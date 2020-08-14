@@ -83,7 +83,7 @@ and reason_of_use_t = function
   | DebugSleepT reason -> reason
   | ElemT (_, reason, _, _) -> reason
   | EnumCastT { enum = (reason, _, _); _ } -> reason
-  | EnumExhaustiveCheckT (reason, _, _) -> reason
+  | EnumExhaustiveCheckT { reason; _ } -> reason
   | EqT { reason; _ } -> reason
   | ExportNamedT (reason, _, _, _) -> reason
   | ExportTypeT (reason, _, _, _) -> reason
@@ -255,8 +255,8 @@ and mod_reason_of_use_t f = function
   | ElemT (use_op, reason, t, action) -> ElemT (use_op, f reason, t, action)
   | EnumCastT { use_op; enum = (reason, trust, enum) } ->
     EnumCastT { use_op; enum = (f reason, trust, enum) }
-  | EnumExhaustiveCheckT (reason, check, incomplete_out) ->
-    EnumExhaustiveCheckT (f reason, check, incomplete_out)
+  | EnumExhaustiveCheckT { reason; check; incomplete_out } ->
+    EnumExhaustiveCheckT { reason = f reason; check; incomplete_out }
   | EqT ({ reason; _ } as x) -> EqT { x with reason = f reason }
   | ExportNamedT (reason, tmap, export_kind, t_out) ->
     ExportNamedT (f reason, tmap, export_kind, t_out)

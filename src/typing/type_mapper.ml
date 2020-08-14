@@ -1109,9 +1109,9 @@ class virtual ['a] t_with_uses =
           t
         else
           EnumCastT { use_op; enum = (reason, trust, enum') }
-      | EnumExhaustiveCheckT (r, exhaustive_check, incomplete_out) ->
+      | EnumExhaustiveCheckT { reason; check; incomplete_out } ->
         let incomplete_out' = self#type_ cx map_cx incomplete_out in
-        (match exhaustive_check with
+        (match check with
         | EnumExhaustiveCheckPossiblyValid { tool; possible_checks; checks; default_case } ->
           let map_possible_check ((obj_t, check) as possible_check) =
             let obj_t' = self#type_ cx map_cx obj_t in
@@ -1125,15 +1125,18 @@ class virtual ['a] t_with_uses =
             t
           else
             EnumExhaustiveCheckT
-              ( r,
-                EnumExhaustiveCheckPossiblyValid
-                  { tool; possible_checks = possible_checks'; checks; default_case },
-                incomplete_out' )
+              {
+                reason;
+                check =
+                  EnumExhaustiveCheckPossiblyValid
+                    { tool; possible_checks = possible_checks'; checks; default_case };
+                incomplete_out = incomplete_out';
+              }
         | EnumExhaustiveCheckInvalid _ as check ->
           if incomplete_out' == incomplete_out then
             t
           else
-            EnumExhaustiveCheckT (r, check, incomplete_out'))
+            EnumExhaustiveCheckT { reason; check; incomplete_out = incomplete_out' })
       | FunImplicitVoidReturnT { use_op; reason; return; void_t } ->
         let return' = self#type_ cx map_cx return in
         let void_t' = self#type_ cx map_cx void_t in

@@ -1308,8 +1308,11 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t =
           cx
           ( discriminant_t,
             EnumExhaustiveCheckT
-              (reason_of_t discriminant_t, enum_exhaustive_check, exhaustive_check_incomplete_out)
-          );
+              {
+                reason = reason_of_t discriminant_t;
+                check = enum_exhaustive_check;
+                incomplete_out = exhaustive_check_incomplete_out;
+              } );
         let ast =
           ( switch_loc,
             Switch { Switch.discriminant = discriminant_ast; cases = cases_ast; comments } )

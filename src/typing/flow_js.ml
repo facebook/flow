@@ -6506,10 +6506,13 @@ struct
         (* Entry point to exhaustive checking logic - when resolving the discriminant as an enum. *)
         | ( DefT (enum_reason, _, EnumT enum),
             EnumExhaustiveCheckT
-              ( check_reason,
-                EnumExhaustiveCheckPossiblyValid
-                  { tool = EnumResolveDiscriminant; possible_checks; checks; default_case },
-                incomplete_out ) ) ->
+              {
+                reason = check_reason;
+                check =
+                  EnumExhaustiveCheckPossiblyValid
+                    { tool = EnumResolveDiscriminant; possible_checks; checks; default_case };
+                incomplete_out;
+              } ) ->
           enum_exhaustive_check
             cx
             ~trace
@@ -6523,15 +6526,18 @@ struct
         (* Resolving the case tests. *)
         | ( _,
             EnumExhaustiveCheckT
-              ( check_reason,
-                EnumExhaustiveCheckPossiblyValid
-                  {
-                    tool = EnumResolveCaseTest { discriminant_reason; discriminant_enum; check };
-                    possible_checks;
-                    checks;
-                    default_case;
-                  },
-                incomplete_out ) ) ->
+              {
+                reason = check_reason;
+                check =
+                  EnumExhaustiveCheckPossiblyValid
+                    {
+                      tool = EnumResolveCaseTest { discriminant_reason; discriminant_enum; check };
+                      possible_checks;
+                      checks;
+                      default_case;
+                    };
+                incomplete_out;
+              } ) ->
           let (EnumCheck { member_name; _ }) = check in
           let { enum_id = enum_id_discriminant; members; _ } = discriminant_enum in
           let checks =
@@ -6555,22 +6561,25 @@ struct
             ~default_case
             ~incomplete_out
         | ( DefT (_, _, EnumT { enum_name; members; _ }),
-            EnumExhaustiveCheckT (check_reason, EnumExhaustiveCheckInvalid reasons, incomplete_out)
-          ) ->
+            EnumExhaustiveCheckT
+              { reason; check = EnumExhaustiveCheckInvalid reasons; incomplete_out } ) ->
           let example_member = SMap.choose_opt members |> Base.Option.map ~f:fst in
           List.iter
             (fun reason ->
               add_output cx (Error_message.EEnumInvalidCheck { reason; enum_name; example_member }))
             reasons;
-          enum_exhaustive_check_incomplete cx ~trace ~reason:check_reason incomplete_out
+          enum_exhaustive_check_incomplete cx ~trace ~reason incomplete_out
         (* Ignore non-enum exhaustive checks. *)
         | ( _,
             EnumExhaustiveCheckT
-              ( check_reason,
-                ( EnumExhaustiveCheckInvalid _
-                | EnumExhaustiveCheckPossiblyValid { tool = EnumResolveDiscriminant; _ } ),
-                incomplete_out ) ) ->
-          enum_exhaustive_check_incomplete cx ~trace ~reason:check_reason incomplete_out
+              {
+                reason;
+                check =
+                  ( EnumExhaustiveCheckInvalid _
+                  | EnumExhaustiveCheckPossiblyValid { tool = EnumResolveDiscriminant; _ } );
+                incomplete_out;
+              } ) ->
+          enum_exhaustive_check_incomplete cx ~trace ~reason incomplete_out
         (**************************************************************************)
         (* TestPropT is emitted for property reads in the context of branch tests.
        Such tests are always non-strict, in that we don't immediately report an
@@ -8681,17 +8690,20 @@ struct
     | (obj_t, check) :: rest_possible_checks ->
       let exhaustive_check =
         EnumExhaustiveCheckT
-          ( check_reason,
-            EnumExhaustiveCheckPossiblyValid
-              {
-                tool =
-                  EnumResolveCaseTest
-                    { discriminant_enum = enum; discriminant_reason = enum_reason; check };
-                possible_checks = rest_possible_checks;
-                checks;
-                default_case;
-              },
-            incomplete_out )
+          {
+            reason = check_reason;
+            check =
+              EnumExhaustiveCheckPossiblyValid
+                {
+                  tool =
+                    EnumResolveCaseTest
+                      { discriminant_enum = enum; discriminant_reason = enum_reason; check };
+                  possible_checks = rest_possible_checks;
+                  checks;
+                  default_case;
+                };
+            incomplete_out;
+          }
       in
       rec_flow cx trace (obj_t, exhaustive_check)
 

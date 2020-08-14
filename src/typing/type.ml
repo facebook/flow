@@ -776,7 +776,11 @@ module rec TypeTerm : sig
         use_op: use_op;
         enum: reason * Trust.trust_rep * enum_t;
       }
-    | EnumExhaustiveCheckT of reason * enum_possible_exhaustive_check_t * t
+    | EnumExhaustiveCheckT of {
+        reason: reason;
+        check: enum_possible_exhaustive_check_t;
+        incomplete_out: t;
+      }
     | FilterOptionalT of use_op * t
     | FilterMaybeT of use_op * t
     | FunImplicitVoidReturnT of {
