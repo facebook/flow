@@ -45,7 +45,7 @@ exception Worker_busy
 
 type send_job_failure =
   | Worker_already_exited of Unix.process_status
-  | Other_send_job_failure of exn
+  | Other_send_job_failure of Exception.t
 
 exception Worker_failed_to_send_job of send_job_failure
 
@@ -62,7 +62,7 @@ let failure_to_string f =
 let () =
   Caml.Printexc.register_printer @@ function
   | Worker_failed_to_send_job (Other_send_job_failure exn) ->
-    Some (Printf.sprintf "Other_send_job_failure: %s" (Exn.to_string exn))
+    Some (Printf.sprintf "Other_send_job_failure: %s" (Exception.to_string exn))
   | Worker_failed_to_send_job (Worker_already_exited status) ->
     Some (Printf.sprintf "Worker_already_exited: %s" (status_string status))
   | Worker_failed (id, failure) ->
@@ -272,8 +272,8 @@ let call w (type a b) (f : a -> b) (x : a) : b Lwt.t =
        let _ = Marshal_tools.to_fd_with_preamble ~flags:[Caml.Marshal.Closures] outfd request in
        Lwt.return_unit
      with exn ->
-       let stack = Caml.Printexc.get_backtrace () in
-       Hh_logger.error "Failed to read response from work #%d\n%s" (worker_id w) stack;
+       let exn = Exception.wrap exn in
+       Hh_logger.error ~exn "Failed to read response from work #%d" (worker_id w);
 
        (* Failed to send the job to the worker. Is it because the worker is dead or is it
         * something else? *)
@@ -295,6 +295,7 @@ let call w (type a b) (f : a -> b) (x : a) : b Lwt.t =
      with
      | Lwt.Canceled as exn ->
        (* Worker is handling a job but we're cancelling *)
+       let exn = Exception.wrap exn in
 
        (* Each worker might call this but that's ok *)
        WorkerCancel.stop_workers ();
@@ -304,8 +305,9 @@ let call w (type a b) (f : a -> b) (x : a) : b Lwt.t =
        (* Read the junk from the pipe *)
        let _ = Marshal_tools.from_fd_with_preamble infd in
        let _ = Marshal_tools.from_fd_with_preamble infd in
-       raise exn
+       Exception.reraise exn
      | exn ->
+       let exn = Exception.wrap exn in
        let%lwt (pid, status) = Lwt_unix.waitpid [Unix.WNOHANG] worker_pid in
        begin
          match (pid, status) with
@@ -313,7 +315,7 @@ let call w (type a b) (f : a -> b) (x : a) : b Lwt.t =
          | (_, Unix.WEXITED 0) ->
            (* The worker is still running or exited normally. It's odd that we failed to read
             * the response, so just raise that exception *)
-           raise exn
+           Exception.reraise exn
          | (_, Unix.WEXITED i) ->
            (match FlowExitStatus.error_type_opt i with
            | Some FlowExitStatus.Out_of_shared_memory -> raise SharedMem.Out_of_shared_memory

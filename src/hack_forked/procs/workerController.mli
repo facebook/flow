@@ -33,7 +33,7 @@ val failure_to_string : worker_failure -> string
 
 type send_job_failure =
   | Worker_already_exited of Unix.process_status
-  | Other_send_job_failure of exn
+  | Other_send_job_failure of Exception.t
 
 exception Worker_failed_to_send_job of send_job_failure
 
