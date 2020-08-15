@@ -77,8 +77,9 @@ and mark_local_binding = function
         mark_loc id_loc;
         mark_parsed def)
       statics
-  | P.FunBinding { id_loc; name = _; async = _; generator = _; def; statics } ->
+  | P.FunBinding { id_loc; name = _; async = _; generator = _; fn_loc; def; statics } ->
     mark_loc id_loc;
+    mark_loc fn_loc;
     mark_fun (Lazy.force def);
     SMap.iter
       (fun _ (id_loc, def) ->
@@ -93,8 +94,9 @@ and mark_local_binding = function
     mark_declare_class (Lazy.force def)
   | P.DeclareFunBinding { name = _; defs_rev } ->
     Nel.iter
-      (fun (id_loc, def) ->
+      (fun (id_loc, fn_loc, def) ->
         mark_loc id_loc;
+        mark_loc fn_loc;
         mark_fun (Lazy.force def))
       defs_rev
   | P.EnumBinding { id_loc; name = _; def } ->

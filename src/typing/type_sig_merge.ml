@@ -102,7 +102,13 @@ let def_reason = function
   | ClassBinding { id_loc; name; _ }
   | DeclareClassBinding { id_loc; name; _ } ->
     Type.DescFormat.instance_reason name id_loc
-  | FunBinding { id_loc; async; generator; _ } -> Reason.func_reason ~async ~generator id_loc
+  | FunBinding { fn_loc; _ } ->
+    (* RFunctionType should be Reason.func_reason instead, but this matches the
+     * behavior of types-first where function bindings are converted to declared
+     * functions, which are given a RFunctionType reason.
+     *
+     * TODO Fix once T71257430 is closed. *)
+    Reason.(mk_reason RFunctionType fn_loc)
   | DeclareFun { id_loc; _ } -> Reason.(mk_reason RFunctionType id_loc)
   | Variable { id_loc; name; _ } -> Reason.(mk_reason (RIdentifier name) id_loc)
   | DisabledEnumBinding { id_loc; name; _ }
@@ -332,11 +338,11 @@ and merge_def component file reason = function
   | DeclareClassBinding { id_loc; name = _; def } ->
     let id = Context.make_aloc_id file.cx id_loc in
     merge_declare_class component file reason id def
-  | FunBinding { id_loc = _; name = _; async = _; generator = _; def; statics } ->
+  | FunBinding { id_loc = _; name = _; async = _; generator = _; fn_loc = _; def; statics } ->
     let statics = merge_fun_statics component file reason statics in
     merge_fun component file reason def statics
-  | DeclareFun { id_loc; name = _; def; tail } ->
-    merge_declare_fun component file ((id_loc, def), tail)
+  | DeclareFun { id_loc; fn_loc; name = _; def; tail } ->
+    merge_declare_fun component file ((id_loc, fn_loc, def), tail)
   | Variable { id_loc = _; name = _; def } -> merge component file def
   | DisabledEnumBinding _ -> Type.AnyT.error reason
   | EnumBinding { id_loc; name; rep; members } -> merge_enum file reason id_loc name rep members
@@ -943,8 +949,13 @@ and merge_value component file = function
     let reason = Type.DescFormat.instance_reason name loc in
     let id = Context.make_aloc_id file.cx loc in
     merge_class component file reason id def
-  | FunExpr { loc; async; generator; def; statics } ->
-    let reason = Reason.func_reason ~async ~generator loc in
+  | FunExpr { loc; async = _; generator = _; def; statics } ->
+    (* RFunctionType should be Reason.func_reason instead, but this matches the
+     * behavior of types-first where function bindings are converted to declared
+     * functions, which are given a RFunctionType reason.
+     *
+     * TODO Fix once T71257430 is closed. *)
+    let reason = Reason.(mk_reason RFunctionType loc) in
     let statics = merge_fun_statics component file reason statics in
     merge_fun component file reason def statics
   | StringVal loc ->
@@ -1060,8 +1071,13 @@ and merge_obj_value_prop component file = function
     let t = merge component file t in
     Type.Field (Some id_loc, t, polarity)
   | ObjValueAccess x -> merge_accessor component file x
-  | ObjValueMethod { id_loc; fn_loc; async; generator; def } ->
-    let reason = Reason.func_reason ~async ~generator fn_loc in
+  | ObjValueMethod { id_loc; fn_loc; async = _; generator = _; def } ->
+    (* RFunctionType should be Reason.func_reason instead, but this matches the
+     * behavior of types-first where function bindings are converted to declared
+     * functions, which are given a RFunctionType reason.
+     *
+     * TODO Fix once T71257430 is closed. *)
+    let reason = Reason.(mk_reason RFunctionType fn_loc) in
     let statics = merge_fun_statics component file reason SMap.empty in
     let t = merge_fun component file reason def statics in
     Type.Method (Some id_loc, t)
@@ -1071,8 +1087,13 @@ and merge_class_prop component file = function
     let t = merge component file t in
     Type.Field (Some id_loc, t, polarity)
   | ObjValueAccess x -> merge_accessor component file x
-  | ObjValueMethod { id_loc; fn_loc; async; generator; def } ->
-    let reason = Reason.func_reason ~async ~generator fn_loc in
+  | ObjValueMethod { id_loc; fn_loc; async = _; generator = _; def } ->
+    (* RFunctionType should be Reason.func_reason instead, but this matches the
+     * behavior of types-first where function bindings are converted to declared
+     * functions, which are given a RFunctionType reason.
+     *
+     * TODO Fix once T71257430 is closed. *)
+    let reason = Reason.(mk_reason RFunctionType fn_loc) in
     let statics = Type.dummy_static reason in
     let t = merge_fun component file reason def statics in
     Type.Method (Some id_loc, t)
@@ -1542,8 +1563,8 @@ and merge_fun
 and merge_declare_fun component file defs =
   let ts =
     Nel.map
-      (fun (id_loc, def) ->
-        let reason = Reason.(mk_reason RFunctionType id_loc) in
+      (fun (_, fn_loc, def) ->
+        let reason = Reason.(mk_reason RFunctionType fn_loc) in
         let statics = merge_fun_statics component file reason SMap.empty in
         merge_fun component file reason def statics)
       defs

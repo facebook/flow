@@ -252,14 +252,16 @@ type ('loc, 'a) def =
       name: string;
       async: bool;
       generator: bool;
+      fn_loc: 'loc;
       def: ('loc, 'a) fun_sig;
       statics: ('loc * 'a) smap;
     }
   | DeclareFun of {
       id_loc: 'loc;
       name: string;
+      fn_loc: 'loc;
       def: ('loc, 'a) fun_sig;
-      tail: ('loc * ('loc, 'a) fun_sig) list;
+      tail: ('loc * 'loc * ('loc, 'a) fun_sig) list;
     }
   | Variable of {
       id_loc: 'loc;

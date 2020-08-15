@@ -205,12 +205,13 @@ and 'loc local_binding =
       name: string;
       async: bool;
       generator: bool;
+      fn_loc: 'loc loc_node;
       def: ('loc loc_node, 'loc parsed) fun_sig Lazy.t;
       statics: ('loc loc_node * 'loc parsed) smap;
     }
   | DeclareFunBinding of {
       name: string;
-      defs_rev: ('loc loc_node * ('loc loc_node, 'loc parsed) fun_sig Lazy.t) Nel.t;
+      defs_rev: ('loc loc_node * 'loc loc_node * ('loc loc_node, 'loc parsed) fun_sig Lazy.t) Nel.t;
     }
   | EnumBinding of {
       id_loc: 'loc loc_node;
@@ -588,20 +589,20 @@ module Scope = struct
   let bind_enum scope id_loc name def =
     bind_local scope name (EnumBinding {id_loc; name; def})
 
-  let bind_function scope id_loc name ~async ~generator def =
+  let bind_function scope id_loc fn_loc name ~async ~generator def =
     let statics = SMap.empty in
-    bind_local scope name (FunBinding {id_loc; name; async; generator; def; statics})
+    bind_local scope name (FunBinding {id_loc; name; async; generator; fn_loc; def; statics})
 
   (* Multiple declared functions with the same name in the same scope define an
    * overloaded function. Note that declared functions are block scoped, so we
    * don't need to walk the scope chain since the scope argument is certainly
    * the host scope. *)
-  let bind_declare_function scope id_loc name def =
+  let bind_declare_function scope id_loc fn_loc name def =
     modify_names (
       SMap.update name (fun binding_opt ->
         match binding_opt with
         | None ->
-          let defs_rev = Nel.one (id_loc, def) in
+          let defs_rev = Nel.one (id_loc, fn_loc, def) in
           let def = DeclareFunBinding {name; defs_rev} in
           let node = push_local_def def scope in
           Some (LocalBinding node)
@@ -609,7 +610,7 @@ module Scope = struct
         | Some (LocalBinding node) ->
           Local_defs.modify node (function
             | DeclareFunBinding {name; defs_rev} ->
-              let defs_rev = Nel.cons (id_loc, def) defs_rev in
+              let defs_rev = Nel.cons (id_loc, fn_loc, def) defs_rev in
               DeclareFunBinding {name; defs_rev}
             | def -> def
           );
@@ -2339,20 +2340,26 @@ let rec expression opts scope locs (loc, expr) =
       let def = class_def opts scope locs c in
       Value (ClassExpr (loc, def))
     end
-  | E.Function f | E.ArrowFunction f ->
-    let {Ast.Function.id; async; generator; _} = f in
+  | E.Function f ->
+    let {Ast.Function.id; async; generator; sig_loc; _} = f in
+    let sig_loc = Locs.push locs sig_loc in
     begin match id with
     | Some (id_loc, {Ast.Identifier.name; comments = _}) ->
       let id_loc = Locs.push locs id_loc in
       let scope = Scope.push_lex scope in
       let def = lazy (Locs.splice id_loc (fun locs -> function_def opts scope locs SSet.empty f)) in
-      Scope.bind_function scope id_loc name ~async ~generator def;
+      Scope.bind_function scope id_loc sig_loc name ~async ~generator def;
       val_ref scope id_loc name
     | None ->
       let def = function_def opts scope locs SSet.empty f in
       let statics = SMap.empty in
-      Value (FunExpr {loc; async; generator; def; statics})
+      Value (FunExpr {loc = sig_loc; async; generator; def; statics})
     end
+  | E.ArrowFunction f ->
+    let {Ast.Function.async; generator; _} = f in
+    let def = function_def opts scope locs SSet.empty f in
+    let statics = SMap.empty in
+    Value (FunExpr {loc; async; generator; def; statics})
   | E.TypeCast {E.TypeCast.expression = _; annot = (_, t); comments = _} ->
     annot opts scope locs SSet.empty t
   | E.Object {E.Object.properties; comments = _} ->
@@ -2803,9 +2810,9 @@ and class_def =
     List.fold_left (fun acc ->
       let module P = Ast.Expression.Object.Property in
       function
-      | C.Body.Method (_, {C.Method.
+      | C.Body.Method (fn_loc, {C.Method.
           key = P.Identifier (id_loc, {Ast.Identifier.name; comments = _});
-          value = (fn_loc, fn);
+          value = (_, fn);
           kind;
           static;
           decorators = _;
@@ -2814,17 +2821,19 @@ and class_def =
         if opts.munge && Signature_utils.is_munged_property_name name
         then acc
         else
-          let id_loc = Locs.push locs id_loc in
           begin match kind with
           | C.Method.Method | C.Method.Constructor ->
             let {Ast.Function.async; generator; _} = fn in
             let fn_loc = Locs.push locs fn_loc in
+            let id_loc = Locs.push locs id_loc in
             let def = function_def opts scope locs xs fn in
             Acc.add_method ~static name id_loc fn_loc ~async ~generator def acc
           | C.Method.Get ->
+            let id_loc = Locs.push locs id_loc in
             let getter = getter_def opts scope locs xs id_loc fn in
             Acc.add_accessor ~static name getter acc
           | C.Method.Set ->
+            let id_loc = Locs.push locs id_loc in
             let setter = setter_def opts scope locs xs id_loc fn in
             Acc.add_accessor ~static name setter acc
           end
@@ -2884,7 +2893,7 @@ and object_literal =
   let module O = Ast.Expression.Object in
   let module P = O.Property in
   let module Acc = ObjectLiteralAcc in
-  let prop opts scope locs acc = function
+  let prop opts scope locs acc prop_loc = function
     | P.Init {
         key = (
           P.Identifier (id_loc, {Ast.Identifier.name; comments = _}) |
@@ -2904,11 +2913,11 @@ and object_literal =
           P.Identifier (id_loc, {Ast.Identifier.name; comments = _}) |
           P.Literal (id_loc, {Ast.Literal.value = Ast.Literal.String name; _})
         );
-        value = (fn_loc, fn)
+        value = (_, fn)
       } ->
       let {Ast.Function.async; generator; _} = fn in
+      let fn_loc = Locs.push locs prop_loc in
       let id_loc = Locs.push locs id_loc in
-      let fn_loc = Locs.push locs fn_loc in
       let def = function_def opts scope locs SSet.empty fn in
       Acc.add_method name id_loc fn_loc ~async ~generator def acc
     | P.Get {
@@ -2966,8 +2975,8 @@ and object_literal =
       | O.Property (ploc, P.Method {key = P.Computed _; _}) ->
         let ploc = Locs.push locs ploc in
         Err (ploc, UnsupportedComputedProperty)
-      | O.Property (_, p) ->
-        let acc = prop opts scope locs acc p in
+      | O.Property (prop_loc, p) ->
+        let acc = prop opts scope locs acc prop_loc p in
         loop opts scope locs loc ~frozen acc ps
   in
   fun opts scope locs loc ~frozen properties ->
@@ -3182,24 +3191,32 @@ let rec const_var_init_decl opts scope locs id_loc name expr =
     let ref_loc = Locs.push locs ref_loc in
     Scope.bind_const_ref scope id_loc name ref_loc ref_name scope
   (* const x = function *)
-  | (loc, (E.Function f | E.ArrowFunction f)) ->
-    let {Ast.Function.id = fn_id; async; generator; _} = f in
+  | (_, E.Function f) ->
+    let {Ast.Function.id = fn_id; async; generator; sig_loc; _} = f in
+    let sig_loc = Locs.push locs sig_loc in
     begin match fn_id with
-    | Some (fn_loc, {Ast.Identifier.name = fn_name; comments = _}) ->
-      let fn_loc = Locs.push locs fn_loc in
+    | Some (fn_id_loc, {Ast.Identifier.name = fn_name; comments = _}) ->
+      let fn_id_loc = Locs.push locs fn_id_loc in
       let fn_scope = Scope.push_lex scope in
       let def = lazy (
-        Locs.splice fn_loc (fun locs -> function_def opts fn_scope locs SSet.empty f)
+        Locs.splice fn_id_loc (fun locs -> function_def opts fn_scope locs SSet.empty f)
       ) in
-      Scope.bind_function fn_scope fn_loc fn_name ~async ~generator def;
-      Scope.bind_const_ref scope id_loc name fn_loc fn_name fn_scope
+      Scope.bind_function fn_scope fn_id_loc sig_loc fn_name ~async ~generator def;
+      Scope.bind_const_ref scope id_loc name fn_id_loc fn_name fn_scope
     | None ->
-      let loc = Locs.push locs loc in
       let def = lazy (
-        Locs.splice loc (fun locs -> function_def opts scope locs SSet.empty f)
+        Locs.splice sig_loc (fun locs -> function_def opts scope locs SSet.empty f)
       ) in
-      Scope.bind_const_fun scope id_loc name loc ~async ~generator def
+      Scope.bind_const_fun scope id_loc name sig_loc ~async ~generator def
     end
+  (* const x = arrow function *)
+  | (loc, E.ArrowFunction f) ->
+    let {Ast.Function.async; generator; _} = f in
+    let loc = Locs.push locs loc in
+    let def = lazy (
+      Locs.splice loc (fun locs -> function_def opts scope locs SSet.empty f)
+    ) in
+    Scope.bind_const_fun scope id_loc name loc ~async ~generator def
   (* const x = a, b *)
   | (_, E.Sequence {E.Sequence.expressions; comments = _}) ->
     sequence (const_var_init_decl opts scope locs id_loc name) expressions
@@ -3263,11 +3280,12 @@ let class_decl opts scope locs decl =
   Scope.bind_class scope id_loc name def
 
 let function_decl opts scope locs decl =
-  let {Ast.Function.id; async; generator; _} = decl in
+  let {Ast.Function.id; async; generator; sig_loc; _} = decl in
   let (id_loc, {Ast.Identifier.name; comments = _}) = Base.Option.value_exn id in
+  let sig_loc = Locs.push locs sig_loc in
   let id_loc = Locs.push locs id_loc in
   let def = lazy (Locs.splice id_loc (fun locs -> function_def opts scope locs SSet.empty decl)) in
-  Scope.bind_function scope id_loc name ~async ~generator def
+  Scope.bind_function scope id_loc sig_loc name ~async ~generator def
 
 let declare_variable_decl opts scope locs decl =
   let {Ast.Statement.DeclareVariable.id; annot = t; comments = _} = decl in
@@ -3279,12 +3297,13 @@ let declare_variable_decl opts scope locs decl =
 let declare_function_decl opts scope locs decl =
   let {Ast.Statement.DeclareFunction.
     id = (id_loc, {Ast.Identifier.name; comments = _});
-    annot = (_, (_, t));
+    annot = (_, (fn_loc, t));
     predicate = p;
     comments = _;
   } = decl in
   let id_loc = Locs.push locs id_loc in
-  let def = lazy (Locs.splice id_loc (fun locs ->
+  let fn_loc = Locs.push locs fn_loc in
+  let def = lazy (Locs.splice fn_loc (fun locs ->
     let module T = Ast.Type in
     match t with
     | T.Function {T.Function.
@@ -3317,7 +3336,7 @@ let declare_function_decl opts scope locs decl =
       FunSig { tparams; params; rest_param; return; predicate }
     | _ -> failwith "unexpected declare function annot"
   )) in
-  Scope.bind_declare_function scope id_loc name def
+  Scope.bind_declare_function scope id_loc fn_loc name def
 
 let declare_class_decl opts scope locs decl =
   let (id_loc, {Ast.Identifier.name; comments = _}) = decl.Ast.Statement.DeclareClass.id in

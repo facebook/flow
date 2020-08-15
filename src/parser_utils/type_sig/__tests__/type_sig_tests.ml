@@ -343,7 +343,7 @@ let%expect_test "export_function_reference" =
     Local defs:
     0. FunBinding {id_loc = [1:9-12];
          name = "foo"; async = false;
-         generator = false;
+         generator = false; fn_loc = [1:0-31];
          def =
          FunSig {tparams = Mono;
            params = [FunParam {name = (Some "x"); t = (Annot (Number [1:16-22]))}];
@@ -368,7 +368,7 @@ let%expect_test "export_function_reference_check1" =
     Local defs:
     0. FunBinding {id_loc = [1:9-12];
          name = "foo"; async = false;
-         generator = false;
+         generator = false; fn_loc = [1:0-23];
          def =
          FunSig {tparams = Mono; params = [FunParam {name = (Some "x"); t = (Err [1:14])}];
            rest_param = None; return = (Annot (Number [1:17-23]));
@@ -395,7 +395,7 @@ let%expect_test "export_function_reference_check2" =
     Local defs:
     0. FunBinding {id_loc = [1:9-12];
          name = "foo"; async = false;
-         generator = false;
+         generator = false; fn_loc = [1:0-23];
          def =
          FunSig {tparams = Mono;
            params = [FunParam {name = (Some "x"); t = (Annot (Number [1:16-22]))}];
@@ -557,7 +557,7 @@ let%expect_test "export_class_reference" =
            proto_props =
            { "m" ->
              ObjValueMethod {id_loc = [3:2-3];
-               fn_loc = [3:3-36]; async = false;
+               fn_loc = [3:2-36]; async = false;
                generator = false;
                def =
                FunSig {tparams = Mono;
@@ -593,7 +593,7 @@ let%expect_test "export_class_reference_check1" =
            proto_props =
            { "m" ->
              ObjValueMethod {id_loc = [3:2-3];
-               fn_loc = [3:3-36]; async = false;
+               fn_loc = [3:2-36]; async = false;
                generator = false;
                def =
                FunSig {tparams = Mono;
@@ -631,7 +631,7 @@ let%expect_test "export_class_reference_check2" =
            proto_props =
            { "m" ->
              ObjValueMethod {id_loc = [3:2-3];
-               fn_loc = [3:3-28]; async = false;
+               fn_loc = [3:2-28]; async = false;
                generator = false;
                def =
                FunSig {tparams = Mono;
@@ -670,7 +670,7 @@ let%expect_test "export_class_reference_check3" =
            proto_props =
            { "m" ->
              ObjValueMethod {id_loc = [3:2-3];
-               fn_loc = [3:3-28]; async = false;
+               fn_loc = [3:2-28]; async = false;
                generator = false;
                def =
                FunSig {tparams = Mono;
@@ -715,7 +715,7 @@ let%expect_test "type_alias_dependencies" =
            proto_props =
            { "m" ->
              ObjValueMethod {id_loc = [6:2-3];
-               fn_loc = [6:3-28]; async = false;
+               fn_loc = [6:2-28]; async = false;
                generator = false;
                def =
                FunSig {tparams = Mono;
@@ -766,7 +766,7 @@ let%expect_test "class_dependencies" =
            proto_props =
            { "m" ->
              ObjValueMethod {id_loc = [4:2-3];
-               fn_loc = [4:3-26]; async = false;
+               fn_loc = [4:2-26]; async = false;
                generator = false;
                def =
                FunSig {tparams = Mono;
@@ -816,7 +816,7 @@ let%expect_test "class_dependencies_check" =
            proto_props =
            { "m" ->
              ObjValueMethod {id_loc = [4:2-3];
-               fn_loc = [4:3-26]; async = false;
+               fn_loc = [4:2-26]; async = false;
                generator = false;
                def =
                FunSig {tparams = Mono;
@@ -870,7 +870,7 @@ let%expect_test "export_new_typecast" =
            proto_props =
            { "m" ->
              ObjValueMethod {id_loc = [4:2-3];
-               fn_loc = [4:3-26]; async = false;
+               fn_loc = [4:2-26]; async = false;
                generator = false;
                def =
                FunSig {tparams = Mono;
@@ -920,7 +920,7 @@ let%expect_test "export_new_typecast_check" =
            proto_props =
            { "m" ->
              ObjValueMethod {id_loc = [4:2-3];
-               fn_loc = [4:3-26]; async = false;
+               fn_loc = [4:2-26]; async = false;
                generator = false;
                def =
                FunSig {tparams = Mono;
@@ -965,7 +965,7 @@ let%expect_test "recursive_dependencies" =
            proto_props =
            { "m" ->
              ObjValueMethod {id_loc = [3:2-3];
-               fn_loc = [3:3-26]; async = false;
+               fn_loc = [3:2-26]; async = false;
                generator = false;
                def =
                FunSig {tparams = Mono;
@@ -1007,7 +1007,7 @@ let%expect_test "recursive_dependencies_check" =
            proto_props =
            { "m" ->
              ObjValueMethod {id_loc = [3:2-3];
-               fn_loc = [3:3-26]; async = false;
+               fn_loc = [3:2-26]; async = false;
                generator = false;
                def =
                FunSig {tparams = Mono;
@@ -1172,7 +1172,7 @@ let%expect_test "void_function" =
     Local defs:
     0. FunBinding {id_loc = [1:9-12];
          name = "foo"; async = false;
-         generator = false;
+         generator = false; fn_loc = [1:0-14];
          def =
          FunSig {tparams = Mono; params = [];
            rest_param = None; return = (Annot (Void [1:14]));
@@ -1196,7 +1196,7 @@ let%expect_test "void_generator" =
     Local defs:
     0. FunBinding {id_loc = [1:10-13];
          name = "foo"; async = false;
-         generator = true;
+         generator = true; fn_loc = [1:0-15];
          def =
          FunSig {tparams = Mono; params = [];
            rest_param = None; return = (Err [1:15]);
@@ -1274,7 +1274,7 @@ let%expect_test "import_type_dependencies" =
            proto_props =
            { "m" ->
              ObjValueMethod {id_loc = [4:2-3];
-               fn_loc = [4:3-28]; async = false;
+               fn_loc = [4:2-28]; async = false;
                generator = false;
                def =
                FunSig {tparams = Mono;
@@ -1325,7 +1325,7 @@ let%expect_test "qualified_references" =
            proto_props =
            { "m" ->
              ObjValueMethod {id_loc = [4:2-3];
-               fn_loc = [4:3-32]; async = false;
+               fn_loc = [4:2-32]; async = false;
                generator = false;
                def =
                FunSig {tparams = Mono;
@@ -1626,7 +1626,7 @@ let%expect_test "munged_methods_not_ignored" =
            proto_props =
            { "_method" ->
              ObjValueMethod {id_loc = [2:2-9];
-               fn_loc = [2:9-25]; async = false;
+               fn_loc = [2:2-25]; async = false;
                generator = false;
                def =
                FunSig {tparams = Mono;
@@ -1923,7 +1923,7 @@ let%expect_test "named_function_expression" =
     Local defs:
     0. FunBinding {id_loc = [1:26-29];
          name = "foo"; async = false;
-         generator = false;
+         generator = false; fn_loc = [1:17-31];
          def =
          FunSig {tparams = Mono; params = [];
            rest_param = None; return = (Annot (Void [1:31]));
@@ -2157,7 +2157,7 @@ let%expect_test "function_return" =
     0. Variable {id_loc = [1:4-5]; name = "n"; def = (Err [1:5])}
     1. FunBinding {id_loc = [2:16-19];
          name = "foo"; async = false;
-         generator = false;
+         generator = false; fn_loc = [2:7-38];
          def =
          FunSig {
            tparams =
@@ -2196,7 +2196,7 @@ let%expect_test "function_return_2" =
     0. Variable {id_loc = [1:4-5]; name = "n"; def = (Err [1:5])}
     1. FunBinding {id_loc = [2:16-19];
          name = "bar"; async = false;
-         generator = false;
+         generator = false; fn_loc = [2:7-42];
          def =
          FunSig {tparams = Mono;
            params =
@@ -2243,7 +2243,7 @@ let%expect_test "function_statics" =
     Local defs:
     0. FunBinding {id_loc = [1:9-12];
          name = "bar"; async = false;
-         generator = false;
+         generator = false; fn_loc = [1:0-20];
          def =
          FunSig {tparams = Mono; params = [];
            rest_param = None; return = (Annot (Void [1:16-20]));
@@ -2267,7 +2267,7 @@ let%expect_test "function_predicates_1" =
     Local defs:
     0. FunBinding {id_loc = [2:16-19];
          name = "foo"; async = false;
-         generator = false;
+         generator = false; fn_loc = [2:7-46];
          def =
          FunSig {tparams = Mono;
            params = [FunParam {name = (Some "x"); t = (Annot (Mixed [2:23-28]))}];
@@ -2289,7 +2289,7 @@ let%expect_test "function_predicates_2" =
 
     Local defs:
     0. DeclareFun {id_loc = [1:17-20];
-         name = "bar";
+         name = "bar"; fn_loc = [1:20-39];
          def =
          FunSig {tparams = Mono;
            params = [FunParam {name = (Some "x"); t = (Annot (Mixed [1:24-29]))}];
@@ -2298,7 +2298,7 @@ let%expect_test "function_predicates_2" =
          tail = []}
     1. FunBinding {id_loc = [2:16-19];
          name = "foo"; async = false;
-         generator = false;
+         generator = false; fn_loc = [2:7-46];
          def =
          FunSig {tparams = Mono;
            params = [FunParam {name = (Some "x"); t = (Annot (Mixed [2:23-28]))}];
@@ -2321,7 +2321,7 @@ let%expect_test "function_predicates_3" =
     Local defs:
     0. FunBinding {id_loc = [1:9-12];
          name = "bar"; async = false;
-         generator = false;
+         generator = false; fn_loc = [1:0-31];
          def =
          FunSig {tparams = Mono;
            params = [FunParam {name = (Some "x"); t = (Annot (Mixed [1:16-21]))}];
@@ -2329,7 +2329,7 @@ let%expect_test "function_predicates_3" =
            predicate = (Some ([1:34-52], (Some (NullP "x"))))};
          statics = {}}
     1. DeclareFun {id_loc = [2:24-27];
-         name = "foo";
+         name = "foo"; fn_loc = [2:27-46];
          def =
          FunSig {tparams = Mono;
            params = [FunParam {name = (Some "x"); t = (Annot (Mixed [2:31-36]))}];
@@ -2358,7 +2358,7 @@ let%expect_test "function_predicates_4" =
     Local defs:
     0. FunBinding {id_loc = [3:16-21];
          name = "isOne"; async = false;
-         generator = false;
+         generator = false; fn_loc = [3:7-48];
          def =
          FunSig {tparams = Mono;
            params = [FunParam {name = (Some "x"); t = (Annot (Mixed [3:25-30]))}];
@@ -2381,7 +2381,7 @@ let%expect_test "function_predicates_5" =
     Local defs:
     0. FunBinding {id_loc = [2:16-21];
          name = "isOne"; async = false;
-         generator = false;
+         generator = false; fn_loc = [2:7-48];
          def =
          FunSig {tparams = Mono;
            params = [FunParam {name = (Some "x"); t = (Annot (Mixed [2:25-30]))}];
@@ -2403,7 +2403,7 @@ let%expect_test "async_function_1" =
     Local defs:
     0. FunBinding {id_loc = [1:15-18];
          name = "foo"; async = true;
-         generator = false;
+         generator = false; fn_loc = [1:6-20];
          def =
          FunSig {tparams = Mono; params = [];
            rest_param = None; return = (AsyncVoidReturn [1:20]);
@@ -2425,7 +2425,7 @@ let%expect_test "async_function_2" =
     Local defs:
     0. FunBinding {id_loc = [1:15-18];
          name = "foo"; async = true;
-         generator = false;
+         generator = false; fn_loc = [1:6-20];
          def =
          FunSig {tparams = Mono; params = [];
            rest_param = None; return = (Err [1:20]);
@@ -3008,7 +3008,7 @@ let%expect_test "class_this" =
            proto_props =
            { "m" ->
              ObjValueMethod {id_loc = [2:2-3];
-               fn_loc = [2:3-27]; async = false;
+               fn_loc = [2:2-27]; async = false;
                generator = false;
                def =
                FunSig {tparams = Mono;
@@ -3146,7 +3146,7 @@ let%expect_test "cjs_export_fun_expr_props" =
 
     Export_def:
     (Value
-       FunExpr {loc = [1:17-30]; async = false;
+       FunExpr {loc = [1:17-27]; async = false;
          generator = false;
          def =
          FunSig {tparams = Mono; params = [];
@@ -3171,7 +3171,7 @@ let%expect_test "cjs_export_fun_binding_props" =
     Local defs:
     0. FunBinding {id_loc = [1:26-29];
          name = "foo"; async = false;
-         generator = false;
+         generator = false; fn_loc = [1:17-31];
          def =
          FunSig {tparams = Mono; params = [];
            rest_param = None; return = (Annot (Void [1:31]));
@@ -3193,7 +3193,7 @@ let%expect_test "es_export_named_fun_props" =
     Local defs:
     0. FunBinding {id_loc = [1:16-19];
          name = "foo"; async = false;
-         generator = false;
+         generator = false; fn_loc = [1:7-21];
          def =
          FunSig {tparams = Mono; params = [];
            rest_param = None; return = (Annot (Void [1:21]));
@@ -3213,7 +3213,7 @@ let%expect_test "es_export_default_fun_props" =
     Local defs:
     0. FunBinding {id_loc = [1:24-27];
          name = "foo"; async = false;
-         generator = false;
+         generator = false; fn_loc = [1:15-29];
          def =
          FunSig {tparams = Mono; params = [];
            rest_param = None; return = (Annot (Void [1:29]));
@@ -3235,7 +3235,7 @@ let%expect_test "fun_binding_assign" =
     Local defs:
     0. FunBinding {id_loc = [1:9-12];
          name = "foo"; async = false;
-         generator = false;
+         generator = false; fn_loc = [1:0-14];
          def =
          FunSig {tparams = Mono; params = [];
            rest_param = None; return = (Annot (Void [1:14]));
@@ -3258,7 +3258,7 @@ let%expect_test "fun_const_assign" =
     0. Variable {id_loc = [1:6-9]; name = "foo";
          def =
          (Value
-            FunExpr {loc = [1:12-25];
+            FunExpr {loc = [1:12-22];
               async = false; generator = false;
               def =
               FunSig {tparams = Mono;
@@ -3282,6 +3282,7 @@ let%expect_test "ref_const_assign" =
     Local defs:
     0. FunBinding {id_loc = [1:21-22];
          name = "f"; async = false; generator = false;
+         fn_loc = [1:12-24];
          def =
          FunSig {tparams = Mono; params = [];
            rest_param = None; return = (Annot (Void [1:24]));
@@ -3844,6 +3845,7 @@ let%expect_test "predicate_latent" =
     Local defs:
     0. FunBinding {id_loc = [1:9-10];
          name = "f"; async = false; generator = false;
+         fn_loc = [1:0-37];
          def =
          FunSig {tparams = Mono;
            params = [FunParam {name = (Some "a"); t = (Annot (Mixed [1:14-19]))}];
@@ -3852,6 +3854,7 @@ let%expect_test "predicate_latent" =
          statics = {}}
     1. FunBinding {id_loc = [4:9-10];
          name = "g"; async = false; generator = false;
+         fn_loc = [4:0-47];
          def =
          FunSig {tparams = Mono;
            params =
@@ -3862,6 +3865,7 @@ let%expect_test "predicate_latent" =
          statics = {}}
     2. FunBinding {id_loc = [7:16-17];
          name = "h"; async = false; generator = false;
+         fn_loc = [7:7-54];
          def =
          FunSig {tparams = Mono;
            params =
@@ -3916,6 +3920,7 @@ let%expect_test "export_default_function_binding" =
     Local defs:
     0. FunBinding {id_loc = [1:24-25];
          name = "f"; async = false; generator = false;
+         fn_loc = [1:15-33];
          def =
          FunSig {tparams = Mono; params = [];
            rest_param = None; return = (Annot (Void [1:29-33]));
@@ -3950,7 +3955,7 @@ let%expect_test "declared_export_default_function_binding" =
 
     Local defs:
     0. DeclareFun {id_loc = [1:32-33];
-         name = "f";
+         name = "f"; fn_loc = [1:33-41];
          def =
          FunSig {tparams = Mono; params = [];
            rest_param = None; return = (Annot (Void [1:37-41]));
