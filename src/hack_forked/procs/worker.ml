@@ -22,6 +22,8 @@ and serializer = { send: 'a. 'a -> unit }
 
 type job_status = Job_terminated of Unix.process_status
 
+exception Connection_closed
+
 let on_job_cancelled parent_outfd =
   (* The cancelling controller will ignore result of cancelled job anyway (see
    * wait_for_cancel function), so we can send back anything. Write twice, since
@@ -94,7 +96,8 @@ let worker_main ic oc =
     WorkerCancel.set_on_worker_cancelled (fun () -> ());
     let len =
       Measure.time "worker_send_response" (fun () ->
-          Marshal_tools.to_fd_with_preamble ~flags:[Marshal.Closures] outfd data)
+          try Marshal_tools.to_fd_with_preamble ~flags:[Marshal.Closures] outfd data
+          with Unix.Unix_error (Unix.EPIPE, _, _) -> raise Connection_closed)
     in
     if len > 30 * 1024 * 1024 (* 30 MB *) then (
       Hh_logger.log
@@ -107,14 +110,19 @@ let worker_main ic oc =
     Measure.sample "worker_response_len" (float len);
 
     let stats = Measure.serialize (Measure.pop_global ()) in
-    let _ = Marshal_tools.to_fd_with_preamble outfd stats in
+    let _ =
+      try Marshal_tools.to_fd_with_preamble outfd stats
+      with Unix.Unix_error (Unix.EPIPE, _, _) -> raise Connection_closed
+    in
     ()
   in
   try
     try
       Measure.push_global ();
       let (Request do_process) =
-        Measure.time "worker_read_request" (fun () -> Marshal_tools.from_fd_with_preamble infd)
+        Measure.time "worker_read_request" (fun () ->
+            try Marshal_tools.from_fd_with_preamble infd
+            with End_of_file -> raise Connection_closed)
       in
       WorkerCancel.set_on_worker_cancelled (fun () -> on_job_cancelled outfd);
       let tm = Unix.times () in
@@ -134,7 +142,7 @@ let worker_main ic oc =
       do_process { send = send_result };
       exit 0
     with
-    | End_of_file -> exit 1
+    | Connection_closed -> exit 1
     | SharedMem.Out_of_shared_memory -> FlowExitStatus.(exit Out_of_shared_memory)
     | SharedMem.Hash_table_full -> FlowExitStatus.(exit Hash_table_full)
     | SharedMem.Heap_full -> FlowExitStatus.(exit Heap_full)
