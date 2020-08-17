@@ -814,6 +814,42 @@ References:
                   ^^^^^^ [2]
 
 
+Error --------------------------------------------------------------------------------- inclusion_check_widening.js:28:8
+
+Cannot call `setter` with `'B'` bound to the first parameter because object with property `A` that matches string
+literal `B` [1] is incompatible with string literal `A` [2]. [incompatible-call]
+
+   inclusion_check_widening.js:28:8
+   28| setter('B');  // TODO okay
+              ^^^
+
+References:
+   inclusion_check_widening.js:27:5
+   27| if (value === Enum.A) {}
+           ^^^^^^^^^^^^^^^^ [1]
+   inclusion_check_widening.js:21:23
+   21| declare var Enum: {A: 'A', B: 'B'};
+                             ^^^ [2]
+
+
+Error --------------------------------------------------------------------------------- inclusion_check_widening.js:71:2
+
+Cannot cast `key5` to string literal `a` because string literal `b` [1] is incompatible with string literal `a` [2].
+[incompatible-cast]
+
+   inclusion_check_widening.js:71:2
+   71| (key5: 'a'); // TODO okay
+        ^^^^
+
+References:
+   inclusion_check_widening.js:70:20
+   70| const _ = key5 === 'b' ? null : null;
+                          ^^^ [1]
+   inclusion_check_widening.js:71:8
+   71| (key5: 'a'); // TODO okay
+              ^^^ [2]
+
+
 Error ------------------------------------------------------------------------------------- missing-property-cond.js:4:7
 
 Property `p1` is missing in object type [1]. [prop-missing]
@@ -4063,4 +4099,7 @@ Cannot perform arithmetic operation because undefined [1] is not a number. [unsa
 
 
 
-Found 266 errors
+Found 268 errors
+
+Only showing the most relevant union/intersection branches.
+To see all branches, re-run Flow with --show-all-branches
