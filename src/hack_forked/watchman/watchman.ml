@@ -637,16 +637,23 @@ let maybe_restart_instance instance =
     else if within_backoff_time dead_env.reinit_attempts dead_env.dead_since then (
       let () = Hh_logger.log "Attemping to reestablish watchman subscription" in
       (* TODO: don't hardcode this timeout *)
-      with_timeout (Some 120.) @@ fun () ->
-      match%map re_init ~prior_clockspec:dead_env.prior_clockspec dead_env.prior_settings with
+      let timeout = Some 120. in
+      match%lwt
+        with_timeout timeout @@ fun () ->
+        re_init ~prior_clockspec:dead_env.prior_clockspec dead_env.prior_settings
+      with
+      | exception Timeout ->
+        Hh_logger.log "Reestablishing watchman subscription timed out.";
+        EventLogger.watchman_connection_reestablishment_failed ();
+        Lwt.return (Watchman_dead { dead_env with reinit_attempts = dead_env.reinit_attempts + 1 })
       | None ->
         Hh_logger.log "Reestablishing watchman subscription failed.";
         EventLogger.watchman_connection_reestablishment_failed ();
-        Watchman_dead { dead_env with reinit_attempts = dead_env.reinit_attempts + 1 }
+        Lwt.return (Watchman_dead { dead_env with reinit_attempts = dead_env.reinit_attempts + 1 })
       | Some env ->
         Hh_logger.log "Watchman connection reestablished.";
         EventLogger.watchman_connection_reestablished ();
-        Watchman_alive env
+        Lwt.return (Watchman_alive env)
     ) else
       Lwt.return instance
 
