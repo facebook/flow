@@ -30,6 +30,14 @@ type 'a smap = 'a SMap.t
 
 let iter_smap f = SMap.iter (fun _ x -> f x)
 
+(* The PPX generated map functions will use the non-tail-recursive List.map
+ * implementation. Use this type instead if the list might be very long. For
+ * example, codegen can produce unions that are very large. *)
+type 'a tailrec_list = 'a list
+[@@deriving iter, show {with_path = false}]
+
+let map_tailrec_list f xs = Base.List.map ~f xs
+
 type ('key, 'loc, 'a) predicate =
   | AndP of ('key, 'loc, 'a) predicate * ('key, 'loc, 'a) predicate
   | OrP of ('key, 'loc, 'a) predicate * ('key, 'loc, 'a) predicate
@@ -339,7 +347,7 @@ type ('loc, 'a) value =
       proto: ('loc * 'a) option;
       elems_rev: ('loc, 'a) obj_value_spread_elem Nel.t;
     }
-  | ArrayLit of 'loc * 'a * 'a list
+  | ArrayLit of 'loc * 'a * 'a tailrec_list
   [@@deriving iter, map, show {with_path = false}]
 
 type 'a obj_kind =
@@ -364,10 +372,10 @@ type ('loc, 'a) annot =
 
   | Optional of 'a
   | Maybe of 'loc * 'a
-  | Union of {loc: 'loc; t0: 'a; t1: 'a; ts: 'a list}
-  | Intersection of {loc: 'loc; t0: 'a; t1: 'a; ts: 'a list}
+  | Union of {loc: 'loc; t0: 'a; t1: 'a; ts: 'a tailrec_list}
+  | Intersection of {loc: 'loc; t0: 'a; t1: 'a; ts: 'a tailrec_list}
 
-  | Tuple of {loc: 'loc; ts: 'a list}
+  | Tuple of {loc: 'loc; ts: 'a tailrec_list}
   | Array of 'loc * 'a
   | ReadOnlyArray of 'loc * 'a
 

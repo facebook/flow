@@ -504,7 +504,8 @@ and merge_annot component file = function
     let reason = Reason.(mk_annot_reason RUnionType loc) in
     let t0 = merge component file t0 in
     let t1 = merge component file t1 in
-    let ts = List.map (merge component file) ts in
+    (* NB: tail-recursive map in case of very large types *)
+    let ts = Base.List.map ~f:(merge component file) ts in
     let open Type in
     let rep = UnionRep.make t0 t1 ts in
     UnionRep.optimize
@@ -518,12 +519,14 @@ and merge_annot component file = function
     let reason = Reason.(mk_annot_reason RIntersectionType loc) in
     let t0 = merge component file t0 in
     let t1 = merge component file t1 in
-    let ts = List.map (merge component file) ts in
+    (* NB: tail-recursive map in case of very large types *)
+    let ts = Base.List.map ~f:(merge component file) ts in
     Type.(IntersectionT (reason, InterRep.make t0 t1 ts))
   | Tuple { loc; ts } ->
     let reason = Reason.(mk_annot_reason RTupleType loc) in
     let elem_reason = Reason.(mk_annot_reason RTupleElement loc) in
-    let ts = List.map (merge component file) ts in
+    (* NB: tail-recursive map in case of very large types *)
+    let ts = Base.List.map ~f:(merge component file) ts in
     let elem_t =
       match ts with
       | [] -> Type.EmptyT.why elem_reason trust
@@ -1046,7 +1049,8 @@ and merge_value component file = function
   | ArrayLit (loc, t, ts) ->
     let reason = Reason.(mk_reason RArrayLit loc) in
     let t = merge component file t in
-    let ts = List.map (merge component file) ts in
+    (* NB: tail-recursive map in case of very large literals *)
+    let ts = Base.List.map ~f:(merge component file) ts in
     let t =
       match (t, ts) with
       | (t, []) -> t
