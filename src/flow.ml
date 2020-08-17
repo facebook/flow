@@ -80,9 +80,12 @@ end = struct
            (command, rest)
          with Not_found -> (default_command, next :: rest))
     in
+
     let command_string = CommandSpec.name command in
     FlowEventLogger.set_command (Some command_string);
-    FlowEventLogger.init_flow_command ~version:Flow_version.version;
+
+    let init_id = Random_id.short_string () in
+    FlowEventLogger.init_flow_command ~init_id ~version:Flow_version.version;
 
     CommandUtils.run_command command argv
 end

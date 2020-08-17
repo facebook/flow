@@ -381,7 +381,8 @@ end = struct
     watcher#start_init;
     let file_watcher_pid = watcher#getpid in
     let handle =
-      Server.daemonize ~log_file ~shared_mem_config ~argv ~file_watcher_pid server_options
+      let init_id = Random_id.short_string () in
+      Server.daemonize ~init_id ~log_file ~shared_mem_config ~argv ~file_watcher_pid server_options
     in
     let (ic, oc) = handle.Daemon.channels in
     let in_fd =

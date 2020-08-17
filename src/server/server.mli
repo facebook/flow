@@ -6,6 +6,7 @@
  *)
 
 val check_once :
+  init_id:string ->
   shared_mem_config:SharedMem_js.config ->
   format_errors:
     (Errors.ConcreteLocPrintableErrorSet.t
@@ -22,6 +23,7 @@ val check_once :
 (* warnings *)
 
 val daemonize :
+  init_id:string ->
   log_file:string ->
   shared_mem_config:SharedMem_js.config ->
   argv:string array ->
