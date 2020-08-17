@@ -399,7 +399,17 @@ let detect_matching_props_violations cx =
     match sentinel with
     | DefT (_, _, (BoolT (Some _) | StrT (Literal _) | NumT (Literal _))) ->
       (* Limit the check to promitive literal sentinels *)
-      Flow_js.flow_t cx (MatchingPropT (reason, key, sentinel), obj)
+      let use_op =
+        Op
+          (MatchingProp
+             {
+               op = reason;
+               obj = TypeUtil.reason_of_t obj;
+               key;
+               sentinel_reason = TypeUtil.reason_of_t sentinel;
+             })
+      in
+      Flow_js.flow cx (MatchingPropT (reason, key, sentinel), UseT (use_op, obj))
     | _ -> ()
   in
   let matching_props = Context.matching_props cx in

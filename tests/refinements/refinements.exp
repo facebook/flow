@@ -362,21 +362,24 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ eq.js:20:17
 
-All branches are incompatible: [incompatible-type]
- - Either number [1] is incompatible with string literal `foo` [2].
- - Or number [1] is incompatible with string literal `bar` [3].
+Cannot compare number [1] with property `y` of union type [2] because: [incompatible-type]
+ - Either number [1] is incompatible with string literal `foo` [3].
+ - Or number [1] is incompatible with string literal `bar` [4].
 
    eq.js:20:17
    20|     if (x.y === 123) {} // error
                        ^^^ [1]
 
 References:
+   eq.js:18:15
+   18|   function(x: { y: 'foo' } | { y: 'bar' }) {
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
    eq.js:18:20
    18|   function(x: { y: 'foo' } | { y: 'bar' }) {
-                          ^^^^^ [2]
+                          ^^^^^ [3]
    eq.js:18:35
    18|   function(x: { y: 'foo' } | { y: 'bar' }) {
-                                         ^^^^^ [3]
+                                         ^^^^^ [4]
 
 
 Error --------------------------------------------------------------------------------------------------- exists.js:18:9
@@ -2632,16 +2635,20 @@ References:
 
 Error ------------------------------------------------------------------------------------------- tagged_union.js:120:24
 
-number [1] is incompatible with function type [2]. [incompatible-type]
+Cannot compare number [1] with property `toString` of number [2] because number [1] is incompatible with function
+type [3]. [incompatible-type]
 
    tagged_union.js:120:24
    120|     if (z.toString === 0) {} // Error
                                ^ [1]
 
 References:
+   tagged_union.js:107:37
+   107|     x: Array<string>, y: string, z: number, q: boolean,
+                                            ^^^^^^ [2]
    <BUILTINS>/core.js:165:5
    165|     toString(radix?: number): string;
-            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
 
 
 Error -------------------------------------------------------------------------------------------- tagged_union.js:121:9
@@ -2677,16 +2684,20 @@ References:
 
 Error ------------------------------------------------------------------------------------------- tagged_union.js:125:23
 
-number [1] is incompatible with function type [2]. [incompatible-type]
+Cannot compare number [1] with property `valueOf` of boolean [2] because number [1] is incompatible with function
+type [3]. [incompatible-type]
 
    tagged_union.js:125:23
    125|     if (q.valueOf === 0) {} // Error
                               ^ [1]
 
 References:
+   tagged_union.js:107:48
+   107|     x: Array<string>, y: string, z: number, q: boolean,
+                                                       ^^^^^^^ [2]
    <BUILTINS>/core.js:140:5
    140|     valueOf(): boolean;
-            ^^^^^^^^^^^^^^^^^^ [2]
+            ^^^^^^^^^^^^^^^^^^ [3]
 
 
 Error -------------------------------------------------------------------------------------------- tagged_union.js:126:9
@@ -2722,16 +2733,20 @@ References:
 
 Error ------------------------------------------------------------------------------------------- tagged_union.js:137:20
 
-number [1] is incompatible with function type [2]. [incompatible-type]
+Cannot compare number [1] with property `call` of function type [2] because number [1] is incompatible with function
+type [3]. [incompatible-type]
 
    tagged_union.js:137:20
    137|     if (t.call === 0) {} // Error
                            ^ [1]
 
 References:
+   tagged_union.js:108:32
+   108|     r: Object, s: Function, t: () => void
+                                       ^^^^^^^^^^ [2]
    <BUILTINS>/core.js:129:17
    129|     proto call: Function$Prototype$Call; // (thisArg: any, ...argArray: Array<any>) => any
-                        ^^^^^^^^^^^^^^^^^^^^^^^ [2]
+                        ^^^^^^^^^^^^^^^^^^^^^^^ [3]
 
 
 Error -------------------------------------------------------------------------------------------- tagged_union.js:138:9

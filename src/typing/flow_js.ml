@@ -10528,6 +10528,7 @@ struct
                   | Internal _
                   | ReactCreateElementCall _
                   | ReactGetIntrinsic _
+                  | MatchingProp _
                   | UnknownUse ->
                     false)
                 | _ -> should_replace)

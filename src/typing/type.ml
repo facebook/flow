@@ -362,6 +362,12 @@ module rec TypeTerm : sig
         case_test: 'loc virtual_reason;
         switch_discriminant: 'loc virtual_reason;
       }
+    | MatchingProp of {
+        op: 'loc virtual_reason;
+        obj: 'loc virtual_reason;
+        key: string;
+        sentinel_reason: 'loc virtual_reason;
+      }
     | UnknownUse
 
   and 'loc virtual_frame_use_op =
@@ -2858,7 +2864,8 @@ let aloc_of_root_use_op : root_use_op -> ALoc.t = function
   | TypeApplication { type' = op }
   | SetProperty { value = op; _ }
   | UpdateProperty { lhs = op; _ }
-  | SwitchCheck { case_test = op; _ } ->
+  | SwitchCheck { case_test = op; _ }
+  | MatchingProp { op; _ } ->
     aloc_of_reason op
   | ReactGetIntrinsic _
   | Speculation _
@@ -2997,6 +3004,7 @@ let string_of_root_use_op (type a) : a virtual_root_use_op -> string = function
   | SetProperty _ -> "SetProperty"
   | UpdateProperty _ -> "UpdateProperty"
   | SwitchCheck _ -> "SwitchCheck"
+  | MatchingProp _ -> "MatchingProp"
   | UnknownUse -> "UnknownUse"
 
 let string_of_frame_use_op (type a) : a virtual_frame_use_op -> string = function

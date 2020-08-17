@@ -560,6 +560,14 @@ let rec mod_loc_of_virtual_use_op f =
     | SwitchCheck { case_test; switch_discriminant } ->
       SwitchCheck
         { case_test = mod_reason case_test; switch_discriminant = mod_reason switch_discriminant }
+    | MatchingProp { op; obj; key; sentinel_reason } ->
+      MatchingProp
+        {
+          op = mod_reason op;
+          obj = mod_reason obj;
+          key;
+          sentinel_reason = mod_reason sentinel_reason;
+        }
     | UnknownUse -> UnknownUse
   in
   let mod_loc_of_frame_use_op = function
