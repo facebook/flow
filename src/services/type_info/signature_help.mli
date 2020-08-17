@@ -13,6 +13,7 @@ val func_details :
   ServerProt.Response.func_details_result
 
 val find_signatures :
+  reader:State_reader.t ->
   cx:Context.t ->
   file_sig:File_sig.With_ALoc.t ->
   typed_ast:(ALoc.t, ALoc.t * Type.t) Flow_ast.Program.t ->

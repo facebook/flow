@@ -5,6 +5,8 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
+open Parsing_heaps_utils
+
 let parameter_name is_opt name =
   let opt =
     if is_opt then
@@ -50,11 +52,11 @@ module Callee_finder = struct
       the latter covers the `f(x,| y)` case, where your cursor is after the
       comma and before the space; this is not contained in `x` nor `y`, but should
       select `y`. *)
-  let rec find_argument cursor arguments i =
+  let rec find_argument ~reader cursor arguments i =
     match arguments with
     | [] -> i
     | Flow_ast.Expression.(Expression ((arg_loc, _), _) | Spread (arg_loc, _)) :: rest ->
-      let arg_loc = ALoc.to_loc_exn arg_loc in
+      let arg_loc = loc_of_aloc ~reader arg_loc in
       (* if the cursor is within this arg, we obviously found it. if it's immediately after,
          then we're between the arg and the comma/closing paren. if it's before the arg,
          but hasn't been found by earlier args, then we must be in the whitespace before
@@ -66,13 +68,13 @@ module Callee_finder = struct
       then
         i
       else
-        find_argument cursor rest (i + 1)
+        find_argument ~reader cursor rest (i + 1)
 
-  class finder (cursor : Loc.t) =
+  class finder ~(reader : State_reader.t) (cursor : Loc.t) =
     object (this)
       inherit Typed_ast_utils.type_parameter_mapper as super
 
-      method covers_target loc = Reason.in_range cursor (ALoc.to_loc_exn loc)
+      method covers_target loc = Reason.in_range cursor (loc_of_aloc ~reader loc)
 
       (* only recurse if this loc covers the target. *)
       method short_circuit : 'a. ALoc.t -> 'a -> ('a -> 'a) -> 'a =
@@ -95,7 +97,7 @@ module Callee_finder = struct
         let (args_loc, { Flow_ast.Expression.ArgList.arguments; comments = _ }) = arguments in
         let inside_loc =
           (* exclude the parens *)
-          let args_loc = ALoc.to_loc_exn args_loc in
+          let args_loc = loc_of_aloc ~reader args_loc in
           let start = args_loc.Loc.start in
           let start = { start with Loc.column = start.Loc.column + 1 } in
           ALoc.of_loc { args_loc with Loc.start }
@@ -105,7 +107,7 @@ module Callee_finder = struct
              so after this line we know we found the right call. *)
           let _ = super#call annot expr in
 
-          let active_parameter = find_argument cursor arguments 0 in
+          let active_parameter = find_argument ~reader cursor arguments 0 in
           this#annot_with_tparams (fun tparams ->
               raise (Found (Some { tparams; type_ = t; active_parameter })))
         else
@@ -126,10 +128,10 @@ module Callee_finder = struct
         | _ -> body
     end
 
-  let find_opt loc ast =
-    let finder = new finder loc in
+  let find_opt ~reader ~typed_ast loc =
+    let finder = new finder ~reader loc in
     try
-      let _ = finder#program ast in
+      let _ = finder#program typed_ast in
       None
     with
     | Found (Some { tparams; type_; active_parameter }) ->
@@ -161,8 +163,8 @@ let rec collect_functions ~exact_by_default acc = function
     Base.List.fold_left ~init:acc ~f:(collect_functions ~exact_by_default) (t1 :: t2 :: ts)
   | _ -> acc
 
-let find_signatures ~cx ~file_sig ~typed_ast loc =
-  match Callee_finder.find_opt loc typed_ast with
+let find_signatures ~reader ~cx ~file_sig ~typed_ast loc =
+  match Callee_finder.find_opt ~reader ~typed_ast loc with
   | Some (scheme, active_parameter) ->
     let ty =
       Ty_normalizer.from_scheme

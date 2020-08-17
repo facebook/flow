@@ -1611,7 +1611,7 @@ let handle_persistent_autocomplete_lsp
       end)
 
 let handle_persistent_signaturehelp_lsp
-    ~reader:_ ~options ~id ~params ~loc ~metadata ~client ~profiling ~env =
+    ~reader ~options ~id ~params ~loc ~metadata ~client ~profiling ~env =
   let (file, line, col) =
     match loc with
     | Some loc -> loc
@@ -1645,7 +1645,7 @@ let handle_persistent_signaturehelp_lsp
       let func_details =
         let file_sig = File_sig.abstractify_locs file_sig in
         let cursor_loc = Loc.make path line col in
-        Signature_help.find_signatures ~cx ~file_sig ~typed_ast cursor_loc
+        Signature_help.find_signatures ~reader ~cx ~file_sig ~typed_ast cursor_loc
       in
       (match func_details with
       | Ok details ->
