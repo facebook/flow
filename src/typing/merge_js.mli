@@ -44,8 +44,6 @@ val merge_component :
   (Context.t * (ALoc.t, ALoc.t) Flow_ast.Program.t * (ALoc.t, ALoc.t * Type.t) Flow_ast.Program.t)
   Nel.t
 
-val merge_tvar : Context.t -> Reason.t -> Constraint.ident -> Type.t
-
 module ContextOptimizer : sig
   val sig_context : Context.t -> string list -> Xx.hash
 end
