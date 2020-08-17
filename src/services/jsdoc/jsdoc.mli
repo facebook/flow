@@ -13,6 +13,8 @@ type t
 
 val description : t -> string option
 
+val param : t -> string -> string option
+
 (***********)
 (* parsing *)
 (***********)

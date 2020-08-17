@@ -5,13 +5,18 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
-type t = { description: string option }
+type t = {
+  description: string option;
+  params: string SMap.t;
+}
 
 (*************)
 (* accessors *)
 (*************)
 
 let description { description; _ } = description
+
+let param { params; _ } name = SMap.find_opt name params
 
 (***********)
 (* parsing *)
@@ -28,7 +33,11 @@ module Parser = struct
 
   let line_terminator_sequence = [%sedlex.regexp? '\n' | '\r' | "\r\n" | 0x2028 | 0x2029]
 
+  let identifier = [%sedlex.regexp? Plus (Compl (white_space | '[' | '.' | ']' | '=' | '{'))]
+
   (* Helpers *)
+
+  let empty = { description = None; params = SMap.empty }
 
   let trimmed_string_of_buffer buffer = buffer |> Buffer.contents |> String.trim
 
@@ -37,11 +46,17 @@ module Parser = struct
     | "" -> None
     | s -> Some s
 
+  let add_param jsdoc name description =
+    { jsdoc with params = SMap.add name description jsdoc.params }
+
   (* Parsing functions *)
 
-  (* TODO: parse certain tags like @param *)
-  let tag description _ = Some { description }
-
+  (*
+    `description`, `description_or_tag`, and `description_startline` are
+    helpers for parsing descriptions: a description is a possibly-multiline
+    string terminated by EOF or a new tag. The beginning of each line could
+    contain whitespace and asterisks, which are stripped out when parsing.
+   *)
   let rec description desc_buf lexbuf =
     match%sedlex lexbuf with
     | line_terminator_sequence ->
@@ -50,11 +65,11 @@ module Parser = struct
     | any ->
       Buffer.add_string desc_buf (Sedlexing.Utf8.lexeme lexbuf);
       description desc_buf lexbuf
-    | _ (* eof *) -> Some { description = description_of_desc_buf desc_buf }
+    | _ (* eof *) -> description_of_desc_buf desc_buf
 
   and description_or_tag desc_buf lexbuf =
     match%sedlex lexbuf with
-    | '@' -> tag (description_of_desc_buf desc_buf) lexbuf
+    | '@' -> description_of_desc_buf desc_buf
     | _ -> description desc_buf lexbuf
 
   and description_startline desc_buf lexbuf =
@@ -64,12 +79,58 @@ module Parser = struct
       description_startline desc_buf lexbuf
     | _ -> description_or_tag desc_buf lexbuf
 
+  let rec skip_tag jsdoc lexbuf =
+    match%sedlex lexbuf with
+    | Plus (Compl '@') -> skip_tag jsdoc lexbuf
+    | '@' -> tag jsdoc lexbuf
+    | _ (* eof *) -> jsdoc
+
+  and param_tag_description jsdoc name lexbuf =
+    let desc_buf = Buffer.create 127 in
+    let desc_opt = description desc_buf lexbuf in
+    let jsdoc =
+      Base.Option.fold desc_opt ~init:jsdoc ~f:(fun jsdoc desc -> add_param jsdoc name desc)
+    in
+    tag jsdoc lexbuf
+
+  and param_tag_pre_description jsdoc name lexbuf =
+    match%sedlex lexbuf with
+    | ' ' -> param_tag_pre_description jsdoc name lexbuf
+    | '-' -> param_tag_description jsdoc name lexbuf
+    | _ -> param_tag_description jsdoc name lexbuf
+
+  (* ignore jsdoc type annotation *)
+  and param_tag_type jsdoc lexbuf =
+    match%sedlex lexbuf with
+    | '}' -> param_tag jsdoc lexbuf
+    | Plus (Compl '}') -> param_tag_type jsdoc lexbuf
+    | _ -> jsdoc
+
+  and param_tag jsdoc lexbuf =
+    match%sedlex lexbuf with
+    | whitespace -> param_tag jsdoc lexbuf
+    | '{' -> param_tag_type jsdoc lexbuf
+    | identifier ->
+      let name = Sedlexing.Utf8.lexeme lexbuf in
+      param_tag_pre_description jsdoc name lexbuf
+    | _ -> skip_tag jsdoc lexbuf
+
+  and tag jsdoc lexbuf =
+    match%sedlex lexbuf with
+    | "param"
+    | "arg"
+    | "argument" ->
+      param_tag jsdoc lexbuf
+    | _ -> skip_tag jsdoc lexbuf
+
   let initial lexbuf =
     match%sedlex lexbuf with
     | ('*', Compl '*') ->
       Sedlexing.rollback lexbuf;
       let desc_buf = Buffer.create 127 in
-      description_startline desc_buf lexbuf
+      let description = description_startline desc_buf lexbuf in
+      let jsdoc = { empty with description } in
+      Some (tag jsdoc lexbuf)
     | _ -> None
 end
 

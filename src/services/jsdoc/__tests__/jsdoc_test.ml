@@ -41,19 +41,31 @@ let mk_block_comments ~leading ~trailing =
 (* testing *)
 (***********)
 
-let mk_test comment ?(should_not_parse = false) ?description ctxt =
+let string_option_printer = function
+  | None -> "None"
+  | Some desc -> Printf.sprintf "Some %S" desc
+
+let mk_test comment ?(should_not_parse = false) ?description ?params ctxt =
   match Jsdoc.of_comments comment with
   | None -> assert_bool "JSDoc didn't parse" should_not_parse
   | Some jsdoc ->
     Base.Option.iter description ~f:(fun description ->
         assert_equal
           ~ctxt
-          ~printer:(function
-            | None -> "None"
-            | Some desc -> Printf.sprintf "Some %S" desc)
+          ~printer:string_option_printer
           ~msg:"description"
           description
-          (Jsdoc.description jsdoc))
+          (Jsdoc.description jsdoc));
+    Base.Option.iter
+      params
+      ~f:
+        (Base.List.iter ~f:(fun (name, description) ->
+             assert_equal
+               ~ctxt
+               ~printer:string_option_printer
+               ~msg:(Printf.sprintf "param %s" name)
+               description
+               (Jsdoc.param jsdoc name)))
 
 let tests =
   "JSDoc"
@@ -76,4 +88,30 @@ let tests =
                   ~trailing:["* crackle"])
                ~description:(Some "baz");
          "no_description" >:: mk_test (mk_block_comment "*\n @unsupported") ~description:None;
+         "simple_param_descriptions"
+         >:: mk_test
+               (mk_block_comment
+                  {|* overall description
+                    * @param a description for a
+                    * @param {ignore this} b description for b
+                    * @param c - hyphen before description for c
+                    * @param d
+                    * @param e  multiline
+                    *           param description
+                    * @unsupported tag to be skipped
+                    * @arg f - arg alias for param tag
+                    * @argument g - argument alias for param tag
+                    * @param h description before eof|})
+               ~description:(Some "overall description")
+               ~params:
+                 [
+                   ("a", Some "description for a");
+                   ("b", Some "description for b");
+                   ("c", Some "hyphen before description for c");
+                   ("d", None);
+                   ("e", Some "multiline\nparam description");
+                   ("f", Some "arg alias for param tag");
+                   ("g", Some "argument alias for param tag");
+                   ("h", Some "description before eof");
+                 ];
        ]
