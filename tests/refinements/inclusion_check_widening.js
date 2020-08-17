@@ -22,10 +22,10 @@ declare var Enum: {A: 'A', B: 'B'};
 
 // The conditional below may be seen as a refinement on `Enum`. In that case, we
 // make sure that `value` is a valid type for `Enum.A` (see MatchingPropT).
-// If we let this check affect inference, then this will affect the type of `value`,
-// as well as `setter`. The latter causes the call below to fail.
+// This check should not affect the inferred type of `value` or `setter`, and the
+// subsequent call.
 if (value === Enum.A) {}
-setter('B');  // TODO okay
+setter('B');  // okay
 
 
 // Example 2
@@ -35,7 +35,7 @@ const y = x && x.f.g;
 // `null` may reach `y` here, and so this should be reported as an error ('val'
 // cannot refine `null`). It does not, because we allow the check of 'val' <: TypeOf(y)
 // to expand the type of `y`.
-if (y === 'val') {} // TODO error
+if (y === 'val') {} // error
 
 
 // Example 3
@@ -43,7 +43,7 @@ if (y === 'val') {} // TODO error
 type V<T: {...}> = { key2: $Keys<T> };
 declare var column: V<{...}>;
 const {key2} = column;
-if (key2 === 'a') {} // TODO error (key2 does not include 'a')
+if (key2 === 'a') {} // error (key2 does not include 'a')
 
 
 // Example 4
@@ -58,7 +58,7 @@ class D {
     if (
         prop !== undefined &&
         prop !== null &&
-        prop !== 0 // TODO error (0 incompatible with C)
+        prop !== 0 // error (0 incompatible with C)
        ) {}
   }
 }
@@ -68,4 +68,4 @@ class D {
 
 const {key5} = {key5: 'a'};
 const _ = key5 === 'b' ? null : null;
-(key5: 'a'); // TODO okay
+(key5: 'a'); // okay

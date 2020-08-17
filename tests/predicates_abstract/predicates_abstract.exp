@@ -1,23 +1,5 @@
 Error -------------------------------------------------------------------------------------- sanity-filter-union.js:16:2
 
-Cannot cast `my_filter(...)` to array type because object with property `kind` that matches string literal `A` [1] is
-incompatible with string literal `B` [2] in array element. [incompatible-cast]
-
-   sanity-filter-union.js:16:2
-   16| (my_filter(ab, (x): %checks => x.kind === 'A'): Array<B>);    // ERROR
-        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-References:
-   sanity-filter-union.js:6:71
-    6| declare function my_filter<T, P: $Pred<1>>(v: Array<T>, cb: P): Array<$Refine<T,P,1>>;
-                                                                             ^^^^^^^^^^^^^^ [1]
-   sanity-filter-union.js:9:18
-    9| type B = { kind: 'B', v: string }
-                        ^^^ [2]
-
-
-Error -------------------------------------------------------------------------------------- sanity-filter-union.js:16:2
-
 Cannot cast `my_filter(...)` to array type because property `v` is missing in `A` [1] but exists in `B` [2] in array
 element. [prop-missing]
 
@@ -206,4 +188,4 @@ References:
 
 
 
-Found 12 errors
+Found 11 errors

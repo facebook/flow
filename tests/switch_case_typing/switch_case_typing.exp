@@ -96,32 +96,6 @@ References:
                       ^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- test.js:67:3
-
-All branches are incompatible: [incompatible-type]
- - Either object with property `type` that matches string literal `qux` [1] is incompatible with string literal
-   `foo` [2].
- - Or object with property `type` that matches string literal `qux` [1] is incompatible with string literal `bar` [3].
- - Or object with property `type` that matches string literal `qux` [1] is incompatible with string literal `baz` [4].
-
-   test.js:67:3
-         v-------------------
-   67|   case 'qux': // error
-   68|     break;
-           -----^ [1]
-
-References:
-   test.js:60:30
-   60| type DisjointUnion = { type: 'foo' } | { type: 'bar' } | { type: 'baz' }
-                                    ^^^^^ [2]
-   test.js:60:48
-   60| type DisjointUnion = { type: 'foo' } | { type: 'bar' } | { type: 'baz' }
-                                                      ^^^^^ [3]
-   test.js:60:66
-   60| type DisjointUnion = { type: 'foo' } | { type: 'bar' } | { type: 'baz' }
-                                                                        ^^^^^ [4]
-
-
 Error ----------------------------------------------------------------------------------------------------- test.js:67:8
 
 All branches are incompatible: [incompatible-type]
@@ -359,19 +333,21 @@ References:
                              ^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:109:5
+Error --------------------------------------------------------------------------------------------------- test.js:109:16
 
 All branches are incompatible: [incompatible-type]
- - Either object with property `type` that matches string literal `err` [1] is incompatible with string literal
-   `foo` [2].
- - Or object with property `type` that matches string literal `err` [1] is incompatible with string literal `bar` [3].
- - Or object with property `type` that matches string literal `err` [1] is incompatible with string literal `baz` [4].
+ - Either string [1] is incompatible with string literal `foo` [2].
+ - Or string [1] is incompatible with string literal `bar` [3].
+ - Or string [1] is incompatible with string literal `baz` [4].
 
-   test.js:109:5
+   test.js:109:16
    109| if (o.type === KeyObj.ERR) {} // error
-            ^^^^^^^^^^^^^^^^^^^^^ [1]
+                       ^^^^^^^^^^
 
 References:
+   test.js:106:10
+   106|   "ERR": 'err',
+                 ^^^^^ [1]
    test.js:60:30
     60| type DisjointUnion = { type: 'foo' } | { type: 'bar' } | { type: 'baz' }
                                      ^^^^^ [2]
@@ -383,21 +359,21 @@ References:
                                                                          ^^^^^ [4]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:115:3
+Error ---------------------------------------------------------------------------------------------------- test.js:115:8
 
 All branches are incompatible: [incompatible-type]
- - Either object with property `type` that matches string literal `err` [1] is incompatible with string literal
-   `foo` [2].
- - Or object with property `type` that matches string literal `err` [1] is incompatible with string literal `bar` [3].
- - Or object with property `type` that matches string literal `err` [1] is incompatible with string literal `baz` [4].
+ - Either string [1] is incompatible with string literal `foo` [2].
+ - Or string [1] is incompatible with string literal `bar` [3].
+ - Or string [1] is incompatible with string literal `baz` [4].
 
-   test.js:115:3
-          v------------------------
+   test.js:115:8
    115|   case KeyObj.ERR: // error
-   116|     break;
-            -----^ [1]
+               ^^^^^^^^^^
 
 References:
+   test.js:106:10
+   106|   "ERR": 'err',
+                 ^^^^^ [1]
    test.js:60:30
     60| type DisjointUnion = { type: 'foo' } | { type: 'bar' } | { type: 'baz' }
                                      ^^^^^ [2]
@@ -410,4 +386,4 @@ References:
 
 
 
-Found 25 errors
+Found 24 errors

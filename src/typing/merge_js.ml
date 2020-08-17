@@ -332,6 +332,89 @@ let merge_trust_var constr =
     | TrustResolved t -> t
     | TrustUnresolved bound -> get_trust bound |> Trust.fix)
 
+class resolver_visitor =
+  (* Filter out EmptyT types from unions, when they're not the result of generate_tests.
+     (The flavor in this case will be `Zeroed`.) This helps keep types clean from
+     EmptyTs that have been left over from refinement. *)
+  let filter_empty flavor =
+    match flavor with
+    | Type.Zeroed -> false
+    | Type.Bottom -> true
+  in
+  object (self)
+    inherit [unit] Type_mapper.t_with_uses as super
+
+    method! type_ cx map_cx t =
+      let open Type in
+      match t with
+      | OpenT (r, id) -> merge_tvar ~filter_empty cx r id
+      | EvalT (t', dt, _id) ->
+        let t'' = self#type_ cx map_cx t' in
+        let dt' = self#defer_use_type cx map_cx dt in
+        if t' == t'' && dt == dt' then
+          t
+        else
+          Flow_cache.Eval.id cx t'' dt'
+      | _ -> super#type_ cx map_cx t
+
+    (* Only called from type_ and the CreateObjWithComputedPropT use case *)
+    method tvar _cx _seen _r id = id
+
+    (* overridden in type_ *)
+    method eval_id _cx _map_cx _id = assert false
+
+    method props cx map_cx id =
+      let props_map = Context.find_props cx id in
+      let props_map' =
+        SMap.ident_map (Type.Property.ident_map_t (self#type_ cx map_cx)) props_map
+      in
+      let id' =
+        if props_map == props_map' then
+          id
+        (* When mapping results in a new property map, we have to use a
+           generated id, rather than a location from source. *)
+        else
+          Context.generate_property_map cx props_map'
+      in
+      id'
+
+    (* These should already be fully-resolved. *)
+    method exports _cx _map_cx id = id
+
+    method call_prop cx map_cx id =
+      let t = Context.find_call cx id in
+      let t' = self#type_ cx map_cx t in
+      if t == t' then
+        id
+      else
+        Context.make_call_prop cx t'
+  end
+
+let detect_matching_props_violations cx =
+  let open Type in
+  let resolver = new resolver_visitor in
+  let step (reason, key, sentinel, obj) =
+    let obj = resolver#type_ cx () obj in
+    let sentinel = resolver#type_ cx () sentinel in
+    match sentinel with
+    | DefT (_, _, (BoolT (Some _) | StrT (Literal _) | NumT (Literal _))) ->
+      (* Limit the check to promitive literal sentinels *)
+      Flow_js.flow_t cx (MatchingPropT (reason, key, sentinel), obj)
+    | _ -> ()
+  in
+  let matching_props = Context.matching_props cx in
+  List.iter step matching_props
+
+let detect_literal_subtypes cx =
+  let resolver = new resolver_visitor in
+  let checks = Context.literal_subtypes cx in
+  List.iter
+    (fun (t, u) ->
+      let t = resolver#type_ cx () t in
+      let u = resolver#use_type cx () u in
+      Flow_js.flow cx (t, u))
+    checks
+
 (* Merge a component with its "implicit requires" and "explicit requires." The
    implicit requires are those defined in libraries. For the explicit
    requires, we need to merge only those parts of the dependency graph that the
@@ -483,6 +566,10 @@ let merge_component
     detect_unnecessary_invariants cx;
     detect_invalid_type_assert_calls cx file_sigs cxs tasts;
     Strict_es6_import_export.detect_errors ~metadata ~phase cx results;
+
+    (* Well-formed conditionals *)
+    detect_matching_props_violations cx;
+    detect_literal_subtypes cx;
 
     force_annotations cx other_cxs;
 

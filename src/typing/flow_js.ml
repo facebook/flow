@@ -34,9 +34,6 @@ module TypeExSet = Set.Make (struct
   let compare = reasonless_compare
 end)
 
-let matching_sentinel_prop reason key sentinel_value =
-  MatchingPropT (reason, key, DefT (reason, bogus_trust (), sentinel_value))
-
 (**************************************************************)
 
 (* Check that id1 is not linked to id2. *)
@@ -10440,15 +10437,9 @@ struct
     fun cx trace v reason l key sense enum result ->
       match (v, enum) with
       | (_, One e) when enum_match sense (v, e) && not sense -> ()
-      | (DefT (_, _, StrT _), One (Str sentinel)) when enum_match sense (v, Str sentinel) ->
-        let l = matching_sentinel_prop reason key (SingletonStrT sentinel) in
-        rec_flow_t cx trace ~use_op:unknown_use (l, result)
-      | (DefT (_, _, NumT _), One (Num sentinel)) when enum_match sense (v, Num sentinel) ->
-        let l = matching_sentinel_prop reason key (SingletonNumT sentinel) in
-        rec_flow_t cx trace ~use_op:unknown_use (l, result)
-      | (DefT (_, _, BoolT _), One (Bool sentinel)) when enum_match sense (v, Bool sentinel) ->
-        let l = matching_sentinel_prop reason key (SingletonBoolT sentinel) in
-        rec_flow_t cx trace ~use_op:unknown_use (l, result)
+      | (DefT (_, _, StrT _), One (Str sentinel)) when enum_match sense (v, Str sentinel) -> ()
+      | (DefT (_, _, NumT _), One (Num sentinel)) when enum_match sense (v, Num sentinel) -> ()
+      | (DefT (_, _, BoolT _), One (Bool sentinel)) when enum_match sense (v, Bool sentinel) -> ()
       | (DefT (_, _, (StrT _ | NumT _ | BoolT _ | NullT | VoidT)), Many enums) when sense ->
         UnionEnumSet.iter
           (fun enum ->
