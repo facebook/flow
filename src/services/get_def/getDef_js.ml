@@ -142,7 +142,7 @@ let rec process_request ~options ~reader ~cx ~is_legit_require ~typed_ast :
       ~typed_ast
       Get_def_request.(Member { prop_name = name; object_source = ObjectType props_object })
 
-let get_def ~options ~reader cx file_sig typed_ast requested_loc =
+let get_def ~options ~reader ~cx ~file_sig ~typed_ast requested_loc =
   let require_loc_map = File_sig.With_Loc.(require_loc_map file_sig.module_sig) in
   let is_legit_require source_aloc =
     let source_loc = loc_of_aloc ~reader source_aloc in
