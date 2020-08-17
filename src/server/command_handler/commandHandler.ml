@@ -302,7 +302,9 @@ let infer_type
               let documentation =
                 match getdef_loc_result with
                 | Error _ -> None
-                | Ok getdef_loc -> Find_documentation.of_getdef_loc ~reader getdef_loc
+                | Ok getdef_loc ->
+                  Find_documentation.jsdoc_of_getdef_loc ~reader getdef_loc
+                  |> Base.Option.bind ~f:Jsdoc.description
               in
               let json_props =
                 let documentation_get_def =

@@ -5,14 +5,10 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
-open Utils_js
+exception Found of Jsdoc.t
 
-exception Found of string
-
-let find documentation = raise (Found documentation)
-
-let find_description comments =
-  Base.Option.iter (Jsdoc.of_comments comments) ~f:(Jsdoc.description %> Base.Option.iter ~f:find)
+let find comments =
+  Base.Option.iter (Jsdoc.of_comments comments) ~f:(fun jsdoc -> raise (Found jsdoc))
 
 let loc_of_object_key =
   let open Flow_ast.Expression.Object.Property in
@@ -57,42 +53,40 @@ class documentation_searcher (def_loc : Loc.t) =
               Declarator.
                 { id = (_, Flow_ast.Pattern.(Identifier Identifier.{ name = (loc, _); _ })); _ } )
             when this#is_target loc ->
-            find_description comments
-          | (_, Declarator.{ init = Some (loc, _); _ }) when this#is_target loc ->
-            find_description comments
+            find comments
+          | (_, Declarator.{ init = Some (loc, _); _ }) when this#is_target loc -> find comments
           | _ -> ());
       super#variable_declaration stmt_loc decl
 
     method! class_ stmt_loc cls =
       let open Flow_ast.Class in
       let { id; comments; _ } = cls in
-      Base.Option.iter id ~f:(fun (loc, _) -> if this#is_target loc then find_description comments);
+      Base.Option.iter id ~f:(fun (loc, _) -> if this#is_target loc then find comments);
       super#class_ stmt_loc cls
 
     method! function_ loc func =
       let open Flow_ast.Function in
       let { comments; id; _ } = func in
-      if this#is_target loc then find_description comments;
-      Base.Option.iter id ~f:(fun (id_loc, _) ->
-          if this#is_target id_loc then find_description comments);
+      if this#is_target loc then find comments;
+      Base.Option.iter id ~f:(fun (id_loc, _) -> if this#is_target id_loc then find comments);
       super#function_ loc func
 
     method! declare_variable stmt_loc decl =
       let open Flow_ast.Statement.DeclareVariable in
       let { id = (loc, _); comments; _ } = decl in
-      if this#is_target loc then find_description comments;
+      if this#is_target loc then find comments;
       super#declare_variable stmt_loc decl
 
     method! declare_class stmt_loc decl =
       let open Flow_ast.Statement.DeclareClass in
       let { id = (loc, _); comments; _ } = decl in
-      if this#is_target loc then find_description comments;
+      if this#is_target loc then find comments;
       super#declare_class stmt_loc decl
 
     method! declare_function stmt_loc decl =
       let open Flow_ast.Statement.DeclareFunction in
       let { id = (loc, _); comments; _ } = decl in
-      if this#is_target loc then find_description comments;
+      if this#is_target loc then find comments;
       super#declare_function stmt_loc decl
 
     method! object_property_type prop_type =
@@ -106,9 +100,9 @@ class documentation_searcher (def_loc : Loc.t) =
           value_loc
       in
       if this#is_target (loc_of_object_key key) || this#is_target value_loc then begin
-        find_description comments;
-        find_description (comments_of_variance variance);
-        find_description (comments_of_object_key key)
+        find comments;
+        find (comments_of_variance variance);
+        find (comments_of_object_key key)
       end;
       super#object_property_type prop_type
 
@@ -116,8 +110,8 @@ class documentation_searcher (def_loc : Loc.t) =
       let open Flow_ast.Class.Method in
       let { key; comments; _ } = meth in
       if this#is_target (loc_of_object_key key) then begin
-        find_description comments;
-        find_description (comments_of_object_key key)
+        find comments;
+        find (comments_of_object_key key)
       end;
       super#class_method method_loc meth
 
@@ -125,9 +119,9 @@ class documentation_searcher (def_loc : Loc.t) =
       let open Flow_ast.Class.Property in
       let { key; variance; comments; _ } = prop in
       if this#is_target (loc_of_object_key key) then begin
-        find_description comments;
-        find_description (comments_of_variance variance);
-        find_description (comments_of_object_key key)
+        find comments;
+        find (comments_of_variance variance);
+        find (comments_of_object_key key)
       end;
       super#class_property prop_loc prop
 
@@ -143,7 +137,7 @@ class documentation_searcher (def_loc : Loc.t) =
           ([loc_of_object_key key; loc_of_annotation_or_hint return], [comments])
         | (_, Set _) -> ([], [])
       in
-      if List.exists this#is_target locs then List.iter find_description comments;
+      if List.exists this#is_target locs then List.iter find comments;
       super#object_property prop
   end
 
@@ -154,6 +148,6 @@ let documentation_of_def_loc def_loc ast =
     None
   with Found documentation -> Some documentation
 
-let of_getdef_loc ~reader def_loc =
+let jsdoc_of_getdef_loc ~reader def_loc =
   let open Base.Option in
   Loc.source def_loc >>= Parsing_heaps.Reader.get_ast ~reader >>= documentation_of_def_loc def_loc
