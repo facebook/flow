@@ -6497,9 +6497,9 @@ and predicates_of_condition cx ~cond e =
             } ) ) ->
       let sentinel_refine obj_t =
         (* Generate a refinement on the object that contains a sentinel property.
-               We need to pass this into optional_chain, rather than locally generating a
-               refinement on the type of _object, because the type getting refined is
-               the non-short-circuited, non-nullable branch of any optional chains. *)
+           We need to pass this into optional_chain, rather than locally generating a
+           refinement on the type of _object, because the type getting refined is
+           the non-short-circuited, non-nullable branch of any optional chains. *)
         match (strict, Refinement.key ~allow_optional:true _object) with
         | (false, _)
         | (_, None) ->
@@ -6509,9 +6509,9 @@ and predicates_of_condition cx ~cond e =
           Some (name, obj_t, pred, sense)
       in
       (* Note here we're calling optional_chain on the whole expression, not on _object.
-             We could "look down" one level and call it on _object and wouldn't need the
-             sentinel_refine function above, but then we'd need to duplicate a lot of the
-             functionality of optional_chain here. *)
+         We could "look down" one level and call it on _object and wouldn't need the
+         sentinel_refine function above, but then we'd need to duplicate a lot of the
+         functionality of optional_chain here. *)
       let (_, _, ast, preds, sentinel_refinement) =
         optional_chain
           ~cond:(Some cond) (* We do want to allow possibly absent properties... *)
@@ -6941,7 +6941,12 @@ and predicates_of_condition cx ~cond e =
       let (((_, value_t), _) as value_ast) = expression cx value in
       sentinel_prop_test loc ~sense ~strict expr value_t (fun expr ->
           reconstruct_ast expr value_ast)
-    | (value, ((_, Expression.Member _) as expr)) ->
+    | (value, ((_, Expression.Member _) as expr))
+      when match cond with
+           | SwitchTest _ ->
+             (* Do not treat `switch (val) { case o.p: ... }` as a sentinel prop test on `o`. *)
+             false
+           | OtherTest -> true ->
       let (((_, value_t), _) as value_ast) = expression cx value in
       sentinel_prop_test loc ~sense ~strict expr value_t (fun expr ->
           reconstruct_ast value_ast expr)
