@@ -5,9 +5,35 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
+module Param = struct
+  type optionality =
+    | NotOptional
+    | Optional
+    | OptionalWithDefault of string
+  [@@deriving ord, show, eq]
+
+  type info = {
+    description: string option;
+    optional: optionality;
+  }
+  [@@deriving ord, show, eq]
+
+  type path =
+    | Name
+    | Element of path
+    | Member of path * string
+  [@@deriving ord, show, eq]
+end
+
+module PMap = WrappedMap.Make (struct
+  type t = Param.path
+
+  let compare = Param.compare_path
+end)
+
 type t = {
   description: string option;
-  params: string SMap.t;
+  params: Param.info PMap.t SMap.t;
 }
 
 (*************)
@@ -16,7 +42,8 @@ type t = {
 
 let description { description; _ } = description
 
-let param { params; _ } name = SMap.find_opt name params
+let param { params; _ } name path =
+  Base.Option.bind (SMap.find_opt name params) ~f:(PMap.find_opt path)
 
 (***********)
 (* parsing *)
@@ -46,8 +73,14 @@ module Parser = struct
     | "" -> None
     | s -> Some s
 
-  let add_param jsdoc name description =
-    { jsdoc with params = SMap.add name description jsdoc.params }
+  let add_param jsdoc name path description optional =
+    let old_param_infos =
+      match SMap.find_opt name jsdoc.params with
+      | None -> PMap.empty
+      | Some pmap -> pmap
+    in
+    let new_param_infos = PMap.add path { Param.description; optional } old_param_infos in
+    { jsdoc with params = SMap.add name new_param_infos jsdoc.params }
 
   (* Parsing functions *)
 
@@ -79,40 +112,73 @@ module Parser = struct
       description_startline desc_buf lexbuf
     | _ -> description_or_tag desc_buf lexbuf
 
+  let rec param_path ?(path = Param.Name) lexbuf =
+    match%sedlex lexbuf with
+    | "[]" -> param_path ~path:(Param.Element path) lexbuf
+    | ('.', identifier) ->
+      let member = Sedlexing.Utf8.sub_lexeme lexbuf 1 (Sedlexing.lexeme_length lexbuf - 1) in
+      param_path ~path:(Param.Member (path, member)) lexbuf
+    | _ -> path
+
   let rec skip_tag jsdoc lexbuf =
     match%sedlex lexbuf with
     | Plus (Compl '@') -> skip_tag jsdoc lexbuf
     | '@' -> tag jsdoc lexbuf
     | _ (* eof *) -> jsdoc
 
-  and param_tag_description jsdoc name lexbuf =
+  and param_tag_description jsdoc name path optional lexbuf =
     let desc_buf = Buffer.create 127 in
-    let desc_opt = description desc_buf lexbuf in
-    let jsdoc =
-      Base.Option.fold desc_opt ~init:jsdoc ~f:(fun jsdoc desc -> add_param jsdoc name desc)
-    in
+    let description = description desc_buf lexbuf in
+    let jsdoc = add_param jsdoc name path description optional in
     tag jsdoc lexbuf
 
-  and param_tag_pre_description jsdoc name lexbuf =
+  and param_tag_pre_description jsdoc name path optional lexbuf =
     match%sedlex lexbuf with
-    | ' ' -> param_tag_pre_description jsdoc name lexbuf
-    | '-' -> param_tag_description jsdoc name lexbuf
-    | _ -> param_tag_description jsdoc name lexbuf
+    | ' ' -> param_tag_pre_description jsdoc name path optional lexbuf
+    | '-' -> param_tag_description jsdoc name path optional lexbuf
+    | _ -> param_tag_description jsdoc name path optional lexbuf
+
+  and param_tag_optional_default jsdoc name path def_buf lexbuf =
+    match%sedlex lexbuf with
+    | ']' ->
+      let default = Buffer.contents def_buf in
+      param_tag_pre_description jsdoc name path (Param.OptionalWithDefault default) lexbuf
+    | Plus (Compl ']') ->
+      Buffer.add_string def_buf (Sedlexing.Utf8.lexeme lexbuf);
+      param_tag_optional_default jsdoc name path def_buf lexbuf
+    | _ ->
+      let default = Buffer.contents def_buf in
+      param_tag_pre_description jsdoc name path (Param.OptionalWithDefault default) lexbuf
+
+  and param_tag_optional jsdoc lexbuf =
+    match%sedlex lexbuf with
+    | identifier ->
+      let name = Sedlexing.Utf8.lexeme lexbuf in
+      let path = param_path lexbuf in
+      (match%sedlex lexbuf with
+      | ']' -> param_tag_pre_description jsdoc name path Param.Optional lexbuf
+      | '=' ->
+        let def_buf = Buffer.create 127 in
+        param_tag_optional_default jsdoc name path def_buf lexbuf
+      | _ -> param_tag_pre_description jsdoc name path Param.Optional lexbuf)
+    | _ -> skip_tag jsdoc lexbuf
 
   (* ignore jsdoc type annotation *)
   and param_tag_type jsdoc lexbuf =
     match%sedlex lexbuf with
     | '}' -> param_tag jsdoc lexbuf
     | Plus (Compl '}') -> param_tag_type jsdoc lexbuf
-    | _ -> jsdoc
+    | _ (* eof *) -> jsdoc
 
   and param_tag jsdoc lexbuf =
     match%sedlex lexbuf with
-    | whitespace -> param_tag jsdoc lexbuf
+    | ' ' -> param_tag jsdoc lexbuf
     | '{' -> param_tag_type jsdoc lexbuf
+    | '[' -> param_tag_optional jsdoc lexbuf
     | identifier ->
       let name = Sedlexing.Utf8.lexeme lexbuf in
-      param_tag_pre_description jsdoc name lexbuf
+      let path = param_path lexbuf in
+      param_tag_pre_description jsdoc name path Param.NotOptional lexbuf
     | _ -> skip_tag jsdoc lexbuf
 
   and tag jsdoc lexbuf =

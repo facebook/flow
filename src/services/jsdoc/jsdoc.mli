@@ -5,6 +5,26 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
+module Param : sig
+  type optionality =
+    | NotOptional
+    | Optional
+    | OptionalWithDefault of string
+  [@@deriving ord, show, eq]
+
+  type info = {
+    description: string option;
+    optional: optionality;
+  }
+  [@@deriving ord, show, eq]
+
+  type path =
+    | Name
+    | Element of path
+    | Member of path * string
+  [@@deriving ord, show, eq]
+end
+
 type t
 
 (*************)
@@ -13,7 +33,7 @@ type t
 
 val description : t -> string option
 
-val param : t -> string -> string option
+val param : t -> string -> Param.path -> Param.info option
 
 (***********)
 (* parsing *)
