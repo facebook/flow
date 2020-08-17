@@ -143,10 +143,10 @@ let rec serve ~genv ~env =
 * type-checker succeeded. So to know if there is some work to be done,
 * we look if env.modified changed.
 *)
-let create_program_init ~shared_mem_config ?focus_targets options =
+let create_program_init ~shared_mem_config ~init_id ?focus_targets options =
   let num_workers = Options.max_workers options in
   let handle = SharedMem_js.init ~num_workers shared_mem_config in
-  let genv = ServerEnvBuild.make_genv options handle in
+  let genv = ServerEnvBuild.make_genv ~options ~init_id handle in
   let program_init profiling =
     let%lwt ret = init ~profiling ?focus_targets genv in
     if shared_mem_config.SharedMem_js.log_level > 0 then Measure.print_stats ();
@@ -154,9 +154,9 @@ let create_program_init ~shared_mem_config ?focus_targets options =
   in
   (genv, program_init)
 
-let run ~monitor_channels ~shared_mem_config options =
+let run ~monitor_channels ~init_id ~shared_mem_config options =
   MonitorRPC.init ~channels:monitor_channels;
-  let (genv, program_init) = create_program_init ~shared_mem_config options in
+  let (genv, program_init) = create_program_init ~init_id ~shared_mem_config options in
   let initial_lwt_thread () =
     (* Read messages from the server monitor and add them to a stream as they come in *)
     let listening_thread = ServerMonitorListener.listen_for_messages genv in
@@ -221,8 +221,8 @@ let exit_msg_of_exception exn msg =
     else
       ":\n" ^ bt )
 
-let run_from_daemonize ~monitor_channels ~shared_mem_config options =
-  try run ~monitor_channels ~shared_mem_config options with
+let run_from_daemonize ~init_id ~monitor_channels ~shared_mem_config options =
+  try run ~monitor_channels ~shared_mem_config ~init_id options with
   | SharedMem_js.Out_of_shared_memory as exn ->
     let exn = Exception.wrap exn in
     let msg = exit_msg_of_exception exn "Out of shared memory" in
@@ -242,7 +242,7 @@ let run_from_daemonize ~monitor_channels ~shared_mem_config options =
     let msg = Utils.spf "Unhandled exception: %s" (Exception.to_string e) in
     FlowExitStatus.(exit ~msg Unknown_error)
 
-let check_once ~shared_mem_config ~format_errors ?focus_targets options =
+let check_once ~init_id ~shared_mem_config ~format_errors ?focus_targets options =
   PidLog.disable ();
   MonitorRPC.disable ();
 
@@ -253,7 +253,9 @@ let check_once ~shared_mem_config ~format_errors ?focus_targets options =
   if should_log_server_profiles then Flow_server_profile.init ();
 
   let initial_lwt_thread () =
-    let (_, program_init) = create_program_init ~shared_mem_config ?focus_targets options in
+    let (_, program_init) =
+      create_program_init ~shared_mem_config ~init_id ?focus_targets options
+    in
     let should_print_summary = Options.should_profile options in
     let%lwt (profiling, (print_errors, errors, warnings, first_internal_error)) =
       Profiling_js.with_profiling_lwt ~label:"Init" ~should_print_summary (fun profiling ->
@@ -293,5 +295,12 @@ let check_once ~shared_mem_config ~format_errors ?focus_targets options =
 
 let daemonize =
   let entry = Server_daemon.register_entry_point run_from_daemonize in
-  fun ~log_file ~shared_mem_config ~argv ~file_watcher_pid options ->
-    Server_daemon.daemonize ~log_file ~shared_mem_config ~argv ~options ~file_watcher_pid entry
+  fun ~init_id ~log_file ~shared_mem_config ~argv ~file_watcher_pid options ->
+    Server_daemon.daemonize
+      ~init_id
+      ~log_file
+      ~shared_mem_config
+      ~argv
+      ~options
+      ~file_watcher_pid
+      entry

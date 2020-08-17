@@ -161,7 +161,7 @@ let daemon_entry_point =
   FlowServerMonitorDaemon.register_entry_point (internal_start ~is_daemon:true)
 
 (* The entry point for creating a daemonized flow server monitor (like from `flow start`) *)
-let daemonize ~wait ~on_spawn monitor_options =
+let daemonize ~init_id ~wait ~on_spawn monitor_options =
   let server_options = monitor_options.FlowServerMonitorOptions.server_options in
   (* Let's make sure this isn't all for naught before we fork *)
   let root = Options.root server_options in
@@ -172,7 +172,7 @@ let daemonize ~wait ~on_spawn monitor_options =
     let msg = spf "Error: There is already a server running for %s" (Path.to_string root) in
     FlowExitStatus.(exit ~msg Lock_stolen) );
 
-  FlowServerMonitorDaemon.daemonize ~wait ~on_spawn ~monitor_options daemon_entry_point
+  FlowServerMonitorDaemon.daemonize ~init_id ~wait ~on_spawn ~monitor_options daemon_entry_point
 
 (* The entry point for creating a non-daemonized flow server monitor (like from `flow server`) *)
 let start monitor_options =

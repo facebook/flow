@@ -72,6 +72,7 @@ let make_visitor job_config =
 let initialize_logs options = LoggingUtils.init_loggers ~options ()
 
 let mk_main job_config ~options ~write ~repeat ~log_level ~shared_mem_config roots =
+  let init_id = Random_id.short_string () in
   initialize_logs options;
   let log_level =
     match log_level with
@@ -84,7 +85,7 @@ let mk_main job_config ~options ~write ~repeat ~log_level ~shared_mem_config roo
     let genv =
       let num_workers = Options.max_workers options in
       let handle = SharedMem_js.init ~num_workers shared_mem_config in
-      ServerEnvBuild.make_genv options handle
+      ServerEnvBuild.make_genv ~init_id ~options handle
     in
     let visitor = make_visitor job_config in
     let reporter = job_config.reporter in

@@ -11,6 +11,7 @@ module Server_files = Server_files_js
 type args = {
   shared_mem_config: SharedMem_js.config;
   options: Options.t;
+  init_id: string;
   logging_context: FlowEventLogger.logging_context;
   argv: string array;
   parent_pid: int;
@@ -48,6 +49,7 @@ let new_entry_point =
 
 let register_entry_point
     (main :
+      init_id:string ->
       monitor_channels:MonitorRPC.channels ->
       shared_mem_config:SharedMem_js.config ->
       Options.t ->
@@ -55,6 +57,7 @@ let register_entry_point
   Daemon.register_entry_point (new_entry_point ()) (fun args monitor_channels ->
       let {
         shared_mem_config;
+        init_id;
         options;
         logging_context;
         argv;
@@ -73,7 +76,7 @@ let register_entry_point
       (* It makes the logs easier if all server logs have the "command" column set to "server",
        * regardless of whether they were started with `flow start` or `flow server` *)
       FlowEventLogger.set_command (Some "server");
-      FlowEventLogger.init_flow_command ~version:Flow_version.version;
+      FlowEventLogger.init_flow_command ~init_id ~version:Flow_version.version;
 
       let root = Options.root options in
       let tmp_dir = Options.temp_dir options in
@@ -86,9 +89,9 @@ let register_entry_point
       PidLog.log ~reason:"main" (Unix.getpid ());
       Base.Option.iter (EventLogger.logger_pid ()) ~f:(PidLog.log ~reason:"main_logger");
 
-      main ~monitor_channels ~shared_mem_config options)
+      main ~init_id ~monitor_channels ~shared_mem_config options)
 
-let daemonize ~log_file ~shared_mem_config ~argv ~options ~file_watcher_pid main_entry =
+let daemonize ~init_id ~log_file ~shared_mem_config ~argv ~options ~file_watcher_pid main_entry =
   (* Let's make sure this isn't all for naught before we fork *)
   let root = Options.root options in
   let tmp_dir = Options.temp_dir options in
@@ -128,6 +131,7 @@ let daemonize ~log_file ~shared_mem_config ~argv ~options ~file_watcher_pid main
     main_entry
     {
       shared_mem_config;
+      init_id;
       options;
       logging_context = FlowEventLogger.get_context ();
       argv;

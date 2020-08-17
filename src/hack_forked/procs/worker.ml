@@ -140,14 +140,15 @@ let worker_main ic oc =
     | SharedMem.Heap_full -> FlowExitStatus.(exit Heap_full)
   with e ->
     let exn = Exception.wrap e in
-    let e_str = Exception.get_ctor_string exn in
+    let e_str =
+      Printf.sprintf
+        "%s\nBacktrace: %s"
+        (Exception.get_ctor_string exn)
+        (Exception.get_full_backtrace_string max_int exn)
+    in
     let pid = Unix.getpid () in
-    Printf.printf "Worker %d exception: %s\n%!" pid e_str;
     if EventLogger.should_log () then EventLogger.worker_exception e_str;
-    Printf.printf
-      "Worker %d Potential backtrace:\n%s\n%!"
-      pid
-      (Exception.get_full_backtrace_string max_int exn);
+    Printf.printf "Worker %d exception: %s\n%!" pid e_str;
     exit 2
 
 let win32_worker_main restore (state, _controller_fd) (ic, oc) =
