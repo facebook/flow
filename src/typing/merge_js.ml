@@ -272,6 +272,58 @@ let detect_non_voidable_properties cx =
       check_properties private_property_map private_property_errors)
     (Context.voidable_checks cx)
 
+let merge_tvar =
+  Type.(
+    let possible_types = Flow_js.possible_types in
+    let rec collect_lowers ~filter_empty cx seen acc = function
+      | [] -> Base.List.rev acc
+      | t :: ts ->
+        (match t with
+        (* Recursively unwrap unseen tvars *)
+        | OpenT (_, id) ->
+          if ISet.mem id seen then
+            collect_lowers ~filter_empty cx seen acc ts
+          (* already unwrapped *)
+          else
+            let seen = ISet.add id seen in
+            collect_lowers ~filter_empty cx seen acc (possible_types cx id @ ts)
+        (* Ignore empty in existentials. This behavior is sketchy, but the error
+         behavior without this filtering is worse. If an existential accumulates
+         an empty, we error but it's very non-obvious how the empty arose. *)
+        | DefT (_, _, EmptyT _) when filter_empty -> collect_lowers ~filter_empty cx seen acc ts
+        (* Everything else becomes part of the merge typed *)
+        | _ -> collect_lowers ~filter_empty cx seen (t :: acc) ts)
+    in
+    fun cx r id ->
+      (* Because the behavior of existentials are so difficult to predict, they
+       enjoy some special casing here. When existential types are finally
+       removed, this logic can be removed. *)
+      let existential =
+        Reason.(
+          match desc_of_reason r with
+          | RExistential -> true
+          | _ -> false)
+      in
+      let lowers =
+        let seen = ISet.singleton id in
+        collect_lowers cx seen [] (possible_types cx id) ~filter_empty:existential
+      in
+      match lowers with
+      | [t] -> t
+      | t0 :: t1 :: ts -> UnionT (r, UnionRep.make t0 t1 ts)
+      | [] ->
+        let uses = Flow_js.possible_uses cx id in
+        if uses = [] || existential then
+          AnyT.locationless Unsoundness.existential
+        else
+          MergedT (r, uses))
+
+let merge_trust_var constr =
+  Trust_constraint.(
+    match constr with
+    | TrustResolved t -> t
+    | TrustUnresolved bound -> get_trust bound |> Trust.fix)
+
 (* Merge a component with its "implicit requires" and "explicit requires." The
    implicit requires are those defined in libraries. For the explicit
    requires, we need to merge only those parts of the dependency graph that the
@@ -429,58 +481,6 @@ let merge_component
     match results with
     | [] -> failwith "there is at least one cx"
     | x :: xs -> (x, xs))
-
-let merge_tvar =
-  Type.(
-    let possible_types = Flow_js.possible_types in
-    let rec collect_lowers ~filter_empty cx seen acc = function
-      | [] -> Base.List.rev acc
-      | t :: ts ->
-        (match t with
-        (* Recursively unwrap unseen tvars *)
-        | OpenT (_, id) ->
-          if ISet.mem id seen then
-            collect_lowers ~filter_empty cx seen acc ts
-          (* already unwrapped *)
-          else
-            let seen = ISet.add id seen in
-            collect_lowers ~filter_empty cx seen acc (possible_types cx id @ ts)
-        (* Ignore empty in existentials. This behavior is sketchy, but the error
-         behavior without this filtering is worse. If an existential accumulates
-         an empty, we error but it's very non-obvious how the empty arose. *)
-        | DefT (_, _, EmptyT _) when filter_empty -> collect_lowers ~filter_empty cx seen acc ts
-        (* Everything else becomes part of the merge typed *)
-        | _ -> collect_lowers ~filter_empty cx seen (t :: acc) ts)
-    in
-    fun cx r id ->
-      (* Because the behavior of existentials are so difficult to predict, they
-       enjoy some special casing here. When existential types are finally
-       removed, this logic can be removed. *)
-      let existential =
-        Reason.(
-          match desc_of_reason r with
-          | RExistential -> true
-          | _ -> false)
-      in
-      let lowers =
-        let seen = ISet.singleton id in
-        collect_lowers cx seen [] (possible_types cx id) ~filter_empty:existential
-      in
-      match lowers with
-      | [t] -> t
-      | t0 :: t1 :: ts -> UnionT (r, UnionRep.make t0 t1 ts)
-      | [] ->
-        let uses = Flow_js.possible_uses cx id in
-        if uses = [] || existential then
-          AnyT.locationless Unsoundness.existential
-        else
-          MergedT (r, uses))
-
-let merge_trust_var constr =
-  Trust_constraint.(
-    match constr with
-    | TrustResolved t -> t
-    | TrustUnresolved bound -> get_trust bound |> Trust.fix)
 
 (****************** signature contexts *********************)
 
