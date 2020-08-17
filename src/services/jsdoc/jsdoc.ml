@@ -10,30 +10,30 @@ module Param = struct
     | NotOptional
     | Optional
     | OptionalWithDefault of string
-  [@@deriving ord, show, eq]
+  [@@deriving show, eq]
 
   type info = {
     description: string option;
     optional: optionality;
   }
-  [@@deriving ord, show, eq]
+  [@@deriving show, eq]
 
   type path =
     | Name
     | Element of path
     | Member of path * string
-  [@@deriving ord, show, eq]
+  [@@deriving show, eq]
+
+  type t = (path * info) list [@@deriving show, eq]
 end
 
-module PMap = WrappedMap.Make (struct
-  type t = Param.path
-
-  let compare = Param.compare_path
-end)
+module Params = struct
+  type t = (string * Param.t) list [@@deriving show, eq]
+end
 
 type t = {
   description: string option;
-  params: Param.info PMap.t SMap.t;
+  params: Params.t;
 }
 
 (*************)
@@ -42,8 +42,7 @@ type t = {
 
 let description { description; _ } = description
 
-let param { params; _ } name path =
-  Base.Option.bind (SMap.find_opt name params) ~f:(PMap.find_opt path)
+let params { params; _ } = params
 
 (***********)
 (* parsing *)
@@ -64,7 +63,7 @@ module Parser = struct
 
   (* Helpers *)
 
-  let empty = { description = None; params = SMap.empty }
+  let empty = { description = None; params = [] }
 
   let trimmed_string_of_buffer buffer = buffer |> Buffer.contents |> String.trim
 
@@ -73,14 +72,27 @@ module Parser = struct
     | "" -> None
     | s -> Some s
 
+  (* like Base.List.Assoc.add, but maintains ordering differently:
+   * - if k is already in the list, keeps it in that position and updates the value
+   * - if k isn't in the list, adds it to the end *)
+  let rec add_assoc ~equal k v = function
+    | [] -> [(k, v)]
+    | (k', v') :: xs ->
+      if equal k' k then
+        (k, v) :: xs
+      else
+        (k', v') :: add_assoc ~equal k v xs
+
   let add_param jsdoc name path description optional =
     let old_param_infos =
-      match SMap.find_opt name jsdoc.params with
-      | None -> PMap.empty
-      | Some pmap -> pmap
+      match Base.List.Assoc.find ~equal:String.equal jsdoc.params name with
+      | None -> []
+      | Some param_infos -> param_infos
     in
-    let new_param_infos = PMap.add path { Param.description; optional } old_param_infos in
-    { jsdoc with params = SMap.add name new_param_infos jsdoc.params }
+    let new_param_infos =
+      add_assoc ~equal:Param.equal_path path { Param.description; optional } old_param_infos
+    in
+    { jsdoc with params = add_assoc ~equal:String.equal name new_param_infos jsdoc.params }
 
   (* Parsing functions *)
 

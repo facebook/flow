@@ -10,19 +10,25 @@ module Param : sig
     | NotOptional
     | Optional
     | OptionalWithDefault of string
-  [@@deriving ord, show, eq]
+  [@@deriving show, eq]
 
   type info = {
     description: string option;
     optional: optionality;
   }
-  [@@deriving ord, show, eq]
+  [@@deriving show, eq]
 
   type path =
     | Name
     | Element of path
     | Member of path * string
-  [@@deriving ord, show, eq]
+  [@@deriving show, eq]
+
+  type t = (path * info) list [@@deriving show, eq]
+end
+
+module Params : sig
+  type t = (string * Param.t) list [@@deriving show, eq]
 end
 
 type t
@@ -33,7 +39,7 @@ type t
 
 val description : t -> string option
 
-val param : t -> string -> Param.path -> Param.info option
+val params : t -> Params.t
 
 (***********)
 (* parsing *)

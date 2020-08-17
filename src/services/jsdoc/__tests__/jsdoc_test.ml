@@ -57,17 +57,14 @@ let mk_test comment ?(should_not_parse = false) ?description ?params ctxt =
           ~msg:"description"
           description
           (Jsdoc.description jsdoc));
-    Base.Option.iter
-      params
-      ~f:
-        (Base.List.iter ~f:(fun (name, path, param_info) ->
-             assert_equal
-               ~ctxt
-               ~cmp:(Base.Option.equal Jsdoc.Param.equal_info)
-               ~printer:(string_of_option Jsdoc.Param.show_info)
-               ~msg:(Printf.sprintf "param %S, path %s" name (Jsdoc.Param.show_path path))
-               param_info
-               (Jsdoc.param jsdoc name path)))
+    Base.Option.iter params ~f:(fun params ->
+        assert_equal
+          ~ctxt
+          ~cmp:Jsdoc.Params.equal
+          ~printer:Jsdoc.Params.show
+          ~msg:"params"
+          params
+          (Jsdoc.params jsdoc))
 
 let tests =
   "JSDoc"
@@ -112,42 +109,49 @@ let tests =
                  Jsdoc.Param.
                    [
                      ( "a",
-                       Name,
-                       Some { description = Some "description for a"; optional = NotOptional } );
+                       [(Name, { description = Some "description for a"; optional = NotOptional })]
+                     );
                      ( "b",
-                       Name,
-                       Some { description = Some "description for b"; optional = NotOptional } );
+                       [(Name, { description = Some "description for b"; optional = NotOptional })]
+                     );
                      ( "c",
-                       Name,
-                       Some
-                         {
-                           description = Some "hyphen before description for c";
-                           optional = NotOptional;
-                         } );
-                     ("d", Name, Some { description = None; optional = NotOptional });
+                       [
+                         ( Name,
+                           {
+                             description = Some "hyphen before description for c";
+                             optional = NotOptional;
+                           } );
+                       ] );
+                     ("d", [(Name, { description = None; optional = NotOptional })]);
                      ( "e",
-                       Name,
-                       Some
-                         {
-                           description = Some "multiline\nparam description";
-                           optional = NotOptional;
-                         } );
+                       [
+                         ( Name,
+                           {
+                             description = Some "multiline\nparam description";
+                             optional = NotOptional;
+                           } );
+                       ] );
                      ( "f",
-                       Name,
-                       Some { description = Some "arg alias for param tag"; optional = NotOptional }
-                     );
+                       [
+                         ( Name,
+                           { description = Some "arg alias for param tag"; optional = NotOptional }
+                         );
+                       ] );
                      ( "g",
-                       Name,
-                       Some
-                         {
-                           description = Some "argument alias for param tag";
-                           optional = NotOptional;
-                         } );
-                     ("h", Name, Some { description = None; optional = NotOptional });
+                       [
+                         ( Name,
+                           {
+                             description = Some "argument alias for param tag";
+                             optional = NotOptional;
+                           } );
+                       ] );
+                     ("h", [(Name, { description = None; optional = NotOptional })]);
                      ( "i",
-                       Name,
-                       Some { description = Some "description before eof"; optional = NotOptional }
-                     );
+                       [
+                         ( Name,
+                           { description = Some "description before eof"; optional = NotOptional }
+                         );
+                       ] );
                    ];
          "advanced_params"
          >:: mk_test
@@ -167,50 +171,45 @@ let tests =
                ~params:
                  Jsdoc.Param.
                    [
-                     ("foo", Name, Some { description = Some "optional foo"; optional = Optional });
+                     ("foo", [(Name, { description = Some "optional foo"; optional = Optional })]);
                      ( "bar",
-                       Element Name,
-                       Some { description = Some "element path of bar"; optional = NotOptional } );
-                     ( "bar",
-                       Member (Name, "x"),
-                       Some { description = Some "member x path of bar"; optional = NotOptional } );
-                     ( "bar",
-                       Member (Name, "y"),
-                       Some
-                         {
-                           description = Some "optional member y path of bar with default";
-                           optional = OptionalWithDefault "this is a default";
-                         } );
+                       [
+                         ( Element Name,
+                           { description = Some "element path of bar"; optional = NotOptional } );
+                         ( Member (Name, "x"),
+                           { description = Some "member x path of bar"; optional = NotOptional } );
+                         ( Member (Name, "y"),
+                           {
+                             description = Some "optional member y path of bar with default";
+                             optional = OptionalWithDefault "this is a default";
+                           } );
+                       ] );
                      ( "baz",
-                       Element Name,
-                       Some
-                         {
-                           description = Some "optional element path of baz with default";
-                           optional = OptionalWithDefault "this is another default";
-                         } );
-                     ( "baz",
-                       Member (Member (Name, "bar"), "foo"),
-                       Some
-                         {
-                           description = Some "member foo of member bar of baz";
-                           optional = NotOptional;
-                         } );
-                     ( "baz",
-                       Member (Member (Element Name, "foo"), "bar"),
-                       Some
-                         {
-                           description = Some "member bar of member foo of element of baz";
-                           optional = NotOptional;
-                         } );
+                       [
+                         ( Element Name,
+                           {
+                             description = Some "optional element path of baz with default";
+                             optional = OptionalWithDefault "this is another default";
+                           } );
+                         ( Member (Member (Name, "bar"), "foo"),
+                           {
+                             description = Some "member foo of member bar of baz";
+                             optional = NotOptional;
+                           } );
+                         ( Member (Member (Element Name, "foo"), "bar"),
+                           {
+                             description = Some "member bar of member foo of element of baz";
+                             optional = NotOptional;
+                           } );
+                       ] );
                      ( "qux",
-                       Member (Element (Member (Member (Name, "x"), "y")), "z"),
-                       Some { description = None; optional = NotOptional } );
-                     ( "qux",
-                       Member (Element (Element Name), "x"),
-                       Some { description = None; optional = Optional } );
-                     ( "qux",
-                       Name,
-                       Some { description = None; optional = OptionalWithDefault "has a default" }
-                     );
+                       [
+                         ( Member (Element (Member (Member (Name, "x"), "y")), "z"),
+                           { description = None; optional = NotOptional } );
+                         ( Member (Element (Element Name), "x"),
+                           { description = None; optional = Optional } );
+                         ( Name,
+                           { description = None; optional = OptionalWithDefault "has a default" } );
+                       ] );
                    ];
        ]
