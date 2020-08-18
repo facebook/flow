@@ -143,10 +143,12 @@ let rec process_request ~options ~reader ~cx ~is_legit_require ~typed_ast :
       Get_def_request.(Member { prop_name = name; object_source = ObjectType props_object })
 
 let get_def ~options ~reader ~cx ~file_sig ~typed_ast requested_loc =
-  let require_loc_map = File_sig.With_Loc.(require_loc_map file_sig.module_sig) in
+  let require_aloc_map = File_sig.With_ALoc.(require_loc_map file_sig.module_sig) in
   let is_legit_require source_aloc =
-    let source_loc = loc_of_aloc ~reader source_aloc in
-    SMap.exists (fun _ locs -> Nel.exists (fun loc -> loc = source_loc) locs) require_loc_map
+    SMap.exists
+      (fun _ alocs ->
+        Nel.exists (fun aloc -> loc_of_aloc ~reader aloc = loc_of_aloc ~reader source_aloc) alocs)
+      require_aloc_map
   in
   let rec loop req_loc =
     let open Get_def_process_location in

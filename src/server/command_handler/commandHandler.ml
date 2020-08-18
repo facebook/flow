@@ -204,6 +204,7 @@ let check_file ~options ~env ~profiling ~force file_input =
 let get_def_of_check_result ~options ~reader ~profiling ~check_result (file, line, col) =
   let loc = Loc.make file line col in
   let (cx, _, file_sig, _, typed_ast, parse_errors) = check_result in
+  let file_sig = File_sig.abstractify_locs file_sig in
   Profiling_js.with_timer_lwt profiling ~timer:"GetResult" ~f:(fun () ->
       try_with_json2 (fun () ->
           Lwt.return
