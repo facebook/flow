@@ -1631,3 +1631,41 @@ Flags: --pretty
   ]
 }
 
+jsdoc.js:5:4
+Flags: --lsp
+{
+  "label":"foo",
+  "kind":3,
+  "detail":"() => void",
+  "inlineDetail":"() => void",
+  "documentation":{"kind":"markdown","value":"the function foo"},
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":4,"character":3},"end":{"line":4,"character":3}},
+    "newText":"foo"
+  }
+}
+{
+  "label":"baz",
+  "kind":6,
+  "detail":"number",
+  "inlineDetail":"number",
+  "documentation":{"kind":"markdown","value":"the variable baz"},
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":4,"character":3},"end":{"line":4,"character":3}},
+    "newText":"baz"
+  }
+}
+{
+  "label":"Bar",
+  "kind":7,
+  "detail":"class Bar",
+  "inlineDetail":"class Bar",
+  "documentation":{"kind":"markdown","value":"the class Bar"},
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1
+}
+

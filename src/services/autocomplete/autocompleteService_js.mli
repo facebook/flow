@@ -14,6 +14,7 @@ type autocomplete_service_result =
   | AcFatalError of string
 
 val autocomplete_get_results :
+  options:Options.t ->
   reader:Parsing_heaps.Reader.reader ->
   cx:Context.t ->
   file_sig:File_sig.With_Loc.t ->

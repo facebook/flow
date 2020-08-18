@@ -8,3 +8,4 @@
 no_flowlib=false
 esproposal.optional_chaining=enable
 experimental.enums=true
+experimental.jsdoc=true

@@ -83,3 +83,4 @@ queries_in_file autocomplete "enums.js" --lsp
 queries_in_file autocomplete "enum-id.js" --pretty
 queries_in_file autocomplete "class_declaration_name.js" --pretty
 queries_in_file autocomplete "pattern_object_key_middle.js" --pretty
+queries_in_file autocomplete "jsdoc.js" --lsp

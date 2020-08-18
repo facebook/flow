@@ -139,7 +139,14 @@ let autocomplete ~trigger_character ~reader ~options ~env ~profiling ~filename ~
         try_with_json2 (fun () ->
             let open AutocompleteService_js in
             let (ac_type_string, results_res) =
-              autocomplete_get_results ~reader ~cx ~file_sig ~typed_ast trigger_character cursor_loc
+              autocomplete_get_results
+                ~options
+                ~reader
+                ~cx
+                ~file_sig
+                ~typed_ast
+                trigger_character
+                cursor_loc
             in
             let json_props_to_log =
               ("ac_type", Hh_json.JSON_String ac_type_string)
