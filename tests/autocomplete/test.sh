@@ -84,3 +84,10 @@ queries_in_file autocomplete "enum-id.js" --pretty
 queries_in_file autocomplete "class_declaration_name.js" --pretty
 queries_in_file autocomplete "pattern_object_key_middle.js" --pretty
 queries_in_file autocomplete "jsdoc.js" --lsp
+queries_in_file autocomplete "jsdoc-members-1.js" --lsp
+queries_in_file autocomplete "jsdoc-members-2.js" --lsp
+queries_in_file autocomplete "jsdoc-members-3.js" --lsp
+queries_in_file autocomplete "jsdoc-members-4.js" --lsp
+queries_in_file autocomplete "jsdoc-members-5.js" --lsp
+queries_in_file autocomplete "jsdoc-members-6.js" --lsp
+queries_in_file autocomplete "jsdoc-members-7.js" --lsp

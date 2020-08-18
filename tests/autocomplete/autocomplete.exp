@@ -1669,3 +1669,643 @@ Flags: --lsp
   "insertTextFormat":1
 }
 
+jsdoc-members-1.js:34:5
+Flags: --lsp
+{
+  "label":"a",
+  "kind":6,
+  "detail":"number",
+  "inlineDetail":"number",
+  "documentation":{"kind":"markdown","value":"identifier property of an object literal"},
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1
+}
+{
+  "label":"b",
+  "kind":6,
+  "detail":"number",
+  "inlineDetail":"number",
+  "documentation":{"kind":"markdown","value":"literal property of an object literal"},
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1
+}
+{
+  "label":"c",
+  "kind":6,
+  "detail":"number",
+  "inlineDetail":"number",
+  "documentation":{"kind":"markdown","value":"computed property of an object literal"},
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1
+}
+{
+  "label":"d",
+  "kind":6,
+  "detail":"number",
+  "inlineDetail":"number",
+  "documentation":{"kind":"markdown","value":"annotated getter property of an object literal"},
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1
+}
+{
+  "label":"e",
+  "kind":6,
+  "detail":"void",
+  "inlineDetail":"void",
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1
+}
+{
+  "label":"f",
+  "kind":3,
+  "detail":"() => void",
+  "inlineDetail":"() => void",
+  "documentation":{"kind":"markdown","value":"method property of an object literal"},
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1
+}
+{
+  "label":"g",
+  "kind":3,
+  "detail":"() => Promise<void>",
+  "inlineDetail":"() => Promise<void>",
+  "documentation":{"kind":"markdown","value":"async method property of an object literal"},
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1
+}
+{
+  "label":"hasOwnProperty",
+  "kind":3,
+  "detail":"(prop: mixed) => boolean",
+  "inlineDetail":"(prop: mixed) => boolean",
+  "sortText":"00000000000000000001",
+  "insertTextFormat":1
+}
+{
+  "label":"isPrototypeOf",
+  "kind":3,
+  "detail":"(o: mixed) => boolean",
+  "inlineDetail":"(o: mixed) => boolean",
+  "sortText":"00000000000000000001",
+  "insertTextFormat":1
+}
+{
+  "label":"propertyIsEnumerable",
+  "kind":3,
+  "detail":"(prop: mixed) => boolean",
+  "inlineDetail":"(prop: mixed) => boolean",
+  "sortText":"00000000000000000001",
+  "insertTextFormat":1
+}
+{
+  "label":"toLocaleString",
+  "kind":3,
+  "detail":"() => string",
+  "inlineDetail":"() => string",
+  "sortText":"00000000000000000001",
+  "insertTextFormat":1
+}
+{
+  "label":"toString",
+  "kind":3,
+  "detail":"() => string",
+  "inlineDetail":"() => string",
+  "sortText":"00000000000000000001",
+  "insertTextFormat":1
+}
+{
+  "label":"valueOf",
+  "kind":3,
+  "detail":"() => mixed",
+  "inlineDetail":"() => mixed",
+  "sortText":"00000000000000000001",
+  "insertTextFormat":1
+}
+
+jsdoc-members-2.js:5:17
+Flags: --lsp
+{
+  "label":"bar",
+  "kind":12,
+  "detail":"2",
+  "inlineDetail":"2",
+  "documentation":{"kind":"markdown","value":"bar is a getter property"},
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":4,"character":16},"end":{"line":4,"character":16}},
+    "newText":"bar="
+  }
+}
+{
+  "label":"baz",
+  "kind":12,
+  "detail":"3",
+  "inlineDetail":"3",
+  "documentation":{"kind":"markdown","value":"baz is an identifier property with variance"},
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":4,"character":16},"end":{"line":4,"character":16}},
+    "newText":"baz="
+  }
+}
+{
+  "label":"foo",
+  "kind":12,
+  "detail":"1",
+  "inlineDetail":"1",
+  "documentation":{"kind":"markdown","value":"foo is an identifier property"},
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":4,"character":16},"end":{"line":4,"character":16}},
+    "newText":"foo="
+  }
+}
+{
+  "label":"qux",
+  "kind":12,
+  "detail":"4",
+  "inlineDetail":"4",
+  "documentation":{"kind":"markdown","value":"qux is a literal property"},
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":4,"character":16},"end":{"line":4,"character":16}},
+    "newText":"qux="
+  }
+}
+
+jsdoc-members-3.js:5:20
+Flags: --lsp
+{
+  "label":"bar",
+  "kind":12,
+  "detail":"2",
+  "inlineDetail":"2",
+  "documentation":{"kind":"markdown","value":"bar is a getter property"},
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":4,"character":19},"end":{"line":4,"character":19}},
+    "newText":"bar="
+  }
+}
+{
+  "label":"baz",
+  "kind":12,
+  "detail":"3",
+  "inlineDetail":"3",
+  "documentation":{"kind":"markdown","value":"baz is an identifier property with variance"},
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":4,"character":19},"end":{"line":4,"character":19}},
+    "newText":"baz="
+  }
+}
+{
+  "label":"foo",
+  "kind":12,
+  "detail":"1",
+  "inlineDetail":"1",
+  "documentation":{"kind":"markdown","value":"foo is an identifier property"},
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":4,"character":19},"end":{"line":4,"character":19}},
+    "newText":"foo="
+  }
+}
+{
+  "label":"qux",
+  "kind":12,
+  "detail":"4",
+  "inlineDetail":"4",
+  "documentation":{"kind":"markdown","value":"qux is a literal property"},
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":4,"character":19},"end":{"line":4,"character":19}},
+    "newText":"qux="
+  }
+}
+
+jsdoc-members-4.js:5:5
+Flags: --lsp
+{
+  "label":"apply",
+  "kind":3,
+  "detail":"(thisArg: any, argArray?: any) => any",
+  "inlineDetail":"(thisArg: any, argArray?: any) => any",
+  "sortText":"00000000000000000001",
+  "insertTextFormat":1
+}
+{
+  "label":"arguments",
+  "kind":6,
+  "detail":"any",
+  "inlineDetail":"any",
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1
+}
+{
+  "label":"bind",
+  "kind":3,
+  "detail":"(thisArg: any, ...argArray: Array<any>) => any",
+  "inlineDetail":"(thisArg: any, ...argArray: Array<any>) => any",
+  "sortText":"00000000000000000001",
+  "insertTextFormat":1
+}
+{
+  "label":"call",
+  "kind":3,
+  "detail":"(thisArg: any, ...argArray: Array<any>) => any",
+  "inlineDetail":"(thisArg: any, ...argArray: Array<any>) => any",
+  "sortText":"00000000000000000001",
+  "insertTextFormat":1
+}
+{
+  "label":"caller",
+  "kind":13,
+  "detail":"any | null",
+  "inlineDetail":"any | null",
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1
+}
+{
+  "label":"hasOwnProperty",
+  "kind":3,
+  "detail":"(prop: mixed) => boolean",
+  "inlineDetail":"(prop: mixed) => boolean",
+  "sortText":"00000000000000000001",
+  "insertTextFormat":1
+}
+{
+  "label":"isPrototypeOf",
+  "kind":3,
+  "detail":"(o: mixed) => boolean",
+  "inlineDetail":"(o: mixed) => boolean",
+  "sortText":"00000000000000000001",
+  "insertTextFormat":1
+}
+{
+  "label":"length",
+  "kind":6,
+  "detail":"number",
+  "inlineDetail":"number",
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1
+}
+{
+  "label":"name",
+  "kind":6,
+  "detail":"string",
+  "inlineDetail":"string",
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1
+}
+{
+  "label":"propertyIsEnumerable",
+  "kind":3,
+  "detail":"(prop: mixed) => boolean",
+  "inlineDetail":"(prop: mixed) => boolean",
+  "sortText":"00000000000000000001",
+  "insertTextFormat":1
+}
+{
+  "label":"staticMethod",
+  "kind":3,
+  "detail":"() => void",
+  "inlineDetail":"() => void",
+  "documentation":{"kind":"markdown","value":"this is a static method"},
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1
+}
+{
+  "label":"staticProp",
+  "kind":12,
+  "detail":"1",
+  "inlineDetail":"1",
+  "documentation":{"kind":"markdown","value":"this is a static property"},
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1
+}
+{
+  "label":"toLocaleString",
+  "kind":3,
+  "detail":"() => string",
+  "inlineDetail":"() => string",
+  "sortText":"00000000000000000001",
+  "insertTextFormat":1
+}
+{
+  "label":"toString",
+  "kind":3,
+  "detail":"() => string",
+  "inlineDetail":"() => string",
+  "sortText":"00000000000000000001",
+  "insertTextFormat":1
+}
+{
+  "label":"valueOf",
+  "kind":3,
+  "detail":"() => mixed",
+  "inlineDetail":"() => mixed",
+  "sortText":"00000000000000000001",
+  "insertTextFormat":1
+}
+
+jsdoc-members-5.js:5:13
+Flags: --lsp
+{
+  "label":"hasOwnProperty",
+  "kind":3,
+  "detail":"(prop: mixed) => boolean",
+  "inlineDetail":"(prop: mixed) => boolean",
+  "sortText":"00000000000000000001",
+  "insertTextFormat":1
+}
+{
+  "label":"instanceMethod",
+  "kind":3,
+  "detail":"() => void",
+  "inlineDetail":"() => void",
+  "documentation":{"kind":"markdown","value":"this is an instance method"},
+  "sortText":"00000000000000000001",
+  "insertTextFormat":1
+}
+{
+  "label":"instanceProp",
+  "kind":12,
+  "detail":"2",
+  "inlineDetail":"2",
+  "documentation":{"kind":"markdown","value":"this is an instance property"},
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1
+}
+{
+  "label":"isPrototypeOf",
+  "kind":3,
+  "detail":"(o: mixed) => boolean",
+  "inlineDetail":"(o: mixed) => boolean",
+  "sortText":"00000000000000000001",
+  "insertTextFormat":1
+}
+{
+  "label":"propertyIsEnumerable",
+  "kind":3,
+  "detail":"(prop: mixed) => boolean",
+  "inlineDetail":"(prop: mixed) => boolean",
+  "sortText":"00000000000000000001",
+  "insertTextFormat":1
+}
+{
+  "label":"toLocaleString",
+  "kind":3,
+  "detail":"() => string",
+  "inlineDetail":"() => string",
+  "sortText":"00000000000000000001",
+  "insertTextFormat":1
+}
+{
+  "label":"toString",
+  "kind":3,
+  "detail":"() => string",
+  "inlineDetail":"() => string",
+  "sortText":"00000000000000000001",
+  "insertTextFormat":1
+}
+{
+  "label":"valueOf",
+  "kind":3,
+  "detail":"() => mixed",
+  "inlineDetail":"() => mixed",
+  "sortText":"00000000000000000001",
+  "insertTextFormat":1
+}
+{
+  "label":"varianceProp",
+  "kind":12,
+  "detail":"3",
+  "inlineDetail":"3",
+  "documentation":{"kind":"markdown","value":"property with variance"},
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1
+}
+
+jsdoc-members-6.js:6:5
+Flags: --lsp
+{
+  "label":"bar",
+  "kind":12,
+  "detail":"2",
+  "inlineDetail":"2",
+  "documentation":{"kind":"markdown","value":"bar is a getter property"},
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1
+}
+{
+  "label":"baz",
+  "kind":12,
+  "detail":"3",
+  "inlineDetail":"3",
+  "documentation":{"kind":"markdown","value":"baz is an identifier property with variance"},
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1
+}
+{
+  "label":"foo",
+  "kind":12,
+  "detail":"1",
+  "inlineDetail":"1",
+  "documentation":{"kind":"markdown","value":"foo is an identifier property"},
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1
+}
+{
+  "label":"hasOwnProperty",
+  "kind":3,
+  "detail":"(prop: mixed) => boolean",
+  "inlineDetail":"(prop: mixed) => boolean",
+  "sortText":"00000000000000000001",
+  "insertTextFormat":1
+}
+{
+  "label":"isPrototypeOf",
+  "kind":3,
+  "detail":"(o: mixed) => boolean",
+  "inlineDetail":"(o: mixed) => boolean",
+  "sortText":"00000000000000000001",
+  "insertTextFormat":1
+}
+{
+  "label":"propertyIsEnumerable",
+  "kind":3,
+  "detail":"(prop: mixed) => boolean",
+  "inlineDetail":"(prop: mixed) => boolean",
+  "sortText":"00000000000000000001",
+  "insertTextFormat":1
+}
+{
+  "label":"qux",
+  "kind":12,
+  "detail":"4",
+  "inlineDetail":"4",
+  "documentation":{"kind":"markdown","value":"qux is a literal property"},
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1
+}
+{
+  "label":"toLocaleString",
+  "kind":3,
+  "detail":"() => string",
+  "inlineDetail":"() => string",
+  "sortText":"00000000000000000001",
+  "insertTextFormat":1
+}
+{
+  "label":"toString",
+  "kind":3,
+  "detail":"() => string",
+  "inlineDetail":"() => string",
+  "sortText":"00000000000000000001",
+  "insertTextFormat":1
+}
+{
+  "label":"valueOf",
+  "kind":3,
+  "detail":"() => mixed",
+  "inlineDetail":"() => mixed",
+  "sortText":"00000000000000000001",
+  "insertTextFormat":1
+}
+
+jsdoc-members-7.js:6:5
+Flags: --lsp
+{
+  "label":"?.bar",
+  "kind":13,
+  "detail":"void | 2",
+  "inlineDetail":"void | 2",
+  "documentation":{"kind":"markdown","value":"bar is a getter property"},
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":5,"character":3},"end":{"line":5,"character":4}},
+    "newText":"?.bar"
+  }
+}
+{
+  "label":"?.baz",
+  "kind":13,
+  "detail":"void | 3",
+  "inlineDetail":"void | 3",
+  "documentation":{"kind":"markdown","value":"baz is an identifier property with variance"},
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":5,"character":3},"end":{"line":5,"character":4}},
+    "newText":"?.baz"
+  }
+}
+{
+  "label":"?.foo",
+  "kind":13,
+  "detail":"void | 1",
+  "inlineDetail":"void | 1",
+  "documentation":{"kind":"markdown","value":"foo is an identifier property"},
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":5,"character":3},"end":{"line":5,"character":4}},
+    "newText":"?.foo"
+  }
+}
+{
+  "label":"?.hasOwnProperty",
+  "kind":13,
+  "detail":"void | ((prop: mixed) => boolean)",
+  "inlineDetail":"void | ((prop: mixed) => boolean)",
+  "sortText":"00000000000000000001",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":5,"character":3},"end":{"line":5,"character":4}},
+    "newText":"?.hasOwnProperty"
+  }
+}
+{
+  "label":"?.isPrototypeOf",
+  "kind":13,
+  "detail":"void | ((o: mixed) => boolean)",
+  "inlineDetail":"void | ((o: mixed) => boolean)",
+  "sortText":"00000000000000000001",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":5,"character":3},"end":{"line":5,"character":4}},
+    "newText":"?.isPrototypeOf"
+  }
+}
+{
+  "label":"?.propertyIsEnumerable",
+  "kind":13,
+  "detail":"void | ((prop: mixed) => boolean)",
+  "inlineDetail":"void | ((prop: mixed) => boolean)",
+  "sortText":"00000000000000000001",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":5,"character":3},"end":{"line":5,"character":4}},
+    "newText":"?.propertyIsEnumerable"
+  }
+}
+{
+  "label":"?.qux",
+  "kind":13,
+  "detail":"void | 4",
+  "inlineDetail":"void | 4",
+  "documentation":{"kind":"markdown","value":"qux is a literal property"},
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":5,"character":3},"end":{"line":5,"character":4}},
+    "newText":"?.qux"
+  }
+}
+{
+  "label":"?.toLocaleString",
+  "kind":13,
+  "detail":"void | (() => string)",
+  "inlineDetail":"void | (() => string)",
+  "sortText":"00000000000000000001",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":5,"character":3},"end":{"line":5,"character":4}},
+    "newText":"?.toLocaleString"
+  }
+}
+{
+  "label":"?.toString",
+  "kind":13,
+  "detail":"void | (() => string)",
+  "inlineDetail":"void | (() => string)",
+  "sortText":"00000000000000000001",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":5,"character":3},"end":{"line":5,"character":4}},
+    "newText":"?.toString"
+  }
+}
+{
+  "label":"?.valueOf",
+  "kind":13,
+  "detail":"void | (() => mixed)",
+  "inlineDetail":"void | (() => mixed)",
+  "sortText":"00000000000000000001",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":5,"character":3},"end":{"line":5,"character":4}},
+    "newText":"?.valueOf"
+  }
+}
+

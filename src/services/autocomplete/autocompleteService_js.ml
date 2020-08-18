@@ -381,6 +381,7 @@ let rec members_of_ty : Ty.t -> Ty.t MemberInfo.t SMap.t * string list =
     (SMap.empty, [])
 
 let members_of_type
+    ~reader
     ~exclude_proto_members
     ?(exclude_keys = SSet.empty)
     ?(idx_hook = Stdlib.ignore)
@@ -408,13 +409,22 @@ let members_of_type
     && (* exclude members the caller told us to exclude *)
     not (SSet.mem s exclude_keys)
   in
+  let documentation_of_member name =
+    match GetDef_js.extract_member_def ~reader cx this name with
+    | Ok loc ->
+      Find_documentation.jsdoc_of_getdef_loc ~reader loc |> Base.Option.bind ~f:Jsdoc.description
+    | Error _ -> None
+  in
   match this_ty_res with
   | Error error -> return ([], [Ty_normalizer.error_to_string error])
   | Ok (Ty.Any _) -> fail "not enough type information to autocomplete"
   | Ok this_ty ->
     let (mems, errs) = members_of_ty this_ty in
     return
-      ( mems |> SMap.bindings |> List.filter is_valid_member,
+      ( mems
+        |> SMap.bindings
+        |> List.filter is_valid_member
+        |> List.map (fun (name, info) -> (name, documentation_of_member name, info)),
         match errs with
         | [] -> []
         | _ :: _ -> Printf.sprintf "members_of_type %s" (Debug_js.dump_t cx this) :: errs )
@@ -436,6 +446,7 @@ let autocomplete_member
   let exact_by_default = Context.exact_by_default cx in
   match
     members_of_type
+      ~reader
       ~exclude_proto_members
       ?exclude_keys
       ~idx_hook
@@ -449,7 +460,8 @@ let autocomplete_member
   | Ok (mems, errors_to_log) ->
     let results =
       mems
-      |> Base.List.map ~f:(fun (name, MemberInfo.{ ty; from_proto; from_nullable }) ->
+      |> Base.List.map
+           ~f:(fun (name, documentation, MemberInfo.{ ty; from_proto; from_nullable }) ->
              let rank =
                if from_proto then
                  1
@@ -462,18 +474,24 @@ let autocomplete_member
              match (from_nullable, in_optional_chain, !in_idx) with
              | (false, _, _)
              | (_, _, true) ->
-               autocomplete_create_result ~rank ~exact_by_default (name, ac_loc) ty
+               autocomplete_create_result ~rank ?documentation ~exact_by_default (name, ac_loc) ty
              | (true, false, false) ->
                let opt_chain_name = "?." ^ name in
                let opt_chain_ac_loc = Loc.btwn (Loc.char_before ac_loc) ac_loc in
                autocomplete_create_result
                  ~insert_text:opt_chain_name
                  ~rank
+                 ?documentation
                  ~exact_by_default
                  (opt_chain_name, opt_chain_ac_loc)
                  opt_chain_ty
              | (true, true, false) ->
-               autocomplete_create_result ~rank ~exact_by_default (name, ac_loc) opt_chain_ty)
+               autocomplete_create_result
+                 ~rank
+                 ?documentation
+                 ~exact_by_default
+                 (name, ac_loc)
+                 opt_chain_ty)
     in
     AcResult { results; errors_to_log }
 
@@ -665,6 +683,7 @@ let autocomplete_jsx ~reader cx file_sig typed_ast cls ac_name ~used_attr_names 
   (* Only include own properties, so we don't suggest things like `hasOwnProperty` as potential JSX properties *)
   let mems_result =
     members_of_type
+      ~reader
       ~exclude_proto_members:true
       ~exclude_keys
       cx
@@ -679,9 +698,10 @@ let autocomplete_jsx ~reader cx file_sig typed_ast cls ac_name ~used_attr_names 
   | Ok (mems, errors_to_log) ->
     let results =
       mems
-      |> Base.List.map ~f:(fun (name, MemberInfo.{ ty; _ }) ->
+      |> Base.List.map ~f:(fun (name, documentation, MemberInfo.{ ty; _ }) ->
              autocomplete_create_result
                ~insert_text:(name ^ "=")
+               ?documentation
                ~exact_by_default
                (name, ac_loc)
                ty)
