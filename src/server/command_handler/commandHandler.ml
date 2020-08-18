@@ -134,12 +134,12 @@ let autocomplete ~trigger_character ~reader ~options ~env ~profiling ~filename ~
         :: initial_json_props )
     in
     Lwt.return (Error err, Some json_data_to_log)
-  | Ok (cx, info, file_sig, _, tast, parse_errors) ->
+  | Ok (cx, info, file_sig, _, typed_ast, parse_errors) ->
     Profiling_js.with_timer_lwt profiling ~timer:"GetResults" ~f:(fun () ->
         try_with_json2 (fun () ->
             let open AutocompleteService_js in
             let (ac_type_string, results_res) =
-              autocomplete_get_results ~reader cx file_sig tast trigger_character cursor_loc
+              autocomplete_get_results ~reader ~cx ~file_sig ~typed_ast trigger_character cursor_loc
             in
             let json_props_to_log =
               ("ac_type", Hh_json.JSON_String ac_type_string)

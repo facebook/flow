@@ -857,7 +857,7 @@ let autocomplete_qualified_type ~reader ~cx ~ac_loc ~file_sig ~typed_ast ~tparam
         errors_to_log = [];
       }
 
-let autocomplete_get_results ~reader cx file_sig typed_ast trigger_character cursor =
+let autocomplete_get_results ~reader ~cx ~file_sig ~typed_ast trigger_character cursor =
   let file_sig = File_sig.abstractify_locs file_sig in
   match Autocomplete_js.process_location ~trigger_character ~cursor ~typed_ast with
   | Some (_, _, Acbinding) -> ("Empty", AcEmpty "Binding")
