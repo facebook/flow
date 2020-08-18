@@ -17,6 +17,11 @@ type warning = int * string
 
 type error = int * string
 
+type file_watcher =
+  | NoFileWatcher
+  | DFind
+  | Watchman
+
 let default_temp_dir = Filename.concat Sys_utils.temp_dir_name "flow"
 
 let map_add map (key, value) = SMap.add key value map
@@ -57,7 +62,7 @@ module Opts = struct
     facebook_fbs: string option;
     facebook_fbt: string option;
     facebook_module_interop: bool;
-    file_watcher: Options.file_watcher option;
+    file_watcher: file_watcher option;
     file_watcher_timeout: int option;
     watchman_sync_timeout: int option;
     haste_module_ref_prefix: string option;
@@ -431,11 +436,8 @@ module Opts = struct
       ("facebook.fbs", string (fun opts v -> Ok { opts with facebook_fbs = Some v }));
       ("facebook.fbt", string (fun opts v -> Ok { opts with facebook_fbt = Some v }));
       ( "file_watcher",
-        enum
-          [
-            ("none", Options.NoFileWatcher); ("dfind", Options.DFind); ("watchman", Options.Watchman);
-          ]
-          (fun opts v -> Ok { opts with file_watcher = Some v }) );
+        enum [("none", NoFileWatcher); ("dfind", DFind); ("watchman", Watchman)] (fun opts v ->
+            Ok { opts with file_watcher = Some v }) );
       ("file_watcher_timeout", uint (fun opts v -> Ok { opts with file_watcher_timeout = Some v }));
       ( "file_watcher.watchman.sync_timeout",
         uint (fun opts v -> Ok { opts with watchman_sync_timeout = Some v }) );

@@ -83,6 +83,11 @@ module UpdateLoop = LwtLoop.Make (struct
       Lwt.return_unit
 end)
 
+let file_watcher_for_status = function
+  | FlowServerMonitorOptions.NoFileWatcher -> FileWatcherStatus.NoFileWatcher
+  | FlowServerMonitorOptions.DFind -> FileWatcherStatus.DFind
+  | FlowServerMonitorOptions.Watchman _ -> FileWatcherStatus.Watchman
+
 let empty file_watcher restart_reason =
   let (stream, push_to_stream) = Lwt_stream.create () in
   let ret =
@@ -99,7 +104,7 @@ let empty file_watcher restart_reason =
   ret
 
 (* This is the status info for the current Flow server *)
-let current_status = ref (empty Options.NoFileWatcher None)
+let current_status = ref (empty FileWatcherStatus.NoFileWatcher None)
 
 (* Call f the next time the server is free. If the server is currently free, then call now *)
 let call_on_free ~f =
@@ -118,6 +123,7 @@ let file_watcher_ready () =
 
 (* When a new server starts up, we close the old server's status stream and start over *)
 let reset file_watcher restart_reason =
+  let file_watcher = file_watcher_for_status file_watcher in
   Lwt_mutex.with_lock mutex (fun () ->
       !current_status.push_to_stream None;
       current_status := empty file_watcher restart_reason;

@@ -163,7 +163,7 @@ class dfind (monitor_options : FlowServerMonitorOptions.t) : watcher =
   end
 
 module WatchmanFileWatcher : sig
-  class watchman : FlowServerMonitorOptions.t -> watcher
+  class watchman : Options.t -> FlowServerMonitorOptions.watchman_options -> watcher
 end = struct
   type env = {
     mutable instance: Watchman.watchman_instance;
@@ -321,7 +321,9 @@ end = struct
       Lwt.return_unit
   end)
 
-  class watchman (monitor_options : FlowServerMonitorOptions.t) : watcher =
+  class watchman
+    (server_options : Options.t) (watchman_options : FlowServerMonitorOptions.watchman_options) :
+    watcher =
     object (self)
       val mutable env = None
 
@@ -337,14 +339,7 @@ end = struct
         | Some env -> env
 
       method start_init =
-        let {
-          FlowServerMonitorOptions.server_options;
-          file_watcher_debug;
-          file_watcher_sync_timeout;
-          _;
-        } =
-          monitor_options
-        in
+        let { FlowServerMonitorOptions.debug; sync_timeout } = watchman_options in
         let file_options = Options.file_options server_options in
         let watchman_expression_terms = Watchman_expression_terms.make ~options:server_options in
         let settings =
@@ -353,9 +348,9 @@ end = struct
             Watchman.subscribe_mode = Watchman.Defer_changes;
             expression_terms = watchman_expression_terms;
             subscription_prefix = "flow_watcher";
-            sync_timeout = file_watcher_sync_timeout;
+            sync_timeout;
             roots = Files.watched_paths file_options;
-            debug_logging = file_watcher_debug;
+            debug_logging = debug;
           }
         in
         init_settings <- Some settings;
@@ -368,7 +363,6 @@ end = struct
           init_thread <- None;
 
           let should_track_mergebase =
-            let server_options = monitor_options.FlowServerMonitorOptions.server_options in
             Options.lazy_mode server_options = Options.LAZY_MODE_WATCHMAN
           in
           match watchman with
