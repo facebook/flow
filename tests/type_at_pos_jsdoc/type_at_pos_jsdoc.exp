@@ -226,323 +226,323 @@ Flags: --strip-root --pretty
   "end":5
 }
 
-requires.js:9:6
+objects-requires.js:9:6
 Flags: --strip-root --pretty
 {
   "documentation":"foo is an identifier property",
   "type":"number",
   "reasons":[],
   "loc":{
-    "source":"requires.js",
+    "source":"objects-requires.js",
     "type":"SourceFile",
     "start":{"line":9,"column":5,"offset":193},
     "end":{"line":9,"column":7,"offset":196}
   },
-  "path":"requires.js",
+  "path":"objects-requires.js",
   "line":9,
   "endline":9,
   "start":5,
   "end":7
 }
 
-requires.js:11:6
+objects-requires.js:11:6
 Flags: --strip-root --pretty
 {
   "documentation":"bar is a getter property",
   "type":"number",
   "reasons":[],
   "loc":{
-    "source":"requires.js",
+    "source":"objects-requires.js",
     "type":"SourceFile",
     "start":{"line":11,"column":5,"offset":212},
     "end":{"line":11,"column":7,"offset":215}
   },
-  "path":"requires.js",
+  "path":"objects-requires.js",
   "line":11,
   "endline":11,
   "start":5,
   "end":7
 }
 
-requires.js:13:6
+objects-requires.js:13:6
 Flags: --strip-root --pretty
 {
   "documentation":"baz is an identifier property with variance",
   "type":"number",
   "reasons":[],
   "loc":{
-    "source":"requires.js",
+    "source":"objects-requires.js",
     "type":"SourceFile",
     "start":{"line":13,"column":5,"offset":231},
     "end":{"line":13,"column":7,"offset":234}
   },
-  "path":"requires.js",
+  "path":"objects-requires.js",
   "line":13,
   "endline":13,
   "start":5,
   "end":7
 }
 
-requires.js:15:6
+objects-requires.js:15:6
 Flags: --strip-root --pretty
 {
   "documentation":"qux is a literal property",
   "type":"number",
   "reasons":[],
   "loc":{
-    "source":"requires.js",
+    "source":"objects-requires.js",
     "type":"SourceFile",
     "start":{"line":15,"column":5,"offset":250},
     "end":{"line":15,"column":7,"offset":253}
   },
-  "path":"requires.js",
+  "path":"objects-requires.js",
   "line":15,
   "endline":15,
   "start":5,
   "end":7
 }
 
-requires.js:21:6
+objects-requires.js:21:6
 Flags: --strip-root --pretty
 {
   "documentation":"foo is an identifier property",
   "type":"number",
   "reasons":[],
   "loc":{
-    "source":"requires.js",
+    "source":"objects-requires.js",
     "type":"SourceFile",
     "start":{"line":21,"column":5,"offset":330},
     "end":{"line":21,"column":7,"offset":333}
   },
-  "path":"requires.js",
+  "path":"objects-requires.js",
   "line":21,
   "endline":21,
   "start":5,
   "end":7
 }
 
-requires.js:23:6
+objects-requires.js:23:6
 Flags: --strip-root --pretty
 {
   "documentation":"bar is a getter property",
   "type":"number",
   "reasons":[],
   "loc":{
-    "source":"requires.js",
+    "source":"objects-requires.js",
     "type":"SourceFile",
     "start":{"line":23,"column":5,"offset":349},
     "end":{"line":23,"column":7,"offset":352}
   },
-  "path":"requires.js",
+  "path":"objects-requires.js",
   "line":23,
   "endline":23,
   "start":5,
   "end":7
 }
 
-requires.js:25:6
+objects-requires.js:25:6
 Flags: --strip-root --pretty
 {
   "documentation":"baz is an identifier property with variance",
   "type":"number",
   "reasons":[],
   "loc":{
-    "source":"requires.js",
+    "source":"objects-requires.js",
     "type":"SourceFile",
     "start":{"line":25,"column":5,"offset":368},
     "end":{"line":25,"column":7,"offset":371}
   },
-  "path":"requires.js",
+  "path":"objects-requires.js",
   "line":25,
   "endline":25,
   "start":5,
   "end":7
 }
 
-requires.js:27:6
+objects-requires.js:27:6
 Flags: --strip-root --pretty
 {
   "documentation":"qux is a literal property",
   "type":"number",
   "reasons":[],
   "loc":{
-    "source":"requires.js",
+    "source":"objects-requires.js",
     "type":"SourceFile",
     "start":{"line":27,"column":5,"offset":387},
     "end":{"line":27,"column":7,"offset":390}
   },
-  "path":"requires.js",
+  "path":"objects-requires.js",
   "line":27,
   "endline":27,
   "start":5,
   "end":7
 }
 
-requires.js:32:6
+objects-requires.js:32:6
 Flags: --strip-root --pretty
 {
   "documentation":"foo is an identifier property",
   "type":"1",
   "reasons":[],
   "loc":{
-    "source":"requires.js",
+    "source":"objects-requires.js",
     "type":"SourceFile",
     "start":{"line":32,"column":5,"offset":453},
     "end":{"line":32,"column":7,"offset":456}
   },
-  "path":"requires.js",
+  "path":"objects-requires.js",
   "line":32,
   "endline":32,
   "start":5,
   "end":7
 }
 
-requires.js:34:6
+objects-requires.js:34:6
 Flags: --strip-root --pretty
 {
   "documentation":"bar is a getter property",
   "type":"2",
   "reasons":[],
   "loc":{
-    "source":"requires.js",
+    "source":"objects-requires.js",
     "type":"SourceFile",
     "start":{"line":34,"column":5,"offset":469},
     "end":{"line":34,"column":7,"offset":472}
   },
-  "path":"requires.js",
+  "path":"objects-requires.js",
   "line":34,
   "endline":34,
   "start":5,
   "end":7
 }
 
-requires.js:36:6
+objects-requires.js:36:6
 Flags: --strip-root --pretty
 {
   "documentation":"baz is an identifier property with variance",
   "type":"3",
   "reasons":[],
   "loc":{
-    "source":"requires.js",
+    "source":"objects-requires.js",
     "type":"SourceFile",
     "start":{"line":36,"column":5,"offset":485},
     "end":{"line":36,"column":7,"offset":488}
   },
-  "path":"requires.js",
+  "path":"objects-requires.js",
   "line":36,
   "endline":36,
   "start":5,
   "end":7
 }
 
-requires.js:38:6
+objects-requires.js:38:6
 Flags: --strip-root --pretty
 {
   "documentation":"qux is a literal property",
   "type":"4",
   "reasons":[],
   "loc":{
-    "source":"requires.js",
+    "source":"objects-requires.js",
     "type":"SourceFile",
     "start":{"line":38,"column":5,"offset":501},
     "end":{"line":38,"column":7,"offset":504}
   },
-  "path":"requires.js",
+  "path":"objects-requires.js",
   "line":38,
   "endline":38,
   "start":5,
   "end":7
 }
 
-requires.js:42:7
+objects-requires.js:42:7
 Flags: --strip-root --pretty
 {
   "documentation":"this is a static property",
   "type":"1",
   "reasons":[],
   "loc":{
-    "source":"requires.js",
+    "source":"objects-requires.js",
     "type":"SourceFile",
     "start":{"line":42,"column":5,"offset":521},
     "end":{"line":42,"column":14,"offset":531}
   },
-  "path":"requires.js",
+  "path":"objects-requires.js",
   "line":42,
   "endline":42,
   "start":5,
   "end":14
 }
 
-requires.js:44:7
+objects-requires.js:44:7
 Flags: --strip-root --pretty
 {
   "documentation":"this is a static method",
   "type":"() => void",
   "reasons":[],
   "loc":{
-    "source":"requires.js",
+    "source":"objects-requires.js",
     "type":"SourceFile",
     "start":{"line":44,"column":5,"offset":544},
     "end":{"line":44,"column":16,"offset":556}
   },
-  "path":"requires.js",
+  "path":"objects-requires.js",
   "line":44,
   "endline":44,
   "start":5,
   "end":16
 }
 
-requires.js:47:12
+objects-requires.js:47:12
 Flags: --strip-root --pretty
 {
   "documentation":"this is an instance property",
   "type":"2",
   "reasons":[],
   "loc":{
-    "source":"requires.js",
+    "source":"objects-requires.js",
     "type":"SourceFile",
     "start":{"line":47,"column":9,"offset":601},
     "end":{"line":47,"column":20,"offset":613}
   },
-  "path":"requires.js",
+  "path":"objects-requires.js",
   "line":47,
   "endline":47,
   "start":9,
   "end":20
 }
 
-requires.js:49:12
+objects-requires.js:49:12
 Flags: --strip-root --pretty
 {
   "documentation":"this is an instance method",
   "type":"() => void",
   "reasons":[],
   "loc":{
-    "source":"requires.js",
+    "source":"objects-requires.js",
     "type":"SourceFile",
     "start":{"line":49,"column":9,"offset":636},
     "end":{"line":49,"column":22,"offset":650}
   },
-  "path":"requires.js",
+  "path":"objects-requires.js",
   "line":49,
   "endline":49,
   "start":9,
   "end":22
 }
 
-requires.js:51:12
+objects-requires.js:51:12
 Flags: --strip-root --pretty
 {
   "documentation":"property with variance",
   "type":"3",
   "reasons":[],
   "loc":{
-    "source":"requires.js",
+    "source":"objects-requires.js",
     "type":"SourceFile",
     "start":{"line":51,"column":9,"offset":675},
     "end":{"line":51,"column":20,"offset":687}
   },
-  "path":"requires.js",
+  "path":"objects-requires.js",
   "line":51,
   "endline":51,
   "start":9,
