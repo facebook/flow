@@ -66,8 +66,8 @@ class documentation_searcher (def_loc : Loc.t) =
 
     method! function_ loc func =
       let open Flow_ast.Function in
-      let { comments; id; _ } = func in
-      if this#is_target loc then find comments;
+      let { comments; id; sig_loc; _ } = func in
+      if this#is_target loc || this#is_target sig_loc then find comments;
       Base.Option.iter id ~f:(fun (id_loc, _) -> if this#is_target id_loc then find comments);
       super#function_ loc func
 

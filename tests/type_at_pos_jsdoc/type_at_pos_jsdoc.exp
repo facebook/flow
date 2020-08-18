@@ -663,3 +663,117 @@ Flags: --strip-root --pretty
   "end":5
 }
 
+requires.js:5:4
+Flags: --strip-root --pretty
+{
+  "documentation":"foo is a function",
+  "type":"(x: number, y: number) => number",
+  "reasons":[],
+  "loc":{
+    "source":"requires.js",
+    "type":"SourceFile",
+    "start":{"line":5,"column":3,"offset":67},
+    "end":{"line":5,"column":5,"offset":70}
+  },
+  "path":"requires.js",
+  "line":5,
+  "endline":5,
+  "start":3,
+  "end":5
+}
+
+requires.js:7:4
+Flags: --strip-root --pretty
+{
+  "documentation":"Bar is a class",
+  "type":"class Bar",
+  "reasons":[],
+  "loc":{
+    "source":"requires.js",
+    "type":"SourceFile",
+    "start":{"line":7,"column":3,"offset":79},
+    "end":{"line":7,"column":5,"offset":82}
+  },
+  "path":"requires.js",
+  "line":7,
+  "endline":7,
+  "start":3,
+  "end":5
+}
+
+requires.js:9:4
+Flags: --strip-root --pretty
+{
+  "documentation":"baz is a variable",
+  "type":"number",
+  "reasons":[],
+  "loc":{
+    "source":"requires.js",
+    "type":"SourceFile",
+    "start":{"line":9,"column":3,"offset":91},
+    "end":{"line":9,"column":5,"offset":94}
+  },
+  "path":"requires.js",
+  "line":9,
+  "endline":9,
+  "start":3,
+  "end":5
+}
+
+imports.js:5:4
+Flags: --strip-root --pretty
+{
+  "documentation":"foo is a function",
+  "type":"(x: number, y: number) => number",
+  "reasons":[],
+  "loc":{
+    "source":"imports.js",
+    "type":"SourceFile",
+    "start":{"line":5,"column":3,"offset":57},
+    "end":{"line":5,"column":5,"offset":60}
+  },
+  "path":"imports.js",
+  "line":5,
+  "endline":5,
+  "start":3,
+  "end":5
+}
+
+imports.js:7:4
+Flags: --strip-root --pretty
+{
+  "documentation":"Bar is a class",
+  "type":"class Bar",
+  "reasons":[],
+  "loc":{
+    "source":"imports.js",
+    "type":"SourceFile",
+    "start":{"line":7,"column":3,"offset":69},
+    "end":{"line":7,"column":5,"offset":72}
+  },
+  "path":"imports.js",
+  "line":7,
+  "endline":7,
+  "start":3,
+  "end":5
+}
+
+imports.js:9:4
+Flags: --strip-root --pretty
+{
+  "documentation":"baz is a variable",
+  "type":"number",
+  "reasons":[],
+  "loc":{
+    "source":"imports.js",
+    "type":"SourceFile",
+    "start":{"line":9,"column":3,"offset":81},
+    "end":{"line":9,"column":5,"offset":84}
+  },
+  "path":"imports.js",
+  "line":9,
+  "endline":9,
+  "start":3,
+  "end":5
+}
+
