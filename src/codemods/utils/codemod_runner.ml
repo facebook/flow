@@ -370,6 +370,7 @@ module UntypedRunner :
             let%lwt {
                   Parsing_service_js.parse_ok;
                   parse_skips = _;
+                  parse_not_found_skips = _;
                   parse_hash_mismatch_skips = _;
                   parse_fails = _;
                   parse_unchanged = _;

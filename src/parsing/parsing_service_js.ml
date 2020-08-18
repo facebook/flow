@@ -43,8 +43,10 @@ and docblock_error_kind =
 type results = {
   (* successfully parsed files *)
   parse_ok: File_sig.With_Loc.tolerable_error list FilenameMap.t;
-  (* list of skipped files *)
+  (* list of intentionally skipped files *)
   parse_skips: (File_key.t * Docblock.t) list;
+  (* set of files skipped because they were not found on disk *)
+  parse_not_found_skips: FilenameSet.t;
   (* list of files skipped due to an out of date hash *)
   parse_hash_mismatch_skips: FilenameSet.t;
   (* list of failed files *)
@@ -57,6 +59,7 @@ let empty_result =
   {
     parse_ok = FilenameMap.empty;
     parse_skips = [];
+    parse_not_found_skips = FilenameSet.empty;
     parse_hash_mismatch_skips = FilenameSet.empty;
     parse_fails = [];
     parse_unchanged = FilenameSet.empty;
@@ -626,15 +629,15 @@ let reducer
           { parse_results with parse_fails }
       )
   | None ->
-    let info = Docblock.default_info in
-    let parse_skips = (file, info) :: parse_results.parse_skips in
-    { parse_results with parse_skips }
+    let parse_not_found_skips = FilenameSet.add file parse_results.parse_not_found_skips in
+    { parse_results with parse_not_found_skips }
 
 (* merge is just memberwise union/concat of results *)
 let merge r1 r2 =
   {
     parse_ok = FilenameMap.union r1.parse_ok r2.parse_ok;
     parse_skips = r1.parse_skips @ r2.parse_skips;
+    parse_not_found_skips = FilenameSet.union r1.parse_not_found_skips r2.parse_not_found_skips;
     parse_hash_mismatch_skips =
       FilenameSet.union r1.parse_hash_mismatch_skips r2.parse_hash_mismatch_skips;
     parse_fails = r1.parse_fails @ r2.parse_fails;
@@ -706,14 +709,16 @@ let parse
     let t2 = Unix.gettimeofday () in
     let ok_count = FilenameMap.cardinal results.parse_ok in
     let skip_count = List.length results.parse_skips in
+    let not_found_count = FilenameSet.cardinal results.parse_not_found_skips in
     let mismatch_count = FilenameSet.cardinal results.parse_hash_mismatch_skips in
     let fail_count = List.length results.parse_fails in
     let unchanged_count = FilenameSet.cardinal results.parse_unchanged in
     Hh_logger.info
-      "parsed %d files (%d ok, %d skipped, %d bad hashes, %d failed, %d unchanged) in %f"
+      "parsed %d files (%d ok, %d skipped, %d not found, %d bad hashes, %d failed, %d unchanged) in %f"
       (ok_count + skip_count + mismatch_count + fail_count)
       ok_count
       skip_count
+      not_found_count
       mismatch_count
       fail_count
       unchanged_count
@@ -760,6 +765,7 @@ let reparse
   let modified =
     List.fold_left (fun acc (skip, _) -> FilenameSet.add skip acc) modified results.parse_skips
   in
+  let modified = FilenameSet.union modified results.parse_not_found_skips in
   let modified = FilenameSet.union modified results.parse_hash_mismatch_skips in
   SharedMem_js.collect `gentle;
   let unchanged = FilenameSet.diff files modified in
@@ -878,7 +884,14 @@ let ensure_parsed ~reader options workers files =
   in
   let next = MultiWorkerLwt.next ~progress_fn workers (FilenameSet.elements files_missing_asts) in
   let parse_options = make_parse_options_internal ~types_mode ~use_strict ~docblock:None options in
-  let%lwt results =
+  let%lwt {
+        parse_ok = _;
+        parse_skips = _;
+        parse_not_found_skips;
+        parse_hash_mismatch_skips;
+        parse_fails = _;
+        parse_unchanged = _;
+      } =
     parse
       ~worker_mutator
       ~reader
@@ -891,4 +904,4 @@ let ensure_parsed ~reader options workers files =
       workers
       next
   in
-  Lwt.return results.parse_hash_mismatch_skips
+  Lwt.return (FilenameSet.union parse_not_found_skips parse_hash_mismatch_skips)

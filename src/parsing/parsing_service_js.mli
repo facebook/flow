@@ -48,6 +48,8 @@ type results = {
   parse_ok: File_sig.With_Loc.tolerable_error list FilenameMap.t;
   (* list of skipped files *)
   parse_skips: (File_key.t * Docblock.t) list;
+  (* set of files skipped because they were not found on disk *)
+  parse_not_found_skips: FilenameSet.t;
   (* list of files skipped due to an out of date hash *)
   parse_hash_mismatch_skips: FilenameSet.t;
   (* list of failed files *)

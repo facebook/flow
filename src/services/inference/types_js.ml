@@ -159,6 +159,7 @@ let collate_parse_results ~options parse_results =
   let {
     Parsing_service_js.parse_ok;
     parse_skips;
+    parse_not_found_skips;
     parse_hash_mismatch_skips;
     parse_fails;
     parse_unchanged;
@@ -203,6 +204,9 @@ let collate_parse_results ~options parse_results =
       (fun unparsed (file, info, _) -> (file, info) :: unparsed)
       parse_skips
       parse_fails
+    |> FilenameSet.fold
+         (fun file unparsed -> (file, Docblock.default_info) :: unparsed)
+         parse_not_found_skips
   in
   let parse_ok =
     FilenameMap.fold (fun k _ acc -> FilenameSet.add k acc) parse_ok FilenameSet.empty
@@ -1120,16 +1124,20 @@ end
 
 let ensure_parsed ~options ~profiling ~workers ~reader files =
   with_timer_lwt ~options "EnsureParsed" profiling (fun () ->
-      let%lwt parse_hash_mismatch_skips =
+      (* The set of files that we expected to parse, but were skipped, either because they had
+       * changed since the last recheck or no longer exist on disk. This is in contrast to files
+       * that were skipped intentionally because they are not @flow, or because they are resource
+       * files. *)
+      let%lwt parse_unexpected_skips =
         Parsing_service_js.ensure_parsed ~reader options workers files
       in
-      if FilenameSet.is_empty parse_hash_mismatch_skips then
+      if FilenameSet.is_empty parse_unexpected_skips then
         Lwt.return_unit
       else
         let files_to_recheck =
           FilenameSet.fold
             (fun f acc -> SSet.add (File_key.to_string f) acc)
-            parse_hash_mismatch_skips
+            parse_unexpected_skips
             SSet.empty
         in
         let file_count = SSet.cardinal files_to_recheck in
