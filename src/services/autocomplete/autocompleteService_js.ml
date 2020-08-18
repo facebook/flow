@@ -103,7 +103,7 @@ let lsp_completion_of_decl =
   | ModuleDecl _ -> Lsp.Completion.Module
 
 let autocomplete_create_result
-    ?insert_text ?(rank = 0) ?(preselect = false) ~exact_by_default (name, loc) ty =
+    ?insert_text ?(rank = 0) ?(preselect = false) ?documentation ~exact_by_default (name, loc) ty =
   let res_ty = Ty_printer.string_of_t_single_line ~with_comments:false ~exact_by_default ty in
   let res_kind = lsp_completion_of_type ty in
   {
@@ -114,10 +114,11 @@ let autocomplete_create_result
     res_ty;
     rank;
     res_preselect = preselect;
+    res_documentation = documentation;
   }
 
 let autocomplete_create_result_decl
-    ?insert_text:_ ~rank ?(preselect = false) ~exact_by_default (name, loc) d =
+    ?insert_text:_ ~rank ?(preselect = false) ?documentation ~exact_by_default (name, loc) d =
   let open Ty in
   match d with
   | ModuleDecl _ ->
@@ -129,6 +130,7 @@ let autocomplete_create_result_decl
       res_ty = "module " ^ name;
       rank;
       res_preselect = preselect;
+      res_documentation = documentation;
     }
   | Ty.VariableDecl (_, ty) ->
     {
@@ -139,6 +141,7 @@ let autocomplete_create_result_decl
       res_ty = Ty_printer.string_of_t_single_line ~with_comments:false ~exact_by_default ty;
       rank;
       res_preselect = preselect;
+      res_documentation = documentation;
     }
   | d ->
     {
@@ -149,15 +152,30 @@ let autocomplete_create_result_decl
       res_ty = Ty_printer.string_of_decl_single_line ~with_comments:false ~exact_by_default d;
       rank;
       res_preselect = preselect;
+      res_documentation = documentation;
     }
 
 let autocomplete_create_result_elt
-    ?insert_text ?(rank = 0) ?preselect ~exact_by_default (name, loc) elt =
+    ?insert_text ?(rank = 0) ?preselect ?documentation ~exact_by_default (name, loc) elt =
   match elt with
   | Ty.Type t ->
-    autocomplete_create_result ?insert_text ~rank ?preselect ~exact_by_default (name, loc) t
+    autocomplete_create_result
+      ?insert_text
+      ~rank
+      ?preselect
+      ?documentation
+      ~exact_by_default
+      (name, loc)
+      t
   | Ty.Decl d ->
-    autocomplete_create_result_decl ?insert_text ~rank ?preselect ~exact_by_default (name, loc) d
+    autocomplete_create_result_decl
+      ?insert_text
+      ~rank
+      ?preselect
+      ?documentation
+      ~exact_by_default
+      (name, loc)
+      d
 
 let ty_normalizer_options =
   Ty_normalizer_env.
@@ -582,6 +600,7 @@ let autocomplete_id ~reader ~cx ~ac_loc ~file_sig ~typed_ast ~include_super ~inc
         res_insert_text = Some "this";
         rank = 0;
         res_preselect = false;
+        res_documentation = None;
       }
       :: results
     else
@@ -598,6 +617,7 @@ let autocomplete_id ~reader ~cx ~ac_loc ~file_sig ~typed_ast ~include_super ~inc
         res_insert_text = Some "super";
         rank = 0;
         res_preselect = false;
+        res_documentation = None;
       }
       :: results
     else
@@ -727,6 +747,7 @@ let type_exports_of_module_ty ~ac_loc ~exact_by_default =
               res_ty = Ty_printer.string_of_decl_single_line ~exact_by_default d;
               rank = 0;
               res_preselect = false;
+              res_documentation = None;
             }
         | InterfaceDecl (name, _) as d ->
           Some
@@ -738,6 +759,7 @@ let type_exports_of_module_ty ~ac_loc ~exact_by_default =
               res_ty = Ty_printer.string_of_decl_single_line ~exact_by_default d;
               rank = 0;
               res_preselect = false;
+              res_documentation = None;
             }
         | ClassDecl (name, _) as d ->
           Some
@@ -749,6 +771,7 @@ let type_exports_of_module_ty ~ac_loc ~exact_by_default =
               res_ty = Ty_printer.string_of_decl_single_line ~exact_by_default d;
               rank = 0;
               res_preselect = false;
+              res_documentation = None;
             }
         | _ -> None)
       exports
@@ -770,6 +793,7 @@ let autocomplete_unqualified_type ~reader ~cx ~tparams ~file_sig ~ac_loc ~typed_
           res_insert_text = None;
           rank = 0;
           res_preselect = false;
+          res_documentation = None;
         })
       tparams
   in

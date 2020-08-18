@@ -235,6 +235,7 @@ module Response = struct
     res_insert_text: string option;
     rank: int;
     res_preselect: bool;
+    res_documentation: string option;
   }
 
   type autocomplete_response = (complete_autocomplete_result list, string) result

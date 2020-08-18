@@ -103,13 +103,16 @@ let flow_completion_to_lsp
         (itemType, inlineDetail, detail, Some PlainText, Lazy.force plaintext_text_edits)
       in
       let sortText = Some (Printf.sprintf "%020u" item.rank) in
+      let documentation =
+        Base.Option.map item.res_documentation ~f:(fun doc -> [Lsp.MarkedString doc])
+      in
       {
         label = item.res_name;
         kind = item.res_kind;
         detail;
         inlineDetail;
         itemType;
-        documentation = None;
+        documentation;
         (* This will be filled in by completionItem/resolve. *)
         preselect = is_preselect_supported && item.res_preselect;
         sortText;
