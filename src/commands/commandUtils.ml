@@ -1657,8 +1657,9 @@ let choose_file_watcher ~options ~flowconfig ~file_watcher ~file_watcher_debug ~
       | Some x -> Some x
       | None -> FlowConfig.watchman_sync_timeout flowconfig
     in
+    let defer_states = FlowConfig.watchman_defer_states flowconfig in
     FlowServerMonitorOptions.Watchman
-      { FlowServerMonitorOptions.sync_timeout; debug = file_watcher_debug }
+      { FlowServerMonitorOptions.sync_timeout; debug = file_watcher_debug; defer_states }
 
 let choose_file_watcher_timeout ~flowconfig cli_timeout =
   match Base.Option.first_some cli_timeout (FlowConfig.file_watcher_timeout flowconfig) with

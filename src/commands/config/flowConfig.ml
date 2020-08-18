@@ -65,6 +65,7 @@ module Opts = struct
     file_watcher: file_watcher option;
     file_watcher_timeout: int option;
     watchman_sync_timeout: int option;
+    watchman_defer_states: string list;
     haste_module_ref_prefix: string option;
     haste_name_reducers: (Str.regexp * string) list;
     haste_paths_excludes: string list;
@@ -173,6 +174,7 @@ module Opts = struct
       file_watcher = None;
       file_watcher_timeout = None;
       watchman_sync_timeout = None;
+      watchman_defer_states = [];
       haste_module_ref_prefix = None;
       haste_name_reducers =
         [(Str.regexp "^\\(.*/\\)?\\([a-zA-Z0-9$_.-]+\\)\\.js\\(\\.flow\\)?$", "\\2")];
@@ -441,6 +443,9 @@ module Opts = struct
       ("file_watcher_timeout", uint (fun opts v -> Ok { opts with file_watcher_timeout = Some v }));
       ( "file_watcher.watchman.sync_timeout",
         uint (fun opts v -> Ok { opts with watchman_sync_timeout = Some v }) );
+      ( "file_watcher.watchman.defer_state",
+        string ~multiple:true (fun opts v ->
+            Ok { opts with watchman_defer_states = v :: opts.watchman_defer_states }) );
       ("include_warnings", boolean (fun opts v -> Ok { opts with include_warnings = v }));
       ( "lazy_mode",
         enum
@@ -1169,6 +1174,8 @@ let file_watcher c = c.options.Opts.file_watcher
 let file_watcher_timeout c = c.options.Opts.file_watcher_timeout
 
 let watchman_sync_timeout c = c.options.Opts.watchman_sync_timeout
+
+let watchman_defer_states c = c.options.Opts.watchman_defer_states
 
 let facebook_fbs c = c.options.Opts.facebook_fbs
 
