@@ -215,11 +215,13 @@ module Response = struct
 
   (* Details about functions to be added in json output *)
   type func_param_result = {
+    param_documentation: string option;
     param_name: string;
     param_ty: string;
   }
 
   type func_details_result = {
+    func_documentation: string option;
     param_tys: func_param_result list;
     return_ty: string;
   }

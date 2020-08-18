@@ -6,6 +6,7 @@
  *)
 
 val func_details :
+  jsdoc:Jsdoc.t option ->
   exact_by_default:bool ->
   (string option * Ty.t * Ty.fun_param) Base.List.t ->
   (string option * Ty.t) option ->
@@ -13,6 +14,7 @@ val func_details :
   ServerProt.Response.func_details_result
 
 val find_signatures :
+  options:Options.t ->
   reader:State_reader.t ->
   cx:Context.t ->
   file_sig:File_sig.With_ALoc.t ->

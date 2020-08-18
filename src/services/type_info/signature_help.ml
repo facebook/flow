@@ -18,13 +18,48 @@ let parameter_name is_opt name =
 
 let string_of_ty = Ty_printer.string_of_t_single_line ~with_comments:false
 
-let func_details ~exact_by_default params rest_param return =
+let documentation_of_param_infos name : Jsdoc.Param.t -> string =
+  let open Jsdoc.Param in
+  let open Utils_js in
+  let rec string_of_path = function
+    | Name -> ""
+    | Element p -> spf "%s[]" (string_of_path p)
+    | Member (p, mem) -> spf "%s.%s" (string_of_path p) mem
+  in
+  let string_of_optional = function
+    | NotOptional -> ""
+    | Optional -> " (optional) "
+    | OptionalWithDefault default -> spf " (optional, defaults to %s) " default
+  in
+  let string_of_description = function
+    | None -> ""
+    | Some description -> spf " - %s" description
+  in
+  let documentation_of_param_info (path, { optional; description }) =
+    spf
+      "%s%s%s%s"
+      name
+      (string_of_path path)
+      (string_of_optional optional)
+      (string_of_description description)
+  in
+  Base.List.map ~f:documentation_of_param_info %> String.concat "\n"
+
+let func_details ~jsdoc ~exact_by_default params rest_param return =
+  let documentation_of_param name_opt =
+    let open Base.Option.Let_syntax in
+    let%bind name = name_opt in
+    let%bind jsdoc = jsdoc in
+    let%map param_infos = Base.List.Assoc.find ~equal:String.equal (Jsdoc.params jsdoc) name in
+    documentation_of_param_infos name param_infos
+  in
   let param_tys =
     Base.List.map
       ~f:(fun (n, t, fp) ->
         let param_name = parameter_name fp.Ty.prm_optional n in
         let param_ty = string_of_ty ~exact_by_default t in
-        { ServerProt.Response.param_name; param_ty })
+        let param_documentation = documentation_of_param n in
+        { ServerProt.Response.param_name; param_ty; param_documentation })
       params
   in
   let param_tys =
@@ -33,10 +68,12 @@ let func_details ~exact_by_default params rest_param return =
     | Some (name, t) ->
       let param_name = "..." ^ parameter_name false name in
       let param_ty = string_of_ty ~exact_by_default t in
-      param_tys @ [{ ServerProt.Response.param_name; param_ty }]
+      let param_documentation = documentation_of_param name in
+      param_tys @ [{ ServerProt.Response.param_name; param_ty; param_documentation }]
   in
   let return_ty = string_of_ty ~exact_by_default return in
-  { ServerProt.Response.param_tys; return_ty }
+  let func_documentation = Base.Option.bind jsdoc ~f:Jsdoc.description in
+  { ServerProt.Response.param_tys; return_ty; func_documentation }
 
 (* given a Loc.t within a function call, returns the type of the function being called *)
 module Callee_finder = struct
@@ -44,6 +81,7 @@ module Callee_finder = struct
     tparams: (ALoc.t * string) list;
     type_: Type.t;
     active_parameter: int;
+    loc: Loc.t;
   }
 
   exception Found of t option
@@ -93,7 +131,7 @@ module Callee_finder = struct
         this#short_circuit loc expr super#expression
 
       method! call annot expr =
-        let { Flow_ast.Expression.Call.callee = ((_, t), _); arguments; _ } = expr in
+        let { Flow_ast.Expression.Call.callee = ((callee_loc, t), _); arguments; _ } = expr in
         let (args_loc, { Flow_ast.Expression.ArgList.arguments; comments = _ }) = arguments in
         let inside_loc =
           (* exclude the parens *)
@@ -108,8 +146,9 @@ module Callee_finder = struct
           let _ = super#call annot expr in
 
           let active_parameter = find_argument ~reader cursor arguments 0 in
+          let loc = loc_of_aloc ~reader callee_loc in
           this#annot_with_tparams (fun tparams ->
-              raise (Found (Some { tparams; type_ = t; active_parameter })))
+              raise (Found (Some { tparams; type_ = t; active_parameter; loc })))
         else
           super#call annot expr
 
@@ -134,8 +173,8 @@ module Callee_finder = struct
       let _ = finder#program typed_ast in
       None
     with
-    | Found (Some { tparams; type_; active_parameter }) ->
-      Some ({ Type.TypeScheme.tparams; type_ }, active_parameter)
+    | Found (Some { tparams; type_; active_parameter; loc }) ->
+      Some ({ Type.TypeScheme.tparams; type_ }, active_parameter, loc)
     | Found None -> None
 end
 
@@ -155,27 +194,37 @@ let ty_normalizer_options =
       max_depth = Some 50;
     }
 
-let rec collect_functions ~exact_by_default acc = function
+let rec collect_functions ~jsdoc ~exact_by_default acc = function
   | Ty.Fun { Ty.fun_params; fun_rest_param; fun_return; _ } ->
-    let details = func_details ~exact_by_default fun_params fun_rest_param fun_return in
+    let details = func_details ~jsdoc ~exact_by_default fun_params fun_rest_param fun_return in
     details :: acc
   | Ty.Inter (t1, t2, ts) ->
-    Base.List.fold_left ~init:acc ~f:(collect_functions ~exact_by_default) (t1 :: t2 :: ts)
+    Base.List.fold_left ~init:acc ~f:(collect_functions ~jsdoc ~exact_by_default) (t1 :: t2 :: ts)
   | _ -> acc
 
-let find_signatures ~reader ~cx ~file_sig ~typed_ast loc =
+let find_signatures ~options ~reader ~cx ~file_sig ~typed_ast loc =
   match Callee_finder.find_opt ~reader ~typed_ast loc with
-  | Some (scheme, active_parameter) ->
+  | Some (scheme, active_parameter, callee_loc) ->
     let ty =
       Ty_normalizer.from_scheme
         ~options:ty_normalizer_options
         ~genv:(Ty_normalizer_env.mk_genv ~full_cx:cx ~file:(Context.file cx) ~typed_ast ~file_sig)
         scheme
     in
+    let jsdoc =
+      let open GetDef_js.Get_def_result in
+      match GetDef_js.get_def ~options ~reader ~cx ~file_sig ~typed_ast callee_loc with
+      | Def getdef_loc
+      | Partial (getdef_loc, _) ->
+        Find_documentation.jsdoc_of_getdef_loc ~reader getdef_loc
+      | Bad_loc
+      | Def_error _ ->
+        None
+    in
     (match ty with
     | Ok (Ty.Type ty) ->
       let exact_by_default = Context.exact_by_default cx in
-      (match collect_functions ~exact_by_default [] ty with
+      (match collect_functions ~jsdoc ~exact_by_default [] ty with
       | [] -> Ok None
       | funs -> Ok (Some (funs, active_parameter)))
     | Ok _ -> Ok None

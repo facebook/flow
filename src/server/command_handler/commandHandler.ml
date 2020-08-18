@@ -1648,7 +1648,7 @@ let handle_persistent_signaturehelp_lsp
       let func_details =
         let file_sig = File_sig.abstractify_locs file_sig in
         let cursor_loc = Loc.make path line col in
-        Signature_help.find_signatures ~reader ~cx ~file_sig ~typed_ast cursor_loc
+        Signature_help.find_signatures ~options ~reader ~cx ~file_sig ~typed_ast cursor_loc
       in
       (match func_details with
       | Ok details ->

@@ -48,19 +48,25 @@ let flow_signature_help_to_lsp
     let signatures =
       Base.List.fold_left
         signatures
-        ~f:(fun acc { ServerProt.Response.param_tys; return_ty } ->
-          let params =
-            param_tys
-            |> Base.List.map ~f:(fun { ServerProt.Response.param_name; param_ty } ->
-                   Printf.sprintf "%s: %s" param_name param_ty)
-          in
-          let siginfo_label = Printf.sprintf "(%s): %s" (String.concat ", " params) return_ty in
+        ~f:(fun acc { ServerProt.Response.param_tys; return_ty; func_documentation } ->
           let parameters =
-            Base.List.map
-              ~f:(fun parinfo_label -> { parinfo_label; parinfo_documentation = None })
-              params
+            param_tys
+            |> Base.List.map
+                 ~f:(fun { ServerProt.Response.param_name; param_ty; param_documentation } ->
+                   let parinfo_label = Printf.sprintf "%s: %s" param_name param_ty in
+                   { parinfo_label; parinfo_documentation = param_documentation })
           in
-          let signature = { siginfo_label; siginfo_documentation = None; parameters } in
+          let siginfo_label =
+            Printf.sprintf
+              "(%s): %s"
+              ( parameters
+              |> Base.List.map ~f:(fun { parinfo_label; _ } -> parinfo_label)
+              |> String.concat ", " )
+              return_ty
+          in
+          let signature =
+            { siginfo_label; siginfo_documentation = func_documentation; parameters }
+          in
           signature :: acc)
         ~init:[]
     in
