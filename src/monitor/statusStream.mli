@@ -5,7 +5,8 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
-val reset : Options.file_watcher -> ServerStatus.restart_reason option -> unit Lwt.t
+val reset :
+  FlowServerMonitorOptions.file_watcher -> ServerStatus.restart_reason option -> unit Lwt.t
 
 val update : status:ServerStatus.status -> unit
 

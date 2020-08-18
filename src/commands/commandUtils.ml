@@ -1008,7 +1008,9 @@ let file_watcher_flag prev =
        "--file-watcher"
        (enum
           [
-            ("none", Options.NoFileWatcher); ("dfind", Options.DFind); ("watchman", Options.Watchman);
+            ("none", FlowConfig.NoFileWatcher);
+            ("dfind", FlowConfig.DFind);
+            ("watchman", FlowConfig.Watchman);
           ])
        ~doc:
          ( "Which file watcher Flow should use (none, dfind, watchman). "
@@ -1630,34 +1632,39 @@ let get_check_or_status_exit_code errors warnings max_warnings =
       else
         Type_error))
 
-let choose_file_watcher ~options ~file_watcher ~flowconfig =
-  match (Options.lazy_mode options, file_watcher) with
-  | (Options.LAZY_MODE_WATCHMAN, (None | Some Options.Watchman)) ->
-    (* --lazy-mode watchman implies --file-watcher watchman *)
-    Options.Watchman
-  | (Options.LAZY_MODE_WATCHMAN, Some _) ->
-    (* Error on something like --lazy-mode watchman --file-watcher dfind *)
-    let msg =
-      "Using Watchman lazy mode implicitly uses the Watchman file watcher, "
-      ^ "but you tried to use a different file watcher via the `--file-watcher` flag."
+let choose_file_watcher ~options ~flowconfig ~file_watcher ~file_watcher_debug ~sync_timeout =
+  let file_watcher =
+    match (Options.lazy_mode options, file_watcher) with
+    | (Options.LAZY_MODE_WATCHMAN, (None | Some FlowConfig.Watchman)) ->
+      (* --lazy-mode watchman implies --file-watcher watchman *)
+      FlowConfig.Watchman
+    | (Options.LAZY_MODE_WATCHMAN, Some _) ->
+      (* Error on something like --lazy-mode watchman --file-watcher dfind *)
+      let msg =
+        "Using Watchman lazy mode implicitly uses the Watchman file watcher, "
+        ^ "but you tried to use a different file watcher via the `--file-watcher` flag."
+      in
+      raise (CommandSpec.Failed_to_parse ("--file-watcher", msg))
+    | (_, Some file_watcher) -> file_watcher
+    | (_, None) -> Base.Option.value ~default:FlowConfig.DFind (FlowConfig.file_watcher flowconfig)
+  in
+  match file_watcher with
+  | FlowConfig.NoFileWatcher -> FlowServerMonitorOptions.NoFileWatcher
+  | FlowConfig.DFind -> FlowServerMonitorOptions.DFind
+  | FlowConfig.Watchman ->
+    let sync_timeout =
+      match sync_timeout with
+      | Some x -> Some x
+      | None -> FlowConfig.watchman_sync_timeout flowconfig
     in
-    raise (CommandSpec.Failed_to_parse ("--file-watcher", msg))
-  | (_, Some file_watcher) -> file_watcher
-  | (_, None) -> Base.Option.value ~default:Options.DFind (FlowConfig.file_watcher flowconfig)
+    FlowServerMonitorOptions.Watchman
+      { FlowServerMonitorOptions.sync_timeout; debug = file_watcher_debug }
 
 let choose_file_watcher_timeout ~flowconfig cli_timeout =
   match Base.Option.first_some cli_timeout (FlowConfig.file_watcher_timeout flowconfig) with
   | Some 0 -> None
   | Some x -> Some (float x)
   | None -> Some (float default_file_watcher_timeout)
-
-let choose_file_watcher_sync_timeout ~flowconfig file_watcher cli_timeout =
-  match cli_timeout with
-  | Some x -> Some x
-  | None ->
-    (match file_watcher with
-    | Options.Watchman -> FlowConfig.watchman_sync_timeout flowconfig
-    | _ -> None)
 
 (* Reads the file from disk to compute the offset. This can lead to strange results -- if the file
  * has changed since the location was constructed, the offset could be incorrect. If the file has

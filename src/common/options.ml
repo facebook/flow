@@ -10,11 +10,6 @@ type esproposal_feature_mode =
   | ESPROPOSAL_IGNORE
   | ESPROPOSAL_WARN
 
-type file_watcher =
-  | NoFileWatcher
-  | DFind
-  | Watchman
-
 type module_system =
   | Node
   | Haste
