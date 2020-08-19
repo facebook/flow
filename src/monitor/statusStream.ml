@@ -121,6 +121,11 @@ let file_watcher_ready () =
   check_if_free t;
   broadcast_significant_transition t
 
+let file_watcher_deferred reason =
+  let t = !current_status in
+  t.watcher_status <- (fst t.watcher_status, FileWatcherStatus.Deferred { reason });
+  broadcast_significant_transition t
+
 (* When a new server starts up, we close the old server's status stream and start over *)
 let reset file_watcher restart_reason =
   let file_watcher = file_watcher_for_status file_watcher in

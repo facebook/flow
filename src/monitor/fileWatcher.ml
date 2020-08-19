@@ -280,6 +280,12 @@ end = struct
                 "Watchman reports an hg.update just started. Moving %s revs from %s"
                 distance
                 rev
+            | _ when List.mem name env.init_settings.Watchman.defer_states ->
+              Logger.info
+                "Watchman reports %s just started. Filesystem notifications are paused."
+                name;
+              StatusStream.file_watcher_deferred name;
+              ()
             | _ -> ());
             Lwt.return env
           | Watchman.State_leave (name, metadata) ->
@@ -298,6 +304,10 @@ end = struct
                 "Watchman reports an hg.update just finished. Moved %s revs to %s"
                 distance
                 rev;
+              Lwt.return env
+            | _ when List.mem name env.init_settings.Watchman.defer_states ->
+              Logger.info "Watchman reports %s ended. Filesystem notifications resumed." name;
+              StatusStream.file_watcher_ready ();
               Lwt.return env
             | _ -> Lwt.return env)
           | Watchman.Changed_merge_base _ ->

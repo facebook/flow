@@ -548,20 +548,29 @@ let show_connected_status (cenv : connected_env) : connected_env =
       else
         (MessageType.WarningMessage, "Flow: Server is rechecking...", None, None, None)
     else
-      let message =
-        match cenv.c_lazy_stats with
-        | Some { ServerProt.Response.lazy_mode; checked_files; total_files }
-          when checked_files < total_files && lazy_mode <> Options.NON_LAZY_MODE ->
-          Printf.sprintf
-            "Flow is ready. (%s lazy mode let it check only %d/%d files [[more...](%s)])"
-            (Options.lazy_mode_to_string lazy_mode)
-            checked_files
-            total_files
-            "https://flow.org/en/docs/lang/lazy-modes/"
-        | _ -> "Flow is ready."
-      in
-      let short_message = Some "Flow: ready" in
-      (MessageType.InfoMessage, message, short_message, None, None)
+      let (_, watcher_status) = cenv.c_server_status in
+      match watcher_status with
+      | Some (_, FileWatcherStatus.Deferred { reason }) ->
+        let message = Printf.sprintf "Waiting for %s to finish" reason in
+        let short_message = Some "Flow: blocked" in
+        (MessageType.WarningMessage, message, short_message, None, None)
+      | Some (_, FileWatcherStatus.Initializing)
+      | Some (_, FileWatcherStatus.Ready)
+      | None ->
+        let message =
+          match cenv.c_lazy_stats with
+          | Some { ServerProt.Response.lazy_mode; checked_files; total_files }
+            when checked_files < total_files && lazy_mode <> Options.NON_LAZY_MODE ->
+            Printf.sprintf
+              "Flow is ready. (%s lazy mode let it check only %d/%d files [[more...](%s)])"
+              (Options.lazy_mode_to_string lazy_mode)
+              checked_files
+              total_files
+              "https://flow.org/en/docs/lang/lazy-modes/"
+          | _ -> "Flow is ready."
+        in
+        let short_message = Some "Flow: ready" in
+        (MessageType.InfoMessage, message, short_message, None, None)
   in
   let c_ienv = show_status ~type_ ~message ~shortMessage ~progress ~total cenv.c_ienv in
   { cenv with c_ienv }
