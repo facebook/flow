@@ -222,7 +222,6 @@ and 'loc t' =
   | EBinaryInLHS of 'loc virtual_reason
   | EBinaryInRHS of 'loc virtual_reason
   | EArithmeticOperand of 'loc virtual_reason
-  | ENullVoidAddition of 'loc virtual_reason (* TODO: yeet this *)
   | EForInRHS of 'loc virtual_reason
   | EObjectComputedPropertyAccess of ('loc virtual_reason * 'loc virtual_reason)
   | EObjectComputedPropertyAssign of ('loc virtual_reason * 'loc virtual_reason)
@@ -781,7 +780,6 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
   | EBinaryInLHS r -> EBinaryInLHS (map_reason r)
   | EBinaryInRHS r -> EBinaryInRHS (map_reason r)
   | EArithmeticOperand r -> EArithmeticOperand (map_reason r)
-  | ENullVoidAddition r -> ENullVoidAddition (map_reason r)
   | EForInRHS r -> EForInRHS (map_reason r)
   | EObjectComputedPropertyAccess (r1, r2) ->
     EObjectComputedPropertyAccess (map_reason r1, map_reason r2)
@@ -1081,7 +1079,6 @@ let util_use_op_of_msg nope util = function
   | EBinaryInLHS _
   | EBinaryInRHS _
   | EArithmeticOperand _
-  | ENullVoidAddition _
   | EForInRHS _
   | EObjectComputedPropertyAccess (_, _)
   | EObjectComputedPropertyAssign (_, _)
@@ -1154,7 +1151,6 @@ let loc_of_msg : 'loc t' -> 'loc option = function
   | EBinaryInRHS reason
   | EBinaryInLHS reason
   | EArithmeticOperand reason
-  | ENullVoidAddition reason
   | ERecursionLimit (reason, _)
   | EMissingAnnotation (reason, _)
   | EIdxArity reason
@@ -1357,7 +1353,6 @@ let kind_of_msg =
     | EImplicitInexactObject _ -> LintError Lints.ImplicitInexactObject
     | EAmbiguousObjectType _ -> LintError Lints.AmbiguousObjectType
     | EUninitializedInstanceProperty _ -> LintError Lints.UninitializedInstanceProperty
-    | ENullVoidAddition _ -> LintError Lints.NullVoidAddition
     | EBadDefaultImportAccess _ -> LintError Lints.DefaultImportAccess
     | EBadDefaultImportDestructuring _ -> LintError Lints.DefaultImportAccess
     | EInvalidImportStarUse _ -> LintError Lints.InvalidImportStarUse
@@ -2571,8 +2566,7 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
       ]
     in
     Normal { features }
-  | EArithmeticOperand reason
-  | ENullVoidAddition reason ->
+  | EArithmeticOperand reason ->
     let features =
       [
         text "Cannot perform arithmetic operation because ";
@@ -3324,7 +3318,6 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
 
 let is_lint_error = function
   | EUntypedTypeImport _
-  | ENullVoidAddition _
   | EUntypedImport _
   | ENonstrictImport _
   | EUnclearType _
@@ -3570,7 +3563,6 @@ let error_code_of_message err : error_code option =
   | EValueUsedAsType _ -> Some ValueAsType
   (* lints should match their lint name *)
   | EUntypedTypeImport _
-  | ENullVoidAddition _
   | EUntypedImport _
   | ENonstrictImport _
   | EUnclearType _

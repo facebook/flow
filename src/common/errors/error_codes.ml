@@ -112,7 +112,6 @@ type error_code =
   | NotAnArray
   | NotAnObject
   | NotIterable
-  | NullVoidAddition
   | PropMissing
   | ReassignConst
   | ReassignEnum
@@ -156,7 +155,6 @@ let code_of_lint : Lints.lint_kind -> error_code = function
   | Lints.ImplicitInexactObject -> ImplicitInexactObject
   | Lints.UninitializedInstanceProperty -> UninitializedInstanceProperty
   | Lints.AmbiguousObjectType -> AmbiguousObjectType
-  | Lints.NullVoidAddition -> NullVoidAddition
   | Lints.SketchyNumber Lints.SketchyNumberAnd -> SketchyNumberAnd
   | Lints.SketchyNull (Lints.SketchyNullBool | Lints.SketchyNullEnumBool) -> SketchyNullBool
   | Lints.SketchyNull (Lints.SketchyNullString | Lints.SketchyNullEnumString) -> SketchyNullString
@@ -276,7 +274,6 @@ let string_of_code : error_code -> string = function
   | NotAnArray -> "not-an-array"
   | NotAnObject -> "not-an-object"
   | NotIterable -> "not-iterable"
-  | NullVoidAddition -> "unsafe-addition"
   | PropMissing -> "prop-missing"
   | ReassignConst -> "reassign-const"
   | ReassignEnum -> "reassign-enum"

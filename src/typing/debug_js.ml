@@ -1408,9 +1408,7 @@ let dump_error_message =
     | EInvalidTypeof (loc, name) -> spf "EInvalidTypeof (%s, %S)" (string_of_aloc loc) name
     | EBinaryInLHS reason -> spf "EBinaryInLHS (%s)" (dump_reason cx reason)
     | EBinaryInRHS reason -> spf "EBinaryInRHS (%s)" (dump_reason cx reason)
-    | EArithmeticOperand reason
-    | ENullVoidAddition reason ->
-      spf "EArithmeticOperand (%s)" (dump_reason cx reason)
+    | EArithmeticOperand reason -> spf "EArithmeticOperand (%s)" (dump_reason cx reason)
     | EForInRHS reason -> spf "EForInRHS (%s)" (dump_reason cx reason)
     | EObjectComputedPropertyAccess (reason1, reason2) ->
       spf "EObjectComputedPropertyAccess (%s, %s)" (dump_reason cx reason1) (dump_reason cx reason2)
