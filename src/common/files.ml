@@ -222,20 +222,20 @@ let make_next_files_and_symlinks
                 (Filename.dirname file)
                 (file |> Filename.basename |> SSet.singleton)
                 !node_modules_containers;
-          let dirfiles = Array.to_list @@ try_readdir path in
-          let symlinks =
-            (* accumulates all of the symlinks that point to
-               directories outside of `paths`; symlinks that point to
-               directories already covered by `paths` will be found on
-               their own, so they are skipped. *)
-            if not (List.exists (fun check -> check path) prefix_checkers) then
-              SSet.add path symlinks
-            else
-              symlinks
-          in
           if is_symlink then
+            let symlinks =
+              (* accumulates all of the symlinks that point to
+                directories outside of `paths`; symlinks that point to
+                directories already covered by `paths` will be found on
+                their own, so they are skipped. *)
+              if not (List.exists (fun check -> check path) prefix_checkers) then
+                SSet.add path symlinks
+              else
+                symlinks
+            in
             process sz (acc, symlinks) files dir stack
           else
+            let dirfiles = Array.to_list @@ try_readdir path in
             process sz (acc, symlinks) dirfiles file (S_Dir (files, dir, stack))
         | StatError msg ->
           if error_filter file then prerr_endline msg;
