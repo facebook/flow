@@ -1094,6 +1094,10 @@ literal.js:9:16
 Flags: --pretty
 {"result":[]}
 
+import_source.js:3:17
+Flags: --pretty
+{"result":[]}
+
 object-with-prototype.js:9:11
 Flags: --pretty
 {
