@@ -700,8 +700,6 @@ let parse_completionItem (params : json option) : CompletionItemResolve.params =
       label = Jget.string_exn params "label";
       kind = Base.Option.bind (Jget.int_opt params "kind") completionItemKind_of_enum;
       detail = Jget.string_opt params "detail";
-      inlineDetail = Jget.string_opt params "inlineDetail";
-      itemType = Jget.string_opt params "itemType";
       documentation = None;
       preselect = Jget.bool_d params "preselect" ~default:false;
       sortText = Jget.string_opt params "sortText";
@@ -726,8 +724,6 @@ let print_completionItem ~key (item : Completion.completionItem) : json =
         ("label", Some (JSON_String item.label));
         ("kind", Base.Option.map item.kind (fun x -> int_ @@ completionItemKind_to_enum x));
         ("detail", Base.Option.map item.detail string_);
-        ("inlineDetail", Base.Option.map item.inlineDetail string_);
-        ("itemType", Base.Option.map item.itemType string_);
         ( "documentation",
           Base.Option.map item.documentation ~f:(fun doc ->
               JSON_Object

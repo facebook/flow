@@ -78,8 +78,7 @@ let flow_completion_to_lsp
     (item : ServerProt.Response.complete_autocomplete_result) : Lsp.Completion.completionItem =
   Lsp.Completion.(
     ServerProt.Response.(
-      let itemType = None in
-      let inlineDetail =
+      let detail =
         let trunc n s =
           if String.length s < n then
             s
@@ -89,7 +88,6 @@ let flow_completion_to_lsp
         let column_width = 80 in
         Some (trunc column_width item.res_ty)
       in
-      let detail = inlineDetail in
       let insertTextFormat = Some PlainText in
       let textEdits =
         match item.res_insert_text with
@@ -106,8 +104,6 @@ let flow_completion_to_lsp
         label = item.res_name;
         kind = item.res_kind;
         detail;
-        inlineDetail;
-        itemType;
         documentation;
         (* This will be filled in by completionItem/resolve. *)
         preselect = is_preselect_supported && item.res_preselect;
