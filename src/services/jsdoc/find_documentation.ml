@@ -168,7 +168,7 @@ class documentation_searcher (def_loc : Loc.t) =
     method! enum_string_member member = this#enum_initialized_member member
   end
 
-let documentation_of_def_loc def_loc ast =
+let search def_loc ast =
   let searcher = new documentation_searcher def_loc in
   try
     ignore (searcher#program ast);
@@ -177,4 +177,22 @@ let documentation_of_def_loc def_loc ast =
 
 let jsdoc_of_getdef_loc ~reader def_loc =
   let open Base.Option in
-  Loc.source def_loc >>= Parsing_heaps.Reader.get_ast ~reader >>= documentation_of_def_loc def_loc
+  Loc.source def_loc >>= Parsing_heaps.Reader.get_ast ~reader >>= search def_loc
+
+let documentation_of_jsdoc jsdoc =
+  let documentation_of_unrecognized_tag (tag_name, tag_description) =
+    let tag_name_documentation = Printf.sprintf "**@%s**" tag_name in
+    match tag_description with
+    | None -> tag_name_documentation
+    | Some tag_description -> Printf.sprintf "%s %s" tag_name_documentation tag_description
+  in
+  let documentation_strings =
+    Base.Option.fold
+      (Jsdoc.description jsdoc)
+      ~f:(fun unrecognized_tag_documentations description ->
+        description :: unrecognized_tag_documentations)
+      ~init:(Base.List.map ~f:documentation_of_unrecognized_tag (Jsdoc.unrecognized_tags jsdoc))
+  in
+  match documentation_strings with
+  | [] -> None
+  | _ -> Some (String.concat "\n\n" documentation_strings)

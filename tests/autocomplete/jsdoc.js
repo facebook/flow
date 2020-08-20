@@ -1,6 +1,6 @@
 //@flow
 
-const {foo, Bar, baz} = require('./jsdoc-exports');
+const {foo, Bar, baz, qux} = require('./jsdoc-exports');
 const {
   DefaultedStringEnum,
   InitializedStringEnum,

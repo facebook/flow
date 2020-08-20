@@ -72,7 +72,7 @@ let func_details ~jsdoc ~exact_by_default params rest_param return =
       param_tys @ [{ ServerProt.Response.param_name; param_ty; param_documentation }]
   in
   let return_ty = string_of_ty ~exact_by_default return in
-  let func_documentation = Base.Option.bind jsdoc ~f:Jsdoc.description in
+  let func_documentation = Base.Option.bind jsdoc ~f:Find_documentation.documentation_of_jsdoc in
   { ServerProt.Response.param_tys; return_ty; func_documentation }
 
 (* given a Loc.t within a function call, returns the type of the function being called *)

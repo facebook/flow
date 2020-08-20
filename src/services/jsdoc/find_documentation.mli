@@ -6,3 +6,5 @@
  *)
 
 val jsdoc_of_getdef_loc : reader:Parsing_heaps.Reader.reader -> Loc.t -> Jsdoc.t option
+
+val documentation_of_jsdoc : Jsdoc.t -> string option

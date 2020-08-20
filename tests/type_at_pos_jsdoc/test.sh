@@ -12,3 +12,4 @@ queries_in_file "type-at-pos" "objects-requires.js" --strip-root --pretty
 queries_in_file "type-at-pos" "objects.js" --strip-root --pretty
 queries_in_file "type-at-pos" "requires.js" --strip-root --pretty
 queries_in_file "type-at-pos" "imports.js" --strip-root --pretty
+queries_in_file "type-at-pos" "unrecognized_tags.js" --strip-root --pretty

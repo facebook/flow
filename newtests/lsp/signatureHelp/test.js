@@ -82,12 +82,12 @@ export default suite(
         ),
         verifySignatureHelp(
           '<PLACEHOLDER_PROJECT_URL>/paramDocumentation.js',
-          {line: 11, character: 5},
+          {line: 12, character: 5},
           JSON.stringify({
             signatures: [
               {
                 label: '(bar: void, baz: void): void',
-                documentation: 'foo',
+                documentation: 'foo\n\n**@unrecognized** this tag is unrecognized',
                 parameters: [
                   {
                     label: 'bar: void',

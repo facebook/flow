@@ -15,4 +15,14 @@ class Bar {}
  */
 const baz = 1;
 
-module.exports = {foo, Bar, baz};
+/**
+ * description
+ * @explorer-desc
+ *  this is qux
+ *  it's a var
+ * @explorer-ignore
+ * @explorer-title qux
+ */
+const qux = 2;
+
+module.exports = {foo, Bar, baz, qux};

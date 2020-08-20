@@ -1062,3 +1062,22 @@ Flags: --strip-root --pretty
   "end":5
 }
 
+unrecognized_tags.js:14:4
+Flags: --strip-root --pretty
+{
+  "documentation":"description\n\n**@explorer-desc** this is foo\nit's a component\n\n**@explorer-ignore**\n\n**@explorer-title** foo the component",
+  "type":"number",
+  "reasons":[],
+  "loc":{
+    "source":"unrecognized_tags.js",
+    "type":"SourceFile",
+    "start":{"line":14,"column":3,"offset":163},
+    "end":{"line":14,"column":5,"offset":166}
+  },
+  "path":"unrecognized_tags.js",
+  "line":14,
+  "endline":14,
+  "start":3,
+  "end":5
+}
+

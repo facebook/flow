@@ -1634,6 +1634,22 @@ Flags: --pretty
 jsdoc.js:12:4
 Flags: --lsp
 {
+  "label":"qux",
+  "kind":6,
+  "detail":"number",
+  "inlineDetail":"number",
+  "documentation":{
+    "kind":"markdown",
+    "value":"description\n\n**@explorer-desc** this is qux\nit's a var\n\n**@explorer-ignore**\n\n**@explorer-title** qux"
+  },
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":11,"character":3},"end":{"line":11,"character":3}},
+    "newText":"qux"
+  }
+}
+{
   "label":"foo",
   "kind":3,
   "detail":"() => void",
@@ -1714,7 +1730,7 @@ Flags: --lsp
   "insertTextFormat":1
 }
 
-jsdoc-members-1.js:34:5
+jsdoc-members-1.js:43:5
 Flags: --lsp
 {
   "label":"a",
@@ -1775,6 +1791,18 @@ Flags: --lsp
   "detail":"() => Promise<void>",
   "inlineDetail":"() => Promise<void>",
   "documentation":{"kind":"markdown","value":"async method property of an object literal"},
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1
+}
+{
+  "label":"h",
+  "kind":6,
+  "detail":"number",
+  "inlineDetail":"number",
+  "documentation":{
+    "kind":"markdown",
+    "value":"member h\n\n**@explorer-desc** this is h\nit's a member\n\n**@explorer-ignore**\n\n**@explorer-title** h the member"
+  },
   "sortText":"00000000000000000000",
   "insertTextFormat":1
 }

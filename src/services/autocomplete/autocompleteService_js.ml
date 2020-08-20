@@ -412,7 +412,8 @@ let members_of_type
   let documentation_of_member name =
     match GetDef_js.extract_member_def ~reader cx this name with
     | Ok loc ->
-      Find_documentation.jsdoc_of_getdef_loc ~reader loc |> Base.Option.bind ~f:Jsdoc.description
+      Find_documentation.jsdoc_of_getdef_loc ~reader loc
+      |> Base.Option.bind ~f:Find_documentation.documentation_of_jsdoc
     | Error _ -> None
   in
   match this_ty_res with
@@ -585,7 +586,7 @@ let local_value_identifiers ~options ~reader ~cx ~ac_loc ~file_sig ~typed_ast ~t
       | Def getdef_loc
       | Partial (getdef_loc, _) ->
         Find_documentation.jsdoc_of_getdef_loc ~reader getdef_loc
-        |> Base.Option.bind ~f:Jsdoc.description
+        |> Base.Option.bind ~f:Find_documentation.documentation_of_jsdoc
       | Bad_loc
       | Def_error _ ->
         None
