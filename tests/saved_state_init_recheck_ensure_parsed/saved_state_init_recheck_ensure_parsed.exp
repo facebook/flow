@@ -1,0 +1,37 @@
+There should be no errors when the saved state is generated
+No errors!
+
+Lazy init with saved state does not trigger a recheck
+No errors!
+
+The Flow server is currently in filesystem lazy mode and is only checking 0/2 files.
+To learn more, visit flow.org/en/docs/lang/lazy-modes
+
+Focusing A.js reveals the errors
+Error --------------------------------------------------------------------------------------------------------- B.js:3:9
+
+Cannot import `A` because there is no `A` export in `./A`. [missing-export]
+
+   3| import {A} from './A';
+              ^
+
+
+Error --------------------------------------------------------------------------------------------------------- B.js:5:2
+
+Cannot cast `5` to string because number [1] is incompatible with string [2]. [incompatible-cast]
+
+   B.js:5:2
+   5| (5: string);
+       ^ [1]
+
+References:
+   B.js:5:5
+   5| (5: string);
+          ^^^^^^ [2]
+
+
+
+Found 2 errors
+
+The Flow server is currently in filesystem lazy mode and is only checking 2/2 files.
+To learn more, visit flow.org/en/docs/lang/lazy-modes

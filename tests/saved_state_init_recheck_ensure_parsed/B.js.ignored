@@ -1,0 +1,5 @@
+// @flow
+
+import {A} from './A';
+
+(5: string);

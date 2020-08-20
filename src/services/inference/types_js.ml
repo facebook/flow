@@ -1629,6 +1629,7 @@ module Recheck : sig
     env:ServerEnv.env ->
     (ServerEnv.env * recheck_result * string option) Lwt.t
 
+  (* Raises `Unexpected_file_changes` if it finds files unexpectedly changed when parsing. *)
   val parse_and_update_dependency_info :
     profiling:Profiling_js.running ->
     transaction:Transaction.t ->
@@ -1678,7 +1679,10 @@ end = struct
    * does NOT figure out which files to merge or merge them.
    *
    * It returns an updated env and a bunch of intermediate values which `recheck_merge` can use to
-   * calculate the to_merge and perform the merge *)
+   * calculate the to_merge and perform the merge.
+   *
+   * Raises `Unexpected_file_changes` if it finds files unexpectedly changed when parsing.
+   *)
   let recheck_parse_and_update_dependency_info
       ~profiling
       ~transaction
@@ -1969,9 +1973,7 @@ end = struct
                    ~root_modules:(Modulename.Set.union unchanged_modules changed_modules)) ))
     in
     Hh_logger.info "Re-resolving directly dependent files";
-    let%lwt () =
-      ensure_parsed_or_trigger_recheck ~options ~profiling ~workers ~reader direct_dependent_files
-    in
+    let%lwt () = ensure_parsed ~options ~profiling ~workers ~reader direct_dependent_files in
 
     let node_modules_containers = !Files.node_modules_containers in
     (* requires in direct_dependent_files must be re-resolved before merging. *)
@@ -2362,17 +2364,20 @@ end = struct
         Lwt.return_unit)
       ~rollback:(fun () -> Lwt.return_unit)
       transaction;
+
     let%lwt (env, intermediate_values) =
-      recheck_parse_and_update_dependency_info
-        ~profiling
-        ~transaction
-        ~reader
-        ~options
-        ~workers
-        ~updates
-        ~files_to_force
-        ~recheck_reasons
-        ~env
+      try%lwt
+        recheck_parse_and_update_dependency_info
+          ~profiling
+          ~transaction
+          ~reader
+          ~options
+          ~workers
+          ~updates
+          ~files_to_force
+          ~recheck_reasons
+          ~env
+      with Unexpected_file_changes changed_files -> handle_unexpected_file_changes changed_files
     in
     recheck_merge
       ~profiling
@@ -2717,19 +2722,28 @@ let init_from_saved_state ~profiling ~workers ~saved_state ~updates options =
     (* In lazy mode, we try to avoid the fanout problem. All we really want to do in lazy mode
       * is to update the dependency graph and stuff like that. We don't actually want to merge
       * anything yet. *)
-    with_transaction @@ fun transaction reader ->
     let recheck_reasons = [LspProt.Lazy_init_update_deps] in
     let%lwt env =
-      Recheck.parse_and_update_dependency_info
-        ~profiling
-        ~transaction
-        ~reader
-        ~options
-        ~workers
-        ~updates
-        ~files_to_force:CheckedSet.empty
-        ~recheck_reasons
-        ~env
+      let rec try_update updated_files =
+        try%lwt
+          with_transaction @@ fun transaction reader ->
+          Recheck.parse_and_update_dependency_info
+            ~profiling
+            ~transaction
+            ~reader
+            ~options
+            ~workers
+            ~updates:updated_files
+            ~files_to_force:CheckedSet.empty
+            ~recheck_reasons
+            ~env
+        with Unexpected_file_changes changed_files ->
+          let updated_files =
+            changed_files |> Nel.to_list |> FilenameSet.of_list |> FilenameSet.union updated_files
+          in
+          try_update updated_files
+      in
+      try_update updates
     in
     Lwt.return (FilenameSet.empty, env, libs_ok)
 
