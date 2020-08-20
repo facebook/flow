@@ -367,19 +367,7 @@ module Initialize = struct
     | Messages
     | Verbose
 
-  (* Following initialization options are unfortunately a mix of Hack
-   * and Flow. We should find a way to separate them.
-   * Anyway, they're all optional in the source json, but we pick
-   * a default if necessary while parsing. *)
-  and initializationOptions = {
-    useTextEditAutocomplete: bool;
-    (* only supported for Hack so far *)
-    liveSyntaxErrors: bool;
-    (* implicitly true for Hack; supported in Flow *)
-    namingTableSavedStatePath: string option;
-    (* only supported for Hack *)
-    sendServerStatusEvents: bool; (* only supported for Hack *)
-  }
+  and initializationOptions = { liveSyntaxErrors: bool }
 
   and client_capabilities = {
     workspace: workspaceClientCapabilities;

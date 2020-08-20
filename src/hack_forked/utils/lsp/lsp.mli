@@ -238,12 +238,7 @@ module Initialize : sig
     | Messages
     | Verbose
 
-  and initializationOptions = {
-    useTextEditAutocomplete: bool;
-    liveSyntaxErrors: bool;
-    namingTableSavedStatePath: string option;
-    sendServerStatusEvents: bool;
-  }
+  and initializationOptions = { liveSyntaxErrors: bool }
 
   and client_capabilities = {
     workspace: workspaceClientCapabilities;

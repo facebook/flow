@@ -975,12 +975,7 @@ let parse_initialize (params : json option) : Initialize.params =
       | Some "verbose" -> Verbose
       | _ -> Off
     and parse_initializationOptions json =
-      {
-        useTextEditAutocomplete = Jget.bool_d json "useTextEditAutocomplete" ~default:false;
-        liveSyntaxErrors = Jget.bool_d json "liveSyntaxErrors" ~default:true;
-        namingTableSavedStatePath = Jget.string_opt json "namingTableSavedStatePath";
-        sendServerStatusEvents = Jget.bool_d json "sendServerStatusEvents" ~default:false;
-      }
+      { liveSyntaxErrors = Jget.bool_d json "liveSyntaxErrors" ~default:true }
     and parse_capabilities json =
       {
         workspace = Jget.obj_opt json "workspace" |> parse_workspace;
