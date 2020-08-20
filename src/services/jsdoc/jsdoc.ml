@@ -31,9 +31,14 @@ module Params = struct
   type t = (string * Param.t) list [@@deriving show, eq]
 end
 
+module Unrecognized_tags = struct
+  type t = (string * string option) list [@@deriving show, eq]
+end
+
 type t = {
   description: string option;
   params: Params.t;
+  unrecognized_tags: Unrecognized_tags.t;
 }
 
 (*************)
@@ -43,6 +48,8 @@ type t = {
 let description { description; _ } = description
 
 let params { params; _ } = params
+
+let unrecognized_tags { unrecognized_tags; _ } = unrecognized_tags
 
 (***********)
 (* parsing *)
@@ -63,7 +70,7 @@ module Parser = struct
 
   (* Helpers *)
 
-  let empty = { description = None; params = [] }
+  let empty = { description = None; params = []; unrecognized_tags = [] }
 
   let trimmed_string_of_buffer buffer = buffer |> Buffer.contents |> String.trim
 
@@ -93,6 +100,10 @@ module Parser = struct
       add_assoc ~equal:Param.equal_path path { Param.description; optional } old_param_infos
     in
     { jsdoc with params = add_assoc ~equal:String.equal name new_param_infos jsdoc.params }
+
+  let add_unrecognized_tag jsdoc name description =
+    let { unrecognized_tags; _ } = jsdoc in
+    { jsdoc with unrecognized_tags = unrecognized_tags @ [(name, description)] }
 
   (* Parsing functions *)
 
@@ -199,6 +210,12 @@ module Parser = struct
     let jsdoc = { jsdoc with description } in
     tag jsdoc lexbuf
 
+  and unrecognized_tag jsdoc name lexbuf =
+    let desc_buf = Buffer.create 127 in
+    let description = description desc_buf lexbuf in
+    let jsdoc = add_unrecognized_tag jsdoc name description in
+    tag jsdoc lexbuf
+
   and tag jsdoc lexbuf =
     match%sedlex lexbuf with
     | "param"
@@ -208,6 +225,9 @@ module Parser = struct
     | "description"
     | "desc" ->
       description_tag jsdoc lexbuf
+    | identifier ->
+      let name = Sedlexing.Utf8.lexeme lexbuf in
+      unrecognized_tag jsdoc name lexbuf
     | _ -> skip_tag jsdoc lexbuf
 
   let initial lexbuf =

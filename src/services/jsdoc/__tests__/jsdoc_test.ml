@@ -45,7 +45,7 @@ let string_of_option (f : 'a -> string) : 'a option -> string = function
   | None -> "None"
   | Some x -> Printf.sprintf "Some %s" (f x)
 
-let mk_test comment ?(should_not_parse = false) ?description ?params ctxt =
+let mk_test comment ?(should_not_parse = false) ?description ?params ?unrecognized_tags ctxt =
   match Jsdoc.of_comments comment with
   | None -> assert_bool "JSDoc didn't parse" should_not_parse
   | Some jsdoc ->
@@ -64,7 +64,15 @@ let mk_test comment ?(should_not_parse = false) ?description ?params ctxt =
           ~printer:Jsdoc.Params.show
           ~msg:"params"
           params
-          (Jsdoc.params jsdoc))
+          (Jsdoc.params jsdoc));
+    Base.Option.iter unrecognized_tags ~f:(fun unrecognized_tags ->
+        assert_equal
+          ~ctxt
+          ~cmp:Jsdoc.Unrecognized_tags.equal
+          ~printer:Jsdoc.Unrecognized_tags.show
+          ~msg:"unrecognized tags"
+          unrecognized_tags
+          (Jsdoc.unrecognized_tags jsdoc))
 
 let tests =
   "JSDoc"
@@ -251,4 +259,20 @@ let tests =
                        [(Name, { description = Some "another parameter"; optional = NotOptional })]
                      );
                    ];
+         "unrecognized_tags"
+         >:: mk_test
+               (mk_block_comment
+                  {|* description
+                    * @explorer-desc
+                    * contents of explorer-desc tag
+                    * @explorer-ignore
+                    * @explorer-title some title
+                    * @desc description 2 |})
+               ~description:(Some "description 2")
+               ~unrecognized_tags:
+                 [
+                   ("explorer-desc", Some "contents of explorer-desc tag");
+                   ("explorer-ignore", None);
+                   ("explorer-title", Some "some title");
+                 ];
        ]

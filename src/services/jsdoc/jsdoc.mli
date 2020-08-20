@@ -31,6 +31,10 @@ module Params : sig
   type t = (string * Param.t) list [@@deriving show, eq]
 end
 
+module Unrecognized_tags : sig
+  type t = (string * string option) list [@@deriving show, eq]
+end
+
 type t
 
 (*************)
@@ -40,6 +44,8 @@ type t
 val description : t -> string option
 
 val params : t -> Params.t
+
+val unrecognized_tags : t -> Unrecognized_tags.t
 
 (***********)
 (* parsing *)
