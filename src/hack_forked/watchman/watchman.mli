@@ -75,7 +75,7 @@ type watchman_instance =
 
 type conn
 
-val init : ?since_clockspec:string -> init_settings -> unit -> env option Lwt.t
+val init : init_settings -> env option Lwt.t
 
 val get_changes_since_mergebase : timeout:timeout -> env -> string list Lwt.t
 

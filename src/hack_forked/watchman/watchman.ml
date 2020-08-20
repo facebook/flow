@@ -616,9 +616,7 @@ let re_init
   ignore response;
   env
 
-let init ?since_clockspec settings () =
-  let prior_clockspec = since_clockspec in
-  re_init ?prior_clockspec settings
+let init settings = re_init settings
 
 let extract_file_names env json =
   let open Hh_json.Access in

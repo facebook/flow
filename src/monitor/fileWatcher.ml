@@ -366,7 +366,7 @@ end = struct
         in
         init_settings <- Some settings;
 
-        init_thread <- Some (Watchman.init settings ())
+        init_thread <- Some (Watchman.init settings)
 
       method wait_for_init ~timeout =
         let go () =
