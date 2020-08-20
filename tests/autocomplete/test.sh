@@ -91,3 +91,4 @@ queries_in_file autocomplete "jsdoc-members-4.js" --lsp
 queries_in_file autocomplete "jsdoc-members-5.js" --lsp
 queries_in_file autocomplete "jsdoc-members-6.js" --lsp
 queries_in_file autocomplete "jsdoc-members-7.js" --lsp
+queries_in_file autocomplete "jsdoc-members-8.js" --lsp

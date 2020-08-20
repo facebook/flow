@@ -1631,7 +1631,7 @@ Flags: --pretty
   ]
 }
 
-jsdoc.js:5:4
+jsdoc.js:12:4
 Flags: --lsp
 {
   "label":"foo",
@@ -1642,7 +1642,7 @@ Flags: --lsp
   "sortText":"00000000000000000000",
   "insertTextFormat":1,
   "textEdit":{
-    "range":{"start":{"line":4,"character":3},"end":{"line":4,"character":3}},
+    "range":{"start":{"line":11,"character":3},"end":{"line":11,"character":3}},
     "newText":"foo"
   }
 }
@@ -1655,9 +1655,54 @@ Flags: --lsp
   "sortText":"00000000000000000000",
   "insertTextFormat":1,
   "textEdit":{
-    "range":{"start":{"line":4,"character":3},"end":{"line":4,"character":3}},
+    "range":{"start":{"line":11,"character":3},"end":{"line":11,"character":3}},
     "newText":"baz"
   }
+}
+{
+  "label":"SymbolEnum",
+  "kind":13,
+  "detail":"enum SymbolEnum",
+  "inlineDetail":"enum SymbolEnum",
+  "documentation":{"kind":"markdown","value":"a symbol enum"},
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1
+}
+{
+  "label":"NumberEnum",
+  "kind":13,
+  "detail":"enum NumberEnum",
+  "inlineDetail":"enum NumberEnum",
+  "documentation":{"kind":"markdown","value":"a number enum"},
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1
+}
+{
+  "label":"InitializedStringEnum",
+  "kind":13,
+  "detail":"enum InitializedStringEnum",
+  "inlineDetail":"enum InitializedStringEnum",
+  "documentation":{"kind":"markdown","value":"an initialized string enum"},
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1
+}
+{
+  "label":"DefaultedStringEnum",
+  "kind":13,
+  "detail":"enum DefaultedStringEnum",
+  "inlineDetail":"enum DefaultedStringEnum",
+  "documentation":{"kind":"markdown","value":"a defaulted string enum"},
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1
+}
+{
+  "label":"BooleanEnum",
+  "kind":13,
+  "detail":"enum BooleanEnum",
+  "inlineDetail":"enum BooleanEnum",
+  "documentation":{"kind":"markdown","value":"a boolean enum"},
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1
 }
 {
   "label":"Bar",
@@ -2307,5 +2352,230 @@ Flags: --lsp
     "range":{"start":{"line":5,"character":3},"end":{"line":5,"character":4}},
     "newText":"?.valueOf"
   }
+}
+
+jsdoc-members-8.js:11:21
+Flags: --lsp
+{
+  "label":"Member1",
+  "kind":6,
+  "detail":"DefaultedStringEnum",
+  "inlineDetail":"DefaultedStringEnum",
+  "documentation":{"kind":"markdown","value":"first member of a defaulted string enum"},
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1
+}
+{
+  "label":"Member2",
+  "kind":6,
+  "detail":"DefaultedStringEnum",
+  "inlineDetail":"DefaultedStringEnum",
+  "documentation":{"kind":"markdown","value":"second member of a defaulted string enum"},
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1
+}
+{
+  "label":"cast",
+  "kind":3,
+  "detail":"(input: ?string) => (void | DefaultedStringEnum)",
+  "inlineDetail":"(input: ?string) => (void | DefaultedStringEnum)",
+  "sortText":"00000000000000000001",
+  "insertTextFormat":1
+}
+{
+  "label":"isValid",
+  "kind":3,
+  "detail":"(input: ?string) => boolean",
+  "inlineDetail":"(input: ?string) => boolean",
+  "sortText":"00000000000000000001",
+  "insertTextFormat":1
+}
+{
+  "label":"members",
+  "kind":3,
+  "detail":"() => Iterable<DefaultedStringEnum>",
+  "inlineDetail":"() => Iterable<DefaultedStringEnum>",
+  "sortText":"00000000000000000001",
+  "insertTextFormat":1
+}
+
+jsdoc-members-8.js:13:23
+Flags: --lsp
+{
+  "label":"Member1",
+  "kind":6,
+  "detail":"InitializedStringEnum",
+  "inlineDetail":"InitializedStringEnum",
+  "documentation":{"kind":"markdown","value":"first member of an initialized string enum"},
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1
+}
+{
+  "label":"Member2",
+  "kind":6,
+  "detail":"InitializedStringEnum",
+  "inlineDetail":"InitializedStringEnum",
+  "documentation":{"kind":"markdown","value":"second member of an initialized string enum"},
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1
+}
+{
+  "label":"cast",
+  "kind":3,
+  "detail":"(input: ?string) => (void | InitializedStringEnum)",
+  "inlineDetail":"(input: ?string) => (void | InitializedStringEnum)",
+  "sortText":"00000000000000000001",
+  "insertTextFormat":1
+}
+{
+  "label":"isValid",
+  "kind":3,
+  "detail":"(input: ?string) => boolean",
+  "inlineDetail":"(input: ?string) => boolean",
+  "sortText":"00000000000000000001",
+  "insertTextFormat":1
+}
+{
+  "label":"members",
+  "kind":3,
+  "detail":"() => Iterable<InitializedStringEnum>",
+  "inlineDetail":"() => Iterable<InitializedStringEnum>",
+  "sortText":"00000000000000000001",
+  "insertTextFormat":1
+}
+
+jsdoc-members-8.js:15:12
+Flags: --lsp
+{
+  "label":"Member1",
+  "kind":6,
+  "detail":"NumberEnum",
+  "inlineDetail":"NumberEnum",
+  "documentation":{"kind":"markdown","value":"first member of a number enum"},
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1
+}
+{
+  "label":"Member2",
+  "kind":6,
+  "detail":"NumberEnum",
+  "inlineDetail":"NumberEnum",
+  "documentation":{"kind":"markdown","value":"second member of a number enum"},
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1
+}
+{
+  "label":"cast",
+  "kind":3,
+  "detail":"(input: ?number) => (void | NumberEnum)",
+  "inlineDetail":"(input: ?number) => (void | NumberEnum)",
+  "sortText":"00000000000000000001",
+  "insertTextFormat":1
+}
+{
+  "label":"isValid",
+  "kind":3,
+  "detail":"(input: ?number) => boolean",
+  "inlineDetail":"(input: ?number) => boolean",
+  "sortText":"00000000000000000001",
+  "insertTextFormat":1
+}
+{
+  "label":"members",
+  "kind":3,
+  "detail":"() => Iterable<NumberEnum>",
+  "inlineDetail":"() => Iterable<NumberEnum>",
+  "sortText":"00000000000000000001",
+  "insertTextFormat":1
+}
+
+jsdoc-members-8.js:17:13
+Flags: --lsp
+{
+  "label":"Member1",
+  "kind":6,
+  "detail":"BooleanEnum",
+  "inlineDetail":"BooleanEnum",
+  "documentation":{"kind":"markdown","value":"first member of a boolean enum"},
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1
+}
+{
+  "label":"Member2",
+  "kind":6,
+  "detail":"BooleanEnum",
+  "inlineDetail":"BooleanEnum",
+  "documentation":{"kind":"markdown","value":"second member of a boolean enum"},
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1
+}
+{
+  "label":"cast",
+  "kind":3,
+  "detail":"(input: ?boolean) => (void | BooleanEnum)",
+  "inlineDetail":"(input: ?boolean) => (void | BooleanEnum)",
+  "sortText":"00000000000000000001",
+  "insertTextFormat":1
+}
+{
+  "label":"isValid",
+  "kind":3,
+  "detail":"(input: ?boolean) => boolean",
+  "inlineDetail":"(input: ?boolean) => boolean",
+  "sortText":"00000000000000000001",
+  "insertTextFormat":1
+}
+{
+  "label":"members",
+  "kind":3,
+  "detail":"() => Iterable<BooleanEnum>",
+  "inlineDetail":"() => Iterable<BooleanEnum>",
+  "sortText":"00000000000000000001",
+  "insertTextFormat":1
+}
+
+jsdoc-members-8.js:19:12
+Flags: --lsp
+{
+  "label":"Member1",
+  "kind":6,
+  "detail":"SymbolEnum",
+  "inlineDetail":"SymbolEnum",
+  "documentation":{"kind":"markdown","value":"first member of a boolean enum"},
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1
+}
+{
+  "label":"Member2",
+  "kind":6,
+  "detail":"SymbolEnum",
+  "inlineDetail":"SymbolEnum",
+  "documentation":{"kind":"markdown","value":"second member of a boolean enum"},
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1
+}
+{
+  "label":"cast",
+  "kind":3,
+  "detail":"(input: ?symbol) => (void | SymbolEnum)",
+  "inlineDetail":"(input: ?symbol) => (void | SymbolEnum)",
+  "sortText":"00000000000000000001",
+  "insertTextFormat":1
+}
+{
+  "label":"isValid",
+  "kind":3,
+  "detail":"(input: ?symbol) => boolean",
+  "inlineDetail":"(input: ?symbol) => boolean",
+  "sortText":"00000000000000000001",
+  "insertTextFormat":1
+}
+{
+  "label":"members",
+  "kind":3,
+  "detail":"() => Iterable<SymbolEnum>",
+  "inlineDetail":"() => Iterable<SymbolEnum>",
+  "sortText":"00000000000000000001",
+  "insertTextFormat":1
 }
 

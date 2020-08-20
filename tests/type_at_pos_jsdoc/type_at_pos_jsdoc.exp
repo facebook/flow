@@ -226,7 +226,7 @@ Flags: --strip-root --pretty
   "end":5
 }
 
-objects-requires.js:9:6
+objects-requires.js:18:6
 Flags: --strip-root --pretty
 {
   "documentation":"foo is an identifier property",
@@ -235,17 +235,17 @@ Flags: --strip-root --pretty
   "loc":{
     "source":"objects-requires.js",
     "type":"SourceFile",
-    "start":{"line":9,"column":5,"offset":193},
-    "end":{"line":9,"column":7,"offset":196}
+    "start":{"line":18,"column":5,"offset":293},
+    "end":{"line":18,"column":7,"offset":296}
   },
   "path":"objects-requires.js",
-  "line":9,
-  "endline":9,
+  "line":18,
+  "endline":18,
   "start":5,
   "end":7
 }
 
-objects-requires.js:11:6
+objects-requires.js:20:6
 Flags: --strip-root --pretty
 {
   "documentation":"bar is a getter property",
@@ -254,17 +254,17 @@ Flags: --strip-root --pretty
   "loc":{
     "source":"objects-requires.js",
     "type":"SourceFile",
-    "start":{"line":11,"column":5,"offset":212},
-    "end":{"line":11,"column":7,"offset":215}
+    "start":{"line":20,"column":5,"offset":312},
+    "end":{"line":20,"column":7,"offset":315}
   },
   "path":"objects-requires.js",
-  "line":11,
-  "endline":11,
+  "line":20,
+  "endline":20,
   "start":5,
   "end":7
 }
 
-objects-requires.js:13:6
+objects-requires.js:22:6
 Flags: --strip-root --pretty
 {
   "documentation":"baz is an identifier property with variance",
@@ -273,17 +273,17 @@ Flags: --strip-root --pretty
   "loc":{
     "source":"objects-requires.js",
     "type":"SourceFile",
-    "start":{"line":13,"column":5,"offset":231},
-    "end":{"line":13,"column":7,"offset":234}
+    "start":{"line":22,"column":5,"offset":331},
+    "end":{"line":22,"column":7,"offset":334}
   },
   "path":"objects-requires.js",
-  "line":13,
-  "endline":13,
+  "line":22,
+  "endline":22,
   "start":5,
   "end":7
 }
 
-objects-requires.js:15:6
+objects-requires.js:24:6
 Flags: --strip-root --pretty
 {
   "documentation":"qux is a literal property",
@@ -292,17 +292,17 @@ Flags: --strip-root --pretty
   "loc":{
     "source":"objects-requires.js",
     "type":"SourceFile",
-    "start":{"line":15,"column":5,"offset":250},
-    "end":{"line":15,"column":7,"offset":253}
+    "start":{"line":24,"column":5,"offset":350},
+    "end":{"line":24,"column":7,"offset":353}
   },
   "path":"objects-requires.js",
-  "line":15,
-  "endline":15,
+  "line":24,
+  "endline":24,
   "start":5,
   "end":7
 }
 
-objects-requires.js:21:6
+objects-requires.js:30:6
 Flags: --strip-root --pretty
 {
   "documentation":"foo is an identifier property",
@@ -311,69 +311,12 @@ Flags: --strip-root --pretty
   "loc":{
     "source":"objects-requires.js",
     "type":"SourceFile",
-    "start":{"line":21,"column":5,"offset":330},
-    "end":{"line":21,"column":7,"offset":333}
+    "start":{"line":30,"column":5,"offset":430},
+    "end":{"line":30,"column":7,"offset":433}
   },
   "path":"objects-requires.js",
-  "line":21,
-  "endline":21,
-  "start":5,
-  "end":7
-}
-
-objects-requires.js:23:6
-Flags: --strip-root --pretty
-{
-  "documentation":"bar is a getter property",
-  "type":"number",
-  "reasons":[],
-  "loc":{
-    "source":"objects-requires.js",
-    "type":"SourceFile",
-    "start":{"line":23,"column":5,"offset":349},
-    "end":{"line":23,"column":7,"offset":352}
-  },
-  "path":"objects-requires.js",
-  "line":23,
-  "endline":23,
-  "start":5,
-  "end":7
-}
-
-objects-requires.js:25:6
-Flags: --strip-root --pretty
-{
-  "documentation":"baz is an identifier property with variance",
-  "type":"number",
-  "reasons":[],
-  "loc":{
-    "source":"objects-requires.js",
-    "type":"SourceFile",
-    "start":{"line":25,"column":5,"offset":368},
-    "end":{"line":25,"column":7,"offset":371}
-  },
-  "path":"objects-requires.js",
-  "line":25,
-  "endline":25,
-  "start":5,
-  "end":7
-}
-
-objects-requires.js:27:6
-Flags: --strip-root --pretty
-{
-  "documentation":"qux is a literal property",
-  "type":"number",
-  "reasons":[],
-  "loc":{
-    "source":"objects-requires.js",
-    "type":"SourceFile",
-    "start":{"line":27,"column":5,"offset":387},
-    "end":{"line":27,"column":7,"offset":390}
-  },
-  "path":"objects-requires.js",
-  "line":27,
-  "endline":27,
+  "line":30,
+  "endline":30,
   "start":5,
   "end":7
 }
@@ -381,14 +324,14 @@ Flags: --strip-root --pretty
 objects-requires.js:32:6
 Flags: --strip-root --pretty
 {
-  "documentation":"foo is an identifier property",
-  "type":"1",
+  "documentation":"bar is a getter property",
+  "type":"number",
   "reasons":[],
   "loc":{
     "source":"objects-requires.js",
     "type":"SourceFile",
-    "start":{"line":32,"column":5,"offset":453},
-    "end":{"line":32,"column":7,"offset":456}
+    "start":{"line":32,"column":5,"offset":449},
+    "end":{"line":32,"column":7,"offset":452}
   },
   "path":"objects-requires.js",
   "line":32,
@@ -400,14 +343,14 @@ Flags: --strip-root --pretty
 objects-requires.js:34:6
 Flags: --strip-root --pretty
 {
-  "documentation":"bar is a getter property",
-  "type":"2",
+  "documentation":"baz is an identifier property with variance",
+  "type":"number",
   "reasons":[],
   "loc":{
     "source":"objects-requires.js",
     "type":"SourceFile",
-    "start":{"line":34,"column":5,"offset":469},
-    "end":{"line":34,"column":7,"offset":472}
+    "start":{"line":34,"column":5,"offset":468},
+    "end":{"line":34,"column":7,"offset":471}
   },
   "path":"objects-requires.js",
   "line":34,
@@ -419,14 +362,14 @@ Flags: --strip-root --pretty
 objects-requires.js:36:6
 Flags: --strip-root --pretty
 {
-  "documentation":"baz is an identifier property with variance",
-  "type":"3",
+  "documentation":"qux is a literal property",
+  "type":"number",
   "reasons":[],
   "loc":{
     "source":"objects-requires.js",
     "type":"SourceFile",
-    "start":{"line":36,"column":5,"offset":485},
-    "end":{"line":36,"column":7,"offset":488}
+    "start":{"line":36,"column":5,"offset":487},
+    "end":{"line":36,"column":7,"offset":490}
   },
   "path":"objects-requires.js",
   "line":36,
@@ -435,7 +378,64 @@ Flags: --strip-root --pretty
   "end":7
 }
 
-objects-requires.js:38:6
+objects-requires.js:41:6
+Flags: --strip-root --pretty
+{
+  "documentation":"foo is an identifier property",
+  "type":"1",
+  "reasons":[],
+  "loc":{
+    "source":"objects-requires.js",
+    "type":"SourceFile",
+    "start":{"line":41,"column":5,"offset":553},
+    "end":{"line":41,"column":7,"offset":556}
+  },
+  "path":"objects-requires.js",
+  "line":41,
+  "endline":41,
+  "start":5,
+  "end":7
+}
+
+objects-requires.js:43:6
+Flags: --strip-root --pretty
+{
+  "documentation":"bar is a getter property",
+  "type":"2",
+  "reasons":[],
+  "loc":{
+    "source":"objects-requires.js",
+    "type":"SourceFile",
+    "start":{"line":43,"column":5,"offset":569},
+    "end":{"line":43,"column":7,"offset":572}
+  },
+  "path":"objects-requires.js",
+  "line":43,
+  "endline":43,
+  "start":5,
+  "end":7
+}
+
+objects-requires.js:45:6
+Flags: --strip-root --pretty
+{
+  "documentation":"baz is an identifier property with variance",
+  "type":"3",
+  "reasons":[],
+  "loc":{
+    "source":"objects-requires.js",
+    "type":"SourceFile",
+    "start":{"line":45,"column":5,"offset":585},
+    "end":{"line":45,"column":7,"offset":588}
+  },
+  "path":"objects-requires.js",
+  "line":45,
+  "endline":45,
+  "start":5,
+  "end":7
+}
+
+objects-requires.js:47:6
 Flags: --strip-root --pretty
 {
   "documentation":"qux is a literal property",
@@ -444,17 +444,17 @@ Flags: --strip-root --pretty
   "loc":{
     "source":"objects-requires.js",
     "type":"SourceFile",
-    "start":{"line":38,"column":5,"offset":501},
-    "end":{"line":38,"column":7,"offset":504}
+    "start":{"line":47,"column":5,"offset":601},
+    "end":{"line":47,"column":7,"offset":604}
   },
   "path":"objects-requires.js",
-  "line":38,
-  "endline":38,
+  "line":47,
+  "endline":47,
   "start":5,
   "end":7
 }
 
-objects-requires.js:42:7
+objects-requires.js:51:7
 Flags: --strip-root --pretty
 {
   "documentation":"this is a static property",
@@ -463,17 +463,17 @@ Flags: --strip-root --pretty
   "loc":{
     "source":"objects-requires.js",
     "type":"SourceFile",
-    "start":{"line":42,"column":5,"offset":521},
-    "end":{"line":42,"column":14,"offset":531}
+    "start":{"line":51,"column":5,"offset":621},
+    "end":{"line":51,"column":14,"offset":631}
   },
   "path":"objects-requires.js",
-  "line":42,
-  "endline":42,
+  "line":51,
+  "endline":51,
   "start":5,
   "end":14
 }
 
-objects-requires.js:44:7
+objects-requires.js:53:7
 Flags: --strip-root --pretty
 {
   "documentation":"this is a static method",
@@ -482,17 +482,17 @@ Flags: --strip-root --pretty
   "loc":{
     "source":"objects-requires.js",
     "type":"SourceFile",
-    "start":{"line":44,"column":5,"offset":544},
-    "end":{"line":44,"column":16,"offset":556}
+    "start":{"line":53,"column":5,"offset":644},
+    "end":{"line":53,"column":16,"offset":656}
   },
   "path":"objects-requires.js",
-  "line":44,
-  "endline":44,
+  "line":53,
+  "endline":53,
   "start":5,
   "end":16
 }
 
-objects-requires.js:47:12
+objects-requires.js:56:12
 Flags: --strip-root --pretty
 {
   "documentation":"this is an instance property",
@@ -501,17 +501,17 @@ Flags: --strip-root --pretty
   "loc":{
     "source":"objects-requires.js",
     "type":"SourceFile",
-    "start":{"line":47,"column":9,"offset":601},
-    "end":{"line":47,"column":20,"offset":613}
+    "start":{"line":56,"column":9,"offset":701},
+    "end":{"line":56,"column":20,"offset":713}
   },
   "path":"objects-requires.js",
-  "line":47,
-  "endline":47,
+  "line":56,
+  "endline":56,
   "start":9,
   "end":20
 }
 
-objects-requires.js:49:12
+objects-requires.js:58:12
 Flags: --strip-root --pretty
 {
   "documentation":"this is an instance method",
@@ -520,17 +520,17 @@ Flags: --strip-root --pretty
   "loc":{
     "source":"objects-requires.js",
     "type":"SourceFile",
-    "start":{"line":49,"column":9,"offset":636},
-    "end":{"line":49,"column":22,"offset":650}
+    "start":{"line":58,"column":9,"offset":736},
+    "end":{"line":58,"column":22,"offset":750}
   },
   "path":"objects-requires.js",
-  "line":49,
-  "endline":49,
+  "line":58,
+  "endline":58,
   "start":9,
   "end":22
 }
 
-objects-requires.js:51:12
+objects-requires.js:60:12
 Flags: --strip-root --pretty
 {
   "documentation":"property with variance",
@@ -539,17 +539,302 @@ Flags: --strip-root --pretty
   "loc":{
     "source":"objects-requires.js",
     "type":"SourceFile",
-    "start":{"line":51,"column":9,"offset":675},
-    "end":{"line":51,"column":20,"offset":687}
+    "start":{"line":60,"column":9,"offset":775},
+    "end":{"line":60,"column":20,"offset":787}
   },
   "path":"objects-requires.js",
-  "line":51,
-  "endline":51,
+  "line":60,
+  "endline":60,
   "start":9,
   "end":20
 }
 
-objects.js:84:5
+objects-requires.js:63:8
+Flags: --strip-root --pretty
+{
+  "documentation":"a defaulted string enum",
+  "type":"enum DefaultedStringEnum",
+  "reasons":[],
+  "loc":{
+    "source":"objects-requires.js",
+    "type":"SourceFile",
+    "start":{"line":63,"column":1,"offset":803},
+    "end":{"line":63,"column":19,"offset":822}
+  },
+  "path":"objects-requires.js",
+  "line":63,
+  "endline":63,
+  "start":1,
+  "end":19
+}
+
+objects-requires.js:65:23
+Flags: --strip-root --pretty
+{
+  "documentation":"first member of a defaulted string enum",
+  "type":"DefaultedStringEnum",
+  "reasons":[],
+  "loc":{
+    "source":"objects-requires.js",
+    "type":"SourceFile",
+    "start":{"line":65,"column":21,"offset":853},
+    "end":{"line":65,"column":27,"offset":860}
+  },
+  "path":"objects-requires.js",
+  "line":65,
+  "endline":65,
+  "start":21,
+  "end":27
+}
+
+objects-requires.js:67:23
+Flags: --strip-root --pretty
+{
+  "documentation":"second member of a defaulted string enum",
+  "type":"DefaultedStringEnum",
+  "reasons":[],
+  "loc":{
+    "source":"objects-requires.js",
+    "type":"SourceFile",
+    "start":{"line":67,"column":21,"offset":906},
+    "end":{"line":67,"column":27,"offset":913}
+  },
+  "path":"objects-requires.js",
+  "line":67,
+  "endline":67,
+  "start":21,
+  "end":27
+}
+
+objects-requires.js:69:8
+Flags: --strip-root --pretty
+{
+  "documentation":"an initialized string enum",
+  "type":"enum InitializedStringEnum",
+  "reasons":[],
+  "loc":{
+    "source":"objects-requires.js",
+    "type":"SourceFile",
+    "start":{"line":69,"column":1,"offset":939},
+    "end":{"line":69,"column":21,"offset":960}
+  },
+  "path":"objects-requires.js",
+  "line":69,
+  "endline":69,
+  "start":1,
+  "end":21
+}
+
+objects-requires.js:71:25
+Flags: --strip-root --pretty
+{
+  "documentation":"first member of an initialized string enum",
+  "type":"InitializedStringEnum",
+  "reasons":[],
+  "loc":{
+    "source":"objects-requires.js",
+    "type":"SourceFile",
+    "start":{"line":71,"column":23,"offset":993},
+    "end":{"line":71,"column":29,"offset":1000}
+  },
+  "path":"objects-requires.js",
+  "line":71,
+  "endline":71,
+  "start":23,
+  "end":29
+}
+
+objects-requires.js:73:25
+Flags: --strip-root --pretty
+{
+  "documentation":"second member of an initialized string enum",
+  "type":"InitializedStringEnum",
+  "reasons":[],
+  "loc":{
+    "source":"objects-requires.js",
+    "type":"SourceFile",
+    "start":{"line":73,"column":23,"offset":1050},
+    "end":{"line":73,"column":29,"offset":1057}
+  },
+  "path":"objects-requires.js",
+  "line":73,
+  "endline":73,
+  "start":23,
+  "end":29
+}
+
+objects-requires.js:75:6
+Flags: --strip-root --pretty
+{
+  "documentation":"a number enum",
+  "type":"enum NumberEnum",
+  "reasons":[],
+  "loc":{
+    "source":"objects-requires.js",
+    "type":"SourceFile",
+    "start":{"line":75,"column":1,"offset":1085},
+    "end":{"line":75,"column":10,"offset":1095}
+  },
+  "path":"objects-requires.js",
+  "line":75,
+  "endline":75,
+  "start":1,
+  "end":10
+}
+
+objects-requires.js:77:14
+Flags: --strip-root --pretty
+{
+  "documentation":"first member of a number enum",
+  "type":"NumberEnum",
+  "reasons":[],
+  "loc":{
+    "source":"objects-requires.js",
+    "type":"SourceFile",
+    "start":{"line":77,"column":12,"offset":1115},
+    "end":{"line":77,"column":18,"offset":1122}
+  },
+  "path":"objects-requires.js",
+  "line":77,
+  "endline":77,
+  "start":12,
+  "end":18
+}
+
+objects-requires.js:79:14
+Flags: --strip-root --pretty
+{
+  "documentation":"second member of a number enum",
+  "type":"NumberEnum",
+  "reasons":[],
+  "loc":{
+    "source":"objects-requires.js",
+    "type":"SourceFile",
+    "start":{"line":79,"column":12,"offset":1150},
+    "end":{"line":79,"column":18,"offset":1157}
+  },
+  "path":"objects-requires.js",
+  "line":79,
+  "endline":79,
+  "start":12,
+  "end":18
+}
+
+objects-requires.js:81:7
+Flags: --strip-root --pretty
+{
+  "documentation":"a boolean enum",
+  "type":"enum BooleanEnum",
+  "reasons":[],
+  "loc":{
+    "source":"objects-requires.js",
+    "type":"SourceFile",
+    "start":{"line":81,"column":1,"offset":1174},
+    "end":{"line":81,"column":11,"offset":1185}
+  },
+  "path":"objects-requires.js",
+  "line":81,
+  "endline":81,
+  "start":1,
+  "end":11
+}
+
+objects-requires.js:83:15
+Flags: --strip-root --pretty
+{
+  "documentation":"first member of a boolean enum",
+  "type":"BooleanEnum",
+  "reasons":[],
+  "loc":{
+    "source":"objects-requires.js",
+    "type":"SourceFile",
+    "start":{"line":83,"column":13,"offset":1207},
+    "end":{"line":83,"column":19,"offset":1214}
+  },
+  "path":"objects-requires.js",
+  "line":83,
+  "endline":83,
+  "start":13,
+  "end":19
+}
+
+objects-requires.js:85:15
+Flags: --strip-root --pretty
+{
+  "documentation":"second member of a boolean enum",
+  "type":"BooleanEnum",
+  "reasons":[],
+  "loc":{
+    "source":"objects-requires.js",
+    "type":"SourceFile",
+    "start":{"line":85,"column":13,"offset":1244},
+    "end":{"line":85,"column":19,"offset":1251}
+  },
+  "path":"objects-requires.js",
+  "line":85,
+  "endline":85,
+  "start":13,
+  "end":19
+}
+
+objects-requires.js:87:6
+Flags: --strip-root --pretty
+{
+  "documentation":"a symbol enum",
+  "type":"enum SymbolEnum",
+  "reasons":[],
+  "loc":{
+    "source":"objects-requires.js",
+    "type":"SourceFile",
+    "start":{"line":87,"column":1,"offset":1269},
+    "end":{"line":87,"column":10,"offset":1279}
+  },
+  "path":"objects-requires.js",
+  "line":87,
+  "endline":87,
+  "start":1,
+  "end":10
+}
+
+objects-requires.js:89:15
+Flags: --strip-root --pretty
+{
+  "documentation":"first member of a boolean enum",
+  "type":"SymbolEnum",
+  "reasons":[],
+  "loc":{
+    "source":"objects-requires.js",
+    "type":"SourceFile",
+    "start":{"line":89,"column":12,"offset":1299},
+    "end":{"line":89,"column":18,"offset":1306}
+  },
+  "path":"objects-requires.js",
+  "line":89,
+  "endline":89,
+  "start":12,
+  "end":18
+}
+
+objects-requires.js:91:15
+Flags: --strip-root --pretty
+{
+  "documentation":"second member of a boolean enum",
+  "type":"SymbolEnum",
+  "reasons":[],
+  "loc":{
+    "source":"objects-requires.js",
+    "type":"SourceFile",
+    "start":{"line":91,"column":12,"offset":1335},
+    "end":{"line":91,"column":18,"offset":1342}
+  },
+  "path":"objects-requires.js",
+  "line":91,
+  "endline":91,
+  "start":12,
+  "end":18
+}
+
+objects.js:163:5
 Flags: --strip-root --pretty
 {
   "documentation":"identifier property of an object literal",
@@ -558,17 +843,17 @@ Flags: --strip-root --pretty
   "loc":{
     "source":"objects.js",
     "type":"SourceFile",
-    "start":{"line":84,"column":5,"offset":1354},
-    "end":{"line":84,"column":5,"offset":1355}
+    "start":{"line":163,"column":5,"offset":2412},
+    "end":{"line":163,"column":5,"offset":2413}
   },
   "path":"objects.js",
-  "line":84,
-  "endline":84,
+  "line":163,
+  "endline":163,
   "start":5,
   "end":5
 }
 
-objects.js:86:5
+objects.js:165:5
 Flags: --strip-root --pretty
 {
   "documentation":"literal property of an object literal",
@@ -577,17 +862,17 @@ Flags: --strip-root --pretty
   "loc":{
     "source":"objects.js",
     "type":"SourceFile",
-    "start":{"line":86,"column":5,"offset":1367},
-    "end":{"line":86,"column":5,"offset":1368}
+    "start":{"line":165,"column":5,"offset":2425},
+    "end":{"line":165,"column":5,"offset":2426}
   },
   "path":"objects.js",
-  "line":86,
-  "endline":86,
+  "line":165,
+  "endline":165,
   "start":5,
   "end":5
 }
 
-objects.js:88:5
+objects.js:167:5
 Flags: --strip-root --pretty
 {
   "documentation":"computed property of an object literal",
@@ -596,17 +881,17 @@ Flags: --strip-root --pretty
   "loc":{
     "source":"objects.js",
     "type":"SourceFile",
-    "start":{"line":88,"column":5,"offset":1380},
-    "end":{"line":88,"column":5,"offset":1381}
+    "start":{"line":167,"column":5,"offset":2438},
+    "end":{"line":167,"column":5,"offset":2439}
   },
   "path":"objects.js",
-  "line":88,
-  "endline":88,
+  "line":167,
+  "endline":167,
   "start":5,
   "end":5
 }
 
-objects.js:90:5
+objects.js:169:5
 Flags: --strip-root --pretty
 {
   "documentation":"annotated getter property of an object literal",
@@ -615,17 +900,17 @@ Flags: --strip-root --pretty
   "loc":{
     "source":"objects.js",
     "type":"SourceFile",
-    "start":{"line":90,"column":5,"offset":1393},
-    "end":{"line":90,"column":5,"offset":1394}
+    "start":{"line":169,"column":5,"offset":2451},
+    "end":{"line":169,"column":5,"offset":2452}
   },
   "path":"objects.js",
-  "line":90,
-  "endline":90,
+  "line":169,
+  "endline":169,
   "start":5,
   "end":5
 }
 
-objects.js:94:5
+objects.js:173:5
 Flags: --strip-root --pretty
 {
   "documentation":"method property of an object literal",
@@ -634,17 +919,17 @@ Flags: --strip-root --pretty
   "loc":{
     "source":"objects.js",
     "type":"SourceFile",
-    "start":{"line":94,"column":5,"offset":1478},
-    "end":{"line":94,"column":5,"offset":1479}
+    "start":{"line":173,"column":5,"offset":2536},
+    "end":{"line":173,"column":5,"offset":2537}
   },
   "path":"objects.js",
-  "line":94,
-  "endline":94,
+  "line":173,
+  "endline":173,
   "start":5,
   "end":5
 }
 
-objects.js:96:5
+objects.js:175:5
 Flags: --strip-root --pretty
 {
   "documentation":"async method property of an object literal",
@@ -653,12 +938,12 @@ Flags: --strip-root --pretty
   "loc":{
     "source":"objects.js",
     "type":"SourceFile",
-    "start":{"line":96,"column":5,"offset":1491},
-    "end":{"line":96,"column":5,"offset":1492}
+    "start":{"line":175,"column":5,"offset":2549},
+    "end":{"line":175,"column":5,"offset":2550}
   },
   "path":"objects.js",
-  "line":96,
-  "endline":96,
+  "line":175,
+  "endline":175,
   "start":5,
   "end":5
 }

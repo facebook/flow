@@ -139,6 +139,33 @@ class documentation_searcher (def_loc : Loc.t) =
       in
       if List.exists this#is_target locs then List.iter find comments;
       super#object_property prop
+
+    method! enum_declaration loc enum =
+      let open Flow_ast.Statement.EnumDeclaration in
+      let { comments; id = (id_loc, _); _ } = enum in
+      if this#is_target loc || this#is_target id_loc then find comments;
+      super#enum_declaration loc enum
+
+    method! enum_defaulted_member member =
+      let open Flow_ast.Statement.EnumDeclaration.DefaultedMember in
+      let (loc, { id = (_, Flow_ast.Identifier.{ comments; _ }) }) = member in
+      if this#is_target loc then find comments;
+      member
+
+    method enum_initialized_member
+        : 'a. ('a, Loc.t) Flow_ast.Statement.EnumDeclaration.InitializedMember.t ->
+          ('a, Loc.t) Flow_ast.Statement.EnumDeclaration.InitializedMember.t =
+      fun member ->
+        let open Flow_ast.Statement.EnumDeclaration.InitializedMember in
+        let (loc, { id = (_, Flow_ast.Identifier.{ comments; _ }); _ }) = member in
+        if this#is_target loc then find comments;
+        member
+
+    method! enum_boolean_member member = this#enum_initialized_member member
+
+    method! enum_number_member member = this#enum_initialized_member member
+
+    method! enum_string_member member = this#enum_initialized_member member
   end
 
 let documentation_of_def_loc def_loc ast =

@@ -1,7 +1,16 @@
 //@flow
 
 const React = require('React');
-const {FunctionComponent, ClassComponent, Foo} = require('./objects');
+const {
+  FunctionComponent,
+  ClassComponent,
+  Foo,
+  DefaultedStringEnum,
+  InitializedStringEnum,
+  NumberEnum,
+  BooleanEnum,
+  SymbolEnum,
+} = require('./objects');
 import type {Props} from './objects';
 
 let component1 =
@@ -50,3 +59,34 @@ fooInst.instanceMethod();
 //         ^
 fooInst.varianceProp;
 //         ^
+
+DefaultedStringEnum;
+//     ^
+DefaultedStringEnum.Member1;
+//                    ^
+DefaultedStringEnum.Member2;
+//                    ^
+InitializedStringEnum;
+//     ^
+InitializedStringEnum.Member1;
+//                      ^
+InitializedStringEnum.Member2;
+//                      ^
+NumberEnum;
+//   ^
+NumberEnum.Member1;
+//           ^
+NumberEnum.Member2;
+//           ^
+BooleanEnum;
+//    ^
+BooleanEnum.Member1;
+//            ^
+BooleanEnum.Member2;
+//            ^
+SymbolEnum;
+//   ^
+SymbolEnum.Member1;
+//            ^
+SymbolEnum.Member2;
+//            ^

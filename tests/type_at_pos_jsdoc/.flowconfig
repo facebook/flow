@@ -10,5 +10,6 @@
 no_flowlib=false
 types_first=true
 experimental.jsdoc=true
+experimental.enums=true
 
 [strict]
