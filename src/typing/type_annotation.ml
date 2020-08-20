@@ -1028,7 +1028,12 @@ let rec convert cx tparams_map =
                 def_reason = reason;
               } ) )
     in
-    let t = poly_type_of_tparams (Context.make_source_poly_id cx loc) tparams ft in
+    let poly_id =
+      match tparams with
+      | None -> Context.generate_poly_id cx
+      | Some (tparams_loc, _) -> Context.make_source_poly_id cx tparams_loc
+    in
+    let t = poly_type_of_tparams poly_id tparams ft in
     ( (loc, t),
       Function
         {

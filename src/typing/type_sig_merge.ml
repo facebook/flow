@@ -1167,9 +1167,9 @@ and merge_tparams_helper component file reason t = function
   | Poly (tparams_loc, tp, tps) ->
     let poly_reason = Reason.(update_desc_reason (fun d -> RPolyType d) reason) in
     let tparams = Nel.map (merge_tparam component file) (tp, tps) in
-    let id = Context.generate_poly_id file.cx in
-    Type.(
-      DefT (poly_reason, trust, PolyT { tparams_loc; tparams; t_out = t (Nel.to_list tparams); id }))
+    let t_out = t (Nel.to_list tparams) in
+    let id = Context.make_source_poly_id file.cx tparams_loc in
+    Type.(DefT (poly_reason, trust, PolyT { tparams_loc; tparams; t_out; id }))
 
 and merge_tparam component file tp =
   let (TParam { name_loc; name; polarity; bound; default }) = tp in
