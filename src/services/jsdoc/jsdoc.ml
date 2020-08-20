@@ -193,12 +193,21 @@ module Parser = struct
       param_tag_pre_description jsdoc name path Param.NotOptional lexbuf
     | _ -> skip_tag jsdoc lexbuf
 
+  and description_tag jsdoc lexbuf =
+    let desc_buf = Buffer.create 127 in
+    let description = description desc_buf lexbuf in
+    let jsdoc = { jsdoc with description } in
+    tag jsdoc lexbuf
+
   and tag jsdoc lexbuf =
     match%sedlex lexbuf with
     | "param"
     | "arg"
     | "argument" ->
       param_tag jsdoc lexbuf
+    | "description"
+    | "desc" ->
+      description_tag jsdoc lexbuf
     | _ -> skip_tag jsdoc lexbuf
 
   let initial lexbuf =

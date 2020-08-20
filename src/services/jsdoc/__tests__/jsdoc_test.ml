@@ -212,4 +212,43 @@ let tests =
                            { description = None; optional = OptionalWithDefault "has a default" } );
                        ] );
                    ];
+         "description_tag"
+         >:: mk_test
+               (mk_block_comment
+                  {|* this description will be overridden
+                    * @param a description for a
+                    * @description this description overrides the first one
+                    *   and can have multiple lines
+                    * @param b another parameter|})
+               ~description:
+                 (Some "this description overrides the first one\nand can have multiple lines")
+               ~params:
+                 Jsdoc.Param.
+                   [
+                     ( "a",
+                       [(Name, { description = Some "description for a"; optional = NotOptional })]
+                     );
+                     ( "b",
+                       [(Name, { description = Some "another parameter"; optional = NotOptional })]
+                     );
+                   ];
+         "desc_tag"
+         >:: mk_test
+               (mk_block_comment
+                  {|* this description will be overridden
+                    * @param a description for a
+                    * @desc this desc overrides the first one
+                    *   and can have multiple lines
+                    * @param b another parameter|})
+               ~description:(Some "this desc overrides the first one\nand can have multiple lines")
+               ~params:
+                 Jsdoc.Param.
+                   [
+                     ( "a",
+                       [(Name, { description = Some "description for a"; optional = NotOptional })]
+                     );
+                     ( "b",
+                       [(Name, { description = Some "another parameter"; optional = NotOptional })]
+                     );
+                   ];
        ]
