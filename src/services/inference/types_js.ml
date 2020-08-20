@@ -1122,7 +1122,21 @@ end = struct
               Base.Option.map first_internal_error ~f:(spf "First check internal error:\n%s") ))
 end
 
-let ensure_parsed_or_trigger_recheck ~options ~profiling ~workers ~reader files =
+exception Unexpected_file_changes of File_key.t Nel.t
+
+let handle_unexpected_file_changes changed_files =
+  let filenames = Nel.map File_key.to_string changed_files in
+  let reason =
+    LspProt.(
+      match filenames with
+      | (filename, []) -> Single_file_changed { filename }
+      | _ -> Many_files_changed { file_count = Nel.length filenames })
+  in
+  let filename_set = filenames |> Nel.to_list |> SSet.of_list in
+  ServerMonitorListenerState.push_files_to_recheck ~reason filename_set;
+  raise Lwt.Canceled
+
+let ensure_parsed ~options ~profiling ~workers ~reader files =
   with_timer_lwt ~options "EnsureParsed" profiling (fun () ->
       (* The set of files that we expected to parse, but were skipped, either because they had
        * changed since the last recheck or no longer exist on disk. This is in contrast to files
@@ -1131,25 +1145,13 @@ let ensure_parsed_or_trigger_recheck ~options ~profiling ~workers ~reader files 
       let%lwt parse_unexpected_skips =
         Parsing_service_js.ensure_parsed ~reader options workers files
       in
-      if FilenameSet.is_empty parse_unexpected_skips then
-        Lwt.return_unit
-      else
-        let files_to_recheck =
-          FilenameSet.fold
-            (fun f acc -> SSet.add (File_key.to_string f) acc)
-            parse_unexpected_skips
-            SSet.empty
-        in
-        let file_count = SSet.cardinal files_to_recheck in
-        let reason =
-          LspProt.(
-            if file_count = 1 then
-              Single_file_changed { filename = SSet.elements files_to_recheck |> List.hd }
-            else
-              Many_files_changed { file_count })
-        in
-        ServerMonitorListenerState.push_files_to_recheck ~reason files_to_recheck;
-        raise Lwt.Canceled)
+      match FilenameSet.elements parse_unexpected_skips with
+      | [] -> Lwt.return_unit
+      | hd :: tl -> raise (Unexpected_file_changes (hd, tl)))
+
+let ensure_parsed_or_trigger_recheck ~options ~profiling ~workers ~reader files =
+  try%lwt ensure_parsed ~options ~profiling ~workers ~reader files
+  with Unexpected_file_changes changed_files -> handle_unexpected_file_changes changed_files
 
 (* When checking contents, ensure that dependencies are checked. Might have more
    general utility.
