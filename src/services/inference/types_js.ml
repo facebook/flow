@@ -1122,7 +1122,7 @@ end = struct
               Base.Option.map first_internal_error ~f:(spf "First check internal error:\n%s") ))
 end
 
-let ensure_parsed ~options ~profiling ~workers ~reader files =
+let ensure_parsed_or_trigger_recheck ~options ~profiling ~workers ~reader files =
   with_timer_lwt ~options "EnsureParsed" profiling (fun () ->
       (* The set of files that we expected to parse, but were skipped, either because they had
        * changed since the last recheck or no longer exist on disk. This is in contrast to files
@@ -1967,7 +1967,9 @@ end = struct
                    ~root_modules:(Modulename.Set.union unchanged_modules changed_modules)) ))
     in
     Hh_logger.info "Re-resolving directly dependent files";
-    let%lwt () = ensure_parsed ~options ~profiling ~workers ~reader direct_dependent_files in
+    let%lwt () =
+      ensure_parsed_or_trigger_recheck ~options ~profiling ~workers ~reader direct_dependent_files
+    in
 
     let node_modules_containers = !Files.node_modules_containers in
     (* requires in direct_dependent_files must be re-resolved before merging. *)
@@ -2240,7 +2242,12 @@ end = struct
       restart_if_faster_than_recheck ~options ~env ~to_merge_or_check ~file_watcher_metadata
     in
     let%lwt () =
-      ensure_parsed ~options ~profiling ~workers ~reader (CheckedSet.all to_merge_or_check)
+      ensure_parsed_or_trigger_recheck
+        ~options
+        ~profiling
+        ~workers
+        ~reader
+        (CheckedSet.all to_merge_or_check)
     in
     (* recheck *)
     let%lwt ( updated_errors,
@@ -2930,7 +2937,12 @@ let full_check ~profiling ~options ~workers ?focus_targets env =
        is not surprising because files_to_infer returns a closed checked set. Thus, the only purpose
        of calling include_dependencies_and_dependents is to compute components. *)
       let%lwt () =
-        ensure_parsed ~options ~profiling ~workers ~reader (CheckedSet.all to_merge_or_check)
+        ensure_parsed_or_trigger_recheck
+          ~options
+          ~profiling
+          ~workers
+          ~reader
+          (CheckedSet.all to_merge_or_check)
       in
       let recheck_reasons = [LspProt.Full_init] in
       let%lwt (updated_errors, coverage, _, sig_new_or_changed, _, _, merge_internal_error) =
