@@ -98,6 +98,8 @@ module Make () : sig
 
   val copy : ('a -> 'b) -> 'a indexed -> 'b t
 
+  val init : int -> (int -> 'a) -> 'a t
+
   val get : 'a t -> index -> 'a
 
   val length : 'a t -> int
