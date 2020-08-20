@@ -526,38 +526,36 @@ end
 
 module Completion : sig
   type completionItemKind =
-    | Text (* 1 *)
-    | Method (* 2 *)
-    | Function (* 3 *)
-    | Constructor (* 4 *)
-    | Field (* 5 *)
-    | Variable (* 6 *)
-    | Class (* 7 *)
-    | Interface (* 8 *)
-    | Module (* 9 *)
-    | Property (* 10 *)
-    | Unit (* 11 *)
-    | Value (* 12 *)
-    | Enum (* 13 *)
-    | Keyword (* 14 *)
-    | Snippet (* 15 *)
-    | Color (* 16 *)
-    | File (* 17 *)
-    | Reference (* 18 *)
-    | Folder (* 19 *)
-    | EnumMember (* 20 *)
-    | Constant (* 21 *)
-    | Struct (* 22 *)
-    | Event (* 23 *)
-    | Operator (* 24 *)
-    | TypeParameter (* 25 *)
+    | Text  (** 1 *)
+    | Method  (** 2 *)
+    | Function  (** 3 *)
+    | Constructor  (** 4 *)
+    | Field  (** 5 *)
+    | Variable  (** 6 *)
+    | Class  (** 7 *)
+    | Interface  (** 8 *)
+    | Module  (** 9 *)
+    | Property  (** 10 *)
+    | Unit  (** 11 *)
+    | Value  (** 12 *)
+    | Enum  (** 13 *)
+    | Keyword  (** 14 *)
+    | Snippet  (** 15 *)
+    | Color  (** 16 *)
+    | File  (** 17 *)
+    | Reference  (** 18 *)
+    | Folder  (** 19 *)
+    | EnumMember  (** 20 *)
+    | Constant  (** 21 *)
+    | Struct  (** 22 *)
+    | Event  (** 23 *)
+    | Operator  (** 24 *)
+    | TypeParameter  (** 25 *)
   [@@deriving enum]
 
   type insertTextFormat =
-    | PlainText (* 1 *)
-    (* the insertText/textEdits are just plain strings *)
-    | SnippetFormat (* 2 *)
-                    (* wire: just "Snippet" *)
+    | PlainText  (** 1 -- the insertText/textEdits are just plain strings *)
+    | SnippetFormat  (** 2 -- wire: just "Snippet" *)
   [@@deriving enum]
 
   type completionTriggerKind =
@@ -588,27 +586,17 @@ module Completion : sig
   }
 
   and completionItem = {
-    label: string;
-    (* the label in the UI *)
-    kind: completionItemKind option;
-    (* tells editor which icon to use *)
-    detail: string option;
-    (* human-readable string like type/symbol info *)
-    documentation: markedString list option;
-    (* human-readable doc-comment *)
-    preselect: bool;
-    (* select this item when showing *)
-    sortText: string option;
-    (* used for sorting; if absent, uses label *)
-    filterText: string option;
-    (* used for filtering; if absent, uses label *)
-    insertText: string option;
-    (* used for inserting; if absent, uses label *)
+    label: string;  (** the label in the UI *)
+    kind: completionItemKind option;  (** tells editor which icon to use *)
+    detail: string option;  (** human-readable string like type/symbol info *)
+    documentation: markedString list option;  (** human-readable doc-comment *)
+    preselect: bool;  (** select this item when showing *)
+    sortText: string option;  (** used for sorting; if absent, uses label *)
+    filterText: string option;  (** used for filtering; if absent, uses label *)
+    insertText: string option;  (** used for inserting; if absent, uses label *)
     insertTextFormat: insertTextFormat option;
-    textEdits: TextEdit.t list;
-    (* wire: split into hd and tl *)
-    command: Command.t option;
-    (* if present, is executed after completion *)
+    textEdits: TextEdit.t list;  (** wire: split into hd and tl *)
+    command: Command.t option;  (** if present, is executed after completion *)
     data: Hh_json.json option;
   }
 end

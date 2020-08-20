@@ -48,21 +48,19 @@ let uri_of_string (s : string) : documentUri = DocumentUri s
 
 let string_of_uri (DocumentUri s) : string = s
 
-(* A position is between two characters like an 'insert' cursor in a editor *)
 type position = {
-  line: int;
-  (* line position in a document [zero-based] *)
-  character: int; (* character offset on a line in a document [zero-based] *)
+  line: int;  (** line position in a document [zero-based] *)
+  character: int;  (** character offset on a line in a document [zero-based] *)
 }
+(** A position is between two characters like an 'insert' cursor in a editor *)
 
-(* A range is comparable to a selection in an editor *)
 type range = {
-  start: position;
-  (* the range's start position *)
-  end_: position; (* the range's end position [exclusive] *)
+  start: position;  (** the range's start position *)
+  end_: position;  (** the range's end position [exclusive] *)
 }
+(** A range is comparable to a selection in an editor *)
 
-(* Represents a location inside a resource, such as a line inside a text file *)
+(** Represents a location inside a resource, such as a line inside a text file *)
 module Location = struct
   type t = {
     uri: documentUri;
@@ -70,8 +68,8 @@ module Location = struct
   }
 end
 
-(* Represents a location inside a resource which also wants to display a
-   friendly name to the user. *)
+(** Represents a location inside a resource which also wants to display a
+  friendly name to the user. *)
 module DefinitionLocation = struct
   type t = {
     location: Location.t;
@@ -85,58 +83,53 @@ module MarkupKind = struct
     | PlainText
 end
 
-(* markedString can be used to render human readable text. It is either a
- * markdown string or a code-block that provides a language and a code snippet.
- * Note that markdown strings will be sanitized by the client - including
- * escaping html *)
+(** markedString can be used to render human readable text. It is either a
+  markdown string or a code-block that provides a language and a code snippet.
+  Note that markdown strings will be sanitized by the client - including
+  escaping html *)
 type markedString =
   | MarkedString of string
-  (* lang, value *)
-  | MarkedCode of string * string
+  | MarkedCode of string * string  (** lang, value *)
 
-(* Represents a reference to a command. Provides a title which will be used to
- * represent a command in the UI. Commands are identitifed using a string
- * identifier and the protocol currently doesn't specify a set of well known
- * commands. So executing a command requires some tool extension code. *)
+(** Represents a reference to a command. Provides a title which will be used to
+  represent a command in the UI. Commands are identitifed using a string
+  identifier and the protocol currently doesn't specify a set of well known
+  commands. So executing a command requires some tool extension code. *)
 module Command = struct
   type name = Command of string
 
   type t = {
-    title: string;
-    (* title of the command, like `save` *)
-    command: name;
-    (* the identifier of the actual command handler *)
-    arguments: Hh_json.json list; (* wire: it can be omitted *)
+    title: string;  (** title of the command, like `save` *)
+    command: name;  (** the identifier of the actual command handler *)
+    arguments: Hh_json.json list;  (** wire: it can be omitted *)
   }
 end
 
-(* A textual edit applicable to a text document. If n textEdits are applied
+(** A textual edit applicable to a text document. If n textEdits are applied
    to a text document all text edits describe changes to the initial document
    version. Execution wise text edits should applied from the bottom to the
    top of the text document. Overlapping text edits are not supported. *)
 module TextEdit = struct
   type t = {
-    range: range;
-    (* to insert text, use a range where start = end *)
-    newText: string; (* for delete operations, use an empty string *)
+    range: range;  (** to insert text, use a range where start = end *)
+    newText: string;  (** for delete operations, use an empty string *)
   }
 end
 
-(* Text documents are identified using a URI. *)
+(** Text documents are identified using a URI. *)
 module TextDocumentIdentifier = struct
-  type t = { uri: documentUri (* the text document's URI *) }
+  type t = { uri: documentUri  (** the text document's URI *) }
 end
 
-(* An identifier to denote a specific version of a text document. *)
+(** An identifier to denote a specific version of a text document. *)
 module VersionedTextDocumentIdentifier = struct
   type t = {
-    uri: documentUri;
-    (* the text document's URI *)
-    version: int; (* the version number of this document *)
+    uri: documentUri;  (** the text document's URI *)
+    version: int;  (** the version number of this document *)
   }
 end
 
-(* Describes textual changes on a single text document. The text document is
+(** Describes textual changes on a single text document. The text document is
    referred to as a VersionedTextDocumentIdentifier to allow clients to check
    the text document version before an edit is applied. *)
 module TextDocumentEdit = struct
@@ -146,24 +139,21 @@ module TextDocumentEdit = struct
   }
 end
 
-(* A workspace edit represents changes to many resources managed in the
+(** A workspace edit represents changes to many resources managed in the
    workspace. A workspace edit consists of a mapping from a URI to an
    array of TextEdits to be applied to the document with that URI. *)
 module WorkspaceEdit = struct
-  type t = { changes: TextEdit.t list SMap.t (* holds changes to existing docs *) }
+  type t = { changes: TextEdit.t list SMap.t  (** holds changes to existing docs *) }
 end
 
-(* An item to transfer a text document from the client to the server. The
+(** An item to transfer a text document from the client to the server. The
    version number strictly increases after each change, including undo/redo. *)
 module TextDocumentItem = struct
   type t = {
-    uri: documentUri;
-    (* the text document's URI *)
-    languageId: string;
-    (* the text document's language identifier *)
-    version: int;
-    (* the version of the document *)
-    text: string; (* the content of the opened text document *)
+    uri: documentUri;  (** the text document's URI *)
+    languageId: string;  (** the text document's language identifier *)
+    version: int;  (** the version of the document *)
+    text: string;  (** the content of the opened text document *)
   }
 end
 
@@ -182,35 +172,32 @@ module CodeLens = struct
   }
 end
 
-(* A parameter literal used in requests to pass a text document and a position
+(** A parameter literal used in requests to pass a text document and a position
    inside that document. *)
 module TextDocumentPositionParams = struct
   type t = {
-    textDocument: TextDocumentIdentifier.t;
-    (* the text document *)
-    position: position; (* the position inside the text document *)
+    textDocument: TextDocumentIdentifier.t;  (** the text document *)
+    position: position;  (** the position inside the text document *)
   }
 end
 
-(* A document filter denotes a document through properties like language,
+(** A document filter denotes a document through properties like language,
    schema or pattern. E.g. language:"typescript",scheme:"file"
    or language:"json",pattern:"**/package.json" *)
 module DocumentFilter = struct
   type t = {
-    language: string option;
-    (* a language id, like "typescript" *)
-    scheme: string option;
-    (* a uri scheme, like "file" or "untitled" *)
-    pattern: string option; (* a glob pattern, like "*.{ts,js}" *)
+    language: string option;  (** a language id, like "typescript" *)
+    scheme: string option;  (** a uri scheme, like "file" or "untitled" *)
+    pattern: string option;  (** a glob pattern, like "*.{ts,js}" *)
   }
 end
 
-(* A document selector is the combination of one or many document filters. *)
+(** A document selector is the combination of one or many document filters. *)
 module DocumentSelector = struct
   type t = DocumentFilter.t list
 end
 
-(* Represents information about programming constructs like variables etc. *)
+(** Represents information about programming constructs like variables etc. *)
 module SymbolInformation = struct
   (* These numbers should match
    * https://microsoft.github.io/language-server-protocol/specification#textDocument_documentSymbol
@@ -244,13 +231,12 @@ module SymbolInformation = struct
   type t = {
     name: string;
     kind: symbolKind;
-    location: Location.t;
-    (* the span of the symbol including its contents *)
-    containerName: string option; (* the symbol containing this symbol *)
+    location: Location.t;  (** the span of the symbol including its contents *)
+    containerName: string option;  (** the symbol containing this symbol *)
   }
 end
 
-(* For showing messages (not diagnostics) in the user interface. *)
+(** For showing messages (not diagnostics) in the user interface. *)
 module MessageType = struct
   type t =
     | ErrorMessage [@value 1]
@@ -261,18 +247,18 @@ module MessageType = struct
 end
 
 module CodeActionKind = struct
-  (*  The kind of a code action.
-   *  Kinds are a hierarchical list of identifiers separated by `.`, e.g.
-   * `"refactor.extract.function"`.
-   * The set of kinds is open and client needs to announce the kinds it supports
-   * to the server during initialization.
-   * CodeActionKind.t uses a pair to represent a non-empty list and provides utility
-   * functions for creation, membership, printing.
-   * Module CodeAction below also references this module as Kind.
-   *)
   type t = string * string list
+  (** The kind of a code action.
+    Kinds are a hierarchical list of identifiers separated by `.`, e.g.
+    `"refactor.extract.function"`.
+    The set of kinds is open and client needs to announce the kinds it supports
+    to the server during initialization.
+    CodeActionKind.t uses a pair to represent a non-empty list and provides utility
+    functions for creation, membership, printing.
+    Module CodeAction below also references this module as Kind.
+   *)
 
-  (* is x of kind k? *)
+  (** is x of kind k? *)
   let is_kind : t -> t -> bool =
     let rec is_prefix_of ks xs =
       match (ks, xs) with
@@ -282,23 +268,23 @@ module CodeActionKind = struct
     in
     (fun (k, ks) (x, xs) -> String.equal k x && is_prefix_of ks xs)
 
-  (* does `ks` contain kind `k` *)
+  (** does `ks` contain kind `k` *)
   let contains_kind k ks = List.exists (is_kind k) ks
 
-  (* does an optional list of kinds `ks` contain kind `k` *)
+  (** does an optional list of kinds `ks` contain kind `k` *)
   let contains_kind_opt ~default k ks =
     match ks with
     | Some ks -> contains_kind k ks
     | None -> default
 
-  (* Create a kind from a string that follows the spec *)
+  (** Create a kind from a string that follows the spec *)
   let kind_of_string : string -> t =
    fun s ->
     match String.split_on_char '.' s with
     | [] -> failwith "split_on_char does not return an empty list"
     | k :: ks -> (k, ks)
 
-  (* Create the equivalent string that the spec would have required *)
+  (** Create the equivalent string that the spec would have required *)
   let string_of_kind : t -> string = (fun (k, ks) -> String.concat "." (k :: ks))
 
   (* Create a new sub-kind of an existing kind *)
@@ -306,18 +292,18 @@ module CodeActionKind = struct
     let cons_to_end (ss : string list) (s : string) = Base.List.(fold_right ss ~f:cons ~init:[s]) in
     (fun (k, ks) s -> (k, cons_to_end ks s))
 
-  (* Some of the constants defined by the spec *)
+  (** Some of the constants defined by the spec *)
   let quickfix = kind_of_string "quickfix"
 
-  (* Document wide code actions *)
+  (** Document wide code actions *)
   let source = kind_of_string "source"
 end
 
-(* Cancellation notification, method="$/cancelRequest" *)
+(** Cancellation notification, method="$/cancelRequest" *)
 module CancelRequest = struct
   type params = cancelParams
 
-  and cancelParams = { id: lsp_id (* the request id to cancel *) }
+  and cancelParams = { id: lsp_id  (** the request id to cancel *) }
 end
 
 module SignatureHelpClientCapabilities = struct
@@ -335,32 +321,26 @@ module SignatureHelpClientCapabilities = struct
   and parameterInformation = { labelOffsetSupport: bool }
 end
 
-(* Initialize request, method="initialize" *)
+(** Initialize request, method="initialize" *)
 module Initialize = struct
   type textDocumentSyncKind =
-    (* docs should not be synced at all. Wire "None" *)
-    | NoSync [@value 0]
-    (* synced by always sending full content. Wire "Full" *)
-    | FullSync [@value 1]
+    | NoSync [@value 0]  (** docs should not be synced at all. Wire "None" *)
+    | FullSync [@value 1]  (** synced by always sending full content. Wire "Full" *)
     | IncrementalSync [@value 2]
   [@@deriving enum]
 
   type params = {
-    processId: int option;
-    (* pid of parent process *)
-    rootPath: string option;
-    (* deprecated *)
-    rootUri: documentUri option;
-    (* the root URI of the workspace *)
+    processId: int option;  (** pid of parent process *)
+    rootPath: string option;  (** deprecated *)
+    rootUri: documentUri option;  (** the root URI of the workspace *)
     initializationOptions: initializationOptions;
-    client_capabilities: client_capabilities;
-    (* "capabilities" over wire *)
-    trace: trace; (* the initial trace setting, default="off" *)
+    client_capabilities: client_capabilities;  (** "capabilities" over wire *)
+    trace: trace;  (** the initial trace setting, default="off" *)
   }
 
-  and result = { server_capabilities: server_capabilities (* "capabilities" over wire *) }
+  and result = { server_capabilities: server_capabilities  (** "capabilities" over wire *) }
 
-  and errorData = { retry: bool (* should client retry the initialize request *) }
+  and errorData = { retry: bool  (** should client retry the initialize request *) }
 
   and trace =
     | Off
@@ -377,37 +357,33 @@ module Initialize = struct
   }
 
   and workspaceClientCapabilities = {
-    applyEdit: bool;
-    (* client supports appling batch edits *)
+    applyEdit: bool;  (** client supports appling batch edits *)
     workspaceEdit: workspaceEdit;
     didChangeWatchedFiles: dynamicRegistration; (* omitted: other dynamic-registration fields *)
   }
 
   and dynamicRegistration = {
-    dynamicRegistration: bool; (* client supports dynamic registration for this capability *)
+    dynamicRegistration: bool;  (** client supports dynamic registration for this capability *)
   }
 
-  and workspaceEdit = { documentChanges: bool (* client supports versioned doc changes *) }
+  and workspaceEdit = { documentChanges: bool  (** client supports versioned doc changes *) }
 
   and textDocumentClientCapabilities = {
     synchronization: synchronization;
-    completion: completion;
-    (* textDocument/completion *)
+    completion: completion;  (** textDocument/completion *)
     codeAction: codeAction;
     (* omitted: dynamic-registration fields *)
     signatureHelp: SignatureHelpClientCapabilities.t;
   }
 
-  (* synchronization capabilities say what messages the client is capable
-   * of sending, should be be so asked by the server.
-   * We use the "can_" prefix for OCaml naming reasons; it's absent in LSP *)
   and synchronization = {
-    can_willSave: bool;
-    (* client can send textDocument/willSave *)
-    can_willSaveWaitUntil: bool;
-    (* textDoc.../willSaveWaitUntil *)
-    can_didSave: bool; (* textDocument/didSave *)
+    can_willSave: bool;  (** client can send textDocument/willSave *)
+    can_willSaveWaitUntil: bool;  (** textDoc.../willSaveWaitUntil *)
+    can_didSave: bool;  (** textDocument/didSave *)
   }
+  (** synchronization capabilities say what messages the client is capable
+    of sending, should be be so asked by the server.
+    We use the "can_" prefix for OCaml naming reasons; it's absent in LSP *)
 
   and completion = { completionItem: completionItem }
 
@@ -417,38 +393,34 @@ module Initialize = struct
   }
 
   and codeAction = {
-    (* Whether code action supports dynamic registration. *)
     codeAction_dynamicRegistration: bool;
-    (* wire: dynamicRegistraction *)
-    (* The client support code action literals as a valid
-     * response of the `textDocument/codeAction` request. *)
+        (** Whether code action supports dynamic registration. (wire: dynamicRegistraction) *)
     codeActionLiteralSupport: codeActionliteralSupport option;
+        (** The client support code action literals as a valid
+            response of the `textDocument/codeAction` request. *)
   }
 
   and codeActionliteralSupport = {
-    (* The code action kind values the client supports. When this
-     * property exists the client also guarantees that it will
-     * handle values outside its set gracefully and falls back
-     * to a default value when unknown. *)
-    codeAction_valueSet: CodeActionKind.t list; (* wire: valueSet *)
+    codeAction_valueSet: CodeActionKind.t list;
+        (** The code action kind values the client supports. When this
+            property exists the client also guarantees that it will
+            handle values outside its set gracefully and falls back
+            to a default value when unknown.
+            (wire: valueSet) *)
   }
 
   and windowClientCapabilities = {
-    status: bool;
-    (* Nuclide-specific: client supports window/showStatusRequest *)
-    progress: bool;
-    (* Nuclide-specific: client supports window/progress *)
-    actionRequired: bool; (* Nuclide-specific: client supports window/actionRequired *)
+    status: bool;  (** Nuclide-specific: client supports window/showStatusRequest *)
+    progress: bool;  (** Nuclide-specific: client supports window/progress *)
+    actionRequired: bool;  (** Nuclide-specific: client supports window/actionRequired *)
   }
 
   and telemetryClientCapabilities = {
-    connectionStatus: bool; (* Nuclide-specific: client supports telemetry/connectionStatus *)
+    connectionStatus: bool;  (** Nuclide-specific: client supports telemetry/connectionStatus *)
   }
 
-  (* What capabilities the server provides *)
   and server_capabilities = {
-    textDocumentSync: textDocumentSyncOptions;
-    (* how to sync *)
+    textDocumentSync: textDocumentSyncOptions;  (** how to sync *)
     hoverProvider: bool;
     completionProvider: completionOptions option;
     signatureHelpProvider: signatureHelpOptions option;
@@ -456,10 +428,8 @@ module Initialize = struct
     typeDefinitionProvider: bool;
     referencesProvider: bool;
     documentHighlightProvider: bool;
-    documentSymbolProvider: bool;
-    (* ie. document outline *)
-    workspaceSymbolProvider: bool;
-    (* ie. find-symbol-in-project *)
+    documentSymbolProvider: bool;  (** ie. document outline *)
+    workspaceSymbolProvider: bool;  (** ie. find-symbol-in-project *)
     codeActionProvider: codeActionOptions;
     codeLensProvider: codeLensOptions option;
     documentFormattingProvider: bool;
@@ -469,26 +439,25 @@ module Initialize = struct
     documentLinkProvider: documentLinkOptions option;
     executeCommandProvider: executeCommandOptions option;
     implementationProvider: bool;
-    (* Nuclide-specific features below *)
-    typeCoverageProvider: bool;
-    rageProvider: bool;
+    typeCoverageProvider: bool;  (** nuclide-specific *)
+    rageProvider: bool;  (** nuclide-specific *)
   }
+  (** What capabilities the server provides *)
 
   and completionOptions = {
-    resolveProvider: bool;
-    (* server resolves extra info on demand *)
-    completion_triggerCharacters: string list; (* wire "triggerCharacters" *)
+    resolveProvider: bool;  (** server resolves extra info on demand *)
+    completion_triggerCharacters: string list;  (** wire "triggerCharacters" *)
   }
 
   and signatureHelpOptions = {
-    sighelp_triggerCharacters: string list; (* wire "triggerCharacters" *)
+    sighelp_triggerCharacters: string list;  (** wire "triggerCharacters" *)
   }
 
   and codeActionOptions =
     | CodeActionBool of bool
     | CodeActionOptions of { codeActionKinds: CodeActionKind.t list }
 
-  and codeLensOptions = { codelens_resolveProvider: bool (* wire "resolveProvider" *) }
+  and codeLensOptions = { codelens_resolveProvider: bool  (** wire "resolveProvider" *) }
 
   and documentOnTypeFormattingOptions = {
     firstTriggerCharacter: string;
@@ -496,15 +465,12 @@ module Initialize = struct
     moreTriggerCharacter: string list;
   }
 
-  and documentLinkOptions = { doclink_resolveProvider: bool (* wire "resolveProvider" *) }
+  and documentLinkOptions = { doclink_resolveProvider: bool  (** wire "resolveProvider" *) }
 
   and executeCommandOptions = {
-    commands: Command.name list; (* the commands to be executed on the server *)
+    commands: Command.name list;  (** the commands to be executed on the server *)
   }
 
-  (* text document sync options say what messages the server requests the
-   * client to send. We use the "want_" prefix for OCaml naming reasons;
-   * this prefix is absent in LSP. *)
   and textDocumentSyncOptions = {
     want_openClose: bool;
     (* textDocument/didOpen+didClose *)
@@ -515,18 +481,21 @@ module Initialize = struct
     (* textDoc.../willSaveWaitUntil *)
     want_didSave: saveOptions option; (* textDocument/didSave *)
   }
+  (** text document sync options say what messages the server requests the
+    client to send. We use the "want_" prefix for OCaml naming reasons;
+    this prefix is absent in LSP. *)
 
   (* full only on open. Wire "Incremental" *)
-  and saveOptions = { includeText: bool (* the client should include content on save *) }
+  and saveOptions = { includeText: bool  (** the client should include content on save *) }
 end
 
-(* Shutdown request, method="shutdown" *)
 module Shutdown = struct end
+(** Shutdown request, method="shutdown" *)
 
-(* Exit notification, method="exit" *)
 module Exit = struct end
+(** Exit notification, method="exit" *)
 
-(* Rage request, method="telemetry/rage" *)
+(** Rage request, method="telemetry/rage" *)
 module Rage = struct
   type result = rageItem list
 
@@ -536,27 +505,26 @@ module Rage = struct
   }
 end
 
-(* Code Lens resolve request, method="codeLens/resolve" *)
+(** Code Lens resolve request, method="codeLens/resolve" *)
 module CodeLensResolve = struct
   type params = CodeLens.t
 
   and result = CodeLens.t
 end
 
-(* Hover request, method="textDocument/hover" *)
+(** Hover request, method="textDocument/hover" *)
 module Hover = struct
   type params = TextDocumentPositionParams.t
 
   and result = hoverResult option
 
   and hoverResult = {
-    contents: markedString list;
-    (* wire: either a single one or an array *)
+    contents: markedString list;  (** wire: either a single one or an array *)
     range: range option;
   }
 end
 
-(* PublishDiagnostics notification, method="textDocument/PublishDiagnostics" *)
+(** PublishDiagnostics notification, method="textDocument/PublishDiagnostics" *)
 module PublishDiagnostics = struct
   type diagnosticSeverity =
     | Error [@value 1]
@@ -573,18 +541,13 @@ module PublishDiagnostics = struct
   }
 
   and diagnostic = {
-    range: range;
-    (* the range at which the message applies *)
-    severity: diagnosticSeverity option;
-    (* if omitted, client decides *)
-    code: diagnosticCode;
-    (* the diagnostic's code. *)
-    source: string option;
-    (* human-readable string, eg. typescript/lint *)
-    message: string;
-    (* the diagnostic's message *)
+    range: range;  (** the range at which the message applies *)
+    severity: diagnosticSeverity option;  (** if omitted, client decides *)
+    code: diagnosticCode;  (** the diagnostic's code. *)
+    source: string option;  (** human-readable string, eg. typescript/lint *)
+    message: string;  (** the diagnostic's message *)
     relatedInformation: diagnosticRelatedInformation list;
-    relatedLocations: relatedLocation list; (* legacy FB extension *)
+    relatedLocations: relatedLocation list;  (** legacy FB extension *)
   }
 
   and diagnosticCode =
@@ -593,45 +556,43 @@ module PublishDiagnostics = struct
     | NoCode
 
   and diagnosticRelatedInformation = {
-    relatedLocation: Location.t;
-    (* wire: just "location" *)
-    relatedMessage: string; (* wire: just "message" *)
+    relatedLocation: Location.t;  (** wire: just "location" *)
+    relatedMessage: string;  (** wire: just "message" *)
   }
 
   (* legacy FB extension *)
   and relatedLocation = diagnosticRelatedInformation
 end
 
-(* DidOpenTextDocument notification, method="textDocument/didOpen" *)
+(** DidOpenTextDocument notification, method="textDocument/didOpen" *)
 module DidOpen = struct
   type params = didOpenTextDocumentParams
 
   and didOpenTextDocumentParams = {
-    textDocument: TextDocumentItem.t; (* the document that was opened *)
+    textDocument: TextDocumentItem.t;  (** the document that was opened *)
   }
 end
 
-(* DidCloseTextDocument notification, method="textDocument/didClose" *)
+(** DidCloseTextDocument notification, method="textDocument/didClose" *)
 module DidClose = struct
   type params = didCloseTextDocumentParams
 
   and didCloseTextDocumentParams = {
-    textDocument: TextDocumentIdentifier.t; (* the doc that was closed *)
+    textDocument: TextDocumentIdentifier.t;  (** the doc that was closed *)
   }
 end
 
-(* DidSaveTextDocument notification, method="textDocument/didSave" *)
+(** DidSaveTextDocument notification, method="textDocument/didSave" *)
 module DidSave = struct
   type params = didSaveTextDocumentParams
 
   and didSaveTextDocumentParams = {
-    textDocument: TextDocumentIdentifier.t;
-    (* the doc that was saved *)
-    text: string option; (* content when saved; depends on includeText *)
+    textDocument: TextDocumentIdentifier.t;  (** the doc that was saved *)
+    text: string option;  (** content when saved; depends on includeText *)
   }
 end
 
-(* DidChangeTextDocument notification, method="textDocument/didChange" *)
+(** DidChangeTextDocument notification, method="textDocument/didChange" *)
 module DidChange = struct
   type params = didChangeTextDocumentParams
 
@@ -641,15 +602,13 @@ module DidChange = struct
   }
 
   and textDocumentContentChangeEvent = {
-    range: range option;
-    (* the range of the document that changed *)
-    rangeLength: int option;
-    (* the length that got replaced *)
-    text: string; (* the new text of the range/document *)
+    range: range option;  (** the range of the document that changed *)
+    rangeLength: int option;  (** the length that got replaced *)
+    text: string;  (** the new text of the range/document *)
   }
 end
 
-(* Watched files changed notification, method="workspace/didChangeWatchedFiles" *)
+(** Watched files changed notification, method="workspace/didChangeWatchedFiles" *)
 module DidChangeWatchedFiles = struct
   type registerOptions = { watchers: fileSystemWatcher list }
 
@@ -669,7 +628,7 @@ module DidChangeWatchedFiles = struct
   }
 end
 
-(* Goto Definition request, method="textDocument/definition" *)
+(** Goto Definition request, method="textDocument/definition" *)
 module Definition = struct
   type params = TextDocumentPositionParams.t
 
@@ -678,26 +637,24 @@ module Definition = struct
   (* wire: either a single one or an array *)
 end
 
-(* Goto TypeDefinition request, method="textDocument/typeDefinition" *)
+(** Goto TypeDefinition request, method="textDocument/typeDefinition" *)
 module TypeDefinition = struct
   type params = TextDocumentPositionParams.t
 
   and result = DefinitionLocation.t list
 end
 
+(** A code action represents a change that can be performed in code, e.g. to fix a problem or
+  to refactor code. *)
 module CodeAction = struct
-  (* A code action represents a change that can be performed in code, e.g. to fix a problem or
-    to refactor code. *)
   type t = {
-    (* A short, human-readable, title for this code action. *)
-    title: string;
-    (* The kind of the code action. Used to filter code actions. *)
-    kind: CodeActionKind.t;
-    (* The diagnostics that this code action resolves. *)
+    title: string;  (** A short, human-readable, title for this code action. *)
+    kind: CodeActionKind.t;  (** The kind of the code action. Used to filter code actions. *)
     diagnostics: PublishDiagnostics.diagnostic list;
-    (* A CodeAction must set either `edit` and/or a `command`.
-       If both are supplied, the `edit` is applied first, then the `command` is executed. *)
+        (** The diagnostics that this code action resolves. *)
     action: edit_and_or_command;
+        (** A CodeAction must set either `edit` and/or a `command`.
+            If both are supplied, the `edit` is applied first, then the `command` is executed. *)
   }
 
   and edit_and_or_command =
@@ -715,12 +672,9 @@ end
 (* Code Action Request, method="textDocument/codeAction" *)
 module CodeActionRequest = struct
   type params = {
-    (* The document in which the command was invoked. *)
-    textDocument: TextDocumentIdentifier.t;
-    (* The range for which the command was invoked. *)
-    range: range;
-    (* Context carrying additional information. *)
-    context: codeActionContext;
+    textDocument: TextDocumentIdentifier.t;  (** The document in which the command was invoked. *)
+    range: range;  (** The range for which the command was invoked. *)
+    context: codeActionContext;  (** Context carrying additional information. *)
   }
 
   (* Contains additional diagnostic information about the context in which
@@ -768,8 +722,8 @@ module Completion = struct
    * https://microsoft.github.io/language-server-protocol/specification#textDocument_completion
    *)
   type insertTextFormat =
-    | PlainText [@value 1] (* the insertText/textEdits are just plain strings *)
-    | SnippetFormat [@value 2] (* wire: just "Snippet" *)
+    | PlainText [@value 1]  (** the insertText/textEdits are just plain strings *)
+    | SnippetFormat [@value 2]  (** wire: just "Snippet" *)
   [@@deriving enum]
 
   type completionTriggerKind =
@@ -800,27 +754,17 @@ module Completion = struct
   }
 
   and completionItem = {
-    label: string;
-    (* the label in the UI *)
-    kind: completionItemKind option;
-    (* tells editor which icon to use *)
-    detail: string option;
-    (* human-readable string like type/symbol info *)
-    documentation: markedString list option;
-    (* human-readable doc-comment *)
-    preselect: bool;
-    (* select this item when showing *)
-    sortText: string option;
-    (* used for sorting; if absent, uses label *)
-    filterText: string option;
-    (* used for filtering; if absent, uses label *)
-    insertText: string option;
-    (* used for inserting; if absent, uses label *)
+    label: string;  (** the label in the UI *)
+    kind: completionItemKind option;  (** tells editor which icon to use *)
+    detail: string option;  (** human-readable string like type/symbol info *)
+    documentation: markedString list option;  (** human-readable doc-comment *)
+    preselect: bool;  (** select this item when showing *)
+    sortText: string option;  (** used for sorting; if absent, uses label *)
+    filterText: string option;  (** used for filtering; if absent, uses label *)
+    insertText: string option;  (** used for inserting; if absent, uses label *)
     insertTextFormat: insertTextFormat option;
-    textEdits: TextEdit.t list;
-    (* wire: split into hd and tl *)
-    command: Command.t option;
-    (* if present, is executed after completion *)
+    textEdits: TextEdit.t list;  (** wire: split into hd and tl *)
+    command: Command.t option;  (** if present, is executed after completion *)
     data: Hh_json.json option;
   }
 end
