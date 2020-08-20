@@ -78,29 +78,25 @@ let flow_completion_to_lsp
     (item : ServerProt.Response.complete_autocomplete_result) : Lsp.Completion.completionItem =
   Lsp.Completion.(
     ServerProt.Response.(
-      let insert_text = Base.Option.value item.res_insert_text ~default:item.res_name in
-      let trunc n s =
-        if String.length s < n then
-          s
-        else
-          String.sub s 0 n ^ "..."
-      in
-      let column_width = 80 in
-      let text_edit loc newText : Lsp.TextEdit.t =
-        { Lsp.TextEdit.range = loc_to_lsp_range loc; Lsp.TextEdit.newText }
-      in
-      let plaintext_text_edits =
-        lazy
-          ( if Base.Option.is_some item.res_insert_text then
-            [text_edit item.res_loc insert_text]
+      let itemType = None in
+      let inlineDetail =
+        let trunc n s =
+          if String.length s < n then
+            s
           else
-            [] )
+            String.sub s 0 n ^ "..."
+        in
+        let column_width = 80 in
+        Some (trunc column_width item.res_ty)
       in
-      let (itemType, inlineDetail, detail, insertTextFormat, textEdits) =
-        let itemType = None in
-        let inlineDetail = Some (trunc column_width item.res_ty) in
-        let detail = inlineDetail in
-        (itemType, inlineDetail, detail, Some PlainText, Lazy.force plaintext_text_edits)
+      let detail = inlineDetail in
+      let insertTextFormat = Some PlainText in
+      let textEdits =
+        match item.res_insert_text with
+        | Some insert_text ->
+          let range = loc_to_lsp_range item.res_loc in
+          [{ Lsp.TextEdit.range; newText = insert_text }]
+        | None -> []
       in
       let sortText = Some (Printf.sprintf "%020u" item.rank) in
       let documentation =
@@ -117,8 +113,7 @@ let flow_completion_to_lsp
         preselect = is_preselect_supported && item.res_preselect;
         sortText;
         filterText = None;
-        (* deprecated and should not be used *)
-        insertText = None;
+        insertText = None (* deprecated and should not be used *);
         insertTextFormat;
         textEdits;
         command = None;
