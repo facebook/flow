@@ -13,6 +13,7 @@ type file_watcher =
 type status' =
   | Initializing
   | Ready
+  | Deferred of { reason: string }
 
 type status = file_watcher * status'
 
@@ -25,6 +26,7 @@ let string_of_status =
   let string_of_status = function
     | Initializing -> "still initializing"
     | Ready -> "ready"
+    | Deferred { reason } -> Printf.sprintf "deferred (%s)" reason
   in
   fun (watcher, status) ->
     Printf.sprintf
