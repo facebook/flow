@@ -21,10 +21,10 @@ module.exports = { a0, a1, a2, a3 };
 
 Stats:
   Files changed:                            1
-  Number of sig. ver. errors:               4
-  Number of annotations required:           4
   Number of annotations added:              3
   Total size of annotations:               10
+  Number of sig. ver. errors:               4
+  Number of annotations required:           4
   Number of annotations skipped:            0
 
 Errors:

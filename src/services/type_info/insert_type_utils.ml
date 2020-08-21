@@ -316,62 +316,61 @@ module Error = struct
     | Unsupported_error_kind -> { c with unsupported_error_kind = c.unsupported_error_kind + 1 }
 end
 
-module Stats = struct
+module type BASE_STATS = sig
+  type t
+
+  val empty : t
+
+  val combine : t -> t -> t
+
+  val serialize : t -> string list
+
+  val report : t -> string list
+end
+
+module Stats (Extra : BASE_STATS) = struct
   type t = {
-    number_of_sig_ver_errors: int;
-    number_of_annotations_required: int;
     number_of_annotations_added: int;
     total_size_of_annotations: int;
-    number_of_annotations_skipped: int;
+    extra: Extra.t;
   }
 
   let empty =
-    {
-      number_of_sig_ver_errors = 0;
-      number_of_annotations_required = 0;
-      number_of_annotations_added = 0;
-      total_size_of_annotations = 0;
-      number_of_annotations_skipped = 0;
-    }
+    { number_of_annotations_added = 0; total_size_of_annotations = 0; extra = Extra.empty }
 
   let combine c1 c2 =
     {
-      number_of_sig_ver_errors = c1.number_of_sig_ver_errors + c2.number_of_sig_ver_errors;
-      number_of_annotations_required =
-        c1.number_of_annotations_required + c2.number_of_annotations_required;
       number_of_annotations_added = c1.number_of_annotations_added + c2.number_of_annotations_added;
       total_size_of_annotations = c1.total_size_of_annotations + c2.total_size_of_annotations;
-      number_of_annotations_skipped =
-        c1.number_of_annotations_skipped + c2.number_of_annotations_skipped;
+      extra = Extra.combine c1.extra c2.extra;
     }
 
   let serialize s =
     let open Utils_js in
     let stats =
       [
-        spf "sig_ver_errors: %d" s.number_of_sig_ver_errors;
-        spf "annotations_required: %d" s.number_of_annotations_required;
         spf "annotations_added: %d" s.number_of_annotations_added;
         spf "total_size_of_annotations: %d" s.total_size_of_annotations;
-        spf "annotations_skipped: %d" s.number_of_annotations_skipped;
       ]
+      @ Extra.serialize s.extra
     in
+
     spf "(%s)" (String.concat ", " stats)
 
   let report s =
     let rows =
       [
-        string_of_row ~indent:2 "Number of sig. ver. errors" s.number_of_sig_ver_errors;
-        string_of_row ~indent:2 "Number of annotations required" s.number_of_annotations_required;
         string_of_row ~indent:2 "Number of annotations added" s.number_of_annotations_added;
         string_of_row ~indent:2 "Total size of annotations" s.total_size_of_annotations;
-        string_of_row ~indent:2 "Number of annotations skipped" s.number_of_annotations_skipped;
       ]
+      @ Extra.report s.extra
     in
     String.concat "\n" rows
 end
 
-module Acc = struct
+module Acc (Extra : BASE_STATS) = struct
+  module Stats = Stats (Extra)
+
   type t = {
     changed_set: FilenameSet.t;
     stats: Stats.t;

@@ -32,10 +32,10 @@ export function number_literal(): number {
 
 Stats:
   Files changed:                            1
-  Number of sig. ver. errors:               4
-  Number of annotations required:           4
   Number of annotations added:              4
   Total size of annotations:                9
+  Number of sig. ver. errors:               4
+  Number of annotations required:           4
   Number of annotations skipped:            0
 
 Errors:
