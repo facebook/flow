@@ -25,7 +25,7 @@ let initialize_environment () =
   ) else
     ()
 
-let main config codemod_flags () =
+let main (module Runnable : Codemod_runner.RUNNABLE) codemod_flags () =
   let (CommandUtils.Codemod_params
         {
           options_flags = option_values;
@@ -81,7 +81,8 @@ let main config codemod_flags () =
       roots
       Utils_js.FilenameSet.empty
   in
-  Codemod_utils.mk_main config ~options ~write ~repeat ~log_level ~shared_mem_config roots
+  let module M = Codemod_utils.MakeMain (Runnable) in
+  M.main ~options ~write ~repeat ~log_level ~shared_mem_config roots
 
 (***********************)
 (* Codemod subcommands *)
@@ -122,25 +123,26 @@ module Annotate_exports_command = struct
                ~doc:"Adds 'any' to all locations where normalization or validation fails");
     }
 
-  let config preserve_literals max_type_size default_any =
-    let open Codemod_utils in
-    let runner =
-      TypedRunner (Mapper (Annotate_exports.mapper ~preserve_literals ~max_type_size ~default_any))
-    in
-    let reporter =
-      let open Insert_type_utils in
-      let module Acc = Acc (Annotate_exports.SignatureVerificationErrorStats) in
-      {
-        Codemod_report.report = Codemod_report.StringReporter Acc.report;
-        combine = Acc.combine;
-        empty = Acc.empty;
-      }
-    in
-    { reporter; runner }
-
   let main codemod_flags preserve_literals max_type_size default_any () =
-    let config = config preserve_literals max_type_size default_any in
-    main config codemod_flags ()
+    let open Codemod_utils in
+    let open Insert_type_utils in
+    let module Runner = Codemod_runner.MakeSimpleTypedRunner (struct
+      module Acc = Acc (Annotate_exports.SignatureVerificationErrorStats)
+
+      type accumulator = Acc.t
+
+      let reporter =
+        {
+          Codemod_report.report = Codemod_report.StringReporter Acc.report;
+          combine = Acc.combine;
+          empty = Acc.empty;
+        }
+
+      let visit =
+        let mapper = Annotate_exports.mapper ~preserve_literals ~max_type_size ~default_any in
+        Codemod_utils.make_visitor (Mapper mapper)
+    end) in
+    main (module Runner) codemod_flags ()
 
   let command = CommandSpec.command spec main
 end
