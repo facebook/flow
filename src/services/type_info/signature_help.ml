@@ -66,10 +66,23 @@ let func_details ~jsdoc ~exact_by_default params rest_param return =
     match rest_param with
     | None -> param_tys
     | Some (name, t) ->
-      let param_name = "..." ^ parameter_name false name in
-      let param_ty = string_of_ty ~exact_by_default t in
-      let param_documentation = documentation_of_param name in
-      param_tys @ [{ ServerProt.Response.param_name; param_ty; param_documentation }]
+      let rest =
+        (* show the rest param's docs for all of the expanded params *)
+        let param_documentation = documentation_of_param name in
+        match t with
+        | Ty.Tup ts ->
+          Base.List.mapi
+            ~f:(fun i t ->
+              let param_name = Printf.sprintf "%s[%d]" (Base.Option.value name ~default:"arg") i in
+              let param_ty = string_of_ty ~exact_by_default t in
+              { ServerProt.Response.param_name; param_ty; param_documentation })
+            ts
+        | _ ->
+          let param_name = "..." ^ parameter_name false name in
+          let param_ty = string_of_ty ~exact_by_default t in
+          [{ ServerProt.Response.param_name; param_ty; param_documentation }]
+      in
+      param_tys @ rest
   in
   let return_ty = string_of_ty ~exact_by_default return in
   let func_documentation = Base.Option.bind jsdoc ~f:Find_documentation.documentation_of_jsdoc in
