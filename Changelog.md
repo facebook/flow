@@ -1,3 +1,17 @@
+### 0.132.0
+
+Likely to cause new Flow errors:
+* Disallow using any-typed values type annotations. [example](https://flow.org/try/#0CYUwxgNghgTiAEA3W8AeAueUB2BPA3AFCFgD22AzgC7y6arwC88AzPkA)
+
+New Features:
+* Added warnings against suppressions without error codes
+
+Notable bug fixes:
+* Fixed some crashes when Flow could not connect to Watchman
+
+Misc:
+* Fix syntax errors in README badges (thanks @jamesisaac)
+
 ### 0.131.0
 
 * "Go to Definition" on a JSX attribute name now jumps to the prop's type.
