@@ -622,6 +622,6 @@ let canonicalize_filenames ~cwd ~handle_imaginary filenames =
       | None -> handle_imaginary filename)
     filenames
 
-let expand_project_root_token ~root str =
+let expand_project_root_token ~root =
   let root = Path.to_string root |> Sys_utils.normalize_filename_dir_sep in
-  str |> Str.split_delim project_root_token |> String.concat root
+  (fun str -> str |> Str.split_delim project_root_token |> String.concat root)

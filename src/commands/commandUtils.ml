@@ -548,17 +548,11 @@ let file_options =
       FlowExitStatus.(exit ~msg Could_not_find_flowconfig)
   in
   let ignores_of_arg root patterns extras =
+    let expand_project_root_token = Files.expand_project_root_token ~root in
     let patterns = Base.List.rev_append extras patterns in
     Base.List.map
       ~f:(fun s ->
-        let root = Path.to_string root |> Sys_utils.normalize_filename_dir_sep in
-        let reg =
-          s
-          |> remove_exclusion
-          |> Str.split_delim Files.project_root_token
-          |> String.concat root
-          |> Str.regexp
-        in
+        let reg = s |> remove_exclusion |> expand_project_root_token |> Str.regexp in
         (s, reg))
       patterns
   in
