@@ -1522,10 +1522,10 @@ let handle_persistent_infer_type ~options ~reader ~id ~params ~loc ~metadata ~cl
       match
         Base.List.concat
           [
-            Base.Option.to_list documentation |> List.map (fun doc -> MarkedString doc);
             Base.Option.to_list ty
             |> List.map (fun elt ->
                    MarkedCode ("flow", Ty_printer.string_of_elt elt ~exact_by_default));
+            Base.Option.to_list documentation |> List.map (fun doc -> MarkedString doc);
           ]
       with
       | [] -> [MarkedString "?"]
