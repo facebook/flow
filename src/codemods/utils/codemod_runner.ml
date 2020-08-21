@@ -116,6 +116,49 @@ end
 (* Implementations *)
 (*******************)
 
+(* We calculate the files that need to be merged in the same way that recheck
+   would, but making the following assumptions:
+
+   (i) No files have already been checked (The codemod command does not use a running
+   server).
+
+   (ii) The set of dependent files depends on the mode we are running in. For a
+   SimpleTypedRunner there are no dependents of the root set, since we do not
+   care about downstream dependencies of the files that are codemoded/reduced over.
+   For a TypedRunnerWithPrepass, we calculate dependents similar to how checking
+   in watchman lazy-mode would work.
+
+   (iii) The set of roots (ie. targets of the transformation) becomes the focused
+   set.
+*)
+let merge_targets ~env ~options ~profiling ~get_dependent_files roots =
+  let { ServerEnv.dependency_info; _ } = env in
+  let sig_dependency_graph = Dependency_info.sig_dependency_graph dependency_info in
+  let implementation_dependency_graph =
+    Dependency_info.implementation_dependency_graph dependency_info
+  in
+  Hh_logger.info "Calculating dependencies";
+  let%lwt (sig_dependent_files, all_dependent_files) =
+    get_dependent_files sig_dependency_graph implementation_dependency_graph roots
+  in
+  let%lwt (to_merge, to_check, _to_merge_or_check, _components, _recheck_set) =
+    Types_js.include_dependencies_and_dependents
+      ~options
+      ~profiling
+      ~unchanged_checked:CheckedSet.empty
+      ~input:(CheckedSet.of_focused_list (FilenameSet.elements roots))
+      ~implementation_dependency_graph
+      ~sig_dependency_graph
+      ~sig_dependent_files
+      ~all_dependent_files
+  in
+  let roots = CheckedSet.all to_merge in
+  let components = Sort_js.topsort ~roots (Utils_js.FilenameGraph.to_map sig_dependency_graph) in
+  let%lwt (sig_dependency_graph, component_map) =
+    Types_js.calc_deps ~options ~profiling ~sig_dependency_graph ~components roots
+  in
+  Lwt.return (sig_dependency_graph, component_map, roots, to_check)
+
 (* As we merge, we will process the target files in Classic mode. These are
      included in roots set. *)
 let merge_job ~visit ~roots ~iteration ~worker_mutator ~options ~reader component =
@@ -209,6 +252,31 @@ let check_job ~visit ~iteration ~reader ~options acc roots =
     acc
     roots
 
+module type TYPED_RUNNER_WITH_PREPASS_CONFIG = sig
+  type accumulator
+
+  type prepass_state
+
+  type prepass_result
+
+  val reporter : accumulator Codemod_report.t
+
+  val prepass_init : unit -> prepass_state
+
+  val prepass_run :
+    Context.t ->
+    prepass_state ->
+    File_key.t ->
+    Mutator_state_reader.t ->
+    File_sig.With_ALoc.t ->
+    (ALoc.t, ALoc.t * Type.t) Flow_ast.Program.t ->
+    prepass_result
+
+  val store_precheck_result : prepass_result unit_result FilenameMap.t -> unit
+
+  val visit : (Loc.t, Loc.t) Flow_ast.Program.t -> Codemod_context.Typed.t -> accumulator
+end
+
 module type TYPED_RUNNER_CONFIG = sig
   type accumulator
 
@@ -230,51 +298,14 @@ module SimpleTypedRunner (C : SIMPLE_TYPED_RUNNER_CONFIG) : TYPED_RUNNER_CONFIG 
 
   let reporter = C.reporter
 
-  (* We calculate the files that need to be merged in the same way that recheck
-     would, but making the following assumptions:
-
-     (i) No files have already been checked (The codemod command does not use a running
-     server).
-
-     (ii) There are no dependent files. We do not care about downstream dependencies
-     of the files that are codemoded/reduced over, since we will not be reporting
-     errors there.
-
-     (iii) The set of roots (ie. targets of the transformation) becomes the focused
-     set.
-  *)
-  let merge_targets ~env ~options ~profiling roots =
-    let { ServerEnv.dependency_info; _ } = env in
-    let sig_dependency_graph = Dependency_info.sig_dependency_graph dependency_info in
-    let implementation_dependency_graph =
-      Dependency_info.implementation_dependency_graph dependency_info
-    in
-    Hh_logger.info "Calculating dependencies";
-    let%lwt (to_merge, _to_check, _to_merge_or_check, _components, _recheck_set) =
-      Types_js.include_dependencies_and_dependents
-        ~options
-        ~profiling
-        ~unchanged_checked:CheckedSet.empty
-        ~input:(CheckedSet.of_focused_list (FilenameSet.elements roots))
-        ~implementation_dependency_graph
-        ~sig_dependency_graph
-        ~sig_dependent_files:FilenameSet.empty
-        ~all_dependent_files:FilenameSet.empty
-    in
-    let roots = CheckedSet.all to_merge in
-    let components = Sort_js.topsort ~roots (Utils_js.FilenameGraph.to_map sig_dependency_graph) in
-    let%lwt (sig_dependency_graph, component_map) =
-      Types_js.calc_deps ~options ~profiling ~sig_dependency_graph ~components roots
-    in
-    Lwt.return (sig_dependency_graph, component_map, roots)
-
   let merge_and_check env workers options profiling roots ~iteration =
     Transaction.with_transaction (fun transaction ->
         let reader = Mutator_state_reader.create transaction in
 
         (* Calculate dependencies that need to be merged *)
-        let%lwt (sig_dependency_graph, component_map, files_to_merge) =
-          merge_targets ~env ~options ~profiling roots
+        let%lwt (sig_dependency_graph, component_map, files_to_merge, _) =
+          let get_dependent_files _ _ _ = Lwt.return (FilenameSet.empty, FilenameSet.empty) in
+          merge_targets ~env ~options ~profiling ~get_dependent_files roots
         in
         let (master_mutator, worker_mutator) =
           Context_heaps.Merge_context_mutator.create transaction files_to_merge
@@ -318,6 +349,111 @@ module SimpleTypedRunner (C : SIMPLE_TYPED_RUNNER_CONFIG) : TYPED_RUNNER_CONFIG 
               ~next:(MultiWorkerLwt.next workers (FilenameSet.elements roots))
           in
           Hh_logger.info "Done";
+          Lwt.return result)
+end
+
+(* This mode will run a prepass analysis over the input files and their downstream
+   dependents. The analysis is expected to gather information to be used later on
+   in the main codemod pass.
+
+   Module C is expected to handle the storing of this information. This is why it
+   is required to implement `prepass_init` and `store_precheck_result`. A typical
+   use for `prepass_init` is to setup typing hooks that will gather the necessary
+   information. `prepass_run` processes these results, while `store_precheck_result`
+   stores it to main memory.
+ *)
+module TypedRunnerWithPrepass (C : TYPED_RUNNER_WITH_PREPASS_CONFIG) : TYPED_RUNNER_CONFIG = struct
+  type accumulator = C.accumulator
+
+  let reporter = C.reporter
+
+  let pre_check_job ~reader ~options acc roots =
+    let state = C.prepass_init () in
+    List.fold_left
+      (fun acc file ->
+        match Merge_service.check options ~reader file with
+        | (file, Ok (Some (cx, file_sigs, typed_asts), _)) ->
+          let file_sig = FilenameMap.find file file_sigs in
+          let typed_ast = FilenameMap.find file typed_asts in
+          let result = C.prepass_run cx state file reader file_sig typed_ast in
+          FilenameMap.add file (Ok result) acc
+        | (_, Ok (None, _)) -> acc
+        | (_, Error e) -> FilenameMap.add file (Error e) acc)
+      acc
+      roots
+
+  let merge_and_check env workers options profiling roots ~iteration =
+    Transaction.with_transaction (fun transaction ->
+        let reader = Mutator_state_reader.create transaction in
+
+        (* Calculate dependencies that need to be merged *)
+        let%lwt (sig_dependency_graph, component_map, files_to_merge, files_to_check) =
+          let get_dependent_files sig_dependency_graph implementation_dependency_graph roots =
+            SharedMem_js.with_memory_timer_lwt ~options "AllDependentFiles" profiling (fun () ->
+                Lwt.return
+                  (Pure_dep_graph_operations.calc_all_dependents
+                     ~sig_dependency_graph
+                     ~implementation_dependency_graph
+                     roots))
+          in
+          merge_targets ~env ~options ~profiling ~get_dependent_files roots
+        in
+        let (master_mutator, worker_mutator) =
+          Context_heaps.Merge_context_mutator.create transaction files_to_merge
+        in
+        Hh_logger.info "Merging %d files" (FilenameSet.cardinal files_to_merge);
+        let%lwt (merge_result, _) =
+          Merge_service.merge_runner
+            ~job:(merge_job ~visit:C.visit ~roots ~iteration)
+            ~master_mutator
+            ~worker_mutator
+            ~reader
+            ~intermediate_result_callback:(fun _ -> ())
+            ~options
+            ~workers
+            ~sig_dependency_graph
+            ~component_map
+            ~recheck_set:files_to_merge
+        in
+        Hh_logger.info "Merging done.";
+        let merge_result =
+          List.fold_left
+            (fun acc (file, result) ->
+              match result with
+              | Ok result -> FilenameMap.union result acc
+              | Error e -> FilenameMap.add file (Error e) acc)
+            FilenameMap.empty
+            merge_result
+        in
+        match Options.arch options with
+        | Options.Classic ->
+          (* Nothing to do here *)
+          Lwt.return merge_result
+        | Options.TypesFirst _ ->
+          let files_to_check = CheckedSet.all files_to_check in
+          Hh_logger.info "Pre-Checking %d files" (FilenameSet.cardinal files_to_check);
+          let%lwt result =
+            MultiWorkerLwt.call
+              workers
+              ~job:(pre_check_job ~reader ~options)
+              ~neutral:FilenameMap.empty
+              ~merge:FilenameMap.union
+              ~next:(MultiWorkerLwt.next workers (FilenameSet.elements files_to_check))
+          in
+          Hh_logger.info "Pre-checking Done";
+          Hh_logger.info "Storing pre-checking results";
+          C.store_precheck_result result;
+          Hh_logger.info "Storing pre-checking results Done";
+          Hh_logger.info "Checking+Codemodding %d files" (FilenameSet.cardinal roots);
+          let%lwt result =
+            MultiWorkerLwt.call
+              workers
+              ~job:(check_job ~visit:C.visit ~iteration ~reader ~options)
+              ~neutral:FilenameMap.empty
+              ~merge:FilenameMap.union
+              ~next:(MultiWorkerLwt.next workers (FilenameSet.elements roots))
+          in
+          Hh_logger.info "Checking+Codemodding Done";
           Lwt.return result)
 end
 
@@ -590,6 +726,9 @@ end
 
 module MakeSimpleTypedRunner (C : SIMPLE_TYPED_RUNNER_CONFIG) : RUNNABLE =
   RepeatRunner (TypedRunner (SimpleTypedRunner (C)))
+
+module MakeTypedRunnerWithPrepass (C : TYPED_RUNNER_WITH_PREPASS_CONFIG) : RUNNABLE =
+  RepeatRunner (TypedRunner (TypedRunnerWithPrepass (C)))
 
 module MakeUntypedFlowInitRunner (C : UNTYPED_FLOW_INIT_RUNNER_CONFIG) : RUNNABLE =
   RepeatRunner (UntypedFlowInitRunner (C))
