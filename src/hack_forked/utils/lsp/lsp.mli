@@ -46,6 +46,13 @@ module MarkupKind : sig
     | PlainText
 end
 
+module MarkupContent : sig
+  type t = {
+    kind: MarkupKind.t;
+    value: string;
+  }
+end
+
 type markedString =
   | MarkedString of string
   | MarkedCode of string * string
@@ -731,6 +738,12 @@ module SignatureHelp : sig
     [@@deriving enum]
   end
 
+  module Documentation : sig
+    type t =
+      | String of string
+      | MarkupContent of MarkupContent.t
+  end
+
   type params = {
     loc: TextDocumentPositionParams.t;
     context: context option;
@@ -753,13 +766,13 @@ module SignatureHelp : sig
 
   and signature_information = {
     siginfo_label: string;
-    siginfo_documentation: string option;
+    siginfo_documentation: Documentation.t option;
     parameters: parameter_information list;
   }
 
   and parameter_information = {
     parinfo_label: string;
-    parinfo_documentation: string option;
+    parinfo_documentation: Documentation.t option;
   }
 end
 

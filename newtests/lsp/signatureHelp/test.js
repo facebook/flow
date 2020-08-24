@@ -28,7 +28,11 @@ export default suite(
     };
     return [
       test('textDocument/signatureHelp', [
-        addFiles('nestedClasses.js', 'nestedFunctions.js', 'paramDocumentation.js'),
+        addFiles(
+          'nestedClasses.js',
+          'nestedFunctions.js',
+          'paramDocumentation.js',
+        ),
         lspStartAndConnect(),
         verifySignatureHelp(
           '<PLACEHOLDER_PROJECT_URL>/nestedClasses.js',
@@ -87,16 +91,25 @@ export default suite(
             signatures: [
               {
                 label: '(bar: void, baz: void): void',
-                documentation: 'foo\n\n**@unrecognized** this tag is unrecognized',
+                documentation: {
+                  kind: 'markdown',
+                  value: 'foo\n\n**@unrecognized** this tag is unrecognized',
+                },
                 parameters: [
                   {
                     label: 'bar: void',
-                    documentation: 'bar - the first summand',
+                    documentation: {
+                      kind: 'markdown',
+                      value: 'bar - the first summand',
+                    },
                   },
                   {
                     label: 'baz: void',
-                    documentation:
-                      'baz - the second and third summands\nbaz.x (optional)  - the second summand\nbaz.y (optional, defaults to 0)  - the third summand',
+                    documentation: {
+                      kind: 'markdown',
+                      value:
+                        'baz - the second and third summands\nbaz.x (optional)  - the second summand\nbaz.y (optional, defaults to 0)  - the third summand',
+                    },
                   },
                 ],
               },

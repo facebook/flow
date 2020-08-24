@@ -83,6 +83,13 @@ module MarkupKind = struct
     | PlainText
 end
 
+module MarkupContent = struct
+  type t = {
+    kind: MarkupKind.t;
+    value: string;
+  }
+end
+
 (** markedString can be used to render human readable text. It is either a
   markdown string or a code-block that provides a language and a code snippet.
   Note that markdown strings will be sanitized by the client - including
@@ -921,6 +928,12 @@ module SignatureHelp = struct
     [@@deriving enum]
   end
 
+  module Documentation = struct
+    type t =
+      | String of string
+      | MarkupContent of MarkupContent.t
+  end
+
   type params = {
     loc: TextDocumentPositionParams.t;
     context: context option;
@@ -943,13 +956,13 @@ module SignatureHelp = struct
 
   and signature_information = {
     siginfo_label: string;
-    siginfo_documentation: string option;
+    siginfo_documentation: Documentation.t option;
     parameters: parameter_information list;
   }
 
   and parameter_information = {
     parinfo_label: string;
-    parinfo_documentation: string option;
+    parinfo_documentation: Documentation.t option;
   }
 end
 

@@ -38,6 +38,8 @@ let loc_to_lsp_range (loc : Loc.t) : Lsp.range =
     let end_ = flow_position_to_lsp loc_end.line loc_end.column in
     { Lsp.start; end_ })
 
+let markup_string str = { Lsp.MarkupContent.kind = Lsp.MarkupKind.Markdown; value = str }
+
 let flow_signature_help_to_lsp
     (details : (ServerProt.Response.func_details_result list * int) option) :
     Lsp.SignatureHelp.result =
@@ -49,12 +51,16 @@ let flow_signature_help_to_lsp
       Base.List.fold_left
         signatures
         ~f:(fun acc { ServerProt.Response.param_tys; return_ty; func_documentation } ->
+          let doc_opt =
+            Base.Option.map ~f:(fun doc -> Documentation.MarkupContent (markup_string doc))
+          in
           let parameters =
             param_tys
             |> Base.List.map
                  ~f:(fun { ServerProt.Response.param_name; param_ty; param_documentation } ->
                    let parinfo_label = Printf.sprintf "%s: %s" param_name param_ty in
-                   { parinfo_label; parinfo_documentation = param_documentation })
+                   let parinfo_documentation = doc_opt param_documentation in
+                   { parinfo_label; parinfo_documentation })
           in
           let siginfo_label =
             Printf.sprintf
@@ -64,9 +70,8 @@ let flow_signature_help_to_lsp
               |> String.concat ", " )
               return_ty
           in
-          let signature =
-            { siginfo_label; siginfo_documentation = func_documentation; parameters }
-          in
+          let siginfo_documentation = doc_opt func_documentation in
+          let signature = { siginfo_label; siginfo_documentation; parameters } in
           signature :: acc)
         ~init:[]
     in

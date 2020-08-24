@@ -217,14 +217,29 @@ let print_codeLens ~key (codeLens : CodeLens.t) : json =
       ])
 
 module MarkupKindFmt = struct
+  open MarkupKind
+
+  let to_string = function
+    | Markdown -> "markdown"
+    | PlainText -> "plaintext"
+
+  let to_json kind = Hh_json.JSON_String (to_string kind)
+
   let of_string_opt = function
-    | "markdown" -> Some MarkupKind.Markdown
-    | "plaintext" -> Some MarkupKind.PlainText
+    | "markdown" -> Some Markdown
+    | "plaintext" -> Some PlainText
     | _ -> None
 
   let of_json = function
     | JSON_String str -> of_string_opt str
     | _ -> None
+end
+
+module MarkupContentFmt = struct
+  open MarkupContent
+
+  let to_json { kind; value } =
+    Hh_json.JSON_Object [("kind", MarkupKindFmt.to_json kind); ("value", Hh_json.JSON_String value)]
 end
 
 (************************************************************************)
@@ -316,18 +331,23 @@ let parse_didChange (params : json option) : DidChange.params =
 module SignatureHelpFmt = struct
   open SignatureHelp
 
+  let json_of_documentation (doc : Documentation.t) : json =
+    match doc with
+    | Documentation.String str -> Hh_json.JSON_String str
+    | Documentation.MarkupContent content -> MarkupContentFmt.to_json content
+
   let json_of_parameter { parinfo_label; parinfo_documentation } =
     Jprint.object_opt
       [
         ("label", Some (Hh_json.JSON_String parinfo_label));
-        ("documentation", Base.Option.map ~f:Hh_json.string_ parinfo_documentation);
+        ("documentation", Base.Option.map ~f:json_of_documentation parinfo_documentation);
       ]
 
   let json_of_signature { siginfo_label; siginfo_documentation; parameters } =
     Jprint.object_opt
       [
         ("label", Some (Hh_json.JSON_String siginfo_label));
-        ("documentation", Base.Option.map ~f:Hh_json.string_ siginfo_documentation);
+        ("documentation", Base.Option.map ~f:json_of_documentation siginfo_documentation);
         ("parameters", Some (Hh_json.JSON_Array (List.map ~f:json_of_parameter parameters)));
       ]
 
