@@ -336,35 +336,33 @@ module SignatureHelpFmt = struct
           | None -> None
           | Some _ -> Some (context_of_json json) );
     }
-end
 
-(* TODO: rename to SignatureHelpFmt.to_json *)
-let print_signatureHelp (r : SignatureHelp.result) : json =
-  SignatureHelp.(
-    let print_parInfo parInfo =
-      Jprint.object_opt
-        [
-          ("label", Some (Hh_json.JSON_String parInfo.parinfo_label));
-          ("documentation", Base.Option.map ~f:Hh_json.string_ parInfo.parinfo_documentation);
-        ]
-    in
-    let print_sigInfo sigInfo =
-      Jprint.object_opt
-        [
-          ("label", Some (Hh_json.JSON_String sigInfo.siginfo_label));
-          ("documentation", Base.Option.map ~f:Hh_json.string_ sigInfo.siginfo_documentation);
-          ("parameters", Some (Hh_json.JSON_Array (List.map ~f:print_parInfo sigInfo.parameters)));
-        ]
-    in
+  let json_of_parameters { parinfo_label; parinfo_documentation } =
+    Jprint.object_opt
+      [
+        ("label", Some (Hh_json.JSON_String parinfo_label));
+        ("documentation", Base.Option.map ~f:Hh_json.string_ parinfo_documentation);
+      ]
+
+  let json_of_signatures { siginfo_label; siginfo_documentation; parameters } =
+    Jprint.object_opt
+      [
+        ("label", Some (Hh_json.JSON_String siginfo_label));
+        ("documentation", Base.Option.map ~f:Hh_json.string_ siginfo_documentation);
+        ("parameters", Some (Hh_json.JSON_Array (List.map ~f:json_of_parameters parameters)));
+      ]
+
+  let to_json (r : SignatureHelp.result) : json =
     match r with
     | None -> Hh_json.JSON_Null
     | Some r ->
       Hh_json.JSON_Object
         [
-          ("signatures", Hh_json.JSON_Array (List.map ~f:print_sigInfo r.signatures));
+          ("signatures", Hh_json.JSON_Array (List.map ~f:json_of_signatures r.signatures));
           ("activeSignature", Hh_json.int_ r.activeSignature);
           ("activeParameter", Hh_json.int_ r.activeParameter);
-        ])
+        ]
+end
 
 (************************************************************************)
 (* codeLens/resolve Request                                             *)
@@ -1495,7 +1493,7 @@ let print_lsp_response ?include_error_stack_trace ~key (id : lsp_id) (result : l
     | RenameResult r -> print_documentRename r
     | DocumentCodeLensResult r -> print_documentCodeLens ~key r
     | ExecuteCommandResult r -> print_executeCommand r
-    | SignatureHelpResult r -> print_signatureHelp r
+    | SignatureHelpResult r -> SignatureHelpFmt.to_json r
     | ShowMessageRequestResult _
     | ShowStatusResult _
     | CompletionItemResolveResult _ ->
