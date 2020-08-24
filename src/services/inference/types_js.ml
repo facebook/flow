@@ -1379,8 +1379,9 @@ let unfocused_files_and_dependents_to_infer
    their dependencies (minus those that are already focused). The set of dependencies might contain
    node modules.
 
-   When focus targets are provided, the result is a checked set focusing on those files, plus their
-   dependents, plus all their combined dependencies. All these sets might contain node modules.
+   When focus targets are provided, we remove any unparsed (e.g. syntax error) targets, and then
+   the result is a checked set focusing on those files, plus their dependents, plus all their
+   combined dependencies. All these sets might contain node modules.
 
    In either case, we can consider the result to be "closed" in terms of expected invariants.
 *)
@@ -1402,6 +1403,8 @@ let files_to_infer ~options ~profiling ~reader ~dependency_info ?focus_targets ~
         let is_file_checked =
           is_file_tracked_and_checked ~reader:(Abstract_state_reader.Mutator_state_reader reader)
         in
+        (* only focus files that parsed successfully *)
+        let input_focused = FilenameSet.inter input_focused parsed in
         focused_files_and_dependents_to_infer
           ~is_file_checked
           ~implementation_dependency_graph
