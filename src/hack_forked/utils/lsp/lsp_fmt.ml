@@ -316,6 +316,32 @@ let parse_didChange (params : json option) : DidChange.params =
 module SignatureHelpFmt = struct
   open SignatureHelp
 
+  let json_of_parameter { parinfo_label; parinfo_documentation } =
+    Jprint.object_opt
+      [
+        ("label", Some (Hh_json.JSON_String parinfo_label));
+        ("documentation", Base.Option.map ~f:Hh_json.string_ parinfo_documentation);
+      ]
+
+  let json_of_signature { siginfo_label; siginfo_documentation; parameters } =
+    Jprint.object_opt
+      [
+        ("label", Some (Hh_json.JSON_String siginfo_label));
+        ("documentation", Base.Option.map ~f:Hh_json.string_ siginfo_documentation);
+        ("parameters", Some (Hh_json.JSON_Array (List.map ~f:json_of_parameter parameters)));
+      ]
+
+  let to_json (r : SignatureHelp.result) : json =
+    match r with
+    | None -> Hh_json.JSON_Null
+    | Some r ->
+      Hh_json.JSON_Object
+        [
+          ("signatures", Hh_json.JSON_Array (List.map ~f:json_of_signature r.signatures));
+          ("activeSignature", Hh_json.int_ r.activeSignature);
+          ("activeParameter", Hh_json.int_ r.activeParameter);
+        ]
+
   let context_of_json json : SignatureHelp.context =
     {
       triggerKind =
@@ -336,32 +362,6 @@ module SignatureHelpFmt = struct
           | None -> None
           | Some _ -> Some (context_of_json json) );
     }
-
-  let json_of_parameters { parinfo_label; parinfo_documentation } =
-    Jprint.object_opt
-      [
-        ("label", Some (Hh_json.JSON_String parinfo_label));
-        ("documentation", Base.Option.map ~f:Hh_json.string_ parinfo_documentation);
-      ]
-
-  let json_of_signatures { siginfo_label; siginfo_documentation; parameters } =
-    Jprint.object_opt
-      [
-        ("label", Some (Hh_json.JSON_String siginfo_label));
-        ("documentation", Base.Option.map ~f:Hh_json.string_ siginfo_documentation);
-        ("parameters", Some (Hh_json.JSON_Array (List.map ~f:json_of_parameters parameters)));
-      ]
-
-  let to_json (r : SignatureHelp.result) : json =
-    match r with
-    | None -> Hh_json.JSON_Null
-    | Some r ->
-      Hh_json.JSON_Object
-        [
-          ("signatures", Hh_json.JSON_Array (List.map ~f:json_of_signatures r.signatures));
-          ("activeSignature", Hh_json.int_ r.activeSignature);
-          ("activeParameter", Hh_json.int_ r.activeParameter);
-        ]
 end
 
 (************************************************************************)
