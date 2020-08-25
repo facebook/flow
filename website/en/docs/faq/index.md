@@ -321,3 +321,24 @@ const GenericButton = ({type, children}) => <button type={type} onClick={() => c
 
 const Button: React.ComponentType<{children: React.Node}> = setType(GenericButton);
 ```
+
+### I'm not getting type checking when importing from a barrel file <a class="toc" id="im-not-getting-type-checking-when-importing-from-a-barrel-file" href="#im-not-getting-type-checking-when-importing-from-a-barrel-file"></a>
+If you have a top level barrel file that you use to import a list of variables, you may find that you aren't getting type checking in those files that are re-exported. Check that your barrel file has flow enabled.
+
+This is because when flow resolves the a file, if it is flow typed, it can continue to traverse the dependency tree finding types, otherwise it will stop and define everything as `any`.
+
+```js
+/* index.js */
+// @flow
+export { default as Comp } from './Comp.js';
+
+/* Comp.js */
+// @flow
+import * as React from 'react';
+
+const Comp = (): React.Node => {
+  // ...
+};
+
+export default Comp;
+```
