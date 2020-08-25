@@ -54,22 +54,23 @@ let flow_signature_help_to_lsp
           let doc_opt =
             Base.Option.map ~f:(fun doc -> Documentation.MarkupContent (markup_string doc))
           in
+          let label_buf = Buffer.create 20 in
+          Buffer.add_string label_buf "(";
           let parameters =
             param_tys
-            |> Base.List.map
-                 ~f:(fun { ServerProt.Response.param_name; param_ty; param_documentation } ->
-                   let parinfo_label = Printf.sprintf "%s: %s" param_name param_ty in
-                   let parinfo_documentation = doc_opt param_documentation in
-                   { parinfo_label; parinfo_documentation })
+            |> Base.List.mapi
+                 ~f:(fun i { ServerProt.Response.param_name; param_ty; param_documentation } ->
+                   let label = Printf.sprintf "%s: %s" param_name param_ty in
+                   if i > 0 then Buffer.add_string label_buf ", ";
+                   Buffer.add_string label_buf label;
+                   {
+                     parinfo_label = String label;
+                     parinfo_documentation = doc_opt param_documentation;
+                   })
           in
-          let siginfo_label =
-            Printf.sprintf
-              "(%s): %s"
-              ( parameters
-              |> Base.List.map ~f:(fun { parinfo_label; _ } -> parinfo_label)
-              |> String.concat ", " )
-              return_ty
-          in
+          Buffer.add_string label_buf "): ";
+          Buffer.add_string label_buf return_ty;
+          let siginfo_label = Buffer.contents label_buf in
           let siginfo_documentation = doc_opt func_documentation in
           let signature = { siginfo_label; siginfo_documentation; parameters } in
           signature :: acc)

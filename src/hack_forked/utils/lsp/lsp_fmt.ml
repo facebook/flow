@@ -330,36 +330,42 @@ let parse_didChange (params : json option) : DidChange.params =
 
 module SignatureHelpFmt = struct
   open SignatureHelp
+  open Hh_json
+
+  let json_of_label : label -> json = function
+    | String str -> JSON_String str
+    | Offset (start, end_) ->
+      JSON_Array [JSON_Number (string_of_int start); JSON_Number (string_of_int end_)]
 
   let json_of_documentation (doc : Documentation.t) : json =
     match doc with
-    | Documentation.String str -> Hh_json.JSON_String str
+    | Documentation.String str -> JSON_String str
     | Documentation.MarkupContent content -> MarkupContentFmt.to_json content
 
   let json_of_parameter { parinfo_label; parinfo_documentation } =
     Jprint.object_opt
       [
-        ("label", Some (Hh_json.JSON_String parinfo_label));
+        ("label", Some (json_of_label parinfo_label));
         ("documentation", Base.Option.map ~f:json_of_documentation parinfo_documentation);
       ]
 
   let json_of_signature { siginfo_label; siginfo_documentation; parameters } =
     Jprint.object_opt
       [
-        ("label", Some (Hh_json.JSON_String siginfo_label));
+        ("label", Some (JSON_String siginfo_label));
         ("documentation", Base.Option.map ~f:json_of_documentation siginfo_documentation);
-        ("parameters", Some (Hh_json.JSON_Array (List.map ~f:json_of_parameter parameters)));
+        ("parameters", Some (JSON_Array (List.map ~f:json_of_parameter parameters)));
       ]
 
   let to_json (r : SignatureHelp.result) : json =
     match r with
-    | None -> Hh_json.JSON_Null
+    | None -> JSON_Null
     | Some r ->
-      Hh_json.JSON_Object
+      JSON_Object
         [
-          ("signatures", Hh_json.JSON_Array (List.map ~f:json_of_signature r.signatures));
-          ("activeSignature", Hh_json.int_ r.activeSignature);
-          ("activeParameter", Hh_json.int_ r.activeParameter);
+          ("signatures", JSON_Array (List.map ~f:json_of_signature r.signatures));
+          ("activeSignature", int_ r.activeSignature);
+          ("activeParameter", int_ r.activeParameter);
         ]
 
   let context_of_json json : SignatureHelp.context =

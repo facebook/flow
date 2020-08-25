@@ -771,9 +771,13 @@ module SignatureHelp : sig
   }
 
   and parameter_information = {
-    parinfo_label: string;
+    parinfo_label: label;
     parinfo_documentation: Documentation.t option;
   }
+
+  and label =
+    | String of string
+    | Offset of int * int
 end
 
 module Rename : sig

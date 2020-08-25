@@ -961,9 +961,13 @@ module SignatureHelp = struct
   }
 
   and parameter_information = {
-    parinfo_label: string;
+    parinfo_label: label;
     parinfo_documentation: Documentation.t option;
   }
+
+  and label =
+    | String of string
+    | Offset of int * int
 end
 
 (* Workspace Rename request, method="textDocument/rename" *)
