@@ -359,6 +359,9 @@ docs_additional_reading: "Additional Reading"
 "/docs/tools/create-react-app/":
   title: "Create React App"
   description: "Learn how to use Flow with Create React App"
+"/docs/tools/eslint/":
+  title: "eslint"
+  description: "Learn how to use Flow with eslint"
 
 "/docs/editors/":
   title: "Editors"
