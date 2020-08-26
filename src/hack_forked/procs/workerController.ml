@@ -45,7 +45,7 @@ exception Worker_busy
 
 type send_job_failure =
   | Worker_already_exited of Unix.process_status
-  | Other_send_job_failure of exn
+  | Other_send_job_failure of Exception.t
 
 exception Worker_failed_to_send_job of send_job_failure
 
@@ -62,7 +62,7 @@ let failure_to_string f =
 let () =
   Caml.Printexc.register_printer @@ function
   | Worker_failed_to_send_job (Other_send_job_failure exn) ->
-    Some (Printf.sprintf "Other_send_job_failure: %s" (Exn.to_string exn))
+    Some (Printf.sprintf "Other_send_job_failure: %s" (Exception.to_string exn))
   | Worker_failed_to_send_job (Worker_already_exited status) ->
     Some (Printf.sprintf "Worker_already_exited: %s" (status_string status))
   | Worker_failed (id, failure) ->
@@ -110,46 +110,10 @@ type worker = {
   mutable killed: bool;
   (* Sanity check: is the worker currently busy ? *)
   mutable busy: bool;
-  (* If the worker is currently busy, handle of the job it's execuing *)
-  mutable handle: 'a 'b. ('a, 'b) handle option;
   (* On Unix, a reference to the 'prespawned' worker. *)
   prespawned: (void, request) Daemon.handle option;
   (* On Windows, a function to spawn a worker. *)
   spawn: unit -> (void, request) Daemon.handle;
-}
-
-(*****************************************************************************
- * The handle is what we get back when we start a job. It's a "future"
- * (sometimes called a "promise"). The scheduler uses the handle to retrieve
- * the result of the job when the task is done (cf multiWorker.ml).
- *
- *****************************************************************************)
-and ('a, 'b) handle = ('a, 'b) delayed ref
-
-(* Integer represents job the handle belongs to.
- * See MultiThreadedCall.call_id. *)
-and ('a, 'b) delayed = ('a * int) * 'b worker_handle
-
-and 'b worker_handle =
-  | Processing of 'b job
-  | Cached of 'b * worker
-  | Canceled
-  | Failed of exn
-
-(* The Controller's job has a Worker. The Worker is itself a single process
- * on Windows. On Unix, the Worker is itself forks Clones *)
-and 'a job = {
-  worker: worker;
-  (* The associated worker *)
-
-  (* The file descriptor we might pass to select in order to
-     wait for the worker to finish its job. *)
-  infd: Unix.file_descr;
-  (* A blocking function that returns the job result. *)
-  result: unit -> 'a;
-  (* A blocking function that waits for job cancellation (see Worker.cancel)
-   * to finish *)
-  wait_for_cancel: unit -> unit;
 }
 
 let worker_id w = w.id
@@ -162,12 +126,8 @@ let mark_busy w =
   if w.busy then raise Worker_busy;
   w.busy <- true
 
-let get_handle_UNSAFE w = w.handle
-
 (* Mark the worker as free *)
-let mark_free w =
-  w.busy <- false;
-  w.handle <- None
+let mark_free w = w.busy <- false
 
 (* If the worker isn't prespawned, spawn the worker *)
 let spawn w =
@@ -223,16 +183,7 @@ let make_one ?call_wrapper controller_fd spawn id =
       Some (spawn ())
   in
   let worker =
-    {
-      call_wrapper;
-      controller_fd;
-      id;
-      busy = false;
-      handle = None;
-      killed = false;
-      prespawned;
-      spawn;
-    }
+    { call_wrapper; controller_fd; id; busy = false; killed = false; prespawned; spawn }
   in
   workers := worker :: !workers;
   worker
@@ -280,212 +231,114 @@ let make ?call_wrapper ~saved_state ~entry ~nbr_procs ~gc_control ~heap_handle =
   done;
   !made_workers
 
-(**************************************************************************
- * Send a job to a worker
- *
- **************************************************************************)
+(** Send a job to a worker
 
-let call ?(call_id = 0) w (type a b) (f : a -> b) (x : a) : (a, b) handle =
+  This is basically an lwt thread that writes a job to the worker, waits for the response, and
+  then returns the result.
+
+  The main complication is that I, glevi, found a perf regression when I used Marshal_tools_lwt
+  to send the job to the worker. Here's my hypothesis:
+
+  1. On a machine with many CPUs (like 56) we create 56 threads to send a job to each worker.
+  2. Lwt attempts to write the jobs to the workers in parallel.
+  3. Each worker spends more time between getting the first byte and last byte
+  4. Something something this leads to more context switches for the worker
+  5. The worker spends more time on a job
+
+  This is reinforced by the observation that the regression only happens as the number of workers
+  grows.
+
+  By switching from Marshal_tools_lwt.to_fd_with_preamble to Marshal_tools.to_fd_with_preamble,
+  the issue seems to have disappeared. Reading from the worker didn't seem to trigger a perf issue
+  in my testing, but there's really nothing more urgent than reading a response from a finished
+  worker, so reading in a blocking manner is fine. *)
+let call w (type a b) (f : a -> b) (x : a) : b Lwt.t =
   if is_killed w then Printf.ksprintf failwith "killed worker (%d)" (worker_id w);
   mark_busy w;
 
-  (* Spawn the worker process, if not prespawned. *)
+  (* Spawn the worker, if not prespawned. *)
   let ({ Daemon.pid = worker_pid; channels = (inc, outc) } as h) = spawn w in
   let infd = Daemon.descr_of_in_channel inc in
   let outfd = Daemon.descr_of_out_channel outc in
-  let worker_failed pid_stat controller_fd =
-    (* If we have a controller fd, we read the true pid status
-     * over that channel instead of using the one returned from the
-     * Worker. *)
-    let pid_stat =
-      match controller_fd with
-      | None -> snd pid_stat
-      | Some fd ->
-        Timeout.with_timeout
-          ~timeout:3
-          ~on_timeout:(fun _ -> snd pid_stat)
-          ~do_:(fun _ ->
-            try
-              let (Job_terminated status) = Marshal_tools.from_fd_with_preamble fd in
-              status
-            with End_of_file -> snd pid_stat)
-    in
-    match pid_stat with
-    | Unix.WEXITED i ->
-      (match FlowExitStatus.error_type_opt i with
-      | Some FlowExitStatus.Out_of_shared_memory -> raise SharedMem.Out_of_shared_memory
-      | Some FlowExitStatus.Hash_table_full -> raise SharedMem.Hash_table_full
-      | Some FlowExitStatus.Heap_full -> raise SharedMem.Heap_full
-      | _ ->
-        Caml.Printf.eprintf "Subprocess(%d): fail %d" worker_pid i;
-        raise (Worker_failed (worker_pid, Worker_quit (Unix.WEXITED i))))
-    | Unix.WSTOPPED i -> raise (Worker_failed (worker_pid, Worker_quit (Unix.WSTOPPED i)))
-    | Unix.WSIGNALED i -> raise (Worker_failed (worker_pid, Worker_quit (Unix.WSIGNALED i)))
-  in
-  (* Checks if the worker process has exited. *)
-  let with_exit_status_check ?(block_on_waitpid = false) worker_pid f =
-    let wait_flags =
-      if block_on_waitpid then
-        []
-      else
-        [Unix.WNOHANG]
-    in
-    let pid_stat = Unix.waitpid wait_flags worker_pid in
-    match pid_stat with
-    | (0, _) -> f ()
-    | (_, Unix.WEXITED 0) ->
-      (* This will never actually happen. Worker process only exits if this
-       * Controller process has exited. *)
-      failwith "Worker process exited 0 unexpectedly"
-    | _ -> worker_failed pid_stat w.controller_fd
-  in
-  (* Prepare ourself to read answer from the worker process. *)
-  let get_result_with_status_check ?(block_on_waitpid = false) () : b =
-    with_exit_status_check ~block_on_waitpid worker_pid (fun () ->
-        let data : b = Marshal_tools.from_fd_with_preamble infd in
-        let stats : Measure.record_data = Marshal_tools.from_fd_with_preamble infd in
-        close w h;
-        Measure.merge (Measure.deserialize stats);
-        data)
-  in
-  let result () : b =
-    (*
-     * We run the "with_exit_status_check" twice (first time non-blockingly).
-     * This is because of a race condition.
-     *
-     * Immediately after the worker forks the clone (see worker.ml), it does
-     * a blocking, non-interruptible waitpid on the clone. This means that if the clone
-     * fails, then the worker will see the failure and also fail accordingly, which we
-     * will catch in here with "with_exit_status_check". This is designed around a sort-of
-     * invariant - if the clone fails, then the worker will fail, so the WorkerController
-     * here will see the failure and not attempt to read the result with
-     *"Marshal_tools.from_fd_with_preamble"
-     *
-     * But there is a brief moment after the clone is forked and before the
-     * non-interruptible waitpid where the clone can actually fail quickly
-     * and this WorkerController has already checked the worker process's status. So the
-     * invariant above will be broken, the WorkerController will try to read the result
-     * with Marshal_tools, get an End_of_file, and crash.
-     *
-     * To get around this, we give the worker process time to "catch up" and reach the
-     * non-interruptible waitpid that we expect it to be at. Eventually, it will also
-     * fail accordingly, since its clone has failed.
-     *)
-    try get_result_with_status_check ()
-    with End_of_file -> get_result_with_status_check ~block_on_waitpid:true ()
-  in
-  let wait_for_cancel () : unit =
-    with_exit_status_check worker_pid (fun () ->
-        (* Depending on whether we manage to kill the clone before it starts writing
-         * results back, this will return either actual results, or "anything"
-         * (written by interrupt signal that exited). The types don't match, but we
-         * ignore both of them anyway. *)
-        let (_ : 'c) = Marshal_tools.from_fd_with_preamble infd in
-        let (_ : 'c) = Marshal_tools.from_fd_with_preamble infd in
-        ())
-  in
-  let job = { result; infd; worker = w; wait_for_cancel } in
+  let infd_lwt = Lwt_unix.of_unix_file_descr ~blocking:false ~set_flags:true infd in
+  let outfd_lwt = Lwt_unix.of_unix_file_descr ~blocking:false ~set_flags:true outfd in
   let request = wrap_request w f x in
-  (* Send the job to the worker. *)
-  let () =
-    try Marshal_tools.to_fd_with_preamble ~flags:[Caml.Marshal.Closures] outfd request |> ignore
-    with e ->
-      begin
-        match Unix.waitpid [Unix.WNOHANG] worker_pid with
-        | (0, _) -> raise (Worker_failed_to_send_job (Other_send_job_failure e))
-        | (_, status) -> raise (Worker_failed_to_send_job (Worker_already_exited status))
-      end
-  in
-  (* And returned the 'handle'. *)
-  let handle = ref ((x, call_id), Processing job) in
-  w.handle <- Caml.Obj.magic (Some handle);
-  handle
+  (* Send the job *)
+  (let%lwt () =
+     try%lwt
+       (* Wait in an lwt-friendly manner for the worker to be writable (should be instant) *)
+       let%lwt () = Lwt_unix.wait_write outfd_lwt in
+       (* Write in a lwt-unfriendly, blocking manner to the worker *)
+       let _ = Marshal_tools.to_fd_with_preamble ~flags:[Caml.Marshal.Closures] outfd request in
+       Lwt.return_unit
+     with exn ->
+       let exn = Exception.wrap exn in
+       Hh_logger.error ~exn "Failed to read response from work #%d" (worker_id w);
 
-(**************************************************************************
- * Read results from a handle.
- * This might block if the worker hasn't finished yet.
- *
- **************************************************************************)
+       (* Failed to send the job to the worker. Is it because the worker is dead or is it
+        * something else? *)
+       let%lwt (pid, status) = Lwt_unix.waitpid [Unix.WNOHANG] worker_pid in
+       (match pid with
+       | 0 -> raise (Worker_failed_to_send_job (Other_send_job_failure exn))
+       | _ -> raise (Worker_failed_to_send_job (Worker_already_exited status)))
+   in
+   (* Get the job's result *)
+   let%lwt res =
+     try%lwt
+       (* Wait in an lwt-friendly manner for the worker to finish the job *)
+       let%lwt () = Lwt_unix.wait_read infd_lwt in
+       (* Read in a lwt-unfriendly, blocking manner from the worker *)
+       (* Due to https://github.com/ocsigen/lwt/issues/564, annotation cannot go on let%let node *)
+       let data : b = Marshal_tools.from_fd_with_preamble infd in
+       let stats : Measure.record_data = Marshal_tools.from_fd_with_preamble infd in
+       Lwt.return (data, stats)
+     with
+     | Lwt.Canceled as exn ->
+       (* Worker is handling a job but we're cancelling *)
+       let exn = Exception.wrap exn in
 
-let with_worker_exn (handle : ('a, 'b) handle) job f =
-  try f () with
-  | Worker_failed (pid, status) as exn ->
-    mark_free job.worker;
-    handle := (fst !handle, Failed exn);
-    begin
-      match status with
-      | Worker_quit (Unix.WSIGNALED -7) -> raise (Worker_failed (pid, Worker_oomed))
-      | _ -> raise exn
-    end
-  | exn ->
-    mark_free job.worker;
-    handle := (fst !handle, Failed exn);
-    raise exn
+       (* Each worker might call this but that's ok *)
+       WorkerCancel.stop_workers ();
 
-let get_result d =
-  match snd !d with
-  | Cached (x, _) -> x
-  | Failed exn -> raise exn
-  | Canceled -> raise End_of_file
-  | Processing s ->
-    with_worker_exn d s (fun () ->
-        let res = s.result () in
-        mark_free s.worker;
-        d := (fst !d, Cached (res, s.worker));
-        res)
-
-(*****************************************************************************
- * Our polling primitive on workers
- * Given a list of handle, returns the ones that are ready.
- *
- *****************************************************************************)
-
-type ('a, 'b) selected = {
-  readys: ('a, 'b) handle list;
-  waiters: ('a, 'b) handle list;
-  ready_fds: Unix.file_descr list;
-}
-
-let get_processing ds =
-  List.rev_filter_map ds ~f:(fun d ->
-      match snd !d with
-      | Processing p -> Some p
-      | _ -> None)
-
-let select ds additional_fds =
-  let processing = get_processing ds in
-  let fds = List.map ~f:(fun { infd; _ } -> infd) processing in
-  let (ready_fds, _, _) =
-    if List.is_empty fds || List.length processing <> List.length ds then
-      ([], [], [])
-    else
-      Sys_utils.select_non_intr (fds @ additional_fds) [] [] (-1.)
-  in
-  let additional_ready_fds = List.filter ~f:(List.mem ~equal:Poly.( = ) ready_fds) additional_fds in
-  List.fold_right
-    ~f:(fun d acc ->
-      match snd !d with
-      | Cached _
-      | Canceled
-      | Failed _ ->
-        { acc with readys = d :: acc.readys }
-      | Processing s when List.mem ~equal:Poly.( = ) ready_fds s.infd ->
-        { acc with readys = d :: acc.readys }
-      | Processing _ -> { acc with waiters = d :: acc.waiters })
-    ~init:{ readys = []; waiters = []; ready_fds = additional_ready_fds }
-    ds
-
-let get_worker h =
-  match snd !h with
-  | Processing { worker; _ } -> worker
-  | Cached (_, worker) -> worker
-  | Canceled
-  | Failed _ ->
-    invalid_arg "Worker.get_worker"
-
-let get_job h = fst (fst !h)
-
-let get_call_id h = snd (fst !h)
+       (* Wait for the worker to finish cancelling *)
+       let%lwt () = Lwt_unix.wait_read infd_lwt in
+       (* Read the junk from the pipe *)
+       let _ = Marshal_tools.from_fd_with_preamble infd in
+       let _ = Marshal_tools.from_fd_with_preamble infd in
+       Exception.reraise exn
+     | exn ->
+       let exn = Exception.wrap exn in
+       let%lwt (pid, status) = Lwt_unix.waitpid [Unix.WNOHANG] worker_pid in
+       begin
+         match (pid, status) with
+         | (0, _)
+         | (_, Unix.WEXITED 0) ->
+           (* The worker is still running or exited normally. It's odd that we failed to read
+            * the response, so just raise that exception *)
+           Exception.reraise exn
+         | (_, Unix.WEXITED i) ->
+           (match FlowExitStatus.error_type_opt i with
+           | Some FlowExitStatus.Out_of_shared_memory -> raise SharedMem.Out_of_shared_memory
+           | Some FlowExitStatus.Hash_table_full -> raise SharedMem.Hash_table_full
+           | Some FlowExitStatus.Heap_full -> raise SharedMem.Heap_full
+           | _ ->
+             let () = Caml.Printf.eprintf "Subprocess(%d): fail %d" worker_pid i in
+             raise (Worker_failed (worker_pid, Worker_quit (Unix.WEXITED i))))
+         | (_, Unix.WSTOPPED i) ->
+           let () = Caml.Printf.eprintf "Subprocess(%d): stopped %d" worker_pid i in
+           raise (Worker_failed (worker_pid, Worker_quit (Unix.WSTOPPED i)))
+         | (_, Unix.WSIGNALED i) ->
+           let () = Caml.Printf.eprintf "Subprocess(%d): signaled %d" worker_pid i in
+           raise (Worker_failed (worker_pid, Worker_quit (Unix.WSIGNALED i)))
+       end
+   in
+   close w h;
+   Measure.merge (Measure.deserialize (snd res));
+   Lwt.return (fst res))
+    [%lwt.finally
+      (* No matter what, always mark worker as free when we're done *)
+      mark_free w;
+      Lwt.return_unit]
 
 (**************************************************************************
  * Worker termination
@@ -498,18 +351,3 @@ let kill w =
   )
 
 let killall () = List.iter ~f:kill !workers
-
-let wait_for_cancel d =
-  match snd !d with
-  | Processing s ->
-    with_worker_exn d s (fun () ->
-        s.wait_for_cancel ();
-        mark_free s.worker;
-        d := (fst !d, Canceled))
-  | _ -> ()
-
-let cancel handles =
-  WorkerCancel.stop_workers ();
-  List.iter handles ~f:(fun x -> wait_for_cancel x);
-  WorkerCancel.resume_workers ();
-  ()

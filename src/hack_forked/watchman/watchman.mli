@@ -30,6 +30,7 @@ type init_settings = {
   subscribe_mode: subscribe_mode;
   expression_terms: Hh_json.json list;  (** See watchman expression terms. *)
   debug_logging: bool;
+  defer_states: string list;  (** defer notifications while these states are asserted *)
   roots: Path.t list;
   subscription_prefix: string;
   sync_timeout: int option;
@@ -74,7 +75,7 @@ type watchman_instance =
 
 type conn
 
-val init : ?since_clockspec:string -> init_settings -> unit -> env option Lwt.t
+val init : init_settings -> env option Lwt.t
 
 val get_changes_since_mergebase : timeout:timeout -> env -> string list Lwt.t
 

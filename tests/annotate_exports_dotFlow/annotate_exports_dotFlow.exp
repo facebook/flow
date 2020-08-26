@@ -15,10 +15,10 @@ module.exports = (): number => 1;
 
 Stats:
   Files changed:                            2
-  Number of sig. ver. errors:               2
-  Number of annotations required:           2
   Number of annotations added:              2
   Total size of annotations:                2
+  Number of sig. ver. errors:               2
+  Number of annotations required:           2
   Number of annotations skipped:            0
 
 Errors:

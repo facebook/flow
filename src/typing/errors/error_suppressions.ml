@@ -16,6 +16,22 @@ open Suppression_comments
 
 exception No_source of string
 
+let file_of_loc_unsafe loc =
+  match loc.Loc.source with
+  | Some x -> x
+  | None -> raise (No_source (Loc.debug_to_string ~include_source:true loc))
+
+module CodeLocSet : Set.S with type elt = string * Loc.t = Set.Make (struct
+  type t = string * Loc.t
+
+  let compare (c1, l1) (c2, l2) =
+    let k = String.compare c1 c2 in
+    if k = 0 then
+      Loc.compare l1 l2
+    else
+      k
+end)
+
 module FileSuppressions : sig
   type t
 
@@ -36,20 +52,28 @@ module FileSuppressions : sig
   val suppression_at_loc : Loc.t -> t -> (LocSet.t * applicable_codes) option
 
   val all_unused_locs : t -> LocSet.t
+
+  val universally_suppressed_codes : t -> CodeLocSet.t
 end = struct
   type error_suppressions = (LocSet.t * applicable_codes) SpanMap.t
 
   type t = {
     suppressions: error_suppressions;
+    used_universal_suppressions: CodeLocSet.t SpanMap.t;
     lint_suppressions: LocSet.t;
   }
 
-  let empty = { suppressions = SpanMap.empty; lint_suppressions = LocSet.empty }
+  let empty =
+    {
+      suppressions = SpanMap.empty;
+      used_universal_suppressions = SpanMap.empty;
+      lint_suppressions = LocSet.empty;
+    }
 
-  let is_empty { suppressions; lint_suppressions } =
+  let is_empty { suppressions; lint_suppressions; _ } =
     SpanMap.is_empty suppressions && LocSet.is_empty lint_suppressions
 
-  let add loc codes { suppressions; lint_suppressions } =
+  let add loc codes { suppressions; lint_suppressions; used_universal_suppressions } =
     let suppression_loc =
       Loc.(
         let start = { line = loc._end.line + 1; column = 0 } in
@@ -64,40 +88,77 @@ end = struct
         ~combine:(fun (set1, codes1) (set2, codes2) ->
           (LocSet.union set1 set2, join_applicable_codes codes1 codes2))
     in
-    { suppressions; lint_suppressions }
+    { suppressions; lint_suppressions; used_universal_suppressions }
 
-  let all_unused_locs { suppressions; lint_suppressions } =
+  let all_unused_locs { suppressions; lint_suppressions; _ } =
     suppressions
     |> SpanMap.values
     |> List.map (snd %> Suppression_comments.locs_of_applicable_codes %> LocSet.of_list)
     |> List.fold_left LocSet.union lint_suppressions
 
-  let remove loc codes ({ suppressions; _ } as orig) =
+  let universally_suppressed_codes { used_universal_suppressions; _ } =
+    used_universal_suppressions
+    |> SpanMap.values
+    |> List.fold_left CodeLocSet.union CodeLocSet.empty
+
+  let remove loc codes { suppressions; lint_suppressions; used_universal_suppressions } =
     let supp_at_loc = SpanMap.find_opt loc suppressions in
-    let suppressions =
+    let (suppressions, used_universal_suppressions) =
       match (supp_at_loc, codes) with
       | (Some (locs, Specific codes'), Specific codes) when CodeSet.subset codes codes' ->
         let new_codes = CodeSet.diff codes' codes in
         if CodeSet.is_empty new_codes then
-          SpanMap.remove loc suppressions
+          (SpanMap.remove loc suppressions, used_universal_suppressions)
         else
           let orig_loc =
             (* We don't want to overwrite the original location with one that falls inside it *)
             SpanMap.keys suppressions |> Base.List.find_exn ~f:(fun k -> Loc.span_compare k loc = 0)
           in
-          SpanMap.add orig_loc (locs, Specific new_codes) suppressions
-      | (None, _) -> SpanMap.remove loc suppressions
-      | (Some (_, All _), _)
-      | (Some (_, Specific _), All _) ->
-        SpanMap.remove loc suppressions
-      | (Some _, Specific _) -> suppressions
+          (SpanMap.add orig_loc (locs, Specific new_codes) suppressions, used_universal_suppressions)
+      | (Some (_, All l), Specific codes) ->
+        let universal =
+          CodeSet.fold (fun (code, _) -> CodeLocSet.add (code, l)) codes CodeLocSet.empty
+        in
+        let old_universal =
+          SpanMap.find_opt loc used_universal_suppressions
+          |> Base.Option.value ~default:CodeLocSet.empty
+        in
+        let universal = CodeLocSet.union universal old_universal in
+        let orig_loc =
+          (* We don't want to overwrite the original location with one that falls inside it *)
+          SpanMap.keys suppressions |> Base.List.find_exn ~f:(fun k -> Loc.span_compare k loc = 0)
+        in
+        let used_universal_suppressions =
+          SpanMap.add orig_loc universal used_universal_suppressions
+        in
+        (* Using a univeral suppression to suppress a single code should remove it from the map, but
+           we need to mark the codes it suppressed in the past *)
+        (SpanMap.remove loc suppressions, used_universal_suppressions)
+      | (_, All _) -> (SpanMap.remove loc suppressions, used_universal_suppressions)
+      | (None, Specific codes) ->
+        begin
+          match SpanMap.find_opt loc used_universal_suppressions with
+          | None -> (SpanMap.remove loc suppressions, used_universal_suppressions)
+          | Some old_universal ->
+            let supp_loc = CodeLocSet.choose old_universal |> snd in
+            let universal =
+              CodeSet.fold (fun (code, _) -> CodeLocSet.add (code, supp_loc)) codes old_universal
+            in
+            let used_universal_suppressions =
+              SpanMap.add supp_loc universal used_universal_suppressions
+            in
+            (SpanMap.remove loc suppressions, used_universal_suppressions)
+        end
+      | (_, Specific _) -> (suppressions, used_universal_suppressions)
     in
-    { orig with suppressions }
+    { suppressions; lint_suppressions; used_universal_suppressions }
 
   let union a b =
     {
       suppressions = SpanMap.union a.suppressions b.suppressions;
       lint_suppressions = LocSet.union a.lint_suppressions b.lint_suppressions;
+      used_universal_suppressions =
+        SpanMap.union a.used_universal_suppressions b.used_universal_suppressions;
     }
 
   let add_lint_suppression lint_suppression t =
@@ -112,11 +173,6 @@ end
 type t = FileSuppressions.t FilenameMap.t
 
 let empty = FilenameMap.empty
-
-let file_of_loc_unsafe loc =
-  match loc.Loc.source with
-  | Some x -> x
-  | None -> raise (No_source (Loc.debug_to_string ~include_source:true loc))
 
 let add loc codes map =
   let file = file_of_loc_unsafe loc in
@@ -230,6 +286,12 @@ let all_unused_locs map =
     (fun _k v acc -> LocSet.union acc (FileSuppressions.all_unused_locs v))
     map
     LocSet.empty
+
+let universally_suppressed_codes map =
+  FilenameMap.fold
+    (fun _k v acc -> CodeLocSet.union acc (FileSuppressions.universally_suppressed_codes v))
+    map
+    CodeLocSet.empty
 
 let filter_suppressed_errors ~root ~file_options suppressions errors ~unused =
   (* Filter out suppressed errors. also track which suppressions are used. *)

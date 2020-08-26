@@ -2,5 +2,5 @@
 
 import {foo} from './dependency';
 
-// $FlowFixMe - Suppresses error in unrelated.js
+// $FlowFixMe[incompatible-call] - Suppresses error in unrelated.js
 foo(123);

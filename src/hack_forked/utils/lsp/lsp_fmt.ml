@@ -217,14 +217,29 @@ let print_codeLens ~key (codeLens : CodeLens.t) : json =
       ])
 
 module MarkupKindFmt = struct
+  open MarkupKind
+
+  let to_string = function
+    | Markdown -> "markdown"
+    | PlainText -> "plaintext"
+
+  let to_json kind = Hh_json.JSON_String (to_string kind)
+
   let of_string_opt = function
-    | "markdown" -> Some MarkupKind.Markdown
-    | "plaintext" -> Some MarkupKind.PlainText
+    | "markdown" -> Some Markdown
+    | "plaintext" -> Some PlainText
     | _ -> None
 
   let of_json = function
     | JSON_String str -> of_string_opt str
     | _ -> None
+end
+
+module MarkupContentFmt = struct
+  open MarkupContent
+
+  let to_json { kind; value } =
+    Hh_json.JSON_Object [("kind", MarkupKindFmt.to_json kind); ("value", Hh_json.JSON_String value)]
 end
 
 (************************************************************************)
@@ -315,6 +330,43 @@ let parse_didChange (params : json option) : DidChange.params =
 
 module SignatureHelpFmt = struct
   open SignatureHelp
+  open Hh_json
+
+  let json_of_label : label -> json = function
+    | String str -> JSON_String str
+    | Offset (start, end_) ->
+      JSON_Array [JSON_Number (string_of_int start); JSON_Number (string_of_int end_)]
+
+  let json_of_documentation (doc : Documentation.t) : json =
+    match doc with
+    | Documentation.String str -> JSON_String str
+    | Documentation.MarkupContent content -> MarkupContentFmt.to_json content
+
+  let json_of_parameter { parinfo_label; parinfo_documentation } =
+    Jprint.object_opt
+      [
+        ("label", Some (json_of_label parinfo_label));
+        ("documentation", Base.Option.map ~f:json_of_documentation parinfo_documentation);
+      ]
+
+  let json_of_signature { siginfo_label; siginfo_documentation; parameters } =
+    Jprint.object_opt
+      [
+        ("label", Some (JSON_String siginfo_label));
+        ("documentation", Base.Option.map ~f:json_of_documentation siginfo_documentation);
+        ("parameters", Some (JSON_Array (List.map ~f:json_of_parameter parameters)));
+      ]
+
+  let to_json (r : SignatureHelp.result) : json =
+    match r with
+    | None -> JSON_Null
+    | Some r ->
+      JSON_Object
+        [
+          ("signatures", JSON_Array (List.map ~f:json_of_signature r.signatures));
+          ("activeSignature", int_ r.activeSignature);
+          ("activeParameter", int_ r.activeParameter);
+        ]
 
   let context_of_json json : SignatureHelp.context =
     {
@@ -337,34 +389,6 @@ module SignatureHelpFmt = struct
           | Some _ -> Some (context_of_json json) );
     }
 end
-
-(* TODO: rename to SignatureHelpFmt.to_json *)
-let print_signatureHelp (r : SignatureHelp.result) : json =
-  SignatureHelp.(
-    let print_parInfo parInfo =
-      Jprint.object_opt
-        [
-          ("label", Some (Hh_json.JSON_String parInfo.parinfo_label));
-          ("documentation", Base.Option.map ~f:Hh_json.string_ parInfo.parinfo_documentation);
-        ]
-    in
-    let print_sigInfo sigInfo =
-      Jprint.object_opt
-        [
-          ("label", Some (Hh_json.JSON_String sigInfo.siginfo_label));
-          ("documentation", Base.Option.map ~f:Hh_json.string_ sigInfo.siginfo_documentation);
-          ("parameters", Some (Hh_json.JSON_Array (List.map ~f:print_parInfo sigInfo.parameters)));
-        ]
-    in
-    match r with
-    | None -> Hh_json.JSON_Null
-    | Some r ->
-      Hh_json.JSON_Object
-        [
-          ("signatures", Hh_json.JSON_Array (List.map ~f:print_sigInfo r.signatures));
-          ("activeSignature", Hh_json.int_ r.activeSignature);
-          ("activeParameter", Hh_json.int_ r.activeParameter);
-        ])
 
 (************************************************************************)
 (* codeLens/resolve Request                                             *)
@@ -700,8 +724,6 @@ let parse_completionItem (params : json option) : CompletionItemResolve.params =
       label = Jget.string_exn params "label";
       kind = Base.Option.bind (Jget.int_opt params "kind") completionItemKind_of_enum;
       detail = Jget.string_opt params "detail";
-      inlineDetail = Jget.string_opt params "inlineDetail";
-      itemType = Jget.string_opt params "itemType";
       documentation = None;
       preselect = Jget.bool_d params "preselect" ~default:false;
       sortText = Jget.string_opt params "sortText";
@@ -726,8 +748,6 @@ let print_completionItem ~key (item : Completion.completionItem) : json =
         ("label", Some (JSON_String item.label));
         ("kind", Base.Option.map item.kind (fun x -> int_ @@ completionItemKind_to_enum x));
         ("detail", Base.Option.map item.detail string_);
-        ("inlineDetail", Base.Option.map item.inlineDetail string_);
-        ("itemType", Base.Option.map item.itemType string_);
         ( "documentation",
           Base.Option.map item.documentation ~f:(fun doc ->
               JSON_Object
@@ -979,12 +999,7 @@ let parse_initialize (params : json option) : Initialize.params =
       | Some "verbose" -> Verbose
       | _ -> Off
     and parse_initializationOptions json =
-      {
-        useTextEditAutocomplete = Jget.bool_d json "useTextEditAutocomplete" ~default:false;
-        liveSyntaxErrors = Jget.bool_d json "liveSyntaxErrors" ~default:true;
-        namingTableSavedStatePath = Jget.string_opt json "namingTableSavedStatePath";
-        sendServerStatusEvents = Jget.bool_d json "sendServerStatusEvents" ~default:false;
-      }
+      { liveSyntaxErrors = Jget.bool_d json "liveSyntaxErrors" ~default:true }
     and parse_capabilities json =
       {
         workspace = Jget.obj_opt json "workspace" |> parse_workspace;
@@ -1504,7 +1519,7 @@ let print_lsp_response ?include_error_stack_trace ~key (id : lsp_id) (result : l
     | RenameResult r -> print_documentRename r
     | DocumentCodeLensResult r -> print_documentCodeLens ~key r
     | ExecuteCommandResult r -> print_executeCommand r
-    | SignatureHelpResult r -> print_signatureHelp r
+    | SignatureHelpResult r -> SignatureHelpFmt.to_json r
     | ShowMessageRequestResult _
     | ShowStatusResult _
     | CompletionItemResolveResult _ ->

@@ -1,5 +1,4 @@
 [options]
-esproposal.optional_chaining=enable
 no_flowlib=false
 
 [lints]

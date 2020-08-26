@@ -55,6 +55,8 @@ type metadata = {
   react_runtime: Options.react_runtime;
   recursion_limit: int;
   root: Path.t;
+  strict_es6_import_export: bool;
+  strict_es6_import_export_excludes: string list;
   strip_root: bool;
   suppress_types: SSet.t;
   max_workers: int;
@@ -169,6 +171,9 @@ type component_t = {
   fix_cache: (Reason.t * Type.t, Type.t) Hashtbl.t;
   spread_cache: Spread_cache.t;
   speculation_state: Speculation_state.t;
+  (* Post-inference checks *)
+  mutable literal_subtypes: (Type.t * Type.use_t) list;
+  mutable matching_props: (Reason.reason * string * Type.t * Type.t) list;
 }
 
 type phase =
@@ -227,6 +232,8 @@ let metadata_of_options options =
     react_runtime = Options.react_runtime options;
     recursion_limit = Options.recursion_limit options;
     root = Options.root options;
+    strict_es6_import_export = Options.strict_es6_import_export options;
+    strict_es6_import_export_excludes = Options.strict_es6_import_export_excludes options;
     strip_root = Options.should_strip_root options;
     suppress_types = Options.suppress_types options;
     default_lib_dir = (Options.file_options options).Files.default_lib_dir;
@@ -291,6 +298,8 @@ let make_ccx sig_cx aloc_tables =
     nominal_poly_ids = Type.Poly.Set.empty;
     nominal_prop_ids = ISet.empty;
     type_asserts_map = ALocMap.empty;
+    matching_props = [];
+    literal_subtypes = [];
     errors = Flow_error.ErrorSet.empty;
     error_suppressions = Error_suppressions.empty;
     severity_cover = Utils_js.FilenameMap.empty;
@@ -504,7 +513,11 @@ let default_lib_dir cx = cx.metadata.default_lib_dir
 
 let type_asserts_map cx = cx.ccx.type_asserts_map
 
+let literal_subtypes cx = cx.ccx.literal_subtypes
+
 let type_graph cx = cx.ccx.type_graph
+
+let matching_props cx = cx.ccx.matching_props
 
 let trust_mode cx = cx.metadata.trust_mode
 
@@ -609,6 +622,10 @@ let add_nominal_poly_id cx id =
   cx.ccx.nominal_poly_ids <- Type.Poly.Set.add id cx.ccx.nominal_poly_ids
 
 let add_type_assert cx k v = cx.ccx.type_asserts_map <- ALocMap.add k v cx.ccx.type_asserts_map
+
+let add_matching_props cx c = cx.ccx.matching_props <- c :: cx.ccx.matching_props
+
+let add_literal_subtypes cx c = cx.ccx.literal_subtypes <- c :: cx.ccx.literal_subtypes
 
 let add_voidable_check cx voidable_check =
   cx.ccx.voidable_checks <- voidable_check :: cx.ccx.voidable_checks

@@ -475,7 +475,7 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
                           (Base.List.map ~f:(mk_object cx reason options) xs) )
                   | Error e ->
                     add_output cx ~trace e;
-                    AnyT.why AnyError reason
+                    AnyT.error reason
                 in
                 (* Intentional UnknownUse here. *)
                 rec_flow_t cx ~use_op trace (t, tout)
@@ -535,7 +535,7 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
                   ~trace
                   (Error_message.EExponentialSpread
                      { reason; reasons_for_operand1; reasons_for_operand2 });
-                rec_flow_t cx trace ~use_op (AnyT.why AnyError reason, tout)
+                rec_flow_t cx trace ~use_op (AnyT.error reason, tout)
               ) else
                 continue acc resolved (curr_resolve_idx + 1) todo_rev
             ))
@@ -1343,7 +1343,7 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
                 ~trace
                 (Error_message.ECannotSpreadInterface
                    { spread_reason = reason; interface_reason = r; use_op });
-              rec_flow cx trace (AnyT.why AnyError reason, UseT (use_op, tout))
+              rec_flow cx trace (AnyT.error reason, UseT (use_op, tout))
             | _ -> rec_flow cx trace (super, ObjKitT (use_op, reason, resolve_tool, tool, tout))
           end
         (* Statics of a class. TODO: This logic is unfortunately duplicated from the

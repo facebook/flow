@@ -12,6 +12,4 @@
 .*/newtests/lsp/completion/unqualified-type-annotation.js
 
 [options]
-esproposal.class_instance_fields=enable
-esproposal.class_static_fields=enable
 emoji=true

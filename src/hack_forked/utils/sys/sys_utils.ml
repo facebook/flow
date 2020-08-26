@@ -515,13 +515,26 @@ let lstat path =
   else
     path
 
+(** Converts platform-specific directory separators to / *)
 let normalize_filename_dir_sep =
   let dir_sep_char = Filename.dir_sep.[0] in
-  String.map (fun c ->
-      if c = dir_sep_char then
-        '/'
-      else
-        c)
+  let no_op path = path in
+  let normalize path =
+    if String.contains path dir_sep_char then
+      String.map
+        (fun c ->
+          if Char.equal dir_sep_char c then
+            '/'
+          else
+            c)
+        path
+    else
+      path
+  in
+  if Char.equal dir_sep_char '/' then
+    no_op
+  else
+    normalize
 
 let name_of_signal = function
   | s when s = Sys.sigabrt -> "SIGABRT (Abnormal termination)"

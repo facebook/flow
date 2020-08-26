@@ -43,8 +43,10 @@ and docblock_error_kind =
 type results = {
   (* successfully parsed files *)
   parse_ok: File_sig.With_Loc.tolerable_error list FilenameMap.t;
-  (* list of skipped files *)
+  (* list of intentionally skipped files *)
   parse_skips: (File_key.t * Docblock.t) list;
+  (* set of files skipped because they were not found on disk *)
+  parse_not_found_skips: FilenameSet.t;
   (* list of files skipped due to an out of date hash *)
   parse_hash_mismatch_skips: FilenameSet.t;
   (* list of failed files *)
@@ -57,6 +59,7 @@ let empty_result =
   {
     parse_ok = FilenameMap.empty;
     parse_skips = [];
+    parse_not_found_skips = FilenameSet.empty;
     parse_hash_mismatch_skips = FilenameSet.empty;
     parse_fails = [];
     parse_unchanged = FilenameSet.empty;
@@ -79,6 +82,11 @@ type parse_options = {
   parse_facebook_fbt: string option;
   parse_arch: Options.arch;
   parse_abstract_locations: bool;
+  parse_type_asserts: bool;
+  parse_suppress_types: SSet.t;
+  parse_max_literal_len: int;
+  parse_exact_by_default: bool;
+  parse_enable_enums: bool;
 }
 
 let parse_source_file ~fail ~types ~use_strict content file =
@@ -376,6 +384,11 @@ let do_parse ~parse_options ~info content file =
     parse_facebook_fbt = facebook_fbt;
     parse_arch = arch;
     parse_abstract_locations = abstract_locations;
+    parse_type_asserts = type_asserts;
+    parse_suppress_types = suppress_types;
+    parse_max_literal_len = max_literal_len;
+    parse_exact_by_default = exact_by_default;
+    parse_enable_enums = enable_enums;
   } =
     parse_options
   in
@@ -413,41 +426,42 @@ let do_parse ~parse_options ~info content file =
         let facebook_keyMirror = true in
         let exports_info = File_sig.With_Loc.program_with_exports_info ~ast ~module_ref_prefix in
         (match exports_info with
+        | Error e -> Parse_fail (File_sig_error e)
         | Ok (exports_info, tolerable_errors) ->
-          let signature = Signature_builder.program ast ~exports_info in
-          let (errors, env, sig_ast) =
-            Signature_builder.Signature.verify_and_generate
-              ~prevent_munge
-              ~facebook_fbt
-              ~ignore_static_propTypes
-              ~facebook_keyMirror
-              signature
-              ast
-          in
-          let env =
+          let (env, errors, sig_extra) =
             match arch with
-            | Options.Classic -> None
-            | Options.TypesFirst ->
-              Some
-                (SMap.map
-                   (fun lmap ->
-                     Loc_collections.LocMap.fold
-                       (fun loc _ acc -> Loc_collections.LocSet.add loc acc)
-                       lmap
-                       Loc_collections.LocSet.empty)
-                   env)
-          in
-          let file_sig = File_sig.With_Loc.verified env (snd signature) in
-          let tolerable_errors =
-            Signature_builder_deps.PrintableErrorSet.fold
-              (fun error acc -> File_sig.With_Loc.SignatureVerificationError error :: acc)
-              errors
-              tolerable_errors
-          in
-          let sig_extra =
-            match arch with
-            | Options.Classic -> Parsing_heaps.Classic
-            | Options.TypesFirst ->
+            | Options.Classic ->
+              let signature = Signature_builder.program ast ~exports_info in
+              let (errors, _, _) =
+                Signature_builder.Signature.verify
+                  ~prevent_munge
+                  ~facebook_fbt
+                  ~ignore_static_propTypes
+                  ~facebook_keyMirror
+                  signature
+              in
+              (None, errors, Parsing_heaps.Classic)
+            | Options.TypesFirst { new_signatures = false } ->
+              let signature = Signature_builder.program ast ~exports_info in
+              let (errors, env, sig_ast) =
+                Signature_builder.Signature.verify_and_generate
+                  ~prevent_munge
+                  ~facebook_fbt
+                  ~ignore_static_propTypes
+                  ~facebook_keyMirror
+                  signature
+                  ast
+              in
+              let env =
+                Some
+                  (SMap.map
+                     (fun lmap ->
+                       Loc_collections.LocMap.fold
+                         (fun loc _ acc -> Loc_collections.LocSet.add loc acc)
+                         lmap
+                         Loc_collections.LocSet.empty)
+                     env)
+              in
               let sig_ast = Ast_loc_utils.loc_to_aloc_mapper#program sig_ast in
               let (aloc_table, sig_ast) =
                 if abstract_locations then
@@ -461,10 +475,52 @@ let do_parse ~parse_options ~info content file =
                 | Ok fs -> fs
                 | Error _ -> assert false
               in
-              Parsing_heaps.TypesFirst { sig_ast; sig_file_sig; aloc_table }
+              (env, errors, Parsing_heaps.TypesFirst { sig_ast; sig_file_sig; aloc_table })
+            | Options.TypesFirst { new_signatures = true } ->
+              let sig_opts =
+                {
+                  Type_sig_parse.type_asserts;
+                  suppress_types;
+                  munge = not prevent_munge;
+                  ignore_static_propTypes;
+                  facebook_keyMirror;
+                  facebook_fbt;
+                  max_literal_len;
+                  exact_by_default;
+                  module_ref_prefix;
+                  enable_enums;
+                }
+              in
+              let (errors, locs, type_sig) =
+                let strict = Docblock.is_strict info in
+                Type_sig_utils.parse_and_pack_module ~strict sig_opts (Some file) ast
+              in
+              (* TODO: extract env from type_sig *)
+              let env = None in
+              (* TODO: make type sig errors match signature builder errors *)
+              let errors =
+                List.fold_left
+                  (fun acc (loc, err) ->
+                    let loc = Type_sig_collections.Locs.get locs loc in
+                    let err = Signature_error.TODO (Type_sig.show_errno err, loc) in
+                    Signature_builder_deps.PrintableErrorSet.add err acc)
+                  Signature_builder_deps.PrintableErrorSet.empty
+                  errors
+              in
+              let aloc_table =
+                Type_sig_collections.Locs.to_array locs
+                |> ALoc.ALocRepresentationDoNotUse.make_table file
+              in
+              (env, errors, Parsing_heaps.TypeSig (type_sig, aloc_table))
           in
-          Parse_ok { ast; file_sig; sig_extra; tolerable_errors; parse_errors }
-        | Error e -> Parse_fail (File_sig_error e))
+          let tolerable_errors =
+            Signature_builder_deps.PrintableErrorSet.fold
+              (fun error acc -> File_sig.With_Loc.SignatureVerificationError error :: acc)
+              errors
+              tolerable_errors
+          in
+          let file_sig = File_sig.With_Loc.verified env exports_info in
+          Parse_ok { ast; file_sig; sig_extra; tolerable_errors; parse_errors })
   with
   | Parse_error.Error (first_parse_error :: _) -> Parse_fail (Parse_error first_parse_error)
   | e ->
@@ -573,15 +629,15 @@ let reducer
           { parse_results with parse_fails }
       )
   | None ->
-    let info = Docblock.default_info in
-    let parse_skips = (file, info) :: parse_results.parse_skips in
-    { parse_results with parse_skips }
+    let parse_not_found_skips = FilenameSet.add file parse_results.parse_not_found_skips in
+    { parse_results with parse_not_found_skips }
 
 (* merge is just memberwise union/concat of results *)
 let merge r1 r2 =
   {
     parse_ok = FilenameMap.union r1.parse_ok r2.parse_ok;
     parse_skips = r1.parse_skips @ r2.parse_skips;
+    parse_not_found_skips = FilenameSet.union r1.parse_not_found_skips r2.parse_not_found_skips;
     parse_hash_mismatch_skips =
       FilenameSet.union r1.parse_hash_mismatch_skips r2.parse_hash_mismatch_skips;
     parse_fails = r1.parse_fails @ r2.parse_fails;
@@ -653,14 +709,16 @@ let parse
     let t2 = Unix.gettimeofday () in
     let ok_count = FilenameMap.cardinal results.parse_ok in
     let skip_count = List.length results.parse_skips in
+    let not_found_count = FilenameSet.cardinal results.parse_not_found_skips in
     let mismatch_count = FilenameSet.cardinal results.parse_hash_mismatch_skips in
     let fail_count = List.length results.parse_fails in
     let unchanged_count = FilenameSet.cardinal results.parse_unchanged in
     Hh_logger.info
-      "parsed %d files (%d ok, %d skipped, %d bad hashes, %d failed, %d unchanged) in %f"
+      "parsed %d files (%d ok, %d skipped, %d not found, %d bad hashes, %d failed, %d unchanged) in %f"
       (ok_count + skip_count + mismatch_count + fail_count)
       ok_count
       skip_count
+      not_found_count
       mismatch_count
       fail_count
       unchanged_count
@@ -707,6 +765,7 @@ let reparse
   let modified =
     List.fold_left (fun acc (skip, _) -> FilenameSet.add skip acc) modified results.parse_skips
   in
+  let modified = FilenameSet.union modified results.parse_not_found_skips in
   let modified = FilenameSet.union modified results.parse_hash_mismatch_skips in
   SharedMem_js.collect `gentle;
   let unchanged = FilenameSet.diff files modified in
@@ -740,6 +799,11 @@ let make_parse_options_internal
     parse_facebook_fbt = facebook_fbt;
     parse_arch = arch;
     parse_abstract_locations = abstract_locations;
+    parse_type_asserts = Options.type_asserts options;
+    parse_suppress_types = Options.suppress_types options;
+    parse_max_literal_len = Options.max_literal_length options;
+    parse_exact_by_default = Options.exact_by_default options;
+    parse_enable_enums = Options.enums options;
   }
 
 let make_parse_options ?fail ?types_mode ?use_strict docblock options =
@@ -799,7 +863,7 @@ let ensure_parsed ~reader options workers files =
   (* We want to parse unchanged files, since this is our first time parsing them *)
   let parse_unchanged = true in
   (* We're not replacing any info, so there's nothing to roll back. That means we can just use the
-   * simle Parse_mutator rather than the rollback-able Reparse_mutator *)
+   * simple Parse_mutator rather than the rollback-able Reparse_mutator *)
   let worker_mutator = Parsing_heaps.Parse_mutator.create () in
   let progress_fn ~total ~start ~length:_ =
     MonitorRPC.status_update
@@ -820,7 +884,14 @@ let ensure_parsed ~reader options workers files =
   in
   let next = MultiWorkerLwt.next ~progress_fn workers (FilenameSet.elements files_missing_asts) in
   let parse_options = make_parse_options_internal ~types_mode ~use_strict ~docblock:None options in
-  let%lwt results =
+  let%lwt {
+        parse_ok = _;
+        parse_skips = _;
+        parse_not_found_skips;
+        parse_hash_mismatch_skips;
+        parse_fails = _;
+        parse_unchanged = _;
+      } =
     parse
       ~worker_mutator
       ~reader
@@ -833,4 +904,4 @@ let ensure_parsed ~reader options workers files =
       workers
       next
   in
-  Lwt.return results.parse_hash_mismatch_skips
+  Lwt.return (FilenameSet.union parse_not_found_skips parse_hash_mismatch_skips)

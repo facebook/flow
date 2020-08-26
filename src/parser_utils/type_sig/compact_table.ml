@@ -136,6 +136,8 @@ module Make () = struct
         loop f dst head head.next;
         dst
 
+  let init = Array.init
+
   external get : 'a t -> index -> 'a = "%array_unsafe_get"
 
   let length = Array.length

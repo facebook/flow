@@ -20,10 +20,10 @@ cp tmp/foo.js .
 assert_ok "$FLOW" force-recheck --no-auto-start foo.js
 assert_errors "$FLOW" status --no-auto-start .
 
-printf "\nRemove @flow in foo.js (no errors!):\n"
+printf "\nRemove @flow in foo.js:\n"
 cp tmp1/foo.js .
 assert_ok "$FLOW" force-recheck --no-auto-start foo.js
-assert_ok "$FLOW" status --no-auto-start .
+assert_errors "$FLOW" status --no-auto-start .
 
 printf "\nRestore foo.js (same as initial status):\n"
 cp tmp/foo.js .

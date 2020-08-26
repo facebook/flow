@@ -5,6 +5,11 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
+type file_watcher =
+  | NoFileWatcher
+  | DFind
+  | Watchman
+
 type config
 
 type warning = int * string
@@ -92,7 +97,7 @@ val facebook_fbt : config -> string option
 
 val facebook_module_interop : config -> bool
 
-val file_watcher : config -> Options.file_watcher option
+val file_watcher : config -> file_watcher option
 
 val file_watcher_timeout : config -> int option
 
@@ -109,6 +114,8 @@ val haste_use_name_reducers : config -> bool
 val ignore_non_literal_requires : config -> bool
 
 val include_warnings : config -> bool
+
+val jsdoc : config -> bool
 
 val lazy_mode : config -> Options.lazy_mode option
 
@@ -182,7 +189,11 @@ val type_asserts : config -> bool
 
 val types_first : config -> bool
 
+val new_signatures : config -> bool
+
 val watchman_sync_timeout : config -> int option
+
+val watchman_defer_states : config -> string list
 
 val wait_for_recheck : config -> bool
 

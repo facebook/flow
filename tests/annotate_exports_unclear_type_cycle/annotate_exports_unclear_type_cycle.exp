@@ -41,10 +41,10 @@ export default (g(): any); // any okay
 
 Stats:
   Files changed:                            4
-  Number of sig. ver. errors:               4
-  Number of annotations required:           4
   Number of annotations added:              4
   Total size of annotations:                4
+  Number of sig. ver. errors:               4
+  Number of annotations required:           4
   Number of annotations skipped:            0
 
 Errors:

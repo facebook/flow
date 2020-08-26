@@ -69,17 +69,15 @@ let choose_provider_and_warn_about_duplicates =
 let module_name_candidates ~options =
   Module_hashtables.memoize_with_module_name_candidates_cache ~f:(fun name ->
       let mappers = Options.module_name_mappers options in
-      let root = Options.root options |> Path.to_string |> Sys_utils.normalize_filename_dir_sep in
+      let root = Options.root options in
+      let expand_project_root_token = Files.expand_project_root_token ~root in
       let map_name mapped_names (regexp, template) =
         let new_name =
           name
           (* First we apply the mapper *)
           |> Str.global_replace regexp template
-          (* Then we replace the PROJECT_ROOT placeholder. This works like
-           * Str.global_replace except it ignores things that look like
-           * backreferences, like \1 *)
-          |> Str.split_delim Files.project_root_token
-          |> String.concat root
+          (* Then we replace the PROJECT_ROOT placeholder. *)
+          |> expand_project_root_token
         in
         if new_name = name then
           mapped_names

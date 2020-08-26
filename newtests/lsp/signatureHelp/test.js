@@ -28,7 +28,11 @@ export default suite(
     };
     return [
       test('textDocument/signatureHelp', [
-        addFiles('nestedClasses.js', 'nestedFunctions.js'),
+        addFiles(
+          'nestedClasses.js',
+          'nestedFunctions.js',
+          'paramDocumentation.js',
+        ),
         lspStartAndConnect(),
         verifySignatureHelp(
           '<PLACEHOLDER_PROJECT_URL>/nestedClasses.js',
@@ -79,6 +83,40 @@ export default suite(
           '<PLACEHOLDER_PROJECT_URL>/nestedFunctions.js',
           {line: 8, character: 2}, // inside nested function body
           '{null}',
+        ),
+        verifySignatureHelp(
+          '<PLACEHOLDER_PROJECT_URL>/paramDocumentation.js',
+          {line: 12, character: 5},
+          JSON.stringify({
+            signatures: [
+              {
+                label: '(bar: void, baz: void): void',
+                documentation: {
+                  kind: 'markdown',
+                  value: 'foo\n\n**@unrecognized** this tag is unrecognized',
+                },
+                parameters: [
+                  {
+                    label: 'bar: void',
+                    documentation: {
+                      kind: 'markdown',
+                      value: 'bar - the first summand',
+                    },
+                  },
+                  {
+                    label: 'baz: void',
+                    documentation: {
+                      kind: 'markdown',
+                      value:
+                        'baz - the second and third summands\nbaz.x (optional)  - the second summand\nbaz.y (optional, defaults to 0)  - the third summand',
+                    },
+                  },
+                ],
+              },
+            ],
+            activeSignature: 0,
+            activeParameter: 0,
+          }),
         ),
       ]),
     ];

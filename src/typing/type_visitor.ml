@@ -352,9 +352,9 @@ class ['a] t =
       | TypeCastT (_, t) -> self#type_ cx pole_TODO acc t
       | EnumCastT { enum = (_, _, { representation_t; _ }); _ } ->
         self#type_ cx pole_TODO acc representation_t
-      | EnumExhaustiveCheckT (_, exhaustive_check, incomplete_out) ->
+      | EnumExhaustiveCheckT { reason = _; check; incomplete_out } ->
         let acc = self#type_ cx pole_TODO acc incomplete_out in
-        (match exhaustive_check with
+        (match check with
         | EnumExhaustiveCheckPossiblyValid { possible_checks; _ } ->
           List.fold_left
             (fun acc (obj_t, _) -> self#type_ cx pole_TODO acc obj_t)

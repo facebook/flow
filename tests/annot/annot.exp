@@ -184,5 +184,14 @@ References:
                       ^^^^^^^ [2]
 
 
+Error ------------------------------------------------------------------------------------------------------ test.js:2:6
 
-Found 12 errors
+Cannot use `C` as a type. A name can be used as a type only if it refers to a type, interface, class, or enum
+definition. To get the type of a non-class value, use `typeof`. [value-as-type]
+
+   2| ((0: C): string);
+           ^
+
+
+
+Found 13 errors

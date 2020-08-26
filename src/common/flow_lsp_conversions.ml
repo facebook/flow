@@ -38,6 +38,8 @@ let loc_to_lsp_range (loc : Loc.t) : Lsp.range =
     let end_ = flow_position_to_lsp loc_end.line loc_end.column in
     { Lsp.start; end_ })
 
+let markup_string str = { Lsp.MarkupContent.kind = Lsp.MarkupKind.Markdown; value = str }
+
 let flow_signature_help_to_lsp
     (details : (ServerProt.Response.func_details_result list * int) option) :
     Lsp.SignatureHelp.result =
@@ -48,19 +50,29 @@ let flow_signature_help_to_lsp
     let signatures =
       Base.List.fold_left
         signatures
-        ~f:(fun acc { ServerProt.Response.param_tys; return_ty } ->
-          let params =
-            param_tys
-            |> Base.List.map ~f:(fun { ServerProt.Response.param_name; param_ty } ->
-                   Printf.sprintf "%s: %s" param_name param_ty)
+        ~f:(fun acc { ServerProt.Response.param_tys; return_ty; func_documentation } ->
+          let doc_opt =
+            Base.Option.map ~f:(fun doc -> Documentation.MarkupContent (markup_string doc))
           in
-          let siginfo_label = Printf.sprintf "(%s): %s" (String.concat ", " params) return_ty in
+          let label_buf = Buffer.create 20 in
+          Buffer.add_string label_buf "(";
           let parameters =
-            Base.List.map
-              ~f:(fun parinfo_label -> { parinfo_label; parinfo_documentation = None })
-              params
+            param_tys
+            |> Base.List.mapi
+                 ~f:(fun i { ServerProt.Response.param_name; param_ty; param_documentation } ->
+                   let label = Printf.sprintf "%s: %s" param_name param_ty in
+                   if i > 0 then Buffer.add_string label_buf ", ";
+                   Buffer.add_string label_buf label;
+                   {
+                     parinfo_label = String label;
+                     parinfo_documentation = doc_opt param_documentation;
+                   })
           in
-          let signature = { siginfo_label; siginfo_documentation = None; parameters } in
+          Buffer.add_string label_buf "): ";
+          Buffer.add_string label_buf return_ty;
+          let siginfo_label = Buffer.contents label_buf in
+          let siginfo_documentation = doc_opt func_documentation in
+          let signature = { siginfo_label; siginfo_documentation; parameters } in
           signature :: acc)
         ~init:[]
     in
@@ -72,44 +84,38 @@ let flow_completion_to_lsp
     (item : ServerProt.Response.complete_autocomplete_result) : Lsp.Completion.completionItem =
   Lsp.Completion.(
     ServerProt.Response.(
-      let insert_text = Base.Option.value item.res_insert_text ~default:item.res_name in
-      let trunc n s =
-        if String.length s < n then
-          s
-        else
-          String.sub s 0 n ^ "..."
-      in
-      let column_width = 80 in
-      let text_edit loc newText : Lsp.TextEdit.t =
-        { Lsp.TextEdit.range = loc_to_lsp_range loc; Lsp.TextEdit.newText }
-      in
-      let plaintext_text_edits =
-        lazy
-          ( if Base.Option.is_some item.res_insert_text then
-            [text_edit item.res_loc insert_text]
+      let detail =
+        let trunc n s =
+          if String.length s < n then
+            s
           else
-            [] )
+            String.sub s 0 n ^ "..."
+        in
+        let column_width = 80 in
+        Some (trunc column_width item.res_ty)
       in
-      let (itemType, inlineDetail, detail, insertTextFormat, textEdits) =
-        let itemType = None in
-        let inlineDetail = Some (trunc column_width item.res_ty) in
-        let detail = inlineDetail in
-        (itemType, inlineDetail, detail, Some PlainText, Lazy.force plaintext_text_edits)
+      let insertTextFormat = Some PlainText in
+      let textEdits =
+        match item.res_insert_text with
+        | Some insert_text ->
+          let range = loc_to_lsp_range item.res_loc in
+          [{ Lsp.TextEdit.range; newText = insert_text }]
+        | None -> []
       in
       let sortText = Some (Printf.sprintf "%020u" item.rank) in
+      let documentation =
+        Base.Option.map item.res_documentation ~f:(fun doc -> [Lsp.MarkedString doc])
+      in
       {
         label = item.res_name;
         kind = item.res_kind;
         detail;
-        inlineDetail;
-        itemType;
-        documentation = None;
+        documentation;
         (* This will be filled in by completionItem/resolve. *)
         preselect = is_preselect_supported && item.res_preselect;
         sortText;
         filterText = None;
-        (* deprecated and should not be used *)
-        insertText = None;
+        insertText = None (* deprecated and should not be used *);
         insertTextFormat;
         textEdits;
         command = None;

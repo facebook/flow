@@ -134,12 +134,19 @@ let autocomplete ~trigger_character ~reader ~options ~env ~profiling ~filename ~
         :: initial_json_props )
     in
     Lwt.return (Error err, Some json_data_to_log)
-  | Ok (cx, info, file_sig, _, tast, parse_errors) ->
+  | Ok (cx, info, file_sig, _, typed_ast, parse_errors) ->
     Profiling_js.with_timer_lwt profiling ~timer:"GetResults" ~f:(fun () ->
         try_with_json2 (fun () ->
             let open AutocompleteService_js in
             let (ac_type_string, results_res) =
-              autocomplete_get_results ~reader cx file_sig tast trigger_character cursor_loc
+              autocomplete_get_results
+                ~options
+                ~reader
+                ~cx
+                ~file_sig
+                ~typed_ast
+                trigger_character
+                cursor_loc
             in
             let json_props_to_log =
               ("ac_type", Hh_json.JSON_String ac_type_string)
@@ -204,20 +211,13 @@ let check_file ~options ~env ~profiling ~force file_input =
 let get_def_of_check_result ~options ~reader ~profiling ~check_result (file, line, col) =
   let loc = Loc.make file line col in
   let (cx, _, file_sig, _, typed_ast, parse_errors) = check_result in
+  let file_sig = File_sig.abstractify_locs file_sig in
   Profiling_js.with_timer_lwt profiling ~timer:"GetResult" ~f:(fun () ->
       try_with_json2 (fun () ->
           Lwt.return
-            ( GetDef_js.get_def ~options ~reader cx file_sig typed_ast loc
-            |> fun (result, request_history) ->
+            ( GetDef_js.get_def ~options ~reader ~cx ~file_sig ~typed_ast loc |> fun result ->
               let open GetDef_js.Get_def_result in
-              let json_props =
-                [
-                  ( "request_history",
-                    Hh_json.JSON_Array
-                      (Base.List.map ~f:(fun str -> Hh_json.JSON_String str) request_history) );
-                ]
-                |> fold_json_of_parse_errors parse_errors
-              in
+              let json_props = fold_json_of_parse_errors parse_errors [] in
               match result with
               | Def loc -> (Ok loc, Some (("result", Hh_json.JSON_String "SUCCESS") :: json_props))
               | Partial (loc, msg) ->
@@ -297,17 +297,22 @@ let infer_type
                   column
               in
               let%lwt (getdef_loc_result, get_def_json_props) =
-                get_def_of_check_result
-                  ~options
-                  ~reader
-                  ~profiling
-                  ~check_result
-                  (file, line, column)
+                if Options.jsdoc options then
+                  get_def_of_check_result
+                    ~options
+                    ~reader
+                    ~profiling
+                    ~check_result
+                    (file, line, column)
+                else
+                  Lwt.return (Error "", Some [("disabled", Hh_json.JSON_Bool true)])
               in
               let documentation =
                 match getdef_loc_result with
                 | Error _ -> None
-                | Ok getdef_loc -> Find_documentation.of_getdef_loc ~reader getdef_loc
+                | Ok getdef_loc ->
+                  Find_documentation.jsdoc_of_getdef_loc ~reader getdef_loc
+                  |> Base.Option.bind ~f:Find_documentation.documentation_of_jsdoc
               in
               let json_props =
                 let documentation_get_def =
@@ -1517,10 +1522,10 @@ let handle_persistent_infer_type ~options ~reader ~id ~params ~loc ~metadata ~cl
       match
         Base.List.concat
           [
-            Base.Option.to_list documentation |> List.map (fun doc -> MarkedString doc);
             Base.Option.to_list ty
             |> List.map (fun elt ->
                    MarkedCode ("flow", Ty_printer.string_of_elt elt ~exact_by_default));
+            Base.Option.to_list documentation |> List.map (fun doc -> MarkedString doc);
           ]
       with
       | [] -> [MarkedString "?"]
@@ -1616,7 +1621,7 @@ let handle_persistent_autocomplete_lsp
       end)
 
 let handle_persistent_signaturehelp_lsp
-    ~reader:_ ~options ~id ~params ~loc ~metadata ~client ~profiling ~env =
+    ~reader ~options ~id ~params ~loc ~metadata ~client ~profiling ~env =
   let (file, line, col) =
     match loc with
     | Some loc -> loc
@@ -1650,7 +1655,7 @@ let handle_persistent_signaturehelp_lsp
       let func_details =
         let file_sig = File_sig.abstractify_locs file_sig in
         let cursor_loc = Loc.make path line col in
-        Signature_help.find_signatures ~cx ~file_sig ~typed_ast cursor_loc
+        Signature_help.find_signatures ~options ~reader ~cx ~file_sig ~typed_ast cursor_loc
       in
       (match func_details with
       | Ok details ->

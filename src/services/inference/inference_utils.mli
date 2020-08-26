@@ -32,6 +32,3 @@ val fold_included_well_formed_exports :
   f:(File_key.t -> 'a -> 'b -> 'b) -> Options.t -> 'a Utils_js.FilenameMap.t -> 'b -> 'b
 
 val well_formed_exports_enabled : Options.t -> File_key.t -> bool
-
-val iter_strict_es6_import_export :
-  f:('a -> unit) -> Options.t -> (Context.t * 'a * 'b) Nel.t -> unit

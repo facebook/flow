@@ -1,121 +1,67 @@
-Error -------------------------------------------------------------------------------------------- disjoint_union.js:8:7
-
-All branches are incompatible: [incompatible-type]
- - Either object with property `type` that matches string literal `square` [1] is incompatible with string literal
-   `rectangle` [2].
- - Or object with property `type` that matches string literal `square` [1] is incompatible with string literal
-   `circle` [3].
-
-   disjoint_union.js:8:7
-   8|   if (shape.type === 'square') { // error
-            ^^^^^^^^^^^^^^^^^^^^^^^ [1]
-
-References:
-   disjoint_union.js:4:10
-   4|   {type: 'rectangle', width: number, height: number} |
-               ^^^^^^^^^^^ [2]
-   disjoint_union.js:5:10
-   5|   {type: 'circle', radius: number};
-               ^^^^^^^^ [3]
-
-
 Error ------------------------------------------------------------------------------------------- disjoint_union.js:8:22
 
-All branches are incompatible: [incompatible-type]
- - Either string [1] is incompatible with string literal `rectangle` [2].
- - Or string [1] is incompatible with string literal `circle` [3].
+Cannot compare string [1] with property `type` of `Shape` [2] because: [incompatible-type]
+ - Either string [1] is incompatible with string literal `rectangle` [3].
+ - Or string [1] is incompatible with string literal `circle` [4].
 
    disjoint_union.js:8:22
    8|   if (shape.type === 'square') { // error
                            ^^^^^^^^ [1]
 
 References:
+   disjoint_union.js:7:22
+   7| function area(shape: Shape): number {
+                           ^^^^^ [2]
    disjoint_union.js:4:10
    4|   {type: 'rectangle', width: number, height: number} |
-               ^^^^^^^^^^^ [2]
+               ^^^^^^^^^^^ [3]
    disjoint_union.js:5:10
    5|   {type: 'circle', radius: number};
-               ^^^^^^^^ [3]
-
-
-Error ------------------------------------------------------------------------------------------- disjoint_union.js:21:7
-
-All branches are incompatible: [incompatible-type]
- - Either object with property `type` that matches string literal `square` [1] is incompatible with string literal
-   `rectangle` [2].
- - Or object with property `type` that matches string literal `square` [1] is incompatible with string literal
-   `circle` [3].
-
-   disjoint_union.js:21:7
-   21|   if (shape.type === 'square') { // error
-             ^^^^^^^^^^^^^^^^^^^^^^^ [1]
-
-References:
-   disjoint_union.js:17:11
-   17|   {|type: 'rectangle', width: number, height: number|} |
-                 ^^^^^^^^^^^ [2]
-   disjoint_union.js:18:11
-   18|   {|type: 'circle', radius: number|};
-                 ^^^^^^^^ [3]
+               ^^^^^^^^ [4]
 
 
 Error ------------------------------------------------------------------------------------------ disjoint_union.js:21:22
 
-All branches are incompatible: [incompatible-type]
- - Either string [1] is incompatible with string literal `rectangle` [2].
- - Or string [1] is incompatible with string literal `circle` [3].
+Cannot compare string [1] with property `type` of `ExactShape` [2] because: [incompatible-type]
+ - Either string [1] is incompatible with string literal `rectangle` [3].
+ - Or string [1] is incompatible with string literal `circle` [4].
 
    disjoint_union.js:21:22
    21|   if (shape.type === 'square') { // error
                             ^^^^^^^^ [1]
 
 References:
+   disjoint_union.js:20:23
+   20| function area2(shape: ExactShape): number {
+                             ^^^^^^^^^^ [2]
    disjoint_union.js:17:11
    17|   {|type: 'rectangle', width: number, height: number|} |
-                 ^^^^^^^^^^^ [2]
+                 ^^^^^^^^^^^ [3]
    disjoint_union.js:18:11
    18|   {|type: 'circle', radius: number|};
-                 ^^^^^^^^ [3]
-
-
-Error ------------------------------------------------------------------------------------------- disjoint_union.js:34:7
-
-All branches are incompatible: [incompatible-type]
- - Either object with property `type` that matches string literal `square` [1] is incompatible with string literal
-   `rectangle` [2].
- - Or object with property `type` that matches string literal `square` [1] is incompatible with string literal
-   `circle` [3].
-
-   disjoint_union.js:34:7
-   34|   if (shape.type === 'square') { // error
-             ^^^^^^^^^^^^^^^^^^^^^^^ [1]
-
-References:
-   disjoint_union.js:30:11
-   30|   {+type: 'rectangle', width: number, height: number} |
-                 ^^^^^^^^^^^ [2]
-   disjoint_union.js:31:11
-   31|   {+type: 'circle', radius: number};
-                 ^^^^^^^^ [3]
+                 ^^^^^^^^ [4]
 
 
 Error ------------------------------------------------------------------------------------------ disjoint_union.js:34:22
 
-All branches are incompatible: [incompatible-type]
- - Either string [1] is incompatible with string literal `rectangle` [2].
- - Or string [1] is incompatible with string literal `circle` [3].
+Cannot compare string [1] with property `type` of `ReadOnlyShape` [2] because: [incompatible-type]
+ - Either string [1] is incompatible with string literal `rectangle` [3].
+ - Or string [1] is incompatible with string literal `circle` [4].
 
    disjoint_union.js:34:22
    34|   if (shape.type === 'square') { // error
                             ^^^^^^^^ [1]
 
 References:
+   disjoint_union.js:33:23
+   33| function area3(shape: ReadOnlyShape): number {
+                             ^^^^^^^^^^^^^ [2]
    disjoint_union.js:30:11
    30|   {+type: 'rectangle', width: number, height: number} |
-                 ^^^^^^^^^^^ [2]
+                 ^^^^^^^^^^^ [3]
    disjoint_union.js:31:11
    31|   {+type: 'circle', radius: number};
-                 ^^^^^^^^ [3]
+                 ^^^^^^^^ [4]
 
 
 Error ----------------------------------------------------------------------------------------------------- enum.js:8:25
@@ -133,4 +79,4 @@ References:
 
 
 
-Found 7 errors
+Found 4 errors

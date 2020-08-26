@@ -69,14 +69,18 @@ let variable_declaration loc (decl : (Loc.t, Loc.t) Ast.Statement.VariableDeclar
     declarations
 
 let function_declaration
-    loc { Ast.Function.id; generator; async; tparams; params; return; body; predicate; _ } =
+    loc { Ast.Function.id; generator; async; tparams; params; return; body; predicate; sig_loc; _ }
+    =
   ( Base.Option.value_exn id,
-    (loc, Kind.FunctionDef { generator; async; tparams; params; return; body; predicate }) )
+    (loc, Kind.FunctionDef { generator; async; tparams; params; return; body; predicate; sig_loc })
+  )
 
 let function_expression
-    loc { Ast.Function.id; generator; async; tparams; params; return; body; predicate; _ } =
+    loc { Ast.Function.id; generator; async; tparams; params; return; body; predicate; sig_loc; _ }
+    =
   ( Base.Option.value_exn id,
-    (loc, Kind.FunctionDef { generator; async; tparams; params; return; body; predicate }) )
+    (loc, Kind.FunctionDef { generator; async; tparams; params; return; body; predicate; sig_loc })
+  )
 
 let class_ loc class_ =
   let open Ast.Class in

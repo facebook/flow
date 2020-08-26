@@ -95,10 +95,10 @@ module.exports = (): {|
 
 Stats:
   Files changed:                            7
-  Number of sig. ver. errors:               9
-  Number of annotations required:           9
   Number of annotations added:              9
   Total size of annotations:               33
+  Number of sig. ver. errors:               9
+  Number of annotations required:           9
   Number of annotations skipped:            0
 
 Errors:

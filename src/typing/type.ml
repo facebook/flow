@@ -362,6 +362,12 @@ module rec TypeTerm : sig
         case_test: 'loc virtual_reason;
         switch_discriminant: 'loc virtual_reason;
       }
+    | MatchingProp of {
+        op: 'loc virtual_reason;
+        obj: 'loc virtual_reason;
+        key: string;
+        sentinel_reason: 'loc virtual_reason;
+      }
     | UnknownUse
 
   and 'loc virtual_frame_use_op =
@@ -776,7 +782,11 @@ module rec TypeTerm : sig
         use_op: use_op;
         enum: reason * Trust.trust_rep * enum_t;
       }
-    | EnumExhaustiveCheckT of reason * enum_possible_exhaustive_check_t * t
+    | EnumExhaustiveCheckT of {
+        reason: reason;
+        check: enum_possible_exhaustive_check_t;
+        incomplete_out: t;
+      }
     | FilterOptionalT of use_op * t
     | FilterMaybeT of use_op * t
     | FunImplicitVoidReturnT of {
@@ -921,9 +931,11 @@ module rec TypeTerm : sig
 
   and any_source =
     | Annotated
-    | AnyError
+    | AnyError of any_error_kind option
     | Unsound of unsoundness_kind
     | Untyped
+
+  and any_error_kind = UnresolvedName
 
   (* Tracks the kinds of unsoundness inherent in Flow. If you can't find a kind that matches
      your use case, make one *)
@@ -2624,7 +2636,9 @@ module AnyT = struct
 
   let annot = why Annotated
 
-  let error = why AnyError
+  let error = why (AnyError None)
+
+  let error_of_kind kind = why (AnyError (Some kind))
 
   let untyped = why Untyped
 
@@ -2850,7 +2864,8 @@ let aloc_of_root_use_op : root_use_op -> ALoc.t = function
   | TypeApplication { type' = op }
   | SetProperty { value = op; _ }
   | UpdateProperty { lhs = op; _ }
-  | SwitchCheck { case_test = op; _ } ->
+  | SwitchCheck { case_test = op; _ }
+  | MatchingProp { op; _ } ->
     aloc_of_reason op
   | ReactGetIntrinsic _
   | Speculation _
@@ -2989,6 +3004,7 @@ let string_of_root_use_op (type a) : a virtual_root_use_op -> string = function
   | SetProperty _ -> "SetProperty"
   | UpdateProperty _ -> "UpdateProperty"
   | SwitchCheck _ -> "SwitchCheck"
+  | MatchingProp _ -> "MatchingProp"
   | UnknownUse -> "UnknownUse"
 
 let string_of_frame_use_op (type a) : a virtual_frame_use_op -> string = function

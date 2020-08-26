@@ -34,9 +34,6 @@ module TypeExSet = Set.Make (struct
   let compare = reasonless_compare
 end)
 
-let matching_sentinel_prop reason key sentinel_value =
-  MatchingPropT (reason, key, DefT (reason, bogus_trust (), sentinel_value))
-
 (**************************************************************)
 
 (* Check that id1 is not linked to id2. *)
@@ -2012,7 +2009,7 @@ struct
             match call_type.call_targs with
             | None ->
               add_output cx ~trace (Error_message.ETooFewTypeArgs (reason, reason, 1));
-              AnyT.at AnyError fun_loc
+              AnyT.at (AnyError None) fun_loc
             | Some [ExplicitArg t] ->
               let (kind, return_t) =
                 match l with
@@ -2055,7 +2052,7 @@ struct
               return_t
             | Some _ ->
               add_output cx ~trace (Error_message.ETooManyTypeArgs (reason, reason, 1));
-              AnyT.at AnyError fun_loc
+              AnyT.at (AnyError None) fun_loc
           in
           let funtype =
             DefT
@@ -2821,11 +2818,7 @@ struct
             CreateObjWithComputedPropT { reason; value = _; tout_tvar = (tout_reason, tout_id) } )
           ->
           Context.computed_property_add_multiple_lower_bounds cx tout_id;
-          rec_flow_t
-            ~use_op:unknown_use
-            cx
-            trace
-            (AnyT.why AnyError reason, OpenT (tout_reason, tout_id));
+          rec_flow_t ~use_op:unknown_use cx trace (AnyT.error reason, OpenT (tout_reason, tout_id));
           add_output
             cx
             ~trace
@@ -4840,7 +4833,10 @@ struct
           add_output cx ~trace Error_message.(EEnumMemberUsedAsType { reason; enum_name })
         (* non-class/function values used in annotations are errors *)
         | (_, UseT (_, DefT (reason_use, _, TypeT _))) ->
-          add_output cx ~trace Error_message.(EValueUsedAsType { reason_use })
+          (match l with
+          (* Short-circut as we already error on the unresolved name. *)
+          | AnyT (_, AnyError (Some UnresolvedName)) -> ()
+          | _ -> add_output cx ~trace Error_message.(EValueUsedAsType { reason_use }))
         | (DefT (rl, _, ClassT l), UseT (use_op, DefT (_, _, ClassT u))) ->
           rec_flow cx trace (reposition cx ~trace (aloc_of_reason rl) l, UseT (use_op, u))
         | ( DefT (_, _, FunT (static1, prototype, _)),
@@ -6507,10 +6503,13 @@ struct
         (* Entry point to exhaustive checking logic - when resolving the discriminant as an enum. *)
         | ( DefT (enum_reason, _, EnumT enum),
             EnumExhaustiveCheckT
-              ( check_reason,
-                EnumExhaustiveCheckPossiblyValid
-                  { tool = EnumResolveDiscriminant; possible_checks; checks; default_case },
-                incomplete_out ) ) ->
+              {
+                reason = check_reason;
+                check =
+                  EnumExhaustiveCheckPossiblyValid
+                    { tool = EnumResolveDiscriminant; possible_checks; checks; default_case };
+                incomplete_out;
+              } ) ->
           enum_exhaustive_check
             cx
             ~trace
@@ -6524,15 +6523,18 @@ struct
         (* Resolving the case tests. *)
         | ( _,
             EnumExhaustiveCheckT
-              ( check_reason,
-                EnumExhaustiveCheckPossiblyValid
-                  {
-                    tool = EnumResolveCaseTest { discriminant_reason; discriminant_enum; check };
-                    possible_checks;
-                    checks;
-                    default_case;
-                  },
-                incomplete_out ) ) ->
+              {
+                reason = check_reason;
+                check =
+                  EnumExhaustiveCheckPossiblyValid
+                    {
+                      tool = EnumResolveCaseTest { discriminant_reason; discriminant_enum; check };
+                      possible_checks;
+                      checks;
+                      default_case;
+                    };
+                incomplete_out;
+              } ) ->
           let (EnumCheck { member_name; _ }) = check in
           let { enum_id = enum_id_discriminant; members; _ } = discriminant_enum in
           let checks =
@@ -6556,22 +6558,25 @@ struct
             ~default_case
             ~incomplete_out
         | ( DefT (_, _, EnumT { enum_name; members; _ }),
-            EnumExhaustiveCheckT (check_reason, EnumExhaustiveCheckInvalid reasons, incomplete_out)
-          ) ->
+            EnumExhaustiveCheckT
+              { reason; check = EnumExhaustiveCheckInvalid reasons; incomplete_out } ) ->
           let example_member = SMap.choose_opt members |> Base.Option.map ~f:fst in
           List.iter
             (fun reason ->
               add_output cx (Error_message.EEnumInvalidCheck { reason; enum_name; example_member }))
             reasons;
-          enum_exhaustive_check_incomplete cx ~trace ~reason:check_reason incomplete_out
+          enum_exhaustive_check_incomplete cx ~trace ~reason incomplete_out
         (* Ignore non-enum exhaustive checks. *)
         | ( _,
             EnumExhaustiveCheckT
-              ( check_reason,
-                ( EnumExhaustiveCheckInvalid _
-                | EnumExhaustiveCheckPossiblyValid { tool = EnumResolveDiscriminant; _ } ),
-                incomplete_out ) ) ->
-          enum_exhaustive_check_incomplete cx ~trace ~reason:check_reason incomplete_out
+              {
+                reason;
+                check =
+                  ( EnumExhaustiveCheckInvalid _
+                  | EnumExhaustiveCheckPossiblyValid { tool = EnumResolveDiscriminant; _ } );
+                incomplete_out;
+              } ) ->
+          enum_exhaustive_check_incomplete cx ~trace ~reason incomplete_out
         (**************************************************************************)
         (* TestPropT is emitted for property reads in the context of branch tests.
        Such tests are always non-strict, in that we don't immediately report an
@@ -6781,7 +6786,7 @@ struct
                 { reason_prop; reason_obj = strict_reason; name = Some x; use_op; suggestion }
           in
           add_output cx ~trace error_message;
-          let p = Field (None, AnyT.error reason_op, Polarity.Neutral) in
+          let p = Field (None, AnyT.error_of_kind UnresolvedName reason_op, Polarity.Neutral) in
           perform_lookup_action cx trace propref p DynamicProperty reason reason_op action
         | ( (DefT (reason, _, NullT) | ObjProtoT reason | FunProtoT reason),
             LookupT
@@ -7076,7 +7081,7 @@ struct
                  use_op = Some use_op;
                  branches = [];
                });
-          rec_flow cx trace (AnyT.make AnyError lreason, u)
+          rec_flow cx trace (AnyT.make (AnyError None) lreason, u)
         (* Special cases of FunT *)
         | (FunProtoApplyT reason, _)
         | (FunProtoBindT reason, _)
@@ -7181,7 +7186,7 @@ struct
         rec_flow_t cx trace ~use_op:unknown_use (StrT.at loc |> with_trust bogus_trust, u)
       | (DefT (reason, _, (VoidT | NullT)), _)
       | (_, DefT (reason, _, (VoidT | NullT))) ->
-        add_output cx ~trace (Error_message.ENullVoidAddition reason);
+        add_output cx ~trace (Error_message.EArithmeticOperand reason);
         rec_flow_t cx trace ~use_op:unknown_use (NumT.at loc |> with_trust bogus_trust, u)
       | (AnyT (_, src), _)
       | (_, AnyT (_, src)) ->
@@ -7246,7 +7251,7 @@ struct
         ()
       else
         let reasons = FlowError.ordered_reasons (reason_of_t l, reason_of_t r) in
-        add_output cx ~trace (Error_message.EComparison reasons)
+        add_output cx ~trace (Error_message.ENonStrictEqualityComparison reasons)
 
   and flow_strict_eq cx trace reason cond_context flip l r =
     if needs_resolution r then
@@ -7767,11 +7772,6 @@ struct
       (* function type *)
       any_prop_to_function use_op funtype covariant_flow contravariant_flow;
       true
-    | UseT (_, DefT (reason, _, TypeT (_, t))) ->
-      (* import type *)
-      (* any can function as class, hence ok for annotations *)
-      rec_flow cx trace (any, BecomeT (reason, t));
-      true
     | ReactKitT (_, _, React.CreateClass (React.CreateClass.PropTypes _, _, _))
     | ReactKitT (_, _, React.SimplifyPropType _) ->
       (* Propagating through here causes exponential blowup. React PropTypes are deprecated
@@ -7858,6 +7858,7 @@ struct
     (* Handled in __flow *)
     | ObjAssignToT _ (* Handled in __flow *)
     | UseT (_, ThisTypeAppT _)
+    | UseT (_, DefT (_, _, TypeT _))
     | CreateObjWithComputedPropT _ (* Handled in __flow *)
     (* Should never occur, so we just defer to __flow to handle errors *)
     | UseT (_, InternalT _)
@@ -8468,7 +8469,7 @@ struct
                 (Error_message.ETooFewTypeArgs (reason_tapp, reason_arity, minimum_arity));
               Base.Option.iter errs_ref ~f:(fun errs_ref ->
                   errs_ref := Context.ETooFewTypeArgs (reason_arity, minimum_arity) :: !errs_ref);
-              (AnyT (reason_op, AnyError), [])
+              (AnyT (reason_op, AnyError None), [])
             | (_, t :: ts) -> (t, ts)
           in
           let t_ = cache_instantiate cx trace ~use_op ?cache typeparam reason_op reason_tapp t in
@@ -8686,17 +8687,20 @@ struct
     | (obj_t, check) :: rest_possible_checks ->
       let exhaustive_check =
         EnumExhaustiveCheckT
-          ( check_reason,
-            EnumExhaustiveCheckPossiblyValid
-              {
-                tool =
-                  EnumResolveCaseTest
-                    { discriminant_enum = enum; discriminant_reason = enum_reason; check };
-                possible_checks = rest_possible_checks;
-                checks;
-                default_case;
-              },
-            incomplete_out )
+          {
+            reason = check_reason;
+            check =
+              EnumExhaustiveCheckPossiblyValid
+                {
+                  tool =
+                    EnumResolveCaseTest
+                      { discriminant_enum = enum; discriminant_reason = enum_reason; check };
+                  possible_checks = rest_possible_checks;
+                  checks;
+                  default_case;
+                };
+            incomplete_out;
+          }
       in
       rec_flow cx trace (obj_t, exhaustive_check)
 
@@ -10433,15 +10437,9 @@ struct
     fun cx trace v reason l key sense enum result ->
       match (v, enum) with
       | (_, One e) when enum_match sense (v, e) && not sense -> ()
-      | (DefT (_, _, StrT _), One (Str sentinel)) when enum_match sense (v, Str sentinel) ->
-        let l = matching_sentinel_prop reason key (SingletonStrT sentinel) in
-        rec_flow_t cx trace ~use_op:unknown_use (l, result)
-      | (DefT (_, _, NumT _), One (Num sentinel)) when enum_match sense (v, Num sentinel) ->
-        let l = matching_sentinel_prop reason key (SingletonNumT sentinel) in
-        rec_flow_t cx trace ~use_op:unknown_use (l, result)
-      | (DefT (_, _, BoolT _), One (Bool sentinel)) when enum_match sense (v, Bool sentinel) ->
-        let l = matching_sentinel_prop reason key (SingletonBoolT sentinel) in
-        rec_flow_t cx trace ~use_op:unknown_use (l, result)
+      | (DefT (_, _, StrT _), One (Str sentinel)) when enum_match sense (v, Str sentinel) -> ()
+      | (DefT (_, _, NumT _), One (Num sentinel)) when enum_match sense (v, Num sentinel) -> ()
+      | (DefT (_, _, BoolT _), One (Bool sentinel)) when enum_match sense (v, Bool sentinel) -> ()
       | (DefT (_, _, (StrT _ | NumT _ | BoolT _ | NullT | VoidT)), Many enums) when sense ->
         UnionEnumSet.iter
           (fun enum ->
@@ -10530,6 +10528,7 @@ struct
                   | Internal _
                   | ReactCreateElementCall _
                   | ReactGetIntrinsic _
+                  | MatchingProp _
                   | UnknownUse ->
                     false)
                 | _ -> should_replace)

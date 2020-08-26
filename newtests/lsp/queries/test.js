@@ -38,7 +38,7 @@ export default suite(
         [
           [
             'textDocument/definition',
-            '{definition.js,"start":{"line":2,"character":0}}',
+            '{definition.js,"start":{"line":2,"character":9}}',
           ],
         ],
         [...lspIgnoreStatusAndCancellation],

@@ -269,8 +269,9 @@ and pack_local_binding cx = function
     let id_loc = pack_loc id_loc in
     let def = pack_declare_class cx (Lazy.force def) in
     DeclareClassBinding { id_loc; name; def }
-  | P.FunBinding { id_loc; name; async; generator; def; statics } ->
+  | P.FunBinding { id_loc; name; async; generator; fn_loc; def; statics } ->
     let id_loc = pack_loc id_loc in
+    let fn_loc = pack_loc fn_loc in
     let def = pack_fun cx (Lazy.force def) in
     let statics =
       SMap.map
@@ -280,17 +281,18 @@ and pack_local_binding cx = function
           (id_loc, t))
         statics
     in
-    FunBinding { id_loc; name; async; generator; def; statics }
+    FunBinding { id_loc; name; async; generator; fn_loc; def; statics }
   | P.DeclareFunBinding { name; defs_rev } ->
-    let ((id_loc, def), tail) =
+    let ((id_loc, fn_loc, def), tail) =
       Nel.rev_map
-        (fun (id_loc, def) ->
+        (fun (id_loc, fn_loc, def) ->
           let id_loc = pack_loc id_loc in
+          let fn_loc = pack_loc fn_loc in
           let def = pack_fun cx (Lazy.force def) in
-          (id_loc, def))
+          (id_loc, fn_loc, def))
         defs_rev
     in
-    DeclareFun { id_loc; name; def; tail }
+    DeclareFun { id_loc; name; fn_loc; def; tail }
   | P.EnumBinding { id_loc; name; def } ->
     let id_loc = pack_loc id_loc in
     begin

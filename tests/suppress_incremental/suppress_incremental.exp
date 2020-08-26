@@ -27,8 +27,8 @@ Warning ------------------------------------------------------------------------
 
 Unused suppression comment.
 
-   3| // $FlowIssue
-      ^^^^^^^^^^^^^
+   3| // $FlowIssue[incompatible-cast]
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
 

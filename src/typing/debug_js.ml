@@ -116,7 +116,7 @@ let rec dump_t_ (depth, tvars) cx t =
   in
   let string_of_any_source = function
     | Annotated -> "Annotated"
-    | AnyError -> "Error"
+    | AnyError _ -> "Error"
     | Unsound _ -> "Unsound"
     | Untyped -> "Untyped"
   in
@@ -808,7 +808,7 @@ and dump_use_t_ (depth, tvars) cx t =
     | TypeCastT (_, arg) -> p ~reason:false ~extra:(kid arg) t
     | EnumCastT { use_op = _; enum = (reason, trust, enum) } ->
       p ~reason:false ~extra:(kid (DefT (reason, trust, EnumT enum))) t
-    | EnumExhaustiveCheckT (_, check, _) ->
+    | EnumExhaustiveCheckT { check; _ } ->
       let check_str =
         match check with
         | EnumExhaustiveCheckPossiblyValid _ -> "EnumExhaustiveCheckPossiblyValid"
@@ -1241,6 +1241,8 @@ let dump_error_message =
       spf "EAdditionMixed (%s, %s)" (dump_reason cx reason) (string_of_use_op use_op)
     | EComparison (reason1, reason2) ->
       spf "EComparison (%s, %s)" (dump_reason cx reason1) (dump_reason cx reason2)
+    | ENonStrictEqualityComparison (reason1, reason2) ->
+      spf "ENonStrictEqualityComparison (%s, %s)" (dump_reason cx reason1) (dump_reason cx reason2)
     | ETupleArityMismatch ((reason1, reason2), arity1, arity2, use_op) ->
       spf
         "ETupleArityMismatch (%s, %s, %d, %d, %s)"
@@ -1406,9 +1408,7 @@ let dump_error_message =
     | EInvalidTypeof (loc, name) -> spf "EInvalidTypeof (%s, %S)" (string_of_aloc loc) name
     | EBinaryInLHS reason -> spf "EBinaryInLHS (%s)" (dump_reason cx reason)
     | EBinaryInRHS reason -> spf "EBinaryInRHS (%s)" (dump_reason cx reason)
-    | EArithmeticOperand reason
-    | ENullVoidAddition reason ->
-      spf "EArithmeticOperand (%s)" (dump_reason cx reason)
+    | EArithmeticOperand reason -> spf "EArithmeticOperand (%s)" (dump_reason cx reason)
     | EForInRHS reason -> spf "EForInRHS (%s)" (dump_reason cx reason)
     | EObjectComputedPropertyAccess (reason1, reason2) ->
       spf "EObjectComputedPropertyAccess (%s, %s)" (dump_reason cx reason1) (dump_reason cx reason2)
@@ -1487,6 +1487,7 @@ let dump_error_message =
     | EDeprecatedType loc -> spf "EDeprecatedType (%s)" (string_of_aloc loc)
     | EUnsafeGettersSetters loc -> spf "EUnclearGettersSetters (%s)" (string_of_aloc loc)
     | EUnusedSuppression loc -> spf "EUnusedSuppression (%s)" (string_of_aloc loc)
+    | ECodelessSuppression (loc, c) -> spf "ECodelessSuppression (%s, %s)" (string_of_aloc loc) c
     | ELintSetting (loc, kind) ->
       LintSettings.(
         let kind_str =

@@ -1308,8 +1308,11 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t =
           cx
           ( discriminant_t,
             EnumExhaustiveCheckT
-              (reason_of_t discriminant_t, enum_exhaustive_check, exhaustive_check_incomplete_out)
-          );
+              {
+                reason = reason_of_t discriminant_t;
+                check = enum_exhaustive_check;
+                incomplete_out = exhaustive_check_incomplete_out;
+              } );
         let ast =
           ( switch_loc,
             Switch { Switch.discriminant = discriminant_ast; cases = cases_ast; comments } )
@@ -2686,12 +2689,7 @@ and object_prop cx acc prop =
               | Property.Literal (loc, { Ast.Literal.value = Ast.Literal.String name; _ }) ) as key;
             value = (fn_loc, func);
           } ) ->
-    let ((_, t), v) = expression cx (fn_loc, Ast.Expression.Function func) in
-    let func =
-      match v with
-      | Ast.Expression.Function func -> func
-      | _ -> assert false
-    in
+    let (t, func) = mk_function_expression None cx prop_loc func in
     ( ObjectExpressionAcc.add_prop (Properties.add_field name Polarity.Neutral (Some loc) t) acc,
       Property
         ( prop_loc,
@@ -3182,7 +3180,7 @@ and expression_ ~cond cx loc e : (ALoc.t, ALoc.t * Type.t) Ast.Expression.t =
               reason_arity = Reason.(locationless_reason (RType "Function"));
               expected_arity = 0;
             });
-      ( (loc, AnyT.at AnyError loc),
+      ( (loc, AnyT.at (AnyError None) loc),
         New
           {
             New.callee = (callee_annot, Identifier ((id_loc, id_t), name));
@@ -3807,13 +3805,13 @@ and optional_chain ~cond ~is_existence_check ?sentinel_refine cx ((loc, e) as ex
                   reason_arity = Reason.(locationless_reason (RFunction RNormal));
                   expected_arity = 0;
                 });
-          (AnyT.at AnyError loc, Tast_utils.error_mapper#arg_list arguments)
+          (AnyT.at (AnyError None) loc, Tast_utils.error_mapper#arg_list arguments)
         | (None, arguments) ->
           ignore (arg_list cx arguments);
           let ignore_non_literals = Context.should_ignore_non_literal_requires cx in
           if not ignore_non_literals then
             Flow.add_output cx Error_message.(EUnsupportedSyntax (loc, RequireDynamicArgument));
-          (AnyT.at AnyError loc, Tast_utils.error_mapper#arg_list arguments)
+          (AnyT.at (AnyError None) loc, Tast_utils.error_mapper#arg_list arguments)
       in
       let id_t = bogus_trust () |> MixedT.at callee_loc in
       Some
@@ -3910,11 +3908,11 @@ and optional_chain ~cond ~is_existence_check ?sentinel_refine cx ((loc, e) as ex
                   reason_arity = Reason.(locationless_reason (RFunction RNormal));
                   expected_arity = 0;
                 });
-          (AnyT.at AnyError loc, Tast_utils.error_mapper#arg_list arguments)
+          (AnyT.at (AnyError None) loc, Tast_utils.error_mapper#arg_list arguments)
         | (None, arguments) ->
           ignore (arg_list cx arguments);
           Flow.add_output cx Error_message.(EUnsupportedSyntax (loc, RequireLazyDynamicArgument));
-          (AnyT.at AnyError loc, Tast_utils.error_mapper#arg_list arguments)
+          (AnyT.at (AnyError None) loc, Tast_utils.error_mapper#arg_list arguments)
       in
       let id_t = bogus_trust () |> MixedT.at callee_loc in
       Some
@@ -5173,7 +5171,7 @@ and literal cx loc lit =
   | BigInt _ ->
     let reason = mk_annot_reason (RBigIntLit lit.raw) loc in
     Flow.add_output cx (Error_message.EBigIntNotYetSupported reason);
-    AnyT.why AnyError reason
+    AnyT.error reason
   | RegExp _ -> Flow.get_builtin_type cx (mk_annot_reason RRegExp loc) "RegExp"
 
 (* traverse a unary expression, return result type *)
@@ -6499,9 +6497,9 @@ and predicates_of_condition cx ~cond e =
             } ) ) ->
       let sentinel_refine obj_t =
         (* Generate a refinement on the object that contains a sentinel property.
-               We need to pass this into optional_chain, rather than locally generating a
-               refinement on the type of _object, because the type getting refined is
-               the non-short-circuited, non-nullable branch of any optional chains. *)
+           We need to pass this into optional_chain, rather than locally generating a
+           refinement on the type of _object, because the type getting refined is
+           the non-short-circuited, non-nullable branch of any optional chains. *)
         match (strict, Refinement.key ~allow_optional:true _object) with
         | (false, _)
         | (_, None) ->
@@ -6511,9 +6509,9 @@ and predicates_of_condition cx ~cond e =
           Some (name, obj_t, pred, sense)
       in
       (* Note here we're calling optional_chain on the whole expression, not on _object.
-             We could "look down" one level and call it on _object and wouldn't need the
-             sentinel_refine function above, but then we'd need to duplicate a lot of the
-             functionality of optional_chain here. *)
+         We could "look down" one level and call it on _object and wouldn't need the
+         sentinel_refine function above, but then we'd need to duplicate a lot of the
+         functionality of optional_chain here. *)
       let (_, _, ast, preds, sentinel_refinement) =
         optional_chain
           ~cond:(Some cond) (* We do want to allow possibly absent properties... *)
@@ -6943,7 +6941,12 @@ and predicates_of_condition cx ~cond e =
       let (((_, value_t), _) as value_ast) = expression cx value in
       sentinel_prop_test loc ~sense ~strict expr value_t (fun expr ->
           reconstruct_ast expr value_ast)
-    | (value, ((_, Expression.Member _) as expr)) ->
+    | (value, ((_, Expression.Member _) as expr))
+      when match cond with
+           | SwitchTest _ ->
+             (* Do not treat `switch (val) { case o.p: ... }` as a sentinel prop test on `o`. *)
+             false
+           | OtherTest -> true ->
       let (((_, value_t), _) as value_ast) = expression cx value in
       sentinel_prop_test loc ~sense ~strict expr value_t (fun expr ->
           reconstruct_ast value_ast expr)
@@ -7414,7 +7417,7 @@ and static_method_call_Object cx loc callee_loc prop_loc expr obj_t m targs args
             reason_arity = Reason.(locationless_reason (RFunction RNormal));
             expected_arity = arity;
           });
-    (AnyT.at AnyError loc, Some (targs_loc, targs), args)
+    (AnyT.at (AnyError None) loc, Some (targs_loc, targs), args)
   (* TODO *)
   | _ ->
     let (targts, targ_asts) = convert_call_targs_opt cx targs in

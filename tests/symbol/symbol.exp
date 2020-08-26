@@ -66,7 +66,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- symbol.js:62:3
 
-Cannot compare tuple type [1] to symbol [2]. [invalid-compare]
+Cannot compare tuple type [1] to symbol [2] with a non-strict equality check. Make sure the arguments are valid, or try
+using strict equality (`===` or `!==`) instead. [invalid-compare]
 
    symbol.js:62:3
    62|   x == s; // Error
@@ -83,7 +84,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- symbol.js:63:3
 
-Cannot compare symbol [1] to tuple type [2]. [invalid-compare]
+Cannot compare symbol [1] to tuple type [2] with a non-strict equality check. Make sure the arguments are valid, or try
+using strict equality (`===` or `!==`) instead. [invalid-compare]
 
    symbol.js:63:3
    63|   s == x; // Error
@@ -100,7 +102,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- symbol.js:64:3
 
-Cannot compare tuple type [1] to symbol [2]. [invalid-compare]
+Cannot compare tuple type [1] to symbol [2] with a non-strict equality check. Make sure the arguments are valid, or try
+using strict equality (`===` or `!==`) instead. [invalid-compare]
 
    symbol.js:64:3
    64|   x != s; // Error
@@ -117,7 +120,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- symbol.js:65:3
 
-Cannot compare symbol [1] to tuple type [2]. [invalid-compare]
+Cannot compare symbol [1] to tuple type [2] with a non-strict equality check. Make sure the arguments are valid, or try
+using strict equality (`===` or `!==`) instead. [invalid-compare]
 
    symbol.js:65:3
    65|   s != x; // Error

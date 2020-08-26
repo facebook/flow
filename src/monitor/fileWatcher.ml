@@ -163,7 +163,7 @@ class dfind (monitor_options : FlowServerMonitorOptions.t) : watcher =
   end
 
 module WatchmanFileWatcher : sig
-  class watchman : FlowServerMonitorOptions.t -> watcher
+  class watchman : Options.t -> FlowServerMonitorOptions.watchman_options -> watcher
 end = struct
   type env = {
     mutable instance: Watchman.watchman_instance;
@@ -280,6 +280,12 @@ end = struct
                 "Watchman reports an hg.update just started. Moving %s revs from %s"
                 distance
                 rev
+            | _ when List.mem name env.init_settings.Watchman.defer_states ->
+              Logger.info
+                "Watchman reports %s just started. Filesystem notifications are paused."
+                name;
+              StatusStream.file_watcher_deferred name;
+              ()
             | _ -> ());
             Lwt.return env
           | Watchman.State_leave (name, metadata) ->
@@ -298,6 +304,10 @@ end = struct
                 "Watchman reports an hg.update just finished. Moved %s revs to %s"
                 distance
                 rev;
+              Lwt.return env
+            | _ when List.mem name env.init_settings.Watchman.defer_states ->
+              Logger.info "Watchman reports %s ended. Filesystem notifications resumed." name;
+              StatusStream.file_watcher_ready ();
               Lwt.return env
             | _ -> Lwt.return env)
           | Watchman.Changed_merge_base _ ->
@@ -321,7 +331,9 @@ end = struct
       Lwt.return_unit
   end)
 
-  class watchman (monitor_options : FlowServerMonitorOptions.t) : watcher =
+  class watchman
+    (server_options : Options.t) (watchman_options : FlowServerMonitorOptions.watchman_options) :
+    watcher =
     object (self)
       val mutable env = None
 
@@ -337,30 +349,24 @@ end = struct
         | Some env -> env
 
       method start_init =
-        let {
-          FlowServerMonitorOptions.server_options;
-          file_watcher_debug;
-          file_watcher_sync_timeout;
-          _;
-        } =
-          monitor_options
-        in
+        let { FlowServerMonitorOptions.debug; defer_states; sync_timeout } = watchman_options in
         let file_options = Options.file_options server_options in
         let watchman_expression_terms = Watchman_expression_terms.make ~options:server_options in
         let settings =
           {
-            (* Defer updates during `hg.update` *)
+            (* Defer updates during `hg.update` and defer_states *)
             Watchman.subscribe_mode = Watchman.Defer_changes;
             expression_terms = watchman_expression_terms;
             subscription_prefix = "flow_watcher";
-            sync_timeout = file_watcher_sync_timeout;
+            sync_timeout;
             roots = Files.watched_paths file_options;
-            debug_logging = file_watcher_debug;
+            debug_logging = debug;
+            defer_states;
           }
         in
         init_settings <- Some settings;
 
-        init_thread <- Some (Watchman.init settings ())
+        init_thread <- Some (Watchman.init settings)
 
       method wait_for_init ~timeout =
         let go () =
@@ -368,7 +374,6 @@ end = struct
           init_thread <- None;
 
           let should_track_mergebase =
-            let server_options = monitor_options.FlowServerMonitorOptions.server_options in
             Options.lazy_mode server_options = Options.LAZY_MODE_WATCHMAN
           in
           match watchman with

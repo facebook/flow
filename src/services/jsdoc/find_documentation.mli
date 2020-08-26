@@ -5,5 +5,6 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
-(* Call in a sub-process *)
-val call : WorkerController.worker -> ('a -> 'b) -> 'a -> 'b Lwt.t
+val jsdoc_of_getdef_loc : reader:Parsing_heaps.Reader.reader -> Loc.t -> Jsdoc.t option
+
+val documentation_of_jsdoc : Jsdoc.t -> string option

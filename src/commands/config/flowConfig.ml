@@ -17,6 +17,11 @@ type warning = int * string
 
 type error = int * string
 
+type file_watcher =
+  | NoFileWatcher
+  | DFind
+  | Watchman
+
 let default_temp_dir = Filename.concat Sys_utils.temp_dir_name "flow"
 
 let map_add map (key, value) = SMap.add key value map
@@ -57,9 +62,10 @@ module Opts = struct
     facebook_fbs: string option;
     facebook_fbt: string option;
     facebook_module_interop: bool;
-    file_watcher: Options.file_watcher option;
+    file_watcher: file_watcher option;
     file_watcher_timeout: int option;
     watchman_sync_timeout: int option;
+    watchman_defer_states: string list;
     haste_module_ref_prefix: string option;
     haste_name_reducers: (Str.regexp * string) list;
     haste_paths_excludes: string list;
@@ -67,6 +73,7 @@ module Opts = struct
     haste_use_name_reducers: bool;
     ignore_non_literal_requires: bool;
     include_warnings: bool;
+    jsdoc: bool;
     lazy_mode: Options.lazy_mode option;
     log_file: Path.t option;
     max_files_checked_per_worker: int;
@@ -102,6 +109,7 @@ module Opts = struct
     trust_mode: Options.trust_mode;
     type_asserts: bool;
     types_first: bool;
+    new_signatures: bool;
     wait_for_recheck: bool;
     weak: bool;
   }
@@ -156,9 +164,9 @@ module Opts = struct
       esproposal_class_instance_fields = Options.ESPROPOSAL_ENABLE;
       esproposal_class_static_fields = Options.ESPROPOSAL_ENABLE;
       esproposal_decorators = Options.ESPROPOSAL_WARN;
-      esproposal_export_star_as = Options.ESPROPOSAL_WARN;
-      esproposal_nullish_coalescing = Options.ESPROPOSAL_WARN;
-      esproposal_optional_chaining = Options.ESPROPOSAL_WARN;
+      esproposal_export_star_as = Options.ESPROPOSAL_ENABLE;
+      esproposal_nullish_coalescing = Options.ESPROPOSAL_ENABLE;
+      esproposal_optional_chaining = Options.ESPROPOSAL_ENABLE;
       exact_by_default = false;
       facebook_fbs = None;
       facebook_fbt = None;
@@ -166,6 +174,7 @@ module Opts = struct
       file_watcher = None;
       file_watcher_timeout = None;
       watchman_sync_timeout = None;
+      watchman_defer_states = [];
       haste_module_ref_prefix = None;
       haste_name_reducers =
         [(Str.regexp "^\\(.*/\\)?\\([a-zA-Z0-9$_.-]+\\)\\.js\\(\\.flow\\)?$", "\\2")];
@@ -174,6 +183,7 @@ module Opts = struct
       haste_use_name_reducers = false;
       ignore_non_literal_requires = false;
       include_warnings = false;
+      jsdoc = false;
       lazy_mode = None;
       log_file = None;
       max_files_checked_per_worker = 100;
@@ -190,6 +200,7 @@ module Opts = struct
       module_system = Options.Node;
       modules_are_use_strict = false;
       munge_underscores = false;
+      new_signatures = false;
       no_flowlib = false;
       node_main_fields = ["main"];
       node_resolver_allow_root_relative = false;
@@ -364,6 +375,13 @@ module Opts = struct
         else
           Ok { opts with types_first = v })
 
+  let new_signatures_parser =
+    boolean (fun opts v ->
+        if v && not opts.types_first then
+          Error "Cannot set it to \"true\" when \"types_first\" is set to \"false\"."
+        else
+          Ok { opts with new_signatures = v })
+
   let types_first_max_files_checked_per_worker_parser =
     uint (fun opts v -> Ok { opts with max_files_checked_per_worker = v })
 
@@ -420,14 +438,14 @@ module Opts = struct
       ("facebook.fbs", string (fun opts v -> Ok { opts with facebook_fbs = Some v }));
       ("facebook.fbt", string (fun opts v -> Ok { opts with facebook_fbt = Some v }));
       ( "file_watcher",
-        enum
-          [
-            ("none", Options.NoFileWatcher); ("dfind", Options.DFind); ("watchman", Options.Watchman);
-          ]
-          (fun opts v -> Ok { opts with file_watcher = Some v }) );
+        enum [("none", NoFileWatcher); ("dfind", DFind); ("watchman", Watchman)] (fun opts v ->
+            Ok { opts with file_watcher = Some v }) );
       ("file_watcher_timeout", uint (fun opts v -> Ok { opts with file_watcher_timeout = Some v }));
       ( "file_watcher.watchman.sync_timeout",
         uint (fun opts v -> Ok { opts with watchman_sync_timeout = Some v }) );
+      ( "file_watcher.watchman.defer_state",
+        string ~multiple:true (fun opts v ->
+            Ok { opts with watchman_defer_states = v :: opts.watchman_defer_states }) );
       ("include_warnings", boolean (fun opts v -> Ok { opts with include_warnings = v }));
       ( "lazy_mode",
         enum
@@ -569,6 +587,7 @@ module Opts = struct
       ("well_formed_exports.includes", well_formed_exports_includes_parser);
       ("experimental.type_asserts", boolean (fun opts v -> Ok { opts with type_asserts = v }));
       ("types_first", types_first_parser);
+      ("experimental.new_signatures", new_signatures_parser);
       ( "experimental.abstract_locations",
         boolean (fun opts v -> Ok { opts with abstract_locations = v }) );
       ( "experimental.disable_live_non_parse_errors",
@@ -597,6 +616,7 @@ module Opts = struct
         boolean (fun opts v -> Ok { opts with automatic_require_default = v }) );
       ( "experimental.facebook_module_interop",
         boolean (fun opts v -> Ok { opts with facebook_module_interop = v }) );
+      ("experimental.jsdoc", boolean (fun opts v -> Ok { opts with jsdoc = v }));
     ]
 
   let parse =
@@ -1155,6 +1175,8 @@ let file_watcher_timeout c = c.options.Opts.file_watcher_timeout
 
 let watchman_sync_timeout c = c.options.Opts.watchman_sync_timeout
 
+let watchman_defer_states c = c.options.Opts.watchman_defer_states
+
 let facebook_fbs c = c.options.Opts.facebook_fbs
 
 let facebook_fbt c = c.options.Opts.facebook_fbt
@@ -1174,6 +1196,8 @@ let haste_use_name_reducers c = c.options.Opts.haste_use_name_reducers
 let ignore_non_literal_requires c = c.options.Opts.ignore_non_literal_requires
 
 let include_warnings c = c.options.Opts.include_warnings
+
+let jsdoc c = c.options.Opts.jsdoc
 
 let lazy_mode c = c.options.Opts.lazy_mode
 
@@ -1242,6 +1266,8 @@ let trust_mode c = c.options.Opts.trust_mode
 let type_asserts c = c.options.Opts.type_asserts
 
 let types_first c = c.options.Opts.types_first
+
+let new_signatures c = c.options.Opts.new_signatures
 
 let required_version c = c.version
 

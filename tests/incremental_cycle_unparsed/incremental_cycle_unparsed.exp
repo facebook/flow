@@ -87,8 +87,27 @@ References:
 
 Found 2 errors
 
-Remove @flow in foo.js (no errors!):
-No errors!
+Remove @flow in foo.js:
+Error ------------------------------------------------------------------------------------------------------ bar.js:5:19
+
+Cannot use `foo` as a type. A name can be used as a type only if it refers to a type, interface, class, or enum
+definition. To get the type of a non-class value, use `typeof`. [value-as-type]
+
+   5| function err(foo: foo): number {
+                        ^^^
+
+
+Error ------------------------------------------------------------------------------------------------------ bar.js:11:8
+
+Cannot use `foo` as a type. A name can be used as a type only if it refers to a type, interface, class, or enum
+definition. To get the type of a non-class value, use `typeof`. [value-as-type]
+
+   11|   foo: foo
+              ^^^
+
+
+
+Found 2 errors
 
 Restore foo.js (same as initial status):
 Error ------------------------------------------------------------------------------------------------------ bar.js:6:10
@@ -129,6 +148,24 @@ References:
 Found 2 errors
 
 Introduce parse error in foo.js (unexpected identifier!):
+Error ------------------------------------------------------------------------------------------------------ bar.js:5:19
+
+Cannot use `foo` as a type. A name can be used as a type only if it refers to a type, interface, class, or enum
+definition. To get the type of a non-class value, use `typeof`. [value-as-type]
+
+   5| function err(foo: foo): number {
+                        ^^^
+
+
+Error ------------------------------------------------------------------------------------------------------ bar.js:11:8
+
+Cannot use `foo` as a type. A name can be used as a type only if it refers to a type, interface, class, or enum
+definition. To get the type of a non-class value, use `typeof`. [value-as-type]
+
+   11|   foo: foo
+              ^^^
+
+
 Error ----------------------------------------------------------------------------------------------------- foo.js:14:11
 
 Unexpected identifier, expected the token `;`
@@ -138,7 +175,7 @@ Unexpected identifier, expected the token `;`
 
 
 
-Found 1 error
+Found 3 errors
 
 Restore foo.js (same as initial status):
 Error ------------------------------------------------------------------------------------------------------ bar.js:6:10

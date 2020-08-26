@@ -48,6 +48,7 @@ type init_settings = {
   subscribe_mode: subscribe_mode;
   expression_terms: Hh_json.json list;  (** See watchman expression terms. *)
   debug_logging: bool;
+  defer_states: string list;
   roots: Path.t list;
   subscription_prefix: string;
   sync_timeout: int option;
@@ -249,16 +250,17 @@ let get_changes_since_mergebase_query env =
   in
   request_json ~extra_kv Query env
 
-let subscribe ~mode env =
+let subscribe ~mode ~states env =
+  let states = "hg.update" :: states in
   let (since, mode) =
     match mode with
     | All_changes -> (Hh_json.JSON_String env.clockspec, [])
-    | Defer_changes -> (Hh_json.JSON_String env.clockspec, [("defer", J.strlist ["hg.update"])])
-    | Drop_changes -> (Hh_json.JSON_String env.clockspec, [("drop", J.strlist ["hg.update"])])
+    | Defer_changes -> (Hh_json.JSON_String env.clockspec, [("defer", J.strlist states)])
+    | Drop_changes -> (Hh_json.JSON_String env.clockspec, [("drop", J.strlist states)])
     | Scm_aware ->
       Hh_logger.log "Making Scm_aware subscription";
       let scm = Hh_json.JSON_Object [("mergebase-with", Hh_json.JSON_String "master")] in
-      let since = Hh_json.JSON_Object [("scm", scm); ("drop", J.strlist ["hg.update"])] in
+      let since = Hh_json.JSON_Object [("scm", scm); ("drop", J.strlist states)] in
       (since, [])
   in
   request_json
@@ -486,7 +488,15 @@ let prepend_relative_path_term ~relative_path ~terms =
 
 let re_init
     ?prior_clockspec
-    { subscribe_mode; expression_terms; debug_logging; roots; subscription_prefix; sync_timeout } =
+    {
+      subscribe_mode;
+      expression_terms;
+      debug_logging;
+      defer_states;
+      roots;
+      subscription_prefix;
+      sync_timeout;
+    } =
   with_crash_record_opt "init" @@ fun () ->
   let%bind conn = open_connection () in
   let%bind (watched_path_expression_terms, watch_roots, failed_paths) =
@@ -582,6 +592,7 @@ let re_init
       settings =
         {
           debug_logging;
+          defer_states;
           subscribe_mode;
           expression_terms;
           roots;
@@ -600,14 +611,12 @@ let re_init
       ~debug_logging
       ~conn
       ~timeout:None (* the whole init process should be wrapped in a timeout *)
-      (subscribe ~mode:subscribe_mode env)
+      (subscribe ~mode:subscribe_mode ~states:defer_states env)
   in
   ignore response;
   env
 
-let init ?since_clockspec settings () =
-  let prior_clockspec = since_clockspec in
-  re_init ?prior_clockspec settings
+let init settings = re_init settings
 
 let extract_file_names env json =
   let open Hh_json.Access in
@@ -637,16 +646,23 @@ let maybe_restart_instance instance =
     else if within_backoff_time dead_env.reinit_attempts dead_env.dead_since then (
       let () = Hh_logger.log "Attemping to reestablish watchman subscription" in
       (* TODO: don't hardcode this timeout *)
-      with_timeout (Some 120.) @@ fun () ->
-      match%map re_init ~prior_clockspec:dead_env.prior_clockspec dead_env.prior_settings with
+      let timeout = Some 120. in
+      match%lwt
+        with_timeout timeout @@ fun () ->
+        re_init ~prior_clockspec:dead_env.prior_clockspec dead_env.prior_settings
+      with
+      | exception Timeout ->
+        Hh_logger.log "Reestablishing watchman subscription timed out.";
+        EventLogger.watchman_connection_reestablishment_failed ();
+        Lwt.return (Watchman_dead { dead_env with reinit_attempts = dead_env.reinit_attempts + 1 })
       | None ->
         Hh_logger.log "Reestablishing watchman subscription failed.";
         EventLogger.watchman_connection_reestablishment_failed ();
-        Watchman_dead { dead_env with reinit_attempts = dead_env.reinit_attempts + 1 }
+        Lwt.return (Watchman_dead { dead_env with reinit_attempts = dead_env.reinit_attempts + 1 })
       | Some env ->
         Hh_logger.log "Watchman connection reestablished.";
         EventLogger.watchman_connection_reestablished ();
-        Watchman_alive env
+        Lwt.return (Watchman_alive env)
     ) else
       Lwt.return instance
 
@@ -854,6 +870,7 @@ module Testing = struct
       subscribe_mode = Defer_changes;
       expression_terms = [];
       debug_logging = false;
+      defer_states = [];
       roots = [Path.dummy_path];
       subscription_prefix = "dummy_prefix";
       sync_timeout = None;

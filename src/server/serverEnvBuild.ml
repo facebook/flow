@@ -8,11 +8,11 @@
 (*****************************************************************************)
 (* Building the environment *)
 (*****************************************************************************)
-let make_genv options handle =
+let make_genv ~options ~init_id handle =
   let workers =
     let num_workers = Options.max_workers options in
     if num_workers > 0 then
-      Some (ServerWorker.make ~n:num_workers handle)
+      Some (ServerWorker.make ~n:num_workers ~init_id handle)
     else
       None
   in

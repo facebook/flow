@@ -23,10 +23,10 @@ module.exports = (): Array<A | $IMPORTED_TYPE$_A_1> => [foo1(), foo2()]; // dupl
 
 Stats:
   Files changed:                            2
-  Number of sig. ver. errors:               3
-  Number of annotations required:           3
   Number of annotations added:              3
   Total size of annotations:                6
+  Number of sig. ver. errors:               3
+  Number of annotations required:           3
   Number of annotations skipped:            0
 
 Errors:

@@ -121,6 +121,7 @@ and 'loc t' =
       ('loc virtual_reason * 'loc virtual_reason) * string * 'loc virtual_use_op
   | EAdditionMixed of 'loc virtual_reason * 'loc virtual_use_op
   | EComparison of ('loc virtual_reason * 'loc virtual_reason)
+  | ENonStrictEqualityComparison of ('loc virtual_reason * 'loc virtual_reason)
   | ETupleArityMismatch of
       ('loc virtual_reason * 'loc virtual_reason) * int * int * 'loc virtual_use_op
   | ENonLitArrayToTuple of ('loc virtual_reason * 'loc virtual_reason) * 'loc virtual_use_op
@@ -221,7 +222,6 @@ and 'loc t' =
   | EBinaryInLHS of 'loc virtual_reason
   | EBinaryInRHS of 'loc virtual_reason
   | EArithmeticOperand of 'loc virtual_reason
-  | ENullVoidAddition of 'loc virtual_reason (* TODO: yeet this *)
   | EForInRHS of 'loc virtual_reason
   | EObjectComputedPropertyAccess of ('loc virtual_reason * 'loc virtual_reason)
   | EObjectComputedPropertyAssign of ('loc virtual_reason * 'loc virtual_reason)
@@ -272,6 +272,7 @@ and 'loc t' =
   | EDeprecatedUtility of 'loc * string
   | EUnsafeGettersSetters of 'loc
   | EUnusedSuppression of 'loc
+  | ECodelessSuppression of 'loc * string
   | ELintSetting of 'loc * LintSettings.lint_parse_error
   | ESketchyNullLint of {
       kind: Lints.sketchy_null_kind;
@@ -716,6 +717,8 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
   | EPolarityMismatch { reason; name; expected_polarity; actual_polarity } ->
     EPolarityMismatch { reason = map_reason reason; name; expected_polarity; actual_polarity }
   | EComparison (r1, r2) -> EComparison (map_reason r1, map_reason r2)
+  | ENonStrictEqualityComparison (r1, r2) ->
+    ENonStrictEqualityComparison (map_reason r1, map_reason r2)
   | ESpeculationAmbiguous
       { reason; prev_case = (prev_i, prev_case_reason); case = (i, case_reason); cases } ->
     ESpeculationAmbiguous
@@ -777,7 +780,6 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
   | EBinaryInLHS r -> EBinaryInLHS (map_reason r)
   | EBinaryInRHS r -> EBinaryInRHS (map_reason r)
   | EArithmeticOperand r -> EArithmeticOperand (map_reason r)
-  | ENullVoidAddition r -> ENullVoidAddition (map_reason r)
   | EForInRHS r -> EForInRHS (map_reason r)
   | EObjectComputedPropertyAccess (r1, r2) ->
     EObjectComputedPropertyAccess (map_reason r1, map_reason r2)
@@ -801,6 +803,7 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
   | EDeprecatedUtility (loc, s) -> EDeprecatedUtility (f loc, s)
   | EUnsafeGettersSetters loc -> EUnsafeGettersSetters (f loc)
   | EUnusedSuppression loc -> EUnusedSuppression (f loc)
+  | ECodelessSuppression (loc, c) -> ECodelessSuppression (f loc, c)
   | ELintSetting (loc, err) -> ELintSetting (f loc, err)
   | ESketchyNullLint { kind; loc; null_loc; falsy_loc } ->
     ESketchyNullLint { kind; loc = f loc; null_loc = f null_loc; falsy_loc = f falsy_loc }
@@ -1024,6 +1027,7 @@ let util_use_op_of_msg nope util = function
   | EBuiltinLookupFailed _
   | EStrictLookupFailed { use_op = None; _ }
   | EComparison (_, _)
+  | ENonStrictEqualityComparison _
   | ESpeculationAmbiguous _
   | EUnsupportedExact (_, _)
   | EIdxArity _
@@ -1075,7 +1079,6 @@ let util_use_op_of_msg nope util = function
   | EBinaryInLHS _
   | EBinaryInRHS _
   | EArithmeticOperand _
-  | ENullVoidAddition _
   | EForInRHS _
   | EObjectComputedPropertyAccess (_, _)
   | EObjectComputedPropertyAssign (_, _)
@@ -1096,6 +1099,7 @@ let util_use_op_of_msg nope util = function
   | EDeprecatedUtility _
   | EUnsafeGettersSetters _
   | EUnusedSuppression _
+  | ECodelessSuppression _
   | ELintSetting _
   | ESketchyNullLint { kind = _; loc = _; null_loc = _; falsy_loc = _ }
   | ESketchyNumberLint _
@@ -1130,6 +1134,7 @@ let util_use_op_of_msg nope util = function
 let loc_of_msg : 'loc t' -> 'loc option = function
   | EValueUsedAsType { reason_use = primary }
   | EComparison (primary, _)
+  | ENonStrictEqualityComparison (primary, _)
   | EFunPredCustom ((primary, _), _)
   | EInvalidTypeArgs (_, primary)
   | ETooFewTypeArgs (primary, _, _)
@@ -1146,7 +1151,6 @@ let loc_of_msg : 'loc t' -> 'loc option = function
   | EBinaryInRHS reason
   | EBinaryInLHS reason
   | EArithmeticOperand reason
-  | ENullVoidAddition reason
   | ERecursionLimit (reason, _)
   | EMissingAnnotation (reason, _)
   | EIdxArity reason
@@ -1219,6 +1223,7 @@ let loc_of_msg : 'loc t' -> 'loc option = function
   | EOptionalChainingMethods loc
   | EExperimentalOptionalChaining loc
   | EUnusedSuppression loc
+  | ECodelessSuppression (loc, _)
   | EDocblockError (loc, _)
   | EImplicitInexactObject loc
   | EAmbiguousObjectType loc
@@ -1348,7 +1353,6 @@ let kind_of_msg =
     | EImplicitInexactObject _ -> LintError Lints.ImplicitInexactObject
     | EAmbiguousObjectType _ -> LintError Lints.AmbiguousObjectType
     | EUninitializedInstanceProperty _ -> LintError Lints.UninitializedInstanceProperty
-    | ENullVoidAddition _ -> LintError Lints.NullVoidAddition
     | EBadDefaultImportAccess _ -> LintError Lints.DefaultImportAccess
     | EBadDefaultImportDestructuring _ -> LintError Lints.DefaultImportAccess
     | EInvalidImportStarUse _ -> LintError Lints.InvalidImportStarUse
@@ -1846,6 +1850,24 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
       }
   | EComparison (lower, upper) ->
     Normal { features = [text "Cannot compare "; ref lower; text " to "; ref upper; text "."] }
+  | ENonStrictEqualityComparison (lower, upper) ->
+    Normal
+      {
+        features =
+          [
+            text "Cannot compare ";
+            ref lower;
+            text " to ";
+            ref upper;
+            text " with a non-strict equality check. ";
+            text "Make sure the arguments are valid, ";
+            text "or try using strict equality (";
+            code "===";
+            text " or ";
+            code "!==";
+            text ") instead.";
+          ];
+      }
   | ETupleArityMismatch (reasons, l1, l2, use_op) ->
     let (lower, upper) = reasons in
     UseOp
@@ -2544,8 +2566,7 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
       ]
     in
     Normal { features }
-  | EArithmeticOperand reason
-  | ENullVoidAddition reason ->
+  | EArithmeticOperand reason ->
     let features =
       [
         text "Cannot perform arithmetic operation because ";
@@ -2844,6 +2865,16 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
   | EUnsafeGettersSetters _ ->
     Normal { features = [text "Getters and setters can have side effects and are unsafe."] }
   | EUnusedSuppression _ -> Normal { features = [text "Unused suppression comment."] }
+  | ECodelessSuppression (_, c) ->
+    Normal
+      {
+        features =
+          [
+            text
+              "Suppression is missing a code. Please update this suppression to use an error code: ";
+            code ("$FlowFixMe[" ^ c ^ "]");
+          ];
+      }
   | ELintSetting (_, kind) ->
     let features =
       match kind with
@@ -3287,7 +3318,6 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
 
 let is_lint_error = function
   | EUntypedTypeImport _
-  | ENullVoidAddition _
   | EUntypedImport _
   | ENonstrictImport _
   | EUnclearType _
@@ -3388,7 +3418,10 @@ let error_code_of_message err : error_code option =
   | ECannotSpreadIndexerOnRight _ -> Some CannotSpreadIndexer
   | ECannotSpreadInterface _ -> Some CannotSpreadInterface
   | ECharSetAnnot _ -> Some InvalidCharsetTypeArg
-  | EComparison (_, _) -> Some InvalidCompare
+  | ECodelessSuppression _ -> None
+  | ENonStrictEqualityComparison _
+  | EComparison _ ->
+    Some InvalidCompare
   | EComputedPropertyWithMultipleLowerBounds _ -> Some InvalidComputedProp
   | EComputedPropertyWithUnion _ -> Some InvalidComputedProp
   | EDebugPrint (_, _) -> None
@@ -3530,7 +3563,6 @@ let error_code_of_message err : error_code option =
   | EValueUsedAsType _ -> Some ValueAsType
   (* lints should match their lint name *)
   | EUntypedTypeImport _
-  | ENullVoidAddition _
   | EUntypedImport _
   | ENonstrictImport _
   | EUnclearType _

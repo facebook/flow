@@ -66,7 +66,7 @@ queries_in_file autocomplete "inherited-class-properties.js" --pretty
 queries_in_file autocomplete "function-added-properties.js" --pretty
 queries_in_file autocomplete "comments.js" --pretty
 queries_in_file autocomplete "literal.js" --pretty
-queries_in_file autocomplete "import-source.js" --pretty
+queries_in_file autocomplete "import_source.js" --pretty
 queries_in_file autocomplete "object-with-prototype.js" --pretty
 queries_in_file autocomplete "object-spread-1.js" --pretty
 queries_in_file autocomplete "object-spread-2.js" --pretty
@@ -83,3 +83,12 @@ queries_in_file autocomplete "enums.js" --lsp
 queries_in_file autocomplete "enum-id.js" --pretty
 queries_in_file autocomplete "class_declaration_name.js" --pretty
 queries_in_file autocomplete "pattern_object_key_middle.js" --pretty
+queries_in_file autocomplete "jsdoc.js" --lsp
+queries_in_file autocomplete "jsdoc-members-1.js" --lsp
+queries_in_file autocomplete "jsdoc-members-2.js" --lsp
+queries_in_file autocomplete "jsdoc-members-3.js" --lsp
+queries_in_file autocomplete "jsdoc-members-4.js" --lsp
+queries_in_file autocomplete "jsdoc-members-5.js" --lsp
+queries_in_file autocomplete "jsdoc-members-6.js" --lsp
+queries_in_file autocomplete "jsdoc-members-7.js" --lsp
+queries_in_file autocomplete "jsdoc-members-8.js" --lsp

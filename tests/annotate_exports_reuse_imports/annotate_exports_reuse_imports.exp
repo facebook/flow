@@ -85,10 +85,10 @@ module.exports = {
 
 Stats:
   Files changed:                            5
-  Number of sig. ver. errors:              13
-  Number of annotations required:          13
   Number of annotations added:             12
   Total size of annotations:               14
+  Number of sig. ver. errors:              13
+  Number of annotations required:          13
   Number of annotations skipped:            0
 
 Errors:

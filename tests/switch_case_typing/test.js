@@ -98,3 +98,36 @@ type Obj = { field : string };
 declare var obj: Obj;
 if (obj.field === 1 || obj.field === 2) {} // error
 if (obj.field === 1 && obj.field === 2) {} // error
+
+
+const KeyObj = {
+  "FOO": 'foo',
+  "BAR": 'bar',
+  "ERR": 'err',
+};
+
+if (o.type === KeyObj.ERR) {} // error
+if (KeyObj.ERR === o.type) {} // TODO error
+
+switch (o.type) {
+  case KeyObj.FOO:
+  case KeyObj.BAR:
+  case KeyObj.ERR: // error
+    break;
+  default:
+    break;
+}
+
+// We relax the inclusion requirement for object literals
+const P = {
+  field: 'a',
+}
+
+switch (P.field) {
+  case 'a':
+    break;
+  case 'b': // okay
+    break;
+  default:
+    break;
+}

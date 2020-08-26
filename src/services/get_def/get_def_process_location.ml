@@ -5,12 +5,15 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
-type result =
-  | Loc of ALoc.t
-  | Chain of Get_def_request.t
-  | No_loc
-
-exception Result of result
+(*
+  `Ok request` =
+    the given loc is in a symbol for which it makes sense to ask for a definition,
+    process `request` to get to the definition
+  Error loc =
+    the given loc is in a symbol which is its own definition,
+    `loc` is the loc of the symbol
+*)
+exception Result of (Get_def_request.t, ALoc.t) result
 
 (**
  * Determines if the given expression is a `require()` call, or a member expression
@@ -30,6 +33,14 @@ let rec is_require ~is_legit_require expr =
     when is_legit_require source_loc ->
     true
   | _ -> false
+
+let type_of_jsx_name =
+  let open Flow_ast.JSX in
+  function
+  | Identifier ((_, t), _)
+  | NamespacedName (_, NamespacedName.{ name = ((_, t), _); _ })
+  | MemberExpression (_, MemberExpression.{ property = ((_, t), _); _ }) ->
+    t
 
 class searcher (target_loc : Loc.t) (is_legit_require : ALoc.t -> bool) =
   object (this)
@@ -51,9 +62,9 @@ class searcher (target_loc : Loc.t) (is_legit_require : ALoc.t -> bool) =
 
     method covers_target loc = Reason.in_range target_loc (ALoc.to_loc_exn loc)
 
-    method find_loc : 'a. ALoc.t -> 'a = (fun x -> raise (Result (Loc x)))
+    method own_def : 'a. ALoc.t -> 'a = (fun x -> raise (Result (Error x)))
 
-    method chain : 'a. Get_def_request.t -> 'a = (fun x -> raise (Result (Chain x)))
+    method request : 'a. Get_def_request.t -> 'a = (fun x -> raise (Result (Ok x)))
 
     method! variable_declarator
         ~kind ((_, { Flow_ast.Statement.VariableDeclaration.Declarator.id; init }) as x) =
@@ -70,47 +81,28 @@ class searcher (target_loc : Loc.t) (is_legit_require : ALoc.t -> bool) =
 
     method! import_declaration import_loc decl =
       let open Flow_ast.Statement.ImportDeclaration in
-      let {
-        importKind = _;
-        source = (source_loc, { Flow_ast.StringLiteral.value = module_name; _ });
-        specifiers;
-        default;
-        comments = _;
-      } =
-        decl
-      in
-      Base.Option.iter ~f:(this#import_specifier_with_loc ~source_loc) specifiers;
-      Base.Option.iter ~f:(this#import_default_specifier_with_loc ~source_loc) default;
+      let { source = (source_loc, { Flow_ast.StringLiteral.value = module_name; _ }); _ } = decl in
+      let res = super#import_declaration import_loc decl in
       if this#covers_target import_loc then
-        this#chain (Get_def_request.Require ((source_loc, module_name), import_loc));
+        this#request (Get_def_request.Require ((source_loc, module_name), import_loc));
+      res
+
+    method! import_named_specifier decl =
+      let open Flow_ast.Statement.ImportDeclaration in
+      let { local; remote = ((remote_loc, t), _); kind = _ } = decl in
+      if
+        this#covers_target remote_loc
+        || Base.Option.exists local ~f:(fun ((local_loc, _), _) -> this#covers_target local_loc)
+      then
+        this#request (Get_def_request.Type t);
       decl
 
-    method import_specifier_with_loc ~source_loc specifier =
-      let open Flow_ast.Statement.ImportDeclaration in
-      match specifier with
-      | ImportNamedSpecifiers named_specifiers ->
-        Base.List.iter ~f:(this#import_named_specifier_with_loc ~source_loc) named_specifiers
-      | ImportNamespaceSpecifier _ -> ()
+    method! import_default_specifier decl =
+      let ((loc, t), _) = decl in
+      if this#covers_target loc then this#request (Get_def_request.Type t);
+      decl
 
-    method import_named_specifier_with_loc ~source_loc specifier =
-      let open Flow_ast.Statement.ImportDeclaration in
-      let { kind = _; local; remote } = specifier in
-      let ((remote_name_loc, _), { Flow_ast.Identifier.name = remote_name; _ }) = remote in
-      let result =
-        Get_def_request.(
-          Member { prop_name = remote_name; object_source = ObjectRequireLoc source_loc })
-      in
-      if this#covers_target remote_name_loc then this#chain result;
-      Base.Option.iter
-        ~f:(fun local ->
-          let ((local_name_loc, _), _) = local in
-          if this#covers_target local_name_loc then
-            let result =
-              Get_def_request.(
-                Member { prop_name = remote_name; object_source = ObjectRequireLoc source_loc })
-            in
-            this#chain result)
-        local
+    method! import_namespace_specifier id = id
 
     method! export_named_declaration export_loc decl =
       let open Flow_ast.Statement.ExportNamedDeclaration in
@@ -120,7 +112,7 @@ class searcher (target_loc : Loc.t) (is_legit_require : ALoc.t -> bool) =
         let { specifiers; _ } = decl in
         Base.Option.iter ~f:(this#export_specifier_with_loc ~source_loc) specifiers;
         if this#covers_target export_loc then
-          this#chain (Get_def_request.Require ((source_loc, module_name), export_loc));
+          this#request (Get_def_request.Require ((source_loc, module_name), export_loc));
         decl
 
     method export_specifier_with_loc ~source_loc specifier =
@@ -138,7 +130,7 @@ class searcher (target_loc : Loc.t) (is_legit_require : ALoc.t -> bool) =
         Get_def_request.(
           Member { prop_name = local_name; object_source = ObjectRequireLoc source_loc })
       in
-      if this#covers_target specifier_loc then this#chain result
+      if this#covers_target specifier_loc then this#request result
 
     method! member expr =
       let open Flow_ast.Expression.Member in
@@ -151,36 +143,43 @@ class searcher (target_loc : Loc.t) (is_legit_require : ALoc.t -> bool) =
           let result =
             Get_def_request.(Member { prop_name = name; object_source = ObjectType t })
           in
-          this#chain result
+          this#request result
         | _ -> ()
       end;
       super#member expr
 
-    method import_default_specifier_with_loc ~source_loc default =
-      let ((remote_name_loc, _), _) = default in
-      if this#covers_target remote_name_loc then
-        let result =
-          Get_def_request.(
-            Member
-              {
-                prop_name = "default";
-                (* see members.ml *)
-                object_source = ObjectRequireLoc source_loc;
-              })
-        in
-        this#chain result
-
     method! t_identifier (((loc, type_), { Flow_ast.Identifier.name; _ }) as id) =
-      if this#covers_target loc then this#chain (Get_def_request.Identifier { name; loc; type_ });
+      if this#covers_target loc then this#request (Get_def_request.Identifier { name; loc; type_ });
       super#t_identifier id
 
+    method! jsx_opening_element elt =
+      let open Flow_ast.JSX in
+      let (_, Opening.{ name = component_name; attributes; _ }) = elt in
+      List.iter
+        (function
+          | Opening.Attribute
+              ( _,
+                {
+                  Attribute.name =
+                    Attribute.Identifier
+                      ((loc, _), { Identifier.name = attribute_name; comments = _ });
+                  _;
+                } )
+            when this#covers_target loc ->
+            this#request
+              (Get_def_request.JsxAttribute
+                 { component_t = type_of_jsx_name component_name; name = attribute_name; loc })
+          | _ -> ())
+        attributes;
+      super#jsx_opening_element elt
+
     method! jsx_identifier (((loc, type_), { Flow_ast.JSX.Identifier.name; comments = _ }) as id) =
-      if this#covers_target loc then this#chain (Get_def_request.Identifier { name; loc; type_ });
+      if this#covers_target loc then this#request (Get_def_request.Identifier { name; loc; type_ });
       super#jsx_identifier id
 
     method! pattern ?kind (((_, t), p) as pat) =
       let open Flow_ast.Pattern in
-      begin
+      ( if not in_require_declarator then
         match p with
         | Object { Object.properties; _ } ->
           List.iter
@@ -193,22 +192,21 @@ class searcher (target_loc : Loc.t) (is_legit_require : ALoc.t -> bool) =
                       (loc, { Flow_ast.Literal.value = Flow_ast.Literal.String name; _ })
                   | Property.Identifier ((loc, _), { Flow_ast.Identifier.name; _ })
                     when this#covers_target loc ->
-                    this#chain
+                    this#request
                       Get_def_request.(Member { prop_name = name; object_source = ObjectType t })
                   | _ -> ()
                 end
               | _ -> ())
             properties
-        | _ -> ()
-      end;
+        | _ -> () );
       super#pattern ?kind pat
 
     method! t_pattern_identifier ?kind ((loc, t), name) =
       if kind != None && this#covers_target loc then
         if in_require_declarator then
-          this#chain (Get_def_request.Type t)
+          this#request (Get_def_request.Type t)
         else
-          this#find_loc loc;
+          this#own_def loc;
       super#t_pattern_identifier ?kind ((loc, t), name)
 
     method! expression ((loc, t), expr) =
@@ -231,13 +229,39 @@ class searcher (target_loc : Loc.t) (is_legit_require : ALoc.t -> bool) =
               _;
             })
         when this#covers_target loc && is_legit_require source_loc ->
-        this#chain (Get_def_request.Require ((source_loc, module_name), loc))
+        this#request (Get_def_request.Require ((source_loc, module_name), loc))
       | _ -> super#expression ((loc, t), expr)
+
+    (* object keys would normally hit this#t_identifier; this circumvents that. *)
+    method! object_key_identifier id =
+      let ((loc, _), _) = id in
+      if this#covers_target loc then this#own_def loc;
+      id
+
+    (* for object properties using the shorthand {variableName} syntax,
+     * process the value before the key so that the explicit-non-find in this#object_key_identifier
+     * doesn't make us miss the variable *)
+    method! object_property prop =
+      let open Flow_ast.Expression.Object.Property in
+      (match prop with
+      | (_, Init { shorthand = true; value; _ }) -> ignore (this#expression value)
+      | _ -> ());
+      super#object_property prop
   end
+
+(*  This type is distinct from the one raised by the searcher because
+    it would never make sense for the searcher to raise LocNotFound *)
+type result =
+  | OwnDef of ALoc.t
+  | Request of Get_def_request.t
+  | LocNotFound
 
 let process_location ~typed_ast ~is_legit_require loc =
   let searcher = new searcher loc is_legit_require in
   try
     ignore (searcher#program typed_ast);
-    No_loc
-  with Result info -> info
+    LocNotFound
+  with Result info ->
+    (match info with
+    | Ok request -> Request request
+    | Error loc -> OwnDef loc)

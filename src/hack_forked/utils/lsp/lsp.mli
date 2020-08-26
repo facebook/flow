@@ -46,6 +46,13 @@ module MarkupKind : sig
     | PlainText
 end
 
+module MarkupContent : sig
+  type t = {
+    kind: MarkupKind.t;
+    value: string;
+  }
+end
+
 type markedString =
   | MarkedString of string
   | MarkedCode of string * string
@@ -238,12 +245,7 @@ module Initialize : sig
     | Messages
     | Verbose
 
-  and initializationOptions = {
-    useTextEditAutocomplete: bool;
-    liveSyntaxErrors: bool;
-    namingTableSavedStatePath: string option;
-    sendServerStatusEvents: bool;
-  }
+  and initializationOptions = { liveSyntaxErrors: bool }
 
   and client_capabilities = {
     workspace: workspaceClientCapabilities;
@@ -531,38 +533,36 @@ end
 
 module Completion : sig
   type completionItemKind =
-    | Text (* 1 *)
-    | Method (* 2 *)
-    | Function (* 3 *)
-    | Constructor (* 4 *)
-    | Field (* 5 *)
-    | Variable (* 6 *)
-    | Class (* 7 *)
-    | Interface (* 8 *)
-    | Module (* 9 *)
-    | Property (* 10 *)
-    | Unit (* 11 *)
-    | Value (* 12 *)
-    | Enum (* 13 *)
-    | Keyword (* 14 *)
-    | Snippet (* 15 *)
-    | Color (* 16 *)
-    | File (* 17 *)
-    | Reference (* 18 *)
-    | Folder (* 19 *)
-    | EnumMember (* 20 *)
-    | Constant (* 21 *)
-    | Struct (* 22 *)
-    | Event (* 23 *)
-    | Operator (* 24 *)
-    | TypeParameter (* 25 *)
+    | Text  (** 1 *)
+    | Method  (** 2 *)
+    | Function  (** 3 *)
+    | Constructor  (** 4 *)
+    | Field  (** 5 *)
+    | Variable  (** 6 *)
+    | Class  (** 7 *)
+    | Interface  (** 8 *)
+    | Module  (** 9 *)
+    | Property  (** 10 *)
+    | Unit  (** 11 *)
+    | Value  (** 12 *)
+    | Enum  (** 13 *)
+    | Keyword  (** 14 *)
+    | Snippet  (** 15 *)
+    | Color  (** 16 *)
+    | File  (** 17 *)
+    | Reference  (** 18 *)
+    | Folder  (** 19 *)
+    | EnumMember  (** 20 *)
+    | Constant  (** 21 *)
+    | Struct  (** 22 *)
+    | Event  (** 23 *)
+    | Operator  (** 24 *)
+    | TypeParameter  (** 25 *)
   [@@deriving enum]
 
   type insertTextFormat =
-    | PlainText (* 1 *)
-    (* the insertText/textEdits are just plain strings *)
-    | SnippetFormat (* 2 *)
-                    (* wire: just "Snippet" *)
+    | PlainText  (** 1 -- the insertText/textEdits are just plain strings *)
+    | SnippetFormat  (** 2 -- wire: just "Snippet" *)
   [@@deriving enum]
 
   type completionTriggerKind =
@@ -593,31 +593,17 @@ module Completion : sig
   }
 
   and completionItem = {
-    label: string;
-    (* the label in the UI *)
-    kind: completionItemKind option;
-    (* tells editor which icon to use *)
-    detail: string option;
-    (* human-readable string like type/symbol info *)
-    inlineDetail: string option;
-    (* nuclide-specific, right column *)
-    itemType: string option;
-    (* nuclide-specific, left column *)
-    documentation: markedString list option;
-    (* human-readable doc-comment *)
-    preselect: bool;
-    (* select this item when showing *)
-    sortText: string option;
-    (* used for sorting; if absent, uses label *)
-    filterText: string option;
-    (* used for filtering; if absent, uses label *)
-    insertText: string option;
-    (* used for inserting; if absent, uses label *)
+    label: string;  (** the label in the UI *)
+    kind: completionItemKind option;  (** tells editor which icon to use *)
+    detail: string option;  (** human-readable string like type/symbol info *)
+    documentation: markedString list option;  (** human-readable doc-comment *)
+    preselect: bool;  (** select this item when showing *)
+    sortText: string option;  (** used for sorting; if absent, uses label *)
+    filterText: string option;  (** used for filtering; if absent, uses label *)
+    insertText: string option;  (** used for inserting; if absent, uses label *)
     insertTextFormat: insertTextFormat option;
-    textEdits: TextEdit.t list;
-    (* wire: split into hd and tl *)
-    command: Command.t option;
-    (* if present, is executed after completion *)
+    textEdits: TextEdit.t list;  (** wire: split into hd and tl *)
+    command: Command.t option;  (** if present, is executed after completion *)
     data: Hh_json.json option;
   }
 end
@@ -752,6 +738,12 @@ module SignatureHelp : sig
     [@@deriving enum]
   end
 
+  module Documentation : sig
+    type t =
+      | String of string
+      | MarkupContent of MarkupContent.t
+  end
+
   type params = {
     loc: TextDocumentPositionParams.t;
     context: context option;
@@ -774,14 +766,18 @@ module SignatureHelp : sig
 
   and signature_information = {
     siginfo_label: string;
-    siginfo_documentation: string option;
+    siginfo_documentation: Documentation.t option;
     parameters: parameter_information list;
   }
 
   and parameter_information = {
-    parinfo_label: string;
-    parinfo_documentation: string option;
+    parinfo_label: label;
+    parinfo_documentation: Documentation.t option;
   }
+
+  and label =
+    | String of string
+    | Offset of int * int
 end
 
 module Rename : sig

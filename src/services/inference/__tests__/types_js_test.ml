@@ -72,6 +72,7 @@ let dummy_options_flags =
     traces = None;
     trust_mode = None;
     types_first = true;
+    new_signatures = false;
     abstract_locations = true;
     verbose = None;
     wait_for_recheck = None;

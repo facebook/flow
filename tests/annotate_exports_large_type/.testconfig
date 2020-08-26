@@ -1,1 +1,2 @@
 cmd: annotate-exports --max-type-size 10
+TODO_new_signatures: true

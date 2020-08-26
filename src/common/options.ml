@@ -10,11 +10,6 @@ type esproposal_feature_mode =
   | ESPROPOSAL_IGNORE
   | ESPROPOSAL_WARN
 
-type file_watcher =
-  | NoFileWatcher
-  | DFind
-  | Watchman
-
 type module_system =
   | Node
   | Haste
@@ -42,7 +37,7 @@ type saved_state_fetcher =
 
 type arch =
   | Classic
-  | TypesFirst
+  | TypesFirst of { new_signatures: bool }
 
 type trust_mode =
   | NoTrust
@@ -85,6 +80,7 @@ type t = {
   opt_ignore_non_literal_requires: bool;
   opt_include_suppressions: bool;
   opt_include_warnings: bool;
+  opt_jsdoc: bool;
   opt_lazy_mode: lazy_mode;
   opt_lint_severities: Severity.severity LintSettings.t;
   opt_max_files_checked_per_worker: int;
@@ -182,6 +178,8 @@ let lazy_mode opts = opts.opt_lazy_mode
 
 let is_quiet opts = opts.opt_quiet
 
+let jsdoc opts = opts.opt_jsdoc
+
 let max_files_checked_per_worker opts = opts.opt_max_files_checked_per_worker
 
 let max_header_tokens opts = opts.opt_max_header_tokens
@@ -239,6 +237,8 @@ let should_profile opts = opts.opt_profile && not opts.opt_quiet
 let should_strip_root opts = opts.opt_strip_root
 
 let strict_es6_import_export opts = opts.opt_strict_es6_import_export
+
+let strict_es6_import_export_excludes opts = opts.opt_strict_es6_import_export_excludes
 
 let suppress_types opts = opts.opt_suppress_types
 

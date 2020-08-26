@@ -71,6 +71,8 @@ type metadata = {
   react_runtime: Options.react_runtime;
   recursion_limit: int;
   root: Path.t;
+  strict_es6_import_export: bool;
+  strict_es6_import_export_excludes: string list;
   strip_root: bool;
   suppress_types: SSet.t;
   max_workers: int;
@@ -265,6 +267,10 @@ val type_graph : t -> Graph_explorer.graph
 
 val type_asserts_map : t -> (type_assert_kind * ALoc.t) ALocMap.t
 
+val matching_props : t -> (Reason.reason * string * Type.t * Type.t) list
+
+val literal_subtypes : t -> (Type.t * Type.use_t) list
+
 val verbose : t -> Verbose.t option
 
 val max_workers : t -> int
@@ -324,6 +330,10 @@ val add_tvar : t -> Constraint.ident -> Constraint.node -> unit
 val add_trust_var : t -> Trust_constraint.ident -> Trust_constraint.node -> unit
 
 val add_type_assert : t -> ALoc.t -> type_assert_kind * ALoc.t -> unit
+
+val add_matching_props : t -> Reason.reason * string * Type.t * Type.t -> unit
+
+val add_literal_subtypes : t -> Type.t * Type.use_t -> unit
 
 val add_voidable_check : t -> voidable_check -> unit
 
