@@ -52,8 +52,7 @@ within the project root. However, unlike the previous example's
 directories named `__tests__/`, like `src/__tests__/`.
 
 ### Exclusions <a class="toc" id="toc-ignore-exclusions" href="#toc-ignore-exclusions"></a>
-
-Sometimes you may want to exclude all files inside a directory with the exception of a few. An optional prefix "!" which negates the pattern may help. With this, any matching file excluded by a previous pattern will become included again.
+Sometimes you may want to ignore all files inside a directory with the exception of a few. An optional prefix "!" which negates the pattern may help. With this, any matching file excluded by a previous pattern will become included again.
 
 ```
 [ignore]
