@@ -873,6 +873,13 @@ let error_to_lsp
       relatedLocations = relatedInformation (* legacy fb extension *);
     } )
 
+let live_syntax_errors_enabled (state : state) =
+  let open Initialize in
+  match state with
+  | Connected cenv -> cenv.c_ienv.i_initialize_params.initializationOptions.liveSyntaxErrors
+  | Disconnected denv -> denv.d_ienv.i_initialize_params.initializationOptions.liveSyntaxErrors
+  | _ -> false
+
 (** parse_and_cache: either the uri is an open file for which we already
   have parse results (ast+diagnostics), so we can just return them;
   or it's an open file and we are expected to lazily compute the parse results
@@ -881,14 +888,6 @@ let error_to_lsp
   won't store them. *)
 let parse_and_cache flowconfig_name (state : state) (uri : string) :
     state * ((Loc.t, Loc.t) Flow_ast.Program.t * Lsp.PublishDiagnostics.diagnostic list option) =
-  (* part of parsing is producing parse errors, if so desired *)
-  let liveSyntaxErrors =
-    Initialize.(
-      match state with
-      | Connected cenv -> cenv.c_ienv.i_initialize_params.initializationOptions.liveSyntaxErrors
-      | Disconnected denv -> denv.d_ienv.i_initialize_params.initializationOptions.liveSyntaxErrors
-      | _ -> false)
-  in
   let error_to_diagnostic (loc, parse_error) =
     let message = Errors.Friendly.message_of_string (Parse_error.PP.error parse_error) in
     let error = Errors.mk_error ~kind:Errors.ParseError loc None message in
@@ -903,7 +902,7 @@ let parse_and_cache flowconfig_name (state : state) (uri : string) :
      then use of impermissable constructs will be reported at typecheck time
      (not as parse errors). We'll do the same here, with permissive parsing
      and only reporting parse errors. *)
-  let get_parse_options () =
+  let parse_options =
     let root = get_root state in
     let use_strict =
       Base.Option.value_map root ~default:false ~f:(fun root ->
@@ -931,13 +930,12 @@ let parse_and_cache flowconfig_name (state : state) (uri : string) :
         let content = File_input.content_of_file_input_unsafe file in
         let filename_opt = File_input.path_of_file_input file in
         let filekey = Base.Option.map filename_opt ~f:(fun fn -> File_key.SourceFile fn) in
-        let parse_options = get_parse_options () in
         Parser_flow.program_file ~fail:false ~parse_options ~token_sink:None content filekey
       with _ ->
         ((Loc.none, { Flow_ast.Program.statements = []; comments = None; all_comments = [] }), [])
     in
     ( program,
-      if liveSyntaxErrors then
+      if live_syntax_errors_enabled state then
         Some (List.map errors ~f:error_to_diagnostic)
       else
         None )
