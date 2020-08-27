@@ -7,3 +7,5 @@ url.format(url.parse('https://example.com/foo'));
 function f(parseQueryString: boolean) {
   (url.parse('http://example.com/?foo=bar', parseQueryString).query: empty); // error, string | null | object
 }
+
+(url.fileURLToPath('file:///'): string);
