@@ -311,7 +311,7 @@ let infer_type
                 match getdef_loc_result with
                 | Error _ -> None
                 | Ok getdef_loc ->
-                  Find_documentation.jsdoc_of_getdef_loc ~reader getdef_loc
+                  Find_documentation.jsdoc_of_getdef_loc ~current_ast:typed_ast ~reader getdef_loc
                   |> Base.Option.bind ~f:Find_documentation.documentation_of_jsdoc
               in
               let json_props =

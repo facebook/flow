@@ -1081,3 +1081,22 @@ Flags: --strip-root --pretty
   "end":5
 }
 
+parse_error.js:6:5
+Flags: --strip-root --pretty
+{
+  "documentation":"this is foo",
+  "type":"() => void",
+  "reasons":[],
+  "loc":{
+    "source":"parse_error.js",
+    "type":"SourceFile",
+    "start":{"line":6,"column":4,"offset":50},
+    "end":{"line":6,"column":6,"offset":53}
+  },
+  "path":"parse_error.js",
+  "line":6,
+  "endline":6,
+  "start":4,
+  "end":6
+}
+
