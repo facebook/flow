@@ -8,6 +8,7 @@
 .*/newtests/lsp/completion/unqualified-type-annotation.js
 .*/newtests/gen_flow_files_command/type_error.js
 .*/packages/flow-remove-types/.*
+.*/newtests/lsp/signatureHelp/paramDocumentation.js
 
 [options]
 esproposal.class_instance_fields=enable
