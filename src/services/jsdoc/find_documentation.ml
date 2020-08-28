@@ -175,9 +175,40 @@ let search def_loc ast =
     None
   with Found documentation -> Some documentation
 
-let jsdoc_of_getdef_loc ~reader def_loc =
-  let open Base.Option in
-  Loc.source def_loc >>= Parsing_heaps.Reader.get_ast ~reader >>= search def_loc
+module Remove_types = struct
+  open Parsing_heaps_utils
+
+  class type_remover ~(reader : Parsing_heaps.Reader.reader) =
+    object
+      inherit [ALoc.t, ALoc.t * Type.t, Loc.t, Loc.t] Flow_polymorphic_ast_mapper.mapper
+
+      method on_loc_annot x = loc_of_aloc ~reader x
+
+      method on_type_annot (x, _) = loc_of_aloc ~reader x
+    end
+
+  let f ~reader ~typed_ast = (new type_remover ~reader)#program typed_ast
+end
+
+let jsdoc_of_getdef_loc ?current_ast ~reader def_loc =
+  let open Base.Option.Let_syntax in
+  let%bind source = Loc.source def_loc in
+  let current_ast_if_should_use =
+    let%bind ((current_file_loc, _) as typed_ast) = current_ast in
+    let%bind current_file_source =
+      Loc.source (Parsing_heaps_utils.loc_of_aloc ~reader current_file_loc)
+    in
+    if source = current_file_source then
+      Some (Remove_types.f ~reader ~typed_ast)
+    else
+      None
+  in
+  let%bind ast =
+    match current_ast_if_should_use with
+    | Some _ as some_ast -> some_ast
+    | None -> Parsing_heaps.Reader.get_ast ~reader source
+  in
+  search def_loc ast
 
 let documentation_of_jsdoc jsdoc =
   let documentation_of_unrecognized_tag (tag_name, tag_description) =
