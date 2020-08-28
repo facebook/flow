@@ -1583,8 +1583,20 @@ Flags: --pretty
   ]
 }
 
-jsdoc.js:12:4
+jsdoc.js:15:4
 Flags: --lsp
+{
+  "label":"x",
+  "kind":3,
+  "detail":"() => void",
+  "documentation":{"kind":"markdown","value":"a JSDoc in the same file"},
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":14,"character":3},"end":{"line":14,"character":3}},
+    "newText":"x"
+  }
+}
 {
   "label":"qux",
   "kind":6,
@@ -1596,7 +1608,7 @@ Flags: --lsp
   "sortText":"00000000000000000000",
   "insertTextFormat":1,
   "textEdit":{
-    "range":{"start":{"line":11,"character":3},"end":{"line":11,"character":3}},
+    "range":{"start":{"line":14,"character":3},"end":{"line":14,"character":3}},
     "newText":"qux"
   }
 }
@@ -1608,7 +1620,7 @@ Flags: --lsp
   "sortText":"00000000000000000000",
   "insertTextFormat":1,
   "textEdit":{
-    "range":{"start":{"line":11,"character":3},"end":{"line":11,"character":3}},
+    "range":{"start":{"line":14,"character":3},"end":{"line":14,"character":3}},
     "newText":"foo"
   }
 }
@@ -1620,7 +1632,7 @@ Flags: --lsp
   "sortText":"00000000000000000000",
   "insertTextFormat":1,
   "textEdit":{
-    "range":{"start":{"line":11,"character":3},"end":{"line":11,"character":3}},
+    "range":{"start":{"line":14,"character":3},"end":{"line":14,"character":3}},
     "newText":"baz"
   }
 }

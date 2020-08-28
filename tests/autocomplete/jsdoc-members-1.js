@@ -40,5 +40,5 @@ let obj = {
   h : 5,
 }
 
-obj.x
+obj.
 //  ^
