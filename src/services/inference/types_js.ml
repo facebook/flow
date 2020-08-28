@@ -2473,7 +2473,7 @@ let init_from_saved_state ~profiling ~workers ~saved_state ~updates options =
       warnings;
       coverage;
       node_modules_containers;
-      dependency_info;
+      dependency_graph;
     } =
       saved_state
     in
@@ -2597,6 +2597,11 @@ let init_from_saved_state ~profiling ~workers ~saved_state ~updates options =
     in
     let errors =
       { ServerEnv.local_errors; merge_errors = FilenameMap.empty; warnings; suppressions }
+    in
+    let dependency_info =
+      match dependency_graph with
+      | Saved_state.Classic_dep_graph map -> Dependency_info.of_classic_map map
+      | Saved_state.Types_first_dep_graph map -> Dependency_info.of_types_first_map map
     in
     let env =
       mk_init_env
