@@ -854,15 +854,7 @@ and dump_tvar_ (depth, tvars) cx id =
     spf "%d, ^" id
   else
     let stack = ISet.add id tvars in
-    let open_string =
-      Openness.(
-        match
-          Context.openness_graph cx |> Openness.find_opt id |> Base.Option.map ~f:openness_of_node
-        with
-        | Some Open -> "Open"
-        | Some Closed -> "Closed"
-        | None -> "No Openness")
-    in
+    let open_string = "No Openness" in
     Constraint.(
       try
         match Context.find_tvar cx id with

@@ -160,7 +160,6 @@ type component_t = {
   mutable spread_widened_types: Type.Object.slice IMap.t;
   mutable optional_chains_useful: (Reason.t * bool) ALocMap.t;
   mutable invariants_useful: (Reason.t * bool) ALocMap.t;
-  mutable openness_graph: Openness.graph;
   constraint_cache: Type.FlowSet.t ref;
   subst_cache: (Type.Poly.id * Type.t list, subst_cache_err list * Type.t) Hashtbl.t;
   instantiation_cache: (Reason.t * Reason.t * Reason.t Nel.t, Type.t) Hashtbl.t;
@@ -311,7 +310,6 @@ let make_ccx sig_cx aloc_tables =
     spread_widened_types = IMap.empty;
     optional_chains_useful = ALocMap.empty;
     invariants_useful = ALocMap.empty;
-    openness_graph = Openness.empty_graph;
     constraint_cache = ref Type.FlowSet.empty;
     subst_cache = Hashtbl.create 0;
     instantiation_cache = Hashtbl.create 0;
@@ -453,8 +451,6 @@ let mem_nominal_prop_id cx id = ISet.mem id cx.ccx.nominal_prop_ids
 
 let graph cx = graph_sig cx.ccx.sig_cx
 
-let openness_graph cx = cx.ccx.openness_graph
-
 let trust_graph cx = trust_graph_sig cx.ccx.sig_cx
 
 let import_stmts cx = cx.import_stmts
@@ -575,7 +571,6 @@ let copy_of_context cx =
             graph = cx.ccx.sig_cx.graph;
             trust_graph = cx.ccx.sig_cx.trust_graph;
           };
-        openness_graph = cx.ccx.openness_graph;
       };
   }
 
@@ -641,8 +636,6 @@ let set_evaluated cx evaluated = cx.ccx.sig_cx.evaluated <- evaluated
 let set_goals cx goals = cx.ccx.goal_map <- goals
 
 let set_graph cx graph = cx.ccx.sig_cx.graph <- graph
-
-let set_openness_graph cx graph = cx.ccx.openness_graph <- graph
 
 let set_trust_graph cx trust_graph = cx.ccx.sig_cx.trust_graph <- trust_graph
 
