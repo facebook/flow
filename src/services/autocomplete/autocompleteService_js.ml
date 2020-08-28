@@ -581,16 +581,13 @@ let local_value_identifiers ~options ~reader ~cx ~ac_loc ~file_sig ~typed_ast ~t
   let types = collect_types ~reader (LocSet.of_list (SMap.values names_and_locs)) typed_ast in
   let documentation_of_loc loc =
     let open GetDef_js.Get_def_result in
-    if Options.jsdoc options then
-      match GetDef_js.get_def ~options ~reader ~cx ~file_sig ~typed_ast loc with
-      | Def getdef_loc
-      | Partial (getdef_loc, _) ->
-        Find_documentation.jsdoc_of_getdef_loc ~current_ast:typed_ast ~reader getdef_loc
-        |> Base.Option.bind ~f:Find_documentation.documentation_of_jsdoc
-      | Bad_loc
-      | Def_error _ ->
-        None
-    else
+    match GetDef_js.get_def ~options ~reader ~cx ~file_sig ~typed_ast loc with
+    | Def getdef_loc
+    | Partial (getdef_loc, _) ->
+      Find_documentation.jsdoc_of_getdef_loc ~current_ast:typed_ast ~reader getdef_loc
+      |> Base.Option.bind ~f:Find_documentation.documentation_of_jsdoc
+    | Bad_loc
+    | Def_error _ ->
       None
   in
   names_and_locs
