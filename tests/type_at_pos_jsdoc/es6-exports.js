@@ -25,3 +25,6 @@ export class Beta {};
 
 /** gamma is a function */
 export function gamma() {};
+
+/** delta is a function */
+export default function delta() {};

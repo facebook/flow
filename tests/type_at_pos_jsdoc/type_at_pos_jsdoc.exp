@@ -1005,7 +1005,7 @@ Flags: --strip-root --pretty
   "end":5
 }
 
-imports.js:5:4
+imports.js:7:4
 Flags: --strip-root --pretty
 {
   "documentation":"foo is a function",
@@ -1014,27 +1014,8 @@ Flags: --strip-root --pretty
   "loc":{
     "source":"imports.js",
     "type":"SourceFile",
-    "start":{"line":5,"column":3,"offset":77},
-    "end":{"line":5,"column":5,"offset":80}
-  },
-  "path":"imports.js",
-  "line":5,
-  "endline":5,
-  "start":3,
-  "end":5
-}
-
-imports.js:7:4
-Flags: --strip-root --pretty
-{
-  "documentation":"Bar is a class",
-  "type":"class Bar",
-  "reasons":[],
-  "loc":{
-    "source":"imports.js",
-    "type":"SourceFile",
-    "start":{"line":7,"column":3,"offset":89},
-    "end":{"line":7,"column":5,"offset":92}
+    "start":{"line":7,"column":3,"offset":187},
+    "end":{"line":7,"column":5,"offset":190}
   },
   "path":"imports.js",
   "line":7,
@@ -1046,14 +1027,14 @@ Flags: --strip-root --pretty
 imports.js:9:4
 Flags: --strip-root --pretty
 {
-  "documentation":"baz is a variable",
-  "type":"number",
+  "documentation":"Bar is a class",
+  "type":"class Bar",
   "reasons":[],
   "loc":{
     "source":"imports.js",
     "type":"SourceFile",
-    "start":{"line":9,"column":3,"offset":101},
-    "end":{"line":9,"column":5,"offset":104}
+    "start":{"line":9,"column":3,"offset":199},
+    "end":{"line":9,"column":5,"offset":202}
   },
   "path":"imports.js",
   "line":9,
@@ -1065,23 +1046,42 @@ Flags: --strip-root --pretty
 imports.js:11:4
 Flags: --strip-root --pretty
 {
+  "documentation":"baz is a variable",
+  "type":"number",
+  "reasons":[],
+  "loc":{
+    "source":"imports.js",
+    "type":"SourceFile",
+    "start":{"line":11,"column":3,"offset":211},
+    "end":{"line":11,"column":5,"offset":214}
+  },
+  "path":"imports.js",
+  "line":11,
+  "endline":11,
+  "start":3,
+  "end":5
+}
+
+imports.js:13:4
+Flags: --strip-root --pretty
+{
   "documentation":"alpha is a number",
   "type":"number",
   "reasons":[],
   "loc":{
     "source":"imports.js",
     "type":"SourceFile",
-    "start":{"line":11,"column":3,"offset":113},
-    "end":{"line":11,"column":7,"offset":118}
+    "start":{"line":13,"column":3,"offset":223},
+    "end":{"line":13,"column":7,"offset":228}
   },
   "path":"imports.js",
-  "line":11,
-  "endline":11,
+  "line":13,
+  "endline":13,
   "start":3,
   "end":7
 }
 
-imports.js:13:4
+imports.js:15:4
 Flags: --strip-root --pretty
 {
   "documentation":"Beta is a class",
@@ -1090,17 +1090,17 @@ Flags: --strip-root --pretty
   "loc":{
     "source":"imports.js",
     "type":"SourceFile",
-    "start":{"line":13,"column":3,"offset":126},
-    "end":{"line":13,"column":6,"offset":130}
+    "start":{"line":15,"column":3,"offset":236},
+    "end":{"line":15,"column":6,"offset":240}
   },
   "path":"imports.js",
-  "line":13,
-  "endline":13,
+  "line":15,
+  "endline":15,
   "start":3,
   "end":6
 }
 
-imports.js:15:4
+imports.js:17:4
 Flags: --strip-root --pretty
 {
   "documentation":"gamma is a function",
@@ -1109,14 +1109,71 @@ Flags: --strip-root --pretty
   "loc":{
     "source":"imports.js",
     "type":"SourceFile",
-    "start":{"line":15,"column":3,"offset":138},
-    "end":{"line":15,"column":7,"offset":143}
+    "start":{"line":17,"column":3,"offset":248},
+    "end":{"line":17,"column":7,"offset":253}
   },
   "path":"imports.js",
-  "line":15,
-  "endline":15,
+  "line":17,
+  "endline":17,
   "start":3,
   "end":7
+}
+
+imports.js:19:4
+Flags: --strip-root --pretty
+{
+  "documentation":"delta is a function",
+  "type":"() => void",
+  "reasons":[],
+  "loc":{
+    "source":"imports.js",
+    "type":"SourceFile",
+    "start":{"line":19,"column":3,"offset":261},
+    "end":{"line":19,"column":7,"offset":266}
+  },
+  "path":"imports.js",
+  "line":19,
+  "endline":19,
+  "start":3,
+  "end":7
+}
+
+imports.js:21:4
+Flags: --strip-root --pretty
+{
+  "documentation":"this is 2",
+  "type":"number",
+  "reasons":[],
+  "loc":{
+    "source":"imports.js",
+    "type":"SourceFile",
+    "start":{"line":21,"column":3,"offset":274},
+    "end":{"line":21,"column":9,"offset":281}
+  },
+  "path":"imports.js",
+  "line":21,
+  "endline":21,
+  "start":3,
+  "end":9
+}
+
+imports.js:23:4
+Flags: --strip-root --pretty
+{
+  "documentation":"this is a lambda",
+  "type":"() => void",
+  "reasons":[],
+  "loc":{
+    "source":"imports.js",
+    "type":"SourceFile",
+    "start":{"line":23,"column":3,"offset":289},
+    "end":{"line":23,"column":6,"offset":293}
+  },
+  "path":"imports.js",
+  "line":23,
+  "endline":23,
+  "start":3,
+  "end":6
 }
 
 unrecognized_tags.js:14:4
