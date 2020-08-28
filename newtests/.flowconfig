@@ -10,6 +10,7 @@
 .*/newtests/types-first-lazy-ide2/errorsWithFlowPragma.js
 .*/newtests/lsp/completion/jsx.js
 .*/newtests/lsp/completion/unqualified-type-annotation.js
+.*/newtests/lsp/signatureHelp/paramDocumentation.js
 
 [options]
 emoji=true

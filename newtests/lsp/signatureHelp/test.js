@@ -23,7 +23,7 @@ export default suite(
         position: position,
       }).verifyAllLSPMessagesInStep(
         [['textDocument/signatureHelp', response]],
-        lspIgnoreStatusAndCancellation,
+        ['textDocument/publishDiagnostics', ...lspIgnoreStatusAndCancellation],
       );
     };
     return [
