@@ -9,5 +9,8 @@ const {
   SymbolEnum,
 } = require('./jsdoc-objects');
 
+/** a JSDoc in the same file */
+function x() {}
+
 (     );
 // ^
