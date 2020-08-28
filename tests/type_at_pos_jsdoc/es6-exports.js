@@ -16,3 +16,12 @@ class Bar {}
 const baz = 1;
 
 export {foo, Bar, baz};
+
+/** alpha is a number */
+export let alpha: number = 0;
+
+/** Beta is a class */
+export class Beta {};
+
+/** gamma is a function */
+export function gamma() {};

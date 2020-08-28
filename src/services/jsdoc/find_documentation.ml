@@ -39,6 +39,21 @@ let loc_of_annotation_or_hint =
   | Available (_, (loc, _)) ->
     loc
 
+(* used to forward the comments on an export statement to the declaration
+   contained in the export statement. That's why we don't bother with all
+   cases; only statements that can appear in export declarations. *)
+let replace_comments_of_statement ~comments =
+  let open Flow_ast.Statement in
+  Utils_js.map_snd (function
+      | TypeAlias x -> TypeAlias TypeAlias.{ x with comments }
+      | OpaqueType x -> OpaqueType OpaqueType.{ x with comments }
+      | InterfaceDeclaration x -> InterfaceDeclaration Interface.{ x with comments }
+      | VariableDeclaration x -> VariableDeclaration VariableDeclaration.{ x with comments }
+      | ClassDeclaration x -> ClassDeclaration Flow_ast.Class.{ x with comments }
+      | FunctionDeclaration x -> FunctionDeclaration Flow_ast.Function.{ x with comments }
+      | EnumDeclaration x -> EnumDeclaration EnumDeclaration.{ x with comments }
+      | other -> other)
+
 class documentation_searcher (def_loc : Loc.t) =
   object (this)
     inherit [unit, Loc.t] Flow_ast_visitor.visitor ~init:() as super
@@ -49,6 +64,14 @@ class documentation_searcher (def_loc : Loc.t) =
       let open Flow_ast.Statement.VariableDeclaration in
       let { declarations; comments; _ } = decl in
       Base.List.iter declarations ~f:(function
+          | ( _,
+              Declarator.
+                {
+                  id = (_, Flow_ast.Pattern.(Identifier Identifier.{ name = (loc, _); annot; _ }));
+                  _;
+                } )
+            when this#is_target loc || this#is_target (loc_of_annotation_or_hint annot) ->
+            find comments
           | ( _,
               Declarator.
                 { id = (_, Flow_ast.Pattern.(Identifier Identifier.{ name = (loc, _); _ })); _ } )
@@ -166,6 +189,14 @@ class documentation_searcher (def_loc : Loc.t) =
     method! enum_number_member member = this#enum_initialized_member member
 
     method! enum_string_member member = this#enum_initialized_member member
+
+    method! export_named_declaration loc decl =
+      let open Flow_ast.Statement.ExportNamedDeclaration in
+      let { declaration; comments; _ } = decl in
+      Base.Option.iter
+        declaration
+        ~f:Utils_js.(replace_comments_of_statement ~comments %> this#statement %> ignore);
+      super#export_named_declaration loc decl
   end
 
 let search def_loc ast =

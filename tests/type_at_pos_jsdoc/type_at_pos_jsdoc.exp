@@ -1014,8 +1014,8 @@ Flags: --strip-root --pretty
   "loc":{
     "source":"imports.js",
     "type":"SourceFile",
-    "start":{"line":5,"column":3,"offset":57},
-    "end":{"line":5,"column":5,"offset":60}
+    "start":{"line":5,"column":3,"offset":77},
+    "end":{"line":5,"column":5,"offset":80}
   },
   "path":"imports.js",
   "line":5,
@@ -1033,8 +1033,8 @@ Flags: --strip-root --pretty
   "loc":{
     "source":"imports.js",
     "type":"SourceFile",
-    "start":{"line":7,"column":3,"offset":69},
-    "end":{"line":7,"column":5,"offset":72}
+    "start":{"line":7,"column":3,"offset":89},
+    "end":{"line":7,"column":5,"offset":92}
   },
   "path":"imports.js",
   "line":7,
@@ -1052,14 +1052,71 @@ Flags: --strip-root --pretty
   "loc":{
     "source":"imports.js",
     "type":"SourceFile",
-    "start":{"line":9,"column":3,"offset":81},
-    "end":{"line":9,"column":5,"offset":84}
+    "start":{"line":9,"column":3,"offset":101},
+    "end":{"line":9,"column":5,"offset":104}
   },
   "path":"imports.js",
   "line":9,
   "endline":9,
   "start":3,
   "end":5
+}
+
+imports.js:11:4
+Flags: --strip-root --pretty
+{
+  "documentation":"alpha is a number",
+  "type":"number",
+  "reasons":[],
+  "loc":{
+    "source":"imports.js",
+    "type":"SourceFile",
+    "start":{"line":11,"column":3,"offset":113},
+    "end":{"line":11,"column":7,"offset":118}
+  },
+  "path":"imports.js",
+  "line":11,
+  "endline":11,
+  "start":3,
+  "end":7
+}
+
+imports.js:13:4
+Flags: --strip-root --pretty
+{
+  "documentation":"Beta is a class",
+  "type":"class Beta",
+  "reasons":[],
+  "loc":{
+    "source":"imports.js",
+    "type":"SourceFile",
+    "start":{"line":13,"column":3,"offset":126},
+    "end":{"line":13,"column":6,"offset":130}
+  },
+  "path":"imports.js",
+  "line":13,
+  "endline":13,
+  "start":3,
+  "end":6
+}
+
+imports.js:15:4
+Flags: --strip-root --pretty
+{
+  "documentation":"gamma is a function",
+  "type":"() => void",
+  "reasons":[],
+  "loc":{
+    "source":"imports.js",
+    "type":"SourceFile",
+    "start":{"line":15,"column":3,"offset":138},
+    "end":{"line":15,"column":7,"offset":143}
+  },
+  "path":"imports.js",
+  "line":15,
+  "endline":15,
+  "start":3,
+  "end":7
 }
 
 unrecognized_tags.js:14:4
