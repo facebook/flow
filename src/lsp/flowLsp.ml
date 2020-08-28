@@ -483,12 +483,12 @@ let do_initialize params : Initialize.result =
   let open Initialize in
   let codeActionProvider =
     (* currently the only code actions we provide are quickfixes which use CodeAction literals *)
-    match params.client_capabilities.textDocument.codeAction.codeActionLiteralSupport with
-    | Some { codeAction_valueSet }
-      when List.exists ~f:(( = ) CodeActionKind.quickfix) codeAction_valueSet ->
+    let supports_quickfixes =
+      Lsp_helpers.supports_codeActionKinds params |> List.exists ~f:(( = ) CodeActionKind.quickfix)
+    in
+    if supports_quickfixes then
       CodeActionOptions { codeActionKinds = [CodeActionKind.quickfix] }
-    | Some _
-    | None ->
+    else
       CodeActionBool false
   in
   {

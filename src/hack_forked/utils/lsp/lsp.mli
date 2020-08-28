@@ -205,6 +205,26 @@ module CodeActionKind : sig
   val source : t
 end
 
+module CodeActionClientCapabilities : sig
+  module CodeActionLiteralSupport : sig
+    type t = {
+      valueSet: CodeActionKind.t list;
+          (** The code action kind values the client supports. When this
+              property exists the client also guarantees that it will
+              handle values outside its set gracefully and falls back
+              to a default value when unknown. *)
+    }
+  end
+
+  type t = {
+    dynamicRegistration: bool;
+        (** Whether code action supports dynamic registration. (wire: dynamicRegistraction) *)
+    codeActionLiteralSupport: CodeActionLiteralSupport.t option;
+        (** The client support code action literals as a valid
+            response of the `textDocument/codeAction` request. *)
+  }
+end
+
 module SignatureHelpClientCapabilities : sig
   type t = {
     dynamicRegistration: bool;
@@ -267,7 +287,7 @@ module Initialize : sig
   and textDocumentClientCapabilities = {
     synchronization: synchronization;
     completion: completion;
-    codeAction: codeAction;
+    codeAction: CodeActionClientCapabilities.t;
     signatureHelp: SignatureHelpClientCapabilities.t;
   }
 
@@ -283,13 +303,6 @@ module Initialize : sig
     snippetSupport: bool;
     preselectSupport: bool;
   }
-
-  and codeAction = {
-    codeAction_dynamicRegistration: bool;
-    codeActionLiteralSupport: codeActionliteralSupport option;
-  }
-
-  and codeActionliteralSupport = { codeAction_valueSet: CodeActionKind.t list }
 
   and windowClientCapabilities = {
     status: bool;

@@ -265,6 +265,13 @@ let supports_progress (p : Lsp.Initialize.params) : bool =
 let supports_actionRequired (p : Lsp.Initialize.params) : bool =
   Lsp.Initialize.(p.client_capabilities.window.actionRequired)
 
+let supports_codeActionKinds (p : Lsp.Initialize.params) : CodeActionKind.t list =
+  let open Lsp.Initialize in
+  let open Lsp.CodeActionClientCapabilities in
+  match p.client_capabilities.textDocument.codeAction.codeActionLiteralSupport with
+  | Some { CodeActionLiteralSupport.valueSet } -> valueSet
+  | None -> []
+
 let supports_status (p : Lsp.Initialize.params) : bool =
   Lsp.Initialize.(p.client_capabilities.window.status)
 

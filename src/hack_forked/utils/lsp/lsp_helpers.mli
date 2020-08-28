@@ -69,6 +69,8 @@ val supports_progress : Lsp.Initialize.params -> bool
 
 val supports_actionRequired : Lsp.Initialize.params -> bool
 
+val supports_codeActionKinds : Lsp.Initialize.params -> Lsp.CodeActionKind.t list
+
 val supports_status : Lsp.Initialize.params -> bool
 
 val supports_snippets : Lsp.Initialize.params -> bool

@@ -955,6 +955,26 @@ let print_documentOnTypeFormatting (r : DocumentOnTypeFormatting.result) : json 
 (* initialize request                                                   *)
 (************************************************************************)
 
+module CodeActionClientCapabilitiesFmt = struct
+  open CodeActionClientCapabilities
+
+  module CodeActionLiteralSupportFmt = struct
+    open CodeActionLiteralSupport
+
+    let codeActionKind_of_json json =
+      Jget.array_opt json "valueSet" |> Base.Option.map ~f:(fun ls -> { valueSet = parse_kinds ls })
+
+    let of_json json = Jget.obj_opt json "codeActionKind" |> codeActionKind_of_json
+  end
+
+  let of_json json =
+    {
+      dynamicRegistration = Jget.bool_d json "dynamicRegistration" ~default:false;
+      codeActionLiteralSupport =
+        Jget.obj_opt json "codeActionLiteralSupport" |> CodeActionLiteralSupportFmt.of_json;
+    }
+end
+
 module SignatureHelpClientCapabilitiesFmt = struct
   open SignatureHelpClientCapabilities
 
@@ -1022,7 +1042,7 @@ let parse_initialize (params : json option) : Initialize.params =
       {
         synchronization = Jget.obj_opt json "synchronization" |> parse_synchronization;
         completion = Jget.obj_opt json "completion" |> parse_completion;
-        codeAction = Jget.obj_opt json "codeAction" |> parse_codeAction;
+        codeAction = Jget.obj_opt json "codeAction" |> CodeActionClientCapabilitiesFmt.of_json;
         signatureHelp =
           Jget.obj_opt json "signatureHelp" |> SignatureHelpClientCapabilitiesFmt.of_json;
       }
@@ -1039,17 +1059,6 @@ let parse_initialize (params : json option) : Initialize.params =
         snippetSupport = Jget.bool_d json "snippetSupport" ~default:false;
         preselectSupport = Jget.bool_d json "preselectSupport" ~default:false;
       }
-    and parse_codeAction json =
-      {
-        codeAction_dynamicRegistration = Jget.bool_d json "dynamicRegistration" ~default:false;
-        codeActionLiteralSupport =
-          Jget.obj_opt json "codeActionLiteralSupport" |> parse_codeActionLiteralSupport;
-      }
-    and parse_codeActionLiteralSupport json =
-      Jget.obj_opt json "codeActionKind" |> parse_codeActionKind
-    and parse_codeActionKind json =
-      Base.Option.(
-        Jget.array_opt json "valueSet" >>= fun ls -> Some { codeAction_valueSet = parse_kinds ls })
     and parse_window json =
       {
         status = Jget.obj_opt json "status" |> Base.Option.is_some;

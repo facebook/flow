@@ -313,6 +313,26 @@ module CancelRequest = struct
   and cancelParams = { id: lsp_id  (** the request id to cancel *) }
 end
 
+module CodeActionClientCapabilities = struct
+  module CodeActionLiteralSupport = struct
+    type t = {
+      valueSet: CodeActionKind.t list;
+          (** The code action kind values the client supports. When this
+              property exists the client also guarantees that it will
+              handle values outside its set gracefully and falls back
+              to a default value when unknown. *)
+    }
+  end
+
+  type t = {
+    dynamicRegistration: bool;
+        (** Whether code action supports dynamic registration. (wire: dynamicRegistraction) *)
+    codeActionLiteralSupport: CodeActionLiteralSupport.t option;
+        (** The client support code action literals as a valid
+            response of the `textDocument/codeAction` request. *)
+  }
+end
+
 module SignatureHelpClientCapabilities = struct
   type t = {
     dynamicRegistration: bool;
@@ -378,7 +398,7 @@ module Initialize = struct
   and textDocumentClientCapabilities = {
     synchronization: synchronization;
     completion: completion;  (** textDocument/completion *)
-    codeAction: codeAction;
+    codeAction: CodeActionClientCapabilities.t;
     (* omitted: dynamic-registration fields *)
     signatureHelp: SignatureHelpClientCapabilities.t;
   }
@@ -397,23 +417,6 @@ module Initialize = struct
   and completionItem = {
     snippetSupport: bool;  (** client can do snippets as insert text *)
     preselectSupport: bool;  (** client supports the preselect property *)
-  }
-
-  and codeAction = {
-    codeAction_dynamicRegistration: bool;
-        (** Whether code action supports dynamic registration. (wire: dynamicRegistraction) *)
-    codeActionLiteralSupport: codeActionliteralSupport option;
-        (** The client support code action literals as a valid
-            response of the `textDocument/codeAction` request. *)
-  }
-
-  and codeActionliteralSupport = {
-    codeAction_valueSet: CodeActionKind.t list;
-        (** The code action kind values the client supports. When this
-            property exists the client also guarantees that it will
-            handle values outside its set gracefully and falls back
-            to a default value when unknown.
-            (wire: valueSet) *)
   }
 
   and windowClientCapabilities = {
