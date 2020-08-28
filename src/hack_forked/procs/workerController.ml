@@ -335,15 +335,17 @@ let call w (f : 'a -> 'b) (x : 'a) : 'b Lwt.t =
   let ({ Daemon.pid = worker_pid; channels = (inc, outc) } as h) = spawn w in
   let infd = Daemon.descr_of_in_channel inc in
   let outfd = Daemon.descr_of_out_channel outc in
-  (let%lwt () = send w worker_pid outfd f x in
-   let%lwt (res, measure_data) = read worker_pid infd in
-   close w h;
-   Measure.merge (Measure.deserialize measure_data);
-   Lwt.return res)
-    [%lwt.finally
+  Lwt.finalize
+    (fun () ->
+      let%lwt () = send w worker_pid outfd f x in
+      let%lwt (res, measure_data) = read worker_pid infd in
+      close w h;
+      Measure.merge (Measure.deserialize measure_data);
+      Lwt.return res)
+    (fun () ->
       (* No matter what, always mark worker as free when we're done *)
       mark_free w;
-      Lwt.return_unit]
+      Lwt.return_unit)
 
 (**************************************************************************
  * Worker termination
