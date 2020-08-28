@@ -297,15 +297,12 @@ let infer_type
                   column
               in
               let%lwt (getdef_loc_result, get_def_json_props) =
-                if Options.jsdoc options then
-                  get_def_of_check_result
-                    ~options
-                    ~reader
-                    ~profiling
-                    ~check_result
-                    (file, line, column)
-                else
-                  Lwt.return (Error "", Some [("disabled", Hh_json.JSON_Bool true)])
+                get_def_of_check_result
+                  ~options
+                  ~reader
+                  ~profiling
+                  ~check_result
+                  (file, line, column)
               in
               let documentation =
                 match getdef_loc_result with
