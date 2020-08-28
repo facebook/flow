@@ -197,6 +197,18 @@ class documentation_searcher (def_loc : Loc.t) =
         declaration
         ~f:Utils_js.(replace_comments_of_statement ~comments %> this#statement %> ignore);
       super#export_named_declaration loc decl
+
+    method! export_default_declaration loc decl =
+      let open Flow_ast.Statement.ExportDefaultDeclaration in
+      let { declaration; comments; _ } = decl in
+      (let open Flow_ast.Expression in
+      match declaration with
+      | Declaration stmt ->
+        stmt |> replace_comments_of_statement ~comments |> this#statement |> ignore
+      | Expression (_, TypeCast TypeCast.{ annot = (_, (loc, _)); _ })
+      | Expression (loc, _) ->
+        if this#is_target loc then find comments);
+      super#export_default_declaration loc decl
   end
 
 let search def_loc ast =
