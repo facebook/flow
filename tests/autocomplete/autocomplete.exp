@@ -38,9 +38,9 @@ Flags: --pretty
   "result":[
     {"name":"@@iterator","type":"() => Iterator<string>"},
     {"name":"anchor","type":"(name: string) => string"},
-    {"name":"charAt","type":"(pos: number) => string"},
+    {"name":"charAt","type":"(index: number) => string"},
     {"name":"charCodeAt","type":"(index: number) => number"},
-    {"name":"codePointAt","type":"(index: number) => number"},
+    {"name":"codePointAt","type":"(index: number) => (number | void)"},
     {"name":"concat","type":"(...strings: Array<string>) => string"},
     {
       "name":"endsWith",
@@ -352,9 +352,9 @@ Flags: --pretty
   "result":[
     {"name":"@@iterator","type":"() => Iterator<string>"},
     {"name":"anchor","type":"(name: string) => string"},
-    {"name":"charAt","type":"(pos: number) => string"},
+    {"name":"charAt","type":"(index: number) => string"},
     {"name":"charCodeAt","type":"(index: number) => number"},
-    {"name":"codePointAt","type":"(index: number) => number"},
+    {"name":"codePointAt","type":"(index: number) => (number | void)"},
     {"name":"concat","type":"(...strings: Array<string>) => string"},
     {
       "name":"endsWith",
