@@ -205,15 +205,21 @@ let code_actions_at_loc ~reader ~options ~env ~profiling ~params ~file_key ~file
           |> Error_message.map_loc_of_error_message (Parsing_heaps_utils.loc_of_aloc ~reader)
         with
         | Error_message.EEnumInvalidMemberAccess { reason; suggestion = Some suggestion; _ } ->
-          let loc = Reason.loc_of_reason reason in
-          let original = reason |> Reason.desc_of_reason |> Reason.string_of_desc in
-          create_suggestion loc ~original ~suggestion :: actions
+          let error_loc = Reason.loc_of_reason reason in
+          if Loc.contains error_loc loc then
+            let original = reason |> Reason.desc_of_reason |> Reason.string_of_desc in
+            create_suggestion error_loc ~original ~suggestion :: actions
+          else
+            actions
         | error_message ->
           (match error_message |> Error_message.friendly_message_of_msg with
           | Error_message.PropMissing
-              { loc; suggestion = Some suggestion; prop = Some prop_name; _ } ->
-            let original = Printf.sprintf "`%s`" prop_name in
-            create_suggestion loc ~original ~suggestion :: actions
+              { loc = error_loc; suggestion = Some suggestion; prop = Some prop_name; _ } ->
+            if Loc.contains error_loc loc then
+              let original = Printf.sprintf "`%s`" prop_name in
+              create_suggestion error_loc ~original ~suggestion :: actions
+            else
+              actions
           | _ -> actions))
       errors
       []
