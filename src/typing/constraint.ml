@@ -64,8 +64,8 @@ and constraints =
 and bounds = {
   mutable lower: (Trace.t * Type.use_op) TypeMap.t;
   mutable upper: Trace.t UseTypeMap.t;
-  mutable lowertvars: Trace.t IMap.t;
-  mutable uppertvars: Trace.t IMap.t;
+  mutable lowertvars: (Trace.t * Type.use_op) IMap.t;
+  mutable uppertvars: (Trace.t * Type.use_op) IMap.t;
 }
 (** The bounds structure carries the evolving constraints on the solution of an
     unresolved tvar.

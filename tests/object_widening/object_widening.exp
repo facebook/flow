@@ -624,13 +624,14 @@ References:
                               ^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------ type_widening.js:183:28
+Error ------------------------------------------------------------------------------------------ type_widening.js:183:35
 
-Cannot call `spread` because string [1] is incompatible with number [2]. [incompatible-call]
+Cannot call `spread` with `indexer_err` bound to `x` because string [1] is incompatible with number [2].
+[incompatible-call]
 
-   type_widening.js:183:28
+   type_widening.js:183:35
    183| const indexer_err_spread = spread(indexer_err); // Error, string and number don't unify
-                                   ^^^^^^
+                                          ^^^^^^^^^^^
 
 References:
    type_widening.js:178:46
@@ -719,15 +720,15 @@ References:
                                   ^^^^^^^^^^^^^^^^^ [1]
 
 
-Error ------------------------------------------------------------------------------------------ type_widening.js:207:28
+Error ------------------------------------------------------------------------------------------ type_widening.js:207:42
 
-Cannot call `inexactSpread` because Flow cannot determine a type for object type [1]. object type [2] is inexact, so it
-may contain `bar` with a type that conflicts with `bar`'s definition in object type [1]. Try making object type [2]
-exact. [cannot-spread-inexact]
+Cannot call `inexactSpread` with `inexact` bound to `x` because Flow cannot determine a type for object type [1]. object
+type [2] is inexact, so it may contain `bar` with a type that conflicts with `bar`'s definition in object type [1]. Try
+making object type [2] exact. [cannot-spread-inexact]
 
-   type_widening.js:207:28
+   type_widening.js:207:42
    207| const inexact_spread_err = inexactSpread(inexact);
-                                   ^^^^^^^^^^^^^
+                                                 ^^^^^^^
 
 References:
    type_widening.js:206:42

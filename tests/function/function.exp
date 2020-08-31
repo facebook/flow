@@ -517,14 +517,14 @@ References:
                               ^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------- call_error_generic.js:23:5
+Error -------------------------------------------------------------------------------------- call_error_generic.js:18:15
 
-Cannot call `bar` with `foo` bound to `x` because null or undefined [1] is incompatible with string [2] in type argument
-`T` [3]. [incompatible-call]
+Cannot call `from` with `set` bound to `set` because null or undefined [1] is incompatible with string [2] in type
+argument `T` [3]. [incompatible-call]
 
-   call_error_generic.js:23:5
-   23| bar(foo);
-           ^^^
+   call_error_generic.js:18:15
+   18|   return from(set);
+                     ^^^
 
 References:
    call_error_generic.js:3:19
@@ -536,27 +536,27 @@ References:
    call_error_generic.js:21:25
    21| function bar(x: ROArray<string>) { }
                                ^^^^^^ [2]
-   call_error_generic.js:10:24
-   10| declare class ROArray<+T> { }
-                              ^ [3]
+   call_error_generic.js:7:19
+    7| declare class Set<T> {
+                         ^ [3]
 
 
-Error -------------------------------------------------------------------------------------- call_error_generic2.js:11:8
+Error --------------------------------------------------------------------------------------- call_error_generic2.js:6:8
 
-Cannot call `bar2` with `userRef` bound to `fragmentRef` because property `$data` is missing in object type [1] but
-exists in object type [2]. [prop-missing]
+Cannot call `bar1` with `fragmentRef` bound to `key` because property `$data` is missing in object type [1] but exists
+in object type [2]. [prop-missing]
 
-   call_error_generic2.js:11:8
-   11|   bar2(userRef);
-              ^^^^^^^
+   call_error_generic2.js:6:8
+   6|   bar1(fragmentRef);
+             ^^^^^^^^^^^
 
 References:
    call_error_generic2.js:9:33
-    9| function foo(props: { userRef?: {} }) {
-                                       ^^ [1]
+   9| function foo(props: { userRef?: {} }) {
+                                      ^^ [1]
    call_error_generic2.js:3:30
-    3| declare function bar1<TKey: ?{+$data?: mixed}>(key: TKey): void;
-                                    ^^^^^^^^^^^^^^^^ [2]
+   3| declare function bar1<TKey: ?{+$data?: mixed}>(key: TKey): void;
+                                   ^^^^^^^^^^^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------- function.js:21:3

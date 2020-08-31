@@ -917,15 +917,15 @@ struct
           (match (constraints1, constraints2) with
           | (Unresolved bounds1, Unresolved bounds2) ->
             if not_linked (id1, bounds1) (id2, bounds2) then (
-              add_upper_edges cx trace (id1, bounds1) (id2, bounds2);
-              add_lower_edges cx trace (id1, bounds1) (id2, bounds2);
+              add_upper_edges ~new_use_op:use_op cx trace (id1, bounds1) (id2, bounds2);
+              add_lower_edges cx trace ~new_use_op:use_op (id1, bounds1) (id2, bounds2);
               flows_across cx trace ~use_op bounds1.lower bounds2.upper
             )
           | (Unresolved bounds1, (Resolved (use_op', t2) | FullyResolved (use_op', t2))) ->
             let t2_use = flow_use_op cx use_op' (UseT (use_op, t2)) in
             edges_and_flows_to_t cx trace (id1, bounds1) t2_use
           | ((Resolved (_, t1) | FullyResolved (_, t1)), Unresolved bounds2) ->
-            edges_and_flows_from_t cx trace ~use_op t1 (id2, bounds2)
+            edges_and_flows_from_t cx trace ~new_use_op:use_op t1 (id2, bounds2)
           | ( (Resolved (_, t1) | FullyResolved (_, t1)),
               (Resolved (use_op', t2) | FullyResolved (use_op', t2)) ) ->
             let t2_use = flow_use_op cx use_op' (UseT (use_op, t2)) in
@@ -951,7 +951,8 @@ struct
         | (t1, UseT (use_op, OpenT (_, tvar))) ->
           let (id2, constraints2) = Context.find_constraints cx tvar in
           (match constraints2 with
-          | Unresolved bounds2 -> edges_and_flows_from_t cx trace ~use_op t1 (id2, bounds2)
+          | Unresolved bounds2 ->
+            edges_and_flows_from_t cx trace ~new_use_op:use_op t1 (id2, bounds2)
           | Resolved (use_op', t2)
           | FullyResolved (use_op', t2) ->
             let t2_use = flow_use_op cx use_op' (UseT (use_op, t2)) in
@@ -10466,7 +10467,7 @@ struct
   (*******************************************************************)
   (* /predicate *)
   (*******************************************************************)
-  and flow_use_op cx op1 u =
+  and pick_use_op cx op1 op2 =
     let ignore_root = function
       | UnknownUse -> true
       | Internal _ -> true
@@ -10480,65 +10481,65 @@ struct
       | _ -> false
     in
     if ignore_root (root_of_use_op op1) then
-      u
+      op2
     else
-      mod_use_op_of_use_t
-        (fun op2 ->
-          let root_of_op2 = root_of_use_op op2 in
-          let should_replace =
-            fold_use_op
-              (* If the root of the previous use_op is UnknownUse and our alternate
-               * use_op does not have an UnknownUse root then we use our
-               * alternate use_op. *)
-              ignore_root
-              (fun should_replace -> function
-                (* If the use was added to an implicit type param then we want to use
-                 * our alternate if the implicit type param use_op chain is inside
-                 * the implicit type param instantiation. Since we can't directly compare
-                 * abstract locations, we determine whether to do this using a heuristic
-                 * based on the 'locality' of the use_op root. *)
-                | ImplicitTypeParam when not should_replace ->
-                  (match root_of_op2 with
-                  | FunCall { local; _ }
-                  | FunCallMethod { local; _ } ->
-                    local
-                  | Addition _
-                  | AssignVar _
-                  | Coercion _
-                  | DeleteVar _
-                  | DeleteProperty _
-                  | FunImplicitReturn _
-                  | FunReturnStatement _
-                  | GetProperty _
-                  | SetProperty _
-                  | UpdateProperty _
-                  | JSXCreateElement _
-                  | ObjectSpread _
-                  | ObjectChain _
-                  | TypeApplication _
-                  | Speculation _
-                  | InitField _ ->
-                    true
-                  | Cast _
-                  | SwitchCheck _
-                  | ClassExtendsCheck _
-                  | ClassImplementsCheck _
-                  | ClassOwnProtoCheck _
-                  | GeneratorYield _
-                  | Internal _
-                  | ReactCreateElementCall _
-                  | ReactGetIntrinsic _
-                  | MatchingProp _
-                  | UnknownUse ->
-                    false)
-                | _ -> should_replace)
-              op2
-          in
-          if should_replace then
-            op1
-          else
-            op2)
-        u
+      let root_of_op2 = root_of_use_op op2 in
+      let should_replace =
+        fold_use_op
+          (* If the root of the previous use_op is UnknownUse and our alternate
+           * use_op does not have an UnknownUse root then we use our
+           * alternate use_op. *)
+          ignore_root
+          (fun should_replace -> function
+            (* If the use was added to an implicit type param then we want to use
+             * our alternate if the implicit type param use_op chain is inside
+             * the implicit type param instantiation. Since we can't directly compare
+             * abstract locations, we determine whether to do this using a heuristic
+             * based on the 'locality' of the use_op root. *)
+            | ImplicitTypeParam when not should_replace ->
+              (match root_of_op2 with
+              | FunCall { local; _ }
+              | FunCallMethod { local; _ } ->
+                local
+              | Addition _
+              | AssignVar _
+              | Coercion _
+              | DeleteVar _
+              | DeleteProperty _
+              | FunImplicitReturn _
+              | FunReturnStatement _
+              | GetProperty _
+              | SetProperty _
+              | UpdateProperty _
+              | JSXCreateElement _
+              | ObjectSpread _
+              | ObjectChain _
+              | TypeApplication _
+              | Speculation _
+              | InitField _ ->
+                true
+              | Cast _
+              | SwitchCheck _
+              | ClassExtendsCheck _
+              | ClassImplementsCheck _
+              | ClassOwnProtoCheck _
+              | GeneratorYield _
+              | Internal _
+              | ReactCreateElementCall _
+              | ReactGetIntrinsic _
+              | MatchingProp _
+              | UnknownUse ->
+                false)
+            | _ -> should_replace)
+          op2
+      in
+      if should_replace then
+        op1
+      else
+        op2
+
+  and flow_use_op cx op1 u =
+    mod_use_op_of_use_t (fun op2 -> pick_use_op cx op1 op2) u
     (***********************)
     (* bounds manipulation *)
     (***********************)
@@ -10580,10 +10581,10 @@ struct
            join_flow cx [trace_l; trace] (l, u))
 
   (* for each u in us: l => u *)
-  and flows_from_t cx trace ~use_op l us =
+  and flows_from_t cx trace ~new_use_op l us =
     us
     |> UseTypeMap.iter (fun u trace_u ->
-           let u = flow_use_op cx use_op u in
+           let u = flow_use_op cx new_use_op u in
            join_flow cx [trace; trace_u] (l, u))
 
   (* for each l in ls, u in us: l => u *)
@@ -10626,7 +10627,8 @@ struct
   and edges_to_t cx trace ?(opt = false) (id1, bounds1) t2 =
     let max = Context.max_trace_depth cx in
     if not opt then add_upper t2 trace bounds1;
-    iter_with_filter cx bounds1.lowertvars id1 (fun (_, bounds) trace_l ->
+    iter_with_filter cx bounds1.lowertvars id1 (fun (_, bounds) (trace_l, use_op) ->
+        let t2 = flow_use_op cx use_op t2 in
         add_upper t2 (Trace.concat_trace ~max [trace_l; trace]) bounds)
     (* for each id in id2 + bounds2.uppertvars:
    id.bounds.lower += t1
@@ -10635,29 +10637,32 @@ struct
 
   (** As an optimization, skip id2 when it will become either a resolved root or a
     goto node (so that updating its bounds is unnecessary). **)
-  and edges_from_t cx trace ~use_op ?(opt = false) t1 (id2, bounds2) =
+  and edges_from_t cx trace ~new_use_op ?(opt = false) t1 (id2, bounds2) =
     let max = Context.max_trace_depth cx in
-    if not opt then add_lower t1 (trace, use_op) bounds2;
-    iter_with_filter cx bounds2.uppertvars id2 (fun (_, bounds) trace_u ->
+    if not opt then add_lower t1 (trace, new_use_op) bounds2;
+    iter_with_filter cx bounds2.uppertvars id2 (fun (_, bounds) (trace_u, use_op) ->
+        let use_op = pick_use_op cx new_use_op use_op in
         add_lower t1 (Trace.concat_trace ~max [trace; trace_u], use_op) bounds)
 
   (* for each id' in id + bounds.lowertvars:
    id'.bounds.upper += us
 *)
-  and edges_to_ts cx trace ?(opt = false) (id, bounds) us =
+  and edges_to_ts ~new_use_op cx trace ?(opt = false) (id, bounds) us =
     let max = Context.max_trace_depth cx in
     us
     |> UseTypeMap.iter (fun u trace_u ->
+           let u = flow_use_op cx new_use_op u in
            edges_to_t cx (Trace.concat_trace ~max [trace; trace_u]) ~opt (id, bounds) u)
 
   (* for each id' in id + bounds.uppertvars:
    id'.bounds.lower += ls
 *)
-  and edges_from_ts cx trace ?(opt = false) ls (id, bounds) =
+  and edges_from_ts cx trace ~new_use_op ?(opt = false) ls (id, bounds) =
     let max = Context.max_trace_depth cx in
     ls
     |> TypeMap.iter (fun l (trace_l, use_op) ->
-           edges_from_t cx (Trace.concat_trace ~max [trace_l; trace]) ~use_op ~opt l (id, bounds))
+           let new_use_op = pick_use_op cx use_op new_use_op in
+           edges_from_t cx (Trace.concat_trace ~max [trace_l; trace]) ~new_use_op ~opt l (id, bounds))
     (* for each id in id1 + bounds1.lowertvars:
    id.bounds.upper += t2
    for each l in bounds1.lower: l => t2
@@ -10677,18 +10682,19 @@ struct
 
   (** As an invariant, bounds2.upper should already contain id.bounds.upper for
     each id in bounds2.uppertvars. **)
-  and edges_and_flows_from_t cx trace ~use_op ?(opt = false) t1 (id2, bounds2) =
+  and edges_and_flows_from_t cx trace ~new_use_op ?(opt = false) t1 (id2, bounds2) =
     if not (TypeMap.mem t1 bounds2.lower) then (
-      edges_from_t cx trace ~use_op ~opt t1 (id2, bounds2);
-      flows_from_t cx trace ~use_op t1 bounds2.upper
+      edges_from_t cx trace ~new_use_op ~opt t1 (id2, bounds2);
+      flows_from_t cx trace ~new_use_op t1 bounds2.upper
     )
 
   (* bounds.uppertvars += id *)
-  and add_uppertvar id trace bounds = bounds.uppertvars <- IMap.add id trace bounds.uppertvars
+  and add_uppertvar id trace use_op bounds =
+    bounds.uppertvars <- IMap.add id (trace, use_op) bounds.uppertvars
 
   (* bounds.lowertvars += id *)
-  and add_lowertvar id trace bounds =
-    bounds.lowertvars <- IMap.add id trace bounds.lowertvars
+  and add_lowertvar id trace use_op bounds =
+    bounds.lowertvars <- IMap.add id (trace, use_op) bounds.lowertvars
     (* for each id in id1 + bounds1.lowertvars:
    id.bounds.uppertvars += id2
 *)
@@ -10696,11 +10702,12 @@ struct
 
   (** As an optimization, skip id1 when it will become either a resolved root or a
     goto node (so that updating its bounds is unnecessary). **)
-  and edges_to_tvar cx trace ?(opt = false) (id1, bounds1) id2 =
+  and edges_to_tvar cx trace ~new_use_op ?(opt = false) (id1, bounds1) id2 =
     let max = Context.max_trace_depth cx in
-    if not opt then add_uppertvar id2 trace bounds1;
-    iter_with_filter cx bounds1.lowertvars id1 (fun (_, bounds) trace_l ->
-        add_uppertvar id2 (Trace.concat_trace ~max [trace_l; trace]) bounds)
+    if not opt then add_uppertvar id2 trace new_use_op bounds1;
+    iter_with_filter cx bounds1.lowertvars id1 (fun (_, bounds) (trace_l, use_op) ->
+        let use_op = pick_use_op cx use_op new_use_op in
+        add_uppertvar id2 (Trace.concat_trace ~max [trace_l; trace]) use_op bounds)
     (* for each id in id2 + bounds2.uppertvars:
    id.bounds.lowertvars += id1
 *)
@@ -10708,37 +10715,40 @@ struct
 
   (** As an optimization, skip id2 when it will become either a resolved root or a
     goto node (so that updating its bounds is unnecessary). **)
-  and edges_from_tvar cx trace ?(opt = false) id1 (id2, bounds2) =
+  and edges_from_tvar cx trace ~new_use_op ?(opt = false) id1 (id2, bounds2) =
     let max = Context.max_trace_depth cx in
-    if not opt then add_lowertvar id1 trace bounds2;
-    iter_with_filter cx bounds2.uppertvars id2 (fun (_, bounds) trace_u ->
-        add_lowertvar id1 (Trace.concat_trace ~max [trace; trace_u]) bounds)
+    if not opt then add_lowertvar id1 trace new_use_op bounds2;
+    iter_with_filter cx bounds2.uppertvars id2 (fun (_, bounds) (trace_u, use_op) ->
+        let use_op = pick_use_op cx new_use_op use_op in
+        add_lowertvar id1 (Trace.concat_trace ~max [trace; trace_u]) use_op bounds)
 
   (* for each id in id1 + bounds1.lowertvars:
    id.bounds.upper += bounds2.upper
    id.bounds.uppertvars += id2
    id.bounds.uppertvars += bounds2.uppertvars
 *)
-  and add_upper_edges cx trace ?(opt = false) (id1, bounds1) (id2, bounds2) =
+  and add_upper_edges ~new_use_op cx trace ?(opt = false) (id1, bounds1) (id2, bounds2) =
     let max = Context.max_trace_depth cx in
-    edges_to_ts cx trace ~opt (id1, bounds1) bounds2.upper;
-    edges_to_tvar cx trace ~opt (id1, bounds1) id2;
-    iter_with_filter cx bounds2.uppertvars id2 (fun (tvar, _) trace_u ->
+    edges_to_ts ~new_use_op cx trace ~opt (id1, bounds1) bounds2.upper;
+    edges_to_tvar cx trace ~new_use_op ~opt (id1, bounds1) id2;
+    iter_with_filter cx bounds2.uppertvars id2 (fun (tvar, _) (trace_u, use_op) ->
+        let new_use_op = pick_use_op cx new_use_op use_op in
         let trace = Trace.concat_trace ~max [trace; trace_u] in
-        edges_to_tvar cx trace ~opt (id1, bounds1) tvar)
+        edges_to_tvar cx trace ~new_use_op ~opt (id1, bounds1) tvar)
 
   (* for each id in id2 + bounds2.uppertvars:
    id.bounds.lower += bounds1.lower
    id.bounds.lowertvars += id1
    id.bounds.lowertvars += bounds1.lowertvars
 *)
-  and add_lower_edges cx trace ?(opt = false) (id1, bounds1) (id2, bounds2) =
+  and add_lower_edges cx trace ~new_use_op ?(opt = false) (id1, bounds1) (id2, bounds2) =
     let max = Context.max_trace_depth cx in
-    edges_from_ts cx trace ~opt bounds1.lower (id2, bounds2);
-    edges_from_tvar cx trace ~opt id1 (id2, bounds2);
-    iter_with_filter cx bounds1.lowertvars id1 (fun (tvar, _) trace_l ->
+    edges_from_ts cx trace ~new_use_op ~opt bounds1.lower (id2, bounds2);
+    edges_from_tvar cx trace ~new_use_op ~opt id1 (id2, bounds2);
+    iter_with_filter cx bounds1.lowertvars id1 (fun (tvar, _) (trace_l, use_op) ->
+        let use_op = pick_use_op cx use_op new_use_op in
         let trace = Trace.concat_trace ~max [trace_l; trace] in
-        edges_from_tvar cx trace ~opt tvar (id2, bounds2))
+        edges_from_tvar cx trace ~new_use_op:use_op ~opt tvar (id2, bounds2))
 
   (***************)
   (* unification *)
@@ -10758,23 +10768,29 @@ struct
       if cond1 then flows_across cx trace ~use_op bounds1.lower bounds2.upper;
       if cond2 then flows_across cx trace ~use_op:(unify_flip use_op) bounds2.lower bounds1.upper;
       if cond1 then (
-        add_upper_edges cx trace ~opt:true (id1, bounds1) (id2, bounds2);
-        add_lower_edges cx trace (id1, bounds1) (id2, bounds2)
+        add_upper_edges cx trace ~new_use_op:use_op ~opt:true (id1, bounds1) (id2, bounds2);
+        add_lower_edges cx trace ~new_use_op:use_op (id1, bounds1) (id2, bounds2)
       );
       if cond2 then (
-        add_upper_edges cx trace (id2, bounds2) (id1, bounds1);
-        add_lower_edges cx trace ~opt:true (id2, bounds2) (id1, bounds1)
+        add_upper_edges cx trace ~new_use_op:(unify_flip use_op) (id2, bounds2) (id1, bounds1);
+        add_lower_edges
+          cx
+          trace
+          ~new_use_op:(unify_flip use_op)
+          ~opt:true
+          (id2, bounds2)
+          (id1, bounds1)
       );
       Context.add_tvar cx id1 (Goto id2)
     | (Unresolved bounds1, (Resolved (_, t2) | FullyResolved (_, t2))) ->
       let t2_use = UseT (use_op, t2) in
       edges_and_flows_to_t cx trace ~opt:true (id1, bounds1) t2_use;
-      edges_and_flows_from_t cx trace ~use_op:(unify_flip use_op) ~opt:true t2 (id1, bounds1);
+      edges_and_flows_from_t cx trace ~new_use_op:(unify_flip use_op) ~opt:true t2 (id1, bounds1);
       Context.add_tvar cx id1 (Goto id2)
     | ((Resolved (_, t1) | FullyResolved (_, t1)), Unresolved bounds2) ->
       let t1_use = UseT (unify_flip use_op, t1) in
       edges_and_flows_to_t cx trace ~opt:true (id2, bounds2) t1_use;
-      edges_and_flows_from_t cx trace ~use_op ~opt:true t1 (id2, bounds2);
+      edges_and_flows_from_t cx trace ~new_use_op:use_op ~opt:true t1 (id2, bounds2);
       Context.add_tvar cx id2 (Goto id1)
     | ((Resolved (_, t1) | FullyResolved (_, t1)), (Resolved (_, t2) | FullyResolved (_, t2))) ->
       (* replace node first, in case rec_unify recurses back to these tvars *)
@@ -10810,7 +10826,7 @@ struct
       in
       Context.add_tvar cx id (Root { root with constraints });
       edges_and_flows_to_t cx trace ~opt:true (id, bounds) (UseT (use_op, t));
-      edges_and_flows_from_t cx trace ~use_op ~opt:true t (id, bounds)
+      edges_and_flows_from_t cx trace ~new_use_op:use_op ~opt:true t (id, bounds)
     | Resolved (_, t_)
     | FullyResolved (_, t_) ->
       rec_unify cx trace ~use_op t_ t
