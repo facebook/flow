@@ -1828,7 +1828,7 @@ class virtual ['a] t_with_uses =
         if t'' == t' then
           t
         else
-          MatchProp (use, t')
+          MatchProp (use, t'')
 
     method cont cx map_cx t =
       match t with
