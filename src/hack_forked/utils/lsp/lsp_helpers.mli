@@ -21,9 +21,9 @@ val progress_and_actionRequired_counter : int ref
 
 val url_scheme_regex : Str.regexp
 
-val lsp_uri_to_path : Lsp.documentUri -> string
+val lsp_uri_to_path : Lsp.DocumentUri.t -> string
 
-val path_to_lsp_uri : string -> default_path:string -> Lsp.documentUri
+val path_to_lsp_uri : string -> default_path:string -> Lsp.DocumentUri.t
 
 val lsp_textDocumentIdentifier_to_filename : Lsp.TextDocumentIdentifier.t -> string
 

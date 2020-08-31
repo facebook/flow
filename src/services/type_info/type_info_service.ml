@@ -146,7 +146,7 @@ let suggest ~options ~env ~profiling file_key file_content =
 let code_actions_at_loc ~reader ~options ~env ~profiling ~params ~file_key ~file_contents ~loc =
   let open Lsp in
   let CodeActionRequest.{ textDocument; range = _; context } = params in
-  let uri = TextDocumentIdentifier.(textDocument.uri) |> string_of_uri in
+  let uri = TextDocumentIdentifier.(textDocument.uri) |> DocumentUri.to_string in
   let autofix_exports_code_actions ~full_cx ~ast ~file_sig ~tolerable_errors ~typed_ast =
     let open Autofix_exports in
     let fixable_locs = set_of_fixable_signature_verification_locations tolerable_errors in

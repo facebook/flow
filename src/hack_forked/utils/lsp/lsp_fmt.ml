@@ -58,14 +58,17 @@ let print_range (range : range) : json =
 let print_location (location : Location.t) : json =
   Location.(
     JSON_Object
-      [("uri", JSON_String (string_of_uri location.uri)); ("range", print_range location.range)])
+      [
+        ("uri", JSON_String (DocumentUri.to_string location.uri));
+        ("range", print_range location.range);
+      ])
 
 let print_definition_location (definition_location : DefinitionLocation.t) : json =
   DefinitionLocation.(
     let location = definition_location.location in
     Jprint.object_opt
       [
-        ("uri", Some (JSON_String (string_of_uri location.Location.uri)));
+        ("uri", Some (JSON_String (DocumentUri.to_string location.Location.uri)));
         ("range", Some (print_range location.Location.range));
         ("title", Base.Option.map definition_location.title ~f:string_);
       ])
@@ -79,7 +82,7 @@ let parse_range_exn (json : json option) : range =
 let parse_location (j : json option) : Location.t =
   Location.
     {
-      uri = Jget.string_exn j "uri" |> uri_of_string;
+      uri = Jget.string_exn j "uri" |> DocumentUri.of_string;
       range = Jget.obj_exn j "range" |> parse_range_exn;
     }
 
@@ -90,16 +93,19 @@ let parse_range_opt (json : json option) : range option =
     Some (parse_range_exn json)
 
 let parse_textDocumentIdentifier (json : json option) : TextDocumentIdentifier.t =
-  TextDocumentIdentifier.{ uri = Jget.string_exn json "uri" |> uri_of_string }
+  TextDocumentIdentifier.{ uri = Jget.string_exn json "uri" |> DocumentUri.of_string }
 
 let parse_versionedTextDocumentIdentifier (json : json option) : VersionedTextDocumentIdentifier.t =
   VersionedTextDocumentIdentifier.
-    { uri = Jget.string_exn json "uri" |> uri_of_string; version = Jget.int_d json "version" 0 }
+    {
+      uri = Jget.string_exn json "uri" |> DocumentUri.of_string;
+      version = Jget.int_d json "version" 0;
+    }
 
 let parse_textDocumentItem (json : json option) : TextDocumentItem.t =
   TextDocumentItem.
     {
-      uri = Jget.string_exn json "uri" |> uri_of_string;
+      uri = Jget.string_exn json "uri" |> DocumentUri.of_string;
       languageId = Jget.string_d json "languageId" "";
       version = Jget.int_d json "version" 0;
       text = Jget.string_exn json "text";
@@ -109,7 +115,7 @@ let print_textDocumentItem (item : TextDocumentItem.t) : json =
   TextDocumentItem.(
     JSON_Object
       [
-        ("uri", JSON_String (string_of_uri item.uri));
+        ("uri", JSON_String (DocumentUri.to_string item.uri));
         ("languageId", JSON_String item.languageId);
         ("version", JSON_Number (string_of_int item.version));
         ("text", JSON_String item.text);
@@ -477,7 +483,7 @@ let print_diagnostics (r : PublishDiagnostics.params) : json =
   PublishDiagnostics.(
     JSON_Object
       [
-        ("uri", JSON_String (string_of_uri r.uri));
+        ("uri", JSON_String (DocumentUri.to_string r.uri));
         ("diagnostics", print_diagnostic_list r.diagnostics);
       ])
 
@@ -1007,7 +1013,7 @@ let parse_initialize (params : json option) : Initialize.params =
       {
         processId = Jget.int_opt json "processId";
         rootPath = Jget.string_opt json "rootPath";
-        rootUri = Base.Option.map ~f:uri_of_string (Jget.string_opt json "rootUri");
+        rootUri = Base.Option.map ~f:DocumentUri.of_string (Jget.string_opt json "rootUri");
         initializationOptions =
           Jget.obj_opt json "initializationOptions" |> parse_initializationOptions;
         client_capabilities = Jget.obj_opt json "capabilities" |> parse_capabilities;
@@ -1191,7 +1197,7 @@ let parse_didChangeWatchedFiles (json : Hh_json.json option) : DidChangeWatchedF
   let changes =
     Jget.array_exn json "changes"
     |> List.map ~f:(fun change ->
-           let uri = Jget.string_exn change "uri" |> uri_of_string in
+           let uri = Jget.string_exn change "uri" |> DocumentUri.of_string in
            let type_ = Jget.int_exn change "type" in
            let type_ =
              match DidChangeWatchedFiles.fileChangeType_of_enum type_ with

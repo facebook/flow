@@ -1467,7 +1467,9 @@ let handle_persistent_get_def ~reader ~options ~id ~params ~loc ~metadata ~clien
       let response = ResponseMessage (id, DefinitionResult []) in
       Lwt.return ((), LspProt.LspFromServer (Some response), metadata)
     | Ok loc ->
-      let default_uri = params.textDocument.TextDocumentIdentifier.uri |> Lsp.string_of_uri in
+      let default_uri =
+        params.textDocument.TextDocumentIdentifier.uri |> Lsp.DocumentUri.to_string
+      in
       let location = Flow_lsp_conversions.loc_to_lsp_with_default ~default_uri loc in
       let definition_location = { Lsp.DefinitionLocation.location; title = None } in
       let response = ResponseMessage (id, DefinitionResult [definition_location]) in
@@ -1507,7 +1509,7 @@ let handle_persistent_infer_type ~options ~reader ~id ~params ~loc ~metadata ~cl
   | Ok (ServerProt.Response.Infer_type_response { loc; ty; exact_by_default; documentation }) ->
     (* loc may be the 'none' location; content may be None. *)
     (* If both are none then we'll return null; otherwise we'll return a hover *)
-    let default_uri = params.textDocument.TextDocumentIdentifier.uri |> Lsp.string_of_uri in
+    let default_uri = params.textDocument.TextDocumentIdentifier.uri |> Lsp.DocumentUri.to_string in
     let location = Flow_lsp_conversions.loc_to_lsp_with_default ~default_uri loc in
     let range =
       if loc = Loc.none then
@@ -2024,13 +2026,13 @@ let handle_live_errors_request =
                    {
                      live_errors_failure_kind = Canceled_error_response;
                      live_errors_failure_reason = "Subsumed by a later request";
-                     live_errors_failure_uri = Lsp.uri_of_string uri;
+                     live_errors_failure_uri = Lsp.DocumentUri.of_string uri;
                    })),
             metadata )
       else
         (* This is the most recent live errors request we've received for this file. All the
          * older ones have already been responded to or canceled *)
-        let file_path = Lsp_helpers.lsp_uri_to_path (Lsp.uri_of_string uri) in
+        let file_path = Lsp_helpers.lsp_uri_to_path (Lsp.DocumentUri.of_string uri) in
         let%lwt ret =
           match Persistent_connection.get_file client file_path with
           | File_input.FileName _ ->
@@ -2045,7 +2047,7 @@ let handle_live_errors_request =
                          live_errors_failure_kind = Errored_error_response;
                          live_errors_failure_reason =
                            spf "Cannot get live errors for %s: File not open" file_path;
-                         live_errors_failure_uri = Lsp.uri_of_string uri;
+                         live_errors_failure_uri = Lsp.DocumentUri.of_string uri;
                        })),
                 metadata )
           | File_input.FileContent (_, content) ->
@@ -2077,7 +2079,7 @@ let handle_live_errors_request =
                      {
                        LspProt.live_errors;
                        live_warnings;
-                       live_errors_uri = uri |> Lsp.uri_of_string;
+                       live_errors_uri = uri |> Lsp.DocumentUri.of_string;
                      }),
                 metadata )
         in
@@ -2288,7 +2290,7 @@ let get_persistent_handler ~genv ~client_id ~request:(request, metadata) :
     (* We can reject unsupported stuff immediately *)
     Handle_persistent_immediately (handle_persistent_unsupported ?id ~unhandled ~metadata)
   | LiveErrorsRequest uri ->
-    let uri = Lsp.string_of_uri uri in
+    let uri = Lsp.DocumentUri.to_string uri in
     (* We can handle live errors even during a recheck *)
     mk_parallelizable_persistent ~options (handle_live_errors_request ~options ~uri ~metadata)
 

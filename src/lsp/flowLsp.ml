@@ -696,13 +696,15 @@ let track_to_server (state : state) (c : Lsp.lsp_message) : state * track_effect
     match (get_open_files state, c) with
     | (_, NotificationMessage (DidOpenNotification params)) ->
       let o_open_doc = params.DidOpen.textDocument in
-      let uri = params.DidOpen.textDocument.TextDocumentItem.uri |> Lsp.string_of_uri in
+      let uri = params.DidOpen.textDocument.TextDocumentItem.uri |> Lsp.DocumentUri.to_string in
       let state =
         update_open_file uri (Some { o_open_doc; o_ast = None; o_unsaved = false }) state
       in
       (state, Some uri)
     | (_, NotificationMessage (DidCloseNotification params)) ->
-      let uri = params.DidClose.textDocument.TextDocumentIdentifier.uri |> Lsp.string_of_uri in
+      let uri =
+        params.DidClose.textDocument.TextDocumentIdentifier.uri |> Lsp.DocumentUri.to_string
+      in
       let state =
         state
         |> update_open_file uri None
@@ -711,7 +713,7 @@ let track_to_server (state : state) (c : Lsp.lsp_message) : state * track_effect
       (state, None)
     | (Some open_files, NotificationMessage (DidChangeNotification params)) ->
       let uri = params.DidChange.textDocument.VersionedTextDocumentIdentifier.uri in
-      let uri_as_string = Lsp.string_of_uri uri in
+      let uri_as_string = Lsp.DocumentUri.to_string uri in
       let { o_open_doc; _ } = SMap.find uri_as_string open_files in
       let text = o_open_doc.TextDocumentItem.text in
       let text = Lsp_helpers.apply_changes_unsafe text params.DidChange.contentChanges in
@@ -744,7 +746,9 @@ let track_to_server (state : state) (c : Lsp.lsp_message) : state * track_effect
       in
       (state, Some uri_as_string)
     | (Some open_files, NotificationMessage (DidSaveNotification params)) ->
-      let uri = params.DidSave.textDocument.TextDocumentIdentifier.uri |> Lsp.string_of_uri in
+      let uri =
+        params.DidSave.textDocument.TextDocumentIdentifier.uri |> Lsp.DocumentUri.to_string
+      in
       let open_file = SMap.find uri open_files in
       let state = update_open_file uri (Some { open_file with o_unsaved = false }) state in
       (state, Some uri)
@@ -862,7 +866,7 @@ let error_to_lsp
     { Lsp.PublishDiagnostics.relatedLocation; relatedMessage }
   in
   let relatedInformation = List.map error.Errors.Lsp_output.relatedLocations ~f:related_to_lsp in
-  ( Lsp.string_of_uri uri,
+  ( Lsp.DocumentUri.to_string uri,
     {
       Lsp.PublishDiagnostics.range = location.Lsp.Location.range;
       severity;
@@ -955,7 +959,7 @@ let parse_and_cache flowconfig_name (state : state) (uri : string) :
     (state, o_ast)
   | None ->
     (* This is an unopened file, so we won't cache the results and won't return the errors *)
-    let fn = Lsp_helpers.lsp_uri_to_path (Lsp.uri_of_string uri) in
+    let fn = Lsp_helpers.lsp_uri_to_path (Lsp.DocumentUri.of_string uri) in
     let fn = Base.Option.value (Sys_utils.realpath fn) ~default:fn in
     let file = File_input.FileName fn in
     let (open_ast, _) = parse file in
@@ -966,7 +970,7 @@ let do_documentSymbol flowconfig_name (state : state) (id : lsp_id) (params : Do
   let uri = params.DocumentSymbol.textDocument.TextDocumentIdentifier.uri in
   (* It's not do_documentSymbol's job to set live parse errors, so we ignore them *)
   let (state, (ast, _live_parse_errors)) =
-    parse_and_cache flowconfig_name state (Lsp.string_of_uri uri)
+    parse_and_cache flowconfig_name state (Lsp.DocumentUri.to_string uri)
   in
   let result = Flow_lsp_conversions.flow_ast_to_lsp_symbols ~uri ast in
   let json =
@@ -1008,7 +1012,7 @@ module RagePrint = struct
   let string_of_open_file { o_open_doc; o_ast; o_unsaved } : string =
     Printf.sprintf
       "(uri=%s version=%d text=[%d bytes] ast=[%s] unsaved=%b)"
-      (Lsp.string_of_uri o_open_doc.TextDocumentItem.uri)
+      (Lsp.DocumentUri.to_string o_open_doc.TextDocumentItem.uri)
       o_open_doc.TextDocumentItem.version
       (String.length o_open_doc.TextDocumentItem.text)
       (Base.Option.value_map o_ast ~default:"absent" ~f:(fun _ -> "present"))
@@ -1346,7 +1350,7 @@ let do_live_diagnostics
       let metadata =
         { metadata with LspProt.interaction_tracking_id = Some (start_interaction ~trigger state) }
       in
-      send_to_server cenv (LspProt.LiveErrorsRequest (Lsp.uri_of_string uri)) metadata
+      send_to_server cenv (LspProt.LiveErrorsRequest (Lsp.DocumentUri.of_string uri)) metadata
     | _ -> ()
   in
   let interaction_id = start_interaction ~trigger state in
@@ -1999,7 +2003,7 @@ and main_handle_unsafe flowconfig_name (state : state) (event : event) :
             ( LiveErrorsResponse
                 (Ok { live_errors = errors; live_warnings = warnings; live_errors_uri = uri }),
               metadata )) ) ->
-    let uri = Lsp.string_of_uri uri in
+    let uri = Lsp.DocumentUri.to_string uri in
     let file_is_still_open =
       get_open_files state |> Base.Option.value_map ~default:false ~f:(SMap.mem uri)
     in
@@ -2066,7 +2070,7 @@ and main_handle_unsafe flowconfig_name (state : state) (event : event) :
         Hh_json.(
           JSON_Object
             [
-              ("uri", JSON_String (live_errors_failure_uri |> Lsp.string_of_uri));
+              ("uri", JSON_String (live_errors_failure_uri |> Lsp.DocumentUri.to_string));
               ("reason", JSON_String live_errors_failure_reason);
             ]
           |> json_to_string)
@@ -2098,7 +2102,7 @@ and main_handle_unsafe flowconfig_name (state : state) (event : event) :
         in
         SMap.iter
           (fun uri _ ->
-            send_to_server cenv (LspProt.LiveErrorsRequest (Lsp.uri_of_string uri)) metadata)
+            send_to_server cenv (LspProt.LiveErrorsRequest (Lsp.DocumentUri.of_string uri)) metadata)
           open_files);
 
     Ok (state, LogNotNeeded)
