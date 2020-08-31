@@ -1467,9 +1467,7 @@ let handle_persistent_get_def ~reader ~options ~id ~params ~loc ~metadata ~clien
       let response = ResponseMessage (id, DefinitionResult []) in
       Lwt.return ((), LspProt.LspFromServer (Some response), metadata)
     | Ok loc ->
-      let default_uri =
-        params.textDocument.TextDocumentIdentifier.uri |> Lsp.DocumentUri.to_string
-      in
+      let default_uri = params.textDocument.TextDocumentIdentifier.uri in
       let location = Flow_lsp_conversions.loc_to_lsp_with_default ~default_uri loc in
       let definition_location = { Lsp.DefinitionLocation.location; title = None } in
       let response = ResponseMessage (id, DefinitionResult [definition_location]) in
@@ -1509,7 +1507,7 @@ let handle_persistent_infer_type ~options ~reader ~id ~params ~loc ~metadata ~cl
   | Ok (ServerProt.Response.Infer_type_response { loc; ty; exact_by_default; documentation }) ->
     (* loc may be the 'none' location; content may be None. *)
     (* If both are none then we'll return null; otherwise we'll return a hover *)
-    let default_uri = params.textDocument.TextDocumentIdentifier.uri |> Lsp.DocumentUri.to_string in
+    let default_uri = params.textDocument.TextDocumentIdentifier.uri in
     let location = Flow_lsp_conversions.loc_to_lsp_with_default ~default_uri loc in
     let range =
       if loc = Loc.none then
@@ -1867,7 +1865,7 @@ let handle_persistent_rename ~reader ~genv ~id ~params ~metadata ~client ~profil
   let env = !env in
   let edits_to_response (edits : (Loc.t * string) list) =
     (* Extract the path from each edit and convert into a map from file to edits for that file *)
-    let file_to_edits : ((Loc.t * string) list SMap.t, string) result =
+    let file_to_edits : ((Loc.t * string) list UriMap.t, string) result =
       List.fold_left
         begin
           fun map edit ->
@@ -1875,18 +1873,18 @@ let handle_persistent_rename ~reader ~genv ~id ~params ~metadata ~client ~profil
           let (loc, _) = edit in
           let uri = Flow_lsp_conversions.file_key_to_uri Loc.(loc.source) in
           uri >>| fun uri ->
-          let lst = Base.Option.value ~default:[] (SMap.find_opt uri map) in
+          let lst = Base.Option.value ~default:[] (UriMap.find_opt uri map) in
           (* This reverses the list *)
-          SMap.add uri (edit :: lst) map
+          UriMap.add uri (edit :: lst) map
         end
-        (Ok SMap.empty)
+        (Ok UriMap.empty)
         edits
       (* Reverse the lists to restore the original order *)
-      >>| SMap.map List.rev
+      >>| UriMap.map List.rev
     in
     (* Convert all of the edits to LSP edits *)
-    let file_to_textedits : (TextEdit.t list SMap.t, string) result =
-      file_to_edits >>| SMap.map (Base.List.map ~f:Flow_lsp_conversions.flow_edit_to_textedit)
+    let file_to_textedits : (TextEdit.t list UriMap.t, string) result =
+      file_to_edits >>| UriMap.map (Base.List.map ~f:Flow_lsp_conversions.flow_edit_to_textedit)
     in
     let workspace_edit : (WorkspaceEdit.t, string) result =
       file_to_textedits >>| fun file_to_textedits -> { WorkspaceEdit.changes = file_to_textedits }

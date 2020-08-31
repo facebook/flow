@@ -157,7 +157,7 @@ end
    workspace. A workspace edit consists of a mapping from a URI to an
    array of TextEdits to be applied to the document with that URI. *)
 module WorkspaceEdit = struct
-  type t = { changes: TextEdit.t list SMap.t  (** holds changes to existing docs *) }
+  type t = { changes: TextEdit.t list UriMap.t  (** holds changes to existing docs *) }
 end
 
 (** An item to transfer a text document from the client to the server. The

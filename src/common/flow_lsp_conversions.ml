@@ -122,25 +122,25 @@ let flow_completion_to_lsp
         data = None;
       }))
 
-let file_key_to_uri (file_key_opt : File_key.t option) : (string, string) result =
+let file_key_to_uri (file_key_opt : File_key.t option) : (Lsp.DocumentUri.t, string) result =
   let ( >>| ) = Base.Result.( >>| ) in
   let ( >>= ) = Base.Result.( >>= ) in
   Base.Result.of_option file_key_opt ~error:"File_key is None"
   >>= File_key.to_path
   >>| File_url.create
+  >>| Lsp.DocumentUri.of_string
 
 let loc_to_lsp (loc : Loc.t) : (Lsp.Location.t, string) result =
   let ( >>| ) = Base.Result.( >>| ) in
-  file_key_to_uri loc.Loc.source >>| fun uri ->
-  { Lsp.Location.uri = Lsp.DocumentUri.of_string uri; range = loc_to_lsp_range loc }
+  file_key_to_uri loc.Loc.source >>| fun uri -> { Lsp.Location.uri; range = loc_to_lsp_range loc }
 
-let loc_to_lsp_with_default (loc : Loc.t) ~(default_uri : string) : Lsp.Location.t =
+let loc_to_lsp_with_default (loc : Loc.t) ~(default_uri : Lsp.DocumentUri.t) : Lsp.Location.t =
   let uri =
     match file_key_to_uri loc.Loc.source with
     | Ok uri -> uri
     | Error _ -> default_uri
   in
-  { Lsp.Location.uri = Lsp.DocumentUri.of_string uri; range = loc_to_lsp_range loc }
+  { Lsp.Location.uri; range = loc_to_lsp_range loc }
 
 let flow_edit_to_textedit (edit : Loc.t * string) : Lsp.TextEdit.t =
   let (loc, text) = edit in

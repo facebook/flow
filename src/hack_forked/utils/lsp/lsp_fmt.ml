@@ -151,11 +151,12 @@ let print_textEdit (edit : TextEdit.t) : json =
 let print_workspaceEdit (r : WorkspaceEdit.t) : json =
   WorkspaceEdit.(
     let print_workspace_edit_changes (uri, text_edits) =
-      (uri, JSON_Array (List.map ~f:print_textEdit text_edits))
+      (DocumentUri.to_string uri, JSON_Array (List.map ~f:print_textEdit text_edits))
     in
     JSON_Object
       [
-        ("changes", JSON_Object (List.map (SMap.elements r.changes) ~f:print_workspace_edit_changes));
+        ( "changes",
+          JSON_Object (List.map (UriMap.elements r.changes) ~f:print_workspace_edit_changes) );
       ])
 
 let print_command_name ~key name =

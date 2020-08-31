@@ -54,9 +54,9 @@ type per_file_errors = {
 }
 
 type t = {
-  dirty_files: SSet.t;
+  dirty_files: Lsp.UriSet.t;
   (* The set of files for which we must update the IDE *)
-  file_to_errors_map: per_file_errors SMap.t;
+  file_to_errors_map: per_file_errors Lsp.UriMap.t;
 }
 
 let empty_per_file_errors =
@@ -77,7 +77,7 @@ let file_has_no_errors = function
     true
   | _ -> false
 
-let empty = { dirty_files = SSet.empty; file_to_errors_map = SMap.empty }
+let empty = { dirty_files = Lsp.UriSet.empty; file_to_errors_map = Lsp.UriMap.empty }
 
 (* For the most part we don't sort errors, and leave it to the server and the IDE to figure that
  * out. The one exception is in limit_errors, to ensure consistent results *)
@@ -155,15 +155,14 @@ let have_errors_changed before after =
 
 (* We need to send the errors for this file. This is when we need to decide exactly which errors to
  * send. *)
-let send_errors_for_file state (send_json : Hh_json.json -> unit) uri =
+let send_errors_for_file state (send_json : Hh_json.json -> unit) (uri : Lsp.DocumentUri.t) =
   let (parse_errors, non_parse_errors) =
-    SMap.find_opt uri state.file_to_errors_map
+    Lsp.UriMap.find_opt uri state.file_to_errors_map
     |> Base.Option.value ~default:empty_per_file_errors
     |> choose_errors
   in
   let errors = parse_errors @ non_parse_errors in
   let diagnostics = limit_errors errors in
-  let uri = Lsp.DocumentUri.of_string uri in
   PublishDiagnosticsNotification { PublishDiagnostics.uri; diagnostics }
   |> Lsp_fmt.print_lsp_notification
   |> send_json
@@ -172,28 +171,29 @@ let send_errors_for_file state (send_json : Hh_json.json -> unit) uri =
  * to the client *)
 let send_all_errors send_json state =
   let dirty_files = state.dirty_files in
-  let state = { state with dirty_files = SSet.empty } in
-  SSet.iter (send_errors_for_file state send_json) dirty_files;
+  let state = { state with dirty_files = Lsp.UriSet.empty } in
+  Lsp.UriSet.iter (send_errors_for_file state send_json) dirty_files;
   state
 
 (* Helper function to modify the data for a specific file *)
-let modify_per_file_errors uri state f =
+let modify_per_file_errors (uri : Lsp.DocumentUri.t) state f =
   let old_per_file_errors =
-    SMap.find_opt uri state.file_to_errors_map |> Base.Option.value ~default:empty_per_file_errors
+    Lsp.UriMap.find_opt uri state.file_to_errors_map
+    |> Base.Option.value ~default:empty_per_file_errors
   in
   let new_per_file_errors = f old_per_file_errors in
   let dirty = have_errors_changed old_per_file_errors new_per_file_errors in
   (* To keep this data structure small, let's filter out files with no live or server errors *)
   let file_to_errors_map =
     if file_has_no_errors new_per_file_errors then
-      SMap.remove uri state.file_to_errors_map
+      Lsp.UriMap.remove uri state.file_to_errors_map
     else
-      SMap.add uri new_per_file_errors state.file_to_errors_map
+      Lsp.UriMap.add uri new_per_file_errors state.file_to_errors_map
   in
   {
     dirty_files =
       ( if dirty then
-        SSet.add uri state.dirty_files
+        Lsp.UriSet.add uri state.dirty_files
       else
         state.dirty_files );
     file_to_errors_map;
@@ -245,7 +245,7 @@ let append list_a list_b =
 (* During recheck we stream in errors from the server. These will replace finalized server errors
  * from a previous recheck or add to streamed server errors from this recheck *)
 let add_streamed_server_errors_and_send send_json uri_to_error_map state =
-  SMap.fold
+  Lsp.UriMap.fold
     (fun uri new_errors_unsplit state ->
       modify_server_errors uri new_errors_unsplit state (fun server_errors new_errors ->
           match server_errors with
@@ -269,7 +269,7 @@ let add_streamed_server_errors_and_send send_json uri_to_error_map state =
  * already had. *)
 let set_finalized_server_errors_and_send send_json uri_to_error_map state =
   let (state, files_with_new_errors) =
-    SMap.fold
+    Lsp.UriMap.fold
       (fun uri new_errors_unsplit (state, files_with_new_errors) ->
         let state =
           modify_server_errors uri new_errors_unsplit state (fun _ new_errors ->
@@ -277,17 +277,17 @@ let set_finalized_server_errors_and_send send_json uri_to_error_map state =
                * the previous recheck or the streamed errors *)
               Finalized new_errors)
         in
-        let files_with_new_errors = SSet.add uri files_with_new_errors in
+        let files_with_new_errors = Lsp.UriSet.add uri files_with_new_errors in
         (state, files_with_new_errors))
       uri_to_error_map
-      (state, SSet.empty)
+      (state, Lsp.UriSet.empty)
   in
   (* All the errors in uri_to_error_map have been added to state. But uri_to_error_map doesn't
    * include files which used to have >0 errors but now have 0 errors. So we need to go through
    * every file that used to have errors and clear them out *)
-  SMap.fold
+  Lsp.UriMap.fold
     (fun uri _ state ->
-      if SSet.mem uri files_with_new_errors then
+      if Lsp.UriSet.mem uri files_with_new_errors then
         state
       else
         modify_server_errors uri [] state (fun _ cleared_errors -> Finalized cleared_errors))
@@ -299,7 +299,7 @@ let set_finalized_server_errors_and_send send_json uri_to_error_map state =
  * TODO: Don't clear live parse errors. Those don't require the server, so we can still keep
  *       providing them *)
 let clear_all_errors_and_send send_json state =
-  SMap.fold
+  Lsp.UriMap.fold
     (fun uri _ state -> modify_per_file_errors uri state (fun _ -> empty_per_file_errors))
     state.file_to_errors_map
     state
@@ -308,7 +308,6 @@ let clear_all_errors_and_send send_json state =
 (* Basically a best-effort attempt to update the locations of errors after a didChange *)
 let update_errors_due_to_change_and_send send_json params state =
   let uri = params.DidChange.textDocument.VersionedTextDocumentIdentifier.uri in
-  let uri = Lsp.DocumentUri.to_string uri in
   modify_per_file_errors uri state (fun per_file_errors ->
       let { live_parse_errors; live_non_parse_errors; server_errors } = per_file_errors in
       let live_parse_errors =
