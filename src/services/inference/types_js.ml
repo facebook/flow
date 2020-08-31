@@ -2443,7 +2443,7 @@ let make_next_files ~libs ~file_options root =
 
     files |> Base.List.map ~f:(Files.filename_from_string ~options:file_options) |> Bucket.of_list
 
-let mk_init_env ~files ~unparsed ~dependency_info ~ordered_libs ~libs ~errors ~coverage =
+let mk_init_env ~files ~unparsed ~dependency_info ~ordered_libs ~libs ~errors =
   {
     ServerEnv.files;
     unparsed;
@@ -2452,7 +2452,7 @@ let mk_init_env ~files ~unparsed ~dependency_info ~ordered_libs ~libs ~errors ~c
     ordered_libs;
     libs;
     errors;
-    coverage;
+    coverage = FilenameMap.empty;
     collated_errors = ref None;
     connections = Persistent_connection.empty;
   }
@@ -2471,7 +2471,7 @@ let init_from_saved_state ~profiling ~workers ~saved_state ~updates options =
       ordered_non_flowlib_libs;
       local_errors;
       warnings;
-      coverage;
+      coverage = _;
       node_modules_containers;
       dependency_graph;
     } =
@@ -2611,7 +2611,6 @@ let init_from_saved_state ~profiling ~workers ~saved_state ~updates options =
         ~ordered_libs
         ~libs
         ~errors
-        ~coverage
     in
     Lwt.return (env, libs_ok)
   in
@@ -2680,8 +2679,6 @@ let init_from_scratch ~profiling ~workers options =
   in
   (* Parsing won't raise warnings *)
   let warnings = FilenameMap.empty in
-  (* Libdefs have no coverage *)
-  let coverage = FilenameMap.empty in
   assert (FilenameSet.is_empty unchanged);
 
   Hh_logger.info "Building package heap";
@@ -2728,14 +2725,7 @@ let init_from_scratch ~profiling ~workers options =
         Dep_service.calc_dependency_info ~options ~reader workers ~parsed)
   in
   let env =
-    mk_init_env
-      ~files:parsed
-      ~unparsed:unparsed_set
-      ~dependency_info
-      ~ordered_libs
-      ~libs
-      ~errors
-      ~coverage
+    mk_init_env ~files:parsed ~unparsed:unparsed_set ~dependency_info ~ordered_libs ~libs ~errors
   in
   Lwt.return (FilenameSet.empty, env, libs_ok)
 
