@@ -2471,7 +2471,6 @@ let init_from_saved_state ~profiling ~workers ~saved_state ~updates options =
       ordered_non_flowlib_libs;
       local_errors;
       warnings;
-      coverage = _;
       node_modules_containers;
       dependency_graph;
     } =

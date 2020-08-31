@@ -53,7 +53,6 @@ type saved_state_data = {
    *)
   local_errors: Flow_error.ErrorSet.t Utils_js.FilenameMap.t;
   warnings: Flow_error.ErrorSet.t Utils_js.FilenameMap.t;
-  coverage: Coverage_response.file_coverage Utils_js.FilenameMap.t;
   node_modules_containers: SSet.t SMap.t;
   dependency_graph: saved_state_dependency_graph;
 }
@@ -347,7 +346,6 @@ end = struct
         ordered_non_flowlib_libs;
         local_errors;
         warnings;
-        coverage = env.ServerEnv.coverage;
         node_modules_containers;
         dependency_graph;
       }
@@ -534,7 +532,6 @@ end = struct
       ordered_non_flowlib_libs;
       local_errors;
       warnings;
-      coverage;
       node_modules_containers;
       dependency_graph;
     } =
@@ -593,7 +590,6 @@ end = struct
         ordered_non_flowlib_libs;
         local_errors;
         warnings;
-        coverage;
         node_modules_containers;
         dependency_graph;
       }
