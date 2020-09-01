@@ -2044,7 +2044,7 @@ class virtual ['a] t_with_uses =
         let t2' = self#type_ cx map_cx t2 in
         let pred' = self#predicate cx map_cx pred in
         let not_pred' = self#predicate cx map_cx not_pred in
-        if t1' == t2 && t2' == t2 && pred' == pred && not_pred' == not_pred then
+        if t1' == t1 && t2' == t2 && pred' == pred && not_pred' == not_pred then
           t
         else
           PropExistsTest (b, s, r, t1', t2', (pred', not_pred'))
