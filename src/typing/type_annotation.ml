@@ -263,7 +263,7 @@ let rec convert cx tparams_map =
     let id_reason = mk_reason (RType name) id_loc in
     let qid_reason = mk_reason (RType (qualified_name qid)) qid_loc in
     let t_unapplied =
-      Tvar.mk_where cx qid_reason (fun t ->
+      Tvar.mk_no_wrap_where cx qid_reason (fun t ->
           let use_op = Op (GetProperty qid_reason) in
           Flow.flow cx (m, GetPropT (use_op, qid_reason, Named (id_reason, name), t)))
     in
@@ -586,7 +586,7 @@ let rec convert cx tparams_map =
               let desc = RModule value in
               let reason = mk_annot_reason desc loc in
               let remote_module_t =
-                Tvar.mk_where cx reason (fun tout ->
+                Tvar.mk_no_wrap_where cx reason (fun tout ->
                     Flow_js.lookup_builtin
                       cx
                       (internal_module_name value)
@@ -1143,7 +1143,7 @@ and convert_qualification ?(lookup_mode = ForType) cx reason_prefix =
     let reason = mk_reason desc loc in
     let id_reason = mk_reason desc id_loc in
     let t =
-      Tvar.mk_where cx reason (fun t ->
+      Tvar.mk_no_wrap_where cx reason (fun t ->
           let use_op = Op (GetProperty (mk_reason (RType (qualified_name qualified)) loc)) in
           Flow.flow cx (m, GetPropT (use_op, id_reason, Named (id_reason, name), t)))
     in

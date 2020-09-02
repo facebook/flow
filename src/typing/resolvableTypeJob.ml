@@ -324,5 +324,5 @@ and collect_of_use ?log_unresolved cx acc = function
         fct.call_args_tlist
     in
     collect_of_types ?log_unresolved cx acc (arg_types @ [fct.call_tout])
-  | GetPropT (_, _, _, t_out) -> collect_of_type ?log_unresolved cx acc t_out
+  | GetPropT (_, _, _, t_out) -> collect_of_type ?log_unresolved cx acc (OpenT t_out)
   | _ -> acc

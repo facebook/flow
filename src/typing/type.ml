@@ -166,7 +166,7 @@ module rec TypeTerm : sig
     (* types that should never appear in signatures *)
     | InternalT of internal_t
     (* upper bound trigger for type destructors *)
-    | TypeDestructorTriggerT of use_op * reason * (reason * bool) option * destructor * t
+    | TypeDestructorTriggerT of use_op * reason * (reason * bool) option * destructor * tvar
     (* Sigil representing functions that the type system is not expressive
        enough to annotate, so we customize their behavior internally. *)
     | CustomFunT of reason * custom_fun_kind
@@ -464,19 +464,19 @@ module rec TypeTerm : sig
      * fields when the InstanceT ~> SetPrivatePropT constraint is processsed *)
     | SetPrivatePropT of
         use_op * reason * string * set_mode * class_binding list * bool * t * t option
-    | GetPropT of use_op * reason * propref * t
+    | GetPropT of use_op * reason * propref * tvar
     (* For shapes *)
-    | MatchPropT of use_op * reason * propref * t
+    | MatchPropT of use_op * reason * propref * tvar
     (* The same comment on SetPrivatePropT applies here *)
-    | GetPrivatePropT of use_op * reason * string * class_binding list * bool * t
-    | TestPropT of reason * ident * propref * t
+    | GetPrivatePropT of use_op * reason * string * class_binding list * bool * tvar
+    | TestPropT of reason * ident * propref * tvar
     (* SetElemT has a `tout` parameter to serve as a trigger for ordering
        operations. We only need this in one place: object literal initialization.
        In particular, a computed property in the object initializer users SetElemT
        to initialize the property value, but in order to avoid race conditions we
        need to ensure that reads happen after writes. *)
     | SetElemT of use_op * reason * t * set_mode * t * t option (*tout *)
-    | GetElemT of use_op * reason * t * t
+    | GetElemT of use_op * reason * t * tvar
     | CallElemT of (* call *) reason * (* lookup *) reason * t * method_action
     | GetStaticsT of reason * t_out
     | GetProtoT of reason * t_out
@@ -763,7 +763,7 @@ module rec TypeTerm : sig
     (* Used to calculate a destructured binding. If annot is true, the lower
      * bound is an annotation (0->1), and t_out will be unified with the
      * destructured type. The caller should wrap the tvar with an AnnotT. *)
-    | DestructuringT of reason * destruct_kind * selector * t_out
+    | DestructuringT of reason * destruct_kind * selector * tvar
     | CreateObjWithComputedPropT of {
         reason: reason;
         value: t;
@@ -1078,7 +1078,7 @@ module rec TypeTerm : sig
     | ReadProp of {
         use_op: use_op;
         obj_t: t;
-        tout: t;
+        tout: tvar;
       }
     | WriteProp of {
         use_op: use_op;
@@ -1125,7 +1125,7 @@ module rec TypeTerm : sig
      to initialize the property value, but in order to avoid race conditions we
      need to ensure that reads happen after writes. *)
   and elem_action =
-    | ReadElem of t
+    | ReadElem of tvar
     | WriteElem of t * t option (* tout *) * set_mode
     | CallElem of reason * method_action
 
@@ -3345,13 +3345,13 @@ let apply_opt_action action t_out =
 let apply_opt_use opt_use t_out =
   match opt_use with
   | OptMethodT (op, r1, r2, ref, action, prop_tout) ->
-    MethodT (op, r1, r2, ref, apply_opt_action action t_out, prop_tout)
-  | OptCallT (u, r, f) -> CallT (u, r, apply_opt_funcalltype f t_out)
+    MethodT (op, r1, r2, ref, apply_opt_action action (OpenT t_out), prop_tout)
+  | OptCallT (u, r, f) -> CallT (u, r, apply_opt_funcalltype f (OpenT t_out))
   | OptGetPropT (u, r, p) -> GetPropT (u, r, p, t_out)
   | OptGetPrivatePropT (u, r, s, cbs, b) -> GetPrivatePropT (u, r, s, cbs, b, t_out)
   | OptTestPropT (r, i, p) -> TestPropT (r, i, p, t_out)
   | OptGetElemT (u, r, t) -> GetElemT (u, r, t, t_out)
-  | OptCallElemT (r1, r2, elt, call) -> CallElemT (r1, r2, elt, apply_opt_action call t_out)
+  | OptCallElemT (r1, r2, elt, call) -> CallElemT (r1, r2, elt, apply_opt_action call (OpenT t_out))
 
 let mk_enum_type ~loc ~trust enum =
   let { enum_name; _ } = enum in

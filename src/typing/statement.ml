@@ -159,6 +159,12 @@ class loc_mapper (typ : Type.t) =
 
 let snd_fst ((_, x), _) = x
 
+let inference_hook_tvar cx ploc =
+  let r = mk_annot_reason (AnyT.desc (Unsound InferenceHooks)) ploc in
+  let tvar = Tvar.mk_no_wrap cx r in
+  Flow.flow cx (OpenT (r, tvar), BecomeT (r, Unsoundness.at InferenceHooks ploc));
+  (r, tvar)
+
 let translate_identifier_or_literal_key t =
   let open Ast.Expression.Object in
   function
@@ -2568,7 +2574,7 @@ and export_statement cx loc ~default declaration_export_info specifiers source e
       let local_tvar =
         match source_module_tvar with
         | Some tvar ->
-          Tvar.mk_where cx reason (fun t ->
+          Tvar.mk_no_wrap_where cx reason (fun t ->
               Flow.flow cx (tvar, GetPropT (unknown_use, reason, Named (reason, local_name), t)))
         | None -> Env.var_ref ~lookup_mode cx local_name loc
       in
@@ -4357,10 +4363,10 @@ and optional_chain ~cond ~is_existence_check ?sentinel_refine cx ((loc, e) as ex
     let (subexpression_types, subexpression_asts) = subexpressions preds in
     let reason = get_reason chain_t in
     let chain_reason = mk_reason ROptionalChain loc in
-    let mem_t =
+    let mem_tvar =
       match test_hooks chain_t with
       | Some hit -> hit
-      | None -> Tvar.mk cx reason
+      | None -> (reason, Tvar.mk_no_wrap cx reason)
     in
     let voided_out =
       Tvar.mk_where cx reason (fun t ->
@@ -4371,14 +4377,14 @@ and optional_chain ~cond ~is_existence_check ?sentinel_refine cx ((loc, e) as ex
     Flow.flow
       cx
       ( chain_t,
-        OptionalChainT (chain_reason, lhs_reason, this_t, apply_opt_use opt_use mem_t, voided_out)
+        OptionalChainT (chain_reason, lhs_reason, this_t, apply_opt_use opt_use mem_tvar, voided_out)
       );
     let lhs_t =
       Tvar.mk_where cx reason (fun t ->
-          Flow.flow_t cx (mem_t, t);
+          Flow.flow_t cx (OpenT mem_tvar, t);
           Flow.flow_t cx (voided_out, t))
     in
-    (mem_t, Some voided_out, lhs_t, chain_t, object_ast, subexpression_asts, preds)
+    (OpenT mem_tvar, Some voided_out, lhs_t, chain_t, object_ast, subexpression_asts, preds)
   in
   let handle_continue_chain
       (chain_t, voided_t, object_ast, preds, _)
@@ -4399,7 +4405,7 @@ and optional_chain ~cond ~is_existence_check ?sentinel_refine cx ((loc, e) as ex
     let reason = get_reason chain_t in
     let res_t =
       match (test_hooks chain_t, refine ()) with
-      | (Some hit, _) -> hit
+      | (Some hit, _) -> OpenT hit
       | (None, Some refi) ->
         Base.Option.value_map
           ~f:(fun refinement_action -> refinement_action subexpression_types chain_t refi)
@@ -4432,7 +4438,7 @@ and optional_chain ~cond ~is_existence_check ?sentinel_refine cx ((loc, e) as ex
       let reason = get_reason obj_t in
       let lhs_t =
         match (test_hooks obj_t, refine ()) with
-        | (Some hit, _) -> hit
+        | (Some hit, _) -> OpenT hit
         | (None, Some refi) ->
           Base.Option.value_map
             ~f:(fun refinement_action -> refinement_action subexpression_types obj_t refi)
@@ -4559,7 +4565,7 @@ and optional_chain ~cond ~is_existence_check ?sentinel_refine cx ((loc, e) as ex
       let use_op = Op (GetProperty (mk_expression_reason ex)) in
       let get_opt_use tind _ _ = OptGetElemT (use_op, reason, tind) in
       let get_mem_t tind reason obj_t =
-        Tvar.mk_where cx reason (fun t ->
+        Tvar.mk_no_wrap_where cx reason (fun t ->
             let use = apply_opt_use (get_opt_use tind reason obj_t) t in
             Flow.flow cx (obj_t, use))
       in
@@ -4608,12 +4614,12 @@ and optional_chain ~cond ~is_existence_check ?sentinel_refine cx ((loc, e) as ex
       let opt_use = get_prop_opt_use ~cond expr_reason ~use_op (prop_reason, name) in
       let test_hooks obj_t =
         if Type_inference_hooks_js.dispatch_member_hook cx name ploc obj_t then
-          Some (Unsoundness.at InferenceHooks ploc)
+          Some (inference_hook_tvar cx ploc)
         else
           None
       in
       let get_mem_t () _ obj_t =
-        Tvar.mk_where cx expr_reason (fun t ->
+        Tvar.mk_no_wrap_where cx expr_reason (fun t ->
             let use = apply_opt_use opt_use t in
             Flow.flow cx (obj_t, use))
       in
@@ -4660,12 +4666,12 @@ and optional_chain ~cond ~is_existence_check ?sentinel_refine cx ((loc, e) as ex
       let opt_use = get_private_field_opt_use expr_reason ~use_op name in
       let test_hooks obj_t =
         if Type_inference_hooks_js.dispatch_member_hook cx name ploc obj_t then
-          Some (Unsoundness.at InferenceHooks ploc)
+          Some (inference_hook_tvar cx ploc)
         else
           None
       in
       let get_mem_t () _ obj_t =
-        Tvar.mk_where cx expr_reason (fun t ->
+        Tvar.mk_no_wrap_where cx expr_reason (fun t ->
             let use = apply_opt_use opt_use t in
             Flow.flow cx (obj_t, use))
       in
@@ -4745,7 +4751,7 @@ and optional_chain ~cond ~is_existence_check ?sentinel_refine cx ((loc, e) as ex
           in
           let test_hooks obj_t =
             if Type_inference_hooks_js.dispatch_member_hook cx name prop_loc obj_t then
-              Some (Unsoundness.at InferenceHooks prop_loc)
+              Some (inference_hook_tvar cx prop_loc)
             else
               None
           in
@@ -4769,7 +4775,7 @@ and optional_chain ~cond ~is_existence_check ?sentinel_refine cx ((loc, e) as ex
           in
           let get_mem_t argts reason obj_t =
             Type_inference_hooks_js.dispatch_call_hook cx name prop_loc obj_t;
-            Tvar.mk_where cx reason_call (fun t ->
+            Tvar.mk_no_wrap_where cx reason_call (fun t ->
                 let use = apply_opt_use (get_opt_use argts reason obj_t) t in
                 Flow.flow cx (obj_t, use))
           in
@@ -4824,7 +4830,7 @@ and optional_chain ~cond ~is_existence_check ?sentinel_refine cx ((loc, e) as ex
               elem_t
           in
           let get_mem_t arg_and_elem_ts reason obj_t =
-            Tvar.mk_where cx reason_call (fun t ->
+            Tvar.mk_no_wrap_where cx reason_call (fun t ->
                 let use = apply_opt_use (get_opt_use arg_and_elem_ts reason obj_t) t in
                 Flow.flow cx (obj_t, use);
                 Flow.flow_t cx (obj_t, prop_t))
@@ -4901,7 +4907,7 @@ and optional_chain ~cond ~is_existence_check ?sentinel_refine cx ((loc, e) as ex
       let get_opt_use argts reason _ = func_call_opt_use reason ~use_op targts argts in
       let get_reason lhs_t = mk_reason (RFunctionCall (desc_of_t lhs_t)) loc in
       let get_result argts reason f =
-        Tvar.mk_where cx reason (fun t ->
+        Tvar.mk_no_wrap_where cx reason (fun t ->
             let use = apply_opt_use (get_opt_use argts reason f) t in
             Flow.flow cx (f, use))
       in
@@ -5030,7 +5036,7 @@ and func_call_opt_use reason ~use_op ?(call_strict_arity = true) targts argts =
 
 and func_call cx reason ~use_op ?(call_strict_arity = true) func_t targts argts =
   let opt_use = func_call_opt_use reason ~use_op ~call_strict_arity targts argts in
-  Tvar.mk_where cx reason (fun t -> Flow.flow cx (func_t, apply_opt_use opt_use t))
+  Tvar.mk_no_wrap_where cx reason (fun t -> Flow.flow cx (func_t, apply_opt_use opt_use t))
 
 and method_call_opt_use
     opt_state
@@ -7039,7 +7045,7 @@ and predicates_of_condition cx ~cond e =
     let (((_, obj_t), _) as _object) = expression cx o in
     let reason = mk_reason (RCustom "`Array.isArray(...)`") callee_loc in
     let fn_t =
-      Tvar.mk_where cx reason (fun t ->
+      Tvar.mk_no_wrap_where cx reason (fun t ->
           let prop_reason = mk_reason (RProperty (Some "isArray")) prop_loc in
           let use_op = Op (GetProperty (mk_expression_reason e)) in
           Flow.flow cx (obj_t, GetPropT (use_op, reason, Named (prop_reason, "isArray"), t)))
@@ -7147,7 +7153,7 @@ and get_private_field_opt_use reason ~use_op name =
   OptGetPrivatePropT (use_op, reason, name, class_entries, false)
 
 and get_private_field cx reason ~use_op tobj name =
-  Tvar.mk_where cx reason (fun t ->
+  Tvar.mk_no_wrap_where cx reason (fun t ->
       let opt_use = get_private_field_opt_use reason ~use_op name in
       let get_prop_u = apply_opt_use opt_use t in
       Flow.flow cx (tobj, get_prop_u))
@@ -7167,7 +7173,7 @@ and get_prop_opt_use ~cond reason ~use_op (prop_reason, name) =
 
 and get_prop ~cond cx reason ~use_op tobj (prop_reason, name) =
   let opt_use = get_prop_opt_use ~cond reason ~use_op (prop_reason, name) in
-  Tvar.mk_where cx reason (fun t ->
+  Tvar.mk_no_wrap_where cx reason (fun t ->
       let get_prop_u = apply_opt_use opt_use t in
       Flow.flow cx (tobj, get_prop_u))
 

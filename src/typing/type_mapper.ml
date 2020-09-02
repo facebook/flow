@@ -208,7 +208,7 @@ class virtual ['a] t =
       | InternalT (ChoiceKitT _) -> t
       | TypeDestructorTriggerT (u, r, repos, d, x) ->
         let d' = self#destructor cx map_cx d in
-        let x' = self#type_ cx map_cx x in
+        let x' = self#tout cx map_cx x in
         if d == d' && x == x' then
           t
         else
@@ -264,6 +264,13 @@ class virtual ['a] t =
           t
         else
           UnionT (r, urep')
+
+    method private tout cx map_cx ((r, tvar) as t) =
+      let tvar' = self#tvar cx map_cx r tvar in
+      if tvar == tvar' then
+        t
+      else
+        (r, tvar')
 
     method virtual tvar : Context.t -> 'a -> Reason.t -> Constraint.ident -> Constraint.ident
 
@@ -862,20 +869,20 @@ class virtual ['a] t_with_uses =
           SetPrivatePropT (use_op, r, prop, mode, scopes', static, t'', prop_t')
       | GetPropT (use_op, r, prop, t') ->
         let prop' = self#prop_ref cx map_cx prop in
-        let t'' = self#type_ cx map_cx t' in
+        let t'' = self#tout cx map_cx t' in
         if prop' == prop && t'' == t' then
           t
         else
           GetPropT (use_op, r, prop', t'')
       | MatchPropT (use_op, r, prop, t') ->
         let prop' = self#prop_ref cx map_cx prop in
-        let t'' = self#type_ cx map_cx t' in
+        let t'' = self#tout cx map_cx t' in
         if prop' == prop && t'' == t' then
           t
         else
           MatchPropT (use_op, r, prop', t'')
       | GetPrivatePropT (use_op, r, prop, scopes, static, t') ->
-        let t'' = self#type_ cx map_cx t' in
+        let t'' = self#tout cx map_cx t' in
         let scopes' = ListUtils.ident_map (self#class_binding cx map_cx) scopes in
         if t'' == t' && scopes' == scopes then
           t
@@ -883,7 +890,7 @@ class virtual ['a] t_with_uses =
           GetPrivatePropT (use_op, r, prop, scopes', static, t'')
       | TestPropT (r, id, prop, t') ->
         let prop' = self#prop_ref cx map_cx prop in
-        let t'' = self#type_ cx map_cx t' in
+        let t'' = self#tout cx map_cx t' in
         if prop' == prop && t'' == t' then
           t
         else
@@ -898,7 +905,7 @@ class virtual ['a] t_with_uses =
           SetElemT (use_op, r, t1', m, t2', t3')
       | GetElemT (use_op, r, t1, t2) ->
         let t1' = self#type_ cx map_cx t1 in
-        let t2' = self#type_ cx map_cx t2 in
+        let t2' = self#tout cx map_cx t2 in
         if t1' == t1 && t2' == t2 then
           t
         else
@@ -1497,18 +1504,18 @@ class virtual ['a] t_with_uses =
           ModuleExportsAssignT (r, t'', t_out')
       | DestructuringT (r, k, s, t') ->
         let s' = self#selector cx map_cx s in
-        let t'' = self#type_ cx map_cx t' in
+        let t'' = self#tout cx map_cx t' in
         if s' == s && t'' == t' then
           t
         else
           DestructuringT (r, k, s', t'')
-      | CreateObjWithComputedPropT { reason; value; tout_tvar = (r, id) } ->
+      | CreateObjWithComputedPropT { reason; value; tout_tvar } ->
         let value' = self#type_ cx map_cx value in
-        let id' = self#tvar cx map_cx r id in
-        if value' == value && id' == id then
+        let tout_tvar' = self#tout cx map_cx tout_tvar in
+        if value' == value && tout_tvar' == tout_tvar then
           t
         else
-          CreateObjWithComputedPropT { reason; value = value'; tout_tvar = (r, id') }
+          CreateObjWithComputedPropT { reason; value = value'; tout_tvar = tout_tvar' }
       | ResolveUnionT { reason; resolved; unresolved; upper; id } ->
         let resolved' = ListUtils.ident_map (self#type_ cx map_cx) resolved in
         let unresolved' = ListUtils.ident_map (self#type_ cx map_cx) unresolved in
@@ -1600,7 +1607,7 @@ class virtual ['a] t_with_uses =
     method elem_action cx map_cx t =
       match t with
       | ReadElem t' ->
-        let t'' = self#type_ cx map_cx t' in
+        let t'' = self#tout cx map_cx t' in
         if t'' == t' then
           t
         else
@@ -1796,13 +1803,13 @@ class virtual ['a] t_with_uses =
 
     method lookup_action cx map_cx t =
       match t with
-      | ReadProp { use_op; obj_t; tout } ->
+      | ReadProp { use_op; obj_t; tout = tvar } ->
         let obj_t' = self#type_ cx map_cx obj_t in
-        let tout' = self#type_ cx map_cx tout in
-        if obj_t' == obj_t && tout' == tout then
+        let tvar' = self#tout cx map_cx tvar in
+        if obj_t' == obj_t && tvar' == tvar then
           t
         else
-          ReadProp { use_op; obj_t = obj_t'; tout = tout' }
+          ReadProp { use_op; obj_t = obj_t'; tout = tvar' }
       | WriteProp { use_op; obj_t; prop_tout; tin; write_ctx; mode } ->
         let obj_t' = self#type_ cx map_cx obj_t in
         let tin' = self#type_ cx map_cx tin in

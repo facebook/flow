@@ -25,9 +25,9 @@ class ['a] t =
       | OpenT (r, id) -> self#tvar cx pole acc r id
       | DefT (_, _, t) -> self#def_type cx pole acc t
       | InternalT (ChoiceKitT (_, Trigger)) -> acc
-      | TypeDestructorTriggerT (_, _, _, d, t) ->
+      | TypeDestructorTriggerT (_, _, _, d, tout) ->
         let acc = self#destructor cx acc d in
-        let acc = self#type_ cx pole acc t in
+        let acc = self#tout cx pole acc tout in
         acc
       | FunProtoT _
       | FunProtoApplyT _
@@ -255,7 +255,7 @@ class ['a] t =
       | MatchPropT (_, _, p, t)
       | TestPropT (_, _, p, t) ->
         let acc = self#propref cx acc p in
-        let acc = self#type_ cx pole_TODO acc t in
+        let acc = self#tout cx pole_TODO acc t in
         acc
       | SetPrivatePropT (_, _, _, _, scopes, _, t, prop_t) ->
         let acc = List.fold_left (self#class_binding cx) acc scopes in
@@ -264,7 +264,7 @@ class ['a] t =
         acc
       | GetPrivatePropT (_, _, _, scopes, _, t) ->
         let acc = List.fold_left (self#class_binding cx) acc scopes in
-        let acc = self#type_ cx pole_TODO acc t in
+        let acc = self#tout cx pole_TODO acc t in
         acc
       | SetElemT (_, _, e, _, tin, tout) ->
         let acc = self#type_ cx pole_TODO acc e in
@@ -273,7 +273,7 @@ class ['a] t =
         acc
       | GetElemT (_, _, e, t) ->
         let acc = self#type_ cx pole_TODO acc e in
-        let acc = self#type_ cx pole_TODO acc t in
+        let acc = self#tout cx pole_TODO acc t in
         acc
       | CallElemT (_, _, t, fn) ->
         let acc = self#type_ cx pole_TODO acc t in
@@ -632,11 +632,11 @@ class ['a] t =
           acc)
       | DestructuringT (_, _, s, tout) ->
         let acc = self#selector cx acc s in
-        let acc = self#type_ cx pole_TODO acc tout in
+        let acc = self#tout cx pole_TODO acc tout in
         acc
-      | CreateObjWithComputedPropT { reason = _; value; tout_tvar = (r, id) } ->
+      | CreateObjWithComputedPropT { reason = _; value; tout_tvar } ->
         let acc = self#type_ cx pole_TODO acc value in
-        let acc = self#tvar cx pole_TODO acc r id in
+        let acc = self#tout cx pole_TODO acc tout_tvar in
         acc
       | ModuleExportsAssignT (_, t, tout) ->
         let acc = self#type_ cx pole_TODO acc t in
@@ -647,6 +647,8 @@ class ['a] t =
         let acc = List.fold_left (self#type_ cx pole_TODO) acc unresolved in
         let acc = self#use_type_ cx acc upper in
         acc
+
+    method private tout cx pole acc (r, id) = self#tvar cx pole acc r id
 
     (* The default behavior here could be fleshed out a bit, to look up the graph,
      handle Resolved and Unresolved cases, etc. *)
@@ -834,9 +836,9 @@ class ['a] t =
 
     method private lookup_action cx acc =
       function
-      | ReadProp { use_op = _; obj_t = t1; tout = t2 } ->
+      | ReadProp { use_op = _; obj_t = t1; tout } ->
         let acc = self#type_ cx pole_TODO acc t1 in
-        let acc = self#type_ cx pole_TODO acc t2 in
+        let acc = self#tout cx pole_TODO acc tout in
         acc
       | WriteProp { use_op = _; obj_t; prop_tout; tin; write_ctx = _; mode = _ } ->
         let acc = self#type_ cx pole_TODO acc obj_t in
@@ -850,7 +852,7 @@ class ['a] t =
 
     method private elem_action cx acc =
       function
-      | ReadElem t -> self#type_ cx pole_TODO acc t
+      | ReadElem tout -> self#tout cx pole_TODO acc tout
       | WriteElem (tin, tout, _) ->
         let acc = self#type_ cx pole_TODO acc tin in
         let acc = self#opt (self#type_ cx pole_TODO) acc tout in

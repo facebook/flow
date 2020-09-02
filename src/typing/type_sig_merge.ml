@@ -165,13 +165,13 @@ let eval file loc t = function
     let reason = Reason.(mk_reason (RProperty (Some name)) loc) in
     (* TODO: use_op *)
     let use_op = Type.unknown_use in
-    Tvar.mk_where file.cx reason (fun tout ->
+    Tvar.mk_no_wrap_where file.cx reason (fun tout ->
         Flow_js.flow file.cx (t, Type.GetPropT (use_op, reason, Type.Named (reason, name), tout)))
   | GetElem index ->
     let reason = Reason.(mk_reason (RProperty None) loc) in
     (* TODO: use_op *)
     let use_op = Type.unknown_use in
-    Tvar.mk_where file.cx reason (fun tout ->
+    Tvar.mk_no_wrap_where file.cx reason (fun tout ->
         Flow_js.flow file.cx (t, Type.GetElemT (use_op, reason, index, tout)))
 
 let async_void_return file loc =
@@ -278,7 +278,7 @@ and merge_pattern component file = function
     let reason = Reason.(mk_reason (RProperty (Some name)) id_loc) in
     (* TODO: use_op *)
     let use_op = Type.unknown_use in
-    Tvar.mk_where file.cx reason (fun tout ->
+    Tvar.mk_no_wrap_where file.cx reason (fun tout ->
         Flow_js.flow file.cx (t, Type.GetPropT (use_op, reason, Type.Named (reason, name), tout)))
   | Pack.ComputedP { elem; def } ->
     let elem = Pattern_defs.get file.pattern_defs elem in
@@ -289,7 +289,7 @@ and merge_pattern component file = function
     let reason = Reason.(mk_reason (RProperty None) loc) in
     (* TODO: use_op *)
     let use_op = Type.unknown_use in
-    Tvar.mk_where file.cx reason (fun tout ->
+    Tvar.mk_no_wrap_where file.cx reason (fun tout ->
         Flow_js.flow file.cx (t, Type.GetElemT (use_op, reason, elem, tout)))
   | Pack.UnsupportedLiteralP loc -> Type.(AnyT.at (AnyError None) loc)
   | Pack.ObjRestP { loc; xs; def } ->
@@ -308,7 +308,7 @@ and merge_pattern component file = function
     in
     (* TODO: use_op *)
     let use_op = Type.unknown_use in
-    Tvar.mk_where file.cx reason (fun tout ->
+    Tvar.mk_no_wrap_where file.cx reason (fun tout ->
         Flow_js.flow file.cx (t, Type.GetElemT (use_op, reason, i, tout)))
   | Pack.ArrRestP { loc; i; def } ->
     let def = Patterns.get file.patterns def in
@@ -367,7 +367,7 @@ and merge_dep =
   let builtin_module file loc ref name =
     let reason = Reason.(mk_reason (RCustom ref) loc) in
     let m_name = Reason.internal_module_name name in
-    Tvar.mk_where file.cx reason (fun tout ->
+    Tvar.mk_no_wrap_where file.cx reason (fun tout ->
         Flow_js.lookup_builtin file.cx m_name reason (Type.Strict reason) tout)
   in
   let unknown_module loc ref =
@@ -377,8 +377,8 @@ and merge_dep =
   let legacy_unchecked_module file loc ref name =
     let reason = Reason.(mk_reason (RCustom ref) loc) in
     let m_name = Reason.internal_module_name name in
-    Tvar.mk_where file.cx reason (fun tout ->
-        let strict = Type.(NonstrictReturning (Some (AnyT (reason, Untyped), tout), None)) in
+    Tvar.mk_no_wrap_where file.cx reason (fun tout ->
+        let strict = Type.(NonstrictReturning (Some (AnyT (reason, Untyped), OpenT tout), None)) in
         Flow_js.lookup_builtin file.cx m_name reason strict tout)
   in
   fun component file loc -> function
@@ -440,7 +440,7 @@ and merge_tyref component file f = function
       let reason_op = Reason.(mk_reason (RProperty (Some name)) loc) in
       let id_reason = Reason.(mk_reason (RProperty (Some name)) id_loc) in
       let t =
-        Tvar.mk_where file.cx reason_op (fun tout ->
+        Tvar.mk_no_wrap_where file.cx reason_op (fun tout ->
             Flow_js.flow
               file.cx
               (t, Type.(GetPropT (use_op, reason_op, Named (id_reason, name), tout))))
@@ -669,7 +669,7 @@ and merge_annot component file = function
     let reason = Reason.(mk_annot_reason (RModule ref) loc) in
     let m_name = Reason.internal_module_name ref in
     let module_t =
-      Tvar.mk_where file.cx reason (fun tout ->
+      Tvar.mk_no_wrap_where file.cx reason (fun tout ->
           Flow_js.lookup_builtin file.cx m_name reason (Type.Strict reason) tout)
     in
     Tvar.mk_where file.cx reason (fun tout ->

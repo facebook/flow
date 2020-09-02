@@ -318,8 +318,10 @@ let rec dump_t_ (depth, tvars) cx t =
     | InternalT (ExtendsT (_, l, u)) -> p ~extra:(spf "%s, %s" (kid l) (kid u)) t
     | CustomFunT (_, kind) -> p ~extra:(custom_fun kind) t
     | InternalT (ChoiceKitT _) -> p t
-    | TypeDestructorTriggerT (_, _, _, s, x) ->
-      p ~extra:(spf "%s on upper, %s" (string_of_destructor s) (kid x)) t
+    | TypeDestructorTriggerT (_, _, _, s, (r, x)) ->
+      p
+        ~extra:(spf "%s on upper, (%s, %s)" (string_of_destructor s) (string_of_reason r) (tvar x))
+        t
     | OpenPredT { base_t = arg; m_pos = p_pos; m_neg = p_neg; reason = _ } ->
       p
         t
@@ -393,11 +395,12 @@ and dump_use_t_ (depth, tvars) cx t =
         (String.concat "; " (Nel.to_list ids |> Base.List.map ~f:Properties.string_of_id))
   in
   let lookup_action = function
-    | ReadProp { tout; _ } -> spf "Read %s" (kid tout)
+    | ReadProp { tout = (reason, tout); _ } ->
+      spf "Read (%s, %s)" (string_of_reason reason) (tvar tout)
     | WriteProp { tin; _ } -> spf "Write %s" (kid tin)
     | LookupProp (op, p) -> spf "Lookup (%s, %s)" (string_of_use_op op) (prop p)
     | SuperProp (_, p) -> spf "Super %s" (prop p)
-    | MatchProp (_, t) -> spf "Match %s" (kid t)
+    | MatchProp (_, tin) -> spf "Match %s" (kid tin)
   in
   let specialize_cache = function
     | None -> "None"
@@ -674,13 +677,23 @@ and dump_use_t_ (depth, tvars) cx t =
     | ExportTypeT _ -> p t
     | FunImplicitVoidReturnT _ -> p t
     | AssertExportIsTypeT _ -> p t
-    | GetElemT (_, _, ix, etype) -> p ~extra:(spf "%s, %s" (kid ix) (kid etype)) t
+    | GetElemT (_, _, ix, (preason, ptvar)) ->
+      p ~extra:(spf "%s, (%s, %s)" (kid ix) (string_of_reason preason) (tvar ptvar)) t
     | GetKeysT _ -> p t
     | GetValuesT _ -> p t
-    | MatchPropT (use_op, _, prop, ptype)
-    | GetPropT (use_op, _, prop, ptype) ->
-      p ~extra:(spf "%s, (%s), %s" (string_of_use_op use_op) (propref prop) (kid ptype)) t
-    | GetPrivatePropT (_, _, prop, _, _, ptype) -> p ~extra:(spf "(%s), %s" prop (kid ptype)) t
+    | MatchPropT (use_op, _, prop, (preason, ptvar))
+    | GetPropT (use_op, _, prop, (preason, ptvar)) ->
+      p
+        ~extra:
+          (spf
+             "%s, (%s), (%s, %s)"
+             (string_of_use_op use_op)
+             (propref prop)
+             (string_of_reason preason)
+             (tvar ptvar))
+        t
+    | GetPrivatePropT (_, _, prop, _, _, (preason, ptvar)) ->
+      p ~extra:(spf "(%s), (%s, %s)" prop (string_of_reason preason) (tvar ptvar)) t
     | GetProtoT (_, arg) -> p ~extra:(kid arg) t
     | GetStaticsT (_, arg) -> p ~extra:(kid arg) t
     | GuardT (pred, result, sink) ->
@@ -793,7 +806,8 @@ and dump_use_t_ (depth, tvars) cx t =
         ~extra:
           (spf "%s, %s, %s" (string_of_use_op use_op) (object_kit resolve_tool tool) (kid tout))
         t
-    | TestPropT (_, _, prop, ptype) -> p ~extra:(spf "(%s), %s" (propref prop) (kid ptype)) t
+    | TestPropT (_, _, prop, (preason, ptvar)) ->
+      p ~extra:(spf "(%s), (%s, %s)" (propref prop) (string_of_reason preason) (tvar ptvar)) t
     | ThisSpecializeT (_, this, _) -> p ~extra:(spf "%s" (kid this)) t
     | ToStringT (_, arg) -> p ~extra:(use_kid arg) t
     | UnaryMinusT _ -> p t
@@ -833,8 +847,16 @@ and dump_use_t_ (depth, tvars) cx t =
         ~extra:
           (spf "[%s], %s, %s" (String.concat "; " (Base.List.map ~f:kid nexts)) (kid l) (kid u))
         t
-    | DestructuringT (_, k, s, tout) ->
-      p t ~extra:(spf "%s, %s, %s" (string_of_destruct_kind k) (string_of_selector s) (kid tout))
+    | DestructuringT (_, k, s, (r, tout)) ->
+      p
+        t
+        ~extra:
+          (spf
+             "%s, %s, (%s, %s)"
+             (string_of_destruct_kind k)
+             (string_of_selector s)
+             (string_of_reason r)
+             (tvar tout))
     | CreateObjWithComputedPropT { reason = _; value; tout_tvar } ->
       p t ~extra:(spf "%s %s" (kid value) (kid (OpenT tout_tvar)))
     | ResolveUnionT { resolved; unresolved; upper; id; _ } ->

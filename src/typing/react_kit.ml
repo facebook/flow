@@ -81,7 +81,7 @@ let get_intrinsic
 
   (* Create a type variable which will represent the specific intrinsic we
    * find in the intrinsics map. *)
-  let intrinsic = Tvar.mk cx reason in
+  let intrinsic = Tvar.mk_no_wrap cx reason in
   (* Get the intrinsic from the map. *)
   rec_flow
     cx
@@ -93,7 +93,7 @@ let get_intrinsic
           (match literal with
           | Literal (_, name) -> Named (replace_desc_reason (RReactElement (Some name)) reason, name)
           | _ -> Computed component),
-          intrinsic ) );
+          (reason, intrinsic) ) );
 
   (* Get the artifact from the intrinsic. *)
   let propref =
@@ -109,7 +109,7 @@ let get_intrinsic
   rec_flow
     cx
     trace
-    ( intrinsic,
+    ( OpenT (reason, intrinsic),
       LookupT
         {
           reason = reason_op;

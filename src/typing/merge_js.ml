@@ -115,8 +115,10 @@ let explicit_decl_require cx (m, loc, resolved_m, cx_to) =
   let reason = Reason.(mk_reason (RCustom m) loc) in
   (* lookup module declaration from builtin context *)
   let m_name = resolved_m |> Modulename.to_string |> Reason.internal_module_name in
-  let from_t = Tvar.mk cx reason in
-  Flow_js.lookup_builtin cx m_name reason (Type.Strict reason) from_t;
+  let from_t =
+    Tvar.mk_no_wrap_where cx reason (fun from_t ->
+        Flow_js.lookup_builtin cx m_name reason (Type.Strict reason) from_t)
+  in
 
   (* flow the declared module type to importing context *)
   let to_t = Context.find_require cx_to loc in
@@ -131,13 +133,15 @@ let explicit_unchecked_require cx (m, loc, cx_to) =
    * from an untyped module and an any-typed type import from a nonexistent module. *)
   let reason = Reason.(mk_reason (RUntypedModule m) loc) in
   let m_name = Reason.internal_module_name m in
-  let from_t = Tvar.mk cx reason in
-  Flow_js.lookup_builtin
-    cx
-    m_name
-    reason
-    (Type.NonstrictReturning (Some (Type.AnyT (reason, Type.Untyped), from_t), None))
-    from_t;
+  let from_t =
+    Tvar.mk_no_wrap_where cx reason (fun from_t ->
+        Flow_js.lookup_builtin
+          cx
+          m_name
+          reason
+          (Type.NonstrictReturning (Some (Type.AnyT (reason, Type.Untyped), Type.OpenT from_t), None))
+          from_t)
+  in
 
   (* flow the declared module type to importing context *)
   let to_t = Context.find_require cx_to loc in
@@ -397,6 +401,7 @@ let detect_matching_props_violations cx =
     let obj = resolver#type_ cx () obj in
     let sentinel = resolver#type_ cx () sentinel in
     match sentinel with
+    (* TODO: it should not be possible to create a MatchingPropT with a non-tvar tout *)
     | DefT (_, _, (BoolT (Some _) | StrT (Literal _) | NumT (Literal _))) ->
       (* Limit the check to promitive literal sentinels *)
       let use_op =
