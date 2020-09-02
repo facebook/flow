@@ -5187,7 +5187,7 @@ and unary cx loc =
   | { operator = Not; argument; comments } ->
     let (((_, arg), _) as argument) = expression cx argument in
     let reason = mk_reason (RUnaryOperator ("not", desc_of_t arg)) loc in
-    ( Tvar.mk_where cx reason (fun t -> Flow.flow cx (arg, NotT (reason, t))),
+    ( Tvar.mk_no_wrap_where cx reason (fun t -> Flow.flow cx (arg, NotT (reason, t))),
       { operator = Not; argument; comments } )
   | { operator = Plus; argument; comments } ->
     let argument = expression cx argument in
@@ -5425,7 +5425,7 @@ and logical cx loc { Ast.Expression.Logical.operator; left; right; comments } =
       | Some _ -> assert_false "Unexpected abnormal control flow from within expression"
     in
     let reason = mk_reason (RLogical ("||", desc_of_t t1, desc_of_t t2)) loc in
-    ( Tvar.mk_where cx reason (fun t -> Flow.flow cx (t1, OrT (reason, t2, t))),
+    ( Tvar.mk_no_wrap_where cx reason (fun t -> Flow.flow cx (t1, OrT (reason, t2, t))),
       { operator = Or; left; right; comments } )
   | And ->
     let ((((_, t1), _) as left), map, _, xtypes) =
@@ -5442,7 +5442,7 @@ and logical cx loc { Ast.Expression.Logical.operator; left; right; comments } =
       | Some _ -> assert_false "Unexpected abnormal control flow from within expression"
     in
     let reason = mk_reason (RLogical ("&&", desc_of_t t1, desc_of_t t2)) loc in
-    ( Tvar.mk_where cx reason (fun t -> Flow.flow cx (t1, AndT (reason, t2, t))),
+    ( Tvar.mk_no_wrap_where cx reason (fun t -> Flow.flow cx (t1, AndT (reason, t2, t))),
       { operator = And; left; right; comments } )
   | NullishCoalesce ->
     let (((_, t1), _) as left) = expression cx left in
@@ -5456,7 +5456,7 @@ and logical cx loc { Ast.Expression.Logical.operator; left; right; comments } =
       | Some _ -> assert_false "Unexpected abnormal control flow from within expression"
     in
     let reason = mk_reason (RLogical ("??", desc_of_t t1, desc_of_t t2)) loc in
-    ( Tvar.mk_where cx reason (fun t -> Flow.flow cx (t1, NullishCoalesceT (reason, t2, t))),
+    ( Tvar.mk_no_wrap_where cx reason (fun t -> Flow.flow cx (t1, NullishCoalesceT (reason, t2, t))),
       { operator = NullishCoalesce; left; right; comments } )
 
 and assignment_lhs cx patt =
@@ -7074,7 +7074,9 @@ and predicates_of_condition cx ~cond e =
       Env.in_refined_env cx loc map1 xts1 (fun () -> predicates_of_condition cx ~cond right)
     in
     let reason = mk_reason (RLogical ("&&", desc_of_t t1, desc_of_t t2)) loc in
-    let t_out = Tvar.mk_where cx reason (fun t -> Flow.flow cx (t1, AndT (reason, t2, t))) in
+    let t_out =
+      Tvar.mk_no_wrap_where cx reason (fun t -> Flow.flow cx (t1, AndT (reason, t2, t)))
+    in
     ( ( (loc, t_out),
         Logical { Logical.operator = Logical.And; left = left_ast; right = right_ast; comments } ),
       mk_and map1 map2,
@@ -7090,7 +7092,7 @@ and predicates_of_condition cx ~cond e =
       Env.in_refined_env cx loc not_map1 xts1 (fun () -> predicates_of_condition cx ~cond right)
     in
     let reason = mk_reason (RLogical ("||", desc_of_t t1, desc_of_t t2)) loc in
-    let t_out = Tvar.mk_where cx reason (fun t -> Flow.flow cx (t1, OrT (reason, t2, t))) in
+    let t_out = Tvar.mk_no_wrap_where cx reason (fun t -> Flow.flow cx (t1, OrT (reason, t2, t))) in
     ( ( (loc, t_out),
         Logical { Logical.operator = Logical.Or; left = left_ast; right = right_ast; comments } ),
       mk_or map1 map2,

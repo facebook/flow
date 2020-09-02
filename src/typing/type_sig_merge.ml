@@ -143,7 +143,8 @@ let eval_unary file loc t =
   | U.Plus -> Type.NumT.at loc trust
   | U.Not ->
     let reason = Reason.(mk_reason (RUnaryOperator ("not", TypeUtil.desc_of_t t)) loc) in
-    Tvar.mk_where file.cx reason (fun tout -> Flow_js.flow file.cx (t, Type.NotT (reason, tout)))
+    Tvar.mk_no_wrap_where file.cx reason (fun tout ->
+        Flow_js.flow file.cx (t, Type.NotT (reason, tout)))
   | U.BitNot -> Type.NumT.at loc trust
   | U.Typeof -> Type.StrT.at loc trust
   | U.Void -> Type.VoidT.at loc trust

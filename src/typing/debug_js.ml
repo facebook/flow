@@ -361,6 +361,7 @@ and dump_use_t_ (depth, tvars) cx t =
   let kid t = dump_t_ (depth - 1, tvars) cx t in
   let use_kid use_t = dump_use_t_ (depth - 1, tvars) cx use_t in
   let tvar id = dump_tvar_ (depth - 1, tvars) cx id in
+  let tout (reason, id) = spf "(%s, %s)" (string_of_reason reason) (tvar id) in
   let prop p = dump_prop_ (depth - 1, tvars) cx p in
   let string_of_use_op = string_of_use_op_rec in
   let call_arg_kid = function
@@ -632,7 +633,7 @@ and dump_use_t_ (depth, tvars) cx t =
     | UseT (use_op, t) -> spf "UseT (%s, %s)" (string_of_use_op use_op) (kid t)
     | AdderT (use_op, _, _, x, y) ->
       p ~extra:(spf "%s, %s, %s" (string_of_use_op use_op) (kid x) (kid y)) t
-    | AndT (_, x, y) -> p ~extra:(spf "%s, %s" (kid x) (kid y)) t
+    | AndT (_, x, y) -> p ~extra:(spf "%s, %s" (kid x) (tout y)) t
     | ArrRestT (use_op, _, _, _) -> p ~extra:(string_of_use_op use_op) t
     | AssertArithmeticOperandT _ -> p t
     | AssertBinaryInLHST _ -> p t
@@ -698,7 +699,10 @@ and dump_use_t_ (depth, tvars) cx t =
     | GetProtoT (_, (_, arg)) -> p ~extra:(tvar arg) t
     | GetStaticsT (_, arg) -> p ~extra:(tvar arg) t
     | GuardT (pred, result, sink) ->
-      p ~reason:false ~extra:(spf "%s, %s, %s" (string_of_predicate pred) (kid result) (kid sink)) t
+      p
+        ~reason:false
+        ~extra:(spf "%s, %s, %s" (string_of_predicate pred) (kid result) (tout sink))
+        t
     | HasOwnPropT _ -> p t
     | IdxUnMaybeifyT _ -> p t
     | IdxUnwrap _ -> p t
@@ -730,8 +734,8 @@ and dump_use_t_ (depth, tvars) cx t =
     | MapTypeT _ -> p t
     | MethodT (_, _, _, prop, _, _) -> p ~extra:(spf "(%s)" (propref prop)) t
     | MixinT (_, arg) -> p ~extra:(kid arg) t
-    | NotT (_, arg) -> p ~extra:(kid arg) t
-    | NullishCoalesceT (_, x, y) -> p ~extra:(spf "%s, %s" (kid x) (kid y)) t
+    | NotT (_, arg) -> p ~extra:(tout arg) t
+    | NullishCoalesceT (_, x, y) -> p ~extra:(spf "%s, %s" (kid x) (tout y)) t
     | ObjAssignToT (_, _, arg1, arg2, _) -> p t ~extra:(spf "%s, %s" (kid arg1) (kid arg2))
     | ObjAssignFromT (_, _, arg1, arg2, _) -> p t ~extra:(spf "%s, %s" (kid arg1) (kid arg2))
     | ObjFreezeT _ -> p t
@@ -740,9 +744,9 @@ and dump_use_t_ (depth, tvars) cx t =
     | ObjTestProtoT _ -> p t
     | ObjTestT _ -> p t
     | OptionalChainT (_, _, _, t', void_t) -> p ~extra:(spf "%s, %s" (use_kid t') (kid void_t)) t
-    | OrT (_, x, y) -> p ~extra:(spf "%s, %s" (kid x) (kid y)) t
+    | OrT (_, x, y) -> p ~extra:(spf "%s, %s" (kid x) (tout y)) t
     | PredicateT (pred, arg) ->
-      p ~reason:false ~extra:(spf "%s, %s" (string_of_predicate pred) (kid arg)) t
+      p ~reason:false ~extra:(spf "%s, %s" (string_of_predicate pred) (tout arg)) t
     | ReactKitT (use_op, _, tool) ->
       p t ~extra:(spf "%s, %s" (string_of_use_op use_op) (react_kit tool))
     | RefineT _ -> p t
@@ -768,7 +772,7 @@ and dump_use_t_ (depth, tvars) cx t =
     | SentinelPropTestT (_, l, _key, sense, sentinel, result) ->
       p
         ~reason:false
-        ~extra:(spf "%s, %b, %s, %s" (kid l) sense (string_of_sentinel sentinel) (kid result))
+        ~extra:(spf "%s, %b, %s, %s" (kid l) sense (string_of_sentinel sentinel) (tout result))
         t
     | SubstOnPredT (_, _, subst, arg) ->
       let subst =

@@ -312,22 +312,22 @@ class ['a] t =
       | AssertIterableT { targs; _ } -> List.fold_left (self#type_ cx pole_TODO) acc targs
       | PredicateT (predicate, t) ->
         let acc = self#predicate cx acc predicate in
-        let acc = self#type_ cx pole_TODO acc t in
+        let acc = self#tout cx pole_TODO acc t in
         acc
       | GuardT (predicate, t1, t2) ->
         let acc = self#predicate cx acc predicate in
         let acc = self#type_ cx pole_TODO acc t1 in
-        let acc = self#type_ cx pole_TODO acc t2 in
+        let acc = self#tout cx pole_TODO acc t2 in
         acc
       | StrictEqT { arg; _ }
       | EqT { arg; _ } ->
         self#type_ cx pole_TODO acc arg
-      | NotT (_, t) -> self#type_ cx pole_TODO acc t
+      | NotT (_, t) -> self#tout cx pole_TODO acc t
       | AndT (_, a, b)
       | OrT (_, a, b)
       | NullishCoalesceT (_, a, b) ->
         let acc = self#type_ cx pole_TODO acc a in
-        let acc = self#type_ cx pole_TODO acc b in
+        let acc = self#tout cx pole_TODO acc b in
         acc
       | SpecializeT (_, _, _, _, ts, t) ->
         let acc = self#opt (List.fold_left (self#type_ cx pole_TODO)) acc ts in
@@ -534,7 +534,7 @@ class ['a] t =
       | DebugSleepT _ -> acc
       | SentinelPropTestT (_, t, _, _, _, tout) ->
         let acc = self#type_ cx pole_TODO acc t in
-        let acc = self#type_ cx pole_TODO acc tout in
+        let acc = self#tout cx pole_TODO acc tout in
         acc
       | IdxUnwrap (_, tout)
       | IdxUnMaybeifyT (_, tout) ->
@@ -547,12 +547,12 @@ class ['a] t =
       | CallLatentPredT (_, _, _, t1, t2)
       | CallOpenPredT (_, _, _, t1, t2) ->
         let acc = self#type_ cx pole_TODO acc t1 in
-        let acc = self#type_ cx pole_TODO acc t2 in
+        let acc = self#tout cx pole_TODO acc t2 in
         acc
       | SubstOnPredT (_, _, _, t) -> self#type_ cx pole_TODO acc t
       | RefineT (_, predicate, t) ->
         let acc = self#predicate cx acc predicate in
-        let acc = self#type_ cx pole_TODO acc t in
+        let acc = self#tout cx pole_TODO acc t in
         acc
       | ReactPropsToOut (_, t)
       | ReactInToProps (_, t) ->
@@ -622,11 +622,11 @@ class ['a] t =
         | SentinelPropTest (_, _, t1, t2, t3) ->
           let acc = self#type_ cx pole_TODO acc t1 in
           let acc = self#type_ cx pole_TODO acc t2 in
-          let acc = self#type_ cx pole_TODO acc t3 in
+          let acc = self#tout cx pole_TODO acc t3 in
           acc
         | PropExistsTest (_, _, _, t1, t2, (pred, not_pred)) ->
           let acc = self#type_ cx pole_TODO acc t1 in
-          let acc = self#type_ cx pole_TODO acc t2 in
+          let acc = self#tout cx pole_TODO acc t2 in
           let acc = self#predicate cx acc pred in
           let acc = self#predicate cx acc not_pred in
           acc)

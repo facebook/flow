@@ -97,7 +97,7 @@ and reason_of_use_t = function
   | GetPrivatePropT (_, reason, _, _, _, _) -> reason
   | GetProtoT (reason, _) -> reason
   | GetStaticsT (reason, _) -> reason
-  | GuardT (_, _, t) -> reason_of_t t
+  | GuardT (_, _, (r, _)) -> r
   | HasOwnPropT (_, reason, _) -> reason
   | IdxUnMaybeifyT (reason, _) -> reason
   | IdxUnwrap (reason, _) -> reason
@@ -125,13 +125,13 @@ and reason_of_use_t = function
   | ObjTestT (reason, _, _) -> reason
   | OptionalChainT (reason, _, _, _, _) -> reason
   | OrT (reason, _, _) -> reason
-  | PredicateT (_, t) -> reason_of_t t
+  | PredicateT (_, (reason, _)) -> reason
   | ReactKitT (_, reason, _) -> reason
   | RefineT (reason, _, _) -> reason
   | ReposLowerT (reason, _, _) -> reason
   | ReposUseT (reason, _, _, _) -> reason
   | ResolveSpreadT (_, reason, _) -> reason
-  | SentinelPropTestT (_, _, _, _, _, result) -> reason_of_t result
+  | SentinelPropTestT (_, _, _, _, _, (reason, _)) -> reason
   | SetElemT (_, reason, _, _, _, _) -> reason
   | SetPropT (_, reason, _, _, _, _, _) -> reason
   | SetPrivatePropT (_, reason, _, _, _, _, _, _) -> reason
@@ -274,7 +274,7 @@ and mod_reason_of_use_t f = function
     GetPrivatePropT (use_op, f reason, name, bindings, static, t)
   | GetProtoT (reason, t) -> GetProtoT (f reason, t)
   | GetStaticsT (reason, t) -> GetStaticsT (f reason, t)
-  | GuardT (pred, result, t) -> GuardT (pred, result, mod_reason_of_t f t)
+  | GuardT (pred, result, (reason, tvar)) -> GuardT (pred, result, (f reason, tvar))
   | HasOwnPropT (use_op, reason, prop) -> HasOwnPropT (use_op, f reason, prop)
   | IdxUnMaybeifyT (reason, t_out) -> IdxUnMaybeifyT (f reason, t_out)
   | IdxUnwrap (reason, t_out) -> IdxUnwrap (f reason, t_out)
@@ -307,14 +307,14 @@ and mod_reason_of_use_t f = function
   | OptionalChainT (reason, lhs_reason, this, us, vs) ->
     OptionalChainT (f reason, lhs_reason, this, us, vs)
   | OrT (reason, t1, t2) -> OrT (f reason, t1, t2)
-  | PredicateT (pred, t) -> PredicateT (pred, mod_reason_of_t f t)
+  | PredicateT (pred, (reason, t)) -> PredicateT (pred, (f reason, t))
   | ReactKitT (use_op, reason, tool) -> ReactKitT (use_op, f reason, tool)
   | RefineT (reason, p, t) -> RefineT (f reason, p, t)
   | ReposLowerT (reason, use_desc, t) -> ReposLowerT (f reason, use_desc, t)
   | ReposUseT (reason, use_desc, use_op, t) -> ReposUseT (f reason, use_desc, use_op, t)
   | ResolveSpreadT (use_op, reason_op, resolve) -> ResolveSpreadT (use_op, f reason_op, resolve)
-  | SentinelPropTestT (reason_op, l, key, sense, sentinel, result) ->
-    SentinelPropTestT (reason_op, l, key, sense, sentinel, mod_reason_of_t f result)
+  | SentinelPropTestT (reason_op, l, key, sense, sentinel, (reason, result)) ->
+    SentinelPropTestT (reason_op, l, key, sense, sentinel, (f reason, result))
   | SetElemT (use_op, reason, it, mode, et, t) -> SetElemT (use_op, f reason, it, mode, et, t)
   | SetPropT (use_op, reason, n, mode, i, t, tp) -> SetPropT (use_op, f reason, n, mode, i, t, tp)
   | SetPrivatePropT (use_op, reason, n, mode, scopes, static, t, tp) ->

@@ -512,12 +512,12 @@ module rec TypeTerm : sig
         targs: t list;
       }
     (* operation specifying a type refinement via a predicate *)
-    | PredicateT of predicate * t
+    | PredicateT of predicate * tvar
     (* like PredicateT, GuardT guards a subsequent flow with a predicate on an
        incoming type. Unlike PredicateT, the subsequent flow (if any) uses
        an arbitrary LB specified in the GuardT value, rather than the filtered
        result of the predicate itself *)
-    | GuardT of predicate * t * t
+    | GuardT of predicate * t * tvar
     (* === *)
     | StrictEqT of {
         reason: Reason.t;
@@ -532,10 +532,10 @@ module rec TypeTerm : sig
         arg: t;
       }
     (* logical operators *)
-    | AndT of reason * t * t
-    | OrT of reason * t * t
-    | NullishCoalesceT of reason * t * t
-    | NotT of reason * t
+    | AndT of reason * t * tvar
+    | OrT of reason * t * tvar
+    | NullishCoalesceT of reason * t * tvar
+    | NotT of reason * tvar
     (* operation on polymorphic types *)
     (* SpecializeT(_, _, _, cache, targs, tresult) instantiates a polymorphic type
         with type arguments targs, and flows the result into tresult. If cache
@@ -657,7 +657,7 @@ module rec TypeTerm : sig
     | IntersectionPreprocessKitT of reason * intersection_preprocess_tool
     | DebugPrintT of reason
     | DebugSleepT of reason
-    | SentinelPropTestT of reason * t * string * bool * UnionEnum.star * t_out
+    | SentinelPropTestT of reason * t * string * bool * UnionEnum.star * tvar
     | IdxUnwrap of reason * t_out
     | IdxUnMaybeifyT of reason * t_out
     | OptionalChainT of reason * reason * (* this *) t * use_t * (* voids *) t_out
@@ -684,7 +684,7 @@ module rec TypeTerm : sig
      *
      * The boolean part is the sense of the conditional check.
      *)
-    | CallLatentPredT of reason * bool * index * t * t
+    | CallLatentPredT of reason * bool * index * t * tvar
     (*
      * CallOpenPredT is fired subsequently, after processing the flow
      * described above. This flow is necessary since the return type of the
@@ -697,7 +697,7 @@ module rec TypeTerm : sig
      * flow) we only keep the relevant key, which corresponds to the refining
      * parameter.
      *)
-    | CallOpenPredT of reason * bool * Key.t * t * t
+    | CallOpenPredT of reason * bool * Key.t * t * tvar
     (*
      * Even for the limited use of function predicates that is currently
      * allowed, we still have to build machinery to handle subtyping for
@@ -742,7 +742,7 @@ module rec TypeTerm : sig
      * flow using the predicate `pred`. The result will be stored in `tvar`,
      * which is expected to be a type variable.
      *)
-    | RefineT of reason * predicate * t
+    | RefineT of reason * predicate * tvar
     (* Spread elements show up in a bunch of places: array literals, function
      * parameters, function call arguments, method arguments. constructor
      * arguments, etc. Often we have logic that depends on what the spread
@@ -1305,8 +1305,8 @@ module rec TypeTerm : sig
 
   and intersection_preprocess_tool =
     | ConcretizeTypes of t list * t list * t * use_t
-    | SentinelPropTest of bool * string * t * t * t
-    | PropExistsTest of bool * string * reason * t * t * (predicate * predicate)
+    | SentinelPropTest of bool * string * t * t * tvar
+    | PropExistsTest of bool * string * reason * t * tvar * (predicate * predicate)
 
   and spec =
     | UnionCases of use_op * t * UnionRep.t * t list

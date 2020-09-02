@@ -1420,7 +1420,7 @@ let refine_with_preds cx loc preds orig_types =
     Flow.flow cx (orig_type, PredicateT (pred, refined_type))
   in
   let mk_refi_type orig_type pred refi_reason =
-    refine_type orig_type pred |> Tvar.mk_where cx refi_reason
+    refine_type orig_type pred |> Tvar.mk_no_wrap_where cx refi_reason
   in
   let refine_with_pred key pred acc =
     let refi_reason = mk_reason (RRefined (Key.reason_desc key)) loc in

@@ -1013,7 +1013,7 @@ class virtual ['a] t_with_uses =
           AssertIterableT { use_op; reason; async; targs = targs' }
       | PredicateT (p, t') ->
         let p' = self#predicate cx map_cx p in
-        let t'' = self#type_ cx map_cx t' in
+        let t'' = self#tout cx map_cx t' in
         if p' == p && t'' == t' then
           t
         else
@@ -1021,7 +1021,7 @@ class virtual ['a] t_with_uses =
       | GuardT (p, t1, t2) ->
         let p' = self#predicate cx map_cx p in
         let t1' = self#type_ cx map_cx t1 in
-        let t2' = self#type_ cx map_cx t2 in
+        let t2' = self#tout cx map_cx t2 in
         if p' == p && t1' == t1 && t2' == t2 then
           t
         else
@@ -1040,27 +1040,27 @@ class virtual ['a] t_with_uses =
           EqT { reason; flip; arg = arg' }
       | AndT (r, t1, t2) ->
         let t1' = self#type_ cx map_cx t1 in
-        let t2' = self#type_ cx map_cx t2 in
+        let t2' = self#tout cx map_cx t2 in
         if t1' == t1 && t2' == t2 then
           t
         else
           AndT (r, t1', t2')
       | OrT (r, t1, t2) ->
         let t1' = self#type_ cx map_cx t1 in
-        let t2' = self#type_ cx map_cx t2 in
+        let t2' = self#tout cx map_cx t2 in
         if t1' == t1 && t2' == t2 then
           t
         else
           OrT (r, t1', t2')
       | NullishCoalesceT (r, t1, t2) ->
         let t1' = self#type_ cx map_cx t1 in
-        let t2' = self#type_ cx map_cx t2 in
+        let t2' = self#tout cx map_cx t2 in
         if t1' == t1 && t2' == t2 then
           t
         else
           NullishCoalesceT (r, t1', t2')
       | NotT (r, t') ->
-        let t'' = self#type_ cx map_cx t' in
+        let t'' = self#tout cx map_cx t' in
         if t'' == t' then
           t
         else
@@ -1420,7 +1420,7 @@ class virtual ['a] t_with_uses =
       | DebugSleepT _ -> t
       | SentinelPropTestT (r, t1, key, b, sentinel, t2) ->
         let t1' = self#type_ cx map_cx t1 in
-        let t2' = self#type_ cx map_cx t2 in
+        let t2' = self#tout cx map_cx t2 in
         if t1' == t1 && t2' == t2 then
           t
         else
@@ -1448,14 +1448,14 @@ class virtual ['a] t_with_uses =
       | InvariantT _ -> t
       | CallLatentPredT (r, b, i, t1, t2) ->
         let t1' = self#type_ cx map_cx t1 in
-        let t2' = self#type_ cx map_cx t2 in
+        let t2' = self#tout cx map_cx t2 in
         if t1' == t1 && t2' == t2 then
           t
         else
           CallLatentPredT (r, b, i, t1', t2')
       | CallOpenPredT (r, b, key, t1, t2) ->
         let t1' = self#type_ cx map_cx t1 in
-        let t2' = self#type_ cx map_cx t2 in
+        let t2' = self#tout cx map_cx t2 in
         if t1' == t1 && t2' == t2 then
           t
         else
@@ -1468,7 +1468,7 @@ class virtual ['a] t_with_uses =
           SubstOnPredT (use_op, r, sub, t'')
       | RefineT (r, p, t') ->
         let p' = self#predicate cx map_cx p in
-        let t'' = self#type_ cx map_cx t' in
+        let t'' = self#tout cx map_cx t' in
         if p' == p && t'' == t' then
           t
         else
@@ -2041,14 +2041,14 @@ class virtual ['a] t_with_uses =
       | SentinelPropTest (b, s, t1, t2, t3) ->
         let t1' = self#type_ cx map_cx t1 in
         let t2' = self#type_ cx map_cx t2 in
-        let t3' = self#type_ cx map_cx t3 in
+        let t3' = self#tout cx map_cx t3 in
         if t1' == t1 && t2' == t2 && t3' == t3 then
           t
         else
           SentinelPropTest (b, s, t1', t2', t3')
       | PropExistsTest (b, s, r, t1, t2, (pred, not_pred)) ->
         let t1' = self#type_ cx map_cx t1 in
-        let t2' = self#type_ cx map_cx t2 in
+        let t2' = self#tout cx map_cx t2 in
         let pred' = self#predicate cx map_cx pred in
         let not_pred' = self#predicate cx map_cx not_pred in
         if t1' == t1 && t2' == t2 && pred' == pred && not_pred' == not_pred then
