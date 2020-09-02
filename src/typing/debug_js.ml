@@ -643,15 +643,16 @@ and dump_use_t_ (depth, tvars) cx t =
     | BecomeT (_, arg) -> p ~extra:(kid arg) t
     | BindT _ -> p t
     | CallElemT (_, _, _, _) -> p t
-    | CallT (use_op, _, { call_args_tlist; call_tout; call_this_t; _ }) ->
+    | CallT (use_op, _, { call_args_tlist; call_tout = (call_r, call_tvar); call_this_t; _ }) ->
       p
         ~extra:
           (spf
-             "%s, <this: %s>(%s) => %s"
+             "%s, <this: %s>(%s) => (%s, %s)"
              (string_of_use_op use_op)
              (kid call_this_t)
              (String.concat "; " (Base.List.map ~f:call_arg_kid call_args_tlist))
-             (kid call_tout))
+             (string_of_reason call_r)
+             (tvar call_tvar))
         t
     | CallLatentPredT _ -> p t
     | CallOpenPredT _ -> p t
@@ -694,8 +695,8 @@ and dump_use_t_ (depth, tvars) cx t =
         t
     | GetPrivatePropT (_, _, prop, _, _, (preason, ptvar)) ->
       p ~extra:(spf "(%s), (%s, %s)" prop (string_of_reason preason) (tvar ptvar)) t
-    | GetProtoT (_, arg) -> p ~extra:(kid arg) t
-    | GetStaticsT (_, arg) -> p ~extra:(kid arg) t
+    | GetProtoT (_, (_, arg)) -> p ~extra:(tvar arg) t
+    | GetStaticsT (_, arg) -> p ~extra:(tvar arg) t
     | GuardT (pred, result, sink) ->
       p ~reason:false ~extra:(spf "%s, %s, %s" (string_of_predicate pred) (kid result) (kid sink)) t
     | HasOwnPropT _ -> p t

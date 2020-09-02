@@ -153,7 +153,7 @@ let eval_unary file loc t =
     let await = Flow_js.get_builtin file.cx "$await" reason in
     (* TODO: use_op *)
     let use_op = Type.unknown_use in
-    Tvar.mk_where file.cx reason (fun tout ->
+    Tvar.mk_no_wrap_where file.cx reason (fun tout ->
         Flow_js.flow
           file.cx
           ( await,
@@ -184,7 +184,7 @@ let async_void_return file loc =
     [
       Tvar.mk_derivable_where file.cx reason (fun tvar ->
           let funt = Flow_js.get_builtin file.cx "$await" reason in
-          let callt = Type.mk_functioncalltype reason None [Type.Arg t] tvar in
+          let callt = Type.mk_functioncalltype reason None [Type.Arg t] (Type.open_tvar tvar) in
           let reason =
             Reason.repos_reason (Reason.aloc_of_reason (TypeUtil.reason_of_t t)) reason
           in

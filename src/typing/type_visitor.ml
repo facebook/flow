@@ -279,10 +279,10 @@ class ['a] t =
         let acc = self#type_ cx pole_TODO acc t in
         let acc = self#method_action cx acc fn in
         acc
-      | GetStaticsT (_, t)
-      | GetProtoT (_, t)
-      | SetProtoT (_, t) ->
-        self#type_ cx pole_TODO acc t
+      | GetStaticsT t
+      | GetProtoT (_, t) ->
+        self#tout cx pole_TODO acc t
+      | SetProtoT (_, t) -> self#type_ cx pole_TODO acc t
       | ReposLowerT (_, _, u) -> self#use_type_ cx acc u
       | ReposUseT (_, _, _, t) -> self#type_ cx pole_TODO acc t
       | ConstructorT (_, _, targs, args, t) ->
@@ -782,7 +782,7 @@ class ['a] t =
       let acc = self#type_ cx pole_TODO acc call_this_t in
       let acc = self#opt (self#list (self#targ cx pole_TODO)) acc call_targs in
       let acc = self#list (self#call_arg cx) acc call_args_tlist in
-      let acc = self#type_ cx pole_TODO acc call_tout in
+      let acc = self#tout cx pole_TODO acc call_tout in
       acc
 
     method private opt_fun_call_type cx acc (call_this_t, call_targs, call_args_tlist, _, _) =

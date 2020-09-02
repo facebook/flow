@@ -1351,9 +1351,9 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
          * top-level pattern matching against class lower bounds to object-like
          * uses. This duplication should be removed. *)
         | DefT (r, _, ClassT i) ->
-          let t = Tvar.mk cx r in
-          rec_flow cx trace (i, GetStaticsT (r, t));
-          rec_flow cx trace (t, ObjKitT (use_op, reason, Resolve resolve_tool, tool, tout))
+          let tvar = (r, Tvar.mk_no_wrap cx r) in
+          rec_flow cx trace (i, GetStaticsT tvar);
+          rec_flow cx trace (OpenT tvar, ObjKitT (use_op, reason, Resolve resolve_tool, tool, tout))
         (* Resolve each member of a union. *)
         | UnionT (union_reason, rep) ->
           let union_loc = aloc_of_reason union_reason in

@@ -1359,7 +1359,7 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t =
             [
               Tvar.mk_derivable_where cx reason (fun tvar ->
                   let funt = Flow.get_builtin cx "$await" reason in
-                  let callt = mk_functioncalltype reason None [Arg t] tvar in
+                  let callt = mk_functioncalltype reason None [Arg t] (open_tvar tvar) in
                   let reason = repos_reason (aloc_of_reason (reason_of_t t)) reason in
                   Flow.flow cx (funt, CallT (unknown_use, reason, callt)));
             ]
@@ -3387,7 +3387,7 @@ and expression_ ~cond cx loc e : (ALoc.t, ALoc.t * Type.t) Ast.Expression.t =
     let (((_, t), _) as tag_ast) = expression cx tag in
     let reason = mk_reason (RCustom "encaps tag") loc in
     let reason_array = replace_desc_reason RArray reason in
-    let ret = Tvar.mk cx reason in
+    let ret = (reason, Tvar.mk_no_wrap cx reason) in
     (* tag`a${b}c${d}` -> tag(['a', 'c'], b, d) *)
     let call_t =
       let args =
@@ -3415,7 +3415,7 @@ and expression_ ~cond cx loc e : (ALoc.t, ALoc.t * Type.t) Ast.Expression.t =
     in
     Flow.flow cx (t, call_t);
 
-    ( (loc, ret),
+    ( (loc, OpenT ret),
       TaggedTemplate
         {
           TaggedTemplate.tag = tag_ast;
@@ -3996,7 +3996,7 @@ and optional_chain ~cond ~is_existence_check ?sentinel_refine cx ((loc, e) as ex
       Type_inference_hooks_js.dispatch_call_hook cx name ploc super_t;
       let prop_t = Tvar.mk cx reason_prop in
       let lhs_t =
-        Tvar.mk_where cx reason (fun t ->
+        Tvar.mk_no_wrap_where cx reason (fun t ->
             let funtype = mk_methodcalltype super_t targts argts t in
             let use_op =
               Op
@@ -4050,7 +4050,7 @@ and optional_chain ~cond ~is_existence_check ?sentinel_refine cx ((loc, e) as ex
       let super_t = super_ cx super_loc in
       let super_reason = reason_of_t super_t in
       let lhs_t =
-        Tvar.mk_where cx reason (fun t ->
+        Tvar.mk_no_wrap_where cx reason (fun t ->
             let funtype = mk_methodcalltype this targts argts t in
             let propref = Named (super_reason, "constructor") in
             let use_op =
@@ -4757,7 +4757,7 @@ and optional_chain ~cond ~is_existence_check ?sentinel_refine cx ((loc, e) as ex
           in
           let handle_refined_callee argts obj_t f =
             Env.havoc_heap_refinements ();
-            Tvar.mk_where cx reason_call (fun t ->
+            Tvar.mk_no_wrap_where cx reason_call (fun t ->
                 let frame = Env.peek_frame () in
                 let app = mk_methodcalltype obj_t targts argts t ~frame ~call_strict_arity:true in
                 Flow.unify cx f prop_t;
@@ -4768,7 +4768,7 @@ and optional_chain ~cond ~is_existence_check ?sentinel_refine cx ((loc, e) as ex
                     let lhs_reason = mk_expression_reason callee in
                     let this_t = Tvar.mk cx this_reason in
                     OptionalChainT
-                      (chain_reason, lhs_reason, this_t, CallT (use_op, reason_call, app), t)
+                      (chain_reason, lhs_reason, this_t, CallT (use_op, reason_call, app), OpenT t)
                   | _ -> CallT (use_op, reason_call, app)
                 in
                 Flow.flow cx (f, call_t))
@@ -5082,7 +5082,7 @@ and method_call
          performed by the flow algorithm itself. *)
     Env.havoc_heap_refinements ();
     ( f,
-      Tvar.mk_where cx reason (fun t ->
+      Tvar.mk_no_wrap_where cx reason (fun t ->
           let frame = Env.peek_frame () in
           let app = mk_methodcalltype obj_t targts argts t ~frame ~call_strict_arity in
           Flow.flow cx (f, CallT (use_op, reason, app))) )
@@ -5091,7 +5091,7 @@ and method_call
     let reason_prop = mk_reason (RProperty (Some name)) prop_loc in
     let prop_t = Tvar.mk cx reason_prop in
     ( prop_t,
-      Tvar.mk_where cx reason (fun t ->
+      Tvar.mk_no_wrap_where cx reason (fun t ->
           let frame = Env.peek_frame () in
           let reason_expr = mk_reason (RProperty (Some name)) expr_loc in
           let app = mk_methodcalltype obj_t targts argts t ~frame ~call_strict_arity in
@@ -6189,7 +6189,7 @@ and jsx_desugar cx name component_t props attributes children locs =
             reason_of_t a |> AnyT.error)
         children
     in
-    let tvar = Tvar.mk cx reason in
+    let tvar = (reason, Tvar.mk_no_wrap cx reason) in
     let args = [Arg component_t; Arg props] @ Base.List.map ~f:(fun c -> Arg c) children in
     (match Context.react_runtime cx with
     | Options.ReactRuntimeAutomatic ->
@@ -6232,7 +6232,7 @@ and jsx_desugar cx name component_t props attributes children locs =
                    ([Arg component_t; Arg props] @ Base.List.map ~f:(fun c -> Arg c) children)
                    tvar),
               None ) ));
-    tvar
+    OpenT tvar
   | Options.Jsx_pragma (raw_jsx_expr, jsx_expr) ->
     let reason = mk_reason (RJSXFunctionCall raw_jsx_expr) loc_element in
     (* A JSX element with no attributes should pass in null as the second

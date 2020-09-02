@@ -478,8 +478,8 @@ module rec TypeTerm : sig
     | SetElemT of use_op * reason * t * set_mode * t * t option (*tout *)
     | GetElemT of use_op * reason * t * tvar
     | CallElemT of (* call *) reason * (* lookup *) reason * t * method_action
-    | GetStaticsT of reason * t_out
-    | GetProtoT of reason * t_out
+    | GetStaticsT of tvar
+    | GetProtoT of reason * tvar
     | SetProtoT of reason * t
     (* repositioning *)
     | ReposLowerT of reason * bool (* use_desc *) * use_t
@@ -977,7 +977,7 @@ module rec TypeTerm : sig
     call_this_t: t;
     call_targs: targ list option;
     call_args_tlist: call_arg list;
-    call_tout: t;
+    call_tout: tvar;
     call_closure_t: int;
     call_strict_arity: bool;
   }
@@ -3345,13 +3345,13 @@ let apply_opt_action action t_out =
 let apply_opt_use opt_use t_out =
   match opt_use with
   | OptMethodT (op, r1, r2, ref, action, prop_tout) ->
-    MethodT (op, r1, r2, ref, apply_opt_action action (OpenT t_out), prop_tout)
-  | OptCallT (u, r, f) -> CallT (u, r, apply_opt_funcalltype f (OpenT t_out))
+    MethodT (op, r1, r2, ref, apply_opt_action action t_out, prop_tout)
+  | OptCallT (u, r, f) -> CallT (u, r, apply_opt_funcalltype f t_out)
   | OptGetPropT (u, r, p) -> GetPropT (u, r, p, t_out)
   | OptGetPrivatePropT (u, r, s, cbs, b) -> GetPrivatePropT (u, r, s, cbs, b, t_out)
   | OptTestPropT (r, i, p) -> TestPropT (r, i, p, t_out)
   | OptGetElemT (u, r, t) -> GetElemT (u, r, t, t_out)
-  | OptCallElemT (r1, r2, elt, call) -> CallElemT (r1, r2, elt, apply_opt_action call (OpenT t_out))
+  | OptCallElemT (r1, r2, elt, call) -> CallElemT (r1, r2, elt, apply_opt_action call t_out)
 
 let mk_enum_type ~loc ~trust enum =
   let { enum_name; _ } = enum in

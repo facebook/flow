@@ -917,14 +917,14 @@ class virtual ['a] t_with_uses =
           t
         else
           CallElemT (r1, r2, t'', funcall')
-      | GetStaticsT (r, t') ->
-        let t'' = self#type_ cx map_cx t' in
+      | GetStaticsT t' ->
+        let t'' = self#tout cx map_cx t' in
         if t'' == t' then
           t
         else
-          GetStaticsT (r, t'')
+          GetStaticsT t''
       | GetProtoT (r, t') ->
-        let t'' = self#type_ cx map_cx t' in
+        let t'' = self#tout cx map_cx t' in
         if t'' == t' then
           t
         else
@@ -1736,7 +1736,7 @@ class virtual ['a] t_with_uses =
         OptionUtils.ident_map (ListUtils.ident_map (self#targ cx map_cx)) call_targs
       in
       let call_args_tlist' = ListUtils.ident_map (self#call_arg cx map_cx) call_args_tlist in
-      let call_tout' = self#type_ cx map_cx call_tout in
+      let call_tout' = self#tout cx map_cx call_tout in
       if
         call_this_t' == call_this_t
         && call_targs' == call_targs
