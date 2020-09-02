@@ -1,3 +1,30 @@
+### 0.133.0
+
+Likely to cause new Flow errors:
+
+* Improve reliability of inclusion check in strict equality conditionals.
+
+New Features:
+
+* Show JSDoc documentation in hover, autocomplete, and signature help.
+
+Notable bug fixes:
+
+* Fix a bug related to saved state that could cause crashes during initialization.
+* Fix a bug related to saved state that could cause internal errors during rechecks.
+* Fix crash with `flow focus-check` when a focused file has a syntax error.
+
+Misc:
+
+* Remove the `null-void-addition` lint now that it has been subsumed by an ordinary type error.
+* Improved signature help for inlined tuple rest params.
+* Enable the following language features by default, since they have reached stage 4:
+  * `export *`
+  * Nullish coalescing
+  * Optional chaining
+* Remove deprecated, nonstandard `itemType` and `inlineDetail` fields from the LSP `completionItem` implementation.
+* Exit the worker processes gracefully when the main process crashes.
+
 ### 0.132.0
 
 Likely to cause new Flow errors:
