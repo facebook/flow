@@ -428,8 +428,6 @@ module Initialize = struct
 
   and windowClientCapabilities = {
     status: bool;  (** Nuclide-specific: client supports window/showStatusRequest *)
-    progress: bool;  (** Nuclide-specific: client supports window/progress *)
-    actionRequired: bool;  (** Nuclide-specific: client supports window/actionRequired *)
   }
 
   and telemetryClientCapabilities = {
@@ -1067,45 +1065,6 @@ module ShowStatus = struct
   }
 end
 
-(* Progress notification, method="window/progress" *)
-module Progress = struct
-  type t =
-    | Present of {
-        id: int;
-        label: string;
-      }
-    | Absent
-
-  and params = progressParams
-
-  and progressParams = {
-    (* LSP progress notifications have a lifetime that starts with their 1st  *)
-    (* window/progress update message and ends with an update message with    *)
-    (* label = None. They use an ID number (not JsonRPC id) to associate      *)
-    (* multiple messages to a single lifetime stream.                         *)
-    id: int;
-    label: string option;
-  }
-end
-
-(* ActionRequired notification, method="window/actionRequired" *)
-module ActionRequired = struct
-  type t =
-    | Present of {
-        id: int;
-        label: string;
-      }
-    | Absent
-
-  and params = actionRequiredParams
-
-  and actionRequiredParams = {
-    (* See progressParams.id for an explanation of this field. *)
-    id: int;
-    label: string option;
-  }
-end
-
 (* ConnectionStatus notification, method="telemetry/connectionStatus" *)
 module ConnectionStatus = struct
   type params = connectionStatusParams
@@ -1245,8 +1204,6 @@ type lsp_notification =
   | LogMessageNotification of LogMessage.params
   | TelemetryNotification of LogMessage.params (* LSP allows 'any' but we only send these *)
   | ShowMessageNotification of ShowMessage.params
-  | ProgressNotification of Progress.params
-  | ActionRequiredNotification of ActionRequired.params
   | ConnectionStatusNotification of ConnectionStatus.params
   | InitializedNotification
   | SetTraceNotification (* $/setTraceNotification *)

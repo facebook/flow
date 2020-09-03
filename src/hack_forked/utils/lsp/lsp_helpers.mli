@@ -17,8 +17,6 @@ type range_replace = {
   insert_chars_on_final_line: int;
 }
 
-val progress_and_actionRequired_counter : int ref
-
 val url_scheme_regex : Str.regexp
 
 val lsp_uri_to_path : Lsp.DocumentUri.t -> string
@@ -65,10 +63,6 @@ val update_diagnostics_due_to_change :
 
 val get_root : Lsp.Initialize.params -> string
 
-val supports_progress : Lsp.Initialize.params -> bool
-
-val supports_actionRequired : Lsp.Initialize.params -> bool
-
 val supports_codeActionKinds : Lsp.Initialize.params -> Lsp.CodeActionKind.t list
 
 val supports_status : Lsp.Initialize.params -> bool
@@ -96,21 +90,3 @@ val log_info : Jsonrpc.writer -> string -> unit
 val dismiss_diagnostics : Jsonrpc.writer -> Lsp.UriSet.t -> Lsp.UriSet.t
 
 val notify_connectionStatus : Lsp.Initialize.params -> Jsonrpc.writer -> bool -> bool -> bool
-
-val notify_progress_raw :
-  'a ->
-  Lsp.Initialize.params ->
-  ('a -> Lsp.Progress.params -> 'a) ->
-  Lsp.Progress.t ->
-  string option ->
-  'a * Lsp.Progress.t
-
-val notify_progress :
-  Lsp.Initialize.params -> Jsonrpc.writer -> Lsp.Progress.t -> string option -> Lsp.Progress.t
-
-val notify_actionRequired :
-  Lsp.Initialize.params ->
-  Jsonrpc.writer ->
-  Lsp.ActionRequired.t ->
-  string option ->
-  Lsp.ActionRequired.t

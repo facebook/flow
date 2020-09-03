@@ -649,36 +649,6 @@ let print_showStatus (r : ShowStatus.showStatusParams) : json =
     ]
 
 (************************************************************************)
-(* window/progress notification                                         *)
-(************************************************************************)
-
-let print_progress (id : int) (label : string option) : json =
-  let r = { Progress.id; label } in
-  JSON_Object
-    [
-      ("id", r.Progress.id |> int_);
-      ( "label",
-        match r.Progress.label with
-        | None -> JSON_Null
-        | Some s -> JSON_String s );
-    ]
-
-(************************************************************************)
-(* window/actionRequired notification                                   *)
-(************************************************************************)
-
-let print_actionRequired (id : int) (label : string option) : json =
-  let r = { ActionRequired.id; label } in
-  JSON_Object
-    [
-      ("id", r.ActionRequired.id |> int_);
-      ( "label",
-        match r.ActionRequired.label with
-        | None -> JSON_Null
-        | Some s -> JSON_String s );
-    ]
-
-(************************************************************************)
 (* telemetry/connectionStatus notification                              *)
 (************************************************************************)
 
@@ -1066,12 +1036,7 @@ let parse_initialize (params : json option) : Initialize.params =
         snippetSupport = Jget.bool_d json "snippetSupport" ~default:false;
         preselectSupport = Jget.bool_d json "preselectSupport" ~default:false;
       }
-    and parse_window json =
-      {
-        status = Jget.obj_opt json "status" |> Base.Option.is_some;
-        progress = Jget.obj_opt json "progress" |> Base.Option.is_some;
-        actionRequired = Jget.obj_opt json "actionRequired" |> Base.Option.is_some;
-      }
+    and parse_window json = { status = Jget.obj_opt json "status" |> Base.Option.is_some }
     and parse_telemetry json =
       { connectionStatus = Jget.obj_opt json "connectionStatus" |> Base.Option.is_some }
     in
@@ -1332,8 +1297,6 @@ let notification_name_to_string (notification : lsp_notification) : string =
   | TelemetryNotification _ -> "telemetry/event"
   | LogMessageNotification _ -> "window/logMessage"
   | ShowMessageNotification _ -> "window/showMessage"
-  | ProgressNotification _ -> "window/progress"
-  | ActionRequiredNotification _ -> "window/actionRequired"
   | ConnectionStatusNotification _ -> "telemetry/connectionStatus"
   | InitializedNotification -> "initialized"
   | SetTraceNotification -> "$/setTraceNotification"
@@ -1402,8 +1365,6 @@ let parse_lsp_notification (method_ : string) (params : json option) : lsp_notif
   | "textDocument/publishDiagnostics"
   | "window/logMessage"
   | "window/showMessage"
-  | "window/progress"
-  | "window/actionRequired"
   | "telemetry/connectionStatus"
   | _ ->
     UnknownNotification (method_, params)
@@ -1556,9 +1517,6 @@ let print_lsp_notification (notification : lsp_notification) : json =
     | TelemetryNotification r -> print_logMessage r.LogMessage.type_ r.LogMessage.message
     | LogMessageNotification r -> print_logMessage r.LogMessage.type_ r.LogMessage.message
     | ShowMessageNotification r -> print_showMessage r.ShowMessage.type_ r.ShowMessage.message
-    | ProgressNotification r -> print_progress r.Progress.id r.Progress.label
-    | ActionRequiredNotification r ->
-      print_actionRequired r.ActionRequired.id r.ActionRequired.label
     | ConnectionStatusNotification r -> print_connectionStatus r
     | ExitNotification
     | InitializedNotification

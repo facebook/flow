@@ -84,10 +84,6 @@ val parse_result_showMessageRequest : Hh_json.json option -> Lsp.ShowMessageRequ
 
 val print_showStatus : Lsp.ShowStatus.showStatusParams -> Hh_json.json
 
-val print_progress : int -> string option -> Hh_json.json
-
-val print_actionRequired : int -> string option -> Hh_json.json
-
 val print_connectionStatus : Lsp.ConnectionStatus.params -> Hh_json.json
 
 val parse_hover : Hh_json.json option -> Lsp.Hover.params

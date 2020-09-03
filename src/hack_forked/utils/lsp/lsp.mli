@@ -316,11 +316,7 @@ module Initialize : sig
     preselectSupport: bool;
   }
 
-  and windowClientCapabilities = {
-    status: bool;
-    progress: bool;
-    actionRequired: bool;
-  }
+  and windowClientCapabilities = { status: bool }
 
   and telemetryClientCapabilities = { connectionStatus: bool }
 
@@ -885,38 +881,6 @@ module ShowStatus : sig
   }
 end
 
-module Progress : sig
-  type t =
-    | Present of {
-        id: int;
-        label: string;
-      }
-    | Absent
-
-  and params = progressParams
-
-  and progressParams = {
-    id: int;
-    label: string option;
-  }
-end
-
-module ActionRequired : sig
-  type t =
-    | Present of {
-        id: int;
-        label: string;
-      }
-    | Absent
-
-  and params = actionRequiredParams
-
-  and actionRequiredParams = {
-    id: int;
-    label: string option;
-  }
-end
-
 module ConnectionStatus : sig
   type params = connectionStatusParams
 
@@ -1037,8 +1001,6 @@ type lsp_notification =
   | LogMessageNotification of LogMessage.params
   | TelemetryNotification of LogMessage.params (* LSP allows 'any' but we only send these *)
   | ShowMessageNotification of ShowMessage.params
-  | ProgressNotification of Progress.params
-  | ActionRequiredNotification of ActionRequired.params
   | ConnectionStatusNotification of ConnectionStatus.params
   | InitializedNotification
   | SetTraceNotification (* $/setTraceNotification *)

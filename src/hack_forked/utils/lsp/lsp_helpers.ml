@@ -10,8 +10,6 @@
 open Lsp
 open Lsp_fmt
 
-let progress_and_actionRequired_counter = ref 0
-
 (************************************************************************)
 (* Conversions                                                          *)
 (************************************************************************)
@@ -259,12 +257,6 @@ let get_root (p : Lsp.Initialize.params) : string =
     | (None, Some path) -> path
     | (None, None) -> failwith "Initialize params missing root")
 
-let supports_progress (p : Lsp.Initialize.params) : bool =
-  Lsp.Initialize.(p.client_capabilities.window.progress)
-
-let supports_actionRequired (p : Lsp.Initialize.params) : bool =
-  Lsp.Initialize.(p.client_capabilities.window.actionRequired)
-
 let supports_codeActionKinds (p : Lsp.Initialize.params) : CodeActionKind.t list =
   let open Lsp.Initialize in
   let open Lsp.CodeActionClientCapabilities in
@@ -319,74 +311,3 @@ let notify_connectionStatus
     let message = { Lsp.ConnectionStatus.isConnected } in
     message |> print_connectionStatus |> Jsonrpc.notify writer "telemetry/connectionStatus" );
   isConnected
-
-(* notify_progress: for sending/updating/closing progress messages.         *)
-(* To start a new indicator: id=None, message=Some, and get back the new id *)
-(* To update an existing one: id=Some, message=Some, and get back same id   *)
-(* To close an existing one: id=Some, message=None, and get back None       *)
-(* No-op, for convenience: id=None, message=None, and you get back None     *)
-(* messages. To start a new progress notifier, put id=None and message=Some *)
-
-let notify_progress_raw
-    (state : 'a)
-    (p : Lsp.Initialize.params)
-    (writer : 'a -> Progress.params -> 'a)
-    (id : Progress.t)
-    (label : string option) : 'a * Progress.t =
-  match (id, label) with
-  | (Progress.Absent, Some label) ->
-    if supports_progress p then
-      let () = incr progress_and_actionRequired_counter in
-      let id = !progress_and_actionRequired_counter in
-      let msg = { Progress.id; label = Some label } in
-      let state = writer state msg in
-      (state, Progress.Present { id; label })
-    else
-      (state, Progress.Absent)
-  | (Progress.Present { id; label }, Some new_label) when label = new_label ->
-    (state, Progress.Present { id; label })
-  | (Progress.Present { id; _ }, Some label) ->
-    let msg = { Progress.id; label = Some label } in
-    let state = writer state msg in
-    (state, Progress.Present { id; label })
-  | (Progress.Present { id; _ }, None) ->
-    let msg = { Progress.id; label = None } in
-    let state = writer state msg in
-    (state, Progress.Absent)
-  | (Progress.Absent, None) -> (state, Progress.Absent)
-
-let notify_progress
-    (p : Lsp.Initialize.params) (writer : Jsonrpc.writer) (id : Progress.t) (label : string option)
-    : Progress.t =
-  let writer_wrapper () params =
-    let json = print_progress params.Progress.id params.Progress.label in
-    Jsonrpc.notify writer "window/progress" json
-  in
-  let ((), id) = notify_progress_raw () p writer_wrapper id label in
-  id
-
-let notify_actionRequired
-    (p : Lsp.Initialize.params)
-    (writer : Jsonrpc.writer)
-    (id : ActionRequired.t)
-    (label : string option) : ActionRequired.t =
-  match (id, label) with
-  | (ActionRequired.Absent, Some label) ->
-    if supports_actionRequired p then
-      let () = incr progress_and_actionRequired_counter in
-      let id = !progress_and_actionRequired_counter in
-      let () =
-        print_actionRequired id (Some label) |> Jsonrpc.notify writer "window/actionRequired"
-      in
-      ActionRequired.Present { id; label }
-    else
-      ActionRequired.Absent
-  | (ActionRequired.Present { id; label }, Some new_label) when label = new_label ->
-    ActionRequired.Present { id; label }
-  | (ActionRequired.Present { id; _ }, Some label) ->
-    print_actionRequired id (Some label) |> Jsonrpc.notify writer "window/actionRequired";
-    ActionRequired.Present { id; label }
-  | (ActionRequired.Present { id; _ }, None) ->
-    print_actionRequired id None |> Jsonrpc.notify writer "window/actionRequired";
-    ActionRequired.Absent
-  | (ActionRequired.Absent, None) -> ActionRequired.Absent
