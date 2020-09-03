@@ -187,8 +187,6 @@ type t = {
   rev_aloc_table: ALoc.reverse_table Lazy.t;
   metadata: metadata;
   module_info: Module_info.t;
-  mutable import_stmts: (ALoc.t, ALoc.t) Flow_ast.Statement.ImportDeclaration.t list;
-  mutable imported_ts: Type.t SMap.t;
   mutable require_map: Type.t ALocMap.t;
   trust_constructor: unit -> Trust.trust_rep;
   mutable declare_module_ref: Module_info.t option;
@@ -332,8 +330,6 @@ let make ccx metadata file rev_aloc_table module_ref phase =
     rev_aloc_table;
     metadata;
     module_info = Module_info.empty_cjs_module module_ref;
-    import_stmts = [];
-    imported_ts = SMap.empty;
     require_map = ALocMap.empty;
     trust_constructor = Trust.literal_trust;
     declare_module_ref = None;
@@ -452,10 +448,6 @@ let mem_nominal_prop_id cx id = ISet.mem id cx.ccx.nominal_prop_ids
 let graph cx = graph_sig cx.ccx.sig_cx
 
 let trust_graph cx = trust_graph_sig cx.ccx.sig_cx
-
-let import_stmts cx = cx.import_stmts
-
-let imported_ts cx = cx.imported_ts
 
 let is_checked cx = cx.metadata.checked
 
@@ -588,10 +580,6 @@ let add_severity_cover cx filekey severity_cover =
 let add_lint_suppressions cx suppressions =
   cx.ccx.error_suppressions <-
     Error_suppressions.add_lint_suppressions suppressions cx.ccx.error_suppressions
-
-let add_import_stmt cx stmt = cx.import_stmts <- stmt :: cx.import_stmts
-
-let add_imported_t cx name t = cx.imported_ts <- SMap.add name t cx.imported_ts
 
 let add_require cx loc tvar = cx.require_map <- ALocMap.add loc tvar cx.require_map
 

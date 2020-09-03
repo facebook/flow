@@ -2369,8 +2369,6 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t =
 
     (loc, ExportDefaultDeclaration { ExportDefaultDeclaration.default; declaration; comments })
   | (import_loc, ImportDeclaration import_decl) ->
-    Context.add_import_stmt cx import_decl;
-
     let { ImportDeclaration.source; specifiers; default; importKind; comments } = import_decl in
     let (source_loc, { Ast.StringLiteral.value = module_name; _ }) = source in
     let type_kind_of_kind = function
@@ -2389,7 +2387,6 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t =
               ImportNamedT
                 (get_reason, import_kind, remote_export_name, module_name, t, Context.is_strict cx)
           in
-          Context.add_imported_t cx local_name t;
           Flow.flow cx (module_t, import_type))
     in
     let (specifiers, specifiers_ast) =
@@ -2455,7 +2452,6 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t =
             let module_ns_t = Import_export.import_ns cx import_reason (fst source, module_name) in
             let module_ns_typeof =
               Tvar.mk_where cx bind_reason (fun t ->
-                  Context.add_imported_t cx local_name t;
                   Flow.flow cx (module_ns_t, ImportTypeofT (bind_reason, "*", t)))
             in
             let local_ast = ((local_loc, module_ns_typeof), local_id) in
@@ -2464,7 +2460,6 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t =
           | ImportDeclaration.ImportValue ->
             let reason = mk_reason (RModule module_name) import_loc in
             let module_ns_t = Import_export.import_ns cx reason (fst source, module_name) in
-            Context.add_imported_t cx local_name module_ns_t;
             let local_ast = ((local_loc, module_ns_t), local_id) in
             ( [(local_loc, local_name, module_ns_t, None)],
               Some (ImportDeclaration.ImportNamespaceSpecifier (loc_with_star, local_ast)) )

@@ -193,10 +193,6 @@ val graph : t -> Constraint.node IMap.t
 
 val trust_graph : t -> Trust_constraint.node IMap.t
 
-val import_stmts : t -> (ALoc.t, ALoc.t) Flow_ast.Statement.ImportDeclaration.t list
-
-val imported_ts : t -> Type.t SMap.t
-
 val is_checked : t -> bool
 
 val is_verbose : t -> bool
@@ -308,10 +304,6 @@ val add_error_suppression : t -> Loc.t -> Suppression_comments.applicable_codes 
 val add_severity_cover : t -> File_key.t -> ExactCover.lint_severity_cover -> unit
 
 val add_lint_suppressions : t -> LocSet.t -> unit
-
-val add_import_stmt : t -> (ALoc.t, ALoc.t) Flow_ast.Statement.ImportDeclaration.t -> unit
-
-val add_imported_t : t -> string -> Type.t -> unit
 
 val add_require : t -> ALoc.t -> Type.t -> unit
 
