@@ -24,6 +24,6 @@ import { typeof exportValue } from './type-exports';
 (x : ExportInterface) => {};
 //    ^
 (x : ExportEnum) => {};
-//    ^
+//    TODO: make enum "import type" consistent with new-signatures
 (x : exportValue) => {};
 //    ^

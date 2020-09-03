@@ -76,13 +76,17 @@ let rec process_request ~options ~reader ~cx ~is_legit_require ~typed_ast :
     in
     extract_member_def ~reader cx obj_t name
   | Get_def_request.Type v ->
-    let rec loop = function
-      | Type.OpenT _ as t ->
+    let rec loop =
+      let open Type in
+      function
+      | OpenT _ as t ->
         (match Flow_js.possible_types_of_type cx t with
         | [t'] -> loop t'
         | [] -> Error "No possible types"
         | _ :: _ -> Error "More than one possible type")
-      | Type.AnnotT (_, t, _) -> loop t
+      | AnnotT (_, t, _)
+      | DefT (_, _, TypeT ((ImportTypeofKind | ImportClassKind | ImportEnumKind), t)) ->
+        loop t
       | t -> Ok (TypeUtil.def_loc_of_t t |> loc_of_aloc ~reader)
     in
     loop v
