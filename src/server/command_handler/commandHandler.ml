@@ -914,7 +914,7 @@ let find_code_actions ~reader ~options ~env ~profiling ~params ~client =
   match File_input.content_of_file_input file with
   | Error msg -> Lwt.return (Error msg)
   | Ok file_contents ->
-    Type_info_service.code_actions_at_loc
+    Code_action_service.code_actions_at_loc
       ~reader
       ~options
       ~env
