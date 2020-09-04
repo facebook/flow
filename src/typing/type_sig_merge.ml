@@ -329,7 +329,7 @@ and merge_def component file reason = function
   | Interface { id_loc; name = _; tparams; def } ->
     let id = Context.make_aloc_id file.cx id_loc in
     let t targs =
-      let t = merge_interface component file reason id def targs in
+      let t = merge_interface ~inline:false component file reason id def targs in
       TypeUtil.class_type t
     in
     merge_tparams_targs component file reason t tparams
@@ -945,7 +945,7 @@ and merge_annot component file = function
   | InlineInterface (loc, def) ->
     let reason = Reason.(mk_annot_reason RInterfaceType loc) in
     let id = ALoc.id_none in
-    merge_interface component file reason id def []
+    merge_interface ~inline:true component file reason id def []
 
 and merge_value component file = function
   | ClassExpr (loc, def) ->
@@ -1219,7 +1219,7 @@ and merge_opaque_type component file reason id name tparams bound body =
   in
   merge_tparams_targs component file reason t tparams
 
-and merge_interface component file reason id def =
+and merge_interface ~inline component file reason id def =
   let (InterfaceSig { extends; props; calls }) = def in
   let super =
     let super_reason = Reason.(update_desc_reason (fun d -> RSuperOf d) reason) in
@@ -1275,7 +1275,7 @@ and merge_interface component file reason id def =
         initialized_fields = SSet.empty;
         initialized_static_fields = SSet.empty;
         has_unknown_react_mixins = false;
-        inst_kind = InterfaceKind { inline = true };
+        inst_kind = InterfaceKind { inline };
       }
     in
     DefT (reason, trust, InstanceT (static, super, [], insttype))
