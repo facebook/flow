@@ -3,9 +3,10 @@
  */
 
 
+import type Suite from "flow-dev-tools/src/test/Suite.js";
 import {suite, test} from 'flow-dev-tools/src/test/Tester';
 
-export default suite(({addFile, addFiles, addCode}) => [
+export default (suite(({addFile, addFiles, addCode}) => [
   test('$ReadOnlyArray<T> is the supertype for all tuples', [
     addCode(`
       function tupleLength(tup: $ReadOnlyArray<mixed>): number {
@@ -420,4 +421,4 @@ export default suite(({addFile, addFiles, addCode}) => [
         `,
       ),
   ]),
-]);
+]): Suite);

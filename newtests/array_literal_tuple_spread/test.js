@@ -1,9 +1,10 @@
 /* @flow */
 
 
+import type Suite from "flow-dev-tools/src/test/Suite.js";
 import {suite, test} from 'flow-dev-tools/src/test/Tester';
 
-export default suite(({addFile, addFiles, addCode}) => [
+export default (suite(({addFile, addFiles, addCode}) => [
   test("any flowing to spreads", [
     addCode(`
       function withoutAny(tup: [1,2], notAny: [3, 4]): [1, 2, 3, 4] {
@@ -374,4 +375,4 @@ export default suite(({addFile, addFiles, addCode}) => [
           'like spreading any, which results in any'
       ),
   ]),
-]);
+]): Suite);

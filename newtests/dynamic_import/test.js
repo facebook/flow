@@ -3,9 +3,10 @@
  */
 
 
+import type Suite from "flow-dev-tools/src/test/Suite.js";
 import {suite, test} from 'flow-dev-tools/src/test/Tester';
 
-export default suite(({addFile, addFiles, addCode}) => [
+export default (suite(({addFile, addFiles, addCode}) => [
   test('returns a promise of the ModuleNamespaceObject', [
     addFile('esmodule.js').noNewErrors(),
 
@@ -98,4 +99,4 @@ export default suite(({addFile, addFiles, addCode}) => [
         `,
       ),
   ]),
-]);
+]): Suite);

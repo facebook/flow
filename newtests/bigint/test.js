@@ -2,9 +2,10 @@
  * @flow
  */
 
+import type Suite from "flow-dev-tools/src/test/Suite.js";
 import { suite, test } from "flow-dev-tools/src/test/Tester";
 
-export default suite(({ addFile, addFiles, addCode }) => [
+export default (suite(({ addFile, addFiles, addCode }) => [
   test("BigInt invalid decimal type literal", [
     addCode(`
       type InvalidDecimal = 1.0n;
@@ -371,4 +372,4 @@ export default suite(({ addFile, addFiles, addCode }) => [
       const valid_small = 100n;
     `).noNewErrors()
   ])
-]);
+]): Suite);

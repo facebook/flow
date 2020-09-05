@@ -1022,7 +1022,7 @@ export default class Builder {
     process.on('exit', this.cleanup);
   }
 
-  cleanup = async () => {
+  cleanup: () => Promise<void> = async () => {
     await Promise.all(Builder.builders.map(builder => builder.cleanup()));
   };
 

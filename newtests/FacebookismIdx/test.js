@@ -2,9 +2,10 @@
  * @flow
  */
 
+import type Suite from "flow-dev-tools/src/test/Suite.js";
 import {suite, test} from 'flow-dev-tools/src/test/Tester';
 
-export default suite(({addFile, addFiles, addCode}) => [
+export default (suite(({addFile, addFiles, addCode}) => [
   test('idx(object)', [
     addCode('declare var idx: $Facebookism$Idx;\n').noNewErrors(),
     addCode('declare var obj1: {a: ?{b: {c: number}}};').noNewErrors(),
@@ -303,4 +304,4 @@ export default suite(({addFile, addFiles, addCode}) => [
         `,
       ),
   ]),
-]);
+]): Suite);
