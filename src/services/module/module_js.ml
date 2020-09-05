@@ -166,7 +166,7 @@ module type MODULE_SYSTEM = sig
     reader:Abstract_state_reader.t ->
     SSet.t SMap.t ->
     File_key.t ->
-    ALoc.t Nel.t ->
+    ALoc.t ->
     ?resolution_acc:resolution_acc ->
     string ->
     Modulename.t
@@ -328,7 +328,7 @@ module Node = struct
             lazy (path_if_exists_with_file_exts ~file_options resolution_acc path_w_index file_exts);
           ]
 
-  let resolve_relative ~options ~reader ((loc : ALoc.t), _) ?resolution_acc root_path rel_path =
+  let resolve_relative ~options ~reader (loc : ALoc.t) ?resolution_acc root_path rel_path =
     let file_options = Options.file_options options in
     let path = Files.normalize_path root_path rel_path in
     if Files.is_flow_file ~options:file_options path then
@@ -398,7 +398,8 @@ module Node = struct
   let explicitly_relative r =
     Str.string_match Files.current_dir_name r 0 || Str.string_match Files.parent_dir_name r 0
 
-  let resolve_import ~options ~reader node_modules_containers f loc ?resolution_acc import_str =
+  let resolve_import
+      ~options ~reader node_modules_containers f (loc : ALoc.t) ?resolution_acc import_str =
     let file = File_key.to_string f in
     let dir = Filename.dirname file in
     let root_str = Options.root options |> Path.to_string in
@@ -628,8 +629,9 @@ let imported_modules ~options ~reader node_modules_containers file require_loc =
   let resolution_acc = { paths = SSet.empty; errors = [] } in
   let resolved_modules =
     SMap.fold
-      (fun mref loc acc ->
+      (fun mref locs acc ->
         let m =
+          let loc = Nel.hd locs in
           imported_module file loc mref ~options ~reader ~node_modules_containers ~resolution_acc
         in
         SMap.add mref m acc)

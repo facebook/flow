@@ -103,7 +103,7 @@ let rec process_request ~options ~reader ~cx ~is_legit_require ~typed_ast :
              ~reader:(Abstract_state_reader.State_reader reader)
              ~node_modules_containers:!Files.node_modules_containers
              (Context.file cx)
-             (Nel.one require_loc)
+             require_loc
              name)
       in
       match filename with

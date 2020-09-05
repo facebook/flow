@@ -387,7 +387,7 @@ let merge_contents_context ~reader options file ast info file_sig =
             ~reader
             ~node_modules_containers:!Files.node_modules_containers
             file
-            locs
+            (Nel.hd locs)
             r
         in
         (r, locs, resolved_r, file) :: required)

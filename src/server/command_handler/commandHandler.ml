@@ -602,7 +602,7 @@ let find_module ~options ~reader (moduleref, filename) =
       ~reader:(Abstract_state_reader.State_reader reader)
       ~node_modules_containers:!Files.node_modules_containers
       file
-      (Nel.one (ALoc.of_loc loc))
+      (ALoc.of_loc loc)
       moduleref
   in
   Module_heaps.Reader.get_file ~reader ~audit:Expensive.warn module_name
