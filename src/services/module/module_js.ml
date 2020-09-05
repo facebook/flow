@@ -622,24 +622,6 @@ let imported_module ~options ~reader ~node_modules_containers file loc ?resoluti
   let module M = (val get_module_system options) in
   M.imported_module ~options ~reader node_modules_containers file loc ?resolution_acc r
 
-let imported_modules ~options ~reader node_modules_containers file require_loc =
-  (* Resolve all reqs relative to the given cx. Accumulate dependent paths in
-     resolution_acc. Return the map of reqs to their resolved names, and the set
-     containing the resolved names. *)
-  let resolution_acc = { paths = SSet.empty; errors = [] } in
-  let resolved_modules =
-    SMap.fold
-      (fun mref locs acc ->
-        let m =
-          let loc = Nel.hd locs in
-          imported_module file loc mref ~options ~reader ~node_modules_containers ~resolution_acc
-        in
-        SMap.add mref m acc)
-      require_loc
-      SMap.empty
-  in
-  (resolved_modules, resolution_acc)
-
 let choose_provider ~options m files errmap =
   let module M = (val get_module_system options) in
   M.choose_provider m files errmap
@@ -659,14 +641,24 @@ let checked_file ~reader ~audit f =
   let info = f |> Module_heaps.Reader_dispatcher.get_info_unsafe ~reader ~audit in
   info.Module_heaps.checked
 
-(* TODO [perf]: measure size and possibly optimize *)
-(* Extract and process information from context. In particular, resolve
-   references to required modules in a file, and record the results.  *)
-let resolved_requires_of ~options ~reader node_modules_containers f require_loc =
-  let (resolved_modules, { paths; errors }) =
-    imported_modules ~options ~reader node_modules_containers f require_loc
+(** Resolve references to required modules in a file, and record the results.
+
+   TODO [perf]: measure size and possibly optimize *)
+let resolved_requires_of ~options ~reader node_modules_containers file require_loc =
+  let resolution_acc = { paths = SSet.empty; errors = [] } in
+  let resolved_modules =
+    SMap.fold
+      (fun mref locs acc ->
+        let m =
+          let loc = Nel.hd locs in
+          imported_module file loc mref ~options ~reader ~node_modules_containers ~resolution_acc
+        in
+        SMap.add mref m acc)
+      require_loc
+      SMap.empty
   in
-  (errors, Module_heaps.mk_resolved_requires ~resolved_modules ~phantom_dependents:paths)
+  let { paths = phantom_dependents; errors } = resolution_acc in
+  (errors, Module_heaps.mk_resolved_requires ~resolved_modules ~phantom_dependents)
 
 let add_parsed_resolved_requires ~mutator ~reader ~options ~node_modules_containers file =
   let file_sig =
