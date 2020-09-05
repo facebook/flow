@@ -6,19 +6,8 @@
 
 assert_ok "$FLOW" stop
 
-printf "\\nStart server in classic mode\\n"
-assert_ok "$FLOW" start .
-
-printf "\\nValue cycle should include both files\\n"
-assert_ok "$FLOW" cycle --strip-root fileA.js
-
-printf "\\nType cycle should include both files\\n"
-assert_ok "$FLOW" cycle --strip-root --types fileA.js
-
-assert_ok "$FLOW" stop
-
 printf "\\nStart server in types-first mode\\n"
-start_flow . --types-first
+start_flow .
 
 printf "\\nValue cycle should include both files\\n"
 assert_ok "$FLOW" cycle --strip-root fileA.js

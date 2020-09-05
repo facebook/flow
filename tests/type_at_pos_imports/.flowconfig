@@ -8,5 +8,6 @@ lib.js
 [lints]
 
 [options]
+types_first=false
 
 [strict]

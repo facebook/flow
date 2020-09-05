@@ -219,7 +219,7 @@ module Opts = struct
       traces = 0;
       trust_mode = Options.NoTrust;
       type_asserts = false;
-      types_first = false;
+      types_first = true;
       wait_for_recheck = false;
       weak = false;
     }

@@ -806,7 +806,6 @@ module Options_flags = struct
     temp_dir: string option;
     traces: int option;
     trust_mode: Options.trust_mode option;
-    types_first: bool;
     new_signatures: bool;
     abstract_locations: bool;
     verbose: Verbose.t option;
@@ -859,7 +858,6 @@ let options_flags =
       saved_state_fetcher
       saved_state_force_recheck
       saved_state_no_fallback
-      types_first
       new_signatures
       abstract_locations
       include_suppressions
@@ -892,7 +890,6 @@ let options_flags =
         saved_state_force_recheck;
         saved_state_no_fallback;
         trust_mode;
-        types_first;
         new_signatures;
         abstract_locations;
         include_suppressions;
@@ -956,7 +953,6 @@ let options_flags =
            no_arg
            ~doc:
              "If saved state fails to load, exit (normally fallback is to initialize from scratch)"
-      |> flag "--types-first" no_arg ~doc:"types-first architecture"
       |> flag "--new-signatures" no_arg ~doc:""
       |> flag
            "--abstract-locations"
@@ -1163,14 +1159,14 @@ let make_options ~flowconfig_name ~flowconfig ~lazy_mode ~root flags =
     Base.Option.value lazy_mode ~default
   in
   let opt_arch =
-    if flags.new_signatures || flags.types_first || FlowConfig.types_first flowconfig then
+    if flags.new_signatures || FlowConfig.types_first flowconfig then
       let new_signatures = flags.new_signatures || FlowConfig.new_signatures flowconfig in
       Options.TypesFirst { new_signatures }
     else
       Options.Classic
   in
   let opt_enforce_well_formed_exports =
-    if flags.new_signatures || flags.types_first then
+    if flags.new_signatures || FlowConfig.types_first flowconfig then
       Some []
     else if FlowConfig.enforce_well_formed_exports flowconfig then
       let paths =
