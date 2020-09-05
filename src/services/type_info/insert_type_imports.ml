@@ -30,18 +30,17 @@ module Modules = struct
   (* Relativize module name if in the same folder, or use haste paths, or fail *)
   let resolve file module_name =
     match module_name with
-    | Modulename.String s -> Ok s
+    | Modulename.String s -> s
     | Modulename.Filename f ->
       let f = File_key.to_string f in
       let local_file = Filename.basename f in
-      (match (local_file, Filename.dirname f, Filename.dirname (File_key.to_string file)) with
-      (* Match imports from the same folder *)
-      | (local_file, dep_folder, this_folder) when dep_folder = this_folder ->
-        Ok (Filename.concat "./" local_file)
-      | (local_file, _, _) ->
-        (match SMap.find_opt local_file paths with
-        | Some source -> Ok source
-        | None -> Error (Error.Unrecognizable_module_error f)))
+      let dep_folder = Filename.dirname f in
+      let this_folder = Filename.dirname (File_key.to_string file) in
+      if dep_folder = this_folder then
+        Filename.concat "./" local_file
+      else
+        let relative_dir = Files.relative_path this_folder dep_folder in
+        Path.to_string (Path.concat (Path.make relative_dir) local_file)
 end
 
 module AstHelper = struct
@@ -533,8 +532,8 @@ end = struct
           | None -> failwith "No source"
         in
         ExportsHelper.resolve use_mode sym_def_loc remote_name
-        >>= fun { ExportsHelper.import_kind; default } ->
-        Modules.resolve file module_name >>| fun source ->
+        >>| fun { ExportsHelper.import_kind; default } ->
+        let source = Modules.resolve file module_name in
         let local_name =
           ImportInfo.to_local_name ~iteration ~reserved_names index use_mode remote_name
         in

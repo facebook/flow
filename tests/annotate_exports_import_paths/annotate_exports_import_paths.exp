@@ -1,11 +1,12 @@
 
 === Codemod annotate-exports ===
 
->>> ./main.js
+>>> ./a/b/c/f.js
 // @flow
 
-import type {C} from "./lib.js";import { foo } from './lib';
-module.exports = (foo(): C);
+import type {A} from "../../../d/e/lib.js";import {a} from '../../../d/e/lib';
+
+module.exports = (a(): A);
 
 >>> Launching report...
 
@@ -38,11 +39,12 @@ Warnings:
 
 === Autofix exports ===
 
->>> ./main.js
+>>> ./a/b/c/f.js
 // @flow
 
-import type {C} from "./lib.js";import { foo } from './lib';
-module.exports = (foo(): C);
+import type {A} from "../../../d/e/lib.js";import {a} from '../../../d/e/lib';
+
+module.exports = (a(): A);
 
 
 === Diff between codemod-ed & autofix-ed ===
