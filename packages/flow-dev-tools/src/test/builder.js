@@ -63,8 +63,8 @@ export class TestBuilder {
   sourceDir: string;
   suiteName: string;
   tmpDir: string;
-  testErrors = [];
-  allowFlowServerToDie = false;
+  testErrors: Array<string> = [];
+  allowFlowServerToDie: boolean = false;
   logStream: stream$Writable | null;
   waitForRecheck: boolean;
 

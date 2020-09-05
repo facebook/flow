@@ -7,6 +7,8 @@
  * @flow
  */
 
+import type {Flag} from "../command/Base";
+
 import {format} from 'util';
 
 import Base, {commonFlags} from './../command/Base';
@@ -54,7 +56,7 @@ LEGACY_TEST_DIR
 `;
   }
 
-  static getFlags() {
+  static getFlags(): Array<Flag> {
     return [
       commonFlags.bin,
       commonFlags.parallelism,
