@@ -347,7 +347,7 @@ let insert_type
   File_input.content_of_file_input file_input %>>= fun file_content ->
   try_with (fun _ ->
       let%lwt result =
-        Type_info_service.insert_type
+        Code_action_service.insert_type
           ~options
           ~env
           ~profiling
@@ -367,7 +367,7 @@ let autofix_exports ~options ~env ~profiling ~input =
   File_input.content_of_file_input input %>>= fun file_content ->
   try_with (fun _ ->
       let%lwt result =
-        Type_info_service.autofix_exports ~options ~env ~profiling ~file_key ~file_content
+        Code_action_service.autofix_exports ~options ~env ~profiling ~file_key ~file_content
       in
       Lwt.return result)
 

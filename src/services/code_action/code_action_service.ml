@@ -116,3 +116,47 @@ let code_actions_at_loc ~reader ~options ~env ~profiling ~params ~file_key ~file
     in
     Ok (experimental_code_actions @ error_fixes)
   | _ -> Ok []
+
+let autofix_exports ~options ~env ~profiling ~file_key ~file_content =
+  Autofix_exports.(
+    Types_js.typecheck_contents ~options ~env ~profiling file_content file_key >|= function
+    | (Some (full_cx, ast, file_sig, tolerable_errors, typed_ast), _, _) ->
+      let sv_errors = set_of_fixable_signature_verification_locations tolerable_errors in
+      let (new_ast, it_errs) =
+        fix_signature_verification_errors ~file_key ~full_cx ~file_sig ~typed_ast ast sv_errors
+      in
+      Ok (Insert_type.mk_patch ast new_ast file_content, it_errs)
+    | (None, _errs, _) -> Error "Failed to type-check file")
+
+let insert_type
+    ~options
+    ~env
+    ~profiling
+    ~file_key
+    ~file_content
+    ~target
+    ~expand_aliases
+    ~omit_targ_defaults
+    ~location_is_strict:strict
+    ~ambiguity_strategy =
+  Insert_type.(
+    Types_js.typecheck_contents ~options ~env ~profiling file_content file_key >|= function
+    | (Some (full_cx, ast, file_sig, _, typed_ast), _, _) ->
+      begin
+        try
+          let new_ast =
+            Insert_type.insert_type
+              ~full_cx
+              ~file_sig
+              ~typed_ast
+              ~expand_aliases
+              ~omit_targ_defaults
+              ~strict
+              ~ambiguity_strategy
+              ast
+              target
+          in
+          Ok (mk_patch ast new_ast file_content)
+        with FailedToInsertType err -> Error (error_to_string err)
+      end
+    | (None, errs, _) -> Error (error_to_string (Expected (FailedToTypeCheck errs))))
