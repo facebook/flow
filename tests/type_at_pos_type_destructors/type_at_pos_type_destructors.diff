@@ -1,0 +1,11 @@
+--- type_at_pos_type_destructors.exp
++++ type_at_pos_type_destructors.out
+@@ -622,7 +622,7 @@
+ 
+ type-destructor.js:157:6
+ Flags: --evaluate-type-destructors
+-type CallExtractPropTypePoly<P> = P
++type CallExtractPropTypePoly<P> = $Call<ExtractPropType, PropObjPoly<P>>
+ type-destructor.js:157:6,157:28
+ 
+ type-destructor.js:161:6

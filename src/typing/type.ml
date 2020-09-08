@@ -660,6 +660,7 @@ module rec TypeTerm : sig
     | SentinelPropTestT of reason * t * string * bool * UnionEnum.star * tvar
     | IdxUnwrap of reason * t_out
     | IdxUnMaybeifyT of reason * t_out
+    | NoFloatingPromisesT of reason * bool
     | OptionalChainT of reason * reason * (* this *) t * use_t * (* voids *) t_out
     | InvariantT of reason
     (* Function predicate uses *)
@@ -3120,6 +3121,7 @@ let string_of_use_ctor = function
   | ObjTestProtoT _ -> "ObjTestProtoT"
   | ObjTestT _ -> "ObjTestT"
   | OptionalChainT _ -> "OptionalChainT"
+  | NoFloatingPromisesT _ -> "NoFloatingPromisesT"
   | OrT _ -> "OrT"
   | PredicateT _ -> "PredicateT"
   | ReactKitT _ -> "ReactKitT"

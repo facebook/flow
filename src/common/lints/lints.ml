@@ -38,6 +38,7 @@ type lint_kind =
   | SignatureVerificationFailure
   | ImplicitInexactObject
   | UninitializedInstanceProperty
+  | NoFloatingPromises
   | AmbiguousObjectType
   | DefaultImportAccess
   | InvalidImportStarUse
@@ -76,6 +77,7 @@ let string_of_kind = function
   | SignatureVerificationFailure -> "signature-verification-failure"
   | ImplicitInexactObject -> "implicit-inexact-object"
   | UninitializedInstanceProperty -> "uninitialized-instance-property"
+  | NoFloatingPromises -> "no-floating-promises"
   | AmbiguousObjectType -> "ambiguous-object-type"
   | DefaultImportAccess -> "default-import-access"
   | InvalidImportStarUse -> "invalid-import-star-use"
@@ -115,6 +117,7 @@ let kinds_of_string = function
   | "implicit-inexact-object" -> Some [ImplicitInexactObject]
   | "ambiguous-object-type" -> Some [AmbiguousObjectType]
   | "uninitialized-instance-property" -> Some [UninitializedInstanceProperty]
+  | "no-floating-promises" -> Some [NoFloatingPromises]
   | "default-import-access" -> Some [DefaultImportAccess]
   | "invalid-import-star-use" -> Some [InvalidImportStarUse]
   | "non-const-var-export" -> Some [NonConstVarExport]

@@ -1,0 +1,11 @@
+--- async.exp
++++ async.out
+@@ -123,7 +123,7 @@
+ 
+ Error ----------------------------------------------------------------------------------------- async_return_void.js:4:3
+ 
+-Cannot return undefined because undefined [1] is incompatible with string [2] in type argument `R` [3].
++Cannot return `Promise` because undefined [1] is incompatible with string [2] in type argument `R` [3].
+ [incompatible-return]
+ 
+    async_return_void.js:4:3

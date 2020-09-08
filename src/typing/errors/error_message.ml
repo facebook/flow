@@ -286,6 +286,7 @@ and 'loc t' =
   | EOptionalChainingMethods of 'loc
   | EUnnecessaryOptionalChain of 'loc * 'loc virtual_reason
   | EUnnecessaryInvariant of 'loc * 'loc virtual_reason
+  | ENoFloatingPromises of 'loc * 'loc virtual_reason
   | EUnexpectedTemporaryBaseType of 'loc
   | ECannotDelete of 'loc * 'loc virtual_reason
   | EBigIntNotYetSupported of 'loc virtual_reason
@@ -813,6 +814,7 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
   | EOptionalChainingMethods loc -> EOptionalChainingMethods (f loc)
   | EUnnecessaryOptionalChain (loc, r) -> EUnnecessaryOptionalChain (f loc, map_reason r)
   | EUnnecessaryInvariant (loc, r) -> EUnnecessaryInvariant (f loc, map_reason r)
+  | ENoFloatingPromises (loc, r) -> ENoFloatingPromises (f loc, map_reason r)
   | EUnexpectedTemporaryBaseType loc -> EUnexpectedTemporaryBaseType (f loc)
   | ECannotDelete (l1, r1) -> ECannotDelete (f l1, map_reason r1)
   | EBigIntNotYetSupported r -> EBigIntNotYetSupported (map_reason r)
@@ -1108,6 +1110,7 @@ let util_use_op_of_msg nope util = function
   | EOptionalChainingMethods _
   | EUnnecessaryOptionalChain _
   | EUnnecessaryInvariant _
+  | ENoFloatingPromises _
   | EUnexpectedTemporaryBaseType _
   | ECannotDelete _
   | EBigIntNotYetSupported _
@@ -1220,6 +1223,7 @@ let loc_of_msg : 'loc t' -> 'loc option = function
   | EUnsafeGettersSetters loc
   | EUnnecessaryOptionalChain (loc, _)
   | EUnnecessaryInvariant (loc, _)
+  | ENoFloatingPromises (loc, _)
   | EOptionalChainingMethods loc
   | EExperimentalOptionalChaining loc
   | EUnusedSuppression loc
@@ -1353,6 +1357,7 @@ let kind_of_msg =
     | EImplicitInexactObject _ -> LintError Lints.ImplicitInexactObject
     | EAmbiguousObjectType _ -> LintError Lints.AmbiguousObjectType
     | EUninitializedInstanceProperty _ -> LintError Lints.UninitializedInstanceProperty
+    | ENoFloatingPromises _ -> LintError Lints.NoFloatingPromises
     | EBadDefaultImportAccess _ -> LintError Lints.DefaultImportAccess
     | EBadDefaultImportDestructuring _ -> LintError Lints.DefaultImportAccess
     | EInvalidImportStarUse _ -> LintError Lints.InvalidImportStarUse
@@ -2992,6 +2997,14 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
     Normal { features }
   | EBigIntNotYetSupported reason ->
     Normal { features = [text "BigInt "; ref reason; text " is not yet supported."] }
+  | ENoFloatingPromises (_, reason) ->
+    let features =
+      [
+        text "Floating promises can lead to unexpected scheduling.";
+        ref reason;
+      ]
+    in
+    Normal { features }
   | ECannotSpreadInterface { spread_reason; interface_reason; use_op } ->
     let features =
       [
@@ -3330,6 +3343,7 @@ let is_lint_error = function
   | EUnnecessaryInvariant _
   | EImplicitInexactObject _
   | EAmbiguousObjectType _
+  | ENoFloatingPromises _
   | EUninitializedInstanceProperty _ ->
     true
   | _ -> false
@@ -3452,6 +3466,7 @@ let error_code_of_message err : error_code option =
   | EExperimentalEnums _ -> Some IllegalEnum
   | EExperimentalExportStarAs _ -> Some IllegalExportStar
   | EExperimentalOptionalChaining _ -> Some IllegalOptionalChain
+  | ENoFloatingPromises _ -> Some NoFloatingPromises
   | EExponentialSpread _ -> Some ExponentialSpread
   | EExportsAnnot _ -> Some InvalidExportsTypeArg
   | EExportValueAsType (_, _) -> Some ExportValueAsType

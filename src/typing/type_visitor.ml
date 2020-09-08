@@ -543,6 +543,7 @@ class ['a] t =
         let acc = self#type_ cx pole_TODO acc this in
         let acc = self#use_type_ cx acc tout in
         self#type_ cx pole_TODO acc void_out
+      | NoFloatingPromisesT _ -> acc
       | InvariantT _ -> acc
       | CallLatentPredT (_, _, _, t1, t2)
       | CallOpenPredT (_, _, _, t1, t2) ->

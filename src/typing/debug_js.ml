@@ -713,6 +713,7 @@ and dump_use_t_ (depth, tvars) cx t =
     | ImportTypeT _ -> p t
     | IntersectionPreprocessKitT _ -> p t
     | InvariantT _ -> p t
+    | NoFloatingPromisesT _ -> p t
     | LookupT { lookup_kind = kind; propref = prop; lookup_action = action; ids; _ } ->
       p
         ~extra:
@@ -1559,6 +1560,7 @@ let dump_error_message =
       let msg = string_of_signature_error ALoc.debug_to_string sve in
       spf "ESignatureVerification (%s)" msg
     | EBigIntNotYetSupported reason -> spf "EBigIntNotYetSupported (%s)" (dump_reason cx reason)
+    | ENoFloatingPromises (loc, _) -> spf "ENoFloatingPromises (%s)" (string_of_aloc loc)
     | ECannotSpreadInterface { spread_reason; interface_reason; use_op } ->
       spf
         "ECannotSpreadInterface (%s) (%s) (%s)"

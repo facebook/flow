@@ -2128,6 +2128,18 @@ struct
               (match Type_filter.not_exists l with
               | DefT (_, _, EmptyT Bottom) -> false
               | _ -> true)
+        (************************)
+        (* no floating promises *)
+        (************************)
+        | (TypeAppT (reason, _, _, _), NoFloatingPromisesT (reason_op, useful)) ->
+          let typeapp_desc = DescFormat.name_of_instance_reason reason in
+          if typeapp_desc = "`Promise`" then
+            Context.mark_floating_promise
+              cx
+              (aloc_of_reason reason_op)
+              (reason_of_t l)
+              ~useful;
+        | (_, NoFloatingPromisesT _) -> ()
         (***************)
         (* maybe types *)
         (***************)
@@ -4254,6 +4266,7 @@ struct
           let { this_t = o1; params = _; return_t = t1; closure_t = func_scope_id; changeset; _ } =
             funtype
           in
+          rec_flow cx trace (t1, NoFloatingPromisesT (reason_callsite, false));
           let {
             call_this_t = o2;
             call_targs;
@@ -5208,6 +5221,16 @@ struct
         | ( DefT (reason_c, _, InstanceT (_, super, _, instance)),
             MethodT (use_op, reason_call, reason_lookup, Named (reason_prop, x), action, prop_t) )
           ->
+          let funtype =
+            match action with
+            | CallM funtype -> funtype
+            | ChainM (_, _, _, funtype, _) -> funtype
+          in
+          let instance_desc = DescFormat.name_of_instance_reason reason_c in
+          if instance_desc = "Promise" && x = "then" then
+            Context.mark_floating_promise cx (aloc_of_reason reason_call) (reason_of_t l) ~useful:((List.length funtype.call_args_tlist) >= 2);
+          if instance_desc = "Promise" && x = "catch" then
+            Context.mark_floating_promise cx (aloc_of_reason reason_call) (reason_of_t l) ~useful:((List.length funtype.call_args_tlist) >= 1);
           (* TODO: closure *)
           let own_props = Context.find_props cx instance.own_props in
           let proto_props = Context.find_props cx instance.proto_props in
@@ -7646,6 +7669,7 @@ struct
     | (_, ObjTestT _)
     | (_, ObjTestProtoT _)
     | (_, OptionalChainT _)
+    | (_, NoFloatingPromisesT _)
     | (_, SentinelPropTestT _)
     | (_, TestPropT _) ->
       false
@@ -7909,7 +7933,8 @@ struct
      this can be handled by the pre-existing rules *)
     | UseT (_, UnionT _)
     | UseT (_, IntersectionT _) (* Already handled in the wildcard case in __flow *)
-    | UseT (_, OpenT _) ->
+    | UseT (_, OpenT _)
+    | NoFloatingPromisesT _ ->
       false
     (* These types have no t_out, so can't propagate anything. Thus we short-circuit by returning
      true *)

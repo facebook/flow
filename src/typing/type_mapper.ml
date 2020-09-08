@@ -1446,6 +1446,7 @@ class virtual ['a] t_with_uses =
         else
           OptionalChainT (r1, r2, this', t_out', void_out')
       | InvariantT _ -> t
+      | NoFloatingPromisesT _ -> t
       | CallLatentPredT (r, b, i, t1, t2) ->
         let t1' = self#type_ cx map_cx t1 in
         let t2' = self#tout cx map_cx t2 in

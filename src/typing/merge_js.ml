@@ -202,6 +202,16 @@ let detect_unnecessary_invariants cx =
       Flow_js.add_output cx (Error_message.EUnnecessaryInvariant (loc, reason)))
     (Context.unnecessary_invariants cx)
 
+
+let detect_floating_promises cx =
+  let expr_map = Context.bare_expressions cx in
+  Base.List.iter
+    ~f:(fun (loc, reason) -> match (Loc_collections.ALocMap.find_opt loc expr_map) with
+      | Some _ -> Flow_js.add_output cx (Error_message.ENoFloatingPromises (loc, reason))
+      | None -> ()
+    )
+    (Context.floating_promises cx)
+
 let detect_invalid_type_assert_calls cx file_sigs cxs tasts =
   if Context.type_asserts cx then Type_asserts.detect_invalid_calls ~full_cx:cx file_sigs cxs tasts
 
@@ -579,6 +589,7 @@ let merge_component
     detect_test_prop_misses cx;
     detect_unnecessary_optional_chains cx;
     detect_unnecessary_invariants cx;
+    detect_floating_promises cx;
     detect_invalid_type_assert_calls cx file_sigs cxs tasts;
     Strict_es6_import_export.detect_errors ~metadata ~phase cx results;
 
