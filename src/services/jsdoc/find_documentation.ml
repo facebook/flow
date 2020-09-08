@@ -209,6 +209,12 @@ class documentation_searcher (def_loc : Loc.t) =
       | Expression (loc, _) ->
         if this#is_target loc then find comments);
       super#export_default_declaration loc decl
+
+    method! type_alias loc type_alias =
+      let open Flow_ast.Statement.TypeAlias in
+      let { id = (id_loc, _); comments; _ } = type_alias in
+      if this#is_target id_loc then find comments;
+      super#type_alias loc type_alias
   end
 
 let search def_loc ast =

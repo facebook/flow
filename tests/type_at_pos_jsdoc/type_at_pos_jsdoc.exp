@@ -1214,3 +1214,172 @@ Flags: --strip-root --pretty
   "end":6
 }
 
+types.js:14:7
+Flags: --strip-root --pretty
+{
+  "documentation":"this is myFoo",
+  "type":"type myFoo = number",
+  "reasons":[],
+  "loc":{
+    "source":"types.js",
+    "type":"SourceFile",
+    "start":{"line":14,"column":6,"offset":345},
+    "end":{"line":14,"column":10,"offset":350}
+  },
+  "path":"types.js",
+  "line":14,
+  "endline":14,
+  "start":6,
+  "end":10
+}
+
+types.js:16:7
+Flags: --strip-root --pretty
+{
+  "documentation":"this is myBar",
+  "type":"type myBar<T> = ?T",
+  "reasons":[],
+  "loc":{
+    "source":"types.js",
+    "type":"SourceFile",
+    "start":{"line":16,"column":6,"offset":372},
+    "end":{"line":16,"column":10,"offset":377}
+  },
+  "path":"types.js",
+  "line":16,
+  "endline":16,
+  "start":6,
+  "end":10
+}
+
+types.js:18:7
+Flags: --strip-root --pretty
+{
+  "documentation":"this is myClass",
+  "type":"class myClass",
+  "reasons":[],
+  "loc":{
+    "source":"types.js",
+    "type":"SourceFile",
+    "start":{"line":18,"column":6,"offset":407},
+    "end":{"line":18,"column":12,"offset":414}
+  },
+  "path":"types.js",
+  "line":18,
+  "endline":18,
+  "start":6,
+  "end":12
+}
+
+types.js:20:7
+Flags: --strip-root --pretty
+{
+  "type":"interface myInterface",
+  "reasons":[],
+  "loc":{
+    "source":"types.js",
+    "type":"SourceFile",
+    "start":{"line":20,"column":6,"offset":436},
+    "end":{"line":20,"column":16,"offset":447}
+  },
+  "path":"types.js",
+  "line":20,
+  "endline":20,
+  "start":6,
+  "end":16
+}
+
+types.js:22:7
+Flags: --strip-root --pretty
+{
+  "documentation":"this is ExportFoo",
+  "type":"type ExportFoo = number",
+  "reasons":[],
+  "loc":{
+    "source":"types.js",
+    "type":"SourceFile",
+    "start":{"line":22,"column":6,"offset":469},
+    "end":{"line":22,"column":14,"offset":478}
+  },
+  "path":"types.js",
+  "line":22,
+  "endline":22,
+  "start":6,
+  "end":14
+}
+
+types.js:24:7
+Flags: --strip-root --pretty
+{
+  "documentation":"this is ExportBar",
+  "type":"type ExportBar<T> = ?T",
+  "reasons":[],
+  "loc":{
+    "source":"types.js",
+    "type":"SourceFile",
+    "start":{"line":24,"column":6,"offset":500},
+    "end":{"line":24,"column":14,"offset":509}
+  },
+  "path":"types.js",
+  "line":24,
+  "endline":24,
+  "start":6,
+  "end":14
+}
+
+types.js:26:7
+Flags: --strip-root --pretty
+{
+  "documentation":"this is ExportClass",
+  "type":"class ExportClass",
+  "reasons":[],
+  "loc":{
+    "source":"types.js",
+    "type":"SourceFile",
+    "start":{"line":26,"column":6,"offset":539},
+    "end":{"line":26,"column":16,"offset":550}
+  },
+  "path":"types.js",
+  "line":26,
+  "endline":26,
+  "start":6,
+  "end":16
+}
+
+types.js:28:7
+Flags: --strip-root --pretty
+{
+  "type":"interface ExportInterface",
+  "reasons":[],
+  "loc":{
+    "source":"types.js",
+    "type":"SourceFile",
+    "start":{"line":28,"column":6,"offset":572},
+    "end":{"line":28,"column":20,"offset":587}
+  },
+  "path":"types.js",
+  "line":28,
+  "endline":28,
+  "start":6,
+  "end":20
+}
+
+types.js:32:7
+Flags: --strip-root --pretty
+{
+  "documentation":"this is ExportValue",
+  "type":"type exportValue = number",
+  "reasons":[],
+  "loc":{
+    "source":"types.js",
+    "type":"SourceFile",
+    "start":{"line":32,"column":6,"offset":681},
+    "end":{"line":32,"column":16,"offset":692}
+  },
+  "path":"types.js",
+  "line":32,
+  "endline":32,
+  "start":6,
+  "end":16
+}
+
