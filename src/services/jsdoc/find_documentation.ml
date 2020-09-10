@@ -215,6 +215,12 @@ class documentation_searcher (def_loc : Loc.t) =
       let { id = (id_loc, _); comments; _ } = type_alias in
       if this#is_target id_loc then find comments;
       super#type_alias loc type_alias
+
+    method! interface loc interface =
+      let open Flow_ast.Statement.Interface in
+      let { id = (id_loc, _); comments; _ } = interface in
+      if this#is_target id_loc then find comments;
+      super#interface loc interface
   end
 
 let search def_loc ast =

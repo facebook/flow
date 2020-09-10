@@ -1274,6 +1274,7 @@ Flags: --strip-root --pretty
 types.js:20:7
 Flags: --strip-root --pretty
 {
+  "documentation":"this is myInterface",
   "type":"interface myInterface",
   "reasons":[],
   "loc":{
@@ -1349,6 +1350,7 @@ Flags: --strip-root --pretty
 types.js:28:7
 Flags: --strip-root --pretty
 {
+  "documentation":"this is ExportInterace",
   "type":"interface ExportInterface",
   "reasons":[],
   "loc":{
