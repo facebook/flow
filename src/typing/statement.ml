@@ -1310,6 +1310,18 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t =
         in
         let enum_exhaustive_check = enum_exhaustive_check_of_switch_cases cases_ast in
         let ((_, discriminant_t), _) = discriminant_ast in
+        let discriminant_after_check =
+          if added_default then
+            match discriminant with
+            | (loc, Ast.Expression.Identifier (_, { Ast.Identifier.name; _ })) ->
+              Some (Env.query_var cx name loc)
+            | _ ->
+              Refinement.key ~allow_optional:true discriminant
+              |> Base.Option.bind ~f:Env.get_current_env_refi
+              |> Base.Option.map ~f:(fun refi -> refi.Scope.refined)
+          else
+            None
+        in
         Flow.flow
           cx
           ( discriminant_t,
@@ -1318,6 +1330,7 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t =
                 reason = reason_of_t discriminant_t;
                 check = enum_exhaustive_check;
                 incomplete_out = exhaustive_check_incomplete_out;
+                discriminant_after_check;
               } );
         let ast =
           ( switch_loc,

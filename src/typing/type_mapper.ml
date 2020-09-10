@@ -1116,8 +1116,11 @@ class virtual ['a] t_with_uses =
           t
         else
           EnumCastT { use_op; enum = (reason, trust, enum') }
-      | EnumExhaustiveCheckT { reason; check; incomplete_out } ->
+      | EnumExhaustiveCheckT { reason; check; incomplete_out; discriminant_after_check } ->
         let incomplete_out' = self#type_ cx map_cx incomplete_out in
+        let discriminant_after_check' =
+          OptionUtils.ident_map (self#type_ cx map_cx) discriminant_after_check
+        in
         (match check with
         | EnumExhaustiveCheckPossiblyValid { tool; possible_checks; checks; default_case } ->
           let map_possible_check ((obj_t, check) as possible_check) =
@@ -1128,7 +1131,11 @@ class virtual ['a] t_with_uses =
               (obj_t', check)
           in
           let possible_checks' = ListUtils.ident_map map_possible_check possible_checks in
-          if possible_checks' == possible_checks && incomplete_out' == incomplete_out then
+          if
+            possible_checks' == possible_checks
+            && incomplete_out' == incomplete_out
+            && discriminant_after_check' == discriminant_after_check
+          then
             t
           else
             EnumExhaustiveCheckT
@@ -1138,12 +1145,19 @@ class virtual ['a] t_with_uses =
                   EnumExhaustiveCheckPossiblyValid
                     { tool; possible_checks = possible_checks'; checks; default_case };
                 incomplete_out = incomplete_out';
+                discriminant_after_check = discriminant_after_check';
               }
         | EnumExhaustiveCheckInvalid _ as check ->
           if incomplete_out' == incomplete_out then
             t
           else
-            EnumExhaustiveCheckT { reason; check; incomplete_out = incomplete_out' })
+            EnumExhaustiveCheckT
+              {
+                reason;
+                check;
+                incomplete_out = incomplete_out';
+                discriminant_after_check = discriminant_after_check';
+              })
       | FunImplicitVoidReturnT { use_op; reason; return; void_t } ->
         let return' = self#type_ cx map_cx return in
         let void_t' = self#type_ cx map_cx void_t in

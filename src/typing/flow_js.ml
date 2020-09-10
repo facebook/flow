@@ -6542,6 +6542,7 @@ struct
                   EnumExhaustiveCheckPossiblyValid
                     { tool = EnumResolveDiscriminant; possible_checks; checks; default_case };
                 incomplete_out;
+                discriminant_after_check;
               } ) ->
           enum_exhaustive_check
             cx
@@ -6553,6 +6554,7 @@ struct
             ~checks
             ~default_case
             ~incomplete_out
+            ~discriminant_after_check
         (* Resolving the case tests. *)
         | ( _,
             EnumExhaustiveCheckT
@@ -6567,6 +6569,7 @@ struct
                       default_case;
                     };
                 incomplete_out;
+                discriminant_after_check;
               } ) ->
           let (EnumCheck { member_name; _ }) = check in
           let { enum_id = enum_id_discriminant; members; _ } = discriminant_enum in
@@ -6590,16 +6593,25 @@ struct
             ~checks
             ~default_case
             ~incomplete_out
+            ~discriminant_after_check
         | ( DefT (_, _, EnumT { enum_name; members; _ }),
             EnumExhaustiveCheckT
-              { reason; check = EnumExhaustiveCheckInvalid reasons; incomplete_out } ) ->
+              {
+                reason;
+                check = EnumExhaustiveCheckInvalid reasons;
+                incomplete_out;
+                discriminant_after_check = _;
+              } ) ->
           let example_member = SMap.choose_opt members |> Base.Option.map ~f:fst in
           List.iter
             (fun reason ->
               add_output cx (Error_message.EEnumInvalidCheck { reason; enum_name; example_member }))
             reasons;
           enum_exhaustive_check_incomplete cx ~trace ~reason incomplete_out
-        (* Ignore non-enum exhaustive checks. *)
+        (* Non-enum discriminants.
+         * If `discriminant_after_check` is empty (e.g. because the discriminant has been refined
+         * away by each case), then `trigger` will be empty, which will prevent the implicit void
+         * return that could occur otherwise. *)
         | ( _,
             EnumExhaustiveCheckT
               {
@@ -6608,8 +6620,14 @@ struct
                   ( EnumExhaustiveCheckInvalid _
                   | EnumExhaustiveCheckPossiblyValid { tool = EnumResolveDiscriminant; _ } );
                 incomplete_out;
+                discriminant_after_check;
               } ) ->
-          enum_exhaustive_check_incomplete cx ~trace ~reason incomplete_out
+          enum_exhaustive_check_incomplete
+            cx
+            ~trace
+            ~reason
+            ?trigger:discriminant_after_check
+            incomplete_out
         (**************************************************************************)
         (* TestPropT is emitted for property reads in the context of branch tests.
        Such tests are always non-strict, in that we don't immediately report an
@@ -8692,7 +8710,8 @@ struct
       ~possible_checks
       ~checks
       ~default_case
-      ~incomplete_out =
+      ~incomplete_out
+      ~discriminant_after_check =
     match possible_checks with
     (* No possible checks left to resolve, analyze the exhaustive check. *)
     | [] ->
@@ -8738,13 +8757,13 @@ struct
                   default_case;
                 };
             incomplete_out;
+            discriminant_after_check;
           }
       in
       rec_flow cx trace (obj_t, exhaustive_check)
 
-  and enum_exhaustive_check_incomplete cx ~trace ~reason incomplete_out =
-    (* Any type will do to trigger `FunImplicitVoidReturnT`. *)
-    let trigger = VoidT.why reason |> with_trust bogus_trust in
+  and enum_exhaustive_check_incomplete
+      cx ~trace ~reason ?(trigger = VoidT.why reason |> with_trust bogus_trust) incomplete_out =
     rec_flow_t cx trace ~use_op:unknown_use (trigger, incomplete_out)
     (*******************************************************)
     (* Entry points into the process of trying different   *)

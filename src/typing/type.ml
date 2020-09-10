@@ -786,6 +786,7 @@ module rec TypeTerm : sig
         reason: reason;
         check: enum_possible_exhaustive_check_t;
         incomplete_out: t;
+        discriminant_after_check: t option;
       }
     | FilterOptionalT of use_op * t
     | FilterMaybeT of use_op * t

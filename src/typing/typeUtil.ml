@@ -255,8 +255,8 @@ and mod_reason_of_use_t f = function
   | ElemT (use_op, reason, t, action) -> ElemT (use_op, f reason, t, action)
   | EnumCastT { use_op; enum = (reason, trust, enum) } ->
     EnumCastT { use_op; enum = (f reason, trust, enum) }
-  | EnumExhaustiveCheckT { reason; check; incomplete_out } ->
-    EnumExhaustiveCheckT { reason = f reason; check; incomplete_out }
+  | EnumExhaustiveCheckT { reason; check; incomplete_out; discriminant_after_check } ->
+    EnumExhaustiveCheckT { reason = f reason; check; incomplete_out; discriminant_after_check }
   | EqT ({ reason; _ } as x) -> EqT { x with reason = f reason }
   | ExportNamedT (reason, tmap, export_kind, t_out) ->
     ExportNamedT (f reason, tmap, export_kind, t_out)
