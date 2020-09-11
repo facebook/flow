@@ -53,6 +53,7 @@ let main
     file_watcher
     file_watcher_debug
     file_watcher_timeout
+    file_watcher_mergebase_with
     file_watcher_sync_timeout
     path_opt
     () =
@@ -113,6 +114,7 @@ let main
       ~flowconfig
       ~file_watcher
       ~file_watcher_debug
+      ~mergebase_with:file_watcher_mergebase_with
       ~sync_timeout:file_watcher_sync_timeout
   in
   let file_watcher_timeout = choose_file_watcher_timeout ~flowconfig file_watcher_timeout in
