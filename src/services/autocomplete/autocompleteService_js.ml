@@ -535,6 +535,17 @@ let collect_types ~reader locs typed_ast =
   Stdlib.ignore (collector#program typed_ast);
   collector#collected_types
 
+let documentation_of_loc ~options ~reader ~cx ~file_sig ~typed_ast loc =
+  let open GetDef_js.Get_def_result in
+  match GetDef_js.get_def ~options ~reader ~cx ~file_sig ~typed_ast loc with
+  | Def getdef_loc
+  | Partial (getdef_loc, _) ->
+    Find_documentation.jsdoc_of_getdef_loc ~current_ast:typed_ast ~reader getdef_loc
+    |> Base.Option.bind ~f:Find_documentation.documentation_of_jsdoc
+  | Bad_loc
+  | Def_error _ ->
+    None
+
 let local_value_identifiers ~options ~reader ~cx ~ac_loc ~file_sig ~typed_ast ~tparams =
   let scope_info = Scope_builder.program ((new type_killer reader)#program typed_ast) in
   let open Scope_api.With_Loc in
@@ -579,23 +590,13 @@ let local_value_identifiers ~options ~reader ~cx ~ac_loc ~file_sig ~typed_ast ~t
       SMap.empty
   in
   let types = collect_types ~reader (LocSet.of_list (SMap.values names_and_locs)) typed_ast in
-  let documentation_of_loc loc =
-    let open GetDef_js.Get_def_result in
-    match GetDef_js.get_def ~options ~reader ~cx ~file_sig ~typed_ast loc with
-    | Def getdef_loc
-    | Partial (getdef_loc, _) ->
-      Find_documentation.jsdoc_of_getdef_loc ~current_ast:typed_ast ~reader getdef_loc
-      |> Base.Option.bind ~f:Find_documentation.documentation_of_jsdoc
-    | Bad_loc
-    | Def_error _ ->
-      None
-  in
   names_and_locs
   |> SMap.bindings
   |> Base.List.filter_map ~f:(fun (name, loc) ->
          (* TODO(vijayramamurthy) do something about sometimes failing to collect types *)
          Base.Option.map (LocMap.find_opt loc types) ~f:(fun type_ ->
-             ((name, documentation_of_loc loc), Type.TypeScheme.{ tparams; type_ })))
+             ( (name, documentation_of_loc ~options ~reader ~cx ~file_sig ~typed_ast loc),
+               Type.TypeScheme.{ tparams; type_ } )))
   |> Ty_normalizer.from_schemes
        ~options:ty_normalizer_options
        ~genv:(Ty_normalizer_env.mk_genv ~full_cx:cx ~file:(Context.file cx) ~typed_ast ~file_sig)
@@ -764,7 +765,7 @@ let local_type_identifiers ~typed_ast ~cx ~file_sig =
   let search = new local_type_identifiers_searcher in
   Stdlib.ignore (search#program typed_ast);
   search#ids
-  |> Base.List.map ~f:(fun ((_, t), Flow_ast.Identifier.{ name; _ }) -> (name, t))
+  |> Base.List.map ~f:(fun ((loc, t), Flow_ast.Identifier.{ name; _ }) -> ((name, loc), t))
   |> Ty_normalizer.from_types
        ~options:ty_normalizer_options
        ~genv:(Ty_normalizer_env.mk_genv ~full_cx:cx ~file:(Context.file cx) ~typed_ast ~file_sig)
@@ -838,10 +839,16 @@ let autocomplete_unqualified_type ~options ~reader ~cx ~tparams ~file_sig ~ac_lo
   let (tparam_and_tident_results, tparam_and_tident_errors_to_log) =
     local_type_identifiers ~typed_ast ~cx ~file_sig
     |> List.fold_left
-         (fun (results, errors_to_log) (name, ty_result) ->
+         (fun (results, errors_to_log) ((name, aloc), ty_result) ->
+           let documentation =
+             loc_of_aloc ~reader aloc
+             |> documentation_of_loc ~options ~reader ~cx ~file_sig ~typed_ast
+           in
            match ty_result with
            | Ok elt ->
-             let result = autocomplete_create_result_elt ~exact_by_default (name, ac_loc) elt in
+             let result =
+               autocomplete_create_result_elt ?documentation ~exact_by_default (name, ac_loc) elt
+             in
              (result :: results, errors_to_log)
            | Error err ->
              let error_to_log = Ty_normalizer.error_to_string err in
@@ -854,17 +861,20 @@ let autocomplete_unqualified_type ~options ~reader ~cx ~tparams ~file_sig ~ac_lo
   let (results, errors_to_log) =
     local_value_identifiers ~options ~typed_ast ~reader ~ac_loc ~tparams ~cx ~file_sig
     |> List.fold_left
-         (fun (results, errors_to_log) ((name, _), ty_res) ->
+         (fun (results, errors_to_log) ((name, documentation), ty_res) ->
            match ty_res with
            | Error err ->
              let error_to_log = Ty_normalizer.error_to_string err in
              (results, error_to_log :: errors_to_log)
            | Ok (Ty.Decl (Ty.ClassDecl _ | Ty.EnumDecl _) as elt) ->
-             let result = autocomplete_create_result_elt ~exact_by_default (name, ac_loc) elt in
+             let result =
+               autocomplete_create_result_elt ?documentation ~exact_by_default (name, ac_loc) elt
+             in
              (result :: results, errors_to_log)
            | Ok elt when type_exports_of_module_ty ~ac_loc ~exact_by_default elt <> [] ->
              let result =
                autocomplete_create_result_elt
+                 ?documentation
                  ~exact_by_default
                  (name, ac_loc)
                  elt

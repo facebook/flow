@@ -2477,6 +2477,7 @@ Flags: --lsp
   "label":"myEnum",
   "kind":13,
   "detail":"enum myEnum",
+  "documentation":{"kind":"markdown","value":"this is myEnum"},
   "sortText":"00000000000000000000",
   "insertTextFormat":1
 }
@@ -2484,6 +2485,7 @@ Flags: --lsp
   "label":"myClass",
   "kind":7,
   "detail":"class myClass",
+  "documentation":{"kind":"markdown","value":"this is myClass"},
   "sortText":"00000000000000000000",
   "insertTextFormat":1
 }
@@ -2491,6 +2493,7 @@ Flags: --lsp
   "label":"ExportClass",
   "kind":7,
   "detail":"class ExportClass",
+  "documentation":{"kind":"markdown","value":"this is ExportClass"},
   "sortText":"00000000000000000000",
   "insertTextFormat":1
 }
@@ -2498,6 +2501,7 @@ Flags: --lsp
   "label":"myFoo",
   "kind":13,
   "detail":"type myFoo = number",
+  "documentation":{"kind":"markdown","value":"this is myFoo"},
   "sortText":"00000000000000000000",
   "insertTextFormat":1
 }
@@ -2505,6 +2509,7 @@ Flags: --lsp
   "label":"myBar",
   "kind":13,
   "detail":"type myBar<T> = ?T",
+  "documentation":{"kind":"markdown","value":"this is myBar"},
   "sortText":"00000000000000000000",
   "insertTextFormat":1
 }
@@ -2512,6 +2517,7 @@ Flags: --lsp
   "label":"myInterface",
   "kind":8,
   "detail":"interface myInterface",
+  "documentation":{"kind":"markdown","value":"this is myInterface"},
   "sortText":"00000000000000000000",
   "insertTextFormat":1
 }
@@ -2519,6 +2525,7 @@ Flags: --lsp
   "label":"ExportFoo",
   "kind":13,
   "detail":"type ExportFoo = number",
+  "documentation":{"kind":"markdown","value":"this is ExportFoo"},
   "sortText":"00000000000000000000",
   "insertTextFormat":1
 }
@@ -2526,6 +2533,7 @@ Flags: --lsp
   "label":"ExportBar",
   "kind":13,
   "detail":"type ExportBar<T> = ?T",
+  "documentation":{"kind":"markdown","value":"this is ExportBar"},
   "sortText":"00000000000000000000",
   "insertTextFormat":1
 }
@@ -2533,6 +2541,7 @@ Flags: --lsp
   "label":"ExportClass",
   "kind":7,
   "detail":"class ExportClass",
+  "documentation":{"kind":"markdown","value":"this is ExportClass"},
   "sortText":"00000000000000000000",
   "insertTextFormat":1
 }
@@ -2540,6 +2549,7 @@ Flags: --lsp
   "label":"ExportInterface",
   "kind":8,
   "detail":"interface ExportInterface",
+  "documentation":{"kind":"markdown","value":"this is ExportInterace"},
   "sortText":"00000000000000000000",
   "insertTextFormat":1
 }
@@ -2547,6 +2557,7 @@ Flags: --lsp
   "label":"exportValue",
   "kind":13,
   "detail":"type exportValue = number",
+  "documentation":{"kind":"markdown","value":"this is ExportValue"},
   "sortText":"00000000000000000000",
   "insertTextFormat":1
 }
