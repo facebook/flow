@@ -859,7 +859,7 @@ let autocomplete_unqualified_type ~options ~reader ~cx ~tparams ~file_sig ~ac_lo
            | Error err ->
              let error_to_log = Ty_normalizer.error_to_string err in
              (results, error_to_log :: errors_to_log)
-           | Ok (Ty.Decl (Ty.ClassDecl _) as elt) ->
+           | Ok (Ty.Decl (Ty.ClassDecl _ | Ty.EnumDecl _) as elt) ->
              let result = autocomplete_create_result_elt ~exact_by_default (name, ac_loc) elt in
              (result :: results, errors_to_log)
            | Ok elt when type_exports_of_module_ty ~ac_loc ~exact_by_default elt <> [] ->

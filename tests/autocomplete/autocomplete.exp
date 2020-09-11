@@ -2471,3 +2471,83 @@ Flags: --lsp
   "insertTextFormat":1
 }
 
+types-jsdoc.js:16:6
+Flags: --lsp
+{
+  "label":"myEnum",
+  "kind":13,
+  "detail":"enum myEnum",
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1
+}
+{
+  "label":"myClass",
+  "kind":7,
+  "detail":"class myClass",
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1
+}
+{
+  "label":"ExportClass",
+  "kind":7,
+  "detail":"class ExportClass",
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1
+}
+{
+  "label":"myFoo",
+  "kind":13,
+  "detail":"type myFoo = number",
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1
+}
+{
+  "label":"myBar",
+  "kind":13,
+  "detail":"type myBar<T> = ?T",
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1
+}
+{
+  "label":"myInterface",
+  "kind":8,
+  "detail":"interface myInterface",
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1
+}
+{
+  "label":"ExportFoo",
+  "kind":13,
+  "detail":"type ExportFoo = number",
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1
+}
+{
+  "label":"ExportBar",
+  "kind":13,
+  "detail":"type ExportBar<T> = ?T",
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1
+}
+{
+  "label":"ExportClass",
+  "kind":7,
+  "detail":"class ExportClass",
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1
+}
+{
+  "label":"ExportInterface",
+  "kind":8,
+  "detail":"interface ExportInterface",
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1
+}
+{
+  "label":"exportValue",
+  "kind":13,
+  "detail":"type exportValue = number",
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1
+}
+
