@@ -1622,7 +1622,15 @@ end = struct
         let _ =
           FilenameSet.fold
             (fun f i ->
-              Hh_logger.info "%d/%d: %s" i n (File_key.to_string f);
+              let cap = 500 in
+              if i <= cap then
+                Hh_logger.info "%d/%d: %s" i n (File_key.to_string f)
+              else if Hh_logger.Level.(passes_min_level Debug) then
+                Hh_logger.debug "%d/%d: %s" i n (File_key.to_string f)
+              else if i = cap + 1 then
+                Hh_logger.info "..."
+              else
+                ();
               i + 1)
             files
             1
