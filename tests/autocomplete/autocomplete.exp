@@ -2656,3 +2656,41 @@ Flags: --lsp
   "insertTextFormat":1
 }
 
+qualified-types-jsdoc.js:5:12
+Flags: --lsp
+{
+  "label":"ExportBar",
+  "kind":13,
+  "detail":"type ExportBar<T> = ?T",
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1
+}
+{
+  "label":"ExportClass",
+  "kind":7,
+  "detail":"class ExportClass",
+  "sortText":"00000000000000000001",
+  "insertTextFormat":1
+}
+{
+  "label":"ExportEnum",
+  "kind":13,
+  "detail":"enum ExportEnum",
+  "sortText":"00000000000000000002",
+  "insertTextFormat":1
+}
+{
+  "label":"ExportFoo",
+  "kind":6,
+  "detail":"type ExportFoo = number",
+  "sortText":"00000000000000000003",
+  "insertTextFormat":1
+}
+{
+  "label":"ExportInterface",
+  "kind":8,
+  "detail":"interface ExportInterface",
+  "sortText":"00000000000000000004",
+  "insertTextFormat":1
+}
+

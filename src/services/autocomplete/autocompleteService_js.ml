@@ -812,6 +812,18 @@ let type_exports_of_module_ty ~ac_loc ~exact_by_default =
               res_preselect = false;
               res_documentation = None;
             }
+        | EnumDecl name as d ->
+          Some
+            {
+              res_loc = ac_loc;
+              res_kind = Some Lsp.Completion.Enum;
+              res_name = name.Ty.sym_name;
+              res_insert_text = None;
+              res_ty = Ty_printer.string_of_decl_single_line ~exact_by_default d;
+              rank = 0;
+              res_preselect = false;
+              res_documentation = None;
+            }
         | _ -> None)
       exports
     |> Base.List.sort ~compare:(fun { res_name = a; _ } { res_name = b; _ } -> Stdlib.compare a b)
