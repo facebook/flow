@@ -118,7 +118,7 @@ let autocomplete_create_result
   }
 
 let autocomplete_create_result_decl
-    ?insert_text:_ ~rank ?(preselect = false) ?documentation ~exact_by_default (name, loc) d =
+    ?insert_text ~rank ?(preselect = false) ?documentation ~exact_by_default (name, loc) d =
   let open Ty in
   match d with
   | ModuleDecl _ ->
@@ -126,7 +126,7 @@ let autocomplete_create_result_decl
       res_loc = loc;
       res_kind = Some Lsp.Completion.Module;
       res_name = name;
-      res_insert_text = None;
+      res_insert_text = insert_text;
       res_ty = "module " ^ name;
       rank;
       res_preselect = preselect;
@@ -137,7 +137,7 @@ let autocomplete_create_result_decl
       res_loc = loc;
       res_kind = Some Lsp.Completion.Variable;
       res_name = name;
-      res_insert_text = None;
+      res_insert_text = insert_text;
       res_ty = Ty_printer.string_of_t_single_line ~with_comments:false ~exact_by_default ty;
       rank;
       res_preselect = preselect;
@@ -148,7 +148,7 @@ let autocomplete_create_result_decl
       res_loc = loc;
       res_kind = Some (lsp_completion_of_decl d);
       res_name = name;
-      res_insert_text = None;
+      res_insert_text = insert_text;
       res_ty = Ty_printer.string_of_decl_single_line ~with_comments:false ~exact_by_default d;
       rank;
       res_preselect = preselect;

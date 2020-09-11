@@ -59,7 +59,7 @@ queries_in_file autocomplete "this-2.js" --pretty
 queries_in_file autocomplete "pattern.js" --pretty
 queries_in_file autocomplete "normalize-1.js" --pretty
 queries_in_file autocomplete "normalize-2.js" --pretty
-queries_in_file autocomplete "unqualified-type-annotation.js" --pretty
+queries_in_file autocomplete "unqualified-type-annotation.js" --lsp
 queries_in_file autocomplete "qualified-type-annotation.js" --pretty
 queries_in_file autocomplete "qualified-type-annotation-require.js" --pretty
 queries_in_file autocomplete "inherited-class-properties.js" --pretty
