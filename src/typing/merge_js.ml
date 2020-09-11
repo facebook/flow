@@ -964,6 +964,17 @@ module ContextOptimizer = struct
           else
             Poly.id_as_int poly_id |> Base.Option.iter ~f:(SigHash.add_int sig_hash);
           super#type_ cx pole t
+        | UnionT (_, rep) ->
+          if not (UnionRep.is_optimized_finally rep) then
+            UnionRep.optimize
+              rep
+              ~reasonless_eq:TypeUtil.reasonless_eq
+              ~flatten:(Type_mapper.union_flatten cx)
+              ~find_resolved:(Context.find_resolved cx)
+              ~find_props:(Context.find_props cx);
+          let t' = super#type_ cx pole t in
+          SigHash.add_type sig_hash t';
+          t'
         | _ ->
           let t' = super#type_ cx pole t in
           SigHash.add_type sig_hash t';
