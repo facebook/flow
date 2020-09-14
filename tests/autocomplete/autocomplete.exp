@@ -2662,6 +2662,7 @@ Flags: --lsp
   "label":"ExportBar",
   "kind":13,
   "detail":"type ExportBar<T> = ?T",
+  "documentation":{"kind":"markdown","value":"this is ExportBar"},
   "sortText":"00000000000000000000",
   "insertTextFormat":1
 }
@@ -2669,6 +2670,7 @@ Flags: --lsp
   "label":"ExportClass",
   "kind":7,
   "detail":"class ExportClass",
+  "documentation":{"kind":"markdown","value":"this is ExportClass"},
   "sortText":"00000000000000000001",
   "insertTextFormat":1
 }
@@ -2676,6 +2678,7 @@ Flags: --lsp
   "label":"ExportEnum",
   "kind":13,
   "detail":"enum ExportEnum",
+  "documentation":{"kind":"markdown","value":"this is ExportEnum"},
   "sortText":"00000000000000000002",
   "insertTextFormat":1
 }
@@ -2683,6 +2686,7 @@ Flags: --lsp
   "label":"ExportFoo",
   "kind":6,
   "detail":"type ExportFoo = number",
+  "documentation":{"kind":"markdown","value":"this is ExportFoo"},
   "sortText":"00000000000000000003",
   "insertTextFormat":1
 }
@@ -2690,6 +2694,7 @@ Flags: --lsp
   "label":"ExportInterface",
   "kind":8,
   "detail":"interface ExportInterface",
+  "documentation":{"kind":"markdown","value":"this is ExportInterace"},
   "sortText":"00000000000000000004",
   "insertTextFormat":1
 }

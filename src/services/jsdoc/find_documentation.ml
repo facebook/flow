@@ -193,6 +193,7 @@ class documentation_searcher (def_loc : Loc.t) =
     method! export_named_declaration loc decl =
       let open Flow_ast.Statement.ExportNamedDeclaration in
       let { declaration; comments; _ } = decl in
+      if this#is_target loc then find comments;
       Base.Option.iter
         declaration
         ~f:Utils_js.(replace_comments_of_statement ~comments %> this#statement %> ignore);

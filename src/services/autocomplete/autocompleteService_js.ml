@@ -380,6 +380,13 @@ let rec members_of_ty : Ty.t -> Ty.t MemberInfo.t SMap.t * string list =
   | CharSet _ ->
     (SMap.empty, [])
 
+let documentation_of_member ~reader ~cx ~typed_ast this name =
+  match GetDef_js.extract_member_def ~reader cx this name with
+  | Ok loc ->
+    Find_documentation.jsdoc_of_getdef_loc ~current_ast:typed_ast ~reader loc
+    |> Base.Option.bind ~f:Find_documentation.documentation_of_jsdoc
+  | Error _ -> None
+
 let members_of_type
     ~reader
     ~exclude_proto_members
@@ -409,13 +416,6 @@ let members_of_type
     && (* exclude members the caller told us to exclude *)
     not (SSet.mem s exclude_keys)
   in
-  let documentation_of_member name =
-    match GetDef_js.extract_member_def ~reader cx this name with
-    | Ok loc ->
-      Find_documentation.jsdoc_of_getdef_loc ~current_ast:typed_ast ~reader loc
-      |> Base.Option.bind ~f:Find_documentation.documentation_of_jsdoc
-    | Error _ -> None
-  in
   match this_ty_res with
   | Error error -> return ([], [Ty_normalizer.error_to_string error])
   | Ok (Ty.Any _) -> fail "not enough type information to autocomplete"
@@ -425,7 +425,8 @@ let members_of_type
       ( mems
         |> SMap.bindings
         |> List.filter is_valid_member
-        |> List.map (fun (name, info) -> (name, documentation_of_member name, info)),
+        |> List.map (fun (name, info) ->
+               (name, documentation_of_member ~reader ~cx ~typed_ast this name, info)),
         match errs with
         | [] -> []
         | _ :: _ -> Printf.sprintf "members_of_type %s" (Debug_js.dump_t cx this) :: errs )
@@ -770,7 +771,7 @@ let local_type_identifiers ~typed_ast ~cx ~file_sig =
        ~options:ty_normalizer_options
        ~genv:(Ty_normalizer_env.mk_genv ~full_cx:cx ~file:(Context.file cx) ~typed_ast ~file_sig)
 
-let type_exports_of_module_ty ~ac_loc ~exact_by_default =
+let type_exports_of_module_ty ~ac_loc ~exact_by_default ~documentation_of_module_member =
   let open Ty in
   function
   | Decl (ModuleDecl { exports; _ }) ->
@@ -786,7 +787,7 @@ let type_exports_of_module_ty ~ac_loc ~exact_by_default =
               res_ty = Ty_printer.string_of_decl_single_line ~exact_by_default d;
               rank = 0;
               res_preselect = false;
-              res_documentation = None;
+              res_documentation = documentation_of_module_member name.Ty_symbol.sym_name;
             }
         | InterfaceDecl (name, _) as d ->
           Some
@@ -798,7 +799,7 @@ let type_exports_of_module_ty ~ac_loc ~exact_by_default =
               res_ty = Ty_printer.string_of_decl_single_line ~exact_by_default d;
               rank = 0;
               res_preselect = false;
-              res_documentation = None;
+              res_documentation = documentation_of_module_member name.Ty_symbol.sym_name;
             }
         | ClassDecl (name, _) as d ->
           Some
@@ -810,7 +811,7 @@ let type_exports_of_module_ty ~ac_loc ~exact_by_default =
               res_ty = Ty_printer.string_of_decl_single_line ~exact_by_default d;
               rank = 0;
               res_preselect = false;
-              res_documentation = None;
+              res_documentation = documentation_of_module_member name.Ty_symbol.sym_name;
             }
         | EnumDecl name as d ->
           Some
@@ -822,7 +823,7 @@ let type_exports_of_module_ty ~ac_loc ~exact_by_default =
               res_ty = Ty_printer.string_of_decl_single_line ~exact_by_default d;
               rank = 0;
               res_preselect = false;
-              res_documentation = None;
+              res_documentation = documentation_of_module_member name.Ty_symbol.sym_name;
             }
         | _ -> None)
       exports
@@ -883,7 +884,13 @@ let autocomplete_unqualified_type ~options ~reader ~cx ~tparams ~file_sig ~ac_lo
                autocomplete_create_result_elt ?documentation ~exact_by_default (name, ac_loc) elt
              in
              (result :: results, errors_to_log)
-           | Ok elt when type_exports_of_module_ty ~ac_loc ~exact_by_default elt <> [] ->
+           | Ok elt
+             when type_exports_of_module_ty
+                    ~ac_loc
+                    ~exact_by_default
+                    ~documentation_of_module_member:Base.Option.some
+                    elt
+                  <> [] ->
              let result =
                autocomplete_create_result_elt
                  ?documentation
@@ -908,12 +915,18 @@ let autocomplete_qualified_type ~reader ~cx ~ac_loc ~file_sig ~typed_ast ~tparam
       ~genv:(Ty_normalizer_env.mk_genv ~full_cx:cx ~file:(Context.file cx) ~typed_ast ~file_sig)
       qtype_scheme
   in
+  let documentation_of_module_member = documentation_of_member ~reader ~cx ~typed_ast qtype in
   match module_ty_res with
   | Error err -> AcResult { results = []; errors_to_log = [Ty_normalizer.error_to_string err] }
   | Ok module_ty ->
     AcResult
       {
-        results = type_exports_of_module_ty ~ac_loc ~exact_by_default module_ty;
+        results =
+          type_exports_of_module_ty
+            ~ac_loc
+            ~exact_by_default
+            ~documentation_of_module_member
+            module_ty;
         errors_to_log = [];
       }
 
