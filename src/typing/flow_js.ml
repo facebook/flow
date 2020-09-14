@@ -6608,6 +6608,16 @@ struct
               add_output cx (Error_message.EEnumInvalidCheck { reason; enum_name; example_member }))
             reasons;
           enum_exhaustive_check_incomplete cx ~trace ~reason incomplete_out
+        (* If the discriminant is empty, the check is successful. *)
+        | ( DefT (_, _, EmptyT _),
+            EnumExhaustiveCheckT
+              {
+                check =
+                  ( EnumExhaustiveCheckInvalid _
+                  | EnumExhaustiveCheckPossiblyValid { tool = EnumResolveDiscriminant; _ } );
+                _;
+              } ) ->
+          ()
         (* Non-enum discriminants.
          * If `discriminant_after_check` is empty (e.g. because the discriminant has been refined
          * away by each case), then `trigger` will be empty, which will prevent the implicit void

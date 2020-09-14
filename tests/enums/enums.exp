@@ -1230,79 +1230,79 @@ References:
            ^ [1]
 
 
-Error ----------------------------------------------------------------------- exhaustive-check-implicit-return.js:145:19
+Error ----------------------------------------------------------------------- exhaustive-check-implicit-return.js:157:19
 
 Cannot expect number as the return type of function because number [1] is incompatible with implicitly-returned
 undefined. [incompatible-return]
 
-   145| function q(x: E): number { // Error: switch isn't exhaustive
+   157| function q(x: E): number { // Error: switch isn't exhaustive
                           ^^^^^^ [1]
 
 
-Error ----------------------------------------------------------------------- exhaustive-check-implicit-return.js:146:11
+Error ----------------------------------------------------------------------- exhaustive-check-implicit-return.js:158:11
 
 Incomplete exhaustive check: the member `B` of enum `E` [1] has not been considered in check of `x`.
 [invalid-exhaustive-check]
 
-   exhaustive-check-implicit-return.js:146:11
-   146|   switch (x) { // Error
+   exhaustive-check-implicit-return.js:158:11
+   158|   switch (x) { // Error
                   ^
 
 References:
-   exhaustive-check-implicit-return.js:145:15
-   145| function q(x: E): number { // Error: switch isn't exhaustive
+   exhaustive-check-implicit-return.js:157:15
+   157| function q(x: E): number { // Error: switch isn't exhaustive
                       ^ [1]
 
 
-Error ----------------------------------------------------------------------- exhaustive-check-implicit-return.js:152:19
+Error ----------------------------------------------------------------------- exhaustive-check-implicit-return.js:164:19
 
 Cannot expect number as the return type of function because number [1] is incompatible with implicitly-returned
 undefined. [incompatible-return]
 
-   152| function r(x: E): number { // Error
+   164| function r(x: E): number { // Error
                           ^^^^^^ [1]
 
 
-Error ----------------------------------------------------------------------- exhaustive-check-implicit-return.js:163:19
+Error ----------------------------------------------------------------------- exhaustive-check-implicit-return.js:175:19
 
 Cannot expect number as the return type of function because number [1] is incompatible with implicitly-returned
 undefined. [incompatible-return]
 
-   163| function s(x: E): number { // Error: second switch isn't exhaustive
+   175| function s(x: E): number { // Error: second switch isn't exhaustive
                           ^^^^^^ [1]
 
 
-Error ----------------------------------------------------------------------- exhaustive-check-implicit-return.js:172:13
+Error ----------------------------------------------------------------------- exhaustive-check-implicit-return.js:184:13
 
 Incomplete exhaustive check: the member `B` of enum `E` [1] has not been considered in check of `x`.
 [invalid-exhaustive-check]
 
-   exhaustive-check-implicit-return.js:172:13
-   172|     switch (x) { // Error
+   exhaustive-check-implicit-return.js:184:13
+   184|     switch (x) { // Error
                     ^
 
 References:
-   exhaustive-check-implicit-return.js:163:15
-   163| function s(x: E): number { // Error: second switch isn't exhaustive
+   exhaustive-check-implicit-return.js:175:15
+   175| function s(x: E): number { // Error: second switch isn't exhaustive
                       ^ [1]
 
 
-Error ----------------------------------------------------------------------- exhaustive-check-implicit-return.js:179:21
+Error ----------------------------------------------------------------------- exhaustive-check-implicit-return.js:191:21
 
 Cannot expect number as the return type of function because number [1] is incompatible with implicitly-returned
 undefined. [incompatible-return]
 
-   179| function t(x: any): number { // Error
+   191| function t(x: any): number { // Error
                             ^^^^^^ [1]
 
 
-Error ----------------------------------------------------------------------- exhaustive-check-implicit-return.js:186:36
+Error ----------------------------------------------------------------------- exhaustive-check-implicit-return.js:198:36
 
 Cannot expect `Generator` as the return type of generator function because number [1] is incompatible with
 implicitly-returned undefined in type argument `Return` [2]. [incompatible-return]
 
-   exhaustive-check-implicit-return.js:186:36
-   186| function* u(x: E): Generator<void, number, void> { // Error: switch isn't exhaustive
+   exhaustive-check-implicit-return.js:198:36
+   198| function* u(x: E): Generator<void, number, void> { // Error: switch isn't exhaustive
                                            ^^^^^^ [1]
 
 References:
@@ -1311,28 +1311,28 @@ References:
                                     ^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------- exhaustive-check-implicit-return.js:187:11
+Error ----------------------------------------------------------------------- exhaustive-check-implicit-return.js:199:11
 
 Incomplete exhaustive check: the member `B` of enum `E` [1] has not been considered in check of `x`.
 [invalid-exhaustive-check]
 
-   exhaustive-check-implicit-return.js:187:11
-   187|   switch (x) { // Error
+   exhaustive-check-implicit-return.js:199:11
+   199|   switch (x) { // Error
                   ^
 
 References:
-   exhaustive-check-implicit-return.js:186:16
-   186| function* u(x: E): Generator<void, number, void> { // Error: switch isn't exhaustive
+   exhaustive-check-implicit-return.js:198:16
+   198| function* u(x: E): Generator<void, number, void> { // Error: switch isn't exhaustive
                        ^ [1]
 
 
-Error ----------------------------------------------------------------------- exhaustive-check-implicit-return.js:193:33
+Error ----------------------------------------------------------------------- exhaustive-check-implicit-return.js:205:33
 
 Cannot expect `Promise` as the return type of async function because number [1] is incompatible with implicitly-returned
 undefined in type argument `R` [2]. [incompatible-return]
 
-   exhaustive-check-implicit-return.js:193:33
-   193| async function v(x: E): Promise<number> { // Error: switch isn't exhaustive
+   exhaustive-check-implicit-return.js:205:33
+   205| async function v(x: E): Promise<number> { // Error: switch isn't exhaustive
                                         ^^^^^^ [1]
 
 References:
@@ -1341,18 +1341,18 @@ References:
                                ^ [2]
 
 
-Error ----------------------------------------------------------------------- exhaustive-check-implicit-return.js:194:11
+Error ----------------------------------------------------------------------- exhaustive-check-implicit-return.js:206:11
 
 Incomplete exhaustive check: the member `B` of enum `E` [1] has not been considered in check of `x`.
 [invalid-exhaustive-check]
 
-   exhaustive-check-implicit-return.js:194:11
-   194|   switch (x) { // Error
+   exhaustive-check-implicit-return.js:206:11
+   206|   switch (x) { // Error
                   ^
 
 References:
-   exhaustive-check-implicit-return.js:193:21
-   193| async function v(x: E): Promise<number> { // Error: switch isn't exhaustive
+   exhaustive-check-implicit-return.js:205:21
+   205| async function v(x: E): Promise<number> { // Error: switch isn't exhaustive
                             ^ [1]
 
 
