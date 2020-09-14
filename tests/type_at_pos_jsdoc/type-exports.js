@@ -6,7 +6,7 @@ export type ExportFoo = number;
 export type ExportBar<T> = ?T;
 /** this is ExportClass */
 export class ExportClass {};
-/** this is ExportInterace */
+/** this is ExportInterface */
 export interface ExportInterface {};
 /** this is ExportEnum */
 export enum ExportEnum { Inl, Inr }

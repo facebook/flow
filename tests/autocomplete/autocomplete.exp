@@ -2643,7 +2643,7 @@ Flags: --lsp
   "label":"ExportInterface",
   "kind":8,
   "detail":"interface ExportInterface",
-  "documentation":{"kind":"markdown","value":"this is ExportInterace"},
+  "documentation":{"kind":"markdown","value":"this is ExportInterface"},
   "sortText":"00000000000000000000",
   "insertTextFormat":1
 }
@@ -2694,7 +2694,7 @@ Flags: --lsp
   "label":"ExportInterface",
   "kind":8,
   "detail":"interface ExportInterface",
-  "documentation":{"kind":"markdown","value":"this is ExportInterace"},
+  "documentation":{"kind":"markdown","value":"this is ExportInterface"},
   "sortText":"00000000000000000004",
   "insertTextFormat":1
 }

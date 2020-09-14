@@ -1350,7 +1350,7 @@ Flags: --strip-root --pretty
 types.js:28:7
 Flags: --strip-root --pretty
 {
-  "documentation":"this is ExportInterace",
+  "documentation":"this is ExportInterface",
   "type":"interface ExportInterface",
   "reasons":[],
   "loc":{
