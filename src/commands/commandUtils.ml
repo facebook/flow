@@ -991,6 +991,8 @@ let base_flags =
 
 let default_file_watcher_timeout = 120
 
+let default_file_watcher_mergebase_with = "master"
+
 let file_watcher_flag prev =
   let open CommandSpec.ArgSpec in
   prev
@@ -1017,6 +1019,13 @@ let file_watcher_flag prev =
          (Printf.sprintf
             "Maximum time to wait for the file watcher to initialize, in seconds. 0 means no timeout (default: %d)"
             default_file_watcher_timeout)
+  |> flag
+       "--file-watcher-mergebase-with"
+       string
+       ~doc:
+         (Printf.sprintf
+            "Symbolic commit against which to compute the mergebase used to find changed files. (default: %s)"
+            default_file_watcher_mergebase_with)
   |> flag
        "--file-watcher-sync-timeout"
        uint
@@ -1621,7 +1630,8 @@ let get_check_or_status_exit_code errors warnings max_warnings =
       else
         Type_error))
 
-let choose_file_watcher ~options ~flowconfig ~file_watcher ~file_watcher_debug ~sync_timeout =
+let choose_file_watcher
+    ~options ~flowconfig ~file_watcher ~file_watcher_debug ~mergebase_with ~sync_timeout =
   let file_watcher =
     match (Options.lazy_mode options, file_watcher) with
     | (Options.LAZY_MODE_WATCHMAN, (None | Some FlowConfig.Watchman)) ->
@@ -1647,8 +1657,20 @@ let choose_file_watcher ~options ~flowconfig ~file_watcher ~file_watcher_debug ~
       | None -> FlowConfig.watchman_sync_timeout flowconfig
     in
     let defer_states = FlowConfig.watchman_defer_states flowconfig in
+    let mergebase_with =
+      match
+        Base.Option.first_some mergebase_with (FlowConfig.watchman_mergebase_with flowconfig)
+      with
+      | Some x -> x
+      | None -> default_file_watcher_mergebase_with
+    in
     FlowServerMonitorOptions.Watchman
-      { FlowServerMonitorOptions.sync_timeout; debug = file_watcher_debug; defer_states }
+      {
+        FlowServerMonitorOptions.debug = file_watcher_debug;
+        defer_states;
+        mergebase_with;
+        sync_timeout;
+      }
 
 let choose_file_watcher_timeout ~flowconfig cli_timeout =
   match Base.Option.first_some cli_timeout (FlowConfig.file_watcher_timeout flowconfig) with

@@ -349,19 +349,22 @@ end = struct
         | Some env -> env
 
       method start_init =
-        let { FlowServerMonitorOptions.debug; defer_states; sync_timeout } = watchman_options in
+        let { FlowServerMonitorOptions.debug; defer_states; mergebase_with; sync_timeout } =
+          watchman_options
+        in
         let file_options = Options.file_options server_options in
         let watchman_expression_terms = Watchman_expression_terms.make ~options:server_options in
         let settings =
           {
-            (* Defer updates during `hg.update` and defer_states *)
-            Watchman.subscribe_mode = Watchman.Defer_changes;
+            Watchman.debug_logging = debug;
+            defer_states;
             expression_terms = watchman_expression_terms;
+            mergebase_with;
+            roots = Files.watched_paths file_options;
+            (* Defer updates during `hg.update` and defer_states *)
+            subscribe_mode = Watchman.Defer_changes;
             subscription_prefix = "flow_watcher";
             sync_timeout;
-            roots = Files.watched_paths file_options;
-            debug_logging = debug;
-            defer_states;
           }
         in
         init_settings <- Some settings;

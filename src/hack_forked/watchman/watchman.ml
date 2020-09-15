@@ -44,11 +44,12 @@ type subscribe_mode =
 type timeout = float option
 
 type init_settings = {
-  subscribe_mode: subscribe_mode;
-  expression_terms: Hh_json.json list;  (** See watchman expression terms. *)
   debug_logging: bool;
   defer_states: string list;
-  roots: Path.t list;
+  expression_terms: Hh_json.json list;  (** See watchman expression terms. *)
+  mergebase_with: string;
+  roots: Path.t list;  (** symbolic commit to find changes against *)
+  subscribe_mode: subscribe_mode;
   subscription_prefix: string;
   sync_timeout: int option;
 }
@@ -240,11 +241,12 @@ let request_json ?(extra_kv = []) ?(extra_expressions = []) watchman_command env
     request)
 
 let get_changes_since_mergebase_query env =
+  let mergebase_with = env.settings.mergebase_with in
   let extra_kv =
     [
       ( "since",
         Hh_json.JSON_Object
-          [("scm", Hh_json.JSON_Object [("mergebase-with", Hh_json.JSON_String "master")])] );
+          [("scm", Hh_json.JSON_Object [("mergebase-with", Hh_json.JSON_String mergebase_with)])] );
     ]
   in
   request_json ~extra_kv Query env
@@ -483,11 +485,12 @@ let prepend_relative_path_term ~relative_path ~terms =
 let re_init
     ?prior_clockspec
     {
-      subscribe_mode;
-      expression_terms;
       debug_logging;
       defer_states;
+      expression_terms;
+      mergebase_with;
       roots;
+      subscribe_mode;
       subscription_prefix;
       sync_timeout;
     } =
@@ -587,9 +590,10 @@ let re_init
         {
           debug_logging;
           defer_states;
-          subscribe_mode;
           expression_terms;
+          mergebase_with;
           roots;
+          subscribe_mode;
           subscription_prefix;
           sync_timeout;
         };
@@ -861,11 +865,12 @@ let conn_of_instance = function
 module Testing = struct
   let test_settings =
     {
-      subscribe_mode = Defer_changes;
-      expression_terms = [];
       debug_logging = false;
       defer_states = [];
+      expression_terms = [];
+      mergebase_with = "hash";
       roots = [Path.dummy_path];
+      subscribe_mode = Defer_changes;
       subscription_prefix = "dummy_prefix";
       sync_timeout = None;
     }

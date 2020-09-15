@@ -26,11 +26,12 @@ type subscribe_mode =
 type timeout = float option
 
 type init_settings = {
-  subscribe_mode: subscribe_mode;
-  expression_terms: Hh_json.json list;  (** See watchman expression terms. *)
   debug_logging: bool;
   defer_states: string list;  (** defer notifications while these states are asserted *)
+  expression_terms: Hh_json.json list;  (** See watchman expression terms. *)
+  mergebase_with: string;  (** symbolic commit to find changes against *)
   roots: Path.t list;
+  subscribe_mode: subscribe_mode;
   subscription_prefix: string;
   sync_timeout: int option;
 }
