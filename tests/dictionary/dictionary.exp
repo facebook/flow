@@ -65,16 +65,16 @@ Error --------------------------------------------------------------------------
 Cannot cast `o.toString()` to boolean because string [1] is incompatible with boolean [2]. [incompatible-cast]
 
    dictionary.js:94:4
-   94|   (o.toString(): boolean); // error: string ~> boolean
-          ^^^^^^^^^^^^
+    94|   (o.toString(): boolean); // error: string ~> boolean
+           ^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:85:17
-   85|     toString(): string;
-                       ^^^^^^ [1]
+   <BUILTINS>/core.js:100:17
+   100|     toString(): string;
+                        ^^^^^^ [1]
    dictionary.js:94:18
-   94|   (o.toString(): boolean); // error: string ~> boolean
-                        ^^^^^^^ [2]
+    94|   (o.toString(): boolean); // error: string ~> boolean
+                         ^^^^^^^ [2]
 
 
 Error --------------------------------------------------------------------------------------------- dictionary.js:110:34

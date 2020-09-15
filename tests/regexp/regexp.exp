@@ -7,8 +7,8 @@ Cannot assign `patt.test(...)` to `match` because boolean [1] is incompatible wi
                            ^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:384:27
-   384|     test(string: string): boolean;
+   <BUILTINS>/core.js:399:27
+   399|     test(string: string): boolean;
                                   ^^^^^^^ [1]
    regexp.js:2:11
      2| var match:number = patt.test("Hello world!");
