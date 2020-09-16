@@ -88,6 +88,15 @@ References:
 Found 2 errors
 
 Remove @flow in foo.js:
+Error ------------------------------------------------------------------------------------------------------ bar.js:3:14
+
+Importing a type from an untyped module makes it `any` and is not safe! Did you mean to add `// @flow` to the top of
+`./foo`? [untyped-type-import]
+
+   3| import type {foo} from './foo';
+                   ^^^
+
+
 Error ------------------------------------------------------------------------------------------------------ bar.js:5:19
 
 Cannot use `foo` as a type. A name can be used as a type only if it refers to a type, interface, class, or enum
@@ -107,7 +116,7 @@ definition. To get the type of a non-class value, use `typeof`. [value-as-type]
 
 
 
-Found 2 errors
+Found 3 errors
 
 Restore foo.js (same as initial status):
 Error ------------------------------------------------------------------------------------------------------ bar.js:6:10
@@ -148,6 +157,15 @@ References:
 Found 2 errors
 
 Introduce parse error in foo.js (unexpected identifier!):
+Error ------------------------------------------------------------------------------------------------------ bar.js:3:14
+
+Importing a type from an untyped module makes it `any` and is not safe! Did you mean to add `// @flow` to the top of
+`./foo`? [untyped-type-import]
+
+   3| import type {foo} from './foo';
+                   ^^^
+
+
 Error ------------------------------------------------------------------------------------------------------ bar.js:5:19
 
 Cannot use `foo` as a type. A name can be used as a type only if it refers to a type, interface, class, or enum
@@ -175,7 +193,7 @@ Unexpected identifier, expected the token `;`
 
 
 
-Found 3 errors
+Found 4 errors
 
 Restore foo.js (same as initial status):
 Error ------------------------------------------------------------------------------------------------------ bar.js:6:10
