@@ -20,7 +20,6 @@ module Anno = Type_annotation
 module Class_type_sig = Anno.Class_type_sig
 module Object_freeze = Anno.Object_freeze
 module Flow = Flow_js
-module T = Type
 open Utils_js
 open Reason
 open Type
@@ -147,15 +146,6 @@ end
 let ident_name = Flow_ast_utils.name_of_ident
 
 let mk_ident ~comments name = { Ast.Identifier.name; comments }
-
-class loc_mapper (typ : Type.t) =
-  object
-    inherit [ALoc.t, ALoc.t, ALoc.t, ALoc.t * Type.t] Flow_polymorphic_ast_mapper.mapper
-
-    method on_loc_annot (x : ALoc.t) = x
-
-    method on_type_annot (x : ALoc.t) = (x, typ)
-  end
 
 let snd_fst ((_, x), _) = x
 
@@ -5854,12 +5844,6 @@ and delete cx loc target =
     Flow.add_output cx Error_message.(ECannotDelete (loc, reason_of_t t));
     target
 
-and clone_object cx reason this that use_op =
-  Tvar.mk_where cx reason (fun tvar ->
-      let u = ObjRestT (reason, [], tvar) in
-      let t = Flow.tvar_with_constraint cx u in
-      Flow.flow cx (this, ObjAssignToT (use_op, reason, that, t, default_obj_assign_kind)))
-
 and collapse_children cx (children_loc, children) :
     Type.unresolved_param list * (ALoc.t * (ALoc.t, ALoc.t * Type.t) Ast.JSX.child list) =
   let (unresolved_params, children') =
@@ -7161,12 +7145,6 @@ and condition cx ~cond e : (ALoc.t, ALoc.t * Type.t) Ast.Expression.t = expressi
 and get_private_field_opt_use reason ~use_op name =
   let class_entries = Env.get_class_entries () in
   OptGetPrivatePropT (use_op, reason, name, class_entries, false)
-
-and get_private_field cx reason ~use_op tobj name =
-  Tvar.mk_no_wrap_where cx reason (fun t ->
-      let opt_use = get_private_field_opt_use reason ~use_op name in
-      let get_prop_u = apply_opt_use opt_use t in
-      Flow.flow cx (tobj, get_prop_u))
 
 (* Property lookups become non-strict when processing conditional expressions
    (see above).
