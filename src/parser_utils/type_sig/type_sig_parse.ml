@@ -2925,7 +2925,7 @@ and class_def =
               let res =
                 Err (prop_loc,
                   SigError (Signature_error.ExpectedAnnotation (prop_loc,
-                    Expected_annotation_sort.Property { name = Expected_annotation_sort.Identifier name })))
+                    Expected_annotation_sort.Property { name })))
               in
               let id_loc = Locs.push locs id_loc in
               id_loc, res

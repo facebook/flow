@@ -60,36 +60,9 @@ Literal properties not yet supported. [unsupported-syntax]
         ^^^^^^^^
 
 
-Error ----------------------------------------------------------------------------------------------------- class.js:8:3
-
-Cannot build a typed interface for this module. You should annotate the exports of this module with types. Missing type
-annotation at literal property 'b': [signature-verification-failure]
-
-   8|   'b' = 5;
-        ^^^^^^^^
-
-
-Error ---------------------------------------------------------------------------------------------------- class.js:11:3
-
-Cannot build a typed interface for this module. You should annotate the exports of this module with types. Missing type
-annotation at private field `#m`: [signature-verification-failure]
-
-   11|   #m = 2;
-         ^^^^^^^
-
-
 Error ---------------------------------------------------------------------------------------------------- class.js:14:3
 
 Computed property keys not supported. [unsupported-syntax]
-
-   14|   ['a'] = 3;
-         ^^^^^^^^^^
-
-
-Error ---------------------------------------------------------------------------------------------------- class.js:14:3
-
-Cannot build a typed interface for this module. You should annotate the exports of this module with types. Missing type
-annotation at computed property `['a']`: [signature-verification-failure]
 
    14|   ['a'] = 3;
          ^^^^^^^^^^
@@ -103,13 +76,14 @@ Computed property keys not supported. [unsupported-syntax]
          ^^^^^^^^^^^^^^^^
 
 
-Error ---------------------------------------------------------------------------------------------------- class.js:15:3
+Error ------------------------------------------------------------------------------------------------ empty_obj.js:3:18
 
-Cannot build a typed interface for this module. You should annotate the exports of this module with types. Missing type
-annotation at computed property `['a' + 'b']`: [signature-verification-failure]
+Cannot build a typed interface for this module. You should annotate the exports of this module with types. Cannot
+determine types of initialized properties of an empty object. Please provide an annotation, e.g., by adding a type cast
+around this expression. [signature-verification-failure]
 
-   15|   ['a' + 'b'] = 4;
-         ^^^^^^^^^^^^^^^^
+   3| module.exports = {};
+                       ^^
 
 
 Error ------------------------------------------------------------------------------------------------------- fn.js:3:13
@@ -156,6 +130,23 @@ annotation at array pattern: [signature-verification-failure]
                 ^
 
 
+Error -------------------------------------------------------------------------------------------- imports_tparam.js:8:2
+
+Cannot cast `x` to number because `X` [1] is incompatible with number [2]. [incompatible-cast]
+
+   imports_tparam.js:8:2
+   8| (x: number); // nope
+       ^
+
+References:
+   imports_tparam.js:6:9
+   6| var x = new (f())();
+              ^^^^^^^^^^^ [1]
+   imports_tparam.js:8:5
+   8| (x: number); // nope
+          ^^^^^^ [2]
+
+
 Error ----------------------------------------------------------------------------------------------------- misc.js:3:15
 
 The type argument of a temporary base type must be a compatible literal type [invalid-temp-type]
@@ -170,6 +161,99 @@ Cannot use type without exactly 1 type argument. [nonpolymorphic-type-app]
 
    5| export var b: $TEMPORARY$number<1,1> = 42;
                     ^^^^^^^^^^^^^^^^^^^^^^
+
+
+Error ----------------------------------------------------------------------------------------------------- misc.js:7:18
+
+Cannot build a typed interface for this module. You should annotate the exports of this module with types. Expected
+simple key in object: [signature-verification-failure]
+
+   7| export const c = {['a' + 'b']: 42}
+                       ^^^^^^^^^^^^^^^^^
+
+
+Error ----------------------------------------------------------------------------------------------------- misc.js:9:18
+
+Cannot build a typed interface for this module. You should annotate the exports of this module with types. Unexpected
+spread in array: [signature-verification-failure]
+
+   9| export const d = [...c];
+                       ^^^^^^
+
+
+Error ----------------------------------------------------------------------------------------------------- misc.js:9:22
+
+Property `@@iterator` is missing in object literal [1] but exists in `$Iterable` [2]. [prop-missing]
+
+   misc.js:9:22
+    9| export const d = [...c];
+                            ^
+
+References:
+   misc.js:7:18
+    7| export const c = {['a' + 'b']: 42}
+                        ^^^^^^^^^^^^^^^^^ [1]
+   <BUILTINS>/prelude.js:48:11
+   48| interface $Iterable<+Yield,+Return,-Next> {
+                 ^^^^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- misc.js:11:19
+
+Cannot reassign constant `d` [1]. [reassign-const]
+
+   misc.js:11:19
+   11| export const e = (d += d);
+                         ^
+
+References:
+   misc.js:9:14
+    9| export const d = [...c];
+                    ^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------------- misc.js:11:19
+
+Cannot add `d` and `d` because array literal [1] is incompatible with string [2]. [incompatible-type]
+
+   misc.js:11:19
+   11| export const e = (d += d);
+                         ^
+
+References:
+   misc.js:9:18
+    9| export const d = [...c];
+                        ^^^^^^ [1]
+   misc.js:11:19
+   11| export const e = (d += d);
+                         ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- misc.js:11:24
+
+Cannot add `d` and `d` because array literal [1] is incompatible with string [2]. [incompatible-type]
+
+   misc.js:11:24
+   11| export const e = (d += d);
+                              ^
+
+References:
+   misc.js:9:18
+    9| export const d = [...c];
+                        ^^^^^^ [1]
+   misc.js:11:19
+   11| export const e = (d += d);
+                         ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- misc.js:11:19
+
+Cannot build a typed interface for this module. You should annotate the exports of this module with types. Cannot
+determine the type of this assignment expression. Please provide an annotation, e.g., by adding a type cast around this
+expression. [signature-verification-failure]
+
+   11| export const e = (d += d);
+                         ^^^^^^
 
 
 Error ---------------------------------------------------------------------------------------------- obj-pattern.js:3:19
@@ -235,18 +319,9 @@ annotation at array pattern: [signature-verification-failure]
 
 Error --------------------------------------------------------------------------------------------------- tparam.js:5:15
 
-Cannot resolve name `X`. [cannot-resolve-name]
+Cannot resolve name `Y`. [cannot-resolve-name]
 
-   5|     x: typeof X;
-                    ^
-
-
-Error --------------------------------------------------------------------------------------------------- tparam.js:5:15
-
-Cannot build a typed interface for this module. You should annotate the exports of this module with types. Invalid use
-of type parameter: [signature-verification-failure]
-
-   5|     x: typeof X;
+   5|     x: typeof Y;
                     ^
 
 
@@ -277,4 +352,4 @@ annotation at declaration of variable `x`: [signature-verification-failure]
 
 
 
-Found 32 errors
+Found 36 errors

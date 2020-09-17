@@ -617,7 +617,7 @@ let%expect_test "export_class_reference_check1" =
     ([2:2-8],
      (SigError
         (Signature_error.ExpectedAnnotation ([2:2-8],
-           Expected_annotation_sort.Property {name = (Expected_annotation_sort.Identifier "f")}))))
+           Expected_annotation_sort.Property {name = "f"}))))
   |}]
 
 let%expect_test "export_class_reference_check2" =
@@ -854,7 +854,7 @@ let%expect_test "class_dependencies_check" =
     ([1:10-16],
      (SigError
         (Signature_error.ExpectedAnnotation ([1:10-16],
-           Expected_annotation_sort.Property {name = (Expected_annotation_sort.Identifier "f")}))))
+           Expected_annotation_sort.Property {name = "f"}))))
   |}]
 
 let%expect_test "export_new_typecast" =
@@ -961,7 +961,7 @@ let%expect_test "export_new_typecast_check" =
     ([1:10-16],
      (SigError
         (Signature_error.ExpectedAnnotation ([1:10-16],
-           Expected_annotation_sort.Property {name = (Expected_annotation_sort.Identifier "f")}))))
+           Expected_annotation_sort.Property {name = "f"}))))
   |}]
 
 let%expect_test "recursive_dependencies" =
@@ -1048,7 +1048,7 @@ let%expect_test "recursive_dependencies_check" =
     ([2:2-12],
      (SigError
         (Signature_error.ExpectedAnnotation ([2:2-12],
-           Expected_annotation_sort.Property {name = (Expected_annotation_sort.Identifier "f")}))))
+           Expected_annotation_sort.Property {name = "f"}))))
   |}]
 
 let%expect_test "typeof_dependencies" =
@@ -1619,7 +1619,7 @@ let%expect_test "report_all_errors" =
     ([2:2-23],
      (SigError
         (Signature_error.ExpectedAnnotation ([2:2-23],
-           Expected_annotation_sort.Property {name = (Expected_annotation_sort.Identifier "f")}))))
+           Expected_annotation_sort.Property {name = "f"}))))
   |}]
 
 let%expect_test "munged_methods_ignored_if_directive" =
@@ -1737,9 +1737,7 @@ let%expect_test "munged_fields_not_ignored" =
     ([2:2-31],
      (SigError
         (Signature_error.ExpectedAnnotation ([2:2-31],
-           Expected_annotation_sort.Property {
-             name = (Expected_annotation_sort.Identifier "_method")}
-           ))))
+           Expected_annotation_sort.Property {name = "_method"}))))
   |}]
 
 let%expect_test "propTypes_static_ignored" =
@@ -1797,9 +1795,7 @@ let%expect_test "propTypes_static_failure" =
     ([2:2-23],
      (SigError
         (Signature_error.ExpectedAnnotation ([2:2-23],
-           Expected_annotation_sort.Property {
-             name = (Expected_annotation_sort.Identifier "propTypes")}
-           ))))
+           Expected_annotation_sort.Property {name = "propTypes"}))))
   |}]
 
 let%expect_test "array_spread" =

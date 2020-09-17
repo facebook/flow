@@ -1282,9 +1282,7 @@ let loc_of_msg : 'loc t' -> 'loc option = function
       (match sve with
       | ExpectedSort (_, _, loc)
       | ExpectedAnnotation (loc, _)
-      | InvalidTypeParamUse loc
       | UnexpectedObjectKey (loc, _)
-      | UnexpectedObjectSpread (loc, _)
       | UnexpectedArraySpread (loc, _)
       | UnexpectedArrayHole loc
       | EmptyArray loc
@@ -2535,9 +2533,7 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
           [code x; text (spf " is not a %s." (Signature_builder_kind.Sort.to_string sort))]
         | ExpectedAnnotation (_, sort) ->
           [text (spf "Missing type annotation at %s:" (Expected_annotation_sort.to_string sort))]
-        | InvalidTypeParamUse _ -> [text "Invalid use of type parameter:"]
         | UnexpectedObjectKey _ -> [text "Expected simple key in object:"]
-        | UnexpectedObjectSpread _ -> [text "Unexpected spread in object:"]
         | UnexpectedArraySpread _ -> [text "Unexpected spread in array:"]
         | UnexpectedArrayHole _ -> [text "Unexpected array hole:"]
         | EmptyArray _ ->

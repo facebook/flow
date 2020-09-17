@@ -15,7 +15,6 @@ let set_of_fixable_signature_verification_locations tolerable_errors =
         ( ExpectedAnnotation (loc, _)
         | UnexpectedExpression (loc, _)
         | UnexpectedObjectKey (loc, _)
-        | UnexpectedObjectSpread (loc, _)
         | EmptyArray loc
         | EmptyObject loc
         | UnexpectedArraySpread (loc, _) ) ->

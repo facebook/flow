@@ -8,9 +8,7 @@
 type 'loc t =
   | ExpectedSort of Signature_builder_kind.Sort.t * string * 'loc
   | ExpectedAnnotation of 'loc * Expected_annotation_sort.t
-  | InvalidTypeParamUse of 'loc
   | UnexpectedObjectKey of 'loc * 'loc
-  | UnexpectedObjectSpread of 'loc * 'loc
   | UnexpectedArraySpread of 'loc * 'loc
   | UnexpectedArrayHole of 'loc
   | EmptyArray of 'loc

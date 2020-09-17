@@ -1435,12 +1435,6 @@ struct
                   tolerable_error
                 else
                   SignatureVerificationError (ExpectedAnnotation (loc', sort))
-              | InvalidTypeParamUse loc ->
-                let loc' = this#loc loc in
-                if loc == loc' then
-                  tolerable_error
-                else
-                  SignatureVerificationError (InvalidTypeParamUse loc')
               | UnexpectedObjectKey (loc, key_loc) ->
                 let loc' = this#loc loc in
                 let key_loc' = this#loc key_loc in
@@ -1448,13 +1442,6 @@ struct
                   tolerable_error
                 else
                   SignatureVerificationError (UnexpectedObjectKey (loc', key_loc'))
-              | UnexpectedObjectSpread (loc, spread_loc) ->
-                let loc' = this#loc loc in
-                let spread_loc' = this#loc spread_loc in
-                if loc == loc' && spread_loc == spread_loc' then
-                  tolerable_error
-                else
-                  SignatureVerificationError (UnexpectedObjectSpread (loc', spread_loc'))
               | UnexpectedArraySpread (loc, spread_loc) ->
                 let loc' = this#loc loc in
                 let spread_loc' = this#loc spread_loc in

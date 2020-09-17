@@ -1033,10 +1033,7 @@ let string_of_signature_error pp_loc err =
   | ExpectedSort (sort, x, loc) -> spf "%s @ %s is not a %s" x (pp_loc loc) (Sort.to_string sort)
   | ExpectedAnnotation (loc, sort) ->
     spf "Expected annotation at %s @ %s" (Expected_annotation_sort.to_string sort) (pp_loc loc)
-  | InvalidTypeParamUse loc -> spf "Invalid use of type parameter @ %s" (pp_loc loc)
   | UnexpectedObjectKey (_loc, key_loc) -> spf "Expected simple object key @ %s" (pp_loc key_loc)
-  | UnexpectedObjectSpread (_loc, spread_loc) ->
-    spf "Unexpected object spread @ %s" (pp_loc spread_loc)
   | UnexpectedArraySpread (_loc, spread_loc) ->
     spf "Unexpected array spread @ %s" (pp_loc spread_loc)
   | UnexpectedArrayHole loc -> spf "Unexpected array hole @ %s" (pp_loc loc)
