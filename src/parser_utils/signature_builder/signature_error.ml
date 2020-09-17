@@ -19,21 +19,6 @@ type 'loc t =
   | SketchyToplevelDef of 'loc
   | UnsupportedPredicateExpression of 'loc
   | TODO of string * 'loc
-[@@deriving show]
+[@@deriving show, iter, map]
 
 let compare = Stdlib.compare
-
-let map_locs ~f = function
-  | ExpectedSort (sort, str, loc) -> ExpectedSort (sort, str, f loc)
-  | ExpectedAnnotation (loc, sort) -> ExpectedAnnotation (f loc, sort)
-  | InvalidTypeParamUse loc -> InvalidTypeParamUse (f loc)
-  | UnexpectedObjectKey (loc, key_loc) -> UnexpectedObjectKey (f loc, f key_loc)
-  | UnexpectedObjectSpread (loc, spread_loc) -> UnexpectedObjectSpread (f loc, f spread_loc)
-  | UnexpectedArraySpread (loc, spread_loc) -> UnexpectedArraySpread (f loc, f spread_loc)
-  | UnexpectedArrayHole loc -> UnexpectedArrayHole (f loc)
-  | EmptyArray loc -> EmptyArray (f loc)
-  | EmptyObject loc -> EmptyObject (f loc)
-  | UnexpectedExpression (loc, sort) -> UnexpectedExpression (f loc, sort)
-  | SketchyToplevelDef loc -> SketchyToplevelDef (f loc)
-  | UnsupportedPredicateExpression loc -> UnsupportedPredicateExpression (f loc)
-  | TODO (str, loc) -> TODO (str, f loc)

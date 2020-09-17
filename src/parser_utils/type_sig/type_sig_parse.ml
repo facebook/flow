@@ -57,7 +57,7 @@ type 'loc parsed =
   | TyRefApp of {loc: 'loc loc_node; name: 'loc tyname; targs: 'loc parsed list}
   | AsyncVoidReturn of 'loc loc_node
   | ValRef of 'loc ref
-  | Err of 'loc loc_node * errno
+  | Err of 'loc loc_node * 'loc loc_node errno
   | BuiltinTyRef of {ref_loc: 'loc loc_node; name: string}
   | Pattern of 'loc pattern_node
   | Eval of 'loc loc_node * 'loc parsed * 'loc parsed op

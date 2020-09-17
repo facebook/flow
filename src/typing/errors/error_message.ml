@@ -818,7 +818,7 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
   | EUnexpectedTemporaryBaseType loc -> EUnexpectedTemporaryBaseType (f loc)
   | ECannotDelete (l1, r1) -> ECannotDelete (f l1, map_reason r1)
   | EBigIntNotYetSupported r -> EBigIntNotYetSupported (map_reason r)
-  | ESignatureVerification sve -> ESignatureVerification (Signature_error.map_locs ~f sve)
+  | ESignatureVerification sve -> ESignatureVerification (Signature_error.map f sve)
   | ECannotSpreadInterface { spread_reason; interface_reason; use_op } ->
     ECannotSpreadInterface
       {

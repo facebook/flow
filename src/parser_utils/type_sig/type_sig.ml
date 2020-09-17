@@ -508,7 +508,7 @@ type 'a op =
  *    syntax. These represent missing functionality in the analysis which should
  *    be fixed.
  *)
-type errno =
+type 'loc errno =
   | UnexpectedTypeof
   | TArgArity0
   | TArgArity1
@@ -528,6 +528,7 @@ type errno =
   | UnsupportedJSXElement
   | TODO_Literal
   | TODO_Expression
-  [@@deriving show {with_path = false}]
+  | SigError of 'loc Signature_error.t
+  [@@deriving show {with_path = false}, map]
 
-type 'loc error = 'loc * errno [@@deriving show {with_path = false}]
+type 'loc error = 'loc * 'loc errno [@@deriving show {with_path = false}]

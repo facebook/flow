@@ -1533,7 +1533,7 @@ let abstractify_tolerable_errors =
     | WL.BadExportPosition loc -> WA.BadExportPosition (ALoc.of_loc loc)
     | WL.BadExportContext (name, loc) -> WA.BadExportContext (name, ALoc.of_loc loc)
     | WL.SignatureVerificationError err ->
-      WA.SignatureVerificationError (Signature_error.map_locs ~f:ALoc.of_loc err)
+      WA.SignatureVerificationError (Signature_error.map ALoc.of_loc err)
   in
   Base.List.map ~f:abstractify_tolerable_error
 

@@ -502,7 +502,14 @@ let do_parse ~parse_options ~info content file =
                 List.fold_left
                   (fun acc (loc, err) ->
                     let loc = Type_sig_collections.Locs.get locs loc in
-                    let err = Signature_error.TODO (Type_sig.show_errno err, loc) in
+                    let err =
+                      match err with
+                      | Type_sig.SigError err ->
+                        Signature_error.map (Type_sig_collections.Locs.get locs) err
+                      | _ ->
+                        let dummy_pp _ _ = () in
+                        Signature_error.TODO (Type_sig.show_errno dummy_pp err, loc)
+                    in
                     Signature_builder_deps.PrintableErrorSet.add err acc)
                   Signature_builder_deps.PrintableErrorSet.empty
                   errors
