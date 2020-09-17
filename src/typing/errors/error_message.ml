@@ -62,6 +62,7 @@ and 'loc t' =
       min_arity: int;
       max_arity: int;
     }
+  | EAnyValueUsedAsType of { reason_use: 'loc virtual_reason }
   | EValueUsedAsType of { reason_use: 'loc virtual_reason }
   | EExpectedStringLit of {
       reason_lower: 'loc virtual_reason;
@@ -713,6 +714,7 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
         min_arity;
         max_arity;
       }
+  | EAnyValueUsedAsType { reason_use } -> EAnyValueUsedAsType { reason_use = map_reason reason_use }
   | EValueUsedAsType { reason_use } -> EValueUsedAsType { reason_use = map_reason reason_use }
   | EPolarityMismatch { reason; name; expected_polarity; actual_polarity } ->
     EPolarityMismatch { reason = map_reason reason; name; expected_polarity; actual_polarity }
@@ -1022,6 +1024,7 @@ let util_use_op_of_msg nope util = function
   | EOnlyDefaultExport (_, _, _)
   | ENoNamedExport (_, _, _, _)
   | EMissingTypeArgs { reason_tapp = _; reason_arity = _; min_arity = _; max_arity = _ }
+  | EAnyValueUsedAsType _
   | EValueUsedAsType _
   | EPolarityMismatch { reason = _; name = _; expected_polarity = _; actual_polarity = _ }
   | EBuiltinLookupFailed _
@@ -1132,6 +1135,7 @@ let util_use_op_of_msg nope util = function
 (* Not all messages (i.e. those whose locations are based on use_ops) have locations that can be
   determined while locations are abstract. We just return None in this case. *)
 let loc_of_msg : 'loc t' -> 'loc option = function
+  | EAnyValueUsedAsType { reason_use = primary }
   | EValueUsedAsType { reason_use = primary }
   | EComparison (primary, _)
   | ENonStrictEqualityComparison (primary, _)
@@ -1751,6 +1755,22 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
         ]
       in
       Normal { features }
+  | EAnyValueUsedAsType { reason_use } ->
+    let features =
+      [
+        text "Cannot use ";
+        desc reason_use;
+        text " as a type because it is an ";
+        code "any";
+        text "-typed value. ";
+        text "Type ";
+        desc reason_use;
+        text " properly, so it is no longer ";
+        code "any";
+        text "-typed, to use it as an annotation.";
+      ]
+    in
+    Normal { features }
   | EValueUsedAsType { reason_use } ->
     let features =
       [
@@ -3560,7 +3580,9 @@ let error_code_of_message err : error_code option =
   | EUnusedSuppression _ ->
     None
   | EUseArrayLiteral _ -> Some IllegalNewArray
-  | EValueUsedAsType _ -> Some ValueAsType
+  | EAnyValueUsedAsType _
+  | EValueUsedAsType _ ->
+    Some ValueAsType
   (* lints should match their lint name *)
   | EUntypedTypeImport _
   | EUntypedImport _

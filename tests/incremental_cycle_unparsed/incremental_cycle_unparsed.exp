@@ -99,8 +99,8 @@ Importing a type from an untyped module makes it `any` and is not safe! Did you 
 
 Error ------------------------------------------------------------------------------------------------------ bar.js:5:19
 
-Cannot use `foo` as a type. A name can be used as a type only if it refers to a type, interface, class, or enum
-definition. To get the type of a non-class value, use `typeof`. [value-as-type]
+Cannot use `foo` as a type because it is an `any`-typed value. Type `foo` properly, so it is no longer `any`-typed, to
+use it as an annotation. [value-as-type]
 
    5| function err(foo: foo): number {
                         ^^^
@@ -108,8 +108,8 @@ definition. To get the type of a non-class value, use `typeof`. [value-as-type]
 
 Error ------------------------------------------------------------------------------------------------------ bar.js:11:8
 
-Cannot use `foo` as a type. A name can be used as a type only if it refers to a type, interface, class, or enum
-definition. To get the type of a non-class value, use `typeof`. [value-as-type]
+Cannot use `foo` as a type because it is an `any`-typed value. Type `foo` properly, so it is no longer `any`-typed, to
+use it as an annotation. [value-as-type]
 
    11|   foo: foo
               ^^^
@@ -168,8 +168,8 @@ Importing a type from an untyped module makes it `any` and is not safe! Did you 
 
 Error ------------------------------------------------------------------------------------------------------ bar.js:5:19
 
-Cannot use `foo` as a type. A name can be used as a type only if it refers to a type, interface, class, or enum
-definition. To get the type of a non-class value, use `typeof`. [value-as-type]
+Cannot use `foo` as a type because it is an `any`-typed value. Type `foo` properly, so it is no longer `any`-typed, to
+use it as an annotation. [value-as-type]
 
    5| function err(foo: foo): number {
                         ^^^
@@ -177,8 +177,8 @@ definition. To get the type of a non-class value, use `typeof`. [value-as-type]
 
 Error ------------------------------------------------------------------------------------------------------ bar.js:11:8
 
-Cannot use `foo` as a type. A name can be used as a type only if it refers to a type, interface, class, or enum
-definition. To get the type of a non-class value, use `typeof`. [value-as-type]
+Cannot use `foo` as a type because it is an `any`-typed value. Type `foo` properly, so it is no longer `any`-typed, to
+use it as an annotation. [value-as-type]
 
    11|   foo: foo
               ^^^

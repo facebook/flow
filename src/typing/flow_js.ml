@@ -4863,6 +4863,7 @@ struct
           (match l with
           (* Short-circut as we already error on the unresolved name. *)
           | AnyT (_, AnyError (Some UnresolvedName)) -> ()
+          | AnyT _ -> add_output cx ~trace Error_message.(EAnyValueUsedAsType { reason_use })
           | _ -> add_output cx ~trace Error_message.(EValueUsedAsType { reason_use }))
         | (DefT (rl, _, ClassT l), UseT (use_op, DefT (_, _, ClassT u))) ->
           rec_flow cx trace (reposition cx ~trace (aloc_of_reason rl) l, UseT (use_op, u))
