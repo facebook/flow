@@ -159,8 +159,8 @@ Error --------------------------------------------------------------------------
 
 Cannot use type without exactly 1 type argument. [nonpolymorphic-type-app]
 
-   5| export var b: $TEMPORARY$number<1,1> = 42;
-                    ^^^^^^^^^^^^^^^^^^^^^^
+   5| export var b: $TEMPORARY$number<1, 1> = 42;
+                    ^^^^^^^^^^^^^^^^^^^^^^^
 
 
 Error ----------------------------------------------------------------------------------------------------- misc.js:7:18
@@ -168,7 +168,7 @@ Error --------------------------------------------------------------------------
 Cannot build a typed interface for this module. You should annotate the exports of this module with types. Expected
 simple key in object: [signature-verification-failure]
 
-   7| export const c = {['a' + 'b']: 42}
+   7| export const c = {['a' + 'b']: 42};
                        ^^^^^^^^^^^^^^^^^
 
 
@@ -191,7 +191,7 @@ Property `@@iterator` is missing in object literal [1] but exists in `$Iterable`
 
 References:
    misc.js:7:18
-    7| export const c = {['a' + 'b']: 42}
+    7| export const c = {['a' + 'b']: 42};
                         ^^^^^^^^^^^^^^^^^ [1]
    <BUILTINS>/prelude.js:48:11
    48| interface $Iterable<+Yield,+Return,-Next> {
@@ -254,6 +254,42 @@ expression. [signature-verification-failure]
 
    11| export const e = (d += d);
                          ^^^^^^
+
+
+Error ---------------------------------------------------------------------------------------------------- misc.js:15:18
+
+BigInt bigint literal `42n` [1] is not yet supported. [bigint-unsupported]
+
+   15| export const u = 42n;
+                        ^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------------- misc.js:17:18
+
+Cannot build a typed interface for this module. You should annotate the exports of this module with types. Cannot
+determine the type of this literal. Please provide an annotation, e.g., by adding a type cast around this expression.
+[signature-verification-failure]
+
+   17| export const w = /foo/;
+                        ^^^^^
+
+
+Error ---------------------------------------------------------------------------------------------------- misc.js:19:18
+
+Cannot resolve name `React`. [cannot-resolve-name]
+
+   19| export const x = <f />;
+                        ^^^^^
+
+
+Error ---------------------------------------------------------------------------------------------------- misc.js:19:18
+
+Cannot build a typed interface for this module. You should annotate the exports of this module with types. Cannot
+determine the type of this JSX element. Please provide an annotation, e.g., by adding a type cast around this
+expression. [signature-verification-failure]
+
+   19| export const x = <f />;
+                        ^^^^^
 
 
 Error ---------------------------------------------------------------------------------------------- obj-pattern.js:3:19
@@ -352,4 +388,4 @@ annotation at declaration of variable `x`: [signature-verification-failure]
 
 
 
-Found 36 errors
+Found 40 errors

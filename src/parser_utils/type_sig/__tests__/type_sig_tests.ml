@@ -2196,7 +2196,10 @@ let%expect_test "jsx_div" =
     (Err [1:17-28])
 
     Errors:
-    ([1:17-28], UnsupportedJSXElement)
+    ([1:17-28],
+     (SigError
+        (Signature_error.UnexpectedExpression ([1:17-28], Flow_ast_utils.ExpressionSort.JSXElement
+           ))))
   |}]
 
 let%expect_test "function_return" =

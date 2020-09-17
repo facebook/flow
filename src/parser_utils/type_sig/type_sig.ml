@@ -509,18 +509,8 @@ type 'a op =
  *    be fixed.
  *)
 type 'loc errno =
-  | UnexpectedTypeof
-  | TArgArity0
-  | TArgArity1
-  | TArgArity2
-  | TArgArity3
-  | TArgMinArity1
-  | UnexpectedTArg
-  | UnsupportedTemporaryType
   | UnsupportedKeyMirrorProp
-  | UnsupportedJSXElement
-  | TODO_Literal
-  | TODO_Expression
+  | CheckError
   | SigError of 'loc Signature_error.t
   [@@deriving show {with_path = false}, map]
 

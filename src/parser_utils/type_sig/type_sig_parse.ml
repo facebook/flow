@@ -1145,7 +1145,7 @@ let typeof =
       loop scope locs typeof_loc [] id
     | loc, _ ->
       let loc = Locs.push locs loc in
-      Err (loc, UnexpectedTypeof)
+      Err (loc, CheckError)
 
 let rec annot opts scope locs xs (loc, t) =
   let loc = Locs.push locs loc in
@@ -1643,7 +1643,7 @@ and maybe_special_unqualified_generic opts scope locs xs loc targs ref_loc =
     | Some (_, {arguments = [t]; _}) ->
       let t = annot opts scope locs xs t in
       Annot (Array (loc, t))
-    | _ -> Err (loc, TArgArity1)
+    | _ -> Err (loc, CheckError)
     end
 
   | "Class" ->
@@ -1651,57 +1651,59 @@ and maybe_special_unqualified_generic opts scope locs xs loc targs ref_loc =
     | Some (_, {arguments = [t]; _}) ->
       let t = annot opts scope locs xs t in
       Annot (ClassT (loc, t))
-    | _ -> Err (loc, TArgArity1)
+    | _ -> Err (loc, CheckError)
     end
 
   | "Function" | "function" | "Object" ->
     begin match targs with
     | None -> Annot (Any loc)
-    | _ -> Err (loc, TArgArity0)
+    | _ -> Err (loc, CheckError)
     end
 
   | "Function$Prototype$Apply" ->
     begin match targs with
     | None -> Annot (Function_apply loc)
-    | _ -> Err (loc, TArgArity0)
+    | _ -> Err (loc, CheckError)
     end
 
   | "Function$Prototype$Bind" ->
     begin match targs with
     | None -> Annot (Function_bind loc)
-    | _ -> Err (loc, TArgArity0)
+    | _ -> Err (loc, CheckError)
     end
 
   | "Function$Prototype$Call" ->
     begin match targs with
     | None -> Annot (Function_call loc)
-    | _ -> Err (loc, TArgArity0)
+    | _ -> Err (loc, CheckError)
     end
 
   | "Object$Assign" ->
     begin match targs with
     | None -> Annot (Object_assign loc)
-    | _ -> Err (loc, TArgArity0)
+    | _ -> Err (loc, CheckError)
     end
 
   | "Object$GetPrototypeOf" ->
     begin match targs with
     | None -> Annot (Object_getPrototypeOf loc)
-    | _ -> Err (loc, TArgArity0)
+    | _ -> Err (loc, CheckError)
     end
 
   | "Object$SetPrototypeOf" ->
     begin match targs with
     | None -> Annot (Object_setPrototypeOf loc)
-    | _ -> Err (loc, TArgArity0)
+    | _ -> Err (loc, CheckError)
     end
 
   | "$TEMPORARY$number" ->
     begin match targs with
     | Some (_, {arguments = [(_, T.NumberLiteral {Ast.NumberLiteral.value; raw; _})]; _}) ->
       Annot (TEMPORARY_Number (loc, value, raw))
-    | Some (_, {arguments = [(loc, _)]; _}) -> Err (Locs.push locs loc, UnexpectedTArg)
-    | _ -> Err (loc, TArgArity1)
+    | Some (_, {arguments = [(loc, _)]; _}) ->
+      let loc = Locs.push locs loc in
+      Err (loc, CheckError)
+    | _ -> Err (loc, CheckError)
     end
 
   | "$TEMPORARY$string" ->
@@ -1710,16 +1712,20 @@ and maybe_special_unqualified_generic opts scope locs xs loc targs ref_loc =
       if opts.max_literal_len = 0 || String.length s <= opts.max_literal_len
       then Annot (TEMPORARY_String (loc, s))
       else Annot (TEMPORARY_LongString loc)
-    | Some (_, {arguments = [(loc, _)]; _}) -> Err (Locs.push locs loc, UnexpectedTArg)
-    | _ -> Err (loc, TArgArity1)
+    | Some (_, {arguments = [(loc, _)]; _}) ->
+      let loc = Locs.push locs loc in
+      Err (loc, CheckError)
+    | _ -> Err (loc, CheckError)
     end
 
   | "$TEMPORARY$boolean" ->
     begin match targs with
     | Some (_, {arguments = [(_, T.BooleanLiteral {Ast.BooleanLiteral.value; _})]; _}) ->
       Annot (TEMPORARY_Boolean (loc, value))
-    | Some (_, {arguments = [(loc, _)]; _}) -> Err (Locs.push locs loc, UnexpectedTArg)
-    | _ -> Err (loc, TArgArity1)
+    | Some (_, {arguments = [(loc, _)]; _}) ->
+      let loc = Locs.push locs loc in
+      Err (loc, CheckError)
+    | _ -> Err (loc, CheckError)
     end
 
   | "$TEMPORARY$object" ->
@@ -1727,7 +1733,7 @@ and maybe_special_unqualified_generic opts scope locs xs loc targs ref_loc =
     | Some (_, {arguments = [t]; _}) ->
       let t = annot opts scope locs xs t in
       Annot (TEMPORARY_Object t)
-    | _ -> Err (loc, TArgArity1)
+    | _ -> Err (loc, CheckError)
     end
 
   | "$TEMPORARY$array" ->
@@ -1735,7 +1741,7 @@ and maybe_special_unqualified_generic opts scope locs xs loc targs ref_loc =
     | Some (_, {arguments = [t]; _}) ->
       let t = annot opts scope locs xs t in
       Annot (TEMPORARY_Array (loc, t))
-    | _ -> Err (loc, TArgArity1)
+    | _ -> Err (loc, CheckError)
     end
 
   (* These annotations are only used internally by the sig AST and should not
@@ -1743,14 +1749,14 @@ and maybe_special_unqualified_generic opts scope locs xs loc targs ref_loc =
      longer need to create a sig AST. *)
   | "$TEMPORARY$Object$freeze"
   | "$TEMPORARY$function"
-    -> Err (loc, UnsupportedTemporaryType)
+    -> Err (loc, CheckError)
 
   | "$ReadOnlyArray" ->
     begin match targs with
     | Some (_, {arguments = [t]; _}) ->
       let t = annot opts scope locs xs t in
       Annot (ReadOnlyArray (loc, t))
-    | _ -> Err (loc, TArgArity1)
+    | _ -> Err (loc, CheckError)
     end
 
   | "$Supertype" ->
@@ -1758,7 +1764,7 @@ and maybe_special_unqualified_generic opts scope locs xs loc targs ref_loc =
     | Some (_, {arguments = [t]; _}) ->
       let t = annot opts scope locs xs t in
       Annot (AnyWithLowerBound (loc, t))
-    | _ -> Err (loc, TArgArity1)
+    | _ -> Err (loc, CheckError)
     end
 
   | "$Subtype" ->
@@ -1766,7 +1772,7 @@ and maybe_special_unqualified_generic opts scope locs xs loc targs ref_loc =
     | Some (_, {arguments = [t]; _}) ->
       let t = annot opts scope locs xs t in
       Annot (AnyWithUpperBound (loc, t))
-    | _ -> Err (loc, TArgArity1)
+    | _ -> Err (loc, CheckError)
     end
 
   | "$PropertyType" ->
@@ -1774,8 +1780,10 @@ and maybe_special_unqualified_generic opts scope locs xs loc targs ref_loc =
     | Some (_, {arguments = [obj; (_, T.StringLiteral {Ast.StringLiteral.value; _})]; _}) ->
       let obj = annot opts scope locs xs obj in
       Annot (PropertyType { loc; obj; prop = value })
-    | Some (_, {arguments = [_; (loc, _)]; _}) -> Err (Locs.push locs loc, UnexpectedTArg)
-    | _ -> Err (loc, TArgArity2)
+    | Some (_, {arguments = [_; (loc, _)]; _}) ->
+      let loc = Locs.push locs loc in
+      Err (loc, CheckError)
+    | _ -> Err (loc, CheckError)
     end
 
   | "$ElementType" ->
@@ -1784,7 +1792,7 @@ and maybe_special_unqualified_generic opts scope locs xs loc targs ref_loc =
       let obj = annot opts scope locs xs obj in
       let elem = annot opts scope locs xs elem in
       Annot (ElementType { loc; obj; elem; })
-    | _ -> Err (loc, TArgArity2)
+    | _ -> Err (loc, CheckError)
     end
 
   | "$NonMaybeType" ->
@@ -1792,7 +1800,7 @@ and maybe_special_unqualified_generic opts scope locs xs loc targs ref_loc =
     | Some (_, {arguments = [t]; _}) ->
       let t = annot opts scope locs xs t in
       Annot (NonMaybeType (loc, t))
-    | _ -> Err (loc, TArgArity1)
+    | _ -> Err (loc, CheckError)
     end
 
   | "$Shape" ->
@@ -1800,7 +1808,7 @@ and maybe_special_unqualified_generic opts scope locs xs loc targs ref_loc =
     | Some (_, {arguments = [t]; _}) ->
       let t = annot opts scope locs xs t in
       Annot (Shape (loc, t))
-    | _ -> Err (loc, TArgArity1)
+    | _ -> Err (loc, CheckError)
     end
 
   | "$Diff" ->
@@ -1809,7 +1817,7 @@ and maybe_special_unqualified_generic opts scope locs xs loc targs ref_loc =
       let t1 = annot opts scope locs xs t1 in
       let t2 = annot opts scope locs xs t2 in
       Annot (Diff (loc, t1, t2))
-    | _ -> Err (loc, TArgArity2)
+    | _ -> Err (loc, CheckError)
     end
 
   | "$ReadOnly" ->
@@ -1817,7 +1825,7 @@ and maybe_special_unqualified_generic opts scope locs xs loc targs ref_loc =
     | Some (_, {arguments = [t]; _}) ->
       let t = annot opts scope locs xs t in
       Annot (ReadOnly (loc, t))
-    | _ -> Err (loc, TArgArity1)
+    | _ -> Err (loc, CheckError)
     end
 
   | "$Keys" | "$Enum" ->
@@ -1825,7 +1833,7 @@ and maybe_special_unqualified_generic opts scope locs xs loc targs ref_loc =
     | Some (_, {arguments = [t]; _}) ->
       let t = annot opts scope locs xs t in
       Annot (Keys (loc, t))
-    | _ -> Err (loc, TArgArity1)
+    | _ -> Err (loc, CheckError)
     end
 
   | "$Values" ->
@@ -1833,7 +1841,7 @@ and maybe_special_unqualified_generic opts scope locs xs loc targs ref_loc =
     | Some (_, {arguments = [t]; _}) ->
       let t = annot opts scope locs xs t in
       Annot (Values (loc, t))
-    | _ -> Err (loc, TArgArity1)
+    | _ -> Err (loc, CheckError)
     end
 
   | "$Exact" ->
@@ -1841,7 +1849,7 @@ and maybe_special_unqualified_generic opts scope locs xs loc targs ref_loc =
     | Some (_, {arguments = [t]; _}) ->
       let t = annot opts scope locs xs t in
       Annot (Exact (loc, t))
-    | _ -> Err (loc, TArgArity1)
+    | _ -> Err (loc, CheckError)
     end
 
   | "$Rest" ->
@@ -1850,15 +1858,15 @@ and maybe_special_unqualified_generic opts scope locs xs loc targs ref_loc =
       let t1 = annot opts scope locs xs t1 in
       let t2 = annot opts scope locs xs t2 in
       Annot (Rest (loc, t1, t2))
-    | _ -> Err (loc, TArgArity2)
+    | _ -> Err (loc, CheckError)
     end
 
   | "$Exports" ->
     begin match targs with
     | Some (_, {arguments = [(_, T.StringLiteral {Ast.StringLiteral.value; _})]; _}) ->
       Annot (ExportsT (loc, value))
-    | Some (_, {arguments = [(loc, _)]; _}) -> Err (Locs.push locs loc, UnexpectedTArg)
-    | _ -> Err (loc, TArgArity1)
+    | Some (_, {arguments = [(loc, _)]; _}) -> Err (Locs.push locs loc, CheckError)
+    | _ -> Err (loc, CheckError)
     end
 
   | "$Call" ->
@@ -1867,7 +1875,7 @@ and maybe_special_unqualified_generic opts scope locs xs loc targs ref_loc =
       let fn = annot opts scope locs xs fn in
       let args = List.map (annot opts scope locs xs) args in
       Annot (Call { loc; fn; args; })
-    | _ -> Err (loc, TArgMinArity1)
+    | _ -> Err (loc, CheckError)
     end
 
   | "$TupleMap" ->
@@ -1876,7 +1884,7 @@ and maybe_special_unqualified_generic opts scope locs xs loc targs ref_loc =
       let tup = annot opts scope locs xs tup in
       let fn = annot opts scope locs xs fn in
       Annot (TupleMap { loc; tup; fn; })
-    | _ -> Err (loc, TArgArity2)
+    | _ -> Err (loc, CheckError)
     end
 
   | "$ObjMap" ->
@@ -1885,7 +1893,7 @@ and maybe_special_unqualified_generic opts scope locs xs loc targs ref_loc =
       let obj = annot opts scope locs xs obj in
       let fn = annot opts scope locs xs fn in
       Annot (ObjMap { loc; obj; fn; })
-    | _ -> Err (loc, TArgArity2)
+    | _ -> Err (loc, CheckError)
     end
 
   | "$ObjMapi" ->
@@ -1894,15 +1902,17 @@ and maybe_special_unqualified_generic opts scope locs xs loc targs ref_loc =
       let obj = annot opts scope locs xs obj in
       let fn = annot opts scope locs xs fn in
       Annot (ObjMapi { loc; obj; fn; })
-    | _ -> Err (loc, TArgArity2)
+    | _ -> Err (loc, CheckError)
     end
 
   | "$CharSet" ->
     begin match targs with
     | Some (_, {arguments = [(_, T.StringLiteral {Ast.StringLiteral.value; _})]; _}) ->
       Annot (CharSet (loc, value))
-    | Some (_, {arguments = [(loc, _)]; _}) -> Err (Locs.push locs loc, UnexpectedTArg)
-    | _ -> Err (loc, TArgArity1)
+    | Some (_, {arguments = [(loc, _)]; _}) ->
+      let loc = Locs.push locs loc in
+      Err (loc, CheckError)
+    | _ -> Err (loc, CheckError)
     end
 
   | "React$AbstractComponent" ->
@@ -1911,7 +1921,7 @@ and maybe_special_unqualified_generic opts scope locs xs loc targs ref_loc =
       let config = annot opts scope locs xs config in
       let instance = annot opts scope locs xs instance in
       Annot (ReactAbstractComponent { loc; config; instance; })
-    | _ -> Err (loc, TArgArity2)
+    | _ -> Err (loc, CheckError)
     end
 
   | "React$Config" ->
@@ -1920,7 +1930,7 @@ and maybe_special_unqualified_generic opts scope locs xs loc targs ref_loc =
       let props = annot opts scope locs xs props in
       let default = annot opts scope locs xs default in
       Annot (ReactConfig { loc; props; default; })
-    | _ -> Err (loc, TArgArity2)
+    | _ -> Err (loc, CheckError)
     end
 
   | "React$PropType$Primitive" ->
@@ -1928,7 +1938,7 @@ and maybe_special_unqualified_generic opts scope locs xs loc targs ref_loc =
     | Some (_, {arguments = [t]; _}) ->
       let t = annot opts scope locs xs t in
       Annot (ReactPropTypePrimitive (loc, t))
-    | _ -> Err (loc, TArgArity1)
+    | _ -> Err (loc, CheckError)
     end
 
   | "React$PropType$Primitive$Required" ->
@@ -1936,61 +1946,61 @@ and maybe_special_unqualified_generic opts scope locs xs loc targs ref_loc =
     | Some (_, {arguments = [t]; _}) ->
       let t = annot opts scope locs xs t in
       Annot (ReactPropTypePrimitiveRequired (loc, t))
-    | _ -> Err (loc, TArgArity1)
+    | _ -> Err (loc, CheckError)
     end
 
   | "React$PropType$ArrayOf" ->
     begin match targs with
     | None -> Annot (ReactPropTypeArrayOf loc)
-    | _ -> Err (loc, TArgArity0)
+    | _ -> Err (loc, CheckError)
     end
 
   | "React$PropType$InstanceOf" ->
     begin match targs with
     | None -> Annot (ReactPropTypeInstanceOf loc)
-    | _ -> Err (loc, TArgArity0)
+    | _ -> Err (loc, CheckError)
     end
 
   | "React$PropType$ObjectOf" ->
     begin match targs with
     | None -> Annot (ReactPropTypeObjectOf loc)
-    | _ -> Err (loc, TArgArity0)
+    | _ -> Err (loc, CheckError)
     end
 
   | "React$PropType$OneOf" ->
     begin match targs with
     | None -> Annot (ReactPropTypeOneOf loc)
-    | _ -> Err (loc, TArgArity0)
+    | _ -> Err (loc, CheckError)
     end
 
   | "React$PropType$OneOfType" ->
     begin match targs with
     | None -> Annot (ReactPropTypeOneOfType loc)
-    | _ -> Err (loc, TArgArity0)
+    | _ -> Err (loc, CheckError)
     end
 
   | "React$PropType$Shape" ->
     begin match targs with
     | None -> Annot (ReactPropTypeShape loc)
-    | _ -> Err (loc, TArgArity0)
+    | _ -> Err (loc, CheckError)
     end
 
   | "React$CreateClass" ->
     begin match targs with
     | None -> Annot (ReactCreateClass loc)
-    | _ -> Err (loc, TArgArity0)
+    | _ -> Err (loc, CheckError)
     end
 
   | "React$CreateElement" ->
     begin match targs with
     | None -> Annot (ReactCreateElement loc)
-    | _ -> Err (loc, TArgArity0)
+    | _ -> Err (loc, CheckError)
     end
 
   | "React$CloneElement" ->
     begin match targs with
     | None -> Annot (ReactCloneElement loc)
-    | _ -> Err (loc, TArgArity0)
+    | _ -> Err (loc, CheckError)
     end
 
   | "React$ElementFactory" ->
@@ -1998,7 +2008,7 @@ and maybe_special_unqualified_generic opts scope locs xs loc targs ref_loc =
     | Some (_, {arguments = [t]; _}) ->
       let t = annot opts scope locs xs t in
       Annot (ReactElementFactory (loc, t))
-    | _ -> Err (loc, TArgArity1)
+    | _ -> Err (loc, CheckError)
     end
 
   | "React$ElementProps" ->
@@ -2006,7 +2016,7 @@ and maybe_special_unqualified_generic opts scope locs xs loc targs ref_loc =
     | Some (_, {arguments = [t]; _}) ->
       let t = annot opts scope locs xs t in
       Annot (ReactElementProps (loc, t))
-    | _ -> Err (loc, TArgArity1)
+    | _ -> Err (loc, CheckError)
     end
 
   | "React$ElementConfig" ->
@@ -2014,7 +2024,7 @@ and maybe_special_unqualified_generic opts scope locs xs loc targs ref_loc =
     | Some (_, {arguments = [t]; _}) ->
       let t = annot opts scope locs xs t in
       Annot (ReactElementConfig (loc, t))
-    | _ -> Err (loc, TArgArity1)
+    | _ -> Err (loc, CheckError)
     end
 
   | "React$ElementRef" ->
@@ -2022,61 +2032,61 @@ and maybe_special_unqualified_generic opts scope locs xs loc targs ref_loc =
     | Some (_, {arguments = [t]; _}) ->
       let t = annot opts scope locs xs t in
       Annot (ReactElementRef (loc, t))
-    | _ -> Err (loc, TArgArity1)
+    | _ -> Err (loc, CheckError)
     end
 
   | "$Compose" ->
     begin match targs with
     | None -> Annot (Compose loc)
-    | _ -> Err (loc, TArgArity0)
+    | _ -> Err (loc, CheckError)
     end
 
   | "$ComposeReverse" ->
     begin match targs with
     | None -> Annot (ComposeReverse loc)
-    | _ -> Err (loc, TArgArity0)
+    | _ -> Err (loc, CheckError)
     end
 
   | "$Facebookism$Idx" ->
     begin match targs with
     | None -> Annot (FacebookismIdx loc)
-    | _ -> Err (loc, TArgArity0)
+    | _ -> Err (loc, CheckError)
     end
 
   | "$Facebookism$TypeAssertIs" when opts.type_asserts ->
     begin match targs with
     | None -> Annot (FacebookismTypeAssertIs loc)
-    | _ -> Err (loc, TArgArity0)
+    | _ -> Err (loc, CheckError)
     end
 
   | "$Facebookism$TypeAssertThrows" when opts.type_asserts ->
     begin match targs with
     | None -> Annot (FacebookismTypeAssertThrows loc)
-    | _ -> Err (loc, TArgArity0)
+    | _ -> Err (loc, CheckError)
     end
 
   | "$Facebookism$TypeAssertWraps" when opts.type_asserts ->
     begin match targs with
     | None -> Annot (FacebookismTypeAssertWraps loc)
-    | _ -> Err (loc, TArgArity0)
+    | _ -> Err (loc, CheckError)
     end
 
   | "$Flow$DebugPrint" ->
     begin match targs with
     | None -> Annot (FlowDebugPrint loc)
-    | _ -> Err (loc, TArgArity0)
+    | _ -> Err (loc, CheckError)
     end
 
   | "$Flow$DebugThrow" ->
     begin match targs with
     | None -> Annot (FlowDebugThrow loc)
-    | _ -> Err (loc, TArgArity0)
+    | _ -> Err (loc, CheckError)
     end
 
   | "$Flow$DebugSleep" ->
     begin match targs with
     | None -> Annot (FlowDebugSleep loc)
-    | _ -> Err (loc, TArgArity0)
+    | _ -> Err (loc, CheckError)
     end
 
   | "$Pred" ->
@@ -2084,8 +2094,10 @@ and maybe_special_unqualified_generic opts scope locs xs loc targs ref_loc =
     | Some (_, {arguments = [(_, T.NumberLiteral {Ast.NumberLiteral.value; _})]; _})  ->
       let n = Base.Int.of_float value in
       Annot (Pred (loc, n))
-    | Some (_, {arguments = [(loc, _)]; _}) -> Err (Locs.push locs loc, UnexpectedTArg)
-    | _ -> Err (loc, TArgArity1)
+    | Some (_, {arguments = [(loc, _)]; _}) ->
+      let loc = Locs.push locs loc in
+      Err (loc, CheckError)
+    | _ -> Err (loc, CheckError)
     end
 
   | "$Refine" ->
@@ -2094,8 +2106,10 @@ and maybe_special_unqualified_generic opts scope locs xs loc targs ref_loc =
       let base = annot opts scope locs xs base in
       let fn_pred = annot opts scope locs xs pred in
       Annot (Refine { loc; base; fn_pred; index = Base.Int.of_float value })
-    | Some (_, {arguments = [_; _; (loc, _)]; _}) -> Err (Locs.push locs loc, UnexpectedTArg)
-    | _ -> Err (loc, TArgArity3)
+    | Some (_, {arguments = [_; _; (loc, _)]; _}) ->
+      let loc = Locs.push locs loc in
+      Err (loc, CheckError)
+    | _ -> Err (loc, CheckError)
     end
 
   | "$Trusted" ->
@@ -2103,7 +2117,7 @@ and maybe_special_unqualified_generic opts scope locs xs loc targs ref_loc =
     | Some (_, {arguments = [t]; _}) ->
       let t = annot opts scope locs xs t in
       Annot (Trusted (loc, t))
-    | _ -> Err (loc, TArgArity1)
+    | _ -> Err (loc, CheckError)
     end
 
   | "$Private" ->
@@ -2111,7 +2125,7 @@ and maybe_special_unqualified_generic opts scope locs xs loc targs ref_loc =
     | Some (_, {arguments = [t]; _}) ->
       let t = annot opts scope locs xs t in
       Annot (Private (loc, t))
-    | _ -> Err (loc, TArgArity1)
+    | _ -> Err (loc, CheckError)
     end
 
   | name when SSet.mem name opts.suppress_types -> Annot (Any loc)
@@ -2236,13 +2250,13 @@ let literal opts scope loc value raw =
   | L.BigInt _ ->
     (* There's no reason we can't support these in signatures, but they are also
      * not supported in type checker. *)
-    Err (loc, TODO_Literal)
+    Err (loc, CheckError)
   | L.Boolean b -> Value (BooleanLit (loc, b))
   | L.Null -> Value (NullLit loc)
   | L.RegExp _ ->
     (* This can probably be easily supported by referencing the builtin type, as
      * we do in statement.ml. TODO: write a test and implement this. *)
-    Err (loc, TODO_Literal)
+    Err (loc, SigError (Signature_error.UnexpectedExpression (loc, Flow_ast_utils.ExpressionSort.Literal)))
 
 let template_literal opts scope loc quasis =
   let module T = Ast.Expression.TemplateLiteral in
@@ -2290,7 +2304,7 @@ let jsx_element opts locs loc elem =
     let ref_loc = Locs.push locs ref_loc in
     BuiltinTyRef {ref_loc; name = custom_jsx_type}
   | _ ->
-    Err (loc, UnsupportedJSXElement)
+    Err (loc, SigError (Signature_error.UnexpectedExpression (loc, Flow_ast_utils.ExpressionSort.JSXElement)))
 
 let binary loc =
   let open Ast.Expression.Binary in
