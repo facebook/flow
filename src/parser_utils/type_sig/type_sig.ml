@@ -517,13 +517,6 @@ type 'loc errno =
   | TArgMinArity1
   | UnexpectedTArg
   | UnsupportedTemporaryType
-  | MissingAnnotation
-  | EmptyObjectLiteral
-  | EmptyArrayLiteral
-  | UnsupportedComputedProperty
-  | UnsupportedArrayHole
-  | UnsupportedArraySpread
-  | UnsupportedTemporaryObjectProp
   | UnsupportedKeyMirrorProp
   | UnsupportedJSXElement
   | TODO_Literal

@@ -294,13 +294,15 @@ let%expect_test "export_function_literal_check1" =
        FunExpr {loc = [1:15-47]; async = false;
          generator = false;
          def =
-         FunSig {tparams = Mono; params = [FunParam {name = (Some "x"); t = (Err [1:25])}];
+         FunSig {tparams = Mono; params = [FunParam {name = (Some "x"); t = (Err [1:24-25])}];
            rest_param = None; return = (Annot (Number [1:28-34]));
            predicate = None};
          statics = {}})
 
     Errors:
-    ([1:25], MissingAnnotation)
+    ([1:24-25],
+     (SigError
+        (Signature_error.ExpectedAnnotation ([1:24-25], Expected_annotation_sort.ArrayPattern))))
   |}]
 
 let%expect_test "export_function_literal_check2" =
@@ -324,7 +326,9 @@ let%expect_test "export_function_literal_check2" =
          statics = {}})
 
     Errors:
-    ([1:34], MissingAnnotation)
+    ([1:34],
+     (SigError
+        (Signature_error.ExpectedAnnotation ([1:34], Expected_annotation_sort.FunctionReturn))))
   |}]
 
 let%expect_test "export_function_reference" =
@@ -370,13 +374,15 @@ let%expect_test "export_function_reference_check1" =
          name = "foo"; async = false;
          generator = false; fn_loc = [1:0-23];
          def =
-         FunSig {tparams = Mono; params = [FunParam {name = (Some "x"); t = (Err [1:14])}];
+         FunSig {tparams = Mono; params = [FunParam {name = (Some "x"); t = (Err [1:13-14])}];
            rest_param = None; return = (Annot (Number [1:17-23]));
            predicate = None};
          statics = {}}
 
     Errors:
-    ([1:14], MissingAnnotation)
+    ([1:13-14],
+     (SigError
+        (Signature_error.ExpectedAnnotation ([1:13-14], Expected_annotation_sort.ArrayPattern))))
   |}]
 
 let%expect_test "export_function_reference_check2" =
@@ -404,7 +410,9 @@ let%expect_test "export_function_reference_check2" =
          statics = {}}
 
     Errors:
-    ([1:23], MissingAnnotation)
+    ([1:23],
+     (SigError
+        (Signature_error.ExpectedAnnotation ([1:23], Expected_annotation_sort.FunctionReturn))))
   |}]
 
 let%expect_test "function_param_optional" =
@@ -510,10 +518,13 @@ let%expect_test "export_object_literal_property_reference_check" =
               Ref LocalRef {ref_loc = [2:20-21]; index = 0}), Polarity.Neutral)) }})
 
     Local defs:
-    0. Variable {id_loc = [1:4-5]; name = "x"; def = (Err [1:5])}
+    0. Variable {id_loc = [1:4-5]; name = "x"; def = (Err [1:4-5])}
 
     Errors:
-    ([1:5], MissingAnnotation)
+    ([1:4-5],
+     (SigError
+        (Signature_error.ExpectedAnnotation ([1:4-5],
+           Expected_annotation_sort.VariableDefinition {name = "x"}))))
   |}]
 
 let%expect_test "empty_object_literal" =
@@ -529,7 +540,7 @@ let%expect_test "empty_object_literal" =
     (Err [1:15-18])
 
     Errors:
-    ([1:15-18], EmptyObjectLiteral)
+    ([1:15-18], (SigError (Signature_error.EmptyObject [1:15-18])))
   |}]
 
 let%expect_test "export_class_reference" =
@@ -600,10 +611,13 @@ let%expect_test "export_class_reference_check1" =
                  params = [FunParam {name = (Some "x"); t = (Annot (Number [3:7-13]))}];
                  rest_param = None; return = (Annot (Number [3:16-22]));
                  predicate = None}} };
-           own_props = { "f" -> (ObjValueField ([2:2-3], (Err [2:3]), Polarity.Neutral)) }}}
+           own_props = { "f" -> (ObjValueField ([2:2-3], (Err [2:2-8]), Polarity.Neutral)) }}}
 
     Errors:
-    ([2:3], MissingAnnotation)
+    ([2:2-8],
+     (SigError
+        (Signature_error.ExpectedAnnotation ([2:2-8],
+           Expected_annotation_sort.Property {name = (Expected_annotation_sort.Identifier "f")}))))
   |}]
 
 let%expect_test "export_class_reference_check2" =
@@ -635,14 +649,16 @@ let%expect_test "export_class_reference_check2" =
                generator = false;
                def =
                FunSig {tparams = Mono;
-                 params = [FunParam {name = (Some "x"); t = (Err [3:5])}];
+                 params = [FunParam {name = (Some "x"); t = (Err [3:4-5])}];
                  rest_param = None; return = (Annot (Number [3:8-14]));
                  predicate = None}} };
            own_props =
            { "f" -> (ObjValueField ([2:2-3], (Annot (Number [2:5-11])), Polarity.Neutral)) }}}
 
     Errors:
-    ([3:5], MissingAnnotation)
+    ([3:4-5],
+     (SigError
+        (Signature_error.ExpectedAnnotation ([3:4-5], Expected_annotation_sort.ArrayPattern))))
   |}]
 
 let%expect_test "export_class_reference_check3" =
@@ -681,7 +697,9 @@ let%expect_test "export_class_reference_check3" =
            { "f" -> (ObjValueField ([2:2-3], (Annot (Number [2:5-11])), Polarity.Neutral)) }}}
 
     Errors:
-    ([3:14], MissingAnnotation)
+    ([3:14],
+     (SigError
+        (Signature_error.ExpectedAnnotation ([3:14], Expected_annotation_sort.FunctionReturn))))
   |}]
 
 let%expect_test "type_alias_dependencies" =
@@ -807,7 +825,7 @@ let%expect_test "class_dependencies_check" =
          ClassSig {tparams = Mono; extends = ClassImplicitExtends;
            implements = []; static_props = {};
            proto_props = {};
-           own_props = { "f" -> (ObjValueField ([1:10-11], (Err [1:11]), Polarity.Neutral)) }}}
+           own_props = { "f" -> (ObjValueField ([1:10-11], (Err [1:10-16]), Polarity.Neutral)) }}}
     1. ClassBinding {id_loc = [2:6-7];
          name = "C";
          def =
@@ -833,7 +851,10 @@ let%expect_test "class_dependencies_check" =
                 (TyRef (Unqualified LocalRef {ref_loc = [3:5-6]; index = 0})), Polarity.Neutral)) }}}
 
     Errors:
-    ([1:11], MissingAnnotation)
+    ([1:10-16],
+     (SigError
+        (Signature_error.ExpectedAnnotation ([1:10-16],
+           Expected_annotation_sort.Property {name = (Expected_annotation_sort.Identifier "f")}))))
   |}]
 
 let%expect_test "export_new_typecast" =
@@ -911,7 +932,7 @@ let%expect_test "export_new_typecast_check" =
          ClassSig {tparams = Mono; extends = ClassImplicitExtends;
            implements = []; static_props = {};
            proto_props = {};
-           own_props = { "f" -> (ObjValueField ([1:10-11], (Err [1:11]), Polarity.Neutral)) }}}
+           own_props = { "f" -> (ObjValueField ([1:10-11], (Err [1:10-16]), Polarity.Neutral)) }}}
     1. ClassBinding {id_loc = [2:6-7];
          name = "C";
          def =
@@ -937,7 +958,10 @@ let%expect_test "export_new_typecast_check" =
                 (TyRef (Unqualified LocalRef {ref_loc = [3:5-6]; index = 0})), Polarity.Neutral)) }}}
 
     Errors:
-    ([1:11], MissingAnnotation)
+    ([1:10-16],
+     (SigError
+        (Signature_error.ExpectedAnnotation ([1:10-16],
+           Expected_annotation_sort.Property {name = (Expected_annotation_sort.Identifier "f")}))))
   |}]
 
 let%expect_test "recursive_dependencies" =
@@ -1018,10 +1042,13 @@ let%expect_test "recursive_dependencies_check" =
                  rest_param = None;
                  return = (TyRef (Unqualified LocalRef {ref_loc = [3:11-12]; index = 0}));
                  predicate = None}} };
-           own_props = { "f" -> (ObjValueField ([2:2-3], (Err [2:3]), Polarity.Neutral)) }}}
+           own_props = { "f" -> (ObjValueField ([2:2-3], (Err [2:2-12]), Polarity.Neutral)) }}}
 
     Errors:
-    ([2:3], MissingAnnotation)
+    ([2:2-12],
+     (SigError
+        (Signature_error.ExpectedAnnotation ([2:2-12],
+           Expected_annotation_sort.Property {name = (Expected_annotation_sort.Identifier "f")}))))
   |}]
 
 let%expect_test "typeof_dependencies" =
@@ -1074,7 +1101,7 @@ let%expect_test "typeof_dependencies_check" =
     (TyRef (Unqualified LocalRef {ref_loc = [5:23-24]; index = 1}))
 
     Local defs:
-    0. Variable {id_loc = [1:4-5]; name = "x"; def = (Err [1:5])}
+    0. Variable {id_loc = [1:4-5]; name = "x"; def = (Err [1:4-5])}
     1. ClassBinding {id_loc = [2:6-7];
          name = "C";
          def =
@@ -1090,7 +1117,10 @@ let%expect_test "typeof_dependencies_check" =
                 Polarity.Neutral)) }}}
 
     Errors:
-    ([1:5], MissingAnnotation)
+    ([1:4-5],
+     (SigError
+        (Signature_error.ExpectedAnnotation ([1:4-5],
+           Expected_annotation_sort.VariableDefinition {name = "x"}))))
   |}]
 
 let%expect_test "const_initializer" =
@@ -1129,7 +1159,7 @@ let%expect_test "empty_array_literal" =
     (Err [1:15-18])
 
     Errors:
-    ([1:15-18], EmptyArrayLiteral)
+    ([1:15-18], (SigError (Signature_error.EmptyArray [1:15-18])))
   |}]
 
 let%expect_test "non_empty_array_literal" =
@@ -1150,10 +1180,13 @@ let%expect_test "non_empty_array_literal" =
 
     Local defs:
     0. Variable {id_loc = [1:6-7]; name = "x"; def = (Value (NumberLit ([1:10-11], 0., "0")))}
-    1. Variable {id_loc = [2:4-5]; name = "y"; def = (Err [2:5])}
+    1. Variable {id_loc = [2:4-5]; name = "y"; def = (Err [2:4-5])}
 
     Errors:
-    ([2:5], MissingAnnotation)
+    ([2:4-5],
+     (SigError
+        (Signature_error.ExpectedAnnotation ([2:4-5],
+           Expected_annotation_sort.VariableDefinition {name = "y"}))))
   |}]
 
 let%expect_test "void_function" =
@@ -1204,7 +1237,9 @@ let%expect_test "void_generator" =
          statics = {}}
 
     Errors:
-    ([1:15], MissingAnnotation)
+    ([1:15],
+     (SigError
+        (Signature_error.ExpectedAnnotation ([1:15], Expected_annotation_sort.FunctionReturn))))
   |}]
 
 let%expect_test "import_default_dependencies" =
@@ -1401,7 +1436,8 @@ let%expect_test "hoisted_requires" =
     1. PropP {id_loc = [3:8-9]; name = "D"; def = 0}
 
     Errors:
-    ([3:11], MissingAnnotation)
+    ([3:11],
+     (SigError (Signature_error.ExpectedAnnotation ([3:11], Expected_annotation_sort.ArrayPattern))))
   |}]
 
 let%expect_test "hoisted_locals" =
@@ -1428,7 +1464,7 @@ let%expect_test "hoisted_locals" =
 
     Local defs:
     0. Variable {id_loc = [1:6-7]; name = "M"; def = Require {loc = [1:10-44]; index = 0}}
-    1. Variable {id_loc = [3:6-7]; name = "D"; def = (Err [3:7])}
+    1. Variable {id_loc = [3:6-7]; name = "D"; def = (Err [3:6-7])}
     2. ClassBinding {id_loc = [7:6-7];
          name = "C";
          def =
@@ -1444,7 +1480,10 @@ let%expect_test "hoisted_locals" =
                 (TyRef (Unqualified LocalRef {ref_loc = [8:5-6]; index = 1})), Polarity.Neutral)) }}}
 
     Errors:
-    ([3:7], MissingAnnotation)
+    ([3:6-7],
+     (SigError
+        (Signature_error.ExpectedAnnotation ([3:6-7],
+           Expected_annotation_sort.VariableDefinition {name = "D"}))))
   |}]
 
 let%expect_test "dynamic_requires" =
@@ -1571,11 +1610,16 @@ let%expect_test "report_all_errors" =
          ClassSig {tparams = Mono; extends = ClassImplicitExtends;
            implements = []; static_props = {};
            proto_props = {};
-           own_props = { "f" -> (ObjValueField ([2:2-3], (Err [2:3]), Polarity.Neutral)) }}}
+           own_props = { "f" -> (ObjValueField ([2:2-3], (Err [2:2-23]), Polarity.Neutral)) }}}
 
     Errors:
-    ([6:16], MissingAnnotation)
-    ([2:3], MissingAnnotation)
+    ([6:16],
+     (SigError
+        (Signature_error.ExpectedAnnotation ([6:16], Expected_annotation_sort.FunctionReturn))))
+    ([2:2-23],
+     (SigError
+        (Signature_error.ExpectedAnnotation ([2:2-23],
+           Expected_annotation_sort.Property {name = (Expected_annotation_sort.Identifier "f")}))))
   |}]
 
 let%expect_test "munged_methods_ignored_if_directive" =
@@ -1636,7 +1680,9 @@ let%expect_test "munged_methods_not_ignored" =
            own_props = {}}}
 
     Errors:
-    ([2:11], MissingAnnotation)
+    ([2:11],
+     (SigError
+        (Signature_error.ExpectedAnnotation ([2:11], Expected_annotation_sort.FunctionReturn))))
   |}]
 
 let%expect_test "munged_fields_ignored_if_directive" =
@@ -1685,10 +1731,15 @@ let%expect_test "munged_fields_not_ignored" =
          ClassSig {tparams = Mono; extends = ClassImplicitExtends;
            implements = []; static_props = {};
            proto_props = {};
-           own_props = { "_method" -> (ObjValueField ([2:2-9], (Err [2:9]), Polarity.Neutral)) }}}
+           own_props = { "_method" -> (ObjValueField ([2:2-9], (Err [2:2-31]), Polarity.Neutral)) }}}
 
     Errors:
-    ([2:9], MissingAnnotation)
+    ([2:2-31],
+     (SigError
+        (Signature_error.ExpectedAnnotation ([2:2-31],
+           Expected_annotation_sort.Property {
+             name = (Expected_annotation_sort.Identifier "_method")}
+           ))))
   |}]
 
 let%expect_test "propTypes_static_ignored" =
@@ -1739,11 +1790,16 @@ let%expect_test "propTypes_static_failure" =
          ClassSig {tparams = Mono; extends = ClassImplicitExtends;
            implements = [];
            static_props =
-           { "propTypes" -> (ObjValueField ([2:9-18], (Err [2:18]), Polarity.Neutral)) };
+           { "propTypes" -> (ObjValueField ([2:9-18], (Err [2:2-23]), Polarity.Neutral)) };
            proto_props = {}; own_props = {}}}
 
     Errors:
-    ([2:18], MissingAnnotation)
+    ([2:2-23],
+     (SigError
+        (Signature_error.ExpectedAnnotation ([2:2-23],
+           Expected_annotation_sort.Property {
+             name = (Expected_annotation_sort.Identifier "propTypes")}
+           ))))
   |}]
 
 let%expect_test "array_spread" =
@@ -1754,10 +1810,10 @@ let%expect_test "array_spread" =
     CJSExports {types = {}; type_stars = []; strict = true}
 
     Export_def:
-    (Err [1:21-30])
+    (Err [1:17-34])
 
     Errors:
-    ([1:21-30], UnsupportedArraySpread)
+    ([1:17-34], (SigError (Signature_error.UnexpectedArraySpread ([1:17-34], [1:21-30]))))
   |}]
 
 let%expect_test "array_hole" =
@@ -1771,7 +1827,7 @@ let%expect_test "array_hole" =
     (Err [1:17-20])
 
     Errors:
-    ([1:17-20], UnsupportedArrayHole)
+    ([1:17-20], (SigError (Signature_error.UnexpectedArrayHole [1:17-20])))
   |}]
 
 let%expect_test "object_spread" =
@@ -1823,10 +1879,12 @@ let%expect_test "reference_expression2" =
     CJSExports {types = {}; type_stars = []; strict = true}
 
     Export_def:
-    (Err [1:17-20])
+    (Err [1:17-27])
 
     Errors:
-    ([1:17-20], TODO_Expression)
+    ([1:17-27],
+     (SigError
+        (Signature_error.UnexpectedExpression ([1:17-27], Flow_ast_utils.ExpressionSort.Member))))
   |}]
 
 let%expect_test "arith_expression1" =
@@ -1851,7 +1909,9 @@ let%expect_test "arith_expression2" =
     (Err [1:17-20])
 
     Errors:
-    ([1:17-20], MissingAnnotation)
+    ([1:17-20],
+     (SigError
+        (Signature_error.UnexpectedExpression ([1:17-20], Flow_ast_utils.ExpressionSort.Binary))))
   |}]
 
 let%expect_test "update_expression" =
@@ -2154,7 +2214,7 @@ let%expect_test "function_return" =
       strict = true}
 
     Local defs:
-    0. Variable {id_loc = [1:4-5]; name = "n"; def = (Err [1:5])}
+    0. Variable {id_loc = [1:4-5]; name = "n"; def = (Err [1:4-5])}
     1. FunBinding {id_loc = [2:16-19];
          name = "foo"; async = false;
          generator = false; fn_loc = [2:7-38];
@@ -2178,8 +2238,13 @@ let%expect_test "function_return" =
          statics = {}}
 
     Errors:
-    ([2:38], MissingAnnotation)
-    ([1:5], MissingAnnotation)
+    ([2:38],
+     (SigError
+        (Signature_error.ExpectedAnnotation ([2:38], Expected_annotation_sort.FunctionReturn))))
+    ([1:4-5],
+     (SigError
+        (Signature_error.ExpectedAnnotation ([1:4-5],
+           Expected_annotation_sort.VariableDefinition {name = "n"}))))
   |}]
 
 let%expect_test "function_return_2" =
@@ -2193,7 +2258,7 @@ let%expect_test "function_return_2" =
       strict = true}
 
     Local defs:
-    0. Variable {id_loc = [1:4-5]; name = "n"; def = (Err [1:5])}
+    0. Variable {id_loc = [1:4-5]; name = "n"; def = (Err [1:4-5])}
     1. FunBinding {id_loc = [2:16-19];
          name = "bar"; async = false;
          generator = false; fn_loc = [2:7-42];
@@ -2223,8 +2288,13 @@ let%expect_test "function_return_2" =
          statics = {}}
 
     Errors:
-    ([2:42], MissingAnnotation)
-    ([1:5], MissingAnnotation)
+    ([2:42],
+     (SigError
+        (Signature_error.ExpectedAnnotation ([2:42], Expected_annotation_sort.FunctionReturn))))
+    ([1:4-5],
+     (SigError
+        (Signature_error.ExpectedAnnotation ([1:4-5],
+           Expected_annotation_sort.VariableDefinition {name = "n"}))))
   |}]
 
 let%expect_test "function_statics" =
@@ -2340,7 +2410,9 @@ let%expect_test "function_predicates_3" =
          tail = []}
 
     Errors:
-    ([1:31], MissingAnnotation) |}]
+    ([1:31],
+     (SigError
+        (Signature_error.ExpectedAnnotation ([1:31], Expected_annotation_sort.FunctionReturn)))) |}]
 
 let%expect_test "function_predicates_4" =
   print_sig {|
@@ -2433,7 +2505,9 @@ let%expect_test "async_function_2" =
          statics = {}}
 
     Errors:
-    ([1:20], MissingAnnotation)
+    ([1:20],
+     (SigError
+        (Signature_error.ExpectedAnnotation ([1:20], Expected_annotation_sort.FunctionReturn))))
   |}]
 
 let%expect_test "async_function_3" =
@@ -2454,7 +2528,9 @@ let%expect_test "async_function_3" =
          statics = {}})
 
     Errors:
-    ([1:25], MissingAnnotation)
+    ([1:25],
+     (SigError
+        (Signature_error.ExpectedAnnotation ([1:25], Expected_annotation_sort.FunctionReturn))))
   |}]
 
 let%expect_test "type_spread" =

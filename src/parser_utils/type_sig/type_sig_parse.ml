@@ -2162,9 +2162,15 @@ and tparams =
       let tparams_loc = Locs.push locs tparams_loc in
       loop opts scope locs tparams_loc xs [] tps
 
-let annot_or_hint opts scope locs xs = function
+let annot_or_hint ~sort ~err_loc opts scope locs xs = function
   | Ast.Type.Available (_, t) -> annot opts scope locs xs t
-  | Ast.Type.Missing loc -> Err (Locs.push locs loc, MissingAnnotation)
+  | Ast.Type.Missing loc ->
+    let err_loc =
+      match err_loc with
+      | Some err_loc -> err_loc
+      | None -> Locs.push locs loc
+    in
+    Err (err_loc, SigError (Signature_error.ExpectedAnnotation (err_loc, sort)))
 
 let class_implements =
   let module C = Ast.Class in
@@ -2187,7 +2193,10 @@ let class_implements =
 let getter_def opts scope locs xs id_loc f =
   let module F = Ast.Function in
   let {F.return = r; _} = f in
-  let t = annot_or_hint opts scope locs xs r in
+  let t = annot_or_hint
+    ~err_loc:None (* use location of Missing annotation *)
+    ~sort:(Expected_annotation_sort.FunctionReturn)
+    opts scope locs xs r in
   Get (id_loc, t)
 
 let setter_def opts scope locs xs id_loc f =
@@ -2195,11 +2204,16 @@ let setter_def opts scope locs xs id_loc f =
   let module P = Ast.Pattern in
   let {F.params = (_, {F.Params.params; _}); _} = f in
   match params with
-  | [(_, {F.Param.
+  | [(param_loc, {F.Param.
       argument = (_, P.Identifier {P.Identifier.annot = t; _});
       default = _;
     })] ->
-    let t = annot_or_hint opts scope locs xs t in
+    let param_loc = (Locs.push locs param_loc) in
+    let t = annot_or_hint
+        ~err_loc:(Some param_loc)
+        ~sort:(Expected_annotation_sort.ArrayPattern) (* seems wrong, matches original behavior *)
+        opts scope locs xs t
+    in
     Set (id_loc, t)
   | _ -> failwith "unexpected setter"
 
@@ -2305,7 +2319,7 @@ let binary loc =
   | BitAnd ->
     Value (NumberVal loc)
   | Plus ->
-    Err (loc, MissingAnnotation)
+    Err (loc, SigError (Signature_error.UnexpectedExpression (loc, Flow_ast_utils.ExpressionSort.Binary)))
 
 let update loc =
   let open Ast.Expression.Update in
@@ -2327,7 +2341,7 @@ let rec expression opts scope locs (loc, expr) =
     let id_loc = Locs.push locs id_loc in
     val_ref scope id_loc name
   | E.Member {E.Member._object; property; comments = _} ->
-    member opts scope locs _object loc property
+    member ~toplevel_loc:loc opts scope locs _object loc property
   | E.Class c ->
     begin match c.Ast.Class.id with
     | Some (id_loc, {Ast.Identifier.name; comments = _}) ->
@@ -2364,8 +2378,8 @@ let rec expression opts scope locs (loc, expr) =
     annot opts scope locs SSet.empty t
   | E.Object {E.Object.properties; comments = _} ->
     if properties = []
-    then Err (loc, EmptyObjectLiteral)
-    else object_literal opts scope locs loc ~frozen:false properties
+    then Err (loc, SigError (Signature_error.EmptyObject loc))
+    else object_literal opts scope locs loc  ~frozen:false properties
   | E.Array {E.Array.elements; comments = _} ->
     array_literal opts scope locs loc elements
   | E.Unary {E.Unary.operator; argument; comments = _} ->
@@ -2377,6 +2391,12 @@ let rec expression opts scope locs (loc, expr) =
     update loc operator
   | E.Sequence {E.Sequence.expressions; comments = _} ->
     sequence (expression opts scope locs) expressions
+  | E.Assignment {E.Assignment. operator; right; _ } ->
+    begin match operator with
+      | None -> (* This is sketchy: the RHS may have side effects that are not tracked! *) expression opts scope locs right
+      | Some _ ->
+        Err (loc, SigError (Signature_error.UnexpectedExpression (loc, Flow_ast_utils.ExpressionSort.Assignment)))
+    end
   | E.Call {E.Call.
       callee = (_, E.Identifier (_, {Ast.Identifier.name = "require"; comments = _}));
       targs;
@@ -2441,10 +2461,37 @@ let rec expression opts scope locs (loc, expr) =
     key_mirror locs loc properties
   | E.JSXElement elem ->
     jsx_element opts locs loc elem
-  | _ ->
-    (* TODO: This pattern should be exhaustive. It's possible that none of the
-     * remaining expressions need support. *)
-    Err (loc, TODO_Expression)
+  | E.Import _ ->
+    (* TODO: dynamic imports? *)
+    Err (loc, SigError (Signature_error.UnexpectedExpression (loc, Flow_ast_utils.ExpressionSort.Import)))
+  | E.Call _ ->
+    Err (loc, SigError (Signature_error.UnexpectedExpression (loc, Flow_ast_utils.ExpressionSort.Call)))
+  | E.Comprehension _ ->
+    Err (loc, SigError (Signature_error.UnexpectedExpression (loc, Flow_ast_utils.ExpressionSort.Comprehension)))
+  | E.Conditional _ ->
+    Err (loc, SigError (Signature_error.UnexpectedExpression (loc, Flow_ast_utils.ExpressionSort.Conditional)))
+  | E.Generator _ ->
+    Err (loc, SigError (Signature_error.UnexpectedExpression (loc, Flow_ast_utils.ExpressionSort.Generator)))
+  | E.JSXFragment _ ->
+    Err (loc, SigError (Signature_error.UnexpectedExpression (loc, Flow_ast_utils.ExpressionSort.JSXFragment)))
+  | E.Logical _ ->
+    Err (loc, SigError (Signature_error.UnexpectedExpression (loc, Flow_ast_utils.ExpressionSort.Logical)))
+  | E.MetaProperty _ ->
+    Err (loc, SigError (Signature_error.UnexpectedExpression (loc, Flow_ast_utils.ExpressionSort.MetaProperty)))
+  | E.New _ ->
+    Err (loc, SigError (Signature_error.UnexpectedExpression (loc, Flow_ast_utils.ExpressionSort.New)))
+  | E.OptionalCall _ ->
+    Err (loc, SigError (Signature_error.UnexpectedExpression (loc, Flow_ast_utils.ExpressionSort.OptionalCall)))
+  | E.OptionalMember _ ->
+    Err (loc, SigError (Signature_error.UnexpectedExpression (loc, Flow_ast_utils.ExpressionSort.OptionalMember)))
+  | E.Super _ ->
+    Err (loc, SigError (Signature_error.UnexpectedExpression (loc, Flow_ast_utils.ExpressionSort.Super)))
+  | E.TaggedTemplate _ ->
+    Err (loc, SigError (Signature_error.UnexpectedExpression (loc, Flow_ast_utils.ExpressionSort.TaggedTemplate)))
+  | E.This _ ->
+    Err (loc, SigError (Signature_error.UnexpectedExpression (loc, Flow_ast_utils.ExpressionSort.This)))
+  | E.Yield _ ->
+    Err (loc, SigError (Signature_error.UnexpectedExpression (loc, Flow_ast_utils.ExpressionSort.Yield)))
 
 and member =
   let module E = Ast.Expression in
@@ -2462,7 +2509,7 @@ and member =
     | M.PropertyPrivateName _ ->
       failwith "unexpected private name outside class"
   in
-  let rec loop opts scope locs chain (loc, expr) =
+  let rec loop toplevel_loc opts scope locs chain (loc, expr) =
     let loc = Locs.push locs loc in
     match expr with
     | E.Identifier (id_loc, {Ast.Identifier.name; comments = _}) ->
@@ -2471,30 +2518,38 @@ and member =
       finish t chain
     | E.Member {E.Member._object; property; comments = _} ->
       let op = prop_op opts scope locs loc property in
-      loop opts scope locs (op::chain) _object
+      loop toplevel_loc opts scope locs (op::chain) _object
     | _ ->
-      (* TODO: This pattern should be exhaustive. It's possible that none of the
-       * remaining expressions need support. *)
-      Err (loc, TODO_Expression)
+      Err (toplevel_loc, SigError (Signature_error.UnexpectedExpression (toplevel_loc, Flow_ast_utils.ExpressionSort.Member)))
   in
-  fun opts scope locs obj loc prop ->
+  fun ~toplevel_loc opts scope locs obj loc prop ->
     let op = prop_op opts scope locs loc prop in
-    loop opts scope locs [op] obj
+    loop toplevel_loc opts scope locs [op] obj
 
 and function_def =
   let module F = Ast.Function in
-  let param opts scope locs xs (_, p) =
+  let param opts scope locs xs (loc, p) =
     let module P = Ast.Pattern in
     let {F.Param.argument = (_, patt); default} = p in
     match patt with
     | P.Identifier {P.Identifier.name = id; annot = t; optional} ->
       let name = Some (id_name id) in
-      let t = annot_or_hint opts scope locs xs t in
+      let loc = (Locs.push locs loc) in
+      let t = annot_or_hint
+        ~err_loc:(Some loc)
+        ~sort:(Expected_annotation_sort.ArrayPattern) (*Seems wrong, matches original behavior*)
+        opts scope locs xs t
+      in
       let t = if optional || default <> None then Annot (Optional t) else t in
       FunParam {name; t}
     | P.Object {P.Object.annot = t; properties = _; comments = _}
     | P.Array {P.Array.annot = t; elements = _; comments = _} ->
-      let t = annot_or_hint opts scope locs xs t in
+      let loc = (Locs.push locs loc) in
+      let t = annot_or_hint
+        ~err_loc:(Some loc)
+        ~sort:(Expected_annotation_sort.ArrayPattern)
+        opts scope locs xs t
+      in
       let t = if default <> None then Annot (Optional t) else t in
       FunParam {name = None; t}
     | P.Expression _ ->
@@ -2508,13 +2563,19 @@ and function_def =
   in
   let rest_param opts scope locs xs = function
     | None -> None
-    | Some (loc, {F.RestParam.argument = (_, p); comments = _}) ->
+    | Some (param_loc, {F.RestParam.argument = (_, p); comments = _}) ->
       let module P = Ast.Pattern in
       match p with
-      | P.Identifier {P.Identifier.name = id; annot = t; optional = _} ->
-        let loc = Locs.push locs loc in
+      | P.Identifier {P.Identifier.name = (id_loc, _) as id; annot = t; optional = _} ->
+        let loc = Locs.push locs param_loc in
         let name = Some (id_name id) in
-        let t = annot_or_hint opts scope locs xs t in
+        let id_loc = (Locs.push locs id_loc) in
+        let t = annot_or_hint
+          ~err_loc:(Some id_loc)
+          (* TODO: this seems wrong but matches TF1.0 *)
+          ~sort:(Expected_annotation_sort.ArrayPattern)
+          opts scope locs xs t
+        in
         Some (FunRestParam {name; loc; t})
       | P.Object _ | P.Array _ | P.Expression _ ->
         None (* unexpected rest param pattern *)
@@ -2524,7 +2585,8 @@ and function_def =
     | Ast.Type.Missing loc ->
       let loc = Locs.push locs loc in
       if generator || not (Signature_utils.Procedure_decider.is body)
-      then Err (loc, MissingAnnotation)
+      then Err (loc,
+            SigError (Signature_error.ExpectedAnnotation (loc, Expected_annotation_sort.FunctionReturn)))
       else
         if async
         then AsyncVoidReturn loc
@@ -2837,7 +2899,7 @@ and class_def =
             let setter = setter_def opts scope locs xs id_loc fn in
             Acc.add_accessor ~static name setter acc
           end
-      | C.Body.Property (_, {C.Property.
+      | C.Body.Property (prop_loc, {C.Property.
           key = P.Identifier (id_loc, {Ast.Identifier.name; comments = _});
           annot = t;
           value = _;
@@ -2848,14 +2910,25 @@ and class_def =
         if opts.munge && Signature_utils.is_munged_property_name name
         then acc
         else
-          let id_loc = Locs.push locs id_loc in
-          let t = match t with
-          | Ast.Type.Available (_, t) -> annot opts scope locs xs t
+          let id_loc, t = match t with
+          | Ast.Type.Available (_, t) ->
+            let id_loc = Locs.push locs id_loc in
+            id_loc, annot opts scope locs xs t
           | Ast.Type.Missing loc ->
-            let loc = Locs.push locs loc in
             if opts.ignore_static_propTypes && static && name = "propTypes"
-            then Annot (Any loc)
-            else Err (loc, MissingAnnotation)
+            then
+              let id_loc = Locs.push locs id_loc in
+              let loc = Locs.push locs loc in
+              id_loc, Annot (Any loc)
+            else
+              let prop_loc = Locs.push locs prop_loc in
+              let res =
+                Err (prop_loc,
+                  SigError (Signature_error.ExpectedAnnotation (prop_loc,
+                    Expected_annotation_sort.Property { name = Expected_annotation_sort.Identifier name })))
+              in
+              let id_loc = Locs.push locs id_loc in
+              id_loc, res
           in
           Acc.add_field ~static name id_loc (polarity variance) t acc
       | C.Body.PrivateField _ ->
@@ -2971,10 +3044,10 @@ and object_literal =
       | O.SpreadProperty (_, p) ->
         let acc = spread opts scope locs acc p in
         loop opts scope locs loc ~frozen acc ps
-      | O.Property (ploc, P.Init {key = P.Computed _; _})
-      | O.Property (ploc, P.Method {key = P.Computed _; _}) ->
-        let ploc = Locs.push locs ploc in
-        Err (ploc, UnsupportedComputedProperty)
+      | O.Property (prop_loc, P.Init {key = P.Computed _; _})
+      | O.Property (prop_loc, P.Method {key = P.Computed _; _}) ->
+        let prop_loc = Locs.push locs prop_loc in
+        Err (loc, SigError (Signature_error.UnexpectedObjectKey (loc, prop_loc)))
       | O.Property (prop_loc, p) ->
         let acc = prop opts scope locs acc prop_loc p in
         loop opts scope locs loc ~frozen acc ps
@@ -2985,20 +3058,21 @@ and object_literal =
 and array_literal =
   let module E = Ast.Expression in
   let finish loc = function
-    | [] -> Err (loc, EmptyArrayLiteral)
+    | [] -> Err (loc, SigError (Signature_error.EmptyArray loc))
     | t::ts -> Value (ArrayLit (loc, t, ts))
   in
   let rec loop opts scope locs loc acc = function
     | [] -> finish loc (List.rev acc)
     | elem::elems ->
       match elem with
-      | E.Array.Hole _ -> Err (loc, UnsupportedArrayHole)
+      | E.Array.Hole _ ->
+        Err (loc, SigError (Signature_error.UnexpectedArrayHole loc))
       | E.Array.Expression expr ->
         let t = expression opts scope locs expr in
         loop opts scope locs loc (t::acc) elems
       | E.Array.Spread (spread_loc, _) ->
         let spread_loc = Locs.push locs spread_loc in
-        Err (spread_loc, UnsupportedArraySpread)
+        Err (loc, SigError (Signature_error.UnexpectedArraySpread (loc, spread_loc)))
   in
   fun opts scope locs loc elements ->
     loop opts scope locs loc [] elements
@@ -3242,7 +3316,10 @@ let variable_decl opts scope locs kind decl =
     | _ ->
       let def = lazy (
         Locs.splice id_loc (fun locs ->
-          annot_or_hint opts scope locs SSet.empty annot
+          annot_or_hint
+            ~err_loc:(Some id_loc)
+            ~sort:(Expected_annotation_sort.VariableDefinition { name })
+            opts scope locs SSet.empty annot
         )
       ) in
       Scope.bind_var scope kind id_loc name def
@@ -3258,7 +3335,11 @@ let variable_decl opts scope locs kind decl =
       let def = Locs.splice splice_loc (fun locs ->
         match kind, annot, init with
         | V.Const, Ast.Type.Missing _, Some expr -> expression opts scope locs expr
-        | _ -> annot_or_hint opts scope locs SSet.empty annot
+        | _ ->
+          annot_or_hint
+            ~err_loc:None
+            ~sort:(Expected_annotation_sort.ArrayPattern)
+            opts scope locs SSet.empty annot
       ) in
       Scope.push_pattern_def def scope
     ) in
@@ -3291,7 +3372,12 @@ let declare_variable_decl opts scope locs decl =
   let {Ast.Statement.DeclareVariable.id; annot = t; comments = _} = decl in
   let (id_loc, {Ast.Identifier.name; comments = _}) = id in
   let id_loc = Locs.push locs id_loc in
-  let def = lazy (Locs.splice id_loc (fun locs -> annot_or_hint opts scope locs SSet.empty t)) in
+  let def = lazy (Locs.splice id_loc
+    (fun locs -> annot_or_hint
+        ~err_loc:(Some id_loc)
+        ~sort:(Expected_annotation_sort.VariableDefinition { name })
+        opts scope locs SSet.empty t))
+  in
   Scope.bind_declare_var scope id_loc name def
 
 let declare_function_decl opts scope locs decl =
