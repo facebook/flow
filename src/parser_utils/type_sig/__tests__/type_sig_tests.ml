@@ -2176,7 +2176,7 @@ let%expect_test "keymirror" =
 
     Export_def:
     (Value
-       ObjLit {loc = [1:17-4:2]; frozen = false;
+       ObjLit {loc = [1:27-4:1]; frozen = false;
          proto = None;
          props =
          { "a" ->

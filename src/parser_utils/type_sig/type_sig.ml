@@ -509,7 +509,6 @@ type 'a op =
  *    be fixed.
  *)
 type 'loc errno =
-  | UnsupportedKeyMirrorProp
   | CheckError
   | SigError of 'loc Signature_error.t
   [@@deriving show {with_path = false}, map]

@@ -147,6 +147,24 @@ References:
           ^^^^^^ [2]
 
 
+Error ------------------------------------------------------------------------------------------------ keyMirror.js:4:28
+
+Cannot build a typed interface for this module. You should annotate the exports of this module with types. Expected
+simple key in object: [signature-verification-failure]
+
+   4| export const a = keyMirror({['a' + 'b']: null, b: null});
+                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Error ------------------------------------------------------------------------------------------------ keyMirror.js:8:28
+
+Cannot build a typed interface for this module. You should annotate the exports of this module with types. Expected
+simple key in object: [signature-verification-failure]
+
+   8| export const b = keyMirror({...ba});
+                                 ^^^^^^^
+
+
 Error ----------------------------------------------------------------------------------------------------- misc.js:3:15
 
 The type argument of a temporary base type must be a compatible literal type [invalid-temp-type]
@@ -388,4 +406,4 @@ annotation at declaration of variable `x`: [signature-verification-failure]
 
 
 
-Found 40 errors
+Found 42 errors

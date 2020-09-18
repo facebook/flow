@@ -435,13 +435,29 @@ module Eval (Env : EvalEnv) = struct
             arguments =
               ( _,
                 {
-                  Ast.Expression.ArgList.arguments = [Expression ((_, Object _) as expr)];
+                  Ast.Expression.ArgList.arguments =
+                    [Expression (loc, Object { Ast.Expression.Object.properties; _ })];
                   comments = _;
                 } );
             comments = _;
           } )
       when Env.facebook_keyMirror ->
-      literal_expr tps expr
+      let open Ast.Expression.Object in
+      let object_property tps loc = function
+        | ( _,
+            Ast.Expression.Object.Property.Init
+              { key = Ast.Expression.Object.Property.Identifier _; value; _ } ) ->
+          literal_expr tps value
+        | (key_loc, _) -> Deps.top (Error.UnexpectedObjectKey (loc, key_loc))
+      in
+      List.fold_left
+        (fun deps prop ->
+          match prop with
+          | Property p -> Deps.join (deps, object_property tps loc p)
+          | SpreadProperty (prop_loc, _) ->
+            Deps.join (deps, Deps.top (Error.UnexpectedObjectKey (loc, prop_loc))))
+        Deps.bot
+        properties
     | (loc, Unary stuff) ->
       let open Ast.Expression.Unary in
       let { operator; argument; _ } = stuff in

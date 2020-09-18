@@ -2289,8 +2289,10 @@ let key_mirror =
           Acc.add_field name id_loc t acc
         in
         loop locs loc acc ps
-      | _ ->
-        Err (loc, UnsupportedKeyMirrorProp)
+      | O.Property (prop_loc, _)
+      | O.SpreadProperty (prop_loc, _) ->
+        let prop_loc = Locs.push locs prop_loc in
+        Err (loc, SigError (Signature_error.UnexpectedObjectKey (loc, prop_loc)))
   in
   fun locs loc properties ->
     loop locs loc Acc.empty properties
@@ -2463,7 +2465,7 @@ let rec expression opts scope locs (loc, expr) =
       callee = (_, E.Identifier (_, {Ast.Identifier.name = "keyMirror"; comments = _}));
       targs = None;
       arguments = (_, {E.ArgList.
-        arguments = [E.Expression (_, E.Object {E.Object.properties; comments = _})];
+        arguments = [E.Expression (obj_loc, E.Object {E.Object.properties; comments = _})];
         comments = _;
       });
       comments = _;
@@ -2472,7 +2474,8 @@ let rec expression opts scope locs (loc, expr) =
      * possible to ensure that it resolves to the expected function. If not,
      * we should document this limitation along with the flag to enable this
      * behavior. *)
-    key_mirror locs loc properties
+    let obj_loc = Locs.push locs obj_loc in
+    key_mirror locs obj_loc properties
   | E.JSXElement elem ->
     jsx_element opts locs loc elem
   | E.Import _ ->
