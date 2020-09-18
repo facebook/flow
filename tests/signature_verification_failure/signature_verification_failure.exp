@@ -310,6 +310,15 @@ expression. [signature-verification-failure]
                         ^^^^^
 
 
+Error ---------------------------------------------------------------------------------------------------- misc.js:22:10
+
+Cannot build a typed interface for this module. You should annotate the exports of this module with types. Unsupported
+kind of expression in predicate function: [signature-verification-failure]
+
+   22|   return (arg: boolean);
+                ^^^^^^^^^^^^^^
+
+
 Error ---------------------------------------------------------------------------------------------- obj-pattern.js:3:19
 
 Missing type annotation for destructuring. [missing-annot]
@@ -371,6 +380,15 @@ annotation at array pattern: [signature-verification-failure]
                                       ^
 
 
+Error --------------------------------------------------------------------------------------------------- sketchy.js:3:3
+
+Cannot build a typed interface for this module. You should annotate the exports of this module with types. Unexpected
+toplevel definition that needs hoisting: [signature-verification-failure]
+
+   3|   var x: number = 42;
+        ^^^^^^^^^^^^^^^^^^^
+
+
 Error --------------------------------------------------------------------------------------------------- tparam.js:5:15
 
 Cannot resolve name `Y`. [cannot-resolve-name]
@@ -406,4 +424,4 @@ annotation at declaration of variable `x`: [signature-verification-failure]
 
 
 
-Found 42 errors
+Found 44 errors

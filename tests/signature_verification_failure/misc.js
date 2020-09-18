@@ -17,3 +17,9 @@ export const u = 42n;
 export const w = /foo/;
 
 export const x = <f />;
+
+function testit(arg: any): boolean %checks {
+  return (arg: boolean);
+}
+
+export const g = testit;
