@@ -446,35 +446,33 @@ let program
       (old_list : a list)
       (index_offset : int)
       (diffs : a diff_result list) : b change list option =
-    Base.Option.(
-      let recurse_into_change = function
-        | (_, Replace (x1, x2)) -> f x1 x2
-        | (index, Insert { items = lst; separator; leading_separator }) ->
-          let index = index + index_offset in
-          let loc =
-            if List.length old_list = 0 then
-              None
-            else if
-              (* To insert at the start of the list, insert before the first element *)
-              index = -1
-            then
-              List.hd old_list |> trivial >>| fst >>| Loc.start_loc
+    let open Base.Option in
+    let recurse_into_change = function
+      | (_, Replace (x1, x2)) -> f x1 x2
+      | (index, Insert { items = lst; separator; leading_separator }) ->
+        let index = index + index_offset in
+        let loc =
+          if List.length old_list = 0 then
+            None
+          else if index = -1 then
+            (* To insert at the start of the list, insert before the first element *)
+            List.hd old_list |> trivial >>| fst >>| Loc.start_loc
+          else
             (* Otherwise insert it after the current element *)
-            else
-              List.nth old_list index |> trivial >>| fst >>| Loc.end_loc
-          in
-          Base.List.map ~f:trivial lst
-          |> all
-          >>| Base.List.map ~f:snd (* drop the loc *)
-          >>| (fun x -> Insert { items = x; separator; leading_separator })
-          |> both loc
-          >>| Base.List.return
-        | (_, Delete x) -> trivial x >>| (fun (loc, y) -> (loc, Delete y)) >>| Base.List.return
-      in
-      let recurse_into_changes =
-        Base.List.map ~f:recurse_into_change %> all %> map ~f:Base.List.concat
-      in
-      recurse_into_changes diffs)
+            List.nth old_list index |> trivial >>| fst >>| Loc.end_loc
+        in
+        Base.List.map ~f:trivial lst
+        |> all
+        >>| Base.List.map ~f:snd (* drop the loc *)
+        >>| (fun x -> Insert { items = x; separator; leading_separator })
+        |> both loc
+        >>| Base.List.return
+      | (_, Delete x) -> trivial x >>| (fun (loc, y) -> (loc, Delete y)) >>| Base.List.return
+    in
+    let recurse_into_changes =
+      Base.List.map ~f:recurse_into_change %> all %> map ~f:Base.List.concat
+    in
+    recurse_into_changes diffs
   in
   (* Runs `list_diff` and then recurses into replacements (using `f`) to get more granular diffs.
      For inserts and deletes, it uses `trivial` to produce a Loc.t and a b for the change *)
