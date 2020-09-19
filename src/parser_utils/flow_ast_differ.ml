@@ -50,15 +50,17 @@ let change_compare (pos1, chg1) (pos2, chg2) =
 let trivial_list_diff (old_list : 'a list) (new_list : 'a list) : 'a diff_result list option =
   (* inspect the lists pairwise and record any items which are different as replacements. Give up if
    * the lists have different lengths.*)
-  let rec helper i lst1 lst2 =
+  let rec helper acc i lst1 lst2 =
     match (lst1, lst2) with
-    | ([], []) -> Some []
+    | ([], []) -> Some (List.rev acc)
     | (hd1 :: tl1, hd2 :: tl2) ->
-      let rest = helper (i + 1) tl1 tl2 in
-      if hd1 != hd2 then
-        Base.Option.map rest ~f:(List.cons (i, Replace (hd1, hd2)))
-      else
-        rest
+      let acc =
+        if hd1 != hd2 then
+          (i, Replace (hd1, hd2)) :: acc
+        else
+          acc
+      in
+      (helper [@tailcall]) acc (i + 1) tl1 tl2
     | (_, [])
     | ([], _) ->
       None
@@ -66,7 +68,7 @@ let trivial_list_diff (old_list : 'a list) (new_list : 'a list) : 'a diff_result
   if old_list == new_list then
     Some []
   else
-    helper 0 old_list new_list
+    helper [] 0 old_list new_list
 
 (* diffs based on http://www.xmailserver.org/diff2.pdf on page 6 *)
 let standard_list_diff (old_list : 'a list) (new_list : 'a list) : 'a diff_result list option =
