@@ -799,9 +799,6 @@ module Options_flags = struct
     no_flowlib: bool;
     profile: bool;
     quiet: bool;
-    saved_state_fetcher: Options.saved_state_fetcher option;
-    saved_state_force_recheck: bool;
-    saved_state_no_fallback: bool;
     strip_root: bool;
     temp_dir: string option;
     traces: int option;
@@ -812,6 +809,14 @@ module Options_flags = struct
     wait_for_recheck: bool option;
     weak: bool;
     include_suppressions: bool;
+  }
+end
+
+module Saved_state_flags = struct
+  type t = {
+    saved_state_fetcher: Options.saved_state_fetcher option;
+    saved_state_force_recheck: bool;
+    saved_state_no_fallback: bool;
   }
 end
 
@@ -855,9 +860,6 @@ let options_flags =
       temp_dir
       quiet
       merge_timeout
-      saved_state_fetcher
-      saved_state_force_recheck
-      saved_state_no_fallback
       new_signatures
       abstract_locations
       include_suppressions
@@ -886,9 +888,6 @@ let options_flags =
         temp_dir;
         quiet;
         merge_timeout;
-        saved_state_fetcher;
-        saved_state_force_recheck;
-        saved_state_no_fallback;
         trust_mode;
         new_signatures;
         abstract_locations;
@@ -935,24 +934,6 @@ let options_flags =
              ( "The maximum time in seconds to attempt to typecheck a file or cycle of files. "
              ^ "0 means no timeout (default: 100)" )
            ~env:"FLOW_MERGE_TIMEOUT"
-      |> flag
-           "--saved-state-fetcher"
-           (enum
-              [
-                ("none", Options.Dummy_fetcher);
-                ("local", Options.Local_fetcher);
-                ("fb", Options.Fb_fetcher);
-              ])
-           ~doc:"Which saved state fetcher Flow should use (none, local) (default: none)"
-      |> flag
-           "--saved-state-force-recheck"
-           no_arg
-           ~doc:"Force a lazy server to recheck the changes since the saved state was generated"
-      |> flag
-           "--saved-state-no-fallback"
-           no_arg
-           ~doc:
-             "If saved state fails to load, exit (normally fallback is to initialize from scratch)"
       |> flag "--new-signatures" no_arg ~doc:""
       |> flag
            "--abstract-locations"
@@ -973,6 +954,35 @@ let options_flags =
                    ("none", Options.NoTrust);
                  ]))
            ~doc:"")
+
+let saved_state_flags =
+  let collect_saved_state_flags
+      main saved_state_fetcher saved_state_force_recheck saved_state_no_fallback =
+    main
+      { Saved_state_flags.saved_state_fetcher; saved_state_force_recheck; saved_state_no_fallback }
+  in
+  fun prev ->
+    CommandSpec.ArgSpec.(
+      prev
+      |> collect collect_saved_state_flags
+      |> flag
+           "--saved-state-fetcher"
+           (enum
+              [
+                ("none", Options.Dummy_fetcher);
+                ("local", Options.Local_fetcher);
+                ("fb", Options.Fb_fetcher);
+              ])
+           ~doc:"Which saved state fetcher Flow should use (none, local) (default: none)"
+      |> flag
+           "--saved-state-force-recheck"
+           no_arg
+           ~doc:"Force a lazy server to recheck the changes since the saved state was generated"
+      |> flag
+           "--saved-state-no-fallback"
+           no_arg
+           ~doc:
+             "If saved state fails to load, exit (normally fallback is to initialize from scratch)")
 
 let flowconfig_name_flag prev =
   CommandSpec.ArgSpec.(
@@ -1121,8 +1131,10 @@ let no_cgroup_flag =
            no_arg
            ~doc:"Don't automatically run this command in a cgroup (if cgroups are available)")
 
-let make_options ~flowconfig_name ~flowconfig ~lazy_mode ~root ~options_flags =
+let make_options
+    ~flowconfig_name ~flowconfig ~lazy_mode ~root ~options_flags ~saved_state_options_flags =
   let open Options_flags in
+  let open Saved_state_flags in
   let temp_dir =
     options_flags.Options_flags.temp_dir
     |> Base.Option.value ~default:(FlowConfig.temp_dir flowconfig)
@@ -1160,7 +1172,7 @@ let make_options ~flowconfig_name ~flowconfig ~lazy_mode ~root ~options_flags =
   (* The CLI flag overrides the .flowconfig *)
   let opt_saved_state_fetcher =
     Base.Option.value
-      options_flags.saved_state_fetcher
+      saved_state_options_flags.saved_state_fetcher
       ~default:(FlowConfig.saved_state_fetcher flowconfig)
   in
   let opt_lazy_mode =
@@ -1262,8 +1274,8 @@ let make_options ~flowconfig_name ~flowconfig ~lazy_mode ~root ~options_flags =
     opt_strict_mode = strict_mode;
     opt_merge_timeout;
     opt_saved_state_fetcher;
-    opt_saved_state_force_recheck = options_flags.saved_state_force_recheck;
-    opt_saved_state_no_fallback = options_flags.saved_state_no_fallback;
+    opt_saved_state_force_recheck = saved_state_options_flags.saved_state_force_recheck;
+    opt_saved_state_no_fallback = saved_state_options_flags.saved_state_no_fallback;
     opt_node_resolver_allow_root_relative = FlowConfig.node_resolver_allow_root_relative flowconfig;
     opt_node_resolver_root_relative_dirnames =
       FlowConfig.node_resolver_root_relative_dirnames flowconfig;
@@ -1726,6 +1738,7 @@ let subcommand_spec ~name ~doc cmd_list =
 type codemod_params =
   | Codemod_params of {
       options_flags: Options_flags.t;
+      saved_state_options_flags: Saved_state_flags.t;
       shm_flags: shared_mem_params;
       write: bool;
       repeat: bool;
@@ -1737,13 +1750,34 @@ type codemod_params =
     }
 
 let collect_codemod_flags
-    main options_flags shm_flags write repeat log_level root input_file base_flag anon =
+    main
+    options_flags
+    saved_state_options_flags
+    shm_flags
+    write
+    repeat
+    log_level
+    root
+    input_file
+    base_flag
+    anon =
   ( if (not write) && repeat then
     let msg = "Error: cannot run codemod with --repeat flag unless --write is also passed" in
     FlowExitStatus.(exit ~msg Commandline_usage_error) );
   let codemod_flags =
     Codemod_params
-      { options_flags; shm_flags; write; repeat; log_level; root; input_file; base_flag; anon }
+      {
+        options_flags;
+        saved_state_options_flags;
+        shm_flags;
+        write;
+        repeat;
+        log_level;
+        root;
+        input_file;
+        base_flag;
+        anon;
+      }
   in
   main codemod_flags
 
@@ -1763,6 +1797,7 @@ let codemod_flags prev =
     prev
     |> collect collect_codemod_flags
     |> options_flags
+    |> saved_state_flags
     |> shm_flags
     |> from_flag
     |> flag "--write" no_arg ~doc:"Edit files in place"

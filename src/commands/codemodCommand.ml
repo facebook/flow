@@ -29,6 +29,7 @@ let main (module Runnable : Codemod_runner.RUNNABLE) codemod_flags () =
   let (CommandUtils.Codemod_params
         {
           options_flags = option_values;
+          saved_state_options_flags;
           shm_flags;
           write;
           repeat;
@@ -65,6 +66,7 @@ let main (module Runnable : Codemod_runner.RUNNABLE) codemod_flags () =
       ~lazy_mode:(Some Options.LAZY_MODE_FILESYSTEM)
       ~root
       ~options_flags:option_values
+      ~saved_state_options_flags
   in
   (* Normalizes filepaths (symlinks and shortcuts) *)
   if filenames = [] then (
