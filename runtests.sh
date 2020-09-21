@@ -631,19 +631,7 @@ runtest() {
         if [ "$cmd" == "check" ]
         then
             if [[ "$saved_state" -eq 1 ]]; then
-              if create_saved_state . ".flowconfig"; then
-                # default command is check with configurable --no-flowlib
-                "$FLOW" check . \
-                  $flowlib --strip-root --show-all-errors \
-                  $new_signatures_flag \
-                  --saved-state-fetcher "local" \
-                  --saved-state-no-fallback \
-                   1>> "$abs_out_file" 2>> "$stderr_dest"
-                st=$?
-              else
-                printf "Failed to generate saved state\\n" >> "$stderr_dest"
-                return_status=$RUNTEST_ERROR
-              fi
+              return $RUNTEST_SKIP
             else
               # default command is check with configurable --no-flowlib
               "$FLOW" check . \
