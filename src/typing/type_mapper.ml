@@ -1224,12 +1224,6 @@ class virtual ['a] t_with_uses =
           t
         else
           ObjAssignFromT (op, r, t1', t2', obj_assign)
-      | ObjFreezeT (r, t') ->
-        let t'' = self#type_ cx map_cx t' in
-        if t'' == t' then
-          t
-        else
-          ObjFreezeT (r, t'')
       | ObjRestT (r, strings, t') ->
         let t'' = self#type_ cx map_cx t' in
         if t'' == t' then

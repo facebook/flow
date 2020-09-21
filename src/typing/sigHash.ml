@@ -165,7 +165,6 @@ type hash =
   | LookupH
   | ObjAssignToH
   | ObjAssignFromH
-  | ObjFreezeH
   | ObjRestH
   | ObjSealH
   | ObjTestH
@@ -411,7 +410,6 @@ let hash_of_use_ctor =
     | LookupT _ -> LookupH
     | ObjAssignToT _ -> ObjAssignToH
     | ObjAssignFromT _ -> ObjAssignFromH
-    | ObjFreezeT _ -> ObjFreezeH
     | ObjRestT _ -> ObjRestH
     | ObjSealT _ -> ObjSealH
     | ObjTestT _ -> ObjTestH

@@ -597,7 +597,6 @@ module rec TypeTerm : sig
     | ObjAssignToT of use_op * reason * t * t * obj_assign_kind
     (* Resolves the object from which the properties are assigned *)
     | ObjAssignFromT of use_op * reason * t * t * obj_assign_kind
-    | ObjFreezeT of reason * t
     | ObjRestT of reason * string list * t
     | ObjSealT of reason * t
     (* test that something is a valid proto (object-like or null) *)
@@ -2367,6 +2366,7 @@ and Object : sig
     type sealtype =
       | UnsealedInFile of File_key.t option
       | Sealed
+      | Frozen
 
     type target =
       (* When spreading values, the result is exact if all of the input types are
@@ -3115,7 +3115,6 @@ let string_of_use_ctor = function
   | NullishCoalesceT _ -> "NullishCoalesceT"
   | ObjAssignToT _ -> "ObjAssignToT"
   | ObjAssignFromT _ -> "ObjAssignFromT"
-  | ObjFreezeT _ -> "ObjFreezeT"
   | ObjRestT _ -> "ObjRestT"
   | ObjSealT _ -> "ObjSealT"
   | ObjTestProtoT _ -> "ObjTestProtoT"

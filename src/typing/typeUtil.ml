@@ -118,7 +118,6 @@ and reason_of_use_t = function
   | NullishCoalesceT (reason, _, _) -> reason
   | ObjAssignToT (_, reason, _, _, _) -> reason
   | ObjAssignFromT (_, reason, _, _, _) -> reason
-  | ObjFreezeT (reason, _) -> reason
   | ObjRestT (reason, _, _) -> reason
   | ObjSealT (reason, _) -> reason
   | ObjTestProtoT (reason, _) -> reason
@@ -299,7 +298,6 @@ and mod_reason_of_use_t f = function
   | NullishCoalesceT (reason, t1, t2) -> NullishCoalesceT (f reason, t1, t2)
   | ObjAssignToT (op, reason, t, t2, kind) -> ObjAssignToT (op, f reason, t, t2, kind)
   | ObjAssignFromT (op, reason, t, t2, kind) -> ObjAssignFromT (op, f reason, t, t2, kind)
-  | ObjFreezeT (reason, t) -> ObjFreezeT (f reason, t)
   | ObjRestT (reason, t, t2) -> ObjRestT (f reason, t, t2)
   | ObjSealT (reason, t) -> ObjSealT (f reason, t)
   | ObjTestProtoT (reason, t) -> ObjTestProtoT (f reason, t)
@@ -443,7 +441,6 @@ let rec util_use_op_of_use_t :
   | ThisSpecializeT (_, _, _)
   | VarianceCheckT (_, _, _, _)
   | LookupT _
-  | ObjFreezeT (_, _)
   | ObjRestT (_, _, _)
   | ObjSealT (_, _)
   | ObjTestProtoT (_, _)

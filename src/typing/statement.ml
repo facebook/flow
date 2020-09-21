@@ -18,7 +18,6 @@ module Tast_utils = Typed_ast_utils
 
 module Anno = Type_annotation
 module Class_type_sig = Anno.Class_type_sig
-module Object_freeze = Anno.Object_freeze
 module Flow = Flow_js
 open Utils_js
 open Reason
@@ -79,15 +78,15 @@ module ObjectExpressionAcc = struct
 
   let proto { proto; _ } = proto
 
-  let mk_object_from_spread_acc cx acc reason ~default_proto ~empty_unsealed =
-    let mk_object reason ?(proto = default_proto) ?(sealed = false) props =
+  let mk_object_from_spread_acc cx acc reason ~frozen ~default_proto ~empty_unsealed =
+    let mk_object reason ?(proto = default_proto) ~sealed props =
       let obj_kind =
-        if sealed then
+        if sealed || frozen then
           Exact
         else
           UnsealedInFile (ALoc.source (Reason.aloc_of_reason reason))
       in
-      Obj_type.mk_with_proto cx reason ~obj_kind ~props proto
+      Obj_type.mk_with_proto cx reason ~obj_kind ~frozen ~props proto
     in
     let sealed = sealed acc in
     match elements_rev acc with
@@ -123,7 +122,7 @@ module ObjectExpressionAcc = struct
           (t, ts, Some head_slice)
         | _ -> failwith "Invariant Violation: spread list has two slices in a row"
       in
-      let seal = Obj_type.mk_seal reason sealed in
+      let seal = Obj_type.mk_seal reason ~sealed ~frozen in
       let target = Object.Spread.Value { make_seal = seal } in
       let tool = Object.Resolve Object.Next in
       let state =
@@ -2787,7 +2786,7 @@ and prop_map_of_object cx props =
   in
   (acc.ObjectExpressionAcc.obj_pmap, List.rev rev_prop_asts)
 
-and object_ cx reason ?(allow_sealed = true) props =
+and object_ cx reason ~frozen ?(allow_sealed = true) props =
   let open Ast.Expression.Object in
   (* Use the same reason for proto and the ObjT so we can walk the proto chain
      and use the root proto reason to build an error. *)
@@ -2911,6 +2910,7 @@ and object_ cx reason ?(allow_sealed = true) props =
       cx
       acc
       reason
+      ~frozen
       ~default_proto:obj_proto
       ~empty_unsealed:true
   in
@@ -3095,7 +3095,7 @@ and expression_ ~cond cx loc e : (ALoc.t, ALoc.t * Type.t) Ast.Expression.t =
   | OptionalMember _ -> subscript ~cond cx ex
   | Object { Object.properties; comments } ->
     let reason = mk_reason RObjectLit loc in
-    let (t, properties) = object_ cx reason properties in
+    let (t, properties) = object_ ~frozen:false cx reason properties in
     ((loc, t), Object { Object.properties; comments })
   | Array { Array.elements; comments } ->
     let reason = mk_reason RArrayLit loc in
@@ -6162,6 +6162,7 @@ and jsx_mk_props cx reason c name attributes children =
       cx
       acc
       reason_props
+      ~frozen:false
       ~default_proto:proto
       ~empty_unsealed:false
   in
@@ -7372,12 +7373,16 @@ and static_method_call_Object cx loc callee_loc prop_loc expr obj_t m targs args
      have been mutated elsewhere *)
   | ( "freeze",
       ((None | Some (_, { CallTypeArgs.arguments = [_]; comments = _ })) as targs),
-      (args_loc, { ArgList.arguments = [Expression ((arg_loc, Object _) as e)]; comments }) ) ->
+      (args_loc, { ArgList.arguments = [Expression (arg_loc, Object o)]; comments }) ) ->
     let targs =
       Base.Option.map ~f:(fun (loc, targs) -> (loc, convert_call_targs cx SMap.empty targs)) targs
     in
-    let (((_, arg_t), _) as e_ast) = expression cx e in
-    let arg_t = Object_freeze.freeze_object cx arg_loc arg_t in
+    let (((_, arg_t), _) as e_ast) =
+      let { Object.properties; comments } = o in
+      let reason = mk_reason (RFrozen RObjectLit) arg_loc in
+      let (t, properties) = object_ ~frozen:true cx reason properties in
+      ((arg_loc, t), Object { Object.properties; comments })
+    in
     let reason = mk_reason (RMethodCall (Some m)) loc in
     ( snd
         (method_call

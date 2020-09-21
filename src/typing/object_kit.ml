@@ -417,7 +417,6 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
           let mk_object cx reason target { Object.reason = _; props; flags } =
             let props = SMap.map (fun (t, _) -> Field (None, t, Polarity.Neutral)) props in
             let id = Context.generate_property_map cx props in
-            let proto = ObjProtoT reason in
             let flags =
               let (exact, sealed) =
                 match target with
@@ -435,8 +434,10 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
                 | (true, _, _) -> Exact
                 | _ -> Inexact
               in
-              { obj_kind; frozen = false }
+              let frozen = sealed = Object.Spread.Frozen in
+              { obj_kind; frozen }
             in
+            let proto = ObjProtoT reason in
             let call = None in
             let t = mk_object_def_type ~reason ~flags ~call id proto in
             (* Wrap the final type in an `ExactT` if we have an exact flag *)

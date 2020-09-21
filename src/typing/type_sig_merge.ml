@@ -124,6 +124,16 @@ let remote_ref_reason file = function
   | Pack.ImportNs { id_loc; name; _ } -> Reason.(mk_reason (RImportStar name) id_loc)
   | Pack.ImportTypeofNs { id_loc; name; _ } -> Reason.(mk_reason (RImportStarTypeOf name) id_loc)
 
+let obj_lit_reason ~frozen loc =
+  let open Reason in
+  let desc =
+    if frozen then
+      RFrozen RObjectLit
+    else
+      RObjectLit
+  in
+  mk_reason desc loc
+
 let trust = Trust.bogus_trust ()
 
 let specialize file t =
@@ -986,21 +996,7 @@ and merge_value component file = function
     Type.(DefT (reason, trust, BoolT (Some lit)))
   | NullLit loc -> Type.NullT.at loc trust
   | ObjLit { loc; frozen; proto; props } ->
-    let reason =
-      let open Reason in
-      (* RFrozen RObjectType should be RFrozen RObjectLit instead, but this
-       * matches the behavior of types-first, where Object.freeze({...}) is
-       * converted to $TEMPORARY$Object$freeze<{...}> in the sig AST.
-       *
-       * TODO Fix once T71257430 is closed. *)
-      let desc =
-        if frozen then
-          RFrozen RObjectType
-        else
-          RObjectLit
-      in
-      mk_reason desc loc
-    in
+    let reason = obj_lit_reason ~frozen loc in
     let proto =
       match proto with
       | None -> Type.ObjProtoT reason
@@ -1012,8 +1008,8 @@ and merge_value component file = function
     in
     let props = SMap.map (merge_obj_value_prop component file) props in
     Obj_type.mk_with_proto file.cx reason proto ~obj_kind:Type.Exact ~props ~frozen
-  | ObjSpreadLit { loc; frozen = _; proto; elems_rev } ->
-    let reason = Reason.(mk_reason RObjectLit loc) in
+  | ObjSpreadLit { loc; frozen; proto; elems_rev } ->
+    let reason = obj_lit_reason ~frozen loc in
     (* TODO: fix spread to use provided __proto__ prop *)
     ignore proto;
     let merge_slice props =
@@ -1031,7 +1027,16 @@ and merge_value component file = function
       | (Slice slice, Type t :: elems) -> (t, elems, [InlineSlice slice])
       | _ -> failwith "unexpected spread"
     in
-    let target = Type.(Object.Spread.Value { make_seal = Object.Spread.Sealed }) in
+    let target =
+      let open Type.Object.Spread in
+      let make_seal =
+        if frozen then
+          Frozen
+        else
+          Sealed
+      in
+      Value { make_seal }
+    in
     let tool = Type.Object.(Resolve Next) in
     let state =
       {

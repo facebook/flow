@@ -388,7 +388,6 @@ class ['a] t =
         let acc = self#type_ cx pole_TODO acc t2 in
         acc
       | ObjTestProtoT (_, t) -> self#type_ cx pole_TODO acc t
-      | ObjFreezeT (_, t)
       | ObjRestT (_, _, t)
       | ObjSealT (_, t)
       | ArrRestT (_, _, _, t) ->

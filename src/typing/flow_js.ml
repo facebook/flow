@@ -5486,24 +5486,6 @@ struct
           rec_flow_t cx trace ~use_op:unknown_use (new_obj, t)
         | (AnyT (_, src), ObjSealT (reason, tout)) ->
           rec_flow_t cx trace ~use_op:unknown_use (AnyT.why src reason, tout)
-        (*************************)
-        (* objects can be frozen *)
-        (*************************)
-        | (DefT (reason_o, trust, ObjT objtype), ObjFreezeT (reason_op, t)) ->
-          (* make the reason describe the result (e.g. a frozen object literal),
-         but point at the entire Object.freeze call. *)
-          let desc = RFrozen (desc_of_reason reason_o) in
-          let reason = replace_desc_reason desc reason_op in
-          let obj_kind =
-            match objtype.flags.obj_kind with
-            | UnsealedInFile _ -> Exact
-            | k -> k
-          in
-          let flags = { frozen = true; obj_kind } in
-          let new_obj = DefT (reason, trust, ObjT { objtype with flags }) in
-          rec_flow_t cx trace ~use_op:unknown_use (new_obj, t)
-        | (AnyT (_, src), ObjFreezeT (reason_op, t)) ->
-          rec_flow_t cx trace ~use_op:unknown_use (AnyT.why src reason_op, t)
         (*******************************************)
         (* objects may have their fields looked up *)
         (*******************************************)
@@ -7731,7 +7713,6 @@ struct
     | (_, MethodT _)
     | (_, MixinT _)
     | (_, ObjAssignFromT _)
-    | (_, ObjFreezeT _)
     | (_, ObjRestT _)
     | (_, ObjSealT _)
     | (_, PredicateT _)
@@ -7890,7 +7871,6 @@ struct
     | MethodT _
     | MixinT _
     | NullishCoalesceT _
-    | ObjFreezeT _
     | ObjKitT _
     | ObjRestT _
     | ObjSealT _

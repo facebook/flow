@@ -28,3 +28,7 @@ function f(x: Object) {
 
 var inexact: {...} = { p: 0 };
 (Object.freeze({...inexact}): {||}); // Error: inexact -> exact
+
+module.exports = {
+  inexact: Object.freeze({...inexact}),
+}

@@ -60,13 +60,6 @@ end)
 module Func_type_sig = Func_sig.Make (Func_type_params)
 module Class_type_sig = Class_sig.Make (Func_type_sig)
 
-module Object_freeze = struct
-  let freeze_object cx loc t =
-    let reason_arg = mk_annot_reason (RFrozen RObjectLit) loc in
-    Tvar.mk_derivable_where cx reason_arg (fun tvar ->
-        Flow.flow cx (t, ObjFreezeT (reason_arg, tvar)))
-end
-
 (* AST helpers *)
 
 let qualified_name =
@@ -349,8 +342,7 @@ let rec convert cx tparams_map =
       | "$TEMPORARY$Object$freeze" ->
         check_type_arg_arity cx loc t_ast targs 1 (fun () ->
             let (ts, targs) = convert_type_params () in
-            let t = List.hd ts in
-            let t = Object_freeze.freeze_object cx loc t in
+            let t = convert_temporary_object ~frozen:true (List.hd ts) in
             (* TODO fix targs *)
             reconstruct_ast t targs)
       | "$TEMPORARY$module$exports$assign" ->
@@ -415,25 +407,8 @@ let rec convert cx tparams_map =
       | "$TEMPORARY$object" ->
         check_type_arg_arity cx loc t_ast targs 1 (fun () ->
             let (ts, targs) = convert_type_params () in
-            let t = List.hd ts in
-            let tout =
-              match t with
-              | ExactT (_, DefT (r, trust, ObjT o))
-              | DefT (r, trust, ObjT o) ->
-                let r = replace_desc_reason RObjectLit r in
-                let obj_kind =
-                  match o.flags.obj_kind with
-                  | Indexed _ -> o.flags.obj_kind
-                  | _ -> Exact
-                in
-                DefT (r, trust, ObjT { o with flags = { o.flags with obj_kind } })
-              | EvalT (l, TypeDestructorT (use_op, r, SpreadType (_, ts, head_slice)), id) ->
-                let r = replace_desc_reason RObjectLit r in
-                let target = Type.Object.Spread.(Value { make_seal = Sealed }) in
-                EvalT (l, TypeDestructorT (use_op, r, SpreadType (target, ts, head_slice)), id)
-              | _ -> t
-            in
-            reconstruct_ast tout targs)
+            let t = convert_temporary_object ~frozen:false (List.hd ts) in
+            reconstruct_ast t targs)
       | "$TEMPORARY$array" ->
         check_type_arg_arity cx loc t_ast targs 1 (fun () ->
             let (elemts, targs) = convert_type_params () in
@@ -1132,6 +1107,38 @@ and convert_opt cx tparams_map ast_opt =
   let tast_opt = Base.Option.map ~f:(convert cx tparams_map) ast_opt in
   let t_opt = Base.Option.map ~f:(fun ((_, x), _) -> x) tast_opt in
   (t_opt, tast_opt)
+
+and convert_temporary_object ~frozen =
+  let desc =
+    if frozen then
+      RFrozen RObjectLit
+    else
+      RObjectLit
+  in
+  function
+  | ExactT (_, DefT (r, trust, ObjT o))
+  | DefT (r, trust, ObjT o) ->
+    let r = replace_desc_reason desc r in
+    let obj_kind =
+      match o.flags.obj_kind with
+      | Indexed _ -> o.flags.obj_kind
+      | _ -> Exact
+    in
+    DefT (r, trust, ObjT { o with flags = { obj_kind; frozen } })
+  | EvalT (l, TypeDestructorT (use_op, r, SpreadType (_, ts, head_slice)), id) ->
+    let r = replace_desc_reason desc r in
+    let target =
+      let open Type.Object.Spread in
+      let make_seal =
+        if frozen then
+          Frozen
+        else
+          Sealed
+      in
+      Value { make_seal }
+    in
+    EvalT (l, TypeDestructorT (use_op, r, SpreadType (target, ts, head_slice)), id)
+  | t -> t
 
 and convert_qualification ?(lookup_mode = ForType) cx reason_prefix =
   let open Ast.Type.Generic.Identifier in

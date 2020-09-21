@@ -738,7 +738,6 @@ and dump_use_t_ (depth, tvars) cx t =
     | NullishCoalesceT (_, x, y) -> p ~extra:(spf "%s, %s" (kid x) (tout y)) t
     | ObjAssignToT (_, _, arg1, arg2, _) -> p t ~extra:(spf "%s, %s" (kid arg1) (kid arg2))
     | ObjAssignFromT (_, _, arg1, arg2, _) -> p t ~extra:(spf "%s, %s" (kid arg1) (kid arg2))
-    | ObjFreezeT _ -> p t
     | ObjRestT (_, xs, arg) -> p t ~extra:(spf "[%s], %s" (String.concat "; " xs) (kid arg))
     | ObjSealT _ -> p t
     | ObjTestProtoT _ -> p t
