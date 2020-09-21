@@ -427,8 +427,9 @@ let rec convert cx tparams_map =
                   | _ -> Exact
                 in
                 DefT (r, trust, ObjT { o with flags = { o.flags with obj_kind } })
-              | EvalT (l, TypeDestructorT (use_op, r, SpreadType (target, ts, head_slice)), id) ->
+              | EvalT (l, TypeDestructorT (use_op, r, SpreadType (_, ts, head_slice)), id) ->
                 let r = replace_desc_reason RObjectLit r in
+                let target = Type.Object.Spread.(Value { make_seal = Sealed }) in
                 EvalT (l, TypeDestructorT (use_op, r, SpreadType (target, ts, head_slice)), id)
               | _ -> t
             in
