@@ -7,5 +7,5 @@ declare function myRequire<TModule>(
 ): TModule;
 
 const C = myRequire(
-  'm#C',
+  'm#C', // Error - untyped import
 );
