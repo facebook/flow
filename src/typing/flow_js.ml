@@ -5496,8 +5496,8 @@ struct
           let reason = replace_desc_reason desc reason_op in
           let obj_kind =
             match objtype.flags.obj_kind with
-            | Indexed _ -> objtype.flags.obj_kind
-            | _ -> Exact
+            | UnsealedInFile _ -> Exact
+            | k -> k
           in
           let flags = { frozen = true; obj_kind } in
           let new_obj = DefT (reason, trust, ObjT { objtype with flags }) in

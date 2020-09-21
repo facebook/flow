@@ -75,5 +75,23 @@ References:
                      ^^^^^^ [2]
 
 
+Error -------------------------------------------------------------------------------------------- object_freeze.js:30:2
 
-Found 8 errors
+Cannot cast `Object.freeze(...)` to object type because inexact frozen object literal [1] is incompatible with exact
+object type [2]. [incompatible-exact]
+
+   object_freeze.js:30:2
+   30| (Object.freeze({...inexact}): {||}); // Error: inexact -> exact
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   object_freeze.js:30:16
+   30| (Object.freeze({...inexact}): {||}); // Error: inexact -> exact
+                      ^^^^^^^^^^^^ [1]
+   object_freeze.js:30:31
+   30| (Object.freeze({...inexact}): {||}); // Error: inexact -> exact
+                                     ^^^^ [2]
+
+
+
+Found 9 errors
