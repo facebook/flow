@@ -53,6 +53,7 @@ let main
     file_watcher
     file_watcher_debug
     file_watcher_timeout
+    file_watcher_mergebase_with
     file_watcher_sync_timeout
     path_opt
     () =
@@ -63,6 +64,7 @@ let main
     read_config_or_exit ~enforce_warnings:(not ignore_version) flowconfig_path
   in
   let options = make_options ~flowconfig_name ~flowconfig ~lazy_mode ~root options_flags in
+  let init_id = Random_id.short_string () in
   (* initialize loggers before doing too much, especially anything that might exit *)
   LoggingUtils.init_loggers ~options ();
 
@@ -106,11 +108,16 @@ let main
   in
   (* A quiet `flow start` doesn't imply a quiet `flow server` *)
   let server_options = { options with Options.opt_quiet = false } in
-  let file_watcher = choose_file_watcher ~options ~file_watcher ~flowconfig in
-  let file_watcher_timeout = choose_file_watcher_timeout ~flowconfig file_watcher_timeout in
-  let file_watcher_sync_timeout =
-    choose_file_watcher_sync_timeout ~flowconfig file_watcher file_watcher_sync_timeout
+  let file_watcher =
+    choose_file_watcher
+      ~options
+      ~flowconfig
+      ~file_watcher
+      ~file_watcher_debug
+      ~mergebase_with:file_watcher_mergebase_with
+      ~sync_timeout:file_watcher_sync_timeout
   in
+  let file_watcher_timeout = choose_file_watcher_timeout ~flowconfig file_watcher_timeout in
   let monitor_options =
     {
       FlowServerMonitorOptions.log_file = monitor_log_file;
@@ -121,11 +128,9 @@ let main
       shared_mem_config;
       argv = Sys.argv;
       file_watcher;
-      file_watcher_debug;
       file_watcher_timeout;
-      file_watcher_sync_timeout;
     }
   in
-  FlowServerMonitor.daemonize ~wait ~on_spawn monitor_options
+  FlowServerMonitor.daemonize ~init_id ~wait ~on_spawn monitor_options
 
 let command = CommandSpec.command spec main

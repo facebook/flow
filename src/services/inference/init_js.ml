@@ -45,7 +45,11 @@ let parse_lib_file ~reader options file =
       else if List.length results.Parsing.parse_fails > 0 then
         let (_, _, parse_fails) = List.hd results.Parsing.parse_fails in
         Parsing.Parse_fail parse_fails
-      else if List.length results.Parsing.parse_skips > 0 then
+      else if
+      List.length results.Parsing.parse_skips
+      + FilenameSet.cardinal results.Parsing.parse_not_found_skips
+      > 0
+    then
         Parsing.Parse_skip Parsing.Skip_non_flow_file
       else
         failwith "Internal error: no parse results found" )

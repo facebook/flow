@@ -7,6 +7,15 @@ Importing a type from an untyped module makes it `any` and is not safe! Did you 
                     ^
 
 
+Error ------------------------------------------------------------------------------------------------------ test.js:6:5
+
+Cannot use `T` as a type because it is an `any`-typed value. Type `T` properly, so it is no longer `any`-typed, to use
+it as an annotation. [value-as-type]
+
+   6| (0: T);
+          ^
+
+
 Error ------------------------------------------------------------------------------------------------------ test.js:9:3
 
 Cannot reassign constant `x` [1]. [reassign-const]
@@ -30,4 +39,4 @@ Unclear type. Using `any`, `Object`, or `Function` types is not safe! [unclear-t
 
 
 
-Found 3 errors
+Found 4 errors

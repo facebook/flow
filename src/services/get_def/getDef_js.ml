@@ -76,13 +76,17 @@ let rec process_request ~options ~reader ~cx ~is_legit_require ~typed_ast :
     in
     extract_member_def ~reader cx obj_t name
   | Get_def_request.Type v ->
-    let rec loop = function
-      | Type.OpenT _ as t ->
+    let rec loop =
+      let open Type in
+      function
+      | OpenT _ as t ->
         (match Flow_js.possible_types_of_type cx t with
         | [t'] -> loop t'
         | [] -> Error "No possible types"
         | _ :: _ -> Error "More than one possible type")
-      | Type.AnnotT (_, t, _) -> loop t
+      | AnnotT (_, t, _)
+      | DefT (_, _, TypeT ((ImportTypeofKind | ImportClassKind | ImportEnumKind), t)) ->
+        loop t
       | t -> Ok (TypeUtil.def_loc_of_t t |> loc_of_aloc ~reader)
     in
     loop v
@@ -99,7 +103,7 @@ let rec process_request ~options ~reader ~cx ~is_legit_require ~typed_ast :
              ~reader:(Abstract_state_reader.State_reader reader)
              ~node_modules_containers:!Files.node_modules_containers
              (Context.file cx)
-             (Nel.one require_loc)
+             require_loc
              name)
       in
       match filename with
@@ -142,11 +146,13 @@ let rec process_request ~options ~reader ~cx ~is_legit_require ~typed_ast :
       ~typed_ast
       Get_def_request.(Member { prop_name = name; object_source = ObjectType props_object })
 
-let get_def ~options ~reader cx file_sig typed_ast requested_loc =
-  let require_loc_map = File_sig.With_Loc.(require_loc_map file_sig.module_sig) in
+let get_def ~options ~reader ~cx ~file_sig ~typed_ast requested_loc =
+  let require_aloc_map = File_sig.With_ALoc.(require_loc_map file_sig.module_sig) in
   let is_legit_require source_aloc =
-    let source_loc = loc_of_aloc ~reader source_aloc in
-    SMap.exists (fun _ locs -> Nel.exists (fun loc -> loc = source_loc) locs) require_loc_map
+    SMap.exists
+      (fun _ alocs ->
+        Nel.exists (fun aloc -> loc_of_aloc ~reader aloc = loc_of_aloc ~reader source_aloc) alocs)
+      require_aloc_map
   in
   let rec loop req_loc =
     let open Get_def_process_location in

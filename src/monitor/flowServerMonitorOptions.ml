@@ -8,6 +8,19 @@
 (* These are all the little bits of information which the Flow server monitor needs in order to
  * function *)
 
+type watchman_options = {
+  debug: bool;  (** Turn on debugging messages for the file watcher *)
+  defer_states: string list;  (** Defer watchman notifications while these states are asserted *)
+  mergebase_with: string;  (** symbolic commit to find changes against *)
+  sync_timeout: int option;
+      (** How long to wait for the file watcher to synchronize, in milliseconds *)
+}
+
+type file_watcher =
+  | NoFileWatcher
+  | DFind
+  | Watchman of watchman_options
+
 type t = {
   (* Where the monitor logs will go by default *)
   log_file: string;
@@ -25,11 +38,12 @@ type t = {
   (* The argv of the process which created the server monitor *)
   argv: string array;
   (* What to use for file watching *)
-  file_watcher: Options.file_watcher;
-  (* Turn on debugging messages for the file watcher *)
-  file_watcher_debug: bool;
+  file_watcher: file_watcher;
   (* How long to wait for the file watcher to initialize, in seconds *)
   file_watcher_timeout: float option;
-  (* How long to wait for the file watcher to synchronize, in milliseconds *)
-  file_watcher_sync_timeout: int option;
 }
+
+let string_of_file_watcher = function
+  | NoFileWatcher -> "Dummy"
+  | DFind -> "DFind"
+  | Watchman _ -> "Watchman"

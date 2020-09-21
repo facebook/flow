@@ -21,7 +21,7 @@ type 'a t = {
 
 let default_explicit_values =
   LintMap.singleton Lints.DeprecatedUtility (Severity.Err, None)
-  |> LintMap.add Lints.NullVoidAddition (Severity.Err, None)
+  |> LintMap.add Lints.UntypedTypeImport (Severity.Err, None)
 
 let ignored_by_all =
   [

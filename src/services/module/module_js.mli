@@ -34,7 +34,7 @@ val imported_module :
   reader:Abstract_state_reader.t ->
   node_modules_containers:SSet.t SMap.t ->
   File_key.t ->
-  ALoc.t Nel.t ->
+  ALoc.t ->
   ?resolution_acc:resolution_acc ->
   string ->
   Modulename.t

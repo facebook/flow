@@ -14,8 +14,8 @@ References:
    array.js:7:19
      7| (["hi"]: Iterable<number>); // Error string ~> number
                           ^^^^^^ [2]
-   <BUILTINS>/core.js:540:22
-   540| interface $Iterator<+Yield,+Return,-Next> {
+   <BUILTINS>/core.js:555:22
+   555| interface $Iterator<+Yield,+Return,-Next> {
                              ^^^^^ [3]
 
 
@@ -35,8 +35,8 @@ References:
    array.js:8:22
      8| (["hi", 1]: Iterable<string>); // Error number ~> string
                              ^^^^^^ [2]
-   <BUILTINS>/core.js:540:22
-   540| interface $Iterator<+Yield,+Return,-Next> {
+   <BUILTINS>/core.js:555:22
+   555| interface $Iterator<+Yield,+Return,-Next> {
                              ^^^^^ [3]
 
 
@@ -56,8 +56,8 @@ References:
    caching_bug.js:21:62
     21| function miss_the_cache(x: Array<string | number>): Iterable<string> { return x; }
                                                                      ^^^^^^ [2]
-   <BUILTINS>/core.js:540:22
-   540| interface $Iterator<+Yield,+Return,-Next> {
+   <BUILTINS>/core.js:555:22
+   555| interface $Iterator<+Yield,+Return,-Next> {
                              ^^^^^ [3]
 
 
@@ -74,8 +74,8 @@ References:
    iterator_result.js:17:40
     17| function makeIterator(coin_flip: () => boolean ): Iterator<string> {
                                                ^^^^^^^ [1]
-   <BUILTINS>/core.js:535:11
-   535|     done: false,
+   <BUILTINS>/core.js:550:11
+   550|     done: false,
                   ^^^^^ [2]
 
 
@@ -92,8 +92,8 @@ References:
    iterator_result.js:17:40
     17| function makeIterator(coin_flip: () => boolean ): Iterator<string> {
                                                ^^^^^^^ [1]
-   <BUILTINS>/core.js:530:11
-   530|     done: true,
+   <BUILTINS>/core.js:545:11
+   545|     done: true,
                   ^^^^ [2]
 
 
@@ -107,14 +107,14 @@ value of property `@@iterator`. [incompatible-return]
                  ^^^
 
 References:
-   <BUILTINS>/core.js:596:28
-   596|     @@iterator(): Iterator<[K, V]>;
+   <BUILTINS>/core.js:611:28
+   611|     @@iterator(): Iterator<[K, V]>;
                                    ^^^^^^ [1]
    map.js:13:55
     13| function mapTest4(map: Map<number, string>): Iterable<string> {
                                                               ^^^^^^ [2]
-   <BUILTINS>/core.js:540:22
-   540| interface $Iterator<+Yield,+Return,-Next> {
+   <BUILTINS>/core.js:555:22
+   555| interface $Iterator<+Yield,+Return,-Next> {
                              ^^^^^ [3]
 
 
@@ -134,8 +134,8 @@ References:
    set.js:13:47
     13| function setTest4(set: Set<string>): Iterable<number> {
                                                       ^^^^^^ [2]
-   <BUILTINS>/core.js:540:22
-   540| interface $Iterator<+Yield,+Return,-Next> {
+   <BUILTINS>/core.js:555:22
+   555| interface $Iterator<+Yield,+Return,-Next> {
                              ^^^^^ [3]
 
 
@@ -149,14 +149,14 @@ return value of property `@@iterator`. [incompatible-cast]
          ^^^^
 
 References:
-   <BUILTINS>/core.js:324:28
-   324|     @@iterator(): Iterator<string>;
+   <BUILTINS>/core.js:339:28
+   339|     @@iterator(): Iterator<string>;
                                    ^^^^^^ [1]
    string.js:5:17
      5| ("hi": Iterable<number>); // Error - string is a Iterable<string>
                         ^^^^^^ [2]
-   <BUILTINS>/core.js:540:22
-   540| interface $Iterator<+Yield,+Return,-Next> {
+   <BUILTINS>/core.js:555:22
+   555| interface $Iterator<+Yield,+Return,-Next> {
                              ^^^^^ [3]
 
 

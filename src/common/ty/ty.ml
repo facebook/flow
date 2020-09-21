@@ -61,9 +61,11 @@ and generic_t = symbol * gen_kind * t list option
 
 and any_kind =
   | Annotated
-  | AnyError
+  | AnyError of any_error_kind option
   | Unsound of unsoundness_kind
   | Untyped
+
+and any_error_kind = UnresolvedName
 
 and unsoundness_kind =
   | BoundFunctionThis
@@ -458,7 +460,7 @@ class ['A] comparator_ty =
     method tag_of_any_kind _ =
       function
       | Annotated -> 0
-      | AnyError -> 1
+      | AnyError _ -> 1
       | Unsound _ -> 2
       | Untyped -> 3
 

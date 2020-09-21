@@ -65,7 +65,6 @@
     flow_common_modulename
     flow_common_monad
     flow_common_tarjan
-    flow_openness
     flow_parser_utils
     flow_state_heaps_parsing_exceptions
     flow_typing_errors

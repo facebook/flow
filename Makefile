@@ -131,6 +131,7 @@ MODULES=\
   src/server/shmem\
   src/server/watchman_expression_terms\
   src/services/autocomplete\
+  src/services/code_action\
   src/services/coverage\
   src/services/get_def\
   src/services/inference\

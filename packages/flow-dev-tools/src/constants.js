@@ -15,7 +15,7 @@ export const defaultTestsDirName = "newtests";
 
 // This is where we look for tests to run and where we put newly converted
 // tests
-export function getTestsDir(relative_to?: string) {
+export function getTestsDir(relative_to?: string): string {
   if (relative_to !== undefined) {
     return resolve(relative_to, defaultTestsDirName);
   } else {

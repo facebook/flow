@@ -9,12 +9,24 @@ type lsp_id =
   | NumberId of int
   | StringId of string
 
-(* Note: this datatype provides no invariants that the string is well-formed. *)
-type documentUri = DocumentUri of string
+module DocumentUri : sig
+  (* Note: this datatype provides no invariants that the string is well-formed. *)
+  type t = DocumentUri of string
 
-val uri_of_string : string -> documentUri
+  val compare : t -> t -> int
 
-val string_of_uri : documentUri -> string
+  val of_string : string -> t
+
+  val to_string : t -> string
+end
+
+module UriSet : sig
+  include module type of Set.Make (DocumentUri)
+end
+
+module UriMap : sig
+  include module type of WrappedMap.Make (DocumentUri)
+end
 
 type position = {
   line: int;
@@ -28,7 +40,7 @@ type range = {
 
 module Location : sig
   type t = {
-    uri: documentUri;
+    uri: DocumentUri.t;
     range: range;
   }
 end
@@ -44,6 +56,13 @@ module MarkupKind : sig
   type t =
     | Markdown
     | PlainText
+end
+
+module MarkupContent : sig
+  type t = {
+    kind: MarkupKind.t;
+    value: string;
+  }
 end
 
 type markedString =
@@ -71,12 +90,12 @@ module TextEdit : sig
 end
 
 module TextDocumentIdentifier : sig
-  type t = { uri: documentUri }
+  type t = { uri: DocumentUri.t }
 end
 
 module VersionedTextDocumentIdentifier : sig
   type t = {
-    uri: documentUri;
+    uri: DocumentUri.t;
     version: int;
   }
 end
@@ -89,12 +108,12 @@ module TextDocumentEdit : sig
 end
 
 module WorkspaceEdit : sig
-  type t = { changes: TextEdit.t list SMap.t (* holds changes to existing docs *) }
+  type t = { changes: TextEdit.t list UriMap.t (* holds changes to existing docs *) }
 end
 
 module TextDocumentItem : sig
   type t = {
-    uri: documentUri;
+    uri: DocumentUri.t;
     languageId: string;
     version: int;
     text: string;
@@ -198,6 +217,26 @@ module CodeActionKind : sig
   val source : t
 end
 
+module CodeActionClientCapabilities : sig
+  module CodeActionLiteralSupport : sig
+    type t = {
+      valueSet: CodeActionKind.t list;
+          (** The code action kind values the client supports. When this
+              property exists the client also guarantees that it will
+              handle values outside its set gracefully and falls back
+              to a default value when unknown. *)
+    }
+  end
+
+  type t = {
+    dynamicRegistration: bool;
+        (** Whether code action supports dynamic registration. (wire: dynamicRegistraction) *)
+    codeActionLiteralSupport: CodeActionLiteralSupport.t option;
+        (** The client support code action literals as a valid
+            response of the `textDocument/codeAction` request. *)
+  }
+end
+
 module SignatureHelpClientCapabilities : sig
   type t = {
     dynamicRegistration: bool;
@@ -223,7 +262,7 @@ module Initialize : sig
   type params = {
     processId: int option;
     rootPath: string option;
-    rootUri: documentUri option;
+    rootUri: DocumentUri.t option;
     initializationOptions: initializationOptions;
     client_capabilities: client_capabilities;
     trace: trace;
@@ -238,12 +277,7 @@ module Initialize : sig
     | Messages
     | Verbose
 
-  and initializationOptions = {
-    useTextEditAutocomplete: bool;
-    liveSyntaxErrors: bool;
-    namingTableSavedStatePath: string option;
-    sendServerStatusEvents: bool;
-  }
+  and initializationOptions = { liveSyntaxErrors: bool }
 
   and client_capabilities = {
     workspace: workspaceClientCapabilities;
@@ -265,7 +299,7 @@ module Initialize : sig
   and textDocumentClientCapabilities = {
     synchronization: synchronization;
     completion: completion;
-    codeAction: codeAction;
+    codeAction: CodeActionClientCapabilities.t;
     signatureHelp: SignatureHelpClientCapabilities.t;
   }
 
@@ -282,18 +316,7 @@ module Initialize : sig
     preselectSupport: bool;
   }
 
-  and codeAction = {
-    codeAction_dynamicRegistration: bool;
-    codeActionLiteralSupport: codeActionliteralSupport option;
-  }
-
-  and codeActionliteralSupport = { codeAction_valueSet: CodeActionKind.t list }
-
-  and windowClientCapabilities = {
-    status: bool;
-    progress: bool;
-    actionRequired: bool;
-  }
+  and windowClientCapabilities = { status: bool }
 
   and telemetryClientCapabilities = { connectionStatus: bool }
 
@@ -407,7 +430,7 @@ module PublishDiagnostics : sig
   type params = publishDiagnosticsParams
 
   and publishDiagnosticsParams = {
-    uri: documentUri;
+    uri: DocumentUri.t;
     diagnostics: diagnostic list;
   }
 
@@ -479,7 +502,7 @@ module DidChangeWatchedFiles : sig
   type params = { changes: fileEvent list }
 
   and fileEvent = {
-    uri: documentUri;
+    uri: DocumentUri.t;
     type_: fileChangeType;
   }
 end
@@ -531,38 +554,36 @@ end
 
 module Completion : sig
   type completionItemKind =
-    | Text (* 1 *)
-    | Method (* 2 *)
-    | Function (* 3 *)
-    | Constructor (* 4 *)
-    | Field (* 5 *)
-    | Variable (* 6 *)
-    | Class (* 7 *)
-    | Interface (* 8 *)
-    | Module (* 9 *)
-    | Property (* 10 *)
-    | Unit (* 11 *)
-    | Value (* 12 *)
-    | Enum (* 13 *)
-    | Keyword (* 14 *)
-    | Snippet (* 15 *)
-    | Color (* 16 *)
-    | File (* 17 *)
-    | Reference (* 18 *)
-    | Folder (* 19 *)
-    | EnumMember (* 20 *)
-    | Constant (* 21 *)
-    | Struct (* 22 *)
-    | Event (* 23 *)
-    | Operator (* 24 *)
-    | TypeParameter (* 25 *)
+    | Text  (** 1 *)
+    | Method  (** 2 *)
+    | Function  (** 3 *)
+    | Constructor  (** 4 *)
+    | Field  (** 5 *)
+    | Variable  (** 6 *)
+    | Class  (** 7 *)
+    | Interface  (** 8 *)
+    | Module  (** 9 *)
+    | Property  (** 10 *)
+    | Unit  (** 11 *)
+    | Value  (** 12 *)
+    | Enum  (** 13 *)
+    | Keyword  (** 14 *)
+    | Snippet  (** 15 *)
+    | Color  (** 16 *)
+    | File  (** 17 *)
+    | Reference  (** 18 *)
+    | Folder  (** 19 *)
+    | EnumMember  (** 20 *)
+    | Constant  (** 21 *)
+    | Struct  (** 22 *)
+    | Event  (** 23 *)
+    | Operator  (** 24 *)
+    | TypeParameter  (** 25 *)
   [@@deriving enum]
 
   type insertTextFormat =
-    | PlainText (* 1 *)
-    (* the insertText/textEdits are just plain strings *)
-    | SnippetFormat (* 2 *)
-                    (* wire: just "Snippet" *)
+    | PlainText  (** 1 -- the insertText/textEdits are just plain strings *)
+    | SnippetFormat  (** 2 -- wire: just "Snippet" *)
   [@@deriving enum]
 
   type completionTriggerKind =
@@ -593,31 +614,17 @@ module Completion : sig
   }
 
   and completionItem = {
-    label: string;
-    (* the label in the UI *)
-    kind: completionItemKind option;
-    (* tells editor which icon to use *)
-    detail: string option;
-    (* human-readable string like type/symbol info *)
-    inlineDetail: string option;
-    (* nuclide-specific, right column *)
-    itemType: string option;
-    (* nuclide-specific, left column *)
-    documentation: markedString list option;
-    (* human-readable doc-comment *)
-    preselect: bool;
-    (* select this item when showing *)
-    sortText: string option;
-    (* used for sorting; if absent, uses label *)
-    filterText: string option;
-    (* used for filtering; if absent, uses label *)
-    insertText: string option;
-    (* used for inserting; if absent, uses label *)
+    label: string;  (** the label in the UI *)
+    kind: completionItemKind option;  (** tells editor which icon to use *)
+    detail: string option;  (** human-readable string like type/symbol info *)
+    documentation: markedString list option;  (** human-readable doc-comment *)
+    preselect: bool;  (** select this item when showing *)
+    sortText: string option;  (** used for sorting; if absent, uses label *)
+    filterText: string option;  (** used for filtering; if absent, uses label *)
+    insertText: string option;  (** used for inserting; if absent, uses label *)
     insertTextFormat: insertTextFormat option;
-    textEdits: TextEdit.t list;
-    (* wire: split into hd and tl *)
-    command: Command.t option;
-    (* if present, is executed after completion *)
+    textEdits: TextEdit.t list;  (** wire: split into hd and tl *)
+    command: Command.t option;  (** if present, is executed after completion *)
     data: Hh_json.json option;
   }
 end
@@ -752,6 +759,12 @@ module SignatureHelp : sig
     [@@deriving enum]
   end
 
+  module Documentation : sig
+    type t =
+      | String of string
+      | MarkupContent of MarkupContent.t
+  end
+
   type params = {
     loc: TextDocumentPositionParams.t;
     context: context option;
@@ -774,14 +787,18 @@ module SignatureHelp : sig
 
   and signature_information = {
     siginfo_label: string;
-    siginfo_documentation: string option;
+    siginfo_documentation: Documentation.t option;
     parameters: parameter_information list;
   }
 
   and parameter_information = {
-    parinfo_label: string;
-    parinfo_documentation: string option;
+    parinfo_label: label;
+    parinfo_documentation: Documentation.t option;
   }
+
+  and label =
+    | String of string
+    | Offset of int * int
 end
 
 module Rename : sig
@@ -861,38 +878,6 @@ module ShowStatus : sig
     progress: int option;
     total: int option;
     shortMessage: string option;
-  }
-end
-
-module Progress : sig
-  type t =
-    | Present of {
-        id: int;
-        label: string;
-      }
-    | Absent
-
-  and params = progressParams
-
-  and progressParams = {
-    id: int;
-    label: string option;
-  }
-end
-
-module ActionRequired : sig
-  type t =
-    | Present of {
-        id: int;
-        label: string;
-      }
-    | Absent
-
-  and params = actionRequiredParams
-
-  and actionRequiredParams = {
-    id: int;
-    label: string option;
   }
 end
 
@@ -1016,8 +1001,6 @@ type lsp_notification =
   | LogMessageNotification of LogMessage.params
   | TelemetryNotification of LogMessage.params (* LSP allows 'any' but we only send these *)
   | ShowMessageNotification of ShowMessage.params
-  | ProgressNotification of Progress.params
-  | ActionRequiredNotification of ActionRequired.params
   | ConnectionStatusNotification of ConnectionStatus.params
   | InitializedNotification
   | SetTraceNotification (* $/setTraceNotification *)
@@ -1049,18 +1032,4 @@ end
 
 module IdMap : sig
   include module type of WrappedMap.Make (IdKey)
-end
-
-module UriKey : sig
-  type t = documentUri
-
-  val compare : t -> t -> int
-end
-
-module UriSet : sig
-  include module type of Set.Make (UriKey)
-end
-
-module UriMap : sig
-  include module type of WrappedMap.Make (UriKey)
 end

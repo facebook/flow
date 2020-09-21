@@ -125,7 +125,7 @@ module Kit (Flow : Flow_common.S) : Flow_common.ASSERT_GROUND = struct
             (match pole with
             | Polarity.Neutral
             | Polarity.Negative ->
-              AnyT.locationless AnyError
+              AnyT.locationless (AnyError None)
               |> unify_opt cx ~use_op:unknown_use ~unify_any:true (OpenT (r, id));
               let trace_reasons =
                 if max_reasons = 0 then

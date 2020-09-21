@@ -3,9 +3,10 @@
  */
 
 
+import type Suite from "flow-dev-tools/src/test/Suite.js";
 import {suite, test} from 'flow-dev-tools/src/test/Tester';
 
-export default suite(({addFile, addFiles, addCode}) => [
+export default (suite(({addFile, addFiles, addCode}) => [
   test('@jsx pragma without expression is disallowed', [
     addCode('// @jsx')
       .newErrors(
@@ -470,4 +471,4 @@ export default suite(({addFile, addFiles, addCode}) => [
       )
       .because("Multiple spaces midline stay as multiple spaces"),
   ]),
-]);
+]): Suite);

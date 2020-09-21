@@ -71,6 +71,8 @@ type metadata = {
   react_runtime: Options.react_runtime;
   recursion_limit: int;
   root: Path.t;
+  strict_es6_import_export: bool;
+  strict_es6_import_export_excludes: string list;
   strip_root: bool;
   suppress_types: SSet.t;
   max_workers: int;
@@ -189,13 +191,7 @@ val mem_nominal_poly_id : t -> Type.Poly.id -> bool
 
 val graph : t -> Constraint.node IMap.t
 
-val openness_graph : t -> Openness.graph
-
 val trust_graph : t -> Trust_constraint.node IMap.t
-
-val import_stmts : t -> (ALoc.t, ALoc.t) Flow_ast.Statement.ImportDeclaration.t list
-
-val imported_ts : t -> Type.t SMap.t
 
 val is_checked : t -> bool
 
@@ -265,6 +261,10 @@ val type_graph : t -> Graph_explorer.graph
 
 val type_asserts_map : t -> (type_assert_kind * ALoc.t) ALocMap.t
 
+val matching_props : t -> (Reason.reason * string * Type.t * Type.t) list
+
+val literal_subtypes : t -> (Type.t * Type.use_t) list
+
 val verbose : t -> Verbose.t option
 
 val max_workers : t -> int
@@ -305,10 +305,6 @@ val add_severity_cover : t -> File_key.t -> ExactCover.lint_severity_cover -> un
 
 val add_lint_suppressions : t -> LocSet.t -> unit
 
-val add_import_stmt : t -> (ALoc.t, ALoc.t) Flow_ast.Statement.ImportDeclaration.t -> unit
-
-val add_imported_t : t -> string -> Type.t -> unit
-
 val add_require : t -> ALoc.t -> Type.t -> unit
 
 val add_module : t -> string -> Type.t -> unit
@@ -325,6 +321,10 @@ val add_trust_var : t -> Trust_constraint.ident -> Trust_constraint.node -> unit
 
 val add_type_assert : t -> ALoc.t -> type_assert_kind * ALoc.t -> unit
 
+val add_matching_props : t -> Reason.reason * string * Type.t * Type.t -> unit
+
+val add_literal_subtypes : t -> Type.t * Type.use_t -> unit
+
 val add_voidable_check : t -> voidable_check -> unit
 
 val remove_tvar : t -> Constraint.ident -> unit
@@ -340,8 +340,6 @@ val set_type_graph : t -> Graph_explorer.graph -> unit
 val set_all_unresolved : t -> ISet.t IMap.t -> unit
 
 val set_graph : t -> Constraint.node IMap.t -> unit
-
-val set_openness_graph : t -> Openness.graph -> unit
 
 val set_trust_graph : t -> Trust_constraint.node IMap.t -> unit
 

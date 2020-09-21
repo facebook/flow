@@ -1,3 +1,72 @@
+### 0.134.0
+
+Likely to cause new Flow errors:
+
+* Types-first is now the default mode, and has to be explicitly disabled with `types_first=false` in a flowconfig if desired. See https://medium.com/flow-type/types-first-a-scalable-new-architecture-for-flow-3d8c7ba1d4eb for more about types-first.
+
+New Features:
+
+* Added a `file_watcher.watchman.mergebase_with` flowconfig option and `--file-watcher-mergebase-with` CLI option to choose a tracking bookmark for Watchman to compute the mergebase against.
+* Show JSDoc documentation in type declarations.
+
+Misc:
+
+* Improved the consistency of what operation is pointed to in error messages, to ensure they aren't dependent on the order in which constraints are generated.
+* Filtered "did you mean" code actions to only send actions on code under cursor.
+* Changed the return type of fileURLToPath (thanks @aaronasachimp)
+
+### 0.133.0
+
+Likely to cause new Flow errors:
+
+* Improve reliability of inclusion check in strict equality conditionals.
+
+New Features:
+
+* Show JSDoc documentation in hover, autocomplete, and signature help.
+
+Notable bug fixes:
+
+* Fix a bug related to saved state that could cause crashes during initialization.
+* Fix a bug related to saved state that could cause internal errors during rechecks.
+* Fix crash with `flow focus-check` when a focused file has a syntax error.
+
+Misc:
+
+* Remove the `null-void-addition` lint now that it has been subsumed by an ordinary type error.
+* Improved signature help for inlined tuple rest params.
+* Enable the following language features by default, since they have reached stage 4:
+  * `export *`
+  * Nullish coalescing
+  * Optional chaining
+* Remove deprecated, nonstandard `itemType` and `inlineDetail` fields from the LSP `completionItem` implementation.
+* Exit the worker processes gracefully when the main process crashes.
+
+### 0.132.0
+
+Likely to cause new Flow errors:
+* Disallow using any-typed values type annotations. [example](https://flow.org/try/#0CYUwxgNghgTiAEA3W8AeAueUB2BPA3AFCFgD22AzgC7y6arwC88AzPkA)
+
+New Features:
+* Added warnings against suppressions without error codes
+
+Notable bug fixes:
+* Fixed some crashes when Flow could not connect to Watchman
+
+Misc:
+* Fix syntax errors in README badges (thanks @jamesisaac)
+
+### 0.131.0
+
+* "Go to Definition" on a JSX attribute name now jumps to the prop's type.
+* Improved error messages for non-strict equality checks
+* Fixed a bug that prevented the use of `module` in ES modules when `well_formed_exports` is enabled.
+* Fixed an issue that allowed types-first mode to be enabled (`types_first=true`) when using `well_formed_exports.include`. For types-first to function properly, the entire project's exports must be well-formed, not just specific paths.
+* Fixed a similar issue so that `--types-first` on the command line overrides `well_formed_exports=false` in `.flowconfig`. This makes it easier to test types-first mode.
+* The `unsafe-addition` lint now defaults to being an error. It will be converted from a lint to a type error in the future.
+* Removed `dynamic-export` lint which does not work in types-first mode
+* Improved initialization performance
+
 ### 0.130.0
 
 New Features:
@@ -12,7 +81,7 @@ Misc:
 ### 0.129.0
 
 Likely to cause new Flow errors:
-* $Keys<...> will no longer include non-own instance properties, matching the behavior of Object.keys. 
+* $Keys<...> will no longer include non-own instance properties, matching the behavior of Object.keys.
 
 Notable bug fixes:
 * Fixed an incremental rechecking issue caused by the hashes of type destructors

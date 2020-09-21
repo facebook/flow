@@ -18,8 +18,11 @@ type 'a change' =
       leading_separator: bool;
     }
   | Delete of 'a
+[@@deriving show]
 
-type 'a change = Loc.t * 'a change'
+type 'a change = Loc.t * 'a change' [@@deriving show]
+
+type 'a changes = 'a change list [@@deriving show]
 
 type diff_algorithm =
   | Trivial
@@ -50,15 +53,17 @@ let change_compare (pos1, chg1) (pos2, chg2) =
 let trivial_list_diff (old_list : 'a list) (new_list : 'a list) : 'a diff_result list option =
   (* inspect the lists pairwise and record any items which are different as replacements. Give up if
    * the lists have different lengths.*)
-  let rec helper i lst1 lst2 =
+  let rec helper acc i lst1 lst2 =
     match (lst1, lst2) with
-    | ([], []) -> Some []
+    | ([], []) -> Some (List.rev acc)
     | (hd1 :: tl1, hd2 :: tl2) ->
-      let rest = helper (i + 1) tl1 tl2 in
-      if hd1 != hd2 then
-        Base.Option.map rest ~f:(List.cons (i, Replace (hd1, hd2)))
-      else
-        rest
+      let acc =
+        if hd1 != hd2 then
+          (i, Replace (hd1, hd2)) :: acc
+        else
+          acc
+      in
+      (helper [@tailcall]) acc (i + 1) tl1 tl2
     | (_, [])
     | ([], _) ->
       None
@@ -66,7 +71,7 @@ let trivial_list_diff (old_list : 'a list) (new_list : 'a list) : 'a diff_result
   if old_list == new_list then
     Some []
   else
-    helper 0 old_list new_list
+    helper [] 0 old_list new_list
 
 (* diffs based on http://www.xmailserver.org/diff2.pdf on page 6 *)
 let standard_list_diff (old_list : 'a list) (new_list : 'a list) : 'a diff_result list option =
@@ -229,6 +234,7 @@ type node =
   | TemplateLiteral of Loc.t * (Loc.t, Loc.t) Ast.Expression.TemplateLiteral.t
   | JSXChild of (Loc.t, Loc.t) Ast.JSX.child
   | JSXIdentifier of (Loc.t, Loc.t) Ast.JSX.Identifier.t
+[@@deriving show]
 
 let expand_loc_with_comments loc node =
   let open Comment_attachment in
@@ -440,35 +446,33 @@ let program
       (old_list : a list)
       (index_offset : int)
       (diffs : a diff_result list) : b change list option =
-    Base.Option.(
-      let recurse_into_change = function
-        | (_, Replace (x1, x2)) -> f x1 x2
-        | (index, Insert { items = lst; separator; leading_separator }) ->
-          let index = index + index_offset in
-          let loc =
-            if List.length old_list = 0 then
-              None
-            else if
-              (* To insert at the start of the list, insert before the first element *)
-              index = -1
-            then
-              List.hd old_list |> trivial >>| fst >>| Loc.start_loc
+    let open Base.Option in
+    let recurse_into_change = function
+      | (_, Replace (x1, x2)) -> f x1 x2
+      | (index, Insert { items = lst; separator; leading_separator }) ->
+        let index = index + index_offset in
+        let loc =
+          if List.length old_list = 0 then
+            None
+          else if index = -1 then
+            (* To insert at the start of the list, insert before the first element *)
+            List.hd old_list |> trivial >>| fst >>| Loc.start_loc
+          else
             (* Otherwise insert it after the current element *)
-            else
-              List.nth old_list index |> trivial >>| fst >>| Loc.end_loc
-          in
-          Base.List.map ~f:trivial lst
-          |> all
-          >>| Base.List.map ~f:snd (* drop the loc *)
-          >>| (fun x -> Insert { items = x; separator; leading_separator })
-          |> both loc
-          >>| Base.List.return
-        | (_, Delete x) -> trivial x >>| (fun (loc, y) -> (loc, Delete y)) >>| Base.List.return
-      in
-      let recurse_into_changes =
-        Base.List.map ~f:recurse_into_change %> all %> map ~f:Base.List.concat
-      in
-      recurse_into_changes diffs)
+            List.nth old_list index |> trivial >>| fst >>| Loc.end_loc
+        in
+        Base.List.map ~f:trivial lst
+        |> all
+        >>| Base.List.map ~f:snd (* drop the loc *)
+        >>| (fun x -> Insert { items = x; separator; leading_separator })
+        |> both loc
+        >>| Base.List.return
+      | (_, Delete x) -> trivial x >>| (fun (loc, y) -> (loc, Delete y)) >>| Base.List.return
+    in
+    let recurse_into_changes =
+      Base.List.map ~f:recurse_into_change %> all %> map ~f:Base.List.concat
+    in
+    recurse_into_changes diffs
   in
   (* Runs `list_diff` and then recurses into replacements (using `f`) to get more granular diffs.
      For inserts and deletes, it uses `trivial` to produce a Loc.t and a b for the change *)

@@ -55,6 +55,8 @@ type metadata = {
   react_runtime: Options.react_runtime;
   recursion_limit: int;
   root: Path.t;
+  strict_es6_import_export: bool;
+  strict_es6_import_export_excludes: string list;
   strip_root: bool;
   suppress_types: SSet.t;
   max_workers: int;
@@ -158,7 +160,6 @@ type component_t = {
   mutable spread_widened_types: Type.Object.slice IMap.t;
   mutable optional_chains_useful: (Reason.t * bool) ALocMap.t;
   mutable invariants_useful: (Reason.t * bool) ALocMap.t;
-  mutable openness_graph: Openness.graph;
   constraint_cache: Type.FlowSet.t ref;
   subst_cache: (Type.Poly.id * Type.t list, subst_cache_err list * Type.t) Hashtbl.t;
   instantiation_cache: (Reason.t * Reason.t * Reason.t Nel.t, Type.t) Hashtbl.t;
@@ -169,6 +170,9 @@ type component_t = {
   fix_cache: (Reason.t * Type.t, Type.t) Hashtbl.t;
   spread_cache: Spread_cache.t;
   speculation_state: Speculation_state.t;
+  (* Post-inference checks *)
+  mutable literal_subtypes: (Type.t * Type.use_t) list;
+  mutable matching_props: (Reason.reason * string * Type.t * Type.t) list;
 }
 
 type phase =
@@ -183,8 +187,6 @@ type t = {
   rev_aloc_table: ALoc.reverse_table Lazy.t;
   metadata: metadata;
   module_info: Module_info.t;
-  mutable import_stmts: (ALoc.t, ALoc.t) Flow_ast.Statement.ImportDeclaration.t list;
-  mutable imported_ts: Type.t SMap.t;
   mutable require_map: Type.t ALocMap.t;
   trust_constructor: unit -> Trust.trust_rep;
   mutable declare_module_ref: Module_info.t option;
@@ -227,6 +229,8 @@ let metadata_of_options options =
     react_runtime = Options.react_runtime options;
     recursion_limit = Options.recursion_limit options;
     root = Options.root options;
+    strict_es6_import_export = Options.strict_es6_import_export options;
+    strict_es6_import_export_excludes = Options.strict_es6_import_export_excludes options;
     strip_root = Options.should_strip_root options;
     suppress_types = Options.suppress_types options;
     default_lib_dir = (Options.file_options options).Files.default_lib_dir;
@@ -291,6 +295,8 @@ let make_ccx sig_cx aloc_tables =
     nominal_poly_ids = Type.Poly.Set.empty;
     nominal_prop_ids = ISet.empty;
     type_asserts_map = ALocMap.empty;
+    matching_props = [];
+    literal_subtypes = [];
     errors = Flow_error.ErrorSet.empty;
     error_suppressions = Error_suppressions.empty;
     severity_cover = Utils_js.FilenameMap.empty;
@@ -302,7 +308,6 @@ let make_ccx sig_cx aloc_tables =
     spread_widened_types = IMap.empty;
     optional_chains_useful = ALocMap.empty;
     invariants_useful = ALocMap.empty;
-    openness_graph = Openness.empty_graph;
     constraint_cache = ref Type.FlowSet.empty;
     subst_cache = Hashtbl.create 0;
     instantiation_cache = Hashtbl.create 0;
@@ -325,8 +330,6 @@ let make ccx metadata file rev_aloc_table module_ref phase =
     rev_aloc_table;
     metadata;
     module_info = Module_info.empty_cjs_module module_ref;
-    import_stmts = [];
-    imported_ts = SMap.empty;
     require_map = ALocMap.empty;
     trust_constructor = Trust.literal_trust;
     declare_module_ref = None;
@@ -444,13 +447,7 @@ let mem_nominal_prop_id cx id = ISet.mem id cx.ccx.nominal_prop_ids
 
 let graph cx = graph_sig cx.ccx.sig_cx
 
-let openness_graph cx = cx.ccx.openness_graph
-
 let trust_graph cx = trust_graph_sig cx.ccx.sig_cx
-
-let import_stmts cx = cx.import_stmts
-
-let imported_ts cx = cx.imported_ts
 
 let is_checked cx = cx.metadata.checked
 
@@ -504,7 +501,11 @@ let default_lib_dir cx = cx.metadata.default_lib_dir
 
 let type_asserts_map cx = cx.ccx.type_asserts_map
 
+let literal_subtypes cx = cx.ccx.literal_subtypes
+
 let type_graph cx = cx.ccx.type_graph
+
+let matching_props cx = cx.ccx.matching_props
 
 let trust_mode cx = cx.metadata.trust_mode
 
@@ -562,7 +563,6 @@ let copy_of_context cx =
             graph = cx.ccx.sig_cx.graph;
             trust_graph = cx.ccx.sig_cx.trust_graph;
           };
-        openness_graph = cx.ccx.openness_graph;
       };
   }
 
@@ -580,10 +580,6 @@ let add_severity_cover cx filekey severity_cover =
 let add_lint_suppressions cx suppressions =
   cx.ccx.error_suppressions <-
     Error_suppressions.add_lint_suppressions suppressions cx.ccx.error_suppressions
-
-let add_import_stmt cx stmt = cx.import_stmts <- stmt :: cx.import_stmts
-
-let add_imported_t cx name t = cx.imported_ts <- SMap.add name t cx.imported_ts
 
 let add_require cx loc tvar = cx.require_map <- ALocMap.add loc tvar cx.require_map
 
@@ -610,6 +606,10 @@ let add_nominal_poly_id cx id =
 
 let add_type_assert cx k v = cx.ccx.type_asserts_map <- ALocMap.add k v cx.ccx.type_asserts_map
 
+let add_matching_props cx c = cx.ccx.matching_props <- c :: cx.ccx.matching_props
+
+let add_literal_subtypes cx c = cx.ccx.literal_subtypes <- c :: cx.ccx.literal_subtypes
+
 let add_voidable_check cx voidable_check =
   cx.ccx.voidable_checks <- voidable_check :: cx.ccx.voidable_checks
 
@@ -624,8 +624,6 @@ let set_evaluated cx evaluated = cx.ccx.sig_cx.evaluated <- evaluated
 let set_goals cx goals = cx.ccx.goal_map <- goals
 
 let set_graph cx graph = cx.ccx.sig_cx.graph <- graph
-
-let set_openness_graph cx graph = cx.ccx.openness_graph <- graph
 
 let set_trust_graph cx trust_graph = cx.ccx.sig_cx.trust_graph <- trust_graph
 

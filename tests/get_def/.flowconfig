@@ -1,4 +1,4 @@
 [options]
+types_first=false
 module.system=haste
-esproposal.optional_chaining=enable
 no_flowlib=true

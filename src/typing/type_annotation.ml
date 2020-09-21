@@ -86,7 +86,7 @@ let ident_name (_, { Ast.Identifier.name; comments = _ }) = name
 let error_type cx loc msg t_in =
   Flow.add_output cx msg;
   let t_out = Tast_utils.error_mapper#type_ t_in |> snd in
-  ((loc, AnyT.at AnyError loc), t_out)
+  ((loc, AnyT.at (AnyError None) loc), t_out)
 
 let is_suppress_type cx type_name = SSet.mem type_name (Context.suppress_types cx)
 
@@ -163,7 +163,7 @@ let rec convert cx tparams_map =
   | (loc, (BigInt _ as t_ast)) ->
     let reason = mk_annot_reason RBigInt loc in
     Flow.add_output cx (Error_message.EBigIntNotYetSupported reason);
-    ((loc, AnyT.why AnyError reason), t_ast)
+    ((loc, AnyT.error reason), t_ast)
   | (loc, (String _ as t_ast)) -> ((loc, StrT.at loc |> with_trust_inference cx), t_ast)
   | (loc, (Boolean _ as t_ast)) -> ((loc, BoolT.at loc |> with_trust_inference cx), t_ast)
   | (loc, Nullable { Nullable.argument = t; comments }) ->
@@ -245,7 +245,7 @@ let rec convert cx tparams_map =
   | (loc, (BigIntLiteral { Ast.BigIntLiteral.bigint; _ } as t_ast)) ->
     let reason = mk_annot_reason (RBigIntLit bigint) loc in
     Flow.add_output cx (Error_message.EBigIntNotYetSupported reason);
-    ((loc, AnyT.why AnyError reason), t_ast)
+    ((loc, AnyT.error reason), t_ast)
   | (loc, (BooleanLiteral { Ast.BooleanLiteral.value; _ } as t_ast)) ->
     ((loc, mk_singleton_boolean cx loc value), t_ast)
   (* TODO *)
@@ -263,7 +263,7 @@ let rec convert cx tparams_map =
     let id_reason = mk_reason (RType name) id_loc in
     let qid_reason = mk_reason (RType (qualified_name qid)) qid_loc in
     let t_unapplied =
-      Tvar.mk_where cx qid_reason (fun t ->
+      Tvar.mk_no_wrap_where cx qid_reason (fun t ->
           let use_op = Op (GetProperty qid_reason) in
           Flow.flow cx (m, GetPropT (use_op, qid_reason, Named (id_reason, name), t)))
     in
@@ -586,7 +586,7 @@ let rec convert cx tparams_map =
               let desc = RModule value in
               let reason = mk_annot_reason desc loc in
               let remote_module_t =
-                Tvar.mk_where cx reason (fun tout ->
+                Tvar.mk_no_wrap_where cx reason (fun tout ->
                     Flow_js.lookup_builtin
                       cx
                       (internal_module_name value)
@@ -1028,7 +1028,13 @@ let rec convert cx tparams_map =
                 def_reason = reason;
               } ) )
     in
-    let t = poly_type_of_tparams (Context.make_source_poly_id cx loc) tparams ft in
+    let t =
+      match tparams with
+      | None -> ft
+      | Some (tparams_loc, tparams_nel) ->
+        let id = Context.make_source_poly_id cx tparams_loc in
+        poly_type id tparams_loc tparams_nel ft
+    in
     ( (loc, t),
       Function
         {
@@ -1137,7 +1143,7 @@ and convert_qualification ?(lookup_mode = ForType) cx reason_prefix =
     let reason = mk_reason desc loc in
     let id_reason = mk_reason desc id_loc in
     let t =
-      Tvar.mk_where cx reason (fun t ->
+      Tvar.mk_no_wrap_where cx reason (fun t ->
           let use_op = Op (GetProperty (mk_reason (RType (qualified_name qualified)) loc)) in
           Flow.flow cx (m, GetPropT (use_op, id_reason, Named (id_reason, name), t)))
     in
@@ -1829,9 +1835,9 @@ and add_interface_properties cx tparams_map properties s =
                       | { Func_type_sig.tparams = None; fparams; _ } ->
                         (match Func_type_params.value fparams with
                         | [(_, t)] -> t
-                        | _ -> AnyT.at AnyError id_loc)
+                        | _ -> AnyT.at (AnyError None) id_loc)
                       (* error case: report any ok *)
-                      | _ -> AnyT.at AnyError id_loc
+                      | _ -> AnyT.at (AnyError None) id_loc
                       (* error case: report any ok *)
                     in
                     ( add_setter ~static name id_loc fsig x,

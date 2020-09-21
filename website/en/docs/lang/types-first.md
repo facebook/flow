@@ -79,6 +79,11 @@ declare function foo<T>(x: T): T;
 module.exports = (foo(1): number);
 ```
 
+> Note: As of version 0.134, types-first is the default mode. This mode automatically
+enables `well_formed_exports`, so you would see these errors without explicitly
+setting this flag. It is advisable to set `types_first=false` during this part of
+the upgrade.
+
 #### Seal your intermediate results <a class="toc" id="toc-seal-your-intermediate-results" href="#toc-seal-your-intermediate-results"></a>
 
 As you make progress adding types to your codebase, you can include directories
@@ -127,6 +132,9 @@ experimental.well_formed_exports=true
 experimental.well_formed_exports.whitelist=<PROJECT_ROOT>/path/to/directory
 experimental.types_first=true
 ```
+
+> Note: If you are using a version where types-first is enabled by default (ie. `>=0.134`),
+make sure you set `types_first=false` in your .flowconfig while running the codemods.
 
 
 ### Deal with newly introduced errors <a class="toc" id="toc-deal-with-newly-introduced-errors" href="#toc-deal-with-newly-introduced-errors"></a>

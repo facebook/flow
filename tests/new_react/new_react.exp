@@ -230,13 +230,13 @@ References:
                   ^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------- classes.js:64:11
+Error -------------------------------------------------------------------------------------------------- classes.js:64:3
 
 Property `y_` is missing in function type [1] but exists in object type [2]. [prop-missing]
 
-   classes.js:64:11
+   classes.js:64:3
    64|   setState(o: { y_: string }): void { },
-                 ^^^^^^^^^^^^^^^^^^^^^^^^^
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
    <BUILTINS>/react.js:35:37
@@ -247,13 +247,13 @@ References:
                      ^^^^^^^^^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------- classes.js:64:11
+Error -------------------------------------------------------------------------------------------------- classes.js:64:3
 
 Property `y_` is missing in object type [1] but exists in object type [2]. [prop-missing]
 
-   classes.js:64:11
+   classes.js:64:3
    64|   setState(o: { y_: string }): void { },
-                 ^^^^^^^^^^^^^^^^^^^^^^^^^
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
    classes.js:60:22

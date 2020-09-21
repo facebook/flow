@@ -1,0 +1,14 @@
+
+Start server in classic mode
+
+Value dep-graph should include both edges
+digraph {
+  "fileB.js" -> "fileA.js"
+  "fileA.js" -> "fileB.js"
+}
+
+Type dep-graph should include both edges
+digraph {
+  "fileB.js" -> "fileA.js"
+  "fileA.js" -> "fileB.js"
+}

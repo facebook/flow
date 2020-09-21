@@ -62,6 +62,7 @@ and 'loc t' =
       min_arity: int;
       max_arity: int;
     }
+  | EAnyValueUsedAsType of { reason_use: 'loc virtual_reason }
   | EValueUsedAsType of { reason_use: 'loc virtual_reason }
   | EExpectedStringLit of {
       reason_lower: 'loc virtual_reason;
@@ -222,7 +223,6 @@ and 'loc t' =
   | EBinaryInLHS of 'loc virtual_reason
   | EBinaryInRHS of 'loc virtual_reason
   | EArithmeticOperand of 'loc virtual_reason
-  | ENullVoidAddition of 'loc virtual_reason (* TODO: yeet this *)
   | EForInRHS of 'loc virtual_reason
   | EObjectComputedPropertyAccess of ('loc virtual_reason * 'loc virtual_reason)
   | EObjectComputedPropertyAssign of ('loc virtual_reason * 'loc virtual_reason)
@@ -714,6 +714,7 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
         min_arity;
         max_arity;
       }
+  | EAnyValueUsedAsType { reason_use } -> EAnyValueUsedAsType { reason_use = map_reason reason_use }
   | EValueUsedAsType { reason_use } -> EValueUsedAsType { reason_use = map_reason reason_use }
   | EPolarityMismatch { reason; name; expected_polarity; actual_polarity } ->
     EPolarityMismatch { reason = map_reason reason; name; expected_polarity; actual_polarity }
@@ -781,7 +782,6 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
   | EBinaryInLHS r -> EBinaryInLHS (map_reason r)
   | EBinaryInRHS r -> EBinaryInRHS (map_reason r)
   | EArithmeticOperand r -> EArithmeticOperand (map_reason r)
-  | ENullVoidAddition r -> ENullVoidAddition (map_reason r)
   | EForInRHS r -> EForInRHS (map_reason r)
   | EObjectComputedPropertyAccess (r1, r2) ->
     EObjectComputedPropertyAccess (map_reason r1, map_reason r2)
@@ -818,7 +818,7 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
   | EUnexpectedTemporaryBaseType loc -> EUnexpectedTemporaryBaseType (f loc)
   | ECannotDelete (l1, r1) -> ECannotDelete (f l1, map_reason r1)
   | EBigIntNotYetSupported r -> EBigIntNotYetSupported (map_reason r)
-  | ESignatureVerification sve -> ESignatureVerification (Signature_error.map_locs ~f sve)
+  | ESignatureVerification sve -> ESignatureVerification (Signature_error.map f sve)
   | ECannotSpreadInterface { spread_reason; interface_reason; use_op } ->
     ECannotSpreadInterface
       {
@@ -1024,6 +1024,7 @@ let util_use_op_of_msg nope util = function
   | EOnlyDefaultExport (_, _, _)
   | ENoNamedExport (_, _, _, _)
   | EMissingTypeArgs { reason_tapp = _; reason_arity = _; min_arity = _; max_arity = _ }
+  | EAnyValueUsedAsType _
   | EValueUsedAsType _
   | EPolarityMismatch { reason = _; name = _; expected_polarity = _; actual_polarity = _ }
   | EBuiltinLookupFailed _
@@ -1081,7 +1082,6 @@ let util_use_op_of_msg nope util = function
   | EBinaryInLHS _
   | EBinaryInRHS _
   | EArithmeticOperand _
-  | ENullVoidAddition _
   | EForInRHS _
   | EObjectComputedPropertyAccess (_, _)
   | EObjectComputedPropertyAssign (_, _)
@@ -1135,6 +1135,7 @@ let util_use_op_of_msg nope util = function
 (* Not all messages (i.e. those whose locations are based on use_ops) have locations that can be
   determined while locations are abstract. We just return None in this case. *)
 let loc_of_msg : 'loc t' -> 'loc option = function
+  | EAnyValueUsedAsType { reason_use = primary }
   | EValueUsedAsType { reason_use = primary }
   | EComparison (primary, _)
   | ENonStrictEqualityComparison (primary, _)
@@ -1154,7 +1155,6 @@ let loc_of_msg : 'loc t' -> 'loc option = function
   | EBinaryInRHS reason
   | EBinaryInLHS reason
   | EArithmeticOperand reason
-  | ENullVoidAddition reason
   | ERecursionLimit (reason, _)
   | EMissingAnnotation (reason, _)
   | EIdxArity reason
@@ -1282,9 +1282,7 @@ let loc_of_msg : 'loc t' -> 'loc option = function
       (match sve with
       | ExpectedSort (_, _, loc)
       | ExpectedAnnotation (loc, _)
-      | InvalidTypeParamUse loc
       | UnexpectedObjectKey (loc, _)
-      | UnexpectedObjectSpread (loc, _)
       | UnexpectedArraySpread (loc, _)
       | UnexpectedArrayHole loc
       | EmptyArray loc
@@ -1357,7 +1355,6 @@ let kind_of_msg =
     | EImplicitInexactObject _ -> LintError Lints.ImplicitInexactObject
     | EAmbiguousObjectType _ -> LintError Lints.AmbiguousObjectType
     | EUninitializedInstanceProperty _ -> LintError Lints.UninitializedInstanceProperty
-    | ENullVoidAddition _ -> LintError Lints.NullVoidAddition
     | EBadDefaultImportAccess _ -> LintError Lints.DefaultImportAccess
     | EBadDefaultImportDestructuring _ -> LintError Lints.DefaultImportAccess
     | EInvalidImportStarUse _ -> LintError Lints.InvalidImportStarUse
@@ -1756,6 +1753,22 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
         ]
       in
       Normal { features }
+  | EAnyValueUsedAsType { reason_use } ->
+    let features =
+      [
+        text "Cannot use ";
+        desc reason_use;
+        text " as a type because it is an ";
+        code "any";
+        text "-typed value. ";
+        text "Type ";
+        desc reason_use;
+        text " properly, so it is no longer ";
+        code "any";
+        text "-typed, to use it as an annotation.";
+      ]
+    in
+    Normal { features }
   | EValueUsedAsType { reason_use } ->
     let features =
       [
@@ -2520,9 +2533,7 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
           [code x; text (spf " is not a %s." (Signature_builder_kind.Sort.to_string sort))]
         | ExpectedAnnotation (_, sort) ->
           [text (spf "Missing type annotation at %s:" (Expected_annotation_sort.to_string sort))]
-        | InvalidTypeParamUse _ -> [text "Invalid use of type parameter:"]
         | UnexpectedObjectKey _ -> [text "Expected simple key in object:"]
-        | UnexpectedObjectSpread _ -> [text "Unexpected spread in object:"]
         | UnexpectedArraySpread _ -> [text "Unexpected spread in array:"]
         | UnexpectedArrayHole _ -> [text "Unexpected array hole:"]
         | EmptyArray _ ->
@@ -2571,8 +2582,7 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
       ]
     in
     Normal { features }
-  | EArithmeticOperand reason
-  | ENullVoidAddition reason ->
+  | EArithmeticOperand reason ->
     let features =
       [
         text "Cannot perform arithmetic operation because ";
@@ -3324,7 +3334,6 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
 
 let is_lint_error = function
   | EUntypedTypeImport _
-  | ENullVoidAddition _
   | EUntypedImport _
   | ENonstrictImport _
   | EUnclearType _
@@ -3567,10 +3576,11 @@ let error_code_of_message err : error_code option =
   | EUnusedSuppression _ ->
     None
   | EUseArrayLiteral _ -> Some IllegalNewArray
-  | EValueUsedAsType _ -> Some ValueAsType
+  | EAnyValueUsedAsType _
+  | EValueUsedAsType _ ->
+    Some ValueAsType
   (* lints should match their lint name *)
   | EUntypedTypeImport _
-  | ENullVoidAddition _
   | EUntypedImport _
   | ENonstrictImport _
   | EUnclearType _

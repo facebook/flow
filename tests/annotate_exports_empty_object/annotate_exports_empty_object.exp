@@ -59,10 +59,10 @@ module.exports = obj;
 
 Stats:
   Files changed:                            7
-  Number of sig. ver. errors:               7
-  Number of annotations required:           7
   Number of annotations added:              7
   Total size of annotations:               16
+  Number of sig. ver. errors:               7
+  Number of annotations required:           7
   Number of annotations skipped:            0
 
 Errors:
@@ -73,7 +73,6 @@ Errors:
     Parsing heaps get ast error:            0
     Indeterminate module type:              0
     No matching export:                     0
-    Unrecognizable module error:            0
   Serializer error:                         0
   Unsupported error kind:                   0
 

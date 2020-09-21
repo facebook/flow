@@ -955,9 +955,13 @@ end = struct
 
     and any_t = function
       | T.Annotated -> Ty.Annotated
-      | T.AnyError -> Ty.AnyError
+      | T.AnyError kind -> Ty.AnyError (any_error_kind kind)
       | T.Unsound k -> Ty.Unsound (unsoundness_any_t k)
       | T.Untyped -> Ty.Untyped
+
+    and any_error_kind = function
+      | Some T.UnresolvedName -> Some Ty.UnresolvedName
+      | None -> None
 
     and unsoundness_any_t = function
       | T.BoundFunctionThis -> Ty.BoundFunctionThis

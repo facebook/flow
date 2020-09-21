@@ -22,7 +22,7 @@
 type t =
   | String of string
   | Filename of File_key.t
-[@@deriving ord]
+[@@deriving show, ord]
 
 let to_string = function
   | String m -> m

@@ -28,6 +28,11 @@ type unparsed_file_data = {
   unparsed_hash: Xx.hash;
 }
 
+type saved_state_dependency_graph =
+  | Classic_dep_graph of Utils_js.FilenameSet.t Utils_js.FilenameMap.t
+  | Types_first_dep_graph of
+      (Utils_js.FilenameSet.t * Utils_js.FilenameSet.t) Utils_js.FilenameMap.t
+
 (* This is the complete saved state data representation *)
 type saved_state_data = {
   (* The version header should guarantee that a saved state is used by the same version of Flow.
@@ -48,14 +53,43 @@ type saved_state_data = {
    *)
   local_errors: Flow_error.ErrorSet.t Utils_js.FilenameMap.t;
   warnings: Flow_error.ErrorSet.t Utils_js.FilenameMap.t;
-  coverage: Coverage_response.file_coverage Utils_js.FilenameMap.t;
   node_modules_containers: SSet.t SMap.t;
-  dependency_info: Dependency_info.t;
+  dependency_graph: saved_state_dependency_graph;
 }
 
 let modulename_map_fn ~f = function
   | Modulename.Filename fn -> Modulename.Filename (f fn)
   | Modulename.String _ as module_name -> module_name
+
+let update_dependency_graph_filenames f graph =
+  let update_set set =
+    FilenameSet.fold (fun elt new_set -> FilenameSet.add (f elt) new_set) set FilenameSet.empty
+  in
+  let update_map update_value map =
+    FilenameMap.fold
+      (fun key value new_map ->
+        let key = f key in
+        let value = update_value value in
+        FilenameMap.update
+          key
+          (function
+            | None -> Some value
+            | Some _ -> invalid_arg "Duplicate keys created by mapper function")
+          new_map)
+      map
+      FilenameMap.empty
+  in
+  match graph with
+  | Classic_dep_graph map ->
+    let update_value = update_set in
+    Classic_dep_graph (update_map update_value map)
+  | Types_first_dep_graph map ->
+    let update_value (sig_deps, impl_deps) =
+      let sig_deps = update_set sig_deps in
+      let impl_deps = update_set impl_deps in
+      (sig_deps, impl_deps)
+    in
+    Types_first_dep_graph (update_map update_value map)
 
 (* Saving the saved state generally consists of 3 things:
  *
@@ -111,8 +145,8 @@ end = struct
       with_cache file_key_cache file_key (File_key.map (normalize_path normalizer))
   end
 
-  let normalize_dependency_info ~normalizer =
-    Dependency_info.map_filenames (FileNormalizer.normalize_file_key normalizer)
+  let normalize_dependency_graph ~normalizer =
+    update_dependency_graph_filenames (FileNormalizer.normalize_file_key normalizer)
 
   (* A Flow_error.t is a complicated data structure with Loc.t's hidden everywhere. *)
   let normalize_error ~normalizer =
@@ -271,7 +305,34 @@ end = struct
         !Files.node_modules_containers
         SMap.empty
     in
-    let dependency_info = normalize_dependency_info ~normalizer env.ServerEnv.dependency_info in
+    let dependency_graph =
+      let dependency_info = env.ServerEnv.dependency_info in
+      let impl_map =
+        dependency_info |> Dependency_info.implementation_dependency_graph |> FilenameGraph.to_map
+      in
+      let dependency_graph =
+        if Dependency_info.is_types_first dependency_info then begin
+          let sig_map =
+            dependency_info |> Dependency_info.sig_dependency_graph |> FilenameGraph.to_map
+          in
+          (* The maps should have the same entries. Enforce this by asserting that they have the
+           * same size, and then by using `FilenameMap.find` below to ensure that each `impl_map`
+           * entry has a corresponding `sig_map` entry. *)
+          assert (FilenameMap.cardinal sig_map = FilenameMap.cardinal impl_map);
+          let combined_map =
+            FilenameMap.mapi
+              (fun file impl_deps ->
+                let sig_deps = FilenameMap.find file sig_map in
+                (sig_deps, impl_deps))
+              impl_map
+          in
+          Types_first_dep_graph combined_map
+        end else
+          Classic_dep_graph impl_map
+      in
+
+      normalize_dependency_graph ~normalizer dependency_graph
+    in
     let flowconfig_hash =
       FlowConfig.get_hash
       @@ Server_files_js.config_file (Options.flowconfig_name options)
@@ -285,9 +346,8 @@ end = struct
         ordered_non_flowlib_libs;
         local_errors;
         warnings;
-        coverage = env.ServerEnv.coverage;
         node_modules_containers;
-        dependency_info;
+        dependency_graph;
       }
 
   let save ~saved_state_filename ~genv ~env ~profiling =
@@ -367,7 +427,8 @@ module Load : sig
 end = struct
   let denormalize_file_key ~root fn = File_key.map (Files.absolute_path root) fn
 
-  let denormalize_dependency_info ~root = Dependency_info.map_filenames (denormalize_file_key ~root)
+  let denormalize_dependency_graph ~root =
+    update_dependency_graph_filenames (denormalize_file_key ~root)
 
   let denormalize_error ~root =
     Flow_error.map_loc_of_error
@@ -471,9 +532,8 @@ end = struct
       ordered_non_flowlib_libs;
       local_errors;
       warnings;
-      coverage;
       node_modules_containers;
-      dependency_info;
+      dependency_graph;
     } =
       data
     in
@@ -521,7 +581,7 @@ end = struct
         node_modules_containers
         SMap.empty
     in
-    let dependency_info = denormalize_dependency_info ~root dependency_info in
+    let dependency_graph = denormalize_dependency_graph ~root dependency_graph in
     Lwt.return
       {
         flowconfig_hash;
@@ -530,9 +590,8 @@ end = struct
         ordered_non_flowlib_libs;
         local_errors;
         warnings;
-        coverage;
         node_modules_containers;
-        dependency_info;
+        dependency_graph;
       }
 
   let load ~workers ~saved_state_filename ~options ~profiling =

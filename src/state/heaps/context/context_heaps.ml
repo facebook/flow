@@ -164,7 +164,7 @@ end = struct
       Base.List.map
         ~f:(fun f ->
           let module_ref = Files.module_ref f in
-          let module_t = Type.AnyT.locationless Type.AnyError in
+          let module_t = Type.AnyT.locationless (Type.AnyError None) in
           Context.add_module cx module_ref module_t;
 
           (* Ideally we'd assert that f is a member of the oldified files too *)

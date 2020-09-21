@@ -24,6 +24,11 @@ type unparsed_file_data = {
   unparsed_hash: Xx.hash;
 }
 
+type saved_state_dependency_graph =
+  | Classic_dep_graph of Utils_js.FilenameSet.t Utils_js.FilenameMap.t
+  | Types_first_dep_graph of
+      (Utils_js.FilenameSet.t * Utils_js.FilenameSet.t) Utils_js.FilenameMap.t
+
 type saved_state_data = {
   flowconfig_hash: Xx.hash;
   parsed_heaps: parsed_file_data Utils_js.FilenameMap.t;
@@ -31,9 +36,8 @@ type saved_state_data = {
   ordered_non_flowlib_libs: string list;
   local_errors: Flow_error.ErrorSet.t Utils_js.FilenameMap.t;
   warnings: Flow_error.ErrorSet.t Utils_js.FilenameMap.t;
-  coverage: Coverage_response.file_coverage Utils_js.FilenameMap.t;
   node_modules_containers: SSet.t SMap.t;
-  dependency_info: Dependency_info.t;
+  dependency_graph: saved_state_dependency_graph;
 }
 
 type invalid_reason =

@@ -548,17 +548,11 @@ let file_options =
       FlowExitStatus.(exit ~msg Could_not_find_flowconfig)
   in
   let ignores_of_arg root patterns extras =
+    let expand_project_root_token = Files.expand_project_root_token ~root in
     let patterns = Base.List.rev_append extras patterns in
     Base.List.map
       ~f:(fun s ->
-        let root = Path.to_string root |> Sys_utils.normalize_filename_dir_sep in
-        let reg =
-          s
-          |> remove_exclusion
-          |> Str.split_delim Files.project_root_token
-          |> String.concat root
-          |> Str.regexp
-        in
+        let reg = s |> remove_exclusion |> expand_project_root_token |> Str.regexp in
         (s, reg))
       patterns
   in
@@ -812,7 +806,7 @@ module Options_flags = struct
     temp_dir: string option;
     traces: int option;
     trust_mode: Options.trust_mode option;
-    types_first: bool;
+    new_signatures: bool;
     abstract_locations: bool;
     verbose: Verbose.t option;
     wait_for_recheck: bool option;
@@ -864,7 +858,7 @@ let options_flags =
       saved_state_fetcher
       saved_state_force_recheck
       saved_state_no_fallback
-      types_first
+      new_signatures
       abstract_locations
       include_suppressions
       trust_mode =
@@ -896,7 +890,7 @@ let options_flags =
         saved_state_force_recheck;
         saved_state_no_fallback;
         trust_mode;
-        types_first;
+        new_signatures;
         abstract_locations;
         include_suppressions;
       }
@@ -959,7 +953,7 @@ let options_flags =
            no_arg
            ~doc:
              "If saved state fails to load, exit (normally fallback is to initialize from scratch)"
-      |> flag "--types-first" no_arg ~doc:"[EXPERIMENTAL] types-first architecture"
+      |> flag "--new-signatures" no_arg ~doc:""
       |> flag
            "--abstract-locations"
            no_arg
@@ -997,6 +991,8 @@ let base_flags =
 
 let default_file_watcher_timeout = 120
 
+let default_file_watcher_mergebase_with = "master"
+
 let file_watcher_flag prev =
   let open CommandSpec.ArgSpec in
   prev
@@ -1004,7 +1000,9 @@ let file_watcher_flag prev =
        "--file-watcher"
        (enum
           [
-            ("none", Options.NoFileWatcher); ("dfind", Options.DFind); ("watchman", Options.Watchman);
+            ("none", FlowConfig.NoFileWatcher);
+            ("dfind", FlowConfig.DFind);
+            ("watchman", FlowConfig.Watchman);
           ])
        ~doc:
          ( "Which file watcher Flow should use (none, dfind, watchman). "
@@ -1021,6 +1019,13 @@ let file_watcher_flag prev =
          (Printf.sprintf
             "Maximum time to wait for the file watcher to initialize, in seconds. 0 means no timeout (default: %d)"
             default_file_watcher_timeout)
+  |> flag
+       "--file-watcher-mergebase-with"
+       string
+       ~doc:
+         (Printf.sprintf
+            "Symbolic commit against which to compute the mergebase used to find changed files. (default: %s)"
+            default_file_watcher_mergebase_with)
   |> flag
        "--file-watcher-sync-timeout"
        uint
@@ -1163,13 +1168,14 @@ let make_options ~flowconfig_name ~flowconfig ~lazy_mode ~root flags =
     Base.Option.value lazy_mode ~default
   in
   let opt_arch =
-    if flags.types_first || FlowConfig.types_first flowconfig then
-      Options.TypesFirst
+    if flags.new_signatures || FlowConfig.types_first flowconfig then
+      let new_signatures = flags.new_signatures || FlowConfig.new_signatures flowconfig in
+      Options.TypesFirst { new_signatures }
     else
       Options.Classic
   in
   let opt_enforce_well_formed_exports =
-    if flags.types_first then
+    if flags.new_signatures || FlowConfig.types_first flowconfig then
       Some []
     else if FlowConfig.enforce_well_formed_exports flowconfig then
       let paths =
@@ -1229,7 +1235,6 @@ let make_options ~flowconfig_name ~flowconfig ~lazy_mode ~root flags =
     opt_ignore_non_literal_requires = FlowConfig.ignore_non_literal_requires flowconfig;
     opt_include_warnings =
       flags.include_warnings || flags.max_warnings <> None || FlowConfig.include_warnings flowconfig;
-    opt_jsdoc = FlowConfig.jsdoc flowconfig;
     opt_esproposal_class_static_fields = FlowConfig.esproposal_class_static_fields flowconfig;
     opt_esproposal_class_instance_fields = FlowConfig.esproposal_class_instance_fields flowconfig;
     opt_esproposal_optional_chaining = FlowConfig.esproposal_optional_chaining flowconfig;
@@ -1625,34 +1630,53 @@ let get_check_or_status_exit_code errors warnings max_warnings =
       else
         Type_error))
 
-let choose_file_watcher ~options ~file_watcher ~flowconfig =
-  match (Options.lazy_mode options, file_watcher) with
-  | (Options.LAZY_MODE_WATCHMAN, (None | Some Options.Watchman)) ->
-    (* --lazy-mode watchman implies --file-watcher watchman *)
-    Options.Watchman
-  | (Options.LAZY_MODE_WATCHMAN, Some _) ->
-    (* Error on something like --lazy-mode watchman --file-watcher dfind *)
-    let msg =
-      "Using Watchman lazy mode implicitly uses the Watchman file watcher, "
-      ^ "but you tried to use a different file watcher via the `--file-watcher` flag."
+let choose_file_watcher
+    ~options ~flowconfig ~file_watcher ~file_watcher_debug ~mergebase_with ~sync_timeout =
+  let file_watcher =
+    match (Options.lazy_mode options, file_watcher) with
+    | (Options.LAZY_MODE_WATCHMAN, (None | Some FlowConfig.Watchman)) ->
+      (* --lazy-mode watchman implies --file-watcher watchman *)
+      FlowConfig.Watchman
+    | (Options.LAZY_MODE_WATCHMAN, Some _) ->
+      (* Error on something like --lazy-mode watchman --file-watcher dfind *)
+      let msg =
+        "Using Watchman lazy mode implicitly uses the Watchman file watcher, "
+        ^ "but you tried to use a different file watcher via the `--file-watcher` flag."
+      in
+      raise (CommandSpec.Failed_to_parse ("--file-watcher", msg))
+    | (_, Some file_watcher) -> file_watcher
+    | (_, None) -> Base.Option.value ~default:FlowConfig.DFind (FlowConfig.file_watcher flowconfig)
+  in
+  match file_watcher with
+  | FlowConfig.NoFileWatcher -> FlowServerMonitorOptions.NoFileWatcher
+  | FlowConfig.DFind -> FlowServerMonitorOptions.DFind
+  | FlowConfig.Watchman ->
+    let sync_timeout =
+      match sync_timeout with
+      | Some x -> Some x
+      | None -> FlowConfig.watchman_sync_timeout flowconfig
     in
-    raise (CommandSpec.Failed_to_parse ("--file-watcher", msg))
-  | (_, Some file_watcher) -> file_watcher
-  | (_, None) -> Base.Option.value ~default:Options.DFind (FlowConfig.file_watcher flowconfig)
+    let defer_states = FlowConfig.watchman_defer_states flowconfig in
+    let mergebase_with =
+      match
+        Base.Option.first_some mergebase_with (FlowConfig.watchman_mergebase_with flowconfig)
+      with
+      | Some x -> x
+      | None -> default_file_watcher_mergebase_with
+    in
+    FlowServerMonitorOptions.Watchman
+      {
+        FlowServerMonitorOptions.debug = file_watcher_debug;
+        defer_states;
+        mergebase_with;
+        sync_timeout;
+      }
 
 let choose_file_watcher_timeout ~flowconfig cli_timeout =
   match Base.Option.first_some cli_timeout (FlowConfig.file_watcher_timeout flowconfig) with
   | Some 0 -> None
   | Some x -> Some (float x)
   | None -> Some (float default_file_watcher_timeout)
-
-let choose_file_watcher_sync_timeout ~flowconfig file_watcher cli_timeout =
-  match cli_timeout with
-  | Some x -> Some x
-  | None ->
-    (match file_watcher with
-    | Options.Watchman -> FlowConfig.watchman_sync_timeout flowconfig
-    | _ -> None)
 
 (* Reads the file from disk to compute the offset. This can lead to strange results -- if the file
  * has changed since the location was constructed, the offset could be incorrect. If the file has

@@ -47,6 +47,7 @@ let main
     file_watcher
     file_watcher_debug
     file_watcher_timeout
+    file_watcher_mergebase_with
     file_watcher_sync_timeout
     path_opt
     () =
@@ -81,11 +82,16 @@ let main
       CommandUtils.monitor_log_file ~flowconfig_name ~tmp_dir:(Options.temp_dir options) root
       |> Path.to_string
   in
-  let file_watcher = choose_file_watcher ~options ~file_watcher ~flowconfig in
-  let file_watcher_timeout = choose_file_watcher_timeout ~flowconfig file_watcher_timeout in
-  let file_watcher_sync_timeout =
-    choose_file_watcher_sync_timeout ~flowconfig file_watcher file_watcher_sync_timeout
+  let file_watcher =
+    choose_file_watcher
+      ~options
+      ~flowconfig
+      ~file_watcher
+      ~file_watcher_debug
+      ~mergebase_with:file_watcher_mergebase_with
+      ~sync_timeout:file_watcher_sync_timeout
   in
+  let file_watcher_timeout = choose_file_watcher_timeout ~flowconfig file_watcher_timeout in
   let monitor_options =
     {
       FlowServerMonitorOptions.log_file = monitor_log_file;
@@ -96,9 +102,7 @@ let main
       shared_mem_config;
       argv = Sys.argv;
       file_watcher;
-      file_watcher_debug;
       file_watcher_timeout;
-      file_watcher_sync_timeout;
     }
   in
   FlowServerMonitor.start monitor_options

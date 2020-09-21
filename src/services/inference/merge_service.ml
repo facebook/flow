@@ -159,13 +159,9 @@ let merge_context_generic ~options ~reader ~get_ast_unsafe ~get_file_sig_unsafe 
   in
   match (Options.arch options, phase) with
   | (_, Context.Normalizing) -> failwith "unexpected phase: Normalizing"
-  | (Options.TypesFirst, Context.Merging) -> MergeResult { cx = full_cx; master_cx }
-  | (Options.TypesFirst, Context.Checking)
+  | (Options.TypesFirst _, Context.Merging) -> MergeResult { cx = full_cx; master_cx }
+  | (Options.TypesFirst _, Context.Checking)
   | (Options.Classic, _) ->
-    Inference_utils.iter_strict_es6_import_export
-      ~f:(Strict_es6_import_export.detect_errors full_cx)
-      options
-      cx_nel;
     let coverage =
       Nel.fold_left
         (fun acc (ctx, _, typed_ast) ->
@@ -186,38 +182,193 @@ let merge_context_generic ~options ~reader ~get_ast_unsafe ~get_file_sig_unsafe 
     let other_cxs = Base.List.map ~f:(fun (cx, _, _) -> cx) other_cxs in
     CheckResult { cx = full_cx; other_cxs; master_cx; file_sigs; typed_asts; coverage }
 
+let merge_context_new_signatures ~options ~reader component =
+  let module Pack = Type_sig_pack in
+  let module Merge = Type_sig_merge in
+  let module Component = Merge.Component in
+  (* make sig context, shared by all file contexts in component *)
+  let sig_cx = Context.make_sig () in
+  let aloc_tables =
+    Nel.fold_left
+      (fun tables (file : File_key.t) ->
+        let table =
+          lazy (Parsing_heaps.Reader_dispatcher.get_sig_ast_aloc_table_unsafe ~reader file)
+        in
+        FilenameMap.add file table tables)
+      FilenameMap.empty
+      component
+  in
+  let ccx = Context.make_ccx sig_cx aloc_tables in
+
+  (* create per-file contexts *)
+  let metadata = Context.metadata_of_options options in
+  let create_cx file =
+    let docblock = Parsing_heaps.Reader_dispatcher.get_docblock_unsafe ~reader file in
+    let metadata = Context.docblock_overrides docblock metadata in
+    let rev_table =
+      let table = FilenameMap.find file aloc_tables in
+      lazy
+        (try Lazy.force table |> ALoc.reverse_table
+         with
+         (* If we aren't in abstract locations mode, or are in a libdef, we
+            won't have an aloc table, so we just create an empty reverse
+            table. We handle this exception here rather than explicitly
+            making an optional version of the get_aloc_table function for
+            simplicity. *)
+         | Parsing_heaps_exceptions.Sig_ast_ALoc_table_not_found _ ->
+           ALoc.make_empty_reverse_table ())
+    in
+    let module_ref = Files.module_ref file in
+    Context.make ccx metadata file rev_table module_ref Context.Merging
+  in
+
+  (* build a reverse lookup, used to detect in-cycle dependencies *)
+  let component_map = ref FilenameMap.empty in
+  let component =
+    Component.make component (fun i file ->
+        component_map := FilenameMap.add file i !component_map;
+        file)
+  in
+  let component_map = !component_map in
+
+  (* dependencies *)
+  let get_leader =
+    let cache = Hashtbl.create 0 in
+    fun file ->
+      match Hashtbl.find_opt cache file with
+      | Some leader -> leader
+      | None ->
+        let leader = Context_heaps.Reader_dispatcher.find_leader ~reader file in
+        Hashtbl.add cache file leader;
+        leader
+  in
+  let get_dep_cx =
+    let cache = Hashtbl.create 0 in
+    fun file ->
+      let leader = get_leader file in
+      match Hashtbl.find_opt cache leader with
+      | Some dep_sig -> dep_sig
+      | None ->
+        let dep_sig = Context_heaps.Reader_dispatcher.find_sig ~reader leader in
+        Context.merge_into sig_cx dep_sig;
+        Hashtbl.add cache leader dep_sig;
+        dep_sig
+  in
+  let find_dependency file mref =
+    let open Module_heaps in
+    let mname = Module_js.find_resolved_module ~reader ~audit:Expensive.ok file mref in
+    let file = Reader_dispatcher.get_file ~reader ~audit:Expensive.ok mname in
+    match file with
+    | None -> Merge.BuiltinDep (mref, Modulename.to_string mname)
+    | Some (File_key.ResourceFile fn) -> Merge.ResourceDep fn
+    | Some dep ->
+      let info = Reader_dispatcher.get_info_unsafe ~reader ~audit:Expensive.ok dep in
+      if info.checked && info.parsed then
+        match FilenameMap.find_opt dep component_map with
+        | Some i -> Merge.CyclicDep i
+        | None ->
+          let dep_cx = get_dep_cx dep in
+          let dep_exports = Context.find_module_sig dep_cx (Files.module_ref dep) in
+          Merge.AcyclicDep dep_exports
+      else
+        Merge.LegacyUncheckedDepTryBuiltinsFirst (mref, Modulename.to_string mname)
+  in
+
+  (* read type_sig from heap and create file record for merge *)
+  let abstract_locations = Options.abstract_locations options in
+  let component_file file =
+    let open Type_sig_collections in
+    let aloc_table = FilenameMap.find file aloc_tables in
+    let aloc =
+      let source = Some file in
+      fun (loc : Locs.index) ->
+        let aloc = ALoc.ALocRepresentationDoNotUse.make_keyed source (loc :> int) in
+        if abstract_locations then
+          aloc
+        else
+          ALoc.of_loc (ALoc.to_loc aloc_table aloc)
+    in
+    let (exports, export_def, module_refs, local_defs, remote_refs, pattern_defs, patterns) =
+      Parsing_heaps.Reader_dispatcher.get_type_sig_unsafe ~reader file
+    in
+    let dependencies =
+      Module_refs.map (fun mref -> (mref, find_dependency file mref)) module_refs
+    in
+    let exports = Merge.create_node (Pack.map_exports aloc exports) in
+    let export_def = Base.Option.map ~f:(Pack.map_packed aloc) export_def in
+    let local_defs =
+      Local_defs.map (fun def -> Merge.create_node (Pack.map_packed_def aloc def)) local_defs
+    in
+    let remote_refs =
+      Remote_refs.map (fun ref -> Merge.create_node (Pack.map_remote_ref aloc ref)) remote_refs
+    in
+    let pattern_defs = Pattern_defs.map (Pack.map_packed aloc) pattern_defs in
+    let patterns = Patterns.map (fun p -> Merge.create_node (Pack.map_pattern aloc p)) patterns in
+    {
+      Merge.key = file;
+      cx = create_cx file;
+      dependencies;
+      exports;
+      export_def;
+      local_defs;
+      remote_refs;
+      pattern_defs;
+      patterns;
+    }
+  in
+
+  (* create component for merge, pick out leader/representative cx *)
+  let component = Component.map component_file component in
+  let { Merge.cx; _ } = Component.leader component in
+
+  (* create builtins, merge master cx *)
+  let master_cx = Context_heaps.Reader_dispatcher.find_sig ~reader File_key.Builtins in
+  Flow_js.mk_builtins cx;
+  Context.merge_into sig_cx master_cx;
+  Flow_js.flow_t
+    cx
+    ( Context.find_module_sig master_cx Files.lib_module_ref,
+      Context.find_module cx Files.lib_module_ref );
+
+  (* merge *)
+  Merge.merge_component component;
+
+  MergeResult { cx; master_cx }
+
 let merge_context ~options ~reader component =
-  merge_context_generic
-    ~options
-    ~reader
-    ~phase:
-      (match Options.arch options with
-      | Options.Classic -> Context.Checking
-      | Options.TypesFirst -> Context.Merging)
-    ~get_ast_unsafe:
-      (match Options.arch options with
-      | Options.Classic ->
-        fun ~reader file ->
-          let ((_, { Flow_ast.Program.all_comments; _ }) as ast) =
-            Parsing_heaps.Reader_dispatcher.get_ast_unsafe ~reader file
-          in
-          let aloc_ast = Ast_loc_utils.loc_to_aloc_mapper#program ast in
-          (all_comments, aloc_ast)
-      | Options.TypesFirst ->
-        fun ~reader file ->
-          let (_, { Flow_ast.Program.all_comments; _ }) =
-            Parsing_heaps.Reader_dispatcher.get_ast_unsafe ~reader file
-          in
-          let aloc_ast = Parsing_heaps.Reader_dispatcher.get_sig_ast_unsafe ~reader file in
-          (all_comments, aloc_ast))
-    ~get_file_sig_unsafe:
-      (match Options.arch options with
-      | Options.Classic ->
-        fun ~reader file ->
-          let loc_file_sig = Parsing_heaps.Reader_dispatcher.get_file_sig_unsafe ~reader file in
-          File_sig.abstractify_locs loc_file_sig
-      | Options.TypesFirst -> Parsing_heaps.Reader_dispatcher.get_sig_file_sig_unsafe)
-    component
+  let merge_generic_args =
+    match Options.arch options with
+    | Options.Classic ->
+      let phase = Context.Checking in
+      let get_ast_unsafe ~reader file =
+        let ((_, { Flow_ast.Program.all_comments; _ }) as ast) =
+          Parsing_heaps.Reader_dispatcher.get_ast_unsafe ~reader file
+        in
+        let aloc_ast = Ast_loc_utils.loc_to_aloc_mapper#program ast in
+        (all_comments, aloc_ast)
+      in
+      let get_file_sig_unsafe ~reader file =
+        let loc_file_sig = Parsing_heaps.Reader_dispatcher.get_file_sig_unsafe ~reader file in
+        File_sig.abstractify_locs loc_file_sig
+      in
+      Some (phase, get_ast_unsafe, get_file_sig_unsafe)
+    | Options.TypesFirst { new_signatures = false } ->
+      let phase = Context.Merging in
+      let get_ast_unsafe ~reader file =
+        let (_, { Flow_ast.Program.all_comments; _ }) =
+          Parsing_heaps.Reader_dispatcher.get_ast_unsafe ~reader file
+        in
+        let aloc_ast = Parsing_heaps.Reader_dispatcher.get_sig_ast_unsafe ~reader file in
+        (all_comments, aloc_ast)
+      in
+      let get_file_sig_unsafe = Parsing_heaps.Reader_dispatcher.get_sig_file_sig_unsafe in
+      Some (phase, get_ast_unsafe, get_file_sig_unsafe)
+    | Options.TypesFirst { new_signatures = true } -> None
+  in
+  match merge_generic_args with
+  | Some (phase, get_ast_unsafe, get_file_sig_unsafe) ->
+    merge_context_generic ~options ~reader ~phase ~get_ast_unsafe ~get_file_sig_unsafe component
+  | None -> merge_context_new_signatures ~options ~reader component
 
 (* Variation of merge_context where requires may not have already been
    resolved. This is used by commands that make up a context on the fly. *)
@@ -236,7 +387,7 @@ let merge_contents_context ~reader options file ast info file_sig =
             ~reader
             ~node_modules_containers:!Files.node_modules_containers
             file
-            locs
+            (Nel.hd locs)
             r
         in
         (r, locs, resolved_r, file) :: required)
@@ -298,7 +449,7 @@ let merge_component ~worker_mutator ~options ~reader component =
       | MergeResult { cx; master_cx } ->
         let errors = Flow_error.ErrorSet.empty in
         let warnings = Flow_error.ErrorSet.empty in
-        let suppressions = Error_suppressions.empty in
+        let suppressions = Context.error_suppressions cx in
         (cx, master_cx, errors, warnings, suppressions, None)
       | CheckResult { cx; master_cx; coverage; _ } ->
         let errors = Context.errors cx in

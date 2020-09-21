@@ -31,15 +31,6 @@
   (modules extra_commands)
 )
 
-
-(library
-  (name flow_openness)
-  (wrapped false)
-  (modules openness)
-  (libraries
-    collections)
-)
-
 (library
   (name codemod_annotate_exports_hardcoded)
   (wrapped false)

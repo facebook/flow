@@ -40,10 +40,10 @@ module.exports = [
 
 Stats:
   Files changed:                            3
-  Number of sig. ver. errors:               6
-  Number of annotations required:           6
   Number of annotations added:              6
   Total size of annotations:                6
+  Number of sig. ver. errors:               6
+  Number of annotations required:           6
   Number of annotations skipped:            0
 
 Errors:
@@ -54,7 +54,6 @@ Errors:
     Parsing heaps get ast error:            0
     Indeterminate module type:              0
     No matching export:                     0
-    Unrecognizable module error:            0
   Serializer error:                         0
   Unsupported error kind:                   0
 

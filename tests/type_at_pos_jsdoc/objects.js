@@ -48,7 +48,86 @@ class Foo {
   +varianceProp : 3;
 }
 
-module.exports = {FunctionComponent, ClassComponent, Foo}
+/**
+ * a defaulted string enum
+ */
+enum DefaultedStringEnum {
+  /**
+   * first member of a defaulted string enum
+   */
+  Member1,
+  /**
+   * second member of a defaulted string enum
+   */
+  Member2,
+}
+
+/**
+ * an initialized string enum
+ */
+enum InitializedStringEnum {
+  /**
+   * first member of an initialized string enum
+   */
+  Member1 = '?',
+  /**
+   * second member of an initialized string enum
+   */
+  Member2 = '!',
+}
+
+/**
+ * a number enum
+ */
+enum NumberEnum {
+  /**
+   * first member of a number enum
+   */
+  Member1 = 15,
+  /**
+   * second member of a number enum
+   */
+  Member2 = 150,
+}
+
+/**
+ * a boolean enum
+ */
+enum BooleanEnum {
+  /**
+   * first member of a boolean enum
+   */
+  Member1 = true,
+  /**
+   * second member of a boolean enum
+   */
+  Member2 = false,
+}
+
+/**
+ * a symbol enum
+ */
+enum SymbolEnum of symbol {
+  /**
+   * first member of a boolean enum
+   */
+  Member1,
+  /**
+   * second member of a boolean enum
+   */
+  Member2,
+}
+
+module.exports = {
+  FunctionComponent,
+  ClassComponent,
+  Foo,
+  DefaultedStringEnum,
+  InitializedStringEnum,
+  NumberEnum,
+  BooleanEnum,
+  SymbolEnum,
+}
 
 let bar = {
   /**

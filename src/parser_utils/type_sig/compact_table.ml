@@ -114,6 +114,8 @@ module Make () = struct
           loop0 head head head.next
 
   let index_exn node =
+    (* If this is failing, the marking pass is probably missing something.
+       See the comment at the top of `type_sig_pack *)
     assert (node.index >= 0);
     node.index
 
@@ -135,6 +137,8 @@ module Make () = struct
         let dst = Array.make size x in
         loop f dst head head.next;
         dst
+
+  let init = Array.init
 
   external get : 'a t -> index -> 'a = "%array_unsafe_get"
 

@@ -25,9 +25,9 @@ class ['a] t =
       | OpenT (r, id) -> self#tvar cx pole acc r id
       | DefT (_, _, t) -> self#def_type cx pole acc t
       | InternalT (ChoiceKitT (_, Trigger)) -> acc
-      | TypeDestructorTriggerT (_, _, _, d, t) ->
+      | TypeDestructorTriggerT (_, _, _, d, tout) ->
         let acc = self#destructor cx acc d in
-        let acc = self#type_ cx pole acc t in
+        let acc = self#tout cx pole acc tout in
         acc
       | FunProtoT _
       | FunProtoApplyT _
@@ -255,7 +255,7 @@ class ['a] t =
       | MatchPropT (_, _, p, t)
       | TestPropT (_, _, p, t) ->
         let acc = self#propref cx acc p in
-        let acc = self#type_ cx pole_TODO acc t in
+        let acc = self#tout cx pole_TODO acc t in
         acc
       | SetPrivatePropT (_, _, _, _, scopes, _, t, prop_t) ->
         let acc = List.fold_left (self#class_binding cx) acc scopes in
@@ -264,7 +264,7 @@ class ['a] t =
         acc
       | GetPrivatePropT (_, _, _, scopes, _, t) ->
         let acc = List.fold_left (self#class_binding cx) acc scopes in
-        let acc = self#type_ cx pole_TODO acc t in
+        let acc = self#tout cx pole_TODO acc t in
         acc
       | SetElemT (_, _, e, _, tin, tout) ->
         let acc = self#type_ cx pole_TODO acc e in
@@ -273,16 +273,16 @@ class ['a] t =
         acc
       | GetElemT (_, _, e, t) ->
         let acc = self#type_ cx pole_TODO acc e in
-        let acc = self#type_ cx pole_TODO acc t in
+        let acc = self#tout cx pole_TODO acc t in
         acc
       | CallElemT (_, _, t, fn) ->
         let acc = self#type_ cx pole_TODO acc t in
         let acc = self#method_action cx acc fn in
         acc
-      | GetStaticsT (_, t)
-      | GetProtoT (_, t)
-      | SetProtoT (_, t) ->
-        self#type_ cx pole_TODO acc t
+      | GetStaticsT t
+      | GetProtoT (_, t) ->
+        self#tout cx pole_TODO acc t
+      | SetProtoT (_, t) -> self#type_ cx pole_TODO acc t
       | ReposLowerT (_, _, u) -> self#use_type_ cx acc u
       | ReposUseT (_, _, _, t) -> self#type_ cx pole_TODO acc t
       | ConstructorT (_, _, targs, args, t) ->
@@ -312,22 +312,22 @@ class ['a] t =
       | AssertIterableT { targs; _ } -> List.fold_left (self#type_ cx pole_TODO) acc targs
       | PredicateT (predicate, t) ->
         let acc = self#predicate cx acc predicate in
-        let acc = self#type_ cx pole_TODO acc t in
+        let acc = self#tout cx pole_TODO acc t in
         acc
       | GuardT (predicate, t1, t2) ->
         let acc = self#predicate cx acc predicate in
         let acc = self#type_ cx pole_TODO acc t1 in
-        let acc = self#type_ cx pole_TODO acc t2 in
+        let acc = self#tout cx pole_TODO acc t2 in
         acc
       | StrictEqT { arg; _ }
       | EqT { arg; _ } ->
         self#type_ cx pole_TODO acc arg
-      | NotT (_, t) -> self#type_ cx pole_TODO acc t
+      | NotT (_, t) -> self#tout cx pole_TODO acc t
       | AndT (_, a, b)
       | OrT (_, a, b)
       | NullishCoalesceT (_, a, b) ->
         let acc = self#type_ cx pole_TODO acc a in
-        let acc = self#type_ cx pole_TODO acc b in
+        let acc = self#tout cx pole_TODO acc b in
         acc
       | SpecializeT (_, _, _, _, ts, t) ->
         let acc = self#opt (List.fold_left (self#type_ cx pole_TODO)) acc ts in
@@ -352,9 +352,12 @@ class ['a] t =
       | TypeCastT (_, t) -> self#type_ cx pole_TODO acc t
       | EnumCastT { enum = (_, _, { representation_t; _ }); _ } ->
         self#type_ cx pole_TODO acc representation_t
-      | EnumExhaustiveCheckT (_, exhaustive_check, incomplete_out) ->
+      | EnumExhaustiveCheckT { reason = _; check; incomplete_out; discriminant_after_check } ->
         let acc = self#type_ cx pole_TODO acc incomplete_out in
-        (match exhaustive_check with
+        let acc =
+          Base.Option.fold ~init:acc ~f:(self#type_ cx pole_TODO) discriminant_after_check
+        in
+        (match check with
         | EnumExhaustiveCheckPossiblyValid { possible_checks; _ } ->
           List.fold_left
             (fun acc (obj_t, _) -> self#type_ cx pole_TODO acc obj_t)
@@ -534,7 +537,7 @@ class ['a] t =
       | DebugSleepT _ -> acc
       | SentinelPropTestT (_, t, _, _, _, tout) ->
         let acc = self#type_ cx pole_TODO acc t in
-        let acc = self#type_ cx pole_TODO acc tout in
+        let acc = self#tout cx pole_TODO acc tout in
         acc
       | IdxUnwrap (_, tout)
       | IdxUnMaybeifyT (_, tout) ->
@@ -547,12 +550,12 @@ class ['a] t =
       | CallLatentPredT (_, _, _, t1, t2)
       | CallOpenPredT (_, _, _, t1, t2) ->
         let acc = self#type_ cx pole_TODO acc t1 in
-        let acc = self#type_ cx pole_TODO acc t2 in
+        let acc = self#tout cx pole_TODO acc t2 in
         acc
       | SubstOnPredT (_, _, _, t) -> self#type_ cx pole_TODO acc t
       | RefineT (_, predicate, t) ->
         let acc = self#predicate cx acc predicate in
-        let acc = self#type_ cx pole_TODO acc t in
+        let acc = self#tout cx pole_TODO acc t in
         acc
       | ReactPropsToOut (_, t)
       | ReactInToProps (_, t) ->
@@ -622,21 +625,21 @@ class ['a] t =
         | SentinelPropTest (_, _, t1, t2, t3) ->
           let acc = self#type_ cx pole_TODO acc t1 in
           let acc = self#type_ cx pole_TODO acc t2 in
-          let acc = self#type_ cx pole_TODO acc t3 in
+          let acc = self#tout cx pole_TODO acc t3 in
           acc
         | PropExistsTest (_, _, _, t1, t2, (pred, not_pred)) ->
           let acc = self#type_ cx pole_TODO acc t1 in
-          let acc = self#type_ cx pole_TODO acc t2 in
+          let acc = self#tout cx pole_TODO acc t2 in
           let acc = self#predicate cx acc pred in
           let acc = self#predicate cx acc not_pred in
           acc)
       | DestructuringT (_, _, s, tout) ->
         let acc = self#selector cx acc s in
-        let acc = self#type_ cx pole_TODO acc tout in
+        let acc = self#tout cx pole_TODO acc tout in
         acc
-      | CreateObjWithComputedPropT { reason = _; value; tout_tvar = (r, id) } ->
+      | CreateObjWithComputedPropT { reason = _; value; tout_tvar } ->
         let acc = self#type_ cx pole_TODO acc value in
-        let acc = self#tvar cx pole_TODO acc r id in
+        let acc = self#tout cx pole_TODO acc tout_tvar in
         acc
       | ModuleExportsAssignT (_, t, tout) ->
         let acc = self#type_ cx pole_TODO acc t in
@@ -647,6 +650,8 @@ class ['a] t =
         let acc = List.fold_left (self#type_ cx pole_TODO) acc unresolved in
         let acc = self#use_type_ cx acc upper in
         acc
+
+    method private tout cx pole acc (r, id) = self#tvar cx pole acc r id
 
     (* The default behavior here could be fleshed out a bit, to look up the graph,
      handle Resolved and Unresolved cases, etc. *)
@@ -780,7 +785,7 @@ class ['a] t =
       let acc = self#type_ cx pole_TODO acc call_this_t in
       let acc = self#opt (self#list (self#targ cx pole_TODO)) acc call_targs in
       let acc = self#list (self#call_arg cx) acc call_args_tlist in
-      let acc = self#type_ cx pole_TODO acc call_tout in
+      let acc = self#tout cx pole_TODO acc call_tout in
       acc
 
     method private opt_fun_call_type cx acc (call_this_t, call_targs, call_args_tlist, _, _) =
@@ -834,9 +839,9 @@ class ['a] t =
 
     method private lookup_action cx acc =
       function
-      | ReadProp { use_op = _; obj_t = t1; tout = t2 } ->
+      | ReadProp { use_op = _; obj_t = t1; tout } ->
         let acc = self#type_ cx pole_TODO acc t1 in
-        let acc = self#type_ cx pole_TODO acc t2 in
+        let acc = self#tout cx pole_TODO acc tout in
         acc
       | WriteProp { use_op = _; obj_t; prop_tout; tin; write_ctx = _; mode = _ } ->
         let acc = self#type_ cx pole_TODO acc obj_t in
@@ -850,7 +855,7 @@ class ['a] t =
 
     method private elem_action cx acc =
       function
-      | ReadElem t -> self#type_ cx pole_TODO acc t
+      | ReadElem tout -> self#tout cx pole_TODO acc tout
       | WriteElem (tin, tout, _) ->
         let acc = self#type_ cx pole_TODO acc tin in
         let acc = self#opt (self#type_ cx pole_TODO) acc tout in

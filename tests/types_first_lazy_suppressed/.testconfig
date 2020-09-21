@@ -1,2 +1,3 @@
 auto_start: false
 shell: test.sh
+TODO_new_signatures: true

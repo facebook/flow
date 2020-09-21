@@ -491,6 +491,18 @@ let rec make_error_printable (error : Loc.t t) : Loc.t Errors.printable_error =
                     text " against ";
                     ref switch_discriminant;
                   ] )
+            | Op (MatchingProp { op; obj; key; sentinel_reason }) ->
+              let message =
+                [
+                  text "Cannot compare ";
+                  ref sentinel_reason;
+                  text " with property ";
+                  code key;
+                  text " of ";
+                  ref obj;
+                ]
+              in
+              `Root (op, None, message)
             | Frame (ArrayElementCompatibility { lower; _ }, use_op) ->
               `Frame (lower, use_op, [text "array element"])
             | Frame (FunParam { n; lower; _ }, use_op) ->

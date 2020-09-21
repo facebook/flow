@@ -32,5 +32,3 @@ function convert(x: A): B {
 }
 
 export type TransparentMyNum = number;
-
-exports.hide = hide;

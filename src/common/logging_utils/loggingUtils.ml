@@ -44,7 +44,7 @@ let (set_server_options, dump_server_options) =
     let arch =
       match Options.arch server_options with
       | Options.Classic -> "classic"
-      | Options.TypesFirst -> "types_first"
+      | Options.TypesFirst _ -> "types_first"
     in
     let abstract_locations =
       if Options.abstract_locations server_options then

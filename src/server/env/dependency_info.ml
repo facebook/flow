@@ -63,6 +63,10 @@ let map_filenames f = function
         implementation_dependency_graph = FilenameGraph.map f implementation_dependency_graph;
       }
 
+let is_types_first = function
+  | Classic _ -> false
+  | TypesFirst _ -> true
+
 let debug_to_string = function
   | Classic graph ->
     let map = FilenameGraph.to_map graph in

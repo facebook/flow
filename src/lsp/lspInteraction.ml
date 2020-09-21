@@ -340,8 +340,6 @@ let trigger_of_lsp_msg =
   | NotificationMessage (LogMessageNotification _)
   | NotificationMessage (TelemetryNotification _)
   | NotificationMessage (ShowMessageNotification _)
-  | NotificationMessage (ProgressNotification _)
-  | NotificationMessage (ActionRequiredNotification _)
   | NotificationMessage (ConnectionStatusNotification _)
   | NotificationMessage InitializedNotification
   | NotificationMessage SetTraceNotification

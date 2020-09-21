@@ -63,9 +63,13 @@ let rec dump_opt (f : 'a -> string) (o : 'a option) =
 
 and dump_any_kind = function
   | Annotated -> "Annotated"
-  | AnyError -> "AnyError"
+  | AnyError kind -> spf "AnyError (%s)" (dump_any_error_kind kind)
   | Unsound kind -> spf "Unsound (%s)" (dump_any_unsoundness_kind kind)
   | Untyped -> "Untyped"
+
+and dump_any_error_kind = function
+  | Some UnresolvedName -> "UnresolvedName"
+  | None -> "<None>"
 
 and dump_any_unsoundness_kind = function
   | BoundFunctionThis -> "BoundFunctionThis"

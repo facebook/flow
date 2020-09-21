@@ -6,16 +6,6 @@ Cannot resolve module `somewhere`. [cannot-resolve-module]
                               ^^^^^^^^^^^
 
 
-Error ----------------------------------------------------------------------------------------------- enum-crash.js:11:5
-
-Cannot refine `Enum` as a value.  [refine-as-value]
-
-           v-------------
-   11|     case Enum.FOO:
-   12|       return 0;
-             --------^
-
-
 Error ---------------------------------------------------------------------------------------------- enum-crash.js:11:10
 
 Cannot reference type `Enum` [1] from a value position. [type-as-value]
@@ -66,4 +56,4 @@ References:
 
 
 
-Found 5 errors
+Found 4 errors

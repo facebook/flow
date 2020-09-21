@@ -179,7 +179,7 @@ type 'loc pattern =
     }
 [@@deriving map, show { with_path = false }]
 
-type 'loc cx = { mutable errs: (Locs.index * errno) list }
+type 'loc cx = { mutable errs: (Locs.index * 'loc errno) list }
 
 let create_cx () = { errs = [] }
 
@@ -197,6 +197,7 @@ let rec pack_parsed cx = function
     TyRef (Unqualified (BuiltinRef { ref_loc = pack_loc ref_loc; name }))
   | P.Err (loc, err) ->
     let loc = pack_loc loc in
+    let err = map_errno pack_loc err in
     cx.errs <- (loc, err) :: cx.errs;
     Err loc
   | P.ValRef ref -> Ref (pack_ref ref)
@@ -269,8 +270,9 @@ and pack_local_binding cx = function
     let id_loc = pack_loc id_loc in
     let def = pack_declare_class cx (Lazy.force def) in
     DeclareClassBinding { id_loc; name; def }
-  | P.FunBinding { id_loc; name; async; generator; def; statics } ->
+  | P.FunBinding { id_loc; name; async; generator; fn_loc; def; statics } ->
     let id_loc = pack_loc id_loc in
+    let fn_loc = pack_loc fn_loc in
     let def = pack_fun cx (Lazy.force def) in
     let statics =
       SMap.map
@@ -280,17 +282,18 @@ and pack_local_binding cx = function
           (id_loc, t))
         statics
     in
-    FunBinding { id_loc; name; async; generator; def; statics }
+    FunBinding { id_loc; name; async; generator; fn_loc; def; statics }
   | P.DeclareFunBinding { name; defs_rev } ->
-    let ((id_loc, def), tail) =
+    let ((id_loc, fn_loc, def), tail) =
       Nel.rev_map
-        (fun (id_loc, def) ->
+        (fun (id_loc, fn_loc, def) ->
           let id_loc = pack_loc id_loc in
+          let fn_loc = pack_loc fn_loc in
           let def = pack_fun cx (Lazy.force def) in
-          (id_loc, def))
+          (id_loc, fn_loc, def))
         defs_rev
     in
-    DeclareFun { id_loc; name; def; tail }
+    DeclareFun { id_loc; name; fn_loc; def; tail }
   | P.EnumBinding { id_loc; name; def } ->
     let id_loc = pack_loc id_loc in
     begin

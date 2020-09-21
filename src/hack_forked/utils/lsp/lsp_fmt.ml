@@ -58,14 +58,17 @@ let print_range (range : range) : json =
 let print_location (location : Location.t) : json =
   Location.(
     JSON_Object
-      [("uri", JSON_String (string_of_uri location.uri)); ("range", print_range location.range)])
+      [
+        ("uri", JSON_String (DocumentUri.to_string location.uri));
+        ("range", print_range location.range);
+      ])
 
 let print_definition_location (definition_location : DefinitionLocation.t) : json =
   DefinitionLocation.(
     let location = definition_location.location in
     Jprint.object_opt
       [
-        ("uri", Some (JSON_String (string_of_uri location.Location.uri)));
+        ("uri", Some (JSON_String (DocumentUri.to_string location.Location.uri)));
         ("range", Some (print_range location.Location.range));
         ("title", Base.Option.map definition_location.title ~f:string_);
       ])
@@ -79,7 +82,7 @@ let parse_range_exn (json : json option) : range =
 let parse_location (j : json option) : Location.t =
   Location.
     {
-      uri = Jget.string_exn j "uri" |> uri_of_string;
+      uri = Jget.string_exn j "uri" |> DocumentUri.of_string;
       range = Jget.obj_exn j "range" |> parse_range_exn;
     }
 
@@ -90,16 +93,19 @@ let parse_range_opt (json : json option) : range option =
     Some (parse_range_exn json)
 
 let parse_textDocumentIdentifier (json : json option) : TextDocumentIdentifier.t =
-  TextDocumentIdentifier.{ uri = Jget.string_exn json "uri" |> uri_of_string }
+  TextDocumentIdentifier.{ uri = Jget.string_exn json "uri" |> DocumentUri.of_string }
 
 let parse_versionedTextDocumentIdentifier (json : json option) : VersionedTextDocumentIdentifier.t =
   VersionedTextDocumentIdentifier.
-    { uri = Jget.string_exn json "uri" |> uri_of_string; version = Jget.int_d json "version" 0 }
+    {
+      uri = Jget.string_exn json "uri" |> DocumentUri.of_string;
+      version = Jget.int_d json "version" 0;
+    }
 
 let parse_textDocumentItem (json : json option) : TextDocumentItem.t =
   TextDocumentItem.
     {
-      uri = Jget.string_exn json "uri" |> uri_of_string;
+      uri = Jget.string_exn json "uri" |> DocumentUri.of_string;
       languageId = Jget.string_d json "languageId" "";
       version = Jget.int_d json "version" 0;
       text = Jget.string_exn json "text";
@@ -109,7 +115,7 @@ let print_textDocumentItem (item : TextDocumentItem.t) : json =
   TextDocumentItem.(
     JSON_Object
       [
-        ("uri", JSON_String (string_of_uri item.uri));
+        ("uri", JSON_String (DocumentUri.to_string item.uri));
         ("languageId", JSON_String item.languageId);
         ("version", JSON_Number (string_of_int item.version));
         ("text", JSON_String item.text);
@@ -145,11 +151,12 @@ let print_textEdit (edit : TextEdit.t) : json =
 let print_workspaceEdit (r : WorkspaceEdit.t) : json =
   WorkspaceEdit.(
     let print_workspace_edit_changes (uri, text_edits) =
-      (uri, JSON_Array (List.map ~f:print_textEdit text_edits))
+      (DocumentUri.to_string uri, JSON_Array (List.map ~f:print_textEdit text_edits))
     in
     JSON_Object
       [
-        ("changes", JSON_Object (List.map (SMap.elements r.changes) ~f:print_workspace_edit_changes));
+        ( "changes",
+          JSON_Object (List.map (UriMap.elements r.changes) ~f:print_workspace_edit_changes) );
       ])
 
 let print_command_name ~key name =
@@ -217,14 +224,29 @@ let print_codeLens ~key (codeLens : CodeLens.t) : json =
       ])
 
 module MarkupKindFmt = struct
+  open MarkupKind
+
+  let to_string = function
+    | Markdown -> "markdown"
+    | PlainText -> "plaintext"
+
+  let to_json kind = Hh_json.JSON_String (to_string kind)
+
   let of_string_opt = function
-    | "markdown" -> Some MarkupKind.Markdown
-    | "plaintext" -> Some MarkupKind.PlainText
+    | "markdown" -> Some Markdown
+    | "plaintext" -> Some PlainText
     | _ -> None
 
   let of_json = function
     | JSON_String str -> of_string_opt str
     | _ -> None
+end
+
+module MarkupContentFmt = struct
+  open MarkupContent
+
+  let to_json { kind; value } =
+    Hh_json.JSON_Object [("kind", MarkupKindFmt.to_json kind); ("value", Hh_json.JSON_String value)]
 end
 
 (************************************************************************)
@@ -315,6 +337,43 @@ let parse_didChange (params : json option) : DidChange.params =
 
 module SignatureHelpFmt = struct
   open SignatureHelp
+  open Hh_json
+
+  let json_of_label : label -> json = function
+    | String str -> JSON_String str
+    | Offset (start, end_) ->
+      JSON_Array [JSON_Number (string_of_int start); JSON_Number (string_of_int end_)]
+
+  let json_of_documentation (doc : Documentation.t) : json =
+    match doc with
+    | Documentation.String str -> JSON_String str
+    | Documentation.MarkupContent content -> MarkupContentFmt.to_json content
+
+  let json_of_parameter { parinfo_label; parinfo_documentation } =
+    Jprint.object_opt
+      [
+        ("label", Some (json_of_label parinfo_label));
+        ("documentation", Base.Option.map ~f:json_of_documentation parinfo_documentation);
+      ]
+
+  let json_of_signature { siginfo_label; siginfo_documentation; parameters } =
+    Jprint.object_opt
+      [
+        ("label", Some (JSON_String siginfo_label));
+        ("documentation", Base.Option.map ~f:json_of_documentation siginfo_documentation);
+        ("parameters", Some (JSON_Array (List.map ~f:json_of_parameter parameters)));
+      ]
+
+  let to_json (r : SignatureHelp.result) : json =
+    match r with
+    | None -> JSON_Null
+    | Some r ->
+      JSON_Object
+        [
+          ("signatures", JSON_Array (List.map ~f:json_of_signature r.signatures));
+          ("activeSignature", int_ r.activeSignature);
+          ("activeParameter", int_ r.activeParameter);
+        ]
 
   let context_of_json json : SignatureHelp.context =
     {
@@ -337,34 +396,6 @@ module SignatureHelpFmt = struct
           | Some _ -> Some (context_of_json json) );
     }
 end
-
-(* TODO: rename to SignatureHelpFmt.to_json *)
-let print_signatureHelp (r : SignatureHelp.result) : json =
-  SignatureHelp.(
-    let print_parInfo parInfo =
-      Jprint.object_opt
-        [
-          ("label", Some (Hh_json.JSON_String parInfo.parinfo_label));
-          ("documentation", Base.Option.map ~f:Hh_json.string_ parInfo.parinfo_documentation);
-        ]
-    in
-    let print_sigInfo sigInfo =
-      Jprint.object_opt
-        [
-          ("label", Some (Hh_json.JSON_String sigInfo.siginfo_label));
-          ("documentation", Base.Option.map ~f:Hh_json.string_ sigInfo.siginfo_documentation);
-          ("parameters", Some (Hh_json.JSON_Array (List.map ~f:print_parInfo sigInfo.parameters)));
-        ]
-    in
-    match r with
-    | None -> Hh_json.JSON_Null
-    | Some r ->
-      Hh_json.JSON_Object
-        [
-          ("signatures", Hh_json.JSON_Array (List.map ~f:print_sigInfo r.signatures));
-          ("activeSignature", Hh_json.int_ r.activeSignature);
-          ("activeParameter", Hh_json.int_ r.activeParameter);
-        ])
 
 (************************************************************************)
 (* codeLens/resolve Request                                             *)
@@ -453,7 +484,7 @@ let print_diagnostics (r : PublishDiagnostics.params) : json =
   PublishDiagnostics.(
     JSON_Object
       [
-        ("uri", JSON_String (string_of_uri r.uri));
+        ("uri", JSON_String (DocumentUri.to_string r.uri));
         ("diagnostics", print_diagnostic_list r.diagnostics);
       ])
 
@@ -618,36 +649,6 @@ let print_showStatus (r : ShowStatus.showStatusParams) : json =
     ]
 
 (************************************************************************)
-(* window/progress notification                                         *)
-(************************************************************************)
-
-let print_progress (id : int) (label : string option) : json =
-  let r = { Progress.id; label } in
-  JSON_Object
-    [
-      ("id", r.Progress.id |> int_);
-      ( "label",
-        match r.Progress.label with
-        | None -> JSON_Null
-        | Some s -> JSON_String s );
-    ]
-
-(************************************************************************)
-(* window/actionRequired notification                                   *)
-(************************************************************************)
-
-let print_actionRequired (id : int) (label : string option) : json =
-  let r = { ActionRequired.id; label } in
-  JSON_Object
-    [
-      ("id", r.ActionRequired.id |> int_);
-      ( "label",
-        match r.ActionRequired.label with
-        | None -> JSON_Null
-        | Some s -> JSON_String s );
-    ]
-
-(************************************************************************)
 (* telemetry/connectionStatus notification                              *)
 (************************************************************************)
 
@@ -700,8 +701,6 @@ let parse_completionItem (params : json option) : CompletionItemResolve.params =
       label = Jget.string_exn params "label";
       kind = Base.Option.bind (Jget.int_opt params "kind") completionItemKind_of_enum;
       detail = Jget.string_opt params "detail";
-      inlineDetail = Jget.string_opt params "inlineDetail";
-      itemType = Jget.string_opt params "itemType";
       documentation = None;
       preselect = Jget.bool_d params "preselect" ~default:false;
       sortText = Jget.string_opt params "sortText";
@@ -726,8 +725,6 @@ let print_completionItem ~key (item : Completion.completionItem) : json =
         ("label", Some (JSON_String item.label));
         ("kind", Base.Option.map item.kind (fun x -> int_ @@ completionItemKind_to_enum x));
         ("detail", Base.Option.map item.detail string_);
-        ("inlineDetail", Base.Option.map item.inlineDetail string_);
-        ("itemType", Base.Option.map item.itemType string_);
         ( "documentation",
           Base.Option.map item.documentation ~f:(fun doc ->
               JSON_Object
@@ -935,6 +932,26 @@ let print_documentOnTypeFormatting (r : DocumentOnTypeFormatting.result) : json 
 (* initialize request                                                   *)
 (************************************************************************)
 
+module CodeActionClientCapabilitiesFmt = struct
+  open CodeActionClientCapabilities
+
+  module CodeActionLiteralSupportFmt = struct
+    open CodeActionLiteralSupport
+
+    let codeActionKind_of_json json =
+      Jget.array_opt json "valueSet" |> Base.Option.map ~f:(fun ls -> { valueSet = parse_kinds ls })
+
+    let of_json json = Jget.obj_opt json "codeActionKind" |> codeActionKind_of_json
+  end
+
+  let of_json json =
+    {
+      dynamicRegistration = Jget.bool_d json "dynamicRegistration" ~default:false;
+      codeActionLiteralSupport =
+        Jget.obj_opt json "codeActionLiteralSupport" |> CodeActionLiteralSupportFmt.of_json;
+    }
+end
+
 module SignatureHelpClientCapabilitiesFmt = struct
   open SignatureHelpClientCapabilities
 
@@ -967,7 +984,7 @@ let parse_initialize (params : json option) : Initialize.params =
       {
         processId = Jget.int_opt json "processId";
         rootPath = Jget.string_opt json "rootPath";
-        rootUri = Base.Option.map ~f:uri_of_string (Jget.string_opt json "rootUri");
+        rootUri = Base.Option.map ~f:DocumentUri.of_string (Jget.string_opt json "rootUri");
         initializationOptions =
           Jget.obj_opt json "initializationOptions" |> parse_initializationOptions;
         client_capabilities = Jget.obj_opt json "capabilities" |> parse_capabilities;
@@ -979,12 +996,7 @@ let parse_initialize (params : json option) : Initialize.params =
       | Some "verbose" -> Verbose
       | _ -> Off
     and parse_initializationOptions json =
-      {
-        useTextEditAutocomplete = Jget.bool_d json "useTextEditAutocomplete" ~default:false;
-        liveSyntaxErrors = Jget.bool_d json "liveSyntaxErrors" ~default:true;
-        namingTableSavedStatePath = Jget.string_opt json "namingTableSavedStatePath";
-        sendServerStatusEvents = Jget.bool_d json "sendServerStatusEvents" ~default:false;
-      }
+      { liveSyntaxErrors = Jget.bool_d json "liveSyntaxErrors" ~default:true }
     and parse_capabilities json =
       {
         workspace = Jget.obj_opt json "workspace" |> parse_workspace;
@@ -1007,7 +1019,7 @@ let parse_initialize (params : json option) : Initialize.params =
       {
         synchronization = Jget.obj_opt json "synchronization" |> parse_synchronization;
         completion = Jget.obj_opt json "completion" |> parse_completion;
-        codeAction = Jget.obj_opt json "codeAction" |> parse_codeAction;
+        codeAction = Jget.obj_opt json "codeAction" |> CodeActionClientCapabilitiesFmt.of_json;
         signatureHelp =
           Jget.obj_opt json "signatureHelp" |> SignatureHelpClientCapabilitiesFmt.of_json;
       }
@@ -1024,23 +1036,7 @@ let parse_initialize (params : json option) : Initialize.params =
         snippetSupport = Jget.bool_d json "snippetSupport" ~default:false;
         preselectSupport = Jget.bool_d json "preselectSupport" ~default:false;
       }
-    and parse_codeAction json =
-      {
-        codeAction_dynamicRegistration = Jget.bool_d json "dynamicRegistration" ~default:false;
-        codeActionLiteralSupport =
-          Jget.obj_opt json "codeActionLiteralSupport" |> parse_codeActionLiteralSupport;
-      }
-    and parse_codeActionLiteralSupport json =
-      Jget.obj_opt json "codeActionKind" |> parse_codeActionKind
-    and parse_codeActionKind json =
-      Base.Option.(
-        Jget.array_opt json "valueSet" >>= fun ls -> Some { codeAction_valueSet = parse_kinds ls })
-    and parse_window json =
-      {
-        status = Jget.obj_opt json "status" |> Base.Option.is_some;
-        progress = Jget.obj_opt json "progress" |> Base.Option.is_some;
-        actionRequired = Jget.obj_opt json "actionRequired" |> Base.Option.is_some;
-      }
+    and parse_window json = { status = Jget.obj_opt json "status" |> Base.Option.is_some }
     and parse_telemetry json =
       { connectionStatus = Jget.obj_opt json "connectionStatus" |> Base.Option.is_some }
     in
@@ -1167,7 +1163,7 @@ let parse_didChangeWatchedFiles (json : Hh_json.json option) : DidChangeWatchedF
   let changes =
     Jget.array_exn json "changes"
     |> List.map ~f:(fun change ->
-           let uri = Jget.string_exn change "uri" |> uri_of_string in
+           let uri = Jget.string_exn change "uri" |> DocumentUri.of_string in
            let type_ = Jget.int_exn change "type" in
            let type_ =
              match DidChangeWatchedFiles.fileChangeType_of_enum type_ with
@@ -1301,8 +1297,6 @@ let notification_name_to_string (notification : lsp_notification) : string =
   | TelemetryNotification _ -> "telemetry/event"
   | LogMessageNotification _ -> "window/logMessage"
   | ShowMessageNotification _ -> "window/showMessage"
-  | ProgressNotification _ -> "window/progress"
-  | ActionRequiredNotification _ -> "window/actionRequired"
   | ConnectionStatusNotification _ -> "telemetry/connectionStatus"
   | InitializedNotification -> "initialized"
   | SetTraceNotification -> "$/setTraceNotification"
@@ -1371,8 +1365,6 @@ let parse_lsp_notification (method_ : string) (params : json option) : lsp_notif
   | "textDocument/publishDiagnostics"
   | "window/logMessage"
   | "window/showMessage"
-  | "window/progress"
-  | "window/actionRequired"
   | "telemetry/connectionStatus"
   | _ ->
     UnknownNotification (method_, params)
@@ -1504,7 +1496,7 @@ let print_lsp_response ?include_error_stack_trace ~key (id : lsp_id) (result : l
     | RenameResult r -> print_documentRename r
     | DocumentCodeLensResult r -> print_documentCodeLens ~key r
     | ExecuteCommandResult r -> print_executeCommand r
-    | SignatureHelpResult r -> print_signatureHelp r
+    | SignatureHelpResult r -> SignatureHelpFmt.to_json r
     | ShowMessageRequestResult _
     | ShowStatusResult _
     | CompletionItemResolveResult _ ->
@@ -1525,9 +1517,6 @@ let print_lsp_notification (notification : lsp_notification) : json =
     | TelemetryNotification r -> print_logMessage r.LogMessage.type_ r.LogMessage.message
     | LogMessageNotification r -> print_logMessage r.LogMessage.type_ r.LogMessage.message
     | ShowMessageNotification r -> print_showMessage r.ShowMessage.type_ r.ShowMessage.message
-    | ProgressNotification r -> print_progress r.Progress.id r.Progress.label
-    | ActionRequiredNotification r ->
-      print_actionRequired r.ActionRequired.id r.ActionRequired.label
     | ConnectionStatusNotification r -> print_connectionStatus r
     | ExitNotification
     | InitializedNotification

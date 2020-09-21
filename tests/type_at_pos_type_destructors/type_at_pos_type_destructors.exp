@@ -415,7 +415,7 @@ type-destructor.js:169:18,169:28
 
 type-destructor.js:171:18
 Flags:
-<K: any, T: {...}>() => $ElementType<T, K>
+<K: empty, T: {...}>() => $ElementType<T, K>
 type-destructor.js:171:18,171:28
 
 type-destructor.js:175:6
@@ -642,7 +642,7 @@ type-destructor.js:169:18,169:28
 
 type-destructor.js:171:18
 Flags: --evaluate-type-destructors
-<K: any, T: {...}>() => $ElementType<T, K>
+<K: empty, T: {...}>() => $ElementType<T, K>
 type-destructor.js:171:18,171:28
 
 type-destructor.js:175:6

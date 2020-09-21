@@ -1,4 +1,5 @@
 [options]
+types_first=false
 all=true
 module.system=haste
 module.system.haste.use_name_reducers=true

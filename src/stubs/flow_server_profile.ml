@@ -15,7 +15,7 @@ let merge ~length:_ ~merge_time:_ ~leader:_ = ()
 
 let processor_sample () = ()
 
-let get_id () = "hello"
+let get_id () = Some "hello"
 
 let print_url () = ()
 

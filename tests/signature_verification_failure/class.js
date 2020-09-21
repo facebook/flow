@@ -13,5 +13,4 @@ export class A {
   // Ast.Expression.Object.Property.Computed
   ['a'] = 3;
   ['a' + 'b'] = 4;
-
 }

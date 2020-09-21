@@ -362,21 +362,24 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ eq.js:20:17
 
-All branches are incompatible: [incompatible-type]
- - Either number [1] is incompatible with string literal `foo` [2].
- - Or number [1] is incompatible with string literal `bar` [3].
+Cannot compare number [1] with property `y` of union type [2] because: [incompatible-type]
+ - Either number [1] is incompatible with string literal `foo` [3].
+ - Or number [1] is incompatible with string literal `bar` [4].
 
    eq.js:20:17
    20|     if (x.y === 123) {} // error
                        ^^^ [1]
 
 References:
+   eq.js:18:15
+   18|   function(x: { y: 'foo' } | { y: 'bar' }) {
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
    eq.js:18:20
    18|   function(x: { y: 'foo' } | { y: 'bar' }) {
-                          ^^^^^ [2]
+                          ^^^^^ [3]
    eq.js:18:35
    18|   function(x: { y: 'foo' } | { y: 'bar' }) {
-                                         ^^^^^ [3]
+                                         ^^^^^ [4]
 
 
 Error --------------------------------------------------------------------------------------------------- exists.js:18:9
@@ -812,6 +815,48 @@ References:
    heap_defassign.js:85:12
    85|     var z: number = obj.p;      // error, (number | string) ~/~ number
                   ^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------- inclusion_check_widening.js:38:11
+
+string literal `val` [1] is incompatible with null [2]. [incompatible-type]
+
+   inclusion_check_widening.js:38:11
+   38| if (y === 'val') {} // error
+                 ^^^^^ [1]
+
+References:
+   inclusion_check_widening.js:33:11
+   33| const x = null;
+                 ^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------- inclusion_check_widening.js:46:14
+
+Property `a` is missing in object type [1]. [prop-missing]
+
+   inclusion_check_widening.js:46:14
+   46| if (key2 === 'a') {} // error (key2 does not include 'a')
+                    ^^^
+
+References:
+   inclusion_check_widening.js:44:23
+   44| declare var column: V<{...}>;
+                             ^^^^^ [1]
+
+
+Error -------------------------------------------------------------------------------- inclusion_check_widening.js:61:18
+
+number literal `0` [1] is incompatible with `C` [2]. [incompatible-type]
+
+   inclusion_check_widening.js:61:18
+   61|         prop !== 0 // error (0 incompatible with C)
+                        ^ [1]
+
+References:
+   inclusion_check_widening.js:52:23
+   52| type State = { prop: ?C };
+                             ^ [2]
 
 
 Error ------------------------------------------------------------------------------------- missing-property-cond.js:4:7
@@ -1648,23 +1693,6 @@ References:
                                ^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------------------- number.js:97:14
-
-Cannot return `s` because number literal `3` [1] is incompatible with literal union [2]. [incompatible-return]
-
-   number.js:97:14
-   97|       return s; // error
-                    ^
-
-References:
-   number.js:96:22
-   96|     } else if (s === 3) {
-                            ^ [1]
-   number.js:93:25
-   93|   function(s: number): ?Mode {
-                               ^^^^ [2]
-
-
 Error ------------------------------------------------------------------------------------------------- number.js:116:14
 
 Cannot return `x` because number [1] is incompatible with number literal `0` [2]. [incompatible-return]
@@ -2264,23 +2292,6 @@ References:
                                ^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------------------- string.js:98:14
-
-Cannot return `s` because string literal `d` [1] is incompatible with literal union [2]. [incompatible-return]
-
-   string.js:98:14
-   98|       return s; // error
-                    ^
-
-References:
-   string.js:97:22
-   97|     } else if (s === "d") {
-                            ^^^ [1]
-   string.js:94:25
-   94|   function(s: string): ?Mode {
-                               ^^^^ [2]
-
-
 Error ------------------------------------------------------------------------------------------------- string.js:117:14
 
 Cannot return `x` because string [1] is incompatible with empty string [2]. [incompatible-return]
@@ -2518,23 +2529,6 @@ References:
                           ^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------- tagged_union.js:89:8
-
-Cannot cast `x.kindTypo` to string because number literal `1` [1] is incompatible with string [2]. [incompatible-cast]
-
-   tagged_union.js:89:8
-   89|       (x.kindTypo: string); // typos can't be used, though
-              ^^^^^^^^^^
-
-References:
-   tagged_union.js:88:24
-   88|     if (x.kindTypo === 1) { // error: kindTypo prop missing
-                              ^ [1]
-   tagged_union.js:89:20
-   89|       (x.kindTypo: string); // typos can't be used, though
-                          ^^^^^^ [2]
-
-
 Error -------------------------------------------------------------------------------------------- tagged_union.js:96:11
 
 Cannot get `x.fooTypo` because property `fooTypo` is missing in object type [1]. [prop-missing]
@@ -2608,23 +2602,6 @@ References:
                          ^^^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------------- tagged_union.js:113:8
-
-Cannot cast `x.legnth` to string because number literal `0` [1] is incompatible with string [2]. [incompatible-cast]
-
-   tagged_union.js:113:8
-   113|       (x.legnth: string); // error: number literal 0 !~> string
-               ^^^^^^^^
-
-References:
-   tagged_union.js:111:22
-   111|     if (x.legnth === 0) { // Error, typos
-                             ^ [1]
-   tagged_union.js:113:18
-   113|       (x.legnth: string); // error: number literal 0 !~> string
-                         ^^^^^^ [2]
-
-
 Error -------------------------------------------------------------------------------------------- tagged_union.js:116:9
 
 Property `legnth` is missing in string [1]. [prop-missing]
@@ -2656,35 +2633,22 @@ References:
                          ^^^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------------- tagged_union.js:118:8
-
-Cannot cast `y.legnth` to string because number literal `0` [1] is incompatible with string [2]. [incompatible-cast]
-
-   tagged_union.js:118:8
-   118|       (y.legnth: string); // error: number literal 0 !~> string
-               ^^^^^^^^
-
-References:
-   tagged_union.js:116:22
-   116|     if (y.legnth === 0) { // Error, typo
-                             ^ [1]
-   tagged_union.js:118:18
-   118|       (y.legnth: string); // error: number literal 0 !~> string
-                         ^^^^^^ [2]
-
-
 Error ------------------------------------------------------------------------------------------- tagged_union.js:120:24
 
-number [1] is incompatible with function type [2]. [incompatible-type]
+Cannot compare number [1] with property `toString` of number [2] because number [1] is incompatible with function
+type [3]. [incompatible-type]
 
    tagged_union.js:120:24
    120|     if (z.toString === 0) {} // Error
                                ^ [1]
 
 References:
-   <BUILTINS>/core.js:165:5
-   165|     toString(radix?: number): string;
-            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+   tagged_union.js:107:37
+   107|     x: Array<string>, y: string, z: number, q: boolean,
+                                            ^^^^^^ [2]
+   <BUILTINS>/core.js:180:5
+   180|     toString(radix?: number): string;
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
 
 
 Error -------------------------------------------------------------------------------------------- tagged_union.js:121:9
@@ -2718,35 +2682,22 @@ References:
                            ^^^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------------- tagged_union.js:123:8
-
-Cannot cast `z.toStirng` to string because number literal `0` [1] is incompatible with string [2]. [incompatible-cast]
-
-   tagged_union.js:123:8
-   123|       (z.toStirng: string); // error: number literal 0 !~> string
-               ^^^^^^^^^^
-
-References:
-   tagged_union.js:121:24
-   121|     if (z.toStirng === 0) { // Error, typo
-                               ^ [1]
-   tagged_union.js:123:20
-   123|       (z.toStirng: string); // error: number literal 0 !~> string
-                           ^^^^^^ [2]
-
-
 Error ------------------------------------------------------------------------------------------- tagged_union.js:125:23
 
-number [1] is incompatible with function type [2]. [incompatible-type]
+Cannot compare number [1] with property `valueOf` of boolean [2] because number [1] is incompatible with function
+type [3]. [incompatible-type]
 
    tagged_union.js:125:23
    125|     if (q.valueOf === 0) {} // Error
                               ^ [1]
 
 References:
-   <BUILTINS>/core.js:140:5
-   140|     valueOf(): boolean;
-            ^^^^^^^^^^^^^^^^^^ [2]
+   tagged_union.js:107:48
+   107|     x: Array<string>, y: string, z: number, q: boolean,
+                                                       ^^^^^^^ [2]
+   <BUILTINS>/core.js:155:5
+   155|     valueOf(): boolean;
+            ^^^^^^^^^^^^^^^^^^ [3]
 
 
 Error -------------------------------------------------------------------------------------------- tagged_union.js:126:9
@@ -2780,69 +2731,22 @@ References:
                           ^^^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------------- tagged_union.js:128:8
-
-Cannot cast `q.valeuOf` to string because number literal `0` [1] is incompatible with string [2]. [incompatible-cast]
-
-   tagged_union.js:128:8
-   128|       (q.valeuOf: string); // error: number literal 0 !~> string
-               ^^^^^^^^^
-
-References:
-   tagged_union.js:126:23
-   126|     if (q.valeuOf === 0) { // Error, typo
-                              ^ [1]
-   tagged_union.js:128:19
-   128|       (q.valeuOf: string); // error: number literal 0 !~> string
-                          ^^^^^^ [2]
-
-
-Error -------------------------------------------------------------------------------------------- tagged_union.js:131:8
-
-Cannot cast `r.toStirng` to empty because number literal `0` [1] is incompatible with empty [2]. [incompatible-cast]
-
-   tagged_union.js:131:8
-   131|       (r.toStirng: empty); // error, toStirng is refined to 0
-               ^^^^^^^^^^
-
-References:
-   tagged_union.js:130:24
-   130|     if (r.toStirng === 0) { // error: toStirng prop missing
-                               ^ [1]
-   tagged_union.js:131:20
-   131|       (r.toStirng: empty); // error, toStirng is refined to 0
-                           ^^^^^ [2]
-
-
-Error -------------------------------------------------------------------------------------------- tagged_union.js:135:8
-
-Cannot cast `s.calll` to empty because number literal `0` [1] is incompatible with empty [2]. [incompatible-cast]
-
-   tagged_union.js:135:8
-   135|       (s.calll: empty); // error, calll is refined to 0
-               ^^^^^^^
-
-References:
-   tagged_union.js:134:21
-   134|     if (s.calll === 0) { // error: calll prop missing
-                            ^ [1]
-   tagged_union.js:135:17
-   135|       (s.calll: empty); // error, calll is refined to 0
-                        ^^^^^ [2]
-
-
 Error ------------------------------------------------------------------------------------------- tagged_union.js:137:20
 
-number [1] is incompatible with function type [2]. [incompatible-type]
+Cannot compare number [1] with property `call` of function type [2] because number [1] is incompatible with function
+type [3]. [incompatible-type]
 
    tagged_union.js:137:20
    137|     if (t.call === 0) {} // Error
                            ^ [1]
 
 References:
-   <BUILTINS>/core.js:129:17
-   129|     proto call: Function$Prototype$Call; // (thisArg: any, ...argArray: Array<any>) => any
-                        ^^^^^^^^^^^^^^^^^^^^^^^ [2]
+   tagged_union.js:108:32
+   108|     r: Object, s: Function, t: () => void
+                                       ^^^^^^^^^^ [2]
+   <BUILTINS>/core.js:144:17
+   144|     proto call: Function$Prototype$Call; // (thisArg: any, ...argArray: Array<any>) => any
+                        ^^^^^^^^^^^^^^^^^^^^^^^ [3]
 
 
 Error -------------------------------------------------------------------------------------------- tagged_union.js:138:9
@@ -2876,23 +2780,6 @@ References:
                         ^^^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------------- tagged_union.js:140:8
-
-Cannot cast `t.calll` to string because number literal `0` [1] is incompatible with string [2]. [incompatible-cast]
-
-   tagged_union.js:140:8
-   140|       (t.calll: string); // error: number literal 0 !~> string
-               ^^^^^^^
-
-References:
-   tagged_union.js:138:21
-   138|     if (t.calll === 0) { // error: calll prop missing
-                            ^ [1]
-   tagged_union.js:140:17
-   140|       (t.calll: string); // error: number literal 0 !~> string
-                        ^^^^^^ [2]
-
-
 Error -------------------------------------------------------------------------------------------- tagged_union.js:147:8
 
 Cannot cast `x.str` to string literal `not str` because string literal `str` [1] is incompatible with string literal
@@ -2906,24 +2793,6 @@ References:
    tagged_union.js:146:9
    146|     if (x.str === 'str') {
                 ^^^^^ [1]
-   tagged_union.js:147:15
-   147|       (x.str: 'not str'); // error: 'str' !~> 'not str'
-                      ^^^^^^^^^ [2]
-
-
-Error -------------------------------------------------------------------------------------------- tagged_union.js:147:8
-
-Cannot cast `x.str` to string literal `not str` because string literal `str` [1] is incompatible with string literal
-`not str` [2]. [incompatible-cast]
-
-   tagged_union.js:147:8
-   147|       (x.str: 'not str'); // error: 'str' !~> 'not str'
-               ^^^^^
-
-References:
-   tagged_union.js:146:19
-   146|     if (x.str === 'str') {
-                          ^^^^^ [1]
    tagged_union.js:147:15
    147|       (x.str: 'not str'); // error: 'str' !~> 'not str'
                       ^^^^^^^^^ [2]
@@ -2947,24 +2816,6 @@ References:
                       ^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------------- tagged_union.js:150:8
-
-Cannot cast `x.num` to number literal `456` because number literal `123` [1] is incompatible with number literal
-`456` [2]. [incompatible-cast]
-
-   tagged_union.js:150:8
-   150|       (x.num: 456); // error: 123 !~> 456
-               ^^^^^
-
-References:
-   tagged_union.js:149:19
-   149|     if (x.num === 123) {
-                          ^^^ [1]
-   tagged_union.js:150:15
-   150|       (x.num: 456); // error: 123 !~> 456
-                      ^^^ [2]
-
-
 Error -------------------------------------------------------------------------------------------- tagged_union.js:153:8
 
 Cannot cast `x.bool` to boolean literal `false` because boolean literal `true` [1] is incompatible with boolean literal
@@ -2978,24 +2829,6 @@ References:
    tagged_union.js:152:9
    152|     if (x.bool === true) {
                 ^^^^^^ [1]
-   tagged_union.js:153:16
-   153|       (x.bool: false); // error: true !~> false
-                       ^^^^^ [2]
-
-
-Error -------------------------------------------------------------------------------------------- tagged_union.js:153:8
-
-Cannot cast `x.bool` to boolean literal `false` because boolean literal `true` [1] is incompatible with boolean literal
-`false` [2]. [incompatible-cast]
-
-   tagged_union.js:153:8
-   153|       (x.bool: false); // error: true !~> false
-               ^^^^^^
-
-References:
-   tagged_union.js:152:20
-   152|     if (x.bool === true) {
-                           ^^^^ [1]
    tagged_union.js:153:16
    153|       (x.bool: false); // error: true !~> false
                        ^^^^^ [2]
@@ -3032,23 +2865,6 @@ References:
                          ^^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------------- tagged_union.js:157:8
-
-Cannot cast `x.badStr` to empty because string literal `bad` [1] is incompatible with empty [2]. [incompatible-cast]
-
-   tagged_union.js:157:8
-   157|       (x.badStr: empty); // error: 'bad' !~> empty
-               ^^^^^^^^
-
-References:
-   tagged_union.js:156:22
-   156|     if (x.badStr === 'bad') { // Error, reading unknown property
-                             ^^^^^ [1]
-   tagged_union.js:157:18
-   157|       (x.badStr: empty); // error: 'bad' !~> empty
-                         ^^^^^ [2]
-
-
 Error -------------------------------------------------------------------------------------------- tagged_union.js:159:9
 
 Property `badNum` is missing in object type [1]. [prop-missing]
@@ -3080,23 +2896,6 @@ References:
                          ^^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------------- tagged_union.js:160:8
-
-Cannot cast `x.badNum` to empty because number literal `123` [1] is incompatible with empty [2]. [incompatible-cast]
-
-   tagged_union.js:160:8
-   160|       (x.badNum: empty); // error: 123 !~> empty
-               ^^^^^^^^
-
-References:
-   tagged_union.js:159:22
-   159|     if (x.badNum === 123) { // Error, reading unknown property
-                             ^^^ [1]
-   tagged_union.js:160:18
-   160|       (x.badNum: empty); // error: 123 !~> empty
-                         ^^^^^ [2]
-
-
 Error -------------------------------------------------------------------------------------------- tagged_union.js:162:9
 
 Property `badBool` is missing in object type [1]. [prop-missing]
@@ -3123,23 +2922,6 @@ References:
    tagged_union.js:162:9
    162|     if (x.badBool === true) { // Error, reading unknown property
                 ^^^^^^^^^ [1]
-   tagged_union.js:163:19
-   163|       (x.badBool: empty); // error: true !~> empty
-                          ^^^^^ [2]
-
-
-Error -------------------------------------------------------------------------------------------- tagged_union.js:163:8
-
-Cannot cast `x.badBool` to empty because boolean literal `true` [1] is incompatible with empty [2]. [incompatible-cast]
-
-   tagged_union.js:163:8
-   163|       (x.badBool: empty); // error: true !~> empty
-               ^^^^^^^^^
-
-References:
-   tagged_union.js:162:23
-   162|     if (x.badBool === true) { // Error, reading unknown property
-                              ^^^^ [1]
    tagged_union.js:163:19
    163|       (x.badBool: empty); // error: true !~> empty
                           ^^^^^ [2]
@@ -3882,8 +3664,8 @@ Cannot get `x[0]` because an index signature declaring the expected key / value 
             ^^^^
 
 References:
-   <BUILTINS>/core.js:137:15
-   137| declare class Boolean {
+   <BUILTINS>/core.js:152:15
+   152| declare class Boolean {
                       ^^^^^^^ [1]
 
 
@@ -4063,4 +3845,7 @@ Cannot perform arithmetic operation because undefined [1] is not a number. [unsa
 
 
 
-Found 266 errors
+Found 253 errors
+
+Only showing the most relevant union/intersection branches.
+To see all branches, re-run Flow with --show-all-branches

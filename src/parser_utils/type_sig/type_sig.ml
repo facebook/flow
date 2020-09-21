@@ -30,6 +30,14 @@ type 'a smap = 'a SMap.t
 
 let iter_smap f = SMap.iter (fun _ x -> f x)
 
+(* The PPX generated map functions will use the non-tail-recursive List.map
+ * implementation. Use this type instead if the list might be very long. For
+ * example, codegen can produce unions that are very large. *)
+type 'a tailrec_list = 'a list
+[@@deriving iter, show {with_path = false}]
+
+let map_tailrec_list f xs = Base.List.map ~f xs
+
 type ('key, 'loc, 'a) predicate =
   | AndP of ('key, 'loc, 'a) predicate * ('key, 'loc, 'a) predicate
   | OrP of ('key, 'loc, 'a) predicate * ('key, 'loc, 'a) predicate
@@ -59,7 +67,7 @@ type ('key, 'loc, 'a) predicate =
   [@@deriving iter, map, show {with_path = false}]
 
 type ('loc, 'a) tparam = TParam of {
-  loc: 'loc;
+  name_loc: 'loc;
   name: string;
   polarity: Polarity.t;
   bound: 'a option;
@@ -252,14 +260,16 @@ type ('loc, 'a) def =
       name: string;
       async: bool;
       generator: bool;
+      fn_loc: 'loc;
       def: ('loc, 'a) fun_sig;
       statics: ('loc * 'a) smap;
     }
   | DeclareFun of {
       id_loc: 'loc;
       name: string;
+      fn_loc: 'loc;
       def: ('loc, 'a) fun_sig;
-      tail: ('loc * ('loc, 'a) fun_sig) list;
+      tail: ('loc * 'loc * ('loc, 'a) fun_sig) list;
     }
   | Variable of {
       id_loc: 'loc;
@@ -337,7 +347,7 @@ type ('loc, 'a) value =
       proto: ('loc * 'a) option;
       elems_rev: ('loc, 'a) obj_value_spread_elem Nel.t;
     }
-  | ArrayLit of 'loc * 'a * 'a list
+  | ArrayLit of 'loc * 'a * 'a tailrec_list
   [@@deriving iter, map, show {with_path = false}]
 
 type 'a obj_kind =
@@ -362,10 +372,10 @@ type ('loc, 'a) annot =
 
   | Optional of 'a
   | Maybe of 'loc * 'a
-  | Union of {loc: 'loc; t0: 'a; t1: 'a; ts: 'a list}
-  | Intersection of {loc: 'loc; t0: 'a; t1: 'a; ts: 'a list}
+  | Union of {loc: 'loc; t0: 'a; t1: 'a; ts: 'a tailrec_list}
+  | Intersection of {loc: 'loc; t0: 'a; t1: 'a; ts: 'a tailrec_list}
 
-  | Tuple of {loc: 'loc; ts: 'a list}
+  | Tuple of {loc: 'loc; ts: 'a tailrec_list}
   | Array of 'loc * 'a
   | ReadOnlyArray of 'loc * 'a
 
@@ -498,26 +508,9 @@ type 'a op =
  *    syntax. These represent missing functionality in the analysis which should
  *    be fixed.
  *)
-type errno =
-  | UnexpectedTypeof
-  | TArgArity0
-  | TArgArity1
-  | TArgArity2
-  | TArgArity3
-  | TArgMinArity1
-  | UnexpectedTArg
-  | UnsupportedTemporaryType
-  | MissingAnnotation
-  | EmptyObjectLiteral
-  | EmptyArrayLiteral
-  | UnsupportedComputedProperty
-  | UnsupportedArrayHole
-  | UnsupportedArraySpread
-  | UnsupportedTemporaryObjectProp
-  | UnsupportedKeyMirrorProp
-  | UnsupportedJSXElement
-  | TODO_Literal
-  | TODO_Expression
-  [@@deriving show {with_path = false}]
+type 'loc errno =
+  | CheckError
+  | SigError of 'loc Signature_error.t
+  [@@deriving show {with_path = false}, map]
 
-type 'loc error = 'loc * errno [@@deriving show {with_path = false}]
+type 'loc error = 'loc * 'loc errno [@@deriving show {with_path = false}]

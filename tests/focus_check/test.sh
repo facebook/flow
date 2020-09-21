@@ -40,4 +40,7 @@ assert_errors "$FLOW" focus-check other_root/other_root_file.js
 printf "\nFocused check with explicit root:\n"
 assert_errors "$FLOW" focus-check --root . other_root/other_root_file.js
 
+printf "\nFocused check with syntax error:\n"
+assert_errors "$FLOW" focus-check syntax.js
+
 printf "\nDone!\n"

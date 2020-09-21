@@ -636,6 +636,15 @@ References:
                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
+Error --------------------------------------------------------------------------------------------- eventtarget.js:22:22
+
+Cannot use `window` as a type because it is an `any`-typed value. Type `window` properly, so it is no longer
+`any`-typed, to use it as an annotation. [value-as-type]
+
+   22|       (event.target: window);
+                            ^^^^^^
+
+
 Error -------------------------------------------------------------------------------------------------- path2d.js:16:11
 
 Cannot call `path.arcTo` because string [1] is incompatible with number [2]. [incompatible-call]
@@ -1196,7 +1205,7 @@ References:
 
 
 
-Found 49 errors
+Found 50 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches

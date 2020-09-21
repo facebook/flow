@@ -85,10 +85,10 @@ module.exports = {
 
 Stats:
   Files changed:                            5
-  Number of sig. ver. errors:              13
-  Number of annotations required:          13
   Number of annotations added:             12
   Total size of annotations:               14
+  Number of sig. ver. errors:              13
+  Number of annotations required:          13
   Number of annotations skipped:            0
 
 Errors:
@@ -99,7 +99,6 @@ Errors:
     Parsing heaps get ast error:            0
     Indeterminate module type:              0
     No matching export:                     1
-    Unrecognizable module error:            0
   Serializer error:                         0
   Unsupported error kind:                   0
 

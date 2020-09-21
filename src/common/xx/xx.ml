@@ -25,6 +25,8 @@ external hash : string -> (int64[@unboxed]) -> (hash[@unboxed])
   = "caml_xx_hash" "caml_xx_hash_unboxed"
   [@@noalloc]
 
+let equal (a : hash) (b : hash) = Int64.equal a b
+
 (* Unlike Int64.to_string, which returns a decimal string, this returns a hex
  * string which is padded out to the full 16 bytes. *)
 let to_string (hash : hash) : string = Printf.sprintf "%016Lx" hash

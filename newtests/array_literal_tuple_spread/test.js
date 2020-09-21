@@ -1,9 +1,10 @@
 /* @flow */
 
 
+import type Suite from "flow-dev-tools/src/test/Suite.js";
 import {suite, test} from 'flow-dev-tools/src/test/Tester';
 
-export default suite(({addFile, addFiles, addCode}) => [
+export default (suite(({addFile, addFiles, addCode}) => [
   test("any flowing to spreads", [
     addCode(`
       function withoutAny(tup: [1,2], notAny: [3, 4]): [1, 2, 3, 4] {
@@ -316,8 +317,8 @@ export default suite(({addFile, addFiles, addCode}) => [
             3: const arr: Array<number> = [..."hello"];
                                           ^^^^^^^^^^^^ Cannot assign array literal to \`arr\` because string [1] is incompatible with number [2] in array element. [incompatible-type]
             References:
-            324:     @@iterator(): Iterator<string>;
-                                            ^^^^^^ [1]. See lib: [LIB] core.js:324
+            339:     @@iterator(): Iterator<string>;
+                                            ^^^^^^ [1]. See lib: [LIB] core.js:339
               3: const arr: Array<number> = [..."hello"];
                                   ^^^^^^ [2]
         `,
@@ -374,4 +375,4 @@ export default suite(({addFile, addFiles, addCode}) => [
           'like spreading any, which results in any'
       ),
   ]),
-]);
+]): Suite);
