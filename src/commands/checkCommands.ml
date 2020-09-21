@@ -133,7 +133,7 @@ module CheckCommand = struct
     in
     let options =
       let lazy_mode = Some Options.NON_LAZY_MODE in
-      make_options ~flowconfig_name ~flowconfig ~lazy_mode ~root options_flags
+      make_options ~flowconfig_name ~flowconfig ~lazy_mode ~root ~options_flags
     in
     let init_id = Random_id.short_string () in
     let offset_kind = CommandUtils.offset_kind_of_offset_style offset_style in
@@ -220,7 +220,7 @@ module FocusCheckCommand = struct
     let flowconfig = read_config_or_exit (Server_files_js.config_file flowconfig_name root) in
     let options =
       let lazy_mode = Some Options.NON_LAZY_MODE in
-      make_options ~flowconfig_name ~flowconfig ~lazy_mode ~root options_flags
+      make_options ~flowconfig_name ~flowconfig ~lazy_mode ~root ~options_flags
     in
     let init_id = Random_id.short_string () in
     let offset_kind = CommandUtils.offset_kind_of_offset_style offset_style in

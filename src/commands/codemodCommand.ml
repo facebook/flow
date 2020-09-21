@@ -64,7 +64,7 @@ let main (module Runnable : Codemod_runner.RUNNABLE) codemod_flags () =
       ~flowconfig
       ~lazy_mode:(Some Options.LAZY_MODE_FILESYSTEM)
       ~root
-      option_values
+      ~options_flags:option_values
   in
   (* Normalizes filepaths (symlinks and shortcuts) *)
   if filenames = [] then (

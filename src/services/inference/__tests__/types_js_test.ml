@@ -104,7 +104,7 @@ let make_options () =
     ~flowconfig
     ~lazy_mode:None
     ~root
-    dummy_options_flags
+    ~options_flags:dummy_options_flags
 
 let prepare_freshparsed freshparsed =
   freshparsed |> Base.List.map ~f:make_fake_file_key |> FilenameSet.of_list
