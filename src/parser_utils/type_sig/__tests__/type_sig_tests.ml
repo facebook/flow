@@ -3980,8 +3980,8 @@ let%expect_test "long_string_lit" =
     0. Variable {id_loc = [1:13-14]; name = "a"; def = (Value (StringLit ([1:17-22], "aaa")))}
     1. Variable {id_loc = [2:13-14]; name = "b"; def = (Value (LongStringLit [2:17-23]))}
     2. Variable {id_loc = [3:19-20];
-         name = "c"; def = (Annot (TEMPORARY_String ([3:22-46], "ccc")))}
-    3. Variable {id_loc = [4:19-20]; name = "d"; def = (Annot (TEMPORARY_LongString [4:22-47]))} |}]
+         name = "c"; def = (Annot (TEMPORARY_String ([3:40-45], "ccc")))}
+    3. Variable {id_loc = [4:19-20]; name = "d"; def = (Annot (TEMPORARY_LongString [4:40-46]))} |}]
 
 let%expect_test "export_default_function_binding" =
   print_sig {|

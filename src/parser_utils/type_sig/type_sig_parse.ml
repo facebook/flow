@@ -1698,33 +1698,27 @@ and maybe_special_unqualified_generic opts scope locs xs loc targs ref_loc =
 
   | "$TEMPORARY$number" ->
     begin match targs with
-    | Some (_, {arguments = [(_, T.NumberLiteral {Ast.NumberLiteral.value; raw; _})]; _}) ->
-      Annot (TEMPORARY_Number (loc, value, raw))
-    | Some (_, {arguments = [(loc, _)]; _}) ->
+    | Some (_, {arguments = [(loc, T.NumberLiteral {Ast.NumberLiteral.value; raw; _})]; _}) ->
       let loc = Locs.push locs loc in
-      Err (loc, CheckError)
+      Annot (TEMPORARY_Number (loc, value, raw))
     | _ -> Err (loc, CheckError)
     end
 
   | "$TEMPORARY$string" ->
     begin match targs with
-    | Some (_, {arguments = [(_, T.StringLiteral {Ast.StringLiteral.value = s; _})]; _}) ->
+    | Some (_, {arguments = [(loc, T.StringLiteral {Ast.StringLiteral.value = s; _})]; _}) ->
+      let loc = Locs.push locs loc in
       if opts.max_literal_len = 0 || String.length s <= opts.max_literal_len
       then Annot (TEMPORARY_String (loc, s))
       else Annot (TEMPORARY_LongString loc)
-    | Some (_, {arguments = [(loc, _)]; _}) ->
-      let loc = Locs.push locs loc in
-      Err (loc, CheckError)
     | _ -> Err (loc, CheckError)
     end
 
   | "$TEMPORARY$boolean" ->
     begin match targs with
-    | Some (_, {arguments = [(_, T.BooleanLiteral {Ast.BooleanLiteral.value; _})]; _}) ->
-      Annot (TEMPORARY_Boolean (loc, value))
-    | Some (_, {arguments = [(loc, _)]; _}) ->
+    | Some (_, {arguments = [(loc, T.BooleanLiteral {Ast.BooleanLiteral.value; _})]; _}) ->
       let loc = Locs.push locs loc in
-      Err (loc, CheckError)
+      Annot (TEMPORARY_Boolean (loc, value))
     | _ -> Err (loc, CheckError)
     end
 

@@ -40,5 +40,59 @@ References:
                                ^^^ [1]
 
 
+Error ---------------------------------------------------------------------------------------- temporary_bool_dep.js:4:2
 
-Found 3 errors
+Cannot cast `x` to boolean literal `false` because boolean [1] is incompatible with boolean literal `false` [2].
+[incompatible-cast]
+
+   temporary_bool_dep.js:4:2
+   4| (x: false); // error: true ~> false
+       ^
+
+References:
+   temporary_bool.js:3:44
+   3| declare module.exports: $TEMPORARY$boolean<true>;
+                                                 ^^^^ [1]
+   temporary_bool_dep.js:4:5
+   4| (x: false); // error: true ~> false
+          ^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------- temporary_number_dep.js:4:2
+
+Cannot cast `x` to number literal `0` because number [1] is incompatible with number literal `0` [2].
+[incompatible-cast]
+
+   temporary_number_dep.js:4:2
+   4| (x: 0); // error: 42 ~> 0
+       ^
+
+References:
+   temporary_number.js:3:43
+   3| declare module.exports: $TEMPORARY$number<42>;
+                                                ^^ [1]
+   temporary_number_dep.js:4:5
+   4| (x: 0); // error: 42 ~> 0
+          ^ [2]
+
+
+Error -------------------------------------------------------------------------------------- temporary_string_dep.js:4:2
+
+Cannot cast `x` to string literal `bar` because string [1] is incompatible with string literal `bar` [2].
+[incompatible-cast]
+
+   temporary_string_dep.js:4:2
+   4| (x: 'bar'); // error: foo ~> bar
+       ^
+
+References:
+   temporary_string.js:3:43
+   3| declare module.exports: $TEMPORARY$string<'foo'>;
+                                                ^^^^^ [1]
+   temporary_string_dep.js:4:5
+   4| (x: 'bar'); // error: foo ~> bar
+          ^^^^^ [2]
+
+
+
+Found 6 errors
