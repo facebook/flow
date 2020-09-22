@@ -115,14 +115,14 @@ let def_reason = function
   | EnumBinding { id_loc; name; _ } ->
     Reason.(mk_reason (REnum name) id_loc)
 
-let remote_ref_reason file = function
-  | Pack.Import { id_loc; name; index; _ }
-  | Pack.ImportType { id_loc; name; index; _ }
-  | Pack.ImportTypeof { id_loc; name; index; _ } ->
-    let (mref, _) = Module_refs.get file.dependencies index in
-    Reason.(mk_reason (RNamedImportedType (mref, name)) id_loc)
-  | Pack.ImportNs { id_loc; name; _ } -> Reason.(mk_reason (RImportStar name) id_loc)
-  | Pack.ImportTypeofNs { id_loc; name; _ } -> Reason.(mk_reason (RImportStarTypeOf name) id_loc)
+let remote_ref_reason = function
+  | Pack.Import { id_loc; name; _ }
+  | Pack.ImportNs { id_loc; name; _ } ->
+    Reason.(mk_reason (RIdentifier name) id_loc)
+  | Pack.ImportType { id_loc; name; _ }
+  | Pack.ImportTypeof { id_loc; name; _ }
+  | Pack.ImportTypeofNs { id_loc; name; _ } ->
+    Type.DescFormat.type_reason name id_loc
 
 let obj_lit_reason ~frozen loc =
   let open Reason in
@@ -1763,7 +1763,7 @@ and visit_remote_ref component file (Node n) =
   match n.merged with
   | Some t -> t
   | None ->
-    let reason = remote_ref_reason file n.packed in
+    let reason = remote_ref_reason n.packed in
     let tvar = Tvar.mk file.cx reason in
     n.merged <- Some tvar;
     let t = merge_remote_ref component file reason n.packed in

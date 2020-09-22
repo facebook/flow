@@ -1,3 +1,17 @@
+Error ---------------------------------------------------------------------------------------- instantiation_err.js:4:17
+
+Cannot instantiate `T` because `T` [1] is not a polymorphic type. [incompatible-use]
+
+   instantiation_err.js:4:17
+   4| export type U = T<string>; // Err: cannot instantiate
+                      ^^^^^^^^^
+
+References:
+   type_exports.js:3:13
+   3| export type T = string;
+                  ^ [1]
+
+
 Error ------------------------------------------------------------------------------------------------- mixin_dep.js:6:7
 
 Cannot call `s.has` with `"foo"` bound to `key` because string [1] is incompatible with number [2]. [incompatible-call]
@@ -27,4 +41,4 @@ References:
 
 
 
-Found 2 errors
+Found 3 errors
