@@ -1310,14 +1310,32 @@ and merge_class_extends component file this reason extends mixins =
   in
   (super, static_proto)
 
-and merge_class_mixin component file this = function
-  | ClassMixin { loc; t } ->
-    let t = specialize file (merge component file t) in
-    TypeUtil.this_typeapp ~annot_loc:loc t this None
-  | ClassMixinApp { loc; t; targs } ->
-    let t = merge component file t in
-    let targs = List.map (merge component file) targs in
-    TypeUtil.this_typeapp ~annot_loc:loc t this (Some targs)
+and merge_class_mixin =
+  let rec loop component file = function
+    | Pack.Eval (loc, t, (GetProp name as op)) ->
+      let (t, names_rev) = loop component file t in
+      let t = eval file loc t op in
+      (t, name :: names_rev)
+    | Pack.Ref ref ->
+      let f t _ name = (t, [name]) in
+      merge_ref component file f ref
+    | _ -> failwith "unexpected class mixin"
+  in
+  let merge_mixin_ref component file loc ref =
+    let (t, names_rev) = loop component file ref in
+    let name = String.concat "." (List.rev names_rev) in
+    let reason = Reason.(mk_annot_reason (RType name) loc) in
+    Tvar.mk_derivable_where file.cx reason (fun tout ->
+        Flow_js.flow file.cx (t, Type.MixinT (reason, tout)))
+  in
+  fun component file this -> function
+    | ClassMixin { loc; t } ->
+      let t = specialize file (merge_mixin_ref component file loc t) in
+      TypeUtil.this_typeapp ~annot_loc:loc t this None
+    | ClassMixinApp { loc; t; targs } ->
+      let t = merge_mixin_ref component file loc t in
+      let targs = List.map (merge component file) targs in
+      TypeUtil.this_typeapp ~annot_loc:loc t this (Some targs)
 
 and merge_class component file reason id def =
   let (ClassSig { tparams; extends; implements; static_props; own_props; proto_props }) = def in

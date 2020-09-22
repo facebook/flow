@@ -1,3 +1,17 @@
+Error ------------------------------------------------------------------------------------------------- mixin_dep.js:6:7
+
+Cannot call `s.has` with `"foo"` bound to `key` because string [1] is incompatible with number [2]. [incompatible-call]
+
+   mixin_dep.js:6:7
+    6| s.has("foo"); // Err: string ~> number (on Seq, _not_ IndexedIterable's inherited method)
+             ^^^^^ [1]
+
+References:
+   mixin.js:11:48
+   11| declare export class IndexedSeq<T> extends Seq<number,T> mixins IndexedIterable<T> {}
+                                                      ^^^^^^ [2]
+
+
 Error --------------------------------------------------------------------------------------------- qualified_dep.js:4:3
 
 Cannot get `b.bzzt` because property `bzzt` is missing in `B` [1]. [prop-missing]
@@ -13,4 +27,4 @@ References:
 
 
 
-Found 1 error
+Found 2 errors
