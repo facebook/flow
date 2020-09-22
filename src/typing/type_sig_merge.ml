@@ -445,7 +445,7 @@ and merge_star component file (loc, index) =
 and merge_tyref component file f = function
   | Pack.Unqualified ref -> merge_ref component file f ref
   | Pack.Qualified { loc; id_loc; name; qualification } ->
-    let f t =
+    let f t _ _ =
       (* TODO: use_op *)
       let use_op = Type.unknown_use in
       let reason_op = Reason.(mk_reason (RProperty (Some name)) loc) in
@@ -456,7 +456,7 @@ and merge_tyref component file f = function
               file.cx
               (t, Type.(GetPropT (use_op, reason_op, Named (id_reason, name), tout))))
       in
-      f t
+      f t loc name
     in
     merge_tyref component file f qualification
 

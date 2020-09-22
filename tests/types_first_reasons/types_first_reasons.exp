@@ -1,0 +1,16 @@
+Error --------------------------------------------------------------------------------------------- qualified_dep.js:4:3
+
+Cannot get `b.bzzt` because property `bzzt` is missing in `B` [1]. [prop-missing]
+
+   qualified_dep.js:4:3
+   4| b.bzzt; // Error: prop-missing
+        ^^^^
+
+References:
+   qualified.js:5:26
+   5| module.exports = (new B: A.B);
+                               ^^^ [1]
+
+
+
+Found 1 error
