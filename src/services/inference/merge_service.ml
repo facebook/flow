@@ -144,6 +144,7 @@ let merge_context_generic ~options ~reader ~get_ast_unsafe ~get_file_sig_unsafe 
   in
   let (((full_cx, _, _), other_cxs) as cx_nel) =
     Merge_js.merge_component
+      ~arch:(Options.arch options)
       ~metadata
       ~lint_severities
       ~strict_mode
@@ -409,6 +410,7 @@ let merge_contents_context ~reader options file ast info file_sig =
   in
   let ((cx, _, tast), _) =
     Merge_js.merge_component
+      ~arch:(Options.arch options)
       ~metadata
       ~lint_severities
       ~strict_mode

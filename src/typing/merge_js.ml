@@ -205,14 +205,15 @@ let detect_unnecessary_invariants cx =
 let detect_invalid_type_assert_calls cx file_sigs cxs tasts =
   if Context.type_asserts cx then Type_asserts.detect_invalid_calls ~full_cx:cx file_sigs cxs tasts
 
-let force_annotations leader_cx other_cxs =
-  Base.List.iter
-    ~f:(fun cx ->
-      let should_munge_underscores = Context.should_munge_underscores cx in
-      Context.module_ref cx
-      |> Flow_js.lookup_module leader_cx
-      |> Flow_js.enforce_strict leader_cx ~should_munge_underscores)
-    (leader_cx :: other_cxs)
+let force_annotations ~arch leader_cx other_cxs =
+  if arch = Options.Classic then
+    Base.List.iter
+      ~f:(fun cx ->
+        let should_munge_underscores = Context.should_munge_underscores cx in
+        Context.module_ref cx
+        |> Flow_js.lookup_module leader_cx
+        |> Flow_js.enforce_strict leader_cx ~should_munge_underscores)
+      (leader_cx :: other_cxs)
 
 let detect_non_voidable_properties cx =
   (* This function approximately checks whether VoidT can flow to the provided
@@ -463,6 +464,7 @@ let detect_literal_subtypes cx =
    5. Link the local references to libraries in master_cx and component_cxs.
 *)
 let merge_component
+    ~arch
     ~metadata
     ~lint_severities
     ~strict_mode
@@ -586,7 +588,7 @@ let merge_component
     detect_matching_props_violations cx;
     detect_literal_subtypes cx;
 
-    force_annotations cx other_cxs;
+    force_annotations ~arch cx other_cxs;
 
     match results with
     | [] -> failwith "there is at least one cx"

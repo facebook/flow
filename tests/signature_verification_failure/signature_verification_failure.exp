@@ -28,14 +28,6 @@ spread in array: [signature-verification-failure]
 
 Error -------------------------------------------------------------------------------------------- array-pattern.js:3:19
 
-Missing type annotation for destructuring. [missing-annot]
-
-   3| module.exports = ([x, y]) => {};
-                        ^^^^^^
-
-
-Error -------------------------------------------------------------------------------------------- array-pattern.js:3:19
-
 Cannot build a typed interface for this module. You should annotate the exports of this module with types. Missing type
 annotation at array pattern: [signature-verification-failure]
 
@@ -93,14 +85,6 @@ annotation at function return: [signature-verification-failure]
 
    3| function f() {
                   
-
-
-Error ------------------------------------------------------------------------------------------------------- fn.js:7:12
-
-Missing type annotation for `x`. [missing-annot]
-
-   7| function g(x): number {
-                 ^
 
 
 Error ------------------------------------------------------------------------------------------------------- fn.js:7:12
@@ -321,14 +305,6 @@ kind of expression in predicate function: [signature-verification-failure]
 
 Error ---------------------------------------------------------------------------------------------- obj-pattern.js:3:19
 
-Missing type annotation for destructuring. [missing-annot]
-
-   3| module.exports = ({x, y}) => {};
-                        ^^^^^^
-
-
-Error ---------------------------------------------------------------------------------------------- obj-pattern.js:3:19
-
 Cannot build a typed interface for this module. You should annotate the exports of this module with types. Missing type
 annotation at array pattern: [signature-verification-failure]
 
@@ -361,14 +337,6 @@ annotation at declaration of variable `c`: [signature-verification-failure]
 
    7| export var { [b]: c } = (42: any);
                         ^
-
-
-Error ----------------------------------------------------------------------------------------------------- rest.js:3:33
-
-Missing type annotation for rest parameter `z`. [missing-annot]
-
-   3| module.exports = (x: number, ...z) => {};
-                                      ^
 
 
 Error ----------------------------------------------------------------------------------------------------- rest.js:3:33
@@ -424,4 +392,4 @@ annotation at declaration of variable `x`: [signature-verification-failure]
 
 
 
-Found 44 errors
+Found 40 errors

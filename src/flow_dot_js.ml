@@ -243,6 +243,7 @@ let infer_and_merge ~root filename ast file_sig =
   let aloc_ast = Ast_loc_utils.loc_to_aloc_mapper#program ast in
   let ((cx, _, tast), _other_cxs) =
     Merge_js.merge_component
+      ~arch:(Options.TypesFirst { new_signatures = false })
       ~metadata
       ~lint_severities
       ~strict_mode
