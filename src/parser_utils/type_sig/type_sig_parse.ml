@@ -2555,14 +2555,20 @@ and function_def =
       FunParam {name; t}
     | P.Object {P.Object.annot = t; properties = _; comments = _}
     | P.Array {P.Array.annot = t; elements = _; comments = _} ->
-      let loc = (Locs.push locs loc) in
+      let loc = Locs.push locs loc in
+      (* Use the name "_" to match types-first behavior if there is a default.
+       * Because types-first must create a sig AST, it needs to generate a name
+       * in order to insert the ? indicating an optional param.
+       *
+       * TODO Just use None once T71257430 is closed. *)
+      let name = if default <> None then Some "_" else None in
       let t = annot_or_hint
         ~err_loc:(Some loc)
         ~sort:(Expected_annotation_sort.ArrayPattern)
         opts scope locs xs t
       in
       let t = if default <> None then Annot (Optional t) else t in
-      FunParam {name = None; t}
+      FunParam {name; t}
     | P.Expression _ ->
       failwith "unexpected expression pattern"
   in

@@ -1,3 +1,17 @@
+Error ---------------------------------------------------------------------------- destructured_param_default_dep.js:4:3
+
+Cannot call `f` with `0` bound to `_` because number [1] is incompatible with object type [2]. [incompatible-call]
+
+   destructured_param_default_dep.js:4:3
+   4| f(0); // error
+        ^ [1]
+
+References:
+   destructured_param_default.js:3:31
+   3| module.exports = function({}: {} = {}) {}
+                                    ^^ [2]
+
+
 Error ---------------------------------------------------------------------------------------- instantiation_err.js:4:17
 
 Cannot instantiate `T` because `T` [1] is not a polymorphic type. [incompatible-use]
@@ -95,4 +109,4 @@ References:
 
 
 
-Found 6 errors
+Found 7 errors
