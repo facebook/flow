@@ -222,6 +222,15 @@ let add_default_constructor reason extends props =
         | prop -> prop)
       props
 
+let add_name_field reason =
+  let f = function
+    | Some _ as p -> p
+    | None ->
+      let open Type in
+      Some (Field (None, StrT.why reason trust, Polarity.Neutral))
+  in
+  SMap.update "name" f
+
 let merge_enum file reason id_loc enum_name rep members =
   let rep_reason desc = Reason.(mk_reason (REnumRepresentation desc) id_loc) in
   let rep_t desc def_t = Type.DefT (rep_reason desc, trust, def_t) in
@@ -1242,7 +1251,8 @@ and merge_interface ~inline component file reason id def =
   in
   let static =
     let static_reason = Reason.(update_desc_reason (fun d -> RStatics d) reason) in
-    let props = SMap.empty in
+    (* TODO: interfaces don't have a name field, or even statics *)
+    let props = add_name_field reason SMap.empty in
     let proto = Type.NullProtoT static_reason in
     Obj_type.mk_with_proto file.cx static_reason proto ~props ~obj_kind:Type.Inexact
   in
@@ -1349,6 +1359,7 @@ and merge_class component file reason id def =
     let static =
       let static_reason = Reason.(update_desc_reason (fun d -> RStatics d) reason) in
       let props = SMap.map (merge_class_prop component file) static_props in
+      let props = add_name_field reason props in
       Obj_type.mk_with_proto file.cx static_reason static_proto ~props ~obj_kind:Type.Inexact
     in
     let own_props =
@@ -1403,6 +1414,7 @@ and merge_declare_class component file reason id def =
     let static =
       let static_reason = Reason.(update_desc_reason (fun d -> RStatics d) reason) in
       let props = SMap.map (merge_interface_prop component file) static_props in
+      let props = add_name_field reason props in
       let call =
         match List.rev_map (merge component file) static_calls with
         | [] -> None
