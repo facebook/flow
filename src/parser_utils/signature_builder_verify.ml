@@ -443,11 +443,14 @@ module Eval (Env : EvalEnv) = struct
           } )
       when Env.facebook_keyMirror ->
       let open Ast.Expression.Object in
-      let object_property tps loc = function
-        | ( _,
-            Ast.Expression.Object.Property.Init
-              { key = Ast.Expression.Object.Property.Identifier _; value; _ } ) ->
+      let object_key tps loc key_loc value = function
+        | Property.Identifier _
+        | Property.Literal (_, { Ast.Literal.value = Ast.Literal.String _; _ }) ->
           literal_expr tps value
+        | _ -> Deps.top (Error.UnexpectedObjectKey (loc, key_loc))
+      in
+      let object_property tps loc = function
+        | (key_loc, Property.Init { key; value; _ }) -> object_key tps loc key_loc value key
         | (key_loc, _) -> Deps.top (Error.UnexpectedObjectKey (loc, key_loc))
       in
       List.fold_left
