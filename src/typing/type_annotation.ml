@@ -60,13 +60,6 @@ end)
 module Func_type_sig = Func_sig.Make (Func_type_params)
 module Class_type_sig = Class_sig.Make (Func_type_sig)
 
-module Object_freeze = struct
-  let freeze_object cx loc t =
-    let reason_arg = mk_annot_reason (RFrozen RObjectLit) loc in
-    Tvar.mk_derivable_where cx reason_arg (fun tvar ->
-        Flow.flow cx (t, ObjFreezeT (reason_arg, tvar)))
-end
-
 (* AST helpers *)
 
 let qualified_name =
@@ -263,7 +256,7 @@ let rec convert cx tparams_map =
     let id_reason = mk_reason (RType name) id_loc in
     let qid_reason = mk_reason (RType (qualified_name qid)) qid_loc in
     let t_unapplied =
-      Tvar.mk_where cx qid_reason (fun t ->
+      Tvar.mk_no_wrap_where cx qid_reason (fun t ->
           let use_op = Op (GetProperty qid_reason) in
           Flow.flow cx (m, GetPropT (use_op, qid_reason, Named (id_reason, name), t)))
     in
@@ -349,8 +342,7 @@ let rec convert cx tparams_map =
       | "$TEMPORARY$Object$freeze" ->
         check_type_arg_arity cx loc t_ast targs 1 (fun () ->
             let (ts, targs) = convert_type_params () in
-            let t = List.hd ts in
-            let t = Object_freeze.freeze_object cx loc t in
+            let t = convert_temporary_object ~frozen:true (List.hd ts) in
             (* TODO fix targs *)
             reconstruct_ast t targs)
       | "$TEMPORARY$module$exports$assign" ->
@@ -415,24 +407,8 @@ let rec convert cx tparams_map =
       | "$TEMPORARY$object" ->
         check_type_arg_arity cx loc t_ast targs 1 (fun () ->
             let (ts, targs) = convert_type_params () in
-            let t = List.hd ts in
-            let tout =
-              match t with
-              | ExactT (_, DefT (r, trust, ObjT o))
-              | DefT (r, trust, ObjT o) ->
-                let r = replace_desc_reason RObjectLit r in
-                let obj_kind =
-                  match o.flags.obj_kind with
-                  | Indexed _ -> o.flags.obj_kind
-                  | _ -> Exact
-                in
-                DefT (r, trust, ObjT { o with flags = { o.flags with obj_kind } })
-              | EvalT (l, TypeDestructorT (use_op, r, SpreadType (target, ts, head_slice)), id) ->
-                let r = replace_desc_reason RObjectLit r in
-                EvalT (l, TypeDestructorT (use_op, r, SpreadType (target, ts, head_slice)), id)
-              | _ -> t
-            in
-            reconstruct_ast tout targs)
+            let t = convert_temporary_object ~frozen:false (List.hd ts) in
+            reconstruct_ast t targs)
       | "$TEMPORARY$array" ->
         check_type_arg_arity cx loc t_ast targs 1 (fun () ->
             let (elemts, targs) = convert_type_params () in
@@ -586,7 +562,7 @@ let rec convert cx tparams_map =
               let desc = RModule value in
               let reason = mk_annot_reason desc loc in
               let remote_module_t =
-                Tvar.mk_where cx reason (fun tout ->
+                Tvar.mk_no_wrap_where cx reason (fun tout ->
                     Flow_js.lookup_builtin
                       cx
                       (internal_module_name value)
@@ -1132,6 +1108,38 @@ and convert_opt cx tparams_map ast_opt =
   let t_opt = Base.Option.map ~f:(fun ((_, x), _) -> x) tast_opt in
   (t_opt, tast_opt)
 
+and convert_temporary_object ~frozen =
+  let desc =
+    if frozen then
+      RFrozen RObjectLit
+    else
+      RObjectLit
+  in
+  function
+  | ExactT (_, DefT (r, trust, ObjT o))
+  | DefT (r, trust, ObjT o) ->
+    let r = replace_desc_reason desc r in
+    let obj_kind =
+      match o.flags.obj_kind with
+      | Indexed _ -> o.flags.obj_kind
+      | _ -> Exact
+    in
+    DefT (r, trust, ObjT { o with flags = { obj_kind; frozen } })
+  | EvalT (l, TypeDestructorT (use_op, r, SpreadType (_, ts, head_slice)), id) ->
+    let r = replace_desc_reason desc r in
+    let target =
+      let open Type.Object.Spread in
+      let make_seal =
+        if frozen then
+          Frozen
+        else
+          Sealed
+      in
+      Value { make_seal }
+    in
+    EvalT (l, TypeDestructorT (use_op, r, SpreadType (target, ts, head_slice)), id)
+  | t -> t
+
 and convert_qualification ?(lookup_mode = ForType) cx reason_prefix =
   let open Ast.Type.Generic.Identifier in
   function
@@ -1143,7 +1151,7 @@ and convert_qualification ?(lookup_mode = ForType) cx reason_prefix =
     let reason = mk_reason desc loc in
     let id_reason = mk_reason desc id_loc in
     let t =
-      Tvar.mk_where cx reason (fun t ->
+      Tvar.mk_no_wrap_where cx reason (fun t ->
           let use_op = Op (GetProperty (mk_reason (RType (qualified_name qualified)) loc)) in
           Flow.flow cx (m, GetPropT (use_op, id_reason, Named (id_reason, name), t)))
     in

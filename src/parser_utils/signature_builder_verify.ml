@@ -259,11 +259,7 @@ module Eval (Env : EvalEnv) = struct
     let rec qualified_value_ref tps qualification =
       Identifier.(
         match qualification with
-        | Unqualified (loc, { Ast.Identifier.name; comments = _ }) ->
-          if SSet.mem name tps then
-            Deps.top (Error.InvalidTypeParamUse loc)
-          else
-            Deps.value name
+        | Unqualified (_, { Ast.Identifier.name; comments = _ }) -> Deps.value name
         | Qualified (_, { qualification; _ }) -> qualified_value_ref tps qualification)
     in
     fun tps (_, r) ->
@@ -439,13 +435,32 @@ module Eval (Env : EvalEnv) = struct
             arguments =
               ( _,
                 {
-                  Ast.Expression.ArgList.arguments = [Expression ((_, Object _) as expr)];
+                  Ast.Expression.ArgList.arguments =
+                    [Expression (loc, Object { Ast.Expression.Object.properties; _ })];
                   comments = _;
                 } );
             comments = _;
           } )
       when Env.facebook_keyMirror ->
-      literal_expr tps expr
+      let open Ast.Expression.Object in
+      let object_key tps loc key_loc value = function
+        | Property.Identifier _
+        | Property.Literal (_, { Ast.Literal.value = Ast.Literal.String _; _ }) ->
+          literal_expr tps value
+        | _ -> Deps.top (Error.UnexpectedObjectKey (loc, key_loc))
+      in
+      let object_property tps loc = function
+        | (key_loc, Property.Init { key; value; _ }) -> object_key tps loc key_loc value key
+        | (key_loc, _) -> Deps.top (Error.UnexpectedObjectKey (loc, key_loc))
+      in
+      List.fold_left
+        (fun deps prop ->
+          match prop with
+          | Property p -> Deps.join (deps, object_property tps loc p)
+          | SpreadProperty (prop_loc, _) ->
+            Deps.join (deps, Deps.top (Error.UnexpectedObjectKey (loc, prop_loc))))
+        Deps.bot
+        properties
     | (loc, Unary stuff) ->
       let open Ast.Expression.Unary in
       let { operator; argument; _ } = stuff in
@@ -710,22 +725,25 @@ module Eval (Env : EvalEnv) = struct
       | Body.Method (_, { Method.value; _ }) ->
         let (_, { Ast.Function.generator; tparams; params; return; body; predicate; _ }) = value in
         function_ tps generator tparams params return body predicate
-      | Body.Property (loc, { Property.annot; key; _ }) ->
-        let name =
-          let open Ast.Expression.Object.Property in
-          match key with
-          | Literal (_, lit) -> EASort.Literal (Reason.code_desc_of_literal lit)
-          | Identifier (_, { Ast.Identifier.name; _ }) -> EASort.Identifier name
-          | PrivateName (_, { Ast.PrivateName.id = (_, { Ast.Identifier.name; _ }); comments = _ })
-            ->
-            EASort.PrivateName name
-          | Computed (_, { Ast.ComputedKey.expression; comments = _ }) ->
-            EASort.Computed (Reason.code_desc_of_expression ~wrap:false expression)
-        in
+      | Body.Property
+          ( loc,
+            {
+              Property.annot;
+              key = Ast.Expression.Object.Property.Identifier (_, { Ast.Identifier.name; _ });
+              _;
+            } ) ->
         annotated_type ~sort:(EASort.Property { name }) tps loc annot
-      | Body.PrivateField (loc, { PrivateField.key; annot; _ }) ->
-        let (_, { Ast.PrivateName.id = (_, { Ast.Identifier.name; _ }); comments = _ }) = key in
-        annotated_type ~sort:(EASort.PrivateField { name }) tps loc annot
+      | Body.Property
+          ( _,
+            {
+              Property.key = Ast.Expression.Object.Property.(Literal _ | PrivateName _ | Computed _);
+              _;
+            } ) ->
+        (* Don't error on properties that will cause check-time errors anyways *)
+        Deps.bot
+      | Body.PrivateField _ ->
+        (* Private fields are inaccessible externally so should be safe *)
+        Deps.bot
     in
     fun tparams body super super_targs implements ->
       let open Ast.Class in

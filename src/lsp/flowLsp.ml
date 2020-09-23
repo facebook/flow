@@ -100,7 +100,7 @@ type initialized_env = {
   i_outstanding_requests_from_server: Lsp.lsp_request WrappedMap.t;
   i_isConnected: bool;
   i_status: show_status_t;  (** what we've told the client about our connection status *)
-  i_open_files: open_file_info SMap.t;
+  i_open_files: open_file_info Lsp.UriMap.t;
   i_errors: LspErrors.t;
 }
 
@@ -183,19 +183,19 @@ let command_key_of_path (path : Path.t) : string = File_url.create (Path.to_stri
 let command_key_of_state (state : state) : string =
   Base.Option.value_map ~f:command_key_of_path ~default:"" (get_root state)
 
-let get_open_files (state : state) : open_file_info SMap.t option =
+let get_open_files (state : state) : open_file_info Lsp.UriMap.t option =
   match state with
   | Connected cenv -> Some cenv.c_ienv.i_open_files
   | Disconnected denv -> Some denv.d_ienv.i_open_files
   | _ -> None
 
-let update_open_file (uri : string) (open_file_info : open_file_info option) (state : state) : state
-    =
+let update_open_file
+    (uri : Lsp.DocumentUri.t) (open_file_info : open_file_info option) (state : state) : state =
   let update_ienv ienv =
     match open_file_info with
     | Some open_file_info ->
-      { ienv with i_open_files = SMap.add uri open_file_info ienv.i_open_files }
-    | None -> { ienv with i_open_files = SMap.remove uri ienv.i_open_files }
+      { ienv with i_open_files = Lsp.UriMap.add uri open_file_info ienv.i_open_files }
+    | None -> { ienv with i_open_files = Lsp.UriMap.remove uri ienv.i_open_files }
   in
   match state with
   | Connected cenv -> Connected { cenv with c_ienv = update_ienv cenv.c_ienv }
@@ -689,20 +689,20 @@ let close_conn (env : connected_env) : unit =
  OUTSTANDING_ACTION_REQUIRED - similar to outstanding_progress.
  *)
 
-type track_effect = { changed_live_uri: string option }
+type track_effect = { changed_live_uri: Lsp.DocumentUri.t option }
 
 let track_to_server (state : state) (c : Lsp.lsp_message) : state * track_effect =
   let (state, changed_live_uri) =
     match (get_open_files state, c) with
     | (_, NotificationMessage (DidOpenNotification params)) ->
       let o_open_doc = params.DidOpen.textDocument in
-      let uri = params.DidOpen.textDocument.TextDocumentItem.uri |> Lsp.string_of_uri in
+      let uri = params.DidOpen.textDocument.TextDocumentItem.uri in
       let state =
         update_open_file uri (Some { o_open_doc; o_ast = None; o_unsaved = false }) state
       in
       (state, Some uri)
     | (_, NotificationMessage (DidCloseNotification params)) ->
-      let uri = params.DidClose.textDocument.TextDocumentIdentifier.uri |> Lsp.string_of_uri in
+      let uri = params.DidClose.textDocument.TextDocumentIdentifier.uri in
       let state =
         state
         |> update_open_file uri None
@@ -711,8 +711,7 @@ let track_to_server (state : state) (c : Lsp.lsp_message) : state * track_effect
       (state, None)
     | (Some open_files, NotificationMessage (DidChangeNotification params)) ->
       let uri = params.DidChange.textDocument.VersionedTextDocumentIdentifier.uri in
-      let uri_as_string = Lsp.string_of_uri uri in
-      let { o_open_doc; _ } = SMap.find uri_as_string open_files in
+      let { o_open_doc; _ } = Lsp.UriMap.find uri open_files in
       let text = o_open_doc.TextDocumentItem.text in
       let text = Lsp_helpers.apply_changes_unsafe text params.DidChange.contentChanges in
       let o_open_doc =
@@ -724,7 +723,7 @@ let track_to_server (state : state) (c : Lsp.lsp_message) : state * track_effect
         }
       in
       let state =
-        update_open_file uri_as_string (Some { o_open_doc; o_ast = None; o_unsaved = true }) state
+        update_open_file uri (Some { o_open_doc; o_ast = None; o_unsaved = true }) state
       in
       (* update errors... we don't need to send updated squiggle locations
          right now ourselves, since all editors take care of that; but if ever we
@@ -742,10 +741,10 @@ let track_to_server (state : state) (c : Lsp.lsp_message) : state * track_effect
           state |> update_errors (LspErrors.update_errors_due_to_change_and_send to_stdout params)
         | _ -> state
       in
-      (state, Some uri_as_string)
+      (state, Some uri)
     | (Some open_files, NotificationMessage (DidSaveNotification params)) ->
-      let uri = params.DidSave.textDocument.TextDocumentIdentifier.uri |> Lsp.string_of_uri in
-      let open_file = SMap.find uri open_files in
+      let uri = params.DidSave.textDocument.TextDocumentIdentifier.uri in
+      let open_file = Lsp.UriMap.find uri open_files in
       let state = update_open_file uri (Some { open_file with o_unsaved = false }) state in
       (state, Some uri)
     | (_, _) -> (state, None)
@@ -850,8 +849,8 @@ let lsp_DocumentItem_to_flow (open_doc : Lsp.TextDocumentItem.t) : File_input.t 
 
 let error_to_lsp
     ~(severity : PublishDiagnostics.diagnosticSeverity option)
-    ~(default_uri : string)
-    (error : Loc.t Errors.printable_error) : string * PublishDiagnostics.diagnostic =
+    ~(default_uri : Lsp.DocumentUri.t)
+    (error : Loc.t Errors.printable_error) : Lsp.DocumentUri.t * PublishDiagnostics.diagnostic =
   let error = Errors.Lsp_output.lsp_of_error error in
   let location =
     Flow_lsp_conversions.loc_to_lsp_with_default error.Errors.Lsp_output.loc ~default_uri
@@ -862,7 +861,7 @@ let error_to_lsp
     { Lsp.PublishDiagnostics.relatedLocation; relatedMessage }
   in
   let relatedInformation = List.map error.Errors.Lsp_output.relatedLocations ~f:related_to_lsp in
-  ( Lsp.string_of_uri uri,
+  ( uri,
     {
       Lsp.PublishDiagnostics.range = location.Lsp.Location.range;
       severity;
@@ -886,7 +885,7 @@ let live_syntax_errors_enabled (state : state) =
   and store them in the state;
   or it's an unopened file in which case we'll retrieve parse results but
   won't store them. *)
-let parse_and_cache flowconfig_name (state : state) (uri : string) :
+let parse_and_cache flowconfig_name (state : state) (uri : Lsp.DocumentUri.t) :
     state * ((Loc.t, Loc.t) Flow_ast.Program.t * Lsp.PublishDiagnostics.diagnostic list option) =
   let error_to_diagnostic (loc, parse_error) =
     let message = Errors.Friendly.message_of_string (Parse_error.PP.error parse_error) in
@@ -941,7 +940,7 @@ let parse_and_cache flowconfig_name (state : state) (uri : string) :
         None )
   in
   let open_files = get_open_files state in
-  let existing_open_file_info = Base.Option.bind open_files (SMap.find_opt uri) in
+  let existing_open_file_info = Base.Option.bind open_files (Lsp.UriMap.find_opt uri) in
   match existing_open_file_info with
   | Some { o_ast = Some o_ast; _ } ->
     (* We've already parsed this file since it last changed. No need to parse again *)
@@ -955,7 +954,7 @@ let parse_and_cache flowconfig_name (state : state) (uri : string) :
     (state, o_ast)
   | None ->
     (* This is an unopened file, so we won't cache the results and won't return the errors *)
-    let fn = Lsp_helpers.lsp_uri_to_path (Lsp.uri_of_string uri) in
+    let fn = Lsp_helpers.lsp_uri_to_path uri in
     let fn = Base.Option.value (Sys_utils.realpath fn) ~default:fn in
     let file = File_input.FileName fn in
     let (open_ast, _) = parse file in
@@ -965,9 +964,7 @@ let do_documentSymbol flowconfig_name (state : state) (id : lsp_id) (params : Do
     : state =
   let uri = params.DocumentSymbol.textDocument.TextDocumentIdentifier.uri in
   (* It's not do_documentSymbol's job to set live parse errors, so we ignore them *)
-  let (state, (ast, _live_parse_errors)) =
-    parse_and_cache flowconfig_name state (Lsp.string_of_uri uri)
-  in
+  let (state, (ast, _live_parse_errors)) = parse_and_cache flowconfig_name state uri in
   let result = Flow_lsp_conversions.flow_ast_to_lsp_symbols ~uri ast in
   let json =
     let key = command_key_of_state state in
@@ -1008,14 +1005,14 @@ module RagePrint = struct
   let string_of_open_file { o_open_doc; o_ast; o_unsaved } : string =
     Printf.sprintf
       "(uri=%s version=%d text=[%d bytes] ast=[%s] unsaved=%b)"
-      (Lsp.string_of_uri o_open_doc.TextDocumentItem.uri)
+      (Lsp.DocumentUri.to_string o_open_doc.TextDocumentItem.uri)
       o_open_doc.TextDocumentItem.version
       (String.length o_open_doc.TextDocumentItem.text)
       (Base.Option.value_map o_ast ~default:"absent" ~f:(fun _ -> "present"))
       o_unsaved
 
-  let string_of_open_files (files : open_file_info SMap.t) : string =
-    SMap.bindings files
+  let string_of_open_files (files : open_file_info Lsp.UriMap.t) : string =
+    Lsp.UriMap.bindings files
     |> List.map ~f:(fun (_, ofi) -> string_of_open_file ofi)
     |> String.concat ","
 
@@ -1279,9 +1276,9 @@ let collect_interaction_state state =
     let buffer_status =
       match get_open_files state with
       | None -> NoOpenBuffers
-      | Some files when files = SMap.empty -> NoOpenBuffers
+      | Some files when files = Lsp.UriMap.empty -> NoOpenBuffers
       | Some files ->
-        if SMap.exists (fun _ file -> file.o_unsaved) files then
+        if Lsp.UriMap.exists (fun _ file -> file.o_unsaved) files then
           UnsavedBuffers
         else
           NoUnsavedBuffers
@@ -1324,9 +1321,9 @@ let log_interaction ~ux state id =
 let group_errors_by_uri ~default_uri ~errors ~warnings =
   let add severity error acc =
     let (uri, diagnostic) = error_to_lsp ~severity:(Some severity) ~default_uri error in
-    SMap.add ~combine:List.append uri [diagnostic] acc
+    Lsp.UriMap.add ~combine:List.append uri [diagnostic] acc
   in
-  SMap.empty
+  Lsp.UriMap.empty
   |> Errors.ConcreteLocPrintableErrorSet.fold (add PublishDiagnostics.Error) errors
   |> Errors.ConcreteLocPrintableErrorSet.fold (add PublishDiagnostics.Warning) warnings
 
@@ -1335,7 +1332,7 @@ let do_live_diagnostics
     (state : state)
     (trigger : LspInteraction.trigger option)
     (metadata : LspProt.metadata)
-    (uri : string) : state =
+    (uri : Lsp.DocumentUri.t) : state =
   (* Normally we don't log interactions for unknown triggers. But in this case we're providing live
      diagnostics and want to log what triggered it regardless of whether it's known or not *)
   let trigger = Base.Option.value trigger ~default:LspInteraction.UnknownTrigger in
@@ -1346,7 +1343,7 @@ let do_live_diagnostics
       let metadata =
         { metadata with LspProt.interaction_tracking_id = Some (start_interaction ~trigger state) }
       in
-      send_to_server cenv (LspProt.LiveErrorsRequest (Lsp.uri_of_string uri)) metadata
+      send_to_server cenv (LspProt.LiveErrorsRequest uri) metadata
     | _ -> ()
   in
   let interaction_id = start_interaction ~trigger state in
@@ -1372,7 +1369,9 @@ let do_live_diagnostics
     ~request:(metadata.LspProt.start_json_truncated |> Hh_json.json_to_string)
     ~data:
       Hh_json.(
-        JSON_Object [("uri", JSON_String uri); ("error_count", error_count)] |> json_to_string)
+        JSON_Object
+          [("uri", JSON_String (Lsp.DocumentUri.to_string uri)); ("error_count", error_count)]
+        |> json_to_string)
     ~wall_start:metadata.LspProt.start_wall_time;
 
   state
@@ -1464,7 +1463,7 @@ let try_connect flowconfig_name (env : disconnected_env) : state =
     in
     let open_messages =
       env.d_ienv.i_open_files
-      |> SMap.bindings
+      |> Lsp.UriMap.bindings
       |> List.map ~f:(fun (_, { o_open_doc; _ }) -> make_open_message o_open_doc)
     in
     Hh_json.(
@@ -1484,7 +1483,7 @@ let try_connect flowconfig_name (env : disconnected_env) : state =
       (* close the old UI and bring up the new *)
       let new_state = show_connected new_env in
       (* Generate live errors for the newly opened files *)
-      SMap.fold
+      Lsp.UriMap.fold
         (fun uri _ state ->
           do_live_diagnostics
             flowconfig_name
@@ -1656,7 +1655,7 @@ and main_handle_unsafe flowconfig_name (state : state) (event : event) :
         i_outstanding_requests_from_server = WrappedMap.empty;
         i_isConnected = false;
         i_status = Never_shown;
-        i_open_files = SMap.empty;
+        i_open_files = Lsp.UriMap.empty;
         i_errors = LspErrors.empty;
       }
     in
@@ -1975,8 +1974,10 @@ and main_handle_unsafe flowconfig_name (state : state) (event : event) :
 
        I hope that flow won't produce errors with an empty path. But such errors are
        fatal to Nuclide, so if it does, then we'll at least use a fall-back path. *)
-    let default_uri = cenv.c_ienv.i_root |> Path.to_string |> File_url.create in
-    (* First construct an SMap from uri to diagnostic list, which gathers together
+    let default_uri =
+      cenv.c_ienv.i_root |> Path.to_string |> File_url.create |> Lsp.DocumentUri.of_string
+    in
+    (* First construct a map from uri to diagnostic list, which gathers together
        all the errors and warnings per uri *)
     let all = group_errors_by_uri ~default_uri ~errors ~warnings in
     let () =
@@ -1999,16 +2000,15 @@ and main_handle_unsafe flowconfig_name (state : state) (event : event) :
             ( LiveErrorsResponse
                 (Ok { live_errors = errors; live_warnings = warnings; live_errors_uri = uri }),
               metadata )) ) ->
-    let uri = Lsp.string_of_uri uri in
     let file_is_still_open =
-      get_open_files state |> Base.Option.value_map ~default:false ~f:(SMap.mem uri)
+      get_open_files state |> Base.Option.value_map ~default:false ~f:(Lsp.UriMap.mem uri)
     in
     let state =
       if file_is_still_open then (
         (* Only set the live non-parse errors if the file is still open. If it's been closed since
            the request was sent, then we will just ignore the response *)
         let all = group_errors_by_uri ~default_uri:uri ~errors ~warnings in
-        let errors_for_uri = SMap.find_opt uri all |> Base.Option.value ~default:[] in
+        let errors_for_uri = Lsp.UriMap.find_opt uri all |> Base.Option.value ~default:[] in
         Base.Option.iter
           metadata.LspProt.interaction_tracking_id
           ~f:(log_interaction ~ux:LspInteraction.PushedLiveNonParseErrors state);
@@ -2018,7 +2018,7 @@ and main_handle_unsafe flowconfig_name (state : state) (event : event) :
             Hh_json.(
               JSON_Object
                 [
-                  ("uri", JSON_String uri);
+                  ("uri", JSON_String (Lsp.DocumentUri.to_string uri));
                   ("error_count", JSON_Number (List.length errors_for_uri |> string_of_int));
                 ]
               |> json_to_string)
@@ -2035,7 +2035,11 @@ and main_handle_unsafe flowconfig_name (state : state) (event : event) :
           ~request:(metadata.LspProt.start_json_truncated |> Hh_json.json_to_string)
           ~data:
             Hh_json.(
-              JSON_Object [("uri", JSON_String uri); ("reason", JSON_String "File no longer open")]
+              JSON_Object
+                [
+                  ("uri", JSON_String (Lsp.DocumentUri.to_string uri));
+                  ("reason", JSON_String "File no longer open");
+                ]
               |> json_to_string)
           ~wall_start:metadata.LspProt.start_wall_time;
         state
@@ -2066,7 +2070,7 @@ and main_handle_unsafe flowconfig_name (state : state) (event : event) :
         Hh_json.(
           JSON_Object
             [
-              ("uri", JSON_String (live_errors_failure_uri |> Lsp.string_of_uri));
+              ("uri", JSON_String (live_errors_failure_uri |> Lsp.DocumentUri.to_string));
               ("reason", JSON_String live_errors_failure_reason);
             ]
           |> json_to_string)
@@ -2096,9 +2100,8 @@ and main_handle_unsafe flowconfig_name (state : state) (event : event) :
             lsp_method_name = method_name;
           }
         in
-        SMap.iter
-          (fun uri _ ->
-            send_to_server cenv (LspProt.LiveErrorsRequest (Lsp.uri_of_string uri)) metadata)
+        Lsp.UriMap.iter
+          (fun uri _ -> send_to_server cenv (LspProt.LiveErrorsRequest uri) metadata)
           open_files);
 
     Ok (state, LogNotNeeded)

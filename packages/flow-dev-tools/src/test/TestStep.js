@@ -194,7 +194,7 @@ class TestStepFirstOrSecondStage extends TestStep {
     return ret;
   }
 
-  _cloneWithAssertion(assertion: ErrorAssertion) {
+  _cloneWithAssertion(assertion: ErrorAssertion): TestStepSecondStage {
     const ret = new TestStepSecondStage(this);
     ret._assertions.push(assertion);
     return ret;

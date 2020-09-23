@@ -1000,21 +1000,91 @@ Flags: --pretty
 }
 
 unqualified-type-annotation.js:28:18
-Flags: --pretty
+Flags: --lsp
 {
-  "result":[
-    {"name":"Typologies","type":"module Typologies"},
-    {"name":"Typography","type":"class Typewriter"},
-    {"name":"Typewriter","type":"class Typewriter"},
-    {"name":"Types","type":"module Types"},
-    {"name":"Typesafe","type":"interface Typesafety"},
-    {"name":"Typhoon","type":"type Typhoon = string"},
-    {"name":"Typnotism","type":"type Typnotism = number"},
-    {"name":"Tyrant","type":"type Tyrant = string"},
-    {"name":"Tympanic","type":"type Tympanic = number"},
-    {"name":"Typeset","type":"interface Typeset"},
-    {"name":"Typaram","type":"Typaram"}
-  ]
+  "label":"Typologies",
+  "kind":9,
+  "detail":"module Typologies",
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":27,"character":17},"end":{"line":27,"character":17}},
+    "newText":"Typologies."
+  }
+}
+{
+  "label":"Typography",
+  "kind":7,
+  "detail":"class Typewriter",
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1
+}
+{
+  "label":"Typewriter",
+  "kind":7,
+  "detail":"class Typewriter",
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1
+}
+{
+  "label":"Types",
+  "kind":9,
+  "detail":"module Types",
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":27,"character":17},"end":{"line":27,"character":17}},
+    "newText":"Types."
+  }
+}
+{
+  "label":"Typesafe",
+  "kind":8,
+  "detail":"interface Typesafety",
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1
+}
+{
+  "label":"Typhoon",
+  "kind":13,
+  "detail":"type Typhoon = string",
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1
+}
+{
+  "label":"Typnotism",
+  "kind":13,
+  "detail":"type Typnotism = number",
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1
+}
+{
+  "label":"Tyrant",
+  "kind":13,
+  "detail":"type Tyrant = string",
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1
+}
+{
+  "label":"Tympanic",
+  "kind":13,
+  "detail":"type Tympanic = number",
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1
+}
+{
+  "label":"Typeset",
+  "kind":8,
+  "detail":"interface Typeset",
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1
+}
+{
+  "label":"Typaram",
+  "kind":25,
+  "detail":"Typaram",
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1
 }
 
 qualified-type-annotation.js:5:23
@@ -1642,7 +1712,11 @@ Flags: --lsp
   "detail":"enum SymbolEnum",
   "documentation":{"kind":"markdown","value":"a symbol enum"},
   "sortText":"00000000000000000000",
-  "insertTextFormat":1
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":14,"character":3},"end":{"line":14,"character":3}},
+    "newText":"SymbolEnum"
+  }
 }
 {
   "label":"NumberEnum",
@@ -1650,7 +1724,11 @@ Flags: --lsp
   "detail":"enum NumberEnum",
   "documentation":{"kind":"markdown","value":"a number enum"},
   "sortText":"00000000000000000000",
-  "insertTextFormat":1
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":14,"character":3},"end":{"line":14,"character":3}},
+    "newText":"NumberEnum"
+  }
 }
 {
   "label":"InitializedStringEnum",
@@ -1658,7 +1736,11 @@ Flags: --lsp
   "detail":"enum InitializedStringEnum",
   "documentation":{"kind":"markdown","value":"an initialized string enum"},
   "sortText":"00000000000000000000",
-  "insertTextFormat":1
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":14,"character":3},"end":{"line":14,"character":3}},
+    "newText":"InitializedStringEnum"
+  }
 }
 {
   "label":"DefaultedStringEnum",
@@ -1666,7 +1748,11 @@ Flags: --lsp
   "detail":"enum DefaultedStringEnum",
   "documentation":{"kind":"markdown","value":"a defaulted string enum"},
   "sortText":"00000000000000000000",
-  "insertTextFormat":1
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":14,"character":3},"end":{"line":14,"character":3}},
+    "newText":"DefaultedStringEnum"
+  }
 }
 {
   "label":"BooleanEnum",
@@ -1674,7 +1760,11 @@ Flags: --lsp
   "detail":"enum BooleanEnum",
   "documentation":{"kind":"markdown","value":"a boolean enum"},
   "sortText":"00000000000000000000",
-  "insertTextFormat":1
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":14,"character":3},"end":{"line":14,"character":3}},
+    "newText":"BooleanEnum"
+  }
 }
 {
   "label":"Bar",
@@ -1682,7 +1772,11 @@ Flags: --lsp
   "detail":"class Bar",
   "documentation":{"kind":"markdown","value":"the class Bar"},
   "sortText":"00000000000000000000",
-  "insertTextFormat":1
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":14,"character":3},"end":{"line":14,"character":3}},
+    "newText":"Bar"
+  }
 }
 
 jsdoc-members-1.js:43:5
@@ -2468,6 +2562,140 @@ Flags: --lsp
   "kind":3,
   "detail":"() => Iterable<SymbolEnum>",
   "sortText":"00000000000000000001",
+  "insertTextFormat":1
+}
+
+types-jsdoc.js:16:6
+Flags: --lsp
+{
+  "label":"myEnum",
+  "kind":13,
+  "detail":"enum myEnum",
+  "documentation":{"kind":"markdown","value":"this is myEnum"},
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1
+}
+{
+  "label":"myClass",
+  "kind":7,
+  "detail":"class myClass",
+  "documentation":{"kind":"markdown","value":"this is myClass"},
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1
+}
+{
+  "label":"ExportClass",
+  "kind":7,
+  "detail":"class ExportClass",
+  "documentation":{"kind":"markdown","value":"this is ExportClass"},
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1
+}
+{
+  "label":"myFoo",
+  "kind":13,
+  "detail":"type myFoo = number",
+  "documentation":{"kind":"markdown","value":"this is myFoo"},
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1
+}
+{
+  "label":"myBar",
+  "kind":13,
+  "detail":"type myBar<T> = ?T",
+  "documentation":{"kind":"markdown","value":"this is myBar"},
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1
+}
+{
+  "label":"myInterface",
+  "kind":8,
+  "detail":"interface myInterface",
+  "documentation":{"kind":"markdown","value":"this is myInterface"},
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1
+}
+{
+  "label":"ExportFoo",
+  "kind":13,
+  "detail":"type ExportFoo = number",
+  "documentation":{"kind":"markdown","value":"this is ExportFoo"},
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1
+}
+{
+  "label":"ExportBar",
+  "kind":13,
+  "detail":"type ExportBar<T> = ?T",
+  "documentation":{"kind":"markdown","value":"this is ExportBar"},
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1
+}
+{
+  "label":"ExportClass",
+  "kind":7,
+  "detail":"class ExportClass",
+  "documentation":{"kind":"markdown","value":"this is ExportClass"},
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1
+}
+{
+  "label":"ExportInterface",
+  "kind":8,
+  "detail":"interface ExportInterface",
+  "documentation":{"kind":"markdown","value":"this is ExportInterface"},
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1
+}
+{
+  "label":"exportValue",
+  "kind":13,
+  "detail":"type exportValue = number",
+  "documentation":{"kind":"markdown","value":"this is ExportValue"},
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1
+}
+
+qualified-types-jsdoc.js:5:12
+Flags: --lsp
+{
+  "label":"ExportBar",
+  "kind":13,
+  "detail":"type ExportBar<T> = ?T",
+  "documentation":{"kind":"markdown","value":"this is ExportBar"},
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1
+}
+{
+  "label":"ExportClass",
+  "kind":7,
+  "detail":"class ExportClass",
+  "documentation":{"kind":"markdown","value":"this is ExportClass"},
+  "sortText":"00000000000000000001",
+  "insertTextFormat":1
+}
+{
+  "label":"ExportEnum",
+  "kind":13,
+  "detail":"enum ExportEnum",
+  "documentation":{"kind":"markdown","value":"this is ExportEnum"},
+  "sortText":"00000000000000000002",
+  "insertTextFormat":1
+}
+{
+  "label":"ExportFoo",
+  "kind":6,
+  "detail":"type ExportFoo = number",
+  "documentation":{"kind":"markdown","value":"this is ExportFoo"},
+  "sortText":"00000000000000000003",
+  "insertTextFormat":1
+}
+{
+  "label":"ExportInterface",
+  "kind":8,
+  "detail":"interface ExportInterface",
+  "documentation":{"kind":"markdown","value":"this is ExportInterface"},
+  "sortText":"00000000000000000004",
   "insertTextFormat":1
 }
 

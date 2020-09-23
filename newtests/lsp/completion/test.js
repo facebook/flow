@@ -3,9 +3,10 @@
  * @format
  */
 
+import type Suite from 'flow-dev-tools/src/test/Suite.js';
 import {suite, test} from 'flow-dev-tools/src/test/Tester';
 
-export default suite(
+export default (suite(
   ({
     lspStartAndConnect,
     lspStart,
@@ -123,37 +124,113 @@ export default suite(
                   label: 'this',
                   kind: 6,
                   detail: 'this',
+                  sortText: '00000000000000000000',
                   insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {line: 13, character: 15},
+                      end: {line: 13, character: 15},
+                    },
+                    newText: 'this',
+                  },
                 },
                 {
                   label: 'x',
                   kind: 6,
                   detail: 'number',
+                  sortText: '00000000000000000000',
                   insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {line: 13, character: 15},
+                      end: {line: 13, character: 15},
+                    },
+                    newText: 'x',
+                  },
                 },
                 {
                   label: 'foo',
                   kind: 3,
                   detail: '() => void',
+                  sortText: '00000000000000000000',
                   insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {line: 13, character: 15},
+                      end: {line: 13, character: 15},
+                    },
+                    newText: 'foo',
+                  },
+                },
+                {
+                  label: 'anInterface',
+                  kind: 8,
+                  detail: 'interface anInterface',
+                  sortText: '00000000000000000000',
+                  insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {line: 13, character: 15},
+                      end: {line: 13, character: 15},
+                    },
+                    newText: 'anInterface',
+                  },
+                },
+                {
+                  label: 'aUnion',
+                  kind: 13,
+                  detail: 'type aUnion = "a" | "b"',
+                  sortText: '00000000000000000000',
+                  insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {line: 13, character: 15},
+                      end: {line: 13, character: 15},
+                    },
+                    newText: 'aUnion',
+                  },
                 },
                 {
                   label: 'aNumber',
                   kind: 6,
                   detail: 'number',
+                  sortText: '00000000000000000000',
                   insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {line: 13, character: 15},
+                      end: {line: 13, character: 15},
+                    },
+                    newText: 'aNumber',
+                  },
                 },
                 {
                   label: 'aFunction',
                   kind: 3,
                   detail: '() => null',
+                  sortText: '00000000000000000000',
                   insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {line: 13, character: 15},
+                      end: {line: 13, character: 15},
+                    },
+                    newText: 'aFunction',
+                  },
                 },
                 {
                   label: 'aClass',
                   kind: 7,
                   detail: 'class aClass',
+                  sortText: '00000000000000000000',
                   insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {line: 13, character: 15},
+                      end: {line: 13, character: 15},
+                    },
+                    newText: 'aClass',
+                  },
                 },
               ],
             }),
@@ -325,19 +402,57 @@ export default suite(
                   label: 'React',
                   kind: 9,
                   detail: 'module React',
+                  sortText: '00000000000000000000',
                   insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {line: 11, character: 1},
+                      end: {line: 11, character: 1},
+                    },
+                    newText: 'React',
+                  },
+                },
+                {
+                  label: 'Props',
+                  kind: 13,
+                  detail: 'type Props = {a: number, ...}',
+                  sortText: '00000000000000000000',
+                  insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {line: 11, character: 1},
+                      end: {line: 11, character: 1},
+                    },
+                    newText: 'Props',
+                  },
                 },
                 {
                   label: 'D',
                   kind: 3,
                   detail: '(props: Props) => void',
+                  sortText: '00000000000000000000',
                   insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {line: 11, character: 1},
+                      end: {line: 11, character: 1},
+                    },
+                    newText: 'D',
+                  },
                 },
                 {
                   label: 'C',
                   kind: 7,
                   detail: 'class C',
+                  sortText: '00000000000000000000',
                   insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {line: 11, character: 1},
+                      end: {line: 11, character: 1},
+                    },
+                    newText: 'C',
+                  },
                 },
               ],
             }),
@@ -802,4 +917,4 @@ export default suite(
       ),
     ]),
   ],
-);
+): Suite);

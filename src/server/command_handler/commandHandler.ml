@@ -163,10 +163,15 @@ let autocomplete ~trigger_character ~reader ~options ~env ~profiling ~filename ~
                   | ([], _ :: _) -> "FAILURE"
                   | (_ :: _, _ :: _) -> "PARTIAL"
                 in
+                let at_least_one_result_has_documentation =
+                  Base.List.exists results ~f:(fun ServerProt.Response.{ res_documentation; _ } ->
+                      Base.Option.is_some res_documentation)
+                in
                 ( Ok results,
                   ("result", JSON_String result_string)
                   :: ("count", JSON_Number (results |> List.length |> string_of_int))
                   :: ("errors", JSON_Array (Base.List.map ~f:(fun s -> JSON_String s) errors_to_log))
+                  :: ("documentation", JSON_Bool at_least_one_result_has_documentation)
                   :: json_props_to_log )
               | AcEmpty reason ->
                 ( Ok [],
@@ -296,7 +301,7 @@ let infer_type
                   line
                   column
               in
-              let%lwt (getdef_loc_result, get_def_json_props) =
+              let%lwt (getdef_loc_result, _) =
                 get_def_of_check_result
                   ~options
                   ~reader
@@ -312,12 +317,7 @@ let infer_type
                   |> Base.Option.bind ~f:Find_documentation.documentation_of_jsdoc
               in
               let json_props =
-                let documentation_get_def =
-                  match get_def_json_props with
-                  | None -> Hh_json.JSON_Null
-                  | Some props -> Hh_json.JSON_Object props
-                in
-                ("documentation_get_def", documentation_get_def)
+                ("documentation", Hh_json.JSON_Bool (Base.Option.is_some documentation))
                 :: add_cache_hit_data_to_json type_at_pos_json_props did_hit_cache
               in
               let exact_by_default = Options.exact_by_default options in
@@ -347,7 +347,7 @@ let insert_type
   File_input.content_of_file_input file_input %>>= fun file_content ->
   try_with (fun _ ->
       let%lwt result =
-        Type_info_service.insert_type
+        Code_action_service.insert_type
           ~options
           ~env
           ~profiling
@@ -367,7 +367,7 @@ let autofix_exports ~options ~env ~profiling ~input =
   File_input.content_of_file_input input %>>= fun file_content ->
   try_with (fun _ ->
       let%lwt result =
-        Type_info_service.autofix_exports ~options ~env ~profiling ~file_key ~file_content
+        Code_action_service.autofix_exports ~options ~env ~profiling ~file_key ~file_content
       in
       Lwt.return result)
 
@@ -602,7 +602,7 @@ let find_module ~options ~reader (moduleref, filename) =
       ~reader:(Abstract_state_reader.State_reader reader)
       ~node_modules_containers:!Files.node_modules_containers
       file
-      (Nel.one (ALoc.of_loc loc))
+      (ALoc.of_loc loc)
       moduleref
   in
   Module_heaps.Reader.get_file ~reader ~audit:Expensive.warn module_name
@@ -914,7 +914,7 @@ let find_code_actions ~reader ~options ~env ~profiling ~params ~client =
   match File_input.content_of_file_input file with
   | Error msg -> Lwt.return (Error msg)
   | Ok file_contents ->
-    Type_info_service.code_actions_at_loc
+    Code_action_service.code_actions_at_loc
       ~reader
       ~options
       ~env
@@ -1467,7 +1467,7 @@ let handle_persistent_get_def ~reader ~options ~id ~params ~loc ~metadata ~clien
       let response = ResponseMessage (id, DefinitionResult []) in
       Lwt.return ((), LspProt.LspFromServer (Some response), metadata)
     | Ok loc ->
-      let default_uri = params.textDocument.TextDocumentIdentifier.uri |> Lsp.string_of_uri in
+      let default_uri = params.textDocument.TextDocumentIdentifier.uri in
       let location = Flow_lsp_conversions.loc_to_lsp_with_default ~default_uri loc in
       let definition_location = { Lsp.DefinitionLocation.location; title = None } in
       let response = ResponseMessage (id, DefinitionResult [definition_location]) in
@@ -1507,7 +1507,7 @@ let handle_persistent_infer_type ~options ~reader ~id ~params ~loc ~metadata ~cl
   | Ok (ServerProt.Response.Infer_type_response { loc; ty; exact_by_default; documentation }) ->
     (* loc may be the 'none' location; content may be None. *)
     (* If both are none then we'll return null; otherwise we'll return a hover *)
-    let default_uri = params.textDocument.TextDocumentIdentifier.uri |> Lsp.string_of_uri in
+    let default_uri = params.textDocument.TextDocumentIdentifier.uri in
     let location = Flow_lsp_conversions.loc_to_lsp_with_default ~default_uri loc in
     let range =
       if loc = Loc.none then
@@ -1658,7 +1658,23 @@ let handle_persistent_signaturehelp_lsp
       | Ok details ->
         let r = SignatureHelpResult (Flow_lsp_conversions.flow_signature_help_to_lsp details) in
         let response = ResponseMessage (id, r) in
-        Lwt.return ((), LspProt.LspFromServer (Some response), metadata)
+        let has_any_documentation =
+          match details with
+          | None -> false
+          | Some (details_list, _) ->
+            Base.List.exists
+              details_list
+              ~f:
+                ServerProt.Response.(
+                  fun { func_documentation; param_tys; _ } ->
+                    Base.Option.is_some func_documentation
+                    || Base.List.exists param_tys ~f:(fun { param_documentation; _ } ->
+                           Base.Option.is_some param_documentation))
+        in
+        let extra_data =
+          Some (Hh_json.JSON_Object [("documentation", Hh_json.JSON_Bool has_any_documentation)])
+        in
+        Lwt.return ((), LspProt.LspFromServer (Some response), with_data ~extra_data metadata)
       | Error _ ->
         mk_lsp_error_response ~ret:() ~id:(Some id) ~reason:"Failed to normalize type" metadata))
 
@@ -1865,7 +1881,7 @@ let handle_persistent_rename ~reader ~genv ~id ~params ~metadata ~client ~profil
   let env = !env in
   let edits_to_response (edits : (Loc.t * string) list) =
     (* Extract the path from each edit and convert into a map from file to edits for that file *)
-    let file_to_edits : ((Loc.t * string) list SMap.t, string) result =
+    let file_to_edits : ((Loc.t * string) list UriMap.t, string) result =
       List.fold_left
         begin
           fun map edit ->
@@ -1873,18 +1889,18 @@ let handle_persistent_rename ~reader ~genv ~id ~params ~metadata ~client ~profil
           let (loc, _) = edit in
           let uri = Flow_lsp_conversions.file_key_to_uri Loc.(loc.source) in
           uri >>| fun uri ->
-          let lst = Base.Option.value ~default:[] (SMap.find_opt uri map) in
+          let lst = Base.Option.value ~default:[] (UriMap.find_opt uri map) in
           (* This reverses the list *)
-          SMap.add uri (edit :: lst) map
+          UriMap.add uri (edit :: lst) map
         end
-        (Ok SMap.empty)
+        (Ok UriMap.empty)
         edits
       (* Reverse the lists to restore the original order *)
-      >>| SMap.map List.rev
+      >>| UriMap.map List.rev
     in
     (* Convert all of the edits to LSP edits *)
-    let file_to_textedits : (TextEdit.t list SMap.t, string) result =
-      file_to_edits >>| SMap.map (Base.List.map ~f:Flow_lsp_conversions.flow_edit_to_textedit)
+    let file_to_textedits : (TextEdit.t list UriMap.t, string) result =
+      file_to_edits >>| UriMap.map (Base.List.map ~f:Flow_lsp_conversions.flow_edit_to_textedit)
     in
     let workspace_edit : (WorkspaceEdit.t, string) result =
       file_to_textedits >>| fun file_to_textedits -> { WorkspaceEdit.changes = file_to_textedits }
@@ -2024,13 +2040,13 @@ let handle_live_errors_request =
                    {
                      live_errors_failure_kind = Canceled_error_response;
                      live_errors_failure_reason = "Subsumed by a later request";
-                     live_errors_failure_uri = Lsp.uri_of_string uri;
+                     live_errors_failure_uri = Lsp.DocumentUri.of_string uri;
                    })),
             metadata )
       else
         (* This is the most recent live errors request we've received for this file. All the
          * older ones have already been responded to or canceled *)
-        let file_path = Lsp_helpers.lsp_uri_to_path (Lsp.uri_of_string uri) in
+        let file_path = Lsp_helpers.lsp_uri_to_path (Lsp.DocumentUri.of_string uri) in
         let%lwt ret =
           match Persistent_connection.get_file client file_path with
           | File_input.FileName _ ->
@@ -2045,7 +2061,7 @@ let handle_live_errors_request =
                          live_errors_failure_kind = Errored_error_response;
                          live_errors_failure_reason =
                            spf "Cannot get live errors for %s: File not open" file_path;
-                         live_errors_failure_uri = Lsp.uri_of_string uri;
+                         live_errors_failure_uri = Lsp.DocumentUri.of_string uri;
                        })),
                 metadata )
           | File_input.FileContent (_, content) ->
@@ -2077,7 +2093,7 @@ let handle_live_errors_request =
                      {
                        LspProt.live_errors;
                        live_warnings;
-                       live_errors_uri = uri |> Lsp.uri_of_string;
+                       live_errors_uri = uri |> Lsp.DocumentUri.of_string;
                      }),
                 metadata )
         in
@@ -2288,7 +2304,7 @@ let get_persistent_handler ~genv ~client_id ~request:(request, metadata) :
     (* We can reject unsupported stuff immediately *)
     Handle_persistent_immediately (handle_persistent_unsupported ?id ~unhandled ~metadata)
   | LiveErrorsRequest uri ->
-    let uri = Lsp.string_of_uri uri in
+    let uri = Lsp.DocumentUri.to_string uri in
     (* We can handle live errors even during a recheck *)
     mk_parallelizable_persistent ~options (handle_live_errors_request ~options ~uri ~metadata)
 

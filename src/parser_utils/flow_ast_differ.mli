@@ -14,8 +14,11 @@ type 'a change' =
       leading_separator: bool;
     }
   | Delete of 'a
+[@@deriving show]
 
-type 'a change = Loc.t * 'a change'
+type 'a change = Loc.t * 'a change' [@@deriving show]
+
+type 'a changes = 'a change list [@@deriving show]
 
 (* Algorithm to use to compute diff. Trivial algorithm just compares lists pairwise and generates
    replacements to convert one to the other. Standard is more computationally intensive but will
@@ -47,6 +50,7 @@ type node =
   | TemplateLiteral of Loc.t * (Loc.t, Loc.t) Flow_ast.Expression.TemplateLiteral.t
   | JSXChild of (Loc.t, Loc.t) Flow_ast.JSX.child
   | JSXIdentifier of (Loc.t, Loc.t) Flow_ast.JSX.Identifier.t
+[@@deriving show]
 
 (* Diffs the given ASTs using referential equality to determine whether two nodes are different.
  * This works well for transformations based on Flow_ast_mapper, which preserves identity, but it
@@ -55,7 +59,7 @@ val program :
   diff_algorithm ->
   (Loc.t, Loc.t) Flow_ast.Program.t ->
   (Loc.t, Loc.t) Flow_ast.Program.t ->
-  node change list
+  node changes
 
 (* Diffs two lists and produces an edit script. This is exposed only for testing purposes *)
 type 'a diff_result = int * 'a change'

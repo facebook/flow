@@ -508,26 +508,9 @@ type 'a op =
  *    syntax. These represent missing functionality in the analysis which should
  *    be fixed.
  *)
-type errno =
-  | UnexpectedTypeof
-  | TArgArity0
-  | TArgArity1
-  | TArgArity2
-  | TArgArity3
-  | TArgMinArity1
-  | UnexpectedTArg
-  | UnsupportedTemporaryType
-  | MissingAnnotation
-  | EmptyObjectLiteral
-  | EmptyArrayLiteral
-  | UnsupportedComputedProperty
-  | UnsupportedArrayHole
-  | UnsupportedArraySpread
-  | UnsupportedTemporaryObjectProp
-  | UnsupportedKeyMirrorProp
-  | UnsupportedJSXElement
-  | TODO_Literal
-  | TODO_Expression
-  [@@deriving show {with_path = false}]
+type 'loc errno =
+  | CheckError
+  | SigError of 'loc Signature_error.t
+  [@@deriving show {with_path = false}, map]
 
-type 'loc error = 'loc * errno [@@deriving show {with_path = false}]
+type 'loc error = 'loc * 'loc errno [@@deriving show {with_path = false}]

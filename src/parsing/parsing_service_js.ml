@@ -500,10 +500,12 @@ let do_parse ~parse_options ~info content file =
               (* TODO: make type sig errors match signature builder errors *)
               let errors =
                 List.fold_left
-                  (fun acc (loc, err) ->
-                    let loc = Type_sig_collections.Locs.get locs loc in
-                    let err = Signature_error.TODO (Type_sig.show_errno err, loc) in
-                    Signature_builder_deps.PrintableErrorSet.add err acc)
+                  (fun acc (_, err) ->
+                    match err with
+                    | Type_sig.SigError err ->
+                      let err = Signature_error.map (Type_sig_collections.Locs.get locs) err in
+                      Signature_builder_deps.PrintableErrorSet.add err acc
+                    | Type_sig.CheckError -> acc)
                   Signature_builder_deps.PrintableErrorSet.empty
                   errors
               in

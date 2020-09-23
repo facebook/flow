@@ -107,8 +107,8 @@ Cannot call `Object.assign.apply` because no more than 2 arguments are expected 
          ^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:127:18
-   127|     proto apply: Function$Prototype$Apply; // (thisArg: any, argArray?: any) => any
+   <BUILTINS>/core.js:142:18
+   142|     proto apply: Function$Prototype$Apply; // (thisArg: any, argArray?: any) => any
                          ^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
@@ -150,8 +150,8 @@ Cannot cast `Object.assign.length` to string because number [1] is incompatible 
          ^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:133:13
-   133|     length: number;
+   <BUILTINS>/core.js:148:13
+   148|     length: number;
                     ^^^^^^ [1]
    apply.js:12:25
     12| (Object.assign.length : string); // error
@@ -167,8 +167,8 @@ Cannot cast `Object.assign.name` to number because string [1] is incompatible wi
          ^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:134:11
-   134|     name: string;
+   <BUILTINS>/core.js:149:11
+   149|     name: string;
                   ^^^^^^ [1]
    apply.js:14:23
     14| (Object.assign.name : number); // error

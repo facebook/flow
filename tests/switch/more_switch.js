@@ -24,3 +24,15 @@ function baz(x): number {
   }
   return 2;
 }
+
+function boo(o: ?{x: 'a' | 'b'}): void {
+  if (o != null) {
+    switch (o.x) {
+      case 'a':
+        o = null;
+        break;
+      case 'b':
+        break;
+    }
+  }
+}

@@ -193,6 +193,7 @@ class documentation_searcher (def_loc : Loc.t) =
     method! export_named_declaration loc decl =
       let open Flow_ast.Statement.ExportNamedDeclaration in
       let { declaration; comments; _ } = decl in
+      if this#is_target loc then find comments;
       Base.Option.iter
         declaration
         ~f:Utils_js.(replace_comments_of_statement ~comments %> this#statement %> ignore);
@@ -209,6 +210,18 @@ class documentation_searcher (def_loc : Loc.t) =
       | Expression (loc, _) ->
         if this#is_target loc then find comments);
       super#export_default_declaration loc decl
+
+    method! type_alias loc type_alias =
+      let open Flow_ast.Statement.TypeAlias in
+      let { id = (id_loc, _); comments; _ } = type_alias in
+      if this#is_target id_loc then find comments;
+      super#type_alias loc type_alias
+
+    method! interface loc interface =
+      let open Flow_ast.Statement.Interface in
+      let { id = (id_loc, _); comments; _ } = interface in
+      if this#is_target id_loc then find comments;
+      super#interface loc interface
   end
 
 let search def_loc ast =

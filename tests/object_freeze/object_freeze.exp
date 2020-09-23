@@ -1,3 +1,29 @@
+Error ------------------------------------------------------------------------------------------------ downstream.js:5:2
+
+Cannot cast `inexact` to object type because inexact frozen object literal [1] is incompatible with exact object
+type [2]. [incompatible-exact]
+
+   downstream.js:5:2
+    5| (inexact: {||}); // error: inexact -> exact
+        ^^^^^^^
+
+References:
+   object_freeze.js:33:26
+   33|   inexact: Object.freeze({...inexact}),
+                                ^^^^^^^^^^^^ [1]
+   downstream.js:5:11
+    5| (inexact: {||}); // error: inexact -> exact
+                 ^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ downstream.js:7:9
+
+Cannot assign `0` to `inexact.p` because property `p` is not writable. [cannot-write]
+
+   7| inexact.p = 0; // error: can't set prop on frozen object
+              ^
+
+
 Error --------------------------------------------------------------------------------------------- object_freeze.js:4:5
 
 Cannot assign `'23456'` to `foo.bar` because property `bar` is not writable. [cannot-write]
@@ -75,5 +101,23 @@ References:
                      ^^^^^^ [2]
 
 
+Error -------------------------------------------------------------------------------------------- object_freeze.js:30:2
 
-Found 8 errors
+Cannot cast `Object.freeze(...)` to object type because inexact frozen object literal [1] is incompatible with exact
+object type [2]. [incompatible-exact]
+
+   object_freeze.js:30:2
+   30| (Object.freeze({...inexact}): {||}); // Error: inexact -> exact
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   object_freeze.js:30:16
+   30| (Object.freeze({...inexact}): {||}); // Error: inexact -> exact
+                      ^^^^^^^^^^^^ [1]
+   object_freeze.js:30:31
+   30| (Object.freeze({...inexact}): {||}); // Error: inexact -> exact
+                                     ^^^^ [2]
+
+
+
+Found 11 errors

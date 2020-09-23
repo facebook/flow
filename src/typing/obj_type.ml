@@ -7,9 +7,13 @@
 
 open Type
 
-let mk_seal reason = function
-  | true -> Object.Spread.Sealed
-  | false -> Object.Spread.UnsealedInFile (ALoc.source (Reason.aloc_of_reason reason))
+let mk_seal reason ~sealed ~frozen =
+  if frozen then
+    Object.Spread.Frozen
+  else if sealed then
+    Object.Spread.Sealed
+  else
+    Object.Spread.UnsealedInFile (ALoc.source (Reason.aloc_of_reason reason))
 
 let mk_with_proto cx reason ~obj_kind ?(frozen = false) ?call ?(props = SMap.empty) ?loc proto =
   let flags = { obj_kind; frozen } in

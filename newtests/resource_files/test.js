@@ -3,9 +3,10 @@
  */
 
 
+import type Suite from "flow-dev-tools/src/test/Suite.js";
 import {suite, test} from 'flow-dev-tools/src/test/Tester';
 
-export default suite(({addFile, addFiles, addCode}) => [
+export default (suite(({addFile, addFiles, addCode}) => [
   test('Requiring a .css file', [
     addFile('foo.css')
       .addCode("import './foo.css'")
@@ -93,4 +94,4 @@ export default suite(({addFile, addFiles, addCode}) => [
         `,
       ),
   ]).flowConfig('_flowconfig_with_module_name_mapper'),
-]);
+]): Suite);

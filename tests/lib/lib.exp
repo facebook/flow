@@ -7,8 +7,8 @@ Cannot assign `NaN` to `x` because number [1] is incompatible with string [2]. [
                       ^^^
 
 References:
-   <BUILTINS>/core.js:12:18
-   12| declare var NaN: number;
+   <BUILTINS>/core.js:22:18
+   22| declare var NaN: number;
                         ^^^^^^ [1]
    libtest.js:1:7
     1| var x:string = NaN
@@ -24,8 +24,8 @@ Cannot assign `Number.MAX_VALUE` to `y` because number [1] is incompatible with 
                        ^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:147:23
-   147|     static MAX_VALUE: number;
+   <BUILTINS>/core.js:162:23
+   162|     static MAX_VALUE: number;
                               ^^^^^^ [1]
    libtest.js:2:7
      2| var y:string = Number.MAX_VALUE;
@@ -41,8 +41,8 @@ Cannot assign `(new TypeError()).name` to `z` because string [1] is incompatible
                        ^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:467:11
-   467|     name: string;
+   <BUILTINS>/core.js:482:11
+   482|     name: string;
                   ^^^^^^ [1]
    libtest.js:3:7
      3| var z:number = new TypeError().name;
@@ -58,8 +58,8 @@ Cannot assign `parseInt(...)` to `w` because number [1] is incompatible with str
                       ^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:16:59
-   16| declare function parseInt(string: mixed, radix?: number): number;
+   <BUILTINS>/core.js:26:59
+   26| declare function parseInt(string: mixed, radix?: number): number;
                                                                  ^^^^^^ [1]
    libtest.js:4:7
     4| var w:string = parseInt("...");

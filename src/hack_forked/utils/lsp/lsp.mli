@@ -9,12 +9,24 @@ type lsp_id =
   | NumberId of int
   | StringId of string
 
-(* Note: this datatype provides no invariants that the string is well-formed. *)
-type documentUri = DocumentUri of string
+module DocumentUri : sig
+  (* Note: this datatype provides no invariants that the string is well-formed. *)
+  type t = DocumentUri of string
 
-val uri_of_string : string -> documentUri
+  val compare : t -> t -> int
 
-val string_of_uri : documentUri -> string
+  val of_string : string -> t
+
+  val to_string : t -> string
+end
+
+module UriSet : sig
+  include module type of Set.Make (DocumentUri)
+end
+
+module UriMap : sig
+  include module type of WrappedMap.Make (DocumentUri)
+end
 
 type position = {
   line: int;
@@ -28,7 +40,7 @@ type range = {
 
 module Location : sig
   type t = {
-    uri: documentUri;
+    uri: DocumentUri.t;
     range: range;
   }
 end
@@ -78,12 +90,12 @@ module TextEdit : sig
 end
 
 module TextDocumentIdentifier : sig
-  type t = { uri: documentUri }
+  type t = { uri: DocumentUri.t }
 end
 
 module VersionedTextDocumentIdentifier : sig
   type t = {
-    uri: documentUri;
+    uri: DocumentUri.t;
     version: int;
   }
 end
@@ -96,12 +108,12 @@ module TextDocumentEdit : sig
 end
 
 module WorkspaceEdit : sig
-  type t = { changes: TextEdit.t list SMap.t (* holds changes to existing docs *) }
+  type t = { changes: TextEdit.t list UriMap.t (* holds changes to existing docs *) }
 end
 
 module TextDocumentItem : sig
   type t = {
-    uri: documentUri;
+    uri: DocumentUri.t;
     languageId: string;
     version: int;
     text: string;
@@ -250,7 +262,7 @@ module Initialize : sig
   type params = {
     processId: int option;
     rootPath: string option;
-    rootUri: documentUri option;
+    rootUri: DocumentUri.t option;
     initializationOptions: initializationOptions;
     client_capabilities: client_capabilities;
     trace: trace;
@@ -304,11 +316,7 @@ module Initialize : sig
     preselectSupport: bool;
   }
 
-  and windowClientCapabilities = {
-    status: bool;
-    progress: bool;
-    actionRequired: bool;
-  }
+  and windowClientCapabilities = { status: bool }
 
   and telemetryClientCapabilities = { connectionStatus: bool }
 
@@ -422,7 +430,7 @@ module PublishDiagnostics : sig
   type params = publishDiagnosticsParams
 
   and publishDiagnosticsParams = {
-    uri: documentUri;
+    uri: DocumentUri.t;
     diagnostics: diagnostic list;
   }
 
@@ -494,7 +502,7 @@ module DidChangeWatchedFiles : sig
   type params = { changes: fileEvent list }
 
   and fileEvent = {
-    uri: documentUri;
+    uri: DocumentUri.t;
     type_: fileChangeType;
   }
 end
@@ -873,38 +881,6 @@ module ShowStatus : sig
   }
 end
 
-module Progress : sig
-  type t =
-    | Present of {
-        id: int;
-        label: string;
-      }
-    | Absent
-
-  and params = progressParams
-
-  and progressParams = {
-    id: int;
-    label: string option;
-  }
-end
-
-module ActionRequired : sig
-  type t =
-    | Present of {
-        id: int;
-        label: string;
-      }
-    | Absent
-
-  and params = actionRequiredParams
-
-  and actionRequiredParams = {
-    id: int;
-    label: string option;
-  }
-end
-
 module ConnectionStatus : sig
   type params = connectionStatusParams
 
@@ -1025,8 +1001,6 @@ type lsp_notification =
   | LogMessageNotification of LogMessage.params
   | TelemetryNotification of LogMessage.params (* LSP allows 'any' but we only send these *)
   | ShowMessageNotification of ShowMessage.params
-  | ProgressNotification of Progress.params
-  | ActionRequiredNotification of ActionRequired.params
   | ConnectionStatusNotification of ConnectionStatus.params
   | InitializedNotification
   | SetTraceNotification (* $/setTraceNotification *)
@@ -1058,18 +1032,4 @@ end
 
 module IdMap : sig
   include module type of WrappedMap.Make (IdKey)
-end
-
-module UriKey : sig
-  type t = documentUri
-
-  val compare : t -> t -> int
-end
-
-module UriSet : sig
-  include module type of Set.Make (UriKey)
-end
-
-module UriMap : sig
-  include module type of WrappedMap.Make (UriKey)
 end

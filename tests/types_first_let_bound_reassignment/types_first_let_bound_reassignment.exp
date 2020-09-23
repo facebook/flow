@@ -1,31 +1,3 @@
-
-Errors in classic
-Error ----------------------------------------------------------------------------------------------------- file.js:17:5
-
-Cannot assign `1` to `Lib.baz` because property `baz` is not writable. [cannot-write]
-
-   17| Lib.baz = 1; // error in both modes, baz is not writable
-           ^^^
-
-
-Error ----------------------------------------------------------------------------------------------------- file.js:20:7
-
-Cannot assign `1` to `bak` because number [1] is incompatible with function type [2]. [incompatible-type]
-
-   file.js:20:7
-   20| bak = 1; // error in both modes
-             ^ [1]
-
-References:
-   file.js:19:21
-   19| declare function bak(): void;
-                           ^^^^^^^^ [2]
-
-
-
-Found 2 errors
-
-Errors in types-first
 Error ------------------------------------------------------------------------------------------------------ file.js:6:1
 
 Cannot reassign exported class binding `C` [1]. [cannot-reassign-export]

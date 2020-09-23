@@ -135,13 +135,11 @@ module SignatureVerification = struct
           | ExpectedAnnotation (loc, _)
           | UnexpectedExpression (loc, _)
           | UnexpectedObjectKey (loc, _)
-          | UnexpectedObjectSpread (loc, _)
           | EmptyArray loc
           | EmptyObject loc
           | UnexpectedArraySpread (loc, _) ->
             (tot_errors + 1, supported_error_kind cctx norm_opts ~max_type_size acc loc)
           | ExpectedSort (_, _, loc)
-          | InvalidTypeParamUse loc
           | SketchyToplevelDef loc
           | UnexpectedArrayHole loc
           | UnsupportedPredicateExpression loc

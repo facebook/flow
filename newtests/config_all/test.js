@@ -2,9 +2,10 @@
  * @flow
  */
 
+import type Suite from "flow-dev-tools/src/test/Suite.js";
 import {suite, test} from 'flow-dev-tools/src/test/Tester';
 
-export default suite(({addFile}) => [
+export default (suite(({addFile}) => [
   test('all=true', [
     addFile('no_at_flow.js')
       .newErrors(
@@ -27,4 +28,4 @@ export default suite(({addFile}) => [
       .noNewErrors()
       .because('We ignore files without @flow'),
   ]).flowConfig('flowconfig_all_false'),
-]);
+]): Suite);

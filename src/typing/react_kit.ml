@@ -81,7 +81,7 @@ let get_intrinsic
 
   (* Create a type variable which will represent the specific intrinsic we
    * find in the intrinsics map. *)
-  let intrinsic = Tvar.mk cx reason in
+  let intrinsic = Tvar.mk_no_wrap cx reason in
   (* Get the intrinsic from the map. *)
   rec_flow
     cx
@@ -93,7 +93,7 @@ let get_intrinsic
           (match literal with
           | Literal (_, name) -> Named (replace_desc_reason (RReactElement (Some name)) reason, name)
           | _ -> Computed component),
-          intrinsic ) );
+          (reason, intrinsic) ) );
 
   (* Get the artifact from the intrinsic. *)
   let propref =
@@ -109,7 +109,7 @@ let get_intrinsic
   rec_flow
     cx
     trace
-    ( intrinsic,
+    ( OpenT (reason, intrinsic),
       LookupT
         {
           reason = reason_op;
@@ -922,10 +922,10 @@ module Kit (Flow : Flow_common.S) : REACT = struct
         in
         let resolve_call this tool t =
           let reason = reason_of_t t in
-          let return_t = Tvar.mk cx reason in
-          let funcall = mk_methodcalltype this None [] return_t in
+          let return_tvar = (reason, Tvar.mk_no_wrap cx reason) in
+          let funcall = mk_methodcalltype this None [] return_tvar in
           rec_flow cx trace (t, CallT (unknown_use, reason, funcall));
-          resolve tool return_t
+          resolve tool (OpenT return_tvar)
         in
         let merge_nullable f a b =
           match (a, b) with
@@ -1141,7 +1141,7 @@ module Kit (Flow : Flow_common.S) : REACT = struct
                     | None -> v
                     | Some t ->
                       (* Tie the `this` knot with BindT *)
-                      let dummy_return = MixedT.make reason_op |> with_trust bogus_trust in
+                      let dummy_return = (reason_op, Tvar.mk_no_wrap cx reason_op) in
                       let calltype = mk_methodcalltype knot.this None [] dummy_return in
                       rec_flow cx trace (t, BindT (unknown_use, reason_op, calltype, true));
 

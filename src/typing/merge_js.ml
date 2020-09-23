@@ -115,8 +115,10 @@ let explicit_decl_require cx (m, loc, resolved_m, cx_to) =
   let reason = Reason.(mk_reason (RCustom m) loc) in
   (* lookup module declaration from builtin context *)
   let m_name = resolved_m |> Modulename.to_string |> Reason.internal_module_name in
-  let from_t = Tvar.mk cx reason in
-  Flow_js.lookup_builtin cx m_name reason (Type.Strict reason) from_t;
+  let from_t =
+    Tvar.mk_no_wrap_where cx reason (fun from_t ->
+        Flow_js.lookup_builtin cx m_name reason (Type.Strict reason) from_t)
+  in
 
   (* flow the declared module type to importing context *)
   let to_t = Context.find_require cx_to loc in
@@ -131,13 +133,15 @@ let explicit_unchecked_require cx (m, loc, cx_to) =
    * from an untyped module and an any-typed type import from a nonexistent module. *)
   let reason = Reason.(mk_reason (RUntypedModule m) loc) in
   let m_name = Reason.internal_module_name m in
-  let from_t = Tvar.mk cx reason in
-  Flow_js.lookup_builtin
-    cx
-    m_name
-    reason
-    (Type.NonstrictReturning (Some (Type.AnyT (reason, Type.Untyped), from_t), None))
-    from_t;
+  let from_t =
+    Tvar.mk_no_wrap_where cx reason (fun from_t ->
+        Flow_js.lookup_builtin
+          cx
+          m_name
+          reason
+          (Type.NonstrictReturning (Some (Type.AnyT (reason, Type.Untyped), Type.OpenT from_t), None))
+          from_t)
+  in
 
   (* flow the declared module type to importing context *)
   let to_t = Context.find_require cx_to loc in
@@ -201,14 +205,15 @@ let detect_unnecessary_invariants cx =
 let detect_invalid_type_assert_calls cx file_sigs cxs tasts =
   if Context.type_asserts cx then Type_asserts.detect_invalid_calls ~full_cx:cx file_sigs cxs tasts
 
-let force_annotations leader_cx other_cxs =
-  Base.List.iter
-    ~f:(fun cx ->
-      let should_munge_underscores = Context.should_munge_underscores cx in
-      Context.module_ref cx
-      |> Flow_js.lookup_module leader_cx
-      |> Flow_js.enforce_strict leader_cx ~should_munge_underscores)
-    (leader_cx :: other_cxs)
+let force_annotations ~arch leader_cx other_cxs =
+  if arch = Options.Classic then
+    Base.List.iter
+      ~f:(fun cx ->
+        let should_munge_underscores = Context.should_munge_underscores cx in
+        Context.module_ref cx
+        |> Flow_js.lookup_module leader_cx
+        |> Flow_js.enforce_strict leader_cx ~should_munge_underscores)
+      (leader_cx :: other_cxs)
 
 let detect_non_voidable_properties cx =
   (* This function approximately checks whether VoidT can flow to the provided
@@ -397,6 +402,7 @@ let detect_matching_props_violations cx =
     let obj = resolver#type_ cx () obj in
     let sentinel = resolver#type_ cx () sentinel in
     match sentinel with
+    (* TODO: it should not be possible to create a MatchingPropT with a non-tvar tout *)
     | DefT (_, _, (BoolT (Some _) | StrT (Literal _) | NumT (Literal _))) ->
       (* Limit the check to promitive literal sentinels *)
       let use_op =
@@ -458,6 +464,7 @@ let detect_literal_subtypes cx =
    5. Link the local references to libraries in master_cx and component_cxs.
 *)
 let merge_component
+    ~arch
     ~metadata
     ~lint_severities
     ~strict_mode
@@ -581,7 +588,7 @@ let merge_component
     detect_matching_props_violations cx;
     detect_literal_subtypes cx;
 
-    force_annotations cx other_cxs;
+    force_annotations ~arch cx other_cxs;
 
     match results with
     | [] -> failwith "there is at least one cx"
@@ -959,6 +966,17 @@ module ContextOptimizer = struct
           else
             Poly.id_as_int poly_id |> Base.Option.iter ~f:(SigHash.add_int sig_hash);
           super#type_ cx pole t
+        | UnionT (_, rep) ->
+          if not (UnionRep.is_optimized_finally rep) then
+            UnionRep.optimize
+              rep
+              ~reasonless_eq:TypeUtil.reasonless_eq
+              ~flatten:(Type_mapper.union_flatten cx)
+              ~find_resolved:(Context.find_resolved cx)
+              ~find_props:(Context.find_props cx);
+          let t' = super#type_ cx pole t in
+          SigHash.add_type sig_hash t';
+          t'
         | _ ->
           let t' = super#type_ cx pole t in
           SigHash.add_type sig_hash t';

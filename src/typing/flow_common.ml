@@ -36,9 +36,9 @@ module type S = sig
     Context.t -> ?trace:Trace.t -> Type.t -> Type.defer_use_t -> Type.Eval.id -> Type.t
 
   val eval_selector :
-    Context.t -> ?trace:Trace.t -> reason -> Type.t -> Type.selector -> Type.t -> unit
+    Context.t -> ?trace:Trace.t -> reason -> Type.t -> Type.selector -> Type.tvar -> unit
 
-  val filter_optional : Context.t -> ?trace:Trace.t -> reason -> Type.t -> Type.t
+  val filter_optional : Context.t -> ?trace:Trace.t -> reason -> Type.t -> Type.ident
 
   val flow : Context.t -> Type.t * Type.use_t -> unit
 
@@ -79,7 +79,7 @@ module type S = sig
   val is_munged_prop_name_with_munge : name -> should_munge_underscores:bool -> bool
 
   val lookup_builtin :
-    Context.t -> ?trace:Trace.t -> string -> reason -> Type.lookup_kind -> Type.t -> unit
+    Context.t -> ?trace:Trace.t -> string -> reason -> Type.lookup_kind -> Type.tvar -> unit
 
   val match_this_binding : Type.t SMap.t -> (Type.t -> bool) -> bool
 

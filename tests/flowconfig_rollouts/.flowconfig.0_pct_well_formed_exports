@@ -3,3 +3,4 @@ verify_sig=0% on, 100% off
 
 [options]
 (verify_sig=on) well_formed_exports=true
+(verify_sig=off) types_first=false

@@ -19,10 +19,10 @@ ComponentWithDefaultProps.defaultProps = {foo: 3};
 (ComponentWithDefaultProps: React$AbstractComponent<Config2, number | void>); // Ok, instance is void
 (ComponentWithDefaultProps: React$AbstractComponent<Config2, number>); // Error, void ~> number
 
-class NotAComponent {}; // Error, not a component
+class NotAComponent {};
 
 function NotAFunctionComponent(x: Props) {
-  return NotAComponent;
+  return NotAComponent; // Error, not a component
 }
 
 (NotAFunctionComponent: React$AbstractComponent<Props, void>);

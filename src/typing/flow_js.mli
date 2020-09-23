@@ -44,7 +44,7 @@ val reposition :
   Type.t
 
 (* constraint utils *)
-val filter_optional : Context.t -> ?trace:Trace.t -> reason -> Type.t -> Type.t
+val filter_optional : Context.t -> ?trace:Trace.t -> reason -> Type.t -> Type.ident
 
 module Cache : sig
   val stats_poly_instantiation : Context.t -> Hashtbl.statistics
@@ -87,7 +87,7 @@ val check_polarity :
 (* selectors *)
 
 val eval_selector :
-  Context.t -> ?trace:Trace.t -> reason -> Type.t -> Type.selector -> Type.t -> unit
+  Context.t -> ?trace:Trace.t -> reason -> Type.t -> Type.selector -> Type.tvar -> unit
 
 val visit_eval_id : Context.t -> Type.Eval.id -> (Type.t -> unit) -> unit
 
@@ -124,7 +124,7 @@ val builtins : Context.t -> Type.t
 val get_builtin : Context.t -> ?trace:Trace.t -> string -> reason -> Type.t
 
 val lookup_builtin :
-  Context.t -> ?trace:Trace.t -> string -> reason -> Type.lookup_kind -> Type.t -> unit
+  Context.t -> ?trace:Trace.t -> string -> reason -> Type.lookup_kind -> Type.tvar -> unit
 
 val get_builtin_type : Context.t -> ?trace:Trace.t -> reason -> ?use_desc:bool -> string -> Type.t
 

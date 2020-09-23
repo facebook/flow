@@ -1,1 +1,19 @@
-Found 0 errors
+Error ----------------------------------------------------------------------------------------------------- test.js:29:2
+
+Cannot cast `literal.foo` to empty because string literal `foo` [1] is incompatible with empty [2]. [incompatible-cast]
+
+   test.js:29:2
+   29| (literal.foo: empty); // error, 'foo' </: empty
+        ^^^^^^^^^^^
+
+References:
+   literal.js:5:30
+    5| module.exports = keyMirror({ 'foo': null });
+                                    ^^^^^ [1]
+   test.js:29:15
+   29| (literal.foo: empty); // error, 'foo' </: empty
+                     ^^^^^ [2]
+
+
+
+Found 1 error

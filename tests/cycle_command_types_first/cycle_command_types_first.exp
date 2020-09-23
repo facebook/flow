@@ -1,0 +1,11 @@
+
+Start server in types-first mode
+
+Value cycle should include both files
+digraph {
+  "fileB.js" -> "fileA.js"
+  "fileA.js" -> "fileB.js"
+}
+Type cycle should be empty
+digraph {
+}

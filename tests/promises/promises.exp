@@ -113,8 +113,8 @@ References:
    all.js:24:1
     24| Promise.all(); // Error: expected array instead of undefined (too few arguments)
         ^^^^^^^^^^^^^ [1]
-   <BUILTINS>/core.js:692:19
-   692|     static all<T: Iterable<mixed>>(promises: T): Promise<$TupleMap<T, typeof $await>>;
+   <BUILTINS>/core.js:707:19
+   707|     static all<T: Iterable<mixed>>(promises: T): Promise<$TupleMap<T, typeof $await>>;
                           ^^^^^^^^^^^^^^^ [2]
 
 
@@ -128,8 +128,8 @@ in `$Iterable` [2]. [prop-missing]
                     ^ [1]
 
 References:
-   <BUILTINS>/core.js:692:19
-   692|     static all<T: Iterable<mixed>>(promises: T): Promise<$TupleMap<T, typeof $await>>;
+   <BUILTINS>/core.js:707:19
+   707|     static all<T: Iterable<mixed>>(promises: T): Promise<$TupleMap<T, typeof $await>>;
                           ^^^^^^^^^^^^^^^ [2]
 
 
@@ -146,8 +146,8 @@ References:
    allSettled.js:4:1
      4| Promise.allSettled(); // Error: expected $Iterable instead of undefined (too few arguments)
         ^^^^^^^^^^^^^^^^^^^^ [1]
-   <BUILTINS>/core.js:693:26
-   693|     static allSettled<T: Iterable<mixed>>(promises: T): Promise<$TupleMap<T, <T>(p: Promise<T> | T) => $SettledPromiseResult<T>>>;
+   <BUILTINS>/core.js:708:26
+   708|     static allSettled<T: Iterable<mixed>>(promises: T): Promise<$TupleMap<T, <T>(p: Promise<T> | T) => $SettledPromiseResult<T>>>;
                                  ^^^^^^^^^^^^^^^ [2]
 
 
@@ -161,8 +161,8 @@ exists in `$Iterable` [2]. [prop-missing]
                            ^ [1]
 
 References:
-   <BUILTINS>/core.js:693:26
-   693|     static allSettled<T: Iterable<mixed>>(promises: T): Promise<$TupleMap<T, <T>(p: Promise<T> | T) => $SettledPromiseResult<T>>>;
+   <BUILTINS>/core.js:708:26
+   708|     static allSettled<T: Iterable<mixed>>(promises: T): Promise<$TupleMap<T, <T>(p: Promise<T> | T) => $SettledPromiseResult<T>>>;
                                  ^^^^^^^^^^^^^^^ [2]
 
 
@@ -176,8 +176,8 @@ Cannot cast `first.status` to empty because string literal `rejected` [1] is inc
                ^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:701:12
-   701|   +status: 'rejected',
+   <BUILTINS>/core.js:716:12
+   716|   +status: 'rejected',
                    ^^^^^^^^^^ [1]
    allSettled.js:36:22
     36|       (first.status: empty) // Error: 'rejected' case was not covered
@@ -525,8 +525,8 @@ References:
    resolve_void.js:3:29
      3| (Promise.resolve(): Promise<number>); // error
                                     ^^^^^^ [2]
-   <BUILTINS>/core.js:667:24
-   667| declare class Promise<+R> {
+   <BUILTINS>/core.js:682:24
+   682| declare class Promise<+R> {
                                ^ [3]
 
 
@@ -543,8 +543,8 @@ References:
    resolve_void.js:5:38
      5| (Promise.resolve(undefined): Promise<number>); // error
                                              ^^^^^^ [2]
-   <BUILTINS>/core.js:667:24
-   667| declare class Promise<+R> {
+   <BUILTINS>/core.js:682:24
+   682| declare class Promise<+R> {
                                ^ [3]
 
 

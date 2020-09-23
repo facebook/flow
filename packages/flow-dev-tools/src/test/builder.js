@@ -63,8 +63,8 @@ export class TestBuilder {
   sourceDir: string;
   suiteName: string;
   tmpDir: string;
-  testErrors = [];
-  allowFlowServerToDie = false;
+  testErrors: Array<string> = [];
+  allowFlowServerToDie: boolean = false;
   logStream: stream$Writable | null;
   waitForRecheck: boolean;
 
@@ -1022,7 +1022,7 @@ export default class Builder {
     process.on('exit', this.cleanup);
   }
 
-  cleanup = async () => {
+  cleanup: () => Promise<void> = async () => {
     await Promise.all(Builder.builders.map(builder => builder.cleanup()));
   };
 

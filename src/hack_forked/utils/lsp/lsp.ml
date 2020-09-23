@@ -42,11 +42,18 @@ type lsp_id =
   | NumberId of int
   | StringId of string
 
-type documentUri = DocumentUri of string
+module DocumentUri = struct
+  type t = DocumentUri of string
 
-let uri_of_string (s : string) : documentUri = DocumentUri s
+  let compare (DocumentUri x) (DocumentUri y) = String.compare x y
 
-let string_of_uri (DocumentUri s) : string = s
+  let of_string (s : string) : t = DocumentUri s
+
+  let to_string (DocumentUri s) : string = s
+end
+
+module UriSet = Set.Make (DocumentUri)
+module UriMap = WrappedMap.Make (DocumentUri)
 
 type position = {
   line: int;  (** line position in a document [zero-based] *)
@@ -63,7 +70,7 @@ type range = {
 (** Represents a location inside a resource, such as a line inside a text file *)
 module Location = struct
   type t = {
-    uri: documentUri;
+    uri: DocumentUri.t;
     range: range;
   }
 end
@@ -125,13 +132,13 @@ end
 
 (** Text documents are identified using a URI. *)
 module TextDocumentIdentifier = struct
-  type t = { uri: documentUri  (** the text document's URI *) }
+  type t = { uri: DocumentUri.t  (** the text document's URI *) }
 end
 
 (** An identifier to denote a specific version of a text document. *)
 module VersionedTextDocumentIdentifier = struct
   type t = {
-    uri: documentUri;  (** the text document's URI *)
+    uri: DocumentUri.t;  (** the text document's URI *)
     version: int;  (** the version number of this document *)
   }
 end
@@ -150,14 +157,14 @@ end
    workspace. A workspace edit consists of a mapping from a URI to an
    array of TextEdits to be applied to the document with that URI. *)
 module WorkspaceEdit = struct
-  type t = { changes: TextEdit.t list SMap.t  (** holds changes to existing docs *) }
+  type t = { changes: TextEdit.t list UriMap.t  (** holds changes to existing docs *) }
 end
 
 (** An item to transfer a text document from the client to the server. The
    version number strictly increases after each change, including undo/redo. *)
 module TextDocumentItem = struct
   type t = {
-    uri: documentUri;  (** the text document's URI *)
+    uri: DocumentUri.t;  (** the text document's URI *)
     languageId: string;  (** the text document's language identifier *)
     version: int;  (** the version of the document *)
     text: string;  (** the content of the opened text document *)
@@ -359,7 +366,7 @@ module Initialize = struct
   type params = {
     processId: int option;  (** pid of parent process *)
     rootPath: string option;  (** deprecated *)
-    rootUri: documentUri option;  (** the root URI of the workspace *)
+    rootUri: DocumentUri.t option;  (** the root URI of the workspace *)
     initializationOptions: initializationOptions;
     client_capabilities: client_capabilities;  (** "capabilities" over wire *)
     trace: trace;  (** the initial trace setting, default="off" *)
@@ -421,8 +428,6 @@ module Initialize = struct
 
   and windowClientCapabilities = {
     status: bool;  (** Nuclide-specific: client supports window/showStatusRequest *)
-    progress: bool;  (** Nuclide-specific: client supports window/progress *)
-    actionRequired: bool;  (** Nuclide-specific: client supports window/actionRequired *)
   }
 
   and telemetryClientCapabilities = {
@@ -546,7 +551,7 @@ module PublishDiagnostics = struct
   type params = publishDiagnosticsParams
 
   and publishDiagnosticsParams = {
-    uri: documentUri;
+    uri: DocumentUri.t;
     diagnostics: diagnostic list;
   }
 
@@ -633,7 +638,7 @@ module DidChangeWatchedFiles = struct
   type params = { changes: fileEvent list }
 
   and fileEvent = {
-    uri: documentUri;
+    uri: DocumentUri.t;
     type_: fileChangeType;
   }
 end
@@ -1060,45 +1065,6 @@ module ShowStatus = struct
   }
 end
 
-(* Progress notification, method="window/progress" *)
-module Progress = struct
-  type t =
-    | Present of {
-        id: int;
-        label: string;
-      }
-    | Absent
-
-  and params = progressParams
-
-  and progressParams = {
-    (* LSP progress notifications have a lifetime that starts with their 1st  *)
-    (* window/progress update message and ends with an update message with    *)
-    (* label = None. They use an ID number (not JsonRPC id) to associate      *)
-    (* multiple messages to a single lifetime stream.                         *)
-    id: int;
-    label: string option;
-  }
-end
-
-(* ActionRequired notification, method="window/actionRequired" *)
-module ActionRequired = struct
-  type t =
-    | Present of {
-        id: int;
-        label: string;
-      }
-    | Absent
-
-  and params = actionRequiredParams
-
-  and actionRequiredParams = {
-    (* See progressParams.id for an explanation of this field. *)
-    id: int;
-    label: string option;
-  }
-end
-
 (* ConnectionStatus notification, method="telemetry/connectionStatus" *)
 module ConnectionStatus = struct
   type params = connectionStatusParams
@@ -1238,8 +1204,6 @@ type lsp_notification =
   | LogMessageNotification of LogMessage.params
   | TelemetryNotification of LogMessage.params (* LSP allows 'any' but we only send these *)
   | ShowMessageNotification of ShowMessage.params
-  | ProgressNotification of Progress.params
-  | ActionRequiredNotification of ActionRequired.params
   | ConnectionStatusNotification of ConnectionStatus.params
   | InitializedNotification
   | SetTraceNotification (* $/setTraceNotification *)
@@ -1272,12 +1236,3 @@ end
 
 module IdSet = Set.Make (IdKey)
 module IdMap = WrappedMap.Make (IdKey)
-
-module UriKey = struct
-  type t = documentUri
-
-  let compare (DocumentUri x) (DocumentUri y) = String.compare x y
-end
-
-module UriSet = Set.Make (UriKey)
-module UriMap = WrappedMap.Make (UriKey)

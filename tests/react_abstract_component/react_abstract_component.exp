@@ -391,14 +391,14 @@ References:
                                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------ double_wrapped.js:23:13
+Error ------------------------------------------------------------------------------------------ double_wrapped.js:22:29
 
-Cannot create `WrappedBoth` element because property `bar` is missing in object type [1] but exists in props [2].
-[prop-missing]
+Cannot call `wrapper` with `wrapper2(...)` bound to `base` because property `bar` is missing in object type [1] but
+exists in props [2]. [prop-missing]
 
-   double_wrapped.js:23:13
-   23| const _a = <WrappedBoth foo={42} bar={43} />; // Error, extra prop bar
-                   ^^^^^^^^^^^
+   double_wrapped.js:22:29
+   22| const WrappedBoth = wrapper(wrapper2(MyComponent)); // Errors-- props incompatible with component
+                                   ^^^^^^^^^^^^^^^^^^^^^
 
 References:
    double_wrapped.js:4:43
@@ -409,14 +409,14 @@ References:
                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------ double_wrapped.js:24:13
+Error ------------------------------------------------------------------------------------------ double_wrapped.js:22:29
 
-Cannot create `WrappedBoth` element because property `foo` is missing in props [1] but exists in object type [2].
-[prop-missing]
+Cannot call `wrapper` with `wrapper2(...)` bound to `base` because property `foo` is missing in props [1] but exists in
+object type [2]. [prop-missing]
 
-   double_wrapped.js:24:13
-   24| const _b = <WrappedBoth />; // Error, missing prop foo
-                   ^^^^^^^^^^^
+   double_wrapped.js:22:29
+   22| const WrappedBoth = wrapper(wrapper2(MyComponent)); // Errors-- props incompatible with component
+                                   ^^^^^^^^^^^^^^^^^^^^^
 
 References:
    double_wrapped.js:24:12
@@ -524,21 +524,24 @@ References:
                                                                     ^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------- function_lower.js:22:7
+Error ------------------------------------------------------------------------------------------ function_lower.js:25:10
 
-Cannot assign class `NotAComponent` to `NotAComponent` because: [incompatible-type]
+Cannot return `NotAComponent` because: [incompatible-return]
  - Either property `name` is missing in object type [1] but exists in statics of `NotAComponent` [2].
  - Or class `NotAComponent` [2] is incompatible with `React.Portal` [3].
  - Or property `@@iterator` is missing in class `NotAComponent` [2] but exists in `$Iterable` [4].
 
-   function_lower.js:22:7
-   22| class NotAComponent {}; // Error, not a component
-             ^^^^^^^^^^^^^ [2]
+   function_lower.js:25:10
+   25|   return NotAComponent; // Error, not a component
+                ^^^^^^^^^^^^^
 
 References:
    <BUILTINS>/react.js:18:5
    18|   | React$Element<any>
            ^^^^^^^^^^^^^^^^^^ [1]
+   function_lower.js:22:7
+   22| class NotAComponent {};
+             ^^^^^^^^^^^^^ [2]
    <BUILTINS>/react.js:19:5
    19|   | React$Portal
            ^^^^^^^^^^^^ [3]
@@ -563,7 +566,7 @@ References:
    18|   | React$Element<any>
            ^^^^^^^^^^^^^^^^^^ [1]
    function_lower.js:22:7
-   22| class NotAComponent {}; // Error, not a component
+   22| class NotAComponent {};
              ^^^^^^^^^^^^^ [2]
    <BUILTINS>/react.js:19:5
    19|   | React$Portal

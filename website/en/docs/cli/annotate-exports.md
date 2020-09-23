@@ -8,6 +8,10 @@ upgrading large codebases, we are providing a codemod command, whose goal is to
 fill in these missing annotations. This command is included in the Flow binary
 in versions `>= 0.125`.
 
+> Note: As of version 0.134, types-first is the default mode. If you are using a
+version `>=0.134`, make sure you set `types_first=false` in your .flowconfig while
+running this codemod.
+
 This command uses types that Flow infers, to fill in positions that would otherwise
 raise *signature-verification* failures. It will include the necessary type import
 statements, as long as the respective types are exported from their defining modules.

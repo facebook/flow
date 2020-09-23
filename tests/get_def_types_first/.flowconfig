@@ -2,3 +2,4 @@
 module.system=haste
 no_flowlib=true
 types_first=true
+experimental.enums=true

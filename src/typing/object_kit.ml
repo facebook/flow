@@ -417,7 +417,6 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
           let mk_object cx reason target { Object.reason = _; props; flags } =
             let props = SMap.map (fun (t, _) -> Field (None, t, Polarity.Neutral)) props in
             let id = Context.generate_property_map cx props in
-            let proto = ObjProtoT reason in
             let flags =
               let (exact, sealed) =
                 match target with
@@ -435,8 +434,10 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
                 | (true, _, _) -> Exact
                 | _ -> Inexact
               in
-              { obj_kind; frozen = false }
+              let frozen = sealed = Object.Spread.Frozen in
+              { obj_kind; frozen }
             in
+            let proto = ObjProtoT reason in
             let call = None in
             let t = mk_object_def_type ~reason ~flags ~call id proto in
             (* Wrap the final type in an `ExactT` if we have an exact flag *)
@@ -1059,7 +1060,8 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
                               rec_flow
                                 cx
                                 trace
-                                (filter_optional cx ~trace reason t1, CondT (reason, None, t2, tvar)))
+                                ( OpenT (reason, filter_optional cx ~trace reason t1),
+                                  CondT (reason, None, t2, tvar) ))
                         in
                         Some (Field (None, t, prop_polarity)))
                     config_props
@@ -1350,9 +1352,9 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
          * top-level pattern matching against class lower bounds to object-like
          * uses. This duplication should be removed. *)
         | DefT (r, _, ClassT i) ->
-          let t = Tvar.mk cx r in
-          rec_flow cx trace (i, GetStaticsT (r, t));
-          rec_flow cx trace (t, ObjKitT (use_op, reason, Resolve resolve_tool, tool, tout))
+          let tvar = (r, Tvar.mk_no_wrap cx r) in
+          rec_flow cx trace (i, GetStaticsT tvar);
+          rec_flow cx trace (OpenT tvar, ObjKitT (use_op, reason, Resolve resolve_tool, tool, tout))
         (* Resolve each member of a union. *)
         | UnionT (union_reason, rep) ->
           let union_loc = aloc_of_reason union_reason in

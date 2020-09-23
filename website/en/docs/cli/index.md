@@ -28,7 +28,7 @@ Usage: flow [COMMAND] [PROJECT_ROOT]
 Valid values for COMMAND:
   ast              Print the AST
   autocomplete     Queries autocompletion information
-  batch-coverage   Shows aggregate coverage information for a group of files or directories 
+  batch-coverage   Shows aggregate coverage information for a group of files or directories
   check            Does a full Flow check and prints the results
   check-contents   Run typechecker on contents from stdin
   config           Read or write the .flowconfig file
@@ -64,6 +64,7 @@ Status command options:
   --no-auto-start      If the server is not running, do not start it; just exit
   --old-output-format  Use old output format (absolute file names, line and column numbers)
   --one-line           Escapes newlines so that each error prints on one line
+  --quiet              Suppresses the server-status information that would have been printed to stderr
   --retries            Set the number of retries. (default: 3)
   --retry-if-init      retry if the server is initializing (default: true)
   --show-all-errors    Print all errors (the default is to truncate after 50 errors)

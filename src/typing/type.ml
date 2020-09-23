@@ -166,7 +166,7 @@ module rec TypeTerm : sig
     (* types that should never appear in signatures *)
     | InternalT of internal_t
     (* upper bound trigger for type destructors *)
-    | TypeDestructorTriggerT of use_op * reason * (reason * bool) option * destructor * t
+    | TypeDestructorTriggerT of use_op * reason * (reason * bool) option * destructor * tvar
     (* Sigil representing functions that the type system is not expressive
        enough to annotate, so we customize their behavior internally. *)
     | CustomFunT of reason * custom_fun_kind
@@ -464,22 +464,22 @@ module rec TypeTerm : sig
      * fields when the InstanceT ~> SetPrivatePropT constraint is processsed *)
     | SetPrivatePropT of
         use_op * reason * string * set_mode * class_binding list * bool * t * t option
-    | GetPropT of use_op * reason * propref * t
+    | GetPropT of use_op * reason * propref * tvar
     (* For shapes *)
-    | MatchPropT of use_op * reason * propref * t
+    | MatchPropT of use_op * reason * propref * tvar
     (* The same comment on SetPrivatePropT applies here *)
-    | GetPrivatePropT of use_op * reason * string * class_binding list * bool * t
-    | TestPropT of reason * ident * propref * t
+    | GetPrivatePropT of use_op * reason * string * class_binding list * bool * tvar
+    | TestPropT of reason * ident * propref * tvar
     (* SetElemT has a `tout` parameter to serve as a trigger for ordering
        operations. We only need this in one place: object literal initialization.
        In particular, a computed property in the object initializer users SetElemT
        to initialize the property value, but in order to avoid race conditions we
        need to ensure that reads happen after writes. *)
     | SetElemT of use_op * reason * t * set_mode * t * t option (*tout *)
-    | GetElemT of use_op * reason * t * t
+    | GetElemT of use_op * reason * t * tvar
     | CallElemT of (* call *) reason * (* lookup *) reason * t * method_action
-    | GetStaticsT of reason * t_out
-    | GetProtoT of reason * t_out
+    | GetStaticsT of tvar
+    | GetProtoT of reason * tvar
     | SetProtoT of reason * t
     (* repositioning *)
     | ReposLowerT of reason * bool (* use_desc *) * use_t
@@ -512,12 +512,12 @@ module rec TypeTerm : sig
         targs: t list;
       }
     (* operation specifying a type refinement via a predicate *)
-    | PredicateT of predicate * t
+    | PredicateT of predicate * tvar
     (* like PredicateT, GuardT guards a subsequent flow with a predicate on an
        incoming type. Unlike PredicateT, the subsequent flow (if any) uses
        an arbitrary LB specified in the GuardT value, rather than the filtered
        result of the predicate itself *)
-    | GuardT of predicate * t * t
+    | GuardT of predicate * t * tvar
     (* === *)
     | StrictEqT of {
         reason: Reason.t;
@@ -532,10 +532,10 @@ module rec TypeTerm : sig
         arg: t;
       }
     (* logical operators *)
-    | AndT of reason * t * t
-    | OrT of reason * t * t
-    | NullishCoalesceT of reason * t * t
-    | NotT of reason * t
+    | AndT of reason * t * tvar
+    | OrT of reason * t * tvar
+    | NullishCoalesceT of reason * t * tvar
+    | NotT of reason * tvar
     (* operation on polymorphic types *)
     (* SpecializeT(_, _, _, cache, targs, tresult) instantiates a polymorphic type
         with type arguments targs, and flows the result into tresult. If cache
@@ -597,7 +597,6 @@ module rec TypeTerm : sig
     | ObjAssignToT of use_op * reason * t * t * obj_assign_kind
     (* Resolves the object from which the properties are assigned *)
     | ObjAssignFromT of use_op * reason * t * t * obj_assign_kind
-    | ObjFreezeT of reason * t
     | ObjRestT of reason * string list * t
     | ObjSealT of reason * t
     (* test that something is a valid proto (object-like or null) *)
@@ -657,7 +656,7 @@ module rec TypeTerm : sig
     | IntersectionPreprocessKitT of reason * intersection_preprocess_tool
     | DebugPrintT of reason
     | DebugSleepT of reason
-    | SentinelPropTestT of reason * t * string * bool * UnionEnum.star * t_out
+    | SentinelPropTestT of reason * t * string * bool * UnionEnum.star * tvar
     | IdxUnwrap of reason * t_out
     | IdxUnMaybeifyT of reason * t_out
     | OptionalChainT of reason * reason * (* this *) t * use_t * (* voids *) t_out
@@ -684,7 +683,7 @@ module rec TypeTerm : sig
      *
      * The boolean part is the sense of the conditional check.
      *)
-    | CallLatentPredT of reason * bool * index * t * t
+    | CallLatentPredT of reason * bool * index * t * tvar
     (*
      * CallOpenPredT is fired subsequently, after processing the flow
      * described above. This flow is necessary since the return type of the
@@ -697,7 +696,7 @@ module rec TypeTerm : sig
      * flow) we only keep the relevant key, which corresponds to the refining
      * parameter.
      *)
-    | CallOpenPredT of reason * bool * Key.t * t * t
+    | CallOpenPredT of reason * bool * Key.t * t * tvar
     (*
      * Even for the limited use of function predicates that is currently
      * allowed, we still have to build machinery to handle subtyping for
@@ -742,7 +741,7 @@ module rec TypeTerm : sig
      * flow using the predicate `pred`. The result will be stored in `tvar`,
      * which is expected to be a type variable.
      *)
-    | RefineT of reason * predicate * t
+    | RefineT of reason * predicate * tvar
     (* Spread elements show up in a bunch of places: array literals, function
      * parameters, function call arguments, method arguments. constructor
      * arguments, etc. Often we have logic that depends on what the spread
@@ -763,7 +762,7 @@ module rec TypeTerm : sig
     (* Used to calculate a destructured binding. If annot is true, the lower
      * bound is an annotation (0->1), and t_out will be unified with the
      * destructured type. The caller should wrap the tvar with an AnnotT. *)
-    | DestructuringT of reason * destruct_kind * selector * t_out
+    | DestructuringT of reason * destruct_kind * selector * tvar
     | CreateObjWithComputedPropT of {
         reason: reason;
         value: t;
@@ -786,6 +785,7 @@ module rec TypeTerm : sig
         reason: reason;
         check: enum_possible_exhaustive_check_t;
         incomplete_out: t;
+        discriminant_after_check: t option;
       }
     | FilterOptionalT of use_op * t
     | FilterMaybeT of use_op * t
@@ -977,7 +977,7 @@ module rec TypeTerm : sig
     call_this_t: t;
     call_targs: targ list option;
     call_args_tlist: call_arg list;
-    call_tout: t;
+    call_tout: tvar;
     call_closure_t: int;
     call_strict_arity: bool;
   }
@@ -1078,7 +1078,7 @@ module rec TypeTerm : sig
     | ReadProp of {
         use_op: use_op;
         obj_t: t;
-        tout: t;
+        tout: tvar;
       }
     | WriteProp of {
         use_op: use_op;
@@ -1125,7 +1125,7 @@ module rec TypeTerm : sig
      to initialize the property value, but in order to avoid race conditions we
      need to ensure that reads happen after writes. *)
   and elem_action =
-    | ReadElem of t
+    | ReadElem of tvar
     | WriteElem of t * t option (* tout *) * set_mode
     | CallElem of reason * method_action
 
@@ -1305,8 +1305,8 @@ module rec TypeTerm : sig
 
   and intersection_preprocess_tool =
     | ConcretizeTypes of t list * t list * t * use_t
-    | SentinelPropTest of bool * string * t * t * t
-    | PropExistsTest of bool * string * reason * t * t * (predicate * predicate)
+    | SentinelPropTest of bool * string * t * t * tvar
+    | PropExistsTest of bool * string * reason * t * tvar * (predicate * predicate)
 
   and spec =
     | UnionCases of use_op * t * UnionRep.t * t list
@@ -2366,6 +2366,7 @@ and Object : sig
     type sealtype =
       | UnsealedInFile of File_key.t option
       | Sealed
+      | Frozen
 
     type target =
       (* When spreading values, the result is exact if all of the input types are
@@ -3114,7 +3115,6 @@ let string_of_use_ctor = function
   | NullishCoalesceT _ -> "NullishCoalesceT"
   | ObjAssignToT _ -> "ObjAssignToT"
   | ObjAssignFromT _ -> "ObjAssignFromT"
-  | ObjFreezeT _ -> "ObjFreezeT"
   | ObjRestT _ -> "ObjRestT"
   | ObjSealT _ -> "ObjSealT"
   | ObjTestProtoT _ -> "ObjTestProtoT"

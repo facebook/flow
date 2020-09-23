@@ -1,0 +1,112 @@
+Error ---------------------------------------------------------------------------- destructured_param_default_dep.js:4:3
+
+Cannot call `f` with `0` bound to `_` because number [1] is incompatible with object type [2]. [incompatible-call]
+
+   destructured_param_default_dep.js:4:3
+   4| f(0); // error
+        ^ [1]
+
+References:
+   destructured_param_default.js:3:31
+   3| module.exports = function({}: {} = {}) {}
+                                    ^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------- instantiation_err.js:4:17
+
+Cannot instantiate `T` because `T` [1] is not a polymorphic type. [incompatible-use]
+
+   instantiation_err.js:4:17
+   4| export type U = T<string>; // Err: cannot instantiate
+                      ^^^^^^^^^
+
+References:
+   type_exports.js:3:13
+   3| export type T = string;
+                  ^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------- mixin_dep.js:6:7
+
+Cannot call `s.has` with `"foo"` bound to `key` because string [1] is incompatible with number [2]. [incompatible-call]
+
+   mixin_dep.js:6:7
+    6| s.has("foo"); // Err: string ~> number (on Seq, _not_ IndexedIterable's inherited method)
+             ^^^^^ [1]
+
+References:
+   mixin.js:11:48
+   11| declare export class IndexedSeq<T> extends Seq<number,T> mixins IndexedIterable<T> {}
+                                                      ^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------- qualified_dep.js:4:3
+
+Cannot get `b.bzzt` because property `bzzt` is missing in `B` [1]. [prop-missing]
+
+   qualified_dep.js:4:3
+   4| b.bzzt; // Error: prop-missing
+        ^^^^
+
+References:
+   qualified.js:5:26
+   5| module.exports = (new B: A.B);
+                               ^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------- temporary_bool_dep.js:4:2
+
+Cannot cast `x` to boolean literal `false` because boolean [1] is incompatible with boolean literal `false` [2].
+[incompatible-cast]
+
+   temporary_bool_dep.js:4:2
+   4| (x: false); // error: true ~> false
+       ^
+
+References:
+   temporary_bool.js:3:44
+   3| declare module.exports: $TEMPORARY$boolean<true>;
+                                                 ^^^^ [1]
+   temporary_bool_dep.js:4:5
+   4| (x: false); // error: true ~> false
+          ^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------- temporary_number_dep.js:4:2
+
+Cannot cast `x` to number literal `0` because number [1] is incompatible with number literal `0` [2].
+[incompatible-cast]
+
+   temporary_number_dep.js:4:2
+   4| (x: 0); // error: 42 ~> 0
+       ^
+
+References:
+   temporary_number.js:3:43
+   3| declare module.exports: $TEMPORARY$number<42>;
+                                                ^^ [1]
+   temporary_number_dep.js:4:5
+   4| (x: 0); // error: 42 ~> 0
+          ^ [2]
+
+
+Error -------------------------------------------------------------------------------------- temporary_string_dep.js:4:2
+
+Cannot cast `x` to string literal `bar` because string [1] is incompatible with string literal `bar` [2].
+[incompatible-cast]
+
+   temporary_string_dep.js:4:2
+   4| (x: 'bar'); // error: foo ~> bar
+       ^
+
+References:
+   temporary_string.js:3:43
+   3| declare module.exports: $TEMPORARY$string<'foo'>;
+                                                ^^^^^ [1]
+   temporary_string_dep.js:4:5
+   4| (x: 'bar'); // error: foo ~> bar
+          ^^^^^ [2]
+
+
+
+Found 7 errors

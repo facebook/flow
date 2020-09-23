@@ -16,22 +16,22 @@ exception Watchman_restarted
 type subscribe_mode =
   | All_changes
   | Defer_changes
-  (* See also Watchman docs on drop. This means the subscriber will not
-   * get a list of files changed during a repo update. Practically, this
-   * is not useful for the typechecker process which needs to actually
-   * know which files were changed. This is useful for the monitor to
-   * aggressively kill the server. *)
   | Drop_changes
-  | Scm_aware
+      (** See also Watchman docs on drop. This means the subscriber will not
+          get a list of files changed during a repo update. Practically, this
+          is not useful for the typechecker process which needs to actually
+          know which files were changed. This is useful for the monitor to
+          aggressively kill the server. *)
 
 type timeout = float option
 
 type init_settings = {
-  subscribe_mode: subscribe_mode;
-  expression_terms: Hh_json.json list;  (** See watchman expression terms. *)
   debug_logging: bool;
   defer_states: string list;  (** defer notifications while these states are asserted *)
+  expression_terms: Hh_json.json list;  (** See watchman expression terms. *)
+  mergebase_with: string;  (** symbolic commit to find changes against *)
   roots: Path.t list;
+  subscribe_mode: subscribe_mode;
   subscription_prefix: string;
   sync_timeout: int option;
 }

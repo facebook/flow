@@ -179,7 +179,7 @@ type 'loc pattern =
     }
 [@@deriving map, show { with_path = false }]
 
-type 'loc cx = { mutable errs: (Locs.index * errno) list }
+type 'loc cx = { mutable errs: (Locs.index * 'loc errno) list }
 
 let create_cx () = { errs = [] }
 
@@ -197,6 +197,7 @@ let rec pack_parsed cx = function
     TyRef (Unqualified (BuiltinRef { ref_loc = pack_loc ref_loc; name }))
   | P.Err (loc, err) ->
     let loc = pack_loc loc in
+    let err = map_errno pack_loc err in
     cx.errs <- (loc, err) :: cx.errs;
     Err loc
   | P.ValRef ref -> Ref (pack_ref ref)

@@ -638,8 +638,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------- eventtarget.js:22:22
 
-Cannot use `window` as a type. A name can be used as a type only if it refers to a type, interface, class, or enum
-definition. To get the type of a non-class value, use `typeof`. [value-as-type]
+Cannot use `window` as a type because it is an `any`-typed value. Type `window` properly, so it is no longer
+`any`-typed, to use it as an annotation. [value-as-type]
 
    22|       (event.target: window);
                             ^^^^^^

@@ -1066,14 +1066,13 @@ let ensure_checked_dependencies ~options ~reader ~env file file_sig =
     let require_loc_map = File_sig.With_Loc.(require_loc_map file_sig.module_sig) in
     SMap.fold
       (fun r locs resolved_rs ->
-        let locs = Nel.map ALoc.of_loc locs in
         let resolved_r =
           Module_js.imported_module
             ~options
             ~reader:(Abstract_state_reader.State_reader reader)
             ~node_modules_containers:!Files.node_modules_containers
             file
-            locs
+            (Nel.hd locs |> ALoc.of_loc)
             r
         in
         Modulename.Set.add resolved_r resolved_rs)
@@ -1623,7 +1622,15 @@ end = struct
         let _ =
           FilenameSet.fold
             (fun f i ->
-              Hh_logger.info "%d/%d: %s" i n (File_key.to_string f);
+              let cap = 500 in
+              if i <= cap then
+                Hh_logger.info "%d/%d: %s" i n (File_key.to_string f)
+              else if Hh_logger.Level.(passes_min_level Debug) then
+                Hh_logger.debug "%d/%d: %s" i n (File_key.to_string f)
+              else if i = cap + 1 then
+                Hh_logger.info "..."
+              else
+                ();
               i + 1)
             files
             1
@@ -2443,7 +2450,7 @@ let make_next_files ~libs ~file_options root =
 
     files |> Base.List.map ~f:(Files.filename_from_string ~options:file_options) |> Bucket.of_list
 
-let mk_init_env ~files ~unparsed ~dependency_info ~ordered_libs ~libs ~errors ~coverage =
+let mk_init_env ~files ~unparsed ~dependency_info ~ordered_libs ~libs ~errors =
   {
     ServerEnv.files;
     unparsed;
@@ -2452,7 +2459,7 @@ let mk_init_env ~files ~unparsed ~dependency_info ~ordered_libs ~libs ~errors ~c
     ordered_libs;
     libs;
     errors;
-    coverage;
+    coverage = FilenameMap.empty;
     collated_errors = ref None;
     connections = Persistent_connection.empty;
   }
@@ -2471,7 +2478,6 @@ let init_from_saved_state ~profiling ~workers ~saved_state ~updates options =
       ordered_non_flowlib_libs;
       local_errors;
       warnings;
-      coverage;
       node_modules_containers;
       dependency_graph;
     } =
@@ -2611,7 +2617,6 @@ let init_from_saved_state ~profiling ~workers ~saved_state ~updates options =
         ~ordered_libs
         ~libs
         ~errors
-        ~coverage
     in
     Lwt.return (env, libs_ok)
   in
@@ -2680,8 +2685,6 @@ let init_from_scratch ~profiling ~workers options =
   in
   (* Parsing won't raise warnings *)
   let warnings = FilenameMap.empty in
-  (* Libdefs have no coverage *)
-  let coverage = FilenameMap.empty in
   assert (FilenameSet.is_empty unchanged);
 
   Hh_logger.info "Building package heap";
@@ -2728,14 +2731,7 @@ let init_from_scratch ~profiling ~workers options =
         Dep_service.calc_dependency_info ~options ~reader workers ~parsed)
   in
   let env =
-    mk_init_env
-      ~files:parsed
-      ~unparsed:unparsed_set
-      ~dependency_info
-      ~ordered_libs
-      ~libs
-      ~errors
-      ~coverage
+    mk_init_env ~files:parsed ~unparsed:unparsed_set ~dependency_info ~ordered_libs ~libs ~errors
   in
   Lwt.return (FilenameSet.empty, env, libs_ok)
 
