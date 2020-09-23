@@ -163,10 +163,15 @@ let autocomplete ~trigger_character ~reader ~options ~env ~profiling ~filename ~
                   | ([], _ :: _) -> "FAILURE"
                   | (_ :: _, _ :: _) -> "PARTIAL"
                 in
+                let at_least_one_result_has_documentation =
+                  Base.List.exists results ~f:(fun ServerProt.Response.{ res_documentation; _ } ->
+                      Base.Option.is_some res_documentation)
+                in
                 ( Ok results,
                   ("result", JSON_String result_string)
                   :: ("count", JSON_Number (results |> List.length |> string_of_int))
                   :: ("errors", JSON_Array (Base.List.map ~f:(fun s -> JSON_String s) errors_to_log))
+                  :: ("documentation", JSON_Bool at_least_one_result_has_documentation)
                   :: json_props_to_log )
               | AcEmpty reason ->
                 ( Ok [],
@@ -296,7 +301,7 @@ let infer_type
                   line
                   column
               in
-              let%lwt (getdef_loc_result, get_def_json_props) =
+              let%lwt (getdef_loc_result, _) =
                 get_def_of_check_result
                   ~options
                   ~reader
@@ -312,12 +317,7 @@ let infer_type
                   |> Base.Option.bind ~f:Find_documentation.documentation_of_jsdoc
               in
               let json_props =
-                let documentation_get_def =
-                  match get_def_json_props with
-                  | None -> Hh_json.JSON_Null
-                  | Some props -> Hh_json.JSON_Object props
-                in
-                ("documentation_get_def", documentation_get_def)
+                ("documentation", Hh_json.JSON_Bool (Base.Option.is_some documentation))
                 :: add_cache_hit_data_to_json type_at_pos_json_props did_hit_cache
               in
               let exact_by_default = Options.exact_by_default options in
@@ -1658,7 +1658,23 @@ let handle_persistent_signaturehelp_lsp
       | Ok details ->
         let r = SignatureHelpResult (Flow_lsp_conversions.flow_signature_help_to_lsp details) in
         let response = ResponseMessage (id, r) in
-        Lwt.return ((), LspProt.LspFromServer (Some response), metadata)
+        let has_any_documentation =
+          match details with
+          | None -> false
+          | Some (details_list, _) ->
+            Base.List.exists
+              details_list
+              ~f:
+                ServerProt.Response.(
+                  fun { func_documentation; param_tys; _ } ->
+                    Base.Option.is_some func_documentation
+                    || Base.List.exists param_tys ~f:(fun { param_documentation; _ } ->
+                           Base.Option.is_some param_documentation))
+        in
+        let extra_data =
+          Some (Hh_json.JSON_Object [("documentation", Hh_json.JSON_Bool has_any_documentation)])
+        in
+        Lwt.return ((), LspProt.LspFromServer (Some response), with_data ~extra_data metadata)
       | Error _ ->
         mk_lsp_error_response ~ret:() ~id:(Some id) ~reason:"Failed to normalize type" metadata))
 
