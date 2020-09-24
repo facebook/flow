@@ -503,7 +503,12 @@ class type_hoister =
       | (_, OpaqueType _)
       | (_, DeclareOpaqueType _)
       | (_, InterfaceDeclaration _)
-      | (_, DeclareInterface _) ->
+      | (_, DeclareInterface _)
+      (* to match statement.ml, functions are block scoped. this behavior
+       * actually depends on whether strict mode is on, whether we're talking
+       * about ES5 or ES6+, as well as Annex B.3.3 in ES6+ specs. *)
+      | (_, FunctionDeclaration _)
+      | (_, DeclareFunction _) ->
         stmt
       (* process function-scoped bindings *)
       | (_, VariableDeclaration decl) ->
@@ -516,10 +521,7 @@ class type_hoister =
           | Ast.Statement.VariableDeclaration.Const ->
             stmt
         end
-      | (_, DeclareVariable _)
-      | (_, FunctionDeclaration _)
-      | (_, DeclareFunction _) ->
-        super#statement stmt
+      | (_, DeclareVariable _) -> super#statement stmt
       (* recurse through control flow *)
       | (_, Block _)
       | (_, DoWhile _)
