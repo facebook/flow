@@ -1302,13 +1302,13 @@ Cannot expect `Generator` as the return type of generator function because numbe
 implicitly-returned undefined in type argument `Return` [2]. [incompatible-return]
 
    exhaustive-check-implicit-return.js:198:36
-   198| function* u(x: E): Generator<void, number, void> { // Error: switch isn't exhaustive
-                                           ^^^^^^ [1]
+    198| function* u(x: E): Generator<void, number, void> { // Error: switch isn't exhaustive
+                                            ^^^^^^ [1]
 
 References:
-   <BUILTINS>/core.js:566:29
-   566| interface Generator<+Yield,+Return,-Next> {
-                                    ^^^^^^ [2]
+   <BUILTINS>/core.js:1644:29
+   1644| interface Generator<+Yield,+Return,-Next> {
+                                     ^^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------- exhaustive-check-implicit-return.js:199:11
@@ -1332,13 +1332,13 @@ Cannot expect `Promise` as the return type of async function because number [1] 
 undefined in type argument `R` [2]. [incompatible-return]
 
    exhaustive-check-implicit-return.js:205:33
-   205| async function v(x: E): Promise<number> { // Error: switch isn't exhaustive
-                                        ^^^^^^ [1]
+    205| async function v(x: E): Promise<number> { // Error: switch isn't exhaustive
+                                         ^^^^^^ [1]
 
 References:
-   <BUILTINS>/core.js:682:24
-   682| declare class Promise<+R> {
-                               ^ [2]
+   <BUILTINS>/core.js:1798:24
+   1798| declare class Promise<+R> {
+                                ^ [2]
 
 
 Error ----------------------------------------------------------------------- exhaustive-check-implicit-return.js:206:11
@@ -1444,23 +1444,23 @@ Invalid check of case test against switch discriminant [1] because `E` [2] is in
 [incompatible-type]
 
    exhaustive-check.js:80:8
-    80|   case E.isValid: break; // Error
-               ^^^^^^^^^
+     80|   case E.isValid: break; // Error
+                ^^^^^^^^^
 
 References:
    exhaustive-check.js:79:9
-    79| switch (x)  {
-                ^ [1]
+     79| switch (x)  {
+                 ^ [1]
    exhaustive-check.js:3:1
-        v-------
-     3| enum E {
-     4|   A,
-     5|   B,
-     6| }
-        ^ [2]
-   <BUILTINS>/core.js:956:3
-   956|   isValid(input: ?TRepresentation): boolean,
-          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
+         v-------
+      3| enum E {
+      4|   A,
+      5|   B,
+      6| }
+         ^ [2]
+   <BUILTINS>/core.js:2449:3
+   2449|   isValid(input: ?TRepresentation): boolean,
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
 
 
 Error ----------------------------------------------------------------------------------------- exhaustive-check.js:80:8
@@ -2162,19 +2162,19 @@ Error --------------------------------------------------------------------------
 Cannot get `E.nonExistent` because property `nonExistent` is missing in `$EnumProto` [1]. [prop-missing]
 
    methods.js:26:3
-    26| E.nonExistent; // Error
-          ^^^^^^^^^^^
+     26| E.nonExistent; // Error
+           ^^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:954:43
-                                                  v-
-   954| type $EnumProto<TEnum, TRepresentation> = {|
-   955|   cast(input: ?TRepresentation): void | TEnum,
-   956|   isValid(input: ?TRepresentation): boolean,
-   957|   members(): Iterable<TEnum>,
-   958|   __proto__: null,
-   959| |}
-        -^ [1]
+   <BUILTINS>/core.js:2447:43
+                                                   v-
+   2447| type $EnumProto<TEnum, TRepresentation> = {|
+   2448|   cast(input: ?TRepresentation): void | TEnum,
+   2449|   isValid(input: ?TRepresentation): boolean,
+   2450|   members(): Iterable<TEnum>,
+   2451|   __proto__: null,
+   2452| |}
+         -^ [1]
 
 
 Error -------------------------------------------------------------------------------------------------- methods.js:29:3
@@ -2182,19 +2182,19 @@ Error --------------------------------------------------------------------------
 Cannot call `E.nonExistent` because property `nonExistent` is missing in `$EnumProto` [1]. [prop-missing]
 
    methods.js:29:3
-    29| E.nonExistent(); // Error
-          ^^^^^^^^^^^
+     29| E.nonExistent(); // Error
+           ^^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:954:43
-                                                  v-
-   954| type $EnumProto<TEnum, TRepresentation> = {|
-   955|   cast(input: ?TRepresentation): void | TEnum,
-   956|   isValid(input: ?TRepresentation): boolean,
-   957|   members(): Iterable<TEnum>,
-   958|   __proto__: null,
-   959| |}
-        -^ [1]
+   <BUILTINS>/core.js:2447:43
+                                                   v-
+   2447| type $EnumProto<TEnum, TRepresentation> = {|
+   2448|   cast(input: ?TRepresentation): void | TEnum,
+   2449|   isValid(input: ?TRepresentation): boolean,
+   2450|   members(): Iterable<TEnum>,
+   2451|   __proto__: null,
+   2452| |}
+         -^ [1]
 
 
 Error -------------------------------------------------------------------------------------------------- methods.js:32:3
@@ -2220,19 +2220,19 @@ Error --------------------------------------------------------------------------
 Cannot call `E.A` because property `A` is missing in `$EnumProto` [1]. [prop-missing]
 
    methods.js:35:3
-    35| E.A(); // Error
-          ^
+     35| E.A(); // Error
+           ^
 
 References:
-   <BUILTINS>/core.js:954:43
-                                                  v-
-   954| type $EnumProto<TEnum, TRepresentation> = {|
-   955|   cast(input: ?TRepresentation): void | TEnum,
-   956|   isValid(input: ?TRepresentation): boolean,
-   957|   members(): Iterable<TEnum>,
-   958|   __proto__: null,
-   959| |}
-        -^ [1]
+   <BUILTINS>/core.js:2447:43
+                                                   v-
+   2447| type $EnumProto<TEnum, TRepresentation> = {|
+   2448|   cast(input: ?TRepresentation): void | TEnum,
+   2449|   isValid(input: ?TRepresentation): boolean,
+   2450|   members(): Iterable<TEnum>,
+   2451|   __proto__: null,
+   2452| |}
+         -^ [1]
 
 
 Error -------------------------------------------------------------------------------------------------- methods.js:38:3
@@ -2240,19 +2240,19 @@ Error --------------------------------------------------------------------------
 Cannot call `E.toString` because property `toString` is missing in `$EnumProto` [1]. [prop-missing]
 
    methods.js:38:3
-    38| E.toString(); // Error
-          ^^^^^^^^
+     38| E.toString(); // Error
+           ^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:954:43
-                                                  v-
-   954| type $EnumProto<TEnum, TRepresentation> = {|
-   955|   cast(input: ?TRepresentation): void | TEnum,
-   956|   isValid(input: ?TRepresentation): boolean,
-   957|   members(): Iterable<TEnum>,
-   958|   __proto__: null,
-   959| |}
-        -^ [1]
+   <BUILTINS>/core.js:2447:43
+                                                   v-
+   2447| type $EnumProto<TEnum, TRepresentation> = {|
+   2448|   cast(input: ?TRepresentation): void | TEnum,
+   2449|   isValid(input: ?TRepresentation): boolean,
+   2450|   members(): Iterable<TEnum>,
+   2451|   __proto__: null,
+   2452| |}
+         -^ [1]
 
 
 Error ----------------------------------------------------------------------------------------------- refinement.js:15:4

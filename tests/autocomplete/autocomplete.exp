@@ -1355,6 +1355,10 @@ Flags: --lsp
   "label":"hasOwnProperty",
   "kind":3,
   "detail":"(prop: mixed) => boolean",
+  "documentation":{
+    "kind":"markdown",
+    "value":"Determines whether an object has a property with the specified name."
+  },
   "sortText":"00000000000000000001",
   "insertTextFormat":1
 }
@@ -1362,6 +1366,10 @@ Flags: --lsp
   "label":"isPrototypeOf",
   "kind":3,
   "detail":"(o: mixed) => boolean",
+  "documentation":{
+    "kind":"markdown",
+    "value":"Determines whether an object exists in another object's prototype chain."
+  },
   "sortText":"00000000000000000001",
   "insertTextFormat":1
 }
@@ -1369,6 +1377,10 @@ Flags: --lsp
   "label":"propertyIsEnumerable",
   "kind":3,
   "detail":"(prop: mixed) => boolean",
+  "documentation":{
+    "kind":"markdown",
+    "value":"Determines whether a specified property is enumerable."
+  },
   "sortText":"00000000000000000001",
   "insertTextFormat":1
 }
@@ -1376,6 +1388,10 @@ Flags: --lsp
   "label":"toLocaleString",
   "kind":3,
   "detail":"() => string",
+  "documentation":{
+    "kind":"markdown",
+    "value":"Returns a date converted to a string using the current locale."
+  },
   "sortText":"00000000000000000001",
   "insertTextFormat":1
 }
@@ -1383,6 +1399,7 @@ Flags: --lsp
   "label":"toString",
   "kind":6,
   "detail":"(() => string) & number",
+  "documentation":{"kind":"markdown","value":"Returns a string representation of an object."},
   "sortText":"00000000000000000000",
   "insertTextFormat":1
 }
@@ -1390,6 +1407,10 @@ Flags: --lsp
   "label":"valueOf",
   "kind":3,
   "detail":"() => mixed",
+  "documentation":{
+    "kind":"markdown",
+    "value":"Returns the primitive value of the specified object."
+  },
   "sortText":"00000000000000000001",
   "insertTextFormat":1
 }
@@ -1411,6 +1432,10 @@ Flags: --lsp
   "label":"?.hasOwnProperty",
   "kind":13,
   "detail":"void | ((prop: mixed) => boolean)",
+  "documentation":{
+    "kind":"markdown",
+    "value":"Determines whether an object has a property with the specified name."
+  },
   "sortText":"00000000000000000001",
   "insertTextFormat":1,
   "textEdit":{
@@ -1422,6 +1447,10 @@ Flags: --lsp
   "label":"?.isPrototypeOf",
   "kind":13,
   "detail":"void | ((o: mixed) => boolean)",
+  "documentation":{
+    "kind":"markdown",
+    "value":"Determines whether an object exists in another object's prototype chain."
+  },
   "sortText":"00000000000000000001",
   "insertTextFormat":1,
   "textEdit":{
@@ -1433,6 +1462,10 @@ Flags: --lsp
   "label":"?.propertyIsEnumerable",
   "kind":13,
   "detail":"void | ((prop: mixed) => boolean)",
+  "documentation":{
+    "kind":"markdown",
+    "value":"Determines whether a specified property is enumerable."
+  },
   "sortText":"00000000000000000001",
   "insertTextFormat":1,
   "textEdit":{
@@ -1444,6 +1477,10 @@ Flags: --lsp
   "label":"?.toLocaleString",
   "kind":13,
   "detail":"void | (() => string)",
+  "documentation":{
+    "kind":"markdown",
+    "value":"Returns a date converted to a string using the current locale."
+  },
   "sortText":"00000000000000000001",
   "insertTextFormat":1,
   "textEdit":{
@@ -1455,6 +1492,7 @@ Flags: --lsp
   "label":"?.toString",
   "kind":13,
   "detail":"void | (() => string)",
+  "documentation":{"kind":"markdown","value":"Returns a string representation of an object."},
   "sortText":"00000000000000000001",
   "insertTextFormat":1,
   "textEdit":{
@@ -1466,6 +1504,10 @@ Flags: --lsp
   "label":"?.valueOf",
   "kind":13,
   "detail":"void | (() => mixed)",
+  "documentation":{
+    "kind":"markdown",
+    "value":"Returns the primitive value of the specified object."
+  },
   "sortText":"00000000000000000001",
   "insertTextFormat":1,
   "textEdit":{
@@ -1498,6 +1540,10 @@ Flags: --lsp
   "label":"hasOwnProperty",
   "kind":3,
   "detail":"(prop: mixed) => boolean",
+  "documentation":{
+    "kind":"markdown",
+    "value":"Determines whether an object has a property with the specified name."
+  },
   "sortText":"00000000000000000001",
   "insertTextFormat":1
 }
@@ -1505,6 +1551,10 @@ Flags: --lsp
   "label":"isPrototypeOf",
   "kind":3,
   "detail":"(o: mixed) => boolean",
+  "documentation":{
+    "kind":"markdown",
+    "value":"Determines whether an object exists in another object's prototype chain."
+  },
   "sortText":"00000000000000000001",
   "insertTextFormat":1
 }
@@ -1512,6 +1562,10 @@ Flags: --lsp
   "label":"propertyIsEnumerable",
   "kind":3,
   "detail":"(prop: mixed) => boolean",
+  "documentation":{
+    "kind":"markdown",
+    "value":"Determines whether a specified property is enumerable."
+  },
   "sortText":"00000000000000000001",
   "insertTextFormat":1
 }
@@ -1519,6 +1573,10 @@ Flags: --lsp
   "label":"toLocaleString",
   "kind":3,
   "detail":"() => string",
+  "documentation":{
+    "kind":"markdown",
+    "value":"Returns a date converted to a string using the current locale."
+  },
   "sortText":"00000000000000000001",
   "insertTextFormat":1
 }
@@ -1526,6 +1584,7 @@ Flags: --lsp
   "label":"toString",
   "kind":3,
   "detail":"() => string",
+  "documentation":{"kind":"markdown","value":"Returns a string representation of an object."},
   "sortText":"00000000000000000001",
   "insertTextFormat":1
 }
@@ -1533,6 +1592,10 @@ Flags: --lsp
   "label":"valueOf",
   "kind":3,
   "detail":"() => mixed",
+  "documentation":{
+    "kind":"markdown",
+    "value":"Returns the primitive value of the specified object."
+  },
   "sortText":"00000000000000000001",
   "insertTextFormat":1
 }
@@ -1554,6 +1617,10 @@ Flags: --lsp
   "label":"hasOwnProperty",
   "kind":3,
   "detail":"(prop: mixed) => boolean",
+  "documentation":{
+    "kind":"markdown",
+    "value":"Determines whether an object has a property with the specified name."
+  },
   "sortText":"00000000000000000001",
   "insertTextFormat":1
 }
@@ -1561,6 +1628,10 @@ Flags: --lsp
   "label":"isPrototypeOf",
   "kind":3,
   "detail":"(o: mixed) => boolean",
+  "documentation":{
+    "kind":"markdown",
+    "value":"Determines whether an object exists in another object's prototype chain."
+  },
   "sortText":"00000000000000000001",
   "insertTextFormat":1
 }
@@ -1568,6 +1639,10 @@ Flags: --lsp
   "label":"propertyIsEnumerable",
   "kind":3,
   "detail":"(prop: mixed) => boolean",
+  "documentation":{
+    "kind":"markdown",
+    "value":"Determines whether a specified property is enumerable."
+  },
   "sortText":"00000000000000000001",
   "insertTextFormat":1
 }
@@ -1575,6 +1650,10 @@ Flags: --lsp
   "label":"toLocaleString",
   "kind":3,
   "detail":"() => string",
+  "documentation":{
+    "kind":"markdown",
+    "value":"Returns a date converted to a string using the current locale."
+  },
   "sortText":"00000000000000000001",
   "insertTextFormat":1
 }
@@ -1582,6 +1661,7 @@ Flags: --lsp
   "label":"toString",
   "kind":3,
   "detail":"() => string",
+  "documentation":{"kind":"markdown","value":"Returns a string representation of an object."},
   "sortText":"00000000000000000001",
   "insertTextFormat":1
 }
@@ -1589,6 +1669,10 @@ Flags: --lsp
   "label":"valueOf",
   "kind":3,
   "detail":"() => mixed",
+  "documentation":{
+    "kind":"markdown",
+    "value":"Returns the primitive value of the specified object."
+  },
   "sortText":"00000000000000000001",
   "insertTextFormat":1
 }
@@ -1851,6 +1935,10 @@ Flags: --lsp
   "label":"hasOwnProperty",
   "kind":3,
   "detail":"(prop: mixed) => boolean",
+  "documentation":{
+    "kind":"markdown",
+    "value":"Determines whether an object has a property with the specified name."
+  },
   "sortText":"00000000000000000001",
   "insertTextFormat":1
 }
@@ -1858,6 +1946,10 @@ Flags: --lsp
   "label":"isPrototypeOf",
   "kind":3,
   "detail":"(o: mixed) => boolean",
+  "documentation":{
+    "kind":"markdown",
+    "value":"Determines whether an object exists in another object's prototype chain."
+  },
   "sortText":"00000000000000000001",
   "insertTextFormat":1
 }
@@ -1865,6 +1957,10 @@ Flags: --lsp
   "label":"propertyIsEnumerable",
   "kind":3,
   "detail":"(prop: mixed) => boolean",
+  "documentation":{
+    "kind":"markdown",
+    "value":"Determines whether a specified property is enumerable."
+  },
   "sortText":"00000000000000000001",
   "insertTextFormat":1
 }
@@ -1872,6 +1968,10 @@ Flags: --lsp
   "label":"toLocaleString",
   "kind":3,
   "detail":"() => string",
+  "documentation":{
+    "kind":"markdown",
+    "value":"Returns a date converted to a string using the current locale."
+  },
   "sortText":"00000000000000000001",
   "insertTextFormat":1
 }
@@ -1879,6 +1979,7 @@ Flags: --lsp
   "label":"toString",
   "kind":3,
   "detail":"() => string",
+  "documentation":{"kind":"markdown","value":"Returns a string representation of an object."},
   "sortText":"00000000000000000001",
   "insertTextFormat":1
 }
@@ -1886,6 +1987,10 @@ Flags: --lsp
   "label":"valueOf",
   "kind":3,
   "detail":"() => mixed",
+  "documentation":{
+    "kind":"markdown",
+    "value":"Returns the primitive value of the specified object."
+  },
   "sortText":"00000000000000000001",
   "insertTextFormat":1
 }
@@ -2033,6 +2138,10 @@ Flags: --lsp
   "label":"hasOwnProperty",
   "kind":3,
   "detail":"(prop: mixed) => boolean",
+  "documentation":{
+    "kind":"markdown",
+    "value":"Determines whether an object has a property with the specified name."
+  },
   "sortText":"00000000000000000001",
   "insertTextFormat":1
 }
@@ -2040,6 +2149,10 @@ Flags: --lsp
   "label":"isPrototypeOf",
   "kind":3,
   "detail":"(o: mixed) => boolean",
+  "documentation":{
+    "kind":"markdown",
+    "value":"Determines whether an object exists in another object's prototype chain."
+  },
   "sortText":"00000000000000000001",
   "insertTextFormat":1
 }
@@ -2061,6 +2174,10 @@ Flags: --lsp
   "label":"propertyIsEnumerable",
   "kind":3,
   "detail":"(prop: mixed) => boolean",
+  "documentation":{
+    "kind":"markdown",
+    "value":"Determines whether a specified property is enumerable."
+  },
   "sortText":"00000000000000000001",
   "insertTextFormat":1
 }
@@ -2084,6 +2201,10 @@ Flags: --lsp
   "label":"toLocaleString",
   "kind":3,
   "detail":"() => string",
+  "documentation":{
+    "kind":"markdown",
+    "value":"Returns a date converted to a string using the current locale."
+  },
   "sortText":"00000000000000000001",
   "insertTextFormat":1
 }
@@ -2091,6 +2212,7 @@ Flags: --lsp
   "label":"toString",
   "kind":3,
   "detail":"() => string",
+  "documentation":{"kind":"markdown","value":"Returns a string representation of an object."},
   "sortText":"00000000000000000001",
   "insertTextFormat":1
 }
@@ -2098,6 +2220,10 @@ Flags: --lsp
   "label":"valueOf",
   "kind":3,
   "detail":"() => mixed",
+  "documentation":{
+    "kind":"markdown",
+    "value":"Returns the primitive value of the specified object."
+  },
   "sortText":"00000000000000000001",
   "insertTextFormat":1
 }
@@ -2201,6 +2327,10 @@ Flags: --lsp
   "label":"hasOwnProperty",
   "kind":3,
   "detail":"(prop: mixed) => boolean",
+  "documentation":{
+    "kind":"markdown",
+    "value":"Determines whether an object has a property with the specified name."
+  },
   "sortText":"00000000000000000001",
   "insertTextFormat":1
 }
@@ -2208,6 +2338,10 @@ Flags: --lsp
   "label":"isPrototypeOf",
   "kind":3,
   "detail":"(o: mixed) => boolean",
+  "documentation":{
+    "kind":"markdown",
+    "value":"Determines whether an object exists in another object's prototype chain."
+  },
   "sortText":"00000000000000000001",
   "insertTextFormat":1
 }
@@ -2215,6 +2349,10 @@ Flags: --lsp
   "label":"propertyIsEnumerable",
   "kind":3,
   "detail":"(prop: mixed) => boolean",
+  "documentation":{
+    "kind":"markdown",
+    "value":"Determines whether a specified property is enumerable."
+  },
   "sortText":"00000000000000000001",
   "insertTextFormat":1
 }
@@ -2230,6 +2368,10 @@ Flags: --lsp
   "label":"toLocaleString",
   "kind":3,
   "detail":"() => string",
+  "documentation":{
+    "kind":"markdown",
+    "value":"Returns a date converted to a string using the current locale."
+  },
   "sortText":"00000000000000000001",
   "insertTextFormat":1
 }
@@ -2237,6 +2379,7 @@ Flags: --lsp
   "label":"toString",
   "kind":3,
   "detail":"() => string",
+  "documentation":{"kind":"markdown","value":"Returns a string representation of an object."},
   "sortText":"00000000000000000001",
   "insertTextFormat":1
 }
@@ -2244,6 +2387,10 @@ Flags: --lsp
   "label":"valueOf",
   "kind":3,
   "detail":"() => mixed",
+  "documentation":{
+    "kind":"markdown",
+    "value":"Returns the primitive value of the specified object."
+  },
   "sortText":"00000000000000000001",
   "insertTextFormat":1
 }
@@ -2290,6 +2437,10 @@ Flags: --lsp
   "label":"?.hasOwnProperty",
   "kind":13,
   "detail":"void | ((prop: mixed) => boolean)",
+  "documentation":{
+    "kind":"markdown",
+    "value":"Determines whether an object has a property with the specified name."
+  },
   "sortText":"00000000000000000001",
   "insertTextFormat":1,
   "textEdit":{
@@ -2301,6 +2452,10 @@ Flags: --lsp
   "label":"?.isPrototypeOf",
   "kind":13,
   "detail":"void | ((o: mixed) => boolean)",
+  "documentation":{
+    "kind":"markdown",
+    "value":"Determines whether an object exists in another object's prototype chain."
+  },
   "sortText":"00000000000000000001",
   "insertTextFormat":1,
   "textEdit":{
@@ -2312,6 +2467,10 @@ Flags: --lsp
   "label":"?.propertyIsEnumerable",
   "kind":13,
   "detail":"void | ((prop: mixed) => boolean)",
+  "documentation":{
+    "kind":"markdown",
+    "value":"Determines whether a specified property is enumerable."
+  },
   "sortText":"00000000000000000001",
   "insertTextFormat":1,
   "textEdit":{
@@ -2335,6 +2494,10 @@ Flags: --lsp
   "label":"?.toLocaleString",
   "kind":13,
   "detail":"void | (() => string)",
+  "documentation":{
+    "kind":"markdown",
+    "value":"Returns a date converted to a string using the current locale."
+  },
   "sortText":"00000000000000000001",
   "insertTextFormat":1,
   "textEdit":{
@@ -2346,6 +2509,7 @@ Flags: --lsp
   "label":"?.toString",
   "kind":13,
   "detail":"void | (() => string)",
+  "documentation":{"kind":"markdown","value":"Returns a string representation of an object."},
   "sortText":"00000000000000000001",
   "insertTextFormat":1,
   "textEdit":{
@@ -2357,6 +2521,10 @@ Flags: --lsp
   "label":"?.valueOf",
   "kind":13,
   "detail":"void | (() => mixed)",
+  "documentation":{
+    "kind":"markdown",
+    "value":"Returns the primitive value of the specified object."
+  },
   "sortText":"00000000000000000001",
   "insertTextFormat":1,
   "textEdit":{
