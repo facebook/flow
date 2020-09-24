@@ -495,8 +495,20 @@ let do_parse ~parse_options ~info content file =
                 let strict = Docblock.is_strict info in
                 Type_sig_utils.parse_and_pack_module ~strict sig_opts (Some file) ast
               in
-              (* TODO: extract env from type_sig *)
-              let env = None in
+              let env = ref SMap.empty in
+              let () =
+                let open Type_sig in
+                let (_, _, _, local_defs, _, _, _) = type_sig in
+                let f def =
+                  let name = def_name def in
+                  let loc = def_id_loc def in
+                  let loc = Type_sig_collections.Locs.get locs loc in
+                  let locs = Loc_collections.LocSet.singleton loc in
+                  let combine = Loc_collections.LocSet.union in
+                  env := SMap.add name locs ~combine !env
+                in
+                Type_sig_collections.Local_defs.iter f local_defs
+              in
               (* TODO: make type sig errors match signature builder errors *)
               let errors =
                 List.fold_left
@@ -513,7 +525,7 @@ let do_parse ~parse_options ~info content file =
                 Type_sig_collections.Locs.to_array locs
                 |> ALoc.ALocRepresentationDoNotUse.make_table file
               in
-              (env, errors, Parsing_heaps.TypeSig (type_sig, aloc_table))
+              (Some !env, errors, Parsing_heaps.TypeSig (type_sig, aloc_table))
           in
           let tolerable_errors =
             Signature_builder_deps.PrintableErrorSet.fold
