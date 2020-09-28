@@ -1,6 +1,6 @@
 Error ---------------------------------------------------------------------------------------------------- scope.js:1:17
 
-Cannot use variable `x` [1] because the declaration either comes later or was skipped.
+Cannot use variable `x` [1] because the declaration either comes later or was skipped. [reference-before-declaration]
 
    scope.js:1:17
    1| for (const x in x) {} // error: can not reference undeclared x in right-hand expr

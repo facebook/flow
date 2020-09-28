@@ -1,6 +1,6 @@
 Error ---------------------------------------------------------------------------------------------------- cycle1.js:5:5
 
-Property `q` is missing in object literal [1].
+Property `q` is missing in object literal [1]. [prop-missing]
 
    cycle1.js:5:5
    5| if (o_loop.q) {} // error: o_loop.q does not exist (NB: this is `o` exported from here)
@@ -14,7 +14,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- cycle2.js:5:5
 
-Property `q` is missing in object literal [1].
+Property `q` is missing in object literal [1]. [prop-missing]
 
    cycle2.js:5:5
    5| if (o.q) {} // error: o.q does not exist
@@ -28,7 +28,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- dependent.js:5:5
 
-Property `q` is missing in object literal [1].
+Property `q` is missing in object literal [1]. [prop-missing]
 
    dependent.js:5:5
    5| if (o.q) {} // error, o.q not declared
@@ -42,7 +42,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:18:11
 
-Property `thisPropDoesNotExist` is missing in mixed [1].
+Property `thisPropDoesNotExist` is missing in mixed [1]. [incompatible-type]
 
    test.js:18:11
    18| if (mixed.thisPropDoesNotExist) {} // Error
@@ -56,7 +56,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:29:5
 
-Property `thisPropDoesNotExist` is missing in object type [1].
+Property `thisPropDoesNotExist` is missing in object type [1]. [prop-missing]
 
    test.js:29:5
    29| if (inexactObject.thisPropDoesNotExist) {} // Error
@@ -70,7 +70,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:32:5
 
-Property `thisPropDoesNotExist` is missing in object type [1].
+Property `thisPropDoesNotExist` is missing in object type [1]. [prop-missing]
 
    test.js:32:5
    32| if (exactObject.thisPropDoesNotExist) {} // Error
@@ -84,7 +84,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:35:5
 
-Property `thisPropDoesNotExist` is missing in object type [1].
+Property `thisPropDoesNotExist` is missing in object type [1]. [prop-missing]
 
    test.js:35:5
    35| if (unionOfObjects.thisPropDoesNotExist) {} // Error
@@ -98,7 +98,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:40:5
 
-All branches are incompatible:
+All branches are incompatible: [incompatible-use]
  - Either property `thisPropDoesNotExist` is missing in object type [1].
  - Or property `thisPropDoesNotExist` is missing in object type [2].
 
@@ -117,7 +117,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:45:5
 
-Property `thisPropDoesNotExist` is missing in statics of `myClass` [1].
+Property `thisPropDoesNotExist` is missing in statics of `myClass` [1]. [prop-missing]
 
    test.js:45:5
    45| if (myClass.thisPropDoesNotExist) {} // Error
@@ -131,7 +131,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:47:5
 
-Property `thisPropDoesNotExist` is missing in `myClass` [1].
+Property `thisPropDoesNotExist` is missing in `myClass` [1]. [prop-missing]
 
    test.js:47:5
    47| if (instance.thisPropDoesNotExist) {} // Error

@@ -75,7 +75,6 @@ let type_at_pos_type
       omit_targ_defaults;
       merge_bot_and_any_kinds = true;
       verbose_normalizer;
-      expand_toplevel_members = None;
       max_depth = Some max_depth;
     }
   in
@@ -128,10 +127,8 @@ let insert_type_normalize
       expand_type_aliases = expand_aliases;
       (* Shadowed type parameters won't be valid for type insertion *)
       flag_shadowed_type_params = true;
-      (* Insert-Types filters out literals at the users request.
-       * Setting this flag preserves literal information so the we later
-       * have the option of presenting it to the user in specialized types. *)
-      preserve_inferred_literal_types = true;
+      (* We eventually want to elimitate literal types, so let's not expose them here. *)
+      preserve_inferred_literal_types = false;
       (* Utility types won't are not serialized so it may be worth evaluating them away
        * if we find them in the resulting Ty.t. The trade off is that types might get
        * larger. *)
@@ -142,7 +139,6 @@ let insert_type_normalize
       omit_targ_defaults;
       merge_bot_and_any_kinds = true;
       verbose_normalizer = false;
-      expand_toplevel_members = None;
       max_depth = None;
     }
   in

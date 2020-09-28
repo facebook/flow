@@ -17,11 +17,12 @@ type warning = int * string
 
 type error = int * string
 
+type file_watcher =
+  | NoFileWatcher
+  | DFind
+  | Watchman
+
 let default_temp_dir = Filename.concat Sys_utils.temp_dir_name "flow"
-
-let version_regex = Str.regexp_string "<VERSION>"
-
-let less_or_equal_curr_version = Version_regex.less_than_or_equal_to_version Flow_version.version
 
 let map_add map (key, value) = SMap.add key value map
 
@@ -42,14 +43,14 @@ module Opts = struct
   type t = {
     abstract_locations: bool;
     all: bool;
-    autofix_exports: bool;
+    automatic_require_default: bool;
     babel_loose_array_spread: bool;
     disable_live_non_parse_errors: bool;
     emoji: bool;
     enable_const_params: bool;
     enforce_strict_call_arity: bool;
     enforce_well_formed_exports: bool option;
-    enforce_well_formed_exports_whitelist: string list;
+    enforce_well_formed_exports_includes: string list;
     enums: bool;
     esproposal_class_instance_fields: Options.esproposal_feature_mode;
     esproposal_class_static_fields: Options.esproposal_feature_mode;
@@ -60,12 +61,16 @@ module Opts = struct
     exact_by_default: bool;
     facebook_fbs: string option;
     facebook_fbt: string option;
-    file_watcher: Options.file_watcher option;
+    facebook_module_interop: bool;
+    file_watcher: file_watcher option;
     file_watcher_timeout: int option;
+    watchman_sync_timeout: int option;
+    watchman_defer_states: string list;
+    watchman_mergebase_with: string option;
     haste_module_ref_prefix: string option;
     haste_name_reducers: (Str.regexp * string) list;
-    haste_paths_blacklist: string list;
-    haste_paths_whitelist: string list;
+    haste_paths_excludes: string list;
+    haste_paths_includes: string list;
     haste_use_name_reducers: bool;
     ignore_non_literal_requires: bool;
     include_warnings: bool;
@@ -96,13 +101,15 @@ module Opts = struct
     shm_hash_table_pow: int;
     shm_heap_size: int;
     shm_log_level: int;
-    suppress_comments: Str.regexp list;
+    strict_es6_import_export: bool;
+    strict_es6_import_export_excludes: string list;
     suppress_types: SSet.t;
     temp_dir: string;
     traces: int;
     trust_mode: Options.trust_mode;
     type_asserts: bool;
     types_first: bool;
+    new_signatures: bool;
     wait_for_recheck: bool;
     weak: bool;
   }
@@ -120,7 +127,12 @@ module Opts = struct
     Ok (config, warnings)
 
   let module_file_exts =
-    SSet.empty |> SSet.add ".js" |> SSet.add ".jsx" |> SSet.add ".json" |> SSet.add ".mjs"
+    SSet.empty
+    |> SSet.add ".js"
+    |> SSet.add ".jsx"
+    |> SSet.add ".json"
+    |> SSet.add ".mjs"
+    |> SSet.add ".cjs"
 
   let module_resource_exts =
     SSet.empty
@@ -140,31 +152,35 @@ module Opts = struct
     {
       abstract_locations = false;
       all = false;
-      autofix_exports = false;
+      automatic_require_default = false;
       babel_loose_array_spread = false;
       disable_live_non_parse_errors = false;
       emoji = false;
       enable_const_params = false;
       enforce_strict_call_arity = true;
       enforce_well_formed_exports = None;
-      enforce_well_formed_exports_whitelist = [];
+      enforce_well_formed_exports_includes = [];
       enums = false;
       esproposal_class_instance_fields = Options.ESPROPOSAL_ENABLE;
       esproposal_class_static_fields = Options.ESPROPOSAL_ENABLE;
       esproposal_decorators = Options.ESPROPOSAL_WARN;
-      esproposal_export_star_as = Options.ESPROPOSAL_WARN;
-      esproposal_nullish_coalescing = Options.ESPROPOSAL_WARN;
-      esproposal_optional_chaining = Options.ESPROPOSAL_WARN;
+      esproposal_export_star_as = Options.ESPROPOSAL_ENABLE;
+      esproposal_nullish_coalescing = Options.ESPROPOSAL_ENABLE;
+      esproposal_optional_chaining = Options.ESPROPOSAL_ENABLE;
       exact_by_default = false;
       facebook_fbs = None;
       facebook_fbt = None;
+      facebook_module_interop = false;
       file_watcher = None;
       file_watcher_timeout = None;
+      watchman_sync_timeout = None;
+      watchman_defer_states = [];
+      watchman_mergebase_with = None;
       haste_module_ref_prefix = None;
       haste_name_reducers =
         [(Str.regexp "^\\(.*/\\)?\\([a-zA-Z0-9$_.-]+\\)\\.js\\(\\.flow\\)?$", "\\2")];
-      haste_paths_blacklist = ["\\(.*\\)?/node_modules/.*"];
-      haste_paths_whitelist = ["<PROJECT_ROOT>/.*"];
+      haste_paths_excludes = ["\\(.*\\)?/node_modules/.*"];
+      haste_paths_includes = ["<PROJECT_ROOT>/.*"];
       haste_use_name_reducers = false;
       ignore_non_literal_requires = false;
       include_warnings = false;
@@ -184,6 +200,7 @@ module Opts = struct
       module_system = Options.Node;
       modules_are_use_strict = false;
       munge_underscores = false;
+      new_signatures = false;
       no_flowlib = false;
       node_main_fields = ["main"];
       node_resolver_allow_root_relative = false;
@@ -197,13 +214,14 @@ module Opts = struct
       shm_heap_size = 1024 * 1024 * 1024 * 25;
       (* 25 gigs *)
       shm_log_level = 0;
-      suppress_comments = [Str.regexp "\\(.\\|\n\\)*\\$FlowFixMe"];
+      strict_es6_import_export = false;
+      strict_es6_import_export_excludes = [];
       suppress_types = SSet.empty |> SSet.add "$FlowFixMe";
       temp_dir = default_temp_dir;
       traces = 0;
       trust_mode = Options.NoTrust;
       type_asserts = false;
-      types_first = false;
+      types_first = true;
       wait_for_recheck = false;
       weak = false;
     }
@@ -285,11 +303,6 @@ module Opts = struct
     try Ok (Scanf.unescaped str)
     with Scanf.Scan_failure reason -> Error (spf "Invalid ocaml string: %s" reason)
 
-  let optparse_regexp str =
-    optparse_string str >>= fun unescaped ->
-    try Ok (Str.regexp unescaped)
-    with Failure reason -> Error (spf "Invalid regex \"%s\" (%s)" unescaped reason)
-
   let enum values =
     opt (fun str ->
         let values = Base.List.fold_left ~f:map_add ~init:SMap.empty values in
@@ -336,6 +349,71 @@ module Opts = struct
 
   let mapping fn = opt (fun str -> optparse_mapping str >>= fn)
 
+  let well_formed_exports_parser =
+    boolean (fun opts v -> Ok { opts with enforce_well_formed_exports = Some v })
+
+  let well_formed_exports_includes_parser =
+    string
+      ~init:(fun opts -> { opts with enforce_well_formed_exports_includes = [] })
+      ~multiple:true
+      (fun opts v ->
+        if Base.Option.value ~default:false opts.enforce_well_formed_exports then
+          Ok
+            {
+              opts with
+              enforce_well_formed_exports_includes = v :: opts.enforce_well_formed_exports_includes;
+            }
+        else
+          Error "This option requires \"well_formed_exports\" set to \"true\".")
+
+  let types_first_parser =
+    boolean (fun opts v ->
+        if v && opts.enforce_well_formed_exports = Some false then
+          Error "Cannot set it to \"true\" when \"well_formed_exports\" is set to \"false\"."
+        else if v && opts.enforce_well_formed_exports_includes <> [] then
+          Error "Cannot set it to \"true\" when \"well_formed_exports.includes\" is set."
+        else
+          Ok { opts with types_first = v })
+
+  let new_signatures_parser =
+    boolean (fun opts v ->
+        if v && not opts.types_first then
+          Error "Cannot set it to \"true\" when \"types_first\" is set to \"false\"."
+        else
+          Ok { opts with new_signatures = v })
+
+  let types_first_max_files_checked_per_worker_parser =
+    uint (fun opts v -> Ok { opts with max_files_checked_per_worker = v })
+
+  let types_first_max_seconds_for_check_per_worker_parser =
+    uint (fun opts v -> Ok { opts with max_seconds_for_check_per_worker = float v })
+
+  let types_first_max_rss_bytes_for_check_per_worker_parser =
+    uint (fun opts v -> Ok { opts with max_rss_bytes_for_check_per_worker = v })
+
+  let haste_paths_excludes_parser =
+    string
+      ~init:(fun opts -> { opts with haste_paths_excludes = [] })
+      ~multiple:true
+      (fun opts v -> Ok { opts with haste_paths_excludes = v :: opts.haste_paths_excludes })
+
+  let haste_paths_includes_parser =
+    string
+      ~init:(fun opts -> { opts with haste_paths_includes = [] })
+      ~multiple:true
+      (fun opts v -> Ok { opts with haste_paths_includes = v :: opts.haste_paths_includes })
+
+  let strict_es6_import_export_excludes_parser =
+    string
+      ~init:(fun opts -> { opts with strict_es6_import_export_excludes = [] })
+      ~multiple:true
+      (fun opts v ->
+        Ok
+          {
+            opts with
+            strict_es6_import_export_excludes = v :: opts.strict_es6_import_export_excludes;
+          })
+
   let parsers =
     [
       ("emoji", boolean (fun opts v -> Ok { opts with emoji = v }));
@@ -360,12 +438,16 @@ module Opts = struct
       ("facebook.fbs", string (fun opts v -> Ok { opts with facebook_fbs = Some v }));
       ("facebook.fbt", string (fun opts v -> Ok { opts with facebook_fbt = Some v }));
       ( "file_watcher",
-        enum
-          [
-            ("none", Options.NoFileWatcher); ("dfind", Options.DFind); ("watchman", Options.Watchman);
-          ]
-          (fun opts v -> Ok { opts with file_watcher = Some v }) );
+        enum [("none", NoFileWatcher); ("dfind", DFind); ("watchman", Watchman)] (fun opts v ->
+            Ok { opts with file_watcher = Some v }) );
       ("file_watcher_timeout", uint (fun opts v -> Ok { opts with file_watcher_timeout = Some v }));
+      ( "file_watcher.watchman.sync_timeout",
+        uint (fun opts v -> Ok { opts with watchman_sync_timeout = Some v }) );
+      ( "file_watcher.watchman.defer_state",
+        string ~multiple:true (fun opts v ->
+            Ok { opts with watchman_defer_states = v :: opts.watchman_defer_states }) );
+      ( "file_watcher.watchman.mergebase_with",
+        string (fun opts v -> Ok { opts with watchman_mergebase_with = Some v }) );
       ("include_warnings", boolean (fun opts v -> Ok { opts with include_warnings = v }));
       ( "lazy_mode",
         enum
@@ -393,18 +475,8 @@ module Opts = struct
           ~multiple:true
           (fun (pattern, template) -> Ok (Str.regexp pattern, template))
           (fun opts v -> Ok { opts with haste_name_reducers = v :: opts.haste_name_reducers }) );
-      ( "module.system.haste.paths.blacklist",
-        string
-          ~init:(fun opts -> { opts with haste_paths_blacklist = [] })
-          ~multiple:true
-          (fun opts v -> Ok { opts with haste_paths_blacklist = v :: opts.haste_paths_blacklist })
-      );
-      ( "module.system.haste.paths.whitelist",
-        string
-          ~init:(fun opts -> { opts with haste_paths_whitelist = [] })
-          ~multiple:true
-          (fun opts v -> Ok { opts with haste_paths_whitelist = v :: opts.haste_paths_whitelist })
-      );
+      ("module.system.haste.paths.excludes", haste_paths_excludes_parser);
+      ("module.system.haste.paths.includes", haste_paths_includes_parser);
       ( "module.system.haste.use_name_reducers",
         boolean
           ~init:(fun opts -> { opts with haste_use_name_reducers = false })
@@ -489,17 +561,6 @@ module Opts = struct
         boolean (fun opts v -> Ok { opts with babel_loose_array_spread = v }) );
       ("wait_for_recheck", boolean (fun opts v -> Ok { opts with wait_for_recheck = v }));
       ("weak", boolean (fun opts v -> Ok { opts with weak = v }));
-      ( "suppress_comment",
-        string
-          ~init:(fun opts -> { opts with suppress_comments = [] })
-          ~multiple:true
-          (fun opts v ->
-            Str.split_delim version_regex v
-            |> String.concat (">=" ^ less_or_equal_curr_version)
-            |> String.escaped
-            |> Base.Result.return
-            >>= optparse_regexp
-            >>= fun v -> Ok { opts with suppress_comments = v :: opts.suppress_comments }) );
       ( "suppress_type",
         string
           ~init:(fun opts -> { opts with suppress_types = SSet.empty })
@@ -522,33 +583,13 @@ module Opts = struct
       ("max_literal_length", uint (fun opts v -> Ok { opts with max_literal_length = v }));
       ("experimental.const_params", boolean (fun opts v -> Ok { opts with enable_const_params = v }));
       ("experimental.enums", boolean (fun opts v -> Ok { opts with enums = v }));
-      ("experimental.autofix_exports", boolean (fun opts v -> Ok { opts with autofix_exports = v }));
       ( "experimental.strict_call_arity",
         boolean (fun opts v -> Ok { opts with enforce_strict_call_arity = v }) );
-      ( "experimental.well_formed_exports",
-        boolean (fun opts v -> Ok { opts with enforce_well_formed_exports = Some v }) );
-      ( "experimental.well_formed_exports.whitelist",
-        string
-          ~init:(fun opts -> { opts with enforce_well_formed_exports_whitelist = [] })
-          ~multiple:true
-          (fun opts v ->
-            if Base.Option.value ~default:false opts.enforce_well_formed_exports then
-              Ok
-                {
-                  opts with
-                  enforce_well_formed_exports_whitelist =
-                    v :: opts.enforce_well_formed_exports_whitelist;
-                }
-            else
-              Error "This option requires \"experimental.well_formed_exports\" set to \"true\".") );
+      ("well_formed_exports", well_formed_exports_parser);
+      ("well_formed_exports.includes", well_formed_exports_includes_parser);
       ("experimental.type_asserts", boolean (fun opts v -> Ok { opts with type_asserts = v }));
-      ( "experimental.types_first",
-        boolean (fun opts v ->
-            if v && opts.enforce_well_formed_exports = Some false then
-              Error
-                "Cannot set it to \"true\" when \"experimental.well_formed_exports\" is set to \"false\"."
-            else
-              Ok { opts with types_first = v }) );
+      ("types_first", types_first_parser);
+      ("experimental.new_signatures", new_signatures_parser);
       ( "experimental.abstract_locations",
         boolean (fun opts v -> Ok { opts with abstract_locations = v }) );
       ( "experimental.disable_live_non_parse_errors",
@@ -565,12 +606,18 @@ module Opts = struct
           [("classic", Options.ReactRuntimeClassic); ("automatic", Options.ReactRuntimeAutomatic)]
           (fun opts react_runtime -> Ok { opts with react_runtime }) );
       ("recursion_limit", uint (fun opts v -> Ok { opts with recursion_limit = v }));
-      ( "experimental.types_first.max_files_checked_per_worker",
-        uint (fun opts v -> Ok { opts with max_files_checked_per_worker = v }) );
-      ( "experimental.types_first.max_seconds_for_check_per_worker",
-        uint (fun opts v -> Ok { opts with max_seconds_for_check_per_worker = float v }) );
-      ( "experimental.types_first.max_rss_bytes_for_check_per_worker",
-        uint (fun opts v -> Ok { opts with max_rss_bytes_for_check_per_worker = v }) );
+      ("types_first.max_files_checked_per_worker", types_first_max_files_checked_per_worker_parser);
+      ( "types_first.max_seconds_for_check_per_worker",
+        types_first_max_seconds_for_check_per_worker_parser );
+      ( "types_first.max_rss_bytes_for_check_per_worker",
+        types_first_max_rss_bytes_for_check_per_worker_parser );
+      ( "experimental.strict_es6_import_export",
+        boolean (fun opts v -> Ok { opts with strict_es6_import_export = v }) );
+      ("experimental.strict_es6_import_export.excludes", strict_es6_import_export_excludes_parser);
+      ( "experimental.module.automatic_require_default",
+        boolean (fun opts v -> Ok { opts with automatic_require_default = v }) );
+      ( "experimental.facebook_module_interop",
+        boolean (fun opts v -> Ok { opts with facebook_module_interop = v }) );
     ]
 
   let parse =
@@ -668,17 +715,15 @@ end = struct
           pp_opt o "include_warnings" (string_of_bool options.include_warnings))
 
   let lints o config =
-    Lints.(
-      Severity.(
-        let lint_severities = config.lint_severities in
-        let lint_default = LintSettings.get_default lint_severities in
-        (* Don't print an 'all' setting if it matches the default setting. *)
-        if lint_default <> LintSettings.get_default LintSettings.empty_severities then
-          fprintf o "all=%s\n" (string_of_severity lint_default);
-        LintSettings.iter
-          (fun kind (state, _) ->
-            fprintf o "%s=%s\n" (string_of_kind kind) (string_of_severity state))
-          lint_severities))
+    let lint_severities = config.lint_severities in
+    let lint_default = LintSettings.get_default lint_severities in
+    (* Don't print an 'all' setting if it matches the default setting. *)
+    if lint_default <> LintSettings.get_default LintSettings.empty_severities then
+      fprintf o "all=%s\n" (Severity.string_of_severity lint_default);
+    LintSettings.iter
+      (fun kind (state, _) ->
+        fprintf o "%s=%s\n" (Lints.string_of_kind kind) (Severity.string_of_severity state))
+      lint_severities
 
   let strict o config =
     Lints.(
@@ -1015,15 +1060,6 @@ let read filename =
   in
   (lines, hash)
 
-let get_empty_config () =
-  let lint_severities =
-    Base.List.fold_left
-      ~f:(fun acc (lint, severity) -> LintSettings.set_value lint severity acc)
-      ~init:empty_config.lint_severities
-      LintSettings.default_lint_severities
-  in
-  { empty_config with lint_severities }
-
 let init ~ignores ~untyped ~declarations ~includes ~libs ~options ~lints =
   let ( >>= )
       (acc : (config * warning list, error) result)
@@ -1060,7 +1096,8 @@ let get_from_cache ?(allow_cache = true) filename =
     cached_data
   | _ ->
     let (lines, hash) = read filename in
-    let config = parse (get_empty_config ()) lines in
+    let config = { empty_config with lint_severities = LintSettings.default_severities } in
+    let config = parse config lines in
     let cached_data = (filename, config, hash) in
     cache := Some cached_data;
     cached_data
@@ -1097,6 +1134,8 @@ let abstract_locations c = c.options.Opts.abstract_locations
 
 let all c = c.options.Opts.all
 
+let automatic_require_default c = c.options.Opts.automatic_require_default
+
 let babel_loose_array_spread c = c.options.Opts.babel_loose_array_spread
 
 let disable_live_non_parse_errors c = c.options.Opts.disable_live_non_parse_errors
@@ -1110,13 +1149,10 @@ let enable_const_params c = c.options.Opts.enable_const_params
 let enforce_strict_call_arity c = c.options.Opts.enforce_strict_call_arity
 
 let enforce_well_formed_exports c =
-  Base.Option.value ~default:false c.options.Opts.enforce_well_formed_exports
-  || c.options.Opts.types_first
+  c.options.Opts.types_first
+  || Base.Option.value ~default:false c.options.Opts.enforce_well_formed_exports
 
-let well_formed_exports_set_explicitly c =
-  Base.Option.is_some c.options.Opts.enforce_well_formed_exports
-
-let enforce_well_formed_exports_whitelist c = c.options.Opts.enforce_well_formed_exports_whitelist
+let enforce_well_formed_exports_includes c = c.options.Opts.enforce_well_formed_exports_includes
 
 let enums c = c.options.Opts.enums
 
@@ -1138,17 +1174,25 @@ let file_watcher c = c.options.Opts.file_watcher
 
 let file_watcher_timeout c = c.options.Opts.file_watcher_timeout
 
+let watchman_sync_timeout c = c.options.Opts.watchman_sync_timeout
+
+let watchman_defer_states c = c.options.Opts.watchman_defer_states
+
+let watchman_mergebase_with c = c.options.Opts.watchman_mergebase_with
+
 let facebook_fbs c = c.options.Opts.facebook_fbs
 
 let facebook_fbt c = c.options.Opts.facebook_fbt
+
+let facebook_module_interop c = c.options.Opts.facebook_module_interop
 
 let haste_module_ref_prefix c = c.options.Opts.haste_module_ref_prefix
 
 let haste_name_reducers c = c.options.Opts.haste_name_reducers
 
-let haste_paths_blacklist c = c.options.Opts.haste_paths_blacklist
+let haste_paths_excludes c = c.options.Opts.haste_paths_excludes
 
-let haste_paths_whitelist c = c.options.Opts.haste_paths_whitelist
+let haste_paths_includes c = c.options.Opts.haste_paths_includes
 
 let haste_use_name_reducers c = c.options.Opts.haste_use_name_reducers
 
@@ -1159,8 +1203,6 @@ let include_warnings c = c.options.Opts.include_warnings
 let lazy_mode c = c.options.Opts.lazy_mode
 
 let log_file c = c.options.Opts.log_file
-
-let autofix_exports c = c.options.Opts.autofix_exports
 
 let max_files_checked_per_worker c = c.options.Opts.max_files_checked_per_worker
 
@@ -1210,7 +1252,9 @@ let shm_heap_size c = c.options.Opts.shm_heap_size
 
 let shm_log_level c = c.options.Opts.shm_log_level
 
-let suppress_comments c = c.options.Opts.suppress_comments
+let strict_es6_import_export c = c.options.Opts.strict_es6_import_export
+
+let strict_es6_import_export_excludes c = c.options.Opts.strict_es6_import_export_excludes
 
 let suppress_types c = c.options.Opts.suppress_types
 
@@ -1223,6 +1267,8 @@ let trust_mode c = c.options.Opts.trust_mode
 let type_asserts c = c.options.Opts.type_asserts
 
 let types_first c = c.options.Opts.types_first
+
+let new_signatures c = c.options.Opts.new_signatures
 
 let required_version c = c.version
 

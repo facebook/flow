@@ -576,7 +576,7 @@ let rec string_of_desc = function
     spf "%s %s %s" (string_of_desc left) operator (string_of_desc right)
   | RTemplateString -> "template string"
   | RUnknownString -> "some string with unknown value"
-  | RUnionEnum -> "enum"
+  | RUnionEnum -> "literal union"
   | REnum name -> spf "enum `%s`" name
   | REnumRepresentation representation -> spf "%s enum" (string_of_desc representation)
   | RGetterSetterProperty -> "getter/setter property"
@@ -680,7 +680,7 @@ let rec string_of_desc = function
   | RSuperOf d -> spf "super of %s" (string_of_desc d)
   | RFrozen d -> spf "frozen %s" (string_of_desc d)
   | RBound d -> spf "bound %s" (string_of_desc d)
-  | RPredicateOf d -> spf "predicate of %s" (string_of_desc d)
+  | RPredicateOf d -> spf "predicate encoded in %s" (string_of_desc d)
   | RPredicateCall d -> spf "predicate call to %s" (string_of_desc d)
   | RPredicateCallNeg d -> spf "negation of predicate call to %s" (string_of_desc d)
   | RRefined d -> spf "refined %s" (string_of_desc d)
@@ -867,6 +867,11 @@ let is_builtin_reason f r = r.loc |> f |> ( = ) (Some File_key.Builtins)
 let is_lib_reason r =
   r.loc |> ALoc.source |> Base.Option.value_map ~default:false ~f:File_key.is_lib_file
 
+let is_lib_reason_def r =
+  def_aloc_of_reason r
+  |> ALoc.source
+  |> Base.Option.value_map ~default:false ~f:File_key.is_lib_file
+
 let is_blamable_reason r = not (r.loc = ALoc.none || is_lib_reason r)
 
 (* reason transformers: *)
@@ -916,7 +921,7 @@ let mk_annot_reason desc annot_loc = annot_reason ~annot_loc (mk_reason desc ann
 module ReasonMap = WrappedMap.Make (struct
   type t = reason
 
-  let compare = Pervasives.compare
+  let compare = Stdlib.compare
 end)
 
 (* Creates a description string for an arbitrary expression. This description

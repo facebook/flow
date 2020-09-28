@@ -1,3 +1,2 @@
 [options]
-suppress_comment=.*\\$FlowIssue
 include_warnings=true

@@ -413,7 +413,7 @@ and Type : sig
 
     and ('M, 'T) t' = {
       params: ('M, 'T) TypeParam.t list;
-      comments: ('M, unit) Syntax.t option;
+      comments: ('M, 'M Comment.t list) Syntax.t option;
     }
     [@@deriving show]
   end
@@ -423,7 +423,7 @@ and Type : sig
 
     and ('M, 'T) t' = {
       arguments: ('M, 'T) Type.t list;
-      comments: ('M, unit) Syntax.t option;
+      comments: ('M, 'M Comment.t list) Syntax.t option;
     }
     [@@deriving show]
   end
@@ -455,7 +455,9 @@ and Statement : sig
 
   module If : sig
     module Alternate : sig
-      type ('M, 'T) t = {
+      type ('M, 'T) t = 'M * ('M, 'T) t'
+
+      and ('M, 'T) t' = {
         body: ('M, 'T) Statement.t;
         comments: ('M, unit) Syntax.t option;
       }
@@ -988,7 +990,7 @@ and Expression : sig
 
     and ('M, 'T) t' = {
       arguments: ('M, 'T) CallTypeArg.t list;
-      comments: ('M, unit) Syntax.t option;
+      comments: ('M, 'M Comment.t list) Syntax.t option;
     }
     [@@deriving show]
   end
@@ -1238,7 +1240,7 @@ and Expression : sig
 
     and ('M, 'T) t' = {
       arguments: ('M, 'T) expression_or_spread list;
-      comments: ('M, unit) Syntax.t option;
+      comments: ('M, 'M Comment.t list) Syntax.t option;
     }
     [@@deriving show]
   end
@@ -1633,9 +1635,15 @@ end =
 and Comment : sig
   type 'M t = 'M * t'
 
-  and t' =
-    | Block of string
-    | Line of string
+  and kind =
+    | Block
+    | Line
+
+  and t' = {
+    kind: kind;
+    text: string;
+    on_newline: bool;
+  }
   [@@deriving show]
 end =
   Comment
@@ -1817,6 +1825,16 @@ and Function : sig
     | BodyExpression of ('M, 'T) Expression.t
   [@@deriving show]
 end =
-  Function]
+  Function
 
-type ('M, 'T) program = 'M * ('M, 'T) Statement.t list * 'M Comment.t list [@@deriving show]
+and Program : sig
+  type ('M, 'T) t = 'M * ('M, 'T) t'
+
+  and ('M, 'T) t' = {
+    statements: ('M, 'T) Statement.t list;
+    comments: ('M, unit) Syntax.t option;
+    all_comments: 'M Comment.t list;
+  }
+  [@@deriving show]
+end =
+  Program]

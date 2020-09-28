@@ -1,4 +1,7 @@
->>> a.js (#changes: 5)
+
+=== Codemod annotate-exports ===
+
+>>> ./a.js
 // @flow
 
 import type {D, C} from "./lib.js";import { foo, bar } from "./lib";
@@ -7,7 +10,7 @@ const b = require("./b");
 
 module.exports = [(foo(): C), (bar(): D)];
 
->>> b.js (#changes: 5)
+>>> ./b.js
 // @flow
 
 import type {E, C} from "./lib.js";import { foo, baz } from "./lib";
@@ -16,7 +19,7 @@ const c = require("./c");
 
 module.exports = [(foo(): C), (baz(): E)];
 
->>> c.js (#changes: 3)
+>>> ./c.js
 // @flow
 
 import type {E, C} from "./lib.js";import { foo, baz } from "./lib";
@@ -31,10 +34,10 @@ module.exports = [
 
 Stats:
   Files changed:                            3
-  Number of sig. ver. errors:               9
-  Number of annotations required:           9
   Number of annotations added:              5
   Total size of annotations:                7
+  Number of sig. ver. errors:               9
+  Number of annotations required:           9
   Number of annotations skipped:            0
 
 Errors:
@@ -45,7 +48,6 @@ Errors:
     Parsing heaps get ast error:            0
     Indeterminate module type:              0
     No matching export:                     4
-    Unrecognizable module error:            0
   Serializer error:                         0
   Unsupported error kind:                   0
 
@@ -55,4 +57,82 @@ Warnings:
   Location unhandled:                       0
   Empty NoUpper:                            0
   Empty SomeKnownUpper:                     0
+
+
+=== Autofix exports ===
+
+>>> ./a.js
+// @flow
+
+import type {D, C} from "./lib.js";import { foo, bar } from "./lib";
+
+const b = require("./b");
+
+module.exports = [(foo(): C), (bar(): D)];
+
+>>> ./b.js
+// @flow
+
+import type {E, C} from "./lib.js";import { foo, baz } from "./lib";
+
+const c = require("./c");
+
+module.exports = [(foo(): C), (baz(): E)];
+
+>>> ./c.js
+// @flow
+
+import type {E, C} from "./lib.js";import { foo, baz } from "./lib";
+
+const a = require("./a");
+
+module.exports = [
+  (0 < 1 ? foo() : baz(): C | E)
+];
+
+>>> ./error-a.js
+// @flow
+
+// This test ensures that no imports are added since there is an error
+
+import { foo, bar } from "./lib";
+import { error_foo, error_bar } from "./error-lib";
+
+const b = require("./error-b");
+
+module.exports = [
+  (0 < 1 ? foo() : error_foo(): C | C),
+  (0 < 1 ? bar() : error_bar(): D | D),
+];
+
+>>> ./error-b.js
+// @flow
+
+import { foo, baz } from "./lib";
+import { error_foo, error_baz } from "./error-lib";
+
+const a = require("./error-a");
+
+module.exports = [
+  (0 < 1 ? foo() : error_foo(): C | C),
+  (0 < 1 ? baz() : error_baz(): E | E),
+];
+
+
+=== Diff between codemod-ed & autofix-ed ===
+>>> ./error-a.js
+11,12c11,12
+<   0 < 1 ? foo() : error_foo(),
+<   0 < 1 ? bar() : error_bar(),
+---
+>   (0 < 1 ? foo() : error_foo(): C | C),
+>   (0 < 1 ? bar() : error_bar(): D | D),
+
+>>> ./error-b.js
+9,10c9,10
+<   0 < 1 ? foo() : error_foo(),
+<   0 < 1 ? baz() : error_baz(),
+---
+>   (0 < 1 ? foo() : error_foo(): C | C),
+>   (0 < 1 ? baz() : error_baz(): E | E),
 

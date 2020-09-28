@@ -1,6 +1,6 @@
 Error ------------------------------------------------------------------------------------------------- undefined.js:3:7
 
-Cannot call `x.foo` because property `foo` is missing in uninitialized variable [1].
+Cannot call `x.foo` because property `foo` is missing in uninitialized variable [1]. [incompatible-use]
 
    undefined.js:3:7
    3|     x.foo();
@@ -14,7 +14,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ undefined2.js:7:6
 
-Cannot cast `name` to boolean because string [1] is incompatible with boolean [2].
+Cannot cast `name` to boolean because string [1] is incompatible with boolean [2]. [incompatible-cast]
 
    undefined2.js:7:6
    7|     (name: boolean); // error, string or void
@@ -31,7 +31,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ undefined2.js:7:6
 
-Cannot cast `name` to boolean because undefined [1] is incompatible with boolean [2].
+Cannot cast `name` to boolean because undefined [1] is incompatible with boolean [2]. [incompatible-cast]
 
    undefined2.js:7:6
    7|     (name: boolean); // error, string or void
@@ -48,7 +48,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- undefined2.js:13:6
 
-Cannot cast `bar[x]` to boolean because undefined [1] is incompatible with boolean [2].
+Cannot cast `bar[x]` to boolean because undefined [1] is incompatible with boolean [2]. [incompatible-cast]
 
    undefined2.js:13:6
    13|     (bar[x]: boolean); // error, string or void
@@ -65,7 +65,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- undefined2.js:13:6
 
-Cannot cast `bar[x]` to boolean because string [1] is incompatible with boolean [2].
+Cannot cast `bar[x]` to boolean because string [1] is incompatible with boolean [2]. [incompatible-cast]
 
    undefined2.js:13:6
    13|     (bar[x]: boolean); // error, string or void
@@ -83,6 +83,7 @@ References:
 Error ----------------------------------------------------------------------------------------------- undefined2.js:22:7
 
 Cannot get `x[0]` because an index signature declaring the expected key / value type is missing in `Number` [1].
+[prop-missing]
 
    undefined2.js:22:7
    22|       x[0]; // should error, could be void
@@ -96,7 +97,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- undefined2.js:29:6
 
-Cannot cast `bar[x]` to boolean because string [1] is incompatible with boolean [2].
+Cannot cast `bar[x]` to boolean because string [1] is incompatible with boolean [2]. [incompatible-cast]
 
    undefined2.js:29:6
    29|     (bar[x]: boolean); // error, string only
@@ -113,7 +114,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- undefined2.js:29:6
 
-Cannot cast `bar[x]` to boolean because string [1] is incompatible with boolean [2].
+Cannot cast `bar[x]` to boolean because string [1] is incompatible with boolean [2]. [incompatible-cast]
 
    undefined2.js:29:6
    29|     (bar[x]: boolean); // error, string only

@@ -68,7 +68,7 @@ struct
     module ValSet = Set.Make (struct
       type nonrec t = t
 
-      let compare = Pervasives.compare
+      let compare = Stdlib.compare
     end)
 
     let rec normalize t =
@@ -585,8 +585,8 @@ struct
           this#run_to_completion (fun () ->
               ignore
               @@ Flow_ast_mapper.map_opt
-                   (fun { Alternate.body; comments } ->
-                     { Alternate.body = this#statement body; comments })
+                   (fun (loc, { Alternate.body; comments }) ->
+                     (loc, { Alternate.body = this#statement body; comments }))
                    alternate)
         in
         (* merge environments *)
@@ -1101,7 +1101,7 @@ struct
     end
 
   let program_with_scope ?(ignore_toplevel = false) program =
-    let (loc, _, _) = program in
+    let (loc, _) = program in
     let ssa_walk = new ssa_builder in
     let bindings =
       if ignore_toplevel then

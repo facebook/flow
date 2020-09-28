@@ -6,4 +6,5 @@ type Props = $ReadOnly<{x: number, y: string}>;
 
 class C extends React.Component<Props> {
 }
-<C // space
+<C  // space
+// ^

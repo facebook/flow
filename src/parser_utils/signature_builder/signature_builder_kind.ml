@@ -12,6 +12,7 @@ module Annot_path = struct
   type t =
     | Annot of (Loc.t, Loc.t) Ast.Type.annotation
     | Object of Loc.t * (t * (Loc.t * string))
+  [@@deriving show]
 
   let mk_annot ?annot_path = function
     | Ast.Type.Missing _ -> annot_path
@@ -27,6 +28,7 @@ module Init_path = struct
   type t =
     | Init of (Loc.t, Loc.t) Ast.Expression.t
     | Object of Loc.t * (t * (Loc.t * string))
+  [@@deriving show]
 
   let mk_init = function
     | None -> None
@@ -42,6 +44,7 @@ module Sort = struct
   type t =
     | Type
     | Value
+  [@@deriving show]
 
   let to_string = function
     | Type -> "type"
@@ -85,6 +88,7 @@ type t =
       init: Init_path.t option;
     }
   | FunctionDef of {
+      sig_loc: Loc.t;
       generator: bool;
       async: bool;
       tparams: (Loc.t, Loc.t) Ast.Type.TypeParams.t option;
@@ -140,6 +144,7 @@ type t =
       name: Loc.t Ast_utils.ident Nel.t option;
     }
   | SketchyToplevelDef
+[@@deriving show]
 
 type ctor =
   | VariableDefKind
@@ -229,15 +234,19 @@ let validator = function
   | Sort.Value -> is_value
 
 let get_function_kind_info = function
-  | FunctionDef { generator; async; tparams; params; return; body; predicate = _ } ->
-    Some (generator, async, tparams, params, return, body)
+  | FunctionDef { sig_loc; generator; async; tparams; params; return; body; predicate = _ } ->
+    Some (sig_loc, generator, async, tparams, params, return, body)
   | VariableDef
       {
         id = _;
         annot = None;
-        init = Some (Init_path.Init (_, Ast.Expression.(Function stuff | ArrowFunction stuff)));
+        init =
+          Some
+            (Init_path.Init
+              ( (_, Ast.Expression.Function ({ Ast.Function.sig_loc = loc; _ } as fn))
+              | (loc, Ast.Expression.ArrowFunction fn) ));
       } ->
     let open Ast.Function in
-    let { id = _; generator; async; tparams; params; return; body; _ } = stuff in
-    Some (generator, async, tparams, params, return, body)
+    let { id = _; generator; async; tparams; params; return; body; _ } = fn in
+    Some (loc, generator, async, tparams, params, return, body)
   | _ -> None

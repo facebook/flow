@@ -1,0 +1,14 @@
+[ignore]
+
+[include]
+
+[libs]
+
+[lints]
+
+[options]
+no_flowlib=false
+types_first=true
+experimental.enums=true
+
+[strict]

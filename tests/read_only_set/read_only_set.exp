@@ -1,6 +1,7 @@
 Error ---------------------------------------------------------------------------------------------------- test.js:10:36
 
 Cannot use `T` [1] in an input/output position because `T` [1] is expected to occur only in output positions.
+[incompatible-variance]
 
    test.js:10:36
    10|     bad (x: number) : $ReadOnlySet<T> { // Error: T in invariant position
@@ -15,6 +16,7 @@ References:
 Error ---------------------------------------------------------------------------------------------------- test.js:16:36
 
 Cannot use `T` [1] in an input/output position because `T` [1] is expected to occur only in input positions.
+[incompatible-variance]
 
    test.js:16:36
    16|     bad (x: number) : $ReadOnlySet<T> {// Error: T in invariant position

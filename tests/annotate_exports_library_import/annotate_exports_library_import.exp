@@ -1,11 +1,14 @@
->>> fileA.js (#changes: 3)
+
+=== Codemod annotate-exports ===
+
+>>> ./fileA.js
 // @flow
 
 import type {T} from "react-redux";const {foo} = require('react-redux');
 
 module.exports = (foo(): T);
 
->>> fileB.js (#changes: 2)
+>>> ./fileB.js
 // @flow
 
 import type {T} from 'react-redux';
@@ -17,10 +20,10 @@ module.exports = (foo(): T);
 
 Stats:
   Files changed:                            2
-  Number of sig. ver. errors:               2
-  Number of annotations required:           2
   Number of annotations added:              2
   Total size of annotations:                2
+  Number of sig. ver. errors:               2
+  Number of annotations required:           2
   Number of annotations skipped:            0
 
 Errors:
@@ -31,7 +34,6 @@ Errors:
     Parsing heaps get ast error:            0
     Indeterminate module type:              0
     No matching export:                     0
-    Unrecognizable module error:            0
   Serializer error:                         0
   Unsupported error kind:                   0
 
@@ -42,3 +44,23 @@ Warnings:
   Empty NoUpper:                            0
   Empty SomeKnownUpper:                     0
 
+
+=== Autofix exports ===
+
+>>> ./fileA.js
+// @flow
+
+import type {T} from "react-redux";const {foo} = require('react-redux');
+
+module.exports = (foo(): T);
+
+>>> ./fileB.js
+// @flow
+
+import type {T} from 'react-redux';
+const {foo} = require('react-redux');
+
+module.exports = (foo(): T);
+
+
+=== Diff between codemod-ed & autofix-ed ===

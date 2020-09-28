@@ -1,6 +1,6 @@
 Error ----------------------------------------------------------------------------------------------- no_at_flow.js:1:17
 
-Cannot assign `"not a number"` to `x` because string [1] is incompatible with number [2].
+Cannot assign `"not a number"` to `x` because string [1] is incompatible with number [2]. [incompatible-type]
 
    no_at_flow.js:1:17
    1| var x: number = "not a number"; // Error: string ~> number

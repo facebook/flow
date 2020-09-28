@@ -48,7 +48,7 @@ let variance_ = function
 (* Main Transformation   *)
 (*************************)
 
-let layout_of_elt ?(size = 5000) ?(with_comments = true) elt =
+let layout_of_elt ?(size = 5000) ?(with_comments = true) ~exact_by_default elt =
   let env_map : Layout.layout_node IMap.t ref = ref IMap.empty in
   let size = ref size in
   (* util to limit the number of calls to a (usually recursive) function *)
@@ -111,7 +111,8 @@ let layout_of_elt ?(size = 5000) ?(with_comments = true) elt =
           "true"
         else
           "false" )
-    | InlineInterface { if_extends; if_body } -> type_interface ~depth if_extends if_body
+    | InlineInterface { if_extends; if_props; if_dict } ->
+      type_interface ~depth if_extends if_props if_dict
     | TypeOf pv -> fuse [Atom "typeof"; space; builtin_value pv]
     | Mu (i, t) ->
       let t = type_ ~depth:0 t in
@@ -143,7 +144,7 @@ let layout_of_elt ?(size = 5000) ?(with_comments = true) elt =
         else
           Empty );
       ]
-  and type_interface ~depth extends body =
+  and type_interface ~depth extends props dict =
     let extends =
       match extends with
       | [] -> Empty
@@ -151,7 +152,13 @@ let layout_of_elt ?(size = 5000) ?(with_comments = true) elt =
         fuse_with_space
           [Atom "extends"; list ~sep:(Atom ",") (Base.List.map ~f:(type_generic ~depth) extends)]
     in
-    let body = type_object ~depth body in
+    let properties = counted_map (type_object_property ~depth) props in
+    let properties =
+      match dict with
+      | Some d -> type_dict ~depth d :: properties
+      | _ -> properties
+    in
+    let body = list ~wrap:(Atom "{", Atom "}") ~sep:(Atom ";") ~trailing:false properties in
     fuse_with_space [Atom "interface"; extends; body]
   and type_function
       ~depth ~sep { fun_params; fun_rest_param; fun_return; fun_type_params; fun_static = _ } =
@@ -243,48 +250,59 @@ let layout_of_elt ?(size = 5000) ?(with_comments = true) elt =
                   type_ ~depth Void;
                 ]
           end
-        | IndexProp { dict_polarity; dict_name; dict_key; dict_value } ->
-          fuse
-            [
-              variance_ dict_polarity;
-              Atom "[";
-              begin
-                match dict_name with
-                | Some id -> fuse [identifier id; Atom ":"; pretty_space]
-                | None -> Empty
-              end;
-              type_ ~depth dict_key;
-              Atom "]";
-              Atom ":";
-              pretty_space;
-              type_ ~depth dict_value;
-            ]
         | CallProp func -> fuse [type_function ~depth ~sep:(Atom ":") func]
         | SpreadProp t -> fuse [Atom "..."; type_ ~depth t])
-  and type_array ~depth { arr_readonly; arr_literal = _; arr_elt_t } =
+  and type_array ~depth { arr_readonly; arr_literal; arr_elt_t } =
+    let arr =
+      if arr_readonly then
+        "$ReadOnlyArray"
+      else
+        match arr_literal with
+        | Some true -> "$TEMPORARY$array"
+        | Some false
+        | None ->
+          "Array"
+    in
+    fuse [Atom arr; Atom "<"; type_ ~depth arr_elt_t; Atom ">"]
+  and type_dict ~depth { dict_polarity; dict_name; dict_key; dict_value } =
     fuse
       [
-        Atom
-          ( if arr_readonly then
-            "$ReadOnlyArray"
-          else
-            "Array" );
-        Atom "<";
-        type_ ~depth arr_elt_t;
-        Atom ">";
+        variance_ dict_polarity;
+        Atom "[";
+        begin
+          match dict_name with
+          | Some id -> fuse [identifier id; Atom ":"; pretty_space]
+          | None -> Empty
+        end;
+        type_ ~depth dict_key;
+        Atom "]";
+        Atom ":";
+        pretty_space;
+        type_ ~depth dict_value;
       ]
-  and type_object ~depth ?(sep = Atom ",") { obj_exact; obj_props; _ } =
+  and type_object ~depth ?(sep = Atom ",") obj =
+    let { obj_kind; obj_props; obj_literal; _ } = obj in
     let s_exact =
-      if obj_exact then
+      if obj_kind = ExactObj && not exact_by_default then
         Atom "|"
       else
         Empty
     in
-    list
-      ~wrap:(fuse [Atom "{"; s_exact], fuse [s_exact; Atom "}"])
-      ~sep
-      ~trailing:false
-      (counted_map (type_object_property ~depth) obj_props)
+    let props = counted_map (type_object_property ~depth) obj_props in
+    let props =
+      match obj_kind with
+      | IndexedObj d -> type_dict ~depth d :: props
+      | InexactObj -> props @ [Atom "..."]
+      | ExactObj -> props
+    in
+    let o =
+      list ~wrap:(fuse [Atom "{"; s_exact], fuse [s_exact; Atom "}"]) ~sep ~trailing:false props
+    in
+    match obj_literal with
+    | Some true -> fuse [Atom "$TEMPORARY$object"; Atom "<"; o; Atom ">"]
+    | Some false
+    | None ->
+      o
   and type_union ~depth ts =
     let (prefix, ts) =
       if List.mem Null ts && List.mem Void ts then
@@ -425,17 +443,21 @@ let print_single_line ~source_maps node =
 
 let print_pretty ~source_maps node = Pretty_printer.print ~source_maps ~skip_endline:true node
 
-let string_of_elt ?(with_comments = true) (elt : Ty.elt) : string =
-  layout_of_elt ~with_comments elt |> print_pretty ~source_maps:None |> Source.contents
+let string_of_elt ?(with_comments = true) (elt : Ty.elt) ~exact_by_default : string =
+  layout_of_elt ~with_comments ~exact_by_default elt
+  |> print_pretty ~source_maps:None
+  |> Source.contents
 
-let string_of_elt_single_line ?(with_comments = true) (elt : Ty.elt) : string =
-  layout_of_elt ~with_comments elt |> print_single_line ~source_maps:None |> Source.contents
+let string_of_elt_single_line ?(with_comments = true) (elt : Ty.elt) ~exact_by_default : string =
+  layout_of_elt ~with_comments ~exact_by_default elt
+  |> print_single_line ~source_maps:None
+  |> Source.contents
 
-let string_of_t ?(with_comments = true) (ty : Ty.t) : string =
-  string_of_elt ~with_comments (Ty.Type ty)
+let string_of_t ?(with_comments = true) (ty : Ty.t) ~exact_by_default : string =
+  string_of_elt ~with_comments ~exact_by_default (Ty.Type ty)
 
-let string_of_t_single_line ?(with_comments = true) (ty : Ty.t) : string =
-  string_of_elt_single_line ~with_comments (Ty.Type ty)
+let string_of_t_single_line ?(with_comments = true) (ty : Ty.t) ~exact_by_default : string =
+  string_of_elt_single_line ~with_comments ~exact_by_default (Ty.Type ty)
 
-let string_of_decl_single_line ?(with_comments = true) (d : Ty.decl) : string =
-  string_of_elt_single_line ~with_comments (Ty.Decl d)
+let string_of_decl_single_line ?(with_comments = true) (d : Ty.decl) ~exact_by_default : string =
+  string_of_elt_single_line ~with_comments ~exact_by_default (Ty.Decl d)

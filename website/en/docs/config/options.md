@@ -53,6 +53,8 @@ can be overridden with command line flags.
 * [`suppress_type`](#toc-suppress-type-string)
 * [`temp_dir`](#toc-temp-dir-string)
 * [`traces`](#toc-traces-integer)
+* [`types_first`](#toc-types-first-boolean)
+* [`well_formed_exports`](#toc-well-formed-exports-boolean)
 
 #### `all` _`(boolean)`_ <a class="toc" id="toc-all-boolean" href="#toc-all-boolean"></a>
 
@@ -212,8 +214,8 @@ The default value of `max_header_tokens` is 10.
 
 #### `module.file_ext` _`(string)`_ <a class="toc" id="toc-module-file-ext-string" href="#toc-module-file-ext-string"></a>
 
-By default, Flow will look for files with the extensions `.js`, `.jsx`, `.mjs`
-and `.json`. You can override this behavior with this option.
+By default, Flow will look for files with the extensions `.js`, `.jsx`, `.mjs`,
+`.cjs` and `.json`. You can override this behavior with this option.
 
 For example, if you do:
 
@@ -433,7 +435,7 @@ Do not use this option. Instead, pass the command line flag `--strip-root`.
 
 By default this is `false`.
 
-#### `suppress_comment` _`(regex)`_ <a class="toc" id="toc-suppress-comment-regex" href="#toc-suppress-comment-regex"></a>
+#### `suppress_comment` _`(regex)`_ {% until 0.126 %} <a class="toc" id="toc-suppress-comment-regex" href="#toc-suppress-comment-regex"></a>
 
 Defines a magical comment that suppresses any Flow errors on the following
 line. For example:
@@ -460,6 +462,11 @@ default: `// $FlowFixMe`.
 > in favor of the regexps you specify. If you wish to use `$FlowFixMe` with
 > some additional custom suppression comments, you must manually specify
 > `\\(.\\|\n\\)*\\$FlowFixMe` in your custom list of suppressions.
+
+> **Note:** In version v0.127.0, the option to specify the suppression comment
+> syntax was removed. `$FlowFixMe`, `$FlowIssue`, `$FlowExpectedError`,
+> and `$FlowIgnore` became the only standard suppressions.
+
 
 #### `suppress_type` _`(string)`_ <a class="toc" id="toc-suppress-type-string" href="#toc-suppress-type-string"></a>
 
@@ -502,3 +509,46 @@ The default value is `/tmp/flow`.
 Enables traces on all error output (showing additional details about the flow
 of types through the system), to the depth specified. This can be very
 expensive, so is disabled by default.
+
+#### `types_first` _`(boolean)`_ <a class="toc" id="toc-types-first-boolean" href="#toc-types-first-boolean"></a> {% since 0.125.0 %}
+
+For more on types-first mode, see the [types-first docs](/en/docs/lang/types-first/).
+
+Flow builds intermediate artifacts to represent signatures of modules as they are
+checked. If this option is set to `false`, then these artifacts are built using
+inferred type information. If this option is set to `true`, then they are built
+using type annotations at module boundaries.
+
+The default value for `types_first` is `true` (as of version 0.134).
+
+#### `well_formed_exports` _`(boolean)`_ <a class="toc" id="toc-well-formed-exports-boolean" href="#toc-well-formed-exports-boolean"></a> {% since 0.125.0 %}
+
+Enforce the following restrictions on file exports:
+* Statements manipulating `module.exports` and the `exports` alias may only appear
+  as top-level statements.
+* Parts of the source that are visible from a file's exports need to be annotated
+  unless their type can be trivially inferred (e.g. the exported expression is a
+  numeric literal). This is a requirement for types-first mode to function properly.
+  Failure to properly annotate exports raise `signature-verfication-failure`s.
+
+This option is set to `true` by default, since it is implied by [`types_first`](#toc-types-first-boolean),
+but the option is useful on its own when upgrading a project from classic mode to
+types-first mode.
+
+#### `well_formed_exports.includes` _`(string)`_ {% since 0.128.0 %} <a class="toc" id="toc-well-formed-exports-includes-string" href="#toc-well-formed-exports-includes-string"></a>
+
+
+Limit the scope of the `well_formed_exports` requirement to a specific directory
+of this project. For example
+```
+well_formed_exports=true
+well_formed_exports.includes=<PROJECT_ROOT>/dirA
+well_formed_exports.includes=<PROJECT_ROOT>/dirB
+```
+will only report export related errors in files under `dirA` and `dirB`. This option
+requires `well_formed_exports` to be set to `true`.
+
+The purpose of this option is to help prepare a codebase for Flow types-first mode.
+See [this section](#toc-seal-your-intermediate-results) for more.
+
+Between versions v0.125.0 and v0.127.0, this option was named `well_formed_exports.whitelist`.

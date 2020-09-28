@@ -1,14 +1,14 @@
 Error ----------------------------------------------------------------------------------------- number_constants.js:2:17
 
-Cannot assign `Number.MAX_SAFE_INTEGER` to `b` because number [1] is incompatible with string [2].
+Cannot assign `Number.MAX_SAFE_INTEGER` to `b` because number [1] is incompatible with string [2]. [incompatible-type]
 
    number_constants.js:2:17
      2| var b: string = Number.MAX_SAFE_INTEGER;
                         ^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:146:30
-   146|     static MAX_SAFE_INTEGER: number;
+   <BUILTINS>/core.js:375:30
+   375|     static MAX_SAFE_INTEGER: number;
                                      ^^^^^^ [1]
    number_constants.js:2:8
      2| var b: string = Number.MAX_SAFE_INTEGER;
@@ -17,15 +17,15 @@ References:
 
 Error ----------------------------------------------------------------------------------------- number_constants.js:4:17
 
-Cannot assign `Number.MIN_SAFE_INTEGER` to `d` because number [1] is incompatible with string [2].
+Cannot assign `Number.MIN_SAFE_INTEGER` to `d` because number [1] is incompatible with string [2]. [incompatible-type]
 
    number_constants.js:4:17
      4| var d: string = Number.MIN_SAFE_INTEGER;
                         ^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:148:30
-   148|     static MIN_SAFE_INTEGER: number;
+   <BUILTINS>/core.js:383:30
+   383|     static MIN_SAFE_INTEGER: number;
                                      ^^^^^^ [1]
    number_constants.js:4:8
      4| var d: string = Number.MIN_SAFE_INTEGER;
@@ -34,15 +34,15 @@ References:
 
 Error ----------------------------------------------------------------------------------------- number_constants.js:6:17
 
-Cannot assign `Number.MAX_VALUE` to `f` because number [1] is incompatible with string [2].
+Cannot assign `Number.MAX_VALUE` to `f` because number [1] is incompatible with string [2]. [incompatible-type]
 
    number_constants.js:6:17
      6| var f: string = Number.MAX_VALUE;
                         ^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:147:23
-   147|     static MAX_VALUE: number;
+   <BUILTINS>/core.js:377:23
+   377|     static MAX_VALUE: number;
                               ^^^^^^ [1]
    number_constants.js:6:8
      6| var f: string = Number.MAX_VALUE;
@@ -51,15 +51,15 @@ References:
 
 Error ----------------------------------------------------------------------------------------- number_constants.js:8:17
 
-Cannot assign `Number.MIN_VALUE` to `h` because number [1] is incompatible with string [2].
+Cannot assign `Number.MIN_VALUE` to `h` because number [1] is incompatible with string [2]. [incompatible-type]
 
    number_constants.js:8:17
      8| var h: string = Number.MIN_VALUE;
                         ^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:149:23
-   149|     static MIN_VALUE: number;
+   <BUILTINS>/core.js:385:23
+   385|     static MIN_VALUE: number;
                               ^^^^^^ [1]
    number_constants.js:8:8
      8| var h: string = Number.MIN_VALUE;
@@ -68,15 +68,15 @@ References:
 
 Error ---------------------------------------------------------------------------------------- number_constants.js:10:17
 
-Cannot assign `Number.NaN` to `j` because number [1] is incompatible with string [2].
+Cannot assign `Number.NaN` to `j` because number [1] is incompatible with string [2]. [incompatible-type]
 
    number_constants.js:10:17
     10| var j: string = Number.NaN;
                         ^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:150:17
-   150|     static NaN: number;
+   <BUILTINS>/core.js:390:17
+   390|     static NaN: number;
                         ^^^^^^ [1]
    number_constants.js:10:8
     10| var j: string = Number.NaN;
@@ -85,15 +85,15 @@ References:
 
 Error ---------------------------------------------------------------------------------------- number_constants.js:12:17
 
-Cannot assign `Number.EPSILON` to `l` because number [1] is incompatible with string [2].
+Cannot assign `Number.EPSILON` to `l` because number [1] is incompatible with string [2]. [incompatible-type]
 
    number_constants.js:12:17
     12| var l: string = Number.EPSILON;
                         ^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:145:21
-   145|     static EPSILON: number;
+   <BUILTINS>/core.js:369:21
+   369|     static EPSILON: number;
                             ^^^^^^ [1]
    number_constants.js:12:8
     12| var l: string = Number.EPSILON;

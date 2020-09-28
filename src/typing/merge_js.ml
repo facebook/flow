@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
-type get_ast_return = Loc.t Flow_ast.Comment.t list * (ALoc.t, ALoc.t) Flow_ast.program
+type get_ast_return = Loc.t Flow_ast.Comment.t list * (ALoc.t, ALoc.t) Flow_ast.Program.t
 
 module RequireMap = WrappedMap.Make (struct
   (* If file A.js imports module 'Foo', this will be ('Foo' * A.js) *)
@@ -115,8 +115,10 @@ let explicit_decl_require cx (m, loc, resolved_m, cx_to) =
   let reason = Reason.(mk_reason (RCustom m) loc) in
   (* lookup module declaration from builtin context *)
   let m_name = resolved_m |> Modulename.to_string |> Reason.internal_module_name in
-  let from_t = Tvar.mk cx reason in
-  Flow_js.lookup_builtin cx m_name reason (Type.Strict reason) from_t;
+  let from_t =
+    Tvar.mk_no_wrap_where cx reason (fun from_t ->
+        Flow_js.lookup_builtin cx m_name reason (Type.Strict reason) from_t)
+  in
 
   (* flow the declared module type to importing context *)
   let to_t = Context.find_require cx_to loc in
@@ -131,13 +133,15 @@ let explicit_unchecked_require cx (m, loc, cx_to) =
    * from an untyped module and an any-typed type import from a nonexistent module. *)
   let reason = Reason.(mk_reason (RUntypedModule m) loc) in
   let m_name = Reason.internal_module_name m in
-  let from_t = Tvar.mk cx reason in
-  Flow_js.lookup_builtin
-    cx
-    m_name
-    reason
-    (Type.NonstrictReturning (Some (Type.AnyT (reason, Type.Untyped), from_t), None))
-    from_t;
+  let from_t =
+    Tvar.mk_no_wrap_where cx reason (fun from_t ->
+        Flow_js.lookup_builtin
+          cx
+          m_name
+          reason
+          (Type.NonstrictReturning (Some (Type.AnyT (reason, Type.Untyped), Type.OpenT from_t), None))
+          from_t)
+  in
 
   (* flow the declared module type to importing context *)
   let to_t = Context.find_require cx_to loc in
@@ -201,30 +205,15 @@ let detect_unnecessary_invariants cx =
 let detect_invalid_type_assert_calls cx file_sigs cxs tasts =
   if Context.type_asserts cx then Type_asserts.detect_invalid_calls ~full_cx:cx file_sigs cxs tasts
 
-let detect_invalid_enum_exhaustive_checks cx =
-  List.iter (Enum_exhaustive_check.detect_invalid_check cx) (Context.enum_exhaustive_checks cx)
-
-let force_annotations leader_cx other_cxs =
-  Base.List.iter
-    ~f:(fun cx ->
-      let should_munge_underscores = Context.should_munge_underscores cx in
-      Context.module_ref cx
-      |> Flow_js.lookup_module leader_cx
-      |> Flow_js.enforce_strict leader_cx ~should_munge_underscores)
-    (leader_cx :: other_cxs)
-
-let is_builtin_or_flowlib cx =
-  File_key.(
-    function
-    | Builtins -> true
-    | LibFile f
-    | SourceFile f ->
-      begin
-        match Context.default_lib_dir cx with
-        | Some path -> Files.is_prefix (Path.to_string path) f
-        | None -> false
-      end
-    | _ -> false)
+let force_annotations ~arch leader_cx other_cxs =
+  if arch = Options.Classic then
+    Base.List.iter
+      ~f:(fun cx ->
+        let should_munge_underscores = Context.should_munge_underscores cx in
+        Context.module_ref cx
+        |> Flow_js.lookup_module leader_cx
+        |> Flow_js.enforce_strict leader_cx ~should_munge_underscores)
+      (leader_cx :: other_cxs)
 
 let detect_non_voidable_properties cx =
   (* This function approximately checks whether VoidT can flow to the provided
@@ -288,6 +277,160 @@ let detect_non_voidable_properties cx =
       check_properties private_property_map private_property_errors)
     (Context.voidable_checks cx)
 
+let merge_tvar =
+  Type.(
+    let possible_types = Flow_js.possible_types in
+    let rec collect_lowers ~filter_empty cx seen acc = function
+      | [] -> Base.List.rev acc
+      | t :: ts ->
+        (match t with
+        (* Recursively unwrap unseen tvars *)
+        | OpenT (_, id) ->
+          if ISet.mem id seen then
+            collect_lowers ~filter_empty cx seen acc ts
+          (* already unwrapped *)
+          else
+            let seen = ISet.add id seen in
+            collect_lowers ~filter_empty cx seen acc (possible_types cx id @ ts)
+        (* Ignore empty in existentials. This behavior is sketchy, but the error
+           behavior without this filtering is worse. If an existential accumulates
+           an empty, we error but it's very non-obvious how the empty arose. *)
+        | DefT (_, _, EmptyT flavor) when filter_empty flavor ->
+          collect_lowers ~filter_empty cx seen acc ts
+        (* Everything else becomes part of the merge typed *)
+        | _ -> collect_lowers ~filter_empty cx seen (t :: acc) ts)
+    in
+    fun ?filter_empty cx r id ->
+      (* Because the behavior of existentials are so difficult to predict, they
+         enjoy some special casing here. When existential types are finally
+         removed, this logic can be removed. *)
+      let existential =
+        Reason.(
+          match desc_of_reason r with
+          | RExistential -> true
+          | _ -> false)
+      in
+      let filter_empty flavor =
+        existential
+        ||
+        match filter_empty with
+        | Some filter_empty -> filter_empty flavor
+        | None -> false
+      in
+      let lowers =
+        let seen = ISet.singleton id in
+        collect_lowers cx seen [] (possible_types cx id) ~filter_empty
+      in
+      match lowers with
+      | [t] -> t
+      | t0 :: t1 :: ts -> UnionT (r, UnionRep.make t0 t1 ts)
+      | [] ->
+        let uses = Flow_js.possible_uses cx id in
+        if uses = [] || existential then
+          AnyT.locationless Unsoundness.existential
+        else
+          MergedT (r, uses))
+
+let merge_trust_var constr =
+  Trust_constraint.(
+    match constr with
+    | TrustResolved t -> t
+    | TrustUnresolved bound -> get_trust bound |> Trust.fix)
+
+class resolver_visitor =
+  (* Filter out EmptyT types from unions, when they're not the result of generate_tests.
+     (The flavor in this case will be `Zeroed`.) This helps keep types clean from
+     EmptyTs that have been left over from refinement. *)
+  let filter_empty flavor =
+    match flavor with
+    | Type.Zeroed -> false
+    | Type.Bottom -> true
+  in
+  object (self)
+    inherit [unit] Type_mapper.t_with_uses as super
+
+    method! type_ cx map_cx t =
+      let open Type in
+      match t with
+      | OpenT (r, id) -> merge_tvar ~filter_empty cx r id
+      | EvalT (t', dt, _id) ->
+        let t'' = self#type_ cx map_cx t' in
+        let dt' = self#defer_use_type cx map_cx dt in
+        if t' == t'' && dt == dt' then
+          t
+        else
+          Flow_cache.Eval.id cx t'' dt'
+      | _ -> super#type_ cx map_cx t
+
+    (* Only called from type_ and the CreateObjWithComputedPropT use case *)
+    method tvar _cx _seen _r id = id
+
+    (* overridden in type_ *)
+    method eval_id _cx _map_cx _id = assert false
+
+    method props cx map_cx id =
+      let props_map = Context.find_props cx id in
+      let props_map' =
+        SMap.ident_map (Type.Property.ident_map_t (self#type_ cx map_cx)) props_map
+      in
+      let id' =
+        if props_map == props_map' then
+          id
+        (* When mapping results in a new property map, we have to use a
+           generated id, rather than a location from source. *)
+        else
+          Context.generate_property_map cx props_map'
+      in
+      id'
+
+    (* These should already be fully-resolved. *)
+    method exports _cx _map_cx id = id
+
+    method call_prop cx map_cx id =
+      let t = Context.find_call cx id in
+      let t' = self#type_ cx map_cx t in
+      if t == t' then
+        id
+      else
+        Context.make_call_prop cx t'
+  end
+
+let detect_matching_props_violations cx =
+  let open Type in
+  let resolver = new resolver_visitor in
+  let step (reason, key, sentinel, obj) =
+    let obj = resolver#type_ cx () obj in
+    let sentinel = resolver#type_ cx () sentinel in
+    match sentinel with
+    (* TODO: it should not be possible to create a MatchingPropT with a non-tvar tout *)
+    | DefT (_, _, (BoolT (Some _) | StrT (Literal _) | NumT (Literal _))) ->
+      (* Limit the check to promitive literal sentinels *)
+      let use_op =
+        Op
+          (MatchingProp
+             {
+               op = reason;
+               obj = TypeUtil.reason_of_t obj;
+               key;
+               sentinel_reason = TypeUtil.reason_of_t sentinel;
+             })
+      in
+      Flow_js.flow cx (MatchingPropT (reason, key, sentinel), UseT (use_op, obj))
+    | _ -> ()
+  in
+  let matching_props = Context.matching_props cx in
+  List.iter step matching_props
+
+let detect_literal_subtypes cx =
+  let resolver = new resolver_visitor in
+  let checks = Context.literal_subtypes cx in
+  List.iter
+    (fun (t, u) ->
+      let t = resolver#type_ cx () t in
+      let u = resolver#use_type cx () u in
+      Flow_js.flow cx (t, u))
+    checks
+
 (* Merge a component with its "implicit requires" and "explicit requires." The
    implicit requires are those defined in libraries. For the explicit
    requires, we need to merge only those parts of the dependency graph that the
@@ -321,6 +464,7 @@ let detect_non_voidable_properties cx =
    5. Link the local references to libraries in master_cx and component_cxs.
 *)
 let merge_component
+    ~arch
     ~metadata
     ~lint_severities
     ~strict_mode
@@ -333,36 +477,38 @@ let merge_component
     reqs
     dep_cxs
     (master_cx : Context.sig_t) =
-  let sig_cx = Context.make_sig () in
-  let need_merge_master_cx = ref true in
-  let (aloc_tables, rev_aloc_tables) =
+  let aloc_tables =
     Nel.fold_left
-      (fun (tables, rev_tables) filename ->
+      (fun tables filename ->
         let table = lazy (get_aloc_table_unsafe filename) in
-        let rev_table =
-          lazy
-            (try Lazy.force table |> ALoc.reverse_table
-             with
-             (* If we aren't in abstract locations mode, or are in a libdef, we
-          won't have an aloc table, so we just create an empty reverse table. We
-          handle this exception here rather than explicitly making an optional
-          version of the get_aloc_table function for simplicity. *)
-             | Parsing_heaps_exceptions.Sig_ast_ALoc_table_not_found _ ->
-               ALoc.make_empty_reverse_table ())
-        in
-        (FilenameMap.add filename table tables, FilenameMap.add filename rev_table rev_tables))
-      (FilenameMap.empty, FilenameMap.empty)
+        FilenameMap.add filename table tables)
+      FilenameMap.empty
       component
   in
-  let (rev_cxs, rev_tasts, impl_cxs) =
+  let sig_cx = Context.make_sig () in
+  let ccx = Context.make_ccx sig_cx aloc_tables in
+  let need_merge_master_cx = ref true in
+  let (rev_results, impl_cxs) =
     Nel.fold_left
-      (fun (cxs, tasts, impl_cxs) filename ->
+      (fun (results, impl_cxs) filename ->
         (* create cx *)
         let info = get_docblock_unsafe filename in
         let metadata = Context.docblock_overrides info metadata in
         let module_ref = Files.module_ref filename in
-        let rev_table = FilenameMap.find filename rev_aloc_tables in
-        let cx = Context.make sig_cx metadata filename aloc_tables rev_table module_ref phase in
+        let rev_table =
+          let table = FilenameMap.find filename aloc_tables in
+          lazy
+            (try Lazy.force table |> ALoc.reverse_table
+             with
+             (* If we aren't in abstract locations mode, or are in a libdef, we
+                won't have an aloc table, so we just create an empty reverse
+                table. We handle this exception here rather than explicitly
+                making an optional version of the get_aloc_table function for
+                simplicity. *)
+             | Parsing_heaps_exceptions.Sig_ast_ALoc_table_not_found _ ->
+               ALoc.make_empty_reverse_table ())
+        in
+        let cx = Context.make ccx metadata filename rev_table module_ref phase in
         (* create builtins *)
         if !need_merge_master_cx then (
           need_merge_master_cx := false;
@@ -387,14 +533,13 @@ let merge_component
         let tast =
           Type_inference_js.infer_ast cx filename comments ast ~lint_severities ~file_sig
         in
-        (cx :: cxs, tast :: tasts, FilenameMap.add filename cx impl_cxs))
-      ([], [], FilenameMap.empty)
+        ((cx, ast, tast) :: results, FilenameMap.add filename cx impl_cxs))
+      ([], FilenameMap.empty)
       component
   in
-  let cxs = Base.List.rev rev_cxs in
-  let tasts = Base.List.rev rev_tasts in
+  let results = Base.List.rev rev_results in
+  let (cxs, _, tasts) = Base.List.unzip3 results in
   let (cx, other_cxs) = (Base.List.hd_exn cxs, Base.List.tl_exn cxs) in
-  Flow_js.Cache.clear ();
 
   dep_cxs |> Base.List.iter ~f:(Context.merge_into sig_cx);
 
@@ -437,65 +582,17 @@ let merge_component
     detect_unnecessary_optional_chains cx;
     detect_unnecessary_invariants cx;
     detect_invalid_type_assert_calls cx file_sigs cxs tasts;
-    detect_invalid_enum_exhaustive_checks cx;
+    Strict_es6_import_export.detect_errors ~metadata ~phase cx results;
 
-    force_annotations cx other_cxs;
+    (* Well-formed conditionals *)
+    detect_matching_props_violations cx;
+    detect_literal_subtypes cx;
 
-    match Base.List.zip_exn cxs tasts with
+    force_annotations ~arch cx other_cxs;
+
+    match results with
     | [] -> failwith "there is at least one cx"
     | x :: xs -> (x, xs))
-
-let merge_tvar =
-  Type.(
-    let possible_types = Flow_js.possible_types in
-    let rec collect_lowers ~filter_empty cx seen acc = function
-      | [] -> Base.List.rev acc
-      | t :: ts ->
-        (match t with
-        (* Recursively unwrap unseen tvars *)
-        | OpenT (_, id) ->
-          if ISet.mem id seen then
-            collect_lowers ~filter_empty cx seen acc ts
-          (* already unwrapped *)
-          else
-            let seen = ISet.add id seen in
-            collect_lowers ~filter_empty cx seen acc (possible_types cx id @ ts)
-        (* Ignore empty in existentials. This behavior is sketchy, but the error
-         behavior without this filtering is worse. If an existential accumulates
-         an empty, we error but it's very non-obvious how the empty arose. *)
-        | DefT (_, _, EmptyT _) when filter_empty -> collect_lowers ~filter_empty cx seen acc ts
-        (* Everything else becomes part of the merge typed *)
-        | _ -> collect_lowers ~filter_empty cx seen (t :: acc) ts)
-    in
-    fun cx r id ->
-      (* Because the behavior of existentials are so difficult to predict, they
-       enjoy some special casing here. When existential types are finally
-       removed, this logic can be removed. *)
-      let existential =
-        Reason.(
-          match desc_of_reason r with
-          | RExistential -> true
-          | _ -> false)
-      in
-      let lowers =
-        let seen = ISet.singleton id in
-        collect_lowers cx seen [] (possible_types cx id) ~filter_empty:existential
-      in
-      match lowers with
-      | [t] -> t
-      | t0 :: t1 :: ts -> UnionT (r, UnionRep.make t0 t1 ts)
-      | [] ->
-        let uses = Flow_js.possible_uses cx id in
-        if uses = [] || existential then
-          AnyT.locationless Unsoundness.existential
-        else
-          MergedT (r, uses))
-
-let merge_trust_var constr =
-  Trust_constraint.(
-    match constr with
-    | TrustResolved t -> t
-    | TrustUnresolved bound -> get_trust bound |> Trust.fix)
 
 (****************** signature contexts *********************)
 
@@ -542,6 +639,7 @@ let merge_trust_var constr =
 module ContextOptimizer = struct
   open Constraint
   open Type
+  open TypeUtil
 
   class context_optimizer =
     object (self)
@@ -587,33 +685,6 @@ module ContextOptimizer = struct
       val mutable export_reason = None
 
       val mutable export_file = None
-
-      method private warn_dynamic_exports cx r reason_exp =
-        match Reason.aloc_of_reason reason_exp |> ALoc.source with
-        (* The second check here may seem unnecessary, but if the exports of a file are exactly what
-         * it imports from another file this can cause positioning issues. Consider
-         *
-         *     module.exports = require('lib');
-         *
-         * In this case the reason produced by the require statement is actually positioned in the
-         * 'lib' file where the exports were defined; this can break our invariant that all lints have
-         * their primary position in the file where the lint occurs. We don't want to change the
-         * positioning of the require, because this increases the verbosity of all error messages that
-         * reference types or values defined in other files. Instead, we just don't report any export
-         * warnings that arise when the reason isn't in the current file. Given that this warning is
-         * only reported when the type we are exporting contains an any, and we are exporting exactly
-         * what we import from another file, it must follow that the imported file itself exported an
-         * any and the warning was raised there.
-
-         * The alternative check that export_file is builtin allows this lint to appear in libdefs,
-         * since the source of the export of a libdef is set to `Builtins` even if the libdef is
-         * user-provided. Actual builtin files will be filtered out by the first check.
-         *)
-        | Some file
-          when (not @@ is_builtin_or_flowlib cx file)
-               && (export_file = Some file || export_file = Some File_key.Builtins) ->
-          Error_message.EDynamicExport (r, reason_exp) |> Flow_js.add_output cx
-        | _ -> ()
 
       method reduce cx module_ref =
         let export = Context.find_module cx module_ref in
@@ -777,6 +848,77 @@ module ContextOptimizer = struct
             reduced_evaluated <- Eval.Map.add id t' reduced_evaluated;
             id
 
+      method! destructor cx map_cx t =
+        SigHash.add_destructor sig_hash t;
+        match t with
+        | NonMaybeType -> t
+        | PropertyType s ->
+          SigHash.add sig_hash s;
+          t
+        | ElementType t' ->
+          let t'' = self#type_ cx map_cx t' in
+          if t'' == t' then
+            t
+          else
+            ElementType t''
+        | Bind t' ->
+          let t'' = self#type_ cx map_cx t' in
+          if t'' == t' then
+            t
+          else
+            Bind t''
+        | ReadOnlyType -> t
+        | SpreadType (options, tlist, acc) ->
+          let () =
+            match options with
+            | Object.Spread.Annot { make_exact } -> SigHash.add_bool sig_hash make_exact
+            | _ -> ()
+          in
+          let tlist' = ListUtils.ident_map (self#object_kit_spread_operand cx map_cx) tlist in
+          let acc' = OptionUtils.ident_map (self#object_kit_spread_operand_slice cx map_cx) acc in
+          if tlist' == tlist && acc == acc' then
+            t
+          else
+            SpreadType (options, tlist', acc')
+        | RestType (options, x) ->
+          let open Object.Rest in
+          let () =
+            match options with
+            | Sound -> SigHash.add_int sig_hash 1
+            | IgnoreExactAndOwn -> SigHash.add_int sig_hash 2
+            | ReactConfigMerge p ->
+              SigHash.add_int sig_hash 3;
+              SigHash.add sig_hash (Polarity.sigil p)
+          in
+          let x' = self#type_ cx map_cx x in
+          if x' == x then
+            t
+          else
+            RestType (options, x')
+        | ValuesType -> t
+        | CallType args ->
+          let args' = ListUtils.ident_map (self#type_ cx map_cx) args in
+          if args' == args then
+            t
+          else
+            CallType args'
+        | TypeMap tmap ->
+          let tmap' = self#type_map cx map_cx tmap in
+          if tmap' == tmap then
+            t
+          else
+            TypeMap tmap'
+        | ReactConfigType default_props ->
+          let default_props' = self#type_ cx map_cx default_props in
+          if default_props' == default_props then
+            t
+          else
+            ReactConfigType default_props'
+        | ReactElementPropsType
+        | ReactElementConfigType
+        | ReactElementRefType ->
+          t
+
       method! dict_type cx pole dicttype =
         let dicttype' = super#dict_type cx pole dicttype in
         SigHash.add_polarity sig_hash dicttype'.dict_polarity;
@@ -808,12 +950,6 @@ module ContextOptimizer = struct
         | OpaqueT (_, { opaque_id; _ }) ->
           SigHash.add_aloc sig_hash (opaque_id :> ALoc.t);
           super#type_ cx pole t
-        | AnyT (r, src) when Unsoundness.banned_in_exports src && Base.Option.is_some export_reason
-          ->
-          self#warn_dynamic_exports cx r (Base.Option.value_exn export_reason);
-          let t' = super#type_ cx pole t in
-          SigHash.add_type sig_hash t';
-          t'
         | DefT (_, _, PolyT { id = poly_id; _ }) ->
           if Context.mem_nominal_poly_id cx poly_id then
             Poly.id_as_int poly_id
@@ -830,6 +966,17 @@ module ContextOptimizer = struct
           else
             Poly.id_as_int poly_id |> Base.Option.iter ~f:(SigHash.add_int sig_hash);
           super#type_ cx pole t
+        | UnionT (_, rep) ->
+          if not (UnionRep.is_optimized_finally rep) then
+            UnionRep.optimize
+              rep
+              ~reasonless_eq:TypeUtil.reasonless_eq
+              ~flatten:(Type_mapper.union_flatten cx)
+              ~find_resolved:(Context.find_resolved cx)
+              ~find_props:(Context.find_props cx);
+          let t' = super#type_ cx pole t in
+          SigHash.add_type sig_hash t';
+          t'
         | _ ->
           let t' = super#type_ cx pole t in
           SigHash.add_type sig_hash t';

@@ -34,6 +34,7 @@ do_file "class-0.js" 4 3 4 4
 do_file "class-1.js" 5 6
 do_file "class-2.js" 4 6
 do_file "class-3.js" 9 15
+do_file "class-poly-0.js" 5 10
 do_file "comments-0.js" 4 33
 do_file "dictionary.js" 12 12
 do_file "func-0.js" 3 26
@@ -78,9 +79,8 @@ do_file "alias-0.js" 13 1 13 32 --expand-type-aliases
 # Test pointing to identifiers
 do_file "replacement-object.js" 2 5 --strategy=generalize
 do_file "replacement-object.js" 2 6 --strategy=specialize
-do_file "replacement-object.js" 2 7 --strategy=temporary
-assert_exit 110 "$FLOW" autofix insert-type --strip-root --quiet \
-    "replacement-object.js" 2 7 --strategy=fail
+assert_ok "$FLOW" autofix insert-type --strip-root --quiet \
+    "replacement-object.js" 2 7
 do_file "replacement-object.js" 2 8 --strategy=fixme
 do_file "replacement-object.js" 2 5 2 8 --strategy=generalize
 do_file "func-2.js" 3 14

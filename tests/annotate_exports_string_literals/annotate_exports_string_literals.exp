@@ -1,13 +1,16 @@
->>> a.js (#changes: 5)
+
+=== Codemod annotate-exports ===
+
+>>> ./a.js
 // @flow
 
 declare var cond: boolean;
 
 module.exports = {
-  f1: (): $TEMPORARY$string<"0"> | $TEMPORARY$string<"1"> => (cond ? "0" : "1"),
-  f2: (): $TEMPORARY$string<"A0"> | $TEMPORARY$string<"A1"> => (cond ? "A0" : "A1"),
-  f3: (): $TEMPORARY$string<"Aa"> | $TEMPORARY$string<"Bb"> => (cond ? "Aa" : "Bb"),
-  f4: (): $TEMPORARY$string<"A_"> | $TEMPORARY$string<"B_"> => (cond ? "A_" : "B_"),
+  f1: (): string => (cond ? "0" : "1"),
+  f2: (): string => (cond ? "A0" : "A1"),
+  f3: (): string => (cond ? "Aa" : "Bb"),
+  f4: (): string => (cond ? "A_" : "B_"),
 
   f5: (): string => (cond ? "1/1/2000" : "1/1/2001"),
 }
@@ -16,10 +19,10 @@ module.exports = {
 
 Stats:
   Files changed:                            1
+  Number of annotations added:              5
+  Total size of annotations:                5
   Number of sig. ver. errors:               5
   Number of annotations required:           5
-  Number of annotations added:              5
-  Total size of annotations:               15
   Number of annotations skipped:            0
 
 Errors:
@@ -30,7 +33,6 @@ Errors:
     Parsing heaps get ast error:            0
     Indeterminate module type:              0
     No matching export:                     0
-    Unrecognizable module error:            0
   Serializer error:                         0
   Unsupported error kind:                   0
 
@@ -41,3 +43,22 @@ Warnings:
   Empty NoUpper:                            0
   Empty SomeKnownUpper:                     0
 
+
+=== Autofix exports ===
+
+>>> ./a.js
+// @flow
+
+declare var cond: boolean;
+
+module.exports = {
+  f1: (): string => (cond ? "0" : "1"),
+  f2: (): string => (cond ? "A0" : "A1"),
+  f3: (): string => (cond ? "Aa" : "Bb"),
+  f4: (): string => (cond ? "A_" : "B_"),
+
+  f5: (): string => (cond ? "1/1/2000" : "1/1/2001"),
+}
+
+
+=== Diff between codemod-ed & autofix-ed ===

@@ -19,10 +19,7 @@ end
 module Translate (Impl : Translator_intf.S) (Config : Config) : sig
   type t
 
-  val program :
-    Offset_utils.t option ->
-    Loc.t * (Loc.t, Loc.t) Ast.Statement.t list * (Loc.t * Ast.Comment.t') list ->
-    t
+  val program : Offset_utils.t option -> (Loc.t, Loc.t) Ast.Program.t -> t
 
   val expression : Offset_utils.t option -> (Loc.t, Loc.t) Ast.Expression.t -> t
 
@@ -32,7 +29,7 @@ with type t = Impl.t = struct
   type t = Impl.t
 
   type functions = {
-    program: Loc.t * (Loc.t, Loc.t) Ast.Statement.t list * (Loc.t * Ast.Comment.t') list -> t;
+    program: (Loc.t, Loc.t) Ast.Program.t -> t;
     expression: (Loc.t, Loc.t) Ast.Expression.t -> t;
   }
 
@@ -119,15 +116,15 @@ with type t = Impl.t = struct
       in
       let prefix = locs @ comments @ [("type", string _type)] in
       obj (List.rev_append prefix props)
-    and program (loc, statements, comments) =
+    and program (loc, { Ast.Program.statements; comments; all_comments }) =
       let body = statement_list statements in
       let props =
         if Config.include_comments then
-          [("body", body); ("comments", comment_list comments)]
+          [("body", body); ("comments", comment_list all_comments)]
         else
           [("body", body)]
       in
-      node "Program" loc props
+      node ?comments "Program" loc props
     and statement_list statements = array_of_list statement statements
     and statement =
       let open Statement in
@@ -144,7 +141,7 @@ with type t = Impl.t = struct
         let alternate =
           match alternate with
           | None -> null
-          | Some { If.Alternate.body; comments = alternate_comments } ->
+          | Some (_, { If.Alternate.body; comments = alternate_comments }) ->
             statement (Comment_attachment.statement_add_comments body alternate_comments)
         in
         node
@@ -549,7 +546,10 @@ with type t = Impl.t = struct
         let (arguments, comments) =
           match arguments with
           | Some ((_, { ArgList.comments = args_comments; _ }) as arguments) ->
-            (arg_list arguments, Flow_ast_utils.merge_comments ~inner:args_comments ~outer:comments)
+            ( arg_list arguments,
+              Flow_ast_utils.merge_comments
+                ~inner:(format_internal_comments args_comments)
+                ~outer:comments )
           | None -> (array [], comments)
         in
         node
@@ -565,7 +565,11 @@ with type t = Impl.t = struct
           Call
             ({ Call.comments; arguments = (_, { ArgList.comments = args_comments; _ }); _ } as call)
         ) ->
-        let comments = Flow_ast_utils.merge_comments ~inner:args_comments ~outer:comments in
+        let comments =
+          Flow_ast_utils.merge_comments
+            ~inner:(format_internal_comments args_comments)
+            ~outer:comments
+        in
         node ?comments "CallExpression" loc (call_node_properties call)
       | ( loc,
           OptionalCall
@@ -575,7 +579,11 @@ with type t = Impl.t = struct
                 call;
               optional;
             } ) ->
-        let comments = Flow_ast_utils.merge_comments ~inner:args_comments ~outer:comments in
+        let comments =
+          Flow_ast_utils.merge_comments
+            ~inner:(format_internal_comments args_comments)
+            ~outer:comments
+        in
         node
           ?comments
           "OptionalCallExpression"
@@ -1589,7 +1597,11 @@ with type t = Impl.t = struct
     and exists_type loc comments = node ?comments "ExistsTypeAnnotation" loc []
     and type_annotation (loc, ty) = node "TypeAnnotation" loc [("typeAnnotation", _type ty)]
     and type_parameter_declaration (loc, { Type.TypeParams.params; comments }) =
-      node ?comments "TypeParameterDeclaration" loc [("params", array_of_list type_param params)]
+      node
+        ?comments:(format_internal_comments comments)
+        "TypeParameterDeclaration"
+        loc
+        [("params", array_of_list type_param params)]
     and type_param
         ( loc,
           {
@@ -1611,10 +1623,14 @@ with type t = Impl.t = struct
           ("default", option _type default);
         ]
     and type_args (loc, { Type.TypeArgs.arguments; comments }) =
-      node ?comments "TypeParameterInstantiation" loc [("params", array_of_list _type arguments)]
+      node
+        ?comments:(format_internal_comments comments)
+        "TypeParameterInstantiation"
+        loc
+        [("params", array_of_list _type arguments)]
     and call_type_args (loc, { Expression.CallTypeArgs.arguments; comments }) =
       node
-        ?comments
+        ?comments:(format_internal_comments comments)
         "TypeParameterInstantiation"
         loc
         [("params", array_of_list call_type_arg arguments)]
@@ -1784,8 +1800,8 @@ with type t = Impl.t = struct
       Comment.(
         let (_type, value) =
           match c with
-          | Line s -> ("Line", s)
-          | Block s -> ("Block", s)
+          | { kind = Line; text = s; _ } -> ("Line", s)
+          | { kind = Block; text = s; _ } -> ("Block", s)
         in
         node _type loc [("value", string value)])
     and predicate (loc, { Ast.Type.Predicate.kind; comments }) =

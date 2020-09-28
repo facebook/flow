@@ -37,11 +37,11 @@ val fold : (lint_kind -> 'a * Loc.t option -> 'b -> 'b) -> 'a t -> 'b -> 'b
 (* Map over all lint kinds with an explicit value *)
 val map : ('a * Loc.t option -> 'a * Loc.t option) -> 'a t -> 'a t
 
-val default_lint_severities : (lint_kind * (severity * 'a option)) list
-
 (* SEVERITY-SPECIFIC FUNCTIONS *)
 
 val empty_severities : severity t
+
+val default_severities : severity t
 
 (* True iff get_state returns Warn or Err, false otherwise *)
 val is_enabled : lint_kind -> severity t -> bool

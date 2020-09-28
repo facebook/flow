@@ -77,11 +77,11 @@ end)
 (* This used to be an environment variable, but it is too complicated
  * for now. Hardcoding! Yay!
  *)
-let blacklist = List.map ~f:Str.regexp [".*/wiki/images/.*"; ".*/\\.git"; ".*/\\.svn"; ".*/\\.hg"]
+let excludes = List.map ~f:Str.regexp [".*/wiki/images/.*"; ".*/\\.git"; ".*/\\.svn"; ".*/\\.hg"]
 
-let is_blacklisted path =
+let is_excluded path =
   try
-    List.iter blacklist (fun re ->
+    List.iter excludes (fun re ->
         if Str.string_match re path 0 then
           raise Exit
         else
@@ -91,7 +91,7 @@ let is_blacklisted path =
 
 let rec add_file links env path =
   let path = normalize path in
-  match is_blacklisted path with
+  match is_excluded path with
   | true -> return ()
   | false when not (SSet.mem path env.new_files) -> add_new_file links env path
   | _ -> return ()

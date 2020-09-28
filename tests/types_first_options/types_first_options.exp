@@ -1,10 +1,10 @@
 Show well_formed_export errors with .flowconfig:
-experimental.types_first=true
+types_first=true
 
 Error -------------------------------------------------------------------------------------------------------- a.js:3:22
 
 Cannot build a typed interface for this module. You should annotate the exports of this module with types. Missing type
-annotation at function return: (`signature-verification-failure`)
+annotation at function return: [signature-verification-failure]
 
    3| export function foo() { return 1; } // missing annotation
                            
@@ -15,25 +15,19 @@ Found 1 error
 Stopping server...
 
 In .flowconfig:
-experimental.types_first=true
-experimental.well_formed_exports=false
+types_first=true
+well_formed_exports=false
 
-.flowconfig:2 Error setting value for "experimental.types_first". Cannot set it to "true" when "experimental.well_formed_exports" is set to "false".
-
-In .flowconfig:
-experimental.well_formed_exports=false
-experimental.types_first=true
-
-.flowconfig:3 Error setting value for "experimental.types_first". Cannot set it to "true" when "experimental.well_formed_exports" is set to "false".
+.flowconfig:2 Error setting value for "types_first". Cannot set it to "true" when "well_formed_exports" is set to "false".
 
 In .flowconfig:
-experimental.well_formed_exports=false
-Start with --types-first
+well_formed_exports=false
+types_first=true
 
-Cannot start in types-first mode when "experimental.well_formed_exports" is set to false.
+.flowconfig:3 Error setting value for "types_first". Cannot set it to "true" when "well_formed_exports" is set to "false".
 
 In .flowconfig:
-experimental.well_formed_exports=false
-Check with --types-first
-
-Cannot start in types-first mode when "experimental.well_formed_exports" is set to false.
+well_formed_exports=true
+well_formed_exports.includes=foo
+types_first=true
+.flowconfig:4 Error setting value for "types_first". Cannot set it to "true" when "well_formed_exports.includes" is set.

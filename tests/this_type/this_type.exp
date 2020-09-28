@@ -1,6 +1,6 @@
 Error ----------------------------------------------------------------------------------------------- class_expr.js:6:10
 
-Cannot assign `123` to `this.x` because property `x` is missing in `Thing` [1].
+Cannot assign `123` to `this.x` because property `x` is missing in `Thing` [1]. [prop-missing]
 
    class_expr.js:6:10
    6|     this.x = 123; // error: property not found (must be declared)
@@ -20,6 +20,7 @@ References:
 Error ---------------------------------------------------------------------------------------------------- contra.js:4:9
 
 Cannot use `this` [1] in an input/output position because `this` [1] is expected to occur only in output positions.
+[incompatible-variance]
 
    contra.js:4:9
    4|   next: this; // error (see below for exploit): `this` should only appear in
@@ -34,6 +35,7 @@ References:
 Error -------------------------------------------------------------------------------------------------- contra.js:15:10
 
 Cannot use `this` [1] in an input/output position because `this` [1] is expected to occur only in output positions.
+[incompatible-variance]
 
    contra.js:15:10
    15|   foo<X: this>(that: X) { } // error: can't hide contravariance using a bound
@@ -48,6 +50,7 @@ References:
 Error -------------------------------------------------------------------------------------------------- contra.js:19:10
 
 Cannot use `this` [1] in an input/output position because `this` [1] is expected to occur only in output positions.
+[incompatible-variance]
 
    contra.js:19:10
    19|   foo<Y: this>(that: Y) { } // error (see above, catches hidden override)
@@ -62,6 +65,7 @@ References:
 Error -------------------------------------------------------------------------------------------------- contra.js:25:22
 
 Cannot use `this` [1] in an input/output position because `this` [1] is expected to occur only in output positions.
+[incompatible-variance]
 
    contra.js:25:22
    25|   out_object(): { _: this } { return { _: this }; }
@@ -76,6 +80,7 @@ References:
 Error -------------------------------------------------------------------------------------------------- contra.js:26:21
 
 Cannot use `this` [1] in an input/output position because `this` [1] is expected to occur only in output positions.
+[incompatible-variance]
 
    contra.js:26:21
    26|   in_object(_: { _: this }) { }
@@ -90,6 +95,7 @@ References:
 Error -------------------------------------------------------------------------------------------------- contra.js:27:22
 
 Cannot use `this` [1] in an input/output position because `this` [1] is expected to occur only in output positions.
+[incompatible-variance]
 
    contra.js:27:22
    27|   inout_object: { _: this };
@@ -104,6 +110,7 @@ References:
 Error -------------------------------------------------------------------------------------------------- contra.js:29:22
 
 Cannot use `this` [1] in an input/output position because `this` [1] is expected to occur only in output positions.
+[incompatible-variance]
 
    contra.js:29:22
    29|   out_array(): Array<this> { return [this]; }
@@ -118,6 +125,7 @@ References:
 Error -------------------------------------------------------------------------------------------------- contra.js:30:21
 
 Cannot use `this` [1] in an input/output position because `this` [1] is expected to occur only in output positions.
+[incompatible-variance]
 
    contra.js:30:21
    30|   in_array(_: Array<this>) { }
@@ -132,6 +140,7 @@ References:
 Error -------------------------------------------------------------------------------------------------- contra.js:31:22
 
 Cannot use `this` [1] in an input/output position because `this` [1] is expected to occur only in output positions.
+[incompatible-variance]
 
    contra.js:31:22
    31|   inout_array: Array<this>;
@@ -146,6 +155,7 @@ References:
 Error -------------------------------------------------------------------------------------------------- contra.js:38:18
 
 Cannot use `this` [1] in an input/output position because `this` [1] is expected to occur only in output positions.
+[incompatible-variance]
 
    contra.js:38:18
    38|   out_set(): Set<this> { return new Set().add(this); }
@@ -160,6 +170,7 @@ References:
 Error -------------------------------------------------------------------------------------------------- contra.js:39:17
 
 Cannot use `this` [1] in an input/output position because `this` [1] is expected to occur only in output positions.
+[incompatible-variance]
 
    contra.js:39:17
    39|   in_set(_: Set<this>) { }
@@ -174,6 +185,7 @@ References:
 Error -------------------------------------------------------------------------------------------------- contra.js:40:18
 
 Cannot use `this` [1] in an input/output position because `this` [1] is expected to occur only in output positions.
+[incompatible-variance]
 
    contra.js:40:18
    40|   inout_set: Set<this>;
@@ -188,6 +200,7 @@ References:
 Error -------------------------------------------------------------------------------------------------- contra.js:44:25
 
 Cannot use `this` [1] in an input position because `this` [1] is expected to occur only in output positions.
+[incompatible-variance]
 
    contra.js:44:25
    44|   in_promise(_: Promise<this>) { }
@@ -202,6 +215,7 @@ References:
 Error -------------------------------------------------------------------------------------------------- contra.js:45:26
 
 Cannot use `this` [1] in an input/output position because `this` [1] is expected to occur only in output positions.
+[incompatible-variance]
 
    contra.js:45:26
    45|   inout_promise: Promise<this>;
@@ -216,6 +230,7 @@ References:
 Error -------------------------------------------------------------------------------------------------- contra.js:48:41
 
 Cannot use `this` [1] in an input position because `this` [1] is expected to occur only in output positions.
+[incompatible-variance]
 
    contra.js:48:41
    48|   *out_generator(): Generator<this,this,this> {
@@ -230,6 +245,7 @@ References:
 Error -------------------------------------------------------------------------------------------------- contra.js:52:29
 
 Cannot use `this` [1] in an input position because `this` [1] is expected to occur only in output positions.
+[incompatible-variance]
 
    contra.js:52:29
    52|   in_generator(_: Generator<this,this,this>) { }
@@ -244,6 +260,7 @@ References:
 Error -------------------------------------------------------------------------------------------------- contra.js:52:34
 
 Cannot use `this` [1] in an input position because `this` [1] is expected to occur only in output positions.
+[incompatible-variance]
 
    contra.js:52:34
    52|   in_generator(_: Generator<this,this,this>) { }
@@ -258,6 +275,7 @@ References:
 Error -------------------------------------------------------------------------------------------------- contra.js:53:30
 
 Cannot use `this` [1] in an input/output position because `this` [1] is expected to occur only in output positions.
+[incompatible-variance]
 
    contra.js:53:30
    53|   inout_generator: Generator<this,this,this>;
@@ -272,6 +290,7 @@ References:
 Error -------------------------------------------------------------------------------------------------- contra.js:53:35
 
 Cannot use `this` [1] in an input/output position because `this` [1] is expected to occur only in output positions.
+[incompatible-variance]
 
    contra.js:53:35
    53|   inout_generator: Generator<this,this,this>;
@@ -286,6 +305,7 @@ References:
 Error -------------------------------------------------------------------------------------------------- contra.js:53:40
 
 Cannot use `this` [1] in an input/output position because `this` [1] is expected to occur only in output positions.
+[incompatible-variance]
 
    contra.js:53:40
    53|   inout_generator: Generator<this,this,this>;
@@ -299,7 +319,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- generics.js:6:30
 
-Cannot use `Implicit` [1] with fewer than 1 type argument.
+Cannot use `Implicit` [1] with fewer than 1 type argument. [missing-type-arg]
 
    generics.js:6:30
    6| class ImplicitNumber extends Implicit { arg: number; }
@@ -314,6 +334,7 @@ References:
 Error --------------------------------------------------------------------------------------------------- import.js:8:10
 
 Cannot extend `A1` [1] with `B1` because `B1` [2] is incompatible with `this` [3] in the return value of property `foo`.
+[incompatible-extend]
 
    import.js:8:10
    8|   foo(): B1 { return new B1(); } // error
@@ -331,6 +352,7 @@ References:
 Error -------------------------------------------------------------------------------------------------- import.js:14:10
 
 Cannot extend `A3` [1] with `B3` because `B3` [2] is incompatible with `this` [3] in the return value of property `foo`.
+[incompatible-extend]
 
    import.js:14:10
    14|   foo(): B3<X> { return new B3(); } // error
@@ -347,7 +369,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- import.js:18:2
 
-Cannot cast `(new B3()).qux(...)` to string because number [1] is incompatible with string [2].
+Cannot cast `(new B3()).qux(...)` to string because number [1] is incompatible with string [2]. [incompatible-cast]
 
    import.js:18:2
    18| (new B3().qux(0): string); // error
@@ -365,6 +387,7 @@ References:
 Error -------------------------------------------------------------------------------------------------- import.js:21:22
 
 Cannot cast `(new B3()).bar()` to `A2` because string [1] is incompatible with number [2] in type argument `X` [3].
+[incompatible-cast]
 
    import.js:21:22
    21| ((new B3().bar(): B3<string>): A2<number>); // error
@@ -381,7 +404,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- import.js:22:2
 
-Cannot cast `(new B3()).qux(...)` to string because number [1] is incompatible with string [2].
+Cannot cast `(new B3()).qux(...)` to string because number [1] is incompatible with string [2]. [incompatible-cast]
 
    import.js:22:2
    22| ((new B3(): A2<number>).qux(0): string); // error
@@ -398,7 +421,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ interface.js:1:25
 
-Unexpected use of `this` type.
+Unexpected use of `this` type. [illegal-this]
 
    1| interface I { xs: Array<this>; }
                               ^^^^
@@ -406,7 +429,7 @@ Unexpected use of `this` type.
 
 Error ----------------------------------------------------------------------------------------------------- self.js:4:24
 
-Cannot return `(new A()).foo()` because `A` [1] is incompatible with `this` [2].
+Cannot return `(new A()).foo()` because `A` [1] is incompatible with `this` [2]. [incompatible-return]
 
    self.js:4:24
    4|   bar(): this { return new A().foo(); } // same as returning : A, so error
@@ -423,7 +446,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- statics.js:17:2
 
-Cannot cast `A.make()` to `B` because `A` [1] is incompatible with `B` [2].
+Cannot cast `A.make()` to `B` because `A` [1] is incompatible with `B` [2]. [incompatible-cast]
 
    statics.js:17:2
    17| (A.make(): B); // error
@@ -441,6 +464,7 @@ References:
 Error ----------------------------------------------------------------------------------------------------- test.js:23:2
 
 Cannot cast `(new Inherit()).foo()` to `Inherit` because `Base` [1] is incompatible with `Inherit` [2].
+[incompatible-cast]
 
    test.js:23:2
    23| (new Inherit().foo(): Inherit); // error (cf. OK below)
@@ -458,6 +482,7 @@ References:
 Error ----------------------------------------------------------------------------------------------------- test.js:23:2
 
 Cannot cast `(new Inherit()).foo()` to `Inherit` because `Override` [1] is incompatible with `Inherit` [2].
+[incompatible-cast]
 
    test.js:23:2
    23| (new Inherit().foo(): Inherit); // error (cf. OK below)
@@ -475,7 +500,7 @@ References:
 Error ----------------------------------------------------------------------------------------------------- test.js:29:2
 
 Cannot cast `(new InheritOverride()).bar_caller()` to `InheritOverride` because `Base` [1] is incompatible with
-`InheritOverride` [2].
+`InheritOverride` [2]. [incompatible-cast]
 
    test.js:29:2
    29| (new InheritOverride().bar_caller(): InheritOverride); // error
@@ -493,7 +518,7 @@ References:
 Error ----------------------------------------------------------------------------------------------------- test.js:29:2
 
 Cannot cast `(new InheritOverride()).bar_caller()` to `InheritOverride` because `Override` [1] is incompatible with
-`InheritOverride` [2].
+`InheritOverride` [2]. [incompatible-cast]
 
    test.js:29:2
    29| (new InheritOverride().bar_caller(): InheritOverride); // error
@@ -511,6 +536,7 @@ References:
 Error ---------------------------------------------------------------------------------------------------- test.js:41:15
 
 Cannot use `this` [1] in an input position because `this` [1] is expected to occur only in output positions.
+[incompatible-variance]
 
    test.js:41:15
    41|   corge(that: this) { }
@@ -525,7 +551,7 @@ References:
 Error ---------------------------------------------------------------------------------------------------- test.js:51:10
 
 Cannot extend `Base2` [1] with `Override2` because `Override2` [2] is incompatible with `this` [3] in the return value
-of property `bar`.
+of property `bar`. [incompatible-extend]
 
    test.js:51:10
    51|   bar(): Override2 { return new Override2; } // error (cf. OK above)
@@ -543,7 +569,7 @@ References:
 Error ---------------------------------------------------------------------------------------------------- test.js:56:16
 
 Cannot extend `Base2` [1] with `Override2` because `Override2` [2] is incompatible with `Base2` [3] in the first
-argument of property `grault`.
+argument of property `grault`. [incompatible-extend]
 
    test.js:56:16
    56|   grault(that: this) { } // error, too
@@ -561,7 +587,7 @@ References:
 Error ---------------------------------------------------------------------------------------------------- test.js:56:16
 
 Cannot extend `Base2` [1] with `Override2` because `this` [2] is incompatible with `Base2` [3] in the first argument of
-property `grault`.
+property `grault`. [incompatible-extend]
 
    test.js:56:16
    56|   grault(that: this) { } // error, too
@@ -579,6 +605,7 @@ References:
 Error ---------------------------------------------------------------------------------------------------- test.js:54:15
 
 Cannot use `this` [1] in an input position because `this` [1] is expected to occur only in output positions.
+[incompatible-variance]
 
    test.js:54:15
    54|   corge(that: this) { } // error
@@ -593,6 +620,7 @@ References:
 Error ---------------------------------------------------------------------------------------------------- test.js:56:16
 
 Cannot use `this` [1] in an input position because `this` [1] is expected to occur only in output positions.
+[incompatible-variance]
 
    test.js:56:16
    56|   grault(that: this) { } // error, too

@@ -1,6 +1,6 @@
 Error ---------------------------------------------------------------------------------------------- instanceof.js:17:34
 
-Cannot assign `'1337'` to `g.foo` because string [1] is incompatible with number [2].
+Cannot assign `'1337'` to `g.foo` because string [1] is incompatible with number [2]. [incompatible-type]
 
    instanceof.js:17:34
    17|     if (g instanceof X1) g.foo = '1337';  // oops
@@ -14,7 +14,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- instanceof.js:34:42
 
-Cannot assign `'1337'` to `g.bar.foo` because string [1] is incompatible with number [2].
+Cannot assign `'1337'` to `g.bar.foo` because string [1] is incompatible with number [2]. [incompatible-type]
 
    instanceof.js:34:42
    34|     if (g.bar instanceof X1) g.bar.foo = '1337';  // oops
@@ -28,7 +28,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- instanceof.js:51:50
 
-Cannot assign `'1337'` to `g.baz.bar.foo` because string [1] is incompatible with number [2].
+Cannot assign `'1337'` to `g.baz.bar.foo` because string [1] is incompatible with number [2]. [incompatible-type]
 
    instanceof.js:51:50
    51|     if (g.baz.bar instanceof X1) g.baz.bar.foo = '1337';  // oops
@@ -42,7 +42,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- instanceof.js:83:5
 
-Cannot perform arithmetic operation because array type [1] is not a number.
+Cannot perform arithmetic operation because array type [1] is not a number. [unsafe-addition]
 
    instanceof.js:83:5
    83|     x++; // error
@@ -57,7 +57,7 @@ References:
 Error ----------------------------------------------------------------------------------------------- instanceof.js:85:7
 
 Cannot assign `123` to `x[0]` because an index signature declaring the expected key / value type is missing in
-number [1].
+number [1]. [incompatible-use]
 
    instanceof.js:85:7
    85|     x[0] = 123; // error
@@ -71,7 +71,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- mixed.js:6:6
 
-Cannot cast `x` to number because `C` [1] is incompatible with number [2].
+Cannot cast `x` to number because `C` [1] is incompatible with number [2]. [incompatible-cast]
 
    mixed.js:6:6
    6|     (x: number);
@@ -88,7 +88,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- mixed.js:40:7
 
-Cannot get `x.p` because property `p` is missing in `Object` [1].
+Cannot get `x.p` because property `p` is missing in `Object` [1]. [prop-missing]
 
    mixed.js:40:7
    40|     x.p;
@@ -103,6 +103,7 @@ References:
 Error ---------------------------------------------------------------------------------------------------- mixed.js:46:5
 
 Cannot call `x` because a call signature declaring the expected parameter / return type is missing in `Function` [1].
+[prop-missing]
 
    mixed.js:46:5
    46|     x();
@@ -116,7 +117,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- objproto.js:4:4
 
-Cannot cast `c.p` to empty because string [1] is incompatible with empty [2].
+Cannot cast `c.p` to empty because string [1] is incompatible with empty [2]. [incompatible-cast]
 
    objproto.js:4:4
    4|   (c.p: empty); // error: string ~> empty

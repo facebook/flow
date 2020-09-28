@@ -1,6 +1,6 @@
 {
   "name": "flow-parser",
-  "version": "0.124.0-beta1",
+  "version": "0.134.0",
   "description": "JavaScript parser written in OCaml. Produces ESTree AST",
   "homepage": "https://flow.org",
   "license": "MIT",
@@ -22,7 +22,7 @@
   },
   "dependencies": {},
   "devDependencies": {
-    "ast-types": "^0.13.3",
+    "ast-types": "^0.14.1",
     "colors": ">=0.6.2",
     "esprima-fb": "15001.1001.0-dev-harmony-fb",
     "minimist": ">=1.2.3"

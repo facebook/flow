@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
-open Core_kernel
+open Base
 
 let throws f =
   try
@@ -30,7 +30,7 @@ let test_escape_unescape () =
       let encoded = Hh_json.json_to_string json in
       let decoded = Hh_json.json_of_string encoded in
       let result = Hh_json.get_string_exn decoded in
-      result = s)
+      String.equal result s)
 
 let test_empty_string () =
   try
@@ -79,7 +79,7 @@ let test_jget_string () =
   let json_none = None in
   Hh_json_helpers.(
     let results = "" in
-    let str = Jget.string_opt json_string "foo" = Some "hello" in
+    let str = Jget.string_opt json_string "foo" |> Base.Option.equal String.equal (Some "hello") in
     let num = Jget.string_opt json_number "foo" |> Base.Option.is_none in
     let nul = Jget.string_opt json_number "foo" |> Base.Option.is_none in
     let abs = Jget.string_opt json_absent "foo" |> Base.Option.is_none in
@@ -88,15 +88,15 @@ let test_jget_string () =
       results
       ^ Printf.sprintf "string_opt: str=%B num=%B nul=%B abs=%B non=%B\n" str num nul abs non
     in
-    let str = Jget.string_d json_string "foo" ~default:"d" = "hello" in
-    let num = Jget.string_d json_absent "foo" ~default:"d" = "d" in
-    let nul = Jget.string_d json_absent "foo" ~default:"d" = "d" in
-    let abs = Jget.string_d json_absent "foo" ~default:"d" = "d" in
-    let non = Jget.string_d json_none "foo" ~default:"d" = "d" in
+    let str = Jget.string_d json_string "foo" ~default:"d" |> String.equal "hello" in
+    let num = Jget.string_d json_absent "foo" ~default:"d" |> String.equal "d" in
+    let nul = Jget.string_d json_absent "foo" ~default:"d" |> String.equal "d" in
+    let abs = Jget.string_d json_absent "foo" ~default:"d" |> String.equal "d" in
+    let non = Jget.string_d json_none "foo" ~default:"d" |> String.equal "d" in
     let results =
       results ^ Printf.sprintf "string_d: str=%B num=%B nul=%B abs=%B non=%B\n" str num nul abs non
     in
-    let str = Jget.string_exn json_string "foo" = "hello" in
+    let str = Jget.string_exn json_string "foo" |> String.equal "hello" in
     let num = throws (fun () -> Jget.string_exn json_number "foo") in
     let nul = throws (fun () -> Jget.string_exn json_null "foo") in
     let abs = throws (fun () -> Jget.string_exn json_absent "foo") in
@@ -106,7 +106,7 @@ let test_jget_string () =
       ^ Printf.sprintf "string_exn: str=%B num=%B nul=%B abs=%B non=%B\n" str num nul abs non
     in
     let failed = String_utils.is_substring "false" results in
-    if failed then Printf.eprintf "%s" results;
+    if failed then Caml.Printf.eprintf "%s" results;
     not failed)
 
 let test_jget_number () =
@@ -115,20 +115,20 @@ let test_jget_number () =
   let json_string = Some (Hh_json.json_of_string "{ \"foo\": \"hello\" }") in
   Hh_json_helpers.(
     let results = "" in
-    let iint = Jget.int_opt json_int "foo" = Some 1 in
+    let iint = Jget.int_opt json_int "foo" |> Option.equal ( = ) (Some 1) in
     let ifloat = throws (fun () -> Jget.int_opt json_float "foo") in
     let istring = Jget.int_opt json_string "foo" |> Base.Option.is_none in
     let results =
       results ^ Printf.sprintf "int_opt: int=%B float=%B string=%B\n" iint ifloat istring
     in
-    let fint = Jget.float_opt json_int "foo" = Some 1.0 in
-    let ffloat = Jget.float_opt json_float "foo" = Some 1.0 in
+    let fint = Jget.float_opt json_int "foo" |> Option.equal Float.equal (Some 1.0) in
+    let ffloat = Jget.float_opt json_float "foo" |> Option.equal Float.equal (Some 1.0) in
     let fstring = Jget.float_opt json_string "foo" |> Base.Option.is_none in
     let results =
       results ^ Printf.sprintf "float_opt: int=%B float=%B string=%B\n" fint ffloat fstring
     in
     let failed = String_utils.is_substring "false" results in
-    if failed then Printf.eprintf "%s" results;
+    if failed then Caml.Printf.eprintf "%s" results;
     not failed)
 
 let test_access_object_string () =
@@ -216,7 +216,9 @@ let test_access_3_keys_one_object () =
     in
     match result with
     | Error access_failure ->
-      Printf.eprintf "Error failed to parse. See: %s\n" (access_failure_to_string access_failure);
+      Caml.Printf.eprintf
+        "Error failed to parse. See: %s\n"
+        (access_failure_to_string access_failure);
       false
     | Ok (v, _) ->
       Asserter.Bool_asserter.assert_equals v.foo true "foo value mismatch";
@@ -246,7 +248,7 @@ let test_access_3_keys_one_object_wrong_type_middle () =
         "Not the access failure we expected";
       true
     | Ok (_, _) ->
-      Printf.eprintf "Expected failure, but successfully traversed json.\n";
+      Caml.Printf.eprintf "Expected failure, but successfully traversed json.\n";
       false)
 
 let test_truncate () =

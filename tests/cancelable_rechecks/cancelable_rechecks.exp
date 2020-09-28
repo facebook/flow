@@ -5,7 +5,7 @@ Init cannot be canceled
 Recheck can be canceled
 Error ------------------------------------------------------------------------------------------------------ foo.js:3:20
 
-Cannot assign `123` to `foo` because number [1] is incompatible with boolean [2].
+Cannot assign `123` to `foo` because number [1] is incompatible with boolean [2]. [incompatible-type]
 
    foo.js:3:20
    3|  const foo: bool = 123;

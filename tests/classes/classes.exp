@@ -1,6 +1,6 @@
 Error --------------------------------------------------------------------------------------------------------- B.js:6:2
 
-Cannot cast `b.foo` to number because function type [1] is incompatible with number [2].
+Cannot cast `b.foo` to number because function type [1] is incompatible with number [2]. [incompatible-cast]
 
    B.js:6:2
    6| (b.foo: number); // error, number !~> function
@@ -18,7 +18,7 @@ References:
 Error --------------------------------------------------------------------------------------------------------- C.js:4:9
 
 Cannot extend `B` [1] with `C` because string [2] is incompatible with number [3] in the first argument of property
-`foo`.
+`foo`. [incompatible-extend]
 
    C.js:4:9
    4|   foo(x:string):void { }
@@ -35,7 +35,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------------- C.js:8:2
 
-Cannot cast `c.foo` to number because function [1] is incompatible with number [2].
+Cannot cast `c.foo` to number because function [1] is incompatible with number [2]. [incompatible-cast]
 
    C.js:8:2
    8| (c.foo: number); // error, number !~> function
@@ -52,7 +52,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------------- D.js:3:9
 
-Cannot get `(new E()).x` because property `x` is missing in `E` [1].
+Cannot get `(new E()).x` because property `x` is missing in `E` [1]. [prop-missing]
 
    D.js:3:9
    3| new E().x
@@ -66,7 +66,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- class_shapes.js:18:3
 
-Cannot get `x.b` because property `b` is missing in `TestClass` [1].
+Cannot get `x.b` because property `b` is missing in `TestClass` [1]. [prop-missing]
 
    class_shapes.js:18:3
    18| x.b; // error, TestClass has no b
@@ -80,7 +80,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- class_shapes.js:20:3
 
-Cannot get `x.d` because property `d` is missing in `TestClass` [1].
+Cannot get `x.d` because property `d` is missing in `TestClass` [1]. [prop-missing]
 
    class_shapes.js:20:3
    20| x.d; // error, TestClass has no d
@@ -94,7 +94,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- class_shapes.js:22:15
 
-Cannot assign `x` to `y` because property `b` is missing in `TestClass` [1] but exists in `Foo` [2].
+Cannot assign `x` to `y` because property `b` is missing in `TestClass` [1] but exists in `Foo` [2]. [prop-missing]
 
    class_shapes.js:22:15
    22| var y : Foo = x;
@@ -111,7 +111,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- class_shapes.js:35:15
 
-Cannot assign `z` to `w` because number [1] is incompatible with string [2] in property `a`.
+Cannot assign `z` to `w` because number [1] is incompatible with string [2] in property `a`. [incompatible-type]
 
    class_shapes.js:35:15
    35| var w : Foo = z;
@@ -128,7 +128,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- class_shapes.js:35:15
 
-Cannot assign `z` to `w` because number [1] is incompatible with string [2] in property `b`.
+Cannot assign `z` to `w` because number [1] is incompatible with string [2] in property `b`. [incompatible-type]
 
    class_shapes.js:35:15
    35| var w : Foo = z;
@@ -145,7 +145,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- class_shapes.js:35:15
 
-Cannot assign `z` to `w` because number [1] is incompatible with string [2] in property `c`.
+Cannot assign `z` to `w` because number [1] is incompatible with string [2] in property `c`. [incompatible-type]
 
    class_shapes.js:35:15
    35| var w : Foo = z;
@@ -162,7 +162,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- expr.js:14:13
 
-Cannot resolve name `Baz`.
+Cannot resolve name `Baz`. [cannot-resolve-name]
 
    14| var b = new Baz(); // error: Baz is not a runtime binding in this scope
                    ^^^
@@ -170,7 +170,7 @@ Cannot resolve name `Baz`.
 
 Error ----------------------------------------------------------------------------------------------------- expr.js:17:8
 
-Cannot resolve name `Qux`.
+Cannot resolve name `Qux`. [cannot-resolve-name]
 
    17| var c: Qux = new C(); // error: Qux is not a type in this scope
               ^^^
@@ -178,7 +178,7 @@ Cannot resolve name `Qux`.
 
 Error ---------------------------------------------------------------------------------------------------- expr.js:29:21
 
-Cannot assign `new _Alias()` to `alias1` because `Alias` [1] is incompatible with `Alias` [2].
+Cannot assign `new _Alias()` to `alias1` because `Alias` [1] is incompatible with `Alias` [2]. [incompatible-type]
 
    expr.js:29:21
    29| var alias1: Alias = new _Alias(); // error: bad pun
@@ -192,7 +192,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- expr.js:30:21
 
-Cannot assign `_Alias.factory()` to `alias2` because `Alias` [1] is incompatible with `Alias` [2].
+Cannot assign `_Alias.factory()` to `alias2` because `Alias` [1] is incompatible with `Alias` [2]. [incompatible-type]
 
    expr.js:30:21
    30| var alias2: Alias = _Alias.factory(); // error: bad pun
@@ -209,7 +209,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------- loc.js:5:7
 
-Cannot declare `Foo` [1] because the name is already bound.
+Cannot declare `Foo` [1] because the name is already bound. [name-already-bound]
 
    loc.js:5:7
    5| class Foo {} // error, shadows type Foo
@@ -223,7 +223,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- statics.js:10:2
 
-Cannot cast `C` to object type because string [1] is incompatible with number [2] in property `p`.
+Cannot cast `C` to object type because string [1] is incompatible with number [2] in property `p`. [incompatible-cast]
 
    statics.js:10:2
    10| (C: {p:number}); // errors, string ~> number & vice versa (unify)
@@ -240,7 +240,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- statics.js:13:2
 
-Cannot cast `o` to statics of `C` because object type [1] is incompatible with statics of `C` [2].
+Cannot cast `o` to statics of `C` because object type [1] is incompatible with statics of `C` [2]. [incompatible-cast]
 
    statics.js:13:2
    13| (o: Class<C>); // error, object type incompatible with class type
@@ -257,7 +257,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- statics.js:19:2
 
-Cannot cast `Dup1.x` to empty because function [1] is incompatible with empty [2].
+Cannot cast `Dup1.x` to empty because function [1] is incompatible with empty [2]. [incompatible-cast]
 
    statics.js:19:2
    19| (Dup1.x: empty); // function ~> empty
@@ -274,7 +274,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- statics.js:25:2
 
-Cannot cast `Dup2.x` to empty because string [1] is incompatible with empty [2].
+Cannot cast `Dup2.x` to empty because string [1] is incompatible with empty [2]. [incompatible-cast]
 
    statics.js:25:2
    25| (Dup2.x: empty); // string ~> empty

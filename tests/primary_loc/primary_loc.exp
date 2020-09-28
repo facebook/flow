@@ -1,6 +1,7 @@
 Error ------------------------------------------------------------------------------------------------------ test.js:7:3
 
 Cannot call `f` with `"asdf"` bound to the first parameter because string [1] is incompatible with number [2].
+[incompatible-call]
 
    test.js:7:3
    7| f("asdf");
@@ -14,7 +15,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:12:2
 
-Cannot cast `3` to `T` because number [1] is incompatible with string [2].
+Cannot cast `3` to `T` because number [1] is incompatible with string [2]. [incompatible-cast]
 
    test.js:12:2
    12| (3 : T);
@@ -28,10 +29,19 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:21:23
 
-Cannot resolve module `react`.
+Cannot resolve module `react`. [cannot-resolve-module]
 
    21| const React = require('react');
                              ^^^^^^^
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:26:45
+
+Cannot use `Node` as a type because it is an `any`-typed value. Type `Node` properly, so it is no longer `any`-typed, to
+use it as an annotation. [value-as-type]
+
+   26| declare function MyComponent(props: Props): React.Node;
+                                                   ^^^^^^^^^^
 
 
 Warning ---------------------------------------------------------------------------------------------------- test.js:3:1
@@ -59,4 +69,4 @@ Unused suppression comment.
 
 
 
-Found 3 errors and 3 warnings
+Found 4 errors and 3 warnings

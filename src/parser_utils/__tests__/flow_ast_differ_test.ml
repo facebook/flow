@@ -33,8 +33,7 @@ class useless_mapper =
     method! literal _loc (expr : Loc.t Ast.Literal.t) =
       let open Ast.Literal in
       match expr.value with
-      | Number 4.0 ->
-        { value = Number 5.0; raw = "5"; comments = Flow_ast_utils.mk_comments_opt () }
+      | Number 4.0 -> { value = Number 5.0; raw = "5"; comments = None }
       | _ -> expr
 
     method! string_literal_type _loc (lit : Loc.t Ast.StringLiteral.t) =
@@ -246,18 +245,10 @@ class literal_mapper =
     method! literal _loc (expr : Loc.t Ast.Literal.t) =
       let open Ast.Literal in
       match expr.value with
-      | String "rename" ->
-        {
-          value = String "gotRenamed";
-          raw = "gotRenamed";
-          comments = Flow_ast_utils.mk_comments_opt ();
-        }
-      | Boolean false ->
-        { value = Boolean true; raw = "true"; comments = Flow_ast_utils.mk_comments_opt () }
-      | Null ->
-        { value = String "wasNull"; raw = "wasNull"; comments = Flow_ast_utils.mk_comments_opt () }
-      | Number 4.0 ->
-        { value = Number 5.0; raw = "5"; comments = Flow_ast_utils.mk_comments_opt () }
+      | String "rename" -> { value = String "gotRenamed"; raw = "gotRenamed"; comments = None }
+      | Boolean false -> { value = Boolean true; raw = "true"; comments = None }
+      | Null -> { value = String "wasNull"; raw = "wasNull"; comments = None }
+      | Number 4.0 -> { value = Number 5.0; raw = "5"; comments = None }
       (* TODO: add test for RegExp case? *)
       | _ -> expr
   end
@@ -437,15 +428,15 @@ class insert_second_cjsimport_mapper =
                                         {
                                           value = Ast.Literal.String "baz";
                                           raw = "\"baz\"";
-                                          comments = Flow_ast_utils.mk_comments_opt ();
+                                          comments = None;
                                         } );
                                 ];
-                              comments = Flow_ast_utils.mk_comments_opt ();
+                              comments = None;
                             } );
-                        comments = Flow_ast_utils.mk_comments_opt ();
+                        comments = None;
                       } );
                 directive = None;
-                comments = Flow_ast_utils.mk_comments_opt ();
+                comments = None;
               } )
         in
         List.hd stmts :: imp :: List.tl stmts
@@ -488,15 +479,15 @@ class add_body_mapper =
                                         {
                                           value = Ast.Literal.String "baz";
                                           raw = "\"baz\"";
-                                          comments = Flow_ast_utils.mk_comments_opt ();
+                                          comments = None;
                                         } );
                                 ];
-                              comments = Flow_ast_utils.mk_comments_opt ();
+                              comments = None;
                             } );
-                        comments = Flow_ast_utils.mk_comments_opt ();
+                        comments = None;
                       } );
                 directive = None;
-                comments = Flow_ast_utils.mk_comments_opt ();
+                comments = None;
               } )
         in
         stmts @ [imp]
@@ -597,7 +588,7 @@ class insert_import_and_annot_mapper =
                 } ) )
 
     method! program prog =
-      let (loc, stmts, comments) = super#program prog in
+      let (loc, { Ast.Program.statements = stmts; comments; all_comments }) = super#program prog in
       let import num =
         let imp = Printf.sprintf "new_import%d" num in
         Ast.Statement.
@@ -621,7 +612,12 @@ class insert_import_and_annot_mapper =
                 comments = None;
               } )
       in
-      (loc, List.hd stmts :: import 1 :: import 2 :: List.tl stmts, comments)
+      ( loc,
+        {
+          Ast.Program.statements = List.hd stmts :: import 1 :: import 2 :: List.tl stmts;
+          comments;
+          all_comments;
+        } )
   end
 
 class prop_annot_mapper =
@@ -651,7 +647,7 @@ class insert_typecast_mapper =
           {
             Ast.Expression.TypeCast.annot = (loc, (loc, Type.Any None));
             expression;
-            comments = Flow_ast_utils.mk_comments_opt ();
+            comments = None;
           } )
   end
 
@@ -680,8 +676,8 @@ class add_comment_mapper =
             Flow_ast.Identifier.comments =
               Some
                 {
-                  leading = [(Loc.none, Flow_ast.Comment.Block "hello")];
-                  trailing = [(Loc.none, Flow_ast.Comment.Block "bye")];
+                  leading = [Ast_builder.Comments.block "hello"];
+                  trailing = [Ast_builder.Comments.block "bye"];
                   internal = ();
                 };
           } )
@@ -694,8 +690,7 @@ class true_to_false_mapper =
     method! literal _loc (expr : Loc.t Ast.Literal.t) =
       let open Ast.Literal in
       match expr.value with
-      | Boolean true ->
-        { value = Boolean false; raw = "false"; comments = Flow_ast_utils.mk_comments_opt () }
+      | Boolean true -> { value = Boolean false; raw = "false"; comments = None }
       | _ -> expr
 
     method! type_annotation (annot : (Loc.t, Loc.t) Ast.Type.annotation) =
@@ -746,12 +741,16 @@ let debug_print_string_script script =
   let print_string_result (i, chg) =
     match chg with
     | Replace (ol, ne) -> print_endline (Utils_js.spf "Replace %s with %s at %d" ol ne i)
-    | Insert (_, ins) -> print_endline (Utils_js.spf "Insert %s at %d" (String.concat ", " ins) i)
+    | Insert { items = ins; _ } ->
+      print_endline (Utils_js.spf "Insert %s at %d" (String.concat ", " ins) i)
     | Delete d -> print_endline (Utils_js.spf "Delete %s at %d" d i)
   in
   match script with
   | None -> print_endline "no script"
   | Some sc -> List.iter print_string_result sc
+
+let mk_insert ~sep ?(leading_sep = false) items =
+  Insert { items; separator = sep; leading_separator = leading_sep }
 
 let apply_edits source edits =
   let apply_edit acc ((_begin, _end), str) =
@@ -1746,7 +1745,13 @@ let tests =
            let b = "b" in
            let old_list = [a; a] in
            let new_list = [b; b; b; b] in
-           let edits = [(0, Replace (a, b)); (1, Replace (a, b)); (1, Insert (None, [b; b]))] in
+           let edits =
+             [
+               (0, Replace (a, b));
+               (1, Replace (a, b));
+               (1, mk_insert ~sep:None ~leading_sep:true [b; b]);
+             ]
+           in
            let script = list_diff Standard old_list new_list in
            assert_equal ~ctxt (Some edits) script );
          ( "list_diff_simple4" >:: fun ctxt ->
@@ -1768,8 +1773,8 @@ let tests =
                (0, Delete a);
                (1, Delete b);
                (3, Delete a);
-               (4, Insert (None, [a]));
-               (6, Insert (None, [c]));
+               (4, mk_insert ~sep:None [a]);
+               (6, mk_insert ~sep:None [c]);
              ]
            in
            let script = list_diff Standard old_list new_list in
@@ -1780,7 +1785,7 @@ let tests =
            let old_list = [x; x; x; y; y; y] in
            let new_list = [y; y; y; x; x; x] in
            let edits =
-             [(0, Delete x); (1, Delete x); (2, Delete x); (5, Insert (None, [x; x; x]))]
+             [(0, Delete x); (1, Delete x); (2, Delete x); (5, mk_insert ~sep:None [x; x; x])]
            in
            let script = list_diff Standard old_list new_list in
            assert_equal ~ctxt (Some edits) script );
@@ -1827,14 +1832,14 @@ let tests =
            in
            let edits =
              [
-               (7, Insert (None, [t; h; e; space]));
-               (9, Insert (None, [c; o]));
+               (7, mk_insert ~sep:None [t; h; e; space]);
+               (9, mk_insert ~sep:None [c; o]);
                (11, Replace (t, d));
-               (11, Insert (None, [space; s]));
+               (11, mk_insert ~sep:None ~leading_sep:true [space; s]);
                (14, Replace (c, t));
                (16, Delete space);
                (17, Delete o);
-               (18, Insert (None, [c]));
+               (18, mk_insert ~sep:None [c]);
              ]
            in
            let script = list_diff Standard old_list new_list in

@@ -215,11 +215,13 @@ module Response = struct
 
   (* Details about functions to be added in json output *)
   type func_param_result = {
+    param_documentation: string option;
     param_name: string;
     param_ty: string;
   }
 
   type func_details_result = {
+    func_documentation: string option;
     param_tys: func_param_result list;
     return_ty: string;
   }
@@ -233,6 +235,7 @@ module Response = struct
     res_insert_text: string option;
     rank: int;
     res_preselect: bool;
+    res_documentation: string option;
   }
 
   type autocomplete_response = (complete_autocomplete_result list, string) result
@@ -255,7 +258,15 @@ module Response = struct
 
   type get_imports_response = Loc.t Nel.t Modulename.Map.t SMap.t * SSet.t
 
-  type infer_type_response = (Loc.t * Ty.elt option, string) result
+  type infer_type_response_ok =
+    | Infer_type_response of {
+        loc: Loc.t;
+        ty: Ty.elt option;
+        exact_by_default: bool;
+        documentation: string option;
+      }
+
+  type infer_type_response = (infer_type_response_ok, string) result
 
   type insert_type_response = (Replacement_printer.patch, string) result
 

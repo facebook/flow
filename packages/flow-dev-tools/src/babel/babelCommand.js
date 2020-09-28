@@ -8,6 +8,8 @@
  * @format
  */
 
+import type {Flag} from '../command/Base';
+
 import {format} from 'util';
 import {resolve} from 'path';
 
@@ -41,7 +43,7 @@ export default class BabelCommand extends Base<Args> {
 `;
   }
 
-  static getFlags() {
+  static getFlags(): Array<Flag> {
     return [
       {
         type: 'string',

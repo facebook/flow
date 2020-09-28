@@ -99,6 +99,9 @@ class ['loc] hoister =
      hoisted). *)
     method! class_ _loc (cls : ('loc, 'loc) Ast.Class.t) = cls
 
+    (* Ignore enum declarations, since they are lexical bindings. *)
+    method! enum_declaration _loc (enum : ('loc, 'loc) Ast.Statement.EnumDeclaration.t) = enum
+
     (* Ignore import declarations, since they are lexical bindings (thus not
      hoisted). *)
     method! import_declaration _loc (decl : ('loc, 'loc) Ast.Statement.ImportDeclaration.t) = decl
@@ -148,6 +151,21 @@ class ['loc] hoister =
         | None -> ()
       end;
       expr
+
+    method! type_alias loc (alias : ('loc, 'loc) Ast.Statement.TypeAlias.t) =
+      let open Ast.Statement.TypeAlias in
+      this#add_binding alias.id;
+      super#type_alias loc alias
+
+    method! opaque_type loc (alias : ('loc, 'loc) Ast.Statement.OpaqueType.t) =
+      let open Ast.Statement.OpaqueType in
+      this#add_binding alias.id;
+      super#opaque_type loc alias
+
+    method! interface loc (interface : ('loc, 'loc) Ast.Statement.Interface.t) =
+      let open Ast.Statement.Interface in
+      this#add_binding interface.id;
+      super#interface loc interface
   end
 
 class ['loc] lexical_hoister =
@@ -164,6 +182,7 @@ class ['loc] lexical_hoister =
       match stmt with
       | (_, VariableDeclaration _)
       | (_, ClassDeclaration _)
+      | (_, EnumDeclaration _)
       | (_, ExportNamedDeclaration _)
       | (_, ExportDefaultDeclaration _)
       | (_, ImportDeclaration _) ->
@@ -212,6 +231,12 @@ class ['loc] lexical_hoister =
         | None -> ()
       end;
       cls
+
+    method! enum_declaration _loc (enum : ('loc, 'loc) Ast.Statement.EnumDeclaration.t) =
+      let open Ast.Statement.EnumDeclaration in
+      let { id; _ } = enum in
+      this#add_binding id;
+      enum
 
     method! import_named_specifier
         (specifier : ('loc, 'loc) Ast.Statement.ImportDeclaration.named_specifier) =

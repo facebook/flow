@@ -178,7 +178,7 @@ let update_server_status stream =
     | Options.Classic ->
       ServerStatus.(
         Merging_progress { finished = stream.merged_files; total = Some stream.total_files })
-    | Options.TypesFirst ->
+    | Options.TypesFirst _ ->
       ServerStatus.(
         Merging_types_progress { finished = stream.merged_files; total = Some stream.total_files })
   in

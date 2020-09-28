@@ -8,6 +8,7 @@
 open Utils_js
 open Reason
 open Type
+open TypeUtil
 
 (***********************)
 (* instantiation utils *)
@@ -85,7 +86,7 @@ end = struct
 
     type t = elt
 
-    let compare = Pervasives.compare
+    let compare = Stdlib.compare
   end)
 
   type entry = Type.t * RootSet.t list

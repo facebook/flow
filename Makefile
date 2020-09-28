@@ -21,6 +21,10 @@ else
   UNAME_S=$(shell uname -s)
 endif
 
+# Default to `ocamlbuild -j 0` (unlimited parallelism), but you can limit it
+# with `make OCAMLBUILD_JOBS=1`
+OCAMLBUILD_JOBS := 0
+
 -include facebook/Makefile.defs
 
 ################################################################################
@@ -110,6 +114,7 @@ MODULES=\
   src/parser_utils/output\
   src/parser_utils/output/printers\
   src/parser_utils/signature_builder\
+  src/parser_utils/type_sig\
   src/parsing\
   src/procs\
   src/server\
@@ -126,9 +131,11 @@ MODULES=\
   src/server/shmem\
   src/server/watchman_expression_terms\
   src/services/autocomplete\
+  src/services/code_action\
   src/services/coverage\
   src/services/get_def\
   src/services/inference\
+  src/services/jsdoc\
   src/services/module\
   src/services/refactor\
   src/services/references\
@@ -257,7 +264,7 @@ BUILT_OBJECT_FILES=$(addprefix _build/,$(NATIVE_OBJECT_FILES))
 BUILT_OUNIT_TESTS=$(addprefix _build/,$(OUNIT_TESTS))
 
 # Any additional C flags can be added here
-CC_FLAGS=
+CC_FLAGS=-mcx16
 CC_FLAGS += $(EXTRA_CC_FLAGS)
 CC_OPTS=$(foreach flag, $(CC_FLAGS), -ccopt $(flag))
 INCLUDE_OPTS=$(foreach dir,$(MODULES),-I $(dir))
@@ -273,7 +280,7 @@ LINKER_FLAGS=$(BYTECODE_LINKER_FLAGS)
 
 RELEASE_TAGS=$(if $(FLOW_RELEASE),-tag warn_a,)
 
-OCB=ocamlbuild -use-ocamlfind -no-links
+OCB=ocamlbuild -use-ocamlfind -no-links -j $(OCAMLBUILD_JOBS)
 
 all: bin/flow$(EXE)
 
@@ -296,20 +303,20 @@ build-flow: _build/scripts/ppx_gen_flowlibs.exe $(BUILT_OBJECT_FILES) $(COPIED_F
 	# Both lwt and lwt_ppx provide ppx stuff. Fixed in lwt 4.0.0
 	# https://github.com/ocsigen/lwt/issues/453
 	export OCAMLFIND_IGNORE_DUPS_IN="$(shell ocamlfind query lwt)"; \
-	$(OCB) $(INTERNAL_FLAGS) $(INCLUDE_OPTS) $(FINDLIB_OPTS) \
+	$(OCB) $(INTERNAL_FLAGS) $(INCLUDE_OPTS) -tag thread $(FINDLIB_OPTS) \
 		-lflags "$(LINKER_FLAGS)" \
 		$(RELEASE_TAGS) \
 		src/flow.native
 
 build-flow-debug: _build/scripts/ppx_gen_flowlibs.exe $(BUILT_OBJECT_FILES) $(COPIED_FLOWLIB) $(COPIED_PRELUDE) $(INTERNAL_BUILD_FLAGS)
-	$(OCB) $(INTERNAL_FLAGS) $(INCLUDE_OPTS) $(FINDLIB_OPTS) \
+	$(OCB) $(INTERNAL_FLAGS) $(INCLUDE_OPTS) -tag thread $(FINDLIB_OPTS) \
 		-lflags -custom -lflags "$(LINKER_FLAGS)" \
 		src/flow.d.byte
 	mkdir -p bin
 	cp _build/src/flow.d.byte bin/flow$(EXE)
 
 testgen: build-flow
-	$(OCB) $(INTERNAL_FLAGS) $(INCLUDE_OPTS) $(FINDLIB_OPTS) \
+	$(OCB) $(INTERNAL_FLAGS) $(INCLUDE_OPTS) -tag thread $(FINDLIB_OPTS) \
 	 	-lflags "$(LINKER_FLAGS)" \
 		$(RELEASE_TAGS) \
 		testgen/flowtestgen.native
@@ -364,7 +371,7 @@ bin/flow$(EXE): build-flow
 
 $(BUILT_OUNIT_TESTS): $(BUILT_OBJECT_FILES) FORCE
 	export OCAMLFIND_IGNORE_DUPS_IN="$(shell ocamlfind query lwt)"; \
-	$(OCB) $(INTERNAL_FLAGS) $(INCLUDE_OPTS) $(FINDLIB_OPTS) \
+	$(OCB) $(INTERNAL_FLAGS) $(INCLUDE_OPTS) -tag thread $(FINDLIB_OPTS) \
 		-I $(patsubst _build/%,%,$(@D)) \
 		-lflags "$(LINKER_FLAGS)" \
 		$(patsubst _build/%,%,$@)
@@ -372,7 +379,7 @@ $(BUILT_OUNIT_TESTS): $(BUILT_OBJECT_FILES) FORCE
 .PHONY: build-ounit-tests
 build-ounit-tests: $(BUILT_OBJECT_FILES) FORCE
 	export OCAMLFIND_IGNORE_DUPS_IN="$(shell ocamlfind query lwt)"; \
-	$(OCB) $(INTERNAL_FLAGS) $(INCLUDE_OPTS) $(FINDLIB_OPTS) \
+	$(OCB) $(INTERNAL_FLAGS) $(INCLUDE_OPTS) -tag thread $(FINDLIB_OPTS) \
 		$(foreach dir,$(dir $(OUNIT_TESTS)),-I $(dir)) \
 		-lflags "$(LINKER_FLAGS)" \
 		$(OUNIT_TESTS)

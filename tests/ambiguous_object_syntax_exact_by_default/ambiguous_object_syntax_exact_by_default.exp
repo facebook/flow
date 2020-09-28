@@ -1,7 +1,7 @@
 Error ----------------------------------------------------------------------------------------------------- test.js:2:10
 
 Please write this object type as explicitly exact (use `{|` and `|}` instead of `{` and `}`) or as explicitly inexact
-(add `...` to the end of the list of properties). (`ambiguous-object-type`)
+(add `...` to the end of the list of properties). [ambiguous-object-type]
 
    2| const x: {} = {}; // Error + lint
                ^^
@@ -10,6 +10,7 @@ Please write this object type as explicitly exact (use `{|` and `|}` instead of 
 Error ----------------------------------------------------------------------------------------------------- test.js:2:15
 
 Cannot assign object literal to `x` because inexact object literal [1] is incompatible with exact object type [2].
+[incompatible-exact]
 
    test.js:2:15
    2| const x: {} = {}; // Error + lint
@@ -24,6 +25,7 @@ References:
 Error ----------------------------------------------------------------------------------------------------- test.js:4:17
 
 Cannot assign object literal to `z` because inexact object literal [1] is incompatible with exact object type [2].
+[incompatible-exact]
 
    test.js:4:17
    4| const z: {||} = {}; // Error

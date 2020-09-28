@@ -117,7 +117,8 @@ class rename_mapper refs new_name =
       | _ -> super#object_property prop
   end
 
-let mapper_to_edits (ast_mapper : Loc.t Flow_ast_mapper.mapper) (ast : (Loc.t, Loc.t) Ast.program) =
+let mapper_to_edits (ast_mapper : Loc.t Flow_ast_mapper.mapper) (ast : (Loc.t, Loc.t) Ast.Program.t)
+    =
   let new_ast = ast_mapper#program ast in
   let changes = Flow_ast_differ.program Flow_ast_differ.Standard ast new_ast in
   Ast_diff_printer.edits_of_changes changes

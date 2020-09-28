@@ -11,8 +11,6 @@ external hh_add : key -> string -> unit = "hh_add"
 
 external hh_mem : key -> bool = "hh_mem"
 
-external hh_mem_status : key -> int = "hh_mem_status"
-
 external hh_remove : key -> unit = "hh_remove"
 
 external hh_move : key -> key -> unit = "hh_move"
@@ -36,8 +34,6 @@ let to_key = OpaqueDigest.string
 let add key value = hh_add (to_key key) value
 
 let mem key = hh_mem (to_key key)
-
-let get_status key = hh_mem_status (to_key key)
 
 let remove key = hh_remove (to_key key)
 
@@ -73,14 +69,6 @@ let expect_mem key =
 let expect_not_mem key =
   expect ~msg:(Printf.sprintf "Expected key '%s' to not be in hashtable" key) @@ not (mem key)
 
-let expect_absent key =
-  expect ~msg:(Printf.sprintf "Expected key '%s' to be absent from hashtable" key)
-  @@ (get_status key = -1)
-
-let expect_removed key =
-  expect ~msg:(Printf.sprintf "Expected key '%s' to be removed from hashtable" key)
-  @@ (get_status key = -2)
-
 let expect_get key expected =
   let value = get key in
   expect
@@ -112,7 +100,6 @@ let expect_aggressive_collect expected =
 let test_ops () =
   expect_stats ~nonempty:0 ~used:0;
   expect_not_mem "0";
-  expect_absent "0";
 
   add "0" "";
   expect_stats ~nonempty:1 ~used:1;
@@ -121,13 +108,11 @@ let test_ops () =
   move "0" "1";
   expect_stats ~nonempty:2 ~used:1;
   expect_not_mem "0";
-  expect_removed "0";
   expect_mem "1";
 
   remove "1";
   expect_stats ~nonempty:2 ~used:0;
-  expect_not_mem "1";
-  expect_removed "1"
+  expect_not_mem "1"
 
 let test_hashtbl_full_hh_add () =
   expect_stats ~nonempty:0 ~used:0;
@@ -188,7 +173,6 @@ let test_no_overwrite () =
   remove "0";
   expect_stats ~nonempty:1 ~used:0;
   expect_not_mem "0";
-  expect_removed "0";
 
   add "0" "Bar";
   expect_stats ~nonempty:1 ~used:1;
@@ -209,7 +193,6 @@ let test_reuse_slots () =
    *)
   remove "1";
   expect_not_mem "1";
-  expect_removed "1";
   expect_stats ~nonempty:2 ~used:1;
   add "1" "Foo";
   expect_mem "1";
@@ -219,11 +202,9 @@ let test_reuse_slots () =
   (* If we move to a previously used slot, nonempty slots stays the same *)
   remove "1";
   expect_not_mem "1";
-  expect_removed "1";
   expect_stats ~nonempty:2 ~used:1;
   move "0" "1";
   expect_not_mem "0";
-  expect_removed "0";
   expect_mem "1";
   expect_get "1" "0";
   expect_stats ~nonempty:2 ~used:1;
@@ -231,7 +212,6 @@ let test_reuse_slots () =
   (* Moving to a brand new key will increase number of nonempty slots *)
   move "1" "2";
   expect_not_mem "1";
-  expect_removed "1";
   expect_mem "2";
   expect_get "2" "0";
   expect_stats ~nonempty:3 ~used:1

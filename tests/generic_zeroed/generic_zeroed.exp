@@ -1,6 +1,6 @@
 Error -------------------------------------------------------------------------------------------------- add1arg.js:4:10
 
-Cannot return `"A" + x` because string [1] is incompatible with `S` [2].
+Cannot return `"A" + x` because string [1] is incompatible with `S` [2]. [incompatible-return]
 
    add1arg.js:4:10
    4|   return "A" + x;
@@ -14,7 +14,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- logic.js:3:15
 
-Cannot return `a && b` because string [1] is incompatible with `A` [2].
+Cannot return `a && b` because string [1] is incompatible with `A` [2]. [incompatible-return]
 
    logic.js:3:15
    3|   return a && b
@@ -31,7 +31,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- logic2.js:3:15
 
-Cannot return `a && b` because `B` [1] is incompatible with `A` [2].
+Cannot return `a && b` because `B` [1] is incompatible with `A` [2]. [incompatible-return]
 
    logic2.js:3:15
    3|   return a && b
@@ -48,7 +48,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ num.js:3:14
 
-Cannot return `a + b` because number [1] is incompatible with `A` [2].
+Cannot return `a + b` because number [1] is incompatible with `A` [2]. [incompatible-return]
 
    num.js:3:14
    3|   return a + b
@@ -66,7 +66,7 @@ References:
 Error --------------------------------------------------------------------------------------------------- reduce.js:8:27
 
 Cannot call `nums.reduce` with function bound to `callbackfn` because number [1] is incompatible with `T` [2] in the
-return value.
+return value. [incompatible-call]
 
    reduce.js:8:27
    8|     ((prevnum, curnum) => curnum + prevnum),
@@ -83,7 +83,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------- wc.js:7:12
 
-Cannot return `"BAD_" + s` because string [1] is incompatible with `S` [2].
+Cannot return `"BAD_" + s` because string [1] is incompatible with `S` [2]. [incompatible-return]
 
    wc.js:7:12
    7|     return "BAD_" + s;

@@ -1,6 +1,7 @@
 Error ------------------------------------------------------------------------------------------------------ test.js:4:8
 
 Cannot assign object literal to `o1` because string [1] is incompatible with number [2] in property `bar`.
+[incompatible-type]
 
    test.js:4:8
    4|   bar: "", // error: string ~/~ number
@@ -14,7 +15,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ test.js:7:1
 
-string `qux` [1] is incompatible with enum [2].
+string `qux` [1] is incompatible with literal union [2]. [incompatible-type]
 
    test.js:7:1
    7| o1.qux; // error: qux not found
@@ -28,7 +29,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:14:1
 
-Property `qux` is missing in `R` [1].
+Property `qux` is missing in `R` [1]. [prop-missing]
 
    test.js:14:1
    14| o2.qux; // error: qux not found
@@ -42,7 +43,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:17:6
 
-Deprecated utility. Using `$Subtype` types is not recommended! (`deprecated-utility`)
+Deprecated utility. Using `$Subtype` types is not recommended! [deprecated-utility]
 
    17|   x: $Subtype<{[key: $Keys<X>]: any}>; // object with larger key set than X's
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

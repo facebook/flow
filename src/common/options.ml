@@ -10,11 +10,6 @@ type esproposal_feature_mode =
   | ESPROPOSAL_IGNORE
   | ESPROPOSAL_WARN
 
-type file_watcher =
-  | NoFileWatcher
-  | DFind
-  | Watchman
-
 type module_system =
   | Node
   | Haste
@@ -42,7 +37,7 @@ type saved_state_fetcher =
 
 type arch =
   | Classic
-  | TypesFirst
+  | TypesFirst of { new_signatures: bool }
 
 type trust_mode =
   | NoTrust
@@ -56,15 +51,14 @@ type react_runtime =
 type t = {
   opt_abstract_locations: bool;
   opt_all: bool;
-  opt_autofix_exports: bool;
+  opt_automatic_require_default: bool;
   opt_arch: arch;
   opt_babel_loose_array_spread: bool;
   opt_debug: bool;
   opt_enable_const_params: bool;
   opt_enabled_rollouts: string SMap.t;
   opt_enforce_strict_call_arity: bool;
-  opt_enforce_well_formed_exports: bool;
-  opt_enforce_well_formed_exports_whitelist: string list;
+  opt_enforce_well_formed_exports: string list option;
   opt_enums: bool;
   opt_esproposal_class_instance_fields: esproposal_feature_mode;
   opt_esproposal_class_static_fields: esproposal_feature_mode;
@@ -75,13 +69,13 @@ type t = {
   opt_exact_by_default: bool;
   opt_facebook_fbs: string option;
   opt_facebook_fbt: string option;
+  opt_facebook_module_interop: bool;
   opt_file_options: Files.options;
-  opt_file_watcher_timeout: float option;
   opt_flowconfig_name: string;
   opt_haste_module_ref_prefix: string option;
   opt_haste_name_reducers: (Str.regexp * string) list;
-  opt_haste_paths_blacklist: string list;
-  opt_haste_paths_whitelist: string list;
+  opt_haste_paths_excludes: string list;
+  opt_haste_paths_includes: string list;
   opt_haste_use_name_reducers: bool;
   opt_ignore_non_literal_requires: bool;
   opt_include_suppressions: bool;
@@ -101,7 +95,6 @@ type t = {
   opt_munge_underscores: bool;
   opt_node_resolver_allow_root_relative: bool;
   opt_node_resolver_root_relative_dirnames: string list;
-  opt_no_saved_state: bool;
   opt_node_main_fields: string list;
   opt_profile: bool;
   opt_quiet: bool;
@@ -112,9 +105,10 @@ type t = {
   opt_saved_state_fetcher: saved_state_fetcher;
   opt_saved_state_force_recheck: bool;
   opt_saved_state_no_fallback: bool;
+  opt_strict_es6_import_export: bool;
+  opt_strict_es6_import_export_excludes: string list;
   opt_strict_mode: StrictModeSettings.t;
   opt_strip_root: bool;
-  opt_suppress_comments: Str.regexp list;
   opt_suppress_types: SSet.t;
   opt_temp_dir: string;
   opt_traces: int;
@@ -128,6 +122,8 @@ type t = {
 let abstract_locations opts = opts.opt_abstract_locations
 
 let all opts = opts.opt_all
+
+let automatic_require_default opts = opts.opt_automatic_require_default
 
 let babel_loose_array_spread opts = opts.opt_babel_loose_array_spread
 
@@ -163,17 +159,15 @@ let haste_module_ref_prefix opts = opts.opt_haste_module_ref_prefix
 
 let haste_name_reducers opts = opts.opt_haste_name_reducers
 
-let haste_paths_blacklist opts = opts.opt_haste_paths_blacklist
+let haste_paths_excludes opts = opts.opt_haste_paths_excludes
 
-let haste_paths_whitelist opts = opts.opt_haste_paths_whitelist
+let haste_paths_includes opts = opts.opt_haste_paths_includes
 
 let haste_use_name_reducers opts = opts.opt_haste_use_name_reducers
 
 let flowconfig_name opts = opts.opt_flowconfig_name
 
 let file_options opts = opts.opt_file_options
-
-let file_watcher_timeout opts = opts.opt_file_watcher_timeout
 
 let is_debug_mode opts = opts.opt_debug
 
@@ -203,8 +197,6 @@ let module_system opts = opts.opt_module
 
 let modules_are_use_strict opts = opts.opt_modules_are_use_strict
 
-let no_saved_state opts = opts.opt_no_saved_state
-
 let node_main_fields opts = opts.opt_node_main_fields
 
 let node_resolver_allow_root_relative opts = opts.opt_node_resolver_allow_root_relative
@@ -223,6 +215,8 @@ let facebook_fbs opts = opts.opt_facebook_fbs
 
 let facebook_fbt opts = opts.opt_facebook_fbt
 
+let facebook_module_interop opts = opts.opt_facebook_module_interop
+
 let saved_state_fetcher opts = opts.opt_saved_state_fetcher
 
 let saved_state_force_recheck opts = opts.opt_saved_state_force_recheck
@@ -239,7 +233,9 @@ let should_profile opts = opts.opt_profile && not opts.opt_quiet
 
 let should_strip_root opts = opts.opt_strip_root
 
-let suppress_comments opts = opts.opt_suppress_comments
+let strict_es6_import_export opts = opts.opt_strict_es6_import_export
+
+let strict_es6_import_export_excludes opts = opts.opt_strict_es6_import_export_excludes
 
 let suppress_types opts = opts.opt_suppress_types
 

@@ -11,7 +11,7 @@ module type S = sig
   module L : Loc_sig.S
 
   module Error : sig
-    type t = L.t Signature_error.t
+    type t = L.t Signature_error.t [@@deriving show]
 
     val compare : t -> t -> int
   end

@@ -299,7 +299,7 @@ typed.js:15:27 = {
   "end":37
 }
 typed.js:16:5 = {
-  "type":"$ElementType<{f1: number}, string>",
+  "type":"$ElementType<{f1: number, ...}, string>",
   "reasons":[],
   "loc":{
     "source":"typed.js",

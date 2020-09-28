@@ -8,6 +8,7 @@
 open Utils_js
 open Reason
 open Type
+open TypeUtil
 
 (*
   Terminology:
@@ -58,7 +59,7 @@ type step =
  *)
 and t = step list * int
 
-let compare = Pervasives.compare
+let compare = Stdlib.compare
 
 let trace_depth = snd
 
@@ -87,7 +88,7 @@ let rec_trace ~max lower upper parent =
 (* Join a list of traces. If the maximum depth of traces is configured to 0, then
    agressively throw away traces and only compute the updated depth. *)
 let concat_trace ~max ts =
-  let d = List.fold_left (fun acc (_, d) -> Pervasives.max acc d) 0 ts in
+  let d = List.fold_left (fun acc (_, d) -> Base.Int.max acc d) 0 ts in
   let steps =
     if max > 0 then
       Base.List.concat_map ~f:fst ts

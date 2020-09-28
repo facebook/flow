@@ -8,7 +8,7 @@
 
 [options]
 no_flowlib=false
-experimental.types_first=true
-experimental.well_formed_exports=true
+types_first=true
+well_formed_exports=true
 
 [strict]

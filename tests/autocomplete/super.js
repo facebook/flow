@@ -2,4 +2,5 @@
 
 class Foo {
   bar =
+//     ^
 }

@@ -37,7 +37,7 @@ module State = struct
     | MaybeInitialized -> "MaybeInitialized"
     | Initialized -> "Initialized"
 
-  let compare x y = Pervasives.compare (to_int x) (to_int y)
+  let compare x y = Stdlib.compare (to_int x) (to_int y)
 end
 
 (* entries for vars/lets, consts and types *)

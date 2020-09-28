@@ -97,14 +97,11 @@ end
 module Patterns = struct
   open Ast.Pattern
 
-  let identifier ?(loc = Loc.none) str =
+  let identifier ?(loc = Loc.none) ?annot str =
+    let annot = Base.Option.value ~default:(Ast.Type.Missing loc) annot in
     ( loc,
       Identifier
-        {
-          Identifier.name = Flow_ast_utils.ident_of_source (loc, str);
-          annot = Ast.Type.Missing loc;
-          optional = false;
-        } )
+        { Identifier.name = Flow_ast_utils.ident_of_source (loc, str); annot; optional = false } )
 
   let array elements =
     let elements =
@@ -172,7 +169,7 @@ module Functions = struct
       return = Ast.Type.Missing Loc.none;
       tparams = None;
       sig_loc = Loc.none;
-      comments = Flow_ast_utils.mk_comments_opt ();
+      comments = None;
     }
 end
 
@@ -270,8 +267,8 @@ module Statements = struct
 
   let variable_declarator_generic id init = (Loc.none, { VariableDeclaration.Declarator.id; init })
 
-  let variable_declarator ?init ?(loc = Loc.none) str =
-    (loc, { VariableDeclaration.Declarator.id = Patterns.identifier ~loc str; init })
+  let variable_declarator ?init ?annot ?(loc = Loc.none) str =
+    (loc, { VariableDeclaration.Declarator.id = Patterns.identifier ~loc ?annot str; init })
 
   let variable_declaration
       ?(kind = Ast.Statement.VariableDeclaration.Var) ?(loc = Loc.none) ?comments declarations =
@@ -280,8 +277,8 @@ module Statements = struct
   let let_declaration declarations =
     variable_declaration ~kind:Ast.Statement.VariableDeclaration.Let declarations
 
-  let const_declaration declarations =
-    variable_declaration ~kind:Ast.Statement.VariableDeclaration.Const declarations
+  let const_declaration ?comments declarations =
+    variable_declaration ~kind:Ast.Statement.VariableDeclaration.Const ?comments declarations
 
   let function_declaration ?(loc = Loc.none) ?(async = false) ?(generator = false) ?params ?body id
       =
@@ -294,7 +291,7 @@ module Statements = struct
   let if_ ?comments test consequent alternate =
     (Loc.none, If { If.test; consequent; alternate; comments })
 
-  let if_alternate ?comments body = { If.Alternate.body; comments }
+  let if_alternate ?(loc = Loc.none) ?comments body = (loc, { If.Alternate.body; comments })
 
   let return ?(loc = Loc.none) ?comments expr = (loc, Return { Return.argument = expr; comments })
 
@@ -508,12 +505,17 @@ module Expressions = struct
 end
 
 module Comments = struct
-  let block ?(loc = Loc.none) txt = (loc, Ast.Comment.Block txt)
+  let block ?(loc = Loc.none) ?(on_newline = false) text =
+    let open Ast.Comment in
+    (loc, { kind = Block; text; on_newline })
 
-  let line ?(loc = Loc.none) txt = (loc, Ast.Comment.Line txt)
+  let line ?(loc = Loc.none) ?(on_newline = false) text =
+    let open Ast.Comment in
+    (loc, { kind = Line; text; on_newline })
 end
 
-let mk_program ?(comments = []) stmts = (Loc.none, stmts, comments)
+let mk_program ?(comments = None) ?(all_comments = []) stmts =
+  (Loc.none, { Ast.Program.statements = stmts; comments; all_comments })
 
 let ast_of_string ~parser str =
   let parse_options =
@@ -547,4 +549,4 @@ let statement_of_string str =
 
 let program_of_string str =
   let stmts = ast_of_string ~parser:(Parser_flow.Parse.module_body ~term_fn:(fun _ -> false)) str in
-  (Loc.none, stmts, [])
+  (Loc.none, { Ast.Program.statements = stmts; comments = None; all_comments = [] })

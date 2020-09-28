@@ -1,0 +1,7 @@
+[options]
+experimental.strict_es6_import_export=true
+experimental.strict_es6_import_export.excludes=<PROJECT_ROOT>/excluded1/.*
+experimental.strict_es6_import_export.excludes=<PROJECT_ROOT>/excluded2/.*
+
+[lints]
+all=error

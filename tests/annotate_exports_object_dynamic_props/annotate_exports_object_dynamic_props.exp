@@ -1,4 +1,7 @@
->>> a.js (#changes: 1)
+
+=== Codemod annotate-exports ===
+
+>>> ./a.js
 // @flow
 
 function keyA() { return 'keyA' };
@@ -11,7 +14,7 @@ const FIELDS = {
   keyAny: keyAny(),
 }
 
-const dict: $TEMPORARY$object<{|keyA: number, keyB: number|}> = {
+const dict: {|keyA: number, keyB: number|} = {
   [FIELDS.A]: 1,
   [FIELDS.B]: 2,
   [FIELDS.keyAny]: 3,
@@ -23,10 +26,10 @@ module.exports = dict;
 
 Stats:
   Files changed:                            1
-  Number of sig. ver. errors:               3
-  Number of annotations required:           1
   Number of annotations added:              1
   Total size of annotations:                3
+  Number of sig. ver. errors:               3
+  Number of annotations required:           1
   Number of annotations skipped:            0
 
 Errors:
@@ -37,7 +40,6 @@ Errors:
     Parsing heaps get ast error:            0
     Indeterminate module type:              0
     No matching export:                     0
-    Unrecognizable module error:            0
   Serializer error:                         0
   Unsupported error kind:                   0
 
@@ -47,4 +49,36 @@ Warnings:
   Location unhandled:                       0
   Empty NoUpper:                            0
   Empty SomeKnownUpper:                     0
+
+
+=== Autofix exports ===
+
+>>> ./a.js
+// @flow
+
+function keyA() { return 'keyA' };
+function keyB() { return 'keyB' };
+function keyAny(): any { return 'keyAny' };
+
+const FIELDS = {
+  A: keyA(),
+  B: keyB(),
+  keyAny: keyAny(),
+}
+
+const dict: {keyA: number, keyB: number,...} = {
+  [FIELDS.A]: 1,
+  [FIELDS.B]: 2,
+  [FIELDS.keyAny]: 3,
+};
+
+module.exports = dict;
+
+
+=== Diff between codemod-ed & autofix-ed ===
+>>> ./a.js
+13c13
+< const dict: {|keyA: number, keyB: number|} = {
+---
+> const dict: {keyA: number, keyB: number,...} = {
 

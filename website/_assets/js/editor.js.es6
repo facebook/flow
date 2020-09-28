@@ -1,51 +1,12 @@
+/**
+ * Copyright (c) Facebook, Inc. and its affiliates.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ */
+
 function toArray(list) {
   return Array.prototype.slice.call(list);
-}
-
-function loadScript(src, integrity) {
-  return new Promise(function(resolve, reject) {
-    var script = document.createElement('script');
-    script.charset = 'utf8';
-    script.src = src;
-
-    if (integrity) {
-      script.integrity = integrity;
-      script.crossOrigin = 'anonymous';
-    }
-
-    script.onload = function() {
-      resolve(null);
-    };
-
-    script.onerror = function() {
-      reject(new Error('Failed to load ' + src));
-    };
-
-    document.body.appendChild(script);
-  });
-}
-
-function loadStyles(href, integrity) {
-  return new Promise(function(resolve, reject) {
-    var link = document.createElement('link');
-    link.rel = 'stylesheet';
-    link.href = href;
-
-    if (integrity) {
-      link.integrity = integrity;
-      link.crossOrigin = 'anonymous';
-    }
-
-    link.onload = function() {
-      resolve(null);
-    };
-
-    link.onerror = function() {
-      reject(new Error('Failed to load ' + src));
-    };
-
-    document.head.appendChild(link);
-  });
 }
 
 var EDITOR_CLASS = '.editor';
@@ -155,43 +116,14 @@ Editor.prototype.unbindEvents = function() {
   });
 };
 
-Editor.prototype.initCodeMirror = function() {
-  this.unbindEvents();
-  this.block.innerHTML = '';
-  CodeMirror(this.block, {
-    lineNumbers: true,
-    readOnly: true,
-    value: this.data.value.trim(),
-    mode: { name: 'jsx', base: { name: 'javascript', typescript: true } }
-  });
-};
-
 Editor.getEditors = function() {
   return toArray(document.querySelectorAll(EDITOR_CLASS));
-};
-
-Editor.loadCodeMirror = function() {
-  return Promise.all([
-    loadScript('https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.20.2/codemirror.min.js', 'sha256-K1exjHe1X4MP24jRizgBaSbUDUrNhFDRSwGoEYGmtJE=').then(function() {
-      return Promise.all([
-        loadScript('https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.20.2/mode/javascript/javascript.min.js', 'sha256-VCI9wgJK81jD+WoGeiVQXSS7MMWqjRbZQ446hRcLmBU='),
-        loadScript('https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.20.2/mode/jsx/jsx.min.js', 'sha256-6HeZVAriCcruNwlGfW6BVNiPQjH+0cGgdT6gCAKblnk=')
-      ]);
-    }),
-    loadStyles('https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.20.2/codemirror.min.css', 'sha256-MdzaXfGXzZdeHw/XEV2LNNycipsLk4uZ0FYzO3hbuvI=')
-  ]);
 };
 
 Editor.init = function() {
   var editors = Editor.getEditors().map(function(block) {
     return new Editor(block);
   });
-
-  // Editor.loadCodeMirror().then(function() {
-  //   editors.forEach(function(editor) {
-  //     editor.initCodeMirror();
-  //   });
-  // });
 };
 
 export default Editor;

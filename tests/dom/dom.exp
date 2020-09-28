@@ -1,34 +1,35 @@
 Error -------------------------------------------------------------------------------- CanvasRenderingContext2D.js:11:16
 
-Cannot call `ctx.moveTo` with `'0'` bound to `x` because string [1] is incompatible with number [2].
+Cannot call `ctx.moveTo` with `'0'` bound to `x` because string [1] is incompatible with number [2]. [incompatible-call]
 
    CanvasRenderingContext2D.js:11:16
      11|     ctx.moveTo('0', '1');  // error: should be numbers
                         ^^^ [1]
 
 References:
-   <BUILTINS>/dom.js:2058:13
-   2058|   moveTo(x: number, y: number): void;
+   <BUILTINS>/dom.js:2059:13
+   2059|   moveTo(x: number, y: number): void;
                      ^^^^^^ [2]
 
 
 Error -------------------------------------------------------------------------------- CanvasRenderingContext2D.js:11:21
 
-Cannot call `ctx.moveTo` with `'1'` bound to `y` because string [1] is incompatible with number [2].
+Cannot call `ctx.moveTo` with `'1'` bound to `y` because string [1] is incompatible with number [2]. [incompatible-call]
 
    CanvasRenderingContext2D.js:11:21
      11|     ctx.moveTo('0', '1');  // error: should be numbers
                              ^^^ [1]
 
 References:
-   <BUILTINS>/dom.js:2058:24
-   2058|   moveTo(x: number, y: number): void;
+   <BUILTINS>/dom.js:2059:24
+   2059|   moveTo(x: number, y: number): void;
                                 ^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------ ClipboardEvent.js:10:45
 
-Cannot call `ClipboardEvent` with `'invalid'` bound to `type` because string [1] is incompatible with enum [2].
+Cannot call `ClipboardEvent` with `'invalid'` bound to `type` because string [1] is incompatible with literal union [2].
+[incompatible-call]
 
    ClipboardEvent.js:10:45
     10|     const invalidEvent = new ClipboardEvent('invalid'); // invalid
@@ -43,7 +44,7 @@ References:
 Error ------------------------------------------------------------------------------------------- ClipboardEvent.js:25:7
 
 Cannot call `ClipboardEvent` with object literal bound to `eventInit` because property `clipboardData` is missing in
-object literal [1] but exists in object type [2].
+object literal [1] but exists in object type [2]. [prop-missing]
 
    ClipboardEvent.js:25:7
     25|       {}, // invalid, clipboardData may not be omitted
@@ -58,7 +59,7 @@ References:
 Error ------------------------------------------------------------------------------------------ ClipboardEvent.js:27:64
 
 Cannot call `ClipboardEvent` with object literal bound to `eventInit` because object literal [1] is incompatible with
-`DataTransfer` [2] in property `clipboardData`.
+`DataTransfer` [2] in property `clipboardData`. [incompatible-call]
 
    ClipboardEvent.js:27:64
                                                                        v
@@ -74,7 +75,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------ ClipboardEvent.js:32:23
 
-Cannot call `e.clipboardData.getData` because property `getData` is missing in null or undefined [1].
+Cannot call `e.clipboardData.getData` because property `getData` is missing in null or undefined [1]. [incompatible-use]
 
    ClipboardEvent.js:32:23
     32|       e.clipboardData.getData('text/plain'); // invalid: null check required
@@ -88,8 +89,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- Element.js:14:28
 
-Cannot call `element.scrollIntoView` with object literal bound to `arg` because string [1] is incompatible with enum [2]
-in property `behavior`.
+Cannot call `element.scrollIntoView` with object literal bound to `arg` because string [1] is incompatible with literal
+union [2] in property `behavior`. [incompatible-call]
 
    Element.js:14:28
      14|     element.scrollIntoView({ behavior: 'invalid' });
@@ -99,15 +100,15 @@ References:
    Element.js:14:40
      14|     element.scrollIntoView({ behavior: 'invalid' });
                                                 ^^^^^^^^^ [1]
-   <BUILTINS>/dom.js:1514:22
-   1514|          behavior?: ('auto' | 'instant' | 'smooth'),
+   <BUILTINS>/dom.js:1515:22
+   1515|          behavior?: ('auto' | 'instant' | 'smooth'),
                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------- Element.js:15:28
 
-Cannot call `element.scrollIntoView` with object literal bound to `arg` because string [1] is incompatible with enum [2]
-in property `block`.
+Cannot call `element.scrollIntoView` with object literal bound to `arg` because string [1] is incompatible with literal
+union [2] in property `block`. [incompatible-call]
 
    Element.js:15:28
      15|     element.scrollIntoView({ block: 'invalid' });
@@ -117,28 +118,29 @@ References:
    Element.js:15:37
      15|     element.scrollIntoView({ block: 'invalid' });
                                              ^^^^^^^^^ [1]
-   <BUILTINS>/dom.js:1515:19
-   1515|          block?: ('start' | 'center' | 'end' | 'nearest'),
+   <BUILTINS>/dom.js:1516:19
+   1516|          block?: ('start' | 'center' | 'end' | 'nearest'),
                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------- Element.js:16:28
 
 Cannot call `element.scrollIntoView` with `1` bound to `arg` because number [1] is incompatible with boolean [2].
+[incompatible-call]
 
    Element.js:16:28
      16|     element.scrollIntoView(1);
                                     ^ [1]
 
 References:
-   <BUILTINS>/dom.js:1513:25
-   1513|   scrollIntoView(arg?: (boolean | {
+   <BUILTINS>/dom.js:1514:25
+   1514|   scrollIntoView(arg?: (boolean | {
                                  ^^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------- HTMLCollection.js:10:4
 
-Cannot get `el.className` because property `className` is missing in null [1].
+Cannot get `el.className` because property `className` is missing in null [1]. [incompatible-use]
 
    HTMLCollection.js:10:4
     10| el.className // invalid
@@ -152,7 +154,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- HTMLCollection.js:14:4
 
-Cannot get `el.className` because property `className` is missing in null [1].
+Cannot get `el.className` because property `className` is missing in null [1]. [incompatible-use]
 
    HTMLCollection.js:14:4
     14| el.className // invalid
@@ -166,22 +168,22 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- HTMLElement.js:9:27
 
-Cannot call `element.hasAttributes` because no arguments are expected by function type [1].
+Cannot call `element.hasAttributes` because no arguments are expected by function type [1]. [extra-arg]
 
    HTMLElement.js:9:27
       9|     element.hasAttributes('foo', 'bar');
                                    ^^^^^
 
 References:
-   <BUILTINS>/dom.js:1502:3
-   1502|   hasAttributes(): boolean;
+   <BUILTINS>/dom.js:1503:3
+   1503|   hasAttributes(): boolean;
            ^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
 Error --------------------------------------------------------------------------------------------- HTMLElement.js:22:28
 
-Cannot call `element.scrollIntoView` with object literal bound to `arg` because string [1] is incompatible with enum [2]
-in property `behavior`.
+Cannot call `element.scrollIntoView` with object literal bound to `arg` because string [1] is incompatible with literal
+union [2] in property `behavior`. [incompatible-call]
 
    HTMLElement.js:22:28
      22|     element.scrollIntoView({behavior: 'invalid'});
@@ -191,15 +193,15 @@ References:
    HTMLElement.js:22:39
      22|     element.scrollIntoView({behavior: 'invalid'});
                                                ^^^^^^^^^ [1]
-   <BUILTINS>/dom.js:1514:22
-   1514|          behavior?: ('auto' | 'instant' | 'smooth'),
+   <BUILTINS>/dom.js:1515:22
+   1515|          behavior?: ('auto' | 'instant' | 'smooth'),
                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error --------------------------------------------------------------------------------------------- HTMLElement.js:23:28
 
-Cannot call `element.scrollIntoView` with object literal bound to `arg` because string [1] is incompatible with enum [2]
-in property `block`.
+Cannot call `element.scrollIntoView` with object literal bound to `arg` because string [1] is incompatible with literal
+union [2] in property `block`. [incompatible-call]
 
    HTMLElement.js:23:28
      23|     element.scrollIntoView({block: 'invalid'});
@@ -209,29 +211,30 @@ References:
    HTMLElement.js:23:36
      23|     element.scrollIntoView({block: 'invalid'});
                                             ^^^^^^^^^ [1]
-   <BUILTINS>/dom.js:1515:19
-   1515|          block?: ('start' | 'center' | 'end' | 'nearest'),
+   <BUILTINS>/dom.js:1516:19
+   1516|          block?: ('start' | 'center' | 'end' | 'nearest'),
                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error --------------------------------------------------------------------------------------------- HTMLElement.js:24:28
 
 Cannot call `element.scrollIntoView` with `1` bound to `arg` because number [1] is incompatible with boolean [2].
+[incompatible-call]
 
    HTMLElement.js:24:28
      24|     element.scrollIntoView(1);
                                     ^ [1]
 
 References:
-   <BUILTINS>/dom.js:1513:25
-   1513|   scrollIntoView(arg?: (boolean | {
+   <BUILTINS>/dom.js:1514:25
+   1514|   scrollIntoView(arg?: (boolean | {
                                  ^^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------- HTMLElement.js:46:6
 
 Cannot cast `element.getElementsByTagName(...)` to `HTMLCollection` because `HTMLAnchorElement` [1] is incompatible with
-`HTMLElement` [2] in type argument `Elem` [3].
+`HTMLElement` [2] in type argument `Elem` [3]. [incompatible-cast]
 
    HTMLElement.js:46:6
      46|     (element.getElementsByTagName(str): HTMLCollection<HTMLAnchorElement>);
@@ -241,8 +244,8 @@ References:
    HTMLElement.js:46:56
      46|     (element.getElementsByTagName(str): HTMLCollection<HTMLAnchorElement>);
                                                                 ^^^^^^^^^^^^^^^^^ [1]
-   <BUILTINS>/dom.js:1445:54
-   1445|   getElementsByTagName(name: string): HTMLCollection<HTMLElement>;
+   <BUILTINS>/dom.js:1446:54
+   1446|   getElementsByTagName(name: string): HTMLCollection<HTMLElement>;
                                                               ^^^^^^^^^^^ [2]
    <BUILTINS>/dom.js:693:31
     693| declare class HTMLCollection<+Elem: HTMLElement> {
@@ -252,7 +255,7 @@ References:
 Error ---------------------------------------------------------------------------------------------- HTMLElement.js:47:6
 
 Cannot cast `element.getElementsByTagNameNS(...)` to `HTMLCollection` because `HTMLAnchorElement` [1] is incompatible
-with `HTMLElement` [2] in type argument `Elem` [3].
+with `HTMLElement` [2] in type argument `Elem` [3]. [incompatible-cast]
 
    HTMLElement.js:47:6
               v------------------------------
@@ -266,8 +269,8 @@ References:
    HTMLElement.js:50:23
      50|     ): HTMLCollection<HTMLAnchorElement>);
                                ^^^^^^^^^^^^^^^^^ [1]
-   <BUILTINS>/dom.js:1499:90
-   1499|   getElementsByTagNameNS(namespaceURI: string | null, localName: string): HTMLCollection<HTMLElement>;
+   <BUILTINS>/dom.js:1500:90
+   1500|   getElementsByTagNameNS(namespaceURI: string | null, localName: string): HTMLCollection<HTMLElement>;
                                                                                                   ^^^^^^^^^^^ [2]
    <BUILTINS>/dom.js:693:31
     693| declare class HTMLCollection<+Elem: HTMLElement> {
@@ -277,15 +280,15 @@ References:
 Error ---------------------------------------------------------------------------------------------- HTMLElement.js:51:6
 
 Cannot cast `element.querySelector(...)` to union type because `HTMLElement` [1] is incompatible with
-`HTMLAnchorElement` [2].
+`HTMLAnchorElement` [2]. [incompatible-cast]
 
    HTMLElement.js:51:6
      51|     (element.querySelector(str): HTMLAnchorElement | null);
               ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/dom.js:1604:36
-   1604|   querySelector(selector: string): HTMLElement | null;
+   <BUILTINS>/dom.js:1605:36
+   1605|   querySelector(selector: string): HTMLElement | null;
                                             ^^^^^^^^^^^ [1]
    HTMLElement.js:51:34
      51|     (element.querySelector(str): HTMLAnchorElement | null);
@@ -295,7 +298,7 @@ References:
 Error ---------------------------------------------------------------------------------------------- HTMLElement.js:52:6
 
 Cannot cast `element.querySelectorAll(...)` to `NodeList` because `HTMLAnchorElement` [1] is incompatible with
-`HTMLElement` [2] in type argument `T` [3].
+`HTMLElement` [2] in type argument `T` [3]. [incompatible-cast]
 
    HTMLElement.js:52:6
      52|     (element.querySelectorAll(str): NodeList<HTMLAnchorElement>);
@@ -305,8 +308,8 @@ References:
    HTMLElement.js:52:46
      52|     (element.querySelectorAll(str): NodeList<HTMLAnchorElement>);
                                                       ^^^^^^^^^^^^^^^^^ [1]
-   <BUILTINS>/dom.js:1668:48
-   1668|   querySelectorAll(selector: string): NodeList<HTMLElement>;
+   <BUILTINS>/dom.js:1669:48
+   1669|   querySelectorAll(selector: string): NodeList<HTMLElement>;
                                                         ^^^^^^^^^^^ [2]
    <BUILTINS>/dom.js:657:24
     657| declare class NodeList<T> {
@@ -316,7 +319,7 @@ References:
 Error ---------------------------------------------------------------------------------------------- HTMLElement.js:55:6
 
 Cannot cast `element.getElementsByTagName(...)` to `HTMLCollection` because `HTMLAnchorElement` [1] is incompatible with
-`HTMLDivElement` [2] in type argument `Elem` [3].
+`HTMLDivElement` [2] in type argument `Elem` [3]. [incompatible-cast]
 
    HTMLElement.js:55:6
      55|     (element.getElementsByTagName('div'): HTMLCollection<HTMLAnchorElement>);
@@ -326,8 +329,8 @@ References:
    HTMLElement.js:55:58
      55|     (element.getElementsByTagName('div'): HTMLCollection<HTMLAnchorElement>);
                                                                   ^^^^^^^^^^^^^^^^^ [1]
-   <BUILTINS>/dom.js:1404:53
-   1404|   getElementsByTagName(name: 'div'): HTMLCollection<HTMLDivElement>;
+   <BUILTINS>/dom.js:1405:53
+   1405|   getElementsByTagName(name: 'div'): HTMLCollection<HTMLDivElement>;
                                                              ^^^^^^^^^^^^^^ [2]
    <BUILTINS>/dom.js:693:31
     693| declare class HTMLCollection<+Elem: HTMLElement> {
@@ -337,7 +340,7 @@ References:
 Error ---------------------------------------------------------------------------------------------- HTMLElement.js:56:6
 
 Cannot cast `element.getElementsByTagNameNS(...)` to `HTMLCollection` because `HTMLAnchorElement` [1] is incompatible
-with `HTMLDivElement` [2] in type argument `Elem` [3].
+with `HTMLDivElement` [2] in type argument `Elem` [3]. [incompatible-cast]
 
    HTMLElement.js:56:6
               v------------------------------
@@ -351,8 +354,8 @@ References:
    HTMLElement.js:59:23
      59|     ): HTMLCollection<HTMLAnchorElement>);
                                ^^^^^^^^^^^^^^^^^ [1]
-   <BUILTINS>/dom.js:1458:89
-   1458|   getElementsByTagNameNS(namespaceURI: string | null, localName: 'div'): HTMLCollection<HTMLDivElement>;
+   <BUILTINS>/dom.js:1459:89
+   1459|   getElementsByTagNameNS(namespaceURI: string | null, localName: 'div'): HTMLCollection<HTMLDivElement>;
                                                                                                  ^^^^^^^^^^^^^^ [2]
    <BUILTINS>/dom.js:693:31
     693| declare class HTMLCollection<+Elem: HTMLElement> {
@@ -362,15 +365,15 @@ References:
 Error ---------------------------------------------------------------------------------------------- HTMLElement.js:60:6
 
 Cannot cast `element.querySelector(...)` to union type because `HTMLDivElement` [1] is incompatible with
-`HTMLAnchorElement` [2].
+`HTMLAnchorElement` [2]. [incompatible-cast]
 
    HTMLElement.js:60:6
      60|     (element.querySelector('div'): HTMLAnchorElement | null);
               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/dom.js:1557:35
-   1557|   querySelector(selector: 'div'): HTMLDivElement | null;
+   <BUILTINS>/dom.js:1558:35
+   1558|   querySelector(selector: 'div'): HTMLDivElement | null;
                                            ^^^^^^^^^^^^^^ [1]
    HTMLElement.js:60:36
      60|     (element.querySelector('div'): HTMLAnchorElement | null);
@@ -380,15 +383,15 @@ References:
 Error ---------------------------------------------------------------------------------------------- HTMLElement.js:61:6
 
 Cannot cast `element.querySelectorAll(...)` to `NodeList` because `HTMLDivElement` [1] is incompatible with
-`HTMLAnchorElement` [2] in type argument `T` [3].
+`HTMLAnchorElement` [2] in type argument `T` [3]. [incompatible-cast]
 
    HTMLElement.js:61:6
      61|     (element.querySelectorAll('div'): NodeList<HTMLAnchorElement>);
               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/dom.js:1621:47
-   1621|   querySelectorAll(selector: 'div'): NodeList<HTMLDivElement>;
+   <BUILTINS>/dom.js:1622:47
+   1622|   querySelectorAll(selector: 'div'): NodeList<HTMLDivElement>;
                                                        ^^^^^^^^^^^^^^ [1]
    HTMLElement.js:61:48
      61|     (element.querySelectorAll('div'): NodeList<HTMLAnchorElement>);
@@ -401,7 +404,7 @@ References:
 Error ---------------------------------------------------------------------------------------------- HTMLElement.js:61:6
 
 Cannot cast `element.querySelectorAll(...)` to `NodeList` because `HTMLAnchorElement` [1] is incompatible with
-`HTMLDivElement` [2] in type argument `T` [3].
+`HTMLDivElement` [2] in type argument `T` [3]. [incompatible-cast]
 
    HTMLElement.js:61:6
      61|     (element.querySelectorAll('div'): NodeList<HTMLAnchorElement>);
@@ -411,8 +414,8 @@ References:
    HTMLElement.js:61:48
      61|     (element.querySelectorAll('div'): NodeList<HTMLAnchorElement>);
                                                         ^^^^^^^^^^^^^^^^^ [1]
-   <BUILTINS>/dom.js:1621:47
-   1621|   querySelectorAll(selector: 'div'): NodeList<HTMLDivElement>;
+   <BUILTINS>/dom.js:1622:47
+   1622|   querySelectorAll(selector: 'div'): NodeList<HTMLDivElement>;
                                                        ^^^^^^^^^^^^^^ [2]
    <BUILTINS>/dom.js:657:24
     657| declare class NodeList<T> {
@@ -422,7 +425,7 @@ References:
 Error --------------------------------------------------------------------------------------------- HTMLElement.js:72:35
 
 Cannot call `element.focus` with object literal bound to `options` because string [1] is incompatible with boolean [2]
-in property `preventScroll`.
+in property `preventScroll`. [incompatible-call]
 
    HTMLElement.js:72:35
      72|     element.focus({preventScroll: 'invalid'});
@@ -437,48 +440,49 @@ References:
 Error --------------------------------------------------------------------------------------------- HTMLElement.js:73:19
 
 Cannot call `element.focus` with `1` bound to `options` because number [1] is incompatible with `FocusOptions` [2].
+[incompatible-call]
 
    HTMLElement.js:73:19
      73|     element.focus(1);
                            ^ [1]
 
 References:
-   <BUILTINS>/dom.js:1680:19
-   1680|   focus(options?: FocusOptions): void;
+   <BUILTINS>/dom.js:1681:19
+   1681|   focus(options?: FocusOptions): void;
                            ^^^^^^^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------ HTMLFormElement.js:23:4
 
-Cannot get `el.className` because property `className` is missing in null [1].
+Cannot get `el.className` because property `className` is missing in null [1]. [incompatible-use]
 
    HTMLFormElement.js:23:4
      23| el.className // invalid
             ^^^^^^^^^
 
 References:
-   <BUILTINS>/dom.js:2987:43
-   2987|   [index: number | string]: HTMLElement | null;
+   <BUILTINS>/dom.js:2988:43
+   2988|   [index: number | string]: HTMLElement | null;
                                                    ^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------ HTMLFormElement.js:27:4
 
-Cannot get `el.className` because property `className` is missing in null [1].
+Cannot get `el.className` because property `className` is missing in null [1]. [incompatible-use]
 
    HTMLFormElement.js:27:4
      27| el.className // invalid
             ^^^^^^^^^
 
 References:
-   <BUILTINS>/dom.js:2987:43
-   2987|   [index: number | string]: HTMLElement | null;
+   <BUILTINS>/dom.js:2988:43
+   2988|   [index: number | string]: HTMLElement | null;
                                                    ^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------ HTMLInputElement.js:7:8
 
-Cannot call `el.setRangeText` because number [1] is incompatible with undefined [2].
+Cannot call `el.setRangeText` because number [1] is incompatible with undefined [2]. [incompatible-call]
 
    HTMLInputElement.js:7:8
       7|     el.setRangeText('foo', 123); // end is required
@@ -488,14 +492,14 @@ References:
    HTMLInputElement.js:7:28
       7|     el.setRangeText('foo', 123); // end is required
                                     ^^^ [1]
-   <BUILTINS>/dom.js:3368:45
-   3368|   setRangeText(replacement: string, start?: void, end?: void, selectMode?: void): void;
+   <BUILTINS>/dom.js:3369:45
+   3369|   setRangeText(replacement: string, start?: void, end?: void, selectMode?: void): void;
                                                      ^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------- HTMLInputElement.js:10:8
 
-Cannot call `el.setRangeText` because string [1] is incompatible with enum [2].
+Cannot call `el.setRangeText` because string [1] is incompatible with literal union [2]. [incompatible-call]
 
    HTMLInputElement.js:10:8
      10|     el.setRangeText('foo', 123, 234, 'bogus'); // invalid value
@@ -505,56 +509,56 @@ References:
    HTMLInputElement.js:10:38
      10|     el.setRangeText('foo', 123, 234, 'bogus'); // invalid value
                                               ^^^^^^^ [1]
-   <BUILTINS>/dom.js:3369:78
-   3369|   setRangeText(replacement: string, start: number, end: number, selectMode?: SelectionMode): void;
+   <BUILTINS>/dom.js:3370:78
+   3370|   setRangeText(replacement: string, start: number, end: number, selectMode?: SelectionMode): void;
                                                                                       ^^^^^^^^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------- HTMLSelectElement.js:11:6
 
-Cannot get `form.action` because property `action` is missing in null [1].
+Cannot get `form.action` because property `action` is missing in null [1]. [incompatible-use]
 
    HTMLSelectElement.js:11:6
      11| form.action // invalid
               ^^^^^^
 
 References:
-   <BUILTINS>/dom.js:3429:27
-   3429|   form: HTMLFormElement | null;
+   <BUILTINS>/dom.js:3430:27
+   3430|   form: HTMLFormElement | null;
                                    ^^^^ [1]
 
 
 Error ---------------------------------------------------------------------------------------- HTMLSelectElement.js:19:6
 
-Cannot get `item.value` because property `value` is missing in null [1].
+Cannot get `item.value` because property `value` is missing in null [1]. [incompatible-use]
 
    HTMLSelectElement.js:19:6
      19| item.value // invalid
               ^^^^^
 
 References:
-   <BUILTINS>/dom.js:3447:44
-   3447|   item(index: number): HTMLOptionElement | null;
+   <BUILTINS>/dom.js:3448:44
+   3448|   item(index: number): HTMLOptionElement | null;
                                                     ^^^^ [1]
 
 
 Error ---------------------------------------------------------------------------------------- HTMLSelectElement.js:22:6
 
-Cannot get `item.value` because property `value` is missing in null [1].
+Cannot get `item.value` because property `value` is missing in null [1]. [incompatible-use]
 
    HTMLSelectElement.js:22:6
      22| item.value // invalid
               ^^^^^
 
 References:
-   <BUILTINS>/dom.js:3448:48
-   3448|   namedItem(name: string): HTMLOptionElement | null;
+   <BUILTINS>/dom.js:3449:48
+   3449|   namedItem(name: string): HTMLOptionElement | null;
                                                         ^^^^ [1]
 
 
 Error --------------------------------------------------------------------------------------------- NamedNodeMap.js:9:16
 
-Cannot get `attributes[null]` because:
+Cannot get `attributes[null]` because: [incompatible-type]
  - Either null [1] is incompatible with number [2].
  - Or null [1] is incompatible with string [3].
 
@@ -573,7 +577,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- NamedNodeMap.js:10:16
 
-Cannot get `attributes[{...}]` because:
+Cannot get `attributes[{...}]` because: [incompatible-type]
  - Either object literal [1] is incompatible with number [2].
  - Or object literal [1] is incompatible with string [3].
 
@@ -592,7 +596,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ URL.js:8:21
 
-Cannot get `c.path` because property `path` is missing in `URL` [1].
+Cannot get `c.path` because property `path` is missing in `URL` [1]. [prop-missing]
 
    URL.js:8:21
    8| const e: string = c.path; // not correct
@@ -606,7 +610,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- eventtarget.js:9:13
 
-Cannot call `target.attachEvent` because undefined [1] is not a function.
+Cannot call `target.attachEvent` because undefined [1] is not a function. [not-a-function]
 
    eventtarget.js:9:13
      9|     (target.attachEvent('foo', listener): void); // invalid, may be undefined
@@ -620,7 +624,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- eventtarget.js:16:13
 
-Cannot call `target.detachEvent` because undefined [1] is not a function.
+Cannot call `target.detachEvent` because undefined [1] is not a function. [not-a-function]
 
    eventtarget.js:16:13
     16|     (target.detachEvent('foo', listener): void); // invalid, may be undefined
@@ -632,9 +636,18 @@ References:
                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
+Error --------------------------------------------------------------------------------------------- eventtarget.js:22:22
+
+Cannot use `window` as a type because it is an `any`-typed value. Type `window` properly, so it is no longer
+`any`-typed, to use it as an annotation. [value-as-type]
+
+   22|       (event.target: window);
+                            ^^^^^^
+
+
 Error -------------------------------------------------------------------------------------------------- path2d.js:16:11
 
-Cannot call `path.arcTo` because string [1] is incompatible with number [2].
+Cannot call `path.arcTo` because string [1] is incompatible with number [2]. [incompatible-call]
 
    path2d.js:16:11
      16|     (path.arcTo(0, 0, 0, 0, 10, '20', 5): void); // invalid
@@ -644,15 +657,15 @@ References:
    path2d.js:16:33
      16|     (path.arcTo(0, 0, 0, 0, 10, '20', 5): void); // invalid
                                          ^^^^ [1]
-   <BUILTINS>/dom.js:1923:83
-   1923|   arcTo(x1: number, y1: number, x2: number, y2: number, radiusX: number, radiusY: number, rotation: number): void;
+   <BUILTINS>/dom.js:1924:83
+   1924|   arcTo(x1: number, y1: number, x2: number, y2: number, radiusX: number, radiusY: number, rotation: number): void;
                                                                                            ^^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------- registerElement.js:52:19
 
 Cannot call `document.registerElement` with object literal bound to `options` because string [1] is incompatible with
-null [2] in the second argument of property `prototype.attributeChangedCallback`.
+null [2] in the second argument of property `prototype.attributeChangedCallback`. [incompatible-call]
 
    registerElement.js:52:19
     52|           oldVal: string, // Error: This might be null
@@ -667,7 +680,7 @@ References:
 Error ----------------------------------------------------------------------------------------- registerElement.js:53:19
 
 Cannot call `document.registerElement` with object literal bound to `options` because string [1] is incompatible with
-null [2] in the third argument of property `prototype.attributeChangedCallback`.
+null [2] in the third argument of property `prototype.attributeChangedCallback`. [incompatible-call]
 
    registerElement.js:53:19
     53|           newVal: string, // Error: This might be null
@@ -681,7 +694,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- traversal.js:29:14
 
-Cannot call `document.createNodeIterator` because:
+Cannot call `document.createNodeIterator` because: [incompatible-call]
  - Either object literal [1] is incompatible with `Attr` [2].
  - Or object literal [1] is incompatible with `Document` [3].
  - Or object literal [1] is incompatible with `Document` [4].
@@ -859,7 +872,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- traversal.js:33:14
 
-Cannot call `document.createTreeWalker` because:
+Cannot call `document.createTreeWalker` because: [incompatible-call]
  - Either object literal [1] is incompatible with `Attr` [2].
  - Or object literal [1] is incompatible with `Document` [3].
  - Or object literal [1] is incompatible with `Document` [4].
@@ -1038,42 +1051,42 @@ References:
 Error ---------------------------------------------------------------------------------------------- traversal.js:186:60
 
 Cannot call `document.createNodeIterator` with function bound to `filter` because string [1] is incompatible with
-enum [2] in the return value.
+literal union [2] in the return value. [incompatible-call]
 
    traversal.js:186:60
     186|     document.createNodeIterator(document_body, -1, node => 'accept'); // invalid
                                                                     ^^^^^^^^ [1]
 
 References:
-   <BUILTINS>/dom.js:3913:1
+   <BUILTINS>/dom.js:3914:1
          v--------------------------------
-   3913| typeof NodeFilter.FILTER_ACCEPT |
-   3914| typeof NodeFilter.FILTER_REJECT |
-   3915| typeof NodeFilter.FILTER_SKIP;
+   3914| typeof NodeFilter.FILTER_ACCEPT |
+   3915| typeof NodeFilter.FILTER_REJECT |
+   3916| typeof NodeFilter.FILTER_SKIP;
          ----------------------------^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------- traversal.js:188:74
 
 Cannot call `document.createNodeIterator` with object literal bound to `filter` because string [1] is incompatible with
-enum [2] in the return value of property `acceptNode`.
+literal union [2] in the return value of property `acceptNode`. [incompatible-call]
 
    traversal.js:188:74
     188|     document.createNodeIterator(document_body, -1, { acceptNode: node => 'accept' }); // invalid
                                                                                   ^^^^^^^^ [1]
 
 References:
-   <BUILTINS>/dom.js:3913:1
+   <BUILTINS>/dom.js:3914:1
          v--------------------------------
-   3913| typeof NodeFilter.FILTER_ACCEPT |
-   3914| typeof NodeFilter.FILTER_REJECT |
-   3915| typeof NodeFilter.FILTER_SKIP;
+   3914| typeof NodeFilter.FILTER_ACCEPT |
+   3915| typeof NodeFilter.FILTER_REJECT |
+   3916| typeof NodeFilter.FILTER_SKIP;
          ----------------------------^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------- traversal.js:189:14
 
-Cannot call `document.createNodeIterator` because:
+Cannot call `document.createNodeIterator` because: [incompatible-call]
  - Either number [1] is incompatible with number literal `1` [2].
  - Or number [1] is incompatible with number literal `4` [3].
  - Or number [1] is incompatible with number literal `5` [4].
@@ -1115,43 +1128,43 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- traversal.js:193:58
 
-Cannot call `document.createTreeWalker` with function bound to `filter` because string [1] is incompatible with enum [2]
-in the return value.
+Cannot call `document.createTreeWalker` with function bound to `filter` because string [1] is incompatible with literal
+union [2] in the return value. [incompatible-call]
 
    traversal.js:193:58
     193|     document.createTreeWalker(document_body, -1, node => 'accept'); // invalid
                                                                   ^^^^^^^^ [1]
 
 References:
-   <BUILTINS>/dom.js:3913:1
+   <BUILTINS>/dom.js:3914:1
          v--------------------------------
-   3913| typeof NodeFilter.FILTER_ACCEPT |
-   3914| typeof NodeFilter.FILTER_REJECT |
-   3915| typeof NodeFilter.FILTER_SKIP;
+   3914| typeof NodeFilter.FILTER_ACCEPT |
+   3915| typeof NodeFilter.FILTER_REJECT |
+   3916| typeof NodeFilter.FILTER_SKIP;
          ----------------------------^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------- traversal.js:195:72
 
 Cannot call `document.createTreeWalker` with object literal bound to `filter` because string [1] is incompatible with
-enum [2] in the return value of property `acceptNode`.
+literal union [2] in the return value of property `acceptNode`. [incompatible-call]
 
    traversal.js:195:72
     195|     document.createTreeWalker(document_body, -1, { acceptNode: node => 'accept' }); // invalid
                                                                                 ^^^^^^^^ [1]
 
 References:
-   <BUILTINS>/dom.js:3913:1
+   <BUILTINS>/dom.js:3914:1
          v--------------------------------
-   3913| typeof NodeFilter.FILTER_ACCEPT |
-   3914| typeof NodeFilter.FILTER_REJECT |
-   3915| typeof NodeFilter.FILTER_SKIP;
+   3914| typeof NodeFilter.FILTER_ACCEPT |
+   3915| typeof NodeFilter.FILTER_REJECT |
+   3916| typeof NodeFilter.FILTER_SKIP;
          ----------------------------^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------- traversal.js:196:14
 
-Cannot call `document.createTreeWalker` because:
+Cannot call `document.createTreeWalker` because: [incompatible-call]
  - Either number [1] is incompatible with number literal `1` [2].
  - Or number [1] is incompatible with number literal `4` [3].
  - Or number [1] is incompatible with number literal `5` [4].
@@ -1192,7 +1205,7 @@ References:
 
 
 
-Found 49 errors
+Found 50 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches

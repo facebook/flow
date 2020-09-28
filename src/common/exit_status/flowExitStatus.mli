@@ -37,6 +37,8 @@ type t =
   | Dfind_died
   | Dfind_unresponsive
   | Watchman_error
+  | Hash_table_full
+  | Heap_full
   | Unknown_error
 
 exception Exit_with of t
@@ -46,6 +48,8 @@ val exit : ?msg:string -> t -> 'a
 val error_code : t -> int
 
 val error_type : int -> t
+
+val error_type_opt : int -> t option
 
 val to_string : t -> string
 

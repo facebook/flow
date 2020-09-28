@@ -159,7 +159,7 @@ module ReposMap = WrappedMap.Make (struct
 
   type t = key
 
-  let compare = Pervasives.compare
+  let compare = Stdlib.compare
 end)
 
 type t = {

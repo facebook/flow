@@ -1,0 +1,6 @@
+(library
+  (name flow_parser_utils_iloc)
+  (wrapped false)
+  (libraries
+    flow_parser)
+  (preprocess (pps ppx_deriving.std)))

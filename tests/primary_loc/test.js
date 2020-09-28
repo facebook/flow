@@ -14,7 +14,7 @@ type T = string;
 
 type U = number;
 
-//$FlowFixMe (used)
+//$FlowFixMe[incompatible-cast] (used)
 ("asdf" : U);
 
 

@@ -110,6 +110,9 @@ docs_additional_reading: "Additional Reading"
 "/docs/cli/coverage/":
   title: "Flow Coverage"
   description: "Increase your confidence in Flow checking"
+"/docs/cli/annotate-exports/":
+  title: "Flow Annotate-Exports"
+  description: "Prepare your codebase for Types-First"
 "/docs/cli/find-module/":
   title: "flow find-module"
   description: ""
@@ -180,8 +183,8 @@ docs_additional_reading: "Additional Reading"
   title: ".flowconfig [declarations]"
   description: "How to include a third-party module’s types without typechecking its code"
 "/docs/errors/":
-  title: "Debugging Errors"
-  description: ""
+  title: "Error Suppressions"
+  description: "How to suppress Flow errors"
 "/docs/lang/":
   title: "Type System"
   description: "Why and how we built Flow for JavaScript"
@@ -212,6 +215,9 @@ docs_additional_reading: "Additional Reading"
 "/docs/lang/lazy-modes/":
   title: "Lazy Modes"
   description: "Explanation of Flow's lazy mode"
+"/docs/lang/types-first/":
+  title: "Types-First"
+  description: "A New Architecture for Performance and Reliability"
 "/docs/libdefs/":
   title: "Library Definitions"
   description: "Typing third-party libraries"
@@ -436,11 +442,10 @@ guides:
     title: "Declaration Files"
     description: >
       Learn how to write types in .flow files.
-  # errors:
-  #   title: "Debugging Errors"
-  #   description: >
-  #     Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod
-  #     tempor incididunt ut labore et dolore.
+  errors:
+    title: "Error Suppressions"
+    description: >
+      Learn how to suppress Flow's type errors.
   react:
     title: "React"
     description: >

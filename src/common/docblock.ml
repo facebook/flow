@@ -41,6 +41,16 @@ let providesModule info = info.providesModule
 
 let jsx info = info.jsx
 
+let is_strict info =
+  match info.flow with
+  | Some OptInStrict -> true
+  | Some OptIn
+  | Some OptInStrictLocal
+  | Some OptInWeak
+  | Some OptOut
+  | None ->
+    false
+
 let is_flow info =
   match info.flow with
   | Some OptIn

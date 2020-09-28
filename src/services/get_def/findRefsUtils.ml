@@ -10,7 +10,7 @@ module Result = Base.Result
 
 let ( >>= ) = Result.( >>= )
 
-type ast_info = (Loc.t, Loc.t) Flow_ast.program * File_sig.With_Loc.t * Docblock.t
+type ast_info = (Loc.t, Loc.t) Flow_ast.Program.t * File_sig.With_Loc.t * Docblock.t
 
 let compute_docblock file content =
   Parsing_service_js.(
@@ -31,15 +31,13 @@ let compute_ast_result options file content =
     let parse_options = make_parse_options ~fail:false ~types_mode ~use_strict docblock options in
     let result = do_parse ~parse_options ~info:docblock content file in
     match result with
-    | Parse_ok (parse_ok, _parse_errors) ->
-      let (ast, file_sig) = basic parse_ok in
-      Ok (ast, file_sig, docblock)
+    | Parse_ok { ast; file_sig; _ } -> Ok (ast, file_sig, docblock)
     (* The parse should not fail; we have passed ~fail:false *)
     | Parse_fail _ -> Error "Parse unexpectedly failed"
     | Parse_skip _ -> Error "Parse unexpectedly skipped")
 
 let get_ast_result ~reader file :
-    ((Loc.t, Loc.t) Flow_ast.program * File_sig.With_Loc.t * Docblock.t, string) result =
+    ((Loc.t, Loc.t) Flow_ast.Program.t * File_sig.With_Loc.t * Docblock.t, string) result =
   Parsing_heaps.(
     let get_result f kind =
       let error =

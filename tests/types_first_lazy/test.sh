@@ -5,7 +5,7 @@
 # LICENSE file in the root directory of this source tree.
 
 printf "\\nServer should start in fs lazy mode and in types-first mode\\n"
-start_flow . --lazy --types-first
+start_flow . --lazy
 
 assert_ok "$FLOW" status --strip-root
 

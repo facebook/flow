@@ -1,4 +1,7 @@
->>> b.js (#changes: 5)
+
+=== Codemod annotate-exports ===
+
+>>> ./b.js
 // @flow
 
 import type {A as $IMPORTED_TYPE$_A_1} from "./a2.js";
@@ -7,23 +10,23 @@ import { foo as foo2 } from "./a2";
 
 module.exports = [(foo1(): A), (foo2(): $IMPORTED_TYPE$_A_1)]; // duplicate import in different types
 
->>> c.js (#changes: 2)
+>>> ./c.js
 // @flow
 
 import type {A as $IMPORTED_TYPE$_A_1} from "./a2.js";
 import type {A} from "./a1.js";import { foo as foo1 } from "./a1";
 import { foo as foo2 } from "./a2";
 
-module.exports = (): $TEMPORARY$array<A | $IMPORTED_TYPE$_A_1> => [foo1(), foo2()]; // duplicate import in same type
+module.exports = (): Array<A | $IMPORTED_TYPE$_A_1> => [foo1(), foo2()]; // duplicate import in same type
 
 >>> Launching report...
 
 Stats:
   Files changed:                            2
-  Number of sig. ver. errors:               3
-  Number of annotations required:           3
   Number of annotations added:              3
   Total size of annotations:                6
+  Number of sig. ver. errors:               3
+  Number of annotations required:           3
   Number of annotations skipped:            0
 
 Errors:
@@ -34,7 +37,6 @@ Errors:
     Parsing heaps get ast error:            0
     Indeterminate module type:              0
     No matching export:                     0
-    Unrecognizable module error:            0
   Serializer error:                         0
   Unsupported error kind:                   0
 
@@ -44,4 +46,33 @@ Warnings:
   Location unhandled:                       0
   Empty NoUpper:                            0
   Empty SomeKnownUpper:                     0
+
+
+=== Autofix exports ===
+
+>>> ./b.js
+// @flow
+
+import type {A as $IMPORTED_TYPE$_A_1} from "./a2.js";
+import type {A} from "./a1.js";import { foo as foo1 } from "./a1";
+import { foo as foo2 } from "./a2";
+
+module.exports = [(foo1(): A), (foo2(): $IMPORTED_TYPE$_A_1)]; // duplicate import in different types
+
+>>> ./c.js
+// @flow
+
+import type {A as $IMPORTED_TYPE$_A_1} from "./a2.js";
+import type {A} from "./a1.js";import { foo as foo1 } from "./a1";
+import { foo as foo2 } from "./a2";
+
+module.exports = (): Array<$IMPORTED_TYPE$_A_1 | A> => [foo1(), foo2()]; // duplicate import in same type
+
+
+=== Diff between codemod-ed & autofix-ed ===
+>>> ./c.js
+7c7
+< module.exports = (): Array<A | $IMPORTED_TYPE$_A_1> => [foo1(), foo2()]; // duplicate import in same type
+---
+> module.exports = (): Array<$IMPORTED_TYPE$_A_1 | A> => [foo1(), foo2()]; // duplicate import in same type
 

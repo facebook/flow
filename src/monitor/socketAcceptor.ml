@@ -147,7 +147,7 @@ let close client_fd () =
      * it, does shutting down first actually make any difference? *)
     try Lwt_unix.(shutdown client_fd SHUTDOWN_ALL) with
     (* Already closed *)
-    | Unix.Unix_error (Unix.EBADF, _, _) -> ()
+    | Unix.Unix_error ((Unix.EBADF | Unix.ENOTCONN), _, _) -> ()
     | exn -> Logger.error ~exn "Failed to shutdown socket client"
   end;
   try%lwt Lwt_unix.close client_fd with
@@ -206,7 +206,7 @@ let perform_handshake_and_get_client_handshake ~client_fd =
     if client_handshake.is_stop_request then
       let%lwt () = respond Server_will_exit None in
       let%lwt () = close client_fd () in
-      Server.exit ~msg:"Killed by `flow stop`. Exiting." FlowExitStatus.No_error
+      Server.stop Server.Stopped
       (* Binary version mismatch *)
     else if client_handshake.client_build_id <> build_revision then
       match client_handshake.version_mismatch_strategy with
@@ -299,7 +299,7 @@ module MonitorSocketAcceptorLoop = SocketAcceptorLoop (struct
       let num_persistent = PersistentConnectionMap.cardinal () in
       let num_ephemeral = RequestMap.cardinal () in
       if autostop && num_persistent = 0 && num_ephemeral = 0 then
-        Server.exit FlowExitStatus.Autostop ~msg:"Autostop"
+        Server.stop Server.Autostopped
       else
         Lwt.return_unit
     in
@@ -332,7 +332,7 @@ module LegacySocketAcceptorLoop = SocketAcceptorLoop (struct
       FlowEventLogger.out_of_date ();
       let msg = "Client and server are different builds. Flow server is out of date. Exiting" in
       Logger.fatal "%s" msg;
-      Server.exit FlowExitStatus.Build_id_mismatch ~msg:"Killed by legacy client. Exiting."
+      Server.stop Server.Legacy_client
     with exn -> catch close exn
 end)
 

@@ -11,6 +11,8 @@ val loc_of_error : 'loc t -> 'loc option
 
 val msg_of_error : 'loc t -> 'loc Error_message.t'
 
+val code_of_error : 'loc t -> Error_codes.error_code option
+
 val source_file : 'loc t -> File_key.t
 
 val trace_reasons : 'loc t -> 'loc Reason.virtual_reason list

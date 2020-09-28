@@ -54,7 +54,8 @@ val type_contents :
   ( Context.t
     * Docblock.t
     * File_sig.With_Loc.t
-    * (ALoc.t, ALoc.t * Type.t) Flow_ast.program
+    * File_sig.With_Loc.tolerable_error list
+    * (ALoc.t, ALoc.t * Type.t) Flow_ast.Program.t
     * (Loc.t * Parse_error.t) list,
     string )
   result
@@ -69,9 +70,10 @@ val typecheck_contents :
   File_key.t ->
   (* fake file-/module name *)
   ( ( Context.t
-    * (Loc.t, Loc.t) Flow_ast.program
+    * (Loc.t, Loc.t) Flow_ast.Program.t
     * File_sig.With_Loc.t
-    * (ALoc.t, ALoc.t * Type.t) Flow_ast.program )
+    * File_sig.With_Loc.tolerable_error list
+    * (ALoc.t, ALoc.t * Type.t) Flow_ast.Program.t )
     option
   * Errors.ConcreteLocPrintableErrorSet.t
   * (* errors *)

@@ -4,4 +4,5 @@ class Foo {
     toString : number
 }
 
-(new Foo).  //
+(new Foo).
+//        ^

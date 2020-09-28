@@ -1,6 +1,7 @@
 Error ----------------------------------------------------------------------------------------------------- test.js:8:12
 
 Cannot create `Component` element because property `bar` is missing in `Props` [1] but exists in props [2].
+[prop-missing]
 
    test.js:8:12
    8| const y = <Component bar={3} />; // Error missing foo, got bar
@@ -18,6 +19,7 @@ References:
 Error ----------------------------------------------------------------------------------------------------- test.js:8:12
 
 Cannot create `Component` element because property `foo` is missing in props [1] but exists in `Props` [2].
+[prop-missing]
 
    test.js:8:12
    8| const y = <Component bar={3} />; // Error missing foo, got bar
@@ -35,7 +37,7 @@ References:
 Error ----------------------------------------------------------------------------------------------------- test.js:9:46
 
 Cannot assign `<Component />` to `z` because property `bar` is missing in `Props` [1] but exists in object type [2] in
-the first argument of type argument `ElementType` [3].
+the first argument of type argument `ElementType` [3]. [prop-missing]
 
    test.js:9:46
      9| const z: React$Element<typeof Component2> = <Component bar={3} />; // Error, missing foo got bar
@@ -56,7 +58,7 @@ References:
 Error ----------------------------------------------------------------------------------------------------- test.js:9:46
 
 Cannot assign `<Component />` to `z` because property `foo` is missing in object type [1] but exists in `Props` [2] in
-the first argument of type argument `ElementType` [3].
+the first argument of type argument `ElementType` [3]. [prop-missing]
 
    test.js:9:46
      9| const z: React$Element<typeof Component2> = <Component bar={3} />; // Error, missing foo got bar
@@ -77,6 +79,7 @@ References:
 Error ----------------------------------------------------------------------------------------------------- test.js:9:46
 
 Cannot create `Component` element because property `bar` is missing in `Props` [1] but exists in props [2].
+[prop-missing]
 
    test.js:9:46
    9| const z: React$Element<typeof Component2> = <Component bar={3} />; // Error, missing foo got bar
@@ -94,6 +97,7 @@ References:
 Error ----------------------------------------------------------------------------------------------------- test.js:9:46
 
 Cannot create `Component` element because property `foo` is missing in props [1] but exists in `Props` [2].
+[prop-missing]
 
    test.js:9:46
    9| const z: React$Element<typeof Component2> = <Component bar={3} />; // Error, missing foo got bar
@@ -108,5 +112,41 @@ References:
                                 ^^^^^ [2]
 
 
+Error ---------------------------------------------------------------------------------------------------- test.js:14:22
 
-Found 6 errors
+Cannot create `Component2` element because property `bar` is missing in props [1] but exists in object type [2].
+[prop-missing]
+
+   test.js:14:22
+   14| const fragment4 = <><Component2 foo={3}/></>; // Error requires bar not foo
+                            ^^^^^^^^^^
+
+References:
+   test.js:14:21
+   14| const fragment4 = <><Component2 foo={3}/></>; // Error requires bar not foo
+                           ^^^^^^^^^^^^^^^^^^^^^ [1]
+   test.js:5:28
+    5| function Component2(props: {| bar: number |}): React$Node { return null }
+                                  ^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:14:22
+
+Cannot create `Component2` element because property `foo` is missing in object type [1] but exists in props [2].
+[prop-missing]
+
+   test.js:14:22
+   14| const fragment4 = <><Component2 foo={3}/></>; // Error requires bar not foo
+                            ^^^^^^^^^^
+
+References:
+   test.js:5:28
+    5| function Component2(props: {| bar: number |}): React$Node { return null }
+                                  ^^^^^^^^^^^^^^^^^ [1]
+   test.js:14:21
+   14| const fragment4 = <><Component2 foo={3}/></>; // Error requires bar not foo
+                           ^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+
+Found 8 errors

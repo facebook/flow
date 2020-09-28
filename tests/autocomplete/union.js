@@ -8,4 +8,5 @@ function foo(a: boolean, x: { bar: string }, y: Object) {
     z = y;
   }
   z.
+//  ^
 }

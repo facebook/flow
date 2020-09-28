@@ -377,13 +377,11 @@ let debug_time_lwt name x =
 module BoolMap = Map.Make (struct
   type t = bool
 
-  (* TODO: Switch to Bool.compare when we upgrade to OCaml 4.08 *)
-  let compare = Pervasives.compare
+  let compare = Base.Bool.compare
 end)
 
 module NumberMap = Map.Make (struct
   type t = float
 
-  (* TODO: Switch to Float.compare when we upgrade to OCaml 4.08 *)
-  let compare = Pervasives.compare
+  let compare = Base.Float.compare
 end)

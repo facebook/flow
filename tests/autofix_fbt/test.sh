@@ -14,11 +14,6 @@ assert_ok "$FLOW" force-recheck a.js
 echo "> cat a.js"
 cat a.js
 
-assert_ok "$FLOW" autofix exports --in-place tmp/a.js
-assert_ok "$FLOW" force-recheck tmp/a.js
-echo "> cat tmp/a.js"
-cat tmp/a.js
-
 echo "> flow status"
 assert_ok "$FLOW" status
 

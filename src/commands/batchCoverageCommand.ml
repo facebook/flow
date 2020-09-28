@@ -111,7 +111,7 @@ let output_results ~root ~strip_root ~json ~pretty ~show_all ~trust stats =
       in
       let array_ elts = JSON_Array elts in
       let file_list =
-        Base.List.sort ~compare:(fun (a, _) (b, _) -> Pervasives.compare a b) stats
+        Base.List.sort ~compare:(fun (a, _) (b, _) -> Stdlib.compare a b) stats
         |> Base.List.map ~f:file_to_json
       in
       let covered_expressions = [("covered_expressions", int_ covered)] in

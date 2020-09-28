@@ -28,7 +28,8 @@ module type EXPRESSION = sig
 
   val number : env -> number_type -> string -> float
 
-  val sequence : env -> (Loc.t, Loc.t) Expression.t list -> (Loc.t, Loc.t) Expression.t
+  val sequence :
+    env -> start_loc:Loc.t -> (Loc.t, Loc.t) Expression.t list -> (Loc.t, Loc.t) Expression.t
 end
 
 module Expression
@@ -172,17 +173,25 @@ module Expression
     fun env ->
       match (Peek.token env, Peek.is_identifier env) with
       | (T_YIELD, _) when allow_yield env -> Cover_expr (yield env)
-      | (T_LPAREN, _)
-      | (T_LESS_THAN, _)
-      | (_, true) ->
+      | ((T_LPAREN as t), _)
+      | ((T_LESS_THAN as t), _)
+      | (t, true) ->
         (* Ok, we don't know if this is going to be an arrow function or a
          * regular assignment expression. Let's first try to parse it as an
          * assignment expression. If that fails we'll try an arrow function.
+         * Unless it begins with `async <` in which case we first try parsing
+         * it as an arrow function, and then an assignment expression.
          *)
-        (match Try.to_parse env try_assignment_but_not_arrow_function with
+        let (initial, secondary) =
+          if t = T_ASYNC && should_parse_types env && Peek.ith_token ~i:1 env = T_LESS_THAN then
+            (try_arrow_function, try_assignment_but_not_arrow_function)
+          else
+            (try_assignment_but_not_arrow_function, try_arrow_function)
+        in
+        (match Try.to_parse env initial with
         | Try.ParsedSuccessfully expr -> expr
         | Try.FailedToParse ->
-          (match Try.to_parse env try_arrow_function with
+          (match Try.to_parse env secondary with
           | Try.ParsedSuccessfully expr -> expr
           | Try.FailedToParse ->
             (* Well shoot. It doesn't parse cleanly as a normal
@@ -828,6 +837,7 @@ module Expression
         let leading = Peek.comments env in
         Expect.token env T_LESS_THAN;
         let arguments = args_helper env [] in
+        let internal = Peek.comments env in
         Expect.token env T_GREATER_THAN;
         let trailing =
           if Peek.token env = T_LPAREN then
@@ -838,7 +848,7 @@ module Expression
         in
         {
           Expression.CallTypeArgs.arguments;
-          comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing ();
+          comments = Flow_ast_utils.mk_comments_with_internal_opt ~leading ~trailing ~internal;
         }
     in
     fun env ->
@@ -875,11 +885,12 @@ module Expression
           let leading = Peek.comments env in
           Expect.token env T_LPAREN;
           let args = arguments' env [] in
+          let internal = Peek.comments env in
           Expect.token env T_RPAREN;
           let trailing = Eat.trailing_comments env in
           {
             Expression.ArgList.arguments = args;
-            comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing ();
+            comments = Flow_ast_utils.mk_comments_with_internal_opt ~leading ~trailing ~internal;
           })
         env
 
@@ -1299,13 +1310,14 @@ module Expression
       with_loc
         (fun env ->
           Expect.token env T_LPAREN;
+          let expr_start_loc = Peek.loc env in
           let expression = assignment env in
           let ret =
             match Peek.token env with
             | T_COLON ->
               let annot = Type.annotation env in
               Group_typecast Expression.TypeCast.{ expression; annot; comments = None }
-            | T_COMMA -> Group_expr (sequence env [expression])
+            | T_COMMA -> Group_expr (sequence env ~start_loc:expr_start_loc [expression])
             | _ -> Group_expr expression
           in
           Expect.token env T_RPAREN;
@@ -1617,17 +1629,18 @@ module Expression
               comments = Flow_ast_utils.mk_comments_opt ~leading ();
             } )
 
-  and sequence env acc =
-    match Peek.token env with
-    | T_COMMA ->
-      Eat.token env;
-      let expr = assignment env in
-      sequence env (expr :: acc)
-    | _ ->
-      let (last_loc, _) = List.hd acc in
-      let expressions = List.rev acc in
-      let (first_loc, _) = List.hd expressions in
-      (Loc.btwn first_loc last_loc, Expression.(Sequence Sequence.{ expressions; comments = None }))
+  and sequence =
+    let rec helper acc env =
+      match Peek.token env with
+      | T_COMMA ->
+        Eat.token env;
+        let expr = assignment env in
+        helper (expr :: acc) env
+      | _ ->
+        let expressions = List.rev acc in
+        Expression.(Sequence Sequence.{ expressions; comments = None })
+    in
+    (fun env ~start_loc acc -> with_loc ~start_loc (helper acc) env)
 
   and property_name_include_private env =
     let start_loc = Peek.loc env in

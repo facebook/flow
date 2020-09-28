@@ -8,7 +8,7 @@ To learn more, visit flow.org/en/docs/lang/lazy-modes
 Editing a file should cause checking its code against computed types of dependencies
 Error ----------------------------------------------------------------------------------------------------- test.js:3:19
 
-Cannot assign `require(...)` to `n` because number [1] is incompatible with string [2].
+Cannot assign `require(...)` to `n` because number [1] is incompatible with string [2]. [incompatible-type]
 
    test.js:3:19
    3| const n: string = require('./import-value1'); // error: number ~/~> string
@@ -25,7 +25,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:10:2
 
-Cannot cast `n` to `T` because string [1] is incompatible with number [2].
+Cannot cast `n` to `T` because string [1] is incompatible with number [2]. [incompatible-cast]
 
    test.js:10:2
    10| (n: T); // error: string ~/~> number
@@ -42,7 +42,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:11:2
 
-Cannot cast `f(...)` to `S` because string [1] is incompatible with number [2].
+Cannot cast `f(...)` to `S` because string [1] is incompatible with number [2]. [incompatible-cast]
 
    test.js:11:2
    11| (f(""): S); // error: string (argument) ~/~> number, string (return) ~/~> number
@@ -59,7 +59,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:11:4
 
-Cannot call `f` with empty string bound to `x` because string [1] is incompatible with number [2].
+Cannot call `f` with empty string bound to `x` because string [1] is incompatible with number [2]. [incompatible-call]
 
    test.js:11:4
    11| (f(""): S); // error: string (argument) ~/~> number, string (return) ~/~> number
@@ -73,7 +73,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:12:2
 
-Cannot cast `o` to `O` because number [1] is incompatible with string [2] in property `x`.
+Cannot cast `o` to `O` because number [1] is incompatible with string [2] in property `x`. [incompatible-cast]
 
    test.js:12:2
    12| (o: O); // error: number (property x) <~/~> string

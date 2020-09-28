@@ -5,3 +5,4 @@ class Foo {
 }
 
 Foo.
+//  ^

@@ -1,6 +1,6 @@
 Error --------------------------------------------------------------------------------------------- class_static.js:9:17
 
-Cannot assign `C.bar()` to `x` because string [1] is incompatible with number [2].
+Cannot assign `C.bar()` to `x` because string [1] is incompatible with number [2]. [incompatible-type]
 
    class_static.js:9:17
    9| var x: number = C.bar();
@@ -17,7 +17,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- class_static.js:10:17
 
-Cannot assign `C.foo()` to `y` because string [1] is incompatible with number [2].
+Cannot assign `C.foo()` to `y` because string [1] is incompatible with number [2]. [incompatible-type]
 
    class_static.js:10:17
    10| var y: number = C.foo();

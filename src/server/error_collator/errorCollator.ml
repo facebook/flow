@@ -25,40 +25,61 @@ let regenerate ~reader =
   Errors.(
     Error_suppressions.(
       let lazy_table_of_aloc = Parsing_heaps.Reader.get_sig_ast_aloc_table_unsafe_lazy ~reader in
-      let add_unused_suppression_warnings checked unused warnings =
+      let add_suppression_warnings checked unused warnings =
         (* For each unused suppression, create an warning *)
         let deps = CheckedSet.dependencies checked in
-        let all_locs = Error_suppressions.all_locs unused in
-        Loc_collections.LocSet.fold
-          (fun loc warnings ->
+        let all_locs = Error_suppressions.all_unused_locs unused in
+        let warnings =
+          Loc_collections.LocSet.fold
+            (fun loc warnings ->
+              let source_file =
+                match Loc.source loc with
+                | Some x -> x
+                | None -> File_key.SourceFile "-"
+              in
+              (* In lazy mode, dependencies are modules which we typecheck not because we care about
+               * them, but because something important (a focused file or a focused file's dependent)
+               * needs these dependencies. Therefore, we might not typecheck a dependencies' dependents.
+               *
+               * This means there might be an unused suppression comment warning in a dependency which
+               * only shows up in lazy mode. To avoid this, we'll just avoid raising this kind of
+               * warning in any dependency.*)
+              if not (FilenameSet.mem source_file deps) then
+                let err =
+                  let msg = Error_message.EUnusedSuppression loc in
+                  Flow_error.error_of_msg ~trace_reasons:[] ~source_file msg
+                  |> Flow_error.make_error_printable
+                in
+                let file_warnings =
+                  FilenameMap.find_opt source_file warnings
+                  |> Base.Option.value ~default:ConcreteLocPrintableErrorSet.empty
+                  |> ConcreteLocPrintableErrorSet.add err
+                in
+                FilenameMap.add source_file file_warnings warnings
+              else
+                warnings)
+            all_locs
+            warnings
+        in
+        Error_suppressions.CodeLocSet.fold
+          (fun (code, loc) warnings ->
             let source_file =
               match Loc.source loc with
               | Some x -> x
               | None -> File_key.SourceFile "-"
             in
-            (* In lazy mode, dependencies are modules which we typecheck not because we care about
-             * them, but because something important (a focused file or a focused file's dependent)
-             * needs these dependencies. Therefore, we might not typecheck a dependencies' dependents.
-             *
-             * This means there might be an unused suppression comment warning in a dependency which
-             * only shows up in lazy mode. To avoid this, we'll just avoid raising this kind of
-             * warning in any dependency.*)
-            if not (FilenameSet.mem source_file deps) then
-              let err =
-                let msg = Error_message.EUnusedSuppression (ALoc.of_loc loc) in
-                Flow_error.error_of_msg ~trace_reasons:[] ~source_file msg
-                |> Flow_error.concretize_error lazy_table_of_aloc
-                |> Flow_error.make_error_printable
-              in
-              let file_warnings =
-                FilenameMap.find_opt source_file warnings
-                |> Base.Option.value ~default:ConcreteLocPrintableErrorSet.empty
-                |> ConcreteLocPrintableErrorSet.add err
-              in
-              FilenameMap.add source_file file_warnings warnings
-            else
-              warnings)
-          all_locs
+            let err =
+              Error_message.ECodelessSuppression (loc, code)
+              |> Flow_error.error_of_msg ~trace_reasons:[] ~source_file
+              |> Flow_error.make_error_printable
+            in
+            let file_warnings =
+              FilenameMap.find_opt source_file warnings
+              |> Base.Option.value ~default:ConcreteLocPrintableErrorSet.empty
+              |> ConcreteLocPrintableErrorSet.add err
+            in
+            FilenameMap.add source_file file_warnings warnings)
+          (Error_suppressions.universally_suppressed_codes unused)
           warnings
       in
       let acc_fun
@@ -121,7 +142,7 @@ let regenerate ~reader =
           |> FilenameMap.fold acc_warn_fun warnings
         in
         let collated_warning_map =
-          add_unused_suppression_warnings env.ServerEnv.checked_files unused warnings
+          add_suppression_warnings env.ServerEnv.checked_files unused warnings
         in
         { collated_errorset; collated_warning_map; collated_suppressed_errors }))
 

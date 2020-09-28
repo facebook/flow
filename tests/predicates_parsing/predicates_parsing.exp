@@ -1,6 +1,6 @@
 Error --------------------------------------------------------------------------------------------------- fail-0.js:5:40
 
-Predicate function declarations need to declare a predicate expression.
+Predicate function declarations need to declare a predicate expression. [unsupported-syntax]
 
    5| declare function f2(x: mixed): boolean %checks;
                                              ^^^^^^^
@@ -8,7 +8,7 @@ Predicate function declarations need to declare a predicate expression.
 
 Error --------------------------------------------------------------------------------------------------- fail-1.js:5:24
 
-Cannot declare predicate when a function body is present.
+Cannot declare predicate when a function body is present. [unsupported-syntax]
 
    5| function f6(x: mixed): %checks (x !== null) {  }
                              ^^^^^^^^^^^^^^^^^^^^
@@ -16,7 +16,7 @@ Cannot declare predicate when a function body is present.
 
 Error --------------------------------------------------------------------------------------------------- fail-1.js:5:45
 
-Invalid body for predicate function. Expected a simple return statement as body.
+Invalid body for predicate function. Expected a simple return statement as body. [unsupported-syntax]
 
    5| function f6(x: mixed): %checks (x !== null) {  }
                                                   ^^^^
@@ -24,7 +24,7 @@ Invalid body for predicate function. Expected a simple return statement as body.
 
 Error --------------------------------------------------------------------------------------------------- fail-1.js:5:45
 
-Predicate functions need to return non-void.
+Predicate functions need to return non-void. [unsupported-syntax]
 
    5| function f6(x: mixed): %checks (x !== null) {  }
                                                   ^^^^
@@ -32,7 +32,7 @@ Predicate functions need to return non-void.
 
 Error --------------------------------------------------------------------------------------------------- fail-2.js:3:22
 
-Cannot declare predicate when a function body is present.
+Cannot declare predicate when a function body is present. [unsupported-syntax]
 
    3| var a2 = (x: mixed): %checks (x !== null) => {        // Error: body form
                            ^^^^^^^^^^^^^^^^^^^^
@@ -40,7 +40,7 @@ Cannot declare predicate when a function body is present.
 
 Error --------------------------------------------------------------------------------------------------- fail-2.js:3:46
 
-Invalid body for predicate function. Expected a simple return statement as body.
+Invalid body for predicate function. Expected a simple return statement as body. [unsupported-syntax]
 
                                                    v---------------------------
    3| var a2 = (x: mixed): %checks (x !== null) => {        // Error: body form
@@ -51,7 +51,7 @@ Invalid body for predicate function. Expected a simple return statement as body.
 
 Error --------------------------------------------------------------------------------------------------- fail-3.js:5:24
 
-Cannot declare predicate when a function body is present.
+Cannot declare predicate when a function body is present. [unsupported-syntax]
 
    5| function f5(x: mixed): %checks (x !== null) { return x !== null }
                              ^^^^^^^^^^^^^^^^^^^^
@@ -59,7 +59,7 @@ Cannot declare predicate when a function body is present.
 
 Error --------------------------------------------------------------------------------------------------- fail-3.js:7:22
 
-Cannot declare predicate when a function body is present.
+Cannot declare predicate when a function body is present. [unsupported-syntax]
 
    7| var a2 = (x: mixed): %checks (x !== null) => x !== null;
                            ^^^^^^^^^^^^^^^^^^^^

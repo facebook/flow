@@ -1,7 +1,7 @@
 Error ------------------------------------------------------------------------------------------------ Suspense.js:12:23
 
-Cannot create `Suspense` element because in property `fallback`:
- - Either inexact function [1] is incompatible with exact `React.Element` [2].
+Cannot create `Suspense` element because in property `fallback`: [incompatible-type]
+ - Either inexact function [1] is incompatible with exact object type [2].
  - Or function [1] is incompatible with `React.Portal` [3].
  - Or property `@@iterator` is missing in function [1] but exists in `$Iterable` [4].
 
@@ -27,7 +27,7 @@ References:
 Error ----------------------------------------------------------------------------------------------------- lazy.js:9:18
 
 Cannot call `React.lazy` with function bound to `component` because function [1] is incompatible with `Promise` [2] in
-the return value.
+the return value. [incompatible-call]
 
    lazy.js:9:18
      9| React.lazy(() => FunctionComponent); // Error incompatible with Promise
@@ -37,15 +37,15 @@ References:
    lazy.js:6:1
      6| function FunctionComponent(x: Props): React.Node { return null }
         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   <BUILTINS>/react.js:313:22
-   313|     component: () => Promise<{ default: React$AbstractComponent<Config, Instance>, ... }>,
+   <BUILTINS>/react.js:315:22
+   315|     component: () => Promise<{ default: React$AbstractComponent<Config, Instance>, ... }>,
                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- lazy.js:10:18
 
 Cannot call `React.lazy` with function bound to `component` because class `ClassComponent` [1] is incompatible with
-`Promise` [2] in the return value.
+`Promise` [2] in the return value. [incompatible-call]
 
    lazy.js:10:18
     10| React.lazy(() => ClassComponent); // Error incompatible with Promise
@@ -55,56 +55,57 @@ References:
    lazy.js:7:7
      7| class ClassComponent extends React.Component<Props> {}
               ^^^^^^^^^^^^^^ [1]
-   <BUILTINS>/react.js:313:22
-   313|     component: () => Promise<{ default: React$AbstractComponent<Config, Instance>, ... }>,
+   <BUILTINS>/react.js:315:22
+   315|     component: () => Promise<{ default: React$AbstractComponent<Config, Instance>, ... }>,
                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- lazy.js:11:34
 
 Cannot call `React.lazy` with function bound to `component` because property `default` is missing in function [1] but
-exists in object type [2] in type argument `R` [3] of the return value.
+exists in object type [2] in type argument `R` [3] of the return value. [prop-missing]
 
    lazy.js:11:34
-    11| React.lazy(() => Promise.resolve(FunctionComponent)); // Error property default is missing
-                                         ^^^^^^^^^^^^^^^^^
+     11| React.lazy(() => Promise.resolve(FunctionComponent)); // Error property default is missing
+                                          ^^^^^^^^^^^^^^^^^
 
 References:
    lazy.js:6:1
-     6| function FunctionComponent(x: Props): React.Node { return null }
-        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   <BUILTINS>/react.js:313:30
-   313|     component: () => Promise<{ default: React$AbstractComponent<Config, Instance>, ... }>,
-                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
-   <BUILTINS>/core.js:667:24
-   667| declare class Promise<+R> {
-                               ^ [3]
+      6| function FunctionComponent(x: Props): React.Node { return null }
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   <BUILTINS>/react.js:315:30
+    315|     component: () => Promise<{ default: React$AbstractComponent<Config, Instance>, ... }>,
+                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+   <BUILTINS>/core.js:1798:24
+   1798| declare class Promise<+R> {
+                                ^ [3]
 
 
 Error ---------------------------------------------------------------------------------------------------- lazy.js:12:34
 
 Cannot call `React.lazy` with function bound to `component` because property `default` is missing in statics of
-`ClassComponent` [1] but exists in object type [2] in type argument `R` [3] of the return value.
+`ClassComponent` [1] but exists in object type [2] in type argument `R` [3] of the return value. [prop-missing]
 
    lazy.js:12:34
-    12| React.lazy(() => Promise.resolve(ClassComponent)); // Error property default is missing
-                                         ^^^^^^^^^^^^^^
+     12| React.lazy(() => Promise.resolve(ClassComponent)); // Error property default is missing
+                                          ^^^^^^^^^^^^^^
 
 References:
    lazy.js:7:7
-     7| class ClassComponent extends React.Component<Props> {}
-              ^^^^^^^^^^^^^^ [1]
-   <BUILTINS>/react.js:313:30
-   313|     component: () => Promise<{ default: React$AbstractComponent<Config, Instance>, ... }>,
-                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
-   <BUILTINS>/core.js:667:24
-   667| declare class Promise<+R> {
-                               ^ [3]
+      7| class ClassComponent extends React.Component<Props> {}
+               ^^^^^^^^^^^^^^ [1]
+   <BUILTINS>/react.js:315:30
+    315|     component: () => Promise<{ default: React$AbstractComponent<Config, Instance>, ... }>,
+                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+   <BUILTINS>/core.js:1798:24
+   1798| declare class Promise<+R> {
+                                ^ [3]
 
 
 Error ---------------------------------------------------------------------------------------------------- lazy.js:19:13
 
 Cannot create `LazyFunctionComponent` element because property `foo` is missing in props [1] but exists in `Props` [2].
+[prop-missing]
 
    lazy.js:19:13
    19| const _b = <LazyFunctionComponent />; // Error missing foo
@@ -125,6 +126,7 @@ References:
 Error ---------------------------------------------------------------------------------------------------- lazy.js:20:13
 
 Cannot create `LazyFunctionComponent` element because property `bar` is missing in `Props` [1] but exists in props [2].
+[prop-missing]
 
    lazy.js:20:13
    20| const _c = <LazyFunctionComponent foo={3} bar={3} />; // Error extra bar
@@ -145,6 +147,7 @@ References:
 Error ---------------------------------------------------------------------------------------------------- lazy.js:21:13
 
 Cannot create `LazyFunctionComponent` element because string [1] is incompatible with number [2] in property `foo`.
+[incompatible-type]
 
    lazy.js:21:13
    21| const _d = <LazyFunctionComponent foo="string" />; // Error wrong type for foo
@@ -162,6 +165,7 @@ References:
 Error ---------------------------------------------------------------------------------------------------- lazy.js:28:13
 
 Cannot create `LazyClassComponent` element because property `foo` is missing in props [1] but exists in `Props` [2].
+[prop-missing]
 
    lazy.js:28:13
    28| const _f = <LazyClassComponent />; // Error missing foo
@@ -179,6 +183,7 @@ References:
 Error ---------------------------------------------------------------------------------------------------- lazy.js:29:13
 
 Cannot create `LazyClassComponent` element because property `bar` is missing in `Props` [1] but exists in props [2].
+[prop-missing]
 
    lazy.js:29:13
    29| const _g = <LazyClassComponent foo={3} bar={3} />; // Error extra bar
@@ -196,6 +201,7 @@ References:
 Error ---------------------------------------------------------------------------------------------------- lazy.js:30:36
 
 Cannot create `LazyClassComponent` element because string [1] is incompatible with number [2] in property `foo`.
+[incompatible-type]
 
    lazy.js:30:36
    30| const _h = <LazyClassComponent foo="string" />; // Error wrong type for foo
@@ -209,7 +215,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ lazy_ref.js:21:40
 
-Cannot call `ref.moo` with `0` bound to `x` because number [1] is incompatible with string [2].
+Cannot call `ref.moo` with `0` bound to `x` because number [1] is incompatible with string [2]. [incompatible-call]
 
    lazy_ref.js:21:40
    21|       <Lazy ref={ref => ref && ref.moo(0)} />;
@@ -224,6 +230,7 @@ References:
 Error ---------------------------------------------------------------------------------------------------- memo.js:12:13
 
 Cannot create `MemoComponent` element because property `foo` is missing in props [1] but exists in `Props` [2].
+[prop-missing]
 
    memo.js:12:13
    12| const _b = <MemoComponent />; // Error missing foo
@@ -241,6 +248,7 @@ References:
 Error ---------------------------------------------------------------------------------------------------- memo.js:13:13
 
 Cannot create `MemoComponent` element because property `bar` is missing in `Props` [1] but exists in props [2].
+[prop-missing]
 
    memo.js:13:13
    13| const _c = <MemoComponent foo={3} bar={3} />; // Error extra bar
@@ -258,6 +266,7 @@ References:
 Error ---------------------------------------------------------------------------------------------------- memo.js:14:13
 
 Cannot create `MemoComponent` element because string [1] is incompatible with number [2] in property `foo`.
+[incompatible-type]
 
    memo.js:14:13
    14| const _d = <MemoComponent foo="string" />; // Error wrong type for foo
@@ -275,6 +284,7 @@ References:
 Error ---------------------------------------------------------------------------------------------------- memo.js:19:13
 
 Cannot create `MemoComponentWithEqual` element because property `foo` is missing in props [1] but exists in `Props` [2].
+[prop-missing]
 
    memo.js:19:13
    19| const _f = <MemoComponentWithEqual />; // Error missing foo
@@ -292,6 +302,7 @@ References:
 Error ---------------------------------------------------------------------------------------------------- memo.js:20:13
 
 Cannot create `MemoComponentWithEqual` element because property `bar` is missing in `Props` [1] but exists in props [2].
+[prop-missing]
 
    memo.js:20:13
    20| const _g = <MemoComponentWithEqual foo={3} bar={3} />; // Error extra bar
@@ -309,6 +320,7 @@ References:
 Error ---------------------------------------------------------------------------------------------------- memo.js:21:13
 
 Cannot create `MemoComponentWithEqual` element because string [1] is incompatible with number [2] in property `foo`.
+[incompatible-type]
 
    memo.js:21:13
    21| const _h = <MemoComponentWithEqual foo="string" />; // Error wrong type for foo
@@ -325,7 +337,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ memo_ref.js:17:43
 
-Cannot call `ref.moo` with `0` bound to `x` because number [1] is incompatible with string [2].
+Cannot call `ref.moo` with `0` bound to `x` because number [1] is incompatible with string [2]. [incompatible-call]
 
    memo_ref.js:17:43
    17|   return <Memo ref={ref => ref && ref.moo(0)} />;

@@ -1,18 +1,21 @@
->>> a.js (#changes: 3)
+
+=== Codemod annotate-exports ===
+
+>>> ./a.js
 // @flow
 
 import type {List} from "./declare-export-class.js";import { list } from './declare-export-class';
 
 module.exports = (list(): List<number>);
 
->>> b.js (#changes: 2)
+>>> ./b.js
 // @flow
 
 import typeof {List as $IMPORTED_TYPEOF$_List} from "./declare-export-class.js";const List: $IMPORTED_TYPEOF$_List = require('./declare-export-class').List;
 
 module.exports = List;
 
->>> c.js (#changes: 3)
+>>> ./c.js
 // @flow
 
 import type {List} from "./declare-class-export-type.js";import { list } from './declare-class-export-type';
@@ -23,10 +26,10 @@ module.exports = (list(): List<number>);
 
 Stats:
   Files changed:                            3
-  Number of sig. ver. errors:               3
-  Number of annotations required:           3
   Number of annotations added:              3
   Total size of annotations:                5
+  Number of sig. ver. errors:               3
+  Number of annotations required:           3
   Number of annotations skipped:            0
 
 Errors:
@@ -37,7 +40,6 @@ Errors:
     Parsing heaps get ast error:            0
     Indeterminate module type:              0
     No matching export:                     0
-    Unrecognizable module error:            0
   Serializer error:                         0
   Unsupported error kind:                   0
 
@@ -47,4 +49,36 @@ Warnings:
   Location unhandled:                       0
   Empty NoUpper:                            0
   Empty SomeKnownUpper:                     0
+
+
+=== Autofix exports ===
+
+>>> ./a.js
+// @flow
+
+import type {List} from "./declare-export-class.js";import { list } from './declare-export-class';
+
+module.exports = (list(): List<number>);
+
+>>> ./b.js
+// @flow
+
+import typeof {List} from "./declare-export-class.js";const List: List = require('./declare-export-class').List;
+
+module.exports = List;
+
+>>> ./c.js
+// @flow
+
+import type {List} from "./declare-class-export-type.js";import { list } from './declare-class-export-type';
+
+module.exports = (list(): List<number>);
+
+
+=== Diff between codemod-ed & autofix-ed ===
+>>> ./b.js
+3c3
+< import typeof {List as $IMPORTED_TYPEOF$_List} from "./declare-export-class.js";const List: $IMPORTED_TYPEOF$_List = require('./declare-export-class').List;
+---
+> import typeof {List} from "./declare-export-class.js";const List: List = require('./declare-export-class').List;
 

@@ -52,7 +52,7 @@ let spec =
 
 type ast_result_type =
   | Ast_json of (Loc.t, Loc.t) Ast.Expression.t
-  | Ast_js of (Loc.t, Loc.t) Ast.program
+  | Ast_js of (Loc.t, Loc.t) Ast.Program.t
 
 let get_file path = function
   | Some filename -> File_input.FileName (CommandUtils.expand_path filename)
@@ -145,11 +145,11 @@ let main
               Parser_flow.program_file ~fail:false ~parse_options ~token_sink content filekey
             in
             if debug then (
-              Ast.pp_program Loc.pp Loc.pp Format.err_formatter ocaml_ast;
+              Ast.Program.pp Loc.pp Loc.pp Format.err_formatter ocaml_ast;
               Printf.eprintf "\n%!"
             );
             if pattern then (
-              Ast.pp_program pp_underscore_loc pp_underscore_loc Format.err_formatter ocaml_ast;
+              Ast.Program.pp pp_underscore_loc pp_underscore_loc Format.err_formatter ocaml_ast;
               Printf.eprintf "\n%!"
             );
             (Ast_js ocaml_ast, errors)

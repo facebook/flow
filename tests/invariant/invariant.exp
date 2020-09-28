@@ -1,6 +1,6 @@
 Error ----------------------------------------------------------------------------------------------------- index.js:6:1
 
-This use of `invariant` is unnecessary because boolean literal `true` [1] is always truthy. (`unnecessary-invariant`)
+This use of `invariant` is unnecessary because boolean literal `true` [1] is always truthy. [unnecessary-invariant]
 
    index.js:6:1
    6| invariant(a);
@@ -14,7 +14,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- index.js:13:5
 
-This use of `invariant` is unnecessary because boolean [1] is always truthy. (`unnecessary-invariant`)
+This use of `invariant` is unnecessary because boolean [1] is always truthy. [unnecessary-invariant]
 
    index.js:13:5
    13| c ? invariant(c) : invariant(c);
@@ -28,7 +28,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- index.js:19:1
 
-This use of `invariant` is unnecessary because number literal `1` [1] is always truthy. (`unnecessary-invariant`)
+This use of `invariant` is unnecessary because number literal `1` [1] is always truthy. [unnecessary-invariant]
 
    index.js:19:1
    19| invariant(e);
@@ -42,7 +42,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- index.js:25:1
 
-This use of `invariant` is unnecessary because intersection type [1] is always truthy. (`unnecessary-invariant`)
+This use of `invariant` is unnecessary because intersection type [1] is always truthy. [unnecessary-invariant]
 
    index.js:25:1
    25| invariant(g);

@@ -7,7 +7,7 @@
 
 type 'a in_channel = Timeout.in_channel
 
-type 'a out_channel = Pervasives.out_channel
+type 'a out_channel = Stdlib.out_channel
 
 type ('in_, 'out) channel_pair = 'in_ in_channel * 'out out_channel
 
@@ -28,7 +28,7 @@ let to_channel : 'a out_channel -> ?flags:Marshal.extern_flags list -> ?flush:bo
 let from_channel : ?timeout:Timeout.t -> 'a in_channel -> 'a =
  (fun ?timeout ic -> Timeout.input_value ?timeout ic)
 
-let flush : 'a out_channel -> unit = Pervasives.flush
+let flush : 'a out_channel -> unit = Stdlib.flush
 
 let descr_of_in_channel : 'a in_channel -> Unix.file_descr = Timeout.descr_of_in_channel
 
@@ -150,8 +150,8 @@ let exec entry param ic oc =
     f param (ic, oc);
     exit 0
   with e ->
-    prerr_endline (Printexc.to_string e);
-    Printexc.print_backtrace stderr;
+    let e = Exception.wrap e in
+    prerr_endline (Exception.to_string e);
     exit 2
 
 let register_entry_point = Entry.register
@@ -215,8 +215,8 @@ let fork
        f param (child_in, child_out);
        exit 0
      with e ->
-       prerr_endline (Printexc.to_string e);
-       Printexc.print_backtrace stderr;
+       let e = Exception.wrap e in
+       prerr_endline (Exception.to_string e);
        exit 1)
   | pid ->
     (* parent *)

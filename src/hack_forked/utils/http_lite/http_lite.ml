@@ -83,7 +83,7 @@ let read_message_utf8 (reader : Buffered_line_reader.t) : string =
 (** write_message: writes "Content-Length:...body" *)
 let write_message (outchan : out_channel) (body : string) : unit =
   (* Without this, Windows will change the \r\n to \r\r\n *)
-  Pervasives.set_binary_mode_out outchan true;
+  Stdlib.set_binary_mode_out outchan true;
 
   Printf.fprintf outchan "Content-Length: %n\r\n" (String.length body);
   Printf.fprintf outchan "\r\n";

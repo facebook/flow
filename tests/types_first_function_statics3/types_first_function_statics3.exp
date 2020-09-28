@@ -1,6 +1,7 @@
 Error --------------------------------------------------------------------------------------------------------- b.js:8:2
 
 Cannot create `Component` element because property `other` is missing in `Props` [1] but exists in props [2].
+[prop-missing]
 
    b.js:8:2
    8| <Component other={1}/>;
@@ -18,6 +19,7 @@ References:
 Error -------------------------------------------------------------------------------------------------------- b.js:13:2
 
 Cannot create `PolyComponent` element because property `other` is missing in `Props` [1] but exists in props [2].
+[prop-missing]
 
    b.js:13:2
    13| <PolyComponent t={0} other={1}/>;

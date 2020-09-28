@@ -1,6 +1,6 @@
 Error -------------------------------------------------------------------------------------------------------- a.js:13:3
 
-Cannot assign `2` to `a.prop` because property `prop` is not writable.
+Cannot assign `2` to `a.prop` because property `prop` is not writable. [cannot-write]
 
    13| a.prop = 2;                   // ERROR: Cannot assign outside of ctor to + prop
          ^^^^
@@ -8,7 +8,7 @@ Cannot assign `2` to `a.prop` because property `prop` is not writable.
 
 Error ------------------------------------------------------------------------------------------------------- a.js:20:17
 
-Cannot assign `prop` to `this.prop` because string [1] is incompatible with number [2].
+Cannot assign `prop` to `this.prop` because string [1] is incompatible with number [2]. [incompatible-type]
 
    a.js:20:17
    20|     this.prop = prop;         // ERROR: we should not be assigning a string here
@@ -25,7 +25,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------- a.js:21:10
 
-Cannot assign function to `this.m` because property `m` is not writable.
+Cannot assign function to `this.m` because property `m` is not writable. [cannot-write]
 
    21|     this.m = () => {};        // ERORR: cannot assign method
                 ^
@@ -33,7 +33,7 @@ Cannot assign function to `this.m` because property `m` is not writable.
 
 Error ------------------------------------------------------------------------------------------------------- a.js:47:12
 
-Cannot assign `prop` to `this.prop` because property `prop` is not writable.
+Cannot assign `prop` to `this.prop` because property `prop` is not writable. [cannot-write]
 
    47|       this.prop = prop;       // ERROR: the initilized object can only be
                   ^^^^
@@ -41,7 +41,7 @@ Cannot assign `prop` to `this.prop` because property `prop` is not writable.
 
 Error ------------------------------------------------------------------------------------------------------- a.js:61:10
 
-Cannot assign `1` to `this.prop` because property `prop` is not writable.
+Cannot assign `1` to `this.prop` because property `prop` is not writable. [cannot-write]
 
    61|     this.prop = 1;            // ERROR
                 ^^^^
@@ -49,7 +49,7 @@ Cannot assign `1` to `this.prop` because property `prop` is not writable.
 
 Error ------------------------------------------------------------------------------------------------------- a.js:70:17
 
-Cannot assign empty string to `this.prop` because string [1] is incompatible with number [2].
+Cannot assign empty string to `this.prop` because string [1] is incompatible with number [2]. [incompatible-type]
 
    a.js:70:17
    70|     this.prop = "";           // ERROR
@@ -64,6 +64,7 @@ References:
 Error -------------------------------------------------------------------------------------------------------- a.js:74:7
 
 Cannot extend `F` [1] with `G` because property `prop` is write-only in `G` [2] but read-only in `A` [3].
+[incompatible-variance]
 
    a.js:74:7
    74| class G extends F {

@@ -434,7 +434,7 @@ let covered_types ~should_check ~check_trust cx tast =
 
 let file_coverage :
     full_cx:Context.t ->
-    (ALoc.t, ALoc.t * Type.t) Flow_polymorphic_ast_mapper.Ast.program ->
+    (ALoc.t, ALoc.t * Type.t) Flow_polymorphic_ast_mapper.Ast.Program.t ->
     Coverage_response.file_coverage =
   let coverage_computer = new visitor in
   let step cx _ t acc =

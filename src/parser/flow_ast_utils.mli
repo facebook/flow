@@ -7,9 +7,9 @@
 
 type 'loc binding = 'loc * string
 
-type 'loc ident = 'loc * string
+type 'loc ident = 'loc * string [@@deriving show]
 
-type 'loc source = 'loc * string
+type 'loc source = 'loc * string [@@deriving show]
 
 val fold_bindings_of_pattern :
   ('a -> ('loc, 'loc) Flow_ast.Identifier.t -> 'a) -> 'a -> ('loc, 'loc) Flow_ast.Pattern.t -> 'a
@@ -69,6 +69,10 @@ val merge_comments_with_internal :
   outer:('M, 'a) Flow_ast.Syntax.t option ->
   ('M, 'loc Flow_ast.Comment.t list) Flow_ast.Syntax.t option
 
+val split_comments :
+  ('loc, unit) Flow_ast.Syntax.t option ->
+  ('loc, unit) Flow_ast.Syntax.t option * ('loc, unit) Flow_ast.Syntax.t option
+
 module ExpressionSort : sig
   type t =
     | Array
@@ -102,6 +106,7 @@ module ExpressionSort : sig
     | Unary
     | Update
     | Yield
+  [@@deriving show]
 
   val to_string : t -> string
 end

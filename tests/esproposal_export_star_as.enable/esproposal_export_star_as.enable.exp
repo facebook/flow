@@ -1,6 +1,6 @@
 Error ----------------------------------------------------------------------------------------------------- dest.js:6:17
 
-Cannot assign `source.num` to `b` because number [1] is incompatible with string [2].
+Cannot assign `source.num` to `b` because number [1] is incompatible with string [2]. [incompatible-type]
 
    dest.js:6:17
    6| var b: string = source.num; // Error: num ~> string
@@ -17,7 +17,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- dest.js:9:17
 
-Cannot assign `source.str` to `d` because string [1] is incompatible with number [2].
+Cannot assign `source.str` to `d` because string [1] is incompatible with number [2]. [incompatible-type]
 
    dest.js:9:17
    9| var d: number = source.str; // Error: num ~> string

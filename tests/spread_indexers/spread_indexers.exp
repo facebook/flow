@@ -1,6 +1,6 @@
 Error ---------------------------------------------------------------------------------------------------- test.js:12:11
 
-Cannot spread object literal because number [1] is incompatible with string [2].
+Cannot spread object literal because number [1] is incompatible with string [2]. [incompatible-type]
 
    test.js:12:11
    12| const i = {...g, ...h}; // Error. Keys and values of the indexers fail to unify 
@@ -17,7 +17,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:12:11
 
-Cannot spread object literal because number [1] is incompatible with string [2].
+Cannot spread object literal because number [1] is incompatible with string [2]. [incompatible-type]
 
    test.js:12:11
    12| const i = {...g, ...h}; // Error. Keys and values of the indexers fail to unify 
@@ -36,7 +36,7 @@ Error --------------------------------------------------------------------------
 
 Cannot spread object literal because Flow cannot determine a type for object literal [1]. object type [2] cannot be
 spread because the indexer string [3] may overwrite properties with explicit keys in a way that Flow cannot track. Try
-spreading object type [2] first or remove the indexer.
+spreading object type [2] first or remove the indexer. [cannot-spread-indexer]
 
    test.js:16:11
    16| const l = {...j, ...k}; // Error, there may be some properties in j that are not overwritten by the indexer
@@ -55,7 +55,7 @@ Error --------------------------------------------------------------------------
 
 Cannot spread object literal because Flow cannot determine a type for object literal [1]. object type [2] cannot be
 spread because the indexer string [3] may overwrite properties with explicit keys in a way that Flow cannot track. Try
-spreading object type [2] first or remove the indexer.
+spreading object type [2] first or remove the indexer. [cannot-spread-indexer]
 
    test.js:20:11
    20| const o = {...m, ...n}; // Error, indexer may overwrite properties with explicit keys
@@ -74,7 +74,7 @@ Error --------------------------------------------------------------------------
 
 Cannot spread object literal because Flow cannot determine a type for object literal [1]. object type [2] cannot be
 spread because the indexer string [3] may overwrite properties with explicit keys in a way that Flow cannot track. Try
-spreading object type [2] first or remove the indexer.
+spreading object type [2] first or remove the indexer. [cannot-spread-indexer]
 
    test.js:24:11
    24| const r = {...p, ...q}; // Error, indexer may overwrite properties with explicit keys

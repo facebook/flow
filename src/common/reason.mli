@@ -278,6 +278,8 @@ val is_builtin_reason : ('loc -> File_key.t option) -> 'loc virtual_reason -> bo
 
 val is_lib_reason : reason -> bool
 
+val is_lib_reason_def : reason -> bool
+
 val is_blamable_reason : reason -> bool
 
 val string_of_source : ?strip_root:Path.t option -> File_key.t -> string

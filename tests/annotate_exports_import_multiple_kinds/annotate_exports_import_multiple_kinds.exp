@@ -1,4 +1,7 @@
->>> a.js (#changes: 5)
+
+=== Codemod annotate-exports ===
+
+>>> ./a.js
 // @flow
 
 import type {C as $IMPORTED_TYPE$_C_1} from "./lib2.js";
@@ -10,7 +13,7 @@ module.exports = [
   (foo2(): $IMPORTED_TYPE$_C_1),
 ]
 
->>> b.js (#changes: 5)
+>>> ./b.js
 // @flow
 
 import typeof {C} from "./lib1.js";
@@ -22,7 +25,7 @@ module.exports = [
   (foo2(): $IMPORTED_TYPE$_C_1),
 ]
 
->>> c.js (#changes: 5)
+>>> ./c.js
 // @flow
 
 import typeof {C as $IMPORTED_TYPEOF$_C_1} from "./lib1.js";
@@ -37,10 +40,10 @@ module.exports = [
 
 Stats:
   Files changed:                            3
-  Number of sig. ver. errors:               6
-  Number of annotations required:           6
   Number of annotations added:              6
   Total size of annotations:                6
+  Number of sig. ver. errors:               6
+  Number of annotations required:           6
   Number of annotations skipped:            0
 
 Errors:
@@ -51,7 +54,6 @@ Errors:
     Parsing heaps get ast error:            0
     Indeterminate module type:              0
     No matching export:                     0
-    Unrecognizable module error:            0
   Serializer error:                         0
   Unsupported error kind:                   0
 
@@ -62,3 +64,43 @@ Warnings:
   Empty NoUpper:                            0
   Empty SomeKnownUpper:                     0
 
+
+=== Autofix exports ===
+
+>>> ./a.js
+// @flow
+
+import type {C as $IMPORTED_TYPE$_C_1} from "./lib2.js";
+import type {C} from "./lib1.js";import { foo1a } from './lib1';
+import { foo2 } from './lib2';
+
+module.exports = [
+  (foo1a(): C),
+  (foo2(): $IMPORTED_TYPE$_C_1),
+]
+
+>>> ./b.js
+// @flow
+
+import typeof {C} from "./lib1.js";
+import type {C as $IMPORTED_TYPE$_C_1} from "./lib2.js";import { foo1b } from './lib1';
+import { foo2 } from './lib2';
+
+module.exports = [
+  (foo1b(): C),
+  (foo2(): $IMPORTED_TYPE$_C_1),
+]
+
+>>> ./c.js
+// @flow
+
+import typeof {C as $IMPORTED_TYPEOF$_C_1} from "./lib1.js";
+import type {C} from "./lib1.js";import { foo1a, foo1b } from './lib1';
+
+module.exports = [
+  (foo1a(): C),
+  (foo1b(): $IMPORTED_TYPEOF$_C_1),
+]
+
+
+=== Diff between codemod-ed & autofix-ed ===

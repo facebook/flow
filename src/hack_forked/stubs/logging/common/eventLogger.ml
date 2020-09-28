@@ -29,7 +29,7 @@ let logger_pid () = None
 
 let set_init_type _ = ()
 
-let log_if_initialized _ = ()
+let should_log () = false
 
 let master_exception _ ~stack:_ = ()
 

@@ -3,9 +3,10 @@
  * @format
  */
 
+import type Suite from 'flow-dev-tools/src/test/Suite.js';
 import {suite, test} from 'flow-dev-tools/src/test/Tester';
 
-export default suite(
+export default (suite(
   ({
     lspStartAndConnect,
     lspStart,
@@ -32,7 +33,6 @@ export default suite(
                   label: 'this',
                   kind: 6,
                   detail: 'this',
-                  inlineDetail: 'this',
                   sortText: '00000000000000000000',
                   insertTextFormat: 1,
                   textEdit: {
@@ -47,7 +47,6 @@ export default suite(
                   label: 'x',
                   kind: 6,
                   detail: 'number',
-                  inlineDetail: 'number',
                   sortText: '00000000000000000000',
                   insertTextFormat: 1,
                   textEdit: {
@@ -62,7 +61,6 @@ export default suite(
                   label: 'fred',
                   kind: 3,
                   detail: '(a: number, b: string) => number',
-                  inlineDetail: '(a: number, b: string) => number',
                   sortText: '00000000000000000000',
                   insertTextFormat: 1,
                   textEdit: {
@@ -77,7 +75,6 @@ export default suite(
                   label: 'b',
                   kind: 6,
                   detail: 'string',
-                  inlineDetail: 'string',
                   sortText: '00000000000000000000',
                   insertTextFormat: 1,
                   textEdit: {
@@ -92,7 +89,6 @@ export default suite(
                   label: 'a',
                   kind: 6,
                   detail: 'number',
-                  inlineDetail: 'number',
                   sortText: '00000000000000000000',
                   insertTextFormat: 1,
                   textEdit: {
@@ -128,43 +124,113 @@ export default suite(
                   label: 'this',
                   kind: 6,
                   detail: 'this',
-                  inlineDetail: 'this',
+                  sortText: '00000000000000000000',
                   insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {line: 13, character: 15},
+                      end: {line: 13, character: 15},
+                    },
+                    newText: 'this',
+                  },
                 },
                 {
                   label: 'x',
                   kind: 6,
                   detail: 'number',
-                  inlineDetail: 'number',
+                  sortText: '00000000000000000000',
                   insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {line: 13, character: 15},
+                      end: {line: 13, character: 15},
+                    },
+                    newText: 'x',
+                  },
                 },
                 {
                   label: 'foo',
                   kind: 3,
                   detail: '() => void',
-                  inlineDetail: '() => void',
+                  sortText: '00000000000000000000',
                   insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {line: 13, character: 15},
+                      end: {line: 13, character: 15},
+                    },
+                    newText: 'foo',
+                  },
+                },
+                {
+                  label: 'anInterface',
+                  kind: 8,
+                  detail: 'interface anInterface',
+                  sortText: '00000000000000000000',
+                  insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {line: 13, character: 15},
+                      end: {line: 13, character: 15},
+                    },
+                    newText: 'anInterface',
+                  },
+                },
+                {
+                  label: 'aUnion',
+                  kind: 13,
+                  detail: 'type aUnion = "a" | "b"',
+                  sortText: '00000000000000000000',
+                  insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {line: 13, character: 15},
+                      end: {line: 13, character: 15},
+                    },
+                    newText: 'aUnion',
+                  },
                 },
                 {
                   label: 'aNumber',
                   kind: 6,
                   detail: 'number',
-                  inlineDetail: 'number',
+                  sortText: '00000000000000000000',
                   insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {line: 13, character: 15},
+                      end: {line: 13, character: 15},
+                    },
+                    newText: 'aNumber',
+                  },
                 },
                 {
                   label: 'aFunction',
                   kind: 3,
                   detail: '() => null',
-                  inlineDetail: '() => null',
+                  sortText: '00000000000000000000',
                   insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {line: 13, character: 15},
+                      end: {line: 13, character: 15},
+                    },
+                    newText: 'aFunction',
+                  },
                 },
                 {
                   label: 'aClass',
                   kind: 7,
                   detail: 'class aClass',
-                  inlineDetail: 'class aClass',
+                  sortText: '00000000000000000000',
                   insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {line: 13, character: 15},
+                      end: {line: 13, character: 15},
+                    },
+                    newText: 'aClass',
+                  },
                 },
               ],
             }),
@@ -205,7 +271,6 @@ export default suite(
                   label: 'this',
                   kind: 6,
                   detail: 'this',
-                  inlineDetail: 'this',
                   sortText: '00000000000000000000',
                   insertTextFormat: 1,
                   textEdit: {
@@ -220,7 +285,6 @@ export default suite(
                   label: 'x',
                   kind: 6,
                   detail: 'number',
-                  inlineDetail: 'number',
                   sortText: '00000000000000000000',
                   insertTextFormat: 1,
                   textEdit: {
@@ -235,7 +299,6 @@ export default suite(
                   label: 'foo',
                   kind: 3,
                   detail: '() => void',
-                  inlineDetail: '() => void',
                   sortText: '00000000000000000000',
                   insertTextFormat: 1,
                   textEdit: {
@@ -250,7 +313,6 @@ export default suite(
                   label: 'aFunction',
                   kind: 3,
                   detail: '(arg1: number, arg2: string) => null',
-                  inlineDetail: '(arg1: number, arg2: string) => null',
                   sortText: '00000000000000000000',
                   insertTextFormat: 1,
                   textEdit: {
@@ -286,7 +348,6 @@ export default suite(
                   label: 'a',
                   kind: 6,
                   detail: 'number',
-                  inlineDetail: 'number',
                   insertTextFormat: 1,
                   textEdit: {
                     range: {
@@ -341,22 +402,57 @@ export default suite(
                   label: 'React',
                   kind: 9,
                   detail: 'module React',
-                  inlineDetail: 'module React',
+                  sortText: '00000000000000000000',
                   insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {line: 11, character: 1},
+                      end: {line: 11, character: 1},
+                    },
+                    newText: 'React',
+                  },
+                },
+                {
+                  label: 'Props',
+                  kind: 13,
+                  detail: 'type Props = {a: number, ...}',
+                  sortText: '00000000000000000000',
+                  insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {line: 11, character: 1},
+                      end: {line: 11, character: 1},
+                    },
+                    newText: 'Props',
+                  },
                 },
                 {
                   label: 'D',
                   kind: 3,
                   detail: '(props: Props) => void',
-                  inlineDetail: '(props: Props) => void',
+                  sortText: '00000000000000000000',
                   insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {line: 11, character: 1},
+                      end: {line: 11, character: 1},
+                    },
+                    newText: 'D',
+                  },
                 },
                 {
                   label: 'C',
                   kind: 7,
                   detail: 'class C',
-                  inlineDetail: 'class C',
+                  sortText: '00000000000000000000',
                   insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {line: 11, character: 1},
+                      end: {line: 11, character: 1},
+                    },
+                    newText: 'C',
+                  },
                 },
               ],
             }),
@@ -383,7 +479,6 @@ export default suite(
                   label: 'a',
                   kind: 6,
                   detail: 'number',
-                  inlineDetail: 'number',
                   insertTextFormat: 1,
                   textEdit: {
                     range: {
@@ -420,7 +515,6 @@ export default suite(
                     label: 'a',
                     kind: 6,
                     detail: 'number',
-                    inlineDetail: 'number',
                     insertTextFormat: 1,
                     textEdit: {
                       range: {
@@ -459,7 +553,6 @@ export default suite(
                   label: 'a',
                   kind: 6,
                   detail: 'number',
-                  inlineDetail: 'number',
                   insertTextFormat: 1,
                   textEdit: {
                     range: {
@@ -494,121 +587,102 @@ export default suite(
                   label: 'apply',
                   kind: 3,
                   detail: '(thisArg: any, argArray?: any) => any',
-                  inlineDetail: '(thisArg: any, argArray?: any) => any',
                   insertTextFormat: 1,
                 },
                 {
                   label: 'arguments',
                   kind: 6,
                   detail: 'any',
-                  inlineDetail: 'any',
                   insertTextFormat: 1,
                 },
                 {
                   label: 'bind',
                   kind: 3,
                   detail: '(thisArg: any, ...argArray: Array<any>) => any',
-                  inlineDetail:
-                    '(thisArg: any, ...argArray: Array<any>) => any',
                   insertTextFormat: 1,
                 },
                 {
                   label: 'call',
                   kind: 3,
                   detail: '(thisArg: any, ...argArray: Array<any>) => any',
-                  inlineDetail:
-                    '(thisArg: any, ...argArray: Array<any>) => any',
                   insertTextFormat: 1,
                 },
                 {
                   label: 'caller',
                   kind: 13,
                   detail: 'any | null',
-                  inlineDetail: 'any | null',
                   insertTextFormat: 1,
                 },
                 {
                   label: 'childContextTypes',
                   kind: 6,
                   detail: 'any',
-                  inlineDetail: 'any',
                   insertTextFormat: 1,
                 },
                 {
                   label: 'contextTypes',
                   kind: 6,
                   detail: 'any',
-                  inlineDetail: 'any',
                   insertTextFormat: 1,
                 },
                 {
                   label: 'displayName',
                   kind: 13,
                   detail: '(?string) | void',
-                  inlineDetail: '(?string) | void',
                   insertTextFormat: 1,
                 },
                 {
                   label: 'hasOwnProperty',
                   kind: 3,
                   detail: '(prop: mixed) => boolean',
-                  inlineDetail: '(prop: mixed) => boolean',
                   insertTextFormat: 1,
                 },
                 {
                   label: 'isPrototypeOf',
                   kind: 3,
                   detail: '(o: mixed) => boolean',
-                  inlineDetail: '(o: mixed) => boolean',
                   insertTextFormat: 1,
                 },
                 {
                   label: 'length',
                   kind: 6,
                   detail: 'number',
-                  inlineDetail: 'number',
                   insertTextFormat: 1,
                 },
                 {
                   label: 'name',
                   kind: 6,
                   detail: 'string',
-                  inlineDetail: 'string',
                   insertTextFormat: 1,
                 },
                 {
                   label: 'propTypes',
                   kind: 6,
                   detail: 'any',
-                  inlineDetail: 'any',
                   insertTextFormat: 1,
                 },
                 {
                   label: 'propertyIsEnumerable',
                   kind: 3,
                   detail: '(prop: mixed) => boolean',
-                  inlineDetail: '(prop: mixed) => boolean',
                   insertTextFormat: 1,
                 },
                 {
                   label: 'toLocaleString',
                   kind: 3,
                   detail: '() => string',
-                  inlineDetail: '() => string',
                   insertTextFormat: 1,
                 },
                 {
                   label: 'toString',
                   kind: 3,
                   detail: '() => string',
-                  inlineDetail: '() => string',
                   insertTextFormat: 1,
                 },
                 {
                   label: 'valueOf',
                   kind: 3,
                   detail: '() => mixed',
-                  inlineDetail: '() => mixed',
                   insertTextFormat: 1,
                 },
               ],
@@ -636,121 +710,102 @@ export default suite(
                   label: 'apply',
                   kind: 3,
                   detail: '(thisArg: any, argArray?: any) => any',
-                  inlineDetail: '(thisArg: any, argArray?: any) => any',
                   insertTextFormat: 1,
                 },
                 {
                   label: 'arguments',
                   kind: 6,
                   detail: 'any',
-                  inlineDetail: 'any',
                   insertTextFormat: 1,
                 },
                 {
                   label: 'bind',
                   kind: 3,
                   detail: '(thisArg: any, ...argArray: Array<any>) => any',
-                  inlineDetail:
-                    '(thisArg: any, ...argArray: Array<any>) => any',
                   insertTextFormat: 1,
                 },
                 {
                   label: 'call',
                   kind: 3,
                   detail: '(thisArg: any, ...argArray: Array<any>) => any',
-                  inlineDetail:
-                    '(thisArg: any, ...argArray: Array<any>) => any',
                   insertTextFormat: 1,
                 },
                 {
                   label: 'caller',
                   kind: 13,
                   detail: 'any | null',
-                  inlineDetail: 'any | null',
                   insertTextFormat: 1,
                 },
                 {
                   label: 'childContextTypes',
                   kind: 6,
                   detail: 'any',
-                  inlineDetail: 'any',
                   insertTextFormat: 1,
                 },
                 {
                   label: 'contextTypes',
                   kind: 6,
                   detail: 'any',
-                  inlineDetail: 'any',
                   insertTextFormat: 1,
                 },
                 {
                   label: 'displayName',
                   kind: 13,
                   detail: '(?string) | void',
-                  inlineDetail: '(?string) | void',
                   insertTextFormat: 1,
                 },
                 {
                   label: 'hasOwnProperty',
                   kind: 3,
                   detail: '(prop: mixed) => boolean',
-                  inlineDetail: '(prop: mixed) => boolean',
                   insertTextFormat: 1,
                 },
                 {
                   label: 'isPrototypeOf',
                   kind: 3,
                   detail: '(o: mixed) => boolean',
-                  inlineDetail: '(o: mixed) => boolean',
                   insertTextFormat: 1,
                 },
                 {
                   label: 'length',
                   kind: 6,
                   detail: 'number',
-                  inlineDetail: 'number',
                   insertTextFormat: 1,
                 },
                 {
                   label: 'name',
                   kind: 6,
                   detail: 'string',
-                  inlineDetail: 'string',
                   insertTextFormat: 1,
                 },
                 {
                   label: 'propTypes',
                   kind: 6,
                   detail: 'any',
-                  inlineDetail: 'any',
                   insertTextFormat: 1,
                 },
                 {
                   label: 'propertyIsEnumerable',
                   kind: 3,
                   detail: '(prop: mixed) => boolean',
-                  inlineDetail: '(prop: mixed) => boolean',
                   insertTextFormat: 1,
                 },
                 {
                   label: 'toLocaleString',
                   kind: 3,
                   detail: '() => string',
-                  inlineDetail: '() => string',
                   insertTextFormat: 1,
                 },
                 {
                   label: 'toString',
                   kind: 3,
                   detail: '() => string',
-                  inlineDetail: '() => string',
                   insertTextFormat: 1,
                 },
                 {
                   label: 'valueOf',
                   kind: 3,
                   detail: '() => mixed',
-                  inlineDetail: '() => mixed',
                   insertTextFormat: 1,
                 },
               ],
@@ -781,7 +836,6 @@ export default suite(
                   label: 'Typologies',
                   kind: 9,
                   detail: 'module Typologies',
-                  inlineDetail: 'module Typologies',
                   sortText: '00000000000000000000',
                   insertTextFormat: 1,
                 },
@@ -789,7 +843,6 @@ export default suite(
                   label: 'Typography',
                   kind: 7,
                   detail: 'class Typewriter',
-                  inlineDetail: 'class Typewriter',
                   sortText: '00000000000000000000',
                   insertTextFormat: 1,
                 },
@@ -797,7 +850,6 @@ export default suite(
                   label: 'Typewriter',
                   kind: 7,
                   detail: 'class Typewriter',
-                  inlineDetail: 'class Typewriter',
                   sortText: '00000000000000000000',
                   insertTextFormat: 1,
                 },
@@ -805,7 +857,6 @@ export default suite(
                   label: 'Types',
                   kind: 9,
                   detail: 'module Types',
-                  inlineDetail: 'module Types',
                   sortText: '00000000000000000000',
                   insertTextFormat: 1,
                 },
@@ -813,7 +864,6 @@ export default suite(
                   label: 'Typesafe',
                   kind: 8,
                   detail: 'interface Typesafety',
-                  inlineDetail: 'interface Typesafety',
                   sortText: '00000000000000000000',
                   insertTextFormat: 1,
                 },
@@ -821,7 +871,6 @@ export default suite(
                   label: 'Typhoon',
                   kind: 13,
                   detail: 'type Typhoon = string',
-                  inlineDetail: 'type Typhoon = string',
                   sortText: '00000000000000000000',
                   insertTextFormat: 1,
                 },
@@ -829,7 +878,6 @@ export default suite(
                   label: 'Typnotism',
                   kind: 13,
                   detail: 'type Typnotism = number',
-                  inlineDetail: 'type Typnotism = number',
                   sortText: '00000000000000000000',
                   insertTextFormat: 1,
                 },
@@ -837,7 +885,6 @@ export default suite(
                   label: 'Tyrant',
                   kind: 13,
                   detail: 'type Tyrant = string',
-                  inlineDetail: 'type Tyrant = string',
                   sortText: '00000000000000000000',
                   insertTextFormat: 1,
                 },
@@ -845,7 +892,6 @@ export default suite(
                   label: 'Tympanic',
                   kind: 13,
                   detail: 'type Tympanic = number',
-                  inlineDetail: 'type Tympanic = number',
                   sortText: '00000000000000000000',
                   insertTextFormat: 1,
                 },
@@ -853,7 +899,6 @@ export default suite(
                   label: 'Typeset',
                   kind: 8,
                   detail: 'interface Typeset',
-                  inlineDetail: 'interface Typeset',
                   sortText: '00000000000000000000',
                   insertTextFormat: 1,
                 },
@@ -861,7 +906,6 @@ export default suite(
                   label: 'Typaram',
                   kind: 25,
                   detail: 'Typaram',
-                  inlineDetail: 'Typaram',
                   sortText: '00000000000000000000',
                   insertTextFormat: 1,
                 },
@@ -873,4 +917,4 @@ export default suite(
       ),
     ]),
   ],
-);
+): Suite);

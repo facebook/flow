@@ -10,6 +10,14 @@ open Base.Result
 open Ty
 module T = Flow_ast.Type
 
+module Let_syntax = struct
+  let bind x ~f = x >>= f
+
+  let map x ~f = x >>| f
+end
+
+type options = { exact_by_default: bool }
+
 let mapM f ts = all (Base.List.map ~f ts)
 
 let opt f t =
@@ -27,14 +35,9 @@ let id_from_symbol x =
     Ok (id_from_string sym_name)
 
 let mk_generic x targs =
-  {
-    T.Generic.id = T.Generic.Identifier.Unqualified x;
-    targs;
-    comments = Flow_ast_utils.mk_comments_opt ();
-  }
+  { T.Generic.id = T.Generic.Identifier.Unqualified x; targs; comments = None }
 
-let mk_targs arguments =
-  (Loc.none, { T.TypeArgs.arguments; comments = Flow_ast_utils.mk_comments_opt () })
+let mk_targs arguments = (Loc.none, { T.TypeArgs.arguments; comments = None })
 
 let mk_generic_type x targs = (Loc.none, T.Generic (mk_generic x targs))
 
@@ -46,306 +49,307 @@ let tvar (RVar _) = Error "Unsupported recursive variables."
 
 let variance_ = function
   | Neutral -> None
-  | Positive ->
-    Some
-      ( Loc.none,
-        { Ast.Variance.kind = Ast.Variance.Plus; comments = Flow_ast_utils.mk_comments_opt () } )
-  | Negative ->
-    Some
-      ( Loc.none,
-        { Ast.Variance.kind = Ast.Variance.Minus; comments = Flow_ast_utils.mk_comments_opt () } )
+  | Positive -> Some (Loc.none, { Ast.Variance.kind = Ast.Variance.Plus; comments = None })
+  | Negative -> Some (Loc.none, { Ast.Variance.kind = Ast.Variance.Minus; comments = None })
 
-let rec type_ t =
-  let just t = return (Loc.none, t) in
-  match t with
-  | TVar (v, _) -> tvar v
-  | Bound (_, name) -> Ok (builtin_from_string name)
-  | Generic (x, _, ts) -> generic_type x ts
-  | Any _ -> just (T.Any (Flow_ast_utils.mk_comments_opt ()))
-  | Top -> just (T.Mixed (Flow_ast_utils.mk_comments_opt ()))
-  | Bot _ -> just (T.Empty (Flow_ast_utils.mk_comments_opt ()))
-  | Void -> just (T.Void (Flow_ast_utils.mk_comments_opt ()))
-  | Null -> just (T.Null (Flow_ast_utils.mk_comments_opt ()))
-  | Symbol -> just (T.Symbol (Flow_ast_utils.mk_comments_opt ()))
-  | Num (Some lit) ->
-    return
-      (builtin_from_string
-         "$TEMPORARY$number"
-         ~targs:(mk_targs [(Loc.none, T.NumberLiteral (num_lit lit))]))
-  | Num None -> just (T.Number (Flow_ast_utils.mk_comments_opt ()))
-  | Str (Some lit) ->
-    return
-      (builtin_from_string
-         "$TEMPORARY$string"
-         ~targs:(mk_targs [(Loc.none, T.StringLiteral (str_lit lit))]))
-  | Str None -> just (T.String (Flow_ast_utils.mk_comments_opt ()))
-  | Bool (Some lit) ->
-    return
-      (builtin_from_string
-         "$TEMPORARY$boolean"
-         ~targs:(mk_targs [(Loc.none, T.BooleanLiteral (bool_lit lit))]))
-  | Bool None -> just (T.Boolean (Flow_ast_utils.mk_comments_opt ()))
-  | NumLit lit -> just (T.NumberLiteral (num_lit lit))
-  | StrLit lit -> just (T.StringLiteral (str_lit lit))
-  | BoolLit lit -> just (T.BooleanLiteral (bool_lit lit))
-  | Fun f -> function_ f >>| fun f -> (Loc.none, T.Function f)
-  | Obj o -> obj_ o
-  | Arr a -> arr a
-  | Tup ts ->
-    mapM type_ ts >>| fun ts ->
-    (Loc.none, T.Tuple { T.Tuple.types = ts; comments = Flow_ast_utils.mk_comments_opt () })
-  | Union (t0, t1, ts) as t -> union t (t0, t1, ts)
-  | Inter (t0, t1, ts) -> intersection (t0, t1, ts)
-  | Utility s -> utility s
-  | InlineInterface i -> inline_interface i
-  | CharSet s ->
-    let id = id_from_string "CharSet" in
-    return (mk_generic_type id (Some (mk_targs [(Loc.none, T.StringLiteral (str_lit s))])))
-  | TypeOf (TSymbol name) ->
-    id_from_symbol name >>= fun id ->
-    just
-      (T.Typeof
-         {
-           T.Typeof.argument = mk_generic_type id None;
-           internal = false;
-           comments = Flow_ast_utils.mk_comments_opt ();
-         })
-  | TypeOf _
-  | Mu _ ->
-    Error (Utils_js.spf "Unsupported type constructor `%s`." (Ty_debug.string_of_ctor_t t))
-
-and generic x targs =
-  id_from_symbol x >>= fun id ->
-  opt type_arguments targs >>| fun targs -> mk_generic id targs
-
-and generic_type x targs =
-  id_from_symbol x >>= fun id ->
-  opt type_arguments targs >>| fun targs -> mk_generic_type id targs
-
-and union t (t0, t1, rest) =
-  let ts = bk_union t |> Nel.to_list in
-  if List.mem Null ts && List.mem Void ts then
-    match List.filter (fun t -> not (t = Null || t = Void)) ts with
-    | [] ->
+let type_ options =
+  let rec type_ t =
+    let just t = return (Loc.none, t) in
+    let just' t = (Loc.none, t) in
+    match t with
+    | TVar (v, _) -> tvar v
+    | Bound (_, name) -> Ok (builtin_from_string name)
+    | Generic (x, _, ts) -> generic_type x ts
+    | Any _ -> just (T.Any None)
+    | Top -> just (T.Mixed None)
+    | Bot _ -> just (T.Empty None)
+    | Void -> just (T.Void None)
+    | Null -> just (T.Null None)
+    | Symbol -> just (T.Symbol None)
+    | Num (Some lit) ->
       return
-        ( Loc.none,
-          T.Union
-            {
-              T.Union.types =
-                ( (Loc.none, T.Null (Flow_ast_utils.mk_comments_opt ())),
-                  (Loc.none, T.Void (Flow_ast_utils.mk_comments_opt ())),
-                  [] );
-              comments = Flow_ast_utils.mk_comments_opt ();
-            } )
-    | hd :: tl ->
-      type_ (mk_union (hd, tl)) >>| fun ts ->
-      ( Loc.none,
-        T.Nullable { T.Nullable.argument = ts; comments = Flow_ast_utils.mk_comments_opt () } )
-  else
-    type_ t0 >>= fun t0 ->
-    type_ t1 >>= fun t1 ->
-    mapM type_ rest >>| fun rest ->
-    ( Loc.none,
-      T.Union { T.Union.types = (t0, t1, rest); comments = Flow_ast_utils.mk_comments_opt () } )
-
-and intersection (t0, t1, rest) =
-  type_ t0 >>= fun t0 ->
-  type_ t1 >>= fun t1 ->
-  mapM type_ rest >>| fun rest ->
-  ( Loc.none,
-    T.Intersection
-      { T.Intersection.types = (t0, t1, rest); comments = Flow_ast_utils.mk_comments_opt () } )
-
-and function_ f =
-  type_ f.fun_return >>= fun return ->
-  fun_params f.fun_params f.fun_rest_param >>= fun params ->
-  opt type_params f.fun_type_params >>| fun tparams ->
-  { T.Function.params; return; tparams; comments = Flow_ast_utils.mk_comments_opt () }
-
-and fun_params params rest_param =
-  mapM fun_param params >>= fun params ->
-  opt fun_rest_param rest_param >>| fun rest ->
-  (Loc.none, { T.Function.Params.params; rest; comments = None })
-
-and fun_param (name, t, { prm_optional }) =
-  let name = Base.Option.map ~f:id_from_string name in
-  type_ t >>| fun annot -> (Loc.none, { T.Function.Param.name; annot; optional = prm_optional })
-
-and fun_rest_param (name, t) =
-  fun_param (name, t, { prm_optional = false }) >>| fun argument ->
-  (Loc.none, { T.Function.RestParam.argument; comments = Flow_ast_utils.mk_comments_opt () })
-
-and obj_ o =
-  mapM obj_prop o.obj_props >>| fun properties ->
-  (Loc.none, T.Object { T.Object.exact = o.obj_exact; inexact = false; properties; comments = None })
-
-and obj_prop = function
-  | NamedProp { name; prop; _ } ->
-    obj_named_prop name prop >>| fun p -> T.Object.Property (Loc.none, p)
-  | IndexProp d -> obj_index_prop d >>| fun p -> T.Object.Indexer (Loc.none, p)
-  | CallProp f -> obj_call_prop f >>| fun p -> T.Object.CallProperty (Loc.none, p)
-  | SpreadProp t -> obj_spread_prop t >>| fun p -> T.Object.SpreadProperty p
-
-and obj_named_prop =
-  let to_key x =
-    if Ty_printer.property_key_quotes_needed x then
-      let raw = x in
-      let value = Ast.Literal.String raw in
-      Ast.Expression.Object.Property.Literal
-        (Loc.none, { Ast.Literal.value; raw; comments = Flow_ast_utils.mk_comments_opt () })
+        (builtin_from_string
+           "$TEMPORARY$number"
+           ~targs:(mk_targs [(Loc.none, T.NumberLiteral (num_lit lit))]))
+    | Num None -> just (T.Number None)
+    | Str (Some lit) ->
+      return
+        (builtin_from_string
+           "$TEMPORARY$string"
+           ~targs:(mk_targs [(Loc.none, T.StringLiteral (str_lit lit))]))
+    | Str None -> just (T.String None)
+    | Bool (Some lit) ->
+      return
+        (builtin_from_string
+           "$TEMPORARY$boolean"
+           ~targs:(mk_targs [(Loc.none, T.BooleanLiteral (bool_lit lit))]))
+    | Bool None -> just (T.Boolean None)
+    | NumLit lit -> just (T.NumberLiteral (num_lit lit))
+    | StrLit lit -> just (T.StringLiteral (str_lit lit))
+    | BoolLit lit -> just (T.BooleanLiteral (bool_lit lit))
+    | Fun f ->
+      let%map f = function_ f in
+      (Loc.none, T.Function f)
+    | Obj o -> obj_ o
+    | Arr a -> arr a
+    | Tup ts ->
+      let%map ts = mapM type_ ts in
+      (Loc.none, T.Tuple { T.Tuple.types = ts; comments = None })
+    | Union (t0, t1, ts) as t -> union t (t0, t1, ts)
+    | Inter (t0, t1, ts) -> intersection (t0, t1, ts)
+    | Utility s -> utility s
+    | InlineInterface i -> inline_interface i
+    | CharSet s ->
+      let id = id_from_string "CharSet" in
+      return (mk_generic_type id (Some (mk_targs [(Loc.none, T.StringLiteral (str_lit s))])))
+    | TypeOf (TSymbol name) ->
+      let%map id = id_from_symbol name in
+      just'
+        (T.Typeof { T.Typeof.argument = mk_generic_type id None; internal = false; comments = None })
+    | TypeOf _
+    | Mu _ ->
+      Error (Utils_js.spf "Unsupported type constructor `%s`." (Ty_debug.string_of_ctor_t t))
+  and generic x targs =
+    let%bind id = id_from_symbol x in
+    let%map targs = opt type_arguments targs in
+    mk_generic id targs
+  and generic_type x targs =
+    let%bind id = id_from_symbol x in
+    let%map targs = opt type_arguments targs in
+    mk_generic_type id targs
+  and union t (t0, t1, rest) =
+    let ts = bk_union t |> Nel.to_list in
+    if List.mem Null ts && List.mem Void ts then
+      match List.filter (fun t -> not (t = Null || t = Void)) ts with
+      | [] ->
+        return
+          ( Loc.none,
+            T.Union
+              {
+                T.Union.types = ((Loc.none, T.Null None), (Loc.none, T.Void None), []);
+                comments = None;
+              } )
+      | hd :: tl ->
+        let%map ts = type_ (mk_union (hd, tl)) in
+        (Loc.none, T.Nullable { T.Nullable.argument = ts; comments = None })
     else
-      Ast.Expression.Object.Property.Identifier (id_from_string x)
+      let%bind t0 = type_ t0 in
+      let%bind t1 = type_ t1 in
+      let%map rest = mapM type_ rest in
+      (Loc.none, T.Union { T.Union.types = (t0, t1, rest); comments = None })
+  and intersection (t0, t1, rest) =
+    let%bind t0 = type_ t0 in
+    let%bind t1 = type_ t1 in
+    let%map rest = mapM type_ rest in
+    (Loc.none, T.Intersection { T.Intersection.types = (t0, t1, rest); comments = None })
+  and function_ f =
+    let%bind return = type_ f.fun_return in
+    let%bind params = fun_params f.fun_params f.fun_rest_param in
+    let%map tparams = opt type_params f.fun_type_params in
+    { T.Function.params; return; tparams; comments = None }
+  and fun_params params rest_param =
+    let%bind params = mapM fun_param params in
+    let%map rest = opt fun_rest_param rest_param in
+    (Loc.none, { T.Function.Params.params; rest; comments = None })
+  and fun_param (name, t, { prm_optional }) =
+    let name = Base.Option.map ~f:id_from_string name in
+    let%map annot = type_ t in
+    (Loc.none, { T.Function.Param.name; annot; optional = prm_optional })
+  and fun_rest_param (name, t) =
+    let%map argument = fun_param (name, t, { prm_optional = false }) in
+    (Loc.none, { T.Function.RestParam.argument; comments = None })
+  and obj_ o =
+    let%bind properties = mapM obj_prop o.obj_props in
+    let%map (exact, inexact, properties) =
+      match o.obj_kind with
+      | ExactObj -> return (not options.exact_by_default, false, properties)
+      | InexactObj -> return (false, true, properties)
+      | IndexedObj d ->
+        let%map p = obj_index_prop d in
+        let properties = T.Object.Indexer (Loc.none, p) :: properties in
+        (false, false, properties)
+    in
+    let t = (Loc.none, T.Object { T.Object.exact; inexact; properties; comments = None }) in
+    match o.obj_literal with
+    | Some true -> mk_generic_type (id_from_string "$TEMPORARY$object") (Some (mk_targs [t]))
+    | None
+    | Some false ->
+      t
+  and obj_prop = function
+    | NamedProp { name; prop; _ } ->
+      let%map p = obj_named_prop name prop in
+      T.Object.Property (Loc.none, p)
+    | CallProp f ->
+      let%map p = obj_call_prop f in
+      T.Object.CallProperty (Loc.none, p)
+    | SpreadProp t ->
+      let%map p = obj_spread_prop t in
+      T.Object.SpreadProperty p
+  and obj_named_prop =
+    let to_key x =
+      if Ty_printer.property_key_quotes_needed x then
+        let quote = Js_layout_generator.better_quote x in
+        let raw = quote ^ Js_layout_generator.utf8_escape ~quote x ^ quote in
+        let value = Ast.Literal.String x in
+        Ast.Expression.Object.Property.Literal
+          (Loc.none, { Ast.Literal.value; raw; comments = None })
+      else
+        Ast.Expression.Object.Property.Identifier (id_from_string x)
+    in
+    fun x prop ->
+      match prop with
+      | Field { t; polarity; optional } ->
+        let%map t = type_ t in
+        {
+          T.Object.Property.key = to_key x;
+          value = T.Object.Property.Init t;
+          optional;
+          static = false;
+          proto = false;
+          _method = false;
+          variance = variance_ polarity;
+          comments = None;
+        }
+      | Method f ->
+        let%map fun_t = function_ f in
+        {
+          T.Object.Property.key = to_key x;
+          value = T.Object.Property.Init (Loc.none, T.Function fun_t);
+          optional = false;
+          static = false;
+          proto = false;
+          _method = true;
+          variance = None;
+          comments = None;
+        }
+      | Get t ->
+        let%map t = getter t in
+        {
+          T.Object.Property.key = to_key x;
+          value = T.Object.Property.Get (Loc.none, t);
+          optional = false;
+          static = false;
+          proto = false;
+          _method = false;
+          variance = None;
+          comments = None;
+        }
+      | Set t ->
+        let%map t = setter t in
+        {
+          T.Object.Property.key = to_key x;
+          value = T.Object.Property.Set (Loc.none, t);
+          optional = false;
+          static = false;
+          proto = false;
+          _method = false;
+          variance = None;
+          comments = None;
+        }
+  and obj_index_prop d =
+    let id = Base.Option.map ~f:id_from_string d.dict_name in
+    let%bind key = type_ d.dict_key in
+    let%map value = type_ d.dict_value in
+    {
+      T.Object.Indexer.id;
+      key;
+      value;
+      static = false;
+      variance = variance_ d.dict_polarity;
+      comments = None;
+    }
+  and obj_call_prop f =
+    let%map value = function_ f in
+    { T.Object.CallProperty.value = (Loc.none, value); static = false; comments = None }
+  and obj_spread_prop t =
+    let%map t = type_ t in
+    (Loc.none, { T.Object.SpreadProperty.argument = t; comments = None })
+  and arr { arr_readonly; arr_elt_t; arr_literal; _ } =
+    let%map t = type_ arr_elt_t in
+    if arr_readonly then
+      builtin_from_string "$ReadOnlyArray" ~targs:(mk_targs [t])
+    else
+      match arr_literal with
+      | Some true -> mk_generic_type (id_from_string "$TEMPORARY$array") (Some (mk_targs [t]))
+      | None
+      | Some false ->
+        builtin_from_string "Array" ~targs:(mk_targs [t])
+  and type_params ts =
+    let%map ts = mapM type_param ts in
+    (Loc.none, { T.TypeParams.params = ts; comments = None })
+  and type_param tp =
+    let%bind bound = opt annotation tp.tp_bound in
+    let%map default = opt type_ tp.tp_default in
+    ( Loc.none,
+      {
+        T.TypeParam.name = id_from_string tp.tp_name;
+        bound =
+          (match bound with
+          | Some t -> T.Available t
+          | None -> T.Missing Loc.none);
+        variance = variance_ tp.tp_polarity;
+        default;
+      } )
+  and type_arguments ts =
+    let%map ts = mapM type_ ts in
+    mk_targs ts
+  and str_lit lit =
+    let quote = Js_layout_generator.better_quote lit in
+    let raw_lit = Js_layout_generator.utf8_escape ~quote lit in
+    let raw = quote ^ raw_lit ^ quote in
+    { Ast.StringLiteral.value = lit; raw; comments = None }
+  and num_lit lit =
+    {
+      Ast.NumberLiteral.value = (try Base.Float.of_string lit with Failure _ -> 0.);
+      raw = lit;
+      comments = None;
+    }
+  and bool_lit lit = { Ast.BooleanLiteral.value = lit; comments = None }
+  and getter t =
+    function_
+      {
+        fun_params = [];
+        fun_rest_param = None;
+        fun_return = t;
+        fun_type_params = None;
+        fun_static = Ty.Top;
+      }
+  and setter t =
+    function_
+      {
+        fun_params = [(None, t, { prm_optional = false })];
+        fun_rest_param = None;
+        fun_return = Void;
+        fun_type_params = None;
+        fun_static = Ty.Top;
+      }
+  and interface_extends e =
+    let (x, _, ts) = e in
+    let%map gen = generic x ts in
+    (Loc.none, gen)
+  and inline_interface i =
+    let { if_extends; if_props; if_dict } = i in
+    let%bind extends = mapM interface_extends if_extends in
+    let%bind properties = mapM obj_prop if_props in
+    let%bind properties =
+      match if_dict with
+      | Some d ->
+        let%bind p = obj_index_prop d in
+        return (T.Object.Indexer (Loc.none, p) :: properties)
+      | None -> return properties
+    in
+    let body =
+      (Loc.none, { T.Object.exact = false; inexact = false; properties; comments = None })
+    in
+    return (Loc.none, T.Interface { T.Interface.body; extends; comments = None })
+  and utility u =
+    let ctor = Ty.string_of_utility_ctor u in
+    let ts = Ty.types_of_utility u in
+    let id = id_from_string ctor in
+    let%map ts = opt type_arguments ts in
+    mk_generic_type id ts
+  and annotation t =
+    let%map t = type_ t in
+    (Loc.none, t)
   in
-  fun x prop ->
-    match prop with
-    | Field { t; polarity; optional } ->
-      type_ t >>| fun t ->
-      {
-        T.Object.Property.key = to_key x;
-        value = T.Object.Property.Init t;
-        optional;
-        static = false;
-        proto = false;
-        _method = false;
-        variance = variance_ polarity;
-        comments = None;
-      }
-    | Method f ->
-      function_ f >>| fun fun_t ->
-      {
-        T.Object.Property.key = to_key x;
-        value = T.Object.Property.Init (Loc.none, T.Function fun_t);
-        optional = false;
-        static = false;
-        proto = false;
-        _method = true;
-        variance = None;
-        comments = None;
-      }
-    | Get t ->
-      getter t >>| fun t ->
-      {
-        T.Object.Property.key = to_key x;
-        value = T.Object.Property.Get (Loc.none, t);
-        optional = false;
-        static = false;
-        proto = false;
-        _method = false;
-        variance = None;
-        comments = None;
-      }
-    | Set t ->
-      setter t >>| fun t ->
-      {
-        T.Object.Property.key = to_key x;
-        value = T.Object.Property.Set (Loc.none, t);
-        optional = false;
-        static = false;
-        proto = false;
-        _method = false;
-        variance = None;
-        comments = None;
-      }
-
-and obj_index_prop d =
-  let id = Base.Option.map ~f:id_from_string d.dict_name in
-  type_ d.dict_key >>= fun key ->
-  type_ d.dict_value >>| fun value ->
-  {
-    T.Object.Indexer.id;
-    key;
-    value;
-    static = false;
-    variance = variance_ d.dict_polarity;
-    comments = Flow_ast_utils.mk_comments_opt ();
-  }
-
-and obj_call_prop f =
-  function_ f >>| fun value ->
-  { T.Object.CallProperty.value = (Loc.none, value); static = false; comments = None }
-
-and obj_spread_prop t =
-  type_ t >>| fun t ->
-  (Loc.none, { T.Object.SpreadProperty.argument = t; comments = Flow_ast_utils.mk_comments_opt () })
-
-and arr { arr_readonly; arr_elt_t; _ } =
-  type_ arr_elt_t >>| fun t ->
-  if arr_readonly then
-    builtin_from_string "$ReadOnlyArray" ~targs:(mk_targs [t])
-  else
-    builtin_from_string "Array" ~targs:(mk_targs [t])
-
-and type_params ts =
-  mapM type_param ts >>| fun ts ->
-  (Loc.none, { T.TypeParams.params = ts; comments = Flow_ast_utils.mk_comments_opt () })
-
-and type_param tp =
-  opt annotation tp.tp_bound >>= fun bound ->
-  opt type_ tp.tp_default >>| fun default ->
-  ( Loc.none,
-    {
-      T.TypeParam.name = id_from_string tp.tp_name;
-      bound =
-        (match bound with
-        | Some t -> T.Available t
-        | None -> T.Missing Loc.none);
-      variance = variance_ tp.tp_polarity;
-      default;
-    } )
-
-and type_arguments ts = mapM type_ ts >>| fun ts -> mk_targs ts
-
-and str_lit lit =
-  let quote = Js_layout_generator.better_quote lit in
-  let raw_lit = Js_layout_generator.utf8_escape ~quote lit in
-  let raw = quote ^ raw_lit ^ quote in
-  { Ast.StringLiteral.value = lit; raw; comments = Flow_ast_utils.mk_comments_opt () }
-
-and num_lit lit =
-  {
-    Ast.NumberLiteral.value = (try Pervasives.float_of_string lit with Failure _ -> 0.);
-    raw = lit;
-    comments = Flow_ast_utils.mk_comments_opt ();
-  }
-
-and bool_lit lit = { Ast.BooleanLiteral.value = lit; comments = Flow_ast_utils.mk_comments_opt () }
-
-and getter t =
-  function_
-    {
-      fun_params = [];
-      fun_rest_param = None;
-      fun_return = t;
-      fun_type_params = None;
-      fun_static = Ty.Top;
-    }
-
-and setter t =
-  function_
-    {
-      fun_params = [(None, t, { prm_optional = false })];
-      fun_rest_param = None;
-      fun_return = Void;
-      fun_type_params = None;
-      fun_static = Ty.Top;
-    }
-
-and interface_extends e =
-  let (x, _, ts) = e in
-  generic x ts >>| fun gen -> (Loc.none, gen)
-
-and inline_interface i =
-  let { if_extends; if_body } = i in
-  let { obj_props; _ } = if_body in
-  mapM interface_extends if_extends >>= fun extends ->
-  mapM obj_prop obj_props >>| fun properties ->
-  let body = (Loc.none, { T.Object.exact = false; inexact = false; properties; comments = None }) in
-  (Loc.none, T.Interface { T.Interface.body; extends; comments = Flow_ast_utils.mk_comments_opt () })
-
-and utility u =
-  let ctor = Ty.string_of_utility_ctor u in
-  let ts = Ty.types_of_utility u in
-  let id = id_from_string ctor in
-  opt type_arguments ts >>| fun ts -> mk_generic_type id ts
-
-and annotation t = type_ t >>| fun t -> (Loc.none, t)
+  (fun t -> type_ t)

@@ -11,7 +11,7 @@ include Sys
 module S = struct
   type t = string
 
-  let compare = Pervasives.compare
+  let compare = Stdlib.compare
 
   let to_string x = x
 end
@@ -22,7 +22,7 @@ let dummy_path : t = ""
 
 let cat = Sys_utils.cat
 
-let compare = Pervasives.compare
+let compare = Stdlib.compare
 
 let dirname = Filename.dirname
 

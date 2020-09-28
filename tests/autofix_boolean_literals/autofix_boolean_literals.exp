@@ -5,22 +5,8 @@
 declare var cond: boolean;
 
 module.exports = (): boolean => (cond ? true : false);
-> autofix exports tmp/a.js
-> cat tmp/a.js
-// @flow
-
-declare var cond: boolean;
-
-module.exports = (): boolean => (cond ? true : false);
 > autofix insert-type b.js 5 20 --strategy=specialize
 > cat b.js
-// @flow
-
-declare var cond: boolean;
-
-module.exports = (): boolean => (cond ? true : false);
-> autofix exports tmp/b.js
-> cat tmp/b.js
 // @flow
 
 declare var cond: boolean;

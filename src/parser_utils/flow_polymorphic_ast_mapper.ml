@@ -16,12 +16,14 @@ class virtual ['M, 'T, 'N, 'U] mapper =
 
     method virtual on_type_annot : 'T -> 'U
 
-    method program (program : ('M, 'T) Ast.program) : ('N, 'U) Ast.program =
-      let (annot, statements, comments) = program in
+    method program (program : ('M, 'T) Ast.Program.t) : ('N, 'U) Ast.Program.t =
+      let open Ast.Program in
+      let (annot, { statements; comments; all_comments }) = program in
       let annot' = this#on_loc_annot annot in
       let statements' = this#toplevel_statement_list statements in
-      let comments' = Base.List.map ~f:this#comment comments in
-      (annot', statements', comments')
+      let comments' = Base.Option.map ~f:this#syntax comments in
+      let all_comments' = Base.List.map ~f:this#comment all_comments in
+      (annot', { statements = statements'; comments = comments'; all_comments = all_comments' })
 
     method statement ((annot, stmt) : ('M, 'T) Ast.Statement.t) : ('N, 'U) Ast.Statement.t =
       Ast.Statement.
@@ -133,7 +135,7 @@ class virtual ['M, 'T, 'N, 'U] mapper =
       let { arguments; comments } = args in
       let annot' = this#on_loc_annot annot in
       let arguments' = Base.List.map ~f:this#expression_or_spread arguments in
-      let comments' = Base.Option.map ~f:this#syntax comments in
+      let comments' = Base.Option.map ~f:this#syntax_with_internal comments in
       (annot', { arguments = arguments'; comments = comments' })
 
     method array (expr : ('M, 'T) Ast.Expression.Array.t) : ('N, 'U) Ast.Expression.Array.t =
@@ -207,7 +209,7 @@ class virtual ['M, 'T, 'N, 'U] mapper =
       let (annot, { arguments; comments }) = pi in
       let annot' = this#on_loc_annot annot in
       let arguments' = Base.List.map ~f:this#call_type_arg arguments in
-      let comments' = Base.Option.map ~f:this#syntax comments in
+      let comments' = Base.Option.map ~f:this#syntax_with_internal comments in
       (annot', { arguments = arguments'; comments = comments' })
 
     method call_type_arg (x : ('M, 'T) Ast.Expression.CallTypeArg.t)
@@ -863,7 +865,7 @@ class virtual ['M, 'T, 'N, 'U] mapper =
       let (annot, { arguments; comments }) = targs in
       let annot' = this#on_loc_annot annot in
       let arguments' = Base.List.map ~f:this#type_ arguments in
-      let comments' = Base.Option.map ~f:this#syntax comments in
+      let comments' = Base.Option.map ~f:this#syntax_with_internal comments in
       (annot', { arguments = arguments'; comments = comments' })
 
     method type_params_opt
@@ -877,7 +879,7 @@ class virtual ['M, 'T, 'N, 'U] mapper =
               let (annot, { params = tps; comments }) = tparams in
               let annot' = this#on_loc_annot annot in
               let tps' = Base.List.map ~f:this#type_param tps in
-              let comments' = Base.Option.map ~f:this#syntax comments in
+              let comments' = Base.Option.map ~f:this#syntax_with_internal comments in
               (annot', { params = tps'; comments = comments' }))
             tparams
         in
@@ -1182,10 +1184,11 @@ class virtual ['M, 'T, 'N, 'U] mapper =
     method if_alternate_statement (altern : ('M, 'T) Ast.Statement.If.Alternate.t)
         : ('N, 'U) Ast.Statement.If.Alternate.t =
       let open Ast.Statement.If.Alternate in
-      let { body; comments } = altern in
+      let (annot, { body; comments }) = altern in
+      let annot' = this#on_loc_annot annot in
       let body' = this#statement body in
       let comments' = Base.Option.map ~f:this#syntax comments in
-      { body = body'; comments = comments' }
+      (annot', { body = body'; comments = comments' })
 
     method if_statement (stmt : ('M, 'T) Ast.Statement.If.t) : ('N, 'U) Ast.Statement.If.t =
       let open Ast.Statement.If in

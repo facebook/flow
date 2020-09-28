@@ -4,10 +4,10 @@
 
 Stats:
   Files changed:                            4
-  Number of sig. ver. errors:               4
-  Number of annotations required:           4
   Number of annotations added:              4
   Total size of annotations:                4
+  Number of sig. ver. errors:               4
+  Number of annotations required:           4
   Number of annotations skipped:            0
 
 Errors:
@@ -18,7 +18,6 @@ Errors:
     Parsing heaps get ast error:            0
     Indeterminate module type:              0
     No matching export:                     0
-    Unrecognizable module error:            0
   Serializer error:                         0
   Unsupported error kind:                   0
 
@@ -35,10 +34,10 @@ Warnings:
 
 Stats:
   Files changed:                            3
-  Number of sig. ver. errors:               3
-  Number of annotations required:           3
   Number of annotations added:              3
   Total size of annotations:                3
+  Number of sig. ver. errors:               3
+  Number of annotations required:           3
   Number of annotations skipped:            0
 
 Errors:
@@ -49,7 +48,6 @@ Errors:
     Parsing heaps get ast error:            0
     Indeterminate module type:              0
     No matching export:                     0
-    Unrecognizable module error:            0
   Serializer error:                         0
   Unsupported error kind:                   0
 
@@ -66,10 +64,10 @@ Warnings:
 
 Stats:
   Files changed:                            2
-  Number of sig. ver. errors:               2
-  Number of annotations required:           2
   Number of annotations added:              2
   Total size of annotations:                2
+  Number of sig. ver. errors:               2
+  Number of annotations required:           2
   Number of annotations skipped:            0
 
 Errors:
@@ -80,7 +78,6 @@ Errors:
     Parsing heaps get ast error:            0
     Indeterminate module type:              0
     No matching export:                     0
-    Unrecognizable module error:            0
   Serializer error:                         0
   Unsupported error kind:                   0
 
@@ -97,10 +94,10 @@ Warnings:
 
 Stats:
   Files changed:                            1
-  Number of sig. ver. errors:               1
-  Number of annotations required:           1
   Number of annotations added:              1
   Total size of annotations:                1
+  Number of sig. ver. errors:               1
+  Number of annotations required:           1
   Number of annotations skipped:            0
 
 Errors:
@@ -111,7 +108,6 @@ Errors:
     Parsing heaps get ast error:            0
     Indeterminate module type:              0
     No matching export:                     0
-    Unrecognizable module error:            0
   Serializer error:                         0
   Unsupported error kind:                   0
 
@@ -128,10 +124,10 @@ Warnings:
 
 Stats:
   Files changed:                            0
-  Number of sig. ver. errors:               0
-  Number of annotations required:           0
   Number of annotations added:              0
   Total size of annotations:                0
+  Number of sig. ver. errors:               0
+  Number of annotations required:           0
   Number of annotations skipped:            0
 
 Errors:
@@ -142,7 +138,6 @@ Errors:
     Parsing heaps get ast error:            0
     Indeterminate module type:              0
     No matching export:                     0
-    Unrecognizable module error:            0
   Serializer error:                         0
   Unsupported error kind:                   0
 

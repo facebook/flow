@@ -1,4 +1,7 @@
->>> a.js (#changes: 2)
+
+=== Codemod annotate-exports ===
+
+>>> ./a.js
 // @flow
 
 class C {}
@@ -8,7 +11,7 @@ export default class {
   num: number = 1;
 }
 
->>> b.js (#changes: 1)
+>>> ./b.js
 // @flow
 
 class C {
@@ -18,7 +21,7 @@ class C {
 }
 module.exports = C;
 
->>> c.js (#changes: 2)
+>>> ./c.js
 // @flow
 
 class A {
@@ -34,10 +37,10 @@ module.exports = {
 
 Stats:
   Files changed:                            3
-  Number of sig. ver. errors:               5
-  Number of annotations required:           5
   Number of annotations added:              5
   Total size of annotations:                9
+  Number of sig. ver. errors:               5
+  Number of annotations required:           5
   Number of annotations skipped:            0
 
 Errors:
@@ -48,7 +51,6 @@ Errors:
     Parsing heaps get ast error:            0
     Indeterminate module type:              0
     No matching export:                     0
-    Unrecognizable module error:            0
   Serializer error:                         0
   Unsupported error kind:                   0
 
@@ -58,4 +60,47 @@ Warnings:
   Location unhandled:                       0
   Empty NoUpper:                            1
   Empty SomeKnownUpper:                     0
+
+
+=== Autofix exports ===
+
+>>> ./a.js
+// @flow
+
+class C {}
+// XYZXYZ
+export default class {
+  array: Array<empty> = [];
+  num: number = 1;
+}
+
+>>> ./b.js
+// @flow
+
+class C {
+  m(): number {
+    return 1;
+  }
+}
+module.exports = C;
+
+>>> ./c.js
+// @flow
+
+class A {
+  f: ((x: string) => string) = (x: string) => x;
+}
+
+module.exports = {
+  a: A,
+  b: (x: string): string => x,
+};
+
+
+=== Diff between codemod-ed & autofix-ed ===
+>>> ./a.js
+6c6
+<   array: Array<any> = [];
+---
+>   array: Array<empty> = [];
 

@@ -22,9 +22,9 @@ module UnionSimplification = struct
           Ty.Union
             ( Ty.Obj
                 {
-                  Ty.obj_exact = false;
+                  Ty.obj_kind = Ty.InexactObj;
                   obj_frozen = false;
-                  obj_literal = false;
+                  obj_literal = None;
                   obj_props =
                     [
                       Ty.NamedProp
@@ -38,9 +38,9 @@ module UnionSimplification = struct
                 },
               Ty.Obj
                 {
-                  Ty.obj_exact = false;
+                  Ty.obj_kind = Ty.InexactObj;
                   obj_frozen = false;
-                  obj_literal = false;
+                  obj_literal = None;
                   obj_props =
                     [
                       Ty.NamedProp
@@ -58,9 +58,9 @@ module UnionSimplification = struct
         let t_exp =
           Ty.Obj
             {
-              Ty.obj_exact = false;
+              Ty.obj_kind = Ty.InexactObj;
               obj_frozen = false;
-              obj_literal = false;
+              obj_literal = None;
               obj_props =
                 [
                   Ty.NamedProp
@@ -83,9 +83,9 @@ module UnionSimplification = struct
           Ty.Union
             ( Ty.Obj
                 {
-                  Ty.obj_exact = false;
+                  Ty.obj_kind = Ty.InexactObj;
                   obj_frozen = false;
-                  obj_literal = false;
+                  obj_literal = None;
                   obj_props =
                     [
                       Ty.NamedProp
@@ -99,9 +99,9 @@ module UnionSimplification = struct
                 },
               Ty.Obj
                 {
-                  Ty.obj_exact = false;
+                  Ty.obj_kind = Ty.InexactObj;
                   obj_frozen = false;
-                  obj_literal = false;
+                  obj_literal = None;
                   obj_props =
                     [
                       Ty.NamedProp
@@ -136,9 +136,9 @@ module BotAndTopSimplification = struct
           Ty.Union
             ( Ty.Obj
                 {
-                  Ty.obj_exact = false;
+                  Ty.obj_kind = Ty.InexactObj;
                   obj_frozen = false;
-                  obj_literal = false;
+                  obj_literal = None;
                   obj_props =
                     [
                       Ty.NamedProp
@@ -153,9 +153,9 @@ module BotAndTopSimplification = struct
                 },
               Ty.Obj
                 {
-                  Ty.obj_exact = false;
+                  Ty.obj_kind = Ty.InexactObj;
                   obj_frozen = false;
-                  obj_literal = false;
+                  obj_literal = None;
                   obj_props =
                     [
                       Ty.NamedProp
@@ -178,9 +178,9 @@ module BotAndTopSimplification = struct
         let t_exp =
           Ty.Obj
             {
-              Ty.obj_exact = false;
+              Ty.obj_kind = Ty.InexactObj;
               obj_frozen = false;
-              obj_literal = false;
+              obj_literal = None;
               obj_props =
                 [
                   Ty.NamedProp
@@ -327,26 +327,30 @@ module Sorting = struct
       ( "idempotence" >:: fun ctxt ->
         assert_equal
           ~ctxt
-          ~printer:Ty_printer.string_of_t
+          ~printer:(Ty_printer.string_of_t ~exact_by_default:true)
           (simplify_base t0)
           (simplify_base (simplify_base t0));
         assert_equal
           ~ctxt
-          ~printer:Ty_printer.string_of_t
+          ~printer:(Ty_printer.string_of_t ~exact_by_default:true)
           (simplify_base t6)
           (simplify_base (simplify_base (simplify_base t6)));
         assert_equal
           ~ctxt
-          ~printer:Ty_printer.string_of_t
+          ~printer:(Ty_printer.string_of_t ~exact_by_default:true)
           (simplify_sort t4)
           (simplify_sort (simplify_sort t4));
         assert_equal
           ~ctxt
-          ~printer:Ty_printer.string_of_t
+          ~printer:(Ty_printer.string_of_t ~exact_by_default:true)
           (simplify_sort t6)
           (simplify_sort (simplify_sort (simplify_sort t6))) );
       ( "sorting" >:: fun ctxt ->
-        assert_equal ~ctxt ~printer:Ty_printer.string_of_t t6_sorted (simplify_sort t6) );
+        assert_equal
+          ~ctxt
+          ~printer:(Ty_printer.string_of_t ~exact_by_default:true)
+          t6_sorted
+          (simplify_sort t6) );
       ( "union/intersection" >:: fun ctxt ->
         let t_in =
           Inter

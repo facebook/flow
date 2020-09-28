@@ -1,7 +1,7 @@
 Error ------------------------------------------------------------------------------------------------------ test.js:9:4
 
 Cannot call `fn` with object literal bound to the first parameter because property `foo` is missing in object type [1]
-but exists in object literal [2].
+but exists in object literal [2]. [prop-missing]
 
    test.js:9:4
     9| fn({foo: 42}); // Error: `foo` is not in `{||}`

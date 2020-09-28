@@ -15,7 +15,6 @@ let check_type_visitor wrap =
     method! private on_prop env =
       function
       | NamedProp { prop; _ } -> self#on_named_prop env prop
-      | IndexProp d -> self#on_dict env d
       | CallProp _ -> wrap (Reason.RCustom "object Call Property")
       | SpreadProp _ -> wrap (Reason.RCustom "object Spread Property")
 
@@ -74,7 +73,7 @@ let detect_invalid_calls ~full_cx file_sigs cxs tasts =
         | Ok _
         | Error _ ->
           let { Type.TypeScheme.type_ = t; _ } = scheme in
-          wrap (Type.desc_of_t t))
+          wrap (TypeUtil.desc_of_t t))
   in
   Base.List.iter2_exn
     ~f:(fun cx typed_ast ->

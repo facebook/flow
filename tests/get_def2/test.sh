@@ -31,6 +31,7 @@ assert_ok "$FLOW" get-def --strip-root require.js 4 2
 
 printf "\nReact class and attribute expressions\n"
 assert_ok "$FLOW" get-def --strip-root react.js 11 3
+assert_ok "$FLOW" get-def --strip-root react.js 11 5
 assert_ok "$FLOW" get-def --strip-root react.js 11 9
 # TODO give some result for the JSX intrinsic here
 assert_ok "$FLOW" get-def --strip-root react.js 13 4

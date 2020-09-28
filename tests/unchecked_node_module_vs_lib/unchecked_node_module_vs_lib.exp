@@ -1,6 +1,6 @@
 Error ---------------------------------------------------------------------------------------------------- test.js:12:18
 
-Cannot assign `buffer.INSPECT_MAX_BYTES` to `b` because number [1] is incompatible with boolean [2].
+Cannot assign `buffer.INSPECT_MAX_BYTES` to `b` because number [1] is incompatible with boolean [2]. [incompatible-type]
 
    test.js:12:18
     12| var b: boolean = buffer.INSPECT_MAX_BYTES; // error, number ~/> boolean
@@ -17,7 +17,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:22:23
 
-Cannot resolve module `./buffer`.
+Cannot resolve module `./buffer`. [cannot-resolve-module]
 
    22| var buffer2 = require("./buffer");
                              ^^^^^^^^^^
@@ -25,7 +25,7 @@ Cannot resolve module `./buffer`.
 
 Error ---------------------------------------------------------------------------------------------------- test.js:25:23
 
-Cannot resolve module `./buffer.js`.
+Cannot resolve module `./buffer.js`. [cannot-resolve-module]
 
    25| var buffer3 = require("./buffer.js");
                              ^^^^^^^^^^^^^

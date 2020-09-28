@@ -10,9 +10,9 @@
  *
  * The 'serializer' is the job continuation: it is a function that must
  * be called at the end of the request ir order to send back the result
- * to the master (this is "internal business", this is not visible outside
- * this module). The slave will provide the expected function.
- * cf 'send_result' in 'slave_main'.
+ * to the worker process (this is "internal business", this is not visible
+ * outside this module). The clone process will provide the expected
+ * function. cf 'send_result' in 'worker_main'.
  *
  *****************************************************************************)
 
@@ -20,9 +20,11 @@ type request = Request of (serializer -> unit)
 
 and serializer = { send: 'a. 'a -> unit }
 
-type slave_job_status = Slave_terminated of Unix.process_status
+type job_status = Job_terminated of Unix.process_status
 
-let on_slave_cancelled parent_outfd =
+exception Connection_closed
+
+let on_job_cancelled parent_outfd =
   (* The cancelling controller will ignore result of cancelled job anyway (see
    * wait_for_cancel function), so we can send back anything. Write twice, since
    * the normal response writes twice too *)
@@ -34,7 +36,7 @@ let on_slave_cancelled parent_outfd =
  *
  *****************************************************************************)
 
-let slave_main ic oc =
+let worker_main ic oc =
   let start_user_time = ref 0. in
   let start_system_time = ref 0. in
   let start_minor_words = ref 0. in
@@ -94,7 +96,8 @@ let slave_main ic oc =
     WorkerCancel.set_on_worker_cancelled (fun () -> ());
     let len =
       Measure.time "worker_send_response" (fun () ->
-          Marshal_tools.to_fd_with_preamble ~flags:[Marshal.Closures] outfd data)
+          try Marshal_tools.to_fd_with_preamble ~flags:[Marshal.Closures] outfd data
+          with Unix.Unix_error (Unix.EPIPE, _, _) -> raise Connection_closed)
     in
     if len > 30 * 1024 * 1024 (* 30 MB *) then (
       Hh_logger.log
@@ -107,48 +110,58 @@ let slave_main ic oc =
     Measure.sample "worker_response_len" (float len);
 
     let stats = Measure.serialize (Measure.pop_global ()) in
-    let _ = Marshal_tools.to_fd_with_preamble outfd stats in
+    let _ =
+      try Marshal_tools.to_fd_with_preamble outfd stats
+      with Unix.Unix_error (Unix.EPIPE, _, _) -> raise Connection_closed
+    in
     ()
   in
   try
-    Measure.push_global ();
-    let (Request do_process) =
-      Measure.time "worker_read_request" (fun () -> Marshal_tools.from_fd_with_preamble infd)
-    in
-    WorkerCancel.set_on_worker_cancelled (fun () -> on_slave_cancelled outfd);
-    let tm = Unix.times () in
-    let gc = Gc.quick_stat () in
-    Sys_utils.start_gc_profiling ();
+    try
+      Measure.push_global ();
+      let (Request do_process) =
+        Measure.time "worker_read_request" (fun () ->
+            try Marshal_tools.from_fd_with_preamble infd
+            with End_of_file -> raise Connection_closed)
+      in
+      WorkerCancel.set_on_worker_cancelled (fun () -> on_job_cancelled outfd);
+      let tm = Unix.times () in
+      let gc = Gc.quick_stat () in
+      Sys_utils.start_gc_profiling ();
 
-    start_user_time := tm.Unix.tms_utime +. tm.Unix.tms_cutime;
-    start_system_time := tm.Unix.tms_stime +. tm.Unix.tms_cstime;
-    start_minor_words := gc.Gc.minor_words;
-    start_promoted_words := gc.Gc.promoted_words;
-    start_major_words := gc.Gc.major_words;
-    start_minor_collections := gc.Gc.minor_collections;
-    start_major_collections := gc.Gc.major_collections;
-    start_wall_time := Unix.gettimeofday ();
-    start_proc_fs_status := ProcFS.status_for_pid (Unix.getpid ()) |> Core_kernel.Result.ok;
-    Mem_profile.start ();
-    do_process { send = send_result };
-    exit 0
-  with
-  | End_of_file -> exit 1
-  | SharedMem.Out_of_shared_memory -> Exit_status.(exit Out_of_shared_memory)
-  | SharedMem.Hash_table_full -> Exit_status.(exit Hash_table_full)
-  | SharedMem.Heap_full -> Exit_status.(exit Heap_full)
-  | e ->
-    let e_backtrace = Printexc.get_backtrace () in
-    let e_str = Printexc.to_string e in
+      start_user_time := tm.Unix.tms_utime +. tm.Unix.tms_cutime;
+      start_system_time := tm.Unix.tms_stime +. tm.Unix.tms_cstime;
+      start_minor_words := gc.Gc.minor_words;
+      start_promoted_words := gc.Gc.promoted_words;
+      start_major_words := gc.Gc.major_words;
+      start_minor_collections := gc.Gc.minor_collections;
+      start_major_collections := gc.Gc.major_collections;
+      start_wall_time := Unix.gettimeofday ();
+      start_proc_fs_status := ProcFS.status_for_pid (Unix.getpid ()) |> Base.Result.ok;
+      Mem_profile.start ();
+      do_process { send = send_result };
+      exit 0
+    with
+    | Connection_closed -> exit 1
+    | SharedMem.Out_of_shared_memory -> FlowExitStatus.(exit Out_of_shared_memory)
+    | SharedMem.Hash_table_full -> FlowExitStatus.(exit Hash_table_full)
+    | SharedMem.Heap_full -> FlowExitStatus.(exit Heap_full)
+  with e ->
+    let exn = Exception.wrap e in
+    let e_str =
+      Printf.sprintf
+        "%s\nBacktrace: %s"
+        (Exception.get_ctor_string exn)
+        (Exception.get_full_backtrace_string max_int exn)
+    in
     let pid = Unix.getpid () in
-    Printf.printf "Worker slave %d exception: %s\n%!" pid e_str;
-    EventLogger.log_if_initialized (fun () -> EventLogger.worker_exception e_str);
-    Printf.printf "Worker slave %d Potential backtrace:\n%s\n%!" pid e_backtrace;
+    if EventLogger.should_log () then EventLogger.worker_exception e_str;
+    Printf.printf "Worker %d exception: %s\n%!" pid e_str;
     exit 2
 
 let win32_worker_main restore (state, _controller_fd) (ic, oc) =
   restore state;
-  slave_main ic oc
+  worker_main ic oc
 
 let maybe_send_status_to_controller fd status =
   match fd with
@@ -158,19 +171,20 @@ let maybe_send_status_to_controller fd status =
     (match status with
     | Unix.WEXITED 0 -> ()
     | Unix.WEXITED 1 ->
-      (* 1 is an expected exit code. On unix systems, when the master process exits, the pipe
-       * becomes readable. We fork a worker slave, which reads 0 bytes and exits with code 1.
-       * In this case, the master is dead so trying to write a message to the master will
-       * cause an exception *)
+      (* 1 is an expected exit code. On unix systems, when the controller
+       * process exits, the pipe becomes readable. We fork a new clone, which
+       * reads 0 bytes and exits with code 1. In this case, the controller is
+       * dead so trying to write a message to the controller willcause an
+       * exception *)
       ()
     | _ ->
       Timeout.with_timeout
         ~timeout:10
         ~on_timeout:(fun _ -> Hh_logger.log "Timed out sending status to controller")
-        ~do_:(fun _ -> to_controller fd (Slave_terminated status)))
+        ~do_:(fun _ -> to_controller fd (Job_terminated status)))
 
-(* On Unix each job runs in a forked process. The first thing these jobs do is
- * deserialize a marshaled closure which is the job.
+(* On Unix each job runs in a forked clone process. The first thing these clones
+ * do is deserialize a marshaled closure which is the job.
  *
  * The marshaled representation of a closure includes a MD5 digest of the code
  * segment and an offset. The digest is lazily computed, but if it has not been
@@ -183,24 +197,23 @@ let dummy_closure () = ()
 (**
  * On Windows, the Worker is a process and runs the job directly. See above.
  *
- * On Unix, the Worker is split into a Worker Master and a Worker Slave
- * process with the Master reaping the Slave's process with waitpid.
- * The Slave runs the actual job and sends the results over the oc.
- * If the Slave exits normally (exit code 0), the Master keeps living and
- * waits for the next incoming job before forking a new slave.
+ * On Unix, the Worker forks Clone processes and reaps them with waitpid.
+ * The Clone runs the actual job and sends the results over the oc.
+ * If the Clone exits normally (exit code 0), the Worker keeps living and
+ * waits for the next incoming job before forking a new Clone.
  *
- * If the Slave exits with a non-zero code, the Master also exits with the
+ * If the Clone exits with a non-zero code, the Worker also exits with the
  * same code. Thus, the owning process of this Worker can just waitpid
  * directly on this process and see correct exit codes.
  *
  * Except `WSIGNALED i` and `WSTOPPED i` are all compressed to `exit 2`
  * and `exit 3` respectively. Thus some resolution is lost. So if
- * the underling Worker Slave is for example SIGKILL'd by the OOM killer,
+ * the underling Clone is for example SIGKILL'd by the OOM killer,
  * then the owning process won't be aware of it.
  *
  * To regain this lost resolution, controller_fd can be optionally set. The
  * real exit statuses (includinng WSIGNALED and WSTOPPED) will be sent over
- * this file descriptor to the Controller when the Worker Slave exits
+ * this file descriptor to the Controller when the Clone exits
  * abnormally (non-zero exit code).
  *)
 let unix_worker_main restore (state, controller_fd) (ic, oc) =
@@ -213,16 +226,16 @@ let unix_worker_main restore (state, controller_fd) (ic, oc) =
   try
     while true do
       (* Wait for an incoming job : is there something to read?
-         But we don't read it yet. It will be read by the forked slave. *)
+         But we don't read it yet. It will be read by the forked clone. *)
       let (readyl, _, _) = Unix.select [in_fd] [] [] (-1.0) in
       if readyl = [] then exit 0;
 
-      (* We fork a slave for every incoming request.
+      (* We fork a clone for every incoming request.
          And let it die after one request. This is the quickest GC. *)
       match Fork.fork () with
-      | 0 -> slave_main ic oc
+      | 0 -> worker_main ic oc
       | pid ->
-        (* Wait for the slave termination... *)
+        (* Wait for the clone to terminate... *)
         let status = snd (Sys_utils.waitpid_non_intr [] pid) in
         let () = maybe_send_status_to_controller controller_fd status in
         (match status with
@@ -231,7 +244,7 @@ let unix_worker_main restore (state, controller_fd) (ic, oc) =
         | Unix.WEXITED code ->
           Printf.printf "Worker exited (code: %d)\n" code;
           flush stdout;
-          Pervasives.exit code
+          Stdlib.exit code
         | Unix.WSIGNALED x ->
           let sig_str = PrintSignal.string_of_signal x in
           Printf.printf "Worker interrupted with signal: %s\n" sig_str;

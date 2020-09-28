@@ -1,7 +1,7 @@
 Error ----------------------------------------------------------------------------------------------------- test.js:14:4
 
 Cannot cast `"aaaa"` to character set `ab` because string literal `aaaa` [1] is incompatible with character set `ab` [2]
-since `a` is duplicated.
+since `a` is duplicated. [invalid-charset-type-arg]
 
    test.js:14:4
    14|   ("aaaa": $CharSet<"ab">); // error
@@ -16,7 +16,7 @@ References:
 Error ----------------------------------------------------------------------------------------------------- test.js:15:4
 
 Cannot cast `"c"` to character set `ab` because string literal `c` [1] is incompatible with character set `ab` [2] since
-`c` is not a member of the set.
+`c` is not a member of the set. [invalid-charset-type-arg]
 
    test.js:15:4
    15|   ("c": $CharSet<"ab">); // error
@@ -31,7 +31,7 @@ References:
 Error ----------------------------------------------------------------------------------------------------- test.js:16:4
 
 Cannot cast `"ac"` to character set `ab` because string literal `ac` [1] is incompatible with character set `ab` [2]
-since `c` is not a member of the set.
+since `c` is not a member of the set. [invalid-charset-type-arg]
 
    test.js:16:4
    16|   ("ac": $CharSet<"ab">); // error
@@ -46,7 +46,7 @@ References:
 Error ----------------------------------------------------------------------------------------------------- test.js:20:9
 
 Cannot call `C` with `x` bound to `flags` because string literal `abcd` [1] is incompatible with `C$flags` [2] since `c`
-is not a member of the set and `d` is not a member of the set.
+is not a member of the set and `d` is not a member of the set. [invalid-charset-type-arg]
 
    test.js:20:9
    20|   new C(x);
@@ -64,6 +64,7 @@ References:
 Error ----------------------------------------------------------------------------------------------------- test.js:25:4
 
 Cannot cast `x` to string literal `foo` because string [1] is incompatible with string literal `foo` [2].
+[incompatible-cast]
 
    test.js:25:4
    25|   (x: "foo");

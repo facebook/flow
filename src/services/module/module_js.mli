@@ -34,7 +34,7 @@ val imported_module :
   reader:Abstract_state_reader.t ->
   node_modules_containers:SSet.t SMap.t ->
   File_key.t ->
-  ALoc.t Nel.t ->
+  ALoc.t ->
   ?resolution_acc:resolution_acc ->
   string ->
   Modulename.t
@@ -129,7 +129,7 @@ val package_incompatible :
   options:Options.t ->
   reader:State_reader.t ->
   string ->
-  (Loc.t, Loc.t) Flow_ast.program ->
+  (Loc.t, Loc.t) Flow_ast.Program.t ->
   package_incompatible_return
 
 (***************************************************)

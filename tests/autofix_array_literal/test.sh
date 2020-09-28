@@ -13,9 +13,9 @@ test_file(){
   cat "$FILE"
 }
 
-test_file a.js 6 15 --strategy=temporary
+test_file a.js 6 15
 test_file b.js 6 15 --strategy=generalize
 test_file c.js 6 15 --strategy=specialize
 
 echo "> flow status"
-assert_ok "$FLOW" status --strip-root
+assert_errors "$FLOW" status --strip-root

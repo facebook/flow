@@ -10,7 +10,8 @@ open Utils_js
 (****************** shared context heap *********************)
 
 module SigContextHeap =
-  SharedMem_js.WithCache (SharedMem_js.Immediate) (File_key)
+  SharedMem_js.WithCache
+    (File_key)
     (struct
       type t = Context.sig_t
 
@@ -29,7 +30,8 @@ let add_sig ~audit cx =
   add_sig_context ~audit cx_file (Context.sig_cx cx)
 
 module SigHashHeap =
-  SharedMem_js.NoCache (SharedMem_js.Immediate) (File_key)
+  SharedMem_js.NoCache
+    (File_key)
     (struct
       type t = Xx.hash
 
@@ -39,7 +41,8 @@ module SigHashHeap =
     end)
 
 module LeaderHeap =
-  SharedMem_js.WithCache (SharedMem_js.Immediate) (File_key)
+  SharedMem_js.WithCache
+    (File_key)
     (struct
       type t = File_key.t
 
@@ -142,25 +145,26 @@ end = struct
     )
 
   let add_merge_on_exn ~audit () ~options component =
-    let leader_f = Nel.hd component in
     (* Ideally we'd assert that leader_f is a member of the oldified files, but it's a little too
      * expensive to send the set of oldified files to the worker *)
+    let leader_f = Nel.hd component in
+    (* This context is only used to add *something* to the sighash when we encounter an unexpected
+     * exception during typechecking. It doesn't really matter what we choose, so we might as well
+     * make it the empty map. *)
+    let aloc_tables = FilenameMap.empty in
     let sig_cx = Context.make_sig () in
+    let ccx = Context.make_ccx sig_cx aloc_tables in
     let cx =
       let metadata = Context.metadata_of_options options in
-      (* This context is only used to add *something* to the sighash when we encounter an unexpected
-       * exception during typechecking. It doesn't really matter what we choose, so we might as well
-       * make it the empty map. *)
-      let aloc_tables = FilenameMap.empty in
       let rev_table = lazy (ALoc.make_empty_reverse_table ()) in
       let module_ref = Files.module_ref leader_f in
-      Context.make sig_cx metadata leader_f aloc_tables rev_table module_ref Context.Merging
+      Context.make ccx metadata leader_f rev_table module_ref Context.Merging
     in
     let module_refs =
       Base.List.map
         ~f:(fun f ->
           let module_ref = Files.module_ref f in
-          let module_t = Type.AnyT.locationless Type.AnyError in
+          let module_t = Type.AnyT.locationless (Type.AnyError None) in
           Context.add_module cx module_ref module_t;
 
           (* Ideally we'd assert that f is a member of the oldified files too *)

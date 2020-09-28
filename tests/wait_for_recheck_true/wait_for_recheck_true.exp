@@ -10,7 +10,7 @@ autocomplete with --wait-for-recheck false runs immediately:
 check-contents with --wait-for-recheck false runs immediately:
 Error -------------------------------------------------------------------------------------------------- focused.js:5:17
 
-Cannot assign `val` to `x` because number [1] is incompatible with string [2].
+Cannot assign `val` to `x` because number [1] is incompatible with string [2]. [incompatible-type]
 
    focused.js:5:17
    5| var x: string = val;

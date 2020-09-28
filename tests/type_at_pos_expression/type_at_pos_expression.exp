@@ -74,7 +74,7 @@ jsx.js:7:16 = {
   "end":20
 }
 jsx.js:7:23 = {
-  "type":"{data: A, name: string}",
+  "type":"{data: A, name: string, ...}",
   "reasons":[],
   "loc":{
     "source":"jsx.js",
@@ -134,7 +134,7 @@ jsx.js:7:55 = {
   "end":55
 }
 jsx.js:7:61 = {
-  "type":"{data: A, name: string}",
+  "type":"{data: A, name: string, ...}",
   "reasons":[],
   "loc":{
     "source":"jsx.js",
@@ -149,7 +149,7 @@ jsx.js:7:61 = {
   "end":65
 }
 jsx.js:8:17 = {
-  "type":"{data: A, name: string}",
+  "type":"{data: A, name: string, ...}",
   "reasons":[],
   "loc":{
     "source":"jsx.js",
@@ -554,7 +554,7 @@ object-resolution.js:5:2 = {
   "end":3
 }
 object-resolution.js:10:2 = {
-  "type":"{q: string}",
+  "type":"{q: string, ...}",
   "reasons":[],
   "loc":{
     "source":"object-resolution.js",
@@ -569,7 +569,7 @@ object-resolution.js:10:2 = {
   "end":5
 }
 object-resolution.js:13:5 = {
-  "type":"{p: number, q: string}",
+  "type":"{p: number, q: string, ...}",
   "reasons":[],
   "loc":{
     "source":"object-resolution.js",
@@ -584,7 +584,7 @@ object-resolution.js:13:5 = {
   "end":10
 }
 object.js:3:15 = {
-  "type":"{a?: {b: ?{c: (null | {d: number})}}}",
+  "type":"{a?: {b: ?{c: (null | {d: number, ...}), ...}, ...}, ...}",
   "reasons":[],
   "loc":{
     "source":"object.js",
@@ -599,7 +599,7 @@ object.js:3:15 = {
   "end":15
 }
 object.js:3:19 = {
-  "type":"void | {b: ?{c: (null | {d: number})}}",
+  "type":"void | {b: ?{c: (null | {d: number, ...}), ...}, ...}",
   "reasons":[],
   "loc":{
     "source":"object.js",
@@ -614,7 +614,7 @@ object.js:3:19 = {
   "end":19
 }
 object.js:3:24 = {
-  "type":"?{c: (null | {d: number})}",
+  "type":"?{c: (null | {d: number, ...}), ...}",
   "reasons":[],
   "loc":{
     "source":"object.js",
@@ -629,7 +629,7 @@ object.js:3:24 = {
   "end":24
 }
 object.js:3:29 = {
-  "type":"null | {d: number}",
+  "type":"null | {d: number, ...}",
   "reasons":[],
   "loc":{
     "source":"object.js",
@@ -659,7 +659,7 @@ object.js:3:40 = {
   "end":40
 }
 object.js:6:5 = {
-  "type":"{a?: {b: ?{c: (null | {d: number})}}}",
+  "type":"{a?: {b: ?{c: (null | {d: number, ...}), ...}, ...}, ...}",
   "reasons":[],
   "loc":{
     "source":"object.js",
@@ -674,7 +674,7 @@ object.js:6:5 = {
   "end":5
 }
 object.js:6:7 = {
-  "type":"void | {b: ?{c: (null | {d: number})}}",
+  "type":"void | {b: ?{c: (null | {d: number, ...}), ...}, ...}",
   "reasons":[],
   "loc":{
     "source":"object.js",
@@ -689,7 +689,7 @@ object.js:6:7 = {
   "end":7
 }
 object.js:7:10 = {
-  "type":"{b: ?{c: (null | {d: number})}}",
+  "type":"{b: ?{c: (null | {d: number, ...}), ...}, ...}",
   "reasons":[],
   "loc":{
     "source":"object.js",
@@ -704,7 +704,7 @@ object.js:7:10 = {
   "end":10
 }
 object.js:7:12 = {
-  "type":"?{c: (null | {d: number})}",
+  "type":"?{c: (null | {d: number, ...}), ...}",
   "reasons":[],
   "loc":{
     "source":"object.js",
@@ -719,7 +719,7 @@ object.js:7:12 = {
   "end":12
 }
 object.js:8:14 = {
-  "type":"{c: (null | {d: number})}",
+  "type":"{c: (null | {d: number, ...}), ...}",
   "reasons":[],
   "loc":{
     "source":"object.js",
@@ -734,7 +734,7 @@ object.js:8:14 = {
   "end":14
 }
 object.js:8:16 = {
-  "type":"null | {d: number}",
+  "type":"null | {d: number, ...}",
   "reasons":[],
   "loc":{
     "source":"object.js",
@@ -749,7 +749,7 @@ object.js:8:16 = {
   "end":16
 }
 object.js:9:18 = {
-  "type":"{d: number}",
+  "type":"{d: number, ...}",
   "reasons":[],
   "loc":{
     "source":"object.js",
@@ -884,7 +884,7 @@ object.js:22:7 = {
   "end":7
 }
 object.js:35:1 = {
-  "type":"{b: 0b111, d: 11, f: \"ff\", g: 'g\"g', h: 'h\"h', i: \"i'i\", j: \"'\", x: 0x111}",
+  "type":"{b: 0b111, d: 11, f: \"ff\", g: 'g\"g', h: 'h\"h', i: \"i'i\", j: \"'\", x: 0x111, ...}",
   "reasons":[],
   "loc":{
     "source":"object.js",

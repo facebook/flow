@@ -1,6 +1,6 @@
 Error --------------------------------------------------------------------------------------------- import_type.js:13:18
 
-Cannot assign `foo1Inst` to `a2` because `ClassFoo1` [1] is incompatible with number [2].
+Cannot assign `foo1Inst` to `a2` because `ClassFoo1` [1] is incompatible with number [2]. [incompatible-type]
 
    import_type.js:13:18
    13| var a2: number = foo1Inst; // Error: ClassFoo1 ~> number
@@ -17,7 +17,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- import_type.js:14:5
 
-Cannot reference type `ClassFoo1` [1] from a value position.
+Cannot reference type `ClassFoo1` [1] from a value position. [type-as-value]
 
    import_type.js:14:5
    14| new ClassFoo1(); // Error: ClassFoo1 is not a value-identifier
@@ -31,7 +31,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- import_type.js:24:18
 
-Cannot assign `foo2Inst` to `b2` because `ClassFoo2` [1] is incompatible with number [2].
+Cannot assign `foo2Inst` to `b2` because `ClassFoo2` [1] is incompatible with number [2]. [incompatible-type]
 
    import_type.js:24:18
    24| var b2: number = foo2Inst; // Error: ClassFoo2 ~> number
@@ -48,7 +48,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- import_type.js:25:5
 
-Cannot reference type `ClassFoo2` [1] from a value position.
+Cannot reference type `ClassFoo2` [1] from a value position. [type-as-value]
 
    import_type.js:25:5
    25| new ClassFoo2(); // Error: ClassFoo2 is not a value-identifier
@@ -62,7 +62,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- import_type.js:34:5
 
-Cannot reference type `ClassFoo3T` [1] from a value position.
+Cannot reference type `ClassFoo3T` [1] from a value position. [type-as-value]
 
    import_type.js:34:5
    34| new ClassFoo3T(); // Error: ClassFoo3 is not a value-identifier
@@ -76,7 +76,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- import_type.js:44:18
 
-Cannot assign `foo4Inst` to `d2` because `ClassFoo4` [1] is incompatible with number [2].
+Cannot assign `foo4Inst` to `d2` because `ClassFoo4` [1] is incompatible with number [2]. [incompatible-type]
 
    import_type.js:44:18
    44| var d2: number = foo4Inst; // Error: ClassFoo4 ~> number
@@ -93,7 +93,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- import_type.js:45:5
 
-Cannot reference type `ClassFoo4` [1] from a value position.
+Cannot reference type `ClassFoo4` [1] from a value position. [type-as-value]
 
    import_type.js:45:5
    45| new ClassFoo4(); // Error: ClassFoo4 is not a value-identifier
@@ -107,7 +107,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- import_type.js:47:16
 
-Cannot reference type `ClassFoo5` [1] from a value position.
+Cannot reference type `ClassFoo5` [1] from a value position. [type-as-value]
 
    import_type.js:47:16
    47| var d3: typeof ClassFoo5 = foo5Inst; // Error: Can't typeof a type alias
@@ -121,7 +121,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- import_type.js:56:18
 
-Cannot assign `givesAFoo3Obj()` to `e2` because `AliasFoo3` [1] is incompatible with number [2].
+Cannot assign `givesAFoo3Obj()` to `e2` because `AliasFoo3` [1] is incompatible with number [2]. [incompatible-type]
 
    import_type.js:56:18
    56| var e2: number = givesAFoo3Obj(); // Error: AliasFoo3 ~> number
@@ -138,7 +138,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- import_type.js:57:16
 
-Cannot reference type `AliasFoo3` [1] from a value position.
+Cannot reference type `AliasFoo3` [1] from a value position. [type-as-value]
 
    import_type.js:57:16
    57| var e3: typeof AliasFoo3 = givesAFoo3Obj(); // Error: Can't typeof a type alias
@@ -153,7 +153,7 @@ References:
 Error --------------------------------------------------------------------------------------------- import_type.js:71:14
 
 Cannot import the value `numValue` as a type. `import type` only works on type exports like type aliases, interfaces,
-and classes. If you intended to import the type of a value use `import typeof` instead.
+and classes. If you intended to import the type of a value use `import typeof` instead. [import-value-as-type]
 
    71| import type {numValue} from "./ExportsANumber"; // Error: Cannot import-type a number value
                     ^^^^^^^^
@@ -161,7 +161,7 @@ and classes. If you intended to import the type of a value use `import typeof` i
 
 Error ---------------------------------------------------------------------------------------------- import_type.js:81:3
 
-Cannot reference type `ClassFoo6` [1] from a value position.
+Cannot reference type `ClassFoo6` [1] from a value position. [type-as-value]
 
    import_type.js:81:3
    81|   ClassFoo6; // Error: Not a value binding
@@ -176,7 +176,7 @@ References:
 Error -------------------------------------------------------------------------------------------- import_type.js:100:13
 
 Cannot import the default export as a type. `import type` only works on type exports like type aliases, interfaces, and
-classes. If you intended to import the type of a value use `import typeof` instead.
+classes. If you intended to import the type of a value use `import typeof` instead. [import-value-as-type]
 
    100| import type x from './ExportDefaultNonType';
                     ^

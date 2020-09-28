@@ -285,7 +285,7 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
       | Some t -> (loc, t)
       | None ->
         error_unexpected env;
-        (loc, Type.Any (Flow_ast_utils.mk_comments_opt ())))
+        (loc, Type.Any None))
 
   and is_primitive = function
     | T_ANY_TYPE
@@ -584,8 +584,9 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
         with_loc
           ~start_loc
           (fun env ->
+            let start_loc = Peek.loc env in
             let tparams = type_params_remove_trailing env (type_params env) in
-            let value = methodish env (Peek.loc env) tparams in
+            let value = methodish env start_loc tparams in
             Type.Object.CallProperty.
               {
                 value;
@@ -1117,11 +1118,13 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
                let leading = Peek.comments env in
                Expect.token env T_LESS_THAN;
                let params = params env ~require_default:false [] in
+               let internal = Peek.comments env in
                Expect.token env T_GREATER_THAN;
                let trailing = Eat.trailing_comments env in
                {
                  Type.TypeParams.params;
-                 comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing ();
+                 comments =
+                   Flow_ast_utils.mk_comments_with_internal_opt ~leading ~trailing ~internal;
                })
              env)
       ) else
@@ -1147,11 +1150,13 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
                Expect.token env T_LESS_THAN;
                let env = with_no_anon_function_type false env in
                let arguments = args env [] in
+               let internal = Peek.comments env in
                Expect.token env T_GREATER_THAN;
                let trailing = Eat.trailing_comments env in
                {
                  Type.TypeArgs.arguments;
-                 comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing ();
+                 comments =
+                   Flow_ast_utils.mk_comments_with_internal_opt ~leading ~trailing ~internal;
                })
              env)
       else

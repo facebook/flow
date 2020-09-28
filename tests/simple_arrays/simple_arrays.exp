@@ -1,6 +1,6 @@
 Error --------------------------------------------------------------------------------------------------- array.js:14:34
 
-Cannot return `a[i]` because number [1] is incompatible with string [2].
+Cannot return `a[i]` because number [1] is incompatible with string [2]. [incompatible-return]
 
    array.js:14:34
    14| function bar(i): string { return a[i]; }
@@ -17,7 +17,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- array.js:20:41
 
-Cannot return `a[i]` because number [1] is incompatible with string [2].
+Cannot return `a[i]` because number [1] is incompatible with string [2]. [incompatible-return]
 
    array.js:20:41
    20| function baz(i:number): string { return a[i]; }
@@ -34,7 +34,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- array2.js:8:42
 
-Cannot return `a[i]` because number [1] is incompatible with string [2].
+Cannot return `a[i]` because number [1] is incompatible with string [2]. [incompatible-return]
 
    array2.js:8:42
    8| function foo(i: number): string { return a[i]; }

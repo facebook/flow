@@ -1,6 +1,6 @@
 Error ----------------------------------------------------------------------------------------------------- test.js:8:59
 
-Cannot return `x` because number [1] is incompatible with `Queue` [2].
+Cannot return `x` because number [1] is incompatible with `Queue` [2]. [incompatible-return]
 
    test.js:8:59
    8| function flowsSomethingToQueue(x: number): Queue { return x; } // Error number ~> Queue
@@ -17,7 +17,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:9:58
 
-Cannot return `q` because `Queue` [1] is incompatible with number [2].
+Cannot return `q` because `Queue` [1] is incompatible with number [2]. [incompatible-return]
 
    test.js:9:58
    9| function flowsQueueToSomething(q: Queue): number {return q; } // Error Queue ~> number
@@ -35,6 +35,7 @@ References:
 Error ---------------------------------------------------------------------------------------------------- test.js:13:19
 
 Cannot call `counter_to_number` with `y` bound to `c` because number [1] is incompatible with `Counter` [2].
+[incompatible-call]
 
    test.js:13:19
    13| counter_to_number(y); // Error: number ~> Counter
@@ -51,7 +52,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:22:12
 
-Cannot return `x` because number [1] is incompatible with string [2] in type argument `T` [3].
+Cannot return `x` because number [1] is incompatible with string [2] in type argument `T` [3]. [incompatible-return]
 
    test.js:22:12
    22|     return x; // Error: string ~> number, number ~> string
@@ -71,7 +72,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:27:12
 
-Cannot return `x` because number [1] is incompatible with string [2] in type argument `T` [3].
+Cannot return `x` because number [1] is incompatible with string [2] in type argument `T` [3]. [incompatible-return]
 
    test.js:27:12
    27|     return x; // Error string ~> number

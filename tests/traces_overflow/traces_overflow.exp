@@ -4,6 +4,7 @@ Computing object literal [1] may lead to an exponentially large number of cases 
 from object literal [2] | object literal [1] and inferred union from object literal [1] | object literal [1] are both
 unions. Please use at most one union type per spread to simplify reasoning about the spread result. You may be able to
 get rid of a union by specifying a more general type that captures all of the branches of the union.
+[exponential-spread]
 
    stack_overflow_bug.js:56:10
    56|       ...accumulator,
@@ -27,6 +28,7 @@ Error --------------------------------------------------------------------------
 Cannot use `colName` [1] as a computed property. Computed properties may only be primitive literal values, but this one
 may be either string literal `yyyyy` [2] or string literal `zzz_xxxxx` [3]. Can you add a literal type annotation to
 `colName` [1]? See https://flow.org/en/docs/types/literals/ for more information on literal types.
+[invalid-computed-prop]
 
    stack_overflow_bug.js:57:8
    57|       [colName]: row[idx]

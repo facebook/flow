@@ -1,6 +1,6 @@
 Error -------------------------------------------------------------------------------------------------------- E.js:10:1
 
-`exports` may only be used as part of a legal top level export statement
+`exports` may only be used as part of a legal top level export statement [invalid-export]
 
    10| exports = {stringValue: ''};
        ^^^^^^^
@@ -8,7 +8,7 @@ Error --------------------------------------------------------------------------
 
 Error ---------------------------------------------------------------------------------------- require-type-error.js:4:8
 
-Cannot import the type `MyType` as a value. Use `import type` instead.
+Cannot import the type `MyType` as a value. Use `import type` instead. [import-type-as-value]
 
    4| const {MyType} = require('./exports-type');
              ^^^^^^
@@ -17,6 +17,7 @@ Cannot import the type `MyType` as a value. Use `import type` instead.
 Error -------------------------------------------------------------------------------------------------- require.js:9:14
 
 Cannot call `takesAString` with `A.numberValue` bound to `str` because number [1] is incompatible with string [2].
+[incompatible-call]
 
    require.js:9:14
    9| takesAString(A.numberValue);
@@ -34,6 +35,7 @@ References:
 Error ------------------------------------------------------------------------------------------------- require.js:14:14
 
 Cannot call `takesAString` with `B.numberValue` bound to `str` because number [1] is incompatible with string [2].
+[incompatible-call]
 
    require.js:14:14
    14| takesAString(B.numberValue);
@@ -50,7 +52,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- require.js:17:9
 
-Cannot resolve module `C`.
+Cannot resolve module `C`. [cannot-resolve-module]
 
    17| require("C");
                ^^^
@@ -58,7 +60,7 @@ Cannot resolve module `C`.
 
 Error -------------------------------------------------------------------------------------------------- require.js:20:9
 
-Cannot resolve module `./D`.
+Cannot resolve module `./D`. [cannot-resolve-module]
 
    20| require("./D");
                ^^^^^
@@ -66,7 +68,7 @@ Cannot resolve module `./D`.
 
 Error -------------------------------------------------------------------------------------------------- require.js:25:3
 
-Cannot get `E.stringValue` because property `stringValue` is missing in object literal [1].
+Cannot get `E.stringValue` because property `stringValue` is missing in object literal [1]. [prop-missing]
 
    require.js:25:3
    25| E.stringValue; // Error: The E exports obj has no 'stringValue' property
@@ -83,7 +85,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- require.js:30:1
 
-The parameter passed to `require` must be a string literal.
+The parameter passed to `require` must be a string literal. [unsupported-syntax]
 
    30| require(a); // Error: Param must be string literal
        ^^^^^^^^^^
@@ -91,7 +93,7 @@ The parameter passed to `require` must be a string literal.
 
 Error -------------------------------------------------------------------------------------------------- require.js:32:1
 
-The parameter passed to `require` must be a string literal.
+The parameter passed to `require` must be a string literal. [unsupported-syntax]
 
    32| require(`${'./E'}`); // error: but only if they have no expressions
        ^^^^^^^^^^^^^^^^^^^

@@ -1,7 +1,7 @@
 {
   "type":"Program",
-  "loc":{"source":null,"start":{"line":1,"column":16},"end":{"line":13,"column":17}},
-  "range":[16,397],
+  "loc":{"source":null,"start":{"line":1,"column":16},"end":{"line":17,"column":29}},
+  "range":[16,456],
   "body":[
     {
       "type":"ExpressionStatement",
@@ -298,6 +298,73 @@
         "arguments":[]
       },
       "directive":null
+    },
+    {
+      "type":"ExpressionStatement",
+      "loc":{"source":null,"start":{"line":15,"column":0},"end":{"line":15,"column":26}},
+      "range":[399,425],
+      "expression":{
+        "type":"NewExpression",
+        "trailingComments":[
+          {
+            "type":"Block",
+            "loc":{"source":null,"start":{"line":15,"column":8},"end":{"line":15,"column":24}},
+            "range":[407,423],
+            "value":" 5.1 I args "
+          }
+        ],
+        "loc":{"source":null,"start":{"line":15,"column":0},"end":{"line":15,"column":25}},
+        "range":[399,424],
+        "callee":{
+          "type":"Identifier",
+          "loc":{"source":null,"start":{"line":15,"column":4},"end":{"line":15,"column":7}},
+          "range":[403,406],
+          "name":"Foo",
+          "typeAnnotation":null,
+          "optional":false
+        },
+        "typeArguments":null,
+        "arguments":[]
+      },
+      "directive":null
+    },
+    {
+      "type":"ExpressionStatement",
+      "loc":{"source":null,"start":{"line":17,"column":0},"end":{"line":17,"column":29}},
+      "range":[427,456],
+      "expression":{
+        "type":"NewExpression",
+        "trailingComments":[
+          {
+            "type":"Block",
+            "loc":{"source":null,"start":{"line":17,"column":11},"end":{"line":17,"column":27}},
+            "range":[438,454],
+            "value":" 6.1 I args "
+          }
+        ],
+        "loc":{"source":null,"start":{"line":17,"column":0},"end":{"line":17,"column":28}},
+        "range":[427,455],
+        "callee":{
+          "type":"Identifier",
+          "loc":{"source":null,"start":{"line":17,"column":4},"end":{"line":17,"column":7}},
+          "range":[431,434],
+          "name":"Foo",
+          "typeAnnotation":null,
+          "optional":false
+        },
+        "typeArguments":null,
+        "arguments":[
+          {
+            "type":"Identifier",
+            "loc":{"source":null,"start":{"line":17,"column":8},"end":{"line":17,"column":9}},
+            "range":[435,436],
+            "name":"a",
+            "typeAnnotation":null,
+            "optional":false
+          }
+        ]
+      },
+      "directive":null
     }
   ],
   "comments":[
@@ -420,6 +487,18 @@
       "loc":{"source":null,"start":{"line":13,"column":2},"end":{"line":13,"column":16}},
       "range":[382,396],
       "value":" 4.3 T id "
+    },
+    {
+      "type":"Block",
+      "loc":{"source":null,"start":{"line":15,"column":8},"end":{"line":15,"column":24}},
+      "range":[407,423],
+      "value":" 5.1 I args "
+    },
+    {
+      "type":"Block",
+      "loc":{"source":null,"start":{"line":17,"column":11},"end":{"line":17,"column":27}},
+      "range":[438,454],
+      "value":" 6.1 I args "
     }
   ]
 }

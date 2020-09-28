@@ -1,9 +1,12 @@
->>> a.js (#changes: 1)
+
+=== Codemod annotate-exports ===
+
+>>> ./a.js
 // @flow
 
 module.exports = (): number => 1;
 
->>> a.js.flow (#changes: 1)
+>>> ./a.js.flow
 // @flow
 
 module.exports = (): number => 1;
@@ -12,10 +15,10 @@ module.exports = (): number => 1;
 
 Stats:
   Files changed:                            2
-  Number of sig. ver. errors:               2
-  Number of annotations required:           2
   Number of annotations added:              2
   Total size of annotations:                2
+  Number of sig. ver. errors:               2
+  Number of annotations required:           2
   Number of annotations skipped:            0
 
 Errors:
@@ -26,7 +29,6 @@ Errors:
     Parsing heaps get ast error:            0
     Indeterminate module type:              0
     No matching export:                     0
-    Unrecognizable module error:            0
   Serializer error:                         0
   Unsupported error kind:                   0
 
@@ -37,3 +39,18 @@ Warnings:
   Empty NoUpper:                            0
   Empty SomeKnownUpper:                     0
 
+
+=== Autofix exports ===
+
+>>> ./a.js
+// @flow
+
+module.exports = (): number => 1;
+
+>>> ./a.js.flow
+// @flow
+
+module.exports = (): number => 1;
+
+
+=== Diff between codemod-ed & autofix-ed ===

@@ -180,8 +180,8 @@ let sample ?record ?(weight = 1.0) name value =
   (* Knuth's online variance approximation algorithm, updated for weights.
    * Weighted version from http://people.ds.cam.ac.uk/fanf2/hermes/doc/antiforgery/stats.pdf *)
   let variance_sum = variance_sum +. (weight *. (value -. old_mean) *. (value -. mean)) in
-  let max = Pervasives.max max value in
-  let min = Pervasives.min min value in
+  let max = Base.Float.max max value in
+  let min = Base.Float.min min value in
   let distribution = update_distribution ~weight value distribution in
   let entry = { count; mean; variance_sum; max; min; distribution } in
   record := SMap.add name entry !record
@@ -209,8 +209,8 @@ let merge_entries name from into =
     let variance_sum =
       from.variance_sum +. into.variance_sum +. (delta *. delta *. into.count *. from.count /. count)
     in
-    let max = Pervasives.max from.max into.max in
-    let min = Pervasives.min from.min into.min in
+    let max = Base.Float.max from.max into.max in
+    let min = Base.Float.min from.min into.min in
     let distribution =
       match (from.distribution, into.distribution) with
       | (None, into) -> into

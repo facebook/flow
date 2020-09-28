@@ -68,8 +68,6 @@ val parse_didSave : Hh_json.json option -> Lsp.DidSave.params
 
 val parse_didChange : Hh_json.json option -> Lsp.DidChange.params
 
-val print_signatureHelp : Lsp.SignatureHelp.result -> Hh_json.json
-
 val parse_documentRename : Hh_json.json option -> Lsp.Rename.params
 
 val print_documentRename : Lsp.Rename.result -> Hh_json.json
@@ -85,10 +83,6 @@ val print_showMessageRequest : Lsp.ShowMessageRequest.showMessageRequestParams -
 val parse_result_showMessageRequest : Hh_json.json option -> Lsp.ShowMessageRequest.result
 
 val print_showStatus : Lsp.ShowStatus.showStatusParams -> Hh_json.json
-
-val print_progress : int -> string option -> Hh_json.json
-
-val print_actionRequired : int -> string option -> Hh_json.json
 
 val print_connectionStatus : Lsp.ConnectionStatus.params -> Hh_json.json
 
@@ -143,8 +137,6 @@ val parse_documentOnTypeFormatting : Hh_json.json option -> Lsp.DocumentOnTypeFo
 val print_documentOnTypeFormatting : Lsp.DocumentOnTypeFormatting.result -> Hh_json.json
 
 val parse_initialize : Hh_json.json option -> Lsp.Initialize.params
-
-val print_initializeError : Lsp.Initialize.errorData -> Hh_json.json
 
 val print_registerCapability : Lsp.RegisterCapability.params -> Hh_json.json
 

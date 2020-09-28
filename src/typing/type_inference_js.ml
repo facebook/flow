@@ -5,6 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
+open Utils_js
 module Ast = Flow_ast
 
 (* infer phase services *)
@@ -32,26 +33,39 @@ let infer_core cx statements =
   | Abnormal.Exn _ -> failwith "Flow bug: Statement.toplevels threw with non-stmts payload"
   | exc -> raise exc
 
-(* There's a .flowconfig option to specify suppress_comments regexes. Any
- * comments that match those regexes will suppress any errors on the next line
- *)
-let scan_for_error_suppressions =
-  let should_suppress suppress_comments comment =
-    List.exists (fun r -> Str.string_match r comment 0) suppress_comments
-  in
-  fun cx comments ->
-    let suppress_comments = Context.suppress_comments cx in
-    let should_suppress = should_suppress suppress_comments in
-    (* Bail immediately if we're not using error suppressing comments *)
-    if suppress_comments <> [] then
-      List.iter
-        (function
-          | (loc, Ast.Comment.Block comment)
-          | (loc, Ast.Comment.Line comment)
-            when should_suppress comment ->
-            Context.add_error_suppression cx loc
-          | _ -> ())
-        comments
+(* Scan the list of comments to place suppressions on the appropriate locations.
+   Because each comment can only contain a single code, in order to support
+   suppressing multiple types of errors on one location we allow you to stack
+   comments like so:
+   //$FlowFixMe[x]
+   //$FlowFixMe[y]
+    some code causing errors x and y
+
+  This logic produces a set of error codes associated with the location of the
+  bottom suppression in the stack *)
+
+let scan_for_error_suppressions cx =
+  let open Suppression_comments in
+  (* If multiple comments are stacked together, we join them into a codeset positioned on the
+     location of the last comment *)
+  Base.List.fold_left
+    ~f:(fun acc -> function
+      | (({ Loc.start = { Loc.line; _ }; _ } as loc), { Ast.Comment.text; _ }) ->
+        begin
+          match (should_suppress text loc, acc) with
+          | (Ok (Some (Specific _ as codes)), Some (prev_loc, (Specific _ as prev_codes)))
+            when line = prev_loc.Loc._end.Loc.line + 1 ->
+            Some ({ prev_loc with Loc._end = loc.Loc._end }, join_applicable_codes codes prev_codes)
+          | (Ok codes, _) ->
+            Base.Option.iter ~f:(Context.add_error_suppression cx |> uncurry) acc;
+            Base.Option.map codes ~f:(mk_tuple loc)
+          | (Error (), _) ->
+            Flow_js.add_output cx Error_message.(EMalformedCode (ALoc.of_loc loc));
+            Base.Option.iter ~f:(Context.add_error_suppression cx |> uncurry) acc;
+            None
+        end)
+    ~init:None
+  %> Base.Option.iter ~f:(Context.add_error_suppression cx |> uncurry)
 
 type 'a located = {
   value: 'a;
@@ -231,12 +245,12 @@ let scan_for_lint_suppressions =
      * Trim the locs to line up with the contents of the comment. *)
     Loc.(
       match comment with
-      | Ast.Comment.Block s ->
+      | { Ast.Comment.kind = Ast.Comment.Block; text = s; _ } ->
         let new_start = { loc.start with column = loc.start.column + 2 } in
         let new_end = { loc._end with column = loc._end.column - 2 } in
         let new_loc = { loc with start = new_start; _end = new_end } in
         { loc = new_loc; value = s }
-      | Ast.Comment.Line s ->
+      | { Ast.Comment.kind = Ast.Comment.Line; text = s; _ } ->
         let new_start = { loc.start with column = loc.start.column + 2 } in
         let new_loc = { loc with start = new_start } in
         { loc = new_loc; value = s })
@@ -336,6 +350,7 @@ let scan_for_lint_suppressions =
     Context.add_lint_suppressions cx suppression_locs
 
 let scan_for_suppressions cx lint_severities comments =
+  let comments = List.sort (fun (loc1, _) (loc2, _) -> Loc.compare loc1 loc2) comments in
   scan_for_error_suppressions cx comments;
   scan_for_lint_suppressions cx lint_severities comments
 
@@ -376,9 +391,14 @@ let add_require_tvars =
 let infer_ast ~lint_severities ~file_sig cx filename comments aloc_ast =
   assert (Context.is_checked cx);
 
-  Flow_js.Cache.clear ();
-
-  let (prog_aloc, aloc_statements, aloc_comments) = aloc_ast in
+  let ( prog_aloc,
+        {
+          Ast.Program.statements = aloc_statements;
+          comments = aloc_comments;
+          all_comments = aloc_all_comments;
+        } ) =
+    aloc_ast
+  in
   add_require_tvars cx file_sig;
   Context.set_local_env cx file_sig.File_sig.With_ALoc.exported_locals;
 
@@ -397,7 +417,7 @@ let infer_ast ~lint_severities ~file_sig cx filename comments aloc_ast =
       let scope = fresh ~var_scope_kind:Module () in
       add_entry
         "exports"
-        (Entry.new_var ~loc:(Type.loc_of_t local_exports_var) local_exports_var)
+        (Entry.new_var ~loc:(TypeUtil.loc_of_t local_exports_var) local_exports_var)
         scope;
 
       add_entry
@@ -415,7 +435,7 @@ let infer_ast ~lint_severities ~file_sig cx filename comments aloc_ast =
 
   let file_loc = Loc.{ none with source = Some filename } |> ALoc.of_loc in
   let reason = Reason.mk_reason Reason.RExports file_loc in
-  let init_exports = Obj_type.mk cx reason in
+  let init_exports = Obj_type.mk_unsealed cx reason in
   ImpExp.set_module_exports cx file_loc init_exports;
 
   (* infer *)
@@ -426,7 +446,12 @@ let infer_ast ~lint_severities ~file_sig cx filename comments aloc_ast =
   let module_t = Import_export.mk_module_t cx reason in
   Context.add_module cx module_ref module_t;
 
-  (prog_aloc, typed_statements, aloc_comments)
+  ( prog_aloc,
+    {
+      Ast.Program.statements = typed_statements;
+      comments = aloc_comments;
+      all_comments = aloc_all_comments;
+    } )
 
 (* Because libdef parsing is overly permissive, a libdef file might include an
    unexpected top-level statement like `export type` which mutates the module
@@ -462,9 +487,8 @@ let with_libdef_builtins cx f =
  *)
 let infer_lib_file ~exclude_syms ~lint_severities ~file_sig cx ast =
   let aloc_ast = Ast_loc_utils.loc_to_aloc_mapper#program ast in
-  let (_, _, comments) = ast in
-  let (_, aloc_statements, _) = aloc_ast in
-  Flow_js.Cache.clear ();
+  let (_, { Ast.Program.all_comments; _ }) = ast in
+  let (_, { Ast.Program.statements = aloc_statements; _ }) = aloc_ast in
 
   let () =
     (* TODO: Wait a minute, why do we bother with requires for lib files? Pretty
@@ -476,7 +500,7 @@ let infer_lib_file ~exclude_syms ~lint_severities ~file_sig cx ast =
 
   with_libdef_builtins cx (fun () ->
       ignore (infer_core cx aloc_statements : (ALoc.t, ALoc.t * Type.t) Ast.Statement.t list);
-      scan_for_suppressions cx lint_severities comments);
+      scan_for_suppressions cx lint_severities all_comments);
 
   ( module_scope
   |> Scope.(

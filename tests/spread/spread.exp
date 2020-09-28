@@ -2,7 +2,7 @@ Error --------------------------------------------------------------------------
 
 Cannot spread object literal because Flow cannot determine a type for object literal [1]. object type [2] cannot be
 spread because the indexer string [3] may overwrite properties with explicit keys in a way that Flow cannot track. Try
-spreading object type [2] first or remove the indexer.
+spreading object type [2] first or remove the indexer. [cannot-spread-indexer]
 
    dict.js:7:5
            v
@@ -25,6 +25,7 @@ Error --------------------------------------------------------------------------
 
 Cannot call `bar` because Flow cannot determine a type for object type [1]. object type [2] is inexact, so it may
 contain `m` with a type that conflicts with `m`'s definition in object type [1]. Try making object type [2] exact.
+[cannot-spread-inexact]
 
    error_positions.js:11:6
    11| (foo(bar(C)): F<typeof C>); // error on call
@@ -43,7 +44,7 @@ Error --------------------------------------------------------------------------
 
 Cannot call `spread` with `inexact` bound to `x` because Flow cannot determine a type for object type [1]. object
 type [2] is inexact, so it may contain `foo` with a type that conflicts with `foo`'s definition in object type [3]. Try
-making object type [2] exact.
+making object type [2] exact. [cannot-spread-inexact]
 
    error_positions.js:16:8
    16| spread(inexact); // error on call
@@ -64,7 +65,7 @@ References:
 Error --------------------------------------------------------------------------------------------------- exact.js:14:35
 
 Cannot assign object literal to `spread_inexact_first` because inexact object literal [1] is incompatible with exact
-`Foo` [2].
+`Foo` [2]. [incompatible-exact]
 
    exact.js:14:35
    14| const spread_inexact_first: Foo = {...foo_inexact, ...other}; // not OK
@@ -80,7 +81,7 @@ Error --------------------------------------------------------------------------
 
 Cannot spread object literal because Flow cannot determine a type for object literal [1]. object type [2] is inexact, so
 it may contain `bar` with a type that conflicts with `bar`'s definition in object literal [3]. Try making object
-type [2] exact.
+type [2] exact. [cannot-spread-inexact]
 
    exact.js:15:36
    15| const spread_inexact_second: Foo = {...other, ...foo_inexact}; // not OK
@@ -97,7 +98,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- null.js:6:10
 
-Cannot get `empty.x` because property `x` is missing in object literal [1].
+Cannot get `empty.x` because property `x` is missing in object literal [1]. [prop-missing]
 
    null.js:6:10
    6|   (empty.x); // Error
@@ -111,7 +112,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test10.js:3:2
 
-Cannot cast `o.p` to empty because number [1] is incompatible with empty [2].
+Cannot cast `o.p` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
 
    test10.js:3:2
    3| (o.p: empty); // error: number ~> empty
@@ -128,7 +129,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test3.js:8:17
 
-Cannot assign `o.y` to `y` because string [1] is incompatible with number [2].
+Cannot assign `o.y` to `y` because string [1] is incompatible with number [2]. [incompatible-type]
 
    test3.js:8:17
    8| var y: number = o.y; // Error string ~> number
@@ -145,7 +146,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test3.js:9:17
 
-Cannot assign `o.z` to `z` because string [1] is incompatible with number [2].
+Cannot assign `o.z` to `z` because string [1] is incompatible with number [2]. [incompatible-type]
 
    test3.js:9:17
    9| var z: number = o.z; // Error string ~> number
@@ -163,6 +164,7 @@ References:
 Error ---------------------------------------------------------------------------------------------------- test6.js:10:2
 
 Cannot cast `p` to object type because property `abc` is missing in object literal [1] but exists in object type [2].
+[prop-missing]
 
    test6.js:10:2
    10| (p: {foo: string; abc: string}); // error, p doesn't have `abc` yet
@@ -183,6 +185,7 @@ References:
 Error ----------------------------------------------------------------------------------------------------- test8.js:7:2
 
 Cannot cast object literal to object type because string [1] is incompatible with number [2] in property `q`.
+[incompatible-cast]
 
    test8.js:7:2
     7| ({ ...o }: { p: number, q: number }); // error: string ~> number (prop q)
@@ -200,6 +203,7 @@ References:
 Error ----------------------------------------------------------------------------------------------------- test8.js:8:2
 
 Cannot cast object literal to object type because number [1] is incompatible with string [2] in property `p`.
+[incompatible-cast]
 
    test8.js:8:2
     8| ({ ...o }: { p: string, q: string }); // error: number ~> string (prop p)
@@ -218,6 +222,7 @@ Error --------------------------------------------------------------------------
 
 Cannot spread object literal because Flow cannot determine a type for object literal [1]. `I_call` [2] cannot be spread
 because interfaces do not track the own-ness of their properties. Try using an object type instead.
+[cannot-spread-interface]
 
    test9.js:5:2
    5| ({ ...o_call }: { "$call": any }); // error: interfaces cannot be spread 
@@ -233,6 +238,7 @@ Error --------------------------------------------------------------------------
 
 Cannot spread object literal because Flow cannot determine a type for object literal [1]. `I_index` [2] cannot be spread
 because interfaces do not track the own-ness of their properties. Try using an object type instead.
+[cannot-spread-interface]
 
    test9.js:11:2
    11| ({ ...o_index }: { "$key": any }); // error: interfaces cannot be spread 
@@ -248,6 +254,7 @@ Error --------------------------------------------------------------------------
 
 Cannot spread object literal because Flow cannot determine a type for object literal [1]. `I_index` [2] cannot be spread
 because interfaces do not track the own-ness of their properties. Try using an object type instead.
+[cannot-spread-interface]
 
    test9.js:12:2
    12| ({ ...o_index }: { "$value": any }); // error: interfaces cannot be spread 
@@ -261,7 +268,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- unsealed.js:6:10
 
-Cannot return `o` because inexact object literal [1] is incompatible with exact object type [2].
+Cannot return `o` because inexact object literal [1] is incompatible with exact object type [2]. [incompatible-exact]
 
    unsealed.js:6:10
    6|   return o; // error, unsealed implies inexact
@@ -278,7 +285,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- unsealed.js:25:4
 
-Cannot cast `b2.x` to string because number [1] is incompatible with string [2].
+Cannot cast `b2.x` to string because number [1] is incompatible with string [2]. [incompatible-cast]
 
    unsealed.js:25:4
    25|   (b2.x: string); // expected error: number ~/~> string

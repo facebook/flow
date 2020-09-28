@@ -996,6 +996,49 @@ module Eat = struct
       let comments = List.filter (fun (loc, _) -> loc.start.line <= last_loc._end.line) comments in
       consume_comments_until env { line = last_loc._end.line + 1; column = 0 };
       comments
+
+  let program_comments env =
+    let open Flow_ast.Comment in
+    let comments = Peek.comments env in
+    let flow_directive = "@flow" in
+    let flow_directive_length = String.length flow_directive in
+    let contains_flow_directive { text; _ } =
+      let text_length = String.length text in
+      let rec contains_flow_directive_after_offset off =
+        if off + flow_directive_length > text_length then
+          false
+        else
+          String.sub text off flow_directive_length = flow_directive
+          || contains_flow_directive_after_offset (off + 1)
+      in
+      contains_flow_directive_after_offset 0
+    in
+    (* Comments up through the last comment with an @flow directive are considered program comments *)
+    let rec flow_directive_comments comments =
+      match comments with
+      | [] -> []
+      | (loc, comment) :: rest ->
+        if contains_flow_directive comment then (
+          (env.consumed_comments_pos := Loc.(loc._end));
+          List.rev ((loc, comment) :: rest)
+        ) else
+          flow_directive_comments rest
+    in
+    let program_comments = flow_directive_comments (List.rev comments) in
+    let program_comments =
+      if program_comments <> [] then
+        program_comments
+      else
+        (* If there is no @flow directive, consider the first block comment a program comment if
+           it starts with "/**" *)
+        match comments with
+        | ((loc, { kind = Block; text; _ }) as first_comment) :: _
+          when String.length text >= 1 && text.[0] = '*' ->
+          (env.consumed_comments_pos := Loc.(loc._end));
+          [first_comment]
+        | _ -> []
+    in
+    program_comments
 end
 
 module Expect = struct

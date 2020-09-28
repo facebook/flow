@@ -2,7 +2,7 @@ Without --include-warnings
 Error ------------------------------------------------------------------------------------------------------ test.js:7:5
 
 Sketchy null check on number [1] which is potentially 0. Perhaps you meant to check for null or undefined [2]?
-(`sketchy-null-number`)
+[sketchy-null-number]
 
    test.js:7:5
    7| if (x) {} //Error
@@ -25,7 +25,7 @@ With --include-warnings
 Error ------------------------------------------------------------------------------------------------------ test.js:7:5
 
 Sketchy null check on number [1] which is potentially 0. Perhaps you meant to check for null or undefined [2]?
-(`sketchy-null-number`)
+[sketchy-null-number]
 
    test.js:7:5
    7| if (x) {} //Error
@@ -43,7 +43,7 @@ References:
 Warning --------------------------------------------------------------------------------------------------- test.js:10:5
 
 Sketchy null check on number [1] which is potentially 0. Perhaps you meant to check for null or undefined [2]?
-(`sketchy-null-number`)
+[sketchy-null-number]
 
    test.js:10:5
    10| if (x) {} //Warning
@@ -129,7 +129,7 @@ JSON without --include-warnings
       "message":[
         {
           "context":"if (x) {} //Error",
-          "descr":"Sketchy null check on number [1] which is potentially 0. Perhaps you meant to check for null or undefined [2]? (`sketchy-null-number`)",
+          "descr":"Sketchy null check on number [1] which is potentially 0. Perhaps you meant to check for null or undefined [2]? [sketchy-null-number]",
           "type":"Blame",
           "loc":{
             "source":"test.js",
@@ -143,7 +143,8 @@ JSON without --include-warnings
           "start":5,
           "end":5
         }
-      ]
+      ],
+      "error_codes":["sketchy-null-number"]
     }
   ],
   "passed":false
@@ -217,7 +218,7 @@ JSON with --include-warnings
       "message":[
         {
           "context":"if (x) {} //Error",
-          "descr":"Sketchy null check on number [1] which is potentially 0. Perhaps you meant to check for null or undefined [2]? (`sketchy-null-number`)",
+          "descr":"Sketchy null check on number [1] which is potentially 0. Perhaps you meant to check for null or undefined [2]? [sketchy-null-number]",
           "type":"Blame",
           "loc":{
             "source":"test.js",
@@ -231,7 +232,8 @@ JSON with --include-warnings
           "start":5,
           "end":5
         }
-      ]
+      ],
+      "error_codes":["sketchy-null-number"]
     },
     {
       "kind":"lint",
@@ -296,7 +298,7 @@ JSON with --include-warnings
       "message":[
         {
           "context":"if (x) {} //Warning",
-          "descr":"Sketchy null check on number [1] which is potentially 0. Perhaps you meant to check for null or undefined [2]? (`sketchy-null-number`)",
+          "descr":"Sketchy null check on number [1] which is potentially 0. Perhaps you meant to check for null or undefined [2]? [sketchy-null-number]",
           "type":"Blame",
           "loc":{
             "source":"test.js",
@@ -310,7 +312,8 @@ JSON with --include-warnings
           "start":5,
           "end":5
         }
-      ]
+      ],
+      "error_codes":["sketchy-null-number"]
     }
   ],
   "passed":false

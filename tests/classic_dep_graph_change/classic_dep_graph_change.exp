@@ -4,7 +4,7 @@ Server should start in classic mode
 Error should refer to test/node_modules/foo.js
 Error ------------------------------------------------------------------------------------------------- test/test.js:5:2
 
-Cannot cast `foo()` to empty because number [1] is incompatible with empty [2].
+Cannot cast `foo()` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
 
    test/test.js:5:2
    5| (foo(): empty);
@@ -25,7 +25,7 @@ Found 1 error
 Removing test/node_modules/foo.js should make error refer to node_modules/foo.js
 Error ------------------------------------------------------------------------------------------------- test/test.js:5:2
 
-Cannot cast `foo()` to empty because string [1] is incompatible with empty [2].
+Cannot cast `foo()` to empty because string [1] is incompatible with empty [2]. [incompatible-cast]
 
    test/test.js:5:2
    5| (foo(): empty);
@@ -46,7 +46,7 @@ Found 1 error
 Adding test/node_modules/foo.js should make error refer to test/node_modules/foo.js
 Error ------------------------------------------------------------------------------------------------- test/test.js:5:2
 
-Cannot cast `foo()` to empty because number [1] is incompatible with empty [2].
+Cannot cast `foo()` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
 
    test/test.js:5:2
    5| (foo(): empty);

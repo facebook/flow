@@ -17,6 +17,35 @@ let to_string_tests =
            assert_equal ~ctxt ~printer:(Printf.sprintf "%S") "ef46db3751d8e999" str );
        ]
 
-let tests = "xx" >::: [to_string_tests]
+let equal_tests =
+  "equal"
+  >::: [
+         ( "is_equal" >:: fun ctxt ->
+           let a =
+             let state = Xx.init 0L in
+             let () = Xx.update state "foo" in
+             Xx.digest state
+           in
+           let b =
+             let state = Xx.init 0L in
+             let () = Xx.update state "foo" in
+             Xx.digest state
+           in
+           assert_equal ~ctxt ~cmp:Xx.equal ~printer:Xx.to_string a b );
+         ( "not_equal" >:: fun ctxt ->
+           let a =
+             let state = Xx.init 0L in
+             let () = Xx.update state "foo" in
+             Xx.digest state
+           in
+           let b =
+             let state = Xx.init 0L in
+             let () = Xx.update state "bar" in
+             Xx.digest state
+           in
+           assert_equal ~ctxt ~cmp:(fun a b -> not (Xx.equal a b)) ~printer:Xx.to_string a b );
+       ]
+
+let tests = "xx" >::: [to_string_tests; equal_tests]
 
 let () = run_test_tt_main tests

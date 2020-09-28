@@ -4,7 +4,7 @@
   (modules
     process_types)
   (libraries
-    core_kernel
+    base
     utils_core
     sys_utils))
 

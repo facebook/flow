@@ -9,9 +9,9 @@ open Flow_ast
 
 type 'loc binding = 'loc * string
 
-type 'loc ident = 'loc * string
+type 'loc ident = 'loc * string [@@deriving show]
 
-type 'loc source = 'loc * string
+type 'loc source = 'loc * string [@@deriving show]
 
 let rec fold_bindings_of_pattern =
   Pattern.(
@@ -114,6 +114,12 @@ let merge_comments_with_internal ~inner ~outer =
       ~trailing:(inner_trailing @ outer_trailing)
       ~internal
 
+let split_comments comments =
+  match comments with
+  | None -> (None, None)
+  | Some { Syntax.leading; trailing; _ } ->
+    (mk_comments_opt ~leading (), mk_comments_opt ~trailing ())
+
 let string_of_assignment_operator op =
   let open Flow_ast.Expression.Assignment in
   match op with
@@ -189,6 +195,7 @@ module ExpressionSort = struct
     | Unary
     | Update
     | Yield
+  [@@deriving show]
 
   let to_string = function
     | Array -> "array"

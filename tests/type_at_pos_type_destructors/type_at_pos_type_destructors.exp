@@ -60,7 +60,11 @@ react-component.js:14:6,14:12
 
 react-component.js:20:13
 Flags:
-{x: {+m: <T>(x: $NonMaybeType<T>) => T}, y: {+m: <T>(x: $NonMaybeType<T>) => T}}
+{
+  x: {+m: <T>(x: $NonMaybeType<T>) => T, ...},
+  y: {+m: <T>(x: $NonMaybeType<T>) => T, ...},
+  ...
+}
 react-component.js:20:13,20:13
 
 spread.js:12:6
@@ -70,12 +74,12 @@ spread.js:12:6,12:10
 
 spread.js:14:6
 Flags:
-type C1 = {...C, o: O}
+type C1 = {...C, o: O, ...}
 spread.js:14:6,14:7
 
 spread.js:16:6
 Flags:
-type C2 = {o: O, ...C}
+type C2 = {o: O, ...C, ...}
 spread.js:16:6,16:7
 
 spread.js:18:6
@@ -90,77 +94,77 @@ spread.js:20:6,20:8
 
 spread.js:22:6
 Flags:
-type Ctor1 = {...Ctor, o: O}
+type Ctor1 = {...Ctor, o: O, ...}
 spread.js:22:6,22:10
 
 spread.js:24:6
 Flags:
-type P1<T> = {...P<T>, o: O}
+type P1<T> = {...P<T>, o: O, ...}
 spread.js:24:6,24:7
 
 spread.js:26:6
 Flags:
-type Rec = {o: O, ...Rec}
+type Rec = {o: O, ...Rec, ...}
 spread.js:26:6,26:8
 
 spread.js:30:6
 Flags:
-type B1<T: {}, S: {}> = {...T, ...S, o: O}
+type B1<T: {...}, S: {...}> = {...T, ...S, o: O, ...}
 spread.js:30:6,30:7
 
 spread.js:32:6
 Flags:
-type B2<T: {}> = {...T, o: O}
+type B2<T: {...}> = {...T, o: O, ...}
 spread.js:32:6,32:7
 
 spread.js:34:6
 Flags:
-type B3<T: {}> = {o: O, ...T}
+type B3<T: {...}> = {o: O, ...T, ...}
 spread.js:34:6,34:7
 
 spread.js:36:6
 Flags:
-type B4<T: {}> = {o: O, ...T, oo: O}
+type B4<T: {...}> = {o: O, ...T, oo: O, ...}
 spread.js:36:6,36:7
 
 spread.js:38:6
 Flags:
-type B5<T: {}> = {u: O, w: T, v: O, x: O, ...T, y: O}
+type B5<T: {...}> = {u: O, w: T, v: O, x: O, ...T, y: O, ...}
 spread.js:38:6,38:7
 
 spread.js:40:6
 Flags:
-type EB1<T: {}, S: {}> = {|...T, ...S, o: O|}
+type EB1<T: {...}, S: {...}> = {|...T, ...S, o: O|}
 spread.js:40:6,40:8
 
 spread.js:42:6
 Flags:
-type EB2<T: {}> = {|...T, o: O|}
+type EB2<T: {...}> = {|...T, o: O|}
 spread.js:42:6,42:8
 
 spread.js:44:6
 Flags:
-type EB3<T: {}> = {|o: O, ...T|}
+type EB3<T: {...}> = {|o: O, ...T|}
 spread.js:44:6,44:8
 
 spread.js:46:6
 Flags:
-type EB4<T: {}> = {|o: O, ...T, oo: O|}
+type EB4<T: {...}> = {|o: O, ...T, oo: O|}
 spread.js:46:6,46:8
 
 spread.js:48:6
 Flags:
-type EB5<T: {}> = {|u: O, w: T, v: O, x: O, ...T, y: O|}
+type EB5<T: {...}> = {|u: O, w: T, v: O, x: O, ...T, y: O|}
 spread.js:48:6,48:8
 
 spread.js:50:6
 Flags: --expand-type-aliases
-type PTA1<T: {}> = {o: O, ...T, ...T}
+type PTA1<T: {...}> = {o: O, ...T, ...T, ...}
 spread.js:50:6,50:9
 
 spread.js:52:6
 Flags:
-type PTA2<T: {}> = {...T, ...B2<T>}
+type PTA2<T: {...}> = {...T, ...B2<T>, ...}
 spread.js:52:6,52:9
 
 spread.js:54:6
@@ -185,27 +189,27 @@ spread.js:60:6,60:11
 
 spread.js:62:6
 Flags:
-type PRec<X> = {o: O, ...PRec<X>}
+type PRec<X> = {o: O, ...PRec<X>, ...}
 spread.js:62:6,62:9
 
 spread.js:64:6
 Flags: --expand-type-aliases
-type IP1<T: {}> = {...T, ...S, o: O} & {...T, o: O}
+type IP1<T: {...}> = {...T, ...S, o: O, ...} & {...T, o: O, ...}
 spread.js:64:6,64:8
 
 spread.js:66:6
 Flags:
-type Nest1<T: {}> = {...T}
+type Nest1<T: {...}> = {...T, ...}
 spread.js:66:6,66:10
 
 spread.js:68:6
 Flags:
-type Nest2<T: {}> = {...T}
+type Nest2<T: {...}> = {...T, ...}
 spread.js:68:6,68:10
 
 spread.js:70:6
 Flags:
-type UNest<T: {}> = {...T}
+type UNest<T: {...}> = {...T, ...}
 spread.js:70:6,70:10
 
 type-destructor.js:20:6
@@ -235,12 +239,12 @@ type-destructor.js:34:6,34:15
 
 type-destructor.js:37:6
 Flags:
-type ValuesPolyBound<X: {f: number}> = $Values<X>
+type ValuesPolyBound<X: {f: number, ...}> = $Values<X>
 type-destructor.js:37:6,37:20
 
 type-destructor.js:41:6
 Flags:
-type ReadOnlyObj = $ReadOnly<{key: any}>
+type ReadOnlyObj = $ReadOnly<{key: any, ...}>
 type-destructor.js:41:6,41:16
 
 type-destructor.js:50:6
@@ -250,17 +254,17 @@ type-destructor.js:50:6,50:18
 
 type-destructor.js:53:6
 Flags:
-type DiffFromEmptyObjectError = $Diff<{}, {nope: number}>
+type DiffFromEmptyObjectError = $Diff<{...}, {nope: number, ...}>
 type-destructor.js:53:6,53:29
 
 type-destructor.js:55:6
 Flags:
-type DiffFromEmptyObjectOkay = $Diff<{}, {nope: (number | void)}>
+type DiffFromEmptyObjectOkay = $Diff<{...}, {nope: (number | void), ...}>
 type-destructor.js:55:6,55:28
 
 type-destructor.js:57:6
 Flags:
-type DiffObjPoly<X> = $Diff<{|y: X|}, {|[string]: X|}>
+type DiffObjPoly<X> = $Diff<{|y: X|}, {[string]: X}>
 type-destructor.js:57:6,57:16
 
 type-destructor.js:59:6
@@ -285,12 +289,12 @@ type-destructor.js:67:6,67:14
 
 type-destructor.js:70:6
 Flags:
-type RestObj = $Rest<{|y: O1|}, {|[string]: O2|}>
+type RestObj = $Rest<{|y: O1|}, {[string]: O2}>
 type-destructor.js:70:6,70:12
 
 type-destructor.js:72:6
 Flags:
-type RestObjPoly<X> = $Rest<{|y: X|}, {|[string]: X|}>
+type RestObjPoly<X> = $Rest<{|y: X|}, {[string]: X}>
 type-destructor.js:72:6,72:16
 
 type-destructor.js:74:6
@@ -340,7 +344,7 @@ type-destructor.js:98:6,98:16
 
 type-destructor.js:101:6
 Flags:
-type ObjMapPoly<X, Y> = $ObjMap<{a: X, b?: Y}, <T>(T) => Array<T>>
+type ObjMapPoly<X, Y> = $ObjMap<{a: X, b?: Y, ...}, <T>(T) => Array<T>>
 type-destructor.js:101:6,101:15
 
 type-destructor.js:105:6
@@ -350,7 +354,10 @@ type-destructor.js:105:6,105:17
 
 type-destructor.js:107:6
 Flags:
-type ObjMapiPoly<X, Y> = $ObjMapi<{a: X, b?: Y}, <K, V>(K, V) => Array<(K | V)>>
+type ObjMapiPoly<X, Y> = $ObjMapi<
+  {a: X, b?: Y, ...},
+  <K, V>(K, V) => Array<(K | V)>,
+>
 type-destructor.js:107:6,107:16
 
 type-destructor.js:112:6
@@ -381,7 +388,7 @@ type-destructor.js:129:6,129:24
 type-destructor.js:142:6
 Flags:
 type CallNestedObjType = $Call<
-  <T>({+data: ?$ReadOnlyArray<{+foo: ?{+bar: ?T}}>}) => T,
+  <T>({+data: ?$ReadOnlyArray<{+foo: ?{+bar: ?T, ...}, ...}>, ...}) => T,
   NestedObj,
 >
 type-destructor.js:142:6,142:22
@@ -403,12 +410,12 @@ type-destructor.js:165:6,165:13
 
 type-destructor.js:169:18
 Flags:
-<T: {}, K: T>() => $ElementType<T, K>
+<T: {...}, K: T>() => $ElementType<T, K>
 type-destructor.js:169:18,169:28
 
 type-destructor.js:171:18
 Flags:
-<K: any, T: {}>() => $ElementType<T, K>
+<K: empty, T: {...}>() => $ElementType<T, K>
 type-destructor.js:171:18,171:28
 
 type-destructor.js:175:6
@@ -427,7 +434,7 @@ type-destructor.js:182:6,182:32
 
 type-destructor.js:188:6
 Flags:
-type $Pick<O: {}, K: $Keys<O>> = $ElementType<$NonMaybeType<O>, K>
+type $Pick<O: {...}, K: $Keys<O>> = $ElementType<$NonMaybeType<O>, K>
 type-destructor.js:188:6,188:10
 
 type-destructor.js:20:6
@@ -457,32 +464,32 @@ type-destructor.js:34:6,34:15
 
 type-destructor.js:37:6
 Flags: --evaluate-type-destructors
-type ValuesPolyBound<X: {f: number}> = $Values<X>
+type ValuesPolyBound<X: {f: number, ...}> = $Values<X>
 type-destructor.js:37:6,37:20
 
 type-destructor.js:41:6
 Flags: --evaluate-type-destructors
-type ReadOnlyObj = {+key: any}
+type ReadOnlyObj = {+key: any, ...}
 type-destructor.js:41:6,41:16
 
 type-destructor.js:50:6
 Flags: --evaluate-type-destructors
-type RequiredProps = {name: string}
+type RequiredProps = {name: string, ...}
 type-destructor.js:50:6,50:18
 
 type-destructor.js:53:6
 Flags: --evaluate-type-destructors
-type DiffFromEmptyObjectError = {}
+type DiffFromEmptyObjectError = {...}
 type-destructor.js:53:6,53:29
 
 type-destructor.js:55:6
 Flags: --evaluate-type-destructors
-type DiffFromEmptyObjectOkay = {}
+type DiffFromEmptyObjectOkay = {...}
 type-destructor.js:55:6,55:28
 
 type-destructor.js:57:6
 Flags: --evaluate-type-destructors
-type DiffObjPoly<X> = $Diff<{|y: X|}, {|[string]: X|}>
+type DiffObjPoly<X> = $Diff<{|y: X|}, {[string]: X}>
 type-destructor.js:57:6,57:16
 
 type-destructor.js:59:6
@@ -502,7 +509,7 @@ type-destructor.js:63:6,63:17
 
 type-destructor.js:67:6
 Flags: --evaluate-type-destructors
-type RestProps = {name?: string}
+type RestProps = {name?: string, ...}
 type-destructor.js:67:6,67:14
 
 type-destructor.js:70:6
@@ -512,7 +519,7 @@ type-destructor.js:70:6,70:12
 
 type-destructor.js:72:6
 Flags: --evaluate-type-destructors
-type RestObjPoly<X> = $Rest<{|y: X|}, {|[string]: X|}>
+type RestObjPoly<X> = $Rest<{|y: X|}, {[string]: X}>
 type-destructor.js:72:6,72:16
 
 type-destructor.js:74:6
@@ -557,32 +564,34 @@ type-destructor.js:94:6,94:25
 
 type-destructor.js:98:6
 Flags: --evaluate-type-destructors
-type ObjMapProps = {age: Array<number>, name: Array<string>}
+type ObjMapProps = {age: Array<number>, name: Array<string>, ...}
 type-destructor.js:98:6,98:16
 
 type-destructor.js:101:6
 Flags: --evaluate-type-destructors
-type ObjMapPoly<X, Y> = {a: Array<X>, b?: Array<Y>}
+type ObjMapPoly<X, Y> = {a: Array<X>, b?: Array<Y>, ...}
 type-destructor.js:101:6,101:15
 
 type-destructor.js:105:6
 Flags: --evaluate-type-destructors
 type ObjMapiProps = {
   age: Array<("age" | number)>,
-  name: Array<("name" | string)>
+  name: Array<("name" | string)>,
+  ...
 }
 type-destructor.js:105:6,105:17
 
 type-destructor.js:107:6
 Flags: --evaluate-type-destructors
-type ObjMapiPoly<X, Y> = {a: Array<("a" | X)>, b?: Array<("b" | Y)>}
+type ObjMapiPoly<X, Y> = {a: Array<("a" | X)>, b?: Array<("b" | Y)>, ...}
 type-destructor.js:107:6,107:16
 
 type-destructor.js:112:6
 Flags: --evaluate-type-destructors
 type ObjMapFnReturnTypes = {
-  getAge: {k: "getAge", v: number},
-  getName: {k: "getName", v: string}
+  getAge: {k: "getAge", v: number, ...},
+  getName: {k: "getName", v: string, ...},
+  ...
 }
 type-destructor.js:112:6,112:24
 
@@ -628,12 +637,12 @@ type-destructor.js:165:6,165:13
 
 type-destructor.js:169:18
 Flags: --evaluate-type-destructors
-<T: {}, K: T>() => $ElementType<T, K>
+<T: {...}, K: T>() => $ElementType<T, K>
 type-destructor.js:169:18,169:28
 
 type-destructor.js:171:18
 Flags: --evaluate-type-destructors
-<K: any, T: {}>() => $ElementType<T, K>
+<K: empty, T: {...}>() => $ElementType<T, K>
 type-destructor.js:171:18,171:28
 
 type-destructor.js:175:6
@@ -650,6 +659,6 @@ type-destructor.js:182:6,182:32
 
 type-destructor.js:188:6
 Flags: --evaluate-type-destructors
-type $Pick<O: {}, K: $Keys<O>> = $ElementType<$NonMaybeType<O>, K>
+type $Pick<O: {...}, K: $Keys<O>> = $ElementType<$NonMaybeType<O>, K>
 type-destructor.js:188:6,188:10
 

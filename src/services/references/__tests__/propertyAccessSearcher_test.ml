@@ -21,14 +21,18 @@ let run ctxt expected name content =
         parse_facebook_fbt = None;
         parse_arch = Options.Classic;
         parse_abstract_locations = false;
+        (* following options unused in classic mode *)
+        parse_type_asserts = false;
+        parse_suppress_types = SSet.empty;
+        parse_max_literal_len = 0;
+        parse_exact_by_default = false;
+        parse_enable_enums = false;
       }
     in
     let result = Parsing_service_js.do_parse ~parse_options ~info content file in
     let ast =
       match result with
-      | Parsing_service_js.Parse_ok (parse_ok, _parse_errors) ->
-        let (ast, _) = Parsing_service_js.basic parse_ok in
-        ast
+      | Parsing_service_js.Parse_ok { ast; _ } -> ast
       | Parsing_service_js.Parse_fail _ -> failwith "Parse unexpectedly failed"
       | Parsing_service_js.Parse_skip _ -> failwith "Parse unexpectedly skipped"
     in

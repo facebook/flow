@@ -1,6 +1,6 @@
 Error ------------------------------------------------------------------------------------------------------ test.js:5:1
 
-Cannot resolve name `React$Element`.
+Cannot resolve name `React$Element`. [cannot-resolve-name]
 
    5| <div />;
       ^^^^^^^
@@ -8,7 +8,7 @@ Cannot resolve name `React$Element`.
 
 Error ------------------------------------------------------------------------------------------------------ test.js:5:1
 
-Cannot resolve name `React$Key`.
+Cannot resolve name `React$Key`. [cannot-resolve-name]
 
    5| <div />;
       ^^^^^^^
@@ -16,7 +16,7 @@ Cannot resolve name `React$Key`.
 
 Error ------------------------------------------------------------------------------------------------------ test.js:5:1
 
-Cannot resolve name `React$Ref`.
+Cannot resolve name `React$Ref`. [cannot-resolve-name]
 
    5| <div />;
       ^^^^^^^
@@ -24,7 +24,7 @@ Cannot resolve name `React$Ref`.
 
 Error ------------------------------------------------------------------------------------------------------ test.js:5:2
 
-Cannot resolve name `$JSXIntrinsics`.
+Cannot resolve name `$JSXIntrinsics`. [cannot-resolve-name]
 
    5| <div />;
        ^^^

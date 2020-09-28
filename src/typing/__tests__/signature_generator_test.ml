@@ -33,7 +33,7 @@ let verify_and_generate
   let exports_info = File_sig.With_Loc.program_with_exports_info ~ast ~module_ref_prefix:None in
   let signature =
     match exports_info with
-    | Ok exports_info -> Signature_builder.program ast ~exports_info
+    | Ok (exports_info, _) -> Signature_builder.program ast ~exports_info
     | Error _ -> failwith "Signature builder failure!"
   in
   Signature_builder.Signature.verify_and_generate
@@ -90,7 +90,7 @@ let mk_generated_signature_file_sig_test
         contents
     in
     match File_sig.With_Loc.program ~ast:program ~module_ref_prefix:None with
-    | Ok fs -> File_sig.With_Loc.to_string fs |> String.split_on_char '\n'
+    | Ok (fs, _) -> File_sig.With_Loc.to_string fs |> String.split_on_char '\n'
     | Error _ -> []
   in
   let printer v = "\n" ^ String.concat "\n" v in
@@ -535,10 +535,36 @@ let tests =
                  "}";
                  "export {C};";
                ];
-         "class_extends_error"
+         "class_extends"
          >:: mk_signature_generator_test
-               ["export class C extends (undefined: any) { }"]
-               ["declare class C extends $TEMPORARY$Super$FlowFixMe {}"; "export {C};"];
+               [
+                 "class A<T> {};";
+                 "export class B extends (A: Class<A<null>>) {};";
+                 "export class C extends A<null> {};";
+               ]
+               [
+                 "declare class A<T> {}";
+                 "declare class B extends $1 {}";
+                 "declare var $1: Class<A<null>>;";
+                 "declare class C extends $2<null> {}";
+                 "declare var $2: typeof A;";
+                 "export {B};";
+                 "export {C};";
+               ];
+         "class_extends_reenter"
+         >:: mk_signature_generator_test
+               [
+                 "declare class A<T> {}";
+                 "const B = class extends A<string> {}";
+                 "module.exports = B";
+               ]
+               [
+                 "declare class A<T> {}";
+                 "declare var B: typeof $1;";
+                 "declare class $1 extends $2<string> {}";
+                 "declare var $2: typeof A;";
+                 "declare module.exports: typeof B;";
+               ];
          "function_overloading"
          >:: mk_signature_generator_test
                [
@@ -727,7 +753,7 @@ let tests =
                  "  },";
                  ">;";
                ];
-         "function_statics"
+         "cjs_function_statics"
          >:: mk_signature_generator_test
                ["function bar(): void { };"; "const x = 42;"; "bar.x = x;"; "module.exports = bar;"]
                [
@@ -741,6 +767,21 @@ let tests =
                  "declare var x: $TEMPORARY$number<42>;";
                  "";
                  "declare module.exports: typeof bar;";
+               ];
+         "es_function_statics"
+         >:: mk_signature_generator_test
+               ["function bar(): void { };"; "const x = 42;"; "bar.x = x;"; "export default bar;"]
+               [
+                 "declare var bar: $TEMPORARY$function<";
+                 "  () => void,";
+                 "  {";
+                 "    x: typeof x,";
+                 "    ...,";
+                 "  },";
+                 ">;";
+                 "declare var x: $TEMPORARY$number<42>;";
+                 "";
+                 "declare export default typeof bar;";
                ];
          "function_predicates1"
          >:: mk_signature_generator_test

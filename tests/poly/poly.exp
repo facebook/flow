@@ -1,6 +1,6 @@
 Error ---------------------------------------------------------------------------------------------------- annot.js:3:17
 
-Cannot use `A` [1] with fewer than 1 type argument.
+Cannot use `A` [1] with fewer than 1 type argument. [missing-type-arg]
 
    annot.js:3:17
    3| class B extends A { } // OK, same as above
@@ -15,7 +15,7 @@ References:
 Error --------------------------------------------------------------------------------------------------- annot.js:10:36
 
 Cannot return `(new A) || (new A)` because property `x` is missing in object type [1] but exists in object type [2] in
-type argument `X` [3].
+type argument `X` [3]. [prop-missing]
 
    annot.js:10:36
    10|   return (new A: A<{}>) || (new A: A<{x: string}>);
@@ -35,7 +35,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- annot2.js:4:2
 
-Cannot cast `f(...)(...)` to number because `T` [1] is incompatible with number [2].
+Cannot cast `f(...)(...)` to number because `T` [1] is incompatible with number [2]. [incompatible-cast]
 
    annot2.js:4:2
    4| (f(0)(1): number); // errors: number ~> T (empty), T (mixed) ~> number
@@ -52,7 +52,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- annot2.js:4:7
 
-Cannot call `f(...)` with `1` bound to `y` because number [1] is incompatible with `T` [2].
+Cannot call `f(...)` with `1` bound to `y` because number [1] is incompatible with `T` [2]. [incompatible-call]
 
    annot2.js:4:7
    4| (f(0)(1): number); // errors: number ~> T (empty), T (mixed) ~> number
@@ -67,6 +67,7 @@ References:
 Error ----------------------------------------------------------------------------------------------------- error.js:8:8
 
 Cannot call `newFn1` with `'string'` bound to the first parameter because string [1] is incompatible with number [2].
+[incompatible-call]
 
    error.js:8:8
    8| newFn1('string'); // The error should point here.
@@ -80,7 +81,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- error.js:11:20
 
-Cannot call `fn2` with `42` bound to `x` because number [1] is incompatible with string [2].
+Cannot call `fn2` with `42` bound to `x` because number [1] is incompatible with string [2]. [incompatible-call]
 
    error.js:11:20
    11| const newFn2 = fn2(42);
@@ -94,7 +95,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- error.js:15:5
 
-Cannot call `fn3` with `42` bound to `x` because number [1] is incompatible with string [2].
+Cannot call `fn3` with `42` bound to `x` because number [1] is incompatible with string [2]. [incompatible-call]
 
    error.js:15:5
    15| fn3(42, (x: string) => {}); // The error should point to 42 and not string.
@@ -108,7 +109,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- error.js:20:2
 
-Cannot cast `newVal4` to string because number [1] is incompatible with string [2].
+Cannot cast `newVal4` to string because number [1] is incompatible with string [2]. [incompatible-cast]
 
    error.js:20:2
    20| (newVal4: string); // The error should point here.
@@ -126,7 +127,7 @@ References:
 Error ------------------------------------------------------------------------------------------- error_position.js:11:2
 
 Cannot cast `foo` to `typeof bar` because property `x` is missing in `Props` [1] but exists in `Props2` [2] in the first
-argument.
+argument. [prop-missing]
 
    error_position.js:11:2
    11| (foo : typeof bar);
@@ -144,6 +145,7 @@ References:
 Error --------------------------------------------------------------------------- implicit_bounded_instantiation.js:15:8
 
 Cannot instantiate `C` because number [1] is incompatible with `Middle` [2] in type argument `T`.
+[incompatible-type-arg]
 
    implicit_bounded_instantiation.js:15:8
    15| var a: C<*> = new C();
@@ -161,6 +163,7 @@ References:
 Error --------------------------------------------------------------------------- implicit_bounded_instantiation.js:15:8
 
 Cannot instantiate `C` because `Base` [1] is incompatible with `Middle` [2] in type argument `T`.
+[incompatible-type-arg]
 
    implicit_bounded_instantiation.js:15:8
    15| var a: C<*> = new C();
@@ -175,9 +178,51 @@ References:
                   ^^^^^^ [2]
 
 
+Error -------------------------------------------------------------------------- implicit_bounded_instantiation.js:15:15
+
+Cannot assign `new C()` to `a` because `Middle` [1] is incompatible with number [2] in type argument `T` [3].
+[incompatible-type-arg]
+
+   implicit_bounded_instantiation.js:15:15
+   15| var a: C<*> = new C();
+                     ^^^^^^^
+
+References:
+   implicit_bounded_instantiation.js:7:12
+    7| class C<T: Middle> {
+                  ^^^^^^ [1]
+   implicit_bounded_instantiation.js:19:8
+   19| a.meth(42); // Error: number ~> Middle
+              ^^ [2]
+   implicit_bounded_instantiation.js:7:9
+    7| class C<T: Middle> {
+               ^ [3]
+
+
+Error -------------------------------------------------------------------------- implicit_bounded_instantiation.js:15:15
+
+Cannot assign `new C()` to `a` because `Middle` [1] is incompatible with `Base` [2] in type argument `T` [3].
+[incompatible-type-arg]
+
+   implicit_bounded_instantiation.js:15:15
+   15| var a: C<*> = new C();
+                     ^^^^^^^
+
+References:
+   implicit_bounded_instantiation.js:7:12
+    7| class C<T: Middle> {
+                  ^^^^^^ [1]
+   implicit_bounded_instantiation.js:20:8
+   20| a.meth(new Base()); // Error: Base ~> Middle
+              ^^^^^^^^^^ [2]
+   implicit_bounded_instantiation.js:7:9
+    7| class C<T: Middle> {
+               ^ [3]
+
+
 Error --------------------------------------------------------------------------- implicit_bounded_instantiation.js:19:8
 
-Cannot call `a.meth` with `42` bound to `a` because number [1] is incompatible with `Middle` [2].
+Cannot call `a.meth` with `42` bound to `a` because number [1] is incompatible with `Middle` [2]. [incompatible-call]
 
    implicit_bounded_instantiation.js:19:8
    19| a.meth(42); // Error: number ~> Middle
@@ -192,6 +237,7 @@ References:
 Error --------------------------------------------------------------------------- implicit_bounded_instantiation.js:20:8
 
 Cannot call `a.meth` with `new Base()` bound to `a` because `Base` [1] is incompatible with `Middle` [2].
+[incompatible-call]
 
    implicit_bounded_instantiation.js:20:8
    20| a.meth(new Base()); // Error: Base ~> Middle
@@ -205,7 +251,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- inout.js:7:2
 
-Cannot cast `x` to `C` because `B` [1] is incompatible with `A` [2] in type argument `In` [3].
+Cannot cast `x` to `C` because `B` [1] is incompatible with `A` [2] in type argument `In` [3]. [incompatible-cast]
 
    inout.js:7:2
    7| (x: C<A>); // error: A ~> B in default-expanded type
@@ -226,6 +272,7 @@ References:
 Error --------------------------------------------------------------------------------------------------- phantom.js:7:2
 
 Cannot cast `a` to `B` because number [1] is incompatible with string [2] in type argument `Phantom` [3].
+[incompatible-cast]
 
    phantom.js:7:2
    7| (a: B); // Error
@@ -246,6 +293,7 @@ References:
 Error -------------------------------------------------------------------------------------------------- phantom.js:15:2
 
 Cannot cast `c` to `D` because number [1] is incompatible with string [2] in type argument `Phantom` [3].
+[incompatible-cast]
 
    phantom.js:15:2
    15| (c: D); // Error
@@ -265,7 +313,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- poly.js:17:16
 
-Cannot assign `foo.x` to `x` because number [1] is incompatible with string [2].
+Cannot assign `foo.x` to `x` because number [1] is incompatible with string [2]. [incompatible-type]
 
    poly.js:17:16
    17| var x:string = foo.x;
@@ -282,7 +330,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- poly.js:17:16
 
-Cannot assign `foo.x` to `x` because number [1] is incompatible with string [2].
+Cannot assign `foo.x` to `x` because number [1] is incompatible with string [2]. [incompatible-type]
 
    poly.js:17:16
    17| var x:string = foo.x;
@@ -300,6 +348,7 @@ References:
 Error ---------------------------------------------------------------------------------------------------- poly.js:18:31
 
 Cannot assign `Q.bar(...)` to `z` because string [1] is incompatible with number [2] in type argument `T` [3].
+[incompatible-type-arg]
 
    poly.js:18:31
    18| var z:Foo<number> = Q.bar(foo,"");
@@ -317,6 +366,7 @@ References:
 Error ----------------------------------------------------------------------------------------------------- test.js:8:10
 
 Cannot extend `C` [1] with `D` because number [2] is incompatible with `X` [3] in the first argument of property `foo`.
+[incompatible-extend]
 
    test.js:8:10
    8|   foo(x: number): number { return x; } // error (specialization, see below)
@@ -334,6 +384,7 @@ References:
 Error ----------------------------------------------------------------------------------------------------- test.js:8:19
 
 Cannot extend `C` [1] with `D` because number [2] is incompatible with `X` [3] in the return value of property `foo`.
+[incompatible-extend]
 
    test.js:8:19
    8|   foo(x: number): number { return x; } // error (specialization, see below)
@@ -349,4 +400,4 @@ References:
 
 
 
-Found 21 errors
+Found 23 errors

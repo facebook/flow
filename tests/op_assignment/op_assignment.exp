@@ -1,6 +1,6 @@
 Error ----------------------------------------------------------------------------------------------------- test.js:37:3
 
-Cannot reassign constant `x` [1].
+Cannot reassign constant `x` [1]. [reassign-const]
 
    test.js:37:3
    37|   x += 2; // Error: cannot reassign constant
@@ -14,7 +14,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:38:3
 
-Cannot reassign constant `x` [1].
+Cannot reassign constant `x` [1]. [reassign-const]
 
    test.js:38:3
    38|   x -= 2; // Error: cannot reassign constant
@@ -28,7 +28,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:39:3
 
-Cannot reassign constant `x` [1].
+Cannot reassign constant `x` [1]. [reassign-const]
 
    test.js:39:3
    39|   x *= 2; // Error: cannot reassign constant
@@ -42,7 +42,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:40:3
 
-Cannot reassign constant `x` [1].
+Cannot reassign constant `x` [1]. [reassign-const]
 
    test.js:40:3
    40|   x /= 2; // Error: cannot reassign constant
@@ -56,7 +56,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:41:3
 
-Cannot reassign constant `x` [1].
+Cannot reassign constant `x` [1]. [reassign-const]
 
    test.js:41:3
    41|   x **= 2; // Error: cannot reassign constant
@@ -70,7 +70,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:42:3
 
-Cannot reassign constant `x` [1].
+Cannot reassign constant `x` [1]. [reassign-const]
 
    test.js:42:3
    42|   x %= 2; // Error: cannot reassign constant
@@ -84,7 +84,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:48:3
 
-Cannot reassign constant `sx` [1].
+Cannot reassign constant `sx` [1]. [reassign-const]
 
    test.js:48:3
    48|   sx += "b"; // Error: cannot reassign constant
@@ -98,7 +98,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:54:5
 
-Cannot update `o.p` because property `p` is not writable.
+Cannot update `o.p` because property `p` is not writable. [cannot-write]
 
    54|   o.p += 2; // Error: property is non-writable
            ^
@@ -106,7 +106,7 @@ Cannot update `o.p` because property `p` is not writable.
 
 Error ----------------------------------------------------------------------------------------------------- test.js:55:5
 
-Cannot update `o.p` because property `p` is not writable.
+Cannot update `o.p` because property `p` is not writable. [cannot-write]
 
    55|   o.p -= 2; // Error: property is non-writable
            ^
@@ -114,7 +114,7 @@ Cannot update `o.p` because property `p` is not writable.
 
 Error ----------------------------------------------------------------------------------------------------- test.js:56:5
 
-Cannot update `o.p` because property `p` is not writable.
+Cannot update `o.p` because property `p` is not writable. [cannot-write]
 
    56|   o.p *= 2; // Error: property is non-writable
            ^
@@ -122,7 +122,7 @@ Cannot update `o.p` because property `p` is not writable.
 
 Error ----------------------------------------------------------------------------------------------------- test.js:57:5
 
-Cannot update `o.p` because property `p` is not writable.
+Cannot update `o.p` because property `p` is not writable. [cannot-write]
 
    57|   o.p /= 2; // Error: property is non-writable
            ^
@@ -130,7 +130,7 @@ Cannot update `o.p` because property `p` is not writable.
 
 Error ----------------------------------------------------------------------------------------------------- test.js:58:5
 
-Cannot update `o.p` because property `p` is not writable.
+Cannot update `o.p` because property `p` is not writable. [cannot-write]
 
    58|   o.p **= 2; // Error: property is non-writable
            ^
@@ -138,7 +138,7 @@ Cannot update `o.p` because property `p` is not writable.
 
 Error ----------------------------------------------------------------------------------------------------- test.js:59:5
 
-Cannot update `o.p` because property `p` is not writable.
+Cannot update `o.p` because property `p` is not writable. [cannot-write]
 
    59|   o.p %= 2; // Error: property is non-writable
            ^
@@ -146,7 +146,7 @@ Cannot update `o.p` because property `p` is not writable.
 
 Error ----------------------------------------------------------------------------------------------------- test.js:65:5
 
-Cannot update `o.p` because property `p` is not writable.
+Cannot update `o.p` because property `p` is not writable. [cannot-write]
 
    65|   o.p += "b"; // Error: property is non-writable
            ^
@@ -154,7 +154,7 @@ Cannot update `o.p` because property `p` is not writable.
 
 Error ----------------------------------------------------------------------------------------------------- test.js:71:5
 
-Cannot get `o.p` because property `p` is not readable.
+Cannot get `o.p` because property `p` is not readable. [cannot-read]
 
    71|   o.p += 2; // Error: property is non-readable
            ^

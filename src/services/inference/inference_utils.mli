@@ -28,7 +28,7 @@ val set_of_file_sig_error :
 val set_of_file_sig_tolerable_errors :
   source_file:File_key.t -> File_sig.With_ALoc.tolerable_error list -> Flow_error.ErrorSet.t
 
-val fold_whitelisted_well_formed_exports :
+val fold_included_well_formed_exports :
   f:(File_key.t -> 'a -> 'b -> 'b) -> Options.t -> 'a Utils_js.FilenameMap.t -> 'b -> 'b
 
 val well_formed_exports_enabled : Options.t -> File_key.t -> bool

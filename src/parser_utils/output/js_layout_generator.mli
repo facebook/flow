@@ -5,7 +5,10 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
-type opts = { preserve_formatting: bool }
+type opts = {
+  preserve_formatting: bool;
+  bracket_spacing: bool;
+}
 
 type expression_context = {
   left: expression_context_left;
@@ -32,10 +35,10 @@ val program :
   ?opts:opts ->
   preserve_docblock:bool ->
   checksum:string option ->
-  (Loc.t, Loc.t) Flow_ast.program ->
+  (Loc.t, Loc.t) Flow_ast.Program.t ->
   Layout.layout_node
 
-val program_simple : ?opts:opts -> (Loc.t, Loc.t) Flow_ast.program -> Layout.layout_node
+val program_simple : ?opts:opts -> (Loc.t, Loc.t) Flow_ast.Program.t -> Layout.layout_node
 
 val literal : opts:opts -> Loc.t -> Loc.t Flow_ast.Literal.t -> Layout.layout_node
 
@@ -55,6 +58,12 @@ val expression :
 
 val statement :
   ?pretty_semicolon:bool -> opts:opts -> (Loc.t, Loc.t) Flow_ast.Statement.t -> Layout.layout_node
+
+val statement_list :
+  ?pretty_semicolon:bool ->
+  opts:opts ->
+  (Loc.t, Loc.t) Flow_ast.Statement.t list ->
+  Layout.layout_node list
 
 val object_property :
   opts:opts -> (Loc.t, Loc.t) Flow_ast.Expression.Object.property -> Layout.layout_node
@@ -100,6 +109,6 @@ val better_quote : string -> string
 
 val utf8_escape : quote:string -> string -> string
 
-val wrap_in_parens : Layout.layout_node -> Layout.layout_node
+val wrap_in_parens : ?with_break:bool -> Layout.layout_node -> Layout.layout_node
 
 val with_semicolon : Layout.layout_node -> Layout.layout_node

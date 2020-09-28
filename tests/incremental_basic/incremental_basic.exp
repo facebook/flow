@@ -1,6 +1,6 @@
 Error -------------------------------------------------------------------------------------------------------- a.js:2:17
 
-Cannot assign `0` to `a` because number [1] is incompatible with string [2].
+Cannot assign `0` to `a` because number [1] is incompatible with string [2]. [incompatible-type]
 
    a.js:2:17
    2| var a: string = 0;
@@ -14,7 +14,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------------- b.js:3:17
 
-Cannot assign `a` to `b` because string [1] is incompatible with number [2].
+Cannot assign `a` to `b` because string [1] is incompatible with number [2]. [incompatible-type]
 
    b.js:3:17
    3| var b: number = a;
@@ -31,7 +31,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------------- c.js:3:17
 
-Cannot assign `b` to `c` because number [1] is incompatible with string [2].
+Cannot assign `b` to `c` because number [1] is incompatible with string [2]. [incompatible-type]
 
    c.js:3:17
    3| var c: string = b;
@@ -50,7 +50,7 @@ References:
 Found 3 errors
 Error -------------------------------------------------------------------------------------------------------- a.js:2:17
 
-Cannot assign `0` to `a` because number [1] is incompatible with string [2].
+Cannot assign `0` to `a` because number [1] is incompatible with string [2]. [incompatible-type]
 
    a.js:2:17
    2| var a: string = 0;
@@ -66,7 +66,7 @@ References:
 Found 1 error
 Error -------------------------------------------------------------------------------------------------------- c.js:3:17
 
-Cannot assign `b` to `c` because number [1] is incompatible with string [2].
+Cannot assign `b` to `c` because number [1] is incompatible with string [2]. [incompatible-type]
 
    c.js:3:17
    3| var c: string = b;
@@ -85,7 +85,7 @@ References:
 Found 1 error
 Error -------------------------------------------------------------------------------------------------------- c.js:3:17
 
-Cannot assign `b` to `c` because number [1] is incompatible with string [2].
+Cannot assign `b` to `c` because number [1] is incompatible with string [2]. [incompatible-type]
 
    c.js:3:17
    3| var c: string = b;

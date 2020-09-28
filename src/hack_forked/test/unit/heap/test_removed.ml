@@ -17,15 +17,12 @@ end
 
 let test_add_remove (module IntHeap : SharedMem.NoCache with type t = int and type key = string) ()
     =
-  assert (SharedMem.debug_removed_count () = 0);
   IntHeap.add "a" 4;
-  assert (SharedMem.debug_removed_count () = 0);
   assert (IntHeap.mem "a");
   IntHeap.remove_batch (IntHeap.KeySet.singleton "a");
-  assert (not @@ IntHeap.mem "a");
-  assert (SharedMem.debug_removed_count () = 1)
+  assert (not (IntHeap.mem "a"))
 
-module TestNoCache = SharedMem.NoCache (SharedMem.Immediate) (StringKey) (IntVal)
+module TestNoCache = SharedMem.NoCache (StringKey) (IntVal)
 
 let tests () =
   let list = [("test_add_remove", test_add_remove (module TestNoCache))] in

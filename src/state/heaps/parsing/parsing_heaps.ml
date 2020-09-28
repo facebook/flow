@@ -10,9 +10,10 @@ open Parsing_heaps_exceptions
 
 (* shared heap for parsed ASTs by filename *)
 module ASTHeap =
-  SharedMem_js.WithCache (SharedMem_js.Immediate) (File_key)
+  SharedMem_js.WithCache
+    (File_key)
     (struct
-      type t = (RelativeLoc.t, RelativeLoc.t) Flow_ast.program
+      type t = (RelativeLoc.t, RelativeLoc.t) Flow_ast.Program.t
 
       let prefix = Prefix.make ()
 
@@ -20,9 +21,10 @@ module ASTHeap =
     end)
 
 module SigASTHeap =
-  SharedMem_js.WithCache (SharedMem_js.Immediate) (File_key)
+  SharedMem_js.WithCache
+    (File_key)
     (struct
-      type t = (ALoc.t, ALoc.t) Flow_ast.program
+      type t = (ALoc.t, ALoc.t) Flow_ast.Program.t
 
       let prefix = Prefix.make ()
 
@@ -30,13 +32,34 @@ module SigASTHeap =
     end)
 
 module SigASTALocTableHeap =
-  SharedMem_js.WithCache (SharedMem_js.Immediate) (File_key)
+  SharedMem_js.WithCache
+    (File_key)
     (struct
       type t = ALoc.table
 
       let prefix = Prefix.make ()
 
       let description = "ALocTable"
+    end)
+
+type 'loc type_sig =
+  'loc Type_sig_pack.exports
+  * 'loc Type_sig_pack.packed option
+  * string Type_sig_collections.Module_refs.t
+  * 'loc Type_sig_pack.packed_def Type_sig_collections.Local_defs.t
+  * 'loc Type_sig_pack.remote_ref Type_sig_collections.Remote_refs.t
+  * 'loc Type_sig_pack.packed Type_sig_collections.Pattern_defs.t
+  * 'loc Type_sig_pack.pattern Type_sig_collections.Patterns.t
+
+module TypeSigHeap =
+  SharedMem_js.NoCache
+    (File_key)
+    (struct
+      type t = Type_sig_collections.Locs.index type_sig
+
+      let prefix = Prefix.make ()
+
+      let description = "TypeSig"
     end)
 
 (* There's some redundancy in the visitors here, but an attempt to avoid repeated code led,
@@ -94,7 +117,8 @@ let decompactify_loc file ast = (loc_decompactifier (Some file))#program ast
 let add_source_aloc file ast = (source_adder_aloc (Some file))#program ast
 
 module DocblockHeap =
-  SharedMem_js.WithCache (SharedMem_js.Immediate) (File_key)
+  SharedMem_js.WithCache
+    (File_key)
     (struct
       type t = Docblock.t
 
@@ -104,7 +128,8 @@ module DocblockHeap =
     end)
 
 module FileSigHeap =
-  SharedMem_js.WithCache (SharedMem_js.Immediate) (File_key)
+  SharedMem_js.WithCache
+    (File_key)
     (struct
       type t = File_sig.With_Loc.t
 
@@ -114,7 +139,8 @@ module FileSigHeap =
     end)
 
 module SigFileSigHeap =
-  SharedMem_js.WithCache (SharedMem_js.Immediate) (File_key)
+  SharedMem_js.WithCache
+    (File_key)
     (struct
       type t = File_sig.With_ALoc.t
 
@@ -125,7 +151,8 @@ module SigFileSigHeap =
 
 (* Contains the hash for every file we even consider parsing *)
 module FileHashHeap =
-  SharedMem_js.WithCache (SharedMem_js.Immediate) (File_key)
+  SharedMem_js.WithCache
+    (File_key)
     (struct
       (* In the future I imagine a system like this:
        *
@@ -151,20 +178,35 @@ module FileHashHeap =
       let description = "FileHash"
     end)
 
+type sig_extra =
+  | Classic
+  | TypesFirst of {
+      sig_ast: (ALoc.t, ALoc.t) Flow_ast.Program.t;
+      sig_file_sig: File_sig.With_ALoc.t;
+      aloc_table: ALoc.table option;
+    }
+  | TypeSig of Type_sig_collections.Locs.index type_sig * ALoc.table
+
 (* Groups operations on the multiple heaps that need to stay in sync *)
 module ParsingHeaps = struct
-  let add file info (ast, file_sig) sig_opt =
+  let add file info (ast, file_sig) extra =
     ASTHeap.add file (compactify_loc ast);
     DocblockHeap.add file info;
     FileSigHeap.add file file_sig;
-    Base.Option.iter sig_opt ~f:(fun (sig_ast, sig_file_sig, aloc_table) ->
-        SigASTHeap.add file (remove_source_aloc sig_ast);
-        Base.Option.iter aloc_table ~f:(SigASTALocTableHeap.add file);
-        SigFileSigHeap.add file sig_file_sig)
+    match extra with
+    | Classic -> ()
+    | TypesFirst { sig_ast; sig_file_sig; aloc_table } ->
+      SigASTHeap.add file (remove_source_aloc sig_ast);
+      Base.Option.iter aloc_table ~f:(SigASTALocTableHeap.add file);
+      SigFileSigHeap.add file sig_file_sig
+    | TypeSig (type_sig, aloc_table) ->
+      TypeSigHeap.add file type_sig;
+      SigASTALocTableHeap.add file aloc_table
 
   let oldify_batch files =
     ASTHeap.oldify_batch files;
     SigASTHeap.oldify_batch files;
+    TypeSigHeap.oldify_batch files;
     SigASTALocTableHeap.oldify_batch files;
     DocblockHeap.oldify_batch files;
     FileSigHeap.oldify_batch files;
@@ -174,6 +216,7 @@ module ParsingHeaps = struct
   let remove_old_batch files =
     ASTHeap.remove_old_batch files;
     SigASTHeap.remove_old_batch files;
+    TypeSigHeap.remove_old_batch files;
     SigASTALocTableHeap.remove_old_batch files;
     DocblockHeap.remove_old_batch files;
     FileSigHeap.remove_old_batch files;
@@ -184,6 +227,7 @@ module ParsingHeaps = struct
   let revive_batch files =
     ASTHeap.revive_batch files;
     SigASTHeap.revive_batch files;
+    TypeSigHeap.revive_batch files;
     SigASTALocTableHeap.revive_batch files;
     DocblockHeap.revive_batch files;
     FileSigHeap.revive_batch files;
@@ -196,19 +240,17 @@ module type READER = sig
 
   val has_ast : reader:reader -> File_key.t -> bool
 
-  val get_ast : reader:reader -> File_key.t -> (Loc.t, Loc.t) Flow_ast.program option
+  val get_ast : reader:reader -> File_key.t -> (Loc.t, Loc.t) Flow_ast.Program.t option
 
   val get_docblock : reader:reader -> File_key.t -> Docblock.t option
 
   val get_file_sig : reader:reader -> File_key.t -> File_sig.With_Loc.t option
 
-  val get_sig_file_sig : reader:reader -> File_key.t -> File_sig.With_ALoc.t option
-
   val get_file_hash : reader:reader -> File_key.t -> Xx.hash option
 
-  val get_ast_unsafe : reader:reader -> File_key.t -> (Loc.t, Loc.t) Flow_ast.program
+  val get_ast_unsafe : reader:reader -> File_key.t -> (Loc.t, Loc.t) Flow_ast.Program.t
 
-  val get_sig_ast_unsafe : reader:reader -> File_key.t -> (ALoc.t, ALoc.t) Flow_ast.program
+  val get_sig_ast_unsafe : reader:reader -> File_key.t -> (ALoc.t, ALoc.t) Flow_ast.Program.t
 
   val get_sig_ast_aloc_table_unsafe : reader:reader -> File_key.t -> ALoc.table
 
@@ -219,6 +261,8 @@ module type READER = sig
   val get_file_sig_unsafe : reader:reader -> File_key.t -> File_sig.With_Loc.t
 
   val get_sig_file_sig_unsafe : reader:reader -> File_key.t -> File_sig.With_ALoc.t
+
+  val get_type_sig_unsafe : reader:reader -> File_key.t -> Type_sig_collections.Locs.index type_sig
 
   val get_file_hash_unsafe : reader:reader -> File_key.t -> Xx.hash
 end
@@ -252,8 +296,6 @@ end = struct
 
   let get_file_sig ~reader:_ = FileSigHeap.get
 
-  let get_sig_file_sig ~reader:_ = SigFileSigHeap.get
-
   let get_file_hash ~reader:_ = FileHashHeap.get
 
   let get_old_file_hash ~reader:_ = FileHashHeap.get_old
@@ -285,6 +327,10 @@ end = struct
     try SigFileSigHeap.find_unsafe file
     with Not_found -> raise (Sig_requires_not_found (File_key.to_string file))
 
+  let get_type_sig_unsafe ~reader:_ file =
+    try TypeSigHeap.find_unsafe file
+    with Not_found -> raise (Type_sig_not_found (File_key.to_string file))
+
   let get_file_hash_unsafe ~reader:_ file =
     try FileHashHeap.find_unsafe file
     with Not_found -> raise (Hash_not_found (File_key.to_string file))
@@ -295,8 +341,8 @@ type worker_mutator = {
   add_file:
     File_key.t ->
     Docblock.t ->
-    (Loc.t, Loc.t) Flow_ast.program * File_sig.With_Loc.t ->
-    ((ALoc.t, ALoc.t) Flow_ast.program * File_sig.With_ALoc.t * ALoc.table option) option ->
+    (Loc.t, Loc.t) Flow_ast.Program.t * File_sig.With_Loc.t ->
+    sig_extra ->
     unit;
   add_hash: File_key.t -> Xx.hash -> unit;
 }
@@ -426,6 +472,12 @@ module Reader : READER with type reader = State_reader.t = struct
     else
       SigFileSigHeap.get key
 
+  let get_type_sig ~reader:_ key =
+    if should_use_oldified key then
+      TypeSigHeap.get_old key
+    else
+      TypeSigHeap.get key
+
   let get_file_hash ~reader:_ key =
     if should_use_oldified key then
       FileHashHeap.get_old key
@@ -465,6 +517,11 @@ module Reader : READER with type reader = State_reader.t = struct
     | Some file_sig -> file_sig
     | None -> raise (Sig_requires_not_found (File_key.to_string file))
 
+  let get_type_sig_unsafe ~reader file =
+    match get_type_sig ~reader file with
+    | Some type_sig -> type_sig
+    | None -> raise (Type_sig_not_found (File_key.to_string file))
+
   let get_file_hash_unsafe ~reader file =
     match get_file_hash ~reader file with
     | Some file_hash -> file_hash
@@ -496,11 +553,6 @@ module Reader_dispatcher : READER with type reader = Abstract_state_reader.t = s
     match reader with
     | Mutator_state_reader reader -> Mutator_reader.get_file_sig ~reader
     | State_reader reader -> Reader.get_file_sig ~reader
-
-  let get_sig_file_sig ~reader =
-    match reader with
-    | Mutator_state_reader reader -> Mutator_reader.get_sig_file_sig ~reader
-    | State_reader reader -> Reader.get_sig_file_sig ~reader
 
   let get_file_hash ~reader =
     match reader with
@@ -540,6 +592,11 @@ module Reader_dispatcher : READER with type reader = Abstract_state_reader.t = s
     | Mutator_state_reader reader -> Mutator_reader.get_sig_file_sig_unsafe ~reader
     | State_reader reader -> Reader.get_sig_file_sig_unsafe ~reader
 
+  let get_type_sig_unsafe ~reader =
+    match reader with
+    | Mutator_state_reader reader -> Mutator_reader.get_type_sig_unsafe ~reader
+    | State_reader reader -> Reader.get_type_sig_unsafe ~reader
+
   let get_file_hash_unsafe ~reader =
     match reader with
     | Mutator_state_reader reader -> Mutator_reader.get_file_hash_unsafe ~reader
@@ -555,3 +612,5 @@ end = struct
 
   let add_file_hash = FileHashHeap.add
 end
+
+let add_aloc_table = SigASTALocTableHeap.add

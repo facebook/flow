@@ -35,7 +35,11 @@ type monitor_to_server_message =
   (* A notification that a persistent socket connection is dead *)
   | DeadPersistentConnection of LspProt.client_id
   (* The file watcher has noticed changes *)
-  | FileWatcherNotification of SSet.t * file_watcher_metadata option
+  | FileWatcherNotification of {
+      files: SSet.t;
+      metadata: file_watcher_metadata option;
+      initial: bool;
+    }
   (* Monitor wants to kill the server but first asks nicely for the server to honorably kill itself *)
   | PleaseDie of please_die_reason
 

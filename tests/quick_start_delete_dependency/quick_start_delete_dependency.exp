@@ -12,7 +12,7 @@ To learn more, visit flow.org/en/docs/lang/lazy-modes
 Delete @flow file with a @flow dependent file, expect error.
 Error --------------------------------------------------------------------------------------------------------- b.js:2:9
 
-Cannot resolve module `./a`.
+Cannot resolve module `./a`. [cannot-resolve-module]
 
    2| require('./a');
               ^^^^^

@@ -5,7 +5,7 @@ No errors!
 Clear A.js:
 Error --------------------------------------------------------------------------------------------------------- B.js:5:9
 
-Cannot resolve module `A`.
+Cannot resolve module `A`. [cannot-resolve-module]
 
    5| require('A');
               ^^^

@@ -32,7 +32,6 @@ type lint_kind =
   | UnclearType
   | DeprecatedType
   | DeprecatedUtility
-  | DynamicExport
   | UnsafeGettersSetters
   | UnnecessaryOptionalChain
   | UnnecessaryInvariant
@@ -40,7 +39,12 @@ type lint_kind =
   | ImplicitInexactObject
   | UninitializedInstanceProperty
   | AmbiguousObjectType
-  | NullVoidAddition
+  | DefaultImportAccess
+  | InvalidImportStarUse
+  | NonConstVarExport
+  | ThisInExportedFunction
+  | MixedImportAndRequire
+  | ExportRenamedDefault
 
 val string_of_kind : lint_kind -> string
 

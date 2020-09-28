@@ -12,7 +12,8 @@ module Typed = struct
     metadata: Context.metadata;
     options: Options.t;
     full_cx: Context.t;
-    typed_ast: (ALoc.t, ALoc.t * Type.t) Flow_ast.program;
+    typed_ast: (ALoc.t, ALoc.t * Type.t) Flow_ast.Program.t;
+    docblock: Docblock.t;
     iteration: int;
   }
 
@@ -47,6 +48,8 @@ module Untyped = struct
     file: File_key.t;
     file_sig: File_sig.With_Loc.t;
   }
+
+  let file ccx = ccx.file
 end
 
 module UntypedFlowInit = struct
@@ -55,4 +58,6 @@ module UntypedFlowInit = struct
     file_sig: File_sig.With_Loc.t;
     reader: State_reader.t;
   }
+
+  let file ccx = ccx.file
 end

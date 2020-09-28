@@ -26,7 +26,7 @@ not_flow.js
 
 Error -------------------------------------------------------------------------------------------------- not_flow.js:1:5
 
-Cannot perform arithmetic operation because string [1] is not a number.
+Cannot perform arithmetic operation because string [1] is not a number. [unsafe-addition]
 
    1| 1 * 'foo';
           ^^^^^ [1]
@@ -40,7 +40,7 @@ not_flow.js with --all
 
 Error -------------------------------------------------------------------------------------------------- not_flow.js:1:5
 
-Cannot perform arithmetic operation because string [1] is not a number.
+Cannot perform arithmetic operation because string [1] is not a number. [unsafe-addition]
 
    1| 1 * 'foo';
           ^^^^^ [1]
@@ -59,7 +59,7 @@ not_flow.js with --respect-pragma and --all
 
 Error -------------------------------------------------------------------------------------------------- not_flow.js:1:5
 
-Cannot perform arithmetic operation because string [1] is not a number.
+Cannot perform arithmetic operation because string [1] is not a number. [unsafe-addition]
 
    1| 1 * 'foo';
           ^^^^^ [1]
@@ -79,7 +79,7 @@ bad_exports.js
 Error ---------------------------------------------------------------------------------------------- bad_exports.js:1:31
 
 Cannot build a typed interface for this module. You should annotate the exports of this module with types. Missing type
-annotation at function return: (`signature-verification-failure`)
+annotation at function return: [signature-verification-failure]
 
    1| export function foo(x: number) { return x; } // Error, missing return type
                                     

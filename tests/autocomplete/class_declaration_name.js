@@ -3,3 +3,4 @@
 class Foo {}
 
 class F
+//     ^

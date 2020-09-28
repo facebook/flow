@@ -1,11 +1,14 @@
->>> lib.js (#changes: 2)
+
+=== Codemod annotate-exports ===
+
+>>> ./lib.js
 // @flow
 
 class C {}
 
 module.exports = (new C: C);
 
->>> main.js (#changes: 2)
+>>> ./main.js
 // @flow
 
 import typeof C from "./lib.js";const c = require('./lib');
@@ -16,10 +19,10 @@ module.exports = (): C => c;
 
 Stats:
   Files changed:                            2
-  Number of sig. ver. errors:               2
-  Number of annotations required:           2
   Number of annotations added:              2
   Total size of annotations:                2
+  Number of sig. ver. errors:               2
+  Number of annotations required:           2
   Number of annotations skipped:            0
 
 Errors:
@@ -30,7 +33,6 @@ Errors:
     Parsing heaps get ast error:            0
     Indeterminate module type:              0
     No matching export:                     0
-    Unrecognizable module error:            0
   Serializer error:                         0
   Unsupported error kind:                   0
 
@@ -41,3 +43,22 @@ Warnings:
   Empty NoUpper:                            0
   Empty SomeKnownUpper:                     0
 
+
+=== Autofix exports ===
+
+>>> ./lib.js
+// @flow
+
+class C {}
+
+module.exports = (new C: C);
+
+>>> ./main.js
+// @flow
+
+import typeof C from "./lib.js";const c = require('./lib');
+
+module.exports = (): C => c;
+
+
+=== Diff between codemod-ed & autofix-ed ===

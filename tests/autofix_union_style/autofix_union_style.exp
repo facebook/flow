@@ -6,9 +6,9 @@ declare var cond2: boolean;
 declare var cond3: boolean;
 
 module.exports = {
-  b1: (): true =>
+  b1: (): boolean =>
     (cond ? true : true),
-  b2: (): false =>
+  b2: (): boolean =>
     (cond ? false : false),
   b3: (): boolean =>
     (cond ? true : false),
@@ -20,19 +20,19 @@ module.exports = {
     (cond ? false : b),
   b7: (t: mixed): mixed =>
     (cond ? false: t),
-  b8: (e: empty): false =>
+  b8: (e: empty): boolean =>
     (cond ? false : e),
-  b9: (a: any): any | false =>
+  b9: (a: any): any | boolean =>
     (cond ? false : a),
-  n1: (): 0 | 1 =>
+  n1: (): number =>
     (cond ? 0 : 1),
-  n2: (): 0 | 1 =>
+  n2: (): number =>
     (cond ? 0 : (cond ? 1 : (cond ? 0 : 1))),
   n3: (n : number): number =>
     (cond ? 0 : (cond2 ? 1 : (cond3 ? 0 : n))),
-  s1: (): "0" | "1" =>
+  s1: (): string =>
     (cond ? "0" : "1"),
-  s2: (): "0" | "1" =>
+  s2: (): string =>
     (cond ? "0" : (cond ? "1" : (cond ? "0" : "1"))),
   s3: (s : string): string =>
     (cond ? "0" : (cond2 ? "1" : (cond3 ? s : "1"))),
@@ -42,7 +42,7 @@ module.exports = {
     cond ? (cond2 ? "0" : 0) : (cond3 ? n : s),
 
 
-  o2: (): {|x: false|} | {|x: true|} =>
+  o2: (): {|x: boolean|} =>
     cond ? {x: true} : {x: false},
 }
 > flow status

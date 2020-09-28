@@ -1,4 +1,7 @@
->>> b.js (#changes: 2)
+
+=== Codemod annotate-exports ===
+
+>>> ./b.js
 // @flow
 import type A from "./lib.js";const foo = require('./a');
 
@@ -8,10 +11,10 @@ module.exports = (): A => foo();
 
 Stats:
   Files changed:                            1
-  Number of sig. ver. errors:               1
-  Number of annotations required:           1
   Number of annotations added:              1
   Total size of annotations:                1
+  Number of sig. ver. errors:               1
+  Number of annotations required:           1
   Number of annotations skipped:            0
 
 Errors:
@@ -22,7 +25,6 @@ Errors:
     Parsing heaps get ast error:            0
     Indeterminate module type:              0
     No matching export:                     0
-    Unrecognizable module error:            0
   Serializer error:                         0
   Unsupported error kind:                   0
 
@@ -33,3 +35,14 @@ Warnings:
   Empty NoUpper:                            0
   Empty SomeKnownUpper:                     0
 
+
+=== Autofix exports ===
+
+>>> ./b.js
+// @flow
+import type A from "./lib.js";const foo = require('./a');
+
+module.exports = (): A => foo();
+
+
+=== Diff between codemod-ed & autofix-ed ===

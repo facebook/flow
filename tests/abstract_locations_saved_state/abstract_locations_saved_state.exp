@@ -1,15 +1,7 @@
 Error ------------------------------------------------------------------------------------------------------ foo.js:3:21
 
-Missing type annotation for `x`.
-
-   3| export function foo(x) { return x; }
-                          ^
-
-
-Error ------------------------------------------------------------------------------------------------------ foo.js:3:21
-
 Cannot build a typed interface for this module. You should annotate the exports of this module with types. Missing type
-annotation at array pattern: (`signature-verification-failure`)
+annotation at array pattern: [signature-verification-failure]
 
    3| export function foo(x) { return x; }
                           ^
@@ -18,11 +10,11 @@ annotation at array pattern: (`signature-verification-failure`)
 Error ------------------------------------------------------------------------------------------------------ foo.js:3:23
 
 Cannot build a typed interface for this module. You should annotate the exports of this module with types. Missing type
-annotation at function return: (`signature-verification-failure`)
+annotation at function return: [signature-verification-failure]
 
    3| export function foo(x) { return x; }
                             
 
 
 
-Found 3 errors
+Found 2 errors

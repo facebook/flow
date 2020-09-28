@@ -1,0 +1,2 @@
+[options]
+experimental.facebook_module_interop=true

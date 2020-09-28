@@ -3,9 +3,10 @@
  */
 
 
+import type Suite from "flow-dev-tools/src/test/Suite.js";
 import {suite, test} from 'flow-dev-tools/src/test/Tester';
 
-export default suite(({addFile, addFiles, addCode}) => [
+export default (suite(({addFile, addFiles, addCode}) => [
   test('new.target is not supported yet', [
     addCode(`
       function x() { new.target(); }
@@ -13,7 +14,7 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:4
             4:       function x() { new.target(); }
-                                    ^^^^^^^^^^ Not supported.
+                                    ^^^^^^^^^^ Not supported. [unsupported-syntax]
         `,
       ),
   ]),
@@ -24,4 +25,4 @@ export default suite(({addFile, addFiles, addCode}) => [
       function x() { new.target; }
     `).noNewErrors(),
   ]),
-]);
+]): Suite);

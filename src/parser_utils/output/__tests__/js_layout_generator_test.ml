@@ -18,7 +18,7 @@ module L = Layout_builder
 
 let opts = Js_layout_generator.default_opts
 
-let preserve_formatting_opts = { Js_layout_generator.preserve_formatting = true }
+let preserve_formatting_opts = Js_layout_generator.{ default_opts with preserve_formatting = true }
 
 let tests =
   "js_layout_generator"
@@ -1806,7 +1806,10 @@ let tests =
              Js_layout_generator.expression ~opts (E.typecast (E.identifier a80) Types.mixed)
            in
            assert_output ~ctxt ("(" ^ a80 ^ ":mixed)") layout;
-           assert_output ~ctxt ~pretty:true ("(" ^ a80 ^ ": mixed)") layout );
+           assert_output ~ctxt ~pretty:true ("(" ^ a80 ^ ": mixed)") layout;
+           assert_statement_string ~ctxt ~pretty:true "var a = (b: mixed);";
+           (* Arrow function with type params is wrapped in parens *)
+           assert_expression_string ~ctxt "((<A>()=>B):C)" );
          ( "type_parameter" >:: fun ctxt ->
            assert_statement_string ~ctxt "type a<a>=a;";
            assert_statement_string ~ctxt "type a<a,b>=a;";
@@ -2350,6 +2353,17 @@ let tests =
              (statement_of_string "type T = {\n  a: 1,\n  \n  \n b: 2,\n};");
            (* Comments are not treated as blank lines *)
            assert_statement_string ~ctxt ~pretty:true "type T = {\n  a: 1,\n  //L\n  b: 2,\n};" );
+         ( "object_pattern_preserve_blank_lines_between_properties" >:: fun ctxt ->
+           (* Single blank line is preserved *)
+           assert_statement_string ~ctxt ~pretty:true "var {\n  a,\n  \n  b\n};";
+           (* Multiple blank lines are condensed to a single blank line *)
+           assert_statement
+             ~ctxt
+             ~pretty:true
+             "var {\n  a,\n  \n  b\n};"
+             (statement_of_string "var {\n  a,\n  \n  \n b\n};");
+           (* Comments are not treated as blank lines *)
+           assert_statement_string ~ctxt ~pretty:true "var {\n  a,\n  //L\n  b\n};" );
          ( "switch_preserve_blank_lines_between_cases" >:: fun ctxt ->
            (* Single blank line is preserved *)
            assert_statement_string
@@ -2424,4 +2438,105 @@ let tests =
            (* Blank lines between holes are preserved *)
            assert_statement_string ~ctxt ~pretty:true "var [\n  ,\n  \n  ,\n  a\n];";
            assert_statement_string ~ctxt ~pretty:true "var [\n  a,\n  \n  ,\n  \n  b\n];" );
+         ( "call_preserve_blank_lines_between_args" >:: fun ctxt ->
+           (* Single blank line is preserved *)
+           assert_expression_string ~ctxt ~pretty:true "foo(\n  a,\n  \n  b,\n)";
+           (* Multiple blank lines are condensed to a single blank line *)
+           assert_expression
+             ~ctxt
+             ~pretty:true
+             "foo(\n  a,\n  \n  b,\n)"
+             (expression_of_string "foo(\n  a,\n  \n  \n  b,\n)");
+           (* Comments are not treated as blank lines *)
+           assert_expression_string ~ctxt ~pretty:true "foo(\n  a,\n  //L\n  b,\n)" );
+         ( "new_preserve_blank_lines_between_args" >:: fun ctxt ->
+           (* Single blank line is preserved *)
+           assert_expression_string ~ctxt ~pretty:true "new Foo(\n  a,\n  \n  b,\n)";
+           (* Multiple blank lines are condensed to a single blank line *)
+           assert_expression
+             ~ctxt
+             ~pretty:true
+             "new Foo(\n  a,\n  \n  b,\n)"
+             (expression_of_string "new Foo(\n  a,\n  \n  \n  b,\n)");
+           (* Comments are not treated as blank lines *)
+           assert_expression_string ~ctxt ~pretty:true "new Foo(\n  a,\n  //L\n  b,\n)" );
+         ( "type_args_preserve_blank_lines_between_args" >:: fun ctxt ->
+           (* Single blank line is preserved *)
+           assert_statement_string ~ctxt ~pretty:true "type Foo = Bar<\n  a,\n  \n  b,\n>;";
+           (* Multiple blank lines are condensed to a single blank line *)
+           assert_statement
+             ~ctxt
+             ~pretty:true
+             "type Foo = Bar<\n  a,\n  \n  b,\n>;"
+             (statement_of_string "type Foo = Bar<\n  a,\n  \n  \n  b,\n>;");
+           (* Comments are not treated as blank lines *)
+           assert_statement_string ~ctxt ~pretty:true "type Foo = Bar<\n  a,\n  //L\n  b,\n>;" );
+         ( "call_type_args_preserve_blank_lines_between_args" >:: fun ctxt ->
+           (* Single blank line is preserved *)
+           assert_expression_string ~ctxt ~pretty:true "foo<\n  a,\n  \n  b,\n>()";
+           (* Multiple blank lines are condensed to a single blank line *)
+           assert_expression
+             ~ctxt
+             ~pretty:true
+             "foo<\n  a,\n  \n  b,\n>()"
+             (expression_of_string "foo<\n  a,\n  \n  \n  b,\n>()");
+           (* Comments are not treated as blank lines *)
+           assert_expression_string ~ctxt ~pretty:true "foo<\n  a,\n  //L\n  b,\n>()" );
+         ( "call_template_wrapping" >:: fun ctxt ->
+           assert_expression_string ~ctxt ~pretty:true "foo(`a\nb`)";
+           assert_expression_string ~ctxt ~pretty:true "foo(\n  `a\nb`,\n)" );
+         ( "type_params_preserve_blank_lines_between_params" >:: fun ctxt ->
+           (* Single blank line is preserved *)
+           assert_expression_string ~ctxt ~pretty:true "<\n  a,\n  \n  b,\n>() => {}";
+           (* Multiple blank lines are condensed to a single blank line *)
+           assert_expression
+             ~ctxt
+             ~pretty:true
+             "<\n  a,\n  \n  b,\n>() => {}"
+             (expression_of_string "<\n  a,\n  \n  \n  b,\n>() => {}");
+           (* Comments are not treated as blank lines *)
+           assert_expression_string ~ctxt ~pretty:true "<\n  a,\n  //L\n  b,\n>() => {}" );
+         ( "function_params_break_before_return_type" >:: fun ctxt ->
+           (* If both function params and return type can break, params should break first *)
+           let a20 = String.make 20 'a' in
+           let b20 = String.make 20 'b' in
+           assert_statement
+             ~ctxt
+             ~pretty:true
+             ("function f(\n  " ^ a20 ^ ",\n  " ^ b20 ^ ",\n): {" ^ a20 ^ ": t, " ^ b20 ^ ": t} {}")
+             (statement_of_string
+                ("function f(" ^ a20 ^ ", " ^ b20 ^ "): {" ^ a20 ^ ": t, " ^ b20 ^ ": t} {}")) );
+         ( "function_type_params_break_before_return_type" >:: fun ctxt ->
+           (* If both function param types and return type can break, params should break first *)
+           let a20 = String.make 20 'a' in
+           let b20 = String.make 20 'b' in
+           assert_statement
+             ~ctxt
+             ~pretty:true
+             ("type T = (\n  " ^ a20 ^ ",\n  " ^ b20 ^ "\n) => {" ^ a20 ^ ": t, " ^ b20 ^ ": t};")
+             (statement_of_string
+                ("type T = (" ^ a20 ^ ", " ^ b20 ^ ") => {" ^ a20 ^ ": t, " ^ b20 ^ ": t};")) );
+         ( "jsx_in_new_expression" >:: fun ctxt ->
+           (* Verify that JSX wrapped in parens is not reprinted with extra blank lines before and after *)
+           let a80 = String.make 80 'a' in
+           assert_expression
+             ~ctxt
+             ~pretty:true
+             ( "new Foo(\n"
+             ^ "  a,\n"
+             ^ "  <jsx>\n"
+             ^ ("    " ^ a80 ^ "\n")
+             ^ "  </jsx>,\n"
+             ^ "  b,\n"
+             ^ ")" )
+             (expression_of_string
+                ( "new Foo(\n"
+                ^ "  a,\n"
+                ^ "  (\n"
+                ^ "    <jsx>\n"
+                ^ ("  " ^ a80 ^ "\n")
+                ^ "    </jsx>\n"
+                ^ "  ),\n"
+                ^ "  b,\n"
+                ^ ")" )) );
        ]

@@ -1,6 +1,6 @@
 Error ----------------------------------------------------------------------------------------------------- test.js:3:21
 
-Cannot assign `x` to `y` because number [1] is incompatible with string [2].
+Cannot assign `x` to `y` because number [1] is incompatible with string [2]. [incompatible-type]
 
    test.js:3:21
    3|     var y: string = x; // error
@@ -17,7 +17,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:9:16
 
-Cannot return `x` because number [1] is incompatible with `T` [2].
+Cannot return `x` because number [1] is incompatible with `T` [2]. [incompatible-return]
 
    test.js:9:16
    9|         return x; // error, since T: number and U: number does not imply U: T
@@ -34,7 +34,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:13:25
 
-Cannot assign `x` to `y` because number [1] is incompatible with string [2].
+Cannot assign `x` to `y` because number [1] is incompatible with string [2]. [incompatible-type]
 
    test.js:13:25
    13|         var y: string = x; // error
@@ -51,7 +51,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:22:10
 
-Cannot instantiate `C` because string [1] is incompatible with number [2] in type argument `T`.
+Cannot instantiate `C` because string [1] is incompatible with number [2] in type argument `T`. [incompatible-type-arg]
 
    test.js:22:10
    22| var c: C<string> = new C; // error, since T = string is incompatible with number
@@ -66,6 +66,7 @@ References:
 Error ---------------------------------------------------------------------------------------------------- test.js:22:20
 
 Cannot assign `new C` to `c` because string [1] is incompatible with number [2] in type argument `T` [3].
+[incompatible-type-arg]
 
    test.js:22:20
    22| var c: C<string> = new C; // error, since T = string is incompatible with number
@@ -85,7 +86,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:23:17
 
-Cannot assign `c.qux(...)` to `q` because string [1] is incompatible with number [2].
+Cannot assign `c.qux(...)` to `q` because string [1] is incompatible with number [2]. [incompatible-type]
 
    test.js:23:17
    23| var q: number = c.qux(0);
@@ -102,7 +103,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:23:23
 
-Cannot call `c.qux` because number [1] is incompatible with string [2] in type argument `U`.
+Cannot call `c.qux` because number [1] is incompatible with string [2] in type argument `U`. [incompatible-call]
 
    test.js:23:23
    23| var q: number = c.qux(0);

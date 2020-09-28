@@ -67,7 +67,7 @@ Invoking status with no offset-style argument:
       "message":[
         {
           "context":"const foo: string = 5;",
-          "descr":"Cannot assign `5` to `foo` because number [1] is incompatible with string [2].",
+          "descr":"Cannot assign `5` to `foo` because number [1] is incompatible with string [2]. [incompatible-type]",
           "type":"Blame",
           "loc":{
             "source":"foo.js",
@@ -81,7 +81,8 @@ Invoking status with no offset-style argument:
           "start":21,
           "end":21
         }
-      ]
+      ],
+      "error_codes":["incompatible-type"]
     }
   ],
   "passed":false
@@ -154,7 +155,7 @@ Invoking status with utf8-bytes offset-style:
       "message":[
         {
           "context":"const foo: string = 5;",
-          "descr":"Cannot assign `5` to `foo` because number [1] is incompatible with string [2].",
+          "descr":"Cannot assign `5` to `foo` because number [1] is incompatible with string [2]. [incompatible-type]",
           "type":"Blame",
           "loc":{
             "source":"foo.js",
@@ -168,7 +169,8 @@ Invoking status with utf8-bytes offset-style:
           "start":21,
           "end":21
         }
-      ]
+      ],
+      "error_codes":["incompatible-type"]
     }
   ],
   "passed":false
@@ -241,7 +243,7 @@ Invoking status with js-indices offset-style:
       "message":[
         {
           "context":"const foo: string = 5;",
-          "descr":"Cannot assign `5` to `foo` because number [1] is incompatible with string [2].",
+          "descr":"Cannot assign `5` to `foo` because number [1] is incompatible with string [2]. [incompatible-type]",
           "type":"Blame",
           "loc":{
             "source":"foo.js",
@@ -255,7 +257,8 @@ Invoking status with js-indices offset-style:
           "start":21,
           "end":21
         }
-      ]
+      ],
+      "error_codes":["incompatible-type"]
     }
   ],
   "passed":false
@@ -328,7 +331,7 @@ Invoking check with no offset-style argument:
       "message":[
         {
           "context":"const foo: string = 5;",
-          "descr":"Cannot assign `5` to `foo` because number [1] is incompatible with string [2].",
+          "descr":"Cannot assign `5` to `foo` because number [1] is incompatible with string [2]. [incompatible-type]",
           "type":"Blame",
           "loc":{
             "source":"foo.js",
@@ -342,7 +345,8 @@ Invoking check with no offset-style argument:
           "start":21,
           "end":21
         }
-      ]
+      ],
+      "error_codes":["incompatible-type"]
     }
   ],
   "passed":false
@@ -415,7 +419,7 @@ Invoking check with utf8-bytes offset-style:
       "message":[
         {
           "context":"const foo: string = 5;",
-          "descr":"Cannot assign `5` to `foo` because number [1] is incompatible with string [2].",
+          "descr":"Cannot assign `5` to `foo` because number [1] is incompatible with string [2]. [incompatible-type]",
           "type":"Blame",
           "loc":{
             "source":"foo.js",
@@ -429,7 +433,8 @@ Invoking check with utf8-bytes offset-style:
           "start":21,
           "end":21
         }
-      ]
+      ],
+      "error_codes":["incompatible-type"]
     }
   ],
   "passed":false
@@ -502,7 +507,7 @@ Invoking check with js-indices offset-style:
       "message":[
         {
           "context":"const foo: string = 5;",
-          "descr":"Cannot assign `5` to `foo` because number [1] is incompatible with string [2].",
+          "descr":"Cannot assign `5` to `foo` because number [1] is incompatible with string [2]. [incompatible-type]",
           "type":"Blame",
           "loc":{
             "source":"foo.js",
@@ -516,7 +521,8 @@ Invoking check with js-indices offset-style:
           "start":21,
           "end":21
         }
-      ]
+      ],
+      "error_codes":["incompatible-type"]
     }
   ],
   "passed":false
@@ -589,7 +595,7 @@ Invoking check-contents with no offset-style argument:
       "message":[
         {
           "context":"const foo: string = 5;",
-          "descr":"Cannot assign `5` to `foo` because number [1] is incompatible with string [2].",
+          "descr":"Cannot assign `5` to `foo` because number [1] is incompatible with string [2]. [incompatible-type]",
           "type":"Blame",
           "loc":{
             "source":"-",
@@ -603,7 +609,8 @@ Invoking check-contents with no offset-style argument:
           "start":21,
           "end":21
         }
-      ]
+      ],
+      "error_codes":["incompatible-type"]
     }
   ],
   "passed":false
@@ -676,7 +683,7 @@ Invoking check-contents with utf8-bytes offset-style:
       "message":[
         {
           "context":"const foo: string = 5;",
-          "descr":"Cannot assign `5` to `foo` because number [1] is incompatible with string [2].",
+          "descr":"Cannot assign `5` to `foo` because number [1] is incompatible with string [2]. [incompatible-type]",
           "type":"Blame",
           "loc":{
             "source":"-",
@@ -690,7 +697,8 @@ Invoking check-contents with utf8-bytes offset-style:
           "start":21,
           "end":21
         }
-      ]
+      ],
+      "error_codes":["incompatible-type"]
     }
   ],
   "passed":false
@@ -763,7 +771,7 @@ Invoking check-contents with js-indices offset-style:
       "message":[
         {
           "context":"const foo: string = 5;",
-          "descr":"Cannot assign `5` to `foo` because number [1] is incompatible with string [2].",
+          "descr":"Cannot assign `5` to `foo` because number [1] is incompatible with string [2]. [incompatible-type]",
           "type":"Blame",
           "loc":{
             "source":"-",
@@ -777,7 +785,8 @@ Invoking check-contents with js-indices offset-style:
           "start":21,
           "end":21
         }
-      ]
+      ],
+      "error_codes":["incompatible-type"]
     }
   ],
   "passed":false

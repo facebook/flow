@@ -20,6 +20,7 @@ type t =
       enum_name: string;
       supplied_type: string option;
     }
+  | EnumInvalidExport
   | EnumInvalidInitializerSeparator of { member_name: string }
   | EnumInvalidMemberInitializer of {
       enum_name: string;
@@ -154,6 +155,7 @@ type t =
   | NullishCoalescingDisabled
   | NullishCoalescingUnexpectedLogical of string
   | WhitespaceInPrivateName
+[@@deriving ord]
 
 exception Error of (Loc.t * t) list
 
@@ -189,6 +191,8 @@ module PP = struct
           Printf.sprintf "Enum type `%s` is not valid. %s" supplied_type suggestion
         | None -> Printf.sprintf "Supplied enum type is not valid. %s" suggestion
       end
+    | EnumInvalidExport ->
+      "Cannot export an enum with `export type`, try `export enum E {}` or `module.exports = E;` instead."
     | EnumInvalidInitializerSeparator { member_name } ->
       Printf.sprintf
         "Enum member names and initializers are separated with `=`. Replace `%s:` with `%s =`."

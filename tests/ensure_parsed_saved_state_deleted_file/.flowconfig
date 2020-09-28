@@ -1,0 +1,4 @@
+[options]
+all=true
+well_formed_exports=true
+types_first=true

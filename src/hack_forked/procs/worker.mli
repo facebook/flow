@@ -9,7 +9,7 @@ type request = Request of (serializer -> unit)
 
 and serializer = { send: 'a. 'a -> unit }
 
-type slave_job_status = Slave_terminated of Unix.process_status
+type job_status = Job_terminated of Unix.process_status
 
 val win32_worker_main :
   ('a -> unit) ->

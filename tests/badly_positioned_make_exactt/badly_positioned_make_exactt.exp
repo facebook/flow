@@ -1,6 +1,6 @@
 Error ----------------------------------------------------------------------------------------------------- test.js:17:2
 
-Cannot create `X` element because:
+Cannot create `X` element because: [incompatible-use]
  - Either property `x` is missing in props [1] but exists in `RequiredProps` [2].
  - Or property `y` is missing in props [1] but exists in `RequiredProps1` [3].
 

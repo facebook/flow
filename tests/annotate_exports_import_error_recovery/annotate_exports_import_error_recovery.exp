@@ -1,4 +1,7 @@
->>> main.js (#changes: 2)
+
+=== Codemod annotate-exports ===
+
+>>> ./main.js
 // @flow
 
 import type {OK} from "./lib.js";import { foo, bar } from './lib';
@@ -6,7 +9,7 @@ import type {OK} from "./lib.js";import { foo, bar } from './lib';
 import { props } from './props';
 
 const f = foo();
-const g: {ok: OK} = bar();
+const g: {ok: OK,...} = bar();
 
 module.exports = {
   f,
@@ -17,10 +20,10 @@ module.exports = {
 
 Stats:
   Files changed:                            1
-  Number of sig. ver. errors:               3
-  Number of annotations required:           3
   Number of annotations added:              1
   Total size of annotations:                2
+  Number of sig. ver. errors:               3
+  Number of annotations required:           3
   Number of annotations skipped:            0
 
 Errors:
@@ -31,7 +34,6 @@ Errors:
     Parsing heaps get ast error:            0
     Indeterminate module type:              0
     No matching export:                     2
-    Unrecognizable module error:            0
   Serializer error:                         0
   Unsupported error kind:                   0
 
@@ -41,4 +43,52 @@ Warnings:
   Location unhandled:                       0
   Empty NoUpper:                            0
   Empty SomeKnownUpper:                     0
+
+
+=== Autofix exports ===
+
+>>> ./lib.js
+// @flow
+
+import { props } from './props';
+
+export class OK {}
+
+export function foo(): {ok: OK, props: Props,...} {
+  return {
+    ok: new OK,
+    props: props(),
+  };
+}
+
+declare export function bar(): { ok: OK };
+
+>>> ./main.js
+// @flow
+
+import type {OK} from "./lib.js";import { foo, bar } from './lib';
+
+import { props } from './props';
+
+const f: {ok: OK, props: Props,...} = foo();
+const g: {ok: OK,...} = bar();
+
+module.exports = {
+  f,
+  g,
+ };
+
+
+=== Diff between codemod-ed & autofix-ed ===
+>>> ./lib.js
+7c7
+< export function foo() {
+---
+> export function foo(): {ok: OK, props: Props,...} {
+
+>>> ./main.js
+7c7
+< const f = foo();
+---
+> const f: {ok: OK, props: Props,...} = foo();
 

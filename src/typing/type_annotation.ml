@@ -10,6 +10,7 @@ module Tast_utils = Typed_ast_utils
 open Utils_js
 open Reason
 open Type
+open TypeUtil
 open Env.LookupMode
 open Trust_helpers
 module Flow = Flow_js
@@ -32,7 +33,7 @@ module Func_type_params = Func_params.Make (struct
     let name = Base.Option.map name ~f:id_name in
     let t =
       if optional then
-        Type.optional t
+        TypeUtil.optional t
       else
         t
     in
@@ -59,13 +60,6 @@ end)
 module Func_type_sig = Func_sig.Make (Func_type_params)
 module Class_type_sig = Class_sig.Make (Func_type_sig)
 
-module Object_freeze = struct
-  let freeze_object cx loc t =
-    let reason_arg = mk_annot_reason (RFrozen RObjectLit) loc in
-    Tvar.mk_derivable_where cx reason_arg (fun tvar ->
-        Flow.flow cx (t, ObjFreezeT (reason_arg, tvar)))
-end
-
 (* AST helpers *)
 
 let qualified_name =
@@ -85,7 +79,7 @@ let ident_name (_, { Ast.Identifier.name; comments = _ }) = name
 let error_type cx loc msg t_in =
   Flow.add_output cx msg;
   let t_out = Tast_utils.error_mapper#type_ t_in |> snd in
-  ((loc, AnyT.at AnyError loc), t_out)
+  ((loc, AnyT.at (AnyError None) loc), t_out)
 
 let is_suppress_type cx type_name = SSet.mem type_name (Context.suppress_types cx)
 
@@ -113,7 +107,7 @@ let mk_custom_fun cx loc t_ast targs (id_loc, name, comments) kind =
             Generic.id =
               Generic.Identifier.Unqualified ((id_loc, t), { Ast.Identifier.name; comments });
             targs = None;
-            comments = Flow_ast_utils.mk_comments_opt ();
+            comments = None;
           } ))
 
 let mk_eval_id cx loc =
@@ -162,7 +156,7 @@ let rec convert cx tparams_map =
   | (loc, (BigInt _ as t_ast)) ->
     let reason = mk_annot_reason RBigInt loc in
     Flow.add_output cx (Error_message.EBigIntNotYetSupported reason);
-    ((loc, AnyT.why AnyError reason), t_ast)
+    ((loc, AnyT.error reason), t_ast)
   | (loc, (String _ as t_ast)) -> ((loc, StrT.at loc |> with_trust_inference cx), t_ast)
   | (loc, (Boolean _ as t_ast)) -> ((loc, BoolT.at loc |> with_trust_inference cx), t_ast)
   | (loc, Nullable { Nullable.argument = t; comments }) ->
@@ -244,7 +238,7 @@ let rec convert cx tparams_map =
   | (loc, (BigIntLiteral { Ast.BigIntLiteral.bigint; _ } as t_ast)) ->
     let reason = mk_annot_reason (RBigIntLit bigint) loc in
     Flow.add_output cx (Error_message.EBigIntNotYetSupported reason);
-    ((loc, AnyT.why AnyError reason), t_ast)
+    ((loc, AnyT.error reason), t_ast)
   | (loc, (BooleanLiteral { Ast.BooleanLiteral.value; _ } as t_ast)) ->
     ((loc, mk_singleton_boolean cx loc value), t_ast)
   (* TODO *)
@@ -262,7 +256,7 @@ let rec convert cx tparams_map =
     let id_reason = mk_reason (RType name) id_loc in
     let qid_reason = mk_reason (RType (qualified_name qid)) qid_loc in
     let t_unapplied =
-      Tvar.mk_where cx qid_reason (fun t ->
+      Tvar.mk_no_wrap_where cx qid_reason (fun t ->
           let use_op = Op (GetProperty qid_reason) in
           Flow.flow cx (m, GetPropT (use_op, qid_reason, Named (id_reason, name), t)))
     in
@@ -348,8 +342,7 @@ let rec convert cx tparams_map =
       | "$TEMPORARY$Object$freeze" ->
         check_type_arg_arity cx loc t_ast targs 1 (fun () ->
             let (ts, targs) = convert_type_params () in
-            let t = List.hd ts in
-            let t = Object_freeze.freeze_object cx loc t in
+            let t = convert_temporary_object ~frozen:true (List.hd ts) in
             (* TODO fix targs *)
             reconstruct_ast t targs)
       | "$TEMPORARY$module$exports$assign" ->
@@ -414,19 +407,8 @@ let rec convert cx tparams_map =
       | "$TEMPORARY$object" ->
         check_type_arg_arity cx loc t_ast targs 1 (fun () ->
             let (ts, targs) = convert_type_params () in
-            let t = List.hd ts in
-            let tout =
-              match t with
-              | ExactT (_, DefT (r, trust, ObjT o))
-              | DefT (r, trust, ObjT o) ->
-                let r = replace_desc_reason RObjectLit r in
-                DefT (r, trust, ObjT { o with flags = { o.flags with exact = true } })
-              | EvalT (l, TypeDestructorT (use_op, r, SpreadType (target, ts, head_slice)), id) ->
-                let r = replace_desc_reason RObjectLit r in
-                EvalT (l, TypeDestructorT (use_op, r, SpreadType (target, ts, head_slice)), id)
-              | _ -> t
-            in
-            reconstruct_ast tout targs)
+            let t = convert_temporary_object ~frozen:false (List.hd ts) in
+            reconstruct_ast t targs)
       | "$TEMPORARY$array" ->
         check_type_arg_arity cx loc t_ast targs 1 (fun () ->
             let (elemts, targs) = convert_type_params () in
@@ -440,7 +422,7 @@ let rec convert cx tparams_map =
             let (elemts, targs) = convert_type_params () in
             let elemt = List.hd elemts in
             reconstruct_ast
-              (DefT (mk_reason RArrayType loc, infer_trust cx, ArrT (ArrayAT (elemt, None))))
+              (DefT (mk_annot_reason RArrayType loc, infer_trust cx, ArrT (ArrayAT (elemt, None))))
               targs)
       (* $ReadOnlyArray<T> is the supertype of all tuples and all arrays *)
       | "$ReadOnlyArray" ->
@@ -580,7 +562,7 @@ let rec convert cx tparams_map =
               let desc = RModule value in
               let reason = mk_annot_reason desc loc in
               let remote_module_t =
-                Tvar.mk_where cx reason (fun tout ->
+                Tvar.mk_no_wrap_where cx reason (fun tout ->
                     Flow_js.lookup_builtin
                       cx
                       (internal_module_name value)
@@ -881,10 +863,10 @@ let rec convert cx tparams_map =
         check_type_arg_arity cx loc t_ast targs 1 (fun () ->
             match convert_type_params () with
             | ([DefT (_, _, SingletonNumT (f, _))], targs) ->
-              let n = Pervasives.int_of_float f in
+              let n = Base.Int.of_float f in
               let key_strs =
                 ListUtils.range 0 n
-                |> Base.List.map ~f:(fun i -> Some ("x_" ^ Pervasives.string_of_int i))
+                |> Base.List.map ~f:(fun i -> Some ("x_" ^ Base.Int.to_string i))
               in
               let emp = Key_map.empty in
               let tins = Unsoundness.at FunctionPrototype loc |> ListUtils.repeat n in
@@ -918,7 +900,7 @@ let rec convert cx tparams_map =
         check_type_arg_arity cx loc t_ast targs 3 (fun () ->
             match convert_type_params () with
             | ([base_t; fun_pred_t; DefT (_, _, SingletonNumT (f, _))], targs) ->
-              let idx = Pervasives.int_of_float f in
+              let idx = Base.Int.of_float f in
               let reason = mk_reason (RCustom "refined type") loc in
               let pred = LatentP (fun_pred_t, idx) in
               reconstruct_ast (EvalT (base_t, LatentPredT (reason, pred), mk_eval_id cx loc)) targs
@@ -967,7 +949,7 @@ let rec convert cx tparams_map =
           let (((_, t), _) as annot_ast) = convert cx tparams_map annot in
           let t =
             if optional then
-              Type.optional t
+              TypeUtil.optional t
             else
               t
           in
@@ -1002,7 +984,7 @@ let rec convert cx tparams_map =
     let (((_, return_t), _) as return_ast) = convert cx tparams_map return in
     let statics_t =
       let reason = update_desc_reason (fun d -> RStatics d) reason in
-      Obj_type.mk_with_proto cx reason (FunProtoT reason) ~sealed:true ~exact:false ?call:None
+      Obj_type.mk_with_proto cx reason (FunProtoT reason) ~obj_kind:Inexact ?call:None
     in
     let ft =
       DefT
@@ -1022,7 +1004,13 @@ let rec convert cx tparams_map =
                 def_reason = reason;
               } ) )
     in
-    let t = poly_type_of_tparams (Context.make_source_poly_id cx loc) tparams ft in
+    let t =
+      match tparams with
+      | None -> ft
+      | Some (tparams_loc, tparams_nel) ->
+        let id = Context.make_source_poly_id cx tparams_loc in
+        poly_type id tparams_loc tparams_nel ft
+    in
     ( (loc, t),
       Function
         {
@@ -1120,6 +1108,38 @@ and convert_opt cx tparams_map ast_opt =
   let t_opt = Base.Option.map ~f:(fun ((_, x), _) -> x) tast_opt in
   (t_opt, tast_opt)
 
+and convert_temporary_object ~frozen =
+  let desc =
+    if frozen then
+      RFrozen RObjectLit
+    else
+      RObjectLit
+  in
+  function
+  | ExactT (_, DefT (r, trust, ObjT o))
+  | DefT (r, trust, ObjT o) ->
+    let r = replace_desc_reason desc r in
+    let obj_kind =
+      match o.flags.obj_kind with
+      | Indexed _ -> o.flags.obj_kind
+      | _ -> Exact
+    in
+    DefT (r, trust, ObjT { o with flags = { obj_kind; frozen } })
+  | EvalT (l, TypeDestructorT (use_op, r, SpreadType (_, ts, head_slice)), id) ->
+    let r = replace_desc_reason desc r in
+    let target =
+      let open Type.Object.Spread in
+      let make_seal =
+        if frozen then
+          Frozen
+        else
+          Sealed
+      in
+      Value { make_seal }
+    in
+    EvalT (l, TypeDestructorT (use_op, r, SpreadType (target, ts, head_slice)), id)
+  | t -> t
+
 and convert_qualification ?(lookup_mode = ForType) cx reason_prefix =
   let open Ast.Type.Generic.Identifier in
   function
@@ -1131,7 +1151,7 @@ and convert_qualification ?(lookup_mode = ForType) cx reason_prefix =
     let reason = mk_reason desc loc in
     let id_reason = mk_reason desc id_loc in
     let t =
-      Tvar.mk_where cx reason (fun t ->
+      Tvar.mk_no_wrap_where cx reason (fun t ->
           let use_op = Op (GetProperty (mk_reason (RType (qualified_name qualified)) loc)) in
           Flow.flow cx (m, GetPropT (use_op, id_reason, Named (id_reason, name), t)))
     in
@@ -1215,13 +1235,21 @@ and convert_object =
         Context.generate_property_map cx pmap
     in
     let call = Base.Option.map ~f:(Context.make_call_prop cx) call in
-    let flags = { sealed = Sealed; exact; frozen = false } in
+    let obj_kind =
+      match dict with
+      | Some d -> Indexed d
+      | None ->
+        if exact then
+          Exact
+        else
+          Inexact
+    in
+    let flags = { obj_kind; frozen = false } in
     DefT
-      ( mk_annot_reason RObjectType loc,
-        infer_trust cx,
-        ObjT (mk_objecttype ~flags ~dict ~call pmap proto) )
+      (mk_annot_reason RObjectType loc, infer_trust cx, ObjT (mk_objecttype ~flags ~call pmap proto))
   in
   let mk_object_annot cx loc ~exact call dict pmap proto =
+    let exact = exact && dict = None in
     let t = mk_object cx loc ~src_loc:true ~exact call dict pmap proto in
     if exact then
       ExactT (mk_annot_reason (RExactType RObjectType) loc, t)
@@ -1272,7 +1300,7 @@ and convert_object =
           else
             let t =
               if optional then
-                Type.optional t
+                TypeUtil.optional t
               else
                 t
             in
@@ -1404,7 +1432,7 @@ and convert_object =
           let (((_, t), _) as value_ast) = convert cx tparams_map value in
           let t =
             if optional then
-              Type.optional t
+              TypeUtil.optional t
             else
               t
           in
@@ -1545,7 +1573,7 @@ and mk_func_sig =
         Ast.Type.Function.tparams = tparams_ast;
         params = params_ast;
         return = return_ast;
-        comments = Flow_ast_utils.mk_comments_opt ();
+        comments = None;
       } )
 
 and mk_type cx tparams_map reason = function
@@ -1604,7 +1632,8 @@ and mk_nominal_type cx reason tparams_map (c, targs) =
     (Flow.mk_instance cx reason c, None)
   | Some (loc, { Ast.Type.TypeArgs.arguments = targs; comments }) ->
     let (targs, targs_ast) = convert_list cx tparams_map targs in
-    (typeapp ~annot_loc c targs, Some (loc, { Ast.Type.TypeArgs.arguments = targs_ast; comments }))
+    ( typeapp_annot annot_loc c targs,
+      Some (loc, { Ast.Type.TypeArgs.arguments = targs_ast; comments }) )
 
 (* take a list of AST type param declarations,
    do semantic checking and create types for them. *)
@@ -1768,7 +1797,7 @@ and add_interface_properties cx tparams_map properties s =
                     let (((_, t), _) as value_ast) = convert cx tparams_map value in
                     let t =
                       if optional then
-                        Type.optional t
+                        TypeUtil.optional t
                       else
                         t
                     in
@@ -1814,9 +1843,9 @@ and add_interface_properties cx tparams_map properties s =
                       | { Func_type_sig.tparams = None; fparams; _ } ->
                         (match Func_type_params.value fparams with
                         | [(_, t)] -> t
-                        | _ -> AnyT.at AnyError id_loc)
+                        | _ -> AnyT.at (AnyError None) id_loc)
                       (* error case: report any ok *)
-                      | _ -> AnyT.at AnyError id_loc
+                      | _ -> AnyT.at (AnyError None) id_loc
                       (* error case: report any ok *)
                     in
                     ( add_setter ~static name id_loc fsig x,
@@ -1844,7 +1873,7 @@ and add_interface_properties cx tparams_map properties s =
                 let (((_, t), _) as value) = convert cx tparams_map value in
                 let t =
                   if optional then
-                    Type.optional t
+                    TypeUtil.optional t
                   else
                     t
                 in
@@ -1963,26 +1992,10 @@ let mk_declare_class_sig =
         let (extends, extends_ast) =
           match extends with
           | Some (loc, { Ast.Type.Generic.id; targs; comments }) ->
-            begin
-              match (id, targs) with
-              | ( Ast.Type.Generic.Identifier.Unqualified
-                    ( id_loc,
-                      ( { Ast.Identifier.name = "$TEMPORARY$Super$FlowFixMe"; comments = _ } as
-                      id_name ) ),
-                  None ) ->
-                let ty = AnyT.at Annotated id_loc in
-                let t = (loc, ty, None) in
-                let id =
-                  let id_loc_ty = (id_loc, ty) in
-                  Ast.Type.Generic.Identifier.Unqualified (id_loc_ty, id_name)
-                in
-                (Some t, Some (loc, { Ast.Type.Generic.id; targs = None; comments }))
-              | _ ->
-                let lookup_mode = Env.LookupMode.ForValue in
-                let (i, id) = convert_qualification ~lookup_mode cx "mixins" id in
-                let (t, targs) = mk_super cx tparams_map loc i targs in
-                (Some t, Some (loc, { Ast.Type.Generic.id; targs; comments }))
-            end
+            let lookup_mode = Env.LookupMode.ForValue in
+            let (i, id) = convert_qualification ~lookup_mode cx "mixins" id in
+            let (t, targs) = mk_super cx tparams_map loc i targs in
+            (Some t, Some (loc, { Ast.Type.Generic.id; targs; comments }))
           | None -> (None, None)
         in
         let (mixins, mixins_ast) =

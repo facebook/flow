@@ -1,10 +1,10 @@
 main.js:5:6
 Flags:
-main.js:5:1,5:17
+main.js:5:6,5:6
 
 main.js:8:11
 Flags:
-main.js:5:1,5:17
+main.js:5:6,5:6
 
 main.js:11:11
 Flags:
@@ -24,9 +24,9 @@ library.js:4:3,4:5
 
 main.js:23:13
 Flags:
-[LIB] core.js:940:3,940:6
+[LIB] core.js:2448:3,2448:6
 
 main.js:26:13
 Flags:
-[LIB] core.js:941:3,941:9
+[LIB] core.js:2449:3,2449:9
 

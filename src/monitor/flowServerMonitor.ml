@@ -60,7 +60,8 @@ let internal_start ~is_daemon ?waiting_fd monitor_options =
   let { FlowServerMonitorOptions.server_options; argv; _ } = monitor_options in
   let () =
     let file_watcher =
-      FileWatcherStatus.string_of_file_watcher monitor_options.FlowServerMonitorOptions.file_watcher
+      let open FlowServerMonitorOptions in
+      string_of_file_watcher monitor_options.file_watcher
     in
     FlowEventLogger.set_monitor_options ~file_watcher;
     LoggingUtils.set_server_options ~server_options
@@ -112,7 +113,12 @@ let internal_start ~is_daemon ?waiting_fd monitor_options =
     (Lwt.async_exception_hook :=
        fun exn ->
          let exn = Exception.wrap exn in
-         let msg = Utils.spf "Uncaught async exception: %s" (Exception.to_string exn) in
+         let msg =
+           Utils.spf
+             "Uncaught async exception: %s\n%s"
+             (Exception.get_ctor_string exn)
+             (Exception.get_full_backtrace_string max_int exn)
+         in
          Logger.fatal_s ~exn "Uncaught async exception. Exiting";
          FlowExitStatus.(exit ~msg Unknown_error));
 
@@ -156,7 +162,7 @@ let daemon_entry_point =
   FlowServerMonitorDaemon.register_entry_point (internal_start ~is_daemon:true)
 
 (* The entry point for creating a daemonized flow server monitor (like from `flow start`) *)
-let daemonize ~wait ~on_spawn monitor_options =
+let daemonize ~init_id ~wait ~on_spawn monitor_options =
   let server_options = monitor_options.FlowServerMonitorOptions.server_options in
   (* Let's make sure this isn't all for naught before we fork *)
   let root = Options.root server_options in
@@ -167,7 +173,7 @@ let daemonize ~wait ~on_spawn monitor_options =
     let msg = spf "Error: There is already a server running for %s" (Path.to_string root) in
     FlowExitStatus.(exit ~msg Lock_stolen) );
 
-  FlowServerMonitorDaemon.daemonize ~wait ~on_spawn ~monitor_options daemon_entry_point
+  FlowServerMonitorDaemon.daemonize ~init_id ~wait ~on_spawn ~monitor_options daemon_entry_point
 
 (* The entry point for creating a non-daemonized flow server monitor (like from `flow server`) *)
 let start monitor_options =

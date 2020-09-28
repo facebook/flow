@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
-type ast_info = (Loc.t, Loc.t) Flow_ast.program * File_sig.With_Loc.t * Docblock.t
+type ast_info = (Loc.t, Loc.t) Flow_ast.Program.t * File_sig.With_Loc.t * Docblock.t
 
 val compute_docblock : File_key.t -> string (* content *) -> Docblock.t
 

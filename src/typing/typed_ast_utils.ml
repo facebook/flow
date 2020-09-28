@@ -225,7 +225,7 @@ let error_mapper =
 
     method on_loc_annot loc = loc
 
-    method on_type_annot loc = (loc, Type.AnyT.at Type.AnyError loc)
+    method on_type_annot loc = (loc, Type.AnyT.at (Type.AnyError None) loc)
   end
 
 (* Used in unimplemented cases or unsupported nodes *)

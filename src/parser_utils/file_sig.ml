@@ -22,7 +22,6 @@ struct
   type 'info t' = {
     module_sig: 'info module_sig';
     declare_modules: (L.t * 'info module_sig') SMap.t;
-    tolerable_errors: tolerable_error list;
     (* Some map in types-first, None in classic *)
     exported_locals: L.LSet.t SMap.t option;
   }
@@ -105,13 +104,15 @@ struct
         loc: L.t;
         kind: named_export_kind;
       }
+  [@@deriving show]
 
-  and tolerable_error =
+  type tolerable_error =
     (* e.g. `module.exports.foo = 4` when not at the top level *)
     | BadExportPosition of L.t
     (* e.g. `foo(module)`, dangerous because `module` is aliased *)
     | BadExportContext of string (* offending identifier *) * L.t
     | SignatureVerificationError of Signature_builder_deps.Error.t
+  [@@deriving show]
 
   type exports_info = {
     module_kind_info: module_kind_info;
@@ -131,6 +132,7 @@ struct
     | DeclareExportDef of (L.t, L.t) Ast.Statement.DeclareExportDeclaration.declaration
     | ExportDefaultDef of (L.t, L.t) Ast.Statement.ExportDefaultDeclaration.declaration
     | ExportNamedDef of (L.t, L.t) Ast.Statement.t
+  [@@deriving show]
 
   type error = IndeterminateModuleType of L.t
 
@@ -144,12 +146,7 @@ struct
     }
 
   let mk_file_sig info =
-    {
-      module_sig = mk_module_sig info;
-      declare_modules = SMap.empty;
-      tolerable_errors = [];
-      exported_locals = None;
-    }
+    { module_sig = mk_module_sig info; declare_modules = SMap.empty; exported_locals = None }
 
   let init_exports_info = { module_kind_info = CommonJSInfo []; type_exports_named_info = [] }
 
@@ -194,9 +191,11 @@ struct
       ]
 
   (* Applications may not care about the info carried by signatures. *)
-  type module_sig = unit module_sig'
+  type module_sig = unit module_sig' [@@deriving show]
 
-  type t = unit t'
+  type t = unit t' [@@deriving show]
+
+  type exports_t = exports_info t' [@@deriving show]
 
   let init = mk_file_sig ()
 
@@ -416,7 +415,8 @@ struct
   class requires_exports_calculator ~ast ~module_ref_prefix =
     object (this)
       inherit
-        [(exports_info t', error) result, L.t] visitor ~init:(Ok (mk_file_sig init_exports_info)) as super
+        [(exports_info t' * tolerable_error list, error) result, L.t] visitor
+          ~init:(Ok (mk_file_sig init_exports_info, [])) as super
 
       val scope_info = Scope_builder.program ast
 
@@ -443,10 +443,10 @@ struct
         | None ->
           this#update_acc (function
               | Error _ as acc -> acc
-              | Ok fsig ->
+              | Ok (fsig, errs) ->
                 (match f fsig.module_sig with
                 | Error e -> Error e
-                | Ok module_sig -> Ok { fsig with module_sig }))
+                | Ok module_sig -> Ok ({ fsig with module_sig }, errs)))
 
       method private add_require require = this#update_module_sig (add_require require)
 
@@ -466,8 +466,7 @@ struct
         this#update_module_sig (set_cjs_exports mod_exp_loc cjs_exports_def)
 
       method private add_tolerable_error (err : tolerable_error) =
-        this#update_acc
-          (Result.map ~f:(fun fsig -> { fsig with tolerable_errors = err :: fsig.tolerable_errors }))
+        this#update_acc (Result.map ~f:(fun (fsig, errs) -> (fsig, err :: errs)))
 
       method! expression (expr : (L.t, L.t) Ast.Expression.t) =
         let open Ast.Expression in
@@ -502,7 +501,7 @@ struct
           if not (is_module_or_exports subexpr) then ignore (this#expression subexpr)
         in
         let { operator; left; right; comments = _ } = expr in
-        (* Whitelist e.g. `require.main === module` by avoiding the recursive calls (where the errors
+        (* Allow e.g. `require.main === module` by avoiding the recursive calls (where the errors
          * are generated) if the AST matches specific patterns. *)
         if is_legal_operator operator then (
           identify_or_recurse left;
@@ -1047,7 +1046,7 @@ struct
           | Some m ->
             this#update_acc (function
                 | Error _ as acc -> acc
-                | Ok fsig -> Ok (add_declare_module name m loc fsig))
+                | Ok (fsig, errs) -> Ok (add_declare_module name m loc fsig, errs))
         end;
         curr_declare_module <- None;
         ret
@@ -1125,9 +1124,25 @@ struct
         ListUtils.ident_map map_statement stmts
     end
 
-  let program_with_exports_info ~ast ~module_ref_prefix =
+  (* Now that we've determined the kind of the export, we can filter out
+     BadExportPosition and BadExportContext from ES modules. These errors are only
+     relevant for CommonJS modules, since their goal is to capture aliasing of
+     `module` and `module.exports`. For ES modules these uses should be allowed,
+     so we discard these errors to allow more flexibility. Note that this pass only
+     accummulates BadExportPosition and BadExportContext errors. *)
+  let filter_irrelevant_errors ~module_kind tolerable_errors =
+    match module_kind with
+    | CommonJS _ -> tolerable_errors
+    | ES _ -> []
+
+  let program_with_exports_info ~ast ~module_ref_prefix :
+      (exports_t * tolerable_error list, error) result =
     let walk = new requires_exports_calculator ~ast ~module_ref_prefix in
-    walk#eval walk#program ast
+    match walk#eval walk#program ast with
+    | Ok (exports, tolerable_errors) ->
+      let module_kind = exports.module_sig.module_kind in
+      Ok (exports, filter_irrelevant_errors ~module_kind tolerable_errors)
+    | Error e -> Error e
 
   let map_unit_file_sig =
     let map_unit_module_sig module_sig = { module_sig with info = () } in
@@ -1145,25 +1160,17 @@ struct
 
   let program ~ast ~module_ref_prefix =
     match program_with_exports_info ~ast ~module_ref_prefix with
-    | Ok file_sig -> Ok (map_unit_file_sig file_sig)
+    | Ok (file_sig, errs) -> Ok (map_unit_file_sig file_sig, errs)
     | Error e -> Error e
 
-  let verified errors env file_sig =
+  let verified env file_sig =
     let file_sig = map_unit_file_sig file_sig in
-    {
-      file_sig with
-      tolerable_errors =
-        Signature_builder_deps.PrintableErrorSet.fold
-          (fun error acc -> SignatureVerificationError error :: acc)
-          errors
-          file_sig.tolerable_errors;
-      exported_locals = env;
-    }
+    { file_sig with exported_locals = env }
 
   class mapper =
     object (this)
       method file_sig (file_sig : t) =
-        let { module_sig; declare_modules; tolerable_errors; exported_locals } = file_sig in
+        let { module_sig; declare_modules; exported_locals } = file_sig in
         let module_sig' = this#module_sig module_sig in
         let declare_modules' =
           SMapUtils.ident_map
@@ -1173,23 +1180,17 @@ struct
               (loc, module_sig))
             declare_modules
         in
-        let tolerable_errors' = ListUtils.ident_map this#tolerable_error tolerable_errors in
         let exported_locals' =
           OptionUtils.ident_map
             (SMapUtils.ident_map (L.LSetUtils.ident_map this#loc))
             exported_locals
         in
-        if
-          module_sig == module_sig'
-          && declare_modules == declare_modules'
-          && tolerable_errors == tolerable_errors'
-        then
+        if module_sig == module_sig' && declare_modules == declare_modules' then
           file_sig
         else
           {
             module_sig = module_sig';
             declare_modules = declare_modules';
-            tolerable_errors = tolerable_errors';
             exported_locals = exported_locals';
           }
 
@@ -1434,12 +1435,6 @@ struct
                   tolerable_error
                 else
                   SignatureVerificationError (ExpectedAnnotation (loc', sort))
-              | InvalidTypeParamUse loc ->
-                let loc' = this#loc loc in
-                if loc == loc' then
-                  tolerable_error
-                else
-                  SignatureVerificationError (InvalidTypeParamUse loc')
               | UnexpectedObjectKey (loc, key_loc) ->
                 let loc' = this#loc loc in
                 let key_loc' = this#loc key_loc in
@@ -1447,13 +1442,6 @@ struct
                   tolerable_error
                 else
                   SignatureVerificationError (UnexpectedObjectKey (loc', key_loc'))
-              | UnexpectedObjectSpread (loc, spread_loc) ->
-                let loc' = this#loc loc in
-                let spread_loc' = this#loc spread_loc in
-                if loc == loc' && spread_loc == spread_loc' then
-                  tolerable_error
-                else
-                  SignatureVerificationError (UnexpectedObjectSpread (loc', spread_loc'))
               | UnexpectedArraySpread (loc, spread_loc) ->
                 let loc' = this#loc loc in
                 let spread_loc' = this#loc spread_loc in
@@ -1532,7 +1520,7 @@ let abstractify_tolerable_errors =
     | WL.BadExportPosition loc -> WA.BadExportPosition (ALoc.of_loc loc)
     | WL.BadExportContext (name, loc) -> WA.BadExportContext (name, ALoc.of_loc loc)
     | WL.SignatureVerificationError err ->
-      WA.SignatureVerificationError (Signature_error.map_locs ~f:ALoc.of_loc err)
+      WA.SignatureVerificationError (Signature_error.map ALoc.of_loc err)
   in
   Base.List.map ~f:abstractify_tolerable_error
 
@@ -1645,10 +1633,9 @@ let abstractify_locs : With_Loc.t -> With_ALoc.t =
            exported_locals)
     | None -> None
   in
-  fun { WL.module_sig; declare_modules; tolerable_errors; exported_locals } ->
+  fun { WL.module_sig; declare_modules; exported_locals } ->
     {
       WA.module_sig = abstractify_module_sig module_sig;
       declare_modules = abstractify_declare_modules declare_modules;
-      tolerable_errors = abstractify_tolerable_errors tolerable_errors;
       exported_locals = abstractify_local_env exported_locals;
     }

@@ -33,17 +33,23 @@ let parse_lib_file ~reader options file =
     in
     Lwt.return
       ( if not (FilenameMap.is_empty results.Parsing.parse_ok) then
+        let tolerable_errors = FilenameMap.find lib_file results.Parsing.parse_ok in
         let ast = Parsing_heaps.Mutator_reader.get_ast_unsafe reader lib_file in
         let file_sig = Parsing_heaps.Mutator_reader.get_file_sig_unsafe reader lib_file in
+        let sig_extra = Parsing_heaps.Classic in
         (* Parsing_service_js.result only returns tolerable file sig errors, dropping parse
            errors. So there may actually have been some, but they were ignored.
            TODO: where do we surface lib parse errors? *)
         let parse_errors = [] in
-        Parsing.Parse_ok (Parsing.Classic (ast, file_sig), parse_errors)
+        Parsing.Parse_ok { ast; file_sig; sig_extra; tolerable_errors; parse_errors }
       else if List.length results.Parsing.parse_fails > 0 then
         let (_, _, parse_fails) = List.hd results.Parsing.parse_fails in
         Parsing.Parse_fail parse_fails
-      else if List.length results.Parsing.parse_skips > 0 then
+      else if
+      List.length results.Parsing.parse_skips
+      + FilenameSet.cardinal results.Parsing.parse_not_found_skips
+      > 0
+    then
         Parsing.Parse_skip Parsing.Skip_non_flow_file
       else
         failwith "Internal error: no parse results found" )
@@ -59,7 +65,7 @@ let parse_lib_file ~reader options file =
 
    returns list of (filename, success, errors, suppressions) tuples
  *)
-let load_lib_files ~sig_cx ~options ~reader files =
+let load_lib_files ~ccx ~options ~reader files =
   let verbose = Options.verbose options in
   (* iterate in reverse override order *)
   let%lwt (_, result) =
@@ -71,33 +77,24 @@ let load_lib_files ~sig_cx ~options ~reader files =
            let%lwt result = parse_lib_file ~reader options file in
            Lwt.return
              (match result with
-             | Parsing.Parse_ok (parse_result, _parse_errors) ->
+             | Parsing.Parse_ok { ast; file_sig; tolerable_errors; _ } ->
                (* parse_lib_file doesn't return any parse errors right now *)
-               let (ast, file_sig) = Parsing.basic parse_result in
                let file_sig = File_sig.abstractify_locs file_sig in
+               let tolerable_errors = File_sig.abstractify_tolerable_errors tolerable_errors in
                let metadata =
                  Context.(
                    let metadata = metadata_of_options options in
                    { metadata with checked = false; weak = false })
                in
-               (* Lib files use only concrete locations, so this is not needed. *)
-               let aloc_tables = FilenameMap.empty in
                let rev_table = lazy (ALoc.make_empty_reverse_table ()) in
                let cx =
-                 Context.make
-                   sig_cx
-                   metadata
-                   lib_file
-                   aloc_tables
-                   rev_table
-                   Files.lib_module_ref
-                   Context.Checking
+                 Context.make ccx metadata lib_file rev_table Files.lib_module_ref Context.Checking
                in
                let syms = Infer.infer_lib_file cx ast ~exclude_syms ~lint_severities ~file_sig in
                let errors = Context.errors cx in
                let errors =
                  if Inference_utils.well_formed_exports_enabled options lib_file then
-                   file_sig.File_sig.With_ALoc.tolerable_errors
+                   tolerable_errors
                    |> Inference_utils.set_of_file_sig_tolerable_errors ~source_file:lib_file
                    |> Flow_error.ErrorSet.union errors
                  else
@@ -114,8 +111,6 @@ let load_lib_files ~sig_cx ~options ~reader files =
                    (Context.aloc_tables cx)
                    severity_cover
                in
-               Context.remove_all_errors cx;
-               Context.remove_all_error_suppressions cx;
 
                if verbose != None then
                  prerr_endlinef "load_lib %s: added symbols { %s }" file (String.concat ", " syms);
@@ -155,36 +150,26 @@ let load_lib_files ~sig_cx ~options ~reader files =
    returns list of (lib file, success) pairs.
  *)
 let init ~options ~reader lib_files =
+  (* Lib files use only concrete locations, so this is not needed. *)
+  let aloc_tables = FilenameMap.empty in
   let sig_cx = Context.make_sig () in
+  let ccx = Context.make_ccx sig_cx aloc_tables in
   let master_cx =
     let metadata =
       Context.(
         let metadata = metadata_of_options options in
         { metadata with checked = false; weak = false })
     in
-    (* Builtins use only concrete locations, so this is not needed. *)
-    let aloc_tables = FilenameMap.empty in
     let rev_table = lazy (ALoc.make_empty_reverse_table ()) in
-    Context.make
-      sig_cx
-      metadata
-      File_key.Builtins
-      aloc_tables
-      rev_table
-      Files.lib_module_ref
-      Context.Checking
+    Context.make ccx metadata File_key.Builtins rev_table Files.lib_module_ref Context.Checking
   in
   Flow_js.mk_builtins master_cx;
 
-  let%lwt result = load_lib_files ~sig_cx ~options ~reader lib_files in
-  Flow.Cache.clear ();
+  let%lwt result = load_lib_files ~ccx ~options ~reader lib_files in
   let reason = Reason.builtin_reason (Reason.RCustom "module") in
-  let builtin_module = Obj_type.mk master_cx reason in
+  let builtin_module = Obj_type.mk_unsealed master_cx reason in
   Flow.flow_t master_cx (builtin_module, Flow.builtins master_cx);
   Merge_js.ContextOptimizer.sig_context master_cx [Files.lib_module_ref] |> ignore;
-
-  Context.remove_all_lint_severities master_cx;
-  Context.clear_intermediates master_cx;
 
   (* store master signature context to heap *)
   Context_heaps.Init_master_context_mutator.add_master_sig ~audit:Expensive.ok master_cx;

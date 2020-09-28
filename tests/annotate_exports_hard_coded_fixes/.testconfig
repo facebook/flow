@@ -1,1 +1,1 @@
-cmd: codemod annotate-exports
+cmd: annotate-exports

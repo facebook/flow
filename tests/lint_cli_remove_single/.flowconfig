@@ -5,6 +5,7 @@
 [libs]
 
 [options]
+types_first=false
 
 [lints]
 all=error

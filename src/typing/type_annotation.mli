@@ -11,10 +11,6 @@
 
 module Class_type_sig : Class_sig.S
 
-module Object_freeze : sig
-  val freeze_object : Context.t -> ALoc.t -> Type.t -> Type.t
-end
-
 val convert :
   Context.t ->
   Type.t SMap.t ->

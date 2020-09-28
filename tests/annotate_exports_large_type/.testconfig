@@ -1,1 +1,1 @@
-cmd: codemod annotate-exports --max-type-size 10
+cmd: annotate-exports --max-type-size 10

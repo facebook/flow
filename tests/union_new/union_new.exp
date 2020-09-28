@@ -1,6 +1,7 @@
 Error --------------------------------------------------------------------------------------------- issue-1462-i.js:21:9
 
 Cannot call `print` with `val.foo` bound to `x` because array type [1] is incompatible with number [2].
+[incompatible-call]
 
    issue-1462-i.js:21:9
    21|   print(val.foo);  // <--- foo could be an array
@@ -17,7 +18,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- issue-824.js:21:21
 
-Cannot call `this.foo` with `p` bound to `p` because:
+Cannot call `this.foo` with `p` bound to `p` because: [incompatible-call]
  - Either `I` [1] is incompatible with `B` [2].
  - Or `C` [3] is incompatible with `B` [2].
  - Or `I` [1] is incompatible with `C` [4].
@@ -45,7 +46,7 @@ References:
 Error --------------------------------------------------------------------------------------------------- test1.js:39:24
 
 Could not decide which case to select, since case 1 [1] may work but if it doesn't case 2 [2] looks promising too. To
-fix add a type annotation to return [3].
+fix add a type annotation to return [3]. [speculation-ambiguous]
 
    test1.js:39:24
    39| const fun_result = fun(() => "");
@@ -67,7 +68,7 @@ Error --------------------------------------------------------------------------
 
 Could not decide which case to select, since case 1 [1] may work but if it doesn't case 2 [2] looks promising too. To
 fix add a type annotation to inferred union of array element types (alternatively, provide an annotation to summarize
-the array element type) [3].
+the array element type) [3]. [speculation-ambiguous]
 
    test1.js:57:6
    57| inst([new B6]);
@@ -85,7 +86,7 @@ References:
 Error -------------------------------------------------------------------------------------------------- test10.js:38:11
 
 Could not decide which case to select, since case 1 [1] may work but if it doesn't case 2 [2] looks promising too. To
-fix add a type annotation to return [3] or to `x` [4].
+fix add a type annotation to return [3] or to `x` [4]. [speculation-ambiguous]
 
    test10.js:38:11
    38| check_fun((x) => x);
@@ -109,7 +110,7 @@ References:
 Error -------------------------------------------------------------------------------------------------- test10.js:50:11
 
 Could not decide which case to select, since case 1 [1] may work but if it doesn't case 2 [2] looks promising too. To
-fix add a type annotation to call of `id` [3].
+fix add a type annotation to call of `id` [3]. [speculation-ambiguous]
 
    test10.js:50:11
    50| check_obj({ x: id("") });
@@ -131,7 +132,7 @@ Error --------------------------------------------------------------------------
 
 Could not decide which case to select, since case 1 [1] may work but if it doesn't case 2 [2] looks promising too. To
 fix add a type annotation to inferred union of array element types (alternatively, provide an annotation to summarize
-the array element type) [3].
+the array element type) [3]. [speculation-ambiguous]
 
    test10.js:59:11
    59| check_arr([""]);
@@ -150,7 +151,7 @@ Error --------------------------------------------------------------------------
 
 Could not decide which case to select, since case 1 [1] may work but if it doesn't case 2 [2] looks promising too. To
 fix add a type annotation to inferred union of array element types (alternatively, provide an annotation to summarize
-the array element type) [3].
+the array element type) [3]. [speculation-ambiguous]
 
    test10.js:62:11
    62| check_arr([id("")]);
@@ -168,7 +169,7 @@ References:
 Error --------------------------------------------------------------------------------------------------- test11.js:12:8
 
 Cannot call `length` with object literal bound to `list` because property `next` is missing in object literal [1] but
-exists in `Cons` [2].
+exists in `Cons` [2]. [prop-missing]
 
    test11.js:12:8
    12| length({ kind: "cons" }); // missing `next`
@@ -183,6 +184,7 @@ References:
 Error --------------------------------------------------------------------------------------------------- test11.js:14:8
 
 Cannot call `length` with object literal bound to `list` because object literal [1] is incompatible with `List` [2].
+[incompatible-call]
 
    test11.js:14:8
    14| length({ kind: "empty" }); // `kind` not found
@@ -197,7 +199,7 @@ References:
 Error --------------------------------------------------------------------------------------------------- test14.js:12:9
 
 Could not decide which case to select, since case 1 [1] may work but if it doesn't case 2 [2] looks promising too. To
-fix add a type annotation to call of method `get` [3].
+fix add a type annotation to call of method `get` [3]. [speculation-ambiguous]
 
    test14.js:12:9
    12|   union({ x: c.get() });
@@ -218,7 +220,7 @@ References:
 Error --------------------------------------------------------------------------------------------------- test16.js:11:5
 
 Could not decide which case to select, since case 1 [1] may work but if it doesn't case 2 [2] looks promising too. To
-fix add a type annotation to return [3].
+fix add a type annotation to return [3]. [speculation-ambiguous]
 
    test16.js:11:5
    11| foo(() => qux());
@@ -239,7 +241,7 @@ References:
 Error --------------------------------------------------------------------------------------------------- test16.js:14:5
 
 Could not decide which case to select, since case 2 [1] may work but if it doesn't case 3 [2] looks promising too. To
-fix add a type annotation to return [3].
+fix add a type annotation to return [3]. [speculation-ambiguous]
 
    test16.js:14:5
    14| bar(() => qux());
@@ -259,7 +261,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test17.js:7:2
 
-Cannot cast `[].concat(...)[1]` to string because number [1] is incompatible with string [2].
+Cannot cast `[].concat(...)[1]` to string because number [1] is incompatible with string [2]. [incompatible-cast]
 
    test17.js:7:2
    7| ([].concat([0,1])[1]: string)
@@ -276,7 +278,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test17.js:7:2
 
-Cannot cast `[].concat(...)[1]` to string because number [1] is incompatible with string [2].
+Cannot cast `[].concat(...)[1]` to string because number [1] is incompatible with string [2]. [incompatible-cast]
 
    test17.js:7:2
    7| ([].concat([0,1])[1]: string)
@@ -293,7 +295,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- test20.js:14:26
 
-Cannot perform arithmetic operation because string [1] is not a number.
+Cannot perform arithmetic operation because string [1] is not a number. [unsafe-addition]
 
    test20.js:14:26
    14| [""].reduce((acc,str) => acc * str.length);
@@ -307,7 +309,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- test20.js:14:36
 
-Cannot get `str.length` because property `length` is missing in `Number` [1].
+Cannot get `str.length` because property `length` is missing in `Number` [1]. [prop-missing]
 
    test20.js:14:36
    14| [""].reduce((acc,str) => acc * str.length);
@@ -322,7 +324,7 @@ References:
 Error --------------------------------------------------------------------------------------------------- test21.js:11:2
 
 Could not decide which case to select, since case 1 [1] may work but if it doesn't case 2 [2] looks promising too. To
-fix add a type annotation to call of `bar` [3] or to call of `str` [4].
+fix add a type annotation to call of `bar` [3] or to call of `str` [4]. [speculation-ambiguous]
 
    test21.js:11:2
    11| ({ type: bar(), x: str() }: T);
@@ -345,7 +347,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- test22.js:20:15
 
-Cannot get `x.result` because:
+Cannot get `x.result` because: [incompatible-use]
  - Either property `result` is missing in object type [1].
  - Or property `result` is missing in `Empty` [2].
 
@@ -367,7 +369,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- test26.js:20:14
 
-Cannot call `(new Record()).set` because string [1] is incompatible with number [2].
+Cannot call `(new Record()).set` because string [1] is incompatible with number [2]. [incompatible-call]
 
    test26.js:20:14
    20| new Record().set('foo', "42");
@@ -385,7 +387,7 @@ References:
 Error ---------------------------------------------------------------------------------------------------- test33.js:7:5
 
 Could not decide which case to select, since case 1 [1] may work but if it doesn't case 2 [2] looks promising too. To
-fix add a type annotation to return [3].
+fix add a type annotation to return [3]. [speculation-ambiguous]
 
    test33.js:7:5
    7| foo(bar); // error: ambiguous speculation
@@ -405,7 +407,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test33.js:8:2
 
-Cannot cast `bar()` to string because number [1] is incompatible with string [2].
+Cannot cast `bar()` to string because number [1] is incompatible with string [2]. [incompatible-cast]
 
    test33.js:8:2
    8| (bar(): string); // error: number ~> string
@@ -422,7 +424,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- test34.js:10:6
 
-Cannot cast `x.foo` to empty because string [1] is incompatible with empty [2].
+Cannot cast `x.foo` to empty because string [1] is incompatible with empty [2]. [incompatible-cast]
 
    test34.js:10:6
    10|     (x.foo: empty); // error: string ~> empty
@@ -439,7 +441,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test35.js:8:2
 
-Cannot cast `ret` to empty because string [1] is incompatible with empty [2].
+Cannot cast `ret` to empty because string [1] is incompatible with empty [2]. [incompatible-cast]
 
    test35.js:8:2
    8| (ret: empty); // err, string ~> empty (matched case 2)
@@ -457,7 +459,7 @@ References:
 Error ---------------------------------------------------------------------------------------------------- test5.js:14:5
 
 Could not decide which case to select, since case 1 [1] may work but if it doesn't case 2 [2] looks promising too. To
-fix add a type annotation to return [3] or to `x` [4].
+fix add a type annotation to return [3] or to `x` [4]. [speculation-ambiguous]
 
    test5.js:14:5
    14| fun(a1);
@@ -481,7 +483,7 @@ References:
 Error ---------------------------------------------------------------------------------------------------- test5.js:25:5
 
 Could not decide which case to select, since case 1 [1] may work but if it doesn't case 2 [2] looks promising too. To
-fix add a type annotation to unknown element type of empty array [3].
+fix add a type annotation to unknown element type of empty array [3]. [speculation-ambiguous]
 
    test5.js:25:5
    25| arr(a2);
@@ -501,7 +503,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- test9.js:12:10
 
-Cannot perform arithmetic operation because null or undefined [1] is not a number.
+Cannot perform arithmetic operation because null or undefined [1] is not a number. [unsafe-addition]
 
    test9.js:12:10
    12|   return x * x;
@@ -515,7 +517,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- test9.js:12:14
 
-Cannot perform arithmetic operation because null or undefined [1] is not a number.
+Cannot perform arithmetic operation because null or undefined [1] is not a number. [unsafe-addition]
 
    test9.js:12:14
    12|   return x * x;

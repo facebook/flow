@@ -2,7 +2,7 @@
 Initial status:
 Error ----------------------------------------------------------------------------------------------------- test.js:4:22
 
-Cannot resolve module `./data`.
+Cannot resolve module `./data`. [cannot-resolve-module]
 
    4| const data = require('./data');
                            ^^^^^^^^
@@ -17,7 +17,7 @@ No errors!
 Modify data.json:
 Error ----------------------------------------------------------------------------------------------------- test.js:5:19
 
-Cannot assign `data.x` to `x` because string [1] is incompatible with number [2].
+Cannot assign `data.x` to `x` because string [1] is incompatible with number [2]. [incompatible-type]
 
    test.js:5:19
    5| const x: number = data.x;
@@ -38,7 +38,7 @@ Found 1 error
 Delete data.json:
 Error ----------------------------------------------------------------------------------------------------- test.js:4:22
 
-Cannot resolve module `./data`.
+Cannot resolve module `./data`. [cannot-resolve-module]
 
    4| const data = require('./data');
                            ^^^^^^^^

@@ -104,4 +104,8 @@ module ALocRepresentationDoNotUse : sig
   val get_key_exn : t -> key
 
   val string_of_key : key -> string
+
+  val make_table : File_key.t -> Loc.t array -> table
+
+  val make_keyed : File_key.t option -> int -> t
 end

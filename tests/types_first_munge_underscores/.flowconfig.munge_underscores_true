@@ -7,8 +7,8 @@
 [lints]
 
 [options]
-experimental.well_formed_exports=true
-experimental.types_first=true
+well_formed_exports=true
+types_first=true
 munge_underscores=true
 
 [strict]

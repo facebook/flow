@@ -71,14 +71,16 @@ let map_list_multiple map lst =
 
 class ['loc] mapper =
   object (this)
-    method program (program : ('loc, 'loc) Ast.program) =
-      let (loc, statements, comments) = program in
+    method program (program : ('loc, 'loc) Ast.Program.t) =
+      let open Ast.Program in
+      let (loc, { statements; comments; all_comments }) = program in
       let statements' = this#toplevel_statement_list statements in
-      let comments' = map_list this#comment comments in
-      if statements == statements' && comments == comments' then
+      let comments' = this#syntax_opt comments in
+      let all_comments' = map_list this#comment all_comments in
+      if statements == statements' && comments == comments' && all_comments == all_comments' then
         program
       else
-        (loc, statements', comments')
+        (loc, { statements = statements'; comments = comments'; all_comments = all_comments' })
 
     method statement (stmt : ('loc, 'loc) Ast.Statement.t) =
       let open Ast.Statement in
@@ -1507,7 +1509,7 @@ class ['loc] mapper =
       ignore has_else;
       this#statement stmt
 
-    method if_alternate_statement (altern : ('loc, 'loc) Ast.Statement.If.Alternate.t) =
+    method if_alternate_statement _loc (altern : ('loc, 'loc) Ast.Statement.If.Alternate.t') =
       let open Ast.Statement.If.Alternate in
       let { body; comments } = altern in
       let body' = this#statement body in
@@ -1522,7 +1524,7 @@ class ['loc] mapper =
       let { test; consequent; alternate; comments } = stmt in
       let test' = this#predicate_expression test in
       let consequent' = this#if_consequent_statement ~has_else:(alternate <> None) consequent in
-      let alternate' = map_opt this#if_alternate_statement alternate in
+      let alternate' = map_opt (map_loc this#if_alternate_statement) alternate in
       let comments' = this#syntax_opt comments in
       if
         test == test'

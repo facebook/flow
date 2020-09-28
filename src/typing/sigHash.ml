@@ -50,14 +50,14 @@ type hash =
   | FunProtoApplyH
   | FunProtoBindH
   | FunProtoCallH
-  | ObjFrozenSealedExactH
-  | ObjFrozenSealedNotExactH
-  | ObjFrozenNotSealedExactH
-  | ObjFrozenNotSealedNotExactH
-  | ObjNotFrozenSealedExactH
-  | ObjNotFrozenSealedNotExactH
-  | ObjNotFrozenNotSealedExactH
-  | ObjNotFrozenNotSealedNotExactH
+  | ObjFrozenExactH
+  | ObjFrozenInexactH
+  | ObjFrozenIndexedH
+  | ObjFrozenUnsealedH
+  | ObjNotFrozenExactH
+  | ObjNotFrozenInexactH
+  | ObjNotFrozenIndexedH
+  | ObjNotFrozenUnsealedH
   | ObjProtoH
   | MatchingPropH
   | NullProtoH
@@ -148,6 +148,7 @@ type hash =
   | AssertBinaryInLHSH
   | AssertBinaryInRHSH
   | AssertForInRHSH
+  | AssertIterableH
   | PredicateH
   | GuardH
   | StrictEqH
@@ -164,7 +165,6 @@ type hash =
   | LookupH
   | ObjAssignToH
   | ObjAssignFromH
-  | ObjFreezeH
   | ObjRestH
   | ObjSealH
   | ObjTestH
@@ -219,6 +219,21 @@ type hash =
   | ModuleExportsAssignH
   | FilterOptionalH
   | FilterMaybeH
+  | FunImplicitVoidReturnH
+  | DestructNonMaybeTypeH
+  | DestructPropertyTypeH
+  | DestructElementTypeH
+  | DestructBindH
+  | DestructReadOnlyTypeH
+  | DestructSpreadTypeH
+  | DestructRestTypeH
+  | DestructValuesTypeH
+  | DestructCallTypeH
+  | DestructTypeMapH
+  | DestructReactElementPropsTypeH
+  | DestructReactElementConfigTypeH
+  | DestructReactElementRefTypeH
+  | DestructReactConfigTypeH
 
 let hash_of_def_ctor =
   Type.(
@@ -240,17 +255,17 @@ let hash_of_def_ctor =
     | NullT -> NullH
     | NumT _ -> NumH
     | SymbolT -> SymbolH
-    | ObjT { flags = { frozen; sealed; exact }; _ } ->
+    | ObjT { flags = { frozen; obj_kind }; _ } ->
       begin
-        match (frozen, sealed, exact) with
-        | (true, Sealed, true) -> ObjFrozenSealedExactH
-        | (true, Sealed, false) -> ObjFrozenSealedNotExactH
-        | (true, UnsealedInFile _, true) -> ObjFrozenNotSealedExactH
-        | (true, UnsealedInFile _, false) -> ObjFrozenNotSealedNotExactH
-        | (false, Sealed, true) -> ObjNotFrozenSealedExactH
-        | (false, Sealed, false) -> ObjNotFrozenSealedNotExactH
-        | (false, UnsealedInFile _, true) -> ObjNotFrozenNotSealedExactH
-        | (false, UnsealedInFile _, false) -> ObjNotFrozenNotSealedNotExactH
+        match (frozen, obj_kind) with
+        | (true, Exact) -> ObjFrozenExactH
+        | (true, Inexact) -> ObjFrozenInexactH
+        | (true, Indexed _) -> ObjFrozenIndexedH
+        | (true, UnsealedInFile _) -> ObjFrozenUnsealedH
+        | (false, Exact) -> ObjNotFrozenExactH
+        | (false, Inexact) -> ObjNotFrozenInexactH
+        | (false, Indexed _) -> ObjNotFrozenIndexedH
+        | (false, UnsealedInFile _) -> ObjNotFrozenUnsealedH
       end
     | ReactAbstractComponentT _ -> ReactAbstractComponentH
     | SingletonBoolT _ -> SingletonBoolH
@@ -325,6 +340,24 @@ let hash_of_ctor =
     | TypeAppT _ -> TypeAppH
     | UnionT _ -> UnionH)
 
+let hash_of_destructor =
+  Type.(
+    function
+    | NonMaybeType -> DestructNonMaybeTypeH
+    | PropertyType _ -> DestructPropertyTypeH
+    | ElementType _ -> DestructElementTypeH
+    | Bind _ -> DestructBindH
+    | ReadOnlyType -> DestructReadOnlyTypeH
+    | SpreadType _ -> DestructSpreadTypeH
+    | RestType _ -> DestructRestTypeH
+    | ValuesType -> DestructValuesTypeH
+    | CallType _ -> DestructCallTypeH
+    | TypeMap _ -> DestructTypeMapH
+    | ReactElementPropsType -> DestructReactElementPropsTypeH
+    | ReactElementConfigType -> DestructReactElementConfigTypeH
+    | ReactElementRefType -> DestructReactElementRefTypeH
+    | ReactConfigType _ -> DestructReactConfigTypeH)
+
 let hash_of_use_ctor =
   Type.(
     function
@@ -357,6 +390,7 @@ let hash_of_use_ctor =
     | AssertBinaryInLHST _ -> AssertBinaryInLHSH
     | AssertBinaryInRHST _ -> AssertBinaryInRHSH
     | AssertForInRHST _ -> AssertForInRHSH
+    | AssertIterableT _ -> AssertIterableH
     | PredicateT _ -> PredicateH
     | GuardT _ -> GuardH
     | StrictEqT _ -> StrictEqH
@@ -376,7 +410,6 @@ let hash_of_use_ctor =
     | LookupT _ -> LookupH
     | ObjAssignToT _ -> ObjAssignToH
     | ObjAssignFromT _ -> ObjAssignFromH
-    | ObjFreezeT _ -> ObjFreezeH
     | ObjRestT _ -> ObjRestH
     | ObjSealT _ -> ObjSealH
     | ObjTestT _ -> ObjTestH
@@ -429,7 +462,8 @@ let hash_of_use_ctor =
     | ResolveUnionT _ -> ResolveUnionH
     | ModuleExportsAssignT _ -> ModuleExportsAssignH
     | FilterOptionalT _ -> FilterOptionalH
-    | FilterMaybeT _ -> FilterMaybeH)
+    | FilterMaybeT _ -> FilterMaybeH
+    | FunImplicitVoidReturnT _ -> FunImplicitVoidReturnH)
 
 let add = Xx.update
 
@@ -468,6 +502,8 @@ let add_type state t =
     | _ -> ())
 
 let add_use state use = add_int state (hash_of_use_ctor use)
+
+let add_destructor state d = add_int state (hash_of_destructor d)
 
 let add_file_key state =
   File_key.(

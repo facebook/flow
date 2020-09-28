@@ -1,7 +1,7 @@
 Error ---------------------------------------------------------------------------------------------------- testA.js:8:16
 
 Missing type annotation for `A`. `A` is a type parameter declared in function [1] and was implicitly instantiated at
-call of `f` [2].
+call of `f` [2]. [missing-annot]
 
    testA.js:8:16
    8| export default f(0, 0); // should just be missing for A, not B
@@ -16,7 +16,7 @@ References:
 Error ---------------------------------------------------------------------------------------------------- testB.js:8:16
 
 Missing type annotation for `B`. `B` is a type parameter declared in function [1] and was implicitly instantiated at
-call of `f` [2].
+call of `f` [2]. [missing-annot]
 
    testB.js:8:16
    8| export default f(0, 0); // should just be missing for B, not A
@@ -31,7 +31,7 @@ References:
 Error ---------------------------------------------------------------------------------------------------- testC.js:4:16
 
 Missing type annotation for `T`. `T` is a type parameter declared in function type [1] and was implicitly instantiated
-at call of `test` [2].
+at call of `test` [2]. [missing-annot]
 
    testC.js:4:16
    4| export default test(); // missing annotation error since T appears contravariantly.

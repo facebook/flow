@@ -1,20 +1,20 @@
 Error ------------------------------------------------------------------------------------------------ issue-198.js:9:20
 
-Cannot call `str.toFixed` because property `toFixed` is missing in `String` [1].
+Cannot call `str.toFixed` because property `toFixed` is missing in `String` [1]. [prop-missing]
 
    issue-198.js:9:20
      9|         return str.toFixed();
                            ^^^^^^^
 
 References:
-   <BUILTINS>/core.js:162:39
-   162|     toFixed(fractionDigits?: number): string;
+   <BUILTINS>/core.js:449:39
+   449|     toFixed(fractionDigits?: number): string;
                                               ^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------------ issue-324.js:8:10
 
-Cannot assign `barstr` to `foostr` because `Bar` [1] is incompatible with `Foo` [2].
+Cannot assign `barstr` to `foostr` because `Bar` [1] is incompatible with `Foo` [2]. [incompatible-type]
 
    issue-324.js:8:10
    8| foostr = barstr;
@@ -31,7 +31,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- issue-7322.js:22:2
 
-Cannot cast `x.noReturn()` to number because undefined [1] is incompatible with number [2].
+Cannot cast `x.noReturn()` to number because undefined [1] is incompatible with number [2]. [incompatible-cast]
 
    issue-7322.js:22:2
    22| (x.noReturn(): number);
@@ -48,7 +48,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- union.js:2:5
 
-Cannot call `bar` with `0` bound to `x` because number [1] is incompatible with string [2].
+Cannot call `bar` with `0` bound to `x` because number [1] is incompatible with string [2]. [incompatible-call]
 
    union.js:2:5
    2| bar(0);
@@ -62,7 +62,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- union.js:8:13
 
-Cannot assign `new E()` to `c` because `D` [1] is incompatible with `C` [2].
+Cannot assign `new E()` to `c` because `D` [1] is incompatible with `C` [2]. [incompatible-type]
 
    union.js:8:13
    8|   var c:C = new E(); // error, since E could be D, and D is not a subtype of C
@@ -76,7 +76,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- union.js:9:19
 
-`D` [1] is incompatible with `C` [2].
+`D` [1] is incompatible with `C` [2]. [incompatible-type]
 
    union.js:9:19
    9|   function qux(e: E) { } // this annotation is an error: is it C, or is it D?

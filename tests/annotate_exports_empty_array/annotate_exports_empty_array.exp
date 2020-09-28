@@ -1,4 +1,7 @@
->>> a.js (#changes: 3)
+
+=== Codemod annotate-exports ===
+
+>>> ./a.js
 // @flow strict
 
 const a0: Array<$FlowFixMeEmpty> = [];
@@ -18,10 +21,10 @@ module.exports = { a0, a1, a2, a3 };
 
 Stats:
   Files changed:                            1
-  Number of sig. ver. errors:               4
-  Number of annotations required:           4
   Number of annotations added:              3
   Total size of annotations:               10
+  Number of sig. ver. errors:               4
+  Number of annotations required:           4
   Number of annotations skipped:            0
 
 Errors:
@@ -32,7 +35,6 @@ Errors:
     Parsing heaps get ast error:            0
     Indeterminate module type:              0
     No matching export:                     0
-    Unrecognizable module error:            0
   Serializer error:                         0
   Unsupported error kind:                   0
 
@@ -42,4 +44,23 @@ Warnings:
   Location unhandled:                       0
   Empty NoUpper:                            1
   Empty SomeKnownUpper:                     2
+
+
+=== Autofix exports ===
+
+
+=== Diff between codemod-ed & autofix-ed ===
+>>> ./a.js
+3c3
+< const a0: Array<$FlowFixMeEmpty> = [];
+---
+> const a0 = [];
+5c5
+< const a1: Array<$FlowFixMe | number> = [];
+---
+> const a1 = [];
+8c8
+< const a2: Array<number> = [];
+---
+> const a2 = [];
 

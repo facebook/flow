@@ -1,6 +1,6 @@
 Error -------------------------------------------------------------------------------------------------- switch.js:28:13
 
-Cannot perform arithmetic operation because string [1] is not a number.
+Cannot perform arithmetic operation because string [1] is not a number. [unsafe-addition]
 
    switch.js:28:13
    28|         x = x*x;
@@ -14,7 +14,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- switch.js:28:15
 
-Cannot perform arithmetic operation because string [1] is not a number.
+Cannot perform arithmetic operation because string [1] is not a number. [unsafe-addition]
 
    switch.js:28:15
    28|         x = x*x;
@@ -28,7 +28,7 @@ References:
 
 Error ------------------------------------------------------------------------------- switch_default_fallthrough.js:16:6
 
-Cannot cast `a` to string because number [1] is incompatible with string [2].
+Cannot cast `a` to string because number [1] is incompatible with string [2]. [incompatible-cast]
 
    switch_default_fallthrough.js:16:6
    16|     (a : string); // error, string | number ~/> string
@@ -45,7 +45,7 @@ References:
 
 Error ------------------------------------------------------------------------------- switch_default_fallthrough.js:17:6
 
-Cannot cast `a` to number because string [1] is incompatible with number [2].
+Cannot cast `a` to number because string [1] is incompatible with number [2]. [incompatible-cast]
 
    switch_default_fallthrough.js:17:6
    17|     (a : number); // error, string | number ~/> number
@@ -62,7 +62,7 @@ References:
 
 Error ------------------------------------------------------------------------------ switch_default_fallthrough.js:21:12
 
-Cannot return `b` because number [1] is incompatible with string [2].
+Cannot return `b` because number [1] is incompatible with string [2]. [incompatible-return]
 
    switch_default_fallthrough.js:21:12
    21|     return b; // error, number ~/> string
@@ -79,7 +79,7 @@ References:
 
 Error ------------------------------------------------------------------------------- switch_default_fallthrough.js:39:6
 
-Cannot cast `a` to string because number [1] is incompatible with string [2].
+Cannot cast `a` to string because number [1] is incompatible with string [2]. [incompatible-cast]
 
    switch_default_fallthrough.js:39:6
    39|     (a : string); // error, string | number ~/> string
@@ -96,7 +96,7 @@ References:
 
 Error ------------------------------------------------------------------------------- switch_default_fallthrough.js:40:6
 
-Cannot cast `a` to number because string [1] is incompatible with number [2].
+Cannot cast `a` to number because string [1] is incompatible with number [2]. [incompatible-cast]
 
    switch_default_fallthrough.js:40:6
    40|     (a : number); // error, string | number ~/> number
@@ -113,7 +113,7 @@ References:
 
 Error ------------------------------------------------------------------------------- switch_default_fallthrough.js:43:6
 
-Cannot cast `b` to string because number [1] is incompatible with string [2].
+Cannot cast `b` to string because number [1] is incompatible with string [2]. [incompatible-cast]
 
    switch_default_fallthrough.js:43:6
    43|     (b : string); // error, string | number ~/> string
@@ -130,7 +130,7 @@ References:
 
 Error ------------------------------------------------------------------------------- switch_default_fallthrough.js:44:6
 
-Cannot cast `b` to number because string [1] is incompatible with number [2].
+Cannot cast `b` to number because string [1] is incompatible with number [2]. [incompatible-cast]
 
    switch_default_fallthrough.js:44:6
    44|     (b : number); // error, string | number ~/> number
@@ -147,7 +147,7 @@ References:
 
 Error ------------------------------------------------------------------------------ switch_default_fallthrough.js:46:12
 
-Cannot return `a + b` because string [1] is incompatible with number [2].
+Cannot return `a + b` because string [1] is incompatible with number [2]. [incompatible-return]
 
    switch_default_fallthrough.js:46:12
    46|     return a+b; // error, string ~/> number
@@ -161,7 +161,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------ trailing_cases.js:23:18
 
-Cannot assign `x` to `y` because string [1] is incompatible with number [2].
+Cannot assign `x` to `y` because string [1] is incompatible with number [2]. [incompatible-type]
 
    trailing_cases.js:23:18
    23|   var y:number = x; // error, number | string ~/> number
@@ -179,6 +179,7 @@ References:
 Error ------------------------------------------------------------------------------------------ trailing_cases.js:39:18
 
 Cannot assign `x` to `y` because possibly uninitialized variable [1] is incompatible with number [2].
+[incompatible-type]
 
    trailing_cases.js:39:18
    39|   var y:number = x; // error, number | uninitialized ~/> number

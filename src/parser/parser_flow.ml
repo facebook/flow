@@ -21,7 +21,7 @@ let filter_duplicate_errors =
     let compare (a_loc, a_error) (b_loc, b_error) =
       let loc = Loc.compare a_loc b_loc in
       if loc = 0 then
-        Pervasives.compare a_error b_error
+        Parse_error.compare a_error b_error
       else
         loc
   end) in
@@ -77,6 +77,7 @@ module rec Parse : PARSER = struct
     identifier_name env
 
   let rec program env =
+    let leading = Eat.program_comments env in
     let stmts = module_body_with_directives env (fun _ -> false) in
     let end_loc = Peek.loc env in
     Expect.token env T_EOF;
@@ -85,8 +86,13 @@ module rec Parse : PARSER = struct
       | [] -> end_loc
       | _ -> Loc.btwn (fst (List.hd stmts)) (fst (List.hd (List.rev stmts)))
     in
-    let comments = List.rev (comments env) in
-    (loc, stmts, comments)
+    let all_comments = List.rev (comments env) in
+    ( loc,
+      {
+        Ast.Program.statements = stmts;
+        comments = Flow_ast_utils.mk_comments_opt ~leading ();
+        all_comments;
+      } )
 
   and directives =
     let check env token =
@@ -256,17 +262,19 @@ module rec Parse : PARSER = struct
     | _ -> Statement.expression env
 
   and expression env =
+    let start_loc = Peek.loc env in
     let expr = Expression.assignment env in
     match Peek.token env with
-    | T_COMMA -> Expression.sequence env [expr]
+    | T_COMMA -> Expression.sequence env ~start_loc [expr]
     | _ -> expr
 
   and expression_or_pattern env =
+    let start_loc = Peek.loc env in
     let expr_or_pattern = Expression.assignment_cover env in
     match Peek.token env with
     | T_COMMA ->
       let expr = Pattern_cover.as_expression env expr_or_pattern in
-      let seq = Expression.sequence env [expr] in
+      let seq = Expression.sequence env ~start_loc [expr] in
       Cover_expr seq
     | _ -> expr_or_pattern
 

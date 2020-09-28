@@ -1,36 +1,39 @@
 create_class.js:4:7 = 
-  Class<React$Component<{bar: string, foo?: string}, {baz: number}>>
+  Class<React$Component<{bar: string, foo?: string, ...}, {baz: number, ...}>>
   &
   {
-    defaultProps: {foo: string},
+    defaultProps: {foo: string, ...},
     +getDefaultProps: () => {|foo: string|},
     +propTypes: {|
       bar: React$PropType$Primitive$Required<string>,
       foo: React$PropType$Primitive<string>
-    |}
+    |},
+    ...
   }
 create_class.js:4:7,4:9
 create_class.js:19:7 = 
-  Class<React$Component<{bar: string, foo?: string}, {}>>
+  Class<React$Component<{bar: string, foo?: string, ...}, {...}>>
   &
   {
-    defaultProps: {foo: string},
+    defaultProps: {foo: string, ...},
     +getDefaultProps: () => {|foo: string|},
     +propTypes: {|
       bar: React$PropType$Primitive$Required<string>,
       foo: React$PropType$Primitive<string>
-    |}
+    |},
+    ...
   }
 create_class.js:19:7,19:13
 create_class.js:31:7 = 
-  Class<React$Component<{bar: string, foo?: string}, {}>>
+  Class<React$Component<{bar: string, foo?: string, ...}, {...}>>
   &
   {
     defaultProps: void,
     +propTypes: {|
       bar: React$PropType$Primitive$Required<string>,
       foo: React$PropType$Primitive<string>
-    |}
+    |},
+    ...
   }
 create_class.js:31:7,31:20
 create_class_state.js:16:5 = React$Component<any, State> | any
@@ -68,7 +71,7 @@ react_component.js:3:9 = module "react" {
     inputs: ?$ReadOnlyArray<mixed>
   ) => void;
   declare var useImperativeHandle: <T>(
-    ref: ?({current: (T | null)} | ((inst: (T | null)) => mixed)),
+    ref: ?({current: (T | null), ...} | ((inst: (T | null)) => mixed)),
     create: () => T,
     inputs: ?$ReadOnlyArray<mixed>
   ) => void;
@@ -92,14 +95,14 @@ react_component.js:3:9 = module "react" {
   ) => React$AbstractComponent<Config, Instance>;
   declare var lazy: <Config, Instance = mixed>(
     component: () => Promise<
-      {default: React$AbstractComponent<Config, Instance>},
+      {default: React$AbstractComponent<Config, Instance>, ...},
     >
   ) => React$AbstractComponent<Config, Instance>;
   declare var isValidElement: (element: any) => boolean;
   declare var forwardRef: <Config, Instance>(
     render: (
       props: Config,
-      ref: ({current: (null | Instance)} | (((null | Instance)) => mixed))
+      ref: ({current: (null | Instance), ...} | (((null | Instance)) => mixed))
     ) => React$Node
   ) => React$AbstractComponent<Config, Instance>;
   declare var createRef: <T>() => {|current: (null | T)|};
@@ -121,9 +124,9 @@ react_component.js:3:9 = module "react" {
     getStack: ?(() => ?string)
   ) => void;
   declare var Suspense: React$ComponentType<
-    {children?: React$Node, fallback?: React$Node},
+    {children?: React$Node, fallback?: React$Node, ...},
   >;
-  declare var StrictMode: ({children?: React$Node}) => React$Node;
+  declare var StrictMode: ({children?: React$Node, ...}) => React$Node;
   type StatelessFunctionalComponent<P> = React$StatelessFunctionalComponent<P>;
   type Ref<C> = React$Ref<C>;
   class React$PureComponent<Props, State = void>;
@@ -136,8 +139,8 @@ react_component.js:3:9 = module "react" {
   type Node = React$Node;
   type MixedElement = React$MixedElement;
   type Key = React$Key;
-  type Interaction = {name: string, timestamp: number};
-  declare var Fragment: ({children?: React$Node}) => React$Node;
+  type Interaction = {name: string, timestamp: number, ...};
+  declare var Fragment: React$FragmentType;
   type ElementType = React$ElementType;
   type ElementRef<C> = React$ElementRef<C>;
   type ElementProps<C> = React$ElementProps<C>;
@@ -146,7 +149,7 @@ react_component.js:3:9 = module "react" {
   declare var DOM: any (explicit);
   type Context<T> = React$Context<T>;
   type Config<Props, DefaultProps> = React$Config<Props, DefaultProps>;
-  declare var ConcurrentMode: ({children?: React$Node}) => React$Node;
+  declare var ConcurrentMode: ({children?: React$Node, ...}) => React$Node;
   type ComponentType<-P> = React$ComponentType<P>;
   class React$Component<Props, State = void>;
   type ChildrenArray<+T> = $ReadOnlyArray<ChildrenArray<T>> | T;
@@ -163,7 +166,8 @@ react_component.js:3:9 = module "react" {
       thisArg?: mixed
     ) => Array<$NonMaybeType<U>>,
     +only: <T>(children: ChildrenArray<T>) => $NonMaybeType<T>,
-    +toArray: <T>(children: ChildrenArray<T>) => Array<$NonMaybeType<T>>
+    +toArray: <T>(children: ChildrenArray<T>) => Array<$NonMaybeType<T>>,
+    ...
   };
   type AbstractComponent<-Config, +Instance = mixed> = React$AbstractComponent<
     Config,
@@ -174,55 +178,18 @@ react_component.js:3:9 = module "react" {
 react_component.js:3:7,3:11
 react_component.js:13:33 = class React$Component<Props, State = void>
 react_component.js:13:29,13:37
-react_component.js:18:17 = {|enabled: boolean|} | {|enabled: boolean|}
+react_component.js:18:17 = {|enabled: boolean|}
 react_component.js:18:14,18:18
 react_component.js:31:7 = {
   "expanded_type":{
-    "kind":"Fun",
-    "typeParams":null,
-    "paramTypes":[
-      {
-        "kind":"Obj",
-        "exact":false,
-        "frozen":false,
-        "literal":false,
-        "props":[
-          {
-            "kind":"NamedProp",
-            "prop":{
-              "name":"children",
-              "prop":{
-                "kind":"field",
-                "type":{
-                  "kind":"Generic",
-                  "type":{
-                    "provenance":{"kind":"Library (Remote)","loc":"[LIB] react.js:14:5,20:25"},
-                    "name":"React$Node"
-                  },
-                  "kind":"type alias"
-                },
-                "polarity":"Neutral",
-                "optional":true
-              },
-              "from_proto":false
-            }
-          }
-        ]
-      }
-    ],
-    "paramNames":["_"],
-    "restParam":null,
-    "returnType":{
-      "kind":"Generic",
-      "type":{
-        "provenance":{"kind":"Library (Remote)","loc":"[LIB] react.js:14:5,20:25"},
-        "name":"React$Node"
-      },
-      "kind":"type alias"
+    "kind":"Generic",
+    "type":{
+      "provenance":{"kind":"Library (Remote)","loc":"[LIB] react.js:222:35-80"},
+      "name":"React$FragmentType"
     },
-    "staticType":{"kind":"Obj","exact":false,"frozen":false,"literal":false,"props":[]}
+    "kind":"type alias"
   },
-  "type":"({children?: React$Node}) => React$Node",
+  "type":"React$FragmentType",
   "reasons":[],
   "loc":{
     "source":"react_component.js",
@@ -241,7 +208,7 @@ react_component.js:32:13 = {
     "kind":"Generic",
     "typeArgs":[{"kind":"Num"}],
     "type":{
-      "provenance":{"kind":"Library (Remote)","loc":"[LIB] react.js:254:23-35"},
+      "provenance":{"kind":"Library (Remote)","loc":"[LIB] react.js:256:23-35"},
       "name":"ComponentType"
     },
     "kind":"type alias"
@@ -264,7 +231,7 @@ react_component.js:32:29 = {
   "expanded_type":{
     "kind":"TypeAlias",
     "name":{
-      "provenance":{"kind":"Library (Remote)","loc":"[LIB] react.js:254:23-35"},
+      "provenance":{"kind":"Library (Remote)","loc":"[LIB] react.js:256:23-35"},
       "name":"ComponentType"
     },
     "typeParams":[{"name":"P","bound":null,"polarity":"Negative"}],

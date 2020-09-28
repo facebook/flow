@@ -1,6 +1,6 @@
 Error ------------------------------------------------------------------------------------------------------- foo.js:2:5
 
-Cannot call `imp` with `1337` bound to `p` because number [1] is incompatible with string [2].
+Cannot call `imp` with `1337` bound to `p` because number [1] is incompatible with string [2]. [incompatible-call]
 
    foo.js:2:5
    2| imp(1337);

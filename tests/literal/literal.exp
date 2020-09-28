@@ -1,6 +1,7 @@
 Error ----------------------------------------------------------------------------------------------- enum_client.js:6:5
 
 Cannot call `foo` with `"LOCATION"` bound to `x` because property `LOCATION` is missing in object literal [1].
+[prop-missing]
 
    enum_client.js:6:5
    6| foo("LOCATION"); // error
@@ -14,7 +15,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- enum_client.js:10:5
 
-Cannot call `bar` with `APIKeys.NAME` bound to `x` because property `name` is missing in object type [1].
+Cannot call `bar` with `APIKeys.NAME` bound to `x` because property `name` is missing in object type [1]. [prop-missing]
 
    enum_client.js:10:5
    10| bar(APIKeys.NAME); // error: since "NAME" is not in the smaller enum
@@ -28,7 +29,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- enum_client.js:17:19
 
-Cannot assign `object[APIKeys.NAME]` to `name` because string [1] is incompatible with number [2].
+Cannot assign `object[APIKeys.NAME]` to `name` because string [1] is incompatible with number [2]. [incompatible-type]
 
    enum_client.js:17:19
    17| var name:number = object[APIKeys.NAME]; // error: object.name is a string
@@ -45,7 +46,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- enum_client.js:21:18
 
-Cannot assign `tuple[indices.red]` to `red` because number [1] is incompatible with string [2].
+Cannot assign `tuple[indices.red]` to `red` because number [1] is incompatible with string [2]. [incompatible-type]
 
    enum_client.js:21:18
    21| var red:string = tuple[indices.red]; // error: tuple[0] is a number
@@ -62,7 +63,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- number.js:6:10
 
-string [1] is not a number.
+string [1] is not a number. [incompatible-use]
 
    number.js:6:10
    6|   return -x;

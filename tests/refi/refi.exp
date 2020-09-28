@@ -1,6 +1,6 @@
 Error ---------------------------------------------------------------------------------------------------- bound.js:9:22
 
-Cannot assign `x` to `y` because null or undefined [1] is incompatible with string [2].
+Cannot assign `x` to `y` because null or undefined [1] is incompatible with string [2]. [incompatible-type]
 
    bound.js:9:22
    9|     var y : string = x;  // not ok
@@ -17,7 +17,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- bound.js:47:22
 
-Cannot assign `x` to `y` because null or undefined [1] is incompatible with string [2].
+Cannot assign `x` to `y` because null or undefined [1] is incompatible with string [2]. [incompatible-type]
 
    bound.js:47:22
    47|     var y : string = x;  // not ok
@@ -34,7 +34,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- bound.js:53:24
 
-Cannot assign `x` to `y` because null or undefined [1] is incompatible with string [2].
+Cannot assign `x` to `y` because null or undefined [1] is incompatible with string [2]. [incompatible-type]
 
    bound.js:53:24
    53|       var y : string = x;  // not ok
@@ -51,7 +51,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- heap.js:5:22
 
-Cannot assign `x.p` to `y` because null or undefined [1] is incompatible with string [2].
+Cannot assign `x.p` to `y` because null or undefined [1] is incompatible with string [2]. [incompatible-type]
 
    heap.js:5:22
    5|     var y : string = x.p;  // not ok
@@ -68,7 +68,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- heap.js:40:24
 
-Cannot assign `x.p` to `y` because null or undefined [1] is incompatible with string [2].
+Cannot assign `x.p` to `y` because null or undefined [1] is incompatible with string [2]. [incompatible-type]
 
    heap.js:40:24
    40|       var y : string = x.p;  // not ok
@@ -85,7 +85,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- heap.js:48:24
 
-Cannot assign `x.p` to `y` because null [1] is incompatible with string [2].
+Cannot assign `x.p` to `y` because null [1] is incompatible with string [2]. [incompatible-type]
 
    heap.js:48:24
    48|       var y : string = x.p;  // not ok
@@ -102,7 +102,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- heap.js:55:22
 
-Cannot assign `x.p` to `y` because null or undefined [1] is incompatible with string [2].
+Cannot assign `x.p` to `y` because null or undefined [1] is incompatible with string [2]. [incompatible-type]
 
    heap.js:55:22
    55|     var y : string = x.p;  // not ok
@@ -119,7 +119,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- heap.js:62:24
 
-Cannot assign `x.p` to `y` because null or undefined [1] is incompatible with string [2].
+Cannot assign `x.p` to `y` because null or undefined [1] is incompatible with string [2]. [incompatible-type]
 
    heap.js:62:24
    62|       var y : string = x.p;  // not ok
@@ -136,7 +136,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- heap.js:105:13
 
-Cannot assign `123` to `x.y` because number [1] is incompatible with string [2].
+Cannot assign `123` to `x.y` because number [1] is incompatible with string [2]. [incompatible-type]
 
    heap.js:105:13
    105|       x.y = 123; // error
@@ -150,7 +150,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- heap.js:107:6
 
-Cannot cast `x.y` to string because number [1] is incompatible with string [2].
+Cannot cast `x.y` to string because number [1] is incompatible with string [2]. [incompatible-cast]
 
    heap.js:107:6
    107|     (x.y: string); // error, this got widened to a number
@@ -167,7 +167,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- heap.js:125:6
 
-Cannot cast `x.y` to string because boolean [1] is incompatible with string [2].
+Cannot cast `x.y` to string because boolean [1] is incompatible with string [2]. [incompatible-cast]
 
    heap.js:125:6
    125|     (x.y : string); // error, could also be boolean
@@ -184,7 +184,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- heap.js:135:6
 
-Cannot cast `x.y` to boolean because string [1] is incompatible with boolean [2].
+Cannot cast `x.y` to boolean because string [1] is incompatible with boolean [2]. [incompatible-cast]
 
    heap.js:135:6
    135|     (x.y : boolean); // error, string
@@ -201,7 +201,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- heap.js:135:6
 
-Cannot cast `x.y` to boolean because string [1] is incompatible with boolean [2].
+Cannot cast `x.y` to boolean because string [1] is incompatible with boolean [2]. [incompatible-cast]
 
    heap.js:135:6
    135|     (x.y : boolean); // error, string
@@ -218,7 +218,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- heap.js:135:6
 
-Cannot cast `x.y` to boolean because string [1] is incompatible with boolean [2].
+Cannot cast `x.y` to boolean because string [1] is incompatible with boolean [2]. [incompatible-cast]
 
    heap.js:135:6
    135|     (x.y : boolean); // error, string
@@ -235,7 +235,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- heap.js:146:6
 
-Cannot cast `x.y` to string because null [1] is incompatible with string [2].
+Cannot cast `x.y` to string because null [1] is incompatible with string [2]. [incompatible-cast]
 
    heap.js:146:6
    146|     (x.y : string); // error
@@ -252,7 +252,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- heap.js:159:6
 
-Cannot cast `x.y` to string because boolean [1] is incompatible with string [2].
+Cannot cast `x.y` to string because boolean [1] is incompatible with string [2]. [incompatible-cast]
 
    heap.js:159:6
    159|     (x.y : string); // error
@@ -269,7 +269,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- heap.js:159:6
 
-Cannot cast `x.y` to string because boolean [1] is incompatible with string [2].
+Cannot cast `x.y` to string because boolean [1] is incompatible with string [2]. [incompatible-cast]
 
    heap.js:159:6
    159|     (x.y : string); // error
@@ -286,7 +286,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- heap.js:172:6
 
-Cannot cast `x.y` to string because boolean [1] is incompatible with string [2].
+Cannot cast `x.y` to string because boolean [1] is incompatible with string [2]. [incompatible-cast]
 
    heap.js:172:6
    172|     (x.y : string); // error
@@ -303,7 +303,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- heap.js:172:6
 
-Cannot cast `x.y` to string because number [1] is incompatible with string [2].
+Cannot cast `x.y` to string because number [1] is incompatible with string [2]. [incompatible-cast]
 
    heap.js:172:6
    172|     (x.y : string); // error
@@ -321,6 +321,7 @@ References:
 Error ---------------------------------------------------------------------------------------------------- heap.js:188:6
 
 Cannot cast `x` to string literal `b` because string [1] is incompatible with string literal `b` [2].
+[incompatible-cast]
 
    heap.js:188:6
    188|     (x: 'b'); // error (but only once, string !~> 'b'; 'a' is irrelevant)
@@ -337,7 +338,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- heap.js:192:18
 
-Property `bar` is missing in mixed [1].
+Property `bar` is missing in mixed [1]. [incompatible-type]
 
    heap.js:192:18
    192|     if (typeof x.bar === 'string') {} // error, so `x.bar` refinement is empty
@@ -351,7 +352,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- heap.js:193:6
 
-Cannot cast `x` to intersection type because mixed [1] is incompatible with string [2].
+Cannot cast `x` to intersection type because mixed [1] is incompatible with string [2]. [incompatible-cast]
 
    heap.js:193:6
    193|     (x: string & number);
@@ -368,7 +369,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- heap.js:193:6
 
-Cannot cast `x` to intersection type because mixed [1] is incompatible with number [2].
+Cannot cast `x` to intersection type because mixed [1] is incompatible with number [2]. [incompatible-cast]
 
    heap.js:193:6
    193|     (x: string & number);
@@ -385,7 +386,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------- lex.js:6:4
 
-Cannot cast `x` to string because number [1] is incompatible with string [2].
+Cannot cast `x` to string because number [1] is incompatible with string [2]. [incompatible-cast]
 
    lex.js:6:4
    6|   (x : string); // error: number ~> string
@@ -402,7 +403,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ lex.js:15:4
 
-Cannot cast `x` to string because number [1] is incompatible with string [2].
+Cannot cast `x` to string because number [1] is incompatible with string [2]. [incompatible-cast]
 
    lex.js:15:4
    15|   (x : string); // error: number ~> string
@@ -419,7 +420,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ lex.js:25:4
 
-Cannot cast `x` to string because number [1] is incompatible with string [2].
+Cannot cast `x` to string because number [1] is incompatible with string [2]. [incompatible-cast]
 
    lex.js:25:4
    25|   (x : string); // error: number ~> string
@@ -436,7 +437,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ lex.js:35:4
 
-Cannot cast `x` to string because number [1] is incompatible with string [2].
+Cannot cast `x` to string because number [1] is incompatible with string [2]. [incompatible-cast]
 
    lex.js:35:4
    35|   (x : string); // error: number ~> string
@@ -453,7 +454,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- local.js:5:22
 
-Cannot assign `x` to `y` because null or undefined [1] is incompatible with string [2].
+Cannot assign `x` to `y` because null or undefined [1] is incompatible with string [2]. [incompatible-type]
 
    local.js:5:22
    5|     var y : string = x;  // not ok
@@ -470,7 +471,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- local.js:47:22
 
-Cannot assign `x` to `y` because null or undefined [1] is incompatible with string [2].
+Cannot assign `x` to `y` because null or undefined [1] is incompatible with string [2]. [incompatible-type]
 
    local.js:47:22
    47|     var y : string = x;  // not ok
@@ -487,7 +488,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- local.js:54:24
 
-Cannot assign `x` to `y` because null or undefined [1] is incompatible with string [2].
+Cannot assign `x` to `y` because null or undefined [1] is incompatible with string [2]. [incompatible-type]
 
    local.js:54:24
    54|       var y : string = x;  // not ok
@@ -504,7 +505,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- null_tests.js:150:14
 
-Cannot return `super.p` because null or undefined [1] is incompatible with string [2].
+Cannot return `super.p` because null or undefined [1] is incompatible with string [2]. [incompatible-return]
 
    null_tests.js:150:14
    150|       return super.p;  // not ok
@@ -521,7 +522,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- switch.js:49:10
 
-Cannot return `foo` because possibly uninitialized variable [1] is incompatible with number [2].
+Cannot return `foo` because possibly uninitialized variable [1] is incompatible with number [2]. [incompatible-return]
 
    switch.js:49:10
    49|   return foo; // error, possibly uninitialized
@@ -538,7 +539,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ undeclared.js:7:7
 
-Cannot use variable `c` [1] because the declaration either comes later or was skipped.
+Cannot use variable `c` [1] because the declaration either comes later or was skipped. [reference-before-declaration]
 
    undeclared.js:7:7
     7|   if (c != null) { // error: declaration comes later
@@ -552,7 +553,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ undeclared.js:7:7
 
-Cannot use variable `c` [1] because the declaration either comes later or was skipped.
+Cannot use variable `c` [1] because the declaration either comes later or was skipped. [reference-before-declaration]
 
    undeclared.js:7:7
     7|   if (c != null) { // error: declaration comes later
@@ -566,7 +567,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ undeclared.js:8:5
 
-Cannot use variable `c` [1] because the declaration either comes later or was skipped.
+Cannot use variable `c` [1] because the declaration either comes later or was skipped. [reference-before-declaration]
 
    undeclared.js:8:5
     8|     c; // error: declaration comes later

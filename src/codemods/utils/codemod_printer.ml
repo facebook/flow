@@ -7,13 +7,13 @@
 
 open Codemod_report
 
-let print_results ~strip_root ~report result : unit =
+let print_results ~reporter_options ~report result : unit =
   match report with
   | StringReporter r ->
-    Utils_js.print_endlinef ">>> Launching report...\n\n%s\n" (r ~strip_root result)
+    Utils_js.print_endlinef ">>> Launching report...\n\n%s\n" (r reporter_options result)
   | UnitReporter r ->
     Utils_js.print_endlinef ">>> Launching report...";
-    r ~strip_root result
+    r reporter_options result
 
 let print_ast_file_dry ~strip_root file =
   let file_path = File_key.to_string file in

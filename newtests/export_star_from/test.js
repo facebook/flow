@@ -3,9 +3,10 @@
  */
 
 
+import type Suite from "flow-dev-tools/src/test/Suite.js";
 import {suite, test} from 'flow-dev-tools/src/test/Tester';
 
-export default suite(({addFile, addFiles, addCode}) => [
+export default (suite(({addFile, addFiles, addCode}) => [
   test('local exports override remote exports', [
     addFile('./origin.js').noNewErrors(),
     addFile('./local_override1.js').noNewErrors(),
@@ -19,7 +20,7 @@ export default suite(({addFile, addFiles, addCode}) => [
                              `
                                test.js:8
                                  8: (C: number);
-                                     ^ Cannot cast \`C\` to number because string [1] is incompatible with number [2].
+                                     ^ Cannot cast \`C\` to number because string [1] is incompatible with number [2]. [incompatible-cast]
                                  References:
                                    3: export const C = "asdf";
                                                        ^^^^^^ [1]. See: local_override1.js:3
@@ -42,7 +43,7 @@ export default suite(({addFile, addFiles, addCode}) => [
                              `
                                test.js:8
                                  8: (C: number);
-                                     ^ Cannot cast \`C\` to number because string [1] is incompatible with number [2].
+                                     ^ Cannot cast \`C\` to number because string [1] is incompatible with number [2]. [incompatible-cast]
                                  References:
                                    4: export const C = "asdf";
                                                        ^^^^^^ [1]. See: local_override2.js:4
@@ -51,4 +52,4 @@ export default suite(({addFile, addFiles, addCode}) => [
                              `,
                            ),
   ]),
-]);
+]): Suite);

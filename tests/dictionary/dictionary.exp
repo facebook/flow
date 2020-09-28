@@ -1,6 +1,6 @@
 Error ------------------------------------------------------------------------------------------------------ any.js:5:21
 
-Cannot assign `dict[k]` to `val` because number [1] is incompatible with string [2].
+Cannot assign `dict[k]` to `val` because number [1] is incompatible with string [2]. [incompatible-type]
 
    any.js:5:21
    5| const val: string = dict[k] // error: number incompatible with string
@@ -17,7 +17,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- dictionary.js:47:9
 
-Cannot assign `new A` to `o.p` because `A` [1] is incompatible with `B` [2].
+Cannot assign `new A` to `o.p` because `A` [1] is incompatible with `B` [2]. [incompatible-type]
 
    dictionary.js:47:9
    47|   o.p = new A; // error, A ~> B
@@ -31,7 +31,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- dictionary.js:58:4
 
-Cannot cast `o.p` to `C` because `B` [1] is incompatible with `C` [2].
+Cannot cast `o.p` to `C` because `B` [1] is incompatible with `C` [2]. [incompatible-cast]
 
    dictionary.js:58:4
    58|   (o.p: C); // error, C ~> B
@@ -48,7 +48,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- dictionary.js:66:3
 
-string `prop` [1] is incompatible with number [2].
+string `prop` [1] is incompatible with number [2]. [incompatible-type]
 
    dictionary.js:66:3
    66|   o.prop = "err"; // error: string ~> number
@@ -62,24 +62,25 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- dictionary.js:94:4
 
-Cannot cast `o.toString()` to boolean because string [1] is incompatible with boolean [2].
+Cannot cast `o.toString()` to boolean because string [1] is incompatible with boolean [2]. [incompatible-cast]
 
    dictionary.js:94:4
-   94|   (o.toString(): boolean); // error: string ~> boolean
-          ^^^^^^^^^^^^
+    94|   (o.toString(): boolean); // error: string ~> boolean
+           ^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:85:17
-   85|     toString(): string;
-                       ^^^^^^ [1]
+   <BUILTINS>/core.js:236:17
+   236|     toString(): string;
+                        ^^^^^^ [1]
    dictionary.js:94:18
-   94|   (o.toString(): boolean); // error: string ~> boolean
-                        ^^^^^^^ [2]
+    94|   (o.toString(): boolean); // error: string ~> boolean
+                         ^^^^^^^ [2]
 
 
 Error --------------------------------------------------------------------------------------------- dictionary.js:110:34
 
 Cannot assign `x` to `a` because `B` [1] is incompatible with `A` [2] in the indexer property of array element.
+[incompatible-type]
 
    dictionary.js:110:34
    110|   let a: Array<{[k:string]:A}> = x; // error
@@ -97,6 +98,7 @@ References:
 Error --------------------------------------------------------------------------------------------- dictionary.js:115:34
 
 Cannot assign `x` to `c` because `B` [1] is incompatible with `C` [2] in the indexer property of array element.
+[incompatible-type]
 
    dictionary.js:115:34
    115|   let c: Array<{[k:string]:C}> = x; // error
@@ -113,7 +115,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- dictionary.js:116:4
 
-Cannot cast `x[0].p` to `C` because `B` [1] is incompatible with `C` [2].
+Cannot cast `x[0].p` to `C` because `B` [1] is incompatible with `C` [2]. [incompatible-cast]
 
    dictionary.js:116:4
    116|   (x[0].p: C); // not true
@@ -130,7 +132,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- dictionary.js:122:27
 
-Cannot assign `x` to `a` because `B` [1] is incompatible with `A` [2] in the indexer property.
+Cannot assign `x` to `a` because `B` [1] is incompatible with `A` [2] in the indexer property. [incompatible-type]
 
    dictionary.js:122:27
    122|   let a: {[k:string]:A} = x; // error
@@ -147,7 +149,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- dictionary.js:127:27
 
-Cannot assign `x` to `c` because `B` [1] is incompatible with `C` [2] in the indexer property.
+Cannot assign `x` to `c` because `B` [1] is incompatible with `C` [2] in the indexer property. [incompatible-type]
 
    dictionary.js:127:27
    127|   let c: {[k:string]:C} = x; // error
@@ -164,7 +166,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- dictionary.js:128:4
 
-Cannot cast `x.p` to `C` because `B` [1] is incompatible with `C` [2].
+Cannot cast `x.p` to `C` because `B` [1] is incompatible with `C` [2]. [incompatible-cast]
 
    dictionary.js:128:4
    128|   (x.p: C); // not true
@@ -181,7 +183,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- dictionary.js:139:8
 
-Cannot assign object literal to `b` because `A` [1] is incompatible with `B` [2] in property `a`.
+Cannot assign object literal to `b` because `A` [1] is incompatible with `B` [2] in property `a`. [incompatible-type]
 
    dictionary.js:139:8
    139|     a: new A, // error, A not <: B
@@ -195,7 +197,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- dictionary.js:145:8
 
-Cannot assign object literal to `c` because `A` [1] is incompatible with `C` [2] in property `a`.
+Cannot assign object literal to `c` because `A` [1] is incompatible with `C` [2] in property `a`. [incompatible-type]
 
    dictionary.js:145:8
    145|     a: new A, // error, A not <: C
@@ -209,7 +211,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- dictionary.js:146:8
 
-Cannot assign object literal to `c` because `B` [1] is incompatible with `C` [2] in property `b`.
+Cannot assign object literal to `c` because `B` [1] is incompatible with `C` [2] in property `b`. [incompatible-type]
 
    dictionary.js:146:8
    146|     b: new B, // error, A not <: C
@@ -224,6 +226,7 @@ References:
 Error --------------------------------------------------------------------------------------------- dictionary.js:159:31
 
 Cannot assign `x` to `a` because `B` [1] is incompatible with `A` [2] in the indexer property's key of array element.
+[incompatible-type]
 
    dictionary.js:159:31
    159|   let a: Array<{[k:A]:any}> = x; // error
@@ -241,6 +244,7 @@ References:
 Error --------------------------------------------------------------------------------------------- dictionary.js:161:31
 
 Cannot assign `x` to `c` because `B` [1] is incompatible with `C` [2] in the indexer property's key of array element.
+[incompatible-type]
 
    dictionary.js:161:31
    161|   let c: Array<{[k:C]:any}> = x; // error
@@ -257,7 +261,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- dictionary.js:167:24
 
-Cannot assign `x` to `a` because `B` [1] is incompatible with `A` [2] in the indexer property's key.
+Cannot assign `x` to `a` because `B` [1] is incompatible with `A` [2] in the indexer property's key. [incompatible-type]
 
    dictionary.js:167:24
    167|   let a: {[k:A]:any} = x; // error
@@ -274,7 +278,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- dictionary.js:169:24
 
-Cannot assign `x` to `c` because `B` [1] is incompatible with `C` [2] in the indexer property's key.
+Cannot assign `x` to `c` because `B` [1] is incompatible with `C` [2] in the indexer property's key. [incompatible-type]
 
    dictionary.js:169:24
    169|   let c: {[k:C]:any} = x; // error
@@ -292,6 +296,7 @@ References:
 Error --------------------------------------------------------------------------------------------- dictionary.js:175:39
 
 Cannot assign `x` to `a` because `A` [1] is incompatible with `B` [2] in property `p` of array element.
+[incompatible-type]
 
    dictionary.js:175:39
    175|   let a: Array<{[k:string]:B, p:A}> = x; // error: A ~> B
@@ -309,6 +314,7 @@ References:
 Error --------------------------------------------------------------------------------------------- dictionary.js:180:39
 
 Cannot assign `x` to `c` because `C` [1] is incompatible with `B` [2] in property `p` of array element.
+[incompatible-type]
 
    dictionary.js:180:39
    180|   let c: Array<{[k:string]:B, p:C}> = x; // error
@@ -325,7 +331,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- dictionary.js:181:4
 
-Cannot cast `x[0].p` to `C` because `B` [1] is incompatible with `C` [2].
+Cannot cast `x[0].p` to `C` because `B` [1] is incompatible with `C` [2]. [incompatible-cast]
 
    dictionary.js:181:4
    181|   (x[0].p: C); // not true
@@ -343,6 +349,7 @@ References:
 Error --------------------------------------------------------------------------------------------- dictionary.js:189:34
 
 Cannot assign `xa` to `a` because `B` [1] is incompatible with `A` [2] in property `p` of array element.
+[incompatible-type]
 
    dictionary.js:189:34
    189|   let a: Array<{[k:string]:A}> = xa; // error
@@ -360,6 +367,7 @@ References:
 Error --------------------------------------------------------------------------------------------- dictionary.js:194:34
 
 Cannot assign `xc` to `c` because `B` [1] is incompatible with `C` [2] in property `p` of array element.
+[incompatible-type]
 
    dictionary.js:194:34
    194|   let c: Array<{[k:string]:C}> = xc; // error
@@ -376,7 +384,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- dictionary.js:195:4
 
-Cannot cast `xc[0].p` to `C` because `B` [1] is incompatible with `C` [2].
+Cannot cast `xc[0].p` to `C` because `B` [1] is incompatible with `C` [2]. [incompatible-cast]
 
    dictionary.js:195:4
    195|   (xc[0].p: C); // not true
@@ -393,7 +401,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- dictionary.js:201:32
 
-Cannot assign `x` to `a` because `B` [1] is incompatible with `A` [2] in property `p`.
+Cannot assign `x` to `a` because `B` [1] is incompatible with `A` [2] in property `p`. [incompatible-type]
 
    dictionary.js:201:32
    201|   let a: {[k:string]:B, p:A} = x; // error: A ~> B
@@ -410,7 +418,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- dictionary.js:206:32
 
-Cannot assign `x` to `c` because `B` [1] is incompatible with `C` [2] in property `p`.
+Cannot assign `x` to `c` because `B` [1] is incompatible with `C` [2] in property `p`. [incompatible-type]
 
    dictionary.js:206:32
    206|   let c: {[k:string]:B, p:C} = x; // error
@@ -427,7 +435,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- dictionary.js:207:4
 
-Cannot cast `x.p` to `C` because `B` [1] is incompatible with `C` [2].
+Cannot cast `x.p` to `C` because `B` [1] is incompatible with `C` [2]. [incompatible-cast]
 
    dictionary.js:207:4
    207|   (x.p: C); // not true
@@ -444,7 +452,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- dictionary.js:215:27
 
-Cannot assign `xa` to `a` because `B` [1] is incompatible with `A` [2] in property `p`.
+Cannot assign `xa` to `a` because `B` [1] is incompatible with `A` [2] in property `p`. [incompatible-type]
 
    dictionary.js:215:27
    215|   let a: {[k:string]:A} = xa; // error
@@ -461,7 +469,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- dictionary.js:220:27
 
-Cannot assign `xc` to `c` because `B` [1] is incompatible with `C` [2] in property `p`.
+Cannot assign `xc` to `c` because `B` [1] is incompatible with `C` [2] in property `p`. [incompatible-type]
 
    dictionary.js:220:27
    220|   let c: {[k:string]:C} = xc; // error
@@ -478,7 +486,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- dictionary.js:221:4
 
-Cannot cast `xc.p` to `C` because `B` [1] is incompatible with `C` [2].
+Cannot cast `xc.p` to `C` because `B` [1] is incompatible with `C` [2]. [incompatible-cast]
 
    dictionary.js:221:4
    221|   (xc.p: C); // not true
@@ -496,7 +504,7 @@ References:
 Error --------------------------------------------------------------------------------------------- dictionary.js:227:10
 
 Cannot return `x` because an index signature declaring the expected key / value type is missing in object type [1] but
-exists in object type [2] in array element.
+exists in object type [2] in array element. [prop-missing]
 
    dictionary.js:227:10
    227|   return x; // error: if allowed, could write {p:X,q:Y} into `x`
@@ -514,7 +522,7 @@ References:
 Error --------------------------------------------------------------------------------------------- dictionary.js:233:10
 
 Cannot return `x` because an index signature declaring the expected key / value type is missing in object type [1] but
-exists in object type [2] in array element.
+exists in object type [2] in array element. [prop-missing]
 
    dictionary.js:233:10
    233|   return x; // error: if allowed, could write {p:X,q:Y} into returned array
@@ -531,7 +539,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- dictionary.js:239:18
 
-Cannot assign `x` to `a` because `B` [1] is incompatible with `A` [2] in property `p`.
+Cannot assign `x` to `a` because `B` [1] is incompatible with `A` [2] in property `p`. [incompatible-type]
 
    dictionary.js:239:18
    239|   let a: {p:A} = x; // error
@@ -548,7 +556,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- dictionary.js:244:18
 
-Cannot assign `x` to `c` because `B` [1] is incompatible with `C` [2] in property `p`.
+Cannot assign `x` to `c` because `B` [1] is incompatible with `C` [2] in property `p`. [incompatible-type]
 
    dictionary.js:244:18
    244|   let c: {p:C} = x; // error
@@ -565,7 +573,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- dictionary.js:245:4
 
-Cannot cast `x.p` to `C` because `B` [1] is incompatible with `C` [2].
+Cannot cast `x.p` to `C` because `B` [1] is incompatible with `C` [2]. [incompatible-cast]
 
    dictionary.js:245:4
    245|   (x.p: C); // not true
@@ -582,7 +590,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- dictionary.js:251:27
 
-Cannot assign `x` to `a` because `B` [1] is incompatible with `A` [2] in property `p`.
+Cannot assign `x` to `a` because `B` [1] is incompatible with `A` [2] in property `p`. [incompatible-type]
 
    dictionary.js:251:27
    251|   let a: {[k:string]:A} = x; // error
@@ -599,7 +607,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- dictionary.js:256:27
 
-Cannot assign `x` to `c` because `B` [1] is incompatible with `C` [2] in property `p`.
+Cannot assign `x` to `c` because `B` [1] is incompatible with `C` [2] in property `p`. [incompatible-type]
 
    dictionary.js:256:27
    256|   let c: {[k:string]:C} = x; // error
@@ -616,7 +624,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- dictionary.js:257:4
 
-Cannot cast `x.p` to `C` because `B` [1] is incompatible with `C` [2].
+Cannot cast `x.p` to `C` because `B` [1] is incompatible with `C` [2]. [incompatible-cast]
 
    dictionary.js:257:4
    257|   (x.p: C); // not true
@@ -633,7 +641,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- dictionary.js:265:31
 
-Cannot assign `x` to `a` because `B` [1] is incompatible with `A` [2] in property `p`.
+Cannot assign `x` to `a` because `B` [1] is incompatible with `A` [2] in property `p`. [incompatible-type]
 
    dictionary.js:265:31
    265|   let a: {[k:string]:A,x:X} = x; // error (as above), but exclusive of x
@@ -650,7 +658,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- dictionary.js:267:31
 
-Cannot assign `x` to `c` because `B` [1] is incompatible with `C` [2] in property `p`.
+Cannot assign `x` to `c` because `B` [1] is incompatible with `C` [2] in property `p`. [incompatible-type]
 
    dictionary.js:267:31
    267|   let c: {[k:string]:C,x:X} = x; // error (as above), but exclusive of x
@@ -668,6 +676,7 @@ References:
 Error --------------------------------------------------------------------------------------------- dictionary.js:273:39
 
 Cannot assign `x` to `a` because `A` [1] is incompatible with `B` [2] in property `p` of array element.
+[incompatible-type]
 
    dictionary.js:273:39
    273|   let a: Array<{[k:string]:B, p:A}> = x; // error
@@ -685,6 +694,7 @@ References:
 Error --------------------------------------------------------------------------------------------- dictionary.js:275:39
 
 Cannot assign `x` to `c` because `C` [1] is incompatible with `B` [2] in property `p` of array element.
+[incompatible-type]
 
    dictionary.js:275:39
    275|   let c: Array<{[k:string]:B, p:C}> = x; // error
@@ -701,7 +711,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- dictionary.js:281:32
 
-Cannot assign `x` to `a` because `B` [1] is incompatible with `A` [2] in property `p`.
+Cannot assign `x` to `a` because `B` [1] is incompatible with `A` [2] in property `p`. [incompatible-type]
 
    dictionary.js:281:32
    281|   let a: {[k:string]:B, p:A} = x; // error
@@ -718,7 +728,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- dictionary.js:283:32
 
-Cannot assign `x` to `c` because `B` [1] is incompatible with `C` [2] in property `p`.
+Cannot assign `x` to `c` because `B` [1] is incompatible with `C` [2] in property `p`. [incompatible-type]
 
    dictionary.js:283:32
    283|   let c: {[k:string]:B, p:C} = x; // error
@@ -735,7 +745,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- dictionary.js:289:19
 
-Cannot assign `x` to `a` because `B` [1] is incompatible with `A` [2] in property `p`.
+Cannot assign `x` to `a` because `B` [1] is incompatible with `A` [2] in property `p`. [incompatible-type]
 
    dictionary.js:289:19
    289|   let a: {p?:A} = x; // error
@@ -752,7 +762,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- dictionary.js:301:19
 
-Cannot assign `x` to `c` because `B` [1] is incompatible with `C` [2] in property `p`.
+Cannot assign `x` to `c` because `B` [1] is incompatible with `C` [2] in property `p`. [incompatible-type]
 
    dictionary.js:301:19
    301|   let c: {p?:C} = x; // error
@@ -769,7 +779,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- dictionary.js:307:10
 
-Cannot return `x` because `A` [1] is incompatible with `B` [2] in property `p`.
+Cannot return `x` because `A` [1] is incompatible with `B` [2] in property `p`. [incompatible-return]
 
    dictionary.js:307:10
    307|   return x;
@@ -786,7 +796,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- dictionary.js:319:10
 
-Cannot return `x` because `C` [1] is incompatible with `B` [2] in property `p`.
+Cannot return `x` because `C` [1] is incompatible with `B` [2] in property `p`. [incompatible-return]
 
    dictionary.js:319:10
    319|   return x;
@@ -803,7 +813,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- incompatible.js:4:35
 
-Cannot assign `x` to `y` because string [1] is incompatible with number [2] in the indexer property.
+Cannot assign `x` to `y` because string [1] is incompatible with number [2] in the indexer property. [incompatible-type]
 
    incompatible.js:4:35
    4| var y : {[key: string]: number} = x; // 2 errors, number !~> string & vice versa
@@ -821,6 +831,7 @@ References:
 Error --------------------------------------------------------------------------------------------- incompatible.js:5:35
 
 Cannot assign `x` to `z` because string [1] is incompatible with number [2] in the indexer property's key.
+[incompatible-type]
 
    incompatible.js:5:35
    5| var z : {[key: number]: string} = x; // 2 errors, string !~> number & vice versa
@@ -838,6 +849,7 @@ References:
 Error --------------------------------------------------------------------------------------------- incompatible.js:8:35
 
 Cannot assign `a` to `b` because null or undefined [1] is incompatible with string [2] in the indexer property.
+[incompatible-type]
 
    incompatible.js:8:35
    8| var b : {[key: string]: string} = a; // 2 errors (null & undefined)
@@ -855,6 +867,7 @@ References:
 Error --------------------------------------------------------------------------------------------- incompatible.js:9:36
 
 Cannot assign `b` to `c` because string [1] is incompatible with null or undefined [2] in the indexer property.
+[incompatible-type]
 
    incompatible.js:9:36
    9| var c : {[key: string]: ?string} = b; // 2 errors, since c['x'] = null updates b
@@ -872,6 +885,7 @@ References:
 Error -------------------------------------------------------------------------------------------- incompatible.js:13:10
 
 Cannot return `x` because number [1] is incompatible with string [2] in the indexer property of array element.
+[incompatible-return]
 
    incompatible.js:13:10
    13|   return x;
@@ -889,6 +903,7 @@ References:
 Error -------------------------------------------------------------------------------------------- incompatible.js:20:10
 
 Cannot return `x` because string [1] is incompatible with number [2] in property `fooBar` of array element.
+[incompatible-return]
 
    incompatible.js:20:10
    20|   return x;
@@ -906,6 +921,7 @@ References:
 Error -------------------------------------------------------------------------------------------- incompatible.js:27:10
 
 Cannot return `x` because string [1] is incompatible with mixed [2] in property `fooBar` of array element.
+[incompatible-return]
 
    incompatible.js:27:10
    27|   return x; // error: mixed ~> string
@@ -922,7 +938,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- incompatible.js:37:10
 
-Cannot return `x` because number [1] is incompatible with string [2] in property `foo`.
+Cannot return `x` because number [1] is incompatible with string [2] in property `foo`. [incompatible-return]
 
    incompatible.js:37:10
    37|   return x;
@@ -940,7 +956,7 @@ References:
 Error -------------------------------------------------------------------------------------------- incompatible.js:42:10
 
 Cannot return `x` because an index signature declaring the expected key / value type is missing in object type [1] but
-exists in object type [2] in array element.
+exists in object type [2] in array element. [prop-missing]
 
    incompatible.js:42:10
    42|   return x;
@@ -958,7 +974,7 @@ References:
 Error -------------------------------------------------------------------------------------------- incompatible.js:47:10
 
 Cannot return `x` because an index signature declaring the expected key / value type is missing in object type [1] but
-exists in object type [2] in array element.
+exists in object type [2] in array element. [prop-missing]
 
    incompatible.js:47:10
    47|   return x;
@@ -975,7 +991,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- incompatible.js:55:4
 
-Cannot cast `x.foo` to string because number [1] is incompatible with string [2].
+Cannot cast `x.foo` to string because number [1] is incompatible with string [2]. [incompatible-cast]
 
    incompatible.js:55:4
    55|   (x.foo: string); // error
@@ -990,14 +1006,14 @@ References:
                  ^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------------ test.js:5:6
+Error ----------------------------------------------------------------------------------------------------- test.js:6:12
 
 Cannot assign object literal to `o` because number [1] is incompatible with string [2] in the return value of property
-`foo`.
+`foo`. [incompatible-type]
 
-   test.js:5:6
-   5|   foo(params) {
-           ^^^^^^^^
+   test.js:6:12
+   6|     return params.count; // error, number ~/~ string
+                 ^^^^^^^^^^^^
 
 References:
    test.js:1:23
@@ -1011,6 +1027,7 @@ References:
 Error ----------------------------------------------------------------------------------------------- test_client.js:3:9
 
 Cannot assign function to `o.foo` because number [1] is incompatible with string [2] in the return value.
+[incompatible-type]
 
    test_client.js:3:9
    3| o.foo = function (params) {

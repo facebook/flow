@@ -13,6 +13,7 @@
 open Utils_js
 open Loc_collections
 open Type
+open TypeUtil
 open Reason
 open Scope
 module Flow = Flow_js
@@ -294,7 +295,13 @@ let update_env cx loc new_scopes =
 
 (* end of basic env API *)
 
-let global_any = ["eval"; "arguments"]
+let global_any =
+  [
+    "eval";
+    "arguments";
+    (* For `switch` statements not in a function body, so we don't get an error. *)
+    internal_name "maybe_exhaustively_checked";
+  ]
 
 let global_lexicals = [internal_name "super"; internal_name "this"]
 
@@ -787,7 +794,7 @@ let read_entry ~lookup_mode ~specific cx name ?desc loc =
     | Type _ when lookup_mode != ForType ->
       let msg = Error_message.ETypeInValuePosition in
       binding_error msg cx name entry loc;
-      AnyT.at AnyError (entry_loc entry)
+      AnyT.at (AnyError None) (entry_loc entry)
     | Type t -> t.type_
     | Class _ -> assert_false "Internal Error: Classes should only be read using get_class_entries"
     | Value v ->
@@ -795,7 +802,7 @@ let read_entry ~lookup_mode ~specific cx name ?desc loc =
       | { Entry.kind; value_state = State.Undeclared; value_declare_loc; _ }
         when lookup_mode = ForValue && (not (allow_forward_ref kind)) && same_activation scope ->
         tdz_error cx name loc v;
-        AnyT.at AnyError value_declare_loc
+        AnyT.at (AnyError None) value_declare_loc
       | _ ->
         Changeset.Global.change_var (scope.id, name, Changeset.Read);
         let (s, g) = value_entry_types ~lookup_mode scope v in
@@ -828,6 +835,8 @@ let get_var ?(lookup_mode = ForValue) = read_entry ~lookup_mode ~specific:true ?
 
 (* query var's specific type *)
 let query_var ?(lookup_mode = ForValue) = read_entry ~lookup_mode ~specific:true
+
+let query_var_non_specific ?(lookup_mode = ForValue) = read_entry ~lookup_mode ~specific:false
 
 let get_internal_var cx name loc = query_var cx (internal_name name) loc
 
@@ -1376,42 +1385,42 @@ let refine_expr = add_heap_refinement Changeset.Refine
    others can be obtained via query_var.
  *)
 let refine_with_preds cx loc preds orig_types =
+  let rec check_literal_subtypes ~general_type pred =
+    (* When refining a type against a literal, we want to be sure that that literal can actually
+       inhabit that type *)
+    match pred with
+    | SingletonBoolP (loc, b) ->
+      let reason = loc |> mk_reason (RBooleanLit b) in
+      let l = DefT (reason, bogus_trust (), BoolT (Some b)) in
+      let u = UseT (Op (Internal Refinement), general_type) in
+      Context.add_literal_subtypes cx (l, u)
+    | SingletonStrP (loc, b, str) ->
+      let reason = loc |> mk_reason (RStringLit str) in
+      let l = DefT (reason, bogus_trust (), StrT (Literal (Some b, str))) in
+      let u = UseT (Op (Internal Refinement), general_type) in
+      Context.add_literal_subtypes cx (l, u)
+    | SingletonNumP (loc, b, ((_, str) as num)) ->
+      let reason = loc |> mk_reason (RNumberLit str) in
+      let l = DefT (reason, bogus_trust (), NumT (Literal (Some b, num))) in
+      let u = UseT (Op (Internal Refinement), general_type) in
+      Context.add_literal_subtypes cx (l, u)
+    | LeftP (SentinelProp name, t) ->
+      let reason = TypeUtil.reason_of_t t in
+      (* Store any potential sentinel type. Later on, when the check is fired (in
+         merge_js.ml), we only focus on primitive literal types. *)
+      Context.add_matching_props cx (reason, name, t, general_type)
+    | NotP p -> check_literal_subtypes ~general_type p
+    | OrP (p1, p2)
+    | AndP (p1, p2) ->
+      check_literal_subtypes ~general_type p1;
+      check_literal_subtypes ~general_type p2
+    | _ -> ()
+  in
   let refine_type orig_type pred refined_type =
-    let rec check_literal_subtypes pred =
-      (* When refining a type against a literal, we want to be sure that that literal can actually
-         inhabit that type *)
-      match pred with
-      | SingletonBoolP (loc, b) ->
-        let reason = loc |> mk_reason (RBooleanLit b) in
-        Flow.flow
-          cx
-          (DefT (reason, bogus_trust (), BoolT (Some b)), UseT (Op (Internal Refinement), orig_type))
-      | SingletonStrP (loc, b, str) ->
-        let reason = loc |> mk_reason (RStringLit str) in
-        Flow.flow
-          cx
-          ( DefT (reason, bogus_trust (), StrT (Literal (Some b, str))),
-            UseT (Op (Internal Refinement), orig_type) )
-      | SingletonNumP (loc, b, ((_, str) as num)) ->
-        let reason = loc |> mk_reason (RNumberLit str) in
-        Flow.flow
-          cx
-          ( DefT (reason, bogus_trust (), NumT (Literal (Some b, num))),
-            UseT (Op (Internal Refinement), orig_type) )
-      | LeftP (SentinelProp name, (DefT (reason, _, (BoolT _ | StrT _ | NumT _)) as t)) ->
-        Flow.flow cx (MatchingPropT (reason, name, t), UseT (Op (Internal Refinement), orig_type))
-      | NotP p -> check_literal_subtypes p
-      | OrP (p1, p2)
-      | AndP (p1, p2) ->
-        check_literal_subtypes p1;
-        check_literal_subtypes p2
-      | _ -> ()
-    in
-    check_literal_subtypes pred;
     Flow.flow cx (orig_type, PredicateT (pred, refined_type))
   in
   let mk_refi_type orig_type pred refi_reason =
-    refine_type orig_type pred |> Tvar.mk_where cx refi_reason
+    refine_type orig_type pred |> Tvar.mk_no_wrap_where cx refi_reason
   in
   let refine_with_pred key pred acc =
     let refi_reason = mk_reason (RRefined (Key.reason_desc key)) loc in
@@ -1422,6 +1431,8 @@ let refine_with_preds cx loc preds orig_types =
         (match find_entry cx name loc with
         | (_, Value v) ->
           let orig_type = query_var cx name loc in
+          let general_type = query_var_non_specific cx name loc in
+          check_literal_subtypes ~general_type pred;
           let refi_type = mk_refi_type orig_type pred refi_reason in
           let refine =
             match Entry.kind_of_value v with

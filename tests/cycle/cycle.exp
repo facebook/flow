@@ -1,6 +1,6 @@
 Error -------------------------------------------------------------------------------------------------------- B.js:5:18
 
-Cannot resolve name `B`.
+Cannot resolve name `B`. [cannot-resolve-name]
 
    5| module.exports = B;
                        ^

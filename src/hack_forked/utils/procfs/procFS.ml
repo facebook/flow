@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
-open Core_kernel
+open Base
 open Result.Monad_infix
 
 let spf = Printf.sprintf
@@ -33,7 +33,8 @@ type status = {
 
 (* The stats we're reading always end in kB. If we start reading more stats then we'll need to beef
  * up this logic *)
-let humanReadableToBytes str = (try Scanf.sscanf str "%d kB" (fun kb -> 1000 * kb) with _ -> 0)
+let humanReadableToBytes str =
+  (try Caml.Scanf.sscanf str "%d kB" (fun kb -> 1000 * kb) with _ -> 0)
 
 let parse_status raw_status_contents =
   let stats =
@@ -76,7 +77,7 @@ let asset_procfs_supported =
     | Some supported -> supported
     | None ->
       let supported =
-        if Sys.unix && Sys.file_exists "/proc" then
+        if Sys.unix && Caml.Sys.file_exists "/proc" then
           Ok ()
         else
           Error "Proc filesystem not supported"

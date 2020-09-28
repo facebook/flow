@@ -29,7 +29,7 @@ let string_of_op = function
 module EntryRef = struct
   type t = int * string * op
 
-  let compare = Pervasives.compare
+  let compare = Stdlib.compare
 end
 
 module EntryRefSet : Set.S with type elt = EntryRef.t = Set.Make (EntryRef)
@@ -38,7 +38,7 @@ module EntryRefSet : Set.S with type elt = EntryRef.t = Set.Make (EntryRef)
 module RefiRef = struct
   type t = int * Key.t * op
 
-  let compare = Pervasives.compare
+  let compare = Stdlib.compare
 end
 
 module RefiRefSet : Set.S with type elt = RefiRef.t = Set.Make (RefiRef)

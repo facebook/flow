@@ -1,4 +1,7 @@
->>> a.js (#changes: 2)
+
+=== Codemod annotate-exports ===
+
+>>> ./a.js
 // @flow
 
 type Key = 'A';
@@ -7,16 +10,16 @@ declare opaque type Val;
 declare var key: Key;
 declare var val: Val
 
-module.exports = ({ [key]: val }: $TEMPORARY$object<{|A: Val|}>);
+module.exports = ({ [key]: val }: {|A: Val|});
 
 >>> Launching report...
 
 Stats:
   Files changed:                            1
-  Number of sig. ver. errors:               1
-  Number of annotations required:           1
   Number of annotations added:              1
   Total size of annotations:                2
+  Number of sig. ver. errors:               1
+  Number of annotations required:           1
   Number of annotations skipped:            0
 
 Errors:
@@ -27,7 +30,6 @@ Errors:
     Parsing heaps get ast error:            0
     Indeterminate module type:              0
     No matching export:                     0
-    Unrecognizable module error:            0
   Serializer error:                         0
   Unsupported error kind:                   0
 
@@ -37,4 +39,26 @@ Warnings:
   Location unhandled:                       0
   Empty NoUpper:                            0
   Empty SomeKnownUpper:                     0
+
+
+=== Autofix exports ===
+
+>>> ./a.js
+// @flow
+
+type Key = 'A';
+declare opaque type Val;
+
+declare var key: Key;
+declare var val: Val
+
+module.exports = ({ [key]: val }: {A: Val,...});
+
+
+=== Diff between codemod-ed & autofix-ed ===
+>>> ./a.js
+9c9
+< module.exports = ({ [key]: val }: {|A: Val|});
+---
+> module.exports = ({ [key]: val }: {A: Val,...});
 

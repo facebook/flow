@@ -1,15 +1,24 @@
 Error ----------------------------------------------------------------------------------------------------- test.js:3:15
 
 Importing a type from an untyped module makes it `any` and is not safe! Did you mean to add `// @flow` to the top of
-`./import`? (`untyped-type-import`)
+`./import`? [untyped-type-import]
 
    3| import type { T } from './import'; // Error: untyped-type-import
                     ^
 
 
+Error ------------------------------------------------------------------------------------------------------ test.js:6:5
+
+Cannot use `T` as a type because it is an `any`-typed value. Type `T` properly, so it is no longer `any`-typed, to use
+it as an annotation. [value-as-type]
+
+   6| (0: T);
+          ^
+
+
 Error ------------------------------------------------------------------------------------------------------ test.js:9:3
 
-Cannot reassign constant `x` [1].
+Cannot reassign constant `x` [1]. [reassign-const]
 
    test.js:9:3
    9|   x = 1; // Error: cannot reassign constant parameter
@@ -23,11 +32,11 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:12:10
 
-Unclear type. Using `any`, `Object`, or `Function` types is not safe! (`unclear-type`)
+Unclear type. Using `any`, `Object`, or `Function` types is not safe! [unclear-type]
 
    12| const x: any = {}; // Error: unclear-type
                 ^^^
 
 
 
-Found 3 errors
+Found 4 errors

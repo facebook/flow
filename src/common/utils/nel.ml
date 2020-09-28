@@ -90,7 +90,7 @@ let tl (_, xs) = xs
 
 let nth nel n = Base.List.nth_exn (to_list nel) n
 
-let dedup ?(compare = Pervasives.compare) (x, xs) =
+let dedup ?(compare = Stdlib.compare) (x, xs) =
   let xs = Base.List.dedup_and_sort ~compare (x :: xs) in
   match xs with
   | x :: xs -> (x, xs)

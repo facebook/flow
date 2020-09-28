@@ -1,6 +1,6 @@
 Error ------------------------------------------------------------------------------------------------------ 1/f.js:3:27
 
-Cannot perform arithmetic operation because null [1] is not a number.
+Cannot perform arithmetic operation because null [1] is not a number. [unsafe-addition]
 
    1/f.js:3:27
    3| function f(x) { return 42/x; }
@@ -14,7 +14,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ 2/A.js:5:15
 
-Missing type annotation for `x`.
+Missing type annotation for `x`. [missing-annot]
 
    5|   constructor(x) { this.x = x; }
                     ^
@@ -22,7 +22,7 @@ Missing type annotation for `x`.
 
 Error ------------------------------------------------------------------------------------------------------ 2/A.js:9:10
 
-Missing type annotation for `callback`.
+Missing type annotation for `callback`. [missing-annot]
 
    9|   onLoad(callback) {
                ^^^^^^^^
@@ -31,6 +31,7 @@ Missing type annotation for `callback`.
 Error ----------------------------------------------------------------------------------------------------- 2/A.js:10:21
 
 Cannot call `callback` with `this.getX()` bound to `x` because number [1] is incompatible with string [2].
+[incompatible-call]
 
    2/A.js:10:21
    10|     return callback(this.getX());

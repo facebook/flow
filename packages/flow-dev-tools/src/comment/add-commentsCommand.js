@@ -8,6 +8,8 @@
  * @format
  */
 
+import type {Flag} from '../command/Base';
+
 import {format} from 'util';
 import {resolve} from 'path';
 
@@ -19,6 +21,7 @@ export type Args = {
   bin: string,
   flowconfigName: string,
   comment: ?string,
+  error_code: ?string,
   errorCheckCommand: 'check' | 'status',
   root: string,
 };
@@ -35,6 +38,7 @@ export default class AddCommentsCommand extends Base<Args> {
       errorCheckCommand: argv.check,
       root: resolve(process.cwd(), argv._[0]),
       comment: argv.comment,
+      error_code: argv.code,
     };
   }
 
@@ -53,7 +57,7 @@ Queries Flow for the errors for ROOT. Then opens a curses interface to let you s
 `;
   }
 
-  static getFlags() {
+  static getFlags(): Array<Flag> {
     return [
       commonFlags.bin,
       commonFlags.flowconfigName,
@@ -61,7 +65,7 @@ Queries Flow for the errors for ROOT. Then opens a curses interface to let you s
       {
         type: 'string',
         name: 'comment',
-        argName: '"\\$FlowFixMe foo"',
+        argName: '"foo"',
         description:
           'Comment to add before the selected errors. If not set, you will be prompted later for it',
       },
@@ -69,6 +73,12 @@ Queries Flow for the errors for ROOT. Then opens a curses interface to let you s
         type: 'boolean',
         name: 'all',
         description: 'Select all errors',
+      },
+      {
+        type: 'string',
+        name: 'code',
+        argName: '"code"',
+        description: 'Only add comments for a specific code',
       },
     ];
   }

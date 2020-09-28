@@ -53,7 +53,6 @@ build-production: test-jekyll flow_js copies
 
 BUNDLE_EXISTS := $(shell command -v bundle 2> /dev/null)
 YARN_EXISTS := $(shell command -v yarn 2> /dev/null)
-JEKYLL_EXISTS := $(shell command -v jekyll 2> /dev/null)
 # CROWDIN_EXISTS := $(shell command -v crowdin-cli 2> /dev/null)
 
 test-bundler:
@@ -66,10 +65,8 @@ ifndef YARN_EXISTS
 	$(error yarn is not installed. Run `npm install yarn`)
 endif
 
-test-jekyll:
-ifndef JEKYLL_EXISTS
-	$(error Jekyll is not installed. Run `make install`)
-endif
+test-jekyll: test-bundler
+	@if ! bundle exec jekyll --version > /dev/null 2>&1; then echo 'jekyll is not installed. Run `make install`'; exit 1; fi
 
 # test-crowdin:
 # ifndef CROWDIN_EXISTS

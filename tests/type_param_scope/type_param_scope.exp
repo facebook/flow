@@ -1,6 +1,6 @@
 Error ---------------------------------------------------------------------------------------------------- class.js:4:12
 
-Cannot call `this.b` with `a` bound to `x` because `A` [1] is incompatible with `T` [2].
+Cannot call `this.b` with `a` bound to `x` because `A` [1] is incompatible with `T` [2]. [incompatible-call]
 
    class.js:4:12
    4|     this.b(a); // error: A ~> incompatible instance of T
@@ -17,7 +17,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- default_params.js:6:7
 
-Cannot call `h` with `c` bound to `d` because `T` [1] is incompatible with `U` [2].
+Cannot call `h` with `c` bound to `d` because `T` [1] is incompatible with `U` [2]. [incompatible-call]
 
    default_params.js:6:7
    6|     h(c); // err, T ~> U
@@ -34,7 +34,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- default_params.js:10:7
 
-Cannot call `g` with `0` bound to `c` because number [1] is incompatible with `T` [2].
+Cannot call `g` with `0` bound to `c` because number [1] is incompatible with `T` [2]. [incompatible-call]
 
    default_params.js:10:7
    10|   g(0,0); // error: number ~> T
@@ -48,7 +48,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- method_shadow.js:42:5
 
-Cannot call `g.m` because in type argument `T`:
+Cannot call `g.m` because in type argument `T`: [incompatible-call]
  - Either boolean [1] is incompatible with number [2].
  - Or boolean [1] is incompatible with string [3].
 
@@ -68,6 +68,7 @@ References:
 Error -------------------------------------------------------------------------------------------- method_shadow.js:43:6
 
 Cannot cast `g.m(...)` to `G` because string [1] is incompatible with number [2] in type argument `T` [3].
+[incompatible-cast]
 
    method_shadow.js:43:6
    43| (g.m(""): G<number>); // err, string ~> number
@@ -84,7 +85,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- method_shadow.js:51:18
 
-Cannot assign `x` to `this.x` because `T` [1] is incompatible with `T` [2].
+Cannot assign `x` to `this.x` because `T` [1] is incompatible with `T` [2]. [incompatible-type]
 
    method_shadow.js:51:18
    51|         this.x = x; // err, m's T != H's T

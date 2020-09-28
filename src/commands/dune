@@ -59,6 +59,8 @@
     commandUtils
   ))
   (libraries
+    flow_codemods
+    flow_codemod_utils
     flow_command_spec
     flow_commands_utils
     flow_common_build_id

@@ -3,9 +3,10 @@
  */
 
 
+import type Suite from "flow-dev-tools/src/test/Suite.js";
 import {suite, test} from 'flow-dev-tools/src/test/Tester';
 
-export default suite(({addFile, addFiles, addCode}) => [
+export default (suite(({addFile, addFiles, addCode}) => [
   test('Unaliased type import', [
     addFile('esmodule.js')
       .addCode('import {type T, C} from "./esmodule";')
@@ -18,7 +19,7 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:9
             9: ("str": T);
-                ^^^^^ Cannot cast \`"str"\` to \`T\` because string [1] is incompatible with number [2].
+                ^^^^^ Cannot cast \`"str"\` to \`T\` because string [1] is incompatible with number [2]. [incompatible-cast]
             References:
               9: ("str": T);
                   ^^^^^ [1]
@@ -40,7 +41,7 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:9
             9: ("str": U);
-                ^^^^^ Cannot cast \`"str"\` to \`U\` because string [1] is incompatible with number [2].
+                ^^^^^ Cannot cast \`"str"\` to \`U\` because string [1] is incompatible with number [2]. [incompatible-cast]
             References:
               9: ("str": U);
                   ^^^^^ [1]
@@ -62,7 +63,7 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:9
             9: ("str": C);
-                ^^^^^ Cannot cast \`"str"\` to \`C\` because string [1] is incompatible with class \`C\` [2].
+                ^^^^^ Cannot cast \`"str"\` to \`C\` because string [1] is incompatible with class \`C\` [2]. [incompatible-cast]
             References:
               9: ("str": C);
                   ^^^^^ [1]
@@ -84,7 +85,7 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:9
             9: ("str": CPrime);
-                ^^^^^ Cannot cast \`"str"\` to \`CPrime\` because string [1] is incompatible with class \`C\` [2].
+                ^^^^^ Cannot cast \`"str"\` to \`CPrime\` because string [1] is incompatible with class \`C\` [2]. [incompatible-cast]
             References:
               9: ("str": CPrime);
                   ^^^^^ [1]
@@ -93,4 +94,4 @@ export default suite(({addFile, addFiles, addCode}) => [
         `,
       ),
   ]),
-]);
+]): Suite);

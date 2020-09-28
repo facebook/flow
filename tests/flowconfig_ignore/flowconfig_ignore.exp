@@ -1,6 +1,6 @@
 Error ------------------------------------------------------------------------------------------- control/control.js:4:1
 
-Cannot call `x` because number [1] is not a function.
+Cannot call `x` because number [1] is not a function. [not-a-function]
 
    control/control.js:4:1
    4| x()
@@ -14,7 +14,7 @@ References:
 
 Error ------------------------------------------------------------------------ my_declarations/actually_typecheck.js:4:1
 
-Cannot call `x` because number [1] is not a function.
+Cannot call `x` because number [1] is not a function. [not-a-function]
 
    my_declarations/actually_typecheck.js:4:1
    4| x();
@@ -28,7 +28,7 @@ References:
 
 Error -------------------------------------------------------------------- my_declarations/root_typecheck/checked.js:4:1
 
-Cannot call `x` because number [1] is not a function.
+Cannot call `x` because number [1] is not a function. [not-a-function]
 
    my_declarations/root_typecheck/checked.js:4:1
    4| x();
@@ -42,7 +42,7 @@ References:
 
 Error ---------------------------------------------------------------------- my_declarations/typecheck_if_in_root.js:4:1
 
-Cannot call `x` because mixed [1] is not a function.
+Cannot call `x` because mixed [1] is not a function. [not-a-function]
 
    my_declarations/typecheck_if_in_root.js:4:1
    4| x();
@@ -56,7 +56,7 @@ References:
 
 Error ----------------------------------------------------------------------------- my_ignores/actually_typecheck.js:4:1
 
-Cannot call `x` because number [1] is not a function.
+Cannot call `x` because number [1] is not a function. [not-a-function]
 
    my_ignores/actually_typecheck.js:4:1
    4| x();
@@ -70,7 +70,7 @@ References:
 
 Error ------------------------------------------------------------------------- my_ignores/root_typecheck/checked.js:4:1
 
-Cannot call `x` because number [1] is not a function.
+Cannot call `x` because number [1] is not a function. [not-a-function]
 
    my_ignores/root_typecheck/checked.js:4:1
    4| x();
@@ -84,7 +84,7 @@ References:
 
 Error --------------------------------------------------------------------------- my_ignores/typecheck_if_in_root.js:4:1
 
-Cannot call `x` because mixed [1] is not a function.
+Cannot call `x` because mixed [1] is not a function. [not-a-function]
 
    my_ignores/typecheck_if_in_root.js:4:1
    4| x();
@@ -98,7 +98,7 @@ References:
 
 Error ----------------------------------------------------------------------------- my_untyped/actually_typecheck.js:4:1
 
-Cannot call `x` because number [1] is not a function.
+Cannot call `x` because number [1] is not a function. [not-a-function]
 
    my_untyped/actually_typecheck.js:4:1
    4| x();
@@ -112,7 +112,7 @@ References:
 
 Error ------------------------------------------------------------------------- my_untyped/root_typecheck/checked.js:4:1
 
-Cannot call `x` because number [1] is not a function.
+Cannot call `x` because number [1] is not a function. [not-a-function]
 
    my_untyped/root_typecheck/checked.js:4:1
    4| x();
@@ -126,7 +126,7 @@ References:
 
 Error --------------------------------------------------------------------------- my_untyped/typecheck_if_in_root.js:4:1
 
-Cannot call `x` because mixed [1] is not a function.
+Cannot call `x` because mixed [1] is not a function. [not-a-function]
 
    my_untyped/typecheck_if_in_root.js:4:1
    4| x();
@@ -140,7 +140,7 @@ References:
 
 Error ----------------------------------------------------------- subdirectory/my_declarations/actually_typecheck.js:4:1
 
-Cannot call `x` because number [1] is not a function.
+Cannot call `x` because number [1] is not a function. [not-a-function]
 
    subdirectory/my_declarations/actually_typecheck.js:4:1
    4| x();
@@ -154,7 +154,7 @@ References:
 
 Error ------------------------------------------------------------ subdirectory/my_declarations/typecheck/checked.js:4:1
 
-Cannot call `x` because number [1] is not a function.
+Cannot call `x` because number [1] is not a function. [not-a-function]
 
    subdirectory/my_declarations/typecheck/checked.js:4:1
    4| x();
@@ -168,7 +168,7 @@ References:
 
 Error ---------------------------------------------------------------- subdirectory/my_ignores/actually_typecheck.js:4:1
 
-Cannot call `x` because number [1] is not a function.
+Cannot call `x` because number [1] is not a function. [not-a-function]
 
    subdirectory/my_ignores/actually_typecheck.js:4:1
    4| x();
@@ -182,7 +182,7 @@ References:
 
 Error ----------------------------------------------------------------- subdirectory/my_ignores/typecheck/checked.js:4:1
 
-Cannot call `x` because number [1] is not a function.
+Cannot call `x` because number [1] is not a function. [not-a-function]
 
    subdirectory/my_ignores/typecheck/checked.js:4:1
    4| x();
@@ -196,7 +196,7 @@ References:
 
 Error ---------------------------------------------------------------- subdirectory/my_untyped/actually_typecheck.js:4:1
 
-Cannot call `x` because number [1] is not a function.
+Cannot call `x` because number [1] is not a function. [not-a-function]
 
    subdirectory/my_untyped/actually_typecheck.js:4:1
    4| x();
@@ -210,7 +210,7 @@ References:
 
 Error ----------------------------------------------------------------- subdirectory/my_untyped/typecheck/checked.js:4:1
 
-Cannot call `x` because number [1] is not a function.
+Cannot call `x` because number [1] is not a function. [not-a-function]
 
    subdirectory/my_untyped/typecheck/checked.js:4:1
    4| x();
@@ -224,7 +224,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:6:24
 
-Cannot resolve module `./my_ignores/outer_bogus`.
+Cannot resolve module `./my_ignores/outer_bogus`. [cannot-resolve-module]
 
    6| import type { K } from "./my_ignores/outer_bogus" //should error
                              ^^^^^^^^^^^^^^^^^^^^^^^^^^

@@ -493,6 +493,12 @@ module Statement
 
       stmt
     in
+    let alternate env =
+      let leading = Peek.comments env in
+      Expect.token env T_ELSE;
+      let body = if_branch env in
+      { Statement.If.Alternate.body; comments = Flow_ast_utils.mk_comments_opt ~leading () }
+    in
     with_loc (fun env ->
         let pre_if_leading = Peek.comments env in
         Expect.token env T_IF;
@@ -503,13 +509,9 @@ module Statement
         Expect.token env T_RPAREN;
         let consequent = if_branch env in
         let alternate =
-          if Peek.token env = T_ELSE then (
-            let leading = Peek.comments env in
-            Expect.token env T_ELSE;
-            let body = if_branch env in
-            Some
-              { Statement.If.Alternate.body; comments = Flow_ast_utils.mk_comments_opt ~leading () }
-          ) else
+          if Peek.token env = T_ELSE then
+            Some (with_loc alternate env)
+          else
             None
         in
         Statement.If
@@ -1476,6 +1478,17 @@ module Statement
                   source = Some source;
                   exportKind = Statement.ExportType;
                   comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing ();
+                }
+            | T_ENUM ->
+              error env Parse_error.EnumInvalidExport;
+              Expect.token env T_TYPE;
+              Statement.ExportNamedDeclaration
+                {
+                  declaration = None;
+                  specifiers = None;
+                  source = None;
+                  exportKind = Statement.ExportType;
+                  comments = Flow_ast_utils.mk_comments_opt ~leading ();
                 }
             | _ ->
               let (loc, type_alias) = with_loc (type_alias_helper ~leading:[]) env in

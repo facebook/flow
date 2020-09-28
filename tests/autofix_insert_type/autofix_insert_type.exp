@@ -1,7 +1,7 @@
 array.js 3 15 --strategy=specialize
 // @flow
 
-function foo(): Array<1 | 2> {
+function foo(): Array<number> {
   return [1, 2];
 }
 No errors!
@@ -102,6 +102,18 @@ class A {
 
 function foo(x: (() => A)) {}
 foo(new A().m);
+No errors!
+class-poly-0.js 5 10
+// @flow
+
+class D<T> {}
+class C<T> extends D<T> {
+  m(x: T): T {
+    return x;
+  }
+}
+
+module.exports = C;
 No errors!
 comments-0.js 4 33
 // @flow
@@ -274,7 +286,7 @@ react-0.js 5 21
 
 import React from "react";
 
-function Clock(props: {date: Date}) {
+function Clock(props: {date: Date,...}) {
   return (
     <div>
       <h1>Hello, world!</h1>
@@ -358,6 +370,7 @@ replacement-dictionary.js 3 3 --strategy=generalize
   ab: null,
   get x(): null,
   set y(string): void,
+  ...,
 } => ({
   ab: null, "a b": null, "a'b": null,
   "1": null, "'": null, " ": null,
@@ -504,7 +517,7 @@ type MyObject = {
   baz: string,
 };
 
-function f(x: MyObject): {bar: boolean, baz: string, foo: number} {
+function f(x: MyObject): {bar: boolean, baz: string, foo: number,...} {
   return x;
 };
 
@@ -538,11 +551,11 @@ function f(x: MyObject) {
   return x;
 };
 
-(f({foo:1, bar:true, baz:"baz"}): {bar: boolean, baz: string, foo: number});
+(f({foo:1, bar:true, baz:"baz"}): {bar: boolean, baz: string, foo: number,...});
 No errors!
 replacement-object.js 2 5 --strategy=generalize
 // @flow
-var obj: {m: (x: number) => string, n: (y: number) => string} = {n(y) {return this.m(y);},m(x) {return "";}}
+var obj: {m: (x: number) => string, n: (y: number) => string,...} = {n(y) {return this.m(y);},m(x) {return "";}}
 obj.n(0)
 
 
@@ -555,7 +568,7 @@ obj.n(0)
 No errors!
 replacement-object.js 2 6 --strategy=specialize
 // @flow
-var obj: {|m: (x: 0) => "", n: (y: 0) => ""|} = {n(y) {return this.m(y);},m(x) {return "";}}
+var obj: {|m: (x: number) => string, n: (y: number) => string|} = {n(y) {return this.m(y);},m(x) {return "";}}
 obj.n(0)
 
 
@@ -566,9 +579,8 @@ obj.n(0)
 
 // This is kinda trailing whitespace
 No errors!
-replacement-object.js 2 7 --strategy=temporary
 // @flow
-var obj: $TEMPORARY$object<{m: (x: number) => string, n: (y: number) => string}> = {n(y) {return this.m(y);},m(x) {return "";}}
+var obj: {m: (x: number) => string, n: (y: number) => string,...} = {n(y) {return this.m(y);},m(x) {return "";}}
 obj.n(0)
 
 
@@ -578,10 +590,9 @@ obj.n(0)
 
 
 // This is kinda trailing whitespace
-No errors!
 replacement-object.js 2 8 --strategy=fixme
 // @flow
-var obj: any = {n(y) {return this.m(y);},m(x) {return "";}}
+var obj: {|m: (x: number) => string, n: (y: number) => string|} = {n(y) {return this.m(y);},m(x) {return "";}}
 obj.n(0)
 
 
@@ -594,7 +605,7 @@ obj.n(0)
 No errors!
 replacement-object.js 2 5 2 8 --strategy=generalize
 // @flow
-var obj: {m: (x: number) => string, n: (y: number) => string} = {n(y) {return this.m(y);},m(x) {return "";}}
+var obj: {m: (x: number) => string, n: (y: number) => string,...} = {n(y) {return this.m(y);},m(x) {return "";}}
 obj.n(0)
 
 
@@ -657,7 +668,7 @@ insert-type array.js 3:15
 cat array.js 3:15
 // @flow
 
-function foo(): Array<1 | 2> {
+function foo(): Array<number> {
   return [1, 2];
 }
 insert-type arrow-0.js 3:11-3:23

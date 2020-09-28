@@ -3,9 +3,10 @@
  * @format
  */
 
+import type Suite from 'flow-dev-tools/src/test/Suite.js';
 import {suite, test} from 'flow-dev-tools/src/test/Tester';
 
-export default suite(
+export default (suite(
   ({
     lspStartAndConnect,
     lspNotification,
@@ -38,7 +39,7 @@ export default suite(
         [
           [
             'textDocument/definition',
-            '{definition.js,"start":{"line":2,"character":0}}',
+            '{definition.js,"start":{"line":2,"character":9}}',
           ],
         ],
         [...lspIgnoreStatusAndCancellation],
@@ -239,4 +240,4 @@ export default suite(
       ),
     ]),
   ],
-);
+): Suite);

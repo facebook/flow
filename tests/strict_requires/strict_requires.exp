@@ -1,6 +1,6 @@
 Error -------------------------------------------------------------------------------------------------------- D.js:3:17
 
-Cannot assign `C.foo` to `x` because string [1] is incompatible with number [2].
+Cannot assign `C.foo` to `x` because string [1] is incompatible with number [2]. [incompatible-type]
 
    D.js:3:17
    3| var x: number = C.foo;
@@ -17,7 +17,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------------- D.js:4:17
 
-Cannot assign `C.A` to `y` because number [1] is incompatible with string [2].
+Cannot assign `C.A` to `y` because number [1] is incompatible with string [2]. [incompatible-type]
 
    D.js:4:17
    4| var y: string = C.A;
@@ -34,7 +34,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------------- D.js:5:7
 
-Cannot assign `false` to `C.A` because boolean [1] is incompatible with number [2].
+Cannot assign `false` to `C.A` because boolean [1] is incompatible with number [2]. [incompatible-type]
 
    D.js:5:7
    5| C.A = false;

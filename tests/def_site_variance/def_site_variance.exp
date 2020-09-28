@@ -1,6 +1,7 @@
 Error ----------------------------------------------------------------------------------------------------- test.js:2:10
 
 Cannot use `Out` [1] in an input position because `Out` [1] is expected to occur only in output positions.
+[incompatible-variance]
 
    test.js:2:10
    2|   foo(x: Out): Out { return x; }
@@ -15,6 +16,7 @@ References:
 Error ----------------------------------------------------------------------------------------------------- test.js:3:15
 
 Cannot use `In` [1] in an output position because `In` [1] is expected to occur only in input positions.
+[incompatible-variance]
 
    test.js:3:15
    3|   bar(y: In): In { return y; }
@@ -29,6 +31,7 @@ References:
 Error ----------------------------------------------------------------------------------------------------- test.js:13:4
 
 Cannot cast `v1` to `Variance` because `A` [1] is incompatible with `B` [2] in type argument `Out` [3].
+[incompatible-cast]
 
    test.js:13:4
    13|   (v1: Variance<B,A>); // error on both targs (A ~/~> B)
@@ -49,6 +52,7 @@ References:
 Error ----------------------------------------------------------------------------------------------------- test.js:13:4
 
 Cannot cast `v1` to `Variance` because `B` [1] is incompatible with `A` [2] in type argument `In` [3].
+[incompatible-cast]
 
    test.js:13:4
    13|   (v1: Variance<B,A>); // error on both targs (A ~/~> B)
@@ -69,6 +73,7 @@ References:
 Error ----------------------------------------------------------------------------------------------------- test.js:18:9
 
 Cannot use `Out` [1] in an input/output position because `Out` [1] is expected to occur only in output positions.
+[incompatible-variance]
 
    test.js:18:9
    18|   inv1: Out; // error
@@ -83,6 +88,7 @@ References:
 Error ----------------------------------------------------------------------------------------------------- test.js:19:9
 
 Cannot use `In` [1] in an input/output position because `In` [1] is expected to occur only in input positions.
+[incompatible-variance]
 
    test.js:19:9
    19|   inv2: In; // error
@@ -97,6 +103,7 @@ References:
 Error ----------------------------------------------------------------------------------------------------- test.js:20:9
 
 Cannot use `Out` [1] in an input position because `Out` [1] is expected to occur only in output positions.
+[incompatible-variance]
 
    test.js:20:9
    20|   -co1: Out; // error
@@ -111,6 +118,7 @@ References:
 Error ---------------------------------------------------------------------------------------------------- test.js:23:10
 
 Cannot use `In` [1] in an output position because `In` [1] is expected to occur only in input positions.
+[incompatible-variance]
 
    test.js:23:10
    23|   +con2: In; // error
@@ -125,6 +133,7 @@ References:
 Error ---------------------------------------------------------------------------------------------------- test.js:25:27
 
 Cannot use `Out` [1] in an input/output position because `Out` [1] is expected to occur only in output positions.
+[incompatible-variance]
 
    test.js:25:27
    25|   inv_dict1: {[k:string]: Out}; // error
@@ -139,6 +148,7 @@ References:
 Error ---------------------------------------------------------------------------------------------------- test.js:26:27
 
 Cannot use `In` [1] in an input/output position because `In` [1] is expected to occur only in input positions.
+[incompatible-variance]
 
    test.js:26:27
    26|   inv_dict2: {[k:string]: In}; // error
@@ -153,6 +163,7 @@ References:
 Error ---------------------------------------------------------------------------------------------------- test.js:28:28
 
 Cannot use `In` [1] in an output position because `In` [1] is expected to occur only in input positions.
+[incompatible-variance]
 
    test.js:28:28
    28|   +co_dict2: {+[k:string]: In}; // error
@@ -167,6 +178,7 @@ References:
 Error ---------------------------------------------------------------------------------------------------- test.js:29:29
 
 Cannot use `Out` [1] in an input position because `Out` [1] is expected to occur only in output positions.
+[incompatible-variance]
 
    test.js:29:29
    29|   +con_dict1: {-[k:string]: Out}; // error

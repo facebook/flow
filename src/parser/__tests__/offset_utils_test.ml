@@ -82,7 +82,7 @@ class loc_extractor =
 
 let extract_locs ast =
   let extractor = new loc_extractor in
-  let (_ : (unit, unit) Flow_ast.program) = extractor#program ast in
+  let (_ : (unit, unit) Flow_ast.Program.t) = extractor#program ast in
   List.rev extractor#get_locs
 
 (* This tests to make sure that we can find an offset for all real-world locations that the parser

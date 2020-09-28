@@ -21,6 +21,7 @@ let spec =
         |> base_flags
         |> lazy_flags
         |> options_flags
+        |> saved_state_flags
         |> shm_flags
         |> ignore_version_flag
         |> from_flag
@@ -39,6 +40,7 @@ let main
     base_flags
     lazy_mode
     options_flags
+    saved_state_options_flags
     shm_flags
     ignore_version
     server_log_file
@@ -47,6 +49,8 @@ let main
     file_watcher
     file_watcher_debug
     file_watcher_timeout
+    file_watcher_mergebase_with
+    file_watcher_sync_timeout
     path_opt
     () =
   let flowconfig_name = base_flags.Base_flags.flowconfig_name in
@@ -56,7 +60,13 @@ let main
     read_config_or_exit ~enforce_warnings:(not ignore_version) flowconfig_path
   in
   let options =
-    make_options ~flowconfig_name ~flowconfig ~lazy_mode ~root ~file_watcher_timeout options_flags
+    make_options
+      ~flowconfig_name
+      ~flowconfig
+      ~lazy_mode
+      ~root
+      ~options_flags
+      ~saved_state_options_flags
   in
   (* initialize loggers before doing too much, especially anything that might exit *)
   LoggingUtils.init_loggers ~options ();
@@ -82,7 +92,16 @@ let main
       CommandUtils.monitor_log_file ~flowconfig_name ~tmp_dir:(Options.temp_dir options) root
       |> Path.to_string
   in
-  let file_watcher = choose_file_watcher ~options ~file_watcher ~flowconfig in
+  let file_watcher =
+    choose_file_watcher
+      ~options
+      ~flowconfig
+      ~file_watcher
+      ~file_watcher_debug
+      ~mergebase_with:file_watcher_mergebase_with
+      ~sync_timeout:file_watcher_sync_timeout
+  in
+  let file_watcher_timeout = choose_file_watcher_timeout ~flowconfig file_watcher_timeout in
   let monitor_options =
     {
       FlowServerMonitorOptions.log_file = monitor_log_file;
@@ -93,8 +112,7 @@ let main
       shared_mem_config;
       argv = Sys.argv;
       file_watcher;
-      file_watcher_debug;
-      file_watcher_timeout = Options.file_watcher_timeout options;
+      file_watcher_timeout;
     }
   in
   FlowServerMonitor.start monitor_options

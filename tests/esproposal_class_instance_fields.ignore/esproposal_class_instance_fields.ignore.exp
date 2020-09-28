@@ -1,6 +1,6 @@
 Error ------------------------------------------------------------------------------------------------------ test.js:7:3
 
-Computed property keys not supported.
+Computed property keys not supported. [unsupported-syntax]
 
    7|   [computed]: string;
         ^^^^^^^^^^^^^^^^^^^

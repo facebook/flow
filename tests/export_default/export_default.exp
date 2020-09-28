@@ -1,6 +1,6 @@
 Error ------------------------------------------------------------------------------------------------------ test.js:3:3
 
-Cannot assign `M(...)` to `N.x` because property `x` is not writable.
+Cannot assign `M(...)` to `N.x` because property `x` is not writable. [cannot-write]
 
    3| N.x = M(N.x);
         ^
@@ -8,7 +8,7 @@ Cannot assign `M(...)` to `N.x` because property `x` is not writable.
 
 Error ------------------------------------------------------------------------------------------------------ test.js:3:9
 
-Cannot call `M` with `N.x` bound to `x` because number [1] is incompatible with string [2].
+Cannot call `M` with `N.x` bound to `x` because number [1] is incompatible with string [2]. [incompatible-call]
 
    test.js:3:9
    3| N.x = M(N.x);
@@ -25,7 +25,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ test.js:5:3
 
-Cannot assign `P(...)` to `N.y` because property `y` is not writable.
+Cannot assign `P(...)` to `N.y` because property `y` is not writable. [cannot-write]
 
    5| N.y = P(N.y);
         ^
@@ -33,7 +33,7 @@ Cannot assign `P(...)` to `N.y` because property `y` is not writable.
 
 Error ------------------------------------------------------------------------------------------------------ test.js:5:9
 
-Cannot call `P` with `N.y` bound to `x` because number [1] is incompatible with string [2].
+Cannot call `P` with `N.y` bound to `x` because number [1] is incompatible with string [2]. [incompatible-call]
 
    test.js:5:9
    5| N.y = P(N.y);
@@ -50,7 +50,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ test.js:7:3
 
-Cannot assign `Q(...)` to `N.z` because property `z` is not writable.
+Cannot assign `Q(...)` to `N.z` because property `z` is not writable. [cannot-write]
 
    7| N.z = Q(N.z);
         ^
@@ -58,7 +58,7 @@ Cannot assign `Q(...)` to `N.z` because property `z` is not writable.
 
 Error ------------------------------------------------------------------------------------------------------ test.js:7:9
 
-Cannot call `Q` with `N.z` bound to `x` because number [1] is incompatible with string [2].
+Cannot call `Q` with `N.z` bound to `x` because number [1] is incompatible with string [2]. [incompatible-call]
 
    test.js:7:9
    7| N.z = Q(N.z);

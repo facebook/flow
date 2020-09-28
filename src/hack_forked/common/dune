@@ -2,4 +2,4 @@
   (name common)
   (wrapped false)
   (libraries
-    core_kernel))
+    base))

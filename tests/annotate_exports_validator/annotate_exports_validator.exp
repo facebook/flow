@@ -1,4 +1,7 @@
->>> simplify-empty.js (#changes: 1)
+
+=== Codemod annotate-exports ===
+
+>>> ./simplify-empty.js
 // @flow
 
 export function foo(x: any): any {
@@ -12,10 +15,10 @@ export function foo(x: any): any {
 
 Stats:
   Files changed:                            1
-  Number of sig. ver. errors:               1
-  Number of annotations required:           1
   Number of annotations added:              1
   Total size of annotations:                3
+  Number of sig. ver. errors:               1
+  Number of annotations required:           1
   Number of annotations skipped:            0
 
 Errors:
@@ -26,7 +29,6 @@ Errors:
     Parsing heaps get ast error:            0
     Indeterminate module type:              0
     No matching export:                     0
-    Unrecognizable module error:            0
   Serializer error:                         0
   Unsupported error kind:                   0
 
@@ -37,3 +39,18 @@ Warnings:
   Empty NoUpper:                            0
   Empty SomeKnownUpper:                     0
 
+
+=== Autofix exports ===
+
+>>> ./simplify-empty.js
+// @flow
+
+export function foo(x: any): any {
+  if (x && x.bar) {
+    return x.bar();
+  }
+  return x;
+}
+
+
+=== Diff between codemod-ed & autofix-ed ===

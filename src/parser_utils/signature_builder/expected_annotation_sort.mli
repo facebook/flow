@@ -5,17 +5,11 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
-type property_key =
-  | Literal of string
-  | Identifier of string
-  | PrivateName of string
-  | Computed of string
-
 type t =
   | ArrayPattern
   | FunctionReturn
-  | PrivateField of { name: string }
-  | Property of { name: property_key }
+  | Property of { name: string }
   | VariableDefinition of { name: string }
+[@@deriving show]
 
 val to_string : t -> string

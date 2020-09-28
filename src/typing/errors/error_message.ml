@@ -22,7 +22,7 @@ type invalid_char_set =
 module InvalidCharSetSet = Set.Make (struct
   type t = invalid_char_set
 
-  let compare = Pervasives.compare
+  let compare = Stdlib.compare
 end)
 
 type t = ALoc.t t'
@@ -62,6 +62,7 @@ and 'loc t' =
       min_arity: int;
       max_arity: int;
     }
+  | EAnyValueUsedAsType of { reason_use: 'loc virtual_reason }
   | EValueUsedAsType of { reason_use: 'loc virtual_reason }
   | EExpectedStringLit of {
       reason_lower: 'loc virtual_reason;
@@ -121,6 +122,7 @@ and 'loc t' =
       ('loc virtual_reason * 'loc virtual_reason) * string * 'loc virtual_use_op
   | EAdditionMixed of 'loc virtual_reason * 'loc virtual_use_op
   | EComparison of ('loc virtual_reason * 'loc virtual_reason)
+  | ENonStrictEqualityComparison of ('loc virtual_reason * 'loc virtual_reason)
   | ETupleArityMismatch of
       ('loc virtual_reason * 'loc virtual_reason) * int * int * 'loc virtual_use_op
   | ENonLitArrayToTuple of ('loc virtual_reason * 'loc virtual_reason) * 'loc virtual_use_op
@@ -153,7 +155,8 @@ and 'loc t' =
       case: int * 'loc virtual_reason;
       cases: 'loc virtual_reason list;
     }
-  | EIncompatibleWithExact of ('loc virtual_reason * 'loc virtual_reason) * 'loc virtual_use_op
+  | EIncompatibleWithExact of
+      ('loc virtual_reason * 'loc virtual_reason) * 'loc virtual_use_op * exactness_error_kind
   | EUnsupportedExact of ('loc virtual_reason * 'loc virtual_reason)
   | EIdxArity of 'loc virtual_reason
   | EIdxUse1 of 'loc virtual_reason
@@ -203,6 +206,13 @@ and 'loc t' =
   | EIndeterminateModuleType of 'loc
   | EBadExportPosition of 'loc
   | EBadExportContext of string * 'loc
+  | EBadDefaultImportAccess of 'loc * 'loc virtual_reason
+  | EBadDefaultImportDestructuring of 'loc
+  | EInvalidImportStarUse of 'loc * 'loc virtual_reason
+  | ENonConstVarExport of 'loc * 'loc virtual_reason option
+  | EThisInExportedFunction of 'loc
+  | EMixedImportAndRequire of 'loc * 'loc virtual_reason
+  | EExportRenamedDefault of 'loc * string
   | EUnreachable of 'loc
   | EInvalidObjectKit of {
       reason: 'loc virtual_reason;
@@ -213,12 +223,15 @@ and 'loc t' =
   | EBinaryInLHS of 'loc virtual_reason
   | EBinaryInRHS of 'loc virtual_reason
   | EArithmeticOperand of 'loc virtual_reason
-  | ENullVoidAddition of 'loc virtual_reason (* TODO: yeet this *)
   | EForInRHS of 'loc virtual_reason
   | EObjectComputedPropertyAccess of ('loc virtual_reason * 'loc virtual_reason)
   | EObjectComputedPropertyAssign of ('loc virtual_reason * 'loc virtual_reason)
   | EInvalidLHSInAssignment of 'loc
-  | EIncompatibleWithUseOp of 'loc virtual_reason * 'loc virtual_reason * 'loc virtual_use_op
+  | EIncompatibleWithUseOp of {
+      use_op: 'loc virtual_use_op;
+      reason_lower: 'loc virtual_reason;
+      reason_upper: 'loc virtual_reason;
+    }
   | ETrustIncompatibleWithUseOp of 'loc virtual_reason * 'loc virtual_reason * 'loc virtual_use_op
   | EUnsupportedImplements of 'loc virtual_reason
   | ENotAReactComponent of {
@@ -258,9 +271,9 @@ and 'loc t' =
   | EUnclearType of 'loc
   | EDeprecatedType of 'loc
   | EDeprecatedUtility of 'loc * string
-  | EDynamicExport of 'loc virtual_reason * 'loc virtual_reason
   | EUnsafeGettersSetters of 'loc
   | EUnusedSuppression of 'loc
+  | ECodelessSuppression of 'loc * string
   | ELintSetting of 'loc * LintSettings.lint_parse_error
   | ESketchyNullLint of {
       kind: Lints.sketchy_null_kind;
@@ -294,7 +307,7 @@ and 'loc t' =
       object1_reason: 'loc virtual_reason;
       object2_reason: 'loc virtual_reason;
       propname: string;
-      error_kind: spread_error_kind;
+      error_kind: exactness_error_kind;
       use_op: 'loc virtual_use_op;
     }
   | EInexactMayOverwriteIndexer of {
@@ -334,6 +347,16 @@ and 'loc t' =
       prev_use_loc: 'loc;
       enum_reason: 'loc virtual_reason;
     }
+  | EEnumInvalidObjectUtil of {
+      reason: 'loc virtual_reason;
+      enum_reason: 'loc virtual_reason;
+      enum_name: string;
+    }
+  | EEnumNotIterable of {
+      reason: 'loc virtual_reason;
+      enum_name: string;
+      for_in: bool;
+    }
   | EEnumMemberAlreadyChecked of {
       reason: 'loc virtual_reason;
       prev_check_reason: 'loc virtual_reason;
@@ -358,7 +381,12 @@ and 'loc t' =
       reason: 'loc virtual_reason;
       enum_name: string;
     }
-  | EEnumCheckedInIf of 'loc virtual_reason
+  | EEnumIncompatible of {
+      use_op: 'loc virtual_use_op;
+      reason_lower: 'loc virtual_reason;
+      reason_upper: 'loc virtual_reason;
+      representation_type: string option;
+    }
   (* end enum error messages *)
   | EAssignExportedConstLikeBinding of {
       loc: 'loc;
@@ -370,13 +398,14 @@ and 'loc t' =
       reason: 'loc virtual_reason;
       blame_reasons: 'loc virtual_reason list;
     }
+  | EMalformedCode of 'loc
 
 and 'loc exponential_spread_reason_group = {
   first_reason: 'loc virtual_reason;
   second_reason: 'loc virtual_reason option;
 }
 
-and spread_error_kind =
+and exactness_error_kind =
   | Indexer
   | Inexact
 
@@ -401,7 +430,6 @@ and internal_error =
   | AbnormalControlFlow
   | MethodNotAFunction
   | OptionalMethod
-  | OpenPredWithoutSubst
   | PredFunWithoutParamNames
   | UnsupportedGuardPredicate of string
   | BreakEnvMissingForCase
@@ -640,8 +668,8 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
         reason_op = map_reason reason_op;
         branches = Base.List.map ~f:map_branch branches;
       }
-  | EIncompatibleWithExact ((r1, r2), op) ->
-    EIncompatibleWithExact ((map_reason r1, map_reason r2), map_use_op op)
+  | EIncompatibleWithExact ((r1, r2), op, kind) ->
+    EIncompatibleWithExact ((map_reason r1, map_reason r2), map_use_op op, kind)
   | EInvalidCharSet { invalid = (ir, set); valid; use_op } ->
     EInvalidCharSet
       { invalid = (map_reason ir, set); valid = map_reason valid; use_op = map_use_op use_op }
@@ -650,8 +678,13 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
   | EInvalidObjectKit { reason; reason_op; use_op } ->
     EInvalidObjectKit
       { reason = map_reason reason; reason_op = map_reason reason_op; use_op = map_use_op use_op }
-  | EIncompatibleWithUseOp (rl, ru, op) ->
-    EIncompatibleWithUseOp (map_reason rl, map_reason ru, map_use_op op)
+  | EIncompatibleWithUseOp { use_op; reason_lower; reason_upper } ->
+    EIncompatibleWithUseOp
+      {
+        use_op = map_use_op use_op;
+        reason_lower = map_reason reason_lower;
+        reason_upper = map_reason reason_upper;
+      }
   | ETrustIncompatibleWithUseOp (rl, ru, op) ->
     ETrustIncompatibleWithUseOp (map_reason rl, map_reason ru, map_use_op op)
   | ENotAReactComponent { reason; use_op } ->
@@ -681,10 +714,13 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
         min_arity;
         max_arity;
       }
+  | EAnyValueUsedAsType { reason_use } -> EAnyValueUsedAsType { reason_use = map_reason reason_use }
   | EValueUsedAsType { reason_use } -> EValueUsedAsType { reason_use = map_reason reason_use }
   | EPolarityMismatch { reason; name; expected_polarity; actual_polarity } ->
     EPolarityMismatch { reason = map_reason reason; name; expected_polarity; actual_polarity }
   | EComparison (r1, r2) -> EComparison (map_reason r1, map_reason r2)
+  | ENonStrictEqualityComparison (r1, r2) ->
+    ENonStrictEqualityComparison (map_reason r1, map_reason r2)
   | ESpeculationAmbiguous
       { reason; prev_case = (prev_i, prev_case_reason); case = (i, case_reason); cases } ->
     ESpeculationAmbiguous
@@ -734,12 +770,18 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
   | EIndeterminateModuleType loc -> EIndeterminateModuleType (f loc)
   | EBadExportPosition loc -> EBadExportPosition (f loc)
   | EBadExportContext (s, loc) -> EBadExportContext (s, f loc)
+  | EBadDefaultImportAccess (loc, r) -> EBadDefaultImportAccess (f loc, map_reason r)
+  | EBadDefaultImportDestructuring loc -> EBadDefaultImportDestructuring (f loc)
+  | EInvalidImportStarUse (loc, r) -> EInvalidImportStarUse (f loc, map_reason r)
+  | ENonConstVarExport (loc, r) -> ENonConstVarExport (f loc, Base.Option.map ~f:map_reason r)
+  | EThisInExportedFunction loc -> EThisInExportedFunction (f loc)
+  | EMixedImportAndRequire (loc, r) -> EMixedImportAndRequire (f loc, map_reason r)
+  | EExportRenamedDefault (loc, s) -> EExportRenamedDefault (f loc, s)
   | EUnreachable loc -> EUnreachable (f loc)
   | EInvalidTypeof (loc, s) -> EInvalidTypeof (f loc, s)
   | EBinaryInLHS r -> EBinaryInLHS (map_reason r)
   | EBinaryInRHS r -> EBinaryInRHS (map_reason r)
   | EArithmeticOperand r -> EArithmeticOperand (map_reason r)
-  | ENullVoidAddition r -> ENullVoidAddition (map_reason r)
   | EForInRHS r -> EForInRHS (map_reason r)
   | EObjectComputedPropertyAccess (r1, r2) ->
     EObjectComputedPropertyAccess (map_reason r1, map_reason r2)
@@ -761,9 +803,9 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
   | EUnclearType loc -> EUnclearType (f loc)
   | EDeprecatedType loc -> EDeprecatedType (f loc)
   | EDeprecatedUtility (loc, s) -> EDeprecatedUtility (f loc, s)
-  | EDynamicExport (r1, r2) -> EDynamicExport (map_reason r1, map_reason r2)
   | EUnsafeGettersSetters loc -> EUnsafeGettersSetters (f loc)
   | EUnusedSuppression loc -> EUnusedSuppression (f loc)
+  | ECodelessSuppression (loc, c) -> ECodelessSuppression (f loc, c)
   | ELintSetting (loc, err) -> ELintSetting (f loc, err)
   | ESketchyNullLint { kind; loc; null_loc; falsy_loc } ->
     ESketchyNullLint { kind; loc = f loc; null_loc = f null_loc; falsy_loc = f falsy_loc }
@@ -776,7 +818,7 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
   | EUnexpectedTemporaryBaseType loc -> EUnexpectedTemporaryBaseType (f loc)
   | ECannotDelete (l1, r1) -> ECannotDelete (f l1, map_reason r1)
   | EBigIntNotYetSupported r -> EBigIntNotYetSupported (map_reason r)
-  | ESignatureVerification sve -> ESignatureVerification (Signature_error.map_locs ~f sve)
+  | ESignatureVerification sve -> ESignatureVerification (Signature_error.map f sve)
   | ECannotSpreadInterface { spread_reason; interface_reason; use_op } ->
     ECannotSpreadInterface
       {
@@ -844,6 +886,11 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
   | EEnumMemberDuplicateValue { loc; prev_use_loc; enum_reason } ->
     EEnumMemberDuplicateValue
       { loc = f loc; prev_use_loc = f prev_use_loc; enum_reason = map_reason enum_reason }
+  | EEnumInvalidObjectUtil { reason; enum_reason; enum_name } ->
+    EEnumInvalidObjectUtil
+      { reason = map_reason reason; enum_reason = map_reason enum_reason; enum_name }
+  | EEnumNotIterable { reason; enum_name; for_in } ->
+    EEnumNotIterable { reason = map_reason reason; enum_name; for_in }
   | EEnumMemberAlreadyChecked { reason; prev_check_reason; enum_reason; member_name } ->
     EEnumMemberAlreadyChecked
       {
@@ -862,7 +909,14 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
     EEnumInvalidCheck { reason = map_reason reason; enum_name; example_member }
   | EEnumMemberUsedAsType { reason; enum_name } ->
     EEnumMemberUsedAsType { reason = map_reason reason; enum_name }
-  | EEnumCheckedInIf reason -> EEnumCheckedInIf (map_reason reason)
+  | EEnumIncompatible { use_op; reason_lower; reason_upper; representation_type } ->
+    EEnumIncompatible
+      {
+        use_op = map_use_op use_op;
+        reason_lower = map_reason reason_lower;
+        reason_upper = map_reason reason_upper;
+        representation_type;
+      }
   | EAssignExportedConstLikeBinding { loc; definition; binding_kind } ->
     EAssignExportedConstLikeBinding
       { loc = f loc; definition = map_reason definition; binding_kind }
@@ -873,6 +927,7 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
         reason = map_reason reason;
         blame_reasons = Base.List.map ~f:map_reason blame_reasons;
       }
+  | EMalformedCode loc -> EMalformedCode (f loc)
 
 let desc_of_reason r = Reason.desc_of_reason ~unwrap:(is_scalar_reason r) r
 
@@ -920,14 +975,18 @@ let util_use_op_of_msg nope util = function
   | EROArrayWrite (rs, op) -> util op (fun op -> EROArrayWrite (rs, op))
   | EUnionSpeculationFailed { use_op; reason; reason_op; branches } ->
     util use_op (fun use_op -> EUnionSpeculationFailed { use_op; reason; reason_op; branches })
-  | EIncompatibleWithExact (rs, op) -> util op (fun op -> EIncompatibleWithExact (rs, op))
+  | EIncompatibleWithExact (rs, op, kind) ->
+    util op (fun op -> EIncompatibleWithExact (rs, op, kind))
   | EInvalidCharSet { invalid; valid; use_op } ->
     util use_op (fun use_op -> EInvalidCharSet { invalid; valid; use_op })
   | EIncompatibleWithShape (l, u, use_op) ->
     util use_op (fun use_op -> EIncompatibleWithShape (l, u, use_op))
   | EInvalidObjectKit { reason; reason_op; use_op } ->
     util use_op (fun use_op -> EInvalidObjectKit { reason; reason_op; use_op })
-  | EIncompatibleWithUseOp (rl, ru, op) -> util op (fun op -> EIncompatibleWithUseOp (rl, ru, op))
+  | EIncompatibleWithUseOp ({ use_op; _ } as contents) ->
+    util use_op (fun use_op -> EIncompatibleWithUseOp { contents with use_op })
+  | EEnumIncompatible ({ use_op; _ } as contents) ->
+    util use_op (fun use_op -> EEnumIncompatible { contents with use_op })
   | ENotAReactComponent { reason; use_op } ->
     util use_op (fun use_op -> ENotAReactComponent { reason; use_op })
   | EInvalidReactConfigType { reason; use_op } ->
@@ -965,11 +1024,13 @@ let util_use_op_of_msg nope util = function
   | EOnlyDefaultExport (_, _, _)
   | ENoNamedExport (_, _, _, _)
   | EMissingTypeArgs { reason_tapp = _; reason_arity = _; min_arity = _; max_arity = _ }
+  | EAnyValueUsedAsType _
   | EValueUsedAsType _
   | EPolarityMismatch { reason = _; name = _; expected_polarity = _; actual_polarity = _ }
   | EBuiltinLookupFailed _
   | EStrictLookupFailed { use_op = None; _ }
   | EComparison (_, _)
+  | ENonStrictEqualityComparison _
   | ESpeculationAmbiguous _
   | EUnsupportedExact (_, _)
   | EIdxArity _
@@ -1009,12 +1070,18 @@ let util_use_op_of_msg nope util = function
   | EIndeterminateModuleType _
   | EBadExportPosition _
   | EBadExportContext _
+  | EBadDefaultImportAccess _
+  | EBadDefaultImportDestructuring _
+  | EInvalidImportStarUse _
+  | ENonConstVarExport _
+  | EThisInExportedFunction _
+  | EMixedImportAndRequire _
+  | EExportRenamedDefault _
   | EUnreachable _
   | EInvalidTypeof (_, _)
   | EBinaryInLHS _
   | EBinaryInRHS _
   | EArithmeticOperand _
-  | ENullVoidAddition _
   | EForInRHS _
   | EObjectComputedPropertyAccess (_, _)
   | EObjectComputedPropertyAssign (_, _)
@@ -1033,9 +1100,9 @@ let util_use_op_of_msg nope util = function
   | EUnclearType _
   | EDeprecatedType _
   | EDeprecatedUtility _
-  | EDynamicExport _
   | EUnsafeGettersSetters _
   | EUnusedSuppression _
+  | ECodelessSuppression _
   | ELintSetting _
   | ESketchyNullLint { kind = _; loc = _; null_loc = _; falsy_loc = _ }
   | ESketchyNumberLint _
@@ -1054,22 +1121,25 @@ let util_use_op_of_msg nope util = function
   | EEnumInvalidMemberAccess _
   | EEnumModification _
   | EEnumMemberDuplicateValue _
+  | EEnumInvalidObjectUtil _
+  | EEnumNotIterable _
   | EEnumMemberAlreadyChecked _
   | EEnumAllMembersAlreadyChecked _
   | EEnumNotAllChecked _
   | EEnumInvalidCheck _
   | EEnumMemberUsedAsType _
-  | EEnumCheckedInIf _
-  | EAssignExportedConstLikeBinding _ ->
+  | EAssignExportedConstLikeBinding _
+  | EMalformedCode _ ->
     nope
 
 (* Not all messages (i.e. those whose locations are based on use_ops) have locations that can be
   determined while locations are abstract. We just return None in this case. *)
 let loc_of_msg : 'loc t' -> 'loc option = function
+  | EAnyValueUsedAsType { reason_use = primary }
   | EValueUsedAsType { reason_use = primary }
   | EComparison (primary, _)
+  | ENonStrictEqualityComparison (primary, _)
   | EFunPredCustom ((primary, _), _)
-  | EDynamicExport (_, primary)
   | EInvalidTypeArgs (_, primary)
   | ETooFewTypeArgs (primary, _, _)
   | ETooManyTypeArgs (primary, _, _) ->
@@ -1085,7 +1155,6 @@ let loc_of_msg : 'loc t' -> 'loc option = function
   | EBinaryInRHS reason
   | EBinaryInLHS reason
   | EArithmeticOperand reason
-  | ENullVoidAddition reason
   | ERecursionLimit (reason, _)
   | EMissingAnnotation (reason, _)
   | EIdxArity reason
@@ -1116,7 +1185,8 @@ let loc_of_msg : 'loc t' -> 'loc option = function
   | EEnumInvalidCheck { reason; _ }
   | EEnumMemberUsedAsType { reason; _ }
   | EEnumInvalidMemberAccess { reason; _ }
-  | EEnumCheckedInIf reason ->
+  | EEnumInvalidObjectUtil { reason; _ }
+  | EEnumNotIterable { reason; _ } ->
     Some (poly_loc_of_reason reason)
   | EExponentialSpread
       {
@@ -1157,6 +1227,7 @@ let loc_of_msg : 'loc t' -> 'loc option = function
   | EOptionalChainingMethods loc
   | EExperimentalOptionalChaining loc
   | EUnusedSuppression loc
+  | ECodelessSuppression (loc, _)
   | EDocblockError (loc, _)
   | EImplicitInexactObject loc
   | EAmbiguousObjectType loc
@@ -1168,6 +1239,13 @@ let loc_of_msg : 'loc t' -> 'loc option = function
   | ECannotDelete (loc, _)
   | EBadExportContext (_, loc)
   | EBadExportPosition loc
+  | EBadDefaultImportAccess (loc, _)
+  | EBadDefaultImportDestructuring loc
+  | EInvalidImportStarUse (loc, _)
+  | ENonConstVarExport (loc, _)
+  | EThisInExportedFunction loc
+  | EMixedImportAndRequire (loc, _)
+  | EExportRenamedDefault (loc, _)
   | EIndeterminateModuleType loc
   | EExperimentalExportStarAs loc
   | EExperimentalEnums loc
@@ -1191,7 +1269,8 @@ let loc_of_msg : 'loc t' -> 'loc option = function
   | EPropertyTypeAnnot loc
   | EUnexpectedThisType loc
   | ETypeParamMinArity (loc, _)
-  | EAssignExportedConstLikeBinding { loc; _ } ->
+  | EAssignExportedConstLikeBinding { loc; _ }
+  | EMalformedCode loc ->
     Some loc
   | ELintSetting (loc, _) -> Some loc
   | ETypeParamArity (loc, _) -> Some loc
@@ -1203,9 +1282,7 @@ let loc_of_msg : 'loc t' -> 'loc option = function
       (match sve with
       | ExpectedSort (_, _, loc)
       | ExpectedAnnotation (loc, _)
-      | InvalidTypeParamUse loc
       | UnexpectedObjectKey (loc, _)
-      | UnexpectedObjectSpread (loc, _)
       | UnexpectedArraySpread (loc, _)
       | UnexpectedArrayHole loc
       | EmptyArray loc
@@ -1232,6 +1309,7 @@ let loc_of_msg : 'loc t' -> 'loc option = function
   | EInvalidReactCreateClass _
   | EIncompatibleWithUseOp _
   | ETrustIncompatibleWithUseOp _
+  | EEnumIncompatible _
   | EIncompatibleDefs _
   | EInvalidObjectKit _
   | EIncompatibleWithShape _
@@ -1268,7 +1346,6 @@ let kind_of_msg =
     | EUnclearType _ -> LintError Lints.UnclearType
     | EDeprecatedType _ -> LintError Lints.DeprecatedType
     | EDeprecatedUtility _ -> LintError Lints.DeprecatedUtility
-    | EDynamicExport _ -> LintError Lints.DynamicExport
     | EUnsafeGettersSetters _ -> LintError Lints.UnsafeGettersSetters
     | ESketchyNullLint { kind; _ } -> LintError (Lints.SketchyNull kind)
     | ESketchyNumberLint (kind, _) -> LintError (Lints.SketchyNumber kind)
@@ -1278,7 +1355,13 @@ let kind_of_msg =
     | EImplicitInexactObject _ -> LintError Lints.ImplicitInexactObject
     | EAmbiguousObjectType _ -> LintError Lints.AmbiguousObjectType
     | EUninitializedInstanceProperty _ -> LintError Lints.UninitializedInstanceProperty
-    | ENullVoidAddition _ -> LintError Lints.NullVoidAddition
+    | EBadDefaultImportAccess _ -> LintError Lints.DefaultImportAccess
+    | EBadDefaultImportDestructuring _ -> LintError Lints.DefaultImportAccess
+    | EInvalidImportStarUse _ -> LintError Lints.InvalidImportStarUse
+    | ENonConstVarExport _ -> LintError Lints.NonConstVarExport
+    | EThisInExportedFunction _ -> LintError Lints.ThisInExportedFunction
+    | EMixedImportAndRequire _ -> LintError Lints.MixedImportAndRequire
+    | EExportRenamedDefault _ -> LintError Lints.ExportRenamedDefault
     | EBadExportPosition _
     | EBadExportContext _ ->
       InferWarning ExportKind
@@ -1318,7 +1401,6 @@ let string_of_internal_error = function
   | AbnormalControlFlow -> "abnormal control flow"
   | MethodNotAFunction -> "expected function type"
   | OptionalMethod -> "optional methods are not supported"
-  | OpenPredWithoutSubst -> "OpenPredT ~> OpenPredT without substitution"
   | PredFunWithoutParamNames -> "FunT -> FunT no params"
   | UnsupportedGuardPredicate pred -> spf "unsupported guard predicate (%s)" pred
   | BreakEnvMissingForCase -> "break env missing for case"
@@ -1363,6 +1445,12 @@ type 'loc friendly_message_recipe =
       reason_lower: 'loc Reason.virtual_reason;
       reason_upper: 'loc Reason.virtual_reason;
       use_op: 'loc Type.virtual_use_op;
+    }
+  | IncompatibleEnum of {
+      reason_lower: 'loc Reason.virtual_reason;
+      reason_upper: 'loc Reason.virtual_reason;
+      use_op: 'loc Type.virtual_use_op;
+      suggestion: 'loc Errors.Friendly.message_feature list;
     }
   | PropMissing of {
       loc: 'loc;
@@ -1665,6 +1753,22 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
         ]
       in
       Normal { features }
+  | EAnyValueUsedAsType { reason_use } ->
+    let features =
+      [
+        text "Cannot use ";
+        desc reason_use;
+        text " as a type because it is an ";
+        code "any";
+        text "-typed value. ";
+        text "Type ";
+        desc reason_use;
+        text " properly, so it is no longer ";
+        code "any";
+        text "-typed, to use it as an annotation.";
+      ]
+    in
+    Normal { features }
   | EValueUsedAsType { reason_use } ->
     let features =
       [
@@ -1764,6 +1868,24 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
       }
   | EComparison (lower, upper) ->
     Normal { features = [text "Cannot compare "; ref lower; text " to "; ref upper; text "."] }
+  | ENonStrictEqualityComparison (lower, upper) ->
+    Normal
+      {
+        features =
+          [
+            text "Cannot compare ";
+            ref lower;
+            text " to ";
+            ref upper;
+            text " with a non-strict equality check. ";
+            text "Make sure the arguments are valid, ";
+            text "or try using strict equality (";
+            code "===";
+            text " or ";
+            code "!==";
+            text ") instead.";
+          ];
+      }
   | ETupleArityMismatch (reasons, l1, l2, use_op) ->
     let (lower, upper) = reasons in
     UseOp
@@ -1868,12 +1990,17 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
         @ [text "."]
       in
       Normal { features })
-  | EIncompatibleWithExact (reasons, use_op) ->
+  | EIncompatibleWithExact (reasons, use_op, kind) ->
     let (lower, upper) = reasons in
+    let object_kind =
+      match kind with
+      | Indexer -> "indexed "
+      | Inexact -> "inexact "
+    in
     UseOp
       {
         loc = loc_of_reason lower;
-        features = [text "inexact "; ref lower; text " is incompatible with exact "; ref upper];
+        features = [text object_kind; ref lower; text " is incompatible with exact "; ref upper];
         use_op;
       }
   | EUnsupportedExact (_, lower) ->
@@ -2302,6 +2429,87 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
         features =
           [code name; text " may only be used as part of a legal top level export statement"];
       }
+  | EBadDefaultImportAccess (_, import_star_reason) ->
+    Normal
+      {
+        features =
+          [
+            text "The default export of a module cannot be accessed from an ";
+            ref import_star_reason;
+            text " object. To use the default export you must import it directly.";
+          ];
+      }
+  | EBadDefaultImportDestructuring _ ->
+    Normal
+      {
+        features =
+          [
+            text "The default export of a module cannot be accessed from import destructuring. ";
+            text "To use the default export you must import it directly.";
+          ];
+      }
+  | EInvalidImportStarUse (_, import_star_reason) ->
+    Normal
+      {
+        features =
+          [
+            ref import_star_reason;
+            text " object can only be used by accessing one of its named exports";
+            text " with a member access or destructuring.";
+          ];
+      }
+  | ENonConstVarExport (_, decl_reason) ->
+    let reason_opt =
+      match decl_reason with
+      | Some reason -> [text "variable "; ref reason]
+      | None -> [text "variable"]
+    in
+    Normal
+      {
+        features =
+          List.concat
+            [
+              [text "Cannot export "];
+              reason_opt;
+              [
+                text " declared using ";
+                code "var";
+                text " or ";
+                code "let";
+                text ". All exported variables must be ";
+                code "const";
+                text ".";
+              ];
+            ];
+      }
+  | EThisInExportedFunction _ ->
+    Normal { features = [text "Cannot use "; code "this"; text " in an exported function."] }
+  | EMixedImportAndRequire (_, import_reason) ->
+    Normal
+      {
+        features =
+          [
+            text "Cannot use a mix of non-type toplevel ";
+            ref import_reason;
+            text " and ";
+            code "require";
+            text " statements in the same file.";
+          ];
+      }
+  | EExportRenamedDefault (_, name) ->
+    Normal
+      {
+        features =
+          [
+            text "Cannot set the default export of a module by renaming ";
+            code name;
+            text " to ";
+            code "default";
+            text ". If you intended to set the default export use ";
+            code (spf "export default %s" name);
+            text " instead.";
+          ];
+      }
   | EUnexpectedTemporaryBaseType _ ->
     Normal
       {
@@ -2325,9 +2533,7 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
           [code x; text (spf " is not a %s." (Signature_builder_kind.Sort.to_string sort))]
         | ExpectedAnnotation (_, sort) ->
           [text (spf "Missing type annotation at %s:" (Expected_annotation_sort.to_string sort))]
-        | InvalidTypeParamUse _ -> [text "Invalid use of type parameter:"]
         | UnexpectedObjectKey _ -> [text "Expected simple key in object:"]
-        | UnexpectedObjectSpread _ -> [text "Unexpected spread in object:"]
         | UnexpectedArraySpread _ -> [text "Unexpected spread in array:"]
         | UnexpectedArrayHole _ -> [text "Unexpected array hole:"]
         | EmptyArray _ ->
@@ -2376,8 +2582,7 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
       ]
     in
     Normal { features }
-  | EArithmeticOperand reason
-  | ENullVoidAddition reason ->
+  | EArithmeticOperand reason ->
     let features =
       [
         text "Cannot perform arithmetic operation because ";
@@ -2428,7 +2633,7 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
     Normal { features = [text "Cannot assign computed property using "; ref reason_prop; text "."] }
   | EInvalidLHSInAssignment _ ->
     Normal { features = [text "Invalid left-hand side in assignment expression."] }
-  | EIncompatibleWithUseOp (reason_lower, reason_upper, use_op) ->
+  | EIncompatibleWithUseOp { reason_lower; reason_upper; use_op } ->
     Incompatible { reason_lower; reason_upper; use_op }
   | ETrustIncompatibleWithUseOp (reason_lower, reason_upper, use_op) ->
     IncompatibleTrust { reason_lower; reason_upper; use_op }
@@ -2673,20 +2878,19 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
       {
         features = [text "Deprecated utility. Using "; code name; text " types is not recommended!"];
       }
-  | EDynamicExport (reason, reason_exp) ->
-    let features =
-      [
-        text "Dynamic ";
-        ref reason;
-        text " unsafely appears in exported ";
-        ref reason_exp;
-        text ". This can cause importing modules to lose type coverage!";
-      ]
-    in
-    Normal { features }
   | EUnsafeGettersSetters _ ->
     Normal { features = [text "Getters and setters can have side effects and are unsafe."] }
   | EUnusedSuppression _ -> Normal { features = [text "Unused suppression comment."] }
+  | ECodelessSuppression (_, c) ->
+    Normal
+      {
+        features =
+          [
+            text
+              "Suppression is missing a code. Please update this suppression to use an error code: ";
+            code ("$FlowFixMe[" ^ c ^ "]");
+          ];
+      }
   | ELintSetting (_, kind) ->
     let features =
       match kind with
@@ -2976,6 +3180,42 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
       ]
     in
     Normal { features }
+  | EEnumInvalidObjectUtil { reason; enum_reason; enum_name } ->
+    let features =
+      [
+        text "Cannot instantiate ";
+        desc reason;
+        text " because ";
+        ref enum_reason;
+        text " is not an object. You can use the enum's name ";
+        code enum_name;
+        text " as the type of its members.";
+      ]
+    in
+    Normal { features }
+  | EEnumNotIterable { reason; enum_name; for_in } ->
+    let features =
+      if for_in then
+        [
+          text "Cannot iterate using a ";
+          code "for...in";
+          text " loop because ";
+          ref reason;
+          text " is not an object, null, or undefined. ";
+          text "You can use ";
+          code (spf "for (... of %s.members()) { ... }" enum_name);
+          text " to iterate over the enum's members.";
+        ]
+      else
+        [
+          desc reason;
+          text " is not an iterable. ";
+          text "You can use ";
+          code (spf "%s.members()" enum_name);
+          text " to get an iterator for the enum's members.";
+        ]
+    in
+    Normal { features }
   | EEnumMemberAlreadyChecked { reason; prev_check_reason; enum_reason; member_name } ->
     let features =
       [
@@ -3056,16 +3296,19 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
       ]
     in
     Normal { features }
-  | EEnumCheckedInIf reason ->
-    let features =
-      [
-        text "Invalid check of an enum in an if statement. ";
-        text "Please use a switch statement to exhaustively check ";
-        ref reason;
-        text " instead.";
-      ]
+  | EEnumIncompatible { reason_lower; reason_upper; use_op; representation_type } ->
+    let suggestion =
+      match representation_type with
+      | Some representation_type ->
+        [
+          text "You can explicitly cast your enum value to a ";
+          text representation_type;
+          text " using ";
+          code (spf "(<expression>: %s)" representation_type);
+        ]
+      | None -> []
     in
-    Normal { features }
+    IncompatibleEnum { reason_lower; reason_upper; use_op; suggestion }
   | EAssignExportedConstLikeBinding { definition; binding_kind; _ } ->
     let features =
       [
@@ -3077,20 +3320,28 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
       ]
     in
     Normal { features }
+  | EMalformedCode _ ->
+    Normal
+      {
+        features =
+          [
+            text "Suppression contains a malformed error code. Suppressions with error codes ";
+            text "should be formatted as ";
+            code "$FlowFixMe[<CODE>]";
+            text ".";
+          ];
+      }
 
 let is_lint_error = function
   | EUntypedTypeImport _
-  | ENullVoidAddition _
   | EUntypedImport _
   | ENonstrictImport _
   | EUnclearType _
   | EDeprecatedType _
   | EDeprecatedUtility _
-  | EDynamicExport _
   | EUnsafeGettersSetters _
   | ESketchyNullLint _
   | ESketchyNumberLint _
-  | EBigIntNotYetSupported _
   | EUnnecessaryOptionalChain _
   | EUnnecessaryInvariant _
   | EImplicitInexactObject _
@@ -3098,3 +3349,253 @@ let is_lint_error = function
   | EUninitializedInstanceProperty _ ->
     true
   | _ -> false
+
+open Error_codes
+
+let error_code_of_use_op use_op ~default =
+  let code_of_root = function
+    | Cast _ -> Some IncompatibleCast
+    | ClassExtendsCheck _ -> Some IncompatibleExtend
+    | FunCall _
+    | FunCallMethod _ ->
+      Some IncompatibleCall
+    | FunReturnStatement _
+    | FunImplicitReturn _ ->
+      Some IncompatibleReturn
+    | _ -> None
+  in
+  let code_of_frame acc frame =
+    match (acc, frame) with
+    | (Some _, _) -> acc
+    | (_, TypeArgCompatibility _)
+    | (_, TypeParamBound _) ->
+      Some IncompatibleTypeArg
+    | (_, CallFunCompatibility _) -> Some InvalidCallUtil
+    | (_, TupleMapFunCompatibility _) -> Some InvalidTupleMap
+    | (_, ObjMapFunCompatibility _) -> Some InvalidObjMap
+    | (_, ObjMapiFunCompatibility _) -> Some InvalidObjMapi
+    | (None, _) -> None
+  in
+  Base.Option.first_some (fold_use_op code_of_root code_of_frame use_op) (Some default)
+
+let error_code_of_upper_kind = function
+  | IncompatibleConstructorT
+  | IncompatibleCallT ->
+    Some NotAFunction
+  | IncompatibleObjAssignFromTSpread
+  | IncompatibleArrRestT ->
+    Some NotAnArray
+  | IncompatibleObjAssignFromT
+  | IncompatibleObjRestT
+  | IncompatibleObjSealT
+  | IncompatibleGetKeysT ->
+    Some NotAnObject
+  | IncompatibleMixinT
+  | IncompatibleThisSpecializeT ->
+    Some NotAClass
+  | _ -> Some Error_codes.IncompatibleUse
+
+let error_code_of_message err : error_code option =
+  match err with
+  | EAdditionMixed _ -> Some UnclearAddition
+  | EArithmeticOperand _ -> Some UnsafeAddition
+  | EAssignExportedConstLikeBinding _ -> Some CannotReassignExport
+  | EBadExportContext _ -> Some InvalidExport
+  | EBadExportPosition _ -> Some InvalidExport
+  | EBadDefaultImportAccess _ -> Some DefaultImportAccess
+  | EBadDefaultImportDestructuring _ -> Some DefaultImportAccess
+  | EInvalidImportStarUse _ -> Some InvalidImportStarUse
+  | EBigIntNotYetSupported _ -> Some BigIntUnsupported
+  | EBinaryInLHS _ -> Some InvalidInLhs
+  | EBinaryInRHS _ -> Some InvalidInRhs
+  | EBindingError (binding_error, _, _, _) ->
+    begin
+      match binding_error with
+      | ENameAlreadyBound -> Some NameAlreadyBound
+      | EReferencedBeforeDeclaration -> Some ReferenceBeforeDeclaration
+      | ETypeInValuePosition
+      | ETypeAliasInValuePosition ->
+        Some TypeAsValue
+      | EConstReassigned
+      | EConstParamReassigned ->
+        Some ReassignConst
+      | EImportReassigned -> Some ReassignImport
+      | EEnumReassigned -> Some ReassignEnum
+    end
+  | EBuiltinLookupFailed { name; _ } ->
+    begin
+      match name with
+      | Some x when is_internal_module_name x -> Some CannotResolveModule
+      | _ -> Some CannotResolveName
+    end
+  | ECallTypeArity _ -> Some NonpolymorphicTypeArg
+  | ECannotDelete _ -> Some CannotDelete
+  | ECannotResolveOpenTvar _ -> Some CannotInferType
+  | ECannotSpreadIndexerOnRight _ -> Some CannotSpreadIndexer
+  | ECannotSpreadInterface _ -> Some CannotSpreadInterface
+  | ECharSetAnnot _ -> Some InvalidCharsetTypeArg
+  | ECodelessSuppression _ -> None
+  | ENonStrictEqualityComparison _
+  | EComparison _ ->
+    Some InvalidCompare
+  | EComputedPropertyWithMultipleLowerBounds _ -> Some InvalidComputedProp
+  | EComputedPropertyWithUnion _ -> Some InvalidComputedProp
+  | EDebugPrint (_, _) -> None
+  | EDocblockError (_, err) ->
+    begin
+      match err with
+      | MultipleFlowAttributes -> Some DuplicateFlowDecl
+      | MultipleProvidesModuleAttributes -> Some DuplicateProvideModuleDecl
+      | MultipleJSXAttributes -> Some DuplicateJsxDecl
+      | InvalidJSXAttribute _ -> Some InvalidJsxDecl
+    end
+  | EDuplicateModuleProvider _ -> Some DuplicateModule
+  | EEnumAllMembersAlreadyChecked _ -> Some InvalidExhaustiveCheck
+  | EEnumInvalidCheck _ -> Some InvalidExhaustiveCheck
+  | EEnumInvalidMemberAccess _ -> Some InvalidEnumAccess
+  | EEnumInvalidObjectUtil _ -> Some NotAnObject
+  | EEnumNotIterable _ -> Some NotIterable
+  | EEnumMemberAlreadyChecked _ -> Some InvalidExhaustiveCheck
+  | EEnumMemberDuplicateValue _ -> Some DuplicateEnumInit
+  | EEnumMemberUsedAsType _ -> Some EnumValueAsType
+  | EEnumModification _ -> Some CannotWriteEnum
+  | EEnumNotAllChecked _ -> Some InvalidExhaustiveCheck
+  | EExpectedBooleanLit { use_op; _ } -> error_code_of_use_op use_op ~default:IncompatibleType
+  | EExpectedNumberLit { use_op; _ } -> error_code_of_use_op use_op ~default:IncompatibleType
+  | EExpectedStringLit { use_op; _ } -> error_code_of_use_op use_op ~default:IncompatibleType
+  | EExperimentalClassProperties (_, _) -> Some IllegalClassField
+  | EExperimentalDecorators _ -> Some IllegalDecorator
+  | EExperimentalEnums _ -> Some IllegalEnum
+  | EExperimentalExportStarAs _ -> Some IllegalExportStar
+  | EExperimentalOptionalChaining _ -> Some IllegalOptionalChain
+  | EExponentialSpread _ -> Some ExponentialSpread
+  | EExportsAnnot _ -> Some InvalidExportsTypeArg
+  | EExportValueAsType (_, _) -> Some ExportValueAsType
+  | EForInRHS _ -> Some InvalidInRhs
+  | EFunctionCallExtraArg _ -> Some ExtraArg
+  | EFunPredCustom (_, _) -> Some FunctionPredicate
+  | EIdxArity _ -> Some InvalidIdx
+  | EIdxUse1 _ -> Some InvalidIdx
+  | EIdxUse2 _ -> Some InvalidIdx
+  | EImportTypeAsTypeof (_, _) -> Some InvalidImportType
+  | EImportTypeAsValue (_, _) -> Some ImportTypeAsValue
+  | EImportValueAsType (_, _) -> Some ImportValueAsType
+  | EIncompatible { upper = (_, upper_kind); branches = []; _ } ->
+    error_code_of_upper_kind upper_kind
+  | EIncompatible { use_op = Some use_op; _ } ->
+    error_code_of_use_op use_op ~default:Error_codes.IncompatibleUse
+  | EIncompatible _ -> Some Error_codes.IncompatibleUse
+  | EIncompatibleDefs { use_op; _ } -> error_code_of_use_op use_op ~default:IncompatibleType
+  | EIncompatibleProp { use_op = Some use_op; _ } ->
+    error_code_of_use_op use_op ~default:IncompatibleType
+  | EIncompatibleProp { use_op = None; _ } -> Some IncompatibleType
+  | EIncompatibleWithExact (_, _, Inexact) -> Some IncompatibleExact
+  | EIncompatibleWithExact (_, _, Indexer) -> Some IncompatibleIndexer
+  | EIncompatibleWithShape _ -> Some IncompatibleShape
+  | EEnumIncompatible { use_op; _ }
+  | EIncompatibleWithUseOp { use_op; _ } ->
+    error_code_of_use_op use_op ~default:IncompatibleType
+  | EIndeterminateModuleType _ -> Some ModuleTypeConflict
+  | EInexactMayOverwriteIndexer _ -> Some CannotSpreadInexact
+  (* We don't want these to be suppressible *)
+  | EInternal (_, _) -> None
+  | EInvalidCharSet _ -> Some InvalidCharsetTypeArg
+  | EInvalidLHSInAssignment _ -> Some InvalidLhs
+  | EInvalidObjectKit _ -> Some NotAnObject
+  | EInvalidPrototype _ -> Some NotAnObject
+  | EInvalidReactConfigType _ -> Some InvalidReactConfig
+  | EInvalidReactCreateClass _ -> Some InvalidReactCreateClass
+  | EInvalidReactPropType _ -> Some InvalidPropType
+  | EInvalidTypeArgs (_, _) -> Some InvalidTypeArg
+  | EInvalidTypeof _ -> Some IllegalTypeof
+  | ELintSetting _ -> Some LintSetting
+  | EMalformedPackageJson (_, _) -> Some MalformedPackage
+  | EMissingAnnotation _ -> Some MissingAnnot
+  | EMissingTypeArgs _ -> Some MissingTypeArg
+  | EMixedImportAndRequire _ -> Some MixedImportAndRequire
+  | EModuleOutsideRoot (_, _) -> Some InvalidModule
+  | ENoDefaultExport (_, _, _) -> Some MissingExport
+  | ENoNamedExport (_, _, _, _) -> Some MissingExport
+  | ENonConstVarExport _ -> Some NonConstVarExport
+  | ENonLitArrayToTuple _ -> Some InvalidTupleArity
+  | ENotAReactComponent _ -> Some NotAComponent
+  | EObjectComputedPropertyAccess (_, _) -> Some InvalidComputedProp
+  | EObjectComputedPropertyAssign (_, _) -> Some InvalidComputedProp
+  | EOnlyDefaultExport (_, _, _) -> Some MissingExport
+  | EOptionalChainingMethods _ -> Some IllegalOptionalChain
+  (* We don't want these to be suppressible *)
+  | EParseError (_, _) -> None
+  | EPolarityMismatch _ -> Some IncompatibleVariance
+  | EPredAnnot _ -> Some InvalidPredTypeArg
+  | EPrivateAnnot _ -> Some InvalidPrivateTypeArg
+  | EPrivateLookupFailed _ -> Some Error_codes.PropMissing
+  | EPropertyTypeAnnot _ -> Some InvalidPropertyTypeArg
+  | EPropNotFound _ -> Some Error_codes.PropMissing
+  | EPropNotReadable _ -> Some CannotRead
+  | EPropNotWritable _ -> Some CannotWrite
+  | EPropPolarityMismatch _ -> Some IncompatibleVariance
+  | EReactElementFunArity (_, _, _) -> Some MissingArg
+  (* We don't want these to be suppressible *)
+  | ERecursionLimit (_, _) -> None
+  | ERefineAnnot _ -> Some InvalidRefineTypeArg
+  | ERefineAsValue (_, _) -> Some RefineAsValue
+  | EROArrayWrite _ -> Some CannotWrite
+  | ESignatureVerification _ -> Some SignatureVerificationFailure
+  | ESpeculationAmbiguous _ -> Some SpeculationAmbiguous
+  | EStrictLookupFailed _ -> Some Error_codes.PropMissing
+  | EThisInExportedFunction _ -> Some ThisInExportedFunction
+  | EExportRenamedDefault _ -> Some ExportRenamedDefault
+  | ETooFewTypeArgs (_, _, _) -> Some MissingTypeArg
+  | ETooManyTypeArgs (_, _, _) -> Some ExtraTypeArg
+  | ETrustedAnnot _ -> Some InvalidTrustedTypeArg
+  | ETrustIncompatibleWithUseOp _ -> Some Error_codes.IncompatibleTrust
+  | ETupleArityMismatch _ -> Some InvalidTupleArity
+  | ETupleNonIntegerIndex _ -> Some InvalidTupleIndex
+  | ETupleOutOfBounds _ -> Some InvalidTupleIndex
+  | ETupleUnsafeWrite _ -> Some InvalidTupleIndex
+  | ETypeParamArity (_, _) -> Some NonpolymorphicTypeApp
+  | ETypeParamMinArity (_, _) -> Some MissingTypeArg
+  | EUnableToSpread { error_kind; _ } ->
+    begin
+      match error_kind with
+      | Inexact -> Some CannotSpreadInexact
+      | Indexer -> Some CannotSpreadIndexer
+    end
+  | EUnexpectedTemporaryBaseType _ -> Some InvalidTempType
+  | EUnexpectedThisType _ -> Some IllegalThis
+  | EUnexpectedTypeof _ -> Some InvalidTypeOf
+  | EUnionSpeculationFailed { use_op; _ } -> error_code_of_use_op use_op ~default:IncompatibleType
+  | EUnreachable _ -> Some UnreachableCode
+  | EUnsafeGetSet _ -> Some IllegalGetSet
+  | EUnsupportedExact (_, _) -> Some InvalidExact
+  | EUnsupportedImplements _ -> Some CannotImplement
+  | EUnsupportedKeyInObjectType _ -> Some IllegalKey
+  | EUnsupportedSetProto _ -> Some CannotWrite
+  | EUnsupportedSyntax (_, _) -> Some UnsupportedSyntax
+  | EMalformedCode _
+  | EUnusedSuppression _ ->
+    None
+  | EUseArrayLiteral _ -> Some IllegalNewArray
+  | EAnyValueUsedAsType _
+  | EValueUsedAsType _ ->
+    Some ValueAsType
+  (* lints should match their lint name *)
+  | EUntypedTypeImport _
+  | EUntypedImport _
+  | ENonstrictImport _
+  | EUnclearType _
+  | EDeprecatedType _
+  | EDeprecatedUtility _
+  | EUnsafeGettersSetters _
+  | ESketchyNullLint _
+  | ESketchyNumberLint _
+  | EUnnecessaryOptionalChain _
+  | EUnnecessaryInvariant _
+  | EImplicitInexactObject _
+  | EAmbiguousObjectType _
+  | EUninitializedInstanceProperty _ ->
+    begin
+      match kind_of_msg err with
+      | Errors.LintError kind -> Some (Error_codes.code_of_lint kind)
+      | _ -> None
+    end

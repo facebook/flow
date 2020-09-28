@@ -1,0 +1,4 @@
+[options]
+well_formed_exports=true
+well_formed_exports.includes=<PROJECT_ROOT>/a
+all=true

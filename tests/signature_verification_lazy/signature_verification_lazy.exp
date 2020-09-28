@@ -49,7 +49,7 @@ To learn more, visit flow.org/en/docs/lang/lazy-modes
 ===== suppressed signature-verification error should not be reported after focus-checking bad_module_export.js: =====
 Error ---------------------------------------------------------------------------------------- bad_module_export.js:4:13
 
-`module` may only be used as part of a legal top level export statement
+`module` may only be used as part of a legal top level export statement [invalid-export]
 
    4|   const x = module.exports;
                   ^^^^^^
@@ -73,7 +73,7 @@ To learn more, visit flow.org/en/docs/lang/lazy-modes
 ===== unsuppressed signature-verification error should be reported after focus-checking signature_verification_error.js: =====
 Error ---------------------------------------------------------------------------------------- bad_module_export.js:4:13
 
-`module` may only be used as part of a legal top level export statement
+`module` may only be used as part of a legal top level export statement [invalid-export]
 
    4|   const x = module.exports;
                   ^^^^^^
@@ -90,7 +90,7 @@ Unexpected token `;`
 Error ----------------------------------------------------------------------------- signature_verification_error.js:3:31
 
 Cannot build a typed interface for this module. You should annotate the exports of this module with types. Missing type
-annotation at function return: (`signature-verification-failure`)
+annotation at function return: [signature-verification-failure]
 
    3| export function foo(x: number) { return x; }
                                     
@@ -106,7 +106,7 @@ To learn more, visit flow.org/en/docs/lang/lazy-modes
 ===== unsuppressed signature-verification error in file which is part of a cycle should be reported when focusing on another part of the cycle =====
 Error ---------------------------------------------------------------------------------------- bad_module_export.js:4:13
 
-`module` may only be used as part of a legal top level export statement
+`module` may only be used as part of a legal top level export statement [invalid-export]
 
    4|   const x = module.exports;
                   ^^^^^^
@@ -115,7 +115,7 @@ Error --------------------------------------------------------------------------
 Error --------------------------------------------------------------------------------------------------- cycleC.js:5:31
 
 Cannot build a typed interface for this module. You should annotate the exports of this module with types. Missing type
-annotation at function return: (`signature-verification-failure`)
+annotation at function return: [signature-verification-failure]
 
    5| export function foo(x: number) { return x; } // error when force-checking cycleA.js
                                     
@@ -132,7 +132,7 @@ Unexpected token `;`
 Error ----------------------------------------------------------------------------- signature_verification_error.js:3:31
 
 Cannot build a typed interface for this module. You should annotate the exports of this module with types. Missing type
-annotation at function return: (`signature-verification-failure`)
+annotation at function return: [signature-verification-failure]
 
    3| export function foo(x: number) { return x; }
                                     

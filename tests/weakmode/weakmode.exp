@@ -1,6 +1,6 @@
 Error --------------------------------------------------------------------------------- should_fail_without_weak.js:9:10
 
-Cannot perform arithmetic operation because string [1] is not a number.
+Cannot perform arithmetic operation because string [1] is not a number. [unsafe-addition]
 
    should_fail_without_weak.js:9:10
    9|   return returns_a_string() * 10;

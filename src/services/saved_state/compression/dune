@@ -1,0 +1,6 @@
+(library
+  (name flow_service_saved_state_compression)
+  (wrapped false)
+  (c_names saved_state_compression_stubs)
+  (libraries lz4)
+)

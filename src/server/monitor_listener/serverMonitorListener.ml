@@ -43,19 +43,24 @@ module ListenLoop = LwtLoop.Make (struct
             connections = Persistent_connection.remove_client_from_clients env.connections client_id;
           });
       Lwt.return_unit
-    | MonitorProt.FileWatcherNotification (changed_files, metadata) ->
+    | MonitorProt.FileWatcherNotification { files = changed_files; metadata; initial } ->
+      let open LspProt in
       let file_count = SSet.cardinal changed_files in
-      let reason =
-        LspProt.(
+      if initial then (
+        let reason = Lazy_init_typecheck in
+        ServerMonitorListenerState.push_files_to_force_focused_and_recheck ~reason changed_files;
+        Lwt.return_unit
+      ) else
+        let reason =
           match metadata with
           | Some { MonitorProt.changed_mergebase = true; total_update_distance } ->
             Rebased { distance = total_update_distance; file_count }
           | _ when file_count = 1 ->
             Single_file_changed { filename = SSet.elements changed_files |> List.hd }
-          | _ -> Many_files_changed { file_count })
-      in
-      ServerMonitorListenerState.push_files_to_recheck ?metadata ~reason changed_files;
-      Lwt.return_unit
+          | _ -> Many_files_changed { file_count }
+        in
+        ServerMonitorListenerState.push_files_to_recheck ?metadata ~reason changed_files;
+        Lwt.return_unit
     | MonitorProt.PleaseDie please_die_reason ->
       kill_workers ();
       let msg =

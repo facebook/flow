@@ -108,10 +108,14 @@ let tests =
       assert_program_string ~ctxt ~pretty:true "A;\n/*L1*/\n/*L2*/\nB;";
       assert_program_string ~ctxt ~pretty:true "A; //L\nB;";
       assert_program_string ~ctxt ~pretty:true "A; /*T1\nT2*/\nB;" );
+    ( "assignment_expression" >:: fun ctxt ->
+      assert_expression_string ~ctxt ~pretty:true "A = //L\nB";
+      assert_expression_string ~ctxt ~pretty:true "A =\n//L\nB" );
     ( "array" >:: fun ctxt ->
       assert_expression_string ~ctxt "[/*I*/]";
       assert_expression_string ~ctxt ~pretty:true "[\n  a,\n  /*I*/\n]";
-      assert_expression_string ~ctxt ~pretty:true "[\n  a,\n  \n  /*I*/\n]" );
+      assert_expression_string ~ctxt ~pretty:true "[\n  a,\n  \n  /*I*/\n]";
+      assert_expression_string ~ctxt ~pretty:true "[\n  a //T\n  ,\n  \n  //L\n  b,\n]" );
     ( "array_pattern" >:: fun ctxt ->
       assert_statement_string ~ctxt "var[/*I*/];";
       assert_statement_string ~ctxt ~pretty:true "var [\n  a\n  /*I*/\n];";
@@ -123,9 +127,26 @@ let tests =
       assert_expression_string ~ctxt ~pretty:true "() =>\n//L\n<A />" );
     ( "arrow_function_params" >:: fun ctxt ->
       assert_expression_string ~ctxt "/*L*/()/*T*/=>{}";
-      assert_expression ~ctxt "/*L*/A/*T*/=>{}" (expression_of_string "/*L*/(A)/*T*/=>{}") );
+      assert_expression ~ctxt "/*L*/A/*T*/=>{}" (expression_of_string "/*L*/(A)/*T*/=>{}");
+      assert_expression_string ~ctxt "(/*L*/A/*T*/)=>{}";
+      assert_expression_string ~ctxt "//L\nA=>{}" );
     ("block" >:: fun ctxt -> assert_statement_string ~ctxt "{/*I*/}");
     ("break" >:: fun ctxt -> assert_statement_string ~ctxt "break;/*T*/");
+    ( "binary_expression" >:: fun ctxt ->
+      assert_expression_string ~ctxt ~pretty:true "a + //L\nb";
+      assert_expression_string ~ctxt ~pretty:true "a + //L\n+b";
+      assert_expression_string ~ctxt ~pretty:true "a + \n//L\nb";
+      assert_expression_string ~ctxt ~pretty:true "a + \n//L\n+b" );
+    ( "call" >:: fun ctxt ->
+      let a80 = String.make 80 'a' in
+      assert_expression_string ~ctxt "foo(/*I*/)";
+      assert_expression_string ~ctxt ~pretty:true ("foo(\n  " ^ a80 ^ ",\n  /*I*/\n)");
+      assert_expression_string ~ctxt ~pretty:true "foo(\n  a,\n  \n  /*I*/\n)" );
+    ( "call_type_args" >:: fun ctxt ->
+      let a80 = String.make 80 'a' in
+      assert_expression_string ~ctxt "foo</*I*/>()";
+      assert_expression_string ~ctxt ~pretty:true ("foo<\n  " ^ a80 ^ ",\n  /*I*/\n>()");
+      assert_expression_string ~ctxt ~pretty:true "foo<\n  a,\n  \n  /*I*/\n>()" );
     ("class_private_field" >:: fun ctxt -> assert_expression_string ~ctxt "class C{/*L*/#A/*T*/;}");
     ("continue" >:: fun ctxt -> assert_statement_string ~ctxt "continue;/*T*/");
     ("debugger" >:: fun ctxt -> assert_statement_string ~ctxt "debugger;/*T*/");
@@ -146,19 +167,43 @@ let tests =
       assert_statement_string ~ctxt "type T=(/*I*/)=>a;";
       assert_statement_string ~ctxt ~pretty:true "type T = (\n  a\n  /*I*/\n) => b;";
       assert_statement_string ~ctxt ~pretty:true "type T = (\n  a\n  \n  /*I*/\n) => b;" );
+    ( "if_statement" >:: fun ctxt ->
+      assert_statement_string ~ctxt ~pretty:true "if (true) {} //L\n else {}";
+      assert_statement_string ~ctxt ~pretty:true "if (true) {}\n//L\nelse {}" );
     ("jsx_expression_container" >:: fun ctxt -> assert_expression_string ~ctxt "<A>{/*I*/}</A>");
     ("literal" >:: fun ctxt -> assert_expression_string ~ctxt "//L\n1//T\n");
+    ( "logical_expression" >:: fun ctxt ->
+      assert_expression_string ~ctxt ~pretty:true "a && //L\n  b";
+      assert_expression_string ~ctxt ~pretty:true "a &&\n  //L\n  b";
+      assert_expression_string ~ctxt ~pretty:true "(\n  //L\n  a &&\n    b\n) ??\n  c" );
     ("tagged_template" >:: fun ctxt -> assert_expression_string ~ctxt "/*L1*/A/*L2*/`B`/*T*/");
     ( "member_expression" >:: fun ctxt ->
       assert_expression_string ~ctxt "A./*L*/B/*T*/";
-      assert_expression_string ~ctxt "A./*L*/#B/*T*/" );
+      assert_expression_string ~ctxt "A./*L*/#B/*T*/";
+      assert_expression_string ~ctxt ~pretty:true "foo //C\n.bar";
+      assert_expression_string ~ctxt ~pretty:true "foo /*C*/\n.bar";
+      assert_expression_string ~ctxt ~pretty:true "foo /*C*/.bar";
+      assert_expression_string ~ctxt ~pretty:true "foo\n//C\n.bar";
+      assert_expression_string ~ctxt ~pretty:true "foo\n/*C*/\n.bar";
+      assert_expression_string ~ctxt ~pretty:true "foo\n/*C*/.bar";
+      assert_expression_string ~ctxt ~pretty:true "foo[\n  //L\n  a\n]" );
+    ( "new" >:: fun ctxt ->
+      let a80 = String.make 80 'a' in
+      assert_expression_string ~ctxt "new Foo(/*I*/)";
+      assert_expression_string ~ctxt ~pretty:true ("new Foo(\n  " ^ a80 ^ ",\n  /*I*/\n)");
+      assert_expression_string ~ctxt ~pretty:true "new Foo(\n  a,\n  \n  /*I*/\n)";
+      assert_expression_string ~ctxt ~pretty:true "new (\n  //L\n  A ||\n    B\n)" );
     ( "object" >:: fun ctxt ->
       assert_expression_string ~ctxt "{/*I*/}";
       assert_expression_string ~ctxt ~pretty:true "{\n  a,\n  /*I*/\n}";
-      assert_expression_string ~ctxt ~pretty:true "{\n  a,\n  \n  /*I*/\n}" );
+      assert_expression_string ~ctxt ~pretty:true "{\n  a,\n  \n  /*I*/\n}";
+      assert_expression_string ~ctxt ~pretty:true "{\n  a: //L\n  b,\n}";
+      assert_expression_string ~ctxt ~pretty:true "{\n  a:\n  //L\n  b,\n}" );
     ( "object_pattern" >:: fun ctxt ->
+      let b80 = String.make 80 'b' in
       assert_statement_string ~ctxt "var{/*I*/};";
-      assert_statement_string ~ctxt "var{a,/*I*/};" );
+      assert_statement_string ~ctxt ~pretty:true ("var {\n  a,\n  " ^ b80 ^ "\n  /*I*/\n};");
+      assert_statement_string ~ctxt ~pretty:true ("var {\n  a,\n  " ^ b80 ^ "\n  \n  /*I*/\n};") );
     ( "object_type" >:: fun ctxt ->
       assert_statement_string ~ctxt "type T={/*I*/};";
       assert_statement_string ~ctxt "type T={a:any,/*I*/};";
@@ -177,9 +222,38 @@ let tests =
         "type T = {\n  a: any,\n  /*I1*/\n  \n  /*I2*/\n  ...,\n};";
       (* Leading comments on variance nodes are included in comment bounds of property *)
       assert_statement_string ~ctxt ~pretty:true "type T = {\n  +a: any,\n  //L\n  +b: any,\n};" );
-    ("return" >:: fun ctxt -> assert_statement_string ~ctxt "return;/*T*/");
+    ( "parenthesized_expression" >:: fun ctxt ->
+      assert_expression_string ~ctxt ~pretty:true "(\n  //L\n  a + b\n) * c" );
+    ( "return" >:: fun ctxt ->
+      assert_statement_string ~ctxt "return;/*T*/";
+      assert_statement_string ~ctxt ~pretty:true "return (\n  //L\n  x\n);";
+      assert_statement_string ~ctxt ~pretty:true "return /*L*/ x;" );
     ( "switch_case" >:: fun ctxt ->
       assert_statement_string ~ctxt ~pretty:true "switch (x) {\n  case 1: /*T*/\n    break;\n}" );
-    ("throw" >:: fun ctxt -> assert_statement_string ~ctxt "throw A;/*T*/");
-    ("variable_declaration" >:: fun ctxt -> assert_statement_string ~ctxt "let A=B;/*T*/");
+    ( "throw" >:: fun ctxt ->
+      assert_statement_string ~ctxt "throw A;/*T*/";
+      assert_statement_string ~ctxt ~pretty:true "throw (\n  //L\n  x\n);";
+      assert_statement_string ~ctxt ~pretty:true "throw /*L*/ x;" );
+    ( "type_alias" >:: fun ctxt ->
+      assert_statement_string ~ctxt ~pretty:true "type A = //L\nB;";
+      assert_statement_string ~ctxt ~pretty:true "type A =\n//L\nB;" );
+    ( "type_args" >:: fun ctxt ->
+      let a80 = String.make 80 'a' in
+      assert_statement_string ~ctxt "type Foo=Bar</*I*/>;";
+      assert_statement_string ~ctxt ~pretty:true ("type Foo = Bar<\n  " ^ a80 ^ ",\n  /*I*/\n>;");
+      assert_statement_string ~ctxt ~pretty:true "type Foo = Bar<\n  a,\n  \n  /*I*/\n>;" );
+    ( "type_params" >:: fun ctxt ->
+      let a80 = String.make 80 'a' in
+      assert_expression_string ~ctxt ~pretty:true ("<\n  " ^ a80 ^ ",\n  /*I*/\n>() => {}");
+      assert_expression_string ~ctxt ~pretty:true ("<\n  " ^ a80 ^ ",\n  \n  /*I*/\n>() => {}") );
+    ( "union_type" >:: fun ctxt ->
+      let b80 = String.make 80 'b' in
+      assert_statement_string ~ctxt ~pretty:true ("type Foo =\n//L\n| a\n  | " ^ b80 ^ ";");
+      assert_statement_string ~ctxt ~pretty:true ("type Foo = \n  | a\n  | //L\n  " ^ b80 ^ ";");
+      assert_statement_string ~ctxt ~pretty:true ("type Foo = \n  | a\n  |\n  //L\n  " ^ b80 ^ ";")
+    );
+    ( "variable_declaration" >:: fun ctxt ->
+      assert_statement_string ~ctxt "let A=B;/*T*/";
+      assert_statement_string ~ctxt ~pretty:true "let A = //L\nB;";
+      assert_statement_string ~ctxt ~pretty:true "let A =\n//L\nB;" );
   ]

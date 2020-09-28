@@ -14,7 +14,7 @@ class Class {
 }
 
 declare var x : mixed;
-//$FlowFixMe should suppress
+//$FlowFixMe[sketchy-null-mixed] should suppress
 if(x) {
 
 };

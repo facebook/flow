@@ -20,6 +20,7 @@ let metadata =
     strict_local = false;
     include_suppressions = false;
     (* global *)
+    automatic_require_default = false;
     babel_loose_array_spread = false;
     max_literal_length = 100;
     enable_const_params = false;
@@ -34,6 +35,7 @@ let metadata =
     exact_by_default = false;
     facebook_fbs = None;
     facebook_fbt = None;
+    facebook_module_interop = false;
     haste_module_ref_prefix = None;
     ignore_non_literal_requires = false;
     max_trace_depth = 0;
@@ -41,8 +43,9 @@ let metadata =
     react_runtime = Options.ReactRuntimeClassic;
     recursion_limit = 10000;
     root = Path.dummy_path;
+    strict_es6_import_export = false;
+    strict_es6_import_export_excludes = [];
     strip_root = true;
-    suppress_comments = [];
     suppress_types = SSet.empty;
     default_lib_dir = None;
     trust_mode = Options.NoTrust;
@@ -70,7 +73,7 @@ let parse_content file content =
     Parser_flow.program_file ~fail:false ~parse_options content (Some file)
   in
   match File_sig.program ~ast ~module_ref_prefix:None with
-  | Ok fsig -> Ok (ast, fsig)
+  | Ok (fsig, _) -> Ok (ast, fsig)
   | Error e -> Error e
 
 (* copied from Type_inference_js *)
@@ -114,22 +117,15 @@ let before_and_after_stmts file_name =
   let file_key = File_key.LibFile file_name in
   match parse_content file_key content with
   | Error e -> Error e
-  | Ok ((_, stmts, _), file_sig) ->
+  | Ok ((_, { Flow_ast.Program.statements = stmts; _ }), file_sig) ->
     let cx =
-      let sig_cx = Context.make_sig () in
-      let aloc_table = Utils_js.FilenameMap.empty in
+      let aloc_tables = Utils_js.FilenameMap.empty in
       let rev_table = lazy (ALoc.make_empty_reverse_table ()) in
-      Context.make
-        sig_cx
-        metadata
-        file_key
-        aloc_table
-        rev_table
-        Files.lib_module_ref
-        Context.Checking
+      let sig_cx = Context.make_sig () in
+      let ccx = Context.make_ccx sig_cx aloc_tables in
+      Context.make ccx metadata file_key rev_table Files.lib_module_ref Context.Checking
     in
     Flow_js.mk_builtins cx;
-    Flow_js.Cache.clear ();
     add_require_tvars cx file_sig;
     let module_scope = Scope.fresh () in
     Env.init_env cx module_scope;
@@ -148,7 +144,7 @@ let before_and_after_stmts file_name =
               {
                 Flow_ast.Statement.Expression.expression = t_expr;
                 directive = None;
-                comments = Flow_ast_utils.mk_comments_opt ();
+                comments = None;
               } );
         ]
       | e ->
@@ -228,7 +224,14 @@ let pp_diff =
   in
   let string_of_src stmts =
     let none_mapper = new loc_none_mapper in
-    let prog = (Loc.none, Base.List.map ~f:none_mapper#statement stmts, []) in
+    let prog =
+      ( Loc.none,
+        {
+          Flow_ast.Program.statements = Base.List.map ~f:none_mapper#statement stmts;
+          comments = None;
+          all_comments = [];
+        } )
+    in
     let layout = Js_layout_generator.program ~preserve_docblock:false ~checksum:None prog in
     layout |> Pretty_printer.print ~source_maps:None |> Source.contents
   in
@@ -255,7 +258,7 @@ let check_structural_equality relative_path file_name stmts1 stmts2 =
     ^ " * restore the produced Typed AST, or\n"
     ^ " * include \""
     ^ relative_path
-    ^ "\" in the blacklist section\n"
+    ^ "\" in the blocklist section\n"
     ^ "   in src/typing/__tests__/typed_ast_test.ml and file a task with the\n"
     ^ "   'flow-typed-ast' tag.\n"
   in
@@ -268,7 +271,7 @@ let test_case relative_path file_name _ =
 
 (* This list includes files for which the produced Typed AST differs in structure
  * from the parsed AST. *)
-let blacklist = SSet.of_list ["invariant_reachability/index.js"]
+let blocklist = SSet.of_list ["invariant_reachability/index.js"; "return/implicit_void.js"]
 
 let tests =
   let relative_test_dir = "flow/tests" in
@@ -279,7 +282,7 @@ let tests =
     SSet.fold
       (fun file acc ->
         let relative_path = Files.relative_path root file in
-        if SSet.mem relative_path blacklist then
+        if SSet.mem relative_path blocklist then
           acc
         else
           let test_name =

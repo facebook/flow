@@ -421,7 +421,7 @@ mixed.js:18:17 = {
   "end":18
 }
 callable-object.js:8:6 = {
-  "type":"type Obj1 = {(...args: $ReadOnlyArray<mixed>): void, f: <T>(x: T) => T}",
+  "type":"type Obj1 = {(...args: $ReadOnlyArray<mixed>): void, f: <T>(x: T) => T, ...}",
   "reasons":[],
   "loc":{
     "source":"callable-object.js",
@@ -436,7 +436,7 @@ callable-object.js:8:6 = {
   "end":9
 }
 callable-object.js:13:6 = {
-  "type":"type Obj2 = {$call: (...args: $ReadOnlyArray<mixed>) => void, f: <T>(x: T) => T}",
+  "type":"type Obj2 = {$call: (...args: $ReadOnlyArray<mixed>) => void, f: <T>(x: T) => T, ...}",
   "reasons":[],
   "loc":{
     "source":"callable-object.js",
@@ -451,7 +451,7 @@ callable-object.js:13:6 = {
   "end":9
 }
 callable-object.js:18:6 = {
-  "type":"type Obj3 = {(...args: $ReadOnlyArray<mixed>): void, f: <T>(x: T) => T}",
+  "type":"type Obj3 = {(...args: $ReadOnlyArray<mixed>): void, f: <T>(x: T) => T, ...}",
   "reasons":[],
   "loc":{
     "source":"callable-object.js",
@@ -466,7 +466,7 @@ callable-object.js:18:6 = {
   "end":9
 }
 callable-object.js:23:6 = {
-  "type":"type Obj4 = {(...args: $ReadOnlyArray<mixed>): O1, $call: (...args: $ReadOnlyArray<mixed>) => O3, f: <T>(x: T) => T} & {(...args: $ReadOnlyArray<mixed>): O2, $call: (...args: $ReadOnlyArray<mixed>) => O3, f: <T>(x: T) => T} & {(...args: $ReadOnlyArray<mixed>): O4, $call: (...args: $ReadOnlyArray<mixed>) => O3, f: <T>(x: T) => T}",
+  "type":"type Obj4 = {(...args: $ReadOnlyArray<mixed>): O1, $call: (...args: $ReadOnlyArray<mixed>) => O3, f: <T>(x: T) => T, ...} & {(...args: $ReadOnlyArray<mixed>): O2, $call: (...args: $ReadOnlyArray<mixed>) => O3, f: <T>(x: T) => T, ...} & {(...args: $ReadOnlyArray<mixed>): O4, $call: (...args: $ReadOnlyArray<mixed>) => O3, f: <T>(x: T) => T, ...}",
   "reasons":[],
   "loc":{
     "source":"callable-object.js",
@@ -481,7 +481,7 @@ callable-object.js:23:6 = {
   "end":9
 }
 callable-object.js:31:6 = {
-  "type":"type Obj5 = {(...args: $ReadOnlyArray<mixed>): O4, $call: (...args: $ReadOnlyArray<mixed>) => O3, f: <T>(x: T) => T} & {(...args: $ReadOnlyArray<mixed>): O1, $call: (...args: $ReadOnlyArray<mixed>) => O3, f: <T>(x: T) => T} & {(...args: $ReadOnlyArray<mixed>): O2, $call: (...args: $ReadOnlyArray<mixed>) => O3, f: <T>(x: T) => T}",
+  "type":"type Obj5 = {(...args: $ReadOnlyArray<mixed>): O4, $call: (...args: $ReadOnlyArray<mixed>) => O3, f: <T>(x: T) => T, ...} & {(...args: $ReadOnlyArray<mixed>): O1, $call: (...args: $ReadOnlyArray<mixed>) => O3, f: <T>(x: T) => T, ...} & {(...args: $ReadOnlyArray<mixed>): O2, $call: (...args: $ReadOnlyArray<mixed>) => O3, f: <T>(x: T) => T, ...}",
   "reasons":[],
   "loc":{
     "source":"callable-object.js",
@@ -856,7 +856,7 @@ optional.js:7:2 = {
   "end":3
 }
 optional.js:10:11 = {
-  "type":"{x?: string}",
+  "type":"{x?: string, ...}",
   "reasons":[],
   "loc":{
     "source":"optional.js",
@@ -901,7 +901,7 @@ optional.js:14:10 = {
   "end":10
 }
 stack-overflow-bugfix.js:5:6 = {
-  "type":"type T = {+fn: <A, B>() => (value: B) => S<A, C<B>>}",
+  "type":"type T = {+fn: <A, B>() => (value: B) => S<A, C<B>>, ...}",
   "reasons":[],
   "loc":{
     "source":"stack-overflow-bugfix.js",
@@ -991,7 +991,7 @@ recursive.js:38:2 = {
   "end":3
 }
 recursive.js:41:17 = {
-  "type":"type V$1 = (x: V$1) => V$2; type V$2 = (x: V$1) => V$2; type Foo = {n: (x: (x: V$1) => V$2) => (x: V$1) => V$2}",
+  "type":"type V$1 = (x: V$1) => V$2; type V$2 = (x: V$1) => V$2; type Foo = {n: (x: (x: V$1) => V$2) => (x: V$1) => V$2, ...}",
   "reasons":[],
   "loc":{
     "source":"recursive.js",
@@ -1051,7 +1051,7 @@ recursive.js:60:31 = {
   "end":31
 }
 subst.js:13:7 = {
-  "type":"{f: number}",
+  "type":"{f: number, ...}",
   "reasons":[],
   "loc":{
     "source":"subst.js",
@@ -1186,7 +1186,7 @@ type-alias.js:5:6 = {
   "end":6
 }
 type-alias.js:6:6 = {
-  "type":"type D = {x: number}",
+  "type":"type D = {x: number, ...}",
   "reasons":[],
   "loc":{
     "source":"type-alias.js",
@@ -1261,7 +1261,7 @@ type-alias.js:12:12 {
   "end":12
 }
 type-alias.js:12:29 {
-  "type":"{t: string}",
+  "type":"{t: string, ...}",
   "reasons":[],
   "loc":{
     "source":"type-alias.js",
@@ -1321,7 +1321,7 @@ type-alias.js:17:8 {
   "end":8
 }
 type-alias.js:18:8 {
-  "type":"type D = {x: X}",
+  "type":"type D = {x: X, ...}",
   "reasons":[],
   "loc":{
     "source":"type-alias.js",
@@ -1426,7 +1426,7 @@ type-alias.js:29:6 {
   "end":6
 }
 type-alias.js:31:6 {
-  "type":"type O = {x: N<number>} | null",
+  "type":"type O = {x: N<number>, ...} | null",
   "reasons":[],
   "loc":{
     "source":"type-alias.js",
@@ -1510,7 +1510,7 @@ unions.js:15:2 = {
   "end":3
 }
 unions.js:24:3 = {
-  "type":"{+f: number} | {+f: string}",
+  "type":"{+f: number, ...} | {+f: string, ...}",
   "reasons":[],
   "loc":{
     "source":"unions.js",
@@ -1570,7 +1570,7 @@ unions.js:49:1 = {
   "end":3
 }
 unions.js:52:1 = {
-  "type":"{g: mixed}",
+  "type":"{g: mixed, ...}",
   "reasons":[],
   "loc":{
     "source":"unions.js",

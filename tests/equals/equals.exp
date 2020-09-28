@@ -1,6 +1,7 @@
 Error ---------------------------------------------------------------------------------------------------- equals.js:7:2
 
-Cannot compare number [1] to string [2].
+Cannot compare number [1] to string [2] with a non-strict equality check. Make sure the arguments are valid, or try
+using strict equality (`===` or `!==`) instead. [invalid-compare]
 
    equals.js:7:2
    7| (1 == ""); // error
@@ -14,7 +15,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- equals.js:8:2
 
-Cannot compare string [1] to number [2].
+Cannot compare string [1] to number [2] with a non-strict equality check. Make sure the arguments are valid, or try
+using strict equality (`===` or `!==`) instead. [invalid-compare]
 
    equals.js:8:2
    8| ("" == 1); // error

@@ -11,3 +11,7 @@ new /* 3.1 L id */ Foo /* 3.2 T id */
 
 new /* 4.1 L id */ Foo /* 4.2 T id */
   /* 4.3 T id */;
+
+new Foo(/* 5.1 I args */);
+
+new Foo(a, /* 6.1 I args */);

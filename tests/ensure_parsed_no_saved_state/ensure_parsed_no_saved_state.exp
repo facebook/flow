@@ -38,7 +38,7 @@ To learn more, visit flow.org/en/docs/lang/lazy-modes
 ==== Now we see the unknown module error ====
 Error -------------------------------------------------------------------------------------------------------- C.js:2:19
 
-Cannot resolve module `./D.js`.
+Cannot resolve module `./D.js`. [cannot-resolve-module]
 
    2| import {bar} from './D.js';
                         ^^^^^^^^

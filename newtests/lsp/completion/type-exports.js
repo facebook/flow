@@ -5,9 +5,9 @@ export type Typical = {|
   y : number
 |};
 
-export let Typhoon = "not a type";
+export let Typhoon: string = "not a type";
 
-export let Typhoons = "also not a type";
+export let Typhoons: string = "also not a type";
 
 export class Tyrannosaurus {};
 

@@ -6,4 +6,5 @@ type C = string
 
 type Foo = {| foo: A, bar: B |};
 declare var y : {| ...Foo, bar: C |};
-y.  // <-- AUTOCOMPLETE REQUEST HERE
+y.
+//^

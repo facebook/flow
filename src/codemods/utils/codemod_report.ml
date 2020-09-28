@@ -5,9 +5,14 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
+type reporter_options = {
+  strip_root: Path.t option;
+  exact_by_default: bool;
+}
+
 type 'a reporter =
-  | StringReporter of (strip_root:Path.t option -> 'a -> string)
-  | UnitReporter of (strip_root:Path.t option -> 'a -> unit)
+  | StringReporter of (reporter_options -> 'a -> string)
+  | UnitReporter of (reporter_options -> 'a -> unit)
 
 type 'a t = {
   report: 'a reporter;
@@ -16,7 +21,7 @@ type 'a t = {
 }
 
 let unit_reporter =
-  let report = StringReporter (fun ~strip_root:_ _ -> "") in
+  let report = StringReporter (fun _ _ -> "") in
   let combine _ _ = () in
   let empty = () in
   { report; combine; empty }

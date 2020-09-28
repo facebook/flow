@@ -44,17 +44,26 @@ val reposition :
   Type.t
 
 (* constraint utils *)
-val filter_optional : Context.t -> ?trace:Trace.t -> reason -> Type.t -> Type.t
+val filter_optional : Context.t -> ?trace:Trace.t -> reason -> Type.t -> Type.ident
 
 module Cache : sig
-  val clear : unit -> unit
+  val stats_poly_instantiation : Context.t -> Hashtbl.statistics
 
-  val stats_poly_instantiation : unit -> Hashtbl.statistics
-
-  val summarize_flow_constraint : unit -> (string * int) list
+  val summarize_flow_constraint : Context.t -> (string * int) list
 end
 
 val get_builtin_typeapp : Context.t -> ?trace:Trace.t -> reason -> string -> Type.t list -> Type.t
+
+val mk_typeapp_instance :
+  Context.t ->
+  ?trace:Trace.t ->
+  use_op:Type.use_op ->
+  reason_op:Reason.reason ->
+  reason_tapp:Reason.reason ->
+  ?cache:Reason.reason list ->
+  Type.t ->
+  Type.t list ->
+  Type.t
 
 val resolve_spread_list :
   Context.t ->
@@ -78,7 +87,7 @@ val check_polarity :
 (* selectors *)
 
 val eval_selector :
-  Context.t -> ?trace:Trace.t -> reason -> Type.t -> Type.selector -> Type.t -> unit
+  Context.t -> ?trace:Trace.t -> reason -> Type.t -> Type.selector -> Type.tvar -> unit
 
 val visit_eval_id : Context.t -> Type.Eval.id -> (Type.t -> unit) -> unit
 
@@ -115,7 +124,7 @@ val builtins : Context.t -> Type.t
 val get_builtin : Context.t -> ?trace:Trace.t -> string -> reason -> Type.t
 
 val lookup_builtin :
-  Context.t -> ?trace:Trace.t -> string -> reason -> Type.lookup_kind -> Type.t -> unit
+  Context.t -> ?trace:Trace.t -> string -> reason -> Type.lookup_kind -> Type.tvar -> unit
 
 val get_builtin_type : Context.t -> ?trace:Trace.t -> reason -> ?use_desc:bool -> string -> Type.t
 

@@ -1,7 +1,7 @@
 {
   "type":"Program",
-  "loc":{"source":null,"start":{"line":1,"column":0},"end":{"line":49,"column":25}},
-  "range":[0,1927],
+  "loc":{"source":null,"start":{"line":1,"column":0},"end":{"line":53,"column":41}},
+  "range":[0,2010],
   "body":[
     {
       "type":"TypeAlias",
@@ -1216,6 +1216,103 @@
           ]
         }
       }
+    },
+    {
+      "type":"TypeAlias",
+      "loc":{"source":null,"start":{"line":51,"column":0},"end":{"line":51,"column":38}},
+      "range":[1929,1967],
+      "id":{
+        "type":"Identifier",
+        "loc":{"source":null,"start":{"line":51,"column":5},"end":{"line":51,"column":11}},
+        "range":[1934,1940],
+        "name":"Test17",
+        "typeAnnotation":null,
+        "optional":false
+      },
+      "typeParameters":null,
+      "right":{
+        "type":"GenericTypeAnnotation",
+        "loc":{"source":null,"start":{"line":51,"column":14},"end":{"line":51,"column":37}},
+        "range":[1943,1966],
+        "id":{
+          "type":"Identifier",
+          "loc":{"source":null,"start":{"line":51,"column":14},"end":{"line":51,"column":17}},
+          "range":[1943,1946],
+          "name":"Foo",
+          "typeAnnotation":null,
+          "optional":false
+        },
+        "typeParameters":{
+          "type":"TypeParameterInstantiation",
+          "trailingComments":[
+            {
+              "type":"Block",
+              "loc":{"source":null,"start":{"line":51,"column":18},"end":{"line":51,"column":36}},
+              "range":[1947,1965],
+              "value":" 17.1 I targs "
+            }
+          ],
+          "loc":{"source":null,"start":{"line":51,"column":17},"end":{"line":51,"column":37}},
+          "range":[1946,1966],
+          "params":[]
+        }
+      }
+    },
+    {
+      "type":"TypeAlias",
+      "loc":{"source":null,"start":{"line":53,"column":0},"end":{"line":53,"column":41}},
+      "range":[1969,2010],
+      "id":{
+        "type":"Identifier",
+        "loc":{"source":null,"start":{"line":53,"column":5},"end":{"line":53,"column":11}},
+        "range":[1974,1980],
+        "name":"Test18",
+        "typeAnnotation":null,
+        "optional":false
+      },
+      "typeParameters":null,
+      "right":{
+        "type":"GenericTypeAnnotation",
+        "loc":{"source":null,"start":{"line":53,"column":14},"end":{"line":53,"column":40}},
+        "range":[1983,2009],
+        "id":{
+          "type":"Identifier",
+          "loc":{"source":null,"start":{"line":53,"column":14},"end":{"line":53,"column":17}},
+          "range":[1983,1986],
+          "name":"Foo",
+          "typeAnnotation":null,
+          "optional":false
+        },
+        "typeParameters":{
+          "type":"TypeParameterInstantiation",
+          "trailingComments":[
+            {
+              "type":"Block",
+              "loc":{"source":null,"start":{"line":53,"column":21},"end":{"line":53,"column":39}},
+              "range":[1990,2008],
+              "value":" 18.1 I targs "
+            }
+          ],
+          "loc":{"source":null,"start":{"line":53,"column":17},"end":{"line":53,"column":40}},
+          "range":[1986,2009],
+          "params":[
+            {
+              "type":"GenericTypeAnnotation",
+              "loc":{"source":null,"start":{"line":53,"column":18},"end":{"line":53,"column":19}},
+              "range":[1987,1988],
+              "id":{
+                "type":"Identifier",
+                "loc":{"source":null,"start":{"line":53,"column":18},"end":{"line":53,"column":19}},
+                "range":[1987,1988],
+                "name":"a",
+                "typeAnnotation":null,
+                "optional":false
+              },
+              "typeParameters":null
+            }
+          ]
+        }
+      }
     }
   ],
   "comments":[
@@ -1650,6 +1747,18 @@
       "loc":{"source":null,"start":{"line":49,"column":2},"end":{"line":49,"column":20}},
       "range":[1904,1922],
       "value":" 16.2 L targs "
+    },
+    {
+      "type":"Block",
+      "loc":{"source":null,"start":{"line":51,"column":18},"end":{"line":51,"column":36}},
+      "range":[1947,1965],
+      "value":" 17.1 I targs "
+    },
+    {
+      "type":"Block",
+      "loc":{"source":null,"start":{"line":53,"column":21},"end":{"line":53,"column":39}},
+      "range":[1990,2008],
+      "value":" 18.1 I targs "
     }
   ]
 }

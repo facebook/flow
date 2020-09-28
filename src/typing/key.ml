@@ -38,7 +38,7 @@ and proj_uses_propname ~private_ propname = function
     uses_propname ~private_ propname key || proj_uses_propname ~private_ propname tail
   | [] -> false
 
-let compare = Pervasives.compare
+let compare = Stdlib.compare
 
 let is_simple (_, ps) = List.length ps = 0
 

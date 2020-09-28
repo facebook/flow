@@ -1,0 +1,7 @@
+// @flow
+
+export type Node = { data: number; next: Node | null };
+
+export function newNode(): Node {
+  return { data: 0, next: null };
+};

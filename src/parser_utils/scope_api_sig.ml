@@ -62,6 +62,8 @@ module type S = sig
 
   val def_of_use : info -> use -> Def.t
 
+  val def_of_use_opt : info -> use -> Def.t option
+
   val use_is_def : info -> use -> bool
 
   val uses_of_def : info -> ?exclude_def:bool -> Def.t -> uses

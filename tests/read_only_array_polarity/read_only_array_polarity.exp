@@ -1,6 +1,7 @@
 Error ---------------------------------------------------------------------------------------------------- test.js:16:38
 
 Cannot use `T` [1] in an output position because `T` [1] is expected to occur only in input positions.
+[incompatible-variance]
 
    test.js:16:38
    16|     bad (x: number) : $ReadOnlyArray<T> {// Error: T in covariant position
@@ -15,6 +16,7 @@ References:
 Error ---------------------------------------------------------------------------------------------------- test.js:22:28
 
 Cannot use `T` [1] in an output position because `T` [1] is expected to occur only in input positions.
+[incompatible-variance]
 
    test.js:22:28
    22|     bad (x: $ReadOnlyArray<T> => number) : number {// Error: T used covariantly
@@ -28,7 +30,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:38:1
 
-Cannot assign `42` to `x[0]` because read-only arrays cannot be written to.
+Cannot assign `42` to `x[0]` because read-only arrays cannot be written to. [cannot-write]
 
    38| x[0] = 42;
        ^^^^
@@ -36,7 +38,7 @@ Cannot assign `42` to `x[0]` because read-only arrays cannot be written to.
 
 Error ----------------------------------------------------------------------------------------------------- test.js:39:1
 
-Cannot assign `42` to `x[0]` because read-only arrays cannot be written to.
+Cannot assign `42` to `x[0]` because read-only arrays cannot be written to. [cannot-write]
 
    39| x[(0: any)] = 42;
        ^^^^^^^^^^^

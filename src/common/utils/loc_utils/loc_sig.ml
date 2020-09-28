@@ -24,7 +24,13 @@ module type S = sig
     val show : (Format.formatter -> 'a -> unit) -> 'a t -> string
   end
 
-  module LSet : Set.S with type elt = t
+  module LSet : sig
+    include Set.S with type elt = t
+
+    val pp : Format.formatter -> t -> unit
+
+    val show : t -> string
+  end
 
   module LSetUtils : sig
     val ident_map : (LSet.elt -> LSet.elt) -> LSet.t -> LSet.t
@@ -70,7 +76,31 @@ module LocS : S with type t = Loc.t = struct
     let show pp_data x = Format.asprintf "%a" (pp pp_data) x
   end
 
-  module LSet = Set.Make (Loc)
+  module LSet = struct
+    include Set.Make (Loc)
+
+    let pp fmt x =
+      Format.fprintf fmt "@[<hv 2>{";
+      let elements = elements x in
+      (match elements with
+      | [] -> ()
+      | _ -> Format.fprintf fmt " ");
+      ignore
+        (List.fold_left
+           (fun sep elt ->
+             if sep then Format.fprintf fmt ";@ ";
+             Loc.pp fmt elt;
+             true)
+           false
+           elements);
+      (match elements with
+      | [] -> ()
+      | _ -> Format.fprintf fmt " ");
+      Format.fprintf fmt "}@]"
+
+    let show x = Format.asprintf "%a" pp x
+  end
+
   module LSetUtils = LSetUtils (LSet)
 end
 
@@ -92,7 +122,31 @@ module ALocS : S with type t = ALoc.t = struct
     let show pp_data x = Format.asprintf "%a" (pp pp_data) x
   end
 
-  module LSet = Set.Make (ALoc)
+  module LSet = struct
+    include Set.Make (ALoc)
+
+    let pp fmt x =
+      Format.fprintf fmt "@[<hv 2>{";
+      let elements = elements x in
+      (match elements with
+      | [] -> ()
+      | _ -> Format.fprintf fmt " ");
+      ignore
+        (List.fold_left
+           (fun sep elt ->
+             if sep then Format.fprintf fmt ";@ ";
+             ALoc.pp fmt elt;
+             true)
+           false
+           elements);
+      (match elements with
+      | [] -> ()
+      | _ -> Format.fprintf fmt " ");
+      Format.fprintf fmt "}@]"
+
+    let show x = Format.asprintf "%a" pp x
+  end
+
   module LSetUtils = LSetUtils (LSet)
 end
 
@@ -114,6 +168,30 @@ module ILocS : S with type t = ILoc.t = struct
     let show pp_data x = Format.asprintf "%a" (pp pp_data) x
   end
 
-  module LSet = Set.Make (ILoc)
+  module LSet = struct
+    include Set.Make (ILoc)
+
+    let pp fmt x =
+      Format.fprintf fmt "@[<hv 2>{";
+      let elements = elements x in
+      (match elements with
+      | [] -> ()
+      | _ -> Format.fprintf fmt " ");
+      ignore
+        (List.fold_left
+           (fun sep elt ->
+             if sep then Format.fprintf fmt ";@ ";
+             ILoc.pp fmt elt;
+             true)
+           false
+           elements);
+      (match elements with
+      | [] -> ()
+      | _ -> Format.fprintf fmt " ");
+      Format.fprintf fmt "}@]"
+
+    let show x = Format.asprintf "%a" pp x
+  end
+
   module LSetUtils = LSetUtils (LSet)
 end

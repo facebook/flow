@@ -1,6 +1,6 @@
 Error ----------------------------------------------------------------------------------------------------- Bar.js:15:19
 
-Cannot assign `"?"` to `(new Qux()).w` because string [1] is incompatible with number [2].
+Cannot assign `"?"` to `(new Qux()).w` because string [1] is incompatible with number [2]. [incompatible-type]
 
    Bar.js:15:19
    15|     new Qux().w = "?";
@@ -15,7 +15,7 @@ References:
 Error ----------------------------------------------------------------------------------------------------- Foo.js:21:12
 
 Cannot extend `Qux` [1] with `Foo` because string [2] is incompatible with number [3] in the first argument of property
-`fooqux`.
+`fooqux`. [incompatible-extend]
 
    Foo.js:21:12
    21|   fooqux(x:string) {
@@ -32,7 +32,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ Foo.js:10:5
 
-Must call `super` before accessing this [1] in a derived constructor.
+Must call `super` before accessing this [1] in a derived constructor. [reference-before-declaration]
 
    Foo.js:10:5
    10|     this.x = x;
@@ -46,7 +46,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- Foo.js:13:16
 
-Missing type annotation for `z`.
+Missing type annotation for `z`. [missing-annot]
 
    13|   foo(y:string,z):number {
                       ^
@@ -54,7 +54,7 @@ Missing type annotation for `z`.
 
 Error ----------------------------------------------------------------------------------------------------- Foo.js:16:21
 
-Cannot call `Bar` with `y` bound to `y` because string [1] is incompatible with number [2].
+Cannot call `Bar` with `y` bound to `y` because string [1] is incompatible with number [2]. [incompatible-call]
 
    Foo.js:16:21
    16|     var v = new Bar(y);
@@ -71,7 +71,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- Foo.js:18:12
 
-Cannot return `v.bar(...)` because string [1] is incompatible with number [2].
+Cannot return `v.bar(...)` because string [1] is incompatible with number [2]. [incompatible-return]
 
    Foo.js:18:12
    18|     return v.bar(z,u);
@@ -88,7 +88,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- Foo.js:18:20
 
-Cannot call `v.bar` with `u` bound to `u` because number [1] is incompatible with string [2].
+Cannot call `v.bar` with `u` bound to `u` because number [1] is incompatible with string [2]. [incompatible-call]
 
    Foo.js:18:20
    18|     return v.bar(z,u);

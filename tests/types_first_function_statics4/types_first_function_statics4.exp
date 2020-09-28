@@ -1,6 +1,6 @@
 Error --------------------------------------------------------------------------------------------------------- b.js:8:2
 
-Cannot cast `foo.x` to string because number [1] is incompatible with string [2].
+Cannot cast `foo.x` to string because number [1] is incompatible with string [2]. [incompatible-cast]
 
    b.js:8:2
    8| (foo.x: string);
@@ -17,7 +17,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------------- b.js:9:6
 
-Cannot get `foo.other` because property `other` is missing in statics of function type [1].
+Cannot get `foo.other` because property `other` is missing in statics of function type [1]. [prop-missing]
 
    b.js:9:6
    9| (foo.other: number);
@@ -26,12 +26,12 @@ Cannot get `foo.other` because property `other` is missing in statics of functio
 References:
    a.js:3:1
    3| function foo() {}
-      ^^^^^^^^^^^^^^^^^ [1]
+      ^^^^^^^^^^^^^^ [1]
 
 
 Error -------------------------------------------------------------------------------------------------------- b.js:13:2
 
-Cannot cast `bar.x` to string because number [1] is incompatible with string [2].
+Cannot cast `bar.x` to string because number [1] is incompatible with string [2]. [incompatible-cast]
 
    b.js:13:2
    13| (bar.x: string);
@@ -48,21 +48,22 @@ References:
 
 Error -------------------------------------------------------------------------------------------------------- b.js:14:6
 
-Cannot get `bar.other` because property `other` is missing in statics of function type [1].
+Cannot get `bar.other` because property `other` is missing in statics of function type [1]. [prop-missing]
 
    b.js:14:6
    14| (bar.other: number);
             ^^^^^
 
 References:
-   a.js:6:1
+   a.js:6:13
     6| const bar = () => {};
-       ^^^^^^^^^^^^^^^^^^^^^ [1]
+                   ^^^^^^^^ [1]
 
 
 Error -------------------------------------------------------------------------------------------------------- b.js:17:2
 
 Cannot create `FooComponent` element because property `other` is missing in `Props` [1] but exists in props [2].
+[prop-missing]
 
    b.js:17:2
    17| <FooComponent other={1}/>;
@@ -80,6 +81,7 @@ References:
 Error -------------------------------------------------------------------------------------------------------- b.js:20:2
 
 Cannot create `BarComponent` element because property `other` is missing in `Props` [1] but exists in props [2].
+[prop-missing]
 
    b.js:20:2
    20| <BarComponent other={1}/>;
@@ -96,7 +98,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------------- b.js:32:2
 
-Cannot cast `poly_foo.x` to string because number [1] is incompatible with string [2].
+Cannot cast `poly_foo.x` to string because number [1] is incompatible with string [2]. [incompatible-cast]
 
    b.js:32:2
    32| (poly_foo.x: string);
@@ -113,7 +115,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------- b.js:33:11
 
-Cannot get `poly_foo.other` because property `other` is missing in statics of function type [1].
+Cannot get `poly_foo.other` because property `other` is missing in statics of function type [1]. [prop-missing]
 
    b.js:33:11
    33| (poly_foo.other: number);
@@ -122,12 +124,12 @@ Cannot get `poly_foo.other` because property `other` is missing in statics of fu
 References:
    poly_a.js:3:1
     3| function foo<T>() {}
-       ^^^^^^^^^^^^^^^^^^^^ [1]
+       ^^^^^^^^^^^^^^^^^ [1]
 
 
 Error -------------------------------------------------------------------------------------------------------- b.js:38:2
 
-Cannot cast `poly_bar.x` to string because number [1] is incompatible with string [2].
+Cannot cast `poly_bar.x` to string because number [1] is incompatible with string [2]. [incompatible-cast]
 
    b.js:38:2
    38| (poly_bar.x: string);
@@ -144,21 +146,22 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------- b.js:39:11
 
-Cannot get `poly_bar.other` because property `other` is missing in statics of function type [1].
+Cannot get `poly_bar.other` because property `other` is missing in statics of function type [1]. [prop-missing]
 
    b.js:39:11
    39| (poly_bar.other: number);
                  ^^^^^
 
 References:
-   poly_a.js:6:1
+   poly_a.js:6:13
     6| const bar = <T>() => {};
-       ^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+                   ^^^^^^^^^^^ [1]
 
 
 Error -------------------------------------------------------------------------------------------------------- b.js:42:2
 
 Cannot create `PolyFooComponent` element because property `other` is missing in `Props` [1] but exists in props [2].
+[prop-missing]
 
    b.js:42:2
    42| <PolyFooComponent t={0} other={1}/>;
@@ -176,6 +179,7 @@ References:
 Error -------------------------------------------------------------------------------------------------------- b.js:45:2
 
 Cannot create `PolyBarComponent` element because property `other` is missing in `Props` [1] but exists in props [2].
+[prop-missing]
 
    b.js:45:2
    45| <PolyBarComponent t={0} other={1}/>;

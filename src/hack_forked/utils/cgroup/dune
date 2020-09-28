@@ -2,7 +2,7 @@
   (name cgroup)
   (wrapped false)
   (libraries
-    core_kernel
+    base
     lwt
     lwt.unix
     procfs

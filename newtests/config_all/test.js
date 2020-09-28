@@ -2,16 +2,17 @@
  * @flow
  */
 
+import type Suite from "flow-dev-tools/src/test/Suite.js";
 import {suite, test} from 'flow-dev-tools/src/test/Tester';
 
-export default suite(({addFile}) => [
+export default (suite(({addFile}) => [
   test('all=true', [
     addFile('no_at_flow.js')
       .newErrors(
         `
           no_at_flow.js:1
             1: var x: number = "not a number";
-                               ^^^^^^^^^^^^^^ Cannot assign \`"not a number"\` to \`x\` because string [1] is incompatible with number [2].
+                               ^^^^^^^^^^^^^^ Cannot assign \`"not a number"\` to \`x\` because string [1] is incompatible with number [2]. [incompatible-type]
             References:
               1: var x: number = "not a number";
                                  ^^^^^^^^^^^^^^ [1]
@@ -27,4 +28,4 @@ export default suite(({addFile}) => [
       .noNewErrors()
       .because('We ignore files without @flow'),
   ]).flowConfig('flowconfig_all_false'),
-]);
+]): Suite);

@@ -95,11 +95,8 @@ let ( catch_stmt_control_flow_exception,
         | Expr (loc, exp) ->
           ( loc,
             Flow_ast.Statement.Expression
-              {
-                Flow_ast.Statement.Expression.expression = exp;
-                directive = None;
-                comments = Flow_ast_utils.mk_comments_opt ();
-              } )
+              { Flow_ast.Statement.Expression.expression = exp; directive = None; comments = None }
+          )
         | Stmts _ -> assert_false "Statement expected"),
     catch_control_flow_exception (function
         | Stmts stmts -> stmts
@@ -135,7 +132,7 @@ module AbnormalMap : WrappedMap.S with type key = t = WrappedMap.Make (struct
 
   type t = abnormal
 
-  let compare = Pervasives.compare
+  let compare = Stdlib.compare
 end)
 
 let abnormals : Env.t AbnormalMap.t ref = ref AbnormalMap.empty

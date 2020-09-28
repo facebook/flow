@@ -32,7 +32,6 @@ type lint_kind =
   | UnclearType
   | DeprecatedType
   | DeprecatedUtility
-  | DynamicExport
   | UnsafeGettersSetters
   | UnnecessaryOptionalChain
   | UnnecessaryInvariant
@@ -40,7 +39,12 @@ type lint_kind =
   | ImplicitInexactObject
   | UninitializedInstanceProperty
   | AmbiguousObjectType
-  | NullVoidAddition
+  | DefaultImportAccess
+  | InvalidImportStarUse
+  | NonConstVarExport
+  | ThisInExportedFunction
+  | MixedImportAndRequire
+  | ExportRenamedDefault
 
 let string_of_sketchy_null_kind = function
   | SketchyNullBool
@@ -66,7 +70,6 @@ let string_of_kind = function
   | UnclearType -> "unclear-type"
   | DeprecatedType -> "deprecated-type"
   | DeprecatedUtility -> "deprecated-utility"
-  | DynamicExport -> "dynamic-export"
   | UnsafeGettersSetters -> "unsafe-getters-setters"
   | UnnecessaryOptionalChain -> "unnecessary-optional-chain"
   | UnnecessaryInvariant -> "unnecessary-invariant"
@@ -74,7 +77,12 @@ let string_of_kind = function
   | ImplicitInexactObject -> "implicit-inexact-object"
   | UninitializedInstanceProperty -> "uninitialized-instance-property"
   | AmbiguousObjectType -> "ambiguous-object-type"
-  | NullVoidAddition -> "unsafe-addition"
+  | DefaultImportAccess -> "default-import-access"
+  | InvalidImportStarUse -> "invalid-import-star-use"
+  | NonConstVarExport -> "non-const-var-export"
+  | ThisInExportedFunction -> "this-in-exported-function"
+  | MixedImportAndRequire -> "mixed-import-and-require"
+  | ExportRenamedDefault -> "export-renamed-default"
 
 let kinds_of_string = function
   | "sketchy-null" ->
@@ -100,7 +108,6 @@ let kinds_of_string = function
   | "unclear-type" -> Some [UnclearType]
   | "deprecated-type" -> Some [DeprecatedType]
   | "deprecated-utility" -> Some [DeprecatedUtility]
-  | "dynamic-export" -> Some [DynamicExport]
   | "unsafe-getters-setters" -> Some [UnsafeGettersSetters]
   | "unnecessary-optional-chain" -> Some [UnnecessaryOptionalChain]
   | "unnecessary-invariant" -> Some [UnnecessaryInvariant]
@@ -108,7 +115,12 @@ let kinds_of_string = function
   | "implicit-inexact-object" -> Some [ImplicitInexactObject]
   | "ambiguous-object-type" -> Some [AmbiguousObjectType]
   | "uninitialized-instance-property" -> Some [UninitializedInstanceProperty]
-  | "unsafe-addition" -> Some [NullVoidAddition]
+  | "default-import-access" -> Some [DefaultImportAccess]
+  | "invalid-import-star-use" -> Some [InvalidImportStarUse]
+  | "non-const-var-export" -> Some [NonConstVarExport]
+  | "this-in-exported-function" -> Some [ThisInExportedFunction]
+  | "mixed-import-and-require" -> Some [MixedImportAndRequire]
+  | "export-renamed-default" -> Some [ExportRenamedDefault]
   | _ -> None
 
 module LintKind = struct

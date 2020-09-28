@@ -78,6 +78,7 @@ val mk_error :
   ?root:Loc.t * Loc.t Friendly.message ->
   ?frames:Loc.t Friendly.message list ->
   Loc.t ->
+  Error_codes.error_code option ->
   Loc.t Friendly.message ->
   Loc.t printable_error
 
@@ -87,6 +88,7 @@ val mk_speculation_error :
   loc:Loc.t ->
   root:(Loc.t * Loc.t Friendly.message) option ->
   frames:Loc.t Friendly.message list ->
+  error_code:Error_codes.error_code option ->
   speculation_errors:(int * Loc.t printable_error) list ->
   Loc.t printable_error
 
@@ -95,6 +97,8 @@ val loc_of_printable_error : 'loc printable_error -> 'loc
 val locs_of_printable_error : 'loc printable_error -> 'loc list
 
 val kind_of_printable_error : 'loc printable_error -> error_kind
+
+val code_of_printable_error : 'loc printable_error -> Error_codes.error_code option
 
 module ConcreteLocPrintableErrorSet : Set.S with type elt = Loc.t printable_error
 

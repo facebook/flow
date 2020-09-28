@@ -7,7 +7,7 @@
 
 module LocMap = Loc_collections.LocMap
 
-type t = (Loc.t * Signature_builder_kind.t) LocMap.t SMap.t
+type t = (Loc.t * Signature_builder_kind.t) LocMap.t SMap.t [@@deriving show]
 
 let empty = SMap.empty
 

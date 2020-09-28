@@ -1,6 +1,6 @@
 Error ---------------------------------------------------------------------------------------------------- test2.js:4:15
 
-Cannot get `this.p` because property `p` is missing in object literal [1].
+Cannot get `this.p` because property `p` is missing in object literal [1]. [prop-missing]
 
    test2.js:4:15
     4|   return this.p;
@@ -17,7 +17,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test3.js:4:8
 
-Cannot call `this.m` because property `m` is missing in global object [1].
+Cannot call `this.m` because property `m` is missing in global object [1]. [prop-missing]
 
    test3.js:4:8
    4|   this.m();
@@ -31,7 +31,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test3.js:4:8
 
-Cannot call `this.m` because property `m` is missing in object literal [1].
+Cannot call `this.m` because property `m` is missing in object literal [1]. [prop-missing]
 
    test3.js:4:8
    4|   this.m();
@@ -45,7 +45,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test3.js:4:8
 
-Cannot call `this.m` because property `m` is missing in object literal [1].
+Cannot call `this.m` because property `m` is missing in object literal [1]. [prop-missing]
 
    test3.js:4:8
     4|   this.m();

@@ -1,6 +1,7 @@
 Error ---------------------------------------------------------------------------------------------------- test.js:10:36
 
 Cannot use `K` [1] in an input/output position because `K` [1] is expected to occur only in output positions.
+[incompatible-variance]
 
    test.js:10:36
    10|     bad (x: number) : $ReadOnlyMap<K, V> { // Error: K in invariant position
@@ -15,6 +16,7 @@ References:
 Error ---------------------------------------------------------------------------------------------------- test.js:22:36
 
 Cannot use `K` [1] in an input/output position because `K` [1] is expected to occur only in input positions.
+[incompatible-variance]
 
    test.js:22:36
    22|     bad (x: number) : $ReadOnlyMap<K, V> {// Error: K in invariant position
@@ -29,6 +31,7 @@ References:
 Error ---------------------------------------------------------------------------------------------------- test.js:28:39
 
 Cannot use `V` [1] in an output position because `V` [1] is expected to occur only in input positions.
+[incompatible-variance]
 
    test.js:28:39
    28|     bad (x: number) : $ReadOnlyMap<K, V> {// Error: V in invariant position

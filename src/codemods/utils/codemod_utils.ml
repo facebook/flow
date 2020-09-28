@@ -32,62 +32,46 @@ let save_ast_diff file_key ast ast' =
   else
     let file_path = File_key.to_string file_key in
     let file_input = File_input.FileName file_path in
-    let layout_opts = { Js_layout_generator.preserve_formatting = true } in
+    let layout_opts = { Js_layout_generator.preserve_formatting = true; bracket_spacing = false } in
     let patch = Replacement_printer.mk_patch_ast_differ_unsafe ~opts:layout_opts diff file_input in
     Diff_heaps.set_diff ~audit:Expensive.ok file_key patch
 
-let make_visitor job_config =
-  let f ask file_key ast runner =
-    match runner with
-    | Reducer reducer ->
-      let reducer = reducer ask in
-      let (_ : (Loc.t, Loc.t) Flow_ast.program) = reducer#program ast in
-      reducer#acc
-    | Mapper mapper ->
-      let mapper = mapper ask in
-      let ast' = mapper#program ast in
-      save_ast_diff file_key ast ast';
-      mapper#acc
-  in
-  match job_config.runner with
-  | TypedRunner runner ->
-    let f ast typed_ask =
-      let { Codemod_context.Typed.file; _ } = typed_ask in
-      f typed_ask file ast runner
-    in
-    Codemod_runner.Typed_visitor f
-  | UntypedRunner runner ->
-    let f ast untyped_ask =
-      let { Codemod_context.Untyped.file; _ } = untyped_ask in
-      f untyped_ask file ast runner
-    in
-    Codemod_runner.Untyped_visitor f
-  | UntypedFlowInitRunner { runner; init } ->
-    let f ast untyped_ask =
-      let { Codemod_context.UntypedFlowInit.file; _ } = untyped_ask in
-      f untyped_ask file ast runner
-    in
-    Codemod_runner.UntypedFlowInitRunner_visitor { Codemod_runner.visit = f; init }
+let make_visitor :
+    ('b, 'a) abstract_codemod_runner -> (Loc.t, Loc.t) Flow_ast_mapper.Ast.Program.t -> 'a -> 'b =
+ fun runner ast cctx ->
+  let (prog_loc, _) = ast in
+  let file = Base.Option.value_exn ~message:"No source for AST" (Loc.source prog_loc) in
+  match runner with
+  | Reducer reducer ->
+    let reducer = reducer cctx in
+    let (_ : (Loc.t, Loc.t) Flow_ast.Program.t) = reducer#program ast in
+    reducer#acc
+  | Mapper mapper ->
+    let mapper = mapper cctx in
+    let ast' = mapper#program ast in
+    save_ast_diff file ast ast';
+    mapper#acc
 
 let initialize_logs options = LoggingUtils.init_loggers ~options ()
 
-let mk_main job_config ~options ~write ~repeat ~log_level ~shared_mem_config roots =
-  initialize_logs options;
-  let log_level =
-    match log_level with
-    | Some level -> level
-    | None -> Hh_logger.Level.Off
-  in
-  Hh_logger.Level.set_min_level log_level;
-
-  let initial_lwt_thread () =
-    let genv =
-      let num_workers = Options.max_workers options in
-      let handle = SharedMem_js.init ~num_workers shared_mem_config in
-      ServerEnvBuild.make_genv options handle
+module MakeMain (Runner : Codemod_runner.RUNNABLE) = struct
+  let main ~options ~write ~repeat ~log_level ~shared_mem_config roots =
+    let init_id = Random_id.short_string () in
+    initialize_logs options;
+    let log_level =
+      match log_level with
+      | Some level -> level
+      | None -> Hh_logger.Level.Off
     in
-    let visitor = make_visitor job_config in
-    let reporter = job_config.reporter in
-    Codemod_runner.run ~genv ~write ~repeat ~visitor ~reporter roots
-  in
-  LwtInit.run_lwt initial_lwt_thread
+    Hh_logger.Level.set_min_level log_level;
+
+    let initial_lwt_thread () =
+      let genv =
+        let num_workers = Options.max_workers options in
+        let handle = SharedMem_js.init ~num_workers shared_mem_config in
+        ServerEnvBuild.make_genv ~init_id ~options handle
+      in
+      Runner.run ~genv ~write ~repeat roots
+    in
+    LwtInit.run_lwt initial_lwt_thread
+end

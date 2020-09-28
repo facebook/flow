@@ -4,7 +4,7 @@ No errors!
 Full init with saved state does recheck & sees new error
 Error ------------------------------------------------------------------------------------------------------- foo.js:4:2
 
-Cannot cast `x` to string because number [1] is incompatible with string [2].
+Cannot cast `x` to string because number [1] is incompatible with string [2]. [incompatible-cast]
 
    foo.js:4:2
    4| (x: string);
@@ -31,7 +31,7 @@ To learn more, visit flow.org/en/docs/lang/lazy-modes
 ...but focusing the file exposes the error
 Error ------------------------------------------------------------------------------------------------------- foo.js:4:2
 
-Cannot cast `x` to string because number [1] is incompatible with string [2].
+Cannot cast `x` to string because number [1] is incompatible with string [2]. [incompatible-cast]
 
    foo.js:4:2
    4| (x: string);
@@ -55,7 +55,7 @@ To learn more, visit flow.org/en/docs/lang/lazy-modes
 --saved-state-force-recheck does recheck & sees new error
 Error ------------------------------------------------------------------------------------------------------- foo.js:4:2
 
-Cannot cast `x` to string because number [1] is incompatible with string [2].
+Cannot cast `x` to string because number [1] is incompatible with string [2]. [incompatible-cast]
 
    foo.js:4:2
    4| (x: string);
@@ -81,7 +81,7 @@ A file incompatible with rechecks changed, so no saved state loading
 ...so we need to fallback to non-saved-state
 Error ------------------------------------------------------------------------------------------------------- foo.js:4:2
 
-Cannot cast `x` to string because number [1] is incompatible with string [2].
+Cannot cast `x` to string because number [1] is incompatible with string [2]. [incompatible-cast]
 
    foo.js:4:2
    4| (x: string);

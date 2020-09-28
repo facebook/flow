@@ -1,0 +1,31 @@
+Parse error should be reported:
+
+Error --------------------------------------------------------------------------------------------------------- a.js:8:1
+
+Unexpected identifier, expected the token `)`
+
+   8| module.exports = (new A(): A);
+      ^^^^^^
+
+
+
+Found 1 error
+
+The Flow server is currently in filesystem lazy mode and is only checking 1/1 files.
+To learn more, visit flow.org/en/docs/lang/lazy-modes
+
+Parse error, but no typing error in b.js:
+
+Error --------------------------------------------------------------------------------------------------------- a.js:8:1
+
+Unexpected identifier, expected the token `)`
+
+   8| module.exports = (new A(): A);
+      ^^^^^^
+
+
+
+Found 1 error
+
+The Flow server is currently in filesystem lazy mode and is only checking 1/1 files.
+To learn more, visit flow.org/en/docs/lang/lazy-modes

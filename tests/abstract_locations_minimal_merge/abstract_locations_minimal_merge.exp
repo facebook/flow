@@ -4,7 +4,7 @@ Changing the exported type should produce downstream errors.
 We should recheck all files, but should not remerge files that are not recursive sig dependents.
 Error ------------------------------------------------------------------------------------------- impl-dependent.js:3:30
 
-Cannot return empty string because string [1] is incompatible with number [2].
+Cannot return empty string because string [1] is incompatible with number [2]. [incompatible-return]
 
    impl-dependent.js:3:30
    3| function bar(): Foo { return ''; }
@@ -18,7 +18,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- sig-dependent.js:3:37
 
-Cannot return empty string because string [1] is incompatible with number [2].
+Cannot return empty string because string [1] is incompatible with number [2]. [incompatible-return]
 
    sig-dependent.js:3:37
    3| export function bar(): Foo { return ''; }

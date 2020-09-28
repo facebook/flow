@@ -1,7 +1,7 @@
 Error ---------------------------------------------------------------------------------------------------- test.js:12:28
 
 Cannot assign object literal to `z2` because property `s` is missing in `typeof o2` [1] but exists in object
-literal [2].
+literal [2]. [prop-missing]
 
    test.js:12:28
    12| let z2:$Shape<typeof o2> = {s : 4}; // flow error
@@ -16,6 +16,7 @@ References:
 Error ---------------------------------------------------------------------------------------------------- test.js:25:29
 
 Cannot assign object literal to `z8` because property `y` is missing in `typeof a` [1] but exists in object literal [2].
+[incompatible-use]
 
    test.js:25:29
    25| let z8 : $Shape<typeof a> = {y : 4}; // flow error
@@ -30,6 +31,7 @@ References:
 Error ---------------------------------------------------------------------------------------------------- test.js:28:27
 
 Cannot assign object literal to `z9` because property `x` is missing in number [1] but exists in object literal [2].
+[incompatible-use]
 
    test.js:28:27
    28| let z9 : $Shape<number> = {x : 3}; // flow error
@@ -44,6 +46,7 @@ References:
 Error ---------------------------------------------------------------------------------------------------- test.js:31:28
 
 Cannot assign object literal to `z11` because property `x` is missing in string [1] but exists in object literal [2].
+[incompatible-use]
 
    test.js:31:28
    31| let z11 : $Shape<string> = {x : 3}; // flow error
@@ -57,7 +60,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:36:2
 
-Cannot cast `z13.p` to empty because number [1] is incompatible with empty [2].
+Cannot cast `z13.p` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
 
    test.js:36:2
    36| (z13.p : empty); //flow error
@@ -74,7 +77,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:36:2
 
-Cannot cast `z13.p` to empty because string [1] is incompatible with empty [2].
+Cannot cast `z13.p` to empty because string [1] is incompatible with empty [2]. [incompatible-cast]
 
    test.js:36:2
    36| (z13.p : empty); //flow error
@@ -92,7 +95,7 @@ References:
 Error ---------------------------------------------------------------------------------------------------- test.js:38:24
 
 Cannot assign object literal to `z14` because property `p` is missing in object type [1] but exists in object
-literal [2].
+literal [2]. [prop-missing]
 
    test.js:38:24
    38| let z14 : $Shape<{}> = {p : 'foo'}; // flow error
@@ -107,6 +110,7 @@ References:
 Error ---------------------------------------------------------------------------------------------------- test.js:72:22
 
 Cannot assign object literal to `_b` because property `y` is missing in `A` [1] but exists in object literal [2].
+[prop-missing]
 
    test.js:72:22
    72| let _b : $Shape<A> = { y : 4 }; // flow error
@@ -121,6 +125,7 @@ References:
 Error ---------------------------------------------------------------------------------------------------- test.js:75:22
 
 Cannot assign object literal to `_e` because property `z` is missing in `B` [1] but exists in object literal [2].
+[prop-missing]
 
    test.js:75:22
    75| let _e : $Shape<B> = { z : 4 }; // flow error
@@ -135,6 +140,7 @@ References:
 Error ---------------------------------------------------------------------------------------------------- test.js:79:22
 
 Cannot assign object literal to `_i` because property `a` is missing in `C` [1] but exists in object literal [2].
+[prop-missing]
 
    test.js:79:22
    79| let _i : $Shape<C> = { a : 4 }; // flow error
@@ -149,6 +155,7 @@ References:
 Error ---------------------------------------------------------------------------------------------------- test.js:81:25
 
 Cannot assign object literal to `_k` because property `x` is missing in `Empt` [1] but exists in object literal [2].
+[prop-missing]
 
    test.js:81:25
    81| let _k : $Shape<Empt> = { x : 4 }; // flow error
@@ -162,7 +169,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:92:22
 
-Cannot assign object literal to `_l` because `A` [1] is incompatible with `B` [2] in property `n`.
+Cannot assign object literal to `_l` because `A` [1] is incompatible with `B` [2] in property `n`. [incompatible-type]
 
    test.js:92:22
    92| let _l : $Shape<D> = {m : a_inst, n : a_inst}; // flow error

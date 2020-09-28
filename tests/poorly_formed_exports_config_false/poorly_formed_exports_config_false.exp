@@ -1,7 +1,7 @@
 FLOW STATUS:
 Error ---------------------------------------------------------------------------------------- bad-default-export.js:4:3
 
-Exports can only appear at the top level
+Exports can only appear at the top level [invalid-export]
 
    4|   module.exports = 42
         ^^^^^^^^^^^^^^
@@ -12,7 +12,7 @@ Found 1 error
 FLOW CHECK-CONTENTS:
 Error ---------------------------------------------------------------------------------------- bad-default-export.js:4:3
 
-Exports can only appear at the top level
+Exports can only appear at the top level [invalid-export]
 
    4|   module.exports = 42
         ^^^^^^^^^^^^^^

@@ -1,6 +1,6 @@
 Error --------------------------------------------------------------------------------------------- test_absolute.js:5:2
 
-Cannot cast `B1.fun()` to string because number [1] is incompatible with string [2].
+Cannot cast `B1.fun()` to string because number [1] is incompatible with string [2]. [incompatible-cast]
 
    test_absolute.js:5:2
    5| (B1.fun(): string); // Error number ~> string
@@ -17,7 +17,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- test_absolute.js:9:2
 
-Cannot cast `B2.fun()` to string because number [1] is incompatible with string [2].
+Cannot cast `B2.fun()` to string because number [1] is incompatible with string [2]. [incompatible-cast]
 
    test_absolute.js:9:2
    9| (B2.fun(): string); // Error number ~> string
@@ -34,7 +34,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- test_absolute.js:12:2
 
-Cannot cast `C.fun()` to string because number [1] is incompatible with string [2].
+Cannot cast `C.fun()` to string because number [1] is incompatible with string [2]. [incompatible-cast]
 
    test_absolute.js:12:2
    12| (C.fun(): string); // Error number ~> string
@@ -51,7 +51,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- test_absolute.js:15:2
 
-Cannot cast `D.fun()` to string because number [1] is incompatible with string [2].
+Cannot cast `D.fun()` to string because number [1] is incompatible with string [2]. [incompatible-cast]
 
    test_absolute.js:15:2
    15| (D.fun(): string); // Error number ~> string
@@ -68,7 +68,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- test_absolute.js:18:2
 
-Cannot cast `E.fun()` to string because number [1] is incompatible with string [2].
+Cannot cast `E.fun()` to string because number [1] is incompatible with string [2]. [incompatible-cast]
 
    test_absolute.js:18:2
    18| (E.fun(): string); // Error number ~> string
@@ -85,7 +85,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- test_absolute.js:21:2
 
-Cannot cast `F.fun()` to string because number [1] is incompatible with string [2].
+Cannot cast `F.fun()` to string because number [1] is incompatible with string [2]. [incompatible-cast]
 
    test_absolute.js:21:2
    21| (F.fun(): string); // Error number ~> string
@@ -102,7 +102,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- test_relative.js:5:2
 
-Cannot cast `A1.fun()` to string because number [1] is incompatible with string [2].
+Cannot cast `A1.fun()` to string because number [1] is incompatible with string [2]. [incompatible-cast]
 
    test_relative.js:5:2
    5| (A1.fun(): string); // Error number ~> string
@@ -119,7 +119,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- test_relative.js:9:2
 
-Cannot cast `A2.fun()` to string because number [1] is incompatible with string [2].
+Cannot cast `A2.fun()` to string because number [1] is incompatible with string [2]. [incompatible-cast]
 
    test_relative.js:9:2
    9| (A2.fun(): string); // Error number ~> string
@@ -136,7 +136,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- test_relative.js:13:2
 
-Cannot cast `CJS` to number because string [1] is incompatible with number [2].
+Cannot cast `CJS` to number because string [1] is incompatible with number [2]. [incompatible-cast]
 
    test_relative.js:13:2
    13| (CJS: number); // Error: string ~> number
@@ -154,7 +154,7 @@ References:
 Error -------------------------------------------------------------------------------------------- test_relative.js:16:1
 
 Importing from an untyped module makes it `any` and is not safe! Did you mean to add `// @flow` to the top of
-`./not_flow`? (`untyped-import`)
+`./not_flow`? [untyped-import]
 
    16| require('./not_flow');
        ^^^^^^^^^^^^^^^^^^^^^

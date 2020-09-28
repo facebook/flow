@@ -82,7 +82,8 @@ type type_contents_artifacts =
   Context.t
   * Docblock.t
   * File_sig.With_Loc.t
-  * (ALoc.t, ALoc.t * Type.t) Flow_ast.program
+  * File_sig.With_Loc.tolerable_error list
+  * (ALoc.t, ALoc.t * Type.t) Flow_ast.Program.t
   * (Loc.t * Parse_error.t) list
 
 val type_contents_cache : single_client -> (type_contents_artifacts, string) result FilenameCache.t

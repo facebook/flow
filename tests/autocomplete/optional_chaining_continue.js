@@ -11,4 +11,5 @@ class Bar {
 
 function callMeMaybe(foo: ?Foo) {
   return foo?.bar.
+//                ^
 }

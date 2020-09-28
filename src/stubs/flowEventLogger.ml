@@ -51,8 +51,8 @@ let set_saved_state_filename _ = ()
 
 let set_monitor_options ~file_watcher:_ = ()
 
-let set_server_options ~lazy_mode:_ ~arch:_ ~abstract_locations:_ ~max_workers:_ ~enabled_rollouts:_
-    =
+let set_server_options
+    ~lazy_mode:_ ~arch:_ ~abstract_locations:_ ~max_workers:_ ~enabled_rollouts:_ ~debug:_ =
   ()
 
 let status_response ~num_errors:_ = ()
@@ -68,7 +68,11 @@ let init_done
     _profiling =
   ()
 
-let init_flow_command ~version:_ = ()
+let init_flow_command ~init_id:_ ~version:_ = ()
+
+let init_worker ~init_id:_ ~version:_ _ = ()
+
+let should_log () = false
 
 let killed _ = ()
 
@@ -78,7 +82,7 @@ let lock_stolen _ = ()
 
 let out_of_date _ = ()
 
-let exit _ _ = ()
+let exit ?error:_ _ _ = ()
 
 let report_from_monitor_server_exit_due_to_signal _ = ()
 

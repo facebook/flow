@@ -17,7 +17,7 @@ end
 module type S = sig
   type s
 
-  type ('a, 'b) r = ('a, 'b) Pervasives.result
+  type ('a, 'b) r = ('a, 'b) result
 
   type ('a, 'b) t = s -> ('a, 'b) r * s
 
@@ -48,7 +48,7 @@ end
 module Make (S : State) : S with type s = S.t = struct
   type s = S.t
 
-  type ('a, 'b) r = ('a, 'b) Pervasives.result
+  type ('a, 'b) r = ('a, 'b) result
 
   type ('a, 'b) t = S.t -> ('a, 'b) r * S.t
 

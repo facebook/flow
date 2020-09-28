@@ -20,15 +20,11 @@
     <link rel="canonical" href="{{meta_canonical}}">
     <link rel="alternate" type="application/rss+xml" title="{{site.title}}" href="{{site.url}}/blog/feed.xml" />
     <link rel="shortcut icon" href="/static/favicon.png?t={{site.time | date_to_xmlschema}}">
-    <link rel="stylesheet" href="{% asset_path 'main.scss' %}?t={{site.time | date_to_xmlschema}}">
+    <link rel="stylesheet" href="{% asset 'main.scss' @path %}?t={{site.time | date_to_xmlschema}}">
     {% if page.search or layout.search %}
       <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/docsearch.js/2.1.8/docsearch.min.css" integrity="sha256-qtayAfor6DgK7swJ/RmRl5Cbo9XUAhuJzGjNfqQLHDU=" crossorigin="anonymous"/>
     {% endif %}
-    {% if page.codemirror or layout.codemirror %}
-      <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.20.2/codemirror.min.css" integrity="sha256-MdzaXfGXzZdeHw/XEV2LNNycipsLk4uZ0FYzO3hbuvI=" crossorigin="anonymous"/>
-      <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.20.2/addon/lint/lint.min.css" integrity="sha256-EYLrIw6E5tjVEIS+bAgP0iR6uTreFdhzLmIGueibEDM=" crossorigin="anonymous"/>
-    {% endif %}
-    <script type="text/javascript" src="{% asset_path 'require_2_3_3.js' %}"></script>
+    <script type="text/javascript" src="{% asset 'require_2_3_3.js' @path %}"></script>
     <script type="text/javascript">
       requirejs.config({
         baseUrl: '/assets',
@@ -38,17 +34,15 @@
         },
         paths: {
           {% for script in page.scripts %}
-          '{% asset_name {{script}} %}': '{{ script | asset_path | strip_extension }}',
+          '{% asset {{script}} @name %}': '{{ script | asset:"@path" | strip_extension }}',
           {% endfor %}
-          'jquery': 'https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.0/jquery.min',
+          'jquery': 'https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.min',
           'tether-min': 'https://cdnjs.cloudflare.com/ajax/libs/tether/1.3.7/js/tether.min',
           'bootstrap': 'https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.0.0-alpha.5/js/bootstrap.min',
           'docsearch': 'https://cdnjs.cloudflare.com/ajax/libs/docsearch.js/2.1.8/docsearch.min',
-          'codemirror/lib/codemirror': 'https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.20.2/codemirror.min',
-          'codemirror/addon/lint/lint': 'https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.20.2/addon/lint/lint.min',
-          'codemirror/mode/javascript/javascript': 'https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.20.2/mode/javascript/javascript.min',
-          'codemirror/mode/xml/xml': 'https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.20.2/mode/xml/xml.min',
-          'codemirror/mode/jsx/jsx': 'https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.20.2/mode/jsx/jsx.min',
+          'vs': 'https://unpkg.com/monaco-editor@0.20.0/min/vs',
+          'vscode-oniguruma': 'https://unpkg.com/vscode-oniguruma@1.3.1/release/main',
+          'vscode-textmate': 'https://unpkg.com/vscode-textmate@5.1.1/release/main',
           'lz-string': 'https://cdnjs.cloudflare.com/ajax/libs/lz-string/1.4.4/lz-string.min'
         }
       });
@@ -65,14 +59,14 @@
   </head>
   <body>
     {% include navbar.html %}
-    <div class="content">
+    <section class="page-content">
       {{content}}
-    </div>
+    </section>
     {% if page.footer %}
       {% include footer.html %}
     {% endif %}
 
-    {% js 'prelude' %}
+    {% asset 'prelude' %}
     <script type="text/javascript">
       define('tether', ['tether-min'], function(tether) {
         window.Tether = tether;
@@ -81,10 +75,10 @@
 
       requirejs([
         'bootstrap',
-        {% if page.search or layout.search %}'{% asset_name "search" %}',{% endif %}
+        {% if page.search or layout.search %}'{% asset "search" @name %}',{% endif %}
       ]);
       {% if page.editor or layout.editor %}
-      requirejs(['{% asset_name "editor" %}'], function(Editor) {
+      requirejs(['{% asset "editor" @name %}'], function(Editor) {
         Editor.init();
       });
       {% endif %}

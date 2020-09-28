@@ -8,6 +8,8 @@
  * @format
  */
 
+import type {Flag} from '../command/Base';
+
 import {format} from 'util';
 
 import Base, {commonFlags} from '../command/Base';
@@ -43,7 +45,7 @@ NAME
 `;
   }
 
-  static getFlags() {
+  static getFlags(): Array<Flag> {
     return [commonFlags.bin];
   }
 }

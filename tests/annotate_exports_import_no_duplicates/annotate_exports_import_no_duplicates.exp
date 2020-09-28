@@ -1,4 +1,7 @@
->>> main.js (#changes: 7)
+
+=== Codemod annotate-exports ===
+
+>>> ./main.js
 // @flow
 
 import type {C} from "./lib.js";import { foo } from "./lib";
@@ -13,10 +16,10 @@ module.exports = {
 
 Stats:
   Files changed:                            1
-  Number of sig. ver. errors:               3
-  Number of annotations required:           3
   Number of annotations added:              3
   Total size of annotations:                3
+  Number of sig. ver. errors:               3
+  Number of annotations required:           3
   Number of annotations skipped:            0
 
 Errors:
@@ -27,7 +30,6 @@ Errors:
     Parsing heaps get ast error:            0
     Indeterminate module type:              0
     No matching export:                     0
-    Unrecognizable module error:            0
   Serializer error:                         0
   Unsupported error kind:                   0
 
@@ -38,3 +40,19 @@ Warnings:
   Empty NoUpper:                            0
   Empty SomeKnownUpper:                     0
 
+
+=== Autofix exports ===
+
+>>> ./main.js
+// @flow
+
+import type {C} from "./lib.js";import { foo } from "./lib";
+
+module.exports = {
+  f: (foo(): C),
+  g: (foo(): C),
+  h: (foo(): C)
+};
+
+
+=== Diff between codemod-ed & autofix-ed ===

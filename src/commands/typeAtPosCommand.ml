@@ -51,48 +51,61 @@ let spec =
         |> anon "args" (required (list_of string)));
   }
 
-let handle_response (loc, t) ~file_contents ~json ~pretty ~strip_root ~expanded =
+let handle_response ~file_contents ~json ~pretty ~strip_root ~expanded response =
+  let (ServerProt.Response.Infer_type_response { loc; ty = t; exact_by_default; documentation }) =
+    response
+  in
   let ty =
     match t with
     | None -> "(unknown)"
     | Some ty ->
       if json then
-        Ty_printer.string_of_elt_single_line ty
+        Ty_printer.string_of_elt_single_line ~exact_by_default ty
       else
-        Ty_printer.string_of_elt ty
+        Ty_printer.string_of_elt ~exact_by_default ty
   in
   if json then
-    Hh_json.(
-      Reason.(
-        let offset_table =
-          Base.Option.map file_contents ~f:(Offset_utils.make ~kind:Offset_utils.Utf8)
-        in
-        let json_assoc =
-          ("type", JSON_String ty)
-          :: ("reasons", JSON_Array [])
-          :: ("loc", json_of_loc ~strip_root ~offset_table loc)
-          :: Errors.deprecated_json_props_of_loc ~strip_root loc
-        in
-        let json_assoc =
-          if expanded then
-            ( "expanded_type",
-              match t with
-              | Some ty -> Ty_debug.json_of_elt ~strip_root ty
-              | None -> JSON_Null )
-            :: json_assoc
-          else
-            json_assoc
-        in
-        let json = JSON_Object json_assoc in
-        print_json_endline ~pretty json))
+    let open Hh_json in
+    let open Reason in
+    let offset_table =
+      Base.Option.map file_contents ~f:(Offset_utils.make ~kind:Offset_utils.Utf8)
+    in
+    let json_assoc =
+      ("type", JSON_String ty)
+      :: ("reasons", JSON_Array [])
+      :: ("loc", json_of_loc ~strip_root ~offset_table loc)
+      :: Errors.deprecated_json_props_of_loc ~strip_root loc
+    in
+    let json_assoc =
+      if expanded then
+        ( "expanded_type",
+          match t with
+          | Some ty -> Ty_debug.json_of_elt ~strip_root ty
+          | None -> JSON_Null )
+        :: json_assoc
+      else
+        json_assoc
+    in
+    let json_assoc =
+      match documentation with
+      | Some doc -> ("documentation", JSON_String doc) :: json_assoc
+      | None -> json_assoc
+    in
+    let json = JSON_Object json_assoc in
+    print_json_endline ~pretty json
   else
+    let doc =
+      match documentation with
+      | Some doc -> doc ^ "\n"
+      | None -> ""
+    in
     let range =
       if loc = Loc.none then
         ""
       else
         spf "\n%s" (range_string_of_loc ~strip_root loc)
     in
-    print_endline (ty ^ range)
+    print_endline (doc ^ ty ^ range)
 
 let handle_error err ~json ~pretty =
   if json then

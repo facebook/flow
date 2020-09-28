@@ -1,6 +1,6 @@
 Error ------------------------------------------------------------------------------------------------------- foo.js:2:9
 
-Cannot resolve module `./bar`.
+Cannot resolve module `./bar`. [cannot-resolve-module]
 
    2| require('./bar');
               ^^^^^^^

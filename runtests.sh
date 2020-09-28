@@ -57,7 +57,8 @@ query_at_pos() {
 
   printf "%s:%s:%s\n" "$file" "$line" "$col"
   echo "Flags:" "${flags[@]}"
-  assert_ok "$FLOW" "$query" "$file" "$line" "$col" --strip-root "${flags[@]}"
+  # shellcheck disable=SC2094
+  assert_ok "$FLOW" "$query" "$file" "$line" "$col" --strip-root "${flags[@]}" < "$file"
   printf "\n"
 }
 
@@ -140,6 +141,8 @@ show_help() {
   echo "        quiet output (hides status, just prints results)"
   echo "    -s"
   echo "        test saved state"
+  echo "    -z"
+  echo "        test new signatures"
   echo "    -v"
   echo "        verbose output (shows skipped tests)"
   echo "    -h"
@@ -153,11 +156,12 @@ export FLOW_NODE_BINARY=${FLOW_NODE_BINARY:-${NODE_BINARY:-$(which node)}}
 OPTIND=1
 record=0
 saved_state=0
+new_signatures=0
 verbose=0
 quiet=0
 relative="$THIS_DIR"
 list_tests=0
-while getopts "b:d:f:lqrst:vh?" opt; do
+while getopts "b:d:f:lqrszt:vh?" opt; do
   case "$opt" in
   b)
     FLOW="$OPTARG"
@@ -184,6 +188,9 @@ while getopts "b:d:f:lqrst:vh?" opt; do
     saved_state=1
     printf "Testing saved state by running all tests using saved state\\n"
     ;;
+  z)
+    new_signatures=1
+    ;;
   v)
     verbose=1
     ;;
@@ -201,6 +208,8 @@ shift $((OPTIND-1))
 if [ -n "$specific_test" ]; then
   if [[ "$saved_state" -eq 1 ]]; then
     specific_test=$(echo $specific_test | sed 's/\(.*\)-saved-state$/\1/')
+  elif [[ "$new_signatures" -eq 1 ]]; then
+    specific_test=$(echo $specific_test | sed 's/\(.*\)-new-signatures$/\1/')
   fi
 
   filter="^$specific_test$"
@@ -339,6 +348,65 @@ RUNTEST_SKIP=2
 RUNTEST_MISSING_FILES=3
 RUNTEST_ERROR=4
 
+
+# start_flow_unsafe ROOT [OPTIONS]...
+start_flow_unsafe () {
+  local root=$1; shift
+
+  if [ ! -d "$root" ]; then
+    printf "Invalid root directory '%s'\\n" "$root" >&2
+    return 1
+  fi
+
+  if [[ "$saved_state" -eq 1 ]]; then
+    local flowconfig_name=".flowconfig"
+    for ((i=1; i<=$#; i++)); do
+      opt="${!i}"
+      if [ "$opt" = "--flowconfig-name" ]
+      then
+        ((i++))
+        flowconfig_name=${!i}
+      fi
+    done
+
+    if create_saved_state "$root" "$flowconfig_name"
+    then
+      PATH="$THIS_DIR/scripts/tests_bin:$PATH" \
+      "$FLOW" start "$root" \
+        $flowlib --wait \
+        $new_signatures_flag \
+        --wait-for-recheck "$wait_for_recheck" \
+        --saved-state-fetcher "local" \
+        --saved-state-no-fallback \
+        --file-watcher "$file_watcher" \
+        --log-file "$abs_log_file" \
+        --monitor-log-file "$abs_monitor_log_file" \
+        "$@"
+      return $?
+    else
+        printf "Failed to generate saved state\\n" >&2
+        return 1
+    fi
+  else
+    # start server and wait
+    PATH="$THIS_DIR/scripts/tests_bin:$PATH" \
+    "$FLOW" start "$root" \
+      $flowlib --wait --wait-for-recheck "$wait_for_recheck" \
+      $new_signatures_flag \
+      --file-watcher "$file_watcher" \
+      --log-file "$abs_log_file" \
+      --monitor-log-file "$abs_monitor_log_file" \
+      "$@"
+    return $?
+  fi
+}
+
+# start_flow_unsafe ROOT [OPTIONS]...
+start_flow () {
+  assert_ok start_flow_unsafe "$@"
+}
+
+
 # This function runs in the background so it shouldn't output anything to
 # stdout or stderr. It should only communicate through its return value
 runtest() {
@@ -440,7 +508,11 @@ runtest() {
         start_args=""
         file_watcher="none"
         wait_for_recheck="true"
-        types_first_flag="--types-first"
+        if [[ "$new_signatures" -eq 1 ]]; then
+          new_signatures_flag="--new-signatures"
+        else
+          new_signatures_flag=""
+        fi
         if [ -e ".testconfig" ]
         then
             # auto_start
@@ -485,12 +557,6 @@ runtest() {
                 cmd="$config_cmd"
             fi
 
-            # classic_only
-            if [ "$(awk '$1=="classic_only:"{print $2}' .testconfig)" == "true" ]
-            then
-                types_first_flag=""
-            fi
-
             if [[ "$saved_state" -eq 1 ]] && \
               [ "$(awk '$1=="skip_saved_state:"{print $2}' .testconfig)" == "true" ]
             then
@@ -499,6 +565,12 @@ runtest() {
 
             if [[ "$saved_state" -eq 0 ]] && \
               [ "$(awk '$1=="saved_state_only:"{print $2}' .testconfig)" == "true" ]
+            then
+                return $RUNTEST_SKIP
+            fi
+
+            if [[ "$new_signatures" -eq 1 ]] && \
+              [ "$(awk '$1=="TODO_new_signatures:"{print $2}' .testconfig)" == "true" ]
             then
                 return $RUNTEST_SKIP
             fi
@@ -519,6 +591,11 @@ runtest() {
             flowlib=""
         fi
 
+        # Only run new-signatures with types-first
+        if [[ "$new_signatures" -eq 1 ]] && [ -f .flowconfig ] && grep -q "types_first=false" .flowconfig; then
+            return $RUNTEST_SKIP
+        fi
+
         # Helper function to generate saved state. If anything goes wrong, it
         # will fail
         create_saved_state () {
@@ -529,7 +606,7 @@ runtest() {
             # start lazy server and wait
             "$FLOW" start "$root" \
               $flowlib --wait \
-              $types_first_flag \
+              $new_signatures_flag \
               --wait-for-recheck "$wait_for_recheck" \
               --lazy \
               --file-watcher "$file_watcher" \
@@ -554,24 +631,12 @@ runtest() {
         if [ "$cmd" == "check" ]
         then
             if [[ "$saved_state" -eq 1 ]]; then
-              if create_saved_state . ".flowconfig"; then
-                # default command is check with configurable --no-flowlib
-                "$FLOW" check . \
-                  $flowlib --strip-root --show-all-errors \
-                  $types_first_flag \
-                  --saved-state-fetcher "local" \
-                  --saved-state-no-fallback \
-                   1>> "$abs_out_file" 2>> "$stderr_dest"
-                st=$?
-              else
-                printf "Failed to generate saved state\\n" >> "$stderr_dest"
-                return_status=$RUNTEST_ERROR
-              fi
+              return $RUNTEST_SKIP
             else
               # default command is check with configurable --no-flowlib
               "$FLOW" check . \
                 $flowlib --strip-root --show-all-errors \
-                $types_first_flag \
+                $new_signatures_flag \
                  1>> "$abs_out_file" 2>> "$stderr_dest"
               st=$?
             fi
@@ -579,25 +644,96 @@ runtest() {
               printf "flow check return code: %d\\n" "$st" >> "$stderr_dest"
               return_status=$RUNTEST_ERROR
             fi
-        elif [ "$(echo "$cmd" | awk '{print $1}')" == "codemod" ]
+        elif [ "$(echo "$cmd" | awk '{print $1}')" == "annotate-exports" ]
         then
-          subcmd=$(echo "$cmd" | awk '{print $2}')
 
-          # parse flags after 'cmd: codemod subcommand'
-          config_cmd_args="$(echo "$cmd" | awk '{$1="";$2="";print}')"
+          # parse flags after 'cmd: annotate-exports'
+          config_cmd_args="$(echo "$cmd" | awk '{$1="";print}')"
           cmd_args=("$config_cmd_args")
 
+          input_file="input.txt"
+          # LC_ALL=C ensures stable sorting between linux & macos
+          find . -name "*.js" -o -name "*.js.flow" | env LC_ALL=C sort > "$input_file"
+
+          (echo ""; echo "=== Codemod annotate-exports ==="; echo "") >> "$abs_out_file"
+
+          # keep copies of the original files
+          xargs -I {} cp {} {}.orig < "$input_file"
+
           # shellcheck disable=SC2086
-          "$FLOW" "codemod" "$subcmd" \
-              $flowlib \
-              ${cmd_args[*]} \
-              $types_first_flag \
-              --strip-root \
-              --quiet \
-              . \
-              1>> "$abs_out_file" \
-              2>> "$stderr_dest"
+          codemod_out=$(\
+            "$FLOW" "codemod" "annotate-exports" \
+                $flowlib \
+                ${cmd_args[*]} \
+                $new_signatures_flag \
+                --strip-root \
+                --quiet \
+                --input-file "$input_file" \
+                --write \
+                . \
+                2>> "$stderr_dest"
+          )
           st=$?
+
+          # Keep copies of codemod-ed files
+          xargs -I {} cp {} {}.codemod < "$input_file"
+
+          # Compare codemod-ed with original
+          while read -r file; do
+            diff --strip-trailing-cr \
+              --label "$file.orig" --label "$file.codemod" \
+              "$file.orig" "$file" > /dev/null
+            code=$?
+            if [ $code -ne 0 ]; then
+              (echo ">>> $file"; cat "$file"; echo "") >> "$abs_out_file"
+            fi
+          done <"$input_file"
+
+          (echo "$codemod_out"; echo "") >> "$abs_out_file"
+
+          (echo ""; echo "=== Autofix exports ==="; echo "") >> "$abs_out_file"
+
+          # Restore original versions
+          xargs -I {} cp {}.orig {} < "$input_file"
+
+          # Run autofix version
+          start_flow . --quiet
+          while read -r file; do
+            "$FLOW" "autofix" "exports" \
+                --strip-root \
+                --in-place \
+                "$file" \
+                2>> "$stderr_dest"
+          done <"$input_file"
+          "$FLOW" stop . 1> /dev/null 2>&1
+
+          # Keep copies of autofix-ed files
+          xargs -I {} cp {} {}.autofix < "$input_file"
+
+          # Compare autofix-ed with original
+          while read -r file; do
+            diff --strip-trailing-cr \
+              --label "$file.orig" --label "$file.autofix" \
+              "$file.orig" "$file" > /dev/null
+            code=$?
+            if [ $code -ne 0 ]; then
+              (echo ">>> $file"; cat "$file.autofix"; echo "") >> "$abs_out_file"
+            fi
+          done <"$input_file"
+
+          # Compare codemod-ed and autofix-ed files
+          (echo ""; echo "=== Diff between codemod-ed & autofix-ed ===") >> "$abs_out_file"
+          while read -r file; do
+            diff_result=$(\
+              diff --strip-trailing-cr \
+                --label "$file.codemod" --label "$file.autofix" \
+                "$file.codemod" "$file.autofix"\
+              )
+            code=$?
+            if [ $code -ne 0 ]; then
+              (echo ">>> $file"; echo "$diff_result"; echo "") >> "$abs_out_file"
+            fi
+          done <"$input_file"
 
           if [ $ignore_stderr = true ] && [ -n "$st" ] && [ $st -ne 0 ] && [ $st -ne 2 ]; then
             printf "flow codemod return code: %d\\n" "$st" >> "$stderr_dest"
@@ -605,63 +741,6 @@ runtest() {
           fi
         else
             # otherwise, run specified flow command, then kill the server
-
-            # start_flow_unsafe ROOT [OPTIONS]...
-            start_flow_unsafe () {
-              local root=$1; shift
-
-              if [ ! -d "$root" ]; then
-                printf "Invalid root directory '%s'\\n" "$root" >&2
-                return 1
-              fi
-
-              if [[ "$saved_state" -eq 1 ]]; then
-                local flowconfig_name=".flowconfig"
-                for ((i=1; i<=$#; i++)); do
-                  opt="${!i}"
-                  if [ "$opt" = "--flowconfig-name" ]
-                  then
-                    ((i++))
-                    flowconfig_name=${!i}
-                  fi
-                done
-
-                if create_saved_state "$root" "$flowconfig_name"
-                then
-                  PATH="$THIS_DIR/scripts/tests_bin:$PATH" \
-                  "$FLOW" start "$root" \
-                    $flowlib --wait \
-                    $types_first_flag \
-                    --wait-for-recheck "$wait_for_recheck" \
-                    --saved-state-fetcher "local" \
-                    --saved-state-no-fallback \
-                    --file-watcher "$file_watcher" \
-                    --log-file "$abs_log_file" \
-                    --monitor-log-file "$abs_monitor_log_file" \
-                    "$@"
-                  return $?
-                else
-                    printf "Failed to generate saved state\\n" >&2
-                    return 1
-                fi
-              else
-                # start server and wait
-                PATH="$THIS_DIR/scripts/tests_bin:$PATH" \
-                "$FLOW" start "$root" \
-                  $flowlib --wait --wait-for-recheck "$wait_for_recheck" \
-                  $types_first_flag \
-                  --file-watcher "$file_watcher" \
-                  --log-file "$abs_log_file" \
-                  --monitor-log-file "$abs_monitor_log_file" \
-                  "$@"
-                return $?
-              fi
-            }
-
-            # start_flow_unsafe ROOT [OPTIONS]...
-            start_flow () {
-              assert_ok start_flow_unsafe "$@"
-            }
 
             if [ $auto_start = true ]; then
               start_flow_unsafe . $start_args > /dev/null 2>> "$abs_err_file"
@@ -798,6 +877,8 @@ if [[ "$list_tests" -eq 1 ]]; then
 
       if [[ "$saved_state" -eq 1 ]]; then
         echo "$name-saved-state"
+      elif [[ "$new_signatures" -eq 1 ]]; then
+        echo "$name-new-signatures"
       else
         echo "$name"
       fi

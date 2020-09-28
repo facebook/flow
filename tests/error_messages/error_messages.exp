@@ -1,6 +1,6 @@
 Error --------------------------------------------------------------------------------------------------- errors.js:1:12
 
-Cannot resolve name `define`.
+Cannot resolve name `define`. [cannot-resolve-name]
 
    1| if (typeof define === 'function' && define.amd) { }
                  ^^^^^^
@@ -9,7 +9,7 @@ Cannot resolve name `define`.
 Error ------------------------------------------------------------------------------------------- long_string_use.js:6:2
 
 Cannot cast `long_lit` to string literal `aaaaaaaaaaaaaaaaaaaaa` because string [1] is incompatible with string literal
-`aaaaaaaaaaaaaaaaaaaaa` [2] because strings longer than `20` characters are not treated as literals.
+`aaaaaaaaaaaaaaaaaaaaa` [2] because strings longer than `20` characters are not treated as literals. [incompatible-cast]
 
    long_string_use.js:6:2
    6| (long_lit: 'aaaaaaaaaaaaaaaaaaaaa'); // error

@@ -1,6 +1,6 @@
 Error ----------------------------------------------------------------------------------------------------- forof.js:7:6
 
-Cannot cast `x` to string because number [1] is incompatible with string [2].
+Cannot cast `x` to string because number [1] is incompatible with string [2]. [incompatible-cast]
 
    forof.js:7:6
    7|     (x: string); // Error - number ~> string
@@ -17,7 +17,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- forof.js:13:6
 
-Cannot cast `x` to string because number [1] is incompatible with string [2].
+Cannot cast `x` to string because number [1] is incompatible with string [2]. [incompatible-cast]
 
    forof.js:13:6
    13|     (x: string); // Error - number ~> string
@@ -34,58 +34,58 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- forof.js:25:6
 
-Cannot cast `x` to number because string [1] is incompatible with number [2].
+Cannot cast `x` to number because string [1] is incompatible with number [2]. [incompatible-cast]
 
    forof.js:25:6
-    25|     (x: number); // Error - string ~> number
-             ^
+     25|     (x: number); // Error - string ~> number
+              ^
 
 References:
-   <BUILTINS>/core.js:324:28
-   324|     @@iterator(): Iterator<string>;
-                                   ^^^^^^ [1]
+   <BUILTINS>/core.js:1069:28
+   1069|     @@iterator(): Iterator<string>;
+                                    ^^^^^^ [1]
    forof.js:25:9
-    25|     (x: number); // Error - string ~> number
-                ^^^^^^ [2]
+     25|     (x: number); // Error - string ~> number
+                 ^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- forof.js:32:6
 
-Cannot cast `elem` to number because tuple type [1] is incompatible with number [2].
+Cannot cast `elem` to number because tuple type [1] is incompatible with number [2]. [incompatible-cast]
 
    forof.js:32:6
-    32|     (elem: number); // Error - tuple ~> number
-             ^^^^
+     32|     (elem: number); // Error - tuple ~> number
+              ^^^^
 
 References:
-   <BUILTINS>/core.js:596:28
-   596|     @@iterator(): Iterator<[K, V]>;
-                                   ^^^^^^ [1]
+   <BUILTINS>/core.js:1698:28
+   1698|     @@iterator(): Iterator<[K, V]>;
+                                    ^^^^^^ [1]
    forof.js:32:12
-    32|     (elem: number); // Error - tuple ~> number
-                   ^^^^^^ [2]
+     32|     (elem: number); // Error - tuple ~> number
+                    ^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- forof.js:39:6
 
-Cannot cast `elem` to number because tuple type [1] is incompatible with number [2].
+Cannot cast `elem` to number because tuple type [1] is incompatible with number [2]. [incompatible-cast]
 
    forof.js:39:6
-    39|     (elem: number); // Error - tuple ~> number
-             ^^^^
+     39|     (elem: number); // Error - tuple ~> number
+              ^^^^
 
 References:
-   <BUILTINS>/core.js:596:28
-   596|     @@iterator(): Iterator<[K, V]>;
-                                   ^^^^^^ [1]
+   <BUILTINS>/core.js:1698:28
+   1698|     @@iterator(): Iterator<[K, V]>;
+                                    ^^^^^^ [1]
    forof.js:39:12
-    39|     (elem: number); // Error - tuple ~> number
-                   ^^^^^^ [2]
+     39|     (elem: number); // Error - tuple ~> number
+                    ^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- forof.js:45:6
 
-Cannot cast `x` to number because string [1] is incompatible with number [2].
+Cannot cast `x` to number because string [1] is incompatible with number [2]. [incompatible-cast]
 
    forof.js:45:6
    45|     (x: number); // Error - string ~> number
@@ -102,7 +102,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- forof.js:66:7
 
-Cannot perform arithmetic operation because string [1] is not a number.
+Cannot perform arithmetic operation because string [1] is not a number. [unsafe-addition]
 
    forof.js:66:7
    66|   x = x * 3; // error
@@ -116,7 +116,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- forof.js:85:4
 
-Cannot cast `x` to number because boolean [1] is incompatible with number [2].
+Cannot cast `x` to number because boolean [1] is incompatible with number [2]. [incompatible-cast]
 
    forof.js:85:4
    85|   (x : number); // error
@@ -133,7 +133,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- forof.js:86:4
 
-Cannot cast `x` to boolean because number [1] is incompatible with boolean [2].
+Cannot cast `x` to boolean because number [1] is incompatible with boolean [2]. [incompatible-cast]
 
    forof.js:86:4
    86|   (x : boolean); // error
@@ -150,7 +150,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- forof.js:87:4
 
-Cannot cast `x` to string because number [1] is incompatible with string [2].
+Cannot cast `x` to string because number [1] is incompatible with string [2]. [incompatible-cast]
 
    forof.js:87:4
    87|   (x : string) //error
@@ -167,7 +167,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- forof.js:87:4
 
-Cannot cast `x` to string because boolean [1] is incompatible with string [2].
+Cannot cast `x` to string because boolean [1] is incompatible with string [2]. [incompatible-cast]
 
    forof.js:87:4
    87|   (x : string) //error
@@ -184,7 +184,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- scope.js:2:17
 
-Cannot use variable `x` [1] because the declaration either comes later or was skipped.
+Cannot use variable `x` [1] because the declaration either comes later or was skipped. [reference-before-declaration]
 
    scope.js:2:17
    2| for (const x of x) { // error: can not reference undeclared x in right-hand expr

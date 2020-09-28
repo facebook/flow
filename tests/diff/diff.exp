@@ -1,6 +1,6 @@
 Error ---------------------------------------------------------------------------------------------- intersection.js:9:2
 
-Cannot cast `any` to `$Diff` because:
+Cannot cast `any` to `$Diff` because: [incompatible-cast]
  - Either property `a` is missing in object type [1] but exists in object type [2].
  - Or property `a` is missing in object type [3] but exists in object type [2].
 
@@ -23,6 +23,7 @@ References:
 Error --------------------------------------------------------------------------------------------- intersection.js:12:8
 
 Cannot cast `any` to `$Diff` because property `a` is missing in object type [1] but exists in object type [2].
+[prop-missing]
 
    intersection.js:12:8
    12| ((any: {b: B}): $Diff<{a: A} & {b: B}, {b: B}>); // Error
@@ -37,6 +38,7 @@ References:
 Error --------------------------------------------------------------------------------------------- intersection.js:14:8
 
 Cannot cast `any` to `$Diff` because property `a` is missing in object type [1] but exists in object type [2].
+[prop-missing]
 
    intersection.js:14:8
    14| ((any: {b: B}): $Diff<{a: A, b: B, c: C}, {b: B} & {c: C}>); // Error
@@ -50,7 +52,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- lower.js:21:4
 
-Cannot get `y.age` because property `age` is missing in `Person` [1].
+Cannot get `y.age` because property `age` is missing in `Person` [1]. [prop-missing]
 
    lower.js:21:4
    21| (y.age: number); // Error -- could be void
@@ -64,7 +66,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- lower.js:22:2
 
-Cannot cast `y.name` to number because string [1] is incompatible with number [2].
+Cannot cast `y.name` to number because string [1] is incompatible with number [2]. [incompatible-cast]
 
    lower.js:22:2
    22| (y.name: number); // Error -- should be string
@@ -81,7 +83,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- lower.js:23:3
 
-Cannot get `y.bla` because property `bla` is missing in `Person` [1].
+Cannot get `y.bla` because property `bla` is missing in `Person` [1]. [prop-missing]
 
    lower.js:23:3
    23| y.bla; // Error -- key not found.
@@ -96,6 +98,7 @@ References:
 Error ------------------------------------------------------------------------------------------------- undefined.js:8:8
 
 Cannot cast `any` to `$Diff` because property `a` is missing in object type [1] but exists in object type [2].
+[prop-missing]
 
    undefined.js:8:8
    8| ((any: {b: B}): $Diff<{a: A, b: B}, {b: B}>); // Error
@@ -109,7 +112,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- undefined.js:10:12
 
-Cannot cast `any` to `$Diff` because undefined [1] is incompatible with `A` [2] in property `a`.
+Cannot cast `any` to `$Diff` because undefined [1] is incompatible with `A` [2] in property `a`. [incompatible-cast]
 
    undefined.js:10:12
    10| ((any: {a: void, b: B}): $Diff<{a: A, b: B}, {b: B}>); // Error
@@ -123,7 +126,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- union.js:6:25
 
-Cannot instantiate `$Diff` because undefined property `b` [1] is incompatible with `B` [2].
+Cannot instantiate `$Diff` because undefined property `b` [1] is incompatible with `B` [2]. [incompatible-type]
 
    union.js:6:25
    6| declare var one : $Diff<{a: A} | {b: B}, {b: B}>;
@@ -138,6 +141,7 @@ References:
 Error ---------------------------------------------------------------------------------------------------- union.js:12:2
 
 Cannot cast `two` to object type because property `a` is missing in object type [1] but exists in object type [2].
+[prop-missing]
 
    union.js:12:2
    12| (two :  {a : A}); // error
@@ -155,6 +159,7 @@ References:
 Error ---------------------------------------------------------------------------------------------------- union.js:20:2
 
 Cannot cast `four` to object type because property `a` is missing in object type [1] but exists in object type [2].
+[prop-missing]
 
    union.js:20:2
    20| (four : {a : A, c : C}); //error
@@ -172,6 +177,7 @@ References:
 Error ---------------------------------------------------------------------------------------------------- union.js:21:2
 
 Cannot cast `four` to object type because property `a` is missing in object type [1] but exists in object type [2].
+[prop-missing]
 
    union.js:21:2
    21| (four : {a : A, b : C, c : C}); //error
@@ -189,6 +195,7 @@ References:
 Error ---------------------------------------------------------------------------------------------------- union.js:21:2
 
 Cannot cast `four` to object type because property `b` is missing in object type [1] but exists in object type [2].
+[prop-missing]
 
    union.js:21:2
    21| (four : {a : A, b : C, c : C}); //error
@@ -205,7 +212,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- union.js:21:2
 
-Cannot cast `four` to object type because `B` [1] is incompatible with `C` [2] in property `b`.
+Cannot cast `four` to object type because `B` [1] is incompatible with `C` [2] in property `b`. [incompatible-cast]
 
    union.js:21:2
    21| (four : {a : A, b : C, c : C}); //error
@@ -222,7 +229,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- union.js:24:26
 
-Cannot instantiate `$Diff` because undefined property `b` [1] is incompatible with `B` [2].
+Cannot instantiate `$Diff` because undefined property `b` [1] is incompatible with `B` [2]. [incompatible-type]
 
    union.js:24:26
    24| declare var five : $Diff<{a: A, c : C} | {b: B, c : C}, {a : A} | {b: B}>;
@@ -236,7 +243,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- union.js:24:42
 
-Cannot instantiate `$Diff` because undefined property `a` [1] is incompatible with `A` [2].
+Cannot instantiate `$Diff` because undefined property `a` [1] is incompatible with `A` [2]. [incompatible-type]
 
    union.js:24:42
    24| declare var five : $Diff<{a: A, c : C} | {b: B, c : C}, {a : A} | {b: B}>;
@@ -251,6 +258,7 @@ References:
 Error ---------------------------------------------------------------------------------------------------- union.js:30:2
 
 Cannot cast `six` to object type because property `c` is missing in object type [1] but exists in object type [2].
+[prop-missing]
 
    union.js:30:2
    30| (six : {c : C, d : D}); // error
@@ -268,6 +276,7 @@ References:
 Error ---------------------------------------------------------------------------------------------------- union.js:30:2
 
 Cannot cast `six` to object type because property `d` is missing in object type [1] but exists in object type [2].
+[prop-missing]
 
    union.js:30:2
    30| (six : {c : C, d : D}); // error

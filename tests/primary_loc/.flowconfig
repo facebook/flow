@@ -1,3 +1,2 @@
 [options]
-suppress_comment=\\(.\\|\n\\)*\\$FlowFixMe\\($\\|[^(]\\|(\\(<VERSION>\\)? *\\(site=[a-z,_]*www[a-z,_]*\\)?)\\)
 include_warnings=true

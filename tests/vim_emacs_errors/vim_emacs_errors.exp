@@ -1,8 +1,8 @@
 from emacs:
 File "test.js", line 3, characters 2-4
-Error: Cannot cast `123` to string because number [1] is incompatible with string [2].
+Error: Cannot cast `123` to string because number [1] is incompatible with string [2]. [incompatible-cast]
 
 from vim:
 File "test.js", line 3, characters 2-4
-Error: Cannot cast `123` to string because number [1] is incompatible with string [2].
+Error: Cannot cast `123` to string because number [1] is incompatible with string [2]. [incompatible-cast]
 

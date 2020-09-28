@@ -1,6 +1,6 @@
 Error ---------------------------------------------------------------------------------------- ../foo/batman/baz.js:3:17
 
-Cannot assign `"not a number"` to `x` because string [1] is incompatible with number [2].
+Cannot assign `"not a number"` to `x` because string [1] is incompatible with number [2]. [incompatible-type]
 
    ../foo/batman/baz.js:3:17
    3| var x: number = "not a number" // Error string ~> number
@@ -14,7 +14,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------ ../included/test.js:1:2
 
-Cannot cast `123` to string because number [1] is incompatible with string [2].
+Cannot cast `123` to string because number [1] is incompatible with string [2]. [incompatible-cast]
 
    ../included/test.js:1:2
    1| (123: string);

@@ -1,7 +1,7 @@
 Without --include-suppressed
 Error ------------------------------------------------------------------------------------------------------ test.js:3:2
 
-Cannot cast `123` to string because number [1] is incompatible with string [2].
+Cannot cast `123` to string because number [1] is incompatible with string [2]. [incompatible-cast]
 
    test.js:3:2
    3| (123: string); // Normal error
@@ -28,7 +28,7 @@ Found 1 error and 1 warning
 With --include-suppressed
 Error ------------------------------------------------------------------------------------------------------ test.js:3:2
 
-Cannot cast `123` to string because number [1] is incompatible with string [2].
+Cannot cast `123` to string because number [1] is incompatible with string [2]. [incompatible-cast]
 
    test.js:3:2
    3| (123: string); // Normal error
@@ -42,7 +42,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ test.js:6:2
 
-Cannot cast `123` to string because number [1] is incompatible with string [2].
+Cannot cast `123` to string because number [1] is incompatible with string [2]. [incompatible-cast]
 
    test.js:6:2
    6| (123: string); // Suppressed error
@@ -133,7 +133,7 @@ JSON without --include-suppressed
       "message":[
         {
           "context":"(123: string); // Normal error",
-          "descr":"Cannot cast `123` to string because number [1] is incompatible with string [2].",
+          "descr":"Cannot cast `123` to string because number [1] is incompatible with string [2]. [incompatible-cast]",
           "type":"Blame",
           "loc":{
             "source":"test.js",
@@ -147,7 +147,8 @@ JSON without --include-suppressed
           "start":2,
           "end":4
         }
-      ]
+      ],
+      "error_codes":["incompatible-cast"]
     },
     {
       "kind":"infer",
@@ -161,8 +162,8 @@ JSON without --include-suppressed
           "loc":{
             "source":"test.js",
             "type":"SourceFile",
-            "start":{"line":8,"column":1,"offset":92},
-            "end":{"line":8,"column":42,"offset":134}
+            "start":{"line":8,"column":1,"offset":111},
+            "end":{"line":8,"column":42,"offset":153}
           },
           "path":"test.js",
           "line":8,
@@ -170,7 +171,8 @@ JSON without --include-suppressed
           "start":1,
           "end":42
         }
-      ]
+      ],
+      "error_codes":[]
     }
   ],
   "passed":false
@@ -244,7 +246,7 @@ JSON with --include-suppressed
       "message":[
         {
           "context":"(123: string); // Normal error",
-          "descr":"Cannot cast `123` to string because number [1] is incompatible with string [2].",
+          "descr":"Cannot cast `123` to string because number [1] is incompatible with string [2]. [incompatible-cast]",
           "type":"Blame",
           "loc":{
             "source":"test.js",
@@ -258,7 +260,8 @@ JSON with --include-suppressed
           "start":2,
           "end":4
         }
-      ]
+      ],
+      "error_codes":["incompatible-cast"]
     },
     {
       "kind":"infer",
@@ -272,8 +275,8 @@ JSON with --include-suppressed
           "loc":{
             "source":"test.js",
             "type":"SourceFile",
-            "start":{"line":8,"column":1,"offset":92},
-            "end":{"line":8,"column":42,"offset":134}
+            "start":{"line":8,"column":1,"offset":111},
+            "end":{"line":8,"column":42,"offset":153}
           },
           "path":"test.js",
           "line":8,
@@ -281,7 +284,8 @@ JSON with --include-suppressed
           "start":1,
           "end":42
         }
-      ]
+      ],
+      "error_codes":[]
     },
     {
       "kind":"infer",
@@ -292,7 +296,7 @@ JSON with --include-suppressed
             "source":"test.js",
             "type":"SourceFile",
             "start":{"line":5,"column":1,"offset":42},
-            "end":{"line":5,"column":13,"offset":55}
+            "end":{"line":5,"column":32,"offset":74}
           }
         }
       ],
@@ -320,8 +324,8 @@ JSON with --include-suppressed
               "loc":{
                 "source":"test.js",
                 "type":"SourceFile",
-                "start":{"line":6,"column":2,"offset":57},
-                "end":{"line":6,"column":4,"offset":60}
+                "start":{"line":6,"column":2,"offset":76},
+                "end":{"line":6,"column":4,"offset":79}
               },
               "path":"test.js",
               "line":6,
@@ -340,8 +344,8 @@ JSON with --include-suppressed
               "loc":{
                 "source":"test.js",
                 "type":"SourceFile",
-                "start":{"line":6,"column":7,"offset":62},
-                "end":{"line":6,"column":12,"offset":68}
+                "start":{"line":6,"column":7,"offset":81},
+                "end":{"line":6,"column":12,"offset":87}
               },
               "path":"test.js",
               "line":6,
@@ -355,13 +359,13 @@ JSON with --include-suppressed
       "message":[
         {
           "context":"(123: string); // Suppressed error",
-          "descr":"Cannot cast `123` to string because number [1] is incompatible with string [2].",
+          "descr":"Cannot cast `123` to string because number [1] is incompatible with string [2]. [incompatible-cast]",
           "type":"Blame",
           "loc":{
             "source":"test.js",
             "type":"SourceFile",
-            "start":{"line":6,"column":2,"offset":57},
-            "end":{"line":6,"column":4,"offset":60}
+            "start":{"line":6,"column":2,"offset":76},
+            "end":{"line":6,"column":4,"offset":79}
           },
           "path":"test.js",
           "line":6,
@@ -369,7 +373,8 @@ JSON with --include-suppressed
           "start":2,
           "end":4
         }
-      ]
+      ],
+      "error_codes":["incompatible-cast"]
     }
   ],
   "passed":false
@@ -379,7 +384,7 @@ JSON with --include-suppressed
 Server without --include-suppressed
 Error ------------------------------------------------------------------------------------------------------ test.js:3:2
 
-Cannot cast `123` to string because number [1] is incompatible with string [2].
+Cannot cast `123` to string because number [1] is incompatible with string [2]. [incompatible-cast]
 
    test.js:3:2
    3| (123: string); // Normal error
@@ -406,7 +411,7 @@ Found 1 error and 1 warning
 Server with --include-suppressed
 Error ------------------------------------------------------------------------------------------------------ test.js:3:2
 
-Cannot cast `123` to string because number [1] is incompatible with string [2].
+Cannot cast `123` to string because number [1] is incompatible with string [2]. [incompatible-cast]
 
    test.js:3:2
    3| (123: string); // Normal error
@@ -420,7 +425,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ test.js:6:2
 
-Cannot cast `123` to string because number [1] is incompatible with string [2].
+Cannot cast `123` to string because number [1] is incompatible with string [2]. [incompatible-cast]
 
    test.js:6:2
    6| (123: string); // Suppressed error

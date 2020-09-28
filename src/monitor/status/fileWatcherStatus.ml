@@ -5,21 +5,28 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
+type file_watcher =
+  | NoFileWatcher
+  | DFind
+  | Watchman
+
 type status' =
   | Initializing
   | Ready
+  | Deferred of { reason: string }
 
-type status = Options.file_watcher * status'
+type status = file_watcher * status'
 
 let string_of_file_watcher = function
-  | Options.NoFileWatcher -> "Dummy"
-  | Options.DFind -> "Dfind"
-  | Options.Watchman -> "Watchman"
+  | NoFileWatcher -> "Dummy"
+  | DFind -> "Dfind"
+  | Watchman -> "Watchman"
 
 let string_of_status =
   let string_of_status = function
     | Initializing -> "still initializing"
     | Ready -> "ready"
+    | Deferred { reason } -> Printf.sprintf "deferred (%s)" reason
   in
   fun (watcher, status) ->
     Printf.sprintf

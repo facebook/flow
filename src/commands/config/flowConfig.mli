@@ -5,6 +5,11 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
+type file_watcher =
+  | NoFileWatcher
+  | DFind
+  | Watchman
+
 type config
 
 type warning = int * string
@@ -54,7 +59,7 @@ val abstract_locations : config -> bool
 
 val all : config -> bool
 
-val autofix_exports : config -> bool
+val automatic_require_default : config -> bool
 
 val babel_loose_array_spread : config -> bool
 
@@ -68,9 +73,7 @@ val enforce_strict_call_arity : config -> bool
 
 val enforce_well_formed_exports : config -> bool
 
-val well_formed_exports_set_explicitly : config -> bool
-
-val enforce_well_formed_exports_whitelist : config -> string list
+val enforce_well_formed_exports_includes : config -> string list
 
 val enums : config -> bool
 
@@ -92,7 +95,9 @@ val facebook_fbs : config -> string option
 
 val facebook_fbt : config -> string option
 
-val file_watcher : config -> Options.file_watcher option
+val facebook_module_interop : config -> bool
+
+val file_watcher : config -> file_watcher option
 
 val file_watcher_timeout : config -> int option
 
@@ -100,9 +105,9 @@ val haste_module_ref_prefix : config -> string option
 
 val haste_name_reducers : config -> (Str.regexp * string) list
 
-val haste_paths_blacklist : config -> string list
+val haste_paths_excludes : config -> string list
 
-val haste_paths_whitelist : config -> string list
+val haste_paths_includes : config -> string list
 
 val haste_use_name_reducers : config -> bool
 
@@ -166,7 +171,9 @@ val shm_heap_size : config -> int
 
 val shm_log_level : config -> int
 
-val suppress_comments : config -> Str.regexp list
+val strict_es6_import_export : config -> bool
+
+val strict_es6_import_export_excludes : config -> string list
 
 val suppress_types : config -> SSet.t
 
@@ -179,6 +186,14 @@ val trust_mode : config -> Options.trust_mode
 val type_asserts : config -> bool
 
 val types_first : config -> bool
+
+val new_signatures : config -> bool
+
+val watchman_sync_timeout : config -> int option
+
+val watchman_defer_states : config -> string list
+
+val watchman_mergebase_with : config -> string option
 
 val wait_for_recheck : config -> bool
 

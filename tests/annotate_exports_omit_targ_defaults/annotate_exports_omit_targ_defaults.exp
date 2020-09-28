@@ -1,4 +1,7 @@
->>> defaults.js (#changes: 2)
+
+=== Codemod annotate-exports ===
+
+>>> ./defaults.js
 // @flow
 
 
@@ -12,10 +15,10 @@ module.exports = (foo(): Foo<>);
 
 Stats:
   Files changed:                            1
-  Number of sig. ver. errors:               1
-  Number of annotations required:           1
   Number of annotations added:              1
   Total size of annotations:                1
+  Number of sig. ver. errors:               1
+  Number of annotations required:           1
   Number of annotations skipped:            0
 
 Errors:
@@ -26,7 +29,6 @@ Errors:
     Parsing heaps get ast error:            0
     Indeterminate module type:              0
     No matching export:                     0
-    Unrecognizable module error:            0
   Serializer error:                         0
   Unsupported error kind:                   0
 
@@ -36,4 +38,25 @@ Warnings:
   Location unhandled:                       0
   Empty NoUpper:                            0
   Empty SomeKnownUpper:                     0
+
+
+=== Autofix exports ===
+
+>>> ./defaults.js
+// @flow
+
+
+type Foo<T = string> = {};
+
+function foo(): Foo<string> { return {}; }
+
+module.exports = (foo(): Foo<string>);
+
+
+=== Diff between codemod-ed & autofix-ed ===
+>>> ./defaults.js
+8c8
+< module.exports = (foo(): Foo<>);
+---
+> module.exports = (foo(): Foo<string>);
 

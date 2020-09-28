@@ -93,8 +93,6 @@
 #define Val_handle(fd) (Val_long(fd))
 #endif
 
-#define HASHTBL_WRITE_IN_PROGRESS (0xfffffffffffffffeull)
-
 /****************************************************************************
  * Quoting the linux manpage: memfd_create() creates an anonymous file
  * and returns a file descriptor that refers to it. The file behaves
@@ -109,6 +107,10 @@
  * appeared in Linux 3.17.
  ****************************************************************************/
 #ifdef __linux__
+ #define MEMFD_CREATE 1
+
+ // glibc only added support for memfd_create in version 2.27.
+ #ifndef MFD_CLOEXEC
   // Linux version for the architecture must support syscall memfd_create
   #ifndef SYS_memfd_create
     #if defined(__x86_64__)
@@ -122,7 +124,6 @@
     #endif
   #endif
 
-  #define MEMFD_CREATE 1
   #include <asm/unistd.h>
 
   /* Originally this function would call uname(), parse the linux
@@ -134,6 +135,7 @@
   static int memfd_create(const char *name, unsigned int flags) {
     return syscall(SYS_memfd_create, name, flags);
   }
+ #endif
 #endif
 
 #ifndef MAP_NORESERVE
@@ -278,10 +280,14 @@ typedef struct {
   char data[];
 } heap_entry_t;
 
-/* Cells of the Hashtable */
-typedef struct {
-  uint64_t hash;
-  addr_t addr;
+/* The hash table supports lock-free writes by performing a 16-byte CAS,
+ * ensuring that the hash and address are written together atomically. */
+typedef union {
+  __int128_t value;
+  struct {
+    uint64_t hash;
+    addr_t addr;
+  };
 } helt_t;
 
 /*****************************************************************************/
@@ -315,8 +321,6 @@ static size_t worker_can_exit = 1;
 static size_t used_heap_size(void) {
   return info->heap - info->heap_init;
 }
-
-static long removed_count = 0;
 
 /* Expose so we can display diagnostics */
 CAMLprim value hh_used_heap_size(void) {
@@ -362,7 +366,7 @@ static HANDLE memfd;
 
 /**************************************************************************
  * We create an anonymous memory file, whose `handle` might be
- * inherited by slave processes.
+ * inherited by subprocesses.
  *
  * This memory file is tagged "reserved" but not "committed". This
  * means that the memory space will be reserved in the virtual memory
@@ -781,10 +785,6 @@ CAMLprim value hh_collect(void) {
     // Skip empty slots
     if (hashtbl[i].addr == NULL_ADDR) { continue; }
 
-    // No workers should be writing at the moment. If a worker died in the
-    // middle of a write, that is also very bad
-    assert(hashtbl[i].addr != HASHTBL_WRITE_IN_PROGRESS);
-
     // The hashtbl addr will be wrong after we relocate the heap entry, but we
     // don't know where the heap entry will relocate to yet. We need to first
     // move the heap entry, then fix up the hashtbl addr.
@@ -952,40 +952,6 @@ static uint64_t get_hash(value key) {
   return *((uint64_t*)String_val(key));
 }
 
-/*****************************************************************************/
-/* Writes the data in one of the slots of the hashtable. There might be
- * concurrent writers, when that happens, the first writer wins.
- *
- * Returns the number of bytes allocated in the shared heap. If the slot
- * was already written to, a negative value is returned to indicate no new
- * memory was allocated.
- */
-/*****************************************************************************/
-static value write_at(unsigned int slot, value data) {
-  CAMLparam1(data);
-  CAMLlocal1(result);
-  result = caml_alloc_tuple(2);
-  // Try to write in a value to indicate that the data is being written.
-  if(
-     __sync_bool_compare_and_swap(
-       &(hashtbl[slot].addr),
-       NULL_ADDR,
-       HASHTBL_WRITE_IN_PROGRESS
-     )
-  ) {
-    size_t alloc_size = 0;
-    size_t orig_size = 0;
-    hashtbl[slot].addr = hh_store_ocaml(data, &alloc_size, &orig_size);
-    Store_field(result, 0, Val_long(alloc_size));
-    Store_field(result, 1, Val_long(orig_size));
-    __sync_fetch_and_add(&info->hcounter_filled, 1);
-  } else {
-    Store_field(result, 0, Min_long);
-    Store_field(result, 1, Min_long);
-  }
-  CAMLreturn(result);
-}
-
 static void raise_hash_table_full(void) {
   static value *exn = NULL;
   if (!exn) exn = caml_named_value("hash_table_full");
@@ -1002,16 +968,54 @@ static void raise_hash_table_full(void) {
 /*****************************************************************************/
 value hh_add(value key, value data) {
   CAMLparam2(key, data);
+  CAMLlocal1(result);
   check_should_exit();
+
+  // Optimistically write this value to the heap. If the value is already
+  // present in the heap, the write will still proceed, but the address will not
+  // be registered with the hash table. If the caller expects the value may
+  // already be present, the caller should first do a mem check before adding.
+  //
+  // If concurrently executing threads race to write the same value, then they
+  // might each successfully write to the heap, but only one thread will
+  // successfully register their write to the hash table.
+  size_t alloc_size = 0;
+  size_t orig_size = 0;
+  helt_t elt;
+  elt.hash = get_hash(key);
+  elt.addr = hh_store_ocaml(data, &alloc_size, &orig_size);
+
+  // Record sizes written to the heap. Note that we will track these sizes even
+  // if the value written above is not recorded in the hash table.
+  result = caml_alloc_tuple(2);
+  Store_field(result, 0, Val_long(alloc_size));
+  Store_field(result, 1, Val_long(orig_size));
+
   size_t hashtbl_slots = info->hashtbl_slots;
-  uint64_t hash = get_hash(key);
-  unsigned int slot = hash & (hashtbl_slots - 1);
+  unsigned int slot = elt.hash & (hashtbl_slots - 1);
   unsigned int init_slot = slot;
-  while(1) {
+
+  while (1) {
     uint64_t slot_hash = hashtbl[slot].hash;
 
-    if(slot_hash == hash) {
-      CAMLreturn(write_at(slot, data));
+    if (slot_hash == elt.hash) {
+      // This value has already been been written to this slot, except that the
+      // value may have been deleted. Deleting a slot leaves the hash in place
+      // but replaces the addr field with NULL_ADDR. In this case, we can re-use
+      // the slot by writing the new address into.
+      //
+      // Remember that only reads and writes can happen concurrently, so we
+      // don't need to worry about concurrent deletes.
+
+      if (hashtbl[slot].addr == NULL_ADDR) {
+        // Two threads may be racing to write this value, so try to grab the slot
+        // atomically.
+        if (__sync_bool_compare_and_swap(&hashtbl[slot].addr, NULL_ADDR, elt.addr)) {
+          __sync_fetch_and_add(&info->hcounter_filled, 1);
+        }
+      }
+
+      break;
     }
 
     if (info->hcounter >= hashtbl_slots) {
@@ -1019,30 +1023,28 @@ value hh_add(value key, value data) {
       raise_hash_table_full();
     }
 
-    if(slot_hash == 0) {
-      // We think we might have a free slot, try to atomically grab it.
-      if(__sync_bool_compare_and_swap(&(hashtbl[slot].hash), 0, hash)) {
+    if (slot_hash == 0) {
+      // This slot is free, but two threads may be racing to write to this slot,
+      // so try to grab the slot atomically. Note that this is a 16-byte CAS
+      // writing both the hash and the address at the same time. Whatever data
+      // was in the slot at the time of the CAS will be stored in `old`.
+      helt_t old;
+      old.value = __sync_val_compare_and_swap(&hashtbl[slot].value, 0, elt.value);
+
+      if (old.hash == 0) {
+        // The slot was still empty when we tried to CAS, meaning we
+        // successfully grabbed the slot.
         uint64_t size = __sync_fetch_and_add(&info->hcounter, 1);
-        // Sanity check
-        assert(size < hashtbl_slots);
-        CAMLreturn(write_at(slot, data));
+        __sync_fetch_and_add(&info->hcounter_filled, 1);
+        assert(size < hashtbl_slots); // sanity check
+        break;
       }
 
-      // Grabbing it failed -- why? If someone else is trying to insert
-      // the data we were about to, try to insert it ourselves too.
-      // Otherwise, keep going.
-      // Note that this read relies on the __sync call above preventing the
-      // compiler from caching the value read out of memory. (And of course
-      // isn't safe on any arch that requires memory barriers.)
-      if(hashtbl[slot].hash == hash) {
-        // Some other thread already grabbed this slot to write this
-        // key, but they might not have written the address (or even
-        // the sigil value) yet. We can't return from hh_add until we
-        // know that hh_mem would succeed, which is to say that addr is
-        // no longer null. To make sure hh_mem will work, we try
-        // writing the value ourselves; either we insert it ourselves or
-        // we know the address is now non-NULL.
-        CAMLreturn(write_at(slot, data));
+      if (old.hash == elt.hash) {
+        // The slot was non-zero, so we failed to grab the slot. However, the
+        // thread which won the race wrote the value we were trying to write,
+        // meaning out work is done.
+        break;
       }
     }
 
@@ -1052,6 +1054,8 @@ value hh_add(value key, value data) {
       raise_hash_table_full();
     }
   }
+
+  CAMLreturn(result);
 }
 
 /*****************************************************************************/
@@ -1079,52 +1083,6 @@ static unsigned int find_slot(value key) {
   }
 }
 
-/*
-hh_mem_inner
- 1 -- key exists and is associated with non-zero data
--1 -- key is not present in the hash table at all
--2 -- key is present in the hash table but associated with zero-valued data.
-      This means that the data has been explicitly deleted.
-
-Note that the only valid return values are {1,-1,-2}. In order to use the result
-of this function in an "if" statement an explicit test must be performed.
-*/
-int hh_mem_inner(value key) {
-  check_should_exit();
-  unsigned int slot = find_slot(key);
-  _Bool good_hash = hashtbl[slot].hash == get_hash(key);
-  _Bool non_null_addr = hashtbl[slot].addr != NULL_ADDR;
-  if (good_hash && non_null_addr) {
-    // The data is currently in the process of being written, wait until it
-    // actually is ready to be used before returning.
-    time_t start = 0;
-    while (hashtbl[slot].addr == HASHTBL_WRITE_IN_PROGRESS) {
-#if defined(__aarch64__) || defined(__powerpc64__)
-      asm volatile("yield" : : : "memory");
-#else
-      asm volatile("pause" : : : "memory");
-#endif
-      // if the worker writing the data dies, we can get stuck. Timeout check
-      // to prevent it.
-      time_t now = time(0);
-      if (start == 0 || start > now) {
-        start = now;
-      } else if (now - start > 60) {
-        caml_failwith("hh_mem busy-wait loop stuck for 60s");
-      }
-    }
-    return 1;
-  }
-  else if (good_hash) {
-    // if the hash matches and the key is zero
-    // then we've removed the key.
-    return -2;
-  } else {
-    // otherwise the key is simply absent
-    return -1;
-  }
-}
-
 /*****************************************************************************/
 /* Returns true if the key is present. We need to check both the hash and
  * the address of the data. This is due to the fact that we remove by setting
@@ -1134,20 +1092,9 @@ int hh_mem_inner(value key) {
 /*****************************************************************************/
 value hh_mem(value key) {
   CAMLparam1(key);
-  CAMLreturn(Val_bool(hh_mem_inner(key) == 1));
-}
-
-CAMLprim value hh_mem_status(value key) {
-  CAMLparam1(key);
-  int res = hh_mem_inner(key);
-  switch (res) {
-    case 1:
-    case -1:
-    case -2:
-      CAMLreturn(Val_int(res));
-    default:
-      caml_failwith("Unreachable case: result must be 1 or -1 or -2");
-  }
+  check_should_exit();
+  helt_t elt = hashtbl[find_slot(key)];
+  CAMLreturn(Val_bool(elt.hash == get_hash(key) && elt.addr != NULL_ADDR));
 }
 
 /*****************************************************************************/
@@ -1248,11 +1195,5 @@ void hh_remove(value key) {
   size_t slot_size = CACHE_ALIGN(Heap_entry_total_size(entry->header));
   info->wasted_heap_size += slot_size;
   hashtbl[slot].addr = NULL_ADDR;
-  removed_count++;
   info->hcounter_filled -= 1;
-}
-
-CAMLprim value hh_removed_count(value unit) {
-    CAMLparam1(unit);
-    return Val_long(removed_count);
 }

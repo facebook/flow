@@ -1,0 +1,100 @@
+
+=== Codemod annotate-exports ===
+
+>>> ./file.js
+// @flow
+
+export function tag_like_values(): $TEMPORARY$object<
+  {|non_tag_like: string, tag_like: $TEMPORARY$string<"tag_like">|},
+> {
+  return {
+    tag_like: 'tag_like', // should print '$TEMPORARY$string<"tag_like">'
+    non_tag_like: 'non_tag_like!', // should print 'string'
+  };
+}
+
+// should print '$TEMPORARY$array<...>'
+export function array_literal(x: string, y: number): $TEMPORARY$array<number | string> {
+  return [x, y];
+}
+
+// should print 'boolean'
+export function bool_literal(): boolean {
+  return true;
+}
+
+// should print 'number
+export function number_literal(): number {
+  return 1;
+}
+
+>>> Launching report...
+
+Stats:
+  Files changed:                            1
+  Number of annotations added:              4
+  Total size of annotations:                9
+  Number of sig. ver. errors:               4
+  Number of annotations required:           4
+  Number of annotations skipped:            0
+
+Errors:
+  Missing annot./normalizer error:          0
+  Validation Error:                         0
+  Import Error:
+    Loc source none:                        0
+    Parsing heaps get ast error:            0
+    Indeterminate module type:              0
+    No matching export:                     0
+  Serializer error:                         0
+  Unsupported error kind:                   0
+
+Warnings:
+  Skipping arrow function:                  0
+  Large type added:                         0
+  Location unhandled:                       0
+  Empty NoUpper:                            0
+  Empty SomeKnownUpper:                     0
+
+
+=== Autofix exports ===
+
+>>> ./file.js
+// @flow
+
+export function tag_like_values(): {non_tag_like: string, tag_like: string,...} {
+  return {
+    tag_like: 'tag_like', // should print '$TEMPORARY$string<"tag_like">'
+    non_tag_like: 'non_tag_like!', // should print 'string'
+  };
+}
+
+// should print '$TEMPORARY$array<...>'
+export function array_literal(x: string, y: number): Array<number | string> {
+  return [x, y];
+}
+
+// should print 'boolean'
+export function bool_literal(): boolean {
+  return true;
+}
+
+// should print 'number
+export function number_literal(): number {
+  return 1;
+}
+
+
+=== Diff between codemod-ed & autofix-ed ===
+>>> ./file.js
+3,5c3
+< export function tag_like_values(): $TEMPORARY$object<
+<   {|non_tag_like: string, tag_like: $TEMPORARY$string<"tag_like">|},
+< > {
+---
+> export function tag_like_values(): {non_tag_like: string, tag_like: string,...} {
+13c11
+< export function array_literal(x: string, y: number): $TEMPORARY$array<number | string> {
+---
+> export function array_literal(x: string, y: number): Array<number | string> {
+

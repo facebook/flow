@@ -1,18 +1,22 @@
-Error ----------------------------------------------------------------------------------------------------- test.js:24:2
+Error ---------------------------------------------------------------------------------------------------- test.js:23:14
 
-Cannot create `Foo` element because property `x` is missing in object type [1] but exists in `Props` [2].
+Cannot call `create` with `create1(...)` bound to `Component` because property `x` is missing in object type [1] but
+exists in `Props` [2] in type argument `P` [3]. [prop-missing]
 
-   test.js:24:2
-   24| <Foo />;
-        ^^^
+   test.js:23:14
+    23| Foo = create(create1(Foo));
+                     ^^^^^^^^^^^^
 
 References:
    test.js:6:34
-    6|   Component: React.ComponentType<{...P, ...{}}>,
-                                        ^^^^^^^^^^^^^ [1]
+     6|   Component: React.ComponentType<{...P, ...{}}>,
+                                         ^^^^^^^^^^^^^ [1]
    test.js:21:35
-   21| class Foo extends React.Component<Props> {}
-                                         ^^^^^ [2]
+    21| class Foo extends React.Component<Props> {}
+                                          ^^^^^ [2]
+   <BUILTINS>/react.js:256:38
+   256|   declare export type ComponentType<-P> = React$ComponentType<P>;
+                                             ^ [3]
 
 
 

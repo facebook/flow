@@ -22,7 +22,7 @@ import {
   prettyPrintMessageOfError,
 } from '../flowResult';
 import getPathToLoc from './getPathToLoc';
-import {getFlowErrors} from '../errors';
+import {getFlowErrors, filterErrors, mainSourceLocOfError} from '../errors';
 import getContext, {NORMAL, JSX, JSX_FRAGMENT, TEMPLATE} from './getContext';
 import getAst from './getAst';
 
@@ -30,11 +30,13 @@ import type {PathNode} from './getPathToLoc';
 import type {Args} from './add-commentsCommand';
 import type {FlowLoc, FlowError, FlowMessage} from '../flowResult';
 import type {Context} from './getContext';
+import {formatComment, addCommentToText} from './commentMutator';
 
 export type Suppression = {|
   loc: FlowLoc,
   isError: boolean,
   lints: Set<string>,
+  error_codes: Array<string>,
 |};
 
 const unselectedBox = '[ ]';
@@ -77,6 +79,10 @@ class BlessedError {
     } else {
       return mainSourceLocOfError(this.error);
     }
+  }
+
+  getErrorCodes(): Array<string> {
+    return this.error.error_codes;
   }
 
   getStringOfLocation(): string {
@@ -131,23 +137,6 @@ class BlessedError {
   isSelected() {
     return this.selected === selectedBox;
   }
-}
-
-function mainSourceLocOfError(error: FlowError): ?FlowLoc {
-  const {operation, message} = error;
-  for (const msg of [operation, ...message]) {
-    if (msg && msg.loc && msg.loc.type === 'SourceFile') {
-      return msg.loc;
-    }
-  }
-  return null;
-}
-
-/**
- * Filter out errors without a main location or a source file
- */
-function filterErrors(errors: Array<FlowError>): Array<FlowError> {
-  return errors.filter(e => mainSourceLocOfError(e) != null);
 }
 
 /**
@@ -623,18 +612,16 @@ async function addComments(args: Args, errors: Array<BlessedError>) {
     string,
     Map<number, Suppression>,
   > = new Map();
-  // Filter out errors without a main location, and dedupe errors that share
-  // the same main location
+  // Filter out errors without a main location
   let errorCount = 0;
   for (const error of errors) {
     const loc = error.getLocation();
+    const error_codes = error.getErrorCodes();
     if (loc != null && loc.source != null) {
       const source = loc.source;
       const lineToLocsMap = filenameToLineToLocsMap.get(source) || new Map();
-      const prevValue = lineToLocsMap.get(loc.start.line);
-      const isError =
-        (prevValue && prevValue.isError) || error.error.kind !== 'lint';
-      let lints = (prevValue && prevValue.lints) || new Set();
+      const isError = error.error.kind !== 'lint';
+      let lints = new Set();
       if (error.error.kind === 'lint') {
         // \u0060 is `. using the escape to avoid a syntax highlighting bug in vscode-language-babel
         const match = /\(\u0060([^\u0060]+)\u0060\)$/.exec(
@@ -644,7 +631,27 @@ async function addComments(args: Args, errors: Array<BlessedError>) {
           lints.add(match[1]);
         }
       }
-      const value = {loc, isError, lints};
+      function joinSuppression(
+        prevValue: ?Suppression,
+        newValue: Suppression,
+      ): Suppression {
+        if (!prevValue) {
+          return newValue;
+        }
+        return {
+          loc: newValue.loc,
+          isError: newValue.isError || prevValue.isError,
+          lints: new Set([...newValue.lints, ...prevValue.lints]),
+          error_codes: [...newValue.error_codes, ...prevValue.error_codes],
+        };
+      }
+      const prevValue: ?Suppression = lineToLocsMap.get(loc.start.line);
+      const value = joinSuppression(prevValue, {
+        loc,
+        isError,
+        lints,
+        error_codes,
+      });
       lineToLocsMap.set(loc.start.line, value);
       filenameToLineToLocsMap.set(source, lineToLocsMap);
       errorCount++;
@@ -677,6 +684,7 @@ async function addCommentsToSource(
 
   const [code, commentCount] = await addCommentsToCode(
     args.comment,
+    args.error_code,
     codeBuffer.toString(),
     locs,
     args.bin,
@@ -687,6 +695,7 @@ async function addCommentsToSource(
 
 export async function addCommentsToCode(
   comment: ?string,
+  error_code: ?string,
   code: string,
   locs: Array<Suppression>,
   flowBinPath: string,
@@ -698,21 +707,22 @@ export async function addCommentsToCode(
   const ast = await getAst(code, flowBinPath);
 
   let commentCount = 0;
-  for (const {loc, isError, lints} of locs) {
+  for (let {loc, isError, lints, error_codes} of locs) {
+    if (error_code != null) {
+      error_codes = error_codes.filter(c => c === error_code);
+    }
+
     const path = getPathToLoc(loc, ast);
 
     if (path != null) {
       let c = comment || '';
-      let wrap = true;
-      if (!isError && lints.size > 0) {
-        const sortedLints = Array.from(lints).sort();
-        c = `flowlint-next-line ${sortedLints
-          .map(lint => `${lint}:off`)
-          .join(', ')}`;
-        wrap = false;
+      const comments = [...new Set(error_codes)].map(
+        error_code => `$FlowFixMe[${error_code}]${c ? ` ${c}` : ''}`,
+      );
+      for (c of comments) {
+        code = addCommentToCode(c, code, loc, path);
       }
-      code = addCommentToCode(c, code, loc, path, wrap);
-      commentCount++;
+      commentCount += error_codes.length;
     }
   }
   return [code, commentCount];
@@ -723,208 +733,15 @@ export function addCommentToCode(
   code: string,
   loc: FlowLoc,
   path: Array<PathNode>,
-  wrap: boolean,
 ): string {
-  /* First of all, we want to know if we can add a comment to the line before
-   * the error. So we need to see if we're in a JSX children block or inside a
-   * template string when we reach the line with the error */
   const [inside, ast] = getContext(loc, path);
-
-  const inJSX = inside === JSX_FRAGMENT || inside === JSX;
-
-  const lines = code.split('\n');
-  if (inside === NORMAL) {
-    // This is easy, just add the comment to the preceding line
-    return []
-      .concat(
-        lines.slice(0, loc.start.line - 1),
-        formatComment(comment, lines[loc.start.line - 1], {wrap}),
-        lines.slice(loc.start.line - 1),
-      )
-      .join('\n');
-  } else if (inJSX && ast.type === 'JSXElement') {
-    /* Ok, so we have something like
-     * <jsx>
-     *   <foo id={10*'hello'} />
-     * <jsx>
-     *
-     * We need to put an empty expression container above the element with our
-     * comment.
-     *
-     * <jsx>
-     *   {// Comment
-     *   }
-     *   <foo id={10*'hello'} />
-     * <jsx>
-     */
-    return []
-      .concat(
-        lines.slice(0, loc.start.line - 1),
-        formatComment(comment, lines[loc.start.line - 1], {jsx: true, wrap}),
-        lines.slice(loc.start.line - 1),
-      )
-      .join('\n');
-  } else if (
-    inside === TEMPLATE ||
-    (inJSX && ast.type === 'JSXExpressionContainer')
-  ) {
-    /* Ok, so we have something like
-     *
-     * <jsx>
-     *   {10 * 'hello'}
-     * <jsx>
-     *
-     * We need to stick the comment inside the expression container.
-     * So the above example turns into
-     *
-     * <jsx>
-     *   {
-     *     // Comment
-     *     10 * 'hello'}
-     * <jsx>
-     *
-     * Same thing if we have something like
-     *
-     * var str = `hello
-     *   ${10 * 'hello'}
-     * `;
-     *
-     * We need to stick the comment inside of the template element. So the
-     * above example turns into
-     *
-     * var str = `hello
-     *   ${
-     *     // Comment
-     *     10 * 'hello'}
-     * `;
-     */
-    const start_col = inJSX ? ast.loc.start.column + 1 : ast.loc.start.column;
-    const line = lines[loc.start.line - 1];
-    const part1 = line.substr(0, start_col);
-    const match = part1.match(/^ */);
-    const padding = match ? match[0] + '  ' : '  ';
-    const part2 = padding + line.substr(start_col);
-    return []
-      .concat(
-        lines.slice(0, ast.loc.start.line - 1),
-        [part1],
-        formatComment(comment, part2, {wrap}),
-        [part2],
-        lines.slice(ast.loc.start.line),
-      )
-      .join('\n');
-  } else if (inJSX && ast.type === 'JSXText') {
-    /* Ignore the case where the error's loc starts after the last non-whitespace
-     * character of the line. This can occur when an error's loc spans the
-     * children of a JSX element. We cannot safely add a comment to the line
-     * before the error's loc, as it may be contained within a JSXOpeningElement.
-     *
-     *     Loc
-     *      |
-     *      v
-     * <jsx>
-     *   JSXElement, JSXExpressionContainer, or JSXText here...
-     * <jsx>
-     */
-    if (lines[loc.start.line - 1].trimEnd().length <= loc.start.column - 1) {
-      return code;
-    }
-
-    /*
-     * Otherwise add an expression container above the text with our comment.
-     *
-     * <jsx>
-     *   {// Comment}
-     *   JSX Text Here
-     * <jsx>
-     */
-    return []
-      .concat(
-        lines.slice(0, loc.start.line - 1),
-        formatComment(comment, lines[loc.start.line - 1], {jsx: true, wrap}),
-        lines.slice(loc.start.line - 1),
-      )
-      .join('\n');
-  }
-
-  return code;
-}
-
-/* Take up to `max` characters from str, trying to split at a space or dash or
- * something like that. */
-function splitAtWord(str: string, max: number): [string, string] {
-  let ret = '';
-  let maybe = '';
-
-  for (let i = 0; i < max; i++) {
-    if (i === str.length) {
-      ret += maybe;
-      break;
-    }
-    maybe += str[i];
-    if (str[i].match(/[- _\t]/)) {
-      ret += maybe;
-      maybe = '';
-    }
-  }
-
-  // If there were no breaks then take it all
-  if (ret === '') {
-    ret = maybe;
-  }
-
-  return [ret, str.substr(ret.length)];
-}
-
-/* Figures out how to pad the comment and split it into multiple lines */
-function formatComment(
-  comment: string,
-  line: string,
-  args: {|
-    jsx?: boolean,
-    wrap?: boolean,
-  |},
-): Array<string> {
-  const {jsx = false, wrap = true} = args;
-  const match = line.match(/^ */);
-  let padding = match ? match[0] : '';
-  padding.length > 40 && (padding = '    ');
-
-  if (jsx === false) {
-    const singleLineComment = format('%s// %s', padding, comment);
-    if (!wrap || singleLineComment.length <= 80) {
-      return [singleLineComment];
-    }
-  }
-
-  const firstLinePrefix = format(!jsx ? '%s/* ' : '%s{/* ', padding);
-
-  if (!wrap) {
-    // jsx === true
-    return [format('%s{/* %s */}', padding, comment.trim())];
-  }
-
-  const commentLines = [];
-  let firstLineComment;
-  [firstLineComment, comment] = splitAtWord(
-    comment.trim(),
-    80 - firstLinePrefix.length,
-  );
-  commentLines.push(firstLinePrefix + firstLineComment.trim());
-
-  const prefix = format(!jsx ? '%s * ' : '%s  * ', padding);
-  let commentLine;
-  while (comment.length > 0) {
-    [commentLine, comment] = splitAtWord(comment.trim(), 80 - prefix.length);
-    commentLines.push(prefix + commentLine.trim());
-  }
-  if (commentLines[commentLines.length - 1].length < 76) {
-    const last = commentLines.pop();
-    commentLines.push(format(!jsx ? '%s */' : '%s */}', last));
-  } else {
-    commentLines.push(format(!jsx ? '%s */' : '%s  */}', padding));
-  }
-  return commentLines;
+  return addCommentToText(
+    Buffer.from(code),
+    loc,
+    inside,
+    [comment],
+    ast,
+  ).toString();
 }
 
 const NO_LOCATION = '[No location]';

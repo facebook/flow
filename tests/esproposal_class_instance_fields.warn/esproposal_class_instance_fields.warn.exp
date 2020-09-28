@@ -2,7 +2,7 @@ Error --------------------------------------------------------------------------
 
 Experimental class instance field usage. Class instance fields are an active early stage feature proposal that may
 change. You may opt-in to using them anyway in Flow by putting `esproposal.class_instance_fields=enable` into the
-`[options]` section of your `.flowconfig`.
+`[options]` section of your `.flowconfig`. [illegal-class-field]
 
    5|   initOnly = 'asdf';
         ^^^^^^^^^^^^^^^^^^
@@ -12,7 +12,7 @@ Error --------------------------------------------------------------------------
 
 Experimental class instance field usage. Class instance fields are an active early stage feature proposal that may
 change. You may opt-in to using them anyway in Flow by putting `esproposal.class_instance_fields=enable` into the
-`[options]` section of your `.flowconfig`.
+`[options]` section of your `.flowconfig`. [illegal-class-field]
 
    6|   initWithAnnotation: string = 'asdf';
         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

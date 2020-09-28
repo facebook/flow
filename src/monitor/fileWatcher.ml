@@ -7,7 +7,7 @@
 
 module Logger = FlowServerMonitorLogger
 
-exception FileWatcherDied of exn
+exception FileWatcherDied of Exception.t
 
 (* TODO - Push-based API for dfind. While the FileWatcher API is push based, dfind is faking it
  * by polling every seconds.
@@ -23,7 +23,8 @@ class type watcher =
 
     method wait_for_init : timeout:float option -> (unit, string) result Lwt.t
 
-    method get_and_clear_changed_files : (SSet.t * MonitorProt.file_watcher_metadata option) Lwt.t
+    method get_and_clear_changed_files :
+      (SSet.t * MonitorProt.file_watcher_metadata option * bool) Lwt.t
 
     method wait_for_changed_files : unit Lwt.t
 
@@ -42,7 +43,7 @@ class dummy : watcher =
 
     method wait_for_init ~timeout:_ = Lwt.return (Ok ())
 
-    method get_and_clear_changed_files = Lwt.return (SSet.empty, None)
+    method get_and_clear_changed_files = Lwt.return (SSet.empty, None, false)
 
     method wait_for_changed_files = Lwt.return_unit
 
@@ -94,12 +95,16 @@ class dfind (monitor_options : FlowServerMonitorOptions.t) : watcher =
             files <- SSet.union files new_files;
             Lwt.return_unit
           with
-          | Sys_error msg as exn when msg = "Broken pipe" -> raise (FileWatcherDied exn)
-          | (End_of_file | Unix.Unix_error (Unix.EPIPE, _, _)) as exn -> raise (FileWatcherDied exn))
+          | Sys_error msg as e when msg = "Broken pipe" ->
+            let exn = Exception.wrap e in
+            raise (FileWatcherDied exn)
+          | (End_of_file | Unix.Unix_error (Unix.EPIPE, _, _)) as e ->
+            let exn = Exception.wrap e in
+            raise (FileWatcherDied exn))
 
     method get_and_clear_changed_files =
       let%lwt () = self#fetch in
-      let ret = (files, None) in
+      let ret = (files, None, false) in
       files <- SSet.empty;
       Lwt.return ret
 
@@ -158,29 +163,30 @@ class dfind (monitor_options : FlowServerMonitorOptions.t) : watcher =
   end
 
 module WatchmanFileWatcher : sig
-  class watchman : FlowServerMonitorOptions.t -> watcher
+  class watchman : Options.t -> FlowServerMonitorOptions.watchman_options -> watcher
 end = struct
   type env = {
-    mutable instance: Watchman_lwt.watchman_instance;
+    mutable instance: Watchman.watchman_instance;
     mutable files: SSet.t;
     mutable metadata: MonitorProt.file_watcher_metadata;
     mutable mergebase: string option;
     mutable finished_an_hg_update: bool;
+    mutable is_initial: bool;
     listening_thread: unit Lwt.t;
     changes_condition: unit Lwt_condition.t;
-    init_settings: Watchman_lwt.init_settings;
+    init_settings: Watchman.init_settings;
     should_track_mergebase: bool;
   }
 
-  let get_mergebase env =
+  let get_mergebase_and_changes env =
     if env.should_track_mergebase then (
-      let%lwt (instance, mergebase) =
+      let%lwt (instance, mergebase_and_changes) =
         (* callers should provide their own timeout *)
-        Watchman_lwt.(get_mergebase ~timeout:None env.instance)
+        Watchman.(get_mergebase_and_changes ~timeout:None env.instance)
       in
       env.instance <- instance;
-      match mergebase with
-      | Ok mergebase -> Lwt.return (Ok (Some mergebase))
+      match mergebase_and_changes with
+      | Ok mergebase_and_changes -> Lwt.return (Ok (Some mergebase_and_changes))
       | Error msg -> Lwt.return (Error msg)
     ) else
       Lwt.return (Ok None)
@@ -202,13 +208,13 @@ end = struct
 
     let main env =
       let deadline = Unix.time () +. 604800. in
-      let%lwt (instance, result) = Watchman_lwt.get_changes ~deadline env.instance in
+      let%lwt (instance, result) = Watchman.get_changes ~deadline env.instance in
       env.instance <- instance;
       match result with
-      | Watchman_lwt.Watchman_pushed pushed_changes ->
+      | Watchman.Watchman_pushed pushed_changes ->
         begin
           match pushed_changes with
-          | Watchman_lwt.Files_changed new_files ->
+          | Watchman.Files_changed new_files ->
             env.files <- SSet.union env.files new_files;
             let%lwt () =
               (*
@@ -243,14 +249,15 @@ end = struct
                *)
               if env.finished_an_hg_update then
                 let%lwt new_mergebase =
-                  match%lwt get_mergebase env with
-                  | Ok mergebase -> Lwt.return mergebase
+                  match%lwt get_mergebase_and_changes env with
+                  | Ok mergebase_and_changes -> Lwt.return mergebase_and_changes
                   | Error msg ->
                     (* TODO: handle this more gracefully than `failwith` *)
                     failwith msg
                 in
                 match (new_mergebase, env.mergebase) with
-                | (Some new_mergebase, Some old_mergebase) when new_mergebase <> old_mergebase ->
+                | (Some (new_mergebase, _changes), Some old_mergebase)
+                  when new_mergebase <> old_mergebase ->
                   Logger.info
                     "Watchman reports mergebase changed from %S to %S"
                     old_mergebase
@@ -265,7 +272,7 @@ end = struct
             in
             broadcast env;
             Lwt.return env
-          | Watchman_lwt.State_enter (name, metadata) ->
+          | Watchman.State_enter (name, metadata) ->
             (match name with
             | "hg.update" ->
               let (distance, rev) = extract_hg_update_metadata metadata in
@@ -273,9 +280,15 @@ end = struct
                 "Watchman reports an hg.update just started. Moving %s revs from %s"
                 distance
                 rev
+            | _ when List.mem name env.init_settings.Watchman.defer_states ->
+              Logger.info
+                "Watchman reports %s just started. Filesystem notifications are paused."
+                name;
+              StatusStream.file_watcher_deferred name;
+              ()
             | _ -> ());
             Lwt.return env
-          | Watchman_lwt.State_leave (name, metadata) ->
+          | Watchman.State_leave (name, metadata) ->
             (match name with
             | "hg.update" ->
               let (distance, rev) = extract_hg_update_metadata metadata in
@@ -292,17 +305,19 @@ end = struct
                 distance
                 rev;
               Lwt.return env
+            | _ when List.mem name env.init_settings.Watchman.defer_states ->
+              Logger.info "Watchman reports %s ended. Filesystem notifications resumed." name;
+              StatusStream.file_watcher_ready ();
+              Lwt.return env
             | _ -> Lwt.return env)
-          | Watchman_lwt.Changed_merge_base _ ->
+          | Watchman.Changed_merge_base _ ->
             failwith "We're not using an scm aware subscription, so we should never get these"
         end
-      | Watchman_lwt.Watchman_synchronous _ ->
-        failwith "Flow should never use the synchronous watchman API"
-      | Watchman_lwt.Watchman_unavailable ->
+      | Watchman.Watchman_unavailable ->
         (* TODO (glevi) - Should we die if we get this for too long? *)
         Logger.error "Watchman unavailable. Retrying...";
 
-        (* Watchman_lwt.get_changes will restart the connection. However it has some backoff
+        (* Watchman.get_changes will restart the connection. However it has some backoff
          * built in and will do nothing if called too early. That turns this LwtLoop module into a
          * busy wait. So let's add a sleep here to yield and prevent spamming the logs too much. *)
         let%lwt () = Lwt_unix.sleep 1.0 in
@@ -316,7 +331,9 @@ end = struct
       Lwt.return_unit
   end)
 
-  class watchman (monitor_options : FlowServerMonitorOptions.t) : watcher =
+  class watchman
+    (server_options : Options.t) (watchman_options : FlowServerMonitorOptions.watchman_options) :
+    watcher =
     object (self)
       val mutable env = None
 
@@ -332,22 +349,27 @@ end = struct
         | Some env -> env
 
       method start_init =
-        let { FlowServerMonitorOptions.server_options; file_watcher_debug; _ } = monitor_options in
+        let { FlowServerMonitorOptions.debug; defer_states; mergebase_with; sync_timeout } =
+          watchman_options
+        in
         let file_options = Options.file_options server_options in
         let watchman_expression_terms = Watchman_expression_terms.make ~options:server_options in
         let settings =
           {
-            (* Defer updates during `hg.update` *)
-            Watchman_lwt.subscribe_mode = Some Watchman_lwt.Defer_changes;
+            Watchman.debug_logging = debug;
+            defer_states;
             expression_terms = watchman_expression_terms;
-            subscription_prefix = "flow_watcher";
+            mergebase_with;
             roots = Files.watched_paths file_options;
-            debug_logging = file_watcher_debug;
+            (* Defer updates during `hg.update` and defer_states *)
+            subscribe_mode = Watchman.Defer_changes;
+            subscription_prefix = "flow_watcher";
+            sync_timeout;
           }
         in
         init_settings <- Some settings;
 
-        init_thread <- Some (Watchman_lwt.init settings ())
+        init_thread <- Some (Watchman.init settings)
 
       method wait_for_init ~timeout =
         let go () =
@@ -355,7 +377,6 @@ end = struct
           init_thread <- None;
 
           let should_track_mergebase =
-            let server_options = monitor_options.FlowServerMonitorOptions.server_options in
             Options.lazy_mode server_options = Options.LAZY_MODE_WATCHMAN
           in
           match watchman with
@@ -363,12 +384,13 @@ end = struct
             let (waiter, wakener) = Lwt.task () in
             let new_env =
               {
-                instance = Watchman_lwt.Watchman_alive watchman;
+                instance = Watchman.Watchman_alive watchman;
                 files = SSet.empty;
                 listening_thread =
                   (let%lwt env = waiter in
                    WatchmanListenLoop.run env);
                 mergebase = None;
+                is_initial = true;
                 finished_an_hg_update = false;
                 changes_condition = Lwt_condition.create ();
                 metadata = MonitorProt.empty_file_watcher_metadata;
@@ -376,12 +398,19 @@ end = struct
                 should_track_mergebase;
               }
             in
-            (match%lwt get_mergebase new_env with
-            | Ok mergebase ->
-              Base.Option.iter
-                mergebase
-                ~f:(Logger.info "Watchman reports the initial mergebase as %S");
-              let new_env = { new_env with mergebase } in
+            (match%lwt get_mergebase_and_changes new_env with
+            | Ok mergebase_and_changes ->
+              let (mergebase, files) =
+                match mergebase_and_changes with
+                | Some (mergebase, changes) ->
+                  Logger.info
+                    "Watchman reports the initial mergebase as %S, and %d changes"
+                    mergebase
+                    (SSet.cardinal changes);
+                  (Some mergebase, changes)
+                | None -> (None, SSet.empty)
+              in
+              let new_env = { new_env with mergebase; files } in
               env <- Some new_env;
               Lwt.wakeup wakener new_env;
               Lwt.return (Ok ())
@@ -400,9 +429,10 @@ end = struct
        * probably don't care about hg updates or mergebase changing if no files were affected *)
       method get_and_clear_changed_files =
         let env = self#get_env in
-        let ret = (env.files, Some env.metadata) in
+        let ret = (env.files, Some env.metadata, env.is_initial) in
         env.files <- SSet.empty;
         env.metadata <- MonitorProt.empty_file_watcher_metadata;
+        env.is_initial <- false;
         Lwt.return ret
 
       method wait_for_changed_files =
@@ -415,10 +445,10 @@ end = struct
         let env = self#get_env in
         Logger.info "Canceling Watchman listening thread & closing connection";
         Lwt.cancel env.listening_thread;
-        Watchman_lwt.with_instance
+        Watchman.with_instance
           env.instance
           ~try_to_restart:false
-          ~on_alive:Watchman_lwt.close
+          ~on_alive:Watchman.close
           ~on_dead:(fun _ -> Lwt.return_unit)
 
       method waitpid =

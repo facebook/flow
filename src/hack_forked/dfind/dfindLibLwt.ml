@@ -5,33 +5,50 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
-module MarshalToolsLwt :
-  DfindLib.MARSHAL_TOOLS with type 'a result = 'a Lwt.t and type fd = Lwt_unix.file_descr = struct
-  type 'a result = 'a Lwt.t
+let ( >>= ) = Lwt.( >>= )
 
-  type fd = Lwt_unix.file_descr
+type t = {
+  infd: Lwt_unix.file_descr;
+  outfd: Lwt_unix.file_descr;
+  daemon_handle: (DfindServer.msg, unit) Daemon.handle;
+}
 
-  let return = Lwt.return
+let descr_of_in_channel ic =
+  Lwt_unix.of_unix_file_descr ~blocking:false ~set_flags:true (Daemon.descr_of_in_channel ic)
 
-  let ( >>= ) = Lwt.( >>= )
+let descr_of_out_channel oc =
+  Lwt_unix.of_unix_file_descr ~blocking:false ~set_flags:true (Daemon.descr_of_out_channel oc)
 
-  let descr_of_in_channel ic =
-    Lwt_unix.of_unix_file_descr ~blocking:false ~set_flags:true (Daemon.descr_of_in_channel ic)
+let init log_fds (scuba_table, roots) =
+  let name = Printf.sprintf "file watching process for server %d" (Unix.getpid ()) in
+  let ({ Daemon.channels = (ic, oc); _ } as daemon_handle) =
+    Daemon.spawn ~name log_fds DfindServer.entry_point (scuba_table, roots)
+  in
+  { infd = descr_of_in_channel ic; outfd = descr_of_out_channel oc; daemon_handle }
 
-  let descr_of_out_channel oc =
-    Lwt_unix.of_unix_file_descr ~blocking:false ~set_flags:true (Daemon.descr_of_out_channel oc)
+let pid handle = handle.daemon_handle.Daemon.pid
 
-  let to_fd_with_preamble ?timeout ?flags fd v =
-    if timeout <> None then raise (Invalid_argument "Use lwt timeouts directly");
-    Marshal_tools_lwt.to_fd_with_preamble ?flags fd v
+let wait_until_ready handle =
+  Marshal_tools_lwt.from_fd_with_preamble handle.infd >>= fun msg ->
+  assert (msg = DfindServer.Ready);
+  Lwt.return ()
 
-  let from_fd_with_preamble ?timeout fd =
-    if timeout <> None then raise (Invalid_argument "Use lwt timeouts directly");
-    Marshal_tools_lwt.from_fd_with_preamble fd
-end
+let request_changes handle =
+  Marshal_tools_lwt.to_fd_with_preamble handle.outfd () >>= fun _ ->
+  Marshal_tools_lwt.from_fd_with_preamble handle.infd
 
-include DfindLib.DFindLibFunctor (MarshalToolsLwt)
+let get_changes handle =
+  let rec loop acc =
+    (request_changes handle >>= function
+     | DfindServer.Updates s -> Lwt.return s
+     | DfindServer.Ready -> assert false)
+    >>= fun diff ->
+    if SSet.is_empty diff then
+      Lwt.return acc
+    else
+      let acc = SSet.union diff acc in
+      loop acc
+  in
+  loop SSet.empty
 
-(* The Timeout module probably doesn't work terribly well with Lwt. Luckily, timeouts are super easy
- * to write in Lwt, so we don't **really** need them *)
-let get_changes handle = get_changes handle
+let stop handle = Daemon.kill handle.daemon_handle

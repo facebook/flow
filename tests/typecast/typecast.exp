@@ -1,6 +1,6 @@
 Error ------------------------------------------------------------------------------------------------- typecast.js:7:14
 
-Cannot cast `"hey"` to number because string [1] is incompatible with number [2].
+Cannot cast `"hey"` to number because string [1] is incompatible with number [2]. [incompatible-cast]
 
    typecast.js:7:14
    7|     var n = ("hey" : number);

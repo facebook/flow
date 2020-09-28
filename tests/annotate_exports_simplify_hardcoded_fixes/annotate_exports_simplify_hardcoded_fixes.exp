@@ -1,4 +1,7 @@
->>> a.js (#changes: 3)
+
+=== Codemod annotate-exports ===
+
+>>> ./a.js
 // @flow
 
 import type {Element} from "React";declare function f(): React$Element<'a'> | React$Element<'b'>;
@@ -9,10 +12,10 @@ module.exports = (f(): Element<"a"> | Element<"b">);
 
 Stats:
   Files changed:                            1
-  Number of sig. ver. errors:               1
-  Number of annotations required:           1
   Number of annotations added:              1
   Total size of annotations:                5
+  Number of sig. ver. errors:               1
+  Number of annotations required:           1
   Number of annotations skipped:            0
 
 Errors:
@@ -23,7 +26,6 @@ Errors:
     Parsing heaps get ast error:            0
     Indeterminate module type:              0
     No matching export:                     0
-    Unrecognizable module error:            0
   Serializer error:                         0
   Unsupported error kind:                   0
 
@@ -33,4 +35,26 @@ Warnings:
   Location unhandled:                       0
   Empty NoUpper:                            0
   Empty SomeKnownUpper:                     0
+
+
+=== Autofix exports ===
+
+>>> ./a.js
+// @flow
+
+declare function f(): React$Element<'a'> | React$Element<'b'>;
+
+module.exports = (f(): React$Element<"a"> | React$Element<"b">);
+
+
+=== Diff between codemod-ed & autofix-ed ===
+>>> ./a.js
+3c3
+< import type {Element} from "React";declare function f(): React$Element<'a'> | React$Element<'b'>;
+---
+> declare function f(): React$Element<'a'> | React$Element<'b'>;
+5c5
+< module.exports = (f(): Element<"a"> | Element<"b">);
+---
+> module.exports = (f(): React$Element<"a"> | React$Element<"b">);
 

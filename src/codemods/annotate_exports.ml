@@ -9,8 +9,7 @@ module Ast = Flow_ast
 module LSet = Loc_collections.LocSet
 module ALSet = Loc_collections.ALocSet
 module LMap = Loc_collections.LocMap
-module ExportsHelper = Insert_type_imports
-module Hardcoded_Ty_Fixes = Annotate_exports_hardcoded_ty_fixes
+module Hardcoded_Ty_Fixes = Codemod_hardcoded_ty_fixes
 open Insert_type_utils
 
 (*
@@ -47,40 +46,8 @@ module Let_syntax = struct
   let map x ~f = x >>| f
 end
 
-(* Types with more nodes than this number will cause a warning. *)
-let type_size_warning_threshold = 30
-
-let norm_opts =
-  {
-    Ty_normalizer_env.fall_through_merged = false;
-    expand_internal_types = false;
-    expand_type_aliases = false;
-    flag_shadowed_type_params = false;
-    preserve_inferred_literal_types = true;
-    evaluate_type_destructors = false;
-    optimize_types = false;
-    omit_targ_defaults = true;
-    merge_bot_and_any_kinds = false;
-    verbose_normalizer = false;
-    expand_toplevel_members = None;
-    max_depth = None;
-  }
-
 module SignatureVerification = struct
-  type type_entry =
-    | NoErrors of Ty.t
-    | WithErrors of Error.kind list * Ty.t
-
-  let string_of_type_entry = function
-    | NoErrors t -> Utils_js.spf "NoError (%s)" (Ty_printer.string_of_t t)
-    | WithErrors (errs, t) ->
-      Utils_js.spf
-        "WithErrors ([%s], %s)"
-        (List.map Error.serialize errs |> String.concat ",")
-        (Ty_printer.string_of_t t)
-
-  let supported_error_kind cctx ~max_type_size acc loc =
-    let loc = ALoc.to_loc_exn loc in
+  let supported_error_kind cctx norm_opts ~max_type_size acc loc =
     let add_ty ty =
       (* NOTE simplify before validating to avoid flagging spurious empty's,
        * eg. empty's that will be simplified away as parts of unions.
@@ -89,10 +56,10 @@ module SignatureVerification = struct
        *)
       let ty = Ty_utils.simplify_type ~merge_kinds:false ty in
       match Validator.validate_type ~size_limit:max_type_size ty with
-      | (ty, []) -> NoErrors ty
+      | (ty, []) -> Ok ty
       | (ty, errs) ->
         let errs = List.map (fun e -> Error.Validation_error e) errs in
-        WithErrors (errs, ty)
+        Error (errs, ty)
     in
     let type_entry =
       match Codemod_context.Typed.ty_at_loc norm_opts cctx loc with
@@ -101,110 +68,133 @@ module SignatureVerification = struct
       | Ok _ ->
         let ty = Ty.explicit_any in
         let errors = [Error.Missing_annotation_or_normalizer_error] in
-        WithErrors (errors, ty)
+        Error (errors, ty)
       | Error _ ->
         let ty = Ty.explicit_any in
         let errors = [Error.Missing_annotation_or_normalizer_error] in
-        WithErrors (errors, ty)
+        Error (errors, ty)
     in
     LMap.add loc type_entry acc
 
   let unsupported_error_kind ~default_any acc loc =
     if default_any then
-      let loc = ALoc.to_loc_exn loc in
-      let ty_entry = WithErrors ([Error.Unsupported_error_kind], Ty.explicit_any) in
+      let ty_entry = Error ([Error.Unsupported_error_kind], Ty.explicit_any) in
       LMap.add loc ty_entry acc
     else
       acc
 
-  let collect_annotations cctx ~default_any ~max_type_size file_sig =
-    let tolerable_errors = file_sig.File_sig.With_ALoc.tolerable_errors in
-    let (total_errors, ty_map) =
-      List.fold_left
-        (fun (tot_errors, acc) err ->
-          match err with
-          | File_sig.With_ALoc.SignatureVerificationError sve ->
-            Signature_error.(
-              (match sve with
-              | ExpectedAnnotation (loc, _)
-              | UnexpectedExpression (loc, _)
-              | UnexpectedObjectKey (loc, _)
-              | UnexpectedObjectSpread (loc, _)
-              | EmptyArray loc
-              | EmptyObject loc
-              | UnexpectedArraySpread (loc, _) ->
-                (tot_errors + 1, supported_error_kind cctx ~max_type_size acc loc)
-              | ExpectedSort (_, _, loc)
-              | InvalidTypeParamUse loc
-              | SketchyToplevelDef loc
-              | UnexpectedArrayHole loc
-              | UnsupportedPredicateExpression loc
-              | TODO (_, loc) ->
-                (tot_errors + 1, unsupported_error_kind ~default_any acc loc)))
-          | _ -> (tot_errors, acc))
-        (0, LMap.empty)
-        tolerable_errors
+  let collect_annotations cctx ~preserve_literals ~default_any ~max_type_size ast =
+    let preserve_inferred_literal_types =
+      Hardcoded_Ty_Fixes.PreserveLiterals.(
+        match preserve_literals with
+        | Always
+        | Auto ->
+          true
+        | Never -> false)
     in
-    (total_errors, ty_map)
+    let norm_opts =
+      {
+        Ty_normalizer_env.fall_through_merged = false;
+        expand_internal_types = false;
+        expand_type_aliases = false;
+        flag_shadowed_type_params = false;
+        preserve_inferred_literal_types;
+        evaluate_type_destructors = false;
+        optimize_types = false;
+        omit_targ_defaults = true;
+        merge_bot_and_any_kinds = false;
+        verbose_normalizer = false;
+        max_depth = None;
+      }
+    in
+    let { Codemod_context.Typed.options; docblock; _ } = cctx in
+    let module_ref_prefix = Options.haste_module_ref_prefix options in
+    match File_sig.With_Loc.program_with_exports_info ~ast ~module_ref_prefix with
+    | Error _ -> (0, LMap.empty)
+    | Ok (exports_info, _) ->
+      let signature = Signature_builder.program ast ~exports_info in
+      let (sig_errors, _, _) =
+        let prevent_munge =
+          let should_munge = Options.should_munge_underscores options in
+          Docblock.preventMunge docblock || not should_munge
+        in
+        let facebook_fbt = Options.facebook_fbt options in
+        let ignore_static_propTypes = true in
+        let facebook_keyMirror = true in
+        Signature_builder.Signature.verify
+          ~prevent_munge
+          ~facebook_fbt
+          ~ignore_static_propTypes
+          ~facebook_keyMirror
+          signature
+      in
+      Signature_builder_deps.With_Loc.PrintableErrorSet.fold
+        (fun err (tot_errors, acc) ->
+          let open Signature_error in
+          match err with
+          | ExpectedAnnotation (loc, _)
+          | UnexpectedExpression (loc, _)
+          | UnexpectedObjectKey (loc, _)
+          | EmptyArray loc
+          | EmptyObject loc
+          | UnexpectedArraySpread (loc, _) ->
+            (tot_errors + 1, supported_error_kind cctx norm_opts ~max_type_size acc loc)
+          | ExpectedSort (_, _, loc)
+          | SketchyToplevelDef loc
+          | UnexpectedArrayHole loc
+          | UnsupportedPredicateExpression loc
+          | TODO (_, loc) ->
+            (tot_errors + 1, unsupported_error_kind ~default_any acc loc))
+        sig_errors
+        (0, LMap.empty)
 end
 
-module Queries = struct
-  class ident_visitor ~init =
-    object (_this)
-      inherit [SSet.t ref, Loc.t] Flow_ast_visitor.visitor ~init
+module SignatureVerificationErrorStats = struct
+  type t = {
+    number_of_sig_ver_errors: int;
+    number_of_annotations_required: int;
+    number_of_annotations_skipped: int;
+  }
 
-      method! identifier id =
-        let (_, { Ast.Identifier.name; _ }) = id in
-        init := SSet.add name !init;
-        id
-    end
+  let empty =
+    {
+      number_of_sig_ver_errors = 0;
+      number_of_annotations_required = 0;
+      number_of_annotations_skipped = 0;
+    }
 
-  let used_names prog =
-    let idents = ref SSet.empty in
-    let visitor = new ident_visitor idents in
-    let _ = visitor#program prog in
-    !idents
+  let combine c1 c2 =
+    {
+      number_of_sig_ver_errors = c1.number_of_sig_ver_errors + c2.number_of_sig_ver_errors;
+      number_of_annotations_required =
+        c1.number_of_annotations_required + c2.number_of_annotations_required;
+      number_of_annotations_skipped =
+        c1.number_of_annotations_skipped + c2.number_of_annotations_skipped;
+    }
+
+  let serialize s =
+    let open Utils_js in
+    [
+      spf "sig_ver_errors: %d" s.number_of_sig_ver_errors;
+      spf "annotations_required: %d" s.number_of_annotations_required;
+      spf "annotations_skipped: %d" s.number_of_annotations_skipped;
+    ]
+
+  let report s =
+    [
+      string_of_row ~indent:2 "Number of sig. ver. errors" s.number_of_sig_ver_errors;
+      string_of_row ~indent:2 "Number of annotations required" s.number_of_annotations_required;
+      string_of_row ~indent:2 "Number of annotations skipped" s.number_of_annotations_skipped;
+    ]
 end
 
-type ty_or_type_ast =
-  | Ty_ of Ty.t
-  | Type_ast of Annotate_exports_hardcoded_expr_fixes.hard_coded_type_ast
-
-module NSpecSet = Set.Make (struct
-  type t = (Loc.t, Loc.t) Ast.Statement.ImportDeclaration.named_specifier
-
-  let compare = Pervasives.compare
-end)
-
-module HardCodedImportMap = struct
-  include WrappedMap.Make (struct
-    type t = Loc.t * Loc.t Ast.StringLiteral.t
-
-    let compare = Pervasives.compare
-  end)
-
-  let to_import_stmts m =
-    bindings m
-    |> Base.List.map ~f:(fun (source, nspecs) ->
-           let nspecs = NSpecSet.elements nspecs in
-           ( Loc.none,
-             Ast.Statement.ImportDeclaration
-               {
-                 Ast.Statement.ImportDeclaration.importKind =
-                   Ast.Statement.ImportDeclaration.ImportType;
-                 source;
-                 default = None;
-                 specifiers = Some (Ast.Statement.ImportDeclaration.ImportNamedSpecifiers nspecs);
-                 comments = Flow_ast_utils.mk_comments_opt ();
-               } ))
-end
+module Codemod_exports_annotator = Codemod_annotator.Make (SignatureVerificationErrorStats)
+module Acc = Acc (SignatureVerificationErrorStats)
 
 let mapper ~preserve_literals ~max_type_size ~default_any (cctx : Codemod_context.Typed.t) =
-  let { Codemod_context.Typed.file; file_sig; metadata; options; _ } = cctx in
+  let { Codemod_context.Typed.file_sig; docblock; metadata; options; _ } = cctx in
   let imports_react = Insert_type_imports.ImportsHelper.imports_react file_sig in
-  let (total_errors, sig_verification_loc_tys) =
-    SignatureVerification.collect_annotations cctx ~default_any ~max_type_size file_sig
-  in
+  let metadata = Context.docblock_overrides docblock metadata in
   let { Context.strict; strict_local; _ } = metadata in
   let lint_severities =
     if strict || strict_local then
@@ -217,75 +207,24 @@ let mapper ~preserve_literals ~max_type_size ~default_any (cctx : Codemod_contex
       Options.lint_severities options
   in
   let suppress_types = Options.suppress_types options in
-  let flowfixme_ast = Builtins.flowfixme_ast lint_severities suppress_types in
+  let exact_by_default = Options.exact_by_default options in
+  let flowfixme_ast = Builtins.flowfixme_ast ~lint_severities ~suppress_types ~exact_by_default in
   object (this)
-    inherit [Acc.t, Loc.t] Flow_ast_visitor.visitor ~init:Acc.empty as super
+    inherit
+      Codemod_exports_annotator.mapper
+        ~max_type_size
+        ~exact_by_default
+        ~lint_severities
+        ~suppress_types
+        ~imports_react
+        ~preserve_literals
+        ~default_any
+        cctx as super
 
-    val mutable added_annotations_locmap = LMap.empty
+    (* initialized in this#program *)
+    val mutable sig_verification_loc_tys = LMap.empty
 
-    val mutable wont_annotate_locs = LSet.empty
-
-    val mutable codemod_error_locs = LSet.empty
-
-    val mutable remote_converter = None
-
-    val mutable hardcoded_imports = HardCodedImportMap.empty
-
-    method private get_remote_converter = Base.Option.value_exn remote_converter
-
-    method private serialize t =
-      match Ty_serializer.type_ t with
-      | Error e -> Error (Error.Serializer_error e)
-      | Ok t -> Ok t
-
-    (* This one does the actual annotation *)
-    method private with_serial
-        : 'a. Loc.t -> ty_or_type_ast -> (Loc.t * (Loc.t, Loc.t) Ast.Type.t -> 'a) ->
-          ('a, Error.kind) result =
-      let run loc ty =
-        let (acc', ty) =
-          Hardcoded_Ty_Fixes.run
-            ~cctx
-            ~lint_severities
-            ~suppress_types
-            ~imports_react
-            ~preserve_literals
-            acc
-            loc
-            ty
-        in
-        this#set_acc acc';
-        let%bind ty = this#get_remote_converter#type_ ty in
-        this#serialize ty
-      in
-      fun loc ty f ->
-        match ty with
-        | Ty_ ty ->
-          begin
-            match run loc ty with
-            | Ok t_ast ->
-              let size = Ty_utils.size_of_type ~max:max_type_size ty in
-              let t_ast' = Insert_type_utils.patch_up_type_ast t_ast in
-              added_annotations_locmap <- LMap.add loc size added_annotations_locmap;
-              Ok (f (Loc.none, t_ast'))
-            | Error e ->
-              this#update_acc (fun acc -> Acc.error acc loc e);
-              codemod_error_locs <- LSet.add loc codemod_error_locs;
-              Error e
-          end
-        | Type_ast { Annotate_exports_hardcoded_expr_fixes.tast_type = t; tast_imports } ->
-          let size = Some 1 (* TODO *) in
-          added_annotations_locmap <- LMap.add loc size added_annotations_locmap;
-          List.iter
-            (fun (source, nspec) ->
-              hardcoded_imports <-
-                HardCodedImportMap.add
-                  ~combine:NSpecSet.union
-                  source
-                  (NSpecSet.singleton nspec)
-                  hardcoded_imports)
-            tast_imports;
-          Ok (f (Loc.none, t))
+    val mutable total_errors = 0
 
     method private annotate_expr loc expression ty =
       let open Ast.Expression in
@@ -295,78 +234,12 @@ let mapper ~preserve_literals ~max_type_size ~default_any (cctx : Codemod_contex
         Ok expression
       | (expr_loc, _) ->
         Acc.debug expr_loc (Debug.Add_annotation Debug.Expr);
-        this#with_serial loc ty (fun annot ->
-            ( expr_loc,
-              TypeCast TypeCast.{ expression; annot; comments = Flow_ast_utils.mk_comments_opt () }
-            ))
+        this#annotate_node loc ty (fun annot ->
+            (expr_loc, TypeCast TypeCast.{ expression; annot; comments = None }))
 
     method private annotate_class_prop loc prop ty =
       let open Ast.Class.Property in
-      this#with_serial loc ty (fun type_ast -> { prop with annot = Ast.Type.Available type_ast })
-
-    method private opt_annotate_inferred_type
-        : 'a. f:(Loc.t -> 'a -> ty_or_type_ast -> ('a, Error.kind) result) -> error:('a -> 'a) ->
-          Loc.t -> ty_or_type_ast -> 'a -> 'a =
-      fun ~f ~error loc ty x ->
-        match f loc x ty with
-        | Ok y ->
-          Acc.debug loc (Debug.Add_annotation Debug.Prop);
-          y
-        | Error e when default_any ->
-          this#update_acc (fun acc -> Acc.error acc loc e);
-          codemod_error_locs <- LSet.add loc codemod_error_locs;
-          let _desc = Error.serialize e in
-          Acc.info loc Info.Default_any;
-          error x
-        | Error _ -> x
-
-    (* The 'expr' parameter is used for hard-coding type annotations on expressions
-     * matching annotate_exports_hardcoded_expr_fixes.expr_to_type_ast.
-     *)
-    method private opt_annotate
-        : 'a. f:(Loc.t -> 'a -> ty_or_type_ast -> ('a, Error.kind) result) -> error:('a -> 'a) ->
-          expr:(Loc.t, Loc.t) Ast.Expression.t option -> Loc.t ->
-          SignatureVerification.type_entry -> 'a -> 'a =
-      fun ~f ~error ~expr loc ty_entry x ->
-        let hard_coded_ast_type =
-          match expr with
-          | Some expr -> Annotate_exports_hardcoded_expr_fixes.expr_to_type_ast expr
-          | None -> None
-        in
-        match (hard_coded_ast_type, ty_entry) with
-        | (Some type_ast, _) -> this#opt_annotate_inferred_type ~f ~error loc (Type_ast type_ast) x
-        | (None, SignatureVerification.WithErrors (errs, ty)) ->
-          List.iter (fun err -> this#update_acc (fun acc -> Acc.error acc loc err)) errs;
-          codemod_error_locs <- LSet.add loc codemod_error_locs;
-          if default_any then (
-            Acc.info loc Info.Default_any;
-            this#opt_annotate_inferred_type ~f ~error loc (Ty_ ty) x
-          ) else
-            x
-        | (None, SignatureVerification.NoErrors ty) ->
-          this#opt_annotate_inferred_type ~f ~error loc (Ty_ ty) x
-
-    (* Copied from here: /facebook/compiler/utils/transform_utils.ml
-     * Was having trouble importing due to buck.
-     *)
-    method private is_directive_statement (stmt : (Loc.t, Loc.t) Ast.Statement.t) =
-      let open Ast.Statement in
-      match stmt with
-      | (_loc, Expression { Expression.directive = Some _; _ })
-      | (_loc, ImportDeclaration { ImportDeclaration.importKind = ImportDeclaration.ImportType; _ })
-        ->
-        true
-      | _ -> false
-
-    method private add_statement_after_directive_and_type_imports
-        (block_stmts : (Loc.t, Loc.t) Ast.Statement.t list)
-        (insert_stmts : (Loc.t, Loc.t) Ast.Statement.t list) =
-      match block_stmts with
-      | [] -> insert_stmts
-      | stmt :: block when this#is_directive_statement stmt ->
-        (* TODO make tail-recursive *)
-        stmt :: this#add_statement_after_directive_and_type_imports block insert_stmts
-      | _ -> insert_stmts @ block_stmts
+      this#annotate_node loc ty (fun type_ast -> { prop with annot = Ast.Type.Available type_ast })
 
     method! variable_declarator ~kind decl =
       let open Flow_ast.Statement.VariableDeclaration.Declarator in
@@ -386,7 +259,7 @@ let mapper ~preserve_literals ~max_type_size ~default_any (cctx : Codemod_contex
             } ) )
         when LMap.mem eloc sig_verification_loc_tys ->
         let ty = LMap.find eloc sig_verification_loc_tys in
-        let f loc _annot ty = this#with_serial loc ty (fun a -> Ast.Type.Available a) in
+        let f loc _annot ty = this#annotate_node loc ty (fun a -> Ast.Type.Available a) in
         let error _ = Ast.Type.Available (Loc.none, flowfixme_ast) in
         let annot' = this#opt_annotate ~f ~error ~expr:init eloc ty annot in
         (* A toplevel annotation has been added. No need to descend into init. *)
@@ -416,11 +289,7 @@ let mapper ~preserve_literals ~max_type_size ~default_any (cctx : Codemod_contex
           ( loc,
             Ast.Expression.TypeCast
               Ast.Expression.TypeCast.
-                {
-                  expression = e;
-                  annot = (Loc.none, flowfixme_ast);
-                  comments = Flow_ast_utils.mk_comments_opt ();
-                } )
+                { expression = e; annot = (Loc.none, flowfixme_ast); comments = None } )
         in
         this#opt_annotate ~f ~error ~expr:(Some expr) loc type_entry expr
       | None -> expr
@@ -437,7 +306,7 @@ let mapper ~preserve_literals ~max_type_size ~default_any (cctx : Codemod_contex
     method private add_annot_to_missing loc ty (return : (Loc.t, Loc.t) Ast.Type.annotation_or_hint)
         =
       let open Ast.Type in
-      let f loc _annot ty = this#with_serial loc ty (fun a -> Available a) in
+      let f loc _annot ty = this#annotate_node loc ty (fun a -> Available a) in
       let error _ = Available (Loc.none, flowfixme_ast) in
       this#opt_annotate ~f ~error ~expr:None loc ty return
 
@@ -553,79 +422,50 @@ let mapper ~preserve_literals ~max_type_size ~default_any (cctx : Codemod_contex
         expr
       | _ -> this#function_ loc expr
 
+    method private post_run () =
+      let not_annotated_locs =
+        LMap.fold
+          (fun loc _ acc ->
+            if LMap.mem loc added_annotations_locmap then
+              (* we added an annot *)
+              acc
+            else if LSet.mem loc wont_annotate_locs then
+              (* we are explicitly avoiding it *)
+              acc
+            else if LSet.mem loc codemod_error_locs then
+              (* codemod error *)
+              acc
+            else
+              loc :: acc)
+          sig_verification_loc_tys
+          []
+      in
+      List.iter
+        (fun loc -> this#update_acc (fun acc -> Acc.warn acc loc Warning.Location_unhandled))
+        not_annotated_locs;
+      let stats =
+        {
+          SignatureVerificationErrorStats.number_of_sig_ver_errors = total_errors;
+          number_of_annotations_required = LMap.cardinal sig_verification_loc_tys;
+          number_of_annotations_skipped = LSet.cardinal wont_annotate_locs;
+        }
+      in
+      stats
+
     method! program prog =
+      let (total_errors_, sig_verification_loc_tys_) =
+        SignatureVerification.collect_annotations
+          cctx
+          ~preserve_literals
+          ~default_any
+          ~max_type_size
+          prog
+      in
+      total_errors <- total_errors_;
+      sig_verification_loc_tys <- sig_verification_loc_tys_;
       if LMap.is_empty sig_verification_loc_tys then
         (* short when no signature *)
         prog
       else
-        (* Gather used identifier names *)
-        let reserved_names = Queries.used_names prog in
-        remote_converter <-
-          Some
-            (new Insert_type_imports.ImportsHelper.remote_converter
-               ~iteration:cctx.Codemod_context.Typed.iteration
-               ~file
-               ~reserved_names);
-
-        let prog' = super#program prog in
-        let (loc, stmts, comments) = prog' in
-
-        if prog != prog' then
-          this#update_acc (fun acc ->
-              { acc with Acc.changed_set = Utils_js.FilenameSet.add file acc.Acc.changed_set });
-
-        (* Post run stats *)
-        let total_size =
-          LMap.fold
-            (fun loc size total ->
-              let size =
-                match size with
-                | Some x -> x
-                | None -> max_type_size
-              in
-              if size > type_size_warning_threshold then
-                this#update_acc (fun acc -> Acc.warn acc loc (Warning.Large_type_added size));
-              total + size)
-            added_annotations_locmap
-            0
-        in
-
-        let stats =
-          {
-            Stats.number_of_sig_ver_errors = total_errors;
-            number_of_annotations_required = LMap.cardinal sig_verification_loc_tys;
-            number_of_annotations_added = LMap.cardinal added_annotations_locmap;
-            total_size_of_annotations = total_size;
-            number_of_annotations_skipped = LSet.cardinal wont_annotate_locs;
-          }
-        in
-
-        Hh_logger.info "%s file stats: %s" (File_key.to_string file) (Stats.serialize stats);
-        this#update_acc (fun acc -> { acc with Acc.stats });
-        let not_annotated_locs =
-          LMap.fold
-            (fun loc _ acc ->
-              if LMap.mem loc added_annotations_locmap then
-                (* we added an annot *)
-                acc
-              else if LSet.mem loc wont_annotate_locs then
-                (* we are explicitly avoiding it *)
-                acc
-              else if LSet.mem loc codemod_error_locs then
-                (* codemod error *)
-                acc
-              else
-                loc :: acc)
-            sig_verification_loc_tys
-            []
-        in
-        List.iter
-          (fun loc -> this#update_acc (fun acc -> Acc.warn acc loc Warning.Location_unhandled))
-          not_annotated_locs;
-
-        let hardcoded_imports = HardCodedImportMap.to_import_stmts hardcoded_imports in
-        let inferred_imports = this#get_remote_converter#to_import_stmts () in
-        let generated_imports = hardcoded_imports @ inferred_imports in
-        let stmts = this#add_statement_after_directive_and_type_imports stmts generated_imports in
-        (loc, stmts, comments)
+        super#program prog
   end

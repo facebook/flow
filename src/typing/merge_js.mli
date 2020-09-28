@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
-type get_ast_return = Loc.t Flow_ast.Comment.t list * (ALoc.t, ALoc.t) Flow_ast.program
+type get_ast_return = Loc.t Flow_ast.Comment.t list * (ALoc.t, ALoc.t) Flow_ast.Program.t
 
 module Reqs : sig
   type t
@@ -24,6 +24,7 @@ module Reqs : sig
 end
 
 val merge_component :
+  arch:Options.arch ->
   metadata:Context.metadata ->
   lint_severities:Severity.severity LintSettings.t ->
   strict_mode:StrictModeSettings.t ->
@@ -41,9 +42,8 @@ val merge_component :
   (* master cx *)
   Context.sig_t ->
   (* cxs in component order, hd is merged leader, along with a coverage summary for each file *)
-  (Context.t * (ALoc.t, ALoc.t * Type.t) Flow_ast.program) Nel.t
-
-val merge_tvar : Context.t -> Reason.t -> Constraint.ident -> Type.t
+  (Context.t * (ALoc.t, ALoc.t) Flow_ast.Program.t * (ALoc.t, ALoc.t * Type.t) Flow_ast.Program.t)
+  Nel.t
 
 module ContextOptimizer : sig
   val sig_context : Context.t -> string list -> Xx.hash

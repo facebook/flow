@@ -1,25 +1,7 @@
 Error -------------------------------------------------------------------------------------- sanity-filter-union.js:16:2
 
-Cannot cast `my_filter(...)` to array type because object with property `kind` that matches string literal `A` [1] is
-incompatible with string literal `B` [2] in array element.
-
-   sanity-filter-union.js:16:2
-   16| (my_filter(ab, (x): %checks => x.kind === 'A'): Array<B>);    // ERROR
-        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-References:
-   sanity-filter-union.js:6:71
-    6| declare function my_filter<T, P: $Pred<1>>(v: Array<T>, cb: P): Array<$Refine<T,P,1>>;
-                                                                             ^^^^^^^^^^^^^^ [1]
-   sanity-filter-union.js:9:18
-    9| type B = { kind: 'B', v: string }
-                        ^^^ [2]
-
-
-Error -------------------------------------------------------------------------------------- sanity-filter-union.js:16:2
-
 Cannot cast `my_filter(...)` to array type because property `v` is missing in `A` [1] but exists in `B` [2] in array
-element.
+element. [prop-missing]
 
    sanity-filter-union.js:16:2
    16| (my_filter(ab, (x): %checks => x.kind === 'A'): Array<B>);    // ERROR
@@ -37,7 +19,7 @@ References:
 Error -------------------------------------------------------------------------------------- sanity-filter-union.js:16:2
 
 Cannot cast `my_filter(...)` to array type because string literal `A` [1] is incompatible with string literal `B` [2] in
-property `kind` of array element.
+property `kind` of array element. [incompatible-cast]
 
    sanity-filter-union.js:16:2
    16| (my_filter(ab, (x): %checks => x.kind === 'A'): Array<B>);    // ERROR
@@ -55,6 +37,7 @@ References:
 Error -------------------------------------------------------------------------------------- sanity-filter-union.js:17:2
 
 Cannot cast `my_filter(...)` to array type because `B` [1] is incompatible with union type [2] in array element.
+[incompatible-cast]
 
    sanity-filter-union.js:17:2
    17| (my_filter(ab, (x): %checks => x.kind !== 'A'): Array<A|C>);  // ERROR
@@ -71,7 +54,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- sanity-filter.js:8:2
 
-Cannot cast `b` to array type because string [1] is incompatible with number [2] in array element.
+Cannot cast `b` to array type because string [1] is incompatible with number [2] in array element. [incompatible-cast]
 
    sanity-filter.js:8:2
     8| (b: Array<number>);
@@ -88,7 +71,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- sanity-filter.js:13:24
 
-function [1]. Function is incompatible with abstract predicate function [2].
+function [1]. Function is incompatible with abstract predicate function [2]. [function-predicate]
 
    sanity-filter.js:13:24
    13| const d = my_filter(c, is_string_regular);
@@ -105,7 +88,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- sanity-filter.js:14:2
 
-Cannot cast `d` to array type because mixed [1] is incompatible with string [2] in array element.
+Cannot cast `d` to array type because mixed [1] is incompatible with string [2] in array element. [incompatible-cast]
 
    sanity-filter.js:14:2
    14| (d: Array<string>);
@@ -123,7 +106,7 @@ References:
 Error -------------------------------------------------------------------------------------------- sanity-refine.js:4:55
 
 refined type that uses predicate on parameter at position 2 [1]. This is incompatible with function with 1
-parameters [2].
+parameters [2]. [function-predicate]
 
    sanity-refine.js:4:55
    4| declare function refine<T, P: $Pred<1>>(v: T, cb: P): $Refine<T,P,2>;
@@ -137,7 +120,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- sanity-refine.js:8:2
 
-Cannot cast `b` to string because mixed [1] is incompatible with string [2].
+Cannot cast `b` to string because mixed [1] is incompatible with string [2]. [incompatible-cast]
 
    sanity-refine.js:8:2
    8| (b: string);
@@ -155,13 +138,16 @@ References:
 Error ------------------------------------------------------------------------------------------- sanity-refine.js:19:26
 
 predicate function with 2 arguments [1]. Predicate function is incompatible with predicate function with 3
-arguments [2].
+arguments [2]. [function-predicate]
 
    sanity-refine.js:19:26
    19| var e = refine3(c, d, e, is_string_and_number);
-                                ^^^^^^^^^^^^^^^^^^^^ [1]
+                                ^^^^^^^^^^^^^^^^^^^^
 
 References:
+   sanity-refine.js:22:1
+   22| function is_string_and_number(x, y): %checks {
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    sanity-refine.js:17:32
    17| declare function refine3<T, P: $Pred<3>>(u: T, v: T, w: T, cb: P): $Refine<T,P,1>;
                                       ^^^^^^^^ [2]
@@ -169,7 +155,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- sanity-refine.js:28:19
 
-function [1]. Function is incompatible with abstract predicate function [2].
+function [1]. Function is incompatible with abstract predicate function [2]. [function-predicate]
 
    sanity-refine.js:28:19
    28| var e = refine(a, is_string_regular);   // ERROR: is_string_regular is not a
@@ -186,7 +172,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- sanity-refine.js:30:2
 
-Cannot cast `e` to number because mixed [1] is incompatible with number [2].
+Cannot cast `e` to number because mixed [1] is incompatible with number [2]. [incompatible-cast]
 
    sanity-refine.js:30:2
    30| (e: number);
@@ -202,4 +188,4 @@ References:
 
 
 
-Found 12 errors
+Found 11 errors

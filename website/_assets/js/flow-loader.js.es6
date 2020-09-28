@@ -71,7 +71,11 @@ export function load(version) {
         self.flow.registerFile(nameAndContent[0], nameAndContent[1]);
       });
       self.flow.registerFile('try-lib.js', TRY_LIB_CONTENTS);
-      self.flow.setLibs([...libs, 'try-lib.js']);
+      if (majorVersion <= 126) {
+        self.flow.setLibs([...libs, 'try-lib.js']);
+      } else {
+        self.flow.initBuiltins([...libs, 'try-lib.js']);
+      }
       versionCache[version] = self.flow;
       return flow;
     })

@@ -23,7 +23,7 @@ let shrink_table table = ResizableArray.shrink table.map
 
 type key = int
 
-let compare_key : key -> key -> int = Pervasives.compare
+let compare_key : key -> key -> int = Stdlib.compare
 
 let string_of_key = string_of_int
 
@@ -345,4 +345,11 @@ module ALocRepresentationDoNotUse = struct
   let get_key_exn = Repr.get_key_exn
 
   let string_of_key = string_of_key
+
+  let make_table file locs =
+    let map = ResizableArray.make (Array.length locs) in
+    Array.iter (fun loc -> ResizableArray.push map (RelativeLoc.of_loc loc)) locs;
+    { file; map }
+
+  let make_keyed = Repr.of_key
 end

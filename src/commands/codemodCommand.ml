@@ -25,10 +25,11 @@ let initialize_environment () =
   ) else
     ()
 
-let main config codemod_flags () =
+let main (module Runnable : Codemod_runner.RUNNABLE) codemod_flags () =
   let (CommandUtils.Codemod_params
         {
           options_flags = option_values;
+          saved_state_options_flags;
           shm_flags;
           write;
           repeat;
@@ -64,8 +65,8 @@ let main config codemod_flags () =
       ~flowconfig
       ~lazy_mode:(Some Options.LAZY_MODE_FILESYSTEM)
       ~root
-      ~file_watcher_timeout:None
-      option_values
+      ~options_flags:option_values
+      ~saved_state_options_flags
   in
   (* Normalizes filepaths (symlinks and shortcuts) *)
   if filenames = [] then (
@@ -82,7 +83,8 @@ let main config codemod_flags () =
       roots
       Utils_js.FilenameSet.empty
   in
-  Codemod_utils.mk_main config ~options ~write ~repeat ~log_level ~shared_mem_config roots
+  let module M = Codemod_utils.MakeMain (Runnable) in
+  M.main ~options ~write ~repeat ~log_level ~shared_mem_config roots
 
 (***********************)
 (* Codemod subcommands *)
@@ -93,6 +95,10 @@ module Annotate_exports_command = struct
     "Annotates parts of input that are visible from the exports as required by Flow types-first mode."
 
   let spec =
+    let module Literals = Codemod_hardcoded_ty_fixes.PreserveLiterals in
+    let preserve_string_literals_level =
+      Literals.[("always", Always); ("never", Never); ("auto", Auto)]
+    in
     {
       CommandSpec.name = "annotate-exports";
       doc;
@@ -107,11 +113,8 @@ module Annotate_exports_command = struct
           |> CommandUtils.codemod_flags
           |> flag
                "--preserve-literals"
-               no_arg
-               ~doc:
-                 ( "Always add precise literal types for string and numeric literals. "
-                 ^ "If not set the codemod uses a heuristic to widen to the respective general type"
-                 )
+               (required ~default:Literals.Never (enum preserve_string_literals_level))
+               ~doc:""
           |> flag
                "--max-type-size"
                (required ~default:100 int)
@@ -122,24 +125,26 @@ module Annotate_exports_command = struct
                ~doc:"Adds 'any' to all locations where normalization or validation fails");
     }
 
-  let config preserve_literals max_type_size default_any =
-    let open Codemod_utils in
-    let runner =
-      TypedRunner (Mapper (Annotate_exports.mapper ~preserve_literals ~max_type_size ~default_any))
-    in
-    let reporter =
-      let open Insert_type_utils in
-      {
-        Codemod_report.report = Codemod_report.StringReporter Acc.report;
-        combine = Acc.combine;
-        empty = Acc.empty;
-      }
-    in
-    { reporter; runner }
-
   let main codemod_flags preserve_literals max_type_size default_any () =
-    let config = config preserve_literals max_type_size default_any in
-    main config codemod_flags ()
+    let open Codemod_utils in
+    let open Insert_type_utils in
+    let module Runner = Codemod_runner.MakeSimpleTypedRunner (struct
+      module Acc = Acc (Annotate_exports.SignatureVerificationErrorStats)
+
+      type accumulator = Acc.t
+
+      let reporter =
+        {
+          Codemod_report.report = Codemod_report.StringReporter Acc.report;
+          combine = Acc.combine;
+          empty = Acc.empty;
+        }
+
+      let visit =
+        let mapper = Annotate_exports.mapper ~preserve_literals ~max_type_size ~default_any in
+        Codemod_utils.make_visitor (Mapper mapper)
+    end) in
+    main (module Runner) codemod_flags ()
 
   let command = CommandSpec.command spec main
 end

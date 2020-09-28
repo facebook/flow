@@ -71,6 +71,14 @@ export async function getFlowErrors(
   return getFlowErrorsImpl(bin, errorCheckCommand, root, false, flowconfigName);
 }
 
+export function isUnusedSuppression(error: FlowError): boolean {
+  return (
+    (error.message[0].descr === 'Error suppressing comment' &&
+      error.message[1].descr === 'Unused suppression') ||
+    error.message[0].descr === 'Unused suppression comment.'
+  );
+}
+
 export async function getUnusedSuppressionErrors(
   bin: string,
   errorCheckCommand: 'check' | 'status',
@@ -84,29 +92,61 @@ export async function getUnusedSuppressionErrors(
     flowconfigName,
   );
 
-  return result.errors.filter(
-    error =>
-      (error.message[0].descr === 'Error suppressing comment' &&
-        error.message[1].descr === 'Unused suppression') ||
-      error.message[0].descr === 'Unused suppression comment.',
-  );
+  return result.errors.filter(isUnusedSuppression);
 }
 
 export function collateLocs(
   errors: Array<FlowError>,
 ): Map<string, Array<FlowLoc>> {
+  const errorsByFile = collateErrors(errors);
   const locsByFile = new Map();
+  for (const [file, errors] of errorsByFile) {
+    locsByFile.set(
+      file,
+      errors.reduce((acc, error) => {
+        const loc = error.message[0].loc;
+        if (loc != null) {
+          acc.push(loc);
+        }
+        return acc;
+      }, []),
+    );
+  }
+  return locsByFile;
+}
+
+export function mainSourceLocOfError(error: FlowError): ?FlowLoc {
+  const {operation, message} = error;
+  for (const msg of [operation, ...message]) {
+    if (msg && msg.loc && msg.loc.type === 'SourceFile') {
+      return msg.loc;
+    }
+  }
+  return null;
+}
+
+/**
+ * Filter out errors without a main location or a source file
+ */
+export function filterErrors(errors: Array<FlowError>): Array<FlowError> {
+  return errors.filter(e => mainSourceLocOfError(e) != null);
+}
+
+export function collateErrors(
+  errors: Array<FlowError>,
+): Map<string, Array<FlowError>> {
+  const errorsByFile = new Map();
   for (const error of errors) {
     const message = error.message[0];
     const loc = message.loc;
     if (loc) {
       const source = loc.source;
       if (source) {
-        const fileErrors: Array<FlowLoc> = locsByFile.get(source) || [];
-        fileErrors.push(loc);
-        locsByFile.set(source, fileErrors);
+        const fileErrors: Array<FlowError> = errorsByFile.get(source) || [];
+        fileErrors.push(error);
+        errorsByFile.set(source, fileErrors);
       }
     }
   }
-  return locsByFile;
+  return errorsByFile;
 }

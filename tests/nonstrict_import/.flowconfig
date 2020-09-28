@@ -11,6 +11,5 @@ libs/
 
 [strict]
 nonstrict-import
-untyped-type-import
 untyped-import
 unclear-type

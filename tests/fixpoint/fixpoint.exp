@@ -1,6 +1,6 @@
 Error ------------------------------------------------------------------------------------------------------ Fun.js:8:14
 
-Missing type annotation for `fold`.
+Missing type annotation for `fold`. [missing-annot]
 
    8| function fix(fold) {
                    ^^^^
@@ -8,7 +8,7 @@ Missing type annotation for `fold`.
 
 Error ----------------------------------------------------------------------------------------------------- Fun.js:19:21
 
-Missing type annotation for `n`.
+Missing type annotation for `n`. [missing-annot]
 
    19|     return function(n) {
                            ^
@@ -16,7 +16,7 @@ Missing type annotation for `n`.
 
 Error ----------------------------------------------------------------------------------------------------- Fun.js:20:15
 
-Cannot call `eq` with `n` bound to `x` because string [1] is incompatible with number [2].
+Cannot call `eq` with `n` bound to `x` because string [1] is incompatible with number [2]. [incompatible-call]
 
    Fun.js:20:15
    20|       if (eq (n, 1)) { return 1; }
@@ -33,7 +33,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- Fun.js:21:35
 
-Cannot call `sub` with `n` bound to `x` because string [1] is incompatible with number [2].
+Cannot call `sub` with `n` bound to `x` because string [1] is incompatible with number [2]. [incompatible-call]
 
    Fun.js:21:35
    21|       return mul (factorial (sub (n, 1)), n);
@@ -50,7 +50,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- Fun.js:21:43
 
-Cannot call `mul` with `n` bound to `y` because string [1] is incompatible with number [2].
+Cannot call `mul` with `n` bound to `y` because string [1] is incompatible with number [2]. [incompatible-call]
 
    Fun.js:21:43
    21|       return mul (factorial (sub (n, 1)), n);
@@ -67,7 +67,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- Ycombinator.js:4:12
 
-Missing type annotation for `f`.
+Missing type annotation for `f`. [missing-annot]
 
    4| function Y(f) {
                  ^
@@ -75,7 +75,7 @@ Missing type annotation for `f`.
 
 Error --------------------------------------------------------------------------------------------- Ycombinator.js:10:44
 
-Cannot return `f(...)` because string [1] is incompatible with number [2].
+Cannot return `f(...)` because string [1] is incompatible with number [2]. [incompatible-return]
 
    Ycombinator.js:10:44
    10|   function fix_f(x:number):number { return f(x); }
@@ -92,7 +92,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- Ycombinator.js:10:46
 
-Cannot call `f` with `x` bound to `x` because number [1] is incompatible with string [2].
+Cannot call `f` with `x` bound to `x` because number [1] is incompatible with string [2]. [incompatible-call]
 
    Ycombinator.js:10:46
    10|   function fix_f(x:number):number { return f(x); }
@@ -109,7 +109,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- Ycombinator.js:14:44
 
-Cannot return `f(...)` because number [1] is incompatible with string [2].
+Cannot return `f(...)` because number [1] is incompatible with string [2]. [incompatible-return]
 
    Ycombinator.js:14:44
    14|   function fix_f(x:string):string { return f(x); }
@@ -126,7 +126,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- Ycombinator.js:14:46
 
-Cannot call `f` with `x` bound to `x` because string [1] is incompatible with number [2].
+Cannot call `f` with `x` bound to `x` because string [1] is incompatible with number [2]. [incompatible-call]
 
    Ycombinator.js:14:46
    14|   function fix_f(x:string):string { return f(x); }
