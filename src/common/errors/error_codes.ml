@@ -131,6 +131,7 @@ type error_code =
   | UnclearAddition
   | UnclearType
   | UninitializedInstanceProperty
+  | NoFloatingPromises
   | UnnecessaryInvariant
   | UnnecessaryOptionalChain
   | UnreachableCode
@@ -154,6 +155,7 @@ let code_of_lint : Lints.lint_kind -> error_code = function
   | Lints.SignatureVerificationFailure -> SignatureVerificationFailure
   | Lints.ImplicitInexactObject -> ImplicitInexactObject
   | Lints.UninitializedInstanceProperty -> UninitializedInstanceProperty
+  | Lints.NoFloatingPromises -> NoFloatingPromises 
   | Lints.AmbiguousObjectType -> AmbiguousObjectType
   | Lints.SketchyNumber Lints.SketchyNumberAnd -> SketchyNumberAnd
   | Lints.SketchyNull (Lints.SketchyNullBool | Lints.SketchyNullEnumBool) -> SketchyNullBool
@@ -302,3 +304,4 @@ let string_of_code : error_code -> string = function
   | UntypedImport -> "untyped-import"
   | UntypedTypeImport -> "untyped-type-import"
   | ValueAsType -> "value-as-type"
+  | NoFloatingPromises -> "no-floating-promises"

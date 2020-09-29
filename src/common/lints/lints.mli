@@ -38,6 +38,7 @@ type lint_kind =
   | SignatureVerificationFailure
   | ImplicitInexactObject
   | UninitializedInstanceProperty
+  | NoFloatingPromises
   | AmbiguousObjectType
   | DefaultImportAccess
   | InvalidImportStarUse

@@ -1,0 +1,100 @@
+Error ----------------------------------------------------------------------------------------------------- index.js:9:7
+
+Cannot call `foo().then` because property `then` is missing in `Promise` [1]. [prop-missing]
+
+   index.js:9:7
+   9| foo().then(() => {}, () => {});
+            ^^^^
+
+References:
+   index.js:4:10
+   4|   return 1;
+               ^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------------- index.js:11:7
+
+Cannot call `foo().catch` because property `catch` is missing in `Promise` [1]. [prop-missing]
+
+   index.js:11:7
+   11| foo().catch(() => {});
+             ^^^^^
+
+References:
+   index.js:4:10
+    4|   return 1;
+                ^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------------- index.js:13:7
+
+Cannot call `foo().then` because property `then` is missing in `Promise` [1]. [prop-missing]
+
+   index.js:13:7
+   13| foo().then(() => {});
+             ^^^^
+
+References:
+   index.js:4:10
+    4|   return 1;
+                ^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------------- index.js:13:1
+
+Floating promises can lead to unexpected scheduling.`Promise` [1] [no-floating-promises]
+
+   index.js:13:1
+   13| foo().then(() => {});
+       ^^^^^^^^^^^^^^^^^^^^
+
+References:
+   index.js:4:10
+    4|   return 1;
+                ^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------------- index.js:15:1
+
+Floating promises can lead to unexpected scheduling.`Promise` [1] [no-floating-promises]
+
+   index.js:15:1
+   15| foo();
+       ^^^^^
+
+References:
+   index.js:4:10
+    4|   return 1;
+                ^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------------- index.js:17:1
+
+Floating promises can lead to unexpected scheduling.`Promise` [1] [no-floating-promises]
+
+   index.js:17:1
+   17| x;
+       ^
+
+References:
+   index.js:6:16
+    6| declare var x: Promise<number>;
+                      ^^^^^^^^^^^^^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------------- index.js:19:1
+
+Floating promises can lead to unexpected scheduling.`Promise` [1] [no-floating-promises]
+
+   index.js:19:1
+   19| z.x;
+       ^^^
+
+References:
+   index.js:7:22
+    7| declare var z: { +x: Promise<boolean> };
+                            ^^^^^^^^^^^^^^^^ [1]
+
+
+
+Found 7 errors

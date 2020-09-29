@@ -160,6 +160,8 @@ type component_t = {
   mutable spread_widened_types: Type.Object.slice IMap.t;
   mutable optional_chains_useful: (Reason.t * bool) ALocMap.t;
   mutable invariants_useful: (Reason.t * bool) ALocMap.t;
+  mutable promises_useful: (Reason.t * bool) ALocMap.t;
+  mutable bare_expressions: (Reason.t * bool) ALocMap.t;
   constraint_cache: Type.FlowSet.t ref;
   subst_cache: (Type.Poly.id * Type.t list, subst_cache_err list * Type.t) Hashtbl.t;
   instantiation_cache: (Reason.t * Reason.t * Reason.t Nel.t, Type.t) Hashtbl.t;
@@ -308,6 +310,8 @@ let make_ccx sig_cx aloc_tables =
     spread_widened_types = IMap.empty;
     optional_chains_useful = ALocMap.empty;
     invariants_useful = ALocMap.empty;
+    promises_useful = ALocMap.empty;
+    bare_expressions = ALocMap.empty;
     constraint_cache = ref Type.FlowSet.empty;
     subst_cache = Hashtbl.create 0;
     instantiation_cache = Hashtbl.create 0;
@@ -736,6 +740,36 @@ let unnecessary_invariants cx =
         (loc, r) :: acc)
     cx.ccx.invariants_useful
     []
+
+let mark_floating_promise cx loc reason ~useful =
+  cx.ccx.promises_useful <-
+    ALocMap.add
+      loc
+      (reason, useful)
+      ~combine:(fun (r, u) (_, u') ->
+        (r, u || u')
+      )
+      cx.ccx.promises_useful
+
+let floating_promises cx =
+  ALocMap.fold
+    (fun loc (r, useful) acc ->
+      if useful then
+        acc
+      else
+        (loc, r) :: acc)
+    cx.ccx.promises_useful
+    []
+
+let mark_bare_expression cx loc reason =
+  cx.ccx.bare_expressions <-
+    ALocMap.add
+      loc
+      (reason, true)
+      ~combine:(fun (r, u) (_, u') -> (r, u || u'))
+      cx.ccx.bare_expressions
+
+let bare_expressions cx = cx.ccx.bare_expressions
 
 (* utils *)
 let find_real_props cx id =
