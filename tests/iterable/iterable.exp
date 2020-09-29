@@ -4,19 +4,19 @@ Cannot cast array literal to `Iterable` because string [1] is incompatible with 
 of the return value of property `@@iterator`. [incompatible-cast]
 
    array.js:7:2
-     7| (["hi"]: Iterable<number>); // Error string ~> number
-         ^^^^^^
+      7| (["hi"]: Iterable<number>); // Error string ~> number
+          ^^^^^^
 
 References:
    array.js:7:3
-     7| (["hi"]: Iterable<number>); // Error string ~> number
-          ^^^^ [1]
+      7| (["hi"]: Iterable<number>); // Error string ~> number
+           ^^^^ [1]
    array.js:7:19
-     7| (["hi"]: Iterable<number>); // Error string ~> number
-                          ^^^^^^ [2]
-   <BUILTINS>/core.js:555:22
-   555| interface $Iterator<+Yield,+Return,-Next> {
-                             ^^^^^ [3]
+      7| (["hi"]: Iterable<number>); // Error string ~> number
+                           ^^^^^^ [2]
+   <BUILTINS>/core.js:1633:22
+   1633| interface $Iterator<+Yield,+Return,-Next> {
+                              ^^^^^ [3]
 
 
 Error ----------------------------------------------------------------------------------------------------- array.js:8:2
@@ -25,19 +25,19 @@ Cannot cast array literal to `Iterable` because number [1] is incompatible with 
 of the return value of property `@@iterator`. [incompatible-cast]
 
    array.js:8:2
-     8| (["hi", 1]: Iterable<string>); // Error number ~> string
-         ^^^^^^^^^
+      8| (["hi", 1]: Iterable<string>); // Error number ~> string
+          ^^^^^^^^^
 
 References:
    array.js:8:9
-     8| (["hi", 1]: Iterable<string>); // Error number ~> string
-                ^ [1]
+      8| (["hi", 1]: Iterable<string>); // Error number ~> string
+                 ^ [1]
    array.js:8:22
-     8| (["hi", 1]: Iterable<string>); // Error number ~> string
-                             ^^^^^^ [2]
-   <BUILTINS>/core.js:555:22
-   555| interface $Iterator<+Yield,+Return,-Next> {
-                             ^^^^^ [3]
+      8| (["hi", 1]: Iterable<string>); // Error number ~> string
+                              ^^^^^^ [2]
+   <BUILTINS>/core.js:1633:22
+   1633| interface $Iterator<+Yield,+Return,-Next> {
+                              ^^^^^ [3]
 
 
 Error --------------------------------------------------------------------------------------------- caching_bug.js:21:79
@@ -46,19 +46,19 @@ Cannot return `x` because number [1] is incompatible with string [2] in type arg
 property `@@iterator`. [incompatible-return]
 
    caching_bug.js:21:79
-    21| function miss_the_cache(x: Array<string | number>): Iterable<string> { return x; }
-                                                                                      ^
+     21| function miss_the_cache(x: Array<string | number>): Iterable<string> { return x; }
+                                                                                       ^
 
 References:
    caching_bug.js:21:43
-    21| function miss_the_cache(x: Array<string | number>): Iterable<string> { return x; }
-                                                  ^^^^^^ [1]
+     21| function miss_the_cache(x: Array<string | number>): Iterable<string> { return x; }
+                                                   ^^^^^^ [1]
    caching_bug.js:21:62
-    21| function miss_the_cache(x: Array<string | number>): Iterable<string> { return x; }
-                                                                     ^^^^^^ [2]
-   <BUILTINS>/core.js:555:22
-   555| interface $Iterator<+Yield,+Return,-Next> {
-                             ^^^^^ [3]
+     21| function miss_the_cache(x: Array<string | number>): Iterable<string> { return x; }
+                                                                      ^^^^^^ [2]
+   <BUILTINS>/core.js:1633:22
+   1633| interface $Iterator<+Yield,+Return,-Next> {
+                              ^^^^^ [3]
 
 
 Error ----------------------------------------------------------------------------------------- iterator_result.js:23:18
@@ -67,16 +67,16 @@ Cannot return object literal because boolean [1] is incompatible with boolean li
 [incompatible-return]
 
    iterator_result.js:23:18
-    23|         return { done, value: "still going..." }; // Error string ~> void
-                         ^^^^
+     23|         return { done, value: "still going..." }; // Error string ~> void
+                          ^^^^
 
 References:
    iterator_result.js:17:40
-    17| function makeIterator(coin_flip: () => boolean ): Iterator<string> {
-                                               ^^^^^^^ [1]
-   <BUILTINS>/core.js:550:11
-   550|     done: false,
-                  ^^^^^ [2]
+     17| function makeIterator(coin_flip: () => boolean ): Iterator<string> {
+                                                ^^^^^^^ [1]
+   <BUILTINS>/core.js:1628:11
+   1628|     done: false,
+                   ^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------- iterator_result.js:25:18
@@ -85,16 +85,16 @@ Cannot return object literal because boolean [1] is incompatible with boolean li
 [incompatible-return]
 
    iterator_result.js:25:18
-    25|         return { done }; // Error void ~> string
-                         ^^^^
+     25|         return { done }; // Error void ~> string
+                          ^^^^
 
 References:
    iterator_result.js:17:40
-    17| function makeIterator(coin_flip: () => boolean ): Iterator<string> {
-                                               ^^^^^^^ [1]
-   <BUILTINS>/core.js:545:11
-   545|     done: true,
-                  ^^^^ [2]
+     17| function makeIterator(coin_flip: () => boolean ): Iterator<string> {
+                                                ^^^^^^^ [1]
+   <BUILTINS>/core.js:1623:11
+   1623|     done: true,
+                   ^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------------- map.js:14:10
@@ -103,19 +103,19 @@ Cannot return `map` because tuple type [1] is incompatible with string [2] in ty
 value of property `@@iterator`. [incompatible-return]
 
    map.js:14:10
-    14|   return map;
-                 ^^^
+     14|   return map;
+                  ^^^
 
 References:
-   <BUILTINS>/core.js:611:28
-   611|     @@iterator(): Iterator<[K, V]>;
-                                   ^^^^^^ [1]
+   <BUILTINS>/core.js:1698:28
+   1698|     @@iterator(): Iterator<[K, V]>;
+                                    ^^^^^^ [1]
    map.js:13:55
-    13| function mapTest4(map: Map<number, string>): Iterable<string> {
-                                                              ^^^^^^ [2]
-   <BUILTINS>/core.js:555:22
-   555| interface $Iterator<+Yield,+Return,-Next> {
-                             ^^^^^ [3]
+     13| function mapTest4(map: Map<number, string>): Iterable<string> {
+                                                               ^^^^^^ [2]
+   <BUILTINS>/core.js:1633:22
+   1633| interface $Iterator<+Yield,+Return,-Next> {
+                              ^^^^^ [3]
 
 
 Error ----------------------------------------------------------------------------------------------------- set.js:14:10
@@ -124,19 +124,19 @@ Cannot return `set` because string [1] is incompatible with number [2] in type a
 of property `@@iterator`. [incompatible-return]
 
    set.js:14:10
-    14|   return set;
-                 ^^^
+     14|   return set;
+                  ^^^
 
 References:
    set.js:13:28
-    13| function setTest4(set: Set<string>): Iterable<number> {
-                                   ^^^^^^ [1]
+     13| function setTest4(set: Set<string>): Iterable<number> {
+                                    ^^^^^^ [1]
    set.js:13:47
-    13| function setTest4(set: Set<string>): Iterable<number> {
-                                                      ^^^^^^ [2]
-   <BUILTINS>/core.js:555:22
-   555| interface $Iterator<+Yield,+Return,-Next> {
-                             ^^^^^ [3]
+     13| function setTest4(set: Set<string>): Iterable<number> {
+                                                       ^^^^^^ [2]
+   <BUILTINS>/core.js:1633:22
+   1633| interface $Iterator<+Yield,+Return,-Next> {
+                              ^^^^^ [3]
 
 
 Error ---------------------------------------------------------------------------------------------------- string.js:5:2
@@ -145,19 +145,19 @@ Cannot cast `"hi"` to `Iterable` because string [1] is incompatible with number 
 return value of property `@@iterator`. [incompatible-cast]
 
    string.js:5:2
-     5| ("hi": Iterable<number>); // Error - string is a Iterable<string>
-         ^^^^
+      5| ("hi": Iterable<number>); // Error - string is a Iterable<string>
+          ^^^^
 
 References:
-   <BUILTINS>/core.js:339:28
-   339|     @@iterator(): Iterator<string>;
-                                   ^^^^^^ [1]
+   <BUILTINS>/core.js:1069:28
+   1069|     @@iterator(): Iterator<string>;
+                                    ^^^^^^ [1]
    string.js:5:17
-     5| ("hi": Iterable<number>); // Error - string is a Iterable<string>
-                        ^^^^^^ [2]
-   <BUILTINS>/core.js:555:22
-   555| interface $Iterator<+Yield,+Return,-Next> {
-                             ^^^^^ [3]
+      5| ("hi": Iterable<number>); // Error - string is a Iterable<string>
+                         ^^^^^^ [2]
+   <BUILTINS>/core.js:1633:22
+   1633| interface $Iterator<+Yield,+Return,-Next> {
+                              ^^^^^ [3]
 
 
 

@@ -2304,20 +2304,24 @@ struct
             | _ ->
               rec_flow cx trace (left, PredicateT (ExistsP None, u));
               rec_flow cx trace (right, UseT (unknown_use, OpenT u))))
-        | (left, NullishCoalesceT (_, right, u))
-          when match left with
-               | OptionalT _
-               | MaybeT _
-               | UnionT _
-               | IntersectionT _ ->
-                 false
-               | _ -> true ->
-          begin
-            match left with
-            | DefT (_, _, (NullT | VoidT)) ->
-              rec_flow_t ~use_op:unknown_use cx trace (right, OpenT u)
-            | _ -> rec_flow_t ~use_op:unknown_use cx trace (left, OpenT u)
-          end
+        (* a not-nullish ?? b ~> a
+         a nullish ?? b ~> b
+         a ?? b ~> a not-nullish | b *)
+        | (left, NullishCoalesceT (_, right, u)) ->
+          (match Type_filter.maybe left with
+          | DefT (_, _, EmptyT Bottom)
+          (* This `AnyT` case is required to have similar behavior to the other logical operators. *)
+          | AnyT _ ->
+            (* not-nullish *)
+            rec_flow cx trace (left, PredicateT (NotP MaybeP, u))
+          | _ ->
+            (match Type_filter.not_maybe left with
+            | DefT (_, _, EmptyT Bottom) ->
+              (* nullish *)
+              rec_flow cx trace (right, UseT (unknown_use, OpenT u))
+            | _ ->
+              rec_flow cx trace (left, PredicateT (NotP MaybeP, u));
+              rec_flow cx trace (right, UseT (unknown_use, OpenT u))))
         | (_, ReactKitT (use_op, reason_op, React.CreateElement0 (clone, config, children, tout)))
           ->
           let tool = React.CreateElement (clone, l, config, children, tout) in
