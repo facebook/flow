@@ -197,10 +197,7 @@ and 'loc t' =
   | ERecursionLimit of ('loc virtual_reason * 'loc virtual_reason)
   | EModuleOutsideRoot of 'loc * string
   | EMalformedPackageJson of 'loc * string
-  | EExperimentalClassProperties of 'loc * bool
   | EUninitializedInstanceProperty of 'loc * Lints.property_assignment_kind
-  | EExperimentalDecorators of 'loc
-  | EExperimentalExportStarAs of 'loc
   | EExperimentalEnums of 'loc
   | EUnsafeGetSet of 'loc
   | EIndeterminateModuleType of 'loc
@@ -283,8 +280,6 @@ and 'loc t' =
     }
   | ESketchyNumberLint of Lints.sketchy_number_kind * 'loc virtual_reason
   | EInvalidPrototype of 'loc * 'loc virtual_reason
-  | EExperimentalOptionalChaining of 'loc
-  | EOptionalChainingMethods of 'loc
   | EUnnecessaryOptionalChain of 'loc * 'loc virtual_reason
   | EUnnecessaryInvariant of 'loc * 'loc virtual_reason
   | EUnexpectedTemporaryBaseType of 'loc
@@ -761,11 +756,8 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
   | ERecursionLimit (r1, r2) -> ERecursionLimit (map_reason r1, map_reason r2)
   | EModuleOutsideRoot (loc, s) -> EModuleOutsideRoot (f loc, s)
   | EMalformedPackageJson (loc, s) -> EMalformedPackageJson (f loc, s)
-  | EExperimentalDecorators loc -> EExperimentalDecorators (f loc)
-  | EExperimentalClassProperties (loc, b) -> EExperimentalClassProperties (f loc, b)
   | EUnsafeGetSet loc -> EUnsafeGetSet (f loc)
   | EUninitializedInstanceProperty (loc, e) -> EUninitializedInstanceProperty (f loc, e)
-  | EExperimentalExportStarAs loc -> EExperimentalExportStarAs (f loc)
   | EExperimentalEnums loc -> EExperimentalEnums (f loc)
   | EIndeterminateModuleType loc -> EIndeterminateModuleType (f loc)
   | EBadExportPosition loc -> EBadExportPosition (f loc)
@@ -811,8 +803,6 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
     ESketchyNullLint { kind; loc = f loc; null_loc = f null_loc; falsy_loc = f falsy_loc }
   | ESketchyNumberLint (kind, r) -> ESketchyNumberLint (kind, map_reason r)
   | EInvalidPrototype (loc, r) -> EInvalidPrototype (f loc, map_reason r)
-  | EExperimentalOptionalChaining loc -> EExperimentalOptionalChaining (f loc)
-  | EOptionalChainingMethods loc -> EOptionalChainingMethods (f loc)
   | EUnnecessaryOptionalChain (loc, r) -> EUnnecessaryOptionalChain (f loc, map_reason r)
   | EUnnecessaryInvariant (loc, r) -> EUnnecessaryInvariant (f loc, map_reason r)
   | EUnexpectedTemporaryBaseType loc -> EUnexpectedTemporaryBaseType (f loc)
@@ -1061,11 +1051,8 @@ let util_use_op_of_msg nope util = function
   | ERecursionLimit (_, _)
   | EModuleOutsideRoot (_, _)
   | EMalformedPackageJson (_, _)
-  | EExperimentalDecorators _
-  | EExperimentalClassProperties (_, _)
   | EUnsafeGetSet _
   | EUninitializedInstanceProperty _
-  | EExperimentalExportStarAs _
   | EExperimentalEnums _
   | EIndeterminateModuleType _
   | EBadExportPosition _
@@ -1107,8 +1094,6 @@ let util_use_op_of_msg nope util = function
   | ESketchyNullLint { kind = _; loc = _; null_loc = _; falsy_loc = _ }
   | ESketchyNumberLint _
   | EInvalidPrototype _
-  | EExperimentalOptionalChaining _
-  | EOptionalChainingMethods _
   | EUnnecessaryOptionalChain _
   | EUnnecessaryInvariant _
   | EUnexpectedTemporaryBaseType _
@@ -1224,8 +1209,6 @@ let loc_of_msg : 'loc t' -> 'loc option = function
   | EUnsafeGettersSetters loc
   | EUnnecessaryOptionalChain (loc, _)
   | EUnnecessaryInvariant (loc, _)
-  | EOptionalChainingMethods loc
-  | EExperimentalOptionalChaining loc
   | EUnusedSuppression loc
   | ECodelessSuppression (loc, _)
   | EDocblockError (loc, _)
@@ -1247,12 +1230,9 @@ let loc_of_msg : 'loc t' -> 'loc option = function
   | EMixedImportAndRequire (loc, _)
   | EExportRenamedDefault (loc, _)
   | EIndeterminateModuleType loc
-  | EExperimentalExportStarAs loc
   | EExperimentalEnums loc
   | EUnsafeGetSet loc
   | EUninitializedInstanceProperty (loc, _)
-  | EExperimentalClassProperties (loc, _)
-  | EExperimentalDecorators loc
   | EModuleOutsideRoot (loc, _)
   | EMalformedPackageJson (loc, _)
   | EUseArrayLiteral loc
@@ -1366,10 +1346,7 @@ let kind_of_msg =
     | EBadExportContext _ ->
       InferWarning ExportKind
     | EUnexpectedTypeof _
-    | EExperimentalDecorators _
-    | EExperimentalClassProperties _
     | EUnsafeGetSet _
-    | EExperimentalExportStarAs _
     | EExperimentalEnums _
     | EIndeterminateModuleType _
     | EUnreachable _
@@ -1380,9 +1357,7 @@ let kind_of_msg =
     | EDuplicateModuleProvider _ -> DuplicateProviderError
     | EParseError _ -> ParseError
     | EDocblockError _
-    | ELintSetting _
-    | EExperimentalOptionalChaining _
-    | EOptionalChainingMethods _ ->
+    | ELintSetting _ ->
       PseudoParseError
     | _ -> InferError)
 
@@ -2297,38 +2272,6 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
     in
     Normal { features }
   | EMalformedPackageJson (_, error) -> Normal { features = [text error] }
-  | EExperimentalDecorators _ ->
-    let features =
-      [
-        text "Experimental decorator usage. Decorators are an early stage ";
-        text "proposal that may change. Additionally, Flow does not account for ";
-        text "the type implications of decorators at this time.";
-      ]
-    in
-    Normal { features }
-  | EExperimentalClassProperties (_, static) ->
-    let (config_name, config_key) =
-      if static then
-        ("class static field", "class_static_fields")
-      else
-        ("class instance field", "class_instance_fields")
-    in
-    let features =
-      [
-        text ("Experimental " ^ config_name ^ " usage. ");
-        text (String.capitalize_ascii config_name ^ "s are an active early stage ");
-        text "feature proposal that may change. You may opt-in to using them ";
-        text "anyway in Flow by putting ";
-        code ("esproposal." ^ config_key ^ "=enable");
-        text " ";
-        text "into the ";
-        code "[options]";
-        text " section of your ";
-        code ".flowconfig";
-        text ".";
-      ]
-    in
-    Normal { features }
   | EUnsafeGetSet _ ->
     let features =
       [
@@ -2375,24 +2318,6 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
           text " in the constructor ";
           text "before all class properties are definitely initialized.";
         ]
-    in
-    Normal { features }
-  | EExperimentalExportStarAs _ ->
-    let features =
-      [
-        text "Experimental ";
-        code "export * as";
-        text " usage. ";
-        code "export * as";
-        text " is an active early stage feature proposal that ";
-        text "may change. You may opt-in to using it anyway by putting ";
-        code "esproposal.export_star_as=enable";
-        text " into the ";
-        code "[options]";
-        text " section of your ";
-        code ".flowconfig";
-        text ".";
-      ]
     in
     Normal { features }
   | EExperimentalEnums _ ->
@@ -2966,26 +2891,6 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
         features =
           [text "Cannot use "; ref reason; text " as a prototype. Expected an object or null."];
       }
-  | EExperimentalOptionalChaining _ ->
-    let features =
-      [
-        text "Experimental optional chaining (";
-        code "?.";
-        text ") usage. ";
-        text "Optional chaining is an active early-stage feature proposal that ";
-        text "may change. You may opt in to using it anyway by putting ";
-        code "esproposal.optional_chaining=enable";
-        text " into the ";
-        code "[options]";
-        text " section of your ";
-        code ".flowconfig";
-        text ".";
-      ]
-    in
-    Normal { features }
-  | EOptionalChainingMethods _ ->
-    Normal
-      { features = [text "Flow does not yet support method or property calls in optional chains."] }
   | EUnnecessaryOptionalChain (_, lhs_reason) ->
     let features =
       [
@@ -3463,11 +3368,7 @@ let error_code_of_message err : error_code option =
   | EExpectedBooleanLit { use_op; _ } -> error_code_of_use_op use_op ~default:IncompatibleType
   | EExpectedNumberLit { use_op; _ } -> error_code_of_use_op use_op ~default:IncompatibleType
   | EExpectedStringLit { use_op; _ } -> error_code_of_use_op use_op ~default:IncompatibleType
-  | EExperimentalClassProperties (_, _) -> Some IllegalClassField
-  | EExperimentalDecorators _ -> Some IllegalDecorator
   | EExperimentalEnums _ -> Some IllegalEnum
-  | EExperimentalExportStarAs _ -> Some IllegalExportStar
-  | EExperimentalOptionalChaining _ -> Some IllegalOptionalChain
   | EExponentialSpread _ -> Some ExponentialSpread
   | EExportsAnnot _ -> Some InvalidExportsTypeArg
   | EExportValueAsType (_, _) -> Some ExportValueAsType
@@ -3522,7 +3423,6 @@ let error_code_of_message err : error_code option =
   | EObjectComputedPropertyAccess (_, _) -> Some InvalidComputedProp
   | EObjectComputedPropertyAssign (_, _) -> Some InvalidComputedProp
   | EOnlyDefaultExport (_, _, _) -> Some MissingExport
-  | EOptionalChainingMethods _ -> Some IllegalOptionalChain
   (* We don't want these to be suppressible *)
   | EParseError (_, _) -> None
   | EPolarityMismatch _ -> Some IncompatibleVariance

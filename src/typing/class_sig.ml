@@ -777,11 +777,10 @@ module Make (F : Func_sig.S) = struct
           ignore (Abnormal.swap_saved Abnormal.Return save_return);
           ignore (Abnormal.swap_saved Abnormal.Throw save_throw)
         in
-        let field config this super _name (_, _, value) =
-          match (config, value) with
-          | (Options.ESPROPOSAL_IGNORE, _) -> ()
-          | (_, Annot _) -> ()
-          | (_, Infer (fsig, set_asts)) -> method_ this super ~set_asts fsig
+        let field this super _name (_, _, value) =
+          match value with
+          | Annot _ -> ()
+          | Infer (fsig, set_asts) -> method_ this super ~set_asts fsig
         in
         let this = SMap.find "this" x.tparams_map in
         let static = TypeUtil.class_type this in
@@ -820,9 +819,8 @@ module Make (F : Func_sig.S) = struct
                (* process static methods and fields *)
                let (this, super) = (new_entry static, new_entry static_super) in
                iter_methods (fun (_loc, f, set_asts, _) -> method_ this super ~set_asts f) s;
-               let config = Context.esproposal_class_static_fields cx in
-               SMap.iter (field config this super) s.fields;
-               SMap.iter (field config this super) s.private_fields);
+               SMap.iter (field this super) s.fields;
+               SMap.iter (field this super) s.private_fields);
 
         x
         |> with_sig ~static:false (fun s ->
@@ -852,10 +850,9 @@ module Make (F : Func_sig.S) = struct
                (* process instance methods and fields *)
                let (this, super) = (new_entry this, new_entry super) in
                iter_methods (fun (_, msig, set_asts, _) -> method_ this super ~set_asts msig) s;
-               let config = Context.esproposal_class_instance_fields cx in
-               SMap.iter (field config this super) s.fields;
-               SMap.iter (field config this super) s.private_fields;
-               SMap.iter (field config this super) s.proto_fields))
+               SMap.iter (field this super) s.fields;
+               SMap.iter (field this super) s.private_fields;
+               SMap.iter (field this super) s.proto_fields))
 
   module This = struct
     let is_bound_to_empty x =

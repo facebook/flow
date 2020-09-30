@@ -117,15 +117,6 @@ let nameify_default_export_decl decl =
         | _ -> failwith "expected ClassDeclaration") )
   | _ -> (decl, identity)
 
-let warn_or_ignore_export_star_as cx name =
-  if name = None then
-    ()
-  else
-    match (Context.esproposal_export_star_as cx, name) with
-    | (Options.ESPROPOSAL_WARN, Some (loc, _)) ->
-      Flow.add_output cx (Error_message.EExperimentalExportStarAs loc)
-    | _ -> ()
-
 (* Module exports are treated differently than `exports`. The latter is a
    variable that is implicitly set to the empty object at the top of a
    module. As such, properties can be added to it throughout the module,

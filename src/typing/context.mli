@@ -55,12 +55,6 @@ type metadata = {
   enable_const_params: bool;
   enable_enums: bool;
   enforce_strict_call_arity: bool;
-  esproposal_class_static_fields: Options.esproposal_feature_mode;
-  esproposal_class_instance_fields: Options.esproposal_feature_mode;
-  esproposal_decorators: Options.esproposal_feature_mode;
-  esproposal_export_star_as: Options.esproposal_feature_mode;
-  esproposal_optional_chaining: Options.esproposal_feature_mode;
-  esproposal_nullish_coalescing: Options.esproposal_feature_mode;
   exact_by_default: bool;
   facebook_fbs: string option;
   facebook_fbt: string option;
@@ -148,18 +142,6 @@ val envs : t -> env IMap.t
 val errors : t -> Flow_error.ErrorSet.t
 
 val error_suppressions : t -> Error_suppressions.t
-
-val esproposal_class_static_fields : t -> Options.esproposal_feature_mode
-
-val esproposal_class_instance_fields : t -> Options.esproposal_feature_mode
-
-val esproposal_decorators : t -> Options.esproposal_feature_mode
-
-val esproposal_export_star_as : t -> Options.esproposal_feature_mode
-
-val esproposal_optional_chaining : t -> Options.esproposal_feature_mode
-
-val esproposal_nullish_coalescing : t -> Options.esproposal_feature_mode
 
 val evaluated : t -> Type.t Type.Eval.Map.t
 
