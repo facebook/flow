@@ -1,6 +1,6 @@
 {
   "name": "flow-remove-types",
-  "version": "2.134.0",
+  "version": "2.135.0",
   "description": "Removes Flow type annotations from JavaScript files with speed and simplicity.",
   "author": {
     "name": "Flow Team",
@@ -43,7 +43,7 @@
     "es6"
   ],
   "dependencies": {
-    "flow-parser": "^0.134.0",
+    "flow-parser": "^0.135.0",
     "pirates": "^3.0.2",
     "vlq": "^0.2.1"
   },
