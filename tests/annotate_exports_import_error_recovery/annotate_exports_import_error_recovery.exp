@@ -4,7 +4,7 @@
 >>> ./main.js
 // @flow
 
-import type {OK} from "./lib.js";import { foo, bar } from './lib';
+import type {OK} from "./lib";import { foo, bar } from './lib';
 
 import { props } from './props';
 
@@ -66,7 +66,7 @@ declare export function bar(): { ok: OK };
 >>> ./main.js
 // @flow
 
-import type {OK} from "./lib.js";import { foo, bar } from './lib';
+import type {OK} from "./lib";import { foo, bar } from './lib';
 
 import { props } from './props';
 

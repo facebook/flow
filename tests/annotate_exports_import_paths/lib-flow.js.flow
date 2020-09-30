@@ -1,0 +1,5 @@
+// @flow
+
+export type B = number;
+
+declare export function bar(): B;
