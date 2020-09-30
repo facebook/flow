@@ -318,11 +318,11 @@ References:
    create_element.js:15:32
     15| const refBad = React.createRef<string>();
                                        ^^^^^^ [2]
-   <BUILTINS>/react.js:248:6
-   248|   ): {|current: null | T|};
+   <BUILTINS>/react.js:249:6
+   249|   ): {|current: null | T|};
              ^^^^^^^^^^^^^^^^^^^^^ [3]
-   <BUILTINS>/react.js:197:6
-   197|   | ((React$ElementRef<ElementType> | null) => mixed)
+   <BUILTINS>/react.js:198:6
+   198|   | ((React$ElementRef<ElementType> | null) => mixed)
              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
 
 
@@ -337,11 +337,11 @@ Cannot create `C` element because in property `key`: [incompatible-type]
                                                         ^^^^^^^^ [1]
 
 References:
-   <BUILTINS>/react.js:190:26
-   190| declare type React$Key = string | number;
+   <BUILTINS>/react.js:191:26
+   191| declare type React$Key = string | number;
                                  ^^^^^^ [2]
-   <BUILTINS>/react.js:190:35
-   190| declare type React$Key = string | number;
+   <BUILTINS>/react.js:191:35
+   191| declare type React$Key = string | number;
                                           ^^^^^^ [3]
 
 
@@ -635,8 +635,9 @@ References:
    132|   // This is only on function components, but trying to access name when
    133|   // displayName is undefined is a common pattern.
    134|   name?: ?string,
-   135|   ...
-   136| };
+   135|   propTypes?: {[string] : any, ...},
+   136|   ...
+   137| };
         ^ [1]
 
 
@@ -680,8 +681,8 @@ References:
    strict.js:4:11
      4| const c = <Component f = {3}/>;
                   ^^^^^^^^^^^^^^^^^^^^ [1]
-   <BUILTINS>/react.js:171:29
-   171|   | React$AbstractComponent<empty, mixed>;
+   <BUILTINS>/react.js:172:29
+   172|   | React$AbstractComponent<empty, mixed>;
                                     ^^^^^ [2]
 
 
@@ -713,8 +714,8 @@ Cannot call `foo` with `ref` bound to `a` because mixed [1] is incompatible with
             ^^^
 
 References:
-   <BUILTINS>/react.js:171:36
-   171|   | React$AbstractComponent<empty, mixed>;
+   <BUILTINS>/react.js:172:36
+   172|   | React$AbstractComponent<empty, mixed>;
                                            ^^^^^ [1]
    strict.js:7:26
      7| declare function foo(a: ?React$Component<any, any>): void;
@@ -737,8 +738,9 @@ References:
    132|   // This is only on function components, but trying to access name when
    133|   // displayName is undefined is a common pattern.
    134|   name?: ?string,
-   135|   ...
-   136| };
+   135|   propTypes?: {[string] : any, ...},
+   136|   ...
+   137| };
         ^ [1]
 
 
