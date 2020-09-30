@@ -2581,7 +2581,7 @@ and export_statement cx loc ~default declaration_export_info specifiers source e
     in
     List.iter export_specifier specifiers
   (* [declare] export [type] * from "source"; *)
-  | ([], Some (ExportNamedDeclaration.ExportBatchSpecifier (batch_loc, star_as_name))) ->
+  | ([], Some (ExportNamedDeclaration.ExportBatchSpecifier (_, star_as_name))) ->
     let (source_loc, source_module_name) =
       match source with
       | Some (loc, { Ast.StringLiteral.value; _ }) -> (loc, value)
@@ -2590,27 +2590,12 @@ and export_statement cx loc ~default declaration_export_info specifiers source e
           ( "Parser Error: `export * from` must specify a string "
           ^ "literal for the source module name!" )
     in
-    Import_export.warn_or_ignore_export_star_as cx star_as_name;
 
-    let parse_export_star_as = Context.esproposal_export_star_as cx in
     (match star_as_name with
     | Some ident ->
       let (_, { Ast.Identifier.name; comments = _ }) = ident in
       let reason = mk_reason (RCustom (spf "export * as %s from %S" name source_module_name)) loc in
-      let remote_namespace_t =
-        if parse_export_star_as = Options.ESPROPOSAL_ENABLE then
-          Import_export.import_ns cx reason (source_loc, source_module_name)
-        else
-          AnyT.untyped
-            (let config_value =
-               if parse_export_star_as = Options.ESPROPOSAL_IGNORE then
-                 "ignore"
-               else
-                 "warn"
-             in
-             let reason = spf "flowconfig: esproposal.export_star_as=%s" config_value in
-             mk_reason (RCustom reason) batch_loc)
-      in
+      let remote_namespace_t = Import_export.import_ns cx reason (source_loc, source_module_name) in
       Import_export.export cx name loc remote_namespace_t
     | None ->
       let source_module_t = Import_export.import cx (source_loc, source_module_name) in
@@ -3632,11 +3617,10 @@ and expression_ ~cond cx loc e : (ALoc.t, ALoc.t * Type.t) Ast.Expression.t =
 *)
 and optional_chain ~cond ~is_existence_check ?sentinel_refine cx ((loc, e) as ex) =
   let open Ast.Expression in
-  let factor_out_optional (loc, e) =
+  let factor_out_optional (_, e) =
     let (opt_state, e') =
       match e with
       | OptionalCall { OptionalCall.call; optional } ->
-        warn_or_ignore_optional_chaining optional cx loc;
         let opt_state =
           if optional then
             NewChain
@@ -3645,7 +3629,6 @@ and optional_chain ~cond ~is_existence_check ?sentinel_refine cx ((loc, e) as ex
         in
         (opt_state, Call call)
       | OptionalMember { OptionalMember.member; optional } ->
-        warn_or_ignore_optional_chaining optional cx loc;
         let opt_state =
           if optional then
             NewChain
@@ -4522,7 +4505,6 @@ and optional_chain ~cond ~is_existence_check ?sentinel_refine cx ((loc, e) as ex
                 comments = _;
               } as call ),
           (NewChain | ContinueChain) ) ->
-        warn_or_ignore_optional_chaining optional cx loc;
         let receiver_ast member = OptionalMember { OptionalMember.member; optional } in
         let member_opt =
           if optional then
@@ -7523,33 +7505,6 @@ and mk_class_sig =
         let (t, targs) = Anno.mk_super cx tparams_map loc c targs in
         (Explicit t, Some (loc, { Ast.Class.Extends.expr; targs; comments }))
     in
-    let warn_or_ignore_decorators cx = function
-      | [] -> []
-      | decorators ->
-        (match Context.esproposal_decorators cx with
-        | Options.ESPROPOSAL_ENABLE -> failwith "Decorators cannot be enabled!"
-        | Options.ESPROPOSAL_IGNORE ->
-          Base.List.map ~f:Tast_utils.unchecked_mapper#class_decorator decorators
-        | Options.ESPROPOSAL_WARN ->
-          List.iter
-            (fun (loc, _) -> Flow.add_output cx (Error_message.EExperimentalDecorators loc))
-            decorators;
-          Base.List.map ~f:Tast_utils.error_mapper#class_decorator decorators)
-    in
-    let warn_or_ignore_class_properties cx ~static loc =
-      let config_setting =
-        if static then
-          Context.esproposal_class_static_fields cx
-        else
-          Context.esproposal_class_instance_fields cx
-      in
-      match config_setting with
-      | Options.ESPROPOSAL_ENABLE
-      | Options.ESPROPOSAL_IGNORE ->
-        ()
-      | Options.ESPROPOSAL_WARN ->
-        Flow.add_output cx (Error_message.EExperimentalClassProperties (loc, static))
-    in
     fun cx
         name_loc
         reason
@@ -7563,7 +7518,9 @@ and mk_class_sig =
           classDecorators;
           comments;
         } ->
-      let classDecorators_ast = warn_or_ignore_decorators cx classDecorators in
+      let classDecorators_ast =
+        Base.List.map ~f:Tast_utils.error_mapper#class_decorator classDecorators
+      in
       let (tparams, tparams_map, tparams_ast) = Anno.mk_type_param_declarations cx tparams in
       let (tparams, tparams_map) = add_this self cx reason tparams tparams_map in
       let (class_sig, extends_ast, implements_ast) =
@@ -7659,7 +7616,9 @@ and mk_class_sig =
                     comments;
                   } ) ->
               Type_inference_hooks_js.dispatch_class_member_decl_hook cx self static name id_loc;
-              let decorators = warn_or_ignore_decorators cx decorators in
+              let decorators =
+                Base.List.map ~f:Tast_utils.error_mapper#class_decorator decorators
+              in
               (match kind with
               | Method.Get
               | Method.Set ->
@@ -7734,13 +7693,6 @@ and mk_class_sig =
                     comments;
                   } ) ->
               Type_inference_hooks_js.dispatch_class_member_decl_hook cx self static name id_loc;
-
-              (match value with
-              | Property.Declared
-              | Property.Uninitialized ->
-                ()
-              | Property.Initialized _ -> warn_or_ignore_class_properties cx ~static loc);
-
               let reason = mk_reason (RProperty (Some name)) loc in
               let polarity = Anno.polarity variance in
               let (field, annot_t, annot_ast, get_value) =
@@ -7772,13 +7724,6 @@ and mk_class_sig =
                     comments;
                   } ) ->
               Type_inference_hooks_js.dispatch_class_member_decl_hook cx self static name id_loc;
-
-              (match value with
-              | Property.Declared
-              | Property.Uninitialized ->
-                ()
-              | Property.Initialized _ -> warn_or_ignore_class_properties cx ~static loc);
-
               let reason = mk_reason (RProperty (Some name)) loc in
               let polarity = Anno.polarity variance in
               let (field, annot_t, annot, get_value) = mk_field cx tparams_map reason annot value in
@@ -8353,17 +8298,6 @@ and mk_initial_arguments_reason =
     | Spread _ :: _ -> []
   in
   (fun (_args_loc, { Ast.Expression.ArgList.arguments; comments = _ }) -> helper arguments)
-
-and warn_or_ignore_optional_chaining optional cx loc =
-  if optional then
-    match Context.esproposal_optional_chaining cx with
-    | Options.ESPROPOSAL_ENABLE
-    | Options.ESPROPOSAL_IGNORE ->
-      ()
-    | Options.ESPROPOSAL_WARN ->
-      Flow.add_output cx (Error_message.EExperimentalOptionalChaining loc)
-  else
-    ()
 
 and is_valid_enum_member_name name =
   (not @@ Base.String.is_empty name) && (not @@ Base.Char.is_lowercase name.[0])

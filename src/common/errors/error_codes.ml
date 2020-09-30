@@ -35,14 +35,10 @@ type error_code =
   | ExtraArg
   | ExtraTypeArg
   | FunctionPredicate
-  | IllegalClassField
-  | IllegalDecorator
   | IllegalEnum
-  | IllegalExportStar
   | IllegalGetSet
   | IllegalKey
   | IllegalNewArray
-  | IllegalOptionalChain
   | IllegalThis
   | IllegalTypeof
   | ImplicitInexactObject
@@ -197,14 +193,10 @@ let string_of_code : error_code -> string = function
   | ExtraArg -> "extra-arg"
   | ExtraTypeArg -> "extra-type-arg"
   | FunctionPredicate -> "function-predicate"
-  | IllegalClassField -> "illegal-class-field"
-  | IllegalDecorator -> "illegal-decorator"
   | IllegalEnum -> "illegal-enum"
-  | IllegalExportStar -> "illegal-export-star"
   | IllegalGetSet -> "illegal-get-set"
   | IllegalKey -> "illegal-key"
   | IllegalNewArray -> "illegal-new-array"
-  | IllegalOptionalChain -> "illegal-optional-chain"
   | IllegalThis -> "illegal-this"
   | IllegalTypeof -> "illegal-typeof"
   | ImplicitInexactObject -> "implicit-inexact-object"

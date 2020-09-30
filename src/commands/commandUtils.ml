@@ -1242,8 +1242,6 @@ let make_options
     opt_enforce_strict_call_arity = FlowConfig.enforce_strict_call_arity flowconfig;
     opt_enforce_well_formed_exports;
     opt_enums = FlowConfig.enums flowconfig;
-    opt_esproposal_decorators = FlowConfig.esproposal_decorators flowconfig;
-    opt_esproposal_export_star_as = FlowConfig.esproposal_export_star_as flowconfig;
     opt_exact_by_default = FlowConfig.exact_by_default flowconfig;
     opt_facebook_fbs = FlowConfig.facebook_fbs flowconfig;
     opt_facebook_fbt = FlowConfig.facebook_fbt flowconfig;
@@ -1253,10 +1251,6 @@ let make_options
       options_flags.include_warnings
       || options_flags.max_warnings <> None
       || FlowConfig.include_warnings flowconfig;
-    opt_esproposal_class_static_fields = FlowConfig.esproposal_class_static_fields flowconfig;
-    opt_esproposal_class_instance_fields = FlowConfig.esproposal_class_instance_fields flowconfig;
-    opt_esproposal_optional_chaining = FlowConfig.esproposal_optional_chaining flowconfig;
-    opt_esproposal_nullish_coalescing = FlowConfig.esproposal_nullish_coalescing flowconfig;
     opt_max_header_tokens = FlowConfig.max_header_tokens flowconfig;
     opt_haste_module_ref_prefix = FlowConfig.haste_module_ref_prefix flowconfig;
     opt_haste_name_reducers = FlowConfig.haste_name_reducers flowconfig;

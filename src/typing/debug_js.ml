@@ -1379,9 +1379,6 @@ let dump_error_message =
     | EModuleOutsideRoot (loc, name) -> spf "EModuleOutsideRoot (%s, %S)" (string_of_aloc loc) name
     | EMalformedPackageJson (loc, error) ->
       spf "EMalformedPackageJson (%s, %S)" (string_of_aloc loc) error
-    | EExperimentalDecorators loc -> spf "EExperimentalDecorators (%s)" (string_of_aloc loc)
-    | EExperimentalClassProperties (loc, static) ->
-      spf "EExperimentalClassProperties (%s, %b)" (string_of_aloc loc) static
     | EUnsafeGetSet loc -> spf "EUnsafeGetSet (%s)" (string_of_aloc loc)
     | EUninitializedInstanceProperty (loc, err) ->
       spf
@@ -1395,7 +1392,6 @@ let dump_error_message =
           | PropertyFunctionCallBeforeEverythingInitialized ->
             "PropertyFunctionCallBeforeEverythingInitialized"
           | ThisBeforeEverythingInitialized -> "ThisBeforeEverythingInitialized")
-    | EExperimentalExportStarAs loc -> spf "EExperimentalExportStarAs (%s)" (string_of_aloc loc)
     | EExperimentalEnums loc -> spf "EExperimentalEnums (%s)" (string_of_aloc loc)
     | EIndeterminateModuleType loc -> spf "EIndeterminateModuleType (%s)" (string_of_aloc loc)
     | EBadExportPosition loc -> spf "EBadExportPosition (%s)" (string_of_aloc loc)
@@ -1544,9 +1540,6 @@ let dump_error_message =
         spf "ESketchyNumberLint (%s) (%s)" kind_str (dump_reason cx reason))
     | EInvalidPrototype (loc, reason) ->
       spf "EInvalidPrototype (%s) (%s)" (string_of_aloc loc) (dump_reason cx reason)
-    | EExperimentalOptionalChaining loc ->
-      spf "EExperimentalOptionalChaining (%s)" (string_of_aloc loc)
-    | EOptionalChainingMethods loc -> spf "EOptionalChainingMethods (%s)" (string_of_aloc loc)
     | EUnnecessaryOptionalChain (loc, _) ->
       spf "EUnnecessaryOptionalChain (%s)" (string_of_aloc loc)
     | EUnnecessaryInvariant (loc, _) -> spf "EUnnecessaryInvariant (%s)" (string_of_aloc loc)

@@ -5,11 +5,6 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
-type esproposal_feature_mode =
-  | ESPROPOSAL_ENABLE
-  | ESPROPOSAL_IGNORE
-  | ESPROPOSAL_WARN
-
 type module_system =
   | Node
   | Haste
@@ -60,12 +55,6 @@ type t = {
   opt_enforce_strict_call_arity: bool;
   opt_enforce_well_formed_exports: string list option;
   opt_enums: bool;
-  opt_esproposal_class_instance_fields: esproposal_feature_mode;
-  opt_esproposal_class_static_fields: esproposal_feature_mode;
-  opt_esproposal_decorators: esproposal_feature_mode;
-  opt_esproposal_export_star_as: esproposal_feature_mode;
-  opt_esproposal_nullish_coalescing: esproposal_feature_mode;
-  opt_esproposal_optional_chaining: esproposal_feature_mode;
   opt_exact_by_default: bool;
   opt_facebook_fbs: string option;
   opt_facebook_fbt: string option;
@@ -140,18 +129,6 @@ let enforce_strict_call_arity opts = opts.opt_enforce_strict_call_arity
 let enforce_well_formed_exports opts = opts.opt_enforce_well_formed_exports
 
 let enums opts = opts.opt_enums
-
-let esproposal_class_static_fields opts = opts.opt_esproposal_class_static_fields
-
-let esproposal_class_instance_fields opts = opts.opt_esproposal_class_instance_fields
-
-let esproposal_decorators opts = opts.opt_esproposal_decorators
-
-let esproposal_export_star_as opts = opts.opt_esproposal_export_star_as
-
-let esproposal_optional_chaining opts = opts.opt_esproposal_optional_chaining
-
-let esproposal_nullish_coalescing opts = opts.opt_esproposal_nullish_coalescing
 
 let exact_by_default opts = opts.opt_exact_by_default
 
