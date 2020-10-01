@@ -1471,6 +1471,12 @@ let dump_error_message =
         param_count
         (string_of_use_op use_op)
     | EUnsupportedSetProto reason -> spf "EUnsupportedSetProto (%s)" (dump_reason cx reason)
+    | EEscapedGeneric { reason; use_op; bound_name; _ } ->
+      spf
+        "EEscapedGeneric { reason = %s; use_op = %s; bound_name = %s; _ }"
+        (dump_reason cx reason)
+        (string_of_use_op use_op)
+        bound_name
     | EDuplicateModuleProvider { module_name; provider; conflict } ->
       spf
         "EDuplicateModuleProvider (%S, %s, %s)"
@@ -1683,7 +1689,7 @@ module Verbose = struct
   let print_if_verbose_lazy cx trace ?(delim = "") ?(indent = 0) (lines : string Lazy.t list) =
     match Context.verbose cx with
     | Some { Verbose.indent = num_spaces; _ } ->
-      let indent = indent + Trace.trace_depth trace - 1 in
+      let indent = max (indent + Trace.trace_depth trace - 1) 0 in
       let prefix = String.make (indent * num_spaces) ' ' in
       let pid = Context.pid_prefix cx in
       let add_prefix line = spf "\n%s%s%s" prefix pid (Lazy.force line) in

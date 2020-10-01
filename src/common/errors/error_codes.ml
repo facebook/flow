@@ -29,6 +29,7 @@ type error_code =
   | DuplicateModule
   | DuplicateProvideModuleDecl
   | EnumValueAsType
+  | EscapedGeneric
   | ExponentialSpread
   | ExportRenamedDefault
   | ExportValueAsType
@@ -187,6 +188,7 @@ let string_of_code : error_code -> string = function
   | DuplicateModule -> "duplicate-module"
   | DuplicateProvideModuleDecl -> "duplicate-provide-module-decl"
   | EnumValueAsType -> "enum-value-as-type"
+  | EscapedGeneric -> "escaped-generic"
   | ExponentialSpread -> "exponential-spread"
   | ExportRenamedDefault -> "export-renamed-default"
   | ExportValueAsType -> "export-value-as-type"
