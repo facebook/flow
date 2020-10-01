@@ -337,7 +337,8 @@ module Func_stmt_config = struct
         let default_t = Flow.mk_default cx reason d in
         Flow.flow_t cx (default_t, t))
       default;
-    bind cx name t loc
+    bind cx name t loc;
+    t
 
   let eval_default cx ~expr = function
     | None -> None
@@ -3009,17 +3010,30 @@ and variable cx kind ?if_uninitialized id init =
             else
               t
           in
-          let () =
+
+          (* If this is a variable declaration without a type annotation
+            constraining writes, we need the type of the identifier to be the
+            general type of the variable in order to detect if a generic escapes
+            into it.
+
+            If there is an annotation, the specific and the general will be
+            unified. *)
+          let id_node_type =
             if has_anno then (
               Env.unify_declared_type cx name t;
-              Env.pseudo_init_declared_type cx name loc
-            ) else
-              init_var cx ~use_op name ~has_anno t loc
+              Env.pseudo_init_declared_type cx name loc;
+              t
+            ) else (
+              init_var cx ~use_op name ~has_anno t loc;
+              Env.get_var_declared_type cx name loc
+            )
           in
           Flow.flow cx (t, AssertImportIsValueT (reason, name));
           Base.Option.iter default ~f:(fun d ->
               let default_t = Flow.mk_default cx reason d in
-              Flow.flow cx (default_t, UseT (use_op, t))))
+              Flow.flow cx (default_t, UseT (use_op, t)));
+
+          id_node_type)
   in
   (id_ast, init_ast)
 

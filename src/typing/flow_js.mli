@@ -109,6 +109,8 @@ val mk_type_destructor :
 
 val mk_default : Context.t -> reason -> Type.t Default.t -> Type.t
 
+val is_munged_prop_name : Context.t -> string -> bool
+
 (* val graph: bounds IMap.t ref *)
 val lookup_module : Context.t -> string -> Type.t
 

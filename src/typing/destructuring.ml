@@ -33,7 +33,8 @@ type expr =
   (ALoc.t, ALoc.t) Flow_ast.Expression.t ->
   (ALoc.t, ALoc.t * Type.t) Flow_ast.Expression.t
 
-type callback = use_op:Type.use_op -> ALoc.t -> string -> Type.t Default.t option -> Type.t -> unit
+type callback =
+  use_op:Type.use_op -> ALoc.t -> string -> Type.t Default.t option -> Type.t -> Type.t
 
 let empty ?init ?default ~annot current = { parent = None; current; init; default; annot }
 
@@ -266,9 +267,9 @@ let rec pattern cx ~expr ~f acc (loc, p) =
         Object { Object.properties; annot; comments }
       | Identifier { Identifier.name = id; optional; annot } ->
         let (id_loc, { Ast.Identifier.name; comments }) = id in
-        let id = ((id_loc, acc.current), { Ast.Identifier.name; comments }) in
         let annot = Tast_utils.unimplemented_mapper#type_annotation_hint annot in
-        identifier cx ~f acc id_loc name;
+        let id_ty = identifier cx ~f acc id_loc name in
+        let id = ((id_loc, id_ty), { Ast.Identifier.name; comments }) in
         Identifier { Identifier.name = id; optional; annot }
       | Expression e ->
         Flow_js.add_output
@@ -328,6 +329,7 @@ let assignment cx ~expr rhs_t init =
   let acc = empty ~init ~annot:false rhs_t in
   let f ~use_op loc name _default t =
     (* TODO destructuring+defaults unsupported in assignment expressions *)
-    ignore Env.(set_var cx ~use_op name t loc)
+    ignore Env.(set_var cx ~use_op name t loc);
+    t
   in
   pattern cx ~expr ~f acc
