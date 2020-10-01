@@ -3,7 +3,7 @@
   "version": "0.0.0",
   "license": "CC-BY-4.0",
   "dependencies": {
-    "bootstrap": "4.0.0-alpha.5",
+    "bootstrap": "4.0.0",
     "jquery": "3.5.1"
   }
 }
