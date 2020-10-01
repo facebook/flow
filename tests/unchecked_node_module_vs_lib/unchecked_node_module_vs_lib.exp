@@ -3,16 +3,16 @@ Error --------------------------------------------------------------------------
 Cannot assign `buffer.INSPECT_MAX_BYTES` to `b` because number [1] is incompatible with boolean [2]. [incompatible-type]
 
    test.js:12:18
-    12| var b: boolean = buffer.INSPECT_MAX_BYTES; // error, number ~/> boolean
-                         ^^^^^^^^^^^^^^^^^^^^^^^^
+   12| var b: boolean = buffer.INSPECT_MAX_BYTES; // error, number ~/> boolean
+                        ^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/node.js:127:34
-   127|   declare var INSPECT_MAX_BYTES: number;
-                                         ^^^^^^ [1]
+   lib.js:2:34
+    2|   declare var INSPECT_MAX_BYTES: number;
+                                        ^^^^^^ [1]
    test.js:12:8
-    12| var b: boolean = buffer.INSPECT_MAX_BYTES; // error, number ~/> boolean
-               ^^^^^^^ [2]
+   12| var b: boolean = buffer.INSPECT_MAX_BYTES; // error, number ~/> boolean
+              ^^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- test.js:22:23
