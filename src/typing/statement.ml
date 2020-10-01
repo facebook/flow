@@ -2014,7 +2014,7 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t =
     let open EnumDeclaration in
     let { id = (name_loc, ident); body; comments } = enum in
     let { Ast.Identifier.name; _ } = ident in
-    let reason = mk_reason (REnum name) loc in
+    let reason = mk_reason (REnum name) name_loc in
     let t =
       if Context.enable_enums cx then (
         let enum_t = mk_enum cx ~enum_reason:reason enum in
