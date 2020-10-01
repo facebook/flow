@@ -689,7 +689,7 @@ class ['a] t =
       | Some t -> self#type_ cx pole acc t
 
     method private type_param cx pole acc tp =
-      let { reason = _; name = _; bound; default; polarity = p } = tp in
+      let { reason = _; name = _; bound; default; polarity = p; is_this = _ } = tp in
       let pole = P.mult (pole, p) in
       let acc = self#type_ cx pole acc bound in
       self#opt (self#type_ cx pole) acc default

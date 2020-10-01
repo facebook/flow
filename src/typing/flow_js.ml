@@ -738,12 +738,18 @@ let union_of_ts reason ts =
   *)
 and generate_tests : 'a. Context.t -> Type.typeparam list -> (Type.t SMap.t -> 'a) -> 'a =
   (* make bot type for given param *)
-  let mk_bot _ { name; reason; _ } =
-    let desc = RPolyTest (name, RIncompatibleInstantiation name) in
+  let mk_bot cx _ { name; reason; is_this; _ } =
+    let desc =
+      RPolyTest
+        ( name,
+          RIncompatibleInstantiation name,
+          Reason.aloc_of_reason reason |> Context.make_aloc_id cx,
+          is_this )
+    in
     DefT (replace_desc_reason desc reason, bogus_trust (), EmptyT Zeroed)
   in
   (* make bound type for given param and argument map *)
-  let mk_bound cx prev_args { bound; name; reason = param_reason; _ } =
+  let mk_bound cx prev_args { bound; name; reason = param_reason; is_this; _ } =
     (* For the top bound, we match the reason locations that appear in the
      * respective bot bound:
      * - 'loc' is the location of the type parameter (may be repositioned later)
@@ -755,7 +761,8 @@ and generate_tests : 'a. Context.t -> Type.typeparam list -> (Type.t SMap.t -> '
         let param_loc = Reason.aloc_of_reason param_reason in
         let annot_loc = annot_aloc_of_reason bound_reason in
         let desc = desc_of_reason ~unwrap:false bound_reason in
-        opt_annot_reason ?annot_loc @@ mk_reason (RPolyTest (name, desc)) param_loc)
+        opt_annot_reason ?annot_loc
+        @@ mk_reason (RPolyTest (name, desc, Context.make_aloc_id cx param_loc, is_this)) param_loc)
       (subst cx prev_args bound)
   in
   (* make argument map by folding mk_arg over param list *)
@@ -768,13 +775,15 @@ and generate_tests : 'a. Context.t -> Type.typeparam list -> (Type.t SMap.t -> '
     | params ->
       let all = mk_argmap (mk_bound cx) params in
       let each =
-        Base.List.map ~f:(fun ({ name; _ } as p) -> SMap.add name (mk_bot SMap.empty p) all) params
+        Base.List.map
+          ~f:(fun ({ name; _ } as p) -> SMap.add name (mk_bot cx SMap.empty p) all)
+          params
       in
       List.rev (all :: each)
   in
   (* a map for every combo of bot/bound params *)
   let powerset cx params arg_map =
-    let none = mk_argmap mk_bot params in
+    let none = mk_argmap (mk_bot cx) params in
     List.fold_left
       (fun maps ({ name; _ } as p) ->
         let bots = Base.List.map ~f:(SMap.add name (SMap.find name none)) maps in
@@ -12043,7 +12052,7 @@ struct
       (aloc_of_reason reason)
       ?desc:
         ( if use_desc then
-          Some (desc_of_reason reason)
+          Some (desc_of_reason ~unwrap:false reason)
         else
           None )
       ?annot_loc:(annot_aloc_of_reason reason)

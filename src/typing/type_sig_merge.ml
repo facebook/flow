@@ -1199,7 +1199,7 @@ and merge_tparam component file tp =
     | None -> None
     | Some t -> Some (merge component file t)
   in
-  { Type.reason; name; polarity; bound; default }
+  { Type.reason; name; polarity; bound; default; is_this = false }
 
 and merge_op component file op = map_op (merge component file) op
 

@@ -753,7 +753,7 @@ end = struct
        * do not perform the substitution. There instead we unfold the underlying type. *)
       let reason = TypeUtil.reason_of_t t in
       match desc_of_reason ~unwrap:false reason with
-      | RPolyTest (name, _) ->
+      | RPolyTest (name, _, _, _) ->
         let loc = Reason.def_aloc_of_reason reason in
         let default t = next ~env t in
         lookup_tparam ~default env t name loc

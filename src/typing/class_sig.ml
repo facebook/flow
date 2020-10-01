@@ -535,6 +535,7 @@ module Make (F : Func_sig.S) = struct
         bound = rec_instance_type;
         polarity = Polarity.Positive;
         default = None;
+        is_this = true;
       }
     in
     let tparams =

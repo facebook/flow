@@ -492,7 +492,7 @@ class virtual ['a] t =
           inst_kind;
         }
 
-    method type_param cx map_cx ({ reason; name; bound; polarity; default } as t) =
+    method type_param cx map_cx ({ reason; name; bound; polarity; default; is_this } as t) =
       let bound' = self#type_ cx map_cx bound in
       let default' = OptionUtils.ident_map (self#type_ cx map_cx) default in
       if bound == bound' && default == default' then
@@ -500,7 +500,7 @@ class virtual ['a] t =
       else
         let bound = bound' in
         let default = default' in
-        { reason; name; bound; polarity; default }
+        { reason; name; bound; polarity; default; is_this }
 
     method selector cx map_cx t =
       match t with
