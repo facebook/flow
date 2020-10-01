@@ -931,7 +931,7 @@ recursive.js:3:25 = {
   "end":27
 }
 recursive.js:6:11 = {
-  "type":"type V$2 = null | {|data: number, next: V$2|}; (n: number) => (null | {|data: number, next: V$2|})",
+  "type":"type V$3 = null | {|data: number, next: V$3|}; (n: number) => (null | {|data: number, next: V$3|})",
   "reasons":[],
   "loc":{
     "source":"recursive.js",
@@ -946,7 +946,7 @@ recursive.js:6:11 = {
   "end":14
 }
 recursive.js:13:12 = {
-  "type":"type V$3 = null | {|data: number, next: V$3|}; type V$5 = null | string | {|a_next: (null | {|data: number, next: V$3|}), data: number, next: V$5|}; (n: number) => (null | string | {|a_next: (null | {|data: number, next: V$3|}), data: number, next: V$5|})",
+  "type":"type V$4 = null | {|data: number, next: V$4|}; type V$6 = null | string | {|a_next: (null | {|data: number, next: V$4|}), data: number, next: V$6|}; (n: number) => (null | string | {|a_next: (null | {|data: number, next: V$4|}), data: number, next: V$6|})",
   "reasons":[],
   "loc":{
     "source":"recursive.js",
@@ -961,7 +961,7 @@ recursive.js:13:12 = {
   "end":14
 }
 recursive.js:23:12 = {
-  "type":"type V$3 = null | {|data: number, next: V$3|}; type V$7 = null | string | {|a_next: (null | {|data: number, next: V$3|}), data: number, next: V$7|}; type V$9 = null | string | {|a_next: (null | {|data: number, next: V$3|}), b_next: (null | string | {|a_next: (null | {|data: number, next: V$3|}), data: number, next: V$7|}), data: number, next: V$9|}; (n: number) => (null | string | {|a_next: (null | {|data: number, next: V$3|}), b_next: (null | string | {|a_next: (null | {|data: number, next: V$3|}), data: number, next: V$7|}), data: number, next: V$9|})",
+  "type":"type V$4 = null | {|data: number, next: V$4|}; type V$8 = null | string | {|a_next: (null | {|data: number, next: V$4|}), data: number, next: V$8|}; type V$10 = null | string | {|a_next: (null | {|data: number, next: V$4|}), b_next: (null | string | {|a_next: (null | {|data: number, next: V$4|}), data: number, next: V$8|}), data: number, next: V$10|}; (n: number) => (null | string | {|a_next: (null | {|data: number, next: V$4|}), b_next: (null | string | {|a_next: (null | {|data: number, next: V$4|}), data: number, next: V$8|}), data: number, next: V$10|})",
   "reasons":[],
   "loc":{
     "source":"recursive.js",

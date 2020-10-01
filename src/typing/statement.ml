@@ -2000,15 +2000,24 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t =
         (loc, ForOf { ForOf.left = left_ast; right = right_ast; body = body_ast; await; comments }))
   | (_, Debugger _) as stmt -> stmt
   | (loc, FunctionDeclaration func) ->
-    let { Ast.Function.id; sig_loc; _ } = func in
-    let (fn_type, func_ast) = mk_function_declaration None cx sig_loc func in
-    (match id with
-    | Some (_, { Ast.Identifier.name; comments = _ }) ->
-      let use_op =
-        Op (AssignVar { var = Some (mk_reason (RIdentifier name) loc); init = reason_of_t fn_type })
-      in
-      Env.init_fun cx ~use_op name fn_type loc
-    | None -> ());
+    let { Ast.Function.id; sig_loc; async; generator; _ } = func in
+    let reason = func_reason ~async ~generator sig_loc in
+    let func_ast =
+      match id with
+      | Some (_, { Ast.Identifier.name; comments = _ }) ->
+        let general = Tvar.mk_where cx reason (Env.unify_declared_type cx name) in
+        let (fn_type, func_ast) = mk_function_declaration None cx ~general reason func in
+        let use_op =
+          Op
+            (AssignVar { var = Some (mk_reason (RIdentifier name) loc); init = reason_of_t fn_type })
+        in
+        Env.init_fun cx ~use_op name fn_type loc;
+        func_ast
+      | None ->
+        let general = Tvar.mk cx reason in
+        let (_, func_ast) = mk_function_declaration None cx ~general reason func in
+        func_ast
+    in
     (loc, FunctionDeclaration func_ast)
   | (loc, EnumDeclaration enum) ->
     let open EnumDeclaration in
@@ -2071,7 +2080,8 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t =
     let (name_loc, name) = extract_class_name class_loc c in
     let reason = DescFormat.instance_reason name name_loc in
     Env.declare_implicit_let Scope.Entry.ClassNameBinding cx name name_loc;
-    let (class_t, c_ast) = mk_class cx class_loc ~name_loc reason c in
+    let general = Tvar.mk_where cx reason (Env.unify_declared_type cx name) in
+    let (class_t, c_ast) = mk_class cx class_loc ~name_loc ~general reason c in
     Env.init_implicit_let
       Scope.Entry.ClassNameBinding
       cx
@@ -2677,7 +2687,10 @@ and object_prop cx acc prop =
               | Property.Literal (loc, { Ast.Literal.value = Ast.Literal.String name; _ }) ) as key;
             value = (fn_loc, func);
           } ) ->
-    let (t, func) = mk_function_expression None cx prop_loc func in
+    let reason = func_reason ~async:false ~generator:false prop_loc in
+    let tvar = Tvar.mk cx reason in
+    let (t, func) = mk_function_expression None cx ~general:tvar reason func in
+    Flow.flow_t cx (t, tvar);
     ( ObjectExpressionAcc.add_prop (Properties.add_field name Polarity.Neutral (Some loc) t) acc,
       Property
         ( prop_loc,
@@ -2700,7 +2713,10 @@ and object_prop cx acc prop =
             comments;
           } ) ->
     Flow_js.add_output cx (Error_message.EUnsafeGettersSetters loc);
-    let (function_type, func) = mk_function_expression None cx vloc func in
+    let reason = func_reason ~async:false ~generator:false vloc in
+    let tvar = Tvar.mk cx reason in
+    let (function_type, func) = mk_function_expression None cx ~general:tvar reason func in
+    Flow.flow_t cx (function_type, tvar);
     let return_t = Type.extract_getter_type function_type in
     ( ObjectExpressionAcc.add_prop (Properties.add_getter name (Some id_loc) return_t) acc,
       Property
@@ -2724,7 +2740,10 @@ and object_prop cx acc prop =
             comments;
           } ) ->
     Flow_js.add_output cx (Error_message.EUnsafeGettersSetters loc);
-    let (function_type, func) = mk_function_expression None cx vloc func in
+    let reason = func_reason ~async:false ~generator:false vloc in
+    let tvar = Tvar.mk cx reason in
+    let (function_type, func) = mk_function_expression None cx ~general:tvar reason func in
+    Flow.flow_t cx (function_type, tvar);
     let param_t = Type.extract_setter_type function_type in
     ( ObjectExpressionAcc.add_prop (Properties.add_setter name (Some id_loc) param_t) acc,
       Property
@@ -3346,18 +3365,21 @@ and expression_ ~cond cx loc e : (ALoc.t, ALoc.t * Type.t) Ast.Expression.t =
     let t = List.(expressions |> map snd_fst |> rev |> hd) in
     ((loc, t), Sequence { Sequence.expressions; comments })
   | Function func ->
-    let { Ast.Function.id; predicate; sig_loc; _ } = func in
+    let { Ast.Function.id; predicate; sig_loc; generator; async; _ } = func in
     (match predicate with
     | Some (_, { Ast.Type.Predicate.kind = Ast.Type.Predicate.Inferred; comments = _ }) ->
       Flow.add_output
         cx
         Error_message.(EUnsupportedSyntax (loc, PredicateDeclarationWithoutExpression))
     | _ -> ());
-
-    let (t, func) = mk_function_expression id cx sig_loc func in
+    let reason = func_reason ~async ~generator sig_loc in
+    let tvar = Tvar.mk cx reason in
+    let (t, func) = mk_function_expression id cx reason ~general:tvar func in
+    Flow.flow_t cx (t, tvar);
     ((loc, t), Function func)
   | ArrowFunction func ->
-    let (t, f) = mk_arrow cx loc func in
+    let reason = Ast.Function.(func_reason ~async:func.async ~generator:func.generator loc) in
+    let (t, f) = mk_arrow cx reason func in
     ((loc, t), ArrowFunction f)
   | TaggedTemplate
       {
@@ -3443,21 +3465,22 @@ and expression_ ~cond cx loc e : (ALoc.t, ALoc.t * Type.t) Ast.Expression.t =
     let class_loc = loc in
     let (name_loc, name) = extract_class_name class_loc c in
     let reason = mk_reason (RIdentifier name) class_loc in
+    let tvar = Tvar.mk cx reason in
     (match c.Ast.Class.id with
     | Some _ ->
-      let tvar = Tvar.mk cx reason in
       let scope = Scope.fresh () in
       Scope.(
         let kind = Entry.ClassNameBinding in
         let entry = Entry.(new_let tvar ~loc:name_loc ~state:State.Declared ~kind) in
         add_entry name entry scope);
       Env.push_var_scope cx scope;
-      let (class_t, c) = mk_class cx class_loc ~name_loc reason c in
+      let (class_t, c) = mk_class cx class_loc ~name_loc ~general:tvar reason c in
       Env.pop_var_scope ();
       Flow.flow_t cx (class_t, tvar);
       ((class_loc, class_t), Class c)
     | None ->
-      let (class_t, c) = mk_class cx class_loc ~name_loc reason c in
+      let (class_t, c) = mk_class cx class_loc ~name_loc ~general:tvar reason c in
+      Flow.flow_t cx (class_t, tvar);
       ((class_loc, class_t), Class c))
   | Yield { Yield.argument; delegate = false; comments } ->
     let yield = Env.get_internal_var cx "yield" loc in
@@ -7425,7 +7448,7 @@ and extract_class_name class_loc =
     | Some (name_loc, { Ast.Identifier.name; comments = _ }) -> (name_loc, name)
     | None -> (class_loc, "<<anonymous class>>"))
 
-and mk_class cx class_loc ~name_loc reason c =
+and mk_class cx class_loc ~name_loc ~general reason c =
   let def_reason = repos_reason class_loc reason in
   let this_in_class = Class_stmt_sig.This.in_class c in
   let self = Tvar.mk cx reason in
@@ -7461,7 +7484,7 @@ and mk_class cx class_loc ~name_loc reason c =
            });
   let class_t = Class_stmt_sig.classtype cx class_sig in
   Flow.unify cx self class_t;
-  (class_t, class_ast_f class_t)
+  (class_t, class_ast_f general)
 
 (* Process a class definition, returning a (polymorphic) class type. A class
    type is a wrapper around an instance type, which contains types of instance
@@ -7624,8 +7647,10 @@ and mk_class_sig =
               | Method.Set ->
                 Flow_js.add_output cx (Error_message.EUnsafeGettersSetters loc)
               | _ -> ());
-
-              let (method_sig, reconstruct_func) = mk_method cx tparams_map loc func in
+              let reason =
+                Ast.Function.(func_reason ~async:func.async ~generator:func.generator loc)
+              in
+              let (method_sig, reconstruct_func) = mk_method cx tparams_map reason func in
               (*  The body of a class method doesn't get checked until Class_sig.toplevels
           is called on the class sig (in this case c). The order of how the methods
           were arranged in the class is lost by the time this happens, so rather
@@ -7905,7 +7930,7 @@ and mk_func_sig =
     in
     finder#type_ cx Polarity.Neutral Loc_collections.ALocSet.empty t
   in
-  fun cx tparams_map loc func ->
+  fun cx tparams_map reason func ->
     let {
       Ast.Function.tparams;
       return;
@@ -7920,7 +7945,7 @@ and mk_func_sig =
     } =
       func
     in
-    let reason = func_reason ~async ~generator loc in
+    let loc = aloc_of_reason reason in
     let kind = function_kind cx ~async ~generator ~predicate ~params in
     let (tparams, tparams_map, tparams_ast) =
       Anno.mk_type_param_declarations cx ~tparams_map tparams
@@ -8002,8 +8027,8 @@ and mk_func_sig =
    signature consisting of type parameters, parameter types, parameter names,
    and return type, check the body against that signature by adding `this`
    and super` to the environment, and return the signature. *)
-and function_decl id cx loc func this super =
-  let (func_sig, reconstruct_func) = mk_func_sig cx SMap.empty loc func in
+and function_decl id cx reason func this super =
+  let (func_sig, reconstruct_func) = mk_func_sig cx SMap.empty reason func in
   let save_return = Abnormal.clear_saved Abnormal.Return in
   let save_throw = Abnormal.clear_saved Abnormal.Throw in
   let (params_ast, body_ast, _) =
@@ -8032,13 +8057,14 @@ and define_internal cx reason x =
   Env.init_let cx ~use_op:unknown_use ix ~has_anno:false t loc
 
 (* Process a function declaration, returning a (polymorphic) function type. *)
-and mk_function_declaration id cx loc func = mk_function id cx loc func
+and mk_function_declaration id cx ~general reason func = mk_function id cx ~general reason func
 
 (* Process a function expression, returning a (polymorphic) function type. *)
-and mk_function_expression id cx loc func = mk_function id cx loc func
+and mk_function_expression id cx ~general reason func = mk_function id cx ~general reason func
 
 (* Internal helper function. Use `mk_function_declaration` and `mk_function_expression` instead. *)
-and mk_function id cx loc func =
+and mk_function id cx ~general reason func =
+  let loc = aloc_of_reason reason in
   let this_t = Tvar.mk cx (mk_reason RThis loc) in
   let this = Scope.Entry.new_let this_t ~loc ~state:Scope.State.Initialized in
   (* Normally, functions do not have access to super. *)
@@ -8046,16 +8072,17 @@ and mk_function id cx loc func =
     let t = ObjProtoT (mk_reason RNoSuper loc) in
     Scope.Entry.new_let t ~loc ~state:Scope.State.Initialized
   in
-  let (func_sig, reconstruct_ast) = function_decl id cx loc func this super in
+  let (func_sig, reconstruct_ast) = function_decl id cx reason func this super in
   let fun_type = Func_stmt_sig.functiontype cx this_t func_sig in
-  (fun_type, reconstruct_ast fun_type)
+  (fun_type, reconstruct_ast general)
 
 (* Process an arrow function, returning a (polymorphic) function type. *)
-and mk_arrow cx loc func =
+and mk_arrow cx reason func =
+  let loc = aloc_of_reason reason in
   let (_, this) = Env.find_entry cx (internal_name "this") loc in
   let (_, super) = Env.find_entry cx (internal_name "super") loc in
   let { Ast.Function.id; _ } = func in
-  let (func_sig, reconstruct_ast) = function_decl id cx loc func this super in
+  let (func_sig, reconstruct_ast) = function_decl id cx reason func this super in
   (* Do not expose the type of `this` in the function's type. The call to
      function_decl above has already done the necessary checking of `this` in
      the body of the function. Now we want to avoid re-binding `this` to
