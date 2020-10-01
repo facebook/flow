@@ -156,6 +156,7 @@ MODULES=\
   src/typing\
   src/typing/coverage_response\
   src/typing/errors\
+  src/typing/generics\
   src/typing/polarity\
   src/hack_forked/dfind\
   src/hack_forked/find\
