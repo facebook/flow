@@ -272,7 +272,7 @@ let merge_context_new_signatures ~options ~reader component =
           let dep_exports = Context.find_module_sig dep_cx (Files.module_ref dep) in
           Merge.AcyclicDep dep_exports
       else
-        Merge.LegacyUncheckedDepTryBuiltinsFirst (mref, Modulename.to_string mname)
+        Merge.LegacyUncheckedDepTryBuiltinsFirst mref
   in
 
   (* read type_sig from heap and create file record for merge *)

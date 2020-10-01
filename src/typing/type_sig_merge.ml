@@ -56,7 +56,7 @@ type dependency =
   | UncheckedDep of string
   | BuiltinDep of string * string
   | UnknownDep of string
-  | LegacyUncheckedDepTryBuiltinsFirst of string * string
+  | LegacyUncheckedDepTryBuiltinsFirst of string
 
 type 'a node =
   | Node of {
@@ -394,9 +394,9 @@ and merge_dep =
     let reason = Reason.(mk_reason (RCustom ref) loc) in
     Type.AnyT.error reason
   in
-  let legacy_unchecked_module file loc ref name =
+  let legacy_unchecked_module file loc ref =
     let reason = Reason.(mk_reason (RCustom ref) loc) in
-    let m_name = Reason.internal_module_name name in
+    let m_name = Reason.internal_module_name ref in
     Tvar.mk_no_wrap_where file.cx reason (fun tout ->
         let strict = Type.(NonstrictReturning (Some (AnyT (reason, Untyped), OpenT tout), None)) in
         Flow_js.lookup_builtin file.cx m_name reason strict tout)
@@ -410,7 +410,7 @@ and merge_dep =
     | UncheckedDep ref -> unchecked_module loc ref
     | BuiltinDep (ref, name) -> builtin_module file loc ref name
     | UnknownDep ref -> unknown_module loc ref
-    | LegacyUncheckedDepTryBuiltinsFirst (ref, name) -> legacy_unchecked_module file loc ref name
+    | LegacyUncheckedDepTryBuiltinsFirst ref -> legacy_unchecked_module file loc ref
 
 and require component file loc index =
   let (mref, dep) = Module_refs.get file.dependencies index in

@@ -1,3 +1,20 @@
+Error ----------------------------------------------------------------------------------------------------- dep2.js:4:18
+
+Cannot assign `dep.INSPECT_MAX_BYTES` to `b` because number [1] is incompatible with boolean [2]. [incompatible-type]
+
+   dep2.js:4:18
+   4| var b: boolean = dep.INSPECT_MAX_BYTES; // error, number ~/> boolean
+                       ^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   lib.js:2:34
+   2|   declare var INSPECT_MAX_BYTES: number;
+                                       ^^^^^^ [1]
+   dep2.js:4:8
+   4| var b: boolean = dep.INSPECT_MAX_BYTES; // error, number ~/> boolean
+             ^^^^^^^ [2]
+
+
 Error ---------------------------------------------------------------------------------------------------- test.js:12:18
 
 Cannot assign `buffer.INSPECT_MAX_BYTES` to `b` because number [1] is incompatible with boolean [2]. [incompatible-type]
@@ -32,4 +49,4 @@ Cannot resolve module `./buffer.js`. [cannot-resolve-module]
 
 
 
-Found 3 errors
+Found 4 errors
