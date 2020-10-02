@@ -107,6 +107,35 @@ module Make (Extra : BASE_STATS) = struct
         | Error e -> Error (Error.Serializer_error e)
         | Ok t -> Ok t
 
+      method private replace_type_node_with_ty =
+        let run loc ty =
+          let (acc', ty) =
+            Hardcoded_Ty_Fixes.run
+              ~cctx
+              ~lint_severities
+              ~suppress_types
+              ~imports_react
+              ~preserve_literals
+              acc
+              loc
+              ty
+          in
+          this#set_acc acc';
+          let%bind ty = this#get_remote_converter#type_ ty in
+          this#serialize ty
+        in
+        fun loc ty ->
+          match run loc ty with
+          | Ok t_ast ->
+            let size = Ty_utils.size_of_type ~max:max_type_size ty in
+            let t_ast' = Insert_type_utils.patch_up_type_ast t_ast in
+            added_annotations_locmap <- LMap.add loc size added_annotations_locmap;
+            Ok t_ast'
+          | Error e ->
+            this#update_acc (fun acc -> Acc.error acc loc e);
+            codemod_error_locs <- LSet.add loc codemod_error_locs;
+            Error e
+
       (* This one does the actual annotation *)
       method private annotate_node
           : 'a. Loc.t -> ty_or_type_ast -> (Loc.t * (Loc.t, Loc.t) Ast.Type.t -> 'a) ->
