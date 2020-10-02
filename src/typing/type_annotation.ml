@@ -1731,7 +1731,7 @@ and add_interface_properties cx tparams_map properties s =
         Ast.Type.Object.(
           fun (x, rev_prop_asts) -> function
             | CallProperty (loc, { CallProperty.value = (value_loc, ft); static; comments }) ->
-              let ((_, t), ft) = convert cx tparams_map (loc, Ast.Type.Function ft) in
+              let ((_, t), ft) = convert cx tparams_map (value_loc, Ast.Type.Function ft) in
               let ft =
                 match ft with
                 | Ast.Type.Function ft -> ft
