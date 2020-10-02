@@ -8,3 +8,4 @@ class D extends C {
   foo() { return this.override() }
   override(): string { return ""; }
   bar() { this.
+//             ^

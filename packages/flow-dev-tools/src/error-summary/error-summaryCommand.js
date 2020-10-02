@@ -1,6 +1,14 @@
-/* @flow
+/**
+ * Copyright (c) Facebook, Inc. and its affiliates.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ *
+ * @flow
  * @format
  */
+
+import type {Flag} from '../command/Base';
 
 import {format} from 'util';
 import {resolve} from 'path';
@@ -53,7 +61,7 @@ Queries Flow for the errors for ROOT. Then logs how many times each error messag
 `;
   }
 
-  static getFlags() {
+  static getFlags(): Array<Flag> {
     return [
       commonFlags.bin,
       commonFlags.flowconfigName,

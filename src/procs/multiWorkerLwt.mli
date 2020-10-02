@@ -1,4 +1,4 @@
-(**
+(*
  * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
@@ -6,7 +6,6 @@
  *)
 
 module Hh_bucket = Bucket
-open Core_kernel
 
 type worker
 
@@ -33,7 +32,7 @@ val make :
   saved_state:'a ->
   entry:'a WorkerController.entry ->
   nbr_procs:int ->
-  gc_control:Gc.control ->
+  gc_control:Caml.Gc.control ->
   heap_handle:SharedMem.handle ->
   worker list
 

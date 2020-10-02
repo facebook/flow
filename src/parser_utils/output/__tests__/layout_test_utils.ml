@@ -1,4 +1,4 @@
-(**
+(*
  * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
@@ -11,8 +11,11 @@ open Ast_builder
 module Layout_builder = struct
   open Layout
 
-  let expression ?(expr_ctxt = Js_layout_generator.normal_context) ast =
-    Js_layout_generator.expression ~ctxt:expr_ctxt ast
+  let expression
+      ?(expr_ctxt = Js_layout_generator.normal_context)
+      ?(opts = Js_layout_generator.default_opts)
+      ast =
+    Js_layout_generator.expression ~ctxt:expr_ctxt ~opts ast
 
   let empty = Empty
 
@@ -136,8 +139,7 @@ module Layout_builder = struct
       | IfBreak (Newline, Atom " ") -> word "line"
       | IfBreak (Newline, IfPretty (Atom " ", Empty)) -> word "pretty_line"
       | IfBreak (Newline, Empty) -> word "softline"
-      | IfBreak (left, right) ->
-        phrase "Layout.IfBreak (%s, %s)" (helper ~i left) (helper ~i right)
+      | IfBreak (left, right) -> phrase "Layout.IfBreak (%s, %s)" (helper ~i left) (helper ~i right)
       | Indent node -> phrase "indent (%s)" (helper ~i node)
       | Newline -> word "hardline"
       | Empty -> word "empty"
@@ -149,7 +151,7 @@ module Layout_builder = struct
         | Phrase str ->
           spf "  %s%s;" indent str
       in
-      let str = nodes |> Core_list.map ~f |> String.concat "\n" in
+      let str = nodes |> Base.List.map ~f |> String.concat "\n" in
       spf "[\n%s\n%s]" str indent
     and helper ~i node =
       match top ~i node with
@@ -229,7 +231,7 @@ module Layout_matcher = struct
   (* higher level helpers *)
 
   let body_of_function_declaration ast =
-    return (Js_layout_generator.statement ast)
+    return (Js_layout_generator.statement ~opts:Js_layout_generator.default_opts ast)
     >>= loc
     >>= nth_fused 5 (* skip `function`, space, name, space, params *)
     >>= loc
@@ -253,12 +255,17 @@ let assert_layout_result ~ctxt ?msg expected actual =
     assert_failure (Printf.sprintf "Unable to decode %s:\n%s" (Layout_builder.printer layout) msg)
 
 let assert_layout_of_expression
-    ~ctxt ?msg ?(expr_ctxt = Js_layout_generator.normal_context) expected ast =
-  let actual = Js_layout_generator.expression ~ctxt:expr_ctxt ast in
+    ~ctxt
+    ?msg
+    ?(expr_ctxt = Js_layout_generator.normal_context)
+    ?(opts = Js_layout_generator.default_opts)
+    expected
+    ast =
+  let actual = Js_layout_generator.expression ~ctxt:expr_ctxt ~opts ast in
   assert_layout ~ctxt ?msg expected actual
 
-let assert_layout_of_statement ~ctxt ?msg expected ast =
-  let actual = Js_layout_generator.statement ast in
+let assert_layout_of_statement ~ctxt ?msg ?(opts = Js_layout_generator.default_opts) expected ast =
+  let actual = Js_layout_generator.statement ~opts ast in
   assert_layout ~ctxt ?msg expected actual
 
 let assert_layout_of_statement_string ~ctxt ?msg expected str =

@@ -1,4 +1,4 @@
-(**
+(*
  * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
@@ -22,7 +22,7 @@ module type S = sig
   type 'info t' = {
     module_sig: 'info module_sig';
     declare_modules: (L.t * 'info module_sig') SMap.t;
-    tolerable_errors: tolerable_error list;
+    exported_locals: L.LSet.t SMap.t option;
   }
 
   (* We can extract the observable interface of a module by extracting information
@@ -128,8 +128,8 @@ module type S = sig
     | ExportDefault of {
         (* location of the `default` keyword *)
         default_loc: L.t;
-            (* may have local name, e.g., `export default function foo {}` *)
             (** NOTE: local = Some id if and only if id introduces a local binding **)
+        (* may have local name, e.g., `export default function foo {}` *)
         local: L.t Flow_ast_utils.ident option;
       }
     | ExportNamed of {
@@ -166,13 +166,15 @@ module type S = sig
         loc: L.t;
         kind: named_export_kind;
       }
+  [@@deriving show]
 
-  and tolerable_error =
+  type tolerable_error =
     (* e.g. `module.exports.foo = 4` when not at the top level *)
     | BadExportPosition of L.t
     (* e.g. `foo(module)`, dangerous because `module` is aliased *)
     | BadExportContext of string (* offending identifier *) * L.t
     | SignatureVerificationError of Signature_builder_deps.Error.t
+  [@@deriving show]
 
   type exports_info = {
     module_kind_info: module_kind_info;
@@ -192,33 +194,33 @@ module type S = sig
     | DeclareExportDef of (L.t, L.t) Flow_ast.Statement.DeclareExportDeclaration.declaration
     | ExportDefaultDef of (L.t, L.t) Flow_ast.Statement.ExportDefaultDeclaration.declaration
     | ExportNamedDef of (L.t, L.t) Flow_ast.Statement.t
+  [@@deriving show]
 
   type error = IndeterminateModuleType of L.t
 
-  type toplevel_names_and_exports_info = {
-    toplevel_names: SSet.t;
-    exports_info: (exports_info t', error) result;
-  }
+  type exports_t = exports_info t' [@@deriving show]
 
-  val program_with_toplevel_names_and_exports_info :
-    ast:(L.t, L.t) Flow_ast.program ->
+  val program_with_exports_info :
+    ast:(L.t, L.t) Flow_ast.Program.t ->
     module_ref_prefix:string option ->
-    toplevel_names_and_exports_info
+    (exports_t * tolerable_error list, error) result
 
   (* Use for debugging; not for exposing info the the end user *)
   val exports_info_to_string : exports_info -> string
 
   (* Applications may not care about the info carried by signatures. *)
-  type module_sig = unit module_sig'
+  type module_sig = unit module_sig' [@@deriving show]
 
-  type t = unit t'
+  type t = unit t' [@@deriving show]
 
   val init : t
 
   val program :
-    ast:(L.t, L.t) Flow_ast.program -> module_ref_prefix:string option -> (t, error) result
+    ast:(L.t, L.t) Flow_ast.Program.t ->
+    module_ref_prefix:string option ->
+    (t * tolerable_error list, error) result
 
-  val verified : Signature_builder_deps.PrintableErrorSet.t -> exports_info t' -> t
+  val verified : L.LSet.t SMap.t option -> exports_info t' -> t
 
   (* Use for debugging; not for exposing info the the end user *)
   val to_string : t -> string

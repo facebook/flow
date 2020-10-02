@@ -9,8 +9,8 @@
       "range":[0,50],
       "expression":{
         "type":"TypeCastExpression",
-        "loc":{"source":null,"start":{"line":1,"column":1},"end":{"line":1,"column":49}},
-        "range":[1,49],
+        "loc":{"source":null,"start":{"line":1,"column":0},"end":{"line":1,"column":50}},
+        "range":[0,50],
         "expression":{
           "type":"ObjectExpression",
           "loc":{"source":null,"start":{"line":1,"column":1},"end":{"line":1,"column":21}},
@@ -74,8 +74,8 @@
             "type":"ObjectTypeAnnotation",
             "loc":{"source":null,"start":{"line":1,"column":23},"end":{"line":1,"column":49}},
             "range":[23,49],
-            "exact":false,
             "inexact":false,
+            "exact":false,
             "properties":[
               {
                 "type":"ObjectTypeProperty",

@@ -199,6 +199,14 @@
                     "range":[105,117],
                     "argument":{
                       "type":"MemberExpression",
+                      "trailingComments":[
+                        {
+                          "type":"Block",
+                          "loc":{"source":null,"start":{"line":4,"column":21},"end":{"line":4,"column":47}},
+                          "range":[118,144],
+                          "value":" trailing yield val 1 "
+                        }
+                      ],
                       "loc":{"source":null,"start":{"line":4,"column":14},"end":{"line":4,"column":20}},
                       "range":[111,117],
                       "object":{
@@ -421,6 +429,14 @@
                     "range":[282,294],
                     "argument":{
                       "type":"MemberExpression",
+                      "trailingComments":[
+                        {
+                          "type":"Block",
+                          "loc":{"source":null,"start":{"line":11,"column":43},"end":{"line":11,"column":69}},
+                          "range":[295,321],
+                          "value":" trailing yield val 2 "
+                        }
+                      ],
                       "loc":{"source":null,"start":{"line":11,"column":36},"end":{"line":11,"column":42}},
                       "range":[288,294],
                       "object":{
@@ -857,6 +873,14 @@
                     "range":[587,623],
                     "argument":{
                       "type":"MemberExpression",
+                      "trailingComments":[
+                        {
+                          "type":"Block",
+                          "loc":{"source":null,"start":{"line":25,"column":45},"end":{"line":25,"column":71}},
+                          "range":[624,650],
+                          "value":" trailing yield val 3 "
+                        }
+                      ],
                       "loc":{"source":null,"start":{"line":25,"column":38},"end":{"line":25,"column":44}},
                       "range":[617,623],
                       "object":{

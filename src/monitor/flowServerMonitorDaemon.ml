@@ -1,4 +1,4 @@
-(**
+(*
  * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
@@ -12,17 +12,22 @@ type start_function = ?waiting_fd:Unix.file_descr -> FlowServerMonitorOptions.t 
 (* When `flow start --wait` daemonizes the Flow server monitor, it listens over a pipe and waits
  * for the Flow server to finish initializing. These are the messages we send over the pipe *)
 type wait_msg =
-  | Starting (* Monitor is up. All `flow start` commands wait for this *)
-  | Ready
+  | Starting  (** Monitor is up. All `flow start` commands wait for this *)
+  | Ready  (** Server is done initializing. `flow start --wait` commands wait for this *)
 
-(* Server is done initializing. `flow start --wait` commands wait for this *)
+type state = {
+  monitor_options: FlowServerMonitorOptions.t;
+  init_id: string;
+  logging_context: FlowEventLogger.logging_context;
+}
 
-type entry_point =
-  (FlowServerMonitorOptions.t * FlowEventLogger.logging_context, unit, wait_msg) Daemon.entry
+type entry_point = (state, unit, wait_msg) Daemon.entry
 
 (* When the daemonized monitor process starts up, this is the first code it runs *)
 let register_entry_point (start : start_function) : entry_point =
-  Daemon.register_entry_point "monitor" (fun (monitor_options, logging_context) (ic, oc) ->
+  Daemon.register_entry_point
+    "monitor"
+    (fun { monitor_options; init_id; logging_context } (ic, oc) ->
       (* Disassociate this process with the process that spawned it *)
       ignore (Sys_utils.setsid ());
 
@@ -33,7 +38,7 @@ let register_entry_point (start : start_function) : entry_point =
       LoggingUtils.set_hh_logger_min_level monitor_options.FlowServerMonitorOptions.server_options;
       FlowEventLogger.restore_context logging_context;
       FlowEventLogger.set_command (Some "monitor");
-      FlowEventLogger.init_flow_command ~version:Flow_version.version;
+      FlowEventLogger.init_flow_command ~init_id ~version:Flow_version.version;
 
       let out_fd = Daemon.descr_of_out_channel oc in
       start ~waiting_fd:out_fd monitor_options)
@@ -96,7 +101,7 @@ let rec wait_loop ~should_wait child_pid ic =
   else
     Daemon.close_in ic
 
-let daemonize ~wait ~on_spawn ~monitor_options (entry_point : entry_point) =
+let daemonize ~wait ~on_spawn ~init_id ~monitor_options (entry_point : entry_point) =
   let null_fd = Daemon.null_fd () in
   (* Daemon.spawn is creating a new process with /dev/null as both the stdout
    * and stderr. We are NOT leaking stdout and stderr. But the Windows
@@ -128,7 +133,7 @@ let daemonize ~wait ~on_spawn ~monitor_options (entry_point : entry_point) =
       ~name:(spf "monitor for %s" root_str)
       (null_fd, null_fd, null_fd)
       entry_point
-      (monitor_options, FlowEventLogger.get_context ())
+      { monitor_options; init_id; logging_context = FlowEventLogger.get_context () }
   in
   (* We never write to the child process so we can close this channel *)
   Daemon.close_out oc;

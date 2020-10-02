@@ -1,22 +1,24 @@
-/* This is basically the ast-types main.js, except without the conflicting
- * babel definitions */
-var types = require("ast-types/lib/types");
+/* This is based off of ast-types/main.ts */
 
-// This core module of AST types captures ES5 as it is parsed today by
-// git://github.com/ariya/esprima.git#master.
-require("ast-types/def/core");
+import fork from "ast-types/fork";
+import { namedTypes } from "ast-types/gen/namedTypes";
 
-// Feel free to add to or remove from this list of extension modules to
-// configure the precise type hierarchy that you need.
-require("ast-types/def/e4x");
-require("ast-types/def/es6");
-require("ast-types/def/es7");
-require("ast-types/def/esprima");
-require("ast-types/def/flow");
-require("ast-types/def/jsx");
-require("ast-types/def/mozilla");
-require('./custom_ast_types');
+import jsxDef from "ast-types/def/jsx";
+import flowDef from "ast-types/def/flow";
+import esprimaDef from "ast-types/def/esprima";
+import customDef from './custom_ast_types';
 
-types.finalize();
+const {
+  namedTypes: n,
+  ...rest
+} = fork([
+  jsxDef,
+  flowDef,
+  esprimaDef,
+  customDef,
+]);
 
-exports.namedTypes = types.namedTypes;
+module.exports = {
+  namedTypes: Object.assign(namedTypes, n),
+  ...rest
+};

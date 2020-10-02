@@ -1,4 +1,4 @@
-var APIKeys = {
+const APIKeys = {
     AGE: 'age',
     NAME: 'name',
 };

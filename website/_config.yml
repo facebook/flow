@@ -53,6 +53,7 @@ exclude:
 
 keep_files:
   - static/master
+  - static/syntaxes
 
 assets:
   sources:

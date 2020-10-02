@@ -1,4 +1,4 @@
-(**
+(*
  * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
@@ -39,10 +39,10 @@ module StatusLoop (Writer : STATUS_WRITER) = LwtLoop.Make (struct
 
   let catch _ exn =
     begin
-      match exn with
+      match Exception.unwrap exn with
       (* The connection closed its write stream, likely it is closed or closing *)
       | Lwt_stream.Closed -> ()
-      | exn -> Logger.error ~exn "StatusLoop threw an exception"
+      | _ -> Logger.error ~exn:(Exception.to_exn exn) "StatusLoop threw an exception"
     end;
     Lwt.return_unit
 end)
@@ -118,7 +118,8 @@ let create_persistent_connection ~client_fd ~close ~lsp_init_params =
   (* On exit, do our best to send all pending messages to the waiting client *)
   let close_on_exit =
     let%lwt _ = Lwt_condition.wait ExitSignal.signal in
-    PersistentConnection.write LspProt.(NotificationFromServer EOF) conn;
+    (try PersistentConnection.write LspProt.(NotificationFromServer EOF) conn
+     with Lwt_stream.Closed -> ());
     PersistentConnection.flush_and_close conn
   in
   (* Lwt.pick returns the first thread to finish and cancels the rest. *)
@@ -146,7 +147,7 @@ let close client_fd () =
      * it, does shutting down first actually make any difference? *)
     try Lwt_unix.(shutdown client_fd SHUTDOWN_ALL) with
     (* Already closed *)
-    | Unix.Unix_error (Unix.EBADF, _, _) -> ()
+    | Unix.Unix_error ((Unix.EBADF | Unix.ENOTCONN), _, _) -> ()
     | exn -> Logger.error ~exn "Failed to shutdown socket client"
   end;
   try%lwt Lwt_unix.close client_fd with
@@ -184,7 +185,7 @@ let perform_handshake_and_get_client_handshake ~client_fd =
       let server1 = { server_build_id; server_bin; server_intent; server_version } in
       let wire : server_handshake_wire =
         ( server1 |> monitor_to_client_1__to_json |> Hh_json.json_to_string,
-          Option.map server2 ~f:(fun server2 -> Marshal.to_string server2 []) )
+          Base.Option.map server2 ~f:(fun server2 -> Marshal.to_string server2 []) )
       in
       let%lwt _ = Marshal_tools_lwt.to_fd_with_preamble client_fd wire in
       Lwt.return_unit
@@ -205,7 +206,7 @@ let perform_handshake_and_get_client_handshake ~client_fd =
     if client_handshake.is_stop_request then
       let%lwt () = respond Server_will_exit None in
       let%lwt () = close client_fd () in
-      Server.exit ~msg:"Killed by `flow stop`. Exiting." FlowExitStatus.No_error
+      Server.stop Server.Stopped
       (* Binary version mismatch *)
     else if client_handshake.client_build_id <> build_revision then
       match client_handshake.version_mismatch_strategy with
@@ -227,7 +228,7 @@ let perform_handshake_and_get_client_handshake ~client_fd =
         failwith (spf "Too many clients, so rejecting new connection (%d)" fd_as_int)
       (* Server still initializing *)
     else if not (StatusStream.ever_been_free ()) then
-      let client = Option.value_exn client in
+      let client = Base.Option.value_exn client in
       let status = StatusStream.get_status () in
       if client_handshake.server_should_hangup_if_still_initializing then (
         let%lwt () = respond Server_will_hangup (Some (Server_still_initializing status)) in
@@ -246,7 +247,7 @@ let perform_handshake_and_get_client_handshake ~client_fd =
         Lwt.return (Some client)
     (* Success *)
     else
-      let client = Option.value_exn client in
+      let client = Base.Option.value_exn client in
       let%lwt () = respond Server_will_continue (Some Server_ready) in
       Lwt.return (Some client))
 
@@ -284,8 +285,8 @@ module SocketAcceptorLoop (Handler : Handler) = LwtLoop.Make (struct
     Lwt.return (autostop, socket_fd)
 
   let catch _ exn =
-    Logger.fatal ~exn "Uncaught exception in the socket acceptor";
-    raise exn
+    Logger.fatal ~exn:(Exception.to_exn exn) "Uncaught exception in the socket acceptor";
+    Exception.reraise exn
 end)
 
 module MonitorSocketAcceptorLoop = SocketAcceptorLoop (struct
@@ -298,7 +299,7 @@ module MonitorSocketAcceptorLoop = SocketAcceptorLoop (struct
       let num_persistent = PersistentConnectionMap.cardinal () in
       let num_ephemeral = RequestMap.cardinal () in
       if autostop && num_persistent = 0 && num_ephemeral = 0 then
-        Server.exit FlowExitStatus.Autostop ~msg:"Autostop"
+        Server.stop Server.Autostopped
       else
         Lwt.return_unit
     in
@@ -309,7 +310,7 @@ module MonitorSocketAcceptorLoop = SocketAcceptorLoop (struct
         | Some { client_type = Ephemeral; _ } -> create_ephemeral_connection ~client_fd ~close
         | Some { client_type = Persistent { lsp_init_params }; _ } ->
           create_persistent_connection ~client_fd ~close ~lsp_init_params
-        | None -> Lwt.return_unit)
+        | None -> close_without_autostop ())
     with exn -> catch close_without_autostop exn
 
   (* Autostop is meant to be "edge-triggered", i.e. when we transition  *)
@@ -331,7 +332,7 @@ module LegacySocketAcceptorLoop = SocketAcceptorLoop (struct
       FlowEventLogger.out_of_date ();
       let msg = "Client and server are different builds. Flow server is out of date. Exiting" in
       Logger.fatal "%s" msg;
-      Server.exit FlowExitStatus.Build_id_mismatch ~msg:"Killed by legacy client. Exiting."
+      Server.stop Server.Legacy_client
     with exn -> catch close exn
 end)
 

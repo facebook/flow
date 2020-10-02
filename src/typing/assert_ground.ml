@@ -1,4 +1,4 @@
-(**
+(*
  * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
@@ -9,6 +9,7 @@ open Constraint
 open Reason
 open Utils_js
 open Type
+open TypeUtil
 module Marked = Marked.IdMarked
 module FlowError = Flow_error
 
@@ -124,12 +125,13 @@ module Kit (Flow : Flow_common.S) : Flow_common.ASSERT_GROUND = struct
             (match pole with
             | Polarity.Neutral
             | Polarity.Negative ->
-              AnyT.locationless AnyError |> unify_opt cx ~unify_any:true (OpenT (r, id));
+              AnyT.locationless (AnyError None)
+              |> unify_opt cx ~use_op:unknown_use ~unify_any:true (OpenT (r, id));
               let trace_reasons =
                 if max_reasons = 0 then
                   []
                 else
-                  Core_list.map
+                  Base.List.map
                     ~f:(fun reason -> repos_reason (def_aloc_of_reason reason) reason)
                     (Nel.to_list !reason_stack)
               in
@@ -151,7 +153,7 @@ module Kit (Flow : Flow_common.S) : Flow_common.ASSERT_GROUND = struct
                 TypeMap.fold (fun t _ seen -> self#type_ cx Polarity.Positive seen t) lower seen))
 
       method! type_ cx pole seen t =
-        Option.iter
+        Base.Option.iter
           ~f:(fun { Verbose.depth = verbose_depth; indent; enabled_during_flowlib = _ } ->
             let pid = Context.pid_prefix cx in
             let indent = String.make (!depth * indent) ' ' in
@@ -193,9 +195,7 @@ module Kit (Flow : Flow_common.S) : Flow_common.ASSERT_GROUND = struct
               | DefT (r, _, ArrT (ArrayAT (t, ts))) when is_literal_array_reason r ->
                 self#arrlit cx pole seen t ts
               | DefT (r, _, ObjT o) when is_literal_object_reason r ->
-                let refcnt =
-                  (try Properties.Map.find_unsafe o.props_tmap objlits with Not_found -> 0)
-                in
+                let refcnt = (try Properties.Map.find o.props_tmap objlits with Not_found -> 0) in
                 objlits <- Properties.Map.add o.props_tmap (refcnt + 1) objlits;
                 let seen = super#type_ cx pole seen t in
                 objlits <-
@@ -211,19 +211,18 @@ module Kit (Flow : Flow_common.S) : Flow_common.ASSERT_GROUND = struct
                   | _ -> None
                 in
                 let own_refcnt =
-                  (try fst (Properties.Map.find_unsafe i.own_props insts) with Not_found -> 0)
+                  (try fst (Properties.Map.find i.own_props insts) with Not_found -> 0)
                 in
                 let proto_refcnt =
-                  (try fst (Properties.Map.find_unsafe i.proto_props insts) with Not_found -> 0)
+                  (try fst (Properties.Map.find i.proto_props insts) with Not_found -> 0)
                 in
                 let static_refcnt =
-                  Option.value_map static_props_id ~default:0 ~f:(fun id ->
-                      (try fst (Properties.Map.find_unsafe id insts) with Not_found -> 0))
+                  Base.Option.value_map static_props_id ~default:0 ~f:(fun id ->
+                      (try fst (Properties.Map.find id insts) with Not_found -> 0))
                 in
-                insts <-
-                  Properties.Map.add i.own_props (own_refcnt + 1, i.initialized_fields) insts;
+                insts <- Properties.Map.add i.own_props (own_refcnt + 1, i.initialized_fields) insts;
                 insts <- Properties.Map.add i.proto_props (proto_refcnt + 1, SSet.empty) insts;
-                Option.iter static_props_id (fun id ->
+                Base.Option.iter static_props_id (fun id ->
                     insts <-
                       Properties.Map.add id (static_refcnt + 1, i.initialized_static_fields) insts);
                 let seen = super#type_ cx pole seen t in
@@ -237,7 +236,7 @@ module Kit (Flow : Flow_common.S) : Flow_common.ASSERT_GROUND = struct
                     Properties.Map.remove i.proto_props insts
                   else
                     Properties.Map.add i.proto_props (own_refcnt, SSet.empty) insts );
-                Option.iter static_props_id (fun id ->
+                Base.Option.iter static_props_id (fun id ->
                     insts <-
                       ( if static_refcnt = 0 then
                         Properties.Map.remove id insts
@@ -247,9 +246,9 @@ module Kit (Flow : Flow_common.S) : Flow_common.ASSERT_GROUND = struct
               | DefT (r, _, FunT (static, prototype, ft)) ->
                 (* This won't propagate to any other types because this happens post-merge *)
                 let any kind = AnyT.locationless (Unsound kind) in
-                any DummyStatic |> unify_opt cx ~unify_any:true static;
-                any FunctionPrototype |> unify_opt cx ~unify_any:true prototype;
-                any BoundFunctionThis |> unify_opt cx ~unify_any:true ft.this_t;
+                any DummyStatic |> unify_opt cx ~use_op:unknown_use ~unify_any:true static;
+                any FunctionPrototype |> unify_opt cx ~use_op:unknown_use ~unify_any:true prototype;
+                any BoundFunctionThis |> unify_opt cx ~use_op:unknown_use ~unify_any:true ft.this_t;
                 super#type_
                   cx
                   pole
@@ -269,19 +268,19 @@ module Kit (Flow : Flow_common.S) : Flow_common.ASSERT_GROUND = struct
         if Properties.Map.mem id objlits then
           self#objlit_props cx pole seen id
         else
-          match Properties.Map.get id insts with
+          match Properties.Map.find_opt id insts with
           | Some (_, init) -> self#inst_props cx pole seen id init
           | _ -> super#props cx pole seen id
 
       method private arrlit cx pole seen t ts =
         let seen = self#type_ cx pole seen t in
-        let seen = Option.fold ts ~init:seen ~f:(List.fold_left (self#type_ cx pole)) in
+        let seen = Base.Option.fold ts ~init:seen ~f:(List.fold_left (self#type_ cx pole)) in
         seen
 
       method private objlit_props cx pole seen id =
         let props = Context.find_props cx id in
         SMap.fold
-          (fun _ p acc -> Property.read_t p |> Option.fold ~f:(self#type_ cx pole) ~init:acc)
+          (fun _ p acc -> Property.read_t p |> Base.Option.fold ~f:(self#type_ cx pole) ~init:acc)
           props
           seen
 
@@ -292,7 +291,7 @@ module Kit (Flow : Flow_common.S) : Flow_common.ASSERT_GROUND = struct
             if is_munged_prop_name_with_munge x ~should_munge_underscores then
               acc
             else if SSet.mem x init then
-              Property.read_t p |> Option.fold ~f:(self#type_ cx pole) ~init:acc
+              Property.read_t p |> Base.Option.fold ~f:(self#type_ cx pole) ~init:acc
             else
               self#prop cx pole acc p)
           props
@@ -329,16 +328,17 @@ module Kit (Flow : Flow_common.S) : Flow_common.ASSERT_GROUND = struct
               ( _,
                 _,
                 PolyT
-                  ( _,
-                    tparams,
-                    DefT
-                      ( _,
-                        _,
-                        TypeT
-                          ( _,
-                            EvalT ((BoundT (_, s, _) as t), TypeDestructorT (_, _, destructor), _)
-                          ) ),
-                    _ ) ) ->
+                  {
+                    tparams;
+                    t_out =
+                      DefT
+                        ( _,
+                          _,
+                          TypeT
+                            (_, EvalT ((BoundT (_, s) as t), TypeDestructorT (_, _, destructor), _))
+                        );
+                    _;
+                  } ) ->
             if (new type_finder t)#destructor cx false destructor then
               loop cx pole seen (Nel.to_list tparams, targs)
             else
@@ -348,7 +348,7 @@ module Kit (Flow : Flow_common.S) : Flow_common.ASSERT_GROUND = struct
                 seen
                 (Nel.to_list tparams, targs)
                 ~constant_polarity_param:(s, Polarity.Positive)
-          | DefT (_, _, PolyT (_, tparams, _, _)) -> loop cx pole seen (Nel.to_list tparams, targs)
+          | DefT (_, _, PolyT { tparams; _ }) -> loop cx pole seen (Nel.to_list tparams, targs)
           | DefT (_, _, EmptyT _) -> seen
           | AnyT _ -> seen
           | _ ->

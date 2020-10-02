@@ -1,6 +1,6 @@
 Error ------------------------------------------------------------------------------------------ libs/type_error.js:2:34
 
-Cannot use type without exactly 1 type argument.
+Cannot use type without exactly 1 type argument. [nonpolymorphic-type-app]
 
    2| declare function foo(x: number): Array;
                                        ^^^^^
@@ -8,7 +8,7 @@ Cannot use type without exactly 1 type argument.
 
 Error -------------------------------------------------------------------------------------------------------- a.js:5:17
 
-Cannot assign `0` to `x` because number [1] is incompatible with string [2].
+Cannot assign `0` to `x` because number [1] is incompatible with string [2]. [incompatible-type]
 
    a.js:5:17
    5| var x: string = 0;

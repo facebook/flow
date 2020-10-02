@@ -1,4 +1,4 @@
-(**
+(*
  * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
@@ -16,7 +16,7 @@ type 'a t
 val create :
   num_workers:int ->
   arch:Options.arch ->
-  dependency_graph:FilenameSet.t FilenameMap.t ->
+  sig_dependency_graph:FilenameSet.t FilenameMap.t ->
   leader_map:File_key.t FilenameMap.t ->
   component_map:File_key.t Nel.t FilenameMap.t ->
   recheck_leader_set:FilenameSet.t ->

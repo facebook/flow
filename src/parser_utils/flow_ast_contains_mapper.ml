@@ -1,4 +1,4 @@
-(**
+(*
  * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
@@ -15,7 +15,7 @@ class virtual ['L] mapper =
 
     method virtual loc_annot_contains_target : 'L -> bool
 
-    method! program ((l, _, _) as x) =
+    method! program ((l, _) as x) =
       if this#loc_annot_contains_target l then
         super#program x
       else

@@ -1,6 +1,7 @@
 Error ------------------------------------------------------------------------------------------------- collator.js:5:29
 
 Cannot assign `new Intl.Collator()` to `c` because `Intl$Collator` [1] is incompatible with `Intl$PluralRules` [2].
+[incompatible-type]
 
    collator.js:5:29
    5| const c: Intl$PluralRules = new Intl.Collator() // incorrect
@@ -15,6 +16,7 @@ References:
 Error ------------------------------------------------------------------------------------------------- collator.js:6:15
 
 Cannot call `Intl.Collator` with `1` bound to `locales` because number [1] is incompatible with string [2].
+[incompatible-call]
 
    collator.js:6:15
     6| Intl.Collator(1, {
@@ -26,70 +28,99 @@ References:
                            ^^^^^^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------- collator.js:6:18
+Error ------------------------------------------------------------------------------------------------- collator.js:7:18
 
-Cannot call `Intl.Collator` with object literal bound to `options` because:
- - string [1] is incompatible with enum [2] in property `localeMatcher`.
- - string [3] is incompatible with enum [4] in property `usage`.
- - string [5] is incompatible with enum [6] in property `sensitivity`.
- - null [7] is incompatible with boolean [8] in property `ignorePunctuation`.
- - number [9] is incompatible with boolean [10] in property `numeric`.
- - string [11] is incompatible with enum [12] in property `caseFirst`.
+Cannot call `Intl.Collator` with object literal bound to `options` because string [1] is incompatible with literal
+union [2] in property `localeMatcher`. [incompatible-call]
 
-   collator.js:6:18
-                        v
-    6| Intl.Collator(1, {
-    7|   localeMatcher: 'look fit',
-    8|   usage: 'find',
-    9|   sensitivity: '',
-   10|   ignorePunctuation: null,
-   11|   numeric: 1,
-   12|   caseFirst: 'true'
-   13| }) // incorrect
-       ^
-
-References:
    collator.js:7:18
     7|   localeMatcher: 'look fit',
                         ^^^^^^^^^^ [1]
+
+References:
    <BUILTINS>/intl.js:48:19
    48|   localeMatcher?: 'lookup' | 'best fit',
                          ^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- collator.js:8:10
+
+Cannot call `Intl.Collator` with object literal bound to `options` because string [1] is incompatible with literal
+union [2] in property `usage`. [incompatible-call]
+
    collator.js:8:10
     8|   usage: 'find',
-                ^^^^^^ [3]
+                ^^^^^^ [1]
+
+References:
    <BUILTINS>/intl.js:49:11
    49|   usage?: 'sort' | 'search',
-                 ^^^^^^^^^^^^^^^^^ [4]
+                 ^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- collator.js:9:16
+
+Cannot call `Intl.Collator` with object literal bound to `options` because string [1] is incompatible with literal
+union [2] in property `sensitivity`. [incompatible-call]
+
    collator.js:9:16
     9|   sensitivity: '',
-                      ^^ [5]
+                      ^^ [1]
+
+References:
    <BUILTINS>/intl.js:50:17
    50|   sensitivity?: 'base' | 'accent' | 'case' | 'variant',
-                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [6]
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ collator.js:10:22
+
+Cannot call `Intl.Collator` with object literal bound to `options` because null [1] is incompatible with boolean [2] in
+property `ignorePunctuation`. [incompatible-call]
+
    collator.js:10:22
    10|   ignorePunctuation: null,
-                            ^^^^ [7]
+                            ^^^^ [1]
+
+References:
    <BUILTINS>/intl.js:51:23
    51|   ignorePunctuation?: boolean,
-                             ^^^^^^^ [8]
+                             ^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ collator.js:11:12
+
+Cannot call `Intl.Collator` with object literal bound to `options` because number [1] is incompatible with boolean [2]
+in property `numeric`. [incompatible-call]
+
    collator.js:11:12
    11|   numeric: 1,
-                  ^ [9]
+                  ^ [1]
+
+References:
    <BUILTINS>/intl.js:52:13
    52|   numeric?: boolean,
-                   ^^^^^^^ [10]
+                   ^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ collator.js:12:14
+
+Cannot call `Intl.Collator` with object literal bound to `options` because string [1] is incompatible with literal
+union [2] in property `caseFirst`. [incompatible-call]
+
    collator.js:12:14
    12|   caseFirst: 'true'
-                    ^^^^^^ [11]
+                    ^^^^^^ [1]
+
+References:
    <BUILTINS>/intl.js:53:15
    53|   caseFirst?: 'upper' | 'lower' | 'false',
-                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [12]
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------- collator.js:24:5
 
-Cannot resolve name `Collator`.
+Cannot resolve name `Collator`. [cannot-resolve-name]
 
    24| new Collator().format() // incorrect
            ^^^^^^^^
@@ -98,7 +129,7 @@ Cannot resolve name `Collator`.
 Error ----------------------------------------------------------------------------------------- date_time_format.js:5:30
 
 Cannot assign `new Intl.DateTimeFormat()` to `c` because `Intl$DateTimeFormat` [1] is incompatible with
-`Intl$NumberFormat` [2].
+`Intl$NumberFormat` [2]. [incompatible-type]
 
    date_time_format.js:5:30
    5| const c: Intl$NumberFormat = new Intl.DateTimeFormat() // incorrect
@@ -113,6 +144,7 @@ References:
 Error ----------------------------------------------------------------------------------------- date_time_format.js:6:21
 
 Cannot call `Intl.DateTimeFormat` with `1` bound to `locales` because number [1] is incompatible with string [2].
+[incompatible-call]
 
    date_time_format.js:6:21
     6| Intl.DateTimeFormat(1, {
@@ -124,126 +156,204 @@ References:
                            ^^^^^^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------- date_time_format.js:6:24
+Error ----------------------------------------------------------------------------------------- date_time_format.js:7:18
 
-Cannot call `Intl.DateTimeFormat` with object literal bound to `options` because:
- - string [1] is incompatible with enum [2] in property `localeMatcher`.
- - number [3] is incompatible with string [4] in property `timeZone`.
- - string [5] is incompatible with boolean [6] in property `hour12`.
- - string [7] is incompatible with enum [8] in property `formatMatcher`.
- - string [9] is incompatible with enum [10] in property `weekday`.
- - string [11] is incompatible with enum [12] in property `era`.
- - string [13] is incompatible with enum [14] in property `year`.
- - string [15] is incompatible with enum [16] in property `month`.
- - string [17] is incompatible with enum [18] in property `day`.
- - string [19] is incompatible with enum [20] in property `hour`.
- - string [21] is incompatible with enum [22] in property `minute`.
- - string [23] is incompatible with enum [24] in property `second`.
- - string [25] is incompatible with enum [26] in property `timeZoneName`.
+Cannot call `Intl.DateTimeFormat` with object literal bound to `options` because string [1] is incompatible with literal
+union [2] in property `localeMatcher`. [incompatible-call]
 
-   date_time_format.js:6:24
-                               v
-     6| Intl.DateTimeFormat(1, {
-     7|   localeMatcher: 'look',
-     8|   timeZone: 1,
-     9|   hour12: '',
-    10|   formatMatcher: 'basic fit',
-    11|   weekday: '2-digit',
-    12|   era: '',
-    13|   year: '',
-    14|   month: '',
-    15|   day: '',
-    16|   hour: '',
-    17|   minute: 'long',
-    18|   second: 'short',
-    19|   timeZoneName: 'narrow'
-    20| }) // incorrect
-        ^
-
-References:
    date_time_format.js:7:18
      7|   localeMatcher: 'look',
                          ^^^^^^ [1]
+
+References:
    <BUILTINS>/intl.js:101:19
    101|   localeMatcher?: 'lookup' | 'best fit',
                           ^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------- date_time_format.js:8:13
+
+Cannot call `Intl.DateTimeFormat` with object literal bound to `options` because number [1] is incompatible with
+string [2] in property `timeZone`. [incompatible-call]
+
    date_time_format.js:8:13
      8|   timeZone: 1,
-                    ^ [3]
+                    ^ [1]
+
+References:
    <BUILTINS>/intl.js:102:14
    102|   timeZone?: string,
-                     ^^^^^^ [4]
+                     ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------- date_time_format.js:9:11
+
+Cannot call `Intl.DateTimeFormat` with object literal bound to `options` because string [1] is incompatible with
+boolean [2] in property `hour12`. [incompatible-call]
+
    date_time_format.js:9:11
      9|   hour12: '',
-                  ^^ [5]
+                  ^^ [1]
+
+References:
    <BUILTINS>/intl.js:103:12
    103|   hour12?: boolean,
-                   ^^^^^^^ [6]
+                   ^^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------- date_time_format.js:10:18
+
+Cannot call `Intl.DateTimeFormat` with object literal bound to `options` because string [1] is incompatible with literal
+union [2] in property `formatMatcher`. [incompatible-call]
+
    date_time_format.js:10:18
     10|   formatMatcher: 'basic fit',
-                         ^^^^^^^^^^^ [7]
+                         ^^^^^^^^^^^ [1]
+
+References:
    <BUILTINS>/intl.js:104:19
    104|   formatMatcher?: 'basic' | 'best fit',
-                          ^^^^^^^^^^^^^^^^^^^^ [8]
+                          ^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------- date_time_format.js:11:12
+
+Cannot call `Intl.DateTimeFormat` with object literal bound to `options` because string [1] is incompatible with literal
+union [2] in property `weekday`. [incompatible-call]
+
    date_time_format.js:11:12
     11|   weekday: '2-digit',
-                   ^^^^^^^^^ [9]
+                   ^^^^^^^^^ [1]
+
+References:
    <BUILTINS>/intl.js:105:13
    105|   weekday?: 'narrow' | 'short' | 'long',
-                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [10]
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------- date_time_format.js:12:8
+
+Cannot call `Intl.DateTimeFormat` with object literal bound to `options` because string [1] is incompatible with literal
+union [2] in property `era`. [incompatible-call]
+
    date_time_format.js:12:8
     12|   era: '',
-               ^^ [11]
+               ^^ [1]
+
+References:
    <BUILTINS>/intl.js:106:9
    106|   era?: 'narrow' | 'short' | 'long',
-                ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [12]
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------- date_time_format.js:13:9
+
+Cannot call `Intl.DateTimeFormat` with object literal bound to `options` because string [1] is incompatible with literal
+union [2] in property `year`. [incompatible-call]
+
    date_time_format.js:13:9
     13|   year: '',
-                ^^ [13]
+                ^^ [1]
+
+References:
    <BUILTINS>/intl.js:107:10
    107|   year?: 'numeric' | '2-digit',
-                 ^^^^^^^^^^^^^^^^^^^^^ [14]
+                 ^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------- date_time_format.js:14:10
+
+Cannot call `Intl.DateTimeFormat` with object literal bound to `options` because string [1] is incompatible with literal
+union [2] in property `month`. [incompatible-call]
+
    date_time_format.js:14:10
     14|   month: '',
-                 ^^ [15]
+                 ^^ [1]
+
+References:
    <BUILTINS>/intl.js:108:11
    108|   month?: 'numeric' | '2-digit' | 'narrow' | 'short' | 'long',
-                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [16]
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------- date_time_format.js:15:8
+
+Cannot call `Intl.DateTimeFormat` with object literal bound to `options` because string [1] is incompatible with literal
+union [2] in property `day`. [incompatible-call]
+
    date_time_format.js:15:8
     15|   day: '',
-               ^^ [17]
+               ^^ [1]
+
+References:
    <BUILTINS>/intl.js:109:9
    109|   day?: 'numeric' | '2-digit',
-                ^^^^^^^^^^^^^^^^^^^^^ [18]
+                ^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------- date_time_format.js:16:9
+
+Cannot call `Intl.DateTimeFormat` with object literal bound to `options` because string [1] is incompatible with literal
+union [2] in property `hour`. [incompatible-call]
+
    date_time_format.js:16:9
     16|   hour: '',
-                ^^ [19]
+                ^^ [1]
+
+References:
    <BUILTINS>/intl.js:110:10
    110|   hour?: 'numeric' | '2-digit',
-                 ^^^^^^^^^^^^^^^^^^^^^ [20]
+                 ^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------- date_time_format.js:17:11
+
+Cannot call `Intl.DateTimeFormat` with object literal bound to `options` because string [1] is incompatible with literal
+union [2] in property `minute`. [incompatible-call]
+
    date_time_format.js:17:11
     17|   minute: 'long',
-                  ^^^^^^ [21]
+                  ^^^^^^ [1]
+
+References:
    <BUILTINS>/intl.js:111:12
    111|   minute?: 'numeric' | '2-digit',
-                   ^^^^^^^^^^^^^^^^^^^^^ [22]
+                   ^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------- date_time_format.js:18:11
+
+Cannot call `Intl.DateTimeFormat` with object literal bound to `options` because string [1] is incompatible with literal
+union [2] in property `second`. [incompatible-call]
+
    date_time_format.js:18:11
     18|   second: 'short',
-                  ^^^^^^^ [23]
+                  ^^^^^^^ [1]
+
+References:
    <BUILTINS>/intl.js:112:12
    112|   second?: 'numeric' | '2-digit',
-                   ^^^^^^^^^^^^^^^^^^^^^ [24]
+                   ^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------- date_time_format.js:19:17
+
+Cannot call `Intl.DateTimeFormat` with object literal bound to `options` because string [1] is incompatible with literal
+union [2] in property `timeZoneName`. [incompatible-call]
+
    date_time_format.js:19:17
     19|   timeZoneName: 'narrow'
-                        ^^^^^^^^ [25]
+                        ^^^^^^^^ [1]
+
+References:
    <BUILTINS>/intl.js:113:18
    113|   timeZoneName?: 'short' | 'long',
-                         ^^^^^^^^^^^^^^^^ [26]
+                         ^^^^^^^^^^^^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------- date_time_format.js:38:5
 
-Cannot resolve name `DateTimeFormat`.
+Cannot resolve name `DateTimeFormat`. [cannot-resolve-name]
 
    38| new DateTimeFormat().select() // incorrect
            ^^^^^^^^^^^^^^
@@ -252,6 +362,7 @@ Cannot resolve name `DateTimeFormat`.
 Error ----------------------------------------------------------------------------------------------------- intl.js:2:19
 
 Cannot assign `Intl.getCanonicalLocales()` to `a` because array type [1] is incompatible with string [2].
+[incompatible-type]
 
    intl.js:2:19
     2| const a: string = Intl.getCanonicalLocales(); // incorrect
@@ -266,13 +377,13 @@ References:
                 ^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- intl.js:2:19
+Error ----------------------------------------------------------------------------------------------------- intl.js:2:24
 
-Cannot call `Intl.getCanonicalLocales` because undefined [1] is not a function.
+Cannot call `Intl.getCanonicalLocales` because undefined [1] is not a function. [not-a-function]
 
-   intl.js:2:19
+   intl.js:2:24
     2| const a: string = Intl.getCanonicalLocales(); // incorrect
-                         ^^^^^^^^^^^^^^^^^^^^^^^^^^
+                              ^^^^^^^^^^^^^^^^^^^
 
 References:
    <BUILTINS>/intl.js:13:25
@@ -282,7 +393,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- intl.js:5:21
 
-Cannot assign `getCanonicalLocales()` to `b` because array type [1] is incompatible with string [2].
+Cannot assign `getCanonicalLocales()` to `b` because array type [1] is incompatible with string [2]. [incompatible-type]
 
    intl.js:5:21
     5|   const b: string = getCanonicalLocales(); // incorrect
@@ -299,7 +410,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- intl.js:6:43
 
-Cannot call `getCanonicalLocales` with `null` bound to `locales` because:
+Cannot call `getCanonicalLocales` with `null` bound to `locales` because: [incompatible-call]
  - Either null [1] is incompatible with string [2].
  - Or null [1] is incompatible with array type [3].
 
@@ -316,35 +427,43 @@ References:
                                          ^^^^^^^^^^^^^ [3]
 
 
-Error ----------------------------------------------------------------------------------------------------- intl.js:7:43
+Error ----------------------------------------------------------------------------------------------------- intl.js:7:45
 
-Cannot call `getCanonicalLocales` with array literal bound to `locales` because:
- - number [1] is incompatible with string [2] in array element.
- - number [3] is incompatible with string [2] in array element.
+Cannot call `getCanonicalLocales` with array literal bound to `locales` because number [1] is incompatible with
+string [2] in array element. [incompatible-call]
 
-   intl.js:7:43
-    7|   const d: string[] = getCanonicalLocales([ 1, 2 ]); // incorrect
-                                                 ^^^^^^^^
-
-References:
    intl.js:7:45
     7|   const d: string[] = getCanonicalLocales([ 1, 2 ]); // incorrect
                                                    ^ [1]
+
+References:
    <BUILTINS>/intl.js:18:35
    18| type Intl$Locales = Intl$Locale | Intl$Locale[]
                                          ^^^^^^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- intl.js:7:48
+
+Cannot call `getCanonicalLocales` with array literal bound to `locales` because number [1] is incompatible with
+string [2] in array element. [incompatible-call]
+
    intl.js:7:48
     7|   const d: string[] = getCanonicalLocales([ 1, 2 ]); // incorrect
-                                                      ^ [3]
+                                                      ^ [1]
+
+References:
+   <BUILTINS>/intl.js:18:35
+   18| type Intl$Locales = Intl$Locale | Intl$Locale[]
+                                         ^^^^^^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- intl.js:13:11
+Error ---------------------------------------------------------------------------------------------------- intl.js:13:16
 
-Cannot get `Intl.Unknown` because property `Unknown` is missing in object type [1].
+Cannot get `Intl.Unknown` because property `Unknown` is missing in object type [1]. [prop-missing]
 
-   intl.js:13:11
+   intl.js:13:16
    13| const h = Intl.Unknown; // incorrect
-                 ^^^^^^^^^^^^
+                      ^^^^^^^
 
 References:
    <BUILTINS>/intl.js:8:19
@@ -363,7 +482,7 @@ References:
 Error -------------------------------------------------------------------------------------------- number_format.js:5:32
 
 Cannot assign `new Intl.NumberFormat()` to `c` because `Intl$NumberFormat` [1] is incompatible with
-`Intl$DateTimeFormat` [2].
+`Intl$DateTimeFormat` [2]. [incompatible-type]
 
    number_format.js:5:32
    5| const c: Intl$DateTimeFormat = new Intl.NumberFormat() // incorrect
@@ -378,6 +497,7 @@ References:
 Error -------------------------------------------------------------------------------------------- number_format.js:6:19
 
 Cannot call `Intl.NumberFormat` with `1` bound to `locales` because number [1] is incompatible with string [2].
+[incompatible-call]
 
    number_format.js:6:19
     6| Intl.NumberFormat(1, {
@@ -389,134 +509,201 @@ References:
                            ^^^^^^^^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------------- number_format.js:6:22
+Error -------------------------------------------------------------------------------------------- number_format.js:7:18
 
-Cannot call `Intl.NumberFormat` with object literal bound to `options` because:
- - string [1] is incompatible with enum [2] in property `localeMatcher`.
- - string [3] is incompatible with enum [4] in property `style`.
- - number [5] is incompatible with string [6] in property `currency`.
- - string [7] is incompatible with enum [8] in property `currencyDisplay`.
- - number [9] is incompatible with boolean [10] in property `useGrouping`.
- - object literal [11] is incompatible with number [12] in property `minimumIntegerDigits`.
- - string [13] is incompatible with number [14] in property `minimumFractionDigits`.
- - null [15] is incompatible with number [16] in property `maximumFractionDigits`.
- - string [17] is incompatible with number [18] in property `minimumSignificantDigits`.
- - null [19] is incompatible with number [20] in property `maximumSignificantDigits`.
+Cannot call `Intl.NumberFormat` with object literal bound to `options` because string [1] is incompatible with literal
+union [2] in property `localeMatcher`. [incompatible-call]
 
-   number_format.js:6:22
-                             v
-     6| Intl.NumberFormat(1, {
-     7|   localeMatcher: 'best',
-     8|   style: 'octal',
-     9|   currency: 123,
-    10|   currencyDisplay: 'sym',
-    11|   useGrouping: 5,
-    12|   minimumIntegerDigits: {},
-    13|   minimumFractionDigits: '',
-    14|   maximumFractionDigits: null,
-    15|   minimumSignificantDigits: '',
-    16|   maximumSignificantDigits: null
-    17| }) // incorrect
-        ^
-
-References:
    number_format.js:7:18
      7|   localeMatcher: 'best',
                          ^^^^^^ [1]
+
+References:
    <BUILTINS>/intl.js:149:19
    149|   localeMatcher?: 'lookup' | 'best fit',
                           ^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------- number_format.js:8:10
+
+Cannot call `Intl.NumberFormat` with object literal bound to `options` because string [1] is incompatible with literal
+union [2] in property `style`. [incompatible-call]
+
    number_format.js:8:10
      8|   style: 'octal',
-                 ^^^^^^^ [3]
+                 ^^^^^^^ [1]
+
+References:
    <BUILTINS>/intl.js:150:11
    150|   style?: 'decimal' | 'currency' | 'percent',
-                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------- number_format.js:9:13
+
+Cannot call `Intl.NumberFormat` with object literal bound to `options` because number [1] is incompatible with
+string [2] in property `currency`. [incompatible-call]
+
    number_format.js:9:13
      9|   currency: 123,
-                    ^^^ [5]
+                    ^^^ [1]
+
+References:
    <BUILTINS>/intl.js:151:14
    151|   currency?: string,
-                     ^^^^^^ [6]
+                     ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------- number_format.js:10:20
+
+Cannot call `Intl.NumberFormat` with object literal bound to `options` because string [1] is incompatible with literal
+union [2] in property `currencyDisplay`. [incompatible-call]
+
    number_format.js:10:20
     10|   currencyDisplay: 'sym',
-                           ^^^^^ [7]
+                           ^^^^^ [1]
+
+References:
    <BUILTINS>/intl.js:152:21
    152|   currencyDisplay?: 'symbol' | 'code' | 'name',
-                            ^^^^^^^^^^^^^^^^^^^^^^^^^^ [8]
+                            ^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------- number_format.js:11:16
+
+Cannot call `Intl.NumberFormat` with object literal bound to `options` because number [1] is incompatible with
+boolean [2] in property `useGrouping`. [incompatible-call]
+
    number_format.js:11:16
     11|   useGrouping: 5,
-                       ^ [9]
+                       ^ [1]
+
+References:
    <BUILTINS>/intl.js:153:17
    153|   useGrouping?: boolean,
-                        ^^^^^^^ [10]
+                        ^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------- number_format.js:12:25
+
+Cannot call `Intl.NumberFormat` with object literal bound to `options` because object literal [1] is incompatible with
+number [2] in property `minimumIntegerDigits`. [incompatible-call]
+
    number_format.js:12:25
     12|   minimumIntegerDigits: {},
-                                ^^ [11]
+                                ^^ [1]
+
+References:
    <BUILTINS>/intl.js:154:26
    154|   minimumIntegerDigits?: number,
-                                 ^^^^^^ [12]
+                                 ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------- number_format.js:13:26
+
+Cannot call `Intl.NumberFormat` with object literal bound to `options` because string [1] is incompatible with
+number [2] in property `minimumFractionDigits`. [incompatible-call]
+
    number_format.js:13:26
     13|   minimumFractionDigits: '',
-                                 ^^ [13]
+                                 ^^ [1]
+
+References:
    <BUILTINS>/intl.js:155:27
    155|   minimumFractionDigits?: number,
-                                  ^^^^^^ [14]
+                                  ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------- number_format.js:14:26
+
+Cannot call `Intl.NumberFormat` with object literal bound to `options` because null [1] is incompatible with number [2]
+in property `maximumFractionDigits`. [incompatible-call]
+
    number_format.js:14:26
     14|   maximumFractionDigits: null,
-                                 ^^^^ [15]
+                                 ^^^^ [1]
+
+References:
    <BUILTINS>/intl.js:156:27
    156|   maximumFractionDigits?: number,
-                                  ^^^^^^ [16]
+                                  ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------- number_format.js:15:29
+
+Cannot call `Intl.NumberFormat` with object literal bound to `options` because string [1] is incompatible with
+number [2] in property `minimumSignificantDigits`. [incompatible-call]
+
    number_format.js:15:29
     15|   minimumSignificantDigits: '',
-                                    ^^ [17]
+                                    ^^ [1]
+
+References:
    <BUILTINS>/intl.js:157:30
    157|   minimumSignificantDigits?: number,
-                                     ^^^^^^ [18]
+                                     ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------- number_format.js:16:29
+
+Cannot call `Intl.NumberFormat` with object literal bound to `options` because null [1] is incompatible with number [2]
+in property `maximumSignificantDigits`. [incompatible-call]
+
    number_format.js:16:29
     16|   maximumSignificantDigits: null
-                                    ^^^^ [19]
+                                    ^^^^ [1]
+
+References:
    <BUILTINS>/intl.js:158:30
    158|   maximumSignificantDigits?: number,
-                                     ^^^^^^ [20]
+                                     ^^^^^^ [2]
 
 
 Error -------------------------------------------------------------------------------------------- number_format.js:32:5
 
-Cannot resolve name `NumberFormat`.
+Cannot resolve name `NumberFormat`. [cannot-resolve-name]
 
    32| new NumberFormat().select() // incorrect
            ^^^^^^^^^^^^
 
 
-Error --------------------------------------------------------------------------------------------- plural_rules.js:3:11
+Error --------------------------------------------------------------------------------------------- plural_rules.js:3:16
 
-Cannot call `Intl.PluralRules` because:
- - null or undefined [1] is not a function.
- - a call signature declaring the expected parameter / return type is missing in statics of `Intl$PluralRules` [2].
+Cannot call `Intl.PluralRules` because null or undefined [1] is not a function. [not-a-function]
 
-   plural_rules.js:3:11
-     3| const a = Intl.PluralRules(); // incorrect
-                  ^^^^^^^^^^^^^^^^^^
+   plural_rules.js:3:16
+    3| const a = Intl.PluralRules(); // incorrect
+                      ^^^^^^^^^^^
 
 References:
    <BUILTINS>/intl.js:12:16
-    12|   PluralRules: ?Class<Intl$PluralRules>,
-                       ^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   12|   PluralRules: ?Class<Intl$PluralRules>,
+                      ^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error --------------------------------------------------------------------------------------------- plural_rules.js:3:16
+
+Cannot call `Intl.PluralRules` because a call signature declaring the expected parameter / return type is missing in
+statics of `Intl$PluralRules` [1]. [prop-missing]
+
+   plural_rules.js:3:16
+     3| const a = Intl.PluralRules(); // incorrect
+                       ^^^^^^^^^^^
+
+References:
    <BUILTINS>/intl.js:162:15
    162| declare class Intl$PluralRules {
-                      ^^^^^^^^^^^^^^^^ [2]
+                      ^^^^^^^^^^^^^^^^ [1]
 
 
 Error --------------------------------------------------------------------------------------------- plural_rules.js:6:13
 
 Cannot call `PluralRules` because a call signature declaring the expected parameter / return type is missing in statics
-of `Intl$PluralRules` [1].
+of `Intl$PluralRules` [1]. [prop-missing]
 
    plural_rules.js:6:13
      6|   const b = PluralRules(); // incorrect
-                    ^^^^^^^^^^^^^
+                    ^^^^^^^^^^^
 
 References:
    <BUILTINS>/intl.js:162:15
@@ -527,6 +714,7 @@ References:
 Error --------------------------------------------------------------------------------------------- plural_rules.js:8:19
 
 Cannot call `PluralRules` with `1` bound to `locales` because number [1] is incompatible with string [2].
+[incompatible-call]
 
    plural_rules.js:8:19
     8|   new PluralRules(1); // incorrect
@@ -538,68 +726,91 @@ References:
                            ^^^^^^^^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------------- plural_rules.js:11:25
+Error -------------------------------------------------------------------------------------------- plural_rules.js:12:20
 
-Cannot call `PluralRules` with object literal bound to `options` because:
- - string [1] is incompatible with enum [2] in property `localeMatcher`.
- - string [3] is incompatible with enum [4] in property `type`.
- - string [5] is incompatible with number [6] in property `minimumIntegerDigits`.
- - `Intl$PluralRules` [7] is incompatible with number [8] in property `minimumSignificantDigits`.
- - string [9] is incompatible with number [10] in property `maximumSignificantDigits`.
+Cannot call `PluralRules` with object literal bound to `options` because string [1] is incompatible with literal
+union [2] in property `localeMatcher`. [incompatible-call]
 
-   plural_rules.js:11:25
-                                v
-    11|   new PluralRules('en', {
-    12|     localeMatcher: 'best one',
-    13|     type: 'count',
-    14|     minimumIntegerDigits: '',
-    15|     minimumFractionDigits: a,
-    16|     maximumFractionDigits: b,
-    17|     minimumSignificantDigits: c,
-    18|     maximumSignificantDigits: ''
-    19|   }); // all kinds of incorrect
-          ^
-
-References:
    plural_rules.js:12:20
     12|     localeMatcher: 'best one',
                            ^^^^^^^^^^ [1]
+
+References:
    <BUILTINS>/intl.js:188:19
    188|   localeMatcher?: 'lookup' | 'best fit',
                           ^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------- plural_rules.js:13:11
+
+Cannot call `PluralRules` with object literal bound to `options` because string [1] is incompatible with literal
+union [2] in property `type`. [incompatible-call]
+
    plural_rules.js:13:11
     13|     type: 'count',
-                  ^^^^^^^ [3]
+                  ^^^^^^^ [1]
+
+References:
    <BUILTINS>/intl.js:189:10
    189|   type?: 'cardinal' | 'ordinal',
-                 ^^^^^^^^^^^^^^^^^^^^^^ [4]
+                 ^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------- plural_rules.js:14:27
+
+Cannot call `PluralRules` with object literal bound to `options` because string [1] is incompatible with number [2] in
+property `minimumIntegerDigits`. [incompatible-call]
+
    plural_rules.js:14:27
     14|     minimumIntegerDigits: '',
-                                  ^^ [5]
+                                  ^^ [1]
+
+References:
    <BUILTINS>/intl.js:190:26
    190|   minimumIntegerDigits?: number,
-                                 ^^^^^^ [6]
+                                 ^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------- plural_rules.js:17:31
+
+Cannot call `PluralRules` with object literal bound to `options` because `Intl$PluralRules` [1] is incompatible with
+number [2] in property `minimumSignificantDigits`. [incompatible-call]
+
+   plural_rules.js:17:31
+    17|     minimumSignificantDigits: c,
+                                      ^
+
+References:
    plural_rules.js:7:13
      7|   const c = new PluralRules(); // correct
-                    ^^^^^^^^^^^^^^^^^ [7]
+                    ^^^^^^^^^^^^^^^^^ [1]
    <BUILTINS>/intl.js:193:30
    193|   minimumSignificantDigits?: number,
-                                     ^^^^^^ [8]
+                                     ^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------- plural_rules.js:18:31
+
+Cannot call `PluralRules` with object literal bound to `options` because string [1] is incompatible with number [2] in
+property `maximumSignificantDigits`. [incompatible-call]
+
    plural_rules.js:18:31
     18|     maximumSignificantDigits: ''
-                                      ^^ [9]
+                                      ^^ [1]
+
+References:
    <BUILTINS>/intl.js:194:30
    194|   maximumSignificantDigits?: number,
-                                     ^^^^^^ [10]
+                                     ^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------- plural_rules.js:30:3
+Error -------------------------------------------------------------------------------------------- plural_rules.js:30:21
 
-Cannot call `new PluralRules().format` because property `format` is missing in `Intl$PluralRules` [1].
+Cannot call `(new PluralRules()).format` because property `format` is missing in `Intl$PluralRules` [1]. [prop-missing]
 
-   plural_rules.js:30:3
+   plural_rules.js:30:21
    30|   new PluralRules().format() // incorrect
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^
+                           ^^^^^^
 
 References:
    plural_rules.js:30:3
@@ -607,13 +818,13 @@ References:
          ^^^^^^^^^^^^^^^^^ [1]
 
 
-Error --------------------------------------------------------------------------------------------- plural_rules.js:31:3
+Error -------------------------------------------------------------------------------------------- plural_rules.js:31:21
 
-Cannot call `new PluralRules().select` because function [1] requires another argument.
+Cannot call `(new PluralRules()).select` because function [1] requires another argument. [incompatible-call]
 
-   plural_rules.js:31:3
+   plural_rules.js:31:21
     31|   new PluralRules().select() // incorrect
-          ^^^^^^^^^^^^^^^^^^^^^^^^^^
+                            ^^^^^^
 
 References:
    <BUILTINS>/intl.js:168:3
@@ -621,14 +832,14 @@ References:
           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
-Error --------------------------------------------------------------------------------------------- plural_rules.js:37:3
+Error -------------------------------------------------------------------------------------------- plural_rules.js:37:15
 
 Cannot call `PluralRules.getCanonicalLocales` because property `getCanonicalLocales` is missing in statics of
-`Intl$PluralRules` [1].
+`Intl$PluralRules` [1]. [prop-missing]
 
-   plural_rules.js:37:3
+   plural_rules.js:37:15
     37|   PluralRules.getCanonicalLocales() // incorrect
-          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                      ^^^^^^^^^^^^^^^^^^^
 
 References:
    <BUILTINS>/intl.js:162:15
@@ -639,7 +850,7 @@ References:
 Error -------------------------------------------------------------------------------------------- plural_rules.js:39:34
 
 Cannot call `PluralRules.supportedLocalesOf` with `1` bound to `locales` because number [1] is incompatible with
-string [2].
+string [2]. [incompatible-call]
 
    plural_rules.js:39:34
    39|   PluralRules.supportedLocalesOf(1) // incorrect

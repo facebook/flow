@@ -1,4 +1,13 @@
-/* @flow */
+/**
+ * Copyright (c) Facebook, Inc. and its affiliates.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ *
+ * @flow
+ */
+
+import type {Flag} from "../command/Base";
 
 import {format} from 'util';
 
@@ -47,7 +56,7 @@ LEGACY_TEST_DIR
 `;
   }
 
-  static getFlags() {
+  static getFlags(): Array<Flag> {
     return [
       commonFlags.bin,
       commonFlags.parallelism,

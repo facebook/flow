@@ -1,0 +1,17 @@
+Error ------------------------------------------------------------------------------------------------------ test.js:9:4
+
+Cannot call `fn` with object literal bound to the first parameter because property `foo` is missing in object type [1]
+but exists in object literal [2]. [prop-missing]
+
+   test.js:9:4
+    9| fn({foo: 42}); // Error: `foo` is not in `{||}`
+          ^^^^^^^^^ [2]
+
+References:
+   merged.js:10:23
+   10| export default fn((t: {|p: number|}) => {});
+                             ^^^^^^^^^^^^^ [1]
+
+
+
+Found 1 error

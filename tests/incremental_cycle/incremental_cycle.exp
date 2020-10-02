@@ -1,44 +1,32 @@
-Error --------------------------------------------------------------------------------------------------------- B.js:5:1
+Error --------------------------------------------------------------------------------------------------------- B.js:6:6
 
-Cannot extend `A` [1] with `B` because `C` [2] is incompatible with string [3] in property `c`.
+Cannot extend `A` [1] with `B` because `C` [2] is incompatible with string [3] in property `c`. [incompatible-extend]
 
-   B.js:5:1
-      v------------------
-   5| class B extends A {
+   B.js:6:6
    6|   c: C;
-   7| }
-      ^
+           ^ [2]
 
 References:
    B.js:5:17
    5| class B extends A {
                       ^ [1]
-   B.js:6:6
-   6|   c: C;
-           ^ [2]
    A.js:5:6
    5|   c: string;
            ^^^^^^ [3]
 
 
-Error --------------------------------------------------------------------------------------------------------- C.js:5:1
+Error --------------------------------------------------------------------------------------------------------- C.js:6:6
 
-Cannot extend `A` [1] with `C` because `B` [2] is incompatible with number [3] in property `b`.
+Cannot extend `A` [1] with `C` because `B` [2] is incompatible with number [3] in property `b`. [incompatible-extend]
 
-   C.js:5:1
-      v------------------
-   5| class C extends A {
+   C.js:6:6
    6|   b: B;
-   7| }
-      ^
+           ^ [2]
 
 References:
    C.js:5:17
    5| class C extends A {
                       ^ [1]
-   C.js:6:6
-   6|   b: B;
-           ^ [2]
    A.js:4:6
    4|   b: number;
            ^^^^^^ [3]
@@ -46,24 +34,18 @@ References:
 
 
 Found 2 errors
-Error --------------------------------------------------------------------------------------------------------- C.js:5:1
+Error --------------------------------------------------------------------------------------------------------- C.js:6:6
 
-Cannot extend `A` [1] with `C` because string [2] is incompatible with number [3] in property `b`.
+Cannot extend `A` [1] with `C` because string [2] is incompatible with number [3] in property `b`. [incompatible-extend]
 
-   C.js:5:1
-      v------------------
-   5| class C extends A {
+   C.js:6:6
    6|   b: B;
-   7| }
-      ^
+           ^ [2]
 
 References:
    C.js:5:17
    5| class C extends A {
                       ^ [1]
-   C.js:6:6
-   6|   b: B;
-           ^ [2]
    A.js:4:6
    4|   b: number;
            ^^^^^^ [3]
@@ -71,24 +53,18 @@ References:
 
 
 Found 1 error
-Error --------------------------------------------------------------------------------------------------------- C.js:5:1
+Error --------------------------------------------------------------------------------------------------------- C.js:6:6
 
-Cannot extend `A` [1] with `C` because string [2] is incompatible with number [3] in property `b`.
+Cannot extend `A` [1] with `C` because string [2] is incompatible with number [3] in property `b`. [incompatible-extend]
 
-   C.js:5:1
-      v------------------
-   5| class C extends A {
+   C.js:6:6
    6|   b: B;
-   7| }
-      ^
+           ^ [2]
 
 References:
    C.js:5:17
    5| class C extends A {
                       ^ [1]
-   C.js:6:6
-   6|   b: B;
-           ^ [2]
    A.js:4:6
    4|   b: number;
            ^^^^^^ [3]
@@ -96,24 +72,18 @@ References:
 
 
 Found 1 error
-Error --------------------------------------------------------------------------------------------------------- C.js:5:1
+Error --------------------------------------------------------------------------------------------------------- C.js:6:6
 
-Cannot extend `A` [1] with `C` because string [2] is incompatible with number [3] in property `b`.
+Cannot extend `A` [1] with `C` because string [2] is incompatible with number [3] in property `b`. [incompatible-extend]
 
-   C.js:5:1
-      v------------------
-   5| class C extends A {
+   C.js:6:6
    6|   b: B;
-   7| }
-      ^
+           ^ [2]
 
 References:
    C.js:5:17
    5| class C extends A {
                       ^ [1]
-   C.js:6:6
-   6|   b: B;
-           ^ [2]
    A.js:4:6
    4|   b: number;
            ^^^^^^ [3]

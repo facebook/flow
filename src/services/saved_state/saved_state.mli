@@ -1,4 +1,4 @@
-(**
+(*
  * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
@@ -6,9 +6,8 @@
  *)
 
 type denormalized_file_data = {
-  package: Package_json.t option;
+  package: (Package_json.t, unit) result option;
   (* Only package.json files have this *)
-  file_sig: File_sig.With_Loc.t;
   resolved_requires: Module_heaps.resolved_requires;
   hash: Xx.hash;
 }
@@ -25,6 +24,11 @@ type unparsed_file_data = {
   unparsed_hash: Xx.hash;
 }
 
+type saved_state_dependency_graph =
+  | Classic_dep_graph of Utils_js.FilenameSet.t Utils_js.FilenameMap.t
+  | Types_first_dep_graph of
+      (Utils_js.FilenameSet.t * Utils_js.FilenameSet.t) Utils_js.FilenameMap.t
+
 type saved_state_data = {
   flowconfig_hash: Xx.hash;
   parsed_heaps: parsed_file_data Utils_js.FilenameMap.t;
@@ -32,8 +36,8 @@ type saved_state_data = {
   ordered_non_flowlib_libs: string list;
   local_errors: Flow_error.ErrorSet.t Utils_js.FilenameMap.t;
   warnings: Flow_error.ErrorSet.t Utils_js.FilenameMap.t;
-  coverage: Coverage_response.file_coverage Utils_js.FilenameMap.t;
-  node_modules_containers: SSet.t;
+  node_modules_containers: SSet.t SMap.t;
+  dependency_graph: saved_state_dependency_graph;
 }
 
 type invalid_reason =

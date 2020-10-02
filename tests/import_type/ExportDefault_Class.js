@@ -7,4 +7,4 @@ class ClassFoo1 {
 }
 
 export default ClassFoo1;
-export var foo1Inst = new ClassFoo1();
+export var foo1Inst: ClassFoo1 = new ClassFoo1();

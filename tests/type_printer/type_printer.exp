@@ -1,0 +1,21 @@
+type BinaryExpression = {
+  _BinaryExpression: void,
+  end: number,
+  innerComments: ?Array<Comment>,
+  leadingComments: ?Array<Comment>,
+  left: Expression,
+  loc: {
+    end: {column: number, line: number, ...},
+    start: {column: number, line: number, ...},
+    ...
+  },
+  operator: BinaryOperator,
+  right: Expression,
+  start: number,
+  trailingComments: ?Array<Comment>,
+  type: "BinaryExpression",
+  ...
+}
+printBinaryExpression.js:15:9,15:24
+BinaryExpression
+printBinaryExpression.js:17:15,17:18

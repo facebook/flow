@@ -6,6 +6,5 @@
 
 [options]
 all=true
-esproposal.class_instance_fields=enable
 no_flowlib=true
-
+types_first=false

@@ -1,4 +1,4 @@
-(**
+(*
  * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
@@ -12,17 +12,17 @@ type loc_patch = (Loc.t * string) list
 val show_patch : patch -> string
 
 val mk_loc_patch_ast_differ :
-  Flow_ast_differ.node Flow_ast_differ.change list -> (Loc.t, Loc.t) Flow_ast.program -> loc_patch
+  ?opts:Js_layout_generator.opts -> Flow_ast_differ.node Flow_ast_differ.change list -> loc_patch
 
 val mk_patch_ast_differ :
+  ?opts:Js_layout_generator.opts ->
   Flow_ast_differ.node Flow_ast_differ.change list ->
-  (Loc.t, Loc.t) Flow_ast.program ->
   string ->
   patch
 
 val mk_patch_ast_differ_unsafe :
+  ?opts:Js_layout_generator.opts ->
   Flow_ast_differ.node Flow_ast_differ.change list ->
-  (Loc.t, Loc.t) Flow_ast.program ->
   File_input.t ->
   patch
 

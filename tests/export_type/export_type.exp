@@ -1,6 +1,6 @@
 Error ------------------------------------------------------------------------------------------------ importer.js:11:23
 
-Cannot assign `'asdf'` to `b` because string [1] is incompatible with number [2].
+Cannot assign `'asdf'` to `b` because string [1] is incompatible with number [2]. [incompatible-type]
 
    importer.js:11:23
    11| var b: inlinedType1 = 'asdf'; // Error: string ~> number
@@ -14,7 +14,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ importer.js:14:26
 
-Cannot assign `'asdf'` to `d` because string [1] is incompatible with number [2].
+Cannot assign `'asdf'` to `d` because string [1] is incompatible with number [2]. [incompatible-type]
 
    importer.js:14:26
    14| var d: standaloneType1 = 'asdf'; // Error: string ~> number
@@ -28,7 +28,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ importer.js:17:18
 
-Cannot assign `'asdf'` to `f` because string [1] is incompatible with number [2].
+Cannot assign `'asdf'` to `f` because string [1] is incompatible with number [2]. [incompatible-type]
 
    importer.js:17:18
    17| var f: talias1 = 'asdf'; // Error: string ~> number
@@ -42,7 +42,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ importer.js:20:18
 
-Cannot assign `'asdf'` to `h` because string [1] is incompatible with number [2].
+Cannot assign `'asdf'` to `h` because string [1] is incompatible with number [2]. [incompatible-type]
 
    importer.js:20:18
    20| var h: talias3 = 'asdf'; // Error: string ~> number
@@ -56,7 +56,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ importer.js:24:18
 
-Cannot assign `'asdf'` to `j` because string [1] is incompatible with number [2].
+Cannot assign `'asdf'` to `j` because string [1] is incompatible with number [2]. [incompatible-type]
 
    importer.js:24:18
    24| var j: talias4 = 'asdf'; // Error: string ~> number
@@ -68,35 +68,31 @@ References:
               ^^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------ importer.js:29:15
+Error ------------------------------------------------------------------------------------------------ importer.js:29:22
 
 Cannot assign object literal to `l` because string [1] is incompatible with number [2] in property `prop`.
+[incompatible-type]
 
-   importer.js:29:15
-   29| var l: IFoo = {prop: 'asdf'}; // Error: {prop:string} ~> {prop:number}
-                     ^^^^^^^^^^^^^^
-
-References:
    importer.js:29:22
    29| var l: IFoo = {prop: 'asdf'}; // Error: {prop:string} ~> {prop:number}
                             ^^^^^^ [1]
+
+References:
    types_only.js:15:31
    15| export interface IFoo { prop: number };
                                      ^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------ importer.js:32:16
+Error ------------------------------------------------------------------------------------------------ importer.js:32:23
 
 Cannot assign object literal to `n` because number [1] is incompatible with string [2] in property `prop`.
+[incompatible-type]
 
-   importer.js:32:16
-   32| var n: IFoo2 = {prop: 42}; // Error: {prop:number} ~> {prop:string}
-                      ^^^^^^^^^^
-
-References:
    importer.js:32:23
    32| var n: IFoo2 = {prop: 42}; // Error: {prop:number} ~> {prop:string}
                              ^^ [1]
+
+References:
    types_only2.js:5:32
     5| export interface IFoo2 { prop: string };
                                       ^^^^^^ [2]
@@ -104,7 +100,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- importer.js:41:5
 
-Cannot reference type `ClsType` [1] from a value position.
+Cannot reference type `ClsType` [1] from a value position. [type-as-value]
 
    importer.js:41:5
    41| new ClsType();
@@ -118,7 +114,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- importer.js:43:2
 
-Cannot cast `5` to `ClsType` because number [1] is incompatible with `Cls` [2].
+Cannot cast `5` to `ClsType` because number [1] is incompatible with `Cls` [2]. [incompatible-cast]
 
    importer.js:43:2
    43| (5: ClsType);
@@ -132,7 +128,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- types_only.js:5:23
 
-Cannot assign `'asdf'` to `b` because string [1] is incompatible with number [2].
+Cannot assign `'asdf'` to `b` because string [1] is incompatible with number [2]. [incompatible-type]
 
    types_only.js:5:23
    5| var b: inlinedType1 = 'asdf'; // Error: string ~> number
@@ -144,9 +140,18 @@ References:
              ^^^^^^^^^^^^ [2]
 
 
+Error ----------------------------------------------------------------------------------------------- types_only.js:10:6
+
+Cannot build a typed interface for this module. You should annotate the exports of this module with types.
+`standaloneType2` is not a value. [signature-verification-failure]
+
+   10| type standaloneType2 = number;
+            ^^^^^^^^^^^^^^^
+
+
 Error ----------------------------------------------------------------------------------------------- types_only.js:11:9
 
-Cannot reference type `standaloneType2` [1] from a value position.
+Cannot reference type `standaloneType2` [1] from a value position. [type-as-value]
 
    types_only.js:11:9
    11| export {standaloneType2}; // Error: Missing `type` keyword
@@ -160,19 +165,28 @@ References:
 
 Error ----------------------------------------------------------------------------------- values_as_type_exports.js:4:14
 
-Cannot export the value `num` as a type.
+Cannot export the value `num` as a type. [export-value-as-type]
 
    4| export type {num};
                    ^^^
 
 
+Error ----------------------------------------------------------------------------------- values_as_type_exports.js:6:10
+
+Cannot build a typed interface for this module. You should annotate the exports of this module with types. `fun` is not
+a type. [signature-verification-failure]
+
+   6| function fun(): void {}
+               ^^^
+
+
 Error ----------------------------------------------------------------------------------- values_as_type_exports.js:7:14
 
-Cannot export the value `fun` as a type.
+Cannot export the value `fun` as a type. [export-value-as-type]
 
    7| export type {fun}
                    ^^^
 
 
 
-Found 13 errors
+Found 15 errors

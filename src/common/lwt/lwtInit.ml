@@ -1,4 +1,4 @@
-(**
+(*
  * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
@@ -101,7 +101,7 @@ class unix_select =
            * than FD_SETSIZE (which is probably 1024). select() stops working for large fds like this
            *)
           let string_of_fd fd = string_of_int (Obj.magic fd : int) in
-          let string_of_fds fds = String.concat ";" (Core_list.map ~f:string_of_fd fds) in
+          let string_of_fds fds = String.concat ";" (Base.List.map ~f:string_of_fd fds) in
           let params = spf "[%s] [%s] []" (string_of_fds fds_r) (string_of_fds fds_w) in
           raise (Unix.Unix_error (Unix.EINVAL, "select", params))
       in
@@ -119,8 +119,16 @@ let set_engine () =
   else
     Lwt_engine.set (new unix_select)
 
+exception WrappedException of Exception.t
+
 (* See comment on unix_select *)
 
 let run_lwt f =
   set_engine ();
-  Lwt_main.run (f ())
+  try
+    Lwt_main.run
+      (try%lwt f ()
+       with exn ->
+         let exn = Exception.wrap exn in
+         raise (WrappedException exn))
+  with WrappedException exn -> Exception.reraise exn

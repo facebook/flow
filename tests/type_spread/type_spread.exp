@@ -1,139 +1,142 @@
-Error ------------------------------------------------------------------------------------------------ all_cases.js:5:27
+Error ------------------------------------------------------------------------------------------------ all_cases.js:5:10
 
-Cannot determine a type for `B` [1]. `A` [2] cannot be spread because interfaces do not track the own-ness of their
-properties. Can you use an object type instead?
+Flow cannot determine a type for `B` [1]. `A` [2] cannot be spread because interfaces do not track the own-ness of their
+properties. Try using an object type instead. [cannot-spread-interface]
 
-   all_cases.js:5:27
-   5| type B = {bar: number, ...A}; // Error
-                                ^ [2]
-
-References:
    all_cases.js:5:10
    5| type B = {bar: number, ...A}; // Error
                ^^^^^^^^^^^^^^^^^^^ [1]
 
-
-Error ----------------------------------------------------------------------------------------------- all_cases.js:10:26
-
-Cannot determine a type for `E` [1]. `D` [2] cannot be spread because the indexer string [3] may overwrite properties
-with explicit keys in a way that Flow cannot track. Can you spread `D` [2] first or remove the indexer?
-
-   all_cases.js:10:26
-   10| type E = {foo:number, ...D}; // Error
+References:
+   all_cases.js:5:27
+   5| type B = {bar: number, ...A}; // Error
                                 ^ [2]
 
-References:
+
+Error ----------------------------------------------------------------------------------------------- all_cases.js:10:10
+
+Flow cannot determine a type for `E` [1]. `D` [2] cannot be spread because the indexer string [3] may overwrite
+properties with explicit keys in a way that Flow cannot track. Try spreading `D` [2] first or remove the indexer.
+[cannot-spread-indexer]
+
    all_cases.js:10:10
    10| type E = {foo:number, ...D}; // Error
                 ^^^^^^^^^^^^^^^^^^ [1]
+
+References:
+   all_cases.js:10:26
+   10| type E = {foo:number, ...D}; // Error
+                                ^ [2]
    all_cases.js:9:12
     9| type D = {[string]: number};
                   ^^^^^^ [3]
 
 
-Error ----------------------------------------------------------------------------------------------- all_cases.js:85:15
+Error ----------------------------------------------------------------------------------------------- all_cases.js:85:11
 
-Cannot determine a type for `C7` [1]. `A7` [2] has an indexer, so it may contain `p` with a type that conflicts with
-`p`'s definition in `B7` [3]. Can you remove the indexer in `A7` [2] or make `p` a required property?
+Flow cannot determine a type for `C7` [1]. `A7` [2] has an indexer, so it may contain `p` with a type that conflicts
+with `p`'s definition in `B7` [3]. Try removing the indexer in `A7` [2] or make `p` a required property.
+[cannot-spread-indexer]
 
-   all_cases.js:85:15
-   85| type C7 = {...A7, ...B7}; // Error, A7 has an indexer and p? is optional
-                     ^^ [2]
-
-References:
    all_cases.js:85:11
    85| type C7 = {...A7, ...B7}; // Error, A7 has an indexer and p? is optional
                  ^^^^^^^^^^^^^^ [1]
+
+References:
+   all_cases.js:85:15
+   85| type C7 = {...A7, ...B7}; // Error, A7 has an indexer and p? is optional
+                     ^^ [2]
    all_cases.js:85:22
    85| type C7 = {...A7, ...B7}; // Error, A7 has an indexer and p? is optional
                             ^^ [3]
 
 
-Error ---------------------------------------------------------------------------------------------- all_cases.js:175:16
+Error ---------------------------------------------------------------------------------------------- all_cases.js:175:12
 
-Cannot determine a type for `C15` [1]. `A15` [2] has an indexer, so it may contain `p` with a type that conflicts with
-`p`'s definition in `B15` [3]. Can you remove the indexer in `A15` [2] or make `p` a required property?
+Flow cannot determine a type for `C15` [1]. `A15` [2] has an indexer, so it may contain `p` with a type that conflicts
+with `p`'s definition in `B15` [3]. Try removing the indexer in `A15` [2] or make `p` a required property.
+[cannot-spread-indexer]
 
-   all_cases.js:175:16
-   175| type C15 = {...A15, ...B15}; // Error, A15 has an indexer and p? is optional
-                       ^^^ [2]
-
-References:
    all_cases.js:175:12
    175| type C15 = {...A15, ...B15}; // Error, A15 has an indexer and p? is optional
                    ^^^^^^^^^^^^^^^^ [1]
+
+References:
+   all_cases.js:175:16
+   175| type C15 = {...A15, ...B15}; // Error, A15 has an indexer and p? is optional
+                       ^^^ [2]
    all_cases.js:175:24
    175| type C15 = {...A15, ...B15}; // Error, A15 has an indexer and p? is optional
                                ^^^ [3]
 
 
-Error ---------------------------------------------------------------------------------------------- all_cases.js:186:16
+Error ---------------------------------------------------------------------------------------------- all_cases.js:186:12
 
-Cannot determine a type for `C16` [1]. `A16` [2] is inexact, so it may contain `p` with a type that conflicts with `p`'s
-definition in `B16` [3]. Can you make `A16` [2] exact?
+Flow cannot determine a type for `C16` [1]. `A16` [2] is inexact, so it may contain `p` with a type that conflicts with
+`p`'s definition in `B16` [3]. Try making `A16` [2] exact. [cannot-spread-inexact]
 
-   all_cases.js:186:16
-   186| type C16 = {...A16, ...B16}; // Error, A16 might include p with an unknown type
-                       ^^^ [2]
-
-References:
    all_cases.js:186:12
    186| type C16 = {...A16, ...B16}; // Error, A16 might include p with an unknown type
                    ^^^^^^^^^^^^^^^^ [1]
+
+References:
+   all_cases.js:186:16
+   186| type C16 = {...A16, ...B16}; // Error, A16 might include p with an unknown type
+                       ^^^ [2]
    all_cases.js:186:24
    186| type C16 = {...A16, ...B16}; // Error, A16 might include p with an unknown type
                                ^^^ [3]
 
 
-Error ---------------------------------------------------------------------------------------------- all_cases.js:219:24
+Error ---------------------------------------------------------------------------------------------- all_cases.js:219:12
 
-Cannot determine a type for `C19` [1]. `B19` [2] is inexact, so it may contain `p` with a type that conflicts with `p`'s
-definition in `A19` [3]. Can you make `B19` [2] exact?
+Flow cannot determine a type for `C19` [1]. `B19` [2] is inexact, so it may contain `p` with a type that conflicts with
+`p`'s definition in `A19` [3]. Try making `B19` [2] exact. [cannot-spread-inexact]
 
-   all_cases.js:219:24
-   219| type C19 = {...A19, ...B19}; // Error
-                               ^^^ [2]
-
-References:
    all_cases.js:219:12
    219| type C19 = {...A19, ...B19}; // Error
                    ^^^^^^^^^^^^^^^^ [1]
+
+References:
+   all_cases.js:219:24
+   219| type C19 = {...A19, ...B19}; // Error
+                               ^^^ [2]
    all_cases.js:219:16
    219| type C19 = {...A19, ...B19}; // Error
                        ^^^ [3]
 
 
-Error ---------------------------------------------------------------------------------------------- all_cases.js:253:24
+Error ---------------------------------------------------------------------------------------------- all_cases.js:253:12
 
-Cannot determine a type for `C22` [1]. `B22` [2] is inexact, so it may contain `p` with a type that conflicts with `p`'s
-definition in `A22` [3]. Can you make `B22` [2] exact?
+Flow cannot determine a type for `C22` [1]. `B22` [2] is inexact, so it may contain `p` with a type that conflicts with
+`p`'s definition in `A22` [3]. Try making `B22` [2] exact. [cannot-spread-inexact]
 
-   all_cases.js:253:24
-   253| type C22 = {...A22, ...B22}; // Error
-                               ^^^ [2]
-
-References:
    all_cases.js:253:12
    253| type C22 = {...A22, ...B22}; // Error
                    ^^^^^^^^^^^^^^^^ [1]
+
+References:
+   all_cases.js:253:24
+   253| type C22 = {...A22, ...B22}; // Error
+                               ^^^ [2]
    all_cases.js:253:16
    253| type C22 = {...A22, ...B22}; // Error
                        ^^^ [3]
 
 
-Error ---------------------------------------------------------------------------------------------- all_cases.js:265:24
+Error ---------------------------------------------------------------------------------------------- all_cases.js:265:12
 
-Cannot determine a type for `C23` [1]. `B23` [2] is inexact and may have a property key that conflicts with string [3]
-or a property value that conflicts with number [4]. Can you make `B23` [2] exact?
+Flow cannot determine a type for `C23` [1]. `B23` [2] is inexact and may have a property key that conflicts with
+string [3] or a property value that conflicts with number [4]. Try making `B23` [2] exact. [cannot-spread-inexact]
 
-   all_cases.js:265:24
-   265| type C23 = {...A23, ...B23}; // Error inexact B23 may have properties that conflict with A23's indexer
-                               ^^^ [2]
-
-References:
    all_cases.js:265:12
    265| type C23 = {...A23, ...B23}; // Error inexact B23 may have properties that conflict with A23's indexer
                    ^^^^^^^^^^^^^^^^ [1]
+
+References:
+   all_cases.js:265:24
+   265| type C23 = {...A23, ...B23}; // Error inexact B23 may have properties that conflict with A23's indexer
+                               ^^^ [2]
    all_cases.js:263:16
    263| type A23 = {| [string]: number |};
                        ^^^^^^ [3]
@@ -142,55 +145,55 @@ References:
                                 ^^^^^^ [4]
 
 
-Error ---------------------------------------------------------------------------------------------- all_cases.js:311:24
+Error ---------------------------------------------------------------------------------------------- all_cases.js:311:12
 
-Cannot determine a type for `C27` [1]. `B27` [2] is inexact, so it may contain `p` with a type that conflicts with `p`'s
-definition in `A27` [3]. Can you make `B27` [2] exact?
+Flow cannot determine a type for `C27` [1]. `B27` [2] is inexact, so it may contain `p` with a type that conflicts with
+`p`'s definition in `A27` [3]. Try making `B27` [2] exact. [cannot-spread-inexact]
 
-   all_cases.js:311:24
-   311| type C27 = {...A27, ...B27}; // Error
-                               ^^^ [2]
-
-References:
    all_cases.js:311:12
    311| type C27 = {...A27, ...B27}; // Error
                    ^^^^^^^^^^^^^^^^ [1]
+
+References:
+   all_cases.js:311:24
+   311| type C27 = {...A27, ...B27}; // Error
+                               ^^^ [2]
    all_cases.js:311:16
    311| type C27 = {...A27, ...B27}; // Error
                        ^^^ [3]
 
 
-Error ---------------------------------------------------------------------------------------------- all_cases.js:345:24
+Error ---------------------------------------------------------------------------------------------- all_cases.js:345:12
 
-Cannot determine a type for `C30` [1]. `B30` [2] is inexact, so it may contain `p` with a type that conflicts with `p`'s
-definition in `A30` [3]. Can you make `B30` [2] exact?
+Flow cannot determine a type for `C30` [1]. `B30` [2] is inexact, so it may contain `p` with a type that conflicts with
+`p`'s definition in `A30` [3]. Try making `B30` [2] exact. [cannot-spread-inexact]
 
-   all_cases.js:345:24
-   345| type C30 = {...A30, ...B30}; // Error
-                               ^^^ [2]
-
-References:
    all_cases.js:345:12
    345| type C30 = {...A30, ...B30}; // Error
                    ^^^^^^^^^^^^^^^^ [1]
+
+References:
+   all_cases.js:345:24
+   345| type C30 = {...A30, ...B30}; // Error
+                               ^^^ [2]
    all_cases.js:345:16
    345| type C30 = {...A30, ...B30}; // Error
                        ^^^ [3]
 
 
-Error ---------------------------------------------------------------------------------------------- all_cases.js:357:24
+Error ---------------------------------------------------------------------------------------------- all_cases.js:357:12
 
-Cannot determine a type for `C31` [1]. `B31` [2] is inexact and may have a property key that conflicts with string [3]
-or a property value that conflicts with number [4]. Can you make `B31` [2] exact?
+Flow cannot determine a type for `C31` [1]. `B31` [2] is inexact and may have a property key that conflicts with
+string [3] or a property value that conflicts with number [4]. Try making `B31` [2] exact. [cannot-spread-inexact]
 
-   all_cases.js:357:24
-   357| type C31 = {...A31, ...B31}; // Error B31 may have props that conflict with A31's indexer
-                               ^^^ [2]
-
-References:
    all_cases.js:357:12
    357| type C31 = {...A31, ...B31}; // Error B31 may have props that conflict with A31's indexer
                    ^^^^^^^^^^^^^^^^ [1]
+
+References:
+   all_cases.js:357:24
+   357| type C31 = {...A31, ...B31}; // Error B31 may have props that conflict with A31's indexer
+                               ^^^ [2]
    all_cases.js:355:15
    355| type A31 = { [string]: number };
                       ^^^^^^ [3]
@@ -199,23 +202,256 @@ References:
                                ^^^^^^ [4]
 
 
-Error ---------------------------------------------------------------------------------------------- all_cases.js:369:16
+Error ---------------------------------------------------------------------------------------------- all_cases.js:369:12
 
-Cannot determine a type for `C32` [1]. `A32` [2] is inexact, so it may contain `p` with a type that conflicts with `p`'s
-definition in `B32` [3]. Can you make `A32` [2] exact?
+Flow cannot determine a type for `C32` [1]. `A32` [2] is inexact, so it may contain `p` with a type that conflicts with
+`p`'s definition in `B32` [3]. Try making `A32` [2] exact. [cannot-spread-inexact]
 
-   all_cases.js:369:16
-   369| type C32 = {...A32, ...B32}; // Error, unknown type for p
-                       ^^^ [2]
-
-References:
    all_cases.js:369:12
    369| type C32 = {...A32, ...B32}; // Error, unknown type for p
                    ^^^^^^^^^^^^^^^^ [1]
+
+References:
+   all_cases.js:369:16
+   369| type C32 = {...A32, ...B32}; // Error, unknown type for p
+                       ^^^ [2]
    all_cases.js:369:24
    369| type C32 = {...A32, ...B32}; // Error, unknown type for p
                                ^^^ [3]
 
 
+Error ------------------------------------------------------------------------------------------- error_messages.js:4:16
 
-Found 12 errors
+Flow cannot determine a type for object type [1]. object type [2] is inexact, so it may contain `b` with a type that
+conflicts with `b`'s definition in object type [3]. Try making object type [2] exact. [cannot-spread-inexact]
+
+   error_messages.js:4:16
+   4| declare var w: {...{a: number}, ...{| c: number |}, ...{| b?: number |}}; // Error
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+References:
+   error_messages.js:4:20
+   4| declare var w: {...{a: number}, ...{| c: number |}, ...{| b?: number |}}; // Error
+                         ^^^^^^^^^^^ [2]
+   error_messages.js:4:56
+   4| declare var w: {...{a: number}, ...{| c: number |}, ...{| b?: number |}}; // Error
+                                                             ^^^^^^^^^^^^^^^^ [3]
+
+
+Error ------------------------------------------------------------------------------------------- error_messages.js:8:16
+
+Flow cannot determine a type for object type [1]. object type [2] is inexact, so it may contain `b` with a type that
+conflicts with `b`'s definition in object type [3]. Try making object type [2] exact. [cannot-spread-inexact]
+
+   error_messages.js:8:16
+   8| declare var x: {...{a: number}, c: number, ...{| b?: number |}}; // Error
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+References:
+   error_messages.js:8:20
+   8| declare var x: {...{a: number}, c: number, ...{| b?: number |}}; // Error
+                         ^^^^^^^^^^^ [2]
+   error_messages.js:8:47
+   8| declare var x: {...{a: number}, c: number, ...{| b?: number |}}; // Error
+                                                    ^^^^^^^^^^^^^^^^ [3]
+
+
+Error ------------------------------------------------------------------------------------------ error_messages.js:12:16
+
+Flow cannot determine a type for object type [1]. object type [2] is inexact, so it may contain `b` with a type that
+conflicts with `b`'s definition in object type [3]. Try making object type [2] exact. [cannot-spread-inexact]
+
+   error_messages.js:12:16
+   12| declare var y: {...{| a: number |}, ...{a: number}, ...{| b?: number |}}; // Error
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+References:
+   error_messages.js:12:40
+   12| declare var y: {...{| a: number |}, ...{a: number}, ...{| b?: number |}}; // Error
+                                              ^^^^^^^^^^^ [2]
+   error_messages.js:12:56
+   12| declare var y: {...{| a: number |}, ...{a: number}, ...{| b?: number |}}; // Error
+                                                              ^^^^^^^^^^^^^^^^ [3]
+
+
+Error ------------------------------------------------------------------------------------------ error_messages.js:16:16
+
+Flow cannot determine a type for object type [1]. object type [2] is inexact, so it may contain `b` with a type that
+conflicts with `b`'s definition in object type [3]. Try making object type [2] exact. [cannot-spread-inexact]
+
+   error_messages.js:16:16
+   16| declare var z: {...{a: number}, ...{a: string}, ...{| b?: number |}}; // Error
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+References:
+   error_messages.js:16:36
+   16| declare var z: {...{a: number}, ...{a: string}, ...{| b?: number |}}; // Error
+                                          ^^^^^^^^^^^ [2]
+   error_messages.js:16:52
+   16| declare var z: {...{a: number}, ...{a: string}, ...{| b?: number |}}; // Error
+                                                          ^^^^^^^^^^^^^^^^ [3]
+
+
+Error ------------------------------------------------------------------------------------------ error_messages.js:22:16
+
+Flow cannot determine a type for object type [1]. object type [2] is inexact, so it may contain `b` with a type that
+conflicts with `b`'s definition in object type [3]. Try making object type [2] exact. [cannot-spread-inexact]
+
+   error_messages.js:22:16
+   22| declare var a: {...{a: number}, ...{| c: number |}, ...{| b?: number |}}; // Error
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+References:
+   error_messages.js:22:20
+   22| declare var a: {...{a: number}, ...{| c: number |}, ...{| b?: number |}}; // Error
+                          ^^^^^^^^^^^ [2]
+   error_messages.js:22:56
+   22| declare var a: {...{a: number}, ...{| c: number |}, ...{| b?: number |}}; // Error
+                                                              ^^^^^^^^^^^^^^^^ [3]
+
+
+Error ------------------------------------------------------------------------------------------ error_messages.js:26:16
+
+Flow cannot determine a type for object type [1]. object type [2] is inexact, so it may contain `b` with a type that
+conflicts with `b`'s definition in object type [3]. Try making object type [2] exact. [cannot-spread-inexact]
+
+   error_messages.js:26:16
+   26| declare var b: {a: number, ...{a: number}, c: number, ...{| b?: number |}}; // Error
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+References:
+   error_messages.js:26:31
+   26| declare var b: {a: number, ...{a: number}, c: number, ...{| b?: number |}}; // Error
+                                     ^^^^^^^^^^^ [2]
+   error_messages.js:26:58
+   26| declare var b: {a: number, ...{a: number}, c: number, ...{| b?: number |}}; // Error
+                                                                ^^^^^^^^^^^^^^^^ [3]
+
+
+Error ------------------------------------------------------------------------------------------ error_messages.js:30:16
+
+Flow cannot determine a type for object type [1]. object type [2] is inexact, so it may contain `b` with a type that
+conflicts with `b`'s definition in object type [3]. Try making object type [2] exact. [cannot-spread-inexact]
+
+   error_messages.js:30:16
+   30| declare var c: {a: number, ...{| a: number |}, ...{a: number}, ...{| b?: number |}}; // Error
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+References:
+   error_messages.js:30:51
+   30| declare var c: {a: number, ...{| a: number |}, ...{a: number}, ...{| b?: number |}}; // Error
+                                                         ^^^^^^^^^^^ [2]
+   error_messages.js:30:67
+   30| declare var c: {a: number, ...{| a: number |}, ...{a: number}, ...{| b?: number |}}; // Error
+                                                                         ^^^^^^^^^^^^^^^^ [3]
+
+
+Error ------------------------------------------------------------------------------------------ error_messages.js:34:16
+
+Flow cannot determine a type for object type [1]. object type [2] is inexact, so it may contain `b` with a type that
+conflicts with `b`'s definition in object type [3]. Try making object type [2] exact. [cannot-spread-inexact]
+
+   error_messages.js:34:16
+   34| declare var d: {a: number, ...{a: number}, ...{a: string}, ...{| b?: number |}}; // Error
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+References:
+   error_messages.js:34:47
+   34| declare var d: {a: number, ...{a: number}, ...{a: string}, ...{| b?: number |}}; // Error
+                                                     ^^^^^^^^^^^ [2]
+   error_messages.js:34:63
+   34| declare var d: {a: number, ...{a: number}, ...{a: string}, ...{| b?: number |}}; // Error
+                                                                     ^^^^^^^^^^^^^^^^ [3]
+
+
+Error ------------------------------------------------------------------------------------------ error_messages.js:40:17
+
+Flow cannot determine a type for object type [1]. `B` [2] is inexact, so it may contain `c` with a type that conflicts
+with `c`'s definition in object type [1]. Try making `B` [2] exact. [cannot-spread-inexact]
+
+   error_messages.js:40:17
+   40| declare var x2: {a: number, ...A, c: number, ...B}; // Error
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+References:
+   error_messages.js:40:49
+   40| declare var x2: {a: number, ...A, c: number, ...B}; // Error
+                                                       ^ [2]
+
+
+Error ------------------------------------------------------------------------------------------ error_messages.js:46:17
+
+Flow cannot determine a type for object type [1]. `C` [2] is inexact, so it may contain `b` with a type that conflicts
+with `b`'s definition in `D` [3]. Try making `C` [2] exact. [cannot-spread-inexact]
+
+   error_messages.js:46:17
+   46| declare var y2: {...C, c: number, d: number, ...D}; // Error
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+References:
+   error_messages.js:46:21
+   46| declare var y2: {...C, c: number, d: number, ...D}; // Error
+                           ^ [2]
+   error_messages.js:46:49
+   46| declare var y2: {...C, c: number, d: number, ...D}; // Error
+                                                       ^ [3]
+
+
+Error ------------------------------------------------------------------------------------------ error_messages.js:50:17
+
+Flow cannot determine a type for object type [1]. object type [2] is inexact, so it may contain `d` with a type that
+conflicts with `d`'s definition in object type [1]. Try making object type [2] exact. [cannot-spread-inexact]
+
+   error_messages.js:50:17
+                       v---------------------------------------------
+   50| declare var x3: { // Error, but message could use improvement.
+   51|   ...{a: number},
+   52|   d: number,
+   53|   ...{b: number},
+   54|   e: number,
+   55|   ...{c: number},
+   56|   f: number,
+   57| };
+       ^ [1]
+
+References:
+   error_messages.js:53:6
+   53|   ...{b: number},
+            ^^^^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------ error_messages.js:60:17
+
+Flow cannot determine a type for object type [1]. `B` [2] is inexact, so it may contain `b` with a type that conflicts
+with `b`'s definition in `A` [3]. Try making `B` [2] exact. [cannot-spread-inexact]
+
+   error_messages.js:60:17
+   60| declare var x4: {...A, ...B, ...C, ...D}; // Error, representative of common case
+                       ^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+References:
+   error_messages.js:60:27
+   60| declare var x4: {...A, ...B, ...C, ...D}; // Error, representative of common case
+                                 ^ [2]
+   error_messages.js:60:21
+   60| declare var x4: {...A, ...B, ...C, ...D}; // Error, representative of common case
+                           ^ [3]
+
+
+Error ------------------------------------------------------------------------------------------ error_messages.js:63:17
+
+Flow cannot determine a type for object type [1]. `B` [2] is inexact, so it may contain `foo` with a type that conflicts
+with `foo`'s definition in object type [1]. Try making `B` [2] exact. [cannot-spread-inexact]
+
+   error_messages.js:63:17
+   63| declare var x5: {foo: number, bar: number, ...B}; // Error, representative of common case
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+References:
+   error_messages.js:63:47
+   63| declare var x5: {foo: number, bar: number, ...B}; // Error, representative of common case
+                                                     ^ [2]
+
+
+
+Found 25 errors

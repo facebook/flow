@@ -1,4 +1,4 @@
-(**
+(*
  * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
@@ -20,27 +20,26 @@ let metadata =
     strict_local = false;
     include_suppressions = false;
     (* global *)
+    automatic_require_default = false;
+    babel_loose_array_spread = false;
     max_literal_length = 100;
     enable_const_params = false;
     enable_enums = true;
     enforce_strict_call_arity = true;
-    esproposal_class_static_fields = Options.ESPROPOSAL_ENABLE;
-    esproposal_class_instance_fields = Options.ESPROPOSAL_ENABLE;
-    esproposal_decorators = Options.ESPROPOSAL_WARN;
-    esproposal_export_star_as = Options.ESPROPOSAL_ENABLE;
-    esproposal_optional_chaining = Options.ESPROPOSAL_ENABLE;
-    esproposal_nullish_coalescing = Options.ESPROPOSAL_ENABLE;
     exact_by_default = false;
     facebook_fbs = None;
     facebook_fbt = None;
+    facebook_module_interop = false;
     haste_module_ref_prefix = None;
     ignore_non_literal_requires = false;
     max_trace_depth = 0;
     max_workers = 0;
+    react_runtime = Options.ReactRuntimeClassic;
     recursion_limit = 10000;
     root = Path.dummy_path;
+    strict_es6_import_export = false;
+    strict_es6_import_export_excludes = [];
     strip_root = true;
-    suppress_comments = [];
     suppress_types = SSet.empty;
     default_lib_dir = None;
     trust_mode = Options.NoTrust;
@@ -68,7 +67,7 @@ let parse_content file content =
     Parser_flow.program_file ~fail:false ~parse_options content (Some file)
   in
   match File_sig.program ~ast ~module_ref_prefix:None with
-  | Ok fsig -> Ok (ast, fsig)
+  | Ok (fsig, _) -> Ok (ast, fsig)
   | Error e -> Error e
 
 (* copied from Type_inference_js *)
@@ -112,26 +111,19 @@ let before_and_after_stmts file_name =
   let file_key = File_key.LibFile file_name in
   match parse_content file_key content with
   | Error e -> Error e
-  | Ok ((_, stmts, _), file_sig) ->
+  | Ok ((_, { Flow_ast.Program.statements = stmts; _ }), file_sig) ->
     let cx =
-      let sig_cx = Context.make_sig () in
-      let aloc_table = Utils_js.FilenameMap.empty in
+      let aloc_tables = Utils_js.FilenameMap.empty in
       let rev_table = lazy (ALoc.make_empty_reverse_table ()) in
-      Context.make
-        sig_cx
-        metadata
-        file_key
-        aloc_table
-        rev_table
-        Files.lib_module_ref
-        Context.Checking
+      let sig_cx = Context.make_sig () in
+      let ccx = Context.make_ccx sig_cx aloc_tables in
+      Context.make ccx metadata file_key rev_table Files.lib_module_ref Context.Checking
     in
     Flow_js.mk_builtins cx;
-    Flow_js.Cache.clear ();
     add_require_tvars cx file_sig;
     let module_scope = Scope.fresh () in
     Env.init_env cx module_scope;
-    let stmts = Core_list.map ~f:Ast_loc_utils.loc_to_aloc_mapper#statement stmts in
+    let stmts = Base.List.map ~f:Ast_loc_utils.loc_to_aloc_mapper#statement stmts in
     let t_stmts =
       try
         Statement.toplevel_decls cx stmts;
@@ -143,7 +135,11 @@ let before_and_after_stmts file_name =
         [
           ( annot,
             Flow_ast.Statement.Expression
-              { Flow_ast.Statement.Expression.expression = t_expr; directive = None } );
+              {
+                Flow_ast.Statement.Expression.expression = t_expr;
+                directive = None;
+                comments = None;
+              } );
         ]
       | e ->
         let e = Exception.wrap e in
@@ -192,9 +188,7 @@ let system_diff ~f prefix =
         Disk.mkdir_p diff_dir;
         let stmts1_file = dump_stmts (prefix ^ "_A.js") stmts1 in
         let stmts2_file = dump_stmts (prefix ^ "_B.js") stmts2 in
-        let out_file =
-          prefix ^ "_diff.txt" |> Path.concat (Path.make diff_dir) |> Path.to_string
-        in
+        let out_file = prefix ^ "_diff.txt" |> Path.concat (Path.make diff_dir) |> Path.to_string in
         let cmd = Utils_js.spf "diff -U7 %s %s > %s" stmts1_file stmts2_file out_file in
         match Sys.command cmd with
         | 0
@@ -220,11 +214,18 @@ let system_diff ~f prefix =
 let pp_diff =
   let aloc_pp fmt x = Loc.pp fmt (ALoc.to_loc_exn x) in
   let string_of_ast stmts =
-    List.map (Flow_ast.Statement.show aloc_pp aloc_pp) stmts |> String.concat "\n"
+    Base.List.map ~f:(Flow_ast.Statement.show aloc_pp aloc_pp) stmts |> String.concat "\n"
   in
   let string_of_src stmts =
     let none_mapper = new loc_none_mapper in
-    let prog = (Loc.none, Core_list.map ~f:none_mapper#statement stmts, []) in
+    let prog =
+      ( Loc.none,
+        {
+          Flow_ast.Program.statements = Base.List.map ~f:none_mapper#statement stmts;
+          comments = None;
+          all_comments = [];
+        } )
+    in
     let layout = Js_layout_generator.program ~preserve_docblock:false ~checksum:None prog in
     layout |> Pretty_printer.print ~source_maps:None |> Source.contents
   in
@@ -251,7 +252,7 @@ let check_structural_equality relative_path file_name stmts1 stmts2 =
     ^ " * restore the produced Typed AST, or\n"
     ^ " * include \""
     ^ relative_path
-    ^ "\" in the blacklist section\n"
+    ^ "\" in the blocklist section\n"
     ^ "   in src/typing/__tests__/typed_ast_test.ml and file a task with the\n"
     ^ "   'flow-typed-ast' tag.\n"
   in
@@ -264,18 +265,18 @@ let test_case relative_path file_name _ =
 
 (* This list includes files for which the produced Typed AST differs in structure
  * from the parsed AST. *)
-let blacklist = SSet.of_list ["invariant_reachability/index.js"]
+let blocklist = SSet.of_list ["invariant_reachability/index.js"; "return/implicit_void.js"]
 
 let tests =
   let relative_test_dir = "flow/tests" in
-  let root = Option.value_exn (Sys_utils.realpath relative_test_dir) in
+  let root = Base.Option.value_exn (Sys_utils.realpath relative_test_dir) in
   let files = CommandUtils.expand_file_list [relative_test_dir] in
   let tests =
     let slash_regex = Str.regexp_string "/" in
     SSet.fold
       (fun file acc ->
         let relative_path = Files.relative_path root file in
-        if SSet.mem relative_path blacklist then
+        if SSet.mem relative_path blocklist then
           acc
         else
           let test_name =

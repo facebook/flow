@@ -1,7 +1,7 @@
 Error --------------------------------------------------------------------------------------------------- cycle_C.js:4:7
 
 Sketchy null check on number [1] which is potentially 0. Perhaps you meant to check for null or undefined [2]?
-(`sketchy-null-number`)
+[sketchy-null-number]
 
    cycle_C.js:4:7
    4|   if (x); /* sketchy because of uses */
@@ -19,7 +19,7 @@ References:
 Error -------------------------------------------------------------------------------------------- fully_across_B.js:4:6
 
 Sketchy null check on string [1] which is potentially an empty string. Perhaps you meant to check for null or
-undefined [2]? (`sketchy-null-string`)
+undefined [2]? [sketchy-null-string]
 
    fully_across_B.js:4:6
    4|   if(x){ /* sketchy because of uses */ }
@@ -37,7 +37,7 @@ References:
 Error ------------------------------------------------------------------------------------------ partial_across_B.js:4:6
 
 Sketchy null check on string [1] which is potentially an empty string. Perhaps you meant to check for null or
-undefined [2]? (`sketchy-null-string`)
+undefined [2]? [sketchy-null-string]
 
    partial_across_B.js:4:6
    4|   if(x){ /* sketchy because of uses */ }
@@ -55,7 +55,7 @@ References:
 Error ------------------------------------------------------------------------------------------ simple_sketchies.js:5:7
 
 Sketchy null check on number [1] which is potentially 0. Perhaps you meant to check for null or undefined [2]?
-(`sketchy-null-number`)
+[sketchy-null-number]
 
    simple_sketchies.js:5:7
    5|   if (x) {/* sketchy */}
@@ -73,7 +73,7 @@ References:
 Error ----------------------------------------------------------------------------------------- simple_sketchies.js:10:7
 
 Sketchy null check on number [1] which is potentially 0. Perhaps you meant to check for null or undefined [2]?
-(`sketchy-null-number`)
+[sketchy-null-number]
 
    simple_sketchies.js:10:7
    10|   if (x) { /* sketchy */ }
@@ -91,7 +91,7 @@ References:
 Error ----------------------------------------------------------------------------------------- simple_sketchies.js:31:7
 
 Sketchy null check on string [1] which is potentially an empty string. Perhaps you meant to check for null or
-undefined [2]? (`sketchy-null-string`)
+undefined [2]? [sketchy-null-string]
 
    simple_sketchies.js:31:7
    31|   if (x) { /* sketchy because of calls */ }
@@ -109,7 +109,7 @@ References:
 Error ----------------------------------------------------------------------------------------- simple_sketchies.js:37:7
 
 Sketchy null check on string [1] which is potentially an empty string. Perhaps you meant to check for null or
-undefined [2]? (`sketchy-null-string`)
+undefined [2]? [sketchy-null-string]
 
    simple_sketchies.js:37:7
    37|   if (x) { /* sketchy because of calls */ }
@@ -127,7 +127,7 @@ References:
 Error ----------------------------------------------------------------------------------------- simple_sketchies.js:47:7
 
 Sketchy null check on number [1] which is potentially 0. Perhaps you meant to check for null or undefined [1]?
-(`sketchy-null-number`)
+[sketchy-null-number]
 
    simple_sketchies.js:47:7
    47|   if (o.p) {/* sketchy */}
@@ -142,7 +142,7 @@ References:
 Error ----------------------------------------------------------------------------------------- simple_sketchies.js:52:7
 
 Sketchy null check on number [1] which is potentially 0. Perhaps you meant to check for null or undefined [2]?
-(`sketchy-null-number`)
+[sketchy-null-number]
 
    simple_sketchies.js:52:7
    52|   if (o.p) {/* sketchy */}
@@ -160,7 +160,7 @@ References:
 Error ----------------------------------------------------------------------------------------- simple_sketchies.js:57:7
 
 Sketchy null check on number [1] which is potentially 0. Perhaps you meant to check for null or undefined [2]?
-(`sketchy-null-number`)
+[sketchy-null-number]
 
    simple_sketchies.js:57:7
    57|   if (o.p) { /* sketchy */ }
@@ -178,7 +178,7 @@ References:
 Error ----------------------------------------------------------------------------------------- simple_sketchies.js:68:7
 
 Sketchy null check on string [1] which is potentially an empty string. Perhaps you meant to check for null or
-undefined [2]? (`sketchy-null-string`)
+undefined [2]? [sketchy-null-string]
 
    simple_sketchies.js:68:7
    68|   if (assignee = x) { /* sketchy */ }
@@ -196,7 +196,7 @@ References:
 Error ---------------------------------------------------------------------------------------- simple_sketchies.js:73:16
 
 Sketchy null check on number [1] which is potentially 0. Perhaps you meant to check for null or undefined [2]?
-(`sketchy-null-number`)
+[sketchy-null-number]
 
    simple_sketchies.js:73:16
    73| var valToUse = value || defaultVal; /* sketchy */
@@ -214,7 +214,7 @@ References:
 Error ---------------------------------------------------------------------------------------- simple_sketchies.js:78:20
 
 Avoid using `&&` to check the value of number [1]. Consider handling falsy values (0 and NaN) by using a conditional to
-choose an explicit default instead. (`sketchy-number-and`)
+choose an explicit default instead. [sketchy-number-and]
 
    simple_sketchies.js:78:20
    78| var sketchyFalse = value && false; /* sketchy */
@@ -229,7 +229,7 @@ References:
 Error ---------------------------------------------------------------------------------------- simple_sketchies.js:78:20
 
 Sketchy null check on number [1] which is potentially 0. Perhaps you meant to check for null or undefined [2]?
-(`sketchy-null-number`)
+[sketchy-null-number]
 
    simple_sketchies.js:78:20
    78| var sketchyFalse = value && false; /* sketchy */
@@ -247,7 +247,7 @@ References:
 Error ---------------------------------------------------------------------------------------- simple_sketchies.js:79:19
 
 Sketchy null check on number [1] which is potentially 0. Perhaps you meant to check for null or undefined [2]?
-(`sketchy-null-number`)
+[sketchy-null-number]
 
    simple_sketchies.js:79:19
    79| var sketchyTrue = value || true; /* sketchy */
@@ -262,5 +262,77 @@ References:
                   ^^^^^^^ [2]
 
 
+Error ----------------------------------------------------------------------------------------- simple_sketchies.js:83:5
 
-Found 15 errors
+Sketchy null check on number [1] which is potentially 0. Perhaps you meant to check for null or undefined [2]?
+[sketchy-null-number]
+
+   simple_sketchies.js:83:5
+   83| if (is && is.a) { }
+           ^^
+
+References:
+   simple_sketchies.js:81:39
+   81| declare var ww: {is?: ?({a: number} | number)};
+                                             ^^^^^^ [1]
+   simple_sketchies.js:81:23
+   81| declare var ww: {is?: ?({a: number} | number)};
+                             ^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------- simple_sketchies.js:83:11
+
+Sketchy null check on number [1] which is potentially 0. Perhaps you meant to check for null or undefined [2]?
+[sketchy-null-number]
+
+   simple_sketchies.js:83:11
+   83| if (is && is.a) { }
+                 ^^^^ [2]
+
+References:
+   simple_sketchies.js:81:29
+   81| declare var ww: {is?: ?({a: number} | number)};
+                                   ^^^^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------- simple_sketchies.js:83:11
+
+Sketchy null check on mixed [1] which is potentially false. Perhaps you meant to check for null or undefined [1]?
+[sketchy-null-mixed]
+
+   83| if (is && is.a) { }
+                 ^^^^ [1]
+
+
+Error ----------------------------------------------------------------------------------------- simple_sketchies.js:86:5
+
+Sketchy null check on mixed [1] which is potentially false. Perhaps you meant to check for null or undefined [1]?
+[sketchy-null-mixed]
+
+   simple_sketchies.js:86:5
+   86| if (hh.a && hh.a.b) { }
+           ^^^^
+
+References:
+   simple_sketchies.js:85:21
+   85| declare var hh: {a: mixed};
+                           ^^^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------- simple_sketchies.js:86:13
+
+Sketchy null check on mixed [1] which is potentially false. Perhaps you meant to check for null or undefined [1]?
+[sketchy-null-mixed]
+
+   simple_sketchies.js:86:13
+   86| if (hh.a && hh.a.b) { }
+                   ^^^^^^
+
+References:
+   simple_sketchies.js:85:21
+   85| declare var hh: {a: mixed};
+                           ^^^^^ [1]
+
+
+
+Found 20 errors

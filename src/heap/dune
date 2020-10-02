@@ -1,0 +1,46 @@
+(library
+  (name heap_libc)
+  (wrapped false)
+  (modules)
+  (c_names
+    hh_assert
+    hh_shared)
+  (c_flags (:standard -I../../src/third-party/lz4))
+  (preprocess (pps ppx_deriving.std visitors.ppx))
+  (libraries
+    utils_core))
+
+(library
+  (name heap_ident)
+  (wrapped false)
+  (modules
+    ident)
+  (libraries
+    collections
+    heap_libc)
+  (preprocess (pps ppx_deriving.std visitors.ppx)))
+
+(library
+  (name heap_shared_mem)
+  (wrapped false)
+  (modules
+    prefix
+    sharedMem
+    value)
+  (preprocess (pps ppx_deriving.std visitors.ppx))
+  (libraries
+    heap_libc
+    logging_common
+    utils_core
+    worker_cancel))
+
+(library
+  (name worker_cancel)
+  (wrapped false)
+  (modules
+    workerCancel)
+  (preprocess (pps ppx_deriving.std visitors.ppx))
+  (libraries
+    heap_libc
+    utils_core))
+

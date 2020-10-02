@@ -1,8 +1,32 @@
 Error ------------------------------------------------------------------------------------------------------ Bad.js:17:3
 
-Cannot call `compose` with compose intermediate value bound to the first parameter because:
- - property `foo` is missing in props [1] but exists in `Props` [2].
- - string [3] is incompatible with number [4] in property `bar`.
+Cannot call `compose` with compose intermediate value bound to the first parameter because property `foo` is missing in
+props [1] but exists in `Props` [2]. [prop-missing]
+
+   Bad.js:17:3
+         v------------------------
+   17|   withProps(({ buz }) => ({
+   18|     bar: buz,
+   19|   })),
+         --^
+
+References:
+   hocs.js:15:25
+                               v-
+   15| ): (React.ComponentType<{|
+   16|   ...Props,
+   17|   ...ExtraProps,
+   18| |}>) => React.ComponentType<Props> {
+       -^ [1]
+   Bad.js:11:21
+   11| const Bad = (props: Props) => null;
+                           ^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------------ Bad.js:17:3
+
+Cannot call `compose` with compose intermediate value bound to the first parameter because string [1] is incompatible
+with number [2] in property `bar`. [incompatible-call]
 
    Bad.js:17:3
           v------------------------
@@ -12,95 +36,91 @@ Cannot call `compose` with compose intermediate value bound to the first paramet
           --^
 
 References:
-   hocs.js:15:25
-                                v-
-    15| ): (React.ComponentType<{|
-    16|   ...Props,
-    17|   ...ExtraProps,
-    18| |}>) => React.ComponentType<Props> {
-        -^ [1]
-   Bad.js:11:21
-    11| const Bad = (props: Props) => null;
-                            ^^^^^ [2]
-   <BUILTINS>/core.js:164:31
-   164|     toString(radix?: number): string;
-                                      ^^^^^^ [3]
+   <BUILTINS>/core.js:465:31
+   465|     toString(radix?: number): string;
+                                      ^^^^^^ [1]
    Bad.js:8:8
      8|   bar: number,
-               ^^^^^^ [4]
+               ^^^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------------------- Good_use.js:7:1
+Error -------------------------------------------------------------------------------------------------- Good_use.js:7:2
 
 Cannot create `Good` element because property `qux` is missing in props [1] but exists in object type [2].
+[prop-missing]
 
+   Good_use.js:7:2
+    7| <Good foo={1} buz={2} />; // Error: Missing qux
+        ^^^^
+
+References:
    Good_use.js:7:1
     7| <Good foo={1} buz={2} />; // Error: Missing qux
        ^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-
-References:
    Good.js:23:30
    23| )(Good): React.ComponentType<{foo: number, buz: number, qux: number}>);
                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------------------- Good_use.js:8:1
+Error -------------------------------------------------------------------------------------------------- Good_use.js:8:2
 
 Cannot create `Good` element because property `buz` is missing in props [1] but exists in object type [2].
+[prop-missing]
 
+   Good_use.js:8:2
+    8| <Good foo={1} qux={3} />; // Error: Missing buz
+        ^^^^
+
+References:
    Good_use.js:8:1
     8| <Good foo={1} qux={3} />; // Error: Missing buz
        ^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-
-References:
    Good.js:23:30
    23| )(Good): React.ComponentType<{foo: number, buz: number, qux: number}>);
                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------------------- Good_use.js:9:1
+Error -------------------------------------------------------------------------------------------------- Good_use.js:9:2
 
 Cannot create `Good` element because property `foo` is missing in props [1] but exists in object type [2].
+[prop-missing]
 
+   Good_use.js:9:2
+    9| <Good buz={2} qux={3} />; // Error: Missing foo
+        ^^^^
+
+References:
    Good_use.js:9:1
     9| <Good buz={2} qux={3} />; // Error: Missing foo
        ^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-
-References:
    Good.js:23:30
    23| )(Good): React.ComponentType<{foo: number, buz: number, qux: number}>);
                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------- Good_use.js:10:1
+Error ------------------------------------------------------------------------------------------------ Good_use.js:10:19
 
-Cannot create `Good` element because string [1] is incompatible with number [2] in property `buz`.
+Cannot create `Good` element because string [1] is incompatible with number [2] in property `buz`. [incompatible-type]
 
-   Good_use.js:10:1
-   10| <Good foo={1} buz="nope" qux={3} />; // Error: Cannot multiply string
-       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-References:
    Good_use.js:10:19
    10| <Good foo={1} buz="nope" qux={3} />; // Error: Cannot multiply string
                          ^^^^^^ [1]
+
+References:
    Good.js:23:49
    23| )(Good): React.ComponentType<{foo: number, buz: number, qux: number}>);
                                                        ^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------- Good_use.js:11:1
+Error ------------------------------------------------------------------------------------------------ Good_use.js:11:27
 
-Cannot create `Good` element because string [1] is incompatible with number [2] in property `qux`.
+Cannot create `Good` element because string [1] is incompatible with number [2] in property `qux`. [incompatible-type]
 
-   Good_use.js:11:1
-   11| <Good foo={1} buz={2} qux="nope" />; // Error: string ~> number
-       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-References:
    Good_use.js:11:27
    11| <Good foo={1} buz={2} qux="nope" />; // Error: string ~> number
                                  ^^^^^^ [1]
+
+References:
    Good.js:23:62
    23| )(Good): React.ComponentType<{foo: number, buz: number, qux: number}>);
                                                                     ^^^^^^ [2]

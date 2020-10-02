@@ -2,9 +2,9 @@
 const React = require('react');
 const View = require('./View');
 
-type Props = {
+type Props = {|
   component: React$ComponentType<*>,
-};
+|};
 
 class C extends React.PureComponent<Props> {
 

@@ -1,6 +1,6 @@
 Error -------------------------------------------------------------------------------------------- bad_shadowing.js:13:5
 
-Cannot declare `A` [1] because the name is already bound.
+Cannot declare `A` [1] because the name is already bound. [name-already-bound]
 
    bad_shadowing.js:13:5
    13| var A: string = "Hello";
@@ -14,7 +14,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- bad_shadowing.js:14:5
 
-Cannot declare `Foo` [1] because the name is already bound.
+Cannot declare `Foo` [1] because the name is already bound. [name-already-bound]
 
    bad_shadowing.js:14:5
    14| var Foo: string = "Goodbye";
@@ -28,7 +28,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- bad_shadowing.js:15:5
 
-Cannot declare `Baz` [1] because the name is already bound.
+Cannot declare `Baz` [1] because the name is already bound. [name-already-bound]
 
    bad_shadowing.js:15:5
    15| var Baz: string = "Go away please";
@@ -42,7 +42,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- bad_shadowing.js:18:5
 
-Cannot declare `duck` [1] because the name is already bound.
+Cannot declare `duck` [1] because the name is already bound. [name-already-bound]
 
    bad_shadowing.js:18:5
    18| var duck: string = "quack";
@@ -56,7 +56,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- good_shadowing.js:8:5
 
-Cannot declare `A` [1] because the name is already bound.
+Cannot declare `A` [1] because the name is already bound. [name-already-bound]
 
    good_shadowing.js:8:5
    8| var A = require('./A.js');
@@ -70,7 +70,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- good_shadowing.js:9:5
 
-Cannot declare `Foo` [1] because the name is already bound.
+Cannot declare `Foo` [1] because the name is already bound. [name-already-bound]
 
    good_shadowing.js:9:5
    9| var Foo = A.Foo;
@@ -84,7 +84,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- good_shadowing.js:9:11
 
-Cannot reference type `A` [1] from a value position.
+Cannot reference type `A` [1] from a value position. [type-as-value]
 
    good_shadowing.js:9:11
    9| var Foo = A.Foo;
@@ -98,7 +98,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- good_shadowing.js:10:5
 
-Cannot declare `Baz` [1] because the name is already bound.
+Cannot declare `Baz` [1] because the name is already bound. [name-already-bound]
 
    good_shadowing.js:10:5
    10| var Baz = A.Bar;
@@ -112,7 +112,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------ good_shadowing.js:10:11
 
-Cannot reference type `A` [1] from a value position.
+Cannot reference type `A` [1] from a value position. [type-as-value]
 
    good_shadowing.js:10:11
    10| var Baz = A.Bar;
@@ -126,7 +126,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- good_shadowing.js:13:9
 
-Cannot reference type `A` [1] from a value position.
+Cannot reference type `A` [1] from a value position. [type-as-value]
 
    good_shadowing.js:13:9
    13| var m = A;
@@ -140,7 +140,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- good_shadowing.js:14:9
 
-Cannot reference type `Foo` [1] from a value position.
+Cannot reference type `Foo` [1] from a value position. [type-as-value]
 
    good_shadowing.js:14:9
    14| var n = Foo;
@@ -154,7 +154,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- good_shadowing.js:15:9
 
-Cannot reference type `Baz` [1] from a value position.
+Cannot reference type `Baz` [1] from a value position. [type-as-value]
 
    good_shadowing.js:15:9
    15| var o = Baz;
@@ -168,7 +168,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------ good_shadowing.js:18:18
 
-Cannot reference type `Foo` [1] from a value position.
+Cannot reference type `Foo` [1] from a value position. [type-as-value]
 
    good_shadowing.js:18:18
    18| var a: Foo = new Foo();
@@ -182,7 +182,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------ good_shadowing.js:19:18
 
-Cannot reference type `A` [1] from a value position.
+Cannot reference type `A` [1] from a value position. [type-as-value]
 
    good_shadowing.js:19:18
    19| var b: Foo = new A.Foo();
@@ -196,7 +196,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- good_shadowing.js:20:6
 
-Cannot reference type `A` [1] from a value position.
+Cannot reference type `A` [1] from a value position. [type-as-value]
 
    good_shadowing.js:20:6
    20| (new A.Bar(): Baz);
@@ -210,7 +210,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- import_type.js:11:9
 
-Cannot reference type `A` [1] from a value position.
+Cannot reference type `A` [1] from a value position. [type-as-value]
 
    import_type.js:11:9
    11| var m = A;
@@ -224,7 +224,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- import_type.js:12:9
 
-Cannot reference type `Foo` [1] from a value position.
+Cannot reference type `Foo` [1] from a value position. [type-as-value]
 
    import_type.js:12:9
    12| var n = Foo;
@@ -238,7 +238,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- import_type.js:13:9
 
-Cannot reference type `Baz` [1] from a value position.
+Cannot reference type `Baz` [1] from a value position. [type-as-value]
 
    import_type.js:13:9
    13| var o = Baz;
@@ -252,7 +252,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ type_alias.js:8:9
 
-Cannot reference type `Foo` [1] from a value position.
+Cannot reference type `Foo` [1] from a value position. [type-as-value]
 
    type_alias.js:8:9
    8| var x = Foo;

@@ -1,0 +1,302 @@
+Error ----------------------------------------------------------------------------------------------------- arrow.js:3:2
+
+Cannot cast `f` to empty because function [1] is incompatible with empty [2]. [incompatible-cast]
+
+   arrow.js:3:2
+   3| (f: empty); // err
+       ^
+
+References:
+   arrow.js:2:11
+   2| const f = () => {};
+                ^^^^^^^^ [1]
+   arrow.js:3:5
+   3| (f: empty); // err
+          ^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- arrow_dep.js:3:2
+
+Cannot cast `f` to empty because function type [1] is incompatible with empty [2]. [incompatible-cast]
+
+   arrow_dep.js:3:2
+   3| (f: empty); // err
+       ^
+
+References:
+   arrow.js:2:11
+   2| const f = () => {};
+                ^^^^^^^^ [1]
+   arrow_dep.js:3:5
+   3| (f: empty); // err
+          ^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------- arrow_with_statics.js:4:2
+
+Cannot cast `f` to empty because function [1] is incompatible with empty [2]. [incompatible-cast]
+
+   arrow_with_statics.js:4:2
+   4| (f: empty); // err
+       ^
+
+References:
+   arrow_with_statics.js:2:11
+   2| const f = () => {};
+                ^^^^^^^^ [1]
+   arrow_with_statics.js:4:5
+   4| (f: empty); // err
+          ^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------- arrow_with_statics.js:5:2
+
+Cannot cast `f.x` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
+
+   arrow_with_statics.js:5:2
+   5| (f.x: empty); // err
+       ^^^
+
+References:
+   arrow_with_statics.js:3:7
+   3| f.x = 1;
+            ^ [1]
+   arrow_with_statics.js:5:7
+   5| (f.x: empty); // err
+            ^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------ arrow_with_statics_dep.js:3:2
+
+Cannot cast `f` to empty because function type [1] is incompatible with empty [2]. [incompatible-cast]
+
+   arrow_with_statics_dep.js:3:2
+   3| (f: empty); // err
+       ^
+
+References:
+   arrow_with_statics.js:2:11
+   2| const f = () => {};
+                ^^^^^^^^ [1]
+   arrow_with_statics_dep.js:3:5
+   3| (f: empty); // err
+          ^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------ arrow_with_statics_dep.js:4:2
+
+Cannot cast `f.x` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
+
+   arrow_with_statics_dep.js:4:2
+   4| (f.x: empty); // err
+       ^^^
+
+References:
+   arrow_with_statics.js:3:7
+   3| f.x = 1;
+            ^ [1]
+   arrow_with_statics_dep.js:4:7
+   4| (f.x: empty); // err
+            ^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------ arrow_with_statics_dep.js:5:3
+
+Cannot get `f.missing` because property `missing` is missing in statics of function type [1]. [prop-missing]
+
+   arrow_with_statics_dep.js:5:3
+   5| f.missing; // err
+        ^^^^^^^
+
+References:
+   arrow_with_statics.js:2:11
+   2| const f = () => {};
+                ^^^^^^^^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------- declare_fun.js:3:2
+
+Cannot cast `f` to empty because function type [1] is incompatible with empty [2]. [incompatible-cast]
+
+   declare_fun.js:3:2
+   3| (f: empty); // err
+       ^
+
+References:
+   declare_fun.js:2:19
+   2| declare function f(): void;
+                        ^^^^^^^^ [1]
+   declare_fun.js:3:5
+   3| (f: empty); // err
+          ^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------- declare_fun_dep.js:3:2
+
+Cannot cast `f` to empty because function type [1] is incompatible with empty [2]. [incompatible-cast]
+
+   declare_fun_dep.js:3:2
+   3| (f: empty); // err
+       ^
+
+References:
+   declare_fun.js:2:19
+   2| declare function f(): void;
+                        ^^^^^^^^ [1]
+   declare_fun_dep.js:3:5
+   3| (f: empty); // err
+          ^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------- function_decl.js:3:2
+
+Cannot cast `f` to empty because function [1] is incompatible with empty [2]. [incompatible-cast]
+
+   function_decl.js:3:2
+   3| (f: empty); // err
+       ^
+
+References:
+   function_decl.js:2:1
+   2| function f() {}
+      ^^^^^^^^^^^^ [1]
+   function_decl.js:3:5
+   3| (f: empty); // err
+          ^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------- function_decl_dep.js:3:2
+
+Cannot cast `f` to empty because function type [1] is incompatible with empty [2]. [incompatible-cast]
+
+   function_decl_dep.js:3:2
+   3| (f: empty); // err
+       ^
+
+References:
+   function_decl.js:2:1
+   2| function f() {}
+      ^^^^^^^^^^^^ [1]
+   function_decl_dep.js:3:5
+   3| (f: empty); // err
+          ^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------- function_decl_with_statics.js:4:2
+
+Cannot cast `f` to empty because function [1] is incompatible with empty [2]. [incompatible-cast]
+
+   function_decl_with_statics.js:4:2
+   4| (f: empty); // err
+       ^
+
+References:
+   function_decl_with_statics.js:2:1
+   2| function f() {};
+      ^^^^^^^^^^^^ [1]
+   function_decl_with_statics.js:4:5
+   4| (f: empty); // err
+          ^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------- function_decl_with_statics.js:5:2
+
+Cannot cast `f.x` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
+
+   function_decl_with_statics.js:5:2
+   5| (f.x: empty); // err
+       ^^^
+
+References:
+   function_decl_with_statics.js:3:7
+   3| f.x = 1;
+            ^ [1]
+   function_decl_with_statics.js:5:7
+   5| (f.x: empty); // err
+            ^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------- function_decl_with_statics_dep.js:3:2
+
+Cannot cast `f` to empty because function type [1] is incompatible with empty [2]. [incompatible-cast]
+
+   function_decl_with_statics_dep.js:3:2
+   3| (f: empty); // err
+       ^
+
+References:
+   function_decl_with_statics.js:2:1
+   2| function f() {};
+      ^^^^^^^^^^^^ [1]
+   function_decl_with_statics_dep.js:3:5
+   3| (f: empty); // err
+          ^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------- function_decl_with_statics_dep.js:4:2
+
+Cannot cast `f.x` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
+
+   function_decl_with_statics_dep.js:4:2
+   4| (f.x: empty); // err
+       ^^^
+
+References:
+   function_decl_with_statics.js:3:7
+   3| f.x = 1;
+            ^ [1]
+   function_decl_with_statics_dep.js:4:7
+   4| (f.x: empty); // err
+            ^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------- function_decl_with_statics_dep.js:5:3
+
+Cannot get `f.missing` because property `missing` is missing in statics of function type [1]. [prop-missing]
+
+   function_decl_with_statics_dep.js:5:3
+   5| f.missing; // err
+        ^^^^^^^
+
+References:
+   function_decl_with_statics.js:2:1
+   2| function f() {};
+      ^^^^^^^^^^^^ [1]
+
+
+Error --------------------------------------------------------------------------------------------- function_expr.js:3:2
+
+Cannot cast `f` to empty because function [1] is incompatible with empty [2]. [incompatible-cast]
+
+   function_expr.js:3:2
+   3| (f: empty); // err
+       ^
+
+References:
+   function_expr.js:2:11
+   2| const f = function() {};
+                ^^^^^^^^^^ [1]
+   function_expr.js:3:5
+   3| (f: empty); // err
+          ^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------- function_expr_dep.js:3:2
+
+Cannot cast `f` to empty because function type [1] is incompatible with empty [2]. [incompatible-cast]
+
+   function_expr_dep.js:3:2
+   3| (f: empty); // err
+       ^
+
+References:
+   function_expr.js:2:11
+   2| const f = function() {};
+                ^^^^^^^^^^ [1]
+   function_expr_dep.js:3:5
+   3| (f: empty); // err
+          ^^^^^ [2]
+
+
+
+Found 18 errors

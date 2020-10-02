@@ -29,23 +29,16 @@
               "loc":{"source":null,"start":{"line":1,"column":10},"end":{"line":1,"column":29}},
               "range":[10,29],
               "object":{
-                "type":"CallExpression",
+                "type":"ImportExpression",
                 "loc":{"source":null,"start":{"line":1,"column":10},"end":{"line":1,"column":24}},
                 "range":[10,24],
-                "callee":{
-                  "type":"Import",
-                  "loc":{"source":null,"start":{"line":1,"column":10},"end":{"line":1,"column":23}},
-                  "range":[10,23]
-                },
-                "arguments":[
-                  {
-                    "type":"Literal",
-                    "loc":{"source":null,"start":{"line":1,"column":17},"end":{"line":1,"column":23}},
-                    "range":[17,23],
-                    "value":"asdf",
-                    "raw":"\"asdf\""
-                  }
-                ]
+                "source":{
+                  "type":"Literal",
+                  "loc":{"source":null,"start":{"line":1,"column":17},"end":{"line":1,"column":23}},
+                  "range":[17,23],
+                  "value":"asdf",
+                  "raw":"\"asdf\""
+                }
               },
               "property":{
                 "type":"Identifier",
@@ -57,6 +50,7 @@
               },
               "computed":false
             },
+            "typeArguments":null,
             "arguments":[]
           }
         }

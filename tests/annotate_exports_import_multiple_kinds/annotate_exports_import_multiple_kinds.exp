@@ -1,0 +1,106 @@
+
+=== Codemod annotate-exports ===
+
+>>> ./a.js
+// @flow
+
+import type {C as $IMPORTED_TYPE$_C_1} from "./lib2";
+import type {C} from "./lib1";import { foo1a } from './lib1';
+import { foo2 } from './lib2';
+
+module.exports = [
+  (foo1a(): C),
+  (foo2(): $IMPORTED_TYPE$_C_1),
+]
+
+>>> ./b.js
+// @flow
+
+import typeof {C} from "./lib1";
+import type {C as $IMPORTED_TYPE$_C_1} from "./lib2";import { foo1b } from './lib1';
+import { foo2 } from './lib2';
+
+module.exports = [
+  (foo1b(): C),
+  (foo2(): $IMPORTED_TYPE$_C_1),
+]
+
+>>> ./c.js
+// @flow
+
+import typeof {C as $IMPORTED_TYPEOF$_C_1} from "./lib1";
+import type {C} from "./lib1";import { foo1a, foo1b } from './lib1';
+
+module.exports = [
+  (foo1a(): C),
+  (foo1b(): $IMPORTED_TYPEOF$_C_1),
+]
+
+>>> Launching report...
+
+Stats:
+  Files changed:                            3
+  Number of annotations added:              6
+  Total size of annotations:                6
+  Number of sig. ver. errors:               6
+  Number of annotations required:           6
+  Number of annotations skipped:            0
+
+Errors:
+  Missing annot./normalizer error:          0
+  Validation Error:                         0
+  Import Error:
+    Loc source none:                        0
+    Parsing heaps get ast error:            0
+    Indeterminate module type:              0
+    No matching export:                     0
+  Serializer error:                         0
+  Unsupported error kind:                   0
+
+Warnings:
+  Skipping arrow function:                  0
+  Large type added:                         0
+  Location unhandled:                       0
+  Empty NoUpper:                            0
+  Empty SomeKnownUpper:                     0
+
+
+=== Autofix exports ===
+
+>>> ./a.js
+// @flow
+
+import type {C as $IMPORTED_TYPE$_C_1} from "./lib2";
+import type {C} from "./lib1";import { foo1a } from './lib1';
+import { foo2 } from './lib2';
+
+module.exports = [
+  (foo1a(): C),
+  (foo2(): $IMPORTED_TYPE$_C_1),
+]
+
+>>> ./b.js
+// @flow
+
+import typeof {C} from "./lib1";
+import type {C as $IMPORTED_TYPE$_C_1} from "./lib2";import { foo1b } from './lib1';
+import { foo2 } from './lib2';
+
+module.exports = [
+  (foo1b(): C),
+  (foo2(): $IMPORTED_TYPE$_C_1),
+]
+
+>>> ./c.js
+// @flow
+
+import typeof {C as $IMPORTED_TYPEOF$_C_1} from "./lib1";
+import type {C} from "./lib1";import { foo1a, foo1b } from './lib1';
+
+module.exports = [
+  (foo1a(): C),
+  (foo1b(): $IMPORTED_TYPEOF$_C_1),
+]
+
+
+=== Diff between codemod-ed & autofix-ed ===

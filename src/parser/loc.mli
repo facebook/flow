@@ -1,4 +1,4 @@
-(**
+(*
  * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
@@ -27,8 +27,10 @@ val char_before : t -> t
 val first_char : t -> t
 
 val contains : t -> t -> bool
+(** [contains loc1 loc2] returns true if [loc1] entirely overlaps [loc2] *)
 
 val lines_intersect : t -> t -> bool
+(** [lines_intersect loc1 loc2] returns true if [loc1] intersects [loc2] at all *)
 
 val pos_cmp : position -> position -> int
 

@@ -1,6 +1,6 @@
 Error ---------------------------------------------------------------------------------------------------- value.js:3:16
 
-Cannot assign `o["x"]` to `y` because number [1] is incompatible with string [2].
+Cannot assign `o["x"]` to `y` because number [1] is incompatible with string [2]. [incompatible-type]
 
    value.js:3:16
    3| var y:string = o["x"];
@@ -17,7 +17,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- value.js:6:14
 
-Cannot assign `"hello"` to `table["x"]` because string [1] is incompatible with number [2].
+Cannot assign `"hello"` to `table["x"]` because string [1] is incompatible with number [2]. [incompatible-type]
 
    value.js:6:14
    6| table["x"] = "hello";

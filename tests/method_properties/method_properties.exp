@@ -1,10 +1,10 @@
-Error ----------------------------------------------------------------------------------------------------- test.js:5:11
+Error ----------------------------------------------------------------------------------------------------- test.js:5:28
 
-Cannot get `this.constructor.x` because property `x` is missing in statics of `C` [1].
+Cannot get `this.constructor.x` because property `x` is missing in statics of `C` [1]. [prop-missing]
 
-   test.js:5:11
+   test.js:5:28
    5|   qux() { this.constructor.x; }
-                ^^^^^^^^^^^^^^^^^^
+                                 ^
 
 References:
    test.js:1:7
@@ -12,13 +12,13 @@ References:
             ^ [1]
 
 
-Error ------------------------------------------------------------------------------------------------------ test.js:7:1
+Error ------------------------------------------------------------------------------------------------------ test.js:7:3
 
-Cannot get `C.x` because property `x` is missing in statics of `C` [1].
+Cannot get `C.x` because property `x` is missing in statics of `C` [1]. [prop-missing]
 
-   test.js:7:1
+   test.js:7:3
    7| C.x;
-      ^^^
+        ^
 
 References:
    test.js:1:7
@@ -26,13 +26,13 @@ References:
             ^ [1]
 
 
-Error ----------------------------------------------------------------------------------------------------- test.js:13:2
+Error ----------------------------------------------------------------------------------------------------- test.js:13:6
 
-Cannot call `foo.bar` because undefined [1] is not a function.
+Cannot call `foo.bar` because undefined [1] is not a function. [not-a-function]
 
-   test.js:13:2
+   test.js:13:6
    13| (foo.bar(): string); // error, could be undefined
-        ^^^^^^^^^
+            ^^^
 
 References:
    exports_optional_prop.js:4:9
@@ -40,13 +40,13 @@ References:
                ^^^^^^^^^^^^ [1]
 
 
-Error ----------------------------------------------------------------------------------------------------- test.js:16:4
+Error ----------------------------------------------------------------------------------------------------- test.js:16:6
 
-Cannot call `x.bar` because undefined [1] is not a function.
+Cannot call `x.bar` because undefined [1] is not a function. [not-a-function]
 
-   test.js:16:4
+   test.js:16:6
    16|   (x.bar(): string); // error. caused by `f(foo)`; annotate x to track it down.
-          ^^^^^^^
+            ^^^
 
 References:
    exports_optional_prop.js:4:9

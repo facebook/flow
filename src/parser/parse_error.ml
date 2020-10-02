@@ -1,4 +1,4 @@
-(**
+(*
  * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
@@ -20,6 +20,8 @@ type t =
       enum_name: string;
       supplied_type: string option;
     }
+  | EnumInvalidExport
+  | EnumInvalidInitializerSeparator of { member_name: string }
   | EnumInvalidMemberInitializer of {
       enum_name: string;
       explicit_type: Enum_common.explicit_type option;
@@ -29,6 +31,7 @@ type t =
       enum_name: string;
       member_name: string;
     }
+  | EnumInvalidMemberSeparator
   | EnumNumberMemberNotInitialized of {
       enum_name: string;
       member_name: string;
@@ -104,8 +107,10 @@ type t =
   | AdjacentJSXElements
   | ParameterAfterRestParameter
   | ElementAfterRestElement
-  | PropertyAfterRestProperty
+  | PropertyAfterRestElement
   | DeclareAsync
+  | DeclareClassElement
+  | DeclareClassFieldInitializer
   | DeclareExportLet
   | DeclareExportConst
   | DeclareExportType
@@ -151,6 +156,7 @@ type t =
   | NullishCoalescingDisabled
   | NullishCoalescingUnexpectedLogical of string
   | WhitespaceInPrivateName
+[@@deriving ord]
 
 exception Error of (Loc.t * t) list
 
@@ -186,6 +192,13 @@ module PP = struct
           Printf.sprintf "Enum type `%s` is not valid. %s" supplied_type suggestion
         | None -> Printf.sprintf "Supplied enum type is not valid. %s" suggestion
       end
+    | EnumInvalidExport ->
+      "Cannot export an enum with `export type`, try `export enum E {}` or `module.exports = E;` instead."
+    | EnumInvalidInitializerSeparator { member_name } ->
+      Printf.sprintf
+        "Enum member names and initializers are separated with `=`. Replace `%s:` with `%s =`."
+        member_name
+        member_name
     | EnumInvalidMemberInitializer { enum_name; explicit_type; member_name } ->
       begin
         match explicit_type with
@@ -218,6 +231,7 @@ module PP = struct
         member_name
         suggestion
         enum_name
+    | EnumInvalidMemberSeparator -> "Enum members are separated with `,`. Replace `;` with `,`."
     | EnumNumberMemberNotInitialized { enum_name; member_name } ->
       Printf.sprintf
         "Number enum members need to be initialized, e.g. `%s = 1,` in enum `%s`."
@@ -319,11 +333,12 @@ module PP = struct
       ^ "elements must be wrapped in an enclosing parent tag"
     | ParameterAfterRestParameter -> "Rest parameter must be final parameter of an argument list"
     | ElementAfterRestElement -> "Rest element must be final element of an array pattern"
-    | PropertyAfterRestProperty -> "Rest property must be final property of an object pattern"
+    | PropertyAfterRestElement -> "Rest property must be final property of an object pattern"
     | DeclareAsync ->
       "async is an implementation detail and isn't necessary for your declare function statement. It is sufficient for your declare function to just have a Promise return type."
-    | DeclareExportLet ->
-      "`declare export let` is not supported. Use `declare export var` instead."
+    | DeclareClassElement -> "`declare` modifier can only appear on class fields."
+    | DeclareClassFieldInitializer -> "Initializers are not allowed in a `declare`."
+    | DeclareExportLet -> "`declare export let` is not supported. Use `declare export var` instead."
     | DeclareExportConst ->
       "`declare export const` is not supported. Use `declare export var` instead."
     | DeclareExportType -> "`declare export type` is not supported. Use `export type` instead."
@@ -345,8 +360,7 @@ module PP = struct
     | GetterArity -> "Getter should have zero parameters"
     | SetterArity -> "Setter should have exactly one parameter"
     | InvalidNonTypeImportInDeclareModule ->
-      "Imports within a `declare module` body must always be "
-      ^ "`import type` or `import typeof`!"
+      "Imports within a `declare module` body must always be " ^ "`import type` or `import typeof`!"
     | ImportTypeShorthandOnlyInPureImport ->
       "The `type` and `typeof` keywords on named imports can only be used on regular `import` statements. It cannot be used with `import type` or `import typeof` statements"
     | ImportSpecifierMissingComma -> "Missing comma between import specifiers"

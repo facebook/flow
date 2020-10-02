@@ -1,0 +1,6 @@
+//@flow
+
+class Foo {
+  bar =
+//     ^
+}

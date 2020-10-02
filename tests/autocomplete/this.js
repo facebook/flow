@@ -6,5 +6,6 @@ class Foo {
   bar() {}
   hello() {
     this.
+//       ^
   }
 }

@@ -1,4 +1,4 @@
-(**
+(*
  * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
@@ -16,5 +16,7 @@ exception Docblock_not_found of string
 exception Requires_not_found of string
 
 exception Sig_requires_not_found of string
+
+exception Type_sig_not_found of string
 
 exception Hash_not_found of string

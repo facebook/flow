@@ -1,63 +1,74 @@
-/* @flow */
+/**
+ * Copyright (c) Facebook, Inc. and its affiliates.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ *
+ * @flow
+ * @format
+ */
 
 import {format} from 'util';
 
 import parseArgs from 'minimist';
 
-export type Flag = $Exact<{
-  type: "string",
-  name: string,
-  description: string,
-  argName: string,
-  aliases?: Array<string>,
-  default?: string,
-}> | $Exact<{
-  type: "boolean",
-  name: string,
-  description: string,
-  aliases?: Array<string>,
-}> | $Exact<{
-  type: "enum",
-  name: string,
-  description: string,
-  argName: string,
-  validValues: Array<string>,
-  aliases?: Array<string>,
-  default?: string,
-}>;
+export type Flag =
+  | $Exact<{
+      type: 'string',
+      name: string,
+      description: string,
+      argName: string,
+      aliases?: Array<string>,
+      default?: string,
+    }>
+  | $Exact<{
+      type: 'boolean',
+      name: string,
+      description: string,
+      aliases?: Array<string>,
+    }>
+  | $Exact<{
+      type: 'enum',
+      name: string,
+      description: string,
+      argName: string,
+      validValues: Array<string>,
+      aliases?: Array<string>,
+      default?: string,
+    }>;
 
 export const commonFlags = {
   bin: {
-    type: "string",
-    name: "bin",
-    argName: "path/to/flow",
-    description: "Path to the flow binary",
+    type: 'string',
+    name: 'bin',
+    argName: 'path/to/flow',
+    description: 'Path to the flow binary',
   },
   flowconfigName: {
-    type: "string",
-    name: "flowconfigName",
-    argName: ".flowconfig",
-    description: "Name of the flowconfig to use in checking",
-    default: ".flowconfig",
+    type: 'string',
+    name: 'flowconfigName',
+    argName: '.flowconfig',
+    description: 'Name of the flowconfig to use in checking',
+    default: '.flowconfig',
   },
   parallelism: {
-    type: "string",
-    name: "parallelism",
-    argName: "N",
-    description: "Number of tests to run in parallel",
-    aliases: ["p"],
-    default: "16",
+    type: 'string',
+    name: 'parallelism',
+    argName: 'N',
+    description: 'Number of tests to run in parallel',
+    aliases: ['p'],
+    default: '16',
   },
   errorCheckCommand: {
-    type: "enum",
-    name: "check",
-    argName: "COMMAND",
-    description: "The flow command to check flow errors",
-    validValues: ["check", "status"],
-    aliases: ["c"],
-    default: "status",
+    type: 'enum',
+    name: 'check',
+    argName: 'COMMAND',
+    description: 'The flow command to check flow errors',
+    validValues: ['check', 'status'],
+    aliases: ['c'],
+    default: 'status',
   },
-}
+};
 
 class ShowUsageException {
   exitCode: number;
@@ -68,8 +79,8 @@ class ShowUsageException {
 }
 
 export default class Base<T: Object> {
-  static BAD_ARGS = 64;
-  static OK = 0;
+  static BAD_ARGS: number = 64;
+  static OK: number = 0;
 
   // abstract
   static processArgv(argv: Object): T {
@@ -96,19 +107,16 @@ export default class Base<T: Object> {
   }
 
   static getAllFlags(): Array<Flag> {
-    return [].concat(
-      this.getFlags(),
-      {
-        type: "boolean",
-        name: "help",
-        description: "Shows this usage message",
-        aliases: ["h"],
-      },
-    );
+    return [].concat(this.getFlags(), {
+      type: 'boolean',
+      name: 'help',
+      description: 'Shows this usage message',
+      aliases: ['h'],
+    });
   }
 
   // final
-  static parse() {
+  static parse(): any {
     const boolean = [];
     const string = [];
     const defaults = {};
@@ -116,7 +124,7 @@ export default class Base<T: Object> {
 
     const flags = this.getAllFlags();
     for (const flag of flags) {
-      if (flag.type === "string" || flag.type === "enum") {
+      if (flag.type === 'string' || flag.type === 'enum') {
         string.push(flag.name);
         flag.default !== undefined && (defaults[flag.name] = flag.default);
       } else {
@@ -129,37 +137,36 @@ export default class Base<T: Object> {
       }
     }
 
-    const argv = parseArgs(
-      process.argv.slice(3),
-      {
-        boolean,
-        string,
-        alias,
-        default: defaults,
-        unknown: flag => {
-          if (flag.match(/^-/)) {
-            process.stderr.write(format('Unsupported flag:', flag, "\n"));
-            this.showUsage(this.BAD_ARGS);
-          }
-        }
-      }
-    );
-    for (const flag of flags) {
-      if (flag.type === "string" || flag.type === "enum") {
-        if (argv[flag.name] === "") {
-          process.stderr.write(
-            format("Missing required argument for flag: %s\n", flag.name),
-          ),
+    const argv = parseArgs(process.argv.slice(3), {
+      boolean,
+      string,
+      alias,
+      default: defaults,
+      unknown: flag => {
+        if (flag.match(/^-/)) {
+          process.stderr.write(format('Unsupported flag:', flag, '\n'));
           this.showUsage(this.BAD_ARGS);
         }
+      },
+    });
+    for (const flag of flags) {
+      if (flag.type === 'string' || flag.type === 'enum') {
+        if (argv[flag.name] === '') {
+          process.stderr.write(
+            format('Missing required argument for flag: %s\n', flag.name),
+          ),
+            this.showUsage(this.BAD_ARGS);
+        }
       }
-      if (flag.type === "enum") {
+      if (flag.type === 'enum') {
         if (flag.validValues.find(v => argv[flag.name] === v) === undefined) {
-          process.stderr.write(format(
-            "%s is not a support value for enum flag %s\n",
-            argv[flag.name],
-            flag.name,
-          ));
+          process.stderr.write(
+            format(
+              '%s is not a support value for enum flag %s\n',
+              argv[flag.name],
+              flag.name,
+            ),
+          );
           this.showUsage(this.BAD_ARGS);
         }
       }
@@ -175,30 +182,36 @@ export default class Base<T: Object> {
   static async displayUsage(exn: ShowUsageException) {
     let usage = await this.usage();
 
-    const flags = this.getAllFlags()
-      .sort((a, b) => a.name.localeCompare(b.name));
+    const flags = this.getAllFlags().sort((a, b) =>
+      a.name.localeCompare(b.name),
+    );
 
-    usage += "\n\nOPTIONS:";
+    usage += '\n\nOPTIONS:';
     for (const flag of flags) {
-      const arg = flag.type === "string" || flag.type === "enum"
-        ? " "+flag.argName
-        : "";
-      const values = flag.type === "enum"
-        ? format(" [%s]", flag.validValues.map(x => format('"%s"', x)).join(", "))
-        : "";
+      const arg =
+        flag.type === 'string' || flag.type === 'enum'
+          ? ' ' + flag.argName
+          : '';
+      const values =
+        flag.type === 'enum'
+          ? format(
+              ' [%s]',
+              flag.validValues.map(x => format('"%s"', x)).join(', '),
+            )
+          : '';
       const defaultDesc =
         flag.default !== undefined
-        ? format(' (default: "%s")', flag.default)
-        : "";
+          ? format(' (default: "%s")', flag.default)
+          : '';
       const names = []
         .concat(flag.name, flag.aliases || [])
         .map(name => (name.length == 1 ? '-' : '--') + name + arg)
-        .join(", ");
-      usage += "\n    " + names
-      usage += "\n        " + flag.description + values + defaultDesc;
+        .join(', ');
+      usage += '\n    ' + names;
+      usage += '\n        ' + flag.description + values + defaultDesc;
     }
 
-    usage += "\n";
+    usage += '\n';
 
     process.stderr.write(usage);
     process.exit(exn.exitCode);

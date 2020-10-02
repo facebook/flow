@@ -1,4 +1,4 @@
-(**
+(*
  * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
@@ -92,12 +92,12 @@ let main base_flags option_values json pretty root strip_root path wait_for_rech
       else
         print_endline (range_string_of_loc ~strip_root loc)
   | ServerProt.Response.GET_DEF (Error exn_msg) ->
-    Utils_js.prerr_endlinef
-      "Could not get definition for %s:%d:%d\n%s"
-      (File_input.filename_of_file_input file)
-      line
-      column
-      exn_msg
+    let file_str =
+      match File_input.filename_of_file_input file with
+      | "-" as s -> s
+      | s -> File_key.SourceFile s |> Reason.string_of_source ~strip_root
+    in
+    Utils_js.prerr_endlinef "Could not get definition for %s:%d:%d\n%s" file_str line column exn_msg
   | response -> failwith_bad_response ~request ~response
 
 let command = CommandSpec.command spec main

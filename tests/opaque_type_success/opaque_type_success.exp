@@ -1,10 +1,15 @@
-Error ----------------------------------------------------------------------------------------------------- test.js:36:1
+Error ---------------------------------------------------------------------------------------------- testimport.js:58:29
 
-Unable to determine module type (CommonJS vs ES) if both an export statement and `module.exports` are used in the same
-module!
+Cannot instantiate `$PropertyType` because property `__type` is missing in `C` [1]. [incompatible-use]
 
-   36| exports.hide = hide;
-       ^^^^^^^
+   testimport.js:58:29
+   58| function t(applicationType: $PropertyType<C, '__type'>): number {
+                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   testimport.js:58:43
+   58| function t(applicationType: $PropertyType<C, '__type'>): number {
+                                                 ^ [1]
 
 
 

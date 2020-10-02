@@ -1,4 +1,25 @@
-# Flow [![Build Status](https://circleci.com/gh/facebook/flow/tree/master.svg?style=shield)](https://circleci.com/gh/facebook/flow/tree/master) [![Windows Build Status](https://ci.appveyor.com/api/projects/status/thyvx6i5nixtoocm/branch/master?svg=true)](https://ci.appveyor.com/project/Facebook/flow/branch/master) [![Join the chat at https://discordapp.com/invite/8ezwRUK](https://img.shields.io/discord/539606376339734558.svg?label=discord&logo=discord&logoColor=white)](https://discordapp.com/invite/8ezwRUK)
+# Flow
+<p align="center">
+  <a href="https://circleci.com/gh/facebook/flow/tree/master">
+    <img src="https://circleci.com/gh/facebook/flow/tree/master.svg?style=shield" alt="CircleCI" />
+  </a>
+  <a href="https://twitter.com/flowtype">
+   <img src="https://img.shields.io/twitter/follow/flowtype?style=social" alt="Follow @flowtype" />
+  </a>
+  <a href="https://github.com/facebook/flow/blob/master/LICENSE">
+    <img alt="GitHub" src="https://img.shields.io/github/license/facebook/flow">
+  </a>
+  <a href="https://github.com/facebook/flow/graphs/contributors">
+   <img alt="GitHub contributors" src="https://img.shields.io/github/contributors/facebook/flow">
+  </a>
+  <a href="">
+    <img alt="GitHub top language" src="https://img.shields.io/github/languages/top/facebook/flow">
+  </a>
+  <a href="https://discordapp.com/invite/8ezwRUK">
+     <img alt="Join Discord Chat" src="https://img.shields.io/discord/539606376339734558.svg?label=discord&logo=discord&logoColor=white">
+  </a>
+</p>
+
 
 Flow is a static typechecker for JavaScript. To find out more about Flow, check out [flow.org](https://flow.org/).
 
@@ -38,27 +59,37 @@ Flow-typed JavaScript can use this to generate Flow's syntax tree with annotated
 
 Flow is written in OCaml (OCaml 4.07.1 is required).
 
-1. Install [`opam`](http://opam.ocaml.org):
+1. Install [`opam`](https://opam.ocaml.org):
 
   - Mac: `brew install opam`
   - Debian: `sudo apt-get install opam`
-  - Other Linux: see [opam docs](http://opam.ocaml.org/doc/Install.html)
+  - Other Linux: see [opam docs](https://opam.ocaml.org/doc/Install.html)
   - Windows: see [OCaml for Windows docs](https://fdopen.github.io/opam-repository-mingw/installation/)
 
-2. Initialize `opam`:
+2. Validate the `opam` version is `2.x.x`:
+
+  ```sh
+  opam --version
+  ```
+
+  The following instructions expect `2.x.x`.
+  Should your package manager have installed a `1.x.x` version,
+  please refer to the [opam docs](https://opam.ocaml.org/doc/Install.html) to install a newer version manually.
+
+3. Initialize `opam`:
 
   ```sh
   opam init
   ```
 
-3. Install OCaml and Flow's dependencies:
+4. Install OCaml and Flow's dependencies:
 
   ```sh
   # from within this git checkout
   opam switch create . --deps-only -y
   ```
 
-4. Build the `flow` binary:
+5. Build the `flow` binary:
 
   ```sh
   eval $(opam env)
@@ -67,7 +98,7 @@ Flow is written in OCaml (OCaml 4.07.1 is required).
 
   This produces the `bin/flow` binary.
 
-5. Build `flow.js` (optional):
+6. Build `flow.js` (optional):
 
   ```sh
   opam install -y js_of_ocaml.3.4.0
@@ -93,7 +124,7 @@ For example: `bash runtests.sh bin/flow class | grep -v 'SKIP'`
 * Discord: https://discord.gg/8ezwRUK
 * irc: #flowtype on Freenode
 * Twitter: follow [@flowtype](https://twitter.com/flowtype) and [#flowtype](https://twitter.com/hashtag/flowtype) to keep up with the latest Flow news.
-* Stack Overflow: Ask a question with the [flowtype tag](http://stackoverflow.com/questions/tagged/flowtype)
+* Stack Overflow: Ask a question with the [flowtype tag](https://stackoverflow.com/questions/tagged/flowtype)
 
 ## License
-Flow is MIT-licensed ([LICENSE](http://github.com/facebook/flow/blob/master/LICENSE)). The [website](https://flow.org/) and [documentation](https://flow.org/en/docs/) are licensed under the Creative Commons Attribution 4.0 license ([website/LICENSE-DOCUMENTATION](https://github.com/facebook/flow/blob/master/website/LICENSE-DOCUMENTATION)).
+Flow is MIT-licensed ([LICENSE](https://github.com/facebook/flow/blob/master/LICENSE)). The [website](https://flow.org/) and [documentation](https://flow.org/en/docs/) are licensed under the Creative Commons Attribution 4.0 license ([website/LICENSE-DOCUMENTATION](https://github.com/facebook/flow/blob/master/website/LICENSE-DOCUMENTATION)).

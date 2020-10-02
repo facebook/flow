@@ -2,6 +2,7 @@
 Error --------------------------------------------------------------------------------------- foo/bar/nested_test.js:7:2
 
 Cannot cast `docblock.fun()` to boolean because `Implementation` [1] is incompatible with boolean [2].
+[incompatible-cast]
 
    foo/bar/nested_test.js:7:2
    7| (docblock.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
@@ -18,7 +19,7 @@ References:
 
 Error --------------------------------------------------------------------------------------- foo/bar/nested_test.js:8:2
 
-Cannot cast `min.fun()` to boolean because `Implementation` [1] is incompatible with boolean [2].
+Cannot cast `min.fun()` to boolean because `Implementation` [1] is incompatible with boolean [2]. [incompatible-cast]
 
    foo/bar/nested_test.js:8:2
    8| (min.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
@@ -35,7 +36,7 @@ References:
 
 Error --------------------------------------------------------------------------------------- foo/bar/nested_test.js:9:2
 
-Cannot cast `corge.fun()` to boolean because `Implementation` [1] is incompatible with boolean [2].
+Cannot cast `corge.fun()` to boolean because `Implementation` [1] is incompatible with boolean [2]. [incompatible-cast]
 
    foo/bar/nested_test.js:9:2
    9| (corge.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
@@ -53,6 +54,7 @@ References:
 Error ------------------------------------------------------------------------------------------------------ test.js:4:2
 
 Cannot cast `Implicit.fun()` to boolean because `Implementation` [1] is incompatible with boolean [2].
+[incompatible-cast]
 
    test.js:4:2
    4| (Implicit.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
@@ -70,6 +72,7 @@ References:
 Error ------------------------------------------------------------------------------------------------------ test.js:7:2
 
 Cannot cast `ExplicitSameName.fun()` to boolean because `Implementation` [1] is incompatible with boolean [2].
+[incompatible-cast]
 
    test.js:7:2
    7| (ExplicitSameName.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
@@ -87,6 +90,7 @@ References:
 Error ----------------------------------------------------------------------------------------------------- test.js:10:2
 
 Cannot cast `ExplicitDifferentName.fun()` to boolean because `Implementation` [1] is incompatible with boolean [2].
+[incompatible-cast]
 
    test.js:10:2
    10| (ExplicitDifferentName.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
@@ -105,7 +109,7 @@ References:
 Found 6 errors
 Error --------------------------------------------------------------------------------------- foo/bar/nested_test.js:7:2
 
-Cannot cast `docblock.fun()` to boolean because `Declaration` [1] is incompatible with boolean [2].
+Cannot cast `docblock.fun()` to boolean because `Declaration` [1] is incompatible with boolean [2]. [incompatible-cast]
 
    foo/bar/nested_test.js:7:2
    7| (docblock.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
@@ -122,7 +126,7 @@ References:
 
 Error --------------------------------------------------------------------------------------- foo/bar/nested_test.js:8:2
 
-Cannot cast `min.fun()` to boolean because `Declaration` [1] is incompatible with boolean [2].
+Cannot cast `min.fun()` to boolean because `Declaration` [1] is incompatible with boolean [2]. [incompatible-cast]
 
    foo/bar/nested_test.js:8:2
    8| (min.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
@@ -139,7 +143,7 @@ References:
 
 Error --------------------------------------------------------------------------------------- foo/bar/nested_test.js:9:2
 
-Cannot cast `corge.fun()` to boolean because `Declaration` [1] is incompatible with boolean [2].
+Cannot cast `corge.fun()` to boolean because `Declaration` [1] is incompatible with boolean [2]. [incompatible-cast]
 
    foo/bar/nested_test.js:9:2
    9| (corge.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
@@ -156,7 +160,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ test.js:4:2
 
-Cannot cast `Implicit.fun()` to boolean because `Declaration` [1] is incompatible with boolean [2].
+Cannot cast `Implicit.fun()` to boolean because `Declaration` [1] is incompatible with boolean [2]. [incompatible-cast]
 
    test.js:4:2
    4| (Implicit.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
@@ -174,6 +178,7 @@ References:
 Error ------------------------------------------------------------------------------------------------------ test.js:7:2
 
 Cannot cast `ExplicitSameName.fun()` to boolean because `Declaration` [1] is incompatible with boolean [2].
+[incompatible-cast]
 
    test.js:7:2
    7| (ExplicitSameName.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
@@ -191,6 +196,7 @@ References:
 Error ----------------------------------------------------------------------------------------------------- test.js:10:2
 
 Cannot cast `ExplicitDifferentName.fun()` to boolean because `Declaration` [1] is incompatible with boolean [2].
+[incompatible-cast]
 
    test.js:10:2
    10| (ExplicitDifferentName.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
@@ -210,6 +216,7 @@ Found 6 errors
 Error --------------------------------------------------------------------------------------- foo/bar/nested_test.js:7:2
 
 Cannot cast `docblock.fun()` to boolean because `Implementation` [1] is incompatible with boolean [2].
+[incompatible-cast]
 
    foo/bar/nested_test.js:7:2
    7| (docblock.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
@@ -226,7 +233,7 @@ References:
 
 Error --------------------------------------------------------------------------------------- foo/bar/nested_test.js:8:2
 
-Cannot cast `min.fun()` to boolean because `Implementation` [1] is incompatible with boolean [2].
+Cannot cast `min.fun()` to boolean because `Implementation` [1] is incompatible with boolean [2]. [incompatible-cast]
 
    foo/bar/nested_test.js:8:2
    8| (min.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
@@ -243,7 +250,7 @@ References:
 
 Error --------------------------------------------------------------------------------------- foo/bar/nested_test.js:9:2
 
-Cannot cast `corge.fun()` to boolean because `Implementation` [1] is incompatible with boolean [2].
+Cannot cast `corge.fun()` to boolean because `Implementation` [1] is incompatible with boolean [2]. [incompatible-cast]
 
    foo/bar/nested_test.js:9:2
    9| (corge.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
@@ -261,6 +268,7 @@ References:
 Error ------------------------------------------------------------------------------------------------------ test.js:4:2
 
 Cannot cast `Implicit.fun()` to boolean because `Implementation` [1] is incompatible with boolean [2].
+[incompatible-cast]
 
    test.js:4:2
    4| (Implicit.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
@@ -278,6 +286,7 @@ References:
 Error ------------------------------------------------------------------------------------------------------ test.js:7:2
 
 Cannot cast `ExplicitSameName.fun()` to boolean because `Implementation` [1] is incompatible with boolean [2].
+[incompatible-cast]
 
    test.js:7:2
    7| (ExplicitSameName.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
@@ -295,6 +304,7 @@ References:
 Error ----------------------------------------------------------------------------------------------------- test.js:10:2
 
 Cannot cast `ExplicitDifferentName.fun()` to boolean because `Implementation` [1] is incompatible with boolean [2].
+[incompatible-cast]
 
    test.js:10:2
    10| (ExplicitDifferentName.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
@@ -316,7 +326,7 @@ Found 6 errors
 ======Start off with the .js files and the .flow file======
 Error --------------------------------------------------------------------------------------- foo/bar/nested_test.js:7:2
 
-Cannot cast `docblock.fun()` to boolean because `Declaration` [1] is incompatible with boolean [2].
+Cannot cast `docblock.fun()` to boolean because `Declaration` [1] is incompatible with boolean [2]. [incompatible-cast]
 
    foo/bar/nested_test.js:7:2
    7| (docblock.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
@@ -333,7 +343,7 @@ References:
 
 Error --------------------------------------------------------------------------------------- foo/bar/nested_test.js:8:2
 
-Cannot cast `min.fun()` to boolean because `Declaration` [1] is incompatible with boolean [2].
+Cannot cast `min.fun()` to boolean because `Declaration` [1] is incompatible with boolean [2]. [incompatible-cast]
 
    foo/bar/nested_test.js:8:2
    8| (min.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
@@ -350,7 +360,7 @@ References:
 
 Error --------------------------------------------------------------------------------------- foo/bar/nested_test.js:9:2
 
-Cannot cast `corge.fun()` to boolean because `Declaration` [1] is incompatible with boolean [2].
+Cannot cast `corge.fun()` to boolean because `Declaration` [1] is incompatible with boolean [2]. [incompatible-cast]
 
    foo/bar/nested_test.js:9:2
    9| (corge.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
@@ -367,7 +377,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ test.js:4:2
 
-Cannot cast `Implicit.fun()` to boolean because `Declaration` [1] is incompatible with boolean [2].
+Cannot cast `Implicit.fun()` to boolean because `Declaration` [1] is incompatible with boolean [2]. [incompatible-cast]
 
    test.js:4:2
    4| (Implicit.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
@@ -385,6 +395,7 @@ References:
 Error ------------------------------------------------------------------------------------------------------ test.js:7:2
 
 Cannot cast `ExplicitSameName.fun()` to boolean because `Declaration` [1] is incompatible with boolean [2].
+[incompatible-cast]
 
    test.js:7:2
    7| (ExplicitSameName.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
@@ -402,6 +413,7 @@ References:
 Error ----------------------------------------------------------------------------------------------------- test.js:10:2
 
 Cannot cast `ExplicitDifferentName.fun()` to boolean because `Declaration` [1] is incompatible with boolean [2].
+[incompatible-cast]
 
    test.js:10:2
    10| (ExplicitDifferentName.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
@@ -421,6 +433,7 @@ Found 6 errors
 Error --------------------------------------------------------------------------------------- foo/bar/nested_test.js:7:2
 
 Cannot cast `docblock.fun()` to boolean because `Implementation` [1] is incompatible with boolean [2].
+[incompatible-cast]
 
    foo/bar/nested_test.js:7:2
    7| (docblock.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
@@ -437,7 +450,7 @@ References:
 
 Error --------------------------------------------------------------------------------------- foo/bar/nested_test.js:8:2
 
-Cannot cast `min.fun()` to boolean because `Implementation` [1] is incompatible with boolean [2].
+Cannot cast `min.fun()` to boolean because `Implementation` [1] is incompatible with boolean [2]. [incompatible-cast]
 
    foo/bar/nested_test.js:8:2
    8| (min.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
@@ -454,7 +467,7 @@ References:
 
 Error --------------------------------------------------------------------------------------- foo/bar/nested_test.js:9:2
 
-Cannot cast `corge.fun()` to boolean because `Implementation` [1] is incompatible with boolean [2].
+Cannot cast `corge.fun()` to boolean because `Implementation` [1] is incompatible with boolean [2]. [incompatible-cast]
 
    foo/bar/nested_test.js:9:2
    9| (corge.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
@@ -472,6 +485,7 @@ References:
 Error ------------------------------------------------------------------------------------------------------ test.js:4:2
 
 Cannot cast `Implicit.fun()` to boolean because `Implementation` [1] is incompatible with boolean [2].
+[incompatible-cast]
 
    test.js:4:2
    4| (Implicit.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
@@ -489,6 +503,7 @@ References:
 Error ------------------------------------------------------------------------------------------------------ test.js:7:2
 
 Cannot cast `ExplicitSameName.fun()` to boolean because `Implementation` [1] is incompatible with boolean [2].
+[incompatible-cast]
 
    test.js:7:2
    7| (ExplicitSameName.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
@@ -506,6 +521,7 @@ References:
 Error ----------------------------------------------------------------------------------------------------- test.js:10:2
 
 Cannot cast `ExplicitDifferentName.fun()` to boolean because `Implementation` [1] is incompatible with boolean [2].
+[incompatible-cast]
 
    test.js:10:2
    10| (ExplicitDifferentName.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
@@ -524,7 +540,7 @@ References:
 Found 6 errors
 Error --------------------------------------------------------------------------------------- foo/bar/nested_test.js:7:2
 
-Cannot cast `docblock.fun()` to boolean because `Declaration` [1] is incompatible with boolean [2].
+Cannot cast `docblock.fun()` to boolean because `Declaration` [1] is incompatible with boolean [2]. [incompatible-cast]
 
    foo/bar/nested_test.js:7:2
    7| (docblock.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
@@ -541,7 +557,7 @@ References:
 
 Error --------------------------------------------------------------------------------------- foo/bar/nested_test.js:8:2
 
-Cannot cast `min.fun()` to boolean because `Declaration` [1] is incompatible with boolean [2].
+Cannot cast `min.fun()` to boolean because `Declaration` [1] is incompatible with boolean [2]. [incompatible-cast]
 
    foo/bar/nested_test.js:8:2
    8| (min.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
@@ -558,7 +574,7 @@ References:
 
 Error --------------------------------------------------------------------------------------- foo/bar/nested_test.js:9:2
 
-Cannot cast `corge.fun()` to boolean because `Declaration` [1] is incompatible with boolean [2].
+Cannot cast `corge.fun()` to boolean because `Declaration` [1] is incompatible with boolean [2]. [incompatible-cast]
 
    foo/bar/nested_test.js:9:2
    9| (corge.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
@@ -575,7 +591,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ test.js:4:2
 
-Cannot cast `Implicit.fun()` to boolean because `Declaration` [1] is incompatible with boolean [2].
+Cannot cast `Implicit.fun()` to boolean because `Declaration` [1] is incompatible with boolean [2]. [incompatible-cast]
 
    test.js:4:2
    4| (Implicit.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
@@ -593,6 +609,7 @@ References:
 Error ------------------------------------------------------------------------------------------------------ test.js:7:2
 
 Cannot cast `ExplicitSameName.fun()` to boolean because `Declaration` [1] is incompatible with boolean [2].
+[incompatible-cast]
 
    test.js:7:2
    7| (ExplicitSameName.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
@@ -610,6 +627,7 @@ References:
 Error ----------------------------------------------------------------------------------------------------- test.js:10:2
 
 Cannot cast `ExplicitDifferentName.fun()` to boolean because `Declaration` [1] is incompatible with boolean [2].
+[incompatible-cast]
 
    test.js:10:2
    10| (ExplicitDifferentName.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
@@ -631,7 +649,7 @@ Found 6 errors
 ======Start off without the .js files and with the .flow file======
 Error --------------------------------------------------------------------------------------- foo/bar/nested_test.js:7:2
 
-Cannot cast `docblock.fun()` to boolean because `Declaration` [1] is incompatible with boolean [2].
+Cannot cast `docblock.fun()` to boolean because `Declaration` [1] is incompatible with boolean [2]. [incompatible-cast]
 
    foo/bar/nested_test.js:7:2
    7| (docblock.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
@@ -648,7 +666,7 @@ References:
 
 Error --------------------------------------------------------------------------------------- foo/bar/nested_test.js:8:2
 
-Cannot cast `min.fun()` to boolean because `Declaration` [1] is incompatible with boolean [2].
+Cannot cast `min.fun()` to boolean because `Declaration` [1] is incompatible with boolean [2]. [incompatible-cast]
 
    foo/bar/nested_test.js:8:2
    8| (min.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
@@ -665,7 +683,7 @@ References:
 
 Error --------------------------------------------------------------------------------------- foo/bar/nested_test.js:9:2
 
-Cannot cast `corge.fun()` to boolean because `Declaration` [1] is incompatible with boolean [2].
+Cannot cast `corge.fun()` to boolean because `Declaration` [1] is incompatible with boolean [2]. [incompatible-cast]
 
    foo/bar/nested_test.js:9:2
    9| (corge.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
@@ -682,7 +700,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ test.js:4:2
 
-Cannot cast `Implicit.fun()` to boolean because `Declaration` [1] is incompatible with boolean [2].
+Cannot cast `Implicit.fun()` to boolean because `Declaration` [1] is incompatible with boolean [2]. [incompatible-cast]
 
    test.js:4:2
    4| (Implicit.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
@@ -700,6 +718,7 @@ References:
 Error ------------------------------------------------------------------------------------------------------ test.js:7:2
 
 Cannot cast `ExplicitSameName.fun()` to boolean because `Declaration` [1] is incompatible with boolean [2].
+[incompatible-cast]
 
    test.js:7:2
    7| (ExplicitSameName.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
@@ -717,6 +736,7 @@ References:
 Error ----------------------------------------------------------------------------------------------------- test.js:10:2
 
 Cannot cast `ExplicitDifferentName.fun()` to boolean because `Declaration` [1] is incompatible with boolean [2].
+[incompatible-cast]
 
    test.js:10:2
    10| (ExplicitDifferentName.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
@@ -735,7 +755,7 @@ References:
 Found 6 errors
 Error --------------------------------------------------------------------------------------- foo/bar/nested_test.js:7:2
 
-Cannot cast `docblock.fun()` to boolean because `Declaration` [1] is incompatible with boolean [2].
+Cannot cast `docblock.fun()` to boolean because `Declaration` [1] is incompatible with boolean [2]. [incompatible-cast]
 
    foo/bar/nested_test.js:7:2
    7| (docblock.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
@@ -752,7 +772,7 @@ References:
 
 Error --------------------------------------------------------------------------------------- foo/bar/nested_test.js:8:2
 
-Cannot cast `min.fun()` to boolean because `Declaration` [1] is incompatible with boolean [2].
+Cannot cast `min.fun()` to boolean because `Declaration` [1] is incompatible with boolean [2]. [incompatible-cast]
 
    foo/bar/nested_test.js:8:2
    8| (min.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
@@ -769,7 +789,7 @@ References:
 
 Error --------------------------------------------------------------------------------------- foo/bar/nested_test.js:9:2
 
-Cannot cast `corge.fun()` to boolean because `Declaration` [1] is incompatible with boolean [2].
+Cannot cast `corge.fun()` to boolean because `Declaration` [1] is incompatible with boolean [2]. [incompatible-cast]
 
    foo/bar/nested_test.js:9:2
    9| (corge.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
@@ -786,7 +806,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ test.js:4:2
 
-Cannot cast `Implicit.fun()` to boolean because `Declaration` [1] is incompatible with boolean [2].
+Cannot cast `Implicit.fun()` to boolean because `Declaration` [1] is incompatible with boolean [2]. [incompatible-cast]
 
    test.js:4:2
    4| (Implicit.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
@@ -804,6 +824,7 @@ References:
 Error ------------------------------------------------------------------------------------------------------ test.js:7:2
 
 Cannot cast `ExplicitSameName.fun()` to boolean because `Declaration` [1] is incompatible with boolean [2].
+[incompatible-cast]
 
    test.js:7:2
    7| (ExplicitSameName.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
@@ -821,6 +842,7 @@ References:
 Error ----------------------------------------------------------------------------------------------------- test.js:10:2
 
 Cannot cast `ExplicitDifferentName.fun()` to boolean because `Declaration` [1] is incompatible with boolean [2].
+[incompatible-cast]
 
    test.js:10:2
    10| (ExplicitDifferentName.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
@@ -839,7 +861,7 @@ References:
 Found 6 errors
 Error --------------------------------------------------------------------------------------- foo/bar/nested_test.js:7:2
 
-Cannot cast `docblock.fun()` to boolean because `Declaration` [1] is incompatible with boolean [2].
+Cannot cast `docblock.fun()` to boolean because `Declaration` [1] is incompatible with boolean [2]. [incompatible-cast]
 
    foo/bar/nested_test.js:7:2
    7| (docblock.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
@@ -856,7 +878,7 @@ References:
 
 Error --------------------------------------------------------------------------------------- foo/bar/nested_test.js:8:2
 
-Cannot cast `min.fun()` to boolean because `Declaration` [1] is incompatible with boolean [2].
+Cannot cast `min.fun()` to boolean because `Declaration` [1] is incompatible with boolean [2]. [incompatible-cast]
 
    foo/bar/nested_test.js:8:2
    8| (min.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
@@ -873,7 +895,7 @@ References:
 
 Error --------------------------------------------------------------------------------------- foo/bar/nested_test.js:9:2
 
-Cannot cast `corge.fun()` to boolean because `Declaration` [1] is incompatible with boolean [2].
+Cannot cast `corge.fun()` to boolean because `Declaration` [1] is incompatible with boolean [2]. [incompatible-cast]
 
    foo/bar/nested_test.js:9:2
    9| (corge.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
@@ -890,7 +912,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ test.js:4:2
 
-Cannot cast `Implicit.fun()` to boolean because `Declaration` [1] is incompatible with boolean [2].
+Cannot cast `Implicit.fun()` to boolean because `Declaration` [1] is incompatible with boolean [2]. [incompatible-cast]
 
    test.js:4:2
    4| (Implicit.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
@@ -908,6 +930,7 @@ References:
 Error ------------------------------------------------------------------------------------------------------ test.js:7:2
 
 Cannot cast `ExplicitSameName.fun()` to boolean because `Declaration` [1] is incompatible with boolean [2].
+[incompatible-cast]
 
    test.js:7:2
    7| (ExplicitSameName.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
@@ -925,6 +948,7 @@ References:
 Error ----------------------------------------------------------------------------------------------------- test.js:10:2
 
 Cannot cast `ExplicitDifferentName.fun()` to boolean because `Declaration` [1] is incompatible with boolean [2].
+[incompatible-cast]
 
    test.js:10:2
    10| (ExplicitDifferentName.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean

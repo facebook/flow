@@ -1,6 +1,6 @@
 Error -------------------------------------------------------------------------------------------------------- A.js:13:7
 
-Cannot assign `A.y` to `A.x` because string [1] is incompatible with boolean [2].
+Cannot assign `A.y` to `A.x` because string [1] is incompatible with boolean [2]. [incompatible-type]
 
    A.js:13:7
    13| A.x = A.y;
@@ -17,7 +17,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------------- A.js:14:3
 
-Cannot call `f` with `A.x` bound to `x` because string [1] is incompatible with boolean [2].
+Cannot call `f` with `A.x` bound to `x` because string [1] is incompatible with boolean [2]. [incompatible-call]
 
    A.js:14:3
    14| f(A.x); // A.x is now a string, by def assign
@@ -32,13 +32,13 @@ References:
                     ^^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------------- C.js:9:5
+Error --------------------------------------------------------------------------------------------------------- C.js:9:7
 
-Cannot get `o.b` because property `b` is missing in new object [1].
+Cannot get `o.b` because property `b` is missing in new object [1]. [prop-missing]
 
-   C.js:9:5
+   C.js:9:7
    9|   f(o.b);
-          ^^^
+            ^
 
 References:
    C.js:8:11
@@ -48,7 +48,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------------- C.js:10:5
 
-Cannot call `f` with `o.s` bound to `x` because number [1] is incompatible with boolean [2].
+Cannot call `f` with `o.s` bound to `x` because number [1] is incompatible with boolean [2]. [incompatible-call]
 
    C.js:10:5
    10|   f(o.s);
@@ -65,7 +65,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------------- D.js:6:30
 
-Cannot return `this.i` because boolean [1] is incompatible with string [2].
+Cannot return `this.i` because boolean [1] is incompatible with string [2]. [incompatible-return]
 
    D.js:6:30
    6| function g():string { return this.i; }
@@ -82,7 +82,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------------- D.js:12:3
 
-Cannot call `f` with `i` bound to `x` because string [1] is incompatible with boolean [2].
+Cannot call `f` with `i` bound to `x` because string [1] is incompatible with boolean [2]. [incompatible-call]
 
    D.js:12:3
    12| f(i);
@@ -99,7 +99,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------------- E.js:8:6
 
-Cannot call `o.fn` with `false` bound to `x` because boolean [1] is incompatible with number [2].
+Cannot call `o.fn` with `false` bound to `x` because boolean [1] is incompatible with number [2]. [incompatible-call]
 
    E.js:8:6
    8| o.fn(false);
@@ -113,7 +113,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------------- F.js:1:26
 
-Cannot perform arithmetic operation because string [1] is not a number.
+Cannot perform arithmetic operation because string [1] is not a number. [unsafe-addition]
 
    F.js:1:26
    1| function fn2(x) { return x.length * 4; }
@@ -127,24 +127,24 @@ References:
 
 Error -------------------------------------------------------------------------------------------------------- F.js:5:10
 
-Cannot return `x.length` because number [1] is incompatible with string [2].
+Cannot return `x.length` because number [1] is incompatible with string [2]. [incompatible-return]
 
    F.js:5:10
-     5|   return x.length;
-                 ^^^^^^^^
+      5|   return x.length;
+                  ^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:294:13
-   294|     length: number;
-                    ^^^^^^ [1]
+   <BUILTINS>/core.js:1005:13
+   1005|     length: number;
+                     ^^^^^^ [1]
    F.js:4:33
-     4| function foo(x: Array<number>): string {
-                                        ^^^^^^ [2]
+      4| function foo(x: Array<number>): string {
+                                         ^^^^^^ [2]
 
 
 Error -------------------------------------------------------------------------------------------------------- G.js:2:12
 
-Cannot assign `123` to `a.length` because number [1] is incompatible with string [2].
+Cannot assign `123` to `a.length` because number [1] is incompatible with string [2]. [incompatible-type]
 
    G.js:2:12
    2| a.length = 123;
@@ -156,13 +156,13 @@ References:
                         ^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------------- G.js:3:1
+Error --------------------------------------------------------------------------------------------------------- G.js:3:3
 
-Cannot call `a.length` because number [1] is not a function.
+Cannot call `a.length` because number [1] is not a function. [not-a-function]
 
-   G.js:3:1
+   G.js:3:3
    3| a.length();
-      ^^^^^^^^^^
+        ^^^^^^
 
 References:
    G.js:2:12
@@ -172,25 +172,25 @@ References:
 
 Error -------------------------------------------------------------------------------------------------------- G.js:6:12
 
-Cannot assign `"duck"` to `b.length` because string [1] is incompatible with number [2].
+Cannot assign `"duck"` to `b.length` because string [1] is incompatible with number [2]. [incompatible-type]
 
    G.js:6:12
-     6| b.length = "duck";
-                   ^^^^^^ [1]
+      6| b.length = "duck";
+                    ^^^^^^ [1]
 
 References:
-   <BUILTINS>/core.js:294:13
-   294|     length: number;
-                    ^^^^^^ [2]
+   <BUILTINS>/core.js:1005:13
+   1005|     length: number;
+                     ^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------------- G.js:7:1
+Error --------------------------------------------------------------------------------------------------------- G.js:7:3
 
-Cannot call `b.length` because string [1] is not a function.
+Cannot call `b.length` because string [1] is not a function. [not-a-function]
 
-   G.js:7:1
+   G.js:7:3
    7| b.length();
-      ^^^^^^^^^^
+        ^^^^^^
 
 References:
    G.js:6:12

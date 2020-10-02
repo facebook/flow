@@ -1,11 +1,11 @@
-(**
+(*
  * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  *)
 
-module List = Core_list
+module List = Base.List
 open LspProt
 
 (* Each interaction gets a unique id. *)
@@ -30,7 +30,10 @@ type trigger =
   | PushedErrorsRecheckStreaming of recheck_reason
   | Rage
   | Rename
+  | ServerConnected
+  | SignatureHelp
   | TypeCoverage
+  | ExecuteCommand
   | UnknownTrigger
 
 (* Source of the trigger *)
@@ -42,9 +45,12 @@ type source =
 (* What was the result of this interaction. *)
 type ux =
   | Canceled
+  | CanceledPushingLiveNonParseErrors
   | Errored
+  | ErroredPushingLiveNonParseErrors
   | ErroredPushingLiveParseErrors
   | PushedErrors
+  | PushedLiveNonParseErrors
   | PushedLiveParseErrors
   | Responded
   | Timeout
@@ -90,14 +96,20 @@ let string_of_trigger = function
   | PushedErrorsNewSubscription -> "newSubscription"
   | Rage -> "Rage"
   | Rename -> "Rename"
+  | ServerConnected -> "ServerConnected"
+  | SignatureHelp -> "SignatureHelp"
   | TypeCoverage -> "TypeCoverage"
+  | ExecuteCommand -> "ExecuteCommand"
   | UnknownTrigger -> "UnknownTrigger"
 
 let string_of_ux = function
   | Canceled -> "Canceled"
+  | CanceledPushingLiveNonParseErrors -> "CanceledPushingLiveNonParseErrors"
   | Errored -> "Errored"
+  | ErroredPushingLiveNonParseErrors -> "ErroredPushingLiveNonParseErrors"
   | ErroredPushingLiveParseErrors -> "ErroredPushingLiveParseErrors"
   | PushedErrors -> "PushedErrors"
+  | PushedLiveNonParseErrors -> "PushedLiveNonParseErrors"
   | PushedLiveParseErrors -> "PushedLiveParseErrors"
   | Responded -> "Responded"
   | Timeout -> "Timeout"
@@ -127,12 +139,15 @@ let source_of_trigger = function
   | Hover
   | Rage
   | Rename
-  | TypeCoverage ->
+  | SignatureHelp
+  | TypeCoverage
+  | ExecuteCommand ->
     Client
   | PushedErrorsEndOfRecheck _
   | PushedErrorsEnvChange
   | PushedErrorsNewSubscription
-  | PushedErrorsRecheckStreaming _ ->
+  | PushedErrorsRecheckStreaming _
+  | ServerConnected ->
     Server
   | UnknownTrigger -> UnknownSource
 
@@ -168,8 +183,7 @@ let start ~start_state ~trigger =
   let id = internal_state.next_id in
   internal_state.next_id <- internal_state.next_id + 1;
   let interaction = { start_state; trigger } in
-  internal_state.pending_interactions <-
-    IMap.add id interaction internal_state.pending_interactions;
+  internal_state.pending_interactions <- IMap.add id interaction internal_state.pending_interactions;
   id
 
 (* Call this to note that a recheck has started *)
@@ -195,17 +209,17 @@ let log_pushed_errors ~end_state ~errors_reason =
     match errors_reason with
     | End_of_recheck { recheck_reasons } ->
       ( List.map recheck_reasons ~f:(fun reason -> PushedErrorsEndOfRecheck reason),
-        Option.value ~default:end_state internal_state.last_recheck_start_state )
+        Base.Option.value ~default:end_state internal_state.last_recheck_start_state )
     | Recheck_streaming { recheck_reasons } ->
       ( List.map recheck_reasons ~f:(fun reason -> PushedErrorsRecheckStreaming reason),
-        Option.value ~default:end_state internal_state.last_recheck_start_state )
+        Base.Option.value ~default:end_state internal_state.last_recheck_start_state )
     | Env_change -> ([PushedErrorsEnvChange], end_state)
     | New_subscription -> ([PushedErrorsNewSubscription], end_state)
   in
   List.iter triggers ~f:(fun trigger -> log ~ux:PushedErrors ~trigger ~start_state ~end_state)
 
 let log ~end_state ~ux ~id =
-  Option.iter (IMap.get id internal_state.pending_interactions) ~f:(fun interaction ->
+  Base.Option.iter (IMap.find_opt id internal_state.pending_interactions) ~f:(fun interaction ->
       internal_state.pending_interactions <- IMap.remove id internal_state.pending_interactions;
       let { start_state; trigger } = interaction in
       log ~ux ~trigger ~start_state ~end_state)
@@ -213,7 +227,7 @@ let log ~end_state ~ux ~id =
 let rec gc ~get_state oldest_allowed =
   let s = internal_state in
   if s.lowest_pending_id < s.next_id then
-    match IMap.get s.lowest_pending_id s.pending_interactions with
+    match IMap.find_opt s.lowest_pending_id s.pending_interactions with
     | None ->
       s.lowest_pending_id <- s.lowest_pending_id + 1;
       gc ~get_state oldest_allowed
@@ -252,83 +266,84 @@ let flush () = FlowInteractionLogger.flush ()
 (* Not every message the the lsp process receives triggers an interaction. This function
  * enumerates which methods we care about and what trigger they correspond to *)
 let trigger_of_lsp_msg =
-  Lsp.(
-    function
-    (* Requests from the client which we care about *)
-    | RequestMessage (_, CodeActionRequest _) -> Some CodeAction
-    | RequestMessage (_, CompletionRequest _) -> Some Completion
-    | RequestMessage (_, DefinitionRequest _) -> Some Definition
-    | RequestMessage (_, DocumentHighlightRequest _) -> Some DocumentHighlight
-    | RequestMessage (_, DocumentSymbolRequest _) -> Some DocumentSymbol
-    | RequestMessage (_, FindReferencesRequest _) -> Some FindReferences
-    | RequestMessage (_, HoverRequest _) -> Some Hover
-    | RequestMessage (_, RageRequest) -> Some Rage
-    | RequestMessage (_, RenameRequest _) -> Some Rename
-    | RequestMessage (_, TypeCoverageRequest _) -> Some TypeCoverage
-    (* Requests which we don't care about. Some are unsupported and some are sent from the lsp to
-     * the client *)
-    | RequestMessage (_, CompletionItemResolveRequest _)
-    | RequestMessage (_, DocumentFormattingRequest _)
-    | RequestMessage (_, DocumentOnTypeFormattingRequest _)
-    | RequestMessage (_, DocumentRangeFormattingRequest _)
-    | RequestMessage (_, InitializeRequest _)
-    | RequestMessage (_, ShowMessageRequestRequest _)
-    | RequestMessage (_, ShowStatusRequest _)
-    | RequestMessage (_, ShutdownRequest)
-    | RequestMessage (_, CodeLensResolveRequest _)
-    | RequestMessage (_, DocumentCodeLensRequest _)
-    (* TODO not sure if this is right, just need to unbreak the build. *)
-    
-    | RequestMessage (_, TypeDefinitionRequest _)
-    | RequestMessage (_, UnknownRequest _)
-    | RequestMessage (_, WorkspaceSymbolRequest _)
-    | RequestMessage (_, RegisterCapabilityRequest _) ->
-      None
-    (* No responses trigger interactions *)
-    | ResponseMessage (_, InitializeResult _)
-    | ResponseMessage (_, ShutdownResult)
-    | ResponseMessage (_, CodeLensResolveResult _)
-    | ResponseMessage (_, HoverResult _)
-    | ResponseMessage (_, DefinitionResult _)
-    | ResponseMessage (_, CompletionResult _)
-    | ResponseMessage (_, CompletionItemResolveResult _)
-    | ResponseMessage (_, WorkspaceSymbolResult _)
-    | ResponseMessage (_, DocumentSymbolResult _)
-    | ResponseMessage (_, FindReferencesResult _)
-    | ResponseMessage (_, DocumentHighlightResult _)
-    | ResponseMessage (_, DocumentCodeLensResult _)
-    | ResponseMessage (_, TypeCoverageResult _)
-    (* TODO not sure if this is right, just need to unbreak the build. *)
-    
-    | ResponseMessage (_, TypeDefinitionResult _)
-    | ResponseMessage (_, DocumentFormattingResult _)
-    | ResponseMessage (_, DocumentRangeFormattingResult _)
-    | ResponseMessage (_, DocumentOnTypeFormattingResult _)
-    | ResponseMessage (_, ShowMessageRequestResult _)
-    | ResponseMessage (_, ShowStatusResult _)
-    | ResponseMessage (_, RageResult _)
-    | ResponseMessage (_, RenameResult _)
-    | ResponseMessage (_, ErrorResult _)
-    | ResponseMessage (_, CodeActionResult _) ->
-      None
-    (* Only a few notifications can trigger an interaction *)
-    | NotificationMessage (DidOpenNotification _) -> Some DidOpen
-    | NotificationMessage (DidCloseNotification _) -> Some DidClose
-    | NotificationMessage (DidSaveNotification _) -> Some DidSave
-    | NotificationMessage (DidChangeNotification _) -> Some DidChange
-    (* Most notifications we ignore *)
-    | NotificationMessage ExitNotification
-    | NotificationMessage (CancelRequestNotification _)
-    | NotificationMessage (PublishDiagnosticsNotification _)
-    | NotificationMessage (LogMessageNotification _)
-    | NotificationMessage (TelemetryNotification _)
-    | NotificationMessage (ShowMessageNotification _)
-    | NotificationMessage (ProgressNotification _)
-    | NotificationMessage (ActionRequiredNotification _)
-    | NotificationMessage (ConnectionStatusNotification _)
-    | NotificationMessage InitializedNotification
-    | NotificationMessage SetTraceNotification
-    | NotificationMessage LogTraceNotification
-    | NotificationMessage (UnknownNotification _)
-    | NotificationMessage (DidChangeWatchedFilesNotification _) ->
-      None)
+  let open Lsp in
+  function
+  (* Requests from the client which we care about *)
+  | RequestMessage (_, CodeActionRequest _) -> Some CodeAction
+  | RequestMessage (_, CompletionRequest _) -> Some Completion
+  | RequestMessage (_, DefinitionRequest _) -> Some Definition
+  | RequestMessage (_, DocumentHighlightRequest _) -> Some DocumentHighlight
+  | RequestMessage (_, DocumentSymbolRequest _) -> Some DocumentSymbol
+  | RequestMessage (_, FindReferencesRequest _) -> Some FindReferences
+  | RequestMessage (_, HoverRequest _) -> Some Hover
+  | RequestMessage (_, RageRequest) -> Some Rage
+  | RequestMessage (_, RenameRequest _) -> Some Rename
+  | RequestMessage (_, TypeCoverageRequest _) -> Some TypeCoverage
+  | RequestMessage (_, SignatureHelpRequest _) -> Some SignatureHelp
+  | RequestMessage (_, ExecuteCommandRequest _) -> Some ExecuteCommand
+  (* Requests which we don't care about. Some are unsupported and some are sent from the lsp to
+    * the client *)
+  | RequestMessage (_, CompletionItemResolveRequest _)
+  | RequestMessage (_, DocumentFormattingRequest _)
+  | RequestMessage (_, DocumentOnTypeFormattingRequest _)
+  | RequestMessage (_, DocumentRangeFormattingRequest _)
+  | RequestMessage (_, InitializeRequest _)
+  | RequestMessage (_, ShowMessageRequestRequest _)
+  | RequestMessage (_, ShowStatusRequest _)
+  | RequestMessage (_, ShutdownRequest)
+  | RequestMessage (_, CodeLensResolveRequest _)
+  | RequestMessage (_, DocumentCodeLensRequest _)
+  (* TODO not sure if this is right, just need to unbreak the build. *)
+  | RequestMessage (_, TypeDefinitionRequest _)
+  | RequestMessage (_, UnknownRequest _)
+  | RequestMessage (_, WorkspaceSymbolRequest _)
+  | RequestMessage (_, RegisterCapabilityRequest _) ->
+    None
+  (* No responses trigger interactions *)
+  | ResponseMessage (_, InitializeResult _)
+  | ResponseMessage (_, ShutdownResult)
+  | ResponseMessage (_, CodeLensResolveResult _)
+  | ResponseMessage (_, HoverResult _)
+  | ResponseMessage (_, DefinitionResult _)
+  | ResponseMessage (_, CompletionResult _)
+  | ResponseMessage (_, CompletionItemResolveResult _)
+  | ResponseMessage (_, SignatureHelpResult _)
+  | ResponseMessage (_, WorkspaceSymbolResult _)
+  | ResponseMessage (_, DocumentSymbolResult _)
+  | ResponseMessage (_, FindReferencesResult _)
+  | ResponseMessage (_, GoToImplementationResult _)
+  | ResponseMessage (_, DocumentHighlightResult _)
+  | ResponseMessage (_, DocumentCodeLensResult _)
+  | ResponseMessage (_, TypeCoverageResult _)
+  | ResponseMessage (_, ExecuteCommandResult _)
+  (* TODO not sure if this is right, just need to unbreak the build. *)
+  | ResponseMessage (_, TypeDefinitionResult _)
+  | ResponseMessage (_, DocumentFormattingResult _)
+  | ResponseMessage (_, DocumentRangeFormattingResult _)
+  | ResponseMessage (_, DocumentOnTypeFormattingResult _)
+  | ResponseMessage (_, ShowMessageRequestResult _)
+  | ResponseMessage (_, ShowStatusResult _)
+  | ResponseMessage (_, RageResult _)
+  | ResponseMessage (_, RenameResult _)
+  | ResponseMessage (_, ErrorResult _)
+  | ResponseMessage (_, CodeActionResult _) ->
+    None
+  (* Only a few notifications can trigger an interaction *)
+  | NotificationMessage (DidOpenNotification _) -> Some DidOpen
+  | NotificationMessage (DidCloseNotification _) -> Some DidClose
+  | NotificationMessage (DidSaveNotification _) -> Some DidSave
+  | NotificationMessage (DidChangeNotification _) -> Some DidChange
+  (* Most notifications we ignore *)
+  | NotificationMessage ExitNotification
+  | NotificationMessage (CancelRequestNotification _)
+  | NotificationMessage (PublishDiagnosticsNotification _)
+  | NotificationMessage (LogMessageNotification _)
+  | NotificationMessage (TelemetryNotification _)
+  | NotificationMessage (ShowMessageNotification _)
+  | NotificationMessage (ConnectionStatusNotification _)
+  | NotificationMessage InitializedNotification
+  | NotificationMessage SetTraceNotification
+  | NotificationMessage LogTraceNotification
+  | NotificationMessage (UnknownNotification _)
+  | NotificationMessage (DidChangeWatchedFilesNotification _) ->
+    None

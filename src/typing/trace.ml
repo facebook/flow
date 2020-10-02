@@ -1,4 +1,4 @@
-(**
+(*
  * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
@@ -8,6 +8,7 @@
 open Utils_js
 open Reason
 open Type
+open TypeUtil
 
 (*
   Terminology:
@@ -41,27 +42,33 @@ open Type
    (The formatting we do in reasons_of_trace recovers the graph
    structure for readability.)
  *)
-type step = Type.t * Type.use_t * parent * int
+type step =
+  | Step of {
+      lower: Type.t;
+      upper: Type.use_t;
+      parent: step list;
+    }
 
-and t = step list
+(* A list of steps and the depth of the trace, trace depth is 1 + the length of
+   the longest ancestor chain in the trace. We keep this precomputed because
 
-and parent = Parent of t
+   a) actual ancestors may be thrown away due to externally imposed limits on trace
+      depth;
 
-let compare = Pervasives.compare
+   b) the recursion limiter in the flow function checks this on every call.
+ *)
+and t = step list * int
 
-(* trace depth is 1 + the length of the longest ancestor chain
-   in the trace. We keep this precomputed because a) actual ancestors
-   may be thrown away due to externally imposed limits on trace depth;
-   b) the recursion limiter in the flow function checks this on every
-   call. *)
-let trace_depth trace = List.fold_left (fun acc (_, _, _, d) -> max acc d) 0 trace
+let compare = Stdlib.compare
+
+let trace_depth = snd
+
+let dummy_trace = ([], 0)
 
 (* Single-step trace with no parent. This corresponds to a
    top-level invocation of the flow function, e.g. due to
    a constraint generated in Type_inference_js *)
-let unit_trace lower upper = [(lower, upper, Parent [], 1)]
-
-let dummy_trace = []
+let unit_trace lower upper : t = ([Step { lower; upper; parent = [] }], 1)
 
 (* Single-step trace with a parent. This corresponds to a
    recursive invocation of the flow function.
@@ -72,18 +79,27 @@ let rec_trace ~max lower upper parent =
   let parent_depth = trace_depth parent in
   let parent =
     if max > 0 then
-      parent
+      fst parent
     else
       []
   in
-  [(lower, upper, Parent parent, parent_depth + 1)]
+  ([Step { lower; upper; parent }], parent_depth + 1)
 
-(* join a list of traces *)
-let concat_trace = List.concat
+(* Join a list of traces. If the maximum depth of traces is configured to 0, then
+   agressively throw away traces and only compute the updated depth. *)
+let concat_trace ~max ts =
+  let d = List.fold_left (fun acc (_, d) -> Base.Int.max acc d) 0 ts in
+  let steps =
+    if max > 0 then
+      Base.List.concat_map ~f:fst ts
+    else
+      []
+  in
+  (steps, d)
 
 (* used to index trace nodes *)
-module TraceMap : MyMap.S with type key = t = MyMap.Make (struct
-  type key = t
+module TraceMap : WrappedMap.S with type key = step list = WrappedMap.Make (struct
+  type key = step list
 
   type t = key
 
@@ -103,30 +119,30 @@ let index_trace =
         (TraceMap.(add trace i tmap), IMap.(add i trace imap))
       in
       List.fold_left
-        (fun acc (_, _, Parent parent, _) ->
+        (fun acc (Step { parent; _ }) ->
           match parent with
           | [] -> acc
           | _ -> f acc parent)
         (level - 1, tmap, imap)
         trace
   in
-  fun level trace ->
-    let (_, tmap, imap) = f (level, TraceMap.empty, IMap.empty) trace in
+  fun level (trace : t) ->
+    let (_, tmap, imap) = f (level, TraceMap.empty, IMap.empty) (fst trace) in
     (tmap, imap)
 
 (* scan a trace tree, return maximum position length
    of reasons at or above the given depth limit, and
    min of that limit and actual max depth *)
-let max_depth_of_trace limit trace =
-  let rec f depth (_, _, parent, _) =
+let max_depth_of_trace limit (trace : t) =
+  let rec f depth (Step { parent; _ }) =
     if depth > limit then
       depth
     else
       match parent with
-      | Parent [] -> depth
-      | Parent trace -> List.fold_left f (depth + 1) trace
+      | [] -> depth
+      | trace -> List.fold_left f (depth + 1) trace
   in
-  List.fold_left f 1 trace
+  List.fold_left f 1 (fst trace)
 
 (* reformat a reason's description with
    - the given prefix and suffix: if either is nonempty,
@@ -165,13 +181,13 @@ let reasons_of_trace ?(level = 0) trace =
     &&
     let upper =
       match List.nth steps (i - 1) with
-      | (_, upper, _, _) -> upper
+      | Step { upper; _ } -> upper
     in
     match upper with
     | UseT (_, upper) -> lower = upper
     | _ -> false
   in
-  let print_step (steps : step list) i (lower, upper, Parent parent, _) =
+  let print_step (steps : step list) i (Step { lower; upper; parent }) =
     (* omit lower if it's a pipelined tvar *)
     ( if is_pipelined_tvar ~steps ~i lower then
       []
@@ -184,13 +200,13 @@ let reasons_of_trace ?(level = 0) trace =
           ( if parent = [] then
             ""
           else
-            match TraceMap.get parent tmap with
+            match TraceMap.find_opt parent tmap with
             | Some i -> spf " (from path %d)" (i + 1)
             | None -> " (from [not shown])" );
       ]
   in
   let print_path i (steps : step list) =
     let desc = RCustom (spf "* path %d:" (i + 1)) in
-    locationless_reason desc :: List.concat (List.mapi (print_step steps) steps)
+    locationless_reason desc :: Base.List.concat (List.mapi (print_step steps) steps)
   in
-  List.concat (List.rev (IMap.fold (fun i flow acc -> print_path i flow :: acc) imap []))
+  Base.List.concat (List.rev (IMap.fold (fun i flow acc -> print_path i flow :: acc) imap []))

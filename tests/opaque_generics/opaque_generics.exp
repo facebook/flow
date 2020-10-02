@@ -1,6 +1,6 @@
 Error ------------------------------------------------------------------------------------- importtest-polarity.js:10:12
 
-Cannot return `x` because string [1] is incompatible with number [2] in type argument `T` [3].
+Cannot return `x` because string [1] is incompatible with number [2] in type argument `T` [3]. [incompatible-return]
 
    importtest-polarity.js:10:12
    10|     return x;
@@ -20,7 +20,7 @@ References:
 
 Error ------------------------------------------------------------------------------------- importtest-polarity.js:18:12
 
-Cannot return `x` because number [1] is incompatible with string [2] in type argument `T` [3].
+Cannot return `x` because number [1] is incompatible with string [2] in type argument `T` [3]. [incompatible-return]
 
    importtest-polarity.js:18:12
    18|     return x;
@@ -40,7 +40,7 @@ References:
 
 Error ------------------------------------------------------------------------------------- importtest-polarity.js:26:12
 
-Cannot return `x` because number [1] is incompatible with string [2] in type argument `T` [3].
+Cannot return `x` because number [1] is incompatible with string [2] in type argument `T` [3]. [incompatible-return]
 
    importtest-polarity.js:26:12
    26|     return x;
@@ -60,7 +60,7 @@ References:
 
 Error ------------------------------------------------------------------------------------- importtest-polarity.js:30:12
 
-Cannot return `x` because string [1] is incompatible with number [2] in type argument `T` [3].
+Cannot return `x` because string [1] is incompatible with number [2] in type argument `T` [3]. [incompatible-return]
 
    importtest-polarity.js:30:12
    30|     return x;
@@ -80,12 +80,7 @@ References:
 
 Error ------------------------------------------------------------------------------------- importtest-polarity.js:39:12
 
-Cannot return `x` because:
- - number [1] is incompatible with string [2] in type argument `S` [3].
- - string [4] is incompatible with number [5] in type argument `T` [6].
- - in type argument `U` [7]:
-    - Either null [8] is incompatible with number [9].
-    - Or null [8] is incompatible with string [10].
+Cannot return `x` because number [1] is incompatible with string [2] in type argument `S` [3]. [incompatible-return]
 
    importtest-polarity.js:39:12
    39|     return x;
@@ -101,32 +96,56 @@ References:
    test-polarity.js:22:24
    22| export opaque type All<S,+T,-U> = FooBarBaz<S,T,U>;
                               ^ [3]
+
+
+Error ------------------------------------------------------------------------------------- importtest-polarity.js:39:12
+
+Cannot return `x` because string [1] is incompatible with number [2] in type argument `T` [3]. [incompatible-return]
+
+   importtest-polarity.js:39:12
+   39|     return x;
+                  ^
+
+References:
    importtest-polarity.js:38:40
    38| function test9(x: All<number, number | string, number | string>) : All<number | string, number, number | string | null> { // Errors: number != number | string (invariant), number | string ~> number (covariant), number | string ~> number | string | null (contravariant)
-                                              ^^^^^^ [4]
+                                              ^^^^^^ [1]
    importtest-polarity.js:38:89
    38| function test9(x: All<number, number | string, number | string>) : All<number | string, number, number | string | null> { // Errors: number != number | string (invariant), number | string ~> number (covariant), number | string ~> number | string | null (contravariant)
-                                                                                               ^^^^^^ [5]
+                                                                                               ^^^^^^ [2]
    test-polarity.js:22:27
    22| export opaque type All<S,+T,-U> = FooBarBaz<S,T,U>;
-                                 ^ [6]
+                                 ^ [3]
+
+
+Error ------------------------------------------------------------------------------------- importtest-polarity.js:39:12
+
+Cannot return `x` because in type argument `U` [1]: [incompatible-return]
+ - Either null [2] is incompatible with number [3].
+ - Or null [2] is incompatible with string [4].
+
+   importtest-polarity.js:39:12
+   39|     return x;
+                  ^
+
+References:
    test-polarity.js:22:30
    22| export opaque type All<S,+T,-U> = FooBarBaz<S,T,U>;
-                                    ^ [7]
+                                    ^ [1]
    importtest-polarity.js:38:115
    38| function test9(x: All<number, number | string, number | string>) : All<number | string, number, number | string | null> { // Errors: number != number | string (invariant), number | string ~> number (covariant), number | string ~> number | string | null (contravariant)
-                                                                                                                         ^^^^ [8]
+                                                                                                                         ^^^^ [2]
    importtest-polarity.js:38:48
    38| function test9(x: All<number, number | string, number | string>) : All<number | string, number, number | string | null> { // Errors: number != number | string (invariant), number | string ~> number (covariant), number | string ~> number | string | null (contravariant)
-                                                      ^^^^^^ [9]
+                                                      ^^^^^^ [3]
    importtest-polarity.js:38:57
    38| function test9(x: All<number, number | string, number | string>) : All<number | string, number, number | string | null> { // Errors: number != number | string (invariant), number | string ~> number (covariant), number | string ~> number | string | null (contravariant)
-                                                               ^^^^^^ [10]
+                                                               ^^^^^^ [4]
 
 
 Error ----------------------------------------------------------------------------------------------- importtest.js:7:12
 
-Cannot return `x` because string [1] is incompatible with number [2] in type argument `T` [3].
+Cannot return `x` because string [1] is incompatible with number [2] in type argument `T` [3]. [incompatible-return]
 
    importtest.js:7:12
    7|     return x;
@@ -146,7 +165,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- importtest.js:15:12
 
-Cannot return `x` because string [1] is incompatible with number [2] in type argument `T` [3].
+Cannot return `x` because string [1] is incompatible with number [2] in type argument `T` [3]. [incompatible-return]
 
    importtest.js:15:12
    15|     return x;
@@ -166,7 +185,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- importtest.js:23:12
 
-Cannot return `x` because `Container` [1] is incompatible with `Box` [2].
+Cannot return `x` because `Container` [1] is incompatible with `Box` [2]. [incompatible-return]
 
    importtest.js:23:12
    23|     return x;
@@ -183,7 +202,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- importtest.js:27:12
 
-Cannot return `x` because `Box` [1] is incompatible with `Container` [2].
+Cannot return `x` because `Box` [1] is incompatible with `Container` [2]. [incompatible-return]
 
    importtest.js:27:12
    27|     return x;
@@ -201,6 +220,7 @@ References:
 Error ------------------------------------------------------------------------------------------- test-polarity.js:12:28
 
 Cannot use `T` [1] in an output position because `T` [1] is expected to occur only in input positions.
+[incompatible-variance]
 
    test-polarity.js:12:28
    12| opaque type Bad1<-T> = Foo<T>; // Error: Foo expects covariant type
@@ -215,6 +235,7 @@ References:
 Error ------------------------------------------------------------------------------------------- test-polarity.js:13:28
 
 Cannot use `T` [1] in an input position because `T` [1] is expected to occur only in output positions.
+[incompatible-variance]
 
    test-polarity.js:13:28
    13| opaque type Bad2<+T> = Bar<T>; // Error: Bar expects contravariant type
@@ -229,6 +250,7 @@ References:
 Error ------------------------------------------------------------------------------------------- test-polarity.js:14:28
 
 Cannot use `T` [1] in an input/output position because `T` [1] is expected to occur only in input positions.
+[incompatible-variance]
 
    test-polarity.js:14:28
    14| opaque type Bad3<-T> = Baz<T>; // Error: Baz expects invariant type
@@ -243,6 +265,7 @@ References:
 Error ------------------------------------------------------------------------------------------- test-polarity.js:15:28
 
 Cannot use `T` [1] in an input/output position because `T` [1] is expected to occur only in output positions.
+[incompatible-variance]
 
    test-polarity.js:15:28
    15| opaque type Bad4<+T> = Baz<T>; // Error: Baz expects invariant type
@@ -256,7 +279,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:7:12
 
-Cannot return `x` because string [1] is incompatible with number [2] in type argument `T` [3].
+Cannot return `x` because string [1] is incompatible with number [2] in type argument `T` [3]. [incompatible-return]
 
    test.js:7:12
    7|     return x;
@@ -276,7 +299,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:15:12
 
-Cannot return `x` because string [1] is incompatible with number [2] in type argument `T` [3].
+Cannot return `x` because string [1] is incompatible with number [2] in type argument `T` [3]. [incompatible-return]
 
    test.js:15:12
    15|     return x;

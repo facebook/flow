@@ -1,4 +1,4 @@
-(**
+(*
  * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
@@ -32,7 +32,7 @@ end = struct
 
   let regexp loc pattern flags =
     let regexp =
-      try Js.Unsafe.new_obj (Js.Unsafe.variable "RegExp") [|string pattern; string flags|]
+      try Js.Unsafe.new_obj (Js.Unsafe.variable "RegExp") [| string pattern; string flags |]
       with _ ->
         translation_errors := (loc, Parse_error.InvalidRegExp) :: !translation_errors;
 
@@ -40,7 +40,7 @@ end = struct
          * too lazy to write a JS regexp parser in Ocaml, so we didn't know
          * the pattern was invalid. We'll recover with an empty pattern.
          *)
-        Js.Unsafe.new_obj (Js.Unsafe.variable "RegExp") [|string ""; string flags|]
+        Js.Unsafe.new_obj (Js.Unsafe.variable "RegExp") [| string ""; string flags |]
     in
     Js.Unsafe.inject regexp
 end
@@ -144,7 +144,7 @@ let parse content options =
   in
   let (ocaml_ast, errors) = Parser_flow.program ~fail:false ~parse_options ~token_sink content in
   JsTranslator.translation_errors := [];
-  let offset_table = Offset_utils.make content in
+  let offset_table = Offset_utils.make ~kind:Offset_utils.JavaScript content in
   let ret = Translate.program (Some offset_table) ocaml_ast in
   let translation_errors = !JsTranslator.translation_errors in
   Js.Unsafe.set ret "errors" (Translate.errors (errors @ translation_errors));

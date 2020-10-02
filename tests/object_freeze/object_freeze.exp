@@ -1,42 +1,68 @@
-Error --------------------------------------------------------------------------------------------- object_freeze.js:4:1
+Error ------------------------------------------------------------------------------------------------ downstream.js:5:2
 
-Cannot assign `'23456'` to `foo.bar` because property `bar` is not writable.
+Cannot cast `inexact` to object type because inexact frozen object literal [1] is incompatible with exact object
+type [2]. [incompatible-exact]
+
+   downstream.js:5:2
+    5| (inexact: {||}); // error: inexact -> exact
+        ^^^^^^^
+
+References:
+   object_freeze.js:33:26
+   33|   inexact: Object.freeze({...inexact}),
+                                ^^^^^^^^^^^^ [1]
+   downstream.js:5:11
+    5| (inexact: {||}); // error: inexact -> exact
+                 ^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ downstream.js:7:9
+
+Cannot assign `0` to `inexact.p` because property `p` is not writable. [cannot-write]
+
+   7| inexact.p = 0; // error: can't set prop on frozen object
+              ^
+
+
+Error --------------------------------------------------------------------------------------------- object_freeze.js:4:5
+
+Cannot assign `'23456'` to `foo.bar` because property `bar` is not writable. [cannot-write]
 
    4| foo.bar = '23456'; // error
-      ^^^^^^^
+          ^^^
 
 
 Error --------------------------------------------------------------------------------------------- object_freeze.js:6:1
 
-Incorrect arguments passed to call of method `assign` because property `bar` is not writable.
+Incorrect arguments passed to call of method `assign` because property `bar` is not writable. [cannot-write]
 
    6| Object.assign(foo, {bar: '12345'}); // error
       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
-Error -------------------------------------------------------------------------------------------- object_freeze.js:10:1
+Error -------------------------------------------------------------------------------------------- object_freeze.js:10:8
 
-Cannot assign `'23456'` to `bliffl.bar` because property `bar` is not writable.
+Cannot assign `'23456'` to `bliffl.bar` because property `bar` is not writable. [cannot-write]
 
    10| bliffl.bar = '23456'; // error
-       ^^^^^^^^^^
+              ^^^
 
 
-Error -------------------------------------------------------------------------------------------- object_freeze.js:11:1
+Error -------------------------------------------------------------------------------------------- object_freeze.js:11:8
 
-Cannot assign `3456` to `bliffl.baz` because property `baz` is not writable.
+Cannot assign `3456` to `bliffl.baz` because property `baz` is not writable. [cannot-write]
 
    11| bliffl.baz = 3456; // error
-       ^^^^^^^^^^
+              ^^^
 
 
-Error -------------------------------------------------------------------------------------------- object_freeze.js:12:1
+Error -------------------------------------------------------------------------------------------- object_freeze.js:12:8
 
-Cannot get `bliffl.corge` because property `corge` is missing in frozen object literal [1].
+Cannot get `bliffl.corge` because property `corge` is missing in frozen object literal [1]. [prop-missing]
 
-   object_freeze.js:12:1
+   object_freeze.js:12:8
    12| bliffl.corge; // error
-       ^^^^^^^^^^^^
+              ^^^^^
 
 References:
    object_freeze.js:9:28
@@ -44,38 +70,54 @@ References:
                                   ^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
-Error -------------------------------------------------------------------------------------------- object_freeze.js:13:1
+Error -------------------------------------------------------------------------------------------- object_freeze.js:13:8
 
-Cannot assign `baz` to `bliffl.constructor` because property `constructor` is not writable.
+Cannot assign `baz` to `bliffl.constructor` because property `constructor` is not writable. [cannot-write]
 
    13| bliffl.constructor = baz; // error
-       ^^^^^^^^^^^^^^^^^^
+              ^^^^^^^^^^^
 
 
-Error -------------------------------------------------------------------------------------------- object_freeze.js:14:1
+Error -------------------------------------------------------------------------------------------- object_freeze.js:14:8
 
-Cannot assign function to `bliffl.toString` because property `toString` is not writable.
+Cannot assign function to `bliffl.toString` because property `toString` is not writable. [cannot-write]
 
    14| bliffl.toString = function() {}; // error
-       ^^^^^^^^^^^^^^^
+              ^^^^^^^^
 
 
-Error ------------------------------------------------------------------------------------------- object_freeze.js:20:26
+Error ------------------------------------------------------------------------------------------- object_freeze.js:20:45
 
 Cannot assign `Object.freeze(...)` to `xx` because string [1] is incompatible with number [2] in property `x`.
+[incompatible-type]
 
-   object_freeze.js:20:26
-   20| var xx : { x: number } = Object.freeze({ x: "error" })
-                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-References:
    object_freeze.js:20:45
    20| var xx : { x: number } = Object.freeze({ x: "error" })
                                                    ^^^^^^^ [1]
+
+References:
    object_freeze.js:20:15
    20| var xx : { x: number } = Object.freeze({ x: "error" })
                      ^^^^^^ [2]
 
 
+Error -------------------------------------------------------------------------------------------- object_freeze.js:30:2
 
-Found 8 errors
+Cannot cast `Object.freeze(...)` to object type because inexact frozen object literal [1] is incompatible with exact
+object type [2]. [incompatible-exact]
+
+   object_freeze.js:30:2
+   30| (Object.freeze({...inexact}): {||}); // Error: inexact -> exact
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   object_freeze.js:30:16
+   30| (Object.freeze({...inexact}): {||}); // Error: inexact -> exact
+                      ^^^^^^^^^^^^ [1]
+   object_freeze.js:30:31
+   30| (Object.freeze({...inexact}): {||}); // Error: inexact -> exact
+                                     ^^^^ [2]
+
+
+
+Found 11 errors

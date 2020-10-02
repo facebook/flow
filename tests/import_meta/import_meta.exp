@@ -1,6 +1,6 @@
 Error ----------------------------------------------------------------------------------------------- import_meta.js:9:1
 
-Not supported.
+Not supported. [unsupported-syntax]
 
    9| import.meta;
       ^^^^^^^^^^^
@@ -8,7 +8,7 @@ Not supported.
 
 Error ---------------------------------------------------------------------------------------------- import_meta.js:12:1
 
-Not supported.
+Not supported. [unsupported-syntax]
 
    12| import.meta.hello = "world";
        ^^^^^^^^^^^
@@ -16,7 +16,7 @@ Not supported.
 
 Error --------------------------------------------------------------------------------------------- import_meta.js:15:14
 
-Not supported.
+Not supported. [unsupported-syntax]
 
    15| const meta = import.meta;
                     ^^^^^^^^^^^

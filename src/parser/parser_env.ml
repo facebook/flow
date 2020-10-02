@@ -1,4 +1,4 @@
-(**
+(*
  * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
@@ -198,6 +198,8 @@ type env = {
   (* It is a syntax error to reference private fields not in scope. In order to enforce this,
    * we keep track of the privates we've seen declared and used. *)
   privates: (SSet.t * (string * Loc.t) list) list ref;
+  (* The position up to which comments have been consumed, exclusive. *)
+  consumed_comments_pos: Loc.position ref;
 }
 
 (* constructor *)
@@ -207,8 +209,7 @@ let init_env ?(token_sink = None) ?(parse_options = None) source content =
   let (lb, errors) =
     try (Sedlexing.Utf8.from_string content, [])
     with Sedlexing.MalFormed ->
-      ( Sedlexing.Utf8.from_string "",
-        [({ Loc.none with Loc.source }, Parse_error.MalformedUnicode)] )
+      (Sedlexing.Utf8.from_string "", [({ Loc.none with Loc.source }, Parse_error.MalformedUnicode)])
   in
   let parse_options =
     match parse_options with
@@ -246,6 +247,7 @@ let init_env ?(token_sink = None) ?(parse_options = None) source content =
     parse_options;
     source;
     privates = ref [];
+    consumed_comments_pos = ref { Loc.line = 0; column = 0 };
   }
 
 (* getters: *)
@@ -351,6 +353,8 @@ let add_used_private env name loc =
   match !(env.privates) with
   | [] -> error_at env (loc, Parse_error.PrivateNotInClass)
   | (declared, used) :: xs -> env.privates := (declared, (name, loc) :: used) :: xs
+
+let consume_comments_until env pos = env.consumed_comments_pos := pos
 
 (* lookahead: *)
 let lookahead ~i env =
@@ -458,6 +462,47 @@ let is_keyword = function
     true
   | _ -> false
 
+let token_is_keyword =
+  Token.(
+    function
+    | T_IDENTIFIER { raw; _ } when is_keyword raw -> true
+    | T_AWAIT
+    | T_BREAK
+    | T_CASE
+    | T_CATCH
+    | T_CLASS
+    | T_CONST
+    | T_CONTINUE
+    | T_DEBUGGER
+    | T_DEFAULT
+    | T_DELETE
+    | T_DO
+    | T_ELSE
+    | T_EXPORT
+    | T_EXTENDS
+    | T_FINALLY
+    | T_FOR
+    | T_FUNCTION
+    | T_IF
+    | T_IMPORT
+    | T_IN
+    | T_INSTANCEOF
+    | T_NEW
+    | T_RETURN
+    | T_SUPER
+    | T_SWITCH
+    | T_THIS
+    | T_THROW
+    | T_TRY
+    | T_TYPEOF
+    | T_VAR
+    | T_VOID
+    | T_WHILE
+    | T_WITH
+    | T_YIELD ->
+      true
+    | _ -> false)
+
 (* #sec-future-reserved-words *)
 let is_future_reserved = function
   | "enum" -> true
@@ -523,6 +568,18 @@ let is_reserved str_val =
     true
   | _ -> false
 
+let token_is_reserved t =
+  token_is_keyword t
+  || token_is_future_reserved t
+  ||
+  match t with
+  | Token.T_IDENTIFIER { raw = "null" | "true" | "false"; _ }
+  | Token.T_NULL
+  | Token.T_TRUE
+  | Token.T_FALSE ->
+    true
+  | _ -> false
+
 let is_reserved_type str_val =
   match str_val with
   | "any"
@@ -556,7 +613,11 @@ module Peek = struct
 
   let ith_errors ~i env = Lex_result.errors (lookahead ~i env)
 
-  let ith_comments ~i env = Lex_result.comments (lookahead ~i env)
+  let ith_comments ~i env =
+    let comments = Lex_result.comments (lookahead ~i env) in
+    List.filter
+      (fun ({ Loc.start; _ }, _) -> Loc.pos_cmp !(env.consumed_comments_pos) start <= 0)
+      comments
 
   let ith_lex_env ~i env = Lookahead.lex_env !(env.lookahead) i
 
@@ -577,6 +638,12 @@ module Peek = struct
 
   let comments env = ith_comments ~i:0 env
 
+  let has_eaten_comments env =
+    let comments = Lex_result.comments (lookahead ~i:0 env) in
+    List.exists
+      (fun ({ Loc.start; _ }, _) -> Loc.pos_cmp start !(env.consumed_comments_pos) < 0)
+      comments
+
   let lex_env env = ith_lex_env ~i:0 env
 
   (* True if there is a line terminator before the next token *)
@@ -593,13 +660,15 @@ module Peek = struct
 
   let is_line_terminator env = ith_is_line_terminator ~i:0 env
 
-  let is_implicit_semicolon env =
-    match token env with
+  let ith_is_implicit_semicolon ~i env =
+    match ith_token ~i env with
     | T_EOF
     | T_RCURLY ->
       true
     | T_SEMICOLON -> false
-    | _ -> is_line_terminator env
+    | _ -> ith_is_line_terminator ~i env
+
+  let is_implicit_semicolon env = ith_is_implicit_semicolon ~i:0 env
 
   let ith_is_identifier ~i env =
     match ith_token ~i env with
@@ -642,11 +711,11 @@ module Peek = struct
         | T_BIGINT_TYPE
         | T_STRING_TYPE
         | T_VOID_TYPE
+        | T_SYMBOL_TYPE
         | T_BOOLEAN_TYPE _
         | T_NUMBER_SINGLETON_TYPE _
         | T_BIGINT_SINGLETON_TYPE _
         (* identifier-ish *)
-        
         | T_ASYNC
         | T_AWAIT
         | T_BREAK
@@ -771,7 +840,6 @@ module Peek = struct
         | T_TEMPLATE_PART _
         | T_REGEXP _
         (* misc that shouldn't appear in NORMAL mode *)
-        
         | T_JSX_IDENTIFIER _
         | T_JSX_TEXT _
         | T_ERROR _ ->
@@ -874,7 +942,7 @@ module Eat = struct
     env.lex_env := Peek.lex_env env;
 
     error_list env (Peek.errors env);
-    env.comments := List.rev_append (Peek.comments env) !(env.comments);
+    env.comments := List.rev_append (Lex_result.comments (lookahead ~i:0 env)) !(env.comments);
     env.last_lex_result := Some (lookahead ~i:0 env);
 
     Lookahead.junk !(env.lookahead)
@@ -901,23 +969,85 @@ module Eat = struct
     env.lex_mode_stack := new_stack;
     env.lookahead := Lookahead.create !(env.lex_env) (lex_mode env)
 
-  (* Semicolon insertion is handled here :(. There seem to be 2 cases where
-  * semicolons are inserted. First, if we reach the EOF. Second, if the next
-  * token is } or is separated by a LineTerminator.
-  *)
-  let semicolon ?(expected = "the token `;`") env =
-    if not (Peek.is_implicit_semicolon env) then
-      if Peek.token env = Token.T_SEMICOLON then
-        token env
+  let trailing_comments env =
+    let open Loc in
+    let loc = Peek.loc env in
+    if Peek.token env = Token.T_COMMA && Peek.ith_is_line_terminator ~i:1 env then (
+      let trailing_before_comma = Peek.comments env in
+      let trailing_after_comma =
+        List.filter
+          (fun (comment_loc, _) -> comment_loc.start.line <= loc._end.line)
+          (Lex_result.comments (lookahead ~i:1 env))
+      in
+      let trailing = trailing_before_comma @ trailing_after_comma in
+      consume_comments_until env { Loc.line = loc._end.line + 1; column = 0 };
+      trailing
+    ) else
+      let trailing = Peek.comments env in
+      consume_comments_until env loc._end;
+      trailing
+
+  let comments_until_next_line env =
+    let open Loc in
+    match !(env.last_lex_result) with
+    | None -> []
+    | Some { Lex_result.lex_loc = last_loc; _ } ->
+      let comments = Peek.comments env in
+      let comments = List.filter (fun (loc, _) -> loc.start.line <= last_loc._end.line) comments in
+      consume_comments_until env { line = last_loc._end.line + 1; column = 0 };
+      comments
+
+  let program_comments env =
+    let open Flow_ast.Comment in
+    let comments = Peek.comments env in
+    let flow_directive = "@flow" in
+    let flow_directive_length = String.length flow_directive in
+    let contains_flow_directive { text; _ } =
+      let text_length = String.length text in
+      let rec contains_flow_directive_after_offset off =
+        if off + flow_directive_length > text_length then
+          false
+        else
+          String.sub text off flow_directive_length = flow_directive
+          || contains_flow_directive_after_offset (off + 1)
+      in
+      contains_flow_directive_after_offset 0
+    in
+    (* Comments up through the last comment with an @flow directive are considered program comments *)
+    let rec flow_directive_comments comments =
+      match comments with
+      | [] -> []
+      | (loc, comment) :: rest ->
+        if contains_flow_directive comment then (
+          (env.consumed_comments_pos := Loc.(loc._end));
+          List.rev ((loc, comment) :: rest)
+        ) else
+          flow_directive_comments rest
+    in
+    let program_comments = flow_directive_comments (List.rev comments) in
+    let program_comments =
+      if program_comments <> [] then
+        program_comments
       else
-        error_unexpected ~expected env
+        (* If there is no @flow directive, consider the first block comment a program comment if
+           it starts with "/**" *)
+        match comments with
+        | ((loc, { kind = Block; text; _ }) as first_comment) :: _
+          when String.length text >= 1 && text.[0] = '*' ->
+          (env.consumed_comments_pos := Loc.(loc._end));
+          [first_comment]
+        | _ -> []
+    in
+    program_comments
 end
 
 module Expect = struct
+  let error env t =
+    let expected = Token.explanation_of_token ~use_article:true t in
+    error_unexpected ~expected env
+
   let token env t =
-    ( if Peek.token env <> t then
-      let expected = Token.explanation_of_token ~use_article:true t in
-      error_unexpected ~expected env );
+    if Peek.token env <> t then error env t;
     Eat.token env
 
   let identifier env name =
@@ -956,6 +1086,7 @@ module Try = struct
     saved_last_lex_result: Lex_result.t option;
     saved_lex_mode_stack: Lex_mode.t list;
     saved_lex_env: Lex_env.t;
+    saved_consumed_comments_pos: Loc.position;
     token_buffer: ((token_sink_result -> unit) * token_sink_result Queue.t) option;
   }
 
@@ -974,6 +1105,7 @@ module Try = struct
       saved_last_lex_result = !(env.last_lex_result);
       saved_lex_mode_stack = !(env.lex_mode_stack);
       saved_lex_env = !(env.lex_env);
+      saved_consumed_comments_pos = !(env.consumed_comments_pos);
       token_buffer;
     }
 
@@ -991,6 +1123,7 @@ module Try = struct
     env.last_lex_result := saved_state.saved_last_lex_result;
     env.lex_mode_stack := saved_state.saved_lex_mode_stack;
     env.lex_env := saved_state.saved_lex_env;
+    env.consumed_comments_pos := saved_state.saved_consumed_comments_pos;
     env.lookahead := Lookahead.create !(env.lex_env) (lex_mode env);
 
     FailedToParse

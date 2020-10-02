@@ -1,7 +1,7 @@
 == Initial there should be 2 errors ==
 Error --------------------------------------------------------------------------------------------- src/dependent.js:4:2
 
-Cannot cast `dependency` to string because boolean [1] is incompatible with string [2].
+Cannot cast `dependency` to string because boolean [1] is incompatible with string [2]. [incompatible-cast]
 
    src/dependent.js:4:2
    4| (dependency: string);
@@ -18,7 +18,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- src/unrelated.js:3:19
 
-Cannot assign `123` to `x` because number [1] is incompatible with string [2].
+Cannot assign `123` to `x` because number [1] is incompatible with string [2]. [incompatible-type]
 
    src/unrelated.js:3:19
    3| const x: string = 123;
@@ -39,7 +39,7 @@ Found 2 errors
 
 Error --------------------------------------------------------------------------------------------- src/dependent.js:4:2
 
-Cannot cast `dependency` to string because boolean [1] is incompatible with string [2].
+Cannot cast `dependency` to string because boolean [1] is incompatible with string [2]. [incompatible-cast]
 
    src/dependent.js:4:2
    4| (dependency: string);
@@ -63,7 +63,7 @@ Found 1 error
 
 Error --------------------------------------------------------------------------------------------- src/dependent.js:4:2
 
-Cannot cast `dependency` to string because boolean [1] is incompatible with string [2].
+Cannot cast `dependency` to string because boolean [1] is incompatible with string [2]. [incompatible-cast]
 
    src/dependent.js:4:2
    4| (dependency: string);
@@ -80,7 +80,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- src/unrelated.js:3:19
 
-Cannot assign `123` to `x` because number [1] is incompatible with string [2].
+Cannot assign `123` to `x` because number [1] is incompatible with string [2]. [incompatible-type]
 
    src/unrelated.js:3:19
    3| const x: string = 123;
@@ -101,7 +101,7 @@ Found 2 errors
 
 Error --------------------------------------------------------------------------------------------- src/dependent.js:4:2
 
-Cannot cast `dependency` to string because number [1] is incompatible with string [2].
+Cannot cast `dependency` to string because number [1] is incompatible with string [2]. [incompatible-cast]
 
    src/dependent.js:4:2
    4| (dependency: string);
@@ -118,7 +118,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- src/unrelated.js:3:19
 
-Cannot assign `123` to `x` because number [1] is incompatible with string [2].
+Cannot assign `123` to `x` because number [1] is incompatible with string [2]. [incompatible-type]
 
    src/unrelated.js:3:19
    3| const x: string = 123;
@@ -139,7 +139,7 @@ Found 2 errors
 
 Error --------------------------------------------------------------------------------------------- src/dependent.js:4:2
 
-Cannot cast `dependency` to string because boolean [1] is incompatible with string [2].
+Cannot cast `dependency` to string because boolean [1] is incompatible with string [2]. [incompatible-cast]
 
    src/dependent.js:4:2
    4| (dependency: string);
@@ -156,7 +156,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- src/unrelated.js:3:19
 
-Cannot assign `123` to `x` because number [1] is incompatible with string [2].
+Cannot assign `123` to `x` because number [1] is incompatible with string [2]. [incompatible-type]
 
    src/unrelated.js:3:19
    3| const x: string = 123;
@@ -177,7 +177,7 @@ Found 2 errors
 
 Error -------------------------------------------------------------------------------------------- src/unrelated.js:3:19
 
-Cannot assign `123` to `x` because number [1] is incompatible with string [2].
+Cannot assign `123` to `x` because number [1] is incompatible with string [2]. [incompatible-type]
 
    src/unrelated.js:3:19
    3| const x: string = 123;
@@ -198,7 +198,7 @@ Found 1 error
 
 Error --------------------------------------------------------------------------------------------- src/dependent.js:4:2
 
-Cannot cast `dependency` to string because boolean [1] is incompatible with string [2].
+Cannot cast `dependency` to string because boolean [1] is incompatible with string [2]. [incompatible-cast]
 
    src/dependent.js:4:2
    4| (dependency: string);
@@ -215,7 +215,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- src/unrelated.js:3:19
 
-Cannot assign `123` to `x` because number [1] is incompatible with string [2].
+Cannot assign `123` to `x` because number [1] is incompatible with string [2]. [incompatible-type]
 
    src/unrelated.js:3:19
    3| const x: string = 123;
@@ -236,7 +236,7 @@ Found 2 errors
 
 Error --------------------------------------------------------------------------------------------- src/dependent.js:4:2
 
-Cannot cast `dependency` to string because boolean [1] is incompatible with string [2].
+Cannot cast `dependency` to string because boolean [1] is incompatible with string [2]. [incompatible-cast]
 
    src/dependent.js:4:2
    4| (dependency: string);
@@ -253,7 +253,7 @@ References:
 
 Error ------------------------------------------------------------------------------ src/node_modules/dependency.js:4:24
 
-Cannot assign `123` to `foo` because number [1] is incompatible with boolean [2].
+Cannot assign `123` to `foo` because number [1] is incompatible with boolean [2]. [incompatible-type]
 
    src/node_modules/dependency.js:4:24
    4| export var foo: bool = 123
@@ -267,7 +267,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- src/unrelated.js:3:19
 
-Cannot assign `123` to `x` because number [1] is incompatible with string [2].
+Cannot assign `123` to `x` because number [1] is incompatible with string [2]. [incompatible-type]
 
    src/unrelated.js:3:19
    3| const x: string = 123;

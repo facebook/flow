@@ -1,4 +1,4 @@
-(**
+(*
  * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
@@ -13,7 +13,9 @@ open CommandSpec
 module InsertType = struct
   let spec =
     Autofix_options.(
-      let ambiguity_strategies_list = String.concat ", " @@ List.map fst ambiguity_strategies in
+      let ambiguity_strategies_list =
+        String.concat ", " @@ Base.List.map ~f:fst ambiguity_strategies
+      in
       {
         name = "insert type";
         doc = "[EXPERIMENTAL] Insert type information at file and position";
@@ -53,8 +55,7 @@ module InsertType = struct
             |> flag
                  "--omit-typearg-defaults"
                  no_arg
-                 ~doc:
-                   "Omit type arguments when defaults exist and match the provided type argument"
+                 ~doc:"Omit type arguments when defaults exist and match the provided type argument"
             |> anon "args" (required (list_of string)));
       })
 
@@ -122,7 +123,7 @@ module InsertType = struct
       args
       () =
     let (Loc.{ source; _ } as target) = parse_args args in
-    let source_path = Option.map ~f:File_key.to_string source in
+    let source_path = Base.Option.map ~f:File_key.to_string source in
     let input = get_file_from_filename_or_stdin ~cmd:spec.name path source_path in
     let root = get_the_root ~base_flags ~input root_arg in
     (* TODO Figure out how to implement root striping *)
@@ -253,22 +254,13 @@ end
 let command =
   let main (cmd, argv) () = CommandUtils.run_command cmd argv in
   let spec =
-    {
-      CommandSpec.name = "autofix";
-      doc = "";
-      usage = Printf.sprintf "Usage: %s autofix SUBCOMMAND [OPTIONS]...\n" CommandUtils.exe_name;
-      args =
-        CommandSpec.ArgSpec.(
-          empty
-          |> anon
-               "subcommand"
-               (required
-                  (command
-                     [
-                       ("suggest", SuggestCommand.command);
-                       ("insert-type", InsertType.command);
-                       ("exports", Exports.command);
-                     ])));
-    }
+    CommandUtils.subcommand_spec
+      ~name:"autofix"
+      ~doc:""
+      [
+        ("suggest", SuggestCommand.command);
+        ("insert-type", InsertType.command);
+        ("exports", Exports.command);
+      ]
   in
   CommandSpec.command spec main

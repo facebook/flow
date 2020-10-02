@@ -1,96 +1,74 @@
-Error ----------------------------------------------------------------------------------------------- eval_union.js:9:18
-
-Cannot instantiate array type because:
- - Either null or undefined [1] is incompatible with empty [2].
- - Or null or undefined [1] is incompatible with number [3].
-
-   eval_union.js:9:18
-   9| arr.forEach(x => acc.push(x.f));
-                       ^^^
-
-References:
-   eval_union.js:7:30
-   7| declare var arr: Array<{ +f: ?number }>;
-                                   ^^^^^^^ [1]
-   eval_union.js:9:27
-   9| arr.forEach(x => acc.push(x.f));
-                                ^^^ [2]
-   eval_union.js:7:31
-   7| declare var arr: Array<{ +f: ?number }>;
-                                    ^^^^^^ [3]
-
-
 Error ----------------------------------------------------------------------------------------------- issue-4070.js:6:17
 
-Property `@@iterator` is missing in undefined [1] but exists in `$Iterable` [2].
+Property `@@iterator` is missing in undefined [1] but exists in `$Iterable` [2]. [incompatible-type]
 
    issue-4070.js:6:17
-     6| ys.set('a', [...y]);
-                        ^
+      6| ys.set('a', [...y]);
+                         ^
 
 References:
-   <BUILTINS>/core.js:599:22
-   599|     get(key: K): V | void;
-                             ^^^^ [1]
-   <BUILTINS>/core.js:543:11
-   543| interface $Iterable<+Yield,+Return,-Next> {
-                  ^^^^^^^^^ [2]
+   <BUILTINS>/core.js:1707:22
+   1707|     get(key: K): V | void;
+                              ^^^^ [1]
+   <BUILTINS>/core.js:1639:11
+   1639| interface $Iterable<+Yield,+Return,-Next> {
+                   ^^^^^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------- issue-4070.js:7:17
 
-Property `@@iterator` is missing in undefined [1] but exists in `$Iterable` [2].
+Property `@@iterator` is missing in undefined [1] but exists in `$Iterable` [2]. [incompatible-type]
 
    issue-4070.js:7:17
-     7| ys.set('a', [...y]);
-                        ^
+      7| ys.set('a', [...y]);
+                         ^
 
 References:
-   <BUILTINS>/core.js:599:22
-   599|     get(key: K): V | void;
-                             ^^^^ [1]
-   <BUILTINS>/core.js:543:11
-   543| interface $Iterable<+Yield,+Return,-Next> {
-                  ^^^^^^^^^ [2]
+   <BUILTINS>/core.js:1707:22
+   1707|     get(key: K): V | void;
+                              ^^^^ [1]
+   <BUILTINS>/core.js:1639:11
+   1639| interface $Iterable<+Yield,+Return,-Next> {
+                   ^^^^^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------- issue-4070.js:8:17
 
-Property `@@iterator` is missing in undefined [1] but exists in `$Iterable` [2].
+Property `@@iterator` is missing in undefined [1] but exists in `$Iterable` [2]. [incompatible-type]
 
    issue-4070.js:8:17
-     8| ys.set('a', [...y]);
-                        ^
+      8| ys.set('a', [...y]);
+                         ^
 
 References:
-   <BUILTINS>/core.js:599:22
-   599|     get(key: K): V | void;
-                             ^^^^ [1]
-   <BUILTINS>/core.js:543:11
-   543| interface $Iterable<+Yield,+Return,-Next> {
-                  ^^^^^^^^^ [2]
+   <BUILTINS>/core.js:1707:22
+   1707|     get(key: K): V | void;
+                              ^^^^ [1]
+   <BUILTINS>/core.js:1639:11
+   1639| interface $Iterable<+Yield,+Return,-Next> {
+                   ^^^^^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------- issue-4070.js:9:17
 
-Property `@@iterator` is missing in undefined [1] but exists in `$Iterable` [2].
+Property `@@iterator` is missing in undefined [1] but exists in `$Iterable` [2]. [incompatible-type]
 
    issue-4070.js:9:17
-     9| ys.set('a', [...y]);
-                        ^
+      9| ys.set('a', [...y]);
+                         ^
 
 References:
-   <BUILTINS>/core.js:599:22
-   599|     get(key: K): V | void;
-                             ^^^^ [1]
-   <BUILTINS>/core.js:543:11
-   543| interface $Iterable<+Yield,+Return,-Next> {
-                  ^^^^^^^^^ [2]
+   <BUILTINS>/core.js:1707:22
+   1707|     get(key: K): V | void;
+                              ^^^^ [1]
+   <BUILTINS>/core.js:1639:11
+   1639| interface $Iterable<+Yield,+Return,-Next> {
+                   ^^^^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------ issue-598.js:7:48
 
-Cannot return `y` because number [1] is incompatible with string [2] in type argument `A` [3].
+Cannot return `y` because number [1] is incompatible with string [2] in type argument `A` [3]. [incompatible-return]
 
    issue-598.js:7:48
    7| function bar(y: F<number>): F<string> { return y; }
@@ -110,16 +88,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- issue6155.js:15:12
 
-Cannot return function because:
- - property `e` is missing in `B` [1] but exists in `A` [2] in the first argument.
- - property `e` is missing in `C` [1] but exists in `A` [2] in the first argument.
- - property `k` is missing in `A` [1] but exists in `B` [3] in the first argument.
- - property `k` is missing in `C` [1] but exists in `B` [3] in the first argument.
- - property `v` is missing in `A` [1] but exists in `B` [3] in the first argument.
- - property `v` is missing in `C` [1] but exists in `B` [3] in the first argument.
- - string literal `a` [4] is incompatible with string literal `b` [5] in property `kind` of the first argument.
- - string literal `a` [4] is incompatible with string literal `c` [6] in property `kind` of the first argument.
- - string literal `b` [5] is incompatible with string literal `c` [6] in property `kind` of the first argument.
+Cannot return function because property `e` is missing in `B` [1] but exists in `A` [2] in the first argument.
+[prop-missing]
 
    issue6155.js:15:12
    15|     return (type) => cases[type.kind](type);
@@ -132,23 +102,163 @@ References:
    issue6155.js:9:9
     9|     a: (A) => R,
                ^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- issue6155.js:15:12
+
+Cannot return function because property `e` is missing in `C` [1] but exists in `A` [2] in the first argument.
+[prop-missing]
+
+   issue6155.js:15:12
+   15|     return (type) => cases[type.kind](type);
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   issue6155.js:14:44
+   14| function matcher<R>(cases: TypeCases<R>): (Type) => R {
+                                                  ^^^^ [1]
+   issue6155.js:9:9
+    9|     a: (A) => R,
+               ^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- issue6155.js:15:12
+
+Cannot return function because property `k` is missing in `A` [1] but exists in `B` [2] in the first argument.
+[prop-missing]
+
+   issue6155.js:15:12
+   15|     return (type) => cases[type.kind](type);
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   issue6155.js:14:44
+   14| function matcher<R>(cases: TypeCases<R>): (Type) => R {
+                                                  ^^^^ [1]
    issue6155.js:10:9
    10|     b: (B) => R,
-               ^ [3]
+               ^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- issue6155.js:15:12
+
+Cannot return function because property `k` is missing in `C` [1] but exists in `B` [2] in the first argument.
+[prop-missing]
+
+   issue6155.js:15:12
+   15|     return (type) => cases[type.kind](type);
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   issue6155.js:14:44
+   14| function matcher<R>(cases: TypeCases<R>): (Type) => R {
+                                                  ^^^^ [1]
+   issue6155.js:10:9
+   10|     b: (B) => R,
+               ^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- issue6155.js:15:12
+
+Cannot return function because property `v` is missing in `A` [1] but exists in `B` [2] in the first argument.
+[prop-missing]
+
+   issue6155.js:15:12
+   15|     return (type) => cases[type.kind](type);
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   issue6155.js:14:44
+   14| function matcher<R>(cases: TypeCases<R>): (Type) => R {
+                                                  ^^^^ [1]
+   issue6155.js:10:9
+   10|     b: (B) => R,
+               ^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- issue6155.js:15:12
+
+Cannot return function because property `v` is missing in `C` [1] but exists in `B` [2] in the first argument.
+[prop-missing]
+
+   issue6155.js:15:12
+   15|     return (type) => cases[type.kind](type);
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   issue6155.js:14:44
+   14| function matcher<R>(cases: TypeCases<R>): (Type) => R {
+                                                  ^^^^ [1]
+   issue6155.js:10:9
+   10|     b: (B) => R,
+               ^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- issue6155.js:15:13
+
+Cannot return function because string literal `a` [1] is incompatible with string literal `b` [2] in property `kind` of
+the first argument. [incompatible-return]
+
+   issue6155.js:15:13
+   15|     return (type) => cases[type.kind](type);
+                   ^^^^
+
+References:
    issue6155.js:3:17
     3| type A = {kind: 'a', e: Type};
-                       ^^^ [4]
+                       ^^^ [1]
    issue6155.js:4:17
     4| type B = {kind: 'b', k: Type, v: Type};
-                       ^^^ [5]
+                       ^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- issue6155.js:15:13
+
+Cannot return function because string literal `a` [1] is incompatible with string literal `c` [2] in property `kind` of
+the first argument. [incompatible-return]
+
+   issue6155.js:15:13
+   15|     return (type) => cases[type.kind](type);
+                   ^^^^
+
+References:
+   issue6155.js:3:17
+    3| type A = {kind: 'a', e: Type};
+                       ^^^ [1]
    issue6155.js:5:17
     5| type C = {kind: 'c'};
-                       ^^^ [6]
+                       ^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- issue6155.js:15:13
+
+Cannot return function because string literal `b` [1] is incompatible with string literal `c` [2] in property `kind` of
+the first argument. [incompatible-return]
+
+   issue6155.js:15:13
+   15|     return (type) => cases[type.kind](type);
+                   ^^^^
+
+References:
+   issue6155.js:4:17
+    4| type B = {kind: 'b', k: Type, v: Type};
+                       ^^^ [1]
+   issue6155.js:5:17
+    5| type C = {kind: 'c'};
+                       ^^^ [2]
+
+
+Error ------------------------------------------------------------------------------- recursive_react_component.js:21:11
+
+Cannot resolve name `DoesntMatter`. [cannot-resolve-name]
+
+   21|   return <DoesntMatter
+                 ^^^^^^^^^^^^
 
 
 Error ------------------------------------------------------------------------------------------------------ test.js:6:2
 
-Cannot cast `p.x` to string because number [1] is incompatible with string [2].
+Cannot cast `p.x` to string because number [1] is incompatible with string [2]. [incompatible-cast]
 
    test.js:6:2
    6| (p.x: string); // error
@@ -165,7 +275,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ test.js:9:2
 
-Cannot cast `pstar` to number because `P` [1] is incompatible with number [2].
+Cannot cast `pstar` to number because `P` [1] is incompatible with number [2]. [incompatible-cast]
 
    test.js:9:2
    9| (pstar: number); // error, but limit potentially unbounded number of errors!
@@ -182,7 +292,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:13:2
 
-Cannot cast `pstar.x` to string because number [1] is incompatible with string [2].
+Cannot cast `pstar.x` to string because number [1] is incompatible with string [2]. [incompatible-cast]
 
    test.js:13:2
    13| (pstar.x: string); // error
@@ -199,7 +309,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:16:2
 
-Cannot cast `pstar.x` to string because `P` [1] is incompatible with string [2].
+Cannot cast `pstar.x` to string because `P` [1] is incompatible with string [2]. [incompatible-cast]
 
    test.js:16:2
    16| (pstar.x: string); // error
@@ -214,18 +324,16 @@ References:
                  ^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- test2.js:30:3
+Error --------------------------------------------------------------------------------------------------- test2.js:30:12
 
-Cannot cast `new C()` to `D` because number [1] is incompatible with string [2] in type argument `X` [3].
+Cannot cast `new C` to `D` because number [1] is incompatible with string [2] in type argument `X` [3].
+[incompatible-cast]
 
-   test2.js:30:3
-   30| ((new C: C<number>): D<string>) // error: number ~/~ string
-         ^^^^^^^^^^^^^^^^
-
-References:
    test2.js:30:12
    30| ((new C: C<number>): D<string>) // error: number ~/~ string
                   ^^^^^^ [1]
+
+References:
    test2.js:30:24
    30| ((new C: C<number>): D<string>) // error: number ~/~ string
                               ^^^^^^ [2]
@@ -237,7 +345,7 @@ References:
 Error --------------------------------------------------------------------------------------------------- test3.js:13:10
 
 Cannot return `x` because a call signature declaring the expected parameter / return type is missing in `Q` [1] but
-exists in `P` [2] in the return value.
+exists in `P` [2] in the return value. [prop-missing]
 
    test3.js:13:10
    13|   return x; // terminate despite expanding types, error
@@ -254,7 +362,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test9.js:13:2
 
-Cannot cast `o` to `O` because number [1] is incompatible with string [2] in property `x`.
+Cannot cast `o` to `O` because number [1] is incompatible with string [2] in property `x`. [incompatible-cast]
 
    test9.js:13:2
    13| (o: O);
@@ -271,7 +379,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test9.js:14:2
 
-Cannot cast `o.y` to `O` because number [1] is incompatible with string [2] in property `x`.
+Cannot cast `o.y` to `O` because number [1] is incompatible with string [2] in property `x`. [incompatible-cast]
 
    test9.js:14:2
    14| (o.y: O);

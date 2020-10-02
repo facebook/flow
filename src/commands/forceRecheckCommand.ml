@@ -1,4 +1,4 @@
-(**
+(*
  * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
@@ -53,7 +53,7 @@ type args = {
 }
 
 let force_recheck flowconfig_name (args : args) connect_flags =
-  let files = Core_list.map ~f:get_path_of_file args.files in
+  let files = Base.List.map ~f:get_path_of_file args.files in
   let request =
     ServerProt.Request.FORCE_RECHECK { files; focus = args.focus; profile = args.profile }
   in
@@ -65,9 +65,11 @@ let force_recheck flowconfig_name (args : args) connect_flags =
   (* Print profiling info *)
   begin
     if args.json = None then
-      Option.iter ~f:Profiling_js.print_summary profiling
+      Base.Option.iter ~f:Profiling_js.print_summary profiling
     else
-      let properties = Option.value_map ~default:[] ~f:Profiling_js.to_json_properties profiling in
+      let properties =
+        Base.Option.value_map ~default:[] ~f:Profiling_js.to_json_properties profiling
+      in
       Hh_json.(print_json_endline ~pretty:(args.json = Some Pretty) (JSON_Object properties))
   end;
 

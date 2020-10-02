@@ -1,4 +1,4 @@
-(**
+(*
  * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
@@ -20,13 +20,14 @@ module type S = sig
       name: int;
       actual_name: string;
     }
+    [@@deriving show]
 
     val compare : t -> t -> int
   end
 
-  module DefMap : MyMap_sig.S with type key = Def.t
+  module DefMap : WrappedMap_sig.S with type key = Def.t
 
-  type use_def_map = Def.t L.LMap.t
+  type use_def_map = Def.t L.LMap.t [@@deriving show]
 
   module Scope : sig
     type t = {
@@ -37,12 +38,14 @@ module type S = sig
       globals: SSet.t;
       loc: L.t;
     }
+    [@@deriving show]
   end
 
   type info = {
     max_distinct: int;
     scopes: Scope.t IMap.t;
   }
+  [@@deriving show]
 
   val scope : info -> scope -> Scope.t
 
@@ -59,6 +62,8 @@ module type S = sig
 
   val def_of_use : info -> use -> Def.t
 
+  val def_of_use_opt : info -> use -> Def.t option
+
   val use_is_def : info -> use -> bool
 
   val uses_of_def : info -> ?exclude_def:bool -> Def.t -> uses
@@ -74,6 +79,4 @@ module type S = sig
   val build_scope_tree : info -> Scope.t Tree.t
 
   val compute_free_and_bound_variables : Scope.t Tree.t -> (Def.t SMap.t * SSet.t * SSet.t) Tree.t
-
-  val toplevel_names : info -> SSet.t
 end

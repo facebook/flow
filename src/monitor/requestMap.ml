@@ -1,4 +1,4 @@
-(**
+(*
  * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
@@ -27,14 +27,14 @@ let add ~request ~client =
 let remove ~request_id =
   (* TODO(ljw): doesn't really need mutexes since it doesn't yield *)
   Lwt_mutex.with_lock mutex (fun () ->
-      let ret = SMap.get request_id !map in
+      let ret = SMap.find_opt request_id !map in
       map := SMap.remove request_id !map;
       Lwt.return ret)
 
 let remove_all () =
   (* TODO(ljw): doesn't really need mutexes since it doesn't yield *)
   Lwt_mutex.with_lock mutex (fun () ->
-      let ret = SMap.elements !map |> Core_list.map ~f:snd in
+      let ret = SMap.elements !map |> Base.List.map ~f:snd in
       map := SMap.empty;
       Lwt.return ret)
 

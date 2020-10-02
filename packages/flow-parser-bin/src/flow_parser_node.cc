@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
@@ -51,7 +51,7 @@ public:
     size_t i = 0;
     while (list_has_next(items)) {
       head = list_head(items);
-      arr->Set(i, convert_json(head));
+      Nan::Set(arr, i, convert_json(head));
       items = list_tail(items);
       i++;
     }
@@ -72,8 +72,8 @@ void Parse(const Nan::FunctionCallbackInfo<v8::Value>& info) {
 
   Nan::HandleScope scope;
   V8Translator converter;
-  String::Utf8Value arg(info[0]);
-  string content = string(*arg);
+  Nan::Utf8String arg(info[0]);
+  std::string content(*arg);
 
   options_t options;
   if (info.Length() > 1) {
@@ -86,12 +86,12 @@ void Parse(const Nan::FunctionCallbackInfo<v8::Value>& info) {
       if (!maybe_props.IsEmpty()) {
         Local<Array> props = maybe_props.ToLocalChecked();
         for (uint32_t i = 0; i < props->Length(); i++) {
-           Local<Value> key = props->Get(i);
-           Local<Value> value = opts->Get(key);
-           String::Utf8Value name(key);
+           Local<Value> key = Nan::Get(props, i).ToLocalChecked();
+           Local<Value> value = Nan::Get(opts, key).ToLocalChecked();
+           Nan::Utf8String name(key);
            options.insert(std::pair<std::string, int>(
-             string(*name),
-             value->BooleanValue()
+             std::string(*name),
+             Nan::To<bool>(value).FromJust()
            ));
         }
       }
@@ -102,10 +102,13 @@ void Parse(const Nan::FunctionCallbackInfo<v8::Value>& info) {
   info.GetReturnValue().Set(result);
 }
 
-void Init(v8::Local<v8::Object> exports) {
+NAN_MODULE_INIT(Init) {
   flowparser::init();
-  exports->Set(Nan::New("parse").ToLocalChecked(),
-               Nan::New<v8::FunctionTemplate>(Parse)->GetFunction());
+  Nan::Set(
+    target,
+    Nan::New("parse").ToLocalChecked(),
+    Nan::GetFunction(Nan::New<v8::FunctionTemplate>(Parse)).ToLocalChecked()
+  );
 }
 
 NODE_MODULE(flow_parser, Init)

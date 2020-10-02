@@ -10,25 +10,25 @@ REL_DIR=src/parser
 OCB = ocamlbuild -use-ocamlfind
 
 NATIVE_OBJECT_FILES=\
-	hack/utils/sys/files.o\
-	hack/utils/sys/gc_profiling.o\
-	hack/utils/sys/getrusage.o\
-	hack/utils/sys/nproc.o\
-	hack/utils/sys/realpath.o\
-	hack/utils/sys/sysinfo.o\
-	hack/utils/sys/processor_info.o\
-	hack/utils/sys/priorities.o
+	src/hack_forked/utils/sys/files.o\
+	src/hack_forked/utils/sys/gc_profiling.o\
+	src/hack_forked/utils/sys/getrusage.o\
+	src/hack_forked/utils/sys/nproc.o\
+	src/hack_forked/utils/sys/realpath.o\
+	src/hack_forked/utils/sys/sysinfo.o\
+	src/hack_forked/utils/sys/processor_info.o\
+	src/hack_forked/utils/sys/priorities.o
 
 RUNNER_DEPS=\
-	hack/heap\
-	hack/injection/default_injector\
-	hack/third-party/core\
-	hack/utils/collections\
-	hack/utils/core\
-	hack/utils/disk\
-	hack/utils/hh_json\
-	hack/utils/string\
-	hack/utils/sys\
+	src/heap\
+	src/hack_forked/injection/default_injector\
+	src/hack_forked/third-party/core\
+	src/hack_forked/utils/collections\
+	src/hack_forked/utils/core\
+	src/hack_forked/utils/disk\
+	src/hack_forked/utils/hh_json\
+	src/hack_forked/utils/string\
+	src/hack_forked/utils/sys\
 	src/common/utils\
 	src/parser\
 	src/parser_utils

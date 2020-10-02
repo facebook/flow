@@ -1,0 +1,63 @@
+Error ------------------------------------------------------------------------------------------------------- A.js:11:24
+
+Cannot assign `str2str(...)` to `fooNum` because string [1] is incompatible with number [2]. [incompatible-type]
+
+   A.js:11:24
+   11| const fooNum: number = str2str(39); // Would not error if using [untyped]!
+                              ^^^^^^^^^^^
+
+References:
+   node_modules/react-native/str2str.js:7:49
+    7| module.exports = function str2str(foo: string): string {
+                                                       ^^^^^^ [1]
+   A.js:11:15
+   11| const fooNum: number = str2str(39); // Would not error if using [untyped]!
+                     ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------------- A.js:11:32
+
+Cannot call `str2str` with `39` bound to `foo` because number [1] is incompatible with string [2]. [incompatible-call]
+
+   A.js:11:32
+   11| const fooNum: number = str2str(39); // Would not error if using [untyped]!
+                                      ^^ [1]
+
+References:
+   node_modules/react-native/str2str.js:7:40
+    7| module.exports = function str2str(foo: string): string {
+                                              ^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------------------- A.js:14:9
+
+Cannot call `str2str` with `39` bound to `foo` because number [1] is incompatible with string [2]. [incompatible-call]
+
+   A.js:14:9
+   14| str2str(39);
+               ^^ [1]
+
+References:
+   node_modules/react-native/str2str.js:7:40
+    7| module.exports = function str2str(foo: string): string {
+                                              ^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------------------- B.js:4:34
+
+Cannot get `React.unstable_AsyncMode` because property `unstable_AsyncMode` is missing in exports [1]. [prop-missing]
+
+   4| const AsyncMode: boolean = React.unstable_AsyncMode;
+                                       ^^^^^^^^^^^^^^^^^^
+
+
+Error ---------------------------------------------------------------------------- node_modules/react-d3/str2str.js:4:25
+
+Cannot get `React.unstable_AsyncMode` because property `unstable_AsyncMode` is missing in exports [1]. [prop-missing]
+
+   4| const AsyncMode = React.unstable_AsyncMode;
+                              ^^^^^^^^^^^^^^^^^^
+
+
+
+Found 5 errors

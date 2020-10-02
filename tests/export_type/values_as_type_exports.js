@@ -3,7 +3,7 @@
 const num = 42;
 export type {num};
 
-function fun() {}
+function fun(): void {}
 export type {fun}
 
 // This one is actually okay, since classes can be used as both values and
@@ -12,5 +12,5 @@ class Cls {}
 export type {Cls}
 
 // Exported for testing the imported type of Cls
-const clsInstance = new Cls();
+const clsInstance: Cls = new Cls();
 export {clsInstance}

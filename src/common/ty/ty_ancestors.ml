@@ -1,4 +1,4 @@
-(**
+(*
  * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
@@ -20,7 +20,7 @@ class ['self] iter_ty_base =
     method private on_aloc : 'env. 'env -> ALoc.t -> unit = (fun _env _x -> ())
 
     method private on_option : 'env 'a 'b. ('env -> 'a -> 'b) -> 'env -> 'a option -> 'b option =
-      (fun f env -> Option.map ~f:(f env))
+      (fun f env -> Base.Option.map ~f:(f env))
 
     method private on_list : 'env 'a. ('env -> 'a -> unit) -> 'env -> 'a list -> unit =
       (fun f env -> List.iter (f env))
@@ -78,10 +78,10 @@ class ['self] map_ty_base =
     method private on_aloc : 'env -> ALoc.t -> ALoc.t = (fun _ x -> x)
 
     method private on_list : 'env 'a 'b. ('env -> 'a -> 'b) -> 'env -> 'a list -> 'b list =
-      (fun f env -> Core_list.map ~f:(f env))
+      (fun f env -> Base.List.map ~f:(f env))
 
     method private on_option : 'env 'a 'b. ('env -> 'a -> 'b) -> 'env -> 'a option -> 'b option =
-      (fun f env -> Option.map ~f:(f env))
+      (fun f env -> Base.Option.map ~f:(f env))
   end
 
 class ['self] endo_ty_base =
@@ -210,10 +210,10 @@ class virtual ['self] reduce_ty_base =
       (fun f env xs -> self#list_fold_left f env self#zero xs)
 
     method private on_option : 'env 'a. ('env -> 'a -> 'acc) -> 'env -> 'a option -> 'acc =
-      (fun f env -> Option.value_map ~default:self#zero ~f:(f env))
+      (fun f env -> Base.Option.value_map ~default:self#zero ~f:(f env))
 
-    method private list_fold_left
-        : 'env 'a. ('env -> 'a -> 'acc) -> 'env -> 'acc -> 'a list -> 'acc =
+    method private list_fold_left : 'env 'a. ('env -> 'a -> 'acc) -> 'env -> 'acc -> 'a list -> 'acc
+        =
       fun f env acc xs ->
         match xs with
         | [] -> acc
@@ -236,8 +236,7 @@ class virtual ['self] mapreduce_ty_base =
 
     method private on_aloc : 'env -> ALoc.t -> ALoc.t * 'acc = (fun _ x -> (x, self#zero))
 
-    method private on_list : 'a 'b. ('env -> 'a -> 'b * 'acc) -> 'env -> 'a list -> 'b list * 'acc
-        =
+    method private on_list : 'a 'b. ('env -> 'a -> 'b * 'acc) -> 'env -> 'a list -> 'b list * 'acc =
       (fun f env -> self#list_fold_left f env ([], self#zero))
 
     method private on_option

@@ -1,6 +1,6 @@
 Error ---------------------------------------------------------------------------------------------- assignment.js:16:14
 
-Cannot assign `x.parent` to `x` because null or undefined [1] is incompatible with `Bar` [2].
+Cannot assign `x.parent` to `x` because null or undefined [1] is incompatible with `Bar` [2]. [incompatible-type]
 
    assignment.js:16:14
    16|   while (x = x.parent) { // can't assign x to ?Bar
@@ -17,7 +17,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- assignment.js:16:14
 
-null or undefined [1] is incompatible with `Bar` [2].
+null or undefined [1] is incompatible with `Bar` [2]. [incompatible-type]
 
    assignment.js:16:14
    16|   while (x = x.parent) { // can't assign x to ?Bar
@@ -32,13 +32,13 @@ References:
                          ^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------- assignment.js:22:14
+Error ---------------------------------------------------------------------------------------------- assignment.js:22:16
 
-Cannot get `x.parent` because property `parent` is missing in null or undefined [1].
+Cannot get `x.parent` because property `parent` is missing in null or undefined [1]. [incompatible-use]
 
-   assignment.js:22:14
+   assignment.js:22:16
    22|   while (x = x.parent) { // x.parent might be null
-                    ^^^^^^^^
+                      ^^^^^^
 
 References:
    assignment.js:21:19
@@ -46,14 +46,14 @@ References:
                          ^^^^ [1]
 
 
-Error ----------------------------------------------------------------------------------------------------- bool.js:12:3
+Error ----------------------------------------------------------------------------------------------------- bool.js:12:5
 
 Cannot get `x[0]` because an index signature declaring the expected key / value type is missing in null or
-undefined [1].
+undefined [1]. [incompatible-use]
 
-   bool.js:12:3
+   bool.js:12:5
    12|   x[0]; // error on null and undefined
-         ^^^^
+           ^
 
 References:
    bool.js:3:17
@@ -61,14 +61,14 @@ References:
                        ^^^^^ [1]
 
 
-Error ----------------------------------------------------------------------------------------------------- bool.js:18:7
+Error ----------------------------------------------------------------------------------------------------- bool.js:18:9
 
 Cannot get `x[0]` because an index signature declaring the expected key / value type is missing in null or
-undefined [1].
+undefined [1]. [incompatible-use]
 
-   bool.js:18:7
+   bool.js:18:9
    18|       x[0]; // error on null and undefined
-             ^^^^
+               ^
 
 References:
    bool.js:15:17
@@ -78,7 +78,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- bool.js:24:13
 
-Cannot perform arithmetic operation because boolean [1] is not a number.
+Cannot perform arithmetic operation because boolean [1] is not a number. [unsafe-addition]
 
    24|   if (100 * false) {
                    ^^^^^ [1]
@@ -86,19 +86,19 @@ Cannot perform arithmetic operation because boolean [1] is not a number.
 
 Error ----------------------------------------------------------------------------------------------------- bool.js:27:7
 
-Cannot perform arithmetic operation because boolean [1] is not a number.
+Cannot perform arithmetic operation because boolean [1] is not a number. [unsafe-addition]
 
    27|   if (false * 100) {
              ^^^^^ [1]
 
 
-Error ---------------------------------------------------------------------------------------------------- bool.js:37:12
+Error ---------------------------------------------------------------------------------------------------- bool.js:37:14
 
-Cannot get `x.result` because property `result` is missing in object type [1].
+Cannot get `x.result` because property `result` is missing in object type [1]. [prop-missing]
 
-   bool.js:37:12
+   bool.js:37:14
    37|     return x.result; // error
-                  ^^^^^^^^
+                    ^^^^^^
 
 References:
    bool.js:33:48
@@ -106,13 +106,13 @@ References:
                                                       ^^^^^^^^^^^^^^^ [1]
 
 
-Error ---------------------------------------------------------------------------------------------------- bool.js:44:12
+Error ---------------------------------------------------------------------------------------------------- bool.js:44:14
 
-Cannot get `x.result` because property `result` is missing in object type [1].
+Cannot get `x.result` because property `result` is missing in object type [1]. [prop-missing]
 
-   bool.js:44:12
+   bool.js:44:14
    44|     return x.result; // error
-                  ^^^^^^^^
+                    ^^^^^^
 
 References:
    bool.js:40:48
@@ -122,7 +122,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- cond_expr.js:4:2
 
-Property `q` is missing in object literal [1].
+Property `q` is missing in object literal [1]. [prop-missing]
 
    cond_expr.js:4:2
    4| (a.q ? a.q : "foo");
@@ -134,13 +134,13 @@ References:
               ^^^^^^^^ [1]
 
 
-Error ------------------------------------------------------------------------------------------------- cond_expr.js:5:2
+Error ------------------------------------------------------------------------------------------------- cond_expr.js:5:4
 
-Cannot get `a.q` because property `q` is missing in object literal [1].
+Cannot get `a.q` because property `q` is missing in object literal [1]. [prop-missing]
 
-   cond_expr.js:5:2
+   cond_expr.js:5:4
    5| (a.q: mixed); // An error here
-       ^^^
+         ^
 
 References:
    cond_expr.js:3:9
@@ -150,7 +150,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- cond_expr.js:8:5
 
-Property `q` is missing in object literal [1].
+Property `q` is missing in object literal [1]. [prop-missing]
 
    cond_expr.js:8:5
    8| if (b.q) {} else {};
@@ -162,13 +162,13 @@ References:
               ^^^^^^^^ [1]
 
 
-Error ------------------------------------------------------------------------------------------------- cond_expr.js:9:2
+Error ------------------------------------------------------------------------------------------------- cond_expr.js:9:4
 
-Cannot get `b.q` because property `q` is missing in object literal [1].
+Cannot get `b.q` because property `q` is missing in object literal [1]. [prop-missing]
 
-   cond_expr.js:9:2
+   cond_expr.js:9:4
    9| (b.q: mixed); // is an error here
-       ^^^
+         ^
 
 References:
    cond_expr.js:7:9
@@ -179,7 +179,7 @@ References:
 Error ----------------------------------------------------------------------------------------------- cond_prop.js:11:25
 
 Cannot call `getTypeASTName` with `typeAST.type` bound to `typeAST` because `BadType` [1] is incompatible with
-`Type` [2].
+`Type` [2]. [incompatible-call]
 
    cond_prop.js:11:25
    11|   return getTypeASTName(typeAST.type); // error, BadType not a subtype of Type
@@ -194,13 +194,13 @@ References:
                                         ^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------- cond_prop.js:19:12
+Error ----------------------------------------------------------------------------------------------- cond_prop.js:19:14
 
-Cannot get `x.result` because property `result` is missing in object type [1].
+Cannot get `x.result` because property `result` is missing in object type [1]. [prop-missing]
 
-   cond_prop.js:19:12
+   cond_prop.js:19:14
    19|     return x.result; // error
-                  ^^^^^^^^
+                    ^^^^^^
 
 References:
    cond_prop.js:15:48
@@ -208,13 +208,13 @@ References:
                                                       ^^^^^^^^^^^^^^^ [1]
 
 
-Error ----------------------------------------------------------------------------------------------- cond_prop.js:24:14
+Error ----------------------------------------------------------------------------------------------- cond_prop.js:24:16
 
-Cannot get `x.result` because property `result` is missing in object type [1].
+Cannot get `x.result` because property `result` is missing in object type [1]. [prop-missing]
 
-   cond_prop.js:24:14
+   cond_prop.js:24:16
    24|       return x.result; // error, consider { foo: "herp", done: "derp" }
-                    ^^^^^^^^
+                      ^^^^^^
 
 References:
    cond_prop.js:22:48
@@ -222,13 +222,13 @@ References:
                                                       ^^^^^^^^^^^^^^^ [1]
 
 
-Error ----------------------------------------------------------------------------------------------- cond_prop.js:26:12
+Error ----------------------------------------------------------------------------------------------- cond_prop.js:26:14
 
-Cannot get `x.result` because property `result` is missing in object type [1].
+Cannot get `x.result` because property `result` is missing in object type [1]. [prop-missing]
 
-   cond_prop.js:26:12
+   cond_prop.js:26:14
    26|     return x.result; // error
-                  ^^^^^^^^
+                    ^^^^^^
 
 References:
    cond_prop.js:22:48
@@ -236,13 +236,13 @@ References:
                                                       ^^^^^^^^^^^^^^^ [1]
 
 
-Error ----------------------------------------------------------------------------------------------- cond_prop.js:36:10
+Error ----------------------------------------------------------------------------------------------- cond_prop.js:36:12
 
-Cannot get `t.bar` because property `bar` is missing in object type [1].
+Cannot get `t.bar` because property `bar` (did you mean `baz`?) is missing in object type [1]. [prop-missing]
 
-   cond_prop.js:36:10
+   cond_prop.js:36:12
    36|         (t.bar: string); // error, consider { baz: "x", quux: "y", foo: "boom" }
-                ^^^^^
+                  ^^^
 
 References:
    cond_prop.js:34:38
@@ -250,13 +250,13 @@ References:
                                             ^ [1]
 
 
-Error ----------------------------------------------------------------------------------------------- cond_prop.js:46:10
+Error ----------------------------------------------------------------------------------------------- cond_prop.js:46:12
 
-Cannot get `t.foo` because property `foo` is missing in object type [1].
+Cannot get `t.foo` because property `foo` is missing in object type [1]. [prop-missing]
 
-   cond_prop.js:46:10
+   cond_prop.js:46:12
    46|         (t.foo: Object); // error, consider { baz: "x", quux: "y", bar: "boom" }
-                ^^^^^
+                  ^^^
 
 References:
    cond_prop.js:44:41
@@ -264,13 +264,13 @@ References:
                                                ^ [1]
 
 
-Error ----------------------------------------------------------------------------------------------- cond_prop.js:48:10
+Error ----------------------------------------------------------------------------------------------- cond_prop.js:48:12
 
-Cannot get `t.quux` because property `quux` is missing in object type [1].
+Cannot get `t.quux` because property `quux` is missing in object type [1]. [prop-missing]
 
-   cond_prop.js:48:10
+   cond_prop.js:48:12
    48|         (t.quux: string); // error, consider { foo: {}, bar: "" }
-                ^^^^^^
+                  ^^^^
 
 References:
    cond_prop.js:44:41
@@ -280,7 +280,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ cond_prop.js:54:9
 
-Property `p` is missing in object type [1].
+Property `p` is missing in object type [1]. [prop-missing]
 
    cond_prop.js:54:9
    54|     if (o.p) {} // 2 errors: property `p` not found on null and not found in {}
@@ -294,7 +294,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- cond_prop.js:54:11
 
-Property `p` is missing in null [1].
+Property `p` is missing in null [1]. [incompatible-use]
 
    cond_prop.js:54:11
    54|     if (o.p) {} // 2 errors: property `p` not found on null and not found in {}
@@ -308,7 +308,8 @@ References:
 
 Error -------------------------------------------------------------------------------------------------------- eq.js:5:9
 
-Cannot compare string [1] to number [2].
+Cannot compare string [1] to number [2] with a non-strict equality check. Make sure the arguments are valid, or try
+using strict equality (`===` or `!==`) instead. [invalid-compare]
 
    eq.js:5:9
    5|     if (x == y) {} // error, string & number are not comparable (unsafe casting)
@@ -325,7 +326,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------- eq.js:19:9
 
-Cannot compare string literal `foo` [1] to number [2].
+Cannot compare string literal `foo` [1] to number [2] with a non-strict equality check. Make sure the arguments are
+valid, or try using strict equality (`===` or `!==`) instead. [invalid-compare]
 
    eq.js:19:9
    19|     if (x.y == 123) {} // error
@@ -342,7 +344,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------- eq.js:19:9
 
-Cannot compare string literal `bar` [1] to number [2].
+Cannot compare string literal `bar` [1] to number [2] with a non-strict equality check. Make sure the arguments are
+valid, or try using strict equality (`===` or `!==`) instead. [invalid-compare]
 
    eq.js:19:9
    19|     if (x.y == 123) {} // error
@@ -359,26 +362,38 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ eq.js:20:17
 
-All branches are incompatible:
- - Either number [1] is incompatible with string literal `foo` [2].
- - Or number [1] is incompatible with string literal `bar` [3].
+Cannot compare number [1] with property `y` of union type [2] because: [incompatible-type]
+ - Either number [1] is incompatible with string literal `foo` [3].
+ - Or number [1] is incompatible with string literal `bar` [4].
 
    eq.js:20:17
    20|     if (x.y === 123) {} // error
                        ^^^ [1]
 
 References:
+   eq.js:18:15
+   18|   function(x: { y: 'foo' } | { y: 'bar' }) {
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
    eq.js:18:20
    18|   function(x: { y: 'foo' } | { y: 'bar' }) {
-                          ^^^^^ [2]
+                          ^^^^^ [3]
    eq.js:18:35
    18|   function(x: { y: 'foo' } | { y: 'bar' }) {
-                                         ^^^^^ [3]
+                                         ^^^^^ [4]
+
+
+Error --------------------------------------------------------------------------------------------------- exists.js:18:9
+
+Property `current` is not readable. [cannot-read]
+
+   18| if (TDR.current) { }
+               ^^^^^^^
 
 
 Error ------------------------------------------------------------------------------------------------------ fn.js:14:22
 
 Cannot call `takesBotFunction` with `x` bound to `x` because the parameter types of an unknown function [1] are unknown.
+[incompatible-use]
 
    fn.js:14:22
    14|     takesBotFunction(x); //error
@@ -393,6 +408,7 @@ References:
 Error ------------------------------------------------------------------------------------------------------ fn.js:20:22
 
 Cannot call `takesTopFunction` with `x` bound to `x` because the parameter types of an unknown function [1] are unknown.
+[incompatible-use]
 
    fn.js:20:22
    20|     takesTopFunction(x); // error
@@ -407,6 +423,7 @@ References:
 Error ------------------------------------------------------------------------------------------------------ fn.js:26:22
 
 Cannot call `takesMidFunction` with `x` bound to `x` because the parameter types of an unknown function [1] are unknown.
+[incompatible-use]
 
    fn.js:26:22
    26|     takesMidFunction(x); // error
@@ -421,7 +438,7 @@ References:
 Error ------------------------------------------------------------------------------------------------------ fn.js:32:23
 
 Cannot call `takesMidFunction2` with `x` bound to `x` because the parameter types of an unknown function [1] are
-unknown.
+unknown. [incompatible-use]
 
    fn.js:32:23
    32|     takesMidFunction2(x); // error
@@ -436,7 +453,7 @@ References:
 Error ------------------------------------------------------------------------------------------------------ fn.js:38:24
 
 Cannot call `takesHigherOrderFn` with `x` bound to `x` because the parameter types of an unknown function [1] are
-unknown.
+unknown. [incompatible-use]
 
    fn.js:38:24
    38|     takesHigherOrderFn(x); // error
@@ -451,7 +468,7 @@ References:
 Error ------------------------------------------------------------------------------------------------------ fn.js:44:25
 
 Cannot call `takesHigherOrderFn2` with `x` bound to `x` because the parameter types of an unknown function [1] are
-unknown.
+unknown. [incompatible-use]
 
    fn.js:44:25
    44|     takesHigherOrderFn2(x); // error
@@ -466,6 +483,7 @@ References:
 Error ------------------------------------------------------------------------------------------------------ fn.js:50:21
 
 Cannot call `takesMultiArgFn` with `x` bound to `x` because the parameter types of an unknown function [1] are unknown.
+[incompatible-use]
 
    fn.js:50:21
    50|     takesMultiArgFn(x); // error
@@ -480,6 +498,7 @@ References:
 Error ------------------------------------------------------------------------------------------------------ fn.js:56:22
 
 Cannot call `takesMultiArgFn2` with `x` bound to `x` because the parameter types of an unknown function [1] are unknown.
+[incompatible-use]
 
    fn.js:56:22
    56|     takesMultiArgFn2(x); // error
@@ -493,11 +512,11 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------- fn.js:62:5
 
-Cannot call `x` because the parameter types of an unknown function [1] are unknown.
+Cannot call `x` because the parameter types of an unknown function [1] are unknown. [incompatible-use]
 
    fn.js:62:5
    62|     x(y); // error
-           ^^^^
+           ^
 
 References:
    fn.js:60:18
@@ -507,11 +526,11 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------- fn.js:63:5
 
-Cannot call `x` because the parameter types of an unknown function [1] are unknown.
+Cannot call `x` because the parameter types of an unknown function [1] are unknown. [incompatible-use]
 
    fn.js:63:5
    63|     x(z);
-           ^^^^
+           ^
 
 References:
    fn.js:60:18
@@ -521,11 +540,11 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------- fn.js:64:5
 
-Cannot call `x` because the parameter types of an unknown function [1] are unknown.
+Cannot call `x` because the parameter types of an unknown function [1] are unknown. [incompatible-use]
 
    fn.js:64:5
    64|     x(x); // error
-           ^^^^
+           ^
 
 References:
    fn.js:60:18
@@ -535,11 +554,11 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------- fn.js:65:5
 
-Cannot call `x` because the parameter types of an unknown function [1] are unknown.
+Cannot call `x` because the parameter types of an unknown function [1] are unknown. [incompatible-use]
 
    fn.js:65:5
    65|     x(1,2,3,4,5); //error
-           ^^^^^^^^^^^^
+           ^
 
 References:
    fn.js:60:18
@@ -549,11 +568,11 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------- fn.js:66:5
 
-Cannot call `x` because the parameter types of an unknown function [1] are unknown.
+Cannot call `x` because the parameter types of an unknown function [1] are unknown. [incompatible-use]
 
    fn.js:66:5
    66|     x(...[1,2]); //error
-           ^^^^^^^^^^^
+           ^
 
 References:
    fn.js:60:18
@@ -563,11 +582,11 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------- fn.js:67:5
 
-Cannot call `x` because the parameter types of an unknown function [1] are unknown.
+Cannot call `x` because the parameter types of an unknown function [1] are unknown. [incompatible-use]
 
    fn.js:67:5
    67|     x();
-           ^^^
+           ^
 
 References:
    fn.js:60:18
@@ -575,13 +594,13 @@ References:
                         ^^^^^ [1]
 
 
-Error ------------------------------------------------------------------------------------------------------ fn.js:73:13
+Error ------------------------------------------------------------------------------------------------------ fn.js:73:17
 
-Cannot call `obj.field` because the parameter types of an unknown function [1] are unknown.
+Cannot call `obj.field` because the parameter types of an unknown function [1] are unknown. [incompatible-use]
 
-   fn.js:73:13
+   fn.js:73:17
    73|   const f = obj.field(0); // error
-                   ^^^^^^^^^^^^
+                       ^^^^^
 
 References:
    fn.js:72:12
@@ -589,13 +608,13 @@ References:
                   ^^^^^^^^^ [1]
 
 
-Error ------------------------------------------------------------------------------------------------------- fn.js:81:5
+Error ------------------------------------------------------------------------------------------------------- fn.js:81:7
 
-Cannot get `x.foo` because property `foo` is missing in unknown function [1].
+Cannot get `x.foo` because property `foo` is missing in unknown function [1]. [prop-missing]
 
-   fn.js:81:5
+   fn.js:81:7
    81|     x.foo; // error
-           ^^^^^
+             ^^^
 
 References:
    fn.js:81:5
@@ -603,13 +622,13 @@ References:
            ^ [1]
 
 
-Error -------------------------------------------------------------------------------------------- hasOwnProperty.js:4:3
+Error -------------------------------------------------------------------------------------------- hasOwnProperty.js:4:5
 
-Cannot call `x.y` because undefined [1] is not a function.
+Cannot call `x.y` because undefined [1] is not a function. [not-a-function]
 
-   hasOwnProperty.js:4:3
+   hasOwnProperty.js:4:5
    4|   x.y(); // error: could be undefined
-        ^^^^^
+          ^
 
 References:
    hasOwnProperty.js:3:20
@@ -617,13 +636,13 @@ References:
                          ^^^^^^^^^^ [1]
 
 
-Error -------------------------------------------------------------------------------------------- hasOwnProperty.js:6:5
+Error -------------------------------------------------------------------------------------------- hasOwnProperty.js:6:7
 
-Cannot call `x.y` because undefined [1] is not a function.
+Cannot call `x.y` because undefined [1] is not a function. [not-a-function]
 
-   hasOwnProperty.js:6:5
+   hasOwnProperty.js:6:7
    6|     x.y(); // error: still could be undefined
-          ^^^^^
+            ^
 
 References:
    hasOwnProperty.js:3:20
@@ -631,13 +650,13 @@ References:
                          ^^^^^^^^^^ [1]
 
 
-Error -------------------------------------------------------------------------------------------- hasOwnProperty.js:9:5
+Error -------------------------------------------------------------------------------------------- hasOwnProperty.js:9:7
 
-Cannot call `x.z` because property `z` is missing in object type [1].
+Cannot call `x.z` because property `z` is missing in object type [1]. [prop-missing]
 
-   hasOwnProperty.js:9:5
+   hasOwnProperty.js:9:7
    9|     x.z(); // error: unreachable, but we don't help you here
-          ^^^^^
+            ^
 
 References:
    hasOwnProperty.js:3:16
@@ -647,7 +666,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------ heap_defassign.js:10:21
 
-Cannot assign `obj.p` to `x` because string [1] is incompatible with number [2].
+Cannot assign `obj.p` to `x` because string [1] is incompatible with number [2]. [incompatible-type]
 
    heap_defassign.js:10:21
    10|     var x: number = obj.p;      // error, obj.p : number | string
@@ -664,7 +683,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------ heap_defassign.js:16:21
 
-Cannot assign `obj.p` to `x` because string [1] is incompatible with number [2].
+Cannot assign `obj.p` to `x` because string [1] is incompatible with number [2]. [incompatible-type]
 
    heap_defassign.js:16:21
    16|     var x: number = obj.p;      // error, obj.p : number | string
@@ -681,7 +700,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------ heap_defassign.js:22:21
 
-Cannot assign `obj.p` to `x` because string [1] is incompatible with number [2].
+Cannot assign `obj.p` to `x` because string [1] is incompatible with number [2]. [incompatible-type]
 
    heap_defassign.js:22:21
    22|     var x: number = obj.p;      // error, obj.p : number | string
@@ -698,7 +717,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------ heap_defassign.js:30:21
 
-Cannot assign `obj.p` to `y` because string [1] is incompatible with number [2].
+Cannot assign `obj.p` to `y` because string [1] is incompatible with number [2]. [incompatible-type]
 
    heap_defassign.js:30:21
    30|     var y: number = obj.p;      // error, obj.p : number | string
@@ -715,7 +734,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------ heap_defassign.js:38:21
 
-Cannot assign `obj.p` to `y` because string [1] is incompatible with number [2].
+Cannot assign `obj.p` to `y` because string [1] is incompatible with number [2]. [incompatible-type]
 
    heap_defassign.js:38:21
    38|     var y: number = obj.p;      // error, obj.p : number | string
@@ -732,9 +751,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------ heap_defassign.js:62:25
 
-Cannot assign `obj.p` to `y` because:
- - string [1] is incompatible with number [2].
- - string [3] is incompatible with number [2].
+Cannot assign `obj.p` to `y` because string [1] is incompatible with number [2]. [incompatible-type]
 
    heap_defassign.js:62:25
    62|         var y: number = obj.p;  // error, string ~/~ number
@@ -747,14 +764,28 @@ References:
    heap_defassign.js:62:16
    62|         var y: number = obj.p;  // error, string ~/~ number
                       ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------ heap_defassign.js:62:25
+
+Cannot assign `obj.p` to `y` because string [1] is incompatible with number [2]. [incompatible-type]
+
+   heap_defassign.js:62:25
+   62|         var y: number = obj.p;  // error, string ~/~ number
+                               ^^^^^
+
+References:
    heap_defassign.js:56:17
    56|         obj.p = 'hey';
-                       ^^^^^ [3]
+                       ^^^^^ [1]
+   heap_defassign.js:62:16
+   62|         var y: number = obj.p;  // error, string ~/~ number
+                      ^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------ heap_defassign.js:65:20
 
-Cannot assign `obj.p` to `z` because number [1] is incompatible with string [2].
+Cannot assign `obj.p` to `z` because number [1] is incompatible with string [2]. [incompatible-type]
 
    heap_defassign.js:65:20
    65|     var z:string = obj.p;       // error, number ~/~ string
@@ -771,7 +802,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------ heap_defassign.js:85:21
 
-Cannot assign `obj.p` to `z` because string [1] is incompatible with number [2].
+Cannot assign `obj.p` to `z` because string [1] is incompatible with number [2]. [incompatible-type]
 
    heap_defassign.js:85:21
    85|     var z: number = obj.p;      // error, (number | string) ~/~ number
@@ -786,9 +817,51 @@ References:
                   ^^^^^^ [2]
 
 
+Error -------------------------------------------------------------------------------- inclusion_check_widening.js:38:11
+
+string literal `val` [1] is incompatible with null [2]. [incompatible-type]
+
+   inclusion_check_widening.js:38:11
+   38| if (y === 'val') {} // error
+                 ^^^^^ [1]
+
+References:
+   inclusion_check_widening.js:33:11
+   33| const x = null;
+                 ^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------- inclusion_check_widening.js:46:14
+
+Property `a` is missing in object type [1]. [prop-missing]
+
+   inclusion_check_widening.js:46:14
+   46| if (key2 === 'a') {} // error (key2 does not include 'a')
+                    ^^^
+
+References:
+   inclusion_check_widening.js:44:23
+   44| declare var column: V<{...}>;
+                             ^^^^^ [1]
+
+
+Error -------------------------------------------------------------------------------- inclusion_check_widening.js:61:18
+
+number literal `0` [1] is incompatible with `C` [2]. [incompatible-type]
+
+   inclusion_check_widening.js:61:18
+   61|         prop !== 0 // error (0 incompatible with C)
+                        ^ [1]
+
+References:
+   inclusion_check_widening.js:52:23
+   52| type State = { prop: ?C };
+                             ^ [2]
+
+
 Error ------------------------------------------------------------------------------------- missing-property-cond.js:4:7
 
-Property `p1` is missing in object type [1].
+Property `p1` is missing in object type [1]. [prop-missing]
 
    missing-property-cond.js:4:7
    4|   if (o.p1) { // Error, testing for unknown property
@@ -802,7 +875,7 @@ References:
 
 Error ------------------------------------------------------------------------------------ missing-property-cond.js:10:7
 
-Property `p2` is missing in object type [1].
+Property `p2` is missing in object type [1]. [prop-missing]
 
    missing-property-cond.js:10:7
    10|   if (o.p2) { // Error, testing for unknown property
@@ -814,13 +887,13 @@ References:
                         ^^^^^^^^^^^^^ [1]
 
 
-Error ------------------------------------------------------------------------------------ missing-property-cond.js:11:5
+Error ----------------------------------------------------------------------------------- missing-property-cond.js:11:10
 
-Cannot get `o.p2.x` because property `x` is missing in property `p2` of unknown type [1].
+Cannot get `o.p2.x` because property `x` is missing in property `p2` of unknown type [1]. [incompatible-use]
 
-   missing-property-cond.js:11:5
+   missing-property-cond.js:11:10
    11|     o.p2.x; // error, since o.p2's type is unknown (e.g., could be `number`)
-           ^^^^^^
+                ^
 
 References:
    missing-property-cond.js:10:7
@@ -828,13 +901,13 @@ References:
              ^^^^ [1]
 
 
-Error ------------------------------------------------------------------------------------ missing-property-cond.js:16:3
+Error ------------------------------------------------------------------------------------ missing-property-cond.js:16:5
 
-Cannot get `o.p3` because property `p3` is missing in object type [1].
+Cannot get `o.p3` because property `p3` is missing in object type [1]. [prop-missing]
 
-   missing-property-cond.js:16:3
+   missing-property-cond.js:16:5
    16|   o.p3.x; // usual error outside conditional
-         ^^^^
+           ^^
 
 References:
    missing-property-cond.js:15:18
@@ -844,7 +917,7 @@ References:
 
 Error ------------------------------------------------------------------------------------ missing-property-cond.js:20:7
 
-Property `p4` is missing in object type [1].
+Property `p4` is missing in object type [1]. [prop-missing]
 
    missing-property-cond.js:20:7
    20|   if (o.p4) { // Error, testing for unknown property
@@ -856,13 +929,13 @@ References:
                                ^^^^^^^^^^^^^ [1]
 
 
-Error ------------------------------------------------------------------------------------ missing-property-cond.js:23:5
+Error ----------------------------------------------------------------------------------- missing-property-cond.js:23:10
 
-Cannot get `o.p4.x` because property `x` is missing in property `p4` does not exist [1].
+Cannot get `o.p4.x` because property `x` is missing in property `p4` does not exist [1]. [incompatible-use]
 
-   missing-property-cond.js:23:5
+   missing-property-cond.js:23:10
    23|     o.p4.x; // error
-           ^^^^^^
+                ^
 
 References:
    missing-property-cond.js:20:7
@@ -872,7 +945,7 @@ References:
 
 Error ------------------------------------------------------------------------------------ missing-property-cond.js:37:9
 
-Property `bar` is missing in mixed [1].
+Property `bar` is missing in mixed [1]. [incompatible-type]
 
    missing-property-cond.js:37:9
    37|   if (o.bar) {} // error, any lookup on mixed is unsafe
@@ -886,7 +959,7 @@ References:
 
 Error ----------------------------------------------------------------------------------- missing-property-cond.js:41:16
 
-Property `bar` is missing in mixed [1].
+Property `bar` is missing in mixed [1]. [incompatible-type]
 
    missing-property-cond.js:41:16
    41|   if (typeof o.bar === 'string') {} // error
@@ -900,7 +973,7 @@ References:
 
 Error ----------------------------------------------------------------------------------- missing-property-cond.js:65:12
 
-Property `q` is missing in null [1].
+Property `q` is missing in null [1]. [incompatible-use]
 
    missing-property-cond.js:65:12
    65|   if (null.q) {} // error: property `q` on null
@@ -914,16 +987,16 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- mixed.js:8:17
 
-Cannot call `takesString` with `x` bound to `x` because number [1] is incompatible with string [2].
+Cannot call `takesString` with `x` bound to `x` because number [1] is incompatible with string [2]. [incompatible-call]
 
    mixed.js:8:17
    8|     takesString(x); // error
                       ^
 
 References:
-   mixed.js:6:17
-   6| function num(x: mixed) {
-                      ^^^^^ [1]
+   mixed.js:7:7
+   7|   if (typeof x === "number") {
+            ^^^^^^^^^^^^^^^^^^^^^ [1]
    mixed.js:4:25
    4| function takesString(x: string) {}
                               ^^^^^^ [2]
@@ -932,6 +1005,7 @@ References:
 Error ----------------------------------------------------------------------------------------------------- mixed.js:9:6
 
 Cannot cast `!x` to boolean literal `false` because boolean [1] is incompatible with boolean literal `false` [2].
+[incompatible-cast]
 
    mixed.js:9:6
    9|     (!x: false); // error: we don't know the truthiness of x
@@ -945,16 +1019,16 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- mixed.js:21:17
 
-Cannot call `takesNumber` with `x` bound to `x` because string [1] is incompatible with number [2].
+Cannot call `takesNumber` with `x` bound to `x` because string [1] is incompatible with number [2]. [incompatible-call]
 
    mixed.js:21:17
    21|     takesNumber(x); // error
                        ^
 
 References:
-   mixed.js:19:17
-   19| function str(x: mixed) {
-                       ^^^^^ [1]
+   mixed.js:20:7
+   20|   if (typeof x === "string") {
+             ^^^^^^^^^^^^^^^^^^^^^ [1]
    mixed.js:3:25
     3| function takesNumber(x: number) {}
                                ^^^^^^ [2]
@@ -963,6 +1037,7 @@ References:
 Error ---------------------------------------------------------------------------------------------------- mixed.js:22:6
 
 Cannot cast `!x` to boolean literal `false` because boolean [1] is incompatible with boolean literal `false` [2].
+[incompatible-cast]
 
    mixed.js:22:6
    22|     (!x: false); // error: we don't know the truthiness of x
@@ -976,16 +1051,16 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- mixed.js:34:17
 
-Cannot call `takesString` with `x` bound to `x` because boolean [1] is incompatible with string [2].
+Cannot call `takesString` with `x` bound to `x` because boolean [1] is incompatible with string [2]. [incompatible-call]
 
    mixed.js:34:17
    34|     takesString(x); // error
                        ^
 
 References:
-   mixed.js:32:18
-   32| function bool(x: mixed) {
-                        ^^^^^ [1]
+   mixed.js:33:7
+   33|   if (typeof x === "boolean") {
+             ^^^^^^^^^^^^^^^^^^^^^^ [1]
    mixed.js:4:25
     4| function takesString(x: string) {}
                                ^^^^^^ [2]
@@ -994,15 +1069,16 @@ References:
 Error ---------------------------------------------------------------------------------------------------- mixed.js:35:6
 
 Cannot cast `x` to boolean literal `true` because boolean [1] is incompatible with boolean literal `true` [2].
+[incompatible-cast]
 
    mixed.js:35:6
    35|     (x: true); // error: we don't know the truthiness of x
             ^
 
 References:
-   mixed.js:32:18
-   32| function bool(x: mixed) {
-                        ^^^^^ [1]
+   mixed.js:33:7
+   33|   if (typeof x === "boolean") {
+             ^^^^^^^^^^^^^^^^^^^^^^ [1]
    mixed.js:35:9
    35|     (x: true); // error: we don't know the truthiness of x
                ^^^^ [2]
@@ -1011,6 +1087,7 @@ References:
 Error --------------------------------------------------------------------------------------------------- mixed.js:47:17
 
 Cannot call `takesString` with `x` bound to `x` because unknown function [1] is incompatible with string [2].
+[incompatible-call]
 
    mixed.js:47:17
    47|     takesString(x); // error
@@ -1027,9 +1104,24 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- mixed.js:53:17
 
-Cannot call `takesString` with `x` bound to `x` because:
- - null [1] is incompatible with string [2].
- - object [1] is incompatible with string [2].
+Cannot call `takesString` with `x` bound to `x` because null [1] is incompatible with string [2]. [incompatible-call]
+
+   mixed.js:53:17
+   53|     takesString(x); // error
+                       ^
+
+References:
+   mixed.js:51:18
+   51| function obj0(x: mixed) {
+                        ^^^^^ [1]
+   mixed.js:4:25
+    4| function takesString(x: string) {}
+                               ^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- mixed.js:53:17
+
+Cannot call `takesString` with `x` bound to `x` because object [1] is incompatible with string [2]. [incompatible-call]
 
    mixed.js:53:17
    53|     takesString(x); // error
@@ -1047,6 +1139,7 @@ References:
 Error --------------------------------------------------------------------------------------------------- mixed.js:59:17
 
 Cannot call `takesString` with `x` bound to `x` because read-only array type [1] is incompatible with string [2].
+[incompatible-call]
 
    mixed.js:59:17
    59|     takesString(x); // error
@@ -1064,6 +1157,7 @@ References:
 Error --------------------------------------------------------------------------------------------------- mixed.js:65:17
 
 Cannot call `takesString` with `x` bound to `x` because undefined [1] is incompatible with string [2].
+[incompatible-call]
 
    mixed.js:65:17
    65|     takesString(x); // error
@@ -1080,7 +1174,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- mixed.js:71:17
 
-Cannot call `takesString` with `x` bound to `x` because null [1] is incompatible with string [2].
+Cannot call `takesString` with `x` bound to `x` because null [1] is incompatible with string [2]. [incompatible-call]
 
    mixed.js:71:17
    71|     takesString(x); // error
@@ -1097,9 +1191,25 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- mixed.js:77:17
 
-Cannot call `takesString` with `x` bound to `x` because:
- - null [1] is incompatible with string [2].
- - undefined [1] is incompatible with string [2].
+Cannot call `takesString` with `x` bound to `x` because null [1] is incompatible with string [2]. [incompatible-call]
+
+   mixed.js:77:17
+   77|     takesString(x); // error
+                       ^
+
+References:
+   mixed.js:75:19
+   75| function maybe(x: mixed) {
+                         ^^^^^ [1]
+   mixed.js:4:25
+    4| function takesString(x: string) {}
+                               ^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- mixed.js:77:17
+
+Cannot call `takesString` with `x` bound to `x` because undefined [1] is incompatible with string [2].
+[incompatible-call]
 
    mixed.js:77:17
    77|     takesString(x); // error
@@ -1117,6 +1227,7 @@ References:
 Error --------------------------------------------------------------------------------------------------- mixed.js:83:17
 
 Cannot call `takesString` with `x` bound to `x` because boolean literal `true` [1] is incompatible with string [2].
+[incompatible-call]
 
    mixed.js:83:17
    83|     takesString(x); // error
@@ -1134,6 +1245,7 @@ References:
 Error --------------------------------------------------------------------------------------------------- mixed.js:89:17
 
 Cannot call `takesString` with `x` bound to `x` because boolean literal `false` [1] is incompatible with string [2].
+[incompatible-call]
 
    mixed.js:89:17
    89|     takesString(x); // error
@@ -1150,7 +1262,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- mixed.js:97:8
 
-Cannot cast `x['foo']` to string because mixed [1] is incompatible with string [2].
+Cannot cast `x['foo']` to string because mixed [1] is incompatible with string [2]. [incompatible-cast]
 
    mixed.js:97:8
    97|       (x['foo']: string); // error, mixed
@@ -1168,6 +1280,7 @@ References:
 Error -------------------------------------------------------------------------------------------------- mixed.js:119:17
 
 Cannot call `takesString` with `x[0]` bound to `x` because mixed [1] is incompatible with string [2].
+[incompatible-call]
 
    mixed.js:119:17
    119|     takesString(x[0]); // error
@@ -1182,17 +1295,17 @@ References:
                                 ^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------- mixed_object.js:4:5
+Error ---------------------------------------------------------------------------------------------- mixed_object.js:4:7
 
-Cannot assign `3` to `x.a` because property `a` is not writable.
+Cannot assign `3` to `x.a` because property `a` is not writable. [cannot-write]
 
    4|     x.a = 3;
-          ^^^
+            ^
 
 
 Error ------------------------------------------------------------------------------------------------------- not.js:5:5
 
-Cannot perform arithmetic operation because null or undefined [1] is not a number.
+Cannot perform arithmetic operation because null or undefined [1] is not a number. [unsafe-addition]
 
    not.js:5:5
    5|     x++; // should error for null, void and bool (false)
@@ -1206,7 +1319,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------- not.js:5:5
 
-Cannot perform arithmetic operation because boolean [1] is not a number.
+Cannot perform arithmetic operation because boolean [1] is not a number. [unsafe-addition]
 
    not.js:5:5
    5|     x++; // should error for null, void and bool (false)
@@ -1220,7 +1333,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------- not.js:5:5
 
-Cannot assign number to `x` because number [1] is incompatible with boolean [2].
+Cannot assign number to `x` because number [1] is incompatible with boolean [2]. [incompatible-type]
 
    not.js:5:5
    5|     x++; // should error for null, void and bool (false)
@@ -1234,7 +1347,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------- not.js:5:5
 
-number [1] is incompatible with boolean [2].
+number [1] is incompatible with boolean [2]. [incompatible-type]
 
    not.js:5:5
    5|     x++; // should error for null, void and bool (false)
@@ -1248,9 +1361,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ not.js:11:5
 
-Cannot get `x[0]` because:
- - an index signature declaring the expected key / value type is missing in `Number` [1].
- - an index signature declaring the expected key / value type is missing in null or undefined [2].
+Cannot get `x[0]` because an index signature declaring the expected key / value type is missing in `Number` [1].
+[prop-missing]
 
    not.js:11:5
    11|     x[0]; // should error for null, void and number (0)
@@ -1260,14 +1372,27 @@ References:
    not.js:9:18
     9| function bar(x: ?number) {
                         ^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------------ not.js:11:7
+
+Cannot get `x[0]` because an index signature declaring the expected key / value type is missing in null or
+undefined [1]. [incompatible-use]
+
+   not.js:11:7
+   11|     x[0]; // should error for null, void and number (0)
+             ^
+
+References:
    not.js:9:17
     9| function bar(x: ?number) {
-                       ^^^^^^^ [2]
+                       ^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------------------ not.js:21:5
 
 Cannot get `x[0]` because an index signature declaring the expected key / value type is missing in `Number` [1].
+[prop-missing]
 
    not.js:21:5
    21|     x[0]; // should error for number (0)
@@ -1282,6 +1407,7 @@ References:
 Error ------------------------------------------------------------------------------------------------------ not.js:41:6
 
 Cannot cast `!x` to boolean literal `false` because boolean [1] is incompatible with boolean literal `false` [2].
+[incompatible-cast]
 
    not.js:41:6
    41|     (!x: false); // error, strings are not always truthy
@@ -1296,6 +1422,7 @@ References:
 Error ------------------------------------------------------------------------------------------------------ not.js:44:6
 
 Cannot cast `!x` to boolean literal `false` because boolean [1] is incompatible with boolean literal `false` [2].
+[incompatible-cast]
 
    not.js:44:6
    44|     (!x: false); // error, numbers are not always truthy
@@ -1310,6 +1437,7 @@ References:
 Error ------------------------------------------------------------------------------------------------------ not.js:47:6
 
 Cannot cast `!x` to boolean literal `false` because boolean [1] is incompatible with boolean literal `false` [2].
+[incompatible-cast]
 
    not.js:47:6
    47|     (!x: false); // error, bools are not always truthy
@@ -1323,7 +1451,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- null.js:4:13
 
-Cannot perform arithmetic operation because null [1] is not a number.
+Cannot perform arithmetic operation because null [1] is not a number. [unsafe-addition]
 
    4|   if (100 * null) {
                   ^^^^ [1]
@@ -1331,7 +1459,7 @@ Cannot perform arithmetic operation because null [1] is not a number.
 
 Error ------------------------------------------------------------------------------------------------------ null.js:7:7
 
-Cannot perform arithmetic operation because null [1] is not a number.
+Cannot perform arithmetic operation because null [1] is not a number. [unsafe-addition]
 
    7|   if (null * 100) {
             ^^^^ [1]
@@ -1339,7 +1467,7 @@ Cannot perform arithmetic operation because null [1] is not a number.
 
 Error ---------------------------------------------------------------------------------------------------- number.js:8:8
 
-Cannot cast `x` to undefined because number literal `0` [1] is incompatible with undefined [2].
+Cannot cast `x` to undefined because number literal `0` [1] is incompatible with undefined [2]. [incompatible-cast]
 
    number.js:8:8
    8|       (x: void); // error
@@ -1357,6 +1485,7 @@ References:
 Error --------------------------------------------------------------------------------------------------- number.js:10:6
 
 Cannot cast `x` to number literal `0` because number [1] is incompatible with number literal `0` [2].
+[incompatible-cast]
 
    number.js:10:6
    10|     (x: 0); // error
@@ -1374,6 +1503,7 @@ References:
 Error --------------------------------------------------------------------------------------------------- number.js:15:8
 
 Cannot cast `x` to number literal `0` because number [1] is incompatible with number literal `0` [2].
+[incompatible-cast]
 
    number.js:15:8
    15|       (x: 0); // error
@@ -1390,7 +1520,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- number.js:17:6
 
-Cannot cast `x` to undefined because number [1] is incompatible with undefined [2].
+Cannot cast `x` to undefined because number [1] is incompatible with undefined [2]. [incompatible-cast]
 
    number.js:17:6
    17|     (x: void); // error
@@ -1407,7 +1537,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- number.js:21:15
 
-number literal `0` [1] is incompatible with number literal `1` [2].
+number literal `0` [1] is incompatible with number literal `1` [2]. [incompatible-type]
 
    number.js:21:15
    21|     if (x === 0) {
@@ -1421,7 +1551,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- number.js:28:15
 
-number literal `1` [1] is incompatible with number literal `0` [2].
+number literal `1` [1] is incompatible with number literal `0` [2]. [incompatible-type]
 
    number.js:28:15
    28|     if (x === 1) {
@@ -1435,7 +1565,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- number.js:35:15
 
-number literal `1` [1] is incompatible with number literal `0` [2].
+number literal `1` [1] is incompatible with number literal `0` [2]. [incompatible-type]
 
    number.js:35:15
    35|     if (x !== 1) {
@@ -1449,9 +1579,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- number.js:51:8
 
-Cannot cast `x` to undefined because:
- - number literal `0` [1] is incompatible with undefined [2].
- - number literal `0` [3] is incompatible with undefined [2].
+Cannot cast `x` to undefined because number literal `0` [1] is incompatible with undefined [2]. [incompatible-cast]
 
    number.js:51:8
    51|       (x: void); // error
@@ -1464,16 +1592,28 @@ References:
    number.js:51:11
    51|       (x: void); // error
                  ^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- number.js:51:8
+
+Cannot cast `x` to undefined because number literal `0` [1] is incompatible with undefined [2]. [incompatible-cast]
+
+   number.js:51:8
+   51|       (x: void); // error
+              ^
+
+References:
    number.js:49:15
    49|     if (x === 0) {
-                     ^ [3]
+                     ^ [1]
+   number.js:51:11
+   51|       (x: void); // error
+                 ^^^^ [2]
 
 
 Error --------------------------------------------------------------------------------------------------- number.js:55:8
 
-Cannot cast `x` to undefined because:
- - number literal `1` [1] is incompatible with undefined [2].
- - number literal `1` [3] is incompatible with undefined [2].
+Cannot cast `x` to undefined because number literal `1` [1] is incompatible with undefined [2]. [incompatible-cast]
 
    number.js:55:8
    55|       (x: void); // error
@@ -1486,14 +1626,28 @@ References:
    number.js:55:11
    55|       (x: void); // error
                  ^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- number.js:55:8
+
+Cannot cast `x` to undefined because number literal `1` [1] is incompatible with undefined [2]. [incompatible-cast]
+
+   number.js:55:8
+   55|       (x: void); // error
+              ^
+
+References:
    number.js:53:15
    53|     if (x === 1) {
-                     ^ [3]
+                     ^ [1]
+   number.js:55:11
+   55|       (x: void); // error
+                 ^^^^ [2]
 
 
 Error -------------------------------------------------------------------------------------------------- number.js:63:12
 
-Cannot return `x.foo` because number [1] is incompatible with number literal `0` [2].
+Cannot return `x.foo` because number [1] is incompatible with number literal `0` [2]. [incompatible-return]
 
    number.js:63:12
    63|     return x.foo; // error
@@ -1510,7 +1664,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- number.js:77:17
 
-Property `bar` is missing in object type [1].
+Property `bar` is missing in object type [1]. [prop-missing]
 
    number.js:77:17
    77|     if (num === obj.bar) { // Error, accessing unknown property
@@ -1524,9 +1678,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- number.js:97:14
 
-Cannot return `s` because:
- - number literal `3` [1] is incompatible with enum [2].
- - number literal `3` [3] is incompatible with enum [2].
+Cannot return `s` because number literal `3` [1] is incompatible with literal union [2]. [incompatible-return]
 
    number.js:97:14
    97|       return s; // error
@@ -1539,14 +1691,11 @@ References:
    number.js:93:25
    93|   function(s: number): ?Mode {
                                ^^^^ [2]
-   number.js:96:22
-   96|     } else if (s === 3) {
-                            ^ [3]
 
 
 Error ------------------------------------------------------------------------------------------------- number.js:116:14
 
-Cannot return `x` because number [1] is incompatible with number literal `0` [2].
+Cannot return `x` because number [1] is incompatible with number literal `0` [2]. [incompatible-return]
 
    number.js:116:14
    116|       return x; // error
@@ -1563,7 +1712,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- number.js:126:8
 
-Cannot cast `x` to undefined because number literal `-1` [1] is incompatible with undefined [2].
+Cannot cast `x` to undefined because number literal `-1` [1] is incompatible with undefined [2]. [incompatible-cast]
 
    number.js:126:8
    126|       (x: void); // error
@@ -1581,6 +1730,7 @@ References:
 Error -------------------------------------------------------------------------------------------------- number.js:128:6
 
 Cannot cast `x` to number literal `-1` because number [1] is incompatible with number literal `-1` [2].
+[incompatible-cast]
 
    number.js:128:6
    128|     (x: -1); // error
@@ -1598,6 +1748,7 @@ References:
 Error -------------------------------------------------------------------------------------------------- number.js:133:8
 
 Cannot cast `x` to number literal `-1` because number [1] is incompatible with number literal `-1` [2].
+[incompatible-cast]
 
    number.js:133:8
    133|       (x: -1); // error
@@ -1615,6 +1766,7 @@ References:
 Error -------------------------------------------------------------------------------------------------- number.js:135:6
 
 Cannot cast `x` to number literal `-1` because number [1] is incompatible with number literal `-1` [2].
+[incompatible-cast]
 
    number.js:135:6
    135|     (x: -1); // error
@@ -1631,7 +1783,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- number.js:146:15
 
-number literal `-1` [1] is incompatible with number literal `0` [2].
+number literal `-1` [1] is incompatible with number literal `0` [2]. [incompatible-type]
 
    number.js:146:15
    146|     if (x === -1) { // error
@@ -1645,7 +1797,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- number.js:153:15
 
-number literal `0` [1] is incompatible with number literal `-1` [2].
+number literal `0` [1] is incompatible with number literal `-1` [2]. [incompatible-type]
 
    number.js:153:15
    153|     if (x === 0) { //error
@@ -1659,7 +1811,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- number.js:170:12
 
-Cannot return `x` because number literal `0` [1] is incompatible with number literal `-1` [2].
+Cannot return `x` because number literal `0` [1] is incompatible with number literal `-1` [2]. [incompatible-return]
 
    number.js:170:12
    170|     return x;
@@ -1676,7 +1828,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ property.js:71:12
 
-Cannot return `x[y.z]` because null or undefined [1] is incompatible with string [2].
+Cannot return `x[y.z]` because null or undefined [1] is incompatible with string [2]. [incompatible-return]
 
    property.js:71:12
    71|     return x[y.z];  // error
@@ -1693,7 +1845,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- refinements.js:4:24
 
-Cannot assign `x` to `y` because number [1] is incompatible with string [2].
+Cannot assign `x` to `y` because number [1] is incompatible with string [2]. [incompatible-type]
 
    refinements.js:4:24
    4|         var y:string = x;
@@ -1710,9 +1862,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- refinements.js:7:20
 
-Cannot assign `x` to `z` because:
- - null [1] is incompatible with string [2].
- - boolean [3] is incompatible with string [2].
+Cannot assign `x` to `z` because null [1] is incompatible with string [2]. [incompatible-type]
 
    refinements.js:7:20
    7|     var z:string = x;
@@ -1725,16 +1875,28 @@ References:
    refinements.js:7:11
    7|     var z:string = x;
                 ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- refinements.js:7:20
+
+Cannot assign `x` to `z` because boolean [1] is incompatible with string [2]. [incompatible-type]
+
+   refinements.js:7:20
+   7|     var z:string = x;
+                         ^
+
+References:
    refinements.js:5:13
    5|         x = false;
-                  ^^^^^ [3]
+                  ^^^^^ [1]
+   refinements.js:7:11
+   7|     var z:string = x;
+                ^^^^^^ [2]
 
 
 Error --------------------------------------------------------------------------------------------- refinements.js:13:24
 
-Cannot assign `x` to `y` because:
- - number [1] is incompatible with string [2].
- - null [3] is incompatible with string [2].
+Cannot assign `x` to `y` because number [1] is incompatible with string [2]. [incompatible-type]
 
    refinements.js:13:24
    13|         var y:string = x;
@@ -1747,14 +1909,28 @@ References:
    refinements.js:13:15
    13|         var y:string = x;
                      ^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------- refinements.js:13:24
+
+Cannot assign `x` to `y` because null [1] is incompatible with string [2]. [incompatible-type]
+
+   refinements.js:13:24
+   13|         var y:string = x;
+                              ^
+
+References:
    refinements.js:11:20
    11|     var x = b? 0 : null;
-                          ^^^^ [3]
+                          ^^^^ [1]
+   refinements.js:13:15
+   13|         var y:string = x;
+                     ^^^^^^ [2]
 
 
 Error --------------------------------------------------------------------------------------------- refinements.js:16:20
 
-Cannot assign `x` to `z` because boolean [1] is incompatible with string [2].
+Cannot assign `x` to `z` because boolean [1] is incompatible with string [2]. [incompatible-type]
 
    refinements.js:16:20
    16|     var z:string = x;
@@ -1771,9 +1947,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- refinements.js:33:24
 
-Cannot assign `x` to `y` because:
- - string [1] is incompatible with number [2].
- - string [3] is incompatible with number [2].
+Cannot assign `x` to `y` because string [1] is incompatible with number [2]. [incompatible-type]
 
    refinements.js:33:24
    33|         var y:number = x;
@@ -1786,14 +1960,28 @@ References:
    refinements.js:33:15
    33|         var y:number = x;
                      ^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------- refinements.js:33:24
+
+Cannot assign `x` to `y` because string [1] is incompatible with number [2]. [incompatible-type]
+
+   refinements.js:33:24
+   33|         var y:number = x;
+                              ^
+
+References:
    refinements.js:27:13
    27|         x = "hello";
-                   ^^^^^^^ [3]
+                   ^^^^^^^ [1]
+   refinements.js:33:15
+   33|         var y:number = x;
+                     ^^^^^^ [2]
 
 
 Error --------------------------------------------------------------------------------------------- refinements.js:36:20
 
-Cannot assign `x` to `z` because number [1] is incompatible with string [2].
+Cannot assign `x` to `z` because number [1] is incompatible with string [2]. [incompatible-type]
 
    refinements.js:36:20
    36|     var z:string = x;
@@ -1810,7 +1998,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- refinements.js:43:24
 
-Cannot assign `x` to `y` because number [1] is incompatible with string [2].
+Cannot assign `x` to `y` because number [1] is incompatible with string [2]. [incompatible-type]
 
    refinements.js:43:24
    43|         var y:string = x;
@@ -1827,9 +2015,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- refinements.js:45:20
 
-Cannot assign `x` to `z` because:
- - null [1] is incompatible with string [2].
- - boolean [3] is incompatible with string [2].
+Cannot assign `x` to `z` because null [1] is incompatible with string [2]. [incompatible-type]
 
    refinements.js:45:20
    45|     var z:string = x;
@@ -1842,14 +2028,28 @@ References:
    refinements.js:45:11
    45|     var z:string = x;
                  ^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------- refinements.js:45:20
+
+Cannot assign `x` to `z` because boolean [1] is incompatible with string [2]. [incompatible-type]
+
+   refinements.js:45:20
+   45|     var z:string = x;
+                          ^
+
+References:
    refinements.js:42:14
    42|          x = false) {
-                    ^^^^^ [3]
+                    ^^^^^ [1]
+   refinements.js:45:11
+   45|     var z:string = x;
+                 ^^^^^^ [2]
 
 
 Error --------------------------------------------------------------------------------------------- refinements.js:54:20
 
-Cannot assign `x` to `z` because boolean [1] is incompatible with number [2].
+Cannot assign `x` to `z` because boolean [1] is incompatible with number [2]. [incompatible-type]
 
    refinements.js:54:20
    54|     var z:number = x;
@@ -1866,7 +2066,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- string.js:8:8
 
-Cannot cast `x` to undefined because string literal `foo` [1] is incompatible with undefined [2].
+Cannot cast `x` to undefined because string literal `foo` [1] is incompatible with undefined [2]. [incompatible-cast]
 
    string.js:8:8
    8|       (x: void); // error
@@ -1884,6 +2084,7 @@ References:
 Error --------------------------------------------------------------------------------------------------- string.js:10:6
 
 Cannot cast `x` to string literal `foo` because string [1] is incompatible with string literal `foo` [2].
+[incompatible-cast]
 
    string.js:10:6
    10|     (x: 'foo'); // error
@@ -1901,6 +2102,7 @@ References:
 Error --------------------------------------------------------------------------------------------------- string.js:15:8
 
 Cannot cast `x` to string literal `foo` because string [1] is incompatible with string literal `foo` [2].
+[incompatible-cast]
 
    string.js:15:8
    15|       (x: 'foo'); // error
@@ -1917,7 +2119,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- string.js:17:6
 
-Cannot cast `x` to undefined because string [1] is incompatible with undefined [2].
+Cannot cast `x` to undefined because string [1] is incompatible with undefined [2]. [incompatible-cast]
 
    string.js:17:6
    17|     (x: void); // error
@@ -1934,7 +2136,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- string.js:21:15
 
-string literal `foo` [1] is incompatible with string literal `bar` [2].
+string literal `foo` [1] is incompatible with string literal `bar` [2]. [incompatible-type]
 
    string.js:21:15
    21|     if (x === 'foo') {
@@ -1948,7 +2150,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- string.js:28:15
 
-string literal `bar` [1] is incompatible with string literal `foo` [2].
+string literal `bar` [1] is incompatible with string literal `foo` [2]. [incompatible-type]
 
    string.js:28:15
    28|     if (x === 'bar') {
@@ -1962,7 +2164,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- string.js:35:15
 
-string literal `bar` [1] is incompatible with string literal `foo` [2].
+string literal `bar` [1] is incompatible with string literal `foo` [2]. [incompatible-type]
 
    string.js:35:15
    35|     if (x !== 'bar') {
@@ -1976,9 +2178,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- string.js:51:8
 
-Cannot cast `x` to undefined because:
- - string literal `foo` [1] is incompatible with undefined [2].
- - string literal `foo` [3] is incompatible with undefined [2].
+Cannot cast `x` to undefined because string literal `foo` [1] is incompatible with undefined [2]. [incompatible-cast]
 
    string.js:51:8
    51|       (x: void); // error
@@ -1991,16 +2191,28 @@ References:
    string.js:51:11
    51|       (x: void); // error
                  ^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- string.js:51:8
+
+Cannot cast `x` to undefined because string literal `foo` [1] is incompatible with undefined [2]. [incompatible-cast]
+
+   string.js:51:8
+   51|       (x: void); // error
+              ^
+
+References:
    string.js:49:15
    49|     if (x === 'foo') {
-                     ^^^^^ [3]
+                     ^^^^^ [1]
+   string.js:51:11
+   51|       (x: void); // error
+                 ^^^^ [2]
 
 
 Error --------------------------------------------------------------------------------------------------- string.js:55:8
 
-Cannot cast `x` to undefined because:
- - string literal `bar` [1] is incompatible with undefined [2].
- - string literal `bar` [3] is incompatible with undefined [2].
+Cannot cast `x` to undefined because string literal `bar` [1] is incompatible with undefined [2]. [incompatible-cast]
 
    string.js:55:8
    55|       (x: void); // error
@@ -2013,14 +2225,28 @@ References:
    string.js:55:11
    55|       (x: void); // error
                  ^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- string.js:55:8
+
+Cannot cast `x` to undefined because string literal `bar` [1] is incompatible with undefined [2]. [incompatible-cast]
+
+   string.js:55:8
+   55|       (x: void); // error
+              ^
+
+References:
    string.js:53:15
    53|     if (x === 'bar') {
-                     ^^^^^ [3]
+                     ^^^^^ [1]
+   string.js:55:11
+   55|       (x: void); // error
+                 ^^^^ [2]
 
 
 Error -------------------------------------------------------------------------------------------------- string.js:63:12
 
-Cannot return `x.foo` because string [1] is incompatible with string literal `foo` [2].
+Cannot return `x.foo` because string [1] is incompatible with string literal `foo` [2]. [incompatible-return]
 
    string.js:63:12
    63|     return x.foo; // error
@@ -2037,7 +2263,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- string.js:77:17
 
-Property `bar` is missing in object type [1].
+Property `bar` is missing in object type [1]. [prop-missing]
 
    string.js:77:17
    77|     if (str === obj.bar) { // Error, testing for unknown property
@@ -2051,9 +2277,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- string.js:98:14
 
-Cannot return `s` because:
- - string literal `d` [1] is incompatible with enum [2].
- - string literal `d` [3] is incompatible with enum [2].
+Cannot return `s` because string literal `d` [1] is incompatible with literal union [2]. [incompatible-return]
 
    string.js:98:14
    98|       return s; // error
@@ -2066,14 +2290,11 @@ References:
    string.js:94:25
    94|   function(s: string): ?Mode {
                                ^^^^ [2]
-   string.js:97:22
-   97|     } else if (s === "d") {
-                            ^^^ [3]
 
 
 Error ------------------------------------------------------------------------------------------------- string.js:117:14
 
-Cannot return `x` because string [1] is incompatible with empty string [2].
+Cannot return `x` because string [1] is incompatible with empty string [2]. [incompatible-return]
 
    string.js:117:14
    117|       return x; // error
@@ -2090,7 +2311,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- super_member.js:12:9
 
-Property `prop` is missing in super of `B` [1].
+Property `prop` is missing in super of `B` [1]. [prop-missing]
 
    super_member.js:12:9
    12|     if (super.prop) { // Error, super.prop doesn't exist
@@ -2105,6 +2326,7 @@ References:
 Error -------------------------------------------------------------------------------------------- super_member.js:13:14
 
 Cannot return `super.prop` because property `prop` of unknown type [1] is incompatible with string [2].
+[incompatible-return]
 
    super_member.js:13:14
    13|       return super.prop; // error, unknown type passed to string expected
@@ -2121,7 +2343,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- switch.js:8:14
 
-Cannot return `text` because number [1] is incompatible with string [2].
+Cannot return `text` because number [1] is incompatible with string [2]. [incompatible-return]
 
    switch.js:8:14
    8|       return text; // error, should return string
@@ -2139,6 +2361,7 @@ References:
 Error -------------------------------------------------------------------------------------------------- switch.js:27:14
 
 Cannot get `text[0]` because an index signature declaring the expected key / value type is missing in `Number` [1].
+[prop-missing]
 
    switch.js:27:14
    27|       return text[0]; // error, [0] on number
@@ -2153,6 +2376,7 @@ References:
 Error -------------------------------------------------------------------------------------------------- switch.js:37:14
 
 Cannot get `text[0]` because an index signature declaring the expected key / value type is missing in `Number` [1].
+[prop-missing]
 
    switch.js:37:14
    37|       return text[0]; // error, [0] on number
@@ -2166,7 +2390,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- switch.js:51:15
 
-Cannot perform arithmetic operation because string [1] is not a number.
+Cannot perform arithmetic operation because string [1] is not a number. [unsafe-addition]
 
    switch.js:51:15
    51|       return (text++) + '';
@@ -2178,13 +2402,13 @@ References:
                             ^^^^^^ [1]
 
 
-Error -------------------------------------------------------------------------------------------- tagged_union.js:20:12
+Error -------------------------------------------------------------------------------------------- tagged_union.js:20:20
 
-Cannot call `x.prop1.charAt` because property `charAt` is missing in undefined [1].
+Cannot call `x.prop1.charAt` because property `charAt` is missing in undefined [1]. [incompatible-use]
 
-   tagged_union.js:20:12
+   tagged_union.js:20:20
    20|     return x.prop1.charAt(0); // typeAST: Node1, but x.prop1 may be undefined
-                  ^^^^^^^^^^^^^^^^^
+                          ^^^^^^
 
 References:
    ast_node.js:3:11
@@ -2195,7 +2419,7 @@ References:
 Error -------------------------------------------------------------------------------------------- tagged_union.js:34:30
 
 Cannot cast `x.taste` to string literal `Good` because string literal `Bad` [1] is incompatible with string literal
-`Good` [2].
+`Good` [2]. [incompatible-cast]
 
    tagged_union.js:34:30
    34|   if (x.kind === 'Fruit') { (x.taste: 'Good'); } // error, Apple.taste = Bad
@@ -2213,7 +2437,7 @@ References:
 Error --------------------------------------------------------------------------------------------- tagged_union.js:35:9
 
 Cannot cast `x.raw` to string literal `No` because string literal `Maybe` [1] is incompatible with string literal
-`No` [2].
+`No` [2]. [incompatible-cast]
 
    tagged_union.js:35:9
    35|   else (x.raw: 'No'); // error, Carrot.raw = Maybe
@@ -2230,7 +2454,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------- tagged_union.js:40:6
 
-Cannot cast `x.raw` to union type because string literal `Maybe` [1] is incompatible with enum [2].
+Cannot cast `x.raw` to union type because string literal `Maybe` [1] is incompatible with literal union [2].
+[incompatible-cast]
 
    tagged_union.js:40:6
    40|     (x.raw: 'Yes' | 'No'); // 2 errors:
@@ -2245,13 +2470,13 @@ References:
                    ^^^^^^^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------- tagged_union.js:40:6
+Error --------------------------------------------------------------------------------------------- tagged_union.js:40:8
 
-Cannot get `x.raw` because property `raw` is missing in `Orange` [1].
+Cannot get `x.raw` because property `raw` is missing in `Orange` [1]. [prop-missing]
 
-   tagged_union.js:40:6
+   tagged_union.js:40:8
    40|     (x.raw: 'Yes' | 'No'); // 2 errors:
-            ^^^^^
+              ^^^
 
 References:
    tagged_union.js:38:17
@@ -2259,13 +2484,13 @@ References:
                        ^^^^^^^^^ [1]
 
 
-Error -------------------------------------------------------------------------------------------- tagged_union.js:72:19
+Error -------------------------------------------------------------------------------------------- tagged_union.js:72:21
 
-Cannot get `x.A` because property `A` is missing in `C` [1].
+Cannot get `x.A` because property `A` is missing in `C` [1]. [prop-missing]
 
-   tagged_union.js:72:19
+   tagged_union.js:72:21
    72|   default: return x.A; // error, x: C and property A not found in type C
-                         ^^^
+                           ^
 
 References:
    tagged_union.js:68:26
@@ -2275,7 +2500,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- tagged_union.js:88:9
 
-Property `kindTypo` is missing in `A` [1].
+Property `kindTypo` is missing in `A` [1]. [prop-missing]
 
    tagged_union.js:88:9
    88|     if (x.kindTypo === 1) { // error: kindTypo prop missing
@@ -2289,9 +2514,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- tagged_union.js:89:8
 
-Cannot cast `x.kindTypo` to string because:
- - number literal `1` [1] is incompatible with string [2].
- - number literal `1` [3] is incompatible with string [2].
+Cannot cast `x.kindTypo` to string because number literal `1` [1] is incompatible with string [2]. [incompatible-cast]
 
    tagged_union.js:89:8
    89|       (x.kindTypo: string); // typos can't be used, though
@@ -2304,18 +2527,15 @@ References:
    tagged_union.js:89:20
    89|       (x.kindTypo: string); // typos can't be used, though
                           ^^^^^^ [2]
-   tagged_union.js:88:24
-   88|     if (x.kindTypo === 1) { // error: kindTypo prop missing
-                              ^ [3]
 
 
-Error --------------------------------------------------------------------------------------------- tagged_union.js:96:9
+Error -------------------------------------------------------------------------------------------- tagged_union.js:96:11
 
-Cannot get `x.fooTypo` because property `fooTypo` is missing in object type [1].
+Cannot get `x.fooTypo` because property `fooTypo` is missing in object type [1]. [prop-missing]
 
-   tagged_union.js:96:9
+   tagged_union.js:96:11
    96|     if (x.fooTypo.bar === 1) {} // error, fooTypo doesn't exist
-               ^^^^^^^^^
+                 ^^^^^^^
 
 References:
    tagged_union.js:94:21
@@ -2323,13 +2543,13 @@ References:
                            ^^^^^^^^^^^^^^^ [1]
 
 
-Error ------------------------------------------------------------------------------------------- tagged_union.js:101:20
+Error ------------------------------------------------------------------------------------------- tagged_union.js:101:27
 
-Cannot call `null.toString` because property `toString` is missing in null [1].
+Cannot call `null.toString` because property `toString` is missing in null [1]. [incompatible-use]
 
-   tagged_union.js:101:20
+   tagged_union.js:101:27
    101|     if (x.kind === (null).toString()) {} // error, method on null
-                           ^^^^^^^^^^^^^^^^^
+                                  ^^^^^^^^
 
 References:
    tagged_union.js:101:21
@@ -2337,13 +2557,13 @@ References:
                             ^^^^ [1]
 
 
-Error ------------------------------------------------------------------------------------------- tagged_union.js:102:28
+Error ------------------------------------------------------------------------------------------- tagged_union.js:102:35
 
-Cannot call `null.toString` because property `toString` is missing in null [1].
+Cannot call `null.toString` because property `toString` is missing in null [1]. [incompatible-use]
 
-   tagged_union.js:102:28
+   tagged_union.js:102:35
    102|     if ({kind: 1}.kind === (null).toString()) {} // error, method on null
-                                   ^^^^^^^^^^^^^^^^^
+                                          ^^^^^^^^
 
 References:
    tagged_union.js:102:29
@@ -2353,7 +2573,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- tagged_union.js:111:9
 
-Property `legnth` is missing in array type [1].
+Property `legnth` is missing in array type [1]. [prop-missing]
 
    tagged_union.js:111:9
    111|     if (x.legnth === 0) { // Error, typos
@@ -2367,9 +2587,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- tagged_union.js:113:8
 
-Cannot cast `x.legnth` to string because:
- - number literal `0` [1] is incompatible with string [2].
- - number literal `0` [3] is incompatible with string [2].
+Cannot cast `x.legnth` to string because number literal `0` [1] is incompatible with string [2]. [incompatible-cast]
 
    tagged_union.js:113:8
    113|       (x.legnth: string); // error: number literal 0 !~> string
@@ -2382,14 +2600,11 @@ References:
    tagged_union.js:113:18
    113|       (x.legnth: string); // error: number literal 0 !~> string
                          ^^^^^^ [2]
-   tagged_union.js:111:22
-   111|     if (x.legnth === 0) { // Error, typos
-                             ^ [3]
 
 
 Error -------------------------------------------------------------------------------------------- tagged_union.js:116:9
 
-Property `legnth` is missing in string [1].
+Property `legnth` is missing in string [1]. [prop-missing]
 
    tagged_union.js:116:9
    116|     if (y.legnth === 0) { // Error, typo
@@ -2403,9 +2618,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- tagged_union.js:118:8
 
-Cannot cast `y.legnth` to string because:
- - number literal `0` [1] is incompatible with string [2].
- - number literal `0` [3] is incompatible with string [2].
+Cannot cast `y.legnth` to string because number literal `0` [1] is incompatible with string [2]. [incompatible-cast]
 
    tagged_union.js:118:8
    118|       (y.legnth: string); // error: number literal 0 !~> string
@@ -2418,28 +2631,29 @@ References:
    tagged_union.js:118:18
    118|       (y.legnth: string); // error: number literal 0 !~> string
                          ^^^^^^ [2]
-   tagged_union.js:116:22
-   116|     if (y.legnth === 0) { // Error, typo
-                             ^ [3]
 
 
 Error ------------------------------------------------------------------------------------------- tagged_union.js:120:24
 
-number [1] is incompatible with function type [2].
+Cannot compare number [1] with property `toString` of number [2] because number [1] is incompatible with function
+type [3]. [incompatible-type]
 
    tagged_union.js:120:24
    120|     if (z.toString === 0) {} // Error
                                ^ [1]
 
 References:
-   <BUILTINS>/core.js:164:5
-   164|     toString(radix?: number): string;
-            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+   tagged_union.js:107:37
+   107|     x: Array<string>, y: string, z: number, q: boolean,
+                                            ^^^^^^ [2]
+   <BUILTINS>/core.js:465:5
+   465|     toString(radix?: number): string;
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
 
 
 Error -------------------------------------------------------------------------------------------- tagged_union.js:121:9
 
-Property `toStirng` is missing in number [1].
+Property `toStirng` is missing in number [1]. [prop-missing]
 
    tagged_union.js:121:9
    121|     if (z.toStirng === 0) { // Error, typo
@@ -2453,9 +2667,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- tagged_union.js:123:8
 
-Cannot cast `z.toStirng` to string because:
- - number literal `0` [1] is incompatible with string [2].
- - number literal `0` [3] is incompatible with string [2].
+Cannot cast `z.toStirng` to string because number literal `0` [1] is incompatible with string [2]. [incompatible-cast]
 
    tagged_union.js:123:8
    123|       (z.toStirng: string); // error: number literal 0 !~> string
@@ -2468,28 +2680,29 @@ References:
    tagged_union.js:123:20
    123|       (z.toStirng: string); // error: number literal 0 !~> string
                            ^^^^^^ [2]
-   tagged_union.js:121:24
-   121|     if (z.toStirng === 0) { // Error, typo
-                               ^ [3]
 
 
 Error ------------------------------------------------------------------------------------------- tagged_union.js:125:23
 
-number [1] is incompatible with function type [2].
+Cannot compare number [1] with property `valueOf` of boolean [2] because number [1] is incompatible with function
+type [3]. [incompatible-type]
 
    tagged_union.js:125:23
    125|     if (q.valueOf === 0) {} // Error
                               ^ [1]
 
 References:
-   <BUILTINS>/core.js:139:5
-   139|     valueOf(): boolean;
-            ^^^^^^^^^^^^^^^^^^ [2]
+   tagged_union.js:107:48
+   107|     x: Array<string>, y: string, z: number, q: boolean,
+                                                       ^^^^^^^ [2]
+   <BUILTINS>/core.js:358:5
+   358|     valueOf(): boolean;
+            ^^^^^^^^^^^^^^^^^^ [3]
 
 
 Error -------------------------------------------------------------------------------------------- tagged_union.js:126:9
 
-Property `valeuOf` is missing in boolean [1].
+Property `valeuOf` is missing in boolean [1]. [prop-missing]
 
    tagged_union.js:126:9
    126|     if (q.valeuOf === 0) { // Error, typo
@@ -2503,9 +2716,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- tagged_union.js:128:8
 
-Cannot cast `q.valeuOf` to string because:
- - number literal `0` [1] is incompatible with string [2].
- - number literal `0` [3] is incompatible with string [2].
+Cannot cast `q.valeuOf` to string because number literal `0` [1] is incompatible with string [2]. [incompatible-cast]
 
    tagged_union.js:128:8
    128|       (q.valeuOf: string); // error: number literal 0 !~> string
@@ -2518,62 +2729,29 @@ References:
    tagged_union.js:128:19
    128|       (q.valeuOf: string); // error: number literal 0 !~> string
                           ^^^^^^ [2]
-   tagged_union.js:126:23
-   126|     if (q.valeuOf === 0) { // Error, typo
-                              ^ [3]
-
-
-Error -------------------------------------------------------------------------------------------- tagged_union.js:131:8
-
-Cannot cast `r.toStirng` to empty because number literal `0` [1] is incompatible with empty [2].
-
-   tagged_union.js:131:8
-   131|       (r.toStirng: empty); // error, toStirng is refined to 0
-               ^^^^^^^^^^
-
-References:
-   tagged_union.js:130:24
-   130|     if (r.toStirng === 0) { // error: toStirng prop missing
-                               ^ [1]
-   tagged_union.js:131:20
-   131|       (r.toStirng: empty); // error, toStirng is refined to 0
-                           ^^^^^ [2]
-
-
-Error -------------------------------------------------------------------------------------------- tagged_union.js:135:8
-
-Cannot cast `s.calll` to empty because number literal `0` [1] is incompatible with empty [2].
-
-   tagged_union.js:135:8
-   135|       (s.calll: empty); // error, calll is refined to 0
-               ^^^^^^^
-
-References:
-   tagged_union.js:134:21
-   134|     if (s.calll === 0) { // error: calll prop missing
-                            ^ [1]
-   tagged_union.js:135:17
-   135|       (s.calll: empty); // error, calll is refined to 0
-                        ^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------- tagged_union.js:137:20
 
-number [1] is incompatible with function type [2].
+Cannot compare number [1] with property `call` of function type [2] because number [1] is incompatible with function
+type [3]. [incompatible-type]
 
    tagged_union.js:137:20
    137|     if (t.call === 0) {} // Error
                            ^ [1]
 
 References:
-   <BUILTINS>/core.js:128:17
-   128|     proto call: Function$Prototype$Call; // (thisArg: any, ...argArray: Array<any>) => any
-                        ^^^^^^^^^^^^^^^^^^^^^^^ [2]
+   tagged_union.js:108:32
+   108|     r: Object, s: Function, t: () => void
+                                       ^^^^^^^^^^ [2]
+   <BUILTINS>/core.js:342:17
+   342|     proto call: Function$Prototype$Call; // (thisArg: any, ...argArray: Array<any>) => any
+                        ^^^^^^^^^^^^^^^^^^^^^^^ [3]
 
 
 Error -------------------------------------------------------------------------------------------- tagged_union.js:138:9
 
-Property `calll` is missing in statics of function type [1].
+Property `calll` is missing in statics of function type [1]. [prop-missing]
 
    tagged_union.js:138:9
    138|     if (t.calll === 0) { // error: calll prop missing
@@ -2587,9 +2765,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- tagged_union.js:140:8
 
-Cannot cast `t.calll` to string because:
- - number literal `0` [1] is incompatible with string [2].
- - number literal `0` [3] is incompatible with string [2].
+Cannot cast `t.calll` to string because number literal `0` [1] is incompatible with string [2]. [incompatible-cast]
 
    tagged_union.js:140:8
    140|       (t.calll: string); // error: number literal 0 !~> string
@@ -2602,16 +2778,12 @@ References:
    tagged_union.js:140:17
    140|       (t.calll: string); // error: number literal 0 !~> string
                         ^^^^^^ [2]
-   tagged_union.js:138:21
-   138|     if (t.calll === 0) { // error: calll prop missing
-                            ^ [3]
 
 
 Error -------------------------------------------------------------------------------------------- tagged_union.js:147:8
 
-Cannot cast `x.str` to string literal `not str` because:
- - string literal `str` [1] is incompatible with string literal `not str` [2].
- - string literal `str` [3] is incompatible with string literal `not str` [2].
+Cannot cast `x.str` to string literal `not str` because string literal `str` [1] is incompatible with string literal
+`not str` [2]. [incompatible-cast]
 
    tagged_union.js:147:8
    147|       (x.str: 'not str'); // error: 'str' !~> 'not str'
@@ -2624,16 +2796,12 @@ References:
    tagged_union.js:147:15
    147|       (x.str: 'not str'); // error: 'str' !~> 'not str'
                       ^^^^^^^^^ [2]
-   tagged_union.js:146:19
-   146|     if (x.str === 'str') {
-                          ^^^^^ [3]
 
 
 Error -------------------------------------------------------------------------------------------- tagged_union.js:150:8
 
-Cannot cast `x.num` to number literal `456` because:
- - number literal `123` [1] is incompatible with number literal `456` [2].
- - number literal `123` [3] is incompatible with number literal `456` [2].
+Cannot cast `x.num` to number literal `456` because number literal `123` [1] is incompatible with number literal
+`456` [2]. [incompatible-cast]
 
    tagged_union.js:150:8
    150|       (x.num: 456); // error: 123 !~> 456
@@ -2646,16 +2814,12 @@ References:
    tagged_union.js:150:15
    150|       (x.num: 456); // error: 123 !~> 456
                       ^^^ [2]
-   tagged_union.js:149:19
-   149|     if (x.num === 123) {
-                          ^^^ [3]
 
 
 Error -------------------------------------------------------------------------------------------- tagged_union.js:153:8
 
-Cannot cast `x.bool` to boolean literal `false` because:
- - boolean literal `true` [1] is incompatible with boolean literal `false` [2].
- - boolean literal `true` [3] is incompatible with boolean literal `false` [2].
+Cannot cast `x.bool` to boolean literal `false` because boolean literal `true` [1] is incompatible with boolean literal
+`false` [2]. [incompatible-cast]
 
    tagged_union.js:153:8
    153|       (x.bool: false); // error: true !~> false
@@ -2668,14 +2832,11 @@ References:
    tagged_union.js:153:16
    153|       (x.bool: false); // error: true !~> false
                        ^^^^^ [2]
-   tagged_union.js:152:20
-   152|     if (x.bool === true) {
-                           ^^^^ [3]
 
 
 Error -------------------------------------------------------------------------------------------- tagged_union.js:156:9
 
-Property `badStr` is missing in object type [1].
+Property `badStr` is missing in object type [1]. [prop-missing]
 
    tagged_union.js:156:9
    156|     if (x.badStr === 'bad') { // Error, reading unknown property
@@ -2689,9 +2850,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- tagged_union.js:157:8
 
-Cannot cast `x.badStr` to empty because:
- - string literal `bad` [1] is incompatible with empty [2].
- - string literal `bad` [3] is incompatible with empty [2].
+Cannot cast `x.badStr` to empty because string literal `bad` [1] is incompatible with empty [2]. [incompatible-cast]
 
    tagged_union.js:157:8
    157|       (x.badStr: empty); // error: 'bad' !~> empty
@@ -2704,14 +2863,11 @@ References:
    tagged_union.js:157:18
    157|       (x.badStr: empty); // error: 'bad' !~> empty
                          ^^^^^ [2]
-   tagged_union.js:156:22
-   156|     if (x.badStr === 'bad') { // Error, reading unknown property
-                             ^^^^^ [3]
 
 
 Error -------------------------------------------------------------------------------------------- tagged_union.js:159:9
 
-Property `badNum` is missing in object type [1].
+Property `badNum` is missing in object type [1]. [prop-missing]
 
    tagged_union.js:159:9
    159|     if (x.badNum === 123) { // Error, reading unknown property
@@ -2725,9 +2881,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- tagged_union.js:160:8
 
-Cannot cast `x.badNum` to empty because:
- - number literal `123` [1] is incompatible with empty [2].
- - number literal `123` [3] is incompatible with empty [2].
+Cannot cast `x.badNum` to empty because number literal `123` [1] is incompatible with empty [2]. [incompatible-cast]
 
    tagged_union.js:160:8
    160|       (x.badNum: empty); // error: 123 !~> empty
@@ -2740,14 +2894,11 @@ References:
    tagged_union.js:160:18
    160|       (x.badNum: empty); // error: 123 !~> empty
                          ^^^^^ [2]
-   tagged_union.js:159:22
-   159|     if (x.badNum === 123) { // Error, reading unknown property
-                             ^^^ [3]
 
 
 Error -------------------------------------------------------------------------------------------- tagged_union.js:162:9
 
-Property `badBool` is missing in object type [1].
+Property `badBool` is missing in object type [1]. [prop-missing]
 
    tagged_union.js:162:9
    162|     if (x.badBool === true) { // Error, reading unknown property
@@ -2761,9 +2912,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- tagged_union.js:163:8
 
-Cannot cast `x.badBool` to empty because:
- - boolean literal `true` [1] is incompatible with empty [2].
- - boolean literal `true` [3] is incompatible with empty [2].
+Cannot cast `x.badBool` to empty because boolean literal `true` [1] is incompatible with empty [2]. [incompatible-cast]
 
    tagged_union.js:163:8
    163|       (x.badBool: empty); // error: true !~> empty
@@ -2776,18 +2925,15 @@ References:
    tagged_union.js:163:19
    163|       (x.badBool: empty); // error: true !~> empty
                           ^^^^^ [2]
-   tagged_union.js:162:23
-   162|     if (x.badBool === true) { // Error, reading unknown property
-                              ^^^^ [3]
 
 
-Error -------------------------------------------------------------------------------------------- tagged_union.js:171:7
+Error -------------------------------------------------------------------------------------------- tagged_union.js:171:9
 
-Cannot get `x.z` because property `z` is missing in object type [1].
+Cannot get `x.z` because property `z` is missing in object type [1]. [prop-missing]
 
-   tagged_union.js:171:7
+   tagged_union.js:171:9
    171|       x.z; // error
-              ^^^
+                ^
 
 References:
    tagged_union.js:168:15
@@ -2795,13 +2941,13 @@ References:
                       ^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
-Error -------------------------------------------------------------------------------------------- tagged_union.js:174:7
+Error -------------------------------------------------------------------------------------------- tagged_union.js:174:9
 
-Cannot get `x.y` because property `y` is missing in object type [1].
+Cannot get `x.y` because property `y` is missing in object type [1]. [prop-missing]
 
-   tagged_union.js:174:7
+   tagged_union.js:174:9
    174|       x.y; // error
-              ^^^
+                ^
 
 References:
    tagged_union.js:168:41
@@ -2809,13 +2955,13 @@ References:
                                                 ^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
-Error -------------------------------------------------------------------------------------------- tagged_union.js:178:7
+Error -------------------------------------------------------------------------------------------- tagged_union.js:178:9
 
-Cannot get `x.y` because property `y` is missing in object type [1].
+Cannot get `x.y` because property `y` is missing in object type [1]. [prop-missing]
 
-   tagged_union.js:178:7
+   tagged_union.js:178:9
    178|       x.y; // error
-              ^^^
+                ^
 
 References:
    tagged_union.js:168:41
@@ -2823,13 +2969,13 @@ References:
                                                 ^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
-Error -------------------------------------------------------------------------------------------- tagged_union.js:181:7
+Error -------------------------------------------------------------------------------------------- tagged_union.js:181:9
 
-Cannot get `x.z` because property `z` is missing in object type [1].
+Cannot get `x.z` because property `z` is missing in object type [1]. [prop-missing]
 
-   tagged_union.js:181:7
+   tagged_union.js:181:9
    181|       x.z; // error
-              ^^^
+                ^
 
 References:
    tagged_union.js:168:15
@@ -2837,13 +2983,13 @@ References:
                       ^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
-Error -------------------------------------------------------------------------------------------- tagged_union.js:189:7
+Error -------------------------------------------------------------------------------------------- tagged_union.js:189:9
 
-Cannot get `x.z` because property `z` is missing in object type [1].
+Cannot get `x.z` because property `z` is missing in object type [1]. [prop-missing]
 
-   tagged_union.js:189:7
+   tagged_union.js:189:9
    189|       x.z; // error
-              ^^^
+                ^
 
 References:
    tagged_union.js:186:15
@@ -2851,13 +2997,13 @@ References:
                       ^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
-Error -------------------------------------------------------------------------------------------- tagged_union.js:191:7
+Error -------------------------------------------------------------------------------------------- tagged_union.js:191:9
 
-Cannot get `x.y` because property `y` is missing in object type [1].
+Cannot get `x.y` because property `y` is missing in object type [1]. [prop-missing]
 
-   tagged_union.js:191:7
+   tagged_union.js:191:9
    191|       x.y; // error: x.foo could be a string
-              ^^^
+                ^
 
 References:
    tagged_union.js:186:44
@@ -2865,13 +3011,13 @@ References:
                                                    ^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
-Error -------------------------------------------------------------------------------------------- tagged_union.js:192:7
+Error -------------------------------------------------------------------------------------------- tagged_union.js:192:9
 
-Cannot get `x.z` because property `z` is missing in object type [1].
+Cannot get `x.z` because property `z` is missing in object type [1]. [prop-missing]
 
-   tagged_union.js:192:7
+   tagged_union.js:192:9
    192|       x.z; // error: could still be either case (if foo was a different number)
-              ^^^
+                ^
 
 References:
    tagged_union.js:186:15
@@ -2879,13 +3025,13 @@ References:
                       ^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
-Error -------------------------------------------------------------------------------------------- tagged_union.js:197:7
+Error -------------------------------------------------------------------------------------------- tagged_union.js:197:9
 
-Cannot get `x.y` because property `y` is missing in object type [1].
+Cannot get `x.y` because property `y` is missing in object type [1]. [prop-missing]
 
-   tagged_union.js:197:7
+   tagged_union.js:197:9
    197|       x.y; // error
-              ^^^
+                ^
 
 References:
    tagged_union.js:186:44
@@ -2893,13 +3039,13 @@ References:
                                                    ^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
-Error -------------------------------------------------------------------------------------------- tagged_union.js:200:7
+Error -------------------------------------------------------------------------------------------- tagged_union.js:200:9
 
-Cannot get `x.z` because property `z` is missing in object type [1].
+Cannot get `x.z` because property `z` is missing in object type [1]. [prop-missing]
 
-   tagged_union.js:200:7
+   tagged_union.js:200:9
    200|       x.z; // error
-              ^^^
+                ^
 
 References:
    tagged_union.js:186:15
@@ -2907,13 +3053,13 @@ References:
                       ^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
-Error -------------------------------------------------------------------------------------------- tagged_union.js:208:7
+Error -------------------------------------------------------------------------------------------- tagged_union.js:208:9
 
-Cannot get `x.z` because property `z` is missing in object type [1].
+Cannot get `x.z` because property `z` is missing in object type [1]. [prop-missing]
 
-   tagged_union.js:208:7
+   tagged_union.js:208:9
    208|       x.z; // error
-              ^^^
+                ^
 
 References:
    tagged_union.js:205:15
@@ -2921,13 +3067,13 @@ References:
                       ^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
-Error -------------------------------------------------------------------------------------------- tagged_union.js:210:7
+Error -------------------------------------------------------------------------------------------- tagged_union.js:210:9
 
-Cannot get `x.y` because property `y` is missing in object type [1].
+Cannot get `x.y` because property `y` is missing in object type [1]. [prop-missing]
 
-   tagged_union.js:210:7
+   tagged_union.js:210:9
    210|       x.y; // error: x.foo could be a string
-              ^^^
+                ^
 
 References:
    tagged_union.js:205:44
@@ -2935,13 +3081,13 @@ References:
                                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
-Error -------------------------------------------------------------------------------------------- tagged_union.js:211:7
+Error -------------------------------------------------------------------------------------------- tagged_union.js:211:9
 
-Cannot get `x.z` because property `z` is missing in object type [1].
+Cannot get `x.z` because property `z` is missing in object type [1]. [prop-missing]
 
-   tagged_union.js:211:7
+   tagged_union.js:211:9
    211|       x.z; // error: could still be either case (if foo was a different number)
-              ^^^
+                ^
 
 References:
    tagged_union.js:205:15
@@ -2949,13 +3095,13 @@ References:
                       ^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
-Error -------------------------------------------------------------------------------------------- tagged_union.js:216:7
+Error -------------------------------------------------------------------------------------------- tagged_union.js:216:9
 
-Cannot get `x.y` because property `y` is missing in object type [1].
+Cannot get `x.y` because property `y` is missing in object type [1]. [prop-missing]
 
-   tagged_union.js:216:7
+   tagged_union.js:216:9
    216|       x.y; // error
-              ^^^
+                ^
 
 References:
    tagged_union.js:205:44
@@ -2963,13 +3109,13 @@ References:
                                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
-Error -------------------------------------------------------------------------------------------- tagged_union.js:218:7
+Error -------------------------------------------------------------------------------------------- tagged_union.js:218:9
 
-Cannot get `x.y` because property `y` is missing in object type [1].
+Cannot get `x.y` because property `y` is missing in object type [1]. [prop-missing]
 
-   tagged_union.js:218:7
+   tagged_union.js:218:9
    218|       x.y; // error: x.foo could be a different string
-              ^^^
+                ^
 
 References:
    tagged_union.js:205:44
@@ -2977,13 +3123,13 @@ References:
                                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
-Error -------------------------------------------------------------------------------------------- tagged_union.js:219:7
+Error -------------------------------------------------------------------------------------------- tagged_union.js:219:9
 
-Cannot get `x.z` because property `z` is missing in object type [1].
+Cannot get `x.z` because property `z` is missing in object type [1]. [prop-missing]
 
-   tagged_union.js:219:7
+   tagged_union.js:219:9
    219|       x.z; // error: x.foo could be a number
-              ^^^
+                ^
 
 References:
    tagged_union.js:205:15
@@ -2991,13 +3137,13 @@ References:
                       ^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
-Error -------------------------------------------------------------------------------------------- tagged_union.js:229:7
+Error -------------------------------------------------------------------------------------------- tagged_union.js:229:9
 
-Cannot get `x.y` because property `y` is missing in object type [1].
+Cannot get `x.y` because property `y` is missing in object type [1]. [prop-missing]
 
-   tagged_union.js:229:7
+   tagged_union.js:229:9
    229|       x.y; // error: flow isn't smart enough to figure this out yet
-              ^^^
+                ^
 
 References:
    tagged_union.js:225:37
@@ -3005,13 +3151,13 @@ References:
                                             ^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
-Error -------------------------------------------------------------------------------------------- tagged_union.js:230:7
+Error -------------------------------------------------------------------------------------------- tagged_union.js:230:9
 
-Cannot get `x.z` because property `z` is missing in object type [1].
+Cannot get `x.z` because property `z` is missing in object type [1]. [prop-missing]
 
-   tagged_union.js:230:7
+   tagged_union.js:230:9
    230|       x.z; // error
-              ^^^
+                ^
 
 References:
    tagged_union.js:225:8
@@ -3019,13 +3165,13 @@ References:
                ^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
-Error -------------------------------------------------------------------------------------------- tagged_union.js:238:7
+Error -------------------------------------------------------------------------------------------- tagged_union.js:238:9
 
-Cannot get `x.z` because property `z` is missing in object type [1].
+Cannot get `x.z` because property `z` is missing in object type [1]. [prop-missing]
 
-   tagged_union.js:238:7
+   tagged_union.js:238:9
    238|       x.z; // error
-              ^^^
+                ^
 
 References:
    tagged_union.js:235:15
@@ -3033,13 +3179,13 @@ References:
                       ^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
-Error -------------------------------------------------------------------------------------------- tagged_union.js:241:7
+Error -------------------------------------------------------------------------------------------- tagged_union.js:241:9
 
-Cannot get `x.y` because property `y` is missing in object type [1].
+Cannot get `x.y` because property `y` is missing in object type [1]. [prop-missing]
 
-   tagged_union.js:241:7
+   tagged_union.js:241:9
    241|       x.y; // error
-              ^^^
+                ^
 
 References:
    tagged_union.js:235:42
@@ -3047,13 +3193,13 @@ References:
                                                  ^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
-Error -------------------------------------------------------------------------------------------- tagged_union.js:245:7
+Error -------------------------------------------------------------------------------------------- tagged_union.js:245:9
 
-Cannot get `x.y` because property `y` is missing in object type [1].
+Cannot get `x.y` because property `y` is missing in object type [1]. [prop-missing]
 
-   tagged_union.js:245:7
+   tagged_union.js:245:9
    245|       x.y; // error
-              ^^^
+                ^
 
 References:
    tagged_union.js:235:42
@@ -3061,13 +3207,13 @@ References:
                                                  ^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
-Error -------------------------------------------------------------------------------------------- tagged_union.js:248:7
+Error -------------------------------------------------------------------------------------------- tagged_union.js:248:9
 
-Cannot get `x.z` because property `z` is missing in object type [1].
+Cannot get `x.z` because property `z` is missing in object type [1]. [prop-missing]
 
-   tagged_union.js:248:7
+   tagged_union.js:248:9
    248|       x.z; // error
-              ^^^
+                ^
 
 References:
    tagged_union.js:235:15
@@ -3075,13 +3221,13 @@ References:
                       ^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
-Error -------------------------------------------------------------------------------------------- tagged_union.js:256:7
+Error -------------------------------------------------------------------------------------------- tagged_union.js:256:9
 
-Cannot get `x.z` because property `z` is missing in object type [1].
+Cannot get `x.z` because property `z` is missing in object type [1]. [prop-missing]
 
-   tagged_union.js:256:7
+   tagged_union.js:256:9
    256|       x.z; // error
-              ^^^
+                ^
 
 References:
    tagged_union.js:253:15
@@ -3089,13 +3235,13 @@ References:
                       ^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
-Error -------------------------------------------------------------------------------------------- tagged_union.js:259:7
+Error -------------------------------------------------------------------------------------------- tagged_union.js:259:9
 
-Cannot get `x.y` because property `y` is missing in object type [1].
+Cannot get `x.y` because property `y` is missing in object type [1]. [prop-missing]
 
-   tagged_union.js:259:7
+   tagged_union.js:259:9
    259|       x.y; // error
-              ^^^
+                ^
 
 References:
    tagged_union.js:253:42
@@ -3103,13 +3249,13 @@ References:
                                                  ^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
-Error -------------------------------------------------------------------------------------------- tagged_union.js:263:7
+Error -------------------------------------------------------------------------------------------- tagged_union.js:263:9
 
-Cannot get `x.y` because property `y` is missing in object type [1].
+Cannot get `x.y` because property `y` is missing in object type [1]. [prop-missing]
 
-   tagged_union.js:263:7
+   tagged_union.js:263:9
    263|       x.y; // error
-              ^^^
+                ^
 
 References:
    tagged_union.js:253:42
@@ -3117,23 +3263,38 @@ References:
                                                  ^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
-Error -------------------------------------------------------------------------------------------- tagged_union.js:266:7
+Error -------------------------------------------------------------------------------------------- tagged_union.js:266:9
 
-Cannot get `x.z` because property `z` is missing in object type [1].
+Cannot get `x.z` because property `z` is missing in object type [1]. [prop-missing]
 
-   tagged_union.js:266:7
+   tagged_union.js:266:9
    266|       x.z; // error
-              ^^^
+                ^
 
 References:
    tagged_union.js:253:15
    253|   function(x: { foo: void, y: string } | { foo: 'foo', z: string }) {
                       ^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------------- tuple.js:32:6
+
+Cannot get `a[2]` because tuple type [1] only has 2 elements, so index 2 is out of bounds. [invalid-tuple-index]
+
+   tuple.js:32:6
+   32|     (a[2]: number); // Error: one of the variants has only 2 elements.
+            ^^^^
+
+References:
+   tuple.js:25:17
+   25|   a: [string] | [number, number] | [number, number, number]
+                       ^^^^^^^^^^^^^^^^ [1]
 
 
 Error ---------------------------------------------------------------------------------------------------- typeof.js:5:5
 
 Cannot get `x[0]` because an index signature declaring the expected key / value type is missing in `Boolean` [1].
+[prop-missing]
 
    typeof.js:5:5
    5|     x[0]; // error for boolean, not number
@@ -3147,7 +3308,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- typeof.js:12:12
 
-Cannot return `x` because null [1] is incompatible with number [2].
+Cannot return `x` because null [1] is incompatible with number [2]. [incompatible-return]
 
    typeof.js:12:12
    12|     return x; // error, null
@@ -3162,32 +3323,27 @@ References:
                        ^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- typeof.js:23:3
+Error --------------------------------------------------------------------------------------------------- typeof.js:23:7
 
-Cannot call `BAZ.stuff` because:
- - undefined [1] is not a function.
- - property `stuff` is missing in undefined [2].
+Cannot call `BAZ.stuff` because undefined [1] is not a function. [not-a-function]
 
-   typeof.js:23:3
+   typeof.js:23:7
    23|   BAZ.stuff(123); // error, refinement is gone
-         ^^^^^^^^^^^^^^
+             ^^^^^
 
 References:
    lib.js:3:27
     3| declare var BAZ: {stuff?: (x: number) => void} | void;
                                  ^^^^^^^^^^^^^^^^^^^ [1]
-   lib.js:3:50
-    3| declare var BAZ: {stuff?: (x: number) => void} | void;
-                                                        ^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- typeof.js:26:3
+Error --------------------------------------------------------------------------------------------------- typeof.js:23:7
 
-Cannot get `BAZ.stuff` because property `stuff` is missing in undefined [1].
+Cannot call `BAZ.stuff` because property `stuff` is missing in undefined [1]. [incompatible-use]
 
-   typeof.js:26:3
-   26|   BAZ.stuff; // error, could be undefined
-         ^^^^^^^^^
+   typeof.js:23:7
+   23|   BAZ.stuff(123); // error, refinement is gone
+             ^^^^^
 
 References:
    lib.js:3:50
@@ -3195,13 +3351,27 @@ References:
                                                         ^^^^ [1]
 
 
-Error --------------------------------------------------------------------------------------------------- typeof.js:30:5
+Error --------------------------------------------------------------------------------------------------- typeof.js:26:7
 
-Cannot call `BAZ.stuff` because undefined [1] is not a function.
+Cannot get `BAZ.stuff` because property `stuff` is missing in undefined [1]. [incompatible-use]
 
-   typeof.js:30:5
+   typeof.js:26:7
+   26|   BAZ.stuff; // error, could be undefined
+             ^^^^^
+
+References:
+   lib.js:3:50
+    3| declare var BAZ: {stuff?: (x: number) => void} | void;
+                                                        ^^^^ [1]
+
+
+Error --------------------------------------------------------------------------------------------------- typeof.js:30:9
+
+Cannot call `BAZ.stuff` because undefined [1] is not a function. [not-a-function]
+
+   typeof.js:30:9
    30|     BAZ.stuff(123); // error, refinement is gone
-           ^^^^^^^^^^^^^^
+               ^^^^^
 
 References:
    lib.js:3:27
@@ -3212,6 +3382,7 @@ References:
 Error -------------------------------------------------------------------------------------------------- typeof.js:49:20
 
 Cannot compare the result of `typeof` to string literal `foo` because it is not a valid `typeof` return value.
+[illegal-typeof]
 
    49|   if (typeof x === "foo") { // error
                           ^^^^^
@@ -3220,6 +3391,7 @@ Cannot compare the result of `typeof` to string literal `foo` because it is not 
 Error -------------------------------------------------------------------------------------------------- typeof.js:61:20
 
 Cannot compare the result of `typeof` to string literal `foo` because it is not a valid `typeof` return value.
+[illegal-typeof]
 
    61|   if (typeof x === `foo`) { // error
                           ^^^^^
@@ -3227,7 +3399,7 @@ Cannot compare the result of `typeof` to string literal `foo` because it is not 
 
 Error --------------------------------------------------------------------------------------------------- typeof.js:69:6
 
-Cannot cast `Foo` to empty because class `Foo` [1] is incompatible with empty [2].
+Cannot cast `Foo` to empty because class `Foo` [1] is incompatible with empty [2]. [incompatible-cast]
 
    typeof.js:69:6
    69|     (Foo: empty); // error, Foo is a class
@@ -3244,7 +3416,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- typeof.js:77:6
 
-Cannot cast `x` to empty because `Foo` [1] is incompatible with empty [2].
+Cannot cast `x` to empty because `Foo` [1] is incompatible with empty [2]. [incompatible-cast]
 
    typeof.js:77:6
    77|     (x: empty); // error
@@ -3261,24 +3433,144 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- typeof.js:83:6
 
-Cannot cast `x` to string because symbol [1] is incompatible with string [2].
+Cannot cast `x` to string because symbol [1] is incompatible with string [2]. [incompatible-cast]
 
    typeof.js:83:6
    83|     (x: string); // error
             ^
 
 References:
-   typeof.js:81:24
-   81| function testSymbol(x: mixed) {
-                              ^^^^^ [1]
+   typeof.js:82:7
+   82|   if (typeof x === "symbol") { // ok
+             ^^^^^^^^^^^^^^^^^^^^^ [1]
    typeof.js:83:9
    83|     (x: string); // error
                ^^^^^^ [2]
 
 
+Error --------------------------------------------------------------------------------------------------- typeof.js:89:6
+
+Cannot cast `x` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
+
+   typeof.js:89:6
+   89|     (x: empty); // error number ~> empty
+            ^
+
+References:
+   typeof.js:88:7
+   88|   if (typeof x === "number") {
+             ^^^^^^^^^^^^^^^^^^^^^ [1]
+   typeof.js:89:9
+   89|     (x: empty); // error number ~> empty
+               ^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- typeof.js:96:6
+
+Cannot cast `x` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
+
+   typeof.js:96:6
+   96|     (x: empty); // error number ~> empty
+            ^
+
+References:
+   typeof.js:94:7
+   94|   if (typeof x === "number") {
+             ^^^^^^^^^^^^^^^^^^^^^ [1]
+   typeof.js:96:9
+   96|     (x: empty); // error number ~> empty
+               ^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------------- typeof.js:107:6
+
+Cannot cast `x` to empty because string [1] is incompatible with empty [2]. [incompatible-cast]
+
+   typeof.js:107:6
+   107|     (x: empty); // error string ~> empty
+             ^
+
+References:
+   typeof.js:106:7
+   106|   if (typeof x === "string") {
+              ^^^^^^^^^^^^^^^^^^^^^ [1]
+   typeof.js:107:9
+   107|     (x: empty); // error string ~> empty
+                ^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------------- typeof.js:113:6
+
+Cannot cast `x` to empty because boolean [1] is incompatible with empty [2]. [incompatible-cast]
+
+   typeof.js:113:6
+   113|     (x: empty); // error boolean ~> empty
+             ^
+
+References:
+   typeof.js:112:7
+   112|   if (typeof x === "boolean") {
+              ^^^^^^^^^^^^^^^^^^^^^^ [1]
+   typeof.js:113:9
+   113|     (x: empty); // error boolean ~> empty
+                ^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------------- typeof.js:119:6
+
+Cannot cast `x` to boolean literal `true` because boolean [1] is incompatible with boolean literal `true` [2].
+[incompatible-cast]
+
+   typeof.js:119:6
+   119|     (x: true);
+             ^
+
+References:
+   typeof.js:118:7
+   118|   if (typeof x === "boolean") {
+              ^^^^^^^^^^^^^^^^^^^^^^ [1]
+   typeof.js:119:9
+   119|     (x: true);
+                ^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------------- typeof.js:120:6
+
+Cannot cast `x` to empty because boolean [1] is incompatible with empty [2]. [incompatible-cast]
+
+   typeof.js:120:6
+   120|     (x: empty); // error boolean ~> empty
+             ^
+
+References:
+   typeof.js:118:7
+   118|   if (typeof x === "boolean") {
+              ^^^^^^^^^^^^^^^^^^^^^^ [1]
+   typeof.js:120:9
+   120|     (x: empty); // error boolean ~> empty
+                ^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------------- typeof.js:126:6
+
+Cannot cast `x` to empty because symbol [1] is incompatible with empty [2]. [incompatible-cast]
+
+   typeof.js:126:6
+   126|     (x: empty); // error symbol ~> empty
+             ^
+
+References:
+   typeof.js:125:7
+   125|   if (typeof x === "symbol") {
+              ^^^^^^^^^^^^^^^^^^^^^ [1]
+   typeof.js:126:9
+   126|     (x: empty); // error symbol ~> empty
+                ^^^^^ [2]
+
+
 Error --------------------------------------------------------------------------------------------------- undef.js:31:13
 
-Cannot perform arithmetic operation because null or undefined [1] is not a number.
+Cannot perform arithmetic operation because null or undefined [1] is not a number. [unsafe-addition]
 
    undef.js:31:13
    31|     var y = x * 1000;
@@ -3292,7 +3584,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- undef.js:38:13
 
-Cannot perform arithmetic operation because null or undefined [1] is not a number.
+Cannot perform arithmetic operation because null or undefined [1] is not a number. [unsafe-addition]
 
    undef.js:38:13
    38|     var y = x * 1000;
@@ -3306,7 +3598,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- undef.js:44:13
 
-Cannot perform arithmetic operation because null or undefined [1] is not a number.
+Cannot perform arithmetic operation because null or undefined [1] is not a number. [unsafe-addition]
 
    undef.js:44:13
    44|     var y = x.x * 1000;
@@ -3320,7 +3612,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- undef.js:51:13
 
-Cannot perform arithmetic operation because null or undefined [1] is not a number.
+Cannot perform arithmetic operation because null or undefined [1] is not a number. [unsafe-addition]
 
    undef.js:51:13
    51|     var y = x.x * 1000;
@@ -3334,7 +3626,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- undef.js:69:13
 
-Cannot perform arithmetic operation because null or undefined [1] is not a number.
+Cannot perform arithmetic operation because null or undefined [1] is not a number. [unsafe-addition]
 
    undef.js:69:13
    69|     var b = y * 1000; // error
@@ -3348,7 +3640,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- undef.js:74:13
 
-Cannot perform arithmetic operation because undefined [1] is not a number.
+Cannot perform arithmetic operation because undefined [1] is not a number. [unsafe-addition]
 
    74|   if (100 * undefined) {
                    ^^^^^^^^^ [1]
@@ -3356,7 +3648,7 @@ Cannot perform arithmetic operation because undefined [1] is not a number.
 
 Error ---------------------------------------------------------------------------------------------------- undef.js:77:7
 
-Cannot perform arithmetic operation because undefined [1] is not a number.
+Cannot perform arithmetic operation because undefined [1] is not a number. [unsafe-addition]
 
    77|   if (undefined * 100) {
              ^^^^^^^^^ [1]
@@ -3365,20 +3657,22 @@ Cannot perform arithmetic operation because undefined [1] is not a number.
 Error ----------------------------------------------------------------------------------------------------- union.js:7:5
 
 Cannot get `x[0]` because an index signature declaring the expected key / value type is missing in `Boolean` [1].
+[prop-missing]
 
    union.js:7:5
      7|     x[0]; // error on boolean
             ^^^^
 
 References:
-   <BUILTINS>/core.js:136:15
-   136| declare class Boolean {
+   <BUILTINS>/core.js:354:15
+   354| declare class Boolean {
                       ^^^^^^^ [1]
 
 
 Error ---------------------------------------------------------------------------------------------------- union.js:13:5
 
 Cannot get `x[0]` because an index signature declaring the expected key / value type is missing in `Number` [1].
+[prop-missing]
 
    union.js:13:5
    13|     x[0]; // error on number
@@ -3393,6 +3687,7 @@ References:
 Error ---------------------------------------------------------------------------------------------------- union.js:19:5
 
 Cannot get `x[0]` because an index signature declaring the expected key / value type is missing in `Number` [1].
+[prop-missing]
 
    union.js:19:5
    19|     x[0]; // error on number
@@ -3404,9 +3699,26 @@ References:
                         ^^^^^ [1]
 
 
+Error ----------------------------------------------------------------------------------------------- union_enum.js:12:4
+
+Cannot cast `E.A` to number because string [1] is incompatible with number [2]. [incompatible-cast]
+
+   union_enum.js:12:4
+   12|   (E.A: number); // Error expected
+          ^^^
+
+References:
+   union_enum.js:6:15
+    6| const E = {A: 'A', B: 'B'};
+                     ^^^ [1]
+   union_enum.js:12:9
+   12|   (E.A: number); // Error expected
+               ^^^^^^ [2]
+
+
 Error ---------------------------------------------------------------------------------------------------- void.js:31:13
 
-Cannot perform arithmetic operation because null or undefined [1] is not a number.
+Cannot perform arithmetic operation because null or undefined [1] is not a number. [unsafe-addition]
 
    void.js:31:13
    31|     var y = x * 1000;
@@ -3420,7 +3732,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- void.js:38:13
 
-Cannot perform arithmetic operation because null or undefined [1] is not a number.
+Cannot perform arithmetic operation because null or undefined [1] is not a number. [unsafe-addition]
 
    void.js:38:13
    38|     var y = x * 1000;
@@ -3434,7 +3746,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- void.js:44:13
 
-Cannot perform arithmetic operation because null or undefined [1] is not a number.
+Cannot perform arithmetic operation because null or undefined [1] is not a number. [unsafe-addition]
 
    void.js:44:13
    44|     var y = x.x * 1000;
@@ -3448,7 +3760,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- void.js:51:13
 
-Cannot perform arithmetic operation because null or undefined [1] is not a number.
+Cannot perform arithmetic operation because null or undefined [1] is not a number. [unsafe-addition]
 
    void.js:51:13
    51|     var y = x.x * 1000;
@@ -3462,7 +3774,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- void.js:56:32
 
-Cannot perform arithmetic operation because null or undefined [1] is not a number.
+Cannot perform arithmetic operation because null or undefined [1] is not a number. [unsafe-addition]
 
    void.js:56:32
    56|   if (x !== null && x !== void(x * 1000)) {
@@ -3476,7 +3788,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- void.js:62:32
 
-Cannot perform arithmetic operation because null or undefined [1] is not a number.
+Cannot perform arithmetic operation because null or undefined [1] is not a number. [unsafe-addition]
 
    void.js:62:32
    62|   if (x === null || x === void(x * 1000)) {
@@ -3490,7 +3802,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- void.js:69:36
 
-Cannot perform arithmetic operation because null or undefined [1] is not a number.
+Cannot perform arithmetic operation because null or undefined [1] is not a number. [unsafe-addition]
 
    void.js:69:36
    69|   if (x.x !== null && x.x !== void(x.x * 1000)) {
@@ -3504,7 +3816,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- void.js:75:36
 
-Cannot perform arithmetic operation because null or undefined [1] is not a number.
+Cannot perform arithmetic operation because null or undefined [1] is not a number. [unsafe-addition]
 
    void.js:75:36
    75|   if (x.x === null || x.x === void(x.x * 1000)) {
@@ -3518,7 +3830,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- void.js:82:13
 
-Cannot perform arithmetic operation because undefined [1] is not a number.
+Cannot perform arithmetic operation because undefined [1] is not a number. [unsafe-addition]
 
    82|   if (100 * void(0)) {
                    ^^^^^^^ [1]
@@ -3526,11 +3838,14 @@ Cannot perform arithmetic operation because undefined [1] is not a number.
 
 Error ----------------------------------------------------------------------------------------------------- void.js:85:7
 
-Cannot perform arithmetic operation because undefined [1] is not a number.
+Cannot perform arithmetic operation because undefined [1] is not a number. [unsafe-addition]
 
    85|   if (void(0) * 100) {
              ^^^^^^^ [1]
 
 
 
-Found 256 errors
+Found 253 errors
+
+Only showing the most relevant union/intersection branches.
+To see all branches, re-run Flow with --show-all-branches

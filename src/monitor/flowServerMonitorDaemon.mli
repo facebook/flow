@@ -1,4 +1,4 @@
-(**
+(*
  * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
@@ -17,7 +17,8 @@ val register_entry_point : start_function -> entry_point
 
 val daemonize :
   wait:bool ->
-  on_spawn:(int -> 'a) ->
+  on_spawn:(int -> unit) ->
+  init_id:string ->
   monitor_options:FlowServerMonitorOptions.t ->
   entry_point ->
   unit

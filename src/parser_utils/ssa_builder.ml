@@ -1,4 +1,4 @@
-(**
+(*
  * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
@@ -68,7 +68,7 @@ struct
     module ValSet = Set.Make (struct
       type nonrec t = t
 
-      let compare = Pervasives.compare
+      let compare = Stdlib.compare
     end)
 
     let rec normalize t =
@@ -103,7 +103,7 @@ struct
 
     let one loc = Loc loc
 
-    let all locs = join (Core_list.map ~f:(fun loc -> Loc loc) locs)
+    let all locs = join (Base.List.map ~f:(fun loc -> Loc loc) locs)
 
     (* Resolving unresolved to t essentially models an equation of the form
        unresolved = t, where unresolved is a reference to an unknown and t is the
@@ -146,7 +146,7 @@ struct
     (* Simplification converts a Val.t to a list of locations. *)
     let simplify t =
       let vals = normalize t in
-      Core_list.map
+      Base.List.map
         ~f:(function
           | Uninitialized -> Ssa_api.Uninitialized
           | Loc loc -> Ssa_api.Write loc
@@ -173,7 +173,7 @@ struct
       | Return
       | Throw
 
-    let label_opt = Option.map ~f:Flow_ast_utils.name_of_ident
+    let label_opt = Base.Option.map ~f:Flow_ast_utils.name_of_ident
 
     let break x = Break (label_opt x)
 
@@ -276,10 +276,7 @@ struct
       method assert_ssa_env (env0 : Env.t) : unit =
         let env0 = SMap.values env0 in
         let ssa_env = SMap.values ssa_env in
-        List.iter2
-          (fun { val_ref; _ } value -> Val.resolve ~unresolved:value !val_ref)
-          ssa_env
-          env0
+        List.iter2 (fun { val_ref; _ } value -> Val.resolve ~unresolved:value !val_ref) ssa_env env0
 
       method empty_ssa_env : Env.t = SMap.map (fun _ -> Val.empty) ssa_env
 
@@ -322,8 +319,7 @@ struct
         this#resolve_havocs bindings;
         ssa_env <- old_ssa_env
 
-      method! with_bindings : 'a. ?lexical:bool -> L.t -> L.t Bindings.t -> ('a -> 'a) -> 'a -> 'a
-          =
+      method! with_bindings : 'a. ?lexical:bool -> L.t -> L.t Bindings.t -> ('a -> 'a) -> 'a -> 'a =
         fun ?lexical loc bindings visit node ->
           let saved_state = this#push_ssa_env bindings in
           this#run
@@ -427,7 +423,7 @@ struct
         ignore kind;
         let (loc, { Ast.Identifier.name = x; comments = _ }) = ident in
         begin
-          match SMap.get x ssa_env with
+          match SMap.find_opt x ssa_env with
           | Some { val_ref; havoc } ->
             val_ref := Val.one loc;
             Havoc.(havoc.locs <- loc :: havoc.locs)
@@ -437,7 +433,7 @@ struct
 
       (* read *)
       method any_identifier (loc : L.t) (x : string) =
-        match SMap.get x ssa_env with
+        match SMap.find_opt x ssa_env with
         | Some { val_ref; _ } -> values <- L.LMap.add loc !val_ref values
         | None -> ()
 
@@ -446,109 +442,109 @@ struct
         this#any_identifier loc x;
         super#identifier ident
 
-      method! jsx_identifier (ident : L.t Ast.JSX.Identifier.t) =
-        let (loc, { Ast.JSX.Identifier.name }) = ident in
+      method! jsx_identifier (ident : (L.t, L.t) Ast.JSX.Identifier.t) =
+        let (loc, { Ast.JSX.Identifier.name; comments = _ }) = ident in
         this#any_identifier loc name;
         super#jsx_identifier ident
 
       (* Order of evaluation matters *)
       method! assignment _loc (expr : (L.t, L.t) Ast.Expression.Assignment.t) =
-        Ast.Expression.Assignment.(
-          let { operator; left; right } = expr in
-          begin
-            match operator with
-            | None ->
-              Ast.Pattern.(
-                begin
-                  match left with
-                  | (_, (Identifier _ | Object _ | Array _)) ->
-                    (* given `x = e`, read e then write x *)
-                    ignore @@ this#expression right;
-                    ignore @@ this#assignment_pattern left
-                  | (_, Expression _) ->
-                    (* given `o.x = e`, read o then read e *)
-                    ignore @@ this#assignment_pattern left;
-                    ignore @@ this#expression right
-                end)
-            | Some _ ->
-              Ast.Pattern.(
-                begin
-                  match left with
-                  | (_, Identifier { Identifier.name; _ }) ->
-                    (* given `x += e`, read x then read e then write x *)
-                    ignore @@ this#identifier name;
-                    ignore @@ this#expression right;
-                    ignore @@ this#assignment_pattern left
-                  | (_, Expression _) ->
-                    (* given `o.x += e`, read o then read e *)
-                    ignore @@ this#assignment_pattern left;
-                    ignore @@ this#expression right
-                  | (_, (Object _ | Array _)) -> failwith "unexpected AST node"
-                end)
-          end;
-          expr)
+        let open Ast.Expression.Assignment in
+        let { operator; left; right; comments = _ } = expr in
+        begin
+          match operator with
+          | None ->
+            let open Ast.Pattern in
+            begin
+              match left with
+              | (_, (Identifier _ | Object _ | Array _)) ->
+                (* given `x = e`, read e then write x *)
+                ignore @@ this#expression right;
+                ignore @@ this#assignment_pattern left
+              | (_, Expression _) ->
+                (* given `o.x = e`, read o then read e *)
+                ignore @@ this#assignment_pattern left;
+                ignore @@ this#expression right
+            end
+          | Some _ ->
+            let open Ast.Pattern in
+            begin
+              match left with
+              | (_, Identifier { Identifier.name; _ }) ->
+                (* given `x += e`, read x then read e then write x *)
+                ignore @@ this#identifier name;
+                ignore @@ this#expression right;
+                ignore @@ this#assignment_pattern left
+              | (_, Expression _) ->
+                (* given `o.x += e`, read o then read e *)
+                ignore @@ this#assignment_pattern left;
+                ignore @@ this#expression right
+              | (_, (Object _ | Array _)) -> failwith "unexpected AST node"
+            end
+        end;
+        expr
 
       (* Order of evaluation matters *)
       method! variable_declarator
           ~kind (decl : (L.t, L.t) Ast.Statement.VariableDeclaration.Declarator.t) =
-        Ast.Statement.VariableDeclaration.Declarator.(
-          let (_loc, { id; init }) = decl in
-          Ast.Pattern.(
+        let open Ast.Statement.VariableDeclaration.Declarator in
+        let (_loc, { id; init }) = decl in
+        let open Ast.Pattern in
+        begin
+          match id with
+          | (_, (Identifier _ | Object _ | Array _)) ->
             begin
-              match id with
-              | (_, (Identifier _ | Object _ | Array _)) ->
-                begin
-                  match init with
-                  | Some init ->
-                    (* given `var x = e`, read e then write x *)
-                    ignore @@ this#expression init;
-                    ignore @@ this#variable_declarator_pattern ~kind id
-                  | None ->
-                    (* `var x;` is not a write of `x` *)
-                    ()
-                end
-              | (_, Expression _) -> failwith "unexpected AST node"
-            end;
-            decl))
+              match init with
+              | Some init ->
+                (* given `var x = e`, read e then write x *)
+                ignore @@ this#expression init;
+                ignore @@ this#variable_declarator_pattern ~kind id
+              | None ->
+                (* `var x;` is not a write of `x` *)
+                ()
+            end
+          | (_, Expression _) -> failwith "unexpected AST node"
+        end;
+        decl
 
       (* read and write (when the argument is an identifier) *)
       method! update_expression _loc (expr : (L.t, L.t) Ast.Expression.Update.t) =
-        Ast.Expression.Update.(
-          let { argument; operator = _; prefix = _ } = expr in
-          begin
-            match argument with
-            | (_, Ast.Expression.Identifier x) ->
-              (* given `x++`, read x then write x *)
-              ignore @@ this#identifier x;
-              ignore @@ this#pattern_identifier x
-            | _ ->
-              (* given `o.x++`, read o *)
-              ignore @@ this#expression argument
-          end;
-          expr)
+        let open Ast.Expression.Update in
+        let { argument; operator = _; prefix = _; comments = _ } = expr in
+        begin
+          match argument with
+          | (_, Ast.Expression.Identifier x) ->
+            (* given `x++`, read x then write x *)
+            ignore @@ this#identifier x;
+            ignore @@ this#pattern_identifier x
+          | _ ->
+            (* given `o.x++`, read o *)
+            ignore @@ this#expression argument
+        end;
+        expr
 
       (* things that cause abrupt completions *)
       method! break _loc (stmt : L.t Ast.Statement.Break.t) =
-        Ast.Statement.Break.(
-          let { label; comments = _ } = stmt in
-          this#raise_abrupt_completion (AbruptCompletion.break label))
+        let open Ast.Statement.Break in
+        let { label; comments = _ } = stmt in
+        this#raise_abrupt_completion (AbruptCompletion.break label)
 
       method! continue _loc (stmt : L.t Ast.Statement.Continue.t) =
-        Ast.Statement.Continue.(
-          let { label; comments = _ } = stmt in
-          this#raise_abrupt_completion (AbruptCompletion.continue label))
+        let open Ast.Statement.Continue in
+        let { label; comments = _ } = stmt in
+        this#raise_abrupt_completion (AbruptCompletion.continue label)
 
       method! return _loc (stmt : (L.t, L.t) Ast.Statement.Return.t) =
-        Ast.Statement.Return.(
-          let { argument; comments = _ } = stmt in
-          ignore @@ Flow_ast_mapper.map_opt this#expression argument;
-          this#raise_abrupt_completion AbruptCompletion.return)
+        let open Ast.Statement.Return in
+        let { argument; comments = _ } = stmt in
+        ignore @@ Flow_ast_mapper.map_opt this#expression argument;
+        this#raise_abrupt_completion AbruptCompletion.return
 
       method! throw _loc (stmt : (L.t, L.t) Ast.Statement.Throw.t) =
-        Ast.Statement.Throw.(
-          let { argument } = stmt in
-          ignore @@ this#expression argument;
-          this#raise_abrupt_completion AbruptCompletion.throw)
+        let open Ast.Statement.Throw in
+        let { argument; comments = _ } = stmt in
+        ignore @@ this#expression argument;
+        this#raise_abrupt_completion AbruptCompletion.throw
 
       (** Control flow **)
 
@@ -574,28 +570,32 @@ struct
       (* POST = ENV1 | ENV2                     *)
       (******************************************)
       method! if_statement _loc (stmt : (L.t, L.t) Ast.Statement.If.t) =
-        Ast.Statement.If.(
-          let { test; consequent; alternate; _ } = stmt in
-          ignore @@ this#expression test;
-          let env0 = this#ssa_env in
-          (* collect completions and environments of every branch *)
-          let then_completion_state =
-            this#run_to_completion (fun () ->
-                ignore @@ this#if_consequent_statement ~has_else:(alternate <> None) consequent)
-          in
-          let env1 = this#ssa_env in
-          this#reset_ssa_env env0;
-          let else_completion_state =
-            this#run_to_completion (fun () ->
-                ignore @@ Flow_ast_mapper.map_opt this#statement alternate)
-          in
-          (* merge environments *)
-          this#merge_self_ssa_env env1;
+        let open Ast.Statement.If in
+        let { test; consequent; alternate; _ } = stmt in
+        ignore @@ this#expression test;
+        let env0 = this#ssa_env in
+        (* collect completions and environments of every branch *)
+        let then_completion_state =
+          this#run_to_completion (fun () ->
+              ignore @@ this#if_consequent_statement ~has_else:(alternate <> None) consequent)
+        in
+        let env1 = this#ssa_env in
+        this#reset_ssa_env env0;
+        let else_completion_state =
+          this#run_to_completion (fun () ->
+              ignore
+              @@ Flow_ast_mapper.map_opt
+                   (fun (loc, { Alternate.body; comments }) ->
+                     (loc, { Alternate.body = this#statement body; comments }))
+                   alternate)
+        in
+        (* merge environments *)
+        this#merge_self_ssa_env env1;
 
-          (* merge completions *)
-          let if_completion_states = (then_completion_state, [else_completion_state]) in
-          this#merge_completion_states if_completion_states;
-          stmt)
+        (* merge completions *)
+        let if_completion_states = (then_completion_state, [else_completion_state]) in
+        this#merge_completion_states if_completion_states;
+        stmt
 
       (********************************)
       (* [PRE] while (e) { s } [POST] *)
@@ -615,40 +615,40 @@ struct
       method! while_ _loc (stmt : (L.t, L.t) Ast.Statement.While.t) =
         this#expecting_abrupt_completions (fun () ->
             let continues = AbruptCompletion.continue None :: possible_labeled_continues in
-            Ast.Statement.While.(
-              let { test; body } = stmt in
-              (* placeholder for environment at the end of the loop body *)
-              let env1 = this#fresh_ssa_env in
-              this#merge_self_ssa_env env1;
-              ignore @@ this#expression test;
-              let env2 = this#ssa_env in
-              let loop_completion_state =
-                this#run_to_completion (fun () -> ignore @@ this#statement body)
-              in
-              (* continue exits *)
-              let loop_completion_state =
-                this#run_to_completion (fun () ->
-                    this#commit_abrupt_completion_matching
-                      (AbruptCompletion.mem continues)
-                      loop_completion_state)
-              in
-              (* end of loop body *)
-              this#assert_ssa_env env1;
+            let open Ast.Statement.While in
+            let { test; body; comments = _ } = stmt in
+            (* placeholder for environment at the end of the loop body *)
+            let env1 = this#fresh_ssa_env in
+            this#merge_self_ssa_env env1;
+            ignore @@ this#expression test;
+            let env2 = this#ssa_env in
+            let loop_completion_state =
+              this#run_to_completion (fun () -> ignore @@ this#statement body)
+            in
+            (* continue exits *)
+            let loop_completion_state =
+              this#run_to_completion (fun () ->
+                  this#commit_abrupt_completion_matching
+                    (AbruptCompletion.mem continues)
+                    loop_completion_state)
+            in
+            (* end of loop body *)
+            this#assert_ssa_env env1;
 
-              (* out of the loop! this always happens right after evaluating the loop test *)
-              this#reset_ssa_env env2;
+            (* out of the loop! this always happens right after evaluating the loop test *)
+            this#reset_ssa_env env2;
 
-              (* we might also never enter the loop body *)
-              let while_completion_states = (None, [loop_completion_state]) in
-              let completion_state =
-                this#run_to_completion (fun () ->
-                    this#merge_completion_states while_completion_states)
-              in
-              (* completion_state = None *)
-              (* break exits *)
-              this#commit_abrupt_completion_matching
-                AbruptCompletion.(mem [break None])
-                completion_state));
+            (* we might also never enter the loop body *)
+            let while_completion_states = (None, [loop_completion_state]) in
+            let completion_state =
+              this#run_to_completion (fun () ->
+                  this#merge_completion_states while_completion_states)
+            in
+            (* completion_state = None *)
+            (* break exits *)
+            this#commit_abrupt_completion_matching
+              AbruptCompletion.(mem [break None])
+              completion_state);
         stmt
 
       (***********************************)
@@ -667,34 +667,34 @@ struct
       method! do_while _loc (stmt : (L.t, L.t) Ast.Statement.DoWhile.t) =
         this#expecting_abrupt_completions (fun () ->
             let continues = AbruptCompletion.continue None :: possible_labeled_continues in
-            Ast.Statement.DoWhile.(
-              let { body; test; _ } = stmt in
-              let env1 = this#fresh_ssa_env in
-              this#merge_self_ssa_env env1;
-              let loop_completion_state =
-                this#run_to_completion (fun () -> ignore @@ this#statement body)
-              in
-              let loop_completion_state =
-                this#run_to_completion (fun () ->
-                    this#commit_abrupt_completion_matching
-                      (AbruptCompletion.mem continues)
-                      loop_completion_state)
-              in
-              begin
-                match loop_completion_state with
-                | None -> ignore @@ this#expression test
-                | _ -> ()
-              end;
-              this#assert_ssa_env env1;
-              let do_while_completion_states = (loop_completion_state, []) in
-              let completion_state =
-                this#run_to_completion (fun () ->
-                    this#merge_completion_states do_while_completion_states)
-              in
-              (* completion_state = loop_completion_state *)
-              this#commit_abrupt_completion_matching
-                AbruptCompletion.(mem [break None])
-                completion_state));
+            let open Ast.Statement.DoWhile in
+            let { body; test; _ } = stmt in
+            let env1 = this#fresh_ssa_env in
+            this#merge_self_ssa_env env1;
+            let loop_completion_state =
+              this#run_to_completion (fun () -> ignore @@ this#statement body)
+            in
+            let loop_completion_state =
+              this#run_to_completion (fun () ->
+                  this#commit_abrupt_completion_matching
+                    (AbruptCompletion.mem continues)
+                    loop_completion_state)
+            in
+            begin
+              match loop_completion_state with
+              | None -> ignore @@ this#expression test
+              | _ -> ()
+            end;
+            this#assert_ssa_env env1;
+            let do_while_completion_states = (loop_completion_state, []) in
+            let completion_state =
+              this#run_to_completion (fun () ->
+                  this#merge_completion_states do_while_completion_states)
+            in
+            (* completion_state = loop_completion_state *)
+            this#commit_abrupt_completion_matching
+              AbruptCompletion.(mem [break None])
+              completion_state);
         stmt
 
       (**************************************)
@@ -719,38 +719,37 @@ struct
       method! scoped_for_statement _loc (stmt : (L.t, L.t) Ast.Statement.For.t) =
         this#expecting_abrupt_completions (fun () ->
             let continues = AbruptCompletion.continue None :: possible_labeled_continues in
-            Ast.Statement.For.(
-              let { init; test; update; body } = stmt in
-              ignore @@ Flow_ast_mapper.map_opt this#for_statement_init init;
-              let env1 = this#fresh_ssa_env in
-              this#merge_self_ssa_env env1;
-              ignore @@ Flow_ast_mapper.map_opt this#expression test;
-              let env2 = this#ssa_env in
-              let loop_completion_state =
-                this#run_to_completion (fun () -> ignore @@ this#statement body)
-              in
-              (* continue *)
-              let loop_completion_state =
-                this#run_to_completion (fun () ->
-                    this#commit_abrupt_completion_matching
-                      (AbruptCompletion.mem continues)
-                      loop_completion_state)
-              in
-              begin
-                match loop_completion_state with
-                | None -> ignore @@ Flow_ast_mapper.map_opt this#expression update
-                | _ -> ()
-              end;
-              this#assert_ssa_env env1;
-              this#reset_ssa_env env2;
-              let for_completion_states = (None, [loop_completion_state]) in
-              let completion_state =
-                this#run_to_completion (fun () ->
-                    this#merge_completion_states for_completion_states)
-              in
-              this#commit_abrupt_completion_matching
-                AbruptCompletion.(mem [break None])
-                completion_state));
+            let open Ast.Statement.For in
+            let { init; test; update; body; comments = _ } = stmt in
+            ignore @@ Flow_ast_mapper.map_opt this#for_statement_init init;
+            let env1 = this#fresh_ssa_env in
+            this#merge_self_ssa_env env1;
+            ignore @@ Flow_ast_mapper.map_opt this#expression test;
+            let env2 = this#ssa_env in
+            let loop_completion_state =
+              this#run_to_completion (fun () -> ignore @@ this#statement body)
+            in
+            (* continue *)
+            let loop_completion_state =
+              this#run_to_completion (fun () ->
+                  this#commit_abrupt_completion_matching
+                    (AbruptCompletion.mem continues)
+                    loop_completion_state)
+            in
+            begin
+              match loop_completion_state with
+              | None -> ignore @@ Flow_ast_mapper.map_opt this#expression update
+              | _ -> ()
+            end;
+            this#assert_ssa_env env1;
+            this#reset_ssa_env env2;
+            let for_completion_states = (None, [loop_completion_state]) in
+            let completion_state =
+              this#run_to_completion (fun () -> this#merge_completion_states for_completion_states)
+            in
+            this#commit_abrupt_completion_matching
+              AbruptCompletion.(mem [break None])
+              completion_state);
         stmt
 
       (*************************************)
@@ -776,33 +775,33 @@ struct
       method! scoped_for_in_statement _loc (stmt : (L.t, L.t) Ast.Statement.ForIn.t) =
         this#expecting_abrupt_completions (fun () ->
             let continues = AbruptCompletion.continue None :: possible_labeled_continues in
-            Ast.Statement.ForIn.(
-              let { left; right; body; each = _ } = stmt in
-              ignore @@ this#expression right;
-              let env1 = this#fresh_ssa_env in
-              this#merge_self_ssa_env env1;
-              let env2 = this#ssa_env in
-              ignore @@ this#for_in_statement_lhs left;
-              let loop_completion_state =
-                this#run_to_completion (fun () -> ignore @@ this#statement body)
-              in
-              (* continue *)
-              let loop_completion_state =
-                this#run_to_completion (fun () ->
-                    this#commit_abrupt_completion_matching
-                      (AbruptCompletion.mem continues)
-                      loop_completion_state)
-              in
-              this#assert_ssa_env env1;
-              this#reset_ssa_env env2;
-              let for_in_completion_states = (None, [loop_completion_state]) in
-              let completion_state =
-                this#run_to_completion (fun () ->
-                    this#merge_completion_states for_in_completion_states)
-              in
-              this#commit_abrupt_completion_matching
-                AbruptCompletion.(mem [break None])
-                completion_state));
+            let open Ast.Statement.ForIn in
+            let { left; right; body; each = _; comments = _ } = stmt in
+            ignore @@ this#expression right;
+            let env1 = this#fresh_ssa_env in
+            this#merge_self_ssa_env env1;
+            let env2 = this#ssa_env in
+            ignore @@ this#for_in_statement_lhs left;
+            let loop_completion_state =
+              this#run_to_completion (fun () -> ignore @@ this#statement body)
+            in
+            (* continue *)
+            let loop_completion_state =
+              this#run_to_completion (fun () ->
+                  this#commit_abrupt_completion_matching
+                    (AbruptCompletion.mem continues)
+                    loop_completion_state)
+            in
+            this#assert_ssa_env env1;
+            this#reset_ssa_env env2;
+            let for_in_completion_states = (None, [loop_completion_state]) in
+            let completion_state =
+              this#run_to_completion (fun () ->
+                  this#merge_completion_states for_in_completion_states)
+            in
+            this#commit_abrupt_completion_matching
+              AbruptCompletion.(mem [break None])
+              completion_state);
         stmt
 
       (*************************************)
@@ -828,33 +827,33 @@ struct
       method! scoped_for_of_statement _loc (stmt : (L.t, L.t) Ast.Statement.ForOf.t) =
         this#expecting_abrupt_completions (fun () ->
             let continues = AbruptCompletion.continue None :: possible_labeled_continues in
-            Ast.Statement.ForOf.(
-              let { left; right; body; async = _ } = stmt in
-              ignore @@ this#expression right;
-              let env1 = this#fresh_ssa_env in
-              this#merge_self_ssa_env env1;
-              let env2 = this#ssa_env in
-              ignore @@ this#for_of_statement_lhs left;
-              let loop_completion_state =
-                this#run_to_completion (fun () -> ignore @@ this#statement body)
-              in
-              (* continue *)
-              let loop_completion_state =
-                this#run_to_completion (fun () ->
-                    this#commit_abrupt_completion_matching
-                      (AbruptCompletion.mem continues)
-                      loop_completion_state)
-              in
-              this#assert_ssa_env env1;
-              this#reset_ssa_env env2;
-              let for_of_completion_states = (None, [loop_completion_state]) in
-              let completion_state =
-                this#run_to_completion (fun () ->
-                    this#merge_completion_states for_of_completion_states)
-              in
-              this#commit_abrupt_completion_matching
-                AbruptCompletion.(mem [break None])
-                completion_state));
+            let open Ast.Statement.ForOf in
+            let { left; right; body; await = _; comments = _ } = stmt in
+            ignore @@ this#expression right;
+            let env1 = this#fresh_ssa_env in
+            this#merge_self_ssa_env env1;
+            let env2 = this#ssa_env in
+            ignore @@ this#for_of_statement_lhs left;
+            let loop_completion_state =
+              this#run_to_completion (fun () -> ignore @@ this#statement body)
+            in
+            (* continue *)
+            let loop_completion_state =
+              this#run_to_completion (fun () ->
+                  this#commit_abrupt_completion_matching
+                    (AbruptCompletion.mem continues)
+                    loop_completion_state)
+            in
+            this#assert_ssa_env env1;
+            this#reset_ssa_env env2;
+            let for_of_completion_states = (None, [loop_completion_state]) in
+            let completion_state =
+              this#run_to_completion (fun () ->
+                  this#merge_completion_states for_of_completion_states)
+            in
+            this#commit_abrupt_completion_matching
+              AbruptCompletion.(mem [break None])
+              completion_state);
         stmt
 
       (***********************************************************)
@@ -887,43 +886,43 @@ struct
       (***********************************************************)
       method! switch _loc (switch : (L.t, L.t) Ast.Statement.Switch.t) =
         this#expecting_abrupt_completions (fun () ->
-            Ast.Statement.Switch.(
-              let { discriminant; cases } = switch in
-              ignore @@ this#expression discriminant;
-              let (env, case_completion_states) =
-                List.fold_left
-                  (fun acc stuff ->
-                    let (_loc, case) = stuff in
-                    this#ssa_switch_case acc case)
-                  (this#empty_ssa_env, [])
-                  cases
-              in
-              this#merge_self_ssa_env env;
+            let open Ast.Statement.Switch in
+            let { discriminant; cases; comments = _ } = switch in
+            ignore @@ this#expression discriminant;
+            let (env, case_completion_states) =
+              List.fold_left
+                (fun acc stuff ->
+                  let (_loc, case) = stuff in
+                  this#ssa_switch_case acc case)
+                (this#empty_ssa_env, [])
+                cases
+            in
+            this#merge_self_ssa_env env;
 
-              (* In general, cases are non-exhaustive. TODO: optimize with `default`. *)
-              let switch_completion_states = (None, case_completion_states) in
-              let completion_state =
-                this#run_to_completion (fun () ->
-                    this#merge_completion_states switch_completion_states)
-              in
-              this#commit_abrupt_completion_matching
-                AbruptCompletion.(mem [break None])
-                completion_state));
+            (* In general, cases are non-exhaustive. TODO: optimize with `default`. *)
+            let switch_completion_states = (None, case_completion_states) in
+            let completion_state =
+              this#run_to_completion (fun () ->
+                  this#merge_completion_states switch_completion_states)
+            in
+            this#commit_abrupt_completion_matching
+              AbruptCompletion.(mem [break None])
+              completion_state);
         switch
 
       method private ssa_switch_case
           (env, case_completion_states) (case : (L.t, L.t) Ast.Statement.Switch.Case.t') =
-        Ast.Statement.Switch.Case.(
-          let { test; consequent } = case in
-          ignore @@ Flow_ast_mapper.map_opt this#expression test;
-          let env0 = this#ssa_env in
-          this#merge_ssa_env env0 env;
-          let case_completion_state =
-            this#run_to_completion (fun () -> ignore @@ this#statement_list consequent)
-          in
-          let env' = this#ssa_env in
-          this#reset_ssa_env env0;
-          (env', case_completion_state :: case_completion_states))
+        let open Ast.Statement.Switch.Case in
+        let { test; consequent; comments = _ } = case in
+        ignore @@ Flow_ast_mapper.map_opt this#expression test;
+        let env0 = this#ssa_env in
+        this#merge_ssa_env env0 env;
+        let case_completion_state =
+          this#run_to_completion (fun () -> ignore @@ this#statement_list consequent)
+        in
+        let env' = this#ssa_env in
+        this#reset_ssa_env env0;
+        (env', case_completion_state :: case_completion_states)
 
       (****************************************)
       (* [PRE] try { s1 } catch { s2 } [POST] *)
@@ -959,71 +958,69 @@ struct
       (*******************************************************)
       method! try_catch _loc (stmt : (L.t, L.t) Ast.Statement.Try.t) =
         this#expecting_abrupt_completions (fun () ->
-            Ast.Statement.Try.(
-              let { block = (loc, block); handler; finalizer; comments = _ } = stmt in
-              let try_completion_state =
-                this#run_to_completion (fun () -> ignore @@ this#block loc block)
-              in
-              let env1 = this#ssa_env in
-              let (catch_completion_state_opt, env2) =
-                match handler with
-                | Some (loc, clause) ->
-                  (* NOTE: Havoc-ing the state when entering the handler is probably
+            let open Ast.Statement.Try in
+            let { block = (loc, block); handler; finalizer; comments = _ } = stmt in
+            let try_completion_state =
+              this#run_to_completion (fun () -> ignore @@ this#block loc block)
+            in
+            let env1 = this#ssa_env in
+            let (catch_completion_state_opt, env2) =
+              match handler with
+              | Some (loc, clause) ->
+                (* NOTE: Havoc-ing the state when entering the handler is probably
                overkill. We can be more precise but still correct by collecting all
                possible writes in the try-block and merging them with the state when
                entering the try-block. *)
-                  this#havoc_current_ssa_env;
-                  let catch_completion_state =
-                    this#run_to_completion (fun () -> ignore @@ this#catch_clause loc clause)
-                  in
-                  ([catch_completion_state], this#ssa_env)
-                | None -> ([], this#empty_ssa_env)
-              in
-              this#merge_ssa_env env1 env2;
-              let try_catch_completion_states =
-                (try_completion_state, catch_completion_state_opt)
-              in
-              let completion_state =
-                this#run_to_completion (fun () ->
-                    this#merge_completion_states try_catch_completion_states)
-              in
-              this#commit_abrupt_completion_matching AbruptCompletion.all completion_state;
-              begin
-                match finalizer with
-                | Some (_loc, block) ->
-                  (* NOTE: Havoc-ing the state when entering the finalizer is probably
+                this#havoc_current_ssa_env;
+                let catch_completion_state =
+                  this#run_to_completion (fun () -> ignore @@ this#catch_clause loc clause)
+                in
+                ([catch_completion_state], this#ssa_env)
+              | None -> ([], this#empty_ssa_env)
+            in
+            this#merge_ssa_env env1 env2;
+            let try_catch_completion_states = (try_completion_state, catch_completion_state_opt) in
+            let completion_state =
+              this#run_to_completion (fun () ->
+                  this#merge_completion_states try_catch_completion_states)
+            in
+            this#commit_abrupt_completion_matching AbruptCompletion.all completion_state;
+            begin
+              match finalizer with
+              | Some (_loc, block) ->
+                (* NOTE: Havoc-ing the state when entering the finalizer is probably
                overkill. We can be more precise but still correct by collecting
                all possible writes in the handler and merging them with the state
                when entering the handler (which in turn should already account for
                any contributions by the try-block). *)
-                  this#havoc_current_ssa_env;
-                  ignore @@ this#block loc block
-                | None -> ()
-              end;
-              this#from_completion completion_state));
+                this#havoc_current_ssa_env;
+                ignore @@ this#block loc block
+              | None -> ()
+            end;
+            this#from_completion completion_state);
         stmt
 
       (* branching expressions *)
       method! logical _loc (expr : (L.t, L.t) Ast.Expression.Logical.t) =
-        Ast.Expression.Logical.(
-          let { operator = _; left; right } = expr in
-          ignore @@ this#expression left;
-          let env1 = this#ssa_env in
-          ignore @@ this#expression right;
-          this#merge_self_ssa_env env1;
-          expr)
+        let open Ast.Expression.Logical in
+        let { operator = _; left; right; comments = _ } = expr in
+        ignore @@ this#expression left;
+        let env1 = this#ssa_env in
+        ignore @@ this#expression right;
+        this#merge_self_ssa_env env1;
+        expr
 
       method! conditional _loc (expr : (L.t, L.t) Ast.Expression.Conditional.t) =
-        Ast.Expression.Conditional.(
-          let { test; consequent; alternate } = expr in
-          ignore @@ this#predicate_expression test;
-          let env0 = this#ssa_env in
-          ignore @@ this#expression consequent;
-          let env1 = this#ssa_env in
-          this#reset_ssa_env env0;
-          ignore @@ this#expression alternate;
-          this#merge_self_ssa_env env1;
-          expr)
+        let open Ast.Expression.Conditional in
+        let { test; consequent; alternate; comments = _ } = expr in
+        ignore @@ this#predicate_expression test;
+        let env0 = this#ssa_env in
+        ignore @@ this#expression consequent;
+        let env1 = this#ssa_env in
+        this#reset_ssa_env env0;
+        ignore @@ this#expression alternate;
+        this#merge_self_ssa_env env1;
+        expr
 
       (* We also havoc state when entering functions and exiting calls. *)
       method! lambda loc params body =
@@ -1041,70 +1038,70 @@ struct
               ~finally:(fun () -> this#reset_ssa_env env))
 
       method! call _loc (expr : (L.t, L.t) Ast.Expression.Call.t) =
-        Ast.Expression.Call.(
-          let { callee; targs = _; arguments } = expr in
-          ignore @@ this#expression callee;
-          ignore @@ ListUtils.ident_map this#expression_or_spread arguments;
-          this#havoc_current_ssa_env;
-          expr)
+        let open Ast.Expression.Call in
+        let { callee; targs = _; arguments; comments = _ } = expr in
+        ignore @@ this#expression callee;
+        ignore @@ this#call_arguments arguments;
+        this#havoc_current_ssa_env;
+        expr
 
       method! new_ _loc (expr : (L.t, L.t) Ast.Expression.New.t) =
-        Ast.Expression.New.(
-          let { callee; targs = _; arguments; comments = _ } = expr in
-          ignore @@ this#expression callee;
-          ignore @@ ListUtils.ident_map this#expression_or_spread arguments;
-          this#havoc_current_ssa_env;
-          expr)
+        let open Ast.Expression.New in
+        let { callee; targs = _; arguments; comments = _ } = expr in
+        ignore @@ this#expression callee;
+        ignore @@ Flow_ast_mapper.map_opt this#call_arguments arguments;
+        this#havoc_current_ssa_env;
+        expr
 
       (* Labeled statements handle labeled breaks, but also push labeled continues
        that are expected to be handled by immediately nested loops. *)
       method! labeled_statement _loc (stmt : (L.t, L.t) Ast.Statement.Labeled.t) =
         this#expecting_abrupt_completions (fun () ->
-            Ast.Statement.Labeled.(
-              let { label; body } = stmt in
-              possible_labeled_continues <-
-                AbruptCompletion.continue (Some label) :: possible_labeled_continues;
-              let completion_state =
-                this#run_to_completion (fun () -> ignore @@ this#statement body)
-              in
-              possible_labeled_continues <- [];
-              this#commit_abrupt_completion_matching
-                AbruptCompletion.(mem [break (Some label)])
-                completion_state));
+            let open Ast.Statement.Labeled in
+            let { label; body; comments = _ } = stmt in
+            possible_labeled_continues <-
+              AbruptCompletion.continue (Some label) :: possible_labeled_continues;
+            let completion_state =
+              this#run_to_completion (fun () -> ignore @@ this#statement body)
+            in
+            possible_labeled_continues <- [];
+            this#commit_abrupt_completion_matching
+              AbruptCompletion.(mem [break (Some label)])
+              completion_state);
         stmt
 
       method! statement (stmt : (L.t, L.t) Ast.Statement.t) =
-        Ast.Statement.(
-          begin
-            match stmt with
-            | (_, While _)
-            | (_, DoWhile _)
-            | (_, For _)
-            | (_, ForIn _)
-            | (_, ForOf _)
-            | (_, Labeled _) ->
-              ()
-            | _ -> possible_labeled_continues <- []
-          end;
-          super#statement stmt)
+        let open Ast.Statement in
+        begin
+          match stmt with
+          | (_, While _)
+          | (_, DoWhile _)
+          | (_, For _)
+          | (_, ForIn _)
+          | (_, ForOf _)
+          | (_, Labeled _) ->
+            ()
+          | _ -> possible_labeled_continues <- []
+        end;
+        super#statement stmt
 
       (* Function declarations are hoisted to the top of a block, so that they may be considered
        initialized before they are read. *)
       method! statement_list (stmts : (L.t, L.t) Ast.Statement.t list) =
-        Ast.Statement.(
-          let (function_decls, other_stmts) =
-            List.partition
-              (function
-                | (_, FunctionDeclaration _) -> true
-                | _ -> false)
-              stmts
-          in
-          ignore @@ super#statement_list (function_decls @ other_stmts);
-          stmts)
+        let open Ast.Statement in
+        let (function_decls, other_stmts) =
+          List.partition
+            (function
+              | (_, FunctionDeclaration _) -> true
+              | _ -> false)
+            stmts
+        in
+        ignore @@ super#statement_list (function_decls @ other_stmts);
+        stmts
     end
 
   let program_with_scope ?(ignore_toplevel = false) program =
-    let (loc, _, _) = program in
+    let (loc, _) = program in
     let ssa_walk = new ssa_builder in
     let bindings =
       if ignore_toplevel then

@@ -1,93 +1,98 @@
-Error ---------------------------------------------------------------------------------------------- forwardRef.js:12:12
+Error ---------------------------------------------------------------------------------------------- forwardRef.js:12:13
 
 Cannot create `FancyButton` element because property `foo` is missing in props [1] but exists in `Props` [2].
+[prop-missing]
 
+   forwardRef.js:12:13
+   12| const _a = <FancyButton />; // Error, missing foo
+                   ^^^^^^^^^^^
+
+References:
    forwardRef.js:12:12
    12| const _a = <FancyButton />; // Error, missing foo
                   ^^^^^^^^^^^^^^^ [1]
-
-References:
    forwardRef.js:5:38
     5| const FancyButton = React.forwardRef<Props, _>((props, ref) => (
                                             ^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------- forwardRef.js:14:12
+Error ---------------------------------------------------------------------------------------------- forwardRef.js:14:13
 
 Cannot create `FancyButton` element because property `bar` is missing in `Props` [1] but exists in props [2].
+[prop-missing]
 
-   forwardRef.js:14:12
+   forwardRef.js:14:13
    14| const _c = <FancyButton foo={3} bar={3} />; // Error bar, not allowed in exact props
-                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+                   ^^^^^^^^^^^
 
 References:
    forwardRef.js:5:38
     5| const FancyButton = React.forwardRef<Props, _>((props, ref) => (
                                             ^^^^^ [1]
+   forwardRef.js:14:12
+   14| const _c = <FancyButton foo={3} bar={3} />; // Error bar, not allowed in exact props
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------- forwardRef.js:20:12
+Error ---------------------------------------------------------------------------------------------- forwardRef.js:20:38
 
-Cannot create `FancyButton` element because in property `ref`:
+Cannot create `FancyButton` element because in property `ref`: [incompatible-type]
  - Either `HTMLDivElement` [1] is incompatible with `HTMLButtonElement` [2] in property `current`.
  - Or a call signature declaring the expected parameter / return type is missing in object type [3] but exists in
    function type [4].
 
-   forwardRef.js:20:12
+   forwardRef.js:20:38
     20| const _e = <FancyButton foo={3} ref={badRef} />; // Incorrect ref type
-                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                                             ^^^^^^
 
 References:
    forwardRef.js:19:32
     19| const badRef = React.createRef<HTMLDivElement>();
                                        ^^^^^^^^^^^^^^ [1]
-   <BUILTINS>/react-dom.js:313:15
-   313|     instance: HTMLButtonElement,
+   <BUILTINS>/react-dom.js:207:15
+   207|     instance: HTMLButtonElement,
                       ^^^^^^^^^^^^^^^^^ [2]
-   <BUILTINS>/react.js:246:6
-   246|   ): {|current: null | T|};
+   <BUILTINS>/react.js:249:6
+   249|   ): {|current: null | T|};
              ^^^^^^^^^^^^^^^^^^^^^ [3]
-   <BUILTINS>/react.js:197:6
-   197|   | ((React$ElementRef<ElementType> | null) => mixed)
+   <BUILTINS>/react.js:198:6
+   198|   | ((React$ElementRef<ElementType> | null) => mixed)
              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
 
 
-Error ---------------------------------------------------------------------------------------------- forwardRef.js:23:13
+Error ---------------------------------------------------------------------------------------------- forwardRef.js:23:39
 
-Cannot create `FancyButton` element because in property `ref`:
+Cannot create `FancyButton` element because in property `ref`: [incompatible-type]
  - Either property `current` is missing in function [1] but exists in object type [2].
  - Or `HTMLDivElement` [3] is incompatible with `HTMLButtonElement` [4] in the first argument.
 
-   forwardRef.js:23:13
-    23| const _g =  <FancyButton foo={3} ref={(x: null | HTMLDivElement) => x} />; // Incorrect ref type
-                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-References:
    forwardRef.js:23:39
     23| const _g =  <FancyButton foo={3} ref={(x: null | HTMLDivElement) => x} />; // Incorrect ref type
                                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   <BUILTINS>/react.js:196:5
-   196|   | { -current: React$ElementRef<ElementType> | null, ... }
+
+References:
+   <BUILTINS>/react.js:197:5
+   197|   | { -current: React$ElementRef<ElementType> | null, ... }
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
    forwardRef.js:23:50
     23| const _g =  <FancyButton foo={3} ref={(x: null | HTMLDivElement) => x} />; // Incorrect ref type
                                                          ^^^^^^^^^^^^^^ [3]
-   <BUILTINS>/react-dom.js:313:15
-   313|     instance: HTMLButtonElement,
+   <BUILTINS>/react-dom.js:207:15
+   207|     instance: HTMLButtonElement,
                       ^^^^^^^^^^^^^^^^^ [4]
 
 
-Error ---------------------------------------------------------------------------------------------- forwardRef.js:42:12
+Error ---------------------------------------------------------------------------------------------- forwardRef.js:42:35
 
-Cannot create `UnionRef` element because in property `ref`:
+Cannot create `UnionRef` element because in property `ref`: [incompatible-type]
  - Either `HTMLAnchorElement` [1] is incompatible with `HTMLButtonElement` [2] in property `current`.
  - Or `HTMLAnchorElement` [1] is incompatible with `HTMLDivElement` [3] in property `current`.
  - Or a call signature declaring the expected parameter / return type is missing in object type [4] but exists in
    function type [5].
 
-   forwardRef.js:42:12
+   forwardRef.js:42:35
     42| const _j = <UnionRef foo={3} ref={badUnionRef} />; // Error bad ref
-                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                                          ^^^^^^^^^^^
 
 References:
    forwardRef.js:27:65
@@ -99,11 +104,11 @@ References:
    forwardRef.js:41:57
     41| const badUnionRef = React.createRef<HTMLButtonElement | HTMLDivElement>();
                                                                 ^^^^^^^^^^^^^^ [3]
-   <BUILTINS>/react.js:246:6
-   246|   ): {|current: null | T|};
+   <BUILTINS>/react.js:249:6
+   249|   ): {|current: null | T|};
              ^^^^^^^^^^^^^^^^^^^^^ [4]
-   <BUILTINS>/react.js:197:6
-   197|   | ((React$ElementRef<ElementType> | null) => mixed)
+   <BUILTINS>/react.js:198:6
+   198|   | ((React$ElementRef<ElementType> | null) => mixed)
              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [5]
 
 

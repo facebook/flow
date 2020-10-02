@@ -1,4 +1,4 @@
-(**
+(*
  * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
@@ -12,38 +12,23 @@ type flow_mode =
   | OptInWeak
   | OptOut
 
-type jsx_pragma =
-  (*
-   * Specifies a function that should be invoked instead of React.createElement
-   * when interpreting JSX syntax. Otherwise, the usual rules of JSX are
-   * followed: children are varargs after a props argument.
-   *)
-  | Jsx_pragma of (string * (Loc.t, Loc.t) Flow_ast.Expression.t)
-  (*
-   * Alternate mode for interpreting JSX syntax. The element name is treated
-   * as a function to be directly invoked, e.g. <Foo /> -> Foo({}).
-   * Children are part of props instead of a separate argument.
-   *)
-  | Csx_pragma
+(*
+  * Specifies a function that should be invoked instead of React.createElement
+  * when interpreting JSX syntax. Otherwise, the usual rules of JSX are
+  * followed: children are varargs after a props argument.
+  *)
+type jsx_pragma = string * (Loc.t, Loc.t) Flow_ast.Expression.t
 
 type t = {
   flow: flow_mode option;
   typeAssert: bool;
-  preventMunge: bool option;
+  preventMunge: bool;
   providesModule: string option;
-  isDeclarationFile: bool;
   jsx: jsx_pragma option;
 }
 
 let default_info =
-  {
-    flow = None;
-    typeAssert = false;
-    preventMunge = None;
-    providesModule = None;
-    isDeclarationFile = false;
-    jsx = None;
-  }
+  { flow = None; typeAssert = false; preventMunge = false; providesModule = None; jsx = None }
 
 (* accessors *)
 let flow info = info.flow
@@ -54,9 +39,17 @@ let preventMunge info = info.preventMunge
 
 let providesModule info = info.providesModule
 
-let isDeclarationFile info = info.isDeclarationFile
-
 let jsx info = info.jsx
+
+let is_strict info =
+  match info.flow with
+  | Some OptInStrict -> true
+  | Some OptIn
+  | Some OptInStrictLocal
+  | Some OptInWeak
+  | Some OptOut
+  | None ->
+    false
 
 let is_flow info =
   match info.flow with
@@ -106,16 +99,16 @@ let json_of_docblock info =
       | None -> JSON_Null
     in
     let preventsMunge =
-      match preventMunge info with
-      | Some b -> JSON_Bool b
-      | None -> JSON_Null
+      if preventMunge info then
+        JSON_Bool true
+      else
+        JSON_Null
     in
     let providesModule =
       match providesModule info with
       | Some str -> JSON_String str
       | None -> JSON_Null
     in
-    let isDeclarationFile = JSON_Bool (isDeclarationFile info) in
     let typeAssert = JSON_Bool (typeAssert info) in
     JSON_Object
       [
@@ -123,5 +116,4 @@ let json_of_docblock info =
         ("typeAssert", typeAssert);
         ("preventMunge", preventsMunge);
         ("providesModule", providesModule);
-        ("isDeclarationFile", isDeclarationFile);
       ])

@@ -3,9 +3,10 @@
  */
 
 
+import type Suite from "flow-dev-tools/src/test/Suite.js";
 import {suite, test} from 'flow-dev-tools/src/test/Tester';
 
-export default suite(({addFile, flowCmd}) => [
+export default (suite(({addFile, flowCmd}) => [
   test('non-json output', [
     addFile('foo_parse_fail.js'),
     flowCmd(
@@ -37,116 +38,35 @@ export default suite(({addFile, flowCmd}) => [
            "result": [
              {
                "name": "hasOwnProperty",
-               "type": "(prop: mixed) => boolean",
-               "func_details": {
-                 "return_type": "boolean",
-                 "params": [
-                   {
-                     "name": "prop",
-                     "type": "mixed"
-                   }
-                 ]
-               },
-               "path": "[LIB] core.js",
-               "line": 80,
-               "endline": 80,
-               "start": 5,
-               "end": 40
+               "type": "(prop: mixed) => boolean"
              },
              {
                "name": "isPrototypeOf",
-               "type": "(o: mixed) => boolean",
-               "func_details": {
-                 "return_type": "boolean",
-                 "params": [
-                   {
-                     "name": "o",
-                     "type": "mixed"
-                   }
-                 ]
-               },
-               "path": "[LIB] core.js",
-               "line": 81,
-               "endline": 81,
-               "start": 5,
-               "end": 36
+               "type": "(o: mixed) => boolean"
              },
              {
                "name": "num",
-               "type": "number",
-               "func_details": null,
-               "path": "foo.js",
-               "line": 6,
-               "endline": 6,
-               "start": 8,
-               "end": 10
+               "type": "number"
              },
              {
                "name": "propertyIsEnumerable",
-               "type": "(prop: mixed) => boolean",
-               "func_details": {
-                 "return_type": "boolean",
-                 "params": [
-                   {
-                     "name": "prop",
-                     "type": "mixed"
-                   }
-                 ]
-               },
-               "path": "[LIB] core.js",
-               "line": 82,
-               "endline": 82,
-               "start": 5,
-               "end": 46
+               "type": "(prop: mixed) => boolean"
              },
              {
                "name": "str",
-               "type": "string",
-               "func_details": null,
-               "path": "foo.js",
-               "line": 7,
-               "endline": 7,
-               "start": 8,
-               "end": 14
+               "type": "string"
              },
              {
                "name": "toLocaleString",
-               "type": "() => string",
-               "func_details": {
-                 "return_type": "string",
-                 "params": []
-               },
-               "path": "[LIB] core.js",
-               "line": 83,
-               "endline": 83,
-               "start": 5,
-               "end": 28
+               "type": "() => string"
              },
              {
                "name": "toString",
-               "type": "() => string",
-               "func_details": {
-                 "return_type": "string",
-                 "params": []
-               },
-               "path": "[LIB] core.js",
-               "line": 84,
-               "endline": 84,
-               "start": 5,
-               "end": 22
+               "type": "() => string"
              },
              {
                "name": "valueOf",
-               "type": "() => mixed",
-               "func_details": {
-                 "return_type": "mixed",
-                 "params": []
-               },
-               "path": "[LIB] core.js",
-               "line": 85,
-               "endline": 85,
-               "start": 5,
-               "end": 20
+               "type": "() => mixed"
              }
            ]
          }
@@ -171,21 +91,41 @@ export default suite(({addFile, flowCmd}) => [
       ['autocomplete', '--strip-root', '--json', 'qux.js', '6', '3'],
       'qux.js',
     ).stdout(
-`{
-  "result": [
-    {
-      "name": "x",
-      "type": "number",
-      "func_details": null,
-      "path": "qux.js",
-      "line": 3,
-      "endline": 3,
-      "start": 14,
-      "end": 19
-    }
-  ]
-}`,
-).exitCodes([0]),
+       `
+         {
+           "result": [
+             {
+               "name": "hasOwnProperty",
+               "type": "(prop: mixed) => boolean"
+             },
+             {
+               "name": "isPrototypeOf",
+               "type": "(o: mixed) => boolean"
+             },
+             {
+               "name": "propertyIsEnumerable",
+               "type": "(prop: mixed) => boolean"
+             },
+             {
+               "name": "toLocaleString",
+               "type": "() => string"
+             },
+             {
+               "name": "toString",
+               "type": "() => string"
+             },
+             {
+               "name": "valueOf",
+               "type": "() => mixed"
+             },
+             {
+               "name": "x",
+               "type": "number"
+             }
+           ]
+         }
+       `,
+     ).exitCodes([0]),
 
 
     addFile("str.js"),
@@ -198,667 +138,167 @@ export default suite(({addFile, flowCmd}) => [
            "result": [
              {
                "name": "@@iterator",
-               "type": "() => Iterator<string>",
-               "func_details": {
-                 "return_type": "Iterator<string>",
-                 "params": []
-               },
-               "path": "[LIB] core.js",
-               "line": 321,
-               "endline": 321,
-               "start": 5,
-               "end": 34
+               "type": "() => Iterator<string>"
              },
              {
                "name": "anchor",
-               "type": "(name: string) => string",
-               "func_details": {
-                 "return_type": "string",
-                 "params": [
-                   {
-                     "name": "name",
-                     "type": "string"
-                   }
-                 ]
-               },
-               "path": "[LIB] core.js",
-               "line": 322,
-               "endline": 322,
-               "start": 5,
-               "end": 32
+               "type": "(name: string) => string"
              },
              {
                "name": "charAt",
-               "type": "(pos: number) => string",
-               "func_details": {
-                 "return_type": "string",
-                 "params": [
-                   {
-                     "name": "pos",
-                     "type": "number"
-                   }
-                 ]
-               },
-               "path": "[LIB] core.js",
-               "line": 323,
-               "endline": 323,
-               "start": 5,
-               "end": 31
+               "type": "(pos: number) => string"
              },
              {
                "name": "charCodeAt",
-               "type": "(index: number) => number",
-               "func_details": {
-                 "return_type": "number",
-                 "params": [
-                   {
-                     "name": "index",
-                     "type": "number"
-                   }
-                 ]
-               },
-               "path": "[LIB] core.js",
-               "line": 324,
-               "endline": 324,
-               "start": 5,
-               "end": 37
+               "type": "(index: number) => number"
              },
              {
                "name": "codePointAt",
-               "type": "(index: number) => number",
-               "func_details": {
-                 "return_type": "number",
-                 "params": [
-                   {
-                     "name": "index",
-                     "type": "number"
-                   }
-                 ]
-               },
-               "path": "[LIB] core.js",
-               "line": 325,
-               "endline": 325,
-               "start": 5,
-               "end": 38
+               "type": "(index: number) => number"
              },
              {
                "name": "concat",
-               "type": "(...strings: Array<string>) => string",
-               "func_details": {
-                 "return_type": "string",
-                 "params": [
-                   {
-                     "name": "...strings",
-                     "type": "Array<string>"
-                   }
-                 ]
-               },
-               "path": "[LIB] core.js",
-               "line": 326,
-               "endline": 326,
-               "start": 5,
-               "end": 45
+               "type": "(...strings: Array<string>) => string"
              },
              {
                "name": "endsWith",
-               "type": "(searchString: string, position?: number) => boolean",
-               "func_details": {
-                 "return_type": "boolean",
-                 "params": [
-                   {
-                     "name": "searchString",
-                     "type": "string"
-                   },
-                   {
-                     "name": "position?",
-                     "type": "number"
-                   }
-                 ]
-               },
-               "path": "[LIB] core.js",
-               "line": 328,
-               "endline": 328,
-               "start": 5,
-               "end": 62
+               "type": "(searchString: string, position?: number) => boolean"
+             },
+             {
+               "name": "hasOwnProperty",
+               "type": "(prop: mixed) => boolean"
              },
              {
                "name": "includes",
-               "type": "(searchString: string, position?: number) => boolean",
-               "func_details": {
-                 "return_type": "boolean",
-                 "params": [
-                   {
-                     "name": "searchString",
-                     "type": "string"
-                   },
-                   {
-                     "name": "position?",
-                     "type": "number"
-                   }
-                 ]
-               },
-               "path": "[LIB] core.js",
-               "line": 329,
-               "endline": 329,
-               "start": 5,
-               "end": 62
+               "type": "(searchString: string, position?: number) => boolean"
              },
              {
                "name": "indexOf",
-               "type": "(searchString: string, position?: number) => number",
-               "func_details": {
-                 "return_type": "number",
-                 "params": [
-                   {
-                     "name": "searchString",
-                     "type": "string"
-                   },
-                   {
-                     "name": "position?",
-                     "type": "number"
-                   }
-                 ]
-               },
-               "path": "[LIB] core.js",
-               "line": 330,
-               "endline": 330,
-               "start": 5,
-               "end": 60
+               "type": "(searchString: string, position?: number) => number"
+             },
+             {
+               "name": "isPrototypeOf",
+               "type": "(o: mixed) => boolean"
              },
              {
                "name": "lastIndexOf",
-               "type": "(searchString: string, position?: number) => number",
-               "func_details": {
-                 "return_type": "number",
-                 "params": [
-                   {
-                     "name": "searchString",
-                     "type": "string"
-                   },
-                   {
-                     "name": "position?",
-                     "type": "number"
-                   }
-                 ]
-               },
-               "path": "[LIB] core.js",
-               "line": 331,
-               "endline": 331,
-               "start": 5,
-               "end": 64
+               "type": "(searchString: string, position?: number) => number"
              },
              {
                "name": "length",
-               "type": "number",
-               "func_details": null,
-               "path": "[LIB] core.js",
-               "line": 358,
-               "endline": 358,
-               "start": 13,
-               "end": 18
+               "type": "number"
              },
              {
                "name": "link",
-               "type": "(href: string) => string",
-               "func_details": {
-                 "return_type": "string",
-                 "params": [
-                   {
-                     "name": "href",
-                     "type": "string"
-                   }
-                 ]
-               },
-               "path": "[LIB] core.js",
-               "line": 332,
-               "endline": 332,
-               "start": 5,
-               "end": 30
+               "type": "(href: string) => string"
              },
              {
                "name": "localeCompare",
-               "type": "(that: string, locales?: (string | Array<string>), options?: Intl$CollatorOptions) => number",
-               "func_details": {
-                 "return_type": "number",
-                 "params": [
-                   {
-                     "name": "that",
-                     "type": "string"
-                   },
-                   {
-                     "name": "locales?",
-                     "type": "string | Array<string>"
-                   },
-                   {
-                     "name": "options?",
-                     "type": "Intl$CollatorOptions"
-                   }
-                 ]
-               },
-               "path": "[LIB] core.js",
-               "line": 333,
-               "endline": 333,
-               "start": 5,
-               "end": 105
+               "type": "(that: string, locales?: (string | Array<string>), options?: Intl$CollatorOptions) => number"
              },
              {
                "name": "match",
-               "type": "(regexp: (string | RegExp)) => (RegExp$matchResult | null)",
-               "func_details": {
-                 "return_type": "RegExp$matchResult | null",
-                 "params": [
-                   {
-                     "name": "regexp",
-                     "type": "string | RegExp"
-                   }
-                 ]
-               },
-               "path": "[LIB] core.js",
-               "line": 334,
-               "endline": 334,
-               "start": 5,
-               "end": 61
+               "type": "(regexp: (string | RegExp)) => (RegExp$matchResult | null)"
              },
              {
                "name": "matchAll",
-               "type": "(regexp: (string | RegExp)) => Iterator<RegExp$matchResult>",
-               "func_details": {
-                 "return_type": "Iterator<RegExp$matchResult>",
-                 "params": [
-                   {
-                     "name": "regexp",
-                     "type": "string | RegExp"
-                   }
-                 ]
-               },
-               "path": "[LIB] core.js",
-               "line": 335,
-               "endline": 335,
-               "start": 5,
-               "end": 67
+               "type": "(regexp: (string | RegExp)) => Iterator<RegExp$matchResult>"
              },
              {
                "name": "normalize",
-               "type": "(format?: string) => string",
-               "func_details": {
-                 "return_type": "string",
-                 "params": [
-                   {
-                     "name": "format?",
-                     "type": "string"
-                   }
-                 ]
-               },
-               "path": "[LIB] core.js",
-               "line": 336,
-               "endline": 336,
-               "start": 5,
-               "end": 38
+               "type": "(format?: string) => string"
              },
              {
                "name": "padEnd",
-               "type": "(targetLength: number, padString?: string) => string",
-               "func_details": {
-                 "return_type": "string",
-                 "params": [
-                   {
-                     "name": "targetLength",
-                     "type": "number"
-                   },
-                   {
-                     "name": "padString?",
-                     "type": "string"
-                   }
-                 ]
-               },
-               "path": "[LIB] core.js",
-               "line": 337,
-               "endline": 337,
-               "start": 5,
-               "end": 60
+               "type": "(targetLength: number, padString?: string) => string"
              },
              {
                "name": "padStart",
-               "type": "(targetLength: number, padString?: string) => string",
-               "func_details": {
-                 "return_type": "string",
-                 "params": [
-                   {
-                     "name": "targetLength",
-                     "type": "number"
-                   },
-                   {
-                     "name": "padString?",
-                     "type": "string"
-                   }
-                 ]
-               },
-               "path": "[LIB] core.js",
-               "line": 338,
-               "endline": 338,
-               "start": 5,
-               "end": 62
+               "type": "(targetLength: number, padString?: string) => string"
+             },
+             {
+               "name": "propertyIsEnumerable",
+               "type": "(prop: mixed) => boolean"
              },
              {
                "name": "repeat",
-               "type": "(count: number) => string",
-               "func_details": {
-                 "return_type": "string",
-                 "params": [
-                   {
-                     "name": "count",
-                     "type": "number"
-                   }
-                 ]
-               },
-               "path": "[LIB] core.js",
-               "line": 339,
-               "endline": 339,
-               "start": 5,
-               "end": 33
+               "type": "(count: number) => string"
              },
              {
                "name": "replace",
-               "type": "(searchValue: (string | RegExp), replaceValue: (string | ((substring: string, ...args: Array<any>) => string))) => string",
-               "func_details": {
-                 "return_type": "string",
-                 "params": [
-                   {
-                     "name": "searchValue",
-                     "type": "string | RegExp"
-                   },
-                   {
-                     "name": "replaceValue",
-                     "type": "string | ((substring: string, ...args: Array<any>) => string)"
-                   }
-                 ]
-               },
-               "path": "[LIB] core.js",
-               "line": 340,
-               "endline": 340,
-               "start": 5,
-               "end": 124
+               "type": "(searchValue: (string | RegExp), replaceValue: (string | ((substring: string, ...args: Array<any>) => string))) => string"
              },
              {
                "name": "search",
-               "type": "(regexp: (string | RegExp)) => number",
-               "func_details": {
-                 "return_type": "number",
-                 "params": [
-                   {
-                     "name": "regexp",
-                     "type": "string | RegExp"
-                   }
-                 ]
-               },
-               "path": "[LIB] core.js",
-               "line": 341,
-               "endline": 341,
-               "start": 5,
-               "end": 43
+               "type": "(regexp: (string | RegExp)) => number"
              },
              {
                "name": "slice",
-               "type": "(start?: number, end?: number) => string",
-               "func_details": {
-                 "return_type": "string",
-                 "params": [
-                   {
-                     "name": "start?",
-                     "type": "number"
-                   },
-                   {
-                     "name": "end?",
-                     "type": "number"
-                   }
-                 ]
-               },
-               "path": "[LIB] core.js",
-               "line": 342,
-               "endline": 342,
-               "start": 5,
-               "end": 47
+               "type": "(start?: number, end?: number) => string"
              },
              {
                "name": "split",
-               "type": "(separator?: (string | RegExp), limit?: number) => Array<string>",
-               "func_details": {
-                 "return_type": "Array<string>",
-                 "params": [
-                   {
-                     "name": "separator?",
-                     "type": "string | RegExp"
-                   },
-                   {
-                     "name": "limit?",
-                     "type": "number"
-                   }
-                 ]
-               },
-               "path": "[LIB] core.js",
-               "line": 343,
-               "endline": 343,
-               "start": 5,
-               "end": 69
+               "type": "(separator?: (string | RegExp), limit?: number) => Array<string>"
              },
              {
                "name": "startsWith",
-               "type": "(searchString: string, position?: number) => boolean",
-               "func_details": {
-                 "return_type": "boolean",
-                 "params": [
-                   {
-                     "name": "searchString",
-                     "type": "string"
-                   },
-                   {
-                     "name": "position?",
-                     "type": "number"
-                   }
-                 ]
-               },
-               "path": "[LIB] core.js",
-               "line": 344,
-               "endline": 344,
-               "start": 5,
-               "end": 64
+               "type": "(searchString: string, position?: number) => boolean"
              },
              {
                "name": "substr",
-               "type": "(from: number, length?: number) => string",
-               "func_details": {
-                 "return_type": "string",
-                 "params": [
-                   {
-                     "name": "from",
-                     "type": "number"
-                   },
-                   {
-                     "name": "length?",
-                     "type": "number"
-                   }
-                 ]
-               },
-               "path": "[LIB] core.js",
-               "line": 345,
-               "endline": 345,
-               "start": 5,
-               "end": 49
+               "type": "(from: number, length?: number) => string"
              },
              {
                "name": "substring",
-               "type": "(start: number, end?: number) => string",
-               "func_details": {
-                 "return_type": "string",
-                 "params": [
-                   {
-                     "name": "start",
-                     "type": "number"
-                   },
-                   {
-                     "name": "end?",
-                     "type": "number"
-                   }
-                 ]
-               },
-               "path": "[LIB] core.js",
-               "line": 346,
-               "endline": 346,
-               "start": 5,
-               "end": 50
+               "type": "(start: number, end?: number) => string"
              },
              {
                "name": "toLocaleLowerCase",
-               "type": "(locale?: (string | Array<string>)) => string",
-               "func_details": {
-                 "return_type": "string",
-                 "params": [
-                   {
-                     "name": "locale?",
-                     "type": "string | Array<string>"
-                   }
-                 ]
-               },
-               "path": "[LIB] core.js",
-               "line": 347,
-               "endline": 347,
-               "start": 5,
-               "end": 62
+               "type": "(locale?: (string | Array<string>)) => string"
+             },
+             {
+               "name": "toLocaleString",
+               "type": "() => string"
              },
              {
                "name": "toLocaleUpperCase",
-               "type": "(locale?: (string | Array<string>)) => string",
-               "func_details": {
-                 "return_type": "string",
-                 "params": [
-                   {
-                     "name": "locale?",
-                     "type": "string | Array<string>"
-                   }
-                 ]
-               },
-               "path": "[LIB] core.js",
-               "line": 348,
-               "endline": 348,
-               "start": 5,
-               "end": 62
+               "type": "(locale?: (string | Array<string>)) => string"
              },
              {
                "name": "toLowerCase",
-               "type": "() => string",
-               "func_details": {
-                 "return_type": "string",
-                 "params": []
-               },
-               "path": "[LIB] core.js",
-               "line": 349,
-               "endline": 349,
-               "start": 5,
-               "end": 25
+               "type": "() => string"
              },
              {
                "name": "toString",
-               "type": "() => string",
-               "func_details": {
-                 "return_type": "string",
-                 "params": []
-               },
-               "path": "[LIB] core.js",
-               "line": 357,
-               "endline": 357,
-               "start": 5,
-               "end": 22
+               "type": "() => string"
              },
              {
                "name": "toUpperCase",
-               "type": "() => string",
-               "func_details": {
-                 "return_type": "string",
-                 "params": []
-               },
-               "path": "[LIB] core.js",
-               "line": 350,
-               "endline": 350,
-               "start": 5,
-               "end": 25
+               "type": "() => string"
              },
              {
                "name": "trim",
-               "type": "() => string",
-               "func_details": {
-                 "return_type": "string",
-                 "params": []
-               },
-               "path": "[LIB] core.js",
-               "line": 351,
-               "endline": 351,
-               "start": 5,
-               "end": 18
+               "type": "() => string"
              },
              {
                "name": "trimEnd",
-               "type": "() => string",
-               "func_details": {
-                 "return_type": "string",
-                 "params": []
-               },
-               "path": "[LIB] core.js",
-               "line": 352,
-               "endline": 352,
-               "start": 5,
-               "end": 21
+               "type": "() => string"
              },
              {
                "name": "trimLeft",
-               "type": "() => string",
-               "func_details": {
-                 "return_type": "string",
-                 "params": []
-               },
-               "path": "[LIB] core.js",
-               "line": 353,
-               "endline": 353,
-               "start": 5,
-               "end": 22
+               "type": "() => string"
              },
              {
                "name": "trimRight",
-               "type": "() => string",
-               "func_details": {
-                 "return_type": "string",
-                 "params": []
-               },
-               "path": "[LIB] core.js",
-               "line": 354,
-               "endline": 354,
-               "start": 5,
-               "end": 23
+               "type": "() => string"
              },
              {
                "name": "trimStart",
-               "type": "() => string",
-               "func_details": {
-                 "return_type": "string",
-                 "params": []
-               },
-               "path": "[LIB] core.js",
-               "line": 355,
-               "endline": 355,
-               "start": 5,
-               "end": 23
+               "type": "() => string"
              },
              {
                "name": "valueOf",
-               "type": "() => string",
-               "func_details": {
-                 "return_type": "string",
-                 "params": []
-               },
-               "path": "[LIB] core.js",
-               "line": 356,
-               "endline": 356,
-               "start": 5,
-               "end": 21
+               "type": "() => string"
              }
            ]
          }
@@ -875,111 +315,40 @@ export default suite(({addFile, flowCmd}) => [
          {
            "result": [
              {
+               "name": "hasOwnProperty",
+               "type": "(prop: mixed) => boolean"
+             },
+             {
+               "name": "isPrototypeOf",
+               "type": "(o: mixed) => boolean"
+             },
+             {
+               "name": "propertyIsEnumerable",
+               "type": "(prop: mixed) => boolean"
+             },
+             {
                "name": "toExponential",
-               "type": "(fractionDigits?: number) => string",
-               "func_details": {
-                 "return_type": "string",
-                 "params": [
-                   {
-                     "name": "fractionDigits?",
-                     "type": "number"
-                   }
-                 ]
-               },
-               "path": "[LIB] core.js",
-               "line": 160,
-               "endline": 160,
-               "start": 5,
-               "end": 50
+               "type": "(fractionDigits?: number) => string"
              },
              {
                "name": "toFixed",
-               "type": "(fractionDigits?: number) => string",
-               "func_details": {
-                 "return_type": "string",
-                 "params": [
-                   {
-                     "name": "fractionDigits?",
-                     "type": "number"
-                   }
-                 ]
-               },
-               "path": "[LIB] core.js",
-               "line": 161,
-               "endline": 161,
-               "start": 5,
-               "end": 44
+               "type": "(fractionDigits?: number) => string"
              },
              {
                "name": "toLocaleString",
-               "type": "(locales?: (string | Array<string>), options?: Intl$NumberFormatOptions) => string",
-               "func_details": {
-                 "return_type": "string",
-                 "params": [
-                   {
-                     "name": "locales?",
-                     "type": "string | Array<string>"
-                   },
-                   {
-                     "name": "options?",
-                     "type": "Intl$NumberFormatOptions"
-                   }
-                 ]
-               },
-               "path": "[LIB] core.js",
-               "line": 162,
-               "endline": 162,
-               "start": 5,
-               "end": 96
+               "type": "(locales?: (string | Array<string>), options?: Intl$NumberFormatOptions) => string"
              },
              {
                "name": "toPrecision",
-               "type": "(precision?: number) => string",
-               "func_details": {
-                 "return_type": "string",
-                 "params": [
-                   {
-                     "name": "precision?",
-                     "type": "number"
-                   }
-                 ]
-               },
-               "path": "[LIB] core.js",
-               "line": 163,
-               "endline": 163,
-               "start": 5,
-               "end": 43
+               "type": "(precision?: number) => string"
              },
              {
                "name": "toString",
-               "type": "(radix?: number) => string",
-               "func_details": {
-                 "return_type": "string",
-                 "params": [
-                   {
-                     "name": "radix?",
-                     "type": "number"
-                   }
-                 ]
-               },
-               "path": "[LIB] core.js",
-               "line": 164,
-               "endline": 164,
-               "start": 5,
-               "end": 36
+               "type": "(radix?: number) => string"
              },
              {
                "name": "valueOf",
-               "type": "() => number",
-               "func_details": {
-                 "return_type": "number",
-                 "params": []
-               },
-               "path": "[LIB] core.js",
-               "line": 165,
-               "endline": 165,
-               "start": 5,
-               "end": 21
+               "type": "() => number"
              }
            ]
          }
@@ -996,30 +365,28 @@ export default suite(({addFile, flowCmd}) => [
          {
            "result": [
              {
+               "name": "hasOwnProperty",
+               "type": "(prop: mixed) => boolean"
+             },
+             {
+               "name": "isPrototypeOf",
+               "type": "(o: mixed) => boolean"
+             },
+             {
+               "name": "propertyIsEnumerable",
+               "type": "(prop: mixed) => boolean"
+             },
+             {
+               "name": "toLocaleString",
+               "type": "() => string"
+             },
+             {
                "name": "toString",
-               "type": "() => string",
-               "func_details": {
-                 "return_type": "string",
-                 "params": []
-               },
-               "path": "[LIB] core.js",
-               "line": 140,
-               "endline": 140,
-               "start": 5,
-               "end": 22
+               "type": "() => string"
              },
              {
                "name": "valueOf",
-               "type": "() => boolean",
-               "func_details": {
-                 "return_type": "boolean",
-                 "params": []
-               },
-               "path": "[LIB] core.js",
-               "line": 139,
-               "endline": 139,
-               "start": 5,
-               "end": 22
+               "type": "() => boolean"
              }
            ]
          }
@@ -1037,106 +404,31 @@ export default suite(({addFile, flowCmd}) => [
            "result": [
              {
                "name": "bar",
-               "type": "string",
-               "func_details": null,
-               "path": "union.js",
-               "line": 3,
-               "endline": 3,
-               "start": 36,
-               "end": 41
+               "type": "string | any"
              },
              {
                "name": "hasOwnProperty",
-               "type": "(prop: mixed) => boolean",
-               "func_details": {
-                 "return_type": "boolean",
-                 "params": [
-                   {
-                     "name": "prop",
-                     "type": "mixed"
-                   }
-                 ]
-               },
-               "path": "[LIB] core.js",
-               "line": 80,
-               "endline": 80,
-               "start": 5,
-               "end": 40
+               "type": "((prop: mixed) => boolean) | any"
              },
              {
                "name": "isPrototypeOf",
-               "type": "(o: mixed) => boolean",
-               "func_details": {
-                 "return_type": "boolean",
-                 "params": [
-                   {
-                     "name": "o",
-                     "type": "mixed"
-                   }
-                 ]
-               },
-               "path": "[LIB] core.js",
-               "line": 81,
-               "endline": 81,
-               "start": 5,
-               "end": 36
+               "type": "((o: mixed) => boolean) | any"
              },
              {
                "name": "propertyIsEnumerable",
-               "type": "(prop: mixed) => boolean",
-               "func_details": {
-                 "return_type": "boolean",
-                 "params": [
-                   {
-                     "name": "prop",
-                     "type": "mixed"
-                   }
-                 ]
-               },
-               "path": "[LIB] core.js",
-               "line": 82,
-               "endline": 82,
-               "start": 5,
-               "end": 46
+               "type": "((prop: mixed) => boolean) | any"
              },
              {
                "name": "toLocaleString",
-               "type": "() => string",
-               "func_details": {
-                 "return_type": "string",
-                 "params": []
-               },
-               "path": "[LIB] core.js",
-               "line": 83,
-               "endline": 83,
-               "start": 5,
-               "end": 28
+               "type": "(() => string) | any"
              },
              {
                "name": "toString",
-               "type": "() => string",
-               "func_details": {
-                 "return_type": "string",
-                 "params": []
-               },
-               "path": "[LIB] core.js",
-               "line": 84,
-               "endline": 84,
-               "start": 5,
-               "end": 22
+               "type": "(() => string) | any"
              },
              {
                "name": "valueOf",
-               "type": "() => mixed",
-               "func_details": {
-                 "return_type": "mixed",
-                 "params": []
-               },
-               "path": "[LIB] core.js",
-               "line": 85,
-               "endline": 85,
-               "start": 5,
-               "end": 20
+               "type": "(() => mixed) | any"
              }
            ]
          }
@@ -1181,97 +473,56 @@ export default suite(({addFile, flowCmd}) => [
          {
            "result": [
              {
+               "name": "apply",
+               "type": "(thisArg: any, argArray?: any) => any"
+             },
+             {
+               "name": "arguments",
+               "type": "any"
+             },
+             {
+               "name": "bind",
+               "type": "(thisArg: any, ...argArray: Array<any>) => any"
+             },
+             {
+               "name": "call",
+               "type": "(thisArg: any, ...argArray: Array<any>) => any"
+             },
+             {
+               "name": "caller",
+               "type": "any | null"
+             },
+             {
                "name": "hasOwnProperty",
-               "type": "(prop: mixed) => boolean",
-               "func_details": {
-                 "return_type": "boolean",
-                 "params": [
-                   {
-                     "name": "prop",
-                     "type": "mixed"
-                   }
-                 ]
-               },
-               "path": "[LIB] core.js",
-               "line": 80,
-               "endline": 80,
-               "start": 5,
-               "end": 40
+               "type": "(prop: mixed) => boolean"
              },
              {
                "name": "isPrototypeOf",
-               "type": "(o: mixed) => boolean",
-               "func_details": {
-                 "return_type": "boolean",
-                 "params": [
-                   {
-                     "name": "o",
-                     "type": "mixed"
-                   }
-                 ]
-               },
-               "path": "[LIB] core.js",
-               "line": 81,
-               "endline": 81,
-               "start": 5,
-               "end": 36
+               "type": "(o: mixed) => boolean"
+             },
+             {
+               "name": "length",
+               "type": "number"
+             },
+             {
+               "name": "name",
+               "type": "string"
              },
              {
                "name": "propertyIsEnumerable",
-               "type": "(prop: mixed) => boolean",
-               "func_details": {
-                 "return_type": "boolean",
-                 "params": [
-                   {
-                     "name": "prop",
-                     "type": "mixed"
-                   }
-                 ]
-               },
-               "path": "[LIB] core.js",
-               "line": 82,
-               "endline": 82,
-               "start": 5,
-               "end": 46
+               "type": "(prop: mixed) => boolean"
              },
              {
                "name": "toLocaleString",
-               "type": "() => string",
-               "func_details": {
-                 "return_type": "string",
-                 "params": []
-               },
-               "path": "[LIB] core.js",
-               "line": 83,
-               "endline": 83,
-               "start": 5,
-               "end": 28
+               "type": "() => string"
              },
              {
                "name": "toString",
-               "type": "() => string",
-               "func_details": {
-                 "return_type": "string",
-                 "params": []
-               },
-               "path": "[LIB] core.js",
-               "line": 84,
-               "endline": 84,
-               "start": 5,
-               "end": 22
+               "type": "() => string"
              },
              {
                "name": "valueOf",
-               "type": "() => mixed",
-               "func_details": {
-                 "return_type": "mixed",
-                 "params": []
-               },
-               "path": "[LIB] core.js",
-               "line": 85,
-               "endline": 85,
-               "start": 5,
-               "end": 20
+               "type": "() => mixed"
              }
            ]
          }
@@ -1289,39 +540,39 @@ export default suite(({addFile, flowCmd}) => [
            "result": [
              {
                "name": "bar",
-               "type": "() => void",
-               "func_details": {
-                 "return_type": "void",
-                 "params": []
-               },
-               "path": "this.js",
-               "line": 6,
-               "endline": 6,
-               "start": 3,
-               "end": 16
+               "type": "() => void"
              },
              {
                "name": "baz",
-               "type": "string",
-               "func_details": null,
-               "path": "this.js",
-               "line": 5,
-               "endline": 5,
-               "start": 8,
-               "end": 13
+               "type": "string"
+             },
+             {
+               "name": "hasOwnProperty",
+               "type": "(prop: mixed) => boolean"
              },
              {
                "name": "hello",
-               "type": "() => void",
-               "func_details": {
-                 "return_type": "void",
-                 "params": []
-               },
-               "path": "this.js",
-               "line": 7,
-               "endline": 9,
-               "start": 3,
-               "end": 3
+               "type": "() => void"
+             },
+             {
+               "name": "isPrototypeOf",
+               "type": "(o: mixed) => boolean"
+             },
+             {
+               "name": "propertyIsEnumerable",
+               "type": "(prop: mixed) => boolean"
+             },
+             {
+               "name": "toLocaleString",
+               "type": "() => string"
+             },
+             {
+               "name": "toString",
+               "type": "() => string"
+             },
+             {
+               "name": "valueOf",
+               "type": "() => mixed"
              }
            ]
          }
@@ -1338,111 +589,40 @@ export default suite(({addFile, flowCmd}) => [
          {
            "result": [
              {
+               "name": "hasOwnProperty",
+               "type": "(prop: mixed) => boolean"
+             },
+             {
+               "name": "isPrototypeOf",
+               "type": "(o: mixed) => boolean"
+             },
+             {
+               "name": "propertyIsEnumerable",
+               "type": "(prop: mixed) => boolean"
+             },
+             {
                "name": "toExponential",
-               "type": "(fractionDigits?: number) => string",
-               "func_details": {
-                 "return_type": "string",
-                 "params": [
-                   {
-                     "name": "fractionDigits?",
-                     "type": "number"
-                   }
-                 ]
-               },
-               "path": "[LIB] core.js",
-               "line": 160,
-               "endline": 160,
-               "start": 5,
-               "end": 50
+               "type": "(fractionDigits?: number) => string"
              },
              {
                "name": "toFixed",
-               "type": "(fractionDigits?: number) => string",
-               "func_details": {
-                 "return_type": "string",
-                 "params": [
-                   {
-                     "name": "fractionDigits?",
-                     "type": "number"
-                   }
-                 ]
-               },
-               "path": "[LIB] core.js",
-               "line": 161,
-               "endline": 161,
-               "start": 5,
-               "end": 44
+               "type": "(fractionDigits?: number) => string"
              },
              {
                "name": "toLocaleString",
-               "type": "(locales?: (string | Array<string>), options?: Intl$NumberFormatOptions) => string",
-               "func_details": {
-                 "return_type": "string",
-                 "params": [
-                   {
-                     "name": "locales?",
-                     "type": "string | Array<string>"
-                   },
-                   {
-                     "name": "options?",
-                     "type": "Intl$NumberFormatOptions"
-                   }
-                 ]
-               },
-               "path": "[LIB] core.js",
-               "line": 162,
-               "endline": 162,
-               "start": 5,
-               "end": 96
+               "type": "(locales?: (string | Array<string>), options?: Intl$NumberFormatOptions) => string"
              },
              {
                "name": "toPrecision",
-               "type": "(precision?: number) => string",
-               "func_details": {
-                 "return_type": "string",
-                 "params": [
-                   {
-                     "name": "precision?",
-                     "type": "number"
-                   }
-                 ]
-               },
-               "path": "[LIB] core.js",
-               "line": 163,
-               "endline": 163,
-               "start": 5,
-               "end": 43
+               "type": "(precision?: number) => string"
              },
              {
                "name": "toString",
-               "type": "(radix?: number) => string",
-               "func_details": {
-                 "return_type": "string",
-                 "params": [
-                   {
-                     "name": "radix?",
-                     "type": "number"
-                   }
-                 ]
-               },
-               "path": "[LIB] core.js",
-               "line": 164,
-               "endline": 164,
-               "start": 5,
-               "end": 36
+               "type": "(radix?: number) => string"
              },
              {
                "name": "valueOf",
-               "type": "() => number",
-               "func_details": {
-                 "return_type": "number",
-                 "params": []
-               },
-               "path": "[LIB] core.js",
-               "line": 165,
-               "endline": 165,
-               "start": 5,
-               "end": 21
+               "type": "() => number"
              }
            ]
          }
@@ -1460,106 +640,31 @@ export default suite(({addFile, flowCmd}) => [
            "result": [
              {
                "name": "cn",
-               "type": "C<number>",
-               "func_details": null,
-               "path": "generics.js",
-               "line": 5,
-               "endline": 5,
-               "start": 23,
-               "end": 31
+               "type": "C<number>"
              },
              {
                "name": "hasOwnProperty",
-               "type": "(prop: mixed) => boolean",
-               "func_details": {
-                 "return_type": "boolean",
-                 "params": [
-                   {
-                     "name": "prop",
-                     "type": "mixed"
-                   }
-                 ]
-               },
-               "path": "[LIB] core.js",
-               "line": 80,
-               "endline": 80,
-               "start": 5,
-               "end": 40
+               "type": "(prop: mixed) => boolean"
              },
              {
                "name": "isPrototypeOf",
-               "type": "(o: mixed) => boolean",
-               "func_details": {
-                 "return_type": "boolean",
-                 "params": [
-                   {
-                     "name": "o",
-                     "type": "mixed"
-                   }
-                 ]
-               },
-               "path": "[LIB] core.js",
-               "line": 81,
-               "endline": 81,
-               "start": 5,
-               "end": 36
+               "type": "(o: mixed) => boolean"
              },
              {
                "name": "propertyIsEnumerable",
-               "type": "(prop: mixed) => boolean",
-               "func_details": {
-                 "return_type": "boolean",
-                 "params": [
-                   {
-                     "name": "prop",
-                     "type": "mixed"
-                   }
-                 ]
-               },
-               "path": "[LIB] core.js",
-               "line": 82,
-               "endline": 82,
-               "start": 5,
-               "end": 46
+               "type": "(prop: mixed) => boolean"
              },
              {
                "name": "toLocaleString",
-               "type": "() => string",
-               "func_details": {
-                 "return_type": "string",
-                 "params": []
-               },
-               "path": "[LIB] core.js",
-               "line": 83,
-               "endline": 83,
-               "start": 5,
-               "end": 28
+               "type": "() => string"
              },
              {
                "name": "toString",
-               "type": "() => string",
-               "func_details": {
-                 "return_type": "string",
-                 "params": []
-               },
-               "path": "[LIB] core.js",
-               "line": 84,
-               "endline": 84,
-               "start": 5,
-               "end": 22
+               "type": "() => string"
              },
              {
                "name": "valueOf",
-               "type": "() => mixed",
-               "func_details": {
-                 "return_type": "mixed",
-                 "params": []
-               },
-               "path": "[LIB] core.js",
-               "line": 85,
-               "endline": 85,
-               "start": 5,
-               "end": 20
+               "type": "() => mixed"
              }
            ]
          }
@@ -1577,134 +682,39 @@ export default suite(({addFile, flowCmd}) => [
            "result": [
              {
                "name": "f",
-               "type": "(x?: string) => void",
-               "func_details": {
-                 "return_type": "void",
-                 "params": [
-                   {
-                     "name": "x?",
-                     "type": "string"
-                   }
-                 ]
-               },
-               "path": "optional.js",
-               "line": 3,
-               "endline": 3,
-               "start": 36,
-               "end": 55
+               "type": "(x?: string) => void"
              },
              {
                "name": "hasOwnProperty",
-               "type": "(prop: mixed) => boolean",
-               "func_details": {
-                 "return_type": "boolean",
-                 "params": [
-                   {
-                     "name": "prop",
-                     "type": "mixed"
-                   }
-                 ]
-               },
-               "path": "[LIB] core.js",
-               "line": 80,
-               "endline": 80,
-               "start": 5,
-               "end": 40
+               "type": "(prop: mixed) => boolean"
              },
              {
                "name": "isPrototypeOf",
-               "type": "(o: mixed) => boolean",
-               "func_details": {
-                 "return_type": "boolean",
-                 "params": [
-                   {
-                     "name": "o",
-                     "type": "mixed"
-                   }
-                 ]
-               },
-               "path": "[LIB] core.js",
-               "line": 81,
-               "endline": 81,
-               "start": 5,
-               "end": 36
+               "type": "(o: mixed) => boolean"
              },
              {
                "name": "o",
-               "type": "{x?: string}",
-               "func_details": null,
-               "path": "optional.js",
-               "line": 3,
-               "endline": 3,
-               "start": 61,
-               "end": 74
+               "type": "{x?: string, ...}"
              },
              {
                "name": "propertyIsEnumerable",
-               "type": "(prop: mixed) => boolean",
-               "func_details": {
-                 "return_type": "boolean",
-                 "params": [
-                   {
-                     "name": "prop",
-                     "type": "mixed"
-                   }
-                 ]
-               },
-               "path": "[LIB] core.js",
-               "line": 82,
-               "endline": 82,
-               "start": 5,
-               "end": 46
+               "type": "(prop: mixed) => boolean"
              },
              {
                "name": "toLocaleString",
-               "type": "() => string",
-               "func_details": {
-                 "return_type": "string",
-                 "params": []
-               },
-               "path": "[LIB] core.js",
-               "line": 83,
-               "endline": 83,
-               "start": 5,
-               "end": 28
+               "type": "() => string"
              },
              {
                "name": "toString",
-               "type": "() => string",
-               "func_details": {
-                 "return_type": "string",
-                 "params": []
-               },
-               "path": "[LIB] core.js",
-               "line": 84,
-               "endline": 84,
-               "start": 5,
-               "end": 22
+               "type": "() => string"
              },
              {
                "name": "valueOf",
-               "type": "() => mixed",
-               "func_details": {
-                 "return_type": "mixed",
-                 "params": []
-               },
-               "path": "[LIB] core.js",
-               "line": 85,
-               "endline": 85,
-               "start": 5,
-               "end": 20
+               "type": "() => mixed"
              },
              {
                "name": "x",
-               "type": "void | string",
-               "func_details": null,
-               "path": "optional.js",
-               "line": 3,
-               "endline": 3,
-               "start": 25,
-               "end": 30
+               "type": "string | void"
              }
            ]
          }
@@ -1714,7 +724,7 @@ export default suite(({addFile, flowCmd}) => [
 
     addFile("jsx1.js"),
     flowCmd(
-      ['autocomplete', '--strip-root', '--json', 'jsx1.js', '8', '4'],
+      ['autocomplete', '--strip-root', '--json', 'jsx1.js', '7', '4'],
       'jsx1.js',
     ).stdout(
        `
@@ -1722,13 +732,7 @@ export default suite(({addFile, flowCmd}) => [
            "result": [
              {
                "name": "x",
-               "type": "number",
-               "func_details": null,
-               "path": "jsx1.js",
-               "line": 6,
-               "endline": 6,
-               "start": 15,
-               "end": 20
+               "type": "number"
              }
            ]
          }
@@ -1738,31 +742,15 @@ export default suite(({addFile, flowCmd}) => [
 
     addFile("jsx2.js"),
     flowCmd(
-      ['autocomplete', '--strip-root', '--json', 'jsx2.js', '8', '11'],
+      ['autocomplete', '--strip-root', '--json', 'jsx2.js', '7', '9'],
       'jsx2.js',
     ).stdout(
        `
          {
            "result": [
              {
-               "name": "x",
-               "type": "number",
-               "func_details": null,
-               "path": "jsx2.js",
-               "line": 6,
-               "endline": 6,
-               "start": 15,
-               "end": 20
-             },
-             {
                "name": "y",
-               "type": "string",
-               "func_details": null,
-               "path": "jsx2.js",
-               "line": 6,
-               "endline": 6,
-               "start": 26,
-               "end": 31
+               "type": "string"
              }
            ]
          }
@@ -1780,75 +768,15 @@ export default suite(({addFile, flowCmd}) => [
            "result": [
              {
                "name": "objectGetPrototypeOf",
-               "type": "(o: any) => any",
-               "func_details": {
-                 "return_type": "any",
-                 "params": [
-                   {
-                     "name": "o",
-                     "type": "any"
-                   }
-                 ]
-               },
-               "path": "customfun.js",
-               "line": 4,
-               "endline": 4,
-               "start": 13,
-               "end": 32
+               "type": "(o: any) => any"
              },
              {
                "name": "objectAssign",
-               "type": "(target: any, ...sources: Array<any>) => any",
-               "func_details": {
-                 "return_type": "any",
-                 "params": [
-                   {
-                     "name": "target",
-                     "type": "any"
-                   },
-                   {
-                     "name": "...sources",
-                     "type": "Array<any>"
-                   }
-                 ]
-               },
-               "path": "customfun.js",
-               "line": 5,
-               "endline": 5,
-               "start": 13,
-               "end": 24
+               "type": "(target: any, ...sources: Array<any>) => any"
              },
              {
                "name": "idx",
-               "type": "<IdxObject: any, IdxResult>(obj: IdxObject, pathCallback: (demaybefiedObj: IdxObject) => IdxResult) => ?IdxResult",
-               "func_details": {
-                 "return_type": "?IdxResult",
-                 "params": [
-                   {
-                     "name": "obj",
-                     "type": "IdxObject"
-                   },
-                   {
-                     "name": "pathCallback",
-                     "type": "(demaybefiedObj: IdxObject) => IdxResult"
-                   }
-                 ]
-               },
-               "path": "customfun.js",
-               "line": 3,
-               "endline": 3,
-               "start": 13,
-               "end": 15
-             },
-             {
-               "name": "exports",
-               "type": "{||}",
-               "func_details": null,
-               "path": "customfun.js",
-               "line": 0,
-               "endline": 0,
-               "start": 1,
-               "end": 0
+               "type": "<IdxObject: any, IdxResult>(obj: IdxObject, pathCallback: (demaybefiedObj: IdxObject) => IdxResult) => ?IdxResult"
              }
            ]
          }
@@ -1861,44 +789,49 @@ export default suite(({addFile, flowCmd}) => [
       ['autocomplete', '--strip-root', '--json', 'issue-1368.js', '20', '10'],
       'issue-1368.js',
     ).stdout(
-`{
-  "result": [
-    {
-      "name": "extended",
-      "type": "string",
-      "func_details": null,
-      "path": "issue-1368.js",
-      "line": 11,
-      "endline": 11,
-      "start": 13,
-      "end": 18
-    },
-    {
-      "name": "method",
-      "type": "() => void",
-      "func_details": {
-        "return_type": "void",
-        "params": []
-      },
-      "path": "issue-1368.js",
-      "line": 18,
-      "endline": 21,
-      "start": 3,
-      "end": 3
-    },
-    {
-      "name": "prop",
-      "type": "number",
-      "func_details": null,
-      "path": "issue-1368.js",
-      "line": 3,
-      "endline": 3,
-      "start": 9,
-      "end": 14
-    }
-  ]
-}`,
-).exitCodes([0]),
+       `
+         {
+           "result": [
+             {
+               "name": "extended",
+               "type": "string"
+             },
+             {
+               "name": "hasOwnProperty",
+               "type": "(prop: mixed) => boolean"
+             },
+             {
+               "name": "isPrototypeOf",
+               "type": "(o: mixed) => boolean"
+             },
+             {
+               "name": "method",
+               "type": "() => void"
+             },
+             {
+               "name": "prop",
+               "type": "number"
+             },
+             {
+               "name": "propertyIsEnumerable",
+               "type": "(prop: mixed) => boolean"
+             },
+             {
+               "name": "toLocaleString",
+               "type": "() => string"
+             },
+             {
+               "name": "toString",
+               "type": "() => string"
+             },
+             {
+               "name": "valueOf",
+               "type": "() => mixed"
+             }
+           ]
+         }
+       `,
+     ).exitCodes([0]),
 
   addFile("exact.js"),
   flowCmd(
@@ -1910,116 +843,35 @@ export default suite(({addFile, flowCmd}) => [
          "result": [
            {
              "name": "hasOwnProperty",
-             "type": "(prop: mixed) => boolean",
-             "func_details": {
-               "return_type": "boolean",
-               "params": [
-                 {
-                   "name": "prop",
-                   "type": "mixed"
-                 }
-               ]
-             },
-             "path": "[LIB] core.js",
-             "line": 80,
-             "endline": 80,
-             "start": 5,
-             "end": 40
+             "type": "(prop: mixed) => boolean"
            },
            {
              "name": "isPrototypeOf",
-             "type": "(o: mixed) => boolean",
-             "func_details": {
-               "return_type": "boolean",
-               "params": [
-                 {
-                   "name": "o",
-                   "type": "mixed"
-                 }
-               ]
-             },
-             "path": "[LIB] core.js",
-             "line": 81,
-             "endline": 81,
-             "start": 5,
-             "end": 36
+             "type": "(o: mixed) => boolean"
            },
            {
              "name": "num",
-             "type": "number",
-             "func_details": null,
-             "path": "exact.js",
-             "line": 5,
-             "endline": 5,
-             "start": 26,
-             "end": 31
+             "type": "number"
            },
            {
              "name": "propertyIsEnumerable",
-             "type": "(prop: mixed) => boolean",
-             "func_details": {
-               "return_type": "boolean",
-               "params": [
-                 {
-                   "name": "prop",
-                   "type": "mixed"
-                 }
-               ]
-             },
-             "path": "[LIB] core.js",
-             "line": 82,
-             "endline": 82,
-             "start": 5,
-             "end": 46
+             "type": "(prop: mixed) => boolean"
            },
            {
              "name": "str",
-             "type": "string",
-             "func_details": null,
-             "path": "exact.js",
-             "line": 5,
-             "endline": 5,
-             "start": 39,
-             "end": 44
+             "type": "string"
            },
            {
              "name": "toLocaleString",
-             "type": "() => string",
-             "func_details": {
-               "return_type": "string",
-               "params": []
-             },
-             "path": "[LIB] core.js",
-             "line": 83,
-             "endline": 83,
-             "start": 5,
-             "end": 28
+             "type": "() => string"
            },
            {
              "name": "toString",
-             "type": "() => string",
-             "func_details": {
-               "return_type": "string",
-               "params": []
-             },
-             "path": "[LIB] core.js",
-             "line": 84,
-             "endline": 84,
-             "start": 5,
-             "end": 22
+             "type": "() => string"
            },
            {
              "name": "valueOf",
-             "type": "() => mixed",
-             "func_details": {
-               "return_type": "mixed",
-               "params": []
-             },
-             "path": "[LIB] core.js",
-             "line": 85,
-             "endline": 85,
-             "start": 5,
-             "end": 20
+             "type": "() => mixed"
            }
          ]
        }
@@ -2036,27 +888,11 @@ export default suite(({addFile, flowCmd}) => [
           "result": [
             {
               "name": "obj",
-              "type": "{|num: number, str: string|}",
-              "func_details": null,
-              "path": "exact.js",
-              "line": 5,
-              "endline": 5,
-              "start": 13,
-              "end": 15
-            },
-            {
-              "name": "exports",
-              "type": "{||}",
-              "func_details": null,
-              "path": "exact.js",
-              "line": 0,
-              "endline": 0,
-              "start": 1,
-              "end": 0
+              "type": "{|num: number, str: string|}"
             }
           ]
         }
       `,
     ).exitCodes([0]),
   ]),
-]);
+]): Suite);

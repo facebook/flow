@@ -1,4 +1,4 @@
 // @flow
-var a = require('./a');
-var b = a;
+const a = require('./a');
+const b = a;
 module.exports = b;

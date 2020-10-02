@@ -5,6 +5,7 @@
     flow_common
     flow_parser_utils_aloc
     flow_parser_utils_output
+    flow_parser_utils_output_printers
   )
-  (preprocess (pps visitors.ppx ppx_deriving.show))
+  (preprocess (pps visitors.ppx ppx_deriving.show ppx_let))
 )

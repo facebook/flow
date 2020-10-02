@@ -38,24 +38,17 @@
             "loc":{"source":null,"start":{"line":1,"column":21},"end":{"line":1,"column":40}},
             "range":[21,40],
             "expression":{
-              "type":"CallExpression",
+              "type":"ImportExpression",
               "loc":{"source":null,"start":{"line":1,"column":21},"end":{"line":1,"column":39}},
               "range":[21,39],
-              "callee":{
-                "type":"Import",
-                "loc":{"source":null,"start":{"line":1,"column":21},"end":{"line":1,"column":34}},
-                "range":[21,34]
-              },
-              "arguments":[
-                {
-                  "type":"Identifier",
-                  "loc":{"source":null,"start":{"line":1,"column":30},"end":{"line":1,"column":34}},
-                  "range":[30,34],
-                  "name":"from",
-                  "typeAnnotation":null,
-                  "optional":false
-                }
-              ]
+              "source":{
+                "type":"Identifier",
+                "loc":{"source":null,"start":{"line":1,"column":30},"end":{"line":1,"column":34}},
+                "range":[30,34],
+                "name":"from",
+                "typeAnnotation":null,
+                "optional":false
+              }
             },
             "directive":null
           }

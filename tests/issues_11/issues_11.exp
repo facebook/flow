@@ -1,0 +1,36 @@
+Error --------------------------------------------------------------------------------------------------- import.js:3:17
+
+Cannot assign `e.x` to `x` because number [1] is incompatible with string [2]. [incompatible-type]
+
+   import.js:3:17
+   3| var x: string = e.x;
+                      ^^^
+
+References:
+   export.js:2:13
+   2| exports.x = 1;
+                  ^ [1]
+   import.js:3:8
+   3| var x: string = e.x;
+             ^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- import.js:4:17
+
+Cannot assign `e.y` to `y` because string [1] is incompatible with number [2]. [incompatible-type]
+
+   import.js:4:17
+   4| var y: number = e.y;
+                      ^^^
+
+References:
+   export.js:3:13
+   3| exports.y = "";
+                  ^^ [1]
+   import.js:4:8
+   4| var y: number = e.y;
+             ^^^^^^ [2]
+
+
+
+Found 2 errors

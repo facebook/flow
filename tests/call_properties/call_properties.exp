@@ -1,6 +1,6 @@
 Error -------------------------------------------------------------------------------------------------------- A.js:8:10
 
-Cannot return `f()` because string [1] is incompatible with number [2].
+Cannot return `f()` because string [1] is incompatible with number [2]. [incompatible-return]
 
    A.js:8:10
    8|   return f();
@@ -17,7 +17,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------- A.js:13:12
 
-Cannot call `f` with `"hello"` bound to `x` because string [1] is incompatible with number [2].
+Cannot call `f` with `"hello"` bound to `x` because string [1] is incompatible with number [2]. [incompatible-call]
 
    A.js:13:12
    13|   return f("hello");
@@ -31,11 +31,11 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------- A.js:18:10
 
-Cannot call `f` because function [1] requires another argument.
+Cannot call `f` because function [1] requires another argument. [incompatible-call]
 
    A.js:18:10
    18|   return f();
-                ^^^
+                ^
 
 References:
    A.js:17:17
@@ -46,10 +46,11 @@ References:
 Error ------------------------------------------------------------------------------------------------------- A.js:23:10
 
 Cannot call `f` because a call signature declaring the expected parameter / return type is missing in object type [1].
+[prop-missing]
 
    A.js:23:10
    23|   return f();
-                ^^^
+                ^
 
 References:
    A.js:22:15
@@ -60,11 +61,11 @@ References:
 Error ------------------------------------------------------------------------------------------------------- A.js:29:10
 
 Cannot call `x` because a call signature declaring the expected parameter / return type is missing in object
-literal [1].
+literal [1]. [prop-missing]
 
    A.js:29:10
    29|   return x();
-                ^^^
+                ^
 
 References:
    A.js:28:11
@@ -72,35 +73,31 @@ References:
                  ^^ [1]
 
 
-Error -------------------------------------------------------------------------------------------------------- B.js:5:34
+Error -------------------------------------------------------------------------------------------------------- B.js:5:56
 
 Cannot assign function to `b` because string [1] is incompatible with number [2] in the return value.
+[incompatible-type]
 
-   B.js:5:34
-   5| var b: { (x: number): number } = function (x: number): string { return "hi"; };
-                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-References:
    B.js:5:56
    5| var b: { (x: number): number } = function (x: number): string { return "hi"; };
                                                              ^^^^^^ [1]
+
+References:
    B.js:5:23
    5| var b: { (x: number): number } = function (x: number): string { return "hi"; };
                             ^^^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------------------------- B.js:8:34
+Error -------------------------------------------------------------------------------------------------------- B.js:8:47
 
 Cannot assign function to `c` because number [1] is incompatible with string [2] in the first argument.
+[incompatible-type]
 
-   B.js:8:34
-   8| var c: { (x: string): string } = function (x: number): string { return "hi"; };
-                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-References:
    B.js:8:47
    8| var c: { (x: string): string } = function (x: number): string { return "hi"; };
                                                     ^^^^^^ [1]
+
+References:
    B.js:8:14
    8| var c: { (x: string): string } = function (x: number): string { return "hi"; };
                    ^^^^^^ [2]
@@ -108,16 +105,13 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------- B.js:11:25
 
-Cannot assign function to `d` because function [1] requires another argument from function type [2].
+Cannot assign function to `d` because function [1] requires another argument from function type [2]. [incompatible-type]
 
-   B.js:11:25
-   11| var d: { (): string } = function (x: number): string { return "hi"; };
-                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-References:
    B.js:11:25
    11| var d: { (): string } = function (x: number): string { return "hi"; };
                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+References:
    B.js:11:10
    11| var d: { (): string } = function (x: number): string { return "hi"; };
                 ^^^^^^^^^^ [2]
@@ -125,7 +119,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------------- C.js:8:10
 
-Cannot return `x` because string [1] is incompatible with number [2] in the return value.
+Cannot return `x` because string [1] is incompatible with number [2] in the return value. [incompatible-return]
 
    C.js:8:10
    8|   return x;
@@ -142,7 +136,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------- C.js:13:10
 
-Cannot return `x` because number [1] is incompatible with string [2] in the first argument.
+Cannot return `x` because number [1] is incompatible with string [2] in the first argument. [incompatible-return]
 
    C.js:13:10
    13|   return x;
@@ -159,7 +153,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------- C.js:18:10
 
-Cannot return `x` because function type [1] requires another argument from function type [2].
+Cannot return `x` because function type [1] requires another argument from function type [2]. [incompatible-return]
 
    C.js:18:10
    18|   return x;
@@ -177,7 +171,7 @@ References:
 Error ------------------------------------------------------------------------------------------------------- C.js:23:10
 
 Cannot return `x` because a call signature declaring the expected parameter / return type is missing in object type [1]
-but exists in function type [2].
+but exists in function type [2]. [prop-missing]
 
    C.js:23:10
    23|   return x;
@@ -194,16 +188,13 @@ References:
 
 Error -------------------------------------------------------------------------------------------------------- D.js:12:3
 
-Cannot assign function to `c` because function [1] requires another argument from function type [2].
+Cannot assign function to `c` because function [1] requires another argument from function type [2]. [incompatible-type]
 
-   D.js:12:3
-   12|   function (x: number): string { return "hi"; };
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-References:
    D.js:12:3
    12|   function (x: number): string { return "hi"; };
          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+References:
    D.js:11:10
    11| var c: { (): string; (x: number): string } =
                 ^^^^^^^^^^ [2]
@@ -211,7 +202,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------- D.js:21:10
 
-Cannot return `x` because string [1] is incompatible with number [2] in the return value.
+Cannot return `x` because string [1] is incompatible with number [2] in the return value. [incompatible-return]
 
    D.js:21:10
    21|   return x;
@@ -229,44 +220,40 @@ References:
 Error -------------------------------------------------------------------------------------------------------- E.js:2:32
 
 Cannot assign function to `a` because property `someProp` is missing in function [1] but exists in object type [2].
+[prop-missing]
 
-   E.js:2:32
-   2| var a : { someProp: number } = function () {};
-                                     ^^^^^^^^^^^^^^
-
-References:
    E.js:2:32
    2| var a : { someProp: number } = function () {};
                                      ^^^^^^^^^^^ [1]
+
+References:
    E.js:2:9
    2| var a : { someProp: number } = function () {};
               ^^^^^^^^^^^^^^^^^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------------------------- F.js:6:34
+Error -------------------------------------------------------------------------------------------------------- F.js:6:41
 
 Cannot assign function to `b` because string [1] is incompatible with number [2] in the return value.
+[incompatible-type]
 
-   F.js:6:34
-   6| var b: { (x: number): number } = (x) => "hi"
-                                       ^^^^^^^^^^^
-
-References:
    F.js:6:41
    6| var b: { (x: number): number } = (x) => "hi"
                                               ^^^^ [1]
+
+References:
    F.js:6:23
    6| var b: { (x: number): number } = (x) => "hi"
                             ^^^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------------------------- F.js:9:41
+Error -------------------------------------------------------------------------------------------------------- F.js:9:43
 
-Cannot call `x.toFixed` because property `toFixed` is missing in `String` [1].
+Cannot call `x.toFixed` because property `toFixed` is missing in `String` [1]. [prop-missing]
 
-   F.js:9:41
+   F.js:9:43
    9| var c: { (x: string): string } = (x) => x.toFixed()
-                                              ^^^^^^^^^^^
+                                                ^^^^^^^
 
 References:
    F.js:9:14
@@ -277,11 +264,11 @@ References:
 Error --------------------------------------------------------------------------------------------------------- G.js:5:1
 
 Cannot call `o` because a call signature declaring the expected parameter / return type is missing in
-`Object.create` [1].
+`Object.create` [1]. [prop-missing]
 
    G.js:5:1
    5| o(); // error: o is not callable
-      ^^^
+      ^
 
 References:
    G.js:4:9
@@ -291,10 +278,23 @@ References:
 
 Error --------------------------------------------------------------------------------------------- internal_slot.js:5:2
 
-Cannot cast object literal to `O` because:
- - object literal [1] is incompatible with function prototype [2].
- - a call signature declaring the expected parameter / return type is missing in object literal [1] but exists in
-   `O` [2].
+Cannot cast object literal to `O` because object literal [1] is incompatible with function prototype [2].
+[incompatible-cast]
+
+   internal_slot.js:5:2
+   5| ({}: O); // err: no callable property
+       ^^ [1]
+
+References:
+   internal_slot.js:5:6
+   5| ({}: O); // err: no callable property
+           ^ [2]
+
+
+Error --------------------------------------------------------------------------------------------- internal_slot.js:5:2
+
+Cannot cast object literal to `O` because a call signature declaring the expected parameter / return type is missing in
+object literal [1] but exists in `O` [2]. [prop-missing]
 
    internal_slot.js:5:2
    5| ({}: O); // err: no callable property
@@ -309,10 +309,11 @@ References:
 Error --------------------------------------------------------------------------------------------- internal_slot.js:6:2
 
 Cannot cast function to `O` because number [1] is incompatible with undefined [2] in the return value.
+[incompatible-cast]
 
    internal_slot.js:6:2
    6| (function() { return 0 }: O); // err: number ~> void
-       ^^^^^^^^^^^^^^^^^^^^^^^
+       ^^^^^^^^^^
 
 References:
    internal_slot.js:6:22
@@ -326,7 +327,7 @@ References:
 Error -------------------------------------------------------------------------------------------- internal_slot.js:13:2
 
 Cannot cast object literal to `I` because a call signature declaring the expected parameter / return type is missing in
-object literal [1] but exists in `I` [2].
+object literal [1] but exists in `I` [2]. [prop-missing]
 
    internal_slot.js:13:2
    13| ({}: I); // err: no callable property
@@ -341,10 +342,11 @@ References:
 Error -------------------------------------------------------------------------------------------- internal_slot.js:14:2
 
 Cannot cast function to `I` because number [1] is incompatible with undefined [2] in the return value.
+[incompatible-cast]
 
    internal_slot.js:14:2
    14| (function() { return 0 }: I); // err: number ~> void
-        ^^^^^^^^^^^^^^^^^^^^^^^
+        ^^^^^^^^^^
 
 References:
    internal_slot.js:14:22
@@ -357,7 +359,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- internal_slot.js:20:2
 
-Cannot cast `C1()` to empty because undefined [1] is incompatible with empty [2].
+Cannot cast `C1()` to empty because undefined [1] is incompatible with empty [2]. [incompatible-cast]
 
    internal_slot.js:20:2
    20| (C1(): empty); // error: void ~> empty
@@ -374,11 +376,11 @@ References:
 
 Error -------------------------------------------------------------------------------------------- internal_slot.js:23:1
 
-Cannot call `mixed_callable` because mixed [1] is not a function.
+Cannot call `mixed_callable` because mixed [1] is not a function. [not-a-function]
 
    internal_slot.js:23:1
    23| mixed_callable();
-       ^^^^^^^^^^^^^^^^
+       ^^^^^^^^^^^^^^
 
 References:
    internal_slot.js:22:41
@@ -389,6 +391,7 @@ References:
 Error ------------------------------------------------------------------------------------------- internal_slot.js:28:16
 
 Cannot call `annot_callable` with `0` bound to the first parameter because number [1] is incompatible with string [2].
+[incompatible-call]
 
    internal_slot.js:28:16
    28| annot_callable(0); // error: number ~> string
@@ -402,7 +405,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- internal_slot.js:29:2
 
-Cannot cast `annot_callable(...)` to empty because number [1] is incompatible with empty [2].
+Cannot cast `annot_callable(...)` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
 
    internal_slot.js:29:2
    29| (annot_callable("foo"): empty); // error: number ~> empty
@@ -420,7 +423,7 @@ References:
 Error --------------------------------------------------------------------------------------------------- use_ops.js:4:2
 
 Cannot cast `a` to `B` because a call signature declaring the expected parameter / return type is missing in object
-type [1] but exists in function type [2] in property `p`.
+type [1] but exists in function type [2] in property `p`. [prop-missing]
 
    use_ops.js:4:2
    4| (a: B); // error HERE and preserve use ops

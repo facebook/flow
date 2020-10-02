@@ -1,0 +1,89 @@
+syntax_error.js
+Error ---------------------------------------------------------------------------------------------- syntax_error.js:4:1
+
+Unexpected end of input
+
+   4|
+      
+
+
+
+Found 1 error
+syntax_error.js (no filename)
+Error ------------------------------------------------------------------------------------------------------------ -:4:1
+
+Unexpected end of input
+
+   4|
+      
+
+
+
+Found 1 error
+
+
+not_flow.js
+
+Error -------------------------------------------------------------------------------------------------- not_flow.js:1:5
+
+Cannot perform arithmetic operation because string [1] is not a number. [unsafe-addition]
+
+   1| 1 * 'foo';
+          ^^^^^ [1]
+
+
+
+Found 1 error
+
+
+not_flow.js with --all
+
+Error -------------------------------------------------------------------------------------------------- not_flow.js:1:5
+
+Cannot perform arithmetic operation because string [1] is not a number. [unsafe-addition]
+
+   1| 1 * 'foo';
+          ^^^^^ [1]
+
+
+
+Found 1 error
+
+
+not_flow.js with --respect-pragma
+
+File is not @flow!
+
+
+not_flow.js with --respect-pragma and --all
+
+Error -------------------------------------------------------------------------------------------------- not_flow.js:1:5
+
+Cannot perform arithmetic operation because string [1] is not a number. [unsafe-addition]
+
+   1| 1 * 'foo';
+          ^^^^^ [1]
+
+
+
+Found 1 error
+
+
+unsaved_foo.js depends on bar.js which is still checked against foo.js
+
+No errors!
+
+
+bad_exports.js
+
+Error ---------------------------------------------------------------------------------------------- bad_exports.js:1:31
+
+Cannot build a typed interface for this module. You should annotate the exports of this module with types. Missing type
+annotation at function return: [signature-verification-failure]
+
+   1| export function foo(x: number) { return x; } // Error, missing return type
+                                    
+
+
+
+Found 1 error

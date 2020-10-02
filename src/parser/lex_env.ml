@@ -1,4 +1,4 @@
-(**
+(*
  * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
@@ -12,6 +12,7 @@ type t = {
   lex_in_comment_syntax: bool;
   lex_enable_comment_syntax: bool;
   lex_state: lex_state;
+  lex_last_loc: Loc.t;
 }
 
 (* bol = Beginning Of Line *)
@@ -24,6 +25,11 @@ and lex_state = { lex_errors_acc: (Loc.t * Parse_error.t) list }
 
 let empty_lex_state = { lex_errors_acc = [] }
 
+(* The lex_last_loc should initially be set to the beginning of the first line, so that
+   comments on the first line are reported as not being on a new line. *)
+let initial_last_loc =
+  { Loc.source = None; start = { Loc.line = 1; column = 0 }; _end = { Loc.line = 1; column = 0 } }
+
 let new_lex_env lex_source lex_lb ~enable_types_in_comments =
   {
     lex_source;
@@ -32,6 +38,7 @@ let new_lex_env lex_source lex_lb ~enable_types_in_comments =
     lex_in_comment_syntax = false;
     lex_enable_comment_syntax = enable_types_in_comments;
     lex_state = empty_lex_state;
+    lex_last_loc = initial_last_loc;
   }
 
 (* copy all the mutable things so that we have a distinct lexing environment

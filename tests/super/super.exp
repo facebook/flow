@@ -1,6 +1,6 @@
 Error ---------------------------------------------------------------------------------------------- constructor.js:15:5
 
-Must call `super` before accessing this [1] in a derived constructor.
+Must call `super` before accessing this [1] in a derived constructor. [reference-before-declaration]
 
    constructor.js:15:5
    15|     this.y; // error (no super call)
@@ -14,7 +14,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- constructor.js:16:5
 
-Must call `super` before accessing this [1] in a derived constructor.
+Must call `super` before accessing this [1] in a derived constructor. [reference-before-declaration]
 
    constructor.js:16:5
    16|     this.x; // error (no super call)
@@ -28,7 +28,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- constructor.js:36:10
 
-Must call `super` before accessing this [1] in a derived constructor.
+Must call `super` before accessing this [1] in a derived constructor. [reference-before-declaration]
 
    constructor.js:36:10
    36|     leak(this); // error (no super call yet)
@@ -42,7 +42,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- constructor.js:45:5
 
-Must call `super` before accessing super [1] in a derived constructor.
+Must call `super` before accessing super [1] in a derived constructor. [reference-before-declaration]
 
    constructor.js:45:5
    45|     super.x; // error (no super call)
@@ -56,7 +56,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- constructor.js:69:11
 
-Must call `super` before accessing this [1] in a derived constructor.
+Must call `super` before accessing this [1] in a derived constructor. [reference-before-declaration]
 
    constructor.js:69:11
    69|     super(this); // error (no super call yet)
@@ -70,7 +70,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- constructor.js:83:17
 
-Must call `super` before accessing this [1] in a derived constructor.
+Must call `super` before accessing this [1] in a derived constructor. [reference-before-declaration]
 
    constructor.js:83:17
    83|     super(() => this.foo()); // error (no super call yet)
@@ -82,9 +82,27 @@ References:
              ^ [1]
 
 
+Error -------------------------------------------------------------------------------------------- constructor.js:150:12
+
+Cannot return `super()` because `this` [1] cannot escape from its class [1] (try adding a type annotation to
+return [2]). [escaped-generic]
+
+   constructor.js:150:12
+   150|     return super();
+                   ^^^^^^^
+
+References:
+   constructor.js:148:7
+   148| class N extends N_ {
+              ^ [1]
+   constructor.js:149:16
+   149|   constructor() {
+                        [2]
+
+
 Error --------------------------------------------------------------------------------------------------- super.js:10:11
 
-Cannot call `super` with `x` bound to `x` because string [1] is incompatible with number [2].
+Cannot call `super` with `x` bound to `x` because string [1] is incompatible with number [2]. [incompatible-call]
 
    super.js:10:11
    10|     super(x);
@@ -101,7 +119,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- super.js:14:6
 
-Cannot cast `super.staticMethod(...)` to number because string [1] is incompatible with number [2].
+Cannot cast `super.staticMethod(...)` to number because string [1] is incompatible with number [2]. [incompatible-cast]
 
    super.js:14:6
    14|     (super.staticMethod('foo'): number); // error, string !~> number
@@ -116,13 +134,13 @@ References:
                                        ^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- super.js:15:6
+Error --------------------------------------------------------------------------------------------------- super.js:15:12
 
-Cannot call `super.doesntExist` because property `doesntExist` is missing in statics of `A` [1].
+Cannot call `super.doesntExist` because property `doesntExist` is missing in statics of `A` [1]. [prop-missing]
 
-   super.js:15:6
+   super.js:15:12
    15|     (super.doesntExist()); // error, A doesn't have a doesntExist method
-            ^^^^^^^^^^^^^^^^^^^
+                  ^^^^^^^^^^^
 
 References:
    super.js:8:17
@@ -132,7 +150,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- super.js:19:13
 
-Cannot call `super.f` with `0` bound to `x` because number [1] is incompatible with string [2].
+Cannot call `super.f` with `0` bound to `x` because number [1] is incompatible with string [2]. [incompatible-call]
 
    super.js:19:13
    19|     super.f(0);
@@ -144,13 +162,13 @@ References:
              ^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- super.js:20:12
+Error --------------------------------------------------------------------------------------------------- super.js:20:18
 
-Cannot get `super.g` because property `g` is missing in `A` [1].
+Cannot get `super.g` because property `g` is missing in `A` [1]. [prop-missing]
 
-   super.js:20:12
+   super.js:20:18
    20|     return super.g;
-                  ^^^^^^^
+                        ^
 
 References:
    super.js:8:17
@@ -159,4 +177,4 @@ References:
 
 
 
-Found 11 errors
+Found 12 errors

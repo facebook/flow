@@ -17,6 +17,7 @@ can be overridden with command line flags.
 ### Available options <a class="toc" id="toc-available-options" href="#toc-available-options"></a>
 
 * [`all`](#toc-all-boolean)
+* [`babel_loose_array_spread`](#toc-babel-loose-array-spread-boolean)
 * [`emoji`](#toc-emoji-boolean)
 * [`esproposal.class_instance_fields`](#toc-esproposal-class-instance-fields-enable-ignore-warn)
 * [`esproposal.class_static_fields`](#toc-esproposal-class-static-fields-enable-ignore-warn)
@@ -35,14 +36,15 @@ can be overridden with command line flags.
 * [`module.name_mapper`](#toc-module-name-mapper-regex-string)
 * [`module.name_mapper.extension`](#toc-module-name-mapper-extension-string-string)
 * [`module.system`](#toc-module-system-node-haste)
+* [`module.system.node.main_field`](#toc-module-system-node-main-field-string)
 * [`module.system.node.resolve_dirname`](#toc-module-system-node-resolve-dirname-string)
 * [`module.use_strict`](#toc-module-use-strict-boolean)
 * [`munge_underscores`](#toc-munge-underscores-boolean)
 * [`no_flowlib`](#toc-no-flowlib-boolean)
+* [`react.runtime`](#toc-react-runtime-automatic-classic)
 * [`server.max_workers`](#toc-server-max-workers-integer)
 * [`sharedmemory.dirs`](#toc-sharedmemory-dirs-string)
 * [`sharedmemory.minimum_available`](#toc-sharedmemory-minimum-available-unsigned-integer)
-* [`sharedmemory.dep_table_pow`](#toc-sharedmemory-dep-table-pow-unsigned-integer)
 * [`sharedmemory.hash_table_pow`](#toc-sharedmemory-hash-table-pow-unsigned-integer)
 * [`sharedmemory.heap_size`](#toc-sharedmemory-heap-size-unsigned-integer)
 * [`sharedmemory.log_level`](#toc-sharedmemory-log-level-unsigned-integer)
@@ -51,12 +53,27 @@ can be overridden with command line flags.
 * [`suppress_type`](#toc-suppress-type-string)
 * [`temp_dir`](#toc-temp-dir-string)
 * [`traces`](#toc-traces-integer)
+* [`types_first`](#toc-types-first-boolean)
+* [`well_formed_exports`](#toc-well-formed-exports-boolean)
 
 #### `all` _`(boolean)`_ <a class="toc" id="toc-all-boolean" href="#toc-all-boolean"></a>
 
 Set this to `true` to check all files, not just those with `@flow`.
 
 The default value for `all` is `false`.
+
+#### `babel_loose_array_spread` _`(boolean)`_ <a class="toc" id="toc-babel-loose-array-spread-boolean" href="#toc-babel-loose-array-spread-boolean"></a>
+
+Set this to `true` to check that array spread syntax is only used with arrays, not arbitrary iterables (such as `Map` or `Set`). This is useful if you transform your code with Babel in [loose mode](https://babeljs.io/docs/en/babel-plugin-transform-spread#loose) which makes this non-spec-compliant assumption at runtime.
+
+For example:
+
+```js
+const set = new Set();
+const values = [...set]; // Valid ES2015, but Set is not compatible with $ReadOnlyArray in Babel loose mode
+```
+
+The default value for `babel_loose_array_spread` is `false`.
 
 #### `emoji` _`(boolean)`_ <a class="toc" id="toc-emoji-boolean" href="#toc-emoji-boolean"></a>
 
@@ -197,8 +214,8 @@ The default value of `max_header_tokens` is 10.
 
 #### `module.file_ext` _`(string)`_ <a class="toc" id="toc-module-file-ext-string" href="#toc-module-file-ext-string"></a>
 
-By default, Flow will look for files with the extensions `.js`, `.jsx`, `.mjs`
-and `.json`. You can override this behavior with this option.
+By default, Flow will look for files with the extensions `.js`, `.jsx`, `.mjs`,
+`.cjs` and `.json`. You can override this behavior with this option.
 
 For example, if you do:
 
@@ -266,6 +283,38 @@ The module system to use to resolve `import` and `require`.
 
 The default is `node`.
 
+#### `module.system.node.main_field` _`(string)`_ <a class="toc" id="toc-module-system-node-main-field-string" href="#toc-module-system-node-main-field-string"></a>
+
+Flow reads `package.json` files for the `"name"` and `"main"` fields to figure
+out the name of the module and which file should be used to provide that
+module.
+
+So if Flow sees this in the `.flowconfig`:
+
+```
+[options]
+module.system.node.main_field=foo
+module.system.node.main_field=bar
+module.system.node.main_field=baz
+```
+
+and then it comes across a `package.json` with
+
+```
+{
+  "name": "kittens",
+  "main": "main.js",
+  "bar": "bar.js",
+  "baz": "baz.js"
+}
+```
+
+Flow will use `bar.js` to provide the `"kittens"` module.
+
+If this option is unspecified, Flow will always use the `"main"` field.
+
+See [this GitHub issue for the original motivation](https://github.com/facebook/flow/issues/5725)
+
 #### `module.system.node.resolve_dirname` _`(string)`_ <a class="toc" id="toc-module-system-node-resolve-dirname-string" href="#toc-module-system-node-resolve-dirname-string"></a>
 
 By default, Flow will look in directories named `node_modules` for node
@@ -307,6 +356,14 @@ ignore the builtin library definitions.
 
 The default value is `false`.
 
+#### `react.runtime` _`(automatic|classic)`_ <a class="toc" id="toc-react-runtime-automatic-classic" href="#toc-react-runtime-automatic-classic"></a> {% since 0.123.0 %}
+
+Set this to `automatic` if you are using React's automatic runtime in `@babel/plugin-transform-react-jsx`.
+Otherwise, use `classic`. [See the babel documentation](https://babeljs.io/docs/en/babel-plugin-transform-react-jsx)
+for details about the transform.
+
+The default value is `automatic`.
+
 #### `server.max_workers` _`(integer)`_ <a class="toc" id="toc-server-max-workers-integer" href="#toc-server-max-workers-integer"></a>
 
 The maximum number of workers the Flow server can start. By default, the server
@@ -340,17 +397,6 @@ and tries the next. This option lets you configure the minimum amount of space
 needed on a filesystem for shared memory.
 
 By default it is 536870912 (2^29 bytes, which is half a gigabyte).
-
-#### `sharedmemory.dep_table_pow` _`(unsigned integer)`_ <a class="toc" id="toc-sharedmemory-dep-table-pow-unsigned-integer" href="#toc-sharedmemory-dep-table-pow-unsigned-integer"></a>
-
-The 3 largest parts of the shared memory are a dependency table, a hash table,
-and a heap. While the heap grows and shrinks, the two tables are allocated in
-full. This option lets you change the size of the dependency table.
-
-Setting this option to X means the table will support up to 2^X elements,
-which is 16*2^X bytes.
-
-By default, this is set to 17 (Table size is 2^17, which is 2 megabytes)
 
 #### `sharedmemory.hash_table_pow` _`(unsigned integer)`_ <a class="toc" id="toc-sharedmemory-hash-table-pow-unsigned-integer" href="#toc-sharedmemory-hash-table-pow-unsigned-integer"></a>
 
@@ -389,7 +435,7 @@ Do not use this option. Instead, pass the command line flag `--strip-root`.
 
 By default this is `false`.
 
-#### `suppress_comment` _`(regex)`_ <a class="toc" id="toc-suppress-comment-regex" href="#toc-suppress-comment-regex"></a>
+#### `suppress_comment` _`(regex)`_ {% until 0.126 %} <a class="toc" id="toc-suppress-comment-regex" href="#toc-suppress-comment-regex"></a>
 
 Defines a magical comment that suppresses any Flow errors on the following
 line. For example:
@@ -416,6 +462,11 @@ default: `// $FlowFixMe`.
 > in favor of the regexps you specify. If you wish to use `$FlowFixMe` with
 > some additional custom suppression comments, you must manually specify
 > `\\(.\\|\n\\)*\\$FlowFixMe` in your custom list of suppressions.
+
+> **Note:** In version v0.127.0, the option to specify the suppression comment
+> syntax was removed. `$FlowFixMe`, `$FlowIssue`, `$FlowExpectedError`,
+> and `$FlowIgnore` became the only standard suppressions.
+
 
 #### `suppress_type` _`(string)`_ <a class="toc" id="toc-suppress-type-string" href="#toc-suppress-type-string"></a>
 
@@ -458,3 +509,46 @@ The default value is `/tmp/flow`.
 Enables traces on all error output (showing additional details about the flow
 of types through the system), to the depth specified. This can be very
 expensive, so is disabled by default.
+
+#### `types_first` _`(boolean)`_ <a class="toc" id="toc-types-first-boolean" href="#toc-types-first-boolean"></a> {% since 0.125.0 %}
+
+For more on types-first mode, see the [types-first docs](/en/docs/lang/types-first/).
+
+Flow builds intermediate artifacts to represent signatures of modules as they are
+checked. If this option is set to `false`, then these artifacts are built using
+inferred type information. If this option is set to `true`, then they are built
+using type annotations at module boundaries.
+
+The default value for `types_first` is `true` (as of version 0.134).
+
+#### `well_formed_exports` _`(boolean)`_ <a class="toc" id="toc-well-formed-exports-boolean" href="#toc-well-formed-exports-boolean"></a> {% since 0.125.0 %}
+
+Enforce the following restrictions on file exports:
+* Statements manipulating `module.exports` and the `exports` alias may only appear
+  as top-level statements.
+* Parts of the source that are visible from a file's exports need to be annotated
+  unless their type can be trivially inferred (e.g. the exported expression is a
+  numeric literal). This is a requirement for types-first mode to function properly.
+  Failure to properly annotate exports raise `signature-verfication-failure`s.
+
+This option is set to `true` by default, since it is implied by [`types_first`](#toc-types-first-boolean),
+but the option is useful on its own when upgrading a project from classic mode to
+types-first mode.
+
+#### `well_formed_exports.includes` _`(string)`_ {% since 0.128.0 %} <a class="toc" id="toc-well-formed-exports-includes-string" href="#toc-well-formed-exports-includes-string"></a>
+
+
+Limit the scope of the `well_formed_exports` requirement to a specific directory
+of this project. For example
+```
+well_formed_exports=true
+well_formed_exports.includes=<PROJECT_ROOT>/dirA
+well_formed_exports.includes=<PROJECT_ROOT>/dirB
+```
+will only report export related errors in files under `dirA` and `dirB`. This option
+requires `well_formed_exports` to be set to `true`.
+
+The purpose of this option is to help prepare a codebase for Flow types-first mode.
+See [this section](#toc-seal-your-intermediate-results) for more.
+
+Between versions v0.125.0 and v0.127.0, this option was named `well_formed_exports.whitelist`.

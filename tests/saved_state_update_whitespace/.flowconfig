@@ -1,0 +1,16 @@
+[ignore]
+
+[include]
+
+[libs]
+
+[lints]
+
+[options]
+
+suppress_type=$FlowFixMe
+well_formed_exports=true
+types_first=true
+experimental.abstract_locations=true
+
+[strict]

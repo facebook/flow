@@ -1,4 +1,4 @@
-(**
+(*
  * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
@@ -15,7 +15,6 @@ let hh_logger_level_of_env env =
   | Some "debug" -> Some Hh_logger.Level.Debug
   | Some _
   (* ignore invalid values *)
-  
   | None ->
     None
 
@@ -45,7 +44,7 @@ let (set_server_options, dump_server_options) =
     let arch =
       match Options.arch server_options with
       | Options.Classic -> "classic"
-      | Options.TypesFirst -> "types_first"
+      | Options.TypesFirst _ -> "types_first"
     in
     let abstract_locations =
       if Options.abstract_locations server_options then
@@ -55,10 +54,11 @@ let (set_server_options, dump_server_options) =
     in
     let max_workers = Options.max_workers server_options in
     let enabled_rollouts = Options.enabled_rollouts server_options in
-    (lazy_mode, arch, abstract_locations, max_workers, enabled_rollouts)
+    let debug = Options.is_debug_mode server_options in
+    (lazy_mode, arch, abstract_locations, max_workers, enabled_rollouts, debug)
   in
   let set_server_options ~server_options =
-    let (lazy_mode, arch, abstract_locations, max_workers, enabled_rollouts) =
+    let (lazy_mode, arch, abstract_locations, max_workers, enabled_rollouts, debug) =
       format server_options
     in
     FlowEventLogger.set_server_options
@@ -67,15 +67,17 @@ let (set_server_options, dump_server_options) =
       ~abstract_locations
       ~max_workers
       ~enabled_rollouts
+      ~debug
   in
   let dump_server_options ~server_options ~log =
-    let (lazy_mode, arch, abstract_locations, max_workers, enabled_rollouts) =
+    let (lazy_mode, arch, abstract_locations, max_workers, enabled_rollouts, debug) =
       format server_options
     in
     log (Printf.sprintf "lazy_mode=%s" lazy_mode);
     log (Printf.sprintf "arch=%s" arch);
     log (Printf.sprintf "abstract_locations=%s" abstract_locations);
     log (Printf.sprintf "max_workers=%d" max_workers);
+    log (Printf.sprintf "debug=%b" debug);
     SMap.iter (fun r g -> log (Printf.sprintf "Rollout %S set to %S" r g)) enabled_rollouts
   in
   (set_server_options, dump_server_options)

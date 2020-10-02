@@ -1,88 +1,107 @@
 Error ----------------------------------------------------------------------------------------- apply-array-like.js:5:16
 
-string [1] is incompatible with `$ArrayLike` [2].
+string [1] is incompatible with `$ArrayLike` [2]. [incompatible-type]
 
    apply-array-like.js:5:16
-     5| test.apply("", "foo"); // error: string ~> object
-                       ^^^^^ [1]
+      5| test.apply("", "foo"); // error: string ~> object
+                        ^^^^^ [1]
 
 References:
-   <BUILTINS>/core.js:306:22
-                             v
-   306| type $ArrayLike<T> = {
-   307|   [indexer: number]: T,
-   308|   length: number,
-   309|   ...
-   310| }
-        ^ [2]
+   <BUILTINS>/core.js:1051:22
+                              v
+   1051| type $ArrayLike<T> = {
+   1052|   [indexer: number]: T,
+   1053|   length: number,
+   1054|   ...
+   1055| }
+         ^ [2]
 
 
 Error ---------------------------------------------------------------------------------------- apply-array-like.js:20:16
 
-Property `length` is missing in `Generator` [1] but exists in `$ArrayLike` [2].
+Property `length` is missing in `Generator` [1] but exists in `$ArrayLike` [2]. [prop-missing]
 
    apply-array-like.js:20:16
-    20| test.apply([], gen()); // error: iterable ~> array-like
-                       ^^^^^
+     20| test.apply([], gen()); // error: iterable ~> array-like
+                        ^^^^^
 
 References:
    apply-array-like.js:15:17
-    15| function * gen() {
-                        ^ [1]
-   <BUILTINS>/core.js:306:22
-                             v
-   306| type $ArrayLike<T> = {
-   307|   [indexer: number]: T,
-   308|   length: number,
-   309|   ...
-   310| }
-        ^ [2]
+     15| function * gen() {
+                         ^ [1]
+   <BUILTINS>/core.js:1051:22
+                              v
+   1051| type $ArrayLike<T> = {
+   1052|   [indexer: number]: T,
+   1053|   length: number,
+   1054|   ...
+   1055| }
+         ^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- apply.js:2:10
+Error ---------------------------------------------------------------------------------------------------- apply.js:2:15
 
-Cannot get `this.length` because:
- - property `length` is missing in `Number` [1].
- - property `length` is missing in `Number` [2].
- - property `length` is missing in `Number` [3].
+Cannot get `this.length` because property `length` is missing in `Number` [1]. [prop-missing]
 
-   apply.js:2:10
+   apply.js:2:15
     2|   return this.length; // expect []/"" this
-                ^^^^^^^^^^^
+                     ^^^^^^
 
 References:
    apply.js:12:12
    12| test.apply(0, ["", 0]); // error: lookup `length` on Number
                   ^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------------- apply.js:2:15
+
+Cannot get `this.length` because property `length` is missing in `Number` [1]. [prop-missing]
+
+   apply.js:2:15
+    2|   return this.length; // expect []/"" this
+                     ^^^^^^
+
+References:
    apply.js:35:25
    35| (test.call.apply(test, [0, 123, 'foo']): void);
-                               ^ [2]
+                               ^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------------- apply.js:2:15
+
+Cannot get `this.length` because property `length` is missing in `Number` [1]. [prop-missing]
+
+   apply.js:2:15
+    2|   return this.length; // expect []/"" this
+                     ^^^^^^
+
+References:
    apply.js:40:25
    40| (test.bind.apply(test, [0, 123]): (b: number) => number);
-                               ^ [3]
+                               ^ [1]
 
 
 Error ----------------------------------------------------------------------------------------------------- apply.js:6:1
 
-Cannot call `test.apply` because no more than 2 arguments are expected by function type [1].
+Cannot call `test.apply` because no more than 2 arguments are expected by function type [1]. [extra-arg]
 
    apply.js:6:1
      6| test.apply("", ["", 0], 'error')
-        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        ^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:126:18
-   126|     proto apply: Function$Prototype$Apply; // (thisArg: any, argArray?: any) => any
+   <BUILTINS>/core.js:340:18
+   340|     proto apply: Function$Prototype$Apply; // (thisArg: any, argArray?: any) => any
                          ^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
-Error ---------------------------------------------------------------------------------------------------- apply.js:15:1
+Error ---------------------------------------------------------------------------------------------------- apply.js:15:6
 
-Cannot call `test.apply` because function [1] requires another argument.
+Cannot call `test.apply` because function [1] requires another argument. [incompatible-call]
 
-   apply.js:15:1
+   apply.js:15:6
    15| test.apply("", [""]); // error: void ~> number
-       ^^^^^^^^^^^^^^^^^^^^
+            ^^^^^
 
 References:
    apply.js:1:1
@@ -93,6 +112,7 @@ References:
 Error --------------------------------------------------------------------------------------------------- apply.js:18:21
 
 Cannot call `test.apply` with string bound to `b` because string [1] is incompatible with number [2].
+[incompatible-call]
 
    apply.js:18:21
    18| test.apply("", ["", ""]); // error: string ~> number (2nd arg)
@@ -107,6 +127,7 @@ References:
 Error --------------------------------------------------------------------------------------------------- apply.js:19:17
 
 Cannot call `test.apply` with number bound to `a` because number [1] is incompatible with string [2].
+[incompatible-call]
 
    apply.js:19:17
    19| test.apply("", [0, 0]); // error: number ~> string (1st arg)
@@ -121,6 +142,7 @@ References:
 Error ---------------------------------------------------------------------------------------------------- apply.js:24:8
 
 Cannot call `test.apply` with string bound to `b` because string [1] is incompatible with number [2].
+[incompatible-call]
 
    apply.js:24:8
    24| f(["", ""]); // error: string ~> number (2nd arg)
@@ -135,6 +157,7 @@ References:
 Error ---------------------------------------------------------------------------------------------------- apply.js:25:4
 
 Cannot call `test.apply` with number bound to `a` because number [1] is incompatible with string [2].
+[incompatible-call]
 
    apply.js:25:4
    25| f([0, 0]); // error: number ~> string (1st arg)
@@ -148,26 +171,27 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- apply.js:28:16
 
-string [1] is incompatible with `$ArrayLike` [2].
+string [1] is incompatible with `$ArrayLike` [2]. [incompatible-type]
 
    apply.js:28:16
-    28| test.apply("", "not array"); // error: string ~> object
-                       ^^^^^^^^^^^ [1]
+     28| test.apply("", "not array"); // error: string ~> object
+                        ^^^^^^^^^^^ [1]
 
 References:
-   <BUILTINS>/core.js:306:22
-                             v
-   306| type $ArrayLike<T> = {
-   307|   [indexer: number]: T,
-   308|   length: number,
-   309|   ...
-   310| }
-        ^ [2]
+   <BUILTINS>/core.js:1051:22
+                              v
+   1051| type $ArrayLike<T> = {
+   1052|   [indexer: number]: T,
+   1053|   length: number,
+   1054|   ...
+   1055| }
+         ^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- apply.js:35:2
 
 Cannot cast `test.call.apply(...)` to undefined because number [1] is incompatible with undefined [2].
+[incompatible-cast]
 
    apply.js:35:2
    35| (test.call.apply(test, [0, 123, 'foo']): void);
@@ -185,6 +209,7 @@ References:
 Error --------------------------------------------------------------------------------------------------- apply.js:35:28
 
 Cannot call `test.call.apply` with number bound to `a` because number [1] is incompatible with string [2].
+[incompatible-call]
 
    apply.js:35:28
    35| (test.call.apply(test, [0, 123, 'foo']): void);
@@ -199,6 +224,7 @@ References:
 Error --------------------------------------------------------------------------------------------------- apply.js:35:33
 
 Cannot call `test.call.apply` with string bound to `b` because string [1] is incompatible with number [2].
+[incompatible-call]
 
    apply.js:35:33
    35| (test.call.apply(test, [0, 123, 'foo']): void);
@@ -213,6 +239,7 @@ References:
 Error --------------------------------------------------------------------------------------------------- apply.js:40:28
 
 Cannot call `test.bind.apply` with number bound to `a` because number [1] is incompatible with string [2].
+[incompatible-call]
 
    apply.js:40:28
    40| (test.bind.apply(test, [0, 123]): (b: number) => number);
@@ -226,7 +253,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- apply.js:50:22
 
-Cannot call `x.apply` with number bound to `b` because number [1] is incompatible with string [2].
+Cannot call `x.apply` with number bound to `b` because number [1] is incompatible with string [2]. [incompatible-call]
 
    apply.js:50:22
    50|   x.apply(x, ['foo', 123]); // error, number !~> string
@@ -240,7 +267,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ bind.js:7:7
 
-Cannot call `y` with `123` bound to `b` because number [1] is incompatible with string [2].
+Cannot call `y` with `123` bound to `b` because number [1] is incompatible with string [2]. [incompatible-call]
 
    bind.js:7:7
    7|     y(123); // error, number !~> string
@@ -254,7 +281,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- bind.js:14:7
 
-Cannot call `y` with `123` bound to `b` because number [1] is incompatible with string [2].
+Cannot call `y` with `123` bound to `b` because number [1] is incompatible with string [2]. [incompatible-call]
 
    bind.js:14:7
    14|     y(123); // error, number !~> string
@@ -266,13 +293,13 @@ References:
                                       ^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- bind.js:19:5
+Error ----------------------------------------------------------------------------------------------------- bind.js:19:7
 
-Cannot call `x.bind` because property `bind` is missing in object type [1].
+Cannot call `x.bind` because property `bind` is missing in object type [1]. [prop-missing]
 
-   bind.js:19:5
+   bind.js:19:7
    19|     x.bind(x, 'foo'); // error
-           ^^^^^^^^^^^^^^^^
+             ^^^^
 
 References:
    bind.js:18:15
@@ -282,7 +309,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- bind.js:25:13
 
-Cannot call `x.bind` with `123` bound to `a` because number [1] is incompatible with string [2].
+Cannot call `x.bind` with `123` bound to `a` because number [1] is incompatible with string [2]. [incompatible-call]
 
    bind.js:25:13
    25|     (x.bind(123): void); // error, number !~> string
@@ -294,32 +321,41 @@ References:
                                                             ^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- call.js:4:10
+Error ----------------------------------------------------------------------------------------------------- call.js:4:15
 
-Cannot get `this.length` because:
- - property `length` is missing in `Number` [1].
- - property `length` is missing in `Number` [2].
+Cannot get `this.length` because property `length` is missing in `Number` [1]. [prop-missing]
 
-   call.js:4:10
+   call.js:4:15
     4|   return this.length; // expect []/"" this
-                ^^^^^^^^^^^
+                     ^^^^^^
 
 References:
    call.js:11:11
    11| test.call(0, "", 0); // error: lookup `length` on Number
                  ^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------------- call.js:4:15
+
+Cannot get `this.length` because property `length` is missing in `Number` [1]. [prop-missing]
+
+   call.js:4:15
+    4|   return this.length; // expect []/"" this
+                     ^^^^^^
+
+References:
    call.js:30:24
    30| (test.apply.call(test, 0, [0, 'foo']): number);
-                              ^ [2]
+                              ^ [1]
 
 
-Error ----------------------------------------------------------------------------------------------------- call.js:14:1
+Error ----------------------------------------------------------------------------------------------------- call.js:14:6
 
-Cannot call `test.call` because function [1] requires another argument.
+Cannot call `test.call` because function [1] requires another argument. [incompatible-call]
 
-   call.js:14:1
+   call.js:14:6
    14| test.call("", ""); // error: void ~> number
-       ^^^^^^^^^^^^^^^^^
+            ^^^^
 
 References:
    call.js:3:1
@@ -330,6 +366,7 @@ References:
 Error ---------------------------------------------------------------------------------------------------- call.js:17:19
 
 Cannot call `test.call` with empty string bound to `b` because string [1] is incompatible with number [2].
+[incompatible-call]
 
    call.js:17:19
    17| test.call("", "", ""); // error: string ~> number (2nd arg)
@@ -343,7 +380,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- call.js:18:15
 
-Cannot call `test.call` with `0` bound to `a` because number [1] is incompatible with string [2].
+Cannot call `test.call` with `0` bound to `a` because number [1] is incompatible with string [2]. [incompatible-call]
 
    call.js:18:15
    18| test.call("", 0, 0); // error: number ~> string (1st arg)
@@ -358,6 +395,7 @@ References:
 Error ---------------------------------------------------------------------------------------------------- call.js:21:34
 
 Cannot call `test.call` with `args[0]` bound to `a` because number [1] is incompatible with string [2].
+[incompatible-call]
 
    call.js:21:34
    21| function f(args) { test.call("", args[0], args[1]) }
@@ -375,6 +413,7 @@ References:
 Error ---------------------------------------------------------------------------------------------------- call.js:21:43
 
 Cannot call `test.call` with `args[1]` bound to `b` because string [1] is incompatible with number [2].
+[incompatible-call]
 
    call.js:21:43
    21| function f(args) { test.call("", args[0], args[1]) }
@@ -392,6 +431,7 @@ References:
 Error ---------------------------------------------------------------------------------------------------- call.js:30:28
 
 Cannot call `test.apply.call` with number bound to `a` because number [1] is incompatible with string [2].
+[incompatible-call]
 
    call.js:30:28
    30| (test.apply.call(test, 0, [0, 'foo']): number);
@@ -406,6 +446,7 @@ References:
 Error ---------------------------------------------------------------------------------------------------- call.js:30:31
 
 Cannot call `test.apply.call` with string bound to `b` because string [1] is incompatible with number [2].
+[incompatible-call]
 
    call.js:30:31
    30| (test.apply.call(test, 0, [0, 'foo']): number);
@@ -419,7 +460,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- call.js:40:20
 
-Cannot call `x.call` with `123` bound to `b` because number [1] is incompatible with string [2].
+Cannot call `x.call` with `123` bound to `b` because number [1] is incompatible with string [2]. [incompatible-call]
 
    call.js:40:20
    40|   x.call(x, 'foo', 123); // error, number !~> string
@@ -431,68 +472,59 @@ References:
                                           ^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- call.js:47:7
+Error ---------------------------------------------------------------------------------------------------- call.js:47:11
 
 Cannot call `f` with object literal bound to `y` because string [1] is incompatible with string literal `bar` [2] in
-property `x`.
+property `x`. [incompatible-call]
 
-   call.js:47:7
-   47|     f({x: "foo"}); // error, "foo" !~> "bar"
-             ^^^^^^^^^^
-
-References:
    call.js:47:11
    47|     f({x: "foo"}); // error, "foo" !~> "bar"
                  ^^^^^ [1]
+
+References:
    call.js:46:24
    46|     function f(y: { x: "bar" }): void {}
                               ^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- call.js:53:7
+Error ---------------------------------------------------------------------------------------------------- call.js:53:11
 
 Cannot call `f` with object literal bound to `y` because number [1] is incompatible with number literal `123` [2] in
-property `x`.
+property `x`. [incompatible-call]
 
-   call.js:53:7
-   53|     f({x: 234}); // error, 234 !~> 123
-             ^^^^^^^^
-
-References:
    call.js:53:11
    53|     f({x: 234}); // error, 234 !~> 123
                  ^^^ [1]
+
+References:
    call.js:52:24
    52|     function f(y: { x: 123 }): void {}
                               ^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- call.js:59:7
+Error ---------------------------------------------------------------------------------------------------- call.js:59:11
 
 Cannot call `f` with object literal bound to `y` because boolean [1] is incompatible with boolean literal `false` [2] in
-property `x`.
+property `x`. [incompatible-call]
 
-   call.js:59:7
-   59|     f({x: true}); // error, true !~> false
-             ^^^^^^^^^
-
-References:
    call.js:59:11
    59|     f({x: true}); // error, true !~> false
                  ^^^^ [1]
+
+References:
    call.js:58:24
    58|     function f(y: { x: false }): void {}
                               ^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------- call_error_generic.js:23:5
+Error -------------------------------------------------------------------------------------- call_error_generic.js:18:15
 
-Cannot call `bar` with `foo` bound to `x` because null or undefined [1] is incompatible with string [2] in type argument
-`T` [3].
+Cannot call `from` with `set` bound to `set` because null or undefined [1] is incompatible with string [2] in type
+argument `T` [3]. [incompatible-call]
 
-   call_error_generic.js:23:5
-   23| bar(foo);
-           ^^^
+   call_error_generic.js:18:15
+   18|   return from(set);
+                     ^^^
 
 References:
    call_error_generic.js:3:19
@@ -504,32 +536,32 @@ References:
    call_error_generic.js:21:25
    21| function bar(x: ROArray<string>) { }
                                ^^^^^^ [2]
-   call_error_generic.js:10:24
-   10| declare class ROArray<+T> { }
-                              ^ [3]
+   call_error_generic.js:7:19
+    7| declare class Set<T> {
+                         ^ [3]
 
 
-Error -------------------------------------------------------------------------------------- call_error_generic2.js:11:8
+Error --------------------------------------------------------------------------------------- call_error_generic2.js:6:8
 
-Cannot call `bar2` with `userRef` bound to `fragmentRef` because property `$data` is missing in object type [1] but
-exists in object type [2].
+Cannot call `bar1` with `fragmentRef` bound to `key` because property `$data` is missing in object type [1] but exists
+in object type [2]. [prop-missing]
 
-   call_error_generic2.js:11:8
-   11|   bar2(userRef);
-              ^^^^^^^
+   call_error_generic2.js:6:8
+   6|   bar1(fragmentRef);
+             ^^^^^^^^^^^
 
 References:
    call_error_generic2.js:9:33
-    9| function foo(props: { userRef?: {} }) {
-                                       ^^ [1]
+   9| function foo(props: { userRef?: {} }) {
+                                      ^^ [1]
    call_error_generic2.js:3:30
-    3| declare function bar1<TKey: ?{+$data?: mixed}>(key: TKey): void;
-                                    ^^^^^^^^^^^^^^^^ [2]
+   3| declare function bar1<TKey: ?{+$data?: mixed}>(key: TKey): void;
+                                   ^^^^^^^^^^^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------- function.js:21:3
 
-Cannot resolve name `React`.
+Cannot resolve name `React`. [cannot-resolve-name]
 
    21|   <MyThing />;
          ^^^^^^^^^^^
@@ -537,15 +569,15 @@ Cannot resolve name `React`.
 
 Error ------------------------------------------------------------------------------------------------- function.js:37:6
 
-Cannot cast `x.length` to undefined because number [1] is incompatible with undefined [2].
+Cannot cast `x.length` to undefined because number [1] is incompatible with undefined [2]. [incompatible-cast]
 
    function.js:37:6
     37|     (x.length: void); // error, it's a number
              ^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:132:13
-   132|     length: number;
+   <BUILTINS>/core.js:347:13
+   347|     length: number;
                     ^^^^^^ [1]
    function.js:37:16
     37|     (x.length: void); // error, it's a number
@@ -554,15 +586,15 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- function.js:38:6
 
-Cannot cast `y.length` to undefined because number [1] is incompatible with undefined [2].
+Cannot cast `y.length` to undefined because number [1] is incompatible with undefined [2]. [incompatible-cast]
 
    function.js:38:6
     38|     (y.length: void); // error, it's a number
              ^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:132:13
-   132|     length: number;
+   <BUILTINS>/core.js:347:13
+   347|     length: number;
                     ^^^^^^ [1]
    function.js:38:16
     38|     (y.length: void); // error, it's a number
@@ -571,15 +603,15 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- function.js:41:6
 
-Cannot cast `x.name` to undefined because string [1] is incompatible with undefined [2].
+Cannot cast `x.name` to undefined because string [1] is incompatible with undefined [2]. [incompatible-cast]
 
    function.js:41:6
     41|     (x.name: void); // error, it's a string
              ^^^^^^
 
 References:
-   <BUILTINS>/core.js:133:11
-   133|     name: string;
+   <BUILTINS>/core.js:351:11
+   351|     name: string;
                   ^^^^^^ [1]
    function.js:41:14
     41|     (x.name: void); // error, it's a string
@@ -588,15 +620,15 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- function.js:42:6
 
-Cannot cast `y.name` to undefined because string [1] is incompatible with undefined [2].
+Cannot cast `y.name` to undefined because string [1] is incompatible with undefined [2]. [incompatible-cast]
 
    function.js:42:6
     42|     (y.name: void); // error, it's a string
              ^^^^^^
 
 References:
-   <BUILTINS>/core.js:133:11
-   133|     name: string;
+   <BUILTINS>/core.js:351:11
+   351|     name: string;
                   ^^^^^^ [1]
    function.js:42:14
     42|     (y.name: void); // error, it's a string
@@ -605,63 +637,63 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ function.js:48:16
 
-Cannot assign `'foo'` to `x.length` because string [1] is incompatible with number [2].
+Cannot assign `'foo'` to `x.length` because string [1] is incompatible with number [2]. [incompatible-type]
 
    function.js:48:16
     48|     x.length = 'foo'; // error, it's a number
                        ^^^^^ [1]
 
 References:
-   <BUILTINS>/core.js:132:13
-   132|     length: number;
+   <BUILTINS>/core.js:347:13
+   347|     length: number;
                     ^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------ function.js:49:16
 
-Cannot assign `'foo'` to `y.length` because string [1] is incompatible with number [2].
+Cannot assign `'foo'` to `y.length` because string [1] is incompatible with number [2]. [incompatible-type]
 
    function.js:49:16
     49|     y.length = 'foo'; // error, it's a number
                        ^^^^^ [1]
 
 References:
-   <BUILTINS>/core.js:132:13
-   132|     length: number;
+   <BUILTINS>/core.js:347:13
+   347|     length: number;
                     ^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------ function.js:52:14
 
-Cannot assign `123` to `x.name` because number [1] is incompatible with string [2].
+Cannot assign `123` to `x.name` because number [1] is incompatible with string [2]. [incompatible-type]
 
    function.js:52:14
     52|     x.name = 123; // error, it's a string
                      ^^^ [1]
 
 References:
-   <BUILTINS>/core.js:133:11
-   133|     name: string;
+   <BUILTINS>/core.js:351:11
+   351|     name: string;
                   ^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------ function.js:53:14
 
-Cannot assign `123` to `y.name` because number [1] is incompatible with string [2].
+Cannot assign `123` to `y.name` because number [1] is incompatible with string [2]. [incompatible-type]
 
    function.js:53:14
     53|     y.name = 123; // error, it's a string
                      ^^^ [1]
 
 References:
-   <BUILTINS>/core.js:133:11
-   133|     name: string;
+   <BUILTINS>/core.js:351:11
+   351|     name: string;
                   ^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------ issue-7529.js:4:7
 
-Cannot call `foo` with `123` bound to `x` because number [1] is incompatible with string [2].
+Cannot call `foo` with `123` bound to `x` because number [1] is incompatible with string [2]. [incompatible-call]
 
    issue-7529.js:4:7
    4|   foo(123);
@@ -673,13 +705,31 @@ References:
                                   ^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- rest.js:36:10
+Error ---------------------------------------------------------------------------------------------------- rest.js:31:10
 
-Cannot call `xs.pop` because property `pop` is missing in `T` [1].
+Cannot return function because function [1] contains type variable `T` [2] which cannot escape from the scope in which
+it was defined [2] (try adding a type annotation to return [3]). [escaped-generic]
 
-   rest.js:36:10
+   rest.js:31:10
+   31|   return function<U: T>(...xs: T): void {}
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+References:
+   rest.js:30:27
+   30| function bounds_on_bounds<T>() {
+                                 ^ [2]
+   rest.js:30:31
+   30| function bounds_on_bounds<T>() {
+                                      [3]
+
+
+Error ---------------------------------------------------------------------------------------------------- rest.js:36:13
+
+Cannot call `xs.pop` because property `pop` is missing in `T` [1]. [incompatible-use]
+
+   rest.js:36:13
    36|   return xs.pop(); // Error - no bound on T
-                ^^^^^^^^
+                   ^^^
 
 References:
    rest.js:35:39
@@ -689,13 +739,16 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- rest.js:38:55
 
-Cannot call `string_rest_t` because rest array [1] is incompatible with string [2].
+Cannot call `string_rest_t` because rest array [1] is incompatible with string [2]. [incompatible-call]
 
    rest.js:38:55
    38| function string_rest_t<T: string>(...xs: T): void {}; string_rest_t(); // Error - rest param can't be a string
-                                                             ^^^^^^^^^^^^^^^ [1]
+                                                             ^^^^^^^^^^^^^
 
 References:
+   rest.js:38:55
+   38| function string_rest_t<T: string>(...xs: T): void {}; string_rest_t(); // Error - rest param can't be a string
+                                                             ^^^^^^^^^^^^^^^ [1]
    rest.js:38:27
    38| function string_rest_t<T: string>(...xs: T): void {}; string_rest_t(); // Error - rest param can't be a string
                                  ^^^^^^ [2]
@@ -703,13 +756,16 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- rest.js:39:53
 
-Cannot call `empty_rest_t` because rest array [1] is incompatible with empty [2].
+Cannot call `empty_rest_t` because rest array [1] is incompatible with empty [2]. [incompatible-call]
 
    rest.js:39:53
    39| function empty_rest_t<T: empty>(...xs: T): void {}; empty_rest_t(); // Error - rest param can't be empty
-                                                           ^^^^^^^^^^^^^^ [1]
+                                                           ^^^^^^^^^^^^
 
 References:
+   rest.js:39:53
+   39| function empty_rest_t<T: empty>(...xs: T): void {}; empty_rest_t(); // Error - rest param can't be empty
+                                                           ^^^^^^^^^^^^^^ [1]
    rest.js:29:26
    29| function empty_rest_t<T: empty>(...xs: T): void {}
                                 ^^^^^ [2]
@@ -717,7 +773,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- rest.js:53:2
 
-Cannot cast `empty_rest()` to empty because rest array [1] is incompatible with empty [2].
+Cannot cast `empty_rest()` to empty because rest array [1] is incompatible with empty [2]. [incompatible-cast]
 
    rest.js:53:2
    53| (empty_rest(): empty); // Error Array ~> empty
@@ -731,14 +787,11 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- rest.js:58:10
 
-Cannot return function because rest array [1] is incompatible with number [2] in the return value.
+Cannot return function because rest array [1] is incompatible with number [2] in the return value. [incompatible-return]
 
    rest.js:58:10
-                v------------------
    58|   return function(...args) {
-   59|     return args; // Error: Array ~> number
-   60|   }
-         ^
+                ^^^^^^^^^^^^^^^^^
 
 References:
    rest.js:57:4
@@ -751,11 +804,11 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- rest.js:64:1
 
-Cannot call `requires_first_param` because function [1] requires another argument.
+Cannot call `requires_first_param` because function [1] requires another argument. [incompatible-call]
 
    rest.js:64:1
    64| requires_first_param(); // Error: missing first arg
-       ^^^^^^^^^^^^^^^^^^^^^^
+       ^^^^^^^^^^^^^^^^^^^^
 
 References:
    rest.js:63:1
@@ -765,7 +818,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ rest_type.js:15:5
 
-Cannot call `f` with `123` bound to `x` because number [1] is not an array.
+Cannot call `f` with `123` bound to `x` because number [1] is not an array. [not-an-array]
 
    15|   f(123); // Error - number ~> array - luckily this errors
            ^^^ [1]
@@ -773,13 +826,11 @@ Cannot call `f` with `123` bound to `x` because number [1] is not an array.
 
 Error ------------------------------------------------------------------------------------------------ rest_type.js:20:3
 
-Cannot call `f` because:
- - string [1] is not an array.
- - rest array [2] is incompatible with string [1].
+Cannot call `f` because string [1] is not an array. [not-an-array]
 
    rest_type.js:20:3
    20|   f('hello'); // Error - string ~> array - luckily this errors
-         ^^^^^^^^^^ [2]
+         ^
 
 References:
    rest_type.js:18:30
@@ -787,9 +838,26 @@ References:
                                     ^^^^^^ [1]
 
 
+Error ------------------------------------------------------------------------------------------------ rest_type.js:20:3
+
+Cannot call `f` because rest array [1] is incompatible with string [2]. [incompatible-call]
+
+   rest_type.js:20:3
+   20|   f('hello'); // Error - string ~> array - luckily this errors
+         ^
+
+References:
+   rest_type.js:20:3
+   20|   f('hello'); // Error - string ~> array - luckily this errors
+         ^^^^^^^^^^ [1]
+   rest_type.js:18:30
+   18| type string_rest_t = (...xs: string) => void; // Should be error but no way to check yet :(
+                                    ^^^^^^ [2]
+
+
 Error ----------------------------------------------------------------------------------------------- rest_type.js:31:22
 
-Cannot cast `f()` to empty because rest array [1] is incompatible with empty [2].
+Cannot cast `f()` to empty because rest array [1] is incompatible with empty [2]. [incompatible-cast]
 
    rest_type.js:31:22
    31| ((f: empty_rest) => (f(): empty)); // Error Array ~> empty
@@ -802,4 +870,4 @@ References:
 
 
 
-Found 56 errors
+Found 57 errors

@@ -1,4 +1,4 @@
-(**
+(*
  * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
@@ -8,6 +8,25 @@
 module File_sig = File_sig.With_ALoc
 
 type options = {
+  (* If this flag is set to `true` then the normalizer will attempt to reuse the
+   * cached results of evaluated type-destructors. If this is set to `false`, then
+   * instread it will try to use:
+   *  - a potentially attendant type-alias annotation, or
+   *  - reuse the utility type that corresponds to this the specific type-destructor.
+   *
+   * Choosing 'false' will typically result in smaller produced types, which makes
+   * it a more appropriate option for codemods.
+   *)
+  evaluate_type_destructors: bool;
+  (* Expand the signatures of built-in functions, such as:
+   * Function.prototype.apply: (thisArg: any, argArray?: any): any
+   *)
+  expand_internal_types: bool;
+  (* If set to `true` type aliase names will be expanded to the types they represent.
+   *
+   * WARNING: This can cause a blow-up in the size of the produced types.
+   *)
+  expand_type_aliases: bool;
   (* MergedT is somewhat unconventional. It introduces UseT's that the
    * normalizer is not intended to handle. If this flag is set to true, all
    * instances of MergedT will fall through and return Top. Otherwise, we
@@ -18,15 +37,6 @@ type options = {
    * Pick `true` if the result does not need to be "parseable", e.g. coverage.
    *)
   fall_through_merged: bool;
-  (* Expand the signatures of built-in functions, such as:
-   * Function.prototype.apply: (thisArg: any, argArray?: any): any
-   *)
-  expand_internal_types: bool;
-  (* If set to `true` type aliase names will be expanded to the types they represent.
-   *
-   * WARNING: This can cause a blow-up in the size of the produced types.
-   *)
-  expand_type_aliases: bool;
   (* The normalizer keeps a stack of type parameters that are in scope. This stack
    * may contain the same name twice (but with different associated locations).
    * This is a case of shadowing. For certain uses of normalized types (e.g. suggest)
@@ -41,30 +51,6 @@ type options = {
    * This flags toggles this behavior.
    *)
   flag_shadowed_type_params: bool;
-  (* Makes the normalizer more aggressive in preserving inferred literal types *)
-  preserve_inferred_literal_types: bool;
-  (* If this flag is set to `true` then the normalizer will attempt to reuse the
-     cached results of evaluated type-destructors. If this is set to `false`, then
-     instread it will try to use:
-      - a potentially attendant type-alias annotation, or
-      - reuse the utility type that corresponds to this the specific type-destructor.
-
-     Choosing 'false' will typically result in smaller produced types, which makes
-     it a more appropriate option for codemods.
-  *)
-  evaluate_type_destructors: bool;
-  (* Run an optimization pass that removes duplicates from unions and intersections.
-   *
-   * WARNING May be slow for large types
-   *)
-  optimize_types: bool;
-  (* Omits type params if they match the defaults, e.g:
-   *
-   * Given `type Foo<A, B = Baz>`, `Foo<Bar, Baz>` is reduced to `Foo<Bar>`
-   *
-   * WARNING: May be slow due to the structural equality checks that this necessitates.
-   *)
-  omit_targ_defaults: bool;
   (* Consider all kinds of Bot and Any the same when simplifying types.
    *
    * The normalized type Ty.Bot may correspond to either the `Empty` type, not
@@ -76,7 +62,40 @@ type options = {
    * Any can be due to an annotation or implicitly arising from inference.
    *)
   merge_bot_and_any_kinds: bool;
+  (* Omits type params if they match the defaults, e.g:
+   *
+   * Given `type Foo<A, B = Baz>`, `Foo<Bar, Baz>` is reduced to `Foo<Bar>`
+   *
+   * WARNING: May be slow due to the structural equality checks that this necessitates.
+   *)
+  omit_targ_defaults: bool;
+  (* Run an optimization pass that removes duplicates from unions and intersections.
+   *
+   * WARNING May be slow for large types
+   *)
+  optimize_types: bool;
+  (* Makes the normalizer more aggressive in preserving inferred literal types *)
+  preserve_inferred_literal_types: bool;
+  (* Debug *)
+  verbose_normalizer: bool;
+  (* Maximum depth of recursion *)
+  max_depth: int option;
 }
+
+let default_options =
+  {
+    evaluate_type_destructors = false;
+    expand_internal_types = false;
+    expand_type_aliases = false;
+    fall_through_merged = false;
+    flag_shadowed_type_params = false;
+    merge_bot_and_any_kinds = true;
+    omit_targ_defaults = false;
+    optimize_types = true;
+    preserve_inferred_literal_types = false;
+    verbose_normalizer = false;
+    max_depth = Some 50;
+  }
 
 (* This is a global environment that should not change during normalization *)
 type genv = {
@@ -85,12 +104,18 @@ type genv = {
   (* Full (merged) context *)
   cx: Context.t;
   (* Typed AST of the current file *)
-  typed_ast: (ALoc.t, ALoc.t * Type.t) Flow_ast.program;
+  typed_ast: (ALoc.t, ALoc.t * Type.t) Flow_ast.Program.t;
   (* The file_sig of the current file *)
   file_sig: File_sig.t;
 }
 
 let mk_genv ~full_cx ~file ~typed_ast ~file_sig = { file; cx = full_cx; typed_ast; file_sig }
+
+module SymbolSet = Set.Make (struct
+  type t = Ty_symbol.symbol
+
+  let compare = Stdlib.compare
+end)
 
 type t = {
   (* Does not change. Set once in the beginning. *)
@@ -120,7 +145,7 @@ type t = {
      to `T` even though it's now out of scope. In this case we need to fall back to
      the actual bounds and return those instead. So the normalized type here would
      be: Empty | Mixed, which simplifies to Mixed. *)
-  tparams: Type.typeparam list;
+  tparams: (ALoc.t * string) list;
   (* In determining whether a symbol is Local, Imported, Remote, etc, it is
      useful to keep a map of imported names and the corresponding
      location available. We can then make this decision by comparing the
@@ -145,11 +170,11 @@ type t = {
      (coming from different scopes for example). Ideally we would use the location
      or a unique ID of the type alias to make this distinction, but at the moment
      keeping this information around introduces a small space regression. *)
-  under_type_alias: string option;
+  under_type_alias: SymbolSet.t;
 }
 
 let init ~options ~genv ~tparams ~imported_names =
-  { options; genv; depth = 0; tparams; imported_names; under_type_alias = None }
+  { options; genv; depth = 0; tparams; imported_names; under_type_alias = SymbolSet.empty }
 
 let descend e = { e with depth = e.depth + 1 }
 
@@ -169,8 +194,14 @@ let preserve_inferred_literal_types e = e.options.preserve_inferred_literal_type
 
 let omit_targ_defaults e = e.options.omit_targ_defaults
 
+let max_depth e = e.options.max_depth
+
 let merge_bot_and_any_kinds e = e.options.merge_bot_and_any_kinds
 
 let current_file e = e.genv.file
 
 let add_typeparam env typeparam = { env with tparams = typeparam :: env.tparams }
+
+let set_type_alias name e = { e with under_type_alias = SymbolSet.add name e.under_type_alias }
+
+let seen_type_alias name e = SymbolSet.mem name e.under_type_alias

@@ -1,10 +1,10 @@
-Error ---------------------------------------------------------------------------------------------------- class.js:3:13
+Error ---------------------------------------------------------------------------------------------------- class.js:3:15
 
-Cannot get `A.bar` because property `bar` is missing in statics of `A` [1].
+Cannot get `A.bar` because property `bar` is missing in statics of `A` [1]. [prop-missing]
 
-   class.js:3:13
+   class.js:3:15
    3| var test1 = A.bar; // Error bar doesn't exist
-                  ^^^^^
+                    ^^^
 
 References:
    class.js:1:7
@@ -14,7 +14,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- class.js:5:21
 
-Cannot assign `A.name` to `test3` because string [1] is incompatible with number [2].
+Cannot assign `A.name` to `test3` because string [1] is incompatible with number [2]. [incompatible-type]
 
    class.js:5:21
    5| var test3: number = A.name; // Error string ~> number
@@ -29,13 +29,13 @@ References:
                  ^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- class.js:8:13
+Error ---------------------------------------------------------------------------------------------------- class.js:8:27
 
-Cannot get `a.constructor.bar` because property `bar` is missing in statics of `A` [1].
+Cannot get `a.constructor.bar` because property `bar` is missing in statics of `A` [1]. [prop-missing]
 
-   class.js:8:13
+   class.js:8:27
    8| var test4 = a.constructor.bar; // Error bar doesn't exist
-                  ^^^^^^^^^^^^^^^^^
+                                ^^^
 
 References:
    class.js:7:9
@@ -45,7 +45,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- class.js:10:21
 
-Cannot assign `a.constructor.name` to `test6` because string [1] is incompatible with number [2].
+Cannot assign `a.constructor.name` to `test6` because string [1] is incompatible with number [2]. [incompatible-type]
 
    class.js:10:21
    10| var test6: number = a.constructor.name; // Error string ~> number

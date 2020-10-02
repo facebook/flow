@@ -3,9 +3,10 @@
  * @format
  */
 
+import type Suite from 'flow-dev-tools/src/test/Suite.js';
 import {suite, test} from 'flow-dev-tools/src/test/Tester';
 
-export default suite(
+export default (suite(
   ({
     lspStart,
     lspRequest,
@@ -18,7 +19,7 @@ export default suite(
       lspRequest('initialize', lspInitializeParams)
         .waitUntilLSPMessage(30000, 'initialize')
         .verifyAllLSPMessagesInStep(
-          ['initialize{Wrong version of Flow. The config specifies}'],
+          [['initialize', '{Wrong version of Flow. The config specifies}']],
           [...lspIgnoreStatusAndCancellation],
         ),
       lspRequest('shutdown')
@@ -34,4 +35,4 @@ export default suite(
         .verifyServerStatus('stopped'),
     ]),
   ],
-);
+): Suite);

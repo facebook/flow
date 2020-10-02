@@ -1,4 +1,4 @@
-(**
+(*
  * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
@@ -8,7 +8,8 @@
 type entry_point
 
 val register_entry_point :
-  (monitor_channels:MonitorRPC.channels ->
+  (init_id:string ->
+  monitor_channels:MonitorRPC.channels ->
   shared_mem_config:SharedMem_js.config ->
   Options.t ->
   unit) ->
@@ -17,6 +18,7 @@ val register_entry_point :
 val open_log_file : string -> Unix.file_descr
 
 val daemonize :
+  init_id:string ->
   log_file:string ->
   shared_mem_config:SharedMem_js.config ->
   argv:string array ->

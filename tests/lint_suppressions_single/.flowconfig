@@ -1,10 +1,6 @@
-[ignore]
-
-[include]
-
-[libs]
-
 [options]
+types_first=false
+all=true
 
 [lints]
 all=off

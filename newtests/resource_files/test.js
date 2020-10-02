@@ -3,9 +3,10 @@
  */
 
 
+import type Suite from "flow-dev-tools/src/test/Suite.js";
 import {suite, test} from 'flow-dev-tools/src/test/Tester';
 
-export default suite(({addFile, addFiles, addCode}) => [
+export default (suite(({addFile, addFiles, addCode}) => [
   test('Requiring a .css file', [
     addFile('foo.css')
       .addCode("import './foo.css'")
@@ -19,7 +20,7 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:3
             3: import './foo'
-                      ^^^^^^^ Cannot resolve module \`./foo\`.
+                      ^^^^^^^ Cannot resolve module \`./foo\`. [cannot-resolve-module]
         `,
       ),
   ]),
@@ -53,7 +54,7 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:3
             3: import './bar'
-                      ^^^^^^^ Cannot resolve module \`./bar\`.
+                      ^^^^^^^ Cannot resolve module \`./bar\`. [cannot-resolve-module]
         `,
       ),
   ]),
@@ -66,7 +67,7 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:5
             5: (png: number)
-                ^^^ Cannot cast \`png\` to number because string [1] is incompatible with number [2].
+                ^^^ Cannot cast \`png\` to number because string [1] is incompatible with number [2]. [incompatible-cast]
             References:
               3: const png = require('./bar.png');
                                      ^^^^^^^^^^^ [1]
@@ -84,7 +85,7 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:5
             5: (css: string)
-                ^^^ Cannot cast \`css\` to string because boolean [1] is incompatible with string [2].
+                ^^^ Cannot cast \`css\` to string because boolean [1] is incompatible with string [2]. [incompatible-cast]
             References:
               2: declare module.exports: boolean;
                                          ^^^^^^^ [1]. See: cssMock.js:2
@@ -93,4 +94,4 @@ export default suite(({addFile, addFiles, addCode}) => [
         `,
       ),
   ]).flowConfig('_flowconfig_with_module_name_mapper'),
-]);
+]): Suite);

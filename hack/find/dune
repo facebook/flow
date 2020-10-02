@@ -1,5 +1,0 @@
-(library
-  (name find)
-  (wrapped false)
-  (libraries
-    sys_utils))

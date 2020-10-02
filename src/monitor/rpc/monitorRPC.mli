@@ -1,14 +1,14 @@
-(**
+(*
  * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  *)
 
+exception Monitor_died
+
 type channels =
-  ( MonitorProt.monitor_to_server_message,
-    MonitorProt.server_to_monitor_message )
-  Daemon.channel_pair
+  (MonitorProt.monitor_to_server_message, MonitorProt.server_to_monitor_message) Daemon.channel_pair
 
 val init : channels:channels -> unit
 

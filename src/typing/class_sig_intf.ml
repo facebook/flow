@@ -1,4 +1,4 @@
-(**
+(*
  * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
@@ -47,10 +47,7 @@ module type S = sig
 
   (** 1. Constructors **)
 
-  val empty :
-    ALoc.t -> (* id *)
-              Reason.t -> Type.typeparams -> Type.t SMap.t -> (* tparams_map *)
-                                                              super -> t
+  val empty : ALoc.id -> Reason.t -> Type.typeparams -> Type.t SMap.t -> super -> t
   (** Create signature with no elements. *)
 
   val add_constructor :
@@ -160,7 +157,7 @@ module type S = sig
     Type.typeparams ->
     Type.t SMap.t ->
     (* tparams_map *)
-    Type.t * Type.typeparams * Type.t SMap.t
+    Type.typeparams * Type.t SMap.t
 
   val to_prop_map : Context.t -> field' SMap.t -> Type.Properties.id
 

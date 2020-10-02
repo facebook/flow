@@ -1,6 +1,6 @@
 Error ------------------------------------------------------------------------------------------------------- A.js:16:21
 
-Cannot assign `123` to `test4` because number [1] is incompatible with string [2].
+Cannot assign `123` to `test4` because number [1] is incompatible with string [2]. [incompatible-type]
 
    A.js:16:21
    16| var test4: string = 123; // This error is NOT suppressed
@@ -12,18 +12,40 @@ References:
                   ^^^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------------------- versions.js:7:2
+Error --------------------------------------------------------------------------------------------------------- D.js:8:5
 
-Cannot cast `123` to string because number [1] is incompatible with string [2].
+Cannot assign `y` to `x` because property `bar` is missing in object type [1] but exists in object type [2] in property
+`x`. [prop-missing]
 
-   versions.js:7:2
-   7| (123: string); // should not be suppressed
-       ^^^ [1]
+   D.js:8:5
+   8| x = y;
+          ^
 
 References:
-   versions.js:7:7
-   7| (123: string); // should not be suppressed
-            ^^^^^^ [2]
+   D.js:2:6
+   2|   x: { foo: string }
+           ^^^^^^^^^^^^^^^ [1]
+   D.js:6:6
+   6|   x: { bar: number }
+           ^^^^^^^^^^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------------- D.js:8:5
+
+Cannot assign `y` to `x` because property `foo` is missing in object type [1] but exists in object type [2] in property
+`x`. [prop-missing]
+
+   D.js:8:5
+   8| x = y;
+          ^
+
+References:
+   D.js:6:6
+   6|   x: { bar: number }
+           ^^^^^^^^^^^^^^^ [1]
+   D.js:2:6
+   2|   x: { foo: string }
+           ^^^^^^^^^^^^^^^ [2]
 
 
 Warning ------------------------------------------------------------------------------------------------------ A.js:14:1
@@ -32,6 +54,14 @@ Unused suppression comment.
 
    14| // $FlowFixMe Error unused suppression
        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Warning ------------------------------------------------------------------------------------------------------- D.js:5:3
+
+Unused suppression comment.
+
+   5|   // $FlowFixMe - this location is only mentioned in the extra section
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
 Warning ------------------------------------------------------------------------------------------------------- E.js:8:1
@@ -43,4 +73,4 @@ Unused suppression comment.
 
 
 
-Found 2 errors and 2 warnings
+Found 3 errors and 3 warnings

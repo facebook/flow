@@ -1,0 +1,30 @@
+test.js:3:6
+Flags:
+enum E
+test.js:3:6,3:6
+
+test.js:6:11
+Flags:
+enum E
+test.js:6:11,6:11
+
+test.js:9:13
+Flags:
+E
+test.js:9:13,9:13
+
+test.js:12:6
+Flags:
+type T = Class<E>
+test.js:12:6,12:6
+
+test.js:16:13
+Flags:
+F
+test.js:16:13,16:13
+
+test.js:20:13
+Flags:
+G
+test.js:20:13,20:13
+

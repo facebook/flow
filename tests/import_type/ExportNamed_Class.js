@@ -7,4 +7,4 @@ class ClassFoo2 {
 }
 
 export {ClassFoo2};
-export var foo2Inst = new ClassFoo2();
+export var foo2Inst: ClassFoo2 = new ClassFoo2();

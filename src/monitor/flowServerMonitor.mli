@@ -1,4 +1,4 @@
-(**
+(*
  * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
@@ -7,4 +7,5 @@
 
 val start : FlowServerMonitorOptions.t -> unit
 
-val daemonize : wait:bool -> on_spawn:(int -> unit) -> FlowServerMonitorOptions.t -> unit
+val daemonize :
+  init_id:string -> wait:bool -> on_spawn:(int -> unit) -> FlowServerMonitorOptions.t -> unit

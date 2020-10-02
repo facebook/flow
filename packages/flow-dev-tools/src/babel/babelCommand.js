@@ -1,4 +1,14 @@
-/* @flow */
+/**
+ * Copyright (c) Facebook, Inc. and its affiliates.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ *
+ * @flow
+ * @format
+ */
+
+import type {Flag} from '../command/Base';
 
 import {format} from 'util';
 import {resolve} from 'path';
@@ -25,7 +35,7 @@ export default class BabelCommand extends Base<Args> {
   }
 
   static description(): string {
-    return "Runs babel";
+    return 'Runs babel';
   }
 
   static async usage(): Promise<string> {
@@ -33,28 +43,28 @@ export default class BabelCommand extends Base<Args> {
 `;
   }
 
-  static getFlags() {
+  static getFlags(): Array<Flag> {
     return [
       {
-        type: "string",
-        name: "dest",
-        argName: "pathToDest",
-        description: "Where the transformed code should end up",
+        type: 'string',
+        name: 'dest',
+        argName: 'pathToDest',
+        description: 'Where the transformed code should end up',
       },
       {
-        type: "string",
-        name: "src",
-        argName: "pathToSrc",
+        type: 'string',
+        name: 'src',
+        argName: 'pathToSrc',
         description:
-          "The root (containing the package.json) of the code to transform",
+          'The root (containing the package.json) of the code to transform',
       },
       {
-        type: "enum",
-        name: "transform",
-        argName: "string",
-        description: "What to transform",
-        validValues: ["all", "tool", "tests"],
-        default: "all",
+        type: 'enum',
+        name: 'transform',
+        argName: 'string',
+        description: 'What to transform',
+        validValues: ['all', 'tool', 'tests'],
+        default: 'all',
       },
     ];
   }

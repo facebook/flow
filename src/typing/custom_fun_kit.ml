@@ -1,4 +1,4 @@
-(**
+(*
  * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
@@ -7,6 +7,7 @@
 
 open Reason
 open Type
+open TypeUtil
 module FlowError = Flow_error
 
 module type CUSTOM_FUN = sig
@@ -34,7 +35,7 @@ module Kit (Flow : Flow_common.S) = struct
     | (false, fn :: fns, _) ->
       let reason = replace_desc_reason (RCustom "compose intermediate value") (reason_of_t fn) in
       let tvar =
-        Tvar.mk_where cx reason (fun tvar ->
+        Tvar.mk_no_wrap_where cx reason (fun tvar ->
             run_compose cx trace ~use_op reason_op reverse fns spread_fn tin tvar)
       in
       rec_flow
@@ -45,17 +46,17 @@ module Kit (Flow : Flow_common.S) = struct
      * functions in our array after we call the head function. *)
     | (true, fn :: fns, _) ->
       let reason = replace_desc_reason (RCustom "compose intermediate value") (reason_of_t fn) in
-      let tvar =
-        Tvar.mk_where cx reason (fun tvar ->
-            rec_flow
-              cx
-              trace
-              (fn, CallT (use_op, reason, mk_functioncalltype reason_op None [Arg tin] tvar)))
-      in
-      run_compose cx trace ~use_op reason_op reverse fns spread_fn tvar tout
+      let tvar = Tvar.mk_no_wrap cx reason in
+      rec_flow
+        cx
+        trace
+        ( fn,
+          CallT (use_op, reason, mk_functioncalltype reason_op None [Arg (OpenT tin)] (reason, tvar))
+        );
+      run_compose cx trace ~use_op reason_op reverse fns spread_fn (reason, tvar) tout
     (* If there are no functions and no spread function then we are an identity
      * function. *)
-    | (_, [], None) -> rec_flow_t cx trace (tin, tout)
+    | (_, [], None) -> rec_flow_t ~use_op:unknown_use cx trace (OpenT tin, OpenT tout)
     (* Correctly implementing spreads of unknown arity for the compose function
      * is a little tricky. Let's look at a couple of cases.
      *
@@ -122,30 +123,34 @@ module Kit (Flow : Flow_common.S) = struct
           Op (FunCallMethod { op; fn; prop; args = []; local })
         | _ -> use_op
       in
-      let tin = Tvar.mk cx reason_op in
-      let tvar = Tvar.mk cx reason_op in
+      let tin = (reason_op, Tvar.mk_no_wrap cx reason_op) in
+      let tvar = (reason_op, Tvar.mk_no_wrap cx reason_op) in
       run_compose cx trace ~use_op reason_op reverse args spread_arg tin tvar;
       let funt =
         FunT
           ( dummy_static reason_op,
             dummy_prototype,
-            mk_functiontype reason_op [tin] ~rest_param:None ~def_reason:reason_op tvar )
+            mk_functiontype
+              reason_op
+              [OpenT tin]
+              ~rest_param:None
+              ~def_reason:reason_op
+              (OpenT tvar) )
       in
-      rec_flow_t cx trace (DefT (reason_op, bogus_trust (), funt), tout)
+      rec_flow_t ~use_op:unknown_use cx trace (DefT (reason_op, bogus_trust (), funt), tout)
     | ReactCreateElement ->
       (match args with
       (* React.createElement(component) *)
       | [component] ->
         let config =
           let r = replace_desc_reason RReactProps reason_op in
-          Obj_type.mk_with_proto cx r ~sealed:true ~exact:true ~frozen:true (ObjProtoT r)
+          Obj_type.mk_with_proto cx r ~obj_kind:Exact ~frozen:true (ObjProtoT r)
         in
         rec_flow
           cx
           trace
           ( component,
-            ReactKitT (use_op, reason_op, React.CreateElement0 (false, config, ([], None), tout))
-          )
+            ReactKitT (use_op, reason_op, React.CreateElement0 (false, config, ([], None), tout)) )
       (* React.createElement(component, config, ...children) *)
       | component :: config :: children ->
         rec_flow
@@ -153,9 +158,8 @@ module Kit (Flow : Flow_common.S) = struct
           trace
           ( component,
             ReactKitT
-              ( use_op,
-                reason_op,
-                React.CreateElement0 (false, config, (children, spread_arg), tout) ) )
+              (use_op, reason_op, React.CreateElement0 (false, config, (children, spread_arg), tout))
+          )
       (* React.createElement() *)
       | _ ->
         (* If we don't have the arguments we need, add an arity error. *)
@@ -167,24 +171,20 @@ module Kit (Flow : Flow_common.S) = struct
         (* Create the expected type for our element with a fresh tvar in the
          * component position. *)
         let expected_element =
-          get_builtin_typeapp
-            cx
-            ~trace
-            (reason_of_t element)
-            "React$Element"
-            [Tvar.mk cx reason_op]
+          get_builtin_typeapp cx ~trace (reason_of_t element) "React$Element" [Tvar.mk cx reason_op]
         in
         (* Flow the element arg to our expected element. *)
-        rec_flow_t cx trace (element, expected_element);
+        rec_flow_t ~use_op:unknown_use cx trace (element, expected_element);
 
         (* Flow our expected element to the return type. *)
-        rec_flow_t cx trace (expected_element, tout)
+        rec_flow_t ~use_op:unknown_use cx trace (expected_element, tout)
       (* React.cloneElement(element, config, ...children) *)
       | element :: config :: children ->
         (* Create a tvar for our component. *)
         let component = Tvar.mk cx reason_op in
         (* Flow the element arg to the element type we expect. *)
         rec_flow_t
+          ~use_op:unknown_use
           cx
           trace
           (element, get_builtin_typeapp cx ~trace reason_op "React$Element" [component]);
@@ -207,14 +207,13 @@ module Kit (Flow : Flow_common.S) = struct
       | [] ->
         let config =
           let r = replace_desc_reason RReactProps reason_op in
-          Obj_type.mk_with_proto cx r ~sealed:true ~exact:true ~frozen:true (ObjProtoT r)
+          Obj_type.mk_with_proto cx r ~obj_kind:Exact ~frozen:true (ObjProtoT r)
         in
         rec_flow
           cx
           trace
           ( component,
-            ReactKitT (use_op, reason_op, React.CreateElement0 (false, config, ([], None), tout))
-          )
+            ReactKitT (use_op, reason_op, React.CreateElement0 (false, config, ([], None), tout)) )
       (* React.createFactory(component)(config, ...children) *)
       | config :: children ->
         rec_flow
@@ -222,9 +221,8 @@ module Kit (Flow : Flow_common.S) = struct
           trace
           ( component,
             ReactKitT
-              ( use_op,
-                reason_op,
-                React.CreateElement0 (false, config, (children, spread_arg), tout) ) ))
+              (use_op, reason_op, React.CreateElement0 (false, config, (children, spread_arg), tout))
+          ))
     | ObjectAssign
     | ObjectGetPrototypeOf
     | ObjectSetPrototypeOf

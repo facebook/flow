@@ -1,4 +1,9 @@
 #!/bin/bash
+# Copyright (c) Facebook, Inc. and its affiliates.
+#
+# This source code is licensed under the MIT license found in the
+# LICENSE file in the root directory of this source tree.
+
 mkdir tmp
 cp foo.js tmp/
 
@@ -15,10 +20,10 @@ cp tmp/foo.js .
 assert_ok "$FLOW" force-recheck --no-auto-start foo.js
 assert_errors "$FLOW" status --no-auto-start .
 
-printf "\nRemove @flow in foo.js (no errors!):\n"
+printf "\nRemove @flow in foo.js:\n"
 cp tmp1/foo.js .
 assert_ok "$FLOW" force-recheck --no-auto-start foo.js
-assert_ok "$FLOW" status --no-auto-start .
+assert_errors "$FLOW" status --no-auto-start .
 
 printf "\nRestore foo.js (same as initial status):\n"
 cp tmp/foo.js .

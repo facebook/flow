@@ -1,4 +1,8 @@
 #!/bin/bash
+# Copyright (c) Facebook, Inc. and its affiliates.
+#
+# This source code is licensed under the MIT license found in the
+# LICENSE file in the root directory of this source tree.
 
 printf "Reading JS from stdin:\n"
 assert_ok "$FLOW" ast --pretty < foo.js
@@ -20,3 +24,12 @@ assert_ok "$FLOW" ast --pretty --path my/relative/path.js < foo.js
 
 printf "\nUsing --path is ignore without stdin:\n"
 assert_ok "$FLOW" ast --pretty --path my/relative/path.js foo.js
+
+printf "\nNon-ASCII characters without specifying offset style:\n"
+assert_ok "$FLOW" ast --pretty nonascii.js
+
+printf "\nNon-ASCII characters with utf8-bytes offset style:\n"
+assert_ok "$FLOW" ast --pretty --offset-style utf8-bytes nonascii.js
+
+printf "\nNon-ASCII characters with js-indices offset style:\n"
+assert_ok "$FLOW" ast --pretty --offset-style js-indices nonascii.js

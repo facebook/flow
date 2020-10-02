@@ -1,4 +1,4 @@
-(**
+(*
  * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
@@ -37,7 +37,7 @@ val module_resource_exts : options -> SSet.t
 
 val node_resolver_dirnames : options -> string list
 
-val node_modules_containers : SSet.t ref
+val node_modules_containers : SSet.t SMap.t ref
 
 val global_file_name : string
 
@@ -81,8 +81,6 @@ val current_dir_name : Str.regexp
 val parent_dir_name : Str.regexp
 
 val absolute_path_regexp : Str.regexp
-
-val project_root_token : Str.regexp
 
 val watched_paths : options -> Path.t list
 
@@ -129,6 +127,4 @@ val imaginary_realpath : string -> string
 val canonicalize_filenames :
   cwd:string -> handle_imaginary:(string -> string) -> string list -> string list
 
-val expand_project_root_token_to_string : root:Path.t -> string -> string
-
-val expand_project_root_token_to_regexp : root:Path.t -> string -> Str.regexp
+val expand_project_root_token : root:Path.t -> string -> string

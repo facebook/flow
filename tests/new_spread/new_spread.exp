@@ -1,218 +1,99 @@
-Error ----------------------------------------------------------------------------------------- cross_module/app.js:5:16
+Error ----------------------------------------------------------------------------------------- cross_module/app.js:5:24
 
 Cannot call `fn` with function bound to `arg` because number [1] is incompatible with string [2] in property `a` of the
-first argument.
+first argument. [incompatible-call]
 
-   cross_module/app.js:5:16
-   5| const app = fn((o: {a: number, b: number}) => {});
-                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-References:
    cross_module/app.js:5:24
    5| const app = fn((o: {a: number, b: number}) => {});
                              ^^^^^^ [1]
+
+References:
    cross_module/app.js:6:9
    6| app({a: 'foo', b: 2});
               ^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------ cross_module/use.js:5:5
+Error ------------------------------------------------------------------------------------------ cross_module/use.js:5:9
 
 Cannot call `app` with object literal bound to the first parameter because string [1] is incompatible with number [2] in
-property `a`.
+property `a`. [incompatible-call]
 
-   cross_module/use.js:5:5
-   5| app({a: 'foo', b: 2});
-          ^^^^^^^^^^^^^^^^
-
-References:
    cross_module/use.js:5:9
    5| app({a: 'foo', b: 2});
               ^^^^^ [1]
+
+References:
    cross_module/app.js:8:60
    8| export default (fn((o: {a: number, b: number}) => {}): {|a:number, b:number|} => void);
                                                                  ^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------- error_messages.js:3:62
+Error -------------------------------------------------------------------------------------------- no_interfaces.js:16:1
 
-Cannot determine a type for object type [1]. object type [2] is inexact, so it may contain `c` with a type that
-conflicts with `c`'s definition in object type [1]. Can you make object type [2] exact?
+Cannot call `spread` because Flow cannot determine a type for object type [1]. `B` [2] cannot be spread because
+interfaces do not track the own-ness of their properties. Try using an object type instead. [cannot-spread-interface]
 
-   error_messages.js:3:62
-   3| declare var x: {a: number, ...{| b: number |}, c: number, ...{d: number}}; // Error
-                                                                   ^^^^^^^^^^^ [2]
-
-References:
-   error_messages.js:3:16
-   3| declare var x: {a: number, ...{| b: number |}, c: number, ...{d: number}}; // Error
-                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-
-
-Error ------------------------------------------------------------------------------------------- error_messages.js:7:16
-
-Cannot determine a type for object type [1]. object type [1] is inexact, so it may contain `b` with a type that
-conflicts with `b`'s definition in object type [2]. Can you make object type [1] exact?
-
-   error_messages.js:7:16
-   7| declare var y: {...{a: number}, c: number, d: number, ...{| b?: number |}}; // Error
-                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-
-References:
-   error_messages.js:7:58
-   7| declare var y: {...{a: number}, c: number, d: number, ...{| b?: number |}}; // Error
-                                                               ^^^^^^^^^^^^^^^^ [2]
-
-
-Error ------------------------------------------------------------------------------------------ error_messages.js:13:49
-
-Cannot determine a type for object type [1]. `B` [2] is inexact, so it may contain `c` with a type that conflicts with
-`c`'s definition in object type [1]. Can you make `B` [2] exact?
-
-   error_messages.js:13:49
-   13| declare var x2: {a: number, ...A, c: number, ...B}; // Error
-                                                       ^ [2]
-
-References:
-   error_messages.js:13:17
-   13| declare var x2: {a: number, ...A, c: number, ...B}; // Error
-                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-
-
-Error ------------------------------------------------------------------------------------------ error_messages.js:19:17
-
-Cannot determine a type for object type [1]. object type [1] is inexact, so it may contain `b` with a type that
-conflicts with `b`'s definition in `D` [2]. Can you make object type [1] exact?
-
-   error_messages.js:19:17
-   19| declare var y2: {...C, c: number, d: number, ...D}; // Error
-                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-
-References:
-   error_messages.js:19:49
-   19| declare var y2: {...C, c: number, d: number, ...D}; // Error
-                                                       ^ [2]
-
-
-Error ------------------------------------------------------------------------------------------- error_messages.js:26:6
-
-Cannot determine a type for object type [1]. object type [2] is inexact, so it may contain `d` with a type that
-conflicts with `d`'s definition in object type [1]. Can you make object type [2] exact?
-
-   error_messages.js:26:6
-   26|   ...{b: number},
-            ^^^^^^^^^^^ [2]
-
-References:
-   error_messages.js:23:17
-                       v---------------------------------------------
-   23| declare var x3: { // Error, but message could use improvement.
-   24|   ...{a: number},
-   25|   d: number,
-   26|   ...{b: number},
-   27|   e: number,
-   28|   ...{c: number},
-   29|   f: number,
-   30| };
-       ^ [1]
-
-
-Error ------------------------------------------------------------------------------------------ error_messages.js:33:27
-
-Cannot determine a type for object type [1]. `B` [2] is inexact, so it may contain `b` with a type that conflicts with
-`b`'s definition in `A` [3]. Can you make `B` [2] exact?
-
-   error_messages.js:33:27
-   33| declare var x4: {...A, ...B, ...C, ...D}; // Error, representative of common case
-                                 ^ [2]
-
-References:
-   error_messages.js:33:17
-   33| declare var x4: {...A, ...B, ...C, ...D}; // Error, representative of common case
-                       ^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   error_messages.js:33:21
-   33| declare var x4: {...A, ...B, ...C, ...D}; // Error, representative of common case
-                           ^ [3]
-
-
-Error ------------------------------------------------------------------------------------------ error_messages.js:36:47
-
-Cannot determine a type for object type [1]. `B` [2] is inexact, so it may contain `foo` with a type that conflicts with
-`foo`'s definition in object type [1]. Can you make `B` [2] exact?
-
-   error_messages.js:36:47
-   36| declare var x5: {foo: number, bar: number, ...B}; // Error, representative of common case
-                                                     ^ [2]
-
-References:
-   error_messages.js:36:17
-   36| declare var x5: {foo: number, bar: number, ...B}; // Error, representative of common case
-                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-
-
-Error ------------------------------------------------------------------------------------------- no_interfaces.js:16:11
-
-Cannot determine a type for object type [1]. `B` [2] cannot be spread because interfaces do not track the own-ness of
-their properties. Can you use an object type instead?
-
-   no_interfaces.js:16:11
+   no_interfaces.js:16:1
    16| spread<A, B>(a, b); // Error, can't spread interface
-                 ^ [2]
+       ^^^^^^
 
 References:
    no_interfaces.js:9:4
     9| ): {...A, ...B} {
           ^^^^^^^^^^^^ [1]
+   no_interfaces.js:16:11
+   16| spread<A, B>(a, b); // Error, can't spread interface
+                 ^ [2]
 
 
-Error ------------------------------------------------------------------------------------------- no_interfaces.js:18:20
+Error ------------------------------------------------------------------------------------------- no_interfaces.js:18:10
 
-Cannot determine a type for `X` [1]. `B` [2] cannot be spread because interfaces do not track the own-ness of their
-properties. Can you use an object type instead?
+Flow cannot determine a type for `X` [1]. `B` [2] cannot be spread because interfaces do not track the own-ness of their
+properties. Try using an object type instead. [cannot-spread-interface]
 
-   no_interfaces.js:18:20
-   18| type X = {...A, ...B}; // Error, can't spread interface
-                          ^ [2]
-
-References:
    no_interfaces.js:18:10
    18| type X = {...A, ...B}; // Error, can't spread interface
                 ^^^^^^^^^^^^ [1]
 
-
-Error ------------------------------------------------------------------------------------------- no_interfaces.js:23:14
-
-Cannot determine a type for `Y` [1]. `A` [2] cannot be spread because interfaces do not track the own-ness of their
-properties. Can you use an object type instead?
-
-   no_interfaces.js:23:14
-   23| type Y = {...A, foo: number}; // Error, can't spread interface
-                    ^ [2]
-
 References:
+   no_interfaces.js:18:20
+   18| type X = {...A, ...B}; // Error, can't spread interface
+                          ^ [2]
+
+
+Error ------------------------------------------------------------------------------------------- no_interfaces.js:23:10
+
+Flow cannot determine a type for `Y` [1]. `A` [2] cannot be spread because interfaces do not track the own-ness of their
+properties. Try using an object type instead. [cannot-spread-interface]
+
    no_interfaces.js:23:10
    23| type Y = {...A, foo: number}; // Error, can't spread interface
                 ^^^^^^^^^^^^^^^^^^^ [1]
 
-
-Error ------------------------------------------------------------------------------------------- no_interfaces.js:27:27
-
-Cannot determine a type for `Z` [1]. `A` [2] cannot be spread because interfaces do not track the own-ness of their
-properties. Can you use an object type instead?
-
-   no_interfaces.js:27:27
-   27| type Z = {foo: number, ...A}; // Error, can't spread interface
-                                 ^ [2]
-
 References:
+   no_interfaces.js:23:14
+   23| type Y = {...A, foo: number}; // Error, can't spread interface
+                    ^ [2]
+
+
+Error ------------------------------------------------------------------------------------------- no_interfaces.js:27:10
+
+Flow cannot determine a type for `Z` [1]. `A` [2] cannot be spread because interfaces do not track the own-ness of their
+properties. Try using an object type instead. [cannot-spread-interface]
+
    no_interfaces.js:27:10
    27| type Z = {foo: number, ...A}; // Error, can't spread interface
                 ^^^^^^^^^^^^^^^^^^^ [1]
 
+References:
+   no_interfaces.js:27:27
+   27| type Z = {foo: number, ...A}; // Error, can't spread interface
+                                 ^ [2]
+
 
 Error ----------------------------------------------------------------------------------------------------- type.js:12:2
 
-Cannot cast `o1` to object type because `T` [1] is incompatible with undefined [2] in property `p`.
+Cannot cast `o1` to object type because `T` [1] is incompatible with undefined [2] in property `p`. [incompatible-cast]
 
    type.js:12:2
    12| (o1: {p?:T}); // ok
@@ -227,13 +108,13 @@ References:
                 ^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- type.js:16:2
+Error ----------------------------------------------------------------------------------------------------- type.js:16:5
 
-Cannot cast object literal to `O1` because `U` [1] is incompatible with `T` [2] in property `p`.
+Cannot cast object literal to `O1` because `U` [1] is incompatible with `T` [2] in property `p`. [incompatible-cast]
 
-   type.js:16:2
+   type.js:16:5
    16| ({p:y}: O1); // error: y ~> T
-        ^^^^^
+           ^
 
 References:
    type.js:5:16
@@ -246,7 +127,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- type.js:23:2
 
-Cannot cast `o2` to object type because undefined [1] is incompatible with `T` [2] in property `p`.
+Cannot cast `o2` to object type because undefined [1] is incompatible with `T` [2] in property `p`. [incompatible-cast]
 
    type.js:23:2
    23| (o2: {p:T}); // error: o2.p is optional
@@ -261,13 +142,13 @@ References:
                ^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- type.js:26:2
+Error ----------------------------------------------------------------------------------------------------- type.js:26:5
 
-Cannot cast object literal to `O2` because `U` [1] is incompatible with `T` [2] in property `p`.
+Cannot cast object literal to `O2` because `U` [1] is incompatible with `T` [2] in property `p`. [incompatible-cast]
 
-   type.js:26:2
+   type.js:26:5
    26| ({p:y}: O2); // error: y ~> T
-        ^^^^^
+           ^
 
 References:
    type.js:5:16
@@ -280,7 +161,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- type.js:30:16
 
-Inexact object type [1] is incompatible with exact `O3` [2].
+Inexact object type [1] is incompatible with exact `O3` [2]. [incompatible-exact]
 
    type.js:30:16
    30| type O3 = {|...{p:T}|}; ({p:x}: O3); // error: spread result is not exact
@@ -294,7 +175,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- type.js:36:2
 
-Cannot cast `o4` to object type because inexact object type [1] is incompatible with exact object type [2].
+Cannot cast `o4` to object type because inexact `O4` [1] is incompatible with exact object type [2].
+[incompatible-exact]
 
    type.js:36:2
    36| (o4: {|p:T|}); // error: not exact
@@ -309,30 +191,28 @@ References:
             ^^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- type.js:37:3
+Error ----------------------------------------------------------------------------------------------------- type.js:37:6
 
-Cannot cast object literal to `O4` because property `p` is missing in object type [1] but exists in object type [2].
+Cannot cast object literal to `O4` because property `p` is missing in object type [1] but exists in `O4` [2].
+[prop-missing]
 
-   type.js:37:3
-   37| (({}:{}): O4); // error: property `p` not found
-         ^^^^^
-
-References:
    type.js:37:6
    37| (({}:{}): O4); // error: property `p` not found
             ^^ [1]
+
+References:
    type.js:37:11
    37| (({}:{}): O4); // error: property `p` not found
                  ^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- type.js:39:2
+Error ----------------------------------------------------------------------------------------------------- type.js:39:5
 
-Cannot cast object literal to `O4` because `U` [1] is incompatible with `T` [2] in property `p`.
+Cannot cast object literal to `O4` because `U` [1] is incompatible with `T` [2] in property `p`. [incompatible-cast]
 
-   type.js:39:2
+   type.js:39:5
    39| ({p:y}: O4); // error: y ~> T
-        ^^^^^
+           ^
 
 References:
    type.js:5:16
@@ -345,7 +225,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- type.js:47:2
 
-Cannot cast `nil` to `O5` because property `p` is missing in object type [1] but exists in object type [2].
+Cannot cast `nil` to `O5` because property `p` is missing in object type [1] but exists in `O5` [2]. [prop-missing]
 
    type.js:47:2
    47| (nil: O5); // error: property `p` not found
@@ -360,13 +240,13 @@ References:
              ^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- type.js:49:2
+Error ----------------------------------------------------------------------------------------------------- type.js:49:5
 
-Cannot cast object literal to `O5` because `U` [1] is incompatible with `T` [2] in property `p`.
+Cannot cast object literal to `O5` because `U` [1] is incompatible with `T` [2] in property `p`. [incompatible-cast]
 
-   type.js:49:2
+   type.js:49:5
    49| ({p:y}: O5); // error: y ~> T
-        ^^^^^
+           ^
 
 References:
    type.js:5:16
@@ -379,7 +259,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- type.js:50:2
 
-Cannot cast object literal to `O5` because property `q` is missing in object type [1] but exists in object literal [2].
+Cannot cast object literal to `O5` because property `q` is missing in `O5` [1] but exists in object literal [2].
+[prop-missing]
 
    type.js:50:2
    50| ({p:x,q:y}: O5); // error: additional property `q` found
@@ -391,30 +272,28 @@ References:
                    ^^ [1]
 
 
-Error ----------------------------------------------------------------------------------------------------- type.js:56:3
+Error ----------------------------------------------------------------------------------------------------- type.js:56:6
 
 Cannot cast object literal to `O6` because property `p` is missing in object type [1] but exists in `O6` [2].
+[prop-missing]
 
-   type.js:56:3
-   56| (({}:{}): O6); // error: property `p` not found
-         ^^^^^
-
-References:
    type.js:56:6
    56| (({}:{}): O6); // error: property `p` not found
             ^^ [1]
+
+References:
    type.js:56:11
    56| (({}:{}): O6); // error: property `p` not found
                  ^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- type.js:57:2
+Error ----------------------------------------------------------------------------------------------------- type.js:57:5
 
-Cannot cast object literal to `O6` because `T` [1] is incompatible with `U` [2] in property `p`.
+Cannot cast object literal to `O6` because `T` [1] is incompatible with `U` [2] in property `p`. [incompatible-cast]
 
-   type.js:57:2
+   type.js:57:5
    57| ({p:x}: O6); // error: x ~> U
-        ^^^^^
+           ^
 
 References:
    type.js:2:16
@@ -427,7 +306,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- type.js:62:16
 
-Inexact object type [1] is incompatible with exact `O7` [2].
+Inexact object type [1] is incompatible with exact `O7` [2]. [incompatible-exact]
 
    type.js:62:16
    62| type O7 = {|...{p:T},...{|p:U|}|}; ({p:y}: O7);// error: spread result is not exact
@@ -441,7 +320,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- type.js:68:2
 
-Cannot cast `o8.p` to `T` because `U` [1] is incompatible with `T` [2].
+Cannot cast `o8.p` to `T` because `U` [1] is incompatible with `T` [2]. [incompatible-cast]
 
    type.js:68:2
    68| (o8.p: T); // error: U ~> T
@@ -458,7 +337,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- type.js:74:2
 
-Cannot cast `o9` to object type because `T` [1] is incompatible with undefined [2] in property `p`.
+Cannot cast `o9` to object type because `T` [1] is incompatible with undefined [2] in property `p`. [incompatible-cast]
 
    type.js:74:2
    74| (o9: {p?:T,q:U});
@@ -473,37 +352,37 @@ References:
                 ^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- type.js:79:27
+Error ---------------------------------------------------------------------------------------------------- type.js:79:12
 
-Cannot determine a type for `O10` [1]. object type [2] is inexact, so it may contain `p` with a type that conflicts with
-`p`'s definition in object type [3]. Can you make object type [2] exact?
+Flow cannot determine a type for `O10` [1]. object type [2] is inexact, so it may contain `p` with a type that conflicts
+with `p`'s definition in object type [3]. Try making object type [2] exact. [cannot-spread-inexact]
 
-   type.js:79:27
-   79| type O10 = {...{|p:T|},...{q:U}}; // Error, p may exist in second object
-                                 ^^^^^ [2]
-
-References:
    type.js:79:12
    79| type O10 = {...{|p:T|},...{q:U}}; // Error, p may exist in second object
                   ^^^^^^^^^^^^^^^^^^^^^ [1]
+
+References:
+   type.js:79:27
+   79| type O10 = {...{|p:T|},...{q:U}}; // Error, p may exist in second object
+                                 ^^^^^ [2]
    type.js:79:16
    79| type O10 = {...{|p:T|},...{q:U}}; // Error, p may exist in second object
                       ^^^^^^^ [3]
 
 
-Error ---------------------------------------------------------------------------------------------------- type.js:84:25
+Error ---------------------------------------------------------------------------------------------------- type.js:84:12
 
-Cannot determine a type for `O11` [1]. object type [2] is inexact, so it may contain `p` with a type that conflicts with
-`p`'s definition in object type [3]. Can you make object type [2] exact?
+Flow cannot determine a type for `O11` [1]. object type [2] is inexact, so it may contain `p` with a type that conflicts
+with `p`'s definition in object type [3]. Try making object type [2] exact. [cannot-spread-inexact]
 
-   type.js:84:25
-   84| type O11 = {...{p:T},...{q:U}}; // Error, p may exist in second object
-                               ^^^^^ [2]
-
-References:
    type.js:84:12
    84| type O11 = {...{p:T},...{q:U}}; // Error, p may exist in second object
                   ^^^^^^^^^^^^^^^^^^^ [1]
+
+References:
+   type.js:84:25
+   84| type O11 = {...{p:T},...{q:U}}; // Error, p may exist in second object
+                               ^^^^^ [2]
    type.js:84:16
    84| type O11 = {...{p:T},...{q:U}}; // Error, p may exist in second object
                       ^^^^^ [3]
@@ -511,7 +390,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- type.js:102:2
 
-Cannot cast `o14` to object type because `T` [1] is incompatible with undefined [2] in property `p`.
+Cannot cast `o14` to object type because `T` [1] is incompatible with undefined [2] in property `p`. [incompatible-cast]
 
    type.js:102:2
    102| (o14: {p?:T}); // ok
@@ -526,13 +405,13 @@ References:
                   ^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- type.js:105:2
+Error ---------------------------------------------------------------------------------------------------- type.js:105:5
 
-Cannot cast object literal to `O14` because `U` [1] is incompatible with `T` [2] in property `p`.
+Cannot cast object literal to `O14` because `U` [1] is incompatible with `T` [2] in property `p`. [incompatible-cast]
 
-   type.js:105:2
+   type.js:105:5
    105| ({p:y}: O14); // error: U ~> T
-         ^^^^^
+            ^
 
 References:
    type.js:5:16
@@ -546,6 +425,7 @@ References:
 Error ----------------------------------------------------------------------------------------------- type_contra.js:6:2
 
 Cannot cast `o1` to object type because property `p` of unknown type [1] is incompatible with `T` [2] in property `p`.
+[incompatible-cast]
 
    type_contra.js:6:2
    6| (o1: {p?:T}); // error: unknown ~> T
@@ -562,7 +442,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- type_contra.js:7:2
 
-Cannot cast `o1.p` to `T` because property `p` of unknown type [1] is incompatible with `T` [2].
+Cannot cast `o1.p` to `T` because property `p` of unknown type [1] is incompatible with `T` [2]. [incompatible-cast]
 
    type_contra.js:7:2
    7| (o1.p: T); // errors: undefined ~> T, unknown ~> T
@@ -580,7 +460,7 @@ References:
 Error ---------------------------------------------------------------------------------------------- type_contra.js:12:2
 
 Cannot cast `o2` to object type because computed property of unknown type [1] is incompatible with `T` [2] in the
-indexer property.
+indexer property. [incompatible-cast]
 
    type_contra.js:12:2
    12| (o2: {[string]:T}); // error: unknown ~> T
@@ -598,6 +478,7 @@ References:
 Error ---------------------------------------------------------------------------------------------- type_contra.js:13:2
 
 Cannot cast `o2.p` to `T` because computed property of unknown type [1] is incompatible with `T` [2].
+[incompatible-cast]
 
    type_contra.js:13:2
    13| (o2.p: T); // errors: unknown ~> T
@@ -615,6 +496,7 @@ References:
 Error ---------------------------------------------------------------------------------------------- type_contra.js:18:2
 
 Cannot cast `o3` to object type because property `p` of unknown type [1] is incompatible with `T` [2] in property `p`.
+[incompatible-cast]
 
    type_contra.js:18:2
    18| (o3: {p:T}); // error: unknown ~> T
@@ -631,7 +513,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- type_contra.js:19:2
 
-Cannot cast `o3.p` to `T` because property `p` of unknown type [1] is incompatible with `T` [2].
+Cannot cast `o3.p` to `T` because property `p` of unknown type [1] is incompatible with `T` [2]. [incompatible-cast]
 
    type_contra.js:19:2
    19| (o3.p: T); // errors: unknown ~> T
@@ -646,19 +528,20 @@ References:
               ^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------ type_dict.js:4:37
+Error ------------------------------------------------------------------------------------------------ type_dict.js:4:17
 
-Cannot determine a type for object type [1]. object type [2] is inexact and may have a property key that conflicts with
-string [3] or a property value that conflicts with `T` [4]. Can you make object type [2] exact?
+Flow cannot determine a type for object type [1]. object type [2] is inexact and may have a property key that conflicts
+with string [3] or a property value that conflicts with `T` [4]. Try making object type [2] exact.
+[cannot-spread-inexact]
 
-   type_dict.js:4:37
-   4| declare var o1: {...{[string]:T},...{p:U}}; // Error, can't spread because inexact may clash with T
-                                          ^^^^^ [2]
-
-References:
    type_dict.js:4:17
    4| declare var o1: {...{[string]:T},...{p:U}}; // Error, can't spread because inexact may clash with T
                       ^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+References:
+   type_dict.js:4:37
+   4| declare var o1: {...{[string]:T},...{p:U}}; // Error, can't spread because inexact may clash with T
+                                          ^^^^^ [2]
    type_dict.js:4:23
    4| declare var o1: {...{[string]:T},...{p:U}}; // Error, can't spread because inexact may clash with T
                             ^^^^^^ [3]
@@ -669,7 +552,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ type_empty.js:5:2
 
-Cannot cast `42` to `O` because number [1] is incompatible with empty [2].
+Cannot cast `42` to `O` because number [1] is incompatible with empty [2]. [incompatible-cast]
 
    type_empty.js:5:2
    5| (42: O); // Error: number ~> empty
@@ -683,7 +566,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ type_empty.js:9:4
 
-Cannot cast `x` to number because object type [1] is incompatible with number [2].
+Cannot cast `x` to number because object type [1] is incompatible with number [2]. [incompatible-cast]
 
    type_empty.js:9:4
    9|   (x: number); // Error: mixed ~> number,
@@ -701,7 +584,7 @@ References:
 Error ----------------------------------------------------------------------------------------------- type_empty.js:14:6
 
 Cannot call `fn` with object literal bound to the first parameter because object literal [1] is incompatible with
-`T` [2].
+`T` [2]. [incompatible-call]
 
    type_empty.js:14:6
    14|   fn({}); // Error: object ~> empty
@@ -713,38 +596,40 @@ References:
                                 ^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------- type_generic.js:3:2
+Error --------------------------------------------------------------------------------------------- type_generic.js:3:12
 
-Cannot cast `spread(...)` to object type because:
- - number [1] is incompatible with empty [2] in property `p`.
- - number [3] is incompatible with empty [4] in property `q`.
+Cannot cast `spread(...)` to object type because number [1] is incompatible with empty [2] in property `p`.
+[incompatible-cast]
 
-   type_generic.js:3:2
-   3| (spread({p:0},{q:0}): {|+p:empty,+q:empty|}); // number ~> empty (x2)
-       ^^^^^^^^^^^^^^^^^^^
-
-References:
    type_generic.js:3:12
    3| (spread({p:0},{q:0}): {|+p:empty,+q:empty|}); // number ~> empty (x2)
                  ^ [1]
+
+References:
    type_generic.js:3:28
    3| (spread({p:0},{q:0}): {|+p:empty,+q:empty|}); // number ~> empty (x2)
                                  ^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------- type_generic.js:3:18
+
+Cannot cast `spread(...)` to object type because number [1] is incompatible with empty [2] in property `q`.
+[incompatible-cast]
+
    type_generic.js:3:18
    3| (spread({p:0},{q:0}): {|+p:empty,+q:empty|}); // number ~> empty (x2)
-                       ^ [3]
+                       ^ [1]
+
+References:
    type_generic.js:3:37
    3| (spread({p:0},{q:0}): {|+p:empty,+q:empty|}); // number ~> empty (x2)
-                                          ^^^^^ [4]
+                                          ^^^^^ [2]
 
 
 Error --------------------------------------------------------------------------------------------- type_instance.js:6:2
 
-Cannot cast `o1` to object type because:
- - number [1] is incompatible with undefined [2] in property `p`.
- - in property `p`:
-    - Either undefined [2] is incompatible with string [3].
-    - Or undefined [2] is incompatible with number [4].
+Cannot cast `o1` to object type because number [1] is incompatible with undefined [2] in property `p`.
+[incompatible-cast]
 
    type_instance.js:6:2
    6| (o1: {p?:number}); // Error
@@ -757,19 +642,33 @@ References:
    type_instance.js:6:10
    6| (o1: {p?:number}); // Error
                ^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------- type_instance.js:6:2
+
+Cannot cast `o1` to object type because in property `p`: [incompatible-cast]
+ - Either undefined [1] is incompatible with string [2].
+ - Or undefined [1] is incompatible with number [3].
+
+   type_instance.js:6:2
+   6| (o1: {p?:number}); // Error
+       ^^
+
+References:
+   type_instance.js:6:10
+   6| (o1: {p?:number}); // Error
+               ^^^^^^ [1]
    type_instance.js:1:14
    1| class A {+p: string|number}
-                   ^^^^^^ [3]
+                   ^^^^^^ [2]
    type_instance.js:1:21
    1| class A {+p: string|number}
-                          ^^^^^^ [4]
+                          ^^^^^^ [3]
 
 
 Error ----------------------------------------------------------------------------------------- type_intersection.js:9:2
 
-Cannot cast `o1` to object type because:
- - `T` [1] is incompatible with undefined [2] in property `p`.
- - `U` [3] is incompatible with undefined [4] in property `q`.
+Cannot cast `o1` to object type because `T` [1] is incompatible with undefined [2] in property `p`. [incompatible-cast]
 
    type_intersection.js:9:2
    9| (o1: {p?:T,q?:U}); // ok
@@ -782,19 +681,28 @@ References:
    type_intersection.js:9:10
    9| (o1: {p?:T,q?:U}); // ok
                ^ [2]
+
+
+Error ----------------------------------------------------------------------------------------- type_intersection.js:9:2
+
+Cannot cast `o1` to object type because `U` [1] is incompatible with undefined [2] in property `q`. [incompatible-cast]
+
+   type_intersection.js:9:2
+   9| (o1: {p?:T,q?:U}); // ok
+       ^^
+
+References:
    type_intersection.js:7:24
    7| type O1 = {...{p:T}&{q:U}};
-                             ^ [3]
+                             ^ [1]
    type_intersection.js:9:15
    9| (o1: {p?:T,q?:U}); // ok
-                    ^ [4]
+                    ^ [2]
 
 
 Error ---------------------------------------------------------------------------------------- type_intersection.js:13:2
 
-Cannot cast `o2` to object type because:
- - `A` [1] is incompatible with undefined [2] in property `p`.
- - `B` [3] is incompatible with undefined [2] in property `p`.
+Cannot cast `o2` to object type because `A` [1] is incompatible with undefined [2] in property `p`. [incompatible-cast]
 
    type_intersection.js:13:2
    13| (o2: {p?:B}); // ok
@@ -807,23 +715,34 @@ References:
    type_intersection.js:13:10
    13| (o2: {p?:B}); // ok
                 ^ [2]
-   type_intersection.js:11:24
-   11| type O2 = {...{p:A}&{p:B}};
-                              ^ [3]
 
 
-Error ---------------------------------------------------------------------------------------- type_intersection.js:15:2
+Error ---------------------------------------------------------------------------------------- type_intersection.js:13:2
 
-Cannot cast object literal to `O2` because `A` [1] is incompatible with `B` [2] in property `p`.
+Cannot cast `o2` to object type because `B` [1] is incompatible with undefined [2] in property `p`. [incompatible-cast]
 
-   type_intersection.js:15:2
-   15| ({p: new A}: O2); // error: A ~> B
-        ^^^^^^^^^^
+   type_intersection.js:13:2
+   13| (o2: {p?:B}); // ok
+        ^^
 
 References:
+   type_intersection.js:11:24
+   11| type O2 = {...{p:A}&{p:B}};
+                              ^ [1]
+   type_intersection.js:13:10
+   13| (o2: {p?:B}); // ok
+                ^ [2]
+
+
+Error ---------------------------------------------------------------------------------------- type_intersection.js:15:6
+
+Cannot cast object literal to `O2` because `A` [1] is incompatible with `B` [2] in property `p`. [incompatible-cast]
+
    type_intersection.js:15:6
    15| ({p: new A}: O2); // error: A ~> B
             ^^^^^ [1]
+
+References:
    type_intersection.js:11:24
    11| type O2 = {...{p:A}&{p:B}};
                               ^ [2]
@@ -831,9 +750,7 @@ References:
 
 Error -------------------------------------------------------------------------------- type_intersection_optional.js:5:2
 
-Cannot cast `o1` to object type because:
- - `T` [1] is incompatible with undefined [2] in property `p`.
- - `U` [3] is incompatible with undefined [2] in property `p`.
+Cannot cast `o1` to object type because `T` [1] is incompatible with undefined [2] in property `p`. [incompatible-cast]
 
    type_intersection_optional.js:5:2
    5| (o1: {p?:T&U}); // ok
@@ -846,16 +763,28 @@ References:
    type_intersection_optional.js:5:10
    5| (o1: {p?:T&U}); // ok
                ^^^ [2]
+
+
+Error -------------------------------------------------------------------------------- type_intersection_optional.js:5:2
+
+Cannot cast `o1` to object type because `U` [1] is incompatible with undefined [2] in property `p`. [incompatible-cast]
+
+   type_intersection_optional.js:5:2
+   5| (o1: {p?:T&U}); // ok
+       ^^
+
+References:
    type_intersection_optional.js:4:30
    4| declare var o1: {...{p:T}&{p:U}};
-                                   ^ [3]
+                                   ^ [1]
+   type_intersection_optional.js:5:10
+   5| (o1: {p?:T&U}); // ok
+               ^^^ [2]
 
 
 Error -------------------------------------------------------------------------------- type_intersection_optional.js:8:2
 
-Cannot cast `o2` to object type because:
- - `T` [1] is incompatible with undefined [2] in property `p`.
- - `U` [3] is incompatible with undefined [2] in property `p`.
+Cannot cast `o2` to object type because `T` [1] is incompatible with undefined [2] in property `p`. [incompatible-cast]
 
    type_intersection_optional.js:8:2
    8| (o2: {p?:T&U}); // ok
@@ -868,16 +797,28 @@ References:
    type_intersection_optional.js:8:10
    8| (o2: {p?:T&U}); // ok
                ^^^ [2]
+
+
+Error -------------------------------------------------------------------------------- type_intersection_optional.js:8:2
+
+Cannot cast `o2` to object type because `U` [1] is incompatible with undefined [2] in property `p`. [incompatible-cast]
+
+   type_intersection_optional.js:8:2
+   8| (o2: {p?:T&U}); // ok
+       ^^
+
+References:
    type_intersection_optional.js:7:31
    7| declare var o2: {...{p?:T}&{p:U}};
-                                    ^ [3]
+                                    ^ [1]
+   type_intersection_optional.js:8:10
+   8| (o2: {p?:T&U}); // ok
+               ^^^ [2]
 
 
 Error ------------------------------------------------------------------------------- type_intersection_optional.js:11:2
 
-Cannot cast `o3` to object type because:
- - `T` [1] is incompatible with undefined [2] in property `p`.
- - `U` [3] is incompatible with undefined [2] in property `p`.
+Cannot cast `o3` to object type because `T` [1] is incompatible with undefined [2] in property `p`. [incompatible-cast]
 
    type_intersection_optional.js:11:2
    11| (o3: {p?:T&U}); // ok
@@ -890,16 +831,28 @@ References:
    type_intersection_optional.js:11:10
    11| (o3: {p?:T&U}); // ok
                 ^^^ [2]
+
+
+Error ------------------------------------------------------------------------------- type_intersection_optional.js:11:2
+
+Cannot cast `o3` to object type because `U` [1] is incompatible with undefined [2] in property `p`. [incompatible-cast]
+
+   type_intersection_optional.js:11:2
+   11| (o3: {p?:T&U}); // ok
+        ^^
+
+References:
    type_intersection_optional.js:10:31
    10| declare var o3: {...{p:T}&{p?:U}};
-                                     ^ [3]
+                                     ^ [1]
+   type_intersection_optional.js:11:10
+   11| (o3: {p?:T&U}); // ok
+                ^^^ [2]
 
 
 Error ------------------------------------------------------------------------------- type_intersection_optional.js:53:2
 
-Cannot cast `o17` to object type because:
- - `T` [1] is incompatible with undefined [2] in property `p`.
- - `U` [3] is incompatible with undefined [4] in property `q`.
+Cannot cast `o17` to object type because `T` [1] is incompatible with undefined [2] in property `p`. [incompatible-cast]
 
    type_intersection_optional.js:53:2
    53| (o17: {p?:T,q?:U}); // ok
@@ -912,17 +865,28 @@ References:
    type_intersection_optional.js:53:11
    53| (o17: {p?:T,q?:U}); // ok
                  ^ [2]
+
+
+Error ------------------------------------------------------------------------------- type_intersection_optional.js:53:2
+
+Cannot cast `o17` to object type because `U` [1] is incompatible with undefined [2] in property `q`. [incompatible-cast]
+
+   type_intersection_optional.js:53:2
+   53| (o17: {p?:T,q?:U}); // ok
+        ^^^
+
+References:
    type_intersection_optional.js:52:31
    52| declare var o17: {...{p:T}&{q:U}};
-                                     ^ [3]
+                                     ^ [1]
    type_intersection_optional.js:53:16
    53| (o17: {p?:T,q?:U}); // ok
-                      ^ [4]
+                      ^ [2]
 
 
 Error ------------------------------------------------------------------------------- type_intersection_optional.js:56:2
 
-Cannot cast `o18` to object type because `U` [1] is incompatible with undefined [2] in property `q`.
+Cannot cast `o18` to object type because `U` [1] is incompatible with undefined [2] in property `q`. [incompatible-cast]
 
    type_intersection_optional.js:56:2
    56| (o18: {p?:T,q?:U}); // ok
@@ -939,7 +903,7 @@ References:
 
 Error ------------------------------------------------------------------------------- type_intersection_optional.js:59:2
 
-Cannot cast `o19` to object type because `T` [1] is incompatible with undefined [2] in property `p`.
+Cannot cast `o19` to object type because `T` [1] is incompatible with undefined [2] in property `p`. [incompatible-cast]
 
    type_intersection_optional.js:59:2
    59| (o19: {p?:T,q?:U}); // ok
@@ -956,7 +920,7 @@ References:
 
 Error ------------------------------------------------------------------------------- type_intersection_optional.js:65:2
 
-Cannot cast `o21` to object type because `U` [1] is incompatible with undefined [2] in property `q`.
+Cannot cast `o21` to object type because `U` [1] is incompatible with undefined [2] in property `q`. [incompatible-cast]
 
    type_intersection_optional.js:65:2
    65| (o21: {p:T,q?:U}); // ok
@@ -971,13 +935,13 @@ References:
                      ^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------ type_mixed.js:5:2
+Error ------------------------------------------------------------------------------------------------ type_mixed.js:5:5
 
-Cannot get `o1.someProp` because property `someProp` is missing in `O1` [1].
+Cannot get `o1.someProp` because property `someProp` is missing in `O1` [1]. [prop-missing]
 
-   type_mixed.js:5:2
+   type_mixed.js:5:5
    5| (o1.someProp: empty); // Error someProp does not exist
-       ^^^^^^^^^^^
+          ^^^^^^^^
 
 References:
    type_mixed.js:4:17
@@ -985,13 +949,13 @@ References:
                       ^^ [1]
 
 
-Error ------------------------------------------------------------------------------------------------ type_mixed.js:9:2
+Error ------------------------------------------------------------------------------------------------ type_mixed.js:9:5
 
-Cannot get `o2.someProp` because property `someProp` is missing in `O2` [1].
+Cannot get `o2.someProp` because property `someProp` is missing in `O2` [1]. [prop-missing]
 
-   type_mixed.js:9:2
+   type_mixed.js:9:5
    9| (o2.someProp: empty); // Error someProp does not exist
-       ^^^^^^^^^^^
+          ^^^^^^^^
 
 References:
    type_mixed.js:8:17
@@ -1001,7 +965,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- type_mixed.js:13:2
 
-Cannot cast `o3.a` to empty because number [1] is incompatible with empty [2].
+Cannot cast `o3.a` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
 
    type_mixed.js:13:2
    13| (o3.a: empty); // Error: number ~> empty
@@ -1018,9 +982,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- type_mixed.js:14:2
 
-Cannot cast `o3.b` to empty because:
- - number [1] is incompatible with empty [2].
- - undefined [1] is incompatible with empty [2].
+Cannot cast `o3.b` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
 
    type_mixed.js:14:2
    14| (o3.b: empty); // Error: mixed ~> empty, number ~> empty, and undefined ~> empty
@@ -1035,13 +997,30 @@ References:
               ^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------- type_mixed.js:15:2
+Error ----------------------------------------------------------------------------------------------- type_mixed.js:14:2
 
-Cannot get `o3.c` because property `c` is missing in `O3` [1].
+Cannot cast `o3.b` to empty because undefined [1] is incompatible with empty [2]. [incompatible-cast]
 
-   type_mixed.js:15:2
-   15| (o3.c: empty); // Error c does not exist
+   type_mixed.js:14:2
+   14| (o3.b: empty); // Error: mixed ~> empty, number ~> empty, and undefined ~> empty
         ^^^^
+
+References:
+   type_mixed.js:11:42
+   11| type O3 = {...mixed, ...{|a: number, b?: number|}};
+                                                ^^^^^^ [1]
+   type_mixed.js:14:8
+   14| (o3.b: empty); // Error: mixed ~> empty, number ~> empty, and undefined ~> empty
+              ^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- type_mixed.js:15:5
+
+Cannot get `o3.c` because property `c` is missing in `O3` [1]. [prop-missing]
+
+   type_mixed.js:15:5
+   15| (o3.c: empty); // Error c does not exist
+           ^
 
 References:
    type_mixed.js:12:17
@@ -1049,13 +1028,13 @@ References:
                        ^^ [1]
 
 
-Error ----------------------------------------------------------------------------------------------- type_mixed.js:18:4
+Error ----------------------------------------------------------------------------------------------- type_mixed.js:18:8
 
-Cannot get `obj.someProp` because property `someProp` is missing in object type [1].
+Cannot get `obj.someProp` because property `someProp` is missing in object type [1]. [prop-missing]
 
-   type_mixed.js:18:4
+   type_mixed.js:18:8
    18|   (obj.someProp: empty); // Error someProp does not exist
-          ^^^^^^^^^^^^
+              ^^^^^^^^
 
 References:
    type_mixed.js:17:21
@@ -1066,6 +1045,7 @@ References:
 Error ---------------------------------------------------------------------------------------------- type_statics.js:5:2
 
 Cannot cast `o1` to object type because number [1] is incompatible with undefined [2] in property `p`.
+[incompatible-cast]
 
    type_statics.js:5:2
    5| (o1: {p?:number}); // ok
@@ -1080,19 +1060,23 @@ References:
                ^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------- type_string.js:1:15
+Error ----------------------------------------------------------------------------------------------- type_string.js:2:2
 
-string literal `foo` [1] is not an object.
+Cannot cast `"foo"` to `O1` because string [1] is incompatible with `O1` [2]. [incompatible-cast]
 
-   1| type O1 = {..."foo"}; // error
-                    ^^^^^ [1]
+   type_string.js:2:2
+   2| ("foo": O1); // Error
+       ^^^^^ [1]
+
+References:
+   type_string.js:2:9
+   2| ("foo": O1); // Error
+              ^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------ type_union.js:9:2
 
-Cannot cast `o1` to union type because:
- - `T` [1] is incompatible with undefined [2] in property `p`.
- - `U` [3] is incompatible with undefined [4] in property `q`.
+Cannot cast `o1` to union type because `T` [1] is incompatible with undefined [2] in property `p`. [incompatible-cast]
 
    type_union.js:9:2
    9| (o1: {p?:T}|{q?:U}); // ok
@@ -1105,46 +1089,57 @@ References:
    type_union.js:9:10
    9| (o1: {p?:T}|{q?:U}); // ok
                ^ [2]
-   type_union.js:7:24
-   7| type O1 = {...{p:T}|{q:U}};
-                             ^ [3]
-   type_union.js:9:17
+
+
+Error ------------------------------------------------------------------------------------------------ type_union.js:9:2
+
+Cannot cast `o1` to union type because `U` [1] is incompatible with undefined [2] in property `q`. [incompatible-cast]
+
+   type_union.js:9:2
    9| (o1: {p?:T}|{q?:U}); // ok
-                      ^ [4]
-
-
-Error ---------------------------------------------------------------------------------------------- type_union.js:14:32
-
-Cannot determine a type for object type [1]. object type [2] cannot be spread because the indexer number [3] may
-overwrite properties with explicit keys in a way that Flow cannot track. Can you spread object type [2] first or remove
-the indexer?
-
-   type_union.js:14:32
-   14| declare var x1: {...Union1, ...Union2}; // Error, indexer on right
-                                      ^^^^^^ [2]
+       ^^
 
 References:
+   type_union.js:7:24
+   7| type O1 = {...{p:T}|{q:U}};
+                             ^ [1]
+   type_union.js:9:17
+   9| (o1: {p?:T}|{q?:U}); // ok
+                      ^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- type_union.js:14:17
+
+Flow cannot determine a type for object type [1]. object type [2] cannot be spread because the indexer number [3] may
+overwrite properties with explicit keys in a way that Flow cannot track. Try spreading object type [2] first or remove
+the indexer. [cannot-spread-indexer]
+
    type_union.js:14:17
    14| declare var x1: {...Union1, ...Union2}; // Error, indexer on right
                        ^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+References:
+   type_union.js:14:32
+   14| declare var x1: {...Union1, ...Union2}; // Error, indexer on right
+                                      ^^^^^^ [2]
    type_union.js:12:39
    12| type Union2 = {| bar: number |} | {| [number]: string |};
                                              ^^^^^^ [3]
 
 
-Error ---------------------------------------------------------------------------------------------- type_union.js:17:32
+Error ---------------------------------------------------------------------------------------------- type_union.js:17:17
 
-Cannot determine a type for object type [1]. object type [2] is inexact, so it may contain `foo` with a type that
-conflicts with `foo`'s definition in object type [3]. Can you make object type [2] exact?
+Flow cannot determine a type for object type [1]. object type [2] is inexact, so it may contain `foo` with a type that
+conflicts with `foo`'s definition in object type [3]. Try making object type [2] exact. [cannot-spread-inexact]
 
-   type_union.js:17:32
-   17| declare var x5: {...Union1, ...{}} // Error, spreading {} overwrites indexer
-                                      ^^ [2]
-
-References:
    type_union.js:17:17
    17| declare var x5: {...Union1, ...{}} // Error, spreading {} overwrites indexer
                        ^^^^^^^^^^^^^^^^^^ [1]
+
+References:
+   type_union.js:17:32
+   17| declare var x5: {...Union1, ...{}} // Error, spreading {} overwrites indexer
+                                      ^^ [2]
    type_union.js:17:21
    17| declare var x5: {...Union1, ...{}} // Error, spreading {} overwrites indexer
                            ^^^^^^ [3]
@@ -1152,7 +1147,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- type_union.js:20:9
 
-Cannot assign object literal to `y` because object literal [1] is incompatible with `U` [2].
+Cannot assign object literal to `y` because object literal [1] is incompatible with `U` [2]. [incompatible-type]
 
    type_union.js:20:9
    20| var y = {}; // unsealed
@@ -1164,24 +1159,25 @@ References:
                       ^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------- type_union.js:37:21
+Error ---------------------------------------------------------------------------------------------- type_union.js:37:17
 
-Cannot determine a type for object type [1]. `I1` [2] cannot be spread because interfaces do not track the own-ness of
-their properties. Can you use an object type instead?
+Flow cannot determine a type for object type [1]. `I1` [2] cannot be spread because interfaces do not track the own-ness
+of their properties. Try using an object type instead. [cannot-spread-interface]
 
-   type_union.js:37:21
-   37| declare var x4: {...Union5};  // Error, cannot spread interface
-                           ^^^^^^ [2]
-
-References:
    type_union.js:37:17
    37| declare var x4: {...Union5};  // Error, cannot spread interface
                        ^^^^^^^^^^^ [1]
+
+References:
+   type_union.js:37:21
+   37| declare var x4: {...Union5};  // Error, cannot spread interface
+                           ^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------ type_void.js:12:2
 
 Cannot cast `o1` to object type because inexact `O1` [1] is incompatible with exact object type [2].
+[incompatible-exact]
 
    type_void.js:12:2
    12| (o1: {||}); // error
@@ -1199,6 +1195,7 @@ References:
 Error ------------------------------------------------------------------------------------------------ type_void.js:13:2
 
 Cannot cast `o1` to object type because property `p` is missing in `O1` [1] but exists in object type [2].
+[prop-missing]
 
    type_void.js:13:2
    13| (o1: {p:T}); // error
@@ -1216,6 +1213,7 @@ References:
 Error ------------------------------------------------------------------------------------------------ type_void.js:21:2
 
 Cannot cast `o2` to object type because property `p` is missing in `O2` [1] but exists in object type [2].
+[prop-missing]
 
    type_void.js:21:2
    21| (o2: {p:T}); // error
@@ -1233,6 +1231,7 @@ References:
 Error ------------------------------------------------------------------------------------------------ type_void.js:22:2
 
 Cannot cast object literal to `O2` because inexact object literal [1] is incompatible with exact `O2` [2].
+[incompatible-exact]
 
    type_void.js:22:2
    22| ({}: O2); // error
@@ -1247,6 +1246,7 @@ References:
 Error ------------------------------------------------------------------------------------------------ type_void.js:23:2
 
 Cannot cast object literal to `O2` because property `p` is missing in `O2` [1] but exists in object literal [2].
+[prop-missing]
 
    type_void.js:23:2
    23| ({p:x}: O2); // error
@@ -1261,6 +1261,7 @@ References:
 Error ------------------------------------------------------------------------------------------------ type_void.js:28:2
 
 Cannot cast `o3` to object type because inexact `O3` [1] is incompatible with exact object type [2].
+[incompatible-exact]
 
    type_void.js:28:2
    28| (o3: {||}); // error
@@ -1278,6 +1279,7 @@ References:
 Error ------------------------------------------------------------------------------------------------ type_void.js:29:2
 
 Cannot cast `o3` to object type because property `p` is missing in `O3` [1] but exists in object type [2].
+[prop-missing]
 
    type_void.js:29:2
    29| (o3: {p:T}); // error
@@ -1295,6 +1297,7 @@ References:
 Error ------------------------------------------------------------------------------------------------ type_void.js:37:2
 
 Cannot cast `o4` to object type because property `p` is missing in `O4` [1] but exists in object type [2].
+[prop-missing]
 
    type_void.js:37:2
    37| (o4: {p:T}); // error
@@ -1312,6 +1315,7 @@ References:
 Error ------------------------------------------------------------------------------------------------ type_void.js:38:2
 
 Cannot cast object literal to `O4` because inexact object literal [1] is incompatible with exact `O4` [2].
+[incompatible-exact]
 
    type_void.js:38:2
    38| ({}: O4); // error
@@ -1326,6 +1330,7 @@ References:
 Error ------------------------------------------------------------------------------------------------ type_void.js:39:2
 
 Cannot cast object literal to `O4` because property `p` is missing in `O4` [1] but exists in object literal [2].
+[prop-missing]
 
    type_void.js:39:2
    39| ({p:x}: O4); // error
@@ -1339,7 +1344,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ type_void.js:43:2
 
-Cannot cast `o5` to object type because `T` [1] is incompatible with undefined [2] in property `p`.
+Cannot cast `o5` to object type because `T` [1] is incompatible with undefined [2] in property `p`. [incompatible-cast]
 
    type_void.js:43:2
    43| (o5: {p?:T}); // ok
@@ -1354,13 +1359,13 @@ References:
                 ^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------ type_void.js:47:2
+Error ------------------------------------------------------------------------------------------------ type_void.js:47:5
 
-Cannot cast object literal to `O5` because `U` [1] is incompatible with `T` [2] in property `p`.
+Cannot cast object literal to `O5` because `U` [1] is incompatible with `T` [2] in property `p`. [incompatible-cast]
 
-   type_void.js:47:2
+   type_void.js:47:5
    47| ({p:y}: O5); // error: y ~> T
-        ^^^^^
+           ^
 
 References:
    type_void.js:7:16
@@ -1373,7 +1378,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ type_void.js:52:2
 
-Cannot cast `o6` to object type because `T` [1] is incompatible with undefined [2] in property `p`.
+Cannot cast `o6` to object type because `T` [1] is incompatible with undefined [2] in property `p`. [incompatible-cast]
 
    type_void.js:52:2
    52| (o6: {p?:T}); // error, void doesn't overwrite p
@@ -1388,13 +1393,13 @@ References:
                 ^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------ type_void.js:56:2
+Error ------------------------------------------------------------------------------------------------ type_void.js:56:5
 
-Cannot cast object literal to `O6` because `U` [1] is incompatible with `T` [2] in property `p`.
+Cannot cast object literal to `O6` because `U` [1] is incompatible with `T` [2] in property `p`. [incompatible-cast]
 
-   type_void.js:56:2
+   type_void.js:56:5
    56| ({p:y}: O6); // error: y ~> T
-        ^^^^^
+           ^
 
 References:
    type_void.js:7:16
@@ -1406,7 +1411,7 @@ References:
 
 
 
-Found 92 errors
+Found 85 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches

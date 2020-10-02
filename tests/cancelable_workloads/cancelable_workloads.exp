@@ -16,7 +16,7 @@ sleep.js:5:2,5:4
 And flow status should work
 Error ----------------------------------------------------------------------------------------------------- sleep.js:5:2
 
-Cannot cast `num` to boolean because number [1] is incompatible with boolean [2].
+Cannot cast `num` to boolean because number [1] is incompatible with boolean [2]. [incompatible-cast]
 
    sleep.js:5:2
    5| (num: boolean); // error number ~> boolean

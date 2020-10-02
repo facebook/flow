@@ -1,6 +1,6 @@
 Error ------------------------------------------------------------------------------------------- commonjs_import.js:3:9
 
-Cannot import `_p` because there is no `_p` export in `./commonjs_export`.
+Cannot import `_p` because there is no `_p` export in `./commonjs_export`. [missing-export]
 
    3| import {_p} from "./commonjs_export";
               ^^

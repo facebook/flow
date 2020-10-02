@@ -1,0 +1,11 @@
+(library
+  (name flow_service_saved_state_fetcher)
+  (wrapped false)
+  (libraries
+    flow_common
+    flow_common_profiling
+    lwt.unix
+    sys_utils
+  )
+  (preprocess (pps lwt_ppx))
+)

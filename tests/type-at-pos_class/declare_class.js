@@ -1,4 +1,0 @@
-// @flow
-
-declare class C {
-}

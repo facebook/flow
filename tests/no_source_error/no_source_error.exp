@@ -1,10 +1,11 @@
-Error ------------------------------------------------------------------------------------------------ no_source.js:18:5
+Error ------------------------------------------------------------------------------------------------ no_source.js:18:7
 
 Cannot call `x.filter` because property `bar` is missing in `Foo` [1] but exists in `FooPlus` [2] in the first argument.
+[incompatible-call]
 
-   no_source.js:18:5
+   no_source.js:18:7
    18|     x.filter(this.z);
-           ^^^^^^^^^^^^^^^^
+             ^^^^^^
 
 References:
    no_source.js:17:20

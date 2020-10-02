@@ -1,10 +1,10 @@
 Error --------------------------------------------------------------------------------------------------- test1.js:22:13
 
-Cannot call `foo` because inexact object type [1] is incompatible with exact object type [2].
+Cannot call `foo` because inexact object type [1] is incompatible with exact object type [2]. [incompatible-exact]
 
    test1.js:22:13
    22| var x = f()(foo(Comp));
-                   ^^^^^^^^^
+                   ^^^
 
 References:
    test1.js:12:29

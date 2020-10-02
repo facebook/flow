@@ -1,150 +1,96 @@
 #!/bin/bash
+# Copyright (c) Facebook, Inc. and its affiliates.
+#
+# This source code is licensed under the MIT license found in the
+# LICENSE file in the root directory of this source tree.
+
 # shellcheck disable=SC2094
 
-printf "foo_parse_fail.js = "
-assert_ok \
-  "$FLOW" autocomplete --strip-root foo_parse_fail.js 10 17 < foo_parse_fail.js
-
-printf "foo.js = "
-assert_ok \
-  "$FLOW" autocomplete --strip-root --pretty foo.js 10 5 < foo.js
-
-printf "bar.js = "
-assert_ok \
-  "$FLOW" autocomplete --strip-root --pretty bar.js 4 5 < bar.js
-
-printf "qux.js = "
-assert_ok \
-  "$FLOW" autocomplete --strip-root --pretty qux.js 6 3 < qux.js
-
-printf "str.js = "
-assert_ok \
-  "$FLOW" autocomplete --strip-root --pretty str.js 3 9 < str.js
-
-printf "num.js = "
-assert_ok \
-  "$FLOW" autocomplete --strip-root --pretty num.js 4 5 < num.js
-
-printf "bool.js = "
-assert_ok \
-  "$FLOW" autocomplete --strip-root --pretty bool.js 3 6 < bool.js
-
-printf "union.js = "
-assert_ok \
-  "$FLOW" autocomplete --strip-root --pretty union.js 10 5 < union.js
-
-printf "object_builtins.js = "
-assert_ok \
-  "$FLOW" autocomplete --strip-root --pretty object_builtins.js 4 5 < object_builtins.js
-
-printf "function_builtins.js = "
-assert_ok \
-  "$FLOW" autocomplete --strip-root --pretty function_builtins.js 4 5 < function_builtins.js
-
-printf "fun.js = "
-assert_ok \
-  "$FLOW" autocomplete --strip-root --pretty fun.js 4 5 < fun.js
-
-printf "this.js = "
-assert_ok \
-  "$FLOW" autocomplete --strip-root --pretty this.js 8 10 < this.js
-
-printf "typeparams.js = "
-assert_ok \
-  "$FLOW" autocomplete --strip-root --pretty typeparams.js 6 16 < typeparams.js
-
-printf "generics.js = "
-assert_ok \
-  "$FLOW" autocomplete --strip-root --pretty generics.js 6 5 < generics.js
-
-printf "optional.js = "
-assert_ok \
-  "$FLOW" autocomplete --strip-root --pretty optional.js 4 14 < optional.js
-
-printf "jsx1.js = "
-assert_ok \
-  "$FLOW" autocomplete --strip-root --pretty jsx1.js 8 4 < jsx1.js
-
-printf "jsx2.js = "
-assert_ok \
-  "$FLOW" autocomplete --strip-root --pretty jsx2.js 8 11 < jsx2.js
-
-printf "jsx3.js = "
-assert_ok \
-  "$FLOW" autocomplete --strip-root --pretty jsx3.js 10 4 < jsx3.js
-
-printf "customfun.js = "
-assert_ok \
-  "$FLOW" autocomplete --strip-root --pretty customfun.js 6 1 < customfun.js
-
-printf "issue-1368.js = "
-assert_ok \
-  "$FLOW" autocomplete --strip-root --pretty issue-1368.js 20 10 < issue-1368.js
-
-printf "if.js = "
-assert_ok \
-  "$FLOW" autocomplete --strip-root --pretty if.js 3 7 < if.js
-
-printf "override.js = "
-assert_ok \
-  "$FLOW" autocomplete --strip-root --pretty override.js 10 16 < override.js
-
-printf "class.js = "
-assert_ok \
-  "$FLOW" autocomplete --strip-root --pretty class.js 7 5 < class.js
-
-printf "optional_chaining_new.js = "
-assert_ok \
-  "$FLOW" autocomplete --strip-root --pretty optional_chaining_new.js 9 15 < optional_chaining_new.js
-
-printf "optional_chaining_continue.js = "
-assert_ok \
-  "$FLOW" autocomplete --strip-root --pretty optional_chaining_continue.js 13 19 < optional_chaining_continue.js
-
-printf "idx.js = "
-assert_ok \
-  "$FLOW" autocomplete --strip-root --pretty idx.js 12 28 < idx.js
-
-printf "generic_alias.js = "
-assert_ok \
-  "$FLOW" autocomplete --strip-root --pretty generic_alias.js 7 5 < generic_alias.js
-
-printf "object_literal.js:5:16 = "
-assert_ok \
-  "$FLOW" autocomplete --strip-root --pretty object_literal.js 5 16 < object_literal.js
-
-printf "object_literal.js:7:17 = "
-assert_ok \
-  "$FLOW" autocomplete --strip-root --pretty object_literal.js 7 17 < object_literal.js
-
-printf "optional_object.js = "
-assert_ok \
-  "$FLOW" autocomplete --strip-root --pretty optional_object.js 3 5 < optional_object.js
-  
-printf "indirect_array.js:5:3 = "
-assert_ok \
-  "$FLOW" autocomplete --strip-root --pretty indirect_array.js 5 3 < indirect_array.js
-
-printf "indirect_array.js:10:3 = "
-assert_ok \
-  "$FLOW" autocomplete --strip-root --pretty indirect_array.js 10 3 < indirect_array.js
-
-printf "infer.js = "
-assert_ok \
-  "$FLOW" autocomplete --strip-root --pretty infer.js 4 5 < infer.js
-
-printf "eval_predicate.js = "
-assert_ok \
-  "$FLOW" autocomplete --strip-root --pretty eval_predicate.js 5 3 < eval_predicate.js
-
-printf "eval_destructor.js = "
-assert_ok \
-  "$FLOW" autocomplete --strip-root --pretty eval_destructor.js 5 3 < eval_destructor.js
-
-printf "poly.js = "
-assert_ok \
-  "$FLOW" autocomplete --strip-root --pretty poly.js 5 3 < poly.js
-
-printf "poly_no_args.js = "
-assert_ok \
-  "$FLOW" autocomplete --strip-root --pretty poly_no_args.js 5 3 < poly_no_args.js
+queries_in_file autocomplete "foo_parse_fail.js" --pretty
+queries_in_file autocomplete "foo.js" --pretty
+queries_in_file autocomplete "bar.js" --pretty
+queries_in_file autocomplete "str.js" --pretty
+queries_in_file autocomplete "num.js" --pretty
+queries_in_file autocomplete "bool.js" --pretty
+queries_in_file autocomplete "union.js" --pretty
+queries_in_file autocomplete "object_builtins.js" --pretty
+queries_in_file autocomplete "function_builtins.js" --pretty
+queries_in_file autocomplete "fun.js" --pretty
+queries_in_file autocomplete "this.js" --pretty
+queries_in_file autocomplete "this2.js" --pretty
+queries_in_file autocomplete "typeparams.js" --pretty
+queries_in_file autocomplete "typeparams_function.js" --pretty
+queries_in_file autocomplete "generics.js" --pretty
+queries_in_file autocomplete "optional.js" --pretty
+queries_in_file autocomplete "jsx1.js" --pretty
+queries_in_file autocomplete "jsx2.js" --pretty
+queries_in_file autocomplete "jsx3.js" --pretty
+queries_in_file autocomplete "jsx4.js" --pretty
+queries_in_file autocomplete "jsx-function-component.js" --pretty
+queries_in_file autocomplete "jsx-function-component-2.js" --pretty
+queries_in_file autocomplete "jsx-function-component-3.js" --pretty
+queries_in_file autocomplete "jsx-abstract-component.js" --pretty
+queries_in_file autocomplete "jsx-with-children.js" --pretty
+queries_in_file autocomplete "jsx-text.js" --pretty
+queries_in_file autocomplete "customfun.js" --pretty
+queries_in_file autocomplete "issue-1368.js" --pretty
+queries_in_file autocomplete "if.js" --pretty
+queries_in_file autocomplete "override.js" --pretty
+queries_in_file autocomplete "member_class_property.js" --lsp
+queries_in_file autocomplete "member_class_static.js" --pretty
+queries_in_file autocomplete "member_middle.js" --pretty
+queries_in_file autocomplete "optional_chaining_middle.js" --pretty
+queries_in_file autocomplete "optional_chaining_new.js" --pretty
+queries_in_file autocomplete "optional_chaining_continue.js" --pretty
+queries_in_file autocomplete "idx.js" --pretty
+queries_in_file autocomplete "generic_alias.js" --pretty
+queries_in_file autocomplete "object_literal.js" --pretty
+queries_in_file autocomplete "optional_object.js" --pretty
+queries_in_file autocomplete "indirect_array.js" --pretty
+queries_in_file autocomplete "infer.js" --pretty
+queries_in_file autocomplete "eval_predicate.js" --pretty
+queries_in_file autocomplete "eval_destructor.js" --pretty
+queries_in_file autocomplete "poly.js" --pretty
+queries_in_file autocomplete "poly_no_args.js" --pretty
+queries_in_file autocomplete "identifier.js" --pretty
+queries_in_file autocomplete "identifier_middle.js" --pretty
+queries_in_file autocomplete "super.js" --pretty
+queries_in_file autocomplete "this-2.js" --pretty
+queries_in_file autocomplete "pattern.js" --pretty
+queries_in_file autocomplete "normalize-1.js" --pretty
+queries_in_file autocomplete "normalize-2.js" --pretty
+queries_in_file autocomplete "unqualified-type-annotation.js" --lsp
+queries_in_file autocomplete "qualified-type-annotation.js" --pretty
+queries_in_file autocomplete "qualified-type-annotation-require.js" --pretty
+queries_in_file autocomplete "inherited-class-properties.js" --pretty
+queries_in_file autocomplete "function-added-properties.js" --pretty
+queries_in_file autocomplete "comments.js" --pretty
+queries_in_file autocomplete "literal.js" --pretty
+queries_in_file autocomplete "import_source.js" --pretty
+queries_in_file autocomplete "object-with-prototype.js" --pretty
+queries_in_file autocomplete "object-spread-1.js" --pretty
+queries_in_file autocomplete "object-spread-2.js" --pretty
+queries_in_file autocomplete "union-2.js" --pretty
+queries_in_file autocomplete "type-alias.js" --pretty
+queries_in_file autocomplete "intersection.js" --pretty
+queries_in_file autocomplete "rank.js" --lsp
+queries_in_file autocomplete "rank_union.js" --lsp
+queries_in_file autocomplete "rank_intersection.js" --lsp
+queries_in_file autocomplete "suggest_optional_chaining_1.js" --lsp
+queries_in_file autocomplete "suggest_optional_chaining_2.js" --lsp
+queries_in_file autocomplete "suggest_optional_chaining_3.js" --lsp
+queries_in_file autocomplete "enums.js" --lsp
+queries_in_file autocomplete "enum-id.js" --pretty
+queries_in_file autocomplete "class_declaration_name.js" --pretty
+queries_in_file autocomplete "pattern_object_key_middle.js" --pretty
+queries_in_file autocomplete "jsdoc.js" --lsp
+queries_in_file autocomplete "jsdoc-members-1.js" --lsp
+queries_in_file autocomplete "jsdoc-members-2.js" --lsp
+queries_in_file autocomplete "jsdoc-members-3.js" --lsp
+queries_in_file autocomplete "jsdoc-members-4.js" --lsp
+queries_in_file autocomplete "jsdoc-members-5.js" --lsp
+queries_in_file autocomplete "jsdoc-members-6.js" --lsp
+queries_in_file autocomplete "jsdoc-members-7.js" --lsp
+queries_in_file autocomplete "jsdoc-members-8.js" --lsp
+queries_in_file autocomplete "types-jsdoc.js" --lsp
+queries_in_file autocomplete "qualified-types-jsdoc.js" --lsp

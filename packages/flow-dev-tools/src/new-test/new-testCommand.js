@@ -1,4 +1,14 @@
-/* @flow */
+/**
+ * Copyright (c) Facebook, Inc. and its affiliates.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ *
+ * @flow
+ * @format
+ */
+
+import type {Flag} from '../command/Base';
 
 import {format} from 'util';
 
@@ -23,7 +33,7 @@ export default class NewTestCommand extends Base<Args> {
   }
 
   static description(): string {
-    return "Creates a new empty test";
+    return 'Creates a new empty test';
   }
 
   static async usage(): Promise<string> {
@@ -35,9 +45,7 @@ NAME
 `;
   }
 
-  static getFlags() {
-    return [
-      commonFlags.bin,
-    ];
+  static getFlags(): Array<Flag> {
+    return [commonFlags.bin];
   }
 }

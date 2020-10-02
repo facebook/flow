@@ -1,4 +1,9 @@
-/*
+/**
+ * Copyright (c) Facebook, Inc. and its affiliates.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ *
  * @flow
  * @format
  */
@@ -50,7 +55,7 @@ export function exec(cmd: string, options?: ExecOpts): Promise<string> {
           cp.stdin.end();
           return;
         }
-        const canContinue = cp.stdin.write(chunks[chunkIndex]);
+        const canContinue = cp.stdin.write(chunks[chunkIndex], 'utf8');
         if (canContinue) {
           write(chunkIndex + 1);
         } else {

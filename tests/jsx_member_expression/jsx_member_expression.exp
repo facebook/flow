@@ -1,0 +1,16 @@
+Error ------------------------------------------------------------------------------------------------------ jsx.js:5:19
+
+Cannot get `x.b` because property `b` is missing in object literal [1]. [prop-missing]
+
+   jsx.js:5:19
+   5| <A.B a={x.a} b={x.b} />;
+                        ^
+
+References:
+   jsx.js:4:11
+   4| const x = {a: 3};
+                ^^^^^^ [1]
+
+
+
+Found 1 error

@@ -64,7 +64,7 @@
       "message":[
         {
           "context":"if (x) {} //appears as an error",
-          "descr":"Sketchy null check on number [1] which is potentially 0. Perhaps you meant to check for null or undefined [2]? (`sketchy-null-number`)",
+          "descr":"Sketchy null check on number [1] which is potentially 0. Perhaps you meant to check for null or undefined [2]? [sketchy-null-number]",
           "type":"Blame",
           "loc":{
             "source":"test.js",
@@ -78,7 +78,8 @@
           "start":5,
           "end":5
         }
-      ]
+      ],
+      "error_codes":["sketchy-null-number"]
     },
     {
       "kind":"lint",
@@ -143,7 +144,7 @@
       "message":[
         {
           "context":"if (x) {} //appears as a warning",
-          "descr":"Sketchy null check on number [1] which is potentially 0. Perhaps you meant to check for null or undefined [2]? (`sketchy-null-number`)",
+          "descr":"Sketchy null check on number [1] which is potentially 0. Perhaps you meant to check for null or undefined [2]? [sketchy-null-number]",
           "type":"Blame",
           "loc":{
             "source":"test.js",
@@ -157,7 +158,8 @@
           "start":5,
           "end":5
         }
-      ]
+      ],
+      "error_codes":["sketchy-null-number"]
     }
   ],
   "passed":false

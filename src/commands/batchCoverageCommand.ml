@@ -1,4 +1,4 @@
-(**
+(*
  * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
@@ -59,7 +59,7 @@ let output_results ~root ~strip_root ~json ~pretty ~show_all ~trust stats =
   in
   (* Compute aggregate stats *)
   let (trusted, untrusted, any, empty) =
-    Core_list.fold_left
+    Base.List.fold_left
       ~f:
         (fun (acc_trust, acc_untrust, acc_any, acc_empty)
              (_, { Coverage_response.untainted; tainted; empty; uncovered }) ->
@@ -67,7 +67,7 @@ let output_results ~root ~strip_root ~json ~pretty ~show_all ~trust stats =
       stats
       ~init:(0, 0, 0, 0)
   in
-  let num_files_in_dir = Core_list.length stats in
+  let num_files_in_dir = Base.List.length stats in
   let covered = trusted + untrusted in
   let total = covered + any + empty in
   let trusted_percentage = percent trusted total in
@@ -111,8 +111,8 @@ let output_results ~root ~strip_root ~json ~pretty ~show_all ~trust stats =
       in
       let array_ elts = JSON_Array elts in
       let file_list =
-        Core_list.sort ~cmp:(fun (a, _) (b, _) -> Pervasives.compare a b) stats
-        |> Core_list.map ~f:file_to_json
+        Base.List.sort ~compare:(fun (a, _) (b, _) -> Stdlib.compare a b) stats
+        |> Base.List.map ~f:file_to_json
       in
       let covered_expressions = [("covered_expressions", int_ covered)] in
       let covered_expressions =
@@ -147,17 +147,15 @@ let output_results ~root ~strip_root ~json ~pretty ~show_all ~trust stats =
         ( spf
             "\nOnly showing coverage for 50 of %d files. To show more, rerun with --show-all.\n"
             num_files_in_dir,
-          Core_list.take stats 50 )
+          Base.List.take stats 50 )
       else
         ("", stats)
     in
     if num_files_in_dir > 0 then (
       print_endlinef "\nCoverage results from %d file(s):\n" num_files_in_dir;
-      Core_list.iter
+      Base.List.iter
         ~f:(fun fstats ->
-          let (file, trusted, covered, total, trusted_percentage, percentage) =
-            file_stats fstats
-          in
+          let (file, trusted, covered, total, trusted_percentage, percentage) = file_stats fstats in
           match (trusted_percentage, trusted) with
           | (Some p, Some t) ->
             print_endlinef
@@ -201,9 +199,9 @@ let main
     () =
   let flowconfig_name = base_flags.Base_flags.flowconfig_name in
   let batch =
-    get_filenames_from_input input files |> Core_list.map ~f:(Path.make %> Path.to_string)
+    get_filenames_from_input input files |> Base.List.map ~f:(Path.make %> Path.to_string)
   in
-  let input = Option.map (Core_list.hd batch) (fun x -> File_input.FileName x) in
+  let input = Base.Option.map (Base.List.hd batch) (fun x -> File_input.FileName x) in
   let root = get_the_root ~base_flags ?input root in
   (* pretty implies json *)
   let json = json || pretty in

@@ -1,4 +1,4 @@
-(**
+(*
  * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
@@ -16,7 +16,8 @@ type printer =
   | Cli of Errors.Cli_output.error_flags
 
 (* helper - print errors. used in check-and-die runs *)
-let format_errors ~printer ~client_include_warnings options (errors, warnings, suppressed_errors) =
+let format_errors
+    ~printer ~client_include_warnings ~offset_kind options (errors, warnings, suppressed_errors) =
   let include_warnings = client_include_warnings || Options.should_include_warnings options in
   let warnings =
     if include_warnings then
@@ -52,6 +53,7 @@ let format_errors ~printer ~client_include_warnings options (errors, warnings, s
           ~strip_root
           ~pretty
           ?version
+          ~offset_kind
           ~suppressed_errors
           ~errors
           ~warnings
@@ -59,7 +61,7 @@ let format_errors ~printer ~client_include_warnings options (errors, warnings, s
       in
       fun profiling ->
         let profiling_props =
-          Option.value_map profiling ~default:[] ~f:Profiling_js.to_legacy_json_properties
+          Base.Option.value_map profiling ~default:[] ~f:Profiling_js.to_legacy_json_properties
         in
         finish_formatting ~profiling_props
     | Cli flags ->
@@ -99,6 +101,7 @@ module CheckCommand = struct
           |> error_flags
           |> options_and_json_flags
           |> json_version_flag
+          |> offset_style_flag
           |> shm_flags
           |> ignore_version_flag
           |> from_flag
@@ -117,6 +120,7 @@ module CheckCommand = struct
       json
       pretty
       json_version
+      offset_style
       shm_flags
       ignore_version
       path_opt
@@ -129,17 +133,27 @@ module CheckCommand = struct
     in
     let options =
       let lazy_mode = Some Options.NON_LAZY_MODE in
-      make_options ~flowconfig_name ~flowconfig ~lazy_mode ~root options_flags
-    in
-    if Options.should_profile options && not Sys.win32 then (
-      Flow_server_profile.init ();
-      let rec sample_processor_info () =
-        Flow_server_profile.processor_sample ();
-        Timer.set_timer ~interval:1.0 ~callback:sample_processor_info |> ignore
+      (* Saved state doesn't make sense for `flow check`, so disable it. *)
+      let saved_state_options_flags =
+        CommandUtils.Saved_state_flags.
+          {
+            (* None would mean we would just use the value in the .flowconfig, if available.
+             * Instead, let's override that and turn off saved state entirely. *)
+            saved_state_fetcher = Some Options.Dummy_fetcher;
+            saved_state_force_recheck = false;
+            saved_state_no_fallback = false;
+          }
       in
-      sample_processor_info ()
-    );
-
+      make_options
+        ~flowconfig_name
+        ~flowconfig
+        ~lazy_mode
+        ~root
+        ~options_flags
+        ~saved_state_options_flags
+    in
+    let init_id = Random_id.short_string () in
+    let offset_kind = CommandUtils.offset_kind_of_offset_style offset_style in
     (* initialize loggers before doing too much, especially anything that might exit *)
     LoggingUtils.init_loggers ~options ~min_level:Hh_logger.Level.Error ();
 
@@ -149,14 +163,14 @@ module CheckCommand = struct
     let format_errors =
       let client_include_warnings = error_flags.Errors.Cli_output.include_warnings in
       let printer =
-        if json || Option.is_some json_version || pretty then
+        if json || Base.Option.is_some json_version || pretty then
           Json { pretty; version = json_version }
         else
           Cli error_flags
       in
-      format_errors ~printer ~client_include_warnings options
+      format_errors ~printer ~client_include_warnings ~offset_kind options
     in
-    let (errors, warnings) = Server.check_once options ~shared_mem_config ~format_errors in
+    let (errors, warnings) = Server.check_once options ~init_id ~shared_mem_config ~format_errors in
     Flow_server_profile.print_url ();
     FlowExitStatus.exit
       (get_check_or_status_exit_code errors warnings error_flags.Errors.Cli_output.max_warnings)
@@ -179,6 +193,8 @@ module FocusCheckCommand = struct
           |> error_flags
           |> options_and_json_flags
           |> json_version_flag
+          |> saved_state_flags
+          |> offset_style_flag
           |> shm_flags
           |> ignore_version_flag
           |> from_flag
@@ -199,6 +215,8 @@ module FocusCheckCommand = struct
       json
       pretty
       json_version
+      saved_state_options_flags
+      offset_style
       shm_flags
       ignore_version
       root
@@ -221,8 +239,16 @@ module FocusCheckCommand = struct
     let flowconfig = read_config_or_exit (Server_files_js.config_file flowconfig_name root) in
     let options =
       let lazy_mode = Some Options.NON_LAZY_MODE in
-      make_options ~flowconfig_name ~flowconfig ~lazy_mode ~root options_flags
+      make_options
+        ~flowconfig_name
+        ~flowconfig
+        ~lazy_mode
+        ~root
+        ~options_flags
+        ~saved_state_options_flags
     in
+    let init_id = Random_id.short_string () in
+    let offset_kind = CommandUtils.offset_kind_of_offset_style offset_style in
     (* initialize loggers before doing too much, especially anything that might exit *)
     LoggingUtils.init_loggers ~options ();
 
@@ -243,15 +269,15 @@ module FocusCheckCommand = struct
     let format_errors =
       let client_include_warnings = error_flags.Errors.Cli_output.include_warnings in
       let printer =
-        if json || Option.is_some json_version || pretty then
+        if json || Base.Option.is_some json_version || pretty then
           Json { pretty; version = json_version }
         else
           Cli error_flags
       in
-      format_errors ~printer ~client_include_warnings options
+      format_errors ~printer ~client_include_warnings ~offset_kind options
     in
     let (errors, warnings) =
-      Server.check_once options ~shared_mem_config ~focus_targets ~format_errors
+      Server.check_once options ~init_id ~shared_mem_config ~focus_targets ~format_errors
     in
     FlowExitStatus.exit
       (get_check_or_status_exit_code errors warnings error_flags.Errors.Cli_output.max_warnings)

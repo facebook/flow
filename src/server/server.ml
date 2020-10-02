@@ -1,4 +1,4 @@
-(**
+(*
  * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
@@ -114,7 +114,8 @@ let rec serve ~genv ~env =
   (* Ok, server is settled. Let's go to sleep until we get a message from the monitor *)
   let%lwt () =
     ServerMonitorListenerState.wait_for_anything
-      ~process_updates:(Rechecker.process_updates ~options env)
+      ~process_updates:(fun ?skip_incompatible ->
+        Rechecker.process_updates ?skip_incompatible ~options env)
       ~get_forced:(fun () -> env.ServerEnv.checked_files)
     (* We're not in the middle of a recheck *)
   in
@@ -124,7 +125,7 @@ let rec serve ~genv ~env =
   let%lwt (_profiling, env) = Rechecker.recheck_loop genv env in
   (* Run a workload (if there is one) *)
   let%lwt env =
-    Option.value_map
+    Base.Option.value_map
       (ServerMonitorListenerState.pop_next_workload ())
       ~default:(Lwt.return env)
       ~f:(fun workload ->
@@ -142,10 +143,10 @@ let rec serve ~genv ~env =
 * type-checker succeeded. So to know if there is some work to be done,
 * we look if env.modified changed.
 *)
-let create_program_init ~shared_mem_config ?focus_targets options =
+let create_program_init ~shared_mem_config ~init_id ?focus_targets options =
   let num_workers = Options.max_workers options in
   let handle = SharedMem_js.init ~num_workers shared_mem_config in
-  let genv = ServerEnvBuild.make_genv options handle in
+  let genv = ServerEnvBuild.make_genv ~options ~init_id handle in
   let program_init profiling =
     let%lwt ret = init ~profiling ?focus_targets genv in
     if shared_mem_config.SharedMem_js.log_level > 0 then Measure.print_stats ();
@@ -153,9 +154,9 @@ let create_program_init ~shared_mem_config ?focus_targets options =
   in
   (genv, program_init)
 
-let run ~monitor_channels ~shared_mem_config options =
+let run ~monitor_channels ~init_id ~shared_mem_config options =
   MonitorRPC.init ~channels:monitor_channels;
-  let (genv, program_init) = create_program_init ~shared_mem_config options in
+  let (genv, program_init) = create_program_init ~init_id ~shared_mem_config options in
   let initial_lwt_thread () =
     (* Read messages from the server monitor and add them to a stream as they come in *)
     let listening_thread = ServerMonitorListener.listen_for_messages genv in
@@ -210,41 +211,65 @@ let run ~monitor_channels ~shared_mem_config options =
   in
   LwtInit.run_lwt initial_lwt_thread
 
-let run_from_daemonize ~monitor_channels ~shared_mem_config options =
-  try run ~monitor_channels ~shared_mem_config options with
+let exit_msg_of_exception exn msg =
+  let bt = Exception.get_full_backtrace_string max_int exn in
+  Utils.spf
+    "%s%s"
+    msg
+    ( if bt = "" then
+      bt
+    else
+      ":\n" ^ bt )
+
+let run_from_daemonize ~init_id ~monitor_channels ~shared_mem_config options =
+  try run ~monitor_channels ~shared_mem_config ~init_id options with
   | SharedMem_js.Out_of_shared_memory as exn ->
     let exn = Exception.wrap exn in
-    let bt = Exception.get_backtrace_string exn in
-    let msg =
-      Utils.spf
-        "Out of shared memory%s"
-        ( if bt = "" then
-          bt
-        else
-          ":\n" ^ bt )
-    in
+    let msg = exit_msg_of_exception exn "Out of shared memory" in
     FlowExitStatus.(exit ~msg Out_of_shared_memory)
+  | SharedMem_js.Hash_table_full as exn ->
+    let exn = Exception.wrap exn in
+    let msg = exit_msg_of_exception exn "Hash table is full" in
+    FlowExitStatus.(exit ~msg Hash_table_full)
+  | SharedMem_js.Heap_full as exn ->
+    let exn = Exception.wrap exn in
+    let msg = exit_msg_of_exception exn "Heap is full" in
+    FlowExitStatus.(exit ~msg Heap_full)
+  | MonitorRPC.Monitor_died ->
+    FlowExitStatus.(exit ~msg:"Monitor died unexpectedly" Killed_by_monitor)
   | e ->
     let e = Exception.wrap e in
     let msg = Utils.spf "Unhandled exception: %s" (Exception.to_string e) in
     FlowExitStatus.(exit ~msg Unknown_error)
 
-let check_once ~shared_mem_config ~format_errors ?focus_targets options =
+let check_once ~init_id ~shared_mem_config ~format_errors ?focus_targets options =
   PidLog.disable ();
   MonitorRPC.disable ();
 
   LoggingUtils.set_server_options ~server_options:options;
 
+  let should_log_server_profiles = Options.should_profile options && not Sys.win32 in
+  (* This must happen before we create the workers in create_program_init *)
+  if should_log_server_profiles then Flow_server_profile.init ();
+
   let initial_lwt_thread () =
-    let (_, program_init) = create_program_init ~shared_mem_config ?focus_targets options in
+    let (_, program_init) =
+      create_program_init ~shared_mem_config ~init_id ?focus_targets options
+    in
     let should_print_summary = Options.should_profile options in
     let%lwt (profiling, (print_errors, errors, warnings, first_internal_error)) =
       Profiling_js.with_profiling_lwt ~label:"Init" ~should_print_summary (fun profiling ->
+          ( if should_log_server_profiles then
+            let rec sample_processor_info () =
+              Flow_server_profile.processor_sample ();
+              let%lwt () = Lwt_unix.sleep 1.0 in
+              sample_processor_info ()
+            in
+            Lwt.async sample_processor_info );
           let%lwt (env, _, first_internal_error) = program_init profiling in
           let reader = State_reader.create () in
-          let%lwt (errors, warnings, suppressed_errors) =
-            Profiling_js.with_timer_lwt ~timer:"CollateErrors" profiling ~f:(fun () ->
-                Lwt.return (ErrorCollator.get ~reader ~options env))
+          let (errors, warnings, suppressed_errors) =
+            ErrorCollator.get ~profiling ~reader ~options env
           in
           let collated_errors = (errors, warnings, suppressed_errors) in
           let%lwt print_errors =
@@ -270,5 +295,12 @@ let check_once ~shared_mem_config ~format_errors ?focus_targets options =
 
 let daemonize =
   let entry = Server_daemon.register_entry_point run_from_daemonize in
-  fun ~log_file ~shared_mem_config ~argv ~file_watcher_pid options ->
-    Server_daemon.daemonize ~log_file ~shared_mem_config ~argv ~options ~file_watcher_pid entry
+  fun ~init_id ~log_file ~shared_mem_config ~argv ~file_watcher_pid options ->
+    Server_daemon.daemonize
+      ~init_id
+      ~log_file
+      ~shared_mem_config
+      ~argv
+      ~options
+      ~file_watcher_pid
+      entry

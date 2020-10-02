@@ -1,4 +1,11 @@
-/* @flow */
+/**
+ * Copyright (c) Facebook, Inc. and its affiliates.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ *
+ * @flow
+ */
 
 import {resolve} from 'path';
 
@@ -8,7 +15,7 @@ export const defaultTestsDirName = "newtests";
 
 // This is where we look for tests to run and where we put newly converted
 // tests
-export function getTestsDir(relative_to?: string) {
+export function getTestsDir(relative_to?: string): string {
   if (relative_to !== undefined) {
     return resolve(relative_to, defaultTestsDirName);
   } else {

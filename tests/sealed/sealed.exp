@@ -1,6 +1,6 @@
 Error ---------------------------------------------------------------------------------------------------- proto.js:3:16
 
-Cannot assign `o.x` to `x` because string [1] is incompatible with number [2].
+Cannot assign `o.x` to `x` because string [1] is incompatible with number [2]. [incompatible-type]
 
    proto.js:3:16
    3| var x:number = o.x;
@@ -17,33 +17,45 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- proto.js:7:16
 
-Cannot assign `o.m()` to `y` because:
- - string [1] is incompatible with number [2].
- - boolean [3] is incompatible with number [2].
+Cannot assign `o.m()` to `y` because string [1] is incompatible with number [2]. [incompatible-type]
+
+   proto.js:7:16
+   7| var y:number = o.m();
+                     ^^^^^
+
+References:
+   proto.js:8:7
+   8| o.x = "...";
+            ^^^^^ [1]
+   proto.js:7:7
+   7| var y:number = o.m();
+            ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- proto.js:7:16
+
+Cannot assign `o.m()` to `y` because boolean [1] is incompatible with number [2]. [incompatible-type]
 
    proto.js:7:16
     7| var y:number = o.m();
                       ^^^^^
 
 References:
-   proto.js:8:7
-    8| o.x = "...";
-             ^^^^^ [1]
+   proto.js:10:42
+   10| Foo.prototype = { m: function() { return false; } }
+                                                ^^^^^ [1]
    proto.js:7:7
     7| var y:number = o.m();
              ^^^^^^ [2]
-   proto.js:10:42
-   10| Foo.prototype = { m: function() { return false; } }
-                                                ^^^^^ [3]
 
 
-Error ---------------------------------------------------------------------------------------------------- sealed.js:3:1
+Error ---------------------------------------------------------------------------------------------------- sealed.js:3:3
 
-Cannot assign `0` to `o.z` because property `z` is missing in object type [1].
+Cannot assign `0` to `o.z` because property `z` is missing in object type [1]. [prop-missing]
 
-   sealed.js:3:1
+   sealed.js:3:3
     3| o.z = 0;
-       ^^^
+         ^
 
 References:
    proto.js:12:15
@@ -51,13 +63,13 @@ References:
                      ^^^^^^^^^^ [1]
 
 
-Error ---------------------------------------------------------------------------------------------------- sealed.js:8:1
+Error ---------------------------------------------------------------------------------------------------- sealed.js:8:3
 
-Cannot assign `123` to `a.x` because property `x` is missing in new object [1].
+Cannot assign `123` to `a.x` because property `x` is missing in new object [1]. [prop-missing]
 
-   sealed.js:8:1
+   sealed.js:8:3
    8| a.x = 123;
-      ^^^
+        ^
 
 References:
    sealed.js:7:9
@@ -65,13 +77,13 @@ References:
               ^^^^^^^^^^^^ [1]
 
 
-Error ---------------------------------------------------------------------------------------------------- sealed.js:9:1
+Error ---------------------------------------------------------------------------------------------------- sealed.js:9:3
 
-Cannot assign `'abc'` to `a.y` because property `y` is missing in new object [1].
+Cannot assign `'abc'` to `a.y` because property `y` is missing in new object [1]. [prop-missing]
 
-   sealed.js:9:1
+   sealed.js:9:3
    9| a.y = 'abc'; // error, needs to be declared in Bar's constructor
-      ^^^
+        ^
 
 References:
    sealed.js:7:9

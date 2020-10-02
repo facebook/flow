@@ -1,4 +1,4 @@
 // @flow
 
-export var num = 42;
-export var str = 'asdf';
+export const num = 42;
+export const str = 'asdf';

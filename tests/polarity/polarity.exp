@@ -1,6 +1,22 @@
+Error ----------------------------------------------------------------------------------------------------- call.js:1:20
+
+Cannot use `T` [1] in an input position because `T` [1] is expected to occur only in output positions.
+[incompatible-variance]
+
+   call.js:1:20
+   1| type O<+T> = { (x: T): void }; // Error: +T in a negative position
+                         ^
+
+References:
+   call.js:1:9
+   1| type O<+T> = { (x: T): void }; // Error: +T in a negative position
+              ^ [1]
+
+
 Error ------------------------------------------------------------------------------------------------------ fun.js:3:19
 
 Cannot use `T` [1] in an input position because `T` [1] is expected to occur only in output positions.
+[incompatible-variance]
 
    fun.js:3:19
    3| type ArgPos<+T> = T => void; // Error: +T in negative position
@@ -15,6 +31,7 @@ References:
 Error ------------------------------------------------------------------------------------------------------ fun.js:4:24
 
 Cannot use `T` [1] in an output position because `T` [1] is expected to occur only in input positions.
+[incompatible-variance]
 
    fun.js:4:24
    4| type FlipArgNeg<-T> = (T => void) => void; // Error: -T in positive position
@@ -29,6 +46,7 @@ References:
 Error ------------------------------------------------------------------------------------------------------ fun.js:7:25
 
 Cannot use `T` [1] in an output position because `T` [1] is expected to occur only in input positions.
+[incompatible-variance]
 
    fun.js:7:25
    7| type RetNeg<-T> = () => T; // Error: -T in positive position
@@ -43,6 +61,7 @@ References:
 Error ----------------------------------------------------------------------------------------------------- fun.js:10:30
 
 Cannot use `T` [1] in an input position because `T` [1] is expected to occur only in output positions.
+[incompatible-variance]
 
    fun.js:10:30
    10| type FlipRetPos<+T> = (() => T) => void; // Error: +T in negative position
@@ -54,9 +73,40 @@ References:
                         ^ [1]
 
 
+Error ----------------------------------------------------------------------------------------------- implements.js:2:26
+
+Cannot use `T` [1] in an input position because `T` [1] is expected to occur only in output positions.
+[incompatible-variance]
+
+   implements.js:2:26
+   2| class C<+T> implements I<T> {} // Error: +T in a negative position
+                               ^
+
+References:
+   implements.js:2:10
+   2| class C<+T> implements I<T> {} // Error: +T in a negative position
+               ^ [1]
+
+
+Error --------------------------------------------------------------------------------------------------- method.js:3:16
+
+Cannot use `X` [1] in an input/output position because `X` [1] is expected to occur only in output positions.
+[incompatible-variance]
+
+   method.js:3:16
+   3|   x: <+X>(x: F<X>) => void; 
+                     ^
+
+References:
+   method.js:3:8
+   3|   x: <+X>(x: F<X>) => void; 
+             ^ [1]
+
+
 Error ------------------------------------------------------------------------------------------------------ obj.js:2:25
 
 Cannot use `T` [1] in an input/output position because `T` [1] is expected to occur only in input positions.
+[incompatible-variance]
 
    obj.js:2:25
    2| type FieldNeg<-T> = {x: T}; // Error: -T in neutral position
@@ -71,6 +121,7 @@ References:
 Error ------------------------------------------------------------------------------------------------------ obj.js:3:25
 
 Cannot use `T` [1] in an input/output position because `T` [1] is expected to occur only in output positions.
+[incompatible-variance]
 
    obj.js:3:25
    3| type FieldPos<+T> = {x: T}; // Error: +T in neutral position
@@ -85,6 +136,7 @@ References:
 Error ------------------------------------------------------------------------------------------------------ obj.js:5:29
 
 Cannot use `T` [1] in an output position because `T` [1] is expected to occur only in input positions.
+[incompatible-variance]
 
    obj.js:5:29
    5| type PosFieldNeg<-T> = {+p: T}; // Error: -T in positive position
@@ -99,6 +151,7 @@ References:
 Error ------------------------------------------------------------------------------------------------------ obj.js:8:34
 
 Cannot use `T` [1] in an input position because `T` [1] is expected to occur only in output positions.
+[incompatible-variance]
 
    obj.js:8:34
    8| type FlipPosFieldPos<+T> = ({+x: T}) => void; // Error: +T in negative position
@@ -113,6 +166,7 @@ References:
 Error ----------------------------------------------------------------------------------------------------- obj.js:11:29
 
 Cannot use `T` [1] in an input position because `T` [1] is expected to occur only in output positions.
+[incompatible-variance]
 
    obj.js:11:29
    11| type NegFieldPos<+T> = {-p: T}; // Error: +T in negative position
@@ -127,6 +181,7 @@ References:
 Error ----------------------------------------------------------------------------------------------------- obj.js:12:34
 
 Cannot use `T` [1] in an output position because `T` [1] is expected to occur only in input positions.
+[incompatible-variance]
 
    obj.js:12:34
    12| type FlipNegFieldNeg<-T> = ({-x: T}) => void; // Error: -T in positive position
@@ -141,6 +196,7 @@ References:
 Error ----------------------------------------------------------------------------------------------------- obj.js:15:29
 
 Cannot use `T` [1] in an output position because `T` [1] is expected to occur only in input positions.
+[incompatible-variance]
 
    obj.js:15:29
    15| type GetNeg<-T> = {get p(): T}; // Error: -T in positive position
@@ -155,6 +211,7 @@ References:
 Error ----------------------------------------------------------------------------------------------------- obj.js:19:28
 
 Cannot use `T` [1] in an input position because `T` [1] is expected to occur only in output positions.
+[incompatible-variance]
 
    obj.js:19:28
    19| type SetPos<+T> = {set p(x:T): void}; // Error: +T in negative position
@@ -167,4 +224,4 @@ References:
 
 
 
-Found 12 errors
+Found 15 errors

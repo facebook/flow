@@ -22,7 +22,7 @@ module.exports = function setOptions(newOptions) {
 };
 
 var jsLoader = require.extensions['.js'];
-var exts = ['.js', '.mjs', '.jsx', '.flow', '.es6'];
+var exts = ['.js', '.mjs', '.cjs', '.jsx', '.flow', '.es6'];
 
 var revert = pirates.addHook(
   function hook(code, filename) {

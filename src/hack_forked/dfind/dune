@@ -1,0 +1,15 @@
+(library
+  (name dfind_lwt)
+  (wrapped false)
+  (libraries
+    avl
+    collections
+    fsnotify
+    logging_common
+    lwt
+    lwt.unix
+    marshal_tools
+    marshal_tools_lwt
+    sys_utils
+  )
+)

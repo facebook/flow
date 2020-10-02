@@ -1,28 +1,35 @@
-(**
+(*
  * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  *)
 
+type 'loc type_sig =
+  'loc Type_sig_pack.exports
+  * 'loc Type_sig_pack.packed option
+  * string Type_sig_collections.Module_refs.t
+  * 'loc Type_sig_pack.packed_def Type_sig_collections.Local_defs.t
+  * 'loc Type_sig_pack.remote_ref Type_sig_collections.Remote_refs.t
+  * 'loc Type_sig_pack.packed Type_sig_collections.Pattern_defs.t
+  * 'loc Type_sig_pack.pattern Type_sig_collections.Patterns.t
+
 module type READER = sig
   type reader
 
   val has_ast : reader:reader -> File_key.t -> bool
 
-  val get_ast : reader:reader -> File_key.t -> (Loc.t, Loc.t) Flow_ast.program option
+  val get_ast : reader:reader -> File_key.t -> (Loc.t, Loc.t) Flow_ast.Program.t option
 
   val get_docblock : reader:reader -> File_key.t -> Docblock.t option
 
   val get_file_sig : reader:reader -> File_key.t -> File_sig.With_Loc.t option
 
-  val get_sig_file_sig : reader:reader -> File_key.t -> File_sig.With_ALoc.t option
-
   val get_file_hash : reader:reader -> File_key.t -> Xx.hash option
 
-  val get_ast_unsafe : reader:reader -> File_key.t -> (Loc.t, Loc.t) Flow_ast.program
+  val get_ast_unsafe : reader:reader -> File_key.t -> (Loc.t, Loc.t) Flow_ast.Program.t
 
-  val get_sig_ast_unsafe : reader:reader -> File_key.t -> (ALoc.t, ALoc.t) Flow_ast.program
+  val get_sig_ast_unsafe : reader:reader -> File_key.t -> (ALoc.t, ALoc.t) Flow_ast.Program.t
 
   val get_sig_ast_aloc_table_unsafe : reader:reader -> File_key.t -> ALoc.table
 
@@ -33,6 +40,8 @@ module type READER = sig
   val get_file_sig_unsafe : reader:reader -> File_key.t -> File_sig.With_Loc.t
 
   val get_sig_file_sig_unsafe : reader:reader -> File_key.t -> File_sig.With_ALoc.t
+
+  val get_type_sig_unsafe : reader:reader -> File_key.t -> Type_sig_collections.Locs.index type_sig
 
   val get_file_hash_unsafe : reader:reader -> File_key.t -> Xx.hash
 end
@@ -47,13 +56,22 @@ module Reader : READER with type reader = State_reader.t
 
 module Reader_dispatcher : READER with type reader = Abstract_state_reader.t
 
+type sig_extra =
+  | Classic
+  | TypesFirst of {
+      sig_ast: (ALoc.t, ALoc.t) Flow_ast.Program.t;
+      sig_file_sig: File_sig.With_ALoc.t;
+      aloc_table: ALoc.table option;
+    }
+  | TypeSig of Type_sig_collections.Locs.index type_sig * ALoc.table
+
 (* For use by a worker process *)
 type worker_mutator = {
   add_file:
     File_key.t ->
     Docblock.t ->
-    (Loc.t, Loc.t) Flow_ast.program * File_sig.With_Loc.t ->
-    ((ALoc.t, ALoc.t) Flow_ast.program * File_sig.With_ALoc.t * ALoc.table option) option ->
+    (Loc.t, Loc.t) Flow_ast.Program.t * File_sig.With_Loc.t ->
+    sig_extra ->
     unit;
   add_hash: File_key.t -> Xx.hash -> unit;
 }
@@ -75,3 +93,7 @@ module From_saved_state : sig
 
   val add_file_hash : File_key.t -> Xx.hash -> unit
 end
+
+(* Temporary API. This is needed for the types-first 2.0 demo, which produces
+ * these tables separately from the parse phase. *)
+val add_aloc_table : File_key.t -> ALoc.table -> unit

@@ -1,22 +1,16 @@
-Error -------------------------------------------------------------------------------------------------- lib/test.js:7:1
+Error ------------------------------------------------------------------------------------------------- lib/test.js:8:10
 
 Cannot extend mixins `_module.C` [1] with `D` because string [2] is incompatible with number [3] in the return value of
-property `foo`.
+property `foo`. [incompatible-extend]
 
-   lib/test.js:7:1
-      v----------------------------------
-   7| declare class D extends _module.C {
+   lib/test.js:8:10
    8|   foo(): string;
-   9| }
-      ^
+               ^^^^^^ [2]
 
 References:
    lib/test.js:7:25
    7| declare class D extends _module.C {
                               ^^^^^^^^^ [1]
-   lib/test.js:8:10
-   8|   foo(): string;
-               ^^^^^^ [2]
    lib/test.js:2:10
    2|   foo(): number;
                ^^^^^^ [3]
@@ -24,7 +18,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- declare_class.js:10:7
 
-Cannot assign empty string to `C.x` because string [1] is incompatible with number [2].
+Cannot assign empty string to `C.x` because string [1] is incompatible with number [2]. [incompatible-type]
 
    declare_class.js:10:7
    10| C.x = "";
@@ -39,6 +33,7 @@ References:
 Error -------------------------------------------------------------------------------------------- declare_class.js:11:7
 
 Cannot call `C.foo` with empty string bound to `x` because string [1] is incompatible with number [2].
+[incompatible-call]
 
    declare_class.js:11:7
    11| C.foo("");
@@ -52,7 +47,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- declare_class.js:14:2
 
-Cannot cast `C.name` to number because string [1] is incompatible with number [2].
+Cannot cast `C.name` to number because string [1] is incompatible with number [2]. [incompatible-cast]
 
    declare_class.js:14:2
    14| (C.name: number); // error, it's a string
@@ -69,7 +64,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- declare_class.js:17:7
 
-Cannot call `D` with `123` bound to `x` because number [1] is incompatible with string [2].
+Cannot call `D` with `123` bound to `x` because number [1] is incompatible with string [2]. [incompatible-call]
 
    declare_class.js:17:7
    17| new D(123); // error, number ~> string

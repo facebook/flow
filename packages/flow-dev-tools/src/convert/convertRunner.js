@@ -1,4 +1,11 @@
-/* @flow */
+/**
+ * Copyright (c) Facebook, Inc. and its affiliates.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ *
+ * @flow
+ */
 
 import colors from 'colors/safe';
 import {basename, dirname, extname, join, normalize, relative} from 'path';
@@ -156,7 +163,9 @@ async function convert(
     .join("\n      ");
 
   await writeFile(join(dest, "test.js"),
-`/* @flow */
+`/* Copyright Facebook
+ * @flow
+ */
 import {suite, test} from 'flow-dev-tools/src/test/Tester';
 
 export default suite(({addFiles}) => [

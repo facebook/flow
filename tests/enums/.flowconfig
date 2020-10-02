@@ -5,4 +5,7 @@
 [libs]
 
 [options]
+no_flowlib=false
 experimental.enums=true
+well_formed_exports=true
+types_first=true

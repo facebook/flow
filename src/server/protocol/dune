@@ -5,6 +5,7 @@
     flow_autofix_options
     flow_common
     flow_common_profiling
+    flow_coverage
     flow_exit_status
     flow_parser_utils_replacement_printer
     flow_server_status

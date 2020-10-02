@@ -1,0 +1,162 @@
+Error ----------------------------------------------------------------------------------------------------- test.js:16:2
+
+Cannot cast `ambiguous` to empty because string literal `first_user_code` [1] is incompatible with empty [2].
+[incompatible-cast]
+
+   test.js:16:2
+   16| (ambiguous: empty)
+        ^^^^^^^^^
+
+References:
+   first/ambiguous.js:3:14
+    3| const value: "first_user_code" = "first_user_code";
+                    ^^^^^^^^^^^^^^^^^ [1]
+   test.js:16:13
+   16| (ambiguous: empty)
+                   ^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:19:2
+
+Cannot cast `sub_ambiguous` to empty because string literal `first_user_code` [1] is incompatible with empty [2].
+[incompatible-cast]
+
+   test.js:19:2
+   19| (sub_ambiguous: empty)
+        ^^^^^^^^^^^^^
+
+References:
+   first/subdir/ambiguous.js:3:14
+    3| const value: "first_user_code" = "first_user_code";
+                    ^^^^^^^^^^^^^^^^^ [1]
+   test.js:19:17
+   19| (sub_ambiguous: empty)
+                       ^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:23:2
+
+Cannot cast `user_code` to empty because string literal `first_user_code` [1] is incompatible with empty [2].
+[incompatible-cast]
+
+   test.js:23:2
+   23| (user_code: empty)
+        ^^^^^^^^^
+
+References:
+   first/user_code.js:3:14
+    3| const value: "first_user_code" = "first_user_code";
+                    ^^^^^^^^^^^^^^^^^ [1]
+   test.js:23:13
+   23| (user_code: empty)
+                   ^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:26:2
+
+Cannot cast `sub_user_code` to empty because string literal `first_user_code` [1] is incompatible with empty [2].
+[incompatible-cast]
+
+   test.js:26:2
+   26| (sub_user_code: empty)
+        ^^^^^^^^^^^^^
+
+References:
+   first/subdir/user_code.js:3:14
+    3| const value: "first_user_code" = "first_user_code";
+                    ^^^^^^^^^^^^^^^^^ [1]
+   test.js:26:17
+   26| (sub_user_code: empty)
+                       ^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:30:2
+
+Cannot cast `second_only_user_code` to empty because string literal `second_only_user_code` [1] is incompatible with
+empty [2]. [incompatible-cast]
+
+   test.js:30:2
+   30| (second_only_user_code: empty)
+        ^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   second/second_only_user_code.js:3:14
+    3| const value: "second_only_user_code" = "second_only_user_code";
+                    ^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   test.js:30:25
+   30| (second_only_user_code: empty)
+                               ^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:33:2
+
+Cannot cast `sub_second_only_user_code` to empty because string literal `second_only_user_code` [1] is incompatible with
+empty [2]. [incompatible-cast]
+
+   test.js:33:2
+   33| (sub_second_only_user_code: empty)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   second/subdir/second_only_user_code.js:3:14
+    3| const value: "second_only_user_code" = "second_only_user_code";
+                    ^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   test.js:33:29
+   33| (sub_second_only_user_code: empty)
+                                   ^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:37:2
+
+Cannot cast `node_code` to empty because string literal `node_code` [1] is incompatible with empty [2].
+[incompatible-cast]
+
+   test.js:37:2
+   37| (node_code: empty)
+        ^^^^^^^^^
+
+References:
+   node_modules/node_code.js:3:14
+    3| const value: "node_code" = "node_code";
+                    ^^^^^^^^^^^ [1]
+   test.js:37:13
+   37| (node_code: empty)
+                   ^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:40:2
+
+Cannot cast `sub_node_code` to empty because string literal `node_code` [1] is incompatible with empty [2].
+[incompatible-cast]
+
+   test.js:40:2
+   40| (sub_node_code: empty)
+        ^^^^^^^^^^^^^
+
+References:
+   node_modules/subdir/node_code.js:3:14
+    3| const value: "node_code" = "node_code";
+                    ^^^^^^^^^^^ [1]
+   test.js:40:17
+   40| (sub_node_code: empty)
+                       ^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:43:25
+
+Cannot resolve module `nonexistent`. [cannot-resolve-module]
+
+   43| import nonexistent from 'nonexistent'
+                               ^^^^^^^^^^^^^
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:44:29
+
+Cannot resolve module `subdir/nonexistent`. [cannot-resolve-module]
+
+   44| import sub_nonexistent from 'subdir/nonexistent'
+                                   ^^^^^^^^^^^^^^^^^^^^
+
+
+
+Found 10 errors

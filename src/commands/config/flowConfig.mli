@@ -1,9 +1,14 @@
-(**
+(*
  * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  *)
+
+type file_watcher =
+  | NoFileWatcher
+  | DFind
+  | Watchman
 
 type config
 
@@ -54,9 +59,11 @@ val abstract_locations : config -> bool
 
 val all : config -> bool
 
-val allow_skip_direct_dependents : config -> bool
+val automatic_require_default : config -> bool
 
-val cache_direct_dependents : config -> bool
+val babel_loose_array_spread : config -> bool
+
+val disable_live_non_parse_errors : config -> bool
 
 val emoji : config -> bool
 
@@ -66,21 +73,9 @@ val enforce_strict_call_arity : config -> bool
 
 val enforce_well_formed_exports : config -> bool
 
-val enforce_well_formed_exports_whitelist : config -> string list
+val enforce_well_formed_exports_includes : config -> string list
 
 val enums : config -> bool
-
-val esproposal_class_instance_fields : config -> Options.esproposal_feature_mode
-
-val esproposal_class_static_fields : config -> Options.esproposal_feature_mode
-
-val esproposal_decorators : config -> Options.esproposal_feature_mode
-
-val esproposal_export_star_as : config -> Options.esproposal_feature_mode
-
-val esproposal_nullish_coalescing : config -> Options.esproposal_feature_mode
-
-val esproposal_optional_chaining : config -> Options.esproposal_feature_mode
 
 val exact_by_default : config -> bool
 
@@ -88,15 +83,19 @@ val facebook_fbs : config -> string option
 
 val facebook_fbt : config -> string option
 
-val file_watcher : config -> Options.file_watcher option
+val facebook_module_interop : config -> bool
+
+val file_watcher : config -> file_watcher option
+
+val file_watcher_timeout : config -> int option
 
 val haste_module_ref_prefix : config -> string option
 
 val haste_name_reducers : config -> (Str.regexp * string) list
 
-val haste_paths_blacklist : config -> string list
+val haste_paths_excludes : config -> string list
 
-val haste_paths_whitelist : config -> string list
+val haste_paths_includes : config -> string list
 
 val haste_use_name_reducers : config -> bool
 
@@ -108,13 +107,15 @@ val lazy_mode : config -> Options.lazy_mode option
 
 val log_file : config -> Path.t option
 
-val lsp_code_actions : config -> bool
-
 val max_files_checked_per_worker : config -> int
 
 val max_header_tokens : config -> int
 
 val max_literal_length : config -> int
+
+val max_rss_bytes_for_check_per_worker : config -> int
+
+val max_seconds_for_check_per_worker : config -> float
 
 val max_workers : config -> int
 
@@ -123,8 +124,6 @@ val merge_timeout : config -> int option
 val module_file_exts : config -> SSet.t
 
 val module_name_mappers : config -> (Str.regexp * string) list
-
-val module_resolver : config -> Path.t option
 
 val module_resource_exts : config -> SSet.t
 
@@ -136,9 +135,17 @@ val munge_underscores : config -> bool
 
 val no_flowlib : config -> bool
 
+val node_main_fields : config -> string list
+
+val node_resolver_allow_root_relative : config -> bool
+
 val node_resolver_dirnames : config -> string list
 
+val node_resolver_root_relative_dirnames : config -> string list
+
 val required_version : config -> string option
+
+val react_runtime : config -> Options.react_runtime
 
 val recursion_limit : config -> int
 
@@ -146,19 +153,15 @@ val root_name : config -> string option
 
 val saved_state_fetcher : config -> Options.saved_state_fetcher
 
-val shm_dep_table_pow : config -> int
-
-val shm_dirs : config -> string list
-
 val shm_hash_table_pow : config -> int
 
 val shm_heap_size : config -> int
 
 val shm_log_level : config -> int
 
-val shm_min_avail : config -> int
+val strict_es6_import_export : config -> bool
 
-val suppress_comments : config -> Str.regexp list
+val strict_es6_import_export_excludes : config -> string list
 
 val suppress_types : config -> SSet.t
 
@@ -171,6 +174,14 @@ val trust_mode : config -> Options.trust_mode
 val type_asserts : config -> bool
 
 val types_first : config -> bool
+
+val new_signatures : config -> bool
+
+val watchman_sync_timeout : config -> int option
+
+val watchman_defer_states : config -> string list
+
+val watchman_mergebase_with : config -> string option
 
 val wait_for_recheck : config -> bool
 

@@ -9,6 +9,6 @@ class Foo {
   }
 }
 
-export function f(x: Foo) {
+export function f(x: Foo): Foo {
   return x.foo();
 }

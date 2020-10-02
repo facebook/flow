@@ -1,4 +1,4 @@
-(**
+(*
  * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
@@ -50,10 +50,10 @@ let wait_on_server_restart ic =
     (* Server has exited and hung up on us *)
     ()
 
-module SockMap = MyMap.Make (struct
-  type t = Unix.sockaddr
+module SockMap = WrappedMap.Make (struct
+  type t = Socket.addr
 
-  let compare = Pervasives.compare
+  let compare = Stdlib.compare
 end)
 
 (* We used to open a new connection every time we tried to connect to a socket
@@ -65,11 +65,11 @@ end)
 let connections = ref SockMap.empty
 
 let open_connection ~timeout ~client_handshake sockaddr =
-  match SockMap.get sockaddr !connections with
+  match SockMap.find_opt sockaddr !connections with
   | Some conn -> conn
   | None ->
     let conn =
-      try Timeout.open_connection ~timeout sockaddr
+      try Socket.with_addr sockaddr @@ Timeout.open_connection ~timeout
       with Unix.Unix_error (Unix.ENOENT, "connect", _) -> raise (ConnectError Missing_socket)
     in
     connections := SockMap.add sockaddr conn !connections;
@@ -85,7 +85,7 @@ let open_connection ~timeout ~client_handshake sockaddr =
       conn)
 
 let close_connection sockaddr =
-  match SockMap.get sockaddr !connections with
+  match SockMap.find_opt sockaddr !connections with
   | None -> ()
   | Some (ic, _) ->
     connections := SockMap.remove sockaddr !connections;
@@ -93,16 +93,7 @@ let close_connection sockaddr =
     Timeout.close_in_noerr ic
 
 let establish_connection ~flowconfig_name ~timeout ~client_handshake ~tmp_dir root =
-  let sock_name = Socket.get_path (Server_files.socket_file ~flowconfig_name ~tmp_dir root) in
-  let sockaddr =
-    if Sys.win32 then (
-      let ic = open_in_bin sock_name in
-      let port = input_binary_int ic in
-      close_in ic;
-      Unix.(ADDR_INET (inet_addr_loopback, port))
-    ) else
-      Unix.ADDR_UNIX sock_name
-  in
+  let sockaddr = Socket.addr_for_open (Server_files.socket_file ~flowconfig_name ~tmp_dir root) in
   Ok (sockaddr, open_connection ~timeout ~client_handshake sockaddr)
 
 let get_handshake ~timeout:_ sockaddr ic oc =
@@ -115,7 +106,8 @@ let get_handshake ~timeout:_ sockaddr ic oc =
       let wire = (Marshal_tools.from_fd_with_preamble fd : server_handshake_wire) in
       let server_handshake =
         ( fst wire |> Hh_json.json_of_string |> json_to__monitor_to_client_1,
-          snd wire |> Option.map ~f:(fun s -> (Marshal.from_string s 0 : monitor_to_client_2)) )
+          snd wire |> Base.Option.map ~f:(fun s -> (Marshal.from_string s 0 : monitor_to_client_2))
+        )
         (* Server invariant: it only sends us snd=Some if it knows client+server versions match *)
       in
       Ok (sockaddr, ic, oc, server_handshake)
@@ -168,7 +160,7 @@ let verify_handshake ~client_handshake ~server_handshake sockaddr ic =
 
 (* Connects to the monitor via a socket. *)
 let connect_once ~flowconfig_name ~client_handshake ~tmp_dir root =
-  let ( >>= ) = Core_result.( >>= ) in
+  let ( >>= ) = Base.Result.( >>= ) in
   try
     Timeout.with_timeout
       ~timeout:1
@@ -177,10 +169,10 @@ let connect_once ~flowconfig_name ~client_handshake ~tmp_dir root =
         begin
           fun timeout ->
           establish_connection ~flowconfig_name ~timeout ~client_handshake ~tmp_dir root
-          >>= (fun (sockaddr, (ic, oc)) -> get_handshake ~timeout sockaddr ic oc)
+          >>= fun (sockaddr, (ic, oc)) -> get_handshake ~timeout sockaddr ic oc
         end
     >>= fun (sockaddr, ic, oc, server_handshake) ->
-    verify_handshake ~client_handshake ~server_handshake sockaddr ic >>= (fun () -> Ok (ic, oc))
+    verify_handshake ~client_handshake ~server_handshake sockaddr ic >>= fun () -> Ok (ic, oc)
   with
   | ConnectError Missing_socket ->
     if server_exists ~flowconfig_name ~tmp_dir root then

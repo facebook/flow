@@ -1,7 +1,7 @@
 Error ----------------------------------------------------------------------------------------------------- test.js:3:15
 
 Importing a type from an untyped module makes it `any` and is not safe! Did you mean to add `// @flow` to the top of
-`./import`? (`untyped-type-import`)
+`./import`? [untyped-type-import]
 
    3| import type { T } from './import'; // Error: untyped-type-import
                     ^
@@ -9,15 +9,24 @@ Importing a type from an untyped module makes it `any` and is not safe! Did you 
 
 Error ----------------------------------------------------------------------------------------------------- test.js:4:15
 
-Dependencies of a `@flow strict` module must also be `@flow strict`! (`nonstrict-import`)
+Dependencies of a `@flow strict` module must also be `@flow strict`! [nonstrict-import]
 
    4| import type { S } from './nonstrict_export'; // Error: nonstrict-import
                     ^
 
 
+Error ------------------------------------------------------------------------------------------------------ test.js:6:5
+
+Cannot use `T` as a type because it is an `any`-typed value. Type `T` properly, so it is no longer `any`-typed, to use
+it as an annotation. [value-as-type]
+
+   6| (0: T);
+          ^
+
+
 Error ------------------------------------------------------------------------------------------------------ test.js:9:3
 
-Cannot reassign constant `x` [1].
+Cannot reassign constant `x` [1]. [reassign-const]
 
    test.js:9:3
    9|   x = 1; // Error: cannot reassign constant parameter
@@ -30,4 +39,4 @@ References:
 
 
 
-Found 3 errors
+Found 4 errors

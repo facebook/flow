@@ -1,8 +1,87 @@
+Error ------------------------------------------------------------------------------------------------------ dict.js:7:5
+
+Cannot spread object literal because Flow cannot determine a type for object literal [1]. object type [2] cannot be
+spread because the indexer string [3] may overwrite properties with explicit keys in a way that Flow cannot track. Try
+spreading object type [2] first or remove the indexer. [cannot-spread-indexer]
+
+   dict.js:7:5
+           v
+    7|     {
+    8|       first,
+    9|       ...map // Error, can't spread indexer second
+   10|     },
+           ^ [1]
+
+References:
+   dict.js:3:19
+    3| function foo(map: { [key: string]: mixed }) {
+                         ^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+   dict.js:3:27
+    3| function foo(map: { [key: string]: mixed }) {
+                                 ^^^^^^ [3]
+
+
+Error ------------------------------------------------------------------------------------------ error_positions.js:11:6
+
+Cannot call `bar` because Flow cannot determine a type for object type [1]. object type [2] is inexact, so it may
+contain `m` with a type that conflicts with `m`'s definition in object type [1]. Try making object type [2] exact.
+[cannot-spread-inexact]
+
+   error_positions.js:11:6
+   11| (foo(bar(C)): F<typeof C>); // error on call
+            ^^^
+
+References:
+   error_positions.js:7:45
+    7| declare function bar<P>(React$ComponentType<{ m: number, ...P}>): React$ComponentType<P>;
+                                                   ^^^^^^^^^^^^^^^^^^ [1]
+   error_positions.js:9:33
+    9| class C extends React.Component<{}> {}
+                                       ^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------ error_positions.js:16:8
+
+Cannot call `spread` with `inexact` bound to `x` because Flow cannot determine a type for object type [1]. object
+type [2] is inexact, so it may contain `foo` with a type that conflicts with `foo`'s definition in object type [3]. Try
+making object type [2] exact. [cannot-spread-inexact]
+
+   error_positions.js:16:8
+   16| spread(inexact); // error on call
+              ^^^^^^^
+
+References:
+   error_positions.js:13:39
+   13| declare function spread<T: {}>(x: T): {...T, ...{}}; // error should not appear here
+                                             ^^^^^^^^^^^^^ [1]
+   error_positions.js:13:49
+   13| declare function spread<T: {}>(x: T): {...T, ...{}}; // error should not appear here
+                                                       ^^ [2]
+   error_positions.js:15:22
+   15| declare var inexact: {foo: number};
+                            ^^^^^^^^^^^^^ [3]
+
+
+Error --------------------------------------------------------------------------------------------------- exact.js:14:35
+
+Cannot assign object literal to `spread_inexact_first` because inexact object literal [1] is incompatible with exact
+`Foo` [2]. [incompatible-exact]
+
+   exact.js:14:35
+   14| const spread_inexact_first: Foo = {...foo_inexact, ...other}; // not OK
+                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+References:
+   exact.js:14:29
+   14| const spread_inexact_first: Foo = {...foo_inexact, ...other}; // not OK
+                                   ^^^ [2]
+
+
 Error --------------------------------------------------------------------------------------------------- exact.js:15:36
 
-Cannot determine the type of object literal [1] because it contains a spread of inexact object type [2]. Being inexact,
-object type [2] might be missing the types of some properties that are being copied. Perhaps you could make it exact?
-(`inexact-spread`)
+Cannot spread object literal because Flow cannot determine a type for object literal [1]. object type [2] is inexact, so
+it may contain `bar` with a type that conflicts with `bar`'s definition in object literal [3]. Try making object
+type [2] exact. [cannot-spread-inexact]
 
    exact.js:15:36
    15| const spread_inexact_second: Foo = {...other, ...foo_inexact}; // not OK
@@ -12,15 +91,18 @@ References:
    exact.js:13:20
    13| const foo_inexact: { baz: number } = { bar: 42, baz: 123 };
                           ^^^^^^^^^^^^^^^ [2]
+   exact.js:9:15
+    9| const other = {bar: 'wat'}
+                     ^^^^^^^^^^^^ [3]
 
 
-Error ------------------------------------------------------------------------------------------------------ null.js:6:4
+Error ----------------------------------------------------------------------------------------------------- null.js:6:10
 
-Cannot get `empty.x` because property `x` is missing in object literal [1].
+Cannot get `empty.x` because property `x` is missing in object literal [1]. [prop-missing]
 
-   null.js:6:4
-   6|   (empty.x);
-         ^^^^^^^
+   null.js:6:10
+   6|   (empty.x); // Error
+               ^
 
 References:
    null.js:5:17
@@ -30,7 +112,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test10.js:3:2
 
-Cannot cast `o.p` to empty because number [1] is incompatible with empty [2].
+Cannot cast `o.p` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
 
    test10.js:3:2
    3| (o.p: empty); // error: number ~> empty
@@ -47,10 +129,10 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test3.js:8:17
 
-Cannot assign `o.y` to `y` because string [1] is incompatible with number [2].
+Cannot assign `o.y` to `y` because string [1] is incompatible with number [2]. [incompatible-type]
 
    test3.js:8:17
-   8| var y: number = o.y;
+   8| var y: number = o.y; // Error string ~> number
                       ^^^
 
 References:
@@ -58,16 +140,16 @@ References:
    1| var p = { y: "" };
                    ^^ [1]
    test3.js:8:8
-   8| var y: number = o.y;
+   8| var y: number = o.y; // Error string ~> number
              ^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- test3.js:9:17
 
-Cannot assign `o.z` to `z` because string [1] is incompatible with number [2].
+Cannot assign `o.z` to `z` because string [1] is incompatible with number [2]. [incompatible-type]
 
    test3.js:9:17
-   9| var z: number = o.z;
+   9| var z: number = o.z; // Error string ~> number
                       ^^^
 
 References:
@@ -75,35 +157,14 @@ References:
    2| var q = { z: "" };
                    ^^ [1]
    test3.js:9:8
-   9| var z: number = o.z;
+   9| var z: number = o.z; // Error string ~> number
              ^^^^^^ [2]
-
-
-Error --------------------------------------------------------------------------------------------------- test3.js:17:18
-
-Cannot assign `s.y` to `t` because:
- - string [1] is incompatible with boolean [2].
- - number [3] is incompatible with boolean [2].
-
-   test3.js:17:18
-   17| var t: boolean = s.y; // error, string or number
-                        ^^^
-
-References:
-   test3.js:1:14
-    1| var p = { y: "" };
-                    ^^ [1]
-   test3.js:17:8
-   17| var t: boolean = s.y; // error, string or number
-              ^^^^^^^ [2]
-   test3.js:12:14
-   12| var r = { y: 123 };
-                    ^^^ [3]
 
 
 Error ---------------------------------------------------------------------------------------------------- test6.js:10:2
 
 Cannot cast `p` to object type because property `abc` is missing in object literal [1] but exists in object type [2].
+[prop-missing]
 
    test6.js:10:2
    10| (p: {foo: string; abc: string}); // error, p doesn't have `abc` yet
@@ -124,6 +185,7 @@ References:
 Error ----------------------------------------------------------------------------------------------------- test8.js:7:2
 
 Cannot cast object literal to object type because string [1] is incompatible with number [2] in property `q`.
+[incompatible-cast]
 
    test8.js:7:2
     7| ({ ...o }: { p: number, q: number }); // error: string ~> number (prop q)
@@ -141,6 +203,7 @@ References:
 Error ----------------------------------------------------------------------------------------------------- test8.js:8:2
 
 Cannot cast object literal to object type because number [1] is incompatible with string [2] in property `p`.
+[incompatible-cast]
 
    test8.js:8:2
     8| ({ ...o }: { p: string, q: string }); // error: number ~> string (prop p)
@@ -157,52 +220,55 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test9.js:5:2
 
-Cannot cast object literal to object type because a call signature declaring the expected parameter / return type is
-missing in object literal [1] but exists in object type [2].
+Cannot spread object literal because Flow cannot determine a type for object literal [1]. `I_call` [2] cannot be spread
+because interfaces do not track the own-ness of their properties. Try using an object type instead.
+[cannot-spread-interface]
 
    test9.js:5:2
-   5| ({ ...o_call }: { "$call": any }); // error: callable should not be copied
+   5| ({ ...o_call }: { "$call": any }); // error: interfaces cannot be spread 
        ^^^^^^^^^^^^^ [1]
 
 References:
-   test9.js:5:17
-   5| ({ ...o_call }: { "$call": any }); // error: callable should not be copied
-                      ^^^^^^^^^^^^^^^^ [2]
+   test9.js:4:21
+   4| declare var o_call: I_call;
+                          ^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- test9.js:11:2
 
-Cannot cast object literal to object type because an index signature declaring the expected key / value type is missing
-in object literal [1] but exists in object type [2].
+Cannot spread object literal because Flow cannot determine a type for object literal [1]. `I_index` [2] cannot be spread
+because interfaces do not track the own-ness of their properties. Try using an object type instead.
+[cannot-spread-interface]
 
    test9.js:11:2
-   11| ({ ...o_index }: { "$key": any }); // error: indexer key should not be copied
+   11| ({ ...o_index }: { "$key": any }); // error: interfaces cannot be spread 
         ^^^^^^^^^^^^^^ [1]
 
 References:
-   test9.js:11:18
-   11| ({ ...o_index }: { "$key": any }); // error: indexer key should not be copied
-                        ^^^^^^^^^^^^^^^ [2]
+   test9.js:10:22
+   10| declare var o_index: I_index;
+                            ^^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- test9.js:12:2
 
-Cannot cast object literal to object type because an index signature declaring the expected key / value type is missing
-in object literal [1] but exists in object type [2].
+Cannot spread object literal because Flow cannot determine a type for object literal [1]. `I_index` [2] cannot be spread
+because interfaces do not track the own-ness of their properties. Try using an object type instead.
+[cannot-spread-interface]
 
    test9.js:12:2
-   12| ({ ...o_index }: { "$value": any }); // error: indexer value should not be copied
+   12| ({ ...o_index }: { "$value": any }); // error: interfaces cannot be spread 
         ^^^^^^^^^^^^^^ [1]
 
 References:
-   test9.js:12:18
-   12| ({ ...o_index }: { "$value": any }); // error: indexer value should not be copied
-                        ^^^^^^^^^^^^^^^^^ [2]
+   test9.js:10:22
+   10| declare var o_index: I_index;
+                            ^^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------- unsealed.js:6:10
 
-Cannot return `o` because inexact object literal [1] is incompatible with exact object type [2].
+Cannot return `o` because inexact object literal [1] is incompatible with exact object type [2]. [incompatible-exact]
 
    unsealed.js:6:10
    6|   return o; // error, unsealed implies inexact
@@ -219,25 +285,20 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- unsealed.js:25:4
 
-Cannot cast `b2.x` to string because:
- - number [1] is incompatible with string [2].
- - number [3] is incompatible with string [2].
+Cannot cast `b2.x` to string because number [1] is incompatible with string [2]. [incompatible-cast]
 
    unsealed.js:25:4
    25|   (b2.x: string); // expected error: number ~/~> string
           ^^^^
 
 References:
-   unsealed.js:9:31
-    9| function foo2(b: bool): { x?: number } {
-                                     ^^^^^^ [1]
+   unsealed.js:16:18
+   16|   const a = { x: 42 };
+                        ^^ [1]
    unsealed.js:25:10
    25|   (b2.x: string); // expected error: number ~/~> string
                 ^^^^^^ [2]
-   unsealed.js:16:18
-   16|   const a = { x: 42 };
-                        ^^ [3]
 
 
 
-Found 16 errors
+Found 17 errors

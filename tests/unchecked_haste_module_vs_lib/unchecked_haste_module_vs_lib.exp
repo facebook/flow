@@ -1,15 +1,15 @@
 Error ---------------------------------------------------------------------------------------------------- test.js:13:17
 
-Cannot assign `buffer.INSPECT_MAX_BYTES` to `x` because number [1] is incompatible with string [2].
+Cannot assign `buffer.INSPECT_MAX_BYTES` to `x` because number [1] is incompatible with string [2]. [incompatible-type]
 
    test.js:13:17
    13| var x: string = buffer.INSPECT_MAX_BYTES; // error, number ~/> string
                        ^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   buffer.js:12:32
-   12| export var INSPECT_MAX_BYTES = 0;
-                                      ^ [1]
+   lib.js:2:34
+    2|   declare var INSPECT_MAX_BYTES: number;
+                                        ^^^^^^ [1]
    test.js:13:8
    13| var x: string = buffer.INSPECT_MAX_BYTES; // error, number ~/> string
               ^^^^^^ [2]

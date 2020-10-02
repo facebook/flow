@@ -1,6 +1,6 @@
 Error ---------------------------------------------------------------------------------------------------- unary.js:8:10
 
-string [1] is not a number.
+string [1] is not a number. [incompatible-use]
 
    unary.js:8:10
    8|   return -y; // error, we don't allow coercion here
@@ -14,7 +14,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- unary.js:12:11
 
-string [1] is incompatible with number [2].
+string [1] is incompatible with number [2]. [incompatible-type]
 
    unary.js:12:11
    12|   return ~y;  // error, we don't allow coercion here
@@ -31,7 +31,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- unary.js:19:2
 
-Cannot cast `-1` to undefined because number [1] is incompatible with undefined [2].
+Cannot cast `-1` to undefined because number [1] is incompatible with undefined [2]. [incompatible-cast]
 
    unary.js:19:2
    19| (-1: void); // error, number ~> void
@@ -45,7 +45,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- update.js:12:5
 
-Cannot perform arithmetic operation because string [1] is not a number.
+Cannot perform arithmetic operation because string [1] is not a number. [unsafe-addition]
 
    update.js:12:5
    12|     y++; // error, we don't allow coercion here
@@ -59,7 +59,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- update.js:12:5
 
-Cannot assign number to `y` because number [1] is incompatible with string [2].
+Cannot assign number to `y` because number [1] is incompatible with string [2]. [incompatible-type]
 
    update.js:12:5
    12|     y++; // error, we don't allow coercion here
@@ -73,7 +73,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- update.js:14:5
 
-Cannot assign number to `y` because number [1] is incompatible with string [2].
+Cannot assign number to `y` because number [1] is incompatible with string [2]. [incompatible-type]
 
    update.js:14:5
    14|     y++; // error, but you still can't write a number to a string
@@ -87,7 +87,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- update.js:18:5
 
-Cannot perform arithmetic operation because string [1] is not a number.
+Cannot perform arithmetic operation because string [1] is not a number. [unsafe-addition]
 
    update.js:18:5
    18|     y--; // error, we don't allow coercion here
@@ -101,7 +101,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- update.js:18:5
 
-Cannot assign number to `y` because number [1] is incompatible with string [2].
+Cannot assign number to `y` because number [1] is incompatible with string [2]. [incompatible-type]
 
    update.js:18:5
    18|     y--; // error, we don't allow coercion here
@@ -115,7 +115,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- update.js:22:5
 
-Cannot assign number to `y` because number [1] is incompatible with string [2].
+Cannot assign number to `y` because number [1] is incompatible with string [2]. [incompatible-type]
 
    update.js:22:5
    22|     ++y; // error, we don't allow coercion here
@@ -129,7 +129,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- update.js:22:7
 
-Cannot perform arithmetic operation because string [1] is not a number.
+Cannot perform arithmetic operation because string [1] is not a number. [unsafe-addition]
 
    update.js:22:7
    22|     ++y; // error, we don't allow coercion here
@@ -143,7 +143,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- update.js:26:5
 
-Cannot assign number to `y` because number [1] is incompatible with string [2].
+Cannot assign number to `y` because number [1] is incompatible with string [2]. [incompatible-type]
 
    update.js:26:5
    26|     --y; // error, we don't allow coercion here
@@ -157,7 +157,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- update.js:26:7
 
-Cannot perform arithmetic operation because string [1] is not a number.
+Cannot perform arithmetic operation because string [1] is not a number. [unsafe-addition]
 
    update.js:26:7
    26|     --y; // error, we don't allow coercion here
@@ -171,7 +171,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- update.js:31:5
 
-Cannot reassign constant `y` [1].
+Cannot reassign constant `y` [1]. [reassign-const]
 
    update.js:31:5
    31|     y++; // error, can't update const
@@ -185,7 +185,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- update.js:32:5
 
-Cannot reassign constant `y` [1].
+Cannot reassign constant `y` [1]. [reassign-const]
 
    update.js:32:5
    32|     y--; // error, can't update const
@@ -197,5 +197,45 @@ References:
                  ^ [1]
 
 
+Error --------------------------------------------------------------------------------------------------- update.js:36:7
 
-Found 14 errors
+Cannot update `o.y` because property `y` is not writable. [cannot-write]
+
+   36|     o.y++; // error, can't update read-only property
+             ^
+
+
+Error --------------------------------------------------------------------------------------------------- update.js:37:7
+
+Cannot update `o.y` because property `y` is not writable. [cannot-write]
+
+   37|     o.y--; // error, can't update read-only property
+             ^
+
+
+Error --------------------------------------------------------------------------------------------------- update.js:41:7
+
+Cannot get `o.y` because property `y` is not readable. [cannot-read]
+
+   41|     o.y++; // error, can't read write-only property
+             ^
+
+
+Error --------------------------------------------------------------------------------------------------- update.js:47:5
+
+Cannot update `xs[0]` because read-only arrays cannot be written to. [cannot-write]
+
+   47|     xs[0]++;
+           ^^^^^
+
+
+Error --------------------------------------------------------------------------------------------------- update.js:48:5
+
+Cannot update `xs[0]` because read-only arrays cannot be written to. [cannot-write]
+
+   48|     xs[0]--;
+           ^^^^^
+
+
+
+Found 19 errors

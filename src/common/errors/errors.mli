@@ -1,4 +1,4 @@
-(**
+(*
  * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
@@ -78,6 +78,7 @@ val mk_error :
   ?root:Loc.t * Loc.t Friendly.message ->
   ?frames:Loc.t Friendly.message list ->
   Loc.t ->
+  Error_codes.error_code option ->
   Loc.t Friendly.message ->
   Loc.t printable_error
 
@@ -87,6 +88,7 @@ val mk_speculation_error :
   loc:Loc.t ->
   root:(Loc.t * Loc.t Friendly.message) option ->
   frames:Loc.t Friendly.message list ->
+  error_code:Error_codes.error_code option ->
   speculation_errors:(int * Loc.t printable_error) list ->
   Loc.t printable_error
 
@@ -96,14 +98,15 @@ val locs_of_printable_error : 'loc printable_error -> 'loc list
 
 val kind_of_printable_error : 'loc printable_error -> error_kind
 
+val code_of_printable_error : 'loc printable_error -> Error_codes.error_code option
+
 module ConcreteLocPrintableErrorSet : Set.S with type elt = Loc.t printable_error
 
 (* formatters/printers *)
 
 type stdin_file = (Path.t * string) option
 
-val deprecated_json_props_of_loc :
-  strip_root:Path.t option -> Loc.t -> (string * Hh_json.json) list
+val deprecated_json_props_of_loc : strip_root:Path.t option -> Loc.t -> (string * Hh_json.json) list
 
 (* Some of the error printing functions consist only of named and optional arguments,
  * requiring an extra unit argument for disambiguation on partial application. For
@@ -157,6 +160,7 @@ module Json_output : sig
     stdin_file:stdin_file ->
     suppressed_errors:(Loc.t printable_error * Loc_collections.LocSet.t) list ->
     ?version:json_version ->
+    offset_kind:Offset_utils.offset_kind ->
     errors:ConcreteLocPrintableErrorSet.t ->
     warnings:ConcreteLocPrintableErrorSet.t ->
     unit ->
@@ -167,6 +171,7 @@ module Json_output : sig
     suppressed_errors:(Loc.t printable_error * Loc_collections.LocSet.t) list ->
     ?version:json_version ->
     ?stdin_file:stdin_file ->
+    offset_kind:Offset_utils.offset_kind ->
     errors:ConcreteLocPrintableErrorSet.t ->
     warnings:ConcreteLocPrintableErrorSet.t ->
     unit ->
@@ -179,6 +184,7 @@ module Json_output : sig
     suppressed_errors:(Loc.t printable_error * Loc_collections.LocSet.t) list ->
     pretty:bool ->
     ?version:json_version ->
+    offset_kind:Offset_utils.offset_kind ->
     ?stdin_file:stdin_file ->
     errors:ConcreteLocPrintableErrorSet.t ->
     warnings:ConcreteLocPrintableErrorSet.t ->
@@ -192,6 +198,7 @@ module Json_output : sig
     pretty:bool ->
     ?version:json_version ->
     ?stdin_file:stdin_file ->
+    offset_kind:Offset_utils.offset_kind ->
     errors:ConcreteLocPrintableErrorSet.t ->
     warnings:ConcreteLocPrintableErrorSet.t ->
     unit ->

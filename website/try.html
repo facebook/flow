@@ -3,7 +3,6 @@ permalink: /try/
 layout: default
 footer: false
 fullscreen: true
-codemirror: true
 scripts:
   - "tryFlow.js.es6"
 ---
@@ -23,7 +22,7 @@ scripts:
 </div>
 
 <script type="text/javascript">
-  requirejs(['{% asset_name "tryFlow" %}'], function(tryFlow) {
+  requirejs(['{% asset "tryFlow" @name %}'], function(tryFlow) {
     tryFlow.createEditor(
       '{{ site.flow.version }}',
       document.getElementById("code"),

@@ -1,0 +1,22 @@
+{
+  "body": {
+    "0": {
+      "expression": {
+        "callee": {
+          "property": {
+            "leadingComments": undefined
+          },
+          "object": {
+            "body": {
+              "body": {
+                "0": {
+                  "trailingComments": undefined,
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

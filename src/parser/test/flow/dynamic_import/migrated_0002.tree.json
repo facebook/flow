@@ -21,38 +21,31 @@
             "optional":false
           },
           "init":{
-            "type":"CallExpression",
+            "type":"ImportExpression",
             "loc":{"source":null,"start":{"line":1,"column":10},"end":{"line":1,"column":23}},
             "range":[10,23],
-            "callee":{
-              "type":"Import",
-              "loc":{"source":null,"start":{"line":1,"column":10},"end":{"line":1,"column":22}},
-              "range":[10,22]
-            },
-            "arguments":[
-              {
-                "type":"BinaryExpression",
-                "loc":{"source":null,"start":{"line":1,"column":17},"end":{"line":1,"column":22}},
-                "range":[17,22],
-                "operator":"+",
-                "left":{
-                  "type":"Identifier",
-                  "loc":{"source":null,"start":{"line":1,"column":17},"end":{"line":1,"column":18}},
-                  "range":[17,18],
-                  "name":"a",
-                  "typeAnnotation":null,
-                  "optional":false
-                },
-                "right":{
-                  "type":"Identifier",
-                  "loc":{"source":null,"start":{"line":1,"column":21},"end":{"line":1,"column":22}},
-                  "range":[21,22],
-                  "name":"b",
-                  "typeAnnotation":null,
-                  "optional":false
-                }
+            "source":{
+              "type":"BinaryExpression",
+              "loc":{"source":null,"start":{"line":1,"column":17},"end":{"line":1,"column":22}},
+              "range":[17,22],
+              "operator":"+",
+              "left":{
+                "type":"Identifier",
+                "loc":{"source":null,"start":{"line":1,"column":17},"end":{"line":1,"column":18}},
+                "range":[17,18],
+                "name":"a",
+                "typeAnnotation":null,
+                "optional":false
+              },
+              "right":{
+                "type":"Identifier",
+                "loc":{"source":null,"start":{"line":1,"column":21},"end":{"line":1,"column":22}},
+                "range":[21,22],
+                "name":"b",
+                "typeAnnotation":null,
+                "optional":false
               }
-            ]
+            }
           }
         }
       ],

@@ -1,0 +1,171 @@
+Error ------------------------------------------------------------------------------------- sanity-multi-params.js:10:12
+
+Cannot return `x` because array type [1] is incompatible with string [2]. [incompatible-return]
+
+   sanity-multi-params.js:10:12
+   10|     return x;
+                  ^
+
+References:
+   sanity-multi-params.js:8:26
+    8| function foo(x: string | Array<string>): string {
+                                ^^^^^^^^^^^^^ [1]
+   sanity-multi-params.js:8:42
+    8| function foo(x: string | Array<string>): string {
+                                                ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------- sanity-multi-params.js:12:14
+
+Cannot call `x.join` because property `join` is missing in `String` [1]. [prop-missing]
+
+   sanity-multi-params.js:12:14
+   12|     return x.join();
+                    ^^^^
+
+References:
+   sanity-multi-params.js:8:17
+    8| function foo(x: string | Array<string>): string {
+                       ^^^^^^ [1]
+
+
+Error -------------------------------------------------------------------------------------- sanity-unbound-var.js:13:12
+
+Cannot return `x` because array type [1] is incompatible with string [2]. [incompatible-return]
+
+   sanity-unbound-var.js:13:12
+   13|     return x;
+                  ^
+
+References:
+   sanity-unbound-var.js:11:26
+   11| function foo(x: string | Array<string>): string {
+                                ^^^^^^^^^^^^^ [1]
+   sanity-unbound-var.js:11:42
+   11| function foo(x: string | Array<string>): string {
+                                                ^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------- sanity-unbound-var.js:15:14
+
+Cannot call `x.join` because property `join` is missing in `String` [1]. [prop-missing]
+
+   sanity-unbound-var.js:15:14
+   15|     return x.join();
+                    ^^^^
+
+References:
+   sanity-unbound-var.js:11:17
+   11| function foo(x: string | Array<string>): string {
+                       ^^^^^^ [1]
+
+
+Error --------------------------------------------------------------------------------------------------- sanity.js:5:20
+
+Cannot declare predicate when a function body is present. [unsupported-syntax]
+
+   5| function check(y): %checks(typeof y === "string") {
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Error -------------------------------------------------------------------------------------------------- sanity.js:16:41
+
+Invalid body for predicate function. Expected a simple return statement as body. [unsupported-syntax]
+
+                                               v
+   16| function indirect_is_number(y): %checks {
+   17|   var y = 1;
+   18|   return typeof y === "number";
+   19| }
+       ^
+
+
+Error -------------------------------------------------------------------------------------------------- wf-eval.js:5:42
+
+The return type of a predicate function cannot contain a generic type. The function predicate will be ignored here.
+[unsupported-syntax]
+
+   5| function f3<V>(x: V): $Call<<V>(V) => V, V> %checks { return x; } // error
+                                               ^
+
+
+Error ------------------------------------------------------------------------------------------- wf-polymorphic.js:3:23
+
+The return type of a predicate function cannot contain a generic type. The function predicate will be ignored here.
+[unsupported-syntax]
+
+   3| function f1<X>(x: X): X %checks { return x; } // error: poly return in %checks
+                            ^
+
+
+Error ------------------------------------------------------------------------------------------- wf-polymorphic.js:4:24
+
+The return type of a predicate function cannot contain a generic type. The function predicate will be ignored here.
+[unsupported-syntax]
+
+   4| function f2<X>(x: X): [X, X] %checks { return [x, x]; } // error: poly return in %checks
+                             ^
+
+
+Error ------------------------------------------------------------------------------------------- wf-polymorphic.js:4:27
+
+The return type of a predicate function cannot contain a generic type. The function predicate will be ignored here.
+[unsupported-syntax]
+
+   4| function f2<X>(x: X): [X, X] %checks { return [x, x]; } // error: poly return in %checks
+                                ^
+
+
+Error ------------------------------------------------------------------------------------------- wf-polymorphic.js:5:46
+
+Cannot return `x` because predicate encoded in return [1] contains type variable `X` [2] which cannot escape from the
+scope in which it was defined [3]. [escaped-generic]
+
+   wf-polymorphic.js:5:46
+   5| function f3<X>(x: X): mixed %checks { return x; } // okay
+                                                   ^
+
+References:
+   wf-polymorphic.js:5:39
+   5| function f3<X>(x: X): mixed %checks { return x; } // okay
+                                            ^^^^^^^^^ [1]
+   wf-polymorphic.js:5:19
+   5| function f3<X>(x: X): mixed %checks { return x; } // okay
+                        ^ [2]
+   wf-polymorphic.js:5:13
+   5| function f3<X>(x: X): mixed %checks { return x; } // okay
+                  ^ [3]
+
+
+Error ------------------------------------------------------------------------------------------- wf-polymorphic.js:6:40
+
+Cannot return `x` because predicate encoded in return [1] contains type variable `X` [2] which cannot escape from the
+scope in which it was defined [3]. [escaped-generic]
+
+   wf-polymorphic.js:6:40
+   6| function f4<X>(x: X): %checks { return x; } // okay
+                                             ^
+
+References:
+   wf-polymorphic.js:6:33
+   6| function f4<X>(x: X): %checks { return x; } // okay
+                                      ^^^^^^^^^ [1]
+   wf-polymorphic.js:6:19
+   6| function f4<X>(x: X): %checks { return x; } // okay
+                        ^ [2]
+   wf-polymorphic.js:6:13
+   6| function f4<X>(x: X): %checks { return x; } // okay
+                  ^ [3]
+
+
+Error ------------------------------------------------------------------------------------------- wf-polymorphic.js:8:30
+
+The return type of a predicate function cannot contain a generic type. The function predicate will be ignored here.
+[unsupported-syntax]
+
+   8| declare function g<X>(x: X): X %checks(x); // error: poly return in %checks
+                                   ^
+
+
+
+Found 13 errors

@@ -1,0 +1,4 @@
+// @flow
+
+type T = {| foo: string |};
+({floo: '123'}: T);

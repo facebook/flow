@@ -8,7 +8,7 @@
 )
 
 (library
-  (name flow_logging_lwt_stubs)
+  (name logging_common_lwt_stubs)
   (wrapped false)
   (modules eventLoggerLwt)
   (libraries
@@ -29,4 +29,12 @@
   (name flow_extra_commands)
   (wrapped false)
   (modules extra_commands)
+)
+
+(library
+  (name codemod_annotate_exports_hardcoded)
+  (wrapped false)
+  (modules annotate_exports_hardcoded_expr_fixes annotate_exports_hardcoded_module_fixes)
+  (libraries
+    flow_parser)
 )

@@ -1,0 +1,36 @@
+Run flow on commit A
+No errors!
+
+Run flow on commit B
+Error ----------------------------------------------------------------------------------------------------- test.js:5:14
+
+Cannot assign object literal to `x` because property `bar` is missing in object literal [1] but exists in `X` [2].
+[prop-missing]
+
+   test.js:5:14
+   5| const x: X = {foo: 3};
+                   ^^^^^^^^ [1]
+
+References:
+   test.js:5:10
+   5| const x: X = {foo: 3};
+               ^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:5:14
+
+Cannot assign object literal to `x` because property `foo` is missing in `X` [1] but exists in object literal [2].
+[prop-missing]
+
+   test.js:5:14
+   5| const x: X = {foo: 3};
+                   ^^^^^^^^ [2]
+
+References:
+   test.js:5:10
+   5| const x: X = {foo: 3};
+               ^ [1]
+
+
+
+Found 2 errors

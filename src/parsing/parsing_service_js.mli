@@ -1,4 +1,4 @@
-(**
+(*
  * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
@@ -11,21 +11,15 @@ type types_mode =
   | TypesAllowed
   | TypesForbiddenByDefault
 
-type t = (Loc.t, Loc.t) Flow_ast.program * File_sig.With_Loc.t
-
-type aloc_t = (ALoc.t, ALoc.t) Flow_ast.program * File_sig.With_ALoc.t * ALoc.table option
-
-type parse_ok =
-  | Classic of t
-  | TypesFirst of t * aloc_t
-
-(* sig *)
-
-val basic : parse_ok -> t
-
 (* result of individual parse *)
 type result =
-  | Parse_ok of parse_ok
+  | Parse_ok of {
+      ast: (Loc.t, Loc.t) Flow_ast.Program.t;
+      file_sig: File_sig.With_Loc.t;
+      sig_extra: Parsing_heaps.sig_extra;
+      tolerable_errors: File_sig.With_Loc.tolerable_error list;
+      parse_errors: parse_error list;
+    }
   | Parse_fail of parse_failure
   | Parse_skip of parse_skip_reason
 
@@ -33,9 +27,11 @@ and parse_skip_reason =
   | Skip_resource_file
   | Skip_non_flow_file
 
+and parse_error = Loc.t * Parse_error.t
+
 and parse_failure =
   | Docblock_errors of docblock_error list
-  | Parse_error of (Loc.t * Parse_error.t)
+  | Parse_error of parse_error
   | File_sig_error of File_sig.With_Loc.error
 
 and docblock_error = Loc.t * docblock_error_kind
@@ -52,6 +48,8 @@ type results = {
   parse_ok: File_sig.With_Loc.tolerable_error list FilenameMap.t;
   (* list of skipped files *)
   parse_skips: (File_key.t * Docblock.t) list;
+  (* set of files skipped because they were not found on disk *)
+  parse_not_found_skips: FilenameSet.t;
   (* list of files skipped due to an out of date hash *)
   parse_hash_mismatch_skips: FilenameSet.t;
   (* list of failed files *)
@@ -69,6 +67,11 @@ type parse_options = {
   parse_facebook_fbt: string option;
   parse_arch: Options.arch;
   parse_abstract_locations: bool;
+  parse_type_asserts: bool;
+  parse_suppress_types: SSet.t;
+  parse_max_literal_len: int;
+  parse_exact_by_default: bool;
+  parse_enable_enums: bool;
 }
 
 val make_parse_options :
@@ -119,10 +122,15 @@ val parse_docblock :
   docblock_error list * Docblock.t
 
 val parse_json_file :
+  fail:bool -> string -> File_key.t -> (Loc.t, Loc.t) Flow_ast.Program.t * parse_error list
+
+val parse_source_file :
   fail:bool ->
+  types:bool ->
+  use_strict:bool ->
   string ->
   File_key.t ->
-  Loc.t * (Loc.t * (Loc.t, Loc.t) Flow_ast.Statement.t') list * Loc.t Flow_ast.Comment.t list
+  (Loc.t, Loc.t) Flow_ast.Program.t * parse_error list
 
 (* parse contents of a file *)
 val do_parse :

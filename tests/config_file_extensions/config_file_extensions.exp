@@ -1,6 +1,6 @@
 Error ------------------------------------------------------------------------------------------------- test.js.es6:6:10
 
-Cannot perform arithmetic operation because string [1] is not a number.
+Cannot perform arithmetic operation because string [1] is not a number. [unsafe-addition]
 
    test.js.es6:6:10
    6|   return x * 10;

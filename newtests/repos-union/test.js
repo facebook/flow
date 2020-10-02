@@ -3,9 +3,10 @@
  */
 
 
+import type Suite from "flow-dev-tools/src/test/Suite.js";
 import {suite, test} from 'flow-dev-tools/src/test/Tester';
 
-export default suite(({addFile, addFiles, addCode}) => [
+export default (suite(({addFile, addFiles, addCode}) => [
   test('Prevent reposition loops', [
     addCode(`
       declare class Map<K,V> {
@@ -25,4 +26,4 @@ export default suite(({addFile, addFiles, addCode}) => [
       map2.set('key', val);
     `).noNewErrors(),
   ]),
-]);
+]): Suite);

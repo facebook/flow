@@ -1,6 +1,7 @@
 Error ---------------------------------------------------------------------------------------------------- init.js:34:20
 
 Cannot assign `x` to `y` because possibly uninitialized variable [1] is incompatible with number [2].
+[incompatible-type]
 
    init.js:34:20
    34|     var y:number = x; // error
@@ -18,6 +19,7 @@ References:
 Error ---------------------------------------------------------------------------------------------------- init.js:44:20
 
 Cannot assign `x` to `y` because possibly uninitialized variable [1] is incompatible with number [2].
+[incompatible-type]
 
    init.js:44:20
    44|     var y:number = x; // error
@@ -35,6 +37,7 @@ References:
 Error ---------------------------------------------------------------------------------------------------- init.js:54:20
 
 Cannot assign `x` to `y` because possibly uninitialized variable [1] is incompatible with number [2].
+[incompatible-type]
 
    init.js:54:20
    54|     var y:number = x; // error
@@ -52,6 +55,7 @@ References:
 Error ---------------------------------------------------------------------------------------------------- init.js:66:20
 
 Cannot assign `x` to `y` because possibly uninitialized variable [1] is incompatible with number [2].
+[incompatible-type]
 
    init.js:66:20
    66|     var y:number = x; // error
@@ -68,7 +72,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- init.js:118:18
 
-Cannot assign `x` to `y` because uninitialized variable [1] is incompatible with number [2].
+Cannot assign `x` to `y` because uninitialized variable [1] is incompatible with number [2]. [incompatible-type]
 
    init.js:118:18
    118|   var y:number = x; // error
@@ -86,6 +90,7 @@ References:
 Error --------------------------------------------------------------------------------------------------- init.js:131:18
 
 Cannot assign `x` to `y` because possibly uninitialized variable [1] is incompatible with number [2].
+[incompatible-type]
 
    init.js:131:18
    131|   var y:number = x; // error
@@ -103,6 +108,7 @@ References:
 Error --------------------------------------------------------------------------------------------------- init.js:140:18
 
 Cannot assign `x` to `y` because possibly uninitialized variable [1] is incompatible with number [2].
+[incompatible-type]
 
    init.js:140:18
    140|   var y:number = x; // error
@@ -120,6 +126,7 @@ References:
 Error --------------------------------------------------------------------------------------------------- init.js:153:18
 
 Cannot assign `x` to `y` because possibly uninitialized variable [1] is incompatible with number [2].
+[incompatible-type]
 
    init.js:153:18
    153|   var y:number = x; // error
@@ -137,6 +144,7 @@ References:
 Error ---------------------------------------------------------------------------------- optional-catch-binding.js:19:20
 
 Cannot assign `x` to `y` because possibly uninitialized variable [1] is incompatible with number [2].
+[incompatible-type]
 
    optional-catch-binding.js:19:20
    19|     var y:number = x; // error
@@ -153,7 +161,7 @@ References:
 
 Error ---------------------------------------------------------------------------------- optional-catch-binding.js:27:20
 
-Cannot assign `'string'` to `y` because string [1] is incompatible with number [2].
+Cannot assign `'string'` to `y` because string [1] is incompatible with number [2]. [incompatible-type]
 
    optional-catch-binding.js:27:20
    27|     var y:number = 'string'; // error
@@ -167,7 +175,7 @@ References:
 
 Error ---------------------------------------------------------------------------------- optional-catch-binding.js:36:20
 
-Cannot assign `x` to `y` because number [1] is incompatible with string [2].
+Cannot assign `x` to `y` because number [1] is incompatible with string [2]. [incompatible-type]
 
    optional-catch-binding.js:36:20
    36|     var y:string = x; // error
@@ -184,7 +192,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- return.js:28:3
 
-Unreachable code.
+Unreachable code. [unreachable-code]
 
    28|   return "bar"; // unreachable
          ^^^^^^^^^^^^^
@@ -192,7 +200,7 @@ Unreachable code.
 
 Error --------------------------------------------------------------------------------------------------- return.js:64:3
 
-Unreachable code.
+Unreachable code. [unreachable-code]
 
    64|   bar(); // unreachable
          ^^^^^^
@@ -200,11 +208,11 @@ Unreachable code.
 
 Error ----------------------------------------------------------------------------------------------------- test.js:18:5
 
-Cannot call `x` because string [1] is not a function.
+Cannot call `x` because string [1] is not a function. [not-a-function]
 
    test.js:18:5
    18|     x(); // string ~/> function call (no num or bool error)
-           ^^^
+           ^
 
 References:
    test.js:10:13
@@ -215,11 +223,11 @@ References:
 Error ----------------------------------------------------------------------------------------------------- test.js:19:5
 
 Cannot call `y` because a call signature declaring the expected parameter / return type is missing in object
-literal [1].
+literal [1]. [prop-missing]
 
    test.js:19:5
    19|     y(); // object ~/> function call (no uninitialized error)
-           ^^^
+           ^
 
 References:
    test.js:15:13
@@ -229,7 +237,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:41:5
 
-Unreachable code.
+Unreachable code. [unreachable-code]
 
    41|     x(); // unreachable
            ^^^^
@@ -237,7 +245,7 @@ Unreachable code.
 
 Error ---------------------------------------------------------------------------------------------------- test.js:49:21
 
-Cannot assign `x[0]` to `a` because number [1] is incompatible with string [2].
+Cannot assign `x[0]` to `a` because number [1] is incompatible with string [2]. [incompatible-type]
 
    test.js:49:21
    49|     var a: string = x[0];
@@ -254,7 +262,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:51:21
 
-Cannot assign `x[0]` to `b` because number [1] is incompatible with string [2].
+Cannot assign `x[0]` to `b` because number [1] is incompatible with string [2]. [incompatible-type]
 
    test.js:51:21
    51|     var b: string = x[0];
@@ -271,7 +279,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:53:19
 
-Cannot assign `x[0]` to `c` because number [1] is incompatible with string [2].
+Cannot assign `x[0]` to `c` because number [1] is incompatible with string [2]. [incompatible-type]
 
    test.js:53:19
    53|   var c: string = x[0]; // reachable
@@ -288,7 +296,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:61:21
 
-Cannot assign `x[0]` to `a` because number [1] is incompatible with string [2].
+Cannot assign `x[0]` to `a` because number [1] is incompatible with string [2]. [incompatible-type]
 
    test.js:61:21
    61|     var a: string = x[0];
@@ -305,7 +313,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:63:19
 
-Cannot assign `x[0]` to `c` because number [1] is incompatible with string [2].
+Cannot assign `x[0]` to `c` because number [1] is incompatible with string [2]. [incompatible-type]
 
    test.js:63:19
    63|   var c: string = x[0]; // reachable
@@ -322,7 +330,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:72:19
 
-Cannot assign `x[0]` to `c` because number [1] is incompatible with string [2].
+Cannot assign `x[0]` to `c` because number [1] is incompatible with string [2]. [incompatible-type]
 
    test.js:72:19
    72|   var c: string = x[0]; // reachable

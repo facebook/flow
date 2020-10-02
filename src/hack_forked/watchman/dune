@@ -1,0 +1,13 @@
+(library
+  (name watchman)
+  (wrapped false)
+  (libraries
+    base
+    flow_common_lwt
+    buffered_line_reader_lwt
+    hh_json
+    logging_common
+    sys_utils
+    utils_core)
+  (preprocess (pps lwt_ppx ppx_let))
+)

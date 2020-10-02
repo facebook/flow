@@ -1,4 +1,4 @@
-(**
+(*
  * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
@@ -95,7 +95,8 @@ let ( catch_stmt_control_flow_exception,
         | Expr (loc, exp) ->
           ( loc,
             Flow_ast.Statement.Expression
-              { Flow_ast.Statement.Expression.expression = exp; directive = None } )
+              { Flow_ast.Statement.Expression.expression = exp; directive = None; comments = None }
+          )
         | Stmts _ -> assert_false "Statement expected"),
     catch_control_flow_exception (function
         | Stmts stmts -> stmts
@@ -126,12 +127,12 @@ let ignore_break_or_continue_to_label label res =
 (** at some points we need to record control flow directives in addition
     to responding to them. *)
 
-module AbnormalMap : MyMap.S with type key = t = MyMap.Make (struct
+module AbnormalMap : WrappedMap.S with type key = t = WrappedMap.Make (struct
   type abnormal = t
 
   type t = abnormal
 
-  let compare = Pervasives.compare
+  let compare = Stdlib.compare
 end)
 
 let abnormals : Env.t AbnormalMap.t ref = ref AbnormalMap.empty
@@ -143,7 +144,7 @@ let save ?(env = []) abnormal = abnormals := AbnormalMap.add abnormal env !abnor
 (** set or remove a given control flow directive's value,
     and return the current one *)
 let swap_saved abnormal value =
-  let old = AbnormalMap.get abnormal !abnormals in
+  let old = AbnormalMap.find_opt abnormal !abnormals in
   ( if old <> value then
     abnormals :=
       match value with

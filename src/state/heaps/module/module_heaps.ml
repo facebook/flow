@@ -1,4 +1,4 @@
-(**
+(*
  * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
@@ -9,7 +9,8 @@
 (* Maps module names to the filenames which provide those modules             *)
 
 module NameHeap =
-  SharedMem_js.WithCache (SharedMem_js.Immediate) (Modulename.Key)
+  SharedMem_js.WithCache
+    (Modulename.Key)
     (struct
       type t = File_key.t
 
@@ -44,7 +45,7 @@ type resolved_requires = {
 **)
 
 let mk_resolved_requires ~resolved_modules ~phantom_dependents =
-  let state = Xx.init () in
+  let state = Xx.init 0L in
   SMap.iter
     (fun reference modulename ->
       Xx.update state reference;
@@ -54,7 +55,8 @@ let mk_resolved_requires ~resolved_modules ~phantom_dependents =
   { resolved_modules; phantom_dependents; hash = Xx.digest state }
 
 module ResolvedRequiresHeap =
-  SharedMem_js.WithCache (SharedMem_js.Immediate) (File_key)
+  SharedMem_js.WithCache
+    (File_key)
     (struct
       type t = resolved_requires
 
@@ -76,7 +78,8 @@ type info = {
 }
 
 module InfoHeap =
-  SharedMem_js.WithCache (SharedMem_js.Immediate) (File_key)
+  SharedMem_js.WithCache
+    (File_key)
     (struct
       type t = info
 
@@ -92,7 +95,8 @@ module InfoHeap =
 
 (* shared heap for package.json tokens by filename *)
 module PackageHeap =
-  SharedMem_js.WithCache (SharedMem_js.Immediate) (StringKey)
+  SharedMem_js.WithCache
+    (StringKey)
     (struct
       type t = (Package_json.t, unit) result
 
@@ -103,7 +107,8 @@ module PackageHeap =
 
 (* shared heap for package.json directories by package name *)
 module ReversePackageHeap =
-  SharedMem_js.WithCache (SharedMem_js.Immediate) (StringKey)
+  SharedMem_js.WithCache
+    (StringKey)
     (struct
       type t = string
 
@@ -209,8 +214,7 @@ end = struct
     ResolvedRequiresHeap.revive_batch files
 
   let create transaction oldified_files =
-    if
-      not (Utils_js.FilenameSet.is_empty (Utils_js.FilenameSet.inter oldified_files !active_files))
+    if not (Utils_js.FilenameSet.is_empty (Utils_js.FilenameSet.inter oldified_files !active_files))
     then
       failwith "Multiple Resolved_requires_mutator's operating on the same files";
     active_files := Utils_js.FilenameSet.union oldified_files !active_files;
@@ -321,16 +325,14 @@ module Mutator_reader : READER with type reader = Mutator_state_reader.t = struc
   let get_file_unsafe ~reader ~audit m =
     match get_file ~reader ~audit m with
     | Some file -> file
-    | None ->
-      failwith (Printf.sprintf "file name not found for module %s" (Modulename.to_string m))
+    | None -> failwith (Printf.sprintf "file name not found for module %s" (Modulename.to_string m))
 
   let get_resolved_requires_unsafe ~reader:_ =
     Expensive.wrap (fun f ->
         match ResolvedRequiresHeap.get f with
         | Some resolved_requires -> resolved_requires
         | None ->
-          failwith
-            (Printf.sprintf "resolved requires not found for file %s" (File_key.to_string f)))
+          failwith (Printf.sprintf "resolved requires not found for file %s" (File_key.to_string f)))
 
   let get_info ~reader:_ = Expensive.wrap InfoHeap.get
 
@@ -377,8 +379,7 @@ module Reader : READER with type reader = State_reader.t = struct
   let get_file_unsafe ~reader ~audit m =
     match get_file ~reader ~audit m with
     | Some file -> file
-    | None ->
-      failwith (Printf.sprintf "file name not found for module %s" (Modulename.to_string m))
+    | None -> failwith (Printf.sprintf "file name not found for module %s" (Modulename.to_string m))
 
   let get_resolved_requires_unsafe ~reader:_ =
     Expensive.wrap (fun f ->
@@ -391,8 +392,7 @@ module Reader : READER with type reader = State_reader.t = struct
         match resolved_requires with
         | Some resolved_requires -> resolved_requires
         | None ->
-          failwith
-            (Printf.sprintf "resolved requires not found for file %s" (File_key.to_string f)))
+          failwith (Printf.sprintf "resolved requires not found for file %s" (File_key.to_string f)))
 
   let get_info ~reader:_ ~audit f =
     if should_use_old_infoheap f then
@@ -478,11 +478,6 @@ end
 module For_saved_state = struct
   exception Package_not_found of string
 
-  exception Package_not_valid of string
-
   let get_package_json_unsafe file =
-    match PackageHeap.find_unsafe file with
-    | Ok package -> package
-    | Error () -> raise (Package_not_valid file)
-    | exception Not_found -> raise (Package_not_found file)
+    (try PackageHeap.find_unsafe file with Not_found -> raise (Package_not_found file))
 end

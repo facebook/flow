@@ -1,11 +1,11 @@
-(**
+(*
  * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  *)
 
-type get_ast_return = Loc.t Flow_ast.Comment.t list * (ALoc.t, ALoc.t) Flow_ast.program
+type get_ast_return = Loc.t Flow_ast.Comment.t list * (ALoc.t, ALoc.t) Flow_ast.Program.t
 
 module Reqs : sig
   type t
@@ -24,9 +24,9 @@ module Reqs : sig
 end
 
 val merge_component :
+  arch:Options.arch ->
   metadata:Context.metadata ->
   lint_severities:Severity.severity LintSettings.t ->
-  file_options:Files.options option ->
   strict_mode:StrictModeSettings.t ->
   file_sigs:File_sig.With_ALoc.t Utils_js.FilenameMap.t ->
   get_ast_unsafe:(File_key.t -> get_ast_return) ->
@@ -42,9 +42,8 @@ val merge_component :
   (* master cx *)
   Context.sig_t ->
   (* cxs in component order, hd is merged leader, along with a coverage summary for each file *)
-  (Context.t * (ALoc.t, ALoc.t * Type.t) Flow_ast.program * Coverage_response.file_coverage) Nel.t
-
-val merge_tvar : Context.t -> Reason.t -> Constraint.ident -> Type.t
+  (Context.t * (ALoc.t, ALoc.t) Flow_ast.Program.t * (ALoc.t, ALoc.t * Type.t) Flow_ast.Program.t)
+  Nel.t
 
 module ContextOptimizer : sig
   val sig_context : Context.t -> string list -> Xx.hash

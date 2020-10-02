@@ -1,4 +1,4 @@
-(**
+(*
  * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
@@ -24,7 +24,7 @@ module TrustKit (Flow : Flow_common.S) : Flow_common.TRUST_CHECKING = struct
      it in the trust graph. *)
   let mk_trust_var cx ?initial () =
     let tvar = Reason.mk_id () in
-    let initial = Option.value initial ~default:(dynamic_qualifier ()) in
+    let initial = Base.Option.value initial ~default:(dynamic_qualifier ()) in
     Context.add_trust_var cx tvar (new_unresolved_root initial);
     tvar
 
@@ -96,10 +96,7 @@ module TrustKit (Flow : Flow_common.S) : Flow_common.TRUST_CHECKING = struct
   (* These functions work exactly as above, except for upper trust bounds
       propagating to lower variable bounds, and with publicity instead of taint. *)
   let set_new_upper_bound cx trace id ltrust utrust new_trust lbounds =
-    print_if_verbose
-      cx
-      trace
-      [Printf.sprintf "Publicizing %d to %s" id (string_of_trust new_trust)];
+    print_if_verbose cx trace [Printf.sprintf "Publicizing %d to %s" id (string_of_trust new_trust)];
     if subtype_trust ltrust utrust then (
       set_trust lbounds new_trust;
       true

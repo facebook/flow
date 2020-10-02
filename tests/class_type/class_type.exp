@@ -1,6 +1,6 @@
 Error --------------------------------------------------------------------------------------------------- test2.js:10:10
 
-Cannot call `check` with `new A()` bound to `inst` because `A` [1] is incompatible with `B` [2].
+Cannot call `check` with `new A` bound to `inst` because `A` [1] is incompatible with `B` [2]. [incompatible-call]
 
    test2.js:10:10
    10| check(B, new A);
@@ -14,7 +14,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- test2.js:12:10
 
-Cannot call `check` with `new A()` bound to `inst` because `A` [1] is incompatible with `C` [2].
+Cannot call `check` with `new A` bound to `inst` because `A` [1] is incompatible with `C` [2]. [incompatible-call]
 
    test2.js:12:10
    12| check(C, new A);
@@ -28,7 +28,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- test2.js:13:10
 
-Cannot call `check` with `new B()` bound to `inst` because `B` [1] is incompatible with `C` [2].
+Cannot call `check` with `new B` bound to `inst` because `B` [1] is incompatible with `C` [2]. [incompatible-call]
 
    test2.js:13:10
    13| check(C, new B);
@@ -42,7 +42,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- test2.js:14:10
 
-Cannot call `check` with `new C()` bound to `inst` because `C` [1] is incompatible with `B` [2].
+Cannot call `check` with `new C` bound to `inst` because `C` [1] is incompatible with `B` [2]. [incompatible-call]
 
    test2.js:14:10
    14| check(B, new C);
@@ -56,7 +56,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test3.js:5:1
 
-null [1] is not an instance type.
+null [1] is not an instance type. [incompatible-use]
 
    test3.js:5:1
    5| o.p.foo;

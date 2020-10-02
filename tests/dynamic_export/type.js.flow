@@ -1,4 +1,0 @@
-//@flow
-export type Type = any;
-
-declare module.exports: {f : Type};

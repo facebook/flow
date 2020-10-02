@@ -1,4 +1,4 @@
-(**
+(*
  * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
@@ -6,6 +6,12 @@
  *)
 
 open Reason
+
+(* exceptions *)
+
+exception Not_expect_bound of string
+
+exception Attempted_operation_on_bound of string
 
 (* propagates sources to sinks following a subtype relation *)
 val flow : Context.t -> Type.t * Type.use_t -> unit
@@ -19,7 +25,7 @@ val unify : Context.t -> Type.t -> Type.t -> unit
 
 val flow_p :
   Context.t ->
-  ?use_op:Type.use_op ->
+  use_op:Type.use_op ->
   reason ->
   (* lreason *)
   reason ->
@@ -38,17 +44,26 @@ val reposition :
   Type.t
 
 (* constraint utils *)
-val filter_optional : Context.t -> ?trace:Trace.t -> reason -> Type.t -> Type.t
+val filter_optional : Context.t -> ?trace:Trace.t -> reason -> Type.t -> Type.ident
 
 module Cache : sig
-  val clear : unit -> unit
+  val stats_poly_instantiation : Context.t -> Hashtbl.statistics
 
-  val stats_poly_instantiation : unit -> Hashtbl.statistics
-
-  val summarize_flow_constraint : unit -> (string * int) list
+  val summarize_flow_constraint : Context.t -> (string * int) list
 end
 
 val get_builtin_typeapp : Context.t -> ?trace:Trace.t -> reason -> string -> Type.t list -> Type.t
+
+val mk_typeapp_instance :
+  Context.t ->
+  ?trace:Trace.t ->
+  use_op:Type.use_op ->
+  reason_op:Reason.reason ->
+  reason_tapp:Reason.reason ->
+  ?cache:Reason.reason list ->
+  Type.t ->
+  Type.t list ->
+  Type.t
 
 val resolve_spread_list :
   Context.t ->
@@ -66,23 +81,35 @@ val generate_tests : Context.t -> Type.typeparam list -> (Type.t SMap.t -> 'a) -
 
 val match_this_binding : Type.t SMap.t -> (Type.t -> bool) -> bool
 
-val check_polarity : Context.t -> ?trace:Trace.t -> Polarity.t -> Type.t -> unit
+val check_polarity :
+  Context.t -> ?trace:Trace.t -> Type.typeparam SMap.t -> Polarity.t -> Type.t -> unit
 
 (* selectors *)
 
 val eval_selector :
-  Context.t -> ?trace:Trace.t -> reason -> Type.t -> Type.selector -> Type.t -> unit
+  Context.t -> ?trace:Trace.t -> reason -> Type.t -> Type.selector -> Type.tvar -> unit
 
-val visit_eval_id : Context.t -> int -> (Type.t -> unit) -> unit
+val visit_eval_id : Context.t -> Type.Eval.id -> (Type.t -> unit) -> unit
 
 (* destructors *)
-exception Not_expect_bound of string
 
-val eval_evalt : Context.t -> ?trace:Trace.t -> Type.t -> Type.defer_use_t -> int -> Type.t
+val eval_evalt : Context.t -> ?trace:Trace.t -> Type.t -> Type.defer_use_t -> Type.Eval.id -> Type.t
+
+val mk_type_destructor :
+  Context.t ->
+  trace:Trace.t ->
+  Type.use_op ->
+  Reason.reason ->
+  Type.t ->
+  Type.destructor ->
+  Type.Eval.id ->
+  bool * Type.t
 
 (* ... *)
 
 val mk_default : Context.t -> reason -> Type.t Default.t -> Type.t
+
+val is_munged_prop_name : Context.t -> string -> bool
 
 (* val graph: bounds IMap.t ref *)
 val lookup_module : Context.t -> string -> Type.t
@@ -99,7 +126,7 @@ val builtins : Context.t -> Type.t
 val get_builtin : Context.t -> ?trace:Trace.t -> string -> reason -> Type.t
 
 val lookup_builtin :
-  Context.t -> ?trace:Trace.t -> string -> reason -> Type.lookup_kind -> Type.t -> unit
+  Context.t -> ?trace:Trace.t -> string -> reason -> Type.lookup_kind -> Type.tvar -> unit
 
 val get_builtin_type : Context.t -> ?trace:Trace.t -> reason -> ?use_desc:bool -> string -> Type.t
 
@@ -108,7 +135,7 @@ val set_builtin : Context.t -> ?trace:Trace.t -> string -> Type.t -> unit
 val mk_instance : Context.t -> ?trace:Trace.t -> reason -> ?use_desc:bool -> Type.t -> Type.t
 
 val mk_typeof_annotation :
-  Context.t -> ?trace:Trace.t -> reason -> ?use_desc:bool -> Type.t -> Type.t
+  Context.t -> ?trace:Trace.t -> reason -> ?use_desc:bool -> ?internal:bool -> Type.t -> Type.t
 
 (* strict *)
 val types_of : Constraint.constraints -> Type.t list
@@ -125,3 +152,6 @@ val possible_uses : Context.t -> Constraint.ident -> Type.use_t list
 val mk_trust_var : Context.t -> ?initial:Trust.trust_qualifier -> unit -> Type.ident
 
 val strengthen_trust : Context.t -> Type.ident -> Trust.trust_qualifier -> Error_message.t -> unit
+
+val widen_obj_type :
+  Context.t -> ?trace:Trace.t -> use_op:Type.use_op -> Reason.reason -> Type.t -> Type.t

@@ -1,4 +1,4 @@
-(**
+(*
  * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
@@ -38,44 +38,41 @@ let tests =
   >::: [
          "compare_precedence"
          >::: [
-                ( "prerelease"
-                >:: fun _ctxt ->
-                let ordered =
-                  [
-                    v1_0_0_alpha;
-                    v1_0_0_alpha_1;
-                    v1_0_0_alpha_beta;
-                    v1_0_0_beta;
-                    v1_0_0_beta_2;
-                    v1_0_0_beta_11;
-                    v1_0_0_rc_1;
-                    v1_0_0;
-                  ]
-                in
-                iter_pairs
-                  (fun a b ->
-                    let a_str = to_string a in
-                    let b_str = to_string b in
-                    assert_bool (a_str ^ " < " ^ b_str ^ " failed") (compare_precedence a b < 0);
-                    assert_bool (b_str ^ " > " ^ a_str ^ " failed") (compare_precedence b a > 0))
-                  ordered;
-                List.iter
-                  (fun a ->
-                    let a_str = to_string a in
-                    assert_bool (a_str ^ " not equal to itself") (compare_precedence a a = 0))
-                  ordered );
-                ( "build"
-                >:: fun _ctxt ->
-                let a = v 1 0 0 [] [Int 1] in
-                let b = v 1 0 0 [] [Int 2] in
-                assert_bool "1.0.0+1 should be = 1.0.0+2" (compare_precedence a b = 0) );
+                ( "prerelease" >:: fun _ctxt ->
+                  let ordered =
+                    [
+                      v1_0_0_alpha;
+                      v1_0_0_alpha_1;
+                      v1_0_0_alpha_beta;
+                      v1_0_0_beta;
+                      v1_0_0_beta_2;
+                      v1_0_0_beta_11;
+                      v1_0_0_rc_1;
+                      v1_0_0;
+                    ]
+                  in
+                  iter_pairs
+                    (fun a b ->
+                      let a_str = to_string a in
+                      let b_str = to_string b in
+                      assert_bool (a_str ^ " < " ^ b_str ^ " failed") (compare_precedence a b < 0);
+                      assert_bool (b_str ^ " > " ^ a_str ^ " failed") (compare_precedence b a > 0))
+                    ordered;
+                  List.iter
+                    (fun a ->
+                      let a_str = to_string a in
+                      assert_bool (a_str ^ " not equal to itself") (compare_precedence a a = 0))
+                    ordered );
+                ( "build" >:: fun _ctxt ->
+                  let a = v 1 0 0 [] [Int 1] in
+                  let b = v 1 0 0 [] [Int 2] in
+                  assert_bool "1.0.0+1 should be = 1.0.0+2" (compare_precedence a b = 0) );
               ];
          "compare"
          >::: [
-                ( "build"
-                >:: fun _ctxt ->
-                let a = v 1 0 0 [] [Int 1] in
-                let b = v 1 0 0 [] [Int 2] in
-                assert_bool "1.0.0+1 should NOT be = 1.0.0+2" (compare a b < 0) );
+                ( "build" >:: fun _ctxt ->
+                  let a = v 1 0 0 [] [Int 1] in
+                  let b = v 1 0 0 [] [Int 2] in
+                  assert_bool "1.0.0+1 should NOT be = 1.0.0+2" (compare a b < 0) );
               ];
        ]

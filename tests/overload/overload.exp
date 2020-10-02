@@ -1,12 +1,12 @@
 Error ----------------------------------------------------------------------------------------------------- annot.js:6:1
 
-Cannot call `f` because:
+Cannot call `f` because: [incompatible-call]
  - Either null [1] is incompatible with string [2].
  - Or null [1] is incompatible with number [3].
 
    annot.js:6:1
    6| f(x); // error should point to `x` here, not at type alias
-      ^^^^
+      ^
 
 References:
    annot.js:4:10
@@ -22,106 +22,109 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- overload.js:7:18
 
-Cannot assign `"".match(...)[0]` to `x1` because string [1] is incompatible with number [2].
+Cannot assign `"".match(...)[0]` to `x1` because string [1] is incompatible with number [2]. [incompatible-type]
 
    overload.js:7:18
-     7| var x1: number = "".match(0)[0];
-                         ^^^^^^^^^^^^^^
+      7| var x1: number = "".match(0)[0];
+                          ^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:313:33
-   313| type RegExp$matchResult = Array<string> & {
-                                        ^^^^^^ [1]
+   <BUILTINS>/core.js:1058:33
+   1058| type RegExp$matchResult = Array<string> & {
+                                         ^^^^^^ [1]
    overload.js:7:9
-     7| var x1: number = "".match(0)[0];
-                ^^^^^^ [2]
+      7| var x1: number = "".match(0)[0];
+                 ^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------- overload.js:7:18
+Error ------------------------------------------------------------------------------------------------- overload.js:7:30
 
 Cannot get `"".match(...)[0]` because an index signature declaring the expected key / value type is missing in null [1].
+[incompatible-use]
 
-   overload.js:7:18
-     7| var x1: number = "".match(0)[0];
-                         ^^^^^^^^^^^^^^
+   overload.js:7:30
+      7| var x1: number = "".match(0)[0];
+                                      ^
 
 References:
-   <BUILTINS>/core.js:334:58
-   334|     match(regexp: string | RegExp): RegExp$matchResult | null;
-                                                                 ^^^^ [1]
+   <BUILTINS>/core.js:1138:58
+   1138|     match(regexp: string | RegExp): RegExp$matchResult | null;
+                                                                  ^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------------- overload.js:7:27
 
 Cannot call `"".match` with `0` bound to `regexp` because number [1] is incompatible with string [2].
+[incompatible-call]
 
    overload.js:7:27
-     7| var x1: number = "".match(0)[0];
-                                  ^ [1]
+      7| var x1: number = "".match(0)[0];
+                                   ^ [1]
 
 References:
-   <BUILTINS>/core.js:334:19
-   334|     match(regexp: string | RegExp): RegExp$matchResult | null;
-                          ^^^^^^ [2]
+   <BUILTINS>/core.js:1138:19
+   1138|     match(regexp: string | RegExp): RegExp$matchResult | null;
+                           ^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------- overload.js:8:18
 
-Cannot assign `"".match(...)[0]` to `x2` because string [1] is incompatible with number [2].
+Cannot assign `"".match(...)[0]` to `x2` because string [1] is incompatible with number [2]. [incompatible-type]
 
    overload.js:8:18
-     8| var x2: number = "".match(/pattern/)[0];
-                         ^^^^^^^^^^^^^^^^^^^^^^
+      8| var x2: number = "".match(/pattern/)[0];
+                          ^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:313:33
-   313| type RegExp$matchResult = Array<string> & {
-                                        ^^^^^^ [1]
+   <BUILTINS>/core.js:1058:33
+   1058| type RegExp$matchResult = Array<string> & {
+                                         ^^^^^^ [1]
    overload.js:8:9
-     8| var x2: number = "".match(/pattern/)[0];
-                ^^^^^^ [2]
+      8| var x2: number = "".match(/pattern/)[0];
+                 ^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------- overload.js:8:18
+Error ------------------------------------------------------------------------------------------------- overload.js:8:38
 
 Cannot get `"".match(...)[0]` because an index signature declaring the expected key / value type is missing in null [1].
+[incompatible-use]
 
-   overload.js:8:18
-     8| var x2: number = "".match(/pattern/)[0];
-                         ^^^^^^^^^^^^^^^^^^^^^^
+   overload.js:8:38
+      8| var x2: number = "".match(/pattern/)[0];
+                                              ^
 
 References:
-   <BUILTINS>/core.js:334:58
-   334|     match(regexp: string | RegExp): RegExp$matchResult | null;
-                                                                 ^^^^ [1]
+   <BUILTINS>/core.js:1138:58
+   1138|     match(regexp: string | RegExp): RegExp$matchResult | null;
+                                                                  ^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------------ overload.js:10:18
 
-Cannot assign `"".split(...)[0]` to `x4` because string [1] is incompatible with number [2].
+Cannot assign `"".split(...)[0]` to `x4` because string [1] is incompatible with number [2]. [incompatible-type]
 
    overload.js:10:18
-    10| var x4: number = "".split(/pattern/)[0];
-                         ^^^^^^^^^^^^^^^^^^^^^^
+     10| var x4: number = "".split(/pattern/)[0];
+                          ^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:343:63
-   343|     split(separator?: string | RegExp, limit?: number): Array<string>;
-                                                                      ^^^^^^ [1]
+   <BUILTINS>/core.js:1205:63
+   1205|     split(separator?: string | RegExp, limit?: number): Array<string>;
+                                                                       ^^^^^^ [1]
    overload.js:10:9
-    10| var x4: number = "".split(/pattern/)[0];
-                ^^^^^^ [2]
+     10| var x4: number = "".split(/pattern/)[0];
+                 ^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------- overload.js:24:1
+Error ------------------------------------------------------------------------------------------------- overload.js:24:3
 
-Cannot call `a.foo` because:
+Cannot call `a.foo` because: [incompatible-call]
  - Either boolean [1] is incompatible with number [2].
  - Or boolean [1] is incompatible with string [3].
 
-   overload.js:24:1
+   overload.js:24:3
    24| a.foo(true); // error, function cannot be called on intersection type
-       ^^^^^^^^^^^
+         ^^^
 
 References:
    overload.js:24:7
@@ -135,15 +138,15 @@ References:
                  ^^^^^^ [3]
 
 
-Error ------------------------------------------------------------------------------------------------- overload.js:28:1
+Error ------------------------------------------------------------------------------------------------- overload.js:28:3
 
-Cannot call `a.bar` because:
+Cannot call `a.bar` because: [incompatible-call]
  - Either boolean [1] is incompatible with number [2] in property `a`.
  - Or boolean [1] is incompatible with string [3] in property `a`.
 
-   overload.js:28:1
+   overload.js:28:3
    28| a.bar({ a: true }); // error, function cannot be called on intersection type
-       ^^^^^^^^^^^^^^^^^^
+         ^^^
 
 References:
    overload.js:28:12
@@ -157,15 +160,15 @@ References:
                        ^^^^^^ [3]
 
 
-Error ------------------------------------------------------------------------------------------------- overload.js:32:1
+Error ------------------------------------------------------------------------------------------------- overload.js:32:3
 
-Cannot call `a.bar` because:
+Cannot call `a.bar` because: [incompatible-call]
  - Either boolean [1] is incompatible with number [2] in property `a`.
  - Or boolean [1] is incompatible with string [3] in property `a`.
 
-   overload.js:32:1
+   overload.js:32:3
    32| a.bar(x); // error with nested intersection info (outer for bar, inner for x)
-       ^^^^^^^^
+         ^^^
 
 References:
    overload.js:30:21
@@ -181,7 +184,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test2.js:7:2
 
-Cannot cast `foo.bar(...)` to number because string [1] is incompatible with number [2].
+Cannot cast `foo.bar(...)` to number because string [1] is incompatible with number [2]. [incompatible-cast]
 
    test2.js:7:2
    7| (foo.bar('hmmm'): number); // error

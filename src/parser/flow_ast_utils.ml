@@ -1,4 +1,4 @@
-(**
+(*
  * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
@@ -9,49 +9,50 @@ open Flow_ast
 
 type 'loc binding = 'loc * string
 
-type 'loc ident = 'loc * string
+type 'loc ident = 'loc * string [@@deriving show]
 
-type 'loc source = 'loc * string
+type 'loc source = 'loc * string [@@deriving show]
 
 let rec fold_bindings_of_pattern =
   Pattern.(
     let property f acc =
       Object.(
         function
-        | Property (_, { Property.pattern = (_, p); _ })
-        | RestProperty (_, { RestProperty.argument = (_, p) }) ->
+        | Property (_, { Property.pattern = p; _ })
+        | RestElement (_, { RestElement.argument = p; comments = _ }) ->
           fold_bindings_of_pattern f acc p)
     in
     let element f acc =
       Array.(
         function
-        | None -> acc
-        | Some (Element (_, { Element.argument = (_, p); default = _ }))
-        | Some (RestElement (_, { RestElement.argument = (_, p) })) ->
+        | Hole _ -> acc
+        | Element (_, { Element.argument = p; default = _ })
+        | RestElement (_, { RestElement.argument = p; comments = _ }) ->
           fold_bindings_of_pattern f acc p)
     in
     fun f acc -> function
-      | Identifier { Identifier.name; _ } -> f acc name
-      | Object { Object.properties; _ } -> List.fold_left (property f) acc properties
-      | Array { Array.elements; _ } -> List.fold_left (element f) acc elements
-      | Expression _ -> failwith "expression pattern")
+      | (_, Identifier { Identifier.name; _ }) -> f acc name
+      | (_, Object { Object.properties; _ }) -> List.fold_left (property f) acc properties
+      | (_, Array { Array.elements; _ }) -> List.fold_left (element f) acc elements
+      (* This is for assignment and default param destructuring `[a.b=1]=c`, ignore these for now. *)
+      | (_, Expression _) -> acc)
 
 let fold_bindings_of_variable_declarations f acc declarations =
-  Flow_ast.Statement.VariableDeclaration.(
-    List.fold_left
-      (fun acc -> function
-        | (_, { Declarator.id = (_, pattern); _ }) -> fold_bindings_of_pattern f acc pattern)
-      acc
-      declarations)
+  let open Flow_ast.Statement.VariableDeclaration in
+  List.fold_left
+    (fun acc -> function
+      | (_, { Declarator.id = pattern; _ }) -> fold_bindings_of_pattern f acc pattern)
+    acc
+    declarations
 
 let partition_directives statements =
-  Flow_ast.Statement.(
-    let rec helper directives = function
-      | ((_, Expression { Expression.directive = Some _; _ }) as directive) :: rest ->
-        helper (directive :: directives) rest
-      | rest -> (List.rev directives, rest)
-    in
-    helper [] statements)
+  let open Flow_ast.Statement in
+  let rec helper directives = function
+    | ((_, Expression { Expression.directive = Some _; _ }) as directive) :: rest ->
+      helper (directive :: directives) rest
+    | rest -> (List.rev directives, rest)
+  in
+  helper [] statements
 
 let negate_number_literal (value, raw) =
   let raw_len = String.length raw in
@@ -75,7 +76,7 @@ let name_of_ident (_, { Identifier.name; comments = _ }) = name
 
 let source_of_ident (loc, { Identifier.name; comments = _ }) = (loc, name)
 
-let ident_of_source (loc, name) = (loc, { Identifier.name; comments = None })
+let ident_of_source ?comments (loc, name) = (loc, { Identifier.name; comments })
 
 let mk_comments ?(leading = []) ?(trailing = []) a = { Syntax.leading; trailing; internal = a }
 
@@ -84,47 +85,82 @@ let mk_comments_opt ?(leading = []) ?(trailing = []) () =
   | ([], []) -> None
   | (_, _) -> Some (mk_comments ~leading ~trailing ())
 
+let mk_comments_with_internal_opt ?(leading = []) ?(trailing = []) ~internal =
+  match (leading, trailing, internal) with
+  | ([], [], []) -> None
+  | _ -> Some (mk_comments ~leading ~trailing internal)
+
+let merge_comments ~inner ~outer =
+  let open Syntax in
+  match (inner, outer) with
+  | (None, c)
+  | (c, None) ->
+    c
+  | (Some inner, Some outer) ->
+    mk_comments_opt
+      ~leading:(outer.leading @ inner.leading)
+      ~trailing:(inner.trailing @ outer.trailing)
+      ()
+
+let merge_comments_with_internal ~inner ~outer =
+  match (inner, outer) with
+  | (inner, None) -> inner
+  | (None, Some { Syntax.leading; trailing; _ }) ->
+    mk_comments_with_internal_opt ~leading ~trailing ~internal:[]
+  | ( Some { Syntax.leading = inner_leading; trailing = inner_trailing; internal },
+      Some { Syntax.leading = outer_leading; trailing = outer_trailing; _ } ) ->
+    mk_comments_with_internal_opt
+      ~leading:(outer_leading @ inner_leading)
+      ~trailing:(inner_trailing @ outer_trailing)
+      ~internal
+
+let split_comments comments =
+  match comments with
+  | None -> (None, None)
+  | Some { Syntax.leading; trailing; _ } ->
+    (mk_comments_opt ~leading (), mk_comments_opt ~trailing ())
+
 let string_of_assignment_operator op =
-  Flow_ast.Expression.Assignment.(
-    match op with
-    | PlusAssign -> "+="
-    | MinusAssign -> "-="
-    | MultAssign -> "*="
-    | ExpAssign -> "**="
-    | DivAssign -> "/="
-    | ModAssign -> "%="
-    | LShiftAssign -> "<<="
-    | RShiftAssign -> ">>="
-    | RShift3Assign -> ">>>="
-    | BitOrAssign -> "|="
-    | BitXorAssign -> "^="
-    | BitAndAssign -> "&=")
+  let open Flow_ast.Expression.Assignment in
+  match op with
+  | PlusAssign -> "+="
+  | MinusAssign -> "-="
+  | MultAssign -> "*="
+  | ExpAssign -> "**="
+  | DivAssign -> "/="
+  | ModAssign -> "%="
+  | LShiftAssign -> "<<="
+  | RShiftAssign -> ">>="
+  | RShift3Assign -> ">>>="
+  | BitOrAssign -> "|="
+  | BitXorAssign -> "^="
+  | BitAndAssign -> "&="
 
 let string_of_binary_operator op =
-  Flow_ast.Expression.Binary.(
-    match op with
-    | Equal -> "=="
-    | NotEqual -> "!="
-    | StrictEqual -> "==="
-    | StrictNotEqual -> "!=="
-    | LessThan -> "<"
-    | LessThanEqual -> "<="
-    | GreaterThan -> ">"
-    | GreaterThanEqual -> ">="
-    | LShift -> "<<"
-    | RShift -> ">>"
-    | RShift3 -> ">>>"
-    | Plus -> "+"
-    | Minus -> "-"
-    | Mult -> "*"
-    | Exp -> "**"
-    | Div -> "/"
-    | Mod -> "%"
-    | BitOr -> "|"
-    | Xor -> "^"
-    | BitAnd -> "&"
-    | In -> "in"
-    | Instanceof -> "instanceof")
+  let open Flow_ast.Expression.Binary in
+  match op with
+  | Equal -> "=="
+  | NotEqual -> "!="
+  | StrictEqual -> "==="
+  | StrictNotEqual -> "!=="
+  | LessThan -> "<"
+  | LessThanEqual -> "<="
+  | GreaterThan -> ">"
+  | GreaterThanEqual -> ">="
+  | LShift -> "<<"
+  | RShift -> ">>"
+  | RShift3 -> ">>>"
+  | Plus -> "+"
+  | Minus -> "-"
+  | Mult -> "*"
+  | Exp -> "**"
+  | Div -> "/"
+  | Mod -> "%"
+  | BitOr -> "|"
+  | Xor -> "^"
+  | BitAnd -> "&"
+  | In -> "in"
+  | Instanceof -> "instanceof"
 
 module ExpressionSort = struct
   type t =
@@ -159,6 +195,7 @@ module ExpressionSort = struct
     | Unary
     | Update
     | Yield
+  [@@deriving show]
 
   let to_string = function
     | Array -> "array"

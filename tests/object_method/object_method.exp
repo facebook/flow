@@ -1,0 +1,61 @@
+Error ---------------------------------------------------------------------------------------------------- test2.js:4:15
+
+Cannot get `this.p` because property `p` is missing in object literal [1]. [prop-missing]
+
+   test2.js:4:15
+    4|   return this.p;
+                     ^
+
+References:
+   test2.js:12:9
+               v
+   12| var b = {
+   13|   f
+   14| }
+       ^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------------- test3.js:4:8
+
+Cannot call `this.m` because property `m` is missing in global object [1]. [prop-missing]
+
+   test3.js:4:8
+   4|   this.m();
+             ^
+
+References:
+   test3.js:4:3
+   4|   this.m();
+        ^^^^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------------- test3.js:4:8
+
+Cannot call `this.m` because property `m` is missing in object literal [1]. [prop-missing]
+
+   test3.js:4:8
+   4|   this.m();
+             ^
+
+References:
+   test3.js:9:4
+   9|   ({ f }).f(); // passing container object as `this`
+         ^^^^^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------------- test3.js:4:8
+
+Cannot call `this.m` because property `m` is missing in object literal [1]. [prop-missing]
+
+   test3.js:4:8
+    4|   this.m();
+              ^
+
+References:
+   test3.js:18:5
+   18| qux({ f: foo });  // error, since `this` is used non-trivially in `foo`
+           ^^^^^^^^^^ [1]
+
+
+
+Found 4 errors

@@ -1,0 +1,13 @@
+[ignore]
+
+[include]
+
+[libs]
+lib.js
+
+[lints]
+
+[options]
+no_flowlib=false
+
+[strict]

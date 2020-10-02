@@ -1,21 +1,17 @@
-function leading() {
-  /* 1.0 unreachable leading */
-  var F = function(){}; /* 1.1 leading */
-  /* 1.2 leading */
-  new F();
-}
+/* 1.1 L new */ new /* 1.2 L id */ Foo /* 1.3 L targs */ <T> /* 1.4 L args */ () /* 1.5 T args */;
 
-function trailing() {
-  var F = function(){};
+new /* 2.1 L id */ Foo /* 2.2 T id */
+  /* 2.3 L targs */ <T> /* 2.4 T targs */
+  /* 2.5 L args */ () /* 2.6 T args */
+  /* 2.7 T args */;
 
-  new F() /* 2.0 trailing */;
-  /* 2.1 unreachable trailing */
-}
+new /* 3.1 L id */ Foo /* 3.2 T id */
+  /* 3.3 L targs */ <T> /* 3.4 T targs */
+  /* 3.5 T targs */;
 
-function leading_and_trailing() {
-  /* 3.0 unreachable leading */
-  var F = function(){}; /* 3.1 leading */
-  /* 3.2 leading */
-  new /* 3.3 unreachable by New node */ F() /* 3.4 trailing */;
-  /* 3.5 unreachable trailing */
-}
+new /* 4.1 L id */ Foo /* 4.2 T id */
+  /* 4.3 T id */;
+
+new Foo(/* 5.1 I args */);
+
+new Foo(a, /* 6.1 I args */);

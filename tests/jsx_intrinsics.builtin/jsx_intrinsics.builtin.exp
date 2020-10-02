@@ -1,11 +1,11 @@
-Error ----------------------------------------------------------------------------------------------------- main.js:12:3
+Error ----------------------------------------------------------------------------------------------------- main.js:12:4
 
 Cannot assign `<CustomComponent />` to `b` because `CustomComponent` [1] is incompatible with `CustomComponentNope` [2]
-in property `type`.
+in property `type`. [incompatible-type]
 
-   main.js:12:3
+   main.js:12:4
    12|   <CustomComponent prop="asdf" />; // Error: Bad class type
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+          ^^^^^^^^^^^^^^^
 
 References:
    main.js:6:7
@@ -18,16 +18,51 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- main.js:14:3
 
-Cannot assign `<CustomComponent />` to `c` because:
- - property `prop1` is missing in object type [1] but exists in object type [2] in property `props`.
- - property `prop` is missing in object type [2] but exists in object type [1] in type argument `Props` [3] of property
-   `type`.
- - property `prop1` is missing in object type [1] but exists in object type [2] in type argument `Props` [3] of property
-   `type`.
+Cannot assign `<CustomComponent />` to `c` because property `prop1` is missing in object type [1] but exists in object
+type [2] in property `props`. [prop-missing]
 
    main.js:14:3
    14|   <CustomComponent prop="asdf" />; // Error: Props<{prop}> ~> Props<{prop1}>
          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   main.js:6:47
+    6| class CustomComponent extends React.Component<{prop: string}, void> {}
+                                                     ^^^^^^^^^^^^^^ [1]
+   main.js:13:38
+   13| var c: Element<Class<React.Component<{prop1: string}, void>>> =
+                                            ^^^^^^^^^^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- main.js:14:4
+
+Cannot assign `<CustomComponent />` to `c` because property `prop` is missing in object type [1] but exists in object
+type [2] in type argument `Props` [3] of property `type`. [prop-missing]
+
+   main.js:14:4
+   14|   <CustomComponent prop="asdf" />; // Error: Props<{prop}> ~> Props<{prop1}>
+          ^^^^^^^^^^^^^^^
+
+References:
+   main.js:13:38
+   13| var c: Element<Class<React.Component<{prop1: string}, void>>> =
+                                            ^^^^^^^^^^^^^^^ [1]
+   main.js:6:47
+    6| class CustomComponent extends React.Component<{prop: string}, void> {}
+                                                     ^^^^^^^^^^^^^^ [2]
+   <BUILTINS>/react.js:26:31
+   26| declare class React$Component<Props, State = void> {
+                                     ^^^^^ [3]
+
+
+Error ----------------------------------------------------------------------------------------------------- main.js:14:4
+
+Cannot assign `<CustomComponent />` to `c` because property `prop1` is missing in object type [1] but exists in object
+type [2] in type argument `Props` [3] of property `type`. [prop-missing]
+
+   main.js:14:4
+   14|   <CustomComponent prop="asdf" />; // Error: Props<{prop}> ~> Props<{prop1}>
+          ^^^^^^^^^^^^^^^
 
 References:
    main.js:6:47
@@ -41,18 +76,16 @@ References:
                                      ^^^^^ [3]
 
 
-Error ---------------------------------------------------------------------------------------------------- main.js:21:26
+Error ---------------------------------------------------------------------------------------------------- main.js:21:27
 
 Cannot assign `<div />` to `e` because `div` [1] is incompatible with string literal `span` [2] in property `type`.
+[incompatible-type]
 
-   main.js:21:26
-   21| var e: Element<'span'> = <div not_a_real_attr="asdf" />;
-                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-References:
    main.js:21:27
    21| var e: Element<'span'> = <div not_a_real_attr="asdf" />;
                                  ^^^ [1]
+
+References:
    main.js:21:16
    21| var e: Element<'span'> = <div not_a_real_attr="asdf" />;
                       ^^^^^^ [2]

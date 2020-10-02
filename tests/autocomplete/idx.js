@@ -10,4 +10,5 @@ type Foo = {
 
 function foo(x: ?Foo): ?string {
   return idx(x, _ => _.foo.);
+//                         ^
 }

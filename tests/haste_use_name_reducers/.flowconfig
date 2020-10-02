@@ -9,5 +9,5 @@ module.system.haste.name_reducers='^\(.*\)\.js\(\.flow\)?$' -> '\1'
 # strip .ios suffix
 module.system.haste.name_reducers='^\(.*\)\.ios$' -> '\1'
 
-module.system.haste.paths.whitelist=<PROJECT_ROOT>/dir[0-9]+/.*
-module.system.haste.paths.blacklist=.*/node_modules/.*
+module.system.haste.paths.includes=<PROJECT_ROOT>/dir[0-9]+/.*
+module.system.haste.paths.excludes=.*/node_modules/.*

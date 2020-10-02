@@ -1,5 +1,0 @@
-[options]
-experimental.well_formed_exports=true
-
-[lints]
-signature-verification-failure=error

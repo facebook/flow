@@ -1,0 +1,13 @@
+{
+  "body": {
+    "0": {
+      "expression": {
+        "left": {
+          "right": {
+            "leadingComments": undefined
+          }
+        }
+      }
+    }
+  }
+}

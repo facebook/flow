@@ -1,4 +1,4 @@
-(**
+(*
  * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
@@ -11,8 +11,7 @@
 (** TODO [perf]: investigate whether this takes too much memory **)
 let all_providers = ref (Hashtbl.create 0)
 
-let currently_oldified_all_providers : (Modulename.t, Utils_js.FilenameSet.t) Hashtbl.t option ref
-    =
+let currently_oldified_all_providers : (Modulename.t, Utils_js.FilenameSet.t) Hashtbl.t option ref =
   ref None
 
 let find_in_all_providers_unsafe modulename = Hashtbl.find !all_providers modulename

@@ -1,0 +1,3 @@
+shell: test.sh
+skip_saved_state: true
+auto_start: false

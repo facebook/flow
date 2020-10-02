@@ -9,4 +9,4 @@
  * to satisfy imports/requires instead.
  */
 
-export var INSPECT_MAX_BYTES = 0;
+export const INSPECT_MAX_BYTES = null;

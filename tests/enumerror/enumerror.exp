@@ -1,24 +1,14 @@
 Error ----------------------------------------------------------------------------------------------- enum-crash.js:7:25
 
-Cannot resolve module `somewhere`.
+Cannot resolve module `somewhere`. [cannot-resolve-module]
 
    7| import type {Enum} from 'somewhere';
                               ^^^^^^^^^^^
 
 
-Error ----------------------------------------------------------------------------------------------- enum-crash.js:11:5
-
-Cannot refine `Enum` as a value. 
-
-           v-------------
-   11|     case Enum.FOO:
-   12|       return 0;
-             --------^
-
-
 Error ---------------------------------------------------------------------------------------------- enum-crash.js:11:10
 
-Cannot reference type `Enum` [1] from a value position.
+Cannot reference type `Enum` [1] from a value position. [type-as-value]
 
    enum-crash.js:11:10
    11|     case Enum.FOO:
@@ -30,14 +20,14 @@ References:
                     ^^^^ [1]
 
 
-Error ----------------------------------------------------------------------------------------------- enumerror.js:10:10
+Error ----------------------------------------------------------------------------------------------- enumerror.js:10:18
 
-Cannot call `isActive` with object literal bound to `ad` because property `PAUSE` is missing in object type [1] in
-property `state`.
+Cannot call `isActive` with object literal bound to `ad` because property `PAUSE` (did you mean `PAUSED`?) is missing in
+object type [1] in property `state`. [prop-missing]
 
-   enumerror.js:10:10
+   enumerror.js:10:18
    10| isActive({state: 'PAUSE'});
-                ^^^^^^^^^^^^^^^^
+                        ^^^^^^^
 
 References:
    enumerror.js:3:37
@@ -50,14 +40,14 @@ References:
        ^ [1]
 
 
-Error ----------------------------------------------------------------------------------------------- enumerror.js:20:11
+Error ----------------------------------------------------------------------------------------------- enumerror.js:20:19
 
-Cannot call `isActive2` with object literal bound to `ad` because property `PAUSE` is missing in object literal [1] in
-property `state`.
+Cannot call `isActive2` with object literal bound to `ad` because property `PAUSE` (did you mean `PAUSED`?) is missing
+in object literal [1] in property `state`. [prop-missing]
 
-   enumerror.js:20:11
+   enumerror.js:20:19
    20| isActive2({state: 'PAUSE'});
-                 ^^^^^^^^^^^^^^^^
+                         ^^^^^^^
 
 References:
    enumerror.js:17:38
@@ -66,4 +56,4 @@ References:
 
 
 
-Found 5 errors
+Found 4 errors

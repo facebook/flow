@@ -1,7 +1,7 @@
 (library
   (name flow_version)
   (wrapped false)
-  (preprocess (pps ppx_deriving.eq)) ; See T41851208
+  (preprocess (pps ppx_deriving.std)) ; See T41851208
   (modules flow_version))
 
 (library
@@ -21,7 +21,7 @@
     hh_json ; hack
     sys_utils ; hack
     )
-  (preprocess (pps ppx_deriving.eq))
+  (preprocess (pps ppx_deriving.std))
 )
 
 (library
@@ -34,5 +34,5 @@
     flow_server_protocol
     lsp
   )
-  (preprocess (pps ppx_deriving.eq)) ; See T41851208
+  (preprocess (pps ppx_deriving.std)) ; See T41851208
 )

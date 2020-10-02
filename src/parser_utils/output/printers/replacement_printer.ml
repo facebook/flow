@@ -1,11 +1,9 @@
-(**
+(*
  * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  *)
-
-module Ast = Flow_ast
 
 type patch = (int * int * string) list
 
@@ -29,22 +27,21 @@ let with_content_of_file_input file f =
     Utils_js.assert_false error_msg
 
 let mk_loc_patch_ast_differ
-    (diff : Flow_ast_differ.node Flow_ast_differ.change list) (ast : (Loc.t, Loc.t) Ast.program) :
-    loc_patch =
-  let attached_comments = Some (Flow_prettier_comments.attach_comments ast) in
-  Ast_diff_printer.edits_of_changes attached_comments diff
+    ?(opts = Js_layout_generator.default_opts)
+    (diff : Flow_ast_differ.node Flow_ast_differ.change list) : loc_patch =
+  Ast_diff_printer.edits_of_changes ~opts diff
 
 let mk_patch_ast_differ
+    ?(opts = Js_layout_generator.default_opts)
     (diff : Flow_ast_differ.node Flow_ast_differ.change list)
-    (ast : (Loc.t, Loc.t) Ast.program)
     (content : string) : patch =
-  let offset_table = Offset_utils.make content in
+  let offset_table = Offset_utils.make ~kind:Offset_utils.Utf8 content in
   let offset loc = Offset_utils.offset offset_table loc in
-  mk_loc_patch_ast_differ diff ast
-  |> Core_list.map ~f:(fun (loc, text) -> Loc.(offset loc.start, offset loc._end, text))
+  mk_loc_patch_ast_differ ~opts diff
+  |> Base.List.map ~f:(fun (loc, text) -> Loc.(offset loc.start, offset loc._end, text))
 
-let mk_patch_ast_differ_unsafe diff ast file =
-  with_content_of_file_input file @@ mk_patch_ast_differ diff ast
+let mk_patch_ast_differ_unsafe ?(opts = Js_layout_generator.default_opts) diff file =
+  with_content_of_file_input file @@ mk_patch_ast_differ ~opts diff
 
 let print (patch : patch) (content : string) : string =
   let patch_sorted =

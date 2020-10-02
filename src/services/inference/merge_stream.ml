@@ -1,4 +1,4 @@
-(**
+(*
  * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
@@ -95,7 +95,7 @@ let is_done stream = stream.blocked_components = 0
 let create
     ~num_workers
     ~arch
-    ~dependency_graph
+    ~sig_dependency_graph
     ~leader_map
     ~component_map
     ~recheck_leader_set
@@ -120,25 +120,25 @@ let create
   in
   (* calculate dependents, blocking for each node *)
   let () =
-    let leader f = FilenameMap.find_unsafe f leader_map in
+    let leader f = FilenameMap.find f leader_map in
     FilenameMap.iter
       (fun f dep_fs ->
         let leader_f = leader f in
-        let node = FilenameMap.find_unsafe leader_f graph in
+        let node = FilenameMap.find leader_f graph in
         FilenameSet.iter
           (fun dep_f ->
             let dep_leader_f = leader dep_f in
             if dep_leader_f = leader_f then
               ()
             else
-              let dep_node = FilenameMap.find_unsafe dep_leader_f graph in
+              let dep_node = FilenameMap.find dep_leader_f graph in
               let dependents = FilenameMap.add leader_f node dep_node.dependents in
               if dependents != dep_node.dependents then (
                 dep_node.dependents <- dependents;
                 node.blocking <- node.blocking + 1
               ))
           dep_fs)
-      dependency_graph
+      sig_dependency_graph
   in
   let stream =
     {
@@ -178,7 +178,7 @@ let update_server_status stream =
     | Options.Classic ->
       ServerStatus.(
         Merging_progress { finished = stream.merged_files; total = Some stream.total_files })
-    | Options.TypesFirst ->
+    | Options.TypesFirst _ ->
       ServerStatus.(
         Merging_types_progress { finished = stream.merged_files; total = Some stream.total_files })
   in
@@ -246,7 +246,7 @@ let merge ~master_mutator ~reader stream =
     stream.intermediate_result_callback (lazy merged);
     List.iter
       (fun (leader_f, _) ->
-        let node = FilenameMap.find_unsafe leader_f stream.graph in
+        let node = FilenameMap.find leader_f stream.graph in
         let diff = Context_heaps.Mutator_reader.sig_hash_changed ~reader leader_f in
         push diff node)
       merged;

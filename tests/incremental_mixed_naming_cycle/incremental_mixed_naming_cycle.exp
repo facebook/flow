@@ -1,6 +1,6 @@
 Error --------------------------------------------------------------------------------------------------------- a.js:6:2
 
-Cannot cast `require(...)` to undefined because string [1] is incompatible with undefined [2].
+Cannot cast `require(...)` to undefined because string [1] is incompatible with undefined [2]. [incompatible-cast]
 
    a.js:6:2
    6| (require('./b'): void);
@@ -17,7 +17,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------------- a.js:7:2
 
-Cannot cast `require(...)` to undefined because string [1] is incompatible with undefined [2].
+Cannot cast `require(...)` to undefined because string [1] is incompatible with undefined [2]. [incompatible-cast]
 
    a.js:7:2
    7| (require('C'): void);
@@ -34,7 +34,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------------- b.js:6:2
 
-Cannot cast `require(...)` to undefined because string [1] is incompatible with undefined [2].
+Cannot cast `require(...)` to undefined because string [1] is incompatible with undefined [2]. [incompatible-cast]
 
    b.js:6:2
    6| (require('A'): void);
@@ -51,7 +51,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------------- b.js:7:2
 
-Cannot cast `require(...)` to undefined because string [1] is incompatible with undefined [2].
+Cannot cast `require(...)` to undefined because string [1] is incompatible with undefined [2]. [incompatible-cast]
 
    b.js:7:2
    7| (require('D'): void);
@@ -68,7 +68,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------------- c.js:7:2
 
-Cannot cast `require(...)` to undefined because string [1] is incompatible with undefined [2].
+Cannot cast `require(...)` to undefined because string [1] is incompatible with undefined [2]. [incompatible-cast]
 
    c.js:7:2
    7| (require('./b'): void);
@@ -85,7 +85,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------------- d.js:6:2
 
-Cannot cast `require(...)` to undefined because string [1] is incompatible with undefined [2].
+Cannot cast `require(...)` to undefined because string [1] is incompatible with undefined [2]. [incompatible-cast]
 
    d.js:6:2
    6| (require('./b'): void);
@@ -104,7 +104,7 @@ References:
 Found 6 errors
 Error --------------------------------------------------------------------------------------------------------- a.js:6:2
 
-Cannot cast `require(...)` to undefined because string [1] is incompatible with undefined [2].
+Cannot cast `require(...)` to undefined because string [1] is incompatible with undefined [2]. [incompatible-cast]
 
    a.js:6:2
    6| (require('./b'): void);
@@ -121,7 +121,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------------- a.js:7:2
 
-Cannot cast `require(...)` to undefined because string [1] is incompatible with undefined [2].
+Cannot cast `require(...)` to undefined because string [1] is incompatible with undefined [2]. [incompatible-cast]
 
    a.js:7:2
    7| (require('C'): void);
@@ -138,7 +138,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------------- b.js:6:2
 
-Cannot cast `require(...)` to undefined because string [1] is incompatible with undefined [2].
+Cannot cast `require(...)` to undefined because string [1] is incompatible with undefined [2]. [incompatible-cast]
 
    b.js:6:2
    6| (require('A'): void);
@@ -155,7 +155,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------------- b.js:7:2
 
-Cannot cast `require(...)` to undefined because string [1] is incompatible with undefined [2].
+Cannot cast `require(...)` to undefined because string [1] is incompatible with undefined [2]. [incompatible-cast]
 
    b.js:7:2
    7| (require('D'): void);
@@ -172,7 +172,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------------- c.js:7:2
 
-Cannot cast `require(...)` to undefined because string [1] is incompatible with undefined [2].
+Cannot cast `require(...)` to undefined because string [1] is incompatible with undefined [2]. [incompatible-cast]
 
    c.js:7:2
    7| (require('./b'): void);
@@ -189,7 +189,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------------- d.js:6:2
 
-Cannot cast `require(...)` to undefined because string [1] is incompatible with undefined [2].
+Cannot cast `require(...)` to undefined because string [1] is incompatible with undefined [2]. [incompatible-cast]
 
    d.js:6:2
    6| (require('./b'): void);

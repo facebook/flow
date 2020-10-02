@@ -1,0 +1,38 @@
+Error --------------------------------------------------------------------------------------------------------- b.js:8:2
+
+Cannot create `Component` element because property `other` is missing in `Props` [1] but exists in props [2].
+[prop-missing]
+
+   b.js:8:2
+   8| <Component other={1}/>;
+       ^^^^^^^^^
+
+References:
+   a.js:9:27
+   9| const Component = (props: Props): React.Node => <div />;
+                                ^^^^^ [1]
+   b.js:8:1
+   8| <Component other={1}/>;
+      ^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------------------- b.js:13:2
+
+Cannot create `PolyComponent` element because property `other` is missing in `Props` [1] but exists in props [2].
+[prop-missing]
+
+   b.js:13:2
+   13| <PolyComponent t={0} other={1}/>;
+        ^^^^^^^^^^^^^
+
+References:
+   poly_a.js:10:30
+   10| const Component = <T>(props: Props<T>): React.Node => <div />;
+                                    ^^^^^^^^ [1]
+   b.js:13:1
+   13| <PolyComponent t={0} other={1}/>;
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+
+Found 2 errors

@@ -1,4 +1,4 @@
-(**
+(*
  * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
@@ -11,6 +11,21 @@ include Ty_ancestors
 type aloc = (ALoc.t[@printer (fun fmt loc -> fprintf fmt "%s" (ALoc.to_string_no_source loc))])
 [@@deriving show]
 
+(* WARNING to avoid VisitorsRuntime.StructuralMismatch exceptions when using
+ * comparator_ty, make sure to override the respective fail_* method for every
+ * variant type. To ensure that all such methods have been overridden, check the
+ * file generated with
+ *
+ *  ocamlfind ppx_tools/rewriter \
+ *    -ppx ' \
+ *    `ocamlfind query ppx_deriving`/ppx_deriving \
+ *    `ocamlfind query -predicates ppx_driver,byte -format '%d/%a' ppx_deriving.show` \
+ *    `ocamlfind query -predicates ppx_driver,byte -format '%d/%a' visitors.ppx`' \
+ *    src/common/ty/ty.ml
+ *
+ * and make sure all fail_* methods in the iter_ty class are overridden in
+ * comparator_ty.
+ *)
 type t =
   | TVar of tvar * t list option
   | Bound of aloc * string
@@ -20,6 +35,7 @@ type t =
   | Bot of bot_kind
   | Void
   | Null
+  | Symbol
   | Num of string option
   | Str of string option
   | Bool of bool option
@@ -32,14 +48,11 @@ type t =
   | Tup of t list
   | Union of t * t * t list
   | Inter of t * t * t list
-  | TypeAlias of type_alias
   | InlineInterface of interface_t
-  | TypeOf of builtin_value
-  | ClassDecl of symbol * type_param list option
-  | InterfaceDecl of symbol * type_param list option
+  | TypeOf of builtin_or_symbol
   | Utility of utility
-  | Module of symbol option * export_t
   | Mu of int * t
+  | CharSet of string
 
 and tvar = RVar of int [@@unboxed]
 
@@ -48,9 +61,11 @@ and generic_t = symbol * gen_kind * t list option
 
 and any_kind =
   | Annotated
-  | AnyError
+  | AnyError of any_error_kind option
   | Unsound of unsoundness_kind
   | Untyped
+
+and any_error_kind = UnresolvedName
 
 and unsoundness_kind =
   | BoundFunctionThis
@@ -98,61 +113,66 @@ and gen_kind =
   | ClassKind
   | InterfaceKind
   | TypeAliasKind
-
-and export_t = {
-  exports: (string * t) list;
-  cjs_export: t option;
-}
+  | EnumKind
 
 and fun_t = {
   fun_params: (string option * t * fun_param) list;
   fun_rest_param: (string option * t) option;
   fun_return: t;
   fun_type_params: type_param list option;
+  fun_static: t;
 }
 
+and obj_kind =
+  | ExactObj
+  | InexactObj
+  | IndexedObj of dict
+
 and obj_t = {
-  obj_exact: bool;
   obj_frozen: bool;
-  obj_literal: bool;
+  (* `None` means that this field was not computed, because the normalizer config
+     option preserve_inferred_literal_types was set to false. `Some b` means that
+     it was computed and `b` is true iff this is a literal type. *)
+  obj_literal: bool option;
   obj_props: prop list;
+  obj_kind: obj_kind;
 }
 
 and arr_t = {
   arr_readonly: bool;
-  arr_literal: bool;
+  (* `None` means that this field was not computed, because the normalizer config
+     option preserve_inferred_literal_types was set to false. `Some b` means that
+     it was computed and `b` is true iff this is a literal type. *)
+  arr_literal: bool option;
   arr_elt_t: t;
-}
-
-and type_alias = {
-  ta_name: symbol;
-  ta_tparams: type_param list option;
-  ta_type: t option;
 }
 
 and interface_t = {
   if_extends: generic_t list;
-  if_body: obj_t;
+  if_props: prop list;
+  if_dict: dict option;
 }
 
 and fun_param = { prm_optional: bool }
 
 and prop =
-  | NamedProp of string * named_prop
-  | IndexProp of dict
+  | NamedProp of {
+      name: string;
+      prop: named_prop;
+      from_proto: bool;
+    }
   | CallProp of fun_t
   | SpreadProp of t
 
 and named_prop =
-  | Field of t * field
+  | Field of {
+      t: t;
+      polarity: polarity;
+      optional: bool;
+    }
   | Method of fun_t
   | Get of t
   | Set of t
-
-and field = {
-  fld_polarity: polarity;
-  fld_optional: opt;
-}
 
 and dict = {
   dict_polarity: polarity;
@@ -167,8 +187,6 @@ and type_param = {
   tp_polarity: polarity;
   tp_default: t option;
 }
-
-and opt = bool
 
 and utility =
   (* https://flow.org/en/docs/types/utilities/ *)
@@ -199,12 +217,34 @@ and polarity =
   | Negative
   | Neutral
 
-and builtin_value =
+and builtin_or_symbol =
   | FunProto
   | ObjProto
   | FunProtoApply
   | FunProtoBind
   | FunProtoCall
+  | TSymbol of symbol
+
+and decl =
+  | VariableDecl of string * t
+  | TypeAliasDecl of {
+      import: bool;
+      name: symbol;
+      tparams: type_param list option;
+      type_: t option;
+    }
+  | ClassDecl of symbol * type_param list option
+  | InterfaceDecl of symbol * type_param list option
+  | EnumDecl of symbol
+  | ModuleDecl of {
+      name: symbol option;
+      exports: decl list;
+      default: t option;
+    }
+
+and elt =
+  | Type of t
+  | Decl of decl
 [@@deriving
   visitors
     {
@@ -309,9 +349,9 @@ class ['A] comparator_ty =
           | exception Failure _ -> assert0 (String.compare x y)
         end
 
-    method! private on_bool _env x y = assert0 (Pervasives.compare x y)
+    method! private on_bool _env x y = assert0 (Stdlib.compare x y)
 
-    method! private on_symbol _env x y = assert0 (Pervasives.compare x y)
+    method! private on_symbol _env x y = assert0 (Stdlib.compare x y)
 
     method! private on_aloc _env x y = assert0 (ALoc.compare x y)
 
@@ -338,6 +378,8 @@ class ['A] comparator_ty =
 
     method! private fail_gen_kind env x y = fail_gen this#tag_of_gen_kind env x y
 
+    method! private fail_obj_kind env x y = fail_gen this#tag_of_obj_kind env x y
+
     method! private fail_prop env x y = fail_gen this#tag_of_prop env x y
 
     method! private fail_named_prop env x y = fail_gen this#tag_of_named_prop env x y
@@ -347,6 +389,12 @@ class ['A] comparator_ty =
     method! private fail_polarity env x y = fail_gen this#tag_of_polarity env x y
 
     method! private fail_unsoundness_kind env x y = fail_gen this#tag_of_unsoundness_kind env x y
+
+    method! private fail_builtin_or_symbol env x y = fail_gen this#tag_of_builtin_or_symbol env x y
+
+    method! private fail_decl env x y = fail_gen this#tag_of_decl env x y
+
+    method! private fail_elt env x y = fail_gen this#tag_of_elt env x y
 
     (* types will show up in unions and intersections in ascending order *)
     (* No two elements of each variant can be assigned the same tag *)
@@ -366,34 +414,53 @@ class ['A] comparator_ty =
       | Num _ -> 8
       | StrLit _ -> 9
       | Str _ -> 10
-      | TVar _ -> 11
-      | Bound _ -> 12
-      | Generic _ -> 13
-      | TypeAlias _ -> 14
+      | Symbol -> 11
+      | TVar _ -> 12
+      | Bound _ -> 13
+      | Generic _ -> 14
       | TypeOf _ -> 15
-      | ClassDecl _ -> 16
-      | Utility _ -> 17
-      | Tup _ -> 18
-      | Arr _ -> 19
-      | Fun _ -> 20
-      | Obj _ -> 21
-      | Inter _ -> 22
-      | Union _ -> 23
-      | InterfaceDecl _ -> 24
-      | Module _ -> 25
-      | Mu _ -> 26
-      | InlineInterface _ -> 27
+      | Utility _ -> 16
+      | Tup _ -> 17
+      | Arr _ -> 18
+      | Fun _ -> 19
+      | Obj _ -> 20
+      | Inter _ -> 21
+      | Union _ -> 22
+      | Mu _ -> 23
+      | InlineInterface _ -> 24
+      | CharSet _ -> 25
+
+    method tag_of_decl _ =
+      function
+      | VariableDecl _ -> 0
+      | TypeAliasDecl _ -> 1
+      | ClassDecl _ -> 2
+      | InterfaceDecl _ -> 3
+      | EnumDecl _ -> 4
+      | ModuleDecl _ -> 5
+
+    method tag_of_elt _ =
+      function
+      | Type _ -> 0
+      | Decl _ -> 1
 
     method tag_of_gen_kind _ =
       function
       | ClassKind -> 0
       | InterfaceKind -> 1
       | TypeAliasKind -> 2
+      | EnumKind -> 3
+
+    method tag_of_obj_kind _ =
+      function
+      | ExactObj -> 0
+      | InexactObj -> 1
+      | IndexedObj _ -> 2
 
     method tag_of_any_kind _ =
       function
       | Annotated -> 0
-      | AnyError -> 1
+      | AnyError _ -> 1
       | Unsound _ -> 2
       | Untyped -> 3
 
@@ -418,9 +485,8 @@ class ['A] comparator_ty =
     method tag_of_prop _env =
       function
       | NamedProp _ -> 0
-      | IndexProp _ -> 1
-      | CallProp _ -> 2
-      | SpreadProp _ -> 3
+      | CallProp _ -> 1
+      | SpreadProp _ -> 2
 
     method tag_of_named_prop _env =
       function
@@ -470,6 +536,15 @@ class ['A] comparator_ty =
       | NoUpper -> 0
       | SomeKnownUpper _ -> 1
       | SomeUnknownUpper _ -> 2
+
+    method tag_of_builtin_or_symbol _ =
+      function
+      | FunProto -> 0
+      | ObjProto -> 1
+      | FunProtoApply -> 2
+      | FunProtoBind -> 3
+      | FunProtoCall -> 4
+      | TSymbol _ -> 5
   end
 
 (* Type destructors *)
@@ -507,13 +582,14 @@ let is_dynamic = function
 let mk_maybe t = mk_union (Null, [Void; t])
 
 let mk_field_props prop_list =
-  Core_list.map
+  Base.List.map
     ~f:(fun (id, t, opt) ->
-      NamedProp (id, Field (t, { fld_polarity = Neutral; fld_optional = opt })))
+      NamedProp
+        { name = id; prop = Field { t; polarity = Neutral; optional = opt }; from_proto = false })
     prop_list
 
-let mk_object ?(obj_exact = false) ?(obj_frozen = false) ?(obj_literal = false) obj_props =
-  Obj { obj_exact; obj_frozen; obj_literal; obj_props }
+let mk_object ?(obj_kind = InexactObj) ?(obj_frozen = false) ?obj_literal obj_props =
+  Obj { obj_kind; obj_frozen; obj_literal; obj_props }
 
 let mk_generic_class symbol targs = Generic (symbol, ClassKind, targs)
 
@@ -523,10 +599,13 @@ let mk_generic_talias symbol targs = Generic (symbol, TypeAliasKind, targs)
 
 let rec mk_exact ty =
   match ty with
-  | Obj o -> Obj { o with obj_exact = true }
-  | TypeAlias a ->
-    let ta_type = Option.map ~f:mk_exact a.ta_type in
-    TypeAlias { a with ta_type }
+  | Obj o ->
+    let obj_kind =
+      match o.obj_kind with
+      | InexactObj -> ExactObj
+      | _ -> o.obj_kind
+    in
+    Obj { o with obj_kind }
   | Mu (i, t) -> Mu (i, mk_exact t)
   (* Not applicable *)
   | Any _
@@ -534,6 +613,7 @@ let rec mk_exact ty =
   | Bot _
   | Void
   | Null
+  | Symbol
   | Num _
   | Str _
   | Bool _
@@ -543,7 +623,8 @@ let rec mk_exact ty =
   | Fun _
   | Arr _
   | Tup _
-  | InlineInterface _ ->
+  | InlineInterface _
+  | CharSet _ ->
     ty
   (* Do not nest $Exact *)
   | Utility (Exact _) -> ty
@@ -554,35 +635,17 @@ let rec mk_exact ty =
   | Union _
   | Inter _
   | TypeOf _
-  | ClassDecl _
-  | InterfaceDecl _
-  | Utility _
-  | Module _ ->
+  | Utility _ ->
     Utility (Exact ty)
 
 let mk_array ~readonly ~literal t =
   Arr { arr_readonly = readonly; arr_literal = literal; arr_elt_t = t }
 
-let named_alias ?ta_tparams ?ta_type name = TypeAlias { ta_name = name; ta_tparams; ta_type }
-
-let debug_string_of_provenance_ctor = function
-  | Local -> "Local"
-  | Remote { imported_as = Some _ } -> "Imported"
-  | Remote { imported_as = None } -> "Remote"
-  | Library -> "Library"
-  | Builtin -> "Builtin"
-
-let debug_string_of_symbol { provenance; def_loc; name; _ } =
-  Utils_js.spf
-    "%s (%s:%s)"
-    name
-    (debug_string_of_provenance_ctor provenance)
-    (Reason.string_of_aloc def_loc)
-
 let debug_string_of_generic_kind = function
   | ClassKind -> "class"
   | InterfaceKind -> "interface"
   | TypeAliasKind -> "type alias"
+  | EnumKind -> "enum"
 
 let string_of_utility_ctor = function
   | Keys _ -> "$Keys"

@@ -1,7 +1,7 @@
 Error ----------------------------------------------------------------------------------------------------- test.js:4:26
 
 Cannot assign object literal to `x` because property `bar` is missing in object type [1] but exists in object
-literal [2].
+literal [2]. [prop-missing]
 
    test.js:4:26
    4| const x: {foo: number} = {foo: 3, bar: 3}; // Error, {foo: number} is exact so can't include bar
@@ -16,7 +16,7 @@ References:
 Error ------------------------------------------------------------------------------------------------------ test.js:9:6
 
 Cannot call `test` with `inexact` bound to `x` because inexact object type [1] is incompatible with exact object
-type [2].
+type [2]. [incompatible-exact]
 
    test.js:9:6
    9| test(inexact); // Error inexact ~> exact

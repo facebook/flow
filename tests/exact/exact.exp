@@ -1,7 +1,7 @@
 Error ---------------------------------------------------------------------------------------------------- call.js:22:13
 
 Cannot assign object literal to `c1` because property `f` is missing in object type [1] but exists in object
-literal [2].
+literal [2]. [prop-missing]
 
    call.js:22:13
                    v
@@ -20,7 +20,7 @@ References:
 Error ---------------------------------------------------------------------------------------------------- call.js:26:21
 
 Cannot assign object literal to `c2` because property `f` is missing in object type [1] but exists in object
-literal [2].
+literal [2]. [prop-missing]
 
    call.js:26:21
                            v
@@ -39,7 +39,7 @@ References:
 Error ------------------------------------------------------------------------------------------------ callable.js:17:26
 
 Cannot assign `f` to `g` because a call signature declaring the expected parameter / return type is missing in object
-type [1] but exists in object type [2].
+type [1] but exists in object type [2]. [prop-missing]
 
    callable.js:17:26
    17| var g: {| x: string |} = f; // error: callable signature in f missing in g
@@ -54,35 +54,39 @@ References:
                       ^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------- error_continues.js:3:3
+Error ------------------------------------------------------------------------------------------- error_continues.js:3:8
 
-Cannot cast `any` to object type because:
- - inexact object type [1] is incompatible with exact object type [2].
- - number [3] is incompatible with string [4] in property `p`.
+Cannot cast `any` to object type because inexact object type [1] is incompatible with exact object type [2].
+[incompatible-exact]
 
-   error_continues.js:3:3
-   3| ((any: {p: number}): {|p: string|}); // We should get two errors here!
-        ^^^^^^^^^^^^^^^^
-
-References:
    error_continues.js:3:8
    3| ((any: {p: number}): {|p: string|}); // We should get two errors here!
              ^^^^^^^^^^^ [1]
+
+References:
    error_continues.js:3:22
    3| ((any: {p: number}): {|p: string|}); // We should get two errors here!
                            ^^^^^^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------ error_continues.js:3:12
+
+Cannot cast `any` to object type because number [1] is incompatible with string [2] in property `p`. [incompatible-cast]
+
    error_continues.js:3:12
    3| ((any: {p: number}): {|p: string|}); // We should get two errors here!
-                 ^^^^^^ [3]
+                 ^^^^^^ [1]
+
+References:
    error_continues.js:3:27
    3| ((any: {p: number}): {|p: string|}); // We should get two errors here!
-                                ^^^^^^ [4]
+                                ^^^^^^ [2]
 
 
 Error -------------------------------------------------------------------------------------------- exact_basics.js:49:20
 
 Cannot call `takesExactlyPerson` with `subtypeOfPerson` bound to `person` because property `first` is missing in
-`ExactPerson` [1] but exists in object literal [2].
+`ExactPerson` [1] but exists in object literal [2]. [prop-missing]
 
    exact_basics.js:49:20
    49| takesExactlyPerson(subtypeOfPerson); // error
@@ -100,7 +104,7 @@ References:
 Error -------------------------------------------------------------------------------------------- exact_basics.js:61:20
 
 Cannot call `takesExactlyPerson` with `returnsSubtypeOfPerson()` bound to `person` because inexact `Person` [1] is
-incompatible with exact `ExactPerson` [2].
+incompatible with exact `ExactPerson` [2]. [incompatible-exact]
 
    exact_basics.js:61:20
    61| takesExactlyPerson(returnsSubtypeOfPerson());  // error
@@ -118,7 +122,7 @@ References:
 Error -------------------------------------------------------------------------------------------- exact_basics.js:71:20
 
 Cannot call `takesExactlyPerson` with `returnsExactlyPerson2()` bound to `person` because property `first` is missing in
-`ExactPerson` [1] but exists in `ExactPerson2` [2].
+`ExactPerson` [1] but exists in `ExactPerson2` [2]. [prop-missing]
 
    exact_basics.js:71:20
    71| takesExactlyPerson(returnsExactlyPerson2()); // error
@@ -136,7 +140,7 @@ References:
 Error -------------------------------------------------------------------------------------------- exact_basics.js:85:23
 
 Cannot call `takesSubtypeOfPerson2` with `returnsExactlyPerson()` bound to `person2` because property `first` is missing
-in `ExactPerson` [1] but exists in `Person2` [2].
+in `ExactPerson` [1] but exists in `Person2` [2]. [prop-missing]
 
    exact_basics.js:85:23
    85| takesSubtypeOfPerson2(returnsExactlyPerson()); // error
@@ -153,7 +157,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- exact_basics.js:94:17
 
-Cannot create exact type from `PersonPred` [1].
+Cannot create exact type from `PersonPred` [1]. [invalid-exact]
 
    exact_basics.js:94:17
    94| takesPersonPred(returnsExactlyPersonPred()); // error
@@ -165,19 +169,214 @@ References:
                                                            ^^^^^^^^^^ [1]
 
 
-Error -------------------------------------------------------------------------------------------------- objmap.js:11:32
+Error --------------------------------------------------------------------------------------- exact_lower_indexer.js:5:2
 
-Cannot assign object literal to `doesError` because number [1] is incompatible with number literal `2` [2] in property
-`a`.
+Cannot cast `a` to `A` because indexed `A` [1] is incompatible with exact `A` [2]. [incompatible-indexer]
 
-   objmap.js:11:32
-   11| const doesError: MappedThing = {a: 3};
-                                      ^^^^^^
+   exact_lower_indexer.js:5:2
+   5| (a: $Exact<A>);
+       ^
 
 References:
+   exact_lower_indexer.js:4:16
+   4| declare var a: A;
+                     ^ [1]
+   exact_lower_indexer.js:5:5
+   5| (a: $Exact<A>);
+          ^^^^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- not_object.js:3:16
+
+Cannot assign `3` to `x` because number [1] is incompatible with object type [2]. [incompatible-type]
+
+   not_object.js:3:16
+   3| let x : {||} = 3;
+                     ^ [1]
+
+References:
+   not_object.js:3:9
+   3| let x : {||} = 3;
+              ^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- not_object.js:4:16
+
+Cannot assign empty string to `y` because string [1] is incompatible with object type [2]. [incompatible-type]
+
+   not_object.js:4:16
+   4| let y : {||} = "";
+                     ^^ [1]
+
+References:
+   not_object.js:4:9
+   4| let y : {||} = "";
+              ^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- not_object.js:5:16
+
+Cannot assign `true` to `z` because boolean [1] is incompatible with object type [2]. [incompatible-type]
+
+   not_object.js:5:16
+   5| let z : {||} = true;
+                     ^^^^ [1]
+
+References:
+   not_object.js:5:9
+   5| let z : {||} = true;
+              ^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- not_object.js:7:16
+
+Cannot assign `new class { ... }` to `c` because inexact `<<anonymous class>>` [1] is incompatible with exact object
+type [2]. [incompatible-exact]
+
+   not_object.js:7:16
+   7| let c : {||} = new class {};
+                     ^^^^^^^^^^^^ [1]
+
+References:
+   not_object.js:7:9
+   7| let c : {||} = new class {};
+              ^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- not_object.js:8:16
+
+Cannot assign function to `f` because inexact function [1] is incompatible with exact object type [2].
+[incompatible-exact]
+
+   not_object.js:8:16
+   8| let f : {||} = () => {};
+                     ^^^^^^^^ [1]
+
+References:
+   not_object.js:8:9
+   8| let f : {||} = () => {};
+              ^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- not_object.js:11:2
+
+Cannot cast `u` to object type because inexact object type [1] is incompatible with exact object type [2].
+[incompatible-exact]
+
+   not_object.js:11:2
+   11| (u : {||});
+        ^
+
+References:
+   not_object.js:10:24
+   10| declare var u : {||} | {};
+                              ^^ [1]
+   not_object.js:11:6
+   11| (u : {||});
+            ^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- not_object.js:14:2
+
+Cannot cast `v` to object type because number [1] is incompatible with object type [2]. [incompatible-cast]
+
+   not_object.js:14:2
+   14| (v : {||});
+        ^
+
+References:
+   not_object.js:13:17
+   13| declare var v : number | {};
+                       ^^^^^^ [1]
+   not_object.js:14:6
+   14| (v : {||});
+            ^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- not_object.js:14:2
+
+Cannot cast `v` to object type because inexact object type [1] is incompatible with exact object type [2].
+[incompatible-exact]
+
+   not_object.js:14:2
+   14| (v : {||});
+        ^
+
+References:
+   not_object.js:13:26
+   13| declare var v : number | {};
+                                ^^ [1]
+   not_object.js:14:6
+   14| (v : {||});
+            ^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- not_object.js:19:12
+
+Cannot create exact type from number [1]. [invalid-exact]
+
+   19| (0: $Exact<number>);
+                  ^^^^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------- not_object.js:20:13
+
+Cannot create exact type from string [1]. [invalid-exact]
+
+   20| ("": $Exact<string>);
+                   ^^^^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------- not_object.js:21:15
+
+Cannot create exact type from boolean [1]. [invalid-exact]
+
+   21| (true: $Exact<boolean>);
+                     ^^^^^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------- not_object.js:22:18
+
+Cannot create exact type from `A` [1]. [invalid-exact]
+
+   22| (new A(): $Exact<A>);
+                        ^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------- not_object.js:23:18
+
+Cannot create exact type from function type [1]. [invalid-exact]
+
+   23| (()=>{} : $Exact<()=>{}>);
+                        ^^^^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------- not_object.js:27:18
+
+Cannot create exact type from function [1]. [invalid-exact]
+
+   27| (()=>{} : $Exact<typeof foo>);
+                        ^^^^^^^^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------- not_object.js:29:18
+
+Cannot create exact type from `A` [1]. [invalid-exact]
+
+   29| (new A(): $Exact<typeof bar>);
+                        ^^^^^^^^^^ [1]
+
+
+Error -------------------------------------------------------------------------------------------------- objmap.js:11:36
+
+Cannot assign object literal to `doesError` because number [1] is incompatible with number literal `2` [2] in property
+`a`. [incompatible-type]
+
    objmap.js:11:36
    11| const doesError: MappedThing = {a: 3};
                                           ^ [1]
+
+References:
    objmap.js:5:47
     5| type MappedThing = $ObjMap<ExactThing, (1) => 2>;
                                                      ^ [2]
@@ -186,7 +385,7 @@ References:
 Error -------------------------------------------------------------------------------------------------- objmap.js:14:35
 
 Cannot assign object literal to `shouldntWork` because property `b` is missing in object type [1] but exists in object
-literal [2].
+literal [2]. [prop-missing]
 
    objmap.js:14:35
    14| const shouldntWork: MappedThing = {a: 2, b: 1};
@@ -200,7 +399,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- optional.js:3:47
 
-Cannot return `x` because property `p` is missing in object type [1] but exists in object type [2].
+Cannot return `x` because property `p` is missing in object type [1] but exists in object type [2]. [prop-missing]
 
    optional.js:3:47
    3| function foo1(x: {||}): {p?: number} { return x; } // error, p must be read-only
@@ -217,7 +416,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- optional.js:5:71
 
-Cannot return `x` because string [1] is incompatible with number [2] in property `p`.
+Cannot return `x` because string [1] is incompatible with number [2] in property `p`. [incompatible-return]
 
    optional.js:5:71
    5| function foo3(x: {|__proto__: { p: string}|}): {+p?: number} { return x; } // error, type incompatibility
@@ -234,7 +433,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ prop_test.js:12:7
 
-Property `xxx` is missing in `Person` [1].
+Property `xxx` is missing in `Person` [1]. [prop-missing]
 
    prop_test.js:12:7
    12|   if (p.xxx) {     // Error - xxx doesn't exist in the exact type
@@ -246,13 +445,13 @@ References:
                                           ^^^^^^ [1]
 
 
-Error ----------------------------------------------------------------------------------------------- prop_test.js:28:10
+Error ----------------------------------------------------------------------------------------------- prop_test.js:28:13
 
-Cannot get `pc.state` because property `state` is missing in `Person` [1].
+Cannot get `pc.state` because property `state` is missing in `Person` [1]. [prop-missing]
 
-   prop_test.js:28:10
+   prop_test.js:28:13
    28|   return pc.state;      // error, since (pc: $Exact<Person>).first may be ""
-                ^^^^^^^^
+                   ^^^^^
 
 References:
    prop_test.js:24:43
@@ -260,31 +459,53 @@ References:
                                                  ^^^^^^ [1]
 
 
-Error ------------------------------------------------------------------------------------------------- unsealed.js:14:3
+Error ----------------------------------------------------------------------------------------------------- union.js:3:2
 
-Cannot call `f` with `o` bound to `o` because:
- - Either property `p` is missing in object literal [1] but exists in object type [2].
- - Or inexact object literal [1] is incompatible with exact object type [3].
+Cannot cast object literal to union type because property `q` is missing in object type [1] but exists in object
+literal [2]. [prop-missing]
 
-   unsealed.js:14:3
-   14| f(o); // error: o incompatible with exact type
-         ^
+   union.js:3:2
+   3| ({p:'A',q:0}: $Exact<{p:'A'}|{p:'B'}>); // error: extra prop
+       ^^^^^^^^^^^ [2]
 
 References:
-   unsealed.js:12:9
-   12| var o = {};
-               ^^ [1]
-   unsealed.js:4:15
+   union.js:3:22
+   3| ({p:'A',q:0}: $Exact<{p:'A'}|{p:'B'}>); // error: extra prop
+                           ^^^^^^^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------------- union.js:4:2
+
+Cannot cast object literal to union type because object literal [1] is incompatible with union type [2].
+[incompatible-cast]
+
+   union.js:4:2
+   4| ({p:'C'}: $Exact<{p:'A'}|{p:'B'}>); // error: no match
+       ^^^^^^^ [1]
+
+References:
+   union.js:4:18
+   4| ({p:'C'}: $Exact<{p:'A'}|{p:'B'}>); // error: no match
+                       ^^^^^^^^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ unsealed.js:16:22
+
+Cannot assign `0` to `o.p` because number [1] is incompatible with string [2]. [incompatible-type]
+
+   unsealed.js:16:22
+   16| function g() { o.p = 0 } // error: cannot write a number to o because it later expects a string
+                            ^ [1]
+
+References:
+   unsealed.js:4:19
     4| function f(o: {p: string} | $Exact<{}>): string {
-                     ^^^^^^^^^^^ [2]
-   unsealed.js:4:29
-    4| function f(o: {p: string} | $Exact<{}>): string {
-                                   ^^^^^^^^^^ [3]
+                         ^^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------- unsealed2.js:15:12
 
-Cannot return `x.q` because string [1] is incompatible with number [2].
+Cannot return `x.q` because string [1] is incompatible with number [2]. [incompatible-return]
 
    unsealed2.js:15:12
    15|     return x.q;
@@ -302,6 +523,7 @@ References:
 Error -------------------------------------------------------------------------------------------------- use_ops.js:2:31
 
 Cannot assign `a` to `b` because inexact object type [1] is incompatible with exact object type [2] in property `p`.
+[incompatible-exact]
 
    use_ops.js:2:31
    2| var b: { p: {| q: null |} } = a; // error a != b, with nested info for a.p != b.p
@@ -319,6 +541,7 @@ References:
 Error --------------------------------------------------------------------------------------------------- use_ops.js:6:3
 
 Cannot call `f` with `o` bound to `o` because inexact object type [1] is incompatible with exact object type [2].
+[incompatible-exact]
 
    use_ops.js:6:3
    6| f(o); // error: inexact arg incompatible with exact param (error should indicate exactness issue)
@@ -334,4 +557,4 @@ References:
 
 
 
-Found 20 errors
+Found 38 errors

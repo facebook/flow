@@ -1,6 +1,6 @@
 Error -------------------------------------------------------------------------------------------------- keyvalue.js:5:6
 
-Cannot cast `x[""]` to number because string [1] is incompatible with number [2].
+Cannot cast `x[""]` to number because string [1] is incompatible with number [2]. [incompatible-cast]
 
    keyvalue.js:5:6
    5|     (x[""]: number);
@@ -17,7 +17,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- keyvalue.js:5:6
 
-empty string [1] is incompatible with number [2].
+empty string [1] is incompatible with number [2]. [incompatible-type]
 
    keyvalue.js:5:6
    5|     (x[""]: number);

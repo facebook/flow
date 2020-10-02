@@ -83,3 +83,46 @@ function testSymbol(x: mixed) {
     (x: string); // error
   }
 }
+
+function testAnyWithNumber(x: any) {
+  if (typeof x === "number") {
+    (x: empty); // error number ~> empty
+  }
+}
+
+function testMixedWithNumber(x: mixed) {
+  if (typeof x === "number") {
+    (x: number); // OK
+    (x: empty); // error number ~> empty
+  }
+}
+
+function testAnyWithNumberPostConditional(x: any) {
+  if (typeof x === "number") {}
+  (x: empty); // ok: x is any again
+}
+
+function testAnyWithString(x: any) {
+  if (typeof x === "string") {
+    (x: empty); // error string ~> empty
+  }
+}
+
+function testAnyWithBoolean(x: any) {
+  if (typeof x === "boolean") {
+    (x: empty); // error boolean ~> empty
+  }
+}
+
+function testMixedWithBoolean(x: mixed) {
+  if (typeof x === "boolean") {
+    (x: true);
+    (x: empty); // error boolean ~> empty
+  }
+}
+
+function testAnyWithSymbol(x: any) {
+  if (typeof x === "symbol") {
+    (x: empty); // error symbol ~> empty
+  }
+}

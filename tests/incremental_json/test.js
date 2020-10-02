@@ -1,5 +1,5 @@
 /**
  * @flow
  */
-var data = require('./data');
-var x: number = data.x;
+const data = require('./data');
+const x: number = data.x;

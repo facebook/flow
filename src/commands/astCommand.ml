@@ -1,4 +1,4 @@
-(**
+(*
  * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
@@ -44,6 +44,7 @@ let spec =
              (enum [("js", File_js); ("json", File_json)])
              ~doc:"Type of input file (js or json)"
         |> flag "--strict" no_arg ~doc:"Parse in strict mode"
+        |> CommandUtils.offset_style_flag
         |> CommandUtils.from_flag
         |> CommandUtils.path_flag
         |> anon "file" (optional string));
@@ -51,7 +52,7 @@ let spec =
 
 type ast_result_type =
   | Ast_json of (Loc.t, Loc.t) Ast.Expression.t
-  | Ast_js of (Loc.t, Loc.t) Ast.program
+  | Ast_js of (Loc.t, Loc.t) Ast.Program.t
 
 let get_file path = function
   | Some filename -> File_input.FileName (CommandUtils.expand_path filename)
@@ -73,8 +74,10 @@ module Token_translator = Token_translator.Translate (Json_of_estree)
 
 let pp_underscore_loc fmt _ = Format.pp_print_string fmt "_"
 
-let main include_tokens pretty check debug pattern file_type_opt use_strict path filename () =
-  let use_relative_path = Option.value_map filename ~default:false ~f:Filename.is_relative in
+let main
+    include_tokens pretty check debug pattern file_type_opt use_strict offset_style path filename ()
+    =
+  let use_relative_path = Base.Option.value_map filename ~default:false ~f:Filename.is_relative in
   let file = get_file path filename in
   let content = File_input.content_of_file_input_unsafe file in
   let file_type =
@@ -97,7 +100,8 @@ let main include_tokens pretty check debug pattern file_type_opt use_strict path
    * order.
    *)
   let tokens = ref [] in
-  let offset_table = lazy (Offset_utils.make content) in
+  let offset_kind = CommandUtils.offset_kind_of_offset_style offset_style in
+  let offset_table = lazy (Offset_utils.make ~kind:offset_kind content) in
   let token_sink =
     if not include_tokens then
       None
@@ -129,28 +133,28 @@ let main include_tokens pretty check debug pattern file_type_opt use_strict path
         let filename = File_input.path_of_file_input file in
         let filename =
           if use_relative_path then
-            Option.map filename ~f:(Files.relative_path (Sys.getcwd ()))
+            Base.Option.map filename ~f:(Files.relative_path (Sys.getcwd ()))
           else
             filename
         in
         let (ast, errors) =
           match file_type with
           | File_js ->
-            let filekey = Option.map filename ~f:(fun s -> File_key.SourceFile s) in
+            let filekey = Base.Option.map filename ~f:(fun s -> File_key.SourceFile s) in
             let (ocaml_ast, errors) =
               Parser_flow.program_file ~fail:false ~parse_options ~token_sink content filekey
             in
             if debug then (
-              Ast.pp_program Loc.pp Loc.pp Format.err_formatter ocaml_ast;
+              Ast.Program.pp Loc.pp Loc.pp Format.err_formatter ocaml_ast;
               Printf.eprintf "\n%!"
             );
             if pattern then (
-              Ast.pp_program pp_underscore_loc pp_underscore_loc Format.err_formatter ocaml_ast;
+              Ast.Program.pp pp_underscore_loc pp_underscore_loc Format.err_formatter ocaml_ast;
               Printf.eprintf "\n%!"
             );
             (Ast_js ocaml_ast, errors)
           | File_json ->
-            let filekey = Option.map filename ~f:(fun s -> File_key.JsonFile s) in
+            let filekey = Base.Option.map filename ~f:(fun s -> File_key.JsonFile s) in
             let (ocaml_ast, errors) =
               Parser_flow.json_file ~fail:false ~parse_options ~token_sink content filekey
             in
@@ -168,7 +172,7 @@ let main include_tokens pretty check debug pattern file_type_opt use_strict path
           JSON_Object
             [("errors", Translate.errors errors); ("tokens", JSON_Array (List.rev !tokens))]
         else
-          let offset_table = Some (Offset_utils.make content) in
+          let offset_table = Some (Lazy.force offset_table) in
           let translated_ast =
             match ast with
             | Ast_js ast -> Translate.program offset_table ast

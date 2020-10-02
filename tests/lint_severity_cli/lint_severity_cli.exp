@@ -1,7 +1,7 @@
 [31mError ----------------------------------------------------------------------------------------------------- test.js:13:5[0m[0m
 [0m[0m
 [0m[0mSketchy[0m[0m [0m[0mnull[0m[0m [0m[0mcheck[0m[0m [0m[0mon[0m[0m [0m[0m[0m[0;4mnumber[0m[0m [0m[0;2m[[0m[36m1[0m[0;2m][0m[0m[0m[0m [0m[0m[0m[0mwhich[0m[0m [0m[0mis[0m[0m [0m[0mpotentially[0m[0m [0m[0m[0m[0m0[0m[0m.[0m[0m [0m[0mPerhaps[0m[0m [0m[0myou[0m[0m [0m[0mmeant[0m[0m [0m[0mto[0m[0m [0m[0m[0m[0mcheck[0m[0m [0m[0mfor[0m[0m [0m[0m[0m[0;4mnull[0m[0;4m [0m[0;4mor[0m[0;4m [0m[0;4mundefined[0m[0m [0m[0;2m[[0m[33m2[0m[0;2m][0m[0m?[0m[0m[0m[0m
-[0m[0m([0m[0;1msketchy-null-number[0m[0m)[0m[0m
+[0m[0m[[0m[0msketchy-null-number[0m[0m][0m[0m
 [0m[0m
 [0m[0m [0m[0;2m[[0m[33m2[0m[0;2m][0m[0;2m[[0m[36m1[0m[0;2m][0m[0m [0m[0m [0m[0;2m5[0m[0;2m|[0m[0m [0m[0;2mvar x: [0m[33m?[0m[36mnumber[0m[33m[0m[0;2m = 0;[0m[0m
 [0m[0m          [0m[0;2m:[0m[0m
@@ -15,7 +15,7 @@
 [0m[33mWarning --------------------------------------------------------------------------------------------------- test.js:10:5[0m[0m
 [0m[0m
 [0m[0mSketchy[0m[0m [0m[0mnull[0m[0m [0m[0mcheck[0m[0m [0m[0mon[0m[0m [0m[0m[0m[0;4mnumber[0m[0m [0m[0;2m[[0m[36m1[0m[0;2m][0m[0m[0m[0m [0m[0m[0m[0mwhich[0m[0m [0m[0mis[0m[0m [0m[0mpotentially[0m[0m [0m[0m[0m[0m0[0m[0m.[0m[0m [0m[0mPerhaps[0m[0m [0m[0myou[0m[0m [0m[0mmeant[0m[0m [0m[0mto[0m[0m [0m[0m[0m[0mcheck[0m[0m [0m[0mfor[0m[0m [0m[0m[0m[0;4mnull[0m[0;4m [0m[0;4mor[0m[0;4m [0m[0;4mundefined[0m[0m [0m[0;2m[[0m[33m2[0m[0;2m][0m[0m?[0m[0m[0m[0m
-[0m[0m([0m[0;1msketchy-null-number[0m[0m)[0m[0m
+[0m[0m[[0m[0msketchy-null-number[0m[0m][0m[0m
 [0m[0m
 [0m[0m [0m[0;2m[[0m[33m2[0m[0;2m][0m[0;2m[[0m[36m1[0m[0;2m][0m[0m [0m[0m [0m[0;2m5[0m[0;2m|[0m[0m [0m[0;2mvar x: [0m[33m?[0m[36mnumber[0m[33m[0m[0;2m = 0;[0m[0m
 [0m[0m        [0m[0m [0m[0;2m6[0m[0;2m|[0m[0;2m[0m[0m

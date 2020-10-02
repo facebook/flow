@@ -11,3 +11,6 @@ var A2 = require('./A.js');
 var CJS = require('./CJS.js');
 (CJS: string);
 (CJS: number); // Error: string ~> number
+
+// flowlint-next-line untyped-import:error
+require('./not_flow');

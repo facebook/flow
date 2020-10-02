@@ -1,3 +1,8 @@
+# Copyright (c) Facebook, Inc. and its affiliates.
+#
+# This source code is licensed under the MIT license found in the
+# LICENSE file in the root directory of this source tree.
+
 require 'open3'
 require 'json'
 require 'cgi'
@@ -269,7 +274,6 @@ module Jekyll
       f.write(
         <<-EOF.gsub(/^ {10}/, '')
           [options]
-          suppress_comment=\\\\(.\\\\|\\n\\\\)*\\\\$DocIssue
           max_header_tokens=1
         EOF
       )

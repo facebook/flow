@@ -3,6 +3,8 @@
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
+ *
+ * @format
  */
 
 var parse = require('flow-parser').parse;
@@ -21,6 +23,11 @@ var vlq = require('vlq');
  *     If true, removes types completely rather than replacing with spaces.
  *     This may require using source maps.
  *
+ *   - ignoreUninitializedFields: (default: false)
+ *     If true, removes uninitialized class fields (`foo;`, `foo: string;`)
+ *     completely rather than only removing the type. THIS IS NOT SPEC
+ *     COMPLIANT! Instead, use `declare foo: string;` for type-only fields.
+ *
  * Returns an object with two methods:
  *
  *   - .toString()
@@ -34,7 +41,7 @@ module.exports = function flowRemoveTypes(source, options) {
   var all = Boolean(options && options.all);
   if (options && options.checkPragma) {
     throw new Error(
-      'flow-remove-types: the "checkPragma" option has been replaced by "all".'
+      'flow-remove-types: the "checkPragma" option has been replaced by "all".',
     );
   }
 
@@ -68,6 +75,9 @@ module.exports = function flowRemoveTypes(source, options) {
     source: source,
     removedNodes: removedNodes,
     pretty: Boolean(options && options.pretty),
+    ignoreUninitializedFields: Boolean(
+      options && options.ignoreUninitializedFields,
+    ),
   };
 
   // Remove the flow pragma.
@@ -172,7 +182,7 @@ var removeFlowVisitor = {
   },
 
   ClassProperty: function(context, node) {
-    if (!node.value) {
+    if (node.declare || (context.ignoreUninitializedFields && !node.value)) {
       return removeNode(context, node);
     }
   },
@@ -256,8 +266,8 @@ var removeFlowVisitor = {
             context,
             endOf(ast.tokens[paramEndIdx]),
             ast.tokens[paramEndIdx].loc.end,
-            ' =>'
-          )
+            ' =>',
+          ),
         );
 
         // Delete the original arrow token.

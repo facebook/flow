@@ -1,0 +1,7 @@
+// @flow
+
+enum E {
+  Bizzbazz,
+  Foobar,
+}
+E.Foobat;

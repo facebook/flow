@@ -5,4 +5,6 @@
 [libs]
 
 [options]
+types_first=false
 module.system=haste
+all=true

@@ -1,11 +1,11 @@
 Error ------------------------------------------------------------------------------------------------ primitives.js:6:1
 
 Cannot call `dict` because a call signature declaring the expected parameter / return type is missing in object
-type [1].
+type [1]. [prop-missing]
 
    primitives.js:6:1
    6| dict(); // error, callable signature not found
-      ^^^^^^
+      ^^^^
 
 References:
    primitives.js:5:11
@@ -15,7 +15,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- primitives.js:12:7
 
-Cannot call `icall` with `0` bound to `x` because number [1] is incompatible with string [2].
+Cannot call `icall` with `0` bound to `x` because number [1] is incompatible with string [2]. [incompatible-call]
 
    primitives.js:12:7
    12| icall(0); // error, number ~> string
@@ -29,7 +29,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- primitives.js:13:18
 
-Cannot call `icall.call` with `0` bound to `x` because number [1] is incompatible with string [2].
+Cannot call `icall.call` with `0` bound to `x` because number [1] is incompatible with string [2]. [incompatible-call]
 
    primitives.js:13:18
    13| icall.call(null, 0); // error, number ~> string
@@ -43,7 +43,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- primitives.js:20:10
 
-Cannot call `callable` with `0` bound to `x` because number [1] is incompatible with string [2].
+Cannot call `callable` with `0` bound to `x` because number [1] is incompatible with string [2]. [incompatible-call]
 
    primitives.js:20:10
    20| callable(0); // error, number ~> string
@@ -58,6 +58,7 @@ References:
 Error ---------------------------------------------------------------------------------------------- primitives.js:21:21
 
 Cannot call `callable.call` with `0` bound to `x` because number [1] is incompatible with string [2].
+[incompatible-call]
 
    primitives.js:21:21
    21| callable.call(null, 0); // error, number ~> string

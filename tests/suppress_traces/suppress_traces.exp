@@ -1,1 +1,73 @@
-Found 0 errors
+Error -------------------------------------------------------------------------------------------------- traces.js:15:17
+
+Cannot assign `foo(...)` to `a` because number [1] is incompatible with string [2]. [incompatible-type]
+
+   traces.js:15:17
+   15| var a: string = foo('hi'); // error number ~> string
+                       ^^^^^^^^^
+
+References:
+   traces.js:9:17
+    9| function bar(): number { return 5; }
+                       ^^^^^^ [1]
+   traces.js:15:8
+   15| var a: string = foo('hi'); // error number ~> string
+              ^^^^^^ [2]
+
+Trace:
+* path 1:
+ 15: var a: string = foo('hi'); // error number ~> string
+                     ^^^^^^^^^ NumT [number]
+ 15: var a: string = foo('hi'); // error number ~> string
+                     ^^^^^^^^^ ~> UseT(FunReturnStatement, OpenT) [return] (from path 2)
+ 15: var a: string = foo('hi'); // error number ~> string
+                     ^^^^^^^^^ ~> UseT(UnknownUse, OpenT) [call of `foo`] (from path 5)
+ 15: var a: string = foo('hi'); // error number ~> string
+         ^ ~> UseT(AssignVar, OpenT) [`a`]
+* path 2:
+ 12:   return bar();
+              ^^^^^ NumT [number]
+ 12:   return bar();
+              ^^^^^ ~> UseT(UnknownUse, OpenT) [call of `bar`] (from path 3)
+ 11: function foo(x: string) {
+                            ^ ~> UseT(FunReturnStatement, OpenT) [return]
+ 15: var a: string = foo('hi'); // error number ~> string
+                     ^^^^^^^^^ ~> ReposLowerT [return] (from path 5)
+* path 3:
+ 12:   return bar();
+              ^^^ FunT [function]
+ 12:   return bar();
+              ^^^ ~> UseT(AssignVar, OpenT) [function] (from path 4)
+ 12:   return bar();
+              ^^^ OpenT [`bar`]
+ 12:   return bar();
+              ^^^^^ ~> CallT [call of `bar`]
+* path 4:
+  9: function bar(): number { return 5; }
+     ^^^^^^^^^^^^^^^^^^^^^^ FunT [function]
+  9: function bar(): number { return 5; }
+              ^^^ ~> UseT(AssignVar, OpenT) [function]
+ 12:   return bar();
+              ^^^ ~> ReposLowerT [function]
+* path 5:
+ 15: var a: string = foo('hi'); // error number ~> string
+                     ^^^ FunT [function]
+ 15: var a: string = foo('hi'); // error number ~> string
+                     ^^^^^^^^^ ~> CallT [call of `foo`] (from path 6)
+* path 6:
+ 15: var a: string = foo('hi'); // error number ~> string
+                     ^^^ OpenT [`foo`]
+ 15: var a: string = foo('hi'); // error number ~> string
+                     ^^^^^^^^^ ~> CallT [call of `foo`]
+
+
+Warning -------------------------------------------------------------------------------------------------- traces.js:8:1
+
+Unused suppression comment.
+
+   8| // $FlowFixMe - Error unused suppression
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+
+Found 1 error and 1 warning

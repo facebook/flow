@@ -1,4 +1,14 @@
-/* @flow */
+/**
+ * Copyright (c) Facebook, Inc. and its affiliates.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ *
+ * @flow
+ * @format
+ */
+
+import type {Flag} from '../command/Base';
 
 import {format} from 'util';
 import {resolve} from 'path';
@@ -11,6 +21,7 @@ export type Args = {
   bin: string,
   flowconfigName: string,
   comment: ?string,
+  error_code: ?string,
   errorCheckCommand: 'check' | 'status',
   root: string,
 };
@@ -27,6 +38,7 @@ export default class AddCommentsCommand extends Base<Args> {
       errorCheckCommand: argv.check,
       root: resolve(process.cwd(), argv._[0]),
       comment: argv.comment,
+      error_code: argv.code,
     };
   }
 
@@ -35,32 +47,39 @@ export default class AddCommentsCommand extends Base<Args> {
   }
 
   static description(): string {
-    return "Adds flow comments";
+    return 'Adds flow comments';
   }
 
   static async usage(): Promise<string> {
-return `usage: ${process.argv[1]} add-comments [OPTION]... ROOT
+    return `usage: ${process.argv[1]} add-comments [OPTION]... ROOT
 
 Queries Flow for the errors for ROOT. Then opens a curses interface to let you select errors. The selected errors will automatically have a comment added on the line before them.
 `;
   }
 
-  static getFlags() {
+  static getFlags(): Array<Flag> {
     return [
       commonFlags.bin,
       commonFlags.flowconfigName,
       commonFlags.errorCheckCommand,
       {
-        type: "string",
-        name: "comment",
-        argName: '"\\$FlowFixMe foo"',
-        description: "Comment to add before the selected errors. If not set, you will be prompted later for it",
+        type: 'string',
+        name: 'comment',
+        argName: '"foo"',
+        description:
+          'Comment to add before the selected errors. If not set, you will be prompted later for it',
       },
       {
-        type: "boolean",
-        name: "all",
-        description: "Select all errors",
-      }
+        type: 'boolean',
+        name: 'all',
+        description: 'Select all errors',
+      },
+      {
+        type: 'string',
+        name: 'code',
+        argName: '"code"',
+        description: 'Only add comments for a specific code',
+      },
     ];
   }
 }

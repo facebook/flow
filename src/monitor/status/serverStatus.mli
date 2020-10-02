@@ -1,4 +1,4 @@
-(**
+(*
  * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
@@ -41,7 +41,7 @@ type event =
   | Handling_request_start
   | GC_start
   | Collating_errors_start
-  | Watchman_wait_start of float
+  | Watchman_wait_start of float option
 
 type status
 

@@ -1,8 +1,22 @@
 Error ---------------------------------------------------------------------------------------------------- errors.js:9:2
 
-Cannot cast `k` to string literal `c` because:
- - string literal `a` [1] is incompatible with string literal `c` [2].
- - string literal `b` [1] is incompatible with string literal `c` [2].
+Cannot cast `k` to string literal `c` because string literal `a` [1] is incompatible with string literal `c` [2].
+[incompatible-cast]
+
+   errors.js:9:2
+   9| (k: 'c');
+       ^ [1]
+
+References:
+   errors.js:9:5
+   9| (k: 'c');
+          ^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- errors.js:9:2
+
+Cannot cast `k` to string literal `c` because string literal `b` [1] is incompatible with string literal `c` [2].
+[incompatible-cast]
 
    errors.js:9:2
    9| (k: 'c');
@@ -16,7 +30,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- errors.js:10:2
 
-Cannot cast `'c'` to `K` because property `c` is missing in object literal [1].
+Cannot cast `'c'` to `K` because property `c` is missing in object literal [1]. [prop-missing]
 
    errors.js:10:2
    10| ('c': K);
@@ -28,9 +42,67 @@ References:
              ^ [1]
 
 
+Error ------------------------------------------------------------------------------------------------- instance.js:23:2
+
+Cannot cast `'missing'` to `T` because property `missing` is missing in `B` [1]. [prop-missing]
+
+   instance.js:23:2
+   23| ('missing': T); // Error
+        ^^^^^^^^^
+
+References:
+   instance.js:23:13
+   23| ('missing': T); // Error
+                   ^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------- instance.js:25:2
+
+Cannot cast `'bMethod'` to `T` because property `bMethod` (did you mean `bMethod`?) is missing in `B` [1].
+[prop-missing]
+
+   instance.js:25:2
+   25| ('bMethod': T); // Error: methods are on proto
+        ^^^^^^^^^
+
+References:
+   instance.js:25:13
+   25| ('bMethod': T); // Error: methods are on proto
+                   ^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------- instance.js:27:2
+
+Cannot cast `'aOne'` to `T` because property `aOne` (did you mean `bOne`?) is missing in `B` [1]. [prop-missing]
+
+   instance.js:27:2
+   27| ('aOne': T); // Error: non-own field
+        ^^^^^^
+
+References:
+   instance.js:27:10
+   27| ('aOne': T); // Error: non-own field
+                ^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------- instance.js:28:2
+
+Cannot cast `'aMethod'` to `T` because property `aMethod` (did you mean `bMethod`?) is missing in `B` [1].
+[prop-missing]
+
+   instance.js:28:2
+   28| ('aMethod': T); // Error: non-own field
+        ^^^^^^^^^
+
+References:
+   instance.js:28:13
+   28| ('aMethod': T); // Error: non-own field
+                   ^ [1]
+
+
 Error ----------------------------------------------------------------------------------------------------- keys.js:10:4
 
-Cannot cast `123` to key set because number [1] is incompatible with key set [2].
+Cannot cast `123` to key set because number [1] is incompatible with key set [2]. [incompatible-cast]
 
    keys.js:10:4
    10|   (123: $Keys<Object>); // Error: number -> keys of Object
@@ -44,7 +116,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- keys.js:21:4
 
-Cannot cast `123` to key set because number [1] is incompatible with key set [2].
+Cannot cast `123` to key set because number [1] is incompatible with key set [2]. [incompatible-cast]
 
    keys.js:21:4
    21|   (123: $Keys<StrDict>); // Error: number -> keys of StrDict
@@ -58,7 +130,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- keys.js:26:4
 
-some string with unknown value [1] is incompatible with string literal `hi` [2].
+some string with unknown value [1] is incompatible with string literal `hi` [2]. [incompatible-type]
 
    keys.js:26:4
    26|   (str: $Keys<StrLitDict>); // Error: Not all strings are allowed
@@ -72,7 +144,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- keys.js:28:6
 
-some string with unknown value [1] is incompatible with string literal `hi` [2].
+some string with unknown value [1] is incompatible with string literal `hi` [2]. [incompatible-type]
 
    keys.js:28:6
    28|     (str: $Keys<StrLitDict>); // Error: Not all truthy strings are allowed
@@ -86,7 +158,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- keys.js:31:4
 
-property `bye` [1] is incompatible with string literal `hi` [2].
+property `bye` [1] is incompatible with string literal `hi` [2]. [incompatible-type]
 
    keys.js:31:4
    31|   ('bye': $Keys<StrLitDict>); // Error: The wrong string literal is not allowed
@@ -100,7 +172,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- keys.js:33:4
 
-Cannot cast `123` to key set because number [1] is incompatible with key set [2].
+Cannot cast `123` to key set because number [1] is incompatible with key set [2]. [incompatible-cast]
 
    keys.js:33:4
    33|   (123: $Keys<StrLitDict>); // Error: number -> keys of StrLitDict
@@ -115,7 +187,7 @@ References:
 Error ----------------------------------------------------------------------------------------------------- keys.js:38:4
 
 Cannot cast `str` to key set because an index signature declaring the expected key / value type is missing in
-`ObjLit` [1].
+`ObjLit` [1]. [prop-missing]
 
    keys.js:38:4
    38|   (str: $Keys<ObjLit>); // Error: string -> keys of ObjLit
@@ -130,7 +202,7 @@ References:
 Error ----------------------------------------------------------------------------------------------------- keys.js:40:6
 
 Cannot cast `str` to key set because an index signature declaring the expected key / value type is missing in
-`ObjLit` [1].
+`ObjLit` [1]. [prop-missing]
 
    keys.js:40:6
    40|     (str: $Keys<ObjLit>); // Error: truthy string -> keys of ObjLit
@@ -144,7 +216,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- keys.js:44:4
 
-Cannot cast `123` to key set because number [1] is incompatible with key set [2].
+Cannot cast `123` to key set because number [1] is incompatible with key set [2]. [incompatible-cast]
 
    keys.js:44:4
    44|   (123: $Keys<ObjLit>); // Error: number -> keys of ObjLit
@@ -157,4 +229,4 @@ References:
 
 
 
-Found 12 errors
+Found 16 errors

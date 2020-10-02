@@ -1,4 +1,4 @@
-(**
+(*
  * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
@@ -208,8 +208,7 @@ module Frontmatter = struct
         in
         let negative =
           if contains negative_regexp text then
-            Some
-              { phase = matched_group phase_regexp text; type_ = matched_group type_regexp text }
+            Some { phase = matched_group phase_regexp text; type_ = matched_group type_regexp text }
           else
             None
         in
@@ -334,7 +333,7 @@ let fold_test
     match result with
     | Ok _ -> true
     | Error err ->
-      Option.iter ~f:(Progress_bar.clear (passed_acc, failed_acc)) bar;
+      Base.Option.iter ~f:(Progress_bar.clear (passed_acc, failed_acc)) bar;
       if not verbose then print_name ~strip_root name;
       print_error err;
       false
@@ -349,7 +348,7 @@ let fold_test
       features_acc
       frontmatter.Frontmatter.features
   in
-  Option.iter
+  Base.Option.iter
     ~f:(fun bar ->
       Progress_bar.incr bar;
       if not passed then

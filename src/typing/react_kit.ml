@@ -1,4 +1,4 @@
-(**
+(*
  * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
@@ -7,6 +7,7 @@
 
 open Reason
 open Type
+open TypeUtil
 open React
 
 let err_incompatible
@@ -80,7 +81,7 @@ let get_intrinsic
 
   (* Create a type variable which will represent the specific intrinsic we
    * find in the intrinsics map. *)
-  let intrinsic = Tvar.mk cx reason in
+  let intrinsic = Tvar.mk_no_wrap cx reason in
   (* Get the intrinsic from the map. *)
   rec_flow
     cx
@@ -90,10 +91,9 @@ let get_intrinsic
         ( use_op,
           reason,
           (match literal with
-          | Literal (_, name) ->
-            Named (replace_desc_reason (RReactElement (Some name)) reason, name)
+          | Literal (_, name) -> Named (replace_desc_reason (RReactElement (Some name)) reason, name)
           | _ -> Computed component),
-          intrinsic ) );
+          (reason, intrinsic) ) );
 
   (* Get the artifact from the intrinsic. *)
   let propref =
@@ -109,7 +109,16 @@ let get_intrinsic
   rec_flow
     cx
     trace
-    (intrinsic, LookupT (reason_op, Strict reason_op, [], propref, LookupProp (unknown_use, prop)))
+    ( OpenT (reason, intrinsic),
+      LookupT
+        {
+          reason = reason_op;
+          lookup_kind = Strict reason_op;
+          ts = [];
+          propref;
+          lookup_action = LookupProp (unknown_use, prop);
+          ids = Some Properties.Set.empty;
+        } )
 
 (* Lookup the defaultProps of a component and flow with upper depending
  * on the given polarity.
@@ -132,7 +141,19 @@ let lookup_defaults cx trace component ~reason_op ~rec_flow upper pole =
   let propref = Named (reason_prop, name) in
   let action = LookupProp (unknown_use, Field (None, upper, pole)) in
   (* Lookup the `defaultProps` property. *)
-  rec_flow cx trace (component, LookupT (reason_op, strict, [], propref, action))
+  rec_flow
+    cx
+    trace
+    ( component,
+      LookupT
+        {
+          reason = reason_op;
+          lookup_kind = strict;
+          ts = [];
+          propref;
+          lookup_action = action;
+          ids = Some Properties.Set.empty;
+        } )
 
 (* Get a type for the default props of a component. If a component has no
  * default props then either the type will be Some {||} or we will
@@ -155,7 +176,7 @@ let props_to_tout
     component
     ~use_op
     ~reason_op
-    ~(rec_flow_t : Context.t -> Trace.t -> ?use_op:Type.use_op -> Type.t * Type.t -> unit)
+    ~(rec_flow_t : Context.t -> Trace.t -> use_op:Type.use_op -> Type.t * Type.t -> unit)
     ~rec_flow
     ~(get_builtin_type :
        Context.t -> ?trace:Trace.t -> reason -> ?use_desc:bool -> string -> Type.t)
@@ -166,7 +187,7 @@ let props_to_tout
   (* Class components or legacy components. *)
   | DefT (_, _, ClassT _) ->
     let props = Tvar.mk cx reason_op in
-    rec_flow_t cx trace (props, tout);
+    rec_flow_t ~use_op:unknown_use cx trace (props, tout);
     rec_flow cx trace (component, ReactPropsToOut (reason_op, props))
   (* Stateless functional components. *)
   | DefT (_, _, FunT _)
@@ -185,9 +206,9 @@ let props_to_tout
       lit
       (Field (None, tout, Polarity.Positive))
   (* any and any specializations *)
-  | AnyT (reason, src) -> rec_flow_t cx trace (AnyT.why src reason, tout)
+  | AnyT (reason, src) -> rec_flow_t ~use_op:unknown_use cx trace (AnyT.why src reason, tout)
   | DefT (reason, trust, ReactAbstractComponentT _) ->
-    rec_flow_t cx trace (MixedT.why reason trust, tout)
+    rec_flow_t ~use_op:unknown_use cx trace (MixedT.why reason trust, tout)
   (* ...otherwise, error. *)
   | _ -> err_incompatible cx trace ~use_op ~add_output (reason_of_t component) u
 
@@ -216,7 +237,7 @@ let get_config
     component
     ~use_op
     ~reason_op
-    ~(rec_flow_t : Context.t -> Trace.t -> ?use_op:Type.use_op -> Type.t * Type.t -> unit)
+    ~(rec_flow_t : Context.t -> Trace.t -> use_op:Type.use_op -> Type.t * Type.t -> unit)
     ~rec_flow
     ~(rec_unify :
        Context.t -> Trace.t -> use_op:Type.use_op -> ?unify_any:bool -> Type.t -> Type.t -> unit)
@@ -272,8 +293,6 @@ end
 module Kit (Flow : Flow_common.S) : REACT = struct
   include Flow
 
-  let sealed_in_op = Obj_type.sealed_in_op
-
   let run cx trace ~use_op reason_op l u =
     let err_incompatible reason = err_incompatible cx trace ~use_op ~add_output reason u in
     (* ReactKit can't stall, so even if `l` is an unexpected type, we must produce
@@ -283,8 +302,8 @@ module Kit (Flow : Flow_common.S) : REACT = struct
        we get one without any static information, we should fall back without
        erroring. This is best-effort, after all. *)
     let coerce_object = function
-      | DefT (reason, _, ObjT { props_tmap; dict_t; flags; _ }) ->
-        Ok (reason, Context.find_props cx props_tmap, dict_t, flags)
+      | DefT (reason, _, ObjT { props_tmap; flags; _ }) ->
+        Ok (reason, Context.find_props cx props_tmap, flags)
       | AnyT (reason, _) -> Error reason
       | _ ->
         let reason = reason_of_t l in
@@ -294,9 +313,13 @@ module Kit (Flow : Flow_common.S) : REACT = struct
     let coerce_prop_type = function
       | CustomFunT (reason, ReactPropType (PropType.Primitive (required, t))) ->
         let loc = aloc_of_reason reason in
-        Ok (required, reposition cx ~trace loc t)
+        Ok (required, reposition cx ~trace ~annot_loc:loc loc t)
       | DefT (reason, _, FunT _) as t ->
-        rec_flow_t cx trace (t, get_builtin_type cx reason_op "ReactPropsCheckType");
+        rec_flow_t
+          ~use_op:unknown_use
+          cx
+          trace
+          (t, get_builtin_type cx reason_op "ReactPropsCheckType");
         Error reason
       | AnyT (reason, _) -> Error reason
       | t ->
@@ -344,20 +367,20 @@ module Kit (Flow : Flow_common.S) : REACT = struct
         (* The Props type parameter is invariant, but we only want to create a
          * constraint tin <: props. *)
         let props = Tvar.mk cx reason_op in
-        rec_flow_t cx trace (tin, props);
+        rec_flow_t ~use_op:unknown_use cx trace (tin, props);
         rec_flow cx trace (component, ReactInToProps (reason_op, props))
       (* Stateless functional components. *)
       | DefT (_, _, FunT _)
       (* Stateless functional components, again. This time for callable `ObjT`s. *)
-      
       | DefT (_, _, ObjT { call_t = Some _; _ }) ->
         rec_flow cx trace (component, ReactInToProps (reason_op, tin))
       (* Abstract components. *)
       | DefT (reason, trust, ReactAbstractComponentT _) ->
-        rec_flow_t cx trace (tin, MixedT.why reason trust)
+        rec_flow_t ~use_op:unknown_use cx trace (tin, MixedT.why reason trust)
       (* Intrinsic components. *)
       | DefT (_, _, StrT lit) -> get_intrinsic `Props lit (Field (None, tin, Polarity.Negative))
-      | AnyT (reason, source) -> rec_flow_t cx trace (tin, AnyT.why source reason)
+      | AnyT (reason, source) ->
+        rec_flow_t ~use_op:unknown_use cx trace (tin, AnyT.why source reason)
       (* ...otherwise, error. *)
       | _ -> err_incompatible (reason_of_t component)
     in
@@ -401,13 +424,16 @@ module Kit (Flow : Flow_common.S) : REACT = struct
        * of children. We need to model all of these possibilities. *)
       | ([], Some spread) ->
         let r =
-          update_desc_reason
-            (fun desc -> RReactChildrenOrUndefinedOrType desc)
-            (reason_of_t spread)
+          update_desc_reason (fun desc -> RReactChildrenOrUndefinedOrType desc) (reason_of_t spread)
         in
         Some
           (OptionalT
-             (r, union_of_ts r [spread; DefT (r, bogus_trust (), ArrT (ArrayAT (spread, None)))]))
+             {
+               reason = r;
+               type_ =
+                 union_of_ts r [spread; DefT (r, bogus_trust (), ArrT (ArrayAT (spread, None)))];
+               use_desc = false;
+             })
       (* If we have one children argument and a spread of unknown length then
        * React may either pass in the unwrapped argument, or an array where the
        * element type is the union of the known argument and the spread type. *)
@@ -464,13 +490,13 @@ module Kit (Flow : Flow_common.S) : REACT = struct
            * Additionally, this hack enables us to not have to explicitly handle
            * AbstractComponent past this point. *)
           ( ( if clone then
-              ShapeT config
+              ShapeT (reason_of_t config, config)
             else
               config ),
             None )
         | _ ->
           ( ( if clone then
-              ShapeT (Tvar.mk_where cx reason_op props_to_tout)
+              ShapeT (reason_of_t config, Tvar.mk_where cx reason_op props_to_tout)
             else
               Tvar.mk_where cx reason_op tin_to_props ),
             (* For class components and function components we want to lookup the
@@ -546,7 +572,19 @@ module Kit (Flow : Flow_common.S) : REACT = struct
               use_op )
         in
         let action = LookupProp (use_op, Field (None, key_t, Polarity.Positive)) in
-        rec_flow cx trace (normalized_config, LookupT (reason_key, kind, [], propref, action))
+        rec_flow
+          cx
+          trace
+          ( normalized_config,
+            LookupT
+              {
+                reason = reason_key;
+                lookup_kind = kind;
+                ts = [];
+                propref;
+                lookup_action = action;
+                ids = Some Properties.Set.empty;
+              } )
       in
       (* Check the type of React refs in the config input.
        *
@@ -571,10 +609,26 @@ module Kit (Flow : Flow_common.S) : REACT = struct
               use_op )
         in
         let action = LookupProp (use_op, Field (None, ref_t, Polarity.Positive)) in
-        rec_flow cx trace (normalized_config, LookupT (reason_ref, kind, [], propref, action))
+        rec_flow
+          cx
+          trace
+          ( normalized_config,
+            LookupT
+              {
+                reason = reason_ref;
+                lookup_kind = kind;
+                ts = [];
+                propref;
+                lookup_action = action;
+                ids = Some Properties.Set.empty;
+              } )
       in
-      let elem_reason = annot_reason (replace_desc_reason (RType "React$Element") reason_op) in
+      let annot_loc = aloc_of_reason reason_op in
+      let elem_reason =
+        annot_reason ~annot_loc (replace_desc_reason (RType "React$Element") reason_op)
+      in
       rec_flow_t
+        ~use_op:unknown_use
         cx
         trace
         (get_builtin_typeapp cx ~trace elem_reason "React$Element" [component], tout)
@@ -615,19 +669,28 @@ module Kit (Flow : Flow_common.S) : REACT = struct
       let component = l in
       match component with
       (* Class components or legacy components. *)
-      | DefT (_, _, ClassT component) -> rec_flow_t cx trace (component, tout)
+      | DefT (_, _, ClassT component) -> rec_flow_t ~use_op:unknown_use cx trace (component, tout)
       (* Stateless functional components. *)
       | DefT (r, trust, FunT _) ->
-        rec_flow_t cx trace (VoidT.make (replace_desc_reason RVoid r) trust, tout)
+        rec_flow_t
+          ~use_op:unknown_use
+          cx
+          trace
+          (VoidT.make (replace_desc_reason RVoid r) trust, tout)
       (* Stateless functional components, again. This time for callable `ObjT`s. *)
       | DefT (r, trust, ObjT { call_t = Some _; _ }) ->
-        rec_flow_t cx trace (VoidT.make (replace_desc_reason RVoid r) trust, tout)
+        rec_flow_t
+          ~use_op:unknown_use
+          cx
+          trace
+          (VoidT.make (replace_desc_reason RVoid r) trust, tout)
       (* Abstract components. *)
-      | DefT (_, _, ReactAbstractComponentT { instance; _ }) -> rec_flow_t cx trace (instance, tout)
+      | DefT (_, _, ReactAbstractComponentT { instance; _ }) ->
+        rec_flow_t ~use_op:unknown_use cx trace (instance, tout)
       (* Intrinsic components. *)
-      | DefT (_, _, StrT lit) ->
-        get_intrinsic `Instance lit (Field (None, tout, Polarity.Positive))
-      | AnyT (reason, source) -> rec_flow_t cx trace (AnyT.why source reason, tout)
+      | DefT (_, _, StrT lit) -> get_intrinsic `Instance lit (Field (None, tout, Polarity.Positive))
+      | AnyT (reason, source) ->
+        rec_flow_t ~use_op:unknown_use cx trace (AnyT.why source reason, tout)
       (* ...otherwise, error. *)
       | _ -> err_incompatible (reason_of_t component)
     in
@@ -638,6 +701,7 @@ module Kit (Flow : Flow_common.S) : REACT = struct
     let simplify_prop_type tout =
       let resolve t =
         rec_flow_t
+          ~use_op:unknown_use
           cx
           trace
           (CustomFunT (reason_op, ReactPropType (PropType.Primitive (false, t))), tout)
@@ -656,20 +720,21 @@ module Kit (Flow : Flow_common.S) : REACT = struct
           let elem_t =
             match coerce_prop_type l with
             | Ok (_required, t) -> t
-            | Error reason -> AnyT.make AnyError reason
+            | Error reason -> AnyT.make (AnyError None) reason
           in
           let reason = replace_desc_reason RArrayType reason_op in
           let t = DefT (reason, bogus_trust (), ArrT (ArrayAT (elem_t, None))) in
           resolve t
         | InstanceOf ->
-          let t = mk_instance cx (annot_reason reason_op) l in
+          let annot_loc = aloc_of_reason reason_op in
+          let t = mk_instance cx (annot_reason ~annot_loc reason_op) l in
           resolve t
         | ObjectOf ->
           (* TODO: Don't ignore the required flag. *)
           let value =
             match coerce_prop_type l with
             | Ok (_required, t) -> t
-            | Error reason -> AnyT.make AnyError reason
+            | Error reason -> AnyT.make (AnyError None) reason
           in
           let props = SMap.empty in
           let dict =
@@ -682,7 +747,7 @@ module Kit (Flow : Flow_common.S) : REACT = struct
           in
           let proto = ObjProtoT (locationless_reason RObjectClassName) in
           let reason = replace_desc_reason RObjectType reason_op in
-          let t = Obj_type.mk_with_proto cx reason ~props proto ~dict ~sealed:true ~exact:false in
+          let t = Obj_type.mk_with_proto cx reason ~props proto ~obj_kind:(Indexed dict) in
           resolve t
         | OneOf tool ->
           let next todo done_rev =
@@ -704,11 +769,11 @@ module Kit (Flow : Flow_common.S) : REACT = struct
           | ResolveArray ->
             (match coerce_array l with
             | Ok todo -> next todo []
-            | Error _ -> AnyT.make AnyError reason_op |> resolve)
+            | Error _ -> AnyT.make (AnyError None) reason_op |> resolve)
           | ResolveElem (todo, done_rev) ->
             (match coerce_singleton l with
             | Ok t -> next todo (t :: done_rev)
-            | Error _ -> AnyT.make AnyError reason_op |> resolve))
+            | Error _ -> AnyT.make (AnyError None) reason_op |> resolve))
         | OneOfType tool ->
           (* TODO: This is _very_ similar to `one_of` above. *)
           let next todo done_rev =
@@ -730,30 +795,37 @@ module Kit (Flow : Flow_common.S) : REACT = struct
           | ResolveArray ->
             (match coerce_array l with
             | Ok todo -> next todo []
-            | Error _ -> AnyT.make AnyError reason_op |> resolve)
+            | Error _ -> AnyT.make (AnyError None) reason_op |> resolve)
           | ResolveElem (todo, done_rev) ->
             (* TODO: Don't ignore the required flag. *)
             (match coerce_prop_type l with
             | Ok (_required, t) -> next todo (t :: done_rev)
-            | Error _ -> AnyT.make AnyError reason_op |> resolve))
+            | Error _ -> AnyT.make (AnyError None) reason_op |> resolve))
         | Shape tool ->
           (* TODO: This is _very_ similar to `CreateClass.PropTypes` below, except
            for reasons descriptions/locations, recursive ReactKit constraints, and
            `resolve` behavior. *)
-          let add_prop k t (reason, props, dict, flags) =
+          let add_prop k t (reason, props, flags) =
             let props = SMap.add k (Field (None, t, Polarity.Neutral)) props in
-            (reason, props, dict, flags)
+            (reason, props, flags)
           in
-          let add_dict dict (reason, props, _, flags) = (reason, props, Some dict, flags) in
+          let add_dict dict (reason, props, flags) =
+            let flags = { flags with obj_kind = Indexed dict } in
+            (reason, props, flags)
+          in
           let rec next todo shape =
-            match SMap.choose todo with
+            match SMap.choose_opt todo with
             | None ->
               let reason = replace_desc_reason RObjectType reason_op in
               let proto = ObjProtoT (locationless_reason RObjectClassName) in
-              let (_, props, dict, _) = shape in
-              let t =
-                Obj_type.mk_with_proto cx reason ~props proto ?dict ~sealed:true ~exact:false
+              let (_, props, flags) = shape in
+              let { frozen = _; obj_kind } = flags in
+              let obj_kind =
+                match obj_kind with
+                | Indexed _ -> obj_kind
+                | _ -> Inexact
               in
+              let t = Obj_type.mk_with_proto cx reason ~props proto ~obj_kind in
               resolve t
             | Some (k, p) ->
               let todo = SMap.remove k todo in
@@ -777,9 +849,15 @@ module Kit (Flow : Flow_common.S) : REACT = struct
              * we should error and resolve to any. However, since all object spreads
              * are currently unsealed, we must wait for precise spread support.
              * Otherwise, we will cause too many spurious errors. *)
-            | Ok (reason, todo, dict, flags) ->
-              let shape = (reason, SMap.empty, None, flags) in
-              (match dict with
+            | Ok (reason, todo, flags) ->
+              let obj_kind = flags.obj_kind in
+              let flags' =
+                match obj_kind with
+                | Indexed _ -> { flags with obj_kind = Inexact }
+                | _ -> flags
+              in
+              let shape = (reason, SMap.empty, flags') in
+              (match Obj_type.get_dict_opt flags.obj_kind with
               | None -> next todo shape
               | Some dicttype ->
                 rec_flow
@@ -790,12 +868,12 @@ module Kit (Flow : Flow_common.S) : REACT = struct
                       ( unknown_use,
                         reason_op,
                         SimplifyPropType (Shape (ResolveDict (dicttype, todo, shape)), tout) ) ))
-            | Error _ -> AnyT.make AnyError reason_op |> resolve)
+            | Error _ -> AnyT.make (AnyError None) reason_op |> resolve)
           | ResolveDict (dicttype, todo, shape) ->
             let dict =
               match coerce_prop_type l with
               | Ok (_, t) -> { dicttype with value = t }
-              | Error reason -> { dicttype with value = AnyT.make AnyError reason }
+              | Error reason -> { dicttype with value = AnyT.make (AnyError None) reason }
             in
             next todo (add_dict dict shape)
           | ResolveProp (k, todo, shape) ->
@@ -805,8 +883,8 @@ module Kit (Flow : Flow_common.S) : REACT = struct
                 if required then
                   t
                 else
-                  Type.optional ?annot_loc:(annot_aloc_of_reason @@ reason_of_t t) t
-              | Error _ -> AnyT.make AnyError reason_op |> Type.optional
+                  optional ?annot_loc:(annot_aloc_of_reason @@ reason_of_t t) t
+              | Error _ -> AnyT.make (AnyError None) reason_op |> optional
             in
             next todo (add_prop k t shape)))
     in
@@ -820,16 +898,19 @@ module Kit (Flow : Flow_common.S) : REACT = struct
           | Known x -> Known (f x)
           | Unknown e -> Unknown e
         in
-        let get_prop x (_, props, dict, _) =
-          match SMap.get x props with
+        let get_prop x ((_, props, flags) : resolved_object) =
+          let dict = Obj_type.get_dict_opt flags.obj_kind in
+          match SMap.find_opt x props with
           | Some _ as p -> p
           | None ->
-            Option.map dict (fun { key; value; dict_polarity; _ } ->
-                rec_flow_t cx trace (string_key x reason_op, key);
+            Base.Option.map dict (fun { key; value; dict_polarity; _ } ->
+                rec_flow_t ~use_op:unknown_use cx trace (string_key x reason_op, key);
                 Field (None, value, dict_polarity))
         in
-        let read_prop x obj = Option.bind (get_prop x obj) Property.read_t in
-        let read_stack x ((obj, _), _) = read_prop x obj in
+        let read_prop x (obj : resolved_object) =
+          Base.Option.bind (get_prop x obj) Property.read_t
+        in
+        let read_stack x (((obj, _), _) : stack) = read_prop x obj in
         let map_spec f ((obj, spec), tail) = ((obj, f spec), tail) in
         (* This tool recursively resolves types until the spec is resolved enough to
          * compute the instance type. `resolve` and `resolve_call` actually emit the
@@ -841,10 +922,10 @@ module Kit (Flow : Flow_common.S) : REACT = struct
         in
         let resolve_call this tool t =
           let reason = reason_of_t t in
-          let return_t = Tvar.mk cx reason in
-          let funcall = mk_methodcalltype this None [] return_t in
+          let return_tvar = (reason, Tvar.mk_no_wrap cx reason) in
+          let funcall = mk_methodcalltype this None [] return_tvar in
           rec_flow cx trace (t, CallT (unknown_use, reason, funcall));
-          resolve tool return_t
+          resolve tool (OpenT return_tvar)
         in
         let merge_nullable f a b =
           match (a, b) with
@@ -861,30 +942,42 @@ module Kit (Flow : Flow_common.S) : REACT = struct
             Unknown r
         in
         let merge_flags a b =
-          let { frozen = f1; sealed = s1; exact = e1 } = a in
-          let { frozen = f2; sealed = s2; exact = e2 } = b in
+          let { frozen = f1; obj_kind = kind1 } = a in
+          let { frozen = f2; obj_kind = kind2 } = b in
           let frozen = f1 && f2 in
-          let exact = e1 && e2 in
-          let sealed =
-            let s1 = sealed_in_op reason_op s1 in
-            let s2 = sealed_in_op reason_op s2 in
-            if exact && not (s1 || s2) then
+          let obj_kind =
+            let s1 = Obj_type.sealed_in_op reason_op kind1 in
+            let s2 = Obj_type.sealed_in_op reason_op kind2 in
+            if not (s1 || s2) then
               UnsealedInFile (ALoc.source (aloc_of_reason reason_op))
             else
-              Sealed
+              match (kind1, kind2) with
+              | (Exact, Exact)
+              | (UnsealedInFile _, UnsealedInFile _)
+              | (UnsealedInFile _, Exact)
+              | (Exact, UnsealedInFile _) ->
+                Exact
+              | (Inexact, Exact)
+              | (Exact, Inexact)
+              | (UnsealedInFile _, Inexact)
+              | (Inexact, UnsealedInFile _)
+              | (Inexact, Inexact) ->
+                Inexact
+              | (Indexed dict, _)
+              | (_, Indexed dict) ->
+                Indexed dict
           in
-          { frozen; exact; sealed }
+          { frozen; obj_kind }
         in
-        let merge_objs (r1, ps1, dict1, flags1) (_, ps2, dict2, flags2) =
+        let merge_objs (r1, ps1, flags1) (_, ps2, flags2) =
           let props = SMap.union ps1 ps2 in
-          let dict = Option.first_some dict1 dict2 in
           let flags = merge_flags flags1 flags2 in
-          (r1, props, dict, flags)
+          (r1, props, flags)
         in
         (* When a type is resolved, we move on to the next field. If the field is
          * not found on the spec, we skip ahead. Otherwise we emit a constraint to
          * resolve the property type. *)
-        let rec on_resolve_spec stack =
+        let rec on_resolve_spec (stack : stack) =
           match read_stack "mixins" stack with
           | None -> on_resolve_mixins stack
           | Some t -> resolve (Mixins stack) t
@@ -923,17 +1016,16 @@ module Kit (Flow : Flow_common.S) : REACT = struct
                 let reason = replace_desc_reason RReactDefaultProps reason_op in
                 VoidT.make reason (bogus_trust ())
               | Some (Unknown reason) -> AnyT.make Untyped reason
-              | Some (Known (reason, props, dict, _)) ->
-                Obj_type.mk_with_proto
-                  cx
-                  reason
-                  ~props
-                  (ObjProtoT reason)
-                  ?dict
-                  ~sealed:true
-                  ~exact:false
+              | Some (Known (reason, props, flags)) ->
+                let { frozen = _; obj_kind } = flags in
+                let obj_kind =
+                  match obj_kind with
+                  | Indexed _ -> obj_kind
+                  | _ -> Inexact
+                in
+                Obj_type.mk_with_proto cx reason ~props ~obj_kind (ObjProtoT reason)
             in
-            rec_flow_t cx trace (t, knot.default_t)
+            rec_flow_t ~use_op:unknown_use cx trace (t, knot.default_t)
           | t :: todo ->
             let tool = DefaultProps (todo, acc) in
             resolve_call knot.static tool t
@@ -943,14 +1035,21 @@ module Kit (Flow : Flow_common.S) : REACT = struct
               match acc with
               | None ->
                 let reason = replace_desc_reason RReactState reason_op in
-                Obj_type.mk cx reason
+                Obj_type.mk_unsealed cx reason
               | Some (Unknown reason) -> AnyT.make Untyped reason
               | Some (Known (Null reason)) -> DefT (reason, bogus_trust (), NullT)
-              | Some (Known (NotNull (reason, props, dict, { exact; sealed; _ }))) ->
-                let sealed = not (exact && sealed_in_op reason_op sealed) in
-                Obj_type.mk_with_proto cx reason ~props (ObjProtoT reason) ?dict ~sealed ~exact
+              | Some (Known (NotNull (reason, props, { obj_kind; _ }))) ->
+                let obj_kind =
+                  if Obj_type.is_exact_or_sealed reason_op obj_kind then
+                    UnsealedInFile (ALoc.source (aloc_of_reason reason))
+                  else
+                    match obj_kind with
+                    | Indexed _ -> obj_kind
+                    | _ -> Inexact
+                in
+                Obj_type.mk_with_proto cx reason ~props (ObjProtoT reason) ~obj_kind
             in
-            rec_flow_t cx trace (t, knot.state_t)
+            rec_flow_t ~use_op:unknown_use cx trace (t, knot.state_t)
           | t :: todo ->
             let tool = InitialState (todo, acc) in
             resolve_call knot.this tool t
@@ -962,10 +1061,10 @@ module Kit (Flow : Flow_common.S) : REACT = struct
               | Unknown reason -> { acc with unknown_mixins = reason :: acc.unknown_mixins })
             mixins_rev
             spec
-        and merge_statics = Option.merge ~f:(merge_unknown merge_objs)
-        and merge_prop_types = Option.merge ~f:(merge_unknown merge_objs)
-        and merge_default_props = Option.merge ~f:(merge_unknown merge_objs)
-        and merge_initial_state = Option.merge ~f:(merge_unknown (merge_nullable merge_objs))
+        and merge_statics = Base.Option.merge ~f:(merge_unknown merge_objs)
+        and merge_prop_types = Base.Option.merge ~f:(merge_unknown merge_objs)
+        and merge_default_props = Base.Option.merge ~f:(merge_unknown merge_objs)
+        and merge_initial_state = Base.Option.merge ~f:(merge_unknown (merge_nullable merge_objs))
         and merge_specs a b =
           {
             obj = merge_objs a.obj b.obj;
@@ -983,15 +1082,14 @@ module Kit (Flow : Flow_common.S) : REACT = struct
             match spec.prop_types with
             | None -> AnyT.make Untyped reason_op
             | Some (Unknown reason) -> AnyT.make Untyped reason
-            | Some (Known (reason, props, dict, _)) ->
-              Obj_type.mk_with_proto
-                cx
-                reason
-                ~props
-                (ObjProtoT reason)
-                ?dict
-                ~sealed:true
-                ~exact:false
+            | Some (Known (reason, props, flags)) ->
+              let { obj_kind; frozen = _ } = flags in
+              let obj_kind =
+                match obj_kind with
+                | Indexed _ -> obj_kind
+                | _ -> Inexact
+              in
+              Obj_type.mk_with_proto cx reason ~props ~obj_kind (ObjProtoT reason)
           in
           let props_t = mod_reason_of_t (replace_desc_reason RReactPropTypes) props_t in
           let props =
@@ -1002,7 +1100,7 @@ module Kit (Flow : Flow_common.S) : REACT = struct
           (* Some spec fields are used to create the instance type, but are not
            present on the resulting prototype or statics. Other spec fields should
            become static props. Everything else should be on the prototype. *)
-          let (_, spec_props, _, _) = spec.obj in
+          let (_, spec_props, _) = spec.obj in
           let (props, static_props) =
             SMap.fold
               (fun k v (props, static_props) ->
@@ -1043,7 +1141,7 @@ module Kit (Flow : Flow_common.S) : REACT = struct
                     | None -> v
                     | Some t ->
                       (* Tie the `this` knot with BindT *)
-                      let dummy_return = MixedT.make reason_op |> with_trust bogus_trust in
+                      let dummy_return = (reason_op, Tvar.mk_no_wrap cx reason_op) in
                       let calltype = mk_methodcalltype knot.this None [] dummy_return in
                       rec_flow cx trace (t, BindT (unknown_use, reason_op, calltype, true));
 
@@ -1060,7 +1158,7 @@ module Kit (Flow : Flow_common.S) : REACT = struct
                       (fun t ->
                         let use_op = unknown_use in
                         let destructor = Bind knot.this in
-                        let id = mk_id () in
+                        let id = Eval.generate_id () in
                         ignore (mk_type_destructor cx ~trace use_op reason_op t destructor id);
                         EvalT (t, TypeDestructorT (use_op, reason_op, destructor), id))
                       v
@@ -1070,8 +1168,7 @@ module Kit (Flow : Flow_common.S) : REACT = struct
               (props, SMap.empty)
           in
           let static_props =
-            static_props
-            |> SMap.add "defaultProps" (Field (None, knot.default_t, Polarity.Neutral))
+            static_props |> SMap.add "defaultProps" (Field (None, knot.default_t, Polarity.Neutral))
           in
           let reason_component = replace_desc_reason RReactComponent reason_op in
           let super =
@@ -1080,31 +1177,39 @@ module Kit (Flow : Flow_common.S) : REACT = struct
             this_typeapp c knot.this (Some [props_t; knot.state_t])
           in
           let static =
-            let (reason, props, dict, exact, sealed) =
+            let (reason, props, obj_kind) =
               match spec.statics with
-              | None -> (reason_op, static_props, None, true, false)
+              | None ->
+                let reason = replace_desc_reason RReactStatics reason_op in
+                (reason, static_props, UnsealedInFile (ALoc.source (Reason.aloc_of_reason reason)))
               | Some (Unknown reason) ->
                 let dict =
-                  Some
-                    {
-                      dict_name = None;
-                      key = StrT.why reason (bogus_trust ());
-                      value = EmptyT.why reason (bogus_trust ());
-                      dict_polarity = Polarity.Neutral;
-                    }
+                  {
+                    dict_name = None;
+                    key = StrT.why reason (bogus_trust ());
+                    value = EmptyT.why reason (bogus_trust ());
+                    dict_polarity = Polarity.Neutral;
+                  }
                 in
-                (reason, static_props, dict, false, true)
-              | Some (Known (reason, props, dict, { exact; sealed; _ })) ->
+                (reason, static_props, Indexed dict)
+              | Some (Known (reason, props, { obj_kind; _ })) ->
                 let static_props = SMap.union props static_props in
-                let sealed = not (exact && sealed_in_op reason_op sealed) in
-                (reason, static_props, dict, exact, sealed)
+                let obj_kind =
+                  if Obj_type.is_exact_or_sealed reason_op obj_kind then
+                    UnsealedInFile (ALoc.source (aloc_of_reason reason))
+                  else
+                    match obj_kind with
+                    | Indexed _ -> obj_kind
+                    | _ -> Inexact
+                in
+                (reason, static_props, obj_kind)
             in
             let reason = replace_desc_reason RReactStatics reason in
-            Obj_type.mk_with_proto cx reason ~props (class_type super) ?dict ~exact ~sealed
+            Obj_type.mk_with_proto cx reason ~props (class_type super) ~obj_kind
           in
           let insttype =
             {
-              class_id = ALoc.none;
+              class_id = ALoc.id_none;
               type_args = [];
               (* TODO: props are actually installed on the prototype *)
               own_props = Context.generate_property_map cx props;
@@ -1134,17 +1239,17 @@ module Kit (Flow : Flow_common.S) : REACT = struct
           let instance =
             DefT (reason_component, bogus_trust (), InstanceT (static, super, [], insttype))
           in
-          rec_flow_t cx trace (instance, knot.this);
-          rec_flow_t cx trace (static, knot.static);
-          rec_flow_t cx trace (class_type instance, tout)
+          rec_flow_t ~use_op:unknown_use cx trace (instance, knot.this);
+          rec_flow_t ~use_op:unknown_use cx trace (static, knot.static);
+          rec_flow_t ~use_op:unknown_use cx trace (class_type instance, tout)
         in
         let empty_spec obj =
           {
             obj;
             statics = None;
             prop_types = None;
-            get_default_props = Option.to_list (read_prop "getDefaultProps" obj);
-            get_initial_state = Option.to_list (read_prop "getInitialState" obj);
+            get_default_props = Base.Option.to_list (read_prop "getDefaultProps" obj);
+            get_initial_state = Base.Option.to_list (read_prop "getInitialState" obj);
             unknown_mixins = [];
           }
         in
@@ -1152,8 +1257,8 @@ module Kit (Flow : Flow_common.S) : REACT = struct
         | Spec stack' ->
           let result =
             match coerce_object l with
-            | Ok (reason, _, _, { exact; sealed; _ })
-              when not (exact && sealed_in_op reason_op sealed) ->
+            | Ok (reason, _, { obj_kind; _ })
+              when not (Obj_type.is_exact_or_sealed reason_op obj_kind) ->
               err_incompatible reason;
               Error reason
             | result -> result
@@ -1164,7 +1269,7 @@ module Kit (Flow : Flow_common.S) : REACT = struct
             (match stack' with
             | [] ->
               (* The root spec is unknown *)
-              rec_flow_t cx trace (AnyT.error reason_op, tout)
+              rec_flow_t ~use_op:unknown_use cx trace (AnyT.error reason_op, tout)
             | ((obj, spec), todo, mixins_rev) :: stack' ->
               (* A mixin is unknown *)
               let mixins_rev = Unknown reason :: mixins_rev in
@@ -1199,18 +1304,20 @@ module Kit (Flow : Flow_common.S) : REACT = struct
           map_spec (fun spec -> { spec with statics = merge_statics statics spec.statics }) stack
           |> on_resolve_statics
         | PropTypes (stack, tool) ->
-          let add_prop k t (reason, props, dict, flags) =
+          let add_prop k t (reason, props, flags) =
             let props = SMap.add k (Field (None, t, Polarity.Neutral)) props in
-            (reason, props, dict, flags)
+            (reason, props, flags)
           in
-          let add_dict dict (reason, props, _, flags) = (reason, props, Some dict, flags) in
+          let add_dict dict (reason, props, flags) =
+            let flags = { flags with obj_kind = Indexed dict } in
+            (reason, props, flags)
+          in
           let rec next todo prop_types =
-            match SMap.choose todo with
+            match SMap.choose_opt todo with
             | None ->
               let prop_types = Some (Known prop_types) in
               map_spec
-                (fun spec ->
-                  { spec with prop_types = merge_prop_types prop_types spec.prop_types })
+                (fun spec -> { spec with prop_types = merge_prop_types prop_types spec.prop_types })
                 stack
               |> on_resolve_prop_types
             | Some (k, p) ->
@@ -1229,25 +1336,24 @@ module Kit (Flow : Flow_common.S) : REACT = struct
              * we should error and resolve to any. However, since all object spreads
              * are currently unsealed, we must wait for precise spread support.
              * Otherwise, we will cause too many spurious errors. *)
-            | Ok (reason, todo, dict, flags) ->
-              let prop_types = (reason, SMap.empty, None, flags) in
-              (match dict with
-              | None -> next todo prop_types
+            | Ok (reason, todo, flags) ->
+              let prop_types = (reason, SMap.empty, flags) in
+              (match Obj_type.get_dict_opt flags.obj_kind with
               | Some dicttype ->
                 let tool = PropTypes (stack, ResolveDict (dicttype, todo, prop_types)) in
-                resolve tool dicttype.value)
+                resolve tool dicttype.value
+              | None -> next todo prop_types)
             | Error reason ->
               let prop_types = Some (Unknown reason) in
               map_spec
-                (fun spec ->
-                  { spec with prop_types = merge_prop_types prop_types spec.prop_types })
+                (fun spec -> { spec with prop_types = merge_prop_types prop_types spec.prop_types })
                 stack
               |> on_resolve_prop_types)
           | ResolveDict (dicttype, todo, prop_types) ->
             let dict =
               match coerce_prop_type l with
               | Ok (_, t) -> { dicttype with value = t }
-              | Error reason -> { dicttype with value = AnyT.make AnyError reason }
+              | Error reason -> { dicttype with value = AnyT.make (AnyError None) reason }
             in
             next todo (add_dict dict prop_types)
           | ResolveProp (k, todo, prop_types) ->
@@ -1257,8 +1363,8 @@ module Kit (Flow : Flow_common.S) : REACT = struct
                 if required then
                   t
                 else
-                  Type.optional ?annot_loc:(annot_aloc_of_reason @@ reason_of_t t) t
-              | Error reason -> AnyT.make AnyError reason |> Type.optional
+                  optional ?annot_loc:(annot_aloc_of_reason @@ reason_of_t t) t
+              | Error reason -> AnyT.make (AnyError None) reason |> optional
             in
             next todo (add_prop k t prop_types))
         | DefaultProps (todo, acc) ->

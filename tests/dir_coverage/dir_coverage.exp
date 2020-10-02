@@ -1,0 +1,400 @@
+=============================
+CLASSIC
+=============================
+-----------------------------
+restart server
+-----------------------------
+-----------------------------
+root
+-----------------------------
+
+Coverage results from 13 file(s):
+
+other_folder/i.js: 33.33% (4 of 12 expressions)
+other_folder/h.js: 100.00% (9 of 9 expressions)
+match_coverage/coverage.js: 24.39% (10 of 41 expressions)
+folder/subfolder/j.js: 100.00% (6 of 6 expressions)
+folder/e.js: 37.50% (3 of 8 expressions)
+folder/d.js: 50.00% (3 of 6 expressions)
+folder/c.js: 100.00% (6 of 6 expressions)
+f.js: 37.50% (3 of 8 expressions)
+cycle/cycle3.js: 42.11% (8 of 19 expressions)
+cycle/cycle2.js: 52.63% (10 of 19 expressions)
+cycle/cycle1.js: 50.00% (8 of 16 expressions)
+b.js: 100.00% (6 of 6 expressions)
+a.js: 57.14% (4 of 7 expressions)
+
+-----------------------------------
+Aggregate coverage statistics
+-----------------------------------
+Files                : 13
+Expressions          :
+  Covered            : 80
+  Total              : 163
+  Covered Percentage : 49.08%
+
+-----------------------------
+folder
+-----------------------------
+
+Coverage results from 4 file(s):
+
+folder/subfolder/j.js: 100.00% (6 of 6 expressions)
+folder/e.js: 37.50% (3 of 8 expressions)
+folder/d.js: 50.00% (3 of 6 expressions)
+folder/c.js: 100.00% (6 of 6 expressions)
+
+-----------------------------------
+Aggregate coverage statistics
+-----------------------------------
+Files                : 4
+Expressions          :
+  Covered            : 18
+  Total              : 26
+  Covered Percentage : 69.23%
+
+-----------------------------
+cycle
+-----------------------------
+
+Coverage results from 3 file(s):
+
+cycle/cycle3.js: 42.11% (8 of 19 expressions)
+cycle/cycle2.js: 52.63% (10 of 19 expressions)
+cycle/cycle1.js: 50.00% (8 of 16 expressions)
+
+-----------------------------------
+Aggregate coverage statistics
+-----------------------------------
+Files                : 3
+Expressions          :
+  Covered            : 26
+  Total              : 54
+  Covered Percentage : 48.15%
+
+-----------------------------
+match_coverage
+-----------------------------
+
+Coverage results from 1 file(s):
+
+match_coverage/coverage.js: 24.39% (10 of 41 expressions)
+
+-----------------------------------
+Aggregate coverage statistics
+-----------------------------------
+Files                : 1
+Expressions          :
+  Covered            : 10
+  Total              : 41
+  Covered Percentage : 24.39%
+
+-----------------------------
+other_folder
+-----------------------------
+
+Coverage results from 2 file(s):
+
+other_folder/i.js: 33.33% (4 of 12 expressions)
+other_folder/h.js: 100.00% (9 of 9 expressions)
+
+-----------------------------------
+Aggregate coverage statistics
+-----------------------------------
+Files                : 2
+Expressions          :
+  Covered            : 13
+  Total              : 21
+  Covered Percentage : 61.90%
+
+-----------------------------
+folder/subfolder
+-----------------------------
+
+Coverage results from 1 file(s):
+
+folder/subfolder/j.js: 100.00% (6 of 6 expressions)
+
+-----------------------------------
+Aggregate coverage statistics
+-----------------------------------
+Files                : 1
+Expressions          :
+  Covered            : 6
+  Total              : 6
+  Covered Percentage : 100.00%
+
+-----------------------------
+file list
+-----------------------------
+
+Coverage results from 3 file(s):
+
+folder/subfolder/j.js: 100.00% (6 of 6 expressions)
+folder/d.js: 50.00% (3 of 6 expressions)
+a.js: 57.14% (4 of 7 expressions)
+
+-----------------------------------
+Aggregate coverage statistics
+-----------------------------------
+Files                : 3
+Expressions          :
+  Covered            : 13
+  Total              : 19
+  Covered Percentage : 68.42%
+
+-----------------------------
+file and dir list
+-----------------------------
+
+Coverage results from 5 file(s):
+
+folder/subfolder/j.js: 100.00% (6 of 6 expressions)
+folder/e.js: 37.50% (3 of 8 expressions)
+folder/d.js: 50.00% (3 of 6 expressions)
+folder/c.js: 100.00% (6 of 6 expressions)
+a.js: 57.14% (4 of 7 expressions)
+
+-----------------------------------
+Aggregate coverage statistics
+-----------------------------------
+Files                : 5
+Expressions          :
+  Covered            : 22
+  Total              : 33
+  Covered Percentage : 66.67%
+
+-----------------------------
+files
+-----------------------------
+
+Coverage results from 3 file(s):
+
+folder/subfolder/j.js: 100.00% (6 of 6 expressions)
+folder/d.js: 50.00% (3 of 6 expressions)
+a.js: 57.14% (4 of 7 expressions)
+
+-----------------------------------
+Aggregate coverage statistics
+-----------------------------------
+Files                : 3
+Expressions          :
+  Covered            : 13
+  Total              : 19
+  Covered Percentage : 68.42%
+
+-----------------------------
+json
+-----------------------------
+{
+  "files":[
+    {"file":"a.js","percentage":57.14,"covered":4,"total":7},
+    {"file":"folder/d.js","percentage":50.00,"covered":3,"total":6},
+    {"file":"folder/subfolder/j.js","percentage":100.00,"covered":6,"total":6}
+  ],
+  "statistics":{
+    "files_in_directory":3,
+    "covered_expressions":13,
+    "total_expressions":19,
+    "percentage":68.42
+  }
+}
+-----------------------------
+root info survives recheck
+-----------------------------
+
+Coverage results from 13 file(s):
+
+other_folder/i.js: 33.33% (4 of 12 expressions)
+other_folder/h.js: 100.00% (9 of 9 expressions)
+match_coverage/coverage.js: 24.39% (10 of 41 expressions)
+folder/subfolder/j.js: 100.00% (6 of 6 expressions)
+folder/e.js: 37.50% (3 of 8 expressions)
+folder/d.js: 50.00% (3 of 6 expressions)
+folder/c.js: 100.00% (6 of 6 expressions)
+f.js: 37.50% (3 of 8 expressions)
+cycle/cycle3.js: 42.11% (8 of 19 expressions)
+cycle/cycle2.js: 52.63% (10 of 19 expressions)
+cycle/cycle1.js: 50.00% (8 of 16 expressions)
+b.js: 100.00% (6 of 6 expressions)
+a.js: 57.14% (4 of 7 expressions)
+
+-----------------------------------
+Aggregate coverage statistics
+-----------------------------------
+Files                : 13
+Expressions          :
+  Covered            : 80
+  Total              : 163
+  Covered Percentage : 49.08%
+
+-----------------------------
+delete file
+-----------------------------
+
+Coverage results from 12 file(s):
+
+other_folder/i.js: 33.33% (4 of 12 expressions)
+other_folder/h.js: 100.00% (9 of 9 expressions)
+match_coverage/coverage.js: 24.39% (10 of 41 expressions)
+folder/subfolder/j.js: 100.00% (6 of 6 expressions)
+folder/e.js: 37.50% (3 of 8 expressions)
+folder/d.js: 50.00% (3 of 6 expressions)
+folder/c.js: 100.00% (6 of 6 expressions)
+f.js: 37.50% (3 of 8 expressions)
+cycle/cycle3.js: 42.11% (8 of 19 expressions)
+cycle/cycle2.js: 52.63% (10 of 19 expressions)
+cycle/cycle1.js: 50.00% (8 of 16 expressions)
+b.js: 100.00% (6 of 6 expressions)
+
+-----------------------------------
+Aggregate coverage statistics
+-----------------------------------
+Files                : 12
+Expressions          :
+  Covered            : 76
+  Total              : 156
+  Covered Percentage : 48.72%
+
+-----------------------------
+trust
+-----------------------------
+
+Coverage results from 12 file(s):
+
+other_folder/i.js: 16.67% trusted (2 of 12 expressions), 33.33% covered (4 of 12 expressions)
+other_folder/h.js: 77.78% trusted (7 of 9 expressions), 100.00% covered (9 of 9 expressions)
+match_coverage/coverage.js: 24.39% trusted (10 of 41 expressions), 24.39% covered (10 of 41 expressions)
+folder/subfolder/j.js: 16.67% trusted (1 of 6 expressions), 100.00% covered (6 of 6 expressions)
+folder/e.js: 12.50% trusted (1 of 8 expressions), 37.50% covered (3 of 8 expressions)
+folder/d.js: 16.67% trusted (1 of 6 expressions), 50.00% covered (3 of 6 expressions)
+folder/c.js: 83.33% trusted (5 of 6 expressions), 100.00% covered (6 of 6 expressions)
+f.js: 12.50% trusted (1 of 8 expressions), 37.50% covered (3 of 8 expressions)
+cycle/cycle3.js: 5.26% trusted (1 of 19 expressions), 42.11% covered (8 of 19 expressions)
+cycle/cycle2.js: 15.79% trusted (3 of 19 expressions), 52.63% covered (10 of 19 expressions)
+cycle/cycle1.js: 6.25% trusted (1 of 16 expressions), 50.00% covered (8 of 16 expressions)
+b.js: 83.33% trusted (5 of 6 expressions), 100.00% covered (6 of 6 expressions)
+
+-----------------------------------
+Aggregate coverage statistics
+-----------------------------------
+Files                : 12
+Expressions          :
+  Trusted            : 38
+  Covered            : 76
+  Total              : 156
+  Trust Percentage   : 24.36%
+  Covered Percentage : 48.72%
+
+{
+  "files":[
+    {
+      "file":"b.js",
+      "trusted_percentage":83.33,
+      "percentage":100.00,
+      "trusted":5,
+      "covered":6,
+      "total":6
+    },
+    {
+      "file":"cycle/cycle1.js",
+      "trusted_percentage":6.25,
+      "percentage":50.00,
+      "trusted":1,
+      "covered":8,
+      "total":16
+    },
+    {
+      "file":"cycle/cycle2.js",
+      "trusted_percentage":15.79,
+      "percentage":52.63,
+      "trusted":3,
+      "covered":10,
+      "total":19
+    },
+    {
+      "file":"cycle/cycle3.js",
+      "trusted_percentage":5.26,
+      "percentage":42.11,
+      "trusted":1,
+      "covered":8,
+      "total":19
+    },
+    {
+      "file":"f.js",
+      "trusted_percentage":12.50,
+      "percentage":37.50,
+      "trusted":1,
+      "covered":3,
+      "total":8
+    },
+    {
+      "file":"folder/c.js",
+      "trusted_percentage":83.33,
+      "percentage":100.00,
+      "trusted":5,
+      "covered":6,
+      "total":6
+    },
+    {
+      "file":"folder/d.js",
+      "trusted_percentage":16.67,
+      "percentage":50.00,
+      "trusted":1,
+      "covered":3,
+      "total":6
+    },
+    {
+      "file":"folder/e.js",
+      "trusted_percentage":12.50,
+      "percentage":37.50,
+      "trusted":1,
+      "covered":3,
+      "total":8
+    },
+    {
+      "file":"folder/subfolder/j.js",
+      "trusted_percentage":16.67,
+      "percentage":100.00,
+      "trusted":1,
+      "covered":6,
+      "total":6
+    },
+    {
+      "file":"match_coverage/coverage.js",
+      "trusted_percentage":24.39,
+      "percentage":24.39,
+      "trusted":10,
+      "covered":10,
+      "total":41
+    },
+    {
+      "file":"other_folder/h.js",
+      "trusted_percentage":77.78,
+      "percentage":100.00,
+      "trusted":7,
+      "covered":9,
+      "total":9
+    },
+    {
+      "file":"other_folder/i.js",
+      "trusted_percentage":16.67,
+      "percentage":33.33,
+      "trusted":2,
+      "covered":4,
+      "total":12
+    }
+  ],
+  "statistics":{
+    "files_in_directory":12,
+    "trusted_expressions":38,
+    "covered_expressions":76,
+    "total_expressions":156,
+    "trusted_percentage":24.36,
+    "percentage":48.72
+  }
+}
+=============================
+TYPES-FIRST
+=============================
+==== DIFF BETWEEN CLASSIC AND TYPES-FIRST =====

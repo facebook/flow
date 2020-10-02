@@ -1,4 +1,4 @@
-(**
+(*
  * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
@@ -27,21 +27,22 @@ module T = struct
   and decl =
     (* type definitions *)
     | Type of {
-        tparams: (Loc.t, Loc.t) Ast.Type.ParameterDeclaration.t option;
+        tparams: (Loc.t, Loc.t) Ast.Type.TypeParams.t option;
         right: type_;
       }
     | OpaqueType of {
-        tparams: (Loc.t, Loc.t) Ast.Type.ParameterDeclaration.t option;
+        tparams: (Loc.t, Loc.t) Ast.Type.TypeParams.t option;
         impltype: type_ option;
         supertype: type_ option;
       }
     | Interface of {
-        tparams: (Loc.t, Loc.t) Ast.Type.ParameterDeclaration.t option;
+        tparams: (Loc.t, Loc.t) Ast.Type.TypeParams.t option;
         extends: generic list;
         body: Loc.t * object_type;
       }
     (* declarations and outlined expressions *)
     | ClassDecl of class_t
+    | EnumDecl of { body: Loc.t Ast.Statement.EnumDeclaration.body }
     | FunctionDecl of {
         annot: little_annotation;
         predicate: (Loc.t, Loc.t) Ast.Type.Predicate.t option;
@@ -68,8 +69,6 @@ module T = struct
 
   and generic = Loc.t * (Loc.t, Loc.t) Ast.Type.Generic.t
 
-  and class_implement = (Loc.t, Loc.t) Ast.Class.Implements.t
-
   and little_annotation =
     | TYPE of type_
     | EXPR of (Loc.t * expr_type)
@@ -83,9 +82,9 @@ module T = struct
       }
     | ArrayLiteral of array_element_t Nel.t
     | ValueRef of reference (* typeof `x` *)
-    | NumberLiteral of Ast.NumberLiteral.t
-    | StringLiteral of Ast.StringLiteral.t
-    | BooleanLiteral of bool
+    | NumberLiteral of Loc.t Ast.NumberLiteral.t
+    | StringLiteral of Loc.t Ast.StringLiteral.t
+    | BooleanLiteral of Loc.t Ast.BooleanLiteral.t
     | Number
     | String
     | Boolean
@@ -104,12 +103,12 @@ module T = struct
 
   and outlinable_t =
     | Class of (Loc.t * string) option * class_t
-    | DynamicImport of Loc.t * Ast.StringLiteral.t
+    | DynamicImport of Loc.t * Loc.t Ast.StringLiteral.t
     | DynamicRequire of (Loc.t, Loc.t) Ast.Expression.t
 
   and function_t =
     | FUNCTION of {
-        tparams: (Loc.t, Loc.t) Ast.Type.ParameterDeclaration.t option;
+        tparams: (Loc.t, Loc.t) Ast.Type.TypeParams.t option;
         params: function_params;
         return: little_annotation;
       }
@@ -120,16 +119,16 @@ module T = struct
 
   and class_t =
     | CLASS of {
-        tparams: (Loc.t, Loc.t) Ast.Type.ParameterDeclaration.t option;
-        extends: generic option;
-        implements: class_implement list;
+        tparams: (Loc.t, Loc.t) Ast.Type.TypeParams.t option;
+        extends: ((Loc.t * expr_type) * (Loc.t, Loc.t) Ast.Type.TypeArgs.t option) option;
+        implements: (Loc.t, Loc.t) Ast.Class.Implements.t option;
         body: Loc.t * (Loc.t * class_element_t) list;
       }
     | DECLARE_CLASS of {
-        tparams: (Loc.t, Loc.t) Ast.Type.ParameterDeclaration.t option;
+        tparams: (Loc.t, Loc.t) Ast.Type.TypeParams.t option;
         extends: generic option;
         mixins: generic list;
-        implements: class_implement list;
+        implements: (Loc.t, Loc.t) Ast.Class.Implements.t option;
         body: Loc.t * object_type;
       }
 
@@ -160,6 +159,7 @@ module T = struct
               Ast.Type.Generic.Identifier.Unqualified
                 (Flow_ast_utils.ident_of_source (loc, "$FlowFixMe"));
             targs = None;
+            comments = None;
           } )
 
     let mk_little_annotation loc = TYPE (mk_type loc)
@@ -171,16 +171,6 @@ module T = struct
         (loc, None, false, mk_type loc)
 
     let mk_expr_type loc = (loc, FixMe)
-
-    let mk_extends loc =
-      Some
-        ( loc,
-          {
-            Ast.Type.Generic.id =
-              Ast.Type.Generic.Identifier.Unqualified
-                (Flow_ast_utils.ident_of_source (loc, "$TEMPORARY$Super$FlowFixMe"));
-            targs = None;
-          } )
 
     let mk_decl loc = VariableDecl (mk_little_annotation loc)
   end
@@ -240,19 +230,19 @@ module T = struct
 
   and summarize_object_pair =
     let abs_object_key object_key =
-      Ast.Expression.Object.Property.(
-        match object_key with
-        | Literal (_, x) -> `Literal x
-        | Identifier (_, x) -> `Identifier x
-        | PrivateName (_, (_, x)) -> `PrivateName x
-        | _ -> assert false)
+      let open Ast.Expression.Object.Property in
+      match object_key with
+      | Literal (_, x) -> `Literal x
+      | Identifier (_, x) -> `Identifier x
+      | PrivateName (_, x) -> `PrivateName x
+      | _ -> assert false
     in
     let object_key loc abs_object_key =
-      Ast.Expression.Object.Property.(
-        match abs_object_key with
-        | `Literal x -> Literal (loc, x)
-        | `Identifier x -> Identifier (loc, x)
-        | `PrivateName x -> PrivateName (loc, (loc, x)))
+      let open Ast.Expression.Object.Property in
+      match abs_object_key with
+      | `Literal x -> Literal (loc, x)
+      | `Identifier x -> Identifier (loc, x)
+      | `PrivateName x -> PrivateName (loc, x)
     in
     let compare_object_property =
       let abs_object_key = function
@@ -263,7 +253,7 @@ module T = struct
           abs_object_key object_key
         | (_, OSpread _) -> assert false
       in
-      (fun op1 op2 -> Pervasives.compare (abs_object_key op1) (abs_object_key op2))
+      (fun op1 op2 -> Stdlib.compare (abs_object_key op1) (abs_object_key op2))
     in
     let summarize_object_property_pair loc op1 op2 =
       match (snd op1, snd op2) with
@@ -311,31 +301,29 @@ module T = struct
 
     val create : unit -> 'a t
 
-    val next : 'a t -> Loc.t -> (Loc.t * string -> (Loc.t * string) option * 'a) -> Loc.t * string
+    val next :
+      'a t -> Loc.t -> ((unit -> Loc.t * string) -> (Loc.t * string) * 'a) -> Loc.t * string
 
     val get : 'a t -> 'a list
   end = struct
-    type 'a t = (int * 'a list) ref
+    type 'a t = {
+      mutable n: int;
+      mutable l: 'a list;
+    }
 
-    let create () = ref (0, [])
+    let create () = { n = 0; l = [] }
+
+    let gen_id outlined outlined_loc () =
+      let n = outlined.n + 1 in
+      outlined.n <- n;
+      (outlined_loc, Printf.sprintf "$%d" n)
 
     let next outlined outlined_loc f =
-      let (n, l) = !outlined in
-      let n = n + 1 in
-      let id = (outlined_loc, Printf.sprintf "$%d" n) in
-      let (id_opt, x) = f id in
-      let (n, id) =
-        match id_opt with
-        | None -> (n, id)
-        | Some id -> (n - 1, id)
-      in
-      let l = x :: l in
-      outlined := (n, l);
+      let (id, x) = f (gen_id outlined outlined_loc) in
+      outlined.l <- x :: outlined.l;
       id
 
-    let get outlined =
-      let (_, l) = !outlined in
-      l
+    let get outlined = outlined.l
   end
 
   let param_of_type (loc, name, optional, annot) =
@@ -343,7 +331,7 @@ module T = struct
 
   let type_of_generic (loc, gt) = (loc, Ast.Type.Generic gt)
 
-  let source_of_source (loc, x) = (loc, { Ast.StringLiteral.value = x; raw = x })
+  let source_of_source (loc, x) = (loc, { Ast.StringLiteral.value = x; raw = x; comments = None })
 
   let temporary_type name loc t =
     ( loc,
@@ -351,7 +339,8 @@ module T = struct
         {
           Ast.Type.Generic.id =
             Ast.Type.Generic.Identifier.Unqualified (Flow_ast_utils.ident_of_source (loc, name));
-          targs = Some (loc, [(loc, t)]);
+          targs = Some (loc, { Ast.Type.TypeArgs.arguments = [(loc, t)]; comments = None });
+          comments = None;
         } )
 
   let rec type_of_expr_type outlined = function
@@ -365,6 +354,7 @@ module T = struct
              Ast.Type.Object.exact = true;
              inexact = false;
              properties = List.map (type_of_object_property outlined) (pt :: pts);
+             comments = None;
            })
     | (loc, ObjectLiteral { frozen = false; properties = (pt, pts) }) ->
       temporary_type
@@ -374,7 +364,8 @@ module T = struct
            {
              Ast.Type.Object.exact = true;
              inexact = false;
-             properties = Core_list.map ~f:(type_of_object_property outlined) (pt :: pts);
+             properties = Base.List.map ~f:(type_of_object_property outlined) (pt :: pts);
+             comments = None;
            })
     | (loc, ArrayLiteral ets) ->
       temporary_type
@@ -384,22 +375,35 @@ module T = struct
         | (et, []) -> snd (type_of_array_element outlined et)
         | (et1, et2 :: ets) ->
           Ast.Type.Union
-            ( type_of_array_element outlined et1,
-              type_of_array_element outlined et2,
-              Core_list.map ~f:(type_of_array_element outlined) ets ))
+            {
+              Ast.Type.Union.types =
+                ( type_of_array_element outlined et1,
+                  type_of_array_element outlined et2,
+                  Base.List.map ~f:(type_of_array_element outlined) ets );
+              comments = None;
+            })
     | (loc, ValueRef reference) ->
       ( loc,
         Ast.Type.Typeof
-          (type_of_generic
-             (loc, { Ast.Type.Generic.id = generic_id_of_reference reference; targs = None })) )
+          {
+            Ast.Type.Typeof.argument =
+              type_of_generic
+                ( loc,
+                  {
+                    Ast.Type.Generic.id = generic_id_of_reference reference;
+                    targs = None;
+                    comments = None;
+                  } );
+            internal = true;
+            comments = None;
+          } )
     | (loc, NumberLiteral nt) -> temporary_type "$TEMPORARY$number" loc (Ast.Type.NumberLiteral nt)
     | (loc, StringLiteral st) -> temporary_type "$TEMPORARY$string" loc (Ast.Type.StringLiteral st)
-    | (loc, BooleanLiteral b) ->
-      temporary_type "$TEMPORARY$boolean" loc (Ast.Type.BooleanLiteral b)
-    | (loc, Number) -> (loc, Ast.Type.Number)
-    | (loc, String) -> (loc, Ast.Type.String)
-    | (loc, Boolean) -> (loc, Ast.Type.Boolean)
-    | (loc, Void) -> (loc, Ast.Type.Void)
+    | (loc, BooleanLiteral b) -> temporary_type "$TEMPORARY$boolean" loc (Ast.Type.BooleanLiteral b)
+    | (loc, Number) -> (loc, Ast.Type.Number None)
+    | (loc, String) -> (loc, Ast.Type.String None)
+    | (loc, Boolean) -> (loc, Ast.Type.Boolean None)
+    | (loc, Void) -> (loc, Ast.Type.Void None)
     | (loc, Promise t) ->
       ( loc,
         Ast.Type.Generic
@@ -407,9 +411,14 @@ module T = struct
             Ast.Type.Generic.id =
               Ast.Type.Generic.Identifier.Unqualified
                 (Flow_ast_utils.ident_of_source (loc, "Promise"));
-            targs = Some (loc, [type_of_expr_type outlined t]);
+            targs =
+              Some
+                ( loc,
+                  { Ast.Type.TypeArgs.arguments = [type_of_expr_type outlined t]; comments = None }
+                );
+            comments = None;
           } )
-    | (loc, Null) -> (loc, Ast.Type.Null)
+    | (loc, Null) -> (loc, Ast.Type.Null None)
     | (_loc, JSXLiteral g) -> type_of_generic g
     | (_loc, TypeCast t) -> t
     | (loc, Outline ht) ->
@@ -417,41 +426,55 @@ module T = struct
       let id = Outlined.next outlined loc f in
       ( loc,
         Ast.Type.Typeof
-          (type_of_generic
-             ( loc,
-               {
-                 Ast.Type.Generic.id =
-                   Ast.Type.Generic.Identifier.Unqualified (Flow_ast_utils.ident_of_source id);
-                 targs = None;
-               } )) )
+          {
+            Ast.Type.Typeof.argument =
+              type_of_generic
+                ( loc,
+                  {
+                    Ast.Type.Generic.id =
+                      Ast.Type.Generic.Identifier.Unqualified (Flow_ast_utils.ident_of_source id);
+                    targs = None;
+                    comments = None;
+                  } );
+            internal = true;
+            comments = None;
+          } )
     | (loc, ObjectDestruct (annot_or_init, prop)) ->
       let t = type_of_little_annotation outlined annot_or_init in
-      let f id =
-        ( None,
+      let f mk_id =
+        let id = mk_id () in
+        ( id,
           ( fst t,
             Ast.Statement.DeclareVariable
               {
                 Ast.Statement.DeclareVariable.id = Flow_ast_utils.ident_of_source id;
                 annot = Ast.Type.Available (fst t, t);
+                comments = None;
               } ) )
       in
       let id = Outlined.next outlined loc f in
       ( loc,
         Ast.Type.Typeof
-          (type_of_generic
-             ( loc,
-               {
-                 Ast.Type.Generic.id =
-                   Ast.Type.Generic.Identifier.Qualified
-                     ( loc,
-                       {
-                         Ast.Type.Generic.Identifier.qualification =
-                           Ast.Type.Generic.Identifier.Unqualified
-                             (Flow_ast_utils.ident_of_source id);
-                         id = Flow_ast_utils.ident_of_source prop;
-                       } );
-                 targs = None;
-               } )) )
+          {
+            Ast.Type.Typeof.argument =
+              type_of_generic
+                ( loc,
+                  {
+                    Ast.Type.Generic.id =
+                      Ast.Type.Generic.Identifier.Qualified
+                        ( loc,
+                          {
+                            Ast.Type.Generic.Identifier.qualification =
+                              Ast.Type.Generic.Identifier.Unqualified
+                                (Flow_ast_utils.ident_of_source id);
+                            id = Flow_ast_utils.ident_of_source prop;
+                          } );
+                    targs = None;
+                    comments = None;
+                  } );
+            internal = true;
+            comments = None;
+          } )
     | (loc, FixMe) -> FixMe.mk_type loc
 
   and generic_id_of_reference = function
@@ -465,48 +488,58 @@ module T = struct
             id = Flow_ast_utils.ident_of_source (loc, x);
           } )
 
-  and outlining_fun outlined decl_loc ht id =
+  and outlining_fun outlined decl_loc ht mk_id =
     match ht with
     | Class (id_opt, class_t) ->
-      ( id_opt,
-        let id =
-          match id_opt with
-          | None -> id
-          | Some id -> id
-        in
-        stmt_of_decl outlined decl_loc id (ClassDecl class_t) )
+      let id =
+        match id_opt with
+        | None -> mk_id ()
+        | Some id -> id
+      in
+      (id, stmt_of_decl outlined decl_loc id (ClassDecl class_t))
     | DynamicImport (source_loc, source_lit) ->
-      ( None,
-        let importKind = Ast.Statement.ImportDeclaration.ImportValue in
-        let source = (source_loc, source_lit) in
-        let default = None in
-        let specifiers =
-          Some
-            (Ast.Statement.ImportDeclaration.ImportNamespaceSpecifier
-               (decl_loc, Flow_ast_utils.ident_of_source id))
-        in
+      let id = mk_id () in
+      let importKind = Ast.Statement.ImportDeclaration.ImportValue in
+      let source = (source_loc, source_lit) in
+      let default = None in
+      let specifiers =
+        Some
+          (Ast.Statement.ImportDeclaration.ImportNamespaceSpecifier
+             (decl_loc, Flow_ast_utils.ident_of_source id))
+      in
+      ( id,
         ( decl_loc,
           Ast.Statement.ImportDeclaration
-            { Ast.Statement.ImportDeclaration.importKind; source; default; specifiers } ) )
+            {
+              Ast.Statement.ImportDeclaration.importKind;
+              source;
+              default;
+              specifiers;
+              comments = None;
+            } ) )
     | DynamicRequire require ->
-      ( None,
-        let kind = Ast.Statement.VariableDeclaration.Const in
-        let pattern =
-          ( decl_loc,
-            Ast.Pattern.Identifier
-              {
-                Ast.Pattern.Identifier.name = Flow_ast_utils.ident_of_source id;
-                annot = Ast.Type.Missing (fst id);
-                optional = false;
-              } )
-        in
-        let declaration =
-          { Ast.Statement.VariableDeclaration.Declarator.id = pattern; init = Some require }
-        in
+      let id = mk_id () in
+      let kind = Ast.Statement.VariableDeclaration.Const in
+      let pattern =
+        ( decl_loc,
+          Ast.Pattern.Identifier
+            {
+              Ast.Pattern.Identifier.name = Flow_ast_utils.ident_of_source id;
+              annot = Ast.Type.Missing (fst id);
+              optional = false;
+            } )
+      in
+      let declaration =
+        { Ast.Statement.VariableDeclaration.Declarator.id = pattern; init = Some require }
+      in
+      ( id,
         ( decl_loc,
           Ast.Statement.VariableDeclaration
-            { Ast.Statement.VariableDeclaration.kind; declarations = [(decl_loc, declaration)] } )
-      )
+            {
+              Ast.Statement.VariableDeclaration.kind;
+              declarations = [(decl_loc, declaration)];
+              comments = None;
+            } ) )
 
   and type_of_array_element outlined = function
     | AInit expr_type -> type_of_expr_type outlined expr_type
@@ -523,6 +556,7 @@ module T = struct
             proto = false;
             _method = false;
             variance = None;
+            comments = None;
           } )
     | (loc, OMethod (key, function_t)) ->
       Ast.Type.Object.Property
@@ -535,6 +569,7 @@ module T = struct
             proto = false;
             _method = true;
             variance = None;
+            comments = None;
           } )
     | (loc, OGet (key, function_t)) ->
       Ast.Type.Object.Property
@@ -547,6 +582,7 @@ module T = struct
             proto = false;
             _method = false;
             variance = None;
+            comments = None;
           } )
     | (loc, OSet (key, function_t)) ->
       Ast.Type.Object.Property
@@ -558,17 +594,22 @@ module T = struct
             static = false;
             proto = false;
             _method = false;
+            comments = None;
             variance = None;
           } )
     | (loc, OSpread expr_type) ->
       Ast.Type.Object.SpreadProperty
-        (loc, { Ast.Type.Object.SpreadProperty.argument = type_of_expr_type outlined expr_type })
+        ( loc,
+          {
+            Ast.Type.Object.SpreadProperty.argument = type_of_expr_type outlined expr_type;
+            comments = None;
+          } )
 
   and type_of_function_t outlined = function
     | ( loc,
         FUNCTION
           {
-            tparams : (Loc.t, Loc.t) Ast.Type.ParameterDeclaration.t option;
+            tparams : (Loc.t, Loc.t) Ast.Type.TypeParams.t option;
             params : function_params;
             return : little_annotation;
           } ) ->
@@ -579,14 +620,21 @@ module T = struct
           params =
             ( params_loc,
               {
-                Ast.Type.Function.Params.params = Core_list.map ~f:param_of_type params;
+                Ast.Type.Function.Params.params = Base.List.map ~f:param_of_type params;
                 rest =
                   (match rest with
                   | None -> None
                   | Some (loc, rest) ->
-                    Some (loc, { Ast.Type.Function.RestParam.argument = param_of_type rest }));
+                    Some
+                      ( loc,
+                        {
+                          Ast.Type.Function.RestParam.argument = param_of_type rest;
+                          comments = None;
+                        } ));
+                comments = None;
               } );
           return = type_of_little_annotation outlined return;
+          comments = None;
         } )
 
   and type_of_function outlined function_t =
@@ -630,6 +678,7 @@ module T = struct
                       } );
                 ];
               annot = Ast.Type.Missing (fst name);
+              comments = None;
             } )
       in
       wrap_name_pattern pattern names
@@ -655,6 +704,7 @@ module T = struct
                       } );
                 ];
               annot = Ast.Type.Missing (fst name);
+              comments = None;
             } )
       in
       wrap_name_pattern pattern names
@@ -663,18 +713,46 @@ module T = struct
     let id = Flow_ast_utils.ident_of_source id in
     match decl with
     | Type { tparams; right } ->
-      (decl_loc, Ast.Statement.TypeAlias { Ast.Statement.TypeAlias.id; tparams; right })
+      ( decl_loc,
+        Ast.Statement.TypeAlias { Ast.Statement.TypeAlias.id; tparams; right; comments = None } )
     | OpaqueType { tparams; impltype; supertype } ->
       ( decl_loc,
-        Ast.Statement.OpaqueType { Ast.Statement.OpaqueType.id; tparams; impltype; supertype } )
+        Ast.Statement.OpaqueType
+          { Ast.Statement.OpaqueType.id; tparams; impltype; supertype; comments = None } )
     | Interface { tparams; extends; body } ->
       ( decl_loc,
-        Ast.Statement.InterfaceDeclaration { Ast.Statement.Interface.id; tparams; extends; body }
-      )
+        Ast.Statement.InterfaceDeclaration
+          { Ast.Statement.Interface.id; tparams; extends; body; comments = None } )
     | ClassDecl (CLASS { tparams; extends; implements; body = (body_loc, body) }) ->
+      let extends =
+        match extends with
+        | None -> None
+        | Some (((loc, _) as expr_type), targs) ->
+          let f mk_id =
+            let id = mk_id () in
+            let t = type_of_expr_type outlined expr_type in
+            ( id,
+              ( fst t,
+                Ast.Statement.DeclareVariable
+                  {
+                    Ast.Statement.DeclareVariable.id = Flow_ast_utils.ident_of_source id;
+                    annot = Ast.Type.Available (fst t, t);
+                    comments = Flow_ast_utils.mk_comments_opt ();
+                  } ) )
+          in
+          let id = Outlined.next outlined loc f in
+          Some
+            ( loc,
+              {
+                Ast.Type.Generic.id =
+                  Ast.Type.Generic.Identifier.Unqualified (Flow_ast_utils.ident_of_source id);
+                targs;
+                comments = Flow_ast_utils.mk_comments_opt ();
+              } )
+      in
       (* FIXME(T39206072, festevezga) Private properties are filtered to prevent an exception surfaced in https://github.com/facebook/flow/issues/7355 *)
       let filtered_body_FIXME =
-        Core_list.filter
+        Base.List.filter
           ~f:(fun prop ->
             match prop with
             | (_loc, CPrivateField _) -> false
@@ -687,17 +765,37 @@ module T = struct
             Ast.Type.Object.exact = false;
             inexact = false;
             properties =
-              Core_list.map ~f:(object_type_property_of_class_element outlined) filtered_body_FIXME;
+              Base.List.map ~f:(object_type_property_of_class_element outlined) filtered_body_FIXME;
+            comments = None;
           } )
       in
       let mixins = [] in
       ( decl_loc,
         Ast.Statement.DeclareClass
-          { Ast.Statement.DeclareClass.id; tparams; extends; implements; mixins; body } )
+          {
+            Ast.Statement.DeclareClass.id;
+            tparams;
+            extends;
+            implements;
+            mixins;
+            body;
+            comments = None;
+          } )
     | ClassDecl (DECLARE_CLASS { tparams; extends; mixins; implements; body }) ->
       ( decl_loc,
         Ast.Statement.DeclareClass
-          { Ast.Statement.DeclareClass.id; tparams; extends; implements; mixins; body } )
+          {
+            Ast.Statement.DeclareClass.id;
+            tparams;
+            extends;
+            implements;
+            mixins;
+            body;
+            comments = None;
+          } )
+    | EnumDecl { body } ->
+      let open Ast.Statement.EnumDeclaration in
+      (decl_loc, Ast.Statement.EnumDeclaration { id; body; comments = None })
     | FunctionDecl { annot = little_annotation; predicate } ->
       ( decl_loc,
         Ast.Statement.DeclareFunction
@@ -705,28 +803,30 @@ module T = struct
             Ast.Statement.DeclareFunction.id;
             annot = annot_of_little_annotation outlined little_annotation;
             predicate;
+            comments = None;
           } )
     | FunctionWithStaticsDecl { base; statics } ->
       let annot = type_of_expr_type outlined base in
       let properties =
-        Core_list.rev_map
+        Base.List.rev_map
           ~f:(fun (id, expr) ->
             let annot = type_of_expr_type outlined expr in
-            Ast.Type.Object.(
-              Property
-                ( fst id,
-                  {
-                    Property.key = Ast.Expression.Object.Property.Identifier id;
-                    value = Property.Init annot;
-                    optional = false;
-                    static = false;
-                    proto = false;
-                    _method = false;
-                    variance = None;
-                  } )))
+            let open Ast.Type.Object in
+            Property
+              ( fst id,
+                {
+                  Property.key = Ast.Expression.Object.Property.Identifier id;
+                  value = Property.Init annot;
+                  optional = false;
+                  static = false;
+                  proto = false;
+                  _method = false;
+                  variance = None;
+                  comments = None;
+                } ))
           statics
       in
-      let ot = { Ast.Type.Object.exact = false; inexact = true; properties } in
+      let ot = { Ast.Type.Object.exact = false; inexact = true; properties; comments = None } in
       let assign = (decl_loc, Ast.Type.Object ot) in
       let t =
         let name = "$TEMPORARY$function" in
@@ -734,17 +834,28 @@ module T = struct
           Ast.Type.Generic.Identifier.Unqualified (Flow_ast_utils.ident_of_source (decl_loc, name))
         in
         ( decl_loc,
-          Ast.Type.Generic { Ast.Type.Generic.id; targs = Some (decl_loc, [annot; assign]) } )
+          Ast.Type.Generic
+            {
+              Ast.Type.Generic.id;
+              targs =
+                Some (decl_loc, { Ast.Type.TypeArgs.arguments = [annot; assign]; comments = None });
+              comments = None;
+            } )
       in
       ( decl_loc,
         Ast.Statement.DeclareVariable
-          { Ast.Statement.DeclareVariable.id; annot = Ast.Type.Available (fst annot, t) } )
+          {
+            Ast.Statement.DeclareVariable.id;
+            annot = Ast.Type.Available (fst annot, t);
+            comments = None;
+          } )
     | VariableDecl little_annotation ->
       ( decl_loc,
         Ast.Statement.DeclareVariable
           {
             Ast.Statement.DeclareVariable.id;
             annot = Ast.Type.Available (annot_of_little_annotation outlined little_annotation);
+            comments = None;
           } )
     | ImportNamed { kind; source; name } ->
       let importKind = kind in
@@ -776,7 +887,13 @@ module T = struct
       in
       ( decl_loc,
         Ast.Statement.ImportDeclaration
-          { Ast.Statement.ImportDeclaration.importKind; source; default; specifiers } )
+          {
+            Ast.Statement.ImportDeclaration.importKind;
+            source;
+            default;
+            specifiers;
+            comments = None;
+          } )
     | ImportStar { kind; source } ->
       let importKind = kind in
       let source = source_of_source source in
@@ -786,7 +903,13 @@ module T = struct
       in
       ( decl_loc,
         Ast.Statement.ImportDeclaration
-          { Ast.Statement.ImportDeclaration.importKind; source; default; specifiers } )
+          {
+            Ast.Statement.ImportDeclaration.importKind;
+            source;
+            default;
+            specifiers;
+            comments = None;
+          } )
     | Require { source; name } ->
       let kind = Ast.Statement.VariableDeclaration.Const in
       let pattern = name_opt_pattern id name in
@@ -801,16 +924,19 @@ module T = struct
                     (Flow_ast_utils.ident_of_source (approx_loc decl_loc, "require")) );
               targs = None;
               arguments =
-                [
-                  Ast.Expression.Expression
-                    ( loc,
-                      Ast.Expression.Literal
-                        {
-                          Ast.Literal.value = Ast.Literal.String x;
-                          raw = x;
-                          comments = Flow_ast_utils.mk_comments_opt ();
-                        } );
-                ];
+                ( approx_loc decl_loc,
+                  {
+                    Ast.Expression.ArgList.arguments =
+                      [
+                        Ast.Expression.Expression
+                          ( loc,
+                            Ast.Expression.Literal
+                              { Ast.Literal.value = Ast.Literal.String x; raw = x; comments = None }
+                          );
+                      ];
+                    comments = None;
+                  } );
+              comments = None;
             } )
       in
       let declaration =
@@ -818,35 +944,51 @@ module T = struct
       in
       ( decl_loc,
         Ast.Statement.VariableDeclaration
-          { Ast.Statement.VariableDeclaration.kind; declarations = [(decl_loc, declaration)] } )
+          {
+            Ast.Statement.VariableDeclaration.kind;
+            declarations = [(decl_loc, declaration)];
+            comments = None;
+          } )
 
   and object_type_property_of_class_element outlined = function
-    | (loc, CMethod (object_key, _kind, static, f)) ->
-      Ast.Type.Object.(
-        Property
-          ( loc,
-            {
-              Property.key = object_key;
-              value = Property.Init (type_of_function outlined f);
-              optional = false;
-              static;
-              proto = false;
-              _method = true;
-              variance = None;
-            } ))
+    | (loc, CMethod (object_key, kind, static, f)) ->
+      let (value, _method) =
+        match kind with
+        | Ast.Class.Method.Constructor
+        | Ast.Class.Method.Method ->
+          (Ast.Type.Object.Property.Init (type_of_function outlined f), true)
+        | Ast.Class.Method.Get ->
+          (Ast.Type.Object.Property.Get (type_of_function_t outlined f), false)
+        | Ast.Class.Method.Set ->
+          (Ast.Type.Object.Property.Set (type_of_function_t outlined f), false)
+      in
+      let open Ast.Type.Object in
+      Property
+        ( loc,
+          {
+            Property.key = object_key;
+            value;
+            optional = false;
+            static;
+            proto = false;
+            _method;
+            variance = None;
+            comments = None;
+          } )
     | (loc, CProperty (object_key, static, variance, t)) ->
-      Ast.Type.Object.(
-        Property
-          ( loc,
-            {
-              Property.key = object_key;
-              value = Property.Init t;
-              optional = false;
-              static;
-              proto = false;
-              _method = false;
-              variance;
-            } ))
+      let open Ast.Type.Object in
+      Property
+        ( loc,
+          {
+            Property.key = object_key;
+            value = Property.Init t;
+            optional = false;
+            static;
+            proto = false;
+            _method = false;
+            variance;
+            comments = None;
+          } )
     | (_loc, CPrivateField (_x, _static, _variance, _t)) -> assert false
 end
 
@@ -907,7 +1049,8 @@ module Eval (Env : Signature_builder_verify.EvalEnv) = struct
 
   and type_args = function
     | None -> None
-    | Some (loc, ts) -> Some (loc, Core_list.map ~f:type_ ts)
+    | Some (loc, { Ast.Type.TypeArgs.arguments; comments }) ->
+      Some (loc, { Ast.Type.TypeArgs.arguments = Base.List.map ~f:type_ arguments; comments })
 
   let rec annot_path = function
     | Kind.Annot_path.Annot (_, t) -> T.TYPE (type_ t)
@@ -939,33 +1082,33 @@ module Eval (Env : Signature_builder_verify.EvalEnv) = struct
     | Ast.Type.Available (_, t) -> type_ t
 
   and pattern ?(default = false) patt =
-    Ast.Pattern.(
-      match patt with
-      | (loc, Identifier { Identifier.annot; name; optional }) ->
-        (loc, Some name, default || optional, annotated_type annot)
-      | (loc, Object { Object.annot; properties = _ }) ->
-        if default then
-          (loc, Some (Flow_ast_utils.ident_of_source (loc, "_")), true, annotated_type annot)
-        else
-          (loc, None, false, annotated_type annot)
-      | (loc, Array { Array.annot; elements = _; comments = _ }) ->
-        if default then
-          (loc, Some (Flow_ast_utils.ident_of_source (loc, "_")), true, annotated_type annot)
-        else
-          (loc, None, false, annotated_type annot)
-      | (loc, Expression _) -> T.FixMe.mk_pattern default loc)
+    let open Ast.Pattern in
+    match patt with
+    | (loc, Identifier { Identifier.annot; name; optional }) ->
+      (loc, Some name, default || optional, annotated_type annot)
+    | (loc, Object { Object.annot; properties = _; comments = _ }) ->
+      if default then
+        (loc, Some (Flow_ast_utils.ident_of_source (loc, "_")), true, annotated_type annot)
+      else
+        (loc, None, false, annotated_type annot)
+    | (loc, Array { Array.annot; elements = _; comments = _ }) ->
+      if default then
+        (loc, Some (Flow_ast_utils.ident_of_source (loc, "_")), true, annotated_type annot)
+      else
+        (loc, None, false, annotated_type annot)
+    | (loc, Expression _) -> T.FixMe.mk_pattern default loc
 
   and literal_expr =
     let string_value_of_object_key object_key =
-      Ast.Expression.Object.Property.(
-        match object_key with
-        | Literal (loc, { Ast.Literal.value = Ast.Literal.String value; raw; comments = _ }) ->
-          (loc, T.TypeCast (loc, Ast.Type.StringLiteral { Ast.StringLiteral.value; raw }))
-        | Identifier (loc, { Ast.Identifier.name; comments = _ }) ->
-          let value = name in
-          let raw = Printf.sprintf "'%s'" name in
-          (loc, T.TypeCast (loc, Ast.Type.StringLiteral { Ast.StringLiteral.value; raw }))
-        | _ -> assert false)
+      let open Ast.Expression.Object.Property in
+      match object_key with
+      | Literal (loc, { Ast.Literal.value = Ast.Literal.String value; raw; comments }) ->
+        (loc, T.TypeCast (loc, Ast.Type.StringLiteral { Ast.StringLiteral.value; raw; comments }))
+      | Identifier (loc, { Ast.Identifier.name; comments }) ->
+        let value = name in
+        let raw = Printf.sprintf "'%s'" name in
+        (loc, T.TypeCast (loc, Ast.Type.StringLiteral { Ast.StringLiteral.value; raw; comments }))
+      | _ -> assert false
     in
     let keys_as_string_values_of_object_properties object_properties =
       try
@@ -977,338 +1120,361 @@ module Eval (Env : Signature_builder_verify.EvalEnv) = struct
              object_properties)
       with _ -> None
     in
-    Ast.Expression.(
-      function
-      | (loc, Literal { Ast.Literal.value; raw; comments = _ }) ->
-        begin
-          match value with
-          | Ast.Literal.String value -> (loc, T.StringLiteral { Ast.StringLiteral.value; raw })
-          | Ast.Literal.Number value -> (loc, T.NumberLiteral { Ast.NumberLiteral.value; raw })
-          | Ast.Literal.Boolean b -> (loc, T.BooleanLiteral b)
-          | Ast.Literal.Null -> (loc, T.Null)
-          | _ -> T.FixMe.mk_expr_type loc
-        end
-      | (loc, TemplateLiteral _) -> (loc, T.String)
-      | (loc, Identifier stuff) -> (loc, T.ValueRef (identifier stuff))
-      | (loc, Class stuff) ->
-        Ast.Class.(
-          let { tparams; body; extends; implements; id; classDecorators = _ } = stuff in
-          let (super, super_targs) =
-            match extends with
-            | None -> (None, None)
-            | Some (_, { Extends.expr; targs }) -> (Some expr, targs)
-          in
-          ( loc,
-            T.Outline
-              (T.Class
-                 ( Option.map ~f:Flow_ast_utils.source_of_ident id,
-                   class_ tparams body super super_targs implements )) ))
-      | ( loc,
-          Function
-            {
-              Ast.Function.generator;
-              tparams;
-              params;
-              return;
-              body;
-              id = _;
-              async;
-              predicate = _;
-              sig_loc = _;
-            } ) ->
-        (loc, T.Function (function_ generator async tparams params return body))
-      | ( loc,
-          ArrowFunction
-            {
-              Ast.Function.tparams;
-              params;
-              return;
-              body;
-              async;
-              predicate = _;
-              sig_loc = _;
-              (* TODO: arrow functions can't have ids or be generators: *)
-              id = _;
-              generator = _;
-            } ) ->
-        (loc, T.Function (function_ false async tparams params return body))
-      | (loc, Object stuff) ->
-        Ast.Expression.Object.(
-          let { properties; comments = _ } = stuff in
-          begin
-            match object_ properties with
-            | Some o -> (loc, T.ObjectLiteral { frozen = false; properties = o })
-            | None -> T.FixMe.mk_expr_type loc
-          end)
-      | (loc, Array stuff) ->
-        Ast.Expression.Array.(
-          let { elements; comments = _ } = stuff in
-          begin
-            match array_ elements with
-            | Some a -> (loc, T.ArrayLiteral a)
-            | None -> T.FixMe.mk_expr_type loc
-          end)
-      | (loc, TypeCast stuff) ->
-        Ast.Expression.TypeCast.(
-          let { annot; expression = _ } = stuff in
-          let (_, t) = annot in
-          (loc, T.TypeCast (type_ t)))
-      | (loc, Member stuff) ->
-        begin
-          match member stuff with
-          | Some ref_expr -> (loc, T.ValueRef ref_expr)
-          | None -> T.FixMe.mk_expr_type loc
-        end
-      | ( loc,
-          Import
-            ( source_loc,
-              ( Literal { Ast.Literal.value = Ast.Literal.String value; raw; comments = _ }
-              | TemplateLiteral
+    let open Ast.Expression in
+    function
+    | (loc, Literal { Ast.Literal.value; raw; comments }) ->
+      begin
+        match value with
+        | Ast.Literal.String value ->
+          (loc, T.StringLiteral { Ast.StringLiteral.value; raw; comments })
+        | Ast.Literal.Number value ->
+          (loc, T.NumberLiteral { Ast.NumberLiteral.value; raw; comments })
+        | Ast.Literal.Boolean value -> (loc, T.BooleanLiteral { Ast.BooleanLiteral.value; comments })
+        | Ast.Literal.Null -> (loc, T.Null)
+        | _ -> T.FixMe.mk_expr_type loc
+      end
+    | (loc, TemplateLiteral _) -> (loc, T.String)
+    | (loc, Identifier stuff) -> (loc, T.ValueRef (identifier stuff))
+    | (loc, Class stuff) ->
+      let open Ast.Class in
+      let { tparams; body; extends; implements; id; classDecorators = _; comments = _ } = stuff in
+      let (super, super_targs) =
+        match extends with
+        | None -> (None, None)
+        | Some (_, { Extends.expr; targs; comments = _ }) -> (Some expr, targs)
+      in
+      ( loc,
+        T.Outline
+          (T.Class
+             ( Base.Option.map ~f:Flow_ast_utils.source_of_ident id,
+               class_ tparams body super super_targs implements )) )
+    | ( _,
+        Function
+          {
+            Ast.Function.generator;
+            tparams;
+            params;
+            return;
+            body;
+            id = _;
+            async;
+            predicate = _;
+            sig_loc;
+            comments = _;
+          } ) ->
+      (sig_loc, T.Function (function_ generator async tparams params return body))
+    | ( loc,
+        ArrowFunction
+          {
+            Ast.Function.tparams;
+            params;
+            return;
+            body;
+            async;
+            predicate = _;
+            sig_loc = _;
+            (* TODO: arrow functions can't have ids or be generators: *)
+            id = _;
+            generator = _;
+            comments = _;
+          } ) ->
+      (loc, T.Function (function_ false async tparams params return body))
+    | (loc, Object stuff) ->
+      let open Ast.Expression.Object in
+      let { properties; comments = _ } = stuff in
+      begin
+        match object_ properties with
+        | Some o -> (loc, T.ObjectLiteral { frozen = false; properties = o })
+        | None -> T.FixMe.mk_expr_type loc
+      end
+    | (loc, Array stuff) ->
+      let open Ast.Expression.Array in
+      let { elements; comments = _ } = stuff in
+      begin
+        match array_ elements with
+        | Some a -> (loc, T.ArrayLiteral a)
+        | None -> T.FixMe.mk_expr_type loc
+      end
+    | (loc, TypeCast stuff) ->
+      let open Ast.Expression.TypeCast in
+      let { annot; expression = _; comments = _ } = stuff in
+      let (_, t) = annot in
+      (loc, T.TypeCast (type_ t))
+    | (loc, Member stuff) ->
+      begin
+        match member stuff with
+        | Some ref_expr -> (loc, T.ValueRef ref_expr)
+        | None -> T.FixMe.mk_expr_type loc
+      end
+    | ( loc,
+        Import
+          {
+            Import.argument =
+              ( source_loc,
+                ( Literal { Ast.Literal.value = Ast.Literal.String value; raw; comments = _ }
+                | TemplateLiteral
+                    {
+                      TemplateLiteral.quasis =
+                        [
+                          ( _,
+                            {
+                              TemplateLiteral.Element.value =
+                                { TemplateLiteral.Element.cooked = value; raw };
+                              _;
+                            } );
+                        ];
+                      _;
+                    } ) );
+            comments = _;
+          } ) ->
+      ( loc,
+        T.Outline (T.DynamicImport (source_loc, { Ast.StringLiteral.value; raw; comments = None }))
+      )
+    | ( loc,
+        Call
+          {
+            Ast.Expression.Call.callee =
+              (_, Identifier (_, { Ast.Identifier.name = "require"; comments = _ }));
+            _;
+          } ) as expr ->
+      (loc, T.Outline (T.DynamicRequire expr))
+    | ( _,
+        Call
+          {
+            Ast.Expression.Call.callee =
+              ( _,
+                Member
                   {
-                    TemplateLiteral.quasis =
-                      [
-                        ( _,
-                          {
-                            TemplateLiteral.Element.value =
-                              { TemplateLiteral.Element.cooked = value; raw };
-                            _;
-                          } );
-                      ];
-                    _;
-                  } ) ) ) ->
-        (loc, T.Outline (T.DynamicImport (source_loc, { Ast.StringLiteral.value; raw })))
-      | ( loc,
-          Call
-            {
-              Ast.Expression.Call.callee =
-                (_, Identifier (_, { Ast.Identifier.name = "require"; comments = _ }));
-              _;
-            } ) as expr ->
-        (loc, T.Outline (T.DynamicRequire expr))
-      | ( _,
-          Call
-            {
-              Ast.Expression.Call.callee =
-                ( _,
-                  Member
-                    {
-                      Ast.Expression.Member._object =
-                        (_, Identifier (_, { Ast.Identifier.name = "Object"; comments = _ }));
-                      property =
-                        Ast.Expression.Member.PropertyIdentifier
-                          (_, { Ast.Identifier.name = "freeze"; comments = _ });
-                    } );
-              targs = None;
-              arguments = [Expression (loc, Object stuff)];
-            } ) ->
-        Ast.Expression.Object.(
-          let { properties; comments = _ } = stuff in
+                    Ast.Expression.Member._object =
+                      (_, Identifier (_, { Ast.Identifier.name = "Object"; comments = _ }));
+                    property =
+                      Ast.Expression.Member.PropertyIdentifier
+                        (_, { Ast.Identifier.name = "freeze"; comments = _ });
+                    comments = _;
+                  } );
+            targs = None;
+            arguments =
+              ( _,
+                {
+                  Ast.Expression.ArgList.arguments = [Expression (loc, Object stuff)];
+                  comments = _;
+                } );
+            comments = _;
+          } ) ->
+      let open Ast.Expression.Object in
+      let { properties; comments = _ } = stuff in
+      begin
+        match object_ properties with
+        | Some o -> (loc, T.ObjectLiteral { frozen = true; properties = o })
+        | None -> T.FixMe.mk_expr_type loc
+      end
+    | ( _,
+        Call
+          {
+            Ast.Expression.Call.callee =
+              (_, Identifier (_, { Ast.Identifier.name = "keyMirror"; comments = _ }));
+            targs = None;
+            arguments =
+              ( _,
+                {
+                  Ast.Expression.ArgList.arguments = [Expression (loc, Object stuff)];
+                  comments = _;
+                } );
+            comments = _;
+          } ) ->
+      let open Ast.Expression.Object in
+      let { properties; comments = _ } = stuff in
+      begin
+        match object_ properties with
+        | Some o ->
           begin
-            match object_ properties with
-            | Some o -> (loc, T.ObjectLiteral { frozen = true; properties = o })
+            match keys_as_string_values_of_object_properties o with
+            | Some o' -> (loc, T.ObjectLiteral { frozen = false; properties = o' })
             | None -> T.FixMe.mk_expr_type loc
-          end)
-      | ( _,
-          Call
-            {
-              Ast.Expression.Call.callee =
-                (_, Identifier (_, { Ast.Identifier.name = "keyMirror"; comments = _ }));
-              targs = None;
-              arguments = [Expression (loc, Object stuff)];
-            } ) ->
-        Ast.Expression.Object.(
-          let { properties; comments = _ } = stuff in
-          begin
-            match object_ properties with
-            | Some o ->
-              begin
-                match keys_as_string_values_of_object_properties o with
-                | Some o' -> (loc, T.ObjectLiteral { frozen = false; properties = o' })
-                | None -> T.FixMe.mk_expr_type loc
-              end
-            | None -> T.FixMe.mk_expr_type loc
-          end)
-      | (loc, Unary stuff) ->
-        Ast.Expression.Unary.(
-          let { operator; argument; comments = _ } = stuff in
-          arith_unary operator loc argument)
-      | (loc, Binary stuff) ->
-        Ast.Expression.Binary.(
-          let { operator; left; right } = stuff in
-          arith_binary operator loc left right)
-      | (loc, Sequence stuff) ->
-        Ast.Expression.Sequence.(
-          let { expressions } = stuff in
-          begin
-            match List.rev expressions with
-            | expr :: _ -> literal_expr expr
-            | [] -> T.FixMe.mk_expr_type loc
-          end)
-      | (loc, Assignment stuff) ->
-        Ast.Expression.Assignment.(
-          let { operator; left = _; right } = stuff in
-          begin
-            match operator with
-            | None -> literal_expr right
-            | Some _ -> T.FixMe.mk_expr_type loc
-          end)
-      | (loc, Update stuff) ->
-        Ast.Expression.Update.(
-          (* This operation has a simple result type. *)
-          let { operator = _; argument = _; prefix = _ } = stuff in
-          (loc, T.Number))
-      | (loc, JSXElement e) ->
-        Ast.JSX.(
-          let { openingElement; closingElement = _; children = _ } = e in
-          let (_loc, { Opening.name; selfClosing = _; attributes = _ }) = openingElement in
-          begin
-            match (name, Env.facebook_fbt) with
-            | (Ast.JSX.Identifier (_loc_id, { Identifier.name = "fbt" }), Some custom_jsx_type) ->
+          end
+        | None -> T.FixMe.mk_expr_type loc
+      end
+    | (loc, Unary stuff) ->
+      let open Ast.Expression.Unary in
+      let { operator; argument; comments = _ } = stuff in
+      arith_unary operator loc argument
+    | (loc, Binary stuff) ->
+      let open Ast.Expression.Binary in
+      let { operator; left; right; comments = _ } = stuff in
+      arith_binary operator loc left right
+    | (loc, Sequence stuff) ->
+      let open Ast.Expression.Sequence in
+      let { expressions; comments = _ } = stuff in
+      begin
+        match List.rev expressions with
+        | expr :: _ -> literal_expr expr
+        | [] -> T.FixMe.mk_expr_type loc
+      end
+    | (loc, Assignment stuff) ->
+      let open Ast.Expression.Assignment in
+      let { operator; left = _; right; comments = _ } = stuff in
+      begin
+        match operator with
+        | None -> literal_expr right
+        | Some _ -> T.FixMe.mk_expr_type loc
+      end
+    | (loc, Update _) -> (loc, T.Number)
+    | (loc, JSXElement e) ->
+      let open Ast.JSX in
+      let { openingElement; closingElement = _; children = _; comments = _ } = e in
+      let (_loc, { Opening.name; selfClosing = _; attributes = _ }) = openingElement in
+      begin
+        match (name, Env.facebook_fbt) with
+        | ( Ast.JSX.Identifier (_loc_id, { Identifier.name = "fbt"; comments = _ }),
+            Some custom_jsx_type ) ->
+          ( loc,
+            T.JSXLiteral
               ( loc,
-                T.JSXLiteral
-                  ( loc,
-                    {
-                      Ast.Type.Generic.id =
-                        Ast.Type.Generic.Identifier.Unqualified
-                          (Flow_ast_utils.ident_of_source (loc, custom_jsx_type));
-                      targs = None;
-                    } ) )
-            | _ -> T.FixMe.mk_expr_type loc
-          end)
-      | (loc, Call _)
-      | (loc, Comprehension _)
-      | (loc, Conditional _)
-      | (loc, Generator _)
-      | (loc, Import _)
-      | (loc, JSXFragment _)
-      | (loc, Logical _)
-      | (loc, MetaProperty _)
-      | (loc, New _)
-      | (loc, OptionalCall _)
-      | (loc, OptionalMember _)
-      | (loc, Super)
-      | (loc, TaggedTemplate _)
-      | (loc, This)
-      | (loc, Yield _) ->
-        T.FixMe.mk_expr_type loc)
+                {
+                  Ast.Type.Generic.id =
+                    Ast.Type.Generic.Identifier.Unqualified
+                      (Flow_ast_utils.ident_of_source (loc, custom_jsx_type));
+                  targs = None;
+                  comments = None;
+                } ) )
+        | _ -> T.FixMe.mk_expr_type loc
+      end
+    | (loc, Call _)
+    | (loc, Comprehension _)
+    | (loc, Conditional _)
+    | (loc, Generator _)
+    | (loc, Import _)
+    | (loc, JSXFragment _)
+    | (loc, Logical _)
+    | (loc, MetaProperty _)
+    | (loc, New _)
+    | (loc, OptionalCall _)
+    | (loc, OptionalMember _)
+    | (loc, Super _)
+    | (loc, TaggedTemplate _)
+    | (loc, This _)
+    | (loc, Yield _) ->
+      T.FixMe.mk_expr_type loc
 
   and identifier stuff =
     let (loc, { Ast.Identifier.name; comments = _ }) = stuff in
     T.RLexical (loc, name)
 
   and member stuff =
-    Ast.Expression.Member.(
-      let { _object; property } = stuff in
-      let ref_expr_opt = ref_expr _object in
-      let name_opt =
-        match property with
-        | PropertyIdentifier (loc, x) -> Some (loc, x)
-        | PropertyPrivateName (_, (loc, x)) -> Some (loc, x)
-        | PropertyExpression _ -> None
-      in
-      match (ref_expr_opt, name_opt) with
-      | (Some (path_loc, t), Some name) ->
-        Some (T.RPath (path_loc, t, Flow_ast_utils.source_of_ident name))
-      | (None, _)
-      | (_, None) ->
-        None)
+    let open Ast.Expression.Member in
+    let { _object; property; comments = _ } = stuff in
+    let ref_expr_opt = ref_expr _object in
+    let name_opt =
+      match property with
+      | PropertyIdentifier (loc, x) -> Some (loc, x)
+      | PropertyPrivateName (_, { Ast.PrivateName.id = (loc, x); comments = _ }) -> Some (loc, x)
+      | PropertyExpression _ -> None
+    in
+    match (ref_expr_opt, name_opt) with
+    | (Some (path_loc, t), Some name) ->
+      Some (T.RPath (path_loc, t, Flow_ast_utils.source_of_ident name))
+    | (None, _)
+    | (_, None) ->
+      None
 
   and ref_expr expr =
-    Ast.Expression.(
-      match expr with
-      | (loc, Identifier stuff) -> Some (loc, identifier stuff)
-      | (loc, Member stuff) ->
-        begin
-          match member stuff with
-          | Some ref_expr -> Some (loc, ref_expr)
-          | None -> None
-        end
-      | _ -> None)
+    let open Ast.Expression in
+    match expr with
+    | (loc, Identifier stuff) -> Some (loc, identifier stuff)
+    | (loc, Member stuff) ->
+      begin
+        match member stuff with
+        | Some ref_expr -> Some (loc, ref_expr)
+        | None -> None
+      end
+    | _ -> None
 
   and arith_unary operator loc argument =
-    Ast.Expression.Unary.(
-      match operator with
-      (* These operations have simple result types. *)
-      | Plus -> (loc, T.Number)
-      | BitNot -> (loc, T.Number)
-      | Typeof -> (loc, T.String)
-      | Void -> (loc, T.Void)
-      | Delete -> (loc, T.Boolean)
-      (* These operations may or may not have simple result types. See associated TODO: comment in
+    let open Ast.Expression.Unary in
+    match operator with
+    (* These operations have simple result types. *)
+    | Plus -> (loc, T.Number)
+    | BitNot -> (loc, T.Number)
+    | Typeof -> (loc, T.String)
+    | Void -> (loc, T.Void)
+    | Delete -> (loc, T.Boolean)
+    (* These operations may or may not have simple result types. See associated TODO: comment in
          Signature_builder_verify. *)
-      | Minus ->
-        begin
-          match literal_expr argument with
-          | (_, T.NumberLiteral { Ast.NumberLiteral.value; raw }) ->
-            (loc, T.NumberLiteral { Ast.NumberLiteral.value = -.value; raw = "-" ^ raw })
-          | _ -> (loc, T.Number)
-        end
-      | Not ->
-        begin
-          match literal_expr argument with
-          | (_, T.BooleanLiteral b) -> (loc, T.BooleanLiteral (not b))
-          | (_, T.Function _)
-          | (_, T.ObjectLiteral _)
-          | (_, T.ArrayLiteral _)
-          | (_, T.JSXLiteral _) ->
-            (loc, T.BooleanLiteral false)
-          | (_, T.Void)
-          | (_, T.Null) ->
-            (loc, T.BooleanLiteral true)
-          | (_, T.NumberLiteral { Ast.NumberLiteral.value; _ }) ->
-            (loc, T.BooleanLiteral (value = 0.))
-          | (_, T.StringLiteral { Ast.StringLiteral.value; _ }) ->
-            (loc, T.BooleanLiteral (value = ""))
-          | _ -> (loc, T.Boolean)
-        end
-      | Await ->
-        (* The result type of this operation depends in a complicated way on the argument type. *)
-        T.FixMe.mk_expr_type loc)
+    | Minus ->
+      begin
+        match literal_expr argument with
+        | (_, T.NumberLiteral { Ast.NumberLiteral.value; raw; comments }) ->
+          (loc, T.NumberLiteral { Ast.NumberLiteral.value = -.value; raw = "-" ^ raw; comments })
+        | _ -> (loc, T.Number)
+      end
+    | Not ->
+      begin
+        match literal_expr argument with
+        | (_, T.BooleanLiteral { Ast.BooleanLiteral.value; comments }) ->
+          (loc, T.BooleanLiteral { Ast.BooleanLiteral.value = not value; comments })
+        | (_, T.Function _)
+        | (_, T.ObjectLiteral _)
+        | (_, T.ArrayLiteral _)
+        | (_, T.JSXLiteral _) ->
+          (loc, T.BooleanLiteral { Ast.BooleanLiteral.value = false; comments = None })
+        | (_, T.Void)
+        | (_, T.Null) ->
+          (loc, T.BooleanLiteral { Ast.BooleanLiteral.value = true; comments = None })
+        | (_, T.NumberLiteral { Ast.NumberLiteral.value; comments; _ }) ->
+          (loc, T.BooleanLiteral { Ast.BooleanLiteral.value = value = 0.; comments })
+        | (_, T.StringLiteral { Ast.StringLiteral.value; comments; _ }) ->
+          (loc, T.BooleanLiteral { Ast.BooleanLiteral.value = value = ""; comments })
+        | _ -> (loc, T.Boolean)
+      end
+    | Await ->
+      (* The result type of this operation depends in a complicated way on the argument type. *)
+      T.FixMe.mk_expr_type loc
 
   and arith_binary operator loc _left _right =
-    Ast.Expression.Binary.(
-      match operator with
-      | Plus ->
-        (* The result type of this operation depends in a complicated way on the argument type. *)
-        T.FixMe.mk_expr_type loc
-      (* These operations have simple result types. *)
-      | Equal -> (loc, T.Boolean)
-      | NotEqual -> (loc, T.Boolean)
-      | StrictEqual -> (loc, T.Boolean)
-      | StrictNotEqual -> (loc, T.Boolean)
-      | LessThan -> (loc, T.Boolean)
-      | LessThanEqual -> (loc, T.Boolean)
-      | GreaterThan -> (loc, T.Boolean)
-      | GreaterThanEqual -> (loc, T.Boolean)
-      | LShift -> (loc, T.Number)
-      | RShift -> (loc, T.Number)
-      | RShift3 -> (loc, T.Number)
-      | Minus -> (loc, T.Number)
-      | Mult -> (loc, T.Number)
-      | Exp -> (loc, T.Number)
-      | Div -> (loc, T.Number)
-      | Mod -> (loc, T.Number)
-      | BitOr -> (loc, T.Number)
-      | Xor -> (loc, T.Number)
-      | BitAnd -> (loc, T.Number)
-      | In -> (loc, T.Boolean)
-      | Instanceof -> (loc, T.Boolean))
+    let open Ast.Expression.Binary in
+    match operator with
+    | Plus ->
+      (* The result type of this operation depends in a complicated way on the argument type. *)
+      T.FixMe.mk_expr_type loc
+    (* These operations have simple result types. *)
+    | Equal -> (loc, T.Boolean)
+    | NotEqual -> (loc, T.Boolean)
+    | StrictEqual -> (loc, T.Boolean)
+    | StrictNotEqual -> (loc, T.Boolean)
+    | LessThan -> (loc, T.Boolean)
+    | LessThanEqual -> (loc, T.Boolean)
+    | GreaterThan -> (loc, T.Boolean)
+    | GreaterThanEqual -> (loc, T.Boolean)
+    | LShift -> (loc, T.Number)
+    | RShift -> (loc, T.Number)
+    | RShift3 -> (loc, T.Number)
+    | Minus -> (loc, T.Number)
+    | Mult -> (loc, T.Number)
+    | Exp -> (loc, T.Number)
+    | Div -> (loc, T.Number)
+    | Mod -> (loc, T.Number)
+    | BitOr -> (loc, T.Number)
+    | Xor -> (loc, T.Number)
+    | BitAnd -> (loc, T.Number)
+    | In -> (loc, T.Boolean)
+    | Instanceof -> (loc, T.Boolean)
 
   and function_param (_, { Ast.Function.Param.argument; default }) =
     pattern ~default:(default <> None) argument
 
-  and function_rest_param (loc, { Ast.Function.RestParam.argument }) = (loc, pattern argument)
+  and function_rest_param (loc, { Ast.Function.RestParam.argument; comments = _ }) =
+    (loc, pattern argument)
 
   and function_params params =
-    Ast.Function.(
-      let (params_loc, { Params.params; rest }) = params in
-      let params = Core_list.map ~f:function_param params in
-      let rest =
-        match rest with
-        | None -> None
-        | Some param -> Some (function_rest_param param)
-      in
-      (params_loc, params, rest))
+    let open Ast.Function in
+    let (params_loc, { Params.params; rest; comments = _ }) = params in
+    let params = Base.List.map ~f:function_param params in
+    let rest =
+      match rest with
+      | None -> None
+      | Some param -> Some (function_rest_param param)
+    in
+    (params_loc, params, rest)
 
   and function_return ~is_missing_ok ~async return =
     match return with
@@ -1327,19 +1493,21 @@ module Eval (Env : Signature_builder_verify.EvalEnv) = struct
     | Ast.Type.Available (_, t) -> T.TYPE (type_ t)
 
   and function_predicate body predicate =
+    let open Ast.Type.Predicate in
     match (predicate, body) with
     | (None, _) -> None
-    | ( Some (loc, Ast.Type.Predicate.Inferred),
+    | ( Some (loc, { kind = Inferred; comments }),
         ( Ast.Function.BodyBlock
             ( _,
               {
                 Ast.Statement.Block.body =
                   [(_, Ast.Statement.Return { Ast.Statement.Return.argument = Some e; _ })];
+                comments = _;
               } )
         | Ast.Function.BodyExpression e ) ) ->
-      Some (loc, Ast.Type.Predicate.Declared e)
-    | (Some (_, Ast.Type.Predicate.Inferred), _) -> None
-    | (Some (_, Ast.Type.Predicate.Declared _), _) -> predicate
+      Some (loc, { kind = Declared e; comments })
+    | (Some (_, { kind = Inferred; comments = _ }), _) -> None
+    | (Some (_, { kind = Declared _; comments = _ }), _) -> predicate
 
   and function_ generator async tparams params return body =
     let tparams = type_params tparams in
@@ -1355,103 +1523,97 @@ module Eval (Env : Signature_builder_verify.EvalEnv) = struct
 
   and class_ =
     let class_element acc element =
-      Ast.Class.(
-        match element with
-        | Body.Method
-            ( _,
+      let open Ast.Class in
+      match element with
+      | Body.Method
+          ( _,
+            {
+              Method.key =
+                Ast.Expression.Object.Property.Identifier (_, { Ast.Identifier.name; comments = _ });
+              _;
+            } )
+      | Body.Property
+          ( _,
+            {
+              Property.key =
+                Ast.Expression.Object.Property.Identifier (_, { Ast.Identifier.name; comments = _ });
+              _;
+            } )
+        when (not Env.prevent_munge) && Signature_utils.is_munged_property_name name ->
+        acc
+      | Body.Property
+          ( _,
+            {
+              Property.key =
+                Ast.Expression.Object.Property.Identifier
+                  (_, { Ast.Identifier.name = "propTypes"; comments = _ });
+              static = true;
+              _;
+            } )
+        when Env.ignore_static_propTypes ->
+        acc
+      | Body.Method (elem_loc, { Method.key; value; kind; static; decorators = _; comments = _ }) ->
+        let x = object_key key in
+        let ( loc,
               {
-                Method.key =
-                  Ast.Expression.Object.Property.Identifier
-                    (_, { Ast.Identifier.name; comments = _ });
-                _;
-              } )
-        | Body.Property
-            ( _,
-              {
-                Property.key =
-                  Ast.Expression.Object.Property.Identifier
-                    (_, { Ast.Identifier.name; comments = _ });
-                _;
-              } )
-          when (not Env.prevent_munge) && Signature_utils.is_munged_property_name name ->
-          acc
-        | Body.Property
-            ( _,
-              {
-                Property.key =
-                  Ast.Expression.Object.Property.Identifier
-                    (_, { Ast.Identifier.name = "propTypes"; comments = _ });
-                static = true;
-                _;
-              } )
-          when Env.ignore_static_propTypes ->
-          acc
-        | Body.Method (elem_loc, { Method.key; value; kind; static; decorators = _ }) ->
-          let x = object_key key in
-          let ( loc,
-                {
-                  Ast.Function.generator;
-                  tparams;
-                  params;
-                  return;
-                  body;
-                  id = _;
-                  async;
-                  predicate = _;
-                  sig_loc = _;
-                } ) =
-            value
-          in
+                Ast.Function.generator;
+                tparams;
+                params;
+                return;
+                body;
+                id = _;
+                async;
+                predicate = _;
+                sig_loc = _;
+                comments = _;
+              } ) =
+          value
+        in
+        ( elem_loc,
+          T.CMethod (x, kind, static, (loc, function_ generator async tparams params return body))
+        )
+        :: acc
+      | Body.Property (elem_loc, { Property.key; annot; static; variance; value = _; comments = _ })
+        ->
+        let x = object_key key in
+        (elem_loc, T.CProperty (x, static, variance, annotated_type annot)) :: acc
+      | Body.PrivateField
           ( elem_loc,
-            T.CMethod (x, kind, static, (loc, function_ generator async tparams params return body))
-          )
-          :: acc
-        | Body.Property (elem_loc, { Property.key; annot; static; variance; value = _ }) ->
-          let x = object_key key in
-          (elem_loc, T.CProperty (x, static, variance, annotated_type annot)) :: acc
-        | Body.PrivateField
-            ( elem_loc,
-              {
-                PrivateField.key = (_, (_, { Ast.Identifier.name = x; comments = _ }));
-                annot;
-                static;
-                variance;
-                value = _;
-              } ) ->
-          (elem_loc, T.CPrivateField (x, static, variance, annotated_type annot)) :: acc)
+            {
+              PrivateField.key =
+                ( _,
+                  {
+                    Ast.PrivateName.id = (_, { Ast.Identifier.name = x; comments = _ });
+                    comments = _;
+                  } );
+              annot;
+              static;
+              variance;
+              value = _;
+              comments = _;
+            } ) ->
+        (elem_loc, T.CPrivateField (x, static, variance, annotated_type annot)) :: acc
     in
     fun tparams body super super_targs implements ->
-      Ast.Class.(
-        let (body_loc, { Body.body }) = body in
-        let tparams = type_params tparams in
-        let body = List.rev @@ List.fold_left class_element [] body in
-        let extends =
-          match super with
-          | None -> None
-          | Some expr ->
-            let ref_expr_opt = ref_expr expr in
-            begin
-              match ref_expr_opt with
-              | Some (loc, reference) ->
-                Some
-                  ( loc,
-                    {
-                      Ast.Type.Generic.id = T.generic_id_of_reference reference;
-                      targs = type_args super_targs;
-                    } )
-              | None -> T.FixMe.mk_extends (fst expr)
-            end
-        in
-        let implements = Core_list.map ~f:class_implement implements in
-        T.CLASS { tparams; extends; implements; body = (body_loc, body) })
+      let open Ast.Class in
+      let (body_loc, { Body.body; comments = _ }) = body in
+      let tparams = type_params tparams in
+      let body = List.rev @@ List.fold_left class_element [] body in
+      let extends =
+        match super with
+        | None -> None
+        | Some expr -> Some (literal_expr expr, type_args super_targs)
+      in
+      let implements = class_implements implements in
+      T.CLASS { tparams; extends; implements; body = (body_loc, body) }
 
   and array_ =
     let array_element expr_or_spread_opt =
-      Ast.Expression.(
-        match expr_or_spread_opt with
-        | None -> assert false
-        | Some (Expression expr) -> T.AInit (literal_expr expr)
-        | Some (Spread _spread) -> assert false)
+      let open Ast.Expression.Array in
+      match expr_or_spread_opt with
+      | Hole _ -> assert false
+      | Expression expr -> T.AInit (literal_expr expr)
+      | Spread _spread -> assert false
     in
     function
     | [] -> None
@@ -1459,78 +1621,88 @@ module Eval (Env : Signature_builder_verify.EvalEnv) = struct
 
   and class_implement implement = implement
 
+  and class_implements implements =
+    let open Ast.Class.Implements in
+    match implements with
+    | None -> None
+    | Some (loc, { interfaces; comments }) ->
+      Some (loc, { interfaces = Base.List.map ~f:class_implement interfaces; comments })
+
   and object_ =
     let object_property =
-      Ast.Expression.Object.Property.(
-        function
-        | (loc, Init { key; value; shorthand = _ }) ->
-          let x = object_key key in
-          (loc, T.OInit (x, literal_expr value))
-        | (loc, Method { key; value = (fn_loc, fn) }) ->
-          let x = object_key key in
-          let {
-            Ast.Function.generator;
-            tparams;
-            params;
-            return;
-            body;
-            id = _;
-            async;
-            predicate = _;
-            sig_loc = _;
-          } =
-            fn
-          in
-          (loc, T.OMethod (x, (fn_loc, function_ generator async tparams params return body)))
-        | (loc, Get { key; value = (fn_loc, fn) }) ->
-          let x = object_key key in
-          let {
-            Ast.Function.generator;
-            tparams;
-            params;
-            return;
-            body;
-            id = _;
-            async;
-            predicate = _;
-            sig_loc = _;
-          } =
-            fn
-          in
-          (loc, T.OGet (x, (fn_loc, function_ generator async tparams params return body)))
-        | (loc, Set { key; value = (fn_loc, fn) }) ->
-          let x = object_key key in
-          let {
-            Ast.Function.generator;
-            tparams;
-            params;
-            return;
-            body;
-            id = _;
-            async;
-            predicate = _;
-            sig_loc = _;
-          } =
-            fn
-          in
-          (loc, T.OSet (x, (fn_loc, function_ generator async tparams params return body))))
+      let open Ast.Expression.Object.Property in
+      function
+      | (loc, Init { key; value; shorthand = _ }) ->
+        let x = object_key key in
+        (loc, T.OInit (x, literal_expr value))
+      | (loc, Method { key; value = (_, fn) }) ->
+        let x = object_key key in
+        let {
+          Ast.Function.generator;
+          tparams;
+          params;
+          return;
+          body;
+          id = _;
+          async;
+          predicate = _;
+          sig_loc = _;
+          comments = _;
+        } =
+          fn
+        in
+        (loc, T.OMethod (x, (loc, function_ generator async tparams params return body)))
+      | (loc, Get { key; value = (fn_loc, fn); comments = _ }) ->
+        let x = object_key key in
+        let {
+          Ast.Function.generator;
+          tparams;
+          params;
+          return;
+          body;
+          id = _;
+          async;
+          predicate = _;
+          sig_loc = _;
+          comments = _;
+        } =
+          fn
+        in
+        (loc, T.OGet (x, (fn_loc, function_ generator async tparams params return body)))
+      | (loc, Set { key; value = (fn_loc, fn); comments = _ }) ->
+        let x = object_key key in
+        let {
+          Ast.Function.generator;
+          tparams;
+          params;
+          return;
+          body;
+          id = _;
+          async;
+          predicate = _;
+          sig_loc = _;
+          comments = _;
+        } =
+          fn
+        in
+        (loc, T.OSet (x, (fn_loc, function_ generator async tparams params return body)))
     in
     let object_spread_property =
-      Ast.Expression.Object.SpreadProperty.(
-        (fun (loc, { argument }) -> (loc, T.OSpread (literal_expr argument))))
+      let open Ast.Expression.Object.SpreadProperty in
+      (fun (loc, { argument; comments = _ }) -> (loc, T.OSpread (literal_expr argument)))
     in
     function
     | [] -> None
     | property :: properties ->
-      Ast.Expression.Object.(
-        (try
-           Some
-             (Nel.map
-                (function
-                  | Property p -> object_property p
-                  | SpreadProperty p -> object_spread_property p)
-                (property, properties))
-         with _ -> None))
+      let open Ast.Expression.Object in
+      (try
+         Some
+           (Nel.map
+              (function
+                | Property p -> object_property p
+                | SpreadProperty p -> object_spread_property p)
+              (property, properties))
+       with _ -> None)
 end
 
 module Generator (Env : Signature_builder_verify.EvalEnv) = struct
@@ -1541,20 +1713,20 @@ module Generator (Env : Signature_builder_verify.EvalEnv) = struct
     | Kind.WithPropertiesDef { base; properties } ->
       begin
         match Kind.get_function_kind_info base with
-        | Some (generator, async, tparams, params, return, body) ->
+        | Some (loc, generator, async, tparams, params, return, body) ->
           T.FunctionWithStaticsDecl
             {
               base = (loc, T.Function (Eval.function_ generator async tparams params return body));
               statics =
-                Core_list.map properties ~f:(fun (id_prop, expr) ->
+                Base.List.map properties ~f:(fun (id_prop, expr) ->
                     (id_prop, Eval.literal_expr expr));
             }
         | None -> eval (loc, base)
       end
     | Kind.VariableDef { id = _; annot; init } -> T.VariableDecl (Eval.annotation loc ?init annot)
-    | Kind.FunctionDef { generator; async; tparams; params; return; body; predicate } ->
+    | Kind.FunctionDef { generator; async; tparams; params; return; body; predicate; sig_loc } ->
       let annot =
-        T.EXPR (loc, T.Function (Eval.function_ generator async tparams params return body))
+        T.EXPR (sig_loc, T.Function (Eval.function_ generator async tparams params return body))
       in
       let predicate = Eval.function_predicate body predicate in
       T.FunctionDecl { annot; predicate }
@@ -1570,10 +1742,11 @@ module Generator (Env : Signature_builder_verify.EvalEnv) = struct
         | None -> None
         | Some r -> Some (Eval.generic r)
       in
-      let mixins = Core_list.map ~f:Eval.generic mixins in
-      let implements = Core_list.map ~f:Eval.class_implement implements in
+      let mixins = Base.List.map ~f:Eval.generic mixins in
+      let implements = Eval.class_implements implements in
       T.ClassDecl
         (T.DECLARE_CLASS { tparams; extends; mixins; implements; body = (body_loc, body) })
+    | Kind.EnumDef { body } -> T.EnumDecl { body }
     | Kind.TypeDef { tparams; right } ->
       let tparams = Eval.type_params tparams in
       let right = Eval.type_ right in
@@ -1593,7 +1766,7 @@ module Generator (Env : Signature_builder_verify.EvalEnv) = struct
       T.OpaqueType { tparams; impltype; supertype }
     | Kind.InterfaceDef { tparams; extends; body = (body_loc, body) } ->
       let tparams = Eval.type_params tparams in
-      let extends = Core_list.map ~f:Eval.generic extends in
+      let extends = Base.List.map ~f:Eval.generic extends in
       let body = Eval.object_type body in
       T.Interface { tparams; extends; body = (body_loc, body) }
     | Kind.ImportNamedDef { kind; source; name } -> T.ImportNamed { kind; source; name }
@@ -1601,52 +1774,78 @@ module Generator (Env : Signature_builder_verify.EvalEnv) = struct
     | Kind.RequireDef { source; name } -> T.Require { source; name }
     | Kind.SketchyToplevelDef -> T.FixMe.mk_decl loc
 
-  let make_env outlined env =
-    SMap.fold
-      (fun n entries acc ->
-        Loc_collections.LocMap.fold
-          (fun loc kind acc ->
-            let id = (loc, n) in
-            let dt = eval kind in
-            let decl_loc = fst kind in
-            T.stmt_of_decl outlined decl_loc id dt :: acc)
-          entries
-          acc)
-      env
-      []
+  let make_env_entry outlined n entries acc =
+    let entries = Loc_collections.LocMap.bindings entries in
+    let (acc, _) =
+      List.fold_left
+        (fun (acc_stmt, acc_ctor) (loc, kind) ->
+          let ctor = Signature_builder_kind.kind_to_ctor (snd kind) in
+          let (add_entry, acc_ctor) =
+            match acc_ctor with
+            | None ->
+              (* Include the first occurrence, and set the kind of the entries *)
+              (true, Some ctor)
+            | Some Signature_builder_kind.DeclareFunctionDefKind
+              when ctor = Signature_builder_kind.DeclareFunctionDefKind ->
+              (* Multiple function declarations correspond to function overloads.
+               * Only allow these if this is a "function declaration" kind. *)
+              (true, acc_ctor)
+            | Some _ ->
+              (* Ignore any other entry *)
+              (false, acc_ctor)
+          in
+          let acc_stmt =
+            if add_entry then
+              let id = (loc, n) in
+              let dt = eval kind in
+              let decl_loc = fst kind in
+              T.stmt_of_decl outlined decl_loc id dt :: acc_stmt
+            else
+              acc_stmt
+          in
+          (acc_stmt, acc_ctor))
+        (acc, None)
+        entries
+    in
+    acc
+
+  let make_env outlined env = SMap.fold (make_env_entry outlined) env []
 
   let cjs_exports =
     let declare_module_exports mod_exp_loc loc t =
-      (mod_exp_loc, Ast.Statement.DeclareModuleExports (loc, t))
+      ( mod_exp_loc,
+        Ast.Statement.DeclareModuleExports
+          { Ast.Statement.DeclareModuleExports.annot = (loc, t); comments = None } )
     in
     let additional_properties_of_module_exports outlined add_module_exports_list =
-      Core_list.rev_map
+      Base.List.rev_map
         ~f:(fun (id, expr) ->
           let annot = T.type_of_expr_type outlined (Eval.literal_expr expr) in
-          Ast.Type.Object.(
-            Property
-              ( fst id,
-                {
-                  Property.key =
-                    Ast.Expression.Object.Property.Identifier (Flow_ast_utils.ident_of_source id);
-                  value = Property.Init annot;
-                  optional = false;
-                  static = false;
-                  proto = false;
-                  _method = false;
-                  variance = None;
-                } )))
+          let open Ast.Type.Object in
+          Property
+            ( fst id,
+              {
+                Property.key =
+                  Ast.Expression.Object.Property.Identifier (Flow_ast_utils.ident_of_source id);
+                value = Property.Init annot;
+                optional = false;
+                static = false;
+                proto = false;
+                _method = false;
+                variance = None;
+                comments = None;
+              } ))
         add_module_exports_list
     in
     let set_module_exports mod_exp_loc outlined expr add_module_exports_list =
       let annot = T.type_of_expr_type outlined (Eval.literal_expr expr) in
       if ListUtils.is_empty add_module_exports_list then
-        (mod_exp_loc, Ast.Statement.DeclareModuleExports (fst annot, annot))
+        ( mod_exp_loc,
+          Ast.Statement.DeclareModuleExports
+            { Ast.Statement.DeclareModuleExports.annot = (fst annot, annot); comments = None } )
       else
-        let properties =
-          additional_properties_of_module_exports outlined add_module_exports_list
-        in
-        let ot = { Ast.Type.Object.exact = false; inexact = true; properties } in
+        let properties = additional_properties_of_module_exports outlined add_module_exports_list in
+        let ot = { Ast.Type.Object.exact = false; inexact = true; properties; comments = None } in
         let assign = (mod_exp_loc, Ast.Type.Object ot) in
         let t =
           let name = "$TEMPORARY$module$exports$assign" in
@@ -1655,16 +1854,28 @@ module Generator (Env : Signature_builder_verify.EvalEnv) = struct
               (Flow_ast_utils.ident_of_source (mod_exp_loc, name))
           in
           ( mod_exp_loc,
-            Ast.Type.Generic { Ast.Type.Generic.id; targs = Some (mod_exp_loc, [annot; assign]) }
-          )
+            Ast.Type.Generic
+              {
+                Ast.Type.Generic.id;
+                targs =
+                  Some
+                    (mod_exp_loc, { Ast.Type.TypeArgs.arguments = [annot; assign]; comments = None });
+                comments = None;
+              } )
         in
-        (mod_exp_loc, Ast.Statement.DeclareModuleExports (fst annot, t))
+        ( mod_exp_loc,
+          Ast.Statement.DeclareModuleExports
+            { Ast.Statement.DeclareModuleExports.annot = (fst annot, t); comments = None } )
     in
     let add_module_exports mod_exp_loc outlined add_module_exports_list =
       let properties = additional_properties_of_module_exports outlined add_module_exports_list in
-      let ot = { Ast.Type.Object.exact = true; inexact = false; properties } in
+      let ot = { Ast.Type.Object.exact = true; inexact = false; properties; comments = None } in
       let t = (mod_exp_loc, Ast.Type.Object ot) in
-      [(mod_exp_loc, Ast.Statement.DeclareModuleExports (mod_exp_loc, t))]
+      [
+        ( mod_exp_loc,
+          Ast.Statement.DeclareModuleExports
+            { Ast.Statement.DeclareModuleExports.annot = (mod_exp_loc, t); comments = None } );
+      ]
     in
     fun outlined -> function
       | (None, _) -> []
@@ -1700,46 +1911,54 @@ module Generator (Env : Signature_builder_verify.EvalEnv) = struct
           add_module_exports mod_exp_loc outlined add_module_exports_list)
 
   let eval_export_default_declaration =
-    Ast.Statement.ExportDefaultDeclaration.(
-      function
-      | Declaration
-          ( loc,
-            Ast.Statement.FunctionDeclaration
-              ({ Ast.Function.id = Some _; _ } as function_declaration) ) ->
-        `Decl (Entry.function_declaration loc function_declaration)
-      | Declaration
-          ( loc,
-            Ast.Statement.FunctionDeclaration
-              {
-                Ast.Function.id = None;
-                generator;
-                tparams;
-                params;
-                return;
-                body;
-                async;
-                predicate = _;
-                sig_loc = _;
-              } ) ->
-        `Expr (loc, T.Function (Eval.function_ generator async tparams params return body))
-      | Declaration (loc, Ast.Statement.ClassDeclaration ({ Ast.Class.id = Some _; _ } as class_))
-        ->
-        `Decl (Entry.class_ loc class_)
-      | Declaration
-          ( loc,
-            Ast.Statement.ClassDeclaration
-              { Ast.Class.id = None; tparams; body; extends; implements; classDecorators = _ } ) ->
-        let (super, super_targs) =
-          match extends with
-          | None -> (None, None)
-          | Some (_, { Ast.Class.Extends.expr; targs }) -> (Some expr, targs)
-        in
-        `Expr
-          (loc, T.Outline (T.Class (None, Eval.class_ tparams body super super_targs implements)))
-      | Declaration _stmt -> assert false
-      | Expression (loc, Ast.Expression.Function ({ Ast.Function.id = Some _; _ } as function_)) ->
-        `Decl (Entry.function_declaration loc function_)
-      | Expression expr -> `Expr (Eval.literal_expr expr))
+    let open Ast.Statement.ExportDefaultDeclaration in
+    function
+    | Declaration
+        ( loc,
+          Ast.Statement.FunctionDeclaration ({ Ast.Function.id = Some _; _ } as function_declaration)
+        ) ->
+      `Decl (Entry.function_declaration loc function_declaration)
+    | Declaration
+        ( loc,
+          Ast.Statement.FunctionDeclaration
+            {
+              Ast.Function.id = None;
+              generator;
+              tparams;
+              params;
+              return;
+              body;
+              async;
+              predicate = _;
+              sig_loc = _;
+              comments = _;
+            } ) ->
+      `Expr (loc, T.Function (Eval.function_ generator async tparams params return body))
+    | Declaration (loc, Ast.Statement.ClassDeclaration ({ Ast.Class.id = Some _; _ } as class_)) ->
+      `Decl (Entry.class_ loc class_)
+    | Declaration
+        ( loc,
+          Ast.Statement.ClassDeclaration
+            {
+              Ast.Class.id = None;
+              tparams;
+              body;
+              extends;
+              implements;
+              classDecorators = _;
+              comments = _;
+            } ) ->
+      let (super, super_targs) =
+        match extends with
+        | None -> (None, None)
+        | Some (_, { Ast.Class.Extends.expr; targs; comments = _ }) -> (Some expr, targs)
+      in
+      `Expr (loc, T.Outline (T.Class (None, Eval.class_ tparams body super super_targs implements)))
+    | Declaration (loc, Ast.Statement.EnumDeclaration enum) -> `Decl (Entry.enum loc enum)
+    | Declaration _stmt -> assert false
+    | Expression (loc, Ast.Expression.Function ({ Ast.Function.id = Some _; _ } as function_)) ->
+      `Decl (Entry.function_declaration loc function_)
+    | Expression expr -> `Expr (Eval.literal_expr expr)
 
   let export_name export_loc ?exported ?source local exportKind =
     ( export_loc,
@@ -1754,11 +1973,12 @@ module Generator (Env : Signature_builder_verify.EvalEnv) = struct
                      {
                        Ast.Statement.ExportNamedDeclaration.ExportSpecifier.local =
                          Flow_ast_utils.ident_of_source local;
-                       exported = Option.map ~f:Flow_ast_utils.ident_of_source exported;
+                       exported = Base.Option.map ~f:Flow_ast_utils.ident_of_source exported;
                      } );
                  ]);
           source;
           exportKind;
+          comments = None;
         } )
 
   let export_named_specifier export_loc local remote source exportKind =
@@ -1783,9 +2003,10 @@ module Generator (Env : Signature_builder_verify.EvalEnv) = struct
           specifiers =
             Some
               (Ast.Statement.ExportNamedDeclaration.ExportBatchSpecifier
-                 (star_loc, Option.map ~f:Flow_ast_utils.ident_of_source remote));
+                 (star_loc, Base.Option.map ~f:Flow_ast_utils.ident_of_source remote));
           source = Some (T.source_of_source source);
           exportKind;
+          comments = None;
         } )
 
   let declare_export_default_declaration export_loc default_loc declaration =
@@ -1796,6 +2017,7 @@ module Generator (Env : Signature_builder_verify.EvalEnv) = struct
           Ast.Statement.DeclareExportDeclaration.declaration = Some declaration;
           specifiers = None;
           source = None;
+          comments = None;
         } )
 
   let export_value_named_declaration export_loc local =
@@ -1964,16 +2186,21 @@ module Generator (Env : Signature_builder_verify.EvalEnv) = struct
         _end = { line = program_loc._end.line + loc._end.line; column = loc._end.column };
       }
 
-  let make env file_sig program =
-    let (program_loc, _, _) = program in
+  let make (env : Signature_builder_env.t) (file_sig : File_sig.exports_t) program :
+      (Loc.t, Loc.t) Flow_ast.Program.t =
+    let (program_loc, _) = program in
     let outlined = T.Outlined.create () in
     let env = make_env outlined env in
     let (values, types) = exports outlined file_sig in
     let outlined_stmts = T.Outlined.get outlined in
     ( program_loc,
-      List.sort Pervasives.compare (List.rev_append env @@ List.rev outlined_stmts)
-      @ List.sort Pervasives.compare (List.rev_append values @@ List.rev types),
-      [] )
+      {
+        Ast.Program.statements =
+          List.sort Stdlib.compare (List.rev_append env @@ List.rev outlined_stmts)
+          @ List.sort Stdlib.compare (List.rev_append values @@ List.rev types);
+        comments = None;
+        all_comments = [];
+      } )
 
   (* no need to include the comments *)
 end

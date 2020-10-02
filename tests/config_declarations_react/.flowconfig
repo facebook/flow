@@ -1,0 +1,13 @@
+[ignore]
+
+[include]
+
+[libs]
+
+[declarations]
+<PROJECT_ROOT>/node_modules/react-native/.*
+
+[options]
+types_first=false
+include_warnings=true
+all=true

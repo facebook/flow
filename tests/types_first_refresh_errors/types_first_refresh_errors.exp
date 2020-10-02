@@ -1,0 +1,24 @@
+
+Server should start in types-first mode
+Error ------------------------------------------------------------------------------------------------------- bar.js:3:2
+
+Cannot cast `require(...)` to string because number [1] is incompatible with string [2]. [incompatible-cast]
+
+   bar.js:3:2
+   3| (require('./foo'): string);
+       ^^^^^^^^^^^^^^^^
+
+References:
+   foo.js:3:18
+   3| module.exports = 0;
+                       ^ [1]
+   bar.js:3:20
+   3| (require('./foo'): string);
+                         ^^^^^^ [2]
+
+
+
+Found 1 error
+
+Fixing an error upstream should clear that error downstream
+No errors!

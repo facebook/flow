@@ -1,4 +1,4 @@
-(**
+(*
  * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
@@ -14,7 +14,8 @@ type patch = (int * int * string) list
 type key = File_key.t
 
 module DiffPatchHeap =
-  SharedMem_js.NoCache (SharedMem_js.Immediate) (File_key)
+  SharedMem_js.NoCache
+    (File_key)
     (struct
       type t = patch
 
@@ -26,3 +27,5 @@ module DiffPatchHeap =
 let set_diff = Expensive.wrap DiffPatchHeap.add
 
 let get_diff = DiffPatchHeap.get
+
+let remove_batch = DiffPatchHeap.remove_batch

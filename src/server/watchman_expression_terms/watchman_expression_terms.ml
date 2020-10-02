@@ -1,4 +1,4 @@
-(**
+(*
  * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
@@ -30,25 +30,22 @@ let make ~options =
   let absolute_paths =
     (* Config file *)
     let flowconfig_name = Options.flowconfig_name options in
-    let paths = [Server_files_js.config_file flowconfig_name @@ Options.root options] in
-    (* Module resolver *)
-    Option.value_map (Options.module_resolver options) ~default:paths ~f:(fun module_resolver ->
-        Path.to_string module_resolver :: paths)
+    [Server_files_js.config_file flowconfig_name @@ Options.root options]
   in
   (* Include any file with this basename *)
   let basenames = "package.json" :: List.map Filename.basename absolute_paths in
   [
     J.strlist ["type"; "f"];
     (* Watch for files *)
-      J.pred "anyof" @@ [J.assoc_strlist "suffix" suffixes; J.assoc_strlist "name" basenames];
+    J.pred "anyof" @@ [J.assoc_strlist "suffix" suffixes; J.assoc_strlist "name" basenames];
     J.pred "not"
     @@ [
          (* Ignore changes in source control dirs *)
-           J.pred "anyof"
-           @@ [
-                J.strlist ["dirname"; ".hg"];
-                J.strlist ["dirname"; ".git"];
-                J.strlist ["dirname"; ".svn"];
-              ];
+         J.pred "anyof"
+         @@ [
+              J.strlist ["dirname"; ".hg"];
+              J.strlist ["dirname"; ".git"];
+              J.strlist ["dirname"; ".svn"];
+            ];
        ];
   ]

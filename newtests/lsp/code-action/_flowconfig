@@ -1,5 +1,5 @@
 [options]
-experimental.types_first=true
-experimental.well_formed_exports=true
-experimental.lsp.code_actions=true
+types_first=true
+well_formed_exports=true
+experimental.enums=true
 all=true

@@ -1,6 +1,6 @@
 Error -------------------------------------------------------------------------------------------------- classes.js:26:2
 
-Cannot cast `'yo'` to `$Values` because string [1] is incompatible with `$Values` [2].
+Cannot cast `'yo'` to `$Values` because string [1] is incompatible with `$Values` [2]. [incompatible-cast]
 
    classes.js:26:2
    26| ('yo': $Values<NoProps>); // Error: There are no properties.
@@ -14,7 +14,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- classes.js:27:2
 
-Cannot cast `123` to `$Values` because number [1] is incompatible with `$Values` [2].
+Cannot cast `123` to `$Values` because number [1] is incompatible with `$Values` [2]. [incompatible-cast]
 
    classes.js:27:2
    27| (123: $Values<NoProps>); // Error: There are no properties.
@@ -28,7 +28,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- classes.js:28:3
 
-Cannot cast function to `$Values` because function [1] is incompatible with `$Values` [2].
+Cannot cast function to `$Values` because function [1] is incompatible with `$Values` [2]. [incompatible-cast]
 
    classes.js:28:3
    28| ((() => {}): $Values<NoProps>); // Error: There are no properties.
@@ -42,7 +42,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- classes.js:29:2
 
-Cannot cast `true` to `$Values` because boolean [1] is incompatible with `$Values` [2].
+Cannot cast `true` to `$Values` because boolean [1] is incompatible with `$Values` [2]. [incompatible-cast]
 
    classes.js:29:2
    29| (true: $Values<NoProps>); // Error: There are no properties.
@@ -56,7 +56,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- classes.js:31:2
 
-Cannot cast `'yo'` to `$Values` because string [1] is incompatible with `$Values` [2].
+Cannot cast `'yo'` to `$Values` because string [1] is incompatible with `$Values` [2]. [incompatible-cast]
 
    classes.js:31:2
    31| ('yo': $Values<NoReadProps>); // Error: There are no readable properties.
@@ -70,7 +70,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- classes.js:32:2
 
-Cannot cast `123` to `$Values` because number [1] is incompatible with `$Values` [2].
+Cannot cast `123` to `$Values` because number [1] is incompatible with `$Values` [2]. [incompatible-cast]
 
    classes.js:32:2
    32| (123: $Values<NoReadProps>); // Error: There are no readable properties.
@@ -84,7 +84,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- classes.js:33:3
 
-Cannot cast function to `$Values` because function [1] is incompatible with `$Values` [2].
+Cannot cast function to `$Values` because function [1] is incompatible with `$Values` [2]. [incompatible-cast]
 
    classes.js:33:3
    33| ((() => {}): $Values<NoReadProps>); // Error: There are no readable properties.
@@ -98,7 +98,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- classes.js:34:2
 
-Cannot cast `true` to `$Values` because boolean [1] is incompatible with `$Values` [2].
+Cannot cast `true` to `$Values` because boolean [1] is incompatible with `$Values` [2]. [incompatible-cast]
 
    classes.js:34:2
    34| (true: $Values<NoReadProps>); // Error: There are no readable properties.
@@ -112,7 +112,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- classes.js:36:2
 
-Cannot cast `'yo'` to `$Values` because string [1] is incompatible with number [2].
+Cannot cast `'yo'` to `$Values` because string [1] is incompatible with number [2]. [incompatible-cast]
 
    classes.js:36:2
    36| ('yo': $Values<OneProp>); // Error: There is no property with the type of
@@ -126,7 +126,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- classes.js:39:3
 
-Cannot cast function to `$Values` because function [1] is incompatible with number [2].
+Cannot cast function to `$Values` because function [1] is incompatible with number [2]. [incompatible-cast]
 
    classes.js:39:3
    39| ((() => {}): $Values<OneProp>); // Error: Even though there is a method, methods
@@ -140,7 +140,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- classes.js:41:2
 
-Cannot cast `true` to `$Values` because boolean [1] is incompatible with number [2].
+Cannot cast `true` to `$Values` because boolean [1] is incompatible with number [2]. [incompatible-cast]
 
    classes.js:41:2
    41| (true: $Values<OneProp>); // Error: There is no property with the type of
@@ -154,7 +154,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- classes.js:46:3
 
-Cannot cast function to `$Values` because:
+Cannot cast function to `$Values` because: [incompatible-cast]
  - Either function [1] is incompatible with string [2].
  - Or function [1] is incompatible with string [3].
  - Or function [1] is incompatible with number [4].
@@ -177,7 +177,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- classes.js:48:2
 
-Cannot cast `true` to `$Values` because:
+Cannot cast `true` to `$Values` because: [incompatible-cast]
  - Either boolean [1] is incompatible with string [2].
  - Or boolean [1] is incompatible with string [3].
  - Or boolean [1] is incompatible with number [4].
@@ -200,7 +200,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- classes.js:51:2
 
-Cannot cast `'yo'` to `$Values` because string [1] is incompatible with number [2].
+Cannot cast `'yo'` to `$Values` because string [1] is incompatible with number [2]. [incompatible-cast]
 
    classes.js:51:2
    51| ('yo': $Values<Child>); // TODO: This should be ok since there is a property
@@ -214,7 +214,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- classes.js:54:3
 
-Cannot cast function to `$Values` because function [1] is incompatible with number [2].
+Cannot cast function to `$Values` because function [1] is incompatible with number [2]. [incompatible-cast]
 
    classes.js:54:3
    54| ((() => {}): $Values<Child>); // Error: There is no property with the type of
@@ -228,7 +228,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- classes.js:56:2
 
-Cannot cast `true` to `$Values` because boolean [1] is incompatible with number [2].
+Cannot cast `true` to `$Values` because boolean [1] is incompatible with number [2]. [incompatible-cast]
 
    classes.js:56:2
    56| (true: $Values<Child>); // Error: There is no property with the type of boolean.
@@ -242,7 +242,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ non_object.js:3:8
 
-boolean [1] is not an object.
+boolean [1] is not an object. [incompatible-use]
 
    non_object.js:3:8
    3| ('yo': $Values<boolean>); // Error: `boolean` is not an object and so has no
@@ -256,7 +256,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ non_object.js:5:7
 
-boolean [1] is not an object.
+boolean [1] is not an object. [incompatible-use]
 
    non_object.js:5:7
    5| (123: $Values<boolean>); // Error: `boolean` is not an object and so has no
@@ -270,7 +270,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ non_object.js:7:8
 
-boolean [1] is not an object.
+boolean [1] is not an object. [incompatible-use]
 
    non_object.js:7:8
    7| (true: $Values<boolean>); // Error: `boolean` is not an object and so has no
@@ -284,7 +284,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- object_types.js:6:2
 
-Cannot cast `123` to `NoProps` because number [1] is incompatible with `NoProps` [2].
+Cannot cast `123` to `NoProps` because number [1] is incompatible with `NoProps` [2]. [incompatible-cast]
 
    object_types.js:6:2
    6| (123: NoProps); // Error: There are no props.
@@ -298,7 +298,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- object_types.js:7:2
 
-Cannot cast `345` to `NoReadProps` because number [1] is incompatible with `NoReadProps` [2].
+Cannot cast `345` to `NoReadProps` because number [1] is incompatible with `NoReadProps` [2]. [incompatible-cast]
 
    object_types.js:7:2
    7| (345: NoReadProps); // Error: There are no props which can be read.
@@ -312,7 +312,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- object_types.js:11:2
 
-Cannot cast `123` to `OneProp` because number [1] is incompatible with string [2].
+Cannot cast `123` to `OneProp` because number [1] is incompatible with string [2]. [incompatible-cast]
 
    object_types.js:11:2
    11| (123: OneProp); // Error: There is no property with the type of number.
@@ -326,7 +326,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- object_types.js:12:2
 
-Cannot cast `true` to `OneProp` because boolean [1] is incompatible with string [2].
+Cannot cast `true` to `OneProp` because boolean [1] is incompatible with string [2]. [incompatible-cast]
 
    object_types.js:12:2
    12| (true: OneProp); // Error: There is no property with the type of boolean.
@@ -338,18 +338,15 @@ References:
               ^^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------- object_types.js:14:4
+Error -------------------------------------------------------------------------------------------- object_types.js:14:16
 
-Cannot cast `null` to number because string [1] is incompatible with number [2].
+Cannot cast `null` to number because string [1] is incompatible with number [2]. [incompatible-cast]
 
-   object_types.js:14:4
-   14| (((null: any): OneProp): number); // Error: There is no string in the final
-          ^^^^^^^^^^^^^^^^^^^
-
-References:
    object_types.js:14:16
    14| (((null: any): OneProp): number); // Error: There is no string in the final
                       ^^^^^^^ [1]
+
+References:
    object_types.js:14:26
    14| (((null: any): OneProp): number); // Error: There is no string in the final
                                 ^^^^^^ [2]
@@ -357,7 +354,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- object_types.js:20:2
 
-Cannot cast `true` to `ManyProps` because:
+Cannot cast `true` to `ManyProps` because: [incompatible-cast]
  - Either boolean [1] is incompatible with number [2].
  - Or boolean [1] is incompatible with string [3].
  - Or boolean [1] is incompatible with string [4].
@@ -378,20 +375,17 @@ References:
                                      ^^^^^^ [4]
 
 
-Error --------------------------------------------------------------------------------------------- object_types.js:23:4
+Error -------------------------------------------------------------------------------------------- object_types.js:23:16
 
-Cannot cast `null` to union type because:
+Cannot cast `null` to union type because: [incompatible-cast]
  - Either number [1] is incompatible with string [2].
  - Or number [1] is incompatible with boolean [3].
 
-   object_types.js:23:4
-   23| (((null: any): ManyProps): string | boolean); // Error: There is no number in
-          ^^^^^^^^^^^^^^^^^^^^^
-
-References:
    object_types.js:23:16
    23| (((null: any): ManyProps): string | boolean); // Error: There is no number in
                       ^^^^^^^^^ [1]
+
+References:
    object_types.js:23:28
    23| (((null: any): ManyProps): string | boolean); // Error: There is no number in
                                   ^^^^^^ [2]
@@ -402,7 +396,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- object_types.js:27:2
 
-Cannot cast `'yo'` to `DictProps` because:
+Cannot cast `'yo'` to `DictProps` because: [incompatible-cast]
  - Either string [1] is incompatible with number [2].
  - Or string [1] is incompatible with boolean [3].
 
@@ -419,20 +413,17 @@ References:
                                      ^^^^^^^ [3]
 
 
-Error --------------------------------------------------------------------------------------------- object_types.js:32:4
+Error -------------------------------------------------------------------------------------------- object_types.js:32:16
 
-Cannot cast `null` to union type because:
+Cannot cast `null` to union type because: [incompatible-cast]
  - Either number [1] is incompatible with string [2].
  - Or number [1] is incompatible with boolean [3].
 
-   object_types.js:32:4
-   32| (((null: any): DictProps): string | boolean); // Error: There is no number in
-          ^^^^^^^^^^^^^^^^^^^^^
-
-References:
    object_types.js:32:16
    32| (((null: any): DictProps): string | boolean); // Error: There is no number in
                       ^^^^^^^^^ [1]
+
+References:
    object_types.js:32:28
    32| (((null: any): DictProps): string | boolean); // Error: There is no number in
                                   ^^^^^^ [2]
@@ -443,7 +434,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- object_types.js:40:2
 
-Cannot cast `true` to `$Values` because:
+Cannot cast `true` to `$Values` because: [incompatible-cast]
  - Either boolean [1] is incompatible with number [2].
  - Or boolean [1] is incompatible with string [3].
 
@@ -462,7 +453,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- object_types.js:43:3
 
-Cannot cast function to `$Values` because:
+Cannot cast function to `$Values` because: [incompatible-cast]
  - Either function [1] is incompatible with number [2].
  - Or function [1] is incompatible with string [3].
 
@@ -481,7 +472,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- object_types.js:71:2
 
-Cannot cast `'DIAMONDS'` to `SuiteEnum` because string [1] is incompatible with enum [2].
+Cannot cast `'DIAMONDS'` to `SuiteEnum` because string [1] is incompatible with literal union [2]. [incompatible-cast]
 
    object_types.js:71:2
    71| ('DIAMONDS': SuiteEnum); // Error: 'DIAMONDS' is a key, but not a value.
@@ -495,7 +486,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- object_types.js:72:2
 
-Cannot cast `'Magic'` to `SuiteEnum` because string [1] is incompatible with enum [2].
+Cannot cast `'Magic'` to `SuiteEnum` because string [1] is incompatible with literal union [2]. [incompatible-cast]
 
    object_types.js:72:2
    72| ('Magic': SuiteEnum); // Error: 'Magic' is not a value.
@@ -507,22 +498,19 @@ References:
                  ^^^^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------- object_types.js:73:3
+Error -------------------------------------------------------------------------------------------- object_types.js:73:15
 
-Cannot cast `'Diamonds'` to `SuiteEnum` because:
+Cannot cast `'Diamonds'` to `SuiteEnum` because: [incompatible-cast]
  - Either string [1] is incompatible with string literal `Spades` [2].
  - Or string [1] is incompatible with string literal `Hearts` [3].
  - Or string [1] is incompatible with string literal `Diamonds` [4].
  - Or string [1] is incompatible with string literal `Clubs` [5].
 
-   object_types.js:73:3
-   73| (('Diamonds': string): SuiteEnum); // Error: the `string` type is to general and
-         ^^^^^^^^^^^^^^^^^^
-
-References:
    object_types.js:73:15
    73| (('Diamonds': string): SuiteEnum); // Error: the `string` type is to general and
                      ^^^^^^ [1]
+
+References:
    object_types.js:52:11
    52|   SPADES: 'Spades',
                  ^^^^^^^^ [2]
@@ -539,7 +527,8 @@ References:
 
 Error -------------------------------------------------------------------------------------------- object_types.js:79:12
 
-Cannot call `magicTrick` with `'DIAMONDS'` bound to `suite` because string [1] is incompatible with enum [2].
+Cannot call `magicTrick` with `'DIAMONDS'` bound to `suite` because string [1] is incompatible with literal union [2].
+[incompatible-call]
 
    object_types.js:79:12
    79| magicTrick('DIAMONDS'); // Error: 'DIAMONDS' is a key, but not a value.
@@ -553,7 +542,8 @@ References:
 
 Error -------------------------------------------------------------------------------------------- object_types.js:80:12
 
-Cannot call `magicTrick` with `'Magic'` bound to `suite` because string [1] is incompatible with enum [2].
+Cannot call `magicTrick` with `'Magic'` bound to `suite` because string [1] is incompatible with literal union [2].
+[incompatible-call]
 
    object_types.js:80:12
    80| magicTrick('Magic'); // Error: 'Magic' is not a value.
@@ -565,22 +555,19 @@ References:
                                   ^^^^^^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------------- object_types.js:81:13
+Error -------------------------------------------------------------------------------------------- object_types.js:81:25
 
-Cannot call `magicTrick` with `'Diamonds'` bound to `suite` because:
+Cannot call `magicTrick` with `'Diamonds'` bound to `suite` because: [incompatible-call]
  - Either string [1] is incompatible with string literal `Spades` [2].
  - Or string [1] is incompatible with string literal `Hearts` [3].
  - Or string [1] is incompatible with string literal `Diamonds` [4].
  - Or string [1] is incompatible with string literal `Clubs` [5].
 
-   object_types.js:81:13
-   81| magicTrick(('Diamonds': string)); // Error: the `string` type is to general and
-                   ^^^^^^^^^^^^^^^^^^
-
-References:
    object_types.js:81:25
    81| magicTrick(('Diamonds': string)); // Error: the `string` type is to general and
                                ^^^^^^ [1]
+
+References:
    object_types.js:52:11
    52|   SPADES: 'Spades',
                  ^^^^^^^^ [2]
@@ -597,7 +584,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------- object_types.js:95:2
 
-Cannot cast `'DIAMONDS'` to `FrozenSuiteEnum` because string [1] is incompatible with enum [2].
+Cannot cast `'DIAMONDS'` to `FrozenSuiteEnum` because string [1] is incompatible with literal union [2].
+[incompatible-cast]
 
    object_types.js:95:2
    95| ('DIAMONDS': FrozenSuiteEnum); // Error: 'DIAMONDS' is a key, but not a value.
@@ -611,7 +599,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------- object_types.js:96:2
 
-Cannot cast `'Magic'` to `FrozenSuiteEnum` because string [1] is incompatible with enum [2].
+Cannot cast `'Magic'` to `FrozenSuiteEnum` because string [1] is incompatible with literal union [2].
+[incompatible-cast]
 
    object_types.js:96:2
    96| ('Magic': FrozenSuiteEnum); // Error: 'Magic' is not a value.
@@ -623,22 +612,19 @@ References:
                  ^^^^^^^^^^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------- object_types.js:97:3
+Error -------------------------------------------------------------------------------------------- object_types.js:97:15
 
-Cannot cast `'Diamonds'` to `FrozenSuiteEnum` because:
+Cannot cast `'Diamonds'` to `FrozenSuiteEnum` because: [incompatible-cast]
  - Either string [1] is incompatible with string literal `Spades` [2].
  - Or string [1] is incompatible with string literal `Hearts` [3].
  - Or string [1] is incompatible with string literal `Diamonds` [4].
  - Or string [1] is incompatible with string literal `Clubs` [5].
 
-   object_types.js:97:3
-   97| (('Diamonds': string): FrozenSuiteEnum); // Error: `string` is too general
-         ^^^^^^^^^^^^^^^^^^
-
-References:
    object_types.js:97:15
    97| (('Diamonds': string): FrozenSuiteEnum); // Error: `string` is too general
                      ^^^^^^ [1]
+
+References:
    object_types.js:90:11
    90|   SPADES: 'Spades',
                  ^^^^^^^^ [2]
@@ -655,7 +641,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- object_types.js:107:2
 
-Cannot cast `1` to `NumbersEnum` because number [1] is incompatible with enum [2].
+Cannot cast `1` to `NumbersEnum` because number [1] is incompatible with literal union [2]. [incompatible-cast]
 
    object_types.js:107:2
    107| (1: NumbersEnum); // error, NumbersEnum = -1 | 2

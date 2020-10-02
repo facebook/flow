@@ -3,9 +3,10 @@
  * @format
  */
 
+import type Suite from 'flow-dev-tools/src/test/Suite.js';
 import {suite, test} from 'flow-dev-tools/src/test/Tester';
 
-export default suite(
+export default (suite(
   ({
     lspStartAndConnect,
     lspRequestAndWaitUntilResponse,
@@ -17,7 +18,7 @@ export default suite(
       lspStartAndConnect(),
       lspNotification('textDocument/didOpen', {
         textDocument: {
-          uri: '<PLACEHOLDER_PROJECT_URL_SLASH>open.js',
+          uri: '<PLACEHOLDER_PROJECT_URL>/open.js',
           languageId: 'javascript',
           version: 1,
           text: `// @flow
@@ -28,15 +29,15 @@ jones();
         },
       }).verifyAllLSPMessagesInStep([''], [...lspIgnoreStatusAndCancellation]),
       lspRequestAndWaitUntilResponse('textDocument/definition', {
-        textDocument: {uri: '<PLACEHOLDER_PROJECT_URL_SLASH>open.js'},
+        textDocument: {uri: '<PLACEHOLDER_PROJECT_URL>/open.js'},
         position: {line: 3, character: 1},
       }).verifyAllLSPMessagesInStep(
-        ['textDocument/definition{open.js,line":2}'],
+        [['textDocument/definition', '{open.js,line":2}']],
         [...lspIgnoreStatusAndCancellation],
       ),
       lspNotification('textDocument/didChange', {
         textDocument: {
-          uri: '<PLACEHOLDER_PROJECT_URL_SLASH>open.js',
+          uri: '<PLACEHOLDER_PROJECT_URL>/open.js',
           version: 2,
         },
         contentChanges: [
@@ -50,22 +51,22 @@ wilbur();
         ],
       }).verifyAllLSPMessagesInStep([''], [...lspIgnoreStatusAndCancellation]),
       lspRequestAndWaitUntilResponse('textDocument/definition', {
-        textDocument: {uri: '<PLACEHOLDER_PROJECT_URL_SLASH>open.js'},
+        textDocument: {uri: '<PLACEHOLDER_PROJECT_URL>/open.js'},
         position: {line: 3, character: 1},
       }).verifyAllLSPMessagesInStep(
-        ['textDocument/definition{open.js,"line":1}'],
+        [['textDocument/definition', '{open.js,"line":1}']],
         [...lspIgnoreStatusAndCancellation],
       ),
       lspNotification('textDocument/didClose', {
-        textDocument: {uri: '<PLACEHOLDER_PROJECT_URL_SLASH>open.js'},
+        textDocument: {uri: '<PLACEHOLDER_PROJECT_URL>/open.js'},
       }).verifyAllLSPMessagesInStep([''], [...lspIgnoreStatusAndCancellation]),
       lspRequestAndWaitUntilResponse('textDocument/definition', {
-        textDocument: {uri: '<PLACEHOLDER_PROJECT_URL_SLASH>open.js'},
+        textDocument: {uri: '<PLACEHOLDER_PROJECT_URL>/open.js'},
         position: {line: 3, character: 1},
       }).verifyAllLSPMessagesInStep(
-        ['textDocument/definition{unexpected error}'],
+        [['textDocument/definition', '{unexpected error}']],
         [...lspIgnoreStatusAndCancellation],
       ),
     ]),
   ],
-);
+): Suite);

@@ -1,4 +1,4 @@
-(**
+(*
  * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
@@ -6,12 +6,10 @@
  *)
 
 open Utils_js
-module File_sig = File_sig.With_Loc
 
 type denormalized_file_data = {
-  package: Package_json.t option;
   (* Only package.json files have this *)
-  file_sig: File_sig.t;
+  package: (Package_json.t, unit) result option;
   resolved_requires: Module_heaps.resolved_requires;
   hash: Xx.hash;
 }
@@ -30,11 +28,16 @@ type unparsed_file_data = {
   unparsed_hash: Xx.hash;
 }
 
+type saved_state_dependency_graph =
+  | Classic_dep_graph of Utils_js.FilenameSet.t Utils_js.FilenameMap.t
+  | Types_first_dep_graph of
+      (Utils_js.FilenameSet.t * Utils_js.FilenameSet.t) Utils_js.FilenameMap.t
+
 (* This is the complete saved state data representation *)
 type saved_state_data = {
   (* The version header should guarantee that a saved state is used by the same version of Flow.
    * However, config might have changed in a way that invalidates the saved state. In the future,
-   * we probably could whitelist some config options, whitespace, etc. But for now, let's
+   * we probably could allow some config options, whitespace, etc. But for now, let's
    * invalidate the saved state if the config has changed at all *)
   flowconfig_hash: Xx.hash;
   parsed_heaps: parsed_file_data FilenameMap.t;
@@ -50,13 +53,43 @@ type saved_state_data = {
    *)
   local_errors: Flow_error.ErrorSet.t Utils_js.FilenameMap.t;
   warnings: Flow_error.ErrorSet.t Utils_js.FilenameMap.t;
-  coverage: Coverage_response.file_coverage Utils_js.FilenameMap.t;
-  node_modules_containers: SSet.t; (* TODO - Figure out what to do about module.resolver *)
+  node_modules_containers: SSet.t SMap.t;
+  dependency_graph: saved_state_dependency_graph;
 }
 
 let modulename_map_fn ~f = function
   | Modulename.Filename fn -> Modulename.Filename (f fn)
   | Modulename.String _ as module_name -> module_name
+
+let update_dependency_graph_filenames f graph =
+  let update_set set =
+    FilenameSet.fold (fun elt new_set -> FilenameSet.add (f elt) new_set) set FilenameSet.empty
+  in
+  let update_map update_value map =
+    FilenameMap.fold
+      (fun key value new_map ->
+        let key = f key in
+        let value = update_value value in
+        FilenameMap.update
+          key
+          (function
+            | None -> Some value
+            | Some _ -> invalid_arg "Duplicate keys created by mapper function")
+          new_map)
+      map
+      FilenameMap.empty
+  in
+  match graph with
+  | Classic_dep_graph map ->
+    let update_value = update_set in
+    Classic_dep_graph (update_map update_value map)
+  | Types_first_dep_graph map ->
+    let update_value (sig_deps, impl_deps) =
+      let sig_deps = update_set sig_deps in
+      let impl_deps = update_set impl_deps in
+      (sig_deps, impl_deps)
+    in
+    Types_first_dep_graph (update_map update_value map)
 
 (* Saving the saved state generally consists of 3 things:
  *
@@ -77,21 +110,48 @@ module Save : sig
     profiling:Profiling_js.running ->
     unit Lwt.t
 end = struct
-  let normalize_file_key ~root = File_key.map (Files.relative_path root)
+  module FileNormalizer : sig
+    type t
 
-  (* A File_sig.t is a complicated data structure with Loc.t's hidden everywhere. The easiest way to
-   * make sure we get them all is with a mapper *)
-  class file_sig_normalizer root =
-    object
-      inherit File_sig.mapper
+    val make : root:string -> t
 
-      method! loc (loc : Loc.t) =
-        { loc with Loc.source = Option.map ~f:(normalize_file_key ~root) loc.Loc.source }
-    end
+    val normalize_path : t -> string -> string
+
+    val normalize_file_key : t -> File_key.t -> File_key.t
+  end = struct
+    type t = {
+      root: string;
+      file_key_cache: (File_key.t, File_key.t) Hashtbl.t;
+    }
+
+    let make ~root = { root; file_key_cache = Hashtbl.create 16 }
+
+    let with_cache tbl key f =
+      match Hashtbl.find_opt tbl key with
+      | Some result -> result
+      | None ->
+        let result = f key in
+        Hashtbl.add tbl key result;
+        result
+
+    (* We could also add a cache for this call, to improve sharing of the underlying strings
+     * between file keys and the places that deal with raw paths. Unfortunately, an April 2020 test
+     * of the saved state size of Facebook's largest JS codebase showed that while adding this
+     * cache decreased the pre-compression size, it actually increased the post-compression size.
+     * *)
+    let normalize_path { root; _ } path = Files.relative_path root path
+
+    let normalize_file_key ({ file_key_cache; _ } as normalizer) file_key =
+      with_cache file_key_cache file_key (File_key.map (normalize_path normalizer))
+  end
+
+  let normalize_dependency_graph ~normalizer =
+    update_dependency_graph_filenames (FileNormalizer.normalize_file_key normalizer)
 
   (* A Flow_error.t is a complicated data structure with Loc.t's hidden everywhere. *)
-  let normalize_error ~root =
-    Flow_error.map_loc_of_error (ALoc.update_source (Option.map ~f:(normalize_file_key ~root)))
+  let normalize_error ~normalizer =
+    Flow_error.map_loc_of_error
+      (ALoc.update_source (Base.Option.map ~f:(FileNormalizer.normalize_file_key normalizer)))
 
   (* We write the Flow version at the beginning of each saved state file. It's an easy way to assert
    * upon reading the file that the writer and reader are the same version of Flow *)
@@ -112,26 +172,28 @@ end = struct
     in
     loop 0 version_length
 
-  let normalize_info ~root info =
+  let normalize_info ~normalizer info =
     let module_name =
-      modulename_map_fn ~f:(normalize_file_key ~root) info.Module_heaps.module_name
+      modulename_map_fn
+        ~f:(FileNormalizer.normalize_file_key normalizer)
+        info.Module_heaps.module_name
     in
     { info with Module_heaps.module_name }
 
-  let normalize_parsed_data ~root parsed_file_data =
+  let normalize_parsed_data ~normalizer parsed_file_data =
     (* info *)
-    let info = normalize_info ~root parsed_file_data.info in
-    (* file_sig *)
-    let file_sig =
-      (new file_sig_normalizer root)#file_sig parsed_file_data.normalized_file_data.file_sig
-    in
+    let info = normalize_info ~normalizer parsed_file_data.info in
     (* resolved_requires *)
     let { Module_heaps.resolved_modules; phantom_dependents; hash } =
       parsed_file_data.normalized_file_data.resolved_requires
     in
-    let phantom_dependents = SSet.map (Files.relative_path root) phantom_dependents in
+    let phantom_dependents =
+      SSet.map (FileNormalizer.normalize_path normalizer) phantom_dependents
+    in
     let resolved_modules =
-      SMap.map (modulename_map_fn ~f:(normalize_file_key ~root)) resolved_modules
+      SMap.map
+        (modulename_map_fn ~f:(FileNormalizer.normalize_file_key normalizer))
+        resolved_modules
     in
     let resolved_requires = { Module_heaps.resolved_modules; phantom_dependents; hash } in
     {
@@ -139,14 +201,13 @@ end = struct
       normalized_file_data =
         {
           package = parsed_file_data.normalized_file_data.package;
-          file_sig;
           resolved_requires;
           hash = parsed_file_data.normalized_file_data.hash;
         };
     }
 
   (* Collect all the data for a single parsed file *)
-  let collect_normalized_data_for_parsed_file ~root ~reader parsed_heaps fn =
+  let collect_normalized_data_for_parsed_file ~normalizer ~reader fn parsed_heaps =
     let package =
       match fn with
       | File_key.JsonFile str when Filename.basename str = "package.json" ->
@@ -159,28 +220,27 @@ end = struct
         normalized_file_data =
           {
             package;
-            file_sig = Parsing_heaps.Reader.get_file_sig_unsafe ~reader fn;
             resolved_requires =
               Module_heaps.Reader.get_resolved_requires_unsafe ~reader ~audit:Expensive.ok fn;
             hash = Parsing_heaps.Reader.get_file_hash_unsafe ~reader fn;
           };
       }
     in
-    let relative_fn = normalize_file_key ~root fn in
-    let relative_file_data = normalize_parsed_data ~root file_data in
+    let relative_fn = FileNormalizer.normalize_file_key normalizer fn in
+    let relative_file_data = normalize_parsed_data ~normalizer file_data in
     FilenameMap.add relative_fn relative_file_data parsed_heaps
 
   (* Collect all the data for a single unparsed file *)
-  let collect_normalized_data_for_unparsed_file ~root ~reader unparsed_heaps fn =
+  let collect_normalized_data_for_unparsed_file ~normalizer ~reader fn unparsed_heaps =
     let relative_file_data =
       {
         unparsed_info =
-          normalize_info ~root
+          normalize_info ~normalizer
           @@ Module_heaps.Reader.get_info_unsafe ~reader ~audit:Expensive.ok fn;
         unparsed_hash = Parsing_heaps.Reader.get_file_hash_unsafe ~reader fn;
       }
     in
-    let relative_fn = normalize_file_key ~root fn in
+    let relative_fn = FileNormalizer.normalize_file_key normalizer fn in
     FilenameMap.add relative_fn relative_file_data unparsed_heaps
 
   (* The builtin flowlibs are excluded from the saved state. The server which loads the saved state
@@ -192,41 +252,40 @@ end = struct
       let root_str = Path.to_string root in
       (fun f -> not (Files.is_prefix root_str f))
 
-  let normalize_error_set ~root = Flow_error.ErrorSet.map (normalize_error ~root)
+  let normalize_error_set ~normalizer = Flow_error.ErrorSet.map (normalize_error ~normalizer)
 
   (* Collect all the data for all the files *)
-  let collect_data ~workers ~genv ~env ~profiling =
+  let collect_data ~genv ~env ~profiling =
     let options = genv.ServerEnv.options in
-    let root = Options.root options |> Path.to_string in
     let reader = State_reader.create () in
-    let%lwt parsed_heaps =
-      Profiling_js.with_timer_lwt profiling ~timer:"CollectParsed" ~f:(fun () ->
-          MultiWorkerLwt.call
-            workers
-            ~job:(List.fold_left (collect_normalized_data_for_parsed_file ~root ~reader))
-            ~neutral:FilenameMap.empty
-            ~merge:FilenameMap.union
-            ~next:(MultiWorkerLwt.next workers (FilenameSet.elements env.ServerEnv.files)))
+    let normalizer =
+      let root = Options.root options |> Path.to_string in
+      FileNormalizer.make ~root
     in
-    let%lwt unparsed_heaps =
-      Profiling_js.with_timer_lwt profiling ~timer:"CollectUnparsed" ~f:(fun () ->
-          MultiWorkerLwt.call
-            workers
-            ~job:(List.fold_left (collect_normalized_data_for_unparsed_file ~root ~reader))
-            ~neutral:FilenameMap.empty
-            ~merge:FilenameMap.union
-            ~next:(MultiWorkerLwt.next workers (FilenameSet.elements env.ServerEnv.unparsed)))
+    let parsed_heaps =
+      Profiling_js.with_timer profiling ~timer:"CollectParsed" ~f:(fun () ->
+          FilenameSet.fold
+            (collect_normalized_data_for_parsed_file ~normalizer ~reader)
+            env.ServerEnv.files
+            FilenameMap.empty)
+    in
+    let unparsed_heaps =
+      Profiling_js.with_timer profiling ~timer:"CollectUnparsed" ~f:(fun () ->
+          FilenameSet.fold
+            (collect_normalized_data_for_unparsed_file ~normalizer ~reader)
+            env.ServerEnv.unparsed
+            FilenameMap.empty)
     in
     let ordered_non_flowlib_libs =
       env.ServerEnv.ordered_libs
       |> List.filter (is_not_in_flowlib ~options)
-      |> Core_list.map ~f:(Files.relative_path root)
+      |> Base.List.map ~f:(FileNormalizer.normalize_path normalizer)
     in
     let local_errors =
       FilenameMap.fold
         (fun fn error_set acc ->
-          let normalized_fn = normalize_file_key ~root fn in
-          let normalized_error_set = normalize_error_set ~root error_set in
+          let normalized_fn = FileNormalizer.normalize_file_key normalizer fn in
+          let normalized_error_set = normalize_error_set ~normalizer error_set in
           FilenameMap.add normalized_fn normalized_error_set acc)
         env.ServerEnv.errors.ServerEnv.local_errors
         FilenameMap.empty
@@ -234,14 +293,45 @@ end = struct
     let warnings =
       FilenameMap.fold
         (fun fn warning_set acc ->
-          let normalized_fn = normalize_file_key ~root fn in
-          let normalized_error_set = normalize_error_set ~root warning_set in
+          let normalized_fn = FileNormalizer.normalize_file_key normalizer fn in
+          let normalized_error_set = normalize_error_set ~normalizer warning_set in
           FilenameMap.add normalized_fn normalized_error_set acc)
         env.ServerEnv.errors.ServerEnv.warnings
         FilenameMap.empty
     in
     let node_modules_containers =
-      SSet.map (Files.relative_path root) !Files.node_modules_containers
+      SMap.fold
+        (fun key value acc -> SMap.add (FileNormalizer.normalize_path normalizer key) value acc)
+        !Files.node_modules_containers
+        SMap.empty
+    in
+    let dependency_graph =
+      let dependency_info = env.ServerEnv.dependency_info in
+      let impl_map =
+        dependency_info |> Dependency_info.implementation_dependency_graph |> FilenameGraph.to_map
+      in
+      let dependency_graph =
+        if Dependency_info.is_types_first dependency_info then begin
+          let sig_map =
+            dependency_info |> Dependency_info.sig_dependency_graph |> FilenameGraph.to_map
+          in
+          (* The maps should have the same entries. Enforce this by asserting that they have the
+           * same size, and then by using `FilenameMap.find` below to ensure that each `impl_map`
+           * entry has a corresponding `sig_map` entry. *)
+          assert (FilenameMap.cardinal sig_map = FilenameMap.cardinal impl_map);
+          let combined_map =
+            FilenameMap.mapi
+              (fun file impl_deps ->
+                let sig_deps = FilenameMap.find file sig_map in
+                (sig_deps, impl_deps))
+              impl_map
+          in
+          Types_first_dep_graph combined_map
+        end else
+          Classic_dep_graph impl_map
+      in
+
+      normalize_dependency_graph ~normalizer dependency_graph
     in
     let flowconfig_hash =
       FlowConfig.get_hash
@@ -256,15 +346,14 @@ end = struct
         ordered_non_flowlib_libs;
         local_errors;
         warnings;
-        coverage = env.ServerEnv.coverage;
         node_modules_containers;
+        dependency_graph;
       }
 
   let save ~saved_state_filename ~genv ~env ~profiling =
     Hh_logger.info "Collecting data for saved state";
 
-    let workers = genv.ServerEnv.workers in
-    let%lwt data = collect_data ~workers ~genv ~env ~profiling in
+    let%lwt data = collect_data ~genv ~env ~profiling in
     let filename = Path.to_string saved_state_filename in
     let%lwt fd = Lwt_unix.openfile filename [Unix.O_WRONLY; Unix.O_CREAT; Unix.O_TRUNC] 0o666 in
     let%lwt header_bytes_written = write_version fd in
@@ -338,16 +427,12 @@ module Load : sig
 end = struct
   let denormalize_file_key ~root fn = File_key.map (Files.absolute_path root) fn
 
-  class file_sig_denormalizer root =
-    object
-      inherit File_sig.mapper
-
-      method! loc (loc : Loc.t) =
-        { loc with Loc.source = Option.map ~f:(denormalize_file_key ~root) loc.Loc.source }
-    end
+  let denormalize_dependency_graph ~root =
+    update_dependency_graph_filenames (denormalize_file_key ~root)
 
   let denormalize_error ~root =
-    Flow_error.map_loc_of_error (ALoc.update_source (Option.map ~f:(denormalize_file_key ~root)))
+    Flow_error.map_loc_of_error
+      (ALoc.update_source (Base.Option.map ~f:(denormalize_file_key ~root)))
 
   let verify_version =
     let version_length = 16 in
@@ -389,18 +474,14 @@ end = struct
    *
    * We do our best to avoid reading the file system (which Path.make will do) *)
   let denormalize_parsed_data ~root file_data =
-    (* file_sig *)
-    let file_sig = (new file_sig_denormalizer root)#file_sig file_data.file_sig in
     (* resolved_requires *)
-    let { Module_heaps.resolved_modules; phantom_dependents; hash } =
-      file_data.resolved_requires
-    in
+    let { Module_heaps.resolved_modules; phantom_dependents; hash } = file_data.resolved_requires in
     let phantom_dependents = SSet.map (Files.absolute_path root) phantom_dependents in
     let resolved_modules =
       SMap.map (modulename_map_fn ~f:(denormalize_file_key ~root)) resolved_modules
     in
     let resolved_requires = { Module_heaps.resolved_modules; phantom_dependents; hash } in
-    { package = file_data.package; file_sig; resolved_requires; hash = file_data.hash }
+    { package = file_data.package; resolved_requires; hash = file_data.hash }
 
   let partially_denormalize_parsed_data ~root { info; normalized_file_data } =
     let info = denormalize_info ~root info in
@@ -451,8 +532,8 @@ end = struct
       ordered_non_flowlib_libs;
       local_errors;
       warnings;
-      coverage;
       node_modules_containers;
+      dependency_graph;
     } =
       data
     in
@@ -474,7 +555,7 @@ end = struct
       denormalize_unparsed_heaps ~workers ~root ~progress_fn unparsed_heaps
     in
     let ordered_non_flowlib_libs =
-      Core_list.map ~f:(Files.absolute_path root) ordered_non_flowlib_libs
+      Base.List.map ~f:(Files.absolute_path root) ordered_non_flowlib_libs
     in
     let local_errors =
       FilenameMap.fold
@@ -494,7 +575,13 @@ end = struct
         warnings
         FilenameMap.empty
     in
-    let node_modules_containers = SSet.map (Files.absolute_path root) node_modules_containers in
+    let node_modules_containers =
+      SMap.fold
+        (fun key value acc -> SMap.add (Files.absolute_path root key) value acc)
+        node_modules_containers
+        SMap.empty
+    in
+    let dependency_graph = denormalize_dependency_graph ~root dependency_graph in
     Lwt.return
       {
         flowconfig_hash;
@@ -503,8 +590,8 @@ end = struct
         ordered_non_flowlib_libs;
         local_errors;
         warnings;
-        coverage;
         node_modules_containers;
+        dependency_graph;
       }
 
   let load ~workers ~saved_state_filename ~options ~profiling =

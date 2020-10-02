@@ -1,3 +1,550 @@
+### 0.135.0
+
+* Improved exhaustiveness checking in switch statements.
+* Improved autocomplete results to show documentation in more cases.
+* Turned the untyped-type-import lint into an error by default. In a later release, we will turn this into a regular type error instead of a lint error.
+* Removed esproposal configuration options from the .flowconfig format.
+* Added library definition for MediaRecorder API.
+* Fixed Object.freeze to no longer incorrectly convert an inexact object into an exact object.
+* Fixed handling of exported objects with spreads in types-first mode.
+
+### 0.134.0
+
+Likely to cause new Flow errors:
+
+* Types-first is now the default mode, and has to be explicitly disabled with `types_first=false` in a flowconfig if desired. See https://medium.com/flow-type/types-first-a-scalable-new-architecture-for-flow-3d8c7ba1d4eb for more about types-first.
+
+New Features:
+
+* Added a `file_watcher.watchman.mergebase_with` flowconfig option and `--file-watcher-mergebase-with` CLI option to choose a tracking bookmark for Watchman to compute the mergebase against.
+* Show JSDoc documentation in type declarations.
+
+Misc:
+
+* Improved the consistency of what operation is pointed to in error messages, to ensure they aren't dependent on the order in which constraints are generated.
+* Filtered "did you mean" code actions to only send actions on code under cursor.
+* Changed the return type of fileURLToPath (thanks @aaronasachimp)
+
+### 0.133.0
+
+Likely to cause new Flow errors:
+
+* Improve reliability of inclusion check in strict equality conditionals.
+
+New Features:
+
+* Show JSDoc documentation in hover, autocomplete, and signature help.
+
+Notable bug fixes:
+
+* Fix a bug related to saved state that could cause crashes during initialization.
+* Fix a bug related to saved state that could cause internal errors during rechecks.
+* Fix crash with `flow focus-check` when a focused file has a syntax error.
+
+Misc:
+
+* Remove the `null-void-addition` lint now that it has been subsumed by an ordinary type error.
+* Improved signature help for inlined tuple rest params.
+* Enable the following language features by default, since they have reached stage 4:
+  * `export *`
+  * Nullish coalescing
+  * Optional chaining
+* Remove deprecated, nonstandard `itemType` and `inlineDetail` fields from the LSP `completionItem` implementation.
+* Exit the worker processes gracefully when the main process crashes.
+
+### 0.132.0
+
+Likely to cause new Flow errors:
+* Disallow using any-typed values type annotations. [example](https://flow.org/try/#0CYUwxgNghgTiAEA3W8AeAueUB2BPA3AFCFgD22AzgC7y6arwC88AzPkA)
+
+New Features:
+* Added warnings against suppressions without error codes
+
+Notable bug fixes:
+* Fixed some crashes when Flow could not connect to Watchman
+
+Misc:
+* Fix syntax errors in README badges (thanks @jamesisaac)
+
+### 0.131.0
+
+* "Go to Definition" on a JSX attribute name now jumps to the prop's type.
+* Improved error messages for non-strict equality checks
+* Fixed a bug that prevented the use of `module` in ES modules when `well_formed_exports` is enabled.
+* Fixed an issue that allowed types-first mode to be enabled (`types_first=true`) when using `well_formed_exports.include`. For types-first to function properly, the entire project's exports must be well-formed, not just specific paths.
+* Fixed a similar issue so that `--types-first` on the command line overrides `well_formed_exports=false` in `.flowconfig`. This makes it easier to test types-first mode.
+* The `unsafe-addition` lint now defaults to being an error. It will be converted from a lint to a type error in the future.
+* Removed `dynamic-export` lint which does not work in types-first mode
+* Improved initialization performance
+
+### 0.130.0
+
+New Features:
+* Improved IDE get definition behavior of imported names by jumping past `module.exports = ...` to the actual definition.
+
+Library Definitions:
+* Made `offset` an optional argument for the sized Buffer read/writes (thanks @isker!)
+
+Misc:
+* Removed deprecated blacklist/whitelist aliases for config options, use `includes`/`excludes` instead (see updated docs: for [Types First](https://flow.org/en/docs/lang/types-first/#toc-prepare-your-codebase-for-types-first) and [flowconfig options](https://flow.org/en/docs/config/options/)).
+
+### 0.129.0
+
+Likely to cause new Flow errors:
+* $Keys<...> will no longer include non-own instance properties, matching the behavior of Object.keys.
+
+Notable bug fixes:
+* Fixed an incremental rechecking issue caused by the hashes of type destructors
+
+Misc:
+* Updated the type of `cast` and `isValid` to take in optional representation type for enums
+* Added missing links to Medium articles from flow.org (thanks @jamesisaac)
+
+### 0.128.0
+
+New Features:
+* Enable LSP support for autofix exports by default.
+* Added a lint rule to ensure exports named `default` were exported with `export default` syntax.
+* Enabled support for JSDoc in some LSP results.
+
+Library Definitions:
+* Add parameter to MediaStreamTrack.applyConstraints()
+
+Parser:
+* Fix parsing async arrow functions with multiple type parameters
+
+Config:
+* Remove types-first flag aliases prefixed with "experimental"
+* Replace well_formed_exports.whitelist with well_formed_exports.includes
+
+### 0.127.0
+
+Misc:
+
+* Improvements to editor in flow.org/try, including syntax highlighting
+* [Fix broken links in docs](https://github.com/facebook/flow/pull/8388)
+* Standardized error suppression syntax, added ability to suppress errors based on error codes
+
+Library Definitions:
+
+* [Add KD functions](https://github.com/facebook/flow/pull/7376)
+* Add onended callback to OscillatorNode
+* Make 3rd parameter of node.js symlinkSync optional
+
+
+### 0.126.1
+
+* Fixed an issue where changing `.flowconfig` or `package.json` and then running `flow status` would get stuck in a restart loop, if using lazy mode with Watchman and Mercurial.
+
+### 0.126.0
+
+* Allow indexers in exact object annotations
+* Fixed type-at-pos in flow.org/try
+* Improved language of LSP `window/showStatus` responses
+* Improved control flow handing in logical expressions
+* Allow applying utility types to opaque types in the defining module
+* Added `HeadersInit` and `signal` to Fetch API (thanks @andretshurotshka!)
+* Added `replace` method to `DOMTokenList` (thanks @w01fgang!)
+
+### 0.125.1
+
+Publishing of `flow-bin` v0.125.0 failed to include the binaries. Oops!
+
+### 0.125.0
+
+Likely to cause new Flow errors:
+
+* Fixed signatures generated in types-first for classes with non-trivial expressions
+  in their extends clauses, which were before treated like extending `any`.
+
+New features:
+
+* Types-first is no longer an experimental mode, but is now fully supported!
+
+Notable bug fixes:
+
+* Fixed a soundness bug that allowed refined property expressions to be treated as
+  `empty` in some circumstances.
+
+Misc:
+
+* Added `$FlowIssue` and `$FlowExpectedError` as default suppression comments.
+* Improved quality of AST and comment printing and layout.
+* Improved quality of type printing for `type-at-pos` and friends.
+* Add '.cjs' as a default extension.
+
+Parser:
+
+* Fixed ranges of sequence and assignment expressions that contain grouping parentheses.
+* Disallowed newline after `type` keyword in type aliases.
+
+Library definitions:
+
+* Added headers timeout to http & https server (thanks, @mattconde!)
+* Added flushHeaders to http$ServerResponse (thanks, @gajus!)
+* Changed `thisArg` parameter for array callback functions (e.g. `map`, `reduce`) to `mixed`.
+* Added more precise typing for common cases of `Array.flat`.
+
+### 0.124.0
+
+Library Definitions:
+
+* Add `StorageEvent` overloads.
+
+Misc:
+
+* Use `textEdit` in identifier completion item responses over the LSP, to avoid possible behavior differences with different LSP clients.
+* Various improvements to the pretty-printer.
+* A small improvement in completeness when handling the "not" operation in the presence of unions of literal types.
+* Wrap the usage message to 100 chars.
+* Fix a poorly-positioned error related to polymorphic function types.
+
+Parser:
+
+* Improved some parser error messages by treating the end of file as a valid end of object property.
+* Updated ESTree output for import expressions to match the spec.
+
+`flow-dev-tools`:
+
+* Add the `update-suppressions` subcommand.
+
+### 0.123.0
+
+New Features:
+* Added support for the babel react jsx transform with the `react.runtime` flowconfig
+option. When set to `automatic` the transform auto-imports jsx (the replacement for
+`createElement`) under a fresh name (unique of all existing names in the source).
+When set to `classic` it will continue transpiling jsx to `React.createElement`.
+
+Notable bug fixes:
+* We are now treating `$Exact<T|U>` as `$Exact<T>|$Exact<U>`. Before, when we checked
+against this type we would treat it like `$Exact<T> & $Exact<U>`, instead.
+* Fix to prevent infinitely expanding recursive type applications of arrays ([example](https://flow.org/try/#0C4TwDgpgBAqgPAFQHxQLxQIICcsEMSIoA+sc2eBySA3FFAFAAUA2gLpQBcpAdgK4C2AIwhYkASmpA)).
+
+Misc:
+* Improvements in comment attachement in various kinds of AST nodes. These will
+help improve the accuracy of error suppression and various services that inspect
+comments (printing, showing documentation, etc.).
+* `$Exports<'m'>` will now lookup module 'm' directly in builtins, instead of the
+environment.
+* Extend union optimizations used on maybe predicate to also be applied in exists
+predicates.
+
+Parser:
+* The range around type cast expression now includes the parentheses. This follows
+the pattern of other constructs with mandatory punctuation like blocks, objects or arrays.
+
+### 0.122.0
+
+Likely to cause new Flow errors:
+* Moved `react-dom` modules out of built-in libdefs. They are now available on [flow-typed](https://github.com/flow-typed/flow-typed/pull/3716).
+
+  To install the libdefs, run `flow-typed install --flow-version=0.122.0 react-dom@16.13.0`
+
+  This diff is necessary to allow React to make breaking changes to react-dom without force-pinning Flow users to the latest version of react-dom.
+* Fixed an unsoundness in union and intersection spreads
+* Improved object spread-related error messages, which may cause suppressed errors to become unsuppressed because they moved to better locations
+
+Improved Editor Integration:
+* Removed completion of function param snippets. Before, `f<tab>` might complete `foo(aParam)`, which is problematic if you don't want to call the function. Now it just completes `foo`. These snippets are further obviated by signature help, which appears when you type `(`.
+* Improved accuracy of "Did You Mean?" Quick Fixes for object property type errors
+* Added support for Go to Definition on export-from declarations (`export { HERE } from ...`)
+* Fixed tracking of open files in LSP clients which could cause stale errors in the IDE
+
+Misc:
+* Added `HTMLUnknownElement` and support for custom elements to `document.createElement` (thanks @YevhenKap!)
+* Fixed `--saved-state-no-fallback` flag so that Flow exits when saved state is not found
+* Fixed an issue where an invalid package.json would prevent generating saved state
+* Fixed a potential deadlock when communicating with Watchman
+* Fixed types-first signatures for CJS requires introduced with var
+* Enabling `experimental.types_first` now implies `experimental.well_formed_exports`
+
+Parser:
+* Renamed `RestProperty` to `RestElement` to match [estree](https://github.com/estree/estree/blob/master/es2018.md#patterns)
+* Changed 'for await' nodes from `ForAwaitStatement` to `ForOf` with `await: true` to match [estree](https://github.com/estree/estree/blob/master/es2018.md#statements)
+
+### 0.121.0
+
+Highlights:
+* Made several improvements to errors:
+  * Restricted errors to only be suppressible at the error's primary location (see [blog post](https://medium.com/flow-type/making-flow-error-suppressions-more-specific-280aa4e3c95c))
+  * Fixed the error grouping logic to no longer group unrelated errors that happen to share a location
+  * Changed the order of locations printed in error messages so that the primary location is always printed first (which is the one you need to suppress if you want to do that)
+
+Misc:
+* Fixed the `add-comments` script to add comments on `JSXText`
+* Fixed a crash when TMPDIR exceeded 83 characters
+* Stopped parsing `.flow` files without `@flow`
+
+Lib defs:
+* Improved definitions for Node's `url.parse` function (thanks @chicoxyzzy)
+* Added missing `console` methods (thanks @goodmind)
+* Added `Element.hasAttributes()`
+* Added `string` index to `NamedNodeMap`
+* Fixed `Element.querySelector()` and `Element.querySelectorAll()` overloads
+* Added type definition for `Promise.allSettled()`
+
+### 0.120.1
+
+Likely to cause new Flow errors:
+
+* `$Shape` types now carry more information about the locations of errors that involve them, which may invalidate old suppressions.
+* `any`-typed values are now refined by primitive `typeof` checks ([example](https://flow.org/try/#0PTAEAEDMBsHsHcBQjoFMAuoCGA7AnqALygAUOArtNKAFzb4CUA3MgJaSnp4AOqsHuAoWGgARAGd0AJ1Y4A5qIagA3olClBtUBQC2AI1RTmoEPQKtxOAOSYs28vsNqN+LZJnzjp2AGtEAX1BUaHFUFWcSTTpdAyMmEzBJViozAOQgA)).
+
+New Features:
+
+* "Did You Mean?" IDE feature that suggests corrections to your code as you type. For example, if you write foo.bar on an object foo that doesn’t have a field named bar but does have a field named baz, the quick fix will apply that suggestion.
+
+* `declare` can now be used on class fields. When Flow implemented the class fields proposal, uninitialized class fields (e.g. `class C { foo }`) were not allowed, so we used that syntax for type-only declarations (`class C { foo: string }`). Since then, they now are initialized to `undefined` and Babel 8 will start to leave them. To maintain existing behavior, change uninitialized fields to use the `declare` keyword, signalling to Babel that they should be stripped (`class C { declare foo: string }`).
+
+Notable bug fixes:
+
+* Fixed possible stack overflow from overly long traces.
+* Fixed infinite recursion case involving polymorphic types.
+* Various improvements to the output of `type-at-pos` and `signatureHelp`
+
+Misc:
+
+* Fixed libdefs of `Notification` to have read-only fields
+
+### 0.119.1
+
+Notable bug fixes:
+* Fixed a bug that would cause Flow to crash on some rechecks.
+
+### 0.119.0
+
+New Features:
+* Implemented LSP textDocument/signatureHelp, which shows parameter hints when you are within an argument list in a call or `new` expression.
+
+Misc:
+* Removed the `minimal_merge` flag
+* Added optional callback for node dgram socket.close function (thanks @davidnaas!)
+
+Parser:
+* Made arguments on `new` expressions optional
+
+### 0.118.0
+
+New Features:
+* Autocomplete for nullable objects will now suggest completions with optional chaining syntax
+* Added a new lint, `unsafe-addition`, which warns if either operand of an addition is `null` or `void`
+
+Breaking change:
+* The output of `flow autocomplete --json` no longer includes location information. This might affect some IDE integrations which have not yet updated to Flow's LSP server. The LSP integration is unaffected.
+
+Misc:
+* Added the `dir` field to the `Document` libdef (Thanks, @lukeapage!)
+
+### 0.117.1
+
+* Improved timeouts related to Watchman that could cause the server to fail to start if Watchman is slow to respond. Added a `file_watcher_timeout` .flowconfig option and `--file-watcher-timeout` argument to `flow start` and `flow server`, which defaults to 120 seconds.
+
+### 0.117.0
+
+Notable bug fixes:
+* Improved the behavior of `$Diff` and other type destructors when applied to unions.
+
+Misc:
+* Improved error messages when attempting to use watchman without watchman installed.
+* Removed uses of `Symbol` from libdefs in favor of `symbol`.
+* Fixed definition of `fs.promises.mkdir` (thanks @gabrielrumiranda!)
+
+### 0.116.1
+
+Notable bug fixes:
+
+* Fix #8259.
+
+### 0.116.0
+
+New Features:
+
+* Flow now suggests similar names (if applicable) when issuing missing property errors.
+
+Misc:
+
+* Added a rudimentary libdef for `Array.prototype.flat` (#8237, thanks @nnmrts!).
+* Fixed a bug that in certain specific cases led to an expression getting typed as `empty` rather than `any`.
+
+Parser:
+
+* `>` and `}` in JSX child text is a parse error.
+
+### 0.115.0
+
+Likely to cause new Flow errors:
+* In [Types First](https://medium.com/flow-type/what-the-flow-team-has-been-up-to-54239c62004f) mode, exported classes and functions cannot be reassigned.
+* Added similar checking of `symbol` in non-strict equality as other primitive types ([example](https://flow.org/try/#0MYewdgzgLgBBBccCeBbARiANjAvDAyqhpgBQCUA3AFAD0NMAwgIZhgiygoAOTATgKYwmAcyYBLSLDZgAtBCJYIVUJJgAPRAG0Aurhg7qa3HggUYdGAFFevELyoRj6sxeu37RgIQmX9N3YcYb2dzPxsAoA)). We allow for non-strict equality checks between two symbol types, and between a symbol and null/void ([example](https://flow.org/try/#0N4KABGD0lgwg9gWwA4EMBOBLAzvAdmAO6YAuAFmNgJ6IBG8ANmDmKgw-IQKYAm4YAY3zYSlAFyUa9JgF4wAZSmMAFAEoA3PyF4RYKhOp1GYOYqMM1miNhNyq6qDADyAaX5VblB9DCv+NgEI7b2c3CA8gr0dfNwBfEFAIbV1sAyVZBXTLfh8nci50MHJUAjwAV3ZIADd4TB4iMkwBCm5WBkJUKhs2DkJ-T3L2EJj+Qdk5bGG-a08yvB4uADNMPF4psLA5heXV+pkJ9ZBYoA)).
+* We now write properties to unsealed objects recorded during speculative checking, after speculation has succeeded.
+* Added more complete handling for indexers in spreads:
+  - Use the indexer on the right, when the left is empty, exact and has no indexer. [[example](https://flow.org/try/#0MYewdgzgLgBAJgLhgbwD6oL4wLwoHQFgCuANiRgNwwD01KWAfgHwrpYCmATpyJxADQwIIIQAdO7AIZwAlmADmMYmRgAoUJFjskyANrROc+QF0kAWxkAPdnCy5kldeGgwAZjv1RDC0zAvXbHHwCOEECPHZKGjoAZQALEFI4GAAjdhhJMhAAdxsgA)]
+  - Allow matching indexers to be spread. [[example](https://flow.org/try/#0MYewdgzgLgBAhgJgFwwN4G1oCcCWYDmAuigLY4AeApgCYC+MAvGrQNwBQoksARsmugHI4AmAB8YA7gOIwyVOo2btO0GMD4ZseIqQo16TVADoTiADQwTR3qxgB6OzADyAaxhA)]
+* Removed the `non-array-spread` lint, and replaced it with a new .flowconfig option, `babel_loose_array_spread`.
+
+Notable bug fixes:
+* Improved union optimization for non-enum union equality checks.
+* Fixed a bug in which `$Exact<T>` failed when `T` resolved to a `Shape<T>`. [[example](https://flow.org/try/#0C4TwDgpgBAygFgQ0jYDjQLxQCTyRAHgG8AfAKCigDMB7GgLigGdgAnASwDsBzAGjJIBfAHwBuMmQAmEAMYAbBK2hUArpxnB2NTlBVhJaCACYAFBSgAjRYxPYAogA8EGgnmSp0wgJRQMwqJwqALYWEKz8XowAbjTskuJkegbopiZgSlEohoxuEFnoPn5QAAxeokA)]
+
+Misc:
+* Improved performance of calculating the set of files that need to be checked.
+* Cached the typed AST as part of the persistent connection client info, to speed up requests coming from an LSP client (DefinitionRequest, Hover, TypeCoverage).
+* Improved dependency graph construction times, by using Hashtbl and mutable back edges.
+* Improved `tool add-comments` by
+  - using `flowlint-next-line` instead of adding full `$FlowFixMe` suppressions on lints, and
+  - making the rule for inserting comments inside JSX elements also apply to JSX fragments.
+* Upgraded to sedlex 2.1.
+
+### 0.114.1
+
+Upgrade internal dependencies sedlex and lwt. Lwt includes a fix to stack traces that we need to debug crash logs.
+
+### 0.114.0
+
+Likely to cause new Flow errors:
+* Fixed the order of evaluation of JSX attributes and children to match runtime, so that refinements work properly. This can lead to new errors if refined values are used as children, and a function is called within an attribute, because the refinements are now invalidated in a different order. On the other hand, calling a function in a child no longer incorrectly invalidates values used as attributes. [[example](https://flow.org/try/#0JYWwDg9gTgLgBAJQKYEMDG8BmUIjgIilQ3wG4AoczAVwDsNgJa4AxACgG8APAGjgE8AvgC443UbWogARkih9+EqbKiCAlEoA2msXCIxqUZpO1xBlAG4oocLqID8kmXLgBeOABYATBSs3FcI7KLu7eFMCYcGxccACE7iY6AGRJAnEJ1NpqYuRwcAA8LLau3HAA9ABUcADOABYQmQAmcLJwEADWcBVlggIl-G5wiXzeggB8uXliMRna5lNibAFOKtmVNfVNQxDwrR1dPZP5ZSwTgkA)]
+* Added support for refinements on [optional chains](https://github.com/tc39/proposal-optional-chaining)! Now, examples like `if (x?.y)` and `if (x?.y === 42)` understand that `x` is truthy in the consequent. Flow also now refines subexpressions of optional chains. For example, given `obj?.fun(obj.value)`, the second `obj` is known to be truthy since it is only reachable if the earlier `obj?.fun` is also truthy; therefore, you don't need to optional-chain it again (`obj?.value`).
+
+New Features:
+* Added typechecking support for `symbol`! Note that just like `number` is not a `Number`, and vice versa, `symbol` is not a `Symbol`. In the core lib defs, we change usage of `Symbol` to `symbol & Symbol`. Eventually, it will just be `symbol`. The `symbol & Symbol` is temporary for one version to allow for existing usage of the `: Symbol` to be codemodded to `: symbol`.
+
+Bug fixes:
+* Optimized typechecking pointwise-equal unions, from O(n^2) to O(n)
+* Optimized reverse dependency computation, greatly reducing the time spent computing what needs to be rechecked after an edit
+* Fixed an error message that pointed at the definition of a write-only property instead of the callsite that tried to read it [[example](https://flow.org/try/#0CYUwxgNghgTiAEA3W8AqARASgLngbwFowBXGOAOwBdc8B7AM3oGcRKB1AS2EoAtdziAWwBGIGAF9xAbgBQHevAAUGTADoSZEFQCU+eOJlA)]
+* Fixed an issue where coverage results could be incorrect in [Types First](https://medium.com/flow-type/what-the-flow-team-has-been-up-to-54239c62004f) mode when a file is rechecked
+* Fixed an issue when Flow prints evaluated types like `$ElementType`, that led to printing `empty` instead. This improves hover tooltips.
+* Fixed several issues causing various processes to die uncleanly while exiting.
+
+
+### 0.113.0
+Bug fixes:
+* Fixed autocomplete when at the end of file
+* Stopped filtering lints (e.g. `signature-verification-failure`) out when running `flow check-contents`
+
+Parser:
+* Added support for `export default class implements Foo {}` [[example]](https://flow.org/try/#0JYOwLgpgTgZghgYwgAgJIDED2nkG8C+AUIRAB4AOmUYyAJhPAK4A2NCzcAzp8sALblmEPhHA8M2PESA)
+* Added support for type parameters in anonymous class expressions [[example]](https://flow.org/try/#0BQYwNghgzlAEA8ANAfLA3gXwJQG4g) (thanks @nicolo-ribaudo)
+
+Library definitions:
+* Fixed type of `navigator.mediaDevices.getUserMedia` (thanks @thecotne)
+* Added missing `InputEvent` to `removeEventListener`
+* Updated type of `ServiceWorkerContainer.getRegistration`
+
+Misc:
+* Added `module.system.node.main_field` option (see #8128 for more details)
+
+### 0.112.0
+
+Likely to cause new Flow errors:
+* JSX expressions now use the new spread semantics added in v0.111.0
+* Attempting to write to or update a read-only property using operator assignment is now a type error
+
+New Features:
+* New `ambiguous-object-type` lint warning against use of `{}` object types (prefer `{||}` or `{...}` instead, even when `exact-by-default` is enabled).
+* Improved support for optional chaining
+
+Notable bug fixes:
+* Malformed type annotations no longer trigger the `unclear-type` lint error
+* Builtin classes can no longer be extended
+
+Misc:
+* Improved performance for utility types and refinements in unions
+* Various improvements to autocomplete and get-def IDE services
+* Add `useDeferredValue` and `useTransition` to React library definitions
+* Add `bytesWritten` funciton to library definition (thanks @farzonl)
+
+### 0.111.3
+
+Notable bug fixes:
+* 0.111.2 did not include the commit that bumped the Flow version inside of Flow. (@jbrown215 was a clown)
+
+### 0.111.2
+
+Notable bug fixes:
+* Spread performance improvements that can prevent timeouts in extreme cases.
+
+### 0.111.1
+
+New features:
+* Add `module.system.node.root_relative_dirname` to allow you to configure where root relative paths resolve to
+
+Notable bug fixes:
+* Fixed the regex generator that handles the <VERSION> magic string in Flow suppression comments
+* Allow spreads of bools, strings, and numbers to support common React Native patterns
+
+### 0.111.0
+
+Likely to cause new Flow errors:
+
+* Fixes to object spread. See https://medium.com/flow-type/spreads-common-errors-fixes-9701012e9d58
+
+New features:
+* Introduced an experimental flag (`experimental.minimal_merge`) that speeds up rechecks when the experimental types-first mode is in use. This flag will be turned on by default and then removed in future releases.
+* Turned on `experimental.allow_skip_direct_dependents` by default. The flag will be removed next release. This flag speeds up rechecks when the experimental types-first mode is in use.
+
+Notable bug fixes:
+* Fixed a bug where the ocaml representation of union types caused crashes in rare scenarios
+* Fixed a bug in node module resolution which allowed `module.system.node.resolve_dirname=.`. For those who relied on this bug to import modules using root-relative paths, you can now use `module.system.node.allow_root_relative=true`. See [#8156](https://github.com/facebook/flow/issues/8156) for more details.
+
+Misc:
+* Add getElementById to DocumentFragment
+* Add missing methods to Blob (thanks @lyleunderwood!)
+* Allow clients of `flow status`, `flow check`, etc. to choose character offset style
+* Support length refinement on tuples (thanks @ilya-bobyr)
+
+Parser:
+* Allow => in objects in return types of arrow functions
+
+### 0.110.1
+
+Notable bug fixes:
+* No longer show live Flow errors for files without @flow, unless `all=true` in the `.flowconfig`
+* No longer show live Flow errors for ignored files
+* Re-generate live errors after a recheck
+
+### 0.110.0
+
+New Features:
+* Flow will now send type errors as you type to LSP clients. To disable this behavior, add `experimental.disable_live_non_parse_errors=true` to the `[options]` section of your `.flowconfig`.
+
+Notable bug fixes:
+* Fixed file descriptor leak leading to LSP connection refusal in some cases
+* Improved the behavior of the `[declarations]` configuration in the presence of dependency cycles (thanks @STRML!)
+
+Misc:
+* Added `--evaluate-type-destructors` to `type-at-pos` command.
+* Added `--evaluate-type-destructors` and `--expand-type-aliases` to `dump-types` command (thanks @goodmind!)
+* Changed `proceses.env` values from `?string` to `string|void` (thanks @FireyFly!)
+* Improved detection of rebases when using watchman file watcher
+* Improved positions for error messages involving the deprecated `*` type
+
+### 0.109.0
+
+Likely to cause new Flow errors:
+- Flow was previously not typechecking `delete`, but now does
+- `Object.defineProperty` and similar methods now adhere more closely to the spec
+- Allow defaults for properties that may not exist in React components
+
+Notable bug fixes:
+- `$NonMaybeType<mixed>` no longer includes null and undefined (Thanks @goodmind)
+
+Misc:
+- Deprecated `$Supertype` and `$Subtype` utilities are now removed entirely
+- flow-upgrade should now use https over git (Thanks @lukeapage)
+- Autocomplete now fires on spaces in JSX
+- Better error messages when a value is used as a type
+
+Performance:
+- Reduced memory usage by using a more compact representation for code locations
+- Types-first should no longer check direct dependents of files where the signature has not changed
+
+Library Definitions
+- Add a number of CSSOM interfaces + fix `HTMLStyleElement.sheet` type (Thanks @kof)
+- Add `AsyncIterator` to `node.js` (Thanks @goodmind)
+- Add `undefined` to prelude (Thanks @goodmind)
+- Add String.prototype.matchAll (Thanks @goodmind)
+
 ### 0.108.0
 
 Notable bug fixes:
@@ -573,7 +1120,7 @@ Misc:
 * Huge reduction (~15%) in total memory usage (thanks @nmote)
 * Huge reduction in error collation time (thanks @panagosg7)
 
-## 0.90.0
+### 0.90.0
 
 Likely to cause new Flow errors:
 * Removed unsafe rule allowing Date instances to be used as a number
@@ -2936,7 +3483,7 @@ Likely to cause new Flow errors:
 New Features:
 
 - Generators support, courtesy of [@samwgoldman](https://github.com/samwgoldman)
-- # of worker processers is now configurable, defaults to the # of CPUs
+- The number of worker processers is now configurable, defaults to the # of CPUs
 - If Flow knows the value of a boolean expression, then it will know the value of that expression negated.
 - Flow can remember refinements for things like `if(x.y[a.b])`
 - `export type {type1, type2}` syntax

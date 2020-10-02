@@ -1,0 +1,16 @@
+[ignore]
+
+[include]
+
+[libs]
+
+[lints]
+
+[options]
+no_flowlib=false
+well_formed_exports=true
+suppress_type=$FlowFixMe
+suppress_type=$FlowFixMeEmpty
+
+[strict]
+unclear-type

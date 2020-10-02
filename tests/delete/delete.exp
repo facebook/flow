@@ -1,6 +1,6 @@
 Error ---------------------------------------------------------------------------------------------------- delete.js:4:8
 
-Cannot delete `obj1.f` because undefined [1] is incompatible with number [2].
+Cannot delete `obj1.f` because undefined [1] is incompatible with number [2]. [incompatible-type]
 
    delete.js:4:8
    4| delete obj1.f; // error, f is required
@@ -17,7 +17,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- delete.js:12:2
 
-Cannot cast `x` to number because undefined [1] is incompatible with number [2].
+Cannot cast `x` to number because undefined [1] is incompatible with number [2]. [incompatible-cast]
 
    delete.js:12:2
    12| (x: number);
@@ -34,7 +34,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- delete.js:16:8
 
-Cannot delete `y` because undefined [1] is incompatible with number [2].
+Cannot delete `y` because undefined [1] is incompatible with number [2]. [incompatible-type]
 
    delete.js:16:8
    16| delete y;
@@ -51,7 +51,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- delete.js:27:8
 
-Cannot delete `b[0]` because read-only arrays cannot be written to.
+Cannot delete `b[0]` because read-only arrays cannot be written to. [cannot-write]
 
    27| delete b[0];
               ^^^^
@@ -59,7 +59,7 @@ Cannot delete `b[0]` because read-only arrays cannot be written to.
 
 Error --------------------------------------------------------------------------------------------------- delete.js:30:8
 
-Cannot delete `c[1]` because undefined [1] is incompatible with number [2].
+Cannot delete `c[1]` because undefined [1] is incompatible with number [2]. [incompatible-type]
 
    delete.js:30:8
    30| delete c[1];
@@ -76,7 +76,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- delete.js:31:8
 
-Cannot delete `c[2]` because tuple type [1] only has 2 elements, so index 2 is out of bounds.
+Cannot delete `c[2]` because tuple type [1] only has 2 elements, so index 2 is out of bounds. [invalid-tuple-index]
 
    delete.js:31:8
    31| delete c[2];
@@ -90,7 +90,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- delete.js:34:2
 
-Cannot cast `w.a` to undefined because number [1] is incompatible with undefined [2].
+Cannot cast `w.a` to undefined because number [1] is incompatible with undefined [2]. [incompatible-cast]
 
    delete.js:34:2
    34| (w.a: void);
@@ -105,39 +105,39 @@ References:
              ^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------------------- delete.js:40:14
+Error -------------------------------------------------------------------------------------------------- delete.js:40:21
 
-Cannot call method `freeze` because property `freeze` is missing in statics of `Object` [1].
+Cannot call method `freeze` because property `freeze` is missing in statics of `Object` [1]. [prop-missing]
 
-   delete.js:40:14
+   delete.js:40:21
    40| const obj4 = Object.freeze({ f: 1 });
-                    ^^^^^^^^^^^^^^^^^^^^^^^
+                           ^^^^^^
 
 References:
-   <BUILTINS>/prelude.js:5:15
-    5| declare class Object {}
+   <BUILTINS>/prelude.js:12:15
+   12| declare class Object {}
                      ^^^^^^ [1]
 
 
-Error --------------------------------------------------------------------------------------------------- delete.js:44:8
+Error -------------------------------------------------------------------------------------------------- delete.js:44:13
 
-Cannot delete `obj5.f` because property `f` is not writable.
+Cannot delete `obj5.f` because property `f` is not writable. [cannot-write]
 
    44| delete obj5.f; // error, just like when writing to read-only object
-              ^^^^^^
+                   ^
 
 
-Error --------------------------------------------------------------------------------------------------- delete.js:49:8
+Error -------------------------------------------------------------------------------------------------- delete.js:49:13
 
-Cannot delete `obj6.m` because property `m` is not writable.
+Cannot delete `obj6.m` because property `m` is not writable. [cannot-write]
 
    49| delete obj6.m; // warn, m is not own (delete only has effect
-              ^^^^^^
+                   ^
 
 
 Error --------------------------------------------------------------------------------------------------- delete.js:52:1
 
-Cannot delete number [1] because only member expressions and variables can be deleted.
+Cannot delete number [1] because only member expressions and variables can be deleted. [cannot-delete]
 
    delete.js:52:1
    52| delete 1;
@@ -151,7 +151,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- delete.js:54:1
 
-Cannot delete function [1] because only member expressions and variables can be deleted.
+Cannot delete function [1] because only member expressions and variables can be deleted. [cannot-delete]
 
    delete.js:54:1
    54| delete (() => 42);
@@ -165,7 +165,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- delete.js:61:8
 
-Cannot delete `index.a` because undefined [1] is incompatible with boolean [2].
+Cannot delete `index.a` because undefined [1] is incompatible with boolean [2]. [incompatible-type]
 
    delete.js:61:8
    61| delete index.a;
@@ -182,7 +182,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- delete.js:62:8
 
-Cannot delete `index['a']` because undefined [1] is incompatible with boolean [2].
+Cannot delete `index['a']` because undefined [1] is incompatible with boolean [2]. [incompatible-type]
 
    delete.js:62:8
    62| delete index['a'];
@@ -199,7 +199,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- delete.js:71:2
 
-Cannot cast `dct['a']` to string because undefined [1] is incompatible with string [2].
+Cannot cast `dct['a']` to string because undefined [1] is incompatible with string [2]. [incompatible-cast]
 
    delete.js:71:2
    71| (dct['a']: string);
@@ -216,7 +216,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- delete.js:72:2
 
-Cannot cast `dct['a']` to undefined because string [1] is incompatible with undefined [2].
+Cannot cast `dct['a']` to undefined because string [1] is incompatible with undefined [2]. [incompatible-cast]
 
    delete.js:72:2
    72| (dct['a']: void);

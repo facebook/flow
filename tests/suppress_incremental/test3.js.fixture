@@ -1,4 +1,4 @@
 // @flow
 
-// $FlowIssue
+// $FlowIssue[incompatible-cast]
 (123: number);

@@ -1,4 +1,4 @@
-(**
+(*
  * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
@@ -17,14 +17,14 @@ module Procedure_decider = struct
       method! function_ _loc (expr : (Loc.t, Loc.t) Flow_ast.Function.t) = expr
 
       method! return _loc (stmt : (Loc.t, Loc.t) Flow_ast.Statement.Return.t) =
-        Flow_ast.Statement.Return.(
-          let { argument; comments = _ } = stmt in
-          begin
-            match argument with
-            | None -> ()
-            | Some _ -> this#no
-          end;
-          stmt)
+        let open Flow_ast.Statement.Return in
+        let { argument; comments = _ } = stmt in
+        begin
+          match argument with
+          | None -> ()
+          | Some _ -> this#no
+        end;
+        stmt
 
       method! function_body_any (body : (Loc.t, Loc.t) Flow_ast.Function.body) =
         begin

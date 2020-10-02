@@ -1,0 +1,85 @@
+Error ------------------------------------------------------------------------------------------------------ test.js:5:1
+
+Cannot call `get` because: [incompatible-call]
+ - Either boolean [1] is incompatible with string [2].
+ - Or boolean [1] is incompatible with number [3].
+
+   test.js:5:1
+   5| get(true); // incompatible-call
+      ^^^
+
+References:
+   test.js:5:5
+   5| get(true); // incompatible-call
+          ^^^^ [1]
+   test.js:3:27
+   3| declare function get(key: string): void;
+                                ^^^^^^ [2]
+   test.js:4:27
+   4| declare function get(key: number): void;
+                                ^^^^^^ [3]
+
+
+Error ------------------------------------------------------------------------------------------------------ test.js:9:1
+
+Cannot call `x` because: [incompatible-call]
+ - Either null [1] is not a function.
+ - Or number literal `3` [2] is not a function.
+
+   test.js:9:1
+   9| x(); // not-a-function
+      ^
+
+References:
+   test.js:7:16
+   7| declare var x: null & 3;
+                     ^^^^ [1]
+   test.js:7:23
+   7| declare var x: null & 3;
+                            ^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:12:1
+
+Cannot call `f` because boolean [1] is incompatible with number [2]. [incompatible-call]
+
+   test.js:12:1
+   12| f(true); // incompatible-call
+       ^
+
+References:
+   test.js:12:3
+   12| f(true); // incompatible-call
+         ^^^^ [1]
+   test.js:11:24
+   11| declare var f: null & (number => void);
+                              ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:15:2
+
+Cannot cast `y` to boolean because: [incompatible-cast]
+ - Either number [1] is incompatible with boolean [2].
+ - Or string [3] is incompatible with boolean [2].
+
+   test.js:15:2
+   15| (y : boolean) // incompatible-cast
+        ^
+
+References:
+   test.js:14:17
+   14| declare var y : number & string;
+                       ^^^^^^ [1]
+   test.js:15:6
+   15| (y : boolean) // incompatible-cast
+            ^^^^^^^ [2]
+   test.js:14:26
+   14| declare var y : number & string;
+                                ^^^^^^ [3]
+
+
+
+Found 4 errors
+
+Only showing the most relevant union/intersection branches.
+To see all branches, re-run Flow with --show-all-branches

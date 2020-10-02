@@ -5,7 +5,7 @@ Check Without --include-warnings
 Error ------------------------------------------------------------------------------------------------------ test.js:7:5
 
 Sketchy null check on number [1] which is potentially 0. Perhaps you meant to check for null or undefined [2]?
-(`sketchy-null-number`)
+[sketchy-null-number]
 
    test.js:7:5
    7| if (x) {} //Error
@@ -28,7 +28,7 @@ Check With --include-warnings
 Error ------------------------------------------------------------------------------------------------------ test.js:7:5
 
 Sketchy null check on number [1] which is potentially 0. Perhaps you meant to check for null or undefined [2]?
-(`sketchy-null-number`)
+[sketchy-null-number]
 
    test.js:7:5
    7| if (x) {} //Error
@@ -46,7 +46,7 @@ References:
 Warning --------------------------------------------------------------------------------------------------- test.js:10:5
 
 Sketchy null check on number [1] which is potentially 0. Perhaps you meant to check for null or undefined [2]?
-(`sketchy-null-number`)
+[sketchy-null-number]
 
    test.js:10:5
    10| if (x) {} //Warning
@@ -69,7 +69,7 @@ Check-contents Without --include-warnings
 Error ------------------------------------------------------------------------------------------------------ test.js:7:5
 
 Sketchy null check on number [1] which is potentially 0. Perhaps you meant to check for null or undefined [2]?
-(`sketchy-null-number`)
+[sketchy-null-number]
 
    test.js:7:5
    7| if (x) {} //Error
@@ -92,7 +92,7 @@ Check-contents With --include-warnings
 Error ------------------------------------------------------------------------------------------------------ test.js:7:5
 
 Sketchy null check on number [1] which is potentially 0. Perhaps you meant to check for null or undefined [2]?
-(`sketchy-null-number`)
+[sketchy-null-number]
 
    test.js:7:5
    7| if (x) {} //Error
@@ -110,7 +110,7 @@ References:
 Warning --------------------------------------------------------------------------------------------------- test.js:10:5
 
 Sketchy null check on number [1] which is potentially 0. Perhaps you meant to check for null or undefined [2]?
-(`sketchy-null-number`)
+[sketchy-null-number]
 
    test.js:10:5
    10| if (x) {} //Warning
@@ -133,7 +133,7 @@ Status Without --include-warnings
 Error ------------------------------------------------------------------------------------------------------ test.js:7:5
 
 Sketchy null check on number [1] which is potentially 0. Perhaps you meant to check for null or undefined [2]?
-(`sketchy-null-number`)
+[sketchy-null-number]
 
    test.js:7:5
    7| if (x) {} //Error
@@ -156,7 +156,7 @@ Status With --include-warnings
 Error ------------------------------------------------------------------------------------------------------ test.js:7:5
 
 Sketchy null check on number [1] which is potentially 0. Perhaps you meant to check for null or undefined [2]?
-(`sketchy-null-number`)
+[sketchy-null-number]
 
    test.js:7:5
    7| if (x) {} //Error
@@ -174,7 +174,7 @@ References:
 Warning --------------------------------------------------------------------------------------------------- test.js:10:5
 
 Sketchy null check on number [1] which is potentially 0. Perhaps you meant to check for null or undefined [2]?
-(`sketchy-null-number`)
+[sketchy-null-number]
 
    test.js:10:5
    10| if (x) {} //Warning
@@ -202,7 +202,7 @@ Check Without --include-warnings
 Error ------------------------------------------------------------------------------------------------------ test.js:7:5
 
 Sketchy null check on number [1] which is potentially 0. Perhaps you meant to check for null or undefined [2]?
-(`sketchy-null-number`)
+[sketchy-null-number]
 
    test.js:7:5
    7| if (x) {} //Error
@@ -220,7 +220,7 @@ References:
 Warning --------------------------------------------------------------------------------------------------- test.js:10:5
 
 Sketchy null check on number [1] which is potentially 0. Perhaps you meant to check for null or undefined [2]?
-(`sketchy-null-number`)
+[sketchy-null-number]
 
    test.js:10:5
    10| if (x) {} //Warning
@@ -243,7 +243,7 @@ Check With --include-warnings
 Error ------------------------------------------------------------------------------------------------------ test.js:7:5
 
 Sketchy null check on number [1] which is potentially 0. Perhaps you meant to check for null or undefined [2]?
-(`sketchy-null-number`)
+[sketchy-null-number]
 
    test.js:7:5
    7| if (x) {} //Error
@@ -261,7 +261,7 @@ References:
 Warning --------------------------------------------------------------------------------------------------- test.js:10:5
 
 Sketchy null check on number [1] which is potentially 0. Perhaps you meant to check for null or undefined [2]?
-(`sketchy-null-number`)
+[sketchy-null-number]
 
    test.js:10:5
    10| if (x) {} //Warning
@@ -284,7 +284,7 @@ Check-contents Without --include-warnings
 Error ------------------------------------------------------------------------------------------------------ test.js:7:5
 
 Sketchy null check on number [1] which is potentially 0. Perhaps you meant to check for null or undefined [2]?
-(`sketchy-null-number`)
+[sketchy-null-number]
 
    test.js:7:5
    7| if (x) {} //Error
@@ -302,7 +302,7 @@ References:
 Warning --------------------------------------------------------------------------------------------------- test.js:10:5
 
 Sketchy null check on number [1] which is potentially 0. Perhaps you meant to check for null or undefined [2]?
-(`sketchy-null-number`)
+[sketchy-null-number]
 
    test.js:10:5
    10| if (x) {} //Warning
@@ -325,7 +325,7 @@ Check-contents With --include-warnings
 Error ------------------------------------------------------------------------------------------------------ test.js:7:5
 
 Sketchy null check on number [1] which is potentially 0. Perhaps you meant to check for null or undefined [2]?
-(`sketchy-null-number`)
+[sketchy-null-number]
 
    test.js:7:5
    7| if (x) {} //Error
@@ -343,7 +343,7 @@ References:
 Warning --------------------------------------------------------------------------------------------------- test.js:10:5
 
 Sketchy null check on number [1] which is potentially 0. Perhaps you meant to check for null or undefined [2]?
-(`sketchy-null-number`)
+[sketchy-null-number]
 
    test.js:10:5
    10| if (x) {} //Warning
@@ -366,7 +366,7 @@ Status Without --include-warnings
 Error ------------------------------------------------------------------------------------------------------ test.js:7:5
 
 Sketchy null check on number [1] which is potentially 0. Perhaps you meant to check for null or undefined [2]?
-(`sketchy-null-number`)
+[sketchy-null-number]
 
    test.js:7:5
    7| if (x) {} //Error
@@ -384,7 +384,7 @@ References:
 Warning --------------------------------------------------------------------------------------------------- test.js:10:5
 
 Sketchy null check on number [1] which is potentially 0. Perhaps you meant to check for null or undefined [2]?
-(`sketchy-null-number`)
+[sketchy-null-number]
 
    test.js:10:5
    10| if (x) {} //Warning
@@ -407,7 +407,7 @@ Status With --include-warnings
 Error ------------------------------------------------------------------------------------------------------ test.js:7:5
 
 Sketchy null check on number [1] which is potentially 0. Perhaps you meant to check for null or undefined [2]?
-(`sketchy-null-number`)
+[sketchy-null-number]
 
    test.js:7:5
    7| if (x) {} //Error
@@ -425,7 +425,7 @@ References:
 Warning --------------------------------------------------------------------------------------------------- test.js:10:5
 
 Sketchy null check on number [1] which is potentially 0. Perhaps you meant to check for null or undefined [2]?
-(`sketchy-null-number`)
+[sketchy-null-number]
 
    test.js:10:5
    10| if (x) {} //Warning

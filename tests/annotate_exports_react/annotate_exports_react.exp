@@ -1,0 +1,250 @@
+
+=== Codemod annotate-exports ===
+
+>>> ./createClass.js
+// @flow
+
+var React = require('react');
+
+const Comp: Class<React$Component<any, {...}>> & {defaultProps: void,...} = React.createClass(Object.freeze({}));
+
+module.exports = Comp;
+
+>>> ./element-component.js
+// @flow
+
+const React = require('react');
+
+type Props = {}
+
+module.exports = (): React.Node => {
+  class Abc extends React.Component<Props> { }
+  return <Abc/>;
+}
+
+>>> ./element-div.js
+// @flow
+
+const React = require('react');
+
+declare var div: React$Element<'div'>;
+module.exports = (): React.Element<"div"> => div;
+
+>>> ./no-import.js
+// @flow
+
+import type {ComponentType} from "React";
+import type {ComponentType as $IMPORTED_TYPE$_ComponentType_1} from "./fake-react";import { foo } from "./lib";
+import { bar } from "./fake-react";
+
+export function my_foo(): ComponentType<any> {
+  return foo();
+}
+export function my_bar(): $IMPORTED_TYPE$_ComponentType_1<any> {
+  return bar();
+}
+
+>>> ./node.js
+// @flow
+
+const React = require('react');
+declare var n: React.Node
+module.exports = (): React.Node => n;
+
+>>> ./propTypes.js
+// @flow
+
+const { PropTypes } = require('react');
+
+const XShape = {
+  x: PropTypes.number.isRequired
+};
+const FooShape = {
+  foo: (PropTypes.shape(XShape).isRequired: React$PropType$Primitive$Required<{x: number,...}>)
+};
+
+const Bar: React$PropType$Primitive<{foo: {x: number,...},...}> = PropTypes.shape(FooShape);
+
+module.exports = {
+  FooShape,
+  Bar
+};
+
+>>> ./qualified.js
+// @flow
+
+const React = require("react");
+declare var componentType_1: React.ComponentType<number>;
+declare var componentType_2: React.ComponentType<React.ComponentType<number>>;
+declare var elementRef: React.ElementRef<number>;
+declare var elementConfig: React.ElementConfig<number>;
+
+module.exports = (): {|
+  componentType_1: React.ComponentType<number>,
+  componentType_2: React.ComponentType<React.ComponentType<number>>,
+  elementConfig: React.ElementConfig<number>,
+  elementRef: React.ElementRef<number>,
+|} => ({
+  componentType_1,
+  componentType_2,
+  elementRef,
+  elementConfig
+});
+
+>>> Launching report...
+
+Stats:
+  Files changed:                            7
+  Number of annotations added:              9
+  Total size of annotations:               33
+  Number of sig. ver. errors:               9
+  Number of annotations required:           9
+  Number of annotations skipped:            0
+
+Errors:
+  Missing annot./normalizer error:          0
+  Validation Error:                         0
+  Import Error:
+    Loc source none:                        0
+    Parsing heaps get ast error:            0
+    Indeterminate module type:              0
+    No matching export:                     0
+  Serializer error:                         0
+  Unsupported error kind:                   0
+
+Warnings:
+  Skipping arrow function:                  0
+  Large type added:                         0
+  Location unhandled:                       0
+  Empty NoUpper:                            0
+  Empty SomeKnownUpper:                     0
+
+
+=== Autofix exports ===
+
+>>> ./createClass.js
+// @flow
+
+var React = require('react');
+
+const Comp: Class<React$Component<any, {...}>> & {defaultProps: void,...} = React.createClass(Object.freeze({}));
+
+module.exports = Comp;
+
+>>> ./element-component.js
+// @flow
+
+const React = require('react');
+
+type Props = {}
+
+module.exports = (): React$Element<typeof Abc> => {
+  class Abc extends React.Component<Props> { }
+  return <Abc/>;
+}
+
+>>> ./element-div.js
+// @flow
+
+const React = require('react');
+
+declare var div: React$Element<'div'>;
+module.exports = (): React$Element<"div"> => div;
+
+>>> ./no-import.js
+// @flow
+
+import type {ComponentType} from "./fake-react";import { foo } from "./lib";
+import { bar } from "./fake-react";
+
+export function my_foo(): ComponentType<any> {
+  return foo();
+}
+export function my_bar(): ComponentType<any> {
+  return bar();
+}
+
+>>> ./node.js
+// @flow
+
+const React = require('react');
+declare var n: React.Node
+module.exports = (): React.Node => n;
+
+>>> ./propTypes.js
+// @flow
+
+const { PropTypes } = require('react');
+
+const XShape = {
+  x: PropTypes.number.isRequired
+};
+const FooShape = {
+  foo: (PropTypes.shape(XShape).isRequired: React$PropType$Primitive$Required<{x: number,...}>)
+};
+
+const Bar: React$PropType$Primitive<{foo: {x: number,...},...}> = PropTypes.shape(FooShape);
+
+module.exports = {
+  FooShape,
+  Bar
+};
+
+>>> ./qualified.js
+// @flow
+
+const React = require("react");
+declare var componentType_1: React.ComponentType<number>;
+declare var componentType_2: React.ComponentType<React.ComponentType<number>>;
+declare var elementRef: React.ElementRef<number>;
+declare var elementConfig: React.ElementConfig<number>;
+
+module.exports = (): {
+  componentType_1: React.ComponentType<number>,
+  componentType_2: React.ComponentType<React.ComponentType<number>>,
+  elementConfig: React.ElementConfig<number>,
+  elementRef: React.ElementRef<number>,
+  ...,
+} => ({
+  componentType_1,
+  componentType_2,
+  elementRef,
+  elementConfig
+});
+
+
+=== Diff between codemod-ed & autofix-ed ===
+>>> ./element-component.js
+7c7
+< module.exports = (): React.Node => {
+---
+> module.exports = (): React$Element<typeof Abc> => {
+
+>>> ./element-div.js
+6c6
+< module.exports = (): React.Element<"div"> => div;
+---
+> module.exports = (): React$Element<"div"> => div;
+
+>>> ./no-import.js
+3,4c3
+< import type {ComponentType} from "React";
+< import type {ComponentType as $IMPORTED_TYPE$_ComponentType_1} from "./fake-react";import { foo } from "./lib";
+---
+> import type {ComponentType} from "./fake-react";import { foo } from "./lib";
+10c9
+< export function my_bar(): $IMPORTED_TYPE$_ComponentType_1<any> {
+---
+> export function my_bar(): ComponentType<any> {
+
+>>> ./qualified.js
+9c9
+< module.exports = (): {|
+---
+> module.exports = (): {
+14c14,15
+< |} => ({
+---
+>   ...,
+> } => ({
+

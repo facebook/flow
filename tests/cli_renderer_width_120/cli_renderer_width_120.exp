@@ -1,6 +1,6 @@
 Error ----------------------------------------------------------------------------------------------------- basic.js:6:2
 
-Cannot cast `null` to empty because null [1] is incompatible with empty [2].
+Cannot cast `null` to empty because null [1] is incompatible with empty [2]. [incompatible-cast]
 
    basic.js:6:2
    6| (null: empty); // Error: null ~> empty
@@ -12,19 +12,16 @@ References:
              ^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------ text_break.js:6:2
+Error ----------------------------------------------------------------------------------------------- text_break.js:6:34
 
 Cannot cast object literal to object type because number [1] is incompatible with empty [2] in property
-`a.b.c.d.e.f.g.h`.
+`a.b.c.d.e.f.g.h`. [incompatible-cast]
 
-   text_break.js:6:2
-   6| ({a: {b: {c: {d: {e: {f: {g: {h: 42}}}}}}}}: {
-       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-References:
    text_break.js:6:34
    6| ({a: {b: {c: {d: {e: {f: {g: {h: 42}}}}}}}}: {
                                        ^^ [1]
+
+References:
    text_break.js:7:34
    7|   a: {b: {c: {d: {e: {f: {g: {h: empty}}}}}}},
                                        ^^^^^ [2]

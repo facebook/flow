@@ -1,0 +1,73 @@
+> insert-type a.js 6 15
+> cat a.js
+// @flow
+
+type Inexact = { data: string; type: string; }
+type Exact = {| data: string; type: string; |}
+
+function foo(): Array<{data: string, type: string,...}> {
+  return [
+    {data: "", type: ""},
+    {data: "", type: ""},
+  ];
+}
+
+(foo(): Array<Inexact>);
+(foo(): Array<Exact>);
+
+module.exports = foo;
+> insert-type b.js 6 15 --strategy=generalize
+> cat b.js
+// @flow
+
+type Inexact = { data: string; type: string; }
+type Exact = {| data: string; type: string; |}
+
+function foo(): Array<{data: string, type: string,...}> {
+  return [
+    {data: "", type: ""},
+    {data: "", type: ""},
+  ];
+}
+
+(foo(): Array<Inexact>);
+
+module.exports = foo;
+> insert-type c.js 6 15 --strategy=specialize
+> cat c.js
+// @flow
+
+type Inexact = { data: string; type: string; }
+type Exact = {| data: string; type: string; |}
+
+function foo(): Array<{|data: string, type: string|}> {
+  return [
+    {data: "", type: ""},
+    {data: "", type: ""},
+  ];
+}
+
+(foo(): Array<Exact>);
+
+module.exports = foo;
+> flow status
+Error -------------------------------------------------------------------------------------------------------- a.js:14:2
+
+Cannot cast `foo()` to array type because inexact object type [1] is incompatible with exact `Exact` [2] in array
+element. [incompatible-exact]
+
+   a.js:14:2
+   14| (foo(): Array<Exact>);
+        ^^^^^
+
+References:
+   a.js:6:23
+    6| function foo(): Array<{data: string, type: string,...}> {
+                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   a.js:14:15
+   14| (foo(): Array<Exact>);
+                     ^^^^^ [2]
+
+
+
+Found 1 error

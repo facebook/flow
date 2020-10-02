@@ -1,4 +1,4 @@
-(**
+(*
  * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
@@ -37,11 +37,11 @@ val fold : (lint_kind -> 'a * Loc.t option -> 'b -> 'b) -> 'a t -> 'b -> 'b
 (* Map over all lint kinds with an explicit value *)
 val map : ('a * Loc.t option -> 'a * Loc.t option) -> 'a t -> 'a t
 
-val default_lint_severities : (lint_kind * (severity * 'a option)) list
-
 (* SEVERITY-SPECIFIC FUNCTIONS *)
 
 val empty_severities : severity t
+
+val default_severities : severity t
 
 (* True iff get_state returns Warn or Err, false otherwise *)
 val is_enabled : lint_kind -> severity t -> bool
@@ -54,12 +54,10 @@ val of_lines : severity t -> (int * string) list -> (severity t, int * string) r
 (* Intended for debugging purposes. *)
 val to_string : severity t -> string
 
-type lint_parse_error_kind =
+type lint_parse_error =
   | Invalid_setting
   | Malformed_argument
   | Naked_comment
   | Nonexistent_rule
   | Overwritten_argument
   | Redundant_argument
-
-type lint_parse_error = Loc.t * lint_parse_error_kind

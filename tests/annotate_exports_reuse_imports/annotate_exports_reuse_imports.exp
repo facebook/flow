@@ -1,0 +1,210 @@
+
+=== Codemod annotate-exports ===
+
+>>> ./exports-default-class-funcall-a.js
+// @flow
+
+declare class Base {}
+class B extends Base {}
+
+function foo() { return B };
+
+module.exports = (foo(): typeof B);
+
+>>> ./exports-default-class-funcall-b.js
+// @flow
+
+declare class Base {}
+class B extends Base {}
+
+function foo() { return B };
+
+module.exports = (foo(): typeof B);
+
+>>> ./exports-default-instance.js
+// @flow
+
+declare class Base {}
+class A extends Base {}
+
+module.exports = (new A(): A);
+
+>>> ./exports-default-poly-instance.js
+// @flow
+
+class P<X> {}
+
+module.exports = (new P<number>(): P<number>);
+
+>>> ./import-default.js
+// @flow
+
+import typeof $IMPORTED_TYPEOF$_C from "./exports-default-class-1";
+import typeof B from "./exports-default-class";
+import typeof $IMPORTED_TYPEOF$_B_1 from "./exports-default-poly-class";
+import typeof A from "./exports-default-instance";import typeof ImportedDefaultFunction from "./exports-default-function";
+
+import typeof ImportedDefaultInstance from "./exports-default-instance";
+import typeof ImportedDefaultPolyInstance from "./exports-default-poly-instance";
+import type ImportedTypeDefaultClass from "./exports-default-class";
+import type ImportedTypeDefaultClassTwice from "./exports-default-class";
+import type ImportedTypeDefaultPolyClass from "./exports-default-poly-class";
+import typeof ImportedTypeofDefaultClass from "./exports-default-class";
+import typeof ImportedTypeofDefaultClassTwice from "./exports-default-class";
+import typeof ImportedTypeofDefaultPolyClass from "./exports-default-poly-class";
+import typeof ImportedTypeofDefaultClassFuncall from "./exports-default-class-funcall-a";
+import ImportedValueDefaultClassFuncall from "./exports-default-class-funcall-b";
+
+import type ImportedTypeOfClassC from './exports-default-class-1';
+import { typeof_c } from './exports-default-class-1-generator';
+
+declare function f1(): ImportedDefaultInstance;
+declare function f2(): ImportedDefaultPolyInstance;
+declare function f3(): ImportedTypeDefaultClass;
+declare function f4(): ImportedTypeDefaultPolyClass<number>;
+declare function f5(): ImportedTypeofDefaultClass;
+declare function f6(): ImportedTypeofDefaultPolyClass;
+declare function f7(): ImportedTypeofDefaultClassFuncall;
+declare function f8(): ImportedValueDefaultClassFuncall;
+
+var C = 1;
+
+module.exports = {
+  x1: (f1(): A),
+  x2: f2(),
+  x3: (f3(): ImportedTypeDefaultClass),
+  x4: (f4(): ImportedTypeDefaultPolyClass<number>),
+  x5: (f5(): B),
+  x6: (f6(): $IMPORTED_TYPEOF$_B_1),
+  typeof_c: (typeof_c(): $IMPORTED_TYPEOF$_C),  // cannot use `ImportedTypeOfClassC` -- need to import C as typeof
+  x7: (f7(): ImportedTypeofDefaultClassFuncall),
+  x8: (f8(): ImportedValueDefaultClassFuncall),
+};
+
+>>> Launching report...
+
+Stats:
+  Files changed:                            5
+  Number of annotations added:             12
+  Total size of annotations:               14
+  Number of sig. ver. errors:              13
+  Number of annotations required:          13
+  Number of annotations skipped:            0
+
+Errors:
+  Missing annot./normalizer error:          0
+  Validation Error:                         0
+  Import Error:
+    Loc source none:                        0
+    Parsing heaps get ast error:            0
+    Indeterminate module type:              0
+    No matching export:                     1
+  Serializer error:                         0
+  Unsupported error kind:                   0
+
+Warnings:
+  Skipping arrow function:                  0
+  Large type added:                         0
+  Location unhandled:                       0
+  Empty NoUpper:                            0
+  Empty SomeKnownUpper:                     0
+
+
+=== Autofix exports ===
+
+>>> ./exports-default-class-funcall-a.js
+// @flow
+
+declare class Base {}
+class B extends Base {}
+
+function foo() { return B };
+
+module.exports = (foo(): typeof B);
+
+>>> ./exports-default-class-funcall-b.js
+// @flow
+
+declare class Base {}
+class B extends Base {}
+
+function foo() { return B };
+
+module.exports = (foo(): typeof B);
+
+>>> ./exports-default-instance.js
+// @flow
+
+declare class Base {}
+class A extends Base {}
+
+module.exports = (new A(): A);
+
+>>> ./exports-default-poly-instance.js
+// @flow
+
+class P<X> {}
+
+module.exports = (new P<number>(): P<number>);
+
+>>> ./import-default.js
+// @flow
+
+import typeof C from "./exports-default-class-1";
+import typeof B from "./exports-default-class";
+import typeof $IMPORTED_TYPEOF$_B_1 from "./exports-default-poly-class";
+import typeof A from "./exports-default-instance";import typeof ImportedDefaultFunction from "./exports-default-function";
+
+import typeof ImportedDefaultInstance from "./exports-default-instance";
+import typeof ImportedDefaultPolyInstance from "./exports-default-poly-instance";
+import type ImportedTypeDefaultClass from "./exports-default-class";
+import type ImportedTypeDefaultClassTwice from "./exports-default-class";
+import type ImportedTypeDefaultPolyClass from "./exports-default-poly-class";
+import typeof ImportedTypeofDefaultClass from "./exports-default-class";
+import typeof ImportedTypeofDefaultClassTwice from "./exports-default-class";
+import typeof ImportedTypeofDefaultPolyClass from "./exports-default-poly-class";
+import typeof ImportedTypeofDefaultClassFuncall from "./exports-default-class-funcall-a";
+import ImportedValueDefaultClassFuncall from "./exports-default-class-funcall-b";
+
+import type ImportedTypeOfClassC from './exports-default-class-1';
+import { typeof_c } from './exports-default-class-1-generator';
+
+declare function f1(): ImportedDefaultInstance;
+declare function f2(): ImportedDefaultPolyInstance;
+declare function f3(): ImportedTypeDefaultClass;
+declare function f4(): ImportedTypeDefaultPolyClass<number>;
+declare function f5(): ImportedTypeofDefaultClass;
+declare function f6(): ImportedTypeofDefaultPolyClass;
+declare function f7(): ImportedTypeofDefaultClassFuncall;
+declare function f8(): ImportedValueDefaultClassFuncall;
+
+var C = 1;
+
+module.exports = {
+  x1: (f1(): A),
+  x2: (f2(): P<number>),
+  x3: (f3(): ImportedTypeDefaultClass),
+  x4: (f4(): ImportedTypeDefaultPolyClass<number>),
+  x5: (f5(): B),
+  x6: (f6(): $IMPORTED_TYPEOF$_B_1),
+  typeof_c: (typeof_c(): C),  // cannot use `ImportedTypeOfClassC` -- need to import C as typeof
+  x7: (f7(): ImportedTypeofDefaultClassFuncall),
+  x8: (f8(): ImportedValueDefaultClassFuncall),
+};
+
+
+=== Diff between codemod-ed & autofix-ed ===
+>>> ./import-default.js
+3c3
+< import typeof $IMPORTED_TYPEOF$_C from "./exports-default-class-1";
+---
+> import typeof C from "./exports-default-class-1";
+35c35
+<   x2: f2(),
+---
+>   x2: (f2(): P<number>),
+40c40
+<   typeof_c: (typeof_c(): $IMPORTED_TYPEOF$_C),  // cannot use `ImportedTypeOfClassC` -- need to import C as typeof
+---
+>   typeof_c: (typeof_c(): C),  // cannot use `ImportedTypeOfClassC` -- need to import C as typeof
+

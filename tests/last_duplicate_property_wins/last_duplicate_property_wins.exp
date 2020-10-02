@@ -1,6 +1,6 @@
 Error ----------------------------------------------------------------------------------------------------- test.js:11:3
 
-Cannot shadow proto property `bar` [1] because string [2] is incompatible with function [3].
+Cannot shadow proto property `bar` [1] because string [2] is incompatible with function [3]. [incompatible-type]
 
    test.js:11:3
    11|   bar: string; // error: can't shadow proto with incompatible own
@@ -20,7 +20,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:12:3
 
-Cannot shadow proto property `qux` [1] because number [2] is incompatible with function [3].
+Cannot shadow proto property `qux` [1] because number [2] is incompatible with function [3]. [incompatible-type]
 
    test.js:12:3
    12|   qux: number; // error: can't shadow proto with incompatible own
@@ -40,7 +40,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:18:2
 
-Cannot cast `new C().foo()` to boolean because string [1] is incompatible with boolean [2].
+Cannot cast `(new C).foo()` to boolean because string [1] is incompatible with boolean [2]. [incompatible-cast]
 
    test.js:18:2
    18| ((new C).foo(): boolean); // last wins
@@ -57,7 +57,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:19:2
 
-Cannot cast `new C().x` to boolean because string [1] is incompatible with boolean [2].
+Cannot cast `(new C).x` to boolean because string [1] is incompatible with boolean [2]. [incompatible-cast]
 
    test.js:19:2
    19| ((new C).x: boolean); // last wins
@@ -74,7 +74,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:20:2
 
-Cannot cast `new C().bar` to empty because string [1] is incompatible with empty [2].
+Cannot cast `(new C).bar` to empty because string [1] is incompatible with empty [2]. [incompatible-cast]
 
    test.js:20:2
    20| ((new C).bar: empty); // error: string ~> empty (own prop wins)
@@ -91,7 +91,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:21:2
 
-Cannot cast `new C().qux` to empty because number [1] is incompatible with empty [2].
+Cannot cast `(new C).qux` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
 
    test.js:21:2
    21| ((new C).qux: empty); // error: number ~> empty (own prop wins)
@@ -108,7 +108,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:38:2
 
-Cannot cast `o.foo()` to boolean because string [1] is incompatible with boolean [2].
+Cannot cast `o.foo()` to boolean because string [1] is incompatible with boolean [2]. [incompatible-cast]
 
    test.js:38:2
    38| (o.foo(): boolean); // last wins
@@ -125,7 +125,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:39:2
 
-Cannot cast `o.x` to boolean because string [1] is incompatible with boolean [2].
+Cannot cast `o.x` to boolean because string [1] is incompatible with boolean [2]. [incompatible-cast]
 
    test.js:39:2
    39| (o.x: boolean); // last wins
@@ -142,7 +142,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:40:2
 
-Cannot cast `o.bar` to boolean because string [1] is incompatible with boolean [2].
+Cannot cast `o.bar` to boolean because string [1] is incompatible with boolean [2]. [incompatible-cast]
 
    test.js:40:2
    40| (o.bar: boolean); // last wins
@@ -159,7 +159,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:41:2
 
-Cannot cast `o.qux()` to boolean because string [1] is incompatible with boolean [2].
+Cannot cast `o.qux()` to boolean because string [1] is incompatible with boolean [2]. [incompatible-cast]
 
    test.js:41:2
    41| (o.qux(): boolean); // last wins

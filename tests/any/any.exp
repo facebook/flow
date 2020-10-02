@@ -1,6 +1,6 @@
 Error ------------------------------------------------------------------------------------------------------ any.js:8:16
 
-Cannot assign `bar(...)` to `y` because mixed [1] is incompatible with string [2].
+Cannot assign `bar(...)` to `y` because mixed [1] is incompatible with string [2]. [incompatible-type]
 
    any.js:8:16
    8| var y:string = bar(0);
@@ -15,9 +15,44 @@ References:
             ^^^^^^ [2]
 
 
+Error ---------------------------------------------------------------------------------------- ex_special_cases.js:41:21
+
+Cannot assign `array[receiver.name]` to `test1` because number [1] is incompatible with string [2]. [incompatible-type]
+
+   ex_special_cases.js:41:21
+   41| var test1: string = array[receiver.name]; // if result of receiver.getprop is any, this will fail, but no error if it's empty.
+                           ^^^^^^^^^^^^^^^^^^^^
+
+References:
+   ex_special_cases.js:40:26
+   40| declare var array: Array<number>;
+                                ^^^^^^ [1]
+   ex_special_cases.js:41:12
+   41| var test1: string = array[receiver.name]; // if result of receiver.getprop is any, this will fail, but no error if it's empty.
+                  ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------- ex_special_cases.js:42:21
+
+Cannot assign `array[receiver.name()]` to `test2` because number [1] is incompatible with string [2].
+[incompatible-type]
+
+   ex_special_cases.js:42:21
+   42| var test2: string = array[receiver.name()] // likewise
+                           ^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   ex_special_cases.js:40:26
+   40| declare var array: Array<number>;
+                                ^^^^^^ [1]
+   ex_special_cases.js:42:12
+   42| var test2: string = array[receiver.name()] // likewise
+                  ^^^^^^ [2]
+
+
 Error ----------------------------------------------------------------------------------------------- flowfixme.js:14:27
 
-Cannot resolve name `nnumber`.
+Cannot resolve name `nnumber`. [cannot-resolve-name]
 
    14| function baz(x:$FlowFixMe<nnumber>): $FlowFixMe<number> { return x; }
                                  ^^^^^^^
@@ -25,7 +60,7 @@ Cannot resolve name `nnumber`.
 
 Error ----------------------------------------------------------------------------------------------- flowfixme.js:17:16
 
-Cannot assign `bar(...)` to `y` because mixed [1] is incompatible with string [2].
+Cannot assign `bar(...)` to `y` because mixed [1] is incompatible with string [2]. [incompatible-type]
 
    flowfixme.js:17:16
    17| var y:string = bar(0);
@@ -42,7 +77,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- flowissue.js:14:27
 
-Cannot resolve name `nnumber`.
+Cannot resolve name `nnumber`. [cannot-resolve-name]
 
    14| function baz(x:$FlowIssue<nnumber>): $FlowIssue<number> { return x; }
                                  ^^^^^^^
@@ -50,7 +85,7 @@ Cannot resolve name `nnumber`.
 
 Error ----------------------------------------------------------------------------------------------- flowissue.js:17:16
 
-Cannot assign `bar(...)` to `y` because mixed [1] is incompatible with string [2].
+Cannot assign `bar(...)` to `y` because mixed [1] is incompatible with string [2]. [incompatible-type]
 
    flowissue.js:17:16
    17| var y:string = bar(0);
@@ -67,7 +102,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- propagate.js:10:10
 
-Cannot return `c.bar(...)` because number [1] is incompatible with string [2].
+Cannot return `c.bar(...)` because number [1] is incompatible with string [2]. [incompatible-return]
 
    propagate.js:10:10
    10|   return c.bar(0, y); // should be able to select first case and error
@@ -84,7 +119,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ propagate.js:16:6
 
-Cannot cast `x` to boolean because mixed [1] is incompatible with boolean [2].
+Cannot cast `x` to boolean because mixed [1] is incompatible with boolean [2]. [incompatible-cast]
 
    propagate.js:16:6
    16|     (x: boolean);
@@ -101,7 +136,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ propagate.js:23:6
 
-Cannot cast `x` to boolean because mixed [1] is incompatible with boolean [2].
+Cannot cast `x` to boolean because mixed [1] is incompatible with boolean [2]. [incompatible-cast]
 
    propagate.js:23:6
    23|     (x: boolean);
@@ -117,4 +152,4 @@ References:
 
 
 
-Found 8 errors
+Found 10 errors

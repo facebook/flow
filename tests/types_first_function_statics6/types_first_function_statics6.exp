@@ -1,0 +1,36 @@
+Error --------------------------------------------------------------------------------------------------------- b.js:5:2
+
+Cannot cast `A.prop` to string because number [1] is incompatible with string [2]. [incompatible-cast]
+
+   b.js:5:2
+   5| (A.prop : string);
+       ^^^^^^
+
+References:
+   a.js:6:10
+   6| A.prop = 1;
+               ^ [1]
+   b.js:5:11
+   5| (A.prop : string);
+                ^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------------- b.js:6:2
+
+Cannot cast `B.prop` to string because number [1] is incompatible with string [2]. [incompatible-cast]
+
+   b.js:6:2
+   6| (B.prop : string);
+       ^^^^^^
+
+References:
+   a.js:7:10
+   7| B.prop = 2;
+               ^ [1]
+   b.js:6:11
+   6| (B.prop : string);
+                ^^^^^^ [2]
+
+
+
+Found 2 errors

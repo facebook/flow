@@ -4,16 +4,16 @@ No errors!
 Full init with saved state does recheck & sees new error
 Error ------------------------------------------------------------------------------------------------------- foo.js:4:2
 
-Cannot cast `x` to string because number [1] is incompatible with string [2].
+Cannot cast `x` to string because number [1] is incompatible with string [2]. [incompatible-cast]
 
    foo.js:4:2
    4| (x: string);
        ^
 
 References:
-   bar.js:3:16
-   3| export var x = 123
-                     ^^^ [1]
+   bar.js:3:18
+   3| export const x = 123
+                       ^^^ [1]
    foo.js:4:5
    4| (x: string);
           ^^^^^^ [2]
@@ -31,16 +31,16 @@ To learn more, visit flow.org/en/docs/lang/lazy-modes
 ...but focusing the file exposes the error
 Error ------------------------------------------------------------------------------------------------------- foo.js:4:2
 
-Cannot cast `x` to string because number [1] is incompatible with string [2].
+Cannot cast `x` to string because number [1] is incompatible with string [2]. [incompatible-cast]
 
    foo.js:4:2
    4| (x: string);
        ^
 
 References:
-   bar.js:3:16
-   3| export var x = 123
-                     ^^^ [1]
+   bar.js:3:18
+   3| export const x = 123
+                       ^^^ [1]
    foo.js:4:5
    4| (x: string);
           ^^^^^^ [2]
@@ -55,16 +55,16 @@ To learn more, visit flow.org/en/docs/lang/lazy-modes
 --saved-state-force-recheck does recheck & sees new error
 Error ------------------------------------------------------------------------------------------------------- foo.js:4:2
 
-Cannot cast `x` to string because number [1] is incompatible with string [2].
+Cannot cast `x` to string because number [1] is incompatible with string [2]. [incompatible-cast]
 
    foo.js:4:2
    4| (x: string);
        ^
 
 References:
-   bar.js:3:16
-   3| export var x = 123
-                     ^^^ [1]
+   bar.js:3:18
+   3| export const x = 123
+                       ^^^ [1]
    foo.js:4:5
    4| (x: string);
           ^^^^^^ [2]
@@ -81,16 +81,16 @@ A file incompatible with rechecks changed, so no saved state loading
 ...so we need to fallback to non-saved-state
 Error ------------------------------------------------------------------------------------------------------- foo.js:4:2
 
-Cannot cast `x` to string because number [1] is incompatible with string [2].
+Cannot cast `x` to string because number [1] is incompatible with string [2]. [incompatible-cast]
 
    foo.js:4:2
    4| (x: string);
        ^
 
 References:
-   bar.js:3:16
-   3| export var x = 123
-                     ^^^ [1]
+   bar.js:3:18
+   3| export const x = 123
+                       ^^^ [1]
    foo.js:4:5
    4| (x: string);
           ^^^^^^ [2]

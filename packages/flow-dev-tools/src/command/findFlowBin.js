@@ -1,4 +1,12 @@
-/* @flow */
+/**
+ * Copyright (c) Facebook, Inc. and its affiliates.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ *
+ * @flow
+ * @format
+ */
 
 import {existsSync} from 'fs';
 import {resolve} from 'path';
@@ -17,7 +25,6 @@ export default function(binArg: ?string): string {
     }
   }
 
-
   // Default to whatever is in the path
-  return "flow";
+  return 'flow';
 }

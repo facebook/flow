@@ -9,8 +9,7 @@ EXTRA_INCLUDE_PATHS=
 EXTRA_LIB_PATHS=
 EXTRA_LIBS=
 INTERNAL_MODULES=\
-	hack/stubs/logging\
-	hack/stubs/logging/common\
+	src/hack_forked/stubs/logging/common\
 	src/stubs
 INTERNAL_NATIVE_C_FILES=
 INTERNAL_BUILD_FLAGS=
@@ -22,6 +21,10 @@ else
   UNAME_S=$(shell uname -s)
 endif
 
+# Default to `ocamlbuild -j 0` (unlimited parallelism), but you can limit it
+# with `make OCAMLBUILD_JOBS=1`
+OCAMLBUILD_JOBS := 0
+
 -include facebook/Makefile.defs
 
 ################################################################################
@@ -30,9 +33,9 @@ endif
 
 ifeq ($(UNAME_S), Linux)
   EXTRA_LIBS += rt
-  INOTIFY=hack/third-party/inotify
+  INOTIFY=src/hack_forked/third-party/inotify
   INOTIFY_STUBS=$(INOTIFY)/inotify_stubs.c
-  FSNOTIFY=hack/fsnotify_linux
+  FSNOTIFY=src/hack_forked/fsnotify_linux
   FSNOTIFY_STUBS=
   FRAMEWORKS=
   EXE=
@@ -41,17 +44,17 @@ ifeq ($(UNAME_S), FreeBSD)
   EXTRA_INCLUDE_PATHS += /usr/local/include
   EXTRA_LIB_PATHS += /usr/local/lib
   EXTRA_LIBS += inotify
-  INOTIFY=hack/third-party/inotify
+  INOTIFY=src/hack_forked/third-party/inotify
   INOTIFY_STUBS=$(INOTIFY)/inotify_stubs.c
-  FSNOTIFY=hack/fsnotify_linux
+  FSNOTIFY=src/hack_forked/fsnotify_linux
   FSNOTIFY_STUBS=
   FRAMEWORKS=
   EXE=
 endif
 ifeq ($(UNAME_S), Darwin)
-  INOTIFY=hack/fsevents
+  INOTIFY=src/hack_forked/fsevents
   INOTIFY_STUBS=$(INOTIFY)/fsevents_stubs.c
-  FSNOTIFY=hack/fsnotify_darwin
+  FSNOTIFY=src/hack_forked/fsnotify_darwin
   FSNOTIFY_STUBS=
   FRAMEWORKS=CoreServices CoreFoundation
   EXE=
@@ -59,7 +62,7 @@ endif
 ifeq ($(UNAME_S), Windows)
   INOTIFY=
   INOTIFY_STUBS=
-  FSNOTIFY=hack/fsnotify_win
+  FSNOTIFY=src/hack_forked/fsnotify_win
   FSNOTIFY_STUBS=$(FSNOTIFY)/fsnotify_stubs.c
   FRAMEWORKS=
   EXE=.exe
@@ -70,6 +73,8 @@ endif
 ################################################################################
 
 MODULES=\
+  src/codemods\
+  src/codemods/utils\
   src/commands\
   src/commands/config\
   src/commands/options\
@@ -90,6 +95,8 @@ MODULES=\
   src/common/transaction\
   src/common/ty\
   src/common/utils\
+  src/common/utils/checked_set\
+  src/common/utils/filename_cache\
   src/common/utils/loc_utils\
   src/common/xx\
   src/flowlib\
@@ -103,15 +110,17 @@ MODULES=\
   src/parser\
   src/parser_utils\
   src/parser_utils/aloc\
+  src/parser_utils/iloc\
   src/parser_utils/output\
   src/parser_utils/output/printers\
+  src/parser_utils/signature_builder\
+  src/parser_utils/type_sig\
   src/parsing\
   src/procs\
   src/server\
   src/server/command_handler\
   src/server/env\
   src/server/error_collator\
-  src/server/find_refs\
   src/server/lazy_mode_utils\
   src/server/monitor_listener\
   src/server/persistent_connection\
@@ -122,13 +131,20 @@ MODULES=\
   src/server/shmem\
   src/server/watchman_expression_terms\
   src/services/autocomplete\
+  src/services/code_action\
+  src/services/coverage\
   src/services/get_def\
   src/services/inference\
-  src/services/inference/module\
-  src/services/flowFileGen\
+  src/services/jsdoc\
+  src/services/module\
+  src/services/refactor\
+  src/services/references\
   src/services/saved_state\
+  src/services/saved_state/compression\
+  src/services/saved_state/fetcher\
   src/services/type_info\
   src/state/heaps/context\
+  src/state/heaps/diffing\
   src/state/heaps/module\
   src/state/heaps/parsing\
   src/state/heaps/parsing/exceptions\
@@ -140,35 +156,36 @@ MODULES=\
   src/typing\
   src/typing/coverage_response\
   src/typing/errors\
+  src/typing/generics\
   src/typing/polarity\
-  hack/dfind\
-  hack/find\
-  hack/globals\
-  hack/heap\
-  hack/injection/default_injector\
-  hack/procs\
-  hack/search\
-  hack/socket\
-  hack/third-party/avl\
-  hack/third-party/core\
-  hack/utils/cgroup\
-  hack/utils/core\
-  hack/utils/buffered_line_reader\
-  hack/utils/build_mode/prod\
-  hack/utils/collections\
-  hack/utils/disk\
-  hack/utils/file_content\
-  hack/utils/file_url\
-  hack/utils/hh_json\
-  hack/utils/http_lite\
-  hack/utils/jsonrpc\
-  hack/utils/lsp\
-  hack/utils/marshal_tools\
-  hack/utils/opaque_digest\
-  hack/utils/procfs\
-  hack/utils/string\
-  hack/utils/sys\
-  hack/watchman\
+  src/hack_forked/dfind\
+  src/hack_forked/find\
+  src/hack_forked/globals\
+  src/heap\
+  src/hack_forked/injection/default_injector\
+  src/hack_forked/procs\
+  src/hack_forked/search\
+  src/hack_forked/socket\
+  src/hack_forked/third-party/avl\
+  src/hack_forked/third-party/core\
+  src/hack_forked/utils/cgroup\
+  src/hack_forked/utils/core\
+  src/hack_forked/utils/buffered_line_reader\
+  src/hack_forked/utils/build_mode/prod\
+  src/hack_forked/utils/collections\
+  src/hack_forked/utils/disk\
+  src/hack_forked/utils/file_content\
+  src/hack_forked/utils/file_url\
+  src/hack_forked/utils/hh_json\
+  src/hack_forked/utils/http_lite\
+  src/hack_forked/utils/jsonrpc\
+  src/hack_forked/utils/lsp\
+  src/hack_forked/utils/marshal_tools\
+  src/hack_forked/utils/opaque_digest\
+  src/hack_forked/utils/procfs\
+  src/hack_forked/utils/string\
+  src/hack_forked/utils/sys\
+  src/hack_forked/watchman\
   $(INOTIFY)\
   $(FSNOTIFY)\
   $(INTERNAL_MODULES)
@@ -177,19 +194,20 @@ NATIVE_C_FILES=\
   $(INOTIFY_STUBS)\
   $(FSNOTIFY_STUBS)\
   src/common/xx/xx_stubs.c\
-  src/services/saved_state/saved_state_compression_stubs.c\
-  hack/heap/hh_assert.c\
-  hack/heap/hh_shared.c\
-  hack/utils/core/get_build_id.c\
-  hack/utils/sys/files.c\
-  hack/utils/sys/gc_profiling.c\
-  hack/utils/sys/getrusage.c\
-  hack/utils/sys/handle_stubs.c\
-  hack/utils/sys/nproc.c\
-  hack/utils/sys/priorities.c\
-  hack/utils/sys/processor_info.c\
-  hack/utils/sys/realpath.c\
-  hack/utils/sys/sysinfo.c\
+  src/services/saved_state/compression/saved_state_compression_stubs.c\
+  src/hack_forked/find/hh_readdir.c\
+  src/heap/hh_assert.c\
+  src/heap/hh_shared.c\
+  src/hack_forked/utils/core/get_build_id.c\
+  src/hack_forked/utils/sys/files.c\
+  src/hack_forked/utils/sys/gc_profiling.c\
+  src/hack_forked/utils/sys/getrusage.c\
+  src/hack_forked/utils/sys/handle_stubs.c\
+  src/hack_forked/utils/sys/nproc.c\
+  src/hack_forked/utils/sys/priorities.c\
+  src/hack_forked/utils/sys/processor_info.c\
+  src/hack_forked/utils/sys/realpath.c\
+  src/hack_forked/utils/sys/sysinfo.c\
   $(sort $(wildcard src/third-party/lz4/*.c))\
   $(INTERNAL_NATIVE_C_FILES)
 
@@ -215,6 +233,7 @@ COPIED_PRELUDE=\
 	$(foreach lib,$(wildcard prelude/*.js),_build/$(lib))
 
 JS_STUBS=\
+	+base/runtime.js\
 	+dtoa/dtoa_stubs.js\
 	$(wildcard js/*.js)
 
@@ -228,7 +247,7 @@ OUNIT_TESTS=\
 	src/parser_utils/__tests__/parser_utils_tests.native\
 	src/parser_utils/output/__tests__/parser_utils_output_tests.native\
 	src/parser_utils/output/printers/__tests__/parser_utils_output_printers_tests.native\
-	src/server/find_refs/__tests__/find_refs_tests.native
+	src/services/references/__tests__/find_refs_tests.native
 	# src/typing/__tests__/typing_tests.native
 
 ################################################################################
@@ -239,13 +258,14 @@ NATIVE_C_DIRS=$(patsubst %/,%,$(sort $(dir $(NATIVE_C_FILES))))
 ALL_HEADER_FILES=$(addprefix _build/,$(shell find $(NATIVE_C_DIRS) -name '*.h'))
 ALL_HEADER_FILES+=_build/src/third-party/lz4/xxhash.c
 NATIVE_OBJECT_FILES=$(patsubst %.c,%.o,$(NATIVE_C_FILES))
-NATIVE_OBJECT_FILES+=hack/utils/core/get_build_id.gen.o
+NATIVE_OBJECT_FILES+=src/hack_forked/utils/core/get_build_id.gen.o
 BUILT_C_DIRS=$(addprefix _build/,$(NATIVE_C_DIRS))
 BUILT_C_FILES=$(addprefix _build/,$(NATIVE_C_FILES))
 BUILT_OBJECT_FILES=$(addprefix _build/,$(NATIVE_OBJECT_FILES))
 BUILT_OUNIT_TESTS=$(addprefix _build/,$(OUNIT_TESTS))
 
-CC_FLAGS=-DNO_SQLITE3
+# Any additional C flags can be added here
+CC_FLAGS=-mcx16
 CC_FLAGS += $(EXTRA_CC_FLAGS)
 CC_OPTS=$(foreach flag, $(CC_FLAGS), -ccopt $(flag))
 INCLUDE_OPTS=$(foreach dir,$(MODULES),-I $(dir))
@@ -261,7 +281,7 @@ LINKER_FLAGS=$(BYTECODE_LINKER_FLAGS)
 
 RELEASE_TAGS=$(if $(FLOW_RELEASE),-tag warn_a,)
 
-OCB=ocamlbuild -use-ocamlfind -no-links
+OCB=ocamlbuild -use-ocamlfind -no-links -j $(OCAMLBUILD_JOBS)
 
 all: bin/flow$(EXE)
 
@@ -277,27 +297,27 @@ all-homebrew:
 clean:
 	ocamlbuild -clean
 	rm -rf bin
-	rm -f hack/utils/core/get_build_id.gen.c
+	rm -f src/hack_forked/utils/core/get_build_id.gen.c
 	rm -f flow.odocl
 
 build-flow: _build/scripts/ppx_gen_flowlibs.exe $(BUILT_OBJECT_FILES) $(COPIED_FLOWLIB) $(COPIED_PRELUDE) $(INTERNAL_BUILD_FLAGS)
 	# Both lwt and lwt_ppx provide ppx stuff. Fixed in lwt 4.0.0
 	# https://github.com/ocsigen/lwt/issues/453
 	export OCAMLFIND_IGNORE_DUPS_IN="$(shell ocamlfind query lwt)"; \
-	$(OCB) $(INTERNAL_FLAGS) $(INCLUDE_OPTS) $(FINDLIB_OPTS) \
+	$(OCB) $(INTERNAL_FLAGS) $(INCLUDE_OPTS) -tag thread $(FINDLIB_OPTS) \
 		-lflags "$(LINKER_FLAGS)" \
 		$(RELEASE_TAGS) \
 		src/flow.native
 
 build-flow-debug: _build/scripts/ppx_gen_flowlibs.exe $(BUILT_OBJECT_FILES) $(COPIED_FLOWLIB) $(COPIED_PRELUDE) $(INTERNAL_BUILD_FLAGS)
-	$(OCB) $(INTERNAL_FLAGS) $(INCLUDE_OPTS) $(FINDLIB_OPTS) \
+	$(OCB) $(INTERNAL_FLAGS) $(INCLUDE_OPTS) -tag thread $(FINDLIB_OPTS) \
 		-lflags -custom -lflags "$(LINKER_FLAGS)" \
 		src/flow.d.byte
 	mkdir -p bin
 	cp _build/src/flow.d.byte bin/flow$(EXE)
 
 testgen: build-flow
-	$(OCB) $(INTERNAL_FLAGS) $(INCLUDE_OPTS) $(FINDLIB_OPTS) \
+	$(OCB) $(INTERNAL_FLAGS) $(INCLUDE_OPTS) -tag thread $(FINDLIB_OPTS) \
 	 	-lflags "$(LINKER_FLAGS)" \
 		$(RELEASE_TAGS) \
 		testgen/flowtestgen.native
@@ -316,10 +336,10 @@ $(BUILT_C_FILES): _build/%.c: %.c
 $(BUILT_OBJECT_FILES): %.o: %.c $(ALL_HEADER_FILES)
 	cd $(dir $@) && ocamlopt $(EXTRA_INCLUDE_OPTS) $(CC_OPTS) -c $(notdir $<)
 
-hack/utils/core/get_build_id.gen.c: FORCE scripts/script_utils.ml scripts/gen_build_id.ml
+src/hack_forked/utils/core/get_build_id.gen.c: FORCE scripts/script_utils.ml scripts/gen_build_id.ml
 	ocaml -safe-string -I scripts -w -3 unix.cma scripts/gen_build_id.ml $@
 
-_build/hack/utils/core/get_build_id.gen.c: FORCE scripts/script_utils.ml scripts/gen_build_id.ml
+_build/src/hack_forked/utils/core/get_build_id.gen.c: FORCE scripts/script_utils.ml scripts/gen_build_id.ml
 	ocaml -safe-string -I scripts -w -3 unix.cma scripts/gen_build_id.ml $@
 
 $(COPIED_FLOWLIB): _build/%.js: %.js
@@ -352,7 +372,7 @@ bin/flow$(EXE): build-flow
 
 $(BUILT_OUNIT_TESTS): $(BUILT_OBJECT_FILES) FORCE
 	export OCAMLFIND_IGNORE_DUPS_IN="$(shell ocamlfind query lwt)"; \
-	$(OCB) $(INTERNAL_FLAGS) $(INCLUDE_OPTS) $(FINDLIB_OPTS) \
+	$(OCB) $(INTERNAL_FLAGS) $(INCLUDE_OPTS) -tag thread $(FINDLIB_OPTS) \
 		-I $(patsubst _build/%,%,$(@D)) \
 		-lflags "$(LINKER_FLAGS)" \
 		$(patsubst _build/%,%,$@)
@@ -360,7 +380,7 @@ $(BUILT_OUNIT_TESTS): $(BUILT_OBJECT_FILES) FORCE
 .PHONY: build-ounit-tests
 build-ounit-tests: $(BUILT_OBJECT_FILES) FORCE
 	export OCAMLFIND_IGNORE_DUPS_IN="$(shell ocamlfind query lwt)"; \
-	$(OCB) $(INTERNAL_FLAGS) $(INCLUDE_OPTS) $(FINDLIB_OPTS) \
+	$(OCB) $(INTERNAL_FLAGS) $(INCLUDE_OPTS) -tag thread $(FINDLIB_OPTS) \
 		$(foreach dir,$(dir $(OUNIT_TESTS)),-I $(dir)) \
 		-lflags "$(LINKER_FLAGS)" \
 		$(OUNIT_TESTS)
@@ -390,7 +410,7 @@ test: bin/flow$(EXE)
 js: _build/scripts/ppx_gen_flowlibs.exe $(BUILT_OBJECT_FILES) $(COPIED_FLOWLIB)
 	mkdir -p bin
 	# NOTE: temporarily disabling warning 31 because
-	# hack/third-party/core/result.ml and the opam `result` module both define
+	# src/hack_forked/third-party/core/result.ml and the opam `result` module both define
 	# result.cma, and this is the most expedient (though fragile) way to unblock
 	# ourselves.
 	$(OCB) \

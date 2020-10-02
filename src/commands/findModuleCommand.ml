@@ -1,4 +1,4 @@
-(**
+(*
  * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
@@ -33,8 +33,8 @@ let spec =
         |> anon "file" (required string));
   }
 
-let main
-    base_flags option_values json pretty root strip_root wait_for_recheck moduleref filename () =
+let main base_flags option_values json pretty root strip_root wait_for_recheck moduleref filename ()
+    =
   let flowconfig_name = base_flags.Base_flags.flowconfig_name in
   let root =
     guess_root

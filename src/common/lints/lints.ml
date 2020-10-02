@@ -1,4 +1,4 @@
-(**
+(*
  * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
@@ -10,6 +10,9 @@ type sketchy_null_kind =
   | SketchyNullString
   | SketchyNullNumber
   | SketchyNullMixed
+  | SketchyNullEnumBool
+  | SketchyNullEnumString
+  | SketchyNullEnumNumber
 
 type sketchy_number_kind = SketchyNumberAnd
 
@@ -29,20 +32,30 @@ type lint_kind =
   | UnclearType
   | DeprecatedType
   | DeprecatedUtility
-  | DynamicExport
   | UnsafeGettersSetters
-  | InexactSpread
   | UnnecessaryOptionalChain
   | UnnecessaryInvariant
   | SignatureVerificationFailure
   | ImplicitInexactObject
   | UninitializedInstanceProperty
-  | NonArraySpread
+  | AmbiguousObjectType
+  | DefaultImportAccess
+  | InvalidImportStarUse
+  | NonConstVarExport
+  | ThisInExportedFunction
+  | MixedImportAndRequire
+  | ExportRenamedDefault
 
 let string_of_sketchy_null_kind = function
-  | SketchyNullBool -> "sketchy-null-bool"
-  | SketchyNullString -> "sketchy-null-string"
-  | SketchyNullNumber -> "sketchy-null-number"
+  | SketchyNullBool
+  | SketchyNullEnumBool ->
+    "sketchy-null-bool"
+  | SketchyNullString
+  | SketchyNullEnumString ->
+    "sketchy-null-string"
+  | SketchyNullNumber
+  | SketchyNullEnumNumber ->
+    "sketchy-null-number"
   | SketchyNullMixed -> "sketchy-null-mixed"
 
 let string_of_sketchy_number_kind = function
@@ -57,15 +70,19 @@ let string_of_kind = function
   | UnclearType -> "unclear-type"
   | DeprecatedType -> "deprecated-type"
   | DeprecatedUtility -> "deprecated-utility"
-  | DynamicExport -> "dynamic-export"
   | UnsafeGettersSetters -> "unsafe-getters-setters"
-  | InexactSpread -> "inexact-spread"
   | UnnecessaryOptionalChain -> "unnecessary-optional-chain"
   | UnnecessaryInvariant -> "unnecessary-invariant"
   | SignatureVerificationFailure -> "signature-verification-failure"
   | ImplicitInexactObject -> "implicit-inexact-object"
   | UninitializedInstanceProperty -> "uninitialized-instance-property"
-  | NonArraySpread -> "non-array-spread"
+  | AmbiguousObjectType -> "ambiguous-object-type"
+  | DefaultImportAccess -> "default-import-access"
+  | InvalidImportStarUse -> "invalid-import-star-use"
+  | NonConstVarExport -> "non-const-var-export"
+  | ThisInExportedFunction -> "this-in-exported-function"
+  | MixedImportAndRequire -> "mixed-import-and-require"
+  | ExportRenamedDefault -> "export-renamed-default"
 
 let kinds_of_string = function
   | "sketchy-null" ->
@@ -75,10 +92,13 @@ let kinds_of_string = function
         SketchyNull SketchyNullString;
         SketchyNull SketchyNullNumber;
         SketchyNull SketchyNullMixed;
+        SketchyNull SketchyNullEnumBool;
+        SketchyNull SketchyNullEnumString;
+        SketchyNull SketchyNullEnumNumber;
       ]
-  | "sketchy-null-bool" -> Some [SketchyNull SketchyNullBool]
-  | "sketchy-null-string" -> Some [SketchyNull SketchyNullString]
-  | "sketchy-null-number" -> Some [SketchyNull SketchyNullNumber]
+  | "sketchy-null-bool" -> Some [SketchyNull SketchyNullBool; SketchyNull SketchyNullEnumBool]
+  | "sketchy-null-string" -> Some [SketchyNull SketchyNullString; SketchyNull SketchyNullEnumString]
+  | "sketchy-null-number" -> Some [SketchyNull SketchyNullNumber; SketchyNull SketchyNullEnumNumber]
   | "sketchy-null-mixed" -> Some [SketchyNull SketchyNullMixed]
   | "sketchy-number" -> Some [SketchyNumber SketchyNumberAnd]
   | "sketchy-number-and" -> Some [SketchyNumber SketchyNumberAnd]
@@ -88,15 +108,19 @@ let kinds_of_string = function
   | "unclear-type" -> Some [UnclearType]
   | "deprecated-type" -> Some [DeprecatedType]
   | "deprecated-utility" -> Some [DeprecatedUtility]
-  | "dynamic-export" -> Some [DynamicExport]
   | "unsafe-getters-setters" -> Some [UnsafeGettersSetters]
-  | "inexact-spread" -> Some [InexactSpread]
   | "unnecessary-optional-chain" -> Some [UnnecessaryOptionalChain]
   | "unnecessary-invariant" -> Some [UnnecessaryInvariant]
   | "signature-verification-failure" -> Some [SignatureVerificationFailure]
   | "implicit-inexact-object" -> Some [ImplicitInexactObject]
+  | "ambiguous-object-type" -> Some [AmbiguousObjectType]
   | "uninitialized-instance-property" -> Some [UninitializedInstanceProperty]
-  | "non-array-spread" -> Some [NonArraySpread]
+  | "default-import-access" -> Some [DefaultImportAccess]
+  | "invalid-import-star-use" -> Some [InvalidImportStarUse]
+  | "non-const-var-export" -> Some [NonConstVarExport]
+  | "this-in-exported-function" -> Some [ThisInExportedFunction]
+  | "mixed-import-and-require" -> Some [MixedImportAndRequire]
+  | "export-renamed-default" -> Some [ExportRenamedDefault]
   | _ -> None
 
 module LintKind = struct
@@ -105,5 +129,5 @@ module LintKind = struct
   let compare = compare
 end
 
-module LintMap = MyMap.Make (LintKind)
+module LintMap = WrappedMap.Make (LintKind)
 module LintSet = Set.Make (LintKind)

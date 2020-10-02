@@ -1,0 +1,175 @@
+Error ---------------------------------------------------------------------------------------------------- file1.js:4:17
+
+Cannot assign function to `bar` because string [1] is incompatible with number [2] in the first argument.
+[incompatible-type]
+
+   file1.js:4:17
+   4| function bar(x: string): string { return ""; }
+                      ^^^^^^ [1]
+
+References:
+   file1.js:5:25
+   5| declare function bar(x: number): number; // error: cannot declare
+                              ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- file1.js:4:26
+
+Cannot assign function to `bar` because string [1] is incompatible with number [2] in the return value.
+[incompatible-type]
+
+   file1.js:4:26
+   4| function bar(x: string): string { return ""; }
+                               ^^^^^^ [1]
+
+References:
+   file1.js:5:34
+   5| declare function bar(x: number): number; // error: cannot declare
+                                       ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- file1.js:5:18
+
+Cannot declare `bar` [1] because the name is already bound. [name-already-bound]
+
+   file1.js:5:18
+   5| declare function bar(x: number): number; // error: cannot declare
+                       ^^^
+
+References:
+   file1.js:4:10
+   4| function bar(x: string): string { return ""; }
+               ^^^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------------- file4.js:5:7
+
+Cannot declare `A` [1] because the name is already bound. [name-already-bound]
+
+   file4.js:5:7
+   5| class A { x: number }
+            ^
+
+References:
+   file4.js:3:7
+   3| class A { x: string }
+            ^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------------ test.js:5:2
+
+Cannot cast `f1(...)` to number because string [1] is incompatible with number [2]. [incompatible-cast]
+
+   test.js:5:2
+   5| (f1(0): number);
+       ^^^^^
+
+References:
+   file1.js:4:26
+   4| function bar(x: string): string { return ""; }
+                               ^^^^^^ [1]
+   test.js:5:9
+   5| (f1(0): number);
+              ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------------ test.js:5:5
+
+Cannot call `f1` with `0` bound to `x` because number [1] is incompatible with string [2]. [incompatible-call]
+
+   test.js:5:5
+   5| (f1(0): number);
+          ^ [1]
+
+References:
+   file1.js:4:17
+   4| function bar(x: string): string { return ""; }
+                      ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------------ test.js:8:2
+
+Cannot cast `f2(...)` to string because number [1] is incompatible with string [2]. [incompatible-cast]
+
+   test.js:8:2
+   8| (f2(""): string);
+       ^^^^^^
+
+References:
+   file2.js:4:34
+   4| declare function foo(x: number): number;
+                                       ^^^^^^ [1]
+   test.js:8:10
+   8| (f2(""): string);
+               ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------------ test.js:8:5
+
+Cannot call `f2` with empty string bound to `x` because string [1] is incompatible with number [2]. [incompatible-call]
+
+   test.js:8:5
+   8| (f2(""): string);
+          ^^ [1]
+
+References:
+   file2.js:4:25
+   4| declare function foo(x: number): number;
+                              ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:12:2
+
+Cannot call `f3` because: [incompatible-call]
+ - Either string [1] is incompatible with number [2].
+ - Or string [1] is incompatible with boolean [3].
+
+   test.js:12:2
+   12| (f3(""): string);
+        ^^
+
+References:
+   test.js:12:5
+   12| (f3(""): string);
+           ^^ [1]
+   file3.js:5:25
+    5| declare function foo(x: number): number;
+                               ^^^^^^ [2]
+   file3.js:7:25
+    7| declare function foo(x: boolean): boolean;
+                               ^^^^^^^ [3]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:18:2
+
+Cannot cast `(new c).x` to number because string [1] is incompatible with number [2]. [incompatible-cast]
+
+   test.js:18:2
+   18| ((new c).x: number);
+        ^^^^^^^^^
+
+References:
+   file4.js:3:14
+    3| class A { x: string }
+                    ^^^^^^ [1]
+   test.js:18:13
+   18| ((new c).x: number);
+                   ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:22:2
+
+Cannot call `f5` because number [1] is not a function. [not-a-function]
+
+   test.js:22:2
+   22| (f5(): number);
+        ^^
+
+References:
+   file5.js:3:8
+    3| var f: number = 1;
+              ^^^^^^ [1]
+
+
+
+Found 11 errors

@@ -2,8 +2,9 @@
   (name flow_procs)
   (wrapped false)
   (libraries
-    core_kernel
+    base
     flow_common_lwt
+    flow_exit_status
     procs_procs
     procs_bucket
     lwt

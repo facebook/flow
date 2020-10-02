@@ -1,4 +1,4 @@
-(**
+(*
  * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
@@ -74,7 +74,7 @@
 
   Now consider the following line of code:
 
-  > map.set(key, map.get(key));
+  > map.set(key, Map.find_opt(key));
                  ^^^^^^^^^^^^ A. ?V -> RL (r1, T1)
     ^^^^^^^^^^^^^^^^^^^^^^^^^^ B. T1 -> V
 
@@ -125,7 +125,7 @@
   repositioned again to a variable reference. The var-ref repositioning tvar
   then flows back into `V`.
 
-  > var val = map.get(key);
+  > var val = Map.find_opt(key);
               ^^^^^^^^^^^^ A. ?V -> RL (r1, T1)
   > map.set(key, val);
                  ^^^ B. T1 -> RL (r2, T2)
@@ -154,12 +154,12 @@
 
 type ident = Constraint.ident
 
-module ReposMap = MyMap.Make (struct
+module ReposMap = WrappedMap.Make (struct
   type key = ident * Reason.t
 
   type t = key
 
-  let compare = Pervasives.compare
+  let compare = Stdlib.compare
 end)
 
 type t = {
@@ -170,13 +170,13 @@ type t = {
 let empty = { cache = ReposMap.empty; back = IMap.empty }
 
 let breadcrumb id x =
-  match IMap.get id x.back with
+  match IMap.find_opt id x.back with
   | None -> []
   | Some bs -> bs
 
 let find id reason x =
   let rec loop hd tl =
-    match ReposMap.get (hd, reason) x.cache with
+    match ReposMap.find_opt (hd, reason) x.cache with
     | Some _ as found -> found
     | None ->
       (match tl with

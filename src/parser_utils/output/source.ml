@@ -1,4 +1,4 @@
-(**
+(*
  * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
@@ -17,7 +17,7 @@ type t = {
 
 let create ~source_maps () =
   let (sourcemap, names) =
-    Option.value_map source_maps ~default:(None, None) ~f:(fun { Source_map_config.names } ->
+    Base.Option.value_map source_maps ~default:(None, None) ~f:(fun { Source_map_config.names } ->
         (Some (Sourcemap.create ()), Some names))
   in
   {
@@ -59,7 +59,7 @@ let pos_add_string =
 let add_string ?name str src =
   Buffer.add_string src.buffer str;
   let sourcemap =
-    Option.map src.sourcemap ~f:(fun sourcemap ->
+    Base.Option.map src.sourcemap ~f:(fun sourcemap ->
         match src.loc_stack with
         | [] -> sourcemap
         | loc :: _ ->
@@ -85,8 +85,8 @@ let add_identifier loc str src =
   (* If no name is found or its the same as the original name don't set it *)
   let default = None in
   let name =
-    Option.value_map src.names ~default ~f:(fun names ->
-        Option.value_map (LocMap.get loc names) ~default ~f:(fun name ->
+    Base.Option.value_map src.names ~default ~f:(fun names ->
+        Base.Option.value_map (LocMap.find_opt loc names) ~default ~f:(fun name ->
             if name = str then
               None
             else

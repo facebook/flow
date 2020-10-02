@@ -2,7 +2,7 @@
 A full check should ignore the lazy mode in the .flowconfig
 Error ------------------------------------------------------------------------------------------------------ foo.js:3:17
 
-Cannot assign `123` to `x` because number [1] is incompatible with string [2].
+Cannot assign `123` to `x` because number [1] is incompatible with string [2]. [incompatible-type]
 
    foo.js:3:17
    3| var x: string = 123;
@@ -26,7 +26,7 @@ To learn more, visit flow.org/en/docs/lang/lazy-modes
 Editing a file should cause fs lazy mode to focus on the file
 Error ------------------------------------------------------------------------------------------------------ foo.js:3:17
 
-Cannot assign `123` to `x` because number [1] is incompatible with string [2].
+Cannot assign `123` to `x` because number [1] is incompatible with string [2]. [incompatible-type]
 
    foo.js:3:17
    3| var x: string = 123;
@@ -47,7 +47,7 @@ To learn more, visit flow.org/en/docs/lang/lazy-modes
 Server should start in non-lazy mode due to --lazy-mode none
 Error ------------------------------------------------------------------------------------------------------ foo.js:3:17
 
-Cannot assign `123` to `x` because number [1] is incompatible with string [2].
+Cannot assign `123` to `x` because number [1] is incompatible with string [2]. [incompatible-type]
 
    foo.js:3:17
    3| var x: string = 123;

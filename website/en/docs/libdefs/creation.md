@@ -89,7 +89,7 @@ declare module "some-third-party-library" {
 The name specified in quotes after `declare module` can be any string, but it
 should correspond to the same string you'd use to `require` or `import` the
 third-party module into your project. For defining modules that are accessed via
-a relative `require`/`import` path, please see the docs on the [`.flow` files](../declarations)
+a relative `require`/`import` path, please see the docs on the [`.flow` files](../../declarations)
 
 Within the body of a `declare module` block, you can specify the set of exports
 for that module. However, before we start talking about exports we have to talk

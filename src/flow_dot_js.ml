@@ -1,4 +1,4 @@
-(**
+(*
  * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
@@ -15,7 +15,7 @@ let error_of_parse_error source_file (loc, err) =
   Error_message.EParseError (ALoc.of_loc loc, err)
   |> Flow_error.error_of_msg ~trace_reasons:[] ~source_file
   |> Flow_error.concretize_error lazy_table_of_aloc
-  |> Flow_error.make_error_printable lazy_table_of_aloc
+  |> Flow_error.make_error_printable
 
 let error_of_file_sig_error source_file e =
   File_sig.With_Loc.(
@@ -23,7 +23,7 @@ let error_of_file_sig_error source_file e =
     | IndeterminateModuleType loc -> Error_message.EIndeterminateModuleType (ALoc.of_loc loc))
   |> Flow_error.error_of_msg ~trace_reasons:[] ~source_file
   |> Flow_error.concretize_error lazy_table_of_aloc
-  |> Flow_error.make_error_printable lazy_table_of_aloc
+  |> Flow_error.make_error_printable
 
 let parse_content file content =
   let parse_options =
@@ -62,7 +62,7 @@ let parse_content file content =
     match File_sig.With_Loc.program ~ast ~module_ref_prefix:None with
     | Error e ->
       Error (Errors.ConcreteLocPrintableErrorSet.singleton (error_of_file_sig_error file e))
-    | Ok fsig -> Ok (ast, fsig)
+    | Ok (fsig, _tolerable_errors) -> Ok (ast, fsig)
 
 let array_of_list f lst = Array.of_list (List.map f lst)
 
@@ -79,7 +79,7 @@ let rec js_of_json = function
   | Hh_json.JSON_Null -> Js.Unsafe.inject Js.null
 
 let load_lib_files
-    ~master_cx
+    ~ccx
     ~metadata
     files
     save_parse_errors
@@ -87,28 +87,18 @@ let load_lib_files
     save_suppressions
     save_lint_suppressions =
   (* iterate in reverse override order *)
-  let (_, result) =
+  let _ =
     List.rev files
     |> List.fold_left
-         (fun (exclude_syms, result) file ->
+         (fun exclude_syms file ->
            let lib_content = Sys_utils.cat file in
            let lib_file = File_key.LibFile file in
            match parse_content lib_file lib_content with
            | Ok (ast, file_sig) ->
-             let sig_cx = Context.make_sig () in
-             let aloc_table = Utils_js.FilenameMap.empty in
              let rev_table = lazy (ALoc.make_empty_reverse_table ()) in
              let cx =
-               Context.make
-                 sig_cx
-                 metadata
-                 lib_file
-                 aloc_table
-                 rev_table
-                 Files.lib_module_ref
-                 Context.Checking
+               Context.make ccx metadata lib_file rev_table Files.lib_module_ref Context.Checking
              in
-             Flow_js.mk_builtins cx;
              let syms =
                Type_inference_js.infer_lib_file
                  cx
@@ -116,45 +106,31 @@ let load_lib_files
                  ~exclude_syms
                  ~file_sig:(File_sig.abstractify_locs file_sig)
                  ~lint_severities:LintSettings.empty_severities
-                 ~file_options:None
              in
-             Context.merge_into (Context.sig_cx master_cx) sig_cx;
 
-             let () =
-               let from_t = Context.find_module master_cx Files.lib_module_ref in
-               let to_t = Context.find_module cx Files.lib_module_ref in
-               Flow_js.flow_t master_cx (from_t, to_t)
-             in
              let errors = Context.errors cx in
              let suppressions = Context.error_suppressions cx in
              let severity_cover = Context.severity_cover cx in
-             Context.remove_all_errors cx;
-             Context.remove_all_error_suppressions cx;
-             Context.remove_all_lint_severities cx;
 
              save_infer_errors lib_file errors;
              save_suppressions lib_file suppressions;
              save_lint_suppressions lib_file severity_cover;
 
-             (* symbols loaded from this file are suppressed
-           if found in later ones *)
-             let exclude_syms = SSet.union exclude_syms (SSet.of_list syms) in
-             let result = (lib_file, true) :: result in
-             (exclude_syms, result)
+             (* symbols loaded from this file are suppressed if found in later ones *)
+             SSet.union exclude_syms (SSet.of_list syms)
            | Error parse_errors ->
              save_parse_errors lib_file parse_errors;
-             (exclude_syms, (lib_file, false) :: result))
-         (SSet.empty, [])
+             exclude_syms)
+         SSet.empty
   in
-  result
+  ()
 
 let stub_docblock =
   {
     Docblock.flow = None;
     typeAssert = false;
-    preventMunge = None;
+    preventMunge = false;
     providesModule = None;
-    isDeclarationFile = false;
     jsx = None;
   }
 
@@ -169,65 +145,61 @@ let stub_metadata ~root ~checked =
     strict_local = false;
     include_suppressions = false;
     (* global *)
+    automatic_require_default = false;
+    babel_loose_array_spread = false;
     max_literal_length = 100;
     enable_const_params = false;
     enable_enums = true;
     enforce_strict_call_arity = true;
-    esproposal_class_static_fields = Options.ESPROPOSAL_ENABLE;
-    esproposal_class_instance_fields = Options.ESPROPOSAL_ENABLE;
-    esproposal_decorators = Options.ESPROPOSAL_ENABLE;
-    esproposal_export_star_as = Options.ESPROPOSAL_ENABLE;
-    esproposal_optional_chaining = Options.ESPROPOSAL_ENABLE;
-    esproposal_nullish_coalescing = Options.ESPROPOSAL_ENABLE;
     exact_by_default = false;
     facebook_fbs = None;
     facebook_fbt = None;
+    facebook_module_interop = false;
     haste_module_ref_prefix = None;
     ignore_non_literal_requires = false;
     max_trace_depth = 0;
     max_workers = 0;
+    react_runtime = Options.ReactRuntimeClassic;
     recursion_limit = 10000;
     root;
+    strict_es6_import_export = false;
+    strict_es6_import_export_excludes = [];
     strip_root = true;
-    suppress_comments = [];
     suppress_types = SSet.empty;
     default_lib_dir = None;
     trust_mode = Options.NoTrust;
     type_asserts = false;
   }
 
-let get_master_cx =
-  let master_cx = ref None in
-  fun root ->
-    match !master_cx with
-    | Some (prev_root, cx) ->
-      assert (prev_root = root);
-      cx
-    | None ->
-      let sig_cx = Context.make_sig () in
-      let aloc_table = Utils_js.FilenameMap.empty in
-      let rev_table = lazy (ALoc.make_empty_reverse_table ()) in
-      let cx =
-        Context.make
-          sig_cx
-          (stub_metadata ~root ~checked:false)
-          File_key.Builtins
-          aloc_table
-          rev_table
-          Files.lib_module_ref
-          Context.Checking
-      in
-      Flow_js.mk_builtins cx;
-      master_cx := Some (root, cx);
-      cx
+let master_cx_ref : (Path.t * Context.sig_t) option ref = ref None
 
-let set_libs filenames =
+let get_master_cx root =
+  match !master_cx_ref with
+  | None -> failwith "builtins not initialized"
+  | Some (prev_root, sig_cx) ->
+    assert (prev_root = root);
+    sig_cx
+
+let init_builtins filenames =
+  let aloc_tables = Utils_js.FilenameMap.empty in
   let root = Path.dummy_path in
-  let master_cx = get_master_cx root in
-  let metadata = stub_metadata ~root ~checked:true in
-  let (_ : (File_key.t * bool) list) =
+  let sig_cx = Context.make_sig () in
+  let ccx = Context.make_ccx sig_cx aloc_tables in
+  let master_cx =
+    let rev_table = lazy (ALoc.make_empty_reverse_table ()) in
+    Context.make
+      ccx
+      (stub_metadata ~root ~checked:false)
+      File_key.Builtins
+      rev_table
+      Files.lib_module_ref
+      Context.Checking
+  in
+  Flow_js.mk_builtins master_cx;
+  let () =
+    let metadata = stub_metadata ~root ~checked:true in
     load_lib_files
-      ~master_cx
+      ~ccx
       ~metadata
       filenames
       (fun _file _errs -> ())
@@ -235,18 +207,17 @@ let set_libs filenames =
       (fun _file _sups -> ())
       (fun _file _lint -> ())
   in
-  Flow_js.Cache.clear ();
   let reason = Reason.builtin_reason (Reason.RCustom "module") in
-  let builtin_module = Obj_type.mk master_cx reason in
+  let builtin_module = Obj_type.mk_unsealed master_cx reason in
   Flow_js.flow_t master_cx (builtin_module, Flow_js.builtins master_cx);
-  Merge_js.ContextOptimizer.sig_context master_cx [Files.lib_module_ref]
+  ignore (Merge_js.ContextOptimizer.sig_context master_cx [Files.lib_module_ref]);
+  master_cx_ref := Some (root, sig_cx)
 
 let infer_and_merge ~root filename ast file_sig =
   (* this is a VERY pared-down version of Merge_service.merge_strict_context.
      it relies on the JS version only supporting libs + 1 file, so every
      module you can require() must come from a lib; this skips resolving
      module names and just adds them all to the `decls` list. *)
-  Flow_js.Cache.clear ();
   let metadata = stub_metadata ~root ~checked:true in
   let master_cx = get_master_cx root in
   let require_loc_map = File_sig.With_ALoc.(require_loc_map file_sig.module_sig) in
@@ -262,16 +233,16 @@ let infer_and_merge ~root filename ast file_sig =
   let lint_severities = LintSettings.empty_severities in
   let strict_mode = StrictModeSettings.empty in
   let file_sigs = Utils_js.FilenameMap.singleton filename file_sig in
-  let (_, _, comments) = ast in
+  let (_, { Flow_ast.Program.all_comments; _ }) = ast in
   let aloc_ast = Ast_loc_utils.loc_to_aloc_mapper#program ast in
-  let ((cx, tast, _), _other_cxs) =
+  let ((cx, _, tast), _other_cxs) =
     Merge_js.merge_component
+      ~arch:(Options.TypesFirst { new_signatures = false })
       ~metadata
       ~lint_severities
-      ~file_options:None
       ~strict_mode
       ~file_sigs
-      ~get_ast_unsafe:(fun _ -> (comments, aloc_ast))
+      ~get_ast_unsafe:(fun _ -> (all_comments, aloc_ast))
         (* TODO (nmote, sainati) - Exceptions should mainly be used for exceptional code flows. We
          * shouldn't use them to decide whether or not to use abstract locations. We should pass through
          * whatever options we need instead *)
@@ -282,7 +253,7 @@ let infer_and_merge ~root filename ast file_sig =
       (Nel.one filename)
       reqs
       []
-      (Context.sig_cx master_cx)
+      master_cx
   in
   (cx, tast)
 
@@ -309,8 +280,16 @@ let check_content ~filename ~content =
           aloc_tables
           severity_cover
       in
-      let errors = Flow_error.make_errors_printable lazy_table_of_aloc errors in
-      let warnings = Flow_error.make_errors_printable lazy_table_of_aloc warnings in
+      let errors =
+        errors
+        |> Flow_error.concretize_errors lazy_table_of_aloc
+        |> Flow_error.make_errors_printable
+      in
+      let warnings =
+        warnings
+        |> Flow_error.concretize_errors lazy_table_of_aloc
+        |> Flow_error.make_errors_printable
+      in
       let (errors, _, suppressions) =
         Error_suppressions.filter_suppressed_errors
           ~root
@@ -334,6 +313,7 @@ let check_content ~filename ~content =
   Errors.Json_output.json_of_errors_with_context
     ~strip_root
     ~stdin_file
+    ~offset_kind:Offset_utils.Utf8
     ~suppressed_errors:[]
     ~errors
     ~warnings
@@ -344,7 +324,8 @@ let check filename =
   let content = Sys_utils.cat filename in
   check_content ~filename ~content
 
-let set_libs_js js_libs = Js.to_array js_libs |> Array.to_list |> List.map Js.to_string |> set_libs
+let init_builtins_js js_libs =
+  Js.to_array js_libs |> Array.to_list |> List.map Js.to_string |> init_builtins
 
 let check_js js_file = check (Js.to_string js_file)
 
@@ -360,7 +341,7 @@ let mk_loc file line col =
     _end = { Loc.line; column = col + 1 };
   }
 
-let infer_type filename content line col =
+let infer_type filename content line col : Loc.t * (string, string) result =
   let filename = File_key.SourceFile filename in
   let root = Path.dummy_path in
   match parse_content filename content with
@@ -379,12 +360,15 @@ let infer_type filename content line col =
           ~expand_aliases:false
           ~omit_targ_defaults:false
           ~typed_ast
+          ~evaluate_type_destructors:false
+          ~verbose_normalizer:false
+          ~max_depth:50
           loc
       in
       (match result with
       | FailureNoMatch -> (Loc.none, Error "No match")
       | FailureUnparseable (loc, _, _) -> (loc, Error "Unparseable")
-      | Success (loc, t) -> (loc, Ok (Ty_printer.string_of_t ~force_single_line:true t))))
+      | Success (loc, t) -> (loc, Ok (Ty_printer.string_of_elt_single_line ~exact_by_default:true t))))
 
 let types_to_json types ~strip_root =
   Hh_json.(
@@ -411,8 +395,16 @@ let dump_types js_file js_content =
   | Ok (ast, file_sig) ->
     let file_sig = File_sig.abstractify_locs file_sig in
     let (cx, typed_ast) = infer_and_merge ~root filename ast file_sig in
-    let printer = Ty_printer.string_of_t in
-    let types = Query_types.dump_types ~printer cx file_sig typed_ast in
+    let printer = Ty_printer.string_of_elt_single_line ~exact_by_default:true in
+    let types =
+      Query_types.dump_types
+        ~printer
+        ~evaluate_type_destructors:false
+        ~expand_aliases:false
+        cx
+        file_sig
+        typed_ast
+    in
     let strip_root = None in
     let types_json = types_to_json types ~strip_root in
     js_of_json types_json
@@ -423,7 +415,7 @@ let type_at_pos js_file js_content js_line js_col =
   let line = Js.parseInt js_line in
   let col = Js.parseInt js_col in
   match infer_type filename content line col with
-  | (_, Ok resp) -> resp
+  | (_, Ok resp) -> Js.string resp
   | (_, _) -> failwith "Error"
 
 let exports =
@@ -440,7 +432,7 @@ let () =
     "registerFile"
     (Js.wrap_callback (fun name content -> Sys_js.create_file ~name ~content))
 
-let () = Js.Unsafe.set exports "setLibs" (Js.wrap_callback set_libs_js)
+let () = Js.Unsafe.set exports "initBuiltins" (Js.wrap_callback init_builtins_js)
 
 let () = Js.Unsafe.set exports "check" (Js.wrap_callback check_js)
 

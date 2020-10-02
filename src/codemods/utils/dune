@@ -1,0 +1,17 @@
+(library
+  (name flow_codemod_utils)
+  (wrapped false)
+  (libraries
+    flow_logging_utils
+    flow_parser_utils
+    flow_typing
+    flow_server
+    flow_server_env
+    flow_server_utils
+    flow_service_inference
+    flow_shared_mem
+    flow_state_heaps_diffing
+    flow_state_readers
+  )
+  (preprocess (pps lwt_ppx))
+)

@@ -1,4 +1,4 @@
-(**
+(*
  * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
@@ -29,7 +29,7 @@ let string_of_op = function
 module EntryRef = struct
   type t = int * string * op
 
-  let compare = Pervasives.compare
+  let compare = Stdlib.compare
 end
 
 module EntryRefSet : Set.S with type elt = EntryRef.t = Set.Make (EntryRef)
@@ -38,7 +38,7 @@ module EntryRefSet : Set.S with type elt = EntryRef.t = Set.Make (EntryRef)
 module RefiRef = struct
   type t = int * Key.t * op
 
-  let compare = Pervasives.compare
+  let compare = Stdlib.compare
 end
 
 module RefiRefSet : Set.S with type elt = RefiRef.t = Set.Make (RefiRef)
@@ -132,10 +132,7 @@ let to_string =
        String.concat "; " (List.rev refi_refs))
   in
   fun (changed_vars, changed_refis) ->
-    Utils.spf
-      "%s, %s"
-      (string_of_changed_vars changed_vars)
-      (string_of_changed_refis changed_refis)
+    Utils.spf "%s, %s" (string_of_changed_vars changed_vars) (string_of_changed_refis changed_refis)
 
 (*************************************************************)
 

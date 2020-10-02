@@ -1,4 +1,4 @@
-(**
+(*
  * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
@@ -131,6 +131,8 @@ val add_declared_private : env -> string -> unit
 
 val add_used_private : env -> string -> Loc.t -> unit
 
+val consume_comments_until : env -> Loc.position -> unit
+
 (* functional operations -- these return shallow copies, so future mutations to
  * the returned env will also affect the original: *)
 val with_strict : bool -> env -> env
@@ -173,6 +175,8 @@ val enter_function : env -> async:bool -> generator:bool -> env
 
 val is_reserved : string -> bool
 
+val token_is_reserved : Token.t -> bool
+
 val is_future_reserved : string -> bool
 
 val is_strict_reserved : string -> bool
@@ -195,6 +199,8 @@ module Peek : sig
   val errors : env -> (Loc.t * Parse_error.t) list
 
   val comments : env -> Loc.t Flow_ast.Comment.t list
+
+  val has_eaten_comments : env -> bool
 
   val is_line_terminator : env -> bool
 
@@ -220,6 +226,8 @@ module Peek : sig
 
   val ith_is_line_terminator : i:int -> env -> bool
 
+  val ith_is_implicit_semicolon : i:int -> env -> bool
+
   val ith_is_identifier : i:int -> env -> bool
 
   val ith_is_identifier_name : i:int -> env -> bool
@@ -236,10 +244,16 @@ module Eat : sig
 
   val double_pop_lex_mode : env -> unit
 
-  val semicolon : ?expected:string -> env -> unit
+  val trailing_comments : env -> Loc.t Flow_ast.Comment.t list
+
+  val comments_until_next_line : env -> Loc.t Flow_ast.Comment.t list
+
+  val program_comments : env -> Loc.t Flow_ast.Comment.t list
 end
 
 module Expect : sig
+  val error : env -> Token.t -> unit
+
   val token : env -> Token.t -> unit
 
   val identifier : env -> string -> unit

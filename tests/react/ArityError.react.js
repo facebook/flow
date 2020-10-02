@@ -7,5 +7,3 @@ var AudienceInsightsContainer = React.createClass({
     return <AudienceInsights />;
   },
 });
-
-module.exports = AudienceInsightsContainer;

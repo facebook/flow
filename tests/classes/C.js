@@ -1,4 +1,4 @@
-var B = require('./B');
+const B = require('./B');
 
 class C extends B {
   foo(x:string):void { }

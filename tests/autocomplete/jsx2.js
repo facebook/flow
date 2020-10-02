@@ -2,7 +2,7 @@
 
 var React = require('react');
 
-class C extends React.Component {
-  props: { x: number, y: string };
+class C extends React.Component<{x: number, y: string }> {
 }
-<C x = 0, 
+<C x={0} // space
+//      ^

@@ -1,4 +1,4 @@
-(**
+(*
  * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
@@ -9,6 +9,7 @@ module Ast = Flow_ast
 module Flow = Flow_js
 open Reason
 open Type
+open TypeUtil
 include Func_sig_intf
 
 module Make (F : Func_params.S) = struct
@@ -64,7 +65,7 @@ module Make (F : Func_params.S) = struct
       tparams
       |> TypeParams.map (fun tp ->
              let bound = Flow.subst cx map tp.bound in
-             let default = Option.map ~f:(Flow.subst cx map) tp.default in
+             let default = Base.Option.map ~f:(Flow.subst cx map) tp.default in
              { tp with bound; default })
     in
     let map =
@@ -90,11 +91,11 @@ module Make (F : Func_params.S) = struct
     let make_trust = Context.trust_constructor cx in
     let static =
       let proto = FunProtoT reason in
-      Obj_type.mk_with_proto cx reason proto
+      Obj_type.mk_unsealed cx reason ~proto
     in
     let prototype =
       let reason = replace_desc_reason RPrototype reason in
-      Obj_type.mk cx reason
+      Obj_type.mk_unsealed cx reason
     in
     let funtype =
       {
@@ -109,7 +110,7 @@ module Make (F : Func_params.S) = struct
       }
     in
     let t = DefT (reason, make_trust (), FunT (static, prototype, funtype)) in
-    let t = poly_type_of_tparams (Context.make_nominal cx) tparams t in
+    let t = poly_type_of_tparams (Context.generate_poly_id cx) tparams t in
     Flow.unify cx t knot;
     t
 
@@ -127,7 +128,7 @@ module Make (F : Func_params.S) = struct
               dummy_prototype,
               mk_boundfunctiontype params_tlist ~rest_param ~def_reason ~params_names return_t ) )
     in
-    poly_type_of_tparams (Context.make_nominal cx) tparams t
+    poly_type_of_tparams (Context.generate_poly_id cx) tparams t
 
   let gettertype ({ return_t; _ } : t) = return_t
 
@@ -146,11 +147,11 @@ module Make (F : Func_params.S) = struct
       ~expr
       { reason = reason_fn; kind; tparams_map; fparams; body; return_t; knot; _ } =
     let loc =
-      Ast.Function.(
-        match body with
-        | Some (BodyBlock (loc, _)) -> loc
-        | Some (BodyExpression (loc, _)) -> loc
-        | None -> ALoc.none)
+      let open Ast.Function in
+      match body with
+      | Some (BodyBlock (loc, _)) -> loc
+      | Some (BodyExpression (loc, _)) -> loc
+      | None -> ALoc.none
     in
     let reason = mk_reason RFunctionBody loc in
     let env = Env.peek_env () in
@@ -199,7 +200,7 @@ module Make (F : Func_params.S) = struct
     (* add param bindings *)
     let params_ast = F.eval cx fparams in
     (* early-add our own name binding for recursive calls. *)
-    Option.iter id ~f:(fun (loc, { Ast.Identifier.name; comments = _ }) ->
+    Base.Option.iter id ~f:(fun (loc, { Ast.Identifier.name; comments = _ }) ->
         let entry = knot |> Scope.Entry.new_var ~loc in
         Scope.add_entry name entry function_scope);
 
@@ -213,9 +214,8 @@ module Make (F : Func_params.S) = struct
               bogus_trust (),
               MixedT Mixed_everything ),
           DefT
-            ( replace_desc_reason (RCustom "no next") reason,
-              bogus_trust (),
-              MixedT Mixed_everything ) )
+            (replace_desc_reason (RCustom "no next") reason, bogus_trust (), MixedT Mixed_everything)
+        )
     in
     let (yield, next, return) =
       Scope.(
@@ -231,23 +231,33 @@ module Make (F : Func_params.S) = struct
     Scope.add_entry (internal_name "next") next function_scope;
     Scope.add_entry (internal_name "return") return function_scope;
 
+    let maybe_exhaustively_checked_t =
+      Tvar.mk cx (replace_desc_reason (RCustom "maybe_exhaustively_checked") reason)
+    in
+    let maybe_exhaustively_checked =
+      Scope.Entry.new_let
+        ~loc:(loc_of_t maybe_exhaustively_checked_t)
+        ~state:Scope.State.Declared
+        maybe_exhaustively_checked_t
+    in
+    Scope.add_entry
+      (internal_name "maybe_exhaustively_checked")
+      maybe_exhaustively_checked
+      function_scope;
+
     let (statements, reconstruct_body) =
-      Ast.Statement.(
-        match body with
-        | None -> ([], Fn.const None)
-        | Some (Ast.Function.BodyBlock (loc, { Block.body })) ->
-          (body, (fun body -> Some (Ast.Function.BodyBlock (loc, { Block.body }))))
-        | Some (Ast.Function.BodyExpression expr) ->
-          ( [
-              ( fst expr,
-                Return
-                  { Return.argument = Some expr; comments = Flow_ast_utils.mk_comments_opt () } );
-            ],
-            (function
-            | [(_, Return { Return.argument = Some expr; comments = _ })]
-            | [(_, Expression { Expression.expression = expr; _ })] ->
-              Some (Ast.Function.BodyExpression expr)
-            | _ -> failwith "expected return body") ))
+      let open Ast.Statement in
+      match body with
+      | None -> ([], Fn.const None)
+      | Some (Ast.Function.BodyBlock (loc, { Block.body; comments })) ->
+        (body, (fun body -> Some (Ast.Function.BodyBlock (loc, { Block.body; comments }))))
+      | Some (Ast.Function.BodyExpression expr) ->
+        ( [(fst expr, Return { Return.argument = Some expr; comments = None })],
+          (function
+          | [(_, Return { Return.argument = Some expr; comments = _ })]
+          | [(_, Expression { Expression.expression = expr; _ })] ->
+            Some (Ast.Function.BodyExpression expr)
+          | _ -> failwith "expected return body") )
     in
     (* NOTE: Predicate functions can currently only be of the form:
        function f(...) { return <exp>; }
@@ -271,7 +281,7 @@ module Make (F : Func_params.S) = struct
     let (statements_ast, statements_abnormal) =
       Abnormal.catch_stmts_control_flow_exception (fun () -> stmts cx statements)
     in
-    let is_void =
+    let maybe_void =
       Abnormal.(
         match statements_abnormal with
         | Some Return -> false
@@ -284,7 +294,7 @@ module Make (F : Func_params.S) = struct
     let body_ast = reconstruct_body statements_ast in
     (* build return type for void funcs *)
     let init_ast =
-      if is_void then (
+      if maybe_void then (
         let loc = loc_of_t return_t in
         (* Some branches add an ImplicitTypeParam frame to force our flow_use_op
          * algorithm to pick use_ops outside the provided loc. *)
@@ -296,25 +306,23 @@ module Make (F : Func_params.S) = struct
             let use_op = Op (FunImplicitReturn { fn = reason_fn; upper = reason_of_t return_t }) in
             (use_op, t, None)
           | Async ->
-            let reason = annot_reason (mk_reason (RType "Promise") loc) in
+            let reason = mk_annot_reason (RType "Promise") loc in
             let void_t = VoidT.at loc |> with_trust bogus_trust in
             let t = Flow.get_builtin_typeapp cx reason "Promise" [void_t] in
             let use_op = Op (FunImplicitReturn { fn = reason_fn; upper = reason_of_t return_t }) in
             let use_op = Frame (ImplicitTypeParam, use_op) in
             (use_op, t, None)
           | Generator ->
-            let reason = annot_reason (mk_reason (RType "Generator") loc) in
+            let reason = mk_annot_reason (RType "Generator") loc in
             let void_t = VoidT.at loc |> with_trust bogus_trust in
             let t = Flow.get_builtin_typeapp cx reason "Generator" [yield_t; void_t; next_t] in
             let use_op = Op (FunImplicitReturn { fn = reason_fn; upper = reason_of_t return_t }) in
             let use_op = Frame (ImplicitTypeParam, use_op) in
             (use_op, t, None)
           | AsyncGenerator ->
-            let reason = annot_reason (mk_reason (RType "AsyncGenerator") loc) in
+            let reason = mk_annot_reason (RType "AsyncGenerator") loc in
             let void_t = VoidT.at loc |> with_trust bogus_trust in
-            let t =
-              Flow.get_builtin_typeapp cx reason "AsyncGenerator" [yield_t; void_t; next_t]
-            in
+            let t = Flow.get_builtin_typeapp cx reason "AsyncGenerator" [yield_t; void_t; next_t] in
             let use_op = Op (FunImplicitReturn { fn = reason_fn; upper = reason_of_t return_t }) in
             let use_op = Frame (ImplicitTypeParam, use_op) in
             (use_op, t, None)
@@ -330,7 +338,11 @@ module Make (F : Func_params.S) = struct
             let use_op = Op (FunImplicitReturn { fn = reason_fn; upper = reason_of_t return_t }) in
             (use_op, t, None)
         in
-        Flow.flow cx (void_t, UseT (use_op, return_t));
+        Flow.flow
+          cx
+          ( Env.get_internal_var cx "maybe_exhaustively_checked" loc,
+            FunImplicitVoidReturnT
+              { use_op; reason = reason_of_t return_t; return = return_t; void_t } );
         init_ast
       ) else
         None

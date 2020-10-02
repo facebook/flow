@@ -1,6 +1,6 @@
 Error ------------------------------------------------------------------------------------------------------ test.js:4:9
 
-Cannot import `doesntExist` because there is no `doesntExist` export in `./SomeCSSFile.css`.
+Cannot import `doesntExist` because there is no `doesntExist` export in `./SomeCSSFile.css`. [missing-export]
 
    4| import {doesntExist} from "./SomeCSSFile.css"; // Error: `doestExist` isn't an export
               ^^^^^^^^^^^

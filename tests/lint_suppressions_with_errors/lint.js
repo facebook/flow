@@ -7,14 +7,14 @@ import type {Props} from './lib.js';
 class Class {
   constructor(props: Props) {
     const inputProps = {
-      foo: 'bar',
       ...props,
+      foo: 'bar',
     };
   }
 }
 
 declare var x : mixed;
-//$FlowFixMe should suppress
+//$FlowFixMe[sketchy-null-mixed] should suppress
 if(x) {
 
 };

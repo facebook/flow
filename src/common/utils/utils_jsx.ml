@@ -1,4 +1,4 @@
-(**
+(*
  * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
@@ -49,8 +49,8 @@ let trim_jsx_text =
     let lines = String_utils.split_into_lines value in
     let last_line = List.length lines - 1 in
     let trimmed_lines =
-      List.mapi
-        (fun idx line ->
+      Base.List.mapi
+        ~f:(fun idx line ->
           (* Remove the leading whitespace from every line but the first *)
           let line =
             if idx <> 0 then

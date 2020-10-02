@@ -1,4 +1,4 @@
-(**
+(*
  * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
@@ -76,4 +76,16 @@ val get_client : LspProt.client_id -> single_client option
 
 val get_id : single_client -> LspProt.client_id
 
-val client_snippet_support : single_client -> bool
+val lsp_initialize_params : single_client -> Lsp.Initialize.params
+
+type type_contents_artifacts =
+  Context.t
+  * Docblock.t
+  * File_sig.With_Loc.t
+  * File_sig.With_Loc.tolerable_error list
+  * (ALoc.t, ALoc.t * Type.t) Flow_ast.Program.t
+  * (Loc.t * Parse_error.t) list
+
+val type_contents_cache : single_client -> (type_contents_artifacts, string) result FilenameCache.t
+
+val clear_type_contents_caches : unit -> unit

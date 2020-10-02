@@ -1,4 +1,4 @@
-(**
+(*
  * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
@@ -17,9 +17,9 @@ end = struct
   open Flow_ast.Statement.EnumDeclaration
 
   type members = {
-    boolean_members: (bool, Loc.t) InitializedMember.t list;
-    number_members: (NumberLiteral.t, Loc.t) InitializedMember.t list;
-    string_members: (StringLiteral.t, Loc.t) InitializedMember.t list;
+    boolean_members: (Loc.t BooleanLiteral.t, Loc.t) InitializedMember.t list;
+    number_members: (Loc.t NumberLiteral.t, Loc.t) InitializedMember.t list;
+    string_members: (Loc.t StringLiteral.t, Loc.t) InitializedMember.t list;
     defaulted_members: Loc.t DefaultedMember.t list;
   }
 
@@ -31,9 +31,9 @@ end = struct
   type init =
     | NoInit
     | InvalidInit of Loc.t
-    | BooleanInit of Loc.t * bool
-    | NumberInit of Loc.t * NumberLiteral.t
-    | StringInit of Loc.t * StringLiteral.t
+    | BooleanInit of Loc.t * Loc.t BooleanLiteral.t
+    | NumberInit of Loc.t * Loc.t NumberLiteral.t
+    | StringInit of Loc.t * Loc.t StringLiteral.t
 
   let empty_members =
     { boolean_members = []; number_members = []; string_members = []; defaulted_members = [] }
@@ -42,6 +42,7 @@ end = struct
 
   let end_of_member_init env =
     match Peek.token env with
+    | T_SEMICOLON
     | T_COMMA
     | T_RCURLY ->
       true
@@ -49,24 +50,45 @@ end = struct
 
   let member_init env =
     let loc = Peek.loc env in
+    let leading = Peek.comments env in
     match Peek.token env with
     | T_NUMBER { kind; raw } ->
       let value = Parse.number env kind raw in
+      let trailing = Eat.trailing_comments env in
       if end_of_member_init env then
-        NumberInit (loc, { NumberLiteral.value; raw })
+        NumberInit
+          ( loc,
+            {
+              NumberLiteral.value;
+              raw;
+              comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing ();
+            } )
       else
         InvalidInit loc
     | T_STRING (loc, value, raw, octal) ->
       if octal then strict_error env Parse_error.StrictOctalLiteral;
       Eat.token env;
+      let trailing = Eat.trailing_comments env in
       if end_of_member_init env then
-        StringInit (loc, { StringLiteral.value; raw })
+        StringInit
+          ( loc,
+            {
+              StringLiteral.value;
+              raw;
+              comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing ();
+            } )
       else
         InvalidInit loc
     | (T_TRUE | T_FALSE) as token ->
       Eat.token env;
+      let trailing = Eat.trailing_comments env in
       if end_of_member_init env then
-        BooleanInit (loc, token = T_TRUE)
+        BooleanInit
+          ( loc,
+            {
+              BooleanLiteral.value = token = T_TRUE;
+              comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing ();
+            } )
       else
         InvalidInit loc
     | _ ->
@@ -77,10 +99,16 @@ end = struct
     with_loc (fun env ->
         let id = identifier_name env in
         let init =
-          if Expect.maybe env T_ASSIGN then
+          match Peek.token env with
+          | T_ASSIGN ->
+            Expect.token env T_ASSIGN;
             member_init env
-          else
-            NoInit
+          | T_COLON ->
+            let (_, { Identifier.name = member_name; _ }) = id in
+            error env (Parse_error.EnumInvalidInitializerSeparator { member_name });
+            Expect.token env T_COLON;
+            member_init env
+          | _ -> NoInit
         in
         (id, init))
 
@@ -164,19 +192,34 @@ end = struct
       }
     | _ ->
       let acc = enum_member ~enum_name ~explicit_type acc env in
-      if Peek.token env <> T_RCURLY then Expect.token env T_COMMA;
+      (match Peek.token env with
+      | T_RCURLY
+      | T_EOF ->
+        ()
+      | T_SEMICOLON ->
+        error env Parse_error.EnumInvalidMemberSeparator;
+        Expect.token env T_SEMICOLON
+      | _ -> Expect.token env T_COMMA);
       enum_members ~enum_name ~explicit_type acc env
 
-  let string_body ~env ~enum_name ~is_explicit string_members defaulted_members =
+  let string_body ~env ~enum_name ~is_explicit string_members defaulted_members comments =
     let initialized_len = List.length string_members in
     let defaulted_len = List.length defaulted_members in
     let defaulted_body () =
       StringBody
-        { StringBody.members = StringBody.Defaulted defaulted_members; explicitType = is_explicit }
+        {
+          StringBody.members = StringBody.Defaulted defaulted_members;
+          explicitType = is_explicit;
+          comments;
+        }
     in
     let initialized_body () =
       StringBody
-        { StringBody.members = StringBody.Initialized string_members; explicitType = is_explicit }
+        {
+          StringBody.members = StringBody.Initialized string_members;
+          explicitType = is_explicit;
+          comments;
+        }
     in
     match (initialized_len, defaulted_len) with
     | (0, 0)
@@ -204,7 +247,7 @@ end = struct
         | T_BOOLEAN_TYPE BOOLEAN -> Some Enum_common.Boolean
         | T_NUMBER_TYPE -> Some Enum_common.Number
         | T_STRING_TYPE -> Some Enum_common.String
-        | T_IDENTIFIER { value = "symbol"; _ } -> Some Enum_common.Symbol
+        | T_SYMBOL_TYPE -> Some Enum_common.Symbol
         | T_IDENTIFIER { value; _ } ->
           let supplied_type = Some value in
           error env (Parse_error.EnumInvalidExplicitType { enum_name; supplied_type });
@@ -219,20 +262,35 @@ end = struct
     ) else
       None
 
-  let declaration =
+  let enum_body ~enum_name ~name_loc =
     with_loc (fun env ->
-        Expect.token env T_ENUM;
-        let id = Parse.identifier env in
-        let (id_loc, { Identifier.name = enum_name; _ }) = id in
         let explicit_type = parse_explicit_type ~enum_name env in
+        let leading =
+          if explicit_type <> None then
+            Peek.comments env
+          else
+            []
+        in
         Expect.token env T_LCURLY;
         let members = enum_members ~enum_name ~explicit_type empty_acc env in
+        Expect.token env T_RCURLY;
+        let trailing =
+          match Peek.token env with
+          | T_EOF
+          | T_RCURLY ->
+            Eat.trailing_comments env
+          | _ when Peek.is_line_terminator env -> Eat.comments_until_next_line env
+          | _ -> []
+        in
+        let comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing () in
         let body =
           match explicit_type with
           | Some Enum_common.Boolean ->
-            BooleanBody { BooleanBody.members = members.boolean_members; explicitType = true }
+            BooleanBody
+              { BooleanBody.members = members.boolean_members; explicitType = true; comments }
           | Some Enum_common.Number ->
-            NumberBody { NumberBody.members = members.number_members; explicitType = true }
+            NumberBody
+              { NumberBody.members = members.number_members; explicitType = true; comments }
           | Some Enum_common.String ->
             string_body
               ~env
@@ -240,15 +298,17 @@ end = struct
               ~is_explicit:true
               members.string_members
               members.defaulted_members
+              comments
           | Some Enum_common.Symbol ->
-            SymbolBody { SymbolBody.members = members.defaulted_members }
+            SymbolBody { SymbolBody.members = members.defaulted_members; comments }
           | None ->
             let bools_len = List.length members.boolean_members in
             let nums_len = List.length members.number_members in
             let strs_len = List.length members.string_members in
             let defaulted_len = List.length members.defaulted_members in
             let empty () =
-              StringBody { StringBody.members = StringBody.Defaulted []; explicitType = false }
+              StringBody
+                { StringBody.members = StringBody.Defaulted []; explicitType = false; comments }
             in
             begin
               match (bools_len, nums_len, strs_len, defaulted_len) with
@@ -260,6 +320,7 @@ end = struct
                   ~is_explicit:false
                   members.string_members
                   members.defaulted_members
+                  comments
               | (_, 0, 0, _) when bools_len >= defaulted_len ->
                 List.iter
                   (fun (loc, { DefaultedMember.id = (_, { Identifier.name = member_name; _ }) }) ->
@@ -267,7 +328,8 @@ end = struct
                       env
                       (loc, Parse_error.EnumBooleanMemberNotInitialized { enum_name; member_name }))
                   members.defaulted_members;
-                BooleanBody { BooleanBody.members = members.boolean_members; explicitType = false }
+                BooleanBody
+                  { BooleanBody.members = members.boolean_members; explicitType = false; comments }
               | (0, _, 0, _) when nums_len >= defaulted_len ->
                 List.iter
                   (fun (loc, { DefaultedMember.id = (_, { Identifier.name = member_name; _ }) }) ->
@@ -275,12 +337,22 @@ end = struct
                       env
                       (loc, Parse_error.EnumNumberMemberNotInitialized { enum_name; member_name }))
                   members.defaulted_members;
-                NumberBody { NumberBody.members = members.number_members; explicitType = false }
+                NumberBody
+                  { NumberBody.members = members.number_members; explicitType = false; comments }
               | _ ->
-                error_at env (id_loc, Parse_error.EnumInconsistentMemberValues { enum_name });
+                error_at env (name_loc, Parse_error.EnumInconsistentMemberValues { enum_name });
                 empty ()
             end
         in
-        Expect.token env T_RCURLY;
-        Statement.EnumDeclaration { id; body })
+        body)
+
+  let declaration =
+    with_loc (fun env ->
+        let leading = Peek.comments env in
+        Expect.token env T_ENUM;
+        let id = Parse.identifier env in
+        let (name_loc, { Identifier.name = enum_name; _ }) = id in
+        let body = enum_body ~enum_name ~name_loc env in
+        let comments = Flow_ast_utils.mk_comments_opt ~leading () in
+        Statement.EnumDeclaration { id; body; comments })
 end

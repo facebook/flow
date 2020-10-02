@@ -3,7 +3,8 @@
  * @format
  */
 
-import {suite, test} from '../../../packages/flow-dev-tools/src/test/Tester';
+import type Suite from 'flow-dev-tools/src/test/Suite.js';
+import {suite, test} from 'flow-dev-tools/src/test/Tester';
 
 /**
  * This test suite takes each query tested by lsp/queries and runs it once with
@@ -12,7 +13,7 @@ import {suite, test} from '../../../packages/flow-dev-tools/src/test/Tester';
  * parallel with a recheck will return a response. Those that don't will
  * timeout
  */
-export default suite(
+export default (suite(
   ({
     lspStartAndConnect,
     lspNotification,
@@ -28,13 +29,13 @@ export default suite(
         [...lspIgnoreStatusAndCancellation],
       ),
       lspRequestAndWaitUntilResponse('foobar', {}).verifyAllLSPMessagesInStep(
-        ['foobar{unexpected error}'],
+        [['foobar', '{unexpected error}']],
         [...lspIgnoreStatusAndCancellation],
       ),
       lspNotification('barfoo', {})
         .waitUntilLSPMessage(2000, 'barfoo')
         .verifyAllLSPMessagesInStep(
-          ['telemetry/event{not implemented}'],
+          [['telemetry/event', '{not implemented}']],
           [...lspIgnoreStatusAndCancellation],
         ),
     ]).waitForRecheck(true),
@@ -46,13 +47,13 @@ export default suite(
         [...lspIgnoreStatusAndCancellation],
       ),
       lspRequestAndWaitUntilResponse('foobar', {}).verifyAllLSPMessagesInStep(
-        ['foobar{unexpected error}'],
+        [['foobar', '{unexpected error}']],
         [...lspIgnoreStatusAndCancellation],
       ),
       lspNotification('barfoo', {})
         .waitUntilLSPMessage(2000, 'barfoo')
         .verifyAllLSPMessagesInStep(
-          ['telemetry/event{not implemented}'],
+          [['telemetry/event', '{not implemented}']],
           [...lspIgnoreStatusAndCancellation],
         ),
     ]).waitForRecheck(false),
@@ -65,7 +66,7 @@ export default suite(
         [...lspIgnoreStatusAndCancellation],
       ),
       lspRequestAndWaitUntilResponse('textDocument/definition', {
-        textDocument: {uri: '<PLACEHOLDER_PROJECT_URL_SLASH>definition.js'},
+        textDocument: {uri: '<PLACEHOLDER_PROJECT_URL>/definition.js'},
         position: {line: 6, character: 1},
       })
         .verifyAllLSPMessagesInStep([], [...lspIgnoreStatusAndCancellation])
@@ -80,12 +81,15 @@ export default suite(
         [...lspIgnoreStatusAndCancellation],
       ),
       lspRequestAndWaitUntilResponse('textDocument/definition', {
-        textDocument: {uri: '<PLACEHOLDER_PROJECT_URL_SLASH>definition.js'},
+        textDocument: {uri: '<PLACEHOLDER_PROJECT_URL>/definition.js'},
         position: {line: 6, character: 1},
       })
         .verifyAllLSPMessagesInStep(
           [
-            'textDocument/definition{definition.js,"start":{"line":2,"character":0}}',
+            [
+              'textDocument/definition',
+              '{definition.js,"start":{"line":2,"character":9}}',
+            ],
           ],
           [...lspIgnoreStatusAndCancellation],
         )
@@ -100,7 +104,7 @@ export default suite(
         [...lspIgnoreStatusAndCancellation],
       ),
       lspRequestAndWaitUntilResponse('textDocument/hover', {
-        textDocument: {uri: '<PLACEHOLDER_PROJECT_URL_SLASH>hover.js'},
+        textDocument: {uri: '<PLACEHOLDER_PROJECT_URL>/hover.js'},
         position: {line: 6, character: 1}, // over a function use
       })
         .verifyAllLSPMessagesInStep([], [...lspIgnoreStatusAndCancellation])
@@ -115,11 +119,11 @@ export default suite(
         [...lspIgnoreStatusAndCancellation],
       ),
       lspRequestAndWaitUntilResponse('textDocument/hover', {
-        textDocument: {uri: '<PLACEHOLDER_PROJECT_URL_SLASH>hover.js'},
+        textDocument: {uri: '<PLACEHOLDER_PROJECT_URL>/hover.js'},
         position: {line: 6, character: 1}, // over a function use
       })
         .verifyAllLSPMessagesInStep(
-          ['textDocument/hover{() => number}'],
+          [['textDocument/hover', '{() => number}']],
           [...lspIgnoreStatusAndCancellation],
         )
         .timeout(2000),
@@ -133,7 +137,7 @@ export default suite(
         [...lspIgnoreStatusAndCancellation],
       ),
       lspRequestAndWaitUntilResponse('textDocument/completion', {
-        textDocument: {uri: '<PLACEHOLDER_PROJECT_URL_SLASH>completion.js'},
+        textDocument: {uri: '<PLACEHOLDER_PROJECT_URL>/completion.js'},
         position: {line: 10, character: 15}, // statement position
       })
         .verifyAllLSPMessagesInStep([], [...lspIgnoreStatusAndCancellation])
@@ -148,12 +152,15 @@ export default suite(
         [...lspIgnoreStatusAndCancellation],
       ),
       lspRequestAndWaitUntilResponse('textDocument/completion', {
-        textDocument: {uri: '<PLACEHOLDER_PROJECT_URL_SLASH>completion.js'},
+        textDocument: {uri: '<PLACEHOLDER_PROJECT_URL>/completion.js'},
         position: {line: 10, character: 15}, // statement position
       })
         .verifyAllLSPMessagesInStep(
           [
-            'textDocument/completion{"label":"x","label":"fred","detail":"(a: number, b: string) => number","inlineDetail":"(a: number, b: string)"}',
+            [
+              'textDocument/completion',
+              '{"label":"x","label":"fred","detail":"(a: number, b: string) => number"}',
+            ],
           ],
           [...lspIgnoreStatusAndCancellation],
         )
@@ -170,7 +177,7 @@ export default suite(
           [...lspIgnoreStatusAndCancellation],
         ),
         lspRequestAndWaitUntilResponse('textDocument/documentHighlight', {
-          textDocument: {uri: '<PLACEHOLDER_PROJECT_URL_SLASH>references.js'},
+          textDocument: {uri: '<PLACEHOLDER_PROJECT_URL>/references.js'},
           position: {line: 9, character: 17}, // on an identifier
         })
           .verifyAllLSPMessagesInStep(
@@ -191,7 +198,7 @@ export default suite(
           [...lspIgnoreStatusAndCancellation],
         ),
         lspRequestAndWaitUntilResponse('textDocument/documentHighlight', {
-          textDocument: {uri: '<PLACEHOLDER_PROJECT_URL_SLASH>references.js'},
+          textDocument: {uri: '<PLACEHOLDER_PROJECT_URL>/references.js'},
           position: {line: 9, character: 17}, // on an identifier
         })
           .verifyAllLSPMessagesInStep([], [...lspIgnoreStatusAndCancellation])
@@ -207,7 +214,7 @@ export default suite(
         [...lspIgnoreStatusAndCancellation],
       ),
       lspRequestAndWaitUntilResponse('textDocument/references', {
-        textDocument: {uri: '<PLACEHOLDER_PROJECT_URL_SLASH>references.js'},
+        textDocument: {uri: '<PLACEHOLDER_PROJECT_URL>/references.js'},
         position: {line: 9, character: 17}, // on an identifier
       })
         .verifyAllLSPMessagesInStep([], [...lspIgnoreStatusAndCancellation])
@@ -222,7 +229,7 @@ export default suite(
         [...lspIgnoreStatusAndCancellation],
       ),
       lspRequestAndWaitUntilResponse('textDocument/references', {
-        textDocument: {uri: '<PLACEHOLDER_PROJECT_URL_SLASH>references.js'},
+        textDocument: {uri: '<PLACEHOLDER_PROJECT_URL>/references.js'},
         position: {line: 9, character: 17}, // on an identifier
       })
         .verifyAllLSPMessagesInStep([], [...lspIgnoreStatusAndCancellation])
@@ -237,7 +244,7 @@ export default suite(
         [...lspIgnoreStatusAndCancellation],
       ),
       lspRequestAndWaitUntilResponse('textDocument/rename', {
-        textDocument: {uri: '<PLACEHOLDER_PROJECT_URL_SLASH>references.js'},
+        textDocument: {uri: '<PLACEHOLDER_PROJECT_URL>/references.js'},
         position: {line: 9, character: 17}, // on an identifier
         newName: 'foobar',
       })
@@ -253,7 +260,7 @@ export default suite(
         [...lspIgnoreStatusAndCancellation],
       ),
       lspRequestAndWaitUntilResponse('textDocument/rename', {
-        textDocument: {uri: '<PLACEHOLDER_PROJECT_URL_SLASH>references.js'},
+        textDocument: {uri: '<PLACEHOLDER_PROJECT_URL>/references.js'},
         position: {line: 9, character: 17}, // on an identifier
         newName: 'foobar',
       })
@@ -269,11 +276,14 @@ export default suite(
         [...lspIgnoreStatusAndCancellation],
       ),
       lspRequestAndWaitUntilResponse('textDocument/documentSymbol', {
-        textDocument: {uri: '<PLACEHOLDER_PROJECT_URL_SLASH>outline.js'},
+        textDocument: {uri: '<PLACEHOLDER_PROJECT_URL>/outline.js'},
       })
         .verifyAllLSPMessagesInStep(
           [
-            'textDocument/documentSymbol{WORD_REGEX,State,Preferences,pref1,EPrefs,pref2,MyClass1,_projectRoot,command,constructor,dispose,MyInterface2,getFoo,myFunction3}',
+            [
+              'textDocument/documentSymbol',
+              '{WORD_REGEX,State,Preferences,pref1,EPrefs,pref2,MyClass1,_projectRoot,command,constructor,dispose,MyInterface2,getFoo,myFunction3}',
+            ],
           ],
           [...lspIgnoreStatusAndCancellation],
         )
@@ -290,11 +300,14 @@ export default suite(
           [...lspIgnoreStatusAndCancellation],
         ),
         lspRequestAndWaitUntilResponse('textDocument/documentSymbol', {
-          textDocument: {uri: '<PLACEHOLDER_PROJECT_URL_SLASH>outline.js'},
+          textDocument: {uri: '<PLACEHOLDER_PROJECT_URL>/outline.js'},
         })
           .verifyAllLSPMessagesInStep(
             [
-              'textDocument/documentSymbol{WORD_REGEX,State,Preferences,pref1,EPrefs,pref2,MyClass1,_projectRoot,command,constructor,dispose,MyInterface2,getFoo,myFunction3}',
+              [
+                'textDocument/documentSymbol',
+                '{WORD_REGEX,State,Preferences,pref1,EPrefs,pref2,MyClass1,_projectRoot,command,constructor,dispose,MyInterface2,getFoo,myFunction3}',
+              ],
             ],
             [...lspIgnoreStatusAndCancellation],
           )
@@ -310,7 +323,7 @@ export default suite(
         [...lspIgnoreStatusAndCancellation],
       ),
       lspRequestAndWaitUntilResponse('textDocument/typeCoverage', {
-        textDocument: {uri: '<PLACEHOLDER_PROJECT_URL_SLASH>coverage.js'},
+        textDocument: {uri: '<PLACEHOLDER_PROJECT_URL>/coverage.js'},
       })
         .verifyAllLSPMessagesInStep([], [...lspIgnoreStatusAndCancellation])
         .timeout(2000),
@@ -324,10 +337,10 @@ export default suite(
         [...lspIgnoreStatusAndCancellation],
       ),
       lspRequestAndWaitUntilResponse('textDocument/typeCoverage', {
-        textDocument: {uri: '<PLACEHOLDER_PROJECT_URL_SLASH>coverage.js'},
+        textDocument: {uri: '<PLACEHOLDER_PROJECT_URL>/coverage.js'},
       })
         .verifyAllLSPMessagesInStep(
-          ['textDocument/typeCoverage{"line":12,"line":8,"line":6}'],
+          [['textDocument/typeCoverage', '{"line":12,"line":8,"line":6}']],
           [...lspIgnoreStatusAndCancellation],
         )
         .timeout(2000),
@@ -356,10 +369,10 @@ export default suite(
         textDocument: {uri: '<PLACEHOLDER_PROJECT_DIR>/coverage2.js'},
       })
         .verifyAllLSPMessagesInStep(
-          ['textDocument/typeCoverage{Use @flow}'],
+          [['textDocument/typeCoverage', '{Use @flow}']],
           [...lspIgnoreStatusAndCancellation],
         )
         .timeout(2000),
     ]).waitForRecheck(false),
   ],
-);
+): Suite);

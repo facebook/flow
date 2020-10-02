@@ -1,0 +1,20 @@
+
+Initial status:
+No errors!
+
+Move A.js to B.js (excluded):
+Error ----------------------------------------------------------------------------------------------------- index.js:2:9
+
+Cannot resolve module `B`. [cannot-resolve-module]
+
+   2| require('B');
+              ^^^
+
+
+
+Found 1 error
+
+Move B.js to A.js:
+No errors!
+
+Done!

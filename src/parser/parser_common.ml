@@ -1,4 +1,4 @@
-(**
+(*
  * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
@@ -18,7 +18,7 @@ type pattern_cover =
   | Cover_patt of (Loc.t, Loc.t) Expression.t * pattern_errors
 
 module type PARSER = sig
-  val program : env -> (Loc.t, Loc.t) program
+  val program : env -> (Loc.t, Loc.t) Program.t
 
   val statement : env -> (Loc.t, Loc.t) Statement.t
 
@@ -49,12 +49,10 @@ module type PARSER = sig
   val identifier_with_type :
     env -> ?no_optional:bool -> Parse_error.t -> Loc.t * (Loc.t, Loc.t) Pattern.Identifier.t
 
-  val assert_identifier_name_is_identifier :
-    ?restricted_error:Parse_error.t -> env -> (Loc.t, Loc.t) Identifier.t -> unit
-
   val block_body : env -> Loc.t * (Loc.t, Loc.t) Statement.Block.t
 
-  val function_block_body : env -> Loc.t * (Loc.t, Loc.t) Statement.Block.t * bool
+  val function_block_body :
+    expression:bool -> env -> Loc.t * (Loc.t, Loc.t) Statement.Block.t * bool
 
   val jsx_element_or_fragment :
     env ->
@@ -66,8 +64,7 @@ module type PARSER = sig
 
   val object_key : ?class_body:bool -> env -> Loc.t * (Loc.t, Loc.t) Expression.Object.Property.key
 
-  val class_declaration :
-    env -> (Loc.t, Loc.t) Class.Decorator.t list -> (Loc.t, Loc.t) Statement.t
+  val class_declaration : env -> (Loc.t, Loc.t) Class.Decorator.t list -> (Loc.t, Loc.t) Statement.t
 
   val class_expression : env -> (Loc.t, Loc.t) Expression.t
 
@@ -148,6 +145,7 @@ let identifier_name env =
       | T_BIGINT_TYPE -> "bigint"
       | T_STRING_TYPE -> "string"
       | T_VOID_TYPE -> "void"
+      | T_SYMBOL_TYPE -> "symbol"
       (* Contextual stuff *)
       | T_OF -> "of"
       | T_ASYNC -> "async"
@@ -157,7 +155,7 @@ let identifier_name env =
         ""
     in
     Eat.token env;
-    let trailing = Peek.comments env in
+    let trailing = Eat.trailing_comments env in
     let comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing () in
     (loc, { Identifier.name; comments }))
 

@@ -1,4 +1,4 @@
-(**
+(*
  * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
@@ -97,8 +97,8 @@ let handle_response strip_root error_flags fail_on_tc_errors fail_on_suggest_war
     (* This is the case of a parse fail (no context is created). The `errors`
      * set ought to be non-empty. Otherwise, we throw an exception. If this
      * happens, see types_js.ml `typecheck_contents`. *)
-    with_errors_and_warnings true errors Errors.ConcreteLocPrintableErrorSet.empty None
-    @@ (fun () -> failwith "SuggestCommand: Parsing failed with no errors")
+    with_errors_and_warnings true errors Errors.ConcreteLocPrintableErrorSet.empty None @@ fun () ->
+    failwith "SuggestCommand: Parsing failed with no errors"
 
 let main
     base_flags
@@ -117,7 +117,7 @@ let main
     get_file_from_filename_or_stdin
       ~cmd:CommandSpec.(spec.name)
       path
-      (Option.map ~f:expand_path filename)
+      (Base.Option.map ~f:expand_path filename)
   in
   File_input.(
     let content =

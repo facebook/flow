@@ -1,4 +1,4 @@
-(**
+(*
  * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
@@ -141,10 +141,11 @@ module Make (ConnectionProcessor : CONNECTION_PROCESSOR) :
       Lwt.return conn
 
     let catch conn exn =
-      match exn with
+      match Exception.unwrap exn with
       (* The command stream has been closed. This means the command loop should gracefully exit *)
       | Lwt_stream.Empty -> Lwt.return_unit
-      | exn ->
+      | _ ->
+        let exn = Exception.to_exn exn in
         Logger.error
           ~exn
           "Closing connection '%s' due to uncaught exception in command loop"
@@ -164,10 +165,12 @@ module Make (ConnectionProcessor : CONNECTION_PROCESSOR) :
       Lwt.return connection
 
     let catch connection exn =
-      (match exn with
-      | End_of_file ->
+      (match Exception.unwrap exn with
+      | End_of_file
+      | Unix.Unix_error (Unix.ECONNRESET, _, _) ->
         Logger.error "Connection '%s' was closed from the other side" connection.name
       | _ ->
+        let exn = Exception.to_exn exn in
         Logger.error
           ~exn
           "Closing connection '%s' due to uncaught exception in read loop"

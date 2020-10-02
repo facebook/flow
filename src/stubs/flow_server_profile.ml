@@ -1,4 +1,4 @@
-(**
+(*
  * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
@@ -15,7 +15,7 @@ let merge ~length:_ ~merge_time:_ ~leader:_ = ()
 
 let processor_sample () = ()
 
-let get_id () = "hello"
+let get_id () = Some "hello"
 
 let print_url () = ()
 

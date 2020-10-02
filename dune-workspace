@@ -1,15 +1,1 @@
 (lang dune 1.9)
-
-; hacky solution to make hack/heap able to find Flow's vendored lz4.h.
-; for the linker to find the implementation, src/flow.exe depends on the lz4
-; dune library even though it doesn't directly use it.
-(env
-  (_
-    (env-vars
-      (EXTRA_INCLUDE_PATHS src/third-party/lz4)
-      (EXTRA_LIB_PATHS "")
-      (EXTRA_NATIVE_LIBRARIES "")
-      (EXTRA_LINK_OPTS "")
-    )
-  )
-)

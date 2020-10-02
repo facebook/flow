@@ -1,4 +1,4 @@
-(**
+(*
  * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
@@ -80,12 +80,13 @@ let pop stream =
       if use_parallelizable then
         let (_, parallelizable) = ImmQueue.pop parallelizable in
         let workload =
-          Option.map entry_p ~f:(fun (_, workload) -> workload_of_parallelizable_workload workload)
+          Base.Option.map entry_p ~f:(fun (_, workload) ->
+              workload_of_parallelizable_workload workload)
         in
         (workload, parallelizable, nonparallelizable)
       else
         let (_, nonparallelizable) = ImmQueue.pop nonparallelizable in
-        (Option.map entry_n ~f:snd, parallelizable, nonparallelizable)
+        (Base.Option.map entry_n ~f:snd, parallelizable, nonparallelizable)
     in
     stream.parallelizable <- parallelizable;
     stream.nonparallelizable <- nonparallelizable;
@@ -101,7 +102,7 @@ let pop_parallelizable stream =
   | [] ->
     let (entry_opt, parallelizable) = ImmQueue.pop stream.parallelizable in
     stream.parallelizable <- parallelizable;
-    Option.map entry_opt ~f:snd
+    Base.Option.map entry_opt ~f:snd
 
 (* Wait until there's a workload in the stream *)
 let rec wait_for_workload stream =

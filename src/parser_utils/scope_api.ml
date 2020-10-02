@@ -1,4 +1,4 @@
-(**
+(*
  * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
@@ -20,6 +20,7 @@ module Make (L : Loc_sig.S) = struct
       name: int;
       actual_name: string;
     }
+    [@@deriving show]
 
     let compare =
       let rec iter locs1 locs2 =
@@ -39,9 +40,9 @@ module Make (L : Loc_sig.S) = struct
     let is x t = Nel.exists (L.equal x) t.locs
   end
 
-  module DefMap = MyMap.Make (Def)
+  module DefMap = WrappedMap.Make (Def)
 
-  type use_def_map = Def.t L.LMap.t
+  type use_def_map = Def.t L.LMap.t [@@deriving show]
 
   module Scope = struct
     type t = {
@@ -52,6 +53,7 @@ module Make (L : Loc_sig.S) = struct
       globals: SSet.t;
       loc: L.t;
     }
+    [@@deriving show]
   end
 
   type info = {
@@ -60,6 +62,7 @@ module Make (L : Loc_sig.S) = struct
     (* map of scope ids to local scopes *)
     scopes: Scope.t IMap.t;
   }
+  [@@deriving show]
 
   let all_uses { scopes; _ } =
     IMap.fold
@@ -75,23 +78,23 @@ module Make (L : Loc_sig.S) = struct
     let use_def_map = defs_of_all_uses info in
     L.LMap.fold
       (fun use def def_uses_map ->
-        match DefMap.get def def_uses_map with
+        match DefMap.find_opt def def_uses_map with
         | None -> DefMap.add def (L.LSet.singleton use) def_uses_map
         | Some uses -> DefMap.add def (L.LSet.add use uses) def_uses_map)
       use_def_map
       DefMap.empty
 
-  let def_of_use { scopes; _ } use =
-    let def_opt =
-      IMap.fold
-        (fun _ scope acc ->
-          match acc with
-          | Some _ -> acc
-          | None -> L.LMap.get use scope.Scope.locals)
-        scopes
-        None
-    in
-    match def_opt with
+  let def_of_use_opt { scopes; _ } use =
+    IMap.fold
+      (fun _ scope acc ->
+        match acc with
+        | Some _ -> acc
+        | None -> L.LMap.find_opt use scope.Scope.locals)
+      scopes
+      None
+
+  let def_of_use info use =
+    match def_of_use_opt info use with
     | Some def -> def
     | None -> failwith "missing def"
 
@@ -122,7 +125,7 @@ module Make (L : Loc_sig.S) = struct
   let def_is_unused info def = L.LSet.is_empty (uses_of_def info ~exclude_def:true def)
 
   let scope info scope_id =
-    try IMap.find_unsafe scope_id info.scopes
+    try IMap.find scope_id info.scopes
     with Not_found -> failwith ("Scope " ^ string_of_int scope_id ^ " not found")
 
   let scope_of_loc info scope_loc =
@@ -154,7 +157,7 @@ module Make (L : Loc_sig.S) = struct
         match scope.Scope.parent with
         | Some scope_id ->
           let children' =
-            match IMap.get scope_id acc with
+            match IMap.find_opt scope_id acc with
             | Some children -> children
             | None -> []
           in
@@ -168,7 +171,7 @@ module Make (L : Loc_sig.S) = struct
     let children_map = rev_scope_pointers scopes in
     let rec build_scope_tree scope_id =
       let children =
-        match IMap.get scope_id children_map with
+        match IMap.find_opt scope_id children_map with
         | None -> []
         | Some children_scope_ids -> List.rev_map build_scope_tree children_scope_ids
       in
@@ -188,7 +191,7 @@ module Make (L : Loc_sig.S) = struct
   *)
   let rec compute_free_and_bound_variables = function
     | Tree.Node (scope, children) ->
-      let children' = Core_list.map ~f:compute_free_and_bound_variables children in
+      let children' = Base.List.map ~f:compute_free_and_bound_variables children in
       let (free_children, bound_children) =
         List.fold_left
           (fun (facc, bacc) -> function
@@ -218,19 +221,8 @@ module Make (L : Loc_sig.S) = struct
       in
       let bound = SMap.fold (fun name _def acc -> SSet.add name acc) def_locals bound_children in
       Tree.Node ((def_locals, free, bound), children')
-
-  let toplevel_names info =
-    let scopes = info.scopes in
-    Scope.(
-      let toplevel_scope = IMap.find 0 scopes in
-      assert (toplevel_scope.parent = None);
-      let toplevel_lexical_scope = IMap.find 1 scopes in
-      assert (toplevel_lexical_scope.parent = Some 0);
-      SMap.fold
-        (fun x _def acc -> SSet.add x acc)
-        (SMap.union toplevel_scope.defs toplevel_lexical_scope.defs)
-        SSet.empty)
 end
 
 module With_Loc = Make (Loc_sig.LocS)
 module With_ALoc = Make (Loc_sig.ALocS)
+module With_ILoc = Make (Loc_sig.ILocS)

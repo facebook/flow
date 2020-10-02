@@ -1,6 +1,0 @@
-[ignore]
-<PROJECT_ROOT>/tmp*
-
-[options]
-experimental.types_first=true
-experimental.allow_skip_direct_dependents=true

@@ -1,31 +1,32 @@
-Error ---------------------------------------------------------------------------------------------------- annot.js:1:17
+Error ---------------------------------------------------------------------------------------------------- annot.js:1:19
 
-Cannot resolve module `./unknown_class`.
+Cannot resolve module `./unknown_class`. [cannot-resolve-module]
 
-   1| var A = require('./unknown_class');
-                      ^^^^^^^^^^^^^^^^^
+   1| const A = require('./unknown_class');
+                        ^^^^^^^^^^^^^^^^^
 
 
 Error ----------------------------------------------------------------------------------------------------- annot.js:5:7
 
-Missing type annotation for `x`.
+Cannot build a typed interface for this module. You should annotate the exports of this module with types. Missing type
+annotation at array pattern: [signature-verification-failure]
 
-   5|   bar(x) { }
+   5|   bar(x): void { }
             ^
 
 
 Error ----------------------------------------------------------------------------------------------------- fun.js:11:16
 
-Cannot assign `f(...)` to `x` because number [1] is incompatible with string [2].
+Cannot assign `f(...)` to `x` because number [1] is incompatible with string [2]. [incompatible-type]
 
    fun.js:11:16
    11| var x:string = f(0);
                       ^^^^
 
 References:
-   fun.js:8:14
-    8| function f(x:number) { return x; }
-                    ^^^^^^ [1]
+   fun.js:8:23
+    8| function f(x:number): number { return x; }
+                             ^^^^^^ [1]
    fun.js:11:7
    11| var x:string = f(0);
              ^^^^^^ [2]
@@ -33,16 +34,16 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- obj.js:10:16
 
-Cannot assign `o.x` to `x` because number [1] is incompatible with string [2].
+Cannot assign `o.x` to `x` because number [1] is incompatible with string [2]. [incompatible-type]
 
    obj.js:10:16
    10| var x:string = o.x;
                       ^^^
 
 References:
-   obj.js:7:14
-    7| var o = { x: 0 }
-                    ^ [1]
+   obj.js:7:16
+    7| const o = { x: 0 }
+                      ^ [1]
    obj.js:10:7
    10| var x:string = o.x;
              ^^^^^^ [2]

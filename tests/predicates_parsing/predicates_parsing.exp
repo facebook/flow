@@ -1,0 +1,93 @@
+Error --------------------------------------------------------------------------------------------------- fail-0.js:5:40
+
+Predicate function declarations need to declare a predicate expression. [unsupported-syntax]
+
+   5| declare function f2(x: mixed): boolean %checks;
+                                             ^^^^^^^
+
+
+Error --------------------------------------------------------------------------------------------------- fail-1.js:5:24
+
+Cannot declare predicate when a function body is present. [unsupported-syntax]
+
+   5| function f6(x: mixed): %checks (x !== null) {  }
+                             ^^^^^^^^^^^^^^^^^^^^
+
+
+Error --------------------------------------------------------------------------------------------------- fail-1.js:5:45
+
+Invalid body for predicate function. Expected a simple return statement as body. [unsupported-syntax]
+
+   5| function f6(x: mixed): %checks (x !== null) {  }
+                                                  ^^^^
+
+
+Error --------------------------------------------------------------------------------------------------- fail-1.js:5:45
+
+Predicate functions need to return non-void. [unsupported-syntax]
+
+   5| function f6(x: mixed): %checks (x !== null) {  }
+                                                  ^^^^
+
+
+Error --------------------------------------------------------------------------------------------------- fail-2.js:3:22
+
+Cannot declare predicate when a function body is present. [unsupported-syntax]
+
+   3| var a2 = (x: mixed): %checks (x !== null) => {        // Error: body form
+                           ^^^^^^^^^^^^^^^^^^^^
+
+
+Error --------------------------------------------------------------------------------------------------- fail-2.js:3:46
+
+Invalid body for predicate function. Expected a simple return statement as body. [unsupported-syntax]
+
+                                                   v---------------------------
+   3| var a2 = (x: mixed): %checks (x !== null) => {        // Error: body form
+   4|   var x = 1; return x;
+   5| }
+      ^
+
+
+Error --------------------------------------------------------------------------------------------------- fail-3.js:5:24
+
+Cannot declare predicate when a function body is present. [unsupported-syntax]
+
+   5| function f5(x: mixed): %checks (x !== null) { return x !== null }
+                             ^^^^^^^^^^^^^^^^^^^^
+
+
+Error --------------------------------------------------------------------------------------------------- fail-3.js:7:22
+
+Cannot declare predicate when a function body is present. [unsupported-syntax]
+
+   7| var a2 = (x: mixed): %checks (x !== null) => x !== null;
+                           ^^^^^^^^^^^^^^^^^^^^
+
+
+Error -------------------------------------------------------------------------------------------- unsupported-0.js:5:31
+
+Unexpected token `%`, expected the token `;`
+
+   5| var a3: (x: mixed) => boolean %checks (x !== null);
+                                    ^
+
+
+Error -------------------------------------------------------------------------------------------- unsupported-1.js:5:31
+
+Unexpected token `%`, expected the token `;`
+
+   5| var a4: (x: mixed) => boolean %checks = (x: mixed) => x !== null;
+                                    ^
+
+
+Error -------------------------------------------------------------------------------------------- unsupported-2.js:5:31
+
+Unexpected token `%`, expected the token `;`
+
+   5| var a5: (x: mixed) => boolean %checks(x !== null) =
+                                    ^
+
+
+
+Found 11 errors

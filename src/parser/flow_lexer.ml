@@ -1,4 +1,4 @@
-(**
+(*
  * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
@@ -50,8 +50,7 @@ let underscored_oct =
 let underscored_hex =
   [%sedlex.regexp? Plus hex_digit | (hex_digit, Star (hex_digit | ('_', hex_digit)))]
 
-let underscored_digit =
-  [%sedlex.regexp? Plus digit | (digit_non_zero, Star (digit | ('_', digit)))]
+let underscored_digit = [%sedlex.regexp? Plus digit | (digit_non_zero, Star (digit | ('_', digit)))]
 
 let underscored_decimal = [%sedlex.regexp? Plus digit | (digit, Star (digit | ('_', digit)))]
 
@@ -187,16 +186,16 @@ let loc_of_lexbuf env (lexbuf : Sedlexing.lexbuf) =
   let end_offset = Sedlexing.lexeme_end lexbuf in
   loc_of_offsets env start_offset end_offset
 
-let get_result_and_clear_state (env, lex_token, lex_comments) =
+let loc_of_token env lex_token =
+  match lex_token with
+  | T_STRING (loc, _, _, _) -> loc
+  | T_JSX_TEXT (loc, _, _) -> loc
+  | T_TEMPLATE_PART (loc, _, _) -> loc
+  | T_REGEXP (loc, _, _) -> loc
+  | _ -> loc_of_lexbuf env env.lex_lb
+
+let get_result_and_clear_state (env, lex_token, lex_loc, lex_comments) =
   let (env, { lex_errors_acc }) = get_and_clear_state env in
-  let lex_loc =
-    match lex_token with
-    | T_STRING (loc, _, _, _) -> loc
-    | T_JSX_TEXT (loc, _, _) -> loc
-    | T_TEMPLATE_PART (loc, _, _) -> loc
-    | T_REGEXP (loc, _, _) -> loc
-    | _ -> loc_of_lexbuf env env.lex_lb
-  in
   (env, { Lex_result.lex_token; lex_loc; lex_errors = List.rev lex_errors_acc; lex_comments })
 
 let lex_error (env : Lex_env.t) loc err : Lex_env.t =
@@ -233,16 +232,18 @@ let mk_comment
     (_end : Loc.position)
     (buf : Buffer.t)
     (multiline : bool) : Loc.t Flow_ast.Comment.t =
-  Flow_ast.Comment.(
-    let loc = { Loc.source = Lex_env.source env; start; _end } in
-    let s = Buffer.contents buf in
-    let c =
-      if multiline then
-        Block s
-      else
-        Line s
-    in
-    (loc, c))
+  let open Flow_ast.Comment in
+  let loc = { Loc.source = Lex_env.source env; start; _end } in
+  let text = Buffer.contents buf in
+  let kind =
+    if multiline then
+      Block
+    else
+      Line
+  in
+  let on_newline = Loc.(env.lex_last_loc._end.Loc.line < loc.start.Loc.line) in
+  let c = { kind; text; on_newline } in
+  (loc, c)
 
 let mk_num_singleton number_type raw =
   let (neg, num) =
@@ -313,7 +314,7 @@ let mk_bignum_singleton kind raw =
 
 let decode_identifier =
   let assert_valid_unicode_in_identifier env loc code =
-    let lexbuf = Sedlexing.from_int_array [|code|] in
+    let lexbuf = Sedlexing.from_int_array [| code |] in
     match%sedlex lexbuf with
     | js_id_start -> env
     | js_id_continue -> env
@@ -333,7 +334,12 @@ let decode_identifier =
     | unicode_escape ->
       let (loc, hex) = loc_and_sub_lexeme env offset lexbuf 2 0 in
       let code = int_of_string ("0x" ^ hex) in
-      let env = assert_valid_unicode_in_identifier env loc code in
+      let env =
+        if not (Uchar.is_valid code) then
+          lex_error env loc Parse_error.IllegalUnicodeEscape
+        else
+          assert_valid_unicode_in_identifier env loc code
+      in
       Wtf8.add_wtf_8 buf code;
       id_char env offset buf lexbuf
     | codepoint_escape ->
@@ -425,13 +431,13 @@ let string_escape env lexbuf =
   | eof
   | '\\' ->
     let str = lexeme lexbuf in
-    let codes = Sedlexing.lexeme lexbuf in
+    let codes = Sedlexing.lexeme lexbuf |> Array.map Uchar.to_int in
     (env, str, codes, false)
   | ('x', hex_digit, hex_digit) ->
     let str = lexeme lexbuf in
     let code = int_of_string ("0" ^ str) in
     (* 0xAB *)
-    (env, str, [|code|], false)
+    (env, str, [| code |], false)
   | ('0' .. '7', '0' .. '7', '0' .. '7') ->
     let str = lexeme lexbuf in
     let code = int_of_string ("0o" ^ str) in
@@ -439,50 +445,50 @@ let string_escape env lexbuf =
     (* If the 3 character octal code is larger than 256
      * then it is parsed as a 2 character octal code *)
     if code < 256 then
-      (env, str, [|code|], true)
+      (env, str, [| code |], true)
     else
       let remainder = code land 7 in
       let code = code lsr 3 in
-      (env, str, [|code; Char.code '0' + remainder|], true)
+      (env, str, [| code; Char.code '0' + remainder |], true)
   | ('0' .. '7', '0' .. '7') ->
     let str = lexeme lexbuf in
     let code = int_of_string ("0o" ^ str) in
     (* 0o01 *)
-    (env, str, [|code|], true)
-  | '0' -> (env, "0", [|0x0|], false)
-  | 'b' -> (env, "b", [|0x8|], false)
-  | 'f' -> (env, "f", [|0xC|], false)
-  | 'n' -> (env, "n", [|0xA|], false)
-  | 'r' -> (env, "r", [|0xD|], false)
-  | 't' -> (env, "t", [|0x9|], false)
-  | 'v' -> (env, "v", [|0xB|], false)
+    (env, str, [| code |], true)
+  | '0' -> (env, "0", [| 0x0 |], false)
+  | 'b' -> (env, "b", [| 0x8 |], false)
+  | 'f' -> (env, "f", [| 0xC |], false)
+  | 'n' -> (env, "n", [| 0xA |], false)
+  | 'r' -> (env, "r", [| 0xD |], false)
+  | 't' -> (env, "t", [| 0x9 |], false)
+  | 'v' -> (env, "v", [| 0xB |], false)
   | '0' .. '7' ->
     let str = lexeme lexbuf in
     let code = int_of_string ("0o" ^ str) in
     (* 0o1 *)
-    (env, str, [|code|], true)
+    (env, str, [| code |], true)
   | ('u', hex_quad) ->
     let str = lexeme lexbuf in
     let hex = String.sub str 1 (String.length str - 1) in
     let code = int_of_string ("0x" ^ hex) in
-    (env, str, [|code|], false)
+    (env, str, [| code |], false)
   | ("u{", Plus hex_digit, '}') ->
     let str = lexeme lexbuf in
     let hex = String.sub str 2 (String.length str - 3) in
     let code = int_of_string ("0x" ^ hex) in
     (* 11.8.4.1 *)
     let env =
-      if code > 1114111 then
+      if code > 0x10FFFF then
         illegal env (loc_of_lexbuf env lexbuf)
       else
         env
     in
-    (env, str, [|code|], false)
+    (env, str, [| code |], false)
   | 'u'
   | 'x'
   | '0' .. '7' ->
     let str = lexeme lexbuf in
-    let codes = Sedlexing.lexeme lexbuf in
+    let codes = Sedlexing.lexeme lexbuf |> Array.map Uchar.to_int in
     let env = illegal env (loc_of_lexbuf env lexbuf) in
     (env, str, codes, false)
   | line_terminator_sequence ->
@@ -491,7 +497,7 @@ let string_escape env lexbuf =
     (env, str, [||], false)
   | any ->
     let str = lexeme lexbuf in
-    let codes = Sedlexing.lexeme lexbuf in
+    let codes = Sedlexing.lexeme lexbuf |> Array.map Uchar.to_int in
     (env, str, codes, false)
   | _ -> failwith "unreachable"
 
@@ -1021,7 +1027,9 @@ let rec jsx_text env mode buf raw lexbuf =
   | "'"
   | '"'
   | '<'
-  | '{' ->
+  | '>'
+  | '{'
+  | '}' ->
     let c = lexeme lexbuf in
     begin
       match (mode, c) with
@@ -1033,6 +1041,10 @@ let rec jsx_text env mode buf raw lexbuf =
          * yet...they're not part of the JSX text *)
         Sedlexing.rollback lexbuf;
         env
+      | (JSX_CHILD_TEXT, ">") ->
+        unexpected_error_w_suggest env (loc_of_lexbuf env lexbuf) ">" "{'>'}"
+      | (JSX_CHILD_TEXT, "}") ->
+        unexpected_error_w_suggest env (loc_of_lexbuf env lexbuf) "}" "{'}'}"
       | _ ->
         Buffer.add_string raw c;
         Buffer.add_string buf c;
@@ -1451,8 +1463,7 @@ let template_tail env lexbuf =
     let env = illegal env (loc_of_lexbuf env lexbuf) in
     Token
       ( env,
-        T_TEMPLATE_PART (loc_of_lexbuf env lexbuf, { cooked = ""; raw = ""; literal = "" }, true)
-      )
+        T_TEMPLATE_PART (loc_of_lexbuf env lexbuf, { cooked = ""; raw = ""; literal = "" }, true) )
   | _ -> failwith "unreachable"
 
 (* There are some tokens that never show up in a type and which can cause
@@ -1682,6 +1693,7 @@ let type_token env lexbuf =
   | "true" -> Token (env, T_TRUE)
   | "typeof" -> Token (env, T_TYPEOF)
   | "void" -> Token (env, T_VOID_TYPE)
+  | "symbol" -> Token (env, T_SYMBOL_TYPE)
   (* Identifiers *)
   | (js_id_start, Star js_id_continue) ->
     let loc = loc_of_lexbuf env lexbuf in
@@ -1751,13 +1763,19 @@ let jsx_child env =
   let buf = Buffer.create 127 in
   let raw = Buffer.create 127 in
   let (env, child) = jsx_child env start buf raw env.lex_lb in
-  get_result_and_clear_state (env, child, [])
+  let loc = loc_of_token env child in
+  get_result_and_clear_state (env, child, loc, [])
 
 let wrap f =
   let rec helper comments env =
     match f env env.lex_lb with
-    | Token (env, t) -> (env, t, List.rev comments)
-    | Comment (env, comment) -> helper (comment :: comments) env
+    | Token (env, t) ->
+      let loc = loc_of_token env t in
+      let env = { env with lex_last_loc = loc } in
+      (env, t, loc, List.rev comments)
+    | Comment (env, ((loc, _) as comment)) ->
+      let env = { env with lex_last_loc = loc } in
+      helper (comment :: comments) env
     | Continue env -> helper comments env
   in
   (fun env -> get_result_and_clear_state (helper [] env))

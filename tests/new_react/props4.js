@@ -1,7 +1,6 @@
 // @flow
 
 import React from "react";
-import ReactDOM from "react-dom";
 
 class JDiv extends React.Component<{id: string}> {}
 
@@ -14,7 +13,4 @@ class Example extends React.Component<{ bar: string }> {
   }
 }
 
-ReactDOM.render(
-  <Example foo="foo" />,
-  document.body
-);
+<Example foo="foo" />;

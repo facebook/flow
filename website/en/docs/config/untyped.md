@@ -15,7 +15,7 @@ This is different from the `[ignore]` config section that causes matching files 
 
 It is also different from the `[declarations]` section. This also does not typecheck the file contents, but `[declarations]` does extract and use the signatures of functions, classes, etc, when checking other code.
 
-`[untyped]` instead causes a file to be ignored by the typechecker as if it had `noflow` in it, resolve modules as `any` typ, but allow them to NOT be ignored by the module resolver. Any matching file is skipped by Flow (not even parsed, like other `noflow` files!), but can still be `require()`'d.
+`[untyped]` instead causes a file to be ignored by the typechecker as if it had `noflow` in it, resolve modules as `any` type, but allow them to NOT be ignored by the module resolver. Any matching file is skipped by Flow (not even parsed, like other `noflow` files!), but can still be `require()`'d.
 
 Things to keep in mind:
 

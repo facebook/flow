@@ -1,4 +1,4 @@
-(**
+(*
  * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
@@ -18,4 +18,9 @@ val notify_dead_persistent_connection : client_id:LspProt.client_id -> unit
 
 val start : FlowServerMonitorOptions.t -> unit Lwt.t
 
-val exit : msg:string -> FlowExitStatus.t -> 'a Lwt.t
+type stop_reason =
+  | Stopped  (** `flow stop` *)
+  | Autostopped  (** no more active connections *)
+  | Legacy_client  (** very old client tried to connect *)
+
+val stop : stop_reason -> 'a Lwt.t

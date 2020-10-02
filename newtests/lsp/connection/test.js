@@ -3,9 +3,10 @@
  * @format
  */
 
+import type Suite from 'flow-dev-tools/src/test/Suite.js';
 import {suite, test} from 'flow-dev-tools/src/test/Tester';
 
-export default suite(
+export default (suite(
   ({
     startFlowServer,
     lspStart,
@@ -26,7 +27,7 @@ export default suite(
       lspRequest('initialize', lspInitializeParams)
         .waitUntilLSPMessage(60000, 'telemetry/connectionStatus')
         .verifyAllLSPMessagesInStep(
-          ['initialize', 'telemetry/connectionStatus{true}'],
+          ['initialize', ['telemetry/connectionStatus', '{true}']],
           [...lspIgnoreStatusAndCancellation],
         ),
       lspRequest('shutdown')
@@ -48,8 +49,8 @@ export default suite(
         .verifyAllLSPMessagesInStep(
           [
             'initialize',
-            'window/logMessage{Starting Flow server}',
-            'telemetry/connectionStatus{true}',
+            ['window/logMessage', '{Starting Flow server}'],
+            ['telemetry/connectionStatus', '{true}'],
           ],
           [...lspIgnoreStatusAndCancellation],
         ),
@@ -70,12 +71,12 @@ export default suite(
       lspStartAndConnect(),
       flowCmd(['stop'])
         .waitUntilServerStatus(20000, 'stopped')
-        .waitUntilLSPMessage(20000, 'window/showStatus{stopped}')
+        .waitUntilLSPMessage(20000, 'window/showStatus', '{stopped}')
         .verifyAllLSPMessagesInStep(
           [
-            'telemetry/connectionStatus{false}',
-            'telemetry/event{End_of_file}',
-            'window/showStatus{stopped}',
+            ['telemetry/connectionStatus', '{false}'],
+            ['telemetry/event', '{End_of_file}'],
+            ['window/showStatus', '{stopped}'],
           ],
           [
             // After the EOF, lsp's reconnection attempt might occur
@@ -88,7 +89,7 @@ export default suite(
         .waitUntilLSPMessage(60000, 'telemetry/connectionStatus')
         // it really can take a while for flow to be ready to connect
         .verifyAllLSPMessagesInStep(
-          ['telemetry/connectionStatus{true}'],
+          [['telemetry/connectionStatus', '{true}']],
           [...lspIgnoreStatusAndCancellation],
         ),
     ]),
@@ -97,12 +98,12 @@ export default suite(
       lspStartAndConnect(),
       flowCmd(['stop'])
         .waitUntilServerStatus(20000, 'stopped')
-        .waitUntilLSPMessage(20000, 'window/showStatus{stopped}')
+        .waitUntilLSPMessage(20000, 'window/showStatus', '{stopped}')
         .verifyAllLSPMessagesInStep(
           [
-            'telemetry/connectionStatus{false}',
-            'telemetry/event{End_of_file}',
-            'window/showStatus{stopped}',
+            ['telemetry/connectionStatus', '{false}'],
+            ['telemetry/event', '{End_of_file}'],
+            ['window/showStatus', '{stopped}'],
           ],
           [...lspIgnoreStatusAndCancellation],
         ),
@@ -112,7 +113,10 @@ export default suite(
         // launched; not ones that lspCommand launched.
         .waitUntilLSPMessage(60000, 'telemetry/connectionStatus')
         .verifyAllLSPMessagesInStep(
-          ['window/logMessage{Starting}', 'telemetry/connectionStatus{true}'],
+          [
+            ['window/logMessage', '{Starting}'],
+            ['telemetry/connectionStatus', '{true}'],
+          ],
           [...lspIgnoreStatusAndCancellation],
         ),
     ]),
@@ -137,15 +141,15 @@ export default suite(
     test('Restarts a lost server in response to flowconfig benign change', [
       lspStartAndConnect(),
       modifyFile('.flowconfig', '#placeholder', '#replaced')
-        .waitUntilLSPMessage(20000, 'telemetry/connectionStatus{false}')
+        .waitUntilLSPMessage(20000, 'telemetry/connectionStatus', '{false}')
         .dontMindServerDeath()
-        .waitUntilLSPMessage(60000, 'telemetry/connectionStatus{true}')
+        .waitUntilLSPMessage(60000, 'telemetry/connectionStatus', '{true}')
         .verifyAllLSPMessagesInStep(
           [
-            'telemetry/connectionStatus{false}',
-            'telemetry/event{Server fatal exception}',
-            'window/logMessage{Starting}',
-            'telemetry/connectionStatus{true}',
+            ['telemetry/connectionStatus', '{false}'],
+            ['telemetry/event', '{Server fatal exception}'],
+            ['window/logMessage', '{Starting}'],
+            ['telemetry/connectionStatus', '{true}'],
           ],
           [...lspIgnoreStatusAndCancellation],
         ),
@@ -159,11 +163,11 @@ export default suite(
         .waitUntilLSPStatus(20000, 'stopped')
         .verifyAllLSPMessagesInStep(
           [
-            'telemetry/connectionStatus{false}',
-            'telemetry/event{Server fatal exception}',
+            ['telemetry/connectionStatus', '{false}'],
+            ['telemetry/event', '{Server fatal exception}'],
           ],
           [
-            'telemetry/event{Version in flowconfig}', // might or might not come depending on how fast
+            ['telemetry/event', '{Version in flowconfig}'], // might or might not come depending on how fast
             ...lspIgnoreStatusAndCancellation,
           ],
         ),
@@ -173,7 +177,7 @@ export default suite(
       lspStartAndConnect(),
       lspNotification('textDocument/didOpen', {
         textDocument: {
-          uri: '<PLACEHOLDER_PROJECT_URL_SLASH>open.js',
+          uri: '<PLACEHOLDER_PROJECT_URL>/open.js',
           languageId: 'javascript',
           version: 1,
           text: `// @flow
@@ -183,47 +187,50 @@ jones();
         },
       })
         .lspRequestAndWaitUntilResponse('textDocument/definition', {
-          textDocument: {uri: '<PLACEHOLDER_PROJECT_URL_SLASH>open.js'},
+          textDocument: {uri: '<PLACEHOLDER_PROJECT_URL>/open.js'},
           position: {line: 2, character: 1},
         })
         .verifyAllLSPMessagesInStep(
-          ['textDocument/definition{open.js,"line":1}'],
+          [['textDocument/definition', '{open.js,"line":1}']],
           [...lspIgnoreStatusAndCancellation],
         ),
       lspRequestAndWaitUntilResponse('textDocument/definition', {
-        textDocument: {uri: '<PLACEHOLDER_PROJECT_URL_SLASH>open.js'},
+        textDocument: {uri: '<PLACEHOLDER_PROJECT_URL>/open.js'},
         position: {line: 2, character: 1},
       }).verifyAllLSPMessagesInStep(
-        ['textDocument/definition{open.js,"line":1}'],
+        [['textDocument/definition', '{open.js,"line":1}']],
         [...lspIgnoreStatusAndCancellation],
       ),
       lspRequestAndWaitUntilResponse('textDocument/definition', {
-        textDocument: {uri: '<PLACEHOLDER_PROJECT_URL_SLASH>open.js'},
+        textDocument: {uri: '<PLACEHOLDER_PROJECT_URL>/open.js'},
         position: {line: 2, character: 1},
       }).verifyAllLSPMessagesInStep(
-        ['textDocument/definition{open.js,"line":1}'],
+        [['textDocument/definition', '{open.js,"line":1}']],
         [...lspIgnoreStatusAndCancellation],
       ),
       flowCmd(['stop'])
         .waitUntilServerStatus(20000, 'stopped')
-        .waitUntilLSPMessage(20000, 'telemetry/connectionStatus{false}')
+        .waitUntilLSPMessage(20000, 'telemetry/connectionStatus', '{false}')
         .verifyAllLSPMessagesInStep(
-          ['telemetry/connectionStatus{false}'],
-          ['telemetry/event{End_of_file}', ...lspIgnoreStatusAndCancellation],
+          [['telemetry/connectionStatus', '{false}']],
+          [
+            ['telemetry/event', '{End_of_file}'],
+            ...lspIgnoreStatusAndCancellation,
+          ],
         ),
       startFlowServer()
         .waitUntilLSPMessage(60000, 'telemetry/connectionStatus')
         .verifyAllLSPMessagesInStep(
-          ['telemetry/connectionStatus{true}'],
+          [['telemetry/connectionStatus', '{true}']],
           [...lspIgnoreStatusAndCancellation],
         ),
       lspRequestAndWaitUntilResponse('textDocument/definition', {
-        textDocument: {uri: '<PLACEHOLDER_PROJECT_URL_SLASH>open.js'},
+        textDocument: {uri: '<PLACEHOLDER_PROJECT_URL>/open.js'},
         position: {line: 2, character: 1},
       }).verifyAllLSPMessagesInStep(
-        ['textDocument/definition{open.js,line":1}'],
+        [['textDocument/definition', '{open.js,line":1}']],
         [...lspIgnoreStatusAndCancellation],
       ),
     ]),
   ],
-);
+): Suite);

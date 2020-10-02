@@ -218,7 +218,7 @@ module.exports = {
             'root.errors.0.message': {
               type: 'Wrong error message',
               expected: 'Unexpected end of input',
-              actual: 'Unexpected end of input, expected the token `,`'
+              actual: 'Unexpected end of input, expected the token `}`'
             }
           }
         },
@@ -1480,57 +1480,7 @@ module.exports = {
         '<n:a n:v />',
         '<a n:foo="bar"> {value} <b><c /></b></a>',
         '<a b={" "} c=" " d="&amp;" />',
-        {
-          content: '<日本語></日本語>',
-          explanation: 'Flow reports offsets based on bytes',
-          expected_differences: {
-            'root.body.0.expression.openingElement.name.range.1': {
-              type: 'Wrong number',
-              expected: 4,
-              actual: 10,
-            },
-            'root.body.0.expression.openingElement.range.1': {
-              type: 'Wrong number',
-              expected: 5,
-              actual: 11,
-            },
-            'root.body.0.expression.closingElement.name.range.0': {
-              type: 'Wrong number',
-              expected: 7,
-              actual: 13,
-            },
-            'root.body.0.expression.closingElement.name.range.1': {
-              type: 'Wrong number',
-              expected: 10,
-              actual: 22,
-            },
-            'root.body.0.expression.closingElement.range.0': {
-              type: 'Wrong number',
-              expected: 5,
-              actual: 11,
-            },
-            'root.body.0.expression.closingElement.range.1': {
-              type: 'Wrong number',
-              expected: 11,
-              actual: 23,
-            },
-            'root.body.0.expression.range.1': {
-              type: 'Wrong number',
-              expected: 11,
-              actual: 23,
-            },
-            'root.body.0.range.1': {
-              type: 'Wrong number',
-              expected: 11,
-              actual: 23,
-            },
-            'root.range.1': {
-              type: 'Wrong number',
-              expected: 11,
-              actual: 23,
-            },
-          },
-        },
+        '<日本語></日本語>',
         '<AbC-def\n  test="&#x0026;&#38;">\nbar\nbaz\n</AbC-def>',
         '<a b={x ? <c /> : <d />} />',
         '<div>@test content</div>',
@@ -1730,22 +1680,7 @@ module.exports = {
 
     'Harmony: Destructuring': [
         '[a, b] = [b, a]',
-        {
-          content: '({ responseText: text }) = res',
-          explanation: "Esprima counts the parens in the loc, flow doesn't.",
-          expected_differences: {
-            'root.body.0.expression.loc.start.column': {
-              type: 'Wrong number',
-              expected: 0,
-              actual: 1
-            },
-            'root.body.0.expression.range.0': {
-              type: 'Wrong number',
-              expected: 0,
-              actual: 1
-            },
-          }
-        },
+        '({ responseText: text }) = res',
         'const {a} = {}',
         'const [a] = []',
         'let {a} = {}',
@@ -3084,64 +3019,6 @@ module.exports = {
       'var a: (A<T>)',
       'var a: (A | B)',
       'var a: (A & B)',
-    ],
-    'Typecasts': [
-      '(xxx: number)',
-      // distinguish between function type params and typecasts
-      '((xxx) => xxx + 1: (xxx: number) => number)',
-      // parens disambiguate groups from casts
-      {
-        content: '((xxx: number), (yyy: string))',
-        explanation:  'Esprima counts the parens in its locs',
-        expected_differences: {
-          'root.body.0.expression.range.0': {
-            type: 'Wrong number',
-            expected: 1,
-            actual: 2
-          },
-          'root.body.0.expression.range.1': {
-            type: 'Wrong number',
-            expected: 29,
-            actual: 28
-          },
-          'root.body.0.expression.loc.start.column': {
-            type: 'Wrong number',
-            expected: 1,
-            actual: 2
-          },
-          'root.body.0.expression.loc.end.column': {
-            type: 'Wrong number',
-            expected: 29,
-            actual: 28
-          },
-        }
-      },
-    ],
-    'Invalid Typecasts': [
-      // Must be parenthesized
-      {
-        content: 'var x: number = 0: number;',
-        explanation: "Improved error message",
-        expected_differences: {
-          'root.errors.0.message': {
-            type: 'Wrong error message',
-            expected: 'Unexpected token :',
-            actual: 'Unexpected token `:`, expected the token `;`'
-          }
-        }
-      },
-      // ...even within groups
-      {
-        content: '(xxx: number, yyy: string)',
-        explanation: "Improved error message",
-        expected_differences: {
-          'root.errors.0.message': {
-            type: 'Wrong error message',
-            expected: 'Unexpected token ,',
-            actual: 'Unexpected token `,`, expected the token `)`'
-          }
-        }
-      },
     ],
     'Bounded Polymorphism': [
       'function foo<T: Foo>() {}',

@@ -1,0 +1,3 @@
+shell: test.sh
+start_args: --lazy-mode fs
+saved_state_only: true

@@ -1,4 +1,4 @@
-(**
+(*
  * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
@@ -52,7 +52,7 @@ let set_saved_state_filename _ = ()
 let set_monitor_options ~file_watcher:_ = ()
 
 let set_server_options
-    ~lazy_mode:_ ~arch:_ ~abstract_locations:_ ~max_workers:_ ~enabled_rollouts:_ =
+    ~lazy_mode:_ ~arch:_ ~abstract_locations:_ ~max_workers:_ ~enabled_rollouts:_ ~debug:_ =
   ()
 
 let status_response ~num_errors:_ = ()
@@ -68,7 +68,11 @@ let init_done
     _profiling =
   ()
 
-let init_flow_command ~version:_ = ()
+let init_flow_command ~init_id:_ ~version:_ = ()
+
+let init_worker ~init_id:_ ~version:_ _ = ()
+
+let should_log () = false
 
 let killed _ = ()
 
@@ -78,7 +82,7 @@ let lock_stolen _ = ()
 
 let out_of_date _ = ()
 
-let exit _ _ = ()
+let exit ?error:_ _ _ = ()
 
 let report_from_monitor_server_exit_due_to_signal _ = ()
 
@@ -86,7 +90,10 @@ let recheck
     ~recheck_reasons:_
     ~modified:_
     ~deleted:_
-    ~dependent_files:_
+    ~to_merge:_
+    ~to_check:_
+    ~sig_dependent_files:_
+    ~all_dependent_files:_
     ~merge_skip_count:_
     ~check_skip_count:_
     ~profiling:_
@@ -158,3 +165,7 @@ let load_saved_state_error ~saved_state_filename:_ ~changed_files_count:_ ~inval
 let idle_heartbeat ~idle_time:_ ~profiling:_ = ()
 
 let live_parse_errors ~request:_ ~data:_ ~wall_start:_ = ()
+
+let live_non_parse_errors ~request:_ ~data:_ ~wall_start:_ = ()
+
+let live_non_parse_errors_failed ~request:_ ~data:_ ~wall_start:_ = ()

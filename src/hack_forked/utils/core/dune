@@ -1,0 +1,19 @@
+(copy_files ../../../../scripts/get_build_id_gen.c)
+
+(library
+  (name utils_core)
+  (wrapped false)
+  (c_names
+    get_build_id
+    get_build_id_gen)
+  (c_flags (:standard
+    (:include config/build-timestamp-opt)))
+  (libraries
+    base
+    string
+    imported_core
+    hh_json
+    str
+    unix)
+  (preprocess
+    (pps lwt_ppx ppx_deriving.std ppx_deriving.enum)))

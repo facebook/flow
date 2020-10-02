@@ -4,46 +4,13 @@ Trigger a 1000s recheck
 
 
 autocomplete with --wait-for-recheck false runs immediately:
-{
-  "result":[
-    {
-      "name":"x",
-      "type":"string",
-      "func_details":null,
-      "path":"focused.js",
-      "line":5,
-      "endline":5,
-      "start":5,
-      "end":5
-    },
-    {
-      "name":"val",
-      "type":"number",
-      "func_details":null,
-      "path":"focused.js",
-      "line":3,
-      "endline":3,
-      "start":8,
-      "end":10
-    },
-    {
-      "name":"exports",
-      "type":"{||}",
-      "func_details":null,
-      "path":"focused.js",
-      "line":0,
-      "endline":0,
-      "start":1,
-      "end":0
-    }
-  ]
-}
+{"result":[{"name":"x","type":"string"},{"name":"val","type":"number"}]}
 
 
 check-contents with --wait-for-recheck false runs immediately:
 Error -------------------------------------------------------------------------------------------------- focused.js:5:17
 
-Cannot assign `val` to `x` because number [1] is incompatible with string [2].
+Cannot assign `val` to `x` because number [1] is incompatible with string [2]. [incompatible-type]
 
    focused.js:5:17
    5| var x: string = val;

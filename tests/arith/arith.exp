@@ -1,6 +1,6 @@
 Error ---------------------------------------------------------------------------------------------------- Arith.js:13:7
 
-Cannot call `num` with `x + y` bound to `x` because string [1] is incompatible with number [2].
+Cannot call `num` with `x + y` bound to `x` because string [1] is incompatible with number [2]. [incompatible-call]
 
    Arith.js:13:7
    13|   num(x+y); // error
@@ -14,7 +14,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- Arith.js:15:7
 
-Cannot call `str` with `x + x` bound to `x` because number [1] is incompatible with string [2].
+Cannot call `str` with `x + x` bound to `x` because number [1] is incompatible with string [2]. [incompatible-call]
 
    Arith.js:15:7
    15|   str(x+x); // error
@@ -28,11 +28,11 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- Arith.js:16:7
 
-Cannot add `z` and `y` because object literal [1] is incompatible with string [2].
+Cannot add `z` and `y` because object literal [1] is incompatible with string [2]. [incompatible-type]
 
    Arith.js:16:7
    16|   str(z+y); // error
-             ^^^
+             ^
 
 References:
    Arith.js:11:11
@@ -43,18 +43,207 @@ References:
                  ^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- Arith.js:56:5
+Error ---------------------------------------------------------------------------------------------------- Arith.js:21:7
 
-Cannot add `"foo"` and `true` because boolean [1] is incompatible with string [2].
+Cannot perform arithmetic operation because null or undefined [1] is not a number. [unsafe-addition]
 
-   Arith.js:56:5
-   56| str("foo" + true); // error
-           ^^^^^^^^^^^^
+   Arith.js:21:7
+   21|   num(x + y);
+             ^
 
 References:
+   Arith.js:20:18
+   20| function bar0(x: ?number, y: number) {
+                        ^^^^^^^ [1]
+
+
+Error --------------------------------------------------------------------------------------------------- Arith.js:24:11
+
+Cannot perform arithmetic operation because null or undefined [1] is not a number. [unsafe-addition]
+
+   Arith.js:24:11
+   24|   num(x + y);
+                 ^
+
+References:
+   Arith.js:23:29
+   23| function bar1(x: number, y: ?number) {
+                                   ^^^^^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------------- Arith.js:29:7
+
+Cannot perform arithmetic operation because undefined [1] is not a number. [unsafe-addition]
+
+   Arith.js:29:7
+   29|   num(x + y);
+             ^
+
+References:
+   Arith.js:28:19
+   28| function bar2(x?: number, y: number) {
+                         ^^^^^^ [1]
+
+
+Error --------------------------------------------------------------------------------------------------- Arith.js:32:11
+
+Cannot perform arithmetic operation because undefined [1] is not a number. [unsafe-addition]
+
+   Arith.js:32:11
+   32|   num(x + y);
+                 ^
+
+References:
+   Arith.js:31:30
+   31| function bar3(x: number, y?: number) {
+                                    ^^^^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------------- Arith.js:37:7
+
+Cannot perform arithmetic operation because null or undefined [1] is not a number. [unsafe-addition]
+
+   Arith.js:37:7
+   37|   num(x + y);
+             ^
+
+References:
+   Arith.js:36:19
+   36| function bar4(x?: ?number, y: number) {
+                         ^^^^^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------------- Arith.js:37:7
+
+Cannot perform arithmetic operation because undefined [1] is not a number. [unsafe-addition]
+
+   Arith.js:37:7
+   37|   num(x + y);
+             ^
+
+References:
+   Arith.js:36:19
+   36| function bar4(x?: ?number, y: number) {
+                         ^^^^^^^ [1]
+
+
+Error --------------------------------------------------------------------------------------------------- Arith.js:40:11
+
+Cannot perform arithmetic operation because null or undefined [1] is not a number. [unsafe-addition]
+
+   Arith.js:40:11
+   40|   num(x + y);
+                 ^
+
+References:
+   Arith.js:39:30
+   39| function bar5(x: number, y?: ?number) {
+                                    ^^^^^^^ [1]
+
+
+Error --------------------------------------------------------------------------------------------------- Arith.js:40:11
+
+Cannot perform arithmetic operation because undefined [1] is not a number. [unsafe-addition]
+
+   Arith.js:40:11
+   40|   num(x + y);
+                 ^
+
+References:
+   Arith.js:39:30
+   39| function bar5(x: number, y?: ?number) {
+                                    ^^^^^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------------- Arith.js:43:5
+
+Cannot perform arithmetic operation because null [1] is not a number. [unsafe-addition]
+
+   43| num(null + null); // === 0
+           ^^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------------- Arith.js:44:5
+
+Cannot perform arithmetic operation because undefined [1] is not a number. [unsafe-addition]
+
+   44| num(undefined + undefined); // === NaN
+           ^^^^^^^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------------- Arith.js:46:5
+
+Cannot perform arithmetic operation because null [1] is not a number. [unsafe-addition]
+
+   46| num(null + 1); // === 1
+           ^^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------------- Arith.js:47:9
+
+Cannot perform arithmetic operation because null [1] is not a number. [unsafe-addition]
+
+   47| num(1 + null); // === 1
+               ^^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------------- Arith.js:48:5
+
+Cannot perform arithmetic operation because undefined [1] is not a number. [unsafe-addition]
+
+   48| num(undefined + 1); // === NaN
+           ^^^^^^^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------------- Arith.js:49:9
+
+Cannot perform arithmetic operation because undefined [1] is not a number. [unsafe-addition]
+
+   49| num(1 + undefined); // === NaN
+               ^^^^^^^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------------- Arith.js:51:5
+
+Cannot perform arithmetic operation because null [1] is not a number. [unsafe-addition]
+
+   51| num(null + true); // === 1
+           ^^^^ [1]
+
+
+Error --------------------------------------------------------------------------------------------------- Arith.js:52:12
+
+Cannot perform arithmetic operation because null [1] is not a number. [unsafe-addition]
+
+   52| num(true + null); // === 1
+                  ^^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------------- Arith.js:53:5
+
+Cannot perform arithmetic operation because undefined [1] is not a number. [unsafe-addition]
+
+   53| num(undefined + true); // === NaN
+           ^^^^^^^^^ [1]
+
+
+Error --------------------------------------------------------------------------------------------------- Arith.js:54:12
+
+Cannot perform arithmetic operation because undefined [1] is not a number. [unsafe-addition]
+
+   54| num(true + undefined); // === NaN
+                  ^^^^^^^^^ [1]
+
+
+Error --------------------------------------------------------------------------------------------------- Arith.js:56:13
+
+Cannot add `"foo"` and `true` because boolean [1] is incompatible with string [2]. [incompatible-type]
+
    Arith.js:56:13
    56| str("foo" + true); // error
                    ^^^^ [1]
+
+References:
    Arith.js:56:5
    56| str("foo" + true); // error
            ^^^^^ [2]
@@ -62,33 +251,27 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- Arith.js:57:5
 
-Cannot add `true` and `"foo"` because boolean [1] is incompatible with string [2].
+Cannot add `true` and `"foo"` because boolean [1] is incompatible with string [2]. [incompatible-type]
 
-   Arith.js:57:5
-   57| str(true + "foo"); // error
-           ^^^^^^^^^^^^
-
-References:
    Arith.js:57:5
    57| str(true + "foo"); // error
            ^^^^ [1]
+
+References:
    Arith.js:57:12
    57| str(true + "foo"); // error
                   ^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- Arith.js:58:5
+Error --------------------------------------------------------------------------------------------------- Arith.js:58:13
 
-Cannot add `"foo"` and `null` because null [1] is incompatible with string [2].
+Cannot add `"foo"` and `null` because null [1] is incompatible with string [2]. [incompatible-type]
 
-   Arith.js:58:5
-   58| str("foo" + null); // error
-           ^^^^^^^^^^^^
-
-References:
    Arith.js:58:13
    58| str("foo" + null); // error
                    ^^^^ [1]
+
+References:
    Arith.js:58:5
    58| str("foo" + null); // error
            ^^^^^ [2]
@@ -96,33 +279,27 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- Arith.js:59:5
 
-Cannot add `null` and `"foo"` because null [1] is incompatible with string [2].
+Cannot add `null` and `"foo"` because null [1] is incompatible with string [2]. [incompatible-type]
 
-   Arith.js:59:5
-   59| str(null + "foo"); // error
-           ^^^^^^^^^^^^
-
-References:
    Arith.js:59:5
    59| str(null + "foo"); // error
            ^^^^ [1]
+
+References:
    Arith.js:59:12
    59| str(null + "foo"); // error
                   ^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- Arith.js:60:5
+Error --------------------------------------------------------------------------------------------------- Arith.js:60:13
 
-Cannot add `"foo"` and `undefined` because undefined [1] is incompatible with string [2].
+Cannot add `"foo"` and `undefined` because undefined [1] is incompatible with string [2]. [incompatible-type]
 
-   Arith.js:60:5
-   60| str("foo" + undefined); // error
-           ^^^^^^^^^^^^^^^^^
-
-References:
    Arith.js:60:13
    60| str("foo" + undefined); // error
                    ^^^^^^^^^ [1]
+
+References:
    Arith.js:60:5
    60| str("foo" + undefined); // error
            ^^^^^ [2]
@@ -130,16 +307,13 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- Arith.js:61:5
 
-Cannot add `undefined` and `"foo"` because undefined [1] is incompatible with string [2].
+Cannot add `undefined` and `"foo"` because undefined [1] is incompatible with string [2]. [incompatible-type]
 
-   Arith.js:61:5
-   61| str(undefined + "foo"); // error
-           ^^^^^^^^^^^^^^^^^
-
-References:
    Arith.js:61:5
    61| str(undefined + "foo"); // error
            ^^^^^^^^^ [1]
+
+References:
    Arith.js:61:17
    61| str(undefined + "foo"); // error
                        ^^^^^ [2]
@@ -147,11 +321,11 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- Arith.js:65:6
 
-Cannot add `x` and `y` because mixed [1] could either behave like a string or like a number.
+Cannot add `x` and `y` because mixed [1] could either behave like a string or like a number. [unclear-addition]
 
    Arith.js:65:6
    65|     (x + y); // error
-            ^^^^^
+            ^
 
 References:
    Arith.js:64:15
@@ -161,11 +335,11 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- Arith.js:66:6
 
-Cannot add `x` and `0` because mixed [1] could either behave like a string or like a number.
+Cannot add `x` and `0` because mixed [1] could either behave like a string or like a number. [unclear-addition]
 
    Arith.js:66:6
    66|     (x + 0); // error
-            ^^^^^
+            ^
 
 References:
    Arith.js:64:15
@@ -173,13 +347,13 @@ References:
                      ^^^^^ [1]
 
 
-Error ---------------------------------------------------------------------------------------------------- Arith.js:67:6
+Error --------------------------------------------------------------------------------------------------- Arith.js:67:10
 
-Cannot add `0` and `x` because mixed [1] could either behave like a string or like a number.
+Cannot add `0` and `x` because mixed [1] could either behave like a string or like a number. [unclear-addition]
 
-   Arith.js:67:6
+   Arith.js:67:10
    67|     (0 + x); // error
-            ^^^^^
+                ^
 
 References:
    Arith.js:64:15
@@ -189,11 +363,11 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- Arith.js:68:6
 
-Cannot add `x` and empty string because mixed [1] could either behave like a string or like a number.
+Cannot add `x` and empty string because mixed [1] could either behave like a string or like a number. [unclear-addition]
 
    Arith.js:68:6
    68|     (x + ""); // error
-            ^^^^^^
+            ^
 
 References:
    Arith.js:64:15
@@ -201,13 +375,13 @@ References:
                      ^^^^^ [1]
 
 
-Error ---------------------------------------------------------------------------------------------------- Arith.js:69:6
+Error --------------------------------------------------------------------------------------------------- Arith.js:69:11
 
-Cannot add empty string and `x` because mixed [1] could either behave like a string or like a number.
+Cannot add empty string and `x` because mixed [1] could either behave like a string or like a number. [unclear-addition]
 
-   Arith.js:69:6
+   Arith.js:69:11
    69|     ("" + x); // error
-            ^^^^^^
+                 ^
 
 References:
    Arith.js:64:15
@@ -218,10 +392,11 @@ References:
 Error ---------------------------------------------------------------------------------------------------- Arith.js:70:6
 
 Cannot add `x` and object literal because mixed [1] could either behave like a string or like a number.
+[unclear-addition]
 
    Arith.js:70:6
    70|     (x + {}); // error
-            ^^^^^^
+            ^
 
 References:
    Arith.js:64:15
@@ -229,13 +404,14 @@ References:
                      ^^^^^ [1]
 
 
-Error ---------------------------------------------------------------------------------------------------- Arith.js:71:6
+Error --------------------------------------------------------------------------------------------------- Arith.js:71:11
 
 Cannot add object literal and `x` because mixed [1] could either behave like a string or like a number.
+[unclear-addition]
 
-   Arith.js:71:6
+   Arith.js:71:11
    71|     ({} + x); // error
-            ^^^^^^
+                 ^
 
 References:
    Arith.js:64:15
@@ -243,18 +419,15 @@ References:
                      ^^^^^ [1]
 
 
-Error ---------------------------------------------------------------------------------------------------- Arith.js:78:7
+Error --------------------------------------------------------------------------------------------------- Arith.js:78:11
 
-Cannot add `1` and object literal because object literal [1] is incompatible with number [2].
+Cannot add `1` and object literal because object literal [1] is incompatible with number [2]. [incompatible-type]
 
-   Arith.js:78:7
-   78|     ((1 + {}): number); // error: object !~> number
-             ^^^^^^
-
-References:
    Arith.js:78:11
    78|     ((1 + {}): number); // error: object !~> number
                  ^^ [1]
+
+References:
    Arith.js:78:7
    78|     ((1 + {}): number); // error: object !~> number
              ^ [2]
@@ -262,33 +435,27 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- Arith.js:79:7
 
-Cannot add object literal and `1` because object literal [1] is incompatible with number [2].
+Cannot add object literal and `1` because object literal [1] is incompatible with number [2]. [incompatible-type]
 
-   Arith.js:79:7
-   79|     (({} + 1): number); // error: object !~> number
-             ^^^^^^
-
-References:
    Arith.js:79:7
    79|     (({} + 1): number); // error: object !~> number
              ^^ [1]
+
+References:
    Arith.js:79:12
    79|     (({} + 1): number); // error: object !~> number
                   ^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- Arith.js:80:7
+Error --------------------------------------------------------------------------------------------------- Arith.js:80:13
 
-Cannot add `"1"` and object literal because object literal [1] is incompatible with string [2].
+Cannot add `"1"` and object literal because object literal [1] is incompatible with string [2]. [incompatible-type]
 
-   Arith.js:80:7
-   80|     (("1" + {}): string); // error: object !~> string
-             ^^^^^^^^
-
-References:
    Arith.js:80:13
    80|     (("1" + {}): string); // error: object !~> string
                    ^^ [1]
+
+References:
    Arith.js:80:7
    80|     (("1" + {}): string); // error: object !~> string
              ^^^ [2]
@@ -296,16 +463,13 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- Arith.js:81:7
 
-Cannot add object literal and `"1"` because object literal [1] is incompatible with string [2].
+Cannot add object literal and `"1"` because object literal [1] is incompatible with string [2]. [incompatible-type]
 
-   Arith.js:81:7
-   81|     (({} + "1"): string); // error: object !~> string
-             ^^^^^^^^
-
-References:
    Arith.js:81:7
    81|     (({} + "1"): string); // error: object !~> string
              ^^ [1]
+
+References:
    Arith.js:81:12
    81|     (({} + "1"): string); // error: object !~> string
                   ^^^ [2]
@@ -313,7 +477,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- Arith.js:88:6
 
-Cannot cast `x + z` to empty because string [1] is incompatible with empty [2].
+Cannot cast `x + z` to empty because string [1] is incompatible with empty [2]. [incompatible-cast]
 
    Arith.js:88:6
    88|     (x + z: empty); // error, string ~> empty
@@ -327,7 +491,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- Arith.js:89:6
 
-Cannot cast `z + x` to empty because string [1] is incompatible with empty [2].
+Cannot cast `z + x` to empty because string [1] is incompatible with empty [2]. [incompatible-cast]
 
    Arith.js:89:6
    89|     (z + x: empty); // error, string ~> empty
@@ -339,13 +503,13 @@ References:
                    ^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- Arith.js:93:5
+Error --------------------------------------------------------------------------------------------------- Arith.js:93:13
 
-Cannot get `(x + y).length` because property `length` is missing in `Number` [1].
+Cannot get `(x + y).length` because property `length` is missing in `Number` [1]. [prop-missing]
 
-   Arith.js:93:5
+   Arith.js:93:13
    93|     (x + y).length; // error
-           ^^^^^^^^^^^^^^
+                   ^^^^^^
 
 References:
    Arith.js:93:6
@@ -353,13 +517,13 @@ References:
             ^^^^^ [1]
 
 
-Error ---------------------------------------------------------------------------------------------------- Arith.js:94:5
+Error --------------------------------------------------------------------------------------------------- Arith.js:94:13
 
-Cannot get `(1 + 2).length` because property `length` is missing in `Number` [1].
+Cannot get `(1 + 2).length` because property `length` is missing in `Number` [1]. [prop-missing]
 
-   Arith.js:94:5
+   Arith.js:94:13
    94|     (1 + 2).length; // error
-           ^^^^^^^^^^^^^^
+                   ^^^^^^
 
 References:
    Arith.js:94:6
@@ -369,7 +533,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- exponent.js:7:1
 
-Cannot perform arithmetic operation because string [1] is not a number.
+Cannot perform arithmetic operation because string [1] is not a number. [unsafe-addition]
 
    exponent.js:7:1
    7| y **= 2; // error
@@ -383,7 +547,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- exponent.js:7:1
 
-Cannot assign number to `y` because number [1] is incompatible with string [2].
+Cannot assign number to `y` because number [1] is incompatible with string [2]. [incompatible-type]
 
    exponent.js:7:1
    7| y **= 2; // error
@@ -397,11 +561,11 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- generic.js:3:33
 
-Cannot add `a` and `a` because `A` [1] could either behave like a string or like a number.
+Cannot add `a` and `a` because `A` [1] could either behave like a string or like a number. [unclear-addition]
 
    generic.js:3:33
    3| function f<A>(a: A): A { return a + a; } // error
-                                      ^^^^^
+                                      ^
 
 References:
    generic.js:3:18
@@ -411,83 +575,119 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- generic.js:4:40
 
-Cannot add `a` and `b` because:
- - `A` [1] could either behave like a string or like a number.
- - `B` [2] could either behave like a string or like a number.
+Cannot add `a` and `b` because `A` [1] could either behave like a string or like a number. [unclear-addition]
 
    generic.js:4:40
    4| function f<A,B>(a: A, b: B): A {return a + b; } // error
-                                             ^^^^^
+                                             ^
 
 References:
    generic.js:4:20
    4| function f<A,B>(a: A, b: B): A {return a + b; } // error
                          ^ [1]
+
+
+Error -------------------------------------------------------------------------------------------------- generic.js:4:44
+
+Cannot add `a` and `b` because `B` [1] could either behave like a string or like a number. [unclear-addition]
+
+   generic.js:4:44
+   4| function f<A,B>(a: A, b: B): A {return a + b; } // error
+                                                 ^
+
+References:
    generic.js:4:26
    4| function f<A,B>(a: A, b: B): A {return a + b; } // error
-                               ^ [2]
+                               ^ [1]
 
 
 Error -------------------------------------------------------------------------------------------------- generic.js:5:40
 
-Cannot add `b` and `a` because:
- - `B` [1] could either behave like a string or like a number.
- - `A` [2] could either behave like a string or like a number.
+Cannot add `b` and `a` because `B` [1] could either behave like a string or like a number. [unclear-addition]
 
    generic.js:5:40
    5| function f<A,B>(a: A, b: B): A {return b + a; } // error
-                                             ^^^^^
+                                             ^
 
 References:
    generic.js:5:26
    5| function f<A,B>(a: A, b: B): A {return b + a; } // error
                                ^ [1]
+
+
+Error -------------------------------------------------------------------------------------------------- generic.js:5:44
+
+Cannot add `b` and `a` because `A` [1] could either behave like a string or like a number. [unclear-addition]
+
+   generic.js:5:44
+   5| function f<A,B>(a: A, b: B): A {return b + a; } // error
+                                                 ^
+
+References:
    generic.js:5:20
    5| function f<A,B>(a: A, b: B): A {return b + a; } // error
-                         ^ [2]
+                         ^ [1]
 
 
 Error -------------------------------------------------------------------------------------------------- generic.js:6:40
 
-Cannot add `a` and `b` because:
- - `A` [1] could either behave like a string or like a number.
- - `B` [2] could either behave like a string or like a number.
+Cannot add `a` and `b` because `A` [1] could either behave like a string or like a number. [unclear-addition]
 
    generic.js:6:40
    6| function f<A,B>(a: A, b: B): B {return a + b; } // error
-                                             ^^^^^
+                                             ^
 
 References:
    generic.js:6:20
    6| function f<A,B>(a: A, b: B): B {return a + b; } // error
                          ^ [1]
+
+
+Error -------------------------------------------------------------------------------------------------- generic.js:6:44
+
+Cannot add `a` and `b` because `B` [1] could either behave like a string or like a number. [unclear-addition]
+
+   generic.js:6:44
+   6| function f<A,B>(a: A, b: B): B {return a + b; } // error
+                                                 ^
+
+References:
    generic.js:6:26
    6| function f<A,B>(a: A, b: B): B {return a + b; } // error
-                               ^ [2]
+                               ^ [1]
 
 
 Error -------------------------------------------------------------------------------------------------- generic.js:7:40
 
-Cannot add `b` and `a` because:
- - `B` [1] could either behave like a string or like a number.
- - `A` [2] could either behave like a string or like a number.
+Cannot add `b` and `a` because `B` [1] could either behave like a string or like a number. [unclear-addition]
 
    generic.js:7:40
    7| function f<A,B>(a: A, b: B): B {return b + a; } // error
-                                             ^^^^^
+                                             ^
 
 References:
    generic.js:7:26
    7| function f<A,B>(a: A, b: B): B {return b + a; } // error
                                ^ [1]
+
+
+Error -------------------------------------------------------------------------------------------------- generic.js:7:44
+
+Cannot add `b` and `a` because `A` [1] could either behave like a string or like a number. [unclear-addition]
+
+   generic.js:7:44
+   7| function f<A,B>(a: A, b: B): B {return b + a; } // error
+                                                 ^
+
+References:
    generic.js:7:20
    7| function f<A,B>(a: A, b: B): B {return b + a; } // error
-                         ^ [2]
+                         ^ [1]
 
 
 Error ------------------------------------------------------------------------------------------------------ mult.js:5:5
 
-Cannot perform arithmetic operation because null [1] is not a number.
+Cannot perform arithmetic operation because null [1] is not a number. [unsafe-addition]
 
    5| num(null * 1);
           ^^^^ [1]
@@ -495,7 +695,7 @@ Cannot perform arithmetic operation because null [1] is not a number.
 
 Error ------------------------------------------------------------------------------------------------------ mult.js:6:9
 
-Cannot perform arithmetic operation because null [1] is not a number.
+Cannot perform arithmetic operation because null [1] is not a number. [unsafe-addition]
 
    6| num(1 * null);
               ^^^^ [1]
@@ -503,7 +703,7 @@ Cannot perform arithmetic operation because null [1] is not a number.
 
 Error ----------------------------------------------------------------------------------------------------- mult.js:12:1
 
-Cannot perform arithmetic operation because string [1] is not a number.
+Cannot perform arithmetic operation because string [1] is not a number. [unsafe-addition]
 
    mult.js:12:1
    12| y *= 2; // error
@@ -517,7 +717,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- mult.js:12:1
 
-Cannot assign number to `y` because number [1] is incompatible with string [2].
+Cannot assign number to `y` because number [1] is incompatible with string [2]. [incompatible-type]
 
    mult.js:12:1
    12| y *= 2; // error
@@ -531,7 +731,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ relational.js:4:2
 
-Cannot compare number [1] to string [2].
+Cannot compare number [1] to string [2]. [invalid-compare]
 
    relational.js:4:2
    4| (1 < "foo"); // error
@@ -545,7 +745,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ relational.js:5:2
 
-Cannot compare string [1] to number [2].
+Cannot compare string [1] to number [2]. [invalid-compare]
 
    relational.js:5:2
    5| ("foo" < 1); // error
@@ -559,7 +759,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ relational.js:7:2
 
-Cannot compare number [1] to object literal [2].
+Cannot compare number [1] to object literal [2]. [invalid-compare]
 
    relational.js:7:2
    7| (1 < {foo: 1}); // error
@@ -573,7 +773,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ relational.js:8:2
 
-Cannot compare object literal [1] to number [2].
+Cannot compare object literal [1] to number [2]. [invalid-compare]
 
    relational.js:8:2
    8| ({foo: 1} < 1); // error
@@ -587,7 +787,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ relational.js:9:2
 
-Cannot compare object literal [1] to object literal [2].
+Cannot compare object literal [1] to object literal [2]. [invalid-compare]
 
    relational.js:9:2
    9| ({foo: 1} < {foo: 1}); // error
@@ -601,7 +801,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- relational.js:10:2
 
-Cannot compare string [1] to object literal [2].
+Cannot compare string [1] to object literal [2]. [invalid-compare]
 
    relational.js:10:2
    10| ("foo" < {foo: 1}); // error
@@ -615,7 +815,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- relational.js:11:2
 
-Cannot compare object literal [1] to string [2].
+Cannot compare object literal [1] to string [2]. [invalid-compare]
 
    relational.js:11:2
    11| ({foo: 1} < "foo"); // error
@@ -629,7 +829,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- relational.js:14:2
 
-Cannot compare number [1] to null or undefined [2].
+Cannot compare number [1] to null or undefined [2]. [invalid-compare]
 
    relational.js:14:2
    14| (1 < x); // 2 errors: null !~> number; undefined !~> number
@@ -643,7 +843,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- relational.js:15:2
 
-Cannot compare null or undefined [1] to number [2].
+Cannot compare null or undefined [1] to number [2]. [invalid-compare]
 
    relational.js:15:2
    15| (x < 1); // 2 errors: null !~> number; undefined !~> number
@@ -660,7 +860,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- relational.js:17:2
 
-Cannot compare null [1] to null [2].
+Cannot compare null [1] to null [2]. [invalid-compare]
 
    relational.js:17:2
    17| (null < null); // error
@@ -674,7 +874,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- relational.js:18:2
 
-Cannot compare undefined [1] to null [2].
+Cannot compare undefined [1] to null [2]. [invalid-compare]
 
    relational.js:18:2
    18| (undefined < null); // error
@@ -688,7 +888,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- relational.js:19:2
 
-Cannot compare null [1] to undefined [2].
+Cannot compare null [1] to undefined [2]. [invalid-compare]
 
    relational.js:19:2
    19| (null < undefined); // error
@@ -702,7 +902,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- relational.js:20:2
 
-Cannot compare undefined [1] to undefined [2].
+Cannot compare undefined [1] to undefined [2]. [invalid-compare]
 
    relational.js:20:2
    20| (undefined < undefined); // error
@@ -715,4 +915,4 @@ References:
 
 
 
-Found 52 errors
+Found 70 errors

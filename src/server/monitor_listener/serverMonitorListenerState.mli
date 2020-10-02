@@ -1,4 +1,4 @@
-(**
+(*
  * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
@@ -41,12 +41,12 @@ val cancellation_requests : Lsp.IdSet.t ref
 
 (* APIs to wait *)
 val wait_for_anything :
-  process_updates:(SSet.t -> Utils_js.FilenameSet.t) ->
+  process_updates:(?skip_incompatible:bool -> SSet.t -> Utils_js.FilenameSet.t) ->
   get_forced:(unit -> CheckedSet.t) ->
   unit Lwt.t
 
 val wait_for_updates_for_recheck :
-  process_updates:(SSet.t -> Utils_js.FilenameSet.t) ->
+  process_updates:(?skip_incompatible:bool -> SSet.t -> Utils_js.FilenameSet.t) ->
   get_forced:(unit -> CheckedSet.t) ->
   unit Lwt.t
 
@@ -66,6 +66,6 @@ val wait_and_pop_parallelizable_workload : unit -> WorkloadStream.parallelizable
 val update_env : ServerEnv.env -> ServerEnv.env
 
 val get_and_clear_recheck_workload :
-  process_updates:(SSet.t -> Utils_js.FilenameSet.t) ->
+  process_updates:(?skip_incompatible:bool -> SSet.t -> Utils_js.FilenameSet.t) ->
   get_forced:(unit -> CheckedSet.t) ->
   recheck_workload

@@ -26,23 +26,31 @@ command should print something like this:
 Usage: flow [COMMAND] [PROJECT_ROOT]
 
 Valid values for COMMAND:
-  ast             Print the AST
-  autocomplete    Queries autocompletion information
-  check           Does a full Flow check and prints the results
-  check-contents  Run typechecker on contents from stdin
-  coverage        Shows coverage information for a given file
-  find-module     Resolves a module reference to a file
-  get-def         Gets the definition location of a variable or property
-  get-importers   Gets a list of all importers for one or more given modules
-  get-imports     Get names of all modules imported by one or more given modules
-  init            Initializes a directory to be used as a flow root directory
-  server          Runs a Flow server in the foreground
-  start           Starts a Flow server
-  status          (default) Shows current Flow errors by asking the Flow server
-  stop            Stops a Flow server
-  suggest         Shows type annotation suggestions for given files
-  type-at-pos     Shows the type at a given file and position
-  version         Print version information
+  ast              Print the AST
+  autocomplete     Queries autocompletion information
+  batch-coverage   Shows aggregate coverage information for a group of files or directories
+  check            Does a full Flow check and prints the results
+  check-contents   Run typechecker on contents from stdin
+  config           Read or write the .flowconfig file
+  coverage         Shows coverage information for a given file
+  cycle            Output .dot file for cycle containing the given file
+  find-module      Resolves a module reference to a file
+  find-refs        Gets the reference locations of a variable or property
+  force-recheck    Forces the server to recheck a given list of files
+  get-def          Gets the definition location of a variable or property
+  get-imports      Get names of all modules imported by one or more given modules
+  graph            Outputs dependency graphs of flow repositories
+  init             Initializes a directory to be used as a flow root directory
+  ls               Lists files visible to Flow
+  lsp              Acts as a server for the Language Server Protocol over stdin/stdout [experimental]
+  print-signature  Prints the type signature of a file as extracted in types-first mode
+  server           Runs a Flow server in the foreground
+  start            Starts a Flow server
+  status           (default) Shows current Flow errors by asking the Flow server
+  stop             Stops a Flow server
+  suggest          Provides type annotation suggestions for a given program
+  type-at-pos      Shows the type at a given file and position
+  version          Print version information
 
 Default values if unspecified:
   COMMAND         status
@@ -56,6 +64,7 @@ Status command options:
   --no-auto-start      If the server is not running, do not start it; just exit
   --old-output-format  Use old output format (absolute file names, line and column numbers)
   --one-line           Escapes newlines so that each error prints on one line
+  --quiet              Suppresses the server-status information that would have been printed to stderr
   --retries            Set the number of retries. (default: 3)
   --retry-if-init      retry if the server is initializing (default: true)
   --show-all-errors    Print all errors (the default is to truncate after 50 errors)

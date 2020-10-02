@@ -1,4 +1,4 @@
-(**
+(*
  * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
@@ -64,8 +64,8 @@ and constraints =
 and bounds = {
   mutable lower: (Trace.t * Type.use_op) TypeMap.t;
   mutable upper: Trace.t UseTypeMap.t;
-  mutable lowertvars: Trace.t IMap.t;
-  mutable uppertvars: Trace.t IMap.t;
+  mutable lowertvars: (Trace.t * Type.use_op) IMap.t;
+  mutable uppertvars: (Trace.t * Type.use_op) IMap.t;
 }
 (** The bounds structure carries the evolving constraints on the solution of an
     unresolved tvar.
@@ -94,3 +94,5 @@ let new_bounds () =
   }
 
 let new_unresolved_root () = Root { rank = 0; constraints = Unresolved (new_bounds ()) }
+
+let new_resolved_root t op = Root { rank = 0; constraints = FullyResolved (op, t) }

@@ -1,16 +1,140 @@
-Error --------------------------------------------------------------------------------------------------- symbol.js:4:11
+Error --------------------------------------------------------------------------------------------------- symbol.js:8:17
 
-Cannot call `Symbol` because no more than 1 argument is expected by function type [1].
+Cannot call `Symbol` because no more than 1 argument is expected by function type [1]. [extra-arg]
 
-   symbol.js:4:11
-     4| var WAT = Symbol('foo', 'bar'); // Error - unused argument
-                  ^^^^^^^^^^^^^^^^^^^^
+   symbol.js:8:17
+     8|   Symbol('foo', 'bar'); // Error: unused argument
+                        ^^^^^
 
 References:
-   <BUILTINS>/core.js:103:3
-   103|   static (value?:any): Symbol;
+   <BUILTINS>/core.js:260:3
+   260|   static (value?:any): symbol;
           ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
+Error --------------------------------------------------------------------------------------------------- symbol.js:23:6
 
-Found 1 error
+Cannot cast `x` to boolean because symbol [1] is incompatible with boolean [2]. [incompatible-cast]
+
+   symbol.js:23:6
+   23|     (x: boolean); // Error
+            ^
+
+References:
+   symbol.js:20:12
+   20|   const x: symbol | boolean = true;
+                  ^^^^^^ [1]
+   symbol.js:23:9
+   23|     (x: boolean); // Error
+               ^^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- symbol.js:26:6
+
+Cannot cast `x` to symbol because boolean [1] is incompatible with symbol [2]. [incompatible-cast]
+
+   symbol.js:26:6
+   26|     (x: symbol); // Error
+            ^
+
+References:
+   symbol.js:20:21
+   20|   const x: symbol | boolean = true;
+                           ^^^^^^^ [1]
+   symbol.js:26:9
+   26|     (x: symbol); // Error
+               ^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------------- symbol.js:45:27
+
+Cannot assign `Symbol.toPrimitive` to `y` because symbol [1] is incompatible with `$SymbolMatch` [2].
+[incompatible-type]
+
+   symbol.js:45:27
+    45|   const y: $SymbolMatch = Symbol.toPrimitive; // Error
+                                  ^^^^^^^^^^^^^^^^^^
+
+References:
+   <BUILTINS>/core.js:323:23
+   323|   static toPrimitive: $SymbolToPrimitive;
+                              ^^^^^^^^^^^^^^^^^^ [1]
+   symbol.js:45:12
+    45|   const y: $SymbolMatch = Symbol.toPrimitive; // Error
+                   ^^^^^^^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- symbol.js:62:3
+
+Cannot compare tuple type [1] to symbol [2] with a non-strict equality check. Make sure the arguments are valid, or try
+using strict equality (`===` or `!==`) instead. [invalid-compare]
+
+   symbol.js:62:3
+   62|   x == s; // Error
+         ^
+
+References:
+   symbol.js:61:12
+   61|   const x: [] = [];
+                  ^^ [1]
+   symbol.js:59:12
+   59|   const s: symbol = Symbol();
+                  ^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- symbol.js:63:3
+
+Cannot compare symbol [1] to tuple type [2] with a non-strict equality check. Make sure the arguments are valid, or try
+using strict equality (`===` or `!==`) instead. [invalid-compare]
+
+   symbol.js:63:3
+   63|   s == x; // Error
+         ^
+
+References:
+   symbol.js:59:12
+   59|   const s: symbol = Symbol();
+                  ^^^^^^ [1]
+   symbol.js:61:12
+   61|   const x: [] = [];
+                  ^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- symbol.js:64:3
+
+Cannot compare tuple type [1] to symbol [2] with a non-strict equality check. Make sure the arguments are valid, or try
+using strict equality (`===` or `!==`) instead. [invalid-compare]
+
+   symbol.js:64:3
+   64|   x != s; // Error
+         ^
+
+References:
+   symbol.js:61:12
+   61|   const x: [] = [];
+                  ^^ [1]
+   symbol.js:59:12
+   59|   const s: symbol = Symbol();
+                  ^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- symbol.js:65:3
+
+Cannot compare symbol [1] to tuple type [2] with a non-strict equality check. Make sure the arguments are valid, or try
+using strict equality (`===` or `!==`) instead. [invalid-compare]
+
+   symbol.js:65:3
+   65|   s != x; // Error
+         ^
+
+References:
+   symbol.js:59:12
+   59|   const s: symbol = Symbol();
+                  ^^^^^^ [1]
+   symbol.js:61:12
+   61|   const x: [] = [];
+                  ^^ [2]
+
+
+
+Found 8 errors

@@ -1,4 +1,4 @@
-(**
+(*
  * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
@@ -60,21 +60,17 @@ let read_process name args (in_r, _in_w) (out_r, out_w) (err_r, err_w) =
 
 (* Read the first line in stdout or stderr of an external command. *)
 let read_process_output name args =
-  with_pipe
-  @@ fun in_pipe ->
-  with_pipe @@ (fun out_pipe -> read_process name args in_pipe out_pipe out_pipe)
+  with_pipe @@ fun in_pipe ->
+  with_pipe @@ fun out_pipe -> read_process name args in_pipe out_pipe out_pipe
 
 (* Read the first line in stdout of an external command. *)
 let read_process_stdout name args =
-  with_pipe
-  @@ fun in_pipe ->
-  with_pipe
-  @@ fun out_pipe ->
-  with_pipe @@ (fun err_pipe -> read_process name args in_pipe out_pipe err_pipe)
+  with_pipe @@ fun in_pipe ->
+  with_pipe @@ fun out_pipe ->
+  with_pipe @@ fun err_pipe -> read_process name args in_pipe out_pipe err_pipe
 
 let string_of_file filename =
-  with_in_channel filename
-  @@ fun ic ->
+  with_in_channel filename @@ fun ic ->
   let s = Bytes.create 32759 in
   let b = Buffer.create 1000 in
   let rec iter ic b s =

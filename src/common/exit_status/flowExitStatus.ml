@@ -1,9 +1,10 @@
-(**
+(*
  * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  *)
+
 type t =
   (* Signaled *)
   | Interrupted
@@ -69,6 +70,10 @@ type t =
   | Dfind_unresponsive
   (* A fatal error with Watchman *)
   | Watchman_error
+  (* Shared memory hash table is full *)
+  | Hash_table_full
+  (* Shared memory heap is full *)
+  | Heap_full
   (* A generic something-else-went-wrong *)
   | Unknown_error
 
@@ -116,6 +121,8 @@ let error_code = function
   | Dfind_died -> 99
   | Dfind_unresponsive -> 100
   | Watchman_error -> 101
+  | Hash_table_full -> 102
+  | Heap_full -> 103
   | Unknown_error -> 110
 
 (* Return an error type given an error code *)
@@ -152,8 +159,12 @@ let error_type = function
   | 99 -> Dfind_died
   | 100 -> Dfind_unresponsive
   | 101 -> Watchman_error
+  | 102 -> Hash_table_full
+  | 103 -> Heap_full
   | 110 -> Unknown_error
   | _ -> raise Not_found
+
+let error_type_opt i = (try Some (error_type i) with Not_found -> None)
 
 let unpack_process_status = function
   | Unix.WEXITED n -> ("exit", n)
@@ -195,6 +206,8 @@ let to_string = function
   | Killed_by_monitor -> "Killed_by_monitor"
   | Invalid_saved_state -> "Invalid_saved_state"
   | Restart -> "Restart"
+  | Hash_table_full -> "Hash_table_full"
+  | Heap_full -> "Heap_full"
 
 exception Exit_with of t
 
@@ -209,11 +222,8 @@ let unset_json_mode () = json_mode := None
 let json_props_of_t ?msg t =
   Hh_json.(
     let exit_props =
-      [
-        ("code", JSON_Number (error_code t |> string_of_int));
-        ("reason", JSON_String (to_string t));
-      ]
-      @ Option.value_map msg ~default:[] ~f:(fun msg -> [("msg", JSON_String msg)])
+      [("code", JSON_Number (error_code t |> string_of_int)); ("reason", JSON_String (to_string t))]
+      @ Base.Option.value_map msg ~default:[] ~f:(fun msg -> [("msg", JSON_String msg)])
     in
     [("flowVersion", JSON_String Flow_version.version); ("exit", JSON_Object exit_props)])
 
@@ -237,5 +247,5 @@ let exit ?msg t =
   | Some msg -> prerr_endline msg
   | None -> ());
   print_json ?msg t;
-  FlowEventLogger.exit msg (to_string t);
-  Pervasives.exit (error_code t)
+  if FlowEventLogger.should_log () then FlowEventLogger.exit msg (to_string t);
+  Stdlib.exit (error_code t)

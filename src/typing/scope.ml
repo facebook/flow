@@ -1,4 +1,4 @@
-(**
+(*
  * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
@@ -37,7 +37,7 @@ module State = struct
     | MaybeInitialized -> "MaybeInitialized"
     | Initialized -> "Initialized"
 
-  let compare x y = Pervasives.compare (to_int x) (to_int y)
+  let compare x y = Stdlib.compare (to_int x) (to_int y)
 end
 
 (* entries for vars/lets, consts and types *)
@@ -70,18 +70,21 @@ module Entry = struct
     | VarBinding
     | ConstlikeVarBinding
 
+  let string_of_let_binding_kind = function
+    | LetVarBinding -> "let"
+    | ConstlikeLetVarBinding -> "let"
+    | ClassNameBinding -> "class"
+    | CatchParamBinding -> "catch"
+    | FunctionBinding -> "function"
+    | ParamBinding -> "param"
+    | ConstlikeParamBinding -> "param"
+
   let string_of_value_kind = function
     | Const ConstImportBinding -> "import"
     | Const ConstParamBinding -> "const param"
     | Const ConstVarBinding -> "const"
     | Const EnumNameBinding -> "enum"
-    | Let LetVarBinding -> "let"
-    | Let ConstlikeLetVarBinding -> "let"
-    | Let ClassNameBinding -> "class"
-    | Let CatchParamBinding -> "catch"
-    | Let FunctionBinding -> "function"
-    | Let ParamBinding -> "param"
-    | Let ConstlikeParamBinding -> "param"
+    | Let kind -> string_of_let_binding_kind kind
     | Var VarBinding -> "var"
     | Var ConstlikeVarBinding -> "var"
 
@@ -174,7 +177,7 @@ module Entry = struct
   let string_of_kind = function
     | Value v -> string_of_value_kind v.kind
     | Type _ -> "type"
-    | Class c -> spf "Class %s" (ALoc.debug_to_string c.Type.class_binding_id)
+    | Class c -> spf "Class %s" (ALoc.debug_to_string (c.Type.class_binding_id :> ALoc.t))
 
   let kind_of_value (value : value_binding) = value.kind
 
@@ -322,7 +325,7 @@ let add_entry name entry scope = scope.entries <- SMap.add name entry scope.entr
 let remove_entry name scope = scope.entries <- SMap.remove name scope.entries
 
 (* get entry from scope, or None *)
-let get_entry name scope = SMap.get name scope.entries
+let get_entry name scope = SMap.find_opt name scope.entries
 
 (* havoc entry *)
 let havoc_entry name scope =
@@ -348,7 +351,7 @@ let add_refi key refi scope = scope.refis <- Key_map.add key refi scope.refis
 let remove_refi key scope = scope.refis <- Key_map.remove key scope.refis
 
 (* get entry from scope, or None *)
-let get_refi name scope = Key_map.get name scope.refis
+let get_refi name scope = Key_map.find_opt name scope.refis
 
 (* havoc a refi *)
 let havoc_refi key scope =
@@ -387,7 +390,7 @@ let reset loc scope =
 let add_declare_func_annot name annot scope =
   scope.declare_func_annots <- SMap.add name annot scope.declare_func_annots
 
-let get_declare_func_annot name scope = SMap.get name scope.declare_func_annots
+let get_declare_func_annot name scope = SMap.find_opt name scope.declare_func_annots
 
 let is_lex scope =
   match scope.kind with

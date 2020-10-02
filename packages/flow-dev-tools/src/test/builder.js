@@ -5,13 +5,14 @@
 
 import {execSync, spawn} from 'child_process';
 import {randomBytes} from 'crypto';
-import {createWriteStream} from 'fs';
+import {createWriteStream, realpathSync} from 'fs';
 import {platform, tmpdir} from 'os';
 import {basename, dirname, extname, join, sep as dir_sep} from 'path';
 import {format} from 'util';
 import EventEmitter from 'events';
 
 import * as rpc from 'vscode-jsonrpc';
+import {URI as VscodeURI} from 'vscode-uri';
 
 import type {LSPMessage, RpcConnection} from './lsp';
 
@@ -62,8 +63,8 @@ export class TestBuilder {
   sourceDir: string;
   suiteName: string;
   tmpDir: string;
-  testErrors = [];
-  allowFlowServerToDie = false;
+  testErrors: Array<string> = [];
+  allowFlowServerToDie: boolean = false;
   logStream: stream$Writable | null;
   waitForRecheck: boolean;
 
@@ -515,48 +516,33 @@ export class TestBuilder {
   }
 
   getDirUrl(): string {
-    if (platform() === 'win32') {
-      return 'file:///' + this.dir;
-    } else {
-      return 'file://' + this.dir;
-    }
+    return VscodeURI.file(this.dir).toString();
   }
 
   // sanitizeIncomingLSPMessage: removes a few known fields from server output
   // that are known to be specific to an instance of a test, and replaces
   // them with something fixed.
   sanitizeIncomingLSPMessage(params: any): any {
-    const params2 = JSON.parse(JSON.stringify(params));
+    // LSP sends back document URLs, to files within the test project
+    const dirUrl = this.getDirUrl();
+    const replaceDir = (str: string): string => {
+      let out = str;
+      let index;
+      while ((index = out.indexOf(dirUrl)) >= 0) {
+        out =
+          out.substr(0, index) +
+          '<PLACEHOLDER_PROJECT_URL>' +
+          out.substr(index + dirUrl.length);
+      }
+      return out;
+    };
+
+    const params2 = JSON.parse(replaceDir(JSON.stringify(params)));
 
     // Legacy IDE sends back an array of objects where those objects have
     // a '.flowVersion' field
-    // LSP sends back document URLs, to files within the test project
-    const url = this.getDirUrl();
-    const urlslash = url + dir_sep;
     function replace(obj: Object) {
-      function do_url_replace(str: string): string {
-        if (str.startsWith(urlslash)) {
-          return (
-            '<PLACEHOLDER_PROJECT_URL_SLASH>' + str.substr(urlslash.length)
-          );
-        } else if (str.startsWith(url)) {
-          return '<PLACEHOLDER_PROJECT_URL>' + str.substr(url.length);
-        } else {
-          return str;
-        }
-      }
       for (var k in obj) {
-        // workspace edits contain urls in the keys of a dictionary
-        if (typeof k == 'string') {
-          let new_k = do_url_replace(k);
-
-          if (k != new_k) {
-            obj[new_k] = obj[k];
-            delete obj[k];
-            k = new_k;
-          }
-        }
-
         if (!obj.hasOwnProperty(k)) {
           continue;
         }
@@ -570,8 +556,6 @@ export class TestBuilder {
           case 'string':
             if (k == 'flowVersion') {
               obj[k] = '<VERSION STUBBED FOR TEST>';
-            } else {
-              obj[k] = do_url_replace(obj[k]);
             }
             break;
         }
@@ -602,9 +586,7 @@ export class TestBuilder {
             break;
           case 'string':
             if (obj[k].startsWith('<PLACEHOLDER')) {
-              obj[k] = obj[k]
-                .replace(/^<PLACEHOLDER_PROJECT_URL>/, dirUrl)
-                .replace(/^<PLACEHOLDER_PROJECT_URL_SLASH>/, dirUrl + dir_sep);
+              obj[k] = obj[k].replace(/^<PLACEHOLDER_PROJECT_URL>/, dirUrl);
             }
             break;
         }
@@ -689,7 +671,11 @@ export class TestBuilder {
     lsp.messageEmitter.emit('message');
   }
 
-  waitUntilLSPMessage(timeoutMs: number, expected: string): Promise<void> {
+  waitUntilLSPMessage(
+    timeoutMs: number,
+    expectedMethod: string,
+    expectedContents?: string,
+  ): Promise<void> {
     const lsp = this.lsp;
     const lspMessages = this.lspMessages;
 
@@ -713,7 +699,7 @@ export class TestBuilder {
         const duration = new Date().getTime() - startTime;
         emitter && emitter.removeListener('message', checkMessages);
         timeout && clearTimeout(timeout);
-        await this.log('%s message %s in %dms', verb, expected, duration);
+        await this.log('%s message %s in %dms', verb, expectedMethod, duration);
         resolve();
       };
 
@@ -721,7 +707,9 @@ export class TestBuilder {
       const checkMessages = () => {
         for (; nextMessageIndex < lspMessages.length; nextMessageIndex++) {
           const message = lspMessages[nextMessageIndex];
-          if (Builder.doesMessageMatch(message, expected)) {
+          if (
+            Builder.doesMessageMatch(message, expectedMethod, expectedContents)
+          ) {
             doneWithVerb('Got');
           }
         }
@@ -729,7 +717,7 @@ export class TestBuilder {
 
       // It's unavoidably racey whether the log message gets printed
       // before or after we get the right message
-      this.log('Starting to wait %dms for %s', timeoutMs, expected);
+      this.log('Starting to wait %dms for %s', timeoutMs, expectedMethod);
 
       // Our backlog of messages gets cleared out at the start of each step.
       // If we've already received some messages since the start of the step,
@@ -984,33 +972,41 @@ export default class Builder {
   static builders: Array<TestBuilder> = [];
 
   static getDirForRun(runID: string): string {
-    return join(tmpdir(), 'flow/tests', runID);
+    // tmpdir() is a symlink on macOS, canonicalize it
+    const tmp = realpathSync(tmpdir());
+    return VscodeURI.file(join(tmp, 'flow', 'tests', runID)).fsPath;
   }
 
   // doesMethodMatch(actual, 'M') judges whether the method name of the actual
-  // message was M. And doesMethodMatch(actual, 'M{C1,C2,...}') judges also
+  // message was M. And doesMethodMatch(actual, 'M', '{C1,C2,...}') judges also
   // whether the strings C1, C2, ... were all found in the JSON representation
   // of the actual message.
-  static doesMessageMatch(actual: LSPMessage, expected: string): boolean {
-    const iOpenBrace = expected.indexOf('{');
-    const iCloseBrace = expected.lastIndexOf('}');
-    if (iOpenBrace == -1 || iCloseBrace == -1) {
-      return actual.method === expected;
-    } else {
-      if (actual.method !== expected.substring(0, iOpenBrace)) {
-        return false;
-      }
-      const expectedContents = expected
-        .substring(iOpenBrace + 1, iCloseBrace)
-        .split(',');
-      const json = JSON.stringify(actual);
-      for (const expectedContent of expectedContents) {
-        if (!json.includes(expectedContent)) {
-          return false;
-        }
-      }
+  static doesMessageMatch(
+    actual: LSPMessage,
+    expectedMethod: string,
+    expectedContents?: string,
+  ): boolean {
+    if (actual.method !== expectedMethod) {
+      return false;
+    }
+    if (expectedContents === undefined) {
       return true;
     }
+    if (expectedContents === 'null') {
+      return actual.result !== undefined && actual.result === 'null';
+    }
+    const iOpenBrace = expectedContents.indexOf('{');
+    const iCloseBrace = expectedContents.lastIndexOf('}');
+    const parts = expectedContents
+      .substring(iOpenBrace + 1, iCloseBrace)
+      .split(',');
+    const json = JSON.stringify(actual);
+    for (const part of parts) {
+      if (!json.includes(part)) {
+        return false;
+      }
+    }
+    return true;
   }
 
   constructor(errorCheckCommand: CheckCommand) {
@@ -1026,7 +1022,7 @@ export default class Builder {
     process.on('exit', this.cleanup);
   }
 
-  cleanup = async () => {
+  cleanup: () => Promise<void> = async () => {
     await Promise.all(Builder.builders.map(builder => builder.cleanup()));
   };
 

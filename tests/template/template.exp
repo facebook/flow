@@ -1,6 +1,6 @@
 Error ------------------------------------------------------------------------------------------ tagged_template.js:8:14
 
-Cannot call `tag` with string bound to `x` because string [1] is incompatible with number [2].
+Cannot call `tag` with string bound to `x` because string [1] is incompatible with number [2]. [incompatible-call]
 
    tagged_template.js:8:14
    8|     tag`foo${'bad'}bar${2}`; // error: string !~> number
@@ -12,13 +12,13 @@ References:
                                                  ^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------ tagged_template.js:14:5
+Error ----------------------------------------------------------------------------------------- tagged_template.js:14:21
 
-Cannot call `tag` because no more than 2 arguments are expected by function [1].
+Cannot call `tag` because no more than 2 arguments are expected by function [1]. [extra-arg]
 
-   tagged_template.js:14:5
+   tagged_template.js:14:21
    14|     tag`foo${1}bar${2}`; // error: expected 2 args, got 3
-           ^^^^^^^^^^^^^^^^^^^
+                           ^
 
 References:
    tagged_template.js:13:5
@@ -26,18 +26,15 @@ References:
            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
-Error ------------------------------------------------------------------------------------------ tagged_template.js:21:5
+Error ----------------------------------------------------------------------------------------- tagged_template.js:21:14
 
-Cannot call `tag` because string [1] is incompatible with number [2] in array element.
+Cannot call `tag` because string [1] is incompatible with number [2] in array element. [incompatible-call]
 
-   tagged_template.js:21:5
-   21|     tag`foo${'bad'}`; // error: string !~> number
-           ^^^^^^^^^^^^^^^^
-
-References:
    tagged_template.js:21:14
    21|     tag`foo${'bad'}`; // error: string !~> number
                     ^^^^^ [1]
+
+References:
    tagged_template.js:19:57
    19|     function tag(quasis: Array<string>, ...exprs: Array<number>) {}
                                                                ^^^^^^ [2]
@@ -45,7 +42,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- template.js:5:2
 
-Cannot cast template string to number because string [1] is incompatible with number [2].
+Cannot cast template string to number because string [1] is incompatible with number [2]. [incompatible-cast]
 
    template.js:5:2
    5| (`baz`: number); // error
@@ -59,7 +56,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- template.js:8:8
 
-Cannot coerce object literal to string because object literal [1] should not be coerced.
+Cannot coerce object literal to string because object literal [1] should not be coerced. [incompatible-type]
 
    8| `foo ${{bar: 123}} baz`; // error, object can't be appended
              ^^^^^^^^^^ [1]
@@ -67,7 +64,7 @@ Cannot coerce object literal to string because object literal [1] should not be 
 
 Error ------------------------------------------------------------------------------------------------ template.js:22:12
 
-Cannot coerce `x` to string because boolean [1] should not be coerced.
+Cannot coerce `x` to string because boolean [1] should not be coerced. [incompatible-type]
 
    template.js:22:12
    22|     `foo ${x}`; // error
@@ -81,7 +78,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- template.js:23:8
 
-Cannot coerce `x` to string because boolean [1] should not be coerced.
+Cannot coerce `x` to string because boolean [1] should not be coerced. [incompatible-type]
 
    template.js:23:8
    23|     `${x} bar`; // error
@@ -95,7 +92,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ template.js:24:21
 
-Cannot coerce `x` to string because boolean [1] should not be coerced.
+Cannot coerce `x` to string because boolean [1] should not be coerced. [incompatible-type]
 
    template.js:24:21
    24|     `foo ${'bar'} ${x}`; // error
@@ -109,7 +106,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ template.js:27:12
 
-Cannot coerce `x` to string because mixed [1] should not be coerced.
+Cannot coerce `x` to string because mixed [1] should not be coerced. [incompatible-type]
 
    template.js:27:12
    27|     `foo ${x}`; // error
@@ -123,7 +120,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- template.js:28:8
 
-Cannot coerce `x` to string because mixed [1] should not be coerced.
+Cannot coerce `x` to string because mixed [1] should not be coerced. [incompatible-type]
 
    template.js:28:8
    28|     `${x} bar`; // error
@@ -137,7 +134,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ template.js:29:21
 
-Cannot coerce `x` to string because mixed [1] should not be coerced.
+Cannot coerce `x` to string because mixed [1] should not be coerced. [incompatible-type]
 
    template.js:29:21
    29|     `foo ${'bar'} ${x}`; // error

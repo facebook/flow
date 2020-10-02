@@ -9,8 +9,8 @@
       "range":[58,101],
       "expression":{
         "type":"TypeCastExpression",
-        "loc":{"source":null,"start":{"line":2,"column":1},"end":{"line":2,"column":42}},
-        "range":[59,100],
+        "loc":{"source":null,"start":{"line":2,"column":0},"end":{"line":2,"column":43}},
+        "range":[58,101],
         "expression":{
           "type":"ArrowFunctionExpression",
           "loc":{"source":null,"start":{"line":2,"column":1},"end":{"line":2,"column":17}},

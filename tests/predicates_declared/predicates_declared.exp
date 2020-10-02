@@ -1,0 +1,110 @@
+Error --------------------------------------------------------------------------------------- sanity-conditional.js:5:50
+
+Unexpected token `=`, expected the token `)`
+
+   5| declare function foo(x: string): mixed %checks(x = "1");
+                                                       ^
+
+
+Error ------------------------------------------------------------------------------------- sanity-fall-through.js:12:10
+
+Cannot return `1` because number [1] is incompatible with string [2]. [incompatible-return]
+
+   sanity-fall-through.js:12:10
+   12|   return 1;
+                ^ [1]
+
+References:
+   sanity-fall-through.js:8:33
+    8| function foo(s: Array<string>): string {
+                                       ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------- sanity-invalid-calls.js:10:8
+
+Cannot call `1` because number [1] is not a function. [not-a-function]
+
+   10|   if ((1)(s)) {
+              ^ [1]
+
+
+Error ------------------------------------------------------------------------------------- sanity-invalid-calls.js:14:8
+
+Cannot call `pred + 1` because number [1] is not a function. [not-a-function]
+
+   14|   if ((pred + 1)("s")) {
+              ^^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------- sanity-invalid-calls.js:14:8
+
+Cannot add `pred` and `1` because function type [1] is incompatible with number [2]. [incompatible-type]
+
+   sanity-invalid-calls.js:14:8
+   14|   if ((pred + 1)("s")) {
+              ^^^^
+
+References:
+   sanity-invalid-calls.js:6:22
+    6| declare function pred<T>(x: T): boolean;
+                            ^^^^^^^^^^^^^^^^^^ [1]
+   sanity-invalid-calls.js:14:15
+   14|   if ((pred + 1)("s")) {
+                     ^ [2]
+
+
+Error ------------------------------------------------------------------------------------ sanity-is-string-bug.js:13:14
+
+Cannot call `x.join` because property `join` is missing in `String` [1]. [prop-missing]
+
+   sanity-is-string-bug.js:13:14
+   13|     return x.join();    // error: both string and Array<string> can flow to x
+                    ^^^^
+
+References:
+   sanity-is-string-bug.js:9:17
+    9| function bar(x: string | Array<string>): string {
+                       ^^^^^^ [1]
+
+
+Error -------------------------------------------------------------------------------- sanity-parameter-mismatch.js:10:8
+
+Cannot call `foo` with `3` bound to `types` because number [1] is incompatible with string [2]. [incompatible-call]
+
+   sanity-parameter-mismatch.js:10:8
+   10| foo(3, 3);
+              ^ [1]
+
+References:
+   sanity-parameter-mismatch.js:7:10
+    7|   types: string | Array<string>
+                ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------ sanity-pred-with-body.js:6:34
+
+Cannot declare predicate when a function body is present. [unsupported-syntax]
+
+   6| function pred(x: mixed): boolean %checks(typeof x === "string") { // error: cannot use pred type here
+                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Error --------------------------------------------------------------------------------------- sanity-return-type.js:3:47
+
+Cannot return `Array.isArray(...)` because boolean [1] is incompatible with string [2]. [incompatible-return]
+
+   sanity-return-type.js:3:47
+   3| declare function f2(x: mixed): string %checks(Array.isArray(x));
+                                                    ^^^^^^^^^^^^^^^^ [1]
+
+References:
+   sanity-return-type.js:3:32
+   3| declare function f2(x: mixed): string %checks(Array.isArray(x));
+                                     ^^^^^^ [2]
+
+
+
+Found 9 errors
+
+Only showing the most relevant union/intersection branches.
+To see all branches, re-run Flow with --show-all-branches

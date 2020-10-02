@@ -1,4 +1,4 @@
-(**
+(*
  * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
@@ -7,6 +7,7 @@
 
 open Utils_js
 open Type
+open TypeUtil
 open Reason
 open Flow_js
 
@@ -124,7 +125,7 @@ let rec merge_type cx =
            * sufficient. *)
           | (Some _, None)
           | (None, Some _) ->
-            Some (o1.flags.exact || o2.flags.exact)
+            Some (Obj_type.is_exact o1.flags.obj_kind || Obj_type.is_exact o2.flags.obj_kind)
           (* Covariant fields can be merged. *)
           | (Some (Field (_, _, Polarity.Positive)), Some (Field (_, _, Polarity.Positive))) ->
             Some true
@@ -135,36 +136,39 @@ let rec merge_type cx =
         map1
         map2
     in
-    let merge_dict =
-      match (o1.dict_t, o2.dict_t) with
-      (* If neither object has an indexer, neither will the merged object. *)
-      | (None, None) -> Some None
-      (* If both objects covariant indexers, we can merge them. However, if the
-       * key types are disjoint, the resulting dictionary is not useful. *)
-      | ( Some { key = k1; value = v1; dict_polarity = Polarity.Positive; _ },
-          Some { key = k2; value = v2; dict_polarity = Polarity.Positive; _ } ) ->
-        (* TODO: How to merge indexer names? *)
-        Some
-          (Some
-             {
-               dict_name = None;
-               key = create_intersection (InterRep.make k1 k2 []);
-               value = merge_type cx (v1, v2);
-               dict_polarity = Polarity.Positive;
-             })
-      (* Don't merge objects with possibly incompatible indexers. *)
-      | _ -> None
+    let obj_kind =
+      match (o1.flags.obj_kind, o2.flags.obj_kind) with
+      | (UnsealedInFile s1, UnsealedInFile s2) when s1 = s2 -> UnsealedInFile s1
+      | (UnsealedInFile _, _)
+      | (_, UnsealedInFile _) ->
+        UnsealedInFile None
+      | ( Indexed { key = k1; value = v1; dict_polarity = Polarity.Positive; _ },
+          Indexed { key = k2; value = v2; dict_polarity = Polarity.Positive; _ } ) ->
+        Indexed
+          {
+            dict_name = None;
+            key = create_intersection (InterRep.make k1 k2 []);
+            value = merge_type cx (v1, v2);
+            dict_polarity = Polarity.Positive;
+          }
+      | (Indexed d, _)
+      | (_, Indexed d) ->
+        Indexed d
+      | (Inexact, _)
+      | (_, Inexact) ->
+        Inexact
+      | (Exact, Exact) -> Exact
     in
     let merge_call =
       match (o1.call_t, o2.call_t) with
       | (None, None) -> Some None
       | (Some _, None) ->
-        if o2.flags.exact then
+        if Obj_type.is_exact o2.flags.obj_kind then
           Some o1.call_t
         else
           None
       | (None, Some _) ->
-        if o1.flags.exact then
+        if Obj_type.is_exact o1.flags.obj_kind then
           Some o2.call_t
         else
           None
@@ -178,8 +182,8 @@ let rec merge_type cx =
     let should_merge = SMap.for_all (fun _ x -> x) merge_map in
     (* Don't merge objects with different prototypes. *)
     let should_merge = should_merge && o1.proto_t = o2.proto_t in
-    (match (should_merge, merge_dict, merge_call) with
-    | (true, Some dict, Some call) ->
+    (match (should_merge, obj_kind, merge_call) with
+    | (true, Indexed _, Some call) ->
       let map =
         SMap.merge
           (fun _ p1_opt p2_opt ->
@@ -194,21 +198,9 @@ let rec merge_type cx =
           map2
       in
       let id = Context.generate_property_map cx map in
-      let sealed =
-        match (o1.flags.sealed, o2.flags.sealed) with
-        | (Sealed, Sealed) -> Sealed
-        | (UnsealedInFile s1, UnsealedInFile s2) when s1 = s2 -> UnsealedInFile s1
-        | _ -> UnsealedInFile None
-      in
-      let flags =
-        {
-          sealed;
-          exact = o1.flags.exact && o2.flags.exact;
-          frozen = o1.flags.frozen && o2.flags.frozen;
-        }
-      in
+      let flags = { frozen = o1.flags.frozen && o2.flags.frozen; obj_kind } in
       let reason = locationless_reason (RCustom "object") in
-      mk_object_def_type ~reason ~flags ~dict ~call id o1.proto_t
+      mk_object_def_type ~reason ~flags ~call id o1.proto_t
     | _ -> create_union (UnionRep.make t1 t2 []))
   | (DefT (_, _, ArrT (ArrayAT (t1, ts1))), DefT (_, _, ArrT (ArrayAT (t2, ts2)))) ->
     let tuple_types =
@@ -216,7 +208,7 @@ let rec merge_type cx =
       | (None, _)
       | (_, None) ->
         None
-      | (Some ts1, Some ts2) -> Some (Core_list.map2_exn ~f:(merge_type cx |> curry) ts1 ts2)
+      | (Some ts1, Some ts2) -> Some (Base.List.map2_exn ~f:(merge_type cx |> curry) ts1 ts2)
     in
     DefT
       ( locationless_reason (RCustom "array"),
@@ -228,7 +220,7 @@ let rec merge_type cx =
       ( locationless_reason (RCustom "tuple"),
         bogus_trust (),
         ArrT
-          (TupleAT (merge_type cx (t1, t2), Core_list.map2_exn ~f:(merge_type cx |> curry) ts1 ts2))
+          (TupleAT (merge_type cx (t1, t2), Base.List.map2_exn ~f:(merge_type cx |> curry) ts1 ts2))
       )
   | (DefT (_, _, ArrT (ROArrayAT elemt1)), DefT (_, _, ArrT (ROArrayAT elemt2))) ->
     DefT
@@ -251,8 +243,8 @@ let rec merge_type cx =
 
 let instantiate_poly_t cx t args =
   match t with
-  | DefT (_, _, PolyT (_, type_params, t_, _)) ->
-    let args = Option.value ~default:[] args in
+  | DefT (_, _, PolyT { tparams = type_params; t_out = t_; _ }) ->
+    let args = Base.Option.value ~default:[] args in
     let maximum_arity = Nel.length type_params in
     if List.length args > maximum_arity then (
       Hh_logger.error "Instantiating poly type failed";
@@ -363,6 +355,7 @@ let find_props cx =
 
 let resolve_tvar cx (_, id) =
   let ts = possible_types cx id in
+
   (* The list of types returned by possible_types is often empty, and the
      most common reason is that we don't have enough type coverage to
      resolve id. Thus, we take the unit of merging to be `any`. (Something
@@ -384,7 +377,7 @@ let rec resolve_type cx = function
   | AnnotT (_, t, _) -> resolve_type cx t
   | MergedT (_, uses) ->
     begin
-      match Core_list.(uses >>= possible_types_of_use cx) with
+      match Base.List.(uses >>= possible_types_of_use cx) with
       (* The unit of intersection is normally mixed, but MergedT is hacky and empty
       fits better here *)
       | [] -> locationless_reason REmpty |> EmptyT.make |> with_trust bogus_trust
@@ -399,15 +392,14 @@ let rec extract_type cx this_t =
   | AnnotT _
   | MergedT _ ->
     resolve_type cx this_t |> extract_type cx
-  | OptionalT (_, ty)
+  | OptionalT { reason = _; type_ = ty; use_desc = _ }
   | MaybeT (_, ty) ->
     extract_type cx ty
-  | DefT (_, _, (NullT | VoidT))
-  | InternalT (OptionalChainVoidT _) ->
-    FailureNullishType
+  | DefT (_, _, (NullT | VoidT)) -> FailureNullishType
   | AnyT _ -> FailureAnyType
   | DefT (_, _, InstanceT _) as t -> Success t
   | DefT (_, _, ObjT _) as t -> Success t
+  | DefT (_, _, EnumObjectT _) as t -> Success t
   | ExactT (_, t) -> extract_type cx t
   | ModuleT _ as t -> SuccessModule t
   | ThisTypeAppT (_, c, _, ts_opt) ->
@@ -420,7 +412,7 @@ let rec extract_type cx this_t =
     let inst_t = instantiate_poly_t cx c (Some ts) in
     let inst_t = instantiate_type inst_t in
     extract_type cx inst_t
-  | DefT (_, _, PolyT (_, _, sub_type, _)) ->
+  | DefT (_, _, PolyT { t_out = sub_type; _ }) ->
     (* TODO: replace type parameters with stable/proper names? *)
     extract_type cx sub_type
   | ThisClassT (_, DefT (_, _, InstanceT (static, _, _, _)))
@@ -438,6 +430,7 @@ let rec extract_type cx this_t =
   | DefT (reason, _, SingletonBoolT _)
   | DefT (reason, _, BoolT _) ->
     get_builtin_type cx reason "Boolean" |> extract_type cx
+  | DefT (reason, _, SymbolT) -> get_builtin_type cx reason "Symbol" |> extract_type cx
   | DefT (reason, _, CharSetT _) -> get_builtin_type cx reason "String" |> extract_type cx
   | DefT (_, _, IdxWrapper t) -> extract_type cx t
   | DefT (_, _, ReactAbstractComponentT _) as t -> Success t
@@ -476,10 +469,11 @@ let rec extract_type cx this_t =
   | NullProtoT _
   | ObjProtoT _
   | OpaqueT _
-  | OpenPredT (_, _, _, _)
+  | OpenPredT _
   | ShapeT _
   | ThisClassT _
-  | DefT (_, _, TypeT _) ->
+  | DefT (_, _, TypeT _)
+  | DefT (_, _, EnumT _) ->
     FailureUnhandledType this_t
 
 let rec extract_members ?(exclude_proto_members = false) cx = function
@@ -500,7 +494,6 @@ let rec extract_members ?(exclude_proto_members = false) cx = function
             | Get (loc, t)
             | Set (loc, t)
             (* arbitrarily use the location for the getter. maybe we can send both in the future *)
-            
             | GetSet (loc, t, _, _)
             | Method (loc, t) ->
               (loc, t)
@@ -560,11 +553,24 @@ let rec extract_members ?(exclude_proto_members = false) cx = function
     let members = extract_members_as_map ~exclude_proto_members cx static in
     let prot_members = extract_members_as_map ~exclude_proto_members cx proto in
     Success (AugmentableSMap.augment prot_members ~with_bindings:members)
+  | Success (DefT (enum_reason, trust, EnumObjectT enum)) ->
+    let { members; representation_t; _ } = enum in
+    let enum_t = mk_enum_type ~loc:(def_aloc_of_reason enum_reason) ~trust enum in
+    let proto_members =
+      if exclude_proto_members then
+        SMap.empty
+      else
+        let proto = get_builtin_typeapp cx enum_reason "$EnumProto" [enum_t; representation_t] in
+        (* `$EnumProto` has a null proto, so we set `exclude_proto_members` to true *)
+        extract_members_as_map ~exclude_proto_members:true cx proto
+    in
+    let result = SMap.map (fun member_loc -> (Some member_loc, enum_t)) members in
+    Success (AugmentableSMap.augment proto_members ~with_bindings:result)
   | Success (IntersectionT (_, rep)) ->
     (* Intersection type should autocomplete for every property of
          every type in the intersection *)
     let ts = InterRep.members rep in
-    let members = Core_list.map ~f:(extract_members_as_map ~exclude_proto_members cx) ts in
+    let members = Base.List.map ~f:(extract_members_as_map ~exclude_proto_members cx) ts in
     Success
       (List.fold_left
          (fun acc members -> AugmentableSMap.augment acc ~with_bindings:members)
@@ -582,7 +588,7 @@ let rec extract_members ?(exclude_proto_members = false) cx = function
              | AnyT _ ->
                false
              | _ -> true)
-      |> Core_list.map ~f:(extract_members_as_map ~exclude_proto_members cx)
+      |> Base.List.map ~f:(extract_members_as_map ~exclude_proto_members cx)
       |> intersect_members cx
     in
     Success members
@@ -590,8 +596,7 @@ let rec extract_members ?(exclude_proto_members = false) cx = function
   | SuccessModule t ->
     FailureUnhandledMembers t
 
-and extract ?exclude_proto_members cx =
-  extract_type cx %> extract_members ?exclude_proto_members cx
+and extract ?exclude_proto_members cx = extract_type cx %> extract_members ?exclude_proto_members cx
 
 and extract_members_as_map ~exclude_proto_members cx this_t =
   match extract ~exclude_proto_members cx this_t |> to_command_result with

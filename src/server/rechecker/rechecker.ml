@@ -1,4 +1,4 @@
-(**
+(*
  * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
@@ -44,9 +44,7 @@ module Parallelizable_workload_loop = LwtLoop.Make (struct
     let%lwt () = workload env in
     Lwt.return (wait_for_cancel, env)
 
-  let catch _ exn =
-    let exn = Exception.wrap exn in
-    Exception.reraise exn
+  let catch _ exn = Exception.reraise exn
 end)
 
 let start_parallelizable_workloads env =
@@ -74,14 +72,15 @@ let get_lazy_stats ~options env =
  * FilenameSet. Updates may be coming in from the root, or an include path.
  *
  * If any update can't be processed incrementally, the Flow server will exit *)
-let process_updates ~options env updates =
-  Recheck_updates.(
-    match process_updates ~options ~libs:env.ServerEnv.libs updates with
-    | Core_result.Ok updates -> updates
-    | Core_result.Error { msg; exit_status } ->
-      Hh_logger.fatal "Status: Error";
-      Hh_logger.fatal "%s" msg;
-      FlowExitStatus.exit ~msg exit_status)
+let process_updates ?skip_incompatible ~options env updates =
+  match
+    Recheck_updates.process_updates ?skip_incompatible ~options ~libs:env.ServerEnv.libs updates
+  with
+  | Base.Result.Ok updates -> updates
+  | Base.Result.Error { Recheck_updates.msg; exit_status } ->
+    Hh_logger.fatal "Status: Error";
+    Hh_logger.fatal "%s" msg;
+    FlowExitStatus.exit ~msg exit_status
 
 (* on notification, execute client commands or recheck files *)
 let recheck
@@ -99,32 +98,44 @@ let recheck
   Persistent_connection.send_start_recheck env.connections;
   let options = genv.ServerEnv.options in
   let workers = genv.ServerEnv.workers in
-  let%lwt (profiling, summary, env) =
-    Types_js.recheck
-      ~options
-      ~workers
-      ~updates
-      env
-      ~files_to_force
-      ~file_watcher_metadata
-      ~recheck_reasons
-      ~will_be_checked_files
-  in
-  let lazy_stats = get_lazy_stats ~options env in
-  Persistent_connection.send_end_recheck ~lazy_stats env.connections;
+  let%lwt (profiling, (log_recheck_event, summary_info, env)) =
+    let should_print_summary = Options.should_profile options in
+    Profiling_js.with_profiling_lwt ~label:"Recheck" ~should_print_summary (fun profiling ->
+        let%lwt (log_recheck_event, summary_info, env) =
+          Types_js.recheck
+            ~profiling
+            ~options
+            ~workers
+            ~updates
+            env
+            ~files_to_force
+            ~file_watcher_metadata
+            ~recheck_reasons
+            ~will_be_checked_files
+        in
+        let lazy_stats = get_lazy_stats ~options env in
+        Persistent_connection.send_end_recheck ~lazy_stats env.connections;
 
-  (* We must send "end_recheck" prior to sending errors+warnings so the client *)
-  (* knows that this set of errors+warnings are final ones, not incremental.   *)
-  let calc_errors_and_warnings () =
-    let reader = State_reader.create () in
-    let (errors, warnings, _) = ErrorCollator.get_with_separate_warnings ~reader ~options env in
-    (errors, warnings)
+        (* We must send "end_recheck" prior to sending errors+warnings so the client *)
+        (* knows that this set of errors+warnings are final ones, not incremental.   *)
+        let calc_errors_and_warnings () =
+          let reader = State_reader.create () in
+          let (errors, warnings, _) =
+            ErrorCollator.get_with_separate_warnings ~profiling ~reader ~options env
+          in
+          (errors, warnings)
+        in
+        let errors_reason = LspProt.End_of_recheck { recheck_reasons } in
+        Persistent_connection.update_clients
+          ~clients:env.connections
+          ~errors_reason
+          ~calc_errors_and_warnings;
+        Lwt.return (log_recheck_event, summary_info, env))
   in
-  let errors_reason = LspProt.End_of_recheck { recheck_reasons } in
-  Persistent_connection.update_clients
-    ~clients:env.connections
-    ~errors_reason
-    ~calc_errors_and_warnings;
+  log_recheck_event ~profiling;
+
+  let duration = Profiling_js.get_profiling_duration profiling in
+  let summary = ServerStatus.{ duration; info = summary_info } in
 
   MonitorRPC.status_update ~event:(ServerStatus.Finishing_up summary);
   Lwt.return (profiling, env)
@@ -132,7 +143,7 @@ let recheck
 (* Runs a function which should be canceled if we are notified about any file changes. After the
  * thread is canceled, post_cancel is called and its result returned *)
 let run_but_cancel_on_file_changes ~options env ~get_forced ~f ~pre_cancel ~post_cancel =
-  let process_updates = process_updates ~options env in
+  let process_updates ?skip_incompatible = process_updates ?skip_incompatible ~options env in
   (* We don't want to start running f until we're in the try block *)
   let (waiter, wakener) = Lwt.task () in
   let run_thread =
@@ -162,7 +173,7 @@ let run_but_cancel_on_file_changes ~options env ~get_forced ~f ~pre_cancel ~post
  * to include the new changes *)
 let rec recheck_single
     ?(files_to_recheck = FilenameSet.empty)
-    ?(files_to_force = CheckedSet.empty)
+    ~files_to_force
     ?(file_watcher_metadata = MonitorProt.empty_file_watcher_metadata)
     ?(recheck_reasons_list_rev = [])
     genv
@@ -170,7 +181,7 @@ let rec recheck_single
   ServerMonitorListenerState.(
     let env = update_env env in
     let options = genv.ServerEnv.options in
-    let process_updates = process_updates ~options env in
+    let process_updates ?skip_incompatible = process_updates ?skip_incompatible ~options env in
     (* This ref is an estimate of the files which will be checked by the time the recheck is done.
      * As the recheck progresses, the estimate will get better. We use this estimate to prevent
      * canceling the recheck to force a file which we were already going to check
@@ -178,9 +189,7 @@ let rec recheck_single
      * This early estimate is not a very good estimate, since it's missing new dependents and
      * dependencies. However it should be good enough to prevent rechecks continuously restarting as
      * the server gets spammed with autocomplete requests *)
-    let will_be_checked_files =
-      ref (CheckedSet.union env.ServerEnv.checked_files files_to_force)
-    in
+    let will_be_checked_files = ref (CheckedSet.union env.ServerEnv.checked_files files_to_force) in
     let get_forced () = !will_be_checked_files in
     let workload = get_and_clear_recheck_workload ~process_updates ~get_forced in
     let files_to_recheck = FilenameSet.union files_to_recheck workload.files_to_recheck in
@@ -249,12 +258,9 @@ let rec recheck_single
 let recheck_loop =
   (* It's not obvious to Mr Gabe how we should merge together the profiling info from multiple
    * rechecks. But something is better than nothing... *)
-  let rec loop
-      ?(files_to_recheck = FilenameSet.empty)
-      ?(files_to_force = CheckedSet.empty)
-      ?(profiling = [])
-      genv
-      env =
+  let rec loop ~profiling genv env =
+    let files_to_recheck = FilenameSet.empty in
+    let files_to_force = CheckedSet.empty in
     match%lwt recheck_single ~files_to_recheck ~files_to_force genv env with
     | Error env ->
       (* No more work to do for now *)
@@ -263,6 +269,6 @@ let recheck_loop =
       (* We just finished a recheck. Let's see if there's any more stuff to recheck *)
       loop ~profiling:(recheck_profiling :: profiling) genv env
   in
-  (fun genv env -> loop genv env)
+  (fun genv env -> loop ~profiling:[] genv env)
 
-let recheck_single ?files_to_force genv env = recheck_single ?files_to_force genv env
+let recheck_single ~files_to_force genv env = recheck_single ~files_to_force genv env

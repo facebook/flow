@@ -1,23 +1,40 @@
-Error ---------------------------------------------------------------------------------------------------- test.js:12:18
+Error ----------------------------------------------------------------------------------------------------- dep2.js:4:18
 
-Cannot assign `buffer.INSPECT_MAX_BYTES` to `b` because number [1] is incompatible with boolean [2].
+Cannot assign `dep.INSPECT_MAX_BYTES` to `b` because number [1] is incompatible with boolean [2]. [incompatible-type]
 
-   test.js:12:18
-    12| var b: boolean = buffer.INSPECT_MAX_BYTES; // error, number ~/> boolean
-                         ^^^^^^^^^^^^^^^^^^^^^^^^
+   dep2.js:4:18
+   4| var b: boolean = dep.INSPECT_MAX_BYTES; // error, number ~/> boolean
+                       ^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/node.js:127:34
-   127|   declare var INSPECT_MAX_BYTES: number;
-                                         ^^^^^^ [1]
+   lib.js:2:34
+   2|   declare var INSPECT_MAX_BYTES: number;
+                                       ^^^^^^ [1]
+   dep2.js:4:8
+   4| var b: boolean = dep.INSPECT_MAX_BYTES; // error, number ~/> boolean
+             ^^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:12:18
+
+Cannot assign `buffer.INSPECT_MAX_BYTES` to `b` because number [1] is incompatible with boolean [2]. [incompatible-type]
+
+   test.js:12:18
+   12| var b: boolean = buffer.INSPECT_MAX_BYTES; // error, number ~/> boolean
+                        ^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   lib.js:2:34
+    2|   declare var INSPECT_MAX_BYTES: number;
+                                        ^^^^^^ [1]
    test.js:12:8
-    12| var b: boolean = buffer.INSPECT_MAX_BYTES; // error, number ~/> boolean
-               ^^^^^^^ [2]
+   12| var b: boolean = buffer.INSPECT_MAX_BYTES; // error, number ~/> boolean
+              ^^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- test.js:22:23
 
-Cannot resolve module `./buffer`.
+Cannot resolve module `./buffer`. [cannot-resolve-module]
 
    22| var buffer2 = require("./buffer");
                              ^^^^^^^^^^
@@ -25,11 +42,11 @@ Cannot resolve module `./buffer`.
 
 Error ---------------------------------------------------------------------------------------------------- test.js:25:23
 
-Cannot resolve module `./buffer.js`.
+Cannot resolve module `./buffer.js`. [cannot-resolve-module]
 
    25| var buffer3 = require("./buffer.js");
                              ^^^^^^^^^^^^^
 
 
 
-Found 3 errors
+Found 4 errors

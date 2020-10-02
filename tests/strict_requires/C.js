@@ -1,5 +1,5 @@
 /* @flow */
-var o = {
+const o = {
     A: require('./A'),
     ...require('./B'),
 };

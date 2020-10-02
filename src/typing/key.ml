@@ -1,4 +1,4 @@
-(**
+(*
  * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
@@ -20,7 +20,7 @@ let rec string_of_key (base, projs) =
   ^ String.concat
       ""
       ( List.rev projs
-      |> Core_list.map ~f:(function
+      |> Base.List.map ~f:(function
              | Prop name -> spf ".%s" name
              | PrivateField name -> spf "private.%s" name
              | Elem expr -> spf "[%s]" (string_of_key expr)) )
@@ -38,7 +38,7 @@ and proj_uses_propname ~private_ propname = function
     uses_propname ~private_ propname key || proj_uses_propname ~private_ propname tail
   | [] -> false
 
-let compare = Pervasives.compare
+let compare = Stdlib.compare
 
 let is_simple (_, ps) = List.length ps = 0
 

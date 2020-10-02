@@ -194,7 +194,7 @@ class TestStepFirstOrSecondStage extends TestStep {
     return ret;
   }
 
-  _cloneWithAssertion(assertion: ErrorAssertion) {
+  _cloneWithAssertion(assertion: ErrorAssertion): TestStepSecondStage {
     const ret = new TestStepSecondStage(this);
     ret._assertions.push(assertion);
     return ret;
@@ -318,6 +318,14 @@ export class TestStepFirstStage extends TestStepFirstOrSecondStage {
         completion: {},
         hover: {},
         definition: {},
+        signatureHelp: {},
+        codeAction: {
+          codeActionLiteralSupport: {
+            codeActionKind: {
+              valueSet: ['quickfix'],
+            },
+          },
+        },
       },
       window: {status: {}, progress: {}, actionRequired: {}},
       telemetry: {connectionStatus: {}},
@@ -350,17 +358,24 @@ export class TestStepFirstStage extends TestStepFirstOrSecondStage {
     const timeoutMs = timeoutMsOpt || 60000;
     const initParams = initParamsOpt || this.lspInitializeParams;
 
-    const expected = 'telemetry/connectionStatus{true}';
+    const expectedMethod = 'telemetry/connectionStatus';
+    const expectedContents = '{true}';
     const ret = this._cloneWithAction(async (builder, env) => {
       await builder.createLSPConnection();
       const promise = builder.sendLSPRequestAndWaitForResponse('initialize', [
         initParams,
       ]); // discarding the promise; instead we wait in the next statement...
-      await builder.waitUntilLSPMessage(timeoutMs, expected);
+      await builder.waitUntilLSPMessage(
+        timeoutMs,
+        expectedMethod,
+        expectedContents,
+      );
     })._cloneWithAssertion((reason, env) => {
       const isConnected = env
         .getLSPMessagesSinceStartOfStep()
-        .some(msg => Builder.doesMessageMatch(msg, expected));
+        .some(msg =>
+          Builder.doesMessageMatch(msg, expectedMethod, expectedContents),
+        );
       const suggestion = {
         method: 'lspStartAndConnect',
         args: [timeoutMs * 2],
@@ -433,46 +448,57 @@ export class TestStepFirstStage extends TestStepFirstOrSecondStage {
     return ret;
   };
 
-  waitUntilLSPMessage: (number, string) => TestStepFirstStage = (
-    timeoutMs,
-    method,
-  ) => {
+  waitUntilLSPMessage: (
+    timeout: number,
+    expectedMethod: string,
+    expectedContents?: string,
+  ) => TestStepFirstStage = (timeoutMs, method, contents) => {
     const ret = this._cloneWithAction(
       async (builder, env) =>
-        await builder.waitUntilLSPMessage(timeoutMs, method),
+        await builder.waitUntilLSPMessage(timeoutMs, method, contents),
     );
     ret._readsIdeMessages = true;
     return ret;
   };
 
-  // verifyAllLSPMessagesInStep(expects=['A','B{C,D}'], ignores=['B','E'])
+  // verifyAllLSPMessagesInStep(expects=['A',['B','{C,D}']], ignores=['B','E'])
   // will look at all the actual messages that arrived in this step.
-  // In this case there must be an "A", followed by a "B" which has
-  // the strings C and D in its JSON representation (up to whitespace).
+  //
+  // In this case there must be an "A", with any contents, followed by a "B"
+  // which has the strings C and D in its JSON representation (up to whitespace).
+  //
   // It's okay if there are unexpected messages so long as they're in
   // ignores list - in this case we'd ignore any "B" (either because it came
   // in the wrong order or because it didn't have C and D), and ignore any "E".
   // But if there are unexpected messages not in the ignore list, then we fail.
   verifyAllLSPMessagesInStep: (
-    Array<string>,
-    Array<string>,
+    $ReadOnlyArray<string | [string, string]>,
+    $ReadOnlyArray<string | [string, string]>,
   ) => TestStepSecondStage = (expects, ignores) => {
     const assertLoc = searchStackForTestAssertion();
     const ret = this._cloneWithAssertion((reason, env) => {
       const actualMessages = env.getLSPMessagesSinceStartOfStep();
       let actuals: Array<string> = [];
       let iExpect = 0;
+      let doesMatch = (
+        actual: LSPMessage,
+        expected: string | [string, string],
+      ) => {
+        if (typeof expected === 'string') {
+          return Builder.doesMessageMatch(actual, expected);
+        } else {
+          return Builder.doesMessageMatch(actual, expected[0], expected[1]);
+        }
+      };
       for (let iActual = 0; iActual < actualMessages.length; iActual++) {
         if (
           iExpect < expects.length &&
-          Builder.doesMessageMatch(actualMessages[iActual], expects[iExpect])
+          doesMatch(actualMessages[iActual], expects[iExpect])
         ) {
-          actuals.push(expects[iExpect]);
+          actuals.push(expects[iExpect].toString());
           iExpect++;
         } else if (
-          ignores.some(ignore =>
-            Builder.doesMessageMatch(actualMessages[iActual], ignore),
-          )
+          ignores.some(ignore => doesMatch(actualMessages[iActual], ignore))
         ) {
           // ignore it
         } else {

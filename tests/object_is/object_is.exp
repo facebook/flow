@@ -1,32 +1,32 @@
 Error ----------------------------------------------------------------------------------------------- object_is.js:20:17
 
-Cannot assign `Object.is(...)` to `b` because boolean [1] is incompatible with string [2].
+Cannot assign `Object.is(...)` to `b` because boolean [1] is incompatible with string [2]. [incompatible-type]
 
    object_is.js:20:17
-   20| var b: string = Object.is('a', 'a');
-                       ^^^^^^^^^^^^^^^^^^^
+    20| var b: string = Object.is('a', 'a');
+                        ^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:69:31
-   69|     static is<T>(a: T, b: T): boolean;
-                                     ^^^^^^^ [1]
+   <BUILTINS>/core.js:178:31
+   178|     static is<T>(a: T, b: T): boolean;
+                                      ^^^^^^^ [1]
    object_is.js:20:8
-   20| var b: string = Object.is('a', 'a');
-              ^^^^^^ [2]
+    20| var b: string = Object.is('a', 'a');
+               ^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------- object_is.js:22:18
+Error ----------------------------------------------------------------------------------------------- object_is.js:22:38
 
-Cannot call method `is` because no more than 2 arguments are expected by function type [1].
+Cannot call method `is` because no more than 2 arguments are expected by function type [1]. [extra-arg]
 
-   object_is.js:22:18
-   22| var d: boolean = Object.is('a', 'b', 'c'); // Error - 'c' is unused
-                        ^^^^^^^^^^^^^^^^^^^^^^^^
+   object_is.js:22:38
+    22| var d: boolean = Object.is('a', 'b', 'c'); // Error - 'c' is unused
+                                             ^^^
 
 References:
-   <BUILTINS>/core.js:69:5
-   69|     static is<T>(a: T, b: T): boolean;
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   <BUILTINS>/core.js:178:5
+   178|     static is<T>(a: T, b: T): boolean;
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
 

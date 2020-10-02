@@ -2,7 +2,7 @@
 Test a:
 Error ------------------------------------------------------------------------------------------------------- a1.js:3:42
 
-Cannot return `5` because number [1] is incompatible with string [2].
+Cannot return `5` because number [1] is incompatible with string [2]. [incompatible-return]
 
    a1.js:3:42
    3| function foo(x: number): string { return 5; }
@@ -14,13 +14,13 @@ References:
                                ^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------------- a2.js:5:22
+Error ------------------------------------------------------------------------------------------------------- a2.js:5:23
 
-Cannot call `foo` with empty string bound to `x` because string [1] is incompatible with number [2].
+Cannot call `foo` with empty string bound to `x` because string [1] is incompatible with number [2]. [incompatible-call]
 
-   a2.js:5:22
-   5| module.exports = foo("");
-                           ^^ [1]
+   a2.js:5:23
+   5| module.exports = (foo(""): string);
+                            ^^ [1]
 
 References:
    a1.js:3:17
@@ -30,13 +30,30 @@ References:
 
 
 Found 2 errors
-Error ------------------------------------------------------------------------------------------------------- a2.js:5:22
+Error ------------------------------------------------------------------------------------------------------- a2.js:5:19
 
-Cannot call `foo` with empty string bound to `x` because string [1] is incompatible with number [2].
+Cannot cast `foo(...)` to string because number [1] is incompatible with string [2]. [incompatible-cast]
 
-   a2.js:5:22
-   5| module.exports = foo("");
-                           ^^ [1]
+   a2.js:5:19
+   5| module.exports = (foo(""): string);
+                        ^^^^^^^
+
+References:
+   a1.js:3:26
+   3| function foo(x: number): number { return 5; }
+                               ^^^^^^ [1]
+   a2.js:5:28
+   5| module.exports = (foo(""): string);
+                                 ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------------- a2.js:5:23
+
+Cannot call `foo` with empty string bound to `x` because string [1] is incompatible with number [2]. [incompatible-call]
+
+   a2.js:5:23
+   5| module.exports = (foo(""): string);
+                            ^^ [1]
 
 References:
    a1.js:3:17
@@ -44,25 +61,11 @@ References:
                       ^^^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------------------------- a3.js:5:2
-
-Cannot cast `five + five` to string because number [1] is incompatible with string [2].
-
-   a3.js:5:2
-   5| (five + five: string);
-       ^^^^^^^^^^^ [1]
-
-References:
-   a3.js:5:15
-   5| (five + five: string);
-                    ^^^^^^ [2]
-
-
 
 Found 2 errors
 Error -------------------------------------------------------------------------------------------------------- a1.js:5:5
 
-Cannot call `foo` with empty string bound to `x` because string [1] is incompatible with number [2].
+Cannot call `foo` with empty string bound to `x` because string [1] is incompatible with number [2]. [incompatible-call]
 
    a1.js:5:5
    5| foo("");
@@ -74,13 +77,30 @@ References:
                       ^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------------- a2.js:5:22
+Error ------------------------------------------------------------------------------------------------------- a2.js:5:19
 
-Cannot call `foo` with empty string bound to `x` because string [1] is incompatible with number [2].
+Cannot cast `foo(...)` to string because number [1] is incompatible with string [2]. [incompatible-cast]
 
-   a2.js:5:22
-   5| module.exports = foo("");
-                           ^^ [1]
+   a2.js:5:19
+   5| module.exports = (foo(""): string);
+                        ^^^^^^^
+
+References:
+   a1.js:3:26
+   3| function foo(x: number): number { return 5; }
+                               ^^^^^^ [1]
+   a2.js:5:28
+   5| module.exports = (foo(""): string);
+                                 ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------------- a2.js:5:23
+
+Cannot call `foo` with empty string bound to `x` because string [1] is incompatible with number [2]. [incompatible-call]
+
+   a2.js:5:23
+   5| module.exports = (foo(""): string);
+                            ^^ [1]
 
 References:
    a1.js:3:17
@@ -88,36 +108,25 @@ References:
                       ^^^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------------------------- a3.js:5:2
-
-Cannot cast `five + five` to string because number [1] is incompatible with string [2].
-
-   a3.js:5:2
-   5| (five + five: string);
-       ^^^^^^^^^^^ [1]
-
-References:
-   a3.js:5:15
-   5| (five + five: string);
-                    ^^^^^^ [2]
-
-
 
 Found 3 errors
 
 Test b:
-Error -------------------------------------------------------------------------------------------------------- b3.js:5:2
+Error ------------------------------------------------------------------------------------------------------- b1.js:6:19
 
-Cannot cast `new D()` to `C` because `D` [1] is incompatible with `C` [2].
+Cannot assign `bar()` to `X` because `E` [1] is incompatible with `C` [2]. [incompatible-type]
 
-   b3.js:5:2
-   5| (new D: C);
-       ^^^^^ [1]
+   b1.js:6:19
+   6| let X: typeof C = bar();
+                        ^^^^^
 
 References:
-   b3.js:5:9
-   5| (new D: C);
-              ^ [2]
+   b0.js:4:7
+   4| class E { x: C; }
+            ^ [1]
+   b0.js:3:7
+   3| class C { x: C; }
+            ^ [2]
 
 
 
@@ -128,7 +137,7 @@ Test c:
 Error -------------------------------------------------------------------------------------------------------- c2.js:6:7
 
 Cannot call `foo` with object literal bound to `props` because property `x` is missing in object literal [1] but exists
-in object type [2].
+in object type [2]. [prop-missing]
 
    c2.js:6:7
    6|   foo({ y: 0 });
@@ -143,7 +152,7 @@ References:
 Error -------------------------------------------------------------------------------------------------------- c3.js:5:5
 
 Cannot call `bar` with object literal bound to `props` because property `y` is missing in object literal [1] but exists
-in object type [2].
+in object type [2]. [prop-missing]
 
    c3.js:5:5
    5| bar({ x: 0 });
@@ -160,7 +169,7 @@ Found 2 errors
 Error -------------------------------------------------------------------------------------------------------- c3.js:5:5
 
 Cannot call `bar` with object literal bound to `props` because property `y` is missing in object literal [1] but exists
-in object type [2].
+in object type [2]. [prop-missing]
 
    c3.js:5:5
    5| bar({ x: 0 });
@@ -178,16 +187,16 @@ Found 1 error
 Test d:
 Error ------------------------------------------------------------------------------------------------------- d2.js:4:19
 
-Cannot assign `x` to `y` because `B` [1] is incompatible with `A` [2].
+Cannot assign `x` to `y` because `B` [1] is incompatible with `A` [2]. [incompatible-type]
 
    d2.js:4:19
    4| export var y: A = x;
                         ^
 
 References:
-   d1.js:5:16
-   5| export var x = new B;
-                     ^^^^^ [1]
+   d1.js:5:15
+   5| export var x: B = new B;
+                    ^ [1]
    d2.js:4:15
    4| export var y: A = x;
                     ^ [2]
@@ -199,7 +208,7 @@ Found 1 error
 Test e:
 Error ------------------------------------------------------------------------------------------------------- e2.js:6:10
 
-Cannot return object literal because object literal [1] is incompatible with `Action` [2].
+Cannot return object literal because object literal [1] is incompatible with `Action` [2]. [incompatible-return]
 
    e2.js:6:10
    6|   return { type: 'QUX' };
@@ -219,7 +228,7 @@ No errors!
 Test f:
 Error -------------------------------------------------------------------------------------------------------- f2.js:4:2
 
-Cannot cast `c` to object type because string [1] is incompatible with number [2] in property `x`.
+Cannot cast `c` to object type because string [1] is incompatible with number [2] in property `x`. [incompatible-cast]
 
    f2.js:4:2
    4| (c: { x: number });
@@ -240,7 +249,7 @@ No errors!
 No errors!
 Error -------------------------------------------------------------------------------------------------------- f2.js:4:2
 
-Cannot cast `c` to object type because string [1] is incompatible with number [2] in property `x`.
+Cannot cast `c` to object type because string [1] is incompatible with number [2] in property `x`. [incompatible-cast]
 
    f2.js:4:2
    4| (c: { x: number });
@@ -264,7 +273,7 @@ No errors!
 Test h:
 Error ------------------------------------------------------------------------------------------------------- h2.js:3:15
 
-Cannot import `Foo` because there is no `Foo` export in `./h1`.
+Cannot import `Foo` because there is no `Foo` export in `./h1`. [missing-export]
 
    3| import type { Foo } from './h1';
                     ^^^
@@ -274,24 +283,24 @@ Cannot import `Foo` because there is no `Foo` export in `./h1`.
 Found 1 error
 
 Test i:
-Error -------------------------------------------------------------------------------------------------------- i2.js:5:1
+Error -------------------------------------------------------------------------------------------------------- i2.js:5:5
 
-Cannot assign `0` to `foo.p` because property `p` is not writable.
+Cannot assign `0` to `foo.p` because property `p` is not writable. [cannot-write]
 
    5| foo.p = 0;
-      ^^^^^
+          ^
 
 
 
 Found 1 error
 
 Test j:
-Error -------------------------------------------------------------------------------------------------------- j2.js:5:1
+Error -------------------------------------------------------------------------------------------------------- j2.js:5:5
 
-Cannot assign `0` to `foo.p` because property `p` is not writable.
+Cannot assign `0` to `foo.p` because property `p` is not writable. [cannot-write]
 
    5| foo.p = 0;
-      ^^^^^
+          ^
 
 
 
@@ -303,7 +312,7 @@ No errors!
 Test m:
 Error -------------------------------------------------------------------------------------------------------- m3.js:6:2
 
-Cannot cast `x` to `T` because string [1] is incompatible with number [2] in type argument `X` [3].
+Cannot cast `x` to `T` because string [1] is incompatible with number [2] in type argument `X` [3]. [incompatible-cast]
 
    m3.js:6:2
    6| (x: T<number>);
@@ -325,13 +334,13 @@ References:
 Found 1 error
 
 Test k:
-Error --------------------------------------------------------------------------------------------------------- k.js:4:2
+Error --------------------------------------------------------------------------------------------------------- k.js:4:4
 
-Cannot get `x.p` because property `p` is missing in `LibK` [1].
+Cannot get `x.p` because property `p` is missing in `LibK` [1]. [prop-missing]
 
-   k.js:4:2
+   k.js:4:4
    4| (x.p: string);
-       ^^^
+         ^
 
 References:
    k.js:3:16
@@ -342,13 +351,13 @@ References:
 
 Found 1 error
 No errors!
-Error --------------------------------------------------------------------------------------------------------- k.js:4:2
+Error --------------------------------------------------------------------------------------------------------- k.js:4:4
 
-Cannot get `x.p` because property `p` is missing in `LibK` [1].
+Cannot get `x.p` because property `p` is missing in `LibK` [1]. [prop-missing]
 
-   k.js:4:2
+   k.js:4:4
    4| (x.p: string);
-       ^^^
+         ^
 
 References:
    k.js:3:16

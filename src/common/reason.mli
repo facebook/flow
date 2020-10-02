@@ -1,4 +1,4 @@
-(**
+(*
  * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
@@ -20,6 +20,7 @@ type 'loc virtual_reason_desc =
   | REmpty
   | RVoid
   | RNull
+  | RVoidedNull
   | RSymbol
   | RExports
   | RNullOrVoid
@@ -41,6 +42,7 @@ type 'loc virtual_reason_desc =
   | RROArrayType
   | RTupleType
   | RTupleElement
+  | RTupleLength of int
   | RTupleOutOfBoundsAccess
   | RFunction of reason_desc_function
   | RFunctionType
@@ -60,7 +62,8 @@ type 'loc virtual_reason_desc =
   | RTemplateString
   | RUnknownString
   | RUnionEnum
-  | REnum
+  | REnum of string
+  | REnumRepresentation of 'loc virtual_reason_desc
   | RGetterSetterProperty
   | RThis
   | RThisType
@@ -96,7 +99,7 @@ type 'loc virtual_reason_desc =
   | RObjectMap
   | RObjectMapi
   | RType of string
-  | RTypeAlias of string * bool * 'loc virtual_reason_desc
+  | RTypeAlias of string * 'loc option * 'loc virtual_reason_desc
   | ROpaqueType of string
   | RTypeParam of string * ('loc virtual_reason_desc * 'loc) * ('loc virtual_reason_desc * 'loc)
   | RTypeof of string
@@ -129,10 +132,11 @@ type 'loc virtual_reason_desc =
   | RImportStarTypeOf of string
   | RImportStar of string
   | RDefaultImportedType of string * string
+  | RAsyncImport
   | RCode of string
   | RCustom of string
   | RPolyType of 'loc virtual_reason_desc
-  | RPolyTest of string * 'loc virtual_reason_desc
+  | RPolyTest of string * 'loc virtual_reason_desc * ALoc.id * bool
   | RExactType of 'loc virtual_reason_desc
   | ROptional of 'loc virtual_reason_desc
   | RMaybe of 'loc virtual_reason_desc
@@ -147,13 +151,13 @@ type 'loc virtual_reason_desc =
   | RSuperOf of 'loc virtual_reason_desc
   | RFrozen of 'loc virtual_reason_desc
   | RBound of 'loc virtual_reason_desc
-  | RVarianceCheck of 'loc virtual_reason_desc
   | RPredicateOf of 'loc virtual_reason_desc
   | RPredicateCall of 'loc virtual_reason_desc
   | RPredicateCallNeg of 'loc virtual_reason_desc
   | RRefined of 'loc virtual_reason_desc
   | RIncompatibleInstantiation of string
   | RSpreadOf of 'loc virtual_reason_desc
+  | RShapeOf of 'loc virtual_reason_desc
   | RObjectPatternRestProp
   | RArrayPatternRestProp
   | RCommonJSExports of string
@@ -172,6 +176,9 @@ type 'loc virtual_reason_desc =
   | RReactChildrenOrUndefinedOrType of 'loc virtual_reason_desc
   | RReactSFC
   | RReactConfig
+  | RPossiblyMissingPropFromObj of string * 'loc virtual_reason_desc
+  | RWidenedObjProp of 'loc virtual_reason_desc
+  | RUnionBranching of 'loc virtual_reason_desc * int
 
 and reason_desc_function =
   | RAsync
@@ -271,6 +278,8 @@ val is_builtin_reason : ('loc -> File_key.t option) -> 'loc virtual_reason -> bo
 
 val is_lib_reason : reason -> bool
 
+val is_lib_reason_def : reason -> bool
+
 val is_blamable_reason : reason -> bool
 
 val string_of_source : ?strip_root:Path.t option -> File_key.t -> string
@@ -280,6 +289,8 @@ val string_of_reason : ?strip_root:Path.t option -> reason -> string
 val dump_reason : ?strip_root:Path.t option -> reason -> string
 
 (* accessors *)
+val poly_loc_of_reason : 'loc virtual_reason -> 'loc
+
 val loc_of_reason : concrete_reason -> Loc.t
 
 val aloc_of_reason : reason -> ALoc.t
@@ -312,14 +323,21 @@ val update_desc_new_reason :
 val replace_desc_reason : 'loc virtual_reason_desc -> 'loc virtual_reason -> 'loc virtual_reason
 
 (* replace desc, keep loc, but clobber def_loc, annot_loc as in new reason *)
-val replace_desc_new_reason :
-  'loc virtual_reason_desc -> 'loc virtual_reason -> 'loc virtual_reason
+val replace_desc_new_reason : 'loc virtual_reason_desc -> 'loc virtual_reason -> 'loc virtual_reason
 
-val repos_reason : 'loc -> ?annot_loc:'loc -> 'loc virtual_reason -> 'loc virtual_reason
+(* replace loc, but keep def_loc *)
+val repos_reason : 'loc -> 'loc virtual_reason -> 'loc virtual_reason
 
-val annot_reason : 'loc virtual_reason -> 'loc virtual_reason
+(* add / replace annot_loc, but keep loc and def_loc *)
+val annot_reason : annot_loc:'loc -> 'loc virtual_reason -> 'loc virtual_reason
 
-module ReasonMap : MyMap.S with type key = reason
+(* when annot_loc is given, same as annot_reason; otherwise, identity *)
+val opt_annot_reason : ?annot_loc:'loc -> 'loc virtual_reason -> 'loc virtual_reason
+
+(* create a new reason with annot_loc = loc: same as mk_reason followed by annot_reason *)
+val mk_annot_reason : 'loc virtual_reason_desc -> 'loc -> 'loc virtual_reason
+
+module ReasonMap : WrappedMap.S with type key = reason
 
 val mk_expression_reason : (ALoc.t, ALoc.t) Flow_ast.Expression.t -> reason
 
@@ -335,7 +353,20 @@ val code_desc_of_literal : 'loc Flow_ast.Literal.t -> string
 
 val code_desc_of_expression : wrap:bool -> ('a, 'b) Flow_ast.Expression.t -> string
 
+val code_desc_of_pattern : ('a, 'b) Flow_ast.Pattern.t -> string
+
 (* Pass in any available aloc tables to be used when comparing abstract and concrete locations from
  * the same file. Usually `Context.aloc_tables` is a good choice, but if the context is not
  * available, the empty map may be appropriate. *)
 val concretize_equal : ALoc.table Lazy.t Utils_js.FilenameMap.t -> t -> t -> bool
+
+val pp_virtual_reason_desc :
+  (Format.formatter -> 'loc -> Ppx_deriving_runtime.unit) ->
+  Format.formatter ->
+  'loc virtual_reason_desc ->
+  Ppx_deriving_runtime.unit
+
+val show_virtual_reason_desc :
+  (Format.formatter -> 'loc -> Ppx_deriving_runtime.unit) -> 'loc virtual_reason_desc -> string
+
+val show_reason_desc_function : reason_desc_function -> string

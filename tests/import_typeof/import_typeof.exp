@@ -1,6 +1,7 @@
 Error ------------------------------------------------------------------------------------------- import_typeof.js:13:22
 
 Cannot assign `new ClassFoo1()` to `a2` because `ClassFoo1` [1] is incompatible with class `ClassFoo1` [2].
+[incompatible-type]
 
    import_typeof.js:13:22
    13| var a2: ClassFoo1T = new ClassFoo1(); // Error: ClassFoo1 (inst) ~> ClassFoo1 (class)
@@ -14,7 +15,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- import_typeof.js:14:5
 
-Cannot reference type `ClassFoo1T` [1] from a value position.
+Cannot reference type `ClassFoo1T` [1] from a value position. [type-as-value]
 
    import_typeof.js:14:5
    14| new ClassFoo1T(); // Error: ClassFoo1T is not bound to a value
@@ -29,6 +30,7 @@ References:
 Error ------------------------------------------------------------------------------------------- import_typeof.js:24:22
 
 Cannot assign `new ClassFoo2()` to `b2` because `ClassFoo2` [1] is incompatible with class `ClassFoo2` [2].
+[incompatible-type]
 
    import_typeof.js:24:22
    24| var b2: ClassFoo2T = new ClassFoo2(); // Error: ClassFoo2 (inst) ~> ClassFoo2 (class)
@@ -42,7 +44,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- import_typeof.js:25:5
 
-Cannot reference type `ClassFoo2T` [1] from a value position.
+Cannot reference type `ClassFoo2T` [1] from a value position. [type-as-value]
 
    import_typeof.js:25:5
    25| new ClassFoo2T(); // Error: ClassFoo2T is not bound to a value
@@ -57,6 +59,7 @@ References:
 Error ------------------------------------------------------------------------------------------- import_typeof.js:35:22
 
 Cannot assign `new ClassFoo3()` to `c2` because `ClassFoo3` [1] is incompatible with class `ClassFoo3` [2].
+[incompatible-type]
 
    import_typeof.js:35:22
    35| var c2: ClassFoo3T = new ClassFoo3(); // Error: ClassFoo3 (inst) ~> ClassFoo3 (class)
@@ -71,6 +74,7 @@ References:
 Error ------------------------------------------------------------------------------------------- import_typeof.js:45:22
 
 Cannot assign `new ClassFoo4()` to `d2` because `ClassFoo4` [1] is incompatible with class `ClassFoo4` [2].
+[incompatible-type]
 
    import_typeof.js:45:22
    45| var d2: ClassFoo4T = new ClassFoo4(); // Error: ClassFoo4 (inst) ~> ClassFoo4 (class)
@@ -82,69 +86,61 @@ References:
                ^^^^^^^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------------- import_typeof.js:54:2
+Error -------------------------------------------------------------------------------------------- import_typeof.js:54:7
 
 Cannot cast function to `functionFoo1T` because undefined [1] is incompatible with number [2] in the return value.
+[incompatible-cast]
 
-   import_typeof.js:54:2
-   54| (() => {}: functionFoo1T); // Error: return types are not compatible
-        ^^^^^^^^
-
-References:
    import_typeof.js:54:7
    54| (() => {}: functionFoo1T); // Error: return types are not compatible
              ^ [1]
+
+References:
    ExportDefault_Function.js:5:35
     5| function functionFoo1(x: number): number { return x; }
                                          ^^^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------------- import_typeof.js:63:2
+Error -------------------------------------------------------------------------------------------- import_typeof.js:63:7
 
 Cannot cast function to `functionFoo2T` because undefined [1] is incompatible with number [2] in the return value.
+[incompatible-cast]
 
-   import_typeof.js:63:2
-   63| (() => {}: functionFoo2T); // Error: return types are not compatible
-        ^^^^^^^^
-
-References:
    import_typeof.js:63:7
    63| (() => {}: functionFoo2T); // Error: return types are not compatible
              ^ [1]
+
+References:
    ExportNamed_Function.js:5:35
     5| function functionFoo2(x: number): number { return x; }
                                          ^^^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------------- import_typeof.js:72:2
+Error -------------------------------------------------------------------------------------------- import_typeof.js:72:7
 
 Cannot cast function to `functionFoo3T` because undefined [1] is incompatible with number [2] in the return value.
+[incompatible-cast]
 
-   import_typeof.js:72:2
-   72| (() => {}: functionFoo3T); // Error: return types are not compatible
-        ^^^^^^^^
-
-References:
    import_typeof.js:72:7
    72| (() => {}: functionFoo3T); // Error: return types are not compatible
              ^ [1]
+
+References:
    ExportCJSDefault_Function.js:5:35
     5| function functionFoo3(x: number): number { return x; }
                                          ^^^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------------- import_typeof.js:81:2
+Error -------------------------------------------------------------------------------------------- import_typeof.js:81:7
 
 Cannot cast function to `functionFoo4T` because undefined [1] is incompatible with number [2] in the return value.
+[incompatible-cast]
 
-   import_typeof.js:81:2
-   81| (() => {}: functionFoo4T); // Error: return types are not compatible
-        ^^^^^^^^
-
-References:
    import_typeof.js:81:7
    81| (() => {}: functionFoo4T); // Error: return types are not compatible
              ^ [1]
+
+References:
    ExportCJSNamed_Function.js:5:35
     5| function functionFoo4(x: number): number { return x; }
                                          ^^^^^^ [2]
@@ -153,7 +149,7 @@ References:
 Error ------------------------------------------------------------------------------------------- import_typeof.js:87:16
 
 Cannot import the type `AliasFoo3` as a type. `import typeof` only works on value exports like variables, functions, and
-classes. If you intended to import a type use `import type` instead.
+classes. If you intended to import a type use `import type` instead. [invalid-import-type]
 
    87| import typeof {AliasFoo3} from "./ExportNamed_Alias"; // Error: Can't `import typeof` type aliases!
                       ^^^^^^^^^
@@ -161,7 +157,7 @@ classes. If you intended to import a type use `import type` instead.
 
 Error ------------------------------------------------------------------------------------------ import_typeof.js:104:23
 
-Cannot assign `'asdf'` to `f2` because string [1] is incompatible with number [2].
+Cannot assign `'asdf'` to `f2` because string [1] is incompatible with number [2]. [incompatible-type]
 
    import_typeof.js:104:23
    104| var f2: num_default = 'asdf'; // Error: string ~> number
@@ -175,7 +171,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------ import_typeof.js:113:21
 
-Cannot assign `'asdf'` to `g2` because string [1] is incompatible with number [2].
+Cannot assign `'asdf'` to `g2` because string [1] is incompatible with number [2]. [incompatible-type]
 
    import_typeof.js:113:21
    113| var g2: num_named = 'asdf'; // Error: string ~> number
@@ -189,7 +185,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------ import_typeof.js:122:27
 
-Cannot assign `'asdf'` to `h2` because string [1] is incompatible with number [2].
+Cannot assign `'asdf'` to `h2` because string [1] is incompatible with number [2]. [incompatible-type]
 
    import_typeof.js:122:27
    122| var h2: num_cjs_default = 'asdf'; // Error: string ~> number
@@ -203,7 +199,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------ import_typeof.js:131:25
 
-Cannot assign `'asdf'` to `i2` because string [1] is incompatible with number [2].
+Cannot assign `'asdf'` to `i2` because string [1] is incompatible with number [2]. [incompatible-type]
 
    import_typeof.js:131:25
    131| var i2: num_cjs_named = 'asdf'; // Error: string ~> number
@@ -215,21 +211,19 @@ References:
                 ^^^^^^^^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------ import_typeof.js:139:24
+Error ------------------------------------------------------------------------------------------ import_typeof.js:139:39
 
 Cannot assign object literal to `j2` because number [1] is incompatible with string [2] in property `str`.
+[incompatible-type]
 
-   import_typeof.js:139:24
-   139| var j2: ModuleNSObjT = {num: 42, str: 42}; // Error: number ~> string
-                               ^^^^^^^^^^^^^^^^^^
-
-References:
    import_typeof.js:139:39
    139| var j2: ModuleNSObjT = {num: 42, str: 42}; // Error: number ~> string
                                               ^^ [1]
-   ExportNamed_Multi.js:4:18
-     4| export var str = 'asdf';
-                         ^^^^^^ [2]
+
+References:
+   ExportNamed_Multi.js:4:20
+     4| export const str = 'asdf';
+                           ^^^^^^ [2]
 
 
 

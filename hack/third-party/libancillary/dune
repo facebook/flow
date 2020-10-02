@@ -1,7 +1,0 @@
-(library
-  (name libancillary_c)
-  (wrapped false)
-  (c_names
-    fd_recv
-    fd_send)
-  (c_flags (:standard -I%{env:CMAKE_SOURCE_DIR=xxx})))

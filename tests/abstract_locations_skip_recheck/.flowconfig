@@ -1,0 +1,6 @@
+[ignore]
+<PROJECT_ROOT>/tmp*
+
+[options]
+types_first=true
+experimental.abstract_locations=true

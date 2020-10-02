@@ -1,4 +1,8 @@
 #!/bin/bash
+# Copyright (c) Facebook, Inc. and its affiliates.
+#
+# This source code is licensed under the MIT license found in the
+# LICENSE file in the root directory of this source tree.
 
 log_file="$FLOW_TEMP_DIR/direct_dependent_files_cache.log"
 
@@ -84,3 +88,5 @@ assert_ok "$FLOW" force-recheck --profile src/node_modules/dependency.js \
 grep "Resolved requires" "$log_file" | tail -n 2 | cut -d"]" -f 2
 printf "\n"
 assert_errors "$FLOW" status --no-auto-start src
+
+"$FLOW" stop src 1> /dev/null 2>&1

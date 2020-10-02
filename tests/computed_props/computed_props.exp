@@ -1,7 +1,37 @@
+Error --------------------------------------------------------------------------------------------- object_keys.js:14:36
+
+Cannot use `k` [1] as a computed property. Computed properties may only be primitive literal values, but element of
+`Object.keys` [2] is a union. Can you add a literal type annotation to `k` [1]? See
+https://flow.org/en/docs/types/literals/ for more information on literal types. [invalid-computed-prop]
+
+   object_keys.js:14:36
+   14| Object.keys(y).map(k => { return {[k]: k} }); // Error
+                                          ^ [1]
+
+References:
+   object_keys.js:14:1
+   14| Object.keys(y).map(k => { return {[k]: k} }); // Error
+       ^^^^^^^^^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- poly.js:4:33
+
+Cannot assign computed property using `T` [1]. [invalid-computed-prop]
+
+   poly.js:4:33
+   4| function f2<T>(x: T) { return {[x]: x} } // error. mixed can't be used as a computed prop
+                                      ^
+
+References:
+   poly.js:4:19
+   4| function f2<T>(x: T) { return {[x]: x} } // error. mixed can't be used as a computed prop
+                        ^ [1]
+
+
 Error ----------------------------------------------------------------------------------------------------- test.js:19:2
 
 Cannot cast `ColorIdToNumber[ColorId.RED]` to string literal `ffffff` because string [1] is incompatible with string
-literal `ffffff` [2].
+literal `ffffff` [2]. [incompatible-cast]
 
    test.js:19:2
    19| (ColorIdToNumber[ColorId.RED]: 'ffffff'); // oops
@@ -16,13 +46,13 @@ References:
                                       ^^^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- test.js:21:1
+Error ---------------------------------------------------------------------------------------------------- test.js:21:17
 
-Cannot get `ColorIdToNumber.XXX` because property `XXX` is missing in object literal [1].
+Cannot get `ColorIdToNumber.XXX` because property `XXX` is missing in object literal [1]. [prop-missing]
 
-   test.js:21:1
+   test.js:21:17
    21| ColorIdToNumber.XXX; // oops
-       ^^^^^^^^^^^^^^^^^^^
+                       ^^^
 
 References:
    test.js:13:23
@@ -38,7 +68,7 @@ References:
 Error ----------------------------------------------------------------------------------------------------- test2.js:8:2
 
 Cannot cast `ColorIdToNumber[ColorId.GREEN]` to string literal `ffffff` because string [1] is incompatible with string
-literal `ffffff` [2].
+literal `ffffff` [2]. [incompatible-cast]
 
    test2.js:8:2
    8| (ColorIdToNumber[ColorId.GREEN]: 'ffffff'); // oops
@@ -56,7 +86,7 @@ References:
 Error ----------------------------------------------------------------------------------------------------- test3.js:4:2
 
 Cannot cast `ColorIdToNumber[ColorId.BLUE]` to string literal `ffffff` because string [1] is incompatible with string
-literal `ffffff` [2].
+literal `ffffff` [2]. [incompatible-cast]
 
    test3.js:4:2
     4| (ColorIdToNumber[ColorId.BLUE]: 'ffffff'); // oops
@@ -74,6 +104,7 @@ References:
 Error ----------------------------------------------------------------------------------------------------- test6.js:2:2
 
 Cannot cast `o.hello` to string literal `nothing` because string [1] is incompatible with string literal `nothing` [2].
+[incompatible-cast]
 
    test6.js:2:2
    2| (o.hello: 'nothing'); // oops
@@ -90,7 +121,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test7.js:2:17
 
-Cannot assign `obj['m']()` to `x` because number [1] is incompatible with string [2].
+Cannot assign `obj['m']()` to `x` because number [1] is incompatible with string [2]. [incompatible-type]
 
    test7.js:2:17
    2| var x: string = obj['m'](); // error, number ~> string
@@ -107,20 +138,65 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test7.js:5:17
 
-Cannot assign `arr[0]()` to `y` because number [1] is incompatible with string [2].
+Cannot assign `arr[0]()` to `y` because number [1] is incompatible with string [2]. [incompatible-type]
 
    test7.js:5:17
-     5| var y: string = arr[0](); // error: number ~> string
-                        ^^^^^^^^
+      5| var y: string = arr[0](); // error: number ~> string
+                         ^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:294:13
-   294|     length: number;
-                    ^^^^^^ [1]
+   <BUILTINS>/core.js:1005:13
+   1005|     length: number;
+                     ^^^^^^ [1]
    test7.js:5:8
-     5| var y: string = arr[0](); // error: number ~> string
-               ^^^^^^ [2]
+      5| var y: string = arr[0](); // error: number ~> string
+                ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- union.js:5:13
+
+Cannot use `k` [1] as a computed property. Computed properties may only be primitive literal values, but `key` [2] is a
+union. Can you add a literal type annotation to `k` [1]? See https://flow.org/en/docs/types/literals/ for more
+information on literal types. [invalid-computed-prop]
+
+   union.js:5:13
+   5| const a = {[k]: 3}; // Error, k has multiple lower bounds
+                  ^ [1]
+
+References:
+   union.js:4:16
+   4| declare var k: key;
+                     ^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- union.js:17:13
+
+Cannot use `x` [1] as a computed property. Computed properties may only be primitive literal values, but this one may be
+either string literal `foo` [2] or string literal `bar` [3]. Can you add a literal type annotation to `x` [1]? See
+https://flow.org/en/docs/types/literals/ for more information on literal types. [invalid-computed-prop]
+
+   union.js:17:13
+   17| const b = {[x]: 3} // Error, x has multiple lower bounds
+                   ^
+
+References:
+   union.js:9:1
+       v----------
+    9| if (true) {
+   10|   x = 'foo';
+   11| } else if (true) {
+   12|   x = 'bar';
+   13| } else {
+   14|   x = 'baz';
+   15| }
+       ^ [1]
+   union.js:10:7
+   10|   x = 'foo';
+             ^^^^^ [2]
+   union.js:12:7
+   12|   x = 'bar';
+             ^^^^^ [3]
 
 
 
-Found 7 errors
+Found 11 errors

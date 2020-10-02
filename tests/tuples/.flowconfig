@@ -2,3 +2,4 @@
 module.system=haste
 no_flowlib=false
 lazy_mode=fs
+all=true

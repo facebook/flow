@@ -1,4 +1,12 @@
-/* @flow */
+/**
+ * Copyright (c) Facebook, Inc. and its affiliates.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ *
+ * @flow
+ * @format
+ */
 
 import type {FlowLoc} from '../flowResult';
 
@@ -9,14 +17,14 @@ export type PathNode = {
 
 class Path {
   nodes: Array<{
-    ast: Object;
-    key: string;
-    todo: Array<string>;
+    ast: Object,
+    key: string,
+    todo: Array<string>,
   }>;
 
   constructor(ast: Object) {
     this.nodes = [];
-    this.push("root", ast, new Set(['comments']));
+    this.push('root', ast, new Set(['comments']));
   }
 
   push(key: string, ast: Object, exclude?: Set<string>) {
@@ -41,15 +49,15 @@ class Path {
   }
 
   next() {
-    while(this.nodes.length > 0) {
-      const last = this.nodes[this.nodes.length-1];
+    while (this.nodes.length > 0) {
+      const last = this.nodes[this.nodes.length - 1];
       if (last.todo.length === 0) {
         this.nodes.pop();
         continue;
       }
       const prop = last.todo.pop();
       const ast = last.ast[prop];
-      if (this.push(prop, ast)) {
+      if (this.push(prop, ast, new Set(['range']))) {
         return ast;
       }
     }
@@ -72,25 +80,62 @@ function beforeOrEqual(
   return a.line <= b.line;
 }
 
-// Returns true IFF the ast location falls within the error loc
-function errorLocMatchesAstLoc(errorLoc: FlowLoc, astLoc: Object): boolean {
+/**
+ * For non-JSXText nodes, returns true IFF the ast location falls within the
+ * error loc. For JSXText nodes, also returns true if the error loc falls within
+ * the ast loc, as JSXText errors may point to only a portion of a JSXText node.
+ */
+function errorLocMatchesAstLoc(errorLoc: FlowLoc, ast: Object): boolean {
+  const astLoc = ast.loc;
+  if (
+    ast.type === 'JSXText' &&
+    beforeOrEqual(astLoc.start, errorLoc.start) &&
+    beforeOrEqual(errorLoc.end, astLoc.end)
+  ) {
+    return true;
+  }
+
   const errorLocFixedStart = {
     line: errorLoc.start.line,
     column: errorLoc.start.column - 1,
-  }
-  return beforeOrEqual(errorLocFixedStart, astLoc.start) &&
-    beforeOrEqual(astLoc.end, errorLoc.end);
+  };
+  return (
+    beforeOrEqual(errorLocFixedStart, astLoc.start) &&
+    beforeOrEqual(astLoc.end, errorLoc.end)
+  );
+}
+
+function rangeMatchesAstRange(
+  range: [number, number],
+  astRange: [number, number],
+): boolean {
+  return range[0] == astRange[0] && range[1] == astRange[1];
 }
 
 /* Given a location and an AST, find the ast node whose location falls within
  * the given location. Then return the path to that node. */
-export default function (errorLoc: FlowLoc, astRoot: Object): ?Array<PathNode> {
+export default function(errorLoc: FlowLoc, astRoot: Object): ?Array<PathNode> {
   const path = new Path(astRoot);
   let ast = path.next();
   while (ast != null) {
-    const p = path.getPath().map(({key}) => key).join(".");
-    if (ast.loc && errorLocMatchesAstLoc(errorLoc, ast.loc)) {
+    if (ast.loc && errorLocMatchesAstLoc(errorLoc, ast)) {
       return path.getPath();
+    }
+    ast = path.next();
+  }
+
+  return null;
+}
+
+export function getNodeAtRange(
+  range: [number, number],
+  astRoot: Object,
+): ?Object {
+  const path = new Path(astRoot);
+  let ast = path.next();
+  while (ast != null) {
+    if (ast.range && rangeMatchesAstRange(range, ast.range)) {
+      return ast;
     }
     ast = path.next();
   }

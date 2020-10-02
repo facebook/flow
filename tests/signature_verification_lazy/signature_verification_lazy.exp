@@ -1,0 +1,145 @@
+===== signature-verification error should not be reported, just the parsing error: =====
+Error ---------------------------------------------------------------------------------------------- parse_error.js:6:10
+
+Unexpected token `;`
+
+   6| const x =;
+               ^
+
+
+
+Found 1 error
+
+The Flow server is currently in IDE lazy mode and is only checking 0/8 files.
+To learn more, visit flow.org/en/docs/lang/lazy-modes
+
+
+===== suppressed signature-verification error should not be reported after focus-checking suppressed_signature_verification_error.js: =====
+Error ---------------------------------------------------------------------------------------------- parse_error.js:6:10
+
+Unexpected token `;`
+
+   6| const x =;
+               ^
+
+
+
+Found 1 error
+
+The Flow server is currently in IDE lazy mode and is only checking 1/8 files.
+To learn more, visit flow.org/en/docs/lang/lazy-modes
+
+
+===== suppressed signature-verification error should not be reported after focus-checking suppressed_bad_module_export.js: =====
+Error ---------------------------------------------------------------------------------------------- parse_error.js:6:10
+
+Unexpected token `;`
+
+   6| const x =;
+               ^
+
+
+
+Found 1 error
+
+The Flow server is currently in IDE lazy mode and is only checking 2/8 files.
+To learn more, visit flow.org/en/docs/lang/lazy-modes
+
+
+===== suppressed signature-verification error should not be reported after focus-checking bad_module_export.js: =====
+Error ---------------------------------------------------------------------------------------- bad_module_export.js:4:13
+
+`module` may only be used as part of a legal top level export statement [invalid-export]
+
+   4|   const x = module.exports;
+                  ^^^^^^
+
+
+Error ---------------------------------------------------------------------------------------------- parse_error.js:6:10
+
+Unexpected token `;`
+
+   6| const x =;
+               ^
+
+
+
+Found 2 errors
+
+The Flow server is currently in IDE lazy mode and is only checking 3/8 files.
+To learn more, visit flow.org/en/docs/lang/lazy-modes
+
+
+===== unsuppressed signature-verification error should be reported after focus-checking signature_verification_error.js: =====
+Error ---------------------------------------------------------------------------------------- bad_module_export.js:4:13
+
+`module` may only be used as part of a legal top level export statement [invalid-export]
+
+   4|   const x = module.exports;
+                  ^^^^^^
+
+
+Error ---------------------------------------------------------------------------------------------- parse_error.js:6:10
+
+Unexpected token `;`
+
+   6| const x =;
+               ^
+
+
+Error ----------------------------------------------------------------------------- signature_verification_error.js:3:31
+
+Cannot build a typed interface for this module. You should annotate the exports of this module with types. Missing type
+annotation at function return: [signature-verification-failure]
+
+   3| export function foo(x: number) { return x; }
+                                    
+
+
+
+Found 3 errors
+
+The Flow server is currently in IDE lazy mode and is only checking 4/8 files.
+To learn more, visit flow.org/en/docs/lang/lazy-modes
+
+
+===== unsuppressed signature-verification error in file which is part of a cycle should be reported when focusing on another part of the cycle =====
+Error ---------------------------------------------------------------------------------------- bad_module_export.js:4:13
+
+`module` may only be used as part of a legal top level export statement [invalid-export]
+
+   4|   const x = module.exports;
+                  ^^^^^^
+
+
+Error --------------------------------------------------------------------------------------------------- cycleC.js:5:31
+
+Cannot build a typed interface for this module. You should annotate the exports of this module with types. Missing type
+annotation at function return: [signature-verification-failure]
+
+   5| export function foo(x: number) { return x; } // error when force-checking cycleA.js
+                                    
+
+
+Error ---------------------------------------------------------------------------------------------- parse_error.js:6:10
+
+Unexpected token `;`
+
+   6| const x =;
+               ^
+
+
+Error ----------------------------------------------------------------------------- signature_verification_error.js:3:31
+
+Cannot build a typed interface for this module. You should annotate the exports of this module with types. Missing type
+annotation at function return: [signature-verification-failure]
+
+   3| export function foo(x: number) { return x; }
+                                    
+
+
+
+Found 4 errors
+
+The Flow server is currently in IDE lazy mode and is only checking 7/8 files.
+To learn more, visit flow.org/en/docs/lang/lazy-modes

@@ -1,391 +1,504 @@
 {
   "type":"Program",
-  "loc":{"source":null,"start":{"line":1,"column":0},"end":{"line":21,"column":1}},
-  "range":[0,468],
+  "loc":{"source":null,"start":{"line":1,"column":16},"end":{"line":17,"column":29}},
+  "range":[16,456],
   "body":[
     {
-      "type":"FunctionDeclaration",
-      "loc":{"source":null,"start":{"line":1,"column":0},"end":{"line":6,"column":1}},
-      "range":[0,127],
-      "id":{
-        "type":"Identifier",
-        "loc":{"source":null,"start":{"line":1,"column":9},"end":{"line":1,"column":16}},
-        "range":[9,16],
-        "name":"leading",
-        "typeAnnotation":null,
-        "optional":false
-      },
-      "params":[],
-      "body":{
-        "type":"BlockStatement",
-        "loc":{"source":null,"start":{"line":1,"column":19},"end":{"line":6,"column":1}},
-        "range":[19,127],
-        "body":[
+      "type":"ExpressionStatement",
+      "loc":{"source":null,"start":{"line":1,"column":16},"end":{"line":1,"column":98}},
+      "range":[16,98],
+      "expression":{
+        "type":"NewExpression",
+        "trailingComments":[
           {
-            "type":"VariableDeclaration",
-            "loc":{"source":null,"start":{"line":3,"column":2},"end":{"line":3,"column":23}},
-            "range":[55,76],
-            "declarations":[
-              {
-                "type":"VariableDeclarator",
-                "loc":{"source":null,"start":{"line":3,"column":6},"end":{"line":3,"column":22}},
-                "range":[59,75],
-                "id":{
-                  "type":"Identifier",
-                  "loc":{"source":null,"start":{"line":3,"column":6},"end":{"line":3,"column":7}},
-                  "range":[59,60],
-                  "name":"F",
-                  "typeAnnotation":null,
-                  "optional":false
-                },
-                "init":{
-                  "type":"FunctionExpression",
-                  "loc":{"source":null,"start":{"line":3,"column":10},"end":{"line":3,"column":22}},
-                  "range":[63,75],
-                  "id":null,
-                  "params":[],
-                  "body":{
-                    "type":"BlockStatement",
-                    "loc":{"source":null,"start":{"line":3,"column":20},"end":{"line":3,"column":22}},
-                    "range":[73,75],
-                    "body":[]
-                  },
-                  "async":false,
-                  "generator":false,
-                  "predicate":null,
-                  "expression":false,
-                  "returnType":null,
-                  "typeParameters":null
-                }
-              }
-            ],
-            "kind":"var"
+            "type":"Block",
+            "loc":{"source":null,"start":{"line":1,"column":81},"end":{"line":1,"column":97}},
+            "range":[81,97],
+            "value":" 1.5 T args "
+          }
+        ],
+        "leadingComments":[
+          {
+            "type":"Block",
+            "loc":{"source":null,"start":{"line":1,"column":0},"end":{"line":1,"column":15}},
+            "range":[0,15],
+            "value":" 1.1 L new "
           },
           {
-            "type":"ExpressionStatement",
-            "loc":{"source":null,"start":{"line":5,"column":2},"end":{"line":5,"column":10}},
-            "range":[117,125],
-            "expression":{
-              "type":"NewExpression",
-              "leadingComments":[
-                {
-                  "type":"Block",
-                  "loc":{"source":null,"start":{"line":3,"column":24},"end":{"line":3,"column":41}},
-                  "range":[77,94],
-                  "value":" 1.1 leading "
-                },
-                {
-                  "type":"Block",
-                  "loc":{"source":null,"start":{"line":4,"column":2},"end":{"line":4,"column":19}},
-                  "range":[97,114],
-                  "value":" 1.2 leading "
-                }
-              ],
-              "loc":{"source":null,"start":{"line":5,"column":2},"end":{"line":5,"column":9}},
-              "range":[117,124],
-              "callee":{
+            "type":"Block",
+            "loc":{"source":null,"start":{"line":1,"column":61},"end":{"line":1,"column":77}},
+            "range":[61,77],
+            "value":" 1.4 L args "
+          }
+        ],
+        "loc":{"source":null,"start":{"line":1,"column":16},"end":{"line":1,"column":80}},
+        "range":[16,80],
+        "callee":{
+          "type":"Identifier",
+          "leadingComments":[
+            {
+              "type":"Block",
+              "loc":{"source":null,"start":{"line":1,"column":20},"end":{"line":1,"column":34}},
+              "range":[20,34],
+              "value":" 1.2 L id "
+            }
+          ],
+          "loc":{"source":null,"start":{"line":1,"column":35},"end":{"line":1,"column":38}},
+          "range":[35,38],
+          "name":"Foo",
+          "typeAnnotation":null,
+          "optional":false
+        },
+        "typeArguments":{
+          "type":"TypeParameterInstantiation",
+          "leadingComments":[
+            {
+              "type":"Block",
+              "loc":{"source":null,"start":{"line":1,"column":39},"end":{"line":1,"column":56}},
+              "range":[39,56],
+              "value":" 1.3 L targs "
+            }
+          ],
+          "loc":{"source":null,"start":{"line":1,"column":57},"end":{"line":1,"column":60}},
+          "range":[57,60],
+          "params":[
+            {
+              "type":"GenericTypeAnnotation",
+              "loc":{"source":null,"start":{"line":1,"column":58},"end":{"line":1,"column":59}},
+              "range":[58,59],
+              "id":{
                 "type":"Identifier",
-                "loc":{"source":null,"start":{"line":5,"column":6},"end":{"line":5,"column":7}},
-                "range":[121,122],
-                "name":"F",
+                "loc":{"source":null,"start":{"line":1,"column":58},"end":{"line":1,"column":59}},
+                "range":[58,59],
+                "name":"T",
                 "typeAnnotation":null,
                 "optional":false
               },
-              "typeArguments":null,
-              "arguments":[]
-            },
-            "directive":null
-          }
-        ]
+              "typeParameters":null
+            }
+          ]
+        },
+        "arguments":[]
       },
-      "async":false,
-      "generator":false,
-      "predicate":null,
-      "expression":false,
-      "returnType":null,
-      "typeParameters":null
+      "directive":null
     },
     {
-      "type":"FunctionDeclaration",
-      "loc":{"source":null,"start":{"line":8,"column":0},"end":{"line":13,"column":1}},
-      "range":[129,240],
-      "id":{
-        "type":"Identifier",
-        "loc":{"source":null,"start":{"line":8,"column":9},"end":{"line":8,"column":17}},
-        "range":[138,146],
-        "name":"trailing",
-        "typeAnnotation":null,
-        "optional":false
-      },
-      "params":[],
-      "body":{
-        "type":"BlockStatement",
-        "loc":{"source":null,"start":{"line":8,"column":20},"end":{"line":13,"column":1}},
-        "range":[149,240],
-        "body":[
+      "type":"ExpressionStatement",
+      "loc":{"source":null,"start":{"line":3,"column":0},"end":{"line":6,"column":19}},
+      "range":[100,238],
+      "expression":{
+        "type":"NewExpression",
+        "trailingComments":[
           {
-            "type":"VariableDeclaration",
-            "loc":{"source":null,"start":{"line":9,"column":2},"end":{"line":9,"column":23}},
-            "range":[153,174],
-            "declarations":[
-              {
-                "type":"VariableDeclarator",
-                "loc":{"source":null,"start":{"line":9,"column":6},"end":{"line":9,"column":22}},
-                "range":[157,173],
-                "id":{
-                  "type":"Identifier",
-                  "loc":{"source":null,"start":{"line":9,"column":6},"end":{"line":9,"column":7}},
-                  "range":[157,158],
-                  "name":"F",
-                  "typeAnnotation":null,
-                  "optional":false
-                },
-                "init":{
-                  "type":"FunctionExpression",
-                  "loc":{"source":null,"start":{"line":9,"column":10},"end":{"line":9,"column":22}},
-                  "range":[161,173],
-                  "id":null,
-                  "params":[],
-                  "body":{
-                    "type":"BlockStatement",
-                    "loc":{"source":null,"start":{"line":9,"column":20},"end":{"line":9,"column":22}},
-                    "range":[171,173],
-                    "body":[]
-                  },
-                  "async":false,
-                  "generator":false,
-                  "predicate":null,
-                  "expression":false,
-                  "returnType":null,
-                  "typeParameters":null
-                }
-              }
-            ],
-            "kind":"var"
+            "type":"Block",
+            "loc":{"source":null,"start":{"line":5,"column":22},"end":{"line":5,"column":38}},
+            "range":[202,218],
+            "value":" 2.6 T args "
           },
           {
-            "type":"ExpressionStatement",
-            "loc":{"source":null,"start":{"line":11,"column":2},"end":{"line":11,"column":29}},
-            "range":[178,205],
-            "expression":{
-              "type":"NewExpression",
-              "trailingComments":[
-                {
-                  "type":"Block",
-                  "loc":{"source":null,"start":{"line":11,"column":10},"end":{"line":11,"column":28}},
-                  "range":[186,204],
-                  "value":" 2.0 trailing "
-                }
-              ],
-              "loc":{"source":null,"start":{"line":11,"column":2},"end":{"line":11,"column":9}},
-              "range":[178,185],
-              "callee":{
+            "type":"Block",
+            "loc":{"source":null,"start":{"line":6,"column":2},"end":{"line":6,"column":18}},
+            "range":[221,237],
+            "value":" 2.7 T args "
+          }
+        ],
+        "leadingComments":[
+          {
+            "type":"Block",
+            "loc":{"source":null,"start":{"line":5,"column":2},"end":{"line":5,"column":18}},
+            "range":[182,198],
+            "value":" 2.5 L args "
+          }
+        ],
+        "loc":{"source":null,"start":{"line":3,"column":0},"end":{"line":5,"column":21}},
+        "range":[100,201],
+        "callee":{
+          "type":"Identifier",
+          "trailingComments":[
+            {
+              "type":"Block",
+              "loc":{"source":null,"start":{"line":3,"column":23},"end":{"line":3,"column":37}},
+              "range":[123,137],
+              "value":" 2.2 T id "
+            }
+          ],
+          "leadingComments":[
+            {
+              "type":"Block",
+              "loc":{"source":null,"start":{"line":3,"column":4},"end":{"line":3,"column":18}},
+              "range":[104,118],
+              "value":" 2.1 L id "
+            }
+          ],
+          "loc":{"source":null,"start":{"line":3,"column":19},"end":{"line":3,"column":22}},
+          "range":[119,122],
+          "name":"Foo",
+          "typeAnnotation":null,
+          "optional":false
+        },
+        "typeArguments":{
+          "type":"TypeParameterInstantiation",
+          "trailingComments":[
+            {
+              "type":"Block",
+              "loc":{"source":null,"start":{"line":4,"column":24},"end":{"line":4,"column":41}},
+              "range":[162,179],
+              "value":" 2.4 T targs "
+            }
+          ],
+          "leadingComments":[
+            {
+              "type":"Block",
+              "loc":{"source":null,"start":{"line":4,"column":2},"end":{"line":4,"column":19}},
+              "range":[140,157],
+              "value":" 2.3 L targs "
+            }
+          ],
+          "loc":{"source":null,"start":{"line":4,"column":20},"end":{"line":4,"column":23}},
+          "range":[158,161],
+          "params":[
+            {
+              "type":"GenericTypeAnnotation",
+              "loc":{"source":null,"start":{"line":4,"column":21},"end":{"line":4,"column":22}},
+              "range":[159,160],
+              "id":{
                 "type":"Identifier",
-                "loc":{"source":null,"start":{"line":11,"column":6},"end":{"line":11,"column":7}},
-                "range":[182,183],
-                "name":"F",
+                "loc":{"source":null,"start":{"line":4,"column":21},"end":{"line":4,"column":22}},
+                "range":[159,160],
+                "name":"T",
                 "typeAnnotation":null,
                 "optional":false
               },
-              "typeArguments":null,
-              "arguments":[]
-            },
-            "directive":null
-          }
-        ]
+              "typeParameters":null
+            }
+          ]
+        },
+        "arguments":[]
       },
-      "async":false,
-      "generator":false,
-      "predicate":null,
-      "expression":false,
-      "returnType":null,
-      "typeParameters":null
+      "directive":null
     },
     {
-      "type":"FunctionDeclaration",
-      "loc":{"source":null,"start":{"line":15,"column":0},"end":{"line":21,"column":1}},
-      "range":[242,468],
-      "id":{
-        "type":"Identifier",
-        "loc":{"source":null,"start":{"line":15,"column":9},"end":{"line":15,"column":29}},
-        "range":[251,271],
-        "name":"leading_and_trailing",
-        "typeAnnotation":null,
-        "optional":false
-      },
-      "params":[],
-      "body":{
-        "type":"BlockStatement",
-        "loc":{"source":null,"start":{"line":15,"column":32},"end":{"line":21,"column":1}},
-        "range":[274,468],
-        "body":[
-          {
-            "type":"VariableDeclaration",
-            "loc":{"source":null,"start":{"line":17,"column":2},"end":{"line":17,"column":23}},
-            "range":[310,331],
-            "declarations":[
-              {
-                "type":"VariableDeclarator",
-                "loc":{"source":null,"start":{"line":17,"column":6},"end":{"line":17,"column":22}},
-                "range":[314,330],
-                "id":{
-                  "type":"Identifier",
-                  "loc":{"source":null,"start":{"line":17,"column":6},"end":{"line":17,"column":7}},
-                  "range":[314,315],
-                  "name":"F",
-                  "typeAnnotation":null,
-                  "optional":false
-                },
-                "init":{
-                  "type":"FunctionExpression",
-                  "loc":{"source":null,"start":{"line":17,"column":10},"end":{"line":17,"column":22}},
-                  "range":[318,330],
-                  "id":null,
-                  "params":[],
-                  "body":{
-                    "type":"BlockStatement",
-                    "loc":{"source":null,"start":{"line":17,"column":20},"end":{"line":17,"column":22}},
-                    "range":[328,330],
-                    "body":[]
-                  },
-                  "async":false,
-                  "generator":false,
-                  "predicate":null,
-                  "expression":false,
-                  "returnType":null,
-                  "typeParameters":null
-                }
-              }
-            ],
-            "kind":"var"
-          },
-          {
-            "type":"ExpressionStatement",
-            "loc":{"source":null,"start":{"line":19,"column":2},"end":{"line":19,"column":63}},
-            "range":[372,433],
-            "expression":{
-              "type":"NewExpression",
-              "trailingComments":[
-                {
-                  "type":"Block",
-                  "loc":{"source":null,"start":{"line":19,"column":44},"end":{"line":19,"column":62}},
-                  "range":[414,432],
-                  "value":" 3.4 trailing "
-                }
-              ],
-              "leadingComments":[
-                {
-                  "type":"Block",
-                  "loc":{"source":null,"start":{"line":17,"column":24},"end":{"line":17,"column":41}},
-                  "range":[332,349],
-                  "value":" 3.1 leading "
-                },
-                {
-                  "type":"Block",
-                  "loc":{"source":null,"start":{"line":18,"column":2},"end":{"line":18,"column":19}},
-                  "range":[352,369],
-                  "value":" 3.2 leading "
-                }
-              ],
-              "loc":{"source":null,"start":{"line":19,"column":2},"end":{"line":19,"column":43}},
-              "range":[372,413],
-              "callee":{
+      "type":"ExpressionStatement",
+      "loc":{"source":null,"start":{"line":8,"column":0},"end":{"line":10,"column":20}},
+      "range":[240,340],
+      "expression":{
+        "type":"NewExpression",
+        "loc":{"source":null,"start":{"line":8,"column":0},"end":{"line":9,"column":23}},
+        "range":[240,301],
+        "callee":{
+          "type":"Identifier",
+          "trailingComments":[
+            {
+              "type":"Block",
+              "loc":{"source":null,"start":{"line":8,"column":23},"end":{"line":8,"column":37}},
+              "range":[263,277],
+              "value":" 3.2 T id "
+            }
+          ],
+          "leadingComments":[
+            {
+              "type":"Block",
+              "loc":{"source":null,"start":{"line":8,"column":4},"end":{"line":8,"column":18}},
+              "range":[244,258],
+              "value":" 3.1 L id "
+            }
+          ],
+          "loc":{"source":null,"start":{"line":8,"column":19},"end":{"line":8,"column":22}},
+          "range":[259,262],
+          "name":"Foo",
+          "typeAnnotation":null,
+          "optional":false
+        },
+        "typeArguments":{
+          "type":"TypeParameterInstantiation",
+          "trailingComments":[
+            {
+              "type":"Block",
+              "loc":{"source":null,"start":{"line":9,"column":24},"end":{"line":9,"column":41}},
+              "range":[302,319],
+              "value":" 3.4 T targs "
+            },
+            {
+              "type":"Block",
+              "loc":{"source":null,"start":{"line":10,"column":2},"end":{"line":10,"column":19}},
+              "range":[322,339],
+              "value":" 3.5 T targs "
+            }
+          ],
+          "leadingComments":[
+            {
+              "type":"Block",
+              "loc":{"source":null,"start":{"line":9,"column":2},"end":{"line":9,"column":19}},
+              "range":[280,297],
+              "value":" 3.3 L targs "
+            }
+          ],
+          "loc":{"source":null,"start":{"line":9,"column":20},"end":{"line":9,"column":23}},
+          "range":[298,301],
+          "params":[
+            {
+              "type":"GenericTypeAnnotation",
+              "loc":{"source":null,"start":{"line":9,"column":21},"end":{"line":9,"column":22}},
+              "range":[299,300],
+              "id":{
                 "type":"Identifier",
-                "leadingComments":[
-                  {
-                    "type":"Block",
-                    "loc":{"source":null,"start":{"line":19,"column":6},"end":{"line":19,"column":39}},
-                    "range":[376,409],
-                    "value":" 3.3 unreachable by New node "
-                  }
-                ],
-                "loc":{"source":null,"start":{"line":19,"column":40},"end":{"line":19,"column":41}},
-                "range":[410,411],
-                "name":"F",
+                "loc":{"source":null,"start":{"line":9,"column":21},"end":{"line":9,"column":22}},
+                "range":[299,300],
+                "name":"T",
                 "typeAnnotation":null,
                 "optional":false
               },
-              "typeArguments":null,
-              "arguments":[]
+              "typeParameters":null
+            }
+          ]
+        },
+        "arguments":[]
+      },
+      "directive":null
+    },
+    {
+      "type":"ExpressionStatement",
+      "loc":{"source":null,"start":{"line":12,"column":0},"end":{"line":13,"column":17}},
+      "range":[342,397],
+      "expression":{
+        "type":"NewExpression",
+        "loc":{"source":null,"start":{"line":12,"column":0},"end":{"line":12,"column":22}},
+        "range":[342,364],
+        "callee":{
+          "type":"Identifier",
+          "trailingComments":[
+            {
+              "type":"Block",
+              "loc":{"source":null,"start":{"line":12,"column":23},"end":{"line":12,"column":37}},
+              "range":[365,379],
+              "value":" 4.2 T id "
             },
-            "directive":null
+            {
+              "type":"Block",
+              "loc":{"source":null,"start":{"line":13,"column":2},"end":{"line":13,"column":16}},
+              "range":[382,396],
+              "value":" 4.3 T id "
+            }
+          ],
+          "leadingComments":[
+            {
+              "type":"Block",
+              "loc":{"source":null,"start":{"line":12,"column":4},"end":{"line":12,"column":18}},
+              "range":[346,360],
+              "value":" 4.1 L id "
+            }
+          ],
+          "loc":{"source":null,"start":{"line":12,"column":19},"end":{"line":12,"column":22}},
+          "range":[361,364],
+          "name":"Foo",
+          "typeAnnotation":null,
+          "optional":false
+        },
+        "typeArguments":null,
+        "arguments":[]
+      },
+      "directive":null
+    },
+    {
+      "type":"ExpressionStatement",
+      "loc":{"source":null,"start":{"line":15,"column":0},"end":{"line":15,"column":26}},
+      "range":[399,425],
+      "expression":{
+        "type":"NewExpression",
+        "trailingComments":[
+          {
+            "type":"Block",
+            "loc":{"source":null,"start":{"line":15,"column":8},"end":{"line":15,"column":24}},
+            "range":[407,423],
+            "value":" 5.1 I args "
+          }
+        ],
+        "loc":{"source":null,"start":{"line":15,"column":0},"end":{"line":15,"column":25}},
+        "range":[399,424],
+        "callee":{
+          "type":"Identifier",
+          "loc":{"source":null,"start":{"line":15,"column":4},"end":{"line":15,"column":7}},
+          "range":[403,406],
+          "name":"Foo",
+          "typeAnnotation":null,
+          "optional":false
+        },
+        "typeArguments":null,
+        "arguments":[]
+      },
+      "directive":null
+    },
+    {
+      "type":"ExpressionStatement",
+      "loc":{"source":null,"start":{"line":17,"column":0},"end":{"line":17,"column":29}},
+      "range":[427,456],
+      "expression":{
+        "type":"NewExpression",
+        "trailingComments":[
+          {
+            "type":"Block",
+            "loc":{"source":null,"start":{"line":17,"column":11},"end":{"line":17,"column":27}},
+            "range":[438,454],
+            "value":" 6.1 I args "
+          }
+        ],
+        "loc":{"source":null,"start":{"line":17,"column":0},"end":{"line":17,"column":28}},
+        "range":[427,455],
+        "callee":{
+          "type":"Identifier",
+          "loc":{"source":null,"start":{"line":17,"column":4},"end":{"line":17,"column":7}},
+          "range":[431,434],
+          "name":"Foo",
+          "typeAnnotation":null,
+          "optional":false
+        },
+        "typeArguments":null,
+        "arguments":[
+          {
+            "type":"Identifier",
+            "loc":{"source":null,"start":{"line":17,"column":8},"end":{"line":17,"column":9}},
+            "range":[435,436],
+            "name":"a",
+            "typeAnnotation":null,
+            "optional":false
           }
         ]
       },
-      "async":false,
-      "generator":false,
-      "predicate":null,
-      "expression":false,
-      "returnType":null,
-      "typeParameters":null
+      "directive":null
     }
   ],
   "comments":[
     {
       "type":"Block",
-      "loc":{"source":null,"start":{"line":2,"column":2},"end":{"line":2,"column":31}},
-      "range":[23,52],
-      "value":" 1.0 unreachable leading "
+      "loc":{"source":null,"start":{"line":1,"column":0},"end":{"line":1,"column":15}},
+      "range":[0,15],
+      "value":" 1.1 L new "
     },
     {
       "type":"Block",
-      "loc":{"source":null,"start":{"line":3,"column":24},"end":{"line":3,"column":41}},
-      "range":[77,94],
-      "value":" 1.1 leading "
+      "loc":{"source":null,"start":{"line":1,"column":20},"end":{"line":1,"column":34}},
+      "range":[20,34],
+      "value":" 1.2 L id "
+    },
+    {
+      "type":"Block",
+      "loc":{"source":null,"start":{"line":1,"column":39},"end":{"line":1,"column":56}},
+      "range":[39,56],
+      "value":" 1.3 L targs "
+    },
+    {
+      "type":"Block",
+      "loc":{"source":null,"start":{"line":1,"column":61},"end":{"line":1,"column":77}},
+      "range":[61,77],
+      "value":" 1.4 L args "
+    },
+    {
+      "type":"Block",
+      "loc":{"source":null,"start":{"line":1,"column":81},"end":{"line":1,"column":97}},
+      "range":[81,97],
+      "value":" 1.5 T args "
+    },
+    {
+      "type":"Block",
+      "loc":{"source":null,"start":{"line":3,"column":4},"end":{"line":3,"column":18}},
+      "range":[104,118],
+      "value":" 2.1 L id "
+    },
+    {
+      "type":"Block",
+      "loc":{"source":null,"start":{"line":3,"column":23},"end":{"line":3,"column":37}},
+      "range":[123,137],
+      "value":" 2.2 T id "
     },
     {
       "type":"Block",
       "loc":{"source":null,"start":{"line":4,"column":2},"end":{"line":4,"column":19}},
-      "range":[97,114],
-      "value":" 1.2 leading "
+      "range":[140,157],
+      "value":" 2.3 L targs "
     },
     {
       "type":"Block",
-      "loc":{"source":null,"start":{"line":11,"column":10},"end":{"line":11,"column":28}},
-      "range":[186,204],
-      "value":" 2.0 trailing "
+      "loc":{"source":null,"start":{"line":4,"column":24},"end":{"line":4,"column":41}},
+      "range":[162,179],
+      "value":" 2.4 T targs "
     },
     {
       "type":"Block",
-      "loc":{"source":null,"start":{"line":12,"column":2},"end":{"line":12,"column":32}},
-      "range":[208,238],
-      "value":" 2.1 unreachable trailing "
+      "loc":{"source":null,"start":{"line":5,"column":2},"end":{"line":5,"column":18}},
+      "range":[182,198],
+      "value":" 2.5 L args "
     },
     {
       "type":"Block",
-      "loc":{"source":null,"start":{"line":16,"column":2},"end":{"line":16,"column":31}},
-      "range":[278,307],
-      "value":" 3.0 unreachable leading "
+      "loc":{"source":null,"start":{"line":5,"column":22},"end":{"line":5,"column":38}},
+      "range":[202,218],
+      "value":" 2.6 T args "
     },
     {
       "type":"Block",
-      "loc":{"source":null,"start":{"line":17,"column":24},"end":{"line":17,"column":41}},
-      "range":[332,349],
-      "value":" 3.1 leading "
+      "loc":{"source":null,"start":{"line":6,"column":2},"end":{"line":6,"column":18}},
+      "range":[221,237],
+      "value":" 2.7 T args "
     },
     {
       "type":"Block",
-      "loc":{"source":null,"start":{"line":18,"column":2},"end":{"line":18,"column":19}},
-      "range":[352,369],
-      "value":" 3.2 leading "
+      "loc":{"source":null,"start":{"line":8,"column":4},"end":{"line":8,"column":18}},
+      "range":[244,258],
+      "value":" 3.1 L id "
     },
     {
       "type":"Block",
-      "loc":{"source":null,"start":{"line":19,"column":6},"end":{"line":19,"column":39}},
-      "range":[376,409],
-      "value":" 3.3 unreachable by New node "
+      "loc":{"source":null,"start":{"line":8,"column":23},"end":{"line":8,"column":37}},
+      "range":[263,277],
+      "value":" 3.2 T id "
     },
     {
       "type":"Block",
-      "loc":{"source":null,"start":{"line":19,"column":44},"end":{"line":19,"column":62}},
-      "range":[414,432],
-      "value":" 3.4 trailing "
+      "loc":{"source":null,"start":{"line":9,"column":2},"end":{"line":9,"column":19}},
+      "range":[280,297],
+      "value":" 3.3 L targs "
     },
     {
       "type":"Block",
-      "loc":{"source":null,"start":{"line":20,"column":2},"end":{"line":20,"column":32}},
-      "range":[436,466],
-      "value":" 3.5 unreachable trailing "
+      "loc":{"source":null,"start":{"line":9,"column":24},"end":{"line":9,"column":41}},
+      "range":[302,319],
+      "value":" 3.4 T targs "
+    },
+    {
+      "type":"Block",
+      "loc":{"source":null,"start":{"line":10,"column":2},"end":{"line":10,"column":19}},
+      "range":[322,339],
+      "value":" 3.5 T targs "
+    },
+    {
+      "type":"Block",
+      "loc":{"source":null,"start":{"line":12,"column":4},"end":{"line":12,"column":18}},
+      "range":[346,360],
+      "value":" 4.1 L id "
+    },
+    {
+      "type":"Block",
+      "loc":{"source":null,"start":{"line":12,"column":23},"end":{"line":12,"column":37}},
+      "range":[365,379],
+      "value":" 4.2 T id "
+    },
+    {
+      "type":"Block",
+      "loc":{"source":null,"start":{"line":13,"column":2},"end":{"line":13,"column":16}},
+      "range":[382,396],
+      "value":" 4.3 T id "
+    },
+    {
+      "type":"Block",
+      "loc":{"source":null,"start":{"line":15,"column":8},"end":{"line":15,"column":24}},
+      "range":[407,423],
+      "value":" 5.1 I args "
+    },
+    {
+      "type":"Block",
+      "loc":{"source":null,"start":{"line":17,"column":11},"end":{"line":17,"column":27}},
+      "range":[438,454],
+      "value":" 6.1 I args "
     }
   ]
 }

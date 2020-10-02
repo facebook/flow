@@ -1,12 +1,12 @@
 Error ------------------------------------------------------------------------------------ intersection-function.js:19:1
 
-Cannot call `a` because:
+Cannot call `a` because: [incompatible-call]
  - Either boolean [1] is incompatible with number [2].
  - Or boolean [1] is incompatible with string [3].
 
    intersection-function.js:19:1
    19| a(true);
-       ^^^^^^^
+       ^
 
 References:
    intersection-function.js:19:3
@@ -22,13 +22,13 @@ References:
 
 Error ------------------------------------------------------------------------------------ intersection-function.js:23:1
 
-Cannot call `b` because:
+Cannot call `b` because: [incompatible-call]
  - Either number [1] is incompatible with string [2].
  - Or number [1] is incompatible with object type [3].
 
    intersection-function.js:23:1
    23| b(42);
-       ^^^^^
+       ^
 
 References:
    intersection-function.js:23:3
@@ -44,13 +44,13 @@ References:
 
 Error ------------------------------------------------------------------------------------ intersection-function.js:24:1
 
-Cannot call `b` because:
+Cannot call `b` because: [incompatible-call]
  - Either object literal [1] is incompatible with string [2].
  - Or number [3] is incompatible with string [4] in property `p`.
 
    intersection-function.js:24:1
    24| b({p: 42});
-       ^^^^^^^^^^
+       ^
 
 References:
    intersection-function.js:24:3
@@ -69,7 +69,7 @@ References:
 
 Error ------------------------------------------------------------------------------------ intersection-function.js:30:1
 
-Cannot call `c` because:
+Cannot call `c` because: [incompatible-call]
  - Either number [1] is incompatible with string [2].
  - Or number [1] is incompatible with object type [3].
  - Or number [1] is incompatible with boolean [4].
@@ -77,7 +77,7 @@ Cannot call `c` because:
 
    intersection-function.js:30:1
    30| c(42);
-       ^^^^^
+       ^
 
 References:
    intersection-function.js:30:3
@@ -99,7 +99,7 @@ References:
 
 Error ------------------------------------------------------------------------------------ intersection-function.js:31:1
 
-Cannot call `c` because:
+Cannot call `c` because: [incompatible-call]
  - Either object literal [1] is incompatible with string [2].
  - Or number [3] is incompatible with string [4] in property `a.b`.
  - Or object literal [1] is incompatible with boolean [5].
@@ -107,7 +107,7 @@ Cannot call `c` because:
 
    intersection-function.js:31:1
    31| c({a: {b: 42}});
-       ^^^^^^^^^^^^^^^
+       ^
 
 References:
    intersection-function.js:31:3
@@ -132,14 +132,14 @@ References:
 
 Error ------------------------------------------------------------------------------------ intersection-function.js:36:1
 
-Cannot call `d` because:
+Cannot call `d` because: [incompatible-call]
  - Either number [1] is incompatible with string [2].
  - Or number [1] is incompatible with object type [3].
  - Or number [1] is incompatible with object type [4].
 
    intersection-function.js:36:1
    36| d(42);
-       ^^^^^
+       ^
 
 References:
    intersection-function.js:36:3
@@ -158,14 +158,14 @@ References:
 
 Error ------------------------------------------------------------------------------------ intersection-function.js:37:1
 
-Cannot call `d` because:
+Cannot call `d` because: [incompatible-call]
  - Either object literal [1] is incompatible with string [2].
  - Or number [3] is incompatible with string [4] in property `a`.
  - Or number [3] is incompatible with object type [5] in property `a`.
 
    intersection-function.js:37:1
    37| d({a: 42});
-       ^^^^^^^^^^
+       ^
 
 References:
    intersection-function.js:37:3
@@ -187,14 +187,14 @@ References:
 
 Error ------------------------------------------------------------------------------------ intersection-function.js:38:1
 
-Cannot call `d` because:
+Cannot call `d` because: [incompatible-call]
  - Either object literal [1] is incompatible with string [2].
  - Or object literal [3] is incompatible with string [4] in property `a`.
  - Or number [5] is incompatible with string [6] in property `a.b`.
 
    intersection-function.js:38:1
    38| d({a: {b: 42}});
-       ^^^^^^^^^^^^^^^
+       ^
 
 References:
    intersection-function.js:38:3
@@ -219,13 +219,13 @@ References:
 
 Error ------------------------------------------------------------------------------------ intersection-function.js:42:1
 
-Cannot call `e` because:
+Cannot call `e` because: [incompatible-call]
  - Either number [1] is incompatible with `X` [2].
  - Or number [1] is incompatible with object type [3].
 
    intersection-function.js:42:1
    42| e(42);
-       ^^^^^
+       ^
 
 References:
    intersection-function.js:42:3
@@ -241,13 +241,13 @@ References:
 
 Error ------------------------------------------------------------------------------------ intersection-function.js:44:1
 
-Cannot call `e` because:
+Cannot call `e` because: [incompatible-call]
  - Either `Y` [1] is incompatible with `X` [2].
  - Or number [3] is incompatible with string [4] in property `p`.
 
    intersection-function.js:44:1
    44| e(new Y());
-       ^^^^^^^^^^
+       ^
 
 References:
    intersection-function.js:44:3
@@ -266,13 +266,13 @@ References:
 
 Error ------------------------------------------------------------------------------------ intersection-function.js:45:1
 
-Cannot call `e` because:
+Cannot call `e` because: [incompatible-call]
  - Either `Z` [1] is incompatible with `X` [2].
  - Or property `p` is missing in `Z` [1] but exists in object type [3].
 
    intersection-function.js:45:1
    45| e(new Z());
-       ^^^^^^^^^^
+       ^
 
 References:
    intersection-function.js:45:3
@@ -288,13 +288,13 @@ References:
 
 Error ------------------------------------------------------------------------------------ intersection-function.js:46:1
 
-Cannot call `e` because:
+Cannot call `e` because: [incompatible-call]
  - Either object literal [1] is incompatible with `X` [2].
  - Or boolean [3] is incompatible with string [4] in property `p`.
 
    intersection-function.js:46:1
    46| e({p: true});
-       ^^^^^^^^^^^^
+       ^
 
 References:
    intersection-function.js:46:3
@@ -313,14 +313,14 @@ References:
 
 Error ------------------------------------------------------------------------------------ intersection-function.js:51:1
 
-Cannot call `f` because:
+Cannot call `f` because: [incompatible-call]
  - Either number [1] is incompatible with object type [2].
  - Or number [1] is incompatible with read-only array type [3].
  - Or number [1] is incompatible with tuple type [4].
 
    intersection-function.js:51:1
    51| f(42);
-       ^^^^^
+       ^
 
 References:
    intersection-function.js:51:3
@@ -339,14 +339,14 @@ References:
 
 Error ------------------------------------------------------------------------------------ intersection-function.js:52:1
 
-Cannot call `f` because:
+Cannot call `f` because: [incompatible-call]
  - Either number [1] is incompatible with string [2] in property `p`.
  - Or object literal [3] is incompatible with read-only array type [4].
  - Or object literal [3] is incompatible with tuple type [5].
 
    intersection-function.js:52:1
    52| f({p: 42});
-       ^^^^^^^^^^
+       ^
 
 References:
    intersection-function.js:52:7
@@ -366,42 +366,16 @@ References:
                              ^^^^^^^^^^^^^^^^ [5]
 
 
-Error ------------------------------------------------------------------------------------ intersection-function.js:53:1
-
-Cannot call `f` because:
- - Either property `p` is missing in object literal [1] but exists in object type [2].
- - Or object literal [1] is incompatible with read-only array type [3].
- - Or object literal [1] is incompatible with tuple type [4].
-
-   intersection-function.js:53:1
-   53| f({});
-       ^^^^^
-
-References:
-   intersection-function.js:53:3
-   53| f({});
-         ^^ [1]
-   intersection-function.js:48:23
-   48| declare function f(x: {p: string}): void;
-                             ^^^^^^^^^^^ [2]
-   intersection-function.js:49:23
-   49| declare function f(x: $ReadOnlyArray<string>): void;
-                             ^^^^^^^^^^^^^^^^^^^^^^ [3]
-   intersection-function.js:50:23
-   50| declare function f(x: [string, string]): void;
-                             ^^^^^^^^^^^^^^^^ [4]
-
-
 Error ------------------------------------------------------------------------------------ intersection-function.js:54:1
 
-Cannot call `f` because:
+Cannot call `f` because: [incompatible-call]
  - Either number [1] is incompatible with string [2] in property `p`.
  - Or `Y` [3] is incompatible with `$ReadOnlyArray` [4].
  - Or `Y` [3] is incompatible with tuple type [5].
 
    intersection-function.js:54:1
    54| f(new Y());
-       ^^^^^^^^^^
+       ^
 
 References:
    intersection-function.js:10:6
@@ -423,14 +397,14 @@ References:
 
 Error ------------------------------------------------------------------------------------ intersection-function.js:55:1
 
-Cannot call `f` because:
+Cannot call `f` because: [incompatible-call]
  - Either property `p` is missing in `Z` [1] but exists in object type [2].
  - Or `Z` [1] is incompatible with `$ReadOnlyArray` [3].
  - Or `Z` [1] is incompatible with tuple type [4].
 
    intersection-function.js:55:1
    55| f(new Z());
-       ^^^^^^^^^^
+       ^
 
 References:
    intersection-function.js:55:3
@@ -449,14 +423,14 @@ References:
 
 Error ------------------------------------------------------------------------------------ intersection-function.js:56:1
 
-Cannot call `f` because:
+Cannot call `f` because: [incompatible-call]
  - Either tuple type [1] is incompatible with object type [2].
  - Or number [3] is incompatible with string [4] in array element.
  - Or tuple type [1] has an arity of 1 but tuple type [5] has an arity of 2.
 
    intersection-function.js:56:1
    56| f(([1]: [number]));
-       ^^^^^^^^^^^^^^^^^^
+       ^
 
 References:
    intersection-function.js:56:9
@@ -478,14 +452,14 @@ References:
 
 Error ------------------------------------------------------------------------------------ intersection-function.js:57:1
 
-Cannot call `f` because:
+Cannot call `f` because: [incompatible-call]
  - Either tuple type [1] is incompatible with object type [2].
  - Or number [3] is incompatible with string [4] in array element.
  - Or number [3] is incompatible with string [5] in index 0.
 
    intersection-function.js:57:1
    57| f(([1, 2]: [number, number]));
-       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+       ^
 
 References:
    intersection-function.js:57:12
@@ -507,14 +481,14 @@ References:
 
 Error ------------------------------------------------------------------------------------ intersection-function.js:58:1
 
-Cannot call `f` because:
+Cannot call `f` because: [incompatible-call]
  - Either tuple type [1] is incompatible with object type [2].
  - Or number [3] is incompatible with string [4] in array element.
  - Or tuple type [1] has an arity of 3 but tuple type [5] has an arity of 2.
 
    intersection-function.js:58:1
    58| f(([1, 2, 3]: [number, number, number]));
-       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+       ^
 
 References:
    intersection-function.js:58:15
@@ -536,7 +510,7 @@ References:
 
 Error ------------------------------------------------------------------------------------ intersection-function.js:59:1
 
-Cannot call `f` because:
+Cannot call `f` because: [incompatible-call]
  - Either array type [1] is incompatible with object type [2].
  - Or number [3] is incompatible with string [4] in property `p`.
  - Or number [5] is incompatible with string [6] in array element.
@@ -546,7 +520,7 @@ Cannot call `f` because:
 
    intersection-function.js:59:1
    59| f(((null: any): Array<number> & {p: number}));
-       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+       ^
 
 References:
    intersection-function.js:59:17
@@ -580,13 +554,13 @@ References:
 
 Error ------------------------------------------------------------------------------------ intersection-function.js:63:1
 
-Cannot call `g` because:
+Cannot call `g` because: [incompatible-call]
  - Either number [1] is incompatible with string [2].
  - Or number [1] is incompatible with `Z` [3].
 
    intersection-function.js:63:1
    63| g(42);
-       ^^^^^
+       ^
 
 References:
    intersection-function.js:63:3
@@ -602,13 +576,13 @@ References:
 
 Error ------------------------------------------------------------------------------------ intersection-function.js:64:1
 
-Cannot call `g` because:
+Cannot call `g` because: [incompatible-call]
  - Either object literal [1] is incompatible with string [2].
  - Or object literal [1] is incompatible with `Z` [3].
 
    intersection-function.js:64:1
    64| g({});
-       ^^^^^
+       ^
 
 References:
    intersection-function.js:64:3
@@ -624,13 +598,13 @@ References:
 
 Error ------------------------------------------------------------------------------------ intersection-function.js:68:1
 
-Cannot call `h` because:
+Cannot call `h` because: [incompatible-call]
  - Either no more than 2 arguments are expected by function type [1].
  - Or number [2] is incompatible with object type [3].
 
    intersection-function.js:68:1
    68| h(1, 2, 3);
-       ^^^^^^^^^^
+       ^
 
 References:
    intersection-function.js:66:19
@@ -646,13 +620,13 @@ References:
 
 Error ------------------------------------------------------------------------------------ intersection-function.js:72:1
 
-Cannot call `i` because:
+Cannot call `i` because: [incompatible-call]
  - Either number [1] is incompatible with string [2].
  - Or `Y` [3] is incompatible with `X` [4].
 
    intersection-function.js:72:1
    72| i(new Y(), 42);
-       ^^^^^^^^^^^^^^
+       ^
 
 References:
    intersection-function.js:72:12
@@ -671,13 +645,13 @@ References:
 
 Error ------------------------------------------------------------------------------------ intersection-function.js:76:1
 
-Cannot call `j` because:
+Cannot call `j` because: [incompatible-call]
  - Either number [1] is incompatible with string [2].
  - Or number [3] is incompatible with string [4].
 
    intersection-function.js:76:1
    76| j(1, 2);
-       ^^^^^^^
+       ^
 
 References:
    intersection-function.js:76:6
@@ -696,13 +670,13 @@ References:
 
 Error ------------------------------------------------------------------------------------ intersection-function.js:80:1
 
-Cannot call `k` because:
+Cannot call `k` because: [incompatible-call]
  - Either number [1] is incompatible with string [2] in property `p`.
  - Or number [3] is incompatible with string [4].
 
    intersection-function.js:80:1
    80| k(1, {p: 2});
-       ^^^^^^^^^^^^
+       ^
 
 References:
    intersection-function.js:80:10
@@ -721,13 +695,13 @@ References:
 
 Error ------------------------------------------------------------------------------------ intersection-function.js:84:1
 
-Cannot call `m` because:
+Cannot call `m` because: [incompatible-call]
  - Either number [1] is incompatible with string [2] in type argument `T` [3].
  - Or number [1] is incompatible with string [4] in property `p`.
 
    intersection-function.js:84:1
    84| m((new W(): W<number>));
-       ^^^^^^^^^^^^^^^^^^^^^^^
+       ^
 
 References:
    intersection-function.js:84:15
@@ -744,18 +718,16 @@ References:
                                  ^^^^^^ [4]
 
 
-Error ------------------------------------------------------------------------------------------------- sentinel.js:11:2
+Error ------------------------------------------------------------------------------------------------ sentinel.js:11:17
 
 Cannot cast object literal to `X` because string [1] is incompatible with number [2] in property `p`.
+[incompatible-cast]
 
-   sentinel.js:11:2
-   11| ({type: 'A', p: 'foo'}: X);
-        ^^^^^^^^^^^^^^^^^^^^^
-
-References:
    sentinel.js:11:17
    11| ({type: 'A', p: 'foo'}: X);
                        ^^^^^ [1]
+
+References:
    sentinel.js:7:20
     7|   | {type: 'A', p: number}
                           ^^^^^^ [2]
@@ -763,7 +735,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- sentinel.js:12:2
 
-Cannot cast object literal to `X` because object literal [1] is incompatible with `X` [2].
+Cannot cast object literal to `X` because object literal [1] is incompatible with `X` [2]. [incompatible-cast]
 
    sentinel.js:12:2
    12| ({type: 'D'}: X);
@@ -777,7 +749,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- union.js:18:2
 
-Cannot cast `true` to `A` because:
+Cannot cast `true` to `A` because: [incompatible-cast]
  - Either boolean [1] is incompatible with number [2].
  - Or boolean [1] is incompatible with string [3].
 
@@ -796,7 +768,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- union.js:21:2
 
-Cannot cast `42` to `B` because:
+Cannot cast `42` to `B` because: [incompatible-cast]
  - Either number [1] is incompatible with string [2].
  - Or number [1] is incompatible with object type [3].
 
@@ -815,7 +787,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- union.js:22:2
 
-Cannot cast object literal to `B` because:
+Cannot cast object literal to `B` because: [incompatible-cast]
  - Either object literal [1] is incompatible with string [2].
  - Or number [3] is incompatible with string [4] in property `p`.
 
@@ -837,7 +809,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- union.js:25:2
 
-Cannot cast `42` to `C` because:
+Cannot cast `42` to `C` because: [incompatible-cast]
  - Either number [1] is incompatible with string [2].
  - Or number [1] is incompatible with object type [3].
  - Or number [1] is incompatible with boolean [4].
@@ -864,7 +836,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- union.js:26:2
 
-Cannot cast object literal to `C` because:
+Cannot cast object literal to `C` because: [incompatible-cast]
  - Either object literal [1] is incompatible with string [2].
  - Or number [3] is incompatible with string [4] in property `a.b`.
  - Or object literal [1] is incompatible with boolean [5].
@@ -894,7 +866,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- union.js:29:2
 
-Cannot cast `42` to `D` because:
+Cannot cast `42` to `D` because: [incompatible-cast]
  - Either number [1] is incompatible with string [2].
  - Or number [1] is incompatible with object type [3].
  - Or number [1] is incompatible with object type [4].
@@ -917,7 +889,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- union.js:30:2
 
-Cannot cast object literal to `D` because:
+Cannot cast object literal to `D` because: [incompatible-cast]
  - Either object literal [1] is incompatible with string [2].
  - Or number [3] is incompatible with string [4] in property `a`.
  - Or number [3] is incompatible with object type [5] in property `a`.
@@ -943,7 +915,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- union.js:31:2
 
-Cannot cast object literal to `D` because:
+Cannot cast object literal to `D` because: [incompatible-cast]
  - Either object literal [1] is incompatible with string [2].
  - Or object literal [3] is incompatible with string [4] in property `a`.
  - Or number [5] is incompatible with string [6] in property `a.b`.
@@ -972,7 +944,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- union.js:34:2
 
-Cannot cast `42` to `E` because:
+Cannot cast `42` to `E` because: [incompatible-cast]
  - Either number [1] is incompatible with `X` [2].
  - Or number [1] is incompatible with object type [3].
 
@@ -991,7 +963,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- union.js:36:2
 
-Cannot cast `new Y()` to `E` because:
+Cannot cast `new Y()` to `E` because: [incompatible-cast]
  - Either `Y` [1] is incompatible with `X` [2].
  - Or number [3] is incompatible with string [4] in property `p`.
 
@@ -1013,7 +985,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- union.js:37:2
 
-Cannot cast `new Z()` to `E` because:
+Cannot cast `new Z()` to `E` because: [incompatible-cast]
  - Either `Z` [1] is incompatible with `X` [2].
  - Or property `p` is missing in `Z` [1] but exists in object type [3].
 
@@ -1032,7 +1004,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- union.js:38:2
 
-Cannot cast object literal to `E` because:
+Cannot cast object literal to `E` because: [incompatible-cast]
  - Either object literal [1] is incompatible with `X` [2].
  - Or boolean [3] is incompatible with string [4] in property `p`.
 
@@ -1054,7 +1026,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- union.js:41:2
 
-Cannot cast `42` to `F` because:
+Cannot cast `42` to `F` because: [incompatible-cast]
  - Either number [1] is incompatible with object type [2].
  - Or number [1] is incompatible with read-only array type [3].
  - Or number [1] is incompatible with tuple type [4].
@@ -1077,7 +1049,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- union.js:42:2
 
-Cannot cast object literal to `F` because:
+Cannot cast object literal to `F` because: [incompatible-cast]
  - Either number [1] is incompatible with string [2] in property `p`.
  - Or object literal [3] is incompatible with read-only array type [4].
  - Or object literal [3] is incompatible with tuple type [5].
@@ -1101,32 +1073,9 @@ References:
                                                        ^^^^^^^^^^^^^^^^ [5]
 
 
-Error ---------------------------------------------------------------------------------------------------- union.js:43:2
-
-Cannot cast object literal to `F` because:
- - Either property `p` is missing in object literal [1] but exists in object type [2].
- - Or object literal [1] is incompatible with read-only array type [3].
- - Or object literal [1] is incompatible with tuple type [4].
-
-   union.js:43:2
-   43| ({}: F);
-        ^^ [1]
-
-References:
-   union.js:40:10
-   40| type F = {p: string} | $ReadOnlyArray<string> | [string, string];
-                ^^^^^^^^^^^ [2]
-   union.js:40:24
-   40| type F = {p: string} | $ReadOnlyArray<string> | [string, string];
-                              ^^^^^^^^^^^^^^^^^^^^^^ [3]
-   union.js:40:49
-   40| type F = {p: string} | $ReadOnlyArray<string> | [string, string];
-                                                       ^^^^^^^^^^^^^^^^ [4]
-
-
 Error ---------------------------------------------------------------------------------------------------- union.js:44:2
 
-Cannot cast `new Y()` to `F` because:
+Cannot cast `new Y()` to `F` because: [incompatible-cast]
  - Either number [1] is incompatible with string [2] in property `p`.
  - Or `Y` [3] is incompatible with `$ReadOnlyArray` [4].
  - Or `Y` [3] is incompatible with tuple type [5].
@@ -1152,7 +1101,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- union.js:45:2
 
-Cannot cast `new Z()` to `F` because:
+Cannot cast `new Z()` to `F` because: [incompatible-cast]
  - Either property `p` is missing in `Z` [1] but exists in object type [2].
  - Or `Z` [1] is incompatible with `$ReadOnlyArray` [3].
  - Or `Z` [1] is incompatible with tuple type [4].
@@ -1173,21 +1122,18 @@ References:
                                                        ^^^^^^^^^^^^^^^^ [4]
 
 
-Error ---------------------------------------------------------------------------------------------------- union.js:46:3
+Error ---------------------------------------------------------------------------------------------------- union.js:46:8
 
-Cannot cast array literal to `F` because:
+Cannot cast array literal to `F` because: [incompatible-cast]
  - Either tuple type [1] is incompatible with object type [2].
  - Or number [3] is incompatible with string [4] in array element.
  - Or tuple type [1] has an arity of 1 but tuple type [5] has an arity of 2.
 
-   union.js:46:3
-   46| (([1]: [number]): F);
-         ^^^^^^^^^^^^^
-
-References:
    union.js:46:8
    46| (([1]: [number]): F);
               ^^^^^^^^ [1]
+
+References:
    union.js:40:10
    40| type F = {p: string} | $ReadOnlyArray<string> | [string, string];
                 ^^^^^^^^^^^ [2]
@@ -1202,21 +1148,18 @@ References:
                                                        ^^^^^^^^^^^^^^^^ [5]
 
 
-Error ---------------------------------------------------------------------------------------------------- union.js:47:3
+Error --------------------------------------------------------------------------------------------------- union.js:47:11
 
-Cannot cast array literal to `F` because:
+Cannot cast array literal to `F` because: [incompatible-cast]
  - Either tuple type [1] is incompatible with object type [2].
  - Or number [3] is incompatible with string [4] in array element.
  - Or number [3] is incompatible with string [5] in index 0.
 
-   union.js:47:3
-   47| (([1, 2]: [number, number]): F);
-         ^^^^^^^^^^^^^^^^^^^^^^^^
-
-References:
    union.js:47:11
    47| (([1, 2]: [number, number]): F);
                  ^^^^^^^^^^^^^^^^ [1]
+
+References:
    union.js:40:10
    40| type F = {p: string} | $ReadOnlyArray<string> | [string, string];
                 ^^^^^^^^^^^ [2]
@@ -1231,21 +1174,18 @@ References:
                                                         ^^^^^^ [5]
 
 
-Error ---------------------------------------------------------------------------------------------------- union.js:48:3
+Error --------------------------------------------------------------------------------------------------- union.js:48:14
 
-Cannot cast array literal to `F` because:
+Cannot cast array literal to `F` because: [incompatible-cast]
  - Either tuple type [1] is incompatible with object type [2].
  - Or number [3] is incompatible with string [4] in array element.
  - Or tuple type [1] has an arity of 3 but tuple type [5] has an arity of 2.
 
-   union.js:48:3
-   48| (([1, 2, 3]: [number, number, number]): F);
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-References:
    union.js:48:14
    48| (([1, 2, 3]: [number, number, number]): F);
                     ^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+References:
    union.js:40:10
    40| type F = {p: string} | $ReadOnlyArray<string> | [string, string];
                 ^^^^^^^^^^^ [2]
@@ -1260,9 +1200,9 @@ References:
                                                        ^^^^^^^^^^^^^^^^ [5]
 
 
-Error ---------------------------------------------------------------------------------------------------- union.js:49:4
+Error --------------------------------------------------------------------------------------------------- union.js:49:16
 
-Cannot cast `null` to `F` because:
+Cannot cast `null` to `F` because: [incompatible-cast]
  - Either array type [1] is incompatible with object type [2].
  - Or number [3] is incompatible with string [4] in property `p`.
  - Or number [5] is incompatible with string [6] in array element.
@@ -1270,9 +1210,9 @@ Cannot cast `null` to `F` because:
  - Or array type [1] has an unknown number of elements, so is incompatible with tuple type [9].
  - Or object type [7] is incompatible with tuple type [9].
 
-   union.js:49:4
+   union.js:49:16
    49| (((null: any): Array<number> & {p: number}): F);
-          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
    union.js:49:16
@@ -1306,7 +1246,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- union.js:52:2
 
-Cannot cast `42` to `G` because:
+Cannot cast `42` to `G` because: [incompatible-cast]
  - Either number [1] is incompatible with string [2].
  - Or number [1] is incompatible with `Z` [3].
 
@@ -1325,7 +1265,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- union.js:53:2
 
-Cannot cast object literal to `G` because:
+Cannot cast object literal to `G` because: [incompatible-cast]
  - Either object literal [1] is incompatible with string [2].
  - Or object literal [1] is incompatible with `Z` [3].
 
@@ -1342,15 +1282,15 @@ References:
                          ^ [3]
 
 
-Error ---------------------------------------------------------------------------------------------------- union.js:56:3
+Error --------------------------------------------------------------------------------------------------- union.js:56:12
 
-Cannot cast `new W()` to `M` because:
+Cannot cast `new W()` to `M` because: [incompatible-cast]
  - Either number [1] is incompatible with string [2] in type argument `T` [3].
  - Or number [1] is incompatible with string [4] in property `p`.
 
-   union.js:56:3
+   union.js:56:12
    56| ((new W(): W<number>): M);
-         ^^^^^^^^^^^^^^^^^^
+                  ^^^^^^^^^
 
 References:
    union.js:56:14
@@ -1368,4 +1308,4 @@ References:
 
 
 
-Found 54 errors
+Found 52 errors

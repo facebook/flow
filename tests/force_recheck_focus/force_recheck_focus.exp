@@ -7,7 +7,7 @@ To learn more, visit flow.org/en/docs/lang/lazy-modes
 ===== (ide) force-recheck --focus of a unchanged file does a recheck: =====
 Error -------------------------------------------------------------------------------------------------------- a.js:1:17
 
-Cannot assign `123` to `x` because number [1] is incompatible with string [2].
+Cannot assign `123` to `x` because number [1] is incompatible with string [2]. [incompatible-type]
 
    a.js:1:17
    1| var x: string = 123;
@@ -33,7 +33,7 @@ To learn more, visit flow.org/en/docs/lang/lazy-modes
 ===== (fs) force-recheck --focus of a unchanged file does a recheck: =====
 Error -------------------------------------------------------------------------------------------------------- a.js:1:17
 
-Cannot assign `123` to `x` because number [1] is incompatible with string [2].
+Cannot assign `123` to `x` because number [1] is incompatible with string [2]. [incompatible-type]
 
    a.js:1:17
    1| var x: string = 123;

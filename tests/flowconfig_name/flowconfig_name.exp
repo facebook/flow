@@ -1,0 +1,97 @@
+
+We should use the all flag from configure-flow to find an error:
+Error ----------------------------------------------------------------------------------------------------- test.js:2:17
+
+Cannot assign `3` to `x` because number [1] is incompatible with string [2]. [incompatible-type]
+
+   test.js:2:17
+   2| var x: string = 3;
+                      ^ [1]
+
+References:
+   test.js:2:8
+   2| var x: string = 3;
+             ^^^^^^ [2]
+
+
+
+Found 1 error
+
+We can start a server using the configure-flow file:
+
+And still find the error with flow status!:
+Error ----------------------------------------------------------------------------------------------------- test.js:2:17
+
+Cannot assign `3` to `x` because number [1] is incompatible with string [2]. [incompatible-type]
+
+   test.js:2:17
+   2| var x: string = 3;
+                      ^ [1]
+
+References:
+   test.js:2:8
+   2| var x: string = 3;
+             ^^^^^^ [2]
+
+
+
+Found 1 error
+
+We can simultaneously start a server with the regular .flowconfig:
+
+And still find the error with the original configure-flow config:
+Error ----------------------------------------------------------------------------------------------------- test.js:2:17
+
+Cannot assign `3` to `x` because number [1] is incompatible with string [2]. [incompatible-type]
+
+   test.js:2:17
+   2| var x: string = 3;
+                      ^ [1]
+
+References:
+   test.js:2:8
+   2| var x: string = 3;
+             ^^^^^^ [2]
+
+
+
+Found 1 error
+
+And not check any non @flow files using the .flowconfig config:
+No errors!
+
+We should be able to run status without start:
+Error ----------------------------------------------------------------------------------------------------- test.js:2:17
+
+Cannot assign `3` to `x` because number [1] is incompatible with string [2]. [incompatible-type]
+
+   test.js:2:17
+   2| var x: string = 3;
+                      ^ [1]
+
+References:
+   test.js:2:8
+   2| var x: string = 3;
+             ^^^^^^ [2]
+
+
+
+Found 1 error
+
+We should be able to run without any command specified:
+Error ----------------------------------------------------------------------------------------------------- test.js:2:17
+
+Cannot assign `3` to `x` because number [1] is incompatible with string [2]. [incompatible-type]
+
+   test.js:2:17
+   2| var x: string = 3;
+                      ^ [1]
+
+References:
+   test.js:2:8
+   2| var x: string = 3;
+             ^^^^^^ [2]
+
+
+
+Found 1 error

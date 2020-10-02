@@ -1,4 +1,4 @@
-(**
+(*
  * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
@@ -51,7 +51,7 @@ val update_env : Context.t -> ALoc.t -> t -> unit
 
 val promote_to_const_like : Context.t -> ALoc.t -> bool
 
-val bind_class : Context.t -> ALoc.t -> Type.Properties.id -> Type.Properties.id -> unit
+val bind_class : Context.t -> ALoc.id -> Type.Properties.id -> Type.Properties.id -> unit
 
 val bind_var : ?state:State.t -> Context.t -> string -> Type.t -> ALoc.t -> unit
 
@@ -150,6 +150,9 @@ val unify_declared_type : ?lookup_mode:LookupMode.t -> Context.t -> string -> Ty
 val unify_declared_fun_type : Context.t -> string -> ALoc.t -> Type.t -> unit
 
 val var_ref :
+  ?lookup_mode:LookupMode.t -> Context.t -> string -> ?desc:Reason.reason_desc -> ALoc.t -> Type.t
+
+val query_var :
   ?lookup_mode:LookupMode.t -> Context.t -> string -> ?desc:Reason.reason_desc -> ALoc.t -> Type.t
 
 val set_var :

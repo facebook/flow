@@ -1,4 +1,4 @@
-(**
+(*
  * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
@@ -12,7 +12,8 @@ type expr =
   (ALoc.t, ALoc.t) Flow_ast.Expression.t ->
   (ALoc.t, ALoc.t * Type.t) Flow_ast.Expression.t
 
-type callback = use_op:Type.use_op -> ALoc.t -> string -> Type.t Default.t option -> Type.t -> unit
+type callback =
+  use_op:Type.use_op -> ALoc.t -> string -> Type.t Default.t option -> Type.t -> Type.t
 
 val empty :
   ?init:(ALoc.t, ALoc.t) Flow_ast.Expression.t ->
@@ -34,8 +35,8 @@ val array_elements :
   expr:expr ->
   f:callback ->
   state ->
-  (ALoc.t, ALoc.t) Flow_ast.Pattern.Array.element option list ->
-  (ALoc.t, ALoc.t * Type.t) Flow_ast.Pattern.Array.element option list
+  (ALoc.t, ALoc.t) Flow_ast.Pattern.Array.element list ->
+  (ALoc.t, ALoc.t * Type.t) Flow_ast.Pattern.Array.element list
 
 val object_properties :
   Context.t ->

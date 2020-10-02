@@ -9,13 +9,13 @@
       "range":[41,71],
       "expression":{
         "type":"SequenceExpression",
-        "loc":{"source":null,"start":{"line":2,"column":2},"end":{"line":2,"column":28}},
-        "range":[43,69],
+        "loc":{"source":null,"start":{"line":2,"column":1},"end":{"line":2,"column":29}},
+        "range":[42,70],
         "expressions":[
           {
             "type":"TypeCastExpression",
-            "loc":{"source":null,"start":{"line":2,"column":2},"end":{"line":2,"column":13}},
-            "range":[43,54],
+            "loc":{"source":null,"start":{"line":2,"column":1},"end":{"line":2,"column":14}},
+            "range":[42,55],
             "expression":{
               "type":"Identifier",
               "loc":{"source":null,"start":{"line":2,"column":2},"end":{"line":2,"column":5}},
@@ -37,8 +37,8 @@
           },
           {
             "type":"TypeCastExpression",
-            "loc":{"source":null,"start":{"line":2,"column":17},"end":{"line":2,"column":28}},
-            "range":[58,69],
+            "loc":{"source":null,"start":{"line":2,"column":16},"end":{"line":2,"column":29}},
+            "range":[57,70],
             "expression":{
               "type":"Identifier",
               "loc":{"source":null,"start":{"line":2,"column":17},"end":{"line":2,"column":20}},

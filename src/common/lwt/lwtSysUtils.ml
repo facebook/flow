@@ -1,4 +1,4 @@
-(**
+(*
  * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
@@ -25,27 +25,33 @@ let blocking_waitpid =
   else
     reasonable_impl
 
-(* An lwt version of Sys_utils.exec_read. Basically just runs a command and returns the first line
- * of stdout *)
-let exec_read cmd args =
-  let process = Lwt_process.open_process_in (cmd, Array.of_list (cmd :: args)) in
-  let%lwt result = Lwt_io.read_line process#stdout in
-  let%lwt status = process#close in
-  assert (status = Unix.WEXITED 0);
-  Lwt.return result
-
 type command_result = {
   stdout: string;
   stderr: string;
   status: Unix.process_status;
 }
 
-let exec cmd args =
-  Lwt_process.with_process_full
-    (cmd, Array.of_list (cmd :: args))
-    (fun process ->
-      (* Wait for it to finish *)
-      let%lwt status = process#status in
-      let%lwt stdout = Lwt_io.read process#stdout in
-      let%lwt stderr = Lwt_io.read process#stderr in
-      Lwt.return { stdout; stderr; status })
+let command_result_of_process process =
+  (* Wait for it to finish *)
+  let%lwt status = process#status
+  and stdout = Lwt_io.read process#stdout
+  and stderr = Lwt_io.read process#stderr in
+  Lwt.return { stdout; stderr; status }
+
+let prepare_args cmd args = (cmd, Array.of_list (cmd :: args))
+
+let exec cmd args = Lwt_process.with_process_full (prepare_args cmd args) command_result_of_process
+
+let exec_with_timeout ~timeout cmd args =
+  Lwt_process.with_process_full (prepare_args cmd args) (fun process ->
+      let timeout_msg =
+        Printf.sprintf "Timed out while running `%s` after %.3f seconds" cmd timeout
+      in
+      let on_timeout () =
+        process#terminate;
+        let%lwt _ = process#close in
+        Lwt.return_unit
+      in
+      LwtTimeout.with_timeout ~timeout_msg ~on_timeout timeout (fun () ->
+          let%lwt command_result = command_result_of_process process in
+          Lwt.return (Ok command_result)))

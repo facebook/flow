@@ -1,0 +1,4 @@
+// @flow
+
+import {} from '';
+//              ^

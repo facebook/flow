@@ -1,4 +1,4 @@
-(**
+(*
  * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
@@ -25,7 +25,7 @@ let defer_parallelizable_workload workload =
 let requeue_deferred_parallelizable_workloads () =
   let workloads = !deferred_parallelizable_workloads_rev in
   deferred_parallelizable_workloads_rev := [];
-  Core_list.iter workloads ~f:(fun workload ->
+  Base.List.iter workloads ~f:(fun workload ->
       WorkloadStream.requeue_parallelizable workload workload_stream)
 
 (* Env updates are...well...updates to our env. They must be handled in the main thread. Also FIFO
@@ -130,20 +130,25 @@ let recheck_fetch ~process_updates ~get_forced =
   recheck_acc :=
     Lwt_stream.get_available recheck_stream
     (* Get all the files which have changed *)
-    |> Core_list.fold_left
+    |> Base.List.fold_left
          ~init:!recheck_acc
          ~f:(fun workload { files; callback; file_watcher_metadata; recheck_reason } ->
+           let skip_incompatible =
+             match recheck_reason with
+             | LspProt.Lazy_init_typecheck -> Some true
+             | _ -> None
+           in
            let (is_empty_msg, workload) =
              match files with
              | ChangedFiles changed_files ->
-               let updates = process_updates changed_files in
+               let updates = process_updates ?skip_incompatible changed_files in
                ( FilenameSet.is_empty updates,
                  {
                    workload with
                    files_to_recheck = FilenameSet.union updates workload.files_to_recheck;
                  } )
              | FilesToForceFocusedAndRecheck forced_focused_files ->
-               let updates = process_updates forced_focused_files in
+               let updates = process_updates ?skip_incompatible forced_focused_files in
                let focused = FilenameSet.diff updates (get_forced () |> CheckedSet.focused) in
                ( FilenameSet.is_empty updates,
                  {

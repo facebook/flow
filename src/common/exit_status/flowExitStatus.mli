@@ -1,9 +1,10 @@
-(**
+(*
  * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  *)
+
 type t =
   | Interrupted
   | No_error
@@ -36,6 +37,8 @@ type t =
   | Dfind_died
   | Dfind_unresponsive
   | Watchman_error
+  | Hash_table_full
+  | Heap_full
   | Unknown_error
 
 exception Exit_with of t
@@ -45,6 +48,8 @@ val exit : ?msg:string -> t -> 'a
 val error_code : t -> int
 
 val error_type : int -> t
+
+val error_type_opt : int -> t option
 
 val to_string : t -> string
 

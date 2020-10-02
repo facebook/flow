@@ -1,4 +1,4 @@
-(**
+(*
  * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
@@ -7,7 +7,7 @@
 
 open Utils_js
 open Parsing_heaps_utils
-module Result = Core_result
+module Result = Base.Result
 
 let ( >>= ) = Result.( >>= )
 
@@ -20,31 +20,31 @@ class ['acc] object_key_visitor ~init =
     inherit ['acc, Loc.t] Flow_ast_visitor.visitor ~init as super
 
     method! expression (exp : (Loc.t, Loc.t) Flow_ast.Expression.t) =
-      Flow_ast.Expression.(
-        begin
-          match exp with
-          | (loc, Object x) -> this#visit_object_literal loc x
-          | _ -> ()
-        end;
-        super#expression exp)
+      let open Flow_ast.Expression in
+      begin
+        match exp with
+        | (loc, Object x) -> this#visit_object_literal loc x
+        | _ -> ()
+      end;
+      super#expression exp
 
     method private visit_object_literal
         (loc : Loc.t) (obj : (Loc.t, Loc.t) Flow_ast.Expression.Object.t) =
-      Flow_ast.Expression.Object.(
-        let get_prop_key =
-          Property.(
-            function
-            | Init { key; _ }
-            | Method { key; _ }
-            | Get { key; _ }
-            | Set { key; _ } ->
-              key)
-        in
-        let { properties; comments = _ } = obj in
-        properties
-        |> List.iter (function
-               | SpreadProperty _ -> ()
-               | Property (_, prop) -> prop |> get_prop_key |> this#visit_object_key loc))
+      let open Flow_ast.Expression.Object in
+      let get_prop_key =
+        Property.(
+          function
+          | Init { key; _ }
+          | Method { key; _ }
+          | Get { key; _ }
+          | Set { key; _ } ->
+            key)
+      in
+      let { properties; comments = _ } = obj in
+      properties
+      |> List.iter (function
+             | SpreadProperty _ -> ()
+             | Property (_, prop) -> prop |> get_prop_key |> this#visit_object_key loc)
 
     method private visit_object_key
         (_literal_loc : Loc.t) (_key : (Loc.t, Loc.t) Flow_ast.Expression.Object.Property.key) =
@@ -57,7 +57,7 @@ module ObjectKeyAtLoc : sig
    * enclosing object literal. This is because later, we need to figure out which types are related
    * to this object literal which is easier to do when we have the location of the actual object
    * literal than if we only had the location of a single key. *)
-  val get : (Loc.t, Loc.t) Flow_ast.program -> Loc.t -> (Loc.t * Loc.t * string) option
+  val get : (Loc.t, Loc.t) Flow_ast.Program.t -> Loc.t -> (Loc.t * Loc.t * string) option
 end = struct
   class object_key_finder target_loc =
     object (this)
@@ -65,12 +65,12 @@ end = struct
 
       method! private visit_object_key
           (literal_loc : Loc.t) (key : (Loc.t, Loc.t) Flow_ast.Expression.Object.Property.key) =
-        Flow_ast.Expression.Object.(
-          match key with
-          | Property.Identifier (prop_loc, { Flow_ast.Identifier.name; comments = _ })
-            when Loc.contains prop_loc target_loc ->
-            this#set_acc (Some (literal_loc, prop_loc, name))
-          | _ -> ())
+        let open Flow_ast.Expression.Object in
+        match key with
+        | Property.Identifier (prop_loc, { Flow_ast.Identifier.name; comments = _ })
+          when Loc.contains prop_loc target_loc ->
+          this#set_acc (Some (literal_loc, prop_loc, name))
+        | _ -> ()
     end
 
   let get ast target_loc =
@@ -81,14 +81,12 @@ end
 (* If the given type refers to an object literal, return the location of the object literal.
  * Otherwise return None *)
 let get_object_literal_loc ~reader ty : Loc.t option =
-  Type.(
-    Reason.(
-      let reason_desc =
-        reason_of_t ty (* TODO look into unwrap *) |> desc_of_reason ~unwrap:false
-      in
-      match reason_desc with
-      | RObjectLit -> Some (Type.def_loc_of_t ty |> loc_of_aloc ~reader)
-      | _ -> None))
+  let open TypeUtil in
+  let open Reason in
+  let reason_desc = reason_of_t ty (* TODO look into unwrap *) |> desc_of_reason ~unwrap:false in
+  match reason_desc with
+  | RObjectLit -> Some (def_loc_of_t ty |> loc_of_aloc ~reader)
+  | _ -> None
 
 type def_kind =
   (* Use of a property, e.g. `foo.bar`. Includes type of receiver (`foo`) and name of the property
@@ -216,7 +214,7 @@ type def_loc =
   | AnyType
 
 let debug_string_of_locs locs =
-  locs |> Nel.to_list |> Core_list.map ~f:Loc.debug_to_string |> String.concat ", "
+  locs |> Nel.to_list |> Base.List.map ~f:Loc.debug_to_string |> String.concat ", "
 
 (* Disable the unused value warning -- we want to keep this around for debugging *)
 [@@@warning "-32"]
@@ -242,7 +240,7 @@ let rec debug_string_of_def_loc = function
   | FoundObject loc -> spf "FoundObject (%s)" (Loc.debug_to_string loc)
   | FoundUnion def_locs ->
     Nel.to_list def_locs
-    |> Core_list.map ~f:debug_string_of_def_loc
+    |> Base.List.map ~f:debug_string_of_def_loc
     |> String.concat ", "
     |> spf "FoundUnion (%s)"
   | NoDefFound -> "NoDefFound"
@@ -257,7 +255,7 @@ let extract_instancet cx ty : (Type.t, string) result =
     let resolved = Members.resolve_type cx ty in
     match resolved with
     | ThisClassT (_, t)
-    | DefT (_, _, PolyT (_, _, ThisClassT (_, t), _)) ->
+    | DefT (_, _, PolyT { t_out = ThisClassT (_, t); _ }) ->
       Ok t
     | _ ->
       let type_string = string_of_ctor resolved in
@@ -265,11 +263,8 @@ let extract_instancet cx ty : (Type.t, string) result =
 
 (* Must be called with the result from Members.extract_type *)
 let get_def_loc_from_extracted_type cx extracted_type name =
-  extracted_type
-  |> Members.extract_members cx
-  |> Members.to_command_result
-  >>| fun map ->
-  match SMap.get name map with
+  extracted_type |> Members.extract_members cx |> Members.to_command_result >>| fun map ->
+  match SMap.find_opt name map with
   | None -> None
   (* Currently some types (e.g. spreads) do not contain locations for their properties. For now
    * we'll just treat them as if the properties do not exist, but once this is fixed this case
@@ -283,38 +278,33 @@ let rec extract_def_loc ~reader cx ty name : (def_loc, string) result =
 
 (* The same as get_def_loc_from_extracted_type except it recursively checks for overridden
  * definitions of the member in superclasses and returns those as well *)
-and extract_def_loc_from_instancet ~reader cx extracted_type super name : (def_loc, string) result
-    =
+and extract_def_loc_from_instancet ~reader cx extracted_type super name : (def_loc, string) result =
   let current_class_def_loc = get_def_loc_from_extracted_type cx extracted_type name in
-  current_class_def_loc
-  >>= function
+  current_class_def_loc >>= function
   | None -> Ok NoDefFound
   | Some loc ->
     let loc = loc_of_aloc ~reader loc in
-    extract_def_loc ~reader cx super name
-    >>= begin
-          function
-          | FoundClass lst ->
-            (* Avoid duplicate entries. This can happen if a class does not override a method,
-             * so the definition points to the method definition in the parent class. Then we
-             * look at the parent class and find the same definition. *)
-            let lst =
-              if Nel.hd lst = loc then
-                lst
-              else
-                Nel.cons loc lst
-            in
-            Ok (FoundClass lst)
-          | FoundObject _ -> Error "A superclass should be a class, not an object"
-          | FoundUnion _ -> Error "A superclass should be a class, not a union"
-          (* If the superclass does not have a definition for this method, or it is for some reason
-           * not a class type, or we don't know its type, just return the location we already know
-           * about. *)
-          | NoDefFound
-          | UnsupportedType
-          | AnyType ->
-            Ok (FoundClass (Nel.one loc))
-        end
+    extract_def_loc ~reader cx super name >>= ( function
+    | FoundClass lst ->
+      (* Avoid duplicate entries. This can happen if a class does not override a method,
+       * so the definition points to the method definition in the parent class. Then we
+       * look at the parent class and find the same definition. *)
+      let lst =
+        if Nel.hd lst = loc then
+          lst
+        else
+          Nel.cons loc lst
+      in
+      Ok (FoundClass lst)
+    | FoundObject _ -> Error "A superclass should be a class, not an object"
+    | FoundUnion _ -> Error "A superclass should be a class, not a union"
+    (* If the superclass does not have a definition for this method, or it is for some reason
+     * not a class type, or we don't know its type, just return the location we already know
+     * about. *)
+    | NoDefFound
+    | UnsupportedType
+    | AnyType ->
+      Ok (FoundClass (Nel.one loc)) )
 
 and extract_def_loc_resolved ~reader cx ty name : (def_loc, string) result =
   Members.(
@@ -323,25 +313,18 @@ and extract_def_loc_resolved ~reader cx ty name : (def_loc, string) result =
       | Success (DefT (_, _, InstanceT (_, super, _, _))) as extracted_type ->
         extract_def_loc_from_instancet ~reader cx extracted_type super name
       | (Success (DefT (_, _, ObjT _)) | SuccessModule _) as extracted_type ->
-        get_def_loc_from_extracted_type cx extracted_type name
-        >>| begin
-              function
-              | None -> NoDefFound
-              | Some loc -> FoundObject (loc_of_aloc ~reader loc)
-            end
+        get_def_loc_from_extracted_type cx extracted_type name >>| ( function
+        | None -> NoDefFound
+        | Some loc -> FoundObject (loc_of_aloc ~reader loc) )
       | Success (UnionT (_, rep)) ->
         let union_members =
           UnionRep.members rep
-          |> Core_list.map ~f:(fun member -> extract_def_loc ~reader cx member name)
+          |> Base.List.map ~f:(fun member -> extract_def_loc ~reader cx member name)
           |> Result.all
         in
-        union_members
-        >>= begin
-              fun members ->
-              Nel.of_list members
-              |> Result.of_option ~error:"Union should have at least one member"
-            end
-        >>| (fun members_nel -> FoundUnion members_nel)
+        ( union_members >>= fun members ->
+          Nel.of_list members |> Result.of_option ~error:"Union should have at least one member" )
+        >>| fun members_nel -> FoundUnion members_nel
       | Success _
       | FailureNullishType
       | FailureUnhandledType _
@@ -373,7 +356,7 @@ let def_info_of_typecheck_results ~reader cx props_access_info =
       | FoundClass locs -> Some (def_info_of_class_member_locs locs)
       | FoundObject loc -> Some (Nel.one (Object loc))
       | FoundUnion def_locs ->
-        def_locs |> Nel.map def_info_of_def_loc |> Nel.cat_maybes |> Option.map ~f:Nel.concat
+        def_locs |> Nel.map def_info_of_def_loc |> Nel.cat_maybes |> Base.Option.map ~f:Nel.concat
       | NoDefFound
       | UnsupportedType
       | AnyType ->
@@ -389,27 +372,24 @@ let def_info_of_typecheck_results ~reader cx props_access_info =
       (* Here, `ty` ends up resolving to `ObjT` so we lose the knowledge that this is a static
        * property. This means that we don't get the fancy look-up-the-inheritance-chain behavior
        * that we get with class instances. That would be nice to add at some point. *)
-      def_info_of_type name ty >>| Option.map ~f:(fun def_info -> (def_info, name))
+      def_info_of_type name ty >>| Base.Option.map ~f:(fun def_info -> (def_info, name))
     else
       (* We get the type of the class back here, so we need to extract the type of an instance *)
-      extract_instancet cx ty
-      >>= fun ty ->
-      extract_def_loc_resolved ~reader cx ty name
-      >>= (function
+      extract_instancet cx ty >>= fun ty ->
+      extract_def_loc_resolved ~reader cx ty name >>= ( function
       | FoundClass locs -> Ok (Some (def_info_of_class_member_locs locs, name))
       | FoundUnion _
       | FoundObject _ ->
         Error "Expected to extract class def info from a class"
-      | _ -> Error "Unexpectedly failed to extract definition from known type")
+      | _ -> Error "Unexpectedly failed to extract definition from known type" )
   | Some (Use (ty, name)) ->
-    def_info_of_type name ty >>| Option.map ~f:(fun def_info -> (def_info, name))
+    def_info_of_type name ty >>| Base.Option.map ~f:(fun def_info -> (def_info, name))
   | Some (Use_in_literal (types, name)) ->
     let def_infos_result = Nel.map (def_info_of_type name) types |> Nel.result_all in
-    def_infos_result
-    >>| fun def_infos ->
+    def_infos_result >>| fun def_infos ->
     Nel.cat_maybes def_infos
-    |> Option.map ~f:Nel.concat
-    |> Option.map ~f:(fun def_info -> (def_info, name))
+    |> Base.Option.map ~f:Nel.concat
+    |> Base.Option.map ~f:(fun def_info -> (def_info, name))
 
 let add_literal_properties literal_key_info def_info =
   (* If we happen to be on an object property, include the location of that
@@ -432,14 +412,14 @@ let add_literal_properties literal_key_info def_info =
   in
   Result.map
     def_info
-    ~f:(Option.map ~f:(fun (prop_def_info, name) -> Property (prop_def_info, name)))
+    ~f:(Base.Option.map ~f:(fun (prop_def_info, name) -> Property (prop_def_info, name)))
 
 let get_def_info ~reader ~options env profiling file_key ast_info loc :
     (def_info option, string) result Lwt.t =
   let props_access_info = ref (Ok None) in
   let (ast, file_sig, info) = ast_info in
   (* Check if it's an exported symbol *)
-  let loc = Option.value (ImportExportSymbols.find_related_symbol file_sig loc) ~default:loc in
+  let loc = Base.Option.value (ImportExportSymbols.find_related_symbol file_sig loc) ~default:loc in
   let info = Docblock.set_flow_mode_for_ide_command info in
   let literal_key_info : (Loc.t * Loc.t * string) option = ObjectKeyAtLoc.get ast loc in
   let%lwt cx =
@@ -455,13 +435,11 @@ let get_def_info ~reader ~options env profiling file_key ast_info loc :
     Lwt.return cx
   in
   unset_hooks ();
-  !props_access_info
-  %>>= fun props_access_info ->
+  !props_access_info %>>= fun props_access_info ->
   let def_info = def_info_of_typecheck_results ~reader cx props_access_info in
   let def_info = def_info >>= add_literal_properties literal_key_info in
   let def_info =
-    def_info
-    >>= function
+    def_info >>= function
     | Some _ as def_info -> Ok def_info
     | None ->
       (* Check if we are on a CJS import/export. These cases are not covered above since the type
@@ -479,10 +457,10 @@ let get_def_info ~reader ~options env profiling file_key ast_info loc :
                   | Ok None ->
                     let external_file_sig =
                       let filename = file_key_of_module_ref ~reader file_key module_ref in
-                      Option.bind filename (Parsing_heaps.Reader.get_file_sig ~reader)
+                      Base.Option.bind filename (Parsing_heaps.Reader.get_file_sig ~reader)
                     in
                     Result.return
-                    @@ Option.bind external_file_sig (fun external_file_sig ->
+                    @@ Base.Option.bind external_file_sig (fun external_file_sig ->
                            match external_file_sig.module_sig.module_kind with
                            | CommonJS { mod_exp_loc = Some loc; _ } -> Some loc
                            | _ -> None)
@@ -494,8 +472,7 @@ let get_def_info ~reader ~options env profiling file_key ast_info loc :
             file_sig.module_sig.requires)
       in
       let export_loc =
-        export_loc
-        >>| function
+        export_loc >>| function
         | Some _ as x -> x
         | None ->
           File_sig.With_Loc.(
@@ -507,6 +484,6 @@ let get_def_info ~reader ~options env profiling file_key ast_info loc :
                 None
             | _ -> None))
       in
-      Result.map export_loc ~f:(Option.map ~f:(fun x -> CJSExport x))
+      Result.map export_loc ~f:(Base.Option.map ~f:(fun x -> CJSExport x))
   in
   Lwt.return @@ def_info

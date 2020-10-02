@@ -1,0 +1,5 @@
+(library
+  (name unit_test)
+  (wrapped false)
+  (modules unit_test)
+  (libraries utils_core))

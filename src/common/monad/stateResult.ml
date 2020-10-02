@@ -1,4 +1,4 @@
-(**
+(*
  * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
@@ -17,7 +17,7 @@ end
 module type S = sig
   type s
 
-  type ('a, 'b) r = ('a, 'b) Pervasives.result
+  type ('a, 'b) r = ('a, 'b) result
 
   type ('a, 'b) t = s -> ('a, 'b) r * s
 
@@ -48,7 +48,7 @@ end
 module Make (S : State) : S with type s = S.t = struct
   type s = S.t
 
-  type ('a, 'b) r = ('a, 'b) Pervasives.result
+  type ('a, 'b) r = ('a, 'b) result
 
   type ('a, 'b) t = S.t -> ('a, 'b) r * S.t
 
@@ -70,10 +70,10 @@ module Make (S : State) : S with type s = S.t = struct
 
   let get s = (Ok s, s)
 
-  let modify f = get >>= (fun st -> put (f st))
+  let modify f = get >>= fun st -> put (f st)
 
   let option f = function
-    | Some x -> f x >>| Option.some
+    | Some x -> f x >>| Base.Option.some
     | None -> return None
 
   let error x s = (Error x, s)

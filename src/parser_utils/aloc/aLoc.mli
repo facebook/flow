@@ -1,4 +1,4 @@
-(**
+(*
  * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
@@ -15,28 +15,34 @@ type reverse_table
 
 type key
 
-type t
+type t [@@deriving show]
 
 (* Creates an ALoc.t with a concrete underlying representation *)
 val of_loc : Loc.t -> t
 
-(* Takes an ALoc.t with a concrete underlying representation and makes it abstract.
+(* Takes an ALoc.t with a concrete underlying representation and makes it keyed.
  *
  * Preconditions:
- * - The given location cannot have already been abstractified.
+ * - The given location cannot have already been keyified.
  * - The file key with which the table was created must match the `source` of the given location.
- *   - This also implies that locations with `None` as the source cannot be abstractified. This
+ *   - This also implies that locations with `None` as the source cannot be keyified. This
  *     could be relaxed in the future if necessary.
  * *)
-val abstractify : table -> t -> t
+val keyify : table -> reverse_table -> t -> t
 
 (* Takes an ALoc.t with a concrete underlying representation and finds
- * the existing abstract representation for it from a reverse table
+ * the existing keyed representation for it from a reverse table
  *
  * Preconditions:
  * - The file key with which the table was created must match the `source` of the given location.
  * *)
-val lookup_key_if_possible : reverse_table Lazy.t -> t -> t
+type id = private t [@@deriving show]
+
+val id_none : id
+
+val id_of_aloc : reverse_table Lazy.t -> t -> id
+
+val equal_id : id -> id -> bool
 
 (* Converts an ALoc.t back to a Loc.t, looking up the underlying location in the given table if
  * necessary. We will have to look up tables in the shared heap at some point, so making it lazy
@@ -47,7 +53,7 @@ val to_loc : table Lazy.t -> t -> Loc.t
 val to_loc_with_tables : table Lazy.t Utils_js.FilenameMap.t -> t -> Loc.t
 
 (* TODO move to ALocRepresentationDoNotUse *)
-(* Unsafe: fails if the location has an abstract underlying representation. *)
+(* Unsafe: fails if the location has an keyed underlying representation. *)
 val to_loc_exn : t -> Loc.t
 
 (* The specific contents of this string should not be used to influence typechecking, but it can be
@@ -66,15 +72,15 @@ val compare : t -> t -> int
  * This is useful for data structures that do not need equal files to be
  * sorted closely to each other.
  *
- * This comparison also does not throw an error when concrete and abstract
+ * This comparison also does not throw an error when concrete and keyed
  * locations are compared.
  *)
 val quick_compare : t -> t -> int
 
 val equal : t -> t -> bool
 
-(* If one of the provided locations has an abstract underlying representation, and the other is
- * concrete, attempt to concretize the abstract one using the given table, before comparing *)
+(* If one of the provided locations has an keyed underlying representation, and the other is
+ * concrete, attempt to concretize the keyed one using the given table, before comparing *)
 val concretize_compare : table Lazy.t Utils_js.FilenameMap.t -> t -> t -> int
 
 val concretize_equal : table Lazy.t Utils_js.FilenameMap.t -> t -> t -> bool
@@ -92,10 +98,14 @@ val make_empty_reverse_table : unit -> reverse_table
  * made to depend on this module. If you find yourself tempted to use anything here, really think
  * through your options. *)
 module ALocRepresentationDoNotUse : sig
-  val is_abstract : t -> bool
+  val is_keyed : t -> bool
 
-  (* Should only be called if `is_abstract` returns `true`. Otherwise it will raise *)
+  (* Should only be called if `is_keyed` returns `true`. Otherwise it will raise *)
   val get_key_exn : t -> key
 
   val string_of_key : key -> string
+
+  val make_table : File_key.t -> Loc.t array -> table
+
+  val make_keyed : File_key.t option -> int -> t
 end

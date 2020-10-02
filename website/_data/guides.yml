@@ -62,6 +62,7 @@
 
     - path: "/docs/lang/refinements/"
     - path: "/docs/lang/lazy-modes/"
+    - path: "/docs/lang/types-first/"
     # - path: "/docs/lang/sealing/"
 
 - id: cli
@@ -71,7 +72,8 @@
     # - path: "/docs/cli/autocomplete/"
     # - path: "/docs/cli/check-contents/"
     # - path: "/docs/cli/check/"
-    # - path: "/docs/cli/coverage/"
+    - path: "/docs/cli/coverage/"
+    - path: "/docs/cli/annotate-exports/"
     # - path: "/docs/cli/find-module/"
     # - path: "/docs/cli/get-def/"
     # - path: "/docs/cli/get-importers/"
@@ -89,7 +91,6 @@
 - id: config
   pages:
     - path: "/docs/config/"
-    - path: "/docs/config/declarations/"
     - path: "/docs/config/include/"
     - path: "/docs/config/ignore/"
     - path: "/docs/config/untyped/"
@@ -97,6 +98,7 @@
     - path: "/docs/config/lints/"
     - path: "/docs/config/options/"
     - path: "/docs/config/version/"
+    - path: "/docs/config/declarations/"
 
 - id: libdefs
   pages:
@@ -112,9 +114,9 @@
       additional_reading:
         - guide: libdefs
 
-# - id: errors
-#   pages:
-#     - path: "/docs/errors/"
+- id: errors
+  pages:
+    - path: "/docs/errors/"
 
 - id: react
   pages:

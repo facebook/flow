@@ -1,0 +1,14 @@
+[ignore]
+
+[include]
+
+[libs]
+
+[lints]
+
+[options]
+types_first=false
+
+suppress_type=$MyPreferedSuppression
+
+[strict]

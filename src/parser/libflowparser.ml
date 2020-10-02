@@ -1,4 +1,4 @@
-(**
+(*
  * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
@@ -88,7 +88,7 @@ let parse content options =
   let (ast, errors) =
     Parser_flow.program ~fail:false ~parse_options:(Some parse_options) ~token_sink content
   in
-  let offset_table = Offset_utils.make content in
+  let offset_table = Offset_utils.make ~kind:Offset_utils.Utf8 content in
   match Translate.program (Some offset_table) ast with
   | JObject params ->
     let params = ("errors", Translate.errors errors) :: params in

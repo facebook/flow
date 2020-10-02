@@ -1,0 +1,197 @@
+>>> Iteration: 1
+>>> Running codemod on 5 files...
+>>> Launching report...
+
+Stats:
+  Files changed:                            4
+  Number of annotations added:              4
+  Total size of annotations:                4
+  Number of sig. ver. errors:               4
+  Number of annotations required:           4
+  Number of annotations skipped:            0
+
+Errors:
+  Missing annot./normalizer error:          0
+  Validation Error:                         0
+  Import Error:
+    Loc source none:                        0
+    Parsing heaps get ast error:            0
+    Indeterminate module type:              0
+    No matching export:                     0
+  Serializer error:                         0
+  Unsupported error kind:                   0
+
+Warnings:
+  Skipping arrow function:                  0
+  Large type added:                         0
+  Location unhandled:                       0
+  Empty NoUpper:                            0
+  Empty SomeKnownUpper:                     0
+
+>>> Iteration: 2
+>>> Running codemod on 4 files...
+>>> Launching report...
+
+Stats:
+  Files changed:                            3
+  Number of annotations added:              3
+  Total size of annotations:                3
+  Number of sig. ver. errors:               3
+  Number of annotations required:           3
+  Number of annotations skipped:            0
+
+Errors:
+  Missing annot./normalizer error:          0
+  Validation Error:                         0
+  Import Error:
+    Loc source none:                        0
+    Parsing heaps get ast error:            0
+    Indeterminate module type:              0
+    No matching export:                     0
+  Serializer error:                         0
+  Unsupported error kind:                   0
+
+Warnings:
+  Skipping arrow function:                  0
+  Large type added:                         0
+  Location unhandled:                       0
+  Empty NoUpper:                            0
+  Empty SomeKnownUpper:                     0
+
+>>> Iteration: 3
+>>> Running codemod on 3 files...
+>>> Launching report...
+
+Stats:
+  Files changed:                            2
+  Number of annotations added:              2
+  Total size of annotations:                2
+  Number of sig. ver. errors:               2
+  Number of annotations required:           2
+  Number of annotations skipped:            0
+
+Errors:
+  Missing annot./normalizer error:          0
+  Validation Error:                         0
+  Import Error:
+    Loc source none:                        0
+    Parsing heaps get ast error:            0
+    Indeterminate module type:              0
+    No matching export:                     0
+  Serializer error:                         0
+  Unsupported error kind:                   0
+
+Warnings:
+  Skipping arrow function:                  0
+  Large type added:                         0
+  Location unhandled:                       0
+  Empty NoUpper:                            0
+  Empty SomeKnownUpper:                     0
+
+>>> Iteration: 4
+>>> Running codemod on 2 files...
+>>> Launching report...
+
+Stats:
+  Files changed:                            1
+  Number of annotations added:              1
+  Total size of annotations:                1
+  Number of sig. ver. errors:               1
+  Number of annotations required:           1
+  Number of annotations skipped:            0
+
+Errors:
+  Missing annot./normalizer error:          0
+  Validation Error:                         0
+  Import Error:
+    Loc source none:                        0
+    Parsing heaps get ast error:            0
+    Indeterminate module type:              0
+    No matching export:                     0
+  Serializer error:                         0
+  Unsupported error kind:                   0
+
+Warnings:
+  Skipping arrow function:                  0
+  Large type added:                         0
+  Location unhandled:                       0
+  Empty NoUpper:                            0
+  Empty SomeKnownUpper:                     0
+
+>>> Iteration: 5
+>>> Running codemod on 1 files...
+>>> Launching report...
+
+Stats:
+  Files changed:                            0
+  Number of annotations added:              0
+  Total size of annotations:                0
+  Number of sig. ver. errors:               0
+  Number of annotations required:           0
+  Number of annotations skipped:            0
+
+Errors:
+  Missing annot./normalizer error:          0
+  Validation Error:                         0
+  Import Error:
+    Loc source none:                        0
+    Parsing heaps get ast error:            0
+    Indeterminate module type:              0
+    No matching export:                     0
+  Serializer error:                         0
+  Unsupported error kind:                   0
+
+Warnings:
+  Skipping arrow function:                  0
+  Large type added:                         0
+  Location unhandled:                       0
+  Empty NoUpper:                            0
+  Empty SomeKnownUpper:                     0
+
+
+=== codemodded files ===
+
+==> ./a.js <==
+// @flow
+
+class C0 { }
+class C1 { m1(): typeof C0 { return C0; } }
+class C2 { m2(): typeof C1 { return C1; } }
+class C3 { m3(): typeof C2 { return C2; } }
+class C4 { m4(): typeof C3 { return C3; } }
+
+module.exports = C4;
+
+==> ./b.js <==
+// @flow
+
+class C0 { }
+class C1 { m1(): typeof C0 { return C0; } }
+class C2 { m2(): typeof C1 { return C1; } }
+class C3 { m3(): typeof C2 { return C2; } }
+
+module.exports = C3;
+
+==> ./c.js <==
+// @flow
+
+class C0 { }
+class C1 { m1(): typeof C0 { return C0; } }
+class C2 { m2(): typeof C1 { return C1; } }
+
+module.exports = C2;
+
+==> ./d.js <==
+// @flow
+
+class C0 { }
+class C1 { m1(): typeof C0 { return C0; } }
+
+module.exports = C1;
+
+==> ./e.js <==
+// @flow
+
+class C0 { }
+
+module.exports = C0;

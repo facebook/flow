@@ -1,6 +1,6 @@
-var D = require('./import');
+const D = require('./import');
 class C extends D {
-  constructor() { return super(); }
-  foo() { return super.foo(); }
+  constructor(): void { return super(); }
+  foo(): number { return super.foo(); }
 }
 module.exports = C;

@@ -1,6 +1,6 @@
 Error ------------------------------------------------------------------------------------------ advanced_arrows.js:7:34
 
-Cannot return `x` because number [1] is incompatible with string [2].
+Cannot return `x` because number [1] is incompatible with string [2]. [incompatible-return]
 
    advanced_arrows.js:7:34
    7| var bad = (x: number): string => x; // Error!
@@ -17,7 +17,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------ advanced_arrows.js:11:2
 
-Cannot cast `ident(...)` to number because string [1] is incompatible with number [2].
+Cannot cast `ident(...)` to number because string [1] is incompatible with number [2]. [incompatible-cast]
 
    advanced_arrows.js:11:2
    11| (ident("hi"): number); // Error
@@ -32,21 +32,18 @@ References:
                      ^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- arrows.js:7:26
+Error --------------------------------------------------------------------------------------------------- arrows.js:7:36
 
 Cannot call `images.sort` with function bound to `compareFn` because string [1] is incompatible with number [2] in the
-return value.
+return value. [incompatible-call]
 
-   arrows.js:7:26
-     7|     images = images.sort((a, b) => (a.width - b.width) + "");
-                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-References:
    arrows.js:7:36
      7|     images = images.sort((a, b) => (a.width - b.width) + "");
                                            ^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   <BUILTINS>/core.js:288:38
-   288|     sort(compareFn?: (a: T, b: T) => number): Array<T>;
+
+References:
+   <BUILTINS>/core.js:996:38
+   996|     sort(compareFn?: (a: T, b: T) => number): Array<T>;
                                              ^^^^^^ [2]
 
 

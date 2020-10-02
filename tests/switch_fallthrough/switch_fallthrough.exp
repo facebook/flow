@@ -1,8 +1,25 @@
 Error ------------------------------------------------------------------------------------------------------ test.js:8:2
 
-Cannot cast `x` to string literal `bar` because:
- - string literal `baz` [1] is incompatible with string literal `bar` [2].
- - string literal `foo` [1] is incompatible with string literal `bar` [2].
+Cannot cast `x` to string literal `bar` because string literal `baz` [1] is incompatible with string literal `bar` [2].
+[incompatible-cast]
+
+   test.js:8:2
+   8| (x : 'bar'); // error
+       ^
+
+References:
+   test.js:2:16
+   2| declare var x: Enum;
+                     ^^^^ [1]
+   test.js:8:6
+   8| (x : 'bar'); // error
+           ^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------------ test.js:8:2
+
+Cannot cast `x` to string literal `bar` because string literal `foo` [1] is incompatible with string literal `bar` [2].
+[incompatible-cast]
 
    test.js:8:2
    8| (x : 'bar'); // error
@@ -19,7 +36,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:14:8
 
-string literal `qux` [1] is incompatible with enum [2].
+string literal `qux` [1] is incompatible with literal union [2]. [incompatible-type]
 
    test.js:14:8
    14|   case 'qux': // error
@@ -33,7 +50,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:22:8
 
-string literal `qux` [1] is incompatible with enum [2].
+string literal `qux` [1] is incompatible with literal union [2]. [incompatible-type]
 
    test.js:22:8
    22|   case 'qux': // error
@@ -48,6 +65,7 @@ References:
 Error ----------------------------------------------------------------------------------------------------- test.js:31:2
 
 Cannot cast `x` to string literal `foo` because string literal `baz` [1] is incompatible with string literal `foo` [2].
+[incompatible-cast]
 
    test.js:31:2
    31| (x : 'foo'); // error

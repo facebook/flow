@@ -128,11 +128,11 @@ let tests = [
       (q.valeuOf: string); // error: number literal 0 !~> string
     }
     if (r.toStirng === 0) { // error: toStirng prop missing
-      (r.toStirng: empty); // error, toStirng is refined to 0
+      (r.toStirng: empty);
     }
     if (s.call === 0) {} // Error
     if (s.calll === 0) { // error: calll prop missing
-      (s.calll: empty); // error, calll is refined to 0
+      (s.calll: empty);
     }
     if (t.call === 0) {} // Error
     if (t.calll === 0) { // error: calll prop missing

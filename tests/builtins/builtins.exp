@@ -1,6 +1,6 @@
 Error ---------------------------------------------------------------------------------------------------- array.js:3:17
 
-Cannot assign `b[0]` to `c` because number [1] is incompatible with string [2].
+Cannot assign `b[0]` to `c` because number [1] is incompatible with string [2]. [incompatible-type]
 
    array.js:3:17
    3| var c: string = b[0]; // error: number !~> string
@@ -17,7 +17,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- array.js:8:20
 
-Cannot assign `array[0]` to `x` because string [1] is incompatible with number [2].
+Cannot assign `array[0]` to `x` because string [1] is incompatible with number [2]. [incompatible-type]
 
    array.js:8:20
    8|     var x:number = array[0]; // error: string !~> number
@@ -34,7 +34,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- array.js:15:20
 
-Cannot assign `foo1.get()` to `x` because string [1] is incompatible with number [2].
+Cannot assign `foo1.get()` to `x` because string [1] is incompatible with number [2]. [incompatible-type]
 
    array.js:15:20
    15|     var x:number = foo1.get(); // error: string !~> number

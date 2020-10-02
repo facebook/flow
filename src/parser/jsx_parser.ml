@@ -1,4 +1,4 @@
-(**
+(*
  * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
@@ -12,43 +12,69 @@ open Parser_env
 open Flow_ast
 
 module JSX (Parse : Parser_common.PARSER) = struct
+  (* Consumes and returns the trailing comments after the end of a JSX tag name,
+     attribute, or spread attribute.
+     
+     If the component is followed by the end of the JSX tag, then all trailing
+     comments are returned. If the component is instead followed by another tag
+     component on another line, only trailing comments on the same line are
+     returned. If the component is followed by another tag component on the same
+     line, all trailing comments will instead be leading the next component. *)
+  let tag_component_trailing_comments env =
+    match Peek.token env with
+    | T_EOF
+    | T_DIV
+    | T_GREATER_THAN ->
+      Eat.trailing_comments env
+    | _ when Peek.is_line_terminator env -> Eat.comments_until_next_line env
+    | _ -> []
+
   let spread_attribute env =
+    let leading = Peek.comments env in
     Eat.push_lex_mode env Lex_mode.NORMAL;
-    let attr =
+    let (loc, argument) =
       with_loc
         (fun env ->
           Expect.token env T_LCURLY;
           Expect.token env T_ELLIPSIS;
           let argument = Parse.assignment env in
           Expect.token env T_RCURLY;
-          { JSX.SpreadAttribute.argument })
+          argument)
         env
     in
     Eat.pop_lex_mode env;
-    attr
+    let trailing = tag_component_trailing_comments env in
+    ( loc,
+      {
+        JSX.SpreadAttribute.argument;
+        comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing ();
+      } )
 
-  let expression_container' env =
-    let expression =
-      if Peek.token env = T_RCURLY then
-        JSX.ExpressionContainer.EmptyExpression
-      else
-        JSX.ExpressionContainer.Expression (Parse.expression env)
-    in
-    { JSX.ExpressionContainer.expression }
+  let expression_container_contents env =
+    if Peek.token env = T_RCURLY then
+      JSX.ExpressionContainer.EmptyExpression
+    else
+      JSX.ExpressionContainer.Expression (Parse.expression env)
 
   let expression_container env =
+    let leading = Peek.comments env in
     Eat.push_lex_mode env Lex_mode.NORMAL;
-    let container =
+    let (loc, expression) =
       with_loc
         (fun env ->
           Expect.token env T_LCURLY;
-          let container = expression_container' env in
+          let expression = expression_container_contents env in
           Expect.token env T_RCURLY;
-          container)
+          expression)
         env
     in
     Eat.pop_lex_mode env;
-    container
+    let trailing = tag_component_trailing_comments env in
+    ( loc,
+      {
+        JSX.ExpressionContainer.expression;
+        comments = Flow_ast_utils.mk_comments_with_internal_opt ~leading ~trailing ~internal:[];
+      } )
 
   let expression_container_or_spread_child env =
     Eat.push_lex_mode env Lex_mode.NORMAL;
@@ -59,12 +85,26 @@ module JSX (Parse : Parser_common.PARSER) = struct
           let result =
             match Peek.token env with
             | T_ELLIPSIS ->
+              let leading = Peek.comments env in
               Expect.token env T_ELLIPSIS;
-              let expr = Parse.assignment env in
-              JSX.SpreadChild expr
+              let expression = Parse.assignment env in
+              JSX.SpreadChild
+                {
+                  JSX.SpreadChild.expression;
+                  comments = Flow_ast_utils.mk_comments_opt ~leading ();
+                }
             | _ ->
-              let container = expression_container' env in
-              JSX.ExpressionContainer container
+              let expression = expression_container_contents env in
+              let internal =
+                match expression with
+                | JSX.ExpressionContainer.EmptyExpression -> Peek.comments env
+                | _ -> []
+              in
+              JSX.ExpressionContainer
+                {
+                  JSX.ExpressionContainer.expression;
+                  comments = Flow_ast_utils.mk_comments_with_internal_opt internal;
+                }
           in
           Expect.token env T_RCURLY;
           result)
@@ -82,8 +122,22 @@ module JSX (Parse : Parser_common.PARSER) = struct
         error_unexpected ~expected:"an identifier" env;
         ""
     in
+    let leading = Peek.comments env in
     Eat.token env;
-    (loc, JSX.Identifier.{ name })
+    (* Unless this identifier is the first part of a namespaced name, member
+       expression, or attribute name, it is the end of a tag component. *)
+    let trailing =
+      match Peek.token env with
+      (* Namespaced name *)
+      | T_COLON
+      (* Member expression *)
+      | T_PERIOD
+      (* Attribute name *)
+      | T_ASSIGN ->
+        Eat.trailing_comments env
+      | _ -> tag_component_trailing_comments env
+    in
+    (loc, JSX.Identifier.{ name; comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing () })
 
   let name =
     let rec member_expression env member =
@@ -159,7 +213,6 @@ module JSX (Parse : Parser_common.PARSER) = struct
             Expect.token env T_ASSIGN;
             let leading = Peek.comments env in
             let tkn = Peek.token env in
-            let trailing = Peek.comments env in
             begin
               match tkn with
               | T_LCURLY ->
@@ -173,6 +226,7 @@ module JSX (Parse : Parser_common.PARSER) = struct
               | T_JSX_TEXT (loc, value, raw) as token ->
                 Expect.token env token;
                 let value = Ast.Literal.String value in
+                let trailing = tag_component_trailing_comments env in
                 Some
                   (JSX.Attribute.Literal
                      ( loc,
@@ -186,14 +240,7 @@ module JSX (Parse : Parser_common.PARSER) = struct
                 let loc = Peek.loc env in
                 let raw = "" in
                 let value = Ast.Literal.String "" in
-                Some
-                  (JSX.Attribute.Literal
-                     ( loc,
-                       {
-                         Ast.Literal.value;
-                         raw;
-                         comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing ();
-                       } ))
+                Some (JSX.Attribute.Literal (loc, { Ast.Literal.value; raw; comments = None }))
             end
           | _ -> None
         in
@@ -306,7 +353,7 @@ module JSX (Parse : Parser_common.PARSER) = struct
     let rec normalize name =
       JSX.(
         match name with
-        | Identifier (_, { Identifier.name }) -> name
+        | Identifier (_, { Identifier.name; comments = _ }) -> name
         | NamespacedName (_, { NamespacedName.namespace; name }) ->
           (snd namespace).Identifier.name ^ ":" ^ (snd name).Identifier.name
         | MemberExpression (_, { MemberExpression._object; property }) ->
@@ -322,6 +369,7 @@ module JSX (Parse : Parser_common.PARSER) = struct
       | (_, `Fragment) -> false
     in
     fun env ->
+      let leading = Peek.comments env in
       let openingElement = opening_element env in
       Eat.pop_lex_mode env;
       let (children, closingElement) =
@@ -332,6 +380,7 @@ module JSX (Parse : Parser_common.PARSER) = struct
           children_and_closing env
         )
       in
+      let trailing = Eat.trailing_comments env in
       let end_loc =
         match closingElement with
         | `Element (loc, { JSX.Closing.name }) ->
@@ -362,6 +411,7 @@ module JSX (Parse : Parser_common.PARSER) = struct
                   | `Element e -> Some e
                   | _ -> None);
                 children;
+                comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing ();
               }
         | (start_loc, `Fragment) ->
           `Fragment
@@ -375,6 +425,7 @@ module JSX (Parse : Parser_common.PARSER) = struct
                   | `Element (loc, _) -> loc
                   | _ -> end_loc);
                 frag_children = children;
+                frag_comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing ();
               }
       in
       (Loc.btwn (fst openingElement) end_loc, result)
