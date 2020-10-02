@@ -264,7 +264,7 @@ let rec merge component file = function
   | Pack.Value t -> merge_value component file t
   | Pack.Ref ref -> merge_ref component file (fun t _ _ -> t) ref
   | Pack.TyRef name ->
-    let f t ref_loc name =
+    let f t ref_loc (name, _) =
       let reason = Reason.(mk_annot_reason (RType name) ref_loc) in
       Flow_js.mk_instance file.cx reason t
     in
@@ -452,20 +452,23 @@ and merge_star component file (loc, index) =
   (loc, merge_dep component file loc dep)
 
 and merge_tyref component file f = function
-  | Pack.Unqualified ref -> merge_ref component file f ref
+  | Pack.Unqualified ref ->
+    let f t loc name = f t loc (Nel.one name) in
+    merge_ref component file f ref
   | Pack.Qualified { loc; id_loc; name; qualification } ->
-    let f t _ _ =
-      (* TODO: use_op *)
-      let use_op = Type.unknown_use in
-      let reason_op = Reason.(mk_reason (RProperty (Some name)) loc) in
-      let id_reason = Reason.(mk_reason (RProperty (Some name)) id_loc) in
+    let f t _ names =
+      let names = Nel.cons name names in
+      let qname = String.concat "." (List.rev (Nel.to_list names)) in
+      let id_reason = Reason.(mk_reason (RType name) id_loc) in
+      let reason_op = Reason.(mk_reason (RType qname) loc) in
+      let use_op = Type.(Op (GetProperty reason_op)) in
       let t =
         Tvar.mk_no_wrap_where file.cx reason_op (fun tout ->
             Flow_js.flow
               file.cx
               (t, Type.(GetPropT (use_op, reason_op, Named (id_reason, name), tout))))
       in
-      f t loc name
+      f t loc names
     in
     merge_tyref component file f qualification
 

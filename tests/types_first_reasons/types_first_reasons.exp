@@ -54,6 +54,34 @@ References:
                                ^^^ [1]
 
 
+Error ---------------------------------------------------------------------------------------- qualified_typeapp.js:5:25
+
+Cannot use `A.B` [1] with fewer than 1 type argument. [missing-type-arg]
+
+   qualified_typeapp.js:5:25
+   5| declare module.exports: A.B<>; // Error: missing-type-arg
+                              ^^^^^
+
+References:
+   qualified_typeapp.js:3:8
+   3| class B<T> { x: T }
+             ^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------- qualified_typeapp_dep.js:4:1
+
+Cannot use `A.B` [1] with fewer than 1 type argument. [missing-type-arg]
+
+   qualified_typeapp_dep.js:4:1
+   4| b.x; // Error: missing-type-arg
+      ^
+
+References:
+   qualified_typeapp.js:3:8
+   3| class B<T> { x: T }
+             ^^^ [1]
+
+
 Error ---------------------------------------------------------------------------------------- temporary_bool_dep.js:4:2
 
 Cannot cast `x` to boolean literal `false` because boolean [1] is incompatible with boolean literal `false` [2].
@@ -109,4 +137,4 @@ References:
 
 
 
-Found 7 errors
+Found 9 errors
