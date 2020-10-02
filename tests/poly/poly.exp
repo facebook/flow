@@ -36,7 +36,7 @@ References:
 Error --------------------------------------------------------------------------------------------------- annot2.js:1:24
 
 Cannot return function because function [1] contains type variable `T` [2] which cannot escape from the scope in which
-it was defined [2]. [escaped-generic]
+it was defined [2] (try adding a type annotation to return [3]). [escaped-generic]
 
    annot2.js:1:24
    1| const f = <T>(x: T) => (y: T) => y;
@@ -46,6 +46,9 @@ References:
    annot2.js:1:12
    1| const f = <T>(x: T) => (y: T) => y;
                  ^ [2]
+   annot2.js:1:20
+   1| const f = <T>(x: T) => (y: T) => y;
+                          [3]
 
 
 Error ---------------------------------------------------------------------------------------------------- annot2.js:4:2

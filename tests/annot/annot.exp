@@ -187,7 +187,7 @@ References:
 Error --------------------------------------------------------------------------------------------------- scope.js:20:12
 
 Cannot return function because function [1] contains type variable `A` [2] which cannot escape from the scope in which
-it was defined [2]. [escaped-generic]
+it was defined [2] (try adding a type annotation to return [3]). [escaped-generic]
 
    scope.js:20:12
    20|     return function<C>(a: A, b: B, c: C): void {
@@ -197,12 +197,15 @@ References:
    scope.js:18:11
    18| class Foo<A> {
                  ^ [2]
+   scope.js:19:11
+   19|   bar<B>() {
+                  [3]
 
 
 Error --------------------------------------------------------------------------------------------------- scope.js:20:12
 
 Cannot return function because function [1] contains type variable `B` [2] which cannot escape from the scope in which
-it was defined [2]. [escaped-generic]
+it was defined [2] (try adding a type annotation to return [3]). [escaped-generic]
 
    scope.js:20:12
    20|     return function<C>(a: A, b: B, c: C): void {
@@ -212,6 +215,9 @@ References:
    scope.js:19:7
    19|   bar<B>() {
              ^ [2]
+   scope.js:19:11
+   19|   bar<B>() {
+                  [3]
 
 
 Error ------------------------------------------------------------------------------------------------------ test.js:2:6

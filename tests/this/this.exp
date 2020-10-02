@@ -124,7 +124,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- arrows.js:5:18
 
-Cannot return `this` because `this` [1] cannot escape from its class [1]. [escaped-generic]
+Cannot return `this` because `this` [1] cannot escape from its class [1] (try adding a type annotation to return [2]).
+[escaped-generic]
 
    arrows.js:5:18
    5|   bar() { return this; } // return type is C
@@ -134,6 +135,9 @@ References:
    arrows.js:1:7
    1| class C {
             ^ [1]
+   arrows.js:5:8
+   5|   bar() { return this; } // return type is C
+              [2]
 
 
 Error --------------------------------------------------------------------------------------------------- arrows.js:16:2

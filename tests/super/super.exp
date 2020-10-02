@@ -84,7 +84,8 @@ References:
 
 Error -------------------------------------------------------------------------------------------- constructor.js:150:12
 
-Cannot return `super()` because `this` [1] cannot escape from its class [1]. [escaped-generic]
+Cannot return `super()` because `this` [1] cannot escape from its class [1] (try adding a type annotation to
+return [2]). [escaped-generic]
 
    constructor.js:150:12
    150|     return super();
@@ -94,6 +95,9 @@ References:
    constructor.js:148:7
    148| class N extends N_ {
               ^ [1]
+   constructor.js:149:16
+   149|   constructor() {
+                        [2]
 
 
 Error --------------------------------------------------------------------------------------------------- super.js:10:11

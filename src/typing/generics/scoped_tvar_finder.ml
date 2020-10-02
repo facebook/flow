@@ -7,6 +7,7 @@
 
 module Ast = Flow_ast
 open Flow_ast_mapper
+open Reason
 
 let ( * ) : 'a 'b 'c 'd. ('a -> 'c) -> ('b -> 'd) -> 'a * 'b -> 'c * 'd =
  (fun f g (x, y) -> (f x, g y))
@@ -59,12 +60,12 @@ end = struct
     res
 end
 
-(* This visitor walks the AST and produces a generic context (generic_cx.ml), which contains information about
-   what tvars are in what generic scopes. It's the responsibility of this visitor to call #mark *)
-
 type ml = ALoc.t
 
 type tl = ALoc.t * Type.t
+
+(* This visitor walks the AST and produces a generic context (generic_cx.ml), which contains information about
+   what tvars are in what generic scopes. It's the responsibility of this visitor to call #mark or #blame *)
 
 (* The context passed in here needs to be the file-local context for the module, not the leader context, because this
    process is concerned with munged underscores which is a file-local setting. *)
@@ -85,6 +86,18 @@ class finder cx =
       ScopeHelper.init ();
       let (_ : (ml, tl) Ast.Statement.t list) = this#toplevel_statement_list ast in
       gcx
+
+    (* Mark the tvars in a type as being in the current scope, *and* record where an annotation needs to be added
+       if an out-of-scope generic flows into the tvars. This blame information is not always available--for example,
+       in a case like
+
+       class C { }
+       function f<X>(x: X) { C = x }
+
+       there's nothing to annotate that would fix the error. Hence the `mark` method below.
+    *)
+    method blame reason ty =
+      gcx <- Generic_cx.blame_ids_of_type cx gcx ty (Generic_scope.scope_id ()) reason
 
     (* Mark the tvars in a type as being in the current scope *)
     method mark ty = gcx <- Generic_cx.mark_ids_of_type cx gcx ty (Generic_scope.scope_id ())
@@ -266,20 +279,36 @@ class finder cx =
       (* Don't explore object property identifier keys, only value identifiers. *)
       key
 
-    method labeled_type_annotation_hint _name node =
+    method labeled_type_annotation_hint name node =
       let open Ast.Type in
       begin
         match node with
         | Missing (loc, ty) ->
           let (_ : ALoc.t * Type.t) = this#on_type_annot (loc, ty) in
-          this#mark ty
+          this#blame (mk_reason (RCustom name) loc) ty
         | Available annot ->
           let (_ : (ml, tl) Ast.Type.annotation) = this#type_annotation annot in
           ()
       end;
       node
 
-    method! t_pattern_identifier ?kind (((_, ty), { Ast.Identifier.name = _name; _ }) as node) =
+    method! binding_pattern ?(kind = Ast.Statement.VariableDeclaration.Var) ((_, patt) as expr) =
+      (* We can only suggest annotations for bare variable declarations, not destructurings. *)
+      let open Ast.Pattern in
+      begin
+        match patt with
+        | Identifier
+            {
+              Identifier.name = ((loc, ty), { Ast.Identifier.name; _ });
+              annot = Ast.Type.Missing _;
+              _;
+            } ->
+          this#blame (mk_reason (RIdentifier name) loc) ty
+        | _ -> ()
+      end;
+      super#binding_pattern ~kind expr
+
+    method! t_pattern_identifier ?kind (((_, ty), _) as node) =
       (* If `kind` is None, then this is the LHS of an assignment, while it it's Some _, it's a variable
          declaration. We only are concerned with declarations here: statement.ml guarantees that the type
          on a declaration is the general type of the variable in its environment, while assignments just

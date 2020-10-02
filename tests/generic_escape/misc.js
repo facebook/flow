@@ -113,36 +113,34 @@ function f9<Y>(y: Y, escape): ?Y {
   return a8.c;
 }
 
-
-
-for (var xa of []) {
+for (var x0 of []) {
   function f<X>(y: X) {
-    xa = y;
+    x0 = y;
   }
 }
 
-for (var [xb] of []) {
+for (var [x1] of []) {
   function f<X>(y: X) {
-    xb = y;
+    x1 = y;
   }
 }
 
-for (var [...xc] of []) {
+for (var [...x2] of []) {
   function f<X>(y: X) {
-    xc = y;
+    x2 = y;
   }
 }
 
-for (var {...xd} of []) {
+for (var {...x3} of []) {
   function f<X>(y: X) {
-    xd = y;
+    x3 = y;
   }
 }
 
 try {
-} catch (ee) {
+} catch (e) {
   function f<X>(y: X) {
-    ee = y;
+    e = y;
   }
 }
 function f10({...x}) {
@@ -168,4 +166,9 @@ for (var xe of [(42: any)]) {
 var aaa = 1;
 function foo<T: {}>(x: $Diff<T, {}>) {
     aaa = x;
+}
+
+var x4 = [];
+function f<T>(t: T) {
+  x4[0] = t;
 }

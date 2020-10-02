@@ -26,22 +26,22 @@ References:
                 ^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------------ loop.js:5:1
+Error ----------------------------------------------------------------------------------------------------- loop.js:5:33
 
-Cannot assign function to `f` because function [1] contains type variable `T` [2] which cannot escape from the scope in
-which it was defined [3]. [escaped-generic]
+Cannot assign `y` to `x` because optional existential [1] contains type variable `T` [1] which cannot escape from the
+scope in which it was defined [2]. [escaped-generic]
 
-   loop.js:5:1
+   loop.js:5:33
    5| function f<T:*>(x:T,y?:T) { x = y }
-      ^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+                                      ^
 
 References:
    loop.js:5:24
    5| function f<T:*>(x:T,y?:T) { x = y }
-                             ^ [2]
+                             ^ [1]
    loop.js:5:12
    5| function f<T:*>(x:T,y?:T) { x = y }
-                 ^ [3]
+                 ^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------------- loop.js:5:33

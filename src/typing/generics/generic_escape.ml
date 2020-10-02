@@ -11,8 +11,9 @@ open TypeUtil
 
 type acc = {
   seen: ISet.t;
-  tvar_ids: ISet.t;
+  tvar_ids: reason option IMap.t;
   top_level_reason: reason;
+  annot_reason: reason option;
   scope_id: Scope_id.t;
   use_op: use_op;
   exploring_resolved_tvar: bool;
@@ -22,12 +23,21 @@ class escape_finder ~gcx ~(add_output : Context.t -> ?trace:Trace.t -> Error_mes
   object (self)
     inherit [acc] Type_visitor.t as super
 
-    method scan_for_generics ~resolved cx tvar_ids top_level_reason scope_id use_op seen ty =
+    method scan_for_generics
+        ~resolved cx tvar_ids ~top_level_reason ~annot_reason scope_id use_op seen ty =
       let { seen; _ } =
         self#type_
           cx
           Polarity.Positive
-          { seen; tvar_ids; top_level_reason; scope_id; use_op; exploring_resolved_tvar = resolved }
+          {
+            seen;
+            tvar_ids;
+            top_level_reason;
+            annot_reason;
+            scope_id;
+            use_op;
+            exploring_resolved_tvar = resolved;
+          }
           ty
       in
       seen
@@ -35,8 +45,15 @@ class escape_finder ~gcx ~(add_output : Context.t -> ?trace:Trace.t -> Error_mes
     method! type_
         cx
         pole
-        ( { seen = _; top_level_reason; scope_id; use_op; tvar_ids = _; exploring_resolved_tvar } as
-        acc )
+        ( {
+            seen = _;
+            top_level_reason;
+            annot_reason;
+            scope_id;
+            use_op;
+            tvar_ids = _;
+            exploring_resolved_tvar;
+          } as acc )
         ty =
       match desc_of_reason ~unwrap:false @@ reason_of_t ty with
       | RPolyTest (bound_name, _, bound_loc, is_this)
@@ -52,7 +69,7 @@ class escape_finder ~gcx ~(add_output : Context.t -> ?trace:Trace.t -> Error_mes
              {
                reason = top_level_reason;
                blame_reason = reason_of_t ty;
-               annot_reason = None;
+               annot_reason;
                use_op;
                bound_name;
                bound_loc = (bound_loc :> ALoc.t);
@@ -108,41 +125,72 @@ class escape_finder ~gcx ~(add_output : Context.t -> ?trace:Trace.t -> Error_mes
         acc
         { ft with this_t = VoidT.at (aloc_of_reason @@ reason_of_t this_t) (literal_trust ()) }
 
-    method! tvar cx pole ({ seen; tvar_ids; _ } as acc) r id =
+    method! tvar
+        cx
+        pole
+        ( { seen; tvar_ids; annot_reason; use_op; top_level_reason; exploring_resolved_tvar; _ } as
+        acc )
+        r
+        id =
       let open Constraint in
       let (root_id, constraints) = Context.find_constraints cx id in
       if id != root_id then
         self#tvar cx pole acc r root_id
-      else if ISet.mem id tvar_ids then
+      else if IMap.mem id tvar_ids then
         acc
       else if ISet.mem id seen then
         acc
       else
+        let visit ~exploring_resolved_tvar t (_, use_op') seen =
+          let acc =
+            (* Show the use_op, reason, and annotation site most local to the actual escape *)
+            let (use_op', top_level_reason) =
+              match root_of_use_op use_op' with
+              | UnknownUse -> (use_op, top_level_reason)
+              | _ -> (use_op', reason_of_t t)
+            in
+            let annot_reason' =
+              match Generic_cx.get_id_annotation_reason gcx id with
+              | Some _ as annot_reason' -> annot_reason'
+              | _ -> annot_reason
+            in
+            if annot_reason' == annot_reason && use_op' == use_op then
+              { acc with seen; exploring_resolved_tvar }
+            else
+              {
+                acc with
+                annot_reason = annot_reason';
+                use_op = use_op';
+                top_level_reason;
+                exploring_resolved_tvar;
+                seen;
+              }
+          in
+          (* only accumulate the seen ids, not other parts of the accumulator *)
+          let { seen; _ } = self#type_ cx pole acc t in
+          seen
+        in
         let seen = ISet.add id seen in
-        let { seen; _ } =
+        let seen =
           match constraints with
-          | FullyResolved _ -> { acc with seen }
-          | Resolved (_, t) ->
-            self#type_ cx pole { acc with seen; exploring_resolved_tvar = true } t
-          | Unresolved { lower; _ } ->
-            (* only accumulate the seen ids, not other parts of the accumulator *)
-            TypeMap.fold
-              (fun t _ { seen; _ } -> self#type_ cx pole { acc with seen } t)
-              lower
-              { acc with seen }
+          | FullyResolved _ -> seen
+          | Resolved (use_op, t) ->
+            visit ~exploring_resolved_tvar:true t (Trace.dummy_trace, use_op) seen
+          | Unresolved { lower; _ } -> TypeMap.fold (visit ~exploring_resolved_tvar) lower seen
         in
         { acc with seen }
   end
 
 let scan_for_escapes cx ~(add_output : Context.t -> ?trace:Trace.t -> Error_message.t -> unit) ast =
   let scan_for_escapes_in_scope escape_finder scope_id scoped_tvars =
-    let scan_tvar var_id seen =
+    let scan_tvar var_id annot_reason seen =
       let scan_type ~resolved ty (_, use_op) seen =
         escape_finder#scan_for_generics
           ~resolved
           cx
           scoped_tvars
-          (reason_of_t ty)
+          ~top_level_reason:(reason_of_t ty)
+          ~annot_reason
           scope_id
           use_op
           seen
@@ -158,7 +206,7 @@ let scan_for_escapes cx ~(add_output : Context.t -> ?trace:Trace.t -> Error_mess
         | (_, Resolved (use_op, ty)) -> scan_type ~resolved:true ty (Trace.dummy_trace, use_op) seen
         | (_, FullyResolved _) -> seen
     in
-    ignore (ISet.fold scan_tvar scoped_tvars ISet.empty)
+    ignore (IMap.fold scan_tvar scoped_tvars ISet.empty)
   in
   let finder = new Scoped_tvar_finder.finder cx in
   let gcx = finder#exec ast in

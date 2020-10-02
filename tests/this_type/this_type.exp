@@ -429,7 +429,8 @@ Unexpected use of `this` type. [illegal-this]
 
 Error ----------------------------------------------------------------------------------------------------- self.js:2:18
 
-Cannot return `this` because `this` [1] cannot escape from its class [1]. [escaped-generic]
+Cannot return `this` because `this` [1] cannot escape from its class [1] (try adding a type annotation to return [2]).
+[escaped-generic]
 
    self.js:2:18
    2|   foo() { return this; } // return of foo is not annotated to get around
@@ -439,6 +440,9 @@ References:
    self.js:1:7
    1| class A {
             ^ [1]
+   self.js:2:8
+   2|   foo() { return this; } // return of foo is not annotated to get around
+              [2]
 
 
 Error ----------------------------------------------------------------------------------------------------- self.js:4:24
@@ -477,7 +481,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:4:18
 
-Cannot return `this` because `this` [1] cannot escape from its class [1]. [escaped-generic]
+Cannot return `this` because `this` [1] cannot escape from its class [1] (try adding a type annotation to return [2]).
+[escaped-generic]
 
    test.js:4:18
    4|   foo() { return this; }
@@ -487,11 +492,15 @@ References:
    test.js:3:7
    3| class Base {
             ^^^^ [1]
+   test.js:4:8
+   4|   foo() { return this; }
+              [2]
 
 
 Error ----------------------------------------------------------------------------------------------------- test.js:7:18
 
-Cannot return `this` because `this` [1] cannot escape from its class [1]. [escaped-generic]
+Cannot return `this` because `this` [1] cannot escape from its class [1] (try adding a type annotation to return [2]).
+[escaped-generic]
 
    test.js:7:18
    7|   bar() { return this; }
@@ -501,12 +510,15 @@ References:
    test.js:3:7
    3| class Base {
             ^^^^ [1]
+   test.js:7:8
+   7|   bar() { return this; }
+              [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- test.js:14:18
 
-Cannot extend `Base` [1] with `Override` because `this` [2] cannot escape from its class [2] in the return value of
-property `foo`. [escaped-generic]
+Cannot extend `Base` [1] with `Override` because `this` [2] cannot escape from its class [2] (try adding a type
+annotation to return [3]) in the return value of property `foo`. [escaped-generic]
 
    test.js:14:18
    14|   foo() { return this; } // OK
@@ -519,12 +531,15 @@ References:
    test.js:13:7
    13| class Override extends Base {
              ^^^^^^^^ [2]
+   test.js:4:8
+    4|   foo() { return this; }
+               [3]
 
 
 Error ---------------------------------------------------------------------------------------------------- test.js:15:18
 
-Cannot extend `Base` [1] with `Override` because `this` [2] cannot escape from its class [2] in the return value of
-property `qux`. [escaped-generic]
+Cannot extend `Base` [1] with `Override` because `this` [2] cannot escape from its class [2] (try adding a type
+annotation to return [3]) in the return value of property `qux`. [escaped-generic]
 
    test.js:15:18
    15|   qux() { return this; } // OK, too
@@ -537,11 +552,15 @@ References:
    test.js:13:7
    13| class Override extends Base {
              ^^^^^^^^ [2]
+   test.js:5:8
+    5|   qux() { return new Base; }
+               [3]
 
 
 Error ---------------------------------------------------------------------------------------------------- test.js:14:18
 
-Cannot return `this` because `this` [1] cannot escape from its class [1]. [escaped-generic]
+Cannot return `this` because `this` [1] cannot escape from its class [1] (try adding a type annotation to return [2]).
+[escaped-generic]
 
    test.js:14:18
    14|   foo() { return this; } // OK
@@ -551,11 +570,15 @@ References:
    test.js:13:7
    13| class Override extends Base {
              ^^^^^^^^ [1]
+   test.js:14:8
+   14|   foo() { return this; } // OK
+               [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- test.js:15:18
 
-Cannot return `this` because `this` [1] cannot escape from its class [1]. [escaped-generic]
+Cannot return `this` because `this` [1] cannot escape from its class [1] (try adding a type annotation to return [2]).
+[escaped-generic]
 
    test.js:15:18
    15|   qux() { return this; } // OK, too
@@ -565,6 +588,9 @@ References:
    test.js:13:7
    13| class Override extends Base {
              ^^^^^^^^ [1]
+   test.js:15:8
+   15|   qux() { return this; } // OK, too
+               [2]
 
 
 Error ----------------------------------------------------------------------------------------------------- test.js:23:2

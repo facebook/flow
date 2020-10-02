@@ -1,7 +1,7 @@
 Error ----------------------------------------------------------------------------------------------------- alias.js:9:2
 
 Cannot cast function to `Tr` because function type [1] contains type variable `Return` [2] which cannot escape from the
-scope in which it was defined [3] in the first argument. [escaped-generic]
+scope in which it was defined [3] (try adding a type annotation to `f` [4]) in the first argument. [escaped-generic]
 
    alias.js:9:2
         v-----
@@ -20,12 +20,15 @@ References:
    alias.js:5:12
     5| type Tr = <Return>(() => Pr<Return>) => Return;
                   ^^^^^^ [3]
+   alias.js:9:2
+    9| (f => {
+        ^ [4]
 
 
 Error --------------------------------------------------------------------------------------------------- alias.js:10:10
 
 Cannot return `aw(...)` because `Pr` [1] contains type variable `Return` [2] which cannot escape from the scope in which
-it was defined [3]. [escaped-generic]
+it was defined [3] (try adding a type annotation to return [4]). [escaped-generic]
 
    alias.js:10:10
    10|   return aw(f());
@@ -41,12 +44,15 @@ References:
    alias.js:5:12
     5| type Tr = <Return>(() => Pr<Return>) => Return;
                   ^^^^^^ [3]
+   alias.js:9:3
+    9| (f => {
+          [4]
 
 
 Error --------------------------------------------------------------------------------------------------- alias.js:10:10
 
-Cannot return `aw(...)` because type variable `Return` [1] cannot escape from the scope in which it was defined [2].
-[escaped-generic]
+Cannot return `aw(...)` because type variable `Return` [1] cannot escape from the scope in which it was defined [2] (try
+adding a type annotation to return [3]). [escaped-generic]
 
    alias.js:10:10
    10|   return aw(f());
@@ -59,6 +65,9 @@ References:
    alias.js:5:12
     5| type Tr = <Return>(() => Pr<Return>) => Return;
                   ^^^^^^ [2]
+   alias.js:9:3
+    9| (f => {
+          [3]
 
 
 Error --------------------------------------------------------------------------------------------------- alias.js:10:13
@@ -85,8 +94,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- class.js:9:9
 
-Cannot assign `this.s` to `x` because type variable `X` [1] cannot escape from the scope in which it was defined [2].
-[escaped-generic]
+Cannot assign `this.s` to `x` because type variable `X` [1] cannot escape from the scope in which it was defined [2]
+(try adding a type annotation to `x` [3]). [escaped-generic]
 
    class.js:9:9
    9|     x = this.s;
@@ -99,12 +108,15 @@ References:
    class.js:5:9
    5| class A<X> {
               ^ [2]
+   class.js:3:5
+   3| var x = 42;
+          ^ [3]
 
 
 Error --------------------------------------------------------------------------------------------------- class.js:20:11
 
-Cannot assign `this.s` to `y` because type variable `X` [1] cannot escape from the scope in which it was defined [2].
-[escaped-generic]
+Cannot assign `this.s` to `y` because type variable `X` [1] cannot escape from the scope in which it was defined [2]
+(try adding a type annotation to `y` [3]). [escaped-generic]
 
    class.js:20:11
    20|       y = this.s;
@@ -117,6 +129,9 @@ References:
    class.js:16:9
    16| class B<X> {
                ^ [2]
+   class.js:14:5
+   14| var y = 22;
+           ^ [3]
 
 
 Error --------------------------------------------------------------------------------------------------- class.js:22:14
@@ -152,8 +167,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- class.js:31:14
 
-Cannot assign `y` to `this.s` because type variable `Y` [1] cannot escape from the scope in which it was defined [2].
-[escaped-generic]
+Cannot assign `y` to `this.s` because type variable `Y` [1] cannot escape from the scope in which it was defined [2]
+(try adding a type annotation to property `s` [3]). [escaped-generic]
 
    class.js:31:14
    31|     this.s = y;
@@ -166,12 +181,15 @@ References:
    class.js:30:5
    30|   f<Y>(y: Y, x: X) {
            ^ [2]
+   class.js:29:4
+   29|   s;
+           [3]
 
 
 Error --------------------------------------------------------------------------------------------------- class.js:33:16
 
-Cannot assign `x` to `this.s` because type variable `X` [1] cannot escape from the scope in which it was defined [2].
-[escaped-generic]
+Cannot assign `x` to `this.s` because type variable `X` [1] cannot escape from the scope in which it was defined [2]
+(try adding a type annotation to property `s` [3]). [escaped-generic]
 
    class.js:33:16
    33|       this.s = x;
@@ -184,54 +202,15 @@ References:
    class.js:28:9
    28| class C<X> {
                ^ [2]
-
-
-Error --------------------------------------------------------------------------------------------------- class.js:36:25
-
-Cannot assign `this` to `captured_this` because `this` type [1] contains type variable `Z` [2] which cannot escape from
-the scope in which it was defined [3]. [escaped-generic]
-
-   class.js:36:25
-   36|     var captured_this = this;
-                               ^^^^
-
-References:
-   class.js:28:7
-   28| class C<X> {
-             ^ [1]
-   class.js:37:22
-   37|     function h<Z>(z: Z) {
-                            ^ [2]
-   class.js:37:16
-   37|     function h<Z>(z: Z) {
-                      ^ [3]
-
-
-Error --------------------------------------------------------------------------------------------------- class.js:36:25
-
-Cannot assign `this` to `captured_this` because `this` type [1] contains type variable `W` [2] which cannot escape from
-the scope in which it was defined [3]. [escaped-generic]
-
-   class.js:36:25
-   36|     var captured_this = this;
-                               ^^^^
-
-References:
-   class.js:28:7
-   28| class C<X> {
-             ^ [1]
-   class.js:41:12
-   41|     <W>(w: W) => {
-                  ^ [2]
-   class.js:41:6
-   41|     <W>(w: W) => {
-            ^ [3]
+   class.js:29:4
+   29|   s;
+           [3]
 
 
 Error --------------------------------------------------------------------------------------------------- class.js:38:25
 
 Cannot assign `z` to `captured_this.s` because type variable `Z` [1] cannot escape from the scope in which it was
-defined [2]. [escaped-generic]
+defined [2] (try adding a type annotation to property `s` [3]). [escaped-generic]
 
    class.js:38:25
    38|       captured_this.s = z;
@@ -244,12 +223,15 @@ References:
    class.js:37:16
    37|     function h<Z>(z: Z) {
                       ^ [2]
+   class.js:29:4
+   29|   s;
+           [3]
 
 
 Error --------------------------------------------------------------------------------------------------- class.js:39:11
 
-Cannot assign `z` to `a` because type variable `Z` [1] cannot escape from the scope in which it was defined [2].
-[escaped-generic]
+Cannot assign `z` to `a` because type variable `Z` [1] cannot escape from the scope in which it was defined [2] (try
+adding a type annotation to `a` [3]). [escaped-generic]
 
    class.js:39:11
    39|       a = z;
@@ -262,12 +244,15 @@ References:
    class.js:37:16
    37|     function h<Z>(z: Z) {
                       ^ [2]
+   class.js:35:9
+   35|     var a = 42;
+               ^ [3]
 
 
 Error --------------------------------------------------------------------------------------------------- class.js:42:16
 
-Cannot assign `w` to `this.s` because type variable `W` [1] cannot escape from the scope in which it was defined [2].
-[escaped-generic]
+Cannot assign `w` to `this.s` because type variable `W` [1] cannot escape from the scope in which it was defined [2]
+(try adding a type annotation to property `s` [3]). [escaped-generic]
 
    class.js:42:16
    42|       this.s = w;
@@ -280,12 +265,15 @@ References:
    class.js:41:6
    41|     <W>(w: W) => {
             ^ [2]
+   class.js:29:4
+   29|   s;
+           [3]
 
 
 Error --------------------------------------------------------------------------------------------------- class.js:43:11
 
-Cannot assign `w` to `a` because type variable `W` [1] cannot escape from the scope in which it was defined [2].
-[escaped-generic]
+Cannot assign `w` to `a` because type variable `W` [1] cannot escape from the scope in which it was defined [2] (try
+adding a type annotation to `a` [3]). [escaped-generic]
 
    class.js:43:11
    43|       a = w;
@@ -298,12 +286,15 @@ References:
    class.js:41:6
    41|     <W>(w: W) => {
             ^ [2]
+   class.js:35:9
+   35|     var a = 42;
+               ^ [3]
 
 
 Error ---------------------------------------------------------------------------------------------------- class.js:45:9
 
-Cannot assign `this.s` to `z` because type variable `Y` [1] cannot escape from the scope in which it was defined [2].
-[escaped-generic]
+Cannot assign `this.s` to `z` because type variable `Y` [1] cannot escape from the scope in which it was defined [2]
+(try adding a type annotation to `z` [3]). [escaped-generic]
 
    class.js:45:9
    45|     z = this.s;
@@ -316,12 +307,15 @@ References:
    class.js:30:5
    30|   f<Y>(y: Y, x: X) {
            ^ [2]
+   class.js:26:5
+   26| var z = 42;
+           ^ [3]
 
 
 Error ---------------------------------------------------------------------------------------------------- class.js:45:9
 
-Cannot assign `this.s` to `z` because type variable `X` [1] cannot escape from the scope in which it was defined [2].
-[escaped-generic]
+Cannot assign `this.s` to `z` because type variable `X` [1] cannot escape from the scope in which it was defined [2]
+(try adding a type annotation to `z` [3]). [escaped-generic]
 
    class.js:45:9
    45|     z = this.s;
@@ -334,24 +328,9 @@ References:
    class.js:28:9
    28| class C<X> {
                ^ [2]
-
-
-Error ---------------------------------------------------------------------------------------------------- class.js:62:7
-
-Cannot assign `C1` to `C1` because `C1` [1] contains type variable `Y` [2] which cannot escape from the scope in which
-it was defined [3]. [escaped-generic]
-
-   class.js:62:7
-   62| class C1<Y> {
-             ^^ [1]
-
-References:
-   class.js:63:10
-   63|   x: {p: Y};
-                ^ [2]
-   class.js:62:10
-   62| class C1<Y> {
-                ^ [3]
+   class.js:26:5
+   26| var z = 42;
+           ^ [3]
 
 
 Error --------------------------------------------------------------------------------------------------- class.js:65:12
@@ -369,9 +348,28 @@ References:
                 ^ [1]
 
 
+Error --------------------------------------------------------------------------------------------------- class.js:65:12
+
+Cannot return `this.x` because type variable `Y` [1] cannot escape from the scope in which it was defined [2] in
+property `p`. [escaped-generic]
+
+   class.js:65:12
+   65|     return this.x;
+                  ^^^^^^
+
+References:
+   class.js:63:10
+   63|   x: {p: Y};
+                ^ [1]
+   class.js:62:10
+   62| class C1<Y> {
+                ^ [2]
+
+
 Error ---------------------------------------------------------------------------------------------------- class.js:71:7
 
-Cannot initialize property `a` with `this` because `this` [1] cannot escape from its class [1]. [escaped-generic]
+Cannot initialize property `a` with `this` because `this` [1] cannot escape from its class [1] (try adding a type
+annotation to property `a` [2]). [escaped-generic]
 
    class.js:71:7
    71|   a = this;
@@ -381,12 +379,15 @@ References:
    class.js:70:7
    70| class O<T> {
              ^ [1]
+   class.js:71:4
+   71|   a = this;
+           [2]
 
 
 Error --------------------------------------------------------------------------------------------------- class.js:75:14
 
-Cannot assign `t` to `this.b` because type variable `T` [1] cannot escape from the scope in which it was defined [2].
-[escaped-generic]
+Cannot assign `t` to `this.b` because type variable `T` [1] cannot escape from the scope in which it was defined [2]
+(try adding a type annotation to property `b` [3]). [escaped-generic]
 
    class.js:75:14
    75|     this.b = t;
@@ -399,12 +400,15 @@ References:
    class.js:70:9
    70| class O<T> {
                ^ [2]
+   class.js:72:4
+   72|   b;
+           [3]
 
 
 Error --------------------------------------------------------------------------------------------------- class.js:76:12
 
-Cannot return `t` because type variable `T` [1] cannot escape from the scope in which it was defined [2].
-[escaped-generic]
+Cannot return `t` because type variable `T` [1] cannot escape from the scope in which it was defined [2] (try adding a
+type annotation to return [3]). [escaped-generic]
 
    class.js:76:12
    76|     return t;
@@ -417,12 +421,57 @@ References:
    class.js:70:9
    70| class O<T> {
                ^ [2]
+   class.js:73:10
+   73|   f(t: T) {
+                 [3]
+
+
+Error --------------------------------------------------------------------------------------------------- class.js:84:13
+
+Cannot assign `x` to `H._wa` because type variable `T` [1] cannot escape from the scope in which it was defined [2] (try
+adding a type annotation to property `_wa` [3]). [escaped-generic]
+
+   class.js:84:13
+   84|     H._wa = x;
+                   ^
+
+References:
+   class.js:83:8
+   83|   f(x: T) {
+              ^ [1]
+   class.js:80:9
+   80| class H<T> {
+               ^ [2]
+   class.js:81:13
+   81|   static _wa;
+                    [3]
+
+
+Error --------------------------------------------------------------------------------------------------- class.js:85:13
+
+Cannot assign `x` to `H.#pa` because type variable `T` [1] cannot escape from the scope in which it was defined [2] (try
+adding a type annotation to pa [3]). [escaped-generic]
+
+   class.js:85:13
+   85|     H.#pa = x;
+                   ^
+
+References:
+   class.js:83:8
+   83|   f(x: T) {
+              ^ [1]
+   class.js:80:9
+   80| class H<T> {
+               ^ [2]
+   class.js:82:13
+   82|   static #pa;
+                    [3]
 
 
 Error ------------------------------------------------------------------------------------------------------ func.js:6:7
 
-Cannot assign `a` to `x` because type variable `X` [1] cannot escape from the scope in which it was defined [2].
-[escaped-generic]
+Cannot assign `a` to `x` because type variable `X` [1] cannot escape from the scope in which it was defined [2] (try
+adding a type annotation to `x` [3]). [escaped-generic]
 
    func.js:6:7
    6|   x = a; // error, X ~> escape
@@ -435,12 +484,15 @@ References:
    func.js:5:12
    5| function f<X>(a: X): X {
                  ^ [2]
+   func.js:3:5
+   3| var x = 42;
+          ^ [3]
 
 
 Error ---------------------------------------------------------------------------------------------------- func.js:15:60
 
 Cannot call `tostring` with `name` bound to `x` because `X` [1] contains type variable `X` [2] which cannot escape from
-the scope in which it was defined [2]. [escaped-generic]
+the scope in which it was defined [2] (try adding a type annotation to `x` [3]). [escaped-generic]
 
    func.js:15:60
    15| function h<X>(x: X, a: X => string = (name: X) => tostring(name)): string {
@@ -453,11 +505,15 @@ References:
    func.js:15:12
    15| function h<X>(x: X, a: X => string = (name: X) => tostring(name)): string {
                   ^ [2]
+   func.js:10:19
+   10| function tostring(x): string {
+                         ^ [3]
 
 
 Error ---------------------------------------------------------------------------------------------------- func.js:15:60
 
-Type variable `X` [1] cannot escape from the scope in which it was defined [2]. [escaped-generic]
+Type variable `X` [1] cannot escape from the scope in which it was defined [2] (try adding a type annotation to
+`x` [3]). [escaped-generic]
 
    func.js:15:60
    15| function h<X>(x: X, a: X => string = (name: X) => tostring(name)): string {
@@ -470,6 +526,9 @@ References:
    func.js:15:12
    15| function h<X>(x: X, a: X => string = (name: X) => tostring(name)): string {
                   ^ [2]
+   func.js:10:19
+   10| function tostring(x): string {
+                         ^ [3]
 
 
 Error ---------------------------------------------------------------------------------------------------- func.js:23:12
@@ -491,8 +550,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- func.js:37:10
 
-Cannot return `x` because type variable `X` [1] cannot escape from the scope in which it was defined [2].
-[escaped-generic]
+Cannot return `x` because type variable `X` [1] cannot escape from the scope in which it was defined [2] (try adding a
+type annotation to return [3]). [escaped-generic]
 
    func.js:37:10
    37|   return x;
@@ -505,12 +564,15 @@ References:
    func.js:35:12
    35| function o<X>(x: X) {
                   ^ [2]
+   func.js:35:20
+   35| function o<X>(x: X) {
+                           [3]
 
 
 Error ----------------------------------------------------------------------------------------------------- func.js:44:9
 
-function [1] contains type variable `X` [2] which cannot escape from the scope in which it was defined [2].
-[escaped-generic]
+function [1] contains type variable `X` [2] which cannot escape from the scope in which it was defined [2] (try adding a
+type annotation to `a` [3]). [escaped-generic]
 
    func.js:44:9
    44|     a = (x: X) => x;
@@ -520,6 +582,9 @@ References:
    func.js:42:12
    42| function f<X>(b: boolean): X => X {
                   ^ [2]
+   func.js:40:5
+   40| var a = 42;
+           ^ [3]
 
 
 Error ---------------------------------------------------------------------------------------------------- func.js:49:12
@@ -556,22 +621,25 @@ References:
                                        ^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- func.js:53:10
+Error ---------------------------------------------------------------------------------------------------- func.js:56:13
 
-Cannot assign array literal to `xa` because empty array literal [1] contains type variable `T` [2] which cannot escape
-from the scope in which it was defined [3]. [escaped-generic]
+Cannot assign `a` to `xa[0]` because type variable `T` [1] cannot escape from the scope in which it was defined [2] (try
+adding a type annotation to `xa` [3]). [escaped-generic]
 
-   func.js:53:10
-   53| var xa = [];
-                ^^ [1]
+   func.js:56:13
+   56|     xa[0] = a;
+                   ^
 
 References:
    func.js:54:19
    54| function fa<T>(a: T, b: boolean): T {
-                         ^ [2]
+                         ^ [1]
    func.js:54:13
    54| function fa<T>(a: T, b: boolean): T {
-                   ^ [3]
+                   ^ [2]
+   func.js:53:5
+   53| var xa = [];
+           ^^ [3]
 
 
 Error ---------------------------------------------------------------------------------------------------- func.js:58:10
@@ -593,8 +661,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- import.js:9:9
 
-Cannot assign `id(...)` to `x` because type variable `T` [1] cannot escape from the scope in which it was defined [2].
-[escaped-generic]
+Cannot assign `id(...)` to `x` because type variable `T` [1] cannot escape from the scope in which it was defined [2]
+(try adding a type annotation to `x` [3]). [escaped-generic]
 
    import.js:9:9
    9|     x = id(t);
@@ -607,12 +675,15 @@ References:
    import.js:7:12
    7| function f<T>(t: T, escape: boolean): T | number {
                  ^ [2]
+   import.js:5:5
+   5| var x = 42;
+          ^ [3]
 
 
 Error --------------------------------------------------------------------------------------------------- import.js:10:9
 
 Cannot assign `id<...>(...)` to `x` because `T` [1] contains type variable `T` [2] which cannot escape from the scope in
-which it was defined [2]. [escaped-generic]
+which it was defined [2] (try adding a type annotation to `x` [3]). [escaped-generic]
 
    import.js:10:9
    10|     x = id<T>(t);
@@ -625,6 +696,9 @@ References:
    import.js:7:12
     7| function f<T>(t: T, escape: boolean): T | number {
                   ^ [2]
+   import.js:5:5
+    5| var x = 42;
+           ^ [3]
 
 
 Error -------------------------------------------------------------------------------------------------- import.js:12:10
@@ -661,22 +735,25 @@ References:
                                              ^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------------ misc.js:3:9
+Error ----------------------------------------------------------------------------------------------------- misc.js:7:12
 
-new Array(..) [1] contains type variable `X` [2] which cannot escape from the scope in which it was defined [3].
-[escaped-generic]
+Cannot assign `x` to `e[n]` because type variable `X` [1] cannot escape from the scope in which it was defined [2] (try
+adding a type annotation to `e` [3]). [escaped-generic]
 
-   misc.js:3:9
-   3| var e = new Array(10);
-              ^^^^^^^^^^^^^ [1]
+   misc.js:7:12
+   7|     e[n] = x;
+                 ^
 
 References:
    misc.js:5:19
    5| function f1<X>(x: X, escape: boolean, n: number): X | number {
-                        ^ [2]
+                        ^ [1]
    misc.js:5:13
    5| function f1<X>(x: X, escape: boolean, n: number): X | number {
-                  ^ [3]
+                  ^ [2]
+   misc.js:3:5
+   3| var e = new Array(10);
+          ^ [3]
 
 
 Error ----------------------------------------------------------------------------------------------------- misc.js:9:10
@@ -766,22 +843,25 @@ References:
                                           ^^^^^^^^^^^ [3]
 
 
-Error ----------------------------------------------------------------------------------------------------- misc.js:21:9
+Error ---------------------------------------------------------------------------------------------------- misc.js:25:11
 
-`Object.create` [1] contains type variable `X` [2] which cannot escape from the scope in which it was defined [3].
-[escaped-generic]
+Cannot assign `x` to `a.x` because type variable `X` [1] cannot escape from the scope in which it was defined [2] (try
+adding a type annotation to `a` [3]). [escaped-generic]
 
-   misc.js:21:9
-   21| var a = Object.create(null, {x: {value: 42}});
-               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   misc.js:25:11
+   25|     a.x = x;
+                 ^
 
 References:
    misc.js:23:19
    23| function f2<X>(x: X, escape: boolean): X | number {
-                         ^ [2]
+                         ^ [1]
    misc.js:23:13
    23| function f2<X>(x: X, escape: boolean): X | number {
-                   ^ [3]
+                   ^ [2]
+   misc.js:21:5
+   21| var a = Object.create(null, {x: {value: 42}});
+           ^ [3]
 
 
 Error ---------------------------------------------------------------------------------------------------- misc.js:27:10
@@ -801,22 +881,25 @@ References:
                                               ^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- misc.js:30:10
+Error ---------------------------------------------------------------------------------------------------- misc.js:34:13
 
-array type [1] contains type variable `X` [2] which cannot escape from the scope in which it was defined [3].
-[escaped-generic]
+Cannot assign `x` to `a2[n]` because type variable `X` [1] cannot escape from the scope in which it was defined [2] (try
+adding a type annotation to `a2` [3]). [escaped-generic]
 
-   misc.js:30:10
-   30| var a2 = Object.keys({x: 42});
-                ^^^^^^^^^^^^^^^^^^^^ [1]
+   misc.js:34:13
+   34|     a2[n] = x;
+                   ^
 
 References:
    misc.js:32:19
    32| function f3<X>(x: X, escape: boolean, n: number): X | string {
-                         ^ [2]
+                         ^ [1]
    misc.js:32:13
    32| function f3<X>(x: X, escape: boolean, n: number): X | string {
-                   ^ [3]
+                   ^ [2]
+   misc.js:30:5
+   30| var a2 = Object.keys({x: 42});
+           ^^ [3]
 
 
 Error ---------------------------------------------------------------------------------------------------- misc.js:36:10
@@ -987,8 +1070,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- misc.js:69:9
 
-Cannot assign `x` to `u` because type variable `X` [1] cannot escape from the scope in which it was defined [2].
-[escaped-generic]
+Cannot assign `x` to `u` because type variable `X` [1] cannot escape from the scope in which it was defined [2] (try
+adding a type annotation to `u` [3]). [escaped-generic]
 
    misc.js:69:9
    69|     u = x;
@@ -1001,6 +1084,9 @@ References:
    misc.js:67:11
    67| var u = (<X>(x: X, escape: boolean): X => {
                  ^ [2]
+   misc.js:67:5
+   67| var u = (<X>(x: X, escape: boolean): X => {
+           ^ [3]
 
 
 Error ---------------------------------------------------------------------------------------------------- misc.js:71:10
@@ -1037,22 +1123,25 @@ References:
                                             ^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- misc.js:74:10
+Error ---------------------------------------------------------------------------------------------------- misc.js:78:12
 
-object literal [1] contains type variable `X` [2] which cannot escape from the scope in which it was defined [3].
-[escaped-generic]
+Cannot assign `x` to `a3.x` because type variable `X` [1] cannot escape from the scope in which it was defined [2] (try
+adding a type annotation to `a3` [3]). [escaped-generic]
 
-   misc.js:74:10
-   74| var a3 = {};
-                ^^ [1]
+   misc.js:78:12
+   78|     a3.x = x;
+                  ^
 
 References:
    misc.js:76:19
    76| function f6<X>(x: X, escape: boolean): X | void {
-                         ^ [2]
+                         ^ [1]
    misc.js:76:13
    76| function f6<X>(x: X, escape: boolean): X | void {
-                   ^ [3]
+                   ^ [2]
+   misc.js:74:5
+   74| var a3 = {};
+           ^^ [3]
 
 
 Error ---------------------------------------------------------------------------------------------------- misc.js:80:10
@@ -1072,22 +1161,25 @@ References:
                                               ^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- misc.js:83:10
+Error ---------------------------------------------------------------------------------------------------- misc.js:87:12
 
-function [1] contains type variable `X` [2] which cannot escape from the scope in which it was defined [3].
-[escaped-generic]
+Cannot assign `x` to `a4.x` because type variable `X` [1] cannot escape from the scope in which it was defined [2] (try
+adding a type annotation to `a4` [3]). [escaped-generic]
 
-   misc.js:83:10
-   83| var a4 = () => 42;
-                ^^^^^^^^ [1]
+   misc.js:87:12
+   87|     a4.x = x;
+                  ^
 
 References:
    misc.js:85:19
    85| function f7<X>(x: X, escape: boolean): X | void {
-                         ^ [2]
+                         ^ [1]
    misc.js:85:13
    85| function f7<X>(x: X, escape: boolean): X | void {
-                   ^ [3]
+                   ^ [2]
+   misc.js:83:5
+   83| var a4 = () => 42;
+           ^^ [3]
 
 
 Error ---------------------------------------------------------------------------------------------------- misc.js:89:10
@@ -1107,22 +1199,25 @@ References:
                                               ^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- misc.js:92:10
+Error ---------------------------------------------------------------------------------------------------- misc.js:96:12
 
-`Object.create` [1] contains type variable `X` [2] which cannot escape from the scope in which it was defined [3].
-[escaped-generic]
+Cannot assign `x` to `a5.x` because type variable `X` [1] cannot escape from the scope in which it was defined [2] (try
+adding a type annotation to `a5` [3]). [escaped-generic]
 
-   misc.js:92:10
-   92| var a5 = Object.create(null);
-                ^^^^^^^^^^^^^^^^^^^ [1]
+   misc.js:96:12
+   96|     a5.x = x;
+                  ^
 
 References:
    misc.js:94:19
    94| function f8<X>(x: X, escape: boolean): X | void {
-                         ^ [2]
+                         ^ [1]
    misc.js:94:13
    94| function f8<X>(x: X, escape: boolean): X | void {
-                   ^ [3]
+                   ^ [2]
+   misc.js:92:5
+   92| var a5 = Object.create(null);
+           ^^ [3]
 
 
 Error ---------------------------------------------------------------------------------------------------- misc.js:98:10
@@ -1142,25 +1237,22 @@ References:
                                               ^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- misc.js:105:21
+Error --------------------------------------------------------------------------------------------------- misc.js:109:14
 
-Cannot assign `a6` to `a8` because rest of object pattern [1] contains type variable `X` [2] which cannot escape from
-the scope in which it was defined [3]. [escaped-generic]
+Cannot assign `x` to `a8.b` because type variable `X` [1] cannot escape from the scope in which it was defined [2].
+[escaped-generic]
 
-   misc.js:105:21
-   105|   var {a7, ...a8} = a6;
-                            ^^
+   misc.js:109:14
+   109|       a8.b = x;
+                     ^
 
 References:
-   misc.js:105:12
-   105|   var {a7, ...a8} = a6;
-                   ^^^^^ [1]
    misc.js:107:20
    107|   function g<X>(x: X): ?X {
-                           ^ [2]
+                           ^ [1]
    misc.js:107:14
    107|   function g<X>(x: X): ?X {
-                     ^ [3]
+                     ^ [2]
 
 
 Error --------------------------------------------------------------------------------------------------- misc.js:111:12
@@ -1180,172 +1272,202 @@ References:
                                 ^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- misc.js:120:10
+Error --------------------------------------------------------------------------------------------------- misc.js:118:10
 
-Cannot assign `y` to `xa` because type variable `X` [1] cannot escape from the scope in which it was defined [2].
-[escaped-generic]
+Cannot assign `y` to `x0` because type variable `X` [1] cannot escape from the scope in which it was defined [2] (try
+adding a type annotation to `x0` [3]). [escaped-generic]
 
-   misc.js:120:10
-   120|     xa = y;
+   misc.js:118:10
+   118|     x0 = y;
                  ^
 
 References:
-   misc.js:119:20
-   119|   function f<X>(y: X) {
+   misc.js:117:20
+   117|   function f<X>(y: X) {
                            ^ [1]
-   misc.js:119:14
-   119|   function f<X>(y: X) {
+   misc.js:117:14
+   117|   function f<X>(y: X) {
                      ^ [2]
+   misc.js:116:10
+   116| for (var x0 of []) {
+                 ^^ [3]
 
 
-Error --------------------------------------------------------------------------------------------------- misc.js:126:10
+Error --------------------------------------------------------------------------------------------------- misc.js:124:10
 
-Cannot assign `y` to `xb` because type variable `X` [1] cannot escape from the scope in which it was defined [2].
+Cannot assign `y` to `x1` because type variable `X` [1] cannot escape from the scope in which it was defined [2].
 [escaped-generic]
 
-   misc.js:126:10
-   126|     xb = y;
+   misc.js:124:10
+   124|     x1 = y;
                  ^
 
 References:
-   misc.js:125:20
-   125|   function f<X>(y: X) {
+   misc.js:123:20
+   123|   function f<X>(y: X) {
                            ^ [1]
-   misc.js:125:14
-   125|   function f<X>(y: X) {
+   misc.js:123:14
+   123|   function f<X>(y: X) {
                      ^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- misc.js:132:10
+Error --------------------------------------------------------------------------------------------------- misc.js:130:10
 
-Cannot assign `y` to `xc` because type variable `X` [1] cannot escape from the scope in which it was defined [2].
+Cannot assign `y` to `x2` because type variable `X` [1] cannot escape from the scope in which it was defined [2].
 [escaped-generic]
 
-   misc.js:132:10
-   132|     xc = y;
+   misc.js:130:10
+   130|     x2 = y;
                  ^
 
 References:
-   misc.js:131:20
-   131|   function f<X>(y: X) {
+   misc.js:129:20
+   129|   function f<X>(y: X) {
                            ^ [1]
-   misc.js:131:14
-   131|   function f<X>(y: X) {
+   misc.js:129:14
+   129|   function f<X>(y: X) {
                      ^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- misc.js:138:10
+Error --------------------------------------------------------------------------------------------------- misc.js:136:10
 
-Cannot assign `y` to `xd` because type variable `X` [1] cannot escape from the scope in which it was defined [2].
+Cannot assign `y` to `x3` because type variable `X` [1] cannot escape from the scope in which it was defined [2].
 [escaped-generic]
 
-   misc.js:138:10
-   138|     xd = y;
+   misc.js:136:10
+   136|     x3 = y;
                  ^
 
 References:
-   misc.js:137:20
-   137|   function f<X>(y: X) {
+   misc.js:135:20
+   135|   function f<X>(y: X) {
                            ^ [1]
-   misc.js:137:14
-   137|   function f<X>(y: X) {
+   misc.js:135:14
+   135|   function f<X>(y: X) {
                      ^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- misc.js:145:10
+Error ---------------------------------------------------------------------------------------------------- misc.js:143:9
 
-Cannot assign `y` to `ee` because type variable `X` [1] cannot escape from the scope in which it was defined [2].
-[escaped-generic]
+Cannot assign `y` to `e` because type variable `X` [1] cannot escape from the scope in which it was defined [2] (try
+adding a type annotation to `e` [3]). [escaped-generic]
 
-   misc.js:145:10
-   145|     ee = y;
-                 ^
+   misc.js:143:9
+   143|     e = y;
+                ^
 
 References:
-   misc.js:144:20
-   144|   function f<X>(y: X) {
+   misc.js:142:20
+   142|   function f<X>(y: X) {
                            ^ [1]
-   misc.js:144:14
-   144|   function f<X>(y: X) {
+   misc.js:142:14
+   142|   function f<X>(y: X) {
                      ^ [2]
+   misc.js:141:10
+   141| } catch (e) {
+                 ^ [3]
 
 
-Error ---------------------------------------------------------------------------------------------------- misc.js:150:9
+Error ---------------------------------------------------------------------------------------------------- misc.js:148:9
 
 Cannot assign `y` to `x` because type variable `X` [1] cannot escape from the scope in which it was defined [2].
 [escaped-generic]
 
-   misc.js:150:9
-   150|     x = y;
+   misc.js:148:9
+   148|     x = y;
                 ^
 
 References:
-   misc.js:149:20
-   149|   function f<X>(y: X) {
+   misc.js:147:20
+   147|   function f<X>(y: X) {
                            ^ [1]
-   misc.js:149:14
-   149|   function f<X>(y: X) {
+   misc.js:147:14
+   147|   function f<X>(y: X) {
                      ^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- misc.js:157:9
+Error ---------------------------------------------------------------------------------------------------- misc.js:155:9
 
 Cannot assign `y` to `x` because type variable `X` [1] cannot escape from the scope in which it was defined [2].
 [escaped-generic]
 
-   misc.js:157:9
-   157|     x = y;
+   misc.js:155:9
+   155|     x = y;
                 ^
 
 References:
-   misc.js:156:20
-   156|   function f<X>(y: X) {
+   misc.js:154:20
+   154|   function f<X>(y: X) {
                            ^ [1]
-   misc.js:156:14
-   156|   function f<X>(y: X) {
+   misc.js:154:14
+   154|   function f<X>(y: X) {
                      ^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- misc.js:164:9
+Error ---------------------------------------------------------------------------------------------------- misc.js:162:9
 
 Cannot assign `z` to `y` because type variable `X` [1] cannot escape from the scope in which it was defined [2].
 [escaped-generic]
 
-   misc.js:164:9
-   164|     y = z;
+   misc.js:162:9
+   162|     y = z;
                 ^
 
 References:
-   misc.js:163:20
-   163|   function f<X>(z: X) {
+   misc.js:161:20
+   161|   function f<X>(z: X) {
                            ^ [1]
-   misc.js:163:14
-   163|   function f<X>(z: X) {
+   misc.js:161:14
+   161|   function f<X>(z: X) {
                      ^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- misc.js:170:11
+Error --------------------------------------------------------------------------------------------------- misc.js:168:11
 
-Cannot assign `x` to `aaa` because type variable `T` [1] cannot escape from the scope in which it was defined [2].
-[escaped-generic]
+Cannot assign `x` to `aaa` because type variable `T` [1] cannot escape from the scope in which it was defined [2] (try
+adding a type annotation to `aaa` [3]). [escaped-generic]
 
-   misc.js:170:11
-   170|     aaa = x;
+   misc.js:168:11
+   168|     aaa = x;
                   ^
 
 References:
-   misc.js:169:30
-   169| function foo<T: {}>(x: $Diff<T, {}>) {
+   misc.js:167:30
+   167| function foo<T: {}>(x: $Diff<T, {}>) {
                                      ^ [1]
-   misc.js:169:14
-   169| function foo<T: {}>(x: $Diff<T, {}>) {
+   misc.js:167:14
+   167| function foo<T: {}>(x: $Diff<T, {}>) {
                      ^ [2]
+   misc.js:166:5
+   166| var aaa = 1;
+            ^^^ [3]
+
+
+Error --------------------------------------------------------------------------------------------------- misc.js:173:11
+
+Cannot assign `t` to `x4[0]` because type variable `T` [1] cannot escape from the scope in which it was defined [2] (try
+adding a type annotation to `x4` [3]). [escaped-generic]
+
+   misc.js:173:11
+   173|   x4[0] = t;
+                  ^
+
+References:
+   misc.js:172:18
+   172| function f<T>(t: T) {
+                         ^ [1]
+   misc.js:172:12
+   172| function f<T>(t: T) {
+                   ^ [2]
+   misc.js:171:5
+   171| var x4 = [];
+            ^^ [3]
 
 
 Error ----------------------------------------------------------------------------------------------- nonprivate.js:7:12
 
-Cannot return `x` because type variable `X` [1] cannot escape from the scope in which it was defined [2].
-[escaped-generic]
+Cannot return `x` because type variable `X` [1] cannot escape from the scope in which it was defined [2] (try adding a
+type annotation to return [3]). [escaped-generic]
 
    nonprivate.js:7:12
    7|     return x;
@@ -1358,12 +1480,15 @@ References:
    nonprivate.js:4:9
    4| class I<X> {
               ^ [2]
+   nonprivate.js:6:11
+   6|   _h(x: X) {
+                 [3]
 
 
 Error ---------------------------------------------------------------------------------------------- nonprivate.js:10:15
 
-Cannot assign `x` to `this._f` because type variable `X` [1] cannot escape from the scope in which it was defined [2].
-[escaped-generic]
+Cannot assign `x` to `this._f` because type variable `X` [1] cannot escape from the scope in which it was defined [2]
+(try adding a type annotation to property `_f` [3]). [escaped-generic]
 
    nonprivate.js:10:15
    10|     this._f = x;
@@ -1376,18 +1501,24 @@ References:
    nonprivate.js:4:9
     4| class I<X> {
                ^ [2]
+   nonprivate.js:5:5
+    5|   _f;
+            [3]
 
 
-Error ------------------------------------------------------------------------------------------------------ pred.js:2:1
+Error ----------------------------------------------------------------------------------------------------- pred.js:3:10
 
-Cannot assign function to `f3` because function [1] contains type variable `X` [2] which cannot escape from the scope in
-which it was defined [3]. [escaped-generic]
+Cannot return `x` because predicate encoded in return [1] contains type variable `X` [2] which cannot escape from the
+scope in which it was defined [3]. [escaped-generic]
 
-   pred.js:2:1
-   2| function f3<X>(x: X): mixed %checks {
-      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   pred.js:3:10
+   3|   return x;
+               ^
 
 References:
+   pred.js:3:3
+   3|   return x;
+        ^^^^^^^^^ [1]
    pred.js:2:19
    2| function f3<X>(x: X): mixed %checks {
                         ^ [2]
@@ -1396,16 +1527,19 @@ References:
                   ^ [3]
 
 
-Error ------------------------------------------------------------------------------------------------------ pred.js:5:1
+Error ----------------------------------------------------------------------------------------------------- pred.js:6:10
 
-Cannot assign function to `f4` because function [1] contains type variable `X` [2] which cannot escape from the scope in
-which it was defined [3]. [escaped-generic]
+Cannot return `x` because predicate encoded in return [1] contains type variable `X` [2] which cannot escape from the
+scope in which it was defined [3]. [escaped-generic]
 
-   pred.js:5:1
-   5| function f4<X>(x: X): %checks {
-      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   pred.js:6:10
+   6|   return x;
+               ^
 
 References:
+   pred.js:6:3
+   6|   return x;
+        ^^^^^^^^^ [1]
    pred.js:5:19
    5| function f4<X>(x: X): %checks {
                         ^ [2]
@@ -1414,16 +1548,19 @@ References:
                   ^ [3]
 
 
-Error ------------------------------------------------------------------------------------------------------ pred.js:9:1
+Error ----------------------------------------------------------------------------------------------------- pred.js:9:44
 
-Cannot assign function to `g` because function [1] contains type variable `X` [2] which cannot escape from the scope in
-which it was defined [3]. [escaped-generic]
+Cannot return `x` because predicate encoded in return [1] contains type variable `X` [2] which cannot escape from the
+scope in which it was defined [3]. [escaped-generic]
 
-   pred.js:9:1
+   pred.js:9:44
    9| declare function g<X>(x: X): mixed %checks(x);
-      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+                                                 ^
 
 References:
+   pred.js:9:36
+   9| declare function g<X>(x: X): mixed %checks(x);
+                                         ^^^^^^^^^^ [1]
    pred.js:9:26
    9| declare function g<X>(x: X): mixed %checks(x);
                                ^ [2]
@@ -1433,7 +1570,7 @@ References:
 
 
 
-Found 79 errors
+Found 80 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches

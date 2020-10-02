@@ -306,7 +306,8 @@ It is unsafe to use `this` in the constructor before all class properties are de
 
 Error ---------------------------------------------------------------------------------------------------- test.js:235:7
 
-Cannot call `f` with `this` bound to `o` because `this` [1] cannot escape from its class [1]. [escaped-generic]
+Cannot call `f` with `this` bound to `o` because `this` [1] cannot escape from its class [1] (try adding a type
+annotation to `o` [2]). [escaped-generic]
 
    test.js:235:7
    235|     f(this); // ThisBeforeEverythingInitialized
@@ -316,6 +317,9 @@ References:
    test.js:232:7
    232| class E28 {
               ^^^ [1]
+   test.js:231:12
+   231| function f(o) {}
+                   ^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- test.js:235:7
@@ -563,15 +567,6 @@ Class property not definitely initialized in the constructor. Can you add an ass
           ^
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:488:7
-
-Cannot assign class `E54` to `E54` because class `E54` [1] contains `this` [1] which cannot escape from its class [1].
-[escaped-generic]
-
-   488| class E54 {
-              ^^^ [1]
-
-
 Error ---------------------------------------------------------------------------------------------------- test.js:491:5
 
 It is unsafe to call a method in the constructor before all class properties are definitely initialized.
@@ -579,6 +574,24 @@ It is unsafe to call a method in the constructor before all class properties are
 
    491|     this.m(this); // MethodCallBeforeEverythingInitialized, ThisBeforeEverythingInitialized
             ^^^^^^^^^^^^
+
+
+Error --------------------------------------------------------------------------------------------------- test.js:491:12
+
+Cannot call `this.m` with `this` bound to `o` because `this` [1] cannot escape from its class [1] (try adding a type
+annotation to `o` [2]). [escaped-generic]
+
+   test.js:491:12
+   491|     this.m(this); // MethodCallBeforeEverythingInitialized, ThisBeforeEverythingInitialized
+                   ^^^^
+
+References:
+   test.js:488:7
+   488| class E54 {
+              ^^^ [1]
+   test.js:494:5
+   494|   m(o): void {}
+            ^ [2]
 
 
 Error --------------------------------------------------------------------------------------------------- test.js:491:12
@@ -916,7 +929,8 @@ It is unsafe to call a method in the constructor before all class properties are
 
 Error ---------------------------------------------------------------------------------------------------- test.js:714:7
 
-Cannot initialize property `p` with `this` because `this` [1] cannot escape from its class [1]. [escaped-generic]
+Cannot initialize property `p` with `this` because `this` [1] cannot escape from its class [1] (try adding a type
+annotation to property `p` [2]). [escaped-generic]
 
    test.js:714:7
    714|   p = this; // ThisBeforeEverythingInitialized
@@ -926,6 +940,9 @@ References:
    test.js:713:7
    713| class E81 {
               ^^^ [1]
+   test.js:714:4
+   714|   p = this; // ThisBeforeEverythingInitialized
+            [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- test.js:714:7

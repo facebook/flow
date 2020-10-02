@@ -76,3 +76,12 @@ class O<T> {
     return t;
   }
 }
+
+class H<T> {
+  static _wa;
+  static #pa;
+  f(x: T) {
+    H._wa = x;
+    H.#pa = x;
+  }
+}
