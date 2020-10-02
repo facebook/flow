@@ -33,6 +33,21 @@ References:
                ^ [3]
 
 
+Error --------------------------------------------------------------------------------------------------- annot2.js:1:24
+
+Cannot return function because function [1] contains type variable `T` [2] which cannot escape from the scope in which
+it was defined [2]. [escaped-generic]
+
+   annot2.js:1:24
+   1| const f = <T>(x: T) => (y: T) => y;
+                             ^^^^^^^^^^^ [1]
+
+References:
+   annot2.js:1:12
+   1| const f = <T>(x: T) => (y: T) => y;
+                 ^ [2]
+
+
 Error ---------------------------------------------------------------------------------------------------- annot2.js:4:2
 
 Cannot cast `f(...)(...)` to number because `T` [1] is incompatible with number [2]. [incompatible-cast]
@@ -400,4 +415,4 @@ References:
 
 
 
-Found 23 errors
+Found 24 errors

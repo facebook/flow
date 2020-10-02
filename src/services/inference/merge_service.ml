@@ -142,6 +142,7 @@ let merge_context_generic ~options ~reader ~get_ast_unsafe ~get_file_sig_unsafe 
   let get_aloc_table_unsafe =
     Parsing_heaps.Reader_dispatcher.get_sig_ast_aloc_table_unsafe ~reader
   in
+  assert (phase <> Context.Merging || Options.arch options <> Options.Classic);
   let (((full_cx, _, _), other_cxs) as cx_nel) =
     Merge_js.merge_component
       ~arch:(Options.arch options)

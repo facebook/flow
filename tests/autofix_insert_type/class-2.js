@@ -2,6 +2,6 @@
 
 class A {
   m() {
-    return this;
+    return new A();
   }
 }

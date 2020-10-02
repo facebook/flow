@@ -705,6 +705,21 @@ References:
                                   ^^^^^^ [2]
 
 
+Error ---------------------------------------------------------------------------------------------------- rest.js:31:10
+
+Cannot return function because function [1] contains type variable `T` [2] which cannot escape from the scope in which
+it was defined [2]. [escaped-generic]
+
+   rest.js:31:10
+   31|   return function<U: T>(...xs: T): void {}
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+References:
+   rest.js:30:27
+   30| function bounds_on_bounds<T>() {
+                                 ^ [2]
+
+
 Error ---------------------------------------------------------------------------------------------------- rest.js:36:13
 
 Cannot call `xs.pop` because property `pop` is missing in `T` [1]. [incompatible-use]
@@ -852,4 +867,4 @@ References:
 
 
 
-Found 56 errors
+Found 57 errors

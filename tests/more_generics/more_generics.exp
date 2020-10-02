@@ -30,6 +30,24 @@ References:
                               ^ [2]
 
 
+Error ------------------------------------------------------------------------------------------------------ poly.js:9:9
+
+Cannot assign array literal to `x` because empty array literal [1] contains type variable `T` [2] which cannot escape
+from the scope in which it was defined [3]. [escaped-generic]
+
+   poly.js:9:9
+    9| var x = [];
+               ^^ [1]
+
+References:
+   poly.js:10:26
+   10| function foo5<T>():Array<T> { return x; }
+                                ^ [2]
+   poly.js:10:15
+   10| function foo5<T>():Array<T> { return x; }
+                     ^ [3]
+
+
 Error ---------------------------------------------------------------------------------------------------- poly.js:10:38
 
 Cannot return `x` because the expected type is not parametric in `T` [1], perhaps due to the use of `*` or the lack of a
@@ -62,6 +80,24 @@ References:
                              ^ [2]
 
 
+Error ----------------------------------------------------------------------------------------------------- poly.js:22:1
+
+Cannot assign function to `foo8` because function [1] contains type variable `U` [2] which cannot escape from the scope
+in which it was defined [3]. [escaped-generic]
+
+   poly.js:22:1
+   22| function foo8<U>(x:U,y):U {
+       ^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+References:
+   poly.js:22:20
+   22| function foo8<U>(x:U,y):U {
+                          ^ [2]
+   poly.js:22:15
+   22| function foo8<U>(x:U,y):U {
+                     ^ [3]
+
+
 Error ----------------------------------------------------------------------------------------------------- poly.js:24:3
 
 Cannot call `y` because `U` [1] is not a function. [not-a-function]
@@ -77,4 +113,4 @@ References:
 
 
 
-Found 5 errors
+Found 7 errors

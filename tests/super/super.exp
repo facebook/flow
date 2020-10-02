@@ -82,6 +82,20 @@ References:
              ^ [1]
 
 
+Error -------------------------------------------------------------------------------------------- constructor.js:150:12
+
+Cannot return `super()` because `this` [1] cannot escape from its class [1]. [escaped-generic]
+
+   constructor.js:150:12
+   150|     return super();
+                   ^^^^^^^
+
+References:
+   constructor.js:148:7
+   148| class N extends N_ {
+              ^ [1]
+
+
 Error --------------------------------------------------------------------------------------------------- super.js:10:11
 
 Cannot call `super` with `x` bound to `x` because string [1] is incompatible with number [2]. [incompatible-call]
@@ -159,4 +173,4 @@ References:
 
 
 
-Found 11 errors
+Found 12 errors

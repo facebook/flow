@@ -26,6 +26,24 @@ References:
                 ^ [2]
 
 
+Error ------------------------------------------------------------------------------------------------------ loop.js:5:1
+
+Cannot assign function to `f` because function [1] contains type variable `T` [2] which cannot escape from the scope in
+which it was defined [3]. [escaped-generic]
+
+   loop.js:5:1
+   5| function f<T:*>(x:T,y?:T) { x = y }
+      ^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+References:
+   loop.js:5:24
+   5| function f<T:*>(x:T,y?:T) { x = y }
+                             ^ [2]
+   loop.js:5:12
+   5| function f<T:*>(x:T,y?:T) { x = y }
+                 ^ [3]
+
+
 Error ----------------------------------------------------------------------------------------------------- loop.js:5:33
 
 Cannot assign `y` to `x` because undefined [1] is incompatible with `T` [2]. [incompatible-type]
@@ -314,4 +332,4 @@ References:
 
 
 
-Found 22 errors
+Found 23 errors

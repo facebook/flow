@@ -215,6 +215,12 @@ let force_annotations ~arch leader_cx other_cxs =
         |> Flow_js.enforce_strict leader_cx ~should_munge_underscores)
       (leader_cx :: other_cxs)
 
+let detect_escaped_generics results =
+  Base.List.iter
+    ~f:(fun (cx, _, (_, { Flow_ast.Program.statements; _ })) ->
+      Generic_escape.scan_for_escapes cx ~add_output:Flow_js.add_output statements)
+    results
+
 let detect_non_voidable_properties cx =
   (* This function approximately checks whether VoidT can flow to the provided
    * type without actually creating the flow so as not to disturb type inference.
@@ -583,6 +589,7 @@ let merge_component
     detect_unnecessary_invariants cx;
     detect_invalid_type_assert_calls cx file_sigs cxs tasts;
     Strict_es6_import_export.detect_errors ~metadata ~phase cx results;
+    if phase = Context.Checking then detect_escaped_generics results;
 
     (* Well-formed conditionals *)
     detect_matching_props_violations cx;
