@@ -59,7 +59,26 @@ class escape_finder ~gcx ~(add_output : Context.t -> ?trace:Trace.t -> Error_mes
                is_this;
              });
         acc
-      | _ -> super#type_ cx pole acc ty
+      | _ ->
+        begin
+          match (ty, ALoc.source (def_aloc_of_reason (reason_of_t ty))) with
+          | (DefT (_, _, InstanceT (_, _, _, { type_args; _ })), Some key)
+            when key <> Context.file cx ->
+            (* It's really expensive to explore imported instances, and it's usually not necessary to do
+               so. A nominal type like an instance, defined in a different module, should not be able to
+               both contain, and have accessible, a type variable native to the importing module
+               (at least under types-first). The exception is of course type parameters--an external class
+               can have its type parameters instantiated (implicitly or explicitly) by a local generic.
+               To catch such cases, we search the type args of non-local instances, but nothing else. *)
+            let acc =
+              List.fold_left
+                (fun acc (_, _, t, pole') -> self#type_ cx (Polarity.mult (pole, pole')) acc t)
+                acc
+                type_args
+            in
+            acc
+          | _ -> super#type_ cx pole acc ty
+        end
 
     method! use_type_ _cx acc _ty = acc
 
