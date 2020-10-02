@@ -618,26 +618,12 @@ fix add a type annotation to `_` [3] or to `data` [4]. [speculation-ambiguous]
          -^
 
 References:
-   <BUILTINS>/node.js:1104:3
-           v-------------------------
+   <BUILTINS>/node.js:1104:20
    1104|   declare function readFile(
-   1105|     path: string | Buffer | URL | number,
-   1106|     options: {
-   1107|       encoding: string,
-   1108|       flag?: string,
-   1109|       ...
-   1110|     },
-   1111|     callback: (err: ?ErrnoError, data: string) => void
-   1112|   ): void;
-           -------^ [1]
-   <BUILTINS>/node.js:1113:3
-           v-------------------------
+                            ^^^^^^^^ [1]
+   <BUILTINS>/node.js:1113:20
    1113|   declare function readFile(
-   1114|     path: string | Buffer | URL | number,
-   1115|     options: { flag?: string, ... },
-   1116|     callback: (err: ?ErrnoError, data: Buffer) => void
-   1117|   ): void;
-           -------^ [2]
+                            ^^^^^^^^ [2]
    fs/fs.js:13:48
      13| fs.readFile("file.exp", { encoding: "blah" }, (_, data) => {
                                                         ^ [3]

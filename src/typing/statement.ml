@@ -535,10 +535,9 @@ and statement_decl cx =
       let r = DescFormat.type_reason name name_loc in
       let tvar = Tvar.mk cx r in
       Env.bind_implicit_const Scope.Entry.EnumNameBinding cx name tvar name_loc
-  | ( loc,
-      DeclareVariable { DeclareVariable.id = (id_loc, { Ast.Identifier.name; comments = _ }); _ } )
+  | (_, DeclareVariable { DeclareVariable.id = (id_loc, { Ast.Identifier.name; comments = _ }); _ })
     ->
-    let r = mk_reason (RCustom (spf "declare %s" name)) loc in
+    let r = mk_reason (RIdentifier name) id_loc in
     let t = Tvar.mk cx r in
     Env.bind_declare_var cx name t id_loc
   | ( loc,
@@ -547,7 +546,7 @@ and statement_decl cx =
         declare_function ) ) ->
     (match declare_function_to_function_declaration cx loc declare_function with
     | None ->
-      let r = mk_reason (RCustom (spf "declare %s" name)) loc in
+      let r = mk_reason (RIdentifier name) id_loc in
       let t = Tvar.mk cx r in
       Env.bind_declare_fun cx name t id_loc
     | Some (func_decl, _) -> statement_decl cx (loc, func_decl))
@@ -2056,7 +2055,7 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t =
           annot;
           comments;
         } ) ->
-    let r = mk_reason (RCustom (spf "declare %s" name)) loc in
+    let r = mk_reason (RIdentifier name) id_loc in
     let (t, annot_ast) = Anno.mk_type_annotation cx SMap.empty r annot in
     Env.unify_declared_type cx name t;
     (loc, DeclareVariable { DeclareVariable.id = ((id_loc, t), id); annot = annot_ast; comments })
@@ -2071,7 +2070,7 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t =
       in
       let { Ast.Identifier.name; comments = _ } = id_name in
       let (t, annot_ast) = Anno.mk_type_available_annotation cx SMap.empty annot in
-      Env.unify_declared_fun_type cx name loc t;
+      Env.unify_declared_fun_type cx name id_loc t;
       let predicate = Base.Option.map ~f:Tast_utils.error_mapper#type_predicate predicate in
       ( loc,
         DeclareFunction
