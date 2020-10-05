@@ -53,6 +53,7 @@ module Opts = struct
     enforce_well_formed_exports_includes: string list;
     enums: bool;
     exact_by_default: bool;
+    generate_tests: bool;
     facebook_fbs: string option;
     facebook_fbt: string option;
     facebook_module_interop: bool;
@@ -156,6 +157,7 @@ module Opts = struct
       enforce_well_formed_exports_includes = [];
       enums = false;
       exact_by_default = false;
+      generate_tests = true;
       facebook_fbs = None;
       facebook_fbt = None;
       facebook_module_interop = false;
@@ -424,6 +426,7 @@ module Opts = struct
       ("esproposal.optional_chaining", deprecated_esproposal_flag Enable);
       ("esproposal.nullish_coalescing", deprecated_esproposal_flag Enable);
       ("exact_by_default", boolean (fun opts v -> Ok { opts with exact_by_default = v }));
+      ("generate_tests", boolean (fun opts v -> Ok { opts with generate_tests = v }));
       ("facebook.fbs", string (fun opts v -> Ok { opts with facebook_fbs = Some v }));
       ("facebook.fbt", string (fun opts v -> Ok { opts with facebook_fbt = Some v }));
       ( "file_watcher",
@@ -1146,6 +1149,8 @@ let enforce_well_formed_exports_includes c = c.options.Opts.enforce_well_formed_
 let enums c = c.options.Opts.enums
 
 let exact_by_default c = c.options.Opts.exact_by_default
+
+let generate_tests c = c.options.Opts.generate_tests
 
 let file_watcher c = c.options.Opts.file_watcher
 

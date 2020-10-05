@@ -56,6 +56,7 @@ type t = {
   opt_enforce_well_formed_exports: string list option;
   opt_enums: bool;
   opt_exact_by_default: bool;
+  opt_generate_tests: bool;
   opt_facebook_fbs: string option;
   opt_facebook_fbt: string option;
   opt_facebook_module_interop: bool;
@@ -131,6 +132,8 @@ let enforce_well_formed_exports opts = opts.opt_enforce_well_formed_exports
 let enums opts = opts.opt_enums
 
 let exact_by_default opts = opts.opt_exact_by_default
+
+let generate_tests opts = opts.opt_generate_tests
 
 let haste_module_ref_prefix opts = opts.opt_haste_module_ref_prefix
 

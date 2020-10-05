@@ -40,6 +40,7 @@ type metadata = {
   enable_enums: bool;
   enforce_strict_call_arity: bool;
   exact_by_default: bool;
+  generate_tests: bool;
   facebook_fbs: string option;
   facebook_fbt: string option;
   facebook_module_interop: bool;
@@ -207,6 +208,7 @@ let metadata_of_options options =
     enable_enums = Options.enums options;
     enforce_strict_call_arity = Options.enforce_strict_call_arity options;
     exact_by_default = Options.exact_by_default options;
+    generate_tests = Options.generate_tests options;
     facebook_fbs = Options.facebook_fbs options;
     facebook_fbt = Options.facebook_fbt options;
     facebook_module_interop = Options.facebook_module_interop options;
@@ -392,6 +394,8 @@ let evaluated cx = cx.ccx.sig_cx.evaluated
 let goals cx = cx.ccx.goal_map
 
 let exact_by_default cx = cx.metadata.exact_by_default
+
+let generate_tests cx = cx.metadata.generate_tests
 
 let file cx = cx.file
 

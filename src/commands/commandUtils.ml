@@ -803,6 +803,7 @@ module Options_flags = struct
     temp_dir: string option;
     traces: int option;
     trust_mode: Options.trust_mode option;
+    generate_tests: bool option;
     new_signatures: bool;
     abstract_locations: bool;
     verbose: Verbose.t option;
@@ -863,7 +864,8 @@ let options_flags =
       new_signatures
       abstract_locations
       include_suppressions
-      trust_mode =
+      trust_mode
+      generate_tests =
     (match merge_timeout with
     | Some timeout when timeout < 0 ->
       FlowExitStatus.(exit ~msg:"--merge-timeout must be non-negative" Commandline_usage_error)
@@ -889,6 +891,7 @@ let options_flags =
         quiet;
         merge_timeout;
         trust_mode;
+        generate_tests;
         new_signatures;
         abstract_locations;
         include_suppressions;
@@ -953,7 +956,8 @@ let options_flags =
                    ("silent", Options.SilentTrust);
                    ("none", Options.NoTrust);
                  ]))
-           ~doc:"")
+           ~doc:""
+      |> flag "--generate-tests" (optional bool) ~doc:"")
 
 let saved_state_flags =
   let collect_saved_state_flags
@@ -1291,6 +1295,8 @@ let make_options
         ~f:(Files.expand_project_root_token ~root)
         (FlowConfig.strict_es6_import_export_excludes flowconfig);
     opt_automatic_require_default = FlowConfig.automatic_require_default flowconfig;
+    opt_generate_tests =
+      Base.Option.value options_flags.generate_tests ~default:(FlowConfig.generate_tests flowconfig);
   }
 
 let make_env flowconfig_name connect_flags root =

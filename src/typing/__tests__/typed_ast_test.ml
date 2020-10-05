@@ -27,6 +27,7 @@ let metadata =
     enable_enums = true;
     enforce_strict_call_arity = true;
     exact_by_default = false;
+    generate_tests = true;
     facebook_fbs = None;
     facebook_fbt = None;
     facebook_module_interop = false;

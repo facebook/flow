@@ -79,6 +79,8 @@ val enums : config -> bool
 
 val exact_by_default : config -> bool
 
+val generate_tests : config -> bool
+
 val facebook_fbs : config -> string option
 
 val facebook_fbt : config -> string option
