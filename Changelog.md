@@ -1,8 +1,13 @@
 ### 0.135.0
 
+Likely to cause new Flow errors:
+
+* Turned the untyped-type-import lint into an error by default. In a later release, we will turn this into a regular type error instead of a lint error.
+
+Misc:
+
 * Improved exhaustiveness checking in switch statements.
 * Improved autocomplete results to show documentation in more cases.
-* Turned the untyped-type-import lint into an error by default. In a later release, we will turn this into a regular type error instead of a lint error.
 * Removed esproposal configuration options from the .flowconfig format.
 * Added library definition for MediaRecorder API.
 * Fixed Object.freeze to no longer incorrectly convert an inexact object into an exact object.
