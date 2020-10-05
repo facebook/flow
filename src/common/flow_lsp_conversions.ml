@@ -96,11 +96,8 @@ let flow_completion_to_lsp
       in
       let insertTextFormat = Some PlainText in
       let textEdits =
-        match item.res_insert_text with
-        | Some insert_text ->
-          let range = loc_to_lsp_range item.res_loc in
-          [{ Lsp.TextEdit.range; newText = insert_text }]
-        | None -> []
+        let range = loc_to_lsp_range item.res_loc in
+        [{ Lsp.TextEdit.range; newText = item.res_insert_text }]
       in
       let sortText = Some (Printf.sprintf "%020u" item.rank) in
       let documentation =

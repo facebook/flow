@@ -106,11 +106,12 @@ let autocomplete_create_result
     ?insert_text ?(rank = 0) ?(preselect = false) ?documentation ~exact_by_default (name, loc) ty =
   let res_ty = Ty_printer.string_of_t_single_line ~with_comments:false ~exact_by_default ty in
   let res_kind = lsp_completion_of_type ty in
+  let res_insert_text = Base.Option.value ~default:name insert_text in
   {
     res_loc = loc;
     res_kind;
     res_name = name;
-    res_insert_text = insert_text;
+    res_insert_text;
     res_ty;
     rank;
     res_preselect = preselect;
@@ -120,13 +121,14 @@ let autocomplete_create_result
 let autocomplete_create_result_decl
     ?insert_text ~rank ?(preselect = false) ?documentation ~exact_by_default (name, loc) d =
   let open Ty in
+  let res_insert_text = Base.Option.value ~default:name insert_text in
   match d with
   | ModuleDecl _ ->
     {
       res_loc = loc;
       res_kind = Some Lsp.Completion.Module;
       res_name = name;
-      res_insert_text = insert_text;
+      res_insert_text;
       res_ty = "module " ^ name;
       rank;
       res_preselect = preselect;
@@ -137,7 +139,7 @@ let autocomplete_create_result_decl
       res_loc = loc;
       res_kind = Some Lsp.Completion.Variable;
       res_name = name;
-      res_insert_text = insert_text;
+      res_insert_text;
       res_ty = Ty_printer.string_of_t_single_line ~with_comments:false ~exact_by_default ty;
       rank;
       res_preselect = preselect;
@@ -148,7 +150,7 @@ let autocomplete_create_result_decl
       res_loc = loc;
       res_kind = Some (lsp_completion_of_decl d);
       res_name = name;
-      res_insert_text = insert_text;
+      res_insert_text;
       res_ty = Ty_printer.string_of_decl_single_line ~with_comments:false ~exact_by_default d;
       rank;
       res_preselect = preselect;
@@ -635,7 +637,7 @@ let autocomplete_id
         res_kind = Some Lsp.Completion.Variable;
         res_name = "this";
         res_ty = "this";
-        res_insert_text = Some "this";
+        res_insert_text = "this";
         rank = 0;
         res_preselect = false;
         res_documentation = None;
@@ -652,7 +654,7 @@ let autocomplete_id
         res_kind = Some Lsp.Completion.Variable;
         res_name = "super";
         res_ty = "super";
-        res_insert_text = Some "super";
+        res_insert_text = "super";
         rank = 0;
         res_preselect = false;
         res_documentation = None;
@@ -783,7 +785,7 @@ let type_exports_of_module_ty ~ac_loc ~exact_by_default ~documentation_of_module
               res_loc = ac_loc;
               res_kind = lsp_completion_of_type t;
               res_name = name.Ty.sym_name;
-              res_insert_text = None;
+              res_insert_text = name.Ty.sym_name;
               res_ty = Ty_printer.string_of_decl_single_line ~exact_by_default d;
               rank = 0;
               res_preselect = false;
@@ -795,7 +797,7 @@ let type_exports_of_module_ty ~ac_loc ~exact_by_default ~documentation_of_module
               res_loc = ac_loc;
               res_kind = Some Lsp.Completion.Interface;
               res_name = name.Ty.sym_name;
-              res_insert_text = None;
+              res_insert_text = name.Ty.sym_name;
               res_ty = Ty_printer.string_of_decl_single_line ~exact_by_default d;
               rank = 0;
               res_preselect = false;
@@ -807,7 +809,7 @@ let type_exports_of_module_ty ~ac_loc ~exact_by_default ~documentation_of_module
               res_loc = ac_loc;
               res_kind = Some Lsp.Completion.Class;
               res_name = name.Ty.sym_name;
-              res_insert_text = None;
+              res_insert_text = name.Ty.sym_name;
               res_ty = Ty_printer.string_of_decl_single_line ~exact_by_default d;
               rank = 0;
               res_preselect = false;
@@ -819,7 +821,7 @@ let type_exports_of_module_ty ~ac_loc ~exact_by_default ~documentation_of_module
               res_loc = ac_loc;
               res_kind = Some Lsp.Completion.Enum;
               res_name = name.Ty.sym_name;
-              res_insert_text = None;
+              res_insert_text = name.Ty.sym_name;
               res_ty = Ty_printer.string_of_decl_single_line ~exact_by_default d;
               rank = 0;
               res_preselect = false;
@@ -842,7 +844,7 @@ let autocomplete_unqualified_type ~options ~reader ~cx ~tparams ~file_sig ~ac_lo
           res_kind = Some Lsp.Completion.TypeParameter;
           res_name = name;
           res_ty = name;
-          res_insert_text = None;
+          res_insert_text = name;
           rank = 0;
           res_preselect = false;
           res_documentation = None;

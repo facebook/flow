@@ -232,7 +232,7 @@ module Response = struct
     res_ty: string;
     res_kind: Lsp.Completion.completionItemKind option;
     res_name: string;
-    res_insert_text: string option;
+    res_insert_text: string;
     rank: int;
     res_preselect: bool;
     res_documentation: string option;
