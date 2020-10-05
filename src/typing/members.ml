@@ -401,6 +401,7 @@ let rec extract_type cx this_t =
   | DefT (_, _, ObjT _) as t -> Success t
   | DefT (_, _, EnumObjectT _) as t -> Success t
   | ExactT (_, t) -> extract_type cx t
+  | GenericT { bound; _ } -> extract_type cx bound
   | ModuleT _ as t -> SuccessModule t
   | ThisTypeAppT (_, c, _, ts_opt) ->
     let c = resolve_type cx c in

@@ -58,6 +58,7 @@ type hash =
   | ObjNotFrozenInexactH
   | ObjNotFrozenIndexedH
   | ObjNotFrozenUnsealedH
+  | GenericH
   | ObjProtoH
   | MatchingPropH
   | NullProtoH
@@ -323,6 +324,7 @@ let hash_of_ctor =
     | FunProtoApplyT _ -> FunProtoApplyH
     | FunProtoBindT _ -> FunProtoBindH
     | FunProtoCallT _ -> FunProtoCallH
+    | GenericT _ -> GenericH
     | IntersectionT _ -> IntersectionH
     | KeysT _ -> KeysH
     | MaybeT _ -> MaybeH

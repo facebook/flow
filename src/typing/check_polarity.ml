@@ -156,6 +156,7 @@ module Kit (Flow : Flow_common.S) : Flow_common.CHECK_POLARITY = struct
       check_polarity cx ?trace tparams (Polarity.inv polarity) config;
       check_polarity cx ?trace tparams polarity instance
     | ShapeT (_, t) -> check_polarity cx ?trace tparams polarity t
+    | GenericT { bound; _ } -> check_polarity cx ?trace tparams polarity bound
     | KeysT (_, t) -> check_polarity cx ?trace tparams Polarity.Positive t
     (* TODO *)
     | CustomFunT _

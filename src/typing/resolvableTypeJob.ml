@@ -199,6 +199,7 @@ and collect_of_type ?log_unresolved cx acc = function
   | ShapeT (_, t) -> collect_of_type ?log_unresolved cx acc t
   | MatchingPropT (_, _, t) -> collect_of_type ?log_unresolved cx acc t
   | DefT (_, _, IdxWrapper t) -> collect_of_type ?log_unresolved cx acc t
+  | GenericT { bound; _ } -> collect_of_type ?log_unresolved cx acc bound
   | ReposT (_, t)
   | InternalT (ReposUpperT (_, t)) ->
     collect_of_type ?log_unresolved cx acc t

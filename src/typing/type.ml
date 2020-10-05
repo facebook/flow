@@ -70,6 +70,12 @@ module rec TypeTerm : sig
     | EvalT of t * defer_use_t * Eval.id
     (* bound type variable *)
     | BoundT of reason * string
+    | GenericT of {
+        reason: reason;
+        name: string;
+        bound: t;
+        id: ALoc.id;
+      }
     (* existential type variable *)
     | ExistsT of reason
     (* this-abstracted class *)
@@ -2954,6 +2960,7 @@ let string_of_ctor = function
   | FunProtoApplyT _ -> "FunProtoApplyT"
   | FunProtoBindT _ -> "FunProtoBindT"
   | FunProtoCallT _ -> "FunProtoCallT"
+  | GenericT _ -> "GenericT"
   | KeysT _ -> "KeysT"
   | ModuleT _ -> "ModuleT"
   | NullProtoT _ -> "NullProtoT"

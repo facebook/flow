@@ -140,6 +140,12 @@ class virtual ['a] t =
       | FunProtoBindT _
       | FunProtoCallT _ ->
         t
+      | GenericT ({ bound; _ } as generic) ->
+        let bound' = self#type_ cx map_cx bound in
+        if bound' == bound then
+          t
+        else
+          GenericT { generic with bound = bound' }
       | MergedT (r, uses) ->
         let uses' = ListUtils.ident_map (self#use_type cx map_cx) uses in
         if uses == uses' then

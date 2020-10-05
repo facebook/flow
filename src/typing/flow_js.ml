@@ -6764,6 +6764,19 @@ struct
        being overwritten) is where it was defined. *)
         | (_, ReposLowerT (reason, use_desc, u)) ->
           rec_flow cx trace (reposition_reason cx ~trace reason ~use_desc l, u)
+        (***********************************************************)
+        (* generics                                                *)
+        (***********************************************************)
+        | ( GenericT { bound = bound1; id = id1; _ },
+            UseT (use_op, GenericT { bound = bound2; id = id2; _ }) )
+          when ALoc.equal_id id1 id2 ->
+          rec_flow_t cx trace ~use_op (bound1, bound2)
+        | (GenericT { reason; bound; _ }, _) ->
+          rec_flow cx trace (mod_reason_of_t (Fn.const reason) bound, u)
+        | (_, UseT (use_op, GenericT { reason; name; id; _ })) ->
+          let desc = RPolyTest (name, RIncompatibleInstantiation name, id, false) in
+          let bot = DefT (replace_desc_reason desc reason, literal_trust (), EmptyT Zeroed) in
+          rec_flow_t cx trace ~use_op (l, bot)
         (***************)
         (* unsupported *)
         (***************)
@@ -8012,6 +8025,9 @@ struct
     | DefT (_, _, ReactAbstractComponentT { config; instance }) ->
       contravariant_flow ~use_op config;
       covariant_flow ~use_op instance;
+      true
+    | GenericT { bound; _ } ->
+      covariant_flow ~use_op bound;
       true
     (* These types have no negative positions in their lower bounds *)
     | ExistsT _

@@ -801,6 +801,7 @@ end = struct
       match t with
       | OpenT (_, id) -> type_variable ~env id
       | BoundT (reason, name) -> bound_t ~env reason name
+      | GenericT { bound; _ } -> (* TODO: better handling for generics *) type__ ~env bound
       | AnnotT (_, t, _) -> type__ ~env t
       | EvalT (t, d, id) -> eval_t ~env ~cont t id d
       | ExactT (_, t) -> exact_t ~env t

@@ -51,6 +51,7 @@ class ['a] t =
         in
         acc
       | BoundT _ -> acc
+      | GenericT { bound; _ } -> self#type_ cx pole acc bound
       | ExistsT _ -> acc
       | ExactT (_, t) -> self#type_ cx pole acc t
       | MergedT (_, uses) -> List.fold_left (self#use_type_ cx) acc uses

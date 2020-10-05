@@ -222,6 +222,7 @@ let rec dump_t_ (depth, tvars) cx t =
         t
     | ThisClassT (_, inst) -> p ~extra:(kid inst) t
     | BoundT (_, name) -> p ~extra:name t
+    | GenericT { name; bound; _ } -> p ~extra:(spf "%s: %s" name (kid bound)) t
     | ExistsT _ -> p t
     | DefT (_, trust, ObjT { props_tmap; _ }) ->
       p ~trust:(Some trust) t ~extra:(Properties.string_of_id props_tmap)
