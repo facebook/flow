@@ -164,8 +164,10 @@ let autocomplete ~trigger_character ~reader ~options ~env ~profiling ~filename ~
                   | (_ :: _, _ :: _) -> "PARTIAL"
                 in
                 let at_least_one_result_has_documentation =
-                  Base.List.exists results ~f:(fun ServerProt.Response.{ res_documentation; _ } ->
-                      Base.Option.is_some res_documentation)
+                  Base.List.exists
+                    results
+                    ~f:(fun ServerProt.Response.Completion.{ documentation; _ } ->
+                      Base.Option.is_some documentation)
                 in
                 ( Ok results,
                   ("result", JSON_String result_string)

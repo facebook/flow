@@ -226,19 +226,21 @@ module Response = struct
     return_ty: string;
   }
 
-  (* Results ready to be displayed to the user *)
-  type complete_autocomplete_result = {
-    res_loc: Loc.t;
-    res_ty: string;
-    res_kind: Lsp.Completion.completionItemKind option;
-    res_name: string;
-    res_insert_text: string;
-    rank: int;
-    res_preselect: bool;
-    res_documentation: string option;
-  }
+  module Completion = struct
+    type completion_item = {
+      detail: string;
+      kind: Lsp.Completion.completionItemKind option;
+      name: string;
+      text_edits: (Loc.t * string) list;
+      sort_text: string option;
+      preselect: bool;
+      documentation: string option;
+    }
 
-  type autocomplete_response = (complete_autocomplete_result list, string) result
+    type t = completion_item list
+  end
+
+  type autocomplete_response = (Completion.t, string) result
 
   type autofix_exports_response = (Replacement_printer.patch * string list, string) result
 

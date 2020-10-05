@@ -7,7 +7,7 @@
 
 type autocomplete_service_result =
   | AcResult of {
-      results: ServerProt.Response.complete_autocomplete_result list;
+      results: ServerProt.Response.Completion.t;
       errors_to_log: string list;
     }
   | AcEmpty of string
@@ -31,5 +31,5 @@ val add_autocomplete_token : string -> int -> int -> string * string
 
 val autocomplete_response_to_json :
   strip_root:Path.t option ->
-  (ServerProt.Response.complete_autocomplete_result list, string) result ->
+  (ServerProt.Response.Completion.completion_item list, string) result ->
   Hh_json.json

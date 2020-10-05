@@ -143,9 +143,9 @@ let main base_flags option_values json pretty root strip_root wait_for_recheck l
       | Ok completions ->
         List.iter
           (fun res ->
-            let name = res.ServerProt.Response.res_name in
-            let ty = res.ServerProt.Response.res_ty in
-            print_endline (Printf.sprintf "%s %s" name ty))
+            let name = res.ServerProt.Response.Completion.name in
+            let detail = res.ServerProt.Response.Completion.detail in
+            print_endline (Printf.sprintf "%s %s" name detail))
           completions
     )
 
