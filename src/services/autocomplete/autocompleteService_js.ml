@@ -39,27 +39,6 @@ let add_autocomplete_token contents line column =
 let remove_autocomplete_token_from_loc loc =
   Loc.{ loc with _end = { loc._end with column = loc._end.column - suffix_len } }
 
-let autocomplete_result_to_json ~strip_root result =
-  let open ServerProt.Response.Completion in
-  let name = result.name in
-  Stdlib.ignore strip_root;
-  Hh_json.JSON_Object
-    [("name", Hh_json.JSON_String name); ("type", Hh_json.JSON_String result.detail)]
-
-let autocomplete_response_to_json ~strip_root response =
-  Hh_json.(
-    match response with
-    | Error error ->
-      JSON_Object
-        [
-          ("error", JSON_String error);
-          ("result", JSON_Array []);
-          (* TODO: remove this? kept for BC *)
-        ]
-    | Ok completions ->
-      let results = Base.List.map ~f:(autocomplete_result_to_json ~strip_root) completions in
-      JSON_Object [("result", JSON_Array results)])
-
 let lsp_completion_of_type =
   let open Ty in
   function

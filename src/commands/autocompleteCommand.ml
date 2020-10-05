@@ -90,6 +90,27 @@ let parse_args = function
     CommandSpec.usage spec;
     FlowExitStatus.(exit Commandline_usage_error)
 
+let autocomplete_result_to_json ~strip_root result =
+  let open ServerProt.Response.Completion in
+  let name = result.name in
+  Stdlib.ignore strip_root;
+  Hh_json.JSON_Object
+    [("name", Hh_json.JSON_String name); ("type", Hh_json.JSON_String result.detail)]
+
+let autocomplete_response_to_json ~strip_root response =
+  Hh_json.(
+    match response with
+    | Error error ->
+      JSON_Object
+        [
+          ("error", JSON_String error);
+          ("result", JSON_Array []);
+          (* TODO: remove this? kept for BC *)
+        ]
+    | Ok completions ->
+      let results = Base.List.map ~f:(autocomplete_result_to_json ~strip_root) completions in
+      JSON_Object [("result", JSON_Array results)])
+
 let main base_flags option_values json pretty root strip_root wait_for_recheck lsp args () =
   let (filename, contents, cursor_opt) = parse_args args in
   let flowconfig_name = base_flags.Base_flags.flowconfig_name in
@@ -134,9 +155,7 @@ let main base_flags option_values json pretty root strip_root wait_for_recheck l
              %> Lsp_fmt.print_completionItem ~key:(Path.to_string root)
              %> Hh_json.print_json_endline ~pretty:true ))
     else if json || pretty then
-      results
-      |> AutocompleteService_js.autocomplete_response_to_json ~strip_root
-      |> Hh_json.print_json_endline ~pretty
+      results |> autocomplete_response_to_json ~strip_root |> Hh_json.print_json_endline ~pretty
     else (
       match results with
       | Error error -> prerr_endlinef "Error: %s" error

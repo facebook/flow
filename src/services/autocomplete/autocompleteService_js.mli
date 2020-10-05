@@ -28,8 +28,3 @@ val autocomplete_suffix : string
 val suffix_len : int
 
 val add_autocomplete_token : string -> int -> int -> string * string
-
-val autocomplete_response_to_json :
-  strip_root:Path.t option ->
-  (ServerProt.Response.Completion.completion_item list, string) result ->
-  Hh_json.json
