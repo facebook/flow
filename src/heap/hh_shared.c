@@ -747,6 +747,11 @@ CAMLprim value hh_set_can_worker_stop(value val) {
   CAMLreturn(Val_unit);
 }
 
+CAMLprim value hh_get_can_worker_stop(value unit) {
+  CAMLparam1(unit);
+  CAMLreturn(Val_bool(worker_can_exit));
+}
+
 void check_should_exit(void) {
   assert(info != NULL);
   if(worker_can_exit && info->workers_should_exit) {

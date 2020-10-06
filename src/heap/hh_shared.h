@@ -47,6 +47,7 @@ CAMLprim value hh_stop_workers(void);
 CAMLprim value hh_resume_workers(void);
 CAMLprim value hh_check_should_exit(void);
 CAMLprim value hh_set_can_worker_stop(value val);
+CAMLprim value hh_get_can_worker_stop(value unit);
 
 /*****************************************************************************/
 /* Global storage. */
