@@ -68,7 +68,7 @@ module type S = sig
     This signature's own type parameters will be subtituted by the
     `generate-tests` function. *)
 
-  val generate_tests : Context.t -> (t -> 'a) -> t -> 'a
+  val check_with_generics : Context.t -> (t -> 'a) -> t -> 'a
   (** Invoke callback with type parameters substituted by upper/lower bounds. *)
 
   val toplevels :

@@ -736,7 +736,7 @@ let union_of_ts reason ts =
     (instead of Bottom), so that the recorded information is the same as if
     all type parameters were indeed erased and replaced by their bounds.
   *)
-and generate_tests : 'a. Context.t -> Type.typeparam list -> (Type.t SMap.t -> 'a) -> 'a =
+and check_with_generics : 'a. Context.t -> Type.typeparam list -> (Type.t SMap.t -> 'a) -> 'a =
   (* make bot type for given param *)
   let mk_bot cx _ { name; reason; is_this; _ } =
     let desc =
@@ -792,11 +792,30 @@ and generate_tests : 'a. Context.t -> Type.typeparam list -> (Type.t SMap.t -> '
       [arg_map]
       params
   in
+  (* New generics mode: generate a GenericT from a generic *)
+  let generic_bound cx prev_map { bound; name; reason = param_reason; is_this; _ } =
+    let param_loc = aloc_of_reason param_reason in
+    let bound = subst cx prev_map bound in
+    let bound =
+      mod_reason_of_t
+        (fun bound_reason ->
+          let annot_loc = annot_aloc_of_reason bound_reason in
+          let desc = desc_of_reason ~unwrap:false bound_reason in
+          opt_annot_reason ?annot_loc
+          @@ mk_reason
+               (RPolyTest (name, desc, Context.make_aloc_id cx param_loc, is_this))
+               param_loc)
+        bound
+    in
+    let id = Context.make_aloc_id cx param_loc in
+    let generic = GenericT { reason = reason_of_t bound; name; id; bound } in
+    SMap.add name generic prev_map
+  in
   (* main - run f over a collection of arg maps generated for params *)
   fun cx params f ->
     if params = [] then
       f SMap.empty
-    else
+    else if Context.generate_tests cx then
       let is_free = function
         | { bound = DefT (_, _, MixedT _); _ } -> true
         | _ -> false
@@ -810,6 +829,9 @@ and generate_tests : 'a. Context.t -> Type.typeparam list -> (Type.t SMap.t -> '
         | [] -> assert false
       in
       Base.List.fold_left ~f:(Fn.const (TestID.run f)) ~init:(f hd_map) tl_maps
+    else
+      let map = Base.List.fold_left ~f:(generic_bound cx) ~init:SMap.empty params in
+      f map
 
 let inherited_method x = x <> "constructor"
 
@@ -3883,7 +3905,7 @@ struct
             rec_flow_t ~use_op cx trace (inst1, inst2)
         (* general case **)
         | (_, UseT (use_op, DefT (_, _, PolyT { tparams = ids; t_out = t; _ }))) ->
-          generate_tests cx (Nel.to_list ids) (fun map_ ->
+          check_with_generics cx (Nel.to_list ids) (fun map_ ->
               rec_flow cx trace (l, UseT (use_op, subst cx ~use_op map_ t)))
         (* TODO: ideally we'd do the same when lower bounds flow to a
        this-abstracted class, but fixing the class is easier; might need to
@@ -12491,7 +12513,7 @@ module rec FlowJs : Flow_common.S = struct
 
   let union_of_ts = union_of_ts
 
-  let generate_tests = generate_tests
+  let check_with_generics = check_with_generics
 
   let match_this_binding = match_this_binding
 

@@ -341,8 +341,8 @@ module Make (F : Func_sig.S) = struct
           implements = Base.List.map ~f:(subst_typeapp cx map) implements;
         }
 
-  let generate_tests cx f x =
-    Flow.generate_tests cx (Type.TypeParams.to_list x.tparams) (fun map ->
+  let check_with_generics cx f x =
+    Flow.check_with_generics cx (Type.TypeParams.to_list x.tparams) (fun map ->
         f
           {
             id = x.id;
@@ -772,7 +772,7 @@ module Make (F : Func_sig.S) = struct
           let save_return = Abnormal.clear_saved Abnormal.Return in
           let save_throw = Abnormal.clear_saved Abnormal.Throw in
           let asts =
-            f |> F.generate_tests cx (F.toplevels None cx this super ~decls ~stmts ~expr)
+            f |> F.check_with_generics cx (F.toplevels None cx this super ~decls ~stmts ~expr)
           in
           set_asts asts;
           ignore (Abnormal.swap_saved Abnormal.Return save_return);
@@ -794,7 +794,7 @@ module Make (F : Func_sig.S) = struct
             | Explicit (annot_loc, c, targs) ->
               (* Eagerly specialize when there are no targs *)
               (* TODO: We can also specialize when there are targs, because this
-             code executes within generate_tests. However, the type normalizer
+             code executes within check_with_generics. However, the type normalizer
              expects a PolyT here. *)
               let c =
                 if targs = None then

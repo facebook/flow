@@ -55,7 +55,7 @@ module type S = sig
 
   val flow_t : Context.t -> Type.t * Type.t -> unit
 
-  val generate_tests : Context.t -> Type.typeparam list -> (Type.t SMap.t -> 'a) -> 'a
+  val check_with_generics : Context.t -> Type.typeparam list -> (Type.t SMap.t -> 'a) -> 'a
 
   val get_builtin : Context.t -> ?trace:Trace.t -> string -> reason -> Type.t
 

@@ -726,7 +726,7 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t =
   in
   let interface_helper cx loc (iface_sig, self) =
     let def_reason = mk_reason (desc_of_t self) loc in
-    Class_type_sig.generate_tests
+    Class_type_sig.check_with_generics
       cx
       (fun iface_sig ->
         Class_type_sig.check_super cx def_reason iface_sig;
@@ -1079,7 +1079,7 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t =
       let () =
         match (underlying_t, super_t) with
         | (Some l, Some u) ->
-          generate_tests cx (TypeParams.to_list tparams) (fun map_ ->
+          check_with_generics cx (TypeParams.to_list tparams) (fun map_ ->
               flow_t cx (subst cx map_ l, subst cx map_ u))
           |> ignore
         | _ -> ()
@@ -7467,7 +7467,7 @@ and mk_class cx class_loc ~name_loc ~general reason c =
   let self = Tvar.mk cx reason in
   let (class_sig, class_ast_f) = mk_class_sig cx name_loc reason self c in
   class_sig
-  |> Class_stmt_sig.generate_tests cx (fun class_sig ->
+  |> Class_stmt_sig.check_with_generics cx (fun class_sig ->
          let public_property_map =
            Class_stmt_sig.to_prop_map cx
            @@ Class_stmt_sig.public_fields_of_signature ~static:false class_sig
@@ -8003,7 +8003,7 @@ and mk_func_sig =
            *
            *   T' ~> P<X>
            *
-           * which is potentially ill-formed since it appears outside a generate_tests
+           * which is potentially ill-formed since it appears outside a check_with_generics
            * call (leads to Not_expect_bounds exception). We disallow this case
            * and instead propagate the original return type T.
            *)
@@ -8046,7 +8046,7 @@ and function_decl id cx reason func this super =
   let save_throw = Abnormal.clear_saved Abnormal.Throw in
   let (params_ast, body_ast, _) =
     func_sig
-    |> Func_stmt_sig.generate_tests
+    |> Func_stmt_sig.check_with_generics
          cx
          (Func_stmt_sig.toplevels
             id

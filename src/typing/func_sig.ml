@@ -76,9 +76,9 @@ module Make (F : Func_params.S) = struct
     let return_t = Flow.subst cx map return_t in
     { x with tparams; tparams_map; fparams; return_t }
 
-  let generate_tests cx f x =
+  let check_with_generics cx f x =
     let { tparams; tparams_map; fparams; return_t; _ } = x in
-    Flow.generate_tests cx (tparams |> TypeParams.to_list) (fun map ->
+    Flow.check_with_generics cx (tparams |> TypeParams.to_list) (fun map ->
         f
           {
             x with

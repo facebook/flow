@@ -171,7 +171,7 @@ module type S = sig
   (** Emits constraints to ensure the signature is compatible with its declared
     superclass (classes) or extends/mixins (interfaces) *)
 
-  val generate_tests : Context.t -> (t -> 'a) -> t -> 'a
+  val check_with_generics : Context.t -> (t -> 'a) -> t -> 'a
   (** Invoke callback with type parameters substituted by upper/lower bounds. *)
 
   val toplevels :

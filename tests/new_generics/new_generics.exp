@@ -1,0 +1,98 @@
+Error --------------------------------------------------------------------------------------------- basic_class.js:12:12
+
+Cannot return `this.x` because `X` [1] is incompatible with `Y` [2]. [incompatible-return]
+
+   basic_class.js:12:12
+   12|     return this.x;
+                  ^^^^^^
+
+References:
+   basic_class.js:4:6
+    4|   x: X;
+            ^ [1]
+   basic_class.js:11:14
+   11|   get_bad(): Y {
+                    ^ [2]
+
+
+Error --------------------------------------------------------------------------------------------- basic_class.js:28:14
+
+Cannot return `this.get_bad()` because number [1] is incompatible with `X` [2]. [incompatible-return]
+
+   basic_class.js:28:14
+   28|       return this.get_bad();
+                    ^^^^^^^^^^^^^^
+
+References:
+   basic_class.js:24:25
+   24| class E<X> extends C<X, number> {
+                               ^^^^^^ [1]
+   basic_class.js:25:14
+   25|   set(x: X): X {
+                    ^ [2]
+
+
+Error ------------------------------------------------------------------------------------------- basic_function.js:7:19
+
+Cannot assign `x` to `z` because `X` [1] is incompatible with number [2]. [incompatible-type]
+
+   basic_function.js:7:19
+   7|   var z: number = x;
+                        ^
+
+References:
+   basic_function.js:5:18
+   5| function f<X>(x: X): X {
+                       ^ [1]
+   basic_function.js:7:10
+   7|   var z: number = x;
+               ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------- basic_function.js:8:19
+
+Cannot assign `y` to `w` because `X` [1] is incompatible with number [2]. [incompatible-type]
+
+   basic_function.js:8:19
+   8|   var w: number = y;
+                        ^
+
+References:
+   basic_function.js:6:10
+   6|   var y: X = x;
+               ^ [1]
+   basic_function.js:8:10
+   8|   var w: number = y;
+               ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------ basic_function.js:10:12
+
+Cannot return `42` because number [1] is incompatible with `X` [2]. [incompatible-return]
+
+   basic_function.js:10:12
+   10|     return 42;
+                  ^^ [1]
+
+References:
+   basic_function.js:5:22
+    5| function f<X>(x: X): X {
+                            ^ [2]
+
+
+Error ------------------------------------------------------------------------------------------ basic_function.js:20:12
+
+Cannot return `42` because number [1] is incompatible with `X` [2]. [incompatible-return]
+
+   basic_function.js:20:12
+   20|     return 42;
+                  ^^ [1]
+
+References:
+   basic_function.js:15:30
+   15| function g<X: number>(x: X): X {
+                                    ^ [2]
+
+
+
+Found 6 errors

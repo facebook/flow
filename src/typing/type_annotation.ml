@@ -1059,7 +1059,7 @@ let rec convert cx tparams_map =
       (Class_type_sig.empty id reason None tparams_map super, extend_asts)
     in
     let (iface_sig, property_asts) = add_interface_properties cx tparams_map properties iface_sig in
-    Class_type_sig.generate_tests
+    Class_type_sig.check_with_generics
       cx
       (fun iface_sig ->
         Class_type_sig.check_super cx reason iface_sig;
