@@ -123,7 +123,7 @@ show_skipping_stats_types_first() {
 }
 
 show_help() {
-  printf "Usage: runtests.sh [-hlqrv] [-d DIR] [-t TEST] [-b] FLOW_BINARY [[-f] TEST_FILTER]\n\n"
+  printf "Usage: runtests.sh [-ghlqrv] [-d DIR] [-t TEST] [-b] FLOW_BINARY [[-f] TEST_FILTER]\n\n"
   printf "Runs Flow's tests.\n\n"
   echo "    [-b] FLOW_BINARY"
   echo "        path to Flow binary (the -b is optional)"
@@ -143,6 +143,8 @@ show_help() {
   echo "        test saved state"
   echo "    -z"
   echo "        test new signatures"
+  echo "    -g"
+  echo "        test without generate-tests"
   echo "    -v"
   echo "        verbose output (shows skipped tests)"
   echo "    -h"
@@ -157,11 +159,12 @@ OPTIND=1
 record=0
 saved_state=0
 new_signatures=0
+generate_tests=1
 verbose=0
 quiet=0
 relative="$THIS_DIR"
 list_tests=0
-while getopts "b:d:f:lqrszt:vh?" opt; do
+while getopts "b:d:f:glqrszt:vh?" opt; do
   case "$opt" in
   b)
     FLOW="$OPTARG"
@@ -190,6 +193,10 @@ while getopts "b:d:f:lqrszt:vh?" opt; do
     ;;
   z)
     new_signatures=1
+    ;;
+  g)
+    generate_tests=0
+    printf "Testing new generics by not using generate-tests\\n"
     ;;
   v)
     verbose=1
@@ -596,6 +603,17 @@ runtest() {
             return $RUNTEST_SKIP
         fi
 
+        if [[ "$generate_tests" -eq 0 ]]; then
+          generate_tests=" --generate-tests=false"
+        else
+          generate_tests=" --generate-tests=true"
+        fi
+
+        # if .flowconfig sets generate_tests, don't pass the cli flag
+        if [ -f .flowconfig ] && grep -q "generate_tests" .flowconfig; then
+            generate_tests=""
+        fi
+
         # Helper function to generate saved state. If anything goes wrong, it
         # will fail
         create_saved_state () {
@@ -635,7 +653,7 @@ runtest() {
             else
               # default command is check with configurable --no-flowlib
               "$FLOW" check . \
-                $flowlib --strip-root --show-all-errors \
+                $flowlib $generate_tests --strip-root --show-all-errors \
                 $new_signatures_flag \
                  1>> "$abs_out_file" 2>> "$stderr_dest"
               st=$?
