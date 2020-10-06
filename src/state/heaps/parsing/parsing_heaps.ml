@@ -190,18 +190,19 @@ type sig_extra =
 (* Groups operations on the multiple heaps that need to stay in sync *)
 module ParsingHeaps = struct
   let add file info (ast, file_sig) extra =
-    ASTHeap.add file (compactify_loc ast);
-    DocblockHeap.add file info;
-    FileSigHeap.add file file_sig;
-    match extra with
-    | Classic -> ()
-    | TypesFirst { sig_ast; sig_file_sig; aloc_table } ->
-      SigASTHeap.add file (remove_source_aloc sig_ast);
-      Base.Option.iter aloc_table ~f:(SigASTALocTableHeap.add file);
-      SigFileSigHeap.add file sig_file_sig
-    | TypeSig (type_sig, aloc_table) ->
-      TypeSigHeap.add file type_sig;
-      SigASTALocTableHeap.add file aloc_table
+    WorkerCancel.with_no_cancellations (fun () ->
+        ASTHeap.add file (compactify_loc ast);
+        DocblockHeap.add file info;
+        FileSigHeap.add file file_sig;
+        match extra with
+        | Classic -> ()
+        | TypesFirst { sig_ast; sig_file_sig; aloc_table } ->
+          SigASTHeap.add file (remove_source_aloc sig_ast);
+          Base.Option.iter aloc_table ~f:(SigASTALocTableHeap.add file);
+          SigFileSigHeap.add file sig_file_sig
+        | TypeSig (type_sig, aloc_table) ->
+          TypeSigHeap.add file type_sig;
+          SigASTALocTableHeap.add file aloc_table)
 
   let oldify_batch files =
     ASTHeap.oldify_batch files;
