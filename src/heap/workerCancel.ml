@@ -21,16 +21,6 @@ let on_worker_cancelled = ref (fun () -> ())
 
 let set_on_worker_cancelled f = on_worker_cancelled := f
 
-let with_no_cancellations f =
-  Utils.try_finally
-    ~f:
-      begin
-        fun () ->
-        set_can_worker_stop false;
-        f ()
-      end
-    ~finally:(fun () -> set_can_worker_stop true)
-
 let with_worker_exit f =
   try f ()
   with Worker_should_exit ->
@@ -39,3 +29,15 @@ let with_worker_exit f =
 
 (* Check if the workers are stopped and exit if they are *)
 let check_should_exit () = with_worker_exit check_should_exit
+
+let with_no_cancellations f =
+  Utils.try_finally
+    ~f:
+      begin
+        fun () ->
+        set_can_worker_stop false;
+        f ()
+      end
+    ~finally:(fun () ->
+      set_can_worker_stop true;
+      check_should_exit ())
