@@ -370,6 +370,7 @@ class ['a] t =
         self#type_ cx pole_TODO acc void_t
       | FilterOptionalT (_, t) -> self#type_ cx pole_TODO acc t
       | FilterMaybeT (_, t) -> self#type_ cx pole_TODO acc t
+      | SealGenericT { cont; _ } -> self#cont cx acc cont
       | ConcretizeTypeAppsT (_, (ts1, _, _), (t2, ts2, _, _), _) ->
         let acc = List.fold_left (self#type_ cx pole_TODO) acc ts1 in
         let acc = self#type_ cx pole_TODO acc t2 in

@@ -235,6 +235,7 @@ type hash =
   | DestructReactElementConfigTypeH
   | DestructReactElementRefTypeH
   | DestructReactConfigTypeH
+  | SealGenericH
 
 let hash_of_def_ctor =
   Type.(
@@ -465,7 +466,8 @@ let hash_of_use_ctor =
     | ModuleExportsAssignT _ -> ModuleExportsAssignH
     | FilterOptionalT _ -> FilterOptionalH
     | FilterMaybeT _ -> FilterMaybeH
-    | FunImplicitVoidReturnT _ -> FunImplicitVoidReturnH)
+    | FunImplicitVoidReturnT _ -> FunImplicitVoidReturnH
+    | SealGenericT _ -> SealGenericH)
 
 let add = Xx.update
 

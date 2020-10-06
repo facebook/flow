@@ -156,7 +156,8 @@ and reason_of_use_t = function
   | CondT (reason, _, _, _) -> reason
   | MatchPropT (_, reason, _, _) -> reason
   | ReactPropsToOut (reason, _)
-  | ReactInToProps (reason, _) ->
+  | ReactInToProps (reason, _)
+  | SealGenericT { reason; _ } ->
     reason
   | DestructuringT (reason, _, _, _) -> reason
   | CreateObjWithComputedPropT { reason; value = _; tout_tvar = _ } -> reason
@@ -313,6 +314,7 @@ and mod_reason_of_use_t f = function
   | ReposLowerT (reason, use_desc, t) -> ReposLowerT (f reason, use_desc, t)
   | ReposUseT (reason, use_desc, use_op, t) -> ReposUseT (f reason, use_desc, use_op, t)
   | ResolveSpreadT (use_op, reason_op, resolve) -> ResolveSpreadT (use_op, f reason_op, resolve)
+  | SealGenericT ({ reason; _ } as generic) -> SealGenericT { generic with reason = f reason }
   | SentinelPropTestT (reason_op, l, key, sense, sentinel, (reason, result)) ->
     SentinelPropTestT (reason_op, l, key, sense, sentinel, (f reason, result))
   | SetElemT (use_op, reason, it, mode, et, t) -> SetElemT (use_op, f reason, it, mode, et, t)
@@ -483,7 +485,8 @@ let rec util_use_op_of_use_t :
   | ModuleExportsAssignT _
   | CreateObjWithComputedPropT _
   | ResolveUnionT _
-  | EnumExhaustiveCheckT _ ->
+  | EnumExhaustiveCheckT _
+  | SealGenericT _ ->
     nope u
 
 let use_op_of_use_t = util_use_op_of_use_t (fun _ -> None) (fun _ op _ -> Some op)

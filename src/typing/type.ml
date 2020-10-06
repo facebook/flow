@@ -801,6 +801,12 @@ module rec TypeTerm : sig
         return: t;
         void_t: t;
       }
+    | SealGenericT of {
+        reason: reason;
+        id: ALoc.id;
+        name: string;
+        cont: cont;
+      }
 
   and enum_check_t =
     | EnumCheck of {
@@ -3176,6 +3182,7 @@ let string_of_use_ctor = function
   | ModuleExportsAssignT _ -> "ModuleExportsAssignT"
   | FilterOptionalT _ -> "FilterOptionalT"
   | FilterMaybeT _ -> "FilterMaybeT"
+  | SealGenericT _ -> "SealGenericT"
 
 let string_of_binary_test = function
   | InstanceofTest -> "instanceof"

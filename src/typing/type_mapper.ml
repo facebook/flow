@@ -1312,6 +1312,12 @@ class virtual ['a] t_with_uses =
           t
         else
           MakeExactT (r, cont')
+      | SealGenericT ({ cont; _ } as generic) ->
+        let cont' = self#cont cx map_cx cont in
+        if cont' == cont then
+          t
+        else
+          SealGenericT { generic with cont = cont' }
       | CJSRequireT (r, t', is_strict) ->
         let t'' = self#type_ cx map_cx t' in
         if t'' == t' then

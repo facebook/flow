@@ -699,6 +699,8 @@ let strict_equatable_error cond_context (l, r) =
 let strict_equatable cond_context args =
   strict_equatable_error cond_context args |> Base.Option.is_none
 
+let position_generic_bound reason = mod_reason_of_t (Fn.const reason)
+
 (* Creates a union from a list of types. Since unions require a minimum of two
    types this function will return an empty type when there are no types in the
    list, or the list head when there is one type in the list. *)
@@ -901,10 +903,12 @@ struct
        selected or not. *)
       if Speculation.defer_action cx (Speculation_state.FlowAction (l, u)) then
         print_if_verbose cx trace ~indent:1 ["deferred during speculation"]
-      (* Either propagate AnyT through the use type, or short-circuit because any <: u trivially *)
       else if
         match l with
-        | AnyT _ -> any_propagated cx trace l u
+        | AnyT _ ->
+          (* Either propagate AnyT through the use type, or short-circuit because any <: u trivially *)
+          any_propagated cx trace l u
+        | GenericT { bound; name; reason; id } -> handle_generic cx trace bound reason id name u
         | _ -> false
         (* Either propagate AnyT through the def type, or short-circuit because l <: any trivially *)
       then
@@ -2847,6 +2851,9 @@ struct
           let ts' = Base.List.map ts ~f in
           let reason' = repos_reason (aloc_of_reason reason_op) reason in
           continue cx trace (union_of_ts reason' ts') k
+        | (UnionT _, SealGenericT { reason = _; id; name; cont }) ->
+          let reason = reason_of_t l in
+          continue cx trace (GenericT { reason; id; name; bound = l }) cont
         | (UnionT (_, rep), DestructuringT (reason, DestructAnnot, s, tout)) ->
           let (t0, (t1, ts)) = UnionRep.members_nel rep in
           let f t =
@@ -3200,6 +3207,9 @@ struct
           rec_flow cx trace (reposition_reason cx ~trace reason ~use_desc l, u)
         | (IntersectionT _, ObjKitT (use_op, reason, resolve_tool, tool, tout)) ->
           ObjectKit.run cx trace ~use_op reason resolve_tool tool tout l
+        | (IntersectionT _, SealGenericT { reason = _; id; name; cont }) ->
+          let reason = reason_of_t l in
+          continue cx trace (GenericT { reason; id; name; bound = l }) cont
         (* CallT uses that arise from the CallType type destructor are processed
        without preparation (see below). This is because in these cases, the
        return type is intended to be 0-1, whereas preparation (as implemented
@@ -6312,6 +6322,9 @@ struct
         (* Don't refine opaque types based on its bound *)
         | (OpaqueT _, PredicateT (p, t)) -> predicate cx trace t l p
         | (OpaqueT _, GuardT (pred, result, sink)) -> guard cx trace l pred result sink
+        | (OpaqueT _, SealGenericT { reason = _; id; name; cont }) ->
+          let reason = reason_of_t l in
+          continue cx trace (GenericT { reason; id; name; bound = l }) cont
         (* Preserve OpaqueT as consequent, but branch based on the bound *)
         | (OpaqueT (_, { super_t = Some t; _ }), CondT (r, then_t_opt, else_t, tout)) ->
           let then_t_opt =
@@ -6789,12 +6802,19 @@ struct
         (***********************************************************)
         (* generics                                                *)
         (***********************************************************)
-        | ( GenericT { bound = bound1; id = id1; _ },
-            UseT (use_op, GenericT { bound = bound2; id = id2; _ }) )
+        | (_, SealGenericT { reason = _; id; name; cont }) ->
+          let reason = reason_of_t l in
+          continue cx trace (GenericT { reason; id; name; bound = l }) cont
+        | ( GenericT { bound = bound1; id = id1; reason = reason1; _ },
+            UseT (use_op, GenericT { bound = bound2; id = id2; reason = reason2; _ }) )
           when ALoc.equal_id id1 id2 ->
-          rec_flow_t cx trace ~use_op (bound1, bound2)
+          rec_flow_t
+            cx
+            trace
+            ~use_op
+            (position_generic_bound reason1 bound1, position_generic_bound reason2 bound2)
         | (GenericT { reason; bound; _ }, _) ->
-          rec_flow cx trace (mod_reason_of_t (Fn.const reason) bound, u)
+          rec_flow cx trace (position_generic_bound reason bound, u)
         | (_, UseT (use_op, GenericT { reason; name; id; _ })) ->
           let desc = RPolyTest (name, RIncompatibleInstantiation name, id, false) in
           let bot = DefT (replace_desc_reason desc reason, literal_trust (), EmptyT Zeroed) in
@@ -7658,6 +7678,7 @@ struct
     | (_, ReposLowerT _)
     | (_, ReposUseT _)
     | (_, UnifyT _)
+    | (_, SealGenericT _)
     | (_, ResolveUnionT _) ->
       false
     | (Bottom, _) -> true
@@ -7786,6 +7807,32 @@ struct
     | (_, FilterOptionalT _)
     | (_, FilterMaybeT _) ->
       true
+
+  and handle_generic cx trace bound reason id name u =
+    let narrow_generic_with_continuation mk_use_t cont =
+      let t_out' = (reason, Tvar.mk_no_wrap cx reason) in
+      let use_t = mk_use_t t_out' in
+      rec_flow cx trace (position_generic_bound reason bound, use_t);
+      rec_flow cx trace (OpenT t_out', SealGenericT { reason; id; name; cont })
+    in
+    let narrow_generic_use mk_use_t use_t_out =
+      narrow_generic_with_continuation mk_use_t (Upper use_t_out)
+    in
+    let _narrow_generic ?(use_op = unknown_use) mk_use_t t_out =
+      narrow_generic_use (fun v -> mk_use_t (OpenT v)) (UseT (use_op, t_out))
+    in
+    let narrow_generic_tvar ?(use_op = unknown_use) mk_use_t t_out =
+      narrow_generic_use mk_use_t (UseT (use_op, OpenT t_out))
+    in
+    match u with
+    (* The LHS is what's actually getting refined--don't do anything special for the RHS *)
+    | PredicateT (RightP _, _)
+    | PredicateT (NotP (RightP _), _) ->
+      false
+    | PredicateT (pred, t_out) ->
+      narrow_generic_tvar (fun t_out' -> PredicateT (pred, t_out')) t_out;
+      true
+    | _ -> false
 
   (* "Expands" any to match the form of a type. Allows us to reuse our propagation rules for any
    cases. Note that it is not always safe to do this (ie in the case of unions).
@@ -7932,6 +7979,7 @@ struct
     | ReposLowerT _
     | ReposUseT _
     | ResolveSpreadT _
+    | SealGenericT _
     | SentinelPropTestT _
     | SetElemT _
     | SetPropT _
@@ -12215,6 +12263,8 @@ struct
       | ExactT (r, t) ->
         let r = mod_reason r in
         ExactT (r, recurse seen t)
+      | GenericT ({ reason; bound; _ } as generic) ->
+        GenericT { generic with reason = mod_reason reason; bound = recurse seen bound }
       | t -> mod_reason_of_t mod_reason t
     in
     recurse IMap.empty t
