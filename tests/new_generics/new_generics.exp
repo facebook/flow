@@ -94,6 +94,344 @@ References:
                                     ^ [2]
 
 
+Error ---------------------------------------------------------------------------------------------- intersection.js:8:4
+
+Cannot cast `x` to intersection type because intersection type [1] is incompatible with boolean [2]. [incompatible-cast]
+
+   intersection.js:8:4
+   8|   (x: number & string & boolean); // nope
+         ^
+
+References:
+   intersection.js:3:52
+   3| function f1<X: number & string, Y: X & boolean>(x: X, y: Y) {
+                                                         ^ [1]
+   intersection.js:8:25
+   8|   (x: number & string & boolean); // nope
+                              ^^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- maybe.js:15:4
+
+Cannot cast `x` to `X` because null or undefined [1] is incompatible with `X` [2]. [incompatible-cast]
+
+   maybe.js:15:4
+   15|   (x: X); //nope
+          ^
+
+References:
+   maybe.js:4:6
+    4|   x: ?X,
+            ^^ [1]
+   maybe.js:15:7
+   15|   (x: X); //nope
+             ^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- maybe.js:20:6
+
+Cannot cast `x` to union type because: [incompatible-cast]
+ - Either number [1] is incompatible with null [2].
+ - Or number [1] is incompatible with undefined [3].
+
+   maybe.js:20:6
+   20|     (x: null | void); // nope
+            ^
+
+References:
+   maybe.js:4:7
+    4|   x: ?X,
+             ^ [1]
+   maybe.js:20:9
+   20|     (x: null | void); // nope
+               ^^^^ [2]
+   maybe.js:20:16
+   20|     (x: null | void); // nope
+                      ^^^^ [3]
+
+
+Error ---------------------------------------------------------------------------------------------------- maybe.js:31:6
+
+Cannot cast `y` to union type because: [incompatible-cast]
+ - Either number [1] is incompatible with null [2].
+ - Or number [1] is incompatible with undefined [3].
+
+   maybe.js:31:6
+   31|     (y: null | void); // nope
+            ^
+
+References:
+   maybe.js:3:27
+    3| function f<X: number, Y: ?number, Z: ?X>(
+                                 ^^^^^^ [1]
+   maybe.js:31:9
+   31|     (y: null | void); // nope
+               ^^^^ [2]
+   maybe.js:31:16
+   31|     (y: null | void); // nope
+                      ^^^^ [3]
+
+
+Error ---------------------------------------------------------------------------------------------------- maybe.js:38:4
+
+Cannot cast `z` to `X` because null or undefined [1] is incompatible with `X` [2]. [incompatible-cast]
+
+   maybe.js:38:4
+   38|   (z: X); // nope
+          ^
+
+References:
+   maybe.js:6:6
+    6|   z: Z,
+            ^ [1]
+   maybe.js:38:7
+   38|   (z: X); // nope
+             ^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- maybe.js:44:6
+
+Cannot cast `z` to union type because: [incompatible-cast]
+ - Either number [1] is incompatible with null [2].
+ - Or number [1] is incompatible with undefined [3].
+
+   maybe.js:44:6
+   44|     (z: null | void); // nope
+            ^
+
+References:
+   maybe.js:3:39
+    3| function f<X: number, Y: ?number, Z: ?X>(
+                                             ^ [1]
+   maybe.js:44:9
+   44|     (z: null | void); // nope
+               ^^^^ [2]
+   maybe.js:44:16
+   44|     (z: null | void); // nope
+                      ^^^^ [3]
+
+
+Error ---------------------------------------------------------------------------------------------------- maybe.js:50:4
+
+Cannot cast `xu` to `X` because undefined [1] is incompatible with `X` [2]. [incompatible-cast]
+
+   maybe.js:50:4
+   50|   (xu: X); //nope
+          ^^
+
+References:
+   maybe.js:7:8
+    7|   xu?: X,
+              ^ [1]
+   maybe.js:50:8
+   50|   (xu: X); //nope
+              ^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- maybe.js:55:6
+
+Cannot cast `xu` to undefined because number [1] is incompatible with undefined [2]. [incompatible-cast]
+
+   maybe.js:55:6
+   55|     (xu: void); // nope
+            ^^
+
+References:
+   maybe.js:7:8
+    7|   xu?: X,
+              ^ [1]
+   maybe.js:55:10
+   55|     (xu: void); // nope
+                ^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- maybe.js:59:4
+
+Cannot cast `yu` to union type because null or undefined [1] is incompatible with undefined [2]. [incompatible-cast]
+
+   maybe.js:59:4
+   59|   (yu: void | number); // nope
+          ^^
+
+References:
+   maybe.js:3:26
+    3| function f<X: number, Y: ?number, Z: ?X>(
+                                ^^^^^^^ [1]
+   maybe.js:59:8
+   59|   (yu: void | number); // nope
+              ^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- maybe.js:60:4
+
+Cannot cast `yu` to `Y` because undefined [1] is incompatible with `Y` [2]. [incompatible-cast]
+
+   maybe.js:60:4
+   60|   (yu: Y); // nope
+          ^^
+
+References:
+   maybe.js:8:8
+    8|   yu?: Y,
+              ^ [1]
+   maybe.js:60:8
+   60|   (yu: Y); // nope
+              ^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- maybe.js:61:4
+
+Cannot cast `yu` to union type because: [incompatible-cast]
+ - Either undefined [1] is incompatible with `Y` [2].
+ - Or undefined [1] is incompatible with `X` [3].
+
+   maybe.js:61:4
+   61|   (yu: Y | X); // nope
+          ^^
+
+References:
+   maybe.js:8:8
+    8|   yu?: Y,
+              ^ [1]
+   maybe.js:61:8
+   61|   (yu: Y | X); // nope
+              ^ [2]
+   maybe.js:61:12
+   61|   (yu: Y | X); // nope
+                  ^ [3]
+
+
+Error ---------------------------------------------------------------------------------------------------- maybe.js:67:6
+
+Cannot cast `yu` to union type because: [incompatible-cast]
+ - Either number [1] is incompatible with null [2].
+ - Or number [1] is incompatible with undefined [3].
+
+   maybe.js:67:6
+   67|     (yu: null | void); // nope
+            ^^
+
+References:
+   maybe.js:3:27
+    3| function f<X: number, Y: ?number, Z: ?X>(
+                                 ^^^^^^ [1]
+   maybe.js:67:10
+   67|     (yu: null | void); // nope
+                ^^^^ [2]
+   maybe.js:67:17
+   67|     (yu: null | void); // nope
+                       ^^^^ [3]
+
+
+Error ---------------------------------------------------------------------------------------------------- maybe.js:74:4
+
+Cannot cast `zu` to `X` because null or undefined [1] is incompatible with `X` [2]. [incompatible-cast]
+
+   maybe.js:74:4
+   74|   (zu: X); // nope
+          ^^
+
+References:
+   maybe.js:9:8
+    9|   zu?: Z,
+              ^ [1]
+   maybe.js:74:8
+   74|   (zu: X); // nope
+              ^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- maybe.js:74:4
+
+Cannot cast `zu` to `X` because undefined [1] is incompatible with `X` [2]. [incompatible-cast]
+
+   maybe.js:74:4
+   74|   (zu: X); // nope
+          ^^
+
+References:
+   maybe.js:9:8
+    9|   zu?: Z,
+              ^ [1]
+   maybe.js:74:8
+   74|   (zu: X); // nope
+              ^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- maybe.js:76:4
+
+Cannot cast `zu` to `Z` because undefined [1] is incompatible with `Z` [2]. [incompatible-cast]
+
+   maybe.js:76:4
+   76|   (zu: Z); // nope
+          ^^
+
+References:
+   maybe.js:9:8
+    9|   zu?: Z,
+              ^ [1]
+   maybe.js:76:8
+   76|   (zu: Z); // nope
+              ^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- maybe.js:81:6
+
+Cannot cast `zu` to union type because: [incompatible-cast]
+ - Either number [1] is incompatible with null [2].
+ - Or number [1] is incompatible with undefined [3].
+
+   maybe.js:81:6
+   81|     (zu: null | void); // nope
+            ^^
+
+References:
+   maybe.js:3:39
+    3| function f<X: number, Y: ?number, Z: ?X>(
+                                             ^ [1]
+   maybe.js:81:10
+   81|     (zu: null | void); // nope
+                ^^^^ [2]
+   maybe.js:81:17
+   81|     (zu: null | void); // nope
+                       ^^^^ [3]
+
+
+Error --------------------------------------------------------------------------------------------------- maybe.js:87:10
+
+Cannot call method `assign` because property `assign` is missing in statics of `Object` [1]. [prop-missing]
+
+   maybe.js:87:10
+   87|   Object.assign(b, a);
+                ^^^^^^
+
+References:
+   <BUILTINS>/prelude.js:12:15
+   12| declare class Object {}
+                     ^^^^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------------- maybe.js:95:4
+
+Cannot cast `c` to union type because: [incompatible-cast]
+ - Either number [1] is incompatible with null [2].
+ - Or number [1] is incompatible with undefined [3].
+
+   maybe.js:95:4
+   95|   (c: null | void); // nope
+          ^
+
+References:
+   maybe.js:92:32
+   92|   declare var c: $NonMaybeType<X>;
+                                      ^ [1]
+   maybe.js:95:7
+   95|   (c: null | void); // nope
+             ^^^^ [2]
+   maybe.js:95:14
+   95|   (c: null | void); // nope
+                    ^^^^ [3]
+
+
 Error ---------------------------------------------------------------------------------------------- refinements.js:11:6
 
 Cannot cast `x` to string because number [1] is incompatible with string [2]. [incompatible-cast]
@@ -162,5 +500,93 @@ References:
              ^ [2]
 
 
+Error ----------------------------------------------------------------------------------------------------- union.js:9:4
 
-Found 10 errors
+Cannot cast `x` to number because string [1] is incompatible with number [2]. [incompatible-cast]
+
+   union.js:9:4
+   9|   (x: number); // nope
+         ^
+
+References:
+   union.js:3:25
+   3| function f1<X: number | string, Y: X | boolean>(x: X, y: Y) {
+                              ^^^^^^ [1]
+   union.js:9:7
+   9|   (x: number); // nope
+            ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- union.js:13:6
+
+Cannot cast `x` to string because number [1] is incompatible with string [2]. [incompatible-cast]
+
+   union.js:13:6
+   13|     (x: string); // nope
+            ^
+
+References:
+   union.js:3:16
+    3| function f1<X: number | string, Y: X | boolean>(x: X, y: Y) {
+                      ^^^^^^ [1]
+   union.js:13:9
+   13|     (x: string); // nope
+               ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- union.js:17:6
+
+Cannot cast `y` to `X` because boolean [1] is incompatible with `X` [2]. [incompatible-cast]
+
+   union.js:17:6
+   17|     (y: X); // nope
+            ^
+
+References:
+   union.js:3:40
+    3| function f1<X: number | string, Y: X | boolean>(x: X, y: Y) {
+                                              ^^^^^^^ [1]
+   union.js:17:9
+   17|     (y: X); // nope
+               ^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- union.js:20:6
+
+Cannot cast `y` to boolean because number [1] is incompatible with boolean [2]. [incompatible-cast]
+
+   union.js:20:6
+   20|     (y: boolean); // nope
+            ^
+
+References:
+   union.js:3:16
+    3| function f1<X: number | string, Y: X | boolean>(x: X, y: Y) {
+                      ^^^^^^ [1]
+   union.js:20:9
+   20|     (y: boolean); // nope
+               ^^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- union.js:20:6
+
+Cannot cast `y` to boolean because string [1] is incompatible with boolean [2]. [incompatible-cast]
+
+   union.js:20:6
+   20|     (y: boolean); // nope
+            ^
+
+References:
+   union.js:3:25
+    3| function f1<X: number | string, Y: X | boolean>(x: X, y: Y) {
+                               ^^^^^^ [1]
+   union.js:20:9
+   20|     (y: boolean); // nope
+               ^^^^^^^ [2]
+
+
+
+Found 33 errors
+
+Only showing the most relevant union/intersection branches.
+To see all branches, re-run Flow with --show-all-branches

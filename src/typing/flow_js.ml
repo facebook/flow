@@ -699,6 +699,19 @@ let strict_equatable_error cond_context (l, r) =
 let strict_equatable cond_context args =
   strict_equatable_error cond_context args |> Base.Option.is_none
 
+let is_concrete t =
+  match t with
+  | EvalT _
+  | AnnotT _
+  | ExactT _
+  | MaybeT _
+  | OptionalT _
+  | TypeAppT _
+  | ThisTypeAppT _
+  | OpenT _ ->
+    false
+  | _ -> true
+
 let position_generic_bound reason = mod_reason_of_t (Fn.const reason)
 
 (* Creates a union from a list of types. Since unions require a minimum of two
@@ -7809,6 +7822,7 @@ struct
       true
 
   and handle_generic cx trace bound reason id name u =
+    let make_generic t = GenericT { reason; id; name; bound = t } in
     let narrow_generic_with_continuation mk_use_t cont =
       let t_out' = (reason, Tvar.mk_no_wrap cx reason) in
       let use_t = mk_use_t t_out' in
@@ -7818,11 +7832,33 @@ struct
     let narrow_generic_use mk_use_t use_t_out =
       narrow_generic_with_continuation mk_use_t (Upper use_t_out)
     in
-    let _narrow_generic ?(use_op = unknown_use) mk_use_t t_out =
+    let narrow_generic ?(use_op = unknown_use) mk_use_t t_out =
       narrow_generic_use (fun v -> mk_use_t (OpenT v)) (UseT (use_op, t_out))
     in
     let narrow_generic_tvar ?(use_op = unknown_use) mk_use_t t_out =
       narrow_generic_use mk_use_t (UseT (use_op, OpenT t_out))
+    in
+    let wait_for_concrete_bound () =
+      rec_flow cx trace (bound, SealGenericT { reason; id; name; cont = Upper u });
+      true
+    in
+    let distribute_union_intersection () =
+      match bound with
+      | UnionT (_, rep) ->
+        let (t1, (t2, ts)) = UnionRep.members_nel rep in
+        let union_of_generics =
+          UnionRep.make (make_generic t1) (make_generic t2) (Base.List.map ~f:make_generic ts)
+        in
+        rec_flow cx trace (UnionT (reason, union_of_generics), u);
+        true
+      | IntersectionT (_, rep) ->
+        let (t1, (t2, ts)) = InterRep.members_nel rep in
+        let inter_of_generics =
+          InterRep.make (make_generic t1) (make_generic t2) (Base.List.map ~f:make_generic ts)
+        in
+        rec_flow cx trace (IntersectionT (reason, inter_of_generics), u);
+        true
+      | _ -> false
     in
     match u with
     (* The LHS is what's actually getting refined--don't do anything special for the RHS *)
@@ -7832,6 +7868,35 @@ struct
     | PredicateT (pred, t_out) ->
       narrow_generic_tvar (fun t_out' -> PredicateT (pred, t_out')) t_out;
       true
+    | UseT (use_op, MaybeT (r, t_out)) ->
+      narrow_generic ~use_op (fun t_out' -> UseT (use_op, MaybeT (r, t_out'))) t_out;
+      true
+    | UseT (use_op, OptionalT ({ type_ = t_out; _ } as opt)) ->
+      narrow_generic
+        ~use_op
+        (fun t_out' -> UseT (use_op, OptionalT { opt with type_ = t_out' }))
+        t_out;
+      true
+    | FilterMaybeT (use_op, t_out) ->
+      narrow_generic (fun t_out' -> FilterMaybeT (use_op, t_out')) t_out;
+      true
+    | FilterOptionalT (use_op, t_out) ->
+      narrow_generic (fun t_out' -> FilterOptionalT (use_op, t_out')) t_out;
+      true
+    | UseT (_, IntersectionT _) ->
+      if is_concrete bound then
+        distribute_union_intersection ()
+      else
+        wait_for_concrete_bound ()
+    | UseT (_, (UnionT _ as u)) ->
+      if union_optimization_guard cx (Context.trust_errors cx |> TypeUtil.quick_subtype) bound u
+      then begin
+        if Context.is_verbose cx then prerr_endline "UnionT ~> UnionT fast path (via a generic)";
+        true
+      end else if is_concrete bound then
+        distribute_union_intersection ()
+      else
+        wait_for_concrete_bound ()
     | _ -> false
 
   (* "Expands" any to match the form of a type. Allows us to reuse our propagation rules for any
