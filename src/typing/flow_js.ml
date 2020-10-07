@@ -2679,7 +2679,7 @@ struct
                   reason_prop = reason_op;
                   reason_obj = reason_o;
                   use_op;
-                  suggestion = prop_typo_suggestion cx [instance.own_props; instance.proto_props] x;
+                  suggestion = prop_typo_suggestion cx [instance.own_props] x;
                 }
             in
             add_output cx ~trace err)
