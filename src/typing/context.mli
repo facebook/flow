@@ -54,6 +54,7 @@ type metadata = {
   max_literal_length: int;
   enable_const_params: bool;
   enable_enums: bool;
+  enable_enums_with_unknown_members: bool;
   enforce_strict_call_arity: bool;
   exact_by_default: bool;
   generate_tests: bool;
@@ -135,6 +136,8 @@ val babel_loose_array_spread : t -> bool
 val enable_const_params : t -> bool
 
 val enable_enums : t -> bool
+
+val enable_enums_with_unknown_members : t -> bool
 
 val enforce_strict_call_arity : t -> bool
 

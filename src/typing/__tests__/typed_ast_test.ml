@@ -25,6 +25,7 @@ let metadata =
     max_literal_length = 100;
     enable_const_params = false;
     enable_enums = true;
+    enable_enums_with_unknown_members = true;
     enforce_strict_call_arity = true;
     exact_by_default = false;
     generate_tests = true;

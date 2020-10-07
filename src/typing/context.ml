@@ -38,6 +38,7 @@ type metadata = {
   max_literal_length: int;
   enable_const_params: bool;
   enable_enums: bool;
+  enable_enums_with_unknown_members: bool;
   enforce_strict_call_arity: bool;
   exact_by_default: bool;
   generate_tests: bool;
@@ -206,6 +207,7 @@ let metadata_of_options options =
     max_literal_length = Options.max_literal_length options;
     enable_const_params = Options.enable_const_params options;
     enable_enums = Options.enums options;
+    enable_enums_with_unknown_members = Options.enums_with_unknown_members options;
     enforce_strict_call_arity = Options.enforce_strict_call_arity options;
     exact_by_default = Options.exact_by_default options;
     generate_tests = Options.generate_tests options;
@@ -382,6 +384,8 @@ let enable_const_params cx =
   cx.metadata.enable_const_params || cx.metadata.strict || cx.metadata.strict_local
 
 let enable_enums cx = cx.metadata.enable_enums
+
+let enable_enums_with_unknown_members cx = cx.metadata.enable_enums_with_unknown_members
 
 let enforce_strict_call_arity cx = cx.metadata.enforce_strict_call_arity
 

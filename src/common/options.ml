@@ -55,6 +55,7 @@ type t = {
   opt_enforce_strict_call_arity: bool;
   opt_enforce_well_formed_exports: string list option;
   opt_enums: bool;
+  opt_enums_with_unknown_members: bool;
   opt_exact_by_default: bool;
   opt_generate_tests: bool;
   opt_facebook_fbs: string option;
@@ -130,6 +131,8 @@ let enforce_strict_call_arity opts = opts.opt_enforce_strict_call_arity
 let enforce_well_formed_exports opts = opts.opt_enforce_well_formed_exports
 
 let enums opts = opts.opt_enums
+
+let enums_with_unknown_members opts = opts.opt_enums_with_unknown_members
 
 let exact_by_default opts = opts.opt_exact_by_default
 

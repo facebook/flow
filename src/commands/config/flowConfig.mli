@@ -77,6 +77,8 @@ val enforce_well_formed_exports_includes : config -> string list
 
 val enums : config -> bool
 
+val enums_with_unknown_members : config -> bool
+
 val exact_by_default : config -> bool
 
 val generate_tests : config -> bool

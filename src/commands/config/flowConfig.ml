@@ -52,6 +52,7 @@ module Opts = struct
     enforce_well_formed_exports: bool option;
     enforce_well_formed_exports_includes: string list;
     enums: bool;
+    enums_with_unknown_members: bool;
     exact_by_default: bool;
     generate_tests: bool;
     facebook_fbs: string option;
@@ -156,6 +157,7 @@ module Opts = struct
       enforce_well_formed_exports = None;
       enforce_well_formed_exports_includes = [];
       enums = false;
+      enums_with_unknown_members = false;
       exact_by_default = false;
       generate_tests = true;
       facebook_fbs = None;
@@ -575,6 +577,8 @@ module Opts = struct
       ("max_literal_length", uint (fun opts v -> Ok { opts with max_literal_length = v }));
       ("experimental.const_params", boolean (fun opts v -> Ok { opts with enable_const_params = v }));
       ("experimental.enums", boolean (fun opts v -> Ok { opts with enums = v }));
+      ( "experimental.enums_with_unknown_members",
+        boolean (fun opts v -> Ok { opts with enums_with_unknown_members = v }) );
       ( "experimental.strict_call_arity",
         boolean (fun opts v -> Ok { opts with enforce_strict_call_arity = v }) );
       ("well_formed_exports", well_formed_exports_parser);
@@ -1147,6 +1151,8 @@ let enforce_well_formed_exports c =
 let enforce_well_formed_exports_includes c = c.options.Opts.enforce_well_formed_exports_includes
 
 let enums c = c.options.Opts.enums
+
+let enums_with_unknown_members c = c.options.Opts.enums_with_unknown_members
 
 let exact_by_default c = c.options.Opts.exact_by_default
 
