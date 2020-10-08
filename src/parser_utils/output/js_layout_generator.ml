@@ -2184,27 +2184,35 @@ and enum_declaration loc { Ast.Statement.EnumDeclaration.id; body; comments } =
       (_, { InitializedMember.id; init = (loc, { Ast.StringLiteral.raw; comments; _ }) }) =
     initialized_member id (layout_node_with_comments_opt loc comments (Atom raw))
   in
+  let unknown_members has_unknown_members =
+    if has_unknown_members then
+      [Atom "..."]
+    else
+      []
+  in
   let body =
     match body with
-    | (loc, BooleanBody { BooleanBody.members; explicitType; comments }) ->
+    | (loc, BooleanBody { BooleanBody.members; explicitType; has_unknown_members; comments }) ->
       fuse
         [
           representation_type "boolean" explicitType;
           pretty_space;
           layout_node_with_comments_opt loc comments
           @@ wrap_body
-          @@ Base.List.map ~f:boolean_member members;
+          @@ Base.List.map ~f:boolean_member members
+          @ unknown_members has_unknown_members;
         ]
-    | (loc, NumberBody { NumberBody.members; explicitType; comments }) ->
+    | (loc, NumberBody { NumberBody.members; explicitType; has_unknown_members; comments }) ->
       fuse
         [
           representation_type "number" explicitType;
           pretty_space;
           layout_node_with_comments_opt loc comments
           @@ wrap_body
-          @@ Base.List.map ~f:number_member members;
+          @@ Base.List.map ~f:number_member members
+          @ unknown_members has_unknown_members;
         ]
-    | (loc, StringBody { StringBody.members; explicitType; comments }) ->
+    | (loc, StringBody { StringBody.members; explicitType; has_unknown_members; comments }) ->
       fuse
         [
           representation_type "string" explicitType;
@@ -2214,16 +2222,18 @@ and enum_declaration loc { Ast.Statement.EnumDeclaration.id; body; comments } =
           @@
           match members with
           | StringBody.Defaulted members -> Base.List.map ~f:defaulted_member members
-          | StringBody.Initialized members -> Base.List.map ~f:string_member members );
+          | StringBody.Initialized members ->
+            Base.List.map ~f:string_member members @ unknown_members has_unknown_members );
         ]
-    | (loc, SymbolBody { SymbolBody.members; comments }) ->
+    | (loc, SymbolBody { SymbolBody.members; has_unknown_members; comments }) ->
       fuse
         [
           representation_type "symbol" true;
           pretty_space;
           layout_node_with_comments_opt loc comments
           @@ wrap_body
-          @@ Base.List.map ~f:defaulted_member members;
+          @@ Base.List.map ~f:defaulted_member members
+          @ unknown_members has_unknown_members;
         ]
   in
   layout_node_with_comments_opt loc comments (fuse [Atom "enum"; space; identifier id; body])

@@ -745,7 +745,7 @@ class ['loc] mapper =
 
     method enum_boolean_body (body : 'loc Ast.Statement.EnumDeclaration.BooleanBody.t) =
       let open Ast.Statement.EnumDeclaration.BooleanBody in
-      let { members; explicitType = _; comments } = body in
+      let { members; explicitType = _; has_unknown_members = _; comments } = body in
       let members' = map_list this#enum_boolean_member members in
       let comments' = this#syntax_opt comments in
       if members == members' && comments == comments' then
@@ -755,7 +755,7 @@ class ['loc] mapper =
 
     method enum_number_body (body : 'loc Ast.Statement.EnumDeclaration.NumberBody.t) =
       let open Ast.Statement.EnumDeclaration.NumberBody in
-      let { members; explicitType = _; comments } = body in
+      let { members; explicitType = _; has_unknown_members = _; comments } = body in
       let members' = map_list this#enum_number_member members in
       let comments' = this#syntax_opt comments in
       if members == members' && comments == comments' then
@@ -765,7 +765,7 @@ class ['loc] mapper =
 
     method enum_string_body (body : 'loc Ast.Statement.EnumDeclaration.StringBody.t) =
       let open Ast.Statement.EnumDeclaration.StringBody in
-      let { members; explicitType = _; comments } = body in
+      let { members; explicitType = _; has_unknown_members = _; comments } = body in
       let members' =
         match members with
         | Defaulted members -> Defaulted (map_list this#enum_defaulted_member members)
@@ -779,13 +779,13 @@ class ['loc] mapper =
 
     method enum_symbol_body (body : 'loc Ast.Statement.EnumDeclaration.SymbolBody.t) =
       let open Ast.Statement.EnumDeclaration.SymbolBody in
-      let { members; comments } = body in
+      let { members; has_unknown_members = _; comments } = body in
       let members' = map_list this#enum_defaulted_member members in
       let comments' = this#syntax_opt comments in
       if members == members' && comments == comments' then
         body
       else
-        { members = members'; comments = comments' }
+        { body with members = members'; comments = comments' }
 
     method enum_defaulted_member (member : 'loc Ast.Statement.EnumDeclaration.DefaultedMember.t) =
       let open Ast.Statement.EnumDeclaration.DefaultedMember in

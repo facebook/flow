@@ -32,6 +32,7 @@ type t =
       member_name: string;
     }
   | EnumInvalidMemberSeparator
+  | EnumInvalidEllipsis of { trailing_comma: bool }
   | EnumNumberMemberNotInitialized of {
       enum_name: string;
       member_name: string;
@@ -231,6 +232,11 @@ module PP = struct
         suggestion
         enum_name
     | EnumInvalidMemberSeparator -> "Enum members are separated with `,`. Replace `;` with `,`."
+    | EnumInvalidEllipsis { trailing_comma } ->
+      if trailing_comma then
+        "The `...` must come at the end of the enum body. Remove the trailing comma."
+      else
+        "The `...` must come after all enum members. Move it to the end of the enum body."
     | EnumNumberMemberNotInitialized { enum_name; member_name } ->
       Printf.sprintf
         "Number enum members need to be initialized, e.g. `%s = 1,` in enum `%s`."

@@ -8411,7 +8411,7 @@ and mk_enum cx ~enum_reason enum =
   let enum_id = Context.make_aloc_id cx name_loc in
   let (representation_t, members) =
     match body with
-    | (_, BooleanBody { BooleanBody.members; _ }) ->
+    | (_, BooleanBody { BooleanBody.members; has_unknown_members = _; _ }) ->
       let reason = mk_reason (REnumRepresentation RBoolean) (aloc_of_reason enum_reason) in
       let (members, bool_type, _) =
         Base.List.fold_left
@@ -8441,7 +8441,7 @@ and mk_enum cx ~enum_reason enum =
           members
       in
       (DefT (reason, literal_trust (), BoolT bool_type), members)
-    | (_, NumberBody { NumberBody.members; _ }) ->
+    | (_, NumberBody { NumberBody.members; has_unknown_members = _; _ }) ->
       let reason = mk_reason (REnumRepresentation RNumber) (aloc_of_reason enum_reason) in
       let (members, num_type, _) =
         Base.List.fold_left
@@ -8470,7 +8470,9 @@ and mk_enum cx ~enum_reason enum =
           members
       in
       (DefT (reason, literal_trust (), NumT num_type), members)
-    | (_, StringBody { StringBody.members = StringBody.Initialized members; _ }) ->
+    | ( _,
+        StringBody
+          { StringBody.members = StringBody.Initialized members; has_unknown_members = _; _ } ) ->
       let reason = mk_reason (REnumRepresentation RString) (aloc_of_reason enum_reason) in
       let (members, str_type, _) =
         Base.List.fold_left
@@ -8499,11 +8501,13 @@ and mk_enum cx ~enum_reason enum =
           members
       in
       (DefT (reason, literal_trust (), StrT str_type), members)
-    | (_, StringBody { StringBody.members = StringBody.Defaulted members; _ }) ->
+    | ( _,
+        StringBody { StringBody.members = StringBody.Defaulted members; has_unknown_members = _; _ }
+      ) ->
       let reason = mk_reason (REnumRepresentation RString) (aloc_of_reason enum_reason) in
       ( DefT (reason, literal_trust (), StrT Truthy (* Member names can't be the empty string *)),
         defaulted_members members )
-    | (_, SymbolBody { SymbolBody.members; comments = _ }) ->
+    | (_, SymbolBody { SymbolBody.members; has_unknown_members = _; comments = _ }) ->
       let reason = mk_reason (REnumRepresentation RSymbol) (aloc_of_reason enum_reason) in
       (DefT (reason, literal_trust (), SymbolT), defaulted_members members)
   in

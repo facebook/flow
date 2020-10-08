@@ -1032,7 +1032,7 @@ with type t = Impl.t = struct
       let open Statement.EnumDeclaration in
       let enum_body =
         match body with
-        | (loc, BooleanBody { BooleanBody.members; explicitType; comments }) ->
+        | (loc, BooleanBody { BooleanBody.members; explicitType; has_unknown_members; comments }) ->
           node
             ?comments
             "EnumBooleanBody"
@@ -1048,8 +1048,9 @@ with type t = Impl.t = struct
                     node "EnumBooleanMember" loc [("id", identifier id); ("init", bool value)])
                   members );
               ("explicitType", bool explicitType);
+              ("hasUnknownMembers", bool has_unknown_members);
             ]
-        | (loc, NumberBody { NumberBody.members; explicitType; comments }) ->
+        | (loc, NumberBody { NumberBody.members; explicitType; has_unknown_members; comments }) ->
           node
             ?comments
             "EnumNumberBody"
@@ -1064,8 +1065,9 @@ with type t = Impl.t = struct
                       [("id", identifier id); ("init", number_literal init)])
                   members );
               ("explicitType", bool explicitType);
+              ("hasUnknownMembers", bool has_unknown_members);
             ]
-        | (loc, StringBody { StringBody.members; explicitType; comments }) ->
+        | (loc, StringBody { StringBody.members; explicitType; has_unknown_members; comments }) ->
           let members =
             match members with
             | StringBody.Defaulted defaulted_members ->
@@ -1083,8 +1085,12 @@ with type t = Impl.t = struct
             ?comments
             "EnumStringBody"
             loc
-            [("members", array members); ("explicitType", bool explicitType)]
-        | (loc, SymbolBody { SymbolBody.members; comments }) ->
+            [
+              ("members", array members);
+              ("explicitType", bool explicitType);
+              ("hasUnknownMembers", bool has_unknown_members);
+            ]
+        | (loc, SymbolBody { SymbolBody.members; has_unknown_members; comments }) ->
           node
             ?comments
             "EnumSymbolBody"
@@ -1095,6 +1101,7 @@ with type t = Impl.t = struct
                   (fun (loc, { DefaultedMember.id }) ->
                     node "EnumDefaultedMember" loc [("id", identifier id)])
                   members );
+              ("hasUnknownMembers", bool has_unknown_members);
             ]
       in
       node ?comments "EnumDeclaration" loc [("id", identifier id); ("body", enum_body)]
