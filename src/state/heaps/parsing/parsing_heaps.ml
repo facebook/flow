@@ -205,35 +205,38 @@ module ParsingHeaps = struct
           SigASTALocTableHeap.add file aloc_table)
 
   let oldify_batch files =
-    ASTHeap.oldify_batch files;
-    SigASTHeap.oldify_batch files;
-    TypeSigHeap.oldify_batch files;
-    SigASTALocTableHeap.oldify_batch files;
-    DocblockHeap.oldify_batch files;
-    FileSigHeap.oldify_batch files;
-    SigFileSigHeap.oldify_batch files;
-    FileHashHeap.oldify_batch files
+    WorkerCancel.with_no_cancellations (fun () ->
+        ASTHeap.oldify_batch files;
+        SigASTHeap.oldify_batch files;
+        TypeSigHeap.oldify_batch files;
+        SigASTALocTableHeap.oldify_batch files;
+        DocblockHeap.oldify_batch files;
+        FileSigHeap.oldify_batch files;
+        SigFileSigHeap.oldify_batch files;
+        FileHashHeap.oldify_batch files)
 
   let remove_old_batch files =
-    ASTHeap.remove_old_batch files;
-    SigASTHeap.remove_old_batch files;
-    TypeSigHeap.remove_old_batch files;
-    SigASTALocTableHeap.remove_old_batch files;
-    DocblockHeap.remove_old_batch files;
-    FileSigHeap.remove_old_batch files;
-    SigFileSigHeap.remove_old_batch files;
-    FileHashHeap.remove_old_batch files;
-    SharedMem_js.collect `gentle
+    WorkerCancel.with_no_cancellations (fun () ->
+        ASTHeap.remove_old_batch files;
+        SigASTHeap.remove_old_batch files;
+        TypeSigHeap.remove_old_batch files;
+        SigASTALocTableHeap.remove_old_batch files;
+        DocblockHeap.remove_old_batch files;
+        FileSigHeap.remove_old_batch files;
+        SigFileSigHeap.remove_old_batch files;
+        FileHashHeap.remove_old_batch files;
+        SharedMem_js.collect `gentle)
 
   let revive_batch files =
-    ASTHeap.revive_batch files;
-    SigASTHeap.revive_batch files;
-    TypeSigHeap.revive_batch files;
-    SigASTALocTableHeap.revive_batch files;
-    DocblockHeap.revive_batch files;
-    FileSigHeap.revive_batch files;
-    SigFileSigHeap.revive_batch files;
-    FileHashHeap.revive_batch files
+    WorkerCancel.with_no_cancellations (fun () ->
+        ASTHeap.revive_batch files;
+        SigASTHeap.revive_batch files;
+        TypeSigHeap.revive_batch files;
+        SigASTALocTableHeap.revive_batch files;
+        DocblockHeap.revive_batch files;
+        FileSigHeap.revive_batch files;
+        SigFileSigHeap.revive_batch files;
+        FileHashHeap.revive_batch files)
 end
 
 module type READER = sig
@@ -376,15 +379,17 @@ end = struct
   type master_mutator = FilenameSet.t ref
 
   let commit oldified_files =
-    Hh_logger.debug "Committing parsing heaps";
-    ParsingHeaps.remove_old_batch oldified_files;
-    currently_oldified_files := None;
+    WorkerCancel.with_no_cancellations (fun () ->
+        Hh_logger.debug "Committing parsing heaps";
+        ParsingHeaps.remove_old_batch oldified_files;
+        currently_oldified_files := None);
     Lwt.return_unit
 
   let rollback oldified_files =
-    Hh_logger.debug "Rolling back parsing heaps";
-    ParsingHeaps.revive_batch oldified_files;
-    currently_oldified_files := None;
+    WorkerCancel.with_no_cancellations (fun () ->
+        Hh_logger.debug "Rolling back parsing heaps";
+        ParsingHeaps.revive_batch oldified_files;
+        currently_oldified_files := None);
     Lwt.return_unit
 
   (* Ideally we'd assert that file was oldified and not revived, but it's too expensive to pass the
@@ -397,22 +402,24 @@ end = struct
   let add_hash file hash = FileHashHeap.add file hash
 
   let create transaction files =
-    let master_mutator = ref files in
-    currently_oldified_files := Some master_mutator;
-    let worker_mutator = { add_file; add_hash } in
-    ParsingHeaps.oldify_batch files;
+    WorkerCancel.with_no_cancellations (fun () ->
+        let master_mutator = ref files in
+        currently_oldified_files := Some master_mutator;
+        let worker_mutator = { add_file; add_hash } in
+        ParsingHeaps.oldify_batch files;
 
-    let commit () = commit !master_mutator in
-    let rollback () = rollback !master_mutator in
-    Transaction.add ~singleton:"Reparse" ~commit ~rollback transaction;
+        let commit () = commit !master_mutator in
+        let rollback () = rollback !master_mutator in
+        Transaction.add ~singleton:"Reparse" ~commit ~rollback transaction;
 
-    (master_mutator, worker_mutator)
+        (master_mutator, worker_mutator))
 
   let revive_files oldified_files files =
-    (* Every file in files should be in the oldified set *)
-    assert (FilenameSet.is_empty (FilenameSet.diff files !oldified_files));
-    oldified_files := FilenameSet.diff !oldified_files files;
-    ParsingHeaps.revive_batch files
+    WorkerCancel.with_no_cancellations (fun () ->
+        (* Every file in files should be in the oldified set *)
+        assert (FilenameSet.is_empty (FilenameSet.diff files !oldified_files));
+        oldified_files := FilenameSet.diff !oldified_files files;
+        ParsingHeaps.revive_batch files)
 end
 
 (* This peaks at the Reparse_mutator's state and uses that to determine whether to read from the
