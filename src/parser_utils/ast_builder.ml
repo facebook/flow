@@ -320,22 +320,38 @@ module Statements = struct
 
     let defaulted_member ?(loc = Loc.none) id = (loc, { DefaultedMember.id })
 
-    let boolean_body ?(loc = Loc.none) ?(explicit_type = false) ?comments members =
-      (loc, BooleanBody { BooleanBody.members; explicitType = explicit_type; comments })
+    let boolean_body
+        ?(loc = Loc.none) ?(explicit_type = false) ?(has_unknown_members = false) ?comments members
+        =
+      ( loc,
+        BooleanBody
+          { BooleanBody.members; explicitType = explicit_type; has_unknown_members; comments } )
 
-    let number_body ?(loc = Loc.none) ?(explicit_type = false) ?comments members =
-      (loc, NumberBody { NumberBody.members; explicitType = explicit_type; comments })
+    let number_body
+        ?(loc = Loc.none) ?(explicit_type = false) ?(has_unknown_members = false) ?comments members
+        =
+      ( loc,
+        NumberBody
+          { NumberBody.members; explicitType = explicit_type; has_unknown_members; comments } )
 
-    let string_defaulted_body ?(loc = Loc.none) ?(explicit_type = false) ?comments members =
+    let string_defaulted_body
+        ?(loc = Loc.none) ?(explicit_type = false) ?(has_unknown_members = false) ?comments members
+        =
       let members = StringBody.Defaulted members in
-      (loc, StringBody { StringBody.members; explicitType = explicit_type; comments })
+      ( loc,
+        StringBody
+          { StringBody.members; explicitType = explicit_type; has_unknown_members; comments } )
 
-    let string_initialized_body ?(loc = Loc.none) ?(explicit_type = false) ?comments members =
+    let string_initialized_body
+        ?(loc = Loc.none) ?(explicit_type = false) ?(has_unknown_members = false) ?comments members
+        =
       let members = StringBody.Initialized members in
-      (loc, StringBody { StringBody.members; explicitType = explicit_type; comments })
+      ( loc,
+        StringBody
+          { StringBody.members; explicitType = explicit_type; has_unknown_members; comments } )
 
-    let symbol_body ?(loc = Loc.none) ?comments members =
-      (loc, SymbolBody { SymbolBody.members; comments })
+    let symbol_body ?(loc = Loc.none) ?(has_unknown_members = false) ?comments members =
+      (loc, SymbolBody { SymbolBody.members; has_unknown_members; comments })
   end
 end
 

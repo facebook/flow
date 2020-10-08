@@ -538,38 +538,38 @@ class virtual ['M, 'T, 'N, 'U] mapper =
     method enum_boolean_body (body : 'M Ast.Statement.EnumDeclaration.BooleanBody.t)
         : 'N Ast.Statement.EnumDeclaration.BooleanBody.t =
       let open Ast.Statement.EnumDeclaration.BooleanBody in
-      let { members; explicitType; comments } = body in
+      let { members; explicitType; has_unknown_members; comments } = body in
       let members' = Base.List.map ~f:this#enum_boolean_member members in
       let comments' = Base.Option.map ~f:this#syntax comments in
-      { members = members'; explicitType; comments = comments' }
+      { members = members'; explicitType; has_unknown_members; comments = comments' }
 
     method enum_number_body (body : 'M Ast.Statement.EnumDeclaration.NumberBody.t)
         : 'N Ast.Statement.EnumDeclaration.NumberBody.t =
       let open Ast.Statement.EnumDeclaration.NumberBody in
-      let { members; explicitType; comments } = body in
+      let { members; explicitType; has_unknown_members; comments } = body in
       let members' = Base.List.map ~f:this#enum_number_member members in
       let comments' = Base.Option.map ~f:this#syntax comments in
-      { members = members'; explicitType; comments = comments' }
+      { members = members'; explicitType; has_unknown_members; comments = comments' }
 
     method enum_string_body (body : 'M Ast.Statement.EnumDeclaration.StringBody.t)
         : 'N Ast.Statement.EnumDeclaration.StringBody.t =
       let open Ast.Statement.EnumDeclaration.StringBody in
-      let { members; explicitType; comments } = body in
+      let { members; explicitType; has_unknown_members; comments } = body in
       let members' =
         match members with
         | Defaulted members -> Defaulted (Base.List.map ~f:this#enum_defaulted_member members)
         | Initialized members -> Initialized (Base.List.map ~f:this#enum_string_member members)
       in
       let comments' = Base.Option.map ~f:this#syntax comments in
-      { members = members'; explicitType; comments = comments' }
+      { members = members'; explicitType; has_unknown_members; comments = comments' }
 
     method enum_symbol_body (body : 'M Ast.Statement.EnumDeclaration.SymbolBody.t)
         : 'N Ast.Statement.EnumDeclaration.SymbolBody.t =
       let open Ast.Statement.EnumDeclaration.SymbolBody in
-      let { members; comments } = body in
+      let { members; has_unknown_members; comments } = body in
       let members' = Base.List.map ~f:this#enum_defaulted_member members in
       let comments' = Base.Option.map ~f:this#syntax comments in
-      { members = members'; comments = comments' }
+      { members = members'; has_unknown_members; comments = comments' }
 
     method enum_defaulted_member (member : 'M Ast.Statement.EnumDeclaration.DefaultedMember.t)
         : 'N Ast.Statement.EnumDeclaration.DefaultedMember.t =

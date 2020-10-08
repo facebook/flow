@@ -41,7 +41,8 @@
             "init":true
           }
         ],
-        "explicitType":false
+        "explicitType":false,
+        "hasUnknownMembers":false
       }
     }
   ],

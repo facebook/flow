@@ -697,6 +697,7 @@ and Statement : sig
       type 'M t = {
         members: ('M BooleanLiteral.t, 'M) InitializedMember.t list;
         explicitType: bool;
+        has_unknown_members: bool;
         comments: ('M, unit) Syntax.t option;
       }
       [@@deriving show]
@@ -706,6 +707,7 @@ and Statement : sig
       type 'M t = {
         members: ('M NumberLiteral.t, 'M) InitializedMember.t list;
         explicitType: bool;
+        has_unknown_members: bool;
         comments: ('M, unit) Syntax.t option;
       }
       [@@deriving show]
@@ -715,6 +717,7 @@ and Statement : sig
       type 'M t = {
         members: ('M StringLiteral.t, 'M) members;
         explicitType: bool;
+        has_unknown_members: bool;
         comments: ('M, unit) Syntax.t option;
       }
 
@@ -727,6 +730,7 @@ and Statement : sig
     module SymbolBody : sig
       type 'M t = {
         members: 'M DefaultedMember.t list;
+        has_unknown_members: bool;
         comments: ('M, unit) Syntax.t option;
       }
       [@@deriving show]

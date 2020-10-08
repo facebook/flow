@@ -49,7 +49,8 @@
             "init":false
           }
         ],
-        "explicitType":true
+        "explicitType":true,
+        "hasUnknownMembers":false
       }
     }
   ],
