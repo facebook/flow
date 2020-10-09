@@ -1003,11 +1003,6 @@ value hh_add(value key, value data) {
       break;
     }
 
-    if (info->hcounter >= hashtbl_slots) {
-      // We're never going to find a spot
-      raise_hash_table_full();
-    }
-
     if (slot_hash == 0) {
       // This slot is free, but two threads may be racing to write to this slot,
       // so try to grab the slot atomically. Note that this is a 16-byte CAS

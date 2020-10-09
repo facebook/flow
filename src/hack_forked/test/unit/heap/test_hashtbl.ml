@@ -291,6 +291,23 @@ let test_heapsize_decrease () =
   expect_heap_size 3;
   ()
 
+let hash_table_pow = 3
+
+let test_full () =
+  (* add 2^3 hash table entries *)
+  assert (hash_table_pow = 3);
+  add "1" "";
+  add "2" "";
+  add "3" "";
+  add "4" "";
+  add "5" "";
+  add "6" "";
+  add "7" "";
+  add "8" "";
+  let passed = ref false in
+  (try add "9" "" with SharedMem.Hash_table_full -> passed := true);
+  assert !passed
+
 let tests () =
   let list =
     [
@@ -302,6 +319,7 @@ let tests () =
       ("test_gc_collect", test_gc_collect);
       ("test_gc_aggressive", test_gc_aggressive);
       ("test_heapsize_decrease", test_heapsize_decrease);
+      ("test_full", test_full);
     ]
   in
   let setup_test (name, test) =
@@ -309,9 +327,7 @@ let tests () =
       fun () ->
         let num_workers = 0 in
         let handle =
-          SharedMem.init
-            ~num_workers
-            { SharedMem.heap_size = 1024; hash_table_pow = 3; log_level = 0 }
+          SharedMem.init ~num_workers { SharedMem.heap_size = 1024; hash_table_pow; log_level = 0 }
         in
         ignore (handle : SharedMem.handle);
         test ();
