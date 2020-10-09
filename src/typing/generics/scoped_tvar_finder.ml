@@ -151,14 +151,14 @@ class finder cx =
        Non-anonymous classes use the loc for their identifiers as the ALoc.id for `this`. This mirrors the
        behavior of `this` in statement.ml *)
     method class_with_loc decl_loc cls =
-      let { Ast.Class.id; body; tparams; extends; implements; classDecorators; comments = _ } =
+      let { Ast.Class.id; body; tparams; extends; implements; class_decorators; comments = _ } =
         cls
       in
       let (_ : (ml, tl) Ast.Identifier.t option) = map_opt this#class_identifier id in
       let (_ : (ml, tl) Ast.Class.Extends.t option) = map_opt this#class_extends extends in
       let (_ : (ml, tl) Ast.Class.Implements.t option) = map_opt this#class_implements implements in
       let (_ : (ml, tl) Ast.Class.Decorator.t list) =
-        map_list this#class_decorator classDecorators
+        map_list this#class_decorator class_decorators
       in
       let tparams = this#get_tparams tparams in
 

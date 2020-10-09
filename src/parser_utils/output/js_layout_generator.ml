@@ -2099,8 +2099,8 @@ and class_implements ~opts implements =
              ] ))
 
 and class_base
-    ~opts loc { Ast.Class.id; body; tparams; extends; implements; classDecorators; comments } =
-  let decorator_parts = decorators_list ~opts classDecorators in
+    ~opts loc { Ast.Class.id; body; tparams; extends; implements; class_decorators; comments } =
+  let decorator_parts = decorators_list ~opts class_decorators in
   let class_parts =
     [
       Atom "class";

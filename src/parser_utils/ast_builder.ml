@@ -196,7 +196,7 @@ module Classes = struct
       tparams = None;
       extends;
       implements;
-      classDecorators = [];
+      class_decorators = [];
       comments;
     }
 end

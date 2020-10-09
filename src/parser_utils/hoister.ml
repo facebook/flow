@@ -220,7 +220,7 @@ class ['loc] lexical_hoister =
         tparams = _;
         extends = _;
         implements = _;
-        classDecorators = _;
+        class_decorators = _;
         comments = _;
       } =
         cls

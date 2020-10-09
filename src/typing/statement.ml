@@ -7555,11 +7555,11 @@ and mk_class_sig =
           tparams;
           extends;
           implements;
-          classDecorators;
+          class_decorators;
           comments;
         } ->
-      let classDecorators_ast =
-        Base.List.map ~f:Tast_utils.error_mapper#class_decorator classDecorators
+      let class_decorators_ast =
+        Base.List.map ~f:Tast_utils.error_mapper#class_decorator class_decorators
       in
       let (tparams, tparams_map, tparams_ast) = Anno.mk_type_param_declarations cx tparams in
       let (tparams, tparams_map) = add_this self cx reason tparams tparams_map in
@@ -7812,7 +7812,7 @@ and mk_class_sig =
             tparams = tparams_ast;
             extends = extends_ast;
             implements = implements_ast;
-            classDecorators = classDecorators_ast;
+            class_decorators = class_decorators_ast;
             comments;
           } ))
 

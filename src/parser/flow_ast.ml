@@ -1768,7 +1768,7 @@ and Class : sig
     tparams: ('M, 'T) Type.TypeParams.t option;
     extends: ('M, 'T) Extends.t option;
     implements: ('M, 'T) Implements.t option;
-    classDecorators: ('M, 'T) Decorator.t list;
+    class_decorators: ('M, 'T) Decorator.t list;
     comments: ('M, unit) Syntax.t option;
   }
   [@@deriving show]

@@ -2968,7 +2968,7 @@ and class_def =
       tparams = tps;
       extends;
       implements;
-      classDecorators = _;
+      class_decorators = _;
       comments = _;
     } = decl in
     let xs, tparams = tparams opts scope locs SSet.empty tps in

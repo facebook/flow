@@ -350,19 +350,19 @@ class ['loc] mapper =
 
     method class_ _loc (cls : ('loc, 'loc) Ast.Class.t) =
       let open Ast.Class in
-      let { id; body; tparams = _; extends; implements; classDecorators; comments } = cls in
+      let { id; body; tparams = _; extends; implements; class_decorators; comments } = cls in
       let id' = map_opt this#class_identifier id in
       let body' = this#class_body body in
       let extends' = map_opt (map_loc this#class_extends) extends in
       let implements' = map_opt this#class_implements implements in
-      let classDecorators' = map_list this#class_decorator classDecorators in
+      let class_decorators' = map_list this#class_decorator class_decorators in
       let comments' = this#syntax_opt comments in
       if
         id == id'
         && body == body'
         && extends == extends'
         && implements == implements'
-        && classDecorators == classDecorators'
+        && class_decorators == class_decorators'
         && comments = comments'
       then
         cls
@@ -373,7 +373,7 @@ class ['loc] mapper =
           body = body';
           extends = extends';
           implements = implements';
-          classDecorators = classDecorators';
+          class_decorators = class_decorators';
           comments = comments';
         }
 

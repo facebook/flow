@@ -890,7 +890,7 @@ with type t = Impl.t = struct
     and class_declaration ast = class_helper "ClassDeclaration" ast
     and class_expression ast = class_helper "ClassExpression" ast
     and class_helper
-        node_type (loc, { Class.id; extends; body; tparams; implements; classDecorators; comments })
+        node_type (loc, { Class.id; extends; body; tparams; implements; class_decorators; comments })
         =
       let (super, super_targs, comments) =
         match extends with
@@ -919,7 +919,7 @@ with type t = Impl.t = struct
           ("superClass", option expression super);
           ("superTypeParameters", option type_args super_targs);
           ("implements", implements);
-          ("decorators", array_of_list class_decorator classDecorators);
+          ("decorators", array_of_list class_decorator class_decorators);
         ]
     and class_decorator (loc, { Class.Decorator.expression = expr; comments }) =
       node ?comments "Decorator" loc [("expression", expression expr)]

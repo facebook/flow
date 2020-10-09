@@ -991,7 +991,7 @@ module Object
     let (extends, implements) = class_heritage env in
     let body = class_body env ~expression in
     let comments = Flow_ast_utils.mk_comments_opt ~leading () in
-    { Class.id; body; tparams; extends; implements; classDecorators = decorators; comments }
+    { Class.id; body; tparams; extends; implements; class_decorators = decorators; comments }
 
   let class_declaration env decorators =
     with_loc

@@ -230,21 +230,21 @@ class virtual ['M, 'T, 'N, 'U] mapper =
 
     method class_ (cls : ('M, 'T) Ast.Class.t) : ('N, 'U) Ast.Class.t =
       let open Ast.Class in
-      let { id; body; tparams; extends; implements; classDecorators; comments } = cls in
+      let { id; body; tparams; extends; implements; class_decorators; comments } = cls in
       let id' = Base.Option.map ~f:this#class_identifier id in
       let comments' = Base.Option.map ~f:this#syntax comments in
       this#type_params_opt tparams (fun tparams' ->
           let extends' = Base.Option.map ~f:this#class_extends extends in
           let body' = this#class_body body in
           let implements' = Base.Option.map ~f:this#class_implements implements in
-          let classDecorators' = Base.List.map ~f:this#class_decorator classDecorators in
+          let class_decorators' = Base.List.map ~f:this#class_decorator class_decorators in
           {
             id = id';
             body = body';
             tparams = tparams';
             extends = extends';
             implements = implements';
-            classDecorators = classDecorators';
+            class_decorators = class_decorators';
             comments = comments';
           })
 

@@ -1002,7 +1002,7 @@ let program
       tparams = tparams1;
       extends = extends1;
       implements = implements1;
-      classDecorators = classDecorators1;
+      class_decorators = class_decorators1;
       comments = comments1;
     } =
       class1
@@ -1013,7 +1013,7 @@ let program
       tparams = tparams2;
       extends = extends2;
       implements = implements2;
-      classDecorators = classDecorators2;
+      class_decorators = class_decorators2;
       comments = comments2;
     } =
       class2
@@ -1026,7 +1026,7 @@ let program
       let implements_diff = diff_if_changed_opt class_implements implements1 implements2 in
       let body_diff = diff_if_changed_ret_opt class_body body1 body2 in
       let decorators_diff =
-        diff_and_recurse_no_trivial class_decorator classDecorators1 classDecorators2
+        diff_and_recurse_no_trivial class_decorator class_decorators1 class_decorators2
       in
       let comments_diff = syntax_opt loc comments1 comments2 in
       join_diff_list
