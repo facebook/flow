@@ -330,20 +330,16 @@ CAMLprim value hh_log_level(void) {
   return Val_long(info->log_level);
 }
 
-CAMLprim value hh_hash_used_slots(void) {
+CAMLprim value hh_hash_stats(void) {
   CAMLparam0();
-  CAMLlocal1(connector);
+  CAMLlocal1(stats);
 
-  connector = caml_alloc_tuple(2);
-  Store_field(connector, 0, Val_long(info->hcounter_filled));
-  Store_field(connector, 1, Val_long(info->hcounter));
+  stats = caml_alloc_tuple(3);
+  Store_field(stats, 0, Val_long(info->hcounter));
+  Store_field(stats, 1, Val_long(info->hcounter_filled));
+  Store_field(stats, 2, Val_long(info->hashtbl_slots));
 
-  CAMLreturn(connector);
-}
-
-CAMLprim value hh_hash_slots(void) {
-  CAMLparam0();
-  CAMLreturn(Val_long(info->hashtbl_slots));
+  CAMLreturn(stats);
 }
 
 static void raise_failed_memfd_init(int errcode) {

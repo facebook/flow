@@ -17,6 +17,12 @@ type config = {
 
 type handle = Unix.file_descr
 
+type table_stats = {
+  nonempty_slots: int;
+  used_slots: int;
+  slots: int;
+}
+
 exception Out_of_shared_memory
 
 exception Hash_table_full
@@ -74,30 +80,15 @@ external wasted_heap_size : unit -> int = "hh_wasted_heap_size" [@@noalloc]
 external hh_log_level : unit -> int = "hh_log_level" [@@noalloc]
 
 (*****************************************************************************)
-(* The number of used slots in our hashtable *)
-(*****************************************************************************)
-external hash_used_slots : unit -> int * int = "hh_hash_used_slots"
-
-(*****************************************************************************)
 (* The total number of slots in our hashtable *)
 (*****************************************************************************)
-external hash_slots : unit -> int = "hh_hash_slots"
+external hash_stats : unit -> table_stats = "hh_hash_stats"
 
 (*****************************************************************************)
 (* Must be called after the initialization of the hack server is over.
  * (cf serverInit.ml). *)
 (*****************************************************************************)
 let init_done () = EventLogger.sharedmem_init_done (heap_size ())
-
-type table_stats = {
-  nonempty_slots: int;
-  used_slots: int;
-  slots: int;
-}
-
-let hash_stats () =
-  let (used_slots, nonempty_slots) = hash_used_slots () in
-  { nonempty_slots; used_slots; slots = hash_slots () }
 
 let should_collect (effort : [ `gentle | `aggressive | `always_TEST ]) =
   let overhead =
