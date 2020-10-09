@@ -1032,7 +1032,8 @@ with type t = Impl.t = struct
       let open Statement.EnumDeclaration in
       let enum_body =
         match body with
-        | (loc, BooleanBody { BooleanBody.members; explicitType; has_unknown_members; comments }) ->
+        | (loc, BooleanBody { BooleanBody.members; explicit_type; has_unknown_members; comments })
+          ->
           node
             ?comments
             "EnumBooleanBody"
@@ -1047,10 +1048,10 @@ with type t = Impl.t = struct
                          } ) ->
                     node "EnumBooleanMember" loc [("id", identifier id); ("init", bool value)])
                   members );
-              ("explicitType", bool explicitType);
+              ("explicitType", bool explicit_type);
               ("hasUnknownMembers", bool has_unknown_members);
             ]
-        | (loc, NumberBody { NumberBody.members; explicitType; has_unknown_members; comments }) ->
+        | (loc, NumberBody { NumberBody.members; explicit_type; has_unknown_members; comments }) ->
           node
             ?comments
             "EnumNumberBody"
@@ -1064,10 +1065,10 @@ with type t = Impl.t = struct
                       loc
                       [("id", identifier id); ("init", number_literal init)])
                   members );
-              ("explicitType", bool explicitType);
+              ("explicitType", bool explicit_type);
               ("hasUnknownMembers", bool has_unknown_members);
             ]
-        | (loc, StringBody { StringBody.members; explicitType; has_unknown_members; comments }) ->
+        | (loc, StringBody { StringBody.members; explicit_type; has_unknown_members; comments }) ->
           let members =
             match members with
             | StringBody.Defaulted defaulted_members ->
@@ -1087,7 +1088,7 @@ with type t = Impl.t = struct
             loc
             [
               ("members", array members);
-              ("explicitType", bool explicitType);
+              ("explicitType", bool explicit_type);
               ("hasUnknownMembers", bool has_unknown_members);
             ]
         | (loc, SymbolBody { SymbolBody.members; has_unknown_members; comments }) ->

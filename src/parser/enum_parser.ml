@@ -231,7 +231,7 @@ end = struct
       StringBody
         {
           StringBody.members = StringBody.Defaulted defaulted_members;
-          explicitType = is_explicit;
+          explicit_type = is_explicit;
           has_unknown_members;
           comments;
         }
@@ -240,7 +240,7 @@ end = struct
       StringBody
         {
           StringBody.members = StringBody.Initialized string_members;
-          explicitType = is_explicit;
+          explicit_type = is_explicit;
           has_unknown_members;
           comments;
         }
@@ -313,7 +313,7 @@ end = struct
             BooleanBody
               {
                 BooleanBody.members = members.boolean_members;
-                explicitType = true;
+                explicit_type = true;
                 has_unknown_members;
                 comments;
               }
@@ -321,7 +321,7 @@ end = struct
             NumberBody
               {
                 NumberBody.members = members.number_members;
-                explicitType = true;
+                explicit_type = true;
                 has_unknown_members;
                 comments;
               }
@@ -346,7 +346,7 @@ end = struct
               StringBody
                 {
                   StringBody.members = StringBody.Defaulted [];
-                  explicitType = false;
+                  explicit_type = false;
                   has_unknown_members;
                   comments;
                 }
@@ -373,7 +373,7 @@ end = struct
                 BooleanBody
                   {
                     BooleanBody.members = members.boolean_members;
-                    explicitType = false;
+                    explicit_type = false;
                     has_unknown_members;
                     comments;
                   }
@@ -387,7 +387,7 @@ end = struct
                 NumberBody
                   {
                     NumberBody.members = members.number_members;
-                    explicitType = false;
+                    explicit_type = false;
                     has_unknown_members;
                     comments;
                   }

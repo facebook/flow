@@ -2192,30 +2192,30 @@ and enum_declaration loc { Ast.Statement.EnumDeclaration.id; body; comments } =
   in
   let body =
     match body with
-    | (loc, BooleanBody { BooleanBody.members; explicitType; has_unknown_members; comments }) ->
+    | (loc, BooleanBody { BooleanBody.members; explicit_type; has_unknown_members; comments }) ->
       fuse
         [
-          representation_type "boolean" explicitType;
+          representation_type "boolean" explicit_type;
           pretty_space;
           layout_node_with_comments_opt loc comments
           @@ wrap_body
           @@ Base.List.map ~f:boolean_member members
           @ unknown_members has_unknown_members;
         ]
-    | (loc, NumberBody { NumberBody.members; explicitType; has_unknown_members; comments }) ->
+    | (loc, NumberBody { NumberBody.members; explicit_type; has_unknown_members; comments }) ->
       fuse
         [
-          representation_type "number" explicitType;
+          representation_type "number" explicit_type;
           pretty_space;
           layout_node_with_comments_opt loc comments
           @@ wrap_body
           @@ Base.List.map ~f:number_member members
           @ unknown_members has_unknown_members;
         ]
-    | (loc, StringBody { StringBody.members; explicitType; has_unknown_members; comments }) ->
+    | (loc, StringBody { StringBody.members; explicit_type; has_unknown_members; comments }) ->
       fuse
         [
-          representation_type "string" explicitType;
+          representation_type "string" explicit_type;
           pretty_space;
           ( layout_node_with_comments_opt loc comments
           @@ wrap_body
