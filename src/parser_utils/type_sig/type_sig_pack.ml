@@ -299,9 +299,9 @@ and pack_local_binding cx = function
     begin
       match def with
       | None -> DisabledEnumBinding { id_loc; name }
-      | Some (lazy (rep, members)) ->
+      | Some (lazy (rep, members, has_unknown_members)) ->
         let members = SMap.map pack_loc members in
-        EnumBinding { id_loc; name; rep; members }
+        EnumBinding { id_loc; name; rep; members; has_unknown_members }
     end
 
 and pack_remote_binding = function

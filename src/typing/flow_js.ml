@@ -8870,7 +8870,7 @@ struct
     match possible_checks with
     (* No possible checks left to resolve, analyze the exhaustive check. *)
     | [] ->
-      let { members; _ } = enum in
+      let { members; has_unknown_members; _ } = enum in
       let check_member (members_remaining, seen) (EnumCheck { reason; member_name }) =
         if not @@ SMap.mem member_name members_remaining then
           add_output
@@ -8881,15 +8881,23 @@ struct
         (SMap.remove member_name members_remaining, SMap.add member_name reason seen)
       in
       let (left_over, _) = List.fold_left check_member (members, SMap.empty) checks in
-      (match (SMap.is_empty left_over, default_case) with
-      | (false, None) ->
+      (match (SMap.is_empty left_over, default_case, has_unknown_members) with
+      | (false, None, _) ->
         add_output
           cx
           ~trace
           (Error_message.EEnumNotAllChecked
              { reason = check_reason; enum_reason; left_to_check = SMap.keys left_over });
         enum_exhaustive_check_incomplete cx ~trace ~reason:check_reason incomplete_out
-      | (true, Some default_case_reason) ->
+      (* When we have unknown members, a default is required even when we've checked all known members. *)
+      | (true, None, true) ->
+        add_output
+          cx
+          ~trace
+          (Error_message.EEnumUnknownNotChecked { reason = check_reason; enum_reason });
+        enum_exhaustive_check_incomplete cx ~trace ~reason:check_reason incomplete_out
+      | (true, Some _, true) -> ()
+      | (true, Some default_case_reason, false) ->
         add_output
           cx
           ~trace

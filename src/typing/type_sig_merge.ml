@@ -231,7 +231,7 @@ let add_name_field reason =
   in
   SMap.update "name" f
 
-let merge_enum file reason id_loc enum_name rep members =
+let merge_enum file reason id_loc enum_name rep members has_unknown_members =
   let rep_reason desc = Reason.(mk_reason (REnumRepresentation desc) id_loc) in
   let rep_t desc def_t = Type.DefT (rep_reason desc, trust, def_t) in
   let representation_t =
@@ -257,7 +257,11 @@ let merge_enum file reason id_loc enum_name rep members =
     | SymbolRep -> rep_t Reason.RSymbol SymbolT
   in
   let enum_id = Context.make_aloc_id file.cx id_loc in
-  Type.(DefT (reason, trust, EnumObjectT { enum_id; enum_name; members; representation_t }))
+  Type.(
+    DefT
+      ( reason,
+        trust,
+        EnumObjectT { enum_id; enum_name; members; representation_t; has_unknown_members } ))
 
 let rec merge component file = function
   | Pack.Annot t -> merge_annot component file t
@@ -365,7 +369,8 @@ and merge_def component file reason = function
     merge_declare_fun component file ((id_loc, fn_loc, def), tail)
   | Variable { id_loc = _; name = _; def } -> merge component file def
   | DisabledEnumBinding _ -> Type.AnyT.error reason
-  | EnumBinding { id_loc; name; rep; members } -> merge_enum file reason id_loc name rep members
+  | EnumBinding { id_loc; name; rep; members; has_unknown_members } ->
+    merge_enum file reason id_loc name rep members has_unknown_members
 
 and merge_remote_ref component file reason = function
   | Pack.Import { id_loc; name; index; remote } ->

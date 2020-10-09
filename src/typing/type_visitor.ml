@@ -119,7 +119,9 @@ class ['a] t =
         acc
       | EnumT enum
       | EnumObjectT enum ->
-        let { enum_id = _; enum_name = _; members = _; representation_t } = enum in
+        let { enum_id = _; enum_name = _; members = _; representation_t; has_unknown_members = _ } =
+          enum
+        in
         let acc = self#type_ cx pole acc representation_t in
         acc
       | FunT (static, prototype, funtype) ->

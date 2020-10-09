@@ -216,7 +216,7 @@ and 'loc local_binding =
   | EnumBinding of {
       id_loc: 'loc loc_node;
       name: string;
-      def: (enum_rep * 'loc loc_node smap) Lazy.t option;
+      def: (enum_rep * 'loc loc_node smap * bool) Lazy.t option;
     }
 
 and 'loc remote_binding =
@@ -3499,26 +3499,26 @@ let enum_decl =
   let number_member = initialized_member number_rep in
   let defaulted_members locs = List.fold_left (defaulted_member locs) SMap.empty in
   let initialized_members locs f rep = List.fold_left (f locs) (rep, SMap.empty) in
-  let string_enum_def locs = function
+  let string_enum_def locs has_unknown_members = function
     | E.StringBody.Initialized members ->
       let truthy, members = initialized_members locs string_member true members in
-      StringRep {truthy}, members
+      StringRep {truthy}, members, has_unknown_members
     | E.StringBody.Defaulted members ->
       let members = defaulted_members locs members in
-      (StringRep {truthy = true}, members)
+      (StringRep {truthy = true}, members, has_unknown_members)
   in
   let enum_def locs = function
-    | E.BooleanBody {E.BooleanBody.members; _} ->
+    | E.BooleanBody {E.BooleanBody.members; has_unknown_members; _} ->
       let lit, members = initialized_members locs boolean_member None members in
-      BoolRep lit, members
-    | E.NumberBody {E.NumberBody.members; _} ->
+      BoolRep lit, members, has_unknown_members
+    | E.NumberBody {E.NumberBody.members; has_unknown_members; _} ->
       let truthy, members = initialized_members locs number_member true members in
-      NumberRep {truthy}, members
-    | E.StringBody {E.StringBody.members; _} ->
-      string_enum_def locs members
-    | E.SymbolBody {E.SymbolBody.members; _} ->
+      NumberRep {truthy}, members, has_unknown_members
+    | E.StringBody {E.StringBody.members; has_unknown_members; _} ->
+      string_enum_def locs has_unknown_members members
+    | E.SymbolBody {E.SymbolBody.members; has_unknown_members; _} ->
       let members = defaulted_members locs members in
-      SymbolRep, members
+      SymbolRep, members, has_unknown_members
   in
   fun opts scope locs decl ->
     let {E.id; body = (_, body); comments = _} = decl in

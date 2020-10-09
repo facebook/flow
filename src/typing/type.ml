@@ -263,6 +263,7 @@ module rec TypeTerm : sig
     enum_name: string;
     members: ALoc.t SMap.t;
     representation_t: t;
+    has_unknown_members: bool;
   }
 
   and internal_t =

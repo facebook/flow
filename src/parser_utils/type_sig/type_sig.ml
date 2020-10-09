@@ -281,6 +281,7 @@ type ('loc, 'a) def =
       name: string;
       rep: enum_rep;
       members: 'loc smap;
+      has_unknown_members: bool;
     }
   | DisabledEnumBinding of {
       id_loc: 'loc;
