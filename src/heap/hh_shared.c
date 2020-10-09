@@ -197,9 +197,6 @@ typedef struct {
 
   size_t wasted_heap_size;
 
-  /* Useful to add assertions */
-  pid_t master_pid;
-
   /* A counter increasing globally across all forks. */
   alignas(128) uintnat counter;
 
@@ -309,12 +306,9 @@ static helt_t* hashtbl = NULL;
 /* This should only be used before forking */
 static uintnat early_counter = 0;
 
-/* Useful to add assertions */
-static pid_t my_pid = 0;
-
 /* This is a process-local value. The master process is 0, workers are numbered
  * starting at 1. This is an offset into the worker local values in the heap. */
-static size_t worker_id;
+static size_t worker_id = 0;
 
 static size_t worker_can_exit = 1;
 
@@ -545,7 +539,7 @@ static void map_info_page(int page_size) {
   // The first page of shared memory contains (1) size information describing
   // the layout of the rest of the shared file; (2) values which are atomically
   // updated by workers, like the heap pointer; and (3) various configuration
-  // which is convenient to stick here, like the master process pid.
+  // which is convenient to stick here, like the log level.
   assert(page_size >= sizeof(shmem_info_t));
   info = (shmem_info_t*)memfd_map(page_size);
 
@@ -617,7 +611,7 @@ CAMLprim value hh_shared_init(
   /* The info page contains (1) size information describing the layout of the
    * rest of the shared file; (2) values which are atomically updated by
    * workers, like the heap pointer; and (3) various configuration which is
-   * conventient to stick here, like the master process pid. */
+   * conventient to stick here, like the log level. */
   map_info_page(page_size);
   info->locals_size_b = locals_size_b;
   info->hashtbl_size_b = hashtbl_size_b;
@@ -628,20 +622,11 @@ CAMLprim value hh_shared_init(
   info->heap_max = info->heap_init + heap_size_b;
   info->log_level = Long_val(Field(config_val, 2));
 
-  // Keeping the pids around to make asserts.
-#ifdef _WIN32
-  info->master_pid = 0;
-#else
-  info->master_pid = getpid();
-#endif
-
   // Ensure the global counter starts on a COUNTER_RANGE boundary
   info->counter = ALIGN(early_counter + 1, COUNTER_RANGE);
 
   // Initialize top heap pointers
   info->heap = info->heap_init;
-
-  my_pid = info->master_pid;
 
   define_mappings(page_size);
 
@@ -666,11 +651,8 @@ value hh_connect(value handle_val, value worker_id_val) {
   memfd = Handle_val(handle_val);
   worker_id = Long_val(worker_id_val);
 
-#ifdef _WIN32
-  my_pid = 1; // Trick
-#else
-  my_pid = getpid();
-#endif
+  // Avoid confusion with master process, which is designated 0
+  assert(worker_id > 0);
 
   int page_size = getpagesize();
   map_info_page(page_size);
@@ -718,11 +700,11 @@ CAMLprim value hh_counter_next(void) {
  */
 /*****************************************************************************/
 void assert_master(void) {
-  assert(my_pid == info->master_pid);
+  assert(worker_id == 0);
 }
 
 void assert_not_master(void) {
-  assert(my_pid != info->master_pid);
+  assert(worker_id != 0);
 }
 
 /*****************************************************************************/
