@@ -5,8 +5,6 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-#include "hh_shared.h"
-
 /*****************************************************************************/
 /* File Implementing the shared memory system for Hack.
  *
