@@ -251,8 +251,16 @@ let rec dump_t_ (depth, tvars) cx t =
       p ~trust:(Some trust) ~extra:(spf "#%s" (ALoc.debug_to_string (class_id :> ALoc.t))) t
     | DefT (_, trust, TypeT (kind, arg)) ->
       p ~trust:(Some trust) ~extra:(spf "%s, %s" (string_of_type_t_kind kind) (kid arg)) t
-    | DefT (_, trust, EnumT { enum_id; enum_name; members = _; representation_t = _ })
-    | DefT (_, trust, EnumObjectT { enum_id; enum_name; members = _; representation_t = _ }) ->
+    | DefT
+        ( _,
+          trust,
+          EnumT { enum_id; enum_name; members = _; representation_t = _; has_unknown_members = _ }
+        )
+    | DefT
+        ( _,
+          trust,
+          EnumObjectT
+            { enum_id; enum_name; members = _; representation_t = _; has_unknown_members = _ } ) ->
       p
         ~trust:(Some trust)
         ~extra:(spf "enum %s #%s" enum_name (ALoc.debug_to_string (enum_id :> ALoc.t)))
@@ -1396,6 +1404,8 @@ let dump_error_message =
             "PropertyFunctionCallBeforeEverythingInitialized"
           | ThisBeforeEverythingInitialized -> "ThisBeforeEverythingInitialized")
     | EExperimentalEnums loc -> spf "EExperimentalEnums (%s)" (string_of_aloc loc)
+    | EExperimentalEnumsWithUnknownMembers loc ->
+      spf "EExperimentalEnumsWithUnknownMembers (%s)" (string_of_aloc loc)
     | EIndeterminateModuleType loc -> spf "EIndeterminateModuleType (%s)" (string_of_aloc loc)
     | EBadExportPosition loc -> spf "EBadExportPosition (%s)" (string_of_aloc loc)
     | EBadExportContext (name, loc) -> spf "EBadExportContext (%s, %s)" name (string_of_aloc loc)
@@ -1659,6 +1669,8 @@ let dump_error_message =
         (dump_reason cx reason)
         (dump_reason cx enum_reason)
         (String.concat ", " left_to_check)
+    | EEnumUnknownNotChecked { reason; enum_reason } ->
+      spf "EEnumUnknownNotChecked (%s) (%s)" (dump_reason cx reason) (dump_reason cx enum_reason)
     | EEnumInvalidCheck { reason; enum_name; example_member } ->
       spf
         "EEnumInvalidCheck (%s) (%s) (%s)"

@@ -3179,6 +3179,20 @@ References:
            ^ [1]
 
 
+Error --------------------------------------------------------------------------------------- unknown-members-off.js:5:1
+
+Flow Enums with unknown members are not enabled in this project. Remove the `...` from your enum declaration.
+[illegal-enum]
+
+      v-----------------
+   5| enum E {  // Error
+   6|   A,
+   7|   B,
+   8|   ...
+   9| }
+      ^
+
+
 Error ------------------------------------------------------------------------------------------- utility-types.js:12:11
 
 Cannot access `X` because `X` is not a member of enum `E` [1]. [invalid-enum-access]
@@ -3297,7 +3311,7 @@ References:
 
 
 
-Found 200 errors
+Found 201 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches

@@ -4082,7 +4082,8 @@ let%expect_test "enum_export" =
     Local defs:
     0. EnumBinding {id_loc = [1:12-13];
          name = "E"; rep = StringRep {truthy = true};
-         members = { "A" -> [1:16-17]; "B" -> [1:19-20] }} |}]
+         members = { "A" -> [1:16-17]; "B" -> [1:19-20] };
+         has_unknown_members = false} |}]
 
 let%expect_test "enum_default_export" =
   print_sig {|
@@ -4096,7 +4097,8 @@ let%expect_test "enum_default_export" =
     Local defs:
     0. EnumBinding {id_loc = [1:20-21];
          name = "E"; rep = StringRep {truthy = true};
-         members = { "A" -> [1:24-25]; "B" -> [1:27-28] }}
+         members = { "A" -> [1:24-25]; "B" -> [1:27-28] };
+         has_unknown_members = false}
   |}]
 
 let%expect_test "enum_stmt" =
@@ -4112,7 +4114,8 @@ let%expect_test "enum_stmt" =
     Local defs:
     0. EnumBinding {id_loc = [1:5-6];
          name = "E"; rep = StringRep {truthy = true};
-         members = { "A" -> [1:9-10]; "B" -> [1:12-13] }} |}]
+         members = { "A" -> [1:9-10]; "B" -> [1:12-13] };
+         has_unknown_members = false} |}]
 
 let%expect_test "enum_bool_lit" =
   print_sig {|
@@ -4126,7 +4129,8 @@ let%expect_test "enum_bool_lit" =
     Local defs:
     0. EnumBinding {id_loc = [1:12-13];
          name = "E"; rep = (BoolRep (Some true));
-         members = { "A" -> [1:16-24] }} |}]
+         members = { "A" -> [1:16-24] };
+         has_unknown_members = false} |}]
 
 let%expect_test "enum_bool" =
   print_sig {|
@@ -4140,7 +4144,8 @@ let%expect_test "enum_bool" =
     Local defs:
     0. EnumBinding {id_loc = [1:12-13];
          name = "E"; rep = (BoolRep None);
-         members = { "A" -> [1:16-24]; "B" -> [1:26-35] }} |}]
+         members = { "A" -> [1:16-24]; "B" -> [1:26-35] };
+         has_unknown_members = false} |}]
 
 let%expect_test "enum_number_truthy" =
   print_sig {|
@@ -4154,7 +4159,8 @@ let%expect_test "enum_number_truthy" =
     Local defs:
     0. EnumBinding {id_loc = [1:12-13];
          name = "E"; rep = NumberRep {truthy = true};
-         members = { "A" -> [1:16-21]; "B" -> [1:23-28] }} |}]
+         members = { "A" -> [1:16-21]; "B" -> [1:23-28] };
+         has_unknown_members = false} |}]
 
 let%expect_test "enum_number_any" =
   print_sig {|
@@ -4168,7 +4174,8 @@ let%expect_test "enum_number_any" =
     Local defs:
     0. EnumBinding {id_loc = [1:12-13];
          name = "E"; rep = NumberRep {truthy = false};
-         members = { "A" -> [1:16-21]; "B" -> [1:23-28] }} |}]
+         members = { "A" -> [1:16-21]; "B" -> [1:23-28] };
+         has_unknown_members = false} |}]
 
 let%expect_test "enum_string_any" =
   print_sig {|
@@ -4182,7 +4189,8 @@ let%expect_test "enum_string_any" =
     Local defs:
     0. EnumBinding {id_loc = [1:12-13];
          name = "E"; rep = StringRep {truthy = false};
-         members = { "A" -> [1:16-22]; "B" -> [1:24-31] }} |}]
+         members = { "A" -> [1:16-22]; "B" -> [1:24-31] };
+         has_unknown_members = false} |}]
 
 let%expect_test "enum_symbol" =
   print_sig {|
@@ -4196,7 +4204,23 @@ let%expect_test "enum_symbol" =
     Local defs:
     0. EnumBinding {id_loc = [1:12-13];
          name = "E"; rep = SymbolRep;
-         members = { "A" -> [1:26-27]; "B" -> [1:29-30] }} |}]
+         members = { "A" -> [1:26-27]; "B" -> [1:29-30] };
+         has_unknown_members = false} |}]
+
+let%expect_test "enum_unknown_members" =
+  print_sig {|
+    export enum E { A, B, ... };
+  |};
+  [%expect {|
+    ESExports {names = { "E" -> (ExportBinding 0) };
+      types = {}; stars = []; type_stars = [];
+      strict = true}
+
+    Local defs:
+    0. EnumBinding {id_loc = [1:12-13];
+         name = "E"; rep = StringRep {truthy = true};
+         members = { "A" -> [1:16-17]; "B" -> [1:19-20] };
+         has_unknown_members = true} |}]
 
 let%expect_test "enum_disabled" =
   print_sig ~enable_enums:false {|

@@ -208,6 +208,7 @@ and 'loc t' =
   | EMalformedPackageJson of 'loc * string
   | EUninitializedInstanceProperty of 'loc * Lints.property_assignment_kind
   | EExperimentalEnums of 'loc
+  | EExperimentalEnumsWithUnknownMembers of 'loc
   | EUnsafeGetSet of 'loc
   | EIndeterminateModuleType of 'loc
   | EBadExportPosition of 'loc
@@ -375,6 +376,10 @@ and 'loc t' =
       reason: 'loc virtual_reason;
       enum_reason: 'loc virtual_reason;
       left_to_check: string list;
+    }
+  | EEnumUnknownNotChecked of {
+      reason: 'loc virtual_reason;
+      enum_reason: 'loc virtual_reason;
     }
   | EEnumInvalidCheck of {
       reason: 'loc virtual_reason;
@@ -780,6 +785,7 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
   | EUnsafeGetSet loc -> EUnsafeGetSet (f loc)
   | EUninitializedInstanceProperty (loc, e) -> EUninitializedInstanceProperty (f loc, e)
   | EExperimentalEnums loc -> EExperimentalEnums (f loc)
+  | EExperimentalEnumsWithUnknownMembers loc -> EExperimentalEnumsWithUnknownMembers (f loc)
   | EIndeterminateModuleType loc -> EIndeterminateModuleType (f loc)
   | EBadExportPosition loc -> EBadExportPosition (f loc)
   | EBadExportContext (s, loc) -> EBadExportContext (s, f loc)
@@ -916,6 +922,8 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
   | EEnumNotAllChecked { reason; enum_reason; left_to_check } ->
     EEnumNotAllChecked
       { reason = map_reason reason; enum_reason = map_reason enum_reason; left_to_check }
+  | EEnumUnknownNotChecked { reason; enum_reason } ->
+    EEnumUnknownNotChecked { reason = map_reason reason; enum_reason = map_reason enum_reason }
   | EEnumInvalidCheck { reason; enum_name; example_member } ->
     EEnumInvalidCheck { reason = map_reason reason; enum_name; example_member }
   | EEnumMemberUsedAsType { reason; enum_name } ->
@@ -1080,6 +1088,7 @@ let util_use_op_of_msg nope util = function
   | EUnsafeGetSet _
   | EUninitializedInstanceProperty _
   | EExperimentalEnums _
+  | EExperimentalEnumsWithUnknownMembers _
   | EIndeterminateModuleType _
   | EBadExportPosition _
   | EBadExportContext _
@@ -1137,6 +1146,7 @@ let util_use_op_of_msg nope util = function
   | EEnumMemberAlreadyChecked _
   | EEnumAllMembersAlreadyChecked _
   | EEnumNotAllChecked _
+  | EEnumUnknownNotChecked _
   | EEnumInvalidCheck _
   | EEnumMemberUsedAsType _
   | EAssignExportedConstLikeBinding _
@@ -1193,6 +1203,7 @@ let loc_of_msg : 'loc t' -> 'loc option = function
   | EEnumMemberAlreadyChecked { reason; _ }
   | EEnumAllMembersAlreadyChecked { reason; _ }
   | EEnumNotAllChecked { reason; _ }
+  | EEnumUnknownNotChecked { reason; _ }
   | EEnumInvalidCheck { reason; _ }
   | EEnumMemberUsedAsType { reason; _ }
   | EEnumInvalidMemberAccess { reason; _ }
@@ -1257,6 +1268,7 @@ let loc_of_msg : 'loc t' -> 'loc option = function
   | EExportRenamedDefault (loc, _)
   | EIndeterminateModuleType loc
   | EExperimentalEnums loc
+  | EExperimentalEnumsWithUnknownMembers loc
   | EUnsafeGetSet loc
   | EUninitializedInstanceProperty (loc, _)
   | EModuleOutsideRoot (loc, _)
@@ -1375,6 +1387,7 @@ let kind_of_msg =
     | EUnexpectedTypeof _
     | EUnsafeGetSet _
     | EExperimentalEnums _
+    | EExperimentalEnumsWithUnknownMembers _
     | EIndeterminateModuleType _
     | EUnreachable _
     | EInvalidTypeof _ ->
@@ -2363,6 +2376,16 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
       ]
     in
     Normal { features }
+  | EExperimentalEnumsWithUnknownMembers _ ->
+    let features =
+      [
+        text "Flow Enums with unknown members are not enabled in this project. ";
+        text "Remove the ";
+        code "...";
+        text " from your enum declaration.";
+      ]
+    in
+    Normal { features }
   | EIndeterminateModuleType _ ->
     let features =
       [
@@ -3268,6 +3291,23 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
       @ [text " not been considered in check of "; desc reason; text "."]
     in
     Normal { features }
+  | EEnumUnknownNotChecked { reason; enum_reason } ->
+    let features =
+      [
+        text "Missing ";
+        code "default";
+        text " case in the check of ";
+        desc reason;
+        text ". ";
+        ref enum_reason;
+        text " has unknown members (specified using ";
+        code "...";
+        text ") so checking it requires the use of a ";
+        code "default";
+        text " case to cover those members.";
+      ]
+    in
+    Normal { features }
   | EEnumInvalidCheck { reason; enum_name; example_member } ->
     let example_member = Base.Option.value ~default:"A" example_member in
     let features =
@@ -3459,11 +3499,13 @@ let error_code_of_message err : error_code option =
   | EEnumMemberUsedAsType _ -> Some EnumValueAsType
   | EEnumModification _ -> Some CannotWriteEnum
   | EEnumNotAllChecked _ -> Some InvalidExhaustiveCheck
+  | EEnumUnknownNotChecked _ -> Some InvalidExhaustiveCheck
   | EEscapedGeneric _ -> Some EscapedGeneric
   | EExpectedBooleanLit { use_op; _ } -> error_code_of_use_op use_op ~default:IncompatibleType
   | EExpectedNumberLit { use_op; _ } -> error_code_of_use_op use_op ~default:IncompatibleType
   | EExpectedStringLit { use_op; _ } -> error_code_of_use_op use_op ~default:IncompatibleType
   | EExperimentalEnums _ -> Some IllegalEnum
+  | EExperimentalEnumsWithUnknownMembers _ -> Some IllegalEnum
   | EExponentialSpread _ -> Some ExponentialSpread
   | EExportsAnnot _ -> Some InvalidExportsTypeArg
   | EExportValueAsType (_, _) -> Some ExportValueAsType
