@@ -392,7 +392,7 @@ class ['a] t =
         let acc = self#type_ cx pole_TODO acc t2 in
         acc
       | ObjTestProtoT (_, t) -> self#type_ cx pole_TODO acc t
-      | ObjRestT (_, _, t)
+      | ObjRestT (_, _, t, _)
       | ObjSealT (_, t)
       | ArrRestT (_, _, _, t) ->
         self#type_ cx pole_TODO acc t
@@ -636,7 +636,7 @@ class ['a] t =
           let acc = self#predicate cx acc pred in
           let acc = self#predicate cx acc not_pred in
           acc)
-      | DestructuringT (_, _, s, tout) ->
+      | DestructuringT (_, _, s, tout, _) ->
         let acc = self#selector cx acc s in
         let acc = self#tout cx pole_TODO acc tout in
         acc

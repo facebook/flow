@@ -321,7 +321,7 @@ and merge_pattern component file = function
     let t = visit_pattern component file def in
     let reason = Reason.(mk_reason RObjectPatternRestProp loc) in
     Tvar.mk_where file.cx reason (fun tout ->
-        Flow_js.flow file.cx (t, Type.ObjRestT (reason, xs, tout)))
+        Flow_js.flow file.cx (t, Type.ObjRestT (reason, xs, tout, Reason.mk_id ())))
   | Pack.IndexP { loc; i; def } ->
     let def = Patterns.get file.patterns def in
     let t = visit_pattern component file def in

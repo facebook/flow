@@ -2201,12 +2201,15 @@ struct
               None
           in
           rec_flow cx trace (reposition cx ~trace loc ?desc l, u)
-        | (MaybeT (r, t), DestructuringT (reason, DestructAnnot, s, tout)) ->
+        | (MaybeT (r, t), DestructuringT (reason, DestructAnnot, s, tout, _)) ->
           let f t =
             AnnotT
               ( reason,
                 Tvar.mk_no_wrap_where cx reason (fun tvar ->
-                    rec_flow cx trace (t, DestructuringT (reason, DestructAnnot, s, tvar))),
+                    rec_flow
+                      cx
+                      trace
+                      (t, DestructuringT (reason, DestructAnnot, s, tvar, Reason.mk_id ()))),
                 false )
           in
           let void_t = VoidT.why r |> with_trust bogus_trust in
@@ -2247,12 +2250,15 @@ struct
          reposition the entire optional type. *)
           rec_flow cx trace (reposition_reason cx ~trace reason ~use_desc l, u)
         | ( OptionalT { reason = r; type_ = t; use_desc },
-            DestructuringT (reason, DestructAnnot, s, tout) ) ->
+            DestructuringT (reason, DestructAnnot, s, tout, _) ) ->
           let f t =
             AnnotT
               ( reason,
                 Tvar.mk_no_wrap_where cx reason (fun tvar ->
-                    rec_flow cx trace (t, DestructuringT (reason, DestructAnnot, s, tvar))),
+                    rec_flow
+                      cx
+                      trace
+                      (t, DestructuringT (reason, DestructAnnot, s, tvar, Reason.mk_id ()))),
                 false )
           in
           let void_t = VoidT.why_with_use_desc ~use_desc r |> with_trust bogus_trust in
@@ -2867,13 +2873,16 @@ struct
         | (UnionT _, SealGenericT { reason = _; id; name; cont }) ->
           let reason = reason_of_t l in
           continue cx trace (GenericT { reason; id; name; bound = l }) cont
-        | (UnionT (_, rep), DestructuringT (reason, DestructAnnot, s, tout)) ->
+        | (UnionT (_, rep), DestructuringT (reason, DestructAnnot, s, tout, _)) ->
           let (t0, (t1, ts)) = UnionRep.members_nel rep in
           let f t =
             AnnotT
               ( reason,
                 Tvar.mk_no_wrap_where cx reason (fun tvar ->
-                    rec_flow cx trace (t, DestructuringT (reason, DestructAnnot, s, tvar))),
+                    rec_flow
+                      cx
+                      trace
+                      (t, DestructuringT (reason, DestructAnnot, s, tvar, Reason.mk_id ()))),
                 false )
           in
           let rep = UnionRep.make (f t0) (f t1) (Base.List.map ts ~f) in
@@ -5484,30 +5493,33 @@ struct
        thought is to insert a special kind of shadow property into the host
        object, which directs all writes (other than those in `xs`) to the
        unsealed rest result object. For now, the design here is incomplete. *)
-        | (DefT (_, _, ObjT { props_tmap; flags; _ }), ObjRestT (reason, xs, t)) ->
-          let props = Context.find_props cx props_tmap in
-          let props = List.fold_left (fun map x -> SMap.remove x map) props xs in
-          (* Remove shadow properties from rest result *)
-          let props = SMap.filter (fun x _ -> not (is_internal_name x)) props in
-          let proto = ObjProtoT reason in
-          (* A rest result can not be exact if the source object is unsealed,
+        | (DefT (reason_obj, _, ObjT { props_tmap; flags; _ }), ObjRestT (reason, xs, t, id)) ->
+          ConstFoldExpansion.guard id (reason_obj, 0) (function
+              | 0 ->
+                let props = Context.find_props cx props_tmap in
+                let props = List.fold_left (fun map x -> SMap.remove x map) props xs in
+                (* Remove shadow properties from rest result *)
+                let props = SMap.filter (fun x _ -> not (is_internal_name x)) props in
+                let proto = ObjProtoT reason in
+                (* A rest result can not be exact if the source object is unsealed,
          because we may not have seen all the writes yet. *)
-          let obj_kind =
-            match flags.obj_kind with
-            | UnsealedInFile _ when not (Obj_type.sealed_in_op reason flags.obj_kind) ->
-              UnsealedInFile (ALoc.source (aloc_of_reason reason))
-            | UnsealedInFile _
-            | Exact ->
-              Exact
-            | _ -> Inexact
-          in
-          let o = Obj_type.mk_with_proto cx reason ~props proto ~obj_kind in
-          rec_flow_t cx trace ~use_op:unknown_use (o, t)
-        | (DefT (reason, _, InstanceT (_, super, _, insttype)), ObjRestT (reason_op, xs, t)) ->
+                let obj_kind =
+                  match flags.obj_kind with
+                  | UnsealedInFile _ when not (Obj_type.sealed_in_op reason flags.obj_kind) ->
+                    UnsealedInFile (ALoc.source (aloc_of_reason reason))
+                  | UnsealedInFile _
+                  | Exact ->
+                    Exact
+                  | _ -> Inexact
+                in
+                let o = Obj_type.mk_with_proto cx reason ~props proto ~obj_kind in
+                rec_flow_t cx trace ~use_op:unknown_use (o, t)
+              | _ -> ())
+        | (DefT (reason, _, InstanceT (_, super, _, insttype)), ObjRestT (reason_op, xs, t, _)) ->
           (* Spread fields from super into an object *)
           let obj_super =
             Tvar.mk_where cx reason_op (fun tvar ->
-                let u = ObjRestT (reason_op, xs, tvar) in
+                let u = ObjRestT (reason_op, xs, tvar, Reason.mk_id ()) in
                 rec_flow cx trace (super, ReposLowerT (reason, false, u)))
           in
           (* Spread own props from the instance into another object *)
@@ -5526,12 +5538,12 @@ struct
                     ObjAssignFromT (use_op, reason_op, obj_super, tvar, default_obj_assign_kind) ))
           in
           rec_flow_t cx ~use_op trace (o, t)
-        | (AnyT (_, src), ObjRestT (reason, _, t)) ->
+        | (AnyT (_, src), ObjRestT (reason, _, t, _)) ->
           rec_flow_t cx trace ~use_op:unknown_use (AnyT.why src reason, t)
-        | (ObjProtoT _, ObjRestT (reason, _, t)) ->
+        | (ObjProtoT _, ObjRestT (reason, _, t, _)) ->
           let obj = Obj_type.mk_unsealed cx reason ~proto:l in
           rec_flow_t cx trace ~use_op:unknown_use (obj, t)
-        | (DefT (_, _, (NullT | VoidT)), ObjRestT (reason, _, t)) ->
+        | (DefT (_, _, (NullT | VoidT)), ObjRestT (reason, _, t, _)) ->
           (* mirroring Object.assign semantics, treat null/void as empty objects *)
           let o = Obj_type.mk_unsealed cx reason in
           rec_flow_t cx trace ~use_op:unknown_use (o, t)
@@ -5842,7 +5854,7 @@ struct
         (*****************)
         (* destructuring *)
         (*****************)
-        | (_, DestructuringT (reason, kind, s, tout)) ->
+        | (_, DestructuringT (reason, kind, s, tout, id)) ->
           begin
             match kind with
             | DestructAnnot ->
@@ -5850,9 +5862,9 @@ struct
                * currently necessary, since 0->1 annotations are not always
                * recursively 0->1 -- e.g., class instance types. *)
               let tvar = Tvar.mk_no_wrap cx reason in
-              eval_selector cx ~trace reason l s (reason, tvar);
+              eval_selector cx ~trace reason l s (reason, tvar) id;
               rec_flow cx trace (OpenT (reason, tvar), BecomeT (reason, OpenT tout))
-            | DestructInfer -> eval_selector cx ~trace reason l s tout
+            | DestructInfer -> eval_selector cx ~trace reason l s tout id
           end
         (**************)
         (* object kit *)
@@ -8394,7 +8406,7 @@ struct
       in
       result
 
-  and eval_selector cx ?trace reason curr_t s tvar =
+  and eval_selector cx ?trace reason curr_t s tvar id =
     flow_opt
       cx
       ?trace
@@ -8439,7 +8451,7 @@ struct
           else
             getprop_ub ()
         | Elem key -> GetElemT (unknown_use, reason, key, tvar)
-        | ObjRest xs -> ObjRestT (reason, xs, OpenT tvar)
+        | ObjRest xs -> ObjRestT (reason, xs, OpenT tvar, id)
         | ArrRest i -> ArrRestT (unknown_use, reason, i, OpenT tvar)
         | Default -> PredicateT (NotP VoidP, tvar) )
 
@@ -12656,4 +12668,4 @@ let mk_default cx reason =
           flow_t cx (t1, tvar);
           flow_t cx (t2, tvar)))
     ~selector:(fun r t sel ->
-      Tvar.mk_no_wrap_where cx r (fun tvar -> eval_selector cx r t sel tvar))
+      Tvar.mk_no_wrap_where cx r (fun tvar -> eval_selector cx r t sel tvar (Reason.mk_id ())))

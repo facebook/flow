@@ -1230,12 +1230,12 @@ class virtual ['a] t_with_uses =
           t
         else
           ObjAssignFromT (op, r, t1', t2', obj_assign)
-      | ObjRestT (r, strings, t') ->
+      | ObjRestT (r, strings, t', id) ->
         let t'' = self#type_ cx map_cx t' in
         if t'' == t' then
           t
         else
-          ObjRestT (r, strings, t'')
+          ObjRestT (r, strings, t'', id)
       | ObjSealT (r, t') ->
         let t'' = self#type_ cx map_cx t' in
         if t'' == t' then
@@ -1522,13 +1522,13 @@ class virtual ['a] t_with_uses =
           t
         else
           ModuleExportsAssignT (r, t'', t_out')
-      | DestructuringT (r, k, s, t') ->
+      | DestructuringT (r, k, s, t', id) ->
         let s' = self#selector cx map_cx s in
         let t'' = self#tout cx map_cx t' in
         if s' == s && t'' == t' then
           t
         else
-          DestructuringT (r, k, s', t'')
+          DestructuringT (r, k, s', t'', id)
       | CreateObjWithComputedPropT { reason; value; tout_tvar } ->
         let value' = self#type_ cx map_cx value in
         let tout_tvar' = self#tout cx map_cx tout_tvar in

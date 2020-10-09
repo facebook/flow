@@ -36,7 +36,7 @@ module type S = sig
     Context.t -> ?trace:Trace.t -> Type.t -> Type.defer_use_t -> Type.Eval.id -> Type.t
 
   val eval_selector :
-    Context.t -> ?trace:Trace.t -> reason -> Type.t -> Type.selector -> Type.tvar -> unit
+    Context.t -> ?trace:Trace.t -> reason -> Type.t -> Type.selector -> Type.tvar -> int -> unit
 
   val filter_optional : Context.t -> ?trace:Trace.t -> reason -> Type.t -> Type.ident
 

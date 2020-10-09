@@ -46,7 +46,7 @@ let destruct cx reason ~annot selector t =
       DestructInfer
   in
   Tvar.mk_no_wrap_where cx reason (fun tout ->
-      Flow_js.flow cx (t, DestructuringT (reason, kind, selector, tout)))
+      Flow_js.flow cx (t, DestructuringT (reason, kind, selector, tout, Reason.mk_id ())))
 
 let pattern_default cx ~expr acc = function
   | None -> (acc, None)

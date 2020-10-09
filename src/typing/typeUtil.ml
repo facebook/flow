@@ -119,7 +119,7 @@ and reason_of_use_t = function
   | NullishCoalesceT (reason, _, _) -> reason
   | ObjAssignToT (_, reason, _, _, _) -> reason
   | ObjAssignFromT (_, reason, _, _, _) -> reason
-  | ObjRestT (reason, _, _) -> reason
+  | ObjRestT (reason, _, _, _) -> reason
   | ObjSealT (reason, _) -> reason
   | ObjTestProtoT (reason, _) -> reason
   | ObjTestT (reason, _, _) -> reason
@@ -159,7 +159,7 @@ and reason_of_use_t = function
   | ReactInToProps (reason, _)
   | SealGenericT { reason; _ } ->
     reason
-  | DestructuringT (reason, _, _, _) -> reason
+  | DestructuringT (reason, _, _, _, _) -> reason
   | CreateObjWithComputedPropT { reason; value = _; tout_tvar = _ } -> reason
   | ResolveUnionT { reason; _ } -> reason
 
@@ -301,7 +301,7 @@ and mod_reason_of_use_t f = function
   | NullishCoalesceT (reason, t1, t2) -> NullishCoalesceT (f reason, t1, t2)
   | ObjAssignToT (op, reason, t, t2, kind) -> ObjAssignToT (op, f reason, t, t2, kind)
   | ObjAssignFromT (op, reason, t, t2, kind) -> ObjAssignFromT (op, f reason, t, t2, kind)
-  | ObjRestT (reason, t, t2) -> ObjRestT (f reason, t, t2)
+  | ObjRestT (reason, t, t2, id) -> ObjRestT (f reason, t, t2, id)
   | ObjSealT (reason, t) -> ObjSealT (f reason, t)
   | ObjTestProtoT (reason, t) -> ObjTestProtoT (f reason, t)
   | ObjTestT (reason, t1, t2) -> ObjTestT (f reason, t1, t2)
@@ -349,7 +349,7 @@ and mod_reason_of_use_t f = function
   | MatchPropT (op, reason, prop, t) -> MatchPropT (op, f reason, prop, t)
   | ReactPropsToOut (reason, t) -> ReactPropsToOut (f reason, t)
   | ReactInToProps (reason, t) -> ReactInToProps (f reason, t)
-  | DestructuringT (reason, a, s, t) -> DestructuringT (f reason, a, s, t)
+  | DestructuringT (reason, a, s, t, id) -> DestructuringT (f reason, a, s, t, id)
   | CreateObjWithComputedPropT { reason; value; tout_tvar } ->
     CreateObjWithComputedPropT { reason = f reason; value; tout_tvar }
   | ResolveUnionT { reason; resolved; unresolved; upper; id } ->
@@ -445,7 +445,7 @@ let rec util_use_op_of_use_t :
   | ThisSpecializeT (_, _, _)
   | VarianceCheckT (_, _, _, _)
   | LookupT _
-  | ObjRestT (_, _, _)
+  | ObjRestT (_, _, _, _)
   | ObjSealT (_, _)
   | ObjTestProtoT (_, _)
   | ObjTestT (_, _, _)
