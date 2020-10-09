@@ -196,7 +196,6 @@ NATIVE_C_FILES=\
   src/common/xx/xx_stubs.c\
   src/services/saved_state/compression/saved_state_compression_stubs.c\
   src/hack_forked/find/hh_readdir.c\
-  src/heap/hh_assert.c\
   src/heap/hh_shared.c\
   src/hack_forked/utils/core/get_build_id.c\
   src/hack_forked/utils/sys/files.c\

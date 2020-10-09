@@ -25,14 +25,11 @@ exception Heap_full
 
 exception Failed_memfd_init of Unix.error
 
-exception C_assertion_failure of string
-
 let () =
   Callback.register_exception "out_of_shared_memory" Out_of_shared_memory;
   Callback.register_exception "hash_table_full" Hash_table_full;
   Callback.register_exception "heap_full" Heap_full;
-  Callback.register_exception "failed_memfd_init" (Failed_memfd_init Unix.EINVAL);
-  Callback.register_exception "c_assertion_failure" (C_assertion_failure "")
+  Callback.register_exception "failed_memfd_init" (Failed_memfd_init Unix.EINVAL)
 
 (*****************************************************************************)
 (* Initializes the shared memory. Must be called before forking. *)
