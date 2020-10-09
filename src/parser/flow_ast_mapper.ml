@@ -850,7 +850,7 @@ class ['loc] mapper =
     method export_named_declaration
         _loc (decl : ('loc, 'loc) Ast.Statement.ExportNamedDeclaration.t) =
       let open Ast.Statement.ExportNamedDeclaration in
-      let { exportKind; source; specifiers; declaration; comments } = decl in
+      let { export_kind; source; specifiers; declaration; comments } = decl in
       let specifiers' = map_opt this#export_named_specifier specifiers in
       let declaration' = map_opt this#statement declaration in
       let comments' = this#syntax_opt comments in
@@ -858,7 +858,7 @@ class ['loc] mapper =
         decl
       else
         {
-          exportKind;
+          export_kind;
           source;
           specifiers = specifiers';
           declaration = declaration';
@@ -1538,14 +1538,14 @@ class ['loc] mapper =
 
     method import_declaration _loc (decl : ('loc, 'loc) Ast.Statement.ImportDeclaration.t) =
       let open Ast.Statement.ImportDeclaration in
-      let { importKind; source; specifiers; default; comments } = decl in
+      let { import_kind; source; specifiers; default; comments } = decl in
       let specifiers' = map_opt this#import_specifier specifiers in
       let default' = map_opt this#import_default_specifier default in
       let comments' = this#syntax_opt comments in
       if specifiers == specifiers' && default == default' && comments == comments' then
         decl
       else
-        { importKind; source; specifiers = specifiers'; default = default'; comments = comments' }
+        { import_kind; source; specifiers = specifiers'; default = default'; comments = comments' }
 
     method import_specifier (specifier : ('loc, 'loc) Ast.Statement.ImportDeclaration.specifier) =
       let open Ast.Statement.ImportDeclaration in

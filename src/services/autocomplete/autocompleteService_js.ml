@@ -710,14 +710,14 @@ class local_type_identifiers_searcher =
 
     method! import_declaration _ x =
       let open Flow_ast.Statement.ImportDeclaration in
-      let { importKind; specifiers; default; _ } = x in
+      let { import_kind; specifiers; default; _ } = x in
       let binds_type = function
         | ImportType
         | ImportTypeof ->
           true
         | ImportValue -> false
       in
-      let declaration_binds_type = binds_type importKind in
+      let declaration_binds_type = binds_type import_kind in
       if declaration_binds_type then Base.Option.iter default ~f:this#add_id;
       Base.Option.iter specifiers ~f:(function
           | ImportNamedSpecifiers specifiers ->

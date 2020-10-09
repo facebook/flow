@@ -64,7 +64,7 @@ module HardCodedImportMap = struct
            ( Loc.none,
              Ast.Statement.ImportDeclaration
                {
-                 Ast.Statement.ImportDeclaration.importKind =
+                 Ast.Statement.ImportDeclaration.import_kind =
                    Ast.Statement.ImportDeclaration.ImportType;
                  source;
                  default = None;

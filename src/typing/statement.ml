@@ -616,9 +616,9 @@ and statement_decl cx =
     | ExportDefaultDeclaration.Expression _ -> ())
   | ( _,
       ImportDeclaration
-        { ImportDeclaration.importKind; specifiers; default; source = _; comments = _ } ) ->
+        { ImportDeclaration.import_kind; specifiers; default; source = _; comments = _ } ) ->
     let isType =
-      match importKind with
+      match import_kind with
       | ImportDeclaration.ImportType -> true
       | ImportDeclaration.ImportTypeof -> true
       | ImportDeclaration.ImportValue -> false
@@ -2283,7 +2283,7 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t =
     )
   | ( loc,
       ExportNamedDeclaration
-        ( { ExportNamedDeclaration.declaration; specifiers; source; exportKind; comments = _ } as
+        ( { ExportNamedDeclaration.declaration; specifiers; source; export_kind; comments = _ } as
         export_decl ) ) ->
     let (declaration, export_info) =
       match declaration with
@@ -2333,7 +2333,7 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t =
           | _ -> failwith "Parser Error: Invalid export-declaration type!") )
       | None -> (None, [])
     in
-    export_statement cx loc ~default:None export_info specifiers source exportKind;
+    export_statement cx loc ~default:None export_info specifiers source export_kind;
 
     (loc, ExportNamedDeclaration { export_decl with ExportNamedDeclaration.declaration })
   | (loc, ExportDefaultDeclaration { ExportDefaultDeclaration.default; declaration; comments }) ->
@@ -2380,12 +2380,12 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t =
           [("<<expression>>", fst expr, "default", Some expr_t)] )
     in
     (* export default is always a value *)
-    let exportKind = Ast.Statement.ExportValue in
-    export_statement cx loc ~default:(Some default) export_info None None exportKind;
+    let export_kind = Ast.Statement.ExportValue in
+    export_statement cx loc ~default:(Some default) export_info None None export_kind;
 
     (loc, ExportDefaultDeclaration { ExportDefaultDeclaration.default; declaration; comments })
   | (import_loc, ImportDeclaration import_decl) ->
-    let { ImportDeclaration.source; specifiers; default; importKind; comments } = import_decl in
+    let { ImportDeclaration.source; specifiers; default; import_kind; comments } = import_decl in
     let (source_loc, { Ast.StringLiteral.value = module_name; _ }) = source in
     let type_kind_of_kind = function
       | ImportDeclaration.ImportType -> Type.ImportType
@@ -2432,7 +2432,7 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t =
                      Unsoundness.why InferenceHooks import_reason
                    else
                      let import_kind =
-                       type_kind_of_kind (Base.Option.value ~default:importKind kind)
+                       type_kind_of_kind (Base.Option.value ~default:import_kind kind)
                      in
                      get_imported_t import_reason import_kind remote_name local_name
                  in
@@ -2453,7 +2453,7 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t =
         ->
         let import_reason =
           let import_reason_desc =
-            match importKind with
+            match import_kind with
             | ImportDeclaration.ImportType -> RImportStarType local_name
             | ImportDeclaration.ImportTypeof -> RImportStarTypeOf local_name
             | ImportDeclaration.ImportValue -> RImportStar local_name
@@ -2461,7 +2461,7 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t =
           mk_reason import_reason_desc import_loc
         in
         begin
-          match importKind with
+          match import_kind with
           | ImportDeclaration.ImportType -> assert_false "import type * is a parse error"
           | ImportDeclaration.ImportTypeof ->
             let bind_reason = repos_reason local_loc import_reason in
@@ -2491,7 +2491,7 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t =
           if Type_inference_hooks_js.dispatch_member_hook cx "default" loc module_t then
             Unsoundness.why InferenceHooks import_reason
           else
-            let import_kind = type_kind_of_kind importKind in
+            let import_kind = type_kind_of_kind import_kind in
             get_imported_t import_reason import_kind "default" local_name
         in
         ((loc, local_name, imported_t, None) :: specifiers, Some ((loc, imported_t), id))
@@ -2501,7 +2501,7 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t =
       (fun (loc, local_name, t, specifier_kind) ->
         let t_generic =
           let lookup_mode =
-            match Base.Option.value ~default:importKind specifier_kind with
+            match Base.Option.value ~default:import_kind specifier_kind with
             | ImportDeclaration.ImportType -> ForType
             | ImportDeclaration.ImportTypeof -> ForType
             | ImportDeclaration.ImportValue -> ForValue
@@ -2517,14 +2517,14 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t =
           ImportDeclaration.source;
           specifiers = specifiers_ast;
           default = default_ast;
-          importKind;
+          import_kind;
           comments;
         } )
 
-and export_statement cx loc ~default declaration_export_info specifiers source exportKind =
+and export_statement cx loc ~default declaration_export_info specifiers source export_kind =
   let open Ast.Statement in
   let lookup_mode =
-    match exportKind with
+    match export_kind with
     | Ast.Statement.ExportValue -> ForValue
     | Ast.Statement.ExportType -> ForType
   in
@@ -2543,7 +2543,7 @@ and export_statement cx loc ~default declaration_export_info specifiers source e
     (* Use the location of the "default" keyword if this is a default export. For named exports,
      * use the location of the identifier. *)
     let loc = Base.Option.value ~default:loc default in
-    match exportKind with
+    match export_kind with
     | Ast.Statement.ExportType -> Import_export.export_type cx local_name (Some loc) local_tvar
     | Ast.Statement.ExportValue -> Import_export.export cx local_name loc local_tvar
   in
@@ -2589,7 +2589,7 @@ and export_statement cx loc ~default declaration_export_info specifiers source e
               Flow.flow cx (tvar, GetPropT (unknown_use, reason, Named (reason, local_name), t)))
         | None -> Env.var_ref ~lookup_mode cx local_name loc
       in
-      match exportKind with
+      match export_kind with
       | Ast.Statement.ExportType -> Import_export.export_type cx remote_name (Some loc) local_tvar
       | Ast.Statement.ExportValue -> Import_export.export cx remote_name loc local_tvar
     in
@@ -2613,7 +2613,7 @@ and export_statement cx loc ~default declaration_export_info specifiers source e
       Import_export.export cx name loc remote_namespace_t
     | None ->
       let source_module_t = Import_export.import cx (source_loc, source_module_name) in
-      (match exportKind with
+      (match export_kind with
       | Ast.Statement.ExportValue -> Import_export.export_star cx loc source_module_t
       | Ast.Statement.ExportType -> Import_export.export_type_star cx loc source_module_t))
   | ([], None) ->

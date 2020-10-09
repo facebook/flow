@@ -9,7 +9,7 @@ module Ast = Flow_ast
 open Insert_type_utils
 
 type import_declaration = {
-  importKind: Ast.Statement.ImportDeclaration.importKind;
+  import_kind: Ast.Statement.ImportDeclaration.import_kind;
   source: Loc.t * Loc.t Ast.StringLiteral.t;
   default: (Loc.t, Loc.t) Ast.Identifier.t option;
   (* we only import this kind*)
@@ -74,7 +74,7 @@ module AstHelper = struct
         in
         (None, Some { Ast.Statement.ImportDeclaration.kind = None; local; remote = remote_id })
     in
-    { importKind = import_kind; source; default; named_specifier }
+    { import_kind; source; default; named_specifier }
 
   let mk_import_declaration_kind use_mode =
     match use_mode with
@@ -84,14 +84,14 @@ end
 
 module ExportsHelper : sig
   type import_info = {
-    import_kind: Ast.Statement.ImportDeclaration.importKind;
+    import_kind: Ast.Statement.ImportDeclaration.import_kind;
     default: bool;
   }
 
   val resolve : use_mode -> ALoc.t -> string -> (import_info, Error.import_error) result
 end = struct
   type import_info = {
-    import_kind: Ast.Statement.ImportDeclaration.importKind;
+    import_kind: Ast.Statement.ImportDeclaration.import_kind;
     default: bool;
   }
 
@@ -507,7 +507,7 @@ end = struct
   module BatchImportMap = WrappedMap.Make (struct
     open Ast
 
-    type t = Statement.ImportDeclaration.importKind * (Loc.t * Loc.t StringLiteral.t)
+    type t = Statement.ImportDeclaration.import_kind * (Loc.t * Loc.t StringLiteral.t)
 
     let compare = Stdlib.compare
   end)
@@ -667,15 +667,15 @@ end = struct
         let (default_list, named_map) =
           ImportedNameMap.fold
             (fun { ImportInfo.import_declaration; _ } (default_acc, named_acc) ->
-              let { importKind; source; default; named_specifier } = import_declaration in
+              let { import_kind; source; default; named_specifier } = import_declaration in
               match (default, named_specifier) with
               | (None, Some named_specifier) ->
                 let named_specifiers =
-                  match BatchImportMap.find_opt (importKind, source) named_acc with
+                  match BatchImportMap.find_opt (import_kind, source) named_acc with
                   | Some named_specifiers -> named_specifier :: named_specifiers
                   | None -> [named_specifier]
                 in
-                (default_acc, BatchImportMap.add (importKind, source) named_specifiers named_acc)
+                (default_acc, BatchImportMap.add (import_kind, source) named_specifiers named_acc)
               | _ -> (import_declaration :: default_acc, named_acc))
             name_map
             ([], BatchImportMap.empty)
@@ -683,7 +683,7 @@ end = struct
         let import_stmts =
           List.map
             (fun import_declaration ->
-              let { importKind; source; default; named_specifier } = import_declaration in
+              let { import_kind; source; default; named_specifier } = import_declaration in
               let specifiers =
                 match named_specifier with
                 | Some specifer ->
@@ -693,7 +693,7 @@ end = struct
               ( dummy_loc,
                 Ast.Statement.ImportDeclaration
                   {
-                    Ast.Statement.ImportDeclaration.importKind;
+                    Ast.Statement.ImportDeclaration.import_kind;
                     source;
                     default;
                     specifiers;
@@ -703,7 +703,7 @@ end = struct
         in
         let import_stmts =
           BatchImportMap.fold
-            (fun (importKind, source) named_specifiers acc ->
+            (fun (import_kind, source) named_specifiers acc ->
               let specifiers =
                 Some (Ast.Statement.ImportDeclaration.ImportNamedSpecifiers named_specifiers)
               in
@@ -711,7 +711,7 @@ end = struct
                 ( dummy_loc,
                   Ast.Statement.ImportDeclaration
                     {
-                      Ast.Statement.ImportDeclaration.importKind;
+                      Ast.Statement.ImportDeclaration.import_kind;
                       source;
                       default = None;
                       specifiers;

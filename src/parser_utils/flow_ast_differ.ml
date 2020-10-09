@@ -659,7 +659,7 @@ let program
       declaration = decl1;
       specifiers = specs1;
       source = src1;
-      exportKind = kind1;
+      export_kind = kind1;
       comments = comments1;
     } =
       export1
@@ -668,7 +668,7 @@ let program
       declaration = decl2;
       specifiers = specs2;
       source = src2;
-      exportKind = kind2;
+      export_kind = kind2;
       comments = comments2;
     } =
       export2
@@ -788,7 +788,7 @@ let program
       (import2 : (Loc.t, Loc.t) Ast.Statement.ImportDeclaration.t) : node change list option =
     let open Ast.Statement.ImportDeclaration in
     let {
-      importKind = imprt_knd1;
+      import_kind = imprt_knd1;
       source = src1;
       default = dflt1;
       specifiers = spec1;
@@ -797,7 +797,7 @@ let program
       import1
     in
     let {
-      importKind = imprt_knd2;
+      import_kind = imprt_knd2;
       source = src2;
       default = dflt2;
       specifiers = spec2;

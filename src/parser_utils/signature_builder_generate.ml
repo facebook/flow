@@ -54,12 +54,12 @@ module T = struct
     | VariableDecl of little_annotation
     (* remote *)
     | ImportNamed of {
-        kind: Ast.Statement.ImportDeclaration.importKind;
+        kind: Ast.Statement.ImportDeclaration.import_kind;
         source: Loc.t Ast_utils.source;
         name: Loc.t Ast_utils.ident;
       }
     | ImportStar of {
-        kind: Ast.Statement.ImportDeclaration.importKind;
+        kind: Ast.Statement.ImportDeclaration.import_kind;
         source: Loc.t Ast_utils.source;
       }
     | Require of {
@@ -499,7 +499,7 @@ module T = struct
       (id, stmt_of_decl outlined decl_loc id (ClassDecl class_t))
     | DynamicImport (source_loc, source_lit) ->
       let id = mk_id () in
-      let importKind = Ast.Statement.ImportDeclaration.ImportValue in
+      let import_kind = Ast.Statement.ImportDeclaration.ImportValue in
       let source = (source_loc, source_lit) in
       let default = None in
       let specifiers =
@@ -511,7 +511,7 @@ module T = struct
         ( decl_loc,
           Ast.Statement.ImportDeclaration
             {
-              Ast.Statement.ImportDeclaration.importKind;
+              Ast.Statement.ImportDeclaration.import_kind;
               source;
               default;
               specifiers;
@@ -858,7 +858,7 @@ module T = struct
             comments = None;
           } )
     | ImportNamed { kind; source; name } ->
-      let importKind = kind in
+      let import_kind = kind in
       let source = source_of_source source in
       let default =
         if snd name = "default" then
@@ -888,14 +888,14 @@ module T = struct
       ( decl_loc,
         Ast.Statement.ImportDeclaration
           {
-            Ast.Statement.ImportDeclaration.importKind;
+            Ast.Statement.ImportDeclaration.import_kind;
             source;
             default;
             specifiers;
             comments = None;
           } )
     | ImportStar { kind; source } ->
-      let importKind = kind in
+      let import_kind = kind in
       let source = source_of_source source in
       let default = None in
       let specifiers =
@@ -904,7 +904,7 @@ module T = struct
       ( decl_loc,
         Ast.Statement.ImportDeclaration
           {
-            Ast.Statement.ImportDeclaration.importKind;
+            Ast.Statement.ImportDeclaration.import_kind;
             source;
             default;
             specifiers;
@@ -1960,7 +1960,7 @@ module Generator (Env : Signature_builder_verify.EvalEnv) = struct
       `Decl (Entry.function_declaration loc function_)
     | Expression expr -> `Expr (Eval.literal_expr expr)
 
-  let export_name export_loc ?exported ?source local exportKind =
+  let export_name export_loc ?exported ?source local export_kind =
     ( export_loc,
       Ast.Statement.ExportNamedDeclaration
         {
@@ -1977,11 +1977,11 @@ module Generator (Env : Signature_builder_verify.EvalEnv) = struct
                      } );
                  ]);
           source;
-          exportKind;
+          export_kind;
           comments = None;
         } )
 
-  let export_named_specifier export_loc local remote source exportKind =
+  let export_named_specifier export_loc local remote source export_kind =
     let exported =
       if snd remote = snd local then
         None
@@ -1993,9 +1993,9 @@ module Generator (Env : Signature_builder_verify.EvalEnv) = struct
       | None -> None
       | Some source -> Some (T.source_of_source source)
     in
-    export_name export_loc ?exported ?source local exportKind
+    export_name export_loc ?exported ?source local export_kind
 
-  let export_star export_loc star_loc ?remote source exportKind =
+  let export_star export_loc star_loc ?remote source export_kind =
     ( export_loc,
       Ast.Statement.ExportNamedDeclaration
         {
@@ -2005,7 +2005,7 @@ module Generator (Env : Signature_builder_verify.EvalEnv) = struct
               (Ast.Statement.ExportNamedDeclaration.ExportBatchSpecifier
                  (star_loc, Base.Option.map ~f:Flow_ast_utils.ident_of_source remote));
           source = Some (T.source_of_source source);
-          exportKind;
+          export_kind;
           comments = None;
         } )
 

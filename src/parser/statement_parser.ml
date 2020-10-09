@@ -1476,7 +1476,7 @@ module Statement
                   declaration = None;
                   specifiers = Some (ExportBatchSpecifier (specifier_loc, None));
                   source = Some source;
-                  exportKind = Statement.ExportType;
+                  export_kind = Statement.ExportType;
                   comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing ();
                 }
             | T_ENUM ->
@@ -1487,7 +1487,7 @@ module Statement
                   declaration = None;
                   specifiers = None;
                   source = None;
-                  exportKind = Statement.ExportType;
+                  export_kind = Statement.ExportType;
                   comments = Flow_ast_utils.mk_comments_opt ~leading ();
                 }
             | _ ->
@@ -1502,7 +1502,7 @@ module Statement
                   declaration = Some type_alias;
                   specifiers = None;
                   source = None;
-                  exportKind = Statement.ExportType;
+                  export_kind = Statement.ExportType;
                   comments = Flow_ast_utils.mk_comments_opt ~leading ();
                 }))
         | T_OPAQUE ->
@@ -1519,7 +1519,7 @@ module Statement
                 declaration = Some opaque_t;
                 specifiers = None;
                 source = None;
-                exportKind = Statement.ExportType;
+                export_kind = Statement.ExportType;
                 comments = Flow_ast_utils.mk_comments_opt ~leading ();
               })
         | T_INTERFACE ->
@@ -1539,7 +1539,7 @@ module Statement
                 declaration = Some interface;
                 specifiers = None;
                 source = None;
-                exportKind = Statement.ExportType;
+                export_kind = Statement.ExportType;
                 comments = Flow_ast_utils.mk_comments_opt ~leading ();
               })
         | T_LET
@@ -1584,7 +1584,7 @@ module Statement
                 declaration = Some stmt;
                 specifiers = None;
                 source = None;
-                exportKind = Statement.ExportValue;
+                export_kind = Statement.ExportValue;
                 comments = Flow_ast_utils.mk_comments_opt ~leading ();
               })
         | T_MULT ->
@@ -1611,12 +1611,12 @@ module Statement
                 declaration = None;
                 specifiers;
                 source = Some source;
-                exportKind = Statement.ExportValue;
+                export_kind = Statement.ExportValue;
                 comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing ();
               })
         | _ ->
           Statement.ExportNamedDeclaration.(
-            let exportKind =
+            let export_kind =
               match Peek.token env with
               | T_TYPE ->
                 Eat.token env;
@@ -1645,7 +1645,7 @@ module Statement
                 declaration = None;
                 specifiers = Some (ExportSpecifiers specifiers);
                 source;
-                exportKind;
+                export_kind;
                 comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing ();
               }))
 
@@ -2004,22 +2004,22 @@ module Statement
             remove_trailing source (fun remover (loc, source) ->
                 (loc, remover#string_literal_type loc source)) )
       in
-      let with_specifiers importKind env leading =
-        let specifiers = Some (named_or_namespace_specifier env importKind) in
+      let with_specifiers import_kind env leading =
+        let specifiers = Some (named_or_namespace_specifier env import_kind) in
         let source = source env in
         let (trailing, source) = semicolon_and_trailing env source in
         Statement.ImportDeclaration
           {
-            importKind;
+            import_kind;
             source;
             specifiers;
             default = None;
             comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing ();
           }
       in
-      let with_default importKind env leading =
+      let with_default import_kind env leading =
         let default_specifier =
-          match importKind with
+          match import_kind with
           | ImportType
           | ImportTypeof ->
             Type.type_identifier env
@@ -2030,14 +2030,14 @@ module Statement
           | T_COMMA ->
             (* `import Foo, ...` *)
             Expect.token env T_COMMA;
-            Some (named_or_namespace_specifier env importKind)
+            Some (named_or_namespace_specifier env import_kind)
           | _ -> None
         in
         let source = source env in
         let (trailing, source) = semicolon_and_trailing env source in
         Statement.ImportDeclaration
           {
-            importKind;
+            import_kind;
             source;
             specifiers = additional_specifiers;
             default = Some default_specifier;
@@ -2060,7 +2060,7 @@ module Statement
             let (trailing, source) = semicolon_and_trailing env source in
             Statement.ImportDeclaration
               {
-                importKind = ImportValue;
+                import_kind = ImportValue;
                 source;
                 specifiers = None;
                 default = None;

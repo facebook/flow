@@ -622,13 +622,13 @@ class virtual ['M, 'T, 'N, 'U] mapper =
     method export_named_declaration _loc (decl : ('M, 'T) Ast.Statement.ExportNamedDeclaration.t)
         : ('N, 'U) Ast.Statement.ExportNamedDeclaration.t =
       let open Ast.Statement.ExportNamedDeclaration in
-      let { exportKind; source; specifiers; declaration; comments } = decl in
+      let { export_kind; source; specifiers; declaration; comments } = decl in
       let source' = Base.Option.map ~f:(this#on_loc_annot * this#string_literal) source in
       let specifiers' = Base.Option.map ~f:this#export_named_specifier specifiers in
       let declaration' = Base.Option.map ~f:this#statement declaration in
       let comments' = Base.Option.map ~f:this#syntax comments in
       {
-        exportKind;
+        export_kind;
         source = source';
         specifiers = specifiers';
         declaration = declaration';
@@ -1202,13 +1202,13 @@ class virtual ['M, 'T, 'N, 'U] mapper =
     method import_declaration _loc (decl : ('M, 'T) Ast.Statement.ImportDeclaration.t)
         : ('N, 'U) Ast.Statement.ImportDeclaration.t =
       let open Ast.Statement.ImportDeclaration in
-      let { importKind; source; specifiers; default; comments } = decl in
+      let { import_kind; source; specifiers; default; comments } = decl in
       let specifiers' = Base.Option.map ~f:this#import_specifier specifiers in
       let default' = Base.Option.map ~f:this#import_default_specifier default in
       let source' = (this#on_loc_annot * this#string_literal) source in
       let comments' = Base.Option.map ~f:this#syntax comments in
       {
-        importKind;
+        import_kind;
         source = source';
         specifiers = specifiers';
         default = default';

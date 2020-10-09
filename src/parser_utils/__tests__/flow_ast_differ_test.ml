@@ -337,7 +337,7 @@ class insert_import_mapper =
           ( loc,
             Ast.Statement.ImportDeclaration
               {
-                importKind = Ast.Statement.ImportDeclaration.ImportValue;
+                import_kind = Ast.Statement.ImportDeclaration.ImportValue;
                 source = (loc, { value = "baz"; raw = "\"baz\""; comments = None });
                 default = None;
                 specifiers =
@@ -372,7 +372,7 @@ class insert_second_import_mapper =
           ( loc,
             Ast.Statement.ImportDeclaration
               {
-                importKind = Ast.Statement.ImportDeclaration.ImportValue;
+                import_kind = Ast.Statement.ImportDeclaration.ImportValue;
                 source = (loc, { value = "baz"; raw = "\"baz\""; comments = None });
                 default = None;
                 specifiers =
@@ -595,7 +595,7 @@ class insert_import_and_annot_mapper =
           ( Loc.none,
             ImportDeclaration
               {
-                ImportDeclaration.importKind = ImportDeclaration.ImportType;
+                ImportDeclaration.import_kind = ImportDeclaration.ImportType;
                 source = (Loc.none, { Ast.StringLiteral.value = imp; raw = imp; comments = None });
                 default = None;
                 specifiers =

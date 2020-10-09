@@ -312,7 +312,7 @@ with type t = Impl.t = struct
         node ?comments "DeclareModuleExports" loc [("typeAnnotation", type_annotation annot)]
       | ( loc,
           ExportNamedDeclaration
-            { ExportNamedDeclaration.specifiers; declaration; source; exportKind; comments } ) ->
+            { ExportNamedDeclaration.specifiers; declaration; source; export_kind; comments } ) ->
         begin
           match specifiers with
           | Some (ExportNamedDeclaration.ExportBatchSpecifier (_, None)) ->
@@ -322,7 +322,7 @@ with type t = Impl.t = struct
               loc
               [
                 ("source", option string_literal source);
-                ("exportKind", string (export_kind exportKind));
+                ("exportKind", string (string_of_export_kind export_kind));
               ]
           | _ ->
             node
@@ -333,7 +333,7 @@ with type t = Impl.t = struct
                 ("declaration", option statement declaration);
                 ("specifiers", export_specifiers specifiers);
                 ("source", option string_literal source);
-                ("exportKind", string (export_kind exportKind));
+                ("exportKind", string (string_of_export_kind export_kind));
               ]
         end
       | ( loc,
@@ -352,9 +352,12 @@ with type t = Impl.t = struct
           ?comments
           "ExportDefaultDeclaration"
           loc
-          [("declaration", declaration); ("exportKind", string (export_kind Statement.ExportValue))]
+          [
+            ("declaration", declaration);
+            ("exportKind", string (string_of_export_kind Statement.ExportValue));
+          ]
       | ( loc,
-          ImportDeclaration { ImportDeclaration.specifiers; default; importKind; source; comments }
+          ImportDeclaration { ImportDeclaration.specifiers; default; import_kind; source; comments }
         ) ->
         let specifiers =
           match specifiers with
@@ -372,7 +375,7 @@ with type t = Impl.t = struct
           | None -> specifiers
         in
         let import_kind =
-          match importKind with
+          match import_kind with
           | ImportDeclaration.ImportType -> "type"
           | ImportDeclaration.ImportTypeof -> "typeof"
           | ImportDeclaration.ImportValue -> "value"
@@ -832,7 +835,7 @@ with type t = Impl.t = struct
           ("body", object_type ~include_inexact:false body);
           ("extends", array_of_list interface_extends extends);
         ]
-    and export_kind = function
+    and string_of_export_kind = function
       | Statement.ExportType -> "type"
       | Statement.ExportValue -> "value"
     and export_specifiers =

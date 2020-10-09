@@ -836,7 +836,7 @@ and Statement : sig
       declaration: ('M, 'T) Statement.t option;
       specifiers: 'M specifier option;
       source: ('M * 'M StringLiteral.t) option;
-      exportKind: Statement.exportKind;
+      export_kind: Statement.export_kind;
       comments: ('M, unit) Syntax.t option;
     }
 
@@ -889,7 +889,7 @@ and Statement : sig
   end
 
   module ImportDeclaration : sig
-    type importKind =
+    type import_kind =
       | ImportType
       | ImportTypeof
       | ImportValue
@@ -899,13 +899,13 @@ and Statement : sig
       | ImportNamespaceSpecifier of ('M * ('M, 'T) Identifier.t)
 
     and ('M, 'T) named_specifier = {
-      kind: importKind option;
+      kind: import_kind option;
       local: ('M, 'T) Identifier.t option;
       remote: ('M, 'T) Identifier.t;
     }
 
     and ('M, 'T) t = {
-      importKind: importKind;
+      import_kind: import_kind;
       source: 'M * 'M StringLiteral.t;
       default: ('M, 'T) Identifier.t option;
       specifiers: ('M, 'T) specifier option;
@@ -927,7 +927,7 @@ and Statement : sig
     type 'M t = { comments: ('M, unit) Syntax.t option } [@@deriving show]
   end
 
-  type exportKind =
+  type export_kind =
     | ExportType
     | ExportValue
 

@@ -2712,7 +2712,7 @@ and import_named_specifiers named_specifiers =
     ]
 
 and import_declaration
-    loc { Ast.Statement.ImportDeclaration.importKind; source; specifiers; default; comments } =
+    loc { Ast.Statement.ImportDeclaration.import_kind; source; specifiers; default; comments } =
   let s_from = fuse [Atom "from"; pretty_space] in
   let module I = Ast.Statement.ImportDeclaration in
   layout_node_with_comments_opt loc comments
@@ -2721,13 +2721,13 @@ and import_declaration
           [
             Atom "import";
             begin
-              match importKind with
+              match import_kind with
               | I.ImportType -> fuse [space; Atom "type"]
               | I.ImportTypeof -> fuse [space; Atom "typeof"]
               | I.ImportValue -> Empty
             end;
             begin
-              match (partition_specifiers default specifiers, importKind) with
+              match (partition_specifiers default specifiers, import_kind) with
               (* No export specifiers *)
               (* `import 'module-name';` *)
               | (([], None), I.ImportValue) -> pretty_space
@@ -2791,7 +2791,8 @@ and export_specifier source =
 and export_declaration
     ~opts
     loc
-    { Ast.Statement.ExportNamedDeclaration.declaration; specifiers; source; exportKind; comments } =
+    { Ast.Statement.ExportNamedDeclaration.declaration; specifiers; source; export_kind; comments }
+    =
   layout_node_with_comments_opt loc comments
   @@ fuse
        [
@@ -2804,7 +2805,7 @@ and export_declaration
                (fuse
                   [
                     begin
-                      match exportKind with
+                      match export_kind with
                       | Ast.Statement.ExportType -> fuse [space; Atom "type"]
                       | Ast.Statement.ExportValue -> Empty
                     end;

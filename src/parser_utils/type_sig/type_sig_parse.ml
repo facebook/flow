@@ -3749,7 +3749,7 @@ let rec statement opts scope locs (loc, stmt) =
       source = (_, {Ast.StringLiteral.value = mref; _});
       default;
       specifiers;
-      importKind = kind;
+      import_kind = kind;
       comments = _;
     } = decl in
     begin match default with
@@ -3783,7 +3783,7 @@ let rec statement opts scope locs (loc, stmt) =
 
   | S.ExportNamedDeclaration decl ->
     let module E = S.ExportNamedDeclaration in
-    let {E.exportKind = kind; source; specifiers; declaration; comments = _} = decl in
+    let {E.export_kind = kind; source; specifiers; declaration; comments = _} = decl in
     begin match declaration with
     | None -> ()
     | Some (_, stmt) -> export_named_decl opts scope locs kind stmt
