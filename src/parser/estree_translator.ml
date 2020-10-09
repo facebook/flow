@@ -1658,21 +1658,21 @@ with type t = Impl.t = struct
               comments;
             } )
     and jsx_element
-        (loc, { JSX.openingElement; closingElement; children = (_loc, children); comments }) =
+        (loc, { JSX.opening_element; closing_element; children = (_loc, children); comments }) =
       node
         ?comments
         "JSXElement"
         loc
         [
-          ("openingElement", jsx_opening openingElement);
-          ("closingElement", option jsx_closing closingElement);
+          ("openingElement", jsx_opening opening_element);
+          ("closingElement", option jsx_closing closing_element);
           ("children", array_of_list jsx_child children);
         ]
     and jsx_fragment
         ( loc,
           {
-            JSX.frag_openingElement;
-            frag_closingElement;
+            JSX.frag_opening_element;
+            frag_closing_element;
             frag_children = (_loc, frag_children);
             frag_comments;
           } ) =
@@ -1681,18 +1681,18 @@ with type t = Impl.t = struct
         "JSXFragment"
         loc
         [
-          ("openingFragment", jsx_opening_fragment frag_openingElement);
+          ("openingFragment", jsx_opening_fragment frag_opening_element);
           ("children", array_of_list jsx_child frag_children);
-          ("closingFragment", jsx_closing_fragment frag_closingElement);
+          ("closingFragment", jsx_closing_fragment frag_closing_element);
         ]
-    and jsx_opening (loc, { JSX.Opening.name; attributes; selfClosing }) =
+    and jsx_opening (loc, { JSX.Opening.name; attributes; self_closing }) =
       node
         "JSXOpeningElement"
         loc
         [
           ("name", jsx_name name);
           ("attributes", array_of_list jsx_opening_attribute attributes);
-          ("selfClosing", bool selfClosing);
+          ("selfClosing", bool self_closing);
         ]
     and jsx_opening_fragment loc = node "JSXOpeningFragment" loc []
     and jsx_opening_attribute =

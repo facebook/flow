@@ -1588,22 +1588,22 @@ class ['loc] mapper =
 
     method jsx_element _loc (expr : ('loc, 'loc) Ast.JSX.element) =
       let open Ast.JSX in
-      let { openingElement; closingElement; children; comments } = expr in
-      let openingElement' = this#jsx_opening_element openingElement in
-      let closingElement' = map_opt this#jsx_closing_element closingElement in
+      let { opening_element; closing_element; children; comments } = expr in
+      let opening_element' = this#jsx_opening_element opening_element in
+      let closing_element' = map_opt this#jsx_closing_element closing_element in
       let children' = this#jsx_children children in
       let comments' = this#syntax_opt comments in
       if
-        openingElement == openingElement'
-        && closingElement == closingElement'
+        opening_element == opening_element'
+        && closing_element == closing_element'
         && children == children'
         && comments == comments'
       then
         expr
       else
         {
-          openingElement = openingElement';
-          closingElement = closingElement';
+          opening_element = opening_element';
+          closing_element = closing_element';
           children = children';
           comments = comments';
         }
@@ -1620,13 +1620,13 @@ class ['loc] mapper =
 
     method jsx_opening_element (elem : ('loc, 'loc) Ast.JSX.Opening.t) =
       let open Ast.JSX.Opening in
-      let (loc, { name; selfClosing; attributes }) = elem in
+      let (loc, { name; self_closing; attributes }) = elem in
       let name' = this#jsx_name name in
       let attributes' = map_list this#jsx_opening_attribute attributes in
       if name == name' && attributes == attributes' then
         elem
       else
-        (loc, { name = name'; selfClosing; attributes = attributes' })
+        (loc, { name = name'; self_closing; attributes = attributes' })
 
     method jsx_closing_element (elem : ('loc, 'loc) Ast.JSX.Closing.t) =
       let open Ast.JSX.Closing in

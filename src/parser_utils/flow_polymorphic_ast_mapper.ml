@@ -1243,38 +1243,38 @@ class virtual ['M, 'T, 'N, 'U] mapper =
 
     method jsx_element (expr : ('M, 'T) Ast.JSX.element) =
       let open Ast.JSX in
-      let { openingElement; closingElement; children; comments } = expr in
-      let openingElement' = this#jsx_opening_element openingElement in
-      let closingElement' = Base.Option.map ~f:this#jsx_closing_element closingElement in
+      let { opening_element; closing_element; children; comments } = expr in
+      let opening_element' = this#jsx_opening_element opening_element in
+      let closing_element' = Base.Option.map ~f:this#jsx_closing_element closing_element in
       let children' = this#jsx_children children in
       let comments' = Base.Option.map ~f:this#syntax comments in
       {
-        openingElement = openingElement';
-        closingElement = closingElement';
+        opening_element = opening_element';
+        closing_element = closing_element';
         children = children';
         comments = comments';
       }
 
     method jsx_fragment (expr : ('M, 'T) Ast.JSX.fragment) : ('N, 'U) Ast.JSX.fragment =
       let open Ast.JSX in
-      let { frag_openingElement; frag_closingElement; frag_children; frag_comments } = expr in
-      let opening' = this#on_loc_annot frag_openingElement in
-      let closing' = this#on_loc_annot frag_closingElement in
+      let { frag_opening_element; frag_closing_element; frag_children; frag_comments } = expr in
+      let opening' = this#on_loc_annot frag_opening_element in
+      let closing' = this#on_loc_annot frag_closing_element in
       let children' = this#jsx_children frag_children in
       let frag_comments' = Base.Option.map ~f:this#syntax frag_comments in
       {
-        frag_openingElement = opening';
-        frag_closingElement = closing';
+        frag_opening_element = opening';
+        frag_closing_element = closing';
         frag_children = children';
         frag_comments = frag_comments';
       }
 
     method jsx_opening_element (elem : ('M, 'T) Ast.JSX.Opening.t) : ('N, 'U) Ast.JSX.Opening.t =
       let open Ast.JSX.Opening in
-      let (annot, { name; selfClosing; attributes }) = elem in
+      let (annot, { name; self_closing; attributes }) = elem in
       let name' = this#jsx_name name in
       let attributes' = Base.List.map ~f:this#jsx_opening_attribute attributes in
-      (this#on_loc_annot annot, { name = name'; selfClosing; attributes = attributes' })
+      (this#on_loc_annot annot, { name = name'; self_closing; attributes = attributes' })
 
     method jsx_closing_element (elem : ('M, 'T) Ast.JSX.Closing.t) : ('N, 'U) Ast.JSX.Closing.t =
       let open Ast.JSX.Closing in

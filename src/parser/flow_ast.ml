@@ -1505,7 +1505,7 @@ and JSX : sig
 
     and ('M, 'T) t' = {
       name: ('M, 'T) name;
-      selfClosing: bool;
+      self_closing: bool;
       attributes: ('M, 'T) attribute list;
     }
     [@@deriving show]
@@ -1535,15 +1535,15 @@ and JSX : sig
     | Text of Text.t
 
   and ('M, 'T) element = {
-    openingElement: ('M, 'T) Opening.t;
-    closingElement: ('M, 'T) Closing.t option;
+    opening_element: ('M, 'T) Opening.t;
+    closing_element: ('M, 'T) Closing.t option;
     children: 'M * ('M, 'T) child list;
     comments: ('M, unit) Syntax.t option;
   }
 
   and ('M, 'T) fragment = {
-    frag_openingElement: 'M;
-    frag_closingElement: 'M;
+    frag_opening_element: 'M;
+    frag_closing_element: 'M;
     frag_children: 'M * ('M, 'T) child list;
     frag_comments: ('M, unit) Syntax.t option;
   }

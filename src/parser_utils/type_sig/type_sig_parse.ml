@@ -2293,8 +2293,8 @@ let key_mirror =
 
 let jsx_element opts locs loc elem =
   let module J = Ast.JSX in
-  let {J.openingElement; closingElement = _; children = _; comments = _} = elem in
-  let (_, {J.Opening.name; selfClosing = _; attributes = _}) = openingElement in
+  let {J.opening_element; closing_element = _; children = _; comments = _} = elem in
+  let (_, {J.Opening.name; self_closing = _; attributes = _}) = opening_element in
   match name, opts.facebook_fbt with
   | J.Identifier (ref_loc, {J.Identifier.name = "fbt"; comments = _}), Some custom_jsx_type ->
     let ref_loc = Locs.push locs ref_loc in

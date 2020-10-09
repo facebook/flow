@@ -1365,16 +1365,16 @@ let program
       (jsx_elem2 : (Loc.t, Loc.t) Ast.JSX.element) : node change list option =
     let open Ast.JSX in
     let {
-      openingElement = open_elem1;
-      closingElement = close_elem1;
+      opening_element = open_elem1;
+      closing_element = close_elem1;
       children = (_, children1);
       comments = comments1;
     } =
       jsx_elem1
     in
     let {
-      openingElement = open_elem2;
-      closingElement = close_elem2;
+      opening_element = open_elem2;
+      closing_element = close_elem2;
       children = (_, children2);
       comments = comments2;
     } =
@@ -1393,17 +1393,17 @@ let program
     (* Opening and closing elements contain no information besides loc, so we
      * ignore them for the diff *)
     let {
-      frag_openingElement = _;
+      frag_opening_element = _;
       frag_children = (_, children1);
-      frag_closingElement = _;
+      frag_closing_element = _;
       frag_comments = frag_comments1;
     } =
       frag1
     in
     let {
-      frag_openingElement = _;
+      frag_opening_element = _;
       frag_children = (_, children2);
-      frag_closingElement = _;
+      frag_closing_element = _;
       frag_comments = frag_comments2;
     } =
       frag2
@@ -1415,8 +1415,8 @@ let program
       (elem1 : (Loc.t, Loc.t) Ast.JSX.Opening.t) (elem2 : (Loc.t, Loc.t) Ast.JSX.Opening.t) :
       node change list option =
     let open Ast.JSX.Opening in
-    let (_, { name = name1; selfClosing = self_close1; attributes = attrs1 }) = elem1 in
-    let (_, { name = name2; selfClosing = self_close2; attributes = attrs2 }) = elem2 in
+    let (_, { name = name1; self_closing = self_close1; attributes = attrs1 }) = elem1 in
+    let (_, { name = name2; self_closing = self_close2; attributes = attrs2 }) = elem2 in
     if self_close1 != self_close2 then
       None
     else

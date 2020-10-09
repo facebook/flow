@@ -271,8 +271,8 @@ module JSX (Parse : Parser_common.PARSER) = struct
             | _ ->
               let name = name env in
               let attributes = attributes env [] in
-              let selfClosing = Expect.maybe env T_DIV in
-              `Element { JSX.Opening.name; selfClosing; attributes }
+              let self_closing = Expect.maybe env T_DIV in
+              `Element { JSX.Opening.name; self_closing; attributes }
           in
           Expect.token env T_GREATER_THAN;
           element)
@@ -365,15 +365,15 @@ module JSX (Parse : Parser_common.PARSER) = struct
           _object ^ "." ^ (snd property).Identifier.name)
     in
     let is_self_closing = function
-      | (_, `Element e) -> e.JSX.Opening.selfClosing
+      | (_, `Element e) -> e.JSX.Opening.self_closing
       | (_, `Fragment) -> false
     in
     fun env ->
       let leading = Peek.comments env in
-      let openingElement = opening_element env in
+      let opening_element = opening_element env in
       Eat.pop_lex_mode env;
-      let (children, closingElement) =
-        if is_self_closing openingElement then
+      let (children, closing_element) =
+        if is_self_closing opening_element then
           (with_loc (fun _ -> []) env, `None)
         else (
           Eat.push_lex_mode env Lex_mode.JSX_CHILD;
@@ -382,9 +382,9 @@ module JSX (Parse : Parser_common.PARSER) = struct
       in
       let trailing = Eat.trailing_comments env in
       let end_loc =
-        match closingElement with
+        match closing_element with
         | `Element (loc, { JSX.Closing.name }) ->
-          (match snd openingElement with
+          (match snd opening_element with
           | `Element e ->
             let opening_name = normalize e.JSX.Opening.name in
             if normalize name <> opening_name then
@@ -392,22 +392,22 @@ module JSX (Parse : Parser_common.PARSER) = struct
           | `Fragment -> error env (Parse_error.ExpectedJSXClosingTag "JSX fragment"));
           loc
         | `Fragment loc ->
-          (match snd openingElement with
+          (match snd opening_element with
           | `Element e ->
             error env (Parse_error.ExpectedJSXClosingTag (normalize e.JSX.Opening.name))
           | _ -> ());
           loc
-        | _ -> fst openingElement
+        | _ -> fst opening_element
       in
       let result =
-        match openingElement with
+        match opening_element with
         | (start_loc, `Element e) ->
           `Element
             JSX.
               {
-                openingElement = (start_loc, e);
-                closingElement =
-                  (match closingElement with
+                opening_element = (start_loc, e);
+                closing_element =
+                  (match closing_element with
                   | `Element e -> Some e
                   | _ -> None);
                 children;
@@ -417,9 +417,9 @@ module JSX (Parse : Parser_common.PARSER) = struct
           `Fragment
             JSX.
               {
-                frag_openingElement = start_loc;
-                frag_closingElement =
-                  (match closingElement with
+                frag_opening_element = start_loc;
+                frag_closing_element =
+                  (match closing_element with
                   | `Fragment loc -> loc
                   (* the following are parse erros *)
                   | `Element (loc, _) -> loc
@@ -428,7 +428,7 @@ module JSX (Parse : Parser_common.PARSER) = struct
                 frag_comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing ();
               }
       in
-      (Loc.btwn (fst openingElement) end_loc, result)
+      (Loc.btwn (fst opening_element) end_loc, result)
 
   and element_or_fragment env =
     Eat.push_lex_mode env Lex_mode.JSX_TAG;

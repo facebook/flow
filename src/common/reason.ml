@@ -1180,7 +1180,7 @@ and code_desc_of_operation =
 
 and code_desc_of_jsx_element x =
   let open Ast.JSX in
-  match (snd x.openingElement).Opening.name with
+  match (snd x.opening_element).Opening.name with
   | Identifier (_, { Identifier.name; comments = _ }) -> "<" ^ name ^ " />"
   | NamespacedName
       ( _,

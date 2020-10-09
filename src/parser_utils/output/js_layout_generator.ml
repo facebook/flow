@@ -2460,31 +2460,32 @@ and object_property ~opts property =
   | O.SpreadProperty (loc, { O.SpreadProperty.argument; comments }) ->
     source_location_with_comments ?comments (loc, fuse [Atom "..."; expression ~opts argument])
 
-and jsx_element ~opts loc { Ast.JSX.openingElement; closingElement; children; comments } =
+and jsx_element ~opts loc { Ast.JSX.opening_element; closing_element; children; comments } =
   layout_node_with_comments_opt loc comments
   @@ fuse
        [
          begin
-           match openingElement with
-           | (_, { Ast.JSX.Opening.selfClosing = false; _ }) -> jsx_opening ~opts openingElement
-           | (_, { Ast.JSX.Opening.selfClosing = true; _ }) -> jsx_self_closing ~opts openingElement
+           match opening_element with
+           | (_, { Ast.JSX.Opening.self_closing = false; _ }) -> jsx_opening ~opts opening_element
+           | (_, { Ast.JSX.Opening.self_closing = true; _ }) ->
+             jsx_self_closing ~opts opening_element
          end;
          jsx_children ~opts loc children;
          begin
-           match closingElement with
+           match closing_element with
            | Some closing -> jsx_closing closing
            | _ -> Empty
          end;
        ]
 
 and jsx_fragment
-    ~opts loc { Ast.JSX.frag_openingElement; frag_closingElement; frag_children; frag_comments } =
+    ~opts loc { Ast.JSX.frag_opening_element; frag_closing_element; frag_children; frag_comments } =
   layout_node_with_comments_opt loc frag_comments
   @@ fuse
        [
-         jsx_fragment_opening ~opts frag_openingElement;
+         jsx_fragment_opening ~opts frag_opening_element;
          jsx_children ~opts loc frag_children;
-         jsx_closing_fragment frag_closingElement;
+         jsx_closing_fragment frag_closing_element;
        ]
 
 and jsx_identifier (loc, { Ast.JSX.Identifier.name; comments }) =
@@ -2577,7 +2578,7 @@ and jsx_opening_attr ~opts = function
   | Ast.JSX.Opening.Attribute attr -> jsx_attribute ~opts attr
   | Ast.JSX.Opening.SpreadAttribute attr -> jsx_spread_attribute ~opts attr
 
-and jsx_opening ~opts (loc, { Ast.JSX.Opening.name; attributes; selfClosing = _ }) =
+and jsx_opening ~opts (loc, { Ast.JSX.Opening.name; attributes; self_closing = _ }) =
   jsx_opening_helper ~opts loc (Some name) attributes
 
 and jsx_fragment_opening ~opts loc = jsx_opening_helper ~opts loc None []
@@ -2599,7 +2600,7 @@ and jsx_opening_helper ~opts loc nameOpt attributes =
           Atom ">";
         ] )
 
-and jsx_self_closing ~opts (loc, { Ast.JSX.Opening.name; attributes; selfClosing = _ }) =
+and jsx_self_closing ~opts (loc, { Ast.JSX.Opening.name; attributes; self_closing = _ }) =
   let attributes = Base.List.map ~f:(jsx_opening_attr ~opts) attributes in
   source_location_with_comments
     ( loc,

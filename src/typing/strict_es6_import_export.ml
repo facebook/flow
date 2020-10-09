@@ -359,7 +359,7 @@ class import_export_visitor ~cx ~scope_info ~declarations =
 
     method! jsx_element elem_loc elem =
       let open Ast.JSX in
-      let { openingElement = (_, { Opening.name; _ }); _ } = elem in
+      let { opening_element = (_, { Opening.name; _ }); _ } = elem in
       begin
         match name with
         (* Error on use of module object outside member expression *)

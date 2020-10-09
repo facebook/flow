@@ -5883,24 +5883,24 @@ and collapse_children cx (children_loc, children) :
 
 and jsx cx expr_loc e : Type.t * (ALoc.t, ALoc.t * Type.t) Ast.JSX.element =
   let open Ast.JSX in
-  let { openingElement; children; closingElement; comments } = e in
+  let { opening_element; children; closing_element; comments } = e in
   let (children_loc, _) = children in
   let locs =
-    let (open_, _) = openingElement in
-    match closingElement with
+    let (open_, _) = opening_element in
+    match closing_element with
     | Some _ -> (expr_loc, open_, children_loc)
     | _ -> (open_, open_, open_)
   in
-  let (t, openingElement, children, closingElement) =
-    jsx_title cx openingElement children closingElement locs
+  let (t, opening_element, children, closing_element) =
+    jsx_title cx opening_element children closing_element locs
   in
-  (t, { openingElement; children; closingElement; comments })
+  (t, { opening_element; children; closing_element; comments })
 
 and jsx_fragment cx expr_loc fragment : Type.t * (ALoc.t, ALoc.t * Type.t) Ast.JSX.fragment =
   let open Ast.JSX in
-  let { frag_openingElement; frag_children; frag_closingElement; frag_comments } = fragment in
+  let { frag_opening_element; frag_children; frag_closing_element; frag_comments } = fragment in
   let (children_loc, _) = frag_children in
-  let loc_opening = frag_openingElement in
+  let loc_opening = frag_opening_element in
   let fragment_t =
     match Context.react_runtime cx with
     | Options.ReactRuntimeAutomatic ->
@@ -5913,7 +5913,7 @@ and jsx_fragment cx expr_loc fragment : Type.t * (ALoc.t, ALoc.t * Type.t) Ast.J
       get_prop ~cond:None cx reason ~use_op react (reason, "Fragment")
   in
   let (unresolved_params, frag_children) = collapse_children cx frag_children in
-  let locs = (expr_loc, frag_openingElement, children_loc) in
+  let locs = (expr_loc, frag_opening_element, children_loc) in
   let t =
     jsx_desugar
       cx
@@ -5924,13 +5924,13 @@ and jsx_fragment cx expr_loc fragment : Type.t * (ALoc.t, ALoc.t * Type.t) Ast.J
       unresolved_params
       locs
   in
-  (t, { frag_openingElement; frag_children; frag_closingElement; frag_comments })
+  (t, { frag_opening_element; frag_children; frag_closing_element; frag_comments })
 
-and jsx_title cx openingElement children closingElement locs =
+and jsx_title cx opening_element children closing_element locs =
   let open Ast.JSX in
   let make_trust = Context.trust_constructor cx in
   let (loc_element, _, _) = locs in
-  let (loc, { Opening.name; attributes; selfClosing }) = openingElement in
+  let (loc, { Opening.name; attributes; self_closing }) = opening_element in
   let facebook_fbs = Context.facebook_fbs cx in
   let facebook_fbt = Context.facebook_fbt cx in
   let jsx_mode = Context.jsx cx in
@@ -6016,13 +6016,13 @@ and jsx_title cx openingElement children closingElement locs =
       let (_o, attributes', _, children) = jsx_mk_props cx reason c el_name attributes children in
       (t, name', attributes', children)
   in
-  let closingElement =
-    match closingElement with
+  let closing_element =
+    match closing_element with
     | Some (c_loc, { Closing.name = cname }) ->
       Some (c_loc, { Closing.name = jsx_match_closing_element name cname })
     | None -> None
   in
-  (t, (loc, { Opening.name; selfClosing; attributes }), children, closingElement)
+  (t, (loc, { Opening.name; self_closing; attributes }), children, closing_element)
 
 and jsx_match_closing_element =
   let match_identifiers o_id c_id =
