@@ -91,6 +91,24 @@ let update_dependency_graph_filenames f graph =
     in
     Types_first_dep_graph (update_map update_value map)
 
+(* It's simplest if the build ID is always the same length. Let's use 16, since that happens to
+ * be the size of the build ID hash. *)
+let saved_state_version_length = 16
+
+let saved_state_version () =
+  let version =
+    if Build_mode.dev then
+      Flow_build_id.get_build_id ()
+    else
+      let unpadded = Flow_version.version in
+      assert (String.length unpadded <= saved_state_version_length);
+      (* We have to pad out the build ID to bring it up to the right length *)
+      let padding = String.make (saved_state_version_length - String.length unpadded) 'n' in
+      unpadded ^ padding
+  in
+  assert (String.length version = saved_state_version_length);
+  version
+
 (* Saving the saved state generally consists of 3 things:
  *
  * 1. Collecting the various bits of data
@@ -156,10 +174,7 @@ end = struct
   (* We write the Flow version at the beginning of each saved state file. It's an easy way to assert
    * upon reading the file that the writer and reader are the same version of Flow *)
   let write_version fd =
-    let version = Flow_build_id.get_build_id () in
-    let version_length = String.length version in
-    (* Build ID should always be 16 bytes *)
-    assert (version_length = 16);
+    let version = saved_state_version () in
 
     let rec loop offset len =
       if len > 0 then
@@ -168,9 +183,9 @@ end = struct
         let len = len - bytes_written in
         loop offset len
       else
-        Lwt.return version_length
+        Lwt.return saved_state_version_length
     in
-    loop 0 version_length
+    loop 0 saved_state_version_length
 
   let normalize_info ~normalizer info =
     let module_name =
@@ -435,7 +450,6 @@ end = struct
       (ALoc.update_source (Base.Option.map ~f:(denormalize_file_key ~root)))
 
   let verify_version =
-    let version_length = 16 in
     (* Flow_build_id should always be 16 bytes *)
     let rec read_version fd buf offset len =
       if len > 0 then (
@@ -443,8 +457,8 @@ end = struct
         if bytes_read = 0 then (
           Hh_logger.error
             "Invalid saved state version header. It should be %d bytes but only read %d bytes"
-            version_length
-            (version_length - len);
+            saved_state_version_length
+            (saved_state_version_length - len);
           raise (Invalid_saved_state Bad_header)
         );
         let offset = offset + bytes_read in
@@ -452,7 +466,7 @@ end = struct
         read_version fd buf offset len
       ) else
         let result = Bytes.to_string buf in
-        let flow_build_id = Flow_build_id.get_build_id () in
+        let flow_build_id = saved_state_version () in
         if result <> flow_build_id then (
           Hh_logger.error
             "Saved-state file failed version check. Expected version %S but got %S"
@@ -462,7 +476,8 @@ end = struct
         ) else
           Lwt.return_unit
     in
-    (fun fd -> read_version fd (Bytes.create version_length) 0 version_length)
+    fun fd ->
+      read_version fd (Bytes.create saved_state_version_length) 0 saved_state_version_length
 
   let denormalize_info ~root info =
     let module_name =
