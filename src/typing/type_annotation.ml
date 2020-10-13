@@ -942,13 +942,16 @@ let rec convert cx tparams_map =
                 Function.Params.params;
                 rest;
                 (* TODO: handle `this` constraints *)
-                this_ = _;
+                this_;
                 comments = params_comments;
               } );
           return;
           tparams;
           comments = func_comments;
         } ) ->
+    if Context.enable_this_annot cx |> not then
+      Base.Option.iter this_ ~f:(fun (this_loc, _) ->
+          Flow_js.add_output cx (Error_message.EExperimentalThisAnnot this_loc));
     let (tparams, tparams_map, tparams_ast) = mk_type_param_declarations cx ~tparams_map tparams in
     let (rev_params, rev_param_asts) =
       List.fold_left
@@ -1570,7 +1573,10 @@ and mk_func_sig =
       cx
       tparams_map
       (loc, { Params.params; rest; (* TODO: handle `this` constraints *)
-                                   this_ = _; comments }) =
+                                   this_; comments }) =
+    if Context.enable_this_annot cx |> not then
+      Base.Option.iter this_ ~f:(fun (this_loc, _) ->
+          Flow_js.add_output cx (Error_message.EExperimentalThisAnnot this_loc));
     let fparams =
       Func_type_params.empty (fun params rest ->
           Some

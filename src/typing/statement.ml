@@ -7833,7 +7833,10 @@ and mk_class_sig =
 and mk_func_sig =
   let predicate_function_kind cx loc params =
     let open Error_message in
-    let (_, { Ast.Function.Params.params; rest; this_ = _; comments = _ }) = params in
+    let (_, { Ast.Function.Params.params; rest; this_; comments = _ }) = params in
+    if Context.enable_this_annot cx |> not then
+      Base.Option.iter this_ ~f:(fun (this_loc, _) ->
+          Flow_js.add_output cx (Error_message.EExperimentalThisAnnot this_loc));
     let kind = Func_sig.Predicate in
     let kind =
       List.fold_left
@@ -7915,7 +7918,10 @@ and mk_func_sig =
       (* TODO: this should be a parse error, unrepresentable AST *)
       Error Error_message.(EInternal (ploc, RestParameterNotIdentifierPattern))
   in
-  let mk_params cx tparams_map (loc, { Ast.Function.Params.params; rest; this_ = _; comments }) =
+  let mk_params cx tparams_map (loc, { Ast.Function.Params.params; rest; this_; comments }) =
+    if Context.enable_this_annot cx |> not then
+      Base.Option.iter this_ ~f:(fun (this_loc, _) ->
+          Flow_js.add_output cx (Error_message.EExperimentalThisAnnot this_loc));
     let fparams =
       Func_stmt_params.empty (fun params rest ->
           Some (loc, { Ast.Function.Params.params; rest; this_ = None; comments }))
@@ -8147,7 +8153,7 @@ and declare_function_to_function_declaration cx declare_loc func_decl =
                       Ast.Type.Function.Params.params;
                       rest;
                       (* TODO: handle `this` constraints *)
-                      this_ = _;
+                      this_;
                       comments = params_comments;
                     } );
                 Ast.Type.Function.return;
@@ -8176,6 +8182,9 @@ and declare_function_to_function_declaration cx declare_loc func_decl =
             in
             (l, Ast.Pattern.Identifier name')
         in
+        if Context.enable_this_annot cx |> not then
+          Base.Option.iter this_ ~f:(fun (this_loc, _) ->
+              Flow_js.add_output cx (Error_message.EExperimentalThisAnnot this_loc));
         let params =
           Base.List.map
             ~f:(fun param ->
@@ -8228,8 +8237,7 @@ and declare_function_to_function_declaration cx declare_loc func_decl =
                   {
                     Ast.Function.id = Some ((id_loc, fun_type), id_name);
                     tparams;
-                    params =
-                      (params_loc, { Ast.Function.Params.params; rest; this_ = _; comments = _ });
+                    params = (params_loc, { Ast.Function.Params.params; rest; this_; comments = _ });
                     return = Ast.Type.Available (_, return);
                     body =
                       Ast.Function.BodyBlock
@@ -8258,6 +8266,9 @@ and declare_function_to_function_declaration cx declare_loc func_decl =
                   )
                 | _ -> assert_false "Function declaration AST has unexpected shape"
               in
+              if Context.enable_this_annot cx |> not then
+                Base.Option.iter this_ ~f:(fun (this_loc, _) ->
+                    Flow_js.add_output cx (Error_message.EExperimentalThisAnnot this_loc));
               let params =
                 Base.List.map
                   ~f:(fun (_, { Ast.Function.Param.argument; default }) ->

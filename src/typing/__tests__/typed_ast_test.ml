@@ -26,6 +26,7 @@ let metadata =
     enable_const_params = false;
     enable_enums = true;
     enable_enums_with_unknown_members = true;
+    enable_this_annot = true;
     enforce_strict_call_arity = true;
     exact_by_default = false;
     generate_tests = true;
@@ -267,7 +268,15 @@ let test_case relative_path file_name _ =
 
 (* This list includes files for which the produced Typed AST differs in structure
  * from the parsed AST. *)
-let blocklist = SSet.of_list ["invariant_reachability/index.js"; "return/implicit_void.js"]
+let blocklist =
+  SSet.of_list
+    [
+      "invariant_reachability/index.js";
+      "return/implicit_void.js";
+      (* TODO(sainati) : once `this` parameter checking is implemented remove `this`-related files from the blocklist *)
+      "this_annot_warning/test.js";
+      "this_annot_no_warnings/test.js";
+    ]
 
 let tests =
   let relative_test_dir = "flow/tests" in

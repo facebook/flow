@@ -1,0 +1,74 @@
+Error ----------------------------------------------------------------------------------------------------- test.js:3:11
+
+Experimental `this` annotation. You may opt-in to using `this` annotations by putting `experimental.this_annot=true`
+into the `[options]` section of your `.flowconfig`. [illegal-this-annot]
+
+   3| type T = (this : number) => void;
+                ^^^^^^^^^^^^^
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:5:15
+
+Experimental `this` annotation. You may opt-in to using `this` annotations by putting `experimental.this_annot=true`
+into the `[options]` section of your `.flowconfig`. [illegal-this-annot]
+
+   5| function foo (this : number) : void {}
+                    ^^^^^^^^^^^^^
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:7:22
+
+Experimental `this` annotation. You may opt-in to using `this` annotations by putting `experimental.this_annot=true`
+into the `[options]` section of your `.flowconfig`. [illegal-this-annot]
+
+   7| declare function bar(this : number) : void;
+                           ^^^^^^^^^^^^^
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:10:10
+
+Experimental `this` annotation. You may opt-in to using `this` annotations by putting `experimental.this_annot=true`
+into the `[options]` section of your `.flowconfig`. [illegal-this-annot]
+
+   10|     foo (this : number) : void
+                ^^^^^^^^^^^^^
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:14:10
+
+Experimental `this` annotation. You may opt-in to using `this` annotations by putting `experimental.this_annot=true`
+into the `[options]` section of your `.flowconfig`. [illegal-this-annot]
+
+   14|     foo (this : number) : void {}
+                ^^^^^^^^^^^^^
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:18:9
+
+Experimental `this` annotation. You may opt-in to using `this` annotations by putting `experimental.this_annot=true`
+into the `[options]` section of your `.flowconfig`. [illegal-this-annot]
+
+   18|     foo(this : number) : void
+               ^^^^^^^^^^^^^
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:22:9
+
+Experimental `this` annotation. You may opt-in to using `this` annotations by putting `experimental.this_annot=true`
+into the `[options]` section of your `.flowconfig`. [illegal-this-annot]
+
+   22|     foo(this : number) : void {}
+               ^^^^^^^^^^^^^
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:26:9
+
+Experimental `this` annotation. You may opt-in to using `this` annotations by putting `experimental.this_annot=true`
+into the `[options]` section of your `.flowconfig`. [illegal-this-annot]
+
+   26|     foo(this : number) : void
+               ^^^^^^^^^^^^^
+
+
+
+Found 8 errors
