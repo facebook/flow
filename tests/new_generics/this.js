@@ -9,4 +9,7 @@ class C {
     } // nope
     return this.f();
   }
+  clone(): this {
+    return new this.constructor();
+  }
 }

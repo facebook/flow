@@ -7935,6 +7935,29 @@ struct
       | ObjRestT (r, xs, t_out, id) ->
         narrow_generic (fun t_out' -> ObjRestT (r, xs, t_out', id)) t_out;
         true
+      (* Support "new this.constructor ()" *)
+      | GetPropT (op, r, Named (x, "constructor"), t_out) ->
+        if is_concrete bound then
+          match bound with
+          | DefT (_, _, InstanceT _) ->
+            narrow_generic_tvar
+              (fun t_out' -> GetPropT (op, r, Named (x, "constructor"), t_out'))
+              t_out;
+            true
+          | _ -> false
+        else
+          wait_for_concrete_bound ()
+      | ConstructorT (use_op, reason_op, targs, args, t_out) ->
+        if is_concrete bound then
+          match bound with
+          | DefT (_, _, ClassT _) ->
+            narrow_generic
+              (fun t_out' -> ConstructorT (use_op, reason_op, targs, args, t_out'))
+              t_out;
+            true
+          | _ -> false
+        else
+          wait_for_concrete_bound ()
       | ObjKitT _
       | ElemT _
       | UseT (_, IntersectionT _) ->

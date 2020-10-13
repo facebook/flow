@@ -6,6 +6,9 @@ class A {
   clone(): A {
     return new this.constructor(this.n);
   }
+  thisClone(): this {
+    return new this.constructor(this.n);
+  }
   badClone(): number {
     return new this.constructor(this.n); // Error A ~> number
   }
