@@ -432,6 +432,23 @@ References:
                     ^^^^ [3]
 
 
+Error --------------------------------------------------------------------------------------------------- nested.js:8:10
+
+Cannot return `w` because `W` [1] is incompatible with `X` [2]. [incompatible-return]
+
+   nested.js:8:10
+   8|   return w; // nope
+               ^
+
+References:
+   nested.js:5:45
+   5| function f<X, Y: X, Z: Y, W>(y: Y, z: X, w: W): X {
+                                                  ^ [1]
+   nested.js:5:49
+   5| function f<X, Y: X, Z: Y, W>(y: Y, z: X, w: W): X {
+                                                      ^ [2]
+
+
 Error ---------------------------------------------------------------------------------------------- refinements.js:11:6
 
 Cannot cast `x` to string because number [1] is incompatible with string [2]. [incompatible-cast]
@@ -586,7 +603,7 @@ References:
 
 
 
-Found 33 errors
+Found 34 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches

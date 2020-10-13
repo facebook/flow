@@ -74,7 +74,7 @@ module rec TypeTerm : sig
         reason: reason;
         name: string;
         bound: t;
-        id: ALoc.id;
+        id: Generic.id;
       }
     (* existential type variable *)
     | ExistsT of reason
@@ -804,7 +804,7 @@ module rec TypeTerm : sig
       }
     | SealGenericT of {
         reason: reason;
-        id: ALoc.id;
+        id: Generic.id;
         name: string;
         cont: cont;
       }

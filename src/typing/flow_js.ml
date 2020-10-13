@@ -758,7 +758,7 @@ and check_with_generics : 'a. Context.t -> Type.typeparam list -> (Type.t SMap.t
       RPolyTest
         ( name,
           RIncompatibleInstantiation name,
-          Reason.aloc_of_reason reason |> Context.make_aloc_id cx,
+          Reason.aloc_of_reason reason |> Context.make_generic_id cx name |> Generic.aloc_of_id,
           is_this )
     in
     DefT (replace_desc_reason desc reason, bogus_trust (), EmptyT Zeroed)
@@ -777,7 +777,13 @@ and check_with_generics : 'a. Context.t -> Type.typeparam list -> (Type.t SMap.t
         let annot_loc = annot_aloc_of_reason bound_reason in
         let desc = desc_of_reason ~unwrap:false bound_reason in
         opt_annot_reason ?annot_loc
-        @@ mk_reason (RPolyTest (name, desc, Context.make_aloc_id cx param_loc, is_this)) param_loc)
+        @@ mk_reason
+             (RPolyTest
+                ( name,
+                  desc,
+                  Context.make_generic_id cx name param_loc |> Generic.aloc_of_id,
+                  is_this ))
+             param_loc)
       (subst cx prev_args bound)
   in
   (* make argument map by folding mk_arg over param list *)
@@ -811,18 +817,16 @@ and check_with_generics : 'a. Context.t -> Type.typeparam list -> (Type.t SMap.t
   let generic_bound cx prev_map { bound; name; reason = param_reason; is_this; _ } =
     let param_loc = aloc_of_reason param_reason in
     let bound = subst cx prev_map bound in
+    let id = Context.make_generic_id cx name param_loc in
     let bound =
       mod_reason_of_t
         (fun bound_reason ->
           let annot_loc = annot_aloc_of_reason bound_reason in
           let desc = desc_of_reason ~unwrap:false bound_reason in
           opt_annot_reason ?annot_loc
-          @@ mk_reason
-               (RPolyTest (name, desc, Context.make_aloc_id cx param_loc, is_this))
-               param_loc)
+          @@ mk_reason (RPolyTest (name, desc, id |> Generic.aloc_of_id, is_this)) param_loc)
         bound
     in
-    let id = Context.make_aloc_id cx param_loc in
     let generic = GenericT { reason = reason_of_t bound; name; id; bound } in
     SMap.add name generic prev_map
   in
@@ -6830,18 +6834,35 @@ struct
         | (_, SealGenericT { reason = _; id; name; cont }) ->
           let reason = reason_of_t l in
           continue cx trace (GenericT { reason; id; name; bound = l }) cont
-        | ( GenericT { bound = bound1; id = id1; reason = reason1; _ },
-            UseT (use_op, GenericT { bound = bound2; id = id2; reason = reason2; _ }) )
-          when ALoc.equal_id id1 id2 ->
-          rec_flow_t
-            cx
-            trace
-            ~use_op
-            (position_generic_bound reason1 bound1, position_generic_bound reason2 bound2)
+        | ( GenericT ({ bound = bound1; id = id1; reason = reason1; _ } as g1),
+            UseT (use_op, GenericT ({ bound = bound2; id = id2; reason = reason2; _ } as g2)) ) ->
+          begin
+            match Generic.satisfies id1 id2 with
+            | Generic.Satisfied ->
+              rec_flow_t
+                cx
+                trace
+                ~use_op
+                (position_generic_bound reason1 bound1, position_generic_bound reason2 bound2)
+            | Generic.Lower id ->
+              rec_flow_t
+                cx
+                trace
+                ~use_op
+                (GenericT { g1 with id }, position_generic_bound reason2 bound2)
+            | Generic.Upper id ->
+              rec_flow_t
+                cx
+                trace
+                ~use_op
+                (position_generic_bound reason1 bound1, GenericT { g2 with id })
+          end
         | (GenericT { reason; bound; _ }, _) ->
           rec_flow cx trace (position_generic_bound reason bound, u)
         | (_, UseT (use_op, GenericT { reason; name; id; _ })) ->
-          let desc = RPolyTest (name, RIncompatibleInstantiation name, id, false) in
+          let desc =
+            RPolyTest (name, RIncompatibleInstantiation name, id |> Generic.aloc_of_id, false)
+          in
           let bot = DefT (replace_desc_reason desc reason, literal_trust (), EmptyT Zeroed) in
           rec_flow_t cx trace ~use_op (l, bot)
         (***************)
@@ -7872,44 +7893,55 @@ struct
         true
       | _ -> false
     in
-    match u with
-    (* The LHS is what's actually getting refined--don't do anything special for the RHS *)
-    | PredicateT (RightP _, _)
-    | PredicateT (NotP (RightP _), _) ->
-      false
-    | PredicateT (pred, t_out) ->
-      narrow_generic_tvar (fun t_out' -> PredicateT (pred, t_out')) t_out;
+    if
+      match bound with
+      | GenericT { bound; id = id'; _ } ->
+        Generic.collapse id id'
+        |> Base.Option.value_map ~default:false ~f:(fun id ->
+               rec_flow cx trace (GenericT { reason; name; bound; id }, u);
+               true)
+      | _ -> false
+    then
       true
-    | UseT (use_op, MaybeT (r, t_out)) ->
-      narrow_generic ~use_op (fun t_out' -> UseT (use_op, MaybeT (r, t_out'))) t_out;
-      true
-    | UseT (use_op, OptionalT ({ type_ = t_out; _ } as opt)) ->
-      narrow_generic
-        ~use_op
-        (fun t_out' -> UseT (use_op, OptionalT { opt with type_ = t_out' }))
-        t_out;
-      true
-    | FilterMaybeT (use_op, t_out) ->
-      narrow_generic (fun t_out' -> FilterMaybeT (use_op, t_out')) t_out;
-      true
-    | FilterOptionalT (use_op, t_out) ->
-      narrow_generic (fun t_out' -> FilterOptionalT (use_op, t_out')) t_out;
-      true
-    | UseT (_, IntersectionT _) ->
-      if is_concrete bound then
-        distribute_union_intersection ()
-      else
-        wait_for_concrete_bound ()
-    | UseT (_, (UnionT _ as u)) ->
-      if union_optimization_guard cx (Context.trust_errors cx |> TypeUtil.quick_subtype) bound u
-      then begin
-        if Context.is_verbose cx then prerr_endline "UnionT ~> UnionT fast path (via a generic)";
+    else
+      match u with
+      (* The LHS is what's actually getting refined--don't do anything special for the RHS *)
+      | PredicateT (RightP _, _)
+      | PredicateT (NotP (RightP _), _) ->
+        false
+      | PredicateT (pred, t_out) ->
+        narrow_generic_tvar (fun t_out' -> PredicateT (pred, t_out')) t_out;
         true
-      end else if is_concrete bound then
-        distribute_union_intersection ()
-      else
-        wait_for_concrete_bound ()
-    | _ -> false
+      | UseT (use_op, MaybeT (r, t_out)) ->
+        narrow_generic ~use_op (fun t_out' -> UseT (use_op, MaybeT (r, t_out'))) t_out;
+        true
+      | UseT (use_op, OptionalT ({ type_ = t_out; _ } as opt)) ->
+        narrow_generic
+          ~use_op
+          (fun t_out' -> UseT (use_op, OptionalT { opt with type_ = t_out' }))
+          t_out;
+        true
+      | FilterMaybeT (use_op, t_out) ->
+        narrow_generic (fun t_out' -> FilterMaybeT (use_op, t_out')) t_out;
+        true
+      | FilterOptionalT (use_op, t_out) ->
+        narrow_generic (fun t_out' -> FilterOptionalT (use_op, t_out')) t_out;
+        true
+      | UseT (_, IntersectionT _) ->
+        if is_concrete bound then
+          distribute_union_intersection ()
+        else
+          wait_for_concrete_bound ()
+      | UseT (_, (UnionT _ as u)) ->
+        if union_optimization_guard cx (Context.trust_errors cx |> TypeUtil.quick_subtype) bound u
+        then begin
+          if Context.is_verbose cx then prerr_endline "UnionT ~> UnionT fast path (via a generic)";
+          true
+        end else if is_concrete bound then
+          distribute_union_intersection ()
+        else
+          wait_for_concrete_bound ()
+      | _ -> false
 
   (* "Expands" any to match the form of a type. Allows us to reuse our propagation rules for any
    cases. Note that it is not always safe to do this (ie in the case of unions).

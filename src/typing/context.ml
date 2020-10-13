@@ -744,6 +744,8 @@ let set_export cx id name t = find_exports cx id |> SMap.add name t |> add_expor
 (* constructors *)
 let make_aloc_id cx aloc = ALoc.id_of_aloc cx.rev_aloc_table aloc
 
+let make_generic_id cx name loc = Generic.make_bound_id (make_aloc_id cx loc) name
+
 let generate_property_map cx pmap =
   let id = Reason.mk_id () in
   add_nominal_prop_id cx (id :> int);
