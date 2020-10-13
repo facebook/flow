@@ -1679,7 +1679,7 @@ end = struct
         in
         Ty.Obj { Ty.obj_props; obj_kind; obj_literal = None; obj_frozen = false (* default *) }
       in
-      let spread_operand_slice ~env { T.Object.Spread.reason = _; prop_map; dict } =
+      let spread_operand_slice ~env { T.Object.Spread.reason = _; prop_map; dict; _ } =
         Type.TypeTerm.(
           let obj_frozen = false in
           let obj_literal = None in

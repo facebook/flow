@@ -2342,6 +2342,7 @@ and Object : sig
     reason: reason;
     props: props;
     flags: TypeTerm.flags;
+    generics: Generic.spread_id;
   }
 
   and props = prop SMap.t
@@ -2358,6 +2359,7 @@ and Object : sig
     type operand_slice = {
       reason: reason;
       prop_map: Properties.t;
+      generics: Generic.spread_id;
       dict: dict;
     }
 

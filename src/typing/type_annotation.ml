@@ -7,6 +7,7 @@
 
 module Ast = Flow_ast
 module Tast_utils = Typed_ast_utils
+module Generic_ID = Generic
 open Utils_js
 open Reason
 open Type
@@ -1497,18 +1498,32 @@ and convert_object =
                   ~f:(function
                     | Acc.Spread t -> Type t
                     | Acc.Slice { dict; pmap } ->
-                      Slice { Type.Object.Spread.reason; prop_map = pmap; dict })
+                      Slice
+                        {
+                          Type.Object.Spread.reason;
+                          prop_map = pmap;
+                          dict;
+                          generics = Generic_ID.spread_empty;
+                        })
                   ts
               in
               (t, ts, None)
             | (Acc.Slice { dict; pmap = prop_map }, Acc.Spread t :: ts) ->
-              let head_slice = { Type.Object.Spread.reason; prop_map; dict } in
+              let head_slice =
+                { Type.Object.Spread.reason; prop_map; dict; generics = Generic_ID.spread_empty }
+              in
               let ts =
                 Base.List.map
                   ~f:(function
                     | Acc.Spread t -> Type t
                     | Acc.Slice { dict; pmap } ->
-                      Slice { Type.Object.Spread.reason; prop_map = pmap; dict })
+                      Slice
+                        {
+                          Type.Object.Spread.reason;
+                          prop_map = pmap;
+                          dict;
+                          generics = Generic_ID.spread_empty;
+                        })
                   ts
               in
               (t, ts, Some head_slice)

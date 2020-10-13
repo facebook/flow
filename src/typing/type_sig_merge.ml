@@ -952,7 +952,7 @@ and merge_annot component file = function
     let merge_slice dict props =
       let dict = Option.map ~f:(merge_dict component file) dict in
       let prop_map = SMap.map (merge_obj_annot_prop component file) props in
-      { Type.Object.Spread.reason; prop_map; dict }
+      { Type.Object.Spread.reason; prop_map; dict; generics = Generic.spread_empty }
     in
     let merge_elem = function
       | ObjSpreadAnnotElem t -> Type.Object.Spread.Type (merge component file t)
@@ -1031,7 +1031,7 @@ and merge_value component file = function
     ignore proto;
     let merge_slice props =
       let prop_map = SMap.map (merge_obj_value_prop component file) props in
-      { Type.Object.Spread.reason; prop_map; dict = None }
+      { Type.Object.Spread.reason; prop_map; dict = None; generics = Generic.spread_empty }
     in
     let merge_elem = function
       | ObjValueSpreadElem t -> Type.Object.Spread.Type (merge component file t)

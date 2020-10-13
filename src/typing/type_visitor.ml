@@ -924,13 +924,13 @@ class ['a] t =
           let acc = Nel.fold_left (Nel.fold_left (self#object_kit_slice cx)) acc rs in
           acc)
 
-    method private object_kit_slice cx acc { Object.reason = _; props; flags } =
+    method private object_kit_slice cx acc { Object.reason = _; props; flags; generics = _ } =
       let acc = self#smap (fun acc (t, _) -> self#type_ cx pole_TODO acc t) acc props in
       let acc = self#obj_flags cx pole_TODO acc flags in
       acc
 
     method private object_kit_spread_operand_slice
-        cx acc { Object.Spread.reason = _; prop_map; dict } =
+        cx acc { Object.Spread.reason = _; prop_map; dict; generics = _ } =
       let acc = self#smap (Property.fold_t (self#type_ cx pole_TODO)) acc prop_map in
       let acc = self#opt (self#dict_type cx pole_TODO) acc dict in
       acc

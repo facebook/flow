@@ -94,6 +94,95 @@ References:
                                     ^ [2]
 
 
+Error --------------------------------------------------------------------------------------------------- config.js:16:4
+
+Cannot cast `y` to `C` because `Props` [1] is incompatible with `C` [2]. [incompatible-cast]
+
+   config.js:16:4
+   16|   (y: C); // error, generics don't match
+          ^
+
+References:
+   config.js:9:15
+    9| function f<P: Props, D: DefaultProps, C: Config, W: NotTheRightConfig>(
+                     ^^^^^ [1]
+   config.js:16:7
+   16|   (y: C); // error, generics don't match
+             ^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- config.js:18:4
+
+Cannot cast `y` to `NotTheRightConfig` because property `baz` is missing in `Props` [1] but exists in
+`NotTheRightConfig` [2]. [prop-missing]
+
+   config.js:18:4
+   18|   (y: NotTheRightConfig); // Error, configs don't match
+          ^
+
+References:
+   config.js:9:15
+    9| function f<P: Props, D: DefaultProps, C: Config, W: NotTheRightConfig>(
+                     ^^^^^ [1]
+   config.js:18:7
+   18|   (y: NotTheRightConfig); // Error, configs don't match
+             ^^^^^^^^^^^^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- config.js:18:4
+
+Cannot cast `y` to `NotTheRightConfig` because property `qux` is missing in `Props` [1] but exists in
+`NotTheRightConfig` [2]. [prop-missing]
+
+   config.js:18:4
+   18|   (y: NotTheRightConfig); // Error, configs don't match
+          ^
+
+References:
+   config.js:9:15
+    9| function f<P: Props, D: DefaultProps, C: Config, W: NotTheRightConfig>(
+                     ^^^^^ [1]
+   config.js:18:7
+   18|   (y: NotTheRightConfig); // Error, configs don't match
+             ^^^^^^^^^^^^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- config.js:19:4
+
+Cannot cast `z` to config of React component because property `bar` is missing in `NotTheRightConfig` [1] but exists in
+`Props` [2]. [prop-missing]
+
+   config.js:19:4
+   19|   (z: React$Config<Props, DefaultProps>); // Error, configs don't match
+          ^
+
+References:
+   config.js:12:6
+   12|   z: W,
+            ^ [1]
+   config.js:19:20
+   19|   (z: React$Config<Props, DefaultProps>); // Error, configs don't match
+                          ^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- config.js:19:4
+
+Cannot cast `z` to config of React component because property `foo` is missing in `NotTheRightConfig` [1] but exists in
+`Props` [2]. [prop-missing]
+
+   config.js:19:4
+   19|   (z: React$Config<Props, DefaultProps>); // Error, configs don't match
+          ^
+
+References:
+   config.js:12:6
+   12|   z: W,
+            ^ [1]
+   config.js:19:20
+   19|   (z: React$Config<Props, DefaultProps>); // Error, configs don't match
+                          ^^^^^ [2]
+
+
 Error ---------------------------------------------------------------------------------------------- intersection.js:8:4
 
 Cannot cast `x` to intersection type because intersection type [1] is incompatible with boolean [2]. [incompatible-cast]
@@ -396,18 +485,21 @@ References:
                        ^^^^ [3]
 
 
-Error --------------------------------------------------------------------------------------------------- maybe.js:87:10
+Error ---------------------------------------------------------------------------------------------------- maybe.js:89:4
 
-Cannot call method `assign` because property `assign` is missing in statics of `Object` [1]. [prop-missing]
+Cannot cast `b.x` to `Y` because number [1] is incompatible with `Y` [2]. [incompatible-cast]
 
-   maybe.js:87:10
-   87|   Object.assign(b, a);
-                ^^^^^^
+   maybe.js:89:4
+   89|   (b.x: Y); //nope
+          ^^^
 
 References:
-   <BUILTINS>/prelude.js:12:15
-   12| declare class Object {}
-                     ^^^^^^ [1]
+   maybe.js:85:23
+   85|   declare var a: {x?: X};
+                             ^ [1]
+   maybe.js:89:9
+   89|   (b.x: Y); //nope
+               ^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- maybe.js:95:4
@@ -517,6 +609,187 @@ References:
              ^ [2]
 
 
+Error ------------------------------------------------------------------------------------------------------ rest.js:5:4
+
+Cannot cast `y` to `$Diff` because object type [1] is incompatible with `{ ...X }` [2]. [incompatible-cast]
+
+   rest.js:5:4
+   5|   (y: $Diff<{...X, ...Y}, {...Y}>); // nope
+         ^
+
+References:
+   rest.js:3:40
+   3| function f<X: {}, Y: {}>(x: {...X}, y: {...Y}, both: {...X, ...Y}) {
+                                             ^^^^^^ [1]
+   rest.js:5:13
+   5|   (y: $Diff<{...X, ...Y}, {...Y}>); // nope
+                  ^^^^^^^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- rest.js:10:4
+
+Cannot cast `rest` to object type because property `x` is missing in rest of object pattern [1] but exists in object
+type [2]. [prop-missing]
+
+   rest.js:10:4
+   10|   (rest: {...X, ...Y}); //no, because x is missing
+          ^^^^
+
+References:
+   rest.js:9:11
+    9|   var {x, ...rest} = o;
+                 ^^^^^^^ [1]
+   rest.js:10:10
+   10|   (rest: {...X, ...Y}); //no, because x is missing
+                ^^^^^^^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- rest.js:12:4
+
+Cannot cast `rest` to object type because rest of object pattern [1] is incompatible with `{ ...X }` [2].
+[incompatible-cast]
+
+   rest.js:12:4
+   12|   (rest: {...X}); // no, because X's props could have been overwritten
+          ^^^^
+
+References:
+   rest.js:9:11
+    9|   var {x, ...rest} = o;
+                 ^^^^^^^ [1]
+   rest.js:12:10
+   12|   (rest: {...X}); // no, because X's props could have been overwritten
+                ^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- spreads.js:4:4
+
+Cannot cast object literal to object type because object literal [1] is incompatible with `{ ...X }` [2].
+[incompatible-cast]
+
+   spreads.js:4:4
+   4|   ({...x, ...y}: {...X}); // nope, which is different than old generics
+         ^^^^^^^^^^^^ [1]
+
+References:
+   spreads.js:4:18
+   4|   ({...x, ...y}: {...X}); // nope, which is different than old generics
+                       ^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- spreads.js:6:4
+
+Cannot cast object literal to object type because object literal [1] is incompatible with `{ ...Y, ...X }` [2].
+[incompatible-cast]
+
+   spreads.js:6:4
+   6|   ({...x}: {...Y, ...X}); // nope
+         ^^^^^^ [1]
+
+References:
+   spreads.js:6:12
+   6|   ({...x}: {...Y, ...X}); // nope
+                 ^^^^^^^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- spreads.js:7:4
+
+Cannot cast object literal to object type because object literal [1] is incompatible with `{ ...X, ...Y }` [2].
+[incompatible-cast]
+
+   spreads.js:7:4
+   7|   ({...y, ...x}: {...X, ...Y}); // nope, which is different than old generics
+         ^^^^^^^^^^^^ [1]
+
+References:
+   spreads.js:7:18
+   7|   ({...y, ...x}: {...X, ...Y}); // nope, which is different than old generics
+                       ^^^^^^^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------------- spreads.js:11:4
+
+Cannot cast object literal to object type because object literal [1] is incompatible with `{ ...X, ...Z, ...Y }` [2].
+[incompatible-cast]
+
+   spreads.js:11:4
+   11|   ({...x, ...y}: {...X, ...Z, ...Y}); // nope
+          ^^^^^^^^^^^^ [1]
+
+References:
+   spreads.js:11:18
+   11|   ({...x, ...y}: {...X, ...Z, ...Y}); // nope
+                        ^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------------- spreads.js:24:4
+
+Cannot cast `x` to object type because `X` [1] is incompatible with object type [2]. [incompatible-cast]
+
+   spreads.js:24:4
+   24|   (x: {...X}); // nope
+          ^
+
+References:
+   spreads.js:23:18
+   23| function t<X>(x: X, sp_x: {...X}) {
+                        ^ [1]
+   spreads.js:24:7
+   24|   (x: {...X}); // nope
+             ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- spreads.js:41:10
+
+Cannot return `y` because object type [1] is incompatible with `{ ...X, ...Y }` [2]. [incompatible-return]
+
+   spreads.js:41:10
+   41|   return y; // should error
+                ^
+
+References:
+   spreads.js:40:30
+   40| function f3<X: {}, Y: {}>(y: Y): {...X, ...Y} {
+                                    ^ [1]
+   spreads.js:40:34
+   40| function f3<X: {}, Y: {}>(y: Y): {...X, ...Y} {
+                                        ^^^^^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- spreads.js:49:10
+
+Cannot return `y` because object type [1] is incompatible with `Y` [2]. [incompatible-return]
+
+   spreads.js:49:10
+   49|   return y; // should be an error!
+                ^
+
+References:
+   spreads.js:48:31
+   48| function f4b<X: {}, Y: {}>(y: {...Y, ...X}): Y {
+                                     ^^^^^^^^^^^^ [1]
+   spreads.js:48:46
+   48| function f4b<X: {}, Y: {}>(y: {...Y, ...X}): Y {
+                                                    ^ [2]
+
+
+Error -------------------------------------------------------------------------------------------------- spreads.js:53:4
+
+Cannot cast `x` to object type because object type [1] is incompatible with `{ ...X, ...Y }` [2]. [incompatible-cast]
+
+   spreads.js:53:4
+   53|   (x: {...(X & Y)}); // nope
+          ^
+
+References:
+   spreads.js:52:39
+   52| function f<X: {}, Y: {}, Z: X & Y>(x: {...X}, xy: {...X, ...Y}, z: {...Z}) {
+                                             ^^^^^^ [1]
+   spreads.js:53:7
+   53|   (x: {...(X & Y)}); // nope
+             ^^^^^^^^^^^^ [2]
+
+
 Error ----------------------------------------------------------------------------------------------------- union.js:9:4
 
 Cannot cast `x` to number because string [1] is incompatible with number [2]. [incompatible-cast]
@@ -603,7 +876,7 @@ References:
 
 
 
-Found 34 errors
+Found 50 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches

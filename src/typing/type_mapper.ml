@@ -578,13 +578,13 @@ class virtual ['a] t =
         t
 
     method object_kit_spread_operand_slice
-        cx map_cx ({ Object.Spread.reason; prop_map; dict } as slice) =
+        cx map_cx ({ Object.Spread.reason; prop_map; dict; generics } as slice) =
       let prop_map' = SMap.ident_map (Property.ident_map_t (self#type_ cx map_cx)) prop_map in
       let dict' = OptionUtils.ident_map (self#dict_type cx map_cx) dict in
       if prop_map' == prop_map && dict' == dict then
         slice
       else
-        { Object.Spread.reason; prop_map = prop_map'; dict = dict' }
+        { Object.Spread.reason; prop_map = prop_map'; dict = dict'; generics }
 
     method object_kit_spread_operand cx map_cx operand =
       Object.Spread.(
@@ -1961,14 +1961,14 @@ class virtual ['a] t_with_uses =
             t
           else
             Resolve r'
-        | Super ({ Object.reason; props; flags }, r) ->
+        | Super ({ Object.reason; props; flags; generics }, r) ->
           let flags' = self#obj_flags cx map_cx flags in
           let props' = SMap.ident_map (fun (t, b) -> (self#type_ cx map_cx t, b)) props in
           let r' = self#resolve cx map_cx r in
           if flags' == flags && r' == r && props' == props then
             t
           else
-            Super ({ reason; Object.props = props'; flags = flags' }, r'))
+            Super ({ reason; Object.props = props'; flags = flags'; generics }, r'))
 
     method object_kit_tool cx map_cx tool =
       Object.(
@@ -2252,7 +2252,7 @@ class virtual ['a] t_with_uses =
       else
         (t', own)
 
-    method object_kit_slice cx map_cx ({ Object.reason = _; props; flags } as slice) =
+    method object_kit_slice cx map_cx ({ Object.reason = _; props; flags; generics = _ } as slice) =
       let props' = SMap.ident_map (self#resolved_prop cx map_cx) props in
       let flags' = self#obj_flags cx map_cx flags in
       if props' == props && flags' == flags then

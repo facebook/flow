@@ -5,11 +5,16 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
+open Utils_js
+
 (* The definitions in this module handle the sealing and unsealing of generics. *)
 
 (* A generic is the ALoc.id of a type variable definition site (or class
    definition site for `this`.) *)
-type generic = ALoc.id * string
+type generic = {
+  id: ALoc.id;
+  name: string;
+}
 
 (* A bound corresponds to the upper bound annotated on a type variable,
    but it can also include more information if that annotation is itself a
@@ -27,39 +32,102 @@ type generic = ALoc.id * string
    In the comments of this module, I write such complex ids like "Y:X".
    *)
 
-(* The id type has a Bound constructor rather than just being an alias for bound
-   because later diffs will introduce other kinds of IDs (for spreads) *)
-type id = Bound of bound
+type bound = {
+  generic: generic;
+  super: id option;
+}
 
-and bound = generic * id option
+(* A spread is a nonempty list of bounds, each of which corresponds to an object
+   spread operator applied to a generic with that bound. For example, in a program
+   like
+     function f<X: {}, Y: {}>(x: X, y: Y): {...X, ...Y} { return {...x, ...y} }
+   the type {...X, ...Y} will be represented as a GenericT, whose type upper bound is
+   {} and whose Generic.id is Spread [Y, X]. (Note that the ordering of this list of
+   generics is reversed from how it appears in values). This information can then be used to enforce
+   that the only values that are well-typed lower bounds for the type are other
+   spreads from the same generics, in the same order--as opposed to the unsoundnesses that
+   currently (e.g. around v0.130) exist:
+
+     function f<X, Y>(x: X, y: Y): {...X, ...Y} {
+      return {...y, ...x}; // out of order!
+     }
+*)
+and spread = bound Nel.t
+
+and id =
+  | Spread of spread
+  | Bound of bound
+
+(* Used in the object_kit representation of objects, representing whatever generics,
+   if any, have been spread into an object *)
+type spread_id = bound list
 
 let rec to_string id =
   let open Utils_js in
+  let bound_to_string = function
+    | { generic = { name; _ }; super = None } -> name
+    | { generic = { name; _ }; super = Some id } -> spf "%s:%s" name (to_string id)
+  in
   match id with
-  | Bound ((_, name), None) -> name
-  | Bound ((_, name), Some id) -> spf "%s:%s" name (to_string id)
+  | Bound bound -> bound_to_string bound
+  | Spread ids ->
+    spf "{ ...%s }" (String.concat ", ..." (Base.List.map ~f:bound_to_string (Nel.to_list ids)))
 
-let rec equal_bound b1 b2 =
-  match (b1, b2) with
-  | (((id1, _), Some k1), ((id2, _), Some k2)) -> ALoc.equal_id id1 id2 && equal_id k1 k2
-  | (((id1, _), None), ((id2, _), None)) -> ALoc.equal_id id1 id2
-  | _ -> false
+let rec equal_bound
+    { generic = { id = id1; _ }; super = super1 } { generic = { id = id2; _ }; super = super2 } =
+  if not (ALoc.equal_id id1 id2) then
+    false
+  else
+    match (super1, super2) with
+    | (None, None) -> true
+    | (Some sup1, Some sup2) -> equal_id sup1 sup2
+    | _ -> false
+
+and equal_spreads s1 s2 =
+  match Base.List.for_all2 s1 s2 ~f:equal_bound with
+  | Base.List.Or_unequal_lengths.Ok res -> res
+  | Base.List.Or_unequal_lengths.Unequal_lengths -> false
 
 and equal_id k1 k2 =
   match (k1, k2) with
   | (Bound b1, Bound b2) -> equal_bound b1 b2
+  | (Spread bs1, Spread bs2) -> equal_spreads (Nel.to_list bs1) (Nel.to_list bs2)
+  | _ -> false
 
 let rec collapse l u =
   match l with
-  | Bound (g, None) -> Some (Bound (g, Some u))
-  | Bound (g, Some u') -> Some (Bound (g, collapse u' u))
+  | Bound { generic; super = None } -> Some (Bound { generic; super = Some u })
+  | Bound { generic; super = Some u' } -> Some (Bound { generic; super = collapse u' u })
+  | Spread _ -> None
 
-let make_bound_id aloc_id name = Bound ((aloc_id, name), None)
+let spread_empty = []
+
+let make_spread = function
+  | Spread spread -> Nel.to_list spread
+  | Bound bound -> [bound]
+
+let make_bound_id aloc_id name = Bound { generic = { id = aloc_id; name }; super = None }
+
+let make_spread_id (opt : spread_id) : id option =
+  Base.Option.map ~f:(fun spread -> Spread spread) (Nel.of_list opt)
+
+let make_spread_id_exn opt = Spread (Nel.of_list_exn opt)
+
+let spread_subtract id1 id2 =
+  Base.List.filter ~f:(fun a -> not @@ Base.List.mem ~equal:equal_bound id2 a) id1
+
+(* We here enforce the invariant that no bound appears more than once
+   in the spread list. *)
+let spread_append id1 id2 = spread_subtract id1 id2 @ id2
 
 (* legacy, just for RPolyTest reasons *)
 let aloc_of_id id =
+  let aloc_of_bound { generic = { id; _ }; _ } = id in
   match id with
-  | Bound ((l, _), _) -> l
+  | Bound bound -> aloc_of_bound bound
+  | Spread spread -> Nel.hd spread |> aloc_of_bound
+
+let spread_exists = Base.List.is_empty %> not
 
 type sat_result =
   | Satisfied
@@ -72,6 +140,8 @@ type sat_result =
    IDs were just ALoc.ids, this would just be equality and return a boolean success
    or failure, and in the failure case, we'd flow the generic bound of the lower
    type into the upper generic.
+
+   === Complex bounds ===
 
    Since IDs now can represent multiple generics, we need to do more work, and there's
    multiple possible results. For example, suppose X and Y are generics, and Y's upper
@@ -104,6 +174,19 @@ type sat_result =
    that they match, but then there's a hanging `X` on the left. We therefore return
    Lower X, which tells flow_js that it needs to flow a GenericT with id X on the left
    into the bound of the GenericT on the right--in this case, X | number.
+
+   === Spreads ===
+
+   This function is also used to determine whether two spreaded generics are
+   compatible. For the most part, this logic is orthogonal to compatibility of
+   bounds, although a generic can flow into a spread that contains only
+   itself--this should be safe:
+     function f<X: {}>(x: X): {...X} {
+       return x;
+     }
+
+   The rules below show examples of what scenario triggers them.
+
     *)
 
 let rec satisfies id1 id2 =
@@ -119,10 +202,100 @@ let rec satisfies id1 id2 =
     (* continue to the next layer *)
     | (Some id1, Some id2) -> satisfies id1 id2
   in
+  let bound_satisfies
+      { generic = { id = id1; _ }; super = super1 }
+      ({ generic = { id = id2; _ }; super = super2 } as bound2) =
+    if ALoc.equal_id id1 id2 then
+      (* if top-level ids match, strip them off and compare the next levels, if they exist *)
+      opt_satisfies super1 super2
+    else
+      match super1 with
+      | Some super_id ->
+        (* if the top-level ids don't match but the LHS has more to look at, strip it off and try again *)
+        satisfies super_id (Bound bound2)
+      | None ->
+        (* something in id2 wasn't satisfied *)
+        Upper (Bound bound2)
+  in
   match (id1, id2) with
-  (* if top-level ids match, strip them off and compare the next levels, if they exist *)
-  | (Bound ((b1, _), o1), Bound ((b2, _), o2)) when ALoc.equal_id b1 b2 -> opt_satisfies o1 o2
-  (* if the top-level ids don't match but the LHS has more to look at, strip it off and try again *)
-  | (Bound (_, Some id1), Bound _) -> satisfies id1 id2
-  (* something in id2 wasn't satisfied *)
-  | (Bound (_, None), Bound _) -> Upper id2
+  | (Bound bound1, Bound bound2) -> bound_satisfies bound1 bound2
+  (* A generic is interchangeable with a spread of itself,
+     as long as the spread doesn't contain other generics, and as long as the type bounds
+    are compatible too. Example:
+
+      function f<X: {}>(x: X): {...X} {
+        return x; // ok
+      }
+   *)
+  | (Bound bound1, Spread (bound2, [])) -> bound_satisfies bound1 bound2
+  (* A 'bound' generic only represents one bound, so it can't
+     satisfy a spread of more than one generic on its own. We can see if it's bounded by a
+     'spread', though. Example:
+
+      function f<X: {}, Y: {}, Z: {...X, ...Y}>(z: Z): {...X, ...Y} {
+        return z; // ok
+      }
+      *)
+  | (Bound { generic = _; super = Some id1 }, Spread _) -> satisfies id1 id2
+  (* As above, but if it's not bounded by a spread, we can't do
+     anything but strip off the generic from the lower type.
+
+      function f<X: {}, Y: {}>(y: Y): {...X, ...Y} {
+        return y; // should error
+      }
+     *)
+  | (Bound { generic = _; super = None }, Spread _) -> Upper id2
+  (* A spread can flow into a bound if the LAST generic that was
+     spread matches the lower bound (and assuming the types match).
+
+      function fa<X: {}, Y: {}>(y: {...X, ...Y}): Y {
+        return y;
+      }
+
+      function fb<X: {}, Y: {}>(y: {...Y, ...X}): Y {
+        return y; // should error (but didn't previously with old generics)
+      }
+  *)
+  | (Spread bounds, Bound bound2) ->
+    let bound1 = Nel.rev bounds |> Nel.hd in
+    bound_satisfies bound1 bound2
+  (* If an upper bound spread expects more generic components in the spread than are provided in
+     the lower bound, it clearly can't be satisfied *)
+  | (Spread s1, Spread s2) when Nel.length s2 > Nel.length s1 -> Upper id2
+  (* When comparing two spreads, we drop the tail elements of the lower bound so that
+     its length matches the upper bound, and then we compare the elements pairwise. If they're
+     all satisfied, then the spreads are satisfied. Recall the invariant that any generic exists
+     only once in the spread list.
+
+     function a<X: {}, Y: {}, Z: {}>(x: X, y: Y) {
+      ({...x, ...y}: {...X}); // should be error
+      ({...y, ...x}: {...X}); // yup
+      ({...x}: {...Y, ...X}); // nope
+      ({...y, ...x}: {...X, ...Y}); // should be error
+      ({...x, ...y}: {...X, ...Y}); // yup
+      ({...x, ...y}: {...X, ...Y, ...Y}); // yup
+      ({...x, ...y}: {...Y, ...X, ...Y}); // yup
+      ({...x, ...y}: {...X, ...Z, ...Y}); // nope
+    }
+      *)
+  | (Spread s1, Spread s2) ->
+    let s1 = Nel.to_list s1 in
+    let s2 = Nel.to_list s2 in
+    let s1 = Base.List.drop s1 (List.length s1 - List.length s2) in
+    let is_satisfied sat =
+      match sat with
+      | Satisfied
+      | Lower _ ->
+        true
+      | Upper _ -> false
+    in
+    if
+      Base.List.fold2_exn
+        ~f:(fun acc id1 id2 -> acc && is_satisfied (bound_satisfies id1 id2))
+        s1
+        s2
+        ~init:true
+    then
+      Satisfied
+    else
+      Upper id2

@@ -7927,6 +7927,11 @@ struct
       | FilterOptionalT (use_op, t_out) ->
         narrow_generic (fun t_out' -> FilterOptionalT (use_op, t_out')) t_out;
         true
+      | ObjRestT (r, xs, t_out, id) ->
+        narrow_generic (fun t_out' -> ObjRestT (r, xs, t_out', id)) t_out;
+        true
+      | ObjKitT _
+      | ElemT _
       | UseT (_, IntersectionT _) ->
         if is_concrete bound then
           distribute_union_intersection ()
@@ -7941,6 +7946,7 @@ struct
           distribute_union_intersection ()
         else
           wait_for_concrete_bound ()
+      | ResolveSpreadT _ when not (is_concrete bound) -> wait_for_concrete_bound ()
       | _ -> false
 
   (* "Expands" any to match the form of a type. Allows us to reuse our propagation rules for any

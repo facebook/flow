@@ -105,18 +105,32 @@ module ObjectExpressionAcc = struct
               ~f:(function
                 | Spread t -> Object.Spread.Type t
                 | Slice { slice_pmap } ->
-                  Object.Spread.Slice { Object.Spread.reason; prop_map = slice_pmap; dict = None })
+                  Object.Spread.Slice
+                    {
+                      Object.Spread.reason;
+                      prop_map = slice_pmap;
+                      dict = None;
+                      generics = Generic.spread_empty;
+                    })
               ts
           in
           (t, ts, None)
         | (Slice { slice_pmap = prop_map }, Spread t :: ts) ->
-          let head_slice = { Type.Object.Spread.reason; prop_map; dict = None } in
+          let head_slice =
+            { Type.Object.Spread.reason; prop_map; dict = None; generics = Generic.spread_empty }
+          in
           let ts =
             Base.List.map
               ~f:(function
                 | Spread t -> Object.Spread.Type t
                 | Slice { slice_pmap } ->
-                  Object.Spread.Slice { Object.Spread.reason; prop_map = slice_pmap; dict = None })
+                  Object.Spread.Slice
+                    {
+                      Object.Spread.reason;
+                      prop_map = slice_pmap;
+                      dict = None;
+                      generics = Generic.spread_empty;
+                    })
               ts
           in
           (t, ts, Some head_slice)
