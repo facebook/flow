@@ -240,8 +240,14 @@ class virtual ['M, 'T, 'N, 'U] mapper :
     method function_rest_param :
       ('M, 'T) Flow_ast.Function.RestParam.t -> ('N, 'U) Ast.Function.RestParam.t
 
+    method function_this_param :
+      'M * ('M, 'T) Flow_ast.Type.annotation -> 'N * ('N, 'U) Flow_ast.Type.annotation
+
     method function_rest_param_type :
       ('M, 'T) Ast.Type.Function.RestParam.t -> ('N, 'U) Ast.Type.Function.RestParam.t
+
+    method function_this_constraint_type :
+      ('M, 'T) Ast.Type.Function.ThisParam.t -> ('N, 'U) Ast.Type.Function.ThisParam.t
 
     method function_type : ('M, 'T) Ast.Type.Function.t -> ('N, 'U) Ast.Type.Function.t
 

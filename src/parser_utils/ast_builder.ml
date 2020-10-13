@@ -13,8 +13,8 @@ end
 
 module Types = struct
   module Functions = struct
-    let params ?(loc = Loc.none) ?rest ?comments params =
-      (loc, { Ast.Type.Function.Params.params; rest; comments })
+    let params ?(loc = Loc.none) ?rest ?this ?comments params =
+      (loc, { Ast.Type.Function.Params.params; rest; this_ = this; comments })
 
     let make ?tparams ?comments params return =
       { Ast.Type.Function.tparams; params; return; comments }
@@ -138,8 +138,8 @@ end
 module Functions = struct
   open Ast.Function
 
-  let params ?(loc = Loc.none) ?rest ?comments ps =
-    (loc, { Ast.Function.Params.params = ps; rest; comments })
+  let params ?(loc = Loc.none) ?rest ?this_ ?comments ps =
+    (loc, { Ast.Function.Params.params = ps; rest; comments; this_ })
 
   let param ?(loc = Loc.none) ?default argument = (loc, { Ast.Function.Param.argument; default })
 

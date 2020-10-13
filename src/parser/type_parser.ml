@@ -154,8 +154,13 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
         let param = anonymous_function_param env param in
         ( fst param,
           None,
-          (fst param, { Ast.Type.Function.Params.params = [param]; rest = None; comments = None })
-        )
+          ( fst param,
+            {
+              Ast.Type.Function.Params.params = [param];
+              this_ = None;
+              rest = None;
+              comments = None;
+            } ) )
       in
       function_with_params env start_loc tparams params
     | _ -> param
@@ -400,7 +405,7 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
         let annot = _type env in
         anonymous_function_param env annot
     in
-    let rec param_list env acc =
+    let rec param_list env this_ acc =
       match Peek.token env with
       | (T_EOF | T_ELLIPSIS | T_RPAREN) as t ->
         let rest =
@@ -420,13 +425,31 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
           else
             None
         in
-        { Ast.Type.Function.Params.params = List.rev acc; rest; comments = None }
+        { Ast.Type.Function.Params.params = List.rev acc; rest; this_; comments = None }
+      | T_IDENTIFIER { raw = "this"; _ }
+        when Peek.ith_token ~i:1 env == T_COLON || Peek.ith_token ~i:1 env == T_PLING ->
+        if this_ <> None || acc <> [] then error env Parse_error.ThisParamMustBeFirst;
+        let this_ =
+          with_loc
+            (fun env ->
+              let leading = Peek.comments env in
+              Eat.token env;
+              if Peek.token env == T_PLING then error env Parse_error.ThisParamMayNotBeOptional;
+              Expect.token env T_COLON;
+              {
+                Type.Function.ThisParam.annot = _type env;
+                comments = Flow_ast_utils.mk_comments_opt ~leading ();
+              })
+            env
+        in
+        if Peek.token env <> T_RPAREN then Expect.token env T_COMMA;
+        param_list env (Some this_) acc
       | _ ->
         let acc = param env :: acc in
         if Peek.token env <> T_RPAREN then Expect.token env T_COMMA;
-        param_list env acc
+        param_list env this_ acc
     in
-    (fun env -> param_list env)
+    (fun env -> param_list env None)
 
   and function_param_list env =
     with_loc
@@ -456,7 +479,8 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
         ParamList (function_param_list_without_parens env [])
       | T_RPAREN ->
         (* () or is definitely a param list *)
-        ParamList { Ast.Type.Function.Params.params = []; rest = None; comments = None }
+        ParamList
+          { Ast.Type.Function.Params.this_ = None; params = []; rest = None; comments = None }
       | T_IDENTIFIER _
       | T_STATIC (* `static` is reserved in strict mode, but still an identifier *) ->
         (* This could be a function parameter or a generic type *)
@@ -633,7 +657,14 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
             let (_, { Type.Function.params; _ }) = value in
             begin
               match (is_getter, params) with
-              | (true, (_, { Type.Function.Params.params = []; rest = None; comments = _ })) -> ()
+              | (true, (_, { Type.Function.Params.this_ = Some _; _ })) ->
+                error_at env (key_loc, Parse_error.GetterMayNotHaveThisParam)
+              | (false, (_, { Type.Function.Params.this_ = Some _; _ })) ->
+                error_at env (key_loc, Parse_error.SetterMayNotHaveThisParam)
+              | ( true,
+                  (_, { Type.Function.Params.params = []; rest = None; this_ = None; comments = _ })
+                ) ->
+                ()
               | (false, (_, { Type.Function.Params.rest = Some _; _ })) ->
                 (* rest params don't make sense on a setter *)
                 error_at env (key_loc, Parse_error.SetterArity)

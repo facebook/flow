@@ -465,7 +465,7 @@ let internal_comments = function
 
 (* Given a set of comment bounds, determine what separator should be inserted before the
    comments to preserve whether the first comment starts on a new line.
-   
+
    - If there are no leading comments return the specified separator.
    - If the first leading comment starts on a new line, ignore the specified separator and
      return a hard line break.
@@ -1655,6 +1655,7 @@ and arrow_function
                 } );
             ];
           rest = None;
+          this_ = None;
           (* We must wrap the single param in parentheses if there are internal comments *)
           comments = None | Some { Ast.Syntax.internal = []; _ };
         } ) ->
@@ -1812,7 +1813,7 @@ and list_add_internal_comments list list_layout comments =
         list_layout @ [comments_layout])
 
 and function_params
-    ?(ctxt = normal_context) ~opts (_, { Ast.Function.Params.params; rest; comments }) =
+    ?(ctxt = normal_context) ~opts (_, { Ast.Function.Params.params; rest; comments; this_ }) =
   let params =
     Base.List.map
       ~f:(fun ((loc, _) as param) ->
@@ -1835,6 +1836,19 @@ and function_params
       in
       params @ [rest_param]
     | None -> params
+  in
+  (* Add this param *)
+  let params =
+    match this_ with
+    | None -> params
+    | Some (loc, annot) ->
+      let this_layout =
+        source_location_with_comments (loc, fuse [Atom "this"; type_annotation ~opts annot])
+      in
+      let this_param =
+        (loc, Comment_attachment.function_this_param_comment_bounds (loc, annot), this_layout)
+      in
+      this_param :: params
   in
   let params_layout = list_with_newlines ~sep:(Atom ",") ~sep_linebreak:pretty_line params in
   (* Add trailing comma *)
@@ -3165,7 +3179,7 @@ and type_function_param ~opts (loc, { Ast.Type.Function.Param.name; annot; optio
           type_ ~opts annot;
         ] )
 
-and type_function_params ~opts (loc, { Ast.Type.Function.Params.params; rest; comments }) =
+and type_function_params ~opts (loc, { Ast.Type.Function.Params.this_; params; rest; comments }) =
   let params =
     Base.List.map
       ~f:(fun ((loc, _) as param) ->
@@ -3187,6 +3201,20 @@ and type_function_params ~opts (loc, { Ast.Type.Function.Params.params; rest; co
         (loc, Comment_attachment.function_type_rest_param_comment_bounds rest, rest_layout)
       in
       params @ [rest_param]
+    | None -> params
+  in
+  (* Add this constraint *)
+  let params =
+    match this_ with
+    | Some ((loc, { Ast.Type.Function.ThisParam.annot; comments = _ }) as this_) ->
+      let this_layout =
+        source_location_with_comments
+          (loc, fuse [Atom "this"; Atom ":"; pretty_space; type_ ~opts annot])
+      in
+      let this_constraint =
+        (loc, Comment_attachment.function_type_this_param_comment_bounds this_, this_layout)
+      in
+      this_constraint :: params
     | None -> params
   in
   let params_layout = list_with_newlines ~sep:(Atom ",") ~sep_linebreak:pretty_line params in

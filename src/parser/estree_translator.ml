@@ -1151,6 +1151,11 @@ with type t = Impl.t = struct
       | Some default ->
         node "AssignmentPattern" loc [("left", pattern argument); ("right", expression default)]
       | None -> pattern argument
+    and this_param (loc, annotation) =
+      node
+        "Identifier"
+        loc
+        [("name", string "this"); ("typeAnnotation", type_annotation annotation)]
     and function_params =
       let open Ast.Function.Params in
       function
@@ -1159,12 +1164,25 @@ with type t = Impl.t = struct
             params;
             rest = Some (rest_loc, { Function.RestParam.argument; comments });
             comments = _;
+            this_;
           } ) ->
         let rest = node ?comments "RestElement" rest_loc [("argument", pattern argument)] in
         let rev_params = List.rev_map function_param params in
         let params = List.rev (rest :: rev_params) in
+        let params =
+          match this_ with
+          | Some this -> this_param this :: params
+          | None -> params
+        in
         array params
-      | (_, { params; rest = None; comments = _ }) -> array_of_list function_param params
+      | (_, { params; rest = None; this_; comments = _ }) ->
+        let params = List.map function_param params in
+        let params =
+          match this_ with
+          | Some this -> this_param this :: params
+          | None -> params
+        in
+        array params
     and rest_element loc { Pattern.RestElement.argument; comments } =
       node ?comments "RestElement" loc [("argument", pattern argument)]
     and array_pattern_element =
@@ -1378,7 +1396,7 @@ with type t = Impl.t = struct
         ( loc,
           {
             Type.Function.params =
-              (_, { Type.Function.Params.params; rest; comments = params_comments });
+              (_, { Type.Function.Params.this_; params; rest; comments = params_comments });
             return;
             tparams;
             comments = func_comments;
@@ -1394,6 +1412,7 @@ with type t = Impl.t = struct
         loc
         [
           ("params", array_of_list function_type_param params);
+          ("this", option function_type_this_constraint this_);
           ("returnType", _type return);
           ("rest", option function_type_rest rest);
           ("typeParameters", option type_parameter_declaration tparams);
@@ -1417,6 +1436,14 @@ with type t = Impl.t = struct
         "argument", function_type_param argument;
       ] *)
       function_type_param ?comments argument
+    and function_type_this_constraint (loc, { Type.Function.ThisParam.annot; comments }) =
+      node
+        ?comments
+        "FunctionTypeParam"
+        loc
+        [
+          ("name", option identifier None); ("typeAnnotation", _type annot); ("optional", bool false);
+        ]
     and object_type ~include_inexact (loc, { Type.Object.properties; exact; inexact; comments }) =
       Type.Object.(
         let (props, ixs, calls, slots) =

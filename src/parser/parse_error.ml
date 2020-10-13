@@ -156,6 +156,13 @@ type t =
   | NullishCoalescingDisabled
   | NullishCoalescingUnexpectedLogical of string
   | WhitespaceInPrivateName
+  | ThisParamAnnotationRequired
+  | ThisParamMustBeFirst
+  | ThisParamMayNotBeOptional
+  | GetterMayNotHaveThisParam
+  | SetterMayNotHaveThisParam
+  | ThisParamBannedInArrowFunctions
+  | ThisParamBannedInConstructor
 [@@deriving ord]
 
 exception Error of (Loc.t * t) list
@@ -416,4 +423,13 @@ module PP = struct
         "Unexpected token `%s`. Parentheses are required to combine `??` with `&&` or `||` expressions."
         operator
     | WhitespaceInPrivateName -> "Unexpected whitespace between `#` and identifier"
+    | ThisParamAnnotationRequired -> "A type annotation is required for the `this` parameter."
+    | ThisParamMustBeFirst -> "The `this` parameter must be the first function parameter."
+    | ThisParamMayNotBeOptional -> "The `this` parameter cannot be optional."
+    | GetterMayNotHaveThisParam -> "A getter cannot have a `this` parameter."
+    | SetterMayNotHaveThisParam -> "A setter cannot have a `this` parameter."
+    | ThisParamBannedInArrowFunctions ->
+      "Arrow functions cannot have a `this` parameter; arrow functions automatically bind `this` when declared."
+    | ThisParamBannedInConstructor ->
+      "Constructors cannot have a `this` parameter; constructors don't bind `this` like other functions."
 end

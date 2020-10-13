@@ -7819,7 +7819,7 @@ and mk_class_sig =
 and mk_func_sig =
   let predicate_function_kind cx loc params =
     let open Error_message in
-    let (_, { Ast.Function.Params.params; rest; comments = _ }) = params in
+    let (_, { Ast.Function.Params.params; rest; this_ = _; comments = _ }) = params in
     let kind = Func_sig.Predicate in
     let kind =
       List.fold_left
@@ -7901,10 +7901,10 @@ and mk_func_sig =
       (* TODO: this should be a parse error, unrepresentable AST *)
       Error Error_message.(EInternal (ploc, RestParameterNotIdentifierPattern))
   in
-  let mk_params cx tparams_map (loc, { Ast.Function.Params.params; rest; comments }) =
+  let mk_params cx tparams_map (loc, { Ast.Function.Params.params; rest; this_ = _; comments }) =
     let fparams =
       Func_stmt_params.empty (fun params rest ->
-          Some (loc, { Ast.Function.Params.params; rest; comments }))
+          Some (loc, { Ast.Function.Params.params; rest; this_ = None; comments }))
     in
     let fparams =
       List.fold_left
@@ -8128,7 +8128,14 @@ and declare_function_to_function_declaration cx declare_loc func_decl =
             Ast.Type.Function
               {
                 Ast.Type.Function.params =
-                  (params_loc, { Ast.Type.Function.Params.params; rest; comments = params_comments });
+                  ( params_loc,
+                    {
+                      Ast.Type.Function.Params.params;
+                      rest;
+                      (* TODO: handle `this` constraints *)
+                      this_ = _;
+                      comments = params_comments;
+                    } );
                 Ast.Type.Function.return;
                 Ast.Type.Function.tparams;
                 comments = func_comments;
@@ -8188,7 +8195,8 @@ and declare_function_to_function_declaration cx declare_loc func_decl =
           ( Ast.Statement.FunctionDeclaration
               {
                 Ast.Function.id = Some id;
-                params = (params_loc, { Ast.Function.Params.params; rest; comments = None });
+                params =
+                  (params_loc, { Ast.Function.Params.params; rest; this_ = None; comments = None });
                 body;
                 async = false;
                 generator = false;
@@ -8206,7 +8214,8 @@ and declare_function_to_function_declaration cx declare_loc func_decl =
                   {
                     Ast.Function.id = Some ((id_loc, fun_type), id_name);
                     tparams;
-                    params = (params_loc, { Ast.Function.Params.params; rest; comments = _ });
+                    params =
+                      (params_loc, { Ast.Function.Params.params; rest; this_ = _; comments = _ });
                     return = Ast.Type.Available (_, return);
                     body =
                       Ast.Function.BodyBlock
@@ -8260,7 +8269,13 @@ and declare_function_to_function_declaration cx declare_loc func_decl =
                       {
                         Ast.Type.Function.params =
                           ( params_loc,
-                            { Ast.Type.Function.Params.params; rest; comments = params_comments } );
+                            {
+                              Ast.Type.Function.Params.params;
+                              rest;
+                              (* TODO: handle `this` constraints *)
+                              this_ = None;
+                              comments = params_comments;
+                            } );
                         return;
                         tparams;
                         comments = func_comments;

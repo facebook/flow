@@ -738,10 +738,20 @@ class virtual ['M, 'T, 'N, 'U] mapper =
       let comments' = Base.Option.map ~f:this#syntax comments in
       (annot', { argument = argument'; comments = comments' })
 
+    method function_this_constraint_type (frpt : ('M, 'T) Ast.Type.Function.ThisParam.t)
+        : ('N, 'U) Ast.Type.Function.ThisParam.t =
+      let open Ast.Type.Function.ThisParam in
+      let (loc, { annot; comments }) = frpt in
+      let loc' = this#on_loc_annot loc in
+      let annot' = this#type_ annot in
+      let comments' = Base.Option.map ~f:this#syntax comments in
+      (loc', { annot = annot'; comments = comments' })
+
     method function_type (ft : ('M, 'T) Ast.Type.Function.t) : ('N, 'U) Ast.Type.Function.t =
       let open Ast.Type.Function in
       let {
-        params = (params_annot, { Params.params = ps; rest = rpo; comments = params_comments });
+        params =
+          (params_annot, { Params.this_; params = ps; rest = rpo; comments = params_comments });
         return;
         tparams;
         comments = func_comments;
@@ -749,6 +759,7 @@ class virtual ['M, 'T, 'N, 'U] mapper =
         ft
       in
       this#type_params_opt tparams (fun tparams' ->
+          let this_' = Base.Option.map ~f:this#function_this_constraint_type this_ in
           let ps' = Base.List.map ~f:this#function_param_type ps in
           let rpo' = Base.Option.map ~f:this#function_rest_param_type rpo in
           let return' = this#type_ return in
@@ -757,7 +768,7 @@ class virtual ['M, 'T, 'N, 'U] mapper =
           {
             params =
               ( this#on_loc_annot params_annot,
-                { Params.params = ps'; rest = rpo'; comments = params_comments' } );
+                { Params.this_ = this_'; params = ps'; rest = rpo'; comments = params_comments' } );
             return = return';
             tparams = tparams';
             comments = func_comments';
@@ -1084,12 +1095,18 @@ class virtual ['M, 'T, 'N, 'U] mapper =
 
     method function_params (params : ('M, 'T) Ast.Function.Params.t)
         : ('N, 'U) Ast.Function.Params.t =
-      let (annot, { Ast.Function.Params.params = params_list; rest; comments }) = params in
+      let (annot, { Ast.Function.Params.params = params_list; rest; comments; this_ }) = params in
       let params_list' = Base.List.map ~f:this#function_param params_list in
       let rest' = Base.Option.map ~f:this#function_rest_param rest in
+      let this_' = Base.Option.map ~f:this#function_this_param this_ in
       let comments' = Base.Option.map ~f:this#syntax_with_internal comments in
       ( this#on_loc_annot annot,
-        { Ast.Function.Params.params = params_list'; rest = rest'; comments = comments' } )
+        {
+          Ast.Function.Params.params = params_list';
+          rest = rest';
+          comments = comments';
+          this_ = this_';
+        } )
 
     method function_param (param : ('M, 'T) Ast.Function.Param.t) : ('N, 'U) Ast.Function.Param.t =
       let open Ast.Function.Param in
@@ -1107,6 +1124,11 @@ class virtual ['M, 'T, 'N, 'U] mapper =
       let argument' = this#function_param_pattern argument in
       let comments' = Base.Option.map ~f:this#syntax comments in
       (annot', { argument = argument'; comments = comments' })
+
+    method function_this_param (this_param : 'M * ('M, 'T) Flow_ast.Type.annotation)
+        : 'N * ('N, 'U) Flow_ast.Type.annotation =
+      let (this_annot, annotation) = this_param in
+      (this#on_loc_annot this_annot, this#type_annotation annotation)
 
     method function_body body =
       let open Ast.Function in

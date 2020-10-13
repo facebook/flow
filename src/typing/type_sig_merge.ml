@@ -1564,7 +1564,11 @@ and merge_predicate component file base_t loc p =
   Type.OpenPredT { reason; base_t; m_pos; m_neg }
 
 and merge_fun
-    component file reason (FunSig { tparams; params; rest_param; return; predicate }) statics =
+    component
+    file
+    reason
+    (FunSig { tparams; params; rest_param; this_param = _; return; predicate })
+    statics =
   let prototype =
     let reason = Reason.(update_desc_reason (Fn.const RPrototype) reason) in
     Type.Unsoundness.function_proto_any reason

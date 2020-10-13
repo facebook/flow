@@ -994,16 +994,27 @@ class ['loc] mapper =
       else
         (loc, { argument = argument'; comments = comments' })
 
+    method function_this_param_type (this_param : ('loc, 'loc) Ast.Type.Function.ThisParam.t) =
+      let open Ast.Type.Function.ThisParam in
+      let (loc, { annot; comments }) = this_param in
+      let annot' = this#type_ annot in
+      let comments' = this#syntax_opt comments in
+      if annot' == annot && comments' == comments then
+        this_param
+      else
+        (loc, { annot = annot'; comments = comments' })
+
     method function_type _loc (ft : ('loc, 'loc) Ast.Type.Function.t) =
       let open Ast.Type.Function in
       let {
-        params = (params_loc, { Params.params = ps; rest = rpo; comments = params_comments });
+        params = (params_loc, { Params.this_; params = ps; rest = rpo; comments = params_comments });
         return;
         tparams;
         comments = func_comments;
       } =
         ft
       in
+      let this_' = map_opt this#function_this_param_type this_ in
       let ps' = map_list this#function_param_type ps in
       let rpo' = map_opt this#function_rest_param_type rpo in
       let return' = this#type_ return in
@@ -1017,11 +1028,14 @@ class ['loc] mapper =
         && tparams' == tparams
         && func_comments' == func_comments
         && params_comments' == params_comments
+        && this_' == this_
       then
         ft
       else
         {
-          params = (params_loc, { Params.params = ps'; rest = rpo'; comments = params_comments' });
+          params =
+            ( params_loc,
+              { Params.this_ = this_'; params = ps'; rest = rpo'; comments = params_comments' } );
           return = return';
           tparams = tparams';
           comments = func_comments';
@@ -1410,14 +1424,24 @@ class ['loc] mapper =
 
     method function_params (params : ('loc, 'loc) Ast.Function.Params.t) =
       let open Ast.Function in
-      let (loc, { Params.params = params_list; rest; comments }) = params in
+      let (loc, { Params.params = params_list; rest; comments; this_ }) = params in
       let params_list' = map_list this#function_param params_list in
       let rest' = map_opt this#function_rest_param rest in
+      let this_' = map_opt this#function_this_param this_ in
       let comments' = this#syntax_opt comments in
-      if params_list == params_list' && rest == rest' && comments == comments' then
+      if params_list == params_list' && rest == rest' && comments == comments' && this_ == this_'
+      then
         params
       else
-        (loc, { Params.params = params_list'; rest = rest'; comments = comments' })
+        (loc, { Params.params = params_list'; rest = rest'; comments = comments'; this_ = this_' })
+
+    method function_this_param (this_param : 'loc * ('loc, 'loc) Ast.Type.annotation) =
+      let (loc, annotation) = this_param in
+      let annotation' = this#type_annotation annotation in
+      if annotation == annotation' then
+        this_param
+      else
+        (loc, annotation')
 
     method function_param (param : ('loc, 'loc) Ast.Function.Param.t) =
       let open Ast.Function.Param in

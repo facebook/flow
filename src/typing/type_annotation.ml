@@ -936,7 +936,14 @@ let rec convert cx tparams_map =
       Function
         {
           Function.params =
-            (params_loc, { Function.Params.params; rest; comments = params_comments });
+            ( params_loc,
+              {
+                Function.Params.params;
+                rest;
+                (* TODO: handle `this` constraints *)
+                this_ = _;
+                comments = params_comments;
+              } );
           return;
           tparams;
           comments = func_comments;
@@ -1019,6 +1026,8 @@ let rec convert cx tparams_map =
               {
                 Function.Params.params = List.rev rev_param_asts;
                 rest = rest_param_ast;
+                (* TODO: handle `this` constraints *)
+                this_ = None;
                 comments = params_comments;
               } );
           return = return_ast;
@@ -1542,9 +1551,17 @@ and mk_func_sig =
     in
     Func_type_params.add_rest rest x
   in
-  let convert_params cx tparams_map (loc, { Params.params; rest; comments }) =
+  let convert_params
+      cx
+      tparams_map
+      (loc, { Params.params; rest; (* TODO: handle `this` constraints *)
+                                   this_ = _; comments }) =
     let fparams =
-      Func_type_params.empty (fun params rest -> Some (loc, { Params.params; rest; comments }))
+      Func_type_params.empty (fun params rest ->
+          Some
+            ( loc,
+              { Params.params; rest; (* TODO: handle `this` constraints *)
+                                     this_ = None; comments } ))
     in
     let fparams = List.fold_left (add_param cx tparams_map) fparams params in
     let fparams = Base.Option.fold ~f:(add_rest cx tparams_map) ~init:fparams rest in

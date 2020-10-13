@@ -182,13 +182,18 @@ module Eval (Env : EvalEnv) = struct
       let open Ast.Type.Function in
       let { tparams; params; return; comments = _ } = ft in
       let (tps, deps) = type_params tps tparams in
-      let (_, { Params.params; rest; comments = _ }) = params in
+      let (_, { Params.params; rest; this_; comments = _ }) = params in
       let deps = List.fold_left (Deps.reduce_join (function_type_param tps)) deps params in
       let deps =
         match rest with
         | None -> deps
         | Some (_, { RestParam.argument; comments = _ }) ->
           Deps.join (deps, function_type_param tps argument)
+      in
+      let deps =
+        match this_ with
+        | None -> deps
+        | Some (_, { ThisParam.annot; comments = _ }) -> Deps.join (deps, type_ tps annot)
       in
       Deps.join (deps, type_ tps return)
 
@@ -605,13 +610,20 @@ module Eval (Env : EvalEnv) = struct
   and function_rest_param tps (_, { Ast.Function.RestParam.argument; comments = _ }) =
     pattern tps argument
 
+  and function_this_param tps (_, (_, t)) = type_ tps t
+
   and function_params tps params =
     let open Ast.Function in
-    let (_, { Params.params; rest; comments = _ }) = params in
+    let (_, { Params.params; rest; this_; comments = _ }) = params in
     let deps = List.fold_left (Deps.reduce_join (function_param tps)) Deps.bot params in
-    match rest with
+    let deps =
+      match rest with
+      | None -> deps
+      | Some param -> Deps.join (deps, function_rest_param tps param)
+    in
+    match this_ with
     | None -> deps
-    | Some param -> Deps.join (deps, function_rest_param tps param)
+    | Some param -> Deps.join (deps, function_this_param tps param)
 
   and function_return tps ~is_missing_ok return =
     match return with
