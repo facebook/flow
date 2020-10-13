@@ -113,7 +113,8 @@ module T = struct
         return: little_annotation;
       }
 
-  and function_params = Loc.t * pattern list * (Loc.t * pattern) option
+  and function_params =
+    Loc.t * pattern list * (Loc.t * pattern) option * (Loc.t * (Loc.t * type_)) option
 
   and pattern = Loc.t * (Loc.t, Loc.t) Ast.Identifier.t option * bool (* optional *) * type_
 
@@ -613,7 +614,7 @@ module T = struct
             params : function_params;
             return : little_annotation;
           } ) ->
-      let (params_loc, params, rest) = params in
+      let (params_loc, params, rest, this_) = params in
       ( loc,
         {
           Ast.Type.Function.tparams;
@@ -631,6 +632,11 @@ module T = struct
                           Ast.Type.Function.RestParam.argument = param_of_type rest;
                           comments = None;
                         } ));
+                this_ =
+                  (match this_ with
+                  | None -> None
+                  | Some (loc, (_, t)) ->
+                    Some (loc, { Ast.Type.Function.ThisParam.annot = t; comments = None }));
                 comments = None;
               } );
           return = type_of_little_annotation outlined return;
@@ -1465,16 +1471,23 @@ module Eval (Env : Signature_builder_verify.EvalEnv) = struct
   and function_rest_param (loc, { Ast.Function.RestParam.argument; comments = _ }) =
     (loc, pattern argument)
 
+  and function_this_param (loc, (annot_loc, t)) = (loc, (annot_loc, type_ t))
+
   and function_params params =
     let open Ast.Function in
-    let (params_loc, { Params.params; rest; comments = _ }) = params in
+    let (params_loc, { Params.params; rest; this_; comments = _ }) = params in
     let params = Base.List.map ~f:function_param params in
     let rest =
       match rest with
       | None -> None
       | Some param -> Some (function_rest_param param)
     in
-    (params_loc, params, rest)
+    let this_ =
+      match this_ with
+      | None -> None
+      | Some param -> Some (function_this_param param)
+    in
+    (params_loc, params, rest, this_)
 
   and function_return ~is_missing_ok ~async return =
     match return with

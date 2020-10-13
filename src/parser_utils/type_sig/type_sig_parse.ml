@@ -1209,15 +1209,21 @@ and function_type opts scope locs xs f: ('loc loc_node, 'loc parsed) fun_sig =
   let module F = T.Function in
   let {F.
     tparams = tps;
-    params = (_, {F.Params.params = ps; rest = rp; comments = _});
+    params = (_, {F.Params.
+      params = ps;
+      rest = rp;
+      this_;
+      comments = _;
+    });
     return = r;
     comments = _;
   } = f in
   let xs, tparams = tparams opts scope locs xs tps in
+  let this_param = function_type_this_param opts scope locs xs this_ in
   let params = function_type_params opts scope locs xs ps in
   let rest_param = function_type_rest_param opts scope locs xs rp in
   let return = annot opts scope locs xs r in
-  FunSig { tparams; params; rest_param; return; predicate = None }
+  FunSig { tparams; params; rest_param; this_param; return; predicate = None }
 
 and function_type_params =
   let module F = T.Function in
@@ -1248,6 +1254,14 @@ and function_type_rest_param opts scope locs xs =
     let name = match id with None -> None | Some id -> Some (id_name id) in
     let t = annot opts scope locs xs t in
     Some (FunRestParam {name; loc; t})
+
+and function_type_this_param opts scope locs xs =
+ let module F = T.Function in
+  function
+  | None -> None
+  | Some (_, {F.ThisParam.annot = t; comments = _}) ->
+    let t = annot opts scope locs xs t in
+    Some t
 
 and getter_type opts scope locs xs id_loc f =
   let module F = T.Function in
@@ -2578,6 +2592,11 @@ and function_def =
       let p = param opts scope locs xs p in
       params opts scope locs xs (p::acc) ps
   in
+  let this_param opts scope locs xs = function
+    | None -> None
+    | Some (_, (_, t)) ->
+        let t = annot opts scope locs xs t in
+        Some t in
   let rest_param opts scope locs xs = function
     | None -> None
     | Some (param_loc, {F.RestParam.argument = (_, p); comments = _}) ->
@@ -2640,7 +2659,7 @@ and function_def =
     let {F.
       id = _;
       tparams = tps;
-      params = (_, {F.Params.params = ps; rest = rp; comments = _});
+      params = (_, {F.Params.params = ps; rest = rp; this_; comments = _});
       body;
       return = r;
       predicate = p;
@@ -2650,11 +2669,12 @@ and function_def =
       comments = _;
     } = f in
     let xs, tparams = tparams opts scope locs xs tps in
+    let this_param = this_param opts scope locs xs this_ in
     let params = params opts scope locs xs [] ps in
     let rest_param = rest_param opts scope locs xs rp in
     let return = return opts scope locs xs ~async ~generator body r in
     let predicate = predicate opts scope locs ps body p in
-    FunSig { tparams; params; rest_param; return; predicate }
+    FunSig { tparams; params; rest_param; this_param; return; predicate }
 
 and predicate opts scope locs pnames =
   let open Option.Let_syntax in
@@ -3411,11 +3431,17 @@ let declare_function_decl opts scope locs decl =
     match t with
     | T.Function {T.Function.
         tparams = tps;
-        params = (_, {T.Function.Params.params = ps; rest = rp; comments = _});
+        params = (_, {T.Function.Params.
+          params = ps;
+          rest = rp;
+          this_;
+          comments = _;
+        });
         return = r;
         comments = _;
       } ->
       let xs, tparams = tparams opts scope locs SSet.empty tps in
+      let this_param = function_type_this_param opts scope locs xs this_ in
       let params = function_type_params opts scope locs xs ps in
       let rest_param = function_type_rest_param opts scope locs xs rp in
       let return = annot opts scope locs xs r in
@@ -3436,7 +3462,7 @@ let declare_function_decl opts scope locs decl =
           (* inferred predicate not allowed in declared function *)
           None
       in
-      FunSig { tparams; params; rest_param; return; predicate }
+      FunSig { tparams; params; rest_param; this_param; return; predicate }
     | _ -> failwith "unexpected declare function annot"
   )) in
   Scope.bind_declare_function scope id_loc fn_loc name def

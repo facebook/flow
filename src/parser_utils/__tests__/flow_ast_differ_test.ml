@@ -566,7 +566,14 @@ class insert_function_annot_mapper =
               Type.Function
                 {
                   Type.Function.tparams = None;
-                  params = (loc, { Type.Function.Params.params = []; rest = None; comments = None });
+                  params =
+                    ( loc,
+                      {
+                        Type.Function.Params.this_ = None;
+                        params = [];
+                        rest = None;
+                        comments = None;
+                      } );
                   return = (loc, Type.Number None);
                   comments = None;
                 } ) )
@@ -586,7 +593,14 @@ class insert_import_and_annot_mapper =
               Type.Function
                 {
                   Type.Function.tparams = None;
-                  params = (loc, { Type.Function.Params.params = []; rest = None; comments = None });
+                  params =
+                    ( loc,
+                      {
+                        Type.Function.Params.this_ = None;
+                        params = [];
+                        rest = None;
+                        comments = None;
+                      } );
                   return = (loc, Type.Number None);
                   comments = None;
                 } ) )
