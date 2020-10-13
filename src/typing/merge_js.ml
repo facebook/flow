@@ -407,7 +407,7 @@ let detect_matching_props_violations cx =
   let step (reason, key, sentinel, obj) =
     let obj = resolver#type_ cx () obj in
     let sentinel = resolver#type_ cx () sentinel in
-    match sentinel with
+    match drop_generic sentinel with
     (* TODO: it should not be possible to create a MatchingPropT with a non-tvar tout *)
     | DefT (_, _, (BoolT (Some _) | StrT (Literal _) | NumT (Literal _))) ->
       (* Limit the check to promitive literal sentinels *)
@@ -421,7 +421,9 @@ let detect_matching_props_violations cx =
                sentinel_reason = TypeUtil.reason_of_t sentinel;
              })
       in
-      Flow_js.flow cx (MatchingPropT (reason, key, sentinel), UseT (use_op, obj))
+      (* If `obj` is a GenericT, we replace it with it's upper bound, since ultimately it will flow into
+         `sentinel` rather than the other way around. *)
+      Flow_js.flow cx (MatchingPropT (reason, key, sentinel), UseT (use_op, drop_generic obj))
     | _ -> ()
   in
   let matching_props = Context.matching_props cx in

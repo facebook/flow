@@ -445,6 +445,10 @@ let needs_resolution = function
     true
   | _ -> false
 
+let is_generic = function
+  | GenericT _ -> true
+  | _ -> false
+
 let is_object_prototype_method = function
   | "isPrototypeOf"
   | "hasOwnProperty"
@@ -2971,9 +2975,10 @@ struct
             if Context.is_verbose cx then prerr_endline "UnionT ~> StrictEqT fast path"
           end else
             flow_all_in_union cx trace rep1 u
-        | (UnionT _, EqT { reason; flip; arg }) when needs_resolution arg ->
+        | (UnionT _, EqT { reason; flip; arg }) when needs_resolution arg || is_generic arg ->
           rec_flow cx trace (arg, EqT { reason; flip = not flip; arg = l })
-        | (UnionT _, StrictEqT { reason; cond_context; flip; arg }) when needs_resolution arg ->
+        | (UnionT _, StrictEqT { reason; cond_context; flip; arg })
+          when needs_resolution arg || is_generic arg ->
           rec_flow cx trace (arg, StrictEqT { reason; cond_context; flip = not flip; arg = l })
         | (UnionT (r, rep), SentinelPropTestT (_reason, l, _key, sense, sentinel, result)) ->
           (* we have the check l.key === sentinel where l.key is a union *)
@@ -3259,7 +3264,7 @@ struct
           (* Things that can have properties are object-like (objects, instances,
          and their exact versions). Notably, "meta" types like union, annot,
          typeapp, eval, maybe, optional, and intersection should have boiled
-         away by this point. *)
+         away by this point. Generics should have been "unsealed" as well. *)
           let propref = Named (reason, x) in
           let strict = NonstrictReturning (None, None) in
           let u =
@@ -7318,7 +7323,7 @@ struct
  *
  **)
   and flow_addition cx trace use_op reason flip l r u =
-    if needs_resolution r then
+    if needs_resolution r || is_generic r then
       rec_flow cx trace (r, AdderT (use_op, reason, not flip, l, u))
     else
       let (l, r) =
@@ -7378,7 +7383,7 @@ struct
  *   string <> string = string
  **)
   and flow_comparator cx trace reason flip l r =
-    if needs_resolution r then
+    if needs_resolution r || is_generic r then
       rec_flow cx trace (r, ComparatorT { reason; flip = not flip; arg = l })
     else
       let (l, r) =
@@ -7405,7 +7410,7 @@ struct
  * note: almost any types may be compared with === (in)equality.
  **)
   and flow_eq cx trace reason flip l r =
-    if needs_resolution r then
+    if needs_resolution r || is_generic r then
       rec_flow cx trace (r, EqT { reason; flip = not flip; arg = l })
     else
       let (l, r) =
@@ -7421,7 +7426,7 @@ struct
         add_output cx ~trace (Error_message.ENonStrictEqualityComparison reasons)
 
   and flow_strict_eq cx trace reason cond_context flip l r =
-    if needs_resolution r then
+    if needs_resolution r || is_generic r then
       rec_flow cx trace (r, StrictEqT { reason; cond_context; flip = not flip; arg = l })
     else
       let (l, r) =
@@ -7910,6 +7915,24 @@ struct
       true
     else
       match u with
+      (* In this set of cases, we flow the generic's upper bound to u. This is what we normally would do
+          in the catch-all generic case anyways, but these rules are to avoid wildcards elsewhere in __flow. *)
+      | AdderT _
+      | EqT _
+      | StrictEqT _
+      | ComparatorT _
+      | UnaryMinusT _
+      | AssertArithmeticOperandT _
+      | AssertForInRHST _
+      | AssertBinaryInLHST _
+      | AssertBinaryInRHST _
+      | TestPropT _
+      | MapTypeT _
+      (* the above case is not needed for correctness, but rather avoids a slow path in TupleMap *)
+      | UseT (_, ShapeT _)
+      | UseT (Op (Coercion _), DefT (_, _, StrT _)) ->
+        rec_flow cx trace (position_generic_bound reason bound, u);
+        true
       (* The LHS is what's actually getting refined--don't do anything special for the RHS *)
       | PredicateT (RightP _, _)
       | PredicateT (NotP (RightP _), _) ->

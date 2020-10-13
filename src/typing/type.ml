@@ -2813,6 +2813,10 @@ let is_any = function
   | AnyT _ -> true
   | _ -> false
 
+let drop_generic = function
+  | GenericT { bound; _ } -> bound
+  | t -> t
+
 (* Primitives, like string, will be promoted to their wrapper object types for
  * certain operations, like GetPropT, but not for others, like `UseT _`. *)
 let primitive_promoting_use_t = function
