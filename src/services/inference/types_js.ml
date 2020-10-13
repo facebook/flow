@@ -135,47 +135,44 @@ let reparse ~options ~profiling ~transaction ~reader ~workers ~modified ~deleted
       Lwt.return (new_or_changed, parse_ok, unparsed, unchanged, local_errors))
 
 (* TODO: make this always return errors and deal with check_syntax at the caller *)
-let parse_contents ~options ~profiling ~check_syntax filename contents =
-  SharedMem_js.with_memory_timer_lwt ~options "Parsing" profiling (fun () ->
-      (* always enable types when checking an individual file *)
-      let types_mode = Parsing_service_js.TypesAllowed in
-      let max_tokens = Options.max_header_tokens options in
-      let (docblock_errors, info) =
-        Parsing_service_js.parse_docblock ~max_tokens filename contents
-      in
-      let errors = Inference_utils.set_of_docblock_errors ~source_file:filename docblock_errors in
-      let parse_options =
-        Parsing_service_js.make_parse_options ~fail:check_syntax ~types_mode info options
-      in
-      let parse_result = Parsing_service_js.do_parse ~info ~parse_options contents filename in
-      match parse_result with
-      | Parsing_service_js.Parse_ok { ast; file_sig; tolerable_errors; parse_errors; _ } ->
-        (* NOTE: parse errors are ignored because we don't surface them when ~check_syntax:false,
+let parse_contents ~options ~check_syntax filename contents =
+  (* always enable types when checking an individual file *)
+  let types_mode = Parsing_service_js.TypesAllowed in
+  let max_tokens = Options.max_header_tokens options in
+  let (docblock_errors, info) = Parsing_service_js.parse_docblock ~max_tokens filename contents in
+  let errors = Inference_utils.set_of_docblock_errors ~source_file:filename docblock_errors in
+  let parse_options =
+    Parsing_service_js.make_parse_options ~fail:check_syntax ~types_mode info options
+  in
+  let parse_result = Parsing_service_js.do_parse ~info ~parse_options contents filename in
+  match parse_result with
+  | Parsing_service_js.Parse_ok { ast; file_sig; tolerable_errors; parse_errors; _ } ->
+    (* NOTE: parse errors are ignored because we don't surface them when ~check_syntax:false,
            and they'll hit the Parse_fail case instead when ~check_syntax:true *)
-        (* TODO: docblock errors get dropped *)
-        Lwt.return (Ok (ast, file_sig, tolerable_errors, parse_errors), info)
-      | Parsing_service_js.Parse_fail fails ->
-        let errors =
-          match fails with
-          | Parsing_service_js.Parse_error err ->
-            let err = Inference_utils.error_of_parse_error ~source_file:filename err in
-            Flow_error.ErrorSet.add err errors
-          | Parsing_service_js.Docblock_errors errs ->
-            List.fold_left
-              (fun errors err ->
-                let err = Inference_utils.error_of_docblock_error ~source_file:filename err in
-                Flow_error.ErrorSet.add err errors)
-              errors
-              errs
-          | Parsing_service_js.File_sig_error err ->
-            let err = Inference_utils.error_of_file_sig_error ~source_file:filename err in
-            Flow_error.ErrorSet.add err errors
-        in
-        Lwt.return (Error errors, info)
-      | Parsing_service_js.Parse_skip
-          (Parsing_service_js.Skip_non_flow_file | Parsing_service_js.Skip_resource_file) ->
-        (* should never happen *)
-        Lwt.return (Error errors, info))
+    (* TODO: docblock errors get dropped *)
+    (Ok (ast, file_sig, tolerable_errors, parse_errors), info)
+  | Parsing_service_js.Parse_fail fails ->
+    let errors =
+      match fails with
+      | Parsing_service_js.Parse_error err ->
+        let err = Inference_utils.error_of_parse_error ~source_file:filename err in
+        Flow_error.ErrorSet.add err errors
+      | Parsing_service_js.Docblock_errors errs ->
+        List.fold_left
+          (fun errors err ->
+            let err = Inference_utils.error_of_docblock_error ~source_file:filename err in
+            Flow_error.ErrorSet.add err errors)
+          errors
+          errs
+      | Parsing_service_js.File_sig_error err ->
+        let err = Inference_utils.error_of_file_sig_error ~source_file:filename err in
+        Flow_error.ErrorSet.add err errors
+    in
+    (Error errors, info)
+  | Parsing_service_js.Parse_skip
+      (Parsing_service_js.Skip_non_flow_file | Parsing_service_js.Skip_resource_file) ->
+    (* should never happen *)
+    (Error errors, info)
 
 let flow_error_of_module_error file err =
   match err with
@@ -1115,10 +1112,9 @@ let ensure_checked_dependencies ~options ~reader ~env file file_sig =
 (* Another special case, similar assumptions as above. *)
 
 (** TODO: handle case when file+contents don't agree with file system state **)
-let merge_contents ~options ~env ~profiling ~reader filename info (ast, file_sig) =
-  SharedMem_js.with_memory_timer_lwt ~options "MergeContents" profiling (fun () ->
-      let%lwt () = ensure_checked_dependencies ~options ~reader ~env filename file_sig in
-      Lwt.return (Merge_service.merge_contents_context ~reader options filename ast info file_sig))
+let merge_contents ~options ~env ~reader filename info (ast, file_sig) =
+  let%lwt () = ensure_checked_dependencies ~options ~reader ~env filename file_sig in
+  Lwt.return (Merge_service.merge_contents_context ~reader options filename ast info file_sig)
 
 let errors_of_context ~options ~env ~lazy_table_of_aloc filename tolerable_errors cx =
   let errors = Context.errors cx in
@@ -1191,14 +1187,16 @@ let typecheck_contents ~options ~env ~profiling contents filename =
   let reader = State_reader.create () in
   let lazy_table_of_aloc = Parsing_heaps.Reader.get_sig_ast_aloc_table_unsafe_lazy ~reader in
   let%lwt (parse_result, info) =
-    parse_contents ~options ~profiling ~check_syntax:true filename contents
+    SharedMem_js.with_memory_timer_lwt ~options "Parsing" profiling (fun () ->
+        Lwt.return (parse_contents ~options ~check_syntax:true filename contents))
   in
   (* override docblock info *)
   let info = Docblock.set_flow_mode_for_ide_command info in
   match parse_result with
   | Ok (ast, file_sig, tolerable_errors, _parse_errors) ->
     let%lwt (cx, typed_ast) =
-      merge_contents ~options ~env ~profiling ~reader filename info (ast, file_sig)
+      SharedMem_js.with_memory_timer_lwt ~options "MergeContents" profiling (fun () ->
+          merge_contents ~options ~env ~reader filename info (ast, file_sig))
     in
     let (errors, warnings) =
       errors_of_context ~options ~env ~lazy_table_of_aloc filename tolerable_errors cx
@@ -1214,14 +1212,16 @@ let type_contents ~options ~env ~profiling contents filename =
   try%lwt
     let reader = State_reader.create () in
     let%lwt (parse_result, info) =
-      parse_contents ~options ~profiling ~check_syntax:false filename contents
+      SharedMem_js.with_memory_timer_lwt ~options "Parsing" profiling (fun () ->
+          Lwt.return (parse_contents ~options ~check_syntax:false filename contents))
     in
     (* override docblock info *)
     let info = Docblock.set_flow_mode_for_ide_command info in
     match parse_result with
     | Ok (ast, file_sig, tolerable_errors, parse_errors) ->
       let%lwt (cx, typed_ast) =
-        merge_contents ~options ~env ~profiling ~reader filename info (ast, file_sig)
+        SharedMem_js.with_memory_timer_lwt ~options "MergeContents" profiling (fun () ->
+            merge_contents ~options ~env ~reader filename info (ast, file_sig))
       in
       Lwt.return (Ok (cx, info, file_sig, tolerable_errors, typed_ast, parse_errors))
     | Error _ -> failwith "Couldn't parse file"
