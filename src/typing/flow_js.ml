@@ -716,6 +716,14 @@ let is_concrete t =
     false
   | _ -> true
 
+let is_literal_type t =
+  match t with
+  | DefT (_, _, SingletonStrT _)
+  | DefT (_, _, SingletonNumT _)
+  | DefT (_, _, SingletonBoolT _) ->
+    true
+  | _ -> false
+
 let position_generic_bound reason = mod_reason_of_t (Fn.const reason)
 
 (* Creates a union from a list of types. Since unions require a minimum of two
@@ -7981,8 +7989,12 @@ struct
           | _ -> false
         else
           wait_for_concrete_bound ()
+      | ElemT _ ->
+        if is_concrete bound && not (is_literal_type bound) then
+          distribute_union_intersection ()
+        else
+          wait_for_concrete_bound ()
       | ObjKitT _
-      | ElemT _
       | UseT (_, IntersectionT _) ->
         if is_concrete bound then
           distribute_union_intersection ()
@@ -10008,10 +10020,13 @@ struct
         | OpenT _ ->
           let loc = loc_of_t elem_t in
           add_output cx ~trace Error_message.(EInternal (loc, PropRefComputedOpen))
+        | GenericT { bound = DefT (_, _, StrT (Literal _)); _ }
         | DefT (_, _, StrT (Literal _)) ->
           let loc = loc_of_t elem_t in
           add_output cx ~trace Error_message.(EInternal (loc, PropRefComputedLiteral))
         | AnyT _ -> rec_flow_t cx trace ~use_op:unknown_use (AnyT.untyped reason_op, OpenT tout)
+        | GenericT { bound = DefT (_, _, StrT _); _ }
+        | GenericT { bound = DefT (_, _, NumT _); _ }
         | DefT (_, _, StrT _)
         | DefT (_, _, NumT _) ->
           (* string, and number keys are allowed, but there's nothing else to
@@ -10031,6 +10046,7 @@ struct
   and elem_action_on_obj cx trace ~use_op ?on_named_prop l obj reason_op action =
     let propref =
       match l with
+      | GenericT { bound = DefT (_, _, StrT (Literal (_, x))); reason = reason_x; _ }
       | DefT (reason_x, _, StrT (Literal (_, x))) ->
         let reason_named = replace_desc_reason (RStringLit x) reason_x in
         Base.Option.iter ~f:(fun f -> f reason_named) on_named_prop;
@@ -10091,10 +10107,13 @@ struct
         | OpenT _ ->
           let loc = loc_of_t elem_t in
           add_output cx ~trace Error_message.(EInternal (loc, PropRefComputedOpen))
+        | GenericT { bound = DefT (_, _, StrT (Literal _)); _ }
         | DefT (_, _, StrT (Literal _)) ->
           let loc = loc_of_t elem_t in
           add_output cx ~trace Error_message.(EInternal (loc, PropRefComputedLiteral))
         | AnyT _ -> rec_flow_t cx trace ~use_op:unknown_use (prop_t, AnyT.untyped reason_op)
+        | GenericT { bound = DefT (_, _, StrT _); _ }
+        | GenericT { bound = DefT (_, _, NumT _); _ }
         | DefT (_, _, StrT _)
         | DefT (_, _, NumT _) ->
           (* string and number keys are allowed, but there's nothing else to
