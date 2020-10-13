@@ -754,13 +754,15 @@ module Make (F : Func_sig.S) = struct
     end;
     let { tparams; _ } = remove_this x in
     let open TypeUtil in
-    let t =
+    let (t_inner, t_outer) =
       if structural x then
-        class_type ~structural:true this
+        let class_type = class_type ~structural:true this in
+        (class_type, class_type)
       else
-        this_class_type this
+        (this_class_type this true, this_class_type this false)
     in
-    poly_type_of_tparams (Context.generate_poly_id cx) tparams t
+    let poly t = poly_type_of_tparams (Context.generate_poly_id cx) tparams t in
+    (poly t_inner, poly t_outer)
 
   (* Processes the bodies of instance and static class members. *)
   let toplevels cx ~decls ~stmts ~expr ~private_property_map x =

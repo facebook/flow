@@ -450,7 +450,7 @@ Error --------------------------------------------------------------------------
 Cannot return `(new A()).foo()` because `A` [1] is incompatible with `this` [2]. [incompatible-return]
 
    self.js:4:24
-   4|   bar(): this { return new A().foo(); } // same as returning : A, so error
+   4|   bar(): this { return new A().foo(); } // with generate-tests: same as returning : A, so error; with new generics, error is above
                              ^^^^^^^^^^^^^
 
 References:
@@ -458,7 +458,7 @@ References:
    1| class A {
             ^ [1]
    self.js:4:10
-   4|   bar(): this { return new A().foo(); } // same as returning : A, so error
+   4|   bar(): this { return new A().foo(); } // with generate-tests: same as returning : A, so error; with new generics, error is above
                ^^^^ [2]
 
 
@@ -704,7 +704,7 @@ Cannot extend `Base2` [1] with `Override2` because `Override2` [2] is incompatib
 argument of property `grault`. [incompatible-extend]
 
    test.js:56:16
-   56|   grault(that: this) { } // error, too
+   56|   grault(that: this) { } // error, too (only variance error with new-generics)
                       ^^^^ [2]
 
 References:
@@ -722,7 +722,7 @@ Cannot extend `Base2` [1] with `Override2` because `this` [2] is incompatible wi
 property `grault`. [incompatible-extend]
 
    test.js:56:16
-   56|   grault(that: this) { } // error, too
+   56|   grault(that: this) { } // error, too (only variance error with new-generics)
                       ^^^^ [2]
 
 References:
@@ -755,7 +755,7 @@ Cannot use `this` [1] in an input position because `this` [1] is expected to occ
 [incompatible-variance]
 
    test.js:56:16
-   56|   grault(that: this) { } // error, too
+   56|   grault(that: this) { } // error, too (only variance error with new-generics)
                       ^^^^
 
 References:

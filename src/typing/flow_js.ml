@@ -3713,13 +3713,14 @@ struct
 
         (* A class can be viewed as a mixin by extracting its immediate properties,
        and "erasing" its static and super *)
-        | (ThisClassT (_, DefT (_, trust, InstanceT (_, _, _, instance))), MixinT (r, tvar)) ->
+        | (ThisClassT (_, DefT (_, trust, InstanceT (_, _, _, instance)), is_this), MixinT (r, tvar))
+          ->
           let static = ObjProtoT r in
           let super = ObjProtoT r in
           rec_flow
             cx
             trace
-            ( this_class_type (DefT (r, trust, InstanceT (static, super, [], instance))),
+            ( this_class_type (DefT (r, trust, InstanceT (static, super, [], instance))) is_this,
               UseT (unknown_use, tvar) )
         | ( DefT
               ( _,
@@ -3728,7 +3729,7 @@ struct
                   {
                     tparams_loc;
                     tparams = xs;
-                    t_out = ThisClassT (_, DefT (_, trust, InstanceT (_, _, _, insttype)));
+                    t_out = ThisClassT (_, DefT (_, trust, InstanceT (_, _, _, insttype)), is_this);
                     _;
                   } ),
             MixinT (r, tvar) ) ->
@@ -3738,7 +3739,11 @@ struct
           rec_flow
             cx
             trace
-            ( poly_type (Context.generate_poly_id cx) tparams_loc xs (this_class_type instance),
+            ( poly_type
+                (Context.generate_poly_id cx)
+                tparams_loc
+                xs
+                (this_class_type instance is_this),
               UseT (unknown_use, tvar) )
         | (AnyT (_, src), MixinT (r, tvar)) ->
           rec_flow_t ~use_op:unknown_use cx trace (AnyT.why src r, tvar)
@@ -3841,7 +3846,7 @@ struct
         | (AnyT _, SpecializeT (_, _, _, _, _, tvar)) ->
           rec_flow_t ~use_op:unknown_use cx trace (l, tvar)
         (* this-specialize a this-abstracted class by substituting This *)
-        | (ThisClassT (_, i), ThisSpecializeT (r, this, k)) ->
+        | (ThisClassT (_, i, _), ThisSpecializeT (r, this, k)) ->
           let i = subst cx (SMap.singleton "this" this) i in
           continue_repos cx trace r i k
         (* this-specialization of non-this-abstracted classes is a no-op *)
@@ -3946,9 +3951,9 @@ struct
         (* TODO: ideally we'd do the same when lower bounds flow to a
        this-abstracted class, but fixing the class is easier; might need to
        revisit *)
-        | (_, UseT (use_op, ThisClassT (r, i))) ->
+        | (_, UseT (use_op, ThisClassT (r, i, this))) ->
           let reason = reason_of_t l in
-          rec_flow cx trace (l, UseT (use_op, fix_this_class cx trace reason (r, i)))
+          rec_flow cx trace (l, UseT (use_op, fix_this_class cx trace reason (r, i, this)))
         (* This rule is hit when a polymorphic type appears outside a
         type application expression - i.e. not followed by a type argument list
         delimited by angle brackets.
@@ -4091,9 +4096,9 @@ struct
               rec_flow cx trace (t_, u)
           end
         (* when a this-abstracted class flows to upper bounds, fix the class *)
-        | (ThisClassT (r, i), _) ->
+        | (ThisClassT (r, i, this), _) ->
           let reason = reason_of_use_t u in
-          rec_flow cx trace (fix_this_class cx trace reason (r, i), u)
+          rec_flow cx trace (fix_this_class cx trace reason (r, i, this), u)
         (*****************************)
         (* React Abstract Components *)
         (*****************************)
@@ -8808,13 +8813,25 @@ struct
    fixpoint is some `this`, substitute it as This in the instance type, and
    finally unify it with the instance type. Return the class type wrapping the
    instance type. *)
-  and fix_this_class cx trace reason (r, i) =
+  and fix_this_class cx trace reason (r, i, is_this) =
     let i' =
       match Cache.Fix.find cx reason i with
       | Some i' -> i'
       | None ->
         let this = Tvar.mk cx reason in
-        let i' = subst cx (SMap.singleton "this" this) i in
+        let this_generic =
+          if is_this && not (Context.generate_tests cx) then
+            GenericT
+              {
+                id = Context.make_generic_id cx "this" (def_aloc_of_reason r);
+                reason;
+                name = "this";
+                bound = this;
+              }
+          else
+            this
+        in
+        let i' = subst cx (SMap.singleton "this" this_generic) i in
         Cache.Fix.add cx reason i i';
         rec_unify cx trace ~use_op:unknown_use this i';
         i'
@@ -8824,7 +8841,7 @@ struct
   and is_type = function
     | DefT (_, _, ClassT _)
     | DefT (_, _, EnumObjectT _)
-    | ThisClassT (_, _)
+    | ThisClassT (_, _, _)
     | DefT (_, _, TypeT _)
     | AnyT _ ->
       true
@@ -8847,7 +8864,7 @@ struct
       Some (poly_type (Context.generate_poly_id cx) tparams_loc typeparams (class_type tapp))
     | DefT (_, _, PolyT { t_out = DefT (_, _, TypeT _); _ }) -> Some t
     (* fix this-abstracted class when used as a type *)
-    | ThisClassT (r, i) -> Some (fix_this_class cx trace reason (r, i))
+    | ThisClassT (r, i, this) -> Some (fix_this_class cx trace reason (r, i, this))
     | DefT (enum_reason, trust, EnumObjectT enum) ->
       let enum_type = mk_enum_type ~loc:(aloc_of_reason enum_reason) ~trust enum in
       Some (DefT (reason, trust, TypeT (ImportEnumKind, enum_type)))

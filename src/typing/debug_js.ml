@@ -220,7 +220,7 @@ let rec dump_t_ (depth, tvars) cx t =
              (String.concat "; " (Base.List.map ~f:(fun tp -> tp.name) (Nel.to_list tps)))
              (Poly.string_of_id id))
         t
-    | ThisClassT (_, inst) -> p ~extra:(kid inst) t
+    | ThisClassT (_, inst, _) -> p ~extra:(kid inst) t
     | BoundT (_, name) -> p ~extra:name t
     | GenericT { name; bound; _ } -> p ~extra:(spf "%s: %s" name (kid bound)) t
     | ExistsT _ -> p t

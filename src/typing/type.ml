@@ -78,8 +78,10 @@ module rec TypeTerm : sig
       }
     (* existential type variable *)
     | ExistsT of reason
-    (* this-abstracted class *)
-    | ThisClassT of reason * t
+    (* this-abstracted class. If `is_this` is true, then this literally comes from
+       `this` as an annotation or expression, and should be fixed to an internal
+       view of the class, which is a generic whose upper bound is the class. *)
+    | ThisClassT of reason * t * (* is_this *) bool
     (* this instantiation *)
     | ThisTypeAppT of reason * t * t * t list option
     (* type application *)

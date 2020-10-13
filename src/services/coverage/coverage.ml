@@ -180,7 +180,7 @@ class visitor =
       | ReposT (_, t)
       | ShapeT (_, t)
       | GenericT { bound = t; _ }
-      | ThisClassT (_, t)
+      | ThisClassT (_, t, _)
       | ThisTypeAppT (_, t, _, _) ->
         self#type_ cx t
       | UnionT (_, rep) ->

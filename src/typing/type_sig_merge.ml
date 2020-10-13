@@ -1393,7 +1393,7 @@ and merge_class component file reason id def =
       }
     in
     let inst = DefT (reason, trust, InstanceT (static, super, implements, insttype)) in
-    TypeUtil.this_class_type inst
+    TypeUtil.this_class_type inst true
   in
   merge_tparams_targs component file reason t tparams
 
@@ -1467,7 +1467,7 @@ and merge_declare_class component file reason id def =
       }
     in
     let inst = DefT (reason, trust, InstanceT (static, super, implements, insttype)) in
-    TypeUtil.this_class_type inst
+    TypeUtil.this_class_type inst true
   in
   merge_tparams_targs component file reason t tparams
 

@@ -42,7 +42,7 @@ let rec reason_of_t = function
   | ReposT (reason, _) -> reason
   | InternalT (ReposUpperT (reason, _)) -> reason (* HUH? cf. mod_reason below *)
   | ShapeT (reason, _) -> reason
-  | ThisClassT (reason, _) -> reason
+  | ThisClassT (reason, _, _) -> reason
   | ThisTypeAppT (reason, _, _, _) -> reason
   | TypeAppT (reason, _, _, _) -> reason
   | AnyT (reason, _) -> reason
@@ -216,7 +216,7 @@ let rec mod_reason_of_t f = function
   | ReposT (reason, t) -> ReposT (f reason, t)
   | InternalT (ReposUpperT (reason, t)) -> InternalT (ReposUpperT (reason, mod_reason_of_t f t))
   | ShapeT (reason, t) -> ShapeT (f reason, t)
-  | ThisClassT (reason, t) -> ThisClassT (f reason, t)
+  | ThisClassT (reason, t, is_this) -> ThisClassT (f reason, t, is_this)
   | ThisTypeAppT (reason, t1, t2, t3) -> ThisTypeAppT (f reason, t1, t2, t3)
   | TypeAppT (reason, t1, t2, t3) -> TypeAppT (f reason, t1, t2, t3)
 
@@ -729,9 +729,9 @@ let class_type ?(structural = false) ?annot_loc t =
   in
   DefT (reason, bogus_trust (), ClassT t)
 
-let this_class_type t =
+let this_class_type t is_this =
   let reason = update_desc_new_reason (fun desc -> RClass desc) (reason_of_t t) in
-  ThisClassT (reason, t)
+  ThisClassT (reason, t, is_this)
 
 let extends_type r l u =
   let reason = update_desc_reason (fun desc -> RExtends desc) r in

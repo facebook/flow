@@ -104,12 +104,12 @@ class virtual ['a] t =
           EvalT (t'', dt', id')
       | BoundT _ -> t
       | ExistsT _ -> t
-      | ThisClassT (r, t') ->
+      | ThisClassT (r, t', i) ->
         let t'' = self#type_ cx map_cx t' in
         if t'' == t' then
           t
         else
-          ThisClassT (r, t'')
+          ThisClassT (r, t'', i)
       | ThisTypeAppT (r, t1, t2, tlist_opt) ->
         let t1' = self#type_ cx map_cx t1 in
         let t2' = self#type_ cx map_cx t2 in

@@ -746,8 +746,8 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t =
         Class_type_sig.check_super cx def_reason iface_sig;
         Class_type_sig.check_implements cx def_reason iface_sig)
       iface_sig;
-    let t = Class_type_sig.classtype ~check_polarity:false cx iface_sig in
-    Flow.unify cx self t;
+    let (t_internal, t) = Class_type_sig.classtype ~check_polarity:false cx iface_sig in
+    Flow.unify cx self t_internal;
     t
   in
   let interface cx loc decl =
@@ -7513,8 +7513,8 @@ and mk_class cx class_loc ~name_loc ~general reason c =
              private_property_map;
              errors = Property_assignment.eval_property_assignment class_body;
            });
-  let class_t = Class_stmt_sig.classtype cx class_sig in
-  Flow.unify cx self class_t;
+  let (class_t_internal, class_t) = Class_stmt_sig.classtype cx class_sig in
+  Flow.unify cx self class_t_internal;
   (class_t, class_ast_f general)
 
 (* Process a class definition, returning a (polymorphic) class type. A class

@@ -853,7 +853,7 @@ end = struct
           (generic_talias
              (Ty_symbol.builtin_symbol "React$AbstractComponent")
              (Some [config; instance]))
-      | ThisClassT (_, t) -> this_class_t ~env t
+      | ThisClassT (_, t, _) -> this_class_t ~env t
       | ThisTypeAppT (_, c, _, ts) -> type_app ~env c ts
       | KeysT (_, t) ->
         let%map ty = type__ ~env t in
@@ -1291,7 +1291,7 @@ end = struct
     and poly_ty ~env t typeparams =
       let open Type in
       match t with
-      | ThisClassT (_, t) -> this_class_t ~env t
+      | ThisClassT (_, t, _) -> this_class_t ~env t
       | DefT (_, _, FunT (static, _, f)) ->
         let%bind (env, ps) = type_params_t ~env typeparams in
         let%map fun_t = fun_ty ~env static f ps in
@@ -1351,7 +1351,7 @@ end = struct
       let singleton_poly ~env targs tparams t =
         let open Type in
         match t with
-        | ThisClassT (_, DefT (r, _, InstanceT (_, _, _, i)))
+        | ThisClassT (_, DefT (r, _, InstanceT (_, _, _, i)), _)
         | DefT (_, _, TypeT (_, DefT (r, _, InstanceT (_, _, _, i))))
         | DefT (_, _, ClassT (DefT (r, _, InstanceT (_, _, _, i)))) ->
           instance_app ~env r i tparams targs
@@ -1366,7 +1366,7 @@ end = struct
         match t with
         | AnyT _ -> type__ ~env t
         | DefT (_, _, PolyT { tparams; t_out; _ }) -> singleton_poly ~env targs tparams t_out
-        | ThisClassT (_, t)
+        | ThisClassT (_, t, _)
         | DefT (_, _, TypeT (_, t)) ->
           (* This is likely an error - cannot apply on non-polymorphic type.
            * E.g type Foo = any; var x: Foo<number> *)
@@ -1954,7 +1954,7 @@ end = struct
         | DefT (_, _, TypeT (ImportClassKind, DefT (r, _, InstanceT (static, super, _, inst)))) ->
           class_or_interface_decl ~env r (Some tparams) static super inst
         (* Classes *)
-        | ThisClassT (_, DefT (r, _, InstanceT (static, super, _, inst)))
+        | ThisClassT (_, DefT (r, _, InstanceT (static, super, _, inst)), _)
         (* Interfaces *)
         | DefT (_, _, ClassT (DefT (r, _, InstanceT (static, super, _, inst)))) ->
           class_or_interface_decl ~env r (Some tparams) static super inst
@@ -1983,7 +1983,7 @@ end = struct
           let%map (name, exports, default) = module_of_object ~env r o in
           Ty.Decl (Ty.ModuleDecl { name; exports; default })
         (* Monomorphic Classes/Interfaces *)
-        | ThisClassT (_, DefT (r, _, InstanceT (static, super, _, inst)))
+        | ThisClassT (_, DefT (r, _, InstanceT (static, super, _, inst)), _)
         | DefT (_, _, ClassT (DefT (r, _, InstanceT (static, super, _, inst))))
         | DefT (_, _, TypeT (InstanceKind, DefT (r, _, InstanceT (static, super, _, inst))))
         | DefT (_, _, TypeT (ImportClassKind, DefT (r, _, InstanceT (static, super, _, inst)))) ->
@@ -2383,7 +2383,7 @@ end = struct
         | DefT (r, tr, EnumObjectT e) -> enum_t ~env r tr e
         | DefT (r, _, InstanceT (static, super, _, inst)) ->
           instance_t ~env ~imode r static super inst
-        | ThisClassT (_, t) -> this_class_t ~env ~proto ~imode t
+        | ThisClassT (_, t, _) -> this_class_t ~env ~proto ~imode t
         | DefT (_, _, PolyT { t_out; _ }) -> loop ~env ~proto ~imode t_out
         | MaybeT (_, t) ->
           let%map t = loop ~env ~proto ~imode t in
