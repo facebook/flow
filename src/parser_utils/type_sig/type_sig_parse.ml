@@ -36,6 +36,7 @@ type options = {
   exact_by_default: bool;
   module_ref_prefix: string option;
   enable_enums: bool;
+  enable_this_annot : bool;
 }
 
 (* This type encodes the fixed point of parsed signatures. Of particular note

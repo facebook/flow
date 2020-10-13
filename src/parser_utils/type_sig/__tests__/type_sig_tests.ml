@@ -184,6 +184,7 @@ let sig_options
     ?(exact_by_default = false)
     ?module_ref_prefix
     ?(enable_enums = true)
+    ?(enable_this_annot = true)
     () =
   {
     Parse.type_asserts;
@@ -196,6 +197,7 @@ let sig_options
     exact_by_default;
     module_ref_prefix;
     enable_enums;
+    enable_this_annot;
   }
 
 let parse_and_pack_module ~strict sig_opts contents =
@@ -211,6 +213,7 @@ let print_sig
     ?max_literal_len
     ?module_ref_prefix
     ?enable_enums
+    ?enable_this_annot
     contents_indent =
   let contents = dedent_trim contents_indent in
   let sig_opts =
@@ -223,6 +226,7 @@ let print_sig
       ?max_literal_len
       ?module_ref_prefix
       ?enable_enums
+      ?enable_this_annot
       ()
   in
   let type_sig = parse_and_pack_module ~strict:true sig_opts contents in

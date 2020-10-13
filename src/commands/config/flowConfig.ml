@@ -53,6 +53,7 @@ module Opts = struct
     enforce_well_formed_exports_includes: string list;
     enums: bool;
     enums_with_unknown_members: bool;
+    this_annot: bool;
     exact_by_default: bool;
     generate_tests: bool;
     facebook_fbs: string option;
@@ -158,6 +159,7 @@ module Opts = struct
       enforce_well_formed_exports_includes = [];
       enums = false;
       enums_with_unknown_members = false;
+      this_annot = false;
       exact_by_default = false;
       generate_tests = true;
       facebook_fbs = None;
@@ -579,6 +581,7 @@ module Opts = struct
       ("experimental.enums", boolean (fun opts v -> Ok { opts with enums = v }));
       ( "experimental.enums_with_unknown_members",
         boolean (fun opts v -> Ok { opts with enums_with_unknown_members = v }) );
+      ("experimental.this_annot", boolean (fun opts v -> Ok { opts with this_annot = v }));
       ( "experimental.strict_call_arity",
         boolean (fun opts v -> Ok { opts with enforce_strict_call_arity = v }) );
       ("well_formed_exports", well_formed_exports_parser);
@@ -1153,6 +1156,8 @@ let enforce_well_formed_exports_includes c = c.options.Opts.enforce_well_formed_
 let enums c = c.options.Opts.enums
 
 let enums_with_unknown_members c = c.options.Opts.enums_with_unknown_members
+
+let this_annot c = c.options.Opts.this_annot
 
 let exact_by_default c = c.options.Opts.exact_by_default
 

@@ -1406,6 +1406,7 @@ let dump_error_message =
     | EExperimentalEnums loc -> spf "EExperimentalEnums (%s)" (string_of_aloc loc)
     | EExperimentalEnumsWithUnknownMembers loc ->
       spf "EExperimentalEnumsWithUnknownMembers (%s)" (string_of_aloc loc)
+    | EExperimentalThisAnnot loc -> spf "EExperimentalThisAnnot (%s)" (string_of_aloc loc)
     | EIndeterminateModuleType loc -> spf "EIndeterminateModuleType (%s)" (string_of_aloc loc)
     | EBadExportPosition loc -> spf "EBadExportPosition (%s)" (string_of_aloc loc)
     | EBadExportContext (name, loc) -> spf "EBadExportContext (%s, %s)" name (string_of_aloc loc)

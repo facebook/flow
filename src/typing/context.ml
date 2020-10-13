@@ -39,6 +39,7 @@ type metadata = {
   enable_const_params: bool;
   enable_enums: bool;
   enable_enums_with_unknown_members: bool;
+  enable_this_annot: bool;
   enforce_strict_call_arity: bool;
   exact_by_default: bool;
   generate_tests: bool;
@@ -208,6 +209,7 @@ let metadata_of_options options =
     enable_const_params = Options.enable_const_params options;
     enable_enums = Options.enums options;
     enable_enums_with_unknown_members = Options.enums_with_unknown_members options;
+    enable_this_annot = Options.this_annot options;
     enforce_strict_call_arity = Options.enforce_strict_call_arity options;
     exact_by_default = Options.exact_by_default options;
     generate_tests = Options.generate_tests options;
@@ -386,6 +388,8 @@ let enable_const_params cx =
 let enable_enums cx = cx.metadata.enable_enums
 
 let enable_enums_with_unknown_members cx = cx.metadata.enable_enums_with_unknown_members
+
+let enable_this_annot cx = cx.metadata.enable_this_annot
 
 let enforce_strict_call_arity cx = cx.metadata.enforce_strict_call_arity
 
