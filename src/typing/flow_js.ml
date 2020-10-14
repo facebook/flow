@@ -3538,24 +3538,9 @@ struct
             let t = push_type_alias_reason r t in
             rec_flow cx trace (t, MakeExactT (r, Lower (use_op, l)))
           else
-            let error_kind =
-              match flags.obj_kind with
-              | Indexed _ -> Error_message.Indexer
-              | _ -> Error_message.Inexact
-            in
-            let reasons = FlowError.ordered_reasons (reason_of_t l, r) in
-            add_output
-              cx
-              ~trace
-              (Error_message.EIncompatibleWithExact (reasons, use_op, error_kind));
-
-            (* Continue the Flow even after we've errored. Often, there is more that
-             * is different then just the fact that the upper bound is exact and the
-             * lower bound is not. This could easily hide errors in ObjT ~> ExactT *)
-            rec_flow cx trace (l, UseT (use_op, t))
+            exact_obj_error cx trace flags.obj_kind ~use_op ~exact_reason:r (l, t)
         (* any ~> $Exact<UB>. unwrap exact *)
-        | (AnyT _, UseT (use_op, ExactT (_, t))) -> rec_flow cx trace (l, UseT (use_op, t))
-        | (DefT (_, _, EmptyT _), UseT (use_op, ExactT (_, t))) ->
+        | ((DefT (_, _, EmptyT _) | AnyT _), UseT (use_op, ExactT (_, t))) ->
           rec_flow cx trace (l, UseT (use_op, t))
         (* Shapes need to be trapped here to avoid error-ing when used as exact types.
            Below (see "matching shapes of objects"), we have a rule that allows ShapeT(o)
@@ -7447,6 +7432,20 @@ struct
       | Some error -> add_output cx ~trace error
       | None -> ()
 
+  and exact_obj_error cx trace obj_kind ~use_op ~exact_reason (l, u) =
+    let error_kind =
+      match obj_kind with
+      | Indexed _ -> Error_message.Indexer
+      | _ -> Error_message.Inexact
+    in
+    let reasons = FlowError.ordered_reasons (reason_of_t l, exact_reason) in
+    add_output cx ~trace (Error_message.EIncompatibleWithExact (reasons, use_op, error_kind));
+
+    (* Continue the Flow even after we've errored. Often, there is more that
+      * is different then just the fact that the upper bound is exact and the
+      * lower bound is not. This could easily hide errors in ObjT ~> ExactT *)
+    rec_flow_t cx trace ~use_op (l, u)
+
   and flow_obj_to_obj cx trace ~use_op (lreason, l_obj) (ureason, u_obj) =
     let { flags = lflags; call_t = lcall; props_tmap = lflds; proto_t = lproto } = l_obj in
     let { flags = rflags; call_t = ucall; props_tmap = uflds; proto_t = uproto } = u_obj in
@@ -7966,6 +7965,21 @@ struct
       | ObjRestT (r, xs, t_out, id) ->
         narrow_generic (fun t_out' -> ObjRestT (r, xs, t_out', id)) t_out;
         true
+      | MakeExactT (reason_op, k) ->
+        narrow_generic_with_continuation
+          (fun t_out -> MakeExactT (reason_op, Upper (UseT (unknown_use, OpenT t_out))))
+          k;
+        true
+      | UseT (use_op, ExactT (r, u)) ->
+        if is_concrete bound then
+          match bound with
+          | DefT (_, _, ObjT { flags; _ }) when not @@ Obj_type.is_exact_or_sealed r flags.obj_kind
+            ->
+            exact_obj_error cx trace flags.obj_kind ~exact_reason:r ~use_op (make_generic bound, u);
+            true
+          | _ -> false
+        else
+          wait_for_concrete_bound ()
       (* Support "new this.constructor ()" *)
       | GetPropT (op, r, Named (x, "constructor"), t_out) ->
         if is_concrete bound then

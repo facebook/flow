@@ -239,6 +239,37 @@ References:
                           ^^^^^ [2]
 
 
+Error ----------------------------------------------------------------------------------------------------- exact.js:6:4
+
+Cannot cast `x` to `X` because inexact object type [1] is incompatible with exact `X` [2]. [incompatible-exact]
+
+   exact.js:6:4
+   6|   (x: $Exact<X>); // nope
+         ^
+
+References:
+   exact.js:3:40
+   3| function f<X: {...}>(ex: $Exact<X>, x: X) {
+                                             ^ [1]
+   exact.js:6:7
+   6|   (x: $Exact<X>); // nope
+            ^^^^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- exact.js:7:16
+
+Cannot cast `42` to `X` because object type [1] is incompatible with `X` [2]. [incompatible-cast]
+
+   exact.js:7:16
+   7|   (((42: any): {||}): $Exact<X>); // nope
+                     ^^^^ [1]
+
+References:
+   exact.js:7:30
+   7|   (((42: any): {||}): $Exact<X>); // nope
+                                   ^ [2]
+
+
 Error ---------------------------------------------------------------------------------------------- intersection.js:8:4
 
 Cannot cast `x` to intersection type because intersection type [1] is incompatible with boolean [2]. [incompatible-cast]
@@ -1029,7 +1060,7 @@ References:
 
 
 
-Found 60 errors
+Found 62 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches
