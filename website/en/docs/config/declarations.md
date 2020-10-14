@@ -16,7 +16,7 @@ etc are extracted and used by the typechecker when checking other code.
 
 Conceptually one can think of declaration mode as if Flow still typechecks the
 files but acts as if there is a comment that matches
-[`suppress_comment`](https://flow.org/en/docs/config/options/#toc-suppress-comment-regex) on every line.
+[`suppress_comment`](../options/#toc-suppress-comment-regex) on every line.
 
 See also `[untyped]`(untyped) for not typechecking files, and instead using `any` for all contents.
 
