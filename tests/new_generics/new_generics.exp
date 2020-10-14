@@ -339,6 +339,24 @@ References:
                                     ^ [2]
 
 
+Error ------------------------------------------------------------------------------------------ basic_function.js:31:12
+
+Cannot return `arg[arg.length - 1]` because array element of refined `T` [1] is incompatible with `T` [2].
+[incompatible-return]
+
+   basic_function.js:31:12
+   31|     return arg[arg.length - 1];
+                  ^^^^^^^^^^^^^^^^^^^
+
+References:
+   basic_function.js:25:46
+   25| function overrideArgument<T>(arg: Array<T> | T): T {
+                                                    ^ [1]
+   basic_function.js:25:50
+   25| function overrideArgument<T>(arg: Array<T> | T): T {
+                                                        ^ [2]
+
+
 Error -------------------------------------------------------------------------------------------- computed_keys.js:10:3
 
 string `foo` [1] is incompatible with `X` [2]. [incompatible-type]
@@ -1305,7 +1323,7 @@ References:
 
 
 
-Found 78 errors
+Found 79 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches

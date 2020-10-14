@@ -1279,8 +1279,8 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- mixed.js:119:17
 
-Cannot call `takesString` with `x[0]` bound to `x` because mixed [1] is incompatible with string [2].
-[incompatible-call]
+Cannot call `takesString` with `x[0]` bound to `x` because array element of refined mixed [1] is incompatible with
+string [2]. [incompatible-call]
 
    mixed.js:119:17
    119|     takesString(x[0]); // error

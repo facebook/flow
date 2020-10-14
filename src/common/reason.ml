@@ -207,6 +207,7 @@ type 'loc virtual_reason_desc =
   | RPredicateCall of 'loc virtual_reason_desc
   | RPredicateCallNeg of 'loc virtual_reason_desc
   | RRefined of 'loc virtual_reason_desc
+  | RRefinedElement of 'loc virtual_reason_desc
   | RIncompatibleInstantiation of string
   | RSpreadOf of 'loc virtual_reason_desc
   | RShapeOf of 'loc virtual_reason_desc
@@ -300,6 +301,7 @@ let rec map_desc_locs f = function
   | RPredicateCall desc -> RPredicateCall (map_desc_locs f desc)
   | RPredicateCallNeg desc -> RPredicateCallNeg (map_desc_locs f desc)
   | RRefined desc -> RRefined (map_desc_locs f desc)
+  | RRefinedElement desc -> RRefinedElement (map_desc_locs f desc)
   | RSpreadOf desc -> RSpreadOf (map_desc_locs f desc)
   | RShapeOf desc -> RShapeOf (map_desc_locs f desc)
   | RMatchingProp (s, desc) -> RMatchingProp (s, map_desc_locs f desc)
@@ -684,6 +686,7 @@ let rec string_of_desc = function
   | RPredicateCall d -> spf "predicate call to %s" (string_of_desc d)
   | RPredicateCallNeg d -> spf "negation of predicate call to %s" (string_of_desc d)
   | RRefined d -> spf "refined %s" (string_of_desc d)
+  | RRefinedElement d -> spf "array element of refined %s" (string_of_desc d)
   | RIncompatibleInstantiation x -> spf "`%s`" x
   | RSpreadOf d -> spf "spread of %s" (string_of_desc d)
   | RShapeOf d -> spf "%s" (string_of_desc d)
@@ -1426,6 +1429,7 @@ let classification_of_reason r =
   | RPredicateCall _
   | RPredicateCallNeg _
   | RRefined _
+  | RRefinedElement _
   | RIncompatibleInstantiation _
   | RSpreadOf _
   | RShapeOf _

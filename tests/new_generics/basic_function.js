@@ -21,3 +21,15 @@ function g<X: number>(x: X): X {
   }
   return x;
 }
+
+function overrideArgument<T>(arg: Array<T> | T): T {
+  if (arg == null) {
+    return arg;
+  }
+
+  if (Array.isArray(arg)) {
+    return arg[arg.length - 1];
+  }
+
+  return arg;
+}
