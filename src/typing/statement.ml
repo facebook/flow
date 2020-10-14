@@ -3071,8 +3071,8 @@ and array_elements cx undef_loc =
     (Base.List.map ~f:(function
         | Expression e ->
           let (((_, t), _) as e) = expression cx e in
-          (UnresolvedArg t, Expression e)
-        | Hole loc -> (UnresolvedArg (EmptyT.at undef_loc |> with_trust bogus_trust), Hole loc)
+          (UnresolvedArg (t, None), Expression e)
+        | Hole loc -> (UnresolvedArg (EmptyT.at undef_loc |> with_trust bogus_trust, None), Hole loc)
         | Spread (loc, { Ast.Expression.SpreadElement.argument; comments }) ->
           let (((_, t), _) as argument) = expression cx argument in
           (UnresolvedSpreadArg t, Spread (loc, { Ast.Expression.SpreadElement.argument; comments }))))
@@ -6212,7 +6212,7 @@ and jsx_desugar cx name component_t props attributes children locs =
     let children =
       Base.List.map
         ~f:(function
-          | UnresolvedArg a -> a
+          | UnresolvedArg (a, _) -> a
           | UnresolvedSpreadArg a ->
             Flow.add_output cx Error_message.(EUnsupportedSyntax (loc_children, SpreadArgument));
             reason_of_t a |> AnyT.error)
@@ -6275,7 +6275,7 @@ and jsx_desugar cx name component_t props attributes children locs =
       [Arg component_t; Arg props]
       @ Base.List.map
           ~f:(function
-            | UnresolvedArg c -> Arg c
+            | UnresolvedArg (c, _) -> Arg c
             | UnresolvedSpreadArg c -> SpreadArg c)
           children
     in
@@ -6336,10 +6336,10 @@ and jsx_body cx (loc, child) =
   match child with
   | Element e ->
     let (t, e) = jsx cx loc e in
-    (Some (UnresolvedArg t), (loc, Element e))
+    (Some (UnresolvedArg (t, None)), (loc, Element e))
   | Fragment f ->
     let (t, f) = jsx_fragment cx loc f in
-    (Some (UnresolvedArg t), (loc, Fragment f))
+    (Some (UnresolvedArg (t, None)), (loc, Fragment f))
   | ExpressionContainer ec ->
     ExpressionContainer.(
       let { expression = ex; ExpressionContainer.comments } = ec in
@@ -6347,7 +6347,7 @@ and jsx_body cx (loc, child) =
         match ex with
         | Expression e ->
           let (((_, t), _) as e) = expression cx e in
-          (Some (UnresolvedArg t), Expression e)
+          (Some (UnresolvedArg (t, None)), Expression e)
         | EmptyExpression -> (None, EmptyExpression)
       in
       ( unresolved_param,
@@ -6358,7 +6358,7 @@ and jsx_body cx (loc, child) =
   | Text { Text.value; raw } ->
     let unresolved_param_opt =
       match jsx_trim_text make_trust loc value with
-      | Some c -> Some (UnresolvedArg c)
+      | Some c -> Some (UnresolvedArg (c, None))
       | None -> None
     in
     (unresolved_param_opt, (loc, Text { Text.value; raw }))

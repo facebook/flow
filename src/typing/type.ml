@@ -1348,12 +1348,12 @@ module rec TypeTerm : sig
   }
 
   and unresolved_param =
-    | UnresolvedArg of t
+    | UnresolvedArg of t * Generic.id option
     | UnresolvedSpreadArg of t
 
   and resolved_param =
-    | ResolvedArg of t
-    | ResolvedSpreadArg of reason * arrtype
+    | ResolvedArg of t * Generic.id option
+    | ResolvedSpreadArg of reason * arrtype * Generic.id option
     | ResolvedAnySpreadArg of reason
 
   and spread_resolve =
@@ -3253,6 +3253,10 @@ and elemt_of_arrtype = function
   | ROArrayAT elemt
   | TupleAT (elemt, _) ->
     elemt
+
+let ro_of_arrtype = function
+  | ArrayAT _ -> Generic.ArraySpread.NonROSpread
+  | _ -> Generic.ArraySpread.ROSpread
 
 let annot use_desc = function
   | OpenT (r, _) as t -> AnnotT (r, t, use_desc)

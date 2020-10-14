@@ -1,3 +1,248 @@
+Error ------------------------------------------------------------------------------------------------ arr_spread.js:7:4
+
+Cannot call `fn` because rest array [1] is incompatible with `X` [2]. [incompatible-call]
+
+   arr_spread.js:7:4
+   7|   (fn(...arr): R); // nope
+         ^^
+
+References:
+   arr_spread.js:7:4
+   7|   (fn(...arr): R); // nope
+         ^^^^^^^^^^ [1]
+   arr_spread.js:5:41
+   5| function f<X: Array<number>, R>(fn: (...X) => R, x: X, arr: Array<number>) {
+                                              ^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- arr_spread.js:17:12
+
+Cannot return array literal because array literal [1] is incompatible with `X` [2]. [incompatible-return]
+
+   arr_spread.js:17:12
+   17|     return [...B, 42]; // nope
+                  ^^^^^^^^^^ [1]
+
+References:
+   arr_spread.js:12:37
+   12| function g<X: Array<number>>(A: X): X {
+                                           ^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- arr_spread.js:23:14
+
+Cannot assign array literal to `z` because array literal [1] is incompatible with `X` [2]. [incompatible-type]
+
+   arr_spread.js:23:14
+   23|   var z: X = ['3', ...x]; // nope
+                    ^^^^^^^^^^^ [1]
+
+References:
+   arr_spread.js:23:10
+   23|   var z: X = ['3', ...x]; // nope
+                ^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- arr_spread.js:27:3
+
+Cannot call `f` because rest array [1] has an arity of 1 but tuple type [2] has an arity of 2. [invalid-tuple-arity]
+
+   arr_spread.js:27:3
+   27|   f(...x); // nope
+         ^
+
+References:
+   arr_spread.js:27:3
+   27|   f(...x); // nope
+         ^^^^^^^ [1]
+   arr_spread.js:26:54
+   26| function w<A: [number, number]>(x: A, f: (number, ...A) => void) {
+                                                            ^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- arr_spread.js:28:3
+
+Cannot call `f` because rest array [1] is incompatible with `A` [2]. [incompatible-call]
+
+   arr_spread.js:28:3
+   28|   f(42, 42, 42); // nope
+         ^
+
+References:
+   arr_spread.js:28:3
+   28|   f(42, 42, 42); // nope
+         ^^^^^^^^^^^^^ [1]
+   arr_spread.js:26:54
+   26| function w<A: [number, number]>(x: A, f: (number, ...A) => void) {
+                                                            ^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- arr_spread.js:30:3
+
+Cannot call `f` because rest array [1] has an arity of 4 but tuple type [2] has an arity of 2. [invalid-tuple-arity]
+
+   arr_spread.js:30:3
+   30|   f(42, ...x, ...x); // nope
+         ^
+
+References:
+   arr_spread.js:30:3
+   30|   f(42, ...x, ...x); // nope
+         ^^^^^^^^^^^^^^^^^ [1]
+   arr_spread.js:26:54
+   26| function w<A: [number, number]>(x: A, f: (number, ...A) => void) {
+                                                            ^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- arr_spread.js:34:3
+
+Cannot call `f` because rest array [1] is incompatible with `A` [2]. [incompatible-call]
+
+   arr_spread.js:34:3
+   34|   f(42, 42, 42); // nope
+         ^
+
+References:
+   arr_spread.js:34:3
+   34|   f(42, 42, 42); // nope
+         ^^^^^^^^^^^^^ [1]
+   arr_spread.js:32:52
+   32| function w2<A: Array<number>>(x: A, f: (number, ...A) => void) {
+                                                          ^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- arr_spread.js:35:3
+
+Cannot call `f` because rest array [1] is incompatible with `A` [2]. [incompatible-call]
+
+   arr_spread.js:35:3
+   35|   f(42, 42, 42, ...x); // should be nope
+         ^
+
+References:
+   arr_spread.js:35:3
+   35|   f(42, 42, 42, ...x); // should be nope
+         ^^^^^^^^^^^^^^^^^^^ [1]
+   arr_spread.js:32:52
+   32| function w2<A: Array<number>>(x: A, f: (number, ...A) => void) {
+                                                          ^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- arr_spread.js:40:5
+
+Cannot call `f` with array literal bound to the first parameter because array literal [1] is incompatible with `A` [2].
+[incompatible-call]
+
+   arr_spread.js:40:5
+   40|   f([42, 42, 42]); // nope
+           ^^^^^^^^^^^^ [1]
+
+References:
+   arr_spread.js:39:40
+   39| function w3<A: Array<number>>(x: A, f: A => void) {
+                                              ^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- arr_spread.js:41:5
+
+Cannot call `f` with array literal bound to the first parameter because array literal [1] is incompatible with `A` [2].
+[incompatible-call]
+
+   arr_spread.js:41:5
+   41|   f([42, ...x]); // should be nope
+           ^^^^^^^^^^ [1]
+
+References:
+   arr_spread.js:39:40
+   39| function w3<A: Array<number>>(x: A, f: A => void) {
+                                              ^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- arr_spread.js:47:4
+
+Cannot cast array literal to `Y` because array literal [1] is incompatible with `Y` [2]. [incompatible-cast]
+
+   arr_spread.js:47:4
+   47|   ([...x, ...y]: Y); // should be nope
+          ^^^^^^^^^^^^ [1]
+
+References:
+   arr_spread.js:47:18
+   47|   ([...x, ...y]: Y); // should be nope
+                        ^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- arr_spread.js:48:4
+
+Cannot cast array literal to `X` because array literal [1] is incompatible with `X` [2]. [incompatible-cast]
+
+   arr_spread.js:48:4
+   48|   ([...x, ...y]: X); // should be nope
+          ^^^^^^^^^^^^ [1]
+
+References:
+   arr_spread.js:48:18
+   48|   ([...x, ...y]: X); // should be nope
+                        ^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- arr_spread.js:52:4
+
+Cannot cast array literal to `Y` because array literal [1] is incompatible with `Y` [2]. [incompatible-cast]
+
+   arr_spread.js:52:4
+   52|   ([...x, ...y]: Y); // should be nope
+          ^^^^^^^^^^^^ [1]
+
+References:
+   arr_spread.js:52:18
+   52|   ([...x, ...y]: Y); // should be nope
+                        ^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- arr_spread.js:61:10
+
+Cannot return array literal because array literal [1] is incompatible with `X` [2]. [incompatible-return]
+
+   arr_spread.js:61:10
+   61|   return [...x, ...x]; // nope, because X could be a tuple
+                ^^^^^^^^^^^^ [1]
+
+References:
+   arr_spread.js:60:46
+   60| function b<X: $ReadOnlyArray<number>>(x: X): X {
+                                                    ^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- arr_spread.js:65:10
+
+Cannot return array literal because array literal [1] is incompatible with `X` [2]. [incompatible-return]
+
+   arr_spread.js:65:10
+   65|   return [42, ...x]; // error
+                ^^^^^^^^^^ [1]
+
+References:
+   arr_spread.js:64:46
+   64| function c<X: $ReadOnlyArray<number>>(x: X): X {
+                                                    ^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- arr_spread.js:69:10
+
+Cannot return array literal because array literal [1] has an arity of 4 but tuple type [2] has an arity of 2.
+[invalid-tuple-arity]
+
+   arr_spread.js:69:10
+   69|   return [...x, ...x]; // error
+                ^^^^^^^^^^^^ [1]
+
+References:
+   arr_spread.js:68:40
+   68| function d<X: [number, number]>(x: X): X {
+                                              ^ [2]
+
+
 Error --------------------------------------------------------------------------------------------- basic_class.js:12:12
 
 Cannot return `this.x` because `X` [1] is incompatible with `Y` [2]. [incompatible-return]
@@ -1060,7 +1305,7 @@ References:
 
 
 
-Found 62 errors
+Found 78 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches

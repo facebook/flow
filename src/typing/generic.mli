@@ -39,3 +39,18 @@ val spread_exists : spread_id -> bool
 val aloc_of_id : id -> ALoc.id
 
 val satisfies : id -> id -> sat_result
+
+module ArraySpread : sig
+  type ro_status =
+    | NonROSpread
+    | ROSpread
+
+  type t =
+    | Bottom
+    | Top
+    | Generic of (id * ro_status)
+
+  val merge : t -> id option -> ro_status -> t
+
+  val to_option : t -> id option
+end

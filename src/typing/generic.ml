@@ -299,3 +299,45 @@ let rec satisfies id1 id2 =
       Satisfied
     else
       Upper id2
+
+module ArraySpread = struct
+  type ro_status =
+    | NonROSpread
+    | ROSpread
+
+  (* Simple lattice for seeing if all elements of a spread have the same generic ID *)
+  type t =
+    | Bottom
+    | Top
+    | Generic of (id * ro_status)
+
+  (* A generic array spread of a read-only array type can only be reconstructed into a generic if the
+     spread consists of exactly one element, which is the read-only array. *)
+  let merge_ro t s =
+    match (t, s) with
+    | (Bottom, _)
+    | (Top, _) ->
+      t
+    | (Generic _, ROSpread) -> Top
+    | (Generic (id, _), s) -> Generic (id, s)
+
+  let merge t g ro' =
+    match (t, g) with
+    | (Bottom, Some stat) -> Generic (stat, ro')
+    | (Generic _, None)
+    | (Top, _) ->
+      Top
+    | (Generic (id, _), Some id') when equal_id id id' -> merge_ro t ro'
+    | (Generic (id, ro), Some id') ->
+      begin
+        match (satisfies id' id, satisfies id id') with
+        | (Upper _, Upper _) -> Top
+        | (Upper _, _) -> merge_ro (Generic (id', ro')) ro
+        | _ -> merge_ro t ro'
+      end
+    | _ -> Top
+
+  let to_option = function
+    | Generic (id, _) -> Some id
+    | _ -> None
+end

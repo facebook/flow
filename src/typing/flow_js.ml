@@ -3309,8 +3309,13 @@ struct
         | (_, ResolveSpreadT (use_op, reason_op, { rrt_resolved; rrt_unresolved; rrt_resolve_to }))
           ->
           let reason = reason_of_t l in
-          let arrtype =
+          let (lt, generic) =
             match l with
+            | GenericT { bound; id; reason; _ } -> (position_generic_bound reason bound, Some id)
+            | _ -> (l, None)
+          in
+          let arrtype =
+            match lt with
             | DefT (_, _, ArrT arrtype) ->
               (* Arrays *)
               arrtype
@@ -3338,7 +3343,6 @@ struct
                   else
                     `Iterable
               in
-              let reason = reason_of_t l in
               let element_tvar = Tvar.mk cx reason in
               let resolve_to_type =
                 match resolve_to with
@@ -3402,7 +3406,9 @@ struct
                   match recursion_depth with
                   | 0 ->
                     (* The first time we see this, we process it normally *)
-                    let rrt_resolved = ResolvedSpreadArg (reason, arrtype) :: rrt_resolved in
+                    let rrt_resolved =
+                      ResolvedSpreadArg (reason, arrtype, generic) :: rrt_resolved
+                    in
                     resolve_spread_list_rec
                       cx
                       ~trace
@@ -3439,7 +3445,9 @@ struct
                   match recursion_depth with
                   | 0 ->
                     (* The first time we see this, we process it normally *)
-                    let rrt_resolved = ResolvedSpreadArg (reason, arrtype) :: rrt_resolved in
+                    let rrt_resolved =
+                      ResolvedSpreadArg (reason, arrtype, generic) :: rrt_resolved
+                    in
                     resolve_spread_list_rec
                       cx
                       ~trace
@@ -3475,7 +3483,9 @@ struct
                       | ROArrayAT _ ->
                         arrtype
                     in
-                    let rrt_resolved = ResolvedSpreadArg (reason, new_arrtype) :: rrt_resolved in
+                    let rrt_resolved =
+                      ResolvedSpreadArg (reason, new_arrtype, generic) :: rrt_resolved
+                    in
                     resolve_spread_list_rec
                       cx
                       ~trace
@@ -3487,7 +3497,7 @@ struct
             (* no caching *)
             | ResolveSpreadsToArray _
             | ResolveSpreadsToCallT _ ->
-              let rrt_resolved = ResolvedSpreadArg (reason, arrtype) :: rrt_resolved in
+              let rrt_resolved = ResolvedSpreadArg (reason, arrtype, generic) :: rrt_resolved in
               resolve_spread_list_rec
                 cx
                 ~trace
@@ -11685,7 +11695,7 @@ struct
       (* No more arguments *)
       | ([], _) ->
         ([], arglist, parlist)
-      | (tin :: tins, (name, tout) :: touts) ->
+      | ((tin, _) :: tins, (name, tout) :: touts) ->
         (* flow `tin` (argument) to `tout` (param). *)
         let tout =
           let use_op =
@@ -11708,7 +11718,7 @@ struct
       let (used_pairs, unused_parlist) =
         match spread_arg with
         | None -> (used_pairs, unused_parlist)
-        | Some spread_arg_elemt ->
+        | Some (spread_arg_elemt, _) ->
           (* The spread argument may be an empty array and to be 100% correct, we
            * should flow VoidT to every remaining parameter, however we don't. This
            * is consistent with how we treat arrays almost everywhere else *)
@@ -11731,7 +11741,7 @@ struct
         ( if is_strict && Context.enforce_strict_call_arity cx then
           match unused_arglist with
           | [] -> ()
-          | first_unused_arg :: _ ->
+          | (first_unused_arg, _) :: _ ->
             Error_message.EFunctionCallExtraArg
               ( mk_reason RFunctionUnusedArgument (loc_of_t first_unused_arg),
                 def_reason,
@@ -11751,7 +11761,9 @@ struct
         (* We're going to build an array literal with all the unused arguments
          * (and the spread argument if it exists). Then we're going to flow that
          * to the rest parameter *)
-        let rev_elems = List.rev_map (fun arg -> UnresolvedArg arg) unused_arglist in
+        let rev_elems =
+          List.rev_map (fun (arg, generic) -> UnresolvedArg (arg, generic)) unused_arglist
+        in
         let unused_rest_param =
           match spread_arg with
           | None ->
@@ -11770,10 +11782,17 @@ struct
         let elems =
           match spread_arg with
           | None -> List.rev rev_elems
-          | Some spread_arg_elemt ->
+          | Some (spread_arg_elemt, generic) ->
             let reason = reason_of_t spread_arg_elemt in
             let spread_array =
               DefT (reason, bogus_trust (), ArrT (ArrayAT (spread_arg_elemt, None)))
+            in
+            let spread_array =
+              Base.Option.value_map
+                ~f:(fun id ->
+                  GenericT { id; bound = spread_array; reason; name = Generic.to_string id })
+                ~default:spread_array
+                generic
             in
             List.rev_append rev_elems [UnresolvedSpreadArg spread_array]
         in
@@ -11804,7 +11823,7 @@ struct
     let unresolved =
       Base.List.map
         ~f:(function
-          | Arg t -> UnresolvedArg t
+          | Arg t -> UnresolvedArg (t, None)
           | SpreadArg t -> UnresolvedSpreadArg t)
         args
     in
@@ -11819,13 +11838,13 @@ struct
     match (resolved, unresolved) with
     | (resolved, []) ->
       finish_resolve_spread_list cx ?trace ~use_op ~reason_op (List.rev resolved) resolve_to
-    | (resolved, UnresolvedArg next :: unresolved) ->
+    | (resolved, UnresolvedArg (next, generic) :: unresolved) ->
       resolve_spread_list_rec
         cx
         ?trace
         ~use_op
         ~reason_op
-        (ResolvedArg next :: resolved, unresolved)
+        (ResolvedArg (next, generic) :: resolved, unresolved)
         resolve_to
     | (resolved, UnresolvedSpreadArg next :: unresolved) ->
       flow_opt
@@ -11847,13 +11866,13 @@ struct
       |> Base.List.fold_left
            ~f:(fun acc param ->
              match param with
-             | ResolvedSpreadArg (_, arrtype) ->
+             | ResolvedSpreadArg (_, arrtype, generic) ->
                begin
                  match arrtype with
                  | ArrayAT (_, Some tuple_types)
                  | TupleAT (_, tuple_types) ->
                    Base.List.fold_left
-                     ~f:(fun acc elem -> ResolvedArg elem :: acc)
+                     ~f:(fun acc elem -> ResolvedArg (elem, generic) :: acc)
                      ~init:acc
                      tuple_types
                  | ArrayAT (_, None)
@@ -11903,27 +11922,32 @@ struct
                      match (acc, elem) with
                      | (None, _) -> None
                      | (_, ResolvedSpreadArg _) -> None
-                     | (Some tuple_types, ResolvedArg t) -> Some (t :: tuple_types)
+                     | (Some tuple_types, ResolvedArg (t, _)) -> Some (t :: tuple_types)
                      | (_, ResolvedAnySpreadArg _) -> failwith "Should not be hit")
                    (Some [])
               |> Base.Option.map ~f:List.rev
             | `Array -> None
           in
+
           (* We infer the array's general element type by looking at the type of
            * every element in the array *)
-          let tset =
-            List.fold_left
-              (fun tset elem ->
-                let elemt =
-                  match elem with
-                  | ResolvedSpreadArg (_, arrtype) -> elemt_of_arrtype arrtype
-                  | ResolvedArg elemt -> elemt
-                  | ResolvedAnySpreadArg _ -> failwith "Should not be hit"
-                in
-                TypeExSet.add elemt tset)
-              TypeExSet.empty
-              elems
+          let (tset, generic) =
+            Generic.(
+              List.fold_left
+                (fun (tset, generic_state) elem ->
+                  let (elemt, generic, ro) =
+                    match elem with
+                    | ResolvedSpreadArg (_, arrtype, generic) ->
+                      (elemt_of_arrtype arrtype, generic, ro_of_arrtype arrtype)
+                    | ResolvedArg (elemt, generic) ->
+                      (elemt, generic, Generic.ArraySpread.NonROSpread)
+                    | ResolvedAnySpreadArg _ -> failwith "Should not be hit"
+                  in
+                  (TypeExSet.add elemt tset, Generic.ArraySpread.merge generic_state generic ro))
+                (TypeExSet.empty, ArraySpread.Bottom)
+                elems)
           in
+          let generic = Generic.ArraySpread.to_option generic in
 
           (* composite elem type is an upper bound of all element types *)
           (* Should the element type of the array be the union of its element types?
@@ -11952,12 +11976,19 @@ struct
       *)
           TypeExSet.elements tset |> List.iter (fun t -> flow cx (t, UseT (use_op, elemt)));
 
-          match (tuple_types, resolve_to) with
-          | (_, `Array) -> DefT (reason_op, bogus_trust (), ArrT (ArrayAT (elemt, None)))
-          | (_, `Literal) -> DefT (reason_op, bogus_trust (), ArrT (ArrayAT (elemt, tuple_types)))
-          | (Some tuple_types, `Tuple) ->
-            DefT (reason_op, bogus_trust (), ArrT (TupleAT (elemt, tuple_types)))
-          | (None, `Tuple) -> DefT (reason_op, bogus_trust (), ArrT (ArrayAT (elemt, None)))
+          let t =
+            match (tuple_types, resolve_to) with
+            | (_, `Array) -> DefT (reason_op, bogus_trust (), ArrT (ArrayAT (elemt, None)))
+            | (_, `Literal) -> DefT (reason_op, bogus_trust (), ArrT (ArrayAT (elemt, tuple_types)))
+            | (Some tuple_types, `Tuple) ->
+              DefT (reason_op, bogus_trust (), ArrT (TupleAT (elemt, tuple_types)))
+            | (None, `Tuple) -> DefT (reason_op, bogus_trust (), ArrT (ArrayAT (elemt, None)))
+          in
+          Base.Option.value_map
+            ~f:(fun id ->
+              GenericT { bound = t; id; name = Generic.to_string id; reason = reason_of_t t })
+            ~default:t
+            generic
       in
       flow_opt_t cx ~use_op ?trace (result, tout)
     in
@@ -11976,37 +12007,43 @@ struct
           match spread with
           | None ->
             (match resolved with
-            | ResolvedArg t :: rest -> flatten r (t :: args) spread rest
-            | ResolvedSpreadArg (_, (ArrayAT (_, Some ts) | TupleAT (_, ts))) :: rest ->
-              let args = List.rev_append ts args in
+            | ResolvedArg (t, generic) :: rest -> flatten r ((t, generic) :: args) spread rest
+            | ResolvedSpreadArg (_, (ArrayAT (_, Some ts) | TupleAT (_, ts)), generic) :: rest ->
+              let args = List.rev_append (List.map (fun t -> (t, generic)) ts) args in
               flatten r args spread rest
-            | ResolvedSpreadArg (r, _) :: _
+            | ResolvedSpreadArg (r, _, _) :: _
             | ResolvedAnySpreadArg r :: _ ->
               (* We weren't able to flatten the call argument list to remove all
                * spreads. This means we need to build a spread argument, with
                * unknown arity. *)
               let tset = TypeExSet.empty in
-              flatten r args (Some tset) resolved
+              flatten r args (Some (tset, Generic.ArraySpread.Bottom)) resolved
             | [] -> failwith "Empty list already handled")
-          | Some tset ->
-            let (elemt, rest) =
+          | Some (tset, generic) ->
+            let (elemt, generic', ro, rest) =
               match resolved with
-              | ResolvedArg t :: rest -> (t, rest)
-              | ResolvedSpreadArg (_, arrtype) :: rest -> (elemt_of_arrtype arrtype, rest)
-              | ResolvedAnySpreadArg reason :: rest -> (AnyT.untyped reason, rest)
+              | ResolvedArg (t, generic) :: rest ->
+                (t, generic, Generic.ArraySpread.NonROSpread, rest)
+              | ResolvedSpreadArg (_, arrtype, generic) :: rest ->
+                (elemt_of_arrtype arrtype, generic, ro_of_arrtype arrtype, rest)
+              | ResolvedAnySpreadArg reason :: rest ->
+                (AnyT.untyped reason, None, Generic.ArraySpread.NonROSpread, rest)
               | [] -> failwith "Empty list already handled"
             in
             let tset = TypeExSet.add elemt tset in
-            flatten r args (Some tset) rest
+            let generic = Generic.ArraySpread.merge generic generic' ro in
+            flatten r args (Some (tset, generic)) rest
       in
       fun cx ~use_op r resolved ->
         let (args, spread) = flatten r [] None resolved in
         let spread =
           Base.Option.map
-            ~f:(fun tset ->
+            ~f:(fun (tset, generic) ->
+              let generic = Generic.ArraySpread.to_option generic in
               let r = mk_reason RArray (aloc_of_reason r) in
-              Tvar.mk_where cx r (fun tvar ->
-                  TypeExSet.elements tset |> List.iter (fun t -> flow cx (t, UseT (use_op, tvar)))))
+              ( Tvar.mk_where cx r (fun tvar ->
+                    TypeExSet.iter (fun t -> flow cx (t, UseT (use_op, tvar))) tset),
+                generic ))
             spread
         in
         (List.rev args, spread)
@@ -12084,6 +12121,8 @@ struct
         | None -> failwith "All multiflows show have a trace"
       in
       let (args, spread_arg) = flatten_call_arg cx ~use_op reason_op resolved in
+      let spread_arg = Base.Option.map ~f:fst spread_arg in
+      let args = Base.List.map ~f:fst args in
       CustomFunKit.run cx trace ~use_op reason_op kind args spread_arg tout
     in
     (* This is used for things like Function.prototype.apply, whose second arg is
@@ -12093,8 +12132,17 @@ struct
       let call_args_tlist =
         Base.List.map
           ~f:(function
-            | ResolvedArg t -> Arg t
-            | ResolvedSpreadArg (r, arrtype) -> SpreadArg (DefT (r, bogus_trust (), ArrT arrtype))
+            | ResolvedArg (t, _) -> Arg t
+            | ResolvedSpreadArg (r, arrtype, generic) ->
+              let arr = DefT (r, bogus_trust (), ArrT arrtype) in
+              let arr =
+                Base.Option.value_map
+                  ~f:(fun id ->
+                    GenericT { bound = arr; reason = r; id; name = Generic.to_string id })
+                  ~default:arr
+                  generic
+              in
+              SpreadArg arr
             | ResolvedAnySpreadArg r -> SpreadArg (AnyT.untyped r))
           flattened
       in

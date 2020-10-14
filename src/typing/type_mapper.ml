@@ -2150,28 +2150,28 @@ class virtual ['a] t_with_uses =
 
     method resolved_param cx map_cx t =
       match t with
-      | ResolvedArg t' ->
+      | ResolvedArg (t', g) ->
         let t'' = self#type_ cx map_cx t' in
         if t'' == t' then
           t
         else
-          ResolvedArg t''
-      | ResolvedSpreadArg (r, arrtype) ->
+          ResolvedArg (t'', g)
+      | ResolvedSpreadArg (r, arrtype, g) ->
         let arrtype' = self#arr_type cx map_cx arrtype in
         if arrtype' == arrtype then
           t
         else
-          ResolvedSpreadArg (r, arrtype')
+          ResolvedSpreadArg (r, arrtype', g)
       | ResolvedAnySpreadArg _ -> t
 
     method unresolved_param cx map_cx t =
       match t with
-      | UnresolvedArg t' ->
+      | UnresolvedArg (t', g) ->
         let t'' = self#type_ cx map_cx t' in
         if t'' == t' then
           t
         else
-          UnresolvedArg t''
+          UnresolvedArg (t'', g)
       | UnresolvedSpreadArg t' ->
         let t'' = self#type_ cx map_cx t' in
         if t'' == t' then

@@ -567,16 +567,16 @@ class ['a] t =
         let acc =
           List.fold_left
             (fun (acc : 'a) -> function
-              | ResolvedArg t -> self#type_ cx pole_TODO acc t
+              | ResolvedArg (t, _) -> self#type_ cx pole_TODO acc t
               | ResolvedAnySpreadArg _ -> acc
-              | ResolvedSpreadArg (_, arr) -> self#arr_type cx pole_TODO acc arr)
+              | ResolvedSpreadArg (_, arr, _) -> self#arr_type cx pole_TODO acc arr)
             acc
             rrt_resolved
         in
         let acc =
           List.fold_left
             (fun acc -> function
-              | UnresolvedArg t
+              | UnresolvedArg (t, _)
               | UnresolvedSpreadArg t ->
                 self#type_ cx pole_TODO acc t)
             acc
