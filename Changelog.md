@@ -1,3 +1,18 @@
+### 0.136.0
+
+Likely to cause new Flow errors:
+
+* Flow now raises errors when generic type variables escape out of the scope in which they were defined.
+
+Notable bug fixes:
+
+* Fix a race condition related to saved state and cancelable rechecks that caused internal errors of `Requires_not_found` or `Sig_requires_not_found`.
+
+Misc:
+
+* Added documentation to core.js builtins.
+* Add optional `propTypes` to `React.AbstractComponentStatics` (thanks @brianzchen).
+
 ### 0.135.0
 
 Likely to cause new Flow errors:
