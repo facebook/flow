@@ -40,8 +40,8 @@ type saved_state_data = {
    * we probably could allow some config options, whitespace, etc. But for now, let's
    * invalidate the saved state if the config has changed at all *)
   flowconfig_hash: Xx.hash;
-  parsed_heaps: parsed_file_data FilenameMap.t;
-  unparsed_heaps: unparsed_file_data FilenameMap.t;
+  parsed_heaps: (File_key.t * parsed_file_data) list;
+  unparsed_heaps: (File_key.t * unparsed_file_data) list;
   ordered_non_flowlib_libs: string list;
   (* Why store local errors and not merge_errors/suppressions/etc? Well, I have a few reasons:
    *
@@ -243,7 +243,7 @@ end = struct
     in
     let relative_fn = FileNormalizer.normalize_file_key normalizer fn in
     let relative_file_data = normalize_parsed_data ~normalizer file_data in
-    FilenameMap.add relative_fn relative_file_data parsed_heaps
+    (relative_fn, relative_file_data) :: parsed_heaps
 
   (* Collect all the data for a single unparsed file *)
   let collect_normalized_data_for_unparsed_file ~normalizer ~reader fn unparsed_heaps =
@@ -256,7 +256,7 @@ end = struct
       }
     in
     let relative_fn = FileNormalizer.normalize_file_key normalizer fn in
-    FilenameMap.add relative_fn relative_file_data unparsed_heaps
+    (relative_fn, relative_file_data) :: unparsed_heaps
 
   (* The builtin flowlibs are excluded from the saved state. The server which loads the saved state
    * will extract and typecheck its own builtin flowlibs *)
@@ -282,14 +282,14 @@ end = struct
           FilenameSet.fold
             (collect_normalized_data_for_parsed_file ~normalizer ~reader)
             env.ServerEnv.files
-            FilenameMap.empty)
+            [])
     in
     let unparsed_heaps =
       Profiling_js.with_timer profiling ~timer:"CollectUnparsed" ~f:(fun () ->
           FilenameSet.fold
             (collect_normalized_data_for_unparsed_file ~normalizer ~reader)
             env.ServerEnv.unparsed
-            FilenameMap.empty)
+            [])
     in
     let ordered_non_flowlib_libs =
       env.ServerEnv.ordered_libs
@@ -536,31 +536,25 @@ end = struct
 
   (* Denormalize the data for all the parsed files. This is kind of slow :( *)
   let denormalize_parsed_heaps ~denormalizer parsed_heaps =
-    FilenameMap.fold
-      (fun relative_fn parsed_file_data acc ->
+    Base.List.map
+      ~f:(fun (relative_fn, parsed_file_data) ->
         let parsed_file_data = partially_denormalize_parsed_data ~denormalizer parsed_file_data in
         let fn = FileDenormalizer.denormalize_file_key denormalizer relative_fn in
-        FilenameMap.add fn parsed_file_data acc)
+        (fn, parsed_file_data))
       parsed_heaps
-      FilenameMap.empty
 
   (* Denormalize the data for all the unparsed files *)
   let denormalize_unparsed_heaps ~workers ~root ~progress_fn unparsed_heaps =
-    let next =
-      MultiWorkerLwt.next ~progress_fn ~max_size:4000 workers (FilenameMap.bindings unparsed_heaps)
-    in
+    let next = MultiWorkerLwt.next ~progress_fn ~max_size:4000 workers unparsed_heaps in
     MultiWorkerLwt.call
       workers
       ~job:
         (List.fold_left (fun acc (relative_fn, unparsed_file_data) ->
              let unparsed_info = denormalize_info_nocache ~root unparsed_file_data.unparsed_info in
              let fn = denormalize_file_key_nocache ~root relative_fn in
-             FilenameMap.add
-               fn
-               { unparsed_info; unparsed_hash = unparsed_file_data.unparsed_hash }
-               acc))
-      ~neutral:FilenameMap.empty
-      ~merge:FilenameMap.union
+             (fn, { unparsed_info; unparsed_hash = unparsed_file_data.unparsed_hash }) :: acc))
+      ~neutral:[]
+      ~merge:List.rev_append
       ~next
 
   let denormalize_error_set ~denormalizer =
@@ -596,7 +590,7 @@ end = struct
     let parsed_heaps = denormalize_parsed_heaps ~denormalizer parsed_heaps in
     Hh_logger.info "Denormalizing the data for the unparsed files";
     let%lwt unparsed_heaps =
-      let progress_fn = progress_fn (FilenameMap.cardinal unparsed_heaps) in
+      let progress_fn = progress_fn (List.length unparsed_heaps) in
       denormalize_unparsed_heaps ~workers ~root ~progress_fn unparsed_heaps
     in
     let ordered_non_flowlib_libs =

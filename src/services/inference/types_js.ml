@@ -2523,7 +2523,7 @@ let init_from_saved_state ~profiling ~workers ~saved_state ~updates options =
                      Module_heaps.From_saved_state.add_resolved_requires fn resolved_requires))
               ~merge:(fun () () -> ())
               ~neutral:()
-              ~next:(MultiWorkerLwt.next workers (FilenameMap.bindings parsed_heaps))
+              ~next:(MultiWorkerLwt.next workers parsed_heaps)
           in
           MultiWorkerLwt.call
             workers
@@ -2534,7 +2534,7 @@ let init_from_saved_state ~profiling ~workers ~saved_state ~updates options =
                    Parsing_heaps.From_saved_state.add_file_hash fn hash))
             ~merge:(fun () () -> ())
             ~neutral:()
-            ~next:(MultiWorkerLwt.next workers (FilenameMap.bindings unparsed_heaps)))
+            ~next:(MultiWorkerLwt.next workers unparsed_heaps))
     in
     Hh_logger.info "Loading libraries";
 
@@ -2561,22 +2561,22 @@ let init_from_saved_state ~profiling ~workers ~saved_state ~updates options =
     let%lwt (parsed_set, unparsed_set, all_files, parsed, unparsed) =
       SharedMem_js.with_memory_timer_lwt ~options "PrepareCommitModules" profiling (fun () ->
           let (parsed, parsed_set) =
-            FilenameMap.fold
-              (fun fn data (parsed, parsed_set) ->
+            List.fold_left
+              (fun (parsed, parsed_set) (fn, data) ->
                 let parsed = (fn, data.Saved_state.info) :: parsed in
                 let parsed_set = FilenameSet.add fn parsed_set in
                 (parsed, parsed_set))
-              parsed_heaps
               ([], FilenameSet.empty)
+              parsed_heaps
           in
           let (unparsed, unparsed_set) =
-            FilenameMap.fold
-              (fun fn data (unparsed, unparsed_set) ->
+            List.fold_left
+              (fun (unparsed, unparsed_set) (fn, data) ->
                 let unparsed = (fn, data.Saved_state.unparsed_info) :: unparsed in
                 let unparsed_set = FilenameSet.add fn unparsed_set in
                 (unparsed, unparsed_set))
-              unparsed_heaps
               ([], FilenameSet.empty)
+              unparsed_heaps
           in
           let all_files = FilenameSet.union parsed_set unparsed_set in
           Lwt.return (parsed_set, unparsed_set, all_files, parsed, unparsed))
