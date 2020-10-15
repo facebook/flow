@@ -62,9 +62,7 @@ let modulename_map_fn ~f = function
   | Modulename.String _ as module_name -> module_name
 
 let update_dependency_graph_filenames f graph =
-  let update_set set =
-    FilenameSet.fold (fun elt new_set -> FilenameSet.add (f elt) new_set) set FilenameSet.empty
-  in
+  let update_set set = FilenameSet.map f set in
   let update_map update_value map =
     FilenameMap.fold
       (fun key value new_map ->
