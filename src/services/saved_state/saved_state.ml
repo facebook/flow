@@ -440,14 +440,38 @@ module Load : sig
 
   val denormalize_parsed_data : root:string -> normalized_file_data -> denormalized_file_data
 end = struct
-  let denormalize_file_key ~root fn = File_key.map (Files.absolute_path root) fn
+  module FileDenormalizer : sig
+    type t
 
-  let denormalize_dependency_graph ~root =
-    update_dependency_graph_filenames (denormalize_file_key ~root)
+    val make : root:string -> t
 
-  let denormalize_error ~root =
+    val denormalize_path : t -> string -> string
+
+    val denormalize_file_key : t -> File_key.t -> File_key.t
+  end = struct
+    type t = {
+      root: string;
+      file_key_cache: (File_key.t, File_key.t) Hashtbl.t;
+    }
+
+    let make ~root = { root; file_key_cache = Hashtbl.create 16 }
+
+    (* This could also have its own cache, but an October 2020 experiment showed that memoizing
+     * these calls does not even save a single word in the denormalized saved state object. *)
+    let denormalize_path { root; _ } path = Files.absolute_path root path
+
+    let denormalize_file_key ({ file_key_cache; _ } as denormalizer) file_key =
+      with_cache file_key_cache file_key (File_key.map (denormalize_path denormalizer))
+  end
+
+  let denormalize_file_key_nocache ~root fn = File_key.map (Files.absolute_path root) fn
+
+  let denormalize_dependency_graph ~denormalizer =
+    update_dependency_graph_filenames (FileDenormalizer.denormalize_file_key denormalizer)
+
+  let denormalize_error ~denormalizer =
     Flow_error.map_loc_of_error
-      (ALoc.update_source (Base.Option.map ~f:(denormalize_file_key ~root)))
+      (ALoc.update_source (Base.Option.map ~f:(FileDenormalizer.denormalize_file_key denormalizer)))
 
   let verify_version =
     (* Flow_build_id should always be 16 bytes *)
@@ -479,11 +503,15 @@ end = struct
     fun fd ->
       read_version fd (Bytes.create saved_state_version_length) 0 saved_state_version_length
 
-  let denormalize_info ~root info =
-    let module_name =
-      modulename_map_fn ~f:(denormalize_file_key ~root) info.Module_heaps.module_name
-    in
+  let denormalize_info_generic ~denormalize info =
+    let module_name = modulename_map_fn ~f:denormalize info.Module_heaps.module_name in
     { info with Module_heaps.module_name }
+
+  let denormalize_info ~denormalizer info =
+    denormalize_info_generic ~denormalize:(FileDenormalizer.denormalize_file_key denormalizer) info
+
+  let denormalize_info_nocache ~root info =
+    denormalize_info_generic ~denormalize:(denormalize_file_key_nocache ~root) info
 
   (* Turns all the relative paths in a file's data back into absolute paths.
    *
@@ -493,13 +521,13 @@ end = struct
     let { Module_heaps.resolved_modules; phantom_dependents; hash } = file_data.resolved_requires in
     let phantom_dependents = SSet.map (Files.absolute_path root) phantom_dependents in
     let resolved_modules =
-      SMap.map (modulename_map_fn ~f:(denormalize_file_key ~root)) resolved_modules
+      SMap.map (modulename_map_fn ~f:(denormalize_file_key_nocache ~root)) resolved_modules
     in
     let resolved_requires = { Module_heaps.resolved_modules; phantom_dependents; hash } in
     { package = file_data.package; resolved_requires; hash = file_data.hash }
 
-  let partially_denormalize_parsed_data ~root { info; normalized_file_data } =
-    let info = denormalize_info ~root info in
+  let partially_denormalize_parsed_data ~denormalizer { info; normalized_file_data } =
+    let info = denormalize_info ~denormalizer info in
     { info; normalized_file_data }
 
   let progress_fn real_total ~total:_ ~start ~length:_ =
@@ -507,11 +535,11 @@ end = struct
       ServerStatus.(Load_saved_state_progress { total = Some real_total; finished = start })
 
   (* Denormalize the data for all the parsed files. This is kind of slow :( *)
-  let denormalize_parsed_heaps ~root parsed_heaps =
+  let denormalize_parsed_heaps ~denormalizer parsed_heaps =
     FilenameMap.fold
       (fun relative_fn parsed_file_data acc ->
-        let parsed_file_data = partially_denormalize_parsed_data ~root parsed_file_data in
-        let fn = denormalize_file_key ~root relative_fn in
+        let parsed_file_data = partially_denormalize_parsed_data ~denormalizer parsed_file_data in
+        let fn = FileDenormalizer.denormalize_file_key denormalizer relative_fn in
         FilenameMap.add fn parsed_file_data acc)
       parsed_heaps
       FilenameMap.empty
@@ -525,8 +553,8 @@ end = struct
       workers
       ~job:
         (List.fold_left (fun acc (relative_fn, unparsed_file_data) ->
-             let unparsed_info = denormalize_info ~root unparsed_file_data.unparsed_info in
-             let fn = denormalize_file_key ~root relative_fn in
+             let unparsed_info = denormalize_info_nocache ~root unparsed_file_data.unparsed_info in
+             let fn = denormalize_file_key_nocache ~root relative_fn in
              FilenameMap.add
                fn
                { unparsed_info; unparsed_hash = unparsed_file_data.unparsed_hash }
@@ -535,11 +563,13 @@ end = struct
       ~merge:FilenameMap.union
       ~next
 
-  let denormalize_error_set ~root = Flow_error.ErrorSet.map (denormalize_error ~root)
+  let denormalize_error_set ~denormalizer =
+    Flow_error.ErrorSet.map (denormalize_error ~denormalizer)
 
   (* Denormalize all the data *)
   let denormalize_data ~workers ~options ~data =
     let root = Options.root options |> Path.to_string in
+    let denormalizer = FileDenormalizer.make ~root in
     let {
       flowconfig_hash;
       parsed_heaps;
@@ -563,20 +593,20 @@ end = struct
     );
 
     Hh_logger.info "Denormalizing the data for the parsed files";
-    let%lwt parsed_heaps = Lwt.return (denormalize_parsed_heaps ~root parsed_heaps) in
+    let%lwt parsed_heaps = Lwt.return (denormalize_parsed_heaps ~denormalizer parsed_heaps) in
     Hh_logger.info "Denormalizing the data for the unparsed files";
     let%lwt unparsed_heaps =
       let progress_fn = progress_fn (FilenameMap.cardinal unparsed_heaps) in
       denormalize_unparsed_heaps ~workers ~root ~progress_fn unparsed_heaps
     in
     let ordered_non_flowlib_libs =
-      Base.List.map ~f:(Files.absolute_path root) ordered_non_flowlib_libs
+      Base.List.map ~f:(FileDenormalizer.denormalize_path denormalizer) ordered_non_flowlib_libs
     in
     let local_errors =
       FilenameMap.fold
         (fun normalized_fn normalized_error_set acc ->
-          let fn = denormalize_file_key ~root normalized_fn in
-          let error_set = denormalize_error_set ~root normalized_error_set in
+          let fn = FileDenormalizer.denormalize_file_key denormalizer normalized_fn in
+          let error_set = denormalize_error_set ~denormalizer normalized_error_set in
           FilenameMap.add fn error_set acc)
         local_errors
         FilenameMap.empty
@@ -584,19 +614,20 @@ end = struct
     let warnings =
       FilenameMap.fold
         (fun normalized_fn normalized_warning_set acc ->
-          let fn = denormalize_file_key ~root normalized_fn in
-          let warning_set = denormalize_error_set ~root normalized_warning_set in
+          let fn = FileDenormalizer.denormalize_file_key denormalizer normalized_fn in
+          let warning_set = denormalize_error_set ~denormalizer normalized_warning_set in
           FilenameMap.add fn warning_set acc)
         warnings
         FilenameMap.empty
     in
     let node_modules_containers =
       SMap.fold
-        (fun key value acc -> SMap.add (Files.absolute_path root key) value acc)
+        (fun key value acc ->
+          SMap.add (FileDenormalizer.denormalize_path denormalizer key) value acc)
         node_modules_containers
         SMap.empty
     in
-    let dependency_graph = denormalize_dependency_graph ~root dependency_graph in
+    let dependency_graph = denormalize_dependency_graph ~denormalizer dependency_graph in
     Lwt.return
       {
         flowconfig_hash;
