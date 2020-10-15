@@ -127,6 +127,16 @@ let aloc_of_id id =
   | Bound bound -> aloc_of_bound bound
   | Spread spread -> Nel.hd spread |> aloc_of_bound
 
+let rec fold_ids ~f ~acc id =
+  let test_bound acc { generic = { id; name }; super } =
+    match super with
+    | Some super -> f id name (fold_ids ~f ~acc super)
+    | None -> f id name acc
+  in
+  match id with
+  | Bound bound -> test_bound acc bound
+  | Spread spread -> Nel.fold_left test_bound acc spread
+
 let spread_exists = Base.List.is_empty %> not
 
 type sat_result =

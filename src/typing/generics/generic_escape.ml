@@ -55,14 +55,7 @@ class escape_finder ~gcx ~(add_output : Context.t -> ?trace:Trace.t -> Error_mes
             exploring_resolved_tvar;
           } as acc )
         ty =
-      match desc_of_reason ~unwrap:false @@ reason_of_t ty with
-      | RPolyTest (bound_name, _, bound_loc, is_this)
-        when (not @@ Generic_cx.in_scope gcx scope_id bound_loc)
-             && ((not @@ is_bot ty) || exploring_resolved_tvar) ->
-        (* The "exploring_resolved_tvar" bit is probably only needed for the
-           generate-tests world--if we're exploring a resolved tvar, it may
-           have been unified with the empty generic LB, so we're not going to
-           see an upper bound anywhere. *)
+      let error name loc is_this =
         add_output
           cx
           (Error_message.EEscapedGeneric
@@ -71,14 +64,35 @@ class escape_finder ~gcx ~(add_output : Context.t -> ?trace:Trace.t -> Error_mes
                blame_reason = reason_of_t ty;
                annot_reason;
                use_op;
-               bound_name;
-               bound_loc = (bound_loc :> ALoc.t);
+               bound_name = name;
+               bound_loc = loc;
                is_this;
-             });
+             })
+      in
+      match desc_of_reason ~unwrap:false @@ reason_of_t ty with
+      | RPolyTest (bound_name, _, bound_loc, is_this)
+        when (not @@ Generic_cx.in_scope gcx scope_id bound_loc)
+             && ((not @@ is_bot ty) || exploring_resolved_tvar)
+             && Context.generate_tests cx ->
+        (* The "exploring_resolved_tvar" bit is probably only needed for the
+           generate-tests world--if we're exploring a resolved tvar, it may
+           have been unified with the empty generic LB, so we're not going to
+           see an upper bound anywhere. *)
+        error bound_name (bound_loc :> ALoc.t) is_this;
         acc
       | _ ->
         begin
           match (ty, ALoc.source (def_aloc_of_reason (reason_of_t ty))) with
+          | (GenericT { id; _ }, _) ->
+            let err_fn id name acc =
+              let is_escaped = not @@ Generic_cx.in_scope gcx scope_id id in
+              if is_escaped then error name (id :> ALoc.t) (name = "this");
+              is_escaped || acc
+            in
+            if Generic.fold_ids ~f:err_fn ~acc:false id then
+              acc
+            else
+              super#type_ cx pole acc ty
           | (DefT (_, _, InstanceT (_, _, _, { type_args; _ })), Some key)
             when key <> Context.file cx ->
             (* It's really expensive to explore imported instances, and it's usually not necessary to do

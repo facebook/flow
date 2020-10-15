@@ -54,3 +54,8 @@ function f<X: {}, Y: {}, Z: X & Y>(x: {...X}, xy: {...X, ...Y}, z: {...Z}) {
   (xy: {...(X & Y)}); // ok
   (z: {...(X & Y)}); // ok
 }
+
+var esc;
+function hh<X: {}, Y: {}>(x: X, y: Y) {
+  esc = {...x, ...y};
+}

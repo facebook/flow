@@ -38,6 +38,8 @@ val spread_exists : spread_id -> bool
 
 val aloc_of_id : id -> ALoc.id
 
+val fold_ids : f:(ALoc.id -> string -> 'a -> 'a) -> acc:'a -> id -> 'a
+
 val satisfies : id -> id -> sat_result
 
 module ArraySpread : sig

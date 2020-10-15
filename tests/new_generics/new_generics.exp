@@ -1220,6 +1220,42 @@ References:
              ^^^^^^^^^^^^ [2]
 
 
+Error -------------------------------------------------------------------------------------------------- spreads.js:60:9
+
+Cannot assign object literal to `esc` because type variable `X` [1] cannot escape from the scope in which it was
+defined [2] (try adding a type annotation to `esc` [3]). [escaped-generic]
+
+   spreads.js:60:9
+   60|   esc = {...x, ...y};
+               ^^^^^^^^^^^^ [1]
+
+References:
+   spreads.js:59:13
+   59| function hh<X: {}, Y: {}>(x: X, y: Y) {
+                   ^ [2]
+   spreads.js:58:5
+   58| var esc;
+           ^^^ [3]
+
+
+Error -------------------------------------------------------------------------------------------------- spreads.js:60:9
+
+Cannot assign object literal to `esc` because type variable `Y` [1] cannot escape from the scope in which it was
+defined [2] (try adding a type annotation to `esc` [3]). [escaped-generic]
+
+   spreads.js:60:9
+   60|   esc = {...x, ...y};
+               ^^^^^^^^^^^^ [1]
+
+References:
+   spreads.js:59:20
+   59| function hh<X: {}, Y: {}>(x: X, y: Y) {
+                          ^ [2]
+   spreads.js:58:5
+   58| var esc;
+           ^^^ [3]
+
+
 Error ----------------------------------------------------------------------------------------------------- this.js:8:14
 
 Cannot return `this.f2()` because `C` [1] is incompatible with `this` [2]. [incompatible-return]
@@ -1323,7 +1359,7 @@ References:
 
 
 
-Found 79 errors
+Found 81 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches
