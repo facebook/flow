@@ -6850,7 +6850,7 @@ struct
         | ( GenericT ({ bound = bound1; id = id1; reason = reason1; _ } as g1),
             UseT (use_op, GenericT ({ bound = bound2; id = id2; reason = reason2; _ } as g2)) ) ->
           begin
-            match Generic.satisfies id1 id2 with
+            match Generic.satisfies ~printer:(print_if_verbose_lazy cx trace) id1 id2 with
             | Generic.Satisfied ->
               rec_flow_t
                 cx
@@ -11939,11 +11939,18 @@ struct
                     match elem with
                     | ResolvedSpreadArg (_, arrtype, generic) ->
                       (elemt_of_arrtype arrtype, generic, ro_of_arrtype arrtype)
-                    | ResolvedArg (elemt, generic) ->
-                      (elemt, generic, Generic.ArraySpread.NonROSpread)
+                    | ResolvedArg (elemt, generic) -> (elemt, generic, ArraySpread.NonROSpread)
                     | ResolvedAnySpreadArg _ -> failwith "Should not be hit"
                   in
-                  (TypeExSet.add elemt tset, Generic.ArraySpread.merge generic_state generic ro))
+                  ( TypeExSet.add elemt tset,
+                    ArraySpread.merge
+                      ~printer:
+                        (print_if_verbose_lazy
+                           cx
+                           (Base.Option.value trace ~default:Trace.dummy_trace))
+                      generic_state
+                      generic
+                      ro ))
                 (TypeExSet.empty, ArraySpread.Bottom)
                 elems)
           in
@@ -12000,24 +12007,24 @@ struct
      * might flow to any remaining parameter.
      *)
     let flatten_call_arg =
-      let rec flatten r args spread resolved =
+      let rec flatten cx r args spread resolved =
         if resolved = [] then
           (args, spread)
         else
           match spread with
           | None ->
             (match resolved with
-            | ResolvedArg (t, generic) :: rest -> flatten r ((t, generic) :: args) spread rest
+            | ResolvedArg (t, generic) :: rest -> flatten cx r ((t, generic) :: args) spread rest
             | ResolvedSpreadArg (_, (ArrayAT (_, Some ts) | TupleAT (_, ts)), generic) :: rest ->
               let args = List.rev_append (List.map (fun t -> (t, generic)) ts) args in
-              flatten r args spread rest
+              flatten cx r args spread rest
             | ResolvedSpreadArg (r, _, _) :: _
             | ResolvedAnySpreadArg r :: _ ->
               (* We weren't able to flatten the call argument list to remove all
                * spreads. This means we need to build a spread argument, with
                * unknown arity. *)
               let tset = TypeExSet.empty in
-              flatten r args (Some (tset, Generic.ArraySpread.Bottom)) resolved
+              flatten cx r args (Some (tset, Generic.ArraySpread.Bottom)) resolved
             | [] -> failwith "Empty list already handled")
           | Some (tset, generic) ->
             let (elemt, generic', ro, rest) =
@@ -12031,11 +12038,17 @@ struct
               | [] -> failwith "Empty list already handled"
             in
             let tset = TypeExSet.add elemt tset in
-            let generic = Generic.ArraySpread.merge generic generic' ro in
-            flatten r args (Some (tset, generic)) rest
+            let generic =
+              Generic.ArraySpread.merge
+                ~printer:(print_if_verbose_lazy cx Trace.dummy_trace)
+                generic
+                generic'
+                ro
+            in
+            flatten cx r args (Some (tset, generic)) rest
       in
       fun cx ~use_op r resolved ->
-        let (args, spread) = flatten r [] None resolved in
+        let (args, spread) = flatten cx r [] None resolved in
         let spread =
           Base.Option.map
             ~f:(fun (tset, generic) ->

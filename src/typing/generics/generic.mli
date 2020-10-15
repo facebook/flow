@@ -40,7 +40,7 @@ val aloc_of_id : id -> ALoc.id
 
 val fold_ids : f:(ALoc.id -> string -> 'a -> 'a) -> acc:'a -> id -> 'a
 
-val satisfies : id -> id -> sat_result
+val satisfies : printer:(string list Lazy.t -> unit) -> id -> id -> sat_result
 
 module ArraySpread : sig
   type ro_status =
@@ -52,7 +52,7 @@ module ArraySpread : sig
     | Top
     | Generic of (id * ro_status)
 
-  val merge : t -> id option -> ro_status -> t
+  val merge : printer:(string list Lazy.t -> unit) -> t -> id option -> ro_status -> t
 
   val to_option : t -> id option
 end

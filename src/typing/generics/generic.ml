@@ -62,12 +62,14 @@ and id =
    if any, have been spread into an object *)
 type spread_id = bound list
 
-let rec to_string id =
+let rec bound_to_string =
   let open Utils_js in
-  let bound_to_string = function
-    | { generic = { name; _ }; super = None } -> name
-    | { generic = { name; _ }; super = Some id } -> spf "%s:%s" name (to_string id)
-  in
+  function
+  | { generic = { name; _ }; super = None } -> name
+  | { generic = { name; _ }; super = Some id } -> spf "%s:%s" name (to_string id)
+
+and to_string id =
+  let open Utils_js in
   match id with
   | Bound bound -> bound_to_string bound
   | Spread ids ->
@@ -199,18 +201,24 @@ type sat_result =
 
     *)
 
-let rec satisfies id1 id2 =
+let rec satisfies ~printer id1 id2 =
   let opt_satisfies o1 o2 =
     match (o1, o2) with
     (* everything in id2 was satisfied by id1 with nothing left *)
-    | (None, None) -> Satisfied
+    | (None, None) ->
+      printer (lazy ["Generics satisfied"]);
+      Satisfied
     (* everything in id2 was satisfied, but there's generics on the left still
        unmatched *)
-    | (Some id, None) -> Lower id
+    | (Some id, None) ->
+      printer (lazy [spf "Generics satisfied, with %s unmatched on lower bound" (to_string id)]);
+      Lower id
     (* something in id2 wasn't satisfied *)
-    | (None, Some id) -> Upper id
+    | (None, Some id) ->
+      printer (lazy [spf "Generics unsatisfied, with %s unmatched on upper bound" (to_string id)]);
+      Upper id
     (* continue to the next layer *)
-    | (Some id1, Some id2) -> satisfies id1 id2
+    | (Some id1, Some id2) -> satisfies ~printer id1 id2
   in
   let bound_satisfies
       { generic = { id = id1; _ }; super = super1 }
@@ -222,11 +230,16 @@ let rec satisfies id1 id2 =
       match super1 with
       | Some super_id ->
         (* if the top-level ids don't match but the LHS has more to look at, strip it off and try again *)
-        satisfies super_id (Bound bound2)
+        satisfies ~printer super_id (Bound bound2)
       | None ->
         (* something in id2 wasn't satisfied *)
+        printer
+          ( lazy
+            [spf "Generics unsatisfied, with %s unmatched on upper bound" (bound_to_string bound2)]
+            );
         Upper (Bound bound2)
   in
+  printer (lazy [spf "Checking generics compatibility: %s ~> %s" (to_string id1) (to_string id2)]);
   match (id1, id2) with
   | (Bound bound1, Bound bound2) -> bound_satisfies bound1 bound2
   (* A generic is interchangeable with a spread of itself,
@@ -246,7 +259,7 @@ let rec satisfies id1 id2 =
         return z; // ok
       }
       *)
-  | (Bound { generic = _; super = Some id1 }, Spread _) -> satisfies id1 id2
+  | (Bound { generic = _; super = Some id1 }, Spread _) -> satisfies ~printer id1 id2
   (* As above, but if it's not bounded by a spread, we can't do
      anything but strip off the generic from the lower type.
 
@@ -254,7 +267,10 @@ let rec satisfies id1 id2 =
         return y; // should error
       }
      *)
-  | (Bound { generic = _; super = None }, Spread _) -> Upper id2
+  | (Bound { generic = _; super = None }, Spread _) ->
+    printer
+      (lazy ["Generics unsatisfied: single bound cannot satisfy spread with multiple elements"]);
+    Upper id2
   (* A spread can flow into a bound if the LAST generic that was
      spread matches the lower bound (and assuming the types match).
 
@@ -266,12 +282,14 @@ let rec satisfies id1 id2 =
         return y; // should error (but didn't previously with old generics)
       }
   *)
-  | (Spread bounds, Bound bound2) ->
+  | (Spread bounds, Bound _) ->
     let bound1 = Nel.rev bounds |> Nel.hd in
-    bound_satisfies bound1 bound2
+    satisfies ~printer (Bound bound1) id2
   (* If an upper bound spread expects more generic components in the spread than are provided in
      the lower bound, it clearly can't be satisfied *)
-  | (Spread s1, Spread s2) when Nel.length s2 > Nel.length s1 -> Upper id2
+  | (Spread s1, Spread s2) when Nel.length s2 > Nel.length s1 ->
+    printer (lazy ["Generics unsatisfied: more elements in upper bound than lower bound"]);
+    Upper id2
   (* When comparing two spreads, we drop the tail elements of the lower bound so that
      its length matches the upper bound, and then we compare the elements pairwise. If they're
      all satisfied, then the spreads are satisfied. Recall the invariant that any generic exists
@@ -301,14 +319,28 @@ let rec satisfies id1 id2 =
     in
     if
       Base.List.fold2_exn
-        ~f:(fun acc id1 id2 -> acc && is_satisfied (bound_satisfies id1 id2))
+        ~f:(fun acc id1 id2 ->
+          acc
+          &&
+          ( printer
+              ( lazy
+                [
+                  spf
+                    "Checking generics compatibility (from spread): %s ~> %s"
+                    (bound_to_string id1)
+                    (bound_to_string id2);
+                ] );
+            is_satisfied (bound_satisfies id1 id2) ))
         s1
         s2
         ~init:true
-    then
+    then begin
+      printer (lazy ["Generics satisfied: all elements of spread satisfied"]);
       Satisfied
-    else
+    end else begin
+      printer (lazy ["Generics unsatisfied: at least one element of spread unsatisfied"]);
       Upper id2
+    end
 
 module ArraySpread = struct
   type ro_status =
@@ -331,7 +363,7 @@ module ArraySpread = struct
     | (Generic _, ROSpread) -> Top
     | (Generic (id, _), s) -> Generic (id, s)
 
-  let merge t g ro' =
+  let merge ~printer t g ro' =
     match (t, g) with
     | (Bottom, Some stat) -> Generic (stat, ro')
     | (Generic _, None)
@@ -340,7 +372,7 @@ module ArraySpread = struct
     | (Generic (id, _), Some id') when equal_id id id' -> merge_ro t ro'
     | (Generic (id, ro), Some id') ->
       begin
-        match (satisfies id' id, satisfies id id') with
+        match (satisfies ~printer id' id, satisfies ~printer id id') with
         | (Upper _, Upper _) -> Top
         | (Upper _, _) -> merge_ro (Generic (id', ro')) ro
         | _ -> merge_ro t ro'

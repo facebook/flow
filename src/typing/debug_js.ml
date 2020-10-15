@@ -1704,22 +1704,20 @@ let dump_error_message =
     | EMalformedCode loc -> spf "EMalformedCode (%s)" (string_of_aloc loc)
 
 module Verbose = struct
-  let print_if_verbose_lazy cx trace ?(delim = "") ?(indent = 0) (lines : string Lazy.t list) =
+  let print_if_verbose_lazy cx trace ?(delim = "") ?(indent = 0) (lines : string list Lazy.t) =
     match Context.verbose cx with
     | Some { Verbose.indent = num_spaces; _ } ->
       let indent = max (indent + Trace.trace_depth trace - 1) 0 in
       let prefix = String.make (indent * num_spaces) ' ' in
       let pid = Context.pid_prefix cx in
-      let add_prefix line = spf "\n%s%s%s" prefix pid (Lazy.force line) in
-      let lines = Base.List.map ~f:add_prefix lines in
+      let add_prefix line = spf "\n%s%s%s" prefix pid line in
+      let lines = Base.List.map ~f:add_prefix (Lazy.force lines) in
       prerr_endline (String.concat delim lines)
     | None -> ()
 
   let print_if_verbose cx trace ?(delim = "") ?(indent = 0) (lines : string list) =
     match Context.verbose cx with
-    | Some _ ->
-      let lines = Base.List.map ~f:(fun line -> lazy line) lines in
-      print_if_verbose_lazy cx trace ~delim ~indent lines
+    | Some _ -> print_if_verbose_lazy cx trace ~delim ~indent (lazy lines)
     | None -> ()
 
   let print_types_if_verbose cx trace ?(note : string option) ((l : Type.t), (u : Type.use_t)) =
