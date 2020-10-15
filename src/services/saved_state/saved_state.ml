@@ -109,6 +109,14 @@ let saved_state_version () =
   assert (String.length version = saved_state_version_length);
   version
 
+let with_cache tbl key f =
+  match Hashtbl.find_opt tbl key with
+  | Some result -> result
+  | None ->
+    let result = f key in
+    Hashtbl.add tbl key result;
+    result
+
 (* Saving the saved state generally consists of 3 things:
  *
  * 1. Collecting the various bits of data
@@ -143,14 +151,6 @@ end = struct
     }
 
     let make ~root = { root; file_key_cache = Hashtbl.create 16 }
-
-    let with_cache tbl key f =
-      match Hashtbl.find_opt tbl key with
-      | Some result -> result
-      | None ->
-        let result = f key in
-        Hashtbl.add tbl key result;
-        result
 
     (* We could also add a cache for this call, to improve sharing of the underlying strings
      * between file keys and the places that deal with raw paths. Unfortunately, an April 2020 test
