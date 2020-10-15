@@ -381,6 +381,7 @@ start_flow_unsafe () {
       PATH="$THIS_DIR/scripts/tests_bin:$PATH" \
       "$FLOW" start "$root" \
         $flowlib --wait \
+        $generate_tests \
         $new_signatures_flag \
         --wait-for-recheck "$wait_for_recheck" \
         --saved-state-fetcher "local" \
@@ -399,6 +400,7 @@ start_flow_unsafe () {
     PATH="$THIS_DIR/scripts/tests_bin:$PATH" \
     "$FLOW" start "$root" \
       $flowlib --wait --wait-for-recheck "$wait_for_recheck" \
+      $generate_tests \
       $new_signatures_flag \
       --file-watcher "$file_watcher" \
       --log-file "$abs_log_file" \
@@ -624,6 +626,7 @@ runtest() {
             # start lazy server and wait
             "$FLOW" start "$root" \
               $flowlib --wait \
+              $generate_tests \
               $new_signatures_flag \
               --wait-for-recheck "$wait_for_recheck" \
               --lazy \

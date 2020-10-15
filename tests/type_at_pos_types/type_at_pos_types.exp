@@ -328,6 +328,21 @@ generics.js:30:13 = {
   "start":13,
   "end":13
 }
+generics.js:34:5 = {
+  "type":"X",
+  "reasons":[],
+  "loc":{
+    "source":"generics.js",
+    "type":"SourceFile",
+    "start":{"line":34,"column":5,"offset":416},
+    "end":{"line":34,"column":5,"offset":417}
+  },
+  "path":"generics.js",
+  "line":34,
+  "endline":34,
+  "start":5,
+  "end":5
+}
 ill-formed.js:30:13 = {
   "type":"Foo",
   "reasons":[],

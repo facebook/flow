@@ -752,8 +752,9 @@ end = struct
        * may exit the scope of the structure that introduced them, in which case we
        * do not perform the substitution. There instead we unfold the underlying type. *)
       let reason = TypeUtil.reason_of_t t in
-      match desc_of_reason ~unwrap:false reason with
-      | RPolyTest (name, _, _, _) ->
+      match (t, desc_of_reason ~unwrap:false reason) with
+      | (Type.GenericT { name; _ }, _)
+      | (_, RPolyTest (name, _, _, _)) ->
         let loc = Reason.def_aloc_of_reason reason in
         let default t = next ~env t in
         lookup_tparam ~default env t name loc
@@ -801,7 +802,9 @@ end = struct
       match t with
       | OpenT (_, id) -> type_variable ~env id
       | BoundT (reason, name) -> bound_t ~env reason name
-      | GenericT { bound; _ } -> (* TODO: better handling for generics *) type__ ~env bound
+      | GenericT { bound; _ } ->
+        (* only hit when we were unable to lookup a type parameter *)
+        type__ ~env bound
       | AnnotT (_, t, _) -> type__ ~env t
       | EvalT (t, d, id) -> eval_t ~env ~cont t id d
       | ExactT (_, t) -> exact_t ~env t
@@ -2403,6 +2406,7 @@ end = struct
           type_destructor_t ~env ~cont ~default ~non_eval (use_op, r, id, t, d)
         | EvalT (t, LatentPredT _, id) -> latent_pred_t ~env ~proto ~imode id t
         | ExactT (_, t) -> loop ~env ~proto ~imode t
+        | GenericT { bound; _ } -> loop ~env ~proto ~imode bound
         | t -> TypeConverter.convert_t ~env t
       in
       loop ~proto:false ~imode:IMUnset

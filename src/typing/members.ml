@@ -482,6 +482,7 @@ let rec extract_members ?(exclude_proto_members = false) cx = function
   | FailureAnyType -> FailureAnyType
   | FailureUnhandledType t -> FailureUnhandledType t
   | FailureUnhandledMembers t -> FailureUnhandledMembers t
+  | Success (GenericT { bound; _ }) -> extract_members ~exclude_proto_members cx (Success bound)
   | Success (DefT (_, _, InstanceT (_, super, _, { own_props; proto_props; _ }))) ->
     let members =
       SMap.fold
