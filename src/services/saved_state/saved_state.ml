@@ -593,7 +593,7 @@ end = struct
     );
 
     Hh_logger.info "Denormalizing the data for the parsed files";
-    let%lwt parsed_heaps = Lwt.return (denormalize_parsed_heaps ~denormalizer parsed_heaps) in
+    let parsed_heaps = denormalize_parsed_heaps ~denormalizer parsed_heaps in
     Hh_logger.info "Denormalizing the data for the unparsed files";
     let%lwt unparsed_heaps =
       let progress_fn = progress_fn (FilenameMap.cardinal unparsed_heaps) in
