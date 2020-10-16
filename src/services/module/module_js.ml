@@ -123,7 +123,7 @@ type package_incompatible_return =
   | Incompatible of package_incompatible_reason
 
 let package_incompatible ~options ~reader filename ast =
-  let new_package = Package_json.parse ~options ast in
+  let new_package = Package_json.parse ~node_main_fields:(Options.node_main_fields options) ast in
   let old_package = Package_heaps.Reader.get_package ~reader filename in
   match (old_package, new_package) with
   | (None, Ok _) -> Incompatible New (* didn't exist before, found a new one *)

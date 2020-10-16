@@ -584,6 +584,7 @@ module UntypedRunner (C : UNTYPED_RUNNER_CONFIG) : STEP_RUNNER = struct
                   parse_hash_mismatch_skips = _;
                   parse_fails = _;
                   parse_unchanged = _;
+                  parse_package_json = _;
                 } =
               Parsing_service_js.parse_with_defaults ~reader options workers next
             in

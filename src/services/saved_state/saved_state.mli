@@ -6,8 +6,6 @@
  *)
 
 type denormalized_file_data = {
-  package: (Package_json.t, unit) result option;
-  (* Only package.json files have this *)
   resolved_requires: Module_heaps.resolved_requires;
   hash: Xx.hash;
 }
@@ -33,6 +31,7 @@ type saved_state_data = {
   flowconfig_hash: Xx.hash;
   parsed_heaps: (File_key.t * parsed_file_data) list;
   unparsed_heaps: (File_key.t * unparsed_file_data) list;
+  package_heaps: (Package_json.t, unit) result Utils_js.FilenameMap.t;
   ordered_non_flowlib_libs: string list;
   local_errors: Flow_error.ErrorSet.t Utils_js.FilenameMap.t;
   warnings: Flow_error.ErrorSet.t Utils_js.FilenameMap.t;

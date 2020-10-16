@@ -8,8 +8,6 @@
 open Utils_js
 
 type denormalized_file_data = {
-  (* Only package.json files have this *)
-  package: (Package_json.t, unit) result option;
   resolved_requires: Module_heaps.resolved_requires;
   hash: Xx.hash;
 }
@@ -42,6 +40,8 @@ type saved_state_data = {
   flowconfig_hash: Xx.hash;
   parsed_heaps: (File_key.t * parsed_file_data) list;
   unparsed_heaps: (File_key.t * unparsed_file_data) list;
+  (* package.json info *)
+  package_heaps: (Package_json.t, unit) result FilenameMap.t;
   ordered_non_flowlib_libs: string list;
   (* Why store local errors and not merge_errors/suppressions/etc? Well, I have a few reasons:
    *
@@ -212,27 +212,16 @@ end = struct
     {
       info;
       normalized_file_data =
-        {
-          package = parsed_file_data.normalized_file_data.package;
-          resolved_requires;
-          hash = parsed_file_data.normalized_file_data.hash;
-        };
+        { resolved_requires; hash = parsed_file_data.normalized_file_data.hash };
     }
 
   (* Collect all the data for a single parsed file *)
   let collect_normalized_data_for_parsed_file ~normalizer ~reader fn parsed_heaps =
-    let package =
-      match fn with
-      | File_key.JsonFile str when Filename.basename str = "package.json" ->
-        Some (Package_heaps.For_saved_state.get_package_json_unsafe str)
-      | _ -> None
-    in
     let file_data =
       {
         info = Module_heaps.Reader.get_info_unsafe ~reader ~audit:Expensive.ok fn;
         normalized_file_data =
           {
-            package;
             resolved_requires =
               Module_heaps.Reader.get_resolved_requires_unsafe ~reader ~audit:Expensive.ok fn;
             hash = Parsing_heaps.Reader.get_file_hash_unsafe ~reader fn;
@@ -242,6 +231,12 @@ end = struct
     let relative_fn = FileNormalizer.normalize_file_key normalizer fn in
     let relative_file_data = normalize_parsed_data ~normalizer file_data in
     (relative_fn, relative_file_data) :: parsed_heaps
+
+  let collect_normalized_data_for_package_json_file ~normalizer fn package_heaps =
+    let str = File_key.to_string fn in
+    let package = Package_heaps.For_saved_state.get_package_json_unsafe str in
+    let relative_fn = FileNormalizer.normalize_file_key normalizer fn in
+    FilenameMap.add relative_fn package package_heaps
 
   (* Collect all the data for a single unparsed file *)
   let collect_normalized_data_for_unparsed_file ~normalizer ~reader fn unparsed_heaps =
@@ -288,6 +283,13 @@ end = struct
             (collect_normalized_data_for_unparsed_file ~normalizer ~reader)
             env.ServerEnv.unparsed
             [])
+    in
+    let package_heaps =
+      Profiling_js.with_timer profiling ~timer:"CollectPackageJson" ~f:(fun () ->
+          Base.List.fold
+            ~f:(fun m fn -> collect_normalized_data_for_package_json_file ~normalizer fn m)
+            env.ServerEnv.package_json_files
+            ~init:FilenameMap.empty)
     in
     let ordered_non_flowlib_libs =
       env.ServerEnv.ordered_libs
@@ -356,6 +358,7 @@ end = struct
         flowconfig_hash;
         parsed_heaps;
         unparsed_heaps;
+        package_heaps;
         ordered_non_flowlib_libs;
         local_errors;
         warnings;
@@ -522,7 +525,7 @@ end = struct
       SMap.map (modulename_map_fn ~f:(denormalize_file_key_nocache ~root)) resolved_modules
     in
     let resolved_requires = { Module_heaps.resolved_modules; phantom_dependents; hash } in
-    { package = file_data.package; resolved_requires; hash = file_data.hash }
+    { resolved_requires; hash = file_data.hash }
 
   let partially_denormalize_parsed_data ~denormalizer { info; normalized_file_data } =
     let info = denormalize_info ~denormalizer info in
@@ -566,6 +569,7 @@ end = struct
       flowconfig_hash;
       parsed_heaps;
       unparsed_heaps;
+      package_heaps;
       ordered_non_flowlib_libs;
       local_errors;
       warnings;
@@ -583,6 +587,14 @@ end = struct
         "Invalid saved state: .flowconfig has changed since this saved state was generated.";
       raise (Invalid_saved_state Flowconfig_mismatch)
     );
+
+    let package_heaps =
+      FilenameMap.fold
+        (fun fn package heap ->
+          FilenameMap.add (FileDenormalizer.denormalize_file_key denormalizer fn) package heap)
+        package_heaps
+        FilenameMap.empty
+    in
 
     Hh_logger.info "Denormalizing the data for the parsed files";
     let parsed_heaps = denormalize_parsed_heaps ~denormalizer parsed_heaps in
@@ -625,6 +637,7 @@ end = struct
         flowconfig_hash;
         parsed_heaps;
         unparsed_heaps;
+        package_heaps;
         ordered_non_flowlib_libs;
         local_errors;
         warnings;

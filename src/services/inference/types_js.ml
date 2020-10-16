@@ -64,6 +64,7 @@ let collate_parse_results ~options parse_results =
     parse_hash_mismatch_skips;
     parse_fails;
     parse_unchanged;
+    parse_package_json;
   } =
     parse_results
   in
@@ -112,7 +113,7 @@ let collate_parse_results ~options parse_results =
   let parse_ok =
     FilenameMap.fold (fun k _ acc -> FilenameSet.add k acc) parse_ok FilenameSet.empty
   in
-  (parse_ok, unparsed, parse_unchanged, local_errors)
+  (parse_ok, unparsed, parse_unchanged, local_errors, parse_package_json)
 
 let parse ~options ~profiling ~workers ~reader parse_next =
   SharedMem_js.with_memory_timer_lwt ~options "Parsing" profiling (fun () ->
@@ -131,7 +132,9 @@ let reparse ~options ~profiling ~transaction ~reader ~workers ~modified ~deleted
           ~deleted
           options
       in
-      let (parse_ok, unparsed, unchanged, local_errors) = collate_parse_results ~options results in
+      let (parse_ok, unparsed, unchanged, local_errors, _) =
+        collate_parse_results ~options results
+      in
       Lwt.return (new_or_changed, parse_ok, unparsed, unchanged, local_errors))
 
 (* TODO: make this always return errors and deal with check_syntax at the caller *)
@@ -169,8 +172,8 @@ let parse_contents ~options ~check_syntax filename contents =
         Flow_error.ErrorSet.add err errors
     in
     (Error errors, info)
-  | Parsing_service_js.Parse_skip
-      (Parsing_service_js.Skip_non_flow_file | Parsing_service_js.Skip_resource_file) ->
+  | Parsing_service_js.(Parse_skip (Skip_non_flow_file | Skip_resource_file | Skip_package_json _))
+    ->
     (* should never happen *)
     (Error errors, info)
 
@@ -1232,31 +1235,6 @@ let type_contents ~options ~env ~profiling contents filename =
     let e = Exception.to_string exn in
     Hh_logger.error "Uncaught exception in type_contents\n%s" e;
     Lwt.return (Error e)
-
-let init_package_heap ~options ~profiling ~reader parsed =
-  SharedMem_js.with_memory_timer_lwt ~options "PackageHeap" profiling (fun () ->
-      let errors =
-        FilenameSet.fold
-          (fun filename errors ->
-            match filename with
-            | File_key.JsonFile str when Filename.basename str = "package.json" ->
-              let ast = Parsing_heaps.Mutator_reader.get_ast_unsafe ~reader filename in
-              let package = Package_json.parse ~options ast in
-              Module_js.add_package str package;
-              begin
-                match package with
-                | Ok _ -> errors
-                | Error parse_err ->
-                  let errset =
-                    Inference_utils.set_of_package_json_error ~source_file:filename parse_err
-                  in
-                  update_errset errors filename errset
-              end
-            | _ -> errors)
-          parsed
-          FilenameMap.empty
-      in
-      Lwt.return errors)
 
 let init_libs ~options ~profiling ~local_errors ~warnings ~suppressions ~reader ordered_libs =
   SharedMem_js.with_memory_timer_lwt ~options "InitLibs" profiling (fun () ->
@@ -2450,12 +2428,13 @@ let make_next_files ~libs ~file_options root =
 
     files |> Base.List.map ~f:(Files.filename_from_string ~options:file_options) |> Bucket.of_list
 
-let mk_init_env ~files ~unparsed ~dependency_info ~ordered_libs ~libs ~errors =
+let mk_init_env ~files ~unparsed ~package_json_files ~dependency_info ~ordered_libs ~libs ~errors =
   {
     ServerEnv.files;
     unparsed;
     dependency_info;
     checked_files = CheckedSet.empty;
+    package_json_files;
     ordered_libs;
     libs;
     errors;
@@ -2475,6 +2454,7 @@ let init_from_saved_state ~profiling ~workers ~saved_state ~updates options =
       Saved_state.flowconfig_hash = _;
       parsed_heaps;
       unparsed_heaps;
+      package_heaps;
       ordered_non_flowlib_libs;
       local_errors;
       warnings;
@@ -2483,38 +2463,24 @@ let init_from_saved_state ~profiling ~workers ~saved_state ~updates options =
     } =
       saved_state
     in
+    let root = Options.root options |> Path.to_string in
     Files.node_modules_containers := node_modules_containers;
+    (* Restore PackageHeap and the ReversePackageHeap *)
+    FilenameMap.iter (fun fn -> Module_js.add_package (File_key.to_string fn)) package_heaps;
 
     Hh_logger.info "Restoring heaps";
     let%lwt () =
       SharedMem_js.with_memory_timer_lwt ~options "RestoreHeaps" profiling (fun () ->
-          let root = Options.root options |> Path.to_string in
           let%lwt () =
             MultiWorkerLwt.call
               workers
               ~job:
                 (List.fold_left (fun () (fn, parsed_file_data) ->
-                     let { Saved_state.package; hash; resolved_requires } =
+                     let { Saved_state.hash; resolved_requires } =
                        Saved_state.denormalize_parsed_data
                          ~root
                          parsed_file_data.Saved_state.normalized_file_data
                      in
-                     (* Every package.json file should have a Package_json.t. Use those to restore the
-                      * PackageHeap and the ReversePackageHeap *)
-                     begin
-                       match fn with
-                       | File_key.JsonFile str when Filename.basename str = "package.json" ->
-                         begin
-                           match package with
-                           | None ->
-                             failwith
-                               (Printf.sprintf
-                                  "Saved state for `%s` missing Package_json.t data"
-                                  str)
-                           | Some package -> Module_js.add_package str package
-                         end
-                       | _ -> ()
-                     end;
 
                      (* Restore the FileHashHeap *)
                      Parsing_heaps.From_saved_state.add_file_hash fn hash;
@@ -2613,6 +2579,7 @@ let init_from_saved_state ~profiling ~workers ~saved_state ~updates options =
       mk_init_env
         ~files:parsed_set
         ~unparsed:unparsed_set
+        ~package_json_files:(FilenameMap.keys package_heaps)
         ~dependency_info
         ~ordered_libs
         ~libs
@@ -2680,15 +2647,22 @@ let init_from_scratch ~profiling ~workers options =
   let next_files = make_next_files ~libs ~file_options (Options.root options) in
   Hh_logger.info "Parsing";
   MonitorRPC.status_update ServerStatus.(Parsing_progress { finished = 0; total = None });
-  let%lwt (parsed, unparsed, unchanged, local_errors) =
+  let%lwt (parsed, unparsed, unchanged, local_errors, (package_json_files, package_json_errors)) =
     parse ~options ~profiling ~workers ~reader next_files
   in
   (* Parsing won't raise warnings *)
   let warnings = FilenameMap.empty in
   assert (FilenameSet.is_empty unchanged);
 
-  Hh_logger.info "Building package heap";
-  let%lwt package_errors = init_package_heap ~options ~profiling ~reader parsed in
+  let package_errors =
+    List.fold_left
+      (fun errors parse_err ->
+        let filename = Base.Option.value_exn (Loc.source (fst parse_err)) in
+        let errset = Inference_utils.set_of_package_json_error ~source_file:filename parse_err in
+        update_errset errors filename errset)
+      FilenameMap.empty
+      package_json_errors
+  in
   let local_errors = merge_error_maps package_errors local_errors in
   Hh_logger.info "Loading libraries";
   let%lwt (libs_ok, local_errors, warnings, suppressions) =
@@ -2731,7 +2705,14 @@ let init_from_scratch ~profiling ~workers options =
         Dep_service.calc_dependency_info ~options ~reader workers ~parsed)
   in
   let env =
-    mk_init_env ~files:parsed ~unparsed:unparsed_set ~dependency_info ~ordered_libs ~libs ~errors
+    mk_init_env
+      ~files:parsed
+      ~unparsed:unparsed_set
+      ~package_json_files
+      ~dependency_info
+      ~ordered_libs
+      ~libs
+      ~errors
   in
   Lwt.return (FilenameSet.empty, env, libs_ok)
 

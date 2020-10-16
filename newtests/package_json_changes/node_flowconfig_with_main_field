@@ -9,4 +9,3 @@ all=true
 module.system=node
 module.system.node.main_field=main
 module.system.node.main_field=other_main
-types_first=false

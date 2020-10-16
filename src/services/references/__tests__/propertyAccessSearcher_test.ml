@@ -28,6 +28,7 @@ let run ctxt expected name content =
         parse_exact_by_default = false;
         parse_enable_enums = false;
         parse_enable_this_annot = false;
+        parse_node_main_fields = [];
       }
     in
     let result = Parsing_service_js.do_parse ~parse_options ~info content file in
