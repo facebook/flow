@@ -51,6 +51,7 @@ module Opts = struct
     enforce_strict_call_arity: bool;
     enforce_well_formed_exports: bool option;
     enforce_well_formed_exports_includes: string list;
+    enforce_local_inference_annotations: bool;
     enums: bool;
     enums_with_unknown_members: bool;
     this_annot: bool;
@@ -157,6 +158,7 @@ module Opts = struct
       enforce_strict_call_arity = true;
       enforce_well_formed_exports = None;
       enforce_well_formed_exports_includes = [];
+      enforce_local_inference_annotations = false;
       enums = false;
       enums_with_unknown_members = false;
       this_annot = false;
@@ -398,6 +400,9 @@ module Opts = struct
             strict_es6_import_export_excludes = v :: opts.strict_es6_import_export_excludes;
           })
 
+  let local_inference_annotations =
+    boolean (fun opts v -> Ok { opts with enforce_local_inference_annotations = v })
+
   type deprecated_esproposal_setting =
     | Enable
     | Ignore
@@ -589,6 +594,7 @@ module Opts = struct
       ("experimental.type_asserts", boolean (fun opts v -> Ok { opts with type_asserts = v }));
       ("types_first", types_first_parser);
       ("experimental.new_signatures", new_signatures_parser);
+      ("experimental.enforce_local_inference_annotations", local_inference_annotations);
       ( "experimental.abstract_locations",
         boolean (fun opts v -> Ok { opts with abstract_locations = v }) );
       ( "experimental.disable_live_non_parse_errors",
