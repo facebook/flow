@@ -41,6 +41,7 @@ type metadata = {
   enable_enums_with_unknown_members: bool;
   enable_this_annot: bool;
   enforce_strict_call_arity: bool;
+  enforce_local_inference_annotations: bool;
   exact_by_default: bool;
   generate_tests: bool;
   facebook_fbs: string option;
@@ -211,6 +212,7 @@ let metadata_of_options options =
     enable_enums_with_unknown_members = Options.enums_with_unknown_members options;
     enable_this_annot = Options.this_annot options;
     enforce_strict_call_arity = Options.enforce_strict_call_arity options;
+    enforce_local_inference_annotations = Options.enforce_local_inference_annotations options;
     exact_by_default = Options.exact_by_default options;
     generate_tests = Options.generate_tests options;
     facebook_fbs = Options.facebook_fbs options;
@@ -402,6 +404,8 @@ let evaluated cx = cx.ccx.sig_cx.evaluated
 let goals cx = cx.ccx.goal_map
 
 let exact_by_default cx = cx.metadata.exact_by_default
+
+let enforce_local_inference_annotations cx = cx.metadata.enforce_local_inference_annotations
 
 let generate_tests cx = cx.metadata.generate_tests
 

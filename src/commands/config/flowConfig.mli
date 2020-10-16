@@ -69,6 +69,8 @@ val emoji : config -> bool
 
 val enable_const_params : config -> bool
 
+val enforce_local_inference_annotations : config -> bool
+
 val enforce_strict_call_arity : config -> bool
 
 val enforce_well_formed_exports : config -> bool

@@ -52,6 +52,7 @@ type t = {
   opt_debug: bool;
   opt_enable_const_params: bool;
   opt_enabled_rollouts: string SMap.t;
+  opt_enforce_local_inference_annotations: bool;
   opt_enforce_strict_call_arity: bool;
   opt_enforce_well_formed_exports: string list option;
   opt_enums: bool;
@@ -130,6 +131,8 @@ let enabled_rollouts opts = opts.opt_enabled_rollouts
 let enforce_strict_call_arity opts = opts.opt_enforce_strict_call_arity
 
 let enforce_well_formed_exports opts = opts.opt_enforce_well_formed_exports
+
+let enforce_local_inference_annotations opts = opts.opt_enforce_local_inference_annotations
 
 let enums opts = opts.opt_enums
 

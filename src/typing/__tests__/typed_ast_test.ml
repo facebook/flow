@@ -28,6 +28,7 @@ let metadata =
     enable_enums_with_unknown_members = true;
     enable_this_annot = true;
     enforce_strict_call_arity = true;
+    enforce_local_inference_annotations = false;
     exact_by_default = false;
     generate_tests = true;
     facebook_fbs = None;

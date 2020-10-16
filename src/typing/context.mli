@@ -57,6 +57,7 @@ type metadata = {
   enable_enums_with_unknown_members: bool;
   enable_this_annot: bool;
   enforce_strict_call_arity: bool;
+  enforce_local_inference_annotations: bool;
   exact_by_default: bool;
   generate_tests: bool;
   facebook_fbs: string option;
@@ -155,6 +156,8 @@ val evaluated : t -> Type.t Type.Eval.Map.t
 val goals : t -> Type.t IMap.t
 
 val exact_by_default : t -> bool
+
+val enforce_local_inference_annotations : t -> bool
 
 val generate_tests : t -> bool
 

@@ -1151,6 +1151,8 @@ let max_literal_length c = c.options.Opts.max_literal_length
 
 let enable_const_params c = c.options.Opts.enable_const_params
 
+let enforce_local_inference_annotations c = c.options.Opts.enforce_local_inference_annotations
+
 let enforce_strict_call_arity c = c.options.Opts.enforce_strict_call_arity
 
 let enforce_well_formed_exports c =

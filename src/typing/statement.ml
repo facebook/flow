@@ -7902,6 +7902,7 @@ and mk_func_sig =
         (t, Func_stmt_config.Array { annot; elements; comments })
       | Ast.Pattern.Expression _ -> failwith "unexpected expression pattern in param"
     in
+    RequireAnnot.require_annot_on_pattern cx (reason_of_t t) patt;
     Func_stmt_config.Param { t; loc; ploc; pattern; default; expr }
   in
   let mk_rest cx tparams_map rest =
@@ -7911,6 +7912,7 @@ and mk_func_sig =
       let (t, id) =
         id_param cx tparams_map id (fun name -> mk_reason (RRestParameter (Some name)) ploc)
       in
+      RequireAnnot.require_annot_on_pattern cx (reason_of_t t) patt;
       Ok (Func_stmt_config.Rest { t; loc; ploc; id })
     | Ast.Pattern.Object _
     | Ast.Pattern.Array _

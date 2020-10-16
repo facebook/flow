@@ -1243,6 +1243,8 @@ let make_options
     opt_max_literal_length = FlowConfig.max_literal_length flowconfig;
     opt_enable_const_params = FlowConfig.enable_const_params flowconfig;
     opt_enabled_rollouts = FlowConfig.enabled_rollouts flowconfig;
+    opt_enforce_local_inference_annotations =
+      FlowConfig.enforce_local_inference_annotations flowconfig;
     opt_enforce_strict_call_arity = FlowConfig.enforce_strict_call_arity flowconfig;
     opt_enforce_well_formed_exports;
     opt_enums = FlowConfig.enums flowconfig;
