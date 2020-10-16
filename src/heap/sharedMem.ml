@@ -226,25 +226,34 @@ module Raw (Key : Key) (Value : Value) : sig
 
   val move : Key.md5 -> Key.md5 -> unit
 end = struct
-  (* Returns the number of bytes allocated in the heap, or a negative number
-   * if no new memory was allocated *)
-  external hh_add : Key.md5 -> Value.t -> int * int = "hh_add"
+  type addr = int
+
+  (* Returns address into the heap, alloc size, and orig size *)
+  external hh_store : Value.t -> addr * int * int = "hh_store_ocaml"
+
+  external hh_deserialize : addr -> Value.t = "hh_deserialize"
+
+  external hh_add : Key.md5 -> addr -> unit = "hh_add"
 
   external hh_mem : Key.md5 -> bool = "hh_mem"
 
-  external hh_get_size : Key.md5 -> int = "hh_get_size"
+  external hh_get_size : addr -> int = "hh_get_size"
 
-  external hh_get_and_deserialize : Key.md5 -> Value.t = "hh_get_and_deserialize"
+  external hh_get : Key.md5 -> addr = "hh_get"
 
   external hh_remove : Key.md5 -> unit = "hh_remove"
 
   external hh_move : Key.md5 -> Key.md5 -> unit = "hh_move"
 
+  let hh_store x = WorkerCancel.with_worker_exit (fun () -> hh_store x)
+
+  let hh_deserialize x = WorkerCancel.with_worker_exit (fun () -> hh_deserialize x)
+
   let hh_mem x = WorkerCancel.with_worker_exit (fun () -> hh_mem x)
 
   let hh_add x y = WorkerCancel.with_worker_exit (fun () -> hh_add x y)
 
-  let hh_get_and_deserialize x = WorkerCancel.with_worker_exit (fun () -> hh_get_and_deserialize x)
+  let hh_get x = WorkerCancel.with_worker_exit (fun () -> hh_get x)
 
   let log_serialize compressed original =
     let compressed = float compressed in
@@ -271,14 +280,16 @@ end = struct
     )
 
   let add key value =
-    let (compressed_size, original_size) = hh_add key value in
+    let (addr, compressed_size, original_size) = hh_store value in
+    hh_add key addr;
     if hh_log_level () > 0 && compressed_size > 0 then log_serialize compressed_size original_size
 
   let mem key = hh_mem key
 
   let get key =
-    let v = hh_get_and_deserialize key in
-    if hh_log_level () > 0 then log_deserialize (hh_get_size key) (Obj.repr v);
+    let addr = hh_get key in
+    let v = hh_deserialize addr in
+    if hh_log_level () > 0 then log_deserialize (hh_get_size addr) (Obj.repr v);
     v
 
   let remove key = hh_remove key

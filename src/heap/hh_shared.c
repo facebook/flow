@@ -152,10 +152,12 @@ static int win32_getpagesize(void) {
 
 /* Too lazy to use getconf */
 #define CACHE_LINE_SIZE (1 << 6)
+#define WORD_SIZE sizeof(value)
 
 #define __ALIGN_MASK(x,mask)    (((x)+(mask))&~(mask))
 #define ALIGN(x,a)              __ALIGN_MASK(x,(typeof(x))(a)-1)
 #define CACHE_ALIGN(x)          ALIGN(x,CACHE_LINE_SIZE)
+#define WORD_ALIGN(x)           ALIGN(x,WORD_SIZE)
 
 /* Each process reserves a range of values at a time from the shared counter.
  * Should be a power of two for more efficient modulo calculation. */
@@ -223,16 +225,16 @@ typedef struct {
 
 // Every heap entry starts with a 64-bit header with the following layout:
 //
-//  6                                 3  3                                0 0
-//  3                                 2  1                                1 0
-// +------------------------------------+----------------------------------+-+
-// |11111111 11111111 11111111 11111111 |11111111 11111111 11111111 1111111|1|
-// +------------------------------------+----------------------------------+-+
-// |                                    |                                  |
-// |                                    |                                  * 0 tag
-// |                                    |
-// |                                    * 31-1 uncompressed size (0 if uncompressed)
-// * 63-32 size of heap entry
+//  6                               3                             0  0      0
+//  3                               6                             8  7      0
+// +-------------------------------+--------------------------------+--------+
+// |11111111 11111111 11111111 1111|1111 11111111 11111111 11111111 |11111111|
+// +-------------------------------+--------------------------------+--------+
+// |                               |                                |
+// |                               |                                * 0-7 reserved
+// |                               |
+// |                               * 31-1 decompress capacity (in words)
+// * 63-32 compressed size (in words)
 //
 // The tag bit is always 1 and is used to differentiate headers from addresses
 // during garbage collection (see hh_collect).
@@ -265,9 +267,17 @@ typedef uint64_t addr_t;
 #define Entry_of_offset(offset) ((heap_entry_t *)Ptr_of_offset(offset))
 #define Header_of_addr(addr) ((hh_header_t *)Ptr_of_addr(addr))
 
-#define Entry_size(header) ((header) >> 32)
-#define Entry_uncompressed_size(header) (((header) >> 1) & 0x7FFFFFFF)
-#define Heap_entry_total_size(header) sizeof(heap_entry_t) + Entry_size(header)
+// Each heap entry starts with a word-sized header. The header encodes the size
+// (in words) of the entry in the heap and the capacity (in words) of the buffer
+// needed to decompress the entry.
+#define Entry_wsize(header) ((header) >> 36)
+#define Entry_decompress_capacity(header) (Bsize_wsize(((header) >> 8) & 0xFFFFFFF))
+
+// Each allocation in the heap is padded out to a full cache line, to avoid
+// bouncing cache lines when writing to adjacent heap entries from different
+// threads.
+#define Heap_entry_slot_size(header) \
+  (CACHE_ALIGN(sizeof(heap_entry_t) + Bsize_wsize(Entry_wsize(header))))
 
 /* Shared memory structures. hh_shared.h typedefs this to heap_entry_t. */
 typedef struct {
@@ -799,13 +809,13 @@ CAMLprim value hh_collect(void) {
       // entry was not marked in the first pass and should be collected. Don't
       // move dest pointer, but advance src pointer to next heap entry.
       header = *(hh_header_t *)src;
-      aligned_size = CACHE_ALIGN(Heap_entry_total_size(header));
+      aligned_size = Heap_entry_slot_size(header);
     } else {
       // If the lsb is 0, this is an addr to the addr field of the hashtable
       // element, which holds the header bytes. This entry is live.
       hh_header_t *hashtbl_addr = Header_of_addr(*(addr_t *)src);
       header = *hashtbl_addr;
-      aligned_size = CACHE_ALIGN(Heap_entry_total_size(header));
+      aligned_size = Heap_entry_slot_size(header);
 
       // Fix the hashtbl addr field to point to our new location and restore the
       // heap header data temporarily stored in the addr field bits.
@@ -843,22 +853,26 @@ static void raise_heap_full(void) {
 }
 
 /*****************************************************************************/
-/* Allocates in the shared heap. The chunks are cache aligned. */
+/* Allocates a slot in the shared heap, given a size (in words). The caller is
+ * responsible for initializing the returned heap_entry_t with a valid header
+ * and data segment.
+ *
+ * The allocated chunks are cache-line aligned to avoid bouncing cache lines
+ * when writing to adjacent heap entries from different threads. */
 /*****************************************************************************/
 
-static addr_t hh_alloc(hh_header_t header, char *data) {
-  // the size of this allocation needs to be kept in sync with wasted_heap_size
-  // modification in hh_remove
-  size_t slot_size = CACHE_ALIGN(Heap_entry_total_size(header));
+static heap_entry_t* hh_alloc(size_t wsize) {
+  // The size of this allocation needs to be kept in sync with wasted_heap_size
+  // modification in hh_remove and also when performing garbage collection. The
+  // macro Heap_entry_slot_size can be used to get the slot size from a valid
+  // header.
+  size_t slot_size = CACHE_ALIGN(Bsize_wsize(wsize));
   size_t offset = __sync_fetch_and_add(&info->heap, slot_size);
   if (offset + slot_size > info->heap_max) {
     raise_heap_full();
   }
-  heap_entry_t *chunk = Entry_of_offset(offset);
-  memfd_reserve((char *)chunk, slot_size);
-  chunk->header = header;
-  memcpy(&chunk->data, data, Entry_size(header));
-  return Addr_of_offset(offset);
+  memfd_reserve(Ptr_of_offset(offset), slot_size);
+  return Entry_of_offset(offset);
 }
 
 /*****************************************************************************/
@@ -867,60 +881,107 @@ static addr_t hh_alloc(hh_header_t header, char *data) {
  * the allocated chunk.
  */
 /*****************************************************************************/
-static addr_t hh_store_ocaml(
-  value data,
-  /*out*/size_t *alloc_size,
-  /*out*/size_t *orig_size
-) {
-  char* value = NULL;
-  intnat uncompressed_size = 0;
+CAMLprim value hh_store_ocaml(value v) {
+  CAMLparam1(v);
+  CAMLlocal1(result);
+  check_should_exit();
 
-  // Note: we take ownership of the memory allocated by this call
+  char *serialized, *compressed;
   intnat serialized_size;
+  int compress_bound, compressed_size;
+
   caml_output_value_to_malloc(
-    data, Val_int(0)/*flags*/, &value, &serialized_size);
+    v, Val_int(0)/*flags*/, &serialized, &serialized_size);
 
-  assert(serialized_size >= 0);
-  intnat heap_size = serialized_size;
-
-  // We limit the size of elements we will allocate to our heap to ~2GB
-  assert(heap_size < 0x80000000);
-  *orig_size = heap_size;
-
-  size_t max_compression_size = LZ4_compressBound(heap_size);
-  char* compressed_data = malloc(max_compression_size);
-  size_t compressed_size = LZ4_compress_default(
-    value,
-    compressed_data,
-    heap_size,
-    max_compression_size);
-
-  if (compressed_size != 0 && compressed_size < heap_size) {
-    uncompressed_size = heap_size;
-    heap_size = compressed_size;
+  // Compress the serialized data. LZ4's maximum input size is ~2GB. If the
+  // input is larger than that, LZ4_compressBound will return 0 and the
+  // compression itself will do nothing.
+  if (serialized_size > LZ4_MAX_INPUT_SIZE) {
+    caml_invalid_argument("hh_store_ocaml: value larger than max input size");
   }
 
-  *alloc_size = heap_size;
+  compress_bound = LZ4_compressBound(serialized_size);
+  compressed = malloc(compress_bound);
+  compressed_size = LZ4_compress_default(
+    serialized,
+    compressed,
+    serialized_size,
+    compress_bound);
 
-  // Both size and uncompressed_size will certainly fit in 31 bits, as the
-  // original size fits per the assert above and we check that the compressed
-  // size is less than the original size.
+  assert(compressed_size > 0);
+
+  // Construct a header to describe the serialized and compressed data:
+  //
+  // A header is a single word where The low-order byte is reserved, meaning we
+  // have 56 bits to store the serialized size and compressed size. Is it
+  // enough?
+  //
+  // In the worst case, we try to compress uncompressible input of
+  // LZ4_MAX_INPUT_SIZE, consuming the entire compress bound. That would be
+  // 0x7E7E7E8E bytes compressed size.
+  //
+  // NOTE: The compressed size might actually be bigger than the serialized
+  // size, in a worst case scenario where the input is not compressible. This
+  // shouldn't happen in practice, but we account for it in the worse case.
+  //
+  // If we store the size in words instead of bytes, the max size is 0xFCFCFD2
+  // words, which fits in 2^28, so we can fit both sizes (in words) in 56 bits.
+  //
+  // All this is somewhat academic, since we have bigger problems if we're
+  // trying to store 2 gig entries.
+
+  // The compressed size is not necessarily word sized. To accommodate this, we
+  // use a trick lifted from OCaml's own representation of strings, which also
+  // have a header that stores the size in words.
+  //
+  // In the last byte of the block, we store a value which we can use to recover
+  // the exact byte size of the string. If the string is exactly word sized, we
+  // add another word to hold the final byte.
+  size_t compressed_wsize = (compressed_size + WORD_SIZE) / WORD_SIZE;
+
+  // Similarly, the serialized size might not necessarily be a multiple of the
+  // word size. To decompress, we only need to provide a buffer that is large
+  // enough, so we round up to the nearest word.
+  size_t decompress_capacity = Wsize_bsize(WORD_ALIGN(serialized_size));
+
+  // Just in case the math above doesn't check out
+  assert(compressed_size < 0x10000000);
+  assert(decompress_capacity < 0x10000000);
+
   hh_header_t header
-    = heap_size << 32
-    | uncompressed_size << 1
+    = compressed_wsize << 36
+    | decompress_capacity << 8
     | 1;
 
-  addr_t heap_addr = hh_alloc(
-    header,
-    uncompressed_size ? compressed_data : value);
+  // Allocate space for the header and compressed data
+  heap_entry_t *entry = hh_alloc(1 + compressed_wsize);
 
-  free(compressed_data);
-  // We temporarily allocate memory using malloc to serialize the Ocaml object.
-  // When we have finished copying the serialized data into our heap we need
-  // to free the memory we allocated to avoid a leak.
-  free(value);
+  // Write header and data into allocated space.
+  entry->header = header;
+  memcpy(&entry->data, compressed, compressed_size);
 
-  return heap_addr;
+  // Write offset into final byte for byte size calculation
+  // See entry_compressed_bsize for how this is used.
+  size_t offset_index = Bsize_wsize(compressed_wsize) - 1;
+  entry->data[offset_index] = offset_index - compressed_size;
+
+  free(serialized);
+  free(compressed);
+
+  result = caml_alloc_tuple(3);
+  Store_field(result, 0, Val_long(Addr_of_ptr(entry)));
+  Store_field(result, 1, Val_long(compressed_size));
+  Store_field(result, 2, Val_long(serialized_size));
+
+  CAMLreturn(result);
+}
+
+// The final byte of a compressed heap entry contains an offset, which we can
+// use to convert the approximate size in words to the precise size in bytes.
+static size_t entry_compressed_bsize(heap_entry_t *entry) {
+  size_t compressed_wsize = Entry_wsize(entry->header);
+  size_t offset_index = Bsize_wsize(compressed_wsize) - 1;
+  return offset_index - entry->data[offset_index];
 }
 
 /*****************************************************************************/
@@ -947,30 +1008,13 @@ static void raise_hash_table_full(void) {
  * number if nothing no new memory was allocated.
  */
 /*****************************************************************************/
-value hh_add(value key, value data) {
-  CAMLparam2(key, data);
-  CAMLlocal1(result);
+CAMLprim value hh_add(value key, value addr) {
+  CAMLparam2(key, addr);
   check_should_exit();
 
-  // Optimistically write this value to the heap. If the value is already
-  // present in the heap, the write will still proceed, but the address will not
-  // be registered with the hash table. If the caller expects the value may
-  // already be present, the caller should first do a mem check before adding.
-  //
-  // If concurrently executing threads race to write the same value, then they
-  // might each successfully write to the heap, but only one thread will
-  // successfully register their write to the hash table.
-  size_t alloc_size = 0;
-  size_t orig_size = 0;
   helt_t elt;
   elt.hash = get_hash(key);
-  elt.addr = hh_store_ocaml(data, &alloc_size, &orig_size);
-
-  // Record sizes written to the heap. Note that we will track these sizes even
-  // if the value written above is not recorded in the hash table.
-  result = caml_alloc_tuple(2);
-  Store_field(result, 0, Val_long(alloc_size));
-  Store_field(result, 1, Val_long(orig_size));
+  elt.addr = Long_val(addr);
 
   size_t hashtbl_slots = info->hashtbl_slots;
   unsigned int slot = elt.hash & (hashtbl_slots - 1);
@@ -1031,7 +1075,7 @@ value hh_add(value key, value data) {
     }
   }
 
-  CAMLreturn(result);
+  CAMLreturn(Val_unit);
 }
 
 /*****************************************************************************/
@@ -1066,7 +1110,7 @@ static unsigned int find_slot(value key) {
  * of garbage collection).
  */
 /*****************************************************************************/
-value hh_mem(value key) {
+CAMLprim value hh_mem(value key) {
   CAMLparam1(key);
   check_should_exit();
   helt_t elt = hashtbl[find_slot(key)];
@@ -1074,61 +1118,52 @@ value hh_mem(value key) {
 }
 
 /*****************************************************************************/
-/* Deserializes the value pointed to by elt. */
+/* Deserializes the value at the given address. */
 /*****************************************************************************/
-CAMLprim value hh_deserialize(addr_t heap_addr) {
-  CAMLparam0();
+CAMLprim value hh_deserialize(value addr_val) {
+  CAMLparam1(addr_val);
   CAMLlocal1(result);
-  heap_entry_t *entry = Entry_of_addr(heap_addr);
-  size_t size = Entry_size(entry->header);
-  size_t uncompressed_size_exp = Entry_uncompressed_size(entry->header);
-  char *src = entry->data;
-  char *data = entry->data;
-  if (uncompressed_size_exp) {
-    data = malloc(uncompressed_size_exp);
-    size_t uncompressed_size = LZ4_decompress_safe(
-      src,
-      data,
-      size,
-      uncompressed_size_exp);
-    assert(uncompressed_size == uncompressed_size_exp);
-    size = uncompressed_size;
-  }
+  check_should_exit();
 
-  result = caml_input_value_from_block(data, size);
+  heap_entry_t *entry = Entry_of_addr(Long_val(addr_val));
+  size_t compressed_bsize = entry_compressed_bsize(entry);
+  size_t decompress_capacity = Entry_decompress_capacity(entry->header);
 
-  if (data != src) {
-    free(data);
-  }
+  char *decompressed = malloc(decompress_capacity);
+
+  size_t serialized_size = LZ4_decompress_safe(
+    entry->data,
+    decompressed,
+    compressed_bsize,
+    decompress_capacity);
+
+  result = caml_input_value_from_block(decompressed, serialized_size);
+  free(decompressed);
+
   CAMLreturn(result);
 }
 
 /*****************************************************************************/
-/* Returns the value associated to a given key, and deserialize it. */
+/* Returns the address associated to a given key. */
 /* The key MUST be present. */
 /*****************************************************************************/
-CAMLprim value hh_get_and_deserialize(value key) {
+CAMLprim value hh_get(value key) {
   CAMLparam1(key);
   check_should_exit();
-  CAMLlocal1(result);
 
   unsigned int slot = find_slot(key);
   assert(hashtbl[slot].hash == get_hash(key));
-  result = hh_deserialize(hashtbl[slot].addr);
-  CAMLreturn(result);
+  CAMLreturn(Val_long(hashtbl[slot].addr));
 }
 
 /*****************************************************************************/
-/* Returns the size of the value associated to a given key. */
-/* The key MUST be present. */
+/* Returns the size of the value at the given address. */
 /*****************************************************************************/
-CAMLprim value hh_get_size(value key) {
-  CAMLparam1(key);
-
-  unsigned int slot = find_slot(key);
-  assert(hashtbl[slot].hash == get_hash(key));
-  heap_entry_t *entry = Entry_of_addr(hashtbl[slot].addr);
-  CAMLreturn(Val_long(Entry_size(entry->header)));
+CAMLprim value hh_get_size(value addr_val) {
+  CAMLparam1(addr_val);
+  heap_entry_t *entry = Entry_of_addr(Val_long(addr_val));
+  size_t compressed_bsize = entry_compressed_bsize(entry);
+  CAMLreturn(Val_long(compressed_bsize));
 }
 
 /*****************************************************************************/
@@ -1168,7 +1203,7 @@ void hh_remove(value key) {
   assert(hashtbl[slot].hash == get_hash(key));
   // see hh_alloc for the source of this size
   heap_entry_t *entry = Entry_of_addr(hashtbl[slot].addr);
-  size_t slot_size = CACHE_ALIGN(Heap_entry_total_size(entry->header));
+  size_t slot_size = Heap_entry_slot_size(entry->header);
   info->wasted_heap_size += slot_size;
   hashtbl[slot].addr = NULL_ADDR;
   info->hcounter_filled -= 1;
