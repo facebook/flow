@@ -202,6 +202,7 @@ and 'loc t' =
   | EUnsupportedSyntax of 'loc * 'loc unsupported_syntax
   | EUseArrayLiteral of 'loc
   | EMissingAnnotation of 'loc virtual_reason * 'loc virtual_reason list
+  | EMissingLocalAnnotation of 'loc virtual_reason
   | EBindingError of binding_error * 'loc * string * Scope.Entry.t
   | ERecursionLimit of ('loc virtual_reason * 'loc virtual_reason)
   | EModuleOutsideRoot of 'loc * string
@@ -779,6 +780,7 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
   | EUnsupportedSyntax (loc, u) -> EUnsupportedSyntax (f loc, map_unsupported_syntax u)
   | EUseArrayLiteral loc -> EUseArrayLiteral (f loc)
   | EMissingAnnotation (r, rs) -> EMissingAnnotation (map_reason r, Base.List.map ~f:map_reason rs)
+  | EMissingLocalAnnotation r -> EMissingLocalAnnotation (map_reason r)
   | EBindingError (b, loc, s, scope) -> EBindingError (b, f loc, s, scope)
   | ERecursionLimit (r1, r2) -> ERecursionLimit (map_reason r1, map_reason r2)
   | EModuleOutsideRoot (loc, s) -> EModuleOutsideRoot (f loc, s)
@@ -1083,6 +1085,7 @@ let util_use_op_of_msg nope util = function
   | EUnsupportedSyntax (_, _)
   | EUseArrayLiteral _
   | EMissingAnnotation _
+  | EMissingLocalAnnotation _
   | EBindingError (_, _, _, _)
   | ERecursionLimit (_, _)
   | EModuleOutsideRoot (_, _)
@@ -1181,6 +1184,7 @@ let loc_of_msg : 'loc t' -> 'loc option = function
   | EArithmeticOperand reason
   | ERecursionLimit (reason, _)
   | EMissingAnnotation (reason, _)
+  | EMissingLocalAnnotation reason
   | EIdxArity reason
   | EIdxUse1 reason
   | EIdxUse2 reason
@@ -2250,6 +2254,8 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
      * visited to get to the missing annotation error and report that as the
      * trace *)
     Normal { features }
+  | EMissingLocalAnnotation r ->
+    Normal { features = [text "Missing an annotation on "; desc r; text "."] }
   | EBindingError (binding_error, _, x, entry) ->
     let desc =
       if x = internal_name "this" then
@@ -3573,6 +3579,7 @@ let error_code_of_message err : error_code option =
   | ELintSetting _ -> Some LintSetting
   | EMalformedPackageJson (_, _) -> Some MalformedPackage
   | EMissingAnnotation _ -> Some MissingAnnot
+  | EMissingLocalAnnotation _ -> Some MissingLocalAnnot
   | EMissingTypeArgs _ -> Some MissingTypeArg
   | EMixedImportAndRequire _ -> Some MixedImportAndRequire
   | EModuleOutsideRoot (_, _) -> Some InvalidModule

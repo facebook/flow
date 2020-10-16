@@ -94,6 +94,7 @@ type error_code =
   | LintSetting
   | MalformedPackage
   | MissingAnnot
+  | MissingLocalAnnot
   | MissingArg
   | MissingExport
   | MissingTypeArg
@@ -254,6 +255,7 @@ let string_of_code : error_code -> string = function
   | LintSetting -> "lint-setting"
   | MalformedPackage -> "malformed-package"
   | MissingAnnot -> "missing-annot"
+  | MissingLocalAnnot -> "missing-local-annot"
   | MissingArg -> "missing-arg"
   | MissingExport -> "missing-export"
   | MissingTypeArg -> "missing-type-arg"
