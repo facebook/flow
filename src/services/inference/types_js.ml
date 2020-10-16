@@ -1226,7 +1226,7 @@ let type_contents ~options ~env ~profiling contents filename =
         SharedMem_js.with_memory_timer_lwt ~options "MergeContents" profiling (fun () ->
             merge_contents ~options ~env ~reader filename info (ast, file_sig))
       in
-      Lwt.return (Ok (cx, info, file_sig, tolerable_errors, typed_ast, parse_errors))
+      Lwt.return (Ok (cx, info, file_sig, tolerable_errors, ast, typed_ast, parse_errors))
     | Error _ -> failwith "Couldn't parse file"
   with
   | Lwt.Canceled as exn -> raise exn
