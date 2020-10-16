@@ -88,35 +88,6 @@ module InfoHeap =
       let description = "Info"
     end)
 
-(******************************** Package Heaps *******************************)
-(* Maps filenames to info about a module, including the module's name.        *)
-(* note: currently we may have many files for one module name.                *)
-(* this is an issue.                                                          *)
-
-(* shared heap for package.json tokens by filename *)
-module PackageHeap =
-  SharedMem_js.WithCache
-    (StringKey)
-    (struct
-      type t = (Package_json.t, unit) result
-
-      let prefix = Prefix.make ()
-
-      let description = "Package"
-    end)
-
-(* shared heap for package.json directories by package name *)
-module ReversePackageHeap =
-  SharedMem_js.WithCache
-    (StringKey)
-    (struct
-      type t = string
-
-      let prefix = Prefix.make ()
-
-      let description = "ReversePackage"
-    end)
-
 (*********************************** Mutators *********************************)
 
 let currently_oldified_nameheap_modulenames : Modulename.Set.t ref option ref = ref None
@@ -286,22 +257,6 @@ end = struct
   let add_info () file info = InfoHeap.add file info
 end
 
-(* Flow doesn't support incrementally changing the package heaps, so we don't need to add this to
- * a transaction *)
-module Package_heap_mutator : sig
-  val add_package_json : string -> Package_json.t -> unit
-
-  val add_error : string -> unit
-end = struct
-  let add_package_json filename package_json =
-    PackageHeap.add filename (Ok package_json);
-    match Package_json.name package_json with
-    | Some name -> ReversePackageHeap.add name (Filename.dirname filename)
-    | None -> ()
-
-  let add_error filename = PackageHeap.add filename (Error ())
-end
-
 (*********************************** Readers **********************************)
 
 module type READER = sig
@@ -321,10 +276,6 @@ module type READER = sig
   val get_info : reader:reader -> (File_key.t -> info option) Expensive.t
 
   val is_tracked_file : reader:reader -> File_key.t -> bool
-
-  val get_package : reader:reader -> string -> (Package_json.t, unit) result option
-
-  val get_package_directory : reader:reader -> string -> string option
 end
 
 module Mutator_reader : READER with type reader = Mutator_state_reader.t = struct
@@ -354,10 +305,6 @@ module Mutator_reader : READER with type reader = Mutator_state_reader.t = struc
     | None -> failwith (Printf.sprintf "module info not found for file %s" (File_key.to_string f))
 
   let is_tracked_file ~reader:_ = InfoHeap.mem
-
-  let get_package ~reader:_ = PackageHeap.get
-
-  let get_package_directory ~reader:_ = ReversePackageHeap.get
 end
 
 module Reader : READER with type reader = State_reader.t = struct
@@ -422,12 +369,6 @@ module Reader : READER with type reader = State_reader.t = struct
       InfoHeap.mem_old f
     else
       InfoHeap.mem f
-
-  (* We don't support incrementally updating the package heaps, so we never actually oldify
-   * anything. Therefore we always can read from the package heap directly *)
-  let get_package ~reader:_ = PackageHeap.get
-
-  let get_package_directory ~reader:_ = ReversePackageHeap.get
 end
 
 module Reader_dispatcher : READER with type reader = Abstract_state_reader.t = struct
@@ -469,27 +410,10 @@ module Reader_dispatcher : READER with type reader = Abstract_state_reader.t = s
     match reader with
     | Mutator_state_reader reader -> Mutator_reader.is_tracked_file ~reader
     | State_reader reader -> Reader.is_tracked_file ~reader
-
-  let get_package ~reader =
-    match reader with
-    | Mutator_state_reader reader -> Mutator_reader.get_package ~reader
-    | State_reader reader -> Reader.get_package ~reader
-
-  let get_package_directory ~reader =
-    match reader with
-    | Mutator_state_reader reader -> Mutator_reader.get_package_directory ~reader
-    | State_reader reader -> Reader.get_package_directory ~reader
 end
 
 (******************** APIs for saving/loading saved state *********************)
 
 module From_saved_state = struct
   let add_resolved_requires = ResolvedRequiresHeap.add
-end
-
-module For_saved_state = struct
-  exception Package_not_found of string
-
-  let get_package_json_unsafe file =
-    (try PackageHeap.find_unsafe file with Not_found -> raise (Package_not_found file))
 end

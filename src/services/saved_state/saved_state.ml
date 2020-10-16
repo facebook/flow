@@ -224,7 +224,7 @@ end = struct
     let package =
       match fn with
       | File_key.JsonFile str when Filename.basename str = "package.json" ->
-        Some (Module_heaps.For_saved_state.get_package_json_unsafe str)
+        Some (Package_heaps.For_saved_state.get_package_json_unsafe str)
       | _ -> None
     in
     let file_data =
