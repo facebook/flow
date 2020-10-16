@@ -253,7 +253,7 @@ let identifier cx ~f acc loc name =
   in
   f ~use_op loc name default current
 
-let rec pattern cx ~expr ~f acc (loc, p) =
+let rec pattern cx ~(expr : expr) ~(f : callback) acc (loc, p) =
   Ast.Pattern.
     ( (loc, acc.current),
       match p with
