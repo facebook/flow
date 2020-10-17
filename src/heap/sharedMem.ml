@@ -174,11 +174,19 @@ module type Value = sig
   val description : string
 end
 
-module KeyFunctor (UserKeyType : sig
+(*****************************************************************************)
+(* The interface that all keys need to implement *)
+(*****************************************************************************)
+
+module type UserKeyType = sig
   type t
 
   val to_string : t -> string
-end) : Key with type userkey = UserKeyType.t = struct
+
+  val compare : t -> t -> int
+end
+
+module KeyFunctor (UserKeyType : UserKeyType) : Key with type userkey = UserKeyType.t = struct
   type userkey = UserKeyType.t
 
   type t = string
@@ -480,18 +488,6 @@ module type WithCache = sig
   val get_no_cache : key -> t option
 
   module DebugCache : DebugLocalCache
-end
-
-(*****************************************************************************)
-(* The interface that all keys need to implement *)
-(*****************************************************************************)
-
-module type UserKeyType = sig
-  type t
-
-  val to_string : t -> string
-
-  val compare : t -> t -> int
 end
 
 (*****************************************************************************)
