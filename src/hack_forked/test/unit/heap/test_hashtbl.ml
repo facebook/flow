@@ -54,8 +54,17 @@ let expect_stats ~nonempty ~used =
     expect_equals ~name:"slots" slots expected.slots)
 
 let expect_heap_size count =
-  (* Currently a single element takes 64 bytes *)
-  let heap_space_per_element = 64 in
+  (* Currently a single element takes 40 bytes (1 word header + 4 words data).
+   * A single char takes 4 words because we serialize, compress, and word-align.
+   * In practice, with real data, the overhead is insignificant, and made up for
+   * with compression.
+   *
+   * TODO: Hard-coding the space per element is far from ideal. The number below
+   * is currently correct for single-char values, but the underlying
+   * implementation could change, or a test might try to write a larger value,
+   * causing problems. Instead, it would be a good idea for TestHeap.add to
+   * return the number of bytes consumed in the heap, and use that instead. *)
+  let heap_space_per_element = 40 in
   expect_equals ~name:"heap_size" (SharedMem.heap_size ()) (count * heap_space_per_element)
 
 let expect_mem key =

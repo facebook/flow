@@ -273,11 +273,10 @@ typedef uint64_t addr_t;
 #define Entry_wsize(header) ((header) >> 36)
 #define Entry_decompress_capacity(header) (Bsize_wsize(((header) >> 8) & 0xFFFFFFF))
 
-// Each allocation in the heap is padded out to a full cache line, to avoid
-// bouncing cache lines when writing to adjacent heap entries from different
-// threads.
+// The distance (in bytes) from one hh_entry_t* to the next. Entries are laid
+// out contiguously in memory.
 #define Heap_entry_slot_size(header) \
-  (CACHE_ALIGN(sizeof(heap_entry_t) + Bsize_wsize(Entry_wsize(header))))
+  (sizeof(heap_entry_t) + Bsize_wsize(Entry_wsize(header)))
 
 /* Shared memory structures. hh_shared.h typedefs this to heap_entry_t. */
 typedef struct {
@@ -855,10 +854,7 @@ static void raise_heap_full(void) {
 /*****************************************************************************/
 /* Allocates a slot in the shared heap, given a size (in words). The caller is
  * responsible for initializing the returned heap_entry_t with a valid header
- * and data segment.
- *
- * The allocated chunks are cache-line aligned to avoid bouncing cache lines
- * when writing to adjacent heap entries from different threads. */
+ * and data segment. */
 /*****************************************************************************/
 
 static heap_entry_t* hh_alloc(size_t wsize) {
@@ -866,7 +862,7 @@ static heap_entry_t* hh_alloc(size_t wsize) {
   // modification in hh_remove and also when performing garbage collection. The
   // macro Heap_entry_slot_size can be used to get the slot size from a valid
   // header.
-  size_t slot_size = CACHE_ALIGN(Bsize_wsize(wsize));
+  size_t slot_size = Bsize_wsize(wsize);
   size_t offset = __sync_fetch_and_add(&info->heap, slot_size);
   if (offset + slot_size > info->heap_max) {
     raise_heap_full();
