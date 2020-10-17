@@ -319,28 +319,29 @@ static size_t worker_id = 0;
 
 static size_t worker_can_exit = 1;
 
-static size_t used_heap_size(void) {
-  return info->heap - info->heap_init;
-}
-
 /* Expose so we can display diagnostics */
-CAMLprim value hh_used_heap_size(void) {
-  return Val_long(used_heap_size());
+CAMLprim value hh_used_heap_size(value unit) {
+  CAMLparam1(unit);
+  assert(info != NULL);
+  CAMLreturn(Val_long(info->heap - info->heap_init));
 }
 
 /* Part of the heap not reachable from hashtable entries. Can be reclaimed with
  * hh_collect. */
-CAMLprim value hh_wasted_heap_size(void) {
+CAMLprim value hh_wasted_heap_size(value unit) {
+  CAMLparam1(unit);
   assert(info != NULL);
-  return Val_long(info->wasted_heap_size);
+  CAMLreturn(Val_long(info->wasted_heap_size));
 }
 
-CAMLprim value hh_log_level(void) {
-  return Val_long(info->log_level);
+CAMLprim value hh_log_level(value unit) {
+  CAMLparam1(unit);
+  assert(info != NULL);
+  CAMLreturn(Val_long(info->log_level));
 }
 
-CAMLprim value hh_hash_stats(void) {
-  CAMLparam0();
+CAMLprim value hh_hash_stats(value unit) {
+  CAMLparam1(unit);
   CAMLlocal1(stats);
 
   stats = caml_alloc_tuple(3);
@@ -377,7 +378,7 @@ static HANDLE memfd;
  * Committing the whole shared heap at once would require the same
  * amount of free space in memory (or in swap file).
  **************************************************************************/
-void memfd_init(size_t shared_mem_size) {
+static void memfd_init(size_t shared_mem_size) {
   memfd = CreateFileMapping(
     INVALID_HANDLE_VALUE,
     NULL,
@@ -409,7 +410,7 @@ static int memfd = -1;
  * The resulting file descriptor should be mmaped with the memfd_map
  * function (see below).
  ****************************************************************************/
-void memfd_init(size_t shared_mem_size) {
+static void memfd_init(size_t shared_mem_size) {
 #if defined(MEMFD_CREATE)
   memfd = memfd_create("fb_heap", 0);
 #endif
@@ -676,8 +677,8 @@ value hh_connect(value handle_val, value worker_id_val) {
  */
 /*****************************************************************************/
 
-CAMLprim value hh_counter_next(void) {
-  CAMLparam0();
+CAMLprim value hh_counter_next(value unit) {
+  CAMLparam1(unit);
   CAMLlocal1(result);
 
   uintptr_t v = 0;
@@ -702,25 +703,25 @@ CAMLprim value hh_counter_next(void) {
  * process
  */
 /*****************************************************************************/
-void assert_master(void) {
+static void assert_master(void) {
   assert(worker_id == 0);
 }
 
-void assert_not_master(void) {
+static void assert_not_master(void) {
   assert(worker_id != 0);
 }
 
 /*****************************************************************************/
 
-CAMLprim value hh_stop_workers(void) {
-  CAMLparam0();
+CAMLprim value hh_stop_workers(value unit) {
+  CAMLparam1(unit);
   assert_master();
   info->workers_should_exit = 1;
   CAMLreturn(Val_unit);
 }
 
-CAMLprim value hh_resume_workers(void) {
-  CAMLparam0();
+CAMLprim value hh_resume_workers(value unit) {
+  CAMLparam1(unit);
   assert_master();
   info->workers_should_exit = 0;
   CAMLreturn(Val_unit);
@@ -737,7 +738,7 @@ CAMLprim value hh_get_can_worker_stop(value unit) {
   CAMLreturn(Val_bool(worker_can_exit));
 }
 
-void check_should_exit(void) {
+static void check_should_exit(void) {
   assert(info != NULL);
   if(worker_can_exit && info->workers_should_exit) {
     static value *exn = NULL;
@@ -746,8 +747,8 @@ void check_should_exit(void) {
   }
 }
 
-CAMLprim value hh_check_should_exit (void) {
-  CAMLparam0();
+CAMLprim value hh_check_should_exit(value unit) {
+  CAMLparam1(unit);
   check_should_exit();
   CAMLreturn(Val_unit);
 }
@@ -762,11 +763,8 @@ CAMLprim value hh_check_should_exit (void) {
  */
 /*****************************************************************************/
 
-CAMLprim value hh_collect(void) {
-  // NOTE: explicitly do NOT call CAMLparam or any of the other functions/macros
-  // defined in caml/memory.h .
-  // This function takes a boolean and returns unit.
-  // Those are both immediates in the OCaml runtime.
+CAMLprim value hh_collect(value unit) {
+  CAMLparam1(unit);
   assert_master();
 
   // Step 1: Walk the hashtbl entries, which are the roots of our marking pass.
@@ -842,7 +840,7 @@ CAMLprim value hh_collect(void) {
   info->heap = dest;
   info->wasted_heap_size = 0;
 
-  return Val_unit;
+  CAMLreturn(Val_unit);
 }
 
 static void raise_heap_full(void) {
@@ -1169,7 +1167,8 @@ CAMLprim value hh_get_size(value addr_val) {
  * Only the master can perform this operation.
  */
 /*****************************************************************************/
-void hh_move(value key1, value key2) {
+CAMLprim value hh_move(value key1, value key2) {
+  CAMLparam2(key1, key2);
   unsigned int slot1 = find_slot(key1);
   unsigned int slot2 = find_slot(key2);
 
@@ -1185,6 +1184,7 @@ void hh_move(value key1, value key2) {
   hashtbl[slot2].hash = get_hash(key2);
   hashtbl[slot2].addr = hashtbl[slot1].addr;
   hashtbl[slot1].addr = NULL_ADDR;
+  CAMLreturn(Val_unit);
 }
 
 /*****************************************************************************/
@@ -1192,7 +1192,8 @@ void hh_move(value key1, value key2) {
  * Only the master can perform this operation.
  */
 /*****************************************************************************/
-void hh_remove(value key) {
+CAMLprim value hh_remove(value key) {
+  CAMLparam1(key);
   unsigned int slot = find_slot(key);
 
   assert_master();
@@ -1203,4 +1204,5 @@ void hh_remove(value key) {
   info->wasted_heap_size += slot_size;
   hashtbl[slot].addr = NULL_ADDR;
   info->hcounter_filled -= 1;
+  CAMLreturn(Val_unit);
 }

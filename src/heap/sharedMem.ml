@@ -60,24 +60,24 @@ external connect : handle -> worker_id:int -> unit = "hh_connect"
  * free data (cf hh_shared.c for the underlying C implementation).
  *)
 (*****************************************************************************)
-external hh_collect : unit -> unit = "hh_collect" [@@noalloc]
+external hh_collect : unit -> unit = "hh_collect"
 
 (*****************************************************************************)
 (* The size of the dynamically allocated shared memory section *)
 (*****************************************************************************)
-external heap_size : unit -> int = "hh_used_heap_size" [@@noalloc]
+external heap_size : unit -> int = "hh_used_heap_size"
 
 (*****************************************************************************)
 (* Part of the heap not reachable from hashtable entries. *)
 (*****************************************************************************)
-external wasted_heap_size : unit -> int = "hh_wasted_heap_size" [@@noalloc]
+external wasted_heap_size : unit -> int = "hh_wasted_heap_size"
 
 (*****************************************************************************)
 (* The logging level for shared memory statistics *)
 (* 0 = nothing *)
 (* 1 = log totals, averages, min, max bytes marshalled and unmarshalled *)
 (*****************************************************************************)
-external hh_log_level : unit -> int = "hh_log_level" [@@noalloc]
+external hh_log_level : unit -> int = "hh_log_level"
 
 (*****************************************************************************)
 (* The total number of slots in our hashtable *)
