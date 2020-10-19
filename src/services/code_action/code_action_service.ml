@@ -84,6 +84,20 @@ let code_actions_of_errors ~reader ~diagnostics ~errors uri loc =
     errors
     []
 
+let code_actions_of_parse_errors ~diagnostics ~uri ~loc parse_errors =
+  Base.List.fold_left
+    ~f:(fun acc parse_error ->
+      match parse_error with
+      | (error_loc, Parse_error.UnexpectedTokenWithSuggestion (token, suggestion)) ->
+        if Loc.contains error_loc loc then
+          let original = Printf.sprintf "`%s`" token in
+          create_suggestion ~diagnostics ~original ~suggestion uri error_loc :: acc
+        else
+          acc
+      | _ -> acc)
+    ~init:[]
+    parse_errors
+
 let client_supports_quickfixes only =
   Lsp.CodeActionKind.contains_kind_opt ~default:true Lsp.CodeActionKind.quickfix only
 
@@ -95,8 +109,8 @@ let code_actions_at_loc ~reader ~options ~env ~profiling ~params ~file_key ~file
     Lwt.return (Ok [])
   else
     let uri = TextDocumentIdentifier.(textDocument.uri) in
-    match%lwt Types_js.typecheck_contents ~options ~env ~profiling file_contents file_key with
-    | (Some (full_cx, ast, file_sig, tolerable_errors, typed_ast), _errors, _warnings) ->
+    match%lwt Types_js.type_contents ~options ~env ~profiling file_contents file_key with
+    | Ok (full_cx, _info, file_sig, tolerable_errors, ast, typed_ast, parse_errors) ->
       let experimental_code_actions =
         if Inference_utils.well_formed_exports_enabled options file_key then
           autofix_exports_code_actions
@@ -114,8 +128,9 @@ let code_actions_at_loc ~reader ~options ~env ~profiling ~params ~file_key ~file
       let error_fixes =
         code_actions_of_errors ~reader ~diagnostics ~errors:(Context.errors full_cx) uri loc
       in
-      Lwt.return (Ok (experimental_code_actions @ error_fixes))
-    | (None, _errors, _warnings) -> Lwt.return (Ok [])
+      let parse_error_fixes = code_actions_of_parse_errors ~diagnostics ~uri ~loc parse_errors in
+      Lwt.return (Ok (parse_error_fixes @ experimental_code_actions @ error_fixes))
+    | Error _ -> Lwt.return (Ok [])
 
 let autofix_exports ~options ~env ~profiling ~file_key ~file_content =
   let open Autofix_exports in
