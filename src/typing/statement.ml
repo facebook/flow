@@ -29,6 +29,14 @@ open Env.LookupMode
 (* Utilities *)
 (*************)
 
+(* We use this value to indicate places that should pass down an annotation
+ * but do not have access to it in the implementation yet *)
+let annot_todo = None
+
+(* We use this function to indicate places where an annotation is potentially available but
+ * must be decomposed in some way before it is passed down *)
+let annot_decompose_todo x = x
+
 module ObjectExpressionAcc = struct
   type element =
     | Spread of Type.t
@@ -2708,7 +2716,7 @@ and object_prop cx acc prop =
           } ) ->
     let reason = func_reason ~async:false ~generator:false prop_loc in
     let tvar = Tvar.mk cx reason in
-    let (t, func) = mk_function_expression None cx ~general:tvar reason func in
+    let (t, func) = mk_function_expression None cx ~annot:annot_todo ~general:tvar reason func in
     Flow.flow_t cx (t, tvar);
     ( ObjectExpressionAcc.add_prop (Properties.add_field name Polarity.Neutral (Some loc) t) acc,
       Property
@@ -2734,7 +2742,9 @@ and object_prop cx acc prop =
     Flow_js.add_output cx (Error_message.EUnsafeGettersSetters loc);
     let reason = func_reason ~async:false ~generator:false vloc in
     let tvar = Tvar.mk cx reason in
-    let (function_type, func) = mk_function_expression None cx ~general:tvar reason func in
+    let (function_type, func) =
+      mk_function_expression ~annot:annot_todo None cx ~general:tvar reason func
+    in
     Flow.flow_t cx (function_type, tvar);
     let return_t = Type.extract_getter_type function_type in
     ( ObjectExpressionAcc.add_prop (Properties.add_getter name (Some id_loc) return_t) acc,
@@ -2761,7 +2771,9 @@ and object_prop cx acc prop =
     Flow_js.add_output cx (Error_message.EUnsafeGettersSetters loc);
     let reason = func_reason ~async:false ~generator:false vloc in
     let tvar = Tvar.mk cx reason in
-    let (function_type, func) = mk_function_expression None cx ~general:tvar reason func in
+    let (function_type, func) =
+      mk_function_expression None cx ~annot:annot_todo ~general:tvar reason func
+    in
     Flow.flow_t cx (function_type, tvar);
     let param_t = Type.extract_setter_type function_type in
     ( ObjectExpressionAcc.add_prop (Properties.add_setter name (Some id_loc) param_t) acc,
@@ -3083,7 +3095,9 @@ and array_elements cx undef_loc =
           let (((_, t), _) as argument) = expression cx ~annot:None argument in
           (UnresolvedSpreadArg t, Spread (loc, { Ast.Expression.SpreadElement.argument; comments }))))
 
-(* can raise Abnormal.(Exn (Stmt _, _)) *)
+(* can raise Abnormal.(Exn (Stmt _, _))
+ * annot should become a Type.t option when we have the ability to 
+ * inspect annotations and recurse into them *)
 and expression ?cond cx ~annot (loc, e) = expression_ ~cond ~annot cx loc e
 
 and this_ cx loc this =
@@ -3094,7 +3108,7 @@ and this_ cx loc this =
 
 and super_ cx loc = Env.var_ref cx (internal_name "super") loc
 
-and expression_ ~cond ~annot:_ cx loc e : (ALoc.t, ALoc.t * Type.t) Ast.Expression.t =
+and expression_ ~cond ~annot cx loc e : (ALoc.t, ALoc.t * Type.t) Ast.Expression.t =
   let make_trust = Context.trust_constructor cx in
   let ex = (loc, e) in
   let open Ast.Expression in
@@ -3411,12 +3425,12 @@ and expression_ ~cond ~annot:_ cx loc e : (ALoc.t, ALoc.t * Type.t) Ast.Expressi
     | _ -> ());
     let reason = func_reason ~async ~generator sig_loc in
     let tvar = Tvar.mk cx reason in
-    let (t, func) = mk_function_expression id cx reason ~general:tvar func in
+    let (t, func) = mk_function_expression id cx ~annot reason ~general:tvar func in
     Flow.flow_t cx (t, tvar);
     ((loc, t), Function func)
   | ArrowFunction func ->
     let reason = Ast.Function.(func_reason ~async:func.async ~generator:func.generator loc) in
-    let (t, f) = mk_arrow cx reason func in
+    let (t, f) = mk_arrow cx ~annot reason func in
     ((loc, t), ArrowFunction f)
   | TaggedTemplate
       {
@@ -7565,7 +7579,7 @@ and mk_class_sig =
       in
       (field, annot_t, annot_ast, get_init)
     in
-    let mk_method = mk_func_sig in
+    let mk_method = mk_func_sig ~annot:None in
     let mk_extends cx tparams_map = function
       | None -> (Implicit { null = false }, None)
       | Some (loc, { Ast.Class.Extends.expr; targs; comments }) ->
@@ -7896,7 +7910,7 @@ and mk_func_sig =
     let name = ((id_loc, t), id) in
     (t, { Ast.Pattern.Identifier.name; annot; optional })
   in
-  let mk_param cx tparams_map param =
+  let mk_param cx ~annot tparams_map param =
     let (loc, { Ast.Function.Param.argument = (ploc, patt); default }) = param in
     let expr = expression ~annot:None in
     let (t, pattern) =
@@ -7916,17 +7930,17 @@ and mk_func_sig =
         (t, Func_stmt_config.Array { annot; elements; comments })
       | Ast.Pattern.Expression _ -> failwith "unexpected expression pattern in param"
     in
-    RequireAnnot.require_annot_on_pattern cx (reason_of_t t) patt;
+    RequireAnnot.require_annot_on_pattern cx ~annot (reason_of_t t) patt;
     Func_stmt_config.Param { t; loc; ploc; pattern; default; expr }
   in
-  let mk_rest cx tparams_map rest =
+  let mk_rest cx ~annot tparams_map rest =
     let (loc, { Ast.Function.RestParam.argument = (ploc, patt); comments = _ }) = rest in
     match patt with
     | Ast.Pattern.Identifier id ->
       let (t, id) =
         id_param cx tparams_map id (fun name -> mk_reason (RRestParameter (Some name)) ploc)
       in
-      RequireAnnot.require_annot_on_pattern cx (reason_of_t t) patt;
+      RequireAnnot.require_annot_on_pattern cx ~annot (reason_of_t t) patt;
       Ok (Func_stmt_config.Rest { t; loc; ploc; id })
     | Ast.Pattern.Object _
     | Ast.Pattern.Array _
@@ -7934,7 +7948,7 @@ and mk_func_sig =
       (* TODO: this should be a parse error, unrepresentable AST *)
       Error Error_message.(EInternal (ploc, RestParameterNotIdentifierPattern))
   in
-  let mk_params cx tparams_map (loc, { Ast.Function.Params.params; rest; this_; comments }) =
+  let mk_params cx ~annot tparams_map (loc, { Ast.Function.Params.params; rest; this_; comments }) =
     if Context.enable_this_annot cx |> not then
       Base.Option.iter this_ ~f:(fun (this_loc, _) ->
           Flow_js.add_output cx (Error_message.EExperimentalThisAnnot this_loc));
@@ -7944,14 +7958,17 @@ and mk_func_sig =
     in
     let fparams =
       List.fold_left
-        (fun acc param -> Func_stmt_params.add_param (mk_param cx tparams_map param) acc)
+        (fun acc param ->
+          Func_stmt_params.add_param
+            (mk_param cx ~annot:(annot_decompose_todo annot) tparams_map param)
+            acc)
         fparams
         params
     in
     let fparams =
       Base.Option.fold
         ~f:(fun acc rest ->
-          match mk_rest cx tparams_map rest with
+          match mk_rest cx ~annot:(annot_decompose_todo annot) tparams_map rest with
           | Ok rest -> Func_stmt_params.add_rest rest acc
           | Error err ->
             Flow_js.add_output cx err;
@@ -7983,7 +8000,7 @@ and mk_func_sig =
     in
     finder#type_ cx Polarity.Neutral Loc_collections.ALocSet.empty t
   in
-  fun cx tparams_map reason func ->
+  fun cx ~annot tparams_map reason func ->
     let {
       Ast.Function.tparams;
       return;
@@ -8003,7 +8020,7 @@ and mk_func_sig =
     let (tparams, tparams_map, tparams_ast) =
       Anno.mk_type_param_declarations cx ~tparams_map tparams
     in
-    let fparams = mk_params cx tparams_map params in
+    let fparams = mk_params cx ~annot:(annot_decompose_todo annot) tparams_map params in
     let body = Some body in
     let ret_reason = mk_reason RReturn (Func_sig.return_loc func) in
     let (return_t, return) =
@@ -8080,8 +8097,8 @@ and mk_func_sig =
    signature consisting of type parameters, parameter types, parameter names,
    and return type, check the body against that signature by adding `this`
    and super` to the environment, and return the signature. *)
-and function_decl id cx reason func this super =
-  let (func_sig, reconstruct_func) = mk_func_sig cx SMap.empty reason func in
+and function_decl id cx ~annot reason func this super =
+  let (func_sig, reconstruct_func) = mk_func_sig cx ~annot SMap.empty reason func in
   let save_return = Abnormal.clear_saved Abnormal.Return in
   let save_throw = Abnormal.clear_saved Abnormal.Throw in
   let (params_ast, body_ast, _) =
@@ -8110,13 +8127,15 @@ and define_internal cx reason x =
   Env.init_let cx ~use_op:unknown_use ix ~has_anno:false t loc
 
 (* Process a function declaration, returning a (polymorphic) function type. *)
-and mk_function_declaration id cx ~general reason func = mk_function id cx ~general reason func
+and mk_function_declaration id cx ~general reason func =
+  mk_function id cx ~annot:annot_todo ~general reason func
 
 (* Process a function expression, returning a (polymorphic) function type. *)
-and mk_function_expression id cx ~general reason func = mk_function id cx ~general reason func
+and mk_function_expression id cx ~annot ~general reason func =
+  mk_function id cx ~annot ~general reason func
 
 (* Internal helper function. Use `mk_function_declaration` and `mk_function_expression` instead. *)
-and mk_function id cx ~general reason func =
+and mk_function id cx ~annot ~general reason func =
   let loc = aloc_of_reason reason in
   let this_t = Tvar.mk cx (mk_reason RThis loc) in
   let this = Scope.Entry.new_let this_t ~loc ~state:Scope.State.Initialized in
@@ -8125,17 +8144,17 @@ and mk_function id cx ~general reason func =
     let t = ObjProtoT (mk_reason RNoSuper loc) in
     Scope.Entry.new_let t ~loc ~state:Scope.State.Initialized
   in
-  let (func_sig, reconstruct_ast) = function_decl id cx reason func this super in
+  let (func_sig, reconstruct_ast) = function_decl id cx ~annot reason func this super in
   let fun_type = Func_stmt_sig.functiontype cx this_t func_sig in
   (fun_type, reconstruct_ast general)
 
 (* Process an arrow function, returning a (polymorphic) function type. *)
-and mk_arrow cx reason func =
+and mk_arrow cx ~annot reason func =
   let loc = aloc_of_reason reason in
   let (_, this) = Env.find_entry cx (internal_name "this") loc in
   let (_, super) = Env.find_entry cx (internal_name "super") loc in
   let { Ast.Function.id; _ } = func in
-  let (func_sig, reconstruct_ast) = function_decl id cx reason func this super in
+  let (func_sig, reconstruct_ast) = function_decl id cx ~annot reason func this super in
   (* Do not expose the type of `this` in the function's type. The call to
      function_decl above has already done the necessary checking of `this` in
      the body of the function. Now we want to avoid re-binding `this` to
