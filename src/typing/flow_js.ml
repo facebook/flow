@@ -7933,6 +7933,7 @@ struct
           trace
           (position_generic_bound reason bound, SealGenericT { reason; id; name; cont = Upper u });
         true
+      | DefT (_, _, EmptyT flavor) -> empty_success flavor u
       | _ -> false
     then
       true

@@ -65,6 +65,21 @@ function gn<TType>(jsEnum: {[TType]: string, ...}) {
   (Object.keys(jsEnum): Array<TType>);
 }
 
+// KeysT
+function gv<
+  TFormData: {},
+  TValidators: $ObjMap<TFormData, (_: mixed) => number>,
+>(
+  data: TFormData,
+  validators: TValidators,
+): $ObjMap<TFormData, (_: mixed) => ?string> {
+  return Object.keys(data).reduce(
+    <K: $Keys<TFormData>>(acc, k: K) =>
+      Object.assign(acc, {[k]: validators[k](k, data)}),
+    {},
+  );
+}
+
 // More KeysT
 function kt<TKey: $Keys<{a: 42}>>(fieldName: TKey): void {
   if (fieldName) {
@@ -91,4 +106,24 @@ function oc<
     }
     return lookup[id]?.nextOneOne == null;
   });
+}
+
+// generic of key of generic
+const cc = () => <D: {...}, K: $Keys<D>>(key: K, data: D) => {
+  const [click, view] = data[key];
+};
+
+// generic refined to empty
+type ObjectKey = string | number;
+type ObjectType<TK, TV> = {[key: TK]: TV, ...};
+function ObjectFlip<TK: ObjectKey, TV: ?ObjectKey>(
+  obj: ObjectType<TK, TV>,
+  key: TK,
+) {
+  var flipped = {};
+  const value: ?TV = obj[key];
+  if (value !== null && value !== undefined) {
+    flipped[value] = key;
+  }
+  return flipped;
 }
