@@ -127,3 +127,24 @@ function ObjectFlip<TK: ObjectKey, TV: ?ObjectKey>(
   }
   return flipped;
 }
+
+// Type Destructor
+type LLETT =
+  | {response: {account: {activities: number}}}
+  | {response: {account: {}}};
+
+type LLETR = $ElementType<LLETT, 'response'>;
+const elementType = <T: LLETR>(data: T): $ElementType<T, 'account'> =>
+  data.account;
+
+const directAccount = <T: LLETR>(data: T, otherData: LLETR): $ReadOnly<T> =>
+  otherData;
+
+type t = {a: number} | {v: string};
+
+class C<TConfig: t> {
+  _config: TConfig;
+  __updateConfig(updater: (config: $ReadOnly<TConfig>) => TConfig) {
+    const config = updater(this._config);
+  }
+}

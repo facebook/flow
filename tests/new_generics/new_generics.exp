@@ -954,6 +954,23 @@ References:
                                                  ^ [2]
 
 
+Error ---------------------------------------------------------------------------------------------------- misc.js:141:3
+
+Cannot return `otherData` because object type [1] is incompatible with `{ ...T }` [2]. [incompatible-return]
+
+   misc.js:141:3
+   141|   otherData;
+          ^^^^^^^^^
+
+References:
+   misc.js:140:54
+   140| const directAccount = <T: LLETR>(data: T, otherData: LLETR): $ReadOnly<T> =>
+                                                             ^^^^^ [1]
+   misc.js:140:27
+   140| const directAccount = <T: LLETR>(data: T, otherData: LLETR): $ReadOnly<T> =>
+                                  ^^^^^ [2]
+
+
 Error --------------------------------------------------------------------------------------------------- nested.js:8:10
 
 Cannot return `w` because `W` [1] is incompatible with `X` [2]. [incompatible-return]
@@ -1359,7 +1376,7 @@ References:
 
 
 
-Found 81 errors
+Found 82 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches

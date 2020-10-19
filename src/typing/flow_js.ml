@@ -8044,6 +8044,11 @@ struct
           distribute_union_intersection ()
         else
           wait_for_concrete_bound ()
+      | UseT (_, TypeDestructorTriggerT _) ->
+        if is_concrete bound then
+          false
+        else
+          wait_for_concrete_bound ()
       | ResolveSpreadT _ when not (is_concrete bound) -> wait_for_concrete_bound ()
       | _ -> false
 
@@ -8597,6 +8602,13 @@ struct
      * once to an annotation instead of a tvar that gets a bound on both sides. *)
     let t =
       match t with
+      | GenericT { reason; name; id = g_id; bound = OpenT (_, id) } ->
+        let (_, constraints) = Context.find_constraints cx id in
+        (match constraints with
+        | Resolved (_, t)
+        | FullyResolved (_, t) ->
+          GenericT { reason; name; id = g_id; bound = t }
+        | Unresolved _ -> t)
       | OpenT (_, id) ->
         let (_, constraints) = Context.find_constraints cx id in
         (match constraints with
@@ -8607,7 +8619,7 @@ struct
       | _ -> t
     in
     let slingshot =
-      match t with
+      match drop_generic t with
       | OpenT _
       | MergedT _ ->
         false
@@ -8630,10 +8642,16 @@ struct
         let f tvar =
           match t with
           | OpenT _
-          | MergedT _ ->
+          | MergedT _
+          | GenericT { bound = OpenT _; _ }
+          | GenericT { bound = MergedT _; _ } ->
             let x = TypeDestructorTriggerT (use_op, reason, None, d, tvar) in
             rec_flow_t cx trace ~use_op:unknown_use (t, x);
             rec_flow_t cx trace ~use_op:unknown_use (x, t)
+          | GenericT { bound = AnnotT (r, t, use_desc); reason; name; id } ->
+            let repos = Some (r, use_desc) in
+            let x = TypeDestructorTriggerT (use_op, reason, repos, d, tvar) in
+            rec_flow_t cx trace ~use_op:unknown_use (GenericT { reason; name; id; bound = t }, x)
           | AnnotT (r, t, use_desc) ->
             let repos = Some (r, use_desc) in
             let x = TypeDestructorTriggerT (use_op, reason, repos, d, tvar) in
@@ -8645,13 +8663,50 @@ struct
     (slingshot, result)
 
   and eval_destructor cx ~trace use_op reason t d tout =
+    let destruct_union ?(f = (fun t -> t)) r rep upper =
+      let destructor = TypeDestructorT (use_op, reason, d) in
+      let unresolved =
+        UnionRep.members rep |> Base.List.map ~f:(fun t -> Cache.Eval.id cx (f t) destructor)
+      in
+      let (first, unresolved) = (List.hd unresolved, List.tl unresolved) in
+      let u =
+        ResolveUnionT { reason = r; unresolved; resolved = []; upper; id = Reason.mk_id () }
+      in
+      rec_flow cx trace (first, u)
+    in
+    let destruct_maybe ?(f = (fun t -> t)) r t upper =
+      let destructor = TypeDestructorT (use_op, reason, d) in
+      let reason = replace_desc_new_reason RNullOrVoid r in
+      let rep =
+        UnionRep.make
+          (let null = NullT.make reason |> with_trust bogus_trust |> f in
+           Cache.Eval.id cx null destructor)
+          (let void = VoidT.make reason |> with_trust bogus_trust |> f in
+           Cache.Eval.id cx void destructor)
+          [Cache.Eval.id cx (f t) destructor]
+      in
+      rec_flow cx trace (UnionT (r, rep), upper)
+    in
     match t with
+    | GenericT { bound = OpaqueT (_, { underlying_t = Some t; _ }); reason = r; id; name }
+      when ALoc.source (aloc_of_reason r) = ALoc.source (def_aloc_of_reason r) ->
+      eval_destructor cx ~trace use_op reason (GenericT { bound = t; reason = r; id; name }) d tout
     | OpaqueT (r, { underlying_t = Some t; _ })
       when ALoc.source (aloc_of_reason r) = ALoc.source (def_aloc_of_reason r) ->
       eval_destructor cx ~trace use_op reason t d tout
     (* Specialize TypeAppTs before evaluating them so that we can handle special
    cases. Like the union case below. mk_typeapp_instance will return an AnnotT
    which will be fully resolved using the AnnotT case above. *)
+    | GenericT { bound = TypeAppT (_, use_op_tapp, c, ts); reason = reason_tapp; id; name } ->
+      let destructor = TypeDestructorT (use_op, reason, d) in
+      let t =
+        mk_typeapp_instance cx ~trace ~use_op:use_op_tapp ~reason_op:reason ~reason_tapp c ts
+      in
+      rec_flow
+        cx
+        trace
+        ( Cache.Eval.id cx (GenericT { bound = t; name; id; reason = reason_tapp }) destructor,
+          UseT (use_op, OpenT tout) )
     | TypeAppT (reason_tapp, use_op_tapp, c, ts) ->
       let destructor = TypeDestructorT (use_op, reason, d) in
       let t =
@@ -8663,39 +8718,32 @@ struct
    bounds, which prevents the speculative match process from working.
    Instead, we preserve the union by pushing down the destructor onto the
    branches of the unions. *)
-    | UnionT (r, rep) ->
-      let destructor = TypeDestructorT (use_op, reason, d) in
-      let unresolved =
-        UnionRep.members rep |> Base.List.map ~f:(fun t -> Cache.Eval.id cx t destructor)
-      in
-      let (first, unresolved) = (List.hd unresolved, List.tl unresolved) in
-      let u =
-        ResolveUnionT
-          {
-            reason = r;
-            unresolved;
-            resolved = [];
-            upper = UseT (unknown_use, OpenT tout);
-            id = Reason.mk_id ();
-          }
-      in
-      rec_flow cx trace (first, u)
-    | MaybeT (r, t) ->
-      let destructor = TypeDestructorT (use_op, reason, d) in
-      let reason = replace_desc_new_reason RNullOrVoid r in
-      let rep =
-        UnionRep.make
-          (let null = NullT.make reason |> with_trust bogus_trust in
-           Cache.Eval.id cx null destructor)
-          (let void = VoidT.make reason |> with_trust bogus_trust in
-           Cache.Eval.id cx void destructor)
-          [Cache.Eval.id cx t destructor]
-      in
-      rec_flow_t cx trace ~use_op:unknown_use (UnionT (r, rep), OpenT tout)
+    | UnionT (r, rep) -> destruct_union r rep (UseT (unknown_use, OpenT tout))
+    | GenericT { reason; bound = UnionT (_, rep); id; name } ->
+      destruct_union
+        ~f:(fun bound -> GenericT { reason = reason_of_t bound; bound; id; name })
+        reason
+        rep
+        (UseT (use_op, OpenT tout))
+    | MaybeT (r, t) -> destruct_maybe r t (UseT (unknown_use, OpenT tout))
+    | GenericT { reason; bound = MaybeT (_, t); id; name } ->
+      destruct_maybe
+        ~f:(fun bound -> GenericT { reason = reason_of_t bound; bound; id; name })
+        reason
+        t
+        (UseT (use_op, OpenT tout))
     | AnnotT (r, t, use_desc) ->
       let t = reposition_reason ~trace cx r ~use_desc t in
       let destructor = TypeDestructorT (use_op, reason, d) in
       rec_flow_t cx trace ~use_op:unknown_use (Cache.Eval.id cx t destructor, OpenT tout)
+    | GenericT { bound = AnnotT (_, t, use_desc); reason = r; name; id } ->
+      let t = reposition_reason ~trace cx r ~use_desc t in
+      let destructor = TypeDestructorT (use_op, reason, d) in
+      rec_flow_t
+        cx
+        trace
+        ~use_op
+        (Cache.Eval.id cx (GenericT { reason = r; id; name; bound = t }) destructor, OpenT tout)
     | _ ->
       rec_flow
         cx
