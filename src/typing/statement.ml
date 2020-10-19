@@ -3142,7 +3142,7 @@ and expression_ ~cond ~annot cx loc e : (ALoc.t, ALoc.t * Type.t) Ast.Expression
     ((loc, t), Logical l)
   | TypeCast { TypeCast.expression = e; annot; comments } ->
     let (t, annot') = Anno.mk_type_available_annotation cx SMap.empty annot in
-    let (((_, infer_t), _) as e') = expression cx ~annot:None e in
+    let (((_, infer_t), _) as e') = expression cx ~annot:(Some ()) e in
     let use_op = Op (Cast { lower = mk_expression_reason e; upper = reason_of_t t }) in
     Flow.flow cx (infer_t, TypeCastT (use_op, t));
     ((loc, t), TypeCast { TypeCast.expression = e'; annot = annot'; comments })

@@ -1,3 +1,35 @@
+Error ----------------------------------------------------------------------------------------------------- cast.js:6:15
+
+Missing an annotation on `x`. [missing-local-annot]
+
+   6|   const b = ((x) => 3)(3); // This x does not
+                    ^
+
+
+Error ----------------------------------------------------------------------------------------------------- cast.js:7:14
+
+Missing an annotation on `x`. [missing-local-annot]
+
+   7|   const c = (x) => 3; // Neither does this one
+                   ^
+
+
+Error ---------------------------------------------------------------------------------------------------- cast.js:13:15
+
+Missing an annotation on `x`. [missing-local-annot]
+
+   13|   const b = ((x) => 3)(3); // This x does not
+                     ^
+
+
+Error ---------------------------------------------------------------------------------------------------- cast.js:14:14
+
+Missing an annotation on `x`. [missing-local-annot]
+
+   14|   const c = (x) => 3; // Neither does this one
+                    ^
+
+
 Error ------------------------------------------------------------------------------------------------ no_annots.js:3:12
 
 Missing an annotation on `x`. [missing-local-annot]
@@ -39,4 +71,4 @@ Missing an annotation on `x`. [missing-local-annot]
 
 
 
-Found 5 errors
+Found 9 errors
