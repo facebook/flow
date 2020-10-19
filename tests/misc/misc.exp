@@ -130,16 +130,16 @@ Error --------------------------------------------------------------------------
 Cannot return `x.length` because number [1] is incompatible with string [2]. [incompatible-return]
 
    F.js:5:10
-     5|   return x.length;
-                 ^^^^^^^^
+      5|   return x.length;
+                  ^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:312:13
-   312|     length: number;
-                    ^^^^^^ [1]
+   <BUILTINS>/core.js:1005:13
+   1005|     length: number;
+                     ^^^^^^ [1]
    F.js:4:33
-     4| function foo(x: Array<number>): string {
-                                        ^^^^^^ [2]
+      4| function foo(x: Array<number>): string {
+                                         ^^^^^^ [2]
 
 
 Error -------------------------------------------------------------------------------------------------------- G.js:2:12
@@ -175,13 +175,13 @@ Error --------------------------------------------------------------------------
 Cannot assign `"duck"` to `b.length` because string [1] is incompatible with number [2]. [incompatible-type]
 
    G.js:6:12
-     6| b.length = "duck";
-                   ^^^^^^ [1]
+      6| b.length = "duck";
+                    ^^^^^^ [1]
 
 References:
-   <BUILTINS>/core.js:312:13
-   312|     length: number;
-                    ^^^^^^ [2]
+   <BUILTINS>/core.js:1005:13
+   1005|     length: number;
+                     ^^^^^^ [2]
 
 
 Error --------------------------------------------------------------------------------------------------------- G.js:7:3

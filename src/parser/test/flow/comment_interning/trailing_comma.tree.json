@@ -724,7 +724,8 @@
             }
           }
         ],
-        "explicitType":false
+        "explicitType":false,
+        "hasUnknownMembers":false
       }
     }
   ],

@@ -70,10 +70,18 @@ module rec TypeTerm : sig
     | EvalT of t * defer_use_t * Eval.id
     (* bound type variable *)
     | BoundT of reason * string
+    | GenericT of {
+        reason: reason;
+        name: string;
+        bound: t;
+        id: Generic.id;
+      }
     (* existential type variable *)
     | ExistsT of reason
-    (* this-abstracted class *)
-    | ThisClassT of reason * t
+    (* this-abstracted class. If `is_this` is true, then this literally comes from
+       `this` as an annotation or expression, and should be fixed to an internal
+       view of the class, which is a generic whose upper bound is the class. *)
+    | ThisClassT of reason * t * (* is_this *) bool
     (* this instantiation *)
     | ThisTypeAppT of reason * t * t * t list option
     (* type application *)
@@ -257,6 +265,7 @@ module rec TypeTerm : sig
     enum_name: string;
     members: ALoc.t SMap.t;
     representation_t: t;
+    has_unknown_members: bool;
   }
 
   and internal_t =
@@ -597,8 +606,7 @@ module rec TypeTerm : sig
     | ObjAssignToT of use_op * reason * t * t * obj_assign_kind
     (* Resolves the object from which the properties are assigned *)
     | ObjAssignFromT of use_op * reason * t * t * obj_assign_kind
-    | ObjFreezeT of reason * t
-    | ObjRestT of reason * string list * t
+    | ObjRestT of reason * string list * t * int
     | ObjSealT of reason * t
     (* test that something is a valid proto (object-like or null) *)
     | ObjTestProtoT of reason * t_out
@@ -763,7 +771,7 @@ module rec TypeTerm : sig
     (* Used to calculate a destructured binding. If annot is true, the lower
      * bound is an annotation (0->1), and t_out will be unified with the
      * destructured type. The caller should wrap the tvar with an AnnotT. *)
-    | DestructuringT of reason * destruct_kind * selector * tvar
+    | DestructuringT of reason * destruct_kind * selector * tvar * int
     | CreateObjWithComputedPropT of {
         reason: reason;
         value: t;
@@ -795,6 +803,12 @@ module rec TypeTerm : sig
         reason: reason;
         return: t;
         void_t: t;
+      }
+    | SealGenericT of {
+        reason: reason;
+        id: Generic.id;
+        name: string;
+        cont: cont;
       }
 
   and enum_check_t =
@@ -1230,6 +1244,7 @@ module rec TypeTerm : sig
     bound: t;
     polarity: Polarity.t;
     default: t option;
+    is_this: bool;
   }
 
   and typeparams_nonempty = ALoc.t * typeparam Nel.t
@@ -1333,12 +1348,12 @@ module rec TypeTerm : sig
   }
 
   and unresolved_param =
-    | UnresolvedArg of t
+    | UnresolvedArg of t * Generic.id option
     | UnresolvedSpreadArg of t
 
   and resolved_param =
-    | ResolvedArg of t
-    | ResolvedSpreadArg of reason * arrtype
+    | ResolvedArg of t * Generic.id option
+    | ResolvedSpreadArg of reason * arrtype * Generic.id option
     | ResolvedAnySpreadArg of reason
 
   and spread_resolve =
@@ -2329,6 +2344,7 @@ and Object : sig
     reason: reason;
     props: props;
     flags: TypeTerm.flags;
+    generics: Generic.spread_id;
   }
 
   and props = prop SMap.t
@@ -2345,6 +2361,7 @@ and Object : sig
     type operand_slice = {
       reason: reason;
       prop_map: Properties.t;
+      generics: Generic.spread_id;
       dict: dict;
     }
 
@@ -2367,6 +2384,7 @@ and Object : sig
     type sealtype =
       | UnsealedInFile of File_key.t option
       | Sealed
+      | Frozen
 
     type target =
       (* When spreading values, the result is exact if all of the input types are
@@ -2795,6 +2813,10 @@ let is_any = function
   | AnyT _ -> true
   | _ -> false
 
+let drop_generic = function
+  | GenericT { bound; _ } -> bound
+  | t -> t
+
 (* Primitives, like string, will be promoted to their wrapper object types for
  * certain operations, like GetPropT, but not for others, like `UseT _`. *)
 let primitive_promoting_use_t = function
@@ -2953,6 +2975,7 @@ let string_of_ctor = function
   | FunProtoApplyT _ -> "FunProtoApplyT"
   | FunProtoBindT _ -> "FunProtoBindT"
   | FunProtoCallT _ -> "FunProtoCallT"
+  | GenericT _ -> "GenericT"
   | KeysT _ -> "KeysT"
   | ModuleT _ -> "ModuleT"
   | NullProtoT _ -> "NullProtoT"
@@ -3115,7 +3138,6 @@ let string_of_use_ctor = function
   | NullishCoalesceT _ -> "NullishCoalesceT"
   | ObjAssignToT _ -> "ObjAssignToT"
   | ObjAssignFromT _ -> "ObjAssignFromT"
-  | ObjFreezeT _ -> "ObjFreezeT"
   | ObjRestT _ -> "ObjRestT"
   | ObjSealT _ -> "ObjSealT"
   | ObjTestProtoT _ -> "ObjTestProtoT"
@@ -3169,6 +3191,7 @@ let string_of_use_ctor = function
   | ModuleExportsAssignT _ -> "ModuleExportsAssignT"
   | FilterOptionalT _ -> "FilterOptionalT"
   | FilterMaybeT _ -> "FilterMaybeT"
+  | SealGenericT _ -> "SealGenericT"
 
 let string_of_binary_test = function
   | InstanceofTest -> "instanceof"
@@ -3230,6 +3253,10 @@ and elemt_of_arrtype = function
   | ROArrayAT elemt
   | TupleAT (elemt, _) ->
     elemt
+
+let ro_of_arrtype = function
+  | ArrayAT _ -> Generic.ArraySpread.NonROSpread
+  | _ -> Generic.ArraySpread.ROSpread
 
 let annot use_desc = function
   | OpenT (r, _) as t -> AnnotT (r, t, use_desc)

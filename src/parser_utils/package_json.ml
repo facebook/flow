@@ -77,9 +77,9 @@ let rec find_main_property prop_map = function
       ret
   | [] -> None
 
-let parse ~options ast : 'a t_or_error =
+let parse ~node_main_fields ast : 'a t_or_error =
   statement_of_program ast >>= object_of_statement >>= properties_of_object >>= fun properties ->
   let prop_map = List.fold_left extract_property SMap.empty properties in
   let name = SMap.find_opt "name" prop_map in
-  let main = find_main_property prop_map (Options.node_main_fields options) in
+  let main = find_main_property prop_map node_main_fields in
   Ok { name; main }

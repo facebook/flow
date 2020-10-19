@@ -3,7 +3,7 @@
 
 >>> ./b.js
 // @flow
-import type A from "./lib.js";const foo = require('./a');
+import type A from "./lib";const foo = require('./a');
 
 module.exports = (): A => foo();
 
@@ -40,7 +40,7 @@ Warnings:
 
 >>> ./b.js
 // @flow
-import type A from "./lib.js";const foo = require('./a');
+import type A from "./lib";const foo = require('./a');
 
 module.exports = (): A => foo();
 

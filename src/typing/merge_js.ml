@@ -205,14 +205,21 @@ let detect_unnecessary_invariants cx =
 let detect_invalid_type_assert_calls cx file_sigs cxs tasts =
   if Context.type_asserts cx then Type_asserts.detect_invalid_calls ~full_cx:cx file_sigs cxs tasts
 
-let force_annotations leader_cx other_cxs =
+let force_annotations ~arch leader_cx other_cxs =
+  if arch = Options.Classic then
+    Base.List.iter
+      ~f:(fun cx ->
+        let should_munge_underscores = Context.should_munge_underscores cx in
+        Context.module_ref cx
+        |> Flow_js.lookup_module leader_cx
+        |> Flow_js.enforce_strict leader_cx ~should_munge_underscores)
+      (leader_cx :: other_cxs)
+
+let detect_escaped_generics results =
   Base.List.iter
-    ~f:(fun cx ->
-      let should_munge_underscores = Context.should_munge_underscores cx in
-      Context.module_ref cx
-      |> Flow_js.lookup_module leader_cx
-      |> Flow_js.enforce_strict leader_cx ~should_munge_underscores)
-    (leader_cx :: other_cxs)
+    ~f:(fun (cx, _, (_, { Flow_ast.Program.statements; _ })) ->
+      Generic_escape.scan_for_escapes cx ~add_output:Flow_js.add_output statements)
+    results
 
 let detect_non_voidable_properties cx =
   (* This function approximately checks whether VoidT can flow to the provided
@@ -400,7 +407,7 @@ let detect_matching_props_violations cx =
   let step (reason, key, sentinel, obj) =
     let obj = resolver#type_ cx () obj in
     let sentinel = resolver#type_ cx () sentinel in
-    match sentinel with
+    match drop_generic sentinel with
     (* TODO: it should not be possible to create a MatchingPropT with a non-tvar tout *)
     | DefT (_, _, (BoolT (Some _) | StrT (Literal _) | NumT (Literal _))) ->
       (* Limit the check to promitive literal sentinels *)
@@ -414,7 +421,9 @@ let detect_matching_props_violations cx =
                sentinel_reason = TypeUtil.reason_of_t sentinel;
              })
       in
-      Flow_js.flow cx (MatchingPropT (reason, key, sentinel), UseT (use_op, obj))
+      (* If `obj` is a GenericT, we replace it with it's upper bound, since ultimately it will flow into
+         `sentinel` rather than the other way around. *)
+      Flow_js.flow cx (MatchingPropT (reason, key, sentinel), UseT (use_op, drop_generic obj))
     | _ -> ()
   in
   let matching_props = Context.matching_props cx in
@@ -463,6 +472,7 @@ let detect_literal_subtypes cx =
    5. Link the local references to libraries in master_cx and component_cxs.
 *)
 let merge_component
+    ~arch
     ~metadata
     ~lint_severities
     ~strict_mode
@@ -581,12 +591,13 @@ let merge_component
     detect_unnecessary_invariants cx;
     detect_invalid_type_assert_calls cx file_sigs cxs tasts;
     Strict_es6_import_export.detect_errors ~metadata ~phase cx results;
+    if phase = Context.Checking then detect_escaped_generics results;
 
     (* Well-formed conditionals *)
     detect_matching_props_violations cx;
     detect_literal_subtypes cx;
 
-    force_annotations cx other_cxs;
+    force_annotations ~arch cx other_cxs;
 
     match results with
     | [] -> failwith "there is at least one cx"

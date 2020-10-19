@@ -5,8 +5,6 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
-let ( >|= ) = Lwt.( >|= )
-
 let autofix_exports_code_actions
     ~full_cx ~ast ~file_sig ~tolerable_errors ~typed_ast ~diagnostics uri loc =
   let open Lsp in
@@ -86,47 +84,49 @@ let code_actions_of_errors ~reader ~diagnostics ~errors uri loc =
     errors
     []
 
+let client_supports_quickfixes only =
+  Lsp.CodeActionKind.contains_kind_opt ~default:true Lsp.CodeActionKind.quickfix only
+
 let code_actions_at_loc ~reader ~options ~env ~profiling ~params ~file_key ~file_contents ~loc =
   let open Lsp in
-  let CodeActionRequest.{ textDocument; range = _; context } = params in
-  let uri = TextDocumentIdentifier.(textDocument.uri) in
-  let diagnostics = context.CodeActionRequest.diagnostics in
-  Types_js.typecheck_contents ~options ~env ~profiling file_contents file_key >|= function
-  | (Some (full_cx, ast, file_sig, tolerable_errors, typed_ast), _, _)
-    when CodeActionKind.contains_kind_opt
-           ~default:true
-           CodeActionKind.quickfix
-           context.CodeActionRequest.only ->
-    let experimental_code_actions =
-      if Inference_utils.well_formed_exports_enabled options file_key then
-        autofix_exports_code_actions
-          ~full_cx
-          ~ast
-          ~file_sig
-          ~tolerable_errors
-          ~typed_ast
-          ~diagnostics
-          uri
-          loc
-      else
-        []
-    in
-    let error_fixes =
-      code_actions_of_errors ~reader ~diagnostics ~errors:(Context.errors full_cx) uri loc
-    in
-    Ok (experimental_code_actions @ error_fixes)
-  | _ -> Ok []
+  let CodeActionRequest.{ textDocument; range = _; context = { only; diagnostics } } = params in
+  if not (client_supports_quickfixes only) then
+    (* currently all of our code actions are quickfixes, so we can short circuit *)
+    Lwt.return (Ok [])
+  else
+    let uri = TextDocumentIdentifier.(textDocument.uri) in
+    match%lwt Types_js.typecheck_contents ~options ~env ~profiling file_contents file_key with
+    | (Some (full_cx, ast, file_sig, tolerable_errors, typed_ast), _errors, _warnings) ->
+      let experimental_code_actions =
+        if Inference_utils.well_formed_exports_enabled options file_key then
+          autofix_exports_code_actions
+            ~full_cx
+            ~ast
+            ~file_sig
+            ~tolerable_errors
+            ~typed_ast
+            ~diagnostics
+            uri
+            loc
+        else
+          []
+      in
+      let error_fixes =
+        code_actions_of_errors ~reader ~diagnostics ~errors:(Context.errors full_cx) uri loc
+      in
+      Lwt.return (Ok (experimental_code_actions @ error_fixes))
+    | (None, _errors, _warnings) -> Lwt.return (Ok [])
 
 let autofix_exports ~options ~env ~profiling ~file_key ~file_content =
-  Autofix_exports.(
-    Types_js.typecheck_contents ~options ~env ~profiling file_content file_key >|= function
-    | (Some (full_cx, ast, file_sig, tolerable_errors, typed_ast), _, _) ->
-      let sv_errors = set_of_fixable_signature_verification_locations tolerable_errors in
-      let (new_ast, it_errs) =
-        fix_signature_verification_errors ~file_key ~full_cx ~file_sig ~typed_ast ast sv_errors
-      in
-      Ok (Insert_type.mk_patch ast new_ast file_content, it_errs)
-    | (None, _errs, _) -> Error "Failed to type-check file")
+  let open Autofix_exports in
+  match%lwt Types_js.typecheck_contents ~options ~env ~profiling file_content file_key with
+  | (Some (full_cx, ast, file_sig, tolerable_errors, typed_ast), _, _) ->
+    let sv_errors = set_of_fixable_signature_verification_locations tolerable_errors in
+    let (new_ast, it_errs) =
+      fix_signature_verification_errors ~file_key ~full_cx ~file_sig ~typed_ast ast sv_errors
+    in
+    Lwt.return (Ok (Insert_type.mk_patch ast new_ast file_content, it_errs))
+  | (None, _errs, _) -> Lwt.return (Error "Failed to type-check file")
 
 let insert_type
     ~options
@@ -139,24 +139,25 @@ let insert_type
     ~omit_targ_defaults
     ~location_is_strict:strict
     ~ambiguity_strategy =
-  Insert_type.(
-    Types_js.typecheck_contents ~options ~env ~profiling file_content file_key >|= function
-    | (Some (full_cx, ast, file_sig, _, typed_ast), _, _) ->
-      begin
-        try
-          let new_ast =
-            Insert_type.insert_type
-              ~full_cx
-              ~file_sig
-              ~typed_ast
-              ~expand_aliases
-              ~omit_targ_defaults
-              ~strict
-              ~ambiguity_strategy
-              ast
-              target
-          in
-          Ok (mk_patch ast new_ast file_content)
-        with FailedToInsertType err -> Error (error_to_string err)
-      end
-    | (None, errs, _) -> Error (error_to_string (Expected (FailedToTypeCheck errs))))
+  let open Insert_type in
+  match%lwt Types_js.typecheck_contents ~options ~env ~profiling file_content file_key with
+  | (Some (full_cx, ast, file_sig, _, typed_ast), _, _) ->
+    let result =
+      try
+        let new_ast =
+          Insert_type.insert_type
+            ~full_cx
+            ~file_sig
+            ~typed_ast
+            ~expand_aliases
+            ~omit_targ_defaults
+            ~strict
+            ~ambiguity_strategy
+            ast
+            target
+        in
+        Ok (mk_patch ast new_ast file_content)
+      with FailedToInsertType err -> Error (error_to_string err)
+    in
+    Lwt.return result
+  | (None, errs, _) -> Lwt.return (Error (error_to_string (Expected (FailedToTypeCheck errs))))

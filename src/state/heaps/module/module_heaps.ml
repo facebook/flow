@@ -88,35 +88,6 @@ module InfoHeap =
       let description = "Info"
     end)
 
-(******************************** Package Heaps *******************************)
-(* Maps filenames to info about a module, including the module's name.        *)
-(* note: currently we may have many files for one module name.                *)
-(* this is an issue.                                                          *)
-
-(* shared heap for package.json tokens by filename *)
-module PackageHeap =
-  SharedMem_js.WithCache
-    (StringKey)
-    (struct
-      type t = (Package_json.t, unit) result
-
-      let prefix = Prefix.make ()
-
-      let description = "Package"
-    end)
-
-(* shared heap for package.json directories by package name *)
-module ReversePackageHeap =
-  SharedMem_js.WithCache
-    (StringKey)
-    (struct
-      type t = string
-
-      let prefix = Prefix.make ()
-
-      let description = "ReversePackage"
-    end)
-
 (*********************************** Mutators *********************************)
 
 let currently_oldified_nameheap_modulenames : Modulename.Set.t ref option ref = ref None
@@ -139,25 +110,28 @@ end = struct
   }
 
   let commit mutator =
-    Hh_logger.debug "Committing NameHeap";
-    if not mutator.is_init then NameHeap.remove_old_batch !(mutator.changed_files);
-    currently_oldified_nameheap_modulenames := None;
+    WorkerCancel.with_no_cancellations (fun () ->
+        Hh_logger.debug "Committing NameHeap";
+        if not mutator.is_init then NameHeap.remove_old_batch !(mutator.changed_files);
+        currently_oldified_nameheap_modulenames := None);
     Lwt.return_unit
 
   let rollback mutator =
-    Hh_logger.debug "Rolling back NameHeap";
-    if not mutator.is_init then NameHeap.revive_batch !(mutator.changed_files);
-    currently_oldified_nameheap_modulenames := None;
+    WorkerCancel.with_no_cancellations (fun () ->
+        Hh_logger.debug "Rolling back NameHeap";
+        if not mutator.is_init then NameHeap.revive_batch !(mutator.changed_files);
+        currently_oldified_nameheap_modulenames := None);
     Lwt.return_unit
 
   let create transaction ~is_init =
-    let changed_files = ref Modulename.Set.empty in
-    currently_oldified_nameheap_modulenames := Some changed_files;
-    let mutator = { changed_files; is_init } in
-    let commit () = commit mutator in
-    let rollback () = rollback mutator in
-    Transaction.add ~singleton:"Commit_modules" ~commit ~rollback transaction;
-    mutator
+    WorkerCancel.with_no_cancellations (fun () ->
+        let changed_files = ref Modulename.Set.empty in
+        currently_oldified_nameheap_modulenames := Some changed_files;
+        let mutator = { changed_files; is_init } in
+        let commit () = commit mutator in
+        let rollback () = rollback mutator in
+        Transaction.add ~singleton:"Commit_modules" ~commit ~rollback transaction;
+        mutator)
 
   let remove_and_replace mutator ~workers ~to_remove ~to_replace =
     (* During init we don't need to worry about oldifying, reviving, or removing old entries *)
@@ -204,26 +178,32 @@ end = struct
   let active_files = currently_oldified_resolved_requires
 
   let commit files =
-    Hh_logger.debug "Committing ResolvedRequiresHeap";
-    active_files := Utils_js.FilenameSet.diff !active_files files;
-    ResolvedRequiresHeap.remove_old_batch files
+    WorkerCancel.with_no_cancellations (fun () ->
+        Hh_logger.debug "Committing ResolvedRequiresHeap";
+        active_files := Utils_js.FilenameSet.diff !active_files files;
+        ResolvedRequiresHeap.remove_old_batch files)
 
   let rollback files =
-    Hh_logger.debug "Rolling back ResolvedRequiresHeap";
-    active_files := Utils_js.FilenameSet.diff !active_files files;
-    ResolvedRequiresHeap.revive_batch files
+    WorkerCancel.with_no_cancellations (fun () ->
+        Hh_logger.debug "Rolling back ResolvedRequiresHeap";
+        active_files := Utils_js.FilenameSet.diff !active_files files;
+        ResolvedRequiresHeap.revive_batch files)
 
   let create transaction oldified_files =
-    if not (Utils_js.FilenameSet.is_empty (Utils_js.FilenameSet.inter oldified_files !active_files))
-    then
-      failwith "Multiple Resolved_requires_mutator's operating on the same files";
-    active_files := Utils_js.FilenameSet.union oldified_files !active_files;
+    WorkerCancel.with_no_cancellations (fun () ->
+        if
+          not
+            (Utils_js.FilenameSet.is_empty
+               (Utils_js.FilenameSet.inter oldified_files !active_files))
+        then
+          failwith "Multiple Resolved_requires_mutator's operating on the same files";
+        active_files := Utils_js.FilenameSet.union oldified_files !active_files;
 
-    ResolvedRequiresHeap.oldify_batch oldified_files;
-    Transaction.add
-      ~commit:(fun () -> Lwt.return (commit oldified_files))
-      ~rollback:(fun () -> Lwt.return (rollback oldified_files))
-      transaction
+        ResolvedRequiresHeap.oldify_batch oldified_files;
+        Transaction.add
+          ~commit:(fun () -> Lwt.return (commit oldified_files))
+          ~rollback:(fun () -> Lwt.return (rollback oldified_files))
+          transaction)
 
   (* This function runs on a worker process. Ideally, we'd assert that file is a member of
    * oldified_files, but for init and large rechecks this would involve sending a very large
@@ -251,43 +231,30 @@ end = struct
   type t = unit
 
   let commit oldified_files =
-    Hh_logger.debug "Committing InfoHeap";
-    InfoHeap.remove_old_batch oldified_files;
-    currently_oldified_infoheap_files := None;
+    WorkerCancel.with_no_cancellations (fun () ->
+        Hh_logger.debug "Committing InfoHeap";
+        InfoHeap.remove_old_batch oldified_files;
+        currently_oldified_infoheap_files := None);
     Lwt.return_unit
 
   let rollback oldified_files =
-    Hh_logger.debug "Rolling back InfoHeap";
-    InfoHeap.revive_batch oldified_files;
-    currently_oldified_infoheap_files := None;
+    WorkerCancel.with_no_cancellations (fun () ->
+        Hh_logger.debug "Rolling back InfoHeap";
+        InfoHeap.revive_batch oldified_files;
+        currently_oldified_infoheap_files := None);
     Lwt.return_unit
 
   let create transaction oldified_files =
-    currently_oldified_infoheap_files := Some oldified_files;
-    InfoHeap.oldify_batch oldified_files;
-    let commit () = commit oldified_files in
-    let rollback () = rollback oldified_files in
-    Transaction.add ~singleton:"Introduce_files" ~commit ~rollback transaction
+    WorkerCancel.with_no_cancellations (fun () ->
+        currently_oldified_infoheap_files := Some oldified_files;
+        InfoHeap.oldify_batch oldified_files;
+        let commit () = commit oldified_files in
+        let rollback () = rollback oldified_files in
+        Transaction.add ~singleton:"Introduce_files" ~commit ~rollback transaction)
 
   (* Ideally we'd assert that file is in oldified_files, but passing through the oldified_files set
    * to the worker process which calls add_info is kind of expensive *)
   let add_info () file info = InfoHeap.add file info
-end
-
-(* Flow doesn't support incrementally changing the package heaps, so we don't need to add this to
- * a transaction *)
-module Package_heap_mutator : sig
-  val add_package_json : string -> Package_json.t -> unit
-
-  val add_error : string -> unit
-end = struct
-  let add_package_json filename package_json =
-    PackageHeap.add filename (Ok package_json);
-    match Package_json.name package_json with
-    | Some name -> ReversePackageHeap.add name (Filename.dirname filename)
-    | None -> ()
-
-  let add_error filename = PackageHeap.add filename (Error ())
 end
 
 (*********************************** Readers **********************************)
@@ -309,10 +276,6 @@ module type READER = sig
   val get_info : reader:reader -> (File_key.t -> info option) Expensive.t
 
   val is_tracked_file : reader:reader -> File_key.t -> bool
-
-  val get_package : reader:reader -> string -> (Package_json.t, unit) result option
-
-  val get_package_directory : reader:reader -> string -> string option
 end
 
 module Mutator_reader : READER with type reader = Mutator_state_reader.t = struct
@@ -342,10 +305,6 @@ module Mutator_reader : READER with type reader = Mutator_state_reader.t = struc
     | None -> failwith (Printf.sprintf "module info not found for file %s" (File_key.to_string f))
 
   let is_tracked_file ~reader:_ = InfoHeap.mem
-
-  let get_package ~reader:_ = PackageHeap.get
-
-  let get_package_directory ~reader:_ = ReversePackageHeap.get
 end
 
 module Reader : READER with type reader = State_reader.t = struct
@@ -410,12 +369,6 @@ module Reader : READER with type reader = State_reader.t = struct
       InfoHeap.mem_old f
     else
       InfoHeap.mem f
-
-  (* We don't support incrementally updating the package heaps, so we never actually oldify
-   * anything. Therefore we always can read from the package heap directly *)
-  let get_package ~reader:_ = PackageHeap.get
-
-  let get_package_directory ~reader:_ = ReversePackageHeap.get
 end
 
 module Reader_dispatcher : READER with type reader = Abstract_state_reader.t = struct
@@ -457,27 +410,10 @@ module Reader_dispatcher : READER with type reader = Abstract_state_reader.t = s
     match reader with
     | Mutator_state_reader reader -> Mutator_reader.is_tracked_file ~reader
     | State_reader reader -> Reader.is_tracked_file ~reader
-
-  let get_package ~reader =
-    match reader with
-    | Mutator_state_reader reader -> Mutator_reader.get_package ~reader
-    | State_reader reader -> Reader.get_package ~reader
-
-  let get_package_directory ~reader =
-    match reader with
-    | Mutator_state_reader reader -> Mutator_reader.get_package_directory ~reader
-    | State_reader reader -> Reader.get_package_directory ~reader
 end
 
 (******************** APIs for saving/loading saved state *********************)
 
 module From_saved_state = struct
   let add_resolved_requires = ResolvedRequiresHeap.add
-end
-
-module For_saved_state = struct
-  exception Package_not_found of string
-
-  let get_package_json_unsafe file =
-    (try PackageHeap.find_unsafe file with Not_found -> raise (Package_not_found file))
 end

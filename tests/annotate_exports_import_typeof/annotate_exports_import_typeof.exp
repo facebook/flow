@@ -4,7 +4,7 @@
 >>> ./b.js
 // @flow
 
-import typeof C from "./lib.js";import { foo } from './a';
+import typeof C from "./lib";import { foo } from './a';
 
 module.exports = (foo(): C);
 
@@ -42,7 +42,7 @@ Warnings:
 >>> ./b.js
 // @flow
 
-import typeof C from "./lib.js";import { foo } from './a';
+import typeof C from "./lib";import { foo } from './a';
 
 module.exports = (foo(): C);
 

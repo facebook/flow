@@ -150,7 +150,14 @@ let type_ options =
   and fun_params params rest_param =
     let%bind params = mapM fun_param params in
     let%map rest = opt fun_rest_param rest_param in
-    (Loc.none, { T.Function.Params.params; rest; comments = None })
+    ( Loc.none,
+      {
+        T.Function.Params.params;
+        rest;
+        (* TODO: handle `this` constraints *)
+        this_ = None;
+        comments = None;
+      } )
   and fun_param (name, t, { prm_optional }) =
     let name = Base.Option.map ~f:id_from_string name in
     let%map annot = type_ t in

@@ -86,8 +86,8 @@ class-2.js 4 6
 // @flow
 
 class A {
-  m(): this {
-    return this;
+  m(): A {
+    return new A();
   }
 }
 No errors!
@@ -95,7 +95,7 @@ class-3.js 9 15
 // @flow
 
 class A {
-  m() {
+  m(): this {
     return this;
   }
 }
@@ -109,6 +109,7 @@ class-poly-0.js 5 10
 class D<T> {}
 class C<T> extends D<T> {
   m(x: T): T {
+    //$FlowFixMe[escaped-generic]
     return x;
   }
 }
@@ -220,7 +221,7 @@ func-poly-0.js 3 24
 
 function outer<T>(y: T): void {
   function inner<T>(x: T, z) {
-    inner(x, x);
+    inner(x, (x: mixed));
   }
 }
 No errors!
@@ -266,9 +267,9 @@ No errors!
 poly-0.js 3 22 --strategy=specialize
 // @flow
 
-function foo<T>(x: T): {|f: T|} {
+function foo<T>(x: T): {|f: mixed|} {
   return {
-    f: x
+    f: (x: mixed)
   }
 }
 No errors!
@@ -277,7 +278,7 @@ poly-0.js 3 15
 
 function foo<T: mixed>(x: T) {
   return {
-    f: x
+    f: (x: mixed)
   }
 }
 No errors!

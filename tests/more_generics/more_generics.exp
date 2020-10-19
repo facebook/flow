@@ -45,6 +45,27 @@ References:
                                 ^ [1]
 
 
+Error ---------------------------------------------------------------------------------------------------- poly.js:10:38
+
+Cannot return `x` because type variable `T` [1] cannot escape from the scope in which it was defined [2] (try adding a
+type annotation to `x` [3]) in array element. [escaped-generic]
+
+   poly.js:10:38
+   10| function foo5<T>():Array<T> { return x; }
+                                            ^
+
+References:
+   poly.js:10:26
+   10| function foo5<T>():Array<T> { return x; }
+                                ^ [1]
+   poly.js:10:15
+   10| function foo5<T>():Array<T> { return x; }
+                     ^ [2]
+   poly.js:9:5
+    9| var x = [];
+           ^ [3]
+
+
 Error ---------------------------------------------------------------------------------------------------- poly.js:20:34
 
 Cannot return `foo5()` because array type [1] is incompatible with `R` [2]. [incompatible-return]
@@ -62,6 +83,27 @@ References:
                              ^ [2]
 
 
+Error ---------------------------------------------------------------------------------------------------- poly.js:23:18
+
+Cannot call `foo8` with `x` bound to `y` because type variable `U` [1] cannot escape from the scope in which it was
+defined [2] (try adding a type annotation to `y` [3]). [escaped-generic]
+
+   poly.js:23:18
+   23|   var z = foo8(x,x);
+                        ^
+
+References:
+   poly.js:22:20
+   22| function foo8<U>(x:U,y):U {
+                          ^ [1]
+   poly.js:22:15
+   22| function foo8<U>(x:U,y):U {
+                     ^ [2]
+   poly.js:22:22
+   22| function foo8<U>(x:U,y):U {
+                            ^ [3]
+
+
 Error ----------------------------------------------------------------------------------------------------- poly.js:24:3
 
 Cannot call `y` because `U` [1] is not a function. [not-a-function]
@@ -77,4 +119,4 @@ References:
 
 
 
-Found 5 errors
+Found 7 errors

@@ -51,14 +51,12 @@ module Opts = struct
     enforce_strict_call_arity: bool;
     enforce_well_formed_exports: bool option;
     enforce_well_formed_exports_includes: string list;
+    enforce_local_inference_annotations: bool;
     enums: bool;
-    esproposal_class_instance_fields: Options.esproposal_feature_mode;
-    esproposal_class_static_fields: Options.esproposal_feature_mode;
-    esproposal_decorators: Options.esproposal_feature_mode;
-    esproposal_export_star_as: Options.esproposal_feature_mode;
-    esproposal_nullish_coalescing: Options.esproposal_feature_mode;
-    esproposal_optional_chaining: Options.esproposal_feature_mode;
+    enums_with_unknown_members: bool;
+    this_annot: bool;
     exact_by_default: bool;
+    generate_tests: bool;
     facebook_fbs: string option;
     facebook_fbt: string option;
     facebook_module_interop: bool;
@@ -161,14 +159,12 @@ module Opts = struct
       enforce_strict_call_arity = true;
       enforce_well_formed_exports = None;
       enforce_well_formed_exports_includes = [];
+      enforce_local_inference_annotations = false;
       enums = false;
-      esproposal_class_instance_fields = Options.ESPROPOSAL_ENABLE;
-      esproposal_class_static_fields = Options.ESPROPOSAL_ENABLE;
-      esproposal_decorators = Options.ESPROPOSAL_WARN;
-      esproposal_export_star_as = Options.ESPROPOSAL_ENABLE;
-      esproposal_nullish_coalescing = Options.ESPROPOSAL_ENABLE;
-      esproposal_optional_chaining = Options.ESPROPOSAL_ENABLE;
+      enums_with_unknown_members = false;
+      this_annot = false;
       exact_by_default = false;
+      generate_tests = true;
       facebook_fbs = None;
       facebook_fbt = None;
       facebook_module_interop = false;
@@ -316,16 +312,6 @@ module Opts = struct
                str
                (String.concat ", " (SMap.keys values))))
 
-  let esproposal_feature_flag ?(allow_enable = false) =
-    let values = [("ignore", Options.ESPROPOSAL_IGNORE); ("warn", Options.ESPROPOSAL_WARN)] in
-    let values =
-      if allow_enable then
-        ("enable", Options.ESPROPOSAL_ENABLE) :: values
-      else
-        values
-    in
-    enum values
-
   let filepath = opt (fun str -> Ok (Path.make str))
 
   let optparse_mapping str =
@@ -415,27 +401,42 @@ module Opts = struct
             strict_es6_import_export_excludes = v :: opts.strict_es6_import_export_excludes;
           })
 
+  let local_inference_annotations =
+    boolean (fun opts v -> Ok { opts with enforce_local_inference_annotations = v })
+
+  type deprecated_esproposal_setting =
+    | Enable
+    | Ignore
+    | Warn
+
+  let deprecated_esproposal_unparse = function
+    | Enable -> "enable"
+    | Ignore -> "ignore"
+    | Warn -> "warn"
+
+  let deprecated_esproposal_flag default =
+    let f opts v =
+      if v = default then
+        Ok opts
+      else
+        Error
+          (spf
+             "Flow no longer supports esproposal configuration. The only supported value for this option is `%s`, which is also the default."
+             (deprecated_esproposal_unparse default))
+    in
+    enum [("enable", Enable); ("ignore", Ignore); ("warn", Warn)] f
+
   let parsers =
     [
       ("emoji", boolean (fun opts v -> Ok { opts with emoji = v }));
-      ( "esproposal.class_instance_fields",
-        esproposal_feature_flag ~allow_enable:true (fun opts v ->
-            Ok { opts with esproposal_class_instance_fields = v }) );
-      ( "esproposal.class_static_fields",
-        esproposal_feature_flag ~allow_enable:true (fun opts v ->
-            Ok { opts with esproposal_class_static_fields = v }) );
-      ( "esproposal.decorators",
-        esproposal_feature_flag (fun opts v -> Ok { opts with esproposal_decorators = v }) );
-      ( "esproposal.export_star_as",
-        esproposal_feature_flag ~allow_enable:true (fun opts v ->
-            Ok { opts with esproposal_export_star_as = v }) );
-      ( "esproposal.optional_chaining",
-        esproposal_feature_flag ~allow_enable:true (fun opts v ->
-            Ok { opts with esproposal_optional_chaining = v }) );
-      ( "esproposal.nullish_coalescing",
-        esproposal_feature_flag ~allow_enable:true (fun opts v ->
-            Ok { opts with esproposal_nullish_coalescing = v }) );
+      ("esproposal.class_instance_fields", deprecated_esproposal_flag Enable);
+      ("esproposal.class_static_fields", deprecated_esproposal_flag Enable);
+      ("esproposal.decorators", deprecated_esproposal_flag Ignore);
+      ("esproposal.export_star_as", deprecated_esproposal_flag Enable);
+      ("esproposal.optional_chaining", deprecated_esproposal_flag Enable);
+      ("esproposal.nullish_coalescing", deprecated_esproposal_flag Enable);
       ("exact_by_default", boolean (fun opts v -> Ok { opts with exact_by_default = v }));
+      ("generate_tests", boolean (fun opts v -> Ok { opts with generate_tests = v }));
       ("facebook.fbs", string (fun opts v -> Ok { opts with facebook_fbs = Some v }));
       ("facebook.fbt", string (fun opts v -> Ok { opts with facebook_fbt = Some v }));
       ( "file_watcher",
@@ -584,6 +585,9 @@ module Opts = struct
       ("max_literal_length", uint (fun opts v -> Ok { opts with max_literal_length = v }));
       ("experimental.const_params", boolean (fun opts v -> Ok { opts with enable_const_params = v }));
       ("experimental.enums", boolean (fun opts v -> Ok { opts with enums = v }));
+      ( "experimental.enums_with_unknown_members",
+        boolean (fun opts v -> Ok { opts with enums_with_unknown_members = v }) );
+      ("experimental.this_annot", boolean (fun opts v -> Ok { opts with this_annot = v }));
       ( "experimental.strict_call_arity",
         boolean (fun opts v -> Ok { opts with enforce_strict_call_arity = v }) );
       ("well_formed_exports", well_formed_exports_parser);
@@ -591,6 +595,7 @@ module Opts = struct
       ("experimental.type_asserts", boolean (fun opts v -> Ok { opts with type_asserts = v }));
       ("types_first", types_first_parser);
       ("experimental.new_signatures", new_signatures_parser);
+      ("experimental.enforce_local_inference_annotations", local_inference_annotations);
       ( "experimental.abstract_locations",
         boolean (fun opts v -> Ok { opts with abstract_locations = v }) );
       ( "experimental.disable_live_non_parse_errors",
@@ -1147,6 +1152,8 @@ let max_literal_length c = c.options.Opts.max_literal_length
 
 let enable_const_params c = c.options.Opts.enable_const_params
 
+let enforce_local_inference_annotations c = c.options.Opts.enforce_local_inference_annotations
+
 let enforce_strict_call_arity c = c.options.Opts.enforce_strict_call_arity
 
 let enforce_well_formed_exports c =
@@ -1157,19 +1164,13 @@ let enforce_well_formed_exports_includes c = c.options.Opts.enforce_well_formed_
 
 let enums c = c.options.Opts.enums
 
-let esproposal_class_instance_fields c = c.options.Opts.esproposal_class_instance_fields
+let enums_with_unknown_members c = c.options.Opts.enums_with_unknown_members
 
-let esproposal_class_static_fields c = c.options.Opts.esproposal_class_static_fields
-
-let esproposal_decorators c = c.options.Opts.esproposal_decorators
-
-let esproposal_export_star_as c = c.options.Opts.esproposal_export_star_as
-
-let esproposal_optional_chaining c = c.options.Opts.esproposal_optional_chaining
-
-let esproposal_nullish_coalescing c = c.options.Opts.esproposal_nullish_coalescing
+let this_annot c = c.options.Opts.this_annot
 
 let exact_by_default c = c.options.Opts.exact_by_default
+
+let generate_tests c = c.options.Opts.generate_tests
 
 let file_watcher c = c.options.Opts.file_watcher
 

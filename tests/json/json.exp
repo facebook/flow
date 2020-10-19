@@ -1,1 +1,80 @@
-Found 0 errors
+Error ----------------------------------------------------------------------------------------------------- test.js:4:16
+
+Cannot resolve module `a`. [cannot-resolve-module]
+
+   4| import a2 from 'a';         // cannot resolve module
+                     ^^^
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:6:16
+
+Cannot resolve module `./b`. [cannot-resolve-module]
+
+   6| import b2 from './b';       // cannot resolve without extension
+                     ^^^^^
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:7:16
+
+Cannot resolve module `c`. [cannot-resolve-module]
+
+   7| import c1 from 'c';         // cannot resolve module
+                     ^^^
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:9:16
+
+Cannot resolve module `package`. [cannot-resolve-module]
+
+   9| import p2 from 'package';   // cannot resolve module
+                     ^^^^^^^^^
+
+
+
+Found 4 errors
+
+============================================
+Parse error in package.json will be reported
+============================================
+Error ------------------------------------------------------------------------------------------------- package.json:2:1
+
+Unexpected end of input, expected the token `}`
+
+   2|
+      
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:4:16
+
+Cannot resolve module `a`. [cannot-resolve-module]
+
+   4| import a2 from 'a';         // cannot resolve module
+                     ^^^
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:6:16
+
+Cannot resolve module `./b`. [cannot-resolve-module]
+
+   6| import b2 from './b';       // cannot resolve without extension
+                     ^^^^^
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:7:16
+
+Cannot resolve module `c`. [cannot-resolve-module]
+
+   7| import c1 from 'c';         // cannot resolve module
+                     ^^^
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:9:16
+
+Cannot resolve module `package`. [cannot-resolve-module]
+
+   9| import p2 from 'package';   // cannot resolve module
+                     ^^^^^^^^^
+
+
+
+Found 5 errors

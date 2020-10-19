@@ -193,12 +193,13 @@ and collect_of_type ?log_unresolved cx acc = function
   | ExactT (_, t)
   | DefT (_, _, TypeT (_, t))
   | DefT (_, _, ClassT t)
-  | ThisClassT (_, t) ->
+  | ThisClassT (_, t, _) ->
     collect_of_type ?log_unresolved cx acc t
   | KeysT (_, t) -> collect_of_type ?log_unresolved cx acc t
   | ShapeT (_, t) -> collect_of_type ?log_unresolved cx acc t
   | MatchingPropT (_, _, t) -> collect_of_type ?log_unresolved cx acc t
   | DefT (_, _, IdxWrapper t) -> collect_of_type ?log_unresolved cx acc t
+  | GenericT { bound; _ } -> collect_of_type ?log_unresolved cx acc bound
   | ReposT (_, t)
   | InternalT (ReposUpperT (_, t)) ->
     collect_of_type ?log_unresolved cx acc t
@@ -263,7 +264,7 @@ and collect_of_property ?log_unresolved cx name property acc =
     Property.fold_t (fun acc -> collect_of_type ?log_unresolved cx acc) acc property
 
 and collect_of_object_kit_spread_operand_slice
-    ?log_unresolved cx acc { Object.Spread.reason = _; prop_map; dict } =
+    ?log_unresolved cx acc { Object.Spread.reason = _; prop_map; dict; generics = _ } =
   let acc = SMap.fold (collect_of_property ?log_unresolved cx) prop_map acc in
   let ts =
     match dict with

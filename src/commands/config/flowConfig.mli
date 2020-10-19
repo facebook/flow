@@ -69,6 +69,8 @@ val emoji : config -> bool
 
 val enable_const_params : config -> bool
 
+val enforce_local_inference_annotations : config -> bool
+
 val enforce_strict_call_arity : config -> bool
 
 val enforce_well_formed_exports : config -> bool
@@ -77,19 +79,13 @@ val enforce_well_formed_exports_includes : config -> string list
 
 val enums : config -> bool
 
-val esproposal_class_instance_fields : config -> Options.esproposal_feature_mode
+val enums_with_unknown_members : config -> bool
 
-val esproposal_class_static_fields : config -> Options.esproposal_feature_mode
-
-val esproposal_decorators : config -> Options.esproposal_feature_mode
-
-val esproposal_export_star_as : config -> Options.esproposal_feature_mode
-
-val esproposal_nullish_coalescing : config -> Options.esproposal_feature_mode
-
-val esproposal_optional_chaining : config -> Options.esproposal_feature_mode
+val this_annot : config -> bool
 
 val exact_by_default : config -> bool
+
+val generate_tests : config -> bool
 
 val facebook_fbs : config -> string option
 

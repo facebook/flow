@@ -799,19 +799,25 @@ module Options_flags = struct
     no_flowlib: bool;
     profile: bool;
     quiet: bool;
-    saved_state_fetcher: Options.saved_state_fetcher option;
-    saved_state_force_recheck: bool;
-    saved_state_no_fallback: bool;
     strip_root: bool;
     temp_dir: string option;
     traces: int option;
     trust_mode: Options.trust_mode option;
+    generate_tests: bool option;
     new_signatures: bool;
     abstract_locations: bool;
     verbose: Verbose.t option;
     wait_for_recheck: bool option;
     weak: bool;
     include_suppressions: bool;
+  }
+end
+
+module Saved_state_flags = struct
+  type t = {
+    saved_state_fetcher: Options.saved_state_fetcher option;
+    saved_state_force_recheck: bool;
+    saved_state_no_fallback: bool;
   }
 end
 
@@ -855,13 +861,11 @@ let options_flags =
       temp_dir
       quiet
       merge_timeout
-      saved_state_fetcher
-      saved_state_force_recheck
-      saved_state_no_fallback
       new_signatures
       abstract_locations
       include_suppressions
-      trust_mode =
+      trust_mode
+      generate_tests =
     (match merge_timeout with
     | Some timeout when timeout < 0 ->
       FlowExitStatus.(exit ~msg:"--merge-timeout must be non-negative" Commandline_usage_error)
@@ -886,10 +890,8 @@ let options_flags =
         temp_dir;
         quiet;
         merge_timeout;
-        saved_state_fetcher;
-        saved_state_force_recheck;
-        saved_state_no_fallback;
         trust_mode;
+        generate_tests;
         new_signatures;
         abstract_locations;
         include_suppressions;
@@ -935,24 +937,6 @@ let options_flags =
              ( "The maximum time in seconds to attempt to typecheck a file or cycle of files. "
              ^ "0 means no timeout (default: 100)" )
            ~env:"FLOW_MERGE_TIMEOUT"
-      |> flag
-           "--saved-state-fetcher"
-           (enum
-              [
-                ("none", Options.Dummy_fetcher);
-                ("local", Options.Local_fetcher);
-                ("fb", Options.Fb_fetcher);
-              ])
-           ~doc:"Which saved state fetcher Flow should use (none, local) (default: none)"
-      |> flag
-           "--saved-state-force-recheck"
-           no_arg
-           ~doc:"Force a lazy server to recheck the changes since the saved state was generated"
-      |> flag
-           "--saved-state-no-fallback"
-           no_arg
-           ~doc:
-             "If saved state fails to load, exit (normally fallback is to initialize from scratch)"
       |> flag "--new-signatures" no_arg ~doc:""
       |> flag
            "--abstract-locations"
@@ -972,7 +956,37 @@ let options_flags =
                    ("silent", Options.SilentTrust);
                    ("none", Options.NoTrust);
                  ]))
-           ~doc:"")
+           ~doc:""
+      |> flag "--generate-tests" (optional bool) ~doc:"")
+
+let saved_state_flags =
+  let collect_saved_state_flags
+      main saved_state_fetcher saved_state_force_recheck saved_state_no_fallback =
+    main
+      { Saved_state_flags.saved_state_fetcher; saved_state_force_recheck; saved_state_no_fallback }
+  in
+  fun prev ->
+    CommandSpec.ArgSpec.(
+      prev
+      |> collect collect_saved_state_flags
+      |> flag
+           "--saved-state-fetcher"
+           (enum
+              [
+                ("none", Options.Dummy_fetcher);
+                ("local", Options.Local_fetcher);
+                ("fb", Options.Fb_fetcher);
+              ])
+           ~doc:"Which saved state fetcher Flow should use (none, local) (default: none)"
+      |> flag
+           "--saved-state-force-recheck"
+           no_arg
+           ~doc:"Force a lazy server to recheck the changes since the saved state was generated"
+      |> flag
+           "--saved-state-no-fallback"
+           no_arg
+           ~doc:
+             "If saved state fails to load, exit (normally fallback is to initialize from scratch)")
 
 let flowconfig_name_flag prev =
   CommandSpec.ArgSpec.(
@@ -1121,18 +1135,20 @@ let no_cgroup_flag =
            no_arg
            ~doc:"Don't automatically run this command in a cgroup (if cgroups are available)")
 
-let make_options ~flowconfig_name ~flowconfig ~lazy_mode ~root flags =
+let make_options
+    ~flowconfig_name ~flowconfig ~lazy_mode ~root ~options_flags ~saved_state_options_flags =
   let open Options_flags in
+  let open Saved_state_flags in
   let temp_dir =
-    flags.Options_flags.temp_dir
+    options_flags.Options_flags.temp_dir
     |> Base.Option.value ~default:(FlowConfig.temp_dir flowconfig)
     |> Path.make
     |> Path.to_string
   in
   let file_options =
-    let no_flowlib = flags.no_flowlib in
+    let no_flowlib = options_flags.no_flowlib in
     let { includes; ignores; libs; raw_lint_severities = _; untyped; declarations } =
-      flags.flowconfig_flags
+      options_flags.flowconfig_flags
     in
     file_options
       ~root
@@ -1148,10 +1164,10 @@ let make_options ~flowconfig_name ~flowconfig ~lazy_mode ~root flags =
   let lint_severities =
     parse_lints_flag
       (FlowConfig.lint_severities flowconfig)
-      flags.flowconfig_flags.raw_lint_severities
+      options_flags.flowconfig_flags.raw_lint_severities
   in
   let opt_merge_timeout =
-    (match flags.merge_timeout with
+    (match options_flags.merge_timeout with
     | None -> FlowConfig.merge_timeout flowconfig
     | Some 0 -> None
     | timeout -> timeout)
@@ -1159,7 +1175,9 @@ let make_options ~flowconfig_name ~flowconfig ~lazy_mode ~root flags =
   in
   (* The CLI flag overrides the .flowconfig *)
   let opt_saved_state_fetcher =
-    Base.Option.value flags.saved_state_fetcher ~default:(FlowConfig.saved_state_fetcher flowconfig)
+    Base.Option.value
+      saved_state_options_flags.saved_state_fetcher
+      ~default:(FlowConfig.saved_state_fetcher flowconfig)
   in
   let opt_lazy_mode =
     let default =
@@ -1168,14 +1186,14 @@ let make_options ~flowconfig_name ~flowconfig ~lazy_mode ~root flags =
     Base.Option.value lazy_mode ~default
   in
   let opt_arch =
-    if flags.new_signatures || FlowConfig.types_first flowconfig then
-      let new_signatures = flags.new_signatures || FlowConfig.new_signatures flowconfig in
+    if options_flags.new_signatures || FlowConfig.types_first flowconfig then
+      let new_signatures = options_flags.new_signatures || FlowConfig.new_signatures flowconfig in
       Options.TypesFirst { new_signatures }
     else
       Options.Classic
   in
   let opt_enforce_well_formed_exports =
-    if flags.new_signatures || FlowConfig.types_first flowconfig then
+    if options_flags.new_signatures || FlowConfig.types_first flowconfig then
       Some []
     else if FlowConfig.enforce_well_formed_exports flowconfig then
       let paths =
@@ -1188,10 +1206,12 @@ let make_options ~flowconfig_name ~flowconfig ~lazy_mode ~root flags =
       None
   in
   let opt_abstract_locations =
-    flags.abstract_locations || FlowConfig.abstract_locations flowconfig
+    options_flags.abstract_locations || FlowConfig.abstract_locations flowconfig
   in
   let opt_wait_for_recheck =
-    Base.Option.value flags.wait_for_recheck ~default:(FlowConfig.wait_for_recheck flowconfig)
+    Base.Option.value
+      options_flags.wait_for_recheck
+      ~default:(FlowConfig.wait_for_recheck flowconfig)
   in
   let strict_mode = FlowConfig.strict_mode flowconfig in
   {
@@ -1199,46 +1219,46 @@ let make_options ~flowconfig_name ~flowconfig ~lazy_mode ~root flags =
     opt_lazy_mode;
     opt_root = root;
     opt_root_name = FlowConfig.root_name flowconfig;
-    opt_debug = flags.debug;
-    opt_verbose = flags.verbose;
-    opt_all = flags.all || FlowConfig.all flowconfig;
+    opt_debug = options_flags.debug;
+    opt_verbose = options_flags.verbose;
+    opt_all = options_flags.all || FlowConfig.all flowconfig;
     opt_babel_loose_array_spread = FlowConfig.babel_loose_array_spread flowconfig;
     opt_wait_for_recheck;
-    opt_weak = flags.weak || FlowConfig.weak flowconfig;
-    opt_traces = Base.Option.value flags.traces ~default:(FlowConfig.traces flowconfig);
-    opt_quiet = flags.Options_flags.quiet;
+    opt_weak = options_flags.weak || FlowConfig.weak flowconfig;
+    opt_traces = Base.Option.value options_flags.traces ~default:(FlowConfig.traces flowconfig);
+    opt_quiet = options_flags.Options_flags.quiet;
     opt_module_name_mappers = FlowConfig.module_name_mappers flowconfig;
     opt_modules_are_use_strict = FlowConfig.modules_are_use_strict flowconfig;
-    opt_profile = flags.profile;
-    opt_strip_root = flags.strip_root;
+    opt_profile = options_flags.profile;
+    opt_strip_root = options_flags.strip_root;
     opt_module = FlowConfig.module_system flowconfig;
     opt_munge_underscores =
-      flags.munge_underscore_members || FlowConfig.munge_underscores flowconfig;
+      options_flags.munge_underscore_members || FlowConfig.munge_underscores flowconfig;
     opt_node_main_fields = FlowConfig.node_main_fields flowconfig;
     opt_temp_dir = temp_dir;
     opt_max_workers =
-      Base.Option.value flags.max_workers ~default:(FlowConfig.max_workers flowconfig)
+      Base.Option.value options_flags.max_workers ~default:(FlowConfig.max_workers flowconfig)
       |> min Sys_utils.nbr_procs;
     opt_suppress_types = FlowConfig.suppress_types flowconfig;
     opt_max_literal_length = FlowConfig.max_literal_length flowconfig;
     opt_enable_const_params = FlowConfig.enable_const_params flowconfig;
     opt_enabled_rollouts = FlowConfig.enabled_rollouts flowconfig;
+    opt_enforce_local_inference_annotations =
+      FlowConfig.enforce_local_inference_annotations flowconfig;
     opt_enforce_strict_call_arity = FlowConfig.enforce_strict_call_arity flowconfig;
     opt_enforce_well_formed_exports;
     opt_enums = FlowConfig.enums flowconfig;
-    opt_esproposal_decorators = FlowConfig.esproposal_decorators flowconfig;
-    opt_esproposal_export_star_as = FlowConfig.esproposal_export_star_as flowconfig;
+    opt_enums_with_unknown_members = FlowConfig.enums_with_unknown_members flowconfig;
+    opt_this_annot = FlowConfig.this_annot flowconfig;
     opt_exact_by_default = FlowConfig.exact_by_default flowconfig;
     opt_facebook_fbs = FlowConfig.facebook_fbs flowconfig;
     opt_facebook_fbt = FlowConfig.facebook_fbt flowconfig;
     opt_facebook_module_interop = FlowConfig.facebook_module_interop flowconfig;
     opt_ignore_non_literal_requires = FlowConfig.ignore_non_literal_requires flowconfig;
     opt_include_warnings =
-      flags.include_warnings || flags.max_warnings <> None || FlowConfig.include_warnings flowconfig;
-    opt_esproposal_class_static_fields = FlowConfig.esproposal_class_static_fields flowconfig;
-    opt_esproposal_class_instance_fields = FlowConfig.esproposal_class_instance_fields flowconfig;
-    opt_esproposal_optional_chaining = FlowConfig.esproposal_optional_chaining flowconfig;
-    opt_esproposal_nullish_coalescing = FlowConfig.esproposal_nullish_coalescing flowconfig;
+      options_flags.include_warnings
+      || options_flags.max_warnings <> None
+      || FlowConfig.include_warnings flowconfig;
     opt_max_header_tokens = FlowConfig.max_header_tokens flowconfig;
     opt_haste_module_ref_prefix = FlowConfig.haste_module_ref_prefix flowconfig;
     opt_haste_name_reducers = FlowConfig.haste_name_reducers flowconfig;
@@ -1256,15 +1276,16 @@ let make_options ~flowconfig_name ~flowconfig ~lazy_mode ~root flags =
     opt_strict_mode = strict_mode;
     opt_merge_timeout;
     opt_saved_state_fetcher;
-    opt_saved_state_force_recheck = flags.saved_state_force_recheck;
-    opt_saved_state_no_fallback = flags.saved_state_no_fallback;
+    opt_saved_state_force_recheck = saved_state_options_flags.saved_state_force_recheck;
+    opt_saved_state_no_fallback = saved_state_options_flags.saved_state_no_fallback;
     opt_node_resolver_allow_root_relative = FlowConfig.node_resolver_allow_root_relative flowconfig;
     opt_node_resolver_root_relative_dirnames =
       FlowConfig.node_resolver_root_relative_dirnames flowconfig;
     opt_arch;
     opt_abstract_locations;
-    opt_include_suppressions = flags.include_suppressions;
-    opt_trust_mode = Base.Option.value flags.trust_mode ~default:(FlowConfig.trust_mode flowconfig);
+    opt_include_suppressions = options_flags.include_suppressions;
+    opt_trust_mode =
+      Base.Option.value options_flags.trust_mode ~default:(FlowConfig.trust_mode flowconfig);
     opt_react_runtime = FlowConfig.react_runtime flowconfig;
     opt_recursion_limit = FlowConfig.recursion_limit flowconfig;
     opt_max_files_checked_per_worker = FlowConfig.max_files_checked_per_worker flowconfig;
@@ -1278,6 +1299,8 @@ let make_options ~flowconfig_name ~flowconfig ~lazy_mode ~root flags =
         ~f:(Files.expand_project_root_token ~root)
         (FlowConfig.strict_es6_import_export_excludes flowconfig);
     opt_automatic_require_default = FlowConfig.automatic_require_default flowconfig;
+    opt_generate_tests =
+      Base.Option.value options_flags.generate_tests ~default:(FlowConfig.generate_tests flowconfig);
   }
 
 let make_env flowconfig_name connect_flags root =
@@ -1719,6 +1742,7 @@ let subcommand_spec ~name ~doc cmd_list =
 type codemod_params =
   | Codemod_params of {
       options_flags: Options_flags.t;
+      saved_state_options_flags: Saved_state_flags.t;
       shm_flags: shared_mem_params;
       write: bool;
       repeat: bool;
@@ -1730,13 +1754,34 @@ type codemod_params =
     }
 
 let collect_codemod_flags
-    main options_flags shm_flags write repeat log_level root input_file base_flag anon =
+    main
+    options_flags
+    saved_state_options_flags
+    shm_flags
+    write
+    repeat
+    log_level
+    root
+    input_file
+    base_flag
+    anon =
   ( if (not write) && repeat then
     let msg = "Error: cannot run codemod with --repeat flag unless --write is also passed" in
     FlowExitStatus.(exit ~msg Commandline_usage_error) );
   let codemod_flags =
     Codemod_params
-      { options_flags; shm_flags; write; repeat; log_level; root; input_file; base_flag; anon }
+      {
+        options_flags;
+        saved_state_options_flags;
+        shm_flags;
+        write;
+        repeat;
+        log_level;
+        root;
+        input_file;
+        base_flag;
+        anon;
+      }
   in
   main codemod_flags
 
@@ -1756,6 +1801,7 @@ let codemod_flags prev =
     prev
     |> collect collect_codemod_flags
     |> options_flags
+    |> saved_state_flags
     |> shm_flags
     |> from_flag
     |> flag "--write" no_arg ~doc:"Edit files in place"

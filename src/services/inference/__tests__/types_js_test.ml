@@ -64,9 +64,6 @@ let dummy_options_flags =
     no_flowlib = false;
     profile = false;
     quiet = false;
-    saved_state_fetcher = None;
-    saved_state_force_recheck = false;
-    saved_state_no_fallback = false;
     strip_root = false;
     temp_dir = None;
     traces = None;
@@ -77,6 +74,14 @@ let dummy_options_flags =
     wait_for_recheck = None;
     weak = false;
     include_suppressions = false;
+    generate_tests = None;
+  }
+
+let dummy_saved_state_flags =
+  {
+    CommandUtils.Saved_state_flags.saved_state_fetcher = None;
+    saved_state_force_recheck = false;
+    saved_state_no_fallback = false;
   }
 
 let test_with_profiling test_fun ctxt =
@@ -104,7 +109,8 @@ let make_options () =
     ~flowconfig
     ~lazy_mode:None
     ~root
-    dummy_options_flags
+    ~options_flags:dummy_options_flags
+    ~saved_state_options_flags:dummy_saved_state_flags
 
 let prepare_freshparsed freshparsed =
   freshparsed |> Base.List.map ~f:make_fake_file_key |> FilenameSet.of_list

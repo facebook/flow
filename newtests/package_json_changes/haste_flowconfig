@@ -7,4 +7,3 @@
 [options]
 all=true
 module.system=haste
-types_first=false

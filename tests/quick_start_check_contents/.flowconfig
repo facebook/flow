@@ -2,6 +2,5 @@
 <PROJECT_ROOT>/tmp*
 
 [options]
-types_first=false
 module.system=haste
 no_flowlib=false

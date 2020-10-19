@@ -63,7 +63,7 @@ val exact : Type.t -> Type.t
 
 val class_type : ?structural:bool -> ?annot_loc:ALoc.t -> Type.t -> Type.t
 
-val this_class_type : Type.t -> Type.t
+val this_class_type : Type.t -> bool -> Type.t
 
 val extends_type : reason -> Type.t -> Type.t -> Type.t
 

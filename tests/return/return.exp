@@ -36,13 +36,13 @@ Cannot expect `Promise` as the return type of async function because number [1] 
 undefined in type argument `R` [2]. [incompatible-return]
 
    implicit.js:7:30
-     7| async function g2(): Promise<number> {}
-                                     ^^^^^^ [1]
+      7| async function g2(): Promise<number> {}
+                                      ^^^^^^ [1]
 
 References:
-   <BUILTINS>/core.js:682:24
-   682| declare class Promise<+R> {
-                               ^ [2]
+   <BUILTINS>/core.js:1798:24
+   1798| declare class Promise<+R> {
+                                ^ [2]
 
 
 Error ------------------------------------------------------------------------------------------ implicit_void.js:246:16

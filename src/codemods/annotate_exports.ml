@@ -409,6 +409,7 @@ let mapper ~preserve_literals ~max_type_size ~default_any (cctx : Codemod_contex
                    } );
                ];
              rest = None;
+             this_ = None;
              comments = _;
            } );
        return = Ast.Type.Missing rloc;

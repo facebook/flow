@@ -13,12 +13,12 @@ References:
              ^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------------- B.js:13:26
+Error ------------------------------------------------------------------------------------------------------- B.js:12:26
 
 Cannot get `A.BAR` because property `BAR` is missing in object literal [1]. [prop-missing]
 
-   B.js:13:26
-   13| ifRequired('m#A', A => A.BAR); // Ok
+   B.js:12:26
+   12| ifRequired('m#A', A => A.BAR); // Error - BAR is not present in A's exports
                                 ^^^
 
 References:
@@ -35,9 +35,43 @@ Error --------------------------------------------------------------------------
 Importing from an untyped module makes it `any` and is not safe! Did you mean to add `// @flow` to the top of `C`?
 [untyped-import]
 
-   10|   'm#C',
+   10|   'm#C', // Error - untyped import
          ^^^^^
 
 
+Error -------------------------------------------------------------------------------------------------------- G.js:35:6
 
-Found 3 errors
+Cannot cast `E` to number because string [1] is incompatible with number [2]. [incompatible-cast]
+
+   G.js:35:6
+   35|     (E: number); // Error - E exports string
+            ^
+
+References:
+   E.js:6:25
+    6| declare module.exports: string;
+                               ^^^^^^ [1]
+   G.js:35:9
+   35|     (E: number); // Error - E exports string
+               ^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------------------- G.js:36:6
+
+Cannot cast `F` to string because number [1] is incompatible with string [2]. [incompatible-cast]
+
+   G.js:36:6
+   36|     (F: string); // Error - F exports number
+            ^
+
+References:
+   F.js:6:25
+    6| declare module.exports: number;
+                               ^^^^^^ [1]
+   G.js:36:9
+   36|     (F: string); // Error - F exports number
+               ^^^^^^ [2]
+
+
+
+Found 5 errors

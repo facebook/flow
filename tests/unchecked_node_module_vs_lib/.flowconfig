@@ -1,2 +1,4 @@
 [options]
 module.system=node
+[libs]
+lib.js

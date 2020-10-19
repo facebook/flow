@@ -1,0 +1,42 @@
+Error ------------------------------------------------------------------------------------------------ no_annots.js:3:12
+
+Missing an annotation on `x`. [missing-local-annot]
+
+   3| function f(x): void {}
+                 ^
+
+
+Error ------------------------------------------------------------------------------------------------ no_annots.js:4:32
+
+Missing an annotation on `x`. [missing-local-annot]
+
+   4| const function_expr = function(x): void {};
+                                     ^
+
+
+Error ------------------------------------------------------------------------------------------------ no_annots.js:5:21
+
+Missing an annotation on `x`. [missing-local-annot]
+
+   5| const arrow_expr = (x) => {};
+                          ^
+
+
+Error ------------------------------------------------------------------------------------------------ no_annots.js:6:49
+
+Missing an annotation on `x`. [missing-local-annot]
+
+   6| const deep_function_expr = {f: {g: {h: function(x): void {}}}};
+                                                      ^
+
+
+Error ------------------------------------------------------------------------------------------------ no_annots.js:7:38
+
+Missing an annotation on `x`. [missing-local-annot]
+
+   7| const deep_arrow_expr = {f: {g: {h: (x) => void {}}}};
+                                           ^
+
+
+
+Found 5 errors

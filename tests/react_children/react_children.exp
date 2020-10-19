@@ -59,8 +59,8 @@ References:
    api.js:14:25
     14| Children.forEach(a, (x: number) => {}); // Error
                                 ^^^^^^ [2]
-   <BUILTINS>/react.js:284:38
-   284|   declare export type ChildrenArray<+T> = $ReadOnlyArray<ChildrenArray<T>> | T;
+   <BUILTINS>/react.js:285:38
+   285|   declare export type ChildrenArray<+T> = $ReadOnlyArray<ChildrenArray<T>> | T;
                                              ^ [3]
 
 
@@ -80,8 +80,8 @@ References:
    api.js:16:25
     16| Children.forEach(a, (x: string) => {}); // Error
                                 ^^^^^^ [2]
-   <BUILTINS>/react.js:284:38
-   284|   declare export type ChildrenArray<+T> = $ReadOnlyArray<ChildrenArray<T>> | T;
+   <BUILTINS>/react.js:285:38
+   285|   declare export type ChildrenArray<+T> = $ReadOnlyArray<ChildrenArray<T>> | T;
                                              ^ [3]
 
 
@@ -101,8 +101,8 @@ References:
    api.js:16:25
     16| Children.forEach(a, (x: string) => {}); // Error
                                 ^^^^^^ [2]
-   <BUILTINS>/react.js:284:38
-   284|   declare export type ChildrenArray<+T> = $ReadOnlyArray<ChildrenArray<T>> | T;
+   <BUILTINS>/react.js:285:38
+   285|   declare export type ChildrenArray<+T> = $ReadOnlyArray<ChildrenArray<T>> | T;
                                              ^ [3]
 
 
@@ -116,8 +116,8 @@ Cannot call `s` with `Children.count(...)` bound to `x` because number [1] is in
           ^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:296:42
-   296|     count(children: ChildrenArray<any>): number,
+   <BUILTINS>/react.js:297:42
+   297|     count(children: ChildrenArray<any>): number,
                                                  ^^^^^^ [1]
    api.js:29:15
     29| function s(x: string) {}

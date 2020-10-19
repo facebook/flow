@@ -5,3 +5,11 @@
 [libs]
 
 [options]
+types_first=true
+
+module.system=haste
+module.system.haste.use_name_reducers=true
+# get basename
+module.system.haste.name_reducers='^.*/\([a-zA-Z0-9$_.-]+\)$' -> '\1'
+# strip .js or .js.flow suffix
+module.system.haste.name_reducers='^\(.*\)\.js\(\.flow\)?$' -> '\1'

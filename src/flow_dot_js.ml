@@ -150,14 +150,12 @@ let stub_metadata ~root ~checked =
     max_literal_length = 100;
     enable_const_params = false;
     enable_enums = true;
+    enable_this_annot = true;
+    enable_enums_with_unknown_members = true;
+    enforce_local_inference_annotations = false;
     enforce_strict_call_arity = true;
-    esproposal_class_static_fields = Options.ESPROPOSAL_ENABLE;
-    esproposal_class_instance_fields = Options.ESPROPOSAL_ENABLE;
-    esproposal_decorators = Options.ESPROPOSAL_ENABLE;
-    esproposal_export_star_as = Options.ESPROPOSAL_ENABLE;
-    esproposal_optional_chaining = Options.ESPROPOSAL_ENABLE;
-    esproposal_nullish_coalescing = Options.ESPROPOSAL_ENABLE;
     exact_by_default = false;
+    generate_tests = true;
     facebook_fbs = None;
     facebook_fbt = None;
     facebook_module_interop = false;
@@ -243,6 +241,7 @@ let infer_and_merge ~root filename ast file_sig =
   let aloc_ast = Ast_loc_utils.loc_to_aloc_mapper#program ast in
   let ((cx, _, tast), _other_cxs) =
     Merge_js.merge_component
+      ~arch:(Options.TypesFirst { new_signatures = false })
       ~metadata
       ~lint_severities
       ~strict_mode

@@ -51,6 +51,7 @@ class ['a] t =
         in
         acc
       | BoundT _ -> acc
+      | GenericT { bound; _ } -> self#type_ cx pole acc bound
       | ExistsT _ -> acc
       | ExactT (_, t) -> self#type_ cx pole acc t
       | MergedT (_, uses) -> List.fold_left (self#use_type_ cx) acc uses
@@ -79,7 +80,7 @@ class ['a] t =
         let acc = self#list (self#predicate cx) acc (Key_map.values p_map) in
         let acc = self#list (self#predicate cx) acc (Key_map.values n_map) in
         acc
-      | ThisClassT (_, t) -> self#type_ cx pole acc t
+      | ThisClassT (_, t, _) -> self#type_ cx pole acc t
       | ThisTypeAppT (_, t, this, ts_opt) ->
         let acc = self#type_ cx P.Positive acc t in
         let acc = self#type_ cx pole acc this in
@@ -118,7 +119,9 @@ class ['a] t =
         acc
       | EnumT enum
       | EnumObjectT enum ->
-        let { enum_id = _; enum_name = _; members = _; representation_t } = enum in
+        let { enum_id = _; enum_name = _; members = _; representation_t; has_unknown_members = _ } =
+          enum
+        in
         let acc = self#type_ cx pole acc representation_t in
         acc
       | FunT (static, prototype, funtype) ->
@@ -369,6 +372,7 @@ class ['a] t =
         self#type_ cx pole_TODO acc void_t
       | FilterOptionalT (_, t) -> self#type_ cx pole_TODO acc t
       | FilterMaybeT (_, t) -> self#type_ cx pole_TODO acc t
+      | SealGenericT { cont; _ } -> self#cont cx acc cont
       | ConcretizeTypeAppsT (_, (ts1, _, _), (t2, ts2, _, _), _) ->
         let acc = List.fold_left (self#type_ cx pole_TODO) acc ts1 in
         let acc = self#type_ cx pole_TODO acc t2 in
@@ -388,8 +392,7 @@ class ['a] t =
         let acc = self#type_ cx pole_TODO acc t2 in
         acc
       | ObjTestProtoT (_, t) -> self#type_ cx pole_TODO acc t
-      | ObjFreezeT (_, t)
-      | ObjRestT (_, _, t)
+      | ObjRestT (_, _, t, _)
       | ObjSealT (_, t)
       | ArrRestT (_, _, _, t) ->
         self#type_ cx pole_TODO acc t
@@ -564,16 +567,16 @@ class ['a] t =
         let acc =
           List.fold_left
             (fun (acc : 'a) -> function
-              | ResolvedArg t -> self#type_ cx pole_TODO acc t
+              | ResolvedArg (t, _) -> self#type_ cx pole_TODO acc t
               | ResolvedAnySpreadArg _ -> acc
-              | ResolvedSpreadArg (_, arr) -> self#arr_type cx pole_TODO acc arr)
+              | ResolvedSpreadArg (_, arr, _) -> self#arr_type cx pole_TODO acc arr)
             acc
             rrt_resolved
         in
         let acc =
           List.fold_left
             (fun acc -> function
-              | UnresolvedArg t
+              | UnresolvedArg (t, _)
               | UnresolvedSpreadArg t ->
                 self#type_ cx pole_TODO acc t)
             acc
@@ -633,7 +636,7 @@ class ['a] t =
           let acc = self#predicate cx acc pred in
           let acc = self#predicate cx acc not_pred in
           acc)
-      | DestructuringT (_, _, s, tout) ->
+      | DestructuringT (_, _, s, tout, _) ->
         let acc = self#selector cx acc s in
         let acc = self#tout cx pole_TODO acc tout in
         acc
@@ -690,7 +693,7 @@ class ['a] t =
       | Some t -> self#type_ cx pole acc t
 
     method private type_param cx pole acc tp =
-      let { reason = _; name = _; bound; default; polarity = p } = tp in
+      let { reason = _; name = _; bound; default; polarity = p; is_this = _ } = tp in
       let pole = P.mult (pole, p) in
       let acc = self#type_ cx pole acc bound in
       self#opt (self#type_ cx pole) acc default
@@ -921,13 +924,13 @@ class ['a] t =
           let acc = Nel.fold_left (Nel.fold_left (self#object_kit_slice cx)) acc rs in
           acc)
 
-    method private object_kit_slice cx acc { Object.reason = _; props; flags } =
+    method private object_kit_slice cx acc { Object.reason = _; props; flags; generics = _ } =
       let acc = self#smap (fun acc (t, _) -> self#type_ cx pole_TODO acc t) acc props in
       let acc = self#obj_flags cx pole_TODO acc flags in
       acc
 
     method private object_kit_spread_operand_slice
-        cx acc { Object.Spread.reason = _; prop_map; dict } =
+        cx acc { Object.Spread.reason = _; prop_map; dict; generics = _ } =
       let acc = self#smap (Property.fold_t (self#type_ cx pole_TODO)) acc prop_map in
       let acc = self#opt (self#dict_type cx pole_TODO) acc dict in
       acc

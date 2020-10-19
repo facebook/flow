@@ -3,16 +3,16 @@ Error --------------------------------------------------------------------------
 Property `@@iterator` is missing in undefined [1] but exists in `$Iterable` [2]. [incompatible-type]
 
    issue-4070.js:6:17
-     6| ys.set('a', [...y]);
-                        ^
+      6| ys.set('a', [...y]);
+                         ^
 
 References:
-   <BUILTINS>/core.js:617:22
-   617|     get(key: K): V | void;
-                             ^^^^ [1]
-   <BUILTINS>/core.js:561:11
-   561| interface $Iterable<+Yield,+Return,-Next> {
-                  ^^^^^^^^^ [2]
+   <BUILTINS>/core.js:1707:22
+   1707|     get(key: K): V | void;
+                              ^^^^ [1]
+   <BUILTINS>/core.js:1639:11
+   1639| interface $Iterable<+Yield,+Return,-Next> {
+                   ^^^^^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------- issue-4070.js:7:17
@@ -20,16 +20,16 @@ Error --------------------------------------------------------------------------
 Property `@@iterator` is missing in undefined [1] but exists in `$Iterable` [2]. [incompatible-type]
 
    issue-4070.js:7:17
-     7| ys.set('a', [...y]);
-                        ^
+      7| ys.set('a', [...y]);
+                         ^
 
 References:
-   <BUILTINS>/core.js:617:22
-   617|     get(key: K): V | void;
-                             ^^^^ [1]
-   <BUILTINS>/core.js:561:11
-   561| interface $Iterable<+Yield,+Return,-Next> {
-                  ^^^^^^^^^ [2]
+   <BUILTINS>/core.js:1707:22
+   1707|     get(key: K): V | void;
+                              ^^^^ [1]
+   <BUILTINS>/core.js:1639:11
+   1639| interface $Iterable<+Yield,+Return,-Next> {
+                   ^^^^^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------- issue-4070.js:8:17
@@ -37,16 +37,16 @@ Error --------------------------------------------------------------------------
 Property `@@iterator` is missing in undefined [1] but exists in `$Iterable` [2]. [incompatible-type]
 
    issue-4070.js:8:17
-     8| ys.set('a', [...y]);
-                        ^
+      8| ys.set('a', [...y]);
+                         ^
 
 References:
-   <BUILTINS>/core.js:617:22
-   617|     get(key: K): V | void;
-                             ^^^^ [1]
-   <BUILTINS>/core.js:561:11
-   561| interface $Iterable<+Yield,+Return,-Next> {
-                  ^^^^^^^^^ [2]
+   <BUILTINS>/core.js:1707:22
+   1707|     get(key: K): V | void;
+                              ^^^^ [1]
+   <BUILTINS>/core.js:1639:11
+   1639| interface $Iterable<+Yield,+Return,-Next> {
+                   ^^^^^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------- issue-4070.js:9:17
@@ -54,16 +54,16 @@ Error --------------------------------------------------------------------------
 Property `@@iterator` is missing in undefined [1] but exists in `$Iterable` [2]. [incompatible-type]
 
    issue-4070.js:9:17
-     9| ys.set('a', [...y]);
-                        ^
+      9| ys.set('a', [...y]);
+                         ^
 
 References:
-   <BUILTINS>/core.js:617:22
-   617|     get(key: K): V | void;
-                             ^^^^ [1]
-   <BUILTINS>/core.js:561:11
-   561| interface $Iterable<+Yield,+Return,-Next> {
-                  ^^^^^^^^^ [2]
+   <BUILTINS>/core.js:1707:22
+   1707|     get(key: K): V | void;
+                              ^^^^ [1]
+   <BUILTINS>/core.js:1639:11
+   1639| interface $Iterable<+Yield,+Return,-Next> {
+                   ^^^^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------ issue-598.js:7:48

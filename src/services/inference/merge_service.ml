@@ -142,8 +142,10 @@ let merge_context_generic ~options ~reader ~get_ast_unsafe ~get_file_sig_unsafe 
   let get_aloc_table_unsafe =
     Parsing_heaps.Reader_dispatcher.get_sig_ast_aloc_table_unsafe ~reader
   in
+  assert (phase <> Context.Merging || Options.arch options <> Options.Classic);
   let (((full_cx, _, _), other_cxs) as cx_nel) =
     Merge_js.merge_component
+      ~arch:(Options.arch options)
       ~metadata
       ~lint_severities
       ~strict_mode
@@ -271,7 +273,7 @@ let merge_context_new_signatures ~options ~reader component =
           let dep_exports = Context.find_module_sig dep_cx (Files.module_ref dep) in
           Merge.AcyclicDep dep_exports
       else
-        Merge.LegacyUncheckedDepTryBuiltinsFirst (mref, Modulename.to_string mname)
+        Merge.LegacyUncheckedDepTryBuiltinsFirst mref
   in
 
   (* read type_sig from heap and create file record for merge *)
@@ -409,6 +411,7 @@ let merge_contents_context ~reader options file ast info file_sig =
   in
   let ((cx, _, tast), _) =
     Merge_js.merge_component
+      ~arch:(Options.arch options)
       ~metadata
       ~lint_severities
       ~strict_mode

@@ -182,13 +182,18 @@ module Eval (Env : EvalEnv) = struct
       let open Ast.Type.Function in
       let { tparams; params; return; comments = _ } = ft in
       let (tps, deps) = type_params tps tparams in
-      let (_, { Params.params; rest; comments = _ }) = params in
+      let (_, { Params.params; rest; this_; comments = _ }) = params in
       let deps = List.fold_left (Deps.reduce_join (function_type_param tps)) deps params in
       let deps =
         match rest with
         | None -> deps
         | Some (_, { RestParam.argument; comments = _ }) ->
           Deps.join (deps, function_type_param tps argument)
+      in
+      let deps =
+        match this_ with
+        | None -> deps
+        | Some (_, { ThisParam.annot; comments = _ }) -> Deps.join (deps, type_ tps annot)
       in
       Deps.join (deps, type_ tps return)
 
@@ -443,11 +448,14 @@ module Eval (Env : EvalEnv) = struct
           } )
       when Env.facebook_keyMirror ->
       let open Ast.Expression.Object in
-      let object_property tps loc = function
-        | ( _,
-            Ast.Expression.Object.Property.Init
-              { key = Ast.Expression.Object.Property.Identifier _; value; _ } ) ->
+      let object_key tps loc key_loc value = function
+        | Property.Identifier _
+        | Property.Literal (_, { Ast.Literal.value = Ast.Literal.String _; _ }) ->
           literal_expr tps value
+        | _ -> Deps.top (Error.UnexpectedObjectKey (loc, key_loc))
+      in
+      let object_property tps loc = function
+        | (key_loc, Property.Init { key; value; _ }) -> object_key tps loc key_loc value key
         | (key_loc, _) -> Deps.top (Error.UnexpectedObjectKey (loc, key_loc))
       in
       List.fold_left
@@ -489,8 +497,8 @@ module Eval (Env : EvalEnv) = struct
       Deps.bot
     | (loc, JSXElement e) ->
       let open Ast.JSX in
-      let { openingElement; closingElement = _; children = _; comments = _ } = e in
-      let (_loc, { Opening.name; selfClosing = _; attributes = _ }) = openingElement in
+      let { opening_element; closing_element = _; children = _; comments = _ } = e in
+      let (_loc, { Opening.name; self_closing = _; attributes = _ }) = opening_element in
       begin
         match (name, Env.facebook_fbt) with
         | (Ast.JSX.Identifier (_loc_id, { Identifier.name = "fbt"; comments = _ }), Some _) ->
@@ -602,13 +610,20 @@ module Eval (Env : EvalEnv) = struct
   and function_rest_param tps (_, { Ast.Function.RestParam.argument; comments = _ }) =
     pattern tps argument
 
+  and function_this_param tps (_, (_, t)) = type_ tps t
+
   and function_params tps params =
     let open Ast.Function in
-    let (_, { Params.params; rest; comments = _ }) = params in
+    let (_, { Params.params; rest; this_; comments = _ }) = params in
     let deps = List.fold_left (Deps.reduce_join (function_param tps)) Deps.bot params in
-    match rest with
+    let deps =
+      match rest with
+      | None -> deps
+      | Some param -> Deps.join (deps, function_rest_param tps param)
+    in
+    match this_ with
     | None -> deps
-    | Some param -> Deps.join (deps, function_rest_param tps param)
+    | Some param -> Deps.join (deps, function_this_param tps param)
 
   and function_return tps ~is_missing_ok return =
     match return with

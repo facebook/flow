@@ -133,7 +133,24 @@ module CheckCommand = struct
     in
     let options =
       let lazy_mode = Some Options.NON_LAZY_MODE in
-      make_options ~flowconfig_name ~flowconfig ~lazy_mode ~root options_flags
+      (* Saved state doesn't make sense for `flow check`, so disable it. *)
+      let saved_state_options_flags =
+        CommandUtils.Saved_state_flags.
+          {
+            (* None would mean we would just use the value in the .flowconfig, if available.
+             * Instead, let's override that and turn off saved state entirely. *)
+            saved_state_fetcher = Some Options.Dummy_fetcher;
+            saved_state_force_recheck = false;
+            saved_state_no_fallback = false;
+          }
+      in
+      make_options
+        ~flowconfig_name
+        ~flowconfig
+        ~lazy_mode
+        ~root
+        ~options_flags
+        ~saved_state_options_flags
     in
     let init_id = Random_id.short_string () in
     let offset_kind = CommandUtils.offset_kind_of_offset_style offset_style in
@@ -176,6 +193,7 @@ module FocusCheckCommand = struct
           |> error_flags
           |> options_and_json_flags
           |> json_version_flag
+          |> saved_state_flags
           |> offset_style_flag
           |> shm_flags
           |> ignore_version_flag
@@ -197,6 +215,7 @@ module FocusCheckCommand = struct
       json
       pretty
       json_version
+      saved_state_options_flags
       offset_style
       shm_flags
       ignore_version
@@ -220,7 +239,13 @@ module FocusCheckCommand = struct
     let flowconfig = read_config_or_exit (Server_files_js.config_file flowconfig_name root) in
     let options =
       let lazy_mode = Some Options.NON_LAZY_MODE in
-      make_options ~flowconfig_name ~flowconfig ~lazy_mode ~root options_flags
+      make_options
+        ~flowconfig_name
+        ~flowconfig
+        ~lazy_mode
+        ~root
+        ~options_flags
+        ~saved_state_options_flags
     in
     let init_id = Random_id.short_string () in
     let offset_kind = CommandUtils.offset_kind_of_offset_style offset_style in

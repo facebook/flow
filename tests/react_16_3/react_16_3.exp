@@ -52,11 +52,11 @@ References:
    <BUILTINS>/react-dom.js:207:15
    207|     instance: HTMLButtonElement,
                       ^^^^^^^^^^^^^^^^^ [2]
-   <BUILTINS>/react.js:248:6
-   248|   ): {|current: null | T|};
+   <BUILTINS>/react.js:249:6
+   249|   ): {|current: null | T|};
              ^^^^^^^^^^^^^^^^^^^^^ [3]
-   <BUILTINS>/react.js:197:6
-   197|   | ((React$ElementRef<ElementType> | null) => mixed)
+   <BUILTINS>/react.js:198:6
+   198|   | ((React$ElementRef<ElementType> | null) => mixed)
              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
 
 
@@ -71,8 +71,8 @@ Cannot create `FancyButton` element because in property `ref`: [incompatible-typ
                                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 References:
-   <BUILTINS>/react.js:196:5
-   196|   | { -current: React$ElementRef<ElementType> | null, ... }
+   <BUILTINS>/react.js:197:5
+   197|   | { -current: React$ElementRef<ElementType> | null, ... }
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
    forwardRef.js:23:50
     23| const _g =  <FancyButton foo={3} ref={(x: null | HTMLDivElement) => x} />; // Incorrect ref type
@@ -104,11 +104,11 @@ References:
    forwardRef.js:41:57
     41| const badUnionRef = React.createRef<HTMLButtonElement | HTMLDivElement>();
                                                                 ^^^^^^^^^^^^^^ [3]
-   <BUILTINS>/react.js:248:6
-   248|   ): {|current: null | T|};
+   <BUILTINS>/react.js:249:6
+   249|   ): {|current: null | T|};
              ^^^^^^^^^^^^^^^^^^^^^ [4]
-   <BUILTINS>/react.js:197:6
-   197|   | ((React$ElementRef<ElementType> | null) => mixed)
+   <BUILTINS>/react.js:198:6
+   198|   | ((React$ElementRef<ElementType> | null) => mixed)
              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [5]
 
 

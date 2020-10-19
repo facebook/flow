@@ -123,6 +123,15 @@ and 'loc t' =
   | EAdditionMixed of 'loc virtual_reason * 'loc virtual_use_op
   | EComparison of ('loc virtual_reason * 'loc virtual_reason)
   | ENonStrictEqualityComparison of ('loc virtual_reason * 'loc virtual_reason)
+  | EEscapedGeneric of {
+      use_op: 'loc virtual_use_op;
+      reason: 'loc virtual_reason;
+      blame_reason: 'loc virtual_reason;
+      annot_reason: 'loc virtual_reason option;
+      bound_name: string;
+      bound_loc: 'loc;
+      is_this: bool;
+    }
   | ETupleArityMismatch of
       ('loc virtual_reason * 'loc virtual_reason) * int * int * 'loc virtual_use_op
   | ENonLitArrayToTuple of ('loc virtual_reason * 'loc virtual_reason) * 'loc virtual_use_op
@@ -193,15 +202,15 @@ and 'loc t' =
   | EUnsupportedSyntax of 'loc * 'loc unsupported_syntax
   | EUseArrayLiteral of 'loc
   | EMissingAnnotation of 'loc virtual_reason * 'loc virtual_reason list
+  | EMissingLocalAnnotation of 'loc virtual_reason
   | EBindingError of binding_error * 'loc * string * Scope.Entry.t
   | ERecursionLimit of ('loc virtual_reason * 'loc virtual_reason)
   | EModuleOutsideRoot of 'loc * string
   | EMalformedPackageJson of 'loc * string
-  | EExperimentalClassProperties of 'loc * bool
   | EUninitializedInstanceProperty of 'loc * Lints.property_assignment_kind
-  | EExperimentalDecorators of 'loc
-  | EExperimentalExportStarAs of 'loc
   | EExperimentalEnums of 'loc
+  | EExperimentalEnumsWithUnknownMembers of 'loc
+  | EExperimentalThisAnnot of 'loc
   | EUnsafeGetSet of 'loc
   | EIndeterminateModuleType of 'loc
   | EBadExportPosition of 'loc
@@ -283,8 +292,6 @@ and 'loc t' =
     }
   | ESketchyNumberLint of Lints.sketchy_number_kind * 'loc virtual_reason
   | EInvalidPrototype of 'loc * 'loc virtual_reason
-  | EExperimentalOptionalChaining of 'loc
-  | EOptionalChainingMethods of 'loc
   | EUnnecessaryOptionalChain of 'loc * 'loc virtual_reason
   | EUnnecessaryInvariant of 'loc * 'loc virtual_reason
   | EUnexpectedTemporaryBaseType of 'loc
@@ -371,6 +378,10 @@ and 'loc t' =
       reason: 'loc virtual_reason;
       enum_reason: 'loc virtual_reason;
       left_to_check: string list;
+    }
+  | EEnumUnknownNotChecked of {
+      reason: 'loc virtual_reason;
+      enum_reason: 'loc virtual_reason;
     }
   | EEnumInvalidCheck of {
       reason: 'loc virtual_reason;
@@ -721,6 +732,18 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
   | EComparison (r1, r2) -> EComparison (map_reason r1, map_reason r2)
   | ENonStrictEqualityComparison (r1, r2) ->
     ENonStrictEqualityComparison (map_reason r1, map_reason r2)
+  | EEscapedGeneric { reason; blame_reason; annot_reason; use_op; bound_name; bound_loc; is_this }
+    ->
+    EEscapedGeneric
+      {
+        reason = map_reason reason;
+        blame_reason = map_reason blame_reason;
+        annot_reason = Base.Option.map ~f:map_reason annot_reason;
+        use_op = map_use_op use_op;
+        bound_loc = f bound_loc;
+        bound_name;
+        is_this;
+      }
   | ESpeculationAmbiguous
       { reason; prev_case = (prev_i, prev_case_reason); case = (i, case_reason); cases } ->
     ESpeculationAmbiguous
@@ -757,16 +780,16 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
   | EUnsupportedSyntax (loc, u) -> EUnsupportedSyntax (f loc, map_unsupported_syntax u)
   | EUseArrayLiteral loc -> EUseArrayLiteral (f loc)
   | EMissingAnnotation (r, rs) -> EMissingAnnotation (map_reason r, Base.List.map ~f:map_reason rs)
+  | EMissingLocalAnnotation r -> EMissingLocalAnnotation (map_reason r)
   | EBindingError (b, loc, s, scope) -> EBindingError (b, f loc, s, scope)
   | ERecursionLimit (r1, r2) -> ERecursionLimit (map_reason r1, map_reason r2)
   | EModuleOutsideRoot (loc, s) -> EModuleOutsideRoot (f loc, s)
   | EMalformedPackageJson (loc, s) -> EMalformedPackageJson (f loc, s)
-  | EExperimentalDecorators loc -> EExperimentalDecorators (f loc)
-  | EExperimentalClassProperties (loc, b) -> EExperimentalClassProperties (f loc, b)
   | EUnsafeGetSet loc -> EUnsafeGetSet (f loc)
   | EUninitializedInstanceProperty (loc, e) -> EUninitializedInstanceProperty (f loc, e)
-  | EExperimentalExportStarAs loc -> EExperimentalExportStarAs (f loc)
   | EExperimentalEnums loc -> EExperimentalEnums (f loc)
+  | EExperimentalEnumsWithUnknownMembers loc -> EExperimentalEnumsWithUnknownMembers (f loc)
+  | EExperimentalThisAnnot loc -> EExperimentalThisAnnot (f loc)
   | EIndeterminateModuleType loc -> EIndeterminateModuleType (f loc)
   | EBadExportPosition loc -> EBadExportPosition (f loc)
   | EBadExportContext (s, loc) -> EBadExportContext (s, f loc)
@@ -811,8 +834,6 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
     ESketchyNullLint { kind; loc = f loc; null_loc = f null_loc; falsy_loc = f falsy_loc }
   | ESketchyNumberLint (kind, r) -> ESketchyNumberLint (kind, map_reason r)
   | EInvalidPrototype (loc, r) -> EInvalidPrototype (f loc, map_reason r)
-  | EExperimentalOptionalChaining loc -> EExperimentalOptionalChaining (f loc)
-  | EOptionalChainingMethods loc -> EOptionalChainingMethods (f loc)
   | EUnnecessaryOptionalChain (loc, r) -> EUnnecessaryOptionalChain (f loc, map_reason r)
   | EUnnecessaryInvariant (loc, r) -> EUnnecessaryInvariant (f loc, map_reason r)
   | EUnexpectedTemporaryBaseType loc -> EUnexpectedTemporaryBaseType (f loc)
@@ -905,6 +926,8 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
   | EEnumNotAllChecked { reason; enum_reason; left_to_check } ->
     EEnumNotAllChecked
       { reason = map_reason reason; enum_reason = map_reason enum_reason; left_to_check }
+  | EEnumUnknownNotChecked { reason; enum_reason } ->
+    EEnumUnknownNotChecked { reason = map_reason reason; enum_reason = map_reason enum_reason }
   | EEnumInvalidCheck { reason; enum_name; example_member } ->
     EEnumInvalidCheck { reason = map_reason reason; enum_name; example_member }
   | EEnumMemberUsedAsType { reason; enum_name } ->
@@ -1014,6 +1037,11 @@ let util_use_op_of_msg nope util = function
           { spread_reason; key_reason; value_reason; object2_reason; use_op })
   | ECannotResolveOpenTvar { use_op; reason; blame_reasons } ->
     util use_op (fun use_op -> ECannotResolveOpenTvar { use_op; reason; blame_reasons })
+  | EEscapedGeneric { reason; blame_reason; annot_reason; use_op; bound_name; bound_loc; is_this }
+    ->
+    util use_op (fun use_op ->
+        EEscapedGeneric
+          { reason; blame_reason; annot_reason; use_op; bound_loc; bound_name; is_this })
   | EDebugPrint (_, _)
   | EExportValueAsType (_, _)
   | EImportValueAsType (_, _)
@@ -1057,16 +1085,16 @@ let util_use_op_of_msg nope util = function
   | EUnsupportedSyntax (_, _)
   | EUseArrayLiteral _
   | EMissingAnnotation _
+  | EMissingLocalAnnotation _
   | EBindingError (_, _, _, _)
   | ERecursionLimit (_, _)
   | EModuleOutsideRoot (_, _)
   | EMalformedPackageJson (_, _)
-  | EExperimentalDecorators _
-  | EExperimentalClassProperties (_, _)
   | EUnsafeGetSet _
   | EUninitializedInstanceProperty _
-  | EExperimentalExportStarAs _
   | EExperimentalEnums _
+  | EExperimentalEnumsWithUnknownMembers _
+  | EExperimentalThisAnnot _
   | EIndeterminateModuleType _
   | EBadExportPosition _
   | EBadExportContext _
@@ -1107,8 +1135,6 @@ let util_use_op_of_msg nope util = function
   | ESketchyNullLint { kind = _; loc = _; null_loc = _; falsy_loc = _ }
   | ESketchyNumberLint _
   | EInvalidPrototype _
-  | EExperimentalOptionalChaining _
-  | EOptionalChainingMethods _
   | EUnnecessaryOptionalChain _
   | EUnnecessaryInvariant _
   | EUnexpectedTemporaryBaseType _
@@ -1126,6 +1152,7 @@ let util_use_op_of_msg nope util = function
   | EEnumMemberAlreadyChecked _
   | EEnumAllMembersAlreadyChecked _
   | EEnumNotAllChecked _
+  | EEnumUnknownNotChecked _
   | EEnumInvalidCheck _
   | EEnumMemberUsedAsType _
   | EAssignExportedConstLikeBinding _
@@ -1157,6 +1184,7 @@ let loc_of_msg : 'loc t' -> 'loc option = function
   | EArithmeticOperand reason
   | ERecursionLimit (reason, _)
   | EMissingAnnotation (reason, _)
+  | EMissingLocalAnnotation reason
   | EIdxArity reason
   | EIdxUse1 reason
   | EIdxUse2 reason
@@ -1182,6 +1210,7 @@ let loc_of_msg : 'loc t' -> 'loc option = function
   | EEnumMemberAlreadyChecked { reason; _ }
   | EEnumAllMembersAlreadyChecked { reason; _ }
   | EEnumNotAllChecked { reason; _ }
+  | EEnumUnknownNotChecked { reason; _ }
   | EEnumInvalidCheck { reason; _ }
   | EEnumMemberUsedAsType { reason; _ }
   | EEnumInvalidMemberAccess { reason; _ }
@@ -1224,8 +1253,6 @@ let loc_of_msg : 'loc t' -> 'loc option = function
   | EUnsafeGettersSetters loc
   | EUnnecessaryOptionalChain (loc, _)
   | EUnnecessaryInvariant (loc, _)
-  | EOptionalChainingMethods loc
-  | EExperimentalOptionalChaining loc
   | EUnusedSuppression loc
   | ECodelessSuppression (loc, _)
   | EDocblockError (loc, _)
@@ -1247,12 +1274,11 @@ let loc_of_msg : 'loc t' -> 'loc option = function
   | EMixedImportAndRequire (loc, _)
   | EExportRenamedDefault (loc, _)
   | EIndeterminateModuleType loc
-  | EExperimentalExportStarAs loc
   | EExperimentalEnums loc
+  | EExperimentalEnumsWithUnknownMembers loc
+  | EExperimentalThisAnnot loc
   | EUnsafeGetSet loc
   | EUninitializedInstanceProperty (loc, _)
-  | EExperimentalClassProperties (loc, _)
-  | EExperimentalDecorators loc
   | EModuleOutsideRoot (loc, _)
   | EMalformedPackageJson (loc, _)
   | EUseArrayLiteral loc
@@ -1332,6 +1358,7 @@ let loc_of_msg : 'loc t' -> 'loc option = function
   | EExpectedBooleanLit _
   | EExpectedNumberLit _
   | EExpectedStringLit _
+  | EEscapedGeneric _
   | EIncompatibleProp _
   | EIncompatible _
   | ECannotResolveOpenTvar _ ->
@@ -1366,11 +1393,10 @@ let kind_of_msg =
     | EBadExportContext _ ->
       InferWarning ExportKind
     | EUnexpectedTypeof _
-    | EExperimentalDecorators _
-    | EExperimentalClassProperties _
     | EUnsafeGetSet _
-    | EExperimentalExportStarAs _
     | EExperimentalEnums _
+    | EExperimentalEnumsWithUnknownMembers _
+    | EExperimentalThisAnnot _
     | EIndeterminateModuleType _
     | EUnreachable _
     | EInvalidTypeof _ ->
@@ -1380,9 +1406,7 @@ let kind_of_msg =
     | EDuplicateModuleProvider _ -> DuplicateProviderError
     | EParseError _ -> ParseError
     | EDocblockError _
-    | ELintSetting _
-    | EExperimentalOptionalChaining _
-    | EOptionalChainingMethods _ ->
+    | ELintSetting _ ->
       PseudoParseError
     | _ -> InferError)
 
@@ -2230,6 +2254,8 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
      * visited to get to the missing annotation error and report that as the
      * trace *)
     Normal { features }
+  | EMissingLocalAnnotation r ->
+    Normal { features = [text "Missing an annotation on "; desc r; text "."] }
   | EBindingError (binding_error, _, x, entry) ->
     let desc =
       if x = internal_name "this" then
@@ -2297,38 +2323,6 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
     in
     Normal { features }
   | EMalformedPackageJson (_, error) -> Normal { features = [text error] }
-  | EExperimentalDecorators _ ->
-    let features =
-      [
-        text "Experimental decorator usage. Decorators are an early stage ";
-        text "proposal that may change. Additionally, Flow does not account for ";
-        text "the type implications of decorators at this time.";
-      ]
-    in
-    Normal { features }
-  | EExperimentalClassProperties (_, static) ->
-    let (config_name, config_key) =
-      if static then
-        ("class static field", "class_static_fields")
-      else
-        ("class instance field", "class_instance_fields")
-    in
-    let features =
-      [
-        text ("Experimental " ^ config_name ^ " usage. ");
-        text (String.capitalize_ascii config_name ^ "s are an active early stage ");
-        text "feature proposal that may change. You may opt-in to using them ";
-        text "anyway in Flow by putting ";
-        code ("esproposal." ^ config_key ^ "=enable");
-        text " ";
-        text "into the ";
-        code "[options]";
-        text " section of your ";
-        code ".flowconfig";
-        text ".";
-      ]
-    in
-    Normal { features }
   | EUnsafeGetSet _ ->
     let features =
       [
@@ -2377,24 +2371,6 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
         ]
     in
     Normal { features }
-  | EExperimentalExportStarAs _ ->
-    let features =
-      [
-        text "Experimental ";
-        code "export * as";
-        text " usage. ";
-        code "export * as";
-        text " is an active early stage feature proposal that ";
-        text "may change. You may opt-in to using it anyway by putting ";
-        code "esproposal.export_star_as=enable";
-        text " into the ";
-        code "[options]";
-        text " section of your ";
-        code ".flowconfig";
-        text ".";
-      ]
-    in
-    Normal { features }
   | EExperimentalEnums _ ->
     let features =
       [
@@ -2403,6 +2379,34 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
         text " usage. ";
         text "You may opt-in to using enums by putting ";
         code "experimental.enums=true";
+        text " into the ";
+        code "[options]";
+        text " section of your ";
+        code ".flowconfig";
+        text ".";
+      ]
+    in
+    Normal { features }
+  | EExperimentalEnumsWithUnknownMembers _ ->
+    let features =
+      [
+        text "Flow Enums with unknown members are not enabled in this project. ";
+        text "Remove the ";
+        code "...";
+        text " from your enum declaration.";
+      ]
+    in
+    Normal { features }
+  | EExperimentalThisAnnot _ ->
+    let features =
+      [
+        text "Experimental ";
+        code "this";
+        text " annotation. ";
+        text "You may opt-in to using ";
+        code "this";
+        text " annotations by putting ";
+        code "experimental.this_annot=true";
         text " into the ";
         code "[options]";
         text " section of your ";
@@ -2735,6 +2739,73 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
     in
     UseOp
       { loc = loc_of_reason unused_reason; features = [text msg; text " "; ref def_reason]; use_op }
+  | EEscapedGeneric
+      { is_this = false; reason; blame_reason; annot_reason; use_op; bound_loc; bound_name }
+    when blame_reason = reason ->
+    let features =
+      [
+        text "type variable ";
+        ref (replace_desc_reason (RCustom (spf "`%s`" bound_name)) blame_reason);
+        text " cannot escape from the scope in which it was ";
+        ref (mk_reason (RCustom "defined") bound_loc);
+      ]
+    in
+    let annot_features =
+      Base.Option.value_map annot_reason ~default:[] ~f:(fun annot_reason ->
+          [text " (try adding a type annotation to "; ref annot_reason; text ")"])
+    in
+    UseOp { loc = loc_of_reason reason; features = features @ annot_features; use_op }
+  | EEscapedGeneric
+      { is_this = false; reason; blame_reason; annot_reason; use_op; bound_loc; bound_name } ->
+    let features =
+      [
+        ref reason;
+        text " contains type variable ";
+        ref (replace_desc_reason (RCustom (spf "`%s`" bound_name)) blame_reason);
+        text " which cannot escape from the scope in which it was ";
+        ref (mk_reason (RCustom "defined") bound_loc);
+      ]
+    in
+    let annot_features =
+      Base.Option.value_map annot_reason ~default:[] ~f:(fun annot_reason ->
+          [text " (try adding a type annotation to "; ref annot_reason; text ")"])
+    in
+    UseOp { loc = loc_of_reason reason; features = features @ annot_features; use_op }
+  | EEscapedGeneric
+      { is_this = true; reason; blame_reason; annot_reason; use_op; bound_loc; bound_name }
+    when match desc_of_reason reason with
+         | RThis
+         | RThisType ->
+           true
+         | _ -> reason = blame_reason ->
+    let features =
+      [
+        ref (replace_desc_reason (RCustom (spf "`%s`" bound_name)) blame_reason);
+        text " cannot escape from its ";
+        ref (mk_reason (RCustom "class") bound_loc);
+      ]
+    in
+    let annot_features =
+      Base.Option.value_map annot_reason ~default:[] ~f:(fun annot_reason ->
+          [text " (try adding a type annotation to "; ref annot_reason; text ")"])
+    in
+    UseOp { loc = loc_of_reason reason; features = features @ annot_features; use_op }
+  | EEscapedGeneric
+      { is_this = true; reason; blame_reason; annot_reason; use_op; bound_loc; bound_name } ->
+    let features =
+      [
+        ref reason;
+        text " contains ";
+        ref (replace_desc_reason (RCustom (spf "`%s`" bound_name)) blame_reason);
+        text " which cannot escape from its ";
+        ref (mk_reason (RCustom "class") bound_loc);
+      ]
+    in
+    let annot_features =
+      Base.Option.value_map annot_reason ~default:[] ~f:(fun annot_reason ->
+          [text " (try adding a type annotation to "; ref annot_reason; text ")"])
+    in
+    UseOp { loc = loc_of_reason reason; features = features @ annot_features; use_op }
   | EUnsupportedSetProto _ -> Normal { features = [text "Mutating this prototype is unsupported."] }
   | EDuplicateModuleProvider { module_name; provider; _ } ->
     let features =
@@ -2966,26 +3037,6 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
         features =
           [text "Cannot use "; ref reason; text " as a prototype. Expected an object or null."];
       }
-  | EExperimentalOptionalChaining _ ->
-    let features =
-      [
-        text "Experimental optional chaining (";
-        code "?.";
-        text ") usage. ";
-        text "Optional chaining is an active early-stage feature proposal that ";
-        text "may change. You may opt in to using it anyway by putting ";
-        code "esproposal.optional_chaining=enable";
-        text " into the ";
-        code "[options]";
-        text " section of your ";
-        code ".flowconfig";
-        text ".";
-      ]
-    in
-    Normal { features }
-  | EOptionalChainingMethods _ ->
-    Normal
-      { features = [text "Flow does not yet support method or property calls in optional chains."] }
   | EUnnecessaryOptionalChain (_, lhs_reason) ->
     let features =
       [
@@ -3269,6 +3320,23 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
       @ [text " not been considered in check of "; desc reason; text "."]
     in
     Normal { features }
+  | EEnumUnknownNotChecked { reason; enum_reason } ->
+    let features =
+      [
+        text "Missing ";
+        code "default";
+        text " case in the check of ";
+        desc reason;
+        text ". ";
+        ref enum_reason;
+        text " has unknown members (specified using ";
+        code "...";
+        text ") so checking it requires the use of a ";
+        code "default";
+        text " case to cover those members.";
+      ]
+    in
+    Normal { features }
   | EEnumInvalidCheck { reason; enum_name; example_member } ->
     let example_member = Base.Option.value ~default:"A" example_member in
     let features =
@@ -3460,14 +3528,14 @@ let error_code_of_message err : error_code option =
   | EEnumMemberUsedAsType _ -> Some EnumValueAsType
   | EEnumModification _ -> Some CannotWriteEnum
   | EEnumNotAllChecked _ -> Some InvalidExhaustiveCheck
+  | EEnumUnknownNotChecked _ -> Some InvalidExhaustiveCheck
+  | EEscapedGeneric _ -> Some EscapedGeneric
   | EExpectedBooleanLit { use_op; _ } -> error_code_of_use_op use_op ~default:IncompatibleType
   | EExpectedNumberLit { use_op; _ } -> error_code_of_use_op use_op ~default:IncompatibleType
   | EExpectedStringLit { use_op; _ } -> error_code_of_use_op use_op ~default:IncompatibleType
-  | EExperimentalClassProperties (_, _) -> Some IllegalClassField
-  | EExperimentalDecorators _ -> Some IllegalDecorator
   | EExperimentalEnums _ -> Some IllegalEnum
-  | EExperimentalExportStarAs _ -> Some IllegalExportStar
-  | EExperimentalOptionalChaining _ -> Some IllegalOptionalChain
+  | EExperimentalEnumsWithUnknownMembers _ -> Some IllegalEnum
+  | EExperimentalThisAnnot _ -> Some IllegalThisAnnot
   | EExponentialSpread _ -> Some ExponentialSpread
   | EExportsAnnot _ -> Some InvalidExportsTypeArg
   | EExportValueAsType (_, _) -> Some ExportValueAsType
@@ -3511,6 +3579,7 @@ let error_code_of_message err : error_code option =
   | ELintSetting _ -> Some LintSetting
   | EMalformedPackageJson (_, _) -> Some MalformedPackage
   | EMissingAnnotation _ -> Some MissingAnnot
+  | EMissingLocalAnnotation _ -> Some MissingLocalAnnot
   | EMissingTypeArgs _ -> Some MissingTypeArg
   | EMixedImportAndRequire _ -> Some MixedImportAndRequire
   | EModuleOutsideRoot (_, _) -> Some InvalidModule
@@ -3522,7 +3591,6 @@ let error_code_of_message err : error_code option =
   | EObjectComputedPropertyAccess (_, _) -> Some InvalidComputedProp
   | EObjectComputedPropertyAssign (_, _) -> Some InvalidComputedProp
   | EOnlyDefaultExport (_, _, _) -> Some MissingExport
-  | EOptionalChainingMethods _ -> Some IllegalOptionalChain
   (* We don't want these to be suppressible *)
   | EParseError (_, _) -> None
   | EPolarityMismatch _ -> Some IncompatibleVariance

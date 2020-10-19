@@ -38,14 +38,12 @@ type metadata = {
   max_literal_length: int;
   enable_const_params: bool;
   enable_enums: bool;
+  enable_enums_with_unknown_members: bool;
+  enable_this_annot: bool;
   enforce_strict_call_arity: bool;
-  esproposal_class_static_fields: Options.esproposal_feature_mode;
-  esproposal_class_instance_fields: Options.esproposal_feature_mode;
-  esproposal_decorators: Options.esproposal_feature_mode;
-  esproposal_export_star_as: Options.esproposal_feature_mode;
-  esproposal_optional_chaining: Options.esproposal_feature_mode;
-  esproposal_nullish_coalescing: Options.esproposal_feature_mode;
+  enforce_local_inference_annotations: bool;
   exact_by_default: bool;
+  generate_tests: bool;
   facebook_fbs: string option;
   facebook_fbt: string option;
   facebook_module_interop: bool;
@@ -211,14 +209,12 @@ let metadata_of_options options =
     max_literal_length = Options.max_literal_length options;
     enable_const_params = Options.enable_const_params options;
     enable_enums = Options.enums options;
+    enable_enums_with_unknown_members = Options.enums_with_unknown_members options;
+    enable_this_annot = Options.this_annot options;
     enforce_strict_call_arity = Options.enforce_strict_call_arity options;
-    esproposal_class_instance_fields = Options.esproposal_class_instance_fields options;
-    esproposal_class_static_fields = Options.esproposal_class_static_fields options;
-    esproposal_decorators = Options.esproposal_decorators options;
-    esproposal_export_star_as = Options.esproposal_export_star_as options;
-    esproposal_optional_chaining = Options.esproposal_optional_chaining options;
-    esproposal_nullish_coalescing = Options.esproposal_nullish_coalescing options;
+    enforce_local_inference_annotations = Options.enforce_local_inference_annotations options;
     exact_by_default = Options.exact_by_default options;
+    generate_tests = Options.generate_tests options;
     facebook_fbs = Options.facebook_fbs options;
     facebook_fbt = Options.facebook_fbt options;
     facebook_module_interop = Options.facebook_module_interop options;
@@ -393,29 +389,25 @@ let enable_const_params cx =
 
 let enable_enums cx = cx.metadata.enable_enums
 
+let enable_enums_with_unknown_members cx = cx.metadata.enable_enums_with_unknown_members
+
+let enable_this_annot cx = cx.metadata.enable_this_annot
+
 let enforce_strict_call_arity cx = cx.metadata.enforce_strict_call_arity
 
 let errors cx = cx.ccx.errors
 
 let error_suppressions cx = cx.ccx.error_suppressions
 
-let esproposal_class_static_fields cx = cx.metadata.esproposal_class_static_fields
-
-let esproposal_class_instance_fields cx = cx.metadata.esproposal_class_instance_fields
-
-let esproposal_decorators cx = cx.metadata.esproposal_decorators
-
-let esproposal_export_star_as cx = cx.metadata.esproposal_export_star_as
-
-let esproposal_optional_chaining cx = cx.metadata.esproposal_optional_chaining
-
-let esproposal_nullish_coalescing cx = cx.metadata.esproposal_nullish_coalescing
-
 let evaluated cx = cx.ccx.sig_cx.evaluated
 
 let goals cx = cx.ccx.goal_map
 
 let exact_by_default cx = cx.metadata.exact_by_default
+
+let enforce_local_inference_annotations cx = cx.metadata.enforce_local_inference_annotations
+
+let generate_tests cx = cx.metadata.generate_tests
 
 let file cx = cx.file
 
@@ -759,6 +751,8 @@ let set_export cx id name t = find_exports cx id |> SMap.add name t |> add_expor
 
 (* constructors *)
 let make_aloc_id cx aloc = ALoc.id_of_aloc cx.rev_aloc_table aloc
+
+let make_generic_id cx name loc = Generic.make_bound_id (make_aloc_id cx loc) name
 
 let generate_property_map cx pmap =
   let id = Reason.mk_id () in

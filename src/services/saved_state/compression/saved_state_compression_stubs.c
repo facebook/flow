@@ -34,9 +34,7 @@ CAMLprim value marshal_and_compress_stub(value data) {
     data, Val_int(0)/*flags*/, &marshaled_value, &serialized_size);
 
   if (serialized_size < 0) {
-    caml_raise_with_string(
-      *caml_named_value("c_assertion_failure"),
-      "Failed to marshal");
+    caml_failwith("Failed to marshal");
   }
 
   size_t uncompressed_size = (size_t) serialized_size;
@@ -49,9 +47,7 @@ CAMLprim value marshal_and_compress_stub(value data) {
     uncompressed_size,
     max_compression_size);
   if (compressed_size == 0) {
-    caml_raise_with_string(
-      *caml_named_value("c_assertion_failure"),
-      "LZ4 failed to compress");
+    caml_failwith("LZ4 failed to compress");
   }
   // It's unfortunate we need to copy. But we don't know how large the OCaml
   // string will be until after we compress.
@@ -86,9 +82,7 @@ CAMLprim value decompress_and_unmarshal_stub(value compressed) {
     uncompressed_size);
 
   if (actual_uncompressed_size != uncompressed_size) {
-    caml_raise_with_string(
-      *caml_named_value("c_assertion_failure"),
-      "Failed to decompress");
+    caml_failwith("Failed to decompress");
   }
 
   result = caml_input_value_from_block(marshaled_value, uncompressed_size);

@@ -25,3 +25,10 @@ function f(x: Object) {
   let y = Object.freeze({...x});
   y.foo = "bar"; // there is no frozen form of AnyT so this is "allowed"
 }
+
+var inexact: {...} = { p: 0 };
+(Object.freeze({...inexact}): {||}); // Error: inexact -> exact
+
+module.exports = {
+  inexact: Object.freeze({...inexact}),
+}

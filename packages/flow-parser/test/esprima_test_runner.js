@@ -197,6 +197,11 @@ function handleSpecialObjectCompare(esprima, flow, env) {
         esprima.typeAnnotation = null;
       }
       break;
+    case 'FunctionTypeAnnotation':
+      if (!esprima.hasOwnProperty('this')) {
+        esprima.this = null;
+      }
+      break;
     case 'ObjectTypeAnnotation':
       esprima.exact = esprima.exact || false;
       delete flow.inexact;

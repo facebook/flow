@@ -659,7 +659,7 @@ let program
       declaration = decl1;
       specifiers = specs1;
       source = src1;
-      exportKind = kind1;
+      export_kind = kind1;
       comments = comments1;
     } =
       export1
@@ -668,7 +668,7 @@ let program
       declaration = decl2;
       specifiers = specs2;
       source = src2;
-      exportKind = kind2;
+      export_kind = kind2;
       comments = comments2;
     } =
       export2
@@ -788,7 +788,7 @@ let program
       (import2 : (Loc.t, Loc.t) Ast.Statement.ImportDeclaration.t) : node change list option =
     let open Ast.Statement.ImportDeclaration in
     let {
-      importKind = imprt_knd1;
+      import_kind = imprt_knd1;
       source = src1;
       default = dflt1;
       specifiers = spec1;
@@ -797,7 +797,7 @@ let program
       import1
     in
     let {
-      importKind = imprt_knd2;
+      import_kind = imprt_knd2;
       source = src2;
       default = dflt2;
       specifiers = spec2;
@@ -856,8 +856,8 @@ let program
       let params =
         match (is_arrow, params1, params2, params) with
         | ( true,
-            (l, { Params.params = [_p1]; rest = None; comments = _ }),
-            (_, { Params.params = [_p2]; rest = None; comments = _ }),
+            (l, { Params.params = [_p1]; rest = None; this_ = None; comments = _ }),
+            (_, { Params.params = [_p2]; rest = None; this_ = None; comments = _ }),
             Some [_] ) ->
           (* reprint the parameter if it's the single parameter of a lambda to add () *)
           Some [replace l (Params params1) (Params params2)]
@@ -871,12 +871,21 @@ let program
       (params1 : (Loc.t, Loc.t) Ast.Function.Params.t)
       (params2 : (Loc.t, Loc.t) Ast.Function.Params.t) : node change list option =
     let open Ast.Function.Params in
-    let (loc, { params = param_lst1; rest = rest1; comments = comments1 }) = params1 in
-    let (_, { params = param_lst2; rest = rest2; comments = comments2 }) = params2 in
+    let (loc, { params = param_lst1; rest = rest1; this_ = this1; comments = comments1 }) =
+      params1
+    in
+    let (_, { params = param_lst2; rest = rest2; this_ = this2; comments = comments2 }) = params2 in
     let params_diff = diff_and_recurse_no_trivial function_param param_lst1 param_lst2 in
     let rest_diff = diff_if_changed_opt function_rest_param rest1 rest2 in
+    let this_diff = diff_if_changed_opt function_this_param this1 this2 in
     let comments_diff = syntax_opt loc comments1 comments2 in
-    join_diff_list [params_diff; rest_diff; comments_diff]
+    join_diff_list [params_diff; rest_diff; this_diff; comments_diff]
+  and function_this_param
+      (this1 : Loc.t * (Loc.t, Loc.t) Flow_ast.Type.annotation)
+      (this2 : Loc.t * (Loc.t, Loc.t) Flow_ast.Type.annotation) =
+    let (_, annot1) = this1 in
+    let (_, annot2) = this2 in
+    diff_if_changed type_annotation annot1 annot2 |> Base.Option.return
   and function_param
       (param1 : (Loc.t, Loc.t) Ast.Function.Param.t) (param2 : (Loc.t, Loc.t) Ast.Function.Param.t)
       : node change list option =
@@ -1002,7 +1011,7 @@ let program
       tparams = tparams1;
       extends = extends1;
       implements = implements1;
-      classDecorators = classDecorators1;
+      class_decorators = class_decorators1;
       comments = comments1;
     } =
       class1
@@ -1013,7 +1022,7 @@ let program
       tparams = tparams2;
       extends = extends2;
       implements = implements2;
-      classDecorators = classDecorators2;
+      class_decorators = class_decorators2;
       comments = comments2;
     } =
       class2
@@ -1026,7 +1035,7 @@ let program
       let implements_diff = diff_if_changed_opt class_implements implements1 implements2 in
       let body_diff = diff_if_changed_ret_opt class_body body1 body2 in
       let decorators_diff =
-        diff_and_recurse_no_trivial class_decorator classDecorators1 classDecorators2
+        diff_and_recurse_no_trivial class_decorator class_decorators1 class_decorators2
       in
       let comments_diff = syntax_opt loc comments1 comments2 in
       join_diff_list
@@ -1365,16 +1374,16 @@ let program
       (jsx_elem2 : (Loc.t, Loc.t) Ast.JSX.element) : node change list option =
     let open Ast.JSX in
     let {
-      openingElement = open_elem1;
-      closingElement = close_elem1;
+      opening_element = open_elem1;
+      closing_element = close_elem1;
       children = (_, children1);
       comments = comments1;
     } =
       jsx_elem1
     in
     let {
-      openingElement = open_elem2;
-      closingElement = close_elem2;
+      opening_element = open_elem2;
+      closing_element = close_elem2;
       children = (_, children2);
       comments = comments2;
     } =
@@ -1393,17 +1402,17 @@ let program
     (* Opening and closing elements contain no information besides loc, so we
      * ignore them for the diff *)
     let {
-      frag_openingElement = _;
+      frag_opening_element = _;
       frag_children = (_, children1);
-      frag_closingElement = _;
+      frag_closing_element = _;
       frag_comments = frag_comments1;
     } =
       frag1
     in
     let {
-      frag_openingElement = _;
+      frag_opening_element = _;
       frag_children = (_, children2);
-      frag_closingElement = _;
+      frag_closing_element = _;
       frag_comments = frag_comments2;
     } =
       frag2
@@ -1415,8 +1424,8 @@ let program
       (elem1 : (Loc.t, Loc.t) Ast.JSX.Opening.t) (elem2 : (Loc.t, Loc.t) Ast.JSX.Opening.t) :
       node change list option =
     let open Ast.JSX.Opening in
-    let (_, { name = name1; selfClosing = self_close1; attributes = attrs1 }) = elem1 in
-    let (_, { name = name2; selfClosing = self_close2; attributes = attrs2 }) = elem2 in
+    let (_, { name = name1; self_closing = self_close1; attributes = attrs1 }) = elem1 in
+    let (_, { name = name2; self_closing = self_close2; attributes = attrs2 }) = elem2 in
     if self_close1 != self_close2 then
       None
     else
@@ -2426,13 +2435,24 @@ let program
     let arg_diff = diff_if_changed_ret_opt function_param_type arg1 arg2 in
     let comments_diff = syntax_opt loc comments1 comments2 in
     join_diff_list [arg_diff; comments_diff]
+  and function_this_constraint_type
+      (ftct1 : (Loc.t, Loc.t) Ast.Type.Function.ThisParam.t)
+      (ftct2 : (Loc.t, Loc.t) Ast.Type.Function.ThisParam.t) : node change list option =
+    let open Ast.Type.Function.ThisParam in
+    let (loc, { annot = annot1; comments = comments1 }) = ftct1 in
+    let (_, { annot = annot2; comments = comments2 }) = ftct2 in
+    let annot_diff = Some (diff_if_changed type_ annot1 annot2) in
+    let comments_diff = syntax_opt loc comments1 comments2 in
+    join_diff_list [annot_diff; comments_diff]
   and function_type
       (loc : Loc.t)
       (ft1 : (Loc.t, Loc.t) Ast.Type.Function.t)
       (ft2 : (Loc.t, Loc.t) Ast.Type.Function.t) : node change list option =
     let open Ast.Type.Function in
     let {
-      params = (params_loc, { Params.params = params1; rest = rest1; comments = params_comments1 });
+      params =
+        ( params_loc,
+          { Params.this_ = this1; params = params1; rest = rest1; comments = params_comments1 } );
       return = return1;
       tparams = tparams1;
       comments = func_comments1;
@@ -2440,7 +2460,8 @@ let program
       ft1
     in
     let {
-      params = (_, { Params.params = params2; rest = rest2; comments = params_comments2 });
+      params =
+        (_, { Params.this_ = this2; params = params2; rest = rest2; comments = params_comments2 });
       return = return2;
       tparams = tparams2;
       comments = func_comments2;
@@ -2448,13 +2469,22 @@ let program
       ft2
     in
     let tparams_diff = diff_if_changed_opt type_params tparams1 tparams2 in
+    let this_diff = diff_if_changed_opt function_this_constraint_type this1 this2 in
     let params_diff = diff_and_recurse_no_trivial function_param_type params1 params2 in
     let rest_diff = diff_if_changed_opt function_rest_param_type rest1 rest2 in
     let return_diff = diff_if_changed type_ return1 return2 |> Base.Option.return in
     let func_comments_diff = syntax_opt loc func_comments1 func_comments2 in
     let params_comments_diff = syntax_opt params_loc params_comments1 params_comments2 in
     join_diff_list
-      [tparams_diff; params_diff; rest_diff; return_diff; func_comments_diff; params_comments_diff]
+      [
+        tparams_diff;
+        this_diff;
+        params_diff;
+        rest_diff;
+        return_diff;
+        func_comments_diff;
+        params_comments_diff;
+      ]
   and nullable_type
       (loc : Loc.t)
       (t1 : (Loc.t, Loc.t) Ast.Type.Nullable.t)

@@ -3,16 +3,16 @@ Error --------------------------------------------------------------------------
 Cannot assign `d.getTime()` to `x` because number [1] is incompatible with string [2]. [incompatible-type]
 
    date.js:2:16
-     2| var x:string = d.getTime(); // expect error
-                       ^^^^^^^^^^^
+      2| var x:string = d.getTime(); // expect error
+                        ^^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:418:16
-   418|     getTime(): number;
-                       ^^^^^^ [1]
+   <BUILTINS>/core.js:1353:16
+   1353|     getTime(): number;
+                        ^^^^^^ [1]
    date.js:2:7
-     2| var x:string = d.getTime(); // expect error
-              ^^^^^^ [2]
+      2| var x:string = d.getTime(); // expect error
+               ^^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------------- date.js:4:16
@@ -37,16 +37,16 @@ Error --------------------------------------------------------------------------
 Cannot call `Date` because object literal [1] is incompatible with `Date` [2]. [incompatible-call]
 
    date.js:18:5
-    18| new Date({});
-            ^^^^
+     18| new Date({});
+             ^^^^
 
 References:
    date.js:18:10
-    18| new Date({});
-                 ^^ [1]
-   <BUILTINS>/core.js:407:23
-   407|     constructor(date: Date): void;
-                              ^^^^ [2]
+     18| new Date({});
+                  ^^ [1]
+   <BUILTINS>/core.js:1333:23
+   1333|     constructor(date: Date): void;
+                               ^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------------- date.js:19:5
@@ -54,16 +54,16 @@ Error --------------------------------------------------------------------------
 Cannot call `Date` because string [1] is incompatible with number [2]. [incompatible-call]
 
    date.js:19:5
-    19| new Date(2015, '6');
-            ^^^^
+     19| new Date(2015, '6');
+             ^^^^
 
 References:
    date.js:19:16
-    19| new Date(2015, '6');
-                       ^^^ [1]
-   <BUILTINS>/core.js:409:38
-   409|     constructor(year: number, month: number, day?: number, hour?: number, minute?: number, second?: number, millisecond?: number): void;
-                                             ^^^^^^ [2]
+     19| new Date(2015, '6');
+                        ^^^ [1]
+   <BUILTINS>/core.js:1335:38
+   1335|     constructor(year: number, month: number, day?: number, hour?: number, minute?: number, second?: number, millisecond?: number): void;
+                                              ^^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------------- date.js:20:5
@@ -71,16 +71,16 @@ Error --------------------------------------------------------------------------
 Cannot call `Date` because string [1] is incompatible with number [2]. [incompatible-call]
 
    date.js:20:5
-    20| new Date(2015, 6, '18');
-            ^^^^
+     20| new Date(2015, 6, '18');
+             ^^^^
 
 References:
    date.js:20:19
-    20| new Date(2015, 6, '18');
-                          ^^^^ [1]
-   <BUILTINS>/core.js:409:52
-   409|     constructor(year: number, month: number, day?: number, hour?: number, minute?: number, second?: number, millisecond?: number): void;
-                                                           ^^^^^^ [2]
+     20| new Date(2015, 6, '18');
+                           ^^^^ [1]
+   <BUILTINS>/core.js:1335:52
+   1335|     constructor(year: number, month: number, day?: number, hour?: number, minute?: number, second?: number, millisecond?: number): void;
+                                                            ^^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------------- date.js:21:5
@@ -88,16 +88,16 @@ Error --------------------------------------------------------------------------
 Cannot call `Date` because string [1] is incompatible with number [2]. [incompatible-call]
 
    date.js:21:5
-    21| new Date(2015, 6, 18, '11');
-            ^^^^
+     21| new Date(2015, 6, 18, '11');
+             ^^^^
 
 References:
    date.js:21:23
-    21| new Date(2015, 6, 18, '11');
-                              ^^^^ [1]
-   <BUILTINS>/core.js:409:67
-   409|     constructor(year: number, month: number, day?: number, hour?: number, minute?: number, second?: number, millisecond?: number): void;
-                                                                          ^^^^^^ [2]
+     21| new Date(2015, 6, 18, '11');
+                               ^^^^ [1]
+   <BUILTINS>/core.js:1335:67
+   1335|     constructor(year: number, month: number, day?: number, hour?: number, minute?: number, second?: number, millisecond?: number): void;
+                                                                           ^^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------------- date.js:22:5
@@ -105,16 +105,16 @@ Error --------------------------------------------------------------------------
 Cannot call `Date` because string [1] is incompatible with number [2]. [incompatible-call]
 
    date.js:22:5
-    22| new Date(2015, 6, 18, 11, '55');
-            ^^^^
+     22| new Date(2015, 6, 18, 11, '55');
+             ^^^^
 
 References:
    date.js:22:27
-    22| new Date(2015, 6, 18, 11, '55');
-                                  ^^^^ [1]
-   <BUILTINS>/core.js:409:84
-   409|     constructor(year: number, month: number, day?: number, hour?: number, minute?: number, second?: number, millisecond?: number): void;
-                                                                                           ^^^^^^ [2]
+     22| new Date(2015, 6, 18, 11, '55');
+                                   ^^^^ [1]
+   <BUILTINS>/core.js:1335:84
+   1335|     constructor(year: number, month: number, day?: number, hour?: number, minute?: number, second?: number, millisecond?: number): void;
+                                                                                            ^^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------------- date.js:23:5
@@ -122,16 +122,16 @@ Error --------------------------------------------------------------------------
 Cannot call `Date` because string [1] is incompatible with number [2]. [incompatible-call]
 
    date.js:23:5
-    23| new Date(2015, 6, 18, 11, 55, '42');
-            ^^^^
+     23| new Date(2015, 6, 18, 11, 55, '42');
+             ^^^^
 
 References:
    date.js:23:31
-    23| new Date(2015, 6, 18, 11, 55, '42');
-                                      ^^^^ [1]
-   <BUILTINS>/core.js:409:101
-   409|     constructor(year: number, month: number, day?: number, hour?: number, minute?: number, second?: number, millisecond?: number): void;
-                                                                                                            ^^^^^^ [2]
+     23| new Date(2015, 6, 18, 11, 55, '42');
+                                       ^^^^ [1]
+   <BUILTINS>/core.js:1335:101
+   1335|     constructor(year: number, month: number, day?: number, hour?: number, minute?: number, second?: number, millisecond?: number): void;
+                                                                                                             ^^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------------- date.js:24:5
@@ -139,16 +139,16 @@ Error --------------------------------------------------------------------------
 Cannot call `Date` because string [1] is incompatible with number [2]. [incompatible-call]
 
    date.js:24:5
-    24| new Date(2015, 6, 18, 11, 55, 42, '999');
-            ^^^^
+     24| new Date(2015, 6, 18, 11, 55, 42, '999');
+             ^^^^
 
 References:
    date.js:24:35
-    24| new Date(2015, 6, 18, 11, 55, 42, '999');
-                                          ^^^^^ [1]
-   <BUILTINS>/core.js:409:123
-   409|     constructor(year: number, month: number, day?: number, hour?: number, minute?: number, second?: number, millisecond?: number): void;
-                                                                                                                                  ^^^^^^ [2]
+     24| new Date(2015, 6, 18, 11, 55, 42, '999');
+                                           ^^^^^ [1]
+   <BUILTINS>/core.js:1335:123
+   1335|     constructor(year: number, month: number, day?: number, hour?: number, minute?: number, second?: number, millisecond?: number): void;
+                                                                                                                                   ^^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------------- date.js:25:5
@@ -161,25 +161,25 @@ Cannot call `Date` because: [incompatible-call]
  - Or no more than 7 arguments are expected by function type [5].
 
    date.js:25:5
-    25| new Date(2015, 6, 18, 11, 55, 42, 999, 'hahaha');
-            ^^^^
+     25| new Date(2015, 6, 18, 11, 55, 42, 999, 'hahaha');
+             ^^^^
 
 References:
-   <BUILTINS>/core.js:405:5
-   405|     constructor(): void;
-            ^^^^^^^^^^^^^^^^^^^ [1]
-   <BUILTINS>/core.js:406:5
-   406|     constructor(timestamp: number): void;
-            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
-   <BUILTINS>/core.js:407:5
-   407|     constructor(date: Date): void;
-            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
-   <BUILTINS>/core.js:408:5
-   408|     constructor(dateString: string): void;
-            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
-   <BUILTINS>/core.js:409:5
-   409|     constructor(year: number, month: number, day?: number, hour?: number, minute?: number, second?: number, millisecond?: number): void;
-            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [5]
+   <BUILTINS>/core.js:1331:5
+   1331|     constructor(): void;
+             ^^^^^^^^^^^^^^^^^^^ [1]
+   <BUILTINS>/core.js:1332:5
+   1332|     constructor(timestamp: number): void;
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+   <BUILTINS>/core.js:1333:5
+   1333|     constructor(date: Date): void;
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
+   <BUILTINS>/core.js:1334:5
+   1334|     constructor(dateString: string): void;
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
+   <BUILTINS>/core.js:1335:5
+   1335|     constructor(year: number, month: number, day?: number, hour?: number, minute?: number, second?: number, millisecond?: number): void;
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [5]
 
 
 Error ----------------------------------------------------------------------------------------------------- date.js:26:5
@@ -187,16 +187,16 @@ Error --------------------------------------------------------------------------
 Cannot call `Date` because string [1] is incompatible with number [2]. [incompatible-call]
 
    date.js:26:5
-    26| new Date('2015', 6);
-            ^^^^
+     26| new Date('2015', 6);
+             ^^^^
 
 References:
    date.js:26:10
-    26| new Date('2015', 6);
-                 ^^^^^^ [1]
-   <BUILTINS>/core.js:409:23
-   409|     constructor(year: number, month: number, day?: number, hour?: number, minute?: number, second?: number, millisecond?: number): void;
-                              ^^^^^^ [2]
+     26| new Date('2015', 6);
+                  ^^^^^^ [1]
+   <BUILTINS>/core.js:1335:23
+   1335|     constructor(year: number, month: number, day?: number, hour?: number, minute?: number, second?: number, millisecond?: number): void;
+                               ^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- date.js:31:17

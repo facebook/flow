@@ -5,8 +5,6 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
-type key = OpaqueDigest.t
-
 module IntVal = struct
   type t = int
 

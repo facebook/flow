@@ -141,16 +141,16 @@ Error --------------------------------------------------------------------------
 Cannot assign `arr[0]()` to `y` because number [1] is incompatible with string [2]. [incompatible-type]
 
    test7.js:5:17
-     5| var y: string = arr[0](); // error: number ~> string
-                        ^^^^^^^^
+      5| var y: string = arr[0](); // error: number ~> string
+                         ^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:312:13
-   312|     length: number;
-                    ^^^^^^ [1]
+   <BUILTINS>/core.js:1005:13
+   1005|     length: number;
+                     ^^^^^^ [1]
    test7.js:5:8
-     5| var y: string = arr[0](); // error: number ~> string
-               ^^^^^^ [2]
+      5| var y: string = arr[0](); // error: number ~> string
+                ^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- union.js:5:13
@@ -161,9 +161,12 @@ information on literal types. [invalid-computed-prop]
 
    union.js:5:13
    5| const a = {[k]: 3}; // Error, k has multiple lower bounds
-                  ^ [1]
+                  ^
 
 References:
+   union.js:4:13
+   4| declare var k: key;
+                  ^ [1]
    union.js:4:16
    4| declare var k: key;
                      ^^^ [2]

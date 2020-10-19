@@ -3,18 +3,18 @@ Error --------------------------------------------------------------------------
 string [1] is incompatible with `$ArrayLike` [2]. [incompatible-type]
 
    apply-array-like.js:5:16
-     5| test.apply("", "foo"); // error: string ~> object
-                       ^^^^^ [1]
+      5| test.apply("", "foo"); // error: string ~> object
+                        ^^^^^ [1]
 
 References:
-   <BUILTINS>/core.js:324:22
-                             v
-   324| type $ArrayLike<T> = {
-   325|   [indexer: number]: T,
-   326|   length: number,
-   327|   ...
-   328| }
-        ^ [2]
+   <BUILTINS>/core.js:1051:22
+                              v
+   1051| type $ArrayLike<T> = {
+   1052|   [indexer: number]: T,
+   1053|   length: number,
+   1054|   ...
+   1055| }
+         ^ [2]
 
 
 Error ---------------------------------------------------------------------------------------- apply-array-like.js:20:16
@@ -22,21 +22,21 @@ Error --------------------------------------------------------------------------
 Property `length` is missing in `Generator` [1] but exists in `$ArrayLike` [2]. [prop-missing]
 
    apply-array-like.js:20:16
-    20| test.apply([], gen()); // error: iterable ~> array-like
-                       ^^^^^
+     20| test.apply([], gen()); // error: iterable ~> array-like
+                        ^^^^^
 
 References:
    apply-array-like.js:15:17
-    15| function * gen() {
-                        ^ [1]
-   <BUILTINS>/core.js:324:22
-                             v
-   324| type $ArrayLike<T> = {
-   325|   [indexer: number]: T,
-   326|   length: number,
-   327|   ...
-   328| }
-        ^ [2]
+     15| function * gen() {
+                         ^ [1]
+   <BUILTINS>/core.js:1051:22
+                              v
+   1051| type $ArrayLike<T> = {
+   1052|   [indexer: number]: T,
+   1053|   length: number,
+   1054|   ...
+   1055| }
+         ^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- apply.js:2:15
@@ -90,8 +90,8 @@ Cannot call `test.apply` because no more than 2 arguments are expected by functi
         ^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:142:18
-   142|     proto apply: Function$Prototype$Apply; // (thisArg: any, argArray?: any) => any
+   <BUILTINS>/core.js:340:18
+   340|     proto apply: Function$Prototype$Apply; // (thisArg: any, argArray?: any) => any
                          ^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
@@ -174,18 +174,18 @@ Error --------------------------------------------------------------------------
 string [1] is incompatible with `$ArrayLike` [2]. [incompatible-type]
 
    apply.js:28:16
-    28| test.apply("", "not array"); // error: string ~> object
-                       ^^^^^^^^^^^ [1]
+     28| test.apply("", "not array"); // error: string ~> object
+                        ^^^^^^^^^^^ [1]
 
 References:
-   <BUILTINS>/core.js:324:22
-                             v
-   324| type $ArrayLike<T> = {
-   325|   [indexer: number]: T,
-   326|   length: number,
-   327|   ...
-   328| }
-        ^ [2]
+   <BUILTINS>/core.js:1051:22
+                              v
+   1051| type $ArrayLike<T> = {
+   1052|   [indexer: number]: T,
+   1053|   length: number,
+   1054|   ...
+   1055| }
+         ^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- apply.js:35:2
@@ -576,8 +576,8 @@ Cannot cast `x.length` to undefined because number [1] is incompatible with unde
              ^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:148:13
-   148|     length: number;
+   <BUILTINS>/core.js:347:13
+   347|     length: number;
                     ^^^^^^ [1]
    function.js:37:16
     37|     (x.length: void); // error, it's a number
@@ -593,8 +593,8 @@ Cannot cast `y.length` to undefined because number [1] is incompatible with unde
              ^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:148:13
-   148|     length: number;
+   <BUILTINS>/core.js:347:13
+   347|     length: number;
                     ^^^^^^ [1]
    function.js:38:16
     38|     (y.length: void); // error, it's a number
@@ -610,8 +610,8 @@ Cannot cast `x.name` to undefined because string [1] is incompatible with undefi
              ^^^^^^
 
 References:
-   <BUILTINS>/core.js:149:11
-   149|     name: string;
+   <BUILTINS>/core.js:351:11
+   351|     name: string;
                   ^^^^^^ [1]
    function.js:41:14
     41|     (x.name: void); // error, it's a string
@@ -627,8 +627,8 @@ Cannot cast `y.name` to undefined because string [1] is incompatible with undefi
              ^^^^^^
 
 References:
-   <BUILTINS>/core.js:149:11
-   149|     name: string;
+   <BUILTINS>/core.js:351:11
+   351|     name: string;
                   ^^^^^^ [1]
    function.js:42:14
     42|     (y.name: void); // error, it's a string
@@ -644,8 +644,8 @@ Cannot assign `'foo'` to `x.length` because string [1] is incompatible with numb
                        ^^^^^ [1]
 
 References:
-   <BUILTINS>/core.js:148:13
-   148|     length: number;
+   <BUILTINS>/core.js:347:13
+   347|     length: number;
                     ^^^^^^ [2]
 
 
@@ -658,8 +658,8 @@ Cannot assign `'foo'` to `y.length` because string [1] is incompatible with numb
                        ^^^^^ [1]
 
 References:
-   <BUILTINS>/core.js:148:13
-   148|     length: number;
+   <BUILTINS>/core.js:347:13
+   347|     length: number;
                     ^^^^^^ [2]
 
 
@@ -672,8 +672,8 @@ Cannot assign `123` to `x.name` because number [1] is incompatible with string [
                      ^^^ [1]
 
 References:
-   <BUILTINS>/core.js:149:11
-   149|     name: string;
+   <BUILTINS>/core.js:351:11
+   351|     name: string;
                   ^^^^^^ [2]
 
 
@@ -686,8 +686,8 @@ Cannot assign `123` to `y.name` because number [1] is incompatible with string [
                      ^^^ [1]
 
 References:
-   <BUILTINS>/core.js:149:11
-   149|     name: string;
+   <BUILTINS>/core.js:351:11
+   351|     name: string;
                   ^^^^^^ [2]
 
 
@@ -703,6 +703,24 @@ References:
    issue-7529.js:3:29
    3| const bar = function foo(x: string) {
                                   ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- rest.js:31:10
+
+Cannot return function because function [1] contains type variable `T` [2] which cannot escape from the scope in which
+it was defined [2] (try adding a type annotation to return [3]). [escaped-generic]
+
+   rest.js:31:10
+   31|   return function<U: T>(...xs: T): void {}
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+References:
+   rest.js:30:27
+   30| function bounds_on_bounds<T>() {
+                                 ^ [2]
+   rest.js:30:31
+   30| function bounds_on_bounds<T>() {
+                                      [3]
 
 
 Error ---------------------------------------------------------------------------------------------------- rest.js:36:13
@@ -852,4 +870,4 @@ References:
 
 
 
-Found 56 errors
+Found 57 errors

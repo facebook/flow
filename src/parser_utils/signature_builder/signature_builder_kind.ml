@@ -131,12 +131,12 @@ type t =
       extends: (Loc.t * (Loc.t, Loc.t) Ast.Type.Generic.t) list;
     }
   | ImportNamedDef of {
-      kind: Ast.Statement.ImportDeclaration.importKind;
+      kind: Ast.Statement.ImportDeclaration.import_kind;
       source: Loc.t Ast_utils.source;
       name: Loc.t Ast_utils.ident;
     }
   | ImportStarDef of {
-      kind: Ast.Statement.ImportDeclaration.importKind;
+      kind: Ast.Statement.ImportDeclaration.import_kind;
       source: Loc.t Ast_utils.source;
     }
   | RequireDef of {
