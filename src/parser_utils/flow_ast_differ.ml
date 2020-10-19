@@ -881,11 +881,14 @@ let program
     let comments_diff = syntax_opt loc comments1 comments2 in
     join_diff_list [params_diff; rest_diff; this_diff; comments_diff]
   and function_this_param
-      (this1 : Loc.t * (Loc.t, Loc.t) Flow_ast.Type.annotation)
-      (this2 : Loc.t * (Loc.t, Loc.t) Flow_ast.Type.annotation) =
-    let (_, annot1) = this1 in
-    let (_, annot2) = this2 in
-    diff_if_changed type_annotation annot1 annot2 |> Base.Option.return
+      (ftp1 : (Loc.t, Loc.t) Ast.Function.ThisParam.t)
+      (ftp2 : (Loc.t, Loc.t) Ast.Function.ThisParam.t) : node change list option =
+    let open Ast.Function.ThisParam in
+    let (loc, { annot = annot1; comments = comments1 }) = ftp1 in
+    let (_, { annot = annot2; comments = comments2 }) = ftp2 in
+    let annot_diff = Some (diff_if_changed type_annotation annot1 annot2) in
+    let comments_diff = syntax_opt loc comments1 comments2 in
+    join_diff_list [annot_diff; comments_diff]
   and function_param
       (param1 : (Loc.t, Loc.t) Ast.Function.Param.t) (param2 : (Loc.t, Loc.t) Ast.Function.Param.t)
       : node change list option =
@@ -2441,7 +2444,7 @@ let program
     let open Ast.Type.Function.ThisParam in
     let (loc, { annot = annot1; comments = comments1 }) = ftct1 in
     let (_, { annot = annot2; comments = comments2 }) = ftct2 in
-    let annot_diff = Some (diff_if_changed type_ annot1 annot2) in
+    let annot_diff = Some (diff_if_changed type_annotation annot1 annot2) in
     let comments_diff = syntax_opt loc comments1 comments2 in
     join_diff_list [annot_diff; comments_diff]
   and function_type

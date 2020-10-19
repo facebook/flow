@@ -1155,11 +1155,12 @@ with type t = Impl.t = struct
       | Some default ->
         node "AssignmentPattern" loc [("left", pattern argument); ("right", expression default)]
       | None -> pattern argument
-    and this_param (loc, annotation) =
+    and this_param (loc, { Function.ThisParam.annot; comments }) =
       node
+        ?comments
         "Identifier"
         loc
-        [("name", string "this"); ("typeAnnotation", type_annotation annotation)]
+        [("name", string "this"); ("typeAnnotation", type_annotation annot)]
     and function_params =
       let open Ast.Function.Params in
       function
@@ -1440,7 +1441,8 @@ with type t = Impl.t = struct
         "argument", function_type_param argument;
       ] *)
       function_type_param ?comments argument
-    and function_type_this_constraint (loc, { Type.Function.ThisParam.annot; comments }) =
+    and function_type_this_constraint (loc, { Type.Function.ThisParam.annot = (_, annot); comments })
+        =
       node
         ?comments
         "FunctionTypeParam"

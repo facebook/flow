@@ -1260,7 +1260,7 @@ and function_type_this_param opts scope locs xs =
  let module F = T.Function in
   function
   | None -> None
-  | Some (_, {F.ThisParam.annot = t; comments = _}) ->
+  | Some (_, {F.ThisParam.annot = (_, t); comments = _}) ->
     let t = annot opts scope locs xs t in
     Some t
 
@@ -2595,7 +2595,7 @@ and function_def =
   in
   let this_param opts scope locs xs = function
     | None -> None
-    | Some (_, (_, t)) ->
+    | Some (_, {F.ThisParam.annot=(_, t); comments = _}) ->
         let t = annot opts scope locs xs t in
         Some t in
   let rest_param opts scope locs xs = function

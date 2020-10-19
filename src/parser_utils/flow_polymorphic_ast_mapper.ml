@@ -743,7 +743,7 @@ class virtual ['M, 'T, 'N, 'U] mapper =
       let open Ast.Type.Function.ThisParam in
       let (loc, { annot; comments }) = frpt in
       let loc' = this#on_loc_annot loc in
-      let annot' = this#type_ annot in
+      let annot' = this#type_annotation annot in
       let comments' = Base.Option.map ~f:this#syntax comments in
       (loc', { annot = annot'; comments = comments' })
 
@@ -1125,10 +1125,14 @@ class virtual ['M, 'T, 'N, 'U] mapper =
       let comments' = Base.Option.map ~f:this#syntax comments in
       (annot', { argument = argument'; comments = comments' })
 
-    method function_this_param (this_param : 'M * ('M, 'T) Flow_ast.Type.annotation)
-        : 'N * ('N, 'U) Flow_ast.Type.annotation =
-      let (this_annot, annotation) = this_param in
-      (this#on_loc_annot this_annot, this#type_annotation annotation)
+    method function_this_param (this_param : ('M, 'T) Ast.Function.ThisParam.t)
+        : ('N, 'U) Ast.Function.ThisParam.t =
+      let open Ast.Function.ThisParam in
+      let (loc, { annot; comments }) = this_param in
+      let loc' = this#on_loc_annot loc in
+      let annot' = this#type_annotation annot in
+      let comments' = Base.Option.map ~f:this#syntax comments in
+      (loc', { annot = annot'; comments = comments' })
 
     method function_body body =
       let open Ast.Function in

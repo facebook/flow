@@ -435,9 +435,8 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
               let leading = Peek.comments env in
               Eat.token env;
               if Peek.token env == T_PLING then error env Parse_error.ThisParamMayNotBeOptional;
-              Expect.token env T_COLON;
               {
-                Type.Function.ThisParam.annot = _type env;
+                Type.Function.ThisParam.annot = annotation env;
                 comments = Flow_ast_utils.mk_comments_opt ~leading ();
               })
             env

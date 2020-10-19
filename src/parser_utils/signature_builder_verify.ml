@@ -193,7 +193,8 @@ module Eval (Env : EvalEnv) = struct
       let deps =
         match this_ with
         | None -> deps
-        | Some (_, { ThisParam.annot; comments = _ }) -> Deps.join (deps, type_ tps annot)
+        | Some (_, { ThisParam.annot = (_, annot); comments = _ }) ->
+          Deps.join (deps, type_ tps annot)
       in
       Deps.join (deps, type_ tps return)
 
@@ -610,7 +611,8 @@ module Eval (Env : EvalEnv) = struct
   and function_rest_param tps (_, { Ast.Function.RestParam.argument; comments = _ }) =
     pattern tps argument
 
-  and function_this_param tps (_, (_, t)) = type_ tps t
+  and function_this_param tps (_, { Ast.Function.ThisParam.annot = (_, annot); comments = _ }) =
+    type_ tps annot
 
   and function_params tps params =
     let open Ast.Function in

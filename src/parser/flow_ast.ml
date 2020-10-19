@@ -163,7 +163,7 @@ and Type : sig
       type ('M, 'T) t = 'M * ('M, 'T) t'
 
       and ('M, 'T) t' = {
-        annot: ('M, 'T) Type.t;
+        annot: ('M, 'T) Type.annotation;
         comments: ('M, unit) Syntax.t option;
       }
       [@@deriving show]
@@ -1807,11 +1807,21 @@ and Function : sig
     [@@deriving show]
   end
 
+  module ThisParam : sig
+    type ('M, 'T) t = 'M * ('M, 'T) t'
+
+    and ('M, 'T) t' = {
+      annot: ('M, 'T) Type.annotation;
+      comments: ('M, unit) Syntax.t option;
+    }
+    [@@deriving show]
+  end
+
   module Params : sig
     type ('M, 'T) t = 'M * ('M, 'T) t'
 
     and ('M, 'T) t' = {
-      this_: ('M * ('M, 'T) Type.annotation) option;
+      this_: ('M, 'T) ThisParam.t option;
       params: ('M, 'T) Param.t list;
       rest: ('M, 'T) RestParam.t option;
       comments: ('M, 'M Comment.t list) Syntax.t option;

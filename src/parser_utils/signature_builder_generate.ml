@@ -114,7 +114,10 @@ module T = struct
       }
 
   and function_params =
-    Loc.t * pattern list * (Loc.t * pattern) option * (Loc.t * (Loc.t * type_)) option
+    Loc.t
+    * pattern list
+    * (Loc.t * pattern) option
+    * (Loc.t * (Loc.t, Loc.t) Ast.Type.annotation) option
 
   and pattern = Loc.t * (Loc.t, Loc.t) Ast.Identifier.t option * bool (* optional *) * type_
 
@@ -635,7 +638,7 @@ module T = struct
                 this_ =
                   (match this_ with
                   | None -> None
-                  | Some (loc, (_, t)) ->
+                  | Some (loc, t) ->
                     Some (loc, { Ast.Type.Function.ThisParam.annot = t; comments = None }));
                 comments = None;
               } );
@@ -1471,7 +1474,8 @@ module Eval (Env : Signature_builder_verify.EvalEnv) = struct
   and function_rest_param (loc, { Ast.Function.RestParam.argument; comments = _ }) =
     (loc, pattern argument)
 
-  and function_this_param (loc, (annot_loc, t)) = (loc, (annot_loc, type_ t))
+  and function_this_param (loc, { Ast.Function.ThisParam.annot = (l, t); comments = _ }) =
+    (loc, (l, type_ t))
 
   and function_params params =
     let open Ast.Function in

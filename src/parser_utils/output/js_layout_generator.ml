@@ -1841,12 +1841,14 @@ and function_params
   let params =
     match this_ with
     | None -> params
-    | Some (loc, annot) ->
+    | Some ((loc, { Ast.Function.ThisParam.annot; comments }) as param) ->
       let this_layout =
-        source_location_with_comments (loc, fuse [Atom "this"; type_annotation ~opts annot])
+        source_location_with_comments
+          ?comments
+          (loc, fuse [Atom "this"; type_annotation ~opts annot])
       in
       let this_param =
-        (loc, Comment_attachment.function_this_param_comment_bounds (loc, annot), this_layout)
+        (loc, Comment_attachment.function_this_param_comment_bounds param, this_layout)
       in
       this_param :: params
   in
@@ -3210,8 +3212,7 @@ and type_function_params ~opts (loc, { Ast.Type.Function.Params.this_; params; r
     match this_ with
     | Some ((loc, { Ast.Type.Function.ThisParam.annot; comments = _ }) as this_) ->
       let this_layout =
-        source_location_with_comments
-          (loc, fuse [Atom "this"; Atom ":"; pretty_space; type_ ~opts annot])
+        source_location_with_comments (loc, fuse [Atom "this"; type_annotation ~opts annot])
       in
       let this_constraint =
         (loc, Comment_attachment.function_type_this_param_comment_bounds this_, this_layout)

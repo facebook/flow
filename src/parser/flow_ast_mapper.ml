@@ -997,7 +997,7 @@ class ['loc] mapper =
     method function_this_param_type (this_param : ('loc, 'loc) Ast.Type.Function.ThisParam.t) =
       let open Ast.Type.Function.ThisParam in
       let (loc, { annot; comments }) = this_param in
-      let annot' = this#type_ annot in
+      let annot' = this#type_annotation annot in
       let comments' = this#syntax_opt comments in
       if annot' == annot && comments' == comments then
         this_param
@@ -1435,13 +1435,15 @@ class ['loc] mapper =
       else
         (loc, { Params.params = params_list'; rest = rest'; comments = comments'; this_ = this_' })
 
-    method function_this_param (this_param : 'loc * ('loc, 'loc) Ast.Type.annotation) =
-      let (loc, annotation) = this_param in
-      let annotation' = this#type_annotation annotation in
-      if annotation == annotation' then
+    method function_this_param (this_param : ('loc, 'loc) Ast.Function.ThisParam.t) =
+      let open Ast.Function.ThisParam in
+      let (loc, { annot; comments }) = this_param in
+      let annot' = this#type_annotation annot in
+      let comments' = this#syntax_opt comments in
+      if annot' == annot && comments' == comments then
         this_param
       else
-        (loc, annotation')
+        (loc, { annot = annot'; comments = comments' })
 
     method function_param (param : ('loc, 'loc) Ast.Function.Param.t) =
       let open Ast.Function.Param in

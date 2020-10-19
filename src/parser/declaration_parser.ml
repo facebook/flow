@@ -185,6 +185,7 @@ module Declaration (Parse : Parser_common.PARSER) (Type : Type_parser.TYPE) : DE
     in
     let this_param_annotation env =
       if should_parse_types env && Peek.token env = T_THIS then (
+        let leading = Peek.comments env in
         let (this_loc, this_param) =
           with_loc
             (fun env ->
@@ -198,9 +199,14 @@ module Declaration (Parse : Parser_common.PARSER) (Type : Type_parser.TYPE) : DE
         in
         match this_param with
         | None -> None
-        | Some this_param ->
+        | Some annot ->
           if Peek.token env = T_COMMA then Eat.token env;
-          Some (this_loc, this_param)
+          Some
+            ( this_loc,
+              {
+                Ast.Function.ThisParam.annot;
+                comments = Flow_ast_utils.mk_comments_opt ~leading ();
+              } )
       ) else
         None
     in
