@@ -59,3 +59,36 @@ function f<X>(x: Array<X>) {
 function h<X: [number]>(x: X): $TupleMap<X, (number) => string> {
   return ['a']; // existing unsoundness
 }
+
+// ToStringT
+function gn<TType>(jsEnum: {[TType]: string, ...}) {
+  (Object.keys(jsEnum): Array<TType>);
+}
+
+// More KeysT
+function kt<TKey: $Keys<{a: 42}>>(fieldName: TKey): void {
+  if (fieldName) {
+    return;
+  }
+}
+
+// OptionalChainT
+function oc<
+  T: $ReadOnly<{id: ?string, ...}>,
+  L: ?$ReadOnly<{
+    id: ?string,
+    nextOneOne: ?{...},
+    ...
+  }>,
+>(
+  conversations: $ReadOnlyArray<T>,
+  lookup: {[string]: L, ...},
+): $ReadOnlyArray<T> {
+  return conversations.filter(conversation => {
+    const {id} = conversation;
+    if (id == null) {
+      return false;
+    }
+    return lookup[id]?.nextOneOne == null;
+  });
+}

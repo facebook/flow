@@ -7927,6 +7927,12 @@ struct
         |> Base.Option.value_map ~default:false ~f:(fun id ->
                rec_flow cx trace (GenericT { reason; name; bound; id }, u);
                true)
+      | KeysT _ ->
+        rec_flow
+          cx
+          trace
+          (position_generic_bound reason bound, SealGenericT { reason; id; name; cont = Upper u });
+        true
       | _ -> false
     then
       true
@@ -7944,6 +7950,7 @@ struct
       | AssertBinaryInLHST _
       | AssertBinaryInRHST _
       | TestPropT _
+      | OptionalChainT _
       | MapTypeT _
       (* the above case is not needed for correctness, but rather avoids a slow path in TupleMap *)
       | UseT (_, ShapeT _)
@@ -7956,6 +7963,9 @@ struct
         false
       | PredicateT (pred, t_out) ->
         narrow_generic_tvar (fun t_out' -> PredicateT (pred, t_out')) t_out;
+        true
+      | ToStringT (r, t_out) ->
+        narrow_generic_use (fun t_out' -> ToStringT (r, UseT (unknown_use, OpenT t_out'))) t_out;
         true
       | UseT (use_op, MaybeT (r, t_out)) ->
         narrow_generic ~use_op (fun t_out' -> UseT (use_op, MaybeT (r, t_out'))) t_out;
