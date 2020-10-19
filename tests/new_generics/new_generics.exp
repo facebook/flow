@@ -988,6 +988,63 @@ References:
                                                       ^ [2]
 
 
+Error ---------------------------------------------------------------------------------------------------- react.js:13:4
+
+Cannot cast `a` to `React.ComponentType` because `Props` [1] is incompatible with object type [2] in type argument
+`P` [3]. [incompatible-cast]
+
+   react.js:13:4
+    13|   (a: React.ComponentType<{a: number}>); // nope, contravariance
+           ^
+
+References:
+   react.js:11:38
+    11|   declare var a: React.ComponentType<Props>;
+                                             ^^^^^ [1]
+   react.js:13:27
+    13|   (a: React.ComponentType<{a: number}>); // nope, contravariance
+                                  ^^^^^^^^^^^ [2]
+   <BUILTINS>/react.js:257:38
+   257|   declare export type ComponentType<-P> = React$ComponentType<P>;
+                                             ^ [3]
+
+
+Error ---------------------------------------------------------------------------------------------------- react.js:14:4
+
+Cannot cast `b` to `React.Component` because object type [1] is incompatible with `Props` [2] in type argument
+`Props` [3]. [incompatible-cast]
+
+   react.js:14:4
+   14|   (b: React.Component<Props>); // nope
+          ^
+
+References:
+   react.js:12:34
+   12|   declare var b: React.Component<{+a: number}>;
+                                        ^^^^^^^^^^^^ [1]
+   react.js:14:23
+   14|   (b: React.Component<Props>); // nope
+                             ^^^^^ [2]
+   <BUILTINS>/react.js:26:31
+   26| declare class React$Component<Props, State = void> {
+                                     ^^^^^ [3]
+
+
+Error --------------------------------------------------------------------------------------------------- react.js:62:26
+
+Cannot get `X.defaultProps` because property `defaultProps` is missing in `React.AbstractComponentStatics` [1].
+[prop-missing]
+
+   react.js:62:26
+   62|   C.defaultProps = {...X.defaultProps}; // nope
+                                ^^^^^^^^^^^^
+
+References:
+   react.js:54:6
+   54|   X: React.AbstractComponent<{|...Props|}, Instance>,
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
 Error ---------------------------------------------------------------------------------------------- refinements.js:11:6
 
 Cannot cast `x` to string because number [1] is incompatible with string [2]. [incompatible-cast]
@@ -1376,7 +1433,7 @@ References:
 
 
 
-Found 82 errors
+Found 85 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches

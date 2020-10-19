@@ -7958,6 +7958,11 @@ struct
       | UseT (Op (Coercion _), DefT (_, _, StrT _)) ->
         rec_flow cx trace (position_generic_bound reason bound, u);
         true
+      | ReactKitT _ ->
+        if is_concrete bound && not (is_literal_type bound) then
+          distribute_union_intersection ()
+        else
+          wait_for_concrete_bound ()
       (* The LHS is what's actually getting refined--don't do anything special for the RHS *)
       | PredicateT (RightP _, _)
       | PredicateT (NotP (RightP _), _) ->
