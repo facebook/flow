@@ -2966,6 +2966,12 @@ and variable cx kind ?if_uninitialized id init =
     | VariableDeclaration.Let -> (Env.init_let, Env.declare_let)
     | VariableDeclaration.Var -> (Env.init_var, (fun _ _ _ -> ()))
   in
+  let annot = Destructuring.type_of_pattern id in
+  let has_anno =
+    match annot with
+    | Ast.Type.Missing _ -> false
+    | Ast.Type.Available _ -> true
+  in
   (* Identifiers do not need to be initialized at the declaration site as long
    * as they are definitely initialized before use. Destructuring patterns must
    * be initialized, since their declaration involves some operation on the
@@ -2974,7 +2980,13 @@ and variable cx kind ?if_uninitialized id init =
     match (id, init, if_uninitialized) with
     | ((_, Ast.Pattern.Identifier _), None, None) -> (None, None)
     | (_, Some expr, _) ->
-      let (((_, t), _) as init_ast) = expression cx ~annot:None expr in
+      let annot =
+        if has_anno then
+          Some ()
+        else
+          None
+      in
+      let (((_, t), _) as init_ast) = expression cx ~annot expr in
       let r = mk_expression_reason expr in
       (Some (t, r), Some init_ast)
     | ((ploc, _), None, Some f) ->
@@ -2993,13 +3005,7 @@ and variable cx kind ?if_uninitialized id init =
       mk_reason (RIdentifier name) id_loc
     | (ploc, _) -> mk_reason RDestructuring ploc
   in
-  let annot = Destructuring.type_of_pattern id in
   let (annot_t, annot_ast) = Anno.mk_type_annotation cx SMap.empty id_reason annot in
-  let has_anno =
-    match annot with
-    | Ast.Type.Missing _ -> false
-    | Ast.Type.Available _ -> true
-  in
   let id_ast =
     match id with
     | (ploc, Ast.Pattern.Identifier { Ast.Pattern.Identifier.name; annot = _; optional }) ->

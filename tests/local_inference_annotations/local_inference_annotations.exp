@@ -38,6 +38,58 @@ Missing an annotation on `x`. [missing-local-annot]
                     ^
 
 
+Error --------------------------------------------------------------------------------------- destructuring_init.js:4:14
+
+Missing an annotation on `x`. [missing-local-annot]
+
+   4|   const d = (x) => 3;
+                   ^
+
+
+Error ---------------------------------------------------------------------------------------- destructuring_init.js:9:8
+
+Property `x` is missing in statics of function type [1]. [prop-missing]
+
+   destructuring_init.js:9:8
+   9| const {x: b, y: c}: number => void = (x) => { // This x has an annot available
+             ^
+
+References:
+   destructuring_init.js:9:21
+   9| const {x: b, y: c}: number => void = (x) => { // This x has an annot available
+                          ^^^^^^^^^^^^^^ [1]
+
+
+Error --------------------------------------------------------------------------------------- destructuring_init.js:9:14
+
+Property `y` is missing in statics of function type [1]. [prop-missing]
+
+   destructuring_init.js:9:14
+   9| const {x: b, y: c}: number => void = (x) => { // This x has an annot available
+                   ^
+
+References:
+   destructuring_init.js:9:21
+   9| const {x: b, y: c}: number => void = (x) => { // This x has an annot available
+                          ^^^^^^^^^^^^^^ [1]
+
+
+Error -------------------------------------------------------------------------------------- destructuring_init.js:10:15
+
+Missing an annotation on `x`. [missing-local-annot]
+
+   10|   const b = ((x) => 3)(3); // This x does not
+                     ^
+
+
+Error -------------------------------------------------------------------------------------- destructuring_init.js:11:14
+
+Missing an annotation on `x`. [missing-local-annot]
+
+   11|   const c = (x) => 3; // Neither does this one
+                    ^
+
+
 Error ------------------------------------------------------------------------------------------------- do_while.js:8:16
 
 Missing an annotation on `y`. [missing-local-annot]
@@ -138,6 +190,22 @@ Missing an annotation on `y`. [missing-local-annot]
 
    8|     const x = (y) => 3; // non-return, not covered!
                      ^
+
+
+Error -------------------------------------------------------------------------------------------------- id_init.js:6:15
+
+Missing an annotation on `x`. [missing-local-annot]
+
+   6|   const b = ((x) => 3)(3); // This x does not
+                    ^
+
+
+Error -------------------------------------------------------------------------------------------------- id_init.js:7:14
+
+Missing an annotation on `x`. [missing-local-annot]
+
+   7|   const c = (x) => 3; // Neither does this one
+                   ^
 
 
 Error -------------------------------------------------------------------------------------------------------- if.js:7:9
@@ -285,4 +353,4 @@ Missing an annotation on `y`. [missing-local-annot]
 
 
 
-Found 35 errors
+Found 42 errors
