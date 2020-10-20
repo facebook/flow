@@ -26,3 +26,7 @@ let tests = [
   },
 
 ];
+
+class A {}
+
+A.bind(3);

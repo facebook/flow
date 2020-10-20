@@ -1121,6 +1121,7 @@ let dump_error_message =
     | IncompatibleMapTypeTObject -> "IncompatibleMapTypeTObject"
     | IncompatibleTypeAppVarianceCheckT -> "IncompatibleTypeAppVarianceCheckT"
     | IncompatibleGetStaticsT -> "IncompatibleGetStaticsT"
+    | IncompatibleBindT -> "IncompatibleBindT"
     | IncompatibleUnclassified ctor -> spf "IncompatibleUnclassified %S" ctor
   in
   fun cx err ->

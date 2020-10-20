@@ -534,6 +534,7 @@ and 'loc upper_kind =
   | IncompatibleMapTypeTObject
   | IncompatibleTypeAppVarianceCheckT
   | IncompatibleGetStaticsT
+  | IncompatibleBindT
   | IncompatibleUnclassified of string
 
 let map_loc_of_exponential_spread_reason_group f { first_reason; second_reason } =
@@ -559,7 +560,7 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
       | IncompatibleSpecializeT | IncompatibleThisSpecializeT | IncompatibleVarianceCheckT
       | IncompatibleGetKeysT | IncompatibleGetValuesT | IncompatibleUnaryMinusT
       | IncompatibleMapTypeTObject | IncompatibleTypeAppVarianceCheckT | IncompatibleGetStaticsT
-      | IncompatibleUnclassified _ ) as u ->
+      | IncompatibleBindT | IncompatibleUnclassified _ ) as u ->
       u
   in
   let map_unsupported_syntax = function

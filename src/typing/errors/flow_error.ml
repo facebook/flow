@@ -970,6 +970,7 @@ let rec make_error_printable (error : Loc.t t) : Loc.t Errors.printable_error =
       | IncompatibleCallElemT prop_loc ->
         mk_prop_missing_error prop_loc None lower use_op None
       | IncompatibleGetStaticsT -> nope "is not an instance type"
+      | IncompatibleBindT -> nope "is not a function type"
       (* unreachable or unclassified use-types. until we have a mechanical way
        to verify that all legit use types are listed above, we can't afford
        to throw on a use type, so mark the error instead *)
