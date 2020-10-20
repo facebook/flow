@@ -3089,10 +3089,10 @@ and expression_or_spread cx =
   let open Ast.Expression in
   function
   | Expression e ->
-    let (((_, t), _) as e') = expression cx ~annot:None e in
+    let (((_, t), _) as e') = expression cx ~annot:(Some ()) e in
     (Arg t, Expression e')
   | Spread (loc, { SpreadElement.argument; comments }) ->
-    let (((_, t), _) as e') = expression cx ~annot:None argument in
+    let (((_, t), _) as e') = expression cx ~annot:(Some ()) argument in
     (SpreadArg t, Spread (loc, { SpreadElement.argument = e'; comments }))
 
 and array_elements cx undef_loc =

@@ -6,6 +6,28 @@ Missing an annotation on `y`. [missing-local-annot]
                       ^
 
 
+Error ----------------------------------------------------------------------------------------------------- call.js:9:14
+
+Missing an annotation on `x`. [missing-local-annot]
+
+   9|   const a = (x) => 3; // Required annot
+                   ^
+
+
+Error ----------------------------------------------------------------------------------------------------- call.js:12:8
+
+Property `@@iterator` is missing in function [1] but exists in `$Iterable` [2]. [prop-missing]
+
+   call.js:12:8
+   12| }, ...((x) => 3));
+              ^^^^^^^^ [1]
+
+References:
+   <BUILTINS>/prelude.js:48:11
+   48| interface $Iterable<+Yield,+Return,-Next> {
+                 ^^^^^^^^^ [2]
+
+
 Error ----------------------------------------------------------------------------------------------------- cast.js:6:15
 
 Missing an annotation on `x`. [missing-local-annot]
@@ -353,4 +375,4 @@ Missing an annotation on `y`. [missing-local-annot]
 
 
 
-Found 42 errors
+Found 44 errors
