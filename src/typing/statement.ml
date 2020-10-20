@@ -2662,7 +2662,7 @@ and export_statement cx loc ~default declaration_export_info specifiers source e
         *)
     List.iter export_from_local export_info
 
-and object_prop cx acc prop =
+and object_prop cx ~object_annot acc prop =
   let open Ast.Expression.Object in
   match prop with
   (* named prop *)
@@ -2685,10 +2685,12 @@ and object_prop cx acc prop =
           in
           (acc, key, value)
         else
-          let (((_, _t), _) as value) = expression cx ~annot:None v in
+          let (((_, _t), _) as value) =
+            expression cx ~annot:(annot_decompose_todo object_annot) v
+          in
           (acc, key, value)
       else
-        let (((_, t), _) as value) = expression cx ~annot:None v in
+        let (((_, t), _) as value) = expression cx ~annot:(annot_decompose_todo object_annot) v in
         let key = translate_identifier_or_literal_key t key in
         let acc =
           ObjectExpressionAcc.add_prop (Properties.add_field name Polarity.Neutral (Some loc) t) acc
@@ -2705,7 +2707,7 @@ and object_prop cx acc prop =
             value = v;
             shorthand;
           } ) ->
-    let (((_, t), _) as v) = expression cx ~annot:None v in
+    let (((_, t), _) as v) = expression cx ~annot:(annot_decompose_todo object_annot) v in
     ( ObjectExpressionAcc.add_prop (Properties.add_field name Polarity.Neutral (Some loc) t) acc,
       Property
         ( prop_loc,
@@ -2723,7 +2725,15 @@ and object_prop cx acc prop =
           } ) ->
     let reason = func_reason ~async:false ~generator:false prop_loc in
     let tvar = Tvar.mk cx reason in
-    let (t, func) = mk_function_expression None cx ~annot:annot_todo ~general:tvar reason func in
+    let (t, func) =
+      mk_function_expression
+        None
+        cx
+        ~annot:(annot_decompose_todo object_annot)
+        ~general:tvar
+        reason
+        func
+    in
     Flow.flow_t cx (t, tvar);
     ( ObjectExpressionAcc.add_prop (Properties.add_field name Polarity.Neutral (Some loc) t) acc,
       Property
@@ -2750,7 +2760,13 @@ and object_prop cx acc prop =
     let reason = func_reason ~async:false ~generator:false vloc in
     let tvar = Tvar.mk cx reason in
     let (function_type, func) =
-      mk_function_expression ~annot:annot_todo None cx ~general:tvar reason func
+      mk_function_expression
+        ~annot:(annot_decompose_todo object_annot)
+        None
+        cx
+        ~general:tvar
+        reason
+        func
     in
     Flow.flow_t cx (function_type, tvar);
     let return_t = Type.extract_getter_type function_type in
@@ -2779,7 +2795,13 @@ and object_prop cx acc prop =
     let reason = func_reason ~async:false ~generator:false vloc in
     let tvar = Tvar.mk cx reason in
     let (function_type, func) =
-      mk_function_expression None cx ~annot:annot_todo ~general:tvar reason func
+      mk_function_expression
+        None
+        cx
+        ~annot:(annot_decompose_todo object_annot)
+        ~general:tvar
+        reason
+        func
     in
     Flow.flow_t cx (function_type, tvar);
     let param_t = Type.extract_setter_type function_type in
@@ -2821,14 +2843,14 @@ and prop_map_of_object cx props =
   let (acc, rev_prop_asts) =
     List.fold_left
       (fun (map, rev_prop_asts) prop ->
-        let (map, prop) = object_prop cx map prop in
+        let (map, prop) = object_prop cx ~object_annot:None map prop in
         (map, prop :: rev_prop_asts))
       (ObjectExpressionAcc.empty ~allow_sealed:true, [])
       props
   in
   (acc.ObjectExpressionAcc.obj_pmap, List.rev rev_prop_asts)
 
-and object_ cx ~annot:_ reason ~frozen ?(allow_sealed = true) props =
+and object_ cx ~annot reason ~frozen ?(allow_sealed = true) props =
   let open Ast.Expression.Object in
   (* Use the same reason for proto and the ObjT so we can walk the proto chain
      and use the root proto reason to build an error. *)
@@ -2861,7 +2883,9 @@ and object_ cx ~annot:_ reason ~frozen ?(allow_sealed = true) props =
        of union type.
     *)
         | SpreadProperty (prop_loc, { SpreadProperty.argument; comments }) ->
-          let (((_, spread), _) as argument) = expression cx ~annot:None argument in
+          let (((_, spread), _) as argument) =
+            expression cx ~annot:(annot_decompose_todo annot) argument
+          in
           let not_empty_object_literal_argument =
             match spread with
             | DefT (_, _, ObjT { flags; _ }) -> Obj_type.sealed_in_op reason flags.obj_kind
@@ -2884,7 +2908,7 @@ and object_ cx ~annot:_ reason ~frozen ?(allow_sealed = true) props =
                   shorthand;
                 } ) ->
           let (((_, kt), _) as k) = expression cx ~annot:None k in
-          let (((_, vt), _) as v) = expression cx ~annot:None v in
+          let (((_, vt), _) as v) = expression cx ~annot:(annot_decompose_todo annot) v in
           let computed = mk_computed kt vt in
           ( ObjectExpressionAcc.add_spread computed acc,
             Property
@@ -2904,7 +2928,9 @@ and object_ cx ~annot:_ reason ~frozen ?(allow_sealed = true) props =
                   value = (fn_loc, fn);
                 } ) ->
           let (((_, kt), _) as k) = expression cx ~annot:None k in
-          let ((_, vt), v) = expression cx ~annot:None (fn_loc, Ast.Expression.Function fn) in
+          let ((_, vt), v) =
+            expression cx ~annot:(annot_decompose_todo annot) (fn_loc, Ast.Expression.Function fn)
+          in
           let fn =
             match v with
             | Ast.Expression.Function fn -> fn
@@ -2932,7 +2958,7 @@ and object_ cx ~annot:_ reason ~frozen ?(allow_sealed = true) props =
                   shorthand = false;
                 } ) ->
           let reason = mk_reason RPrototype (fst v) in
-          let (((_, vt), _) as v) = expression cx ~annot:None v in
+          let (((_, vt), _) as v) = expression cx ~annot:(annot_decompose_todo annot) v in
           let t = Tvar.mk_where cx reason (fun t -> Flow.flow cx (vt, ObjTestProtoT (reason, t))) in
           ( ObjectExpressionAcc.add_proto t acc,
             Property
@@ -2942,7 +2968,7 @@ and object_ cx ~annot:_ reason ~frozen ?(allow_sealed = true) props =
               )
             :: rev_prop_asts )
         | prop ->
-          let (acc, prop) = object_prop cx acc prop in
+          let (acc, prop) = object_prop cx ~object_annot:annot acc prop in
           (acc, prop :: rev_prop_asts))
       (ObjectExpressionAcc.empty ~allow_sealed, [])
       props
@@ -3163,7 +3189,7 @@ and expression_ ~cond ~annot cx loc e : (ALoc.t, ALoc.t * Type.t) Ast.Expression
   | OptionalMember _ -> subscript ~cond cx ex
   | Object { Object.properties; comments } ->
     let reason = mk_reason RObjectLit loc in
-    let (t, properties) = object_ ~annot:annot_todo ~frozen:false cx reason properties in
+    let (t, properties) = object_ ~annot ~frozen:false cx reason properties in
     ((loc, t), Object { Object.properties; comments })
   | Array { Array.elements; comments } ->
     let reason = mk_reason RArrayLit loc in

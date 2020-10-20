@@ -294,6 +294,70 @@ Missing an annotation on `x`. [missing-local-annot]
                                            ^
 
 
+Error --------------------------------------------------------------------------------------------------- object.js:5:16
+
+Missing an annotation on `x`. [missing-local-annot]
+
+   5|     const a = (x) => 3; // Missing annot
+                     ^
+
+
+Error --------------------------------------------------------------------------------------------------- object.js:9:16
+
+Missing an annotation on `x`. [missing-local-annot]
+
+   9|     const b = (x) => 3; // Missing annot
+                     ^
+
+
+Error -------------------------------------------------------------------------------------------------- object.js:17:16
+
+Missing an annotation on `x`. [missing-local-annot]
+
+   17|     const c = (x) => 3; // Missing annot
+                      ^
+
+
+Error -------------------------------------------------------------------------------------------------- object.js:21:16
+
+Missing an annotation on `x`. [missing-local-annot]
+
+   21|     const d = (x) => 3; // Missing annot
+                      ^
+
+
+Error -------------------------------------------------------------------------------------------------- object.js:26:16
+
+Missing an annotation on `x`. [missing-local-annot]
+
+   26|     const e = (x) => 3; // Missing annot
+                      ^
+
+
+Error -------------------------------------------------------------------------------------------------- object.js:30:16
+
+Missing an annotation on `x`. [missing-local-annot]
+
+   30|     const f = (x) => 3; // Missing annot
+                      ^
+
+
+Error -------------------------------------------------------------------------------------------------- object.js:34:16
+
+Missing an annotation on `x`. [missing-local-annot]
+
+   34|     const g = (x) => 3; // Missing annot
+                      ^
+
+
+Error -------------------------------------------------------------------------------------------------- object.js:38:16
+
+Missing an annotation on `x`. [missing-local-annot]
+
+   38|     const h = (x) => 3; // Missing annot
+                      ^
+
+
 Error --------------------------------------------------------------------------------------------------- return.js:7:22
 
 Missing an annotation on `z`. [missing-local-annot]
@@ -383,4 +447,4 @@ Missing an annotation on `y`. [missing-local-annot]
 
 
 
-Found 45 errors
+Found 53 errors
