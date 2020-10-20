@@ -1,3 +1,19 @@
+Error ---------------------------------------------------------------------------------------------------- array.js:5:16
+
+Missing an annotation on `x`. [missing-local-annot]
+
+   5|     const a = (x) => 3; // Missing annot
+                     ^
+
+
+Error --------------------------------------------------------------------------------------------------- array.js:11:18
+
+Missing an annotation on `x`. [missing-local-annot]
+
+   11|       const b = (x) => 3; // Missing annot
+                        ^
+
+
 Error --------------------------------------------------------------------------------------------------- block.js:14:16
 
 Missing an annotation on `y`. [missing-local-annot]
@@ -447,4 +463,4 @@ Missing an annotation on `y`. [missing-local-annot]
 
 
 
-Found 53 errors
+Found 55 errors

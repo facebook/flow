@@ -3121,17 +3121,17 @@ and expression_or_spread cx =
     let (((_, t), _) as e') = expression cx ~annot:(Some ()) argument in
     (SpreadArg t, Spread (loc, { SpreadElement.argument = e'; comments }))
 
-and array_elements cx undef_loc =
+and array_elements cx ~array_annot undef_loc =
   let open Ast.Expression.Array in
   Fn.compose
     List.split
     (Base.List.map ~f:(function
         | Expression e ->
-          let (((_, t), _) as e) = expression ~annot:None cx e in
+          let (((_, t), _) as e) = expression cx ~annot:(annot_decompose_todo array_annot) e in
           (UnresolvedArg (t, None), Expression e)
         | Hole loc -> (UnresolvedArg (EmptyT.at undef_loc |> with_trust bogus_trust, None), Hole loc)
         | Spread (loc, { Ast.Expression.SpreadElement.argument; comments }) ->
-          let (((_, t), _) as argument) = expression cx ~annot:None argument in
+          let (((_, t), _) as argument) = expression cx ~annot:array_annot argument in
           (UnresolvedSpreadArg t, Spread (loc, { Ast.Expression.SpreadElement.argument; comments }))))
 
 (* can raise Abnormal.(Exn (Stmt _, _))
@@ -3202,7 +3202,7 @@ and expression_ ~cond ~annot cx loc e : (ALoc.t, ALoc.t * Type.t) Ast.Expression
       ( (loc, DefT (reason, make_trust (), ArrT (ArrayAT (elemt, Some [])))),
         Array { Array.elements = []; comments } )
     | elems ->
-      let (elem_spread_list, elements) = array_elements cx loc elems in
+      let (elem_spread_list, elements) = array_elements cx ~array_annot:annot loc elems in
       ( ( loc,
           Tvar.mk_where cx reason (fun tout ->
               let reason_op = reason in
