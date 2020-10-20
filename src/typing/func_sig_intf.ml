@@ -88,6 +88,7 @@ module type S = sig
       (Context.t ->
       (ALoc.t, ALoc.t) Flow_ast.Expression.t ->
       (ALoc.t, ALoc.t * Type.t) Flow_ast.Expression.t) ->
+    return_annot:unit option ->
     t ->
     func_params_tast option
     * (ALoc.t, ALoc.t * Type.t) Flow_ast.Function.body option

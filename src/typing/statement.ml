@@ -1370,7 +1370,8 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t =
           let pred_reason = update_desc_reason (fun desc -> RPredicateOf desc) reason in
           (OpenPredT { reason = pred_reason; base_t = t; m_pos = p_map; m_neg = n_map }, Some ast)
         else
-          let (((_, t), _) as ast) = expression cx ~annot:None expr in
+          let annot = Env.get_var_annotation cx (internal_name "return") loc in
+          let (((_, t), _) as ast) = expression cx ~annot expr in
           (t, Some ast)
     in
     let t =
@@ -8120,7 +8121,8 @@ and function_decl id cx ~annot reason func this super =
             super
             ~decls:toplevel_decls
             ~stmts:toplevels
-            ~expr:(expression ~annot:None))
+            ~expr:(expression ~annot:None)
+            ~return_annot:(annot_decompose_todo annot))
   in
   ignore (Abnormal.swap_saved Abnormal.Return save_return);
   ignore (Abnormal.swap_saved Abnormal.Throw save_throw);

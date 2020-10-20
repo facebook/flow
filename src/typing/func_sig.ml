@@ -149,6 +149,7 @@ module Make (F : Func_params.S) = struct
       ~decls
       ~stmts
       ~expr
+      ~return_annot
       { reason = reason_fn; kind; tparams_map; fparams; body; return_t; knot; _ } =
     let loc =
       let open Ast.Function in
@@ -231,7 +232,12 @@ module Make (F : Func_params.S) = struct
         in
         ( new_entry ~has_anno:false yield_t,
           new_entry ~has_anno:false next_t,
-          new_entry ~has_anno:false return_t ))
+          let has_anno =
+            match return_annot with
+            | Some _ -> true
+            | _ -> false
+          in
+          new_entry ~has_anno return_t ))
     in
     Scope.add_entry (internal_name "yield") yield function_scope;
     Scope.add_entry (internal_name "next") next function_scope;

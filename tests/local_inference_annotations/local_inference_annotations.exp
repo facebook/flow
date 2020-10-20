@@ -1,3 +1,11 @@
+Error --------------------------------------------------------------------------------------------------- block.js:14:16
+
+Missing an annotation on `y`. [missing-local-annot]
+
+   14|     const x = (y) => 3;  // error y missing an annotation
+                      ^
+
+
 Error ----------------------------------------------------------------------------------------------------- cast.js:6:15
 
 Missing an annotation on `x`. [missing-local-annot]
@@ -28,6 +36,124 @@ Missing an annotation on `x`. [missing-local-annot]
 
    14|   const c = (x) => 3; // Neither does this one
                     ^
+
+
+Error ------------------------------------------------------------------------------------------------- do_while.js:8:16
+
+Missing an annotation on `y`. [missing-local-annot]
+
+   8|     const x = (y) => 3; // non-return, not covered!
+                     ^
+
+
+Error ------------------------------------------------------------------------------------------------ do_while.js:11:11
+
+Missing an annotation on `x`. [missing-local-annot]
+
+   11|   while ((x) => 3); // guard is not covered!
+                 ^
+
+
+Error ------------------------------------------------------------------------------------------------- do_while.js:12:3
+
+Unreachable code. [unreachable-code]
+
+   12|   return (y) => 3;
+         ^^^^^^^^^^^^^^^^
+
+
+Error ------------------------------------------------------------------------------------------------------- for.js:7:9
+
+Missing an annotation on `x`. [missing-local-annot]
+
+   7|   for ((x) => true; (x) => true; (x) => true) { // init, test, and update are all not covered by the annot 
+              ^
+
+
+Error ------------------------------------------------------------------------------------------------------ for.js:7:22
+
+Missing an annotation on `x`. [missing-local-annot]
+
+   7|   for ((x) => true; (x) => true; (x) => true) { // init, test, and update are all not covered by the annot 
+                           ^
+
+
+Error ------------------------------------------------------------------------------------------------------ for.js:7:35
+
+Missing an annotation on `x`. [missing-local-annot]
+
+   7|   for ((x) => true; (x) => true; (x) => true) { // init, test, and update are all not covered by the annot 
+                                        ^
+
+
+Error ------------------------------------------------------------------------------------------------------ for.js:8:16
+
+Missing an annotation on `y`. [missing-local-annot]
+
+   8|     const x = (y) => 3; // non-return, not covered!
+                     ^
+
+
+Error --------------------------------------------------------------------------------------------------- for_in.js:7:19
+
+Missing an annotation on `x`. [missing-local-annot]
+
+   7|   for (let x in ((x) => 3)) { // Only the body is covered, missing annot!
+                        ^
+
+
+Error --------------------------------------------------------------------------------------------------- for_in.js:8:16
+
+Missing an annotation on `y`. [missing-local-annot]
+
+   8|     const x = (y) => 3; // non-return, not covered!
+                     ^
+
+
+Error --------------------------------------------------------------------------------------------------- for_of.js:7:18
+
+Property `@@iterator` is missing in function [1] but exists in `$Iterable` [2]. [prop-missing]
+
+   for_of.js:7:18
+    7|   for (let x of ((x) => 3)) { // Only the body is covered, missing annot! Also a type error
+                        ^^^^^^^^ [1]
+
+References:
+   <BUILTINS>/prelude.js:48:11
+   48| interface $Iterable<+Yield,+Return,-Next> {
+                 ^^^^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- for_of.js:7:19
+
+Missing an annotation on `x`. [missing-local-annot]
+
+   7|   for (let x of ((x) => 3)) { // Only the body is covered, missing annot! Also a type error
+                        ^
+
+
+Error --------------------------------------------------------------------------------------------------- for_of.js:8:16
+
+Missing an annotation on `y`. [missing-local-annot]
+
+   8|     const x = (y) => 3; // non-return, not covered!
+                     ^
+
+
+Error -------------------------------------------------------------------------------------------------------- if.js:7:9
+
+Missing an annotation on `x`. [missing-local-annot]
+
+   7|   if (((x) => true) ()){ // Guards are not covered by the annot
+              ^
+
+
+Error ------------------------------------------------------------------------------------------------------ if.js:10:16
+
+Missing an annotation on `x`. [missing-local-annot]
+
+   10|     const z = (x) => 3; // Non-return statements are not covered by the annot
+                      ^
 
 
 Error ------------------------------------------------------------------------------------------------ no_annots.js:3:12
@@ -70,5 +196,93 @@ Missing an annotation on `x`. [missing-local-annot]
                                            ^
 
 
+Error --------------------------------------------------------------------------------------------------- return.js:7:22
 
-Found 9 errors
+Missing an annotation on `z`. [missing-local-annot]
+
+   7| let b = ((x => y => (z => 3)(3)): number => number => number); // annot missing on z
+                           ^
+
+
+Error -------------------------------------------------------------------------------------------------- return.js:11:40
+
+Missing an annotation on `z`. [missing-local-annot]
+
+   11| let d = ((x => { return y => { return (z => 3)(3) }}): number => number => number); // annot missing on z
+                                              ^
+
+
+Error -------------------------------------------------------------------------------------------------- return.js:15:15
+
+Missing an annotation on `x`. [missing-local-annot]
+
+   15|   const xx = (x) => 3; // Missing annot on x
+                     ^
+
+
+Error -------------------------------------------------------------------------------------------------- return.js:17:16
+
+Missing an annotation on `x`. [missing-local-annot]
+
+   17|     const z = (x) => 3; // Missing annot on x
+                      ^
+
+
+Error --------------------------------------------------------------------------------------------------- switch.js:7:12
+
+Missing an annotation on `x`. [missing-local-annot]
+
+   7|   switch ((x) => true){ // Guards are not covered by the annot
+                 ^
+
+
+Error -------------------------------------------------------------------------------------------------- switch.js:11:18
+
+Missing an annotation on `x`. [missing-local-annot]
+
+   11|       const z = (x) => 3; // Non-return statements are not covered by the annot
+                        ^
+
+
+Error ---------------------------------------------------------------------------------------- try_catch_finally.js:8:16
+
+Missing an annotation on `x`. [missing-local-annot]
+
+   8|     const z = (x) => 3; // Non-return statements are not covered by the annot
+                     ^
+
+
+Error --------------------------------------------------------------------------------------- try_catch_finally.js:11:16
+
+Missing an annotation on `x`. [missing-local-annot]
+
+   11|     const z = (x) => 3; // Non-return statements are not covered by the annot
+                      ^
+
+
+Error --------------------------------------------------------------------------------------- try_catch_finally.js:14:16
+
+Missing an annotation on `x`. [missing-local-annot]
+
+   14|     const z = (x) => 3; // Non-return statements are not covered by the annot
+                      ^
+
+
+Error ---------------------------------------------------------------------------------------------------- while.js:7:11
+
+Missing an annotation on `x`. [missing-local-annot]
+
+   7|   while ((x) => 3) { // Only the body is covered, missing annot!
+                ^
+
+
+Error ---------------------------------------------------------------------------------------------------- while.js:8:16
+
+Missing an annotation on `y`. [missing-local-annot]
+
+   8|     const x = (y) => 3; // non-return, not covered!
+                     ^
+
+
+
+Found 35 errors

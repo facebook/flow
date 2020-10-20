@@ -849,6 +849,14 @@ let query_var_non_specific ?(lookup_mode = ForValue) = read_entry ~lookup_mode ~
 
 let get_internal_var cx name loc = query_var cx (internal_name name) loc
 
+let get_var_annotation cx name loc =
+  let (_, entry) = find_entry cx name loc in
+  match entry with
+  (* When we start actually passing annotation targets through statement.ml
+   * we should return the type here instead of unit *)
+  | Entry.Value { Entry.general = Entry.Annotated _; _ } -> Some ()
+  | _ -> None
+
 (* get var's general type - for annotated vars, this is the
    annotated type, and for others it's the union of all
    types assigned to the var throughout its lifetime.

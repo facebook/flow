@@ -143,6 +143,8 @@ val get_var : ?lookup_mode:LookupMode.t -> Context.t -> string -> ALoc.t -> Type
 
 val get_internal_var : Context.t -> string -> ALoc.t -> Type.t
 
+val get_var_annotation : Context.t -> string -> ALoc.t -> unit option
+
 val get_var_declared_type : ?lookup_mode:LookupMode.t -> Context.t -> string -> ALoc.t -> Type.t
 
 val unify_declared_type : ?lookup_mode:LookupMode.t -> Context.t -> string -> Type.t -> unit

@@ -774,7 +774,10 @@ module Make (F : Func_sig.S) = struct
           let save_return = Abnormal.clear_saved Abnormal.Return in
           let save_throw = Abnormal.clear_saved Abnormal.Throw in
           let asts =
-            f |> F.check_with_generics cx (F.toplevels None cx this super ~decls ~stmts ~expr)
+            f
+            |> F.check_with_generics
+                 cx
+                 (F.toplevels None cx this super ~decls ~stmts ~expr ~return_annot:None)
           in
           set_asts asts;
           ignore (Abnormal.swap_saved Abnormal.Return save_return);
