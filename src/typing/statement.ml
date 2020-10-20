@@ -2828,7 +2828,7 @@ and prop_map_of_object cx props =
   in
   (acc.ObjectExpressionAcc.obj_pmap, List.rev rev_prop_asts)
 
-and object_ cx reason ~frozen ?(allow_sealed = true) props =
+and object_ cx ~annot:_ reason ~frozen ?(allow_sealed = true) props =
   let open Ast.Expression.Object in
   (* Use the same reason for proto and the ObjT so we can walk the proto chain
      and use the root proto reason to build an error. *)
@@ -3163,7 +3163,7 @@ and expression_ ~cond ~annot cx loc e : (ALoc.t, ALoc.t * Type.t) Ast.Expression
   | OptionalMember _ -> subscript ~cond cx ex
   | Object { Object.properties; comments } ->
     let reason = mk_reason RObjectLit loc in
-    let (t, properties) = object_ ~frozen:false cx reason properties in
+    let (t, properties) = object_ ~annot:annot_todo ~frozen:false cx reason properties in
     ((loc, t), Object { Object.properties; comments })
   | Array { Array.elements; comments } ->
     let reason = mk_reason RArrayLit loc in
@@ -7459,7 +7459,7 @@ and static_method_call_Object cx loc callee_loc prop_loc expr obj_t m targs args
     let (((_, arg_t), _) as e_ast) =
       let { Object.properties; comments } = o in
       let reason = mk_reason (RFrozen RObjectLit) arg_loc in
-      let (t, properties) = object_ ~frozen:true cx reason properties in
+      let (t, properties) = object_ ~annot:annot_todo ~frozen:true cx reason properties in
       ((arg_loc, t), Object { Object.properties; comments })
     in
     let reason = mk_reason (RMethodCall (Some m)) loc in
