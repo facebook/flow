@@ -122,6 +122,24 @@ References:
               ^^^^ [2]
 
 
+Error --------------------------------------------------------------------------------------------------- arrows.js:3:27
+
+Cannot return `this.bar()` because `this` [1] cannot escape from its class [1] (try adding a type annotation to
+return [2]). [escaped-generic]
+
+   arrows.js:3:27
+   3|     return () => { return this.bar(); }; // OK, since this: C
+                                ^^^^^^^^^^
+
+References:
+   arrows.js:1:7
+   1| class C {
+            ^ [1]
+   arrows.js:3:14
+   3|     return () => { return this.bar(); }; // OK, since this: C
+                    [2]
+
+
 Error --------------------------------------------------------------------------------------------------- arrows.js:5:18
 
 Cannot return `this` because `this` [1] cannot escape from its class [1] (try adding a type annotation to return [2]).
@@ -138,6 +156,42 @@ References:
    arrows.js:5:8
    5|   bar() { return this; } // return type is C
               [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- arrows.js:9:9
+
+Cannot assign `f()` to `i` because `this` [1] cannot escape from its class [1] (try adding a type annotation to
+`i` [2]). [escaped-generic]
+
+   arrows.js:9:9
+   9| var i = f(); // OK
+              ^^^
+
+References:
+   arrows.js:1:7
+   1| class C {
+            ^ [1]
+   arrows.js:9:5
+   9| var i = f(); // OK
+          ^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- arrows.js:15:9
+
+Cannot assign `g()` to `j` because `this` [1] cannot escape from its class [1] (try adding a type annotation to
+`j` [2]). [escaped-generic]
+
+   arrows.js:15:9
+   15| var j = g(); // OK
+               ^^^
+
+References:
+   arrows.js:1:7
+    1| class C {
+             ^ [1]
+   arrows.js:15:5
+   15| var j = g(); // OK
+           ^ [2]
 
 
 Error --------------------------------------------------------------------------------------------------- arrows.js:16:2
@@ -173,4 +227,4 @@ References:
 
 
 
-Found 11 errors
+Found 14 errors

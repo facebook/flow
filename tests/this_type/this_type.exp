@@ -445,23 +445,6 @@ References:
               [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- self.js:4:24
-
-Cannot return `(new A()).foo()` because `A` [1] is incompatible with `this` [2]. [incompatible-return]
-
-   self.js:4:24
-   4|   bar(): this { return new A().foo(); } // with generate-tests: same as returning : A, so error; with new generics, error is above
-                             ^^^^^^^^^^^^^
-
-References:
-   self.js:1:7
-   1| class A {
-            ^ [1]
-   self.js:4:10
-   4|   bar(): this { return new A().foo(); } // with generate-tests: same as returning : A, so error; with new generics, error is above
-               ^^^^ [2]
-
-
 Error -------------------------------------------------------------------------------------------------- statics.js:17:2
 
 Cannot cast `A.make()` to `B` because `A` [1] is incompatible with `B` [2]. [incompatible-cast]
@@ -513,6 +496,24 @@ References:
    test.js:7:8
    7|   bar() { return this; }
               [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:8:25
+
+Cannot return `this.bar()` because `this` [1] cannot escape from its class [1] (try adding a type annotation to
+return [2]). [escaped-generic]
+
+   test.js:8:25
+   8|   bar_caller() { return this.bar(); }
+                              ^^^^^^^^^^
+
+References:
+   test.js:3:7
+   3| class Base {
+            ^^^^ [1]
+   test.js:8:15
+   8|   bar_caller() { return this.bar(); }
+                     [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- test.js:14:18
@@ -700,24 +701,6 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:56:16
 
-Cannot extend `Base2` [1] with `Override2` because `Override2` [2] is incompatible with `Base2` [3] in the first
-argument of property `grault`. [incompatible-extend]
-
-   test.js:56:16
-   56|   grault(that: this) { } // error, too (only variance error with new-generics)
-                      ^^^^ [2]
-
-References:
-   test.js:47:25
-   47| class Override2 extends Base2 {
-                               ^^^^^ [1]
-   test.js:42:16
-   42|   grault(that: Base2) { }
-                      ^^^^^ [3]
-
-
-Error ---------------------------------------------------------------------------------------------------- test.js:56:16
-
 Cannot extend `Base2` [1] with `Override2` because `this` [2] is incompatible with `Base2` [3] in the first argument of
 property `grault`. [incompatible-extend]
 
@@ -765,4 +748,4 @@ References:
 
 
 
-Found 47 errors
+Found 46 errors

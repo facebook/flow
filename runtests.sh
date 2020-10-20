@@ -144,7 +144,7 @@ show_help() {
   echo "    -z"
   echo "        test new signatures"
   echo "    -g"
-  echo "        test without generate-tests"
+  echo "        test with generate-tests"
   echo "    -v"
   echo "        verbose output (shows skipped tests)"
   echo "    -h"
@@ -159,7 +159,7 @@ OPTIND=1
 record=0
 saved_state=0
 new_signatures=0
-generate_tests=1
+generate_tests=0
 verbose=0
 quiet=0
 relative="$THIS_DIR"
@@ -195,8 +195,8 @@ while getopts "b:d:f:glqrszt:vh?" opt; do
     new_signatures=1
     ;;
   g)
-    generate_tests=0
-    printf "Testing new generics by not using generate-tests\\n"
+    generate_tests=1
+    printf "Testing legacy generics using generate-tests\\n"
     ;;
   v)
     verbose=1

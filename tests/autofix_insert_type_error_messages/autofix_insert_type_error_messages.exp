@@ -9,7 +9,7 @@ flow autofix insert-type: The type that would be generated (size: 121) exceeds t
 empty-array.js
 flow autofix insert-type: Failed to validate type: Empty_SomeUnknownUpper (use: GetPropT)
 type-shadowing.js
-flow autofix insert-type: couldn't print type: [Shadowed type parameters] Raised on type: MixedT
+flow autofix insert-type: couldn't print type: [Shadowed type parameters] Raised on type: GenericT
 recursive.js
 flow autofix insert-type: Failed to validate type: Recursive
 anonymous.js
