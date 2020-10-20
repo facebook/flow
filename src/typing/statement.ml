@@ -6165,7 +6165,7 @@ and jsx_mk_props cx reason c name attributes children =
                         ExpressionContainer.expression = ExpressionContainer.Expression (loc, e);
                         comments;
                       } )) ->
-                let (((_, t), _) as e) = expression cx ~annot:None (loc, e) in
+                let (((_, t), _) as e) = expression cx ~annot:(Some ()) (loc, e) in
                 ( t,
                   Some
                     (Attribute.ExpressionContainer
@@ -6203,7 +6203,7 @@ and jsx_mk_props cx reason c name attributes children =
           (acc, atts)
         (* <element {...spread} /> *)
         | Opening.SpreadAttribute (spread_loc, { SpreadAttribute.argument; comments }) ->
-          let (((_, spread), _) as argument) = expression cx ~annot:None argument in
+          let (((_, spread), _) as argument) = expression cx ~annot:(Some ()) argument in
           let acc = ObjectExpressionAcc.add_spread spread acc in
           let att = Opening.SpreadAttribute (spread_loc, { SpreadAttribute.argument; comments }) in
           (acc, att :: atts))

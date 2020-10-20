@@ -19,13 +19,13 @@ Error --------------------------------------------------------------------------
 Property `@@iterator` is missing in function [1] but exists in `$Iterable` [2]. [prop-missing]
 
    call.js:12:8
-   12| }, ...((x) => 3));
-              ^^^^^^^^ [1]
+     12| }, ...((x) => 3));
+                ^^^^^^^^ [1]
 
 References:
-   <BUILTINS>/prelude.js:48:11
-   48| interface $Iterable<+Yield,+Return,-Next> {
-                 ^^^^^^^^^ [2]
+   <BUILTINS>/core.js:1639:11
+   1639| interface $Iterable<+Yield,+Return,-Next> {
+                   ^^^^^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------------- cast.js:6:15
@@ -189,13 +189,13 @@ Error --------------------------------------------------------------------------
 Property `@@iterator` is missing in function [1] but exists in `$Iterable` [2]. [prop-missing]
 
    for_of.js:7:18
-    7|   for (let x of ((x) => 3)) { // Only the body is covered, missing annot! Also a type error
-                        ^^^^^^^^ [1]
+      7|   for (let x of ((x) => 3)) { // Only the body is covered, missing annot! Also a type error
+                          ^^^^^^^^ [1]
 
 References:
-   <BUILTINS>/prelude.js:48:11
-   48| interface $Iterable<+Yield,+Return,-Next> {
-                 ^^^^^^^^^ [2]
+   <BUILTINS>/core.js:1639:11
+   1639| interface $Iterable<+Yield,+Return,-Next> {
+                   ^^^^^^^^^ [2]
 
 
 Error --------------------------------------------------------------------------------------------------- for_of.js:7:19
@@ -244,6 +244,14 @@ Missing an annotation on `x`. [missing-local-annot]
 
    10|     const z = (x) => 3; // Non-return statements are not covered by the annot
                       ^
+
+
+Error ------------------------------------------------------------------------------------------------------ jsx.js:9:14
+
+Missing an annotation on `x`. [missing-local-annot]
+
+   9|   const y = (x) => 3; // error, required annot
+                   ^
 
 
 Error ------------------------------------------------------------------------------------------------ no_annots.js:3:12
@@ -375,4 +383,4 @@ Missing an annotation on `y`. [missing-local-annot]
 
 
 
-Found 44 errors
+Found 45 errors
