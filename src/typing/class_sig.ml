@@ -820,7 +820,9 @@ module Make (F : Func_sig.S) = struct
         x
         |> with_sig ~static:true (fun s ->
                (* process static methods and fields *)
-               let (this, super) = (new_entry static, new_entry static_super) in
+               let (this, super) =
+                 (new_entry ~has_anno:false static, new_entry ~has_anno:false static_super)
+               in
                iter_methods (fun (_loc, f, set_asts, _) -> method_ this super ~set_asts f) s;
                SMap.iter (field this super) s.fields;
                SMap.iter (field this super) s.private_fields);
@@ -845,13 +847,17 @@ module Make (F : Func_sig.S) = struct
                    else
                      new_entry t
                  in
-                 let (this, super) = (new_entry this, new_entry super) in
+                 let (this, super) =
+                   (new_entry ~has_anno:false this, new_entry ~has_anno:false super)
+                 in
                  x.constructor
                  |> List.iter (fun (_, fsig, set_asts, _) -> method_ this super ~set_asts fsig)
                end;
 
                (* process instance methods and fields *)
-               let (this, super) = (new_entry this, new_entry super) in
+               let (this, super) =
+                 (new_entry ~has_anno:false this, new_entry ~has_anno:false super)
+               in
                iter_methods (fun (_, msig, set_asts, _) -> method_ this super ~set_asts msig) s;
                SMap.iter (field this super) s.fields;
                SMap.iter (field this super) s.private_fields;

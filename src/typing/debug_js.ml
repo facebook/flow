@@ -953,6 +953,11 @@ let string_of_scope_entry =
   Scope.(
     let string_of_value_binding
         cx { Entry.kind; value_state; value_declare_loc; value_assign_loc; specific; general } =
+      let general_str =
+        match general with
+        | Entry.Annotated t -> spf "Annotated %s" (dump_t cx t)
+        | Entry.Inferred t -> spf "Inferred %s" (dump_t cx t)
+      in
       spf
         "{ kind: %s; value_state: %s; value_declare_loc: %S; value_assign_loc: %s; specific: %s; general: %s }"
         (Entry.string_of_value_kind kind)
@@ -960,7 +965,7 @@ let string_of_scope_entry =
         (string_of_aloc value_declare_loc)
         (string_of_aloc value_assign_loc)
         (dump_t cx specific)
-        (dump_t cx general)
+        general_str
     in
     let string_of_type_binding cx { Entry.type_state; type_loc; type_; type_binding_kind = _ } =
       spf

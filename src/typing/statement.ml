@@ -37,6 +37,10 @@ let annot_todo = None
  * must be decomposed in some way before it is passed down *)
 let annot_decompose_todo x = x
 
+(* We use this value to indicate places where values stored in the environment can have
+ * an annotation with some more work *)
+let has_anno_todo = false
+
 module ObjectExpressionAcc = struct
   type element =
     | Spread of Type.t
@@ -468,7 +472,8 @@ let rec variable_decl cx { Ast.Statement.VariableDeclaration.kind; declarations;
     (fun () (loc, { Ast.Identifier.name; comments = _ }) ->
       let reason = mk_reason (RIdentifier name) loc in
       let t = Tvar.mk cx reason in
-      bind cx name t loc)
+      (* TODO(jmbrown) Check if annotations exist here *)
+      bind ~has_anno:false cx name t loc)
     ()
     declarations
 
@@ -2137,6 +2142,7 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t =
     Scope.add_entry
       (Reason.internal_name "exports")
       (Scope.Entry.new_var
+         ~has_anno:false
          ~loc:ALoc.none
          ~specific:(Locationless.EmptyT.t |> with_trust bogus_trust)
          (Locationless.MixedT.t |> with_trust bogus_trust))
@@ -3522,7 +3528,9 @@ and expression_ ~cond ~annot cx loc e : (ALoc.t, ALoc.t * Type.t) Ast.Expression
       let scope = Scope.fresh () in
       Scope.(
         let kind = Entry.ClassNameBinding in
-        let entry = Entry.(new_let tvar ~loc:name_loc ~state:State.Declared ~kind) in
+        let entry =
+          Entry.(new_let tvar ~has_anno:has_anno_todo ~loc:name_loc ~state:State.Declared ~kind)
+        in
         add_entry name entry scope);
       Env.push_var_scope cx scope;
       let (class_t, c) = mk_class cx class_loc ~name_loc ~general:tvar reason c in
@@ -8138,11 +8146,11 @@ and mk_function_expression id cx ~annot ~general reason func =
 and mk_function id cx ~annot ~general reason func =
   let loc = aloc_of_reason reason in
   let this_t = Tvar.mk cx (mk_reason RThis loc) in
-  let this = Scope.Entry.new_let this_t ~loc ~state:Scope.State.Initialized in
+  let this = Scope.Entry.new_let this_t ~has_anno:false ~loc ~state:Scope.State.Initialized in
   (* Normally, functions do not have access to super. *)
   let super =
     let t = ObjProtoT (mk_reason RNoSuper loc) in
-    Scope.Entry.new_let t ~loc ~state:Scope.State.Initialized
+    Scope.Entry.new_let t ~has_anno:false ~loc ~state:Scope.State.Initialized
   in
   let (func_sig, reconstruct_ast) = function_decl id cx ~annot reason func this super in
   let fun_type = Func_stmt_sig.functiontype cx this_t func_sig in

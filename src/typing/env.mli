@@ -53,9 +53,9 @@ val promote_to_const_like : Context.t -> ALoc.t -> bool
 
 val bind_class : Context.t -> ALoc.id -> Type.Properties.id -> Type.Properties.id -> unit
 
-val bind_var : ?state:State.t -> Context.t -> string -> Type.t -> ALoc.t -> unit
+val bind_var : has_anno:bool -> ?state:State.t -> Context.t -> string -> Type.t -> ALoc.t -> unit
 
-val bind_let : ?state:State.t -> Context.t -> string -> Type.t -> ALoc.t -> unit
+val bind_let : has_anno:bool -> ?state:State.t -> Context.t -> string -> Type.t -> ALoc.t -> unit
 
 val bind_implicit_let :
   ?state:State.t -> Entry.let_binding_kind -> Context.t -> string -> Type.t -> ALoc.t -> unit
@@ -65,7 +65,7 @@ val bind_fun : ?state:State.t -> Context.t -> string -> Type.t -> ALoc.t -> unit
 val bind_implicit_const :
   ?state:State.t -> Entry.const_binding_kind -> Context.t -> string -> Type.t -> ALoc.t -> unit
 
-val bind_const : ?state:State.t -> Context.t -> string -> Type.t -> ALoc.t -> unit
+val bind_const : has_anno:bool -> ?state:State.t -> Context.t -> string -> Type.t -> ALoc.t -> unit
 
 val bind_import : Context.t -> string -> Type.t -> ALoc.t -> unit
 
