@@ -8090,7 +8090,7 @@ and mk_func_sig =
     let (tparams, tparams_map, tparams_ast) =
       Anno.mk_type_param_declarations cx ~tparams_map tparams
     in
-    let fparams = mk_params cx ~annot:(annot_decompose_todo annot) tparams_map params in
+    let fparams = mk_params cx ~annot tparams_map params in
     let body = Some body in
     let ret_reason = mk_reason RReturn (Func_sig.return_loc func) in
     let (return_t, return) =
@@ -8168,6 +8168,7 @@ and mk_func_sig =
    and return type, check the body against that signature by adding `this`
    and super` to the environment, and return the signature. *)
 and function_decl id cx ~annot reason func this super =
+  let return_annot = mk_return_annot ~annot ~return_annot:func.Ast.Function.return in
   let (func_sig, reconstruct_func) = mk_func_sig cx ~annot SMap.empty reason func in
   let save_return = Abnormal.clear_saved Abnormal.Return in
   let save_throw = Abnormal.clear_saved Abnormal.Throw in
@@ -8183,7 +8184,7 @@ and function_decl id cx ~annot reason func this super =
             ~decls:toplevel_decls
             ~stmts:toplevels
             ~expr:(expression ~annot:None)
-            ~return_annot:(annot_decompose_todo annot))
+            ~return_annot)
   in
   ignore (Abnormal.swap_saved Abnormal.Return save_return);
   ignore (Abnormal.swap_saved Abnormal.Throw save_throw);
@@ -8205,6 +8206,13 @@ and mk_function_declaration id cx ~general reason func =
 and mk_function_expression id cx ~annot ~general reason func =
   mk_function id cx ~annot ~general reason func
 
+(* If a return annot is available on func, use that. Otherwise try to extract the return annot
+ * from our annotation context *)
+and mk_return_annot ~annot ~return_annot =
+  match return_annot with
+  | Ast.Type.Missing _ -> annot_decompose_todo annot
+  | Ast.Type.Available _ -> Some ()
+
 (* Internal helper function. Use `mk_function_declaration` and `mk_function_expression` instead. *)
 and mk_function id cx ~annot ~general reason func =
   let loc = aloc_of_reason reason in
@@ -8225,6 +8233,8 @@ and mk_arrow cx ~annot reason func =
   let (_, this) = Env.find_entry cx (internal_name "this") loc in
   let (_, super) = Env.find_entry cx (internal_name "super") loc in
   let { Ast.Function.id; _ } = func in
+  (* If a return annot is available on func, use that. Otherwise try to extract the return annot
+   * from our annotation context *)
   let (func_sig, reconstruct_ast) = function_decl id cx ~annot reason func this super in
   (* Do not expose the type of `this` in the function's type. The call to
      function_decl above has already done the necessary checking of `this` in
