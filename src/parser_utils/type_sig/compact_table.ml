@@ -154,14 +154,5 @@ module Make () = struct
 
   let to_array x = x
 
-  module Heap = Type_sig_heap
-
-  let heap_size f xs =
-    let size = ref (Heap.addr_map_size xs) in
-    iter (fun x -> size := !size + f x) xs;
-    !size
-
-  let to_heap = Heap.write_addr_map
-
-  let from_heap = Heap.read_addr_map
+  let to_array_map = map
 end

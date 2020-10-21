@@ -114,17 +114,5 @@ module Make () : sig
 
   val to_array : 'a t -> 'a array
 
-  val heap_size : ('a -> Type_sig_heap.size) -> 'a t -> Type_sig_heap.size
-
-  val to_heap :
-    (Type_sig_heap.chunk -> 'a -> 'k Type_sig_heap.addr) ->
-    Type_sig_heap.chunk ->
-    'a t ->
-    'k Type_sig_heap.addr_map Type_sig_heap.addr
-
-  val from_heap :
-    (Type_sig_heap.heap -> 'k Type_sig_heap.addr -> 'a) ->
-    Type_sig_heap.heap ->
-    'k Type_sig_heap.addr_map Type_sig_heap.addr ->
-    'a t
+  val to_array_map : ('a -> 'b) -> 'a t -> 'b array
 end
