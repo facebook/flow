@@ -95,7 +95,7 @@ let gather_declarations ast =
             (* Gather all identifiers in variable declaration *)
             let acc =
               Flow_ast_utils.fold_bindings_of_pattern
-                (fun acc (id_loc, { Ast.Identifier.name; _ }) ->
+                (fun acc (id_loc, { Ast.Identifier.name; _ }) _ ->
                   add_var_decl acc id_loc loc name kind)
                 acc
                 id

@@ -14,6 +14,54 @@ Missing an annotation on `x`. [missing-local-annot]
                         ^
 
 
+Error ------------------------------------------------------------------------------------------------ assignment.js:6:6
+
+Missing an annotation on `x`. [missing-local-annot]
+
+   6| y = (x) => 3; // Missing annot
+           ^
+
+
+Error ------------------------------------------------------------------------------------------------ assignment.js:9:6
+
+Missing an annotation on `x`. [missing-local-annot]
+
+   9| a = (x) => x; // Errors, but could be supported
+           ^
+
+
+Error ---------------------------------------------------------------------------------------------- assignment.js:10:12
+
+Missing an annotation on `y`. [missing-local-annot]
+
+   10| [a, b] = [(y) => y , (y) => y]; // Errors, but could be supported
+                  ^
+
+
+Error ---------------------------------------------------------------------------------------------- assignment.js:10:23
+
+Missing an annotation on `y`. [missing-local-annot]
+
+   10| [a, b] = [(y) => y , (y) => y]; // Errors, but could be supported
+                             ^
+
+
+Error ----------------------------------------------------------------------------------------------- assignment.js:13:6
+
+Missing an annotation on `x`. [missing-local-annot]
+
+   13| c = (x) => 3; // Missing annot
+            ^
+
+
+Error ----------------------------------------------------------------------------------------------- assignment.js:19:6
+
+Missing an annotation on `x`. [missing-local-annot]
+
+   19| e = (x) => 3; // Missing annot
+            ^
+
+
 Error --------------------------------------------------------------------------------------------------- block.js:14:16
 
 Missing an annotation on `y`. [missing-local-annot]
@@ -463,4 +511,4 @@ Missing an annotation on `y`. [missing-local-annot]
 
 
 
-Found 55 errors
+Found 61 errors

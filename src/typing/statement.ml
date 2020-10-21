@@ -469,11 +469,15 @@ let rec variable_decl cx { Ast.Statement.VariableDeclaration.kind; declarations;
     | Ast.Statement.VariableDeclaration.Var -> Env.bind_var
   in
   Flow_ast_utils.fold_bindings_of_variable_declarations
-    (fun () (loc, { Ast.Identifier.name; comments = _ }) ->
+    (fun () (loc, { Ast.Identifier.name; comments = _ }) annot_hint ->
       let reason = mk_reason (RIdentifier name) loc in
       let t = Tvar.mk cx reason in
-      (* TODO(jmbrown) Check if annotations exist here *)
-      bind ~has_anno:false cx name t loc)
+      let has_anno =
+        match annot_hint with
+        | Flow_ast.Type.Missing _ -> false
+        | Flow_ast.Type.Available _ -> true
+      in
+      bind ~has_anno cx name t loc)
     ()
     declarations
 
@@ -2345,7 +2349,7 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t =
             [(spf "enum %s {}" name, id_loc, name, None)]
           | (_, VariableDeclaration { VariableDeclaration.declarations; _ }) ->
             Flow_ast_utils.fold_bindings_of_variable_declarations
-              (fun acc (loc, { Ast.Identifier.name; comments = _ }) ->
+              (fun acc (loc, { Ast.Identifier.name; comments = _ }) _ ->
                 Type_inference_hooks_js.dispatch_export_named_hook name loc;
                 (spf "var %s" name, loc, name, None) :: acc)
               []
@@ -2389,7 +2393,7 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t =
             [(spf "enum %s {}" name, fst ident, name, None)]
           | (_, VariableDeclaration { VariableDeclaration.declarations; _ }) ->
             Flow_ast_utils.fold_bindings_of_variable_declarations
-              (fun acc (loc, { Ast.Identifier.name; comments = _ }) ->
+              (fun acc (loc, { Ast.Identifier.name; comments = _ }) _ ->
                 (spf "var %s" name, loc, name, None) :: acc)
               []
               declarations
@@ -5772,7 +5776,32 @@ and assign_member
 
 (* traverse simple assignment expressions (`lhs = rhs`) *)
 and simple_assignment cx _loc lhs rhs =
-  let (((_, t), _) as typed_rhs) = expression cx ~annot:None rhs in
+  (* Use annotations from variable declarations if the lhs contains only
+   * annotated variables. Consider this example:
+   *
+   * var a: t1, var b: t2;
+   * [a, [b]] = [e1, [e2, e3]]. In this example, we would push down t1 and t2
+   * to e1 and e2 (which will require work to make happen). e3 does not escape the rhs,
+   * so we do not require an annotation. If either a or b were not annotated, then
+   * we would require annotations on all of e1, e2, and e3. To relax that constraint, we'd
+   * need to be able to figure out how to match the lhs to specific expressions on the rhs
+   * before we visit the rhs to ask for annotations.
+   *)
+  let all_have_annots =
+    Flow_ast_utils.fold_bindings_of_pattern
+      (fun all_have_annots (loc, { Ast.Identifier.name; comments = _ }) _ ->
+        let has_annot = Env.get_var_annotation cx name loc <> None in
+        all_have_annots && has_annot)
+      true
+      lhs
+  in
+  let annot =
+    if all_have_annots then
+      Some ()
+    else
+      None
+  in
+  let (((_, t), _) as typed_rhs) = expression cx ~annot rhs in
   (* update env, add constraints arising from LHS structure,
      handle special cases, etc. *)
   let lhs =

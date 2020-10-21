@@ -31,7 +31,7 @@ let rec fold_bindings_of_pattern =
           fold_bindings_of_pattern f acc p)
     in
     fun f acc -> function
-      | (_, Identifier { Identifier.name; _ }) -> f acc name
+      | (_, Identifier { Identifier.name; annot; _ }) -> f acc name annot
       | (_, Object { Object.properties; _ }) -> List.fold_left (property f) acc properties
       | (_, Array { Array.elements; _ }) -> List.fold_left (element f) acc elements
       (* This is for assignment and default param destructuring `[a.b=1]=c`, ignore these for now. *)

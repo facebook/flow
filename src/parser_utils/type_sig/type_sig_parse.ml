@@ -3579,7 +3579,7 @@ let export_named_decl opts scope locs kind =
     Scope.export_binding scope kind i.S.Interface.id
   | S.VariableDeclaration decl ->
     variable_decls opts scope locs decl;
-    Flow_ast_utils.fold_bindings_of_variable_declarations (fun () id ->
+    Flow_ast_utils.fold_bindings_of_variable_declarations (fun () id _ ->
       Scope.export_binding scope kind id
     ) () decl.S.VariableDeclaration.declarations
   | S.EnumDeclaration e ->

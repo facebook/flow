@@ -71,7 +71,7 @@ class property_access_searcher name =
           if exported_name = name then this#set_acc true
         | Some (_, VariableDeclaration { VariableDeclaration.declarations = decls; _ }) ->
           Flow_ast_utils.fold_bindings_of_variable_declarations
-            (fun () (_, { Ast.Identifier.name = exported_name; comments = _ }) ->
+            (fun () (_, { Ast.Identifier.name = exported_name; comments = _ }) _ ->
               if exported_name = name then this#set_acc true)
             ()
             decls
