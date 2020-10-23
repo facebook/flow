@@ -1,0 +1,1 @@
+cmd: codemod annotate-escaped-generics --strip-root --quiet ./
