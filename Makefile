@@ -146,6 +146,7 @@ MODULES=\
   src/state/heaps/context\
   src/state/heaps/diffing\
   src/state/heaps/module\
+  src/state/heaps/package\
   src/state/heaps/parsing\
   src/state/heaps/parsing/exceptions\
   src/state/locals/module\
@@ -156,6 +157,7 @@ MODULES=\
   src/typing\
   src/typing/coverage_response\
   src/typing/errors\
+  src/typing/generics\
   src/typing/polarity\
   src/hack_forked/dfind\
   src/hack_forked/find\
@@ -195,7 +197,6 @@ NATIVE_C_FILES=\
   src/common/xx/xx_stubs.c\
   src/services/saved_state/compression/saved_state_compression_stubs.c\
   src/hack_forked/find/hh_readdir.c\
-  src/heap/hh_assert.c\
   src/heap/hh_shared.c\
   src/hack_forked/utils/core/get_build_id.c\
   src/hack_forked/utils/sys/files.c\

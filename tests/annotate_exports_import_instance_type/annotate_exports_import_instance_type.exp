@@ -11,7 +11,7 @@ module.exports = (new C: C);
 >>> ./main.js
 // @flow
 
-import typeof C from "./lib.js";const c = require('./lib');
+import typeof C from "./lib";const c = require('./lib');
 
 module.exports = (): C => c;
 
@@ -56,7 +56,7 @@ module.exports = (new C: C);
 >>> ./main.js
 // @flow
 
-import typeof C from "./lib.js";const c = require('./lib');
+import typeof C from "./lib";const c = require('./lib');
 
 module.exports = (): C => c;
 

@@ -88,6 +88,10 @@ module Entry = struct
     | Var VarBinding -> "var"
     | Var ConstlikeVarBinding -> "var"
 
+  type general_type =
+    | Annotated of Type.t
+    | Inferred of Type.t
+
   type value_binding = {
     kind: value_kind;
     value_state: State.t;
@@ -96,7 +100,7 @@ module Entry = struct
     (* The last location (in this scope) where the entry value was assigned *)
     value_assign_loc: ALoc.t;
     specific: Type.t;
-    general: Type.t;
+    general: general_type;
   }
 
   type type_binding_kind =
@@ -119,7 +123,13 @@ module Entry = struct
   let new_class class_binding_id class_private_fields class_private_static_fields =
     Class { Type.class_binding_id; Type.class_private_fields; Type.class_private_static_fields }
 
-  let new_value kind state specific general value_declare_loc =
+  let new_value ~has_anno kind state specific general value_declare_loc =
+    let general =
+      if has_anno then
+        Annotated general
+      else
+        Inferred general
+    in
     Value
       {
         kind;
@@ -133,7 +143,8 @@ module Entry = struct
   let new_const ~loc ?(state = State.Undeclared) ?(kind = ConstVarBinding) t =
     new_value (Const kind) state t t loc
 
-  let new_import ~loc t = new_value (Const ConstImportBinding) State.Initialized t t loc
+  let new_import ~loc t =
+    new_value ~has_anno:false (Const ConstImportBinding) State.Initialized t t loc
 
   let new_let ~loc ?(state = State.Undeclared) ?(kind = LetVarBinding) t =
     new_value (Let kind) state t t loc
@@ -164,8 +175,13 @@ module Entry = struct
     | Type t -> t.type_loc
     | Class _ -> ALoc.none
 
+  let type_t_of_general_type = function
+    | Inferred t
+    | Annotated t ->
+      t
+
   let declared_type = function
-    | Value v -> v.general
+    | Value v -> type_t_of_general_type v.general
     | Type t -> t.type_
     | Class _ -> assert_false "Internal Error: Class bindings have no type"
 
@@ -181,7 +197,7 @@ module Entry = struct
 
   let kind_of_value (value : value_binding) = value.kind
 
-  let general_of_value (value : value_binding) = value.general
+  let general_of_value (value : value_binding) = type_t_of_general_type value.general
 
   let state_of_value (value : value_binding) = value.value_state
 
@@ -198,7 +214,7 @@ module Entry = struct
       if Reason.is_internal_name name then
         entry
       else
-        Value { v with specific = v.general }
+        Value { v with specific = type_t_of_general_type v.general }
     | Value { kind = Const _; _ } -> entry
     | Value { kind = Var ConstlikeVarBinding; _ } -> entry
     | Value { kind = Let ConstlikeLetVarBinding; _ } -> entry
@@ -207,7 +223,7 @@ module Entry = struct
       if Reason.is_internal_name name then
         entry
       else
-        Value { v with specific = v.general }
+        Value { v with specific = type_t_of_general_type v.general }
     | Class _ -> entry
 
   let reset loc name entry =

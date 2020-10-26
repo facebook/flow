@@ -107,8 +107,9 @@ and mark_local_binding = function
     begin
       match def with
       | None -> ()
-      | Some (lazy (rep, members)) ->
+      | Some (lazy (rep, members, has_unknown_members)) ->
         ignore rep;
+        ignore has_unknown_members;
         SMap.iter (fun _ -> mark_loc) members
     end
 

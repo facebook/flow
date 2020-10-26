@@ -25,14 +25,12 @@ let metadata =
     max_literal_length = 100;
     enable_const_params = false;
     enable_enums = true;
+    enable_enums_with_unknown_members = true;
+    enable_this_annot = true;
     enforce_strict_call_arity = true;
-    esproposal_class_static_fields = Options.ESPROPOSAL_ENABLE;
-    esproposal_class_instance_fields = Options.ESPROPOSAL_ENABLE;
-    esproposal_decorators = Options.ESPROPOSAL_WARN;
-    esproposal_export_star_as = Options.ESPROPOSAL_ENABLE;
-    esproposal_optional_chaining = Options.ESPROPOSAL_ENABLE;
-    esproposal_nullish_coalescing = Options.ESPROPOSAL_ENABLE;
+    enforce_local_inference_annotations = false;
     exact_by_default = false;
+    generate_tests = true;
     facebook_fbs = None;
     facebook_fbt = None;
     facebook_module_interop = false;
@@ -271,7 +269,15 @@ let test_case relative_path file_name _ =
 
 (* This list includes files for which the produced Typed AST differs in structure
  * from the parsed AST. *)
-let blocklist = SSet.of_list ["invariant_reachability/index.js"; "return/implicit_void.js"]
+let blocklist =
+  SSet.of_list
+    [
+      "invariant_reachability/index.js";
+      "return/implicit_void.js";
+      (* TODO(sainati) : once `this` parameter checking is implemented remove `this`-related files from the blocklist *)
+      "this_annot_warning/test.js";
+      "this_annot_no_warnings/test.js";
+    ]
 
 let tests =
   let relative_test_dir = "flow/tests" in

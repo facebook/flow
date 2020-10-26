@@ -254,11 +254,7 @@ let calc_partial_dependency_graph ~options ~reader workers files ~parsed =
       workers
       ~job:
         (List.fold_left (fun dependency_info file ->
-             let dependencies =
-               match file with
-               | File_key.JsonFile _ -> (FilenameSet.empty, FilenameSet.empty)
-               | _ -> file_dependencies ~options ~audit:Expensive.ok ~reader file
-             in
+             let dependencies = file_dependencies ~options ~audit:Expensive.ok ~reader file in
              FilenameMap.add file dependencies dependency_info))
       ~neutral:FilenameMap.empty
       ~merge:FilenameMap.union

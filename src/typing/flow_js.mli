@@ -77,7 +77,7 @@ val resolve_spread_list :
 
 val subst : Context.t -> ?use_op:Type.use_op -> ?force:bool -> Type.t SMap.t -> Type.t -> Type.t
 
-val generate_tests : Context.t -> Type.typeparam list -> (Type.t SMap.t -> 'a) -> 'a
+val check_with_generics : Context.t -> Type.typeparam list -> (Type.t SMap.t -> 'a) -> 'a
 
 val match_this_binding : Type.t SMap.t -> (Type.t -> bool) -> bool
 
@@ -87,7 +87,7 @@ val check_polarity :
 (* selectors *)
 
 val eval_selector :
-  Context.t -> ?trace:Trace.t -> reason -> Type.t -> Type.selector -> Type.tvar -> unit
+  Context.t -> ?trace:Trace.t -> reason -> Type.t -> Type.selector -> Type.tvar -> int -> unit
 
 val visit_eval_id : Context.t -> Type.Eval.id -> (Type.t -> unit) -> unit
 
@@ -108,6 +108,8 @@ val mk_type_destructor :
 (* ... *)
 
 val mk_default : Context.t -> reason -> Type.t Default.t -> Type.t
+
+val is_munged_prop_name : Context.t -> string -> bool
 
 (* val graph: bounds IMap.t ref *)
 val lookup_module : Context.t -> string -> Type.t

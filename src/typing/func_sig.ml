@@ -12,6 +12,10 @@ open Type
 open TypeUtil
 include Func_sig_intf
 
+(* We use this value to indicate places where values stored in the environment can have
+ * an annotation with some more work *)
+let has_anno_todo = false
+
 module Make (F : Func_params.S) = struct
   type func_params = F.t
 
@@ -76,9 +80,9 @@ module Make (F : Func_params.S) = struct
     let return_t = Flow.subst cx map return_t in
     { x with tparams; tparams_map; fparams; return_t }
 
-  let generate_tests cx f x =
+  let check_with_generics cx f x =
     let { tparams; tparams_map; fparams; return_t; _ } = x in
-    Flow.generate_tests cx (tparams |> TypeParams.to_list) (fun map ->
+    Flow.check_with_generics cx (tparams |> TypeParams.to_list) (fun map ->
         f
           {
             x with
@@ -145,6 +149,7 @@ module Make (F : Func_params.S) = struct
       ~decls
       ~stmts
       ~expr
+      ~return_annot
       { reason = reason_fn; kind; tparams_map; fparams; body; return_t; knot; _ } =
     let loc =
       let open Ast.Function in
@@ -201,7 +206,7 @@ module Make (F : Func_params.S) = struct
     let params_ast = F.eval cx fparams in
     (* early-add our own name binding for recursive calls. *)
     Base.Option.iter id ~f:(fun (loc, { Ast.Identifier.name; comments = _ }) ->
-        let entry = knot |> Scope.Entry.new_var ~loc in
+        let entry = knot |> Scope.Entry.new_var ~has_anno:has_anno_todo ~loc in
         Scope.add_entry name entry function_scope);
 
     let (yield_t, next_t) =
@@ -225,7 +230,14 @@ module Make (F : Func_params.S) = struct
             let state = State.Initialized in
             new_const ~loc ~state t)
         in
-        (new_entry yield_t, new_entry next_t, new_entry return_t))
+        ( new_entry ~has_anno:false yield_t,
+          new_entry ~has_anno:false next_t,
+          let has_anno =
+            match return_annot with
+            | Some _ -> true
+            | _ -> false
+          in
+          new_entry ~has_anno return_t ))
     in
     Scope.add_entry (internal_name "yield") yield function_scope;
     Scope.add_entry (internal_name "next") next function_scope;
@@ -236,6 +248,7 @@ module Make (F : Func_params.S) = struct
     in
     let maybe_exhaustively_checked =
       Scope.Entry.new_let
+        ~has_anno:false
         ~loc:(loc_of_t maybe_exhaustively_checked_t)
         ~state:Scope.State.Declared
         maybe_exhaustively_checked_t

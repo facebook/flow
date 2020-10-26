@@ -58,6 +58,7 @@ type hash =
   | ObjNotFrozenInexactH
   | ObjNotFrozenIndexedH
   | ObjNotFrozenUnsealedH
+  | GenericH
   | ObjProtoH
   | MatchingPropH
   | NullProtoH
@@ -234,6 +235,7 @@ type hash =
   | DestructReactElementConfigTypeH
   | DestructReactElementRefTypeH
   | DestructReactConfigTypeH
+  | SealGenericH
 
 let hash_of_def_ctor =
   Type.(
@@ -323,6 +325,7 @@ let hash_of_ctor =
     | FunProtoApplyT _ -> FunProtoApplyH
     | FunProtoBindT _ -> FunProtoBindH
     | FunProtoCallT _ -> FunProtoCallH
+    | GenericT _ -> GenericH
     | IntersectionT _ -> IntersectionH
     | KeysT _ -> KeysH
     | MaybeT _ -> MaybeH
@@ -463,7 +466,8 @@ let hash_of_use_ctor =
     | ModuleExportsAssignT _ -> ModuleExportsAssignH
     | FilterOptionalT _ -> FilterOptionalH
     | FilterMaybeT _ -> FilterMaybeH
-    | FunImplicitVoidReturnT _ -> FunImplicitVoidReturnH)
+    | FunImplicitVoidReturnT _ -> FunImplicitVoidReturnH
+    | SealGenericT _ -> SealGenericH)
 
 let add = Xx.update
 

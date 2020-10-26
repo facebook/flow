@@ -46,7 +46,8 @@
               "optional":false
             }
           }
-        ]
+        ],
+        "hasUnknownMembers":false
       }
     }
   ],

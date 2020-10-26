@@ -134,7 +134,8 @@ let load_lib_files ~ccx ~options ~reader files =
                  (lib_file, false, errors, Flow_error.ErrorSet.empty, Error_suppressions.empty)
                in
                (exclude_syms, result :: results)
-             | Parsing.Parse_skip (Parsing.Skip_non_flow_file | Parsing.Skip_resource_file) ->
+             | Parsing.(Parse_skip (Skip_non_flow_file | Skip_resource_file | Skip_package_json _))
+               ->
                (* should never happen *)
                let errs = Flow_error.ErrorSet.empty in
                let warnings = Flow_error.ErrorSet.empty in

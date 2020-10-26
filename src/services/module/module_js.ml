@@ -87,8 +87,8 @@ let module_name_candidates ~options =
       List.rev (name :: List.fold_left map_name [] mappers))
 
 let add_package filename = function
-  | Ok package -> Module_heaps.Package_heap_mutator.add_package_json filename package
-  | Error _ -> Module_heaps.Package_heap_mutator.add_error filename
+  | Ok package -> Package_heaps.Package_heap_mutator.add_package_json filename package
+  | Error _ -> Package_heaps.Package_heap_mutator.add_error filename
 
 type package_incompatible_reason =
   (* Didn't exist before, now it exists *)
@@ -123,8 +123,8 @@ type package_incompatible_return =
   | Incompatible of package_incompatible_reason
 
 let package_incompatible ~options ~reader filename ast =
-  let new_package = Package_json.parse ~options ast in
-  let old_package = Module_heaps.Reader.get_package ~reader filename in
+  let new_package = Package_json.parse ~node_main_fields:(Options.node_main_fields options) ast in
+  let old_package = Package_heaps.Reader.get_package ~reader filename in
   match (old_package, new_package) with
   | (None, Ok _) -> Incompatible New (* didn't exist before, found a new one *)
   | (None, Error _) -> Compatible (* didn't exist before, new one is invalid *)
@@ -286,7 +286,7 @@ module Node = struct
       None
     else
       let package =
-        match Module_heaps.Reader_dispatcher.get_package ~reader package_filename with
+        match Package_heaps.Reader_dispatcher.get_package ~reader package_filename with
         | Some (Ok package) -> package
         | Some (Error ()) ->
           (* invalid, but we already raised an error when building PackageHeap *)
@@ -530,7 +530,7 @@ module Haste : MODULE_SYSTEM = struct
     match Str.split_delim (Str.regexp_string "/") r with
     | [] -> None
     | package_name :: rest ->
-      Module_heaps.Reader_dispatcher.get_package_directory ~reader package_name
+      Package_heaps.Reader_dispatcher.get_package_directory ~reader package_name
       |> Base.Option.map ~f:(fun package -> Files.construct_path package rest)
 
   (* similar to Node resolution, with possible special cases *)

@@ -803,6 +803,7 @@ module Options_flags = struct
     temp_dir: string option;
     traces: int option;
     trust_mode: Options.trust_mode option;
+    generate_tests: bool option;
     new_signatures: bool;
     abstract_locations: bool;
     verbose: Verbose.t option;
@@ -863,7 +864,8 @@ let options_flags =
       new_signatures
       abstract_locations
       include_suppressions
-      trust_mode =
+      trust_mode
+      generate_tests =
     (match merge_timeout with
     | Some timeout when timeout < 0 ->
       FlowExitStatus.(exit ~msg:"--merge-timeout must be non-negative" Commandline_usage_error)
@@ -889,6 +891,7 @@ let options_flags =
         quiet;
         merge_timeout;
         trust_mode;
+        generate_tests;
         new_signatures;
         abstract_locations;
         include_suppressions;
@@ -953,7 +956,8 @@ let options_flags =
                    ("silent", Options.SilentTrust);
                    ("none", Options.NoTrust);
                  ]))
-           ~doc:"")
+           ~doc:""
+      |> flag "--generate-tests" (optional bool) ~doc:"")
 
 let saved_state_flags =
   let collect_saved_state_flags
@@ -1239,11 +1243,13 @@ let make_options
     opt_max_literal_length = FlowConfig.max_literal_length flowconfig;
     opt_enable_const_params = FlowConfig.enable_const_params flowconfig;
     opt_enabled_rollouts = FlowConfig.enabled_rollouts flowconfig;
+    opt_enforce_local_inference_annotations =
+      FlowConfig.enforce_local_inference_annotations flowconfig;
     opt_enforce_strict_call_arity = FlowConfig.enforce_strict_call_arity flowconfig;
     opt_enforce_well_formed_exports;
     opt_enums = FlowConfig.enums flowconfig;
-    opt_esproposal_decorators = FlowConfig.esproposal_decorators flowconfig;
-    opt_esproposal_export_star_as = FlowConfig.esproposal_export_star_as flowconfig;
+    opt_enums_with_unknown_members = FlowConfig.enums_with_unknown_members flowconfig;
+    opt_this_annot = FlowConfig.this_annot flowconfig;
     opt_exact_by_default = FlowConfig.exact_by_default flowconfig;
     opt_facebook_fbs = FlowConfig.facebook_fbs flowconfig;
     opt_facebook_fbt = FlowConfig.facebook_fbt flowconfig;
@@ -1253,10 +1259,6 @@ let make_options
       options_flags.include_warnings
       || options_flags.max_warnings <> None
       || FlowConfig.include_warnings flowconfig;
-    opt_esproposal_class_static_fields = FlowConfig.esproposal_class_static_fields flowconfig;
-    opt_esproposal_class_instance_fields = FlowConfig.esproposal_class_instance_fields flowconfig;
-    opt_esproposal_optional_chaining = FlowConfig.esproposal_optional_chaining flowconfig;
-    opt_esproposal_nullish_coalescing = FlowConfig.esproposal_nullish_coalescing flowconfig;
     opt_max_header_tokens = FlowConfig.max_header_tokens flowconfig;
     opt_haste_module_ref_prefix = FlowConfig.haste_module_ref_prefix flowconfig;
     opt_haste_name_reducers = FlowConfig.haste_name_reducers flowconfig;
@@ -1297,6 +1299,8 @@ let make_options
         ~f:(Files.expand_project_root_token ~root)
         (FlowConfig.strict_es6_import_export_excludes flowconfig);
     opt_automatic_require_default = FlowConfig.automatic_require_default flowconfig;
+    opt_generate_tests =
+      Base.Option.value options_flags.generate_tests ~default:(FlowConfig.generate_tests flowconfig);
   }
 
 let make_env flowconfig_name connect_flags root =

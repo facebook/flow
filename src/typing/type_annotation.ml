@@ -7,6 +7,7 @@
 
 module Ast = Flow_ast
 module Tast_utils = Typed_ast_utils
+module Generic_ID = Generic
 open Utils_js
 open Reason
 open Type
@@ -936,11 +937,21 @@ let rec convert cx tparams_map =
       Function
         {
           Function.params =
-            (params_loc, { Function.Params.params; rest; comments = params_comments });
+            ( params_loc,
+              {
+                Function.Params.params;
+                rest;
+                (* TODO: handle `this` constraints *)
+                this_;
+                comments = params_comments;
+              } );
           return;
           tparams;
           comments = func_comments;
         } ) ->
+    if Context.enable_this_annot cx |> not then
+      Base.Option.iter this_ ~f:(fun (this_loc, _) ->
+          Flow_js.add_output cx (Error_message.EExperimentalThisAnnot this_loc));
     let (tparams, tparams_map, tparams_ast) = mk_type_param_declarations cx ~tparams_map tparams in
     let (rev_params, rev_param_asts) =
       List.fold_left
@@ -1019,6 +1030,8 @@ let rec convert cx tparams_map =
               {
                 Function.Params.params = List.rev rev_param_asts;
                 rest = rest_param_ast;
+                (* TODO: handle `this` constraints *)
+                this_ = None;
                 comments = params_comments;
               } );
           return = return_ast;
@@ -1059,7 +1072,7 @@ let rec convert cx tparams_map =
       (Class_type_sig.empty id reason None tparams_map super, extend_asts)
     in
     let (iface_sig, property_asts) = add_interface_properties cx tparams_map properties iface_sig in
-    Class_type_sig.generate_tests
+    Class_type_sig.check_with_generics
       cx
       (fun iface_sig ->
         Class_type_sig.check_super cx reason iface_sig;
@@ -1497,18 +1510,32 @@ and convert_object =
                   ~f:(function
                     | Acc.Spread t -> Type t
                     | Acc.Slice { dict; pmap } ->
-                      Slice { Type.Object.Spread.reason; prop_map = pmap; dict })
+                      Slice
+                        {
+                          Type.Object.Spread.reason;
+                          prop_map = pmap;
+                          dict;
+                          generics = Generic_ID.spread_empty;
+                        })
                   ts
               in
               (t, ts, None)
             | (Acc.Slice { dict; pmap = prop_map }, Acc.Spread t :: ts) ->
-              let head_slice = { Type.Object.Spread.reason; prop_map; dict } in
+              let head_slice =
+                { Type.Object.Spread.reason; prop_map; dict; generics = Generic_ID.spread_empty }
+              in
               let ts =
                 Base.List.map
                   ~f:(function
                     | Acc.Spread t -> Type t
                     | Acc.Slice { dict; pmap } ->
-                      Slice { Type.Object.Spread.reason; prop_map = pmap; dict })
+                      Slice
+                        {
+                          Type.Object.Spread.reason;
+                          prop_map = pmap;
+                          dict;
+                          generics = Generic_ID.spread_empty;
+                        })
                   ts
               in
               (t, ts, Some head_slice)
@@ -1542,9 +1569,20 @@ and mk_func_sig =
     in
     Func_type_params.add_rest rest x
   in
-  let convert_params cx tparams_map (loc, { Params.params; rest; comments }) =
+  let convert_params
+      cx
+      tparams_map
+      (loc, { Params.params; rest; (* TODO: handle `this` constraints *)
+                                   this_; comments }) =
+    if Context.enable_this_annot cx |> not then
+      Base.Option.iter this_ ~f:(fun (this_loc, _) ->
+          Flow_js.add_output cx (Error_message.EExperimentalThisAnnot this_loc));
     let fparams =
-      Func_type_params.empty (fun params rest -> Some (loc, { Params.params; rest; comments }))
+      Func_type_params.empty (fun params rest ->
+          Some
+            ( loc,
+              { Params.params; rest; (* TODO: handle `this` constraints *)
+                                     this_ = None; comments } ))
     in
     let fparams = List.fold_left (add_param cx tparams_map) fparams params in
     let fparams = Base.Option.fold ~f:(add_rest cx tparams_map) ~init:fparams rest in
@@ -1671,7 +1709,7 @@ and mk_type_param_declarations cx ?(tparams_map = SMap.empty) tparams =
         (Some t, default_ast)
     in
     let polarity = polarity variance in
-    let tparam = { reason; name; bound; polarity; default } in
+    let tparam = { reason; name; bound; polarity; default; is_this = false } in
     let t = BoundT (reason, name) in
     let name_ast =
       let (loc, id_name) = id in
@@ -1731,7 +1769,7 @@ and add_interface_properties cx tparams_map properties s =
         Ast.Type.Object.(
           fun (x, rev_prop_asts) -> function
             | CallProperty (loc, { CallProperty.value = (value_loc, ft); static; comments }) ->
-              let ((_, t), ft) = convert cx tparams_map (loc, Ast.Type.Function ft) in
+              let ((_, t), ft) = convert cx tparams_map (value_loc, Ast.Type.Function ft) in
               let ft =
                 match ft with
                 | Ast.Type.Function ft -> ft

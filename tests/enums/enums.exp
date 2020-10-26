@@ -8,13 +8,9 @@ value to a string using `(<expression>: string)`. [incompatible-cast]
         ^^^
 
 References:
-   cast.js:13:1
-       v-----------------
+   cast.js:13:6
    13| enum S of string {
-   14|   A,
-   15|   B,
-   16| }
-       ^ [1]
+            ^ [1]
    cast.js:37:8
    37| (S.A: ?string); // Error: if casting to representation type, must cast to exactly it
               ^^^^^^ [2]
@@ -29,13 +25,9 @@ Cannot cast `B.A` to number because `B` [1] is incompatible with number [2]. [in
         ^^^
 
 References:
-   cast.js:3:1
-       v------------------
+   cast.js:3:6
     3| enum B of boolean {
-    4|   A = true,
-    5|   B = false,
-    6| }
-       ^ [1]
+            ^ [1]
    cast.js:51:7
    51| (B.A: number); // Error
              ^^^^^^ [2]
@@ -50,13 +42,9 @@ Cannot cast `S.A` to boolean because `S` [1] is incompatible with boolean [2]. [
         ^^^
 
 References:
-   cast.js:13:1
-       v-----------------
+   cast.js:13:6
    13| enum S of string {
-   14|   A,
-   15|   B,
-   16| }
-       ^ [1]
+            ^ [1]
    cast.js:52:7
    52| (S.A: boolean); // Error
              ^^^^^^^ [2]
@@ -71,13 +59,9 @@ Cannot cast `N.A` to boolean because `N` [1] is incompatible with boolean [2]. [
         ^^^
 
 References:
-   cast.js:8:1
-       v-----------------
+   cast.js:8:6
     8| enum N of number {
-    9|   A = 1,
-   10|   B = 2,
-   11| }
-       ^ [1]
+            ^ [1]
    cast.js:53:7
    53| (N.A: boolean); // Error
              ^^^^^^^ [2]
@@ -92,13 +76,9 @@ Cannot cast `Y.A` to boolean because `Y` [1] is incompatible with boolean [2]. [
         ^^^
 
 References:
-   cast.js:18:1
-       v-----------------
+   cast.js:18:6
    18| enum Y of symbol {
-   19|   A,
-   20|   B,
-   21| }
-       ^ [1]
+            ^ [1]
    cast.js:54:7
    54| (Y.A: boolean); // Error
              ^^^^^^^ [2]
@@ -113,13 +93,9 @@ Cannot cast `X.A` to string because `B` [1] is incompatible with string [2]. [in
         ^^^
 
 References:
-   cast.js:3:1
-       v------------------
+   cast.js:3:6
     3| enum B of boolean {
-    4|   A = true,
-    5|   B = false,
-    6| }
-       ^ [1]
+            ^ [1]
    cast.js:55:7
    55| (X.A: string); // Error
              ^^^^^^ [2]
@@ -135,13 +111,9 @@ value to a boolean using `(<expression>: boolean)`. [incompatible-cast]
         ^^^^
 
 References:
-   cast.js:3:1
-       v------------------
+   cast.js:3:6
     3| enum B of boolean {
-    4|   A = true,
-    5|   B = false,
-    6| }
-       ^ [1]
+            ^ [1]
    cast.js:66:17
    66| (BS.A: string | boolean); // Error
                        ^^^^^^^ [2]
@@ -157,13 +129,9 @@ value to a string using `(<expression>: string)`. [incompatible-cast]
         ^^^^
 
 References:
-   cast.js:13:1
-       v-----------------
+   cast.js:13:6
    13| enum S of string {
-   14|   A,
-   15|   B,
-   16| }
-       ^ [1]
+            ^ [1]
    cast.js:66:8
    66| (BS.A: string | boolean); // Error
               ^^^^^^ [2]
@@ -214,13 +182,9 @@ Cannot cast `F` to `EO` because enum `F` [1] is incompatible with enum `E` [2]. 
         ^
 
 References:
-   enum-object.js:8:1
-       v-------
+   enum-object.js:8:6
     8| enum F {
-    9|   A,
-   10|   B,
-   11| }
-       ^ [1]
+            ^ [1]
    enum-object.js:16:5
    16| (F: EO); // Error: types are incompatible
            ^^ [2]
@@ -368,13 +332,9 @@ Cannot iterate using a `for...in` loop because enum `E` [1] is not an object, nu
                        ^
 
 References:
-   enum-object.js:3:1
-       v-------
+   enum-object.js:3:6
     3| enum E {
-    4|   A,
-    5|   B,
-    6| }
-       ^ [1]
+            ^ [1]
 
 
 Error ------------------------------------------------------------------------------------------------- equality.js:21:1
@@ -390,13 +350,9 @@ References:
    equality.js:18:10
    18| const s: string = "hi";
                 ^^^^^^ [1]
-   equality.js:3:1
-       v-------
+   equality.js:3:6
     3| enum E {
-    4|   A,
-    5|   B,
-    6| }
-       ^ [2]
+            ^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------- equality.js:22:1
@@ -409,13 +365,9 @@ strict equality (`===` or `!==`) instead. [invalid-compare]
        ^
 
 References:
-   equality.js:3:1
-       v-------
+   equality.js:3:6
     3| enum E {
-    4|   A,
-    5|   B,
-    6| }
-       ^ [1]
+            ^ [1]
    equality.js:18:10
    18| const s: string = "hi";
                 ^^^^^^ [2]
@@ -434,13 +386,9 @@ References:
    equality.js:18:10
    18| const s: string = "hi";
                 ^^^^^^ [1]
-   equality.js:3:1
-       v-------
+   equality.js:3:6
     3| enum E {
-    4|   A,
-    5|   B,
-    6| }
-       ^ [2]
+            ^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------- equality.js:25:1
@@ -453,13 +401,9 @@ strict equality (`===` or `!==`) instead. [invalid-compare]
        ^
 
 References:
-   equality.js:3:1
-       v-------
+   equality.js:3:6
     3| enum E {
-    4|   A,
-    5|   B,
-    6| }
-       ^ [1]
+            ^ [1]
    equality.js:18:10
    18| const s: string = "hi";
                 ^^^^^^ [2]
@@ -475,13 +419,9 @@ strict equality (`===` or `!==`) instead. [invalid-compare]
        ^
 
 References:
-   equality.js:3:1
-       v-------
+   equality.js:3:6
     3| enum E {
-    4|   A,
-    5|   B,
-    6| }
-       ^ [1]
+            ^ [1]
 
 
 Error ------------------------------------------------------------------------------------------------- equality.js:28:1
@@ -497,13 +437,9 @@ References:
    equality.js:16:11
    16| const ef: E | F = E.A;
                  ^ [1]
-   equality.js:3:1
-       v-------
+   equality.js:3:6
     3| enum E {
-    4|   A,
-    5|   B,
-    6| }
-       ^ [2]
+            ^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------- equality.js:28:1
@@ -519,13 +455,9 @@ References:
    equality.js:16:15
    16| const ef: E | F = E.A;
                      ^ [1]
-   equality.js:3:1
-       v-------
+   equality.js:3:6
     3| enum E {
-    4|   A,
-    5|   B,
-    6| }
-       ^ [2]
+            ^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------- equality.js:29:1
@@ -538,20 +470,12 @@ strict equality (`===` or `!==`) instead. [invalid-compare]
        ^^^
 
 References:
-   equality.js:8:1
-       v-------
+   equality.js:8:6
     8| enum F {
-    9|   A,
-   10|   B,
-   11| }
-       ^ [1]
-   equality.js:3:1
-       v-------
+            ^ [1]
+   equality.js:3:6
     3| enum E {
-    4|   A,
-    5|   B,
-    6| }
-       ^ [2]
+            ^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------- equality.js:31:1
@@ -584,13 +508,9 @@ References:
    equality.js:18:10
    18| const s: string = "hi";
                 ^^^^^^ [1]
-   equality.js:3:1
-       v-------
+   equality.js:3:6
     3| enum E {
-    4|   A,
-    5|   B,
-    6| }
-       ^ [2]
+            ^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------- equality.js:39:1
@@ -602,13 +522,9 @@ Cannot compare `E` [1] to string [2]. [invalid-compare]
        ^
 
 References:
-   equality.js:3:1
-       v-------
+   equality.js:3:6
     3| enum E {
-    4|   A,
-    5|   B,
-    6| }
-       ^ [1]
+            ^ [1]
    equality.js:18:10
    18| const s: string = "hi";
                 ^^^^^^ [2]
@@ -626,13 +542,9 @@ References:
    equality.js:18:10
    18| const s: string = "hi";
                 ^^^^^^ [1]
-   equality.js:3:1
-       v-------
+   equality.js:3:6
     3| enum E {
-    4|   A,
-    5|   B,
-    6| }
-       ^ [2]
+            ^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------- equality.js:42:1
@@ -644,13 +556,9 @@ Cannot compare `E` [1] to string [2]. [invalid-compare]
        ^
 
 References:
-   equality.js:3:1
-       v-------
+   equality.js:3:6
     3| enum E {
-    4|   A,
-    5|   B,
-    6| }
-       ^ [1]
+            ^ [1]
    equality.js:18:10
    18| const s: string = "hi";
                 ^^^^^^ [2]
@@ -668,13 +576,9 @@ References:
    equality.js:18:10
    18| const s: string = "hi";
                 ^^^^^^ [1]
-   equality.js:3:1
-       v-------
+   equality.js:3:6
     3| enum E {
-    4|   A,
-    5|   B,
-    6| }
-       ^ [2]
+            ^ [2]
 
 
 Error --------------------------------------------------------------------------------------------- error-access.js:9:13
@@ -686,13 +590,9 @@ Cannot access `C` because `C` is not a member of enum `E` [1]. [invalid-enum-acc
                   ^
 
 References:
-   error-access.js:3:1
-      v-------
+   error-access.js:3:6
    3| enum E {
-   4|   A,
-   5|   B,
-   6| }
-      ^ [1]
+           ^ [1]
 
 
 Error --------------------------------------------------------------------------------------------- error-access.js:14:3
@@ -704,13 +604,9 @@ Cannot access string on enum `E` [1] because computed access is not allowed on e
          ^^^
 
 References:
-   error-access.js:3:1
-       v-------
+   error-access.js:3:6
     3| enum E {
-    4|   A,
-    5|   B,
-    6| }
-       ^ [1]
+            ^ [1]
 
 
 Error --------------------------------------------------------------------------------------------- error-access.js:22:3
@@ -722,14 +618,9 @@ Cannot access `Car` because `Car` is not a member of enum `F` [1]. Did you mean 
          ^^^
 
 References:
-   error-access.js:16:1
-       v-------
+   error-access.js:16:6
    16| enum F {
-   17|   Cart,
-   18|   Bart,
-   19|   Foobar,
-   20| }
-       ^ [1]
+            ^ [1]
 
 
 Error --------------------------------------------------------------------------------------------- error-access.js:23:3
@@ -742,14 +633,9 @@ Cannot access `Foobr` because `Foobr` is not a member of enum `F` [1]. Did you m
          ^^^^^
 
 References:
-   error-access.js:16:1
-       v-------
+   error-access.js:16:6
    16| enum F {
-   17|   Cart,
-   18|   Bart,
-   19|   Foobar,
-   20| }
-       ^ [1]
+            ^ [1]
 
 
 Error --------------------------------------------------------------------------------------------- error-access.js:24:3
@@ -761,14 +647,9 @@ Cannot access `Bar` because `Bar` is not a member of enum `F` [1]. Did you mean 
          ^^^
 
 References:
-   error-access.js:16:1
-       v-------
+   error-access.js:16:6
    16| enum F {
-   17|   Cart,
-   18|   Bart,
-   19|   Foobar,
-   20| }
-       ^ [1]
+            ^ [1]
 
 
 Error --------------------------------------------------------------------------------------------- error-access.js:25:3
@@ -780,14 +661,9 @@ Cannot access `X` because `X` is not a member of enum `F` [1]. [invalid-enum-acc
          ^
 
 References:
-   error-access.js:16:1
-       v-------
+   error-access.js:16:6
    16| enum F {
-   17|   Cart,
-   18|   Bart,
-   19|   Foobar,
-   20| }
-       ^ [1]
+            ^ [1]
 
 
 Error ------------------------------------------------------------------------------------------- error-coercion.js:8:19
@@ -800,13 +676,9 @@ string using `(<expression>: string)`. [incompatible-type]
                         ^^^
 
 References:
-   error-coercion.js:3:1
-      v-------
+   error-coercion.js:3:6
    3| enum E {
-   4|   A,
-   5|   B,
-   6| }
-      ^ [1]
+           ^ [1]
    error-coercion.js:8:10
    8| const a: string = E.A; // Error: cannot implicitly coerce enum to its representation type
                ^^^^^^ [2]
@@ -835,13 +707,9 @@ Cannot assign `E.A` to `c` because `E` [1] is incompatible with number [2]. [inc
                          ^^^
 
 References:
-   error-coercion.js:3:1
-       v-------
+   error-coercion.js:3:6
     3| enum E {
-    4|   A,
-    5|   B,
-    6| }
-       ^ [1]
+            ^ [1]
    error-coercion.js:12:10
    12| const c: number = E.A; // Error, message does not include suggestion because string isn't a subtype of number
                 ^^^^^^ [2]
@@ -857,12 +725,9 @@ to a boolean using `(<expression>: boolean)`. [incompatible-type]
                              ^^^
 
 References:
-   error-coercion.js:14:1
-       v------------------
+   error-coercion.js:14:6
    14| enum B of boolean {
-   15|   A = true,
-   16| }
-       ^ [1]
+            ^ [1]
    error-coercion.js:17:13
    17| const bool: boolean = B.A; // Error, with suggestion
                    ^^^^^^^ [2]
@@ -877,12 +742,9 @@ Cannot assign `B.A` to `x` because `B` [1] is incompatible with number [2]. [inc
                          ^^^
 
 References:
-   error-coercion.js:14:1
-       v------------------
+   error-coercion.js:14:6
    14| enum B of boolean {
-   15|   A = true,
-   16| }
-       ^ [1]
+            ^ [1]
    error-coercion.js:18:10
    18| const x: number = B.A; // Error, no suggestion
                 ^^^^^^ [2]
@@ -898,12 +760,9 @@ a number using `(<expression>: number)`. [incompatible-type]
                            ^^^
 
 References:
-   error-coercion.js:20:1
-       v-----------------
+   error-coercion.js:20:6
    20| enum N of number {
-   21|   A = 1,
-   22| }
-       ^ [1]
+            ^ [1]
    error-coercion.js:23:12
    23| const num: number = N.A; // Error, with suggestion
                   ^^^^^^ [2]
@@ -918,12 +777,9 @@ Cannot assign `N.A` to `y` because `N` [1] is incompatible with string [2]. [inc
                          ^^^
 
 References:
-   error-coercion.js:20:1
-       v-----------------
+   error-coercion.js:20:6
    20| enum N of number {
-   21|   A = 1,
-   22| }
-       ^ [1]
+            ^ [1]
    error-coercion.js:24:10
    24| const y: string = N.A; // Error, no suggestion
                 ^^^^^^ [2]
@@ -939,12 +795,9 @@ a symbol using `(<expression>: symbol)`. [incompatible-type]
                            ^^^
 
 References:
-   error-coercion.js:26:1
-       v-----------------
+   error-coercion.js:26:6
    26| enum S of symbol {
-   27|   A,
-   28| }
-       ^ [1]
+            ^ [1]
    error-coercion.js:29:12
    29| const sym: symbol = S.A; // Error, with suggestion
                   ^^^^^^ [2]
@@ -959,12 +812,9 @@ Cannot assign `S.A` to `z` because `S` [1] is incompatible with boolean [2]. [in
                           ^^^
 
 References:
-   error-coercion.js:26:1
-       v-----------------
+   error-coercion.js:26:6
    26| enum S of symbol {
-   27|   A,
-   28| }
-       ^ [1]
+            ^ [1]
    error-coercion.js:30:10
    30| const z: boolean = S.A; // Error, no suggestion
                 ^^^^^^^ [2]
@@ -983,15 +833,9 @@ References:
    error-duplicate-values.js:4:3
    4|   A = true,
         ^^^^^^^^ [1]
-   error-duplicate-values.js:3:1
-      v-------
+   error-duplicate-values.js:3:6
    3| enum E {
-   4|   A = true,
-   5|   B = false,
-   6|   C = true, // Error: duplicate member initializer
-   7|   D = true, // Error: duplicate member initializer
-   8| }
-      ^ [2]
+           ^ [2]
 
 
 Error ------------------------------------------------------------------------------------ error-duplicate-values.js:7:7
@@ -1007,15 +851,9 @@ References:
    error-duplicate-values.js:4:3
    4|   A = true,
         ^^^^^^^^ [1]
-   error-duplicate-values.js:3:1
-      v-------
+   error-duplicate-values.js:3:6
    3| enum E {
-   4|   A = true,
-   5|   B = false,
-   6|   C = true, // Error: duplicate member initializer
-   7|   D = true, // Error: duplicate member initializer
-   8| }
-      ^ [2]
+           ^ [2]
 
 
 Error ----------------------------------------------------------------------------------- error-duplicate-values.js:12:7
@@ -1031,15 +869,9 @@ References:
    error-duplicate-values.js:11:3
    11|   A = 1,
          ^^^^^ [1]
-   error-duplicate-values.js:10:1
-       v-------
+   error-duplicate-values.js:10:6
    10| enum F {
-   11|   A = 1,
-   12|   B = 1, // Error: duplicate member initializer
-   13|   C = 1.0, // Error: duplicate member initializer
-   14|   D = 2,
-   15| }
-       ^ [2]
+            ^ [2]
 
 
 Error ----------------------------------------------------------------------------------- error-duplicate-values.js:13:7
@@ -1055,15 +887,9 @@ References:
    error-duplicate-values.js:11:3
    11|   A = 1,
          ^^^^^ [1]
-   error-duplicate-values.js:10:1
-       v-------
+   error-duplicate-values.js:10:6
    10| enum F {
-   11|   A = 1,
-   12|   B = 1, // Error: duplicate member initializer
-   13|   C = 1.0, // Error: duplicate member initializer
-   14|   D = 2,
-   15| }
-       ^ [2]
+            ^ [2]
 
 
 Error ----------------------------------------------------------------------------------- error-duplicate-values.js:20:7
@@ -1079,15 +905,9 @@ References:
    error-duplicate-values.js:19:3
    19|   B = "a",
          ^^^^^^^ [1]
-   error-duplicate-values.js:17:1
-       v-------
+   error-duplicate-values.js:17:6
    17| enum G {
-   18|   A = "b",
-   19|   B = "a",
-   20|   C = "a", // Error: duplicate member initializer
-   21|   D = "a", // Error: duplicate member initializer
-   22| }
-       ^ [2]
+            ^ [2]
 
 
 Error ----------------------------------------------------------------------------------- error-duplicate-values.js:21:7
@@ -1103,15 +923,9 @@ References:
    error-duplicate-values.js:19:3
    19|   B = "a",
          ^^^^^^^ [1]
-   error-duplicate-values.js:17:1
-       v-------
+   error-duplicate-values.js:17:6
    17| enum G {
-   18|   A = "b",
-   19|   B = "a",
-   20|   C = "a", // Error: duplicate member initializer
-   21|   D = "a", // Error: duplicate member initializer
-   22| }
-       ^ [2]
+            ^ [2]
 
 
 Error ----------------------------------------------------------------------------------- error-duplicate-values.js:28:7
@@ -1127,15 +941,9 @@ References:
    error-duplicate-values.js:27:3
    27|   B = 2.2204460492503130808472633361816E-16, // Number.EPSILON
          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   error-duplicate-values.js:24:1
-       v-------
+   error-duplicate-values.js:24:6
    24| enum H {
-   25|   A = 0,
-   26|   // Due to IEEE 754, both below values are the same in JS
-   27|   B = 2.2204460492503130808472633361816E-16, // Number.EPSILON
-   28|   C = 2.2204460492503130808472633361815E-16, // Error: duplicate member initializer
-   29| }
-       ^ [2]
+            ^ [2]
 
 
 Error ----------------------------------------------------------------------------------- error-duplicate-values.js:35:7
@@ -1151,15 +959,9 @@ References:
    error-duplicate-values.js:34:3
    34|   B = 9007199254740992,
          ^^^^^^^^^^^^^^^^^^^^ [1]
-   error-duplicate-values.js:31:1
-       v-------
+   error-duplicate-values.js:31:6
    31| enum I {
-   32|   A = 9007199254740991, // Number.MAX_SAFE_INTEGER
-   33|   // Due to IEEE 754, both below values are the same in JS
-   34|   B = 9007199254740992,
-   35|   C = 9007199254740993, // Error: duplicate member initializer
-   36| }
-       ^ [2]
+            ^ [2]
 
 
 Error ---------------------------------------------------------------------------------------- error-modification.js:9:1
@@ -1171,13 +973,9 @@ Cannot change member of enum `E` [1] because enums are frozen. [cannot-write-enu
       ^^^
 
 References:
-   error-modification.js:3:1
-      v-------
+   error-modification.js:3:6
    3| enum E {
-   4|   A,
-   5|   B,
-   6| }
-      ^ [1]
+           ^ [1]
 
 
 Error --------------------------------------------------------------------------------------- error-modification.js:12:1
@@ -1189,13 +987,9 @@ Cannot change member of enum `E` [1] because enums are frozen. [cannot-write-enu
        ^^^^^^
 
 References:
-   error-modification.js:3:1
-       v-------
+   error-modification.js:3:6
     3| enum E {
-    4|   A,
-    5|   B,
-    6| }
-       ^ [1]
+            ^ [1]
 
 
 Error --------------------------------------------------------------------------------------- error-modification.js:15:8
@@ -1207,13 +1001,9 @@ Cannot change member of enum `E` [1] because enums are frozen. [cannot-write-enu
               ^^^
 
 References:
-   error-modification.js:3:1
-       v-------
+   error-modification.js:3:6
     3| enum E {
-    4|   A,
-    5|   B,
-    6| }
-       ^ [1]
+            ^ [1]
 
 
 Error -------------------------------------------------------------------------------------------- error-reassign.js:4:1
@@ -1366,13 +1156,9 @@ Incomplete exhaustive check: the member `B` of enum `E` [1] has not been conside
                ^
 
 References:
-   exhaustive-check.js:3:1
-       v-------
+   exhaustive-check.js:3:6
     3| enum E {
-    4|   A,
-    5|   B,
-    6| }
-       ^ [1]
+            ^ [1]
 
 
 Error ----------------------------------------------------------------------------------------- exhaustive-check.js:51:9
@@ -1451,13 +1237,9 @@ References:
    exhaustive-check.js:79:9
      79| switch (x)  {
                  ^ [1]
-   exhaustive-check.js:3:1
-         v-------
+   exhaustive-check.js:3:6
       3| enum E {
-      4|   A,
-      5|   B,
-      6| }
-         ^ [2]
+              ^ [2]
    <BUILTINS>/core.js:2449:3
    2449|   isValid(input: ?TRepresentation): boolean,
            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
@@ -1482,13 +1264,9 @@ Incomplete exhaustive check: the members `B` and `A` of enum `E` [1] have not be
                ^
 
 References:
-   exhaustive-check.js:3:1
-       v-------
+   exhaustive-check.js:3:6
     3| enum E {
-    4|   A,
-    5|   B,
-    6| }
-       ^ [1]
+            ^ [1]
 
 
 Error ----------------------------------------------------------------------------------------- exhaustive-check.js:98:8
@@ -1501,13 +1279,9 @@ Invalid exhaustive check: case checks for enum member `A` of `E` [1], but member
               ^^^
 
 References:
-   exhaustive-check.js:3:1
-       v-------
+   exhaustive-check.js:3:6
     3| enum E {
-    4|   A,
-    5|   B,
-    6| }
-       ^ [1]
+            ^ [1]
    exhaustive-check.js:96:8
    96|   case E.A: break;
               ^^^ [2]
@@ -1523,13 +1297,9 @@ already been checked. [invalid-exhaustive-check]
           ^^^^^^^^
 
 References:
-   exhaustive-check.js:3:1
-        v-------
+   exhaustive-check.js:3:6
      3| enum E {
-     4|   A,
-     5|   B,
-     6| }
-        ^ [1]
+             ^ [1]
 
 
 Error ---------------------------------------------------------------------------------------- exhaustive-check.js:108:9
@@ -1542,13 +1312,9 @@ Incomplete exhaustive check: the members `B` and `A` of enum `E` [1] have not be
                 ^
 
 References:
-   exhaustive-check.js:3:1
-        v-------
+   exhaustive-check.js:3:6
      3| enum E {
-     4|   A,
-     5|   B,
-     6| }
-        ^ [1]
+             ^ [1]
 
 
 Error ---------------------------------------------------------------------------------------- exhaustive-check.js:109:8
@@ -1564,20 +1330,12 @@ References:
    exhaustive-check.js:108:9
    108| switch (x)  { // Error
                 ^ [1]
-   exhaustive-check.js:3:1
-        v-------
+   exhaustive-check.js:3:6
      3| enum E {
-     4|   A,
-     5|   B,
-     6| }
-        ^ [2]
-   exhaustive-check.js:8:1
-        v-------
+             ^ [2]
+   exhaustive-check.js:8:6
      8| enum F {
-     9|   A,
-    10|   B,
-    11| }
-        ^ [3]
+             ^ [3]
 
 
 Error ---------------------------------------------------------------------------------------- exhaustive-check.js:110:8
@@ -1593,20 +1351,12 @@ References:
    exhaustive-check.js:108:9
    108| switch (x)  { // Error
                 ^ [1]
-   exhaustive-check.js:3:1
-        v-------
+   exhaustive-check.js:3:6
      3| enum E {
-     4|   A,
-     5|   B,
-     6| }
-        ^ [2]
-   exhaustive-check.js:8:1
-        v-------
+             ^ [2]
+   exhaustive-check.js:8:6
      8| enum F {
-     9|   A,
-    10|   B,
-    11| }
-        ^ [3]
+             ^ [3]
 
 
 Error ---------------------------------------------------------------------------------------- exhaustive-check.js:115:8
@@ -1625,13 +1375,9 @@ References:
    exhaustive-check.js:113:16
    113| declare var s: string;
                        ^^^^^^ [2]
-   exhaustive-check.js:3:1
-        v-------
+   exhaustive-check.js:3:6
      3| enum E {
-     4|   A,
-     5|   B,
-     6| }
-        ^ [3]
+             ^ [3]
 
 
 Error ---------------------------------------------------------------------------------------- exhaustive-check.js:116:8
@@ -1650,13 +1396,9 @@ References:
    exhaustive-check.js:113:16
    113| declare var s: string;
                        ^^^^^^ [2]
-   exhaustive-check.js:3:1
-        v-------
+   exhaustive-check.js:3:6
      3| enum E {
-     4|   A,
-     5|   B,
-     6| }
-        ^ [3]
+             ^ [3]
 
 
 Error --------------------------------------------------------------------------------------- exhaustive-check.js:122:10
@@ -1675,13 +1417,9 @@ References:
    exhaustive-check.js:120:17
    120| function f1(x?: E) {
                         ^ [2]
-   exhaustive-check.js:3:1
-        v-------
+   exhaustive-check.js:3:6
      3| enum E {
-     4|   A,
-     5|   B,
-     6| }
-        ^ [3]
+             ^ [3]
 
 
 Error --------------------------------------------------------------------------------------- exhaustive-check.js:123:10
@@ -1700,13 +1438,9 @@ References:
    exhaustive-check.js:120:17
    120| function f1(x?: E) {
                         ^ [2]
-   exhaustive-check.js:3:1
-        v-------
+   exhaustive-check.js:3:6
      3| enum E {
-     4|   A,
-     5|   B,
-     6| }
-        ^ [3]
+             ^ [3]
 
 
 Error --------------------------------------------------------------------------------------- exhaustive-check.js:129:10
@@ -1725,13 +1459,9 @@ References:
    exhaustive-check.js:127:16
    127| function f2(x: ?E) {
                        ^^ [2]
-   exhaustive-check.js:3:1
-        v-------
+   exhaustive-check.js:3:6
      3| enum E {
-     4|   A,
-     5|   B,
-     6| }
-        ^ [3]
+             ^ [3]
 
 
 Error --------------------------------------------------------------------------------------- exhaustive-check.js:130:10
@@ -1750,13 +1480,9 @@ References:
    exhaustive-check.js:127:16
    127| function f2(x: ?E) {
                        ^^ [2]
-   exhaustive-check.js:3:1
-        v-------
+   exhaustive-check.js:3:6
      3| enum E {
-     4|   A,
-     5|   B,
-     6| }
-        ^ [3]
+             ^ [3]
 
 
 Error --------------------------------------------------------------------------------------- exhaustive-check.js:135:11
@@ -1790,13 +1516,9 @@ References:
    exhaustive-check.js:134:16
    134| function f3(x: ?E) {
                        ^^ [2]
-   exhaustive-check.js:3:1
-        v-------
+   exhaustive-check.js:3:6
      3| enum E {
-     4|   A,
-     5|   B,
-     6| }
-        ^ [3]
+             ^ [3]
 
 
 Error --------------------------------------------------------------------------------------- exhaustive-check.js:141:11
@@ -1830,13 +1552,9 @@ References:
    exhaustive-check.js:140:20
    140| function f4(x: E | F) {
                            ^ [2]
-   exhaustive-check.js:3:1
-        v-------
+   exhaustive-check.js:3:6
      3| enum E {
-     4|   A,
-     5|   B,
-     6| }
-        ^ [3]
+             ^ [3]
 
 
 Error --------------------------------------------------------------------------------------- exhaustive-check.js:143:10
@@ -1855,13 +1573,9 @@ References:
    exhaustive-check.js:140:20
    140| function f4(x: E | F) {
                            ^ [2]
-   exhaustive-check.js:3:1
-        v-------
+   exhaustive-check.js:3:6
      3| enum E {
-     4|   A,
-     5|   B,
-     6| }
-        ^ [3]
+             ^ [3]
 
 
 Error --------------------------------------------------------------------------------------- exhaustive-check.js:149:10
@@ -1880,13 +1594,9 @@ References:
    exhaustive-check.js:147:20
    147| function f5(x: E | string) {
                            ^^^^^^ [2]
-   exhaustive-check.js:3:1
-        v-------
+   exhaustive-check.js:3:6
      3| enum E {
-     4|   A,
-     5|   B,
-     6| }
-        ^ [3]
+             ^ [3]
 
 
 Error --------------------------------------------------------------------------------------- exhaustive-check.js:150:10
@@ -1905,13 +1615,9 @@ References:
    exhaustive-check.js:147:20
    147| function f5(x: E | string) {
                            ^^^^^^ [2]
-   exhaustive-check.js:3:1
-        v-------
+   exhaustive-check.js:3:6
      3| enum E {
-     4|   A,
-     5|   B,
-     6| }
-        ^ [3]
+             ^ [3]
 
 
 Error ---------------------------------------------------------------------------------------- exhaustive-check.js:154:9
@@ -1924,13 +1630,9 @@ Incomplete exhaustive check: the member `B` of enum `E` [1] has not been conside
                 ^
 
 References:
-   exhaustive-check.js:3:1
-        v-------
+   exhaustive-check.js:3:6
      3| enum E {
-     4|   A,
-     5|   B,
-     6| }
-        ^ [1]
+             ^ [1]
 
 
 Error ---------------------------------------------------------------------------------------- exhaustive-check.js:156:8
@@ -1946,20 +1648,12 @@ References:
    exhaustive-check.js:154:9
    154| switch (x) { // Error
                 ^ [1]
-   exhaustive-check.js:3:1
-        v-------
+   exhaustive-check.js:3:6
      3| enum E {
-     4|   A,
-     5|   B,
-     6| }
-        ^ [2]
-   exhaustive-check.js:8:1
-        v-------
+             ^ [2]
+   exhaustive-check.js:8:6
      8| enum F {
-     9|   A,
-    10|   B,
-    11| }
-        ^ [3]
+             ^ [3]
 
 
 Error --------------------------------------------------------------------------------------- exhaustive-check.js:165:11
@@ -2057,12 +1751,9 @@ References:
    exhaustive-check.js:187:16
    187| function f8(x: M | N, X: typeof M | typeof N) {
                        ^ [2]
-   exhaustive-check.js:184:1
-        v-------
+   exhaustive-check.js:184:6
    184| enum N {
-   185|   A,
-   186| }
-        ^ [3]
+             ^ [3]
 
 
 Error --------------------------------------------------------------------------------------- exhaustive-check.js:189:10
@@ -2081,12 +1772,9 @@ References:
    exhaustive-check.js:187:20
    187| function f8(x: M | N, X: typeof M | typeof N) {
                            ^ [2]
-   exhaustive-check.js:181:1
-        v-------
+   exhaustive-check.js:181:6
    181| enum M {
-   182|   A,
-   183| }
-        ^ [3]
+             ^ [3]
 
 
 Error --------------------------------------------------------------------------------------- exhaustive-check.js:209:11
@@ -2113,13 +1801,9 @@ Cannot access `XXX` because `XXX` is not a member of enum `E` [1]. [invalid-enum
                  ^^^
 
 References:
-   exhaustive-check.js:3:1
-        v-------
+   exhaustive-check.js:3:6
      3| enum E {
-     4|   A,
-     5|   B,
-     6| }
-        ^ [1]
+             ^ [1]
 
 
 Error ---------------------------------------------------------------------------------------------- import-type.js:10:2
@@ -2206,13 +1890,9 @@ An index signature declaring the expected key / value type is missing in enum `E
          ^^^^^^^^^
 
 References:
-   methods.js:3:1
-       v-------
+   methods.js:3:6
     3| enum E {
-    4|   A,
-    5|   B,
-    6| }
-       ^ [1]
+            ^ [1]
 
 
 Error -------------------------------------------------------------------------------------------------- methods.js:35:3
@@ -3494,13 +3174,23 @@ Cannot spread object literal because enum `E` [1] is not an object. [not-an-obje
                     ^
 
 References:
-   spread.js:3:1
-      v-------
+   spread.js:3:6
    3| enum E {
-   4|   A,
-   5|   B,
-   6| }
-      ^ [1]
+           ^ [1]
+
+
+Error --------------------------------------------------------------------------------------- unknown-members-off.js:5:1
+
+Flow Enums with unknown members are not enabled in this project. Remove the `...` from your enum declaration.
+[illegal-enum]
+
+      v-----------------
+   5| enum E {  // Error
+   6|   A,
+   7|   B,
+   8|   ...
+   9| }
+      ^
 
 
 Error ------------------------------------------------------------------------------------------- utility-types.js:12:11
@@ -3621,7 +3311,7 @@ References:
 
 
 
-Found 200 errors
+Found 201 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches

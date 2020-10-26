@@ -56,7 +56,7 @@ type dependency =
   | UncheckedDep of string
   | BuiltinDep of string * string
   | UnknownDep of string
-  | LegacyUncheckedDepTryBuiltinsFirst of string * string
+  | LegacyUncheckedDepTryBuiltinsFirst of string
 
 type 'a node =
   | Node of {
@@ -231,7 +231,7 @@ let add_name_field reason =
   in
   SMap.update "name" f
 
-let merge_enum file reason id_loc enum_name rep members =
+let merge_enum file reason id_loc enum_name rep members has_unknown_members =
   let rep_reason desc = Reason.(mk_reason (REnumRepresentation desc) id_loc) in
   let rep_t desc def_t = Type.DefT (rep_reason desc, trust, def_t) in
   let representation_t =
@@ -257,14 +257,18 @@ let merge_enum file reason id_loc enum_name rep members =
     | SymbolRep -> rep_t Reason.RSymbol SymbolT
   in
   let enum_id = Context.make_aloc_id file.cx id_loc in
-  Type.(DefT (reason, trust, EnumObjectT { enum_id; enum_name; members; representation_t }))
+  Type.(
+    DefT
+      ( reason,
+        trust,
+        EnumObjectT { enum_id; enum_name; members; representation_t; has_unknown_members } ))
 
 let rec merge component file = function
   | Pack.Annot t -> merge_annot component file t
   | Pack.Value t -> merge_value component file t
   | Pack.Ref ref -> merge_ref component file (fun t _ _ -> t) ref
   | Pack.TyRef name ->
-    let f t ref_loc name =
+    let f t ref_loc (name, _) =
       let reason = Reason.(mk_annot_reason (RType name) ref_loc) in
       Flow_js.mk_instance file.cx reason t
     in
@@ -317,7 +321,7 @@ and merge_pattern component file = function
     let t = visit_pattern component file def in
     let reason = Reason.(mk_reason RObjectPatternRestProp loc) in
     Tvar.mk_where file.cx reason (fun tout ->
-        Flow_js.flow file.cx (t, Type.ObjRestT (reason, xs, tout)))
+        Flow_js.flow file.cx (t, Type.ObjRestT (reason, xs, tout, Reason.mk_id ())))
   | Pack.IndexP { loc; i; def } ->
     let def = Patterns.get file.patterns def in
     let t = visit_pattern component file def in
@@ -365,7 +369,8 @@ and merge_def component file reason = function
     merge_declare_fun component file ((id_loc, fn_loc, def), tail)
   | Variable { id_loc = _; name = _; def } -> merge component file def
   | DisabledEnumBinding _ -> Type.AnyT.error reason
-  | EnumBinding { id_loc; name; rep; members } -> merge_enum file reason id_loc name rep members
+  | EnumBinding { id_loc; name; rep; members; has_unknown_members } ->
+    merge_enum file reason id_loc name rep members has_unknown_members
 
 and merge_remote_ref component file reason = function
   | Pack.Import { id_loc; name; index; remote } ->
@@ -394,9 +399,9 @@ and merge_dep =
     let reason = Reason.(mk_reason (RCustom ref) loc) in
     Type.AnyT.error reason
   in
-  let legacy_unchecked_module file loc ref name =
+  let legacy_unchecked_module file loc ref =
     let reason = Reason.(mk_reason (RCustom ref) loc) in
-    let m_name = Reason.internal_module_name name in
+    let m_name = Reason.internal_module_name ref in
     Tvar.mk_no_wrap_where file.cx reason (fun tout ->
         let strict = Type.(NonstrictReturning (Some (AnyT (reason, Untyped), OpenT tout), None)) in
         Flow_js.lookup_builtin file.cx m_name reason strict tout)
@@ -410,7 +415,7 @@ and merge_dep =
     | UncheckedDep ref -> unchecked_module loc ref
     | BuiltinDep (ref, name) -> builtin_module file loc ref name
     | UnknownDep ref -> unknown_module loc ref
-    | LegacyUncheckedDepTryBuiltinsFirst (ref, name) -> legacy_unchecked_module file loc ref name
+    | LegacyUncheckedDepTryBuiltinsFirst ref -> legacy_unchecked_module file loc ref
 
 and require component file loc index =
   let (mref, dep) = Module_refs.get file.dependencies index in
@@ -452,20 +457,23 @@ and merge_star component file (loc, index) =
   (loc, merge_dep component file loc dep)
 
 and merge_tyref component file f = function
-  | Pack.Unqualified ref -> merge_ref component file f ref
+  | Pack.Unqualified ref ->
+    let f t loc name = f t loc (Nel.one name) in
+    merge_ref component file f ref
   | Pack.Qualified { loc; id_loc; name; qualification } ->
-    let f t _ _ =
-      (* TODO: use_op *)
-      let use_op = Type.unknown_use in
-      let reason_op = Reason.(mk_reason (RProperty (Some name)) loc) in
-      let id_reason = Reason.(mk_reason (RProperty (Some name)) id_loc) in
+    let f t _ names =
+      let names = Nel.cons name names in
+      let qname = String.concat "." (List.rev (Nel.to_list names)) in
+      let id_reason = Reason.(mk_reason (RType name) id_loc) in
+      let reason_op = Reason.(mk_reason (RType qname) loc) in
+      let use_op = Type.(Op (GetProperty reason_op)) in
       let t =
         Tvar.mk_no_wrap_where file.cx reason_op (fun tout ->
             Flow_js.flow
               file.cx
               (t, Type.(GetPropT (use_op, reason_op, Named (id_reason, name), tout))))
       in
-      f t loc name
+      f t loc names
     in
     merge_tyref component file f qualification
 
@@ -944,7 +952,7 @@ and merge_annot component file = function
     let merge_slice dict props =
       let dict = Option.map ~f:(merge_dict component file) dict in
       let prop_map = SMap.map (merge_obj_annot_prop component file) props in
-      { Type.Object.Spread.reason; prop_map; dict }
+      { Type.Object.Spread.reason; prop_map; dict; generics = Generic.spread_empty }
     in
     let merge_elem = function
       | ObjSpreadAnnotElem t -> Type.Object.Spread.Type (merge component file t)
@@ -1023,7 +1031,7 @@ and merge_value component file = function
     ignore proto;
     let merge_slice props =
       let prop_map = SMap.map (merge_obj_value_prop component file) props in
-      { Type.Object.Spread.reason; prop_map; dict = None }
+      { Type.Object.Spread.reason; prop_map; dict = None; generics = Generic.spread_empty }
     in
     let merge_elem = function
       | ObjValueSpreadElem t -> Type.Object.Spread.Type (merge component file t)
@@ -1199,7 +1207,7 @@ and merge_tparam component file tp =
     | None -> None
     | Some t -> Some (merge component file t)
   in
-  { Type.reason; name; polarity; bound; default }
+  { Type.reason; name; polarity; bound; default; is_this = false }
 
 and merge_op component file op = map_op (merge component file) op
 
@@ -1385,7 +1393,7 @@ and merge_class component file reason id def =
       }
     in
     let inst = DefT (reason, trust, InstanceT (static, super, implements, insttype)) in
-    TypeUtil.this_class_type inst
+    TypeUtil.this_class_type inst true
   in
   merge_tparams_targs component file reason t tparams
 
@@ -1459,7 +1467,7 @@ and merge_declare_class component file reason id def =
       }
     in
     let inst = DefT (reason, trust, InstanceT (static, super, implements, insttype)) in
-    TypeUtil.this_class_type inst
+    TypeUtil.this_class_type inst true
   in
   merge_tparams_targs component file reason t tparams
 
@@ -1556,7 +1564,11 @@ and merge_predicate component file base_t loc p =
   Type.OpenPredT { reason; base_t; m_pos; m_neg }
 
 and merge_fun
-    component file reason (FunSig { tparams; params; rest_param; return; predicate }) statics =
+    component
+    file
+    reason
+    (FunSig { tparams; params; rest_param; this_param = _; return; predicate })
+    statics =
   let prototype =
     let reason = Reason.(update_desc_reason (Fn.const RPrototype) reason) in
     Type.Unsoundness.function_proto_any reason

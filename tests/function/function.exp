@@ -321,6 +321,20 @@ References:
                                                             ^^^^^^ [2]
 
 
+Error ----------------------------------------------------------------------------------------------------- bind.js:32:3
+
+Cannot call `A.bind` because class `A` [1] is not a function type. [incompatible-use]
+
+   bind.js:32:3
+   32| A.bind(3);
+         ^^^^
+
+References:
+   bind.js:30:7
+   30| class A {}
+             ^ [1]
+
+
 Error ----------------------------------------------------------------------------------------------------- call.js:4:15
 
 Cannot get `this.length` because property `length` is missing in `Number` [1]. [prop-missing]
@@ -705,6 +719,24 @@ References:
                                   ^^^^^^ [2]
 
 
+Error ---------------------------------------------------------------------------------------------------- rest.js:31:10
+
+Cannot return function because function [1] contains type variable `T` [2] which cannot escape from the scope in which
+it was defined [2] (try adding a type annotation to return [3]). [escaped-generic]
+
+   rest.js:31:10
+   31|   return function<U: T>(...xs: T): void {}
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+References:
+   rest.js:30:27
+   30| function bounds_on_bounds<T>() {
+                                 ^ [2]
+   rest.js:30:31
+   30| function bounds_on_bounds<T>() {
+                                      [3]
+
+
 Error ---------------------------------------------------------------------------------------------------- rest.js:36:13
 
 Cannot call `xs.pop` because property `pop` is missing in `T` [1]. [incompatible-use]
@@ -852,4 +884,4 @@ References:
 
 
 
-Found 56 errors
+Found 58 errors

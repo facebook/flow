@@ -427,21 +427,22 @@ Unexpected use of `this` type. [illegal-this]
                               ^^^^
 
 
-Error ----------------------------------------------------------------------------------------------------- self.js:4:24
+Error ----------------------------------------------------------------------------------------------------- self.js:2:18
 
-Cannot return `(new A()).foo()` because `A` [1] is incompatible with `this` [2]. [incompatible-return]
+Cannot return `this` because `this` [1] cannot escape from its class [1] (try adding a type annotation to return [2]).
+[escaped-generic]
 
-   self.js:4:24
-   4|   bar(): this { return new A().foo(); } // same as returning : A, so error
-                             ^^^^^^^^^^^^^
+   self.js:2:18
+   2|   foo() { return this; } // return of foo is not annotated to get around
+                       ^^^^
 
 References:
    self.js:1:7
    1| class A {
             ^ [1]
-   self.js:4:10
-   4|   bar(): this { return new A().foo(); } // same as returning : A, so error
-               ^^^^ [2]
+   self.js:2:8
+   2|   foo() { return this; } // return of foo is not annotated to get around
+              [2]
 
 
 Error -------------------------------------------------------------------------------------------------- statics.js:17:2
@@ -459,6 +460,138 @@ References:
    statics.js:17:12
    17| (A.make(): B); // error
                   ^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:4:18
+
+Cannot return `this` because `this` [1] cannot escape from its class [1] (try adding a type annotation to return [2]).
+[escaped-generic]
+
+   test.js:4:18
+   4|   foo() { return this; }
+                       ^^^^
+
+References:
+   test.js:3:7
+   3| class Base {
+            ^^^^ [1]
+   test.js:4:8
+   4|   foo() { return this; }
+              [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:7:18
+
+Cannot return `this` because `this` [1] cannot escape from its class [1] (try adding a type annotation to return [2]).
+[escaped-generic]
+
+   test.js:7:18
+   7|   bar() { return this; }
+                       ^^^^
+
+References:
+   test.js:3:7
+   3| class Base {
+            ^^^^ [1]
+   test.js:7:8
+   7|   bar() { return this; }
+              [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:8:25
+
+Cannot return `this.bar()` because `this` [1] cannot escape from its class [1] (try adding a type annotation to
+return [2]). [escaped-generic]
+
+   test.js:8:25
+   8|   bar_caller() { return this.bar(); }
+                              ^^^^^^^^^^
+
+References:
+   test.js:3:7
+   3| class Base {
+            ^^^^ [1]
+   test.js:8:15
+   8|   bar_caller() { return this.bar(); }
+                     [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:14:18
+
+Cannot extend `Base` [1] with `Override` because `this` [2] cannot escape from its class [2] (try adding a type
+annotation to return [3]) in the return value of property `foo`. [escaped-generic]
+
+   test.js:14:18
+   14|   foo() { return this; } // OK
+                        ^^^^
+
+References:
+   test.js:13:24
+   13| class Override extends Base {
+                              ^^^^ [1]
+   test.js:13:7
+   13| class Override extends Base {
+             ^^^^^^^^ [2]
+   test.js:4:8
+    4|   foo() { return this; }
+               [3]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:15:18
+
+Cannot extend `Base` [1] with `Override` because `this` [2] cannot escape from its class [2] (try adding a type
+annotation to return [3]) in the return value of property `qux`. [escaped-generic]
+
+   test.js:15:18
+   15|   qux() { return this; } // OK, too
+                        ^^^^
+
+References:
+   test.js:13:24
+   13| class Override extends Base {
+                              ^^^^ [1]
+   test.js:13:7
+   13| class Override extends Base {
+             ^^^^^^^^ [2]
+   test.js:5:8
+    5|   qux() { return new Base; }
+               [3]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:14:18
+
+Cannot return `this` because `this` [1] cannot escape from its class [1] (try adding a type annotation to return [2]).
+[escaped-generic]
+
+   test.js:14:18
+   14|   foo() { return this; } // OK
+                        ^^^^
+
+References:
+   test.js:13:7
+   13| class Override extends Base {
+             ^^^^^^^^ [1]
+   test.js:14:8
+   14|   foo() { return this; } // OK
+               [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:15:18
+
+Cannot return `this` because `this` [1] cannot escape from its class [1] (try adding a type annotation to return [2]).
+[escaped-generic]
+
+   test.js:15:18
+   15|   qux() { return this; } // OK, too
+                        ^^^^
+
+References:
+   test.js:13:7
+   13| class Override extends Base {
+             ^^^^^^^^ [1]
+   test.js:15:8
+   15|   qux() { return this; } // OK, too
+               [2]
 
 
 Error ----------------------------------------------------------------------------------------------------- test.js:23:2
@@ -568,29 +701,11 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:56:16
 
-Cannot extend `Base2` [1] with `Override2` because `Override2` [2] is incompatible with `Base2` [3] in the first
-argument of property `grault`. [incompatible-extend]
-
-   test.js:56:16
-   56|   grault(that: this) { } // error, too
-                      ^^^^ [2]
-
-References:
-   test.js:47:25
-   47| class Override2 extends Base2 {
-                               ^^^^^ [1]
-   test.js:42:16
-   42|   grault(that: Base2) { }
-                      ^^^^^ [3]
-
-
-Error ---------------------------------------------------------------------------------------------------- test.js:56:16
-
 Cannot extend `Base2` [1] with `Override2` because `this` [2] is incompatible with `Base2` [3] in the first argument of
 property `grault`. [incompatible-extend]
 
    test.js:56:16
-   56|   grault(that: this) { } // error, too
+   56|   grault(that: this) { } // error, too (only variance error with new-generics)
                       ^^^^ [2]
 
 References:
@@ -623,7 +738,7 @@ Cannot use `this` [1] in an input position because `this` [1] is expected to occ
 [incompatible-variance]
 
    test.js:56:16
-   56|   grault(that: this) { } // error, too
+   56|   grault(that: this) { } // error, too (only variance error with new-generics)
                       ^^^^
 
 References:
@@ -633,4 +748,4 @@ References:
 
 
 
-Found 40 errors
+Found 46 errors

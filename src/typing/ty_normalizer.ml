@@ -752,8 +752,9 @@ end = struct
        * may exit the scope of the structure that introduced them, in which case we
        * do not perform the substitution. There instead we unfold the underlying type. *)
       let reason = TypeUtil.reason_of_t t in
-      match desc_of_reason ~unwrap:false reason with
-      | RPolyTest (name, _) ->
+      match (t, desc_of_reason ~unwrap:false reason) with
+      | (Type.GenericT { name; _ }, _)
+      | (_, RPolyTest (name, _, _, _)) ->
         let loc = Reason.def_aloc_of_reason reason in
         let default t = next ~env t in
         lookup_tparam ~default env t name loc
@@ -801,6 +802,9 @@ end = struct
       match t with
       | OpenT (_, id) -> type_variable ~env id
       | BoundT (reason, name) -> bound_t ~env reason name
+      | GenericT { bound; _ } ->
+        (* only hit when we were unable to lookup a type parameter *)
+        type__ ~env bound
       | AnnotT (_, t, _) -> type__ ~env t
       | EvalT (t, d, id) -> eval_t ~env ~cont t id d
       | ExactT (_, t) -> exact_t ~env t
@@ -852,7 +856,7 @@ end = struct
           (generic_talias
              (Ty_symbol.builtin_symbol "React$AbstractComponent")
              (Some [config; instance]))
-      | ThisClassT (_, t) -> this_class_t ~env t
+      | ThisClassT (_, t, _) -> this_class_t ~env t
       | ThisTypeAppT (_, c, _, ts) -> type_app ~env c ts
       | KeysT (_, t) ->
         let%map ty = type__ ~env t in
@@ -1290,7 +1294,7 @@ end = struct
     and poly_ty ~env t typeparams =
       let open Type in
       match t with
-      | ThisClassT (_, t) -> this_class_t ~env t
+      | ThisClassT (_, t, _) -> this_class_t ~env t
       | DefT (_, _, FunT (static, _, f)) ->
         let%bind (env, ps) = type_params_t ~env typeparams in
         let%map fun_t = fun_ty ~env static f ps in
@@ -1350,7 +1354,7 @@ end = struct
       let singleton_poly ~env targs tparams t =
         let open Type in
         match t with
-        | ThisClassT (_, DefT (r, _, InstanceT (_, _, _, i)))
+        | ThisClassT (_, DefT (r, _, InstanceT (_, _, _, i)), _)
         | DefT (_, _, TypeT (_, DefT (r, _, InstanceT (_, _, _, i))))
         | DefT (_, _, ClassT (DefT (r, _, InstanceT (_, _, _, i)))) ->
           instance_app ~env r i tparams targs
@@ -1365,7 +1369,7 @@ end = struct
         match t with
         | AnyT _ -> type__ ~env t
         | DefT (_, _, PolyT { tparams; t_out; _ }) -> singleton_poly ~env targs tparams t_out
-        | ThisClassT (_, t)
+        | ThisClassT (_, t, _)
         | DefT (_, _, TypeT (_, t)) ->
           (* This is likely an error - cannot apply on non-polymorphic type.
            * E.g type Foo = any; var x: Foo<number> *)
@@ -1678,7 +1682,7 @@ end = struct
         in
         Ty.Obj { Ty.obj_props; obj_kind; obj_literal = None; obj_frozen = false (* default *) }
       in
-      let spread_operand_slice ~env { T.Object.Spread.reason = _; prop_map; dict } =
+      let spread_operand_slice ~env { T.Object.Spread.reason = _; prop_map; dict; _ } =
         Type.TypeTerm.(
           let obj_frozen = false in
           let obj_literal = None in
@@ -1953,7 +1957,7 @@ end = struct
         | DefT (_, _, TypeT (ImportClassKind, DefT (r, _, InstanceT (static, super, _, inst)))) ->
           class_or_interface_decl ~env r (Some tparams) static super inst
         (* Classes *)
-        | ThisClassT (_, DefT (r, _, InstanceT (static, super, _, inst)))
+        | ThisClassT (_, DefT (r, _, InstanceT (static, super, _, inst)), _)
         (* Interfaces *)
         | DefT (_, _, ClassT (DefT (r, _, InstanceT (static, super, _, inst)))) ->
           class_or_interface_decl ~env r (Some tparams) static super inst
@@ -1982,7 +1986,7 @@ end = struct
           let%map (name, exports, default) = module_of_object ~env r o in
           Ty.Decl (Ty.ModuleDecl { name; exports; default })
         (* Monomorphic Classes/Interfaces *)
-        | ThisClassT (_, DefT (r, _, InstanceT (static, super, _, inst)))
+        | ThisClassT (_, DefT (r, _, InstanceT (static, super, _, inst)), _)
         | DefT (_, _, ClassT (DefT (r, _, InstanceT (static, super, _, inst))))
         | DefT (_, _, TypeT (InstanceKind, DefT (r, _, InstanceT (static, super, _, inst))))
         | DefT (_, _, TypeT (ImportClassKind, DefT (r, _, InstanceT (static, super, _, inst)))) ->
@@ -2382,7 +2386,7 @@ end = struct
         | DefT (r, tr, EnumObjectT e) -> enum_t ~env r tr e
         | DefT (r, _, InstanceT (static, super, _, inst)) ->
           instance_t ~env ~imode r static super inst
-        | ThisClassT (_, t) -> this_class_t ~env ~proto ~imode t
+        | ThisClassT (_, t, _) -> this_class_t ~env ~proto ~imode t
         | DefT (_, _, PolyT { t_out; _ }) -> loop ~env ~proto ~imode t_out
         | MaybeT (_, t) ->
           let%map t = loop ~env ~proto ~imode t in
@@ -2402,6 +2406,7 @@ end = struct
           type_destructor_t ~env ~cont ~default ~non_eval (use_op, r, id, t, d)
         | EvalT (t, LatentPredT _, id) -> latent_pred_t ~env ~proto ~imode id t
         | ExactT (_, t) -> loop ~env ~proto ~imode t
+        | GenericT { bound; _ } -> loop ~env ~proto ~imode bound
         | t -> TypeConverter.convert_t ~env t
       in
       loop ~proto:false ~imode:IMUnset

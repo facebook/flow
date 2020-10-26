@@ -234,8 +234,8 @@ type D = { g: O; }
 (): {|w: O, x: O, y: O, z: O|} => { declare var x: {|w: O, ...{| x: O, y: O |}, z: O|}; return x; };
 (): {f: O, o: O,...} => { declare var x: {...C, o: O}; return x; };
 (): {...C,...} & {...D,...} => { declare var x: {...C} & {...D}; return x; };
-<T: {}, S: { f: O}>(): T | S | {f: O, o: O,...} => { declare var x: {...T, ...S, o: O}; return x; };
-<T: {}>(): T | {o: O,...} => { declare var x: {...T, o: O}; return x; };
+<T: {}, S: { f: O}>(): {f: O, o: O,...} => { declare var x: {...T, ...S, o: O}; return x; };
+<T: {}>(): {o: O,...} => { declare var x: {...T, o: O}; return x; };
 string-literal.js
 // @flow
 
@@ -442,7 +442,7 @@ warn-func-poly-0.js
 Warning --------------------------------------------------------------------------------------- warn-func-poly-0.js:4:27
 
 Normalizer error:
-[Shadowed type parameters] Raised on type: MixedT
+[Shadowed type parameters] Raised on type: GenericT
 
    4|   function inner<T>(x: T, z) {
                                 ^

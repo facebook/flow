@@ -104,12 +104,12 @@ class virtual ['a] t =
           EvalT (t'', dt', id')
       | BoundT _ -> t
       | ExistsT _ -> t
-      | ThisClassT (r, t') ->
+      | ThisClassT (r, t', i) ->
         let t'' = self#type_ cx map_cx t' in
         if t'' == t' then
           t
         else
-          ThisClassT (r, t'')
+          ThisClassT (r, t'', i)
       | ThisTypeAppT (r, t1, t2, tlist_opt) ->
         let t1' = self#type_ cx map_cx t1 in
         let t2' = self#type_ cx map_cx t2 in
@@ -140,6 +140,12 @@ class virtual ['a] t =
       | FunProtoBindT _
       | FunProtoCallT _ ->
         t
+      | GenericT ({ bound; _ } as generic) ->
+        let bound' = self#type_ cx map_cx bound in
+        if bound' == bound then
+          t
+        else
+          GenericT { generic with bound = bound' }
       | MergedT (r, uses) ->
         let uses' = ListUtils.ident_map (self#use_type cx map_cx) uses in
         if uses == uses' then
@@ -285,12 +291,12 @@ class virtual ['a] t =
           ExplicitArg t''
 
     method enum cx map_cx e =
-      let { enum_id; enum_name; members; representation_t } = e in
+      let { enum_id; enum_name; members; representation_t; has_unknown_members } = e in
       let representation_t' = self#type_ cx map_cx representation_t in
       if representation_t' = representation_t then
         e
       else
-        { enum_id; enum_name; members; representation_t = representation_t' }
+        { enum_id; enum_name; members; representation_t = representation_t'; has_unknown_members }
 
     method def_type cx map_cx t =
       match t with
@@ -492,7 +498,7 @@ class virtual ['a] t =
           inst_kind;
         }
 
-    method type_param cx map_cx ({ reason; name; bound; polarity; default } as t) =
+    method type_param cx map_cx ({ reason; name; bound; polarity; default; is_this } as t) =
       let bound' = self#type_ cx map_cx bound in
       let default' = OptionUtils.ident_map (self#type_ cx map_cx) default in
       if bound == bound' && default == default' then
@@ -500,7 +506,7 @@ class virtual ['a] t =
       else
         let bound = bound' in
         let default = default' in
-        { reason; name; bound; polarity; default }
+        { reason; name; bound; polarity; default; is_this }
 
     method selector cx map_cx t =
       match t with
@@ -572,13 +578,13 @@ class virtual ['a] t =
         t
 
     method object_kit_spread_operand_slice
-        cx map_cx ({ Object.Spread.reason; prop_map; dict } as slice) =
+        cx map_cx ({ Object.Spread.reason; prop_map; dict; generics } as slice) =
       let prop_map' = SMap.ident_map (Property.ident_map_t (self#type_ cx map_cx)) prop_map in
       let dict' = OptionUtils.ident_map (self#dict_type cx map_cx) dict in
       if prop_map' == prop_map && dict' == dict then
         slice
       else
-        { Object.Spread.reason; prop_map = prop_map'; dict = dict' }
+        { Object.Spread.reason; prop_map = prop_map'; dict = dict'; generics }
 
     method object_kit_spread_operand cx map_cx operand =
       Object.Spread.(
@@ -1224,12 +1230,12 @@ class virtual ['a] t_with_uses =
           t
         else
           ObjAssignFromT (op, r, t1', t2', obj_assign)
-      | ObjRestT (r, strings, t') ->
+      | ObjRestT (r, strings, t', id) ->
         let t'' = self#type_ cx map_cx t' in
         if t'' == t' then
           t
         else
-          ObjRestT (r, strings, t'')
+          ObjRestT (r, strings, t'', id)
       | ObjSealT (r, t') ->
         let t'' = self#type_ cx map_cx t' in
         if t'' == t' then
@@ -1306,6 +1312,12 @@ class virtual ['a] t_with_uses =
           t
         else
           MakeExactT (r, cont')
+      | SealGenericT ({ cont; _ } as generic) ->
+        let cont' = self#cont cx map_cx cont in
+        if cont' == cont then
+          t
+        else
+          SealGenericT { generic with cont = cont' }
       | CJSRequireT (r, t', is_strict) ->
         let t'' = self#type_ cx map_cx t' in
         if t'' == t' then
@@ -1510,13 +1522,13 @@ class virtual ['a] t_with_uses =
           t
         else
           ModuleExportsAssignT (r, t'', t_out')
-      | DestructuringT (r, k, s, t') ->
+      | DestructuringT (r, k, s, t', id) ->
         let s' = self#selector cx map_cx s in
         let t'' = self#tout cx map_cx t' in
         if s' == s && t'' == t' then
           t
         else
-          DestructuringT (r, k, s', t'')
+          DestructuringT (r, k, s', t'', id)
       | CreateObjWithComputedPropT { reason; value; tout_tvar } ->
         let value' = self#type_ cx map_cx value in
         let tout_tvar' = self#tout cx map_cx tout_tvar in
@@ -1949,14 +1961,14 @@ class virtual ['a] t_with_uses =
             t
           else
             Resolve r'
-        | Super ({ Object.reason; props; flags }, r) ->
+        | Super ({ Object.reason; props; flags; generics }, r) ->
           let flags' = self#obj_flags cx map_cx flags in
           let props' = SMap.ident_map (fun (t, b) -> (self#type_ cx map_cx t, b)) props in
           let r' = self#resolve cx map_cx r in
           if flags' == flags && r' == r && props' == props then
             t
           else
-            Super ({ reason; Object.props = props'; flags = flags' }, r'))
+            Super ({ reason; Object.props = props'; flags = flags'; generics }, r'))
 
     method object_kit_tool cx map_cx tool =
       Object.(
@@ -2138,28 +2150,28 @@ class virtual ['a] t_with_uses =
 
     method resolved_param cx map_cx t =
       match t with
-      | ResolvedArg t' ->
+      | ResolvedArg (t', g) ->
         let t'' = self#type_ cx map_cx t' in
         if t'' == t' then
           t
         else
-          ResolvedArg t''
-      | ResolvedSpreadArg (r, arrtype) ->
+          ResolvedArg (t'', g)
+      | ResolvedSpreadArg (r, arrtype, g) ->
         let arrtype' = self#arr_type cx map_cx arrtype in
         if arrtype' == arrtype then
           t
         else
-          ResolvedSpreadArg (r, arrtype')
+          ResolvedSpreadArg (r, arrtype', g)
       | ResolvedAnySpreadArg _ -> t
 
     method unresolved_param cx map_cx t =
       match t with
-      | UnresolvedArg t' ->
+      | UnresolvedArg (t', g) ->
         let t'' = self#type_ cx map_cx t' in
         if t'' == t' then
           t
         else
-          UnresolvedArg t''
+          UnresolvedArg (t'', g)
       | UnresolvedSpreadArg t' ->
         let t'' = self#type_ cx map_cx t' in
         if t'' == t' then
@@ -2240,7 +2252,7 @@ class virtual ['a] t_with_uses =
       else
         (t', own)
 
-    method object_kit_slice cx map_cx ({ Object.reason = _; props; flags } as slice) =
+    method object_kit_slice cx map_cx ({ Object.reason = _; props; flags; generics = _ } as slice) =
       let props' = SMap.ident_map (self#resolved_prop cx map_cx) props in
       let flags' = self#obj_flags cx map_cx flags in
       if props' == props && flags' == flags then

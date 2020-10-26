@@ -52,54 +52,36 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- arity.js:16:10
 
-Cannot call `g` because `$ObjMap` [1] expects the provided function type to take only one argument, the value type
-number [2], but function type [3] takes more than one argument. See https://flow.org/en/docs/types/utilities/#toc-objmap
-for documentation. [incompatible-call]
+Cannot return `g(...)` because object type [1] is incompatible with `T` [2]. [incompatible-return]
 
    arity.js:16:10
    16|   return g(o);
-                ^
+                ^^^^
 
 References:
    arity.js:3:26
     3| function g<T: {}>(o: T): $ObjMap<T, typeof makeEditedColumn> {
                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   arity.js:27:27
-   27| type Columns = {[string]: number};
-                                 ^^^^^^ [2]
-   arity.js:29:34
-                                        v
-   29| declare function makeEditedColumn(
-   30|   a: number,
-   31|   b: string,
-   32| ): number;
-       --------^ [3]
+   arity.js:15:32
+   15| function f3<T: Columns>(o: T): T {
+                                      ^ [2]
 
 
 Error --------------------------------------------------------------------------------------------------- arity.js:20:10
 
-Cannot call `g` because `$ObjMap` [1] expects the provided function type to take only one argument, the value type
-number [2], but function type [3] takes more than one argument. See https://flow.org/en/docs/types/utilities/#toc-objmap
-for documentation. [incompatible-call]
+Cannot return `g<...>(...)` because object type [1] is incompatible with `T` [2]. [incompatible-return]
 
    arity.js:20:10
    20|   return g<T>(o);
-                ^
+                ^^^^^^^
 
 References:
    arity.js:3:26
     3| function g<T: {}>(o: T): $ObjMap<T, typeof makeEditedColumn> {
                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   arity.js:27:27
-   27| type Columns = {[string]: number};
-                                 ^^^^^^ [2]
-   arity.js:29:34
-                                        v
-   29| declare function makeEditedColumn(
-   30|   a: number,
-   31|   b: string,
-   32| ): number;
-       --------^ [3]
+   arity.js:19:32
+   19| function f4<T: Columns>(o: T): T {
+                                      ^ [2]
 
 
 Error --------------------------------------------------------------------------------------------------- arity.js:23:25
@@ -187,62 +169,36 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- arity2.js:16:10
 
-Cannot call `g` because `$ObjMapi` [1] expects the provided function type to take only two arguments, the key type
-string [2] and the value type number [3], but function type [4] takes more than two arguments. See
-https://flow.org/en/docs/types/utilities/#toc-objmapi for documentation. [incompatible-call]
+Cannot return `g(...)` because object type [1] is incompatible with `T` [2]. [incompatible-return]
 
    arity2.js:16:10
    16|   return g(o);
-                ^
+                ^^^^
 
 References:
    arity2.js:3:26
     3| function g<T: {}>(o: T): $ObjMapi<T, typeof makeEditedColumn> {
                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   arity2.js:27:18
-   27| type Columns = {[string]: number};
-                        ^^^^^^ [2]
-   arity2.js:27:27
-   27| type Columns = {[string]: number};
-                                 ^^^^^^ [3]
-   arity2.js:29:34
-                                        v
-   29| declare function makeEditedColumn(
-   30|   a: string,
-   31|   b: number,
-   32|   c: boolean,
-   33| ): number;
-       --------^ [4]
+   arity2.js:15:32
+   15| function f3<T: Columns>(o: T): T {
+                                      ^ [2]
 
 
 Error -------------------------------------------------------------------------------------------------- arity2.js:20:10
 
-Cannot call `g` because `$ObjMapi` [1] expects the provided function type to take only two arguments, the key type
-string [2] and the value type number [3], but function type [4] takes more than two arguments. See
-https://flow.org/en/docs/types/utilities/#toc-objmapi for documentation. [incompatible-call]
+Cannot return `g<...>(...)` because object type [1] is incompatible with `T` [2]. [incompatible-return]
 
    arity2.js:20:10
    20|   return g<T>(o);
-                ^
+                ^^^^^^^
 
 References:
    arity2.js:3:26
     3| function g<T: {}>(o: T): $ObjMapi<T, typeof makeEditedColumn> {
                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   arity2.js:27:18
-   27| type Columns = {[string]: number};
-                        ^^^^^^ [2]
-   arity2.js:27:27
-   27| type Columns = {[string]: number};
-                                 ^^^^^^ [3]
-   arity2.js:29:34
-                                        v
-   29| declare function makeEditedColumn(
-   30|   a: string,
-   31|   b: number,
-   32|   c: boolean,
-   33| ): number;
-       --------^ [4]
+   arity2.js:19:32
+   19| function f4<T: Columns>(o: T): T {
+                                      ^ [2]
 
 
 Error -------------------------------------------------------------------------------------------------- arity2.js:23:25

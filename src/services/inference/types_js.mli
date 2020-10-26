@@ -55,6 +55,7 @@ val type_contents :
     * Docblock.t
     * File_sig.With_Loc.t
     * File_sig.With_Loc.tolerable_error list
+    * (Loc.t, Loc.t) Flow_ast.Program.t
     * (ALoc.t, ALoc.t * Type.t) Flow_ast.Program.t
     * (Loc.t * Parse_error.t) list,
     string )

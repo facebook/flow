@@ -75,8 +75,8 @@
           }
         ]
       },
-      "superClass":null,
       "typeParameters":null,
+      "superClass":null,
       "superTypeParameters":null,
       "implements":[],
       "decorators":[]

@@ -134,7 +134,7 @@ let autocomplete ~trigger_character ~reader ~options ~env ~profiling ~filename ~
         :: initial_json_props )
     in
     Lwt.return (Error err, Some json_data_to_log)
-  | Ok (cx, info, file_sig, _, typed_ast, parse_errors) ->
+  | Ok (cx, info, file_sig, _, _ast, typed_ast, parse_errors) ->
     Profiling_js.with_timer_lwt profiling ~timer:"GetResults" ~f:(fun () ->
         try_with_json2 (fun () ->
             let open AutocompleteService_js in
@@ -164,8 +164,10 @@ let autocomplete ~trigger_character ~reader ~options ~env ~profiling ~filename ~
                   | (_ :: _, _ :: _) -> "PARTIAL"
                 in
                 let at_least_one_result_has_documentation =
-                  Base.List.exists results ~f:(fun ServerProt.Response.{ res_documentation; _ } ->
-                      Base.Option.is_some res_documentation)
+                  Base.List.exists
+                    results
+                    ~f:(fun ServerProt.Response.Completion.{ documentation; _ } ->
+                      Base.Option.is_some documentation)
                 in
                 ( Ok results,
                   ("result", JSON_String result_string)
@@ -215,7 +217,7 @@ let check_file ~options ~env ~profiling ~force file_input =
  * getdef_get_result which we end up using *)
 let get_def_of_check_result ~options ~reader ~profiling ~check_result (file, line, col) =
   let loc = Loc.make file line col in
-  let (cx, _, file_sig, _, typed_ast, parse_errors) = check_result in
+  let (cx, _, file_sig, _, _ast, typed_ast, parse_errors) = check_result in
   let file_sig = File_sig.abstractify_locs file_sig in
   Profiling_js.with_timer_lwt profiling ~timer:"GetResult" ~f:(fun () ->
       try_with_json2 (fun () ->
@@ -286,7 +288,7 @@ let infer_type
             | Error str ->
               let json_props = add_cache_hit_data_to_json [] did_hit_cache in
               Lwt.return (Error (str, Some (Hh_json.JSON_Object json_props)))
-            | Ok ((cx, _info, file_sig, _, typed_ast, _parse_errors) as check_result) ->
+            | Ok ((cx, _info, file_sig, _, _ast, typed_ast, _parse_errors) as check_result) ->
               let ((loc, ty), type_at_pos_json_props) =
                 Type_info_service.type_at_pos
                   ~cx
@@ -464,7 +466,7 @@ let dump_types ~options ~env ~profiling ~expand_aliases ~evaluate_type_destructo
       let file = File_key.SourceFile file in
       Lwt.return (File_input.content_of_file_input file_input) >>= fun content ->
       Types_js.type_contents ~options ~env ~profiling content file
-      >>= fun (cx, _info, file_sig, _, typed_ast, _parse_errors) ->
+      >>= fun (cx, _info, file_sig, _, _ast, typed_ast, _parse_errors) ->
       Lwt.return
         (Ok
            (Type_info_service.dump_types
@@ -488,7 +490,7 @@ let coverage ~options ~env ~profiling ~type_contents_cache ~force ~trust file_in
           type_contents_with_cache ~options ~env ~profiling ~type_contents_cache content file
         in
         let result =
-          Base.Result.map type_contents_result ~f:(fun (cx, _, _, _, typed_ast, _) ->
+          Base.Result.map type_contents_result ~f:(fun (cx, _, _, _, _, typed_ast, _) ->
               Type_info_service.coverage ~cx ~typed_ast ~force ~trust file content)
         in
         Lwt.return result)
@@ -1648,7 +1650,7 @@ let handle_persistent_signaturehelp_lsp
     let%lwt check_contents_result = Types_js.type_contents ~options ~env ~profiling contents path in
     (match check_contents_result with
     | Error reason -> mk_lsp_error_response ~ret:() ~id:(Some id) ~reason metadata
-    | Ok (cx, _info, file_sig, _, typed_ast, _parse_errors) ->
+    | Ok (cx, _info, file_sig, _, _ast, typed_ast, _parse_errors) ->
       let func_details =
         let file_sig = File_sig.abstractify_locs file_sig in
         let cursor_loc = Loc.make path line col in

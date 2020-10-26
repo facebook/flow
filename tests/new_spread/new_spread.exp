@@ -584,16 +584,16 @@ References:
 Error ----------------------------------------------------------------------------------------------- type_empty.js:14:6
 
 Cannot call `fn` with object literal bound to the first parameter because object literal [1] is incompatible with
-`T` [2]. [incompatible-call]
+`{ ...T }` [2]. [incompatible-call]
 
    type_empty.js:14:6
    14|   fn({}); // Error: object ~> empty
             ^^ [1]
 
 References:
-   type_empty.js:13:26
+   type_empty.js:13:22
    13| function fn2<T>(fn: ({...T}) => void) {
-                                ^ [2]
+                            ^^^^^^ [2]
 
 
 Error --------------------------------------------------------------------------------------------- type_generic.js:3:12

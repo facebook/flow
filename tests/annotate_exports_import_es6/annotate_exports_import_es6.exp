@@ -4,7 +4,7 @@
 >>> ./main.js
 // @flow
 
-import type {C} from "./lib.js";import { foo } from "./lib";
+import type {C} from "./lib";import { foo } from "./lib";
 
 module.exports = (foo(): C);
 
@@ -42,7 +42,7 @@ Warnings:
 >>> ./main.js
 // @flow
 
-import type {C} from "./lib.js";import { foo } from "./lib";
+import type {C} from "./lib";import { foo } from "./lib";
 
 module.exports = (foo(): C);
 

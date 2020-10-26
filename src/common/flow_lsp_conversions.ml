@@ -81,46 +81,39 @@ let flow_signature_help_to_lsp
 let flow_completion_to_lsp
     ~is_snippet_supported:(_ : bool)
     ~(is_preselect_supported : bool)
-    (item : ServerProt.Response.complete_autocomplete_result) : Lsp.Completion.completionItem =
-  Lsp.Completion.(
-    ServerProt.Response.(
-      let detail =
-        let trunc n s =
-          if String.length s < n then
-            s
-          else
-            String.sub s 0 n ^ "..."
-        in
-        let column_width = 80 in
-        Some (trunc column_width item.res_ty)
-      in
-      let insertTextFormat = Some PlainText in
-      let textEdits =
-        match item.res_insert_text with
-        | Some insert_text ->
-          let range = loc_to_lsp_range item.res_loc in
-          [{ Lsp.TextEdit.range; newText = insert_text }]
-        | None -> []
-      in
-      let sortText = Some (Printf.sprintf "%020u" item.rank) in
-      let documentation =
-        Base.Option.map item.res_documentation ~f:(fun doc -> [Lsp.MarkedString doc])
-      in
-      {
-        label = item.res_name;
-        kind = item.res_kind;
-        detail;
-        documentation;
-        (* This will be filled in by completionItem/resolve. *)
-        preselect = is_preselect_supported && item.res_preselect;
-        sortText;
-        filterText = None;
-        insertText = None (* deprecated and should not be used *);
-        insertTextFormat;
-        textEdits;
-        command = None;
-        data = None;
-      }))
+    (item : ServerProt.Response.Completion.completion_item) : Lsp.Completion.completionItem =
+  let open ServerProt.Response.Completion in
+  let detail =
+    let trunc n s =
+      if String.length s < n then
+        s
+      else
+        String.sub s 0 n ^ "..."
+    in
+    let column_width = 80 in
+    Some (trunc column_width item.detail)
+  in
+  let insertTextFormat = Some Lsp.Completion.PlainText in
+  let textEdits =
+    Base.List.map
+      ~f:(fun (loc, newText) -> { Lsp.TextEdit.range = loc_to_lsp_range loc; newText })
+      item.text_edits
+  in
+  let documentation = Base.Option.map item.documentation ~f:(fun doc -> [Lsp.MarkedString doc]) in
+  {
+    Lsp.Completion.label = item.name;
+    kind = item.kind;
+    detail;
+    documentation;
+    preselect = is_preselect_supported && item.preselect;
+    sortText = item.sort_text;
+    filterText = None;
+    insertText = None (* deprecated and should not be used *);
+    insertTextFormat;
+    textEdits;
+    command = None;
+    data = None;
+  }
 
 let file_key_to_uri (file_key_opt : File_key.t option) : (Lsp.DocumentUri.t, string) result =
   let ( >>| ) = Base.Result.( >>| ) in

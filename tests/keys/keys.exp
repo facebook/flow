@@ -58,8 +58,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- instance.js:25:2
 
-Cannot cast `'bMethod'` to `T` because property `bMethod` (did you mean `bMethod`?) is missing in `B` [1].
-[prop-missing]
+Cannot cast `'bMethod'` to `T` because property `bMethod` is missing in `B` [1]. [prop-missing]
 
    instance.js:25:2
    25| ('bMethod': T); // Error: methods are on proto
@@ -87,8 +86,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- instance.js:28:2
 
-Cannot cast `'aMethod'` to `T` because property `aMethod` (did you mean `bMethod`?) is missing in `B` [1].
-[prop-missing]
+Cannot cast `'aMethod'` to `T` because property `aMethod` is missing in `B` [1]. [prop-missing]
 
    instance.js:28:2
    28| ('aMethod': T); // Error: non-own field

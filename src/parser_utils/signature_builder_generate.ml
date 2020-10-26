@@ -54,12 +54,12 @@ module T = struct
     | VariableDecl of little_annotation
     (* remote *)
     | ImportNamed of {
-        kind: Ast.Statement.ImportDeclaration.importKind;
+        kind: Ast.Statement.ImportDeclaration.import_kind;
         source: Loc.t Ast_utils.source;
         name: Loc.t Ast_utils.ident;
       }
     | ImportStar of {
-        kind: Ast.Statement.ImportDeclaration.importKind;
+        kind: Ast.Statement.ImportDeclaration.import_kind;
         source: Loc.t Ast_utils.source;
       }
     | Require of {
@@ -113,7 +113,11 @@ module T = struct
         return: little_annotation;
       }
 
-  and function_params = Loc.t * pattern list * (Loc.t * pattern) option
+  and function_params =
+    Loc.t
+    * pattern list
+    * (Loc.t * pattern) option
+    * (Loc.t * (Loc.t, Loc.t) Ast.Type.annotation) option
 
   and pattern = Loc.t * (Loc.t, Loc.t) Ast.Identifier.t option * bool (* optional *) * type_
 
@@ -499,7 +503,7 @@ module T = struct
       (id, stmt_of_decl outlined decl_loc id (ClassDecl class_t))
     | DynamicImport (source_loc, source_lit) ->
       let id = mk_id () in
-      let importKind = Ast.Statement.ImportDeclaration.ImportValue in
+      let import_kind = Ast.Statement.ImportDeclaration.ImportValue in
       let source = (source_loc, source_lit) in
       let default = None in
       let specifiers =
@@ -511,7 +515,7 @@ module T = struct
         ( decl_loc,
           Ast.Statement.ImportDeclaration
             {
-              Ast.Statement.ImportDeclaration.importKind;
+              Ast.Statement.ImportDeclaration.import_kind;
               source;
               default;
               specifiers;
@@ -613,7 +617,7 @@ module T = struct
             params : function_params;
             return : little_annotation;
           } ) ->
-      let (params_loc, params, rest) = params in
+      let (params_loc, params, rest, this_) = params in
       ( loc,
         {
           Ast.Type.Function.tparams;
@@ -631,6 +635,11 @@ module T = struct
                           Ast.Type.Function.RestParam.argument = param_of_type rest;
                           comments = None;
                         } ));
+                this_ =
+                  (match this_ with
+                  | None -> None
+                  | Some (loc, t) ->
+                    Some (loc, { Ast.Type.Function.ThisParam.annot = t; comments = None }));
                 comments = None;
               } );
           return = type_of_little_annotation outlined return;
@@ -858,7 +867,7 @@ module T = struct
             comments = None;
           } )
     | ImportNamed { kind; source; name } ->
-      let importKind = kind in
+      let import_kind = kind in
       let source = source_of_source source in
       let default =
         if snd name = "default" then
@@ -888,14 +897,14 @@ module T = struct
       ( decl_loc,
         Ast.Statement.ImportDeclaration
           {
-            Ast.Statement.ImportDeclaration.importKind;
+            Ast.Statement.ImportDeclaration.import_kind;
             source;
             default;
             specifiers;
             comments = None;
           } )
     | ImportStar { kind; source } ->
-      let importKind = kind in
+      let import_kind = kind in
       let source = source_of_source source in
       let default = None in
       let specifiers =
@@ -904,7 +913,7 @@ module T = struct
       ( decl_loc,
         Ast.Statement.ImportDeclaration
           {
-            Ast.Statement.ImportDeclaration.importKind;
+            Ast.Statement.ImportDeclaration.import_kind;
             source;
             default;
             specifiers;
@@ -1137,7 +1146,7 @@ module Eval (Env : Signature_builder_verify.EvalEnv) = struct
     | (loc, Identifier stuff) -> (loc, T.ValueRef (identifier stuff))
     | (loc, Class stuff) ->
       let open Ast.Class in
-      let { tparams; body; extends; implements; id; classDecorators = _; comments = _ } = stuff in
+      let { tparams; body; extends; implements; id; class_decorators = _; comments = _ } = stuff in
       let (super, super_targs) =
         match extends with
         | None -> (None, None)
@@ -1321,8 +1330,8 @@ module Eval (Env : Signature_builder_verify.EvalEnv) = struct
     | (loc, Update _) -> (loc, T.Number)
     | (loc, JSXElement e) ->
       let open Ast.JSX in
-      let { openingElement; closingElement = _; children = _; comments = _ } = e in
-      let (_loc, { Opening.name; selfClosing = _; attributes = _ }) = openingElement in
+      let { opening_element; closing_element = _; children = _; comments = _ } = e in
+      let (_loc, { Opening.name; self_closing = _; attributes = _ }) = opening_element in
       begin
         match (name, Env.facebook_fbt) with
         | ( Ast.JSX.Identifier (_loc_id, { Identifier.name = "fbt"; comments = _ }),
@@ -1465,16 +1474,24 @@ module Eval (Env : Signature_builder_verify.EvalEnv) = struct
   and function_rest_param (loc, { Ast.Function.RestParam.argument; comments = _ }) =
     (loc, pattern argument)
 
+  and function_this_param (loc, { Ast.Function.ThisParam.annot = (l, t); comments = _ }) =
+    (loc, (l, type_ t))
+
   and function_params params =
     let open Ast.Function in
-    let (params_loc, { Params.params; rest; comments = _ }) = params in
+    let (params_loc, { Params.params; rest; this_; comments = _ }) = params in
     let params = Base.List.map ~f:function_param params in
     let rest =
       match rest with
       | None -> None
       | Some param -> Some (function_rest_param param)
     in
-    (params_loc, params, rest)
+    let this_ =
+      match this_ with
+      | None -> None
+      | Some param -> Some (function_this_param param)
+    in
+    (params_loc, params, rest, this_)
 
   and function_return ~is_missing_ok ~async return =
     match return with
@@ -1945,7 +1962,7 @@ module Generator (Env : Signature_builder_verify.EvalEnv) = struct
               body;
               extends;
               implements;
-              classDecorators = _;
+              class_decorators = _;
               comments = _;
             } ) ->
       let (super, super_targs) =
@@ -1960,7 +1977,7 @@ module Generator (Env : Signature_builder_verify.EvalEnv) = struct
       `Decl (Entry.function_declaration loc function_)
     | Expression expr -> `Expr (Eval.literal_expr expr)
 
-  let export_name export_loc ?exported ?source local exportKind =
+  let export_name export_loc ?exported ?source local export_kind =
     ( export_loc,
       Ast.Statement.ExportNamedDeclaration
         {
@@ -1977,11 +1994,11 @@ module Generator (Env : Signature_builder_verify.EvalEnv) = struct
                      } );
                  ]);
           source;
-          exportKind;
+          export_kind;
           comments = None;
         } )
 
-  let export_named_specifier export_loc local remote source exportKind =
+  let export_named_specifier export_loc local remote source export_kind =
     let exported =
       if snd remote = snd local then
         None
@@ -1993,9 +2010,9 @@ module Generator (Env : Signature_builder_verify.EvalEnv) = struct
       | None -> None
       | Some source -> Some (T.source_of_source source)
     in
-    export_name export_loc ?exported ?source local exportKind
+    export_name export_loc ?exported ?source local export_kind
 
-  let export_star export_loc star_loc ?remote source exportKind =
+  let export_star export_loc star_loc ?remote source export_kind =
     ( export_loc,
       Ast.Statement.ExportNamedDeclaration
         {
@@ -2005,7 +2022,7 @@ module Generator (Env : Signature_builder_verify.EvalEnv) = struct
               (Ast.Statement.ExportNamedDeclaration.ExportBatchSpecifier
                  (star_loc, Base.Option.map ~f:Flow_ast_utils.ident_of_source remote));
           source = Some (T.source_of_source source);
-          exportKind;
+          export_kind;
           comments = None;
         } )
 

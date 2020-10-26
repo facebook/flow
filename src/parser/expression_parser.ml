@@ -175,6 +175,7 @@ module Expression
       | (T_YIELD, _) when allow_yield env -> Cover_expr (yield env)
       | ((T_LPAREN as t), _)
       | ((T_LESS_THAN as t), _)
+      | ((T_THIS as t), _)
       | (t, true) ->
         (* Ok, we don't know if this is going to be an arrow function or a
          * regular assignment expression. Let's first try to parse it as an
@@ -1518,7 +1519,8 @@ module Expression
         | StrictReservedWord
         | ParameterAfterRestParameter
         | NewlineBeforeArrow
-        | YieldInFormalParameters ->
+        | YieldInFormalParameters
+        | ThisParamBannedInArrowFunctions ->
           ()
         (* Everything else causes a rollback *)
         | _ -> raise Try.Rollback)
@@ -1569,7 +1571,13 @@ module Expression
                   } )
               in
               ( tparams,
-                (loc, { Ast.Function.Params.params = [param]; rest = None; comments = None }),
+                ( loc,
+                  {
+                    Ast.Function.Params.params = [param];
+                    rest = None;
+                    comments = None;
+                    this_ = None;
+                  } ),
                 Ast.Type.Missing Loc.{ loc with start = loc._end },
                 None )
             else
@@ -1596,11 +1604,21 @@ module Expression
        * instead generate errors as if we were parsing an arrow function *)
       let env =
         match params with
-        | (_, { Ast.Function.Params.rest = Some _; _ })
-        | (_, { Ast.Function.Params.params = []; _ }) ->
+        | (_, { Ast.Function.Params.params = _; rest = Some _; this_ = None; comments = _ })
+        | (_, { Ast.Function.Params.params = []; rest = _; this_ = None; comments = _ }) ->
           without_error_callback env
         | _ -> env
       in
+
+      (* Disallow this param annotations in arrow functions *)
+      let params =
+        match params with
+        | (loc, ({ Ast.Function.Params.this_ = Some (this_loc, _); _ } as params)) ->
+          error_at env (this_loc, Parse_error.ThisParamBannedInArrowFunctions);
+          (loc, { params with Ast.Function.Params.this_ = None })
+        | _ -> params
+      in
+
       if Peek.is_line_terminator env && Peek.token env = T_ARROW then
         error env Parse_error.NewlineBeforeArrow;
       Expect.token env T_ARROW;

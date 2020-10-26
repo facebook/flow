@@ -68,7 +68,7 @@ module type S = sig
     This signature's own type parameters will be subtituted by the
     `generate-tests` function. *)
 
-  val generate_tests : Context.t -> (t -> 'a) -> t -> 'a
+  val check_with_generics : Context.t -> (t -> 'a) -> t -> 'a
   (** Invoke callback with type parameters substituted by upper/lower bounds. *)
 
   val toplevels :
@@ -88,6 +88,7 @@ module type S = sig
       (Context.t ->
       (ALoc.t, ALoc.t) Flow_ast.Expression.t ->
       (ALoc.t, ALoc.t * Type.t) Flow_ast.Expression.t) ->
+    return_annot:unit option ->
     t ->
     func_params_tast option
     * (ALoc.t, ALoc.t * Type.t) Flow_ast.Function.body option

@@ -22,7 +22,7 @@ module.exports = (): LibA2 => x;
 >>> ./mainB2.js
 // @flow
 
-import type {B2} from "./libB2.js";import type LibB2 from "./libB2";
+import type {B2} from "./libB2";import type LibB2 from "./libB2";
 
 declare var x: LibB2;
 
@@ -89,7 +89,7 @@ module.exports = (): B1<any> => x;
 >>> ./mainB2.js
 // @flow
 
-import type {B2} from "./libB2.js";import type LibB2 from "./libB2";
+import type {B2} from "./libB2";import type LibB2 from "./libB2";
 
 declare var x: LibB2;
 

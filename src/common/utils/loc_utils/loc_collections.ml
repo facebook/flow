@@ -9,3 +9,11 @@ module LocSet = Loc_sig.LocS.LSet
 module LocMap = Loc_sig.LocS.LMap
 module ALocSet = Loc_sig.ALocS.LSet
 module ALocMap = Loc_sig.ALocS.LMap
+
+module ALocIDS = struct
+  type t = ALoc.id
+
+  let compare (t1 : t) (t2 : t) = ALoc.quick_compare (t1 :> ALoc.t) (t2 :> ALoc.t)
+end
+
+module ALocIDSet = Set.Make (ALocIDS)

@@ -1,0 +1,1439 @@
+Error ------------------------------------------------------------------------------------------------ arr_spread.js:7:4
+
+Cannot call `fn` because rest array [1] is incompatible with `X` [2]. [incompatible-call]
+
+   arr_spread.js:7:4
+   7|   (fn(...arr): R); // nope
+         ^^
+
+References:
+   arr_spread.js:7:4
+   7|   (fn(...arr): R); // nope
+         ^^^^^^^^^^ [1]
+   arr_spread.js:5:41
+   5| function f<X: Array<number>, R>(fn: (...X) => R, x: X, arr: Array<number>) {
+                                              ^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- arr_spread.js:17:12
+
+Cannot return array literal because array literal [1] is incompatible with `X` [2]. [incompatible-return]
+
+   arr_spread.js:17:12
+   17|     return [...B, 42]; // nope
+                  ^^^^^^^^^^ [1]
+
+References:
+   arr_spread.js:12:37
+   12| function g<X: Array<number>>(A: X): X {
+                                           ^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- arr_spread.js:23:14
+
+Cannot assign array literal to `z` because array literal [1] is incompatible with `X` [2]. [incompatible-type]
+
+   arr_spread.js:23:14
+   23|   var z: X = ['3', ...x]; // nope
+                    ^^^^^^^^^^^ [1]
+
+References:
+   arr_spread.js:23:10
+   23|   var z: X = ['3', ...x]; // nope
+                ^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- arr_spread.js:27:3
+
+Cannot call `f` because rest array [1] has an arity of 1 but tuple type [2] has an arity of 2. [invalid-tuple-arity]
+
+   arr_spread.js:27:3
+   27|   f(...x); // nope
+         ^
+
+References:
+   arr_spread.js:27:3
+   27|   f(...x); // nope
+         ^^^^^^^ [1]
+   arr_spread.js:26:54
+   26| function w<A: [number, number]>(x: A, f: (number, ...A) => void) {
+                                                            ^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- arr_spread.js:28:3
+
+Cannot call `f` because rest array [1] is incompatible with `A` [2]. [incompatible-call]
+
+   arr_spread.js:28:3
+   28|   f(42, 42, 42); // nope
+         ^
+
+References:
+   arr_spread.js:28:3
+   28|   f(42, 42, 42); // nope
+         ^^^^^^^^^^^^^ [1]
+   arr_spread.js:26:54
+   26| function w<A: [number, number]>(x: A, f: (number, ...A) => void) {
+                                                            ^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- arr_spread.js:30:3
+
+Cannot call `f` because rest array [1] has an arity of 4 but tuple type [2] has an arity of 2. [invalid-tuple-arity]
+
+   arr_spread.js:30:3
+   30|   f(42, ...x, ...x); // nope
+         ^
+
+References:
+   arr_spread.js:30:3
+   30|   f(42, ...x, ...x); // nope
+         ^^^^^^^^^^^^^^^^^ [1]
+   arr_spread.js:26:54
+   26| function w<A: [number, number]>(x: A, f: (number, ...A) => void) {
+                                                            ^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- arr_spread.js:34:3
+
+Cannot call `f` because rest array [1] is incompatible with `A` [2]. [incompatible-call]
+
+   arr_spread.js:34:3
+   34|   f(42, 42, 42); // nope
+         ^
+
+References:
+   arr_spread.js:34:3
+   34|   f(42, 42, 42); // nope
+         ^^^^^^^^^^^^^ [1]
+   arr_spread.js:32:52
+   32| function w2<A: Array<number>>(x: A, f: (number, ...A) => void) {
+                                                          ^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- arr_spread.js:35:3
+
+Cannot call `f` because rest array [1] is incompatible with `A` [2]. [incompatible-call]
+
+   arr_spread.js:35:3
+   35|   f(42, 42, 42, ...x); // should be nope
+         ^
+
+References:
+   arr_spread.js:35:3
+   35|   f(42, 42, 42, ...x); // should be nope
+         ^^^^^^^^^^^^^^^^^^^ [1]
+   arr_spread.js:32:52
+   32| function w2<A: Array<number>>(x: A, f: (number, ...A) => void) {
+                                                          ^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- arr_spread.js:40:5
+
+Cannot call `f` with array literal bound to the first parameter because array literal [1] is incompatible with `A` [2].
+[incompatible-call]
+
+   arr_spread.js:40:5
+   40|   f([42, 42, 42]); // nope
+           ^^^^^^^^^^^^ [1]
+
+References:
+   arr_spread.js:39:40
+   39| function w3<A: Array<number>>(x: A, f: A => void) {
+                                              ^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- arr_spread.js:41:5
+
+Cannot call `f` with array literal bound to the first parameter because array literal [1] is incompatible with `A` [2].
+[incompatible-call]
+
+   arr_spread.js:41:5
+   41|   f([42, ...x]); // should be nope
+           ^^^^^^^^^^ [1]
+
+References:
+   arr_spread.js:39:40
+   39| function w3<A: Array<number>>(x: A, f: A => void) {
+                                              ^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- arr_spread.js:47:4
+
+Cannot cast array literal to `Y` because array literal [1] is incompatible with `Y` [2]. [incompatible-cast]
+
+   arr_spread.js:47:4
+   47|   ([...x, ...y]: Y); // should be nope
+          ^^^^^^^^^^^^ [1]
+
+References:
+   arr_spread.js:47:18
+   47|   ([...x, ...y]: Y); // should be nope
+                        ^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- arr_spread.js:48:4
+
+Cannot cast array literal to `X` because array literal [1] is incompatible with `X` [2]. [incompatible-cast]
+
+   arr_spread.js:48:4
+   48|   ([...x, ...y]: X); // should be nope
+          ^^^^^^^^^^^^ [1]
+
+References:
+   arr_spread.js:48:18
+   48|   ([...x, ...y]: X); // should be nope
+                        ^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- arr_spread.js:52:4
+
+Cannot cast array literal to `Y` because array literal [1] is incompatible with `Y` [2]. [incompatible-cast]
+
+   arr_spread.js:52:4
+   52|   ([...x, ...y]: Y); // should be nope
+          ^^^^^^^^^^^^ [1]
+
+References:
+   arr_spread.js:52:18
+   52|   ([...x, ...y]: Y); // should be nope
+                        ^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- arr_spread.js:61:10
+
+Cannot return array literal because array literal [1] is incompatible with `X` [2]. [incompatible-return]
+
+   arr_spread.js:61:10
+   61|   return [...x, ...x]; // nope, because X could be a tuple
+                ^^^^^^^^^^^^ [1]
+
+References:
+   arr_spread.js:60:46
+   60| function b<X: $ReadOnlyArray<number>>(x: X): X {
+                                                    ^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- arr_spread.js:65:10
+
+Cannot return array literal because array literal [1] is incompatible with `X` [2]. [incompatible-return]
+
+   arr_spread.js:65:10
+   65|   return [42, ...x]; // error
+                ^^^^^^^^^^ [1]
+
+References:
+   arr_spread.js:64:46
+   64| function c<X: $ReadOnlyArray<number>>(x: X): X {
+                                                    ^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- arr_spread.js:69:10
+
+Cannot return array literal because array literal [1] has an arity of 4 but tuple type [2] has an arity of 2.
+[invalid-tuple-arity]
+
+   arr_spread.js:69:10
+   69|   return [...x, ...x]; // error
+                ^^^^^^^^^^^^ [1]
+
+References:
+   arr_spread.js:68:40
+   68| function d<X: [number, number]>(x: X): X {
+                                              ^ [2]
+
+
+Error --------------------------------------------------------------------------------------------- basic_class.js:12:12
+
+Cannot return `this.x` because `X` [1] is incompatible with `Y` [2]. [incompatible-return]
+
+   basic_class.js:12:12
+   12|     return this.x;
+                  ^^^^^^
+
+References:
+   basic_class.js:4:6
+    4|   x: X;
+            ^ [1]
+   basic_class.js:11:14
+   11|   get_bad(): Y {
+                    ^ [2]
+
+
+Error --------------------------------------------------------------------------------------------- basic_class.js:28:14
+
+Cannot return `this.get_bad()` because number [1] is incompatible with `X` [2]. [incompatible-return]
+
+   basic_class.js:28:14
+   28|       return this.get_bad();
+                    ^^^^^^^^^^^^^^
+
+References:
+   basic_class.js:24:25
+   24| class E<X> extends C<X, number> {
+                               ^^^^^^ [1]
+   basic_class.js:25:14
+   25|   set(x: X): X {
+                    ^ [2]
+
+
+Error ------------------------------------------------------------------------------------------- basic_function.js:7:19
+
+Cannot assign `x` to `z` because `X` [1] is incompatible with number [2]. [incompatible-type]
+
+   basic_function.js:7:19
+   7|   var z: number = x;
+                        ^
+
+References:
+   basic_function.js:5:18
+   5| function f<X>(x: X): X {
+                       ^ [1]
+   basic_function.js:7:10
+   7|   var z: number = x;
+               ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------- basic_function.js:8:19
+
+Cannot assign `y` to `w` because `X` [1] is incompatible with number [2]. [incompatible-type]
+
+   basic_function.js:8:19
+   8|   var w: number = y;
+                        ^
+
+References:
+   basic_function.js:6:10
+   6|   var y: X = x;
+               ^ [1]
+   basic_function.js:8:10
+   8|   var w: number = y;
+               ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------ basic_function.js:10:12
+
+Cannot return `42` because number [1] is incompatible with `X` [2]. [incompatible-return]
+
+   basic_function.js:10:12
+   10|     return 42;
+                  ^^ [1]
+
+References:
+   basic_function.js:5:22
+    5| function f<X>(x: X): X {
+                            ^ [2]
+
+
+Error ------------------------------------------------------------------------------------------ basic_function.js:20:12
+
+Cannot return `42` because number [1] is incompatible with `X` [2]. [incompatible-return]
+
+   basic_function.js:20:12
+   20|     return 42;
+                  ^^ [1]
+
+References:
+   basic_function.js:15:30
+   15| function g<X: number>(x: X): X {
+                                    ^ [2]
+
+
+Error ------------------------------------------------------------------------------------------ basic_function.js:31:12
+
+Cannot return `arg[arg.length - 1]` because array element of refined `T` [1] is incompatible with `T` [2].
+[incompatible-return]
+
+   basic_function.js:31:12
+   31|     return arg[arg.length - 1];
+                  ^^^^^^^^^^^^^^^^^^^
+
+References:
+   basic_function.js:25:46
+   25| function overrideArgument<T>(arg: Array<T> | T): T {
+                                                    ^ [1]
+   basic_function.js:25:50
+   25| function overrideArgument<T>(arg: Array<T> | T): T {
+                                                        ^ [2]
+
+
+Error -------------------------------------------------------------------------------------------- computed_keys.js:10:3
+
+string `foo` [1] is incompatible with `X` [2]. [incompatible-type]
+
+   computed_keys.js:10:3
+   10|   a['foo'] = 'hi'; // nope
+         ^^^^^^^^ [1]
+
+References:
+   computed_keys.js:6:8
+    6|   a: {[X]: string},
+              ^ [2]
+
+
+Error -------------------------------------------------------------------------------------------- computed_keys.js:12:3
+
+string `foo` [1] is incompatible with `X` [2]. [incompatible-type]
+
+   computed_keys.js:12:3
+   12|   a['foo']; // nope
+         ^^^^^^^^ [1]
+
+References:
+   computed_keys.js:6:8
+    6|   a: {[X]: string},
+              ^ [2]
+
+
+Error -------------------------------------------------------------------------------------------- computed_keys.js:14:5
+
+Cannot assign `42` to `b[y]` because property `lit` is missing in object type [1]. [prop-missing]
+
+   computed_keys.js:14:5
+   14|   b[y] = 42; // nope
+           ^
+
+References:
+   computed_keys.js:7:6
+    7|   b: {prop: number},
+            ^^^^^^^^^^^^^^ [1]
+
+
+Error -------------------------------------------------------------------------------------------- computed_keys.js:17:5
+
+Cannot get `b[y]` because property `lit` is missing in object type [1]. [prop-missing]
+
+   computed_keys.js:17:5
+   17|   b[y]; // nope
+           ^
+
+References:
+   computed_keys.js:7:6
+    7|   b: {prop: number},
+            ^^^^^^^^^^^^^^ [1]
+
+
+Error --------------------------------------------------------------------------------------------------- config.js:16:4
+
+Cannot cast `y` to `C` because `Props` [1] is incompatible with `C` [2]. [incompatible-cast]
+
+   config.js:16:4
+   16|   (y: C); // error, generics don't match
+          ^
+
+References:
+   config.js:9:15
+    9| function f<P: Props, D: DefaultProps, C: Config, W: NotTheRightConfig>(
+                     ^^^^^ [1]
+   config.js:16:7
+   16|   (y: C); // error, generics don't match
+             ^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- config.js:18:4
+
+Cannot cast `y` to `NotTheRightConfig` because property `baz` is missing in `Props` [1] but exists in
+`NotTheRightConfig` [2]. [prop-missing]
+
+   config.js:18:4
+   18|   (y: NotTheRightConfig); // Error, configs don't match
+          ^
+
+References:
+   config.js:9:15
+    9| function f<P: Props, D: DefaultProps, C: Config, W: NotTheRightConfig>(
+                     ^^^^^ [1]
+   config.js:18:7
+   18|   (y: NotTheRightConfig); // Error, configs don't match
+             ^^^^^^^^^^^^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- config.js:18:4
+
+Cannot cast `y` to `NotTheRightConfig` because property `qux` is missing in `Props` [1] but exists in
+`NotTheRightConfig` [2]. [prop-missing]
+
+   config.js:18:4
+   18|   (y: NotTheRightConfig); // Error, configs don't match
+          ^
+
+References:
+   config.js:9:15
+    9| function f<P: Props, D: DefaultProps, C: Config, W: NotTheRightConfig>(
+                     ^^^^^ [1]
+   config.js:18:7
+   18|   (y: NotTheRightConfig); // Error, configs don't match
+             ^^^^^^^^^^^^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- config.js:19:4
+
+Cannot cast `z` to config of React component because property `bar` is missing in `NotTheRightConfig` [1] but exists in
+`Props` [2]. [prop-missing]
+
+   config.js:19:4
+   19|   (z: React$Config<Props, DefaultProps>); // Error, configs don't match
+          ^
+
+References:
+   config.js:12:6
+   12|   z: W,
+            ^ [1]
+   config.js:19:20
+   19|   (z: React$Config<Props, DefaultProps>); // Error, configs don't match
+                          ^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- config.js:19:4
+
+Cannot cast `z` to config of React component because property `foo` is missing in `NotTheRightConfig` [1] but exists in
+`Props` [2]. [prop-missing]
+
+   config.js:19:4
+   19|   (z: React$Config<Props, DefaultProps>); // Error, configs don't match
+          ^
+
+References:
+   config.js:12:6
+   12|   z: W,
+            ^ [1]
+   config.js:19:20
+   19|   (z: React$Config<Props, DefaultProps>); // Error, configs don't match
+                          ^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- exact.js:6:4
+
+Cannot cast `x` to `X` because inexact object type [1] is incompatible with exact `X` [2]. [incompatible-exact]
+
+   exact.js:6:4
+   6|   (x: $Exact<X>); // nope
+         ^
+
+References:
+   exact.js:3:40
+   3| function f<X: {...}>(ex: $Exact<X>, x: X) {
+                                             ^ [1]
+   exact.js:6:7
+   6|   (x: $Exact<X>); // nope
+            ^^^^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- exact.js:7:16
+
+Cannot cast `42` to `X` because object type [1] is incompatible with `X` [2]. [incompatible-cast]
+
+   exact.js:7:16
+   7|   (((42: any): {||}): $Exact<X>); // nope
+                     ^^^^ [1]
+
+References:
+   exact.js:7:30
+   7|   (((42: any): {||}): $Exact<X>); // nope
+                                   ^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- intersection.js:8:4
+
+Cannot cast `x` to intersection type because intersection type [1] is incompatible with boolean [2]. [incompatible-cast]
+
+   intersection.js:8:4
+   8|   (x: number & string & boolean); // nope
+         ^
+
+References:
+   intersection.js:3:52
+   3| function f1<X: number & string, Y: X & boolean>(x: X, y: Y) {
+                                                         ^ [1]
+   intersection.js:8:25
+   8|   (x: number & string & boolean); // nope
+                              ^^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- maybe.js:15:4
+
+Cannot cast `x` to `X` because null or undefined [1] is incompatible with `X` [2]. [incompatible-cast]
+
+   maybe.js:15:4
+   15|   (x: X); //nope
+          ^
+
+References:
+   maybe.js:4:6
+    4|   x: ?X,
+            ^^ [1]
+   maybe.js:15:7
+   15|   (x: X); //nope
+             ^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- maybe.js:20:6
+
+Cannot cast `x` to union type because: [incompatible-cast]
+ - Either number [1] is incompatible with null [2].
+ - Or number [1] is incompatible with undefined [3].
+
+   maybe.js:20:6
+   20|     (x: null | void); // nope
+            ^
+
+References:
+   maybe.js:4:7
+    4|   x: ?X,
+             ^ [1]
+   maybe.js:20:9
+   20|     (x: null | void); // nope
+               ^^^^ [2]
+   maybe.js:20:16
+   20|     (x: null | void); // nope
+                      ^^^^ [3]
+
+
+Error ---------------------------------------------------------------------------------------------------- maybe.js:31:6
+
+Cannot cast `y` to union type because: [incompatible-cast]
+ - Either number [1] is incompatible with null [2].
+ - Or number [1] is incompatible with undefined [3].
+
+   maybe.js:31:6
+   31|     (y: null | void); // nope
+            ^
+
+References:
+   maybe.js:3:27
+    3| function f<X: number, Y: ?number, Z: ?X>(
+                                 ^^^^^^ [1]
+   maybe.js:31:9
+   31|     (y: null | void); // nope
+               ^^^^ [2]
+   maybe.js:31:16
+   31|     (y: null | void); // nope
+                      ^^^^ [3]
+
+
+Error ---------------------------------------------------------------------------------------------------- maybe.js:38:4
+
+Cannot cast `z` to `X` because null or undefined [1] is incompatible with `X` [2]. [incompatible-cast]
+
+   maybe.js:38:4
+   38|   (z: X); // nope
+          ^
+
+References:
+   maybe.js:6:6
+    6|   z: Z,
+            ^ [1]
+   maybe.js:38:7
+   38|   (z: X); // nope
+             ^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- maybe.js:44:6
+
+Cannot cast `z` to union type because: [incompatible-cast]
+ - Either number [1] is incompatible with null [2].
+ - Or number [1] is incompatible with undefined [3].
+
+   maybe.js:44:6
+   44|     (z: null | void); // nope
+            ^
+
+References:
+   maybe.js:3:39
+    3| function f<X: number, Y: ?number, Z: ?X>(
+                                             ^ [1]
+   maybe.js:44:9
+   44|     (z: null | void); // nope
+               ^^^^ [2]
+   maybe.js:44:16
+   44|     (z: null | void); // nope
+                      ^^^^ [3]
+
+
+Error ---------------------------------------------------------------------------------------------------- maybe.js:50:4
+
+Cannot cast `xu` to `X` because undefined [1] is incompatible with `X` [2]. [incompatible-cast]
+
+   maybe.js:50:4
+   50|   (xu: X); //nope
+          ^^
+
+References:
+   maybe.js:7:8
+    7|   xu?: X,
+              ^ [1]
+   maybe.js:50:8
+   50|   (xu: X); //nope
+              ^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- maybe.js:55:6
+
+Cannot cast `xu` to undefined because number [1] is incompatible with undefined [2]. [incompatible-cast]
+
+   maybe.js:55:6
+   55|     (xu: void); // nope
+            ^^
+
+References:
+   maybe.js:7:8
+    7|   xu?: X,
+              ^ [1]
+   maybe.js:55:10
+   55|     (xu: void); // nope
+                ^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- maybe.js:59:4
+
+Cannot cast `yu` to union type because null or undefined [1] is incompatible with undefined [2]. [incompatible-cast]
+
+   maybe.js:59:4
+   59|   (yu: void | number); // nope
+          ^^
+
+References:
+   maybe.js:3:26
+    3| function f<X: number, Y: ?number, Z: ?X>(
+                                ^^^^^^^ [1]
+   maybe.js:59:8
+   59|   (yu: void | number); // nope
+              ^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- maybe.js:60:4
+
+Cannot cast `yu` to `Y` because undefined [1] is incompatible with `Y` [2]. [incompatible-cast]
+
+   maybe.js:60:4
+   60|   (yu: Y); // nope
+          ^^
+
+References:
+   maybe.js:8:8
+    8|   yu?: Y,
+              ^ [1]
+   maybe.js:60:8
+   60|   (yu: Y); // nope
+              ^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- maybe.js:61:4
+
+Cannot cast `yu` to union type because: [incompatible-cast]
+ - Either undefined [1] is incompatible with `Y` [2].
+ - Or undefined [1] is incompatible with `X` [3].
+
+   maybe.js:61:4
+   61|   (yu: Y | X); // nope
+          ^^
+
+References:
+   maybe.js:8:8
+    8|   yu?: Y,
+              ^ [1]
+   maybe.js:61:8
+   61|   (yu: Y | X); // nope
+              ^ [2]
+   maybe.js:61:12
+   61|   (yu: Y | X); // nope
+                  ^ [3]
+
+
+Error ---------------------------------------------------------------------------------------------------- maybe.js:67:6
+
+Cannot cast `yu` to union type because: [incompatible-cast]
+ - Either number [1] is incompatible with null [2].
+ - Or number [1] is incompatible with undefined [3].
+
+   maybe.js:67:6
+   67|     (yu: null | void); // nope
+            ^^
+
+References:
+   maybe.js:3:27
+    3| function f<X: number, Y: ?number, Z: ?X>(
+                                 ^^^^^^ [1]
+   maybe.js:67:10
+   67|     (yu: null | void); // nope
+                ^^^^ [2]
+   maybe.js:67:17
+   67|     (yu: null | void); // nope
+                       ^^^^ [3]
+
+
+Error ---------------------------------------------------------------------------------------------------- maybe.js:74:4
+
+Cannot cast `zu` to `X` because null or undefined [1] is incompatible with `X` [2]. [incompatible-cast]
+
+   maybe.js:74:4
+   74|   (zu: X); // nope
+          ^^
+
+References:
+   maybe.js:9:8
+    9|   zu?: Z,
+              ^ [1]
+   maybe.js:74:8
+   74|   (zu: X); // nope
+              ^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- maybe.js:74:4
+
+Cannot cast `zu` to `X` because undefined [1] is incompatible with `X` [2]. [incompatible-cast]
+
+   maybe.js:74:4
+   74|   (zu: X); // nope
+          ^^
+
+References:
+   maybe.js:9:8
+    9|   zu?: Z,
+              ^ [1]
+   maybe.js:74:8
+   74|   (zu: X); // nope
+              ^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- maybe.js:76:4
+
+Cannot cast `zu` to `Z` because undefined [1] is incompatible with `Z` [2]. [incompatible-cast]
+
+   maybe.js:76:4
+   76|   (zu: Z); // nope
+          ^^
+
+References:
+   maybe.js:9:8
+    9|   zu?: Z,
+              ^ [1]
+   maybe.js:76:8
+   76|   (zu: Z); // nope
+              ^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- maybe.js:81:6
+
+Cannot cast `zu` to union type because: [incompatible-cast]
+ - Either number [1] is incompatible with null [2].
+ - Or number [1] is incompatible with undefined [3].
+
+   maybe.js:81:6
+   81|     (zu: null | void); // nope
+            ^^
+
+References:
+   maybe.js:3:39
+    3| function f<X: number, Y: ?number, Z: ?X>(
+                                             ^ [1]
+   maybe.js:81:10
+   81|     (zu: null | void); // nope
+                ^^^^ [2]
+   maybe.js:81:17
+   81|     (zu: null | void); // nope
+                       ^^^^ [3]
+
+
+Error ---------------------------------------------------------------------------------------------------- maybe.js:89:4
+
+Cannot cast `b.x` to `Y` because number [1] is incompatible with `Y` [2]. [incompatible-cast]
+
+   maybe.js:89:4
+   89|   (b.x: Y); //nope
+          ^^^
+
+References:
+   maybe.js:85:23
+   85|   declare var a: {x?: X};
+                             ^ [1]
+   maybe.js:89:9
+   89|   (b.x: Y); //nope
+               ^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- maybe.js:95:4
+
+Cannot cast `c` to union type because: [incompatible-cast]
+ - Either number [1] is incompatible with null [2].
+ - Or number [1] is incompatible with undefined [3].
+
+   maybe.js:95:4
+   95|   (c: null | void); // nope
+          ^
+
+References:
+   maybe.js:92:32
+   92|   declare var c: $NonMaybeType<X>;
+                                      ^ [1]
+   maybe.js:95:7
+   95|   (c: null | void); // nope
+             ^^^^ [2]
+   maybe.js:95:14
+   95|   (c: null | void); // nope
+                    ^^^^ [3]
+
+
+Error ------------------------------------------------------------------------------------------------------ misc.js:5:4
+
+Cannot cast `x + x` to `X` because number [1] is incompatible with `X` [2]. [incompatible-cast]
+
+   misc.js:5:4
+   5|   (x + x: X); // nope
+         ^^^^^ [1]
+
+References:
+   misc.js:5:11
+   5|   (x + x: X); // nope
+                ^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------------ misc.js:8:5
+
+Cannot cast `-x` to `X` because number [1] is incompatible with `X` [2]. [incompatible-cast]
+
+   misc.js:8:5
+   8|   (-x: X); // nope
+          ^
+
+References:
+   misc.js:3:26
+   3| function a<X: number>(x: X) {
+                               ^ [1]
+   misc.js:8:8
+   8|   (-x: X); // nope
+             ^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- misc.js:11:4
+
+Cannot cast `x * x` to `X` because number [1] is incompatible with `X` [2]. [incompatible-cast]
+
+   misc.js:11:4
+   11|   (x * x: X);
+          ^^^^^ [1]
+
+References:
+   misc.js:11:11
+   11|   (x * x: X);
+                 ^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- misc.js:21:4
+
+Cannot compare number [1] to string [2] with a non-strict equality check. Make sure the arguments are valid, or try
+using strict equality (`===` or `!==`) instead. [invalid-compare]
+
+   misc.js:21:4
+   21|   (x == y: boolean); // nope
+          ^
+
+References:
+   misc.js:17:37
+   17| function b<X: number, Y: string>(x: X, y: Y) {
+                                           ^ [1]
+   misc.js:17:43
+   17| function b<X: number, Y: string>(x: X, y: Y) {
+                                                 ^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- misc.js:24:4
+
+Cannot compare number [1] to string [2]. [invalid-compare]
+
+   misc.js:24:4
+   24|   (x < y: boolean); // nope
+          ^
+
+References:
+   misc.js:17:37
+   17| function b<X: number, Y: string>(x: X, y: Y) {
+                                           ^ [1]
+   misc.js:17:43
+   17| function b<X: number, Y: string>(x: X, y: Y) {
+                                                 ^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- misc.js:141:3
+
+Cannot return `otherData` because object type [1] is incompatible with `{ ...T }` [2]. [incompatible-return]
+
+   misc.js:141:3
+   141|   otherData;
+          ^^^^^^^^^
+
+References:
+   misc.js:140:54
+   140| const directAccount = <T: LLETR>(data: T, otherData: LLETR): $ReadOnly<T> =>
+                                                             ^^^^^ [1]
+   misc.js:140:27
+   140| const directAccount = <T: LLETR>(data: T, otherData: LLETR): $ReadOnly<T> =>
+                                  ^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- nested.js:8:10
+
+Cannot return `w` because `W` [1] is incompatible with `X` [2]. [incompatible-return]
+
+   nested.js:8:10
+   8|   return w; // nope
+               ^
+
+References:
+   nested.js:5:45
+   5| function f<X, Y: X, Z: Y, W>(y: Y, z: X, w: W): X {
+                                                  ^ [1]
+   nested.js:5:49
+   5| function f<X, Y: X, Z: Y, W>(y: Y, z: X, w: W): X {
+                                                      ^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- react.js:13:4
+
+Cannot cast `a` to `React.ComponentType` because `Props` [1] is incompatible with object type [2] in type argument
+`P` [3]. [incompatible-cast]
+
+   react.js:13:4
+    13|   (a: React.ComponentType<{a: number}>); // nope, contravariance
+           ^
+
+References:
+   react.js:11:38
+    11|   declare var a: React.ComponentType<Props>;
+                                             ^^^^^ [1]
+   react.js:13:27
+    13|   (a: React.ComponentType<{a: number}>); // nope, contravariance
+                                  ^^^^^^^^^^^ [2]
+   <BUILTINS>/react.js:257:38
+   257|   declare export type ComponentType<-P> = React$ComponentType<P>;
+                                             ^ [3]
+
+
+Error ---------------------------------------------------------------------------------------------------- react.js:14:4
+
+Cannot cast `b` to `React.Component` because object type [1] is incompatible with `Props` [2] in type argument
+`Props` [3]. [incompatible-cast]
+
+   react.js:14:4
+   14|   (b: React.Component<Props>); // nope
+          ^
+
+References:
+   react.js:12:34
+   12|   declare var b: React.Component<{+a: number}>;
+                                        ^^^^^^^^^^^^ [1]
+   react.js:14:23
+   14|   (b: React.Component<Props>); // nope
+                             ^^^^^ [2]
+   <BUILTINS>/react.js:26:31
+   26| declare class React$Component<Props, State = void> {
+                                     ^^^^^ [3]
+
+
+Error --------------------------------------------------------------------------------------------------- react.js:62:26
+
+Cannot get `X.defaultProps` because property `defaultProps` is missing in `React.AbstractComponentStatics` [1].
+[prop-missing]
+
+   react.js:62:26
+   62|   C.defaultProps = {...X.defaultProps}; // nope
+                                ^^^^^^^^^^^^
+
+References:
+   react.js:54:6
+   54|   X: React.AbstractComponent<{|...Props|}, Instance>,
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------- refinements.js:11:6
+
+Cannot cast `x` to string because number [1] is incompatible with string [2]. [incompatible-cast]
+
+   refinements.js:11:6
+   11|     (x: string); // nope
+            ^
+
+References:
+   refinements.js:8:7
+    8|   if (typeof x === 'number') {
+             ^^^^^^^^^^^^^^^^^^^^^ [1]
+   refinements.js:11:9
+   11|     (x: string); // nope
+               ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- refinements.js:13:4
+
+Cannot cast `x` to number because `X` [1] is incompatible with number [2]. [incompatible-cast]
+
+   refinements.js:13:4
+   13|   (x: number); // nope
+          ^
+
+References:
+   refinements.js:7:18
+    7| function f<X>(x: X) {
+                        ^ [1]
+   refinements.js:13:7
+   13|   (x: number); // nope
+             ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- refinements.js:18:6
+
+Cannot cast `x` to string because `C` [1] is incompatible with string [2]. [incompatible-cast]
+
+   refinements.js:18:6
+   18|     (x: string); // nope
+            ^
+
+References:
+   refinements.js:15:20
+   15|   if (x instanceof C) {
+                          ^ [1]
+   refinements.js:18:9
+   18|     (x: string); // nope
+               ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- refinements.js:20:4
+
+Cannot cast `x` to `C` because `X` [1] is incompatible with `C` [2]. [incompatible-cast]
+
+   refinements.js:20:4
+   20|   (x: C); // nope
+          ^
+
+References:
+   refinements.js:7:18
+    7| function f<X>(x: X) {
+                        ^ [1]
+   refinements.js:20:7
+   20|   (x: C); // nope
+             ^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------------ rest.js:5:4
+
+Cannot cast `y` to `$Diff` because object type [1] is incompatible with `{ ...X }` [2]. [incompatible-cast]
+
+   rest.js:5:4
+   5|   (y: $Diff<{...X, ...Y}, {...Y}>); // nope
+         ^
+
+References:
+   rest.js:3:40
+   3| function f<X: {}, Y: {}>(x: {...X}, y: {...Y}, both: {...X, ...Y}) {
+                                             ^^^^^^ [1]
+   rest.js:5:13
+   5|   (y: $Diff<{...X, ...Y}, {...Y}>); // nope
+                  ^^^^^^^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- rest.js:10:4
+
+Cannot cast `rest` to object type because property `x` is missing in rest of object pattern [1] but exists in object
+type [2]. [prop-missing]
+
+   rest.js:10:4
+   10|   (rest: {...X, ...Y}); //no, because x is missing
+          ^^^^
+
+References:
+   rest.js:9:11
+    9|   var {x, ...rest} = o;
+                 ^^^^^^^ [1]
+   rest.js:10:10
+   10|   (rest: {...X, ...Y}); //no, because x is missing
+                ^^^^^^^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- rest.js:12:4
+
+Cannot cast `rest` to object type because rest of object pattern [1] is incompatible with `{ ...X }` [2].
+[incompatible-cast]
+
+   rest.js:12:4
+   12|   (rest: {...X}); // no, because X's props could have been overwritten
+          ^^^^
+
+References:
+   rest.js:9:11
+    9|   var {x, ...rest} = o;
+                 ^^^^^^^ [1]
+   rest.js:12:10
+   12|   (rest: {...X}); // no, because X's props could have been overwritten
+                ^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- spreads.js:4:4
+
+Cannot cast object literal to object type because object literal [1] is incompatible with `{ ...X }` [2].
+[incompatible-cast]
+
+   spreads.js:4:4
+   4|   ({...x, ...y}: {...X}); // nope, which is different than old generics
+         ^^^^^^^^^^^^ [1]
+
+References:
+   spreads.js:4:18
+   4|   ({...x, ...y}: {...X}); // nope, which is different than old generics
+                       ^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- spreads.js:6:4
+
+Cannot cast object literal to object type because object literal [1] is incompatible with `{ ...Y, ...X }` [2].
+[incompatible-cast]
+
+   spreads.js:6:4
+   6|   ({...x}: {...Y, ...X}); // nope
+         ^^^^^^ [1]
+
+References:
+   spreads.js:6:12
+   6|   ({...x}: {...Y, ...X}); // nope
+                 ^^^^^^^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- spreads.js:7:4
+
+Cannot cast object literal to object type because object literal [1] is incompatible with `{ ...X, ...Y }` [2].
+[incompatible-cast]
+
+   spreads.js:7:4
+   7|   ({...y, ...x}: {...X, ...Y}); // nope, which is different than old generics
+         ^^^^^^^^^^^^ [1]
+
+References:
+   spreads.js:7:18
+   7|   ({...y, ...x}: {...X, ...Y}); // nope, which is different than old generics
+                       ^^^^^^^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------------- spreads.js:11:4
+
+Cannot cast object literal to object type because object literal [1] is incompatible with `{ ...X, ...Z, ...Y }` [2].
+[incompatible-cast]
+
+   spreads.js:11:4
+   11|   ({...x, ...y}: {...X, ...Z, ...Y}); // nope
+          ^^^^^^^^^^^^ [1]
+
+References:
+   spreads.js:11:18
+   11|   ({...x, ...y}: {...X, ...Z, ...Y}); // nope
+                        ^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------------- spreads.js:24:4
+
+Cannot cast `x` to object type because `X` [1] is incompatible with object type [2]. [incompatible-cast]
+
+   spreads.js:24:4
+   24|   (x: {...X}); // nope
+          ^
+
+References:
+   spreads.js:23:18
+   23| function t<X>(x: X, sp_x: {...X}) {
+                        ^ [1]
+   spreads.js:24:7
+   24|   (x: {...X}); // nope
+             ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- spreads.js:41:10
+
+Cannot return `y` because object type [1] is incompatible with `{ ...X, ...Y }` [2]. [incompatible-return]
+
+   spreads.js:41:10
+   41|   return y; // should error
+                ^
+
+References:
+   spreads.js:40:30
+   40| function f3<X: {}, Y: {}>(y: Y): {...X, ...Y} {
+                                    ^ [1]
+   spreads.js:40:34
+   40| function f3<X: {}, Y: {}>(y: Y): {...X, ...Y} {
+                                        ^^^^^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- spreads.js:49:10
+
+Cannot return `y` because object type [1] is incompatible with `Y` [2]. [incompatible-return]
+
+   spreads.js:49:10
+   49|   return y; // should be an error!
+                ^
+
+References:
+   spreads.js:48:31
+   48| function f4b<X: {}, Y: {}>(y: {...Y, ...X}): Y {
+                                     ^^^^^^^^^^^^ [1]
+   spreads.js:48:46
+   48| function f4b<X: {}, Y: {}>(y: {...Y, ...X}): Y {
+                                                    ^ [2]
+
+
+Error -------------------------------------------------------------------------------------------------- spreads.js:53:4
+
+Cannot cast `x` to object type because object type [1] is incompatible with `{ ...X, ...Y }` [2]. [incompatible-cast]
+
+   spreads.js:53:4
+   53|   (x: {...(X & Y)}); // nope
+          ^
+
+References:
+   spreads.js:52:39
+   52| function f<X: {}, Y: {}, Z: X & Y>(x: {...X}, xy: {...X, ...Y}, z: {...Z}) {
+                                             ^^^^^^ [1]
+   spreads.js:53:7
+   53|   (x: {...(X & Y)}); // nope
+             ^^^^^^^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------------- spreads.js:60:9
+
+Cannot assign object literal to `esc` because type variable `X` [1] cannot escape from the scope in which it was
+defined [2] (try adding a type annotation to `esc` [3]). [escaped-generic]
+
+   spreads.js:60:9
+   60|   esc = {...x, ...y};
+               ^^^^^^^^^^^^ [1]
+
+References:
+   spreads.js:59:13
+   59| function hh<X: {}, Y: {}>(x: X, y: Y) {
+                   ^ [2]
+   spreads.js:58:5
+   58| var esc;
+           ^^^ [3]
+
+
+Error -------------------------------------------------------------------------------------------------- spreads.js:60:9
+
+Cannot assign object literal to `esc` because type variable `Y` [1] cannot escape from the scope in which it was
+defined [2] (try adding a type annotation to `esc` [3]). [escaped-generic]
+
+   spreads.js:60:9
+   60|   esc = {...x, ...y};
+               ^^^^^^^^^^^^ [1]
+
+References:
+   spreads.js:59:20
+   59| function hh<X: {}, Y: {}>(x: X, y: Y) {
+                          ^ [2]
+   spreads.js:58:5
+   58| var esc;
+           ^^^ [3]
+
+
+Error ----------------------------------------------------------------------------------------------------- this.js:8:14
+
+Cannot return `this.f2()` because `C` [1] is incompatible with `this` [2]. [incompatible-return]
+
+   this.js:8:14
+   8|       return this.f2();
+                   ^^^^^^^^^
+
+References:
+   this.js:5:14
+   5|   +f2: () => C;
+                   ^ [1]
+   this.js:6:8
+   6|   g(): this {
+             ^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- union.js:9:4
+
+Cannot cast `x` to number because string [1] is incompatible with number [2]. [incompatible-cast]
+
+   union.js:9:4
+   9|   (x: number); // nope
+         ^
+
+References:
+   union.js:3:25
+   3| function f1<X: number | string, Y: X | boolean>(x: X, y: Y) {
+                              ^^^^^^ [1]
+   union.js:9:7
+   9|   (x: number); // nope
+            ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- union.js:13:6
+
+Cannot cast `x` to string because number [1] is incompatible with string [2]. [incompatible-cast]
+
+   union.js:13:6
+   13|     (x: string); // nope
+            ^
+
+References:
+   union.js:3:16
+    3| function f1<X: number | string, Y: X | boolean>(x: X, y: Y) {
+                      ^^^^^^ [1]
+   union.js:13:9
+   13|     (x: string); // nope
+               ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- union.js:17:6
+
+Cannot cast `y` to `X` because boolean [1] is incompatible with `X` [2]. [incompatible-cast]
+
+   union.js:17:6
+   17|     (y: X); // nope
+            ^
+
+References:
+   union.js:3:40
+    3| function f1<X: number | string, Y: X | boolean>(x: X, y: Y) {
+                                              ^^^^^^^ [1]
+   union.js:17:9
+   17|     (y: X); // nope
+               ^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- union.js:20:6
+
+Cannot cast `y` to boolean because number [1] is incompatible with boolean [2]. [incompatible-cast]
+
+   union.js:20:6
+   20|     (y: boolean); // nope
+            ^
+
+References:
+   union.js:3:16
+    3| function f1<X: number | string, Y: X | boolean>(x: X, y: Y) {
+                      ^^^^^^ [1]
+   union.js:20:9
+   20|     (y: boolean); // nope
+               ^^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- union.js:20:6
+
+Cannot cast `y` to boolean because string [1] is incompatible with boolean [2]. [incompatible-cast]
+
+   union.js:20:6
+   20|     (y: boolean); // nope
+            ^
+
+References:
+   union.js:3:25
+    3| function f1<X: number | string, Y: X | boolean>(x: X, y: Y) {
+                               ^^^^^^ [1]
+   union.js:20:9
+   20|     (y: boolean); // nope
+               ^^^^^^^ [2]
+
+
+
+Found 85 errors
+
+Only showing the most relevant union/intersection branches.
+To see all branches, re-run Flow with --show-all-branches

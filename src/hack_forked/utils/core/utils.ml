@@ -244,8 +244,9 @@ let try_finally ~f ~(finally : unit -> unit) =
   let res =
     try f ()
     with e ->
+      let e = Exception.wrap e in
       finally ();
-      raise e
+      Exception.reraise e
   in
   finally ();
   res

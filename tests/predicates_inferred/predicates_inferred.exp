@@ -116,6 +116,48 @@ The return type of a predicate function cannot contain a generic type. The funct
                                 ^
 
 
+Error ------------------------------------------------------------------------------------------- wf-polymorphic.js:5:46
+
+Cannot return `x` because predicate encoded in return [1] contains type variable `X` [2] which cannot escape from the
+scope in which it was defined [3]. [escaped-generic]
+
+   wf-polymorphic.js:5:46
+   5| function f3<X>(x: X): mixed %checks { return x; } // okay
+                                                   ^
+
+References:
+   wf-polymorphic.js:5:39
+   5| function f3<X>(x: X): mixed %checks { return x; } // okay
+                                            ^^^^^^^^^ [1]
+   wf-polymorphic.js:5:19
+   5| function f3<X>(x: X): mixed %checks { return x; } // okay
+                        ^ [2]
+   wf-polymorphic.js:5:13
+   5| function f3<X>(x: X): mixed %checks { return x; } // okay
+                  ^ [3]
+
+
+Error ------------------------------------------------------------------------------------------- wf-polymorphic.js:6:40
+
+Cannot return `x` because predicate encoded in return [1] contains type variable `X` [2] which cannot escape from the
+scope in which it was defined [3]. [escaped-generic]
+
+   wf-polymorphic.js:6:40
+   6| function f4<X>(x: X): %checks { return x; } // okay
+                                             ^
+
+References:
+   wf-polymorphic.js:6:33
+   6| function f4<X>(x: X): %checks { return x; } // okay
+                                      ^^^^^^^^^ [1]
+   wf-polymorphic.js:6:19
+   6| function f4<X>(x: X): %checks { return x; } // okay
+                        ^ [2]
+   wf-polymorphic.js:6:13
+   6| function f4<X>(x: X): %checks { return x; } // okay
+                  ^ [3]
+
+
 Error ------------------------------------------------------------------------------------------- wf-polymorphic.js:8:30
 
 The return type of a predicate function cannot contain a generic type. The function predicate will be ignored here.
@@ -126,4 +168,4 @@ The return type of a predicate function cannot contain a generic type. The funct
 
 
 
-Found 11 errors
+Found 13 errors

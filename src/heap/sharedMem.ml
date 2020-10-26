@@ -17,6 +17,12 @@ type config = {
 
 type handle = Unix.file_descr
 
+type table_stats = {
+  nonempty_slots: int;
+  used_slots: int;
+  slots: int;
+}
+
 exception Out_of_shared_memory
 
 exception Hash_table_full
@@ -25,14 +31,11 @@ exception Heap_full
 
 exception Failed_memfd_init of Unix.error
 
-exception C_assertion_failure of string
-
 let () =
   Callback.register_exception "out_of_shared_memory" Out_of_shared_memory;
   Callback.register_exception "hash_table_full" Hash_table_full;
   Callback.register_exception "heap_full" Heap_full;
-  Callback.register_exception "failed_memfd_init" (Failed_memfd_init Unix.EINVAL);
-  Callback.register_exception "c_assertion_failure" (C_assertion_failure "")
+  Callback.register_exception "failed_memfd_init" (Failed_memfd_init Unix.EINVAL)
 
 (*****************************************************************************)
 (* Initializes the shared memory. Must be called before forking. *)
@@ -57,50 +60,35 @@ external connect : handle -> worker_id:int -> unit = "hh_connect"
  * free data (cf hh_shared.c for the underlying C implementation).
  *)
 (*****************************************************************************)
-external hh_collect : unit -> unit = "hh_collect" [@@noalloc]
+external hh_collect : unit -> unit = "hh_collect"
 
 (*****************************************************************************)
 (* The size of the dynamically allocated shared memory section *)
 (*****************************************************************************)
-external heap_size : unit -> int = "hh_used_heap_size" [@@noalloc]
+external heap_size : unit -> int = "hh_used_heap_size"
 
 (*****************************************************************************)
 (* Part of the heap not reachable from hashtable entries. *)
 (*****************************************************************************)
-external wasted_heap_size : unit -> int = "hh_wasted_heap_size" [@@noalloc]
+external wasted_heap_size : unit -> int = "hh_wasted_heap_size"
 
 (*****************************************************************************)
 (* The logging level for shared memory statistics *)
 (* 0 = nothing *)
 (* 1 = log totals, averages, min, max bytes marshalled and unmarshalled *)
 (*****************************************************************************)
-external hh_log_level : unit -> int = "hh_log_level" [@@noalloc]
-
-(*****************************************************************************)
-(* The number of used slots in our hashtable *)
-(*****************************************************************************)
-external hash_used_slots : unit -> int * int = "hh_hash_used_slots"
+external hh_log_level : unit -> int = "hh_log_level"
 
 (*****************************************************************************)
 (* The total number of slots in our hashtable *)
 (*****************************************************************************)
-external hash_slots : unit -> int = "hh_hash_slots"
+external hash_stats : unit -> table_stats = "hh_hash_stats"
 
 (*****************************************************************************)
 (* Must be called after the initialization of the hack server is over.
  * (cf serverInit.ml). *)
 (*****************************************************************************)
 let init_done () = EventLogger.sharedmem_init_done (heap_size ())
-
-type table_stats = {
-  nonempty_slots: int;
-  used_slots: int;
-  slots: int;
-}
-
-let hash_stats () =
-  let (used_slots, nonempty_slots) = hash_used_slots () in
-  { nonempty_slots; used_slots; slots = hash_slots () }
 
 let should_collect (effort : [ `gentle | `aggressive | `always_TEST ]) =
   let overhead =
@@ -186,11 +174,19 @@ module type Value = sig
   val description : string
 end
 
-module KeyFunctor (UserKeyType : sig
+(*****************************************************************************)
+(* The interface that all keys need to implement *)
+(*****************************************************************************)
+
+module type UserKeyType = sig
   type t
 
   val to_string : t -> string
-end) : Key with type userkey = UserKeyType.t = struct
+
+  val compare : t -> t -> int
+end
+
+module KeyFunctor (UserKeyType : UserKeyType) : Key with type userkey = UserKeyType.t = struct
   type userkey = UserKeyType.t
 
   type t = string
@@ -238,25 +234,34 @@ module Raw (Key : Key) (Value : Value) : sig
 
   val move : Key.md5 -> Key.md5 -> unit
 end = struct
-  (* Returns the number of bytes allocated in the heap, or a negative number
-   * if no new memory was allocated *)
-  external hh_add : Key.md5 -> Value.t -> int * int = "hh_add"
+  type addr = int
+
+  (* Returns address into the heap, alloc size, and orig size *)
+  external hh_store : Value.t -> addr * int * int = "hh_store_ocaml"
+
+  external hh_deserialize : addr -> Value.t = "hh_deserialize"
+
+  external hh_add : Key.md5 -> addr -> unit = "hh_add"
 
   external hh_mem : Key.md5 -> bool = "hh_mem"
 
-  external hh_get_size : Key.md5 -> int = "hh_get_size"
+  external hh_get_size : addr -> int = "hh_get_size"
 
-  external hh_get_and_deserialize : Key.md5 -> Value.t = "hh_get_and_deserialize"
+  external hh_get : Key.md5 -> addr = "hh_get"
 
   external hh_remove : Key.md5 -> unit = "hh_remove"
 
   external hh_move : Key.md5 -> Key.md5 -> unit = "hh_move"
 
+  let hh_store x = WorkerCancel.with_worker_exit (fun () -> hh_store x)
+
+  let hh_deserialize x = WorkerCancel.with_worker_exit (fun () -> hh_deserialize x)
+
   let hh_mem x = WorkerCancel.with_worker_exit (fun () -> hh_mem x)
 
   let hh_add x y = WorkerCancel.with_worker_exit (fun () -> hh_add x y)
 
-  let hh_get_and_deserialize x = WorkerCancel.with_worker_exit (fun () -> hh_get_and_deserialize x)
+  let hh_get x = WorkerCancel.with_worker_exit (fun () -> hh_get x)
 
   let log_serialize compressed original =
     let compressed = float compressed in
@@ -283,14 +288,16 @@ end = struct
     )
 
   let add key value =
-    let (compressed_size, original_size) = hh_add key value in
+    let (addr, compressed_size, original_size) = hh_store value in
+    hh_add key addr;
     if hh_log_level () > 0 && compressed_size > 0 then log_serialize compressed_size original_size
 
   let mem key = hh_mem key
 
   let get key =
-    let v = hh_get_and_deserialize key in
-    if hh_log_level () > 0 then log_deserialize (hh_get_size key) (Obj.repr v);
+    let addr = hh_get key in
+    let v = hh_deserialize addr in
+    if hh_log_level () > 0 then log_deserialize (hh_get_size addr) (Obj.repr v);
     v
 
   let remove key = hh_remove key
@@ -481,18 +488,6 @@ module type WithCache = sig
   val get_no_cache : key -> t option
 
   module DebugCache : DebugLocalCache
-end
-
-(*****************************************************************************)
-(* The interface that all keys need to implement *)
-(*****************************************************************************)
-
-module type UserKeyType = sig
-  type t
-
-  val to_string : t -> string
-
-  val compare : t -> t -> int
 end
 
 (*****************************************************************************)

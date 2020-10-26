@@ -341,8 +341,8 @@ module Make (F : Func_sig.S) = struct
           implements = Base.List.map ~f:(subst_typeapp cx map) implements;
         }
 
-  let generate_tests cx f x =
-    Flow.generate_tests cx (Type.TypeParams.to_list x.tparams) (fun map ->
+  let check_with_generics cx f x =
+    Flow.check_with_generics cx (Type.TypeParams.to_list x.tparams) (fun map ->
         f
           {
             id = x.id;
@@ -535,6 +535,7 @@ module Make (F : Func_sig.S) = struct
         bound = rec_instance_type;
         polarity = Polarity.Positive;
         default = None;
+        is_this = true;
       }
     in
     let tparams =
@@ -753,13 +754,15 @@ module Make (F : Func_sig.S) = struct
     end;
     let { tparams; _ } = remove_this x in
     let open TypeUtil in
-    let t =
+    let (t_inner, t_outer) =
       if structural x then
-        class_type ~structural:true this
+        let class_type = class_type ~structural:true this in
+        (class_type, class_type)
       else
-        this_class_type this
+        (this_class_type this true, this_class_type this false)
     in
-    poly_type_of_tparams (Context.generate_poly_id cx) tparams t
+    let poly t = poly_type_of_tparams (Context.generate_poly_id cx) tparams t in
+    (poly t_inner, poly t_outer)
 
   (* Processes the bodies of instance and static class members. *)
   let toplevels cx ~decls ~stmts ~expr ~private_property_map x =
@@ -771,17 +774,19 @@ module Make (F : Func_sig.S) = struct
           let save_return = Abnormal.clear_saved Abnormal.Return in
           let save_throw = Abnormal.clear_saved Abnormal.Throw in
           let asts =
-            f |> F.generate_tests cx (F.toplevels None cx this super ~decls ~stmts ~expr)
+            f
+            |> F.check_with_generics
+                 cx
+                 (F.toplevels None cx this super ~decls ~stmts ~expr ~return_annot:None)
           in
           set_asts asts;
           ignore (Abnormal.swap_saved Abnormal.Return save_return);
           ignore (Abnormal.swap_saved Abnormal.Throw save_throw)
         in
-        let field config this super _name (_, _, value) =
-          match (config, value) with
-          | (Options.ESPROPOSAL_IGNORE, _) -> ()
-          | (_, Annot _) -> ()
-          | (_, Infer (fsig, set_asts)) -> method_ this super ~set_asts fsig
+        let field this super _name (_, _, value) =
+          match value with
+          | Annot _ -> ()
+          | Infer (fsig, set_asts) -> method_ this super ~set_asts fsig
         in
         let this = SMap.find "this" x.tparams_map in
         let static = TypeUtil.class_type this in
@@ -794,7 +799,7 @@ module Make (F : Func_sig.S) = struct
             | Explicit (annot_loc, c, targs) ->
               (* Eagerly specialize when there are no targs *)
               (* TODO: We can also specialize when there are targs, because this
-             code executes within generate_tests. However, the type normalizer
+             code executes within check_with_generics. However, the type normalizer
              expects a PolyT here. *)
               let c =
                 if targs = None then
@@ -818,11 +823,12 @@ module Make (F : Func_sig.S) = struct
         x
         |> with_sig ~static:true (fun s ->
                (* process static methods and fields *)
-               let (this, super) = (new_entry static, new_entry static_super) in
+               let (this, super) =
+                 (new_entry ~has_anno:false static, new_entry ~has_anno:false static_super)
+               in
                iter_methods (fun (_loc, f, set_asts, _) -> method_ this super ~set_asts f) s;
-               let config = Context.esproposal_class_static_fields cx in
-               SMap.iter (field config this super) s.fields;
-               SMap.iter (field config this super) s.private_fields);
+               SMap.iter (field this super) s.fields;
+               SMap.iter (field this super) s.private_fields);
 
         x
         |> with_sig ~static:false (fun s ->
@@ -844,18 +850,21 @@ module Make (F : Func_sig.S) = struct
                    else
                      new_entry t
                  in
-                 let (this, super) = (new_entry this, new_entry super) in
+                 let (this, super) =
+                   (new_entry ~has_anno:false this, new_entry ~has_anno:false super)
+                 in
                  x.constructor
                  |> List.iter (fun (_, fsig, set_asts, _) -> method_ this super ~set_asts fsig)
                end;
 
                (* process instance methods and fields *)
-               let (this, super) = (new_entry this, new_entry super) in
+               let (this, super) =
+                 (new_entry ~has_anno:false this, new_entry ~has_anno:false super)
+               in
                iter_methods (fun (_, msig, set_asts, _) -> method_ this super ~set_asts msig) s;
-               let config = Context.esproposal_class_instance_fields cx in
-               SMap.iter (field config this super) s.fields;
-               SMap.iter (field config this super) s.private_fields;
-               SMap.iter (field config this super) s.proto_fields))
+               SMap.iter (field this super) s.fields;
+               SMap.iter (field this super) s.private_fields;
+               SMap.iter (field this super) s.proto_fields))
 
   module This = struct
     let is_bound_to_empty x =

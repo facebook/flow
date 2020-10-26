@@ -61,7 +61,8 @@
             }
           }
         ],
-        "explicitType":true
+        "explicitType":true,
+        "hasUnknownMembers":false
       }
     }
   ],

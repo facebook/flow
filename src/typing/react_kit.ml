@@ -159,7 +159,7 @@ let lookup_defaults cx trace component ~reason_op ~rec_flow upper pole =
  * default props then either the type will be Some {||} or we will
  * return None. *)
 let get_defaults cx trace component ~reason_op ~rec_flow =
-  match component with
+  match drop_generic component with
   | DefT (_, _, ClassT _)
   | DefT (_, _, FunT _)
   | DefT (_, _, ObjT _) ->
@@ -183,7 +183,7 @@ let props_to_tout
     ~(add_output : Context.t -> ?trace:Trace.t -> Error_message.t -> unit)
     u
     tout =
-  match component with
+  match drop_generic component with
   (* Class components or legacy components. *)
   | DefT (_, _, ClassT _) ->
     let props = Tvar.mk cx reason_op in
@@ -246,7 +246,7 @@ let get_config
     u
     pole
     tout =
-  match component with
+  match drop_generic component with
   | DefT (_, _, ReactAbstractComponentT { config; _ }) ->
     let use_op = Frame (ReactGetConfig { polarity = pole }, use_op) in
     begin
@@ -301,7 +301,8 @@ module Kit (Flow : Flow_common.S) : REACT = struct
        inflows shouldn't cause additional errors. Also, if we expect an array, but
        we get one without any static information, we should fall back without
        erroring. This is best-effort, after all. *)
-    let coerce_object = function
+    let coerce_object t =
+      match drop_generic t with
       | DefT (reason, _, ObjT { props_tmap; flags; _ }) ->
         Ok (reason, Context.find_props cx props_tmap, flags)
       | AnyT (reason, _) -> Error reason
@@ -310,7 +311,8 @@ module Kit (Flow : Flow_common.S) : REACT = struct
         err_incompatible reason;
         Error reason
     in
-    let coerce_prop_type = function
+    let coerce_prop_type t =
+      match drop_generic t with
       | CustomFunT (reason, ReactPropType (PropType.Primitive (required, t))) ->
         let loc = aloc_of_reason reason in
         Ok (required, reposition cx ~trace ~annot_loc:loc loc t)
@@ -327,7 +329,8 @@ module Kit (Flow : Flow_common.S) : REACT = struct
         err_incompatible reason;
         Error reason
     in
-    let coerce_array = function
+    let coerce_array t =
+      match drop_generic t with
       | DefT (_, _, ArrT (ArrayAT (_, Some ts) | TupleAT (_, ts))) -> Ok ts
       | DefT (reason, _, ArrT _)
       | AnyT (reason, _) ->
@@ -339,17 +342,25 @@ module Kit (Flow : Flow_common.S) : REACT = struct
     in
     (* Unlike other coercions, don't add a Flow error if the incoming type doesn't
        have a singleton type representation. *)
-    let coerce_singleton = function
+    let coerce_singleton t =
+      let (t, f) =
+        match t with
+        | GenericT { bound; id; reason; name } ->
+          ( mod_reason_of_t (Fn.const reason) bound,
+            (fun bound -> GenericT { bound; id; reason = reason_of_t bound; name }) )
+        | _ -> (t, (fun x -> x))
+      in
+      match t with
       | DefT (reason, trust, StrT (Literal (_, x))) ->
         let reason = replace_desc_reason (RStringLit x) reason in
-        Ok (DefT (reason, trust, SingletonStrT x))
+        Ok (f (DefT (reason, trust, SingletonStrT x)))
       | DefT (reason, trust, NumT (Literal (_, x))) ->
         let reason = replace_desc_reason (RNumberLit (snd x)) reason in
-        Ok (DefT (reason, trust, SingletonNumT x))
+        Ok (f (DefT (reason, trust, SingletonNumT x)))
       | DefT (reason, trust, BoolT (Some x)) ->
         let reason = replace_desc_reason (RBooleanLit x) reason in
-        Ok (DefT (reason, trust, SingletonBoolT x))
-      | (DefT (_, _, NullT) | DefT (_, _, VoidT)) as t -> Ok t
+        Ok (f (DefT (reason, trust, SingletonBoolT x)))
+      | (DefT (_, _, NullT) | DefT (_, _, VoidT)) as t -> Ok (f t)
       | t -> Error (reason_of_t t)
     in
     let get_intrinsic = get_intrinsic cx trace l ~reason_op ~rec_flow ~get_builtin_type in
@@ -361,7 +372,7 @@ module Kit (Flow : Flow_common.S) : REACT = struct
      * inferred props type. *)
     let tin_to_props tin =
       let component = l in
-      match component with
+      match drop_generic component with
       (* Class components or legacy components. *)
       | DefT (_, _, ClassT _) ->
         (* The Props type parameter is invariant, but we only want to create a
@@ -473,7 +484,7 @@ module Kit (Flow : Flow_common.S) : REACT = struct
       (* If we are cloning an existing element, the config does not need to
        * provide the entire props type. *)
       let (props, defaults) =
-        match l with
+        match drop_generic l with
         | DefT (_, _, ReactAbstractComponentT { config; _ }) ->
           (* This is a bit of a hack. We will be passing these props and
            * default props to react_config in flow_js.ml to calculate the
@@ -667,7 +678,7 @@ module Kit (Flow : Flow_common.S) : REACT = struct
     in
     let get_instance tout =
       let component = l in
-      match component with
+      match drop_generic component with
       (* Class components or legacy components. *)
       | DefT (_, _, ClassT component) -> rec_flow_t ~use_op:unknown_use cx trace (component, tout)
       (* Stateless functional components. *)

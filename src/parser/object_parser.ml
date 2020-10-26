@@ -146,12 +146,27 @@ module Object
                 in
                 begin
                   match (is_getter, params) with
-                  | (true, (_, { Ast.Function.Params.params = []; rest = None; comments = _ })) ->
+                  | (true, (_, { Ast.Function.Params.this_ = Some _; _ })) ->
+                    error_at env (key_loc, Parse_error.GetterMayNotHaveThisParam)
+                  | (false, (_, { Ast.Function.Params.this_ = Some _; _ })) ->
+                    error_at env (key_loc, Parse_error.SetterMayNotHaveThisParam)
+                  | ( true,
+                      ( _,
+                        { Ast.Function.Params.params = []; rest = None; this_ = None; comments = _ }
+                      ) ) ->
                     ()
                   | (false, (_, { Ast.Function.Params.rest = Some _; _ })) ->
                     (* rest params don't make sense on a setter *)
                     error_at env (key_loc, Parse_error.SetterArity)
-                  | (false, (_, { Ast.Function.Params.params = [_]; _ })) -> ()
+                  | ( false,
+                      ( _,
+                        {
+                          Ast.Function.Params.params = [_];
+                          rest = None;
+                          this_ = None;
+                          comments = _;
+                        } ) ) ->
+                    ()
                   | (true, _) -> error_at env (key_loc, Parse_error.GetterArity)
                   | (false, _) -> error_at env (key_loc, Parse_error.SetterArity)
                 end;
@@ -741,10 +756,20 @@ module Object
                         (* #prod-MethodDefinition *)
                       in
                       let params = Declaration.function_params ~await ~yield env in
-                      if Peek.token env = T_COLON then
-                        params
-                      else
-                        function_params_remove_trailing env params
+                      let params =
+                        if Peek.token env = T_COLON then
+                          params
+                        else
+                          function_params_remove_trailing env params
+                      in
+                      Ast.Function.Params.(
+                        match params with
+                        | (loc, ({ this_ = Some (this_loc, _); _ } as params))
+                          when kind = Ast.Class.Method.Constructor ->
+                          (* Disallow this param annotations for constructors *)
+                          error_at env (this_loc, Parse_error.ThisParamBannedInConstructor);
+                          (loc, { params with this_ = None })
+                        | params -> params)
                     in
                     let return =
                       type_annotation_hint_remove_trailing env (Type.annotation_opt env)
@@ -991,7 +1016,7 @@ module Object
     let (extends, implements) = class_heritage env in
     let body = class_body env ~expression in
     let comments = Flow_ast_utils.mk_comments_opt ~leading () in
-    { Class.id; body; tparams; extends; implements; classDecorators = decorators; comments }
+    { Class.id; body; tparams; extends; implements; class_decorators = decorators; comments }
 
   let class_declaration env decorators =
     with_loc

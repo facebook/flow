@@ -173,8 +173,8 @@ References:
    classes.js:39:15
     39| var foo: $jsx<number> = <Foo/>;
                       ^^^^^^ [1]
-   <BUILTINS>/react.js:170:5
-   170|   | string
+   <BUILTINS>/react.js:171:5
+   171|   | string
             ^^^^^^ [2]
 
 
@@ -305,8 +305,8 @@ References:
    classes.js:79:22
     79| var foo_legacy: $jsx<number> = <FooLegacy/>;
                              ^^^^^^ [1]
-   <BUILTINS>/react.js:170:5
-   170|   | string
+   <BUILTINS>/react.js:171:5
+   171|   | string
             ^^^^^^ [2]
 
 
@@ -894,8 +894,8 @@ Cannot get `React.PropTypes.imaginaryType` because property `imaginaryType` is m
                                        ^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:226:33
-   226|   declare export var PropTypes: ReactPropTypes;
+   <BUILTINS>/react.js:227:33
+   227|   declare export var PropTypes: ReactPropTypes;
                                         ^^^^^^^^^^^^^^ [1]
 
 
@@ -909,13 +909,13 @@ Cannot get `React.PropTypes.string.inRequired` because property `inRequired` (di
                                               ^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:463:39
+   <BUILTINS>/react.js:464:39
                                               v
-   463| type ReactPropsChainableTypeChecker = {
-   464|   (props: any, propName: string, componentName: string, href?: string): ?Error,
-   465|   isRequired: ReactPropsCheckType,
-   466|   ...
-   467| };
+   464| type ReactPropsChainableTypeChecker = {
+   465|   (props: any, propName: string, componentName: string, href?: string): ?Error,
+   466|   isRequired: ReactPropsCheckType,
+   467|   ...
+   468| };
         ^ [1]
 
 

@@ -5,11 +5,6 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
-type esproposal_feature_mode =
-  | ESPROPOSAL_ENABLE
-  | ESPROPOSAL_IGNORE
-  | ESPROPOSAL_WARN
-
 type module_system =
   | Node
   | Haste
@@ -57,16 +52,14 @@ type t = {
   opt_debug: bool;
   opt_enable_const_params: bool;
   opt_enabled_rollouts: string SMap.t;
+  opt_enforce_local_inference_annotations: bool;
   opt_enforce_strict_call_arity: bool;
   opt_enforce_well_formed_exports: string list option;
   opt_enums: bool;
-  opt_esproposal_class_instance_fields: esproposal_feature_mode;
-  opt_esproposal_class_static_fields: esproposal_feature_mode;
-  opt_esproposal_decorators: esproposal_feature_mode;
-  opt_esproposal_export_star_as: esproposal_feature_mode;
-  opt_esproposal_nullish_coalescing: esproposal_feature_mode;
-  opt_esproposal_optional_chaining: esproposal_feature_mode;
+  opt_enums_with_unknown_members: bool;
+  opt_this_annot: bool;
   opt_exact_by_default: bool;
+  opt_generate_tests: bool;
   opt_facebook_fbs: string option;
   opt_facebook_fbt: string option;
   opt_facebook_module_interop: bool;
@@ -139,21 +132,17 @@ let enforce_strict_call_arity opts = opts.opt_enforce_strict_call_arity
 
 let enforce_well_formed_exports opts = opts.opt_enforce_well_formed_exports
 
+let enforce_local_inference_annotations opts = opts.opt_enforce_local_inference_annotations
+
 let enums opts = opts.opt_enums
 
-let esproposal_class_static_fields opts = opts.opt_esproposal_class_static_fields
+let enums_with_unknown_members opts = opts.opt_enums_with_unknown_members
 
-let esproposal_class_instance_fields opts = opts.opt_esproposal_class_instance_fields
-
-let esproposal_decorators opts = opts.opt_esproposal_decorators
-
-let esproposal_export_star_as opts = opts.opt_esproposal_export_star_as
-
-let esproposal_optional_chaining opts = opts.opt_esproposal_optional_chaining
-
-let esproposal_nullish_coalescing opts = opts.opt_esproposal_nullish_coalescing
+let this_annot opts = opts.opt_this_annot
 
 let exact_by_default opts = opts.opt_exact_by_default
+
+let generate_tests opts = opts.opt_generate_tests
 
 let haste_module_ref_prefix opts = opts.opt_haste_module_ref_prefix
 

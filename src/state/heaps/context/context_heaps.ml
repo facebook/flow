@@ -25,9 +25,10 @@ let master_sig : Context.sig_t option option ref = ref None
 let add_sig_context = Expensive.wrap SigContextHeap.add
 
 let add_sig ~audit cx =
-  let cx_file = Context.file cx in
-  if cx_file = File_key.Builtins then master_sig := None;
-  add_sig_context ~audit cx_file (Context.sig_cx cx)
+  WorkerCancel.with_no_cancellations (fun () ->
+      let cx_file = Context.file cx in
+      if cx_file = File_key.Builtins then master_sig := None;
+      add_sig_context ~audit cx_file (Context.sig_cx cx))
 
 module SigHashHeap =
   SharedMem_js.NoCache
@@ -52,20 +53,23 @@ module LeaderHeap =
     end)
 
 let oldify_merge_batch files =
-  LeaderHeap.oldify_batch files;
-  SigContextHeap.oldify_batch files;
-  SigHashHeap.oldify_batch files
+  WorkerCancel.with_no_cancellations (fun () ->
+      LeaderHeap.oldify_batch files;
+      SigContextHeap.oldify_batch files;
+      SigHashHeap.oldify_batch files)
 
 let remove_old_merge_batch files =
-  LeaderHeap.remove_old_batch files;
-  SigContextHeap.remove_old_batch files;
-  SigHashHeap.remove_old_batch files;
-  SharedMem_js.collect `gentle
+  WorkerCancel.with_no_cancellations (fun () ->
+      LeaderHeap.remove_old_batch files;
+      SigContextHeap.remove_old_batch files;
+      SigHashHeap.remove_old_batch files;
+      SharedMem_js.collect `gentle)
 
 let revive_merge_batch files =
-  LeaderHeap.revive_batch files;
-  SigContextHeap.revive_batch files;
-  SigHashHeap.revive_batch files
+  WorkerCancel.with_no_cancellations (fun () ->
+      LeaderHeap.revive_batch files;
+      SigContextHeap.revive_batch files;
+      SigHashHeap.revive_batch files)
 
 module Init_master_context_mutator : sig
   val add_master_sig : (Context.t -> unit) Expensive.t
@@ -97,28 +101,31 @@ end = struct
   type worker_mutator = unit
 
   let commit oldified_files =
-    Hh_logger.debug "Committing context heaps";
-    remove_old_merge_batch oldified_files;
-    currently_oldified_files := None;
+    WorkerCancel.with_no_cancellations (fun () ->
+        Hh_logger.debug "Committing context heaps";
+        remove_old_merge_batch oldified_files;
+        currently_oldified_files := None);
     Lwt.return_unit
 
   let rollback oldified_files =
-    Hh_logger.debug "Rolling back context heaps";
-    revive_merge_batch oldified_files;
-    currently_oldified_files := None;
+    WorkerCancel.with_no_cancellations (fun () ->
+        Hh_logger.debug "Rolling back context heaps";
+        revive_merge_batch oldified_files;
+        currently_oldified_files := None);
     Lwt.return_unit
 
   let create transaction files =
-    let master_mutator = ref files in
-    let worker_mutator = () in
-    currently_oldified_files := Some master_mutator;
+    WorkerCancel.with_no_cancellations (fun () ->
+        let master_mutator = ref files in
+        let worker_mutator = () in
+        currently_oldified_files := Some master_mutator;
 
-    let commit () = commit !master_mutator in
-    let rollback () = rollback !master_mutator in
-    oldify_merge_batch files;
-    Transaction.add ~singleton:"Merge_context" ~commit ~rollback transaction;
+        let commit () = commit !master_mutator in
+        let rollback () = rollback !master_mutator in
+        oldify_merge_batch files;
+        Transaction.add ~singleton:"Merge_context" ~commit ~rollback transaction;
 
-    (master_mutator, worker_mutator)
+        (master_mutator, worker_mutator))
 
   (* While merging, we must keep LeaderHeap, SigContextHeap, and SigHashHeap in
      sync, sometimes creating new entries and sometimes reusing old entries. *)
@@ -134,15 +141,16 @@ end = struct
       | None -> true
       | Some xx_old -> xx <> xx_old
     in
-    if diff then (
-      Nel.iter
-        (fun f ->
-          (* Ideally we'd assert that f is a member of the oldified files too *)
-          LeaderHeap.add f leader_f)
-        component_files;
-      add_sig_context ~audit leader_f (Context.sig_cx leader_cx);
-      SigHashHeap.add leader_f xx
-    )
+    WorkerCancel.with_no_cancellations (fun () ->
+        if diff then (
+          Nel.iter
+            (fun f ->
+              (* Ideally we'd assert that f is a member of the oldified files too *)
+              LeaderHeap.add f leader_f)
+            component_files;
+          add_sig_context ~audit leader_f (Context.sig_cx leader_cx);
+          SigHashHeap.add leader_f xx
+        ))
 
   let add_merge_on_exn ~audit () ~options component =
     (* Ideally we'd assert that leader_f is a member of the oldified files, but it's a little too
@@ -160,27 +168,29 @@ end = struct
       let module_ref = Files.module_ref leader_f in
       Context.make ccx metadata leader_f rev_table module_ref Context.Merging
     in
-    let module_refs =
-      Base.List.map
-        ~f:(fun f ->
-          let module_ref = Files.module_ref f in
-          let module_t = Type.AnyT.locationless (Type.AnyError None) in
-          Context.add_module cx module_ref module_t;
+    WorkerCancel.with_no_cancellations (fun () ->
+        let module_refs =
+          Base.List.map
+            ~f:(fun f ->
+              let module_ref = Files.module_ref f in
+              let module_t = Type.AnyT.locationless (Type.AnyError None) in
+              Context.add_module cx module_ref module_t;
 
-          (* Ideally we'd assert that f is a member of the oldified files too *)
-          LeaderHeap.add f leader_f;
-          module_ref)
-        (Nel.to_list component)
-    in
-    let xx = Merge_js.ContextOptimizer.sig_context cx module_refs in
-    add_sig_context ~audit leader_f sig_cx;
-    SigHashHeap.add leader_f xx
+              (* Ideally we'd assert that f is a member of the oldified files too *)
+              LeaderHeap.add f leader_f;
+              module_ref)
+            (Nel.to_list component)
+        in
+        let xx = Merge_js.ContextOptimizer.sig_context cx module_refs in
+        add_sig_context ~audit leader_f sig_cx;
+        SigHashHeap.add leader_f xx)
 
   let revive_files oldified_files files =
     (* Every file in files should be in the oldified set *)
     assert (FilenameSet.is_empty (FilenameSet.diff files !oldified_files));
-    oldified_files := FilenameSet.diff !oldified_files files;
-    revive_merge_batch files
+    WorkerCancel.with_no_cancellations (fun () ->
+        oldified_files := FilenameSet.diff !oldified_files files;
+        revive_merge_batch files)
 
   (* WARNING: Only call this function at the end of merge!!! Calling it during merge will return
      meaningless results.

@@ -4,7 +4,7 @@ Cannot return `"A" + x` because string [1] is incompatible with `S` [2]. [incomp
 
    add1arg.js:4:10
    4|   return "A" + x;
-               ^^^ [1]
+               ^^^^^^^ [1]
 
 References:
    add1arg.js:3:36
@@ -46,18 +46,15 @@ References:
                                     ^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------------ num.js:3:14
+Error ------------------------------------------------------------------------------------------------------ num.js:3:10
 
 Cannot return `a + b` because number [1] is incompatible with `A` [2]. [incompatible-return]
 
-   num.js:3:14
+   num.js:3:10
    3|   return a + b
-                   ^
+               ^^^^^ [1]
 
 References:
-   num.js:2:41
-   2| function f<A:number, B:number>(a: A, b: B): A {
-                                              ^ [1]
    num.js:2:45
    2| function f<A:number, B:number>(a: A, b: B): A {
                                                   ^ [2]
@@ -70,12 +67,9 @@ return value. [incompatible-call]
 
    reduce.js:8:27
    8|     ((prevnum, curnum) => curnum + prevnum),
-                                ^^^^^^
+                                ^^^^^^^^^^^^^^^^ [1]
 
 References:
-   reduce.js:5:18
-   5|   ...nums: Array<number>
-                       ^^^^^^ [1]
    reduce.js:7:22
    7|   return nums.reduce<T>(
                            ^ [2]
@@ -87,7 +81,7 @@ Cannot return `"BAD_" + s` because string [1] is incompatible with `S` [2]. [inc
 
    wc.js:7:12
    7|     return "BAD_" + s;
-                 ^^^^^^ [1]
+                 ^^^^^^^^^^ [1]
 
 References:
    wc.js:6:38

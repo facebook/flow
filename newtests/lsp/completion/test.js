@@ -587,103 +587,268 @@ export default (suite(
                   label: 'apply',
                   kind: 3,
                   detail: '(thisArg: any, argArray?: any) => any',
+                  sortText: '00000000000000000001',
                   insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {line: 14, character: 3},
+                      end: {line: 14, character: 3},
+                    },
+                    newText: 'apply',
+                  },
                 },
                 {
                   label: 'arguments',
                   kind: 6,
                   detail: 'any',
+                  sortText: '00000000000000000000',
                   insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {line: 14, character: 3},
+                      end: {line: 14, character: 3},
+                    },
+                    newText: 'arguments',
+                  },
                 },
                 {
                   label: 'bind',
                   kind: 3,
                   detail: '(thisArg: any, ...argArray: Array<any>) => any',
+                  sortText: '00000000000000000001',
                   insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {line: 14, character: 3},
+                      end: {line: 14, character: 3},
+                    },
+                    newText: 'bind',
+                  },
                 },
                 {
                   label: 'call',
                   kind: 3,
                   detail: '(thisArg: any, ...argArray: Array<any>) => any',
+                  sortText: '00000000000000000001',
                   insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {line: 14, character: 3},
+                      end: {line: 14, character: 3},
+                    },
+                    newText: 'call',
+                  },
                 },
                 {
                   label: 'caller',
                   kind: 13,
                   detail: 'any | null',
+                  sortText: '00000000000000000000',
                   insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {line: 14, character: 3},
+                      end: {line: 14, character: 3},
+                    },
+                    newText: 'caller',
+                  },
                 },
                 {
                   label: 'childContextTypes',
                   kind: 6,
                   detail: 'any',
+                  sortText: '00000000000000000000',
                   insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {line: 14, character: 3},
+                      end: {line: 14, character: 3},
+                    },
+                    newText: 'childContextTypes',
+                  },
                 },
                 {
                   label: 'contextTypes',
                   kind: 6,
                   detail: 'any',
+                  sortText: '00000000000000000000',
                   insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {line: 14, character: 3},
+                      end: {line: 14, character: 3},
+                    },
+                    newText: 'contextTypes',
+                  },
                 },
                 {
                   label: 'displayName',
                   kind: 13,
                   detail: '(?string) | void',
+                  sortText: '00000000000000000000',
                   insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {line: 14, character: 3},
+                      end: {line: 14, character: 3},
+                    },
+                    newText: 'displayName',
+                  },
                 },
                 {
                   label: 'hasOwnProperty',
                   kind: 3,
                   detail: '(prop: mixed) => boolean',
+                  documentation: {
+                    kind: 'markdown',
+                    value:
+                      'Determines whether an object has a property with the specified name.',
+                  },
+                  sortText: '00000000000000000001',
                   insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {line: 14, character: 3},
+                      end: {line: 14, character: 3},
+                    },
+                    newText: 'hasOwnProperty',
+                  },
                 },
                 {
                   label: 'isPrototypeOf',
                   kind: 3,
                   detail: '(o: mixed) => boolean',
+                  documentation: {
+                    kind: 'markdown',
+                    value:
+                      "Determines whether an object exists in another object's prototype chain.",
+                  },
+                  sortText: '00000000000000000001',
                   insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {line: 14, character: 3},
+                      end: {line: 14, character: 3},
+                    },
+                    newText: 'isPrototypeOf',
+                  },
                 },
                 {
                   label: 'length',
                   kind: 6,
                   detail: 'number',
+                  sortText: '00000000000000000000',
                   insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {line: 14, character: 3},
+                      end: {line: 14, character: 3},
+                    },
+                    newText: 'length',
+                  },
                 },
                 {
                   label: 'name',
                   kind: 6,
                   detail: 'string',
+                  sortText: '00000000000000000000',
                   insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {line: 14, character: 3},
+                      end: {line: 14, character: 3},
+                    },
+                    newText: 'name',
+                  },
                 },
                 {
                   label: 'propTypes',
                   kind: 6,
                   detail: 'any',
+                  sortText: '00000000000000000000',
                   insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {line: 14, character: 3},
+                      end: {line: 14, character: 3},
+                    },
+                    newText: 'propTypes',
+                  },
                 },
                 {
                   label: 'propertyIsEnumerable',
                   kind: 3,
                   detail: '(prop: mixed) => boolean',
+                  documentation: {
+                    kind: 'markdown',
+                    value:
+                      'Determines whether a specified property is enumerable.',
+                  },
+                  sortText: '00000000000000000001',
                   insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {line: 14, character: 3},
+                      end: {line: 14, character: 3},
+                    },
+                    newText: 'propertyIsEnumerable',
+                  },
                 },
                 {
                   label: 'toLocaleString',
                   kind: 3,
                   detail: '() => string',
+                  documentation: {
+                    kind: 'markdown',
+                    value:
+                      'Returns a date converted to a string using the current locale.',
+                  },
+                  sortText: '00000000000000000001',
                   insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {line: 14, character: 3},
+                      end: {line: 14, character: 3},
+                    },
+                    newText: 'toLocaleString',
+                  },
                 },
                 {
                   label: 'toString',
                   kind: 3,
                   detail: '() => string',
+                  documentation: {
+                    kind: 'markdown',
+                    value: 'Returns a string representation of an object.',
+                  },
+                  sortText: '00000000000000000001',
                   insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {line: 14, character: 3},
+                      end: {line: 14, character: 3},
+                    },
+                    newText: 'toString',
+                  },
                 },
                 {
                   label: 'valueOf',
                   kind: 3,
                   detail: '() => mixed',
+                  documentation: {
+                    kind: 'markdown',
+                    value:
+                      'Returns the primitive value of the specified object.',
+                  },
+                  sortText: '00000000000000000001',
                   insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {line: 14, character: 3},
+                      end: {line: 14, character: 3},
+                    },
+                    newText: 'valueOf',
+                  },
                 },
               ],
             }),
@@ -710,103 +875,268 @@ export default (suite(
                   label: 'apply',
                   kind: 3,
                   detail: '(thisArg: any, argArray?: any) => any',
+                  sortText: '00000000000000000001',
                   insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {line: 15, character: 2},
+                      end: {line: 15, character: 2},
+                    },
+                    newText: 'apply',
+                  },
                 },
                 {
                   label: 'arguments',
                   kind: 6,
                   detail: 'any',
+                  sortText: '00000000000000000000',
                   insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {line: 15, character: 2},
+                      end: {line: 15, character: 2},
+                    },
+                    newText: 'arguments',
+                  },
                 },
                 {
                   label: 'bind',
                   kind: 3,
                   detail: '(thisArg: any, ...argArray: Array<any>) => any',
+                  sortText: '00000000000000000001',
                   insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {line: 15, character: 2},
+                      end: {line: 15, character: 2},
+                    },
+                    newText: 'bind',
+                  },
                 },
                 {
                   label: 'call',
                   kind: 3,
                   detail: '(thisArg: any, ...argArray: Array<any>) => any',
+                  sortText: '00000000000000000001',
                   insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {line: 15, character: 2},
+                      end: {line: 15, character: 2},
+                    },
+                    newText: 'call',
+                  },
                 },
                 {
                   label: 'caller',
                   kind: 13,
                   detail: 'any | null',
+                  sortText: '00000000000000000000',
                   insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {line: 15, character: 2},
+                      end: {line: 15, character: 2},
+                    },
+                    newText: 'caller',
+                  },
                 },
                 {
                   label: 'childContextTypes',
                   kind: 6,
                   detail: 'any',
+                  sortText: '00000000000000000000',
                   insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {line: 15, character: 2},
+                      end: {line: 15, character: 2},
+                    },
+                    newText: 'childContextTypes',
+                  },
                 },
                 {
                   label: 'contextTypes',
                   kind: 6,
                   detail: 'any',
+                  sortText: '00000000000000000000',
                   insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {line: 15, character: 2},
+                      end: {line: 15, character: 2},
+                    },
+                    newText: 'contextTypes',
+                  },
                 },
                 {
                   label: 'displayName',
                   kind: 13,
                   detail: '(?string) | void',
+                  sortText: '00000000000000000000',
                   insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {line: 15, character: 2},
+                      end: {line: 15, character: 2},
+                    },
+                    newText: 'displayName',
+                  },
                 },
                 {
                   label: 'hasOwnProperty',
                   kind: 3,
                   detail: '(prop: mixed) => boolean',
+                  documentation: {
+                    kind: 'markdown',
+                    value:
+                      'Determines whether an object has a property with the specified name.',
+                  },
+                  sortText: '00000000000000000001',
                   insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {line: 15, character: 2},
+                      end: {line: 15, character: 2},
+                    },
+                    newText: 'hasOwnProperty',
+                  },
                 },
                 {
                   label: 'isPrototypeOf',
                   kind: 3,
                   detail: '(o: mixed) => boolean',
+                  documentation: {
+                    kind: 'markdown',
+                    value:
+                      "Determines whether an object exists in another object's prototype chain.",
+                  },
+                  sortText: '00000000000000000001',
                   insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {line: 15, character: 2},
+                      end: {line: 15, character: 2},
+                    },
+                    newText: 'isPrototypeOf',
+                  },
                 },
                 {
                   label: 'length',
                   kind: 6,
                   detail: 'number',
+                  sortText: '00000000000000000000',
                   insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {line: 15, character: 2},
+                      end: {line: 15, character: 2},
+                    },
+                    newText: 'length',
+                  },
                 },
                 {
                   label: 'name',
                   kind: 6,
                   detail: 'string',
+                  sortText: '00000000000000000000',
                   insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {line: 15, character: 2},
+                      end: {line: 15, character: 2},
+                    },
+                    newText: 'name',
+                  },
                 },
                 {
                   label: 'propTypes',
                   kind: 6,
                   detail: 'any',
+                  sortText: '00000000000000000000',
                   insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {line: 15, character: 2},
+                      end: {line: 15, character: 2},
+                    },
+                    newText: 'propTypes',
+                  },
                 },
                 {
                   label: 'propertyIsEnumerable',
                   kind: 3,
                   detail: '(prop: mixed) => boolean',
+                  documentation: {
+                    kind: 'markdown',
+                    value:
+                      'Determines whether a specified property is enumerable.',
+                  },
+                  sortText: '00000000000000000001',
                   insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {line: 15, character: 2},
+                      end: {line: 15, character: 2},
+                    },
+                    newText: 'propertyIsEnumerable',
+                  },
                 },
                 {
                   label: 'toLocaleString',
                   kind: 3,
                   detail: '() => string',
+                  documentation: {
+                    kind: 'markdown',
+                    value:
+                      'Returns a date converted to a string using the current locale.',
+                  },
+                  sortText: '00000000000000000001',
                   insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {line: 15, character: 2},
+                      end: {line: 15, character: 2},
+                    },
+                    newText: 'toLocaleString',
+                  },
                 },
                 {
                   label: 'toString',
                   kind: 3,
                   detail: '() => string',
+                  documentation: {
+                    kind: 'markdown',
+                    value: 'Returns a string representation of an object.',
+                  },
+                  sortText: '00000000000000000001',
                   insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {line: 15, character: 2},
+                      end: {line: 15, character: 2},
+                    },
+                    newText: 'toString',
+                  },
                 },
                 {
                   label: 'valueOf',
                   kind: 3,
                   detail: '() => mixed',
+                  documentation: {
+                    kind: 'markdown',
+                    value:
+                      'Returns the primitive value of the specified object.',
+                  },
+                  sortText: '00000000000000000001',
                   insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {line: 15, character: 2},
+                      end: {line: 15, character: 2},
+                    },
+                    newText: 'valueOf',
+                  },
                 },
               ],
             }),
@@ -838,6 +1168,13 @@ export default (suite(
                   detail: 'module Typologies',
                   sortText: '00000000000000000000',
                   insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {line: 27, character: 18},
+                      end: {line: 27, character: 18},
+                    },
+                    newText: 'Typologies.',
+                  },
                 },
                 {
                   label: 'Typography',
@@ -845,6 +1182,13 @@ export default (suite(
                   detail: 'class Typewriter',
                   sortText: '00000000000000000000',
                   insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {line: 27, character: 18},
+                      end: {line: 27, character: 18},
+                    },
+                    newText: 'Typography',
+                  },
                 },
                 {
                   label: 'Typewriter',
@@ -852,6 +1196,13 @@ export default (suite(
                   detail: 'class Typewriter',
                   sortText: '00000000000000000000',
                   insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {line: 27, character: 18},
+                      end: {line: 27, character: 18},
+                    },
+                    newText: 'Typewriter',
+                  },
                 },
                 {
                   label: 'Types',
@@ -859,6 +1210,13 @@ export default (suite(
                   detail: 'module Types',
                   sortText: '00000000000000000000',
                   insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {line: 27, character: 18},
+                      end: {line: 27, character: 18},
+                    },
+                    newText: 'Types.',
+                  },
                 },
                 {
                   label: 'Typesafe',
@@ -866,6 +1224,13 @@ export default (suite(
                   detail: 'interface Typesafety',
                   sortText: '00000000000000000000',
                   insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {line: 27, character: 18},
+                      end: {line: 27, character: 18},
+                    },
+                    newText: 'Typesafe',
+                  },
                 },
                 {
                   label: 'Typhoon',
@@ -873,6 +1238,13 @@ export default (suite(
                   detail: 'type Typhoon = string',
                   sortText: '00000000000000000000',
                   insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {line: 27, character: 18},
+                      end: {line: 27, character: 18},
+                    },
+                    newText: 'Typhoon',
+                  },
                 },
                 {
                   label: 'Typnotism',
@@ -880,6 +1252,13 @@ export default (suite(
                   detail: 'type Typnotism = number',
                   sortText: '00000000000000000000',
                   insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {line: 27, character: 18},
+                      end: {line: 27, character: 18},
+                    },
+                    newText: 'Typnotism',
+                  },
                 },
                 {
                   label: 'Tyrant',
@@ -887,6 +1266,13 @@ export default (suite(
                   detail: 'type Tyrant = string',
                   sortText: '00000000000000000000',
                   insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {line: 27, character: 18},
+                      end: {line: 27, character: 18},
+                    },
+                    newText: 'Tyrant',
+                  },
                 },
                 {
                   label: 'Tympanic',
@@ -894,6 +1280,13 @@ export default (suite(
                   detail: 'type Tympanic = number',
                   sortText: '00000000000000000000',
                   insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {line: 27, character: 18},
+                      end: {line: 27, character: 18},
+                    },
+                    newText: 'Tympanic',
+                  },
                 },
                 {
                   label: 'Typeset',
@@ -901,6 +1294,13 @@ export default (suite(
                   detail: 'interface Typeset',
                   sortText: '00000000000000000000',
                   insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {line: 27, character: 18},
+                      end: {line: 27, character: 18},
+                    },
+                    newText: 'Typeset',
+                  },
                 },
                 {
                   label: 'Typaram',
@@ -908,6 +1308,13 @@ export default (suite(
                   detail: 'Typaram',
                   sortText: '00000000000000000000',
                   insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {line: 27, character: 18},
+                      end: {line: 27, character: 18},
+                    },
+                    newText: 'Typaram',
+                  },
                 },
               ],
             }),

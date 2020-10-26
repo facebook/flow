@@ -1,21 +1,40 @@
 
 === Codemod annotate-exports ===
 
+>>> ./a/a.js
+// @flow
+
+import type {T} from "../lib";import {foo} from '../lib';
+
+module.exports = (foo(): T);
+
 >>> ./a/b/c/f.js
 // @flow
 
-import type {A} from "../../../d/e/lib.js";import {a} from '../../../d/e/lib';
+import type {A} from "../../../d/e/lib-e";import {a} from '../../../d/e/lib-e';
 
 module.exports = (a(): A);
+
+>>> ./file.js
+// @flow
+
+import type {B} from "./lib-flow";
+import type {T} from "./lib";import {foo} from './lib';
+import {bar} from './lib-flow';
+
+module.exports = {
+  foo: (foo(): T),
+  bar: (bar(): B),
+};
 
 >>> Launching report...
 
 Stats:
-  Files changed:                            1
-  Number of annotations added:              1
-  Total size of annotations:                1
-  Number of sig. ver. errors:               1
-  Number of annotations required:           1
+  Files changed:                            3
+  Number of annotations added:              4
+  Total size of annotations:                4
+  Number of sig. ver. errors:               4
+  Number of annotations required:           4
   Number of annotations skipped:            0
 
 Errors:
@@ -39,12 +58,31 @@ Warnings:
 
 === Autofix exports ===
 
+>>> ./a/a.js
+// @flow
+
+import type {T} from "../lib";import {foo} from '../lib';
+
+module.exports = (foo(): T);
+
 >>> ./a/b/c/f.js
 // @flow
 
-import type {A} from "../../../d/e/lib.js";import {a} from '../../../d/e/lib';
+import type {A} from "../../../d/e/lib-e";import {a} from '../../../d/e/lib-e';
 
 module.exports = (a(): A);
+
+>>> ./file.js
+// @flow
+
+import type {B} from "./lib-flow";
+import type {T} from "./lib";import {foo} from './lib';
+import {bar} from './lib-flow';
+
+module.exports = {
+  foo: (foo(): T),
+  bar: (bar(): B),
+};
 
 
 === Diff between codemod-ed & autofix-ed ===

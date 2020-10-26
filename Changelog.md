@@ -1,3 +1,33 @@
+### 0.136.0
+
+Likely to cause new Flow errors:
+
+* Flow now raises errors when generic type variables escape out of the scope in which they were defined.
+
+Notable bug fixes:
+
+* Fix a race condition related to saved state and cancelable rechecks that caused internal errors of `Requires_not_found` or `Sig_requires_not_found`.
+
+Misc:
+
+* Added documentation to core.js builtins.
+* Add optional `propTypes` to `React.AbstractComponentStatics` (thanks @brianzchen).
+
+### 0.135.0
+
+Likely to cause new Flow errors:
+
+* Turned the untyped-type-import lint into an error by default. In a later release, we will turn this into a regular type error instead of a lint error.
+
+Misc:
+
+* Improved exhaustiveness checking in switch statements.
+* Improved autocomplete results to show documentation in more cases.
+* Removed esproposal configuration options from the .flowconfig format.
+* Added library definition for MediaRecorder API.
+* Fixed Object.freeze to no longer incorrectly convert an inexact object into an exact object.
+* Fixed handling of exported objects with spreads in types-first mode.
+
 ### 0.134.0
 
 Likely to cause new Flow errors:

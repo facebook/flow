@@ -350,19 +350,19 @@ class ['loc] mapper =
 
     method class_ _loc (cls : ('loc, 'loc) Ast.Class.t) =
       let open Ast.Class in
-      let { id; body; tparams = _; extends; implements; classDecorators; comments } = cls in
+      let { id; body; tparams = _; extends; implements; class_decorators; comments } = cls in
       let id' = map_opt this#class_identifier id in
       let body' = this#class_body body in
       let extends' = map_opt (map_loc this#class_extends) extends in
       let implements' = map_opt this#class_implements implements in
-      let classDecorators' = map_list this#class_decorator classDecorators in
+      let class_decorators' = map_list this#class_decorator class_decorators in
       let comments' = this#syntax_opt comments in
       if
         id == id'
         && body == body'
         && extends == extends'
         && implements == implements'
-        && classDecorators == classDecorators'
+        && class_decorators == class_decorators'
         && comments = comments'
       then
         cls
@@ -373,7 +373,7 @@ class ['loc] mapper =
           body = body';
           extends = extends';
           implements = implements';
-          classDecorators = classDecorators';
+          class_decorators = class_decorators';
           comments = comments';
         }
 
@@ -745,7 +745,7 @@ class ['loc] mapper =
 
     method enum_boolean_body (body : 'loc Ast.Statement.EnumDeclaration.BooleanBody.t) =
       let open Ast.Statement.EnumDeclaration.BooleanBody in
-      let { members; explicitType = _; comments } = body in
+      let { members; explicit_type = _; has_unknown_members = _; comments } = body in
       let members' = map_list this#enum_boolean_member members in
       let comments' = this#syntax_opt comments in
       if members == members' && comments == comments' then
@@ -755,7 +755,7 @@ class ['loc] mapper =
 
     method enum_number_body (body : 'loc Ast.Statement.EnumDeclaration.NumberBody.t) =
       let open Ast.Statement.EnumDeclaration.NumberBody in
-      let { members; explicitType = _; comments } = body in
+      let { members; explicit_type = _; has_unknown_members = _; comments } = body in
       let members' = map_list this#enum_number_member members in
       let comments' = this#syntax_opt comments in
       if members == members' && comments == comments' then
@@ -765,7 +765,7 @@ class ['loc] mapper =
 
     method enum_string_body (body : 'loc Ast.Statement.EnumDeclaration.StringBody.t) =
       let open Ast.Statement.EnumDeclaration.StringBody in
-      let { members; explicitType = _; comments } = body in
+      let { members; explicit_type = _; has_unknown_members = _; comments } = body in
       let members' =
         match members with
         | Defaulted members -> Defaulted (map_list this#enum_defaulted_member members)
@@ -779,13 +779,13 @@ class ['loc] mapper =
 
     method enum_symbol_body (body : 'loc Ast.Statement.EnumDeclaration.SymbolBody.t) =
       let open Ast.Statement.EnumDeclaration.SymbolBody in
-      let { members; comments } = body in
+      let { members; has_unknown_members = _; comments } = body in
       let members' = map_list this#enum_defaulted_member members in
       let comments' = this#syntax_opt comments in
       if members == members' && comments == comments' then
         body
       else
-        { members = members'; comments = comments' }
+        { body with members = members'; comments = comments' }
 
     method enum_defaulted_member (member : 'loc Ast.Statement.EnumDeclaration.DefaultedMember.t) =
       let open Ast.Statement.EnumDeclaration.DefaultedMember in
@@ -850,7 +850,7 @@ class ['loc] mapper =
     method export_named_declaration
         _loc (decl : ('loc, 'loc) Ast.Statement.ExportNamedDeclaration.t) =
       let open Ast.Statement.ExportNamedDeclaration in
-      let { exportKind; source; specifiers; declaration; comments } = decl in
+      let { export_kind; source; specifiers; declaration; comments } = decl in
       let specifiers' = map_opt this#export_named_specifier specifiers in
       let declaration' = map_opt this#statement declaration in
       let comments' = this#syntax_opt comments in
@@ -858,7 +858,7 @@ class ['loc] mapper =
         decl
       else
         {
-          exportKind;
+          export_kind;
           source;
           specifiers = specifiers';
           declaration = declaration';
@@ -994,16 +994,27 @@ class ['loc] mapper =
       else
         (loc, { argument = argument'; comments = comments' })
 
+    method function_this_param_type (this_param : ('loc, 'loc) Ast.Type.Function.ThisParam.t) =
+      let open Ast.Type.Function.ThisParam in
+      let (loc, { annot; comments }) = this_param in
+      let annot' = this#type_annotation annot in
+      let comments' = this#syntax_opt comments in
+      if annot' == annot && comments' == comments then
+        this_param
+      else
+        (loc, { annot = annot'; comments = comments' })
+
     method function_type _loc (ft : ('loc, 'loc) Ast.Type.Function.t) =
       let open Ast.Type.Function in
       let {
-        params = (params_loc, { Params.params = ps; rest = rpo; comments = params_comments });
+        params = (params_loc, { Params.this_; params = ps; rest = rpo; comments = params_comments });
         return;
         tparams;
         comments = func_comments;
       } =
         ft
       in
+      let this_' = map_opt this#function_this_param_type this_ in
       let ps' = map_list this#function_param_type ps in
       let rpo' = map_opt this#function_rest_param_type rpo in
       let return' = this#type_ return in
@@ -1017,11 +1028,14 @@ class ['loc] mapper =
         && tparams' == tparams
         && func_comments' == func_comments
         && params_comments' == params_comments
+        && this_' == this_
       then
         ft
       else
         {
-          params = (params_loc, { Params.params = ps'; rest = rpo'; comments = params_comments' });
+          params =
+            ( params_loc,
+              { Params.this_ = this_'; params = ps'; rest = rpo'; comments = params_comments' } );
           return = return';
           tparams = tparams';
           comments = func_comments';
@@ -1410,14 +1424,26 @@ class ['loc] mapper =
 
     method function_params (params : ('loc, 'loc) Ast.Function.Params.t) =
       let open Ast.Function in
-      let (loc, { Params.params = params_list; rest; comments }) = params in
+      let (loc, { Params.params = params_list; rest; comments; this_ }) = params in
       let params_list' = map_list this#function_param params_list in
       let rest' = map_opt this#function_rest_param rest in
+      let this_' = map_opt this#function_this_param this_ in
       let comments' = this#syntax_opt comments in
-      if params_list == params_list' && rest == rest' && comments == comments' then
+      if params_list == params_list' && rest == rest' && comments == comments' && this_ == this_'
+      then
         params
       else
-        (loc, { Params.params = params_list'; rest = rest'; comments = comments' })
+        (loc, { Params.params = params_list'; rest = rest'; comments = comments'; this_ = this_' })
+
+    method function_this_param (this_param : ('loc, 'loc) Ast.Function.ThisParam.t) =
+      let open Ast.Function.ThisParam in
+      let (loc, { annot; comments }) = this_param in
+      let annot' = this#type_annotation annot in
+      let comments' = this#syntax_opt comments in
+      if annot' == annot && comments' == comments then
+        this_param
+      else
+        (loc, { annot = annot'; comments = comments' })
 
     method function_param (param : ('loc, 'loc) Ast.Function.Param.t) =
       let open Ast.Function.Param in
@@ -1538,14 +1564,14 @@ class ['loc] mapper =
 
     method import_declaration _loc (decl : ('loc, 'loc) Ast.Statement.ImportDeclaration.t) =
       let open Ast.Statement.ImportDeclaration in
-      let { importKind; source; specifiers; default; comments } = decl in
+      let { import_kind; source; specifiers; default; comments } = decl in
       let specifiers' = map_opt this#import_specifier specifiers in
       let default' = map_opt this#import_default_specifier default in
       let comments' = this#syntax_opt comments in
       if specifiers == specifiers' && default == default' && comments == comments' then
         decl
       else
-        { importKind; source; specifiers = specifiers'; default = default'; comments = comments' }
+        { import_kind; source; specifiers = specifiers'; default = default'; comments = comments' }
 
     method import_specifier (specifier : ('loc, 'loc) Ast.Statement.ImportDeclaration.specifier) =
       let open Ast.Statement.ImportDeclaration in
@@ -1588,22 +1614,22 @@ class ['loc] mapper =
 
     method jsx_element _loc (expr : ('loc, 'loc) Ast.JSX.element) =
       let open Ast.JSX in
-      let { openingElement; closingElement; children; comments } = expr in
-      let openingElement' = this#jsx_opening_element openingElement in
-      let closingElement' = map_opt this#jsx_closing_element closingElement in
+      let { opening_element; closing_element; children; comments } = expr in
+      let opening_element' = this#jsx_opening_element opening_element in
+      let closing_element' = map_opt this#jsx_closing_element closing_element in
       let children' = this#jsx_children children in
       let comments' = this#syntax_opt comments in
       if
-        openingElement == openingElement'
-        && closingElement == closingElement'
+        opening_element == opening_element'
+        && closing_element == closing_element'
         && children == children'
         && comments == comments'
       then
         expr
       else
         {
-          openingElement = openingElement';
-          closingElement = closingElement';
+          opening_element = opening_element';
+          closing_element = closing_element';
           children = children';
           comments = comments';
         }
@@ -1620,13 +1646,13 @@ class ['loc] mapper =
 
     method jsx_opening_element (elem : ('loc, 'loc) Ast.JSX.Opening.t) =
       let open Ast.JSX.Opening in
-      let (loc, { name; selfClosing; attributes }) = elem in
+      let (loc, { name; self_closing; attributes }) = elem in
       let name' = this#jsx_name name in
       let attributes' = map_list this#jsx_opening_attribute attributes in
       if name == name' && attributes == attributes' then
         elem
       else
-        (loc, { name = name'; selfClosing; attributes = attributes' })
+        (loc, { name = name'; self_closing; attributes = attributes' })
 
     method jsx_closing_element (elem : ('loc, 'loc) Ast.JSX.Closing.t) =
       let open Ast.JSX.Closing in

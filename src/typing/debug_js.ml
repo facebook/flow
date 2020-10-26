@@ -220,8 +220,9 @@ let rec dump_t_ (depth, tvars) cx t =
              (String.concat "; " (Base.List.map ~f:(fun tp -> tp.name) (Nel.to_list tps)))
              (Poly.string_of_id id))
         t
-    | ThisClassT (_, inst) -> p ~extra:(kid inst) t
+    | ThisClassT (_, inst, _) -> p ~extra:(kid inst) t
     | BoundT (_, name) -> p ~extra:name t
+    | GenericT { name; bound; _ } -> p ~extra:(spf "%s: %s" name (kid bound)) t
     | ExistsT _ -> p t
     | DefT (_, trust, ObjT { props_tmap; _ }) ->
       p ~trust:(Some trust) t ~extra:(Properties.string_of_id props_tmap)
@@ -250,8 +251,16 @@ let rec dump_t_ (depth, tvars) cx t =
       p ~trust:(Some trust) ~extra:(spf "#%s" (ALoc.debug_to_string (class_id :> ALoc.t))) t
     | DefT (_, trust, TypeT (kind, arg)) ->
       p ~trust:(Some trust) ~extra:(spf "%s, %s" (string_of_type_t_kind kind) (kid arg)) t
-    | DefT (_, trust, EnumT { enum_id; enum_name; members = _; representation_t = _ })
-    | DefT (_, trust, EnumObjectT { enum_id; enum_name; members = _; representation_t = _ }) ->
+    | DefT
+        ( _,
+          trust,
+          EnumT { enum_id; enum_name; members = _; representation_t = _; has_unknown_members = _ }
+        )
+    | DefT
+        ( _,
+          trust,
+          EnumObjectT
+            { enum_id; enum_name; members = _; representation_t = _; has_unknown_members = _ } ) ->
       p
         ~trust:(Some trust)
         ~extra:(spf "enum %s #%s" enum_name (ALoc.debug_to_string (enum_id :> ALoc.t)))
@@ -486,7 +495,7 @@ and dump_use_t_ (depth, tvars) cx t =
       | CreateClass (tool, knot, tout) ->
         spf "CreateClass (%s, %s)" (create_class tool knot) (kid tout))
   in
-  let slice { Object.reason = _; props; flags = { obj_kind; _ } } =
+  let slice { Object.reason = _; props; flags = { obj_kind; _ }; generics = _ } =
     let xs =
       match obj_kind with
       | Indexed { dict_polarity = p; _ } -> [Polarity.sigil p ^ "[]"]
@@ -530,7 +539,7 @@ and dump_use_t_ (depth, tvars) cx t =
       | Some d -> Indexed d
     in
     let flags = { obj_kind; frozen = false } in
-    slice { Object.reason; props; flags }
+    slice { Object.reason; props; flags; generics = Generic.spread_empty }
   in
   let object_kit =
     Object.(
@@ -559,7 +568,8 @@ and dump_use_t_ (depth, tvars) cx t =
         | Super (s, tool) -> spf "Super (%s, %s)" (slice s) (resolve tool)
       in
       let acc_element = function
-        | Spread.InlineSlice { Spread.reason; prop_map; dict } -> operand_slice reason prop_map dict
+        | Spread.InlineSlice { Spread.reason; prop_map; dict; generics = _ } ->
+          operand_slice reason prop_map dict
         | Spread.ResolvedSlice xs -> resolved xs
       in
       let spread target state =
@@ -570,7 +580,8 @@ and dump_use_t_ (depth, tvars) cx t =
             | Value { make_seal } -> spf "Value {make_seal=%b" (bool_of_sealtype make_seal)
           in
           let spread_operand = function
-            | Slice { Spread.reason; prop_map; dict } -> operand_slice reason prop_map dict
+            | Slice { Spread.reason; prop_map; dict; generics = _ } ->
+              operand_slice reason prop_map dict
             | Type t -> kid t
           in
           let state =
@@ -738,7 +749,7 @@ and dump_use_t_ (depth, tvars) cx t =
     | NullishCoalesceT (_, x, y) -> p ~extra:(spf "%s, %s" (kid x) (tout y)) t
     | ObjAssignToT (_, _, arg1, arg2, _) -> p t ~extra:(spf "%s, %s" (kid arg1) (kid arg2))
     | ObjAssignFromT (_, _, arg1, arg2, _) -> p t ~extra:(spf "%s, %s" (kid arg1) (kid arg2))
-    | ObjRestT (_, xs, arg) -> p t ~extra:(spf "[%s], %s" (String.concat "; " xs) (kid arg))
+    | ObjRestT (_, xs, arg, _) -> p t ~extra:(spf "[%s], %s" (String.concat "; " xs) (kid arg))
     | ObjSealT _ -> p t
     | ObjTestProtoT _ -> p t
     | ObjTestT _ -> p t
@@ -835,6 +846,8 @@ and dump_use_t_ (depth, tvars) cx t =
       p ~extra:check_str t
     | FilterOptionalT (_, arg) -> p ~reason:false ~extra:(kid arg) t
     | FilterMaybeT (_, arg) -> p ~reason:false ~extra:(kid arg) t
+    | SealGenericT { name; cont = Lower (_, l); _ } -> p ~extra:(spf "%s <~ %s" name (kid l)) t
+    | SealGenericT { name; cont = Upper u; _ } -> p ~extra:(spf "%s ~> %s" name (use_kid u)) t
     | CondT (_, then_t, else_t, tout) ->
       p
         t
@@ -851,7 +864,7 @@ and dump_use_t_ (depth, tvars) cx t =
         ~extra:
           (spf "[%s], %s, %s" (String.concat "; " (Base.List.map ~f:kid nexts)) (kid l) (kid u))
         t
-    | DestructuringT (_, k, s, (r, tout)) ->
+    | DestructuringT (_, k, s, (r, tout), _) ->
       p
         t
         ~extra:
@@ -880,21 +893,19 @@ and dump_tvar_ (depth, tvars) cx id =
     spf "%d, ^" id
   else
     let stack = ISet.add id tvars in
-    let open_string = "No Openness" in
     Constraint.(
       try
         match Context.find_tvar cx id with
-        | Goto g -> spf "%d, %s, Goto %d" id open_string g
+        | Goto g -> spf "%d, Goto %d" id g
         | Root { constraints = Resolved (_, t) | FullyResolved (_, t); _ } ->
-          spf "%d, %s, Resolved %s" id open_string (dump_t_ (depth - 1, stack) cx t)
+          spf "%d, Resolved %s" id (dump_t_ (depth - 1, stack) cx t)
         | Root { constraints = Unresolved { lower; upper; _ }; _ } ->
           if lower = TypeMap.empty && upper = UseTypeMap.empty then
-            spf "%d, %s" id open_string
+            spf "%d" id
           else
             spf
-              "%d, %s, [%s], [%s]"
+              "%d, [%s], [%s]"
               id
-              open_string
               (String.concat
                  "; "
                  (List.rev
@@ -940,6 +951,11 @@ let string_of_scope_entry =
   Scope.(
     let string_of_value_binding
         cx { Entry.kind; value_state; value_declare_loc; value_assign_loc; specific; general } =
+      let general_str =
+        match general with
+        | Entry.Annotated t -> spf "Annotated %s" (dump_t cx t)
+        | Entry.Inferred t -> spf "Inferred %s" (dump_t cx t)
+      in
       spf
         "{ kind: %s; value_state: %s; value_declare_loc: %S; value_assign_loc: %s; specific: %s; general: %s }"
         (Entry.string_of_value_kind kind)
@@ -947,7 +963,7 @@ let string_of_scope_entry =
         (string_of_aloc value_declare_loc)
         (string_of_aloc value_assign_loc)
         (dump_t cx specific)
-        (dump_t cx general)
+        general_str
     in
     let string_of_type_binding cx { Entry.type_state; type_loc; type_; type_binding_kind = _ } =
       spf
@@ -1108,6 +1124,7 @@ let dump_error_message =
     | IncompatibleMapTypeTObject -> "IncompatibleMapTypeTObject"
     | IncompatibleTypeAppVarianceCheckT -> "IncompatibleTypeAppVarianceCheckT"
     | IncompatibleGetStaticsT -> "IncompatibleGetStaticsT"
+    | IncompatibleBindT -> "IncompatibleBindT"
     | IncompatibleUnclassified ctor -> spf "IncompatibleUnclassified %S" ctor
   in
   fun cx err ->
@@ -1372,6 +1389,7 @@ let dump_error_message =
     | EUnsupportedSyntax (loc, _) -> spf "EUnsupportedSyntax (%s, _)" (string_of_aloc loc)
     | EUseArrayLiteral loc -> spf "EUseArrayLiteral (%s)" (string_of_aloc loc)
     | EMissingAnnotation (reason, _) -> spf "EMissingAnnotation (%s)" (dump_reason cx reason)
+    | EMissingLocalAnnotation reason -> spf "EMissingLocalAnnotation (%s)" (dump_reason cx reason)
     | EBindingError (_binding_error, loc, x, entry) ->
       spf "EBindingError (_, %s, %s, %s)" (string_of_aloc loc) x (Scope.Entry.string_of_kind entry)
     | ERecursionLimit (reason1, reason2) ->
@@ -1379,9 +1397,6 @@ let dump_error_message =
     | EModuleOutsideRoot (loc, name) -> spf "EModuleOutsideRoot (%s, %S)" (string_of_aloc loc) name
     | EMalformedPackageJson (loc, error) ->
       spf "EMalformedPackageJson (%s, %S)" (string_of_aloc loc) error
-    | EExperimentalDecorators loc -> spf "EExperimentalDecorators (%s)" (string_of_aloc loc)
-    | EExperimentalClassProperties (loc, static) ->
-      spf "EExperimentalClassProperties (%s, %b)" (string_of_aloc loc) static
     | EUnsafeGetSet loc -> spf "EUnsafeGetSet (%s)" (string_of_aloc loc)
     | EUninitializedInstanceProperty (loc, err) ->
       spf
@@ -1395,8 +1410,10 @@ let dump_error_message =
           | PropertyFunctionCallBeforeEverythingInitialized ->
             "PropertyFunctionCallBeforeEverythingInitialized"
           | ThisBeforeEverythingInitialized -> "ThisBeforeEverythingInitialized")
-    | EExperimentalExportStarAs loc -> spf "EExperimentalExportStarAs (%s)" (string_of_aloc loc)
     | EExperimentalEnums loc -> spf "EExperimentalEnums (%s)" (string_of_aloc loc)
+    | EExperimentalEnumsWithUnknownMembers loc ->
+      spf "EExperimentalEnumsWithUnknownMembers (%s)" (string_of_aloc loc)
+    | EExperimentalThisAnnot loc -> spf "EExperimentalThisAnnot (%s)" (string_of_aloc loc)
     | EIndeterminateModuleType loc -> spf "EIndeterminateModuleType (%s)" (string_of_aloc loc)
     | EBadExportPosition loc -> spf "EBadExportPosition (%s)" (string_of_aloc loc)
     | EBadExportContext (name, loc) -> spf "EBadExportContext (%s, %s)" name (string_of_aloc loc)
@@ -1475,6 +1492,12 @@ let dump_error_message =
         param_count
         (string_of_use_op use_op)
     | EUnsupportedSetProto reason -> spf "EUnsupportedSetProto (%s)" (dump_reason cx reason)
+    | EEscapedGeneric { reason; use_op; bound_name; _ } ->
+      spf
+        "EEscapedGeneric { reason = %s; use_op = %s; bound_name = %s; _ }"
+        (dump_reason cx reason)
+        (string_of_use_op use_op)
+        bound_name
     | EDuplicateModuleProvider { module_name; provider; conflict } ->
       spf
         "EDuplicateModuleProvider (%S, %s, %s)"
@@ -1544,9 +1567,6 @@ let dump_error_message =
         spf "ESketchyNumberLint (%s) (%s)" kind_str (dump_reason cx reason))
     | EInvalidPrototype (loc, reason) ->
       spf "EInvalidPrototype (%s) (%s)" (string_of_aloc loc) (dump_reason cx reason)
-    | EExperimentalOptionalChaining loc ->
-      spf "EExperimentalOptionalChaining (%s)" (string_of_aloc loc)
-    | EOptionalChainingMethods loc -> spf "EOptionalChainingMethods (%s)" (string_of_aloc loc)
     | EUnnecessaryOptionalChain (loc, _) ->
       spf "EUnnecessaryOptionalChain (%s)" (string_of_aloc loc)
     | EUnnecessaryInvariant (loc, _) -> spf "EUnnecessaryInvariant (%s)" (string_of_aloc loc)
@@ -1657,6 +1677,8 @@ let dump_error_message =
         (dump_reason cx reason)
         (dump_reason cx enum_reason)
         (String.concat ", " left_to_check)
+    | EEnumUnknownNotChecked { reason; enum_reason } ->
+      spf "EEnumUnknownNotChecked (%s) (%s)" (dump_reason cx reason) (dump_reason cx enum_reason)
     | EEnumInvalidCheck { reason; enum_name; example_member } ->
       spf
         "EEnumInvalidCheck (%s) (%s) (%s)"
@@ -1687,22 +1709,20 @@ let dump_error_message =
     | EMalformedCode loc -> spf "EMalformedCode (%s)" (string_of_aloc loc)
 
 module Verbose = struct
-  let print_if_verbose_lazy cx trace ?(delim = "") ?(indent = 0) (lines : string Lazy.t list) =
+  let print_if_verbose_lazy cx trace ?(delim = "") ?(indent = 0) (lines : string list Lazy.t) =
     match Context.verbose cx with
     | Some { Verbose.indent = num_spaces; _ } ->
-      let indent = indent + Trace.trace_depth trace - 1 in
+      let indent = max (indent + Trace.trace_depth trace - 1) 0 in
       let prefix = String.make (indent * num_spaces) ' ' in
       let pid = Context.pid_prefix cx in
-      let add_prefix line = spf "\n%s%s%s" prefix pid (Lazy.force line) in
-      let lines = Base.List.map ~f:add_prefix lines in
+      let add_prefix line = spf "\n%s%s%s" prefix pid line in
+      let lines = Base.List.map ~f:add_prefix (Lazy.force lines) in
       prerr_endline (String.concat delim lines)
     | None -> ()
 
   let print_if_verbose cx trace ?(delim = "") ?(indent = 0) (lines : string list) =
     match Context.verbose cx with
-    | Some _ ->
-      let lines = Base.List.map ~f:(fun line -> lazy line) lines in
-      print_if_verbose_lazy cx trace ~delim ~indent lines
+    | Some _ -> print_if_verbose_lazy cx trace ~delim ~indent (lazy lines)
     | None -> ()
 
   let print_types_if_verbose cx trace ?(note : string option) ((l : Type.t), (u : Type.use_t)) =

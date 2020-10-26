@@ -36,7 +36,7 @@ module type S = sig
     Context.t -> ?trace:Trace.t -> Type.t -> Type.defer_use_t -> Type.Eval.id -> Type.t
 
   val eval_selector :
-    Context.t -> ?trace:Trace.t -> reason -> Type.t -> Type.selector -> Type.tvar -> unit
+    Context.t -> ?trace:Trace.t -> reason -> Type.t -> Type.selector -> Type.tvar -> int -> unit
 
   val filter_optional : Context.t -> ?trace:Trace.t -> reason -> Type.t -> Type.ident
 
@@ -55,7 +55,7 @@ module type S = sig
 
   val flow_t : Context.t -> Type.t * Type.t -> unit
 
-  val generate_tests : Context.t -> Type.typeparam list -> (Type.t SMap.t -> 'a) -> 'a
+  val check_with_generics : Context.t -> Type.typeparam list -> (Type.t SMap.t -> 'a) -> 'a
 
   val get_builtin : Context.t -> ?trace:Trace.t -> string -> reason -> Type.t
 

@@ -4,21 +4,21 @@
 >>> ./a.js
 // @flow
 
-import type {List} from "./declare-export-class.js";import { list } from './declare-export-class';
+import type {List} from "./declare-export-class";import { list } from './declare-export-class';
 
 module.exports = (list(): List<number>);
 
 >>> ./b.js
 // @flow
 
-import typeof {List as $IMPORTED_TYPEOF$_List} from "./declare-export-class.js";const List: $IMPORTED_TYPEOF$_List = require('./declare-export-class').List;
+import typeof {List as $IMPORTED_TYPEOF$_List} from "./declare-export-class";const List: $IMPORTED_TYPEOF$_List = require('./declare-export-class').List;
 
 module.exports = List;
 
 >>> ./c.js
 // @flow
 
-import type {List} from "./declare-class-export-type.js";import { list } from './declare-class-export-type';
+import type {List} from "./declare-class-export-type";import { list } from './declare-class-export-type';
 
 module.exports = (list(): List<number>);
 
@@ -56,21 +56,21 @@ Warnings:
 >>> ./a.js
 // @flow
 
-import type {List} from "./declare-export-class.js";import { list } from './declare-export-class';
+import type {List} from "./declare-export-class";import { list } from './declare-export-class';
 
 module.exports = (list(): List<number>);
 
 >>> ./b.js
 // @flow
 
-import typeof {List} from "./declare-export-class.js";const List: List = require('./declare-export-class').List;
+import typeof {List} from "./declare-export-class";const List: List = require('./declare-export-class').List;
 
 module.exports = List;
 
 >>> ./c.js
 // @flow
 
-import type {List} from "./declare-class-export-type.js";import { list } from './declare-class-export-type';
+import type {List} from "./declare-class-export-type";import { list } from './declare-class-export-type';
 
 module.exports = (list(): List<number>);
 
@@ -78,7 +78,7 @@ module.exports = (list(): List<number>);
 === Diff between codemod-ed & autofix-ed ===
 >>> ./b.js
 3c3
-< import typeof {List as $IMPORTED_TYPEOF$_List} from "./declare-export-class.js";const List: $IMPORTED_TYPEOF$_List = require('./declare-export-class').List;
+< import typeof {List as $IMPORTED_TYPEOF$_List} from "./declare-export-class";const List: $IMPORTED_TYPEOF$_List = require('./declare-export-class').List;
 ---
-> import typeof {List} from "./declare-export-class.js";const List: List = require('./declare-export-class').List;
+> import typeof {List} from "./declare-export-class";const List: List = require('./declare-export-class').List;
 

@@ -36,6 +36,7 @@ type options = {
   exact_by_default: bool;
   module_ref_prefix: string option;
   enable_enums: bool;
+  enable_this_annot : bool;
 }
 
 (* This type encodes the fixed point of parsed signatures. Of particular note
@@ -216,7 +217,7 @@ and 'loc local_binding =
   | EnumBinding of {
       id_loc: 'loc loc_node;
       name: string;
-      def: (enum_rep * 'loc loc_node smap) Lazy.t option;
+      def: (enum_rep * 'loc loc_node smap * bool) Lazy.t option;
     }
 
 and 'loc remote_binding =
@@ -1209,15 +1210,21 @@ and function_type opts scope locs xs f: ('loc loc_node, 'loc parsed) fun_sig =
   let module F = T.Function in
   let {F.
     tparams = tps;
-    params = (_, {F.Params.params = ps; rest = rp; comments = _});
+    params = (_, {F.Params.
+      params = ps;
+      rest = rp;
+      this_;
+      comments = _;
+    });
     return = r;
     comments = _;
   } = f in
   let xs, tparams = tparams opts scope locs xs tps in
+  let this_param = function_type_this_param opts scope locs xs this_ in
   let params = function_type_params opts scope locs xs ps in
   let rest_param = function_type_rest_param opts scope locs xs rp in
   let return = annot opts scope locs xs r in
-  FunSig { tparams; params; rest_param; return; predicate = None }
+  FunSig { tparams; params; rest_param; this_param; return; predicate = None }
 
 and function_type_params =
   let module F = T.Function in
@@ -1248,6 +1255,14 @@ and function_type_rest_param opts scope locs xs =
     let name = match id with None -> None | Some id -> Some (id_name id) in
     let t = annot opts scope locs xs t in
     Some (FunRestParam {name; loc; t})
+
+and function_type_this_param opts scope locs xs =
+ let module F = T.Function in
+  function
+  | None -> None
+  | Some (_, {F.ThisParam.annot = (_, t); comments = _}) ->
+    let t = annot opts scope locs xs t in
+    Some t
 
 and getter_type opts scope locs xs id_loc f =
   let module F = T.Function in
@@ -2293,8 +2308,8 @@ let key_mirror =
 
 let jsx_element opts locs loc elem =
   let module J = Ast.JSX in
-  let {J.openingElement; closingElement = _; children = _; comments = _} = elem in
-  let (_, {J.Opening.name; selfClosing = _; attributes = _}) = openingElement in
+  let {J.opening_element; closing_element = _; children = _; comments = _} = elem in
+  let (_, {J.Opening.name; self_closing = _; attributes = _}) = opening_element in
   match name, opts.facebook_fbt with
   | J.Identifier (ref_loc, {J.Identifier.name = "fbt"; comments = _}), Some custom_jsx_type ->
     let ref_loc = Locs.push locs ref_loc in
@@ -2578,6 +2593,11 @@ and function_def =
       let p = param opts scope locs xs p in
       params opts scope locs xs (p::acc) ps
   in
+  let this_param opts scope locs xs = function
+    | None -> None
+    | Some (_, {F.ThisParam.annot=(_, t); comments = _}) ->
+        let t = annot opts scope locs xs t in
+        Some t in
   let rest_param opts scope locs xs = function
     | None -> None
     | Some (param_loc, {F.RestParam.argument = (_, p); comments = _}) ->
@@ -2640,7 +2660,7 @@ and function_def =
     let {F.
       id = _;
       tparams = tps;
-      params = (_, {F.Params.params = ps; rest = rp; comments = _});
+      params = (_, {F.Params.params = ps; rest = rp; this_; comments = _});
       body;
       return = r;
       predicate = p;
@@ -2650,11 +2670,12 @@ and function_def =
       comments = _;
     } = f in
     let xs, tparams = tparams opts scope locs xs tps in
+    let this_param = this_param opts scope locs xs this_ in
     let params = params opts scope locs xs [] ps in
     let rest_param = rest_param opts scope locs xs rp in
     let return = return opts scope locs xs ~async ~generator body r in
     let predicate = predicate opts scope locs ps body p in
-    FunSig { tparams; params; rest_param; return; predicate }
+    FunSig { tparams; params; rest_param; this_param; return; predicate }
 
 and predicate opts scope locs pnames =
   let open Option.Let_syntax in
@@ -2968,7 +2989,7 @@ and class_def =
       tparams = tps;
       extends;
       implements;
-      classDecorators = _;
+      class_decorators = _;
       comments = _;
     } = decl in
     let xs, tparams = tparams opts scope locs SSet.empty tps in
@@ -3411,11 +3432,17 @@ let declare_function_decl opts scope locs decl =
     match t with
     | T.Function {T.Function.
         tparams = tps;
-        params = (_, {T.Function.Params.params = ps; rest = rp; comments = _});
+        params = (_, {T.Function.Params.
+          params = ps;
+          rest = rp;
+          this_;
+          comments = _;
+        });
         return = r;
         comments = _;
       } ->
       let xs, tparams = tparams opts scope locs SSet.empty tps in
+      let this_param = function_type_this_param opts scope locs xs this_ in
       let params = function_type_params opts scope locs xs ps in
       let rest_param = function_type_rest_param opts scope locs xs rp in
       let return = annot opts scope locs xs r in
@@ -3436,7 +3463,7 @@ let declare_function_decl opts scope locs decl =
           (* inferred predicate not allowed in declared function *)
           None
       in
-      FunSig { tparams; params; rest_param; return; predicate }
+      FunSig { tparams; params; rest_param; this_param; return; predicate }
     | _ -> failwith "unexpected declare function annot"
   )) in
   Scope.bind_declare_function scope id_loc fn_loc name def
@@ -3499,26 +3526,26 @@ let enum_decl =
   let number_member = initialized_member number_rep in
   let defaulted_members locs = List.fold_left (defaulted_member locs) SMap.empty in
   let initialized_members locs f rep = List.fold_left (f locs) (rep, SMap.empty) in
-  let string_enum_def locs = function
+  let string_enum_def locs has_unknown_members = function
     | E.StringBody.Initialized members ->
       let truthy, members = initialized_members locs string_member true members in
-      StringRep {truthy}, members
+      StringRep {truthy}, members, has_unknown_members
     | E.StringBody.Defaulted members ->
       let members = defaulted_members locs members in
-      (StringRep {truthy = true}, members)
+      (StringRep {truthy = true}, members, has_unknown_members)
   in
   let enum_def locs = function
-    | E.BooleanBody {E.BooleanBody.members; _} ->
+    | E.BooleanBody {E.BooleanBody.members; has_unknown_members; _} ->
       let lit, members = initialized_members locs boolean_member None members in
-      BoolRep lit, members
-    | E.NumberBody {E.NumberBody.members; _} ->
+      BoolRep lit, members, has_unknown_members
+    | E.NumberBody {E.NumberBody.members; has_unknown_members; _} ->
       let truthy, members = initialized_members locs number_member true members in
-      NumberRep {truthy}, members
-    | E.StringBody {E.StringBody.members; _} ->
-      string_enum_def locs members
-    | E.SymbolBody {E.SymbolBody.members; _} ->
+      NumberRep {truthy}, members, has_unknown_members
+    | E.StringBody {E.StringBody.members; has_unknown_members; _} ->
+      string_enum_def locs has_unknown_members members
+    | E.SymbolBody {E.SymbolBody.members; has_unknown_members; _} ->
       let members = defaulted_members locs members in
-      SymbolRep, members
+      SymbolRep, members, has_unknown_members
   in
   fun opts scope locs decl ->
     let {E.id; body = (_, body); comments = _} = decl in
@@ -3552,7 +3579,7 @@ let export_named_decl opts scope locs kind =
     Scope.export_binding scope kind i.S.Interface.id
   | S.VariableDeclaration decl ->
     variable_decls opts scope locs decl;
-    Flow_ast_utils.fold_bindings_of_variable_declarations (fun () id ->
+    Flow_ast_utils.fold_bindings_of_variable_declarations (fun () id _ ->
       Scope.export_binding scope kind id
     ) () decl.S.VariableDeclaration.declarations
   | S.EnumDeclaration e ->
@@ -3749,7 +3776,7 @@ let rec statement opts scope locs (loc, stmt) =
       source = (_, {Ast.StringLiteral.value = mref; _});
       default;
       specifiers;
-      importKind = kind;
+      import_kind = kind;
       comments = _;
     } = decl in
     begin match default with
@@ -3783,7 +3810,7 @@ let rec statement opts scope locs (loc, stmt) =
 
   | S.ExportNamedDeclaration decl ->
     let module E = S.ExportNamedDeclaration in
-    let {E.exportKind = kind; source; specifiers; declaration; comments = _} = decl in
+    let {E.export_kind = kind; source; specifiers; declaration; comments = _} = decl in
     begin match declaration with
     | None -> ()
     | Some (_, stmt) -> export_named_decl opts scope locs kind stmt

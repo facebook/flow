@@ -94,6 +94,7 @@ type ('loc, 'a) fun_sig = FunSig of {
   tparams: ('loc, 'a) tparams;
   params: 'a fun_param list;
   rest_param: ('loc, 'a) fun_rest_param option;
+  this_param: 'a option;
   return: 'a;
   predicate: ('loc * (string, 'loc, 'a) predicate option) option;
 } [@@deriving iter, map, show {with_path = false}]
@@ -281,6 +282,7 @@ type ('loc, 'a) def =
       name: string;
       rep: enum_rep;
       members: 'loc smap;
+      has_unknown_members: bool;
     }
   | DisabledEnumBinding of {
       id_loc: 'loc;
