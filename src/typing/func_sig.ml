@@ -318,7 +318,11 @@ module Make (F : Func_params.S) = struct
     let body_ast = reconstruct_body statements_ast in
     (* build return type for void funcs *)
     let init_ast =
-      let return_t = TypeUtil.type_t_of_annotated_or_inferred return_t in
+      let (return_t, return_annot) =
+        match return_t with
+        | Inferred t -> (t, None)
+        | Annotated t -> (t, Some ())
+      in
       if maybe_void then (
         let loc = loc_of_t return_t in
         (* Some branches add an ImplicitTypeParam frame to force our flow_use_op
@@ -352,7 +356,7 @@ module Make (F : Func_params.S) = struct
             let use_op = Frame (ImplicitTypeParam, use_op) in
             (use_op, t, None)
           | FieldInit e ->
-            let (((_, t), _) as ast) = expr ?cond:None cx ~annot:None e in
+            let (((_, t), _) as ast) = expr ?cond:None cx ~annot:return_annot e in
             let body = mk_expression_reason e in
             let use_op = Op (InitField { op = reason_fn; body }) in
             (use_op, t, Some ast)

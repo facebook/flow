@@ -7640,13 +7640,13 @@ and mk_class_sig =
           (Annot annot_t, Fn.const Ast.Class.Property.Uninitialized)
         | Ast.Class.Property.Initialized expr ->
           let value_ref : (ALoc.t, ALoc.t * Type.t) Ast.Expression.t option ref = ref None in
+          let has_anno =
+            match annot with
+            | Ast.Type.Available _ -> true
+            | Ast.Type.Missing _ -> false
+          in
           ( Infer
-              ( Func_stmt_sig.field_initializer
-                  ~has_anno:has_anno_todo
-                  tparams_map
-                  reason
-                  expr
-                  annot_t,
+              ( Func_stmt_sig.field_initializer ~has_anno tparams_map reason expr annot_t,
                 (fun (_, _, value_opt) -> value_ref := Some (Base.Option.value_exn value_opt)) ),
             fun () ->
               Ast.Class.Property.Initialized
