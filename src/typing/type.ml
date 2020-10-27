@@ -3409,3 +3409,7 @@ end = struct
 
   let map f tparams = Base.Option.map ~f:(fun (loc, params) -> (loc, Nel.map f params)) tparams
 end
+
+type annotated_or_inferred =
+  | Annotated of TypeTerm.t
+  | Inferred of TypeTerm.t

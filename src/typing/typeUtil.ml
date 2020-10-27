@@ -839,3 +839,9 @@ let pred_map_implies p1 p2 =
       | None -> false
       | Some v1 -> eq_predicate (v1, v2))
     p2
+
+let type_t_of_annotated_or_inferred (x : Type.annotated_or_inferred) =
+  match x with
+  | Inferred t
+  | Annotated t ->
+    t

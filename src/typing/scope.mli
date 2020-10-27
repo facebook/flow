@@ -46,17 +46,13 @@ module Entry : sig
 
   val string_of_value_kind : value_kind -> string
 
-  type general_type =
-    | Annotated of Type.t
-    | Inferred of Type.t
-
   type value_binding = {
     kind: value_kind;
     value_state: State.t;
     value_declare_loc: ALoc.t;
     value_assign_loc: ALoc.t;
     specific: Type.t;
-    general: general_type;
+    general: Type.annotated_or_inferred;
   }
 
   type type_binding_kind =
@@ -115,8 +111,6 @@ module Entry : sig
   val general_of_value : value_binding -> Type.t
 
   val state_of_value : value_binding -> State.t
-
-  val type_t_of_general_type : general_type -> Type.t
 
   val havoc : string -> t -> t
 

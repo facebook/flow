@@ -546,8 +546,8 @@ let bind_declare_fun =
   in
   let update_general_type general_t new_t =
     match general_t with
-    | Scope.Entry.Inferred t -> Scope.Entry.Inferred (update_type t new_t)
-    | Scope.Entry.Annotated t -> Scope.Entry.Annotated (update_type t new_t)
+    | Inferred t -> Inferred (update_type t new_t)
+    | Annotated t -> Annotated (update_type t new_t)
   in
   fun cx name t loc ->
     if not (is_excluded name) then
@@ -662,7 +662,7 @@ let init_value_entry kind cx ~use_op name ~has_anno specific loc =
           Value ({ Entry.kind = Const _; value_state = State.Undeclared | State.Declared; _ } as v)
         ) ->
         Changeset.Global.change_var (scope.id, name, Changeset.Write);
-        let general = type_t_of_general_type v.general in
+        let general = TypeUtil.type_t_of_annotated_or_inferred v.general in
         if specific != general then Flow_js.flow cx (specific, UseT (use_op, general));
 
         (* note that annotation supercedes specific initializer type *)
@@ -719,7 +719,9 @@ let pseudo_init_declared_type cx name loc =
         ->
         Changeset.Global.change_var (scope.id, name, Changeset.Write);
         let kind = v.Entry.kind in
-        let entry = initialized_value_entry cx kind (type_t_of_general_type v.general) loc v in
+        let entry =
+          initialized_value_entry cx kind (TypeUtil.type_t_of_annotated_or_inferred v.general) loc v
+        in
         Scope.add_entry name entry scope
       | _ ->
         (* Incompatible or non-redeclarable new and previous entries.
@@ -818,7 +820,7 @@ let read_entry ~lookup_mode ~specific cx name ?desc loc =
         if specific then
           s
         else
-          type_t_of_general_type g))
+          TypeUtil.type_t_of_annotated_or_inferred g))
 
 let rec seek_env f = function
   | [] -> None
@@ -854,7 +856,7 @@ let get_var_annotation cx name loc =
   match entry with
   (* When we start actually passing annotation targets through statement.ml
    * we should return the type here instead of unit *)
-  | Entry.Value { Entry.general = Entry.Annotated _; _ } -> Some ()
+  | Entry.Value { Entry.general = Annotated _; _ } -> Some ()
   | _ -> None
 
 (* get var's general type - for annotated vars, this is the
@@ -1122,7 +1124,13 @@ let merge_env =
         let { specific = s1; _ } = child1 in
         let { specific = s2; _ } = child2 in
         let specific =
-          merge_specific cx loc (RIdentifier name) (s0, type_t_of_general_type g0) s1 s2
+          merge_specific
+            cx
+            loc
+            (RIdentifier name)
+            (s0, TypeUtil.type_t_of_annotated_or_inferred g0)
+            s1
+            s2
         in
         let value_state = merge_states orig child1 child2 in
         (* replace entry if anything changed *)
@@ -1294,10 +1302,7 @@ let widen_env =
       Some tvar
   in
   let widen_var
-      cx
-      loc
-      name
-      ({ Entry.specific; general = Entry.Annotated general | Entry.Inferred general; _ } as var) =
+      cx loc name ({ Entry.specific; general = Annotated general | Inferred general; _ } as var) =
     match widened cx loc name specific general with
     | None -> var
     | Some specific -> { var with Entry.specific }
