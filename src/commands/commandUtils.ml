@@ -539,10 +539,10 @@ let remove_exclusion pattern =
 
 let file_options =
   let default_lib_dir ~no_flowlib tmp_dir =
-    let root = Path.make (Tmp.temp_dir tmp_dir "flowlib") in
+    let lib_dir = Flowlib.mkdir ~no_flowlib tmp_dir in
     try
-      Flowlib.extract_flowlib ~no_flowlib root;
-      root
+      Flowlib.extract ~no_flowlib lib_dir;
+      lib_dir
     with _ ->
       let msg = "Could not locate flowlib files" in
       FlowExitStatus.(exit ~msg Could_not_find_flowconfig)
@@ -1143,7 +1143,6 @@ let make_options
     options_flags.Options_flags.temp_dir
     |> Base.Option.value ~default:(FlowConfig.temp_dir flowconfig)
     |> Path.make
-    |> Path.to_string
   in
   let file_options =
     let no_flowlib = options_flags.no_flowlib in
@@ -1235,7 +1234,7 @@ let make_options
     opt_munge_underscores =
       options_flags.munge_underscore_members || FlowConfig.munge_underscores flowconfig;
     opt_node_main_fields = FlowConfig.node_main_fields flowconfig;
-    opt_temp_dir = temp_dir;
+    opt_temp_dir = Path.to_string temp_dir;
     opt_max_workers =
       Base.Option.value options_flags.max_workers ~default:(FlowConfig.max_workers flowconfig)
       |> min Sys_utils.nbr_procs;

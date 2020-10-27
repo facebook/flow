@@ -191,6 +191,9 @@ MODULES=\
   $(FSNOTIFY)\
   $(INTERNAL_MODULES)
 
+LZ4_C_FILES=\
+  $(sort $(wildcard src/third-party/lz4/*.c))
+
 NATIVE_C_FILES=\
   $(INOTIFY_STUBS)\
   $(FSNOTIFY_STUBS)\
@@ -208,7 +211,7 @@ NATIVE_C_FILES=\
   src/hack_forked/utils/sys/processor_info.c\
   src/hack_forked/utils/sys/realpath.c\
   src/hack_forked/utils/sys/sysinfo.c\
-  $(sort $(wildcard src/third-party/lz4/*.c))\
+  $(LZ4_C_FILES)\
   $(INTERNAL_NATIVE_C_FILES)
 
 FINDLIB_PACKAGES=\
@@ -259,10 +262,12 @@ ALL_HEADER_FILES=$(addprefix _build/,$(shell find $(NATIVE_C_DIRS) -name '*.h'))
 ALL_HEADER_FILES+=_build/src/third-party/lz4/xxhash.c
 NATIVE_OBJECT_FILES=$(patsubst %.c,%.o,$(NATIVE_C_FILES))
 NATIVE_OBJECT_FILES+=src/hack_forked/utils/core/get_build_id.gen.o
+LZ4_OBJECT_FILES=$(patsubst %.c,%.o,$(LZ4_C_FILES))
 BUILT_C_DIRS=$(addprefix _build/,$(NATIVE_C_DIRS))
 BUILT_C_FILES=$(addprefix _build/,$(NATIVE_C_FILES))
 BUILT_OBJECT_FILES=$(addprefix _build/,$(NATIVE_OBJECT_FILES))
 BUILT_OUNIT_TESTS=$(addprefix _build/,$(OUNIT_TESTS))
+BUILT_LZ4_OBJECT_FILES=$(addprefix _build/,$(LZ4_OBJECT_FILES))
 
 # Any additional C flags can be added here
 CC_FLAGS=-mcx16
@@ -353,15 +358,16 @@ $(COPIED_PRELUDE): _build/%.js: %.js
 	rm -rf _build/src/prelude
 
 _build/scripts/ppx_gen_flowlibs/ppx_gen_flowlibs.cmxa: scripts/script_utils.ml scripts/ppx_gen_flowlibs/ppx_gen_flowlibs.ml
-	$(OCB) -I scripts -tag linkall -pkg unix scripts/ppx_gen_flowlibs/ppx_gen_flowlibs.cmxa
+	$(OCB) -I scripts -I src/common/xx -tag linkall -pkg unix scripts/ppx_gen_flowlibs/ppx_gen_flowlibs.cmxa
 
 _build/scripts/ppx_gen_flowlibs/ppx_gen_flowlibs_standalone.cmxa: scripts/ppx_gen_flowlibs/ppx_gen_flowlibs_standalone.ml
 	$(OCB) -I scripts -tag linkall -pkg unix scripts/ppx_gen_flowlibs/ppx_gen_flowlibs_standalone.cmxa
 
-_build/scripts/ppx_gen_flowlibs.exe: _build/scripts/ppx_gen_flowlibs/ppx_gen_flowlibs.cmxa _build/scripts/ppx_gen_flowlibs/ppx_gen_flowlibs_standalone.cmxa
+_build/scripts/ppx_gen_flowlibs.exe: $(BUILT_LZ4_OBJECT_FILES) _build/src/common/xx/xx_stubs.o _build/scripts/ppx_gen_flowlibs/ppx_gen_flowlibs.cmxa _build/scripts/ppx_gen_flowlibs/ppx_gen_flowlibs_standalone.cmxa
 	ocamlfind ocamlopt -linkpkg -linkall \
 		-package ocaml-migrate-parsetree,unix \
 		-I _build/scripts/ppx_gen_flowlibs \
+		-ccopt "$(BUILT_LZ4_OBJECT_FILES) _build/src/common/xx/xx_stubs.o" \
 		_build/scripts/ppx_gen_flowlibs/ppx_gen_flowlibs.cmxa \
 		_build/scripts/ppx_gen_flowlibs/ppx_gen_flowlibs_standalone.cmxa \
 		-o "$@"
