@@ -958,7 +958,7 @@ end = struct
       Ty.Bot (Ty.NoLowerWithUpper use_kind)
 
     and any_t = function
-      | T.Annotated -> Ty.Annotated
+      | T.AnnotatedAny -> Ty.Annotated
       | T.AnyError kind -> Ty.AnyError (any_error_kind kind)
       | T.Unsound k -> Ty.Unsound (unsoundness_any_t k)
       | T.Untyped -> Ty.Untyped

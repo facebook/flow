@@ -147,7 +147,7 @@ let rec convert cx tparams_map =
   function
   | (loc, (Any _ as t_ast)) ->
     add_unclear_type_error_if_not_lib_file cx loc;
-    ((loc, AnyT.at Annotated loc), t_ast)
+    ((loc, AnyT.at AnnotatedAny loc), t_ast)
   | (loc, (Mixed _ as t_ast)) -> ((loc, MixedT.at loc |> with_trust_inference cx), t_ast)
   | (loc, (Empty _ as t_ast)) -> ((loc, EmptyT.at loc |> with_trust_inference cx), t_ast)
   | (loc, (Void _ as t_ast)) -> ((loc, VoidT.at loc |> with_trust_inference cx), t_ast)
@@ -695,12 +695,12 @@ let rec convert cx tparams_map =
         check_type_arg_arity cx loc t_ast targs 0 (fun () ->
             add_unclear_type_error_if_not_lib_file cx loc;
             let reason = mk_annot_reason RFunctionType loc in
-            reconstruct_ast (AnyT.make Annotated reason) None)
+            reconstruct_ast (AnyT.make AnnotatedAny reason) None)
       | "Object" ->
         check_type_arg_arity cx loc t_ast targs 0 (fun () ->
             add_unclear_type_error_if_not_lib_file cx loc;
             let reason = mk_annot_reason RObjectType loc in
-            reconstruct_ast (AnyT.make Annotated reason) None)
+            reconstruct_ast (AnyT.make AnnotatedAny reason) None)
       | "Function$Prototype$Apply" ->
         check_type_arg_arity cx loc t_ast targs 0 (fun () ->
             let reason = mk_annot_reason RFunctionType loc in
@@ -851,7 +851,7 @@ let rec convert cx tparams_map =
       | type_name when is_suppress_type cx type_name ->
         (* Optional type params are info-only, validated then forgotten. *)
         let (_, targs) = convert_type_params () in
-        reconstruct_ast (AnyT.at Annotated loc) targs
+        reconstruct_ast (AnyT.at AnnotatedAny loc) targs
       (* in-scope type vars *)
       | _ when SMap.mem name tparams_map ->
         check_type_arg_arity cx loc t_ast targs 0 (fun () ->

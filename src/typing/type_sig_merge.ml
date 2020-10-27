@@ -504,7 +504,7 @@ and merge_ref : 'a. _ -> _ -> (_ -> _ -> _ -> 'a) -> _ -> 'a =
     f t ref_loc name
 
 and merge_annot component file = function
-  | Any loc -> Type.AnyT.at Type.Annotated loc
+  | Any loc -> Type.AnyT.at Type.AnnotatedAny loc
   | Mixed loc -> Type.MixedT.at loc trust
   | Empty loc -> Type.EmptyT.at loc trust
   | Void loc -> Type.VoidT.at loc trust

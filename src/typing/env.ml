@@ -335,7 +335,7 @@ let global_lexicals = [internal_name "super"; internal_name "this"]
 let cache_global cx name ?desc loc global_scope =
   let t =
     if List.mem name global_any then
-      AnyT.at Annotated loc
+      AnyT.at AnnotatedAny loc
     else if List.mem name global_lexicals then
       ObjProtoT (mk_reason (RCustom "global object") loc)
     else

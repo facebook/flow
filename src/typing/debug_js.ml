@@ -115,7 +115,7 @@ let rec dump_t_ (depth, tvars) cx t =
     | Mixed_non_void -> "Mixed_non_void"
   in
   let string_of_any_source = function
-    | Annotated -> "Annotated"
+    | AnnotatedAny -> "AnnotatedAny"
     | AnyError _ -> "Error"
     | Unsound _ -> "Unsound"
     | Untyped -> "Untyped"

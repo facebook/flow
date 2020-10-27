@@ -945,7 +945,7 @@ module rec TypeTerm : sig
     | Zeroed
 
   and any_source =
-    | Annotated
+    | AnnotatedAny
     | AnyError of any_error_kind option
     | Unsound of unsoundness_kind
     | Untyped
@@ -2644,7 +2644,7 @@ end)
 
 module AnyT = struct
   let desc = function
-    | Annotated -> RAnyExplicit
+    | AnnotatedAny -> RAnyExplicit
     | _ -> RAnyImplicit
 
   let make source r = AnyT (r, source)
@@ -2653,7 +2653,7 @@ module AnyT = struct
 
   let why source = replace_desc_reason (desc source) %> make source
 
-  let annot = why Annotated
+  let annot = why AnnotatedAny
 
   let error = why (AnyError None)
 
