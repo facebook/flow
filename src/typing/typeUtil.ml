@@ -845,3 +845,7 @@ let type_t_of_annotated_or_inferred (x : Type.annotated_or_inferred) =
   | Inferred t
   | Annotated t ->
     t
+
+let map_annotated_or_inferred f = function
+  | Inferred t -> Inferred (f t)
+  | Annotated t -> Annotated (f t)

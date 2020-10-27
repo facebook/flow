@@ -1604,7 +1604,7 @@ and mk_func_sig =
         tparams_map;
         fparams;
         body = None;
-        return_t;
+        return_t = Annotated return_t;
         knot;
       },
       {
@@ -1860,7 +1860,9 @@ and add_interface_properties cx tparams_map properties s =
                       Ast.Type.Object.Property.Get (get_loc, func) ) ->
                     Flow_js.add_output cx (Error_message.EUnsafeGettersSetters loc);
                     let (fsig, func_ast) = mk_func_sig cx tparams_map loc func in
-                    let prop_t = fsig.Func_type_sig.return_t in
+                    let prop_t =
+                      TypeUtil.type_t_of_annotated_or_inferred fsig.Func_type_sig.return_t
+                    in
                     ( add_getter ~static name id_loc fsig x,
                       Ast.Type.
                         ( loc,

@@ -7641,7 +7641,12 @@ and mk_class_sig =
         | Ast.Class.Property.Initialized expr ->
           let value_ref : (ALoc.t, ALoc.t * Type.t) Ast.Expression.t option ref = ref None in
           ( Infer
-              ( Func_stmt_sig.field_initializer tparams_map reason expr annot_t,
+              ( Func_stmt_sig.field_initializer
+                  ~has_anno:has_anno_todo
+                  tparams_map
+                  reason
+                  expr
+                  annot_t,
                 (fun (_, _, value_opt) -> value_ref := Some (Base.Option.value_exn value_opt)) ),
             fun () ->
               Ast.Class.Property.Initialized
@@ -8151,6 +8156,15 @@ and mk_func_sig =
           Some (Tast_utils.error_mapper#type_predicate pred) )
     in
     let knot = Tvar.mk cx reason in
+    let return_t =
+      match return with
+      | Ast.Type.Missing _ ->
+        (* Can we decompose the annotation to extract a return type? *)
+        (match annot_decompose_todo annot with
+        | Some _ -> Annotated return_t
+        | None -> Inferred return_t)
+      | Ast.Type.Available _ -> Annotated return_t
+    in
     ( { Func_stmt_sig.reason; kind; tparams; tparams_map; fparams; body; return_t; knot },
       fun params body fun_type ->
         {
@@ -8168,7 +8182,7 @@ and mk_func_sig =
    and return type, check the body against that signature by adding `this`
    and super` to the environment, and return the signature. *)
 and function_decl id cx ~annot reason func this super =
-  let return_annot = mk_return_annot ~annot ~return_annot:func.Ast.Function.return in
+  (*let return_annot = mk_return_annot ~annot ~return_annot:func.Ast.Function.return in*)
   let (func_sig, reconstruct_func) = mk_func_sig cx ~annot SMap.empty reason func in
   let save_return = Abnormal.clear_saved Abnormal.Return in
   let save_throw = Abnormal.clear_saved Abnormal.Throw in
@@ -8183,8 +8197,7 @@ and function_decl id cx ~annot reason func this super =
             super
             ~decls:toplevel_decls
             ~stmts:toplevels
-            ~expr:(expression ~annot:None)
-            ~return_annot)
+            ~expr:(expression ~annot:None))
   in
   ignore (Abnormal.swap_saved Abnormal.Return save_return);
   ignore (Abnormal.swap_saved Abnormal.Throw save_throw);
@@ -8205,13 +8218,6 @@ and mk_function_declaration id cx ~general reason func =
 (* Process a function expression, returning a (polymorphic) function type. *)
 and mk_function_expression id cx ~annot ~general reason func =
   mk_function id cx ~annot ~general reason func
-
-(* If a return annot is available on func, use that. Otherwise try to extract the return annot
- * from our annotation context *)
-and mk_return_annot ~annot ~return_annot =
-  match return_annot with
-  | Ast.Type.Missing _ -> annot_decompose_todo annot
-  | Ast.Type.Available _ -> Some ()
 
 (* Internal helper function. Use `mk_function_declaration` and `mk_function_expression` instead. *)
 and mk_function id cx ~annot ~general reason func =

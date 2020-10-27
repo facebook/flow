@@ -26,7 +26,7 @@ module type S = sig
     tparams_map: Type.t SMap.t;
     fparams: func_params;
     body: (ALoc.t, ALoc.t) Flow_ast.Function.body option;
-    return_t: Type.t;
+    return_t: Type.annotated_or_inferred;
     knot: Type.t;
   }
 
@@ -40,6 +40,7 @@ module type S = sig
     return type. *)
 
   val field_initializer :
+    has_anno:bool ->
     Type.t SMap.t ->
     (* type params map *)
     Reason.t ->
@@ -88,7 +89,6 @@ module type S = sig
       (Context.t ->
       (ALoc.t, ALoc.t) Flow_ast.Expression.t ->
       (ALoc.t, ALoc.t * Type.t) Flow_ast.Expression.t) ->
-    return_annot:unit option ->
     t ->
     func_params_tast option
     * (ALoc.t, ALoc.t * Type.t) Flow_ast.Function.body option

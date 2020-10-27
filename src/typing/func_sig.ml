@@ -28,7 +28,7 @@ module Make (F : Func_params.S) = struct
     tparams_map: Type.t SMap.t;
     fparams: func_params;
     body: (ALoc.t, ALoc.t) Ast.Function.body option;
-    return_t: Type.t;
+    return_t: Type.annotated_or_inferred;
     (* To be unified with the type of the function. *)
     knot: Type.t;
   }
@@ -41,13 +41,13 @@ module Make (F : Func_params.S) = struct
       tparams_map = SMap.empty;
       fparams = F.empty (fun _ _ -> None);
       body = None;
-      return_t = VoidT.why reason |> with_trust bogus_trust;
+      return_t = Annotated (VoidT.why reason |> with_trust bogus_trust);
       (* This can't be directly recursively called. In case this type is accidentally used downstream,
        * stub it out with mixed. *)
       knot = MixedT.why reason |> with_trust bogus_trust;
     }
 
-  let field_initializer tparams_map reason expr return_t =
+  let field_initializer ~has_anno tparams_map reason expr return_t =
     {
       reason;
       kind = FieldInit expr;
@@ -55,7 +55,11 @@ module Make (F : Func_params.S) = struct
       tparams_map;
       fparams = F.empty (fun _ _ -> None);
       body = None;
-      return_t;
+      return_t =
+        ( if has_anno then
+          Annotated return_t
+        else
+          Inferred return_t );
       (* This can't be recursively called. In case this type is accidentally used downstream, stub it
        * out with mixed. *)
       knot = MixedT.why reason |> with_trust bogus_trust;
@@ -77,7 +81,7 @@ module Make (F : Func_params.S) = struct
     in
     let tparams_map = SMap.map (Flow.subst cx map) tparams_map in
     let fparams = F.subst cx map fparams in
-    let return_t = Flow.subst cx map return_t in
+    let return_t = TypeUtil.map_annotated_or_inferred (Flow.subst cx map) return_t in
     { x with tparams; tparams_map; fparams; return_t }
 
   let check_with_generics cx f x =
@@ -88,7 +92,7 @@ module Make (F : Func_params.S) = struct
             x with
             tparams_map = SMap.map (Flow.subst cx map) tparams_map;
             fparams = F.subst cx map fparams;
-            return_t = Flow.subst cx map return_t;
+            return_t = TypeUtil.map_annotated_or_inferred (Flow.subst cx map) return_t;
           })
 
   let functiontype cx this_t { reason; kind; tparams; fparams; return_t; knot; _ } =
@@ -106,7 +110,7 @@ module Make (F : Func_params.S) = struct
         Type.this_t;
         params = F.value fparams;
         rest_param = F.rest fparams;
-        return_t;
+        return_t = TypeUtil.type_t_of_annotated_or_inferred return_t;
         is_predicate = kind = Predicate;
         closure_t = Env.peek_frame ();
         changeset = Env.retrieve_closure_changeset ();
@@ -130,11 +134,16 @@ module Make (F : Func_params.S) = struct
           FunT
             ( dummy_static reason,
               dummy_prototype,
-              mk_boundfunctiontype params_tlist ~rest_param ~def_reason ~params_names return_t ) )
+              mk_boundfunctiontype
+                params_tlist
+                ~rest_param
+                ~def_reason
+                ~params_names
+                (TypeUtil.type_t_of_annotated_or_inferred return_t) ) )
     in
     poly_type_of_tparams (Context.generate_poly_id cx) tparams t
 
-  let gettertype ({ return_t; _ } : t) = return_t
+  let gettertype ({ return_t; _ } : t) = TypeUtil.type_t_of_annotated_or_inferred return_t
 
   let settertype { fparams; _ } =
     match F.value fparams with
@@ -149,7 +158,6 @@ module Make (F : Func_params.S) = struct
       ~decls
       ~stmts
       ~expr
-      ~return_annot
       { reason = reason_fn; kind; tparams_map; fparams; body; return_t; knot; _ } =
     let loc =
       let open Ast.Function in
@@ -232,12 +240,15 @@ module Make (F : Func_params.S) = struct
         in
         ( new_entry ~has_anno:false yield_t,
           new_entry ~has_anno:false next_t,
-          let has_anno =
-            match return_annot with
-            | Some _ -> true
-            | _ -> false
+          (* Entries still take in a has_anno flag and a Type.t We should
+           * change that to instead take a Type.annotated_or_inferred and get rid
+           * of the has_anno flag and this ugly case *)
+          let (has_anno, t) =
+            match return_t with
+            | Annotated t -> (true, t)
+            | Inferred t -> (false, t)
           in
-          new_entry ~has_anno return_t ))
+          new_entry ~has_anno t ))
     in
     Scope.add_entry (internal_name "yield") yield function_scope;
     Scope.add_entry (internal_name "next") next function_scope;
@@ -307,6 +318,7 @@ module Make (F : Func_params.S) = struct
     let body_ast = reconstruct_body statements_ast in
     (* build return type for void funcs *)
     let init_ast =
+      let return_t = TypeUtil.type_t_of_annotated_or_inferred return_t in
       if maybe_void then (
         let loc = loc_of_t return_t in
         (* Some branches add an ImplicitTypeParam frame to force our flow_use_op
