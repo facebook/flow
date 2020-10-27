@@ -218,7 +218,7 @@ module TrustKit (Flow : Flow_common.S) : Flow_common.TRUST_CHECKING = struct
     in
     let info_of = function
       | DefT (r, trust, _) -> Some (r, expand trust)
-      | AnyT (r, _) -> Some (r, Qualifier (dynamic_qualifier ()))
+      | AnyT (r, _) -> Some (r, QualifiedTrust (dynamic_qualifier ()))
       | _ -> None
     in
     let ldata = info_of l in
@@ -233,27 +233,27 @@ module TrustKit (Flow : Flow_common.S) : Flow_common.TRUST_CHECKING = struct
        then we add trust as a new lower bound to the variable ident, and raise
        an error if that fails.
     *)
-    | (Some (lr, Qualifier ltrust), Some (ur, Inferred id)) ->
+    | (Some (lr, QualifiedTrust ltrust), Some (ur, InferredTrust id)) ->
       if not (add_trust_lower_bound cx trace ltrust id) then add_error lr ur
     (* If we see a flow:
           ident ~> trust
          then we add trust as a new upper bound to the variable ident, and raise
          an error if that fails.
       *)
-    | (Some (lr, Inferred id), Some (ur, Qualifier utrust)) ->
+    | (Some (lr, InferredTrust id), Some (ur, QualifiedTrust utrust)) ->
       if not (add_trust_upper_bound cx trace utrust id) then add_error lr ur
     (* If we see a flow:
           ident1 ~> ident2
          we link the two variables and propagate bounds and trust between then,
          and raise an error if this fails.
       *)
-    | (Some (lr, Inferred lid), Some (ur, Inferred uid)) ->
+    | (Some (lr, InferredTrust lid), Some (ur, InferredTrust uid)) ->
       if not (link_trust_variables cx trace lid uid) then add_error lr ur
     (* If we see a flow:
           trust1 ~> trust2
          all we do is raise an error if trust1 is not a subtype of trust2.
       *)
-    | (Some (lr, Qualifier ltrust), Some (ur, Qualifier utrust)) ->
+    | (Some (lr, QualifiedTrust ltrust), Some (ur, QualifiedTrust utrust)) ->
       if not (subtype_trust ltrust utrust) then add_error lr ur
     | (None, _)
     | (_, None) ->

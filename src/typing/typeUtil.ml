@@ -651,7 +651,7 @@ let boolean_literal_eq x = function
 
 let trust_subtype_fixed tr1 tr2 =
   match (Trust.expand tr1, Trust.expand tr2) with
-  | (Trust.Qualifier trust1, Trust.Qualifier trust2) -> Trust.subtype_trust trust1 trust2
+  | (Trust.QualifiedTrust trust1, Trust.QualifiedTrust trust2) -> Trust.subtype_trust trust1 trust2
   | _ -> false
 
 let quick_subtype trust_checked t1 t2 =
