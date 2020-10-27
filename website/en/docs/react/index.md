@@ -22,3 +22,15 @@ follow [this guide](../tools/babel/).
 Babel also
 [works out of the box with Create React App](../tools/create-react-app/),
 just install Flow and create a `.flowconfig`.
+
+## React Runtimes
+
+Flow supports the `@babel/plugin-transform-react-jsx` runtime options required
+to use JSX without explicitly importing the React namespace.
+
+To enable the new automatic runtime, use the following configuration:
+
+```ini
+[options]
+react.runtime=automatic
+```
