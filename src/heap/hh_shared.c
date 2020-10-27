@@ -59,6 +59,7 @@
 #include <caml/fail.h>
 #include <caml/unixsupport.h>
 #include <caml/intext.h>
+#include <caml/bigarray.h>
 
 #ifdef _WIN32
 #include <windows.h>
@@ -598,6 +599,15 @@ static void define_mappings(int page_size) {
 #endif
 }
 
+static value alloc_heap_bigarray(void) {
+  CAMLparam0();
+  CAMLlocal1(heap);
+  int heap_flags = CAML_BA_NATIVE_INT | CAML_BA_C_LAYOUT | CAML_BA_EXTERNAL;
+  intnat heap_dim[1] = {Wsize_bsize(info->hashtbl_size_b + info->heap_size_b)};
+  heap = caml_ba_alloc(heap_flags, 1, hashtbl, heap_dim);
+  CAMLreturn(heap);
+}
+
 /*****************************************************************************/
 /* Must be called by the master BEFORE forking the workers! */
 /*****************************************************************************/
@@ -607,6 +617,7 @@ CAMLprim value hh_shared_init(
   value num_workers_val
 ) {
   CAMLparam2(config_val, num_workers_val);
+  CAMLlocal1(result);
 
   size_t page_size = getpagesize();
 
@@ -661,7 +672,11 @@ CAMLprim value hh_shared_init(
   sigaction(SIGSEGV, &sigact, NULL);
 #endif
 
-  CAMLreturn(Val_handle(memfd));
+  result = caml_alloc_tuple(2);
+  Store_field(result, 0, alloc_heap_bigarray());
+  Store_field(result, 1, Val_handle(memfd));
+
+  CAMLreturn(result);
 }
 
 /* Must be called by every worker before any operation is performed */
@@ -677,7 +692,7 @@ value hh_connect(value handle_val, value worker_id_val) {
   map_info_page(page_size);
   define_mappings(page_size);
 
-  CAMLreturn(Val_unit);
+  CAMLreturn(alloc_heap_bigarray());
 }
 
 /*****************************************************************************/
@@ -866,8 +881,7 @@ static void raise_heap_full(void) {
 
 /*****************************************************************************/
 /* Allocates a slot in the shared heap, given a size (in words). The caller is
- * responsible for initializing the returned heap_entry_t with a valid header
- * and data segment. */
+ * responsible for initializing the allocated space with valid heap objects. */
 /*****************************************************************************/
 
 static addr_t hh_alloc(size_t wsize) {
@@ -882,6 +896,12 @@ static addr_t hh_alloc(size_t wsize) {
   }
   memfd_reserve(Ptr_of_addr(addr), slot_size);
   return addr;
+}
+
+CAMLprim value hh_ml_alloc(value wsize) {
+  CAMLparam1(wsize);
+  addr_t addr = hh_alloc(Long_val(wsize));
+  CAMLreturn(Val_addr(addr));
 }
 
 /*****************************************************************************/
@@ -1220,4 +1240,33 @@ CAMLprim value hh_remove(value key) {
   hashtbl[slot].addr = NULL_ADDR;
   info->hcounter_filled -= 1;
   CAMLreturn(Val_unit);
+}
+
+/*****************************************************************************/
+/* Blits an OCaml string representation into the shared heap.
+ *
+ * Note that, like OCaml's heap, the shared heap is word-addressible. Like
+ * OCaml's strings, strings in the shared heap are encoded with a header
+ * containing the size in words, where the last byte of the last word contains
+ * an offset used to calculate the exact bytes size. */
+/*****************************************************************************/
+
+CAMLprim value hh_write_string(value addr, value s) {
+  memcpy(Ptr_of_addr(Addr_val(addr)), String_val(s), Bosize_val(s));
+  return Val_unit;
+}
+
+/*****************************************************************************/
+/* Reads a string in the shared heap into a the OCaml heap.
+ *
+ * Because we store string data in the shared heap in the same format as OCaml
+ * does for it's own heap, we can simply blit the data directly into the OCaml
+ * heap, instead of using the designated caml_alloc_string function. */
+/*****************************************************************************/
+CAMLprim value hh_read_string(value addr, value wsize) {
+  CAMLparam2(addr, wsize);
+  CAMLlocal1(s);
+  s = caml_alloc(Long_val(wsize), String_tag);
+  memcpy(String_val(s), Ptr_of_addr(Addr_val(addr)), Bsize_wsize(Long_val(wsize)));
+  CAMLreturn(s);
 }

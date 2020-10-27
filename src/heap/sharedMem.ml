@@ -23,6 +23,10 @@ type table_stats = {
   slots: int;
 }
 
+type heap = (nativeint, Bigarray.nativeint_elt, Bigarray.c_layout) Bigarray.Array1.t
+
+let heap_ref : heap option ref = ref None
+
 exception Out_of_shared_memory
 
 exception Hash_table_full
@@ -40,10 +44,13 @@ let () =
 (*****************************************************************************)
 (* Initializes the shared memory. Must be called before forking. *)
 (*****************************************************************************)
-external hh_shared_init : config -> num_workers:int -> handle = "hh_shared_init"
+external init : config -> num_workers:int -> heap * handle = "hh_shared_init"
 
 let init config ~num_workers =
-  try hh_shared_init config ~num_workers
+  try
+    let (heap, handle) = init config ~num_workers in
+    heap_ref := Some heap;
+    handle
   with Failed_memfd_init _ ->
     if EventLogger.should_log () then EventLogger.sharedmem_failed_memfd_init ();
     Hh_logger.log "Failed to use anonymous memfd init";
@@ -53,7 +60,11 @@ let init config ~num_workers =
      * initialized. *)
     raise Out_of_shared_memory
 
-external connect : handle -> worker_id:int -> unit = "hh_connect"
+external connect : handle -> worker_id:int -> heap = "hh_connect"
+
+let connect handle ~worker_id =
+  let heap = connect handle ~worker_id in
+  heap_ref := Some heap
 
 (*****************************************************************************)
 (* The shared memory garbage collector. It must be called every time we
@@ -914,4 +925,384 @@ end = struct
       :: !invalidate_callback_list
 
   let remove_old_batch = Direct.remove_old_batch
+end
+
+module NewAPI = struct
+  open Bigarray
+
+  type nonrec heap = heap
+
+  (* Phantom type parameter provides type-safety to callers of this API.
+   * Internally, these are all just ints, so be careful! *)
+  type _ addr = int
+
+  type chunk = {
+    heap: heap;
+    mutable next_addr: int;
+    mutable remaining_size: int;
+  }
+
+  type heap_string
+
+  type 'a addr_tbl
+
+  type checked_file
+
+  type exports
+
+  type export_def
+
+  type module_ref
+
+  type remote_ref
+
+  type local_def
+
+  type pattern_def
+
+  type pattern
+
+  type size = int
+
+  let get_heap () =
+    match !heap_ref with
+    | None -> failwith "get_heap: not connected"
+    | Some heap -> heap
+
+  external alloc : size -> 'a addr = "hh_ml_alloc"
+
+  let alloc size f =
+    let addr = alloc size in
+    let chunk = { heap = get_heap (); next_addr = addr; remaining_size = size } in
+    let x = f chunk in
+    (* Ensure allocated space was initialized. *)
+    assert (chunk.remaining_size = 0);
+    assert (chunk.next_addr = addr + size);
+    x
+
+  (* Addresses are relative to the hashtbl pointer, so the null address actually
+   * points to the hash field of the first hashtbl entry, which is never a
+   * meaningful address, so we can use it to represent "missing" or similar.
+   *
+   * Naturally, we need to be careful not to dereference the null addr! Any
+   * internal use of null should be hidden from callers of this module. *)
+  let null_addr = 0
+
+  (* header utils *)
+
+  type tag =
+    | Serialized_tag
+    | String_tag
+    | Addr_map_tag
+    | Checked_file_tag
+    | Exports_tag
+    | Export_def_tag
+    | Module_ref_tag
+    | Remote_ref_tag
+    | Local_def_tag
+    | Pattern_def_tag
+    | Pattern_tag
+
+  (* avoid unused constructor warning *)
+  let () = ignore Serialized_tag
+
+  (* constant constructors are integers *)
+  let tag_val : tag -> int = Obj.magic
+
+  let mk_header tag size =
+    (* lower byte of header is reserved for tag, lsb will be set when converting
+     * to intnat before writing to shmem, see unsafe_write_header. *)
+    (tag_val tag lsl 1) lor (size lsl 7)
+
+  let obj_tag hd = (hd lsr 1) land 0x3F
+
+  let obj_size hd = hd lsr 7
+
+  (* sizes *)
+
+  let header_size = 1
+
+  let addr_size = 1
+
+  (* Obj used as an efficient way to get at the word size of an OCaml string
+   * directly from the block header, since that's the size we need. *)
+  let string_size s = Obj.size (Obj.repr s)
+
+  let addr_tbl_size xs = addr_size * Array.length xs
+
+  let checked_file_size = 8 * addr_size
+
+  let exports_size def = string_size def
+
+  let export_def_size = function
+    | None -> 0
+    | Some def -> string_size def
+
+  let module_ref_size ref = string_size ref
+
+  let remote_ref_size ref = string_size ref
+
+  let local_def_size def = string_size def
+
+  let pattern_def_size def = string_size def
+
+  let pattern_size pattern = string_size pattern
+
+  (* headers *)
+
+  let string_header s =
+    let size = string_size s in
+    mk_header String_tag size
+
+  let addr_tbl_header xs =
+    let size = addr_tbl_size xs in
+    mk_header Addr_map_tag size
+
+  let checked_file_header = mk_header Checked_file_tag checked_file_size
+
+  let exports_header exports =
+    let size = exports_size exports in
+    mk_header Exports_tag size
+
+  let export_def_header def =
+    let size = export_def_size (Some def) in
+    mk_header Export_def_tag size
+
+  let module_ref_header ref =
+    let size = module_ref_size ref in
+    mk_header Module_ref_tag size
+
+  let remote_ref_header ref =
+    let size = remote_ref_size ref in
+    mk_header Remote_ref_tag size
+
+  let local_def_header def =
+    let size = local_def_size def in
+    mk_header Local_def_tag size
+
+  let pattern_def_header def =
+    let size = pattern_def_size def in
+    mk_header Pattern_def_tag size
+
+  let pattern_header pattern =
+    let size = pattern_size pattern in
+    mk_header Pattern_tag size
+
+  (* offsets *)
+
+  let filename_addr file = file + 1
+
+  let exports_addr file = file + 2
+
+  let export_def_addr file = file + 3
+
+  let module_refs_addr file = file + 4
+
+  let local_defs_addr file = file + 5
+
+  let remote_refs_addr file = file + 6
+
+  let pattern_defs_addr file = file + 7
+
+  let patterns_addr file = file + 8
+
+  (* read *)
+
+  let assert_tag hd tag = assert (obj_tag hd = tag_val tag)
+
+  (* Read a string from the heap at the specified address with the specified
+   * size (in words). This read is not bounds checked or type checked; caller
+   * must ensure that the given destination contains string data. *)
+  external unsafe_read_string : _ addr -> int -> string = "hh_read_string"
+
+  (* Read a header from the heap. The low bit of the header word is always set,
+   * but when converting to an OCaml int we forfeit that bit to OCaml's own tag.
+   *)
+  let read_header heap addr =
+    let hd_nat = Array1.get heap addr in
+    (* double-check that the data looks like a header *)
+    assert (Nativeint.(logand hd_nat 1n = 1n));
+    Nativeint.(to_int (shift_right_logical hd_nat 1))
+
+  let read_header_checked heap tag addr =
+    let hd = read_header heap addr in
+    assert_tag hd tag;
+    hd
+
+  (* Read an address from the heap. In the heap, we store word-aligned byte
+   * offsets, but in OCaml we prefer word offsets. As with Val_addr when passing
+   * back addresses from C, we perform the byte->word offset conversion here. *)
+  let read_addr heap addr =
+    let addr_nat = Array1.get heap addr in
+    (* double-check that the data looks like an address *)
+    assert (Nativeint.(logand addr_nat 1n = 0n));
+    Nativeint.(to_int (shift_right_logical addr_nat 3))
+
+  let read_string_generic tag addr =
+    let hd = read_header_checked (get_heap ()) tag addr in
+    let offset = addr + header_size in
+    let length = obj_size hd in
+    unsafe_read_string offset length
+
+  let read_string addr = read_string_generic String_tag addr
+
+  let read_addr_tbl_generic f addr init =
+    let heap = get_heap () in
+    let hd = read_header_checked heap Addr_map_tag addr in
+    init (obj_size hd) (fun i -> f (read_addr heap (addr + header_size + i)))
+
+  let read_addr_tbl f addr = read_addr_tbl_generic f addr Array.init
+
+  let read_exports addr = read_string_generic Exports_tag addr
+
+  let read_export_def addr =
+    if addr = null_addr then
+      None
+    else
+      Some (read_string_generic Export_def_tag addr)
+
+  let read_module_ref addr = read_string_generic Module_ref_tag addr
+
+  let read_remote_ref addr = read_string_generic Remote_ref_tag addr
+
+  let read_local_def addr = read_string_generic Local_def_tag addr
+
+  let read_pattern_def addr = read_string_generic Pattern_def_tag addr
+
+  let read_pattern addr = read_string_generic Pattern_tag addr
+
+  (* getters *)
+
+  let file_name file = read_addr (get_heap ()) (filename_addr file)
+
+  let file_exports file = read_addr (get_heap ()) (exports_addr file)
+
+  let file_export_def file = read_addr (get_heap ()) (export_def_addr file)
+
+  let file_module_refs file = read_addr (get_heap ()) (module_refs_addr file)
+
+  let file_local_defs file = read_addr (get_heap ()) (local_defs_addr file)
+
+  let file_remote_refs file = read_addr (get_heap ()) (remote_refs_addr file)
+
+  let file_pattern_defs file = read_addr (get_heap ()) (pattern_defs_addr file)
+
+  let file_patterns file = read_addr (get_heap ()) (patterns_addr file)
+
+  (* write *)
+
+  (* Write a header at a specified address in the heap. This write is not
+   * bounds checked; caller must ensure the given destination has already been
+   * allocated. *)
+  let unsafe_write_header_at heap dst hd =
+    Array1.unsafe_set heap dst Nativeint.(logor 1n (shift_left (of_int hd) 1))
+
+  (* Write an address at a specified address in the heap. This write is not
+   * bounds checked; caller must ensure the given destination has already been
+   * allocated. *)
+  let unsafe_write_addr_at heap dst addr =
+    Array1.unsafe_set heap dst Nativeint.(shift_left (of_int addr) 1)
+
+  (* Write a string at the specified address in the heap. This write is not
+   * bounds checked; caller must ensure the given destination has already been
+   * allocated. *)
+  external unsafe_write_string_at : _ addr -> string -> unit = "hh_write_string" [@@noalloc]
+
+  (* Write a header into the given chunk and advance the chunk address. This
+   * write is not bounds checked; caller must ensure the given destination has
+   * already been allocated. *)
+  let unsafe_write_header chunk hd =
+    unsafe_write_header_at chunk.heap chunk.next_addr hd;
+    chunk.next_addr <- chunk.next_addr + header_size
+
+  (* Write an address into the given chunk and advance the chunk address. This
+   * write is not bounds checked; caller must ensure the given destination has
+   * already been allocated. *)
+  let unsafe_write_addr chunk addr =
+    unsafe_write_addr_at chunk.heap chunk.next_addr addr;
+    chunk.next_addr <- chunk.next_addr + addr_size
+
+  (* Write a string into the given chunk and advance the chunk address. This
+   * write is not bounds checked; caller must ensure the given destination has
+   * already been allocated. *)
+  let unsafe_write_string chunk s =
+    unsafe_write_string_at chunk.next_addr s;
+    chunk.next_addr <- chunk.next_addr + string_size s
+
+  (* Consume space in the chunk for the object described by the given header,
+   * write header, advance chunk address, and return address to the header. This
+   * function should be called before writing any heap object. *)
+  let write_header chunk hd =
+    let size = header_size + obj_size hd in
+    chunk.remaining_size <- chunk.remaining_size - size;
+    assert (chunk.remaining_size >= 0);
+    let addr = chunk.next_addr in
+    unsafe_write_header chunk hd;
+    addr
+
+  let write_string chunk s =
+    let heap_string = write_header chunk (string_header s) in
+    unsafe_write_string chunk s;
+    heap_string
+
+  let write_checked_file
+      chunk filename exports export_def module_refs local_defs remote_refs pattern_defs patterns =
+    let checked_file = write_header chunk checked_file_header in
+    unsafe_write_addr chunk filename;
+    unsafe_write_addr chunk exports;
+    unsafe_write_addr chunk export_def;
+    unsafe_write_addr chunk module_refs;
+    unsafe_write_addr chunk local_defs;
+    unsafe_write_addr chunk remote_refs;
+    unsafe_write_addr chunk pattern_defs;
+    unsafe_write_addr chunk patterns;
+    checked_file
+
+  let write_exports chunk exports =
+    let heap_exports = write_header chunk (exports_header exports) in
+    unsafe_write_string chunk exports;
+    heap_exports
+
+  let write_export_def chunk = function
+    | None -> null_addr
+    | Some def ->
+      let heap_def = write_header chunk (export_def_header def) in
+      unsafe_write_string chunk def;
+      heap_def
+
+  let write_module_ref chunk ref =
+    let heap_ref = write_header chunk (module_ref_header ref) in
+    unsafe_write_string chunk ref;
+    heap_ref
+
+  let write_local_def chunk def =
+    let heap_def = write_header chunk (local_def_header def) in
+    unsafe_write_string chunk def;
+    heap_def
+
+  let write_remote_ref chunk ref =
+    let heap_ref = write_header chunk (remote_ref_header ref) in
+    unsafe_write_string chunk ref;
+    heap_ref
+
+  let write_pattern_def chunk def =
+    let heap_resolved = write_header chunk (pattern_def_header def) in
+    unsafe_write_string chunk def;
+    heap_resolved
+
+  let write_pattern chunk pattern =
+    let heap_pattern = write_header chunk (pattern_header pattern) in
+    unsafe_write_string chunk pattern;
+    heap_pattern
+
+  let write_addr_tbl f chunk xs =
+    let hd = addr_tbl_header xs in
+    let map = write_header chunk hd in
+    chunk.next_addr <- chunk.next_addr + obj_size hd;
+    Array.iteri
+      (fun i x ->
+        let addr = f chunk x in
+        unsafe_write_addr_at chunk.heap (map + header_size + i) addr)
+      xs;
+    map
 end
