@@ -148,6 +148,14 @@ Missing an annotation on `x`. [missing-local-annot]
                      ^
 
 
+Error ------------------------------------------------------------------------------------------ class_expression.js:4:6
+
+Missing an annotation on `x`. [missing-local-annot]
+
+   4|     (x) => 3; // error
+           ^
+
+
 Error --------------------------------------------------------------------------------------- destructuring_init.js:4:14
 
 Missing an annotation on `x`. [missing-local-annot]
@@ -535,4 +543,4 @@ Missing an annotation on `y`. [missing-local-annot]
 
 
 
-Found 64 errors
+Found 65 errors

@@ -2118,7 +2118,8 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t =
     let reason = DescFormat.instance_reason name name_loc in
     Env.declare_implicit_let Scope.Entry.ClassNameBinding cx name name_loc;
     let general = Tvar.mk_where cx reason (Env.unify_declared_type cx name) in
-    let (class_t, c_ast) = mk_class cx class_loc ~name_loc ~general reason c in
+    (* ClassDeclarations are statements, so we will never have an annotation to push down here *)
+    let (class_t, c_ast) = mk_class cx ~class_annot:None class_loc ~name_loc ~general reason c in
     Env.init_implicit_let
       Scope.Entry.ClassNameBinding
       cx
@@ -3570,12 +3571,16 @@ and expression_ ~cond ~annot cx loc e : (ALoc.t, ALoc.t * Type.t) Ast.Expression
         in
         add_entry name entry scope);
       Env.push_var_scope cx scope;
-      let (class_t, c) = mk_class cx class_loc ~name_loc ~general:tvar reason c in
+      let (class_t, c) =
+        mk_class ~class_annot:annot cx class_loc ~name_loc ~general:tvar reason c
+      in
       Env.pop_var_scope ();
       Flow.flow_t cx (class_t, tvar);
       ((class_loc, class_t), Class c)
     | None ->
-      let (class_t, c) = mk_class cx class_loc ~name_loc ~general:tvar reason c in
+      let (class_t, c) =
+        mk_class ~class_annot:annot cx class_loc ~name_loc ~general:tvar reason c
+      in
       Flow.flow_t cx (class_t, tvar);
       ((class_loc, class_t), Class c))
   | Yield { Yield.argument; delegate = false; comments } ->
@@ -7577,11 +7582,11 @@ and extract_class_name class_loc =
     | Some (name_loc, { Ast.Identifier.name; comments = _ }) -> (name_loc, name)
     | None -> (class_loc, "<<anonymous class>>"))
 
-and mk_class cx class_loc ~name_loc ~general reason c =
+and mk_class cx class_loc ~class_annot ~name_loc ~general reason c =
   let def_reason = repos_reason class_loc reason in
   let this_in_class = Class_stmt_sig.This.in_class c in
   let self = Tvar.mk cx reason in
-  let (class_sig, class_ast_f) = mk_class_sig cx name_loc reason self c in
+  let (class_sig, class_ast_f) = mk_class_sig ~class_annot cx name_loc reason self c in
   class_sig
   |> Class_stmt_sig.check_with_generics cx (fun class_sig ->
          let public_property_map =
@@ -7631,7 +7636,7 @@ and mk_class_sig =
         Class_sig.t containing this field, as that is when the initializer expression
         gets checked.
   *)
-    let mk_field cx tparams_map reason annot init =
+    let mk_field cx tparams_map reason annot ~field_annot init =
       let (annot_t, annot_ast) = Anno.mk_type_annotation cx tparams_map reason annot in
       let (field, get_init) =
         match init with
@@ -7641,9 +7646,13 @@ and mk_class_sig =
         | Ast.Class.Property.Initialized expr ->
           let value_ref : (ALoc.t, ALoc.t * Type.t) Ast.Expression.t option ref = ref None in
           let has_anno =
-            match annot with
-            | Ast.Type.Available _ -> true
-            | Ast.Type.Missing _ -> false
+            (* If no annotation is available, we can create one by decomposing the
+             * annotation context passed down to this point *)
+            match (annot, field_annot) with
+            | (Ast.Type.Available _, _)
+            | (_, Some _) ->
+              true
+            | (Ast.Type.Missing _, None) -> false
           in
           ( Infer
               ( Func_stmt_sig.field_initializer ~has_anno tparams_map reason expr annot_t,
@@ -7654,15 +7663,16 @@ and mk_class_sig =
       in
       (field, annot_t, annot_ast, get_init)
     in
-    let mk_method = mk_func_sig ~annot:None in
-    let mk_extends cx tparams_map = function
+    let mk_method ~method_annot = mk_func_sig ~annot:method_annot in
+    let mk_extends ~class_annot cx tparams_map = function
       | None -> (Implicit { null = false }, None)
       | Some (loc, { Ast.Class.Extends.expr; targs; comments }) ->
-        let (((_, c), _) as expr) = expression cx ~annot:None expr in
+        let (((_, c), _) as expr) = expression cx ~annot:class_annot expr in
         let (t, targs) = Anno.mk_super cx tparams_map loc c targs in
         (Explicit t, Some (loc, { Ast.Class.Extends.expr; targs; comments }))
     in
-    fun cx
+    fun ~class_annot
+        cx
         name_loc
         reason
         self
@@ -7682,7 +7692,7 @@ and mk_class_sig =
       let (tparams, tparams_map) = add_this self cx reason tparams tparams_map in
       let (class_sig, extends_ast, implements_ast) =
         let id = Context.make_aloc_id cx name_loc in
-        let (extends, extends_ast) = mk_extends cx tparams_map extends in
+        let (extends, extends_ast) = mk_extends ~class_annot cx tparams_map extends in
         let (implements, implements_ast) =
           match implements with
           | None -> ([], None)
@@ -7784,7 +7794,14 @@ and mk_class_sig =
               let reason =
                 Ast.Function.(func_reason ~async:func.async ~generator:func.generator loc)
               in
-              let (method_sig, reconstruct_func) = mk_method cx tparams_map reason func in
+              let (method_sig, reconstruct_func) =
+                mk_method
+                  ~method_annot:(annot_decompose_todo class_annot)
+                  cx
+                  tparams_map
+                  reason
+                  func
+              in
               (*  The body of a class method doesn't get checked until Class_sig.toplevels
           is called on the class sig (in this case c). The order of how the methods
           were arranged in the class is lost by the time this happens, so rather
@@ -7855,7 +7872,9 @@ and mk_class_sig =
               let reason = mk_reason (RProperty (Some name)) loc in
               let polarity = Anno.polarity variance in
               let (field, annot_t, annot_ast, get_value) =
-                mk_field cx tparams_map reason annot value
+                (* We could never find a private field in an annotation-- that's the point! So
+                 * we make field_annot None here *)
+                mk_field ~field_annot:None cx tparams_map reason annot value
               in
               let get_element () =
                 Body.PrivateField
@@ -7885,7 +7904,15 @@ and mk_class_sig =
               Type_inference_hooks_js.dispatch_class_member_decl_hook cx self static name id_loc;
               let reason = mk_reason (RProperty (Some name)) loc in
               let polarity = Anno.polarity variance in
-              let (field, annot_t, annot, get_value) = mk_field cx tparams_map reason annot value in
+              let (field, annot_t, annot, get_value) =
+                mk_field
+                  ~field_annot:(annot_decompose_todo class_annot)
+                  cx
+                  tparams_map
+                  reason
+                  annot
+                  value
+              in
               let get_element () =
                 Body.Property
                   ( (loc, annot_t),
