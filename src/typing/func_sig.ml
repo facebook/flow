@@ -352,7 +352,7 @@ module Make (F : Func_params.S) = struct
             let use_op = Frame (ImplicitTypeParam, use_op) in
             (use_op, t, None)
           | FieldInit e ->
-            let (((_, t), _) as ast) = expr cx e in
+            let (((_, t), _) as ast) = expr ?cond:None cx ~annot:None e in
             let body = mk_expression_reason e in
             let use_op = Op (InitField { op = reason_fn; body }) in
             (use_op, t, Some ast)

@@ -7600,7 +7600,7 @@ and mk_class cx class_loc ~name_loc ~general reason c =
              class_sig
              ~decls:toplevel_decls
              ~stmts:toplevels
-             ~expr:(expression ~annot:None)
+             ~expr:expression
              ~private_property_map;
 
          let class_body = Ast.Class.((snd c.body).Body.body) in
@@ -8197,7 +8197,7 @@ and function_decl id cx ~annot reason func this super =
             super
             ~decls:toplevel_decls
             ~stmts:toplevels
-            ~expr:(expression ~annot:None))
+            ~expr:expression)
   in
   ignore (Abnormal.swap_saved Abnormal.Return save_return);
   ignore (Abnormal.swap_saved Abnormal.Throw save_throw);
