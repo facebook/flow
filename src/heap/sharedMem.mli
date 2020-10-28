@@ -102,21 +102,17 @@ module type UserKeyType = sig
   val compare : t -> t -> int
 end
 
-module WithCache (UserKeyType : UserKeyType) (Value : Value) : sig
-  include
-    WithCache
-      with type key = UserKeyType.t
-       and type value = Value.t
-       and module KeySet = Set.Make(UserKeyType)
-end
+module WithCache (UserKeyType : UserKeyType) (Value : Value) :
+  WithCache
+    with type key = UserKeyType.t
+     and type value = Value.t
+     and module KeySet = Set.Make(UserKeyType)
 
-module NoCache (UserKeyType : UserKeyType) (Value : Value) : sig
-  include
-    NoCache
-      with type key = UserKeyType.t
-       and type value = Value.t
-       and module KeySet = Set.Make(UserKeyType)
-end
+module NoCache (UserKeyType : UserKeyType) (Value : Value) :
+  NoCache
+    with type key = UserKeyType.t
+     and type value = Value.t
+     and module KeySet = Set.Make(UserKeyType)
 
 val debug_value_size : Obj.t -> int
 

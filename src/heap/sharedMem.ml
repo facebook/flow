@@ -488,13 +488,11 @@ end
 (* A functor returning an implementation of the S module without caching. *)
 (*****************************************************************************)
 
-module NoCache (UserKeyType : UserKeyType) (Value : Value) : sig
-  include
-    NoCache
-      with type key = UserKeyType.t
-       and type value = Value.t
-       and module KeySet = Set.Make(UserKeyType)
-end = struct
+module NoCache (UserKeyType : UserKeyType) (Value : Value) :
+  NoCache
+    with type key = UserKeyType.t
+     and type value = Value.t
+     and module KeySet = Set.Make(UserKeyType) = struct
   module Key = KeyFunctor (UserKeyType)
   module New = New (Key) (Value)
   module Old = Old (Key) (Value)
@@ -762,13 +760,11 @@ end
  * much time. The caches keep a deserialized version of the types.
  *)
 (*****************************************************************************)
-module WithCache (UserKeyType : UserKeyType) (Value : Value) : sig
-  include
-    WithCache
-      with type key = UserKeyType.t
-       and type value = Value.t
-       and module KeySet = Set.Make(UserKeyType)
-end = struct
+module WithCache (UserKeyType : UserKeyType) (Value : Value) :
+  WithCache
+    with type key = UserKeyType.t
+     and type value = Value.t
+     and module KeySet = Set.Make(UserKeyType) = struct
   module Direct = NoCache (UserKeyType) (Value)
 
   type key = Direct.key
