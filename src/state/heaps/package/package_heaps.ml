@@ -97,5 +97,7 @@ module For_saved_state = struct
   exception Package_not_found of string
 
   let get_package_json_unsafe file =
-    (try PackageHeap.find_unsafe file with Not_found -> raise (Package_not_found file))
+    match PackageHeap.get file with
+    | Some package -> package
+    | None -> raise (Package_not_found file)
 end

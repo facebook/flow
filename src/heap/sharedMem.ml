@@ -324,7 +324,7 @@ module New (Key : Key) (Value : Value) : sig
 
   val mem : Key.t -> bool
 
-  val find_unsafe : Key.t -> Value.t
+  val get : Key.t -> Value.t option
 
   val remove : Key.t -> unit
 
@@ -347,11 +347,6 @@ end = struct
       Some (Raw.get key)
     else
       None
-
-  let find_unsafe key =
-    match get key with
-    | None -> raise Not_found
-    | Some x -> x
 
   let remove key =
     let key = Key.md5 key in
@@ -448,8 +443,6 @@ module type NoCache = sig
 
   val remove_old_batch : KeySet.t -> unit
 
-  val find_unsafe : key -> t
-
   val remove_batch : KeySet.t -> unit
 
   val mem : key -> bool
@@ -517,9 +510,7 @@ end = struct
 
   let add x y = New.add (Key.make Value.prefix x) y
 
-  let find_unsafe x = New.find_unsafe (Key.make Value.prefix x)
-
-  let get x = (try Some (find_unsafe x) with Not_found -> None)
+  let get x = New.get (Key.make Value.prefix x)
 
   let get_old x =
     let key = Key.make_old Value.prefix x in
@@ -848,11 +839,6 @@ end = struct
   let get_old = Direct.get_old
 
   let mem_old = Direct.mem_old
-
-  let find_unsafe x =
-    match get x with
-    | None -> raise Not_found
-    | Some x -> x
 
   let mem x =
     match get x with

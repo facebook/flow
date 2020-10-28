@@ -65,8 +65,6 @@ module type NoCache = sig
 
   val remove_old_batch : KeySet.t -> unit
 
-  val find_unsafe : key -> t
-
   val remove_batch : KeySet.t -> unit
 
   val mem : key -> bool
