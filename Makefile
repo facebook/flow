@@ -215,15 +215,20 @@ NATIVE_C_FILES=\
   $(INTERNAL_NATIVE_C_FILES)
 
 FINDLIB_PACKAGES=\
-  sedlex\
+  base\
+  bigarray\
+  dtoa\
+  lwt_ppx\
   lwt\
+  ppx_let\
+  sedlex\
+  str
+
+NATIVE_FINDLIB_PACKAGES=\
+  $(FINDLIB_PACKAGES)\
   lwt_log\
   lwt.unix\
-  lwt_ppx\
-  unix\
-  str\
-  bigarray\
-	ppx_let
+  unix
 
 NATIVE_LIBRARIES=\
   pthread\
@@ -235,9 +240,9 @@ COPIED_FLOWLIB=\
 COPIED_PRELUDE=\
 	$(foreach lib,$(wildcard prelude/*.js),_build/$(lib))
 
+FINDLIB_JS_STUBS=$(shell ocamlfind query $(FINDLIB_PACKAGES) -predicates javascript -o-format -r)
 JS_STUBS=\
-	+base/runtime.js\
-	+dtoa/dtoa_stubs.js\
+	$(FINDLIB_JS_STUBS)\
 	$(wildcard js/*.js)
 
 OUNIT_TESTS=\
@@ -274,7 +279,8 @@ CC_FLAGS=-mcx16
 CC_FLAGS += $(EXTRA_CC_FLAGS)
 CC_OPTS=$(foreach flag, $(CC_FLAGS), -ccopt $(flag))
 INCLUDE_OPTS=$(foreach dir,$(MODULES),-I $(dir))
-FINDLIB_OPTS=$(foreach lib,$(FINDLIB_PACKAGES),-pkg $(lib))
+JS_FINDLIB_OPTS=$(foreach lib,$(FINDLIB_PACKAGES),-pkg $(lib))
+NATIVE_FINDLIB_OPTS=$(foreach lib,$(NATIVE_FINDLIB_PACKAGES),-pkg $(lib))
 NATIVE_LIB_OPTS=$(foreach lib, $(NATIVE_LIBRARIES),-cclib -l -cclib $(lib))
 ALL_INCLUDE_PATHS=$(sort $(realpath $(BUILT_C_DIRS))) $(EXTRA_INCLUDE_PATHS)
 EXTRA_INCLUDE_OPTS=$(foreach dir, $(ALL_INCLUDE_PATHS),-ccopt -I -ccopt $(dir))
@@ -309,20 +315,20 @@ build-flow: _build/scripts/ppx_gen_flowlibs.exe $(BUILT_OBJECT_FILES) $(COPIED_F
 	# Both lwt and lwt_ppx provide ppx stuff. Fixed in lwt 4.0.0
 	# https://github.com/ocsigen/lwt/issues/453
 	export OCAMLFIND_IGNORE_DUPS_IN="$(shell ocamlfind query lwt)"; \
-	$(OCB) $(INTERNAL_FLAGS) $(INCLUDE_OPTS) -tag thread $(FINDLIB_OPTS) \
+	$(OCB) $(INTERNAL_FLAGS) $(INCLUDE_OPTS) -tag thread $(NATIVE_FINDLIB_OPTS) \
 		-lflags "$(LINKER_FLAGS)" \
 		$(RELEASE_TAGS) \
 		src/flow.native
 
 build-flow-debug: _build/scripts/ppx_gen_flowlibs.exe $(BUILT_OBJECT_FILES) $(COPIED_FLOWLIB) $(COPIED_PRELUDE) $(INTERNAL_BUILD_FLAGS)
-	$(OCB) $(INTERNAL_FLAGS) $(INCLUDE_OPTS) -tag thread $(FINDLIB_OPTS) \
+	$(OCB) $(INTERNAL_FLAGS) $(INCLUDE_OPTS) -tag thread $(NATIVE_FINDLIB_OPTS) \
 		-lflags -custom -lflags "$(LINKER_FLAGS)" \
 		src/flow.d.byte
 	mkdir -p bin
 	cp _build/src/flow.d.byte bin/flow$(EXE)
 
 testgen: build-flow
-	$(OCB) $(INTERNAL_FLAGS) $(INCLUDE_OPTS) -tag thread $(FINDLIB_OPTS) \
+	$(OCB) $(INTERNAL_FLAGS) $(INCLUDE_OPTS) -tag thread $(NATIVE_FINDLIB_OPTS) \
 	 	-lflags "$(LINKER_FLAGS)" \
 		$(RELEASE_TAGS) \
 		testgen/flowtestgen.native
@@ -378,7 +384,7 @@ bin/flow$(EXE): build-flow
 
 $(BUILT_OUNIT_TESTS): $(BUILT_OBJECT_FILES) FORCE
 	export OCAMLFIND_IGNORE_DUPS_IN="$(shell ocamlfind query lwt)"; \
-	$(OCB) $(INTERNAL_FLAGS) $(INCLUDE_OPTS) -tag thread $(FINDLIB_OPTS) \
+	$(OCB) $(INTERNAL_FLAGS) $(INCLUDE_OPTS) -tag thread $(NATIVE_FINDLIB_OPTS) \
 		-I $(patsubst _build/%,%,$(@D)) \
 		-lflags "$(LINKER_FLAGS)" \
 		$(patsubst _build/%,%,$@)
@@ -386,7 +392,7 @@ $(BUILT_OUNIT_TESTS): $(BUILT_OBJECT_FILES) FORCE
 .PHONY: build-ounit-tests
 build-ounit-tests: $(BUILT_OBJECT_FILES) FORCE
 	export OCAMLFIND_IGNORE_DUPS_IN="$(shell ocamlfind query lwt)"; \
-	$(OCB) $(INTERNAL_FLAGS) $(INCLUDE_OPTS) -tag thread $(FINDLIB_OPTS) \
+	$(OCB) $(INTERNAL_FLAGS) $(INCLUDE_OPTS) -tag thread $(NATIVE_FINDLIB_OPTS) \
 		$(foreach dir,$(dir $(OUNIT_TESTS)),-I $(dir)) \
 		-lflags "$(LINKER_FLAGS)" \
 		$(OUNIT_TESTS)
@@ -423,7 +429,7 @@ js: _build/scripts/ppx_gen_flowlibs.exe $(BUILT_OBJECT_FILES) $(COPIED_FLOWLIB)
 		-pkg js_of_ocaml \
 		-build-dir _build \
 		-lflags -custom \
-		$(INCLUDE_OPTS) $(FINDLIB_OPTS) \
+		$(INCLUDE_OPTS) $(JS_FINDLIB_OPTS) \
 		-lflags "$(BYTECODE_LINKER_FLAGS) -warn-error -31" \
 		src/flow_dot_js.byte
 	# js_of_ocaml has no ability to upgrade warnings to errors, but we want to
