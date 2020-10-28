@@ -429,15 +429,15 @@ end
 module type NoCache = sig
   type key
 
-  type t
+  type value
 
   module KeySet : Set.S with type elt = key
 
-  val add : key -> t -> unit
+  val add : key -> value -> unit
 
-  val get : key -> t option
+  val get : key -> value option
 
-  val get_old : key -> t option
+  val get_old : key -> value option
 
   val remove_old_batch : KeySet.t -> unit
 
@@ -477,9 +477,9 @@ end
 module type WithCache = sig
   include NoCache
 
-  val write_around : key -> t -> unit
+  val write_around : key -> value -> unit
 
-  val get_no_cache : key -> t option
+  val get_no_cache : key -> value option
 
   module DebugCache : DebugLocalCache
 end
@@ -492,7 +492,7 @@ module NoCache (UserKeyType : UserKeyType) (Value : Value) : sig
   include
     NoCache
       with type key = UserKeyType.t
-       and type t = Value.t
+       and type value = Value.t
        and module KeySet = Set.Make(UserKeyType)
 end = struct
   module Key = KeyFunctor (UserKeyType)
@@ -502,7 +502,7 @@ end = struct
 
   type key = UserKeyType.t
 
-  type t = Value.t
+  type value = Value.t
 
   let add x y = New.add (Key.make Value.prefix x) y
 
@@ -766,14 +766,14 @@ module WithCache (UserKeyType : UserKeyType) (Value : Value) : sig
   include
     WithCache
       with type key = UserKeyType.t
-       and type t = Value.t
+       and type value = Value.t
        and module KeySet = Set.Make(UserKeyType)
 end = struct
   module Direct = NoCache (UserKeyType) (Value)
 
   type key = Direct.key
 
-  type t = Direct.t
+  type value = Direct.value
 
   module KeySet = Direct.KeySet
   module Cache = LocalCache (UserKeyType) (Value)

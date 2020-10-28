@@ -35,7 +35,7 @@ let expect_equals ~name value expected =
     (value = expected)
 
 let test_cache_behavior
-    (module IntHeap : SharedMem.WithCache with type t = int and type key = string) () =
+    (module IntHeap : SharedMem.WithCache with type key = string and type value = int) () =
   let expect_cache_size expected_l1 expected_l2 =
     let actual_l1 = IntHeap.DebugCache.DebugL1.get_size () in
     expect
