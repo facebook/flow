@@ -433,8 +433,6 @@ module type NoCache = sig
 
   module KeySet : Set.S with type elt = key
 
-  module KeyMap : WrappedMap.S with type key = key
-
   val add : key -> t -> unit
 
   val get : key -> t option
@@ -496,13 +494,11 @@ module NoCache (UserKeyType : UserKeyType) (Value : Value) : sig
       with type key = UserKeyType.t
        and type t = Value.t
        and module KeySet = Set.Make(UserKeyType)
-       and module KeyMap = WrappedMap.Make(UserKeyType)
 end = struct
   module Key = KeyFunctor (UserKeyType)
   module New = New (Key) (Value)
   module Old = Old (Key) (Value)
   module KeySet = Set.Make (UserKeyType)
-  module KeyMap = WrappedMap.Make (UserKeyType)
 
   type key = UserKeyType.t
 
@@ -779,7 +775,6 @@ module WithCache (UserKeyType : UserKeyType) (Value : Value) : sig
       with type key = UserKeyType.t
        and type t = Value.t
        and module KeySet = Set.Make(UserKeyType)
-       and module KeyMap = WrappedMap.Make(UserKeyType)
 end = struct
   module Direct = NoCache (UserKeyType) (Value)
 
@@ -788,7 +783,6 @@ end = struct
   type t = Direct.t
 
   module KeySet = Direct.KeySet
-  module KeyMap = Direct.KeyMap
   module Cache = LocalCache (UserKeyType) (Value)
 
   (* This is exposed for tests *)
