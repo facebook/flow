@@ -8209,7 +8209,6 @@ and mk_func_sig =
    and return type, check the body against that signature by adding `this`
    and super` to the environment, and return the signature. *)
 and function_decl id cx ~annot reason func this super =
-  (*let return_annot = mk_return_annot ~annot ~return_annot:func.Ast.Function.return in*)
   let (func_sig, reconstruct_func) = mk_func_sig cx ~annot SMap.empty reason func in
   let save_return = Abnormal.clear_saved Abnormal.Return in
   let save_throw = Abnormal.clear_saved Abnormal.Throw in
