@@ -40,30 +40,6 @@ val init : config -> num_workers:int -> handle
 
 val init_done : unit -> unit
 
-module type Key = sig
-  type userkey
-
-  type t
-
-  type old
-
-  type md5
-
-  val make : Prefix.t -> userkey -> t
-
-  val make_old : Prefix.t -> userkey -> old
-
-  val to_old : t -> old
-
-  val new_from_old : old -> t
-
-  val md5 : t -> md5
-
-  val md5_old : old -> md5
-
-  val string_of_md5 : md5 -> string
-end
-
 module type Value = sig
   type t
 
