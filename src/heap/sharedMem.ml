@@ -326,8 +326,6 @@ module New (Key : Key) (Value : Value) : sig
 
   val find_unsafe : Key.t -> Value.t
 
-  val get : Key.t -> Value.t option
-
   val remove : Key.t -> unit
 
   (* Binds the key to the old one.
@@ -448,17 +446,11 @@ module type NoCache = sig
 
   val get_old : key -> t option
 
-  val get_old_batch : KeySet.t -> t option KeyMap.t
-
   val remove_old_batch : KeySet.t -> unit
 
   val find_unsafe : key -> t
 
-  val get_batch : KeySet.t -> t option KeyMap.t
-
   val remove_batch : KeySet.t -> unit
-
-  val string_of_key : key -> string
 
   val mem : key -> bool
 
@@ -523,8 +515,6 @@ end = struct
 
   type t = Value.t
 
-  let string_of_key key = key |> Key.make Value.prefix |> Key.md5 |> Key.string_of_md5
-
   let add x y = New.add (Key.make Value.prefix x) y
 
   let find_unsafe x = New.find_unsafe (Key.make Value.prefix x)
@@ -534,16 +524,6 @@ end = struct
   let get_old x =
     let key = Key.make_old Value.prefix x in
     Old.get key
-
-  let get_old_batch xs =
-    KeySet.fold
-      begin
-        fun str_key acc ->
-        let key = Key.make_old Value.prefix str_key in
-        KeyMap.add str_key (Old.get key) acc
-      end
-      xs
-      KeyMap.empty
 
   let remove_batch xs =
     KeySet.iter
@@ -579,18 +559,6 @@ end = struct
           New.remove key
       end
       xs
-
-  let get_batch xs =
-    KeySet.fold
-      begin
-        fun str_key acc ->
-        let key = Key.make Value.prefix str_key in
-        match New.get key with
-        | None -> KeyMap.add str_key None acc
-        | Some data -> KeyMap.add str_key (Some data) acc
-      end
-      xs
-      KeyMap.empty
 
   let mem x = New.mem (Key.make Value.prefix x)
 
@@ -835,8 +803,6 @@ end = struct
   (* This is exposed for tests *)
   module DebugCache = Cache
 
-  let string_of_key key = Direct.string_of_key key
-
   let add x y =
     Direct.add x y;
     Cache.add x y
@@ -881,8 +847,6 @@ end = struct
   (* We don't cache old objects, they are not accessed often enough. *)
   let get_old = Direct.get_old
 
-  let get_old_batch = Direct.get_old_batch
-
   let mem_old = Direct.mem_old
 
   let find_unsafe x =
@@ -894,15 +858,6 @@ end = struct
     match get x with
     | None -> false
     | Some _ -> true
-
-  let get_batch keys =
-    KeySet.fold
-      begin
-        fun key acc ->
-        KeyMap.add key (get key) acc
-      end
-      keys
-      KeyMap.empty
 
   let oldify_batch keys =
     Direct.oldify_batch keys;
