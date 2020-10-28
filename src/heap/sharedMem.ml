@@ -562,11 +562,12 @@ end = struct
 end
 
 (*****************************************************************************)
-(* All the cache are configured by a module of type ConfigType *)
+(* All the cache are configured by a module of type CacheConfig *)
 (*****************************************************************************)
 
-module type ConfigType = sig
-  (* The type of object we want to keep in cache *)
+module type CacheConfig = sig
+  type key
+
   type value
 
   (* The capacity of the cache *)
@@ -577,14 +578,10 @@ end
 (* Cache keeping the objects the most frequently used. *)
 (*****************************************************************************)
 
-module FreqCache (Key : sig
-  type t
-end)
-(Config : ConfigType) : CacheType with type key := Key.t and type value := Config.value = struct
-  type value = Config.value
-
+module FreqCache (Config : CacheConfig) :
+  CacheType with type key := Config.key and type value := Config.value = struct
   (* The cache itself *)
-  let (cache : (Key.t, int ref * value) Hashtbl.t) = Hashtbl.create (2 * Config.capacity)
+  let (cache : (Config.key, int ref * Config.value) Hashtbl.t) = Hashtbl.create (2 * Config.capacity)
 
   let size = ref 0
 
@@ -656,11 +653,9 @@ end
 (* An ordered cache keeps the most recently used objects *)
 (*****************************************************************************)
 
-module OrderedCache (Key : sig
-  type t
-end)
-(Config : ConfigType) : CacheType with type key := Key.t and type value := Config.value = struct
-  let (cache : (Key.t, Config.value) Hashtbl.t) = Hashtbl.create Config.capacity
+module OrderedCache (Config : CacheConfig) :
+  CacheType with type key := Config.key and type value := Config.value = struct
+  let (cache : (Config.key, Config.value) Hashtbl.t) = Hashtbl.create Config.capacity
 
   let queue = Queue.create ()
 
@@ -708,22 +703,20 @@ end
 let invalidate_callback_list = ref []
 
 module LocalCache (UserKeyType : UserKeyType) (Value : Value) :
-  LocalCache with type key = UserKeyType.t and type value = Value.t = struct
-  type key = UserKeyType.t
+  LocalCache with type key := UserKeyType.t and type value := Value.t = struct
+  module Config = struct
+    type key = UserKeyType.t
 
-  type value = Value.t
-
-  module ConfValue = struct
     type value = Value.t
 
     let capacity = 1000
   end
 
   (* Young values cache *)
-  module L1 = OrderedCache (UserKeyType) (ConfValue)
+  module L1 = OrderedCache (Config)
 
   (* Frequent values cache *)
-  module L2 = FreqCache (UserKeyType) (ConfValue)
+  module L2 = FreqCache (Config)
 
   (* These are exposed only for tests *)
   module DebugL1 = L1
