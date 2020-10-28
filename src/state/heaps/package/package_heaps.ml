@@ -16,8 +16,6 @@ module PackageHeap =
     (struct
       type t = (Package_json.t, unit) result
 
-      let prefix = Prefix.make ()
-
       let description = "Package"
     end)
 
@@ -27,8 +25,6 @@ module ReversePackageHeap =
     (StringKey)
     (struct
       type t = string
-
-      let prefix = Prefix.make ()
 
       let description = "ReversePackage"
     end)

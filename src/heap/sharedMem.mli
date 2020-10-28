@@ -43,8 +43,6 @@ val init_done : unit -> unit
 module type Value = sig
   type t
 
-  val prefix : Prefix.t
-
   val description : string
 end
 

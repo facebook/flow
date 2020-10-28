@@ -15,8 +15,6 @@ module ASTHeap =
     (struct
       type t = (RelativeLoc.t, RelativeLoc.t) Flow_ast.Program.t
 
-      let prefix = Prefix.make ()
-
       let description = "AST"
     end)
 
@@ -26,8 +24,6 @@ module SigASTHeap =
     (struct
       type t = (ALoc.t, ALoc.t) Flow_ast.Program.t
 
-      let prefix = Prefix.make ()
-
       let description = "SigAST"
     end)
 
@@ -36,8 +32,6 @@ module SigASTALocTableHeap =
     (File_key)
     (struct
       type t = ALoc.table
-
-      let prefix = Prefix.make ()
 
       let description = "ALocTable"
     end)
@@ -56,8 +50,6 @@ module TypeSigHeap =
     (File_key)
     (struct
       type t = Type_sig_collections.Locs.index type_sig
-
-      let prefix = Prefix.make ()
 
       let description = "TypeSig"
     end)
@@ -122,8 +114,6 @@ module DocblockHeap =
     (struct
       type t = Docblock.t
 
-      let prefix = Prefix.make ()
-
       let description = "Docblock"
     end)
 
@@ -133,8 +123,6 @@ module FileSigHeap =
     (struct
       type t = File_sig.With_Loc.t
 
-      let prefix = Prefix.make ()
-
       let description = "Requires"
     end)
 
@@ -143,8 +131,6 @@ module SigFileSigHeap =
     (File_key)
     (struct
       type t = File_sig.With_ALoc.t
-
-      let prefix = Prefix.make ()
 
       let description = "SigRequires"
     end)
@@ -172,8 +158,6 @@ module FileHashHeap =
        * merge file foo.js, even if we parsed it at version N+1 & it's unchanged since version N+1.
        *)
       type t = Xx.hash
-
-      let prefix = Prefix.make ()
 
       let description = "FileHash"
     end)

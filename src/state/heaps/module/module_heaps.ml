@@ -14,8 +14,6 @@ module NameHeap =
     (struct
       type t = File_key.t
 
-      let prefix = Prefix.make ()
-
       let description = "Name"
     end)
 
@@ -60,8 +58,6 @@ module ResolvedRequiresHeap =
     (struct
       type t = resolved_requires
 
-      let prefix = Prefix.make ()
-
       let description = "ResolvedRequires"
     end)
 
@@ -82,8 +78,6 @@ module InfoHeap =
     (File_key)
     (struct
       type t = info
-
-      let prefix = Prefix.make ()
 
       let description = "Info"
     end)

@@ -161,9 +161,9 @@ module type Key = sig
   type md5
 
   (* Creation/conversion primitives *)
-  val make : Prefix.t -> userkey -> t
+  val make : userkey -> t
 
-  val make_old : Prefix.t -> userkey -> old
+  val make_old : userkey -> old
 
   val to_old : t -> old
 
@@ -179,8 +179,6 @@ end
 
 module type Value = sig
   type t
-
-  val prefix : Prefix.t
 
   val description : string
 end
@@ -206,15 +204,17 @@ module KeyFunctor (UserKeyType : UserKeyType) : Key with type userkey = UserKeyT
 
   type md5 = string
 
+  let prefix = Prefix.make ()
+
   (* The prefix we use for old keys. The prefix guarantees that we never
    * mix old and new data, because a key can never start with the prefix
    * "old_", it always starts with a number (cf Prefix.make()).
    *)
   let old_prefix = "old_"
 
-  let make prefix x = Prefix.make_key prefix (UserKeyType.to_string x)
+  let make x = Prefix.make_key prefix (UserKeyType.to_string x)
 
-  let make_old prefix x = old_prefix ^ Prefix.make_key prefix (UserKeyType.to_string x)
+  let make_old x = old_prefix ^ Prefix.make_key prefix (UserKeyType.to_string x)
 
   let to_old x = old_prefix ^ x
 
@@ -502,19 +502,19 @@ module NoCache (UserKeyType : UserKeyType) (Value : Value) :
 
   type value = Value.t
 
-  let add x y = New.add (Key.make Value.prefix x) y
+  let add x y = New.add (Key.make x) y
 
-  let get x = New.get (Key.make Value.prefix x)
+  let get x = New.get (Key.make x)
 
   let get_old x =
-    let key = Key.make_old Value.prefix x in
+    let key = Key.make_old x in
     Old.get key
 
   let remove_batch xs =
     KeySet.iter
       begin
         fun str_key ->
-        let key = Key.make Value.prefix str_key in
+        let key = Key.make str_key in
         New.remove key
       end
       xs
@@ -523,11 +523,11 @@ module NoCache (UserKeyType : UserKeyType) (Value : Value) :
     KeySet.iter
       begin
         fun str_key ->
-        let key = Key.make Value.prefix str_key in
+        let key = Key.make str_key in
         if New.mem key then
           New.oldify key
         else
-          let key = Key.make_old Value.prefix str_key in
+          let key = Key.make_old str_key in
           Old.remove key
       end
       xs
@@ -536,24 +536,24 @@ module NoCache (UserKeyType : UserKeyType) (Value : Value) :
     KeySet.iter
       begin
         fun str_key ->
-        let old_key = Key.make_old Value.prefix str_key in
+        let old_key = Key.make_old str_key in
         if Old.mem old_key then
           Old.revive old_key
         else
-          let key = Key.make Value.prefix str_key in
+          let key = Key.make str_key in
           New.remove key
       end
       xs
 
-  let mem x = New.mem (Key.make Value.prefix x)
+  let mem x = New.mem (Key.make x)
 
-  let mem_old x = Old.mem (Key.make_old Value.prefix x)
+  let mem_old x = Old.mem (Key.make_old x)
 
   let remove_old_batch xs =
     KeySet.iter
       begin
         fun str_key ->
-        let key = Key.make_old Value.prefix str_key in
+        let key = Key.make_old str_key in
         Old.remove key
       end
       xs

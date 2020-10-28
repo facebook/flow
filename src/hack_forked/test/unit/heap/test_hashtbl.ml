@@ -11,8 +11,6 @@ module TestHeap =
     (struct
       type t = string
 
-      let prefix = Prefix.make ()
-
       let description = "test"
     end)
 
