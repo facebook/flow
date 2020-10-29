@@ -70,7 +70,7 @@ executors:
     working_directory: ~/flow
   mac:
     macos:
-      xcode: "9.0"
+      xcode: "9.4.1"
     environment:
       <<: *opam_env
       OPAM_VERSION: 2.0.5
