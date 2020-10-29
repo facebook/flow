@@ -68,7 +68,7 @@ module Make (F : Func_params.S) = struct
   let subst cx map x =
     let { tparams; tparams_map; fparams; return_t; _ } = x in
     (* Remove shadowed type params from `map`, but allow bounds/defaults to be
-     substituted if they refer to a type param before it is shadowed. *)
+       substituted if they refer to a type param before it is shadowed. *)
     let tparams =
       tparams
       |> TypeParams.map (fun tp ->
@@ -285,7 +285,7 @@ module Make (F : Func_params.S) = struct
     in
     (* NOTE: Predicate functions can currently only be of the form:
        function f(...) { return <exp>; }
-  *)
+    *)
     Ast.Statement.(
       match kind with
       | Predicate ->
@@ -381,11 +381,11 @@ module Make (F : Func_params.S) = struct
     Env.update_env cx loc env;
 
     (*  return a tuple of (function body AST option, field initializer AST option).
-      - the function body option is Some _ if the func sig's body was Some, and
-        None if the func sig's body was None.
-      - the field initializer is Some expr' if the func sig's kind was FieldInit expr,
-        where expr' is the typed AST translation of expr.
-  *)
+       - the function body option is Some _ if the func sig's body was Some, and
+         None if the func sig's body was None.
+       - the field initializer is Some expr' if the func sig's kind was FieldInit expr,
+         where expr' is the typed AST translation of expr.
+    *)
     (params_ast, body_ast, init_ast)
 
   let to_ctor_sig f = { f with kind = Ctor }

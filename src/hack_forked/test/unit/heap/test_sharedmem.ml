@@ -73,8 +73,8 @@ let test_cache_behavior
   done
 
 (* Cannot test beyond this point. The LFU cache collection, that
-     occurred when the index hit 2000, deleted half of the keys at
-     random; we don't know which ones specifically. *)
+   occurred when the index hit 2000, deleted half of the keys at
+   random; we don't know which ones specifically. *)
 
 module TestWithCache = SharedMem.WithCache (StringKey) (IntVal)
 

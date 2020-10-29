@@ -210,19 +210,19 @@ let rec convert cx tparams_map =
       | [t] -> t
       | t0 :: t1 :: ts ->
         (* If a tuple should be viewed as an array, what would the element type of
-       the array be?
+           the array be?
 
-       Using a union here seems appealing but is wrong: setting elements
-       through arbitrary indices at the union type would be unsound, since it
-       might violate the projected types of the tuple at their corresponding
-       positions. This also shows why `mixed` doesn't work, either.
+           Using a union here seems appealing but is wrong: setting elements
+           through arbitrary indices at the union type would be unsound, since it
+           might violate the projected types of the tuple at their corresponding
+           positions. This also shows why `mixed` doesn't work, either.
 
-       On the other hand, using the empty type would prevent writes, but admit
-       unsound reads.
+           On the other hand, using the empty type would prevent writes, but admit
+           unsound reads.
 
-       The correct solution is to safely case a tuple type to a covariant
-       array interface whose element type would be a union.
-    *)
+           The correct solution is to safely case a tuple type to a covariant
+           array interface whose element type would be a union.
+        *)
         UnionT (element_reason, UnionRep.make t0 t1 ts)
     in
     ( (loc, DefT (reason, infer_trust cx, ArrT (TupleAT (elemt, tuple_types)))),
@@ -460,7 +460,7 @@ let rec convert cx tparams_map =
                 targs
             | _ -> error_type cx loc (Error_message.EPropertyTypeAnnot loc) t_ast)
       (* $ElementType<T, string> acts as the type of the string elements in object
-     type T *)
+         type T *)
       | "$ElementType" ->
         check_type_arg_arity cx loc t_ast targs 2 (fun () ->
             match convert_type_params () with
@@ -672,9 +672,9 @@ let rec convert cx tparams_map =
       | "this" ->
         if SMap.mem "this" tparams_map then
           (* We model a this type like a type parameter. The bound on a this
-         type reflects the interface of `this` exposed in the current
-         environment. Currently, we only support this types in a class
-         environment: a this type in class C is bounded by C. *)
+             type reflects the interface of `this` exposed in the current
+             environment. Currently, we only support this types in a class
+             environment: a this type in class C is bounded by C. *)
           check_type_arg_arity cx loc t_ast targs 0 (fun () ->
               reconstruct_ast
                 (Flow.reposition cx loc ~annot_loc:loc (SMap.find "this" tparams_map))
@@ -847,7 +847,7 @@ let rec convert cx tparams_map =
        * var x: $FlowFixMe<number> = 123;
        *)
       (* TODO move these to type aliases once optional type args
-     work properly in type aliases: #7007731 *)
+         work properly in type aliases: #7007731 *)
       | type_name when is_suppress_type cx type_name ->
         (* Optional type params are info-only, validated then forgotten. *)
         let (_, targs) = convert_type_params () in
@@ -1097,8 +1097,8 @@ let rec convert cx tparams_map =
     add_deprecated_type_error_if_not_lib_file cx loc;
 
     (* Do not evaluate existential type variables when map is non-empty. This
-     ensures that existential type variables under a polymorphic type remain
-     unevaluated until the polymorphic type is applied. *)
+       ensures that existential type variables under a polymorphic type remain
+       unevaluated until the polymorphic type is applied. *)
     let force = SMap.is_empty tparams_map in
     let reason = derivable_reason (mk_annot_reason RExistential loc) in
     if force then
@@ -1641,7 +1641,7 @@ and mk_return_type_annotation cx tparams_map reason ~definitely_returns_void ann
     let t = VoidT.why reason |> with_trust literal_trust in
     (t, T.Missing (loc, t))
   (* TODO we could probably take the same shortcut for functions with an explicit `void` annotation
-  and no explicit returns *)
+     and no explicit returns *)
   | _ -> mk_type_annotation cx tparams_map reason annot
 
 and mk_type_available_annotation cx tparams_map (loc, annot) =

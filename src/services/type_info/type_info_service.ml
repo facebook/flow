@@ -52,7 +52,7 @@ let type_at_pos
         (mk_data "FAILURE_UNPARSEABLE" loc json, loc, None)
       | Success (loc, ty) ->
         (* TODO use Ty_debug.json_of_t after making it faster using
-             count_calls *)
+           count_calls *)
         let exact_by_default = Context.exact_by_default cx in
         let json = Hh_json.JSON_String (Ty_printer.string_of_elt ~exact_by_default ty) in
         (mk_data "SUCCESS" loc json, loc, Some ty))
@@ -78,8 +78,8 @@ let coverage ~cx ~typed_ast ~force ~trust file content =
       true
     else
       (* We can't just use the docblock that type_contents returns because type_contents modifies
-      * it and we want the original docblock. Fortunately this is a pure function, and pretty fast,
-      * so recomputing it isn't a problem. *)
+       * it and we want the original docblock. Fortunately this is a pure function, and pretty fast,
+       * so recomputing it isn't a problem. *)
       let (_, docblock) = Parsing_service_js.(parse_docblock docblock_max_tokens file content) in
       Docblock.is_flow docblock
   in

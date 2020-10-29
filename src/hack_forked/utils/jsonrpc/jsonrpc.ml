@@ -198,7 +198,7 @@ let internal_run_daemon (_dummy_param : unit) (_ic, (oc : queue_message Daemon.o
        |> ignore
      with _ ->
        (* There may be a broken pipe, for example. We should just give up on
-         reporting the error. *)
+          reporting the error. *)
        ())
 
 let internal_entry_point : (unit, unit, queue_message) Daemon.entry =
@@ -213,8 +213,8 @@ let make_queue () : queue =
     Daemon.spawn
       ~channel_mode:`pipe
       (* We don't technically need to inherit stdout or stderr, but this might be
-       useful in the event that we throw an unexpected exception in the daemon.
-       It's also useful for print-statement debugging of the daemon. *)
+         useful in the event that we throw an unexpected exception in the daemon.
+         It's also useful for print-statement debugging of the daemon. *)
       (Unix.stdin, Unix.stdout, Unix.stderr)
       internal_entry_point
       ()
@@ -251,9 +251,9 @@ let rec read_messages_into_queue_no_wait (message_queue : queue) : unit Lwt.t =
          to make sure that there's something there. *)
         let%lwt message = read_single_message_into_queue_wait message_queue in
         (* Now read any more messages that might be queued up. Only try to read more
-         messages if the daemon is still available to read from. Otherwise, we may
-         infinite loop as a result of `Unix.select` returning that a file
-         descriptor is available to read on. *)
+           messages if the daemon is still available to read from. Otherwise, we may
+           infinite loop as a result of `Unix.select` returning that a file
+           descriptor is available to read on. *)
         match message with
         | Fatal_exception _ -> Lwt.return_unit
         | _ ->

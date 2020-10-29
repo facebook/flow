@@ -9,7 +9,7 @@
    params are functions to save errors and suppressions:
    circular deps in Ocaml prevent direct calls from here
    to Types_js, where error management stuff lives.
- *)
+*)
 val init :
   options:Options.t ->
   reader:Mutator_state_reader.t ->

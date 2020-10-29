@@ -30,7 +30,7 @@ type generic = {
    definition and name, followed by `X`'s ID.
 
    In the comments of this module, I write such complex ids like "Y:X".
-   *)
+*)
 
 type bound = {
   generic: generic;
@@ -199,7 +199,7 @@ type sat_result =
 
    The rules below show examples of what scenario triggers them.
 
-    *)
+*)
 
 let rec satisfies ~printer id1 id2 =
   let opt_satisfies o1 o2 =
@@ -249,7 +249,7 @@ let rec satisfies ~printer id1 id2 =
       function f<X: {}>(x: X): {...X} {
         return x; // ok
       }
-   *)
+  *)
   | (Bound bound1, Spread (bound2, [])) -> bound_satisfies bound1 bound2
   (* A 'bound' generic only represents one bound, so it can't
      satisfy a spread of more than one generic on its own. We can see if it's bounded by a
@@ -258,7 +258,7 @@ let rec satisfies ~printer id1 id2 =
       function f<X: {}, Y: {}, Z: {...X, ...Y}>(z: Z): {...X, ...Y} {
         return z; // ok
       }
-      *)
+  *)
   | (Bound { generic = _; super = Some id1 }, Spread _) -> satisfies ~printer id1 id2
   (* As above, but if it's not bounded by a spread, we can't do
      anything but strip off the generic from the lower type.
@@ -266,7 +266,7 @@ let rec satisfies ~printer id1 id2 =
       function f<X: {}, Y: {}>(y: Y): {...X, ...Y} {
         return y; // should error
       }
-     *)
+  *)
   | (Bound { generic = _; super = None }, Spread _) ->
     printer
       (lazy ["Generics unsatisfied: single bound cannot satisfy spread with multiple elements"]);
@@ -305,7 +305,7 @@ let rec satisfies ~printer id1 id2 =
       ({...x, ...y}: {...Y, ...X, ...Y}); // yup
       ({...x, ...y}: {...X, ...Z, ...Y}); // nope
     }
-      *)
+  *)
   | (Spread s1, Spread s2) ->
     let s1 = Nel.to_list s1 in
     let s2 = Nel.to_list s2 in

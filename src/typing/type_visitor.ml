@@ -85,15 +85,15 @@ class ['a] t =
         let acc = self#type_ cx P.Positive acc t in
         let acc = self#type_ cx pole acc this in
         (* If we knew what `t` resolved to, we could determine the polarities for
-       `ts`, but in general `t` might be unresolved. Subclasses which have more
-       information should override this to be more specific. *)
+           `ts`, but in general `t` might be unresolved. Subclasses which have more
+           information should override this to be more specific. *)
         let acc = self#opt (self#list (self#type_ cx pole_TODO)) acc ts_opt in
         acc
       | TypeAppT (_, _, t, ts) ->
         let acc = self#type_ cx P.Positive acc t in
         (* If we knew what `t` resolved to, we could determine the polarities for
-       `ts`, but in general `t` might be unresolved. Subclasses which have more
-       information should override this to be more specific. *)
+           `ts`, but in general `t` might be unresolved. Subclasses which have more
+           information should override this to be more specific. *)
         let acc = self#list (self#type_ cx pole_TODO) acc ts in
         acc
       | ReposT (_, t)
@@ -657,7 +657,7 @@ class ['a] t =
     method private tout cx pole acc (r, id) = self#tvar cx pole acc r id
 
     (* The default behavior here could be fleshed out a bit, to look up the graph,
-     handle Resolved and Unresolved cases, etc. *)
+       handle Resolved and Unresolved cases, etc. *)
     method tvar _cx _pole acc _r _id = acc
 
     method dict_type cx pole acc d =

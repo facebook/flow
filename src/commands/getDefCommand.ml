@@ -56,7 +56,7 @@ let parse_args path args =
    - strip_root toggles whether output positions are relativized w.r.t. root
    - path is a user-specified path to use as incoming content source path
    - args is mandatory command args; see parse_args above
- *)
+*)
 let main base_flags option_values json pretty root strip_root path wait_for_recheck args () =
   let (file, line, column) = parse_args path args in
   let flowconfig_name = base_flags.Base_flags.flowconfig_name in

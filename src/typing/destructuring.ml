@@ -134,8 +134,8 @@ let object_named_property ~has_default cx acc loc x comments =
     | Some t -> (None, t)
     | None ->
       (* use the same reason for the prop name and the lookup.
-       given `var {foo} = ...`, `foo` is both. compare to `a.foo`
-       where `foo` is the name and `a.foo` is the lookup. *)
+         given `var {foo} = ...`, `foo` is both. compare to `a.foo`
+         where `foo` is the name and `a.foo` is the lookup. *)
       (Some current, destruct cx reason ~annot (Prop (x, has_default)) current)
   in
   let () =

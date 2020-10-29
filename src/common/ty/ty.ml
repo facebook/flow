@@ -367,7 +367,7 @@ class ['A] comparator_ty =
 
     (* This class must override all fail_* methods on variant types to be correct. *)
     (* The following methods are ordered respectively with the
-     definitions in this file to make it easier to check *)
+       definitions in this file to make it easier to check *)
     method! private fail_t env x y = fail_gen this#tag_of_t env x y
 
     method! private fail_any_kind env x y = fail_gen this#tag_of_any_kind env x y

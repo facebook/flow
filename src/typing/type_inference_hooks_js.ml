@@ -65,8 +65,8 @@ type hook_state_t = {
   lval_hook: Context.t -> string -> ALoc.t -> def -> unit;
   member_hook: Context.t -> string -> ALoc.t -> Type.t -> bool;
   (* TODO: This is inconsistent with the way the id/member hooks work, but we
-         currently don't need a way to override call types, so it simplifies
-         things a bit *)
+     currently don't need a way to override call types, so it simplifies
+     things a bit *)
   call_hook: Context.t -> string -> ALoc.t -> Type.t -> unit;
   jsx_hook: Context.t -> string -> ALoc.t -> Type.t -> bool;
   class_member_decl_hook:

@@ -972,8 +972,8 @@ let rec make_error_printable (error : Loc.t t) : Loc.t Errors.printable_error =
       | IncompatibleGetStaticsT -> nope "is not an instance type"
       | IncompatibleBindT -> nope "is not a function type"
       (* unreachable or unclassified use-types. until we have a mechanical way
-       to verify that all legit use types are listed above, we can't afford
-       to throw on a use type, so mark the error instead *)
+         to verify that all legit use types are listed above, we can't afford
+         to throw on a use type, so mark the error instead *)
       | IncompatibleUnclassified ctor -> nope (spf "is not supported by unclassified use %s" ctor)
     in
     (* When an object property has a polarity that is incompatible with another

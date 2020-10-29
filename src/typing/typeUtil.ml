@@ -170,8 +170,8 @@ and reason_of_use_t = function
 let reason_of_t_add_id = reason_of_t
 
 (* function
-| OpenT (r, id) -> prefix_reason (spf "%d: " id) r
-| t -> reason_of_t t *)
+   | OpenT (r, id) -> prefix_reason (spf "%d: " id) r
+   | t -> reason_of_t t *)
 let reason_of_use_t_add_id = reason_of_use_t
 
 let desc_of_t = reason_of_t %> desc_of_reason

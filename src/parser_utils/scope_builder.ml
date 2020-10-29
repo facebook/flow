@@ -337,7 +337,7 @@ module Make (L : Loc_sig.S) (Api : Scope_api_sig.S with module L = L) :
         expr
 
       (* Almost the same as function_declaration, except that the name of the
-       function expression is locally in scope. *)
+         function expression is locally in scope. *)
       method! function_ loc (expr : (L.t, L.t) Ast.Function.t) =
         let contains_with_or_eval =
           let visit = new with_or_eval_visitor in

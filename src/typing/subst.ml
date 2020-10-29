@@ -38,9 +38,9 @@ let substituter =
         if props_map == props_map' then
           id
         (* When substitution results in a new property map, we have to use a
-         generated id, rather than a location from source. The substituted
-         object will have the same location as the generic version, meaning
-         that this location will not serve as a unique identifier. *)
+           generated id, rather than a location from source. The substituted
+           object will have the same location as the generic version, meaning
+           that this location will not serve as a unique identifier. *)
         else
           Context.generate_property_map cx props_map'
       in

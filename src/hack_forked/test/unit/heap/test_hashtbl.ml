@@ -247,8 +247,8 @@ let test_gc_aggressive () =
   expect_heap_size 2;
 
   (* Since latest heap size is zero,
-      now it should gc, but theres nothing to gc,
-      so the heap will stay the same *)
+     now it should gc, but theres nothing to gc,
+     so the heap will stay the same *)
   expect_gentle_collect false;
   SharedMem.collect `gentle;
   expect_heap_size 2;

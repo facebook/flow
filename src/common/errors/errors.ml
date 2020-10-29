@@ -1072,7 +1072,7 @@ module Cli_output = struct
     color: Tty.color_mode;
     include_warnings: bool;
     (* This has to do with the exit code, which is not controlled by this module, but it's
-    convenient to keep the flags about errors co-located *)
+       convenient to keep the flags about errors co-located *)
     max_warnings: int option;
     one_line: bool;
     show_all_errors: bool;
@@ -2345,9 +2345,9 @@ module Cli_output = struct
                 else
                   let first_line_len = String.length (Nel.hd line_list) in
                   (* In some cases, we create a location that starts at or after the
-               end of a line. This probably shouldn't happen, but if it does, we
-               can still create an overline with a carat pointing to that column
-               position. *)
+                     end of a line. This probably shouldn't happen, but if it does, we
+                     can still create an overline with a carat pointing to that column
+                     position. *)
                   let first_line_len = max first_line_len (loc.start.column + 1) in
                   gutter_space
                   ^ String.make loc.start.column ' '

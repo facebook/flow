@@ -116,7 +116,7 @@
         For when trust_qualifier is unknown and we're trying to infer, or if we just don't care.
    For a formal treatment of these ideas, see Avik Chaudhuri's manuscript
    "Safe Types in Untyped Contexts" (to appear)
- *)
+*)
 let mask b = (1 lsl b) - 1
 
 type ident = int

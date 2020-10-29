@@ -325,8 +325,8 @@ let read (type result) worker_pid infd : (result * Measure.record_data) Lwt.t =
 
 (** Send a job to a worker
 
-  This is basically an lwt thread that writes a job to the worker, waits for the response, and
-  then returns the result. *)
+    This is basically an lwt thread that writes a job to the worker, waits for the response, and
+    then returns the result. *)
 let call w (f : 'a -> 'b) (x : 'a) : 'b Lwt.t =
   if is_killed w then Printf.ksprintf failwith "killed worker (%d)" (worker_id w);
   mark_busy w;

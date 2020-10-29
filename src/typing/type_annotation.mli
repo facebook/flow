@@ -7,7 +7,7 @@
 
 (** services for producing types from annotations,
     called during AST traversal.
-  *)
+ *)
 
 module Class_type_sig : Class_sig.S
 

@@ -15,7 +15,7 @@ let mk_id = Reason.mk_id
 
 (* these are basically owned by Env, but are here
    to break circularity between Env and Flow_js
- *)
+*)
 
 (* entry state *)
 module State = struct
@@ -197,7 +197,7 @@ module Entry = struct
       with general type for non-internal, non-Const value entries. Types, consts
       and internal vars are read-only, so specific types can be preserved.
       TODO: value_state should go from Declared to MaybeInitialized?
-    *)
+   *)
   let havoc name entry =
     match entry with
     | Type _ -> entry
@@ -316,7 +316,7 @@ let fresh_lex () = fresh_impl LexScope
 
 (* clone a scope: snapshot mutable entries.
    NOTE: tvars (OpenT) are essentially refs, and are shared by clones.
- *)
+*)
 let clone { id; kind; entries; refis; declare_func_annots } =
   { id; kind; entries; refis; declare_func_annots }
 
@@ -372,7 +372,7 @@ let filter_refis_using_propname ~private_ propname refis =
 (* havoc a scope's refinements:
    if name is passed, clear refis whose expressions involve it.
    otherwise, clear them all
- *)
+*)
 let havoc_refis ?name ~private_ scope =
   scope.refis <-
     (match name with
@@ -386,7 +386,7 @@ let havoc_all_refis ?name scope =
 (* havoc a scope:
    - clear all refinements
    - reset specific types of entries to their general types
- *)
+*)
 let havoc scope =
   havoc_all_refis scope;
   update_entries Entry.havoc scope

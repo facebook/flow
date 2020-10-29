@@ -49,7 +49,7 @@ module Scope_api = Scope_api.With_ALoc
    4. ForTypeof lookups are in fact ForValue lookups, but due to the order in
       which AST traversal takes place, these lookups may legitimately violate
       rule #2, hence the need for a special mode.
- *)
+*)
 module LookupMode = struct
   type t =
     | ForValue
@@ -68,7 +68,7 @@ type t = Scope.t list
 (* the environment is a scope stack, which mutates as an AST is
    traversed. changesets are also managed here, but live in
    a separate Changeset module for dependency reasons.
- *)
+*)
 let scopes : t ref = ref []
 
 (* symbols whose bindings are forcibly prevented from being created,
@@ -77,7 +77,7 @@ let scopes : t ref = ref []
    binding to definition D means that any local reference to D will
    register it as a deferred global lookup, which will then be linked
    to the override. See Init_js.load_lib_files.
- *)
+*)
 let exclude_symbols : SSet.t ref = ref SSet.empty
 
 let set_exclude_symbols syms = exclude_symbols := syms
@@ -331,7 +331,7 @@ let global_lexicals = [internal_name "super"; internal_name "this"]
    information about what uses were made of the reference to
    flag such errors on the current deferred basis.
    tests/global_ref tracks this issue.
- *)
+*)
 let cache_global cx name ?desc loc global_scope =
   let t =
     if List.mem name global_any then
@@ -445,7 +445,7 @@ let already_bound_error = binding_error Error_message.ENameAlreadyBound
    dealing with various situations involving a preexisting entry
    (since multiple declarations - sometimes but not always erroneous -
    may appear in an AST)
- *)
+*)
 
 let bind_entry cx name entry loc =
   (* iterate top-down through scopes until the appropriate scope for this
@@ -581,7 +581,7 @@ let bind_declare_fun =
    Only needed for let and const to push things into scope for potentially
    recursive internal refs: hoisted things (vars and types) become declared
    immediately on binding.
- *)
+*)
 let declare_value_entry kind cx name loc =
   if not (is_excluded name) then
     Entry.(
@@ -676,8 +676,8 @@ let init_value_entry kind cx ~use_op name ~has_anno specific loc =
         Scope.add_entry name new_entry scope
       | _ ->
         (* Incompatible or non-redeclarable new and previous entries.
-         We will have already issued an error in `bind_value_entry`,
-         so we can prune this case here. *)
+           We will have already issued an error in `bind_value_entry`,
+           so we can prune this case here. *)
         ())
 
 let init_var = init_value_entry Entry.(Var VarBinding)
@@ -704,8 +704,8 @@ let init_type cx name type_ loc =
         Scope.add_entry name new_entry scope
       | _ ->
         (* Incompatible or non-redeclarable new and previous entries.
-         We will have already issued an error in `bind_value_entry`,
-         so we can prune this case here. *)
+           We will have already issued an error in `bind_value_entry`,
+           so we can prune this case here. *)
         ())
 
 (* treat a var's declared (annotated) type as an initializer *)
@@ -725,15 +725,15 @@ let pseudo_init_declared_type cx name loc =
         Scope.add_entry name entry scope
       | _ ->
         (* Incompatible or non-redeclarable new and previous entries.
-         We will have already issued an error in `bind_value_entry`,
-         so we can prune this case here. *)
+           We will have already issued an error in `bind_value_entry`,
+           so we can prune this case here. *)
         ())
 
 (* helper for read/write tdz checks *)
 (* for now, we only enforce TDZ within the same activation.
    return true if the given target scope is in the same
    activation as the current scope.
- *)
+*)
 let same_activation target =
   let rec loop target = function
     | [] -> assert_false "target scope not found"
@@ -757,7 +757,7 @@ let value_entry_types ?(lookup_mode = ForValue) scope =
   Entry.(
     function
     (* from value positions, a same-activation ref to var or an explicit let
-     before initialization yields undefined. *)
+       before initialization yields undefined. *)
     | {
         Entry.kind = Var _ | Let LetVarBinding;
         value_state = (State.Declared | State.MaybeInitialized) as state;
@@ -862,7 +862,7 @@ let get_var_annotation cx name loc =
 (* get var's general type - for annotated vars, this is the
    annotated type, and for others it's the union of all
    types assigned to the var throughout its lifetime.
- *)
+*)
 let get_var_declared_type ?(lookup_mode = ForValue) =
   read_entry ~lookup_mode ~specific:false ?desc:None
 
@@ -1079,7 +1079,7 @@ let merge_env =
   (* merge_entry helper - calculate new specific type *)
   let merge_specific cx loc name (specific0, general0) specific1 specific2 =
     (* if both children are unchanged, or 1 child is unchanged and the other
-        is bottom (EmptyT), then we can avoid creating a merged specific *)
+       is bottom (EmptyT), then we can avoid creating a merged specific *)
     if
       (specific0 = specific1 && (specific0 = specific2 || is_bot specific2))
       || (specific0 = specific2 && is_bot specific1)
@@ -1157,7 +1157,7 @@ let merge_env =
              (Debug_js.string_of_scope cx scope1)
              (Debug_js.string_of_scope cx scope2))
       (* a newly created entry may exist in one lex child -
-       this pattern is due to our current switch handling *)
+         this pattern is due to our current switch handling *)
       | (None, Some (Value _ as entry), None) when Scope.is_lex scope1 ->
         add_entry name entry scope0
       | (None, None, Some (Value _ as entry)) when Scope.is_lex scope2 ->
@@ -1201,7 +1201,7 @@ let merge_env =
     (* refi was cleared in a child env. clear from original *)
     | (Some _, _, _) -> remove_refi key scope0
     (* refi was introduced - and possibly also removed by havoc -
-      after envs diverged *)
+       after envs diverged *)
     | (None, _, _) -> ()
   in
   (* merge entries and refis found in changeset *)
@@ -1289,7 +1289,7 @@ let copy_env =
    specific type as incoming lower bound, and general type as
    upper bound. This prepares the specific type for later merging
    during path-dependent analysis.
- *)
+*)
 let widen_env =
   let widened cx loc name specific general =
     if specific = general then
@@ -1337,7 +1337,7 @@ let havoc_all () = iter_scopes Scope.havoc
    all entries including consts must have their specific entries set to EmptyT.
    TODO rework the early-exit stuff to not break invariants. Until then it'll
    remain a source of bugs.
- *)
+*)
 let reset_current_activation loc = iter_local_scopes (Scope.reset loc)
 
 (* clear refinement info for (topmost bindings of) given names in env *)
@@ -1372,7 +1372,7 @@ let havoc_vars =
 (* Clear entries for heap refinement pseudovars in env.
    If name is passed, clear only those refis that depend on it.
    Real variables are left untouched.
- *)
+*)
 let havoc_heap_refinements () = iter_scopes Scope.havoc_all_refis
 
 let havoc_heap_refinements_with_propname ~private_ name =
@@ -1392,7 +1392,7 @@ let havoc_heap_refinements_with_propname ~private_ name =
    variable assignment in user code, and this in certain cases
    (broadly, assignment of function values) may provoke havoc_ctx
    into clearing the refinement we're in the process of installing.
- *)
+*)
 let add_heap_refinement op key refi_loc refined original =
   let refi = { refi_loc; refined; original } in
   let (base, _) = key in
@@ -1411,7 +1411,7 @@ let refine_expr = add_heap_refinement Changeset.Refine
    note: orig_types maps names to unrefined types. this param is
    only necessary for fresh pseudovars like heap refinements -
    others can be obtained via query_var.
- *)
+*)
 let refine_with_preds cx loc preds orig_types =
   let rec check_literal_subtypes ~general_type pred =
     (* When refining a type against a literal, we want to be sure that that literal can actually

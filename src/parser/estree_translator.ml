@@ -675,8 +675,8 @@ with type t = Impl.t = struct
         loc
         [
           (* estree hasn't come around to the idea that function decls can have
-           optional ids, but acorn, babel, espree and esprima all have, so let's
-           do it too. see https://github.com/estree/estree/issues/98 *)
+             optional ids, but acorn, babel, espree and esprima all have, so let's
+             do it too. see https://github.com/estree/estree/issues/98 *)
           ("id", option identifier id);
           ("params", function_params params);
           ("body", block body);
@@ -846,7 +846,7 @@ with type t = Impl.t = struct
         array [node "ExportNamespaceSpecifier" loc [("exported", identifier name)]]
       | Some (ExportBatchSpecifier (_, None)) ->
         (* this should've been handled by callers, since this represents an
-             ExportAllDeclaration, not a specifier. *)
+           ExportAllDeclaration, not a specifier. *)
         array []
       | None -> array []
     and declare_type_alias (loc, { Statement.TypeAlias.id; tparams; right; comments }) =
@@ -911,8 +911,8 @@ with type t = Impl.t = struct
         loc
         [
           (* estree hasn't come around to the idea that class decls can have
-           optional ids, but acorn, babel, espree and esprima all have, so let's
-           do it too. see https://github.com/estree/estree/issues/98 *)
+             optional ids, but acorn, babel, espree and esprima all have, so let's
+             do it too. see https://github.com/estree/estree/issues/98 *)
           ("id", option identifier id);
           ("body", class_body body);
           ("typeParameters", option type_parameter_declaration tparams);
@@ -1438,8 +1438,8 @@ with type t = Impl.t = struct
          coordinated with Babel, ast-types, etc. so keeping the status quo for
          now. Here's an example: *)
       (* node "FunctionTypeRestParam" loc [
-        "argument", function_type_param argument;
-      ] *)
+         "argument", function_type_param argument;
+       ] *)
       function_type_param ?comments argument
     and function_type_this_constraint (loc, { Type.Function.ThisParam.annot = (_, annot); comments })
         =
@@ -1656,7 +1656,7 @@ with type t = Impl.t = struct
         loc
         [
           (* we track the location of the name, but don't expose it here for
-           backwards-compatibility. TODO: change this? *)
+             backwards-compatibility. TODO: change this? *)
           ("name", string name);
           ("bound", hint type_annotation bound);
           ("variance", option variance tp_var);

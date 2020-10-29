@@ -306,7 +306,7 @@ let chdir_main (p : chdir_params) : 'a =
 
   let args = Array.of_list (p.prog :: p.args) in
   (* NOTE: to preserve original behavior of this code, empty environment is the default here.
-    This is different from exec_no_chdir where the default is Default (current environment). *)
+     This is different from exec_no_chdir where the default is Default (current environment). *)
   let env = Base.Option.value p.env ~default:Process_types.Empty in
   let env = env_to_array env in
   match env with

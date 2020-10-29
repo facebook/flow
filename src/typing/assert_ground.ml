@@ -44,14 +44,14 @@ module Kit (Flow : Flow_common.S) : Flow_common.ASSERT_GROUND = struct
       inherit [Marked.t] Type_visitor.t as super
 
       (* Track prop maps which correspond to object literals. We don't ask for
-       annotations for object literals which reach exports. Instead, we walk the
-       properties covariantly. *)
+         annotations for object literals which reach exports. Instead, we walk the
+         properties covariantly. *)
       val mutable objlits : int Properties.Map.t = Properties.Map.empty
 
       (* Track prop maps which correspond to instance fields and methods, indicating
-       any fields which are initialized. We don't ask for annotations for (a)
-       munged property names, which are private and thus not inputs, and (b)
-       initialized field names. *)
+         any fields which are initialized. We don't ask for annotations for (a)
+         munged property names, which are private and thus not inputs, and (b)
+         initialized field names. *)
       val mutable insts : (int * SSet.t) Properties.Map.t = Properties.Map.empty
 
       val depth = ref 0
@@ -85,9 +85,9 @@ module Kit (Flow : Flow_common.S) : Flow_common.ASSERT_GROUND = struct
         (* No possible annotation for `this` type. *)
         | RThis -> true
         (* Treat * as an annotation, even though it is inferred, because the
-         resulting errors are confusing and have unpredictable locations. *-types
-         are already deprecated, and this wart will go away entirely when we
-         finally remove support. *)
+           resulting errors are confusing and have unpredictable locations. *-types
+           are already deprecated, and this wart will go away entirely when we
+           finally remove support. *)
         | RExistential -> true
         | _ -> false
 
@@ -110,10 +110,10 @@ module Kit (Flow : Flow_common.S) : Flow_common.ASSERT_GROUND = struct
               pole
           in
           (* TODO: clean up the match pole below. Visiting a tvar with a negative
-           polarity will add an error and resolve the tvar to any. We don't need
-           to also walk the positive edge of the tvar. This behavior is a bit
-           different from what the Marked module provides, but treating negative
-           as neutral gives the correct behavior. *)
+             polarity will add an error and resolve the tvar to any. We don't need
+             to also walk the positive edge of the tvar. This behavior is a bit
+             different from what the Marked module provides, but treating negative
+             as neutral gives the correct behavior. *)
           let marked_pole =
             match pole with
             | Polarity.Negative -> Polarity.Neutral
@@ -141,12 +141,12 @@ module Kit (Flow : Flow_common.S) : Flow_common.ASSERT_GROUND = struct
               (match constraints with
               | FullyResolved _ ->
                 (* A fully resolved node corresponds to either (a) a tvar imported
-                 from a dependency, which has already gone through assert_ground
-                 or (b) a tvar corresponding to an annotation in this file which
-                 certainly does not contain unresolved tvars.
+                   from a dependency, which has already gone through assert_ground
+                   or (b) a tvar corresponding to an annotation in this file which
+                   certainly does not contain unresolved tvars.
 
-                 In either case, it is not necessary to visit the structure of the
-                 resolved type, as we will not find anything to complain about. *)
+                   In either case, it is not necessary to visit the structure of the
+                   resolved type, as we will not find anything to complain about. *)
                 seen
               | Resolved (_, t) -> self#type_ cx Polarity.Positive seen t
               | Unresolved { lower; _ } ->
@@ -170,8 +170,8 @@ module Kit (Flow : Flow_common.S) : Flow_common.ASSERT_GROUND = struct
               | BoundT _ -> seen
               | MergedT _ ->
                 (* The base class implementation will walk uses here, but there's no
-             reasonable way to complain about missing annotations for MergedT,
-             which was added to avoid missing annotations. *)
+                   reasonable way to complain about missing annotations for MergedT,
+                   which was added to avoid missing annotations. *)
                 seen
               | ReposT (r, _) ->
                 (* It's possible that we might encounter a substituted this type in a
@@ -184,9 +184,9 @@ module Kit (Flow : Flow_common.S) : Flow_common.ASSERT_GROUND = struct
                   super#type_ cx pole seen t
               | EvalT (_, TypeDestructorT _, _) ->
                 (* Type destructors are annotations, so we should never complain about
-             missing annotations due them. The default visitor _should_ never
-             visit a tvar in an input position, but do to some wacky stuff in
-             eval, it's possible today. *)
+                   missing annotations due them. The default visitor _should_ never
+                   visit a tvar in an input position, but do to some wacky stuff in
+                   eval, it's possible today. *)
                 seen
               | KeysT _ ->
                 (* Same idea as type destructors. *)

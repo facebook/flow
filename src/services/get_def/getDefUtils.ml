@@ -93,7 +93,7 @@ type def_kind =
    * `bar` *)
   | Use of Type.t * string
   (* In a class, where a property/method is defined. Includes the type of the class and the name
-  of the property. *)
+     of the property. *)
   | Class_def of Type.t * string (* name *) * bool (* static *)
   (* In an object type. Includes the location of the property definition and its name. *)
   | Obj_def of Loc.t * string (* name *)

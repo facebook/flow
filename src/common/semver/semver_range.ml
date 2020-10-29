@@ -10,8 +10,8 @@ type part =
   | Caret of Semver_version.t
 
 (* TODO: support unions (`||`), like this:
-type comparator_set = part list
-type t = comparator_set list
+   type comparator_set = part list
+   type t = comparator_set list
 *)
 type t = part list
 

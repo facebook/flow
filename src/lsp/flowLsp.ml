@@ -653,40 +653,40 @@ let close_conn (env : connected_env) : unit =
 (************************************************************************
  ** Tracking                                                           **
  ************************************************************************
- The goal of tracking is that, if a server goes down, then all errors
- and dialogs and things it created should be taken down with it.
+    The goal of tracking is that, if a server goes down, then all errors
+    and dialogs and things it created should be taken down with it.
 
- "track_to_server" is called for client->lsp messages when they get
-   sent to the current server.
- "track_from_server" is called for server->lsp messages which
-   immediately get passed on to the client.
- "dismiss_tracks" is called when a server gets disconnected.
+    "track_to_server" is called for client->lsp messages when they get
+      sent to the current server.
+    "track_from_server" is called for server->lsp messages which
+      immediately get passed on to the client.
+    "dismiss_tracks" is called when a server gets disconnected.
 
- EDITOR_OPEN_FILES - we keep the current contents of all editor open
-   files. Updated in response to client->lsp notifications
-   didOpen/Change/Save/Close. When a new server starts, we synthesize
-   didOpen messages to the new server.
- OUTSTANDING_REQUESTS_TO_SERVER - for all client->lsp requests that
-   have been sent to the server. Added to this list when we
-   track_to_server(request); removed on track_from_server(response).
-   When a server dies, we synthesize RequestCancelled responses
-   ourselves since the server will no longer do that.
- OUTSTANDING_REQUESTS_FROM_SERVER - for all server->lsp requests. We
-   generate a "wrapped-id" that encodes which server it came from,
-   and send immediately to the client. Added to this list when we
-   track_from_server(request), removed in track_to_server(response).
-   When a server dies, we emit CancelRequest notifications to the
-   client so it can dismiss dialogs or similar. When any response
-   comes back from the client, we ignore ones that are destined for
-   now-defunct servers, and only forward on the ones for the current
-   server.
- OUTSTANDING_PROGRESS - for all server->lsp progress notifications
-   which are being displayed in the client. Added to this list when
-   we track_from_server(progress) a non-empty progress; removed
-   when we track_from_server(progress) an empty progress. When a
-   server dies, we synthesize progress notifications to the client
-   so it can erase all outstanding progress messages.
- OUTSTANDING_ACTION_REQUIRED - similar to outstanding_progress.
+    EDITOR_OPEN_FILES - we keep the current contents of all editor open
+      files. Updated in response to client->lsp notifications
+      didOpen/Change/Save/Close. When a new server starts, we synthesize
+      didOpen messages to the new server.
+    OUTSTANDING_REQUESTS_TO_SERVER - for all client->lsp requests that
+      have been sent to the server. Added to this list when we
+      track_to_server(request); removed on track_from_server(response).
+      When a server dies, we synthesize RequestCancelled responses
+      ourselves since the server will no longer do that.
+    OUTSTANDING_REQUESTS_FROM_SERVER - for all server->lsp requests. We
+      generate a "wrapped-id" that encodes which server it came from,
+      and send immediately to the client. Added to this list when we
+      track_from_server(request), removed in track_to_server(response).
+      When a server dies, we emit CancelRequest notifications to the
+      client so it can dismiss dialogs or similar. When any response
+      comes back from the client, we ignore ones that are destined for
+      now-defunct servers, and only forward on the ones for the current
+      server.
+    OUTSTANDING_PROGRESS - for all server->lsp progress notifications
+      which are being displayed in the client. Added to this list when
+      we track_from_server(progress) a non-empty progress; removed
+      when we track_from_server(progress) an empty progress. When a
+      server dies, we synthesize progress notifications to the client
+      so it can erase all outstanding progress messages.
+    OUTSTANDING_ACTION_REQUIRED - similar to outstanding_progress.
  *)
 
 type track_effect = { changed_live_uri: Lsp.DocumentUri.t option }
@@ -880,11 +880,11 @@ let live_syntax_errors_enabled (state : state) =
   | _ -> false
 
 (** parse_and_cache: either the uri is an open file for which we already
-  have parse results (ast+diagnostics), so we can just return them;
-  or it's an open file and we are expected to lazily compute the parse results
-  and store them in the state;
-  or it's an unopened file in which case we'll retrieve parse results but
-  won't store them. *)
+    have parse results (ast+diagnostics), so we can just return them;
+    or it's an open file and we are expected to lazily compute the parse results
+    and store them in the state;
+    or it's an unopened file in which case we'll retrieve parse results but
+    won't store them. *)
 let parse_and_cache flowconfig_name (state : state) (uri : Lsp.DocumentUri.t) :
     state * ((Loc.t, Loc.t) Flow_ast.Program.t * Lsp.PublishDiagnostics.diagnostic list option) =
   let error_to_diagnostic (loc, parse_error) =
@@ -1267,9 +1267,9 @@ module LogFlusher = LwtLoop.Make (struct
 end)
 
 (** Our interaction logging logs a snapshot of the state of the world at the start of an
-  interaction (when the interaction is triggered) and at the end of an interaction (when the ux
-  occurs). This function collects that state. This is called relatively often, so it should be
-  pretty cheap *)
+    interaction (when the interaction is triggered) and at the end of an interaction (when the ux
+    occurs). This function collects that state. This is called relatively often, so it should be
+    pretty cheap *)
 let collect_interaction_state state =
   LspInteraction.(
     let time = Unix.gettimeofday () in
@@ -1302,7 +1302,7 @@ let collect_interaction_state state =
     { time; server_status; buffer_status })
 
 (** Completed interactions clean themselves up, but we need to clean up pending interactions which
-  have never been completed. *)
+    have never been completed. *)
 let gc_pending_interactions =
   let next_gc = ref (Unix.gettimeofday ()) in
   fun state ->

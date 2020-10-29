@@ -24,7 +24,7 @@ let autofix_exports_code_actions
             CodeAction.title = "insert type annotation";
             kind = CodeActionKind.quickfix;
             (* Handing back the diagnostics we were given is a placeholder for
-              eventually generating the diagnostics for the errors we are fixing *)
+               eventually generating the diagnostics for the errors we are fixing *)
             diagnostics;
             action = CodeAction.EditOnly WorkspaceEdit.{ changes = UriMap.singleton uri edits };
           };

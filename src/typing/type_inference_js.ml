@@ -485,7 +485,7 @@ let with_libdef_builtins cx f =
    processing is similar to an ordinary module, except that
    a) symbols from prior library loads are suppressed if found,
    b) bindings are added as properties to the builtin object
- *)
+*)
 let infer_lib_file ~exclude_syms ~lint_severities ~file_sig cx ast =
   let aloc_ast = Ast_loc_utils.loc_to_aloc_mapper#program ast in
   let (_, { Ast.Program.all_comments; _ }) = ast in
