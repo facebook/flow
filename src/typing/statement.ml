@@ -3140,7 +3140,7 @@ and array_elements cx ~array_annot undef_loc =
           (UnresolvedSpreadArg t, Spread (loc, { Ast.Expression.SpreadElement.argument; comments }))))
 
 (* can raise Abnormal.(Exn (Stmt _, _))
- * annot should become a Type.t option when we have the ability to 
+ * annot should become a Type.t option when we have the ability to
  * inspect annotations and recurse into them *)
 and expression ?cond cx ~annot (loc, e) = expression_ ~cond ~annot cx loc e
 
@@ -4611,21 +4611,21 @@ and optional_chain ~cond ~is_existence_check ?sentinel_refine cx ((loc, e) as ex
   | None ->
     let (e', method_receiver_and_state) =
       (* If we're looking at a call, look "one level deeper" to see if the
-           next element of the chain is an member access, in which case we're
-           looking at an optional method call and we need to process both
-           "levels" at once.  Similar to the call to factor_out_optional above,
-           we then factor out the optionality of the member lookup component of
-           the method call. However, we can skip this if the callee is optional
-           and the call is non-optional--this means that the callee is in
-           parentheses, so we can treat it as a regular GetProp followed by a
-           regular Call instead of using the special method call machinery. Such
-           a case would look like this:
-
-             callee
-            vvvvvvvvv
-           (obj?.meth)()
-            ^^^
-             member._object
+       * next element of the chain is an member access, in which case we're
+       * looking at an optional method call and we need to process both
+       * "levels" at once.  Similar to the call to factor_out_optional above,
+       * we then factor out the optionality of the member lookup component of
+       * the method call. However, we can skip this if the callee is optional
+       * and the call is non-optional--this means that the callee is in
+       * parentheses, so we can treat it as a regular GetProp followed by a
+       * regular Call instead of using the special method call machinery. Such
+       * a case would look like this:
+       *
+       *     callee
+       *    vvvvvvvvv
+       *   (obj?.meth)()
+       *    ^^^
+       *     member._object
        *)
       match (e', opt_state) with
       | ( Call
@@ -4640,27 +4640,27 @@ and optional_chain ~cond ~is_existence_check ?sentinel_refine cx ((loc, e) as ex
         let member_opt =
           if optional then
             (* In this case:
-
-                 callee
-                vvvvvvvvv
-                obj?.meth() (or obj?.meth?.())
-                ^^^
-                 member._object
-
-               There may or may not be other links in the chain earlier than obj, and the call
-               to meth() may be optional itself (e.g. obj?.meth?.()) -- this has already been
-               factored out.
-              *)
+             *
+             *   callee
+             *  vvvvvvvvv
+             *  obj?.meth() (or obj?.meth?.())
+             *  ^^^
+             *   member._object
+             *
+             * There may or may not be other links in the chain earlier than obj, and the call
+             * to meth() may be optional itself (e.g. obj?.meth?.()) -- this has already been
+             * factored out.
+             *)
             NewChain
           else
             (* In this case:
-
-                          callee
-                         vvvvvvvv
-              other_obj?.obj.meth() (or other_obj?.obj.meth?.())
-                         ^^^
-                          member._object
-              *)
+             *
+             *             callee
+             *            vvvvvvvv
+             * other_obj?.obj.meth() (or other_obj?.obj.meth?.())
+             *            ^^^
+             *             member._object
+             *)
             ContinueChain
         in
         ( Call { call with Call.callee = (callee_loc, Member member) },
