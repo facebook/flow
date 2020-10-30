@@ -40,6 +40,14 @@ val init : config -> num_workers:int -> handle
 
 val init_done : unit -> unit
 
+module type Key = sig
+  type t
+
+  val to_string : t -> string
+
+  val compare : t -> t -> int
+end
+
 module type Value = sig
   type t
 
@@ -92,25 +100,11 @@ module type WithCache = sig
   module DebugCache : DebugLocalCache
 end
 
-module type UserKeyType = sig
-  type t
+module WithCache (Key : Key) (Value : Value) :
+  WithCache with type key = Key.t and type value = Value.t and module KeySet = Set.Make(Key)
 
-  val to_string : t -> string
-
-  val compare : t -> t -> int
-end
-
-module WithCache (UserKeyType : UserKeyType) (Value : Value) :
-  WithCache
-    with type key = UserKeyType.t
-     and type value = Value.t
-     and module KeySet = Set.Make(UserKeyType)
-
-module NoCache (UserKeyType : UserKeyType) (Value : Value) :
-  NoCache
-    with type key = UserKeyType.t
-     and type value = Value.t
-     and module KeySet = Set.Make(UserKeyType)
+module NoCache (Key : Key) (Value : Value) :
+  NoCache with type key = Key.t and type value = Value.t and module KeySet = Set.Make(Key)
 
 val debug_value_size : Obj.t -> int
 

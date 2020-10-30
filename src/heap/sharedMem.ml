@@ -25,6 +25,10 @@ type table_stats = {
 
 type heap = (nativeint, Bigarray.nativeint_elt, Bigarray.c_layout) Bigarray.Array1.t
 
+(* Phantom type parameter provides type-safety to callers of this API.
+ * Internally, these are all just ints, so be careful! *)
+type _ addr = int
+
 let heap_ref : heap option ref = ref None
 
 exception Out_of_shared_memory
@@ -130,51 +134,19 @@ let collect (effort : [ `gentle | `aggressive | `always_TEST ]) =
     EventLogger.sharedmem_gc_ran effort old_size new_size time_taken
   )
 
-(*****************************************************************************)
 (* Compute size of values in the garbage-collected heap *)
-(*****************************************************************************)
-
 let value_size r =
   let w = Obj.reachable_words r in
   w * (Sys.word_size / 8)
 
 let debug_value_size = value_size
 
-(*****************************************************************************)
-(* Module returning the MD5 of the key. It's because the code in C land
- * expects this format. I prefer to make it an abstract type to make sure
- * we don't forget to give the MD5 instead of the key itself.
- *)
-(*****************************************************************************)
-
 module type Key = sig
-  (* The type of keys that OCaml-land callers try to insert *)
-  type userkey
-
-  (* The type of keys that get stored in the C hashtable *)
   type t
 
-  (* The type of old keys that get stored in the C hashtable *)
-  type old
+  val to_string : t -> string
 
-  (* The md5 of an old or a new key *)
-  type md5
-
-  (* Creation/conversion primitives *)
-  val make : userkey -> t
-
-  val make_old : userkey -> old
-
-  val to_old : t -> old
-
-  val new_from_old : old -> t
-
-  (* Md5 primitives *)
-  val md5 : t -> md5
-
-  val md5_old : old -> md5
-
-  val string_of_md5 : md5 -> string
+  val compare : t -> t -> int
 end
 
 module type Value = sig
@@ -183,219 +155,96 @@ module type Value = sig
   val description : string
 end
 
-(*****************************************************************************)
-(* The interface that all keys need to implement *)
-(*****************************************************************************)
+(* The shared memory segment contains a single shared hash table. This functor
+ * creates modules that give the illusion of multiple hash tables by adding a
+ * prefix to each key. *)
+module HashtblSegment (Key : Key) = struct
+  type hash = string
 
-module type UserKeyType = sig
-  type t
+  external hh_add : hash -> _ addr -> unit = "hh_add"
 
-  val to_string : t -> string
+  external hh_mem : hash -> bool = "hh_mem"
 
-  val compare : t -> t -> int
-end
+  external hh_get : hash -> _ addr = "hh_get"
 
-module KeyFunctor (UserKeyType : UserKeyType) : Key with type userkey = UserKeyType.t = struct
-  type userkey = UserKeyType.t
+  external hh_remove : hash -> unit = "hh_remove"
 
-  type t = string
-
-  type old = string
-
-  type md5 = string
-
-  let prefix = Prefix.make ()
-
-  (* The prefix we use for old keys. The prefix guarantees that we never
-   * mix old and new data, because a key can never start with the prefix
-   * "old_", it always starts with a number (cf Prefix.make()).
-   *)
-  let old_prefix = "old_"
-
-  let make x = Prefix.make_key prefix (UserKeyType.to_string x)
-
-  let make_old x = old_prefix ^ Prefix.make_key prefix (UserKeyType.to_string x)
-
-  let to_old x = old_prefix ^ x
-
-  let new_from_old x =
-    let module S = String in
-    S.sub x (S.length old_prefix) (S.length x - S.length old_prefix)
-
-  let md5 = Digest.string
-
-  let md5_old = Digest.string
-
-  let string_of_md5 x = x
-end
-
-(*****************************************************************************)
-(* Immediate access to shared memory (cf hh_shared.c for the underlying
- * representation).
- *)
-(*****************************************************************************)
-module Raw (Key : Key) (Value : Value) : sig
-  val add : Key.md5 -> Value.t -> unit
-
-  val mem : Key.md5 -> bool
-
-  val get : Key.md5 -> Value.t
-
-  val remove : Key.md5 -> unit
-
-  val move : Key.md5 -> Key.md5 -> unit
-end = struct
-  type addr = int
-
-  (* Returns address into the heap, alloc size, and orig size *)
-  external hh_store : Value.t -> addr * int * int = "hh_store_ocaml"
-
-  external hh_deserialize : addr -> Value.t = "hh_deserialize"
-
-  external hh_add : Key.md5 -> addr -> unit = "hh_add"
-
-  external hh_mem : Key.md5 -> bool = "hh_mem"
-
-  external hh_get_size : addr -> int = "hh_get_size"
-
-  external hh_get : Key.md5 -> addr = "hh_get"
-
-  external hh_remove : Key.md5 -> unit = "hh_remove"
-
-  external hh_move : Key.md5 -> Key.md5 -> unit = "hh_move"
-
-  let hh_store x = WorkerCancel.with_worker_exit (fun () -> hh_store x)
-
-  let hh_deserialize x = WorkerCancel.with_worker_exit (fun () -> hh_deserialize x)
-
-  let hh_mem x = WorkerCancel.with_worker_exit (fun () -> hh_mem x)
+  external hh_move : hash -> hash -> unit = "hh_move"
 
   let hh_add x y = WorkerCancel.with_worker_exit (fun () -> hh_add x y)
 
+  let hh_mem x = WorkerCancel.with_worker_exit (fun () -> hh_mem x)
+
   let hh_get x = WorkerCancel.with_worker_exit (fun () -> hh_get x)
 
-  let log_serialize compressed original =
-    let compressed = float compressed in
-    let original = float original in
-    let saved = original -. compressed in
-    let ratio = compressed /. original in
-    Measure.sample (Value.description ^ " (bytes serialized into shared heap)") compressed;
-    Measure.sample "ALL bytes serialized into shared heap" compressed;
-    Measure.sample (Value.description ^ " (bytes saved in shared heap due to compression)") saved;
-    Measure.sample "ALL bytes saved in shared heap due to compression" saved;
-    Measure.sample (Value.description ^ " (shared heap compression ratio)") ratio;
-    Measure.sample "ALL bytes shared heap compression ratio" ratio
+  (* The hash table supports a kind of versioning, where a key can be "oldified"
+   * temporarily while a new value for the same key is written. The oldified key
+   * can then be revived or removed. We ensure that the new and old entries
+   * occupy distinct hash table slots by giving them distinct prefixes. *)
 
-  let log_deserialize l r =
-    let sharedheap = float l in
-    Measure.sample (Value.description ^ " (bytes deserialized from shared heap)") sharedheap;
-    Measure.sample "ALL bytes deserialized from shared heap" sharedheap;
+  let new_prefix = Prefix.make ()
 
-    if hh_log_level () > 1 then (
-      (* value_size is a bit expensive to call this often, so only run with log levels >= 2 *)
-      let localheap = float (value_size r) in
-      Measure.sample (Value.description ^ " (bytes allocated for deserialized value)") localheap;
-      Measure.sample "ALL bytes allocated for deserialized value" localheap
-    )
+  let old_prefix = Prefix.make ()
 
-  let add key value =
-    let (addr, compressed_size, original_size) = hh_store value in
-    hh_add key addr;
-    if hh_log_level () > 0 && compressed_size > 0 then log_serialize compressed_size original_size
+  let new_hash_of_key k = Digest.string (Prefix.make_key new_prefix (Key.to_string k))
 
-  let mem key = hh_mem key
+  let old_hash_of_key k = Digest.string (Prefix.make_key old_prefix (Key.to_string k))
 
-  let get key =
-    let addr = hh_get key in
-    let v = hh_deserialize addr in
-    if hh_log_level () > 0 then log_deserialize (hh_get_size addr) (Obj.repr v);
-    v
+  let add k addr = hh_add (new_hash_of_key k) addr
 
-  let remove key = hh_remove key
+  let mem k = hh_mem (new_hash_of_key k)
 
-  let move from_key to_key = hh_move from_key to_key
-end
+  let mem_old k = hh_mem (old_hash_of_key k)
 
-module New (Key : Key) (Value : Value) : sig
-  (* Adds a binding to the table, the table is left unchanged if the
-   * key was already bound.
-   *)
-  val add : Key.t -> Value.t -> unit
-
-  val mem : Key.t -> bool
-
-  val get : Key.t -> Value.t option
-
-  val remove : Key.t -> unit
-
-  (* Binds the key to the old one.
-   * If 'mykey' is bound to 'myvalue', oldifying 'mykey' makes 'mykey'
-   * accessible to the "Old" module, in other words: "Old.mem mykey" returns
-   * true and "New.mem mykey" returns false after oldifying.
-   *)
-  val oldify : Key.t -> unit
-end = struct
-  module Raw = Raw (Key) (Value)
-
-  let add key value = Raw.add (Key.md5 key) value
-
-  let mem key = Raw.mem (Key.md5 key)
-
-  let get key =
-    let key = Key.md5 key in
-    if Raw.mem key then
-      Some (Raw.get key)
+  let get_hash hash =
+    if hh_mem hash then
+      Some (hh_get hash)
     else
       None
 
-  let remove key =
-    let key = Key.md5 key in
-    if Raw.mem key then (
-      Raw.remove key;
-      assert (not (Raw.mem key))
-    ) else
-      ()
+  let get k = get_hash (new_hash_of_key k)
 
-  let oldify key =
-    if mem key then
-      let old_key = Key.to_old key in
-      Raw.move (Key.md5 key) (Key.md5_old old_key)
-    else
-      ()
-end
+  let get_old k = get_hash (old_hash_of_key k)
 
-(* Same as new, but for old values *)
-module Old (Key : Key) (Value : Value) : sig
-  val get : Key.old -> Value.t option
+  let remove k = hh_remove (new_hash_of_key k)
 
-  val remove : Key.old -> unit
+  (* We oldify entries that might be changed by an operation, which involves
+   * moving the address of the current heap value from the "new" key to the
+   * "old" key. The operation might then write an updated value to the "new"
+   * key.
+   *
+   * This function is strange, though. Why, if a new entry does not exist, do we
+   * try to remove an extant old entry? Why should an old entry even exist at
+   * this point? I was not able to find a clear justification for this behavior
+   * from source control history... *)
+  let oldify k =
+    let new_hash = new_hash_of_key k in
+    let old_hash = old_hash_of_key k in
+    if hh_mem new_hash then
+      hh_move new_hash old_hash
+    else if hh_mem old_hash then
+      hh_remove old_hash
 
-  val mem : Key.old -> bool
+  (* After an operation which first oldified some values, we might decide that
+   * the original values are still good enough. In this case we can move the old
+   * key back into the new slot.
+   *
+   * hh_move expects the destination slot to be empty, but the operation might
+   * have written a new value before deciding to roll back, so we first check
+   * and remove any new key first. *)
+  let revive k =
+    let new_hash = new_hash_of_key k in
+    let old_hash = old_hash_of_key k in
+    if hh_mem new_hash then hh_remove new_hash;
+    if hh_mem old_hash then hh_move old_hash new_hash
 
-  (* Takes an old value and moves it back to a "new" one *)
-  val revive : Key.old -> unit
-end = struct
-  module Raw = Raw (Key) (Value)
-
-  let get key =
-    let key = Key.md5_old key in
-    if Raw.mem key then
-      Some (Raw.get key)
-    else
-      None
-
-  let mem key = Raw.mem (Key.md5_old key)
-
-  let remove key = if mem key then Raw.remove (Key.md5_old key)
-
-  let revive key =
-    if mem key then (
-      let new_key = Key.new_from_old key in
-      let new_key = Key.md5 new_key in
-      let old_key = Key.md5_old key in
-      if Raw.mem new_key then Raw.remove new_key;
-      Raw.move old_key new_key
-    )
+  (* After an operation which first oldified some values, if we decide to commit
+   * those changes, we can remove the old key. Generally the hash table entry
+   * keeps the corresponding heap object alive, so removing this reference will
+   * allow the GC to clean up the old value in the heap. *)
+  let remove_old k =
+    let old_hash = old_hash_of_key k in
+    if hh_mem old_hash then hh_remove old_hash
 end
 
 (*****************************************************************************)
@@ -488,75 +337,81 @@ end
 (* A functor returning an implementation of the S module without caching. *)
 (*****************************************************************************)
 
-module NoCache (UserKeyType : UserKeyType) (Value : Value) :
-  NoCache
-    with type key = UserKeyType.t
-     and type value = Value.t
-     and module KeySet = Set.Make(UserKeyType) = struct
-  module Key = KeyFunctor (UserKeyType)
-  module New = New (Key) (Value)
-  module Old = Old (Key) (Value)
-  module KeySet = Set.Make (UserKeyType)
+module NoCache (Key : Key) (Value : Value) :
+  NoCache with type key = Key.t and type value = Value.t and module KeySet = Set.Make(Key) = struct
+  module Tbl = HashtblSegment (Key)
+  module KeySet = Set.Make (Key)
 
-  type key = UserKeyType.t
+  type key = Key.t
 
   type value = Value.t
 
-  let add x y = New.add (Key.make x) y
+  (* Returns address into the heap, alloc size, and orig size *)
+  external hh_store : Value.t -> _ addr * int * int = "hh_store_ocaml"
 
-  let get x = New.get (Key.make x)
+  external hh_deserialize : _ addr -> Value.t = "hh_deserialize"
 
-  let get_old x =
-    let key = Key.make_old x in
-    Old.get key
+  external hh_get_size : _ addr -> int = "hh_get_size"
 
-  let remove_batch xs =
-    KeySet.iter
-      begin
-        fun str_key ->
-        let key = Key.make str_key in
-        New.remove key
-      end
-      xs
+  let hh_store x = WorkerCancel.with_worker_exit (fun () -> hh_store x)
 
-  let oldify_batch xs =
-    KeySet.iter
-      begin
-        fun str_key ->
-        let key = Key.make str_key in
-        if New.mem key then
-          New.oldify key
-        else
-          let key = Key.make_old str_key in
-          Old.remove key
-      end
-      xs
+  let hh_deserialize x = WorkerCancel.with_worker_exit (fun () -> hh_deserialize x)
 
-  let revive_batch xs =
-    KeySet.iter
-      begin
-        fun str_key ->
-        let old_key = Key.make_old str_key in
-        if Old.mem old_key then
-          Old.revive old_key
-        else
-          let key = Key.make str_key in
-          New.remove key
-      end
-      xs
+  let log_serialize compressed original =
+    let compressed = float compressed in
+    let original = float original in
+    let saved = original -. compressed in
+    let ratio = compressed /. original in
+    Measure.sample (Value.description ^ " (bytes serialized into shared heap)") compressed;
+    Measure.sample "ALL bytes serialized into shared heap" compressed;
+    Measure.sample (Value.description ^ " (bytes saved in shared heap due to compression)") saved;
+    Measure.sample "ALL bytes saved in shared heap due to compression" saved;
+    Measure.sample (Value.description ^ " (shared heap compression ratio)") ratio;
+    Measure.sample "ALL bytes shared heap compression ratio" ratio
 
-  let mem x = New.mem (Key.make x)
+  let log_deserialize l r =
+    let sharedheap = float l in
+    Measure.sample (Value.description ^ " (bytes deserialized from shared heap)") sharedheap;
+    Measure.sample "ALL bytes deserialized from shared heap" sharedheap;
 
-  let mem_old x = Old.mem (Key.make_old x)
+    if hh_log_level () > 1 then (
+      (* value_size is a bit expensive to call this often, so only run with log levels >= 2 *)
+      let localheap = float (value_size r) in
+      Measure.sample (Value.description ^ " (bytes allocated for deserialized value)") localheap;
+      Measure.sample "ALL bytes allocated for deserialized value" localheap
+    )
 
-  let remove_old_batch xs =
-    KeySet.iter
-      begin
-        fun str_key ->
-        let key = Key.make_old str_key in
-        Old.remove key
-      end
-      xs
+  let add key value =
+    let (addr, compressed_size, original_size) = hh_store value in
+    Tbl.add key addr;
+    if hh_log_level () > 0 && compressed_size > 0 then log_serialize compressed_size original_size
+
+  let mem = Tbl.mem
+
+  let mem_old = Tbl.mem_old
+
+  let deserialize addr =
+    let value = hh_deserialize addr in
+    if hh_log_level () > 0 then log_deserialize (hh_get_size addr) (Obj.repr value);
+    value
+
+  let get key =
+    match Tbl.get key with
+    | None -> None
+    | Some addr -> Some (deserialize addr)
+
+  let get_old key =
+    match Tbl.get_old key with
+    | None -> None
+    | Some addr -> Some (deserialize addr)
+
+  let remove_batch keys = KeySet.iter Tbl.remove keys
+
+  let oldify_batch keys = KeySet.iter Tbl.oldify keys
+
+  let revive_batch keys = KeySet.iter Tbl.revive keys
+
+  let remove_old_batch keys = KeySet.iter Tbl.remove_old keys
 end
 
 (*****************************************************************************)
@@ -700,10 +555,10 @@ end
 
 let invalidate_callback_list = ref []
 
-module LocalCache (UserKeyType : UserKeyType) (Value : Value) :
-  LocalCache with type key := UserKeyType.t and type value := Value.t = struct
+module LocalCache (Key : Key) (Value : Value) :
+  LocalCache with type key := Key.t and type value := Value.t = struct
   module Config = struct
-    type key = UserKeyType.t
+    type key = Key.t
 
     type value = Value.t
 
@@ -760,19 +615,17 @@ end
  * much time. The caches keep a deserialized version of the types.
  *)
 (*****************************************************************************)
-module WithCache (UserKeyType : UserKeyType) (Value : Value) :
-  WithCache
-    with type key = UserKeyType.t
-     and type value = Value.t
-     and module KeySet = Set.Make(UserKeyType) = struct
-  module Direct = NoCache (UserKeyType) (Value)
+module WithCache (Key : Key) (Value : Value) :
+  WithCache with type key = Key.t and type value = Value.t and module KeySet = Set.Make(Key) =
+struct
+  module Direct = NoCache (Key) (Value)
 
   type key = Direct.key
 
   type value = Direct.value
 
   module KeySet = Direct.KeySet
-  module Cache = LocalCache (UserKeyType) (Value)
+  module Cache = LocalCache (Key) (Value)
 
   (* This is exposed for tests *)
   module DebugCache = Cache
@@ -856,9 +709,7 @@ module NewAPI = struct
 
   type nonrec heap = heap
 
-  (* Phantom type parameter provides type-safety to callers of this API.
-   * Internally, these are all just ints, so be careful! *)
-  type _ addr = int
+  type nonrec 'a addr = 'a addr
 
   type chunk = {
     heap: heap;
@@ -893,7 +744,7 @@ module NewAPI = struct
     | None -> failwith "get_heap: not connected"
     | Some heap -> heap
 
-  external alloc : size -> 'a addr = "hh_ml_alloc"
+  external alloc : size -> _ addr = "hh_ml_alloc"
 
   let alloc size f =
     let addr = alloc size in
