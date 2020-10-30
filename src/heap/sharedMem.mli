@@ -13,6 +13,11 @@ type config = {
 
 type handle = Unix.file_descr
 
+(* Addresses are represented as integers, but are well-typed via a phantom
+ * type parameter. The type checker will ensure that a `foo addr` is not
+ * passed where a `bar addr` is expected. *)
+type 'k addr [@@immediate]
+
 exception Out_of_shared_memory
 
 exception Hash_table_full
@@ -52,6 +57,10 @@ module type Value = sig
   type t
 
   val description : string
+end
+
+module type AddrValue = sig
+  type t
 end
 
 module type NoCache = sig
@@ -106,6 +115,9 @@ module WithCache (Key : Key) (Value : Value) :
 module NoCache (Key : Key) (Value : Value) :
   NoCache with type key = Key.t and type value = Value.t and module KeySet = Set.Make(Key)
 
+module NoCacheAddr (Key : Key) (Value : AddrValue) :
+  NoCache with type key = Key.t and type value = Value.t addr and module KeySet = Set.Make(Key)
+
 val debug_value_size : Obj.t -> int
 
 module NewAPI : sig
@@ -130,11 +142,6 @@ module NewAPI : sig
    * The chunk API ensures that callers (1) do not write beyond the allocated
    * space and (2) consume all of the allocated space. *)
   type chunk
-
-  (* Addresses are represented as integers, but are well-typed via a phantom
-   * type parameter. The type checker will ensure that a `foo addr` is not
-   * passed where a `bar addr` is expected. *)
-  type 'k addr [@@immediate]
 
   (* Phantom type tag for string objects. *)
   type heap_string

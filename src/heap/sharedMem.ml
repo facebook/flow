@@ -155,6 +155,10 @@ module type Value = sig
   val description : string
 end
 
+module type AddrValue = sig
+  type t
+end
+
 (* The shared memory segment contains a single shared hash table. This functor
  * creates modules that give the illusion of multiple hash tables by adding a
  * prefix to each key. *)
@@ -404,6 +408,33 @@ module NoCache (Key : Key) (Value : Value) :
     match Tbl.get_old key with
     | None -> None
     | Some addr -> Some (deserialize addr)
+
+  let remove_batch keys = KeySet.iter Tbl.remove keys
+
+  let oldify_batch keys = KeySet.iter Tbl.oldify keys
+
+  let revive_batch keys = KeySet.iter Tbl.revive keys
+
+  let remove_old_batch keys = KeySet.iter Tbl.remove_old keys
+end
+
+module NoCacheAddr (Key : Key) (Value : AddrValue) = struct
+  module Tbl = HashtblSegment (Key)
+  module KeySet = Set.Make (Key)
+
+  type key = Key.t
+
+  type value = Value.t addr
+
+  let add = Tbl.add
+
+  let mem = Tbl.mem
+
+  let mem_old = Tbl.mem_old
+
+  let get = Tbl.get
+
+  let get_old = Tbl.get_old
 
   let remove_batch keys = KeySet.iter Tbl.remove keys
 
@@ -706,10 +737,6 @@ end
 
 module NewAPI = struct
   open Bigarray
-
-  type nonrec heap = heap
-
-  type nonrec 'a addr = 'a addr
 
   type chunk = {
     heap: heap;
