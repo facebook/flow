@@ -1003,7 +1003,7 @@ module NewAPI = struct
    * bounds checked; caller must ensure the given destination has already been
    * allocated. *)
   let unsafe_write_addr_at heap dst addr =
-    Array1.unsafe_set heap dst Nativeint.(shift_left (of_int addr) 1)
+    Array1.unsafe_set heap dst Nativeint.(shift_left (of_int addr) 3)
 
   (* Write a string at the specified address in the heap. This write is not
    * bounds checked; caller must ensure the given destination has already been
