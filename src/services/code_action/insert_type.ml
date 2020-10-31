@@ -371,7 +371,7 @@ class mapper
       else
         match (patt, kind) with
         (* In `const x = exp;` for signature varification errors the error appears on the exp portion.
-       When strict we only look for that error. *)
+           When strict we only look for that error. *)
         | (Identifier _, Const) when strict -> super#variable_declarator_pattern ~kind node
         | (Identifier ({ name; annot; _ } as id), (Var | Let | Const))
           when target_is_point || this#is_target loc ->

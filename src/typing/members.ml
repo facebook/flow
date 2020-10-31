@@ -379,7 +379,7 @@ let rec resolve_type cx = function
     begin
       match Base.List.(uses >>= possible_types_of_use cx) with
       (* The unit of intersection is normally mixed, but MergedT is hacky and empty
-      fits better here *)
+         fits better here *)
       | [] -> locationless_reason REmpty |> EmptyT.make |> with_trust bogus_trust
       | [x] -> x
       | x :: y :: ts -> InterRep.make x y ts |> create_intersection
@@ -570,7 +570,7 @@ let rec extract_members ?(exclude_proto_members = false) cx = function
     Success (AugmentableSMap.augment proto_members ~with_bindings:result)
   | Success (IntersectionT (_, rep)) ->
     (* Intersection type should autocomplete for every property of
-         every type in the intersection *)
+       every type in the intersection *)
     let ts = InterRep.members rep in
     let members = Base.List.map ~f:(extract_members_as_map ~exclude_proto_members cx) ts in
     Success

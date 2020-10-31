@@ -21,7 +21,7 @@ type ident = int
     of the tree.
     - A Root node holds the actual non-trivial state of a tvar, represented by a
     root structure (see below).
-**)
+ **)
 type node =
   | Goto of ident
   | Root of root
@@ -54,7 +54,7 @@ and root = {
 
     - Unresolved constraints contain bounds that carry both concrete types and
     other tvars as upper and lower bounds (see below).
-**)
+ **)
 
 and constraints =
   | Resolved of Type.use_op * Type.t
@@ -83,7 +83,7 @@ and bounds = {
 
     The use_op in the lower TypeMap represents the use_op when a lower bound
     was added.
-**)
+ **)
 
 let new_bounds () =
   {

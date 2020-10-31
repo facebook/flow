@@ -29,7 +29,7 @@ let get_cmdline (pid : int) : (string, string) result =
       Error error
 
 (* Takes a PID and returns the information about the process, including
-  the name and the PID of the parent process (PPID) *)
+   the name and the PID of the parent process (PPID) *)
 let get_proc_stat (pid : int) : (proc_stat, string) result =
   (* NOTE: Linux's OS type is Unix *)
   if Sys.os_type <> "Unix" then

@@ -26,7 +26,7 @@ let log_input_files fileset =
    flag has been passed, and,
 
    (iii) library files.
- *)
+*)
 let get_target_filename_set ~options ~libs ~all filename_set =
   FilenameSet.filter
     (fun f ->
@@ -160,7 +160,7 @@ let merge_targets ~env ~options ~profiling ~get_dependent_files roots =
   Lwt.return (sig_dependency_graph, component_map, roots, to_check)
 
 (* As we merge, we will process the target files in Classic mode. These are
-     included in roots set. *)
+   included in roots set. *)
 let merge_job ~visit ~roots ~iteration ~worker_mutator ~options ~reader component =
   let leader = Nel.hd component in
   let reader = Abstract_state_reader.Mutator_state_reader reader in
@@ -190,7 +190,7 @@ let merge_job ~visit ~roots ~iteration ~worker_mutator ~options ~reader componen
         Nel.fold_left
           (fun acc file ->
             (* Merge will have potentially merged more that the target files (roots).
-                 To avoid processing all those files, we pick the ones in the roots set. *)
+               To avoid processing all those files, we pick the ones in the roots set. *)
             if FilenameSet.mem file roots then
               let file_sig = FilenameMap.find file file_sigs in
               let typed_ast = FilenameMap.find file typed_asts in
@@ -220,8 +220,8 @@ let merge_job ~visit ~roots ~iteration ~worker_mutator ~options ~reader componen
   Ok result
 
 (* The processing step in Types-First needs to happen right after the check phase.
-     We have already merged any necessary dependencies, so now we only check the
-     target files for processing. *)
+   We have already merged any necessary dependencies, so now we only check the
+   target files for processing. *)
 let check_job ~visit ~iteration ~reader ~options acc roots =
   let metadata = Context.metadata_of_options options in
   List.fold_left
@@ -361,7 +361,7 @@ end
    use for `prepass_init` is to setup typing hooks that will gather the necessary
    information. `prepass_run` processes these results, while `store_precheck_result`
    stores it to main memory.
- *)
+*)
 module TypedRunnerWithPrepass (C : TYPED_RUNNER_WITH_PREPASS_CONFIG) : TYPED_RUNNER_CONFIG = struct
   type accumulator = C.accumulator
 

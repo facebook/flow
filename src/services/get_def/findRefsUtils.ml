@@ -61,7 +61,7 @@ let get_all_dependents ~reader options workers env file_key content =
       ~reader
       workers
       (* Surprisingly, creating this set doesn't seem to cause horrible performance but it's
-    probably worth looking at if you are searching for optimizations *)
+         probably worth looking at if you are searching for optimizations *)
       ~candidates:ServerEnv.(CheckedSet.all !env.checked_files)
       ~root_files:(FilenameSet.singleton file_key)
       ~root_modules:(Modulename.Set.singleton modulename)

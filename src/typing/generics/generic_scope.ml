@@ -9,18 +9,18 @@ open Loc_collections
 open Scope_id
 
 (* This module tracks what generics are currently in scope. We track a stack
-  of scopes, each with its own unique ID.  This isn't actually where we look
-  to see if a tvar is in scope for a given generic--the context tracks that
-  information. This module just helps us figure out what's in-scope at the
-  moment a tvar is created and set up the context.
+   of scopes, each with its own unique ID.  This isn't actually where we look
+   to see if a tvar is in scope for a given generic--the context tracks that
+   information. This module just helps us figure out what's in-scope at the
+   moment a tvar is created and set up the context.
 
-   When we add a new set of generics to the scope, we:
-   - Create a new ID for the scope
-   - Put the scope ID and the new set of generic IDs (which are ALoc.id's)
-      on the stack
-   - Update the context's generic_scope_map to map from the generic ID to *all*
-      of the generics
-      currently in scope (not just the ones that were just added)
+    When we add a new set of generics to the scope, we:
+    - Create a new ID for the scope
+    - Put the scope ID and the new set of generic IDs (which are ALoc.id's)
+       on the stack
+    - Update the context's generic_scope_map to map from the generic ID to *all*
+       of the generics
+       currently in scope (not just the ones that were just added)
 *)
 
 type scope = ALocIDSet.t

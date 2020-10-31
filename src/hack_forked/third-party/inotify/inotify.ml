@@ -114,7 +114,7 @@ let read fd =
        read(2) fails with the error EINVAL.  Specifying a buffer of size
 
            sizeof(struct inotify_event) + NAME_MAX + 1
-   *)
+  *)
   let event_size = struct_size () in
   let buf_size = event_size + name_max () + 1 in
   let buf = Bytes.create buf_size in

@@ -1006,11 +1006,11 @@ module ContextOptimizer = struct
 
       method! choice_use_tool =
         (* Even with MergedT, any choice kit constraints should be fully
-         discharged by this point. This preserves a key invariant, that type
-         graphs are local to a single merge job. In other words, we will not see
-         a FullyResolveType constraint that corresponds to a tvar from another
-         context. This makes it possible to clear the type graph before storing
-         in the heap. *)
+           discharged by this point. This preserves a key invariant, that type
+           graphs are local to a single merge job. In other words, we will not see
+           a FullyResolveType constraint that corresponds to a tvar from another
+           context. This makes it possible to clear the type graph before storing
+           in the heap. *)
         Utils_js.assert_false "choice kit uses should not appear in signatures"
 
       (* We need to make sure to hash the keys in any spread intermediate types! *)

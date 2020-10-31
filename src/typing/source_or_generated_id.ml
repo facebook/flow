@@ -8,10 +8,10 @@
 open Utils_js
 
 (* In order to minimize the frequency with which we unnecessarily compare
-    equivalent structures, we assign structures created at the top level of a
-    source program an id of their location instead of an int. This way, if we
-    see the structure twice between the merge and check phases, we consider them
-    equal just by looking at their ids *)
+   equivalent structures, we assign structures created at the top level of a
+   source program an id of their location instead of an int. This way, if we
+   see the structure twice between the merge and check phases, we consider them
+   equal just by looking at their ids *)
 type id =
   | Source of ALoc.id
   | Generated of int

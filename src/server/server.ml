@@ -138,11 +138,11 @@ let rec serve ~genv ~env =
   serve ~genv ~env
 
 (* The main entry point of the daemon
-* the only trick to understand here, is that env.modified is the set
-* of files that changed, it is only set back to SSet.empty when the
-* type-checker succeeded. So to know if there is some work to be done,
-* we look if env.modified changed.
-*)
+ * the only trick to understand here, is that env.modified is the set
+ * of files that changed, it is only set back to SSet.empty when the
+ * type-checker succeeded. So to know if there is some work to be done,
+ * we look if env.modified changed.
+ *)
 let create_program_init ~shared_mem_config ~init_id ?focus_targets options =
   let num_workers = Options.max_workers options in
   let handle = SharedMem_js.init ~num_workers shared_mem_config in

@@ -124,7 +124,7 @@ let main
       match content_of_file_input file with
       | Ok content -> content
       (* If the File_input is from stdin we would have been in the previous line.
-       If the File_input is from a file then expand_path verified the file exists. *)
+         If the File_input is from a file then expand_path verified the file exists. *)
       | _ ->
         let msg = Printf.sprintf "Failed to open file: %s" @@ filename_of_file_input file in
         FlowExitStatus.(exit ~msg Input_error)

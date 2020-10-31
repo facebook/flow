@@ -18,5 +18,5 @@ val get_event_fd : env -> Unix.file_descr
 val read_events : env -> event list
 
 (* Currently unimplemented
-val rm_watch : env -> string -> string
+   val rm_watch : env -> string -> string
 *)

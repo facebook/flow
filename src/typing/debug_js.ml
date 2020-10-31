@@ -115,7 +115,7 @@ let rec dump_t_ (depth, tvars) cx t =
     | Mixed_non_void -> "Mixed_non_void"
   in
   let string_of_any_source = function
-    | Annotated -> "Annotated"
+    | AnnotatedAny -> "AnnotatedAny"
     | AnyError _ -> "Error"
     | Unsound _ -> "Unsound"
     | Untyped -> "Untyped"
@@ -953,8 +953,8 @@ let string_of_scope_entry =
         cx { Entry.kind; value_state; value_declare_loc; value_assign_loc; specific; general } =
       let general_str =
         match general with
-        | Entry.Annotated t -> spf "Annotated %s" (dump_t cx t)
-        | Entry.Inferred t -> spf "Inferred %s" (dump_t cx t)
+        | Annotated t -> spf "Annotated %s" (dump_t cx t)
+        | Inferred t -> spf "Inferred %s" (dump_t cx t)
       in
       spf
         "{ kind: %s; value_state: %s; value_declare_loc: %S; value_assign_loc: %s; specific: %s; general: %s }"

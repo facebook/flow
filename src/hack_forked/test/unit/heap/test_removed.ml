@@ -13,8 +13,8 @@ module IntVal = struct
   let description = "IntVal"
 end
 
-let test_add_remove (module IntHeap : SharedMem.NoCache with type t = int and type key = string) ()
-    =
+let test_add_remove
+    (module IntHeap : SharedMem.NoCache with type key = string and type value = int) () =
   IntHeap.add "a" 4;
   assert (IntHeap.mem "a");
   IntHeap.remove_batch (IntHeap.KeySet.singleton "a");

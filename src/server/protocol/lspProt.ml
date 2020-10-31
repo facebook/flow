@@ -43,8 +43,8 @@ type metadata = {
 }
 
 (** For LSP work-items, we keep metadata about requests, to help us log better telemetry.
-   After the work has been handled, we fill out the second part of the metadata.
-*)
+    After the work has been handled, we fill out the second part of the metadata.
+ *)
 let empty_metadata =
   {
     start_wall_time = 0.0;

@@ -353,9 +353,9 @@ let filter_lints suppressions errors aloc_tables ~include_suppressions severity_
                 (match LintSettings.get_value lint_kind lint_settings with
                 | Off when include_suppressions ->
                   (* When --include-suppressions is active we only want to remove lints that were
-               never enabled in the first place, as opposed to those that are enabled but
-               suppressed. We also add them as an error regardless of what they were in the
-               first place. *)
+                     never enabled in the first place, as opposed to those that are enabled but
+                     suppressed. We also add them as an error regardless of what they were in the
+                     first place. *)
                   if LintSettings.is_explicit lint_kind lint_settings then
                     (ErrorSet.add error errors, warnings, suppressions)
                   else

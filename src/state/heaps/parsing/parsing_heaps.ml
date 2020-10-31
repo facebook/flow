@@ -15,8 +15,6 @@ module ASTHeap =
     (struct
       type t = (RelativeLoc.t, RelativeLoc.t) Flow_ast.Program.t
 
-      let prefix = Prefix.make ()
-
       let description = "AST"
     end)
 
@@ -26,8 +24,6 @@ module SigASTHeap =
     (struct
       type t = (ALoc.t, ALoc.t) Flow_ast.Program.t
 
-      let prefix = Prefix.make ()
-
       let description = "SigAST"
     end)
 
@@ -36,8 +32,6 @@ module SigASTALocTableHeap =
     (File_key)
     (struct
       type t = ALoc.table
-
-      let prefix = Prefix.make ()
 
       let description = "ALocTable"
     end)
@@ -56,8 +50,6 @@ module TypeSigHeap =
     (File_key)
     (struct
       type t = Type_sig_collections.Locs.index type_sig
-
-      let prefix = Prefix.make ()
 
       let description = "TypeSig"
     end)
@@ -122,8 +114,6 @@ module DocblockHeap =
     (struct
       type t = Docblock.t
 
-      let prefix = Prefix.make ()
-
       let description = "Docblock"
     end)
 
@@ -133,8 +123,6 @@ module FileSigHeap =
     (struct
       type t = File_sig.With_Loc.t
 
-      let prefix = Prefix.make ()
-
       let description = "Requires"
     end)
 
@@ -143,8 +131,6 @@ module SigFileSigHeap =
     (File_key)
     (struct
       type t = File_sig.With_ALoc.t
-
-      let prefix = Prefix.make ()
 
       let description = "SigRequires"
     end)
@@ -172,8 +158,6 @@ module FileHashHeap =
        * merge file foo.js, even if we parsed it at version N+1 & it's unchanged since version N+1.
        *)
       type t = Xx.hash
-
-      let prefix = Prefix.make ()
 
       let description = "FileHash"
     end)
@@ -305,39 +289,47 @@ end = struct
   let get_old_file_hash ~reader:_ = FileHashHeap.get_old
 
   let get_ast_unsafe ~reader:_ file =
-    try ASTHeap.find_unsafe file |> decompactify_loc file
-    with Not_found -> raise (Ast_not_found (File_key.to_string file))
+    match ASTHeap.get file with
+    | Some ast -> decompactify_loc file ast
+    | None -> raise (Ast_not_found (File_key.to_string file))
 
   let get_sig_ast_unsafe ~reader:_ file =
-    try SigASTHeap.find_unsafe file |> add_source_aloc file
-    with Not_found -> raise (Sig_ast_not_found (File_key.to_string file))
+    match SigASTHeap.get file with
+    | Some sig_ast -> add_source_aloc file sig_ast
+    | None -> raise (Sig_ast_not_found (File_key.to_string file))
 
   let get_sig_ast_aloc_table_unsafe ~reader:_ file =
-    try SigASTALocTableHeap.find_unsafe file
-    with Not_found -> raise (Sig_ast_ALoc_table_not_found (File_key.to_string file))
+    match SigASTALocTableHeap.get file with
+    | Some aloc_table -> aloc_table
+    | None -> raise (Sig_ast_ALoc_table_not_found (File_key.to_string file))
 
   let get_sig_ast_aloc_table_unsafe_lazy =
     make_lazy_aloc_table_fetcher ~get_sig_ast_aloc_table_unsafe
 
   let get_docblock_unsafe ~reader:_ file =
-    try DocblockHeap.find_unsafe file
-    with Not_found -> raise (Docblock_not_found (File_key.to_string file))
+    match DocblockHeap.get file with
+    | Some docblock -> docblock
+    | None -> raise (Docblock_not_found (File_key.to_string file))
 
   let get_file_sig_unsafe ~reader:_ file =
-    try FileSigHeap.find_unsafe file
-    with Not_found -> raise (Requires_not_found (File_key.to_string file))
+    match FileSigHeap.get file with
+    | Some file_sig -> file_sig
+    | None -> raise (Requires_not_found (File_key.to_string file))
 
   let get_sig_file_sig_unsafe ~reader:_ file =
-    try SigFileSigHeap.find_unsafe file
-    with Not_found -> raise (Sig_requires_not_found (File_key.to_string file))
+    match SigFileSigHeap.get file with
+    | Some sig_file_sig -> sig_file_sig
+    | None -> raise (Sig_requires_not_found (File_key.to_string file))
 
   let get_type_sig_unsafe ~reader:_ file =
-    try TypeSigHeap.find_unsafe file
-    with Not_found -> raise (Type_sig_not_found (File_key.to_string file))
+    match TypeSigHeap.get file with
+    | Some type_sig -> type_sig
+    | None -> raise (Type_sig_not_found (File_key.to_string file))
 
   let get_file_hash_unsafe ~reader:_ file =
-    try FileHashHeap.find_unsafe file
-    with Not_found -> raise (Hash_not_found (File_key.to_string file))
+    match FileHashHeap.get file with
+    | Some hash -> hash
+    | None -> raise (Hash_not_found (File_key.to_string file))
 end
 
 (* For use by a worker process *)

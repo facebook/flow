@@ -266,10 +266,10 @@ end
 
 (* Levenshtein distance algorithm.
 
-Based on the public domain implementation at
-https://bitbucket.org/camlspotter/ocaml_levenshtein/src/default/
+   Based on the public domain implementation at
+   https://bitbucket.org/camlspotter/ocaml_levenshtein/src/default/
 
- *)
+*)
 
 let levenshtein_distance (xs : string) (ys : string) =
   let min3 (x : int) y z =

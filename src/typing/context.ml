@@ -253,10 +253,10 @@ let docblock_overrides docblock_info metadata =
     | Some Docblock.OptInStrictLocal -> { metadata with checked = true; strict_local = true }
     | Some Docblock.OptInWeak -> { metadata with checked = true; weak = true }
     (* --all (which sets metadata.checked = true) overrides @noflow, so there are
-   currently no scenarios where we'd change checked = true to false. in the
-   future, there may be a case where checked defaults to true (but is not
-   forced to be true ala --all), but for now we do *not* want to force
-   checked = false here. *)
+       currently no scenarios where we'd change checked = true to false. in the
+       future, there may be a case where checked defaults to true (but is not
+       forced to be true ala --all), but for now we do *not* want to force
+       checked = false here. *)
     | Some Docblock.OptOut -> metadata
   in
   let metadata =
@@ -317,7 +317,7 @@ let make_ccx sig_cx aloc_tables =
 
 (* create a new context structure.
    Flow_js.fresh_context prepares for actual use.
- *)
+*)
 let make ccx metadata file rev_aloc_table module_ref phase =
   {
     ccx;

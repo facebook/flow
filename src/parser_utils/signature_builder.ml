@@ -411,8 +411,8 @@ class type_hoister =
     method private add_binding_list = List.iter (fun entry -> this#add_binding entry)
 
     (* Process local declarations. Ignore import declarations and export declarations since they are
-     handled in File_sig, although it is likely there is still some overlap, in which case we
-     arrange things so that whatever File_sig does wins.  *)
+       handled in File_sig, although it is likely there is still some overlap, in which case we
+       arrange things so that whatever File_sig does wins.  *)
     method! toplevel_statement_list (stmts : (Loc.t, Loc.t) Ast.Statement.t list) =
       stmts
       |> ListUtils.ident_map (fun stmt ->

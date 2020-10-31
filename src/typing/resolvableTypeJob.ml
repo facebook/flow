@@ -63,27 +63,27 @@ and collect_of_type ?log_unresolved cx acc = function
       match constraints with
       | FullyResolved _ ->
         (* Everything reachable from this type is certainly resolved, so we can
-         avoid walking the type entirely. *)
+           avoid walking the type entirely. *)
         acc
       | Resolved (_, t) ->
         let acc = IMap.add id OpenResolved acc in
         collect_of_type ?log_unresolved cx acc t
       | Unresolved _ ->
         (* It is important to consider reads of constant property names as fully
-         resolvable, especially since constant property names are often used to
-         store literals that serve as tags for disjoint unions. Unfortunately,
-         today we cannot distinguish such reads from others, so we rely on a
-         common style convention to recognize constant property names. For now
-         this hack pays for itself: we do not ask such reads to be annotated
-         with the corresponding literal types to decide membership in those
-         disjoint unions. *)
+           resolvable, especially since constant property names are often used to
+           store literals that serve as tags for disjoint unions. Unfortunately,
+           today we cannot distinguish such reads from others, so we rely on a
+           common style convention to recognize constant property names. For now
+           this hack pays for itself: we do not ask such reads to be annotated
+           with the corresponding literal types to decide membership in those
+           disjoint unions. *)
         if is_constant_reason r then
           IMap.add id (Binding (r, id)) acc
         (* Instantiable reasons indicate unresolved tvars that are created
-         "fresh" for the sole purpose of binding to other types, e.g. as
-         instantiations of type parameters or as existentials. Constraining
-         them during speculative matching typically do not cause side effects
-         across branches, and help make progress. *)
+           "fresh" for the sole purpose of binding to other types, e.g. as
+           instantiations of type parameters or as existentials. Constraining
+           them during speculative matching typically do not cause side effects
+           across branches, and help make progress. *)
         else if is_instantiable_reason r then
           acc
         else
@@ -300,7 +300,7 @@ and collect_of_binding ?log_unresolved cx acc = function
       match constraints with
       | FullyResolved _ ->
         (* Everything reachable from this type is certainly resolved, so we can
-         avoid walking the type entirely. *)
+           avoid walking the type entirely. *)
         acc
       | Resolved (_, t) ->
         let acc = IMap.add id OpenResolved acc in

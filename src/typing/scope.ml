@@ -15,7 +15,7 @@ let mk_id = Reason.mk_id
 
 (* these are basically owned by Env, but are here
    to break circularity between Env and Flow_js
- *)
+*)
 
 (* entry state *)
 module State = struct
@@ -88,10 +88,6 @@ module Entry = struct
     | Var VarBinding -> "var"
     | Var ConstlikeVarBinding -> "var"
 
-  type general_type =
-    | Annotated of Type.t
-    | Inferred of Type.t
-
   type value_binding = {
     kind: value_kind;
     value_state: State.t;
@@ -100,7 +96,7 @@ module Entry = struct
     (* The last location (in this scope) where the entry value was assigned *)
     value_assign_loc: ALoc.t;
     specific: Type.t;
-    general: general_type;
+    general: Type.annotated_or_inferred;
   }
 
   type type_binding_kind =
@@ -126,9 +122,9 @@ module Entry = struct
   let new_value ~has_anno kind state specific general value_declare_loc =
     let general =
       if has_anno then
-        Annotated general
+        Type.Annotated general
       else
-        Inferred general
+        Type.Inferred general
     in
     Value
       {
@@ -175,13 +171,8 @@ module Entry = struct
     | Type t -> t.type_loc
     | Class _ -> ALoc.none
 
-  let type_t_of_general_type = function
-    | Inferred t
-    | Annotated t ->
-      t
-
   let declared_type = function
-    | Value v -> type_t_of_general_type v.general
+    | Value v -> TypeUtil.type_t_of_annotated_or_inferred v.general
     | Type t -> t.type_
     | Class _ -> assert_false "Internal Error: Class bindings have no type"
 
@@ -197,7 +188,8 @@ module Entry = struct
 
   let kind_of_value (value : value_binding) = value.kind
 
-  let general_of_value (value : value_binding) = type_t_of_general_type value.general
+  let general_of_value (value : value_binding) =
+    TypeUtil.type_t_of_annotated_or_inferred value.general
 
   let state_of_value (value : value_binding) = value.value_state
 
@@ -205,7 +197,7 @@ module Entry = struct
       with general type for non-internal, non-Const value entries. Types, consts
       and internal vars are read-only, so specific types can be preserved.
       TODO: value_state should go from Declared to MaybeInitialized?
-    *)
+   *)
   let havoc name entry =
     match entry with
     | Type _ -> entry
@@ -214,7 +206,7 @@ module Entry = struct
       if Reason.is_internal_name name then
         entry
       else
-        Value { v with specific = type_t_of_general_type v.general }
+        Value { v with specific = TypeUtil.type_t_of_annotated_or_inferred v.general }
     | Value { kind = Const _; _ } -> entry
     | Value { kind = Var ConstlikeVarBinding; _ } -> entry
     | Value { kind = Let ConstlikeLetVarBinding; _ } -> entry
@@ -223,7 +215,7 @@ module Entry = struct
       if Reason.is_internal_name name then
         entry
       else
-        Value { v with specific = type_t_of_general_type v.general }
+        Value { v with specific = TypeUtil.type_t_of_annotated_or_inferred v.general }
     | Class _ -> entry
 
   let reset loc name entry =
@@ -324,7 +316,7 @@ let fresh_lex () = fresh_impl LexScope
 
 (* clone a scope: snapshot mutable entries.
    NOTE: tvars (OpenT) are essentially refs, and are shared by clones.
- *)
+*)
 let clone { id; kind; entries; refis; declare_func_annots } =
   { id; kind; entries; refis; declare_func_annots }
 
@@ -380,7 +372,7 @@ let filter_refis_using_propname ~private_ propname refis =
 (* havoc a scope's refinements:
    if name is passed, clear refis whose expressions involve it.
    otherwise, clear them all
- *)
+*)
 let havoc_refis ?name ~private_ scope =
   scope.refis <-
     (match name with
@@ -394,7 +386,7 @@ let havoc_all_refis ?name scope =
 (* havoc a scope:
    - clear all refinements
    - reset specific types of entries to their general types
- *)
+*)
 let havoc scope =
   havoc_all_refis scope;
   update_entries Entry.havoc scope

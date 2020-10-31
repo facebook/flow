@@ -100,9 +100,9 @@ module Callee_finder = struct
   exception Found of t option
 
   (* find the argument whose Loc contains `loc`, or the first one past it.
-      the latter covers the `f(x,| y)` case, where your cursor is after the
-      comma and before the space; this is not contained in `x` nor `y`, but should
-      select `y`. *)
+     the latter covers the `f(x,| y)` case, where your cursor is after the
+     comma and before the space; this is not contained in `x` nor `y`, but should
+     select `y`. *)
   let rec find_argument ~reader cursor arguments i =
     match arguments with
     | [] -> i

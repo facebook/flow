@@ -14,8 +14,6 @@ module NameHeap =
     (struct
       type t = File_key.t
 
-      let prefix = Prefix.make ()
-
       let description = "Name"
     end)
 
@@ -28,12 +26,12 @@ module NameHeap =
 type resolved_requires = {
   resolved_modules: Modulename.t SMap.t;
   (* map from module references in file
-                                            to module names they resolve to *)
+     to module names they resolve to *)
   phantom_dependents: SSet.t;
   (* set of paths that were looked up but not found
-                                 when resolving module references in the file:
-                                 when the paths come into existence, the module
-                                 references need to be re-resolved. *)
+     when resolving module references in the file:
+     when the paths come into existence, the module
+     references need to be re-resolved. *)
   hash: Xx.hash; (* An easy way to compare two resolved_requires to see if they've changed *)
 }
 (** TODO [perf] Make resolved_requires tighter. For info:
@@ -42,7 +40,7 @@ type resolved_requires = {
 
     (2) parsed? We only care about the module provided by an unparsed file, but
     that's probably guessable.
-**)
+ **)
 
 let mk_resolved_requires ~resolved_modules ~phantom_dependents =
   let state = Xx.init 0L in
@@ -59,8 +57,6 @@ module ResolvedRequiresHeap =
     (File_key)
     (struct
       type t = resolved_requires
-
-      let prefix = Prefix.make ()
 
       let description = "ResolvedRequires"
     end)
@@ -82,8 +78,6 @@ module InfoHeap =
     (File_key)
     (struct
       type t = info
-
-      let prefix = Prefix.make ()
 
       let description = "Info"
     end)
@@ -174,7 +168,7 @@ end = struct
   type t = unit
 
   (* We actually may have multiple Resolved_requires_mutator's in a single transaction. So we need to
-  * assert that they never interfere with each other *)
+   * assert that they never interfere with each other *)
   let active_files = currently_oldified_resolved_requires
 
   let commit files =

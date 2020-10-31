@@ -482,10 +482,10 @@ class type_killer (reader : Parsing_heaps.Reader.reader) =
   end
 
 (* The fact that we need this feels convoluted.
-    We started with a typed AST, then stripped the types off of it to run Scope_builder on it,
-    and now we go back to the typed AST to get the types of the locations we got from Scope_api.
-    We wouldn't need to do this separate pass if Scope_builder/Scope_api were polymorphic.
- *)
+   We started with a typed AST, then stripped the types off of it to run Scope_builder on it,
+   and now we go back to the typed AST to get the types of the locations we got from Scope_api.
+   We wouldn't need to do this separate pass if Scope_builder/Scope_api were polymorphic.
+*)
 class type_collector (reader : Parsing_heaps.Reader.reader) (locs : LocSet.t) =
   object
     inherit [ALoc.t, ALoc.t * Type.t, ALoc.t, ALoc.t * Type.t] Flow_polymorphic_ast_mapper.mapper
@@ -545,14 +545,14 @@ let local_value_identifiers ~options ~reader ~cx ~ac_loc ~file_sig ~typed_ast ~t
         let scope_vars = scope.Scope.defs |> SMap.map (fun Def.{ locs; _ } -> Nel.hd locs) in
 
         (* don't suggest lexically-scoped variables declared after the current location.
-          this filtering isn't perfect:
+           this filtering isn't perfect:
 
-            let foo = /* request here */
-                ^^^
-                def_loc
+             let foo = /* request here */
+                 ^^^
+                 def_loc
 
-          since def_loc is the location of the identifier within the declaration statement
-          (not the entire statement), we don't filter out foo when declaring foo. *)
+           since def_loc is the location of the identifier within the declaration statement
+           (not the entire statement), we don't filter out foo when declaring foo. *)
         let relevant_scope_vars =
           if scope.Scope.lexical then
             SMap.filter (fun _name def_loc -> Loc.compare def_loc ac_loc < 0) scope_vars
@@ -838,8 +838,8 @@ let autocomplete_unqualified_type ~options ~reader ~cx ~tparams ~file_sig ~ac_lo
          (tparam_results, [])
   in
   (* The value-level identifiers we suggest in type autocompletion:
-      - classes
-      - modules (followed by a dot) *)
+     - classes
+     - modules (followed by a dot) *)
   let (results, errors_to_log) =
     local_value_identifiers ~options ~typed_ast ~reader ~ac_loc ~tparams ~cx ~file_sig
     |> List.fold_left

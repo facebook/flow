@@ -147,7 +147,7 @@ let rec convert cx tparams_map =
   function
   | (loc, (Any _ as t_ast)) ->
     add_unclear_type_error_if_not_lib_file cx loc;
-    ((loc, AnyT.at Annotated loc), t_ast)
+    ((loc, AnyT.at AnnotatedAny loc), t_ast)
   | (loc, (Mixed _ as t_ast)) -> ((loc, MixedT.at loc |> with_trust_inference cx), t_ast)
   | (loc, (Empty _ as t_ast)) -> ((loc, EmptyT.at loc |> with_trust_inference cx), t_ast)
   | (loc, (Void _ as t_ast)) -> ((loc, VoidT.at loc |> with_trust_inference cx), t_ast)
@@ -210,19 +210,19 @@ let rec convert cx tparams_map =
       | [t] -> t
       | t0 :: t1 :: ts ->
         (* If a tuple should be viewed as an array, what would the element type of
-       the array be?
+           the array be?
 
-       Using a union here seems appealing but is wrong: setting elements
-       through arbitrary indices at the union type would be unsound, since it
-       might violate the projected types of the tuple at their corresponding
-       positions. This also shows why `mixed` doesn't work, either.
+           Using a union here seems appealing but is wrong: setting elements
+           through arbitrary indices at the union type would be unsound, since it
+           might violate the projected types of the tuple at their corresponding
+           positions. This also shows why `mixed` doesn't work, either.
 
-       On the other hand, using the empty type would prevent writes, but admit
-       unsound reads.
+           On the other hand, using the empty type would prevent writes, but admit
+           unsound reads.
 
-       The correct solution is to safely case a tuple type to a covariant
-       array interface whose element type would be a union.
-    *)
+           The correct solution is to safely case a tuple type to a covariant
+           array interface whose element type would be a union.
+        *)
         UnionT (element_reason, UnionRep.make t0 t1 ts)
     in
     ( (loc, DefT (reason, infer_trust cx, ArrT (TupleAT (elemt, tuple_types)))),
@@ -460,7 +460,7 @@ let rec convert cx tparams_map =
                 targs
             | _ -> error_type cx loc (Error_message.EPropertyTypeAnnot loc) t_ast)
       (* $ElementType<T, string> acts as the type of the string elements in object
-     type T *)
+         type T *)
       | "$ElementType" ->
         check_type_arg_arity cx loc t_ast targs 2 (fun () ->
             match convert_type_params () with
@@ -672,9 +672,9 @@ let rec convert cx tparams_map =
       | "this" ->
         if SMap.mem "this" tparams_map then
           (* We model a this type like a type parameter. The bound on a this
-         type reflects the interface of `this` exposed in the current
-         environment. Currently, we only support this types in a class
-         environment: a this type in class C is bounded by C. *)
+             type reflects the interface of `this` exposed in the current
+             environment. Currently, we only support this types in a class
+             environment: a this type in class C is bounded by C. *)
           check_type_arg_arity cx loc t_ast targs 0 (fun () ->
               reconstruct_ast
                 (Flow.reposition cx loc ~annot_loc:loc (SMap.find "this" tparams_map))
@@ -695,12 +695,12 @@ let rec convert cx tparams_map =
         check_type_arg_arity cx loc t_ast targs 0 (fun () ->
             add_unclear_type_error_if_not_lib_file cx loc;
             let reason = mk_annot_reason RFunctionType loc in
-            reconstruct_ast (AnyT.make Annotated reason) None)
+            reconstruct_ast (AnyT.make AnnotatedAny reason) None)
       | "Object" ->
         check_type_arg_arity cx loc t_ast targs 0 (fun () ->
             add_unclear_type_error_if_not_lib_file cx loc;
             let reason = mk_annot_reason RObjectType loc in
-            reconstruct_ast (AnyT.make Annotated reason) None)
+            reconstruct_ast (AnyT.make AnnotatedAny reason) None)
       | "Function$Prototype$Apply" ->
         check_type_arg_arity cx loc t_ast targs 0 (fun () ->
             let reason = mk_annot_reason RFunctionType loc in
@@ -847,11 +847,11 @@ let rec convert cx tparams_map =
        * var x: $FlowFixMe<number> = 123;
        *)
       (* TODO move these to type aliases once optional type args
-     work properly in type aliases: #7007731 *)
+         work properly in type aliases: #7007731 *)
       | type_name when is_suppress_type cx type_name ->
         (* Optional type params are info-only, validated then forgotten. *)
         let (_, targs) = convert_type_params () in
-        reconstruct_ast (AnyT.at Annotated loc) targs
+        reconstruct_ast (AnyT.at AnnotatedAny loc) targs
       (* in-scope type vars *)
       | _ when SMap.mem name tparams_map ->
         check_type_arg_arity cx loc t_ast targs 0 (fun () ->
@@ -1097,8 +1097,8 @@ let rec convert cx tparams_map =
     add_deprecated_type_error_if_not_lib_file cx loc;
 
     (* Do not evaluate existential type variables when map is non-empty. This
-     ensures that existential type variables under a polymorphic type remain
-     unevaluated until the polymorphic type is applied. *)
+       ensures that existential type variables under a polymorphic type remain
+       unevaluated until the polymorphic type is applied. *)
     let force = SMap.is_empty tparams_map in
     let reason = derivable_reason (mk_annot_reason RExistential loc) in
     if force then
@@ -1604,7 +1604,7 @@ and mk_func_sig =
         tparams_map;
         fparams;
         body = None;
-        return_t;
+        return_t = Annotated return_t;
         knot;
       },
       {
@@ -1641,7 +1641,7 @@ and mk_return_type_annotation cx tparams_map reason ~definitely_returns_void ann
     let t = VoidT.why reason |> with_trust literal_trust in
     (t, T.Missing (loc, t))
   (* TODO we could probably take the same shortcut for functions with an explicit `void` annotation
-  and no explicit returns *)
+     and no explicit returns *)
   | _ -> mk_type_annotation cx tparams_map reason annot
 
 and mk_type_available_annotation cx tparams_map (loc, annot) =
@@ -1860,7 +1860,9 @@ and add_interface_properties cx tparams_map properties s =
                       Ast.Type.Object.Property.Get (get_loc, func) ) ->
                     Flow_js.add_output cx (Error_message.EUnsafeGettersSetters loc);
                     let (fsig, func_ast) = mk_func_sig cx tparams_map loc func in
-                    let prop_t = fsig.Func_type_sig.return_t in
+                    let prop_t =
+                      TypeUtil.type_t_of_annotated_or_inferred fsig.Func_type_sig.return_t
+                    in
                     ( add_getter ~static name id_loc fsig x,
                       Ast.Type.
                         ( loc,

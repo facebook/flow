@@ -1597,9 +1597,9 @@ class virtual ['M, 'T, 'N, 'U] mapper =
       this#pattern expr
 
     (* NOTE: Patterns are highly overloaded. A pattern can be a binding pattern,
-     which has a kind (Var/Let/Const, with Var being the default for all pre-ES5
-     bindings), or an assignment pattern, which has no kind. Subterms that are
-     patterns inherit the kind (or lack thereof). *)
+       which has a kind (Var/Let/Const, with Var being the default for all pre-ES5
+       bindings), or an assignment pattern, which has no kind. Subterms that are
+       patterns inherit the kind (or lack thereof). *)
     method pattern ?kind (expr : ('M, 'T) Ast.Pattern.t) : ('N, 'U) Ast.Pattern.t =
       let open Ast.Pattern in
       let (annot, patt) = expr in

@@ -564,8 +564,8 @@ module Eval (Env : EvalEnv) = struct
     | Minus
     | Not ->
       (* TODO: These operations are evaluated by Flow; they may or may not have simple result
-           types. Ideally we'd be verifying the argument. Unfortunately, we don't (see below). The
-           generator does some basic constant evaluation to compensate, but it's not enough. *)
+         types. Ideally we'd be verifying the argument. Unfortunately, we don't (see below). The
+         generator does some basic constant evaluation to compensate, but it's not enough. *)
       ignore tps;
       ignore argument;
       Deps.bot

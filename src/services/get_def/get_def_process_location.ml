@@ -6,12 +6,12 @@
  *)
 
 (*
-  `Ok request` =
-    the given loc is in a symbol for which it makes sense to ask for a definition,
-    process `request` to get to the definition
-  Error loc =
-    the given loc is in a symbol which is its own definition,
-    `loc` is the loc of the symbol
+   `Ok request` =
+     the given loc is in a symbol for which it makes sense to ask for a definition,
+     process `request` to get to the definition
+   Error loc =
+     the given loc is in a symbol which is its own definition,
+     `loc` is the loc of the symbol
 *)
 exception Result of (Get_def_request.t, ALoc.t) result
 
@@ -250,7 +250,7 @@ class searcher (target_loc : Loc.t) (is_legit_require : ALoc.t -> bool) =
   end
 
 (*  This type is distinct from the one raised by the searcher because
-    it would never make sense for the searcher to raise LocNotFound *)
+   it would never make sense for the searcher to raise LocNotFound *)
 type result =
   | OwnDef of ALoc.t
   | Request of Get_def_request.t

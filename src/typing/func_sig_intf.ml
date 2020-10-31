@@ -26,7 +26,7 @@ module type S = sig
     tparams_map: Type.t SMap.t;
     fparams: func_params;
     body: (ALoc.t, ALoc.t) Flow_ast.Function.body option;
-    return_t: Type.t;
+    return_t: Type.annotated_or_inferred;
     knot: Type.t;
   }
 
@@ -35,11 +35,12 @@ module type S = sig
   val default_constructor : Reason.t -> t
   (** Create signature for a default constructor.
 
-    Flow represents default constructors as empty functions, i.e., functions
-    with no type parameters, no formal parameters, an empty body, and a void
-    return type. *)
+      Flow represents default constructors as empty functions, i.e., functions
+      with no type parameters, no formal parameters, an empty body, and a void
+      return type. *)
 
   val field_initializer :
+    has_anno:bool ->
     Type.t SMap.t ->
     (* type params map *)
     Reason.t ->
@@ -50,10 +51,10 @@ module type S = sig
     t
   (** Create signature for a class field initializer.
 
-    Field initializers are evaluated in the context of the class body.
-    Representing the initializer as a function means we can reuse `toplevels`
-    from this module to evaluate the initializer in the appropriate context,
-    where `this` and `super` point to the appropriate types. *)
+      Field initializers are evaluated in the context of the class body.
+      Representing the initializer as a function means we can reuse `toplevels`
+      from this module to evaluate the initializer in the appropriate context,
+      where `this` and `super` point to the appropriate types. *)
 
   (** 1. Manipulation *)
 
@@ -61,12 +62,12 @@ module type S = sig
                                             t -> t
   (** Return a signature with types from provided map substituted.
 
-    Note that this function does not substitute type parameters declared by the
-    function itself, which may shadow the names of type parameters in the
-    provided map.
+      Note that this function does not substitute type parameters declared by the
+      function itself, which may shadow the names of type parameters in the
+      provided map.
 
-    This signature's own type parameters will be subtituted by the
-    `generate-tests` function. *)
+      This signature's own type parameters will be subtituted by the
+      `generate-tests` function. *)
 
   val check_with_generics : Context.t -> (t -> 'a) -> t -> 'a
   (** Invoke callback with type parameters substituted by upper/lower bounds. *)
@@ -85,21 +86,22 @@ module type S = sig
       (ALoc.t, ALoc.t) Flow_ast.Statement.t list ->
       (ALoc.t, ALoc.t * Type.t) Flow_ast.Statement.t list) ->
     expr:
-      (Context.t ->
+      (?cond:Type.cond_context ->
+      Context.t ->
+      annot:unit option ->
       (ALoc.t, ALoc.t) Flow_ast.Expression.t ->
       (ALoc.t, ALoc.t * Type.t) Flow_ast.Expression.t) ->
-    return_annot:unit option ->
     t ->
     func_params_tast option
     * (ALoc.t, ALoc.t * Type.t) Flow_ast.Function.body option
     * (ALoc.t, ALoc.t * Type.t) Flow_ast.Expression.t option
   (** Evaluate the function.
 
-    This function creates a new scope, installs bindings for the function's
-    parameters and internal bindings (e.g., this, yield), processes the
-    statements in the function body, and provides an implicit return type if
-    necessary. This is when the body of the function gets checked, so it also
-    returns a typed AST of the function body. *)
+      This function creates a new scope, installs bindings for the function's
+      parameters and internal bindings (e.g., this, yield), processes the
+      statements in the function body, and provides an implicit return type if
+      necessary. This is when the body of the function gets checked, so it also
+      returns a typed AST of the function body. *)
 
   (** 1. Type Conversion *)
 
@@ -113,14 +115,14 @@ module type S = sig
   val gettertype : t -> Type.t
   (** Create a type of the return expression of a getter function.
 
-    Note that this is a partial function. If the signature does not represent a
-    getter, this function will raise an exception. *)
+      Note that this is a partial function. If the signature does not represent a
+      getter, this function will raise an exception. *)
 
   val settertype : t -> Type.t
   (** Create a type of the single parameter of a setter function.
 
-    Note that this is a partial function. If the signature does not represent a
-    setter, this function will raise an exception. *)
+      Note that this is a partial function. If the signature does not represent a
+      setter, this function will raise an exception. *)
 
   (** 1. Util *)
 

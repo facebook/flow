@@ -365,8 +365,8 @@ let utf8_escape =
         (* supplemental planes *)
         | n ->
           (* ES5 does not support the \u{} syntax, so print surrogate pairs
-         "\ud83d\udca9" instead of "\u{1f4A9}". if we add a flag to target
-         ES6, we should change this. *)
+             "\ud83d\udca9" instead of "\u{1f4A9}". if we add a flag to target
+             ES6, we should change this. *)
           let n' = n - 0x10000 in
           let hi = 0xD800 lor (n' lsr 10) in
           let lo = 0xDC00 lor (n' land 0x3FF) in
@@ -675,8 +675,8 @@ and statement ?(pretty_semicolon = false) ~opts (root_stmt : (Loc.t, Loc.t) Ast.
                    wrap_in_parens_on_break (expression ~opts arg)
                  | _ ->
                    (* If the return argument has a leading comment then we must wrap the argument
-                     and its comments in parens. Otherwise, the comments could push the argument
-                     to the next line, meaning the return would be parsed without an argument. *)
+                      and its comments in parens. Otherwise, the comments could push the argument
+                      to the next line, meaning the return would be parsed without an argument. *)
                    let (leading, _) = Comment_attachment.expression_comment_bounds arg in
                    let arg = expression ~opts arg in
                    if leading = None then
@@ -946,8 +946,8 @@ and expression ?(ctxt = normal_context) ~opts (root_expr : (Loc.t, Loc.t) Ast.Ex
         layout_node_with_comments_opt loc comments @@ group [props_layout]
       | E.Sequence { E.Sequence.expressions; comments } ->
         (* to get an AST like `x, (y, z)`, then there must've been parens
-         around the right side. we can force that by bumping the minimum
-         precedence. *)
+           around the right side. we can force that by bumping the minimum
+           precedence. *)
         let precedence = precedence + 1 in
         let layouts =
           Base.List.map ~f:(expression_with_parens ~precedence ~ctxt ~opts) expressions
@@ -1001,8 +1001,8 @@ and expression ?(ctxt = normal_context) ~opts (root_expr : (Loc.t, Loc.t) Ast.Ex
                    fuse [right_separator; expression ~ctxt ~opts right]
                  | _ ->
                    (* to get an AST like `x + (y - z)`, then there must've been parens
-             around the right side. we can force that by bumping the minimum
-             precedence to not have parens. *)
+                      around the right side. we can force that by bumping the minimum
+                      precedence to not have parens. *)
                    let precedence = precedence + 1 in
                    let ctxt =
                      {
@@ -1072,7 +1072,7 @@ and expression ?(ctxt = normal_context) ~opts (root_expr : (Loc.t, Loc.t) Ast.Ex
         in
         let right = expression_with_parens ~precedence:(precedence + 1) ~ctxt ~opts right in
         (* if we need to wrap, the op stays on the first line, with the RHS on a
-         new line and indented by 2 spaces *)
+           new line and indented by 2 spaces *)
         layout_node_with_comments_opt loc comments
         @@ Group [left; pretty_space; operator; Indent (fuse [right_separator; right])]
       | E.Member m -> member ~precedence ~ctxt ~opts m loc
@@ -1140,7 +1140,7 @@ and expression ?(ctxt = normal_context) ~opts (root_expr : (Loc.t, Loc.t) Ast.Ex
              | E.Update.Decrement -> Atom "--"
            in
            (* we never need to wrap `argument` in parens because it must be a valid
-         left-hand side expression *)
+              left-hand side expression *)
            if prefix then
              fuse [s_operator; expression ~ctxt ~opts argument]
            else
@@ -1708,8 +1708,8 @@ and arrow_function
              params_and_stuff;
            ];
          (* Babylon does not parse ():*=>{}` because it thinks the `*=` is an
-       unexpected multiply-and-assign operator. Thus, we format this with a
-       space e.g. `():* =>{}`. *)
+            unexpected multiply-and-assign operator. Thus, we format this with a
+            space e.g. `():* =>{}`. *)
          begin
            match return with
            | Ast.Type.Available (_, (_, Ast.Type.Exists _)) -> space
@@ -2657,7 +2657,7 @@ and jsx_children ~opts loc (_children_loc, children) =
               | Some last_line when loc.start.line > last_line + 1 ->
                 fuse [pretty_hardline; Newline; child_n]
               (* If the current child and the previous child line positions are offset match
-           this via forcing a newline *)
+                 this via forcing a newline *)
               | Some last_line when loc.start.line > last_line ->
                 (* TODO: Remove the `Newline` hack, this forces newlines to exist
                    when using the compact printer *)

@@ -229,9 +229,9 @@ let make_next_files_and_symlinks
             if is_symlink then
               let symlinks =
                 (* accumulates all of the symlinks that point to
-                directories outside of `paths`; symlinks that point to
-                directories already covered by `paths` will be found on
-                their own, so they are skipped. *)
+                   directories outside of `paths`; symlinks that point to
+                   directories already covered by `paths` will be found on
+                   their own, so they are skipped. *)
                 if not (List.exists (fun check -> check path) prefix_checkers) then
                   SSet.add path symlinks
                 else

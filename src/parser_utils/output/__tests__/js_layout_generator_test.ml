@@ -58,12 +58,12 @@ let tests =
            assert_expression ~ctxt "x+(+y+y)" ast;
 
            (* `*` is higher precedence than `+`, so would not normally need parens if
-         not for the `+y` *)
+              not for the `+y` *)
            let ast = E.plus x (E.mult plus_y y) in
            assert_expression ~ctxt "x+(+y)*y" ast;
 
            (* parens are necessary around the inner `+y+y`, but would be reundant
-         around the multiplication. that is, we don't need `x+((+y+y)*y)`. *)
+              around the multiplication. that is, we don't need `x+((+y+y)*y)`. *)
            let ast = E.plus x (E.mult (E.plus plus_y y) y) in
            assert_expression ~ctxt "x+(+y+y)*y" ast );
          ( "update_plus_binary" >:: fun ctxt ->
@@ -1756,8 +1756,8 @@ let tests =
              ("export * as " ^ String.make 80 'a' ^ " from \"a\";");
            assert_statement_string ~ctxt ~pretty:true "export opaque type a = b;" )
          (* TODO: Flow does not parse this but should
-      assert_statement_string ~ctxt "export a,{b}from'a';";
-      assert_statement_string ~ctxt "export*as foo,{bar}from'a';"; *);
+            assert_statement_string ~ctxt "export a,{b}from'a';";
+            assert_statement_string ~ctxt "export*as foo,{bar}from'a';"; *);
          ( "default_export_declaration_statement" >:: fun ctxt ->
            assert_statement_string ~ctxt "export default a;";
            assert_statement_string ~ctxt "export default a=b;";

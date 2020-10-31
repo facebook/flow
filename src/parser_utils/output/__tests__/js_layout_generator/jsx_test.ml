@@ -109,10 +109,10 @@ let tests =
     ( "borderline_length_with_children" >:: fun ctxt ->
       (* opening tag is 80 columns. if it's indented, make sure it breaks.
 
-      <aaaaaaaaaaaaa bbbb="cccccccccccccccccccccccccccccccccccc" ddddd="eeeeeeeeeeee">
-        <f />
-      </aaaaaaaaaaaaa>
-    *)
+         <aaaaaaaaaaaaa bbbb="cccccccccccccccccccccccccccccccccccc" ddddd="eeeeeeeeeeee">
+           <f />
+         </aaaaaaaaaaaaa>
+      *)
       let a_loc = make_loc 1 4 in
       let f_loc = make_loc 2 2 in
       let ast =

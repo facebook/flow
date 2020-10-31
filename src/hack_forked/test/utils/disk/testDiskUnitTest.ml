@@ -9,7 +9,7 @@
  * the real hard disk. *)
 
 (** Test writing to cwd directly without using realpath expansion in
-* Path module. *)
+ * Path module. *)
 let test_write_and_read_directly_cwd () =
   Disk.write_file ~file:"./a.txt" ~contents:"hello";
   let contents = Disk.cat "./a.txt" in

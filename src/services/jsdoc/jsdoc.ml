@@ -108,11 +108,11 @@ module Parser = struct
   (* Parsing functions *)
 
   (*
-    `description`, `description_or_tag`, and `description_startline` are
-    helpers for parsing descriptions: a description is a possibly-multiline
-    string terminated by EOF or a new tag. The beginning of each line could
-    contain whitespace and asterisks, which are stripped out when parsing.
-   *)
+     `description`, `description_or_tag`, and `description_startline` are
+     helpers for parsing descriptions: a description is a possibly-multiline
+     string terminated by EOF or a new tag. The beginning of each line could
+     contain whitespace and asterisks, which are stripped out when parsing.
+  *)
   let rec description desc_buf lexbuf =
     match%sedlex lexbuf with
     | line_terminator_sequence ->

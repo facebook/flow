@@ -38,14 +38,14 @@ val union : t -> t -> t
 
 val diff : t -> t -> t
 (** [diff a b] removes from [a] every key which exists in [b] and which has an equal or higher
-  kind in [b] than it does in [a], where Focused > Dependent > Dependency. So
+    kind in [b] than it does in [a], where Focused > Dependent > Dependency. So
 
-  {[
-    diff
-      { A: Focused, B: Focused,   C: Dependency, D: Dependent }
-      { A: Focused, B: Dependent, C: Dependent}
-    = { B: Focused, D: Dependent }
-  ]}
+    {[
+      diff
+        { A: Focused, B: Focused,   C: Dependency, D: Dependent }
+        { A: Focused, B: Dependent, C: Dependent}
+      = { B: Focused, D: Dependent }
+    ]}
  *)
 
 val filter : f:(File_key.t -> bool) -> t -> t
@@ -59,7 +59,7 @@ val dependents : t -> Utils_js.FilenameSet.t
 val dependencies : t -> Utils_js.FilenameSet.t
 
 (* This is O(n) in the size of the checked set. Because checked sets are typically very large, this
-* operation should be avoided in production code. *)
+ * operation should be avoided in production code. *)
 val debug_equal : t -> t -> bool
 
 val debug_to_string : ?limit:int -> t -> string

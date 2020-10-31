@@ -59,6 +59,7 @@
 #include <caml/fail.h>
 #include <caml/unixsupport.h>
 #include <caml/intext.h>
+#include <caml/bigarray.h>
 
 #ifdef _WIN32
 #include <windows.h>
@@ -169,6 +170,28 @@ static int win32_getpagesize(void) {
 
 /* Convention: .*_b = Size in bytes. */
 
+// Locations in the heap are encoded as byte offsets from the beginning of the
+// hash table. Because all data in the heap is word-aligned, these offsets will
+// always have 0 in the 3 low bits.
+//
+// Currently, we rely on the least significant bit being 0 to distinguish these
+// addresses from headers. Eventually we may want to rely on the 2 lower bits,
+// to represent 4 states in the GC tags instead of 3 (e.g., a gray color state
+// for incremental marking.)
+//
+// Note that the offsets do not start at the beginning of the heap, but the
+// start of the hash table. This has two important implications:
+//
+// 1. The offset 0 will always point to the hash of the first hash table entry,
+// which is never a meaningful offset. Because of this, we can take the address
+// 0 to be the "null" address.
+//
+// 2. During garbage collection, it is necessary to point from the heap to the
+// hash table itself, since we temporarily store heap headers in the addr field
+// of helt_t. By starting the offsets at the beginning of the hash table, we can
+// represent offsets into the hash table itself.
+typedef uint64_t addr_t;
+
 typedef struct {
   /* Layout information, used by workers to create memory mappings. */
   size_t locals_size_b;
@@ -180,10 +203,10 @@ typedef struct {
   size_t hashtbl_slots;
 
   /* Where the heap started (bottom), offset from hashtbl pointer */
-  size_t heap_init;
+  addr_t heap_init;
 
   /* Where the heap will end (top), offset from hashtbl pointer */
-  size_t heap_max;
+  addr_t heap_max;
 
   /* Logging level for shared memory statistics
    * 0 = nothing
@@ -210,7 +233,7 @@ typedef struct {
   alignas(128) uintnat hcounter_filled;
 
   /* The top of the heap, offset from hashtbl pointer */
-  alignas(128) size_t heap;
+  alignas(128) addr_t heap;
 } shmem_info_t;
 
 /* Per-worker data which can be quickly updated non-atomically. Will be placed
@@ -240,32 +263,25 @@ typedef struct {
 // during garbage collection (see hh_collect).
 typedef uint64_t hh_header_t;
 
-// Locations in the heap are encoded as byte offsets from the beginning of
-// the hash table, shifted left by 1 with the least-significant bit always set
-// to 0 to distinguish addresses from headers during garbage collection.
-//
-// Note that the offsets do not start at the beginning of the heap, but the
-// start of the hash table. This has two important implications:
-//
-// 1. The offset 0 will always point to the hash of the first hash table entry,
-// which is never a meaningful offset. Because of this, we can take the
-// address 0 to be the "null" address.
-//
-// 2. During garbage collection, it is necessary to point from the heap to the
-// hash table itself, since we temporarily store heap headers in the addr field
-// of helt_t. By starting the offsets at the beginning of the hash table, we can
-// represent offsets into the hash table itself.
-typedef uint64_t addr_t;
-
 #define NULL_ADDR 0
-#define Offset_of_addr(addr) ((addr) >> 1)
-#define Addr_of_offset(offset) ((offset) << 1)
-#define Addr_of_ptr(entry) (Addr_of_offset((char *)(entry) - (char *)hashtbl))
-#define Ptr_of_offset(offset) ((char *)hashtbl + (offset))
-#define Ptr_of_addr(addr) (Ptr_of_offset(Offset_of_addr(addr)))
+#define Addr_of_ptr(entry) ((char *)(entry) - (char *)hashtbl)
+#define Ptr_of_addr(addr) ((char *)hashtbl + (addr))
 #define Entry_of_addr(addr) ((heap_entry_t *)Ptr_of_addr(addr))
-#define Entry_of_offset(offset) ((heap_entry_t *)Ptr_of_offset(offset))
 #define Header_of_addr(addr) ((hh_header_t *)Ptr_of_addr(addr))
+
+// In OCaml, we can read and write to shared memory by either (a) calling into C
+// functions, passing along an address or by (b) indexing into a Bigarray with
+// the "nativeint" element kind.
+//
+// The Bigarray API naturally requires word offsets for indexing operations into
+// word-sized elements. To accomplish this, we convert between byte offsets and
+// OCaml-encoded word offsets when passing address from C into OCaml, and vice
+// versa.
+//
+// Use these macros instead of Val_long/Long_val when dealing with addrs across
+// the OCaml/C boundary.
+#define Val_addr(addr) (Val_long((addr) / WORD_SIZE))
+#define Addr_val(v) (Long_val(v) * WORD_SIZE)
 
 // Each heap entry starts with a word-sized header. The header encodes the size
 // (in words) of the entry in the heap and the capacity (in words) of the buffer
@@ -583,6 +599,15 @@ static void define_mappings(int page_size) {
 #endif
 }
 
+static value alloc_heap_bigarray(void) {
+  CAMLparam0();
+  CAMLlocal1(heap);
+  int heap_flags = CAML_BA_NATIVE_INT | CAML_BA_C_LAYOUT | CAML_BA_EXTERNAL;
+  intnat heap_dim[1] = {Wsize_bsize(info->hashtbl_size_b + info->heap_size_b)};
+  heap = caml_ba_alloc(heap_flags, 1, hashtbl, heap_dim);
+  CAMLreturn(heap);
+}
+
 /*****************************************************************************/
 /* Must be called by the master BEFORE forking the workers! */
 /*****************************************************************************/
@@ -592,6 +617,7 @@ CAMLprim value hh_shared_init(
   value num_workers_val
 ) {
   CAMLparam2(config_val, num_workers_val);
+  CAMLlocal1(result);
 
   size_t page_size = getpagesize();
 
@@ -646,7 +672,11 @@ CAMLprim value hh_shared_init(
   sigaction(SIGSEGV, &sigact, NULL);
 #endif
 
-  CAMLreturn(Val_handle(memfd));
+  result = caml_alloc_tuple(2);
+  Store_field(result, 0, alloc_heap_bigarray());
+  Store_field(result, 1, Val_handle(memfd));
+
+  CAMLreturn(result);
 }
 
 /* Must be called by every worker before any operation is performed */
@@ -662,7 +692,7 @@ value hh_connect(value handle_val, value worker_id_val) {
   map_info_page(page_size);
   define_mappings(page_size);
 
-  CAMLreturn(Val_unit);
+  CAMLreturn(alloc_heap_bigarray());
 }
 
 /*****************************************************************************/
@@ -795,8 +825,8 @@ CAMLprim value hh_collect(value unit) {
   size_t dest = info->heap_init;
 
   // Pointer that walks the heap from bottom to top.
-  char *src = Ptr_of_offset(info->heap_init);
-  char *heap_ptr = Ptr_of_offset(info->heap);
+  char *src = Ptr_of_addr(info->heap_init);
+  char *heap_ptr = Ptr_of_addr(info->heap);
 
   size_t aligned_size;
   hh_header_t header;
@@ -816,13 +846,13 @@ CAMLprim value hh_collect(value unit) {
 
       // Fix the hashtbl addr field to point to our new location and restore the
       // heap header data temporarily stored in the addr field bits.
-      *hashtbl_addr = Addr_of_offset(dest);
+      *hashtbl_addr = dest;
 
       // Restore the heap entry header
       *(hh_header_t *)src = header;
 
       // Move the entry as far to the left as possible.
-      memmove(Ptr_of_offset(dest), src, aligned_size);
+      memmove(Ptr_of_addr(dest), src, aligned_size);
       dest += aligned_size;
     }
 
@@ -851,22 +881,27 @@ static void raise_heap_full(void) {
 
 /*****************************************************************************/
 /* Allocates a slot in the shared heap, given a size (in words). The caller is
- * responsible for initializing the returned heap_entry_t with a valid header
- * and data segment. */
+ * responsible for initializing the allocated space with valid heap objects. */
 /*****************************************************************************/
 
-static heap_entry_t* hh_alloc(size_t wsize) {
+static addr_t hh_alloc(size_t wsize) {
   // The size of this allocation needs to be kept in sync with wasted_heap_size
   // modification in hh_remove and also when performing garbage collection. The
   // macro Heap_entry_slot_size can be used to get the slot size from a valid
   // header.
   size_t slot_size = Bsize_wsize(wsize);
-  size_t offset = __sync_fetch_and_add(&info->heap, slot_size);
-  if (offset + slot_size > info->heap_max) {
+  addr_t addr = __sync_fetch_and_add(&info->heap, slot_size);
+  if (addr + slot_size > info->heap_max) {
     raise_heap_full();
   }
-  memfd_reserve(Ptr_of_offset(offset), slot_size);
-  return Entry_of_offset(offset);
+  memfd_reserve(Ptr_of_addr(addr), slot_size);
+  return addr;
+}
+
+CAMLprim value hh_ml_alloc(value wsize) {
+  CAMLparam1(wsize);
+  addr_t addr = hh_alloc(Long_val(wsize));
+  CAMLreturn(Val_addr(addr));
 }
 
 /*****************************************************************************/
@@ -948,7 +983,7 @@ CAMLprim value hh_store_ocaml(value v) {
     | 1;
 
   // Allocate space for the header and compressed data
-  heap_entry_t *entry = hh_alloc(1 + compressed_wsize);
+  heap_entry_t *entry = Entry_of_addr(hh_alloc(1 + compressed_wsize));
 
   // Write header and data into allocated space.
   entry->header = header;
@@ -963,7 +998,7 @@ CAMLprim value hh_store_ocaml(value v) {
   free(compressed);
 
   result = caml_alloc_tuple(3);
-  Store_field(result, 0, Val_long(Addr_of_ptr(entry)));
+  Store_field(result, 0, Val_addr(Addr_of_ptr(entry)));
   Store_field(result, 1, Val_long(compressed_size));
   Store_field(result, 2, Val_long(serialized_size));
 
@@ -1008,7 +1043,7 @@ CAMLprim value hh_add(value key, value addr) {
 
   helt_t elt;
   elt.hash = get_hash(key);
-  elt.addr = Long_val(addr);
+  elt.addr = Addr_val(addr);
 
   size_t hashtbl_slots = info->hashtbl_slots;
   unsigned int slot = elt.hash & (hashtbl_slots - 1);
@@ -1119,7 +1154,7 @@ CAMLprim value hh_deserialize(value addr_val) {
   CAMLlocal1(result);
   check_should_exit();
 
-  heap_entry_t *entry = Entry_of_addr(Long_val(addr_val));
+  heap_entry_t *entry = Entry_of_addr(Addr_val(addr_val));
   size_t compressed_bsize = entry_compressed_bsize(entry);
   size_t decompress_capacity = Entry_decompress_capacity(entry->header);
 
@@ -1147,7 +1182,7 @@ CAMLprim value hh_get(value key) {
 
   unsigned int slot = find_slot(key);
   assert(hashtbl[slot].hash == get_hash(key));
-  CAMLreturn(Val_long(hashtbl[slot].addr));
+  CAMLreturn(Val_addr(hashtbl[slot].addr));
 }
 
 /*****************************************************************************/
@@ -1155,7 +1190,7 @@ CAMLprim value hh_get(value key) {
 /*****************************************************************************/
 CAMLprim value hh_get_size(value addr_val) {
   CAMLparam1(addr_val);
-  heap_entry_t *entry = Entry_of_addr(Val_long(addr_val));
+  heap_entry_t *entry = Entry_of_addr(Addr_val(addr_val));
   size_t compressed_bsize = entry_compressed_bsize(entry);
   CAMLreturn(Val_long(compressed_bsize));
 }
@@ -1205,4 +1240,33 @@ CAMLprim value hh_remove(value key) {
   hashtbl[slot].addr = NULL_ADDR;
   info->hcounter_filled -= 1;
   CAMLreturn(Val_unit);
+}
+
+/*****************************************************************************/
+/* Blits an OCaml string representation into the shared heap.
+ *
+ * Note that, like OCaml's heap, the shared heap is word-addressible. Like
+ * OCaml's strings, strings in the shared heap are encoded with a header
+ * containing the size in words, where the last byte of the last word contains
+ * an offset used to calculate the exact bytes size. */
+/*****************************************************************************/
+
+CAMLprim value hh_write_string(value addr, value s) {
+  memcpy(Ptr_of_addr(Addr_val(addr)), String_val(s), Bosize_val(s));
+  return Val_unit;
+}
+
+/*****************************************************************************/
+/* Reads a string in the shared heap into a the OCaml heap.
+ *
+ * Because we store string data in the shared heap in the same format as OCaml
+ * does for it's own heap, we can simply blit the data directly into the OCaml
+ * heap, instead of using the designated caml_alloc_string function. */
+/*****************************************************************************/
+CAMLprim value hh_read_string(value addr, value wsize) {
+  CAMLparam2(addr, wsize);
+  CAMLlocal1(s);
+  s = caml_alloc(Long_val(wsize), String_tag);
+  memcpy(String_val(s), Ptr_of_addr(Addr_val(addr)), Bsize_wsize(Long_val(wsize)));
+  CAMLreturn(s);
 }

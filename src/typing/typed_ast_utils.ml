@@ -24,7 +24,7 @@ class type_parameter_mapper =
     method on_type_annot (x : ALoc.t * Type.t) = x
 
     (* Since the mapper wasn't originally written to pass an accumulator value
-     through the calls, we're maintaining this accumulator imperatively. *)
+       through the calls, we're maintaining this accumulator imperatively. *)
     val mutable bound_tparams : (ALoc.t * string) list = []
 
     method annot_with_tparams : 'a. ((ALoc.t * string) list -> 'a) -> 'a = (fun f -> f bound_tparams)
@@ -38,7 +38,7 @@ class type_parameter_mapper =
       res
 
     (* Record and restore the parameter environment around nodes that might
-     update it. *)
+       update it. *)
     method! type_params_opt pd f =
       let originally_bound_tparams = bound_tparams in
       let res = super#type_params_opt pd f in
@@ -46,7 +46,7 @@ class type_parameter_mapper =
       res
 
     (* Classes assume an additional "this" type parameter, which needs to be
-     explicitly added to bound_tparams *)
+       explicitly added to bound_tparams *)
     method! class_ cls =
       let this_tparam =
         let open Ast.Class in

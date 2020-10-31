@@ -58,13 +58,13 @@ module rec Parse : PARSER = struct
     | T_LET when no_let env -> error_unexpected env
     | T_LET -> ()
     (* `allow_await` means that `await` is allowed to be a keyword,
-        which makes it illegal to use as an identifier.
-        https://tc39.github.io/ecma262/#sec-identifiers-static-semantics-early-errors *)
+       which makes it illegal to use as an identifier.
+       https://tc39.github.io/ecma262/#sec-identifiers-static-semantics-early-errors *)
     | T_AWAIT when allow_await env -> error env Parse_error.UnexpectedReserved
     | T_AWAIT -> ()
     (* `allow_yield` means that `yield` is allowed to be a keyword,
-        which makes it illegal to use as an identifier.
-        https://tc39.github.io/ecma262/#sec-identifiers-static-semantics-early-errors *)
+       which makes it illegal to use as an identifier.
+       https://tc39.github.io/ecma262/#sec-identifiers-static-semantics-early-errors *)
     | T_YIELD when allow_yield env -> error env Parse_error.UnexpectedReserved
     | T_YIELD when in_strict_mode env -> error env Parse_error.StrictReservedWord
     | T_YIELD -> ()
@@ -111,7 +111,7 @@ module rec Parse : PARSER = struct
         (match possible_directive with
         | (_, Ast.Statement.Expression { Ast.Statement.Expression.directive = Some raw; _ }) ->
           (* 14.1.1 says that it has to be "use strict" without any
-                   escapes, so "use\x20strict" is disallowed. *)
+             escapes, so "use\x20strict" is disallowed. *)
           let strict = in_strict_mode env || raw = "use strict" in
           let string_tokens = string_token :: string_tokens in
           statement_list (env |> with_strict strict) term_fn item_fn (string_tokens, stmts)
@@ -249,7 +249,7 @@ module rec Parse : PARSER = struct
       func
     | T_LET when Peek.ith_token ~i:1 env = T_LBRACKET ->
       (* `let [foo]` is ambiguous: either a let binding pattern, or a
-           member expression, so it is banned. *)
+         member expression, so it is banned. *)
       let loc = Loc.btwn (Peek.loc env) (Peek.ith_loc ~i:1 env) in
       error_at env (loc, Parse_error.AmbiguousLetBracket);
       Statement.expression env

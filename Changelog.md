@@ -1,3 +1,20 @@
+### 0.137.0
+
+New Features:
+* Show code actions in the IDE for some parse errors with suggested fixes.
+
+Notable bug fixes:
+* Fixed infinite recursion case involving object rest destructuring.
+
+Library Definitions:
+* Changed return type of `Buffer.write` to `number` (thanks @fedotov).
+
+Misc:
+* Saved state files generated on one platform can now be used on another platform using the same version of Flow.
+* Improved saved state memory use and startup time with more efficient handling of file paths.
+* Improved error message when attempting to bind a class type.
+* Minimum supported MacOS version is now 10.13.
+
 ### 0.136.0
 
 Likely to cause new Flow errors:

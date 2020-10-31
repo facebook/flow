@@ -22,25 +22,25 @@ let () =
   let out_file = Sys.argv.(1) in
   let rev =
     try read_process_stdout "git" [|"git"; "rev-parse"; "HEAD"|]
-    with Failure msg -> (
-      Printf.eprintf "Failed git rev-parse: %s\n%!" msg;
+    with Failure git_msg -> (
       try read_process_stdout "hg" [|"hg"; "log"; "-r"; "."; "-T"; "{node}\\n"|]
-      with Failure msg -> (
-        Printf.eprintf "Failed hg log: %s\n%!" msg;
+      with Failure hg_msg -> (
+        Printf.eprintf "Failed git rev-parse: %s\n%!" git_msg;
+        Printf.eprintf "Failed hg log: %s\n%!" hg_msg;
         ""
       )
     )
   in
   let time =
     try read_process_stdout "git" [|"git"; "log"; "-1"; "--pretty=tformat:%ct"|]
-    with Failure msg -> (
-      Printf.eprintf "Failed git log: %s\n%!" msg;
+    with Failure git_msg -> (
       try
         let raw = read_process_stdout "hg" [|"hg"; "log"; "-r"; "."; "-T"; "{date|hgdate}\\n"|] in
         String.sub raw 0 (String.index raw ' ')
       with
-      | Failure msg -> (
-        Printf.eprintf "Failed hg log: %s\n%!" msg;
+      | Failure hg_msg -> (
+        Printf.eprintf "Failed git log: %s\n%!" git_msg;
+        Printf.eprintf "Failed hg log: %s\n%!" hg_msg;
         "0"
       )
       | Not_found -> "0"

@@ -507,7 +507,7 @@ module Validator = struct
             super#on_t env t
         | Ty.Fun f ->
           (* skip validating fun_static to preserve behavior from before fun_static
-          was added to fun_t *)
+             was added to fun_t *)
           super#on_t env Ty.(Fun { f with fun_static = Top })
         | _ -> super#on_t env t
     end

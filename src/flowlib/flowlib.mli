@@ -5,6 +5,6 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
-val extract_flowlib : no_flowlib:bool -> Path.t -> unit
+val mkdir : no_flowlib:bool -> Path.t -> Path.t
 
-val contents : bool -> (string * string) array
+val extract : no_flowlib:bool -> Path.t -> unit

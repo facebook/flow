@@ -162,10 +162,10 @@ let get_def ~options ~reader ~cx ~file_sig ~typed_ast requested_loc =
       (match process_request ~options ~reader ~cx ~is_legit_require ~typed_ast request with
       | Ok res_loc ->
         (* two scenarios where we stop trying to recur:
-            - when req_loc = res_loc, meaning we've reached a fixed point so
-              continuing would make us infinite loop
-            - when res_loc is not in the file the request originated from, meaning
-              the typed_ast we have is the wrong one to recur with *)
+           - when req_loc = res_loc, meaning we've reached a fixed point so
+             continuing would make us infinite loop
+           - when res_loc is not in the file the request originated from, meaning
+             the typed_ast we have is the wrong one to recur with *)
         if Loc.equal req_loc res_loc || Loc.(res_loc.source <> requested_loc.source) then
           Def res_loc
         else (
