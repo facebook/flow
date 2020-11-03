@@ -451,6 +451,18 @@ module Func_stmt_params = Func_params.Make (Func_stmt_config)
 module Func_stmt_sig = Func_sig.Make (Func_stmt_params)
 module Class_stmt_sig = Class_sig.Make (Func_stmt_sig)
 
+(* In positions where an annotation may be present or an annotation can be pushed down,
+ * we should prefer the annotation over the pushed-down annotation. *)
+let mk_inference_target_with_annots annot_or_inferred local_annot =
+  match (annot_or_inferred, local_annot) with
+  | (Annotated _, _) -> annot_or_inferred
+  | (_, Some _) ->
+    (* TODO: When we actually pass types down, we should create a type annotation
+     * here *)
+    let _t' = annot_decompose_todo local_annot in
+    Annotated (type_t_of_annotated_or_inferred annot_or_inferred)
+  | _ -> annot_or_inferred
+
 (************)
 (* Visitors *)
 (************)
@@ -7648,17 +7660,9 @@ and mk_class_sig =
           (Annot annot_t, Fn.const Ast.Class.Property.Uninitialized)
         | Ast.Class.Property.Initialized expr ->
           let value_ref : (ALoc.t, ALoc.t * Type.t) Ast.Expression.t option ref = ref None in
-          let has_anno =
-            (* If no annotation is available, we can create one by decomposing the
-             * annotation context passed down to this point *)
-            match (annot, field_annot) with
-            | (Ast.Type.Available _, _)
-            | (_, Some _) ->
-              true
-            | (Ast.Type.Missing _, None) -> false
-          in
+          let return_t = mk_inference_target_with_annots annot_or_inferred field_annot in
           ( Infer
-              ( Func_stmt_sig.field_initializer ~has_anno tparams_map reason expr annot_t,
+              ( Func_stmt_sig.field_initializer tparams_map reason expr return_t,
                 (fun (_, _, value_opt) -> value_ref := Some (Base.Option.value_exn value_opt)) ),
             fun () ->
               Ast.Class.Property.Initialized
@@ -8136,11 +8140,10 @@ and mk_func_sig =
       let definitely_returns_void = kind = Func_sig.Ordinary && not has_nonvoid_return in
       Anno.mk_return_type_annotation cx tparams_map ret_reason ~definitely_returns_void return
     in
-    let return_t = type_t_of_annotated_or_inferred return_annotated_or_inferred in
-    let (return_t, predicate) =
+    let (return_annotated_or_inferred, predicate) =
       let open Ast.Type.Predicate in
       match predicate with
-      | None -> (return_t, None)
+      | None -> (return_annotated_or_inferred, None)
       | Some ((_, { kind = Ast.Type.Predicate.Inferred; comments = _ }) as pred) ->
         (* Predicate Functions
          *
@@ -8159,10 +8162,16 @@ and mk_func_sig =
          *
          *  (x: S) => T' (%checks)
          *)
-        let bounds = free_bound_ts cx return_t in
+        let bounds =
+          free_bound_ts cx (type_t_of_annotated_or_inferred return_annotated_or_inferred)
+        in
         if Loc_collections.ALocSet.is_empty bounds then
-          let return_t' = Tvar.mk_where cx reason (fun t -> Flow.flow_t cx (t, return_t)) in
-          (return_t', Some pred)
+          let return_annotated_or_inferred' =
+            map_annotated_or_inferred
+              (fun return_t -> Tvar.mk_where cx reason (fun t -> Flow.flow_t cx (t, return_t)))
+              return_annotated_or_inferred
+          in
+          (return_annotated_or_inferred', Some pred)
         else
           (* If T is a polymorphic type P<X>, this approach can lead to some
            * complications. The 2nd constraint from above would become
@@ -8181,26 +8190,19 @@ and mk_func_sig =
                   Error_message.(EUnsupportedSyntax (loc, PredicateFunctionAbstractReturnType)))
               bounds
           in
-          (return_t, Some (Tast_utils.error_mapper#type_predicate pred))
+          (return_annotated_or_inferred, Some (Tast_utils.error_mapper#type_predicate pred))
       | Some ((loc, { kind = Declared _; comments = _ }) as pred) ->
         let (annotated_or_inferred, _) =
           Anno.mk_type_annotation cx tparams_map ret_reason (Ast.Type.Missing loc)
         in
-        let t = type_t_of_annotated_or_inferred annotated_or_inferred in
         Flow_js.add_output
           cx
           Error_message.(EUnsupportedSyntax (loc, PredicateDeclarationForImplementation));
-        (t, Some (Tast_utils.error_mapper#type_predicate pred))
+        (annotated_or_inferred, Some (Tast_utils.error_mapper#type_predicate pred))
     in
     let knot = Tvar.mk cx reason in
     let return_t =
-      match return with
-      | Ast.Type.Missing _ ->
-        (* Can we decompose the annotation to extract a return type? *)
-        (match annot_decompose_todo annot with
-        | Some _ -> Annotated return_t
-        | None -> Inferred return_t)
-      | Ast.Type.Available _ -> Annotated return_t
+      mk_inference_target_with_annots return_annotated_or_inferred (annot_decompose_todo annot)
     in
     ( { Func_stmt_sig.reason; kind; tparams; tparams_map; fparams; body; return_t; knot },
       fun params body fun_type ->

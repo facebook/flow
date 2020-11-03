@@ -40,13 +40,12 @@ module type S = sig
       return type. *)
 
   val field_initializer :
-    has_anno:bool ->
     Type.t SMap.t ->
     (* type params map *)
     Reason.t ->
     (ALoc.t, ALoc.t) Flow_ast.Expression.t ->
     (* init *)
-    Type.t ->
+    Type.annotated_or_inferred ->
     (* return *)
     t
   (** Create signature for a class field initializer.

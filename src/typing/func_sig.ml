@@ -47,7 +47,7 @@ module Make (F : Func_params.S) = struct
       knot = MixedT.why reason |> with_trust bogus_trust;
     }
 
-  let field_initializer ~has_anno tparams_map reason expr return_t =
+  let field_initializer tparams_map reason expr return_annot_or_inferred =
     {
       reason;
       kind = FieldInit expr;
@@ -55,11 +55,7 @@ module Make (F : Func_params.S) = struct
       tparams_map;
       fparams = F.empty (fun _ _ -> None);
       body = None;
-      return_t =
-        ( if has_anno then
-          Annotated return_t
-        else
-          Inferred return_t );
+      return_t = return_annot_or_inferred;
       (* This can't be recursively called. In case this type is accidentally used downstream, stub it
        * out with mixed. *)
       knot = MixedT.why reason |> with_trust bogus_trust;
