@@ -681,6 +681,8 @@ let quick_subtype trust_checked t1 t2 =
     | (DefT (_, ltrust, BoolT actual), DefT (_, rtrust, SingletonBoolT expected)) ->
       ((not trust_checked) || trust_subtype_fixed ltrust rtrust)
       && boolean_literal_eq expected actual
+    | (DefT (_, _, ObjT { flags = { obj_kind = Exact; _ }; _ }), ExactT (_, t2')) ->
+      reasonless_eq t1 t2'
     | _ -> reasonless_eq t1 t2)
 
 let reason_of_propref = function
