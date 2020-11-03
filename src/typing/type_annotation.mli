@@ -49,7 +49,7 @@ val mk_type_annotation :
   Type.t SMap.t ->
   Reason.t ->
   (ALoc.t, ALoc.t) Flow_ast.Type.annotation_or_hint ->
-  Type.t * (ALoc.t, ALoc.t * Type.t) Flow_ast.Type.annotation_or_hint
+  Type.annotated_or_inferred * (ALoc.t, ALoc.t * Type.t) Flow_ast.Type.annotation_or_hint
 
 val mk_return_type_annotation :
   Context.t ->
@@ -57,7 +57,7 @@ val mk_return_type_annotation :
   Reason.t ->
   definitely_returns_void:bool ->
   (ALoc.t, ALoc.t) Flow_ast.Type.annotation_or_hint ->
-  Type.t * (ALoc.t, ALoc.t * Type.t) Flow_ast.Type.annotation_or_hint
+  Type.annotated_or_inferred * (ALoc.t, ALoc.t * Type.t) Flow_ast.Type.annotation_or_hint
 
 val mk_type_available_annotation :
   Context.t ->

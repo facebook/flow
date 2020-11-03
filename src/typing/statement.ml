@@ -2093,7 +2093,8 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t =
           comments;
         } ) ->
     let r = mk_reason (RIdentifier name) id_loc in
-    let (t, annot_ast) = Anno.mk_type_annotation cx SMap.empty r annot in
+    let (a, annot_ast) = Anno.mk_type_annotation cx SMap.empty r annot in
+    let t = type_t_of_annotated_or_inferred a in
     Env.unify_declared_type cx name t;
     (loc, DeclareVariable { DeclareVariable.id = ((id_loc, t), id); annot = annot_ast; comments })
   | (loc, DeclareFunction declare_function) ->
@@ -3036,7 +3037,8 @@ and variable cx kind ?if_uninitialized id init =
       mk_reason (RIdentifier name) id_loc
     | (ploc, _) -> mk_reason RDestructuring ploc
   in
-  let (annot_t, annot_ast) = Anno.mk_type_annotation cx SMap.empty id_reason annot in
+  let (annot_or_inferred, annot_ast) = Anno.mk_type_annotation cx SMap.empty id_reason annot in
+  let annot_t = type_t_of_annotated_or_inferred annot_or_inferred in
   let id_ast =
     match id with
     | (ploc, Ast.Pattern.Identifier { Ast.Pattern.Identifier.name; annot = _; optional }) ->
@@ -7637,7 +7639,8 @@ and mk_class_sig =
          gets checked.
     *)
     let mk_field cx tparams_map reason annot ~field_annot init =
-      let (annot_t, annot_ast) = Anno.mk_type_annotation cx tparams_map reason annot in
+      let (annot_or_inferred, annot_ast) = Anno.mk_type_annotation cx tparams_map reason annot in
+      let annot_t = type_t_of_annotated_or_inferred annot_or_inferred in
       let (field, get_init) =
         match init with
         | Ast.Class.Property.Declared -> (Annot annot_t, Fn.const Ast.Class.Property.Declared)
@@ -8008,7 +8011,8 @@ and mk_func_sig =
     let { Ast.Pattern.Identifier.name; annot; optional } = id in
     let (id_loc, ({ Ast.Identifier.name; comments = _ } as id)) = name in
     let reason = mk_reason name in
-    let (t, annot) = Anno.mk_type_annotation cx tparams_map reason annot in
+    let (annotated_or_inferred, annot) = Anno.mk_type_annotation cx tparams_map reason annot in
+    let t = type_t_of_annotated_or_inferred annotated_or_inferred in
     let name = ((id_loc, t), id) in
     (t, { Ast.Pattern.Identifier.name; annot; optional })
   in
@@ -8024,11 +8028,13 @@ and mk_func_sig =
         (t, Func_stmt_config.Id id)
       | Ast.Pattern.Object { Ast.Pattern.Object.annot; properties; comments } ->
         let reason = mk_reason RDestructuring ploc in
-        let (t, annot) = Anno.mk_type_annotation cx tparams_map reason annot in
+        let (annotated_or_inferred, annot) = Anno.mk_type_annotation cx tparams_map reason annot in
+        let t = type_t_of_annotated_or_inferred annotated_or_inferred in
         (t, Func_stmt_config.Object { annot; properties; comments })
       | Ast.Pattern.Array { Ast.Pattern.Array.annot; elements; comments } ->
         let reason = mk_reason RDestructuring ploc in
-        let (t, annot) = Anno.mk_type_annotation cx tparams_map reason annot in
+        let (annotated_or_inferred, annot) = Anno.mk_type_annotation cx tparams_map reason annot in
+        let t = type_t_of_annotated_or_inferred annotated_or_inferred in
         (t, Func_stmt_config.Array { annot; elements; comments })
       | Ast.Pattern.Expression _ -> failwith "unexpected expression pattern in param"
     in
@@ -8125,11 +8131,12 @@ and mk_func_sig =
     let fparams = mk_params cx ~annot tparams_map params in
     let body = Some body in
     let ret_reason = mk_reason RReturn (Func_sig.return_loc func) in
-    let (return_t, return) =
+    let (return_annotated_or_inferred, return) =
       let has_nonvoid_return = might_have_nonvoid_return loc func in
       let definitely_returns_void = kind = Func_sig.Ordinary && not has_nonvoid_return in
       Anno.mk_return_type_annotation cx tparams_map ret_reason ~definitely_returns_void return
     in
+    let return_t = type_t_of_annotated_or_inferred return_annotated_or_inferred in
     let (return_t, predicate) =
       let open Ast.Type.Predicate in
       match predicate with
@@ -8176,11 +8183,14 @@ and mk_func_sig =
           in
           (return_t, Some (Tast_utils.error_mapper#type_predicate pred))
       | Some ((loc, { kind = Declared _; comments = _ }) as pred) ->
+        let (annotated_or_inferred, _) =
+          Anno.mk_type_annotation cx tparams_map ret_reason (Ast.Type.Missing loc)
+        in
+        let t = type_t_of_annotated_or_inferred annotated_or_inferred in
         Flow_js.add_output
           cx
           Error_message.(EUnsupportedSyntax (loc, PredicateDeclarationForImplementation));
-        ( fst (Anno.mk_type_annotation cx tparams_map ret_reason (Ast.Type.Missing loc)),
-          Some (Tast_utils.error_mapper#type_predicate pred) )
+        (t, Some (Tast_utils.error_mapper#type_predicate pred))
     in
     let knot = Tvar.mk cx reason in
     let return_t =
