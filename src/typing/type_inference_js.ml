@@ -417,17 +417,16 @@ let infer_ast ~lint_severities ~file_sig cx filename comments aloc_ast =
       let scope = fresh ~var_scope_kind:Module () in
       add_entry
         "exports"
-        (Entry.new_var ~has_anno:false ~loc:(TypeUtil.loc_of_t local_exports_var) local_exports_var)
+        (Entry.new_var ~loc:(TypeUtil.loc_of_t local_exports_var) (Type.Inferred local_exports_var))
         scope;
 
       add_entry
         (Reason.internal_name "exports")
         (Entry.new_var
-           ~has_anno:false
            ~loc:(Reason.aloc_of_reason reason_exports_module)
            ~specific:
              (Type.DefT (reason_exports_module, Type.bogus_trust (), Type.EmptyT Type.Bottom))
-           (Type.Unsoundness.exports_any reason_exports_module))
+           (Type.Inferred (Type.Unsoundness.exports_any reason_exports_module)))
         scope;
 
       scope)

@@ -14,7 +14,7 @@ include Func_sig_intf
 
 (* We use this value to indicate places where values stored in the environment can have
  * an annotation with some more work *)
-let has_anno_todo = false
+let annotated_todo t = Inferred t
 
 module Make (F : Func_params.S) = struct
   type func_params = F.t
@@ -210,7 +210,7 @@ module Make (F : Func_params.S) = struct
     let params_ast = F.eval cx fparams in
     (* early-add our own name binding for recursive calls. *)
     Base.Option.iter id ~f:(fun (loc, { Ast.Identifier.name; comments = _ }) ->
-        let entry = knot |> Scope.Entry.new_var ~has_anno:has_anno_todo ~loc in
+        let entry = annotated_todo knot |> Scope.Entry.new_var ~loc in
         Scope.add_entry name entry function_scope);
 
     let (yield_t, next_t) =
@@ -230,21 +230,11 @@ module Make (F : Func_params.S) = struct
       Scope.(
         let new_entry t =
           Entry.(
-            let loc = loc_of_t t in
+            let loc = loc_of_t (TypeUtil.type_t_of_annotated_or_inferred t) in
             let state = State.Initialized in
             new_const ~loc ~state t)
         in
-        ( new_entry ~has_anno:false yield_t,
-          new_entry ~has_anno:false next_t,
-          (* Entries still take in a has_anno flag and a Type.t We should
-           * change that to instead take a Type.annotated_or_inferred and get rid
-           * of the has_anno flag and this ugly case *)
-          let (has_anno, t) =
-            match return_t with
-            | Annotated t -> (true, t)
-            | Inferred t -> (false, t)
-          in
-          new_entry ~has_anno t ))
+        (new_entry (Inferred yield_t), new_entry (Inferred next_t), new_entry return_t))
     in
     Scope.add_entry (internal_name "yield") yield function_scope;
     Scope.add_entry (internal_name "next") next function_scope;
@@ -255,10 +245,9 @@ module Make (F : Func_params.S) = struct
     in
     let maybe_exhaustively_checked =
       Scope.Entry.new_let
-        ~has_anno:false
         ~loc:(loc_of_t maybe_exhaustively_checked_t)
         ~state:Scope.State.Declared
-        maybe_exhaustively_checked_t
+        (Inferred maybe_exhaustively_checked_t)
     in
     Scope.add_entry
       (internal_name "maybe_exhaustively_checked")

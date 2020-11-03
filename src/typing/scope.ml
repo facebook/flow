@@ -119,13 +119,7 @@ module Entry = struct
   let new_class class_binding_id class_private_fields class_private_static_fields =
     Class { Type.class_binding_id; Type.class_private_fields; Type.class_private_static_fields }
 
-  let new_value ~has_anno kind state specific general value_declare_loc =
-    let general =
-      if has_anno then
-        Type.Annotated general
-      else
-        Type.Inferred general
-    in
+  let new_value kind state specific general value_declare_loc =
     Value
       {
         kind;
@@ -136,20 +130,22 @@ module Entry = struct
         general;
       }
 
-  let new_const ~loc ?(state = State.Undeclared) ?(kind = ConstVarBinding) t =
-    new_value (Const kind) state t t loc
+  let new_const ~loc ?(state = State.Undeclared) ?(kind = ConstVarBinding) general =
+    let specific = TypeUtil.type_t_of_annotated_or_inferred general in
+    new_value (Const kind) state specific general loc
 
   let new_import ~loc t =
-    new_value ~has_anno:false (Const ConstImportBinding) State.Initialized t t loc
+    new_value (Const ConstImportBinding) State.Initialized t (Type.Inferred t) loc
 
-  let new_let ~loc ?(state = State.Undeclared) ?(kind = LetVarBinding) t =
-    new_value (Let kind) state t t loc
+  let new_let ~loc ?(state = State.Undeclared) ?(kind = LetVarBinding) general =
+    let specific = TypeUtil.type_t_of_annotated_or_inferred general in
+    new_value (Let kind) state specific general loc
 
   let new_var ~loc ?(state = State.Undeclared) ?(kind = VarBinding) ?specific general =
     let specific =
       match specific with
       | Some t -> t
-      | None -> general
+      | None -> TypeUtil.type_t_of_annotated_or_inferred general
     in
     new_value (Var kind) state specific general loc
 

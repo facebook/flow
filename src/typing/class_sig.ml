@@ -768,7 +768,10 @@ module Make (F : Func_sig.S) = struct
   let toplevels cx ~decls ~stmts ~expr ~private_property_map x =
     Env.in_lex_scope cx (fun () ->
         let new_entry ?(state = Scope.State.Initialized) t =
-          Scope.Entry.new_let ~loc:(TypeUtil.loc_of_t t) ~state t
+          Scope.Entry.new_let
+            ~loc:(TypeUtil.loc_of_t (TypeUtil.type_t_of_annotated_or_inferred t))
+            ~state
+            t
         in
         let method_ this super ~set_asts f =
           let save_return = Abnormal.clear_saved Abnormal.Return in
@@ -821,7 +824,7 @@ module Make (F : Func_sig.S) = struct
         |> with_sig ~static:true (fun s ->
                (* process static methods and fields *)
                let (this, super) =
-                 (new_entry ~has_anno:false static, new_entry ~has_anno:false static_super)
+                 (new_entry (Type.Inferred static), new_entry (Type.Inferred static_super))
                in
                iter_methods (fun (_loc, f, set_asts, _) -> method_ this super ~set_asts f) s;
                SMap.iter (field this super) s.fields;
@@ -848,7 +851,7 @@ module Make (F : Func_sig.S) = struct
                      new_entry t
                  in
                  let (this, super) =
-                   (new_entry ~has_anno:false this, new_entry ~has_anno:false super)
+                   (new_entry (Type.Inferred this), new_entry (Type.Inferred super))
                  in
                  x.constructor
                  |> List.iter (fun (_, fsig, set_asts, _) -> method_ this super ~set_asts fsig)
@@ -856,7 +859,7 @@ module Make (F : Func_sig.S) = struct
 
                (* process instance methods and fields *)
                let (this, super) =
-                 (new_entry ~has_anno:false this, new_entry ~has_anno:false super)
+                 (new_entry (Type.Inferred this), new_entry (Type.Inferred super))
                in
                iter_methods (fun (_, msig, set_asts, _) -> method_ this super ~set_asts msig) s;
                SMap.iter (field this super) s.fields;

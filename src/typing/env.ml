@@ -347,7 +347,7 @@ let cache_global cx name ?desc loc global_scope =
       let reason = mk_reason desc loc in
       Flow.get_builtin cx name reason
   in
-  let entry = Entry.new_var t ~loc ~state:State.Initialized ~has_anno:false in
+  let entry = Entry.new_var (Inferred t) ~loc ~state:State.Initialized in
   Scope.add_entry name entry global_scope;
   (global_scope, entry)
 
@@ -503,28 +503,28 @@ let bind_class cx class_id class_private_fields class_private_static_fields =
     ALoc.none
 
 (* bind var entry *)
-let bind_var ~has_anno ?(state = State.Declared) cx name t loc =
-  bind_entry cx name (Entry.new_var t ~has_anno ~loc ~state) loc
+let bind_var ?(state = State.Declared) cx name t loc =
+  bind_entry cx name (Entry.new_var t ~loc ~state) loc
 
 (* bind let entry *)
-let bind_let ~has_anno ?(state = State.Undeclared) cx name t loc =
-  bind_entry cx name (Entry.new_let t ~has_anno ~loc ~state) loc
+let bind_let ?(state = State.Undeclared) cx name t loc =
+  bind_entry cx name (Entry.new_let t ~loc ~state) loc
 
 (* bind implicit let entry *)
 let bind_implicit_let ?(state = State.Undeclared) kind cx name t loc =
-  bind_entry cx name (Entry.new_let t ~has_anno:false ~kind ~loc ~state) loc
+  bind_entry cx name (Entry.new_let (Inferred t) ~kind ~loc ~state) loc
 
 let bind_fun ?(state = State.Declared) = bind_implicit_let ~state Entry.FunctionBinding
 
 (* bind const entry *)
-let bind_const ~has_anno ?(state = State.Undeclared) cx name t loc =
-  bind_entry cx name (Entry.new_const t ~has_anno ~loc ~state) loc
+let bind_const ?(state = State.Undeclared) cx name t loc =
+  bind_entry cx name (Entry.new_const t ~loc ~state) loc
 
 let bind_import cx name t loc = bind_entry cx name (Entry.new_import t ~loc) loc
 
 (* bind implicit const entry *)
 let bind_implicit_const ?(state = State.Undeclared) kind cx name t loc =
-  bind_entry cx name (Entry.new_const t ~has_anno:false ~kind ~loc ~state) loc
+  bind_entry cx name (Entry.new_const (Inferred t) ~kind ~loc ~state) loc
 
 (* bind type entry *)
 let bind_type ?(state = State.Declared) cx name t loc =
@@ -533,7 +533,7 @@ let bind_type ?(state = State.Declared) cx name t loc =
 let bind_import_type cx name t loc = bind_entry cx name (Entry.new_import_type t ~loc) loc
 
 (* vars coming from 'declare' statements are preinitialized *)
-let bind_declare_var = bind_var ~has_anno:true ~state:State.Initialized
+let bind_declare_var cx name t = bind_var ~state:State.Initialized cx name (Annotated t)
 
 (* bind entry for declare function *)
 let bind_declare_fun =
@@ -554,7 +554,7 @@ let bind_declare_fun =
       let scope = peek_scope () in
       match Scope.get_entry name scope with
       | None ->
-        let entry = Entry.new_var t ~has_anno:false ~loc ~state:State.Initialized in
+        let entry = Entry.new_var (Inferred t) ~loc ~state:State.Initialized in
         Scope.add_entry name entry scope
       | Some prev ->
         Entry.(

@@ -73,23 +73,22 @@ module Entry : sig
 
   val new_class : ALoc.id -> Type.Properties.id -> Type.Properties.id -> t
 
-  val new_value : has_anno:bool -> value_kind -> State.t -> Type.t -> Type.t -> ALoc.t -> t
+  val new_value : value_kind -> State.t -> Type.t -> Type.annotated_or_inferred -> ALoc.t -> t
 
   val new_const :
-    loc:ALoc.t -> ?state:State.t -> ?kind:const_binding_kind -> Type.t -> has_anno:bool -> t
+    loc:ALoc.t -> ?state:State.t -> ?kind:const_binding_kind -> Type.annotated_or_inferred -> t
 
   val new_import : loc:ALoc.t -> Type.t -> t
 
   val new_let :
-    loc:ALoc.t -> ?state:State.t -> ?kind:let_binding_kind -> Type.t -> has_anno:bool -> t
+    loc:ALoc.t -> ?state:State.t -> ?kind:let_binding_kind -> Type.annotated_or_inferred -> t
 
   val new_var :
     loc:ALoc.t ->
     ?state:State.t ->
     ?kind:var_binding_kind ->
     ?specific:Type.t ->
-    Type.t ->
-    has_anno:bool ->
+    Type.annotated_or_inferred ->
     t
 
   val new_type : loc:ALoc.t -> ?state:State.t -> Type.t -> t
