@@ -143,6 +143,9 @@ module Functions = struct
 
   let param ?(loc = Loc.none) ?default argument = (loc, { Ast.Function.Param.argument; default })
 
+  let rest_param ?(loc = Loc.none) ?comments argument =
+    (loc, { Ast.Function.RestParam.argument; comments })
+
   let body ?(loc = Loc.none) ?comments stmts =
     BodyBlock (loc, { Ast.Statement.Block.body = stmts; comments })
 

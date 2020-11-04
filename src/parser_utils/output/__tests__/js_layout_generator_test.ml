@@ -31,6 +31,7 @@ let tests =
          "pattern" >::: Pattern_test.tests;
          "program" >::: Program_test.tests;
          "jsx" >::: Jsx_test.tests;
+         "trailing_commas" >::: Trailing_commas_test.tests;
          ( "unary_plus_binary" >:: fun ctxt ->
            let x = E.identifier "x" in
            let y = E.identifier "y" in
@@ -1135,41 +1136,6 @@ let tests =
              ~ctxt
              ~pretty:true
              ("[\n  a,\n  " ^ String.make 80 'b' ^ ",\n  ,\n]") );
-         ( "array_with_trailing_comma" >:: fun ctxt ->
-           let a80 = String.make 80 'a' in
-           let layout =
-             Js_layout_generator.expression
-               ~opts
-               (E.array
-                  [E.array_expression (E.identifier a80); E.array_expression (E.identifier a80)])
-           in
-           assert_layout
-             ~ctxt
-             L.(
-               loc
-                 (group
-                    [
-                      atom "[";
-                      indent
-                        (fused
-                           [
-                             softline;
-                             loc (id a80);
-                             atom ",";
-                             pretty_line;
-                             loc (id a80);
-                             Layout.IfBreak (atom ",", empty);
-                           ]);
-                      softline;
-                      atom "]";
-                    ]))
-             layout;
-           assert_output ~ctxt ("[" ^ a80 ^ "," ^ a80 ^ "]") layout;
-           assert_output
-             ~ctxt
-             ~pretty:true
-             ("[\n" ^ "  " ^ a80 ^ ",\n" ^ "  " ^ a80 ^ ",\n" ^ "]")
-             layout );
          ( "array_with_trailing_hole" >:: fun ctxt ->
            let layout =
              Js_layout_generator.expression

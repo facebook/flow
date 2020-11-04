@@ -8,9 +8,42 @@
 module Ast = Flow_ast
 open Layout
 
+module Trailing_commas = struct
+  type t =
+    | All  (** Wherever possible (including function arguments). *)
+    | ES5  (** Where valid in ES5 (objects, arrays, etc.) *)
+    | Off  (** No trailing commas *)
+
+  let enabled_for_function_params = function
+    | All -> true
+    | ES5 -> false
+    | Off -> false
+
+  let enabled_for_function_args = function
+    | All -> true
+    | ES5 -> true
+    | Off -> false
+
+  let enabled_for_objects = function
+    | All -> true
+    | ES5 -> true
+    | Off -> false
+
+  let enabled_for_arrays = function
+    | All -> true
+    | ES5 -> true
+    | Off -> false
+
+  let enabled_for_types = function
+    | All -> true
+    | ES5 -> true
+    | Off -> false
+end
+
 type opts = {
   preserve_formatting: bool;
   bracket_spacing: bool;
+  trailing_commas: Trailing_commas.t;
 }
 
 (* There are some cases where expressions must be wrapped in parens to eliminate
@@ -38,7 +71,8 @@ and expression_context_group =
 
 (* `for ((x in y);;);` would become a for-in *)
 
-let default_opts = { preserve_formatting = false; bracket_spacing = true }
+let default_opts =
+  { preserve_formatting = false; bracket_spacing = true; trailing_commas = Trailing_commas.All }
 
 let normal_context = { left = Normal_left; group = Normal_group }
 
@@ -895,7 +929,7 @@ and expression ?(ctxt = normal_context) ~opts (root_expr : (Loc.t, Loc.t) Ast.Ex
         let trailing_comma =
           if has_trailing_hole then
             Atom ","
-          else if elements <> [] then
+          else if elements <> [] && Trailing_commas.enabled_for_arrays opts.trailing_commas then
             if_break (Atom ",") Empty
           else
             Empty
@@ -920,7 +954,11 @@ and expression ?(ctxt = normal_context) ~opts (root_expr : (Loc.t, Loc.t) Ast.Ex
             ~f:(fun i prop ->
               (* Add trailing comma to last property *)
               let prop_layout =
-                if i = num_props - 1 && internal_comments = [] then
+                if
+                  i = num_props - 1
+                  && internal_comments = []
+                  && Trailing_commas.enabled_for_objects opts.trailing_commas
+                then
                   fuse [object_property ~opts prop; if_break (Atom ",") Empty]
                 else
                   object_property ~opts prop
@@ -1855,7 +1893,11 @@ and function_params
   let params_layout = list_with_newlines ~sep:(Atom ",") ~sep_linebreak:pretty_line params in
   (* Add trailing comma *)
   let params_layout =
-    if params <> [] && rest = None then
+    if
+      params <> []
+      && rest = None
+      && Trailing_commas.enabled_for_function_params opts.trailing_commas
+    then
       params_layout @ [if_break (Atom ",") Empty]
     else
       params_layout
@@ -2907,7 +2949,11 @@ and type_parameter ~opts (loc, { Ast.Type.TypeParams.params; comments }) =
         let param_layout = type_param ~opts param in
         (* Add trailing comma to last parameter *)
         let param_layout =
-          if i = num_params - 1 && internal_comments = [] then
+          if
+            i = num_params - 1
+            && internal_comments = []
+            && Trailing_commas.enabled_for_types opts.trailing_commas
+          then
             fuse [param_layout; if_break (Atom ",") Empty]
           else
             param_layout
@@ -2956,7 +3002,11 @@ and call_args ~opts ~is_new ~lparen (loc, { Ast.Expression.ArgList.arguments; co
         (* Add trailing comma to last argument *)
         let arg_layout = expression_or_spread ~opts arg in
         let arg_layout =
-          if i = num_args - 1 && internal_comments = [] then
+          if
+            i = num_args - 1
+            && internal_comments = []
+            && Trailing_commas.enabled_for_function_args opts.trailing_commas
+          then
             fuse [arg_layout; if_break (Atom ",") Empty]
           else
             arg_layout
@@ -3005,7 +3055,11 @@ and call_type_args ~opts ~less_than (loc, { Ast.Expression.CallTypeArgs.argument
         (* Add trailing comma to last argument *)
         let arg_layout = call_type_arg ~opts arg in
         let arg_layout =
-          if i = num_args - 1 && internal_comments = [] then
+          if
+            i = num_args - 1
+            && internal_comments = []
+            && Trailing_commas.enabled_for_types opts.trailing_commas
+          then
             fuse [arg_layout; if_break (Atom ",") Empty]
           else
             arg_layout
@@ -3043,7 +3097,11 @@ and type_args ~opts (loc, { Ast.Type.TypeArgs.arguments; comments }) =
         (* Add trailing comma to last argument *)
         let arg_layout = type_ ~opts arg in
         let arg_layout =
-          if i = num_args - 1 && internal_comments = [] then
+          if
+            i = num_args - 1
+            && internal_comments = []
+            && Trailing_commas.enabled_for_types opts.trailing_commas
+          then
             fuse [arg_layout; if_break (Atom ",") Empty]
           else
             arg_layout
@@ -3397,7 +3455,11 @@ and type_object ?(sep = Atom ",") ~opts loc { Ast.Type.Object.exact; properties;
       ~f:(fun i property ->
         let prop_layout =
           (* Add trailing comma to last property *)
-          if i = num_props - 1 && internal_comments = [] then
+          if
+            i = num_props - 1
+            && internal_comments = []
+            && Trailing_commas.enabled_for_types opts.trailing_commas
+          then
             let sep =
               if inexact then
                 sep
