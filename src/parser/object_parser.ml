@@ -787,7 +787,6 @@ module Object
                 body;
                 generator;
                 async;
-                (* TODO: add support for method predicates *)
                 predicate;
                 return;
                 tparams;
