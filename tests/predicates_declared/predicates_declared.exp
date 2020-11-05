@@ -18,7 +18,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------ class-predicate.js:28:3
 
-Cannot extend `Hello` [1] with `D3` because function [2]. is incompatible with function [3]. in property `test`.
+Cannot extend `Hello` [1] with `D3` because function [2] is incompatible with function [3] in property `test`.
 [incompatible-extend]
 
    class-predicate.js:28:3

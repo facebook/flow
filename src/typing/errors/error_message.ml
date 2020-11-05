@@ -1167,7 +1167,6 @@ let loc_of_msg : 'loc t' -> 'loc option = function
   | EValueUsedAsType { reason_use = primary }
   | EComparison (primary, _)
   | ENonStrictEqualityComparison (primary, _)
-  | EFunPredCustom ((primary, _), _, _)
   | EInvalidTypeArgs (_, primary)
   | ETooFewTypeArgs (primary, _, _)
   | ETooManyTypeArgs (primary, _, _) ->
@@ -1331,6 +1330,7 @@ let loc_of_msg : 'loc t' -> 'loc option = function
   | EInexactMayOverwriteIndexer _
   | EFunctionCallExtraArg _
   | ENotAReactComponent _
+  | EFunPredCustom (_, _, _)
   | EInvalidReactConfigType _
   | EInvalidReactPropType _
   | EInvalidReactCreateClass _
@@ -2143,7 +2143,7 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
     UseOp
       {
         loc = loc_of_reason a;
-        features = [ref a; text ". "; text msg; text " "; ref b; text "."];
+        features = [ref a; text " "; text msg; text " "; ref b];
         use_op;
       }
   | EIncompatibleWithShape (lower, upper, use_op) ->
@@ -3547,7 +3547,7 @@ let error_code_of_message err : error_code option =
   | EExportValueAsType (_, _) -> Some ExportValueAsType
   | EForInRHS _ -> Some InvalidInRhs
   | EFunctionCallExtraArg _ -> Some ExtraArg
-  | EFunPredCustom (_, _, use_op) -> error_code_of_use_op use_op FunctionPredicate
+  | EFunPredCustom (_, _, use_op) -> error_code_of_use_op use_op ~default:FunctionPredicate
   | EIdxArity _ -> Some InvalidIdx
   | EIdxUse1 _ -> Some InvalidIdx
   | EIdxUse2 _ -> Some InvalidIdx
