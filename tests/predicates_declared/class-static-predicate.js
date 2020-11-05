@@ -2,18 +2,16 @@
 
 import {Seq, isSeq} from './class-static-predicate-lib'
 
-declare var foo: string | Seq<number, string>;
+declare var foo: string | Seq;
 
-// TODO: should refine
 if (Seq.isSeq(foo)) {
-  foo.size // Cannot get `m.size` because property `size` is missing in  `String` 
+  (foo: Seq);
 } else {
-  ;(foo: string);
+  (foo: string);
 }
 
-// TODO: should refine
 if (isSeq(foo)) {
-  foo.size // Cannot get `m.size` because property `size` is missing in  `String` 
+  (foo: Seq);
 } else {
-  ;(foo: string);
+  (foo: string);
 }

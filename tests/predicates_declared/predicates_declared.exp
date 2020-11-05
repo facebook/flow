@@ -1,65 +1,3 @@
-Error ------------------------------------------------------------------------------------ class-static-predicate.js:9:7
-
-Cannot get `foo.size` because property `size` is missing in `String` [1]. [prop-missing]
-
-   class-static-predicate.js:9:7
-   9|   foo.size // Cannot get `m.size` because property `size` is missing in  `String` 
-            ^^^^
-
-References:
-   class-static-predicate.js:5:18
-   5| declare var foo: string | Seq<number, string>;
-                       ^^^^^^ [1]
-
-
-Error ----------------------------------------------------------------------------------- class-static-predicate.js:11:5
-
-Cannot cast `foo` to string because `Seq` [1] is incompatible with string [2]. [incompatible-cast]
-
-   class-static-predicate.js:11:5
-   11|   ;(foo: string);
-           ^^^
-
-References:
-   class-static-predicate.js:5:27
-    5| declare var foo: string | Seq<number, string>;
-                                 ^^^^^^^^^^^^^^^^^^^ [1]
-   class-static-predicate.js:11:10
-   11|   ;(foo: string);
-                ^^^^^^ [2]
-
-
-Error ----------------------------------------------------------------------------------- class-static-predicate.js:16:7
-
-Cannot get `foo.size` because property `size` is missing in `String` [1]. [prop-missing]
-
-   class-static-predicate.js:16:7
-   16|   foo.size // Cannot get `m.size` because property `size` is missing in  `String` 
-             ^^^^
-
-References:
-   class-static-predicate.js:5:18
-    5| declare var foo: string | Seq<number, string>;
-                        ^^^^^^ [1]
-
-
-Error ----------------------------------------------------------------------------------- class-static-predicate.js:18:5
-
-Cannot cast `foo` to string because `Seq` [1] is incompatible with string [2]. [incompatible-cast]
-
-   class-static-predicate.js:18:5
-   18|   ;(foo: string);
-           ^^^
-
-References:
-   class-static-predicate.js:5:27
-    5| declare var foo: string | Seq<number, string>;
-                                 ^^^^^^^^^^^^^^^^^^^ [1]
-   class-static-predicate.js:18:10
-   18|   ;(foo: string);
-                ^^^^^^ [2]
-
-
 Error ------------------------------------------------------------------------------------------------ issue-7920.js:9:4
 
 Cannot cast `null` to `typeof test` because null [1] is incompatible with string [2]. [incompatible-cast]
@@ -180,7 +118,7 @@ References:
 
 
 
-Found 14 errors
+Found 10 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches
