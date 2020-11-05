@@ -7289,23 +7289,28 @@ and predicates_of_condition cx ~cond e =
     | (None, e) -> empty_result e)
   (* e.m(...) *)
   (* TODO: Don't trap method calls for now *)
-  | loc, Call ({ Call.callee = (_, Member _); arguments = (_, { ArgList.arguments; comments = _ }); _ } as call) ->
-    let is_spread = function | Spread _ -> true | _ -> false in
+  | loc, Call ({ Call.callee = (_, Member _); arguments = (_, { ArgList.arguments; comments = _ }); _ } as call)
+    ->
+    let is_spread = function
+      | Spread _ -> true
+      | _ -> false
+    in
     if List.exists is_spread arguments then
       empty_result (expression cx ~annot:None e)
     else
-      let fun_t, keys, arg_ts, ret_t, call_ast =
-        predicated_call_expression cx loc call in
-      let ast = (loc, ret_t), Call call_ast in
+      let (fun_t, keys, arg_ts, ret_t, call_ast) = predicated_call_expression cx loc call in
+      let ast = ((loc, ret_t), Call call_ast) in
       let args_with_offset = ListUtils.zipi keys arg_ts in
       let emp_pred_map = empty_result ast in
-      List.fold_left (fun pred_map arg_info -> match arg_info with
-        | (idx, Some key, unrefined_t) ->
-            let pred = LatentP (fun_t, idx+1) in
+      List.fold_left
+        (fun pred_map arg_info ->
+          match arg_info with
+          | (idx, Some key, unrefined_t) ->
+            let pred = LatentP (fun_t, idx + 1) in
             add_predicate key unrefined_t pred true pred_map
-        | _ ->
-            pred_map
-      ) emp_pred_map args_with_offset
+          | _ -> pred_map)
+        emp_pred_map
+        args_with_offset
   (* f(...) *)
   (* The concrete predicate is not known at this point. We attach a "latent"
      predicate pointing to the type of the function that will supply this
