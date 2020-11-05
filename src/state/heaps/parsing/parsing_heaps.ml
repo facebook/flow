@@ -288,9 +288,9 @@ end = struct
 
   let get_old_file_hash ~reader:_ = FileHashHeap.get_old
 
-  let get_ast_unsafe ~reader:_ file =
-    match ASTHeap.get file with
-    | Some ast -> decompactify_loc file ast
+  let get_ast_unsafe ~reader file =
+    match get_ast ~reader file with
+    | Some ast -> ast
     | None -> raise (Ast_not_found (File_key.to_string file))
 
   let get_sig_ast_unsafe ~reader:_ file =
@@ -306,13 +306,13 @@ end = struct
   let get_sig_ast_aloc_table_unsafe_lazy =
     make_lazy_aloc_table_fetcher ~get_sig_ast_aloc_table_unsafe
 
-  let get_docblock_unsafe ~reader:_ file =
-    match DocblockHeap.get file with
+  let get_docblock_unsafe ~reader file =
+    match get_docblock ~reader file with
     | Some docblock -> docblock
     | None -> raise (Docblock_not_found (File_key.to_string file))
 
-  let get_file_sig_unsafe ~reader:_ file =
-    match FileSigHeap.get file with
+  let get_file_sig_unsafe ~reader file =
+    match get_file_sig ~reader file with
     | Some file_sig -> file_sig
     | None -> raise (Requires_not_found (File_key.to_string file))
 
@@ -326,8 +326,8 @@ end = struct
     | Some type_sig -> type_sig
     | None -> raise (Type_sig_not_found (File_key.to_string file))
 
-  let get_file_hash_unsafe ~reader:_ file =
-    match FileHashHeap.get file with
+  let get_file_hash_unsafe ~reader file =
+    match get_file_hash ~reader file with
     | Some hash -> hash
     | None -> raise (Hash_not_found (File_key.to_string file))
 end
