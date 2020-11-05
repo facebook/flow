@@ -1,3 +1,41 @@
+Error ------------------------------------------------------------------------------------------ class-predicate.js:23:5
+
+Cannot extend `Hello` [1] with `D2` because predicate encoded in return [2] is incompatible with predicate encoded in
+return [3] in property `test`. [incompatible-extend]
+
+   class-predicate.js:23:5
+   23|     return typeof x === "number";
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+References:
+   class-predicate.js:21:18
+   21| class D2 extends Hello {
+                        ^^^^^ [1]
+   class-predicate.js:5:5
+    5|     return typeof x === "string";
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
+
+
+Error ------------------------------------------------------------------------------------------ class-predicate.js:28:3
+
+function [1]. Function is incompatible with function [2]. [function-predicate]
+
+   class-predicate.js:28:3
+         v------------------------------------------------------
+   28|   test(x: mixed): boolean { // error non-predicate method
+   29|     return typeof x === "string";
+   30|   }
+         ^ [1]
+
+References:
+   class-predicate.js:4:3
+         v--------------------------------
+    4|   test(x: mixed): boolean %checks {
+    5|     return typeof x === "string";
+    6|   }
+         ^ [2]
+
+
 Error ------------------------------------------------------------------------------------------------ issue-7920.js:9:4
 
 Cannot cast `null` to `typeof test` because null [1] is incompatible with string [2]. [incompatible-cast]
@@ -135,7 +173,7 @@ References:
 
 
 
-Found 11 errors
+Found 13 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches
