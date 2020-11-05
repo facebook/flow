@@ -1026,6 +1026,7 @@ let rec make_error_printable ?(speculation = false) (error : Loc.t t) : Loc.t Er
     | (Some loc, Error_message.Normal { features }) ->
       mk_error ~trace_infos ~kind loc (code_of_error error) features
     | (None, UseOp { loc; features; use_op }) -> mk_use_op_error loc use_op features
+    | (Some _, UseOp { loc; features; use_op }) -> mk_use_op_error loc use_op features
     | (None, PropMissing { loc; prop; reason_obj; use_op; suggestion }) ->
       mk_prop_missing_error loc prop reason_obj use_op suggestion
     | ( None,

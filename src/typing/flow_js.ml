@@ -3723,7 +3723,7 @@ struct
             let loc = aloc_of_reason lreason in
             add_output cx ~trace Error_message.(EInternal (loc, PredFunWithoutParamNames))
           | Error (msg, reasons) ->
-            add_output cx ~trace (Error_message.EFunPredCustom (reasons, msg));
+            add_output cx ~trace (Error_message.EFunPredCustom (reasons, msg, unknown_use));
             rec_flow_t ~use_op:unknown_use cx trace (unrefined_t, OpenT fresh_t))
         (* Fall through all the remaining cases *)
         | (_, CallLatentPredT (_, _, _, unrefined_t, fresh_t)) ->
@@ -4335,7 +4335,7 @@ struct
               add_output
                 cx
                 ~trace
-                (Error_message.EFunPredCustom ((lreason, ureason), "Function is incompatible with"))
+                (Error_message.EFunPredCustom ((lreason, ureason), "is incompatible with", use_op))
             else
               flow_predicate_func cx trace use_op (lreason, ft1) (ureason, ft2)
           else
@@ -12890,7 +12890,8 @@ struct
         let error =
           Error_message.EFunPredCustom
             ( (mod_reason n1 lreason, mod_reason n2 ureason),
-              "Predicate function is incompatible with" )
+              "Predicate function is incompatible with",
+              use_op )
         in
         add_output cx ~trace error
       | Error `NoParamNames ->
