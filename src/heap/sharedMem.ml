@@ -792,11 +792,12 @@ module NewAPI = struct
 
   (* header utils *)
 
+  (* The integer values corresponding to these tags are encoded in the low byte
+   * of object headers. Any changes made here must be kept in sync with
+   * hh_shared.c -- e.g., the should_scan function. *)
   type tag =
     | Serialized_tag
     | String_tag
-    | Addr_map_tag
-    | Checked_file_tag
     | Exports_tag
     | Export_def_tag
     | Module_ref_tag
@@ -804,6 +805,9 @@ module NewAPI = struct
     | Local_def_tag
     | Pattern_def_tag
     | Pattern_tag
+    (* tags defined below this point are scanned for pointers *)
+    | Addr_map_tag (* 9 *)
+    | Checked_file_tag
 
   (* avoid unused constructor warning *)
   let () = ignore Serialized_tag
