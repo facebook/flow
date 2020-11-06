@@ -1,6 +1,6 @@
 Error ---------------------------------------------------------------------------------------- declare_function.js:14:19
 
-boolean [1] is incompatible with number [2]. [incompatible-type]
+Cannot call `myFun.bind` because boolean [1] is incompatible with number [2] in property `prop`. [incompatible-call]
 
    declare_function.js:14:19
    14| myFun.bind({prop: true}); // Error - bool ~> number
@@ -42,7 +42,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------- declare_function.js:17:23
 
-boolean [1] is incompatible with number [2]. [incompatible-type]
+Cannot call `myPolyFun.bind` because boolean [1] is incompatible with number [2] in property `prop`. [incompatible-call]
 
    declare_function.js:17:23
    17| myPolyFun.bind({prop: true}); // Error - bool ~> number
@@ -183,7 +183,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- function_type.js:7:9
 
-string [1] is incompatible with number [2]. [incompatible-type]
+Cannot call `x.bind` because string [1] is incompatible with number [2]. [incompatible-call]
 
    function_type.js:7:9
    7| (x.bind("")()); // error: number incompatible with string
@@ -197,7 +197,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- function_type.js:14:8
 
-string [1] is incompatible with number [2]. [incompatible-type]
+Cannot call `y.bind` because string [1] is incompatible with number [2]. [incompatible-call]
 
    function_type.js:14:8
    14| y.bind(""); // error: number incompatible with string
@@ -341,7 +341,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:19:10
 
-Property `f` is missing in object type [1] but exists in object type [2]. [prop-missing]
+Cannot call `bar.bind` because property `f` is missing in object type [1] but exists in object type [2]. [prop-missing]
 
    test.js:19:10
    19| bar.bind(y)(); // error : number incompatible with string
@@ -376,24 +376,6 @@ References:
                       ^^^^^^^^^^^^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:41:16
-
-Property `foo` is missing in object type [1] but exists in object literal [2]. [prop-missing]
-
-   test.js:41:16
-   41|     foo(this : {|y : number|}) {},
-                      ^^^^^^^^^^^^^^ [1]
-
-References:
-   test.js:32:10
-                v
-   32| let o2 = {
-   33|     foo(this : {y : number , ...}) {},
-   34|     y : 3
-   35| }
-       ^ [2]
-
-
 Error ----------------------------------------------------------------------------------------------------- test.js:45:4
 
 Cannot call `o3.foo` because property `foo` is missing in object type [1] but exists in object literal [2].
@@ -413,6 +395,28 @@ References:
    41|     foo(this : {|y : number|}) {},
    42|     y : 3
    43| }
+       ^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:47:8
+
+Cannot call `o3.foo.bind` because property `foo` is missing in object type [1] but exists in object literal [2].
+[prop-missing]
+
+   test.js:47:8
+   47| o3.foo.bind(o2)(); // error, foo is missing in type of o2 this
+              ^^^^
+
+References:
+   test.js:41:16
+   41|     foo(this : {|y : number|}) {},
+                      ^^^^^^^^^^^^^^ [1]
+   test.js:32:10
+                v
+   32| let o2 = {
+   33|     foo(this : {y : number , ...}) {},
+   34|     y : 3
+   35| }
        ^ [2]
 
 

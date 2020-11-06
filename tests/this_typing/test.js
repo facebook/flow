@@ -44,7 +44,7 @@ let o3 = {
 
 o3.foo(); // error, foo is missing in type of this
 f.bind(o3)();
-o3.foo.bind(o2)(); // error, foo is missing in type of o2 this (TODO, this error is poorly positioned)
+o3.foo.bind(o2)(); // error, foo is missing in type of o2 this
 
 /******************* Generics **********************/
 

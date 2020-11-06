@@ -6183,7 +6183,7 @@ struct
             calltype
           in
           (* TODO: closure *)
-          rec_flow_t cx trace ~use_op:unknown_use (o2, o1);
+          rec_flow_t cx trace ~use_op (o2, o1);
 
           let resolve_to =
             ResolveSpreadsToMultiflowPartial (mk_id (), ft, reason_op, OpenT call_tout)
