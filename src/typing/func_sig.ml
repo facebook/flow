@@ -39,7 +39,7 @@ module Make (F : Func_params.S) = struct
       kind = Ctor;
       tparams = None;
       tparams_map = SMap.empty;
-      fparams = F.empty (fun _ _ -> None);
+      fparams = F.empty (fun _ _ _ -> None);
       body = None;
       return_t = Annotated (VoidT.why reason |> with_trust bogus_trust);
       (* This can't be directly recursively called. In case this type is accidentally used downstream,
@@ -53,7 +53,7 @@ module Make (F : Func_params.S) = struct
       kind = FieldInit expr;
       tparams = None;
       tparams_map;
-      fparams = F.empty (fun _ _ -> None);
+      fparams = F.empty (fun _ _ _ -> None);
       body = None;
       return_t = return_annot_or_inferred;
       (* This can't be recursively called. In case this type is accidentally used downstream, stub it
@@ -91,7 +91,7 @@ module Make (F : Func_params.S) = struct
             return_t = TypeUtil.map_annotated_or_inferred (Flow.subst cx map) return_t;
           })
 
-  let functiontype cx this_t { reason; kind; tparams; fparams; return_t; knot; _ } =
+  let functiontype cx this_default { reason; kind; tparams; fparams; return_t; knot; _ } =
     let make_trust = Context.trust_constructor cx in
     let static =
       let proto = FunProtoT reason in
@@ -103,7 +103,7 @@ module Make (F : Func_params.S) = struct
     in
     let funtype =
       {
-        Type.this_t;
+        Type.this_t = F.this fparams |> Base.Option.value ~default:this_default;
         params = F.value fparams;
         rest_param = F.rest fparams;
         return_t = TypeUtil.type_t_of_annotated_or_inferred return_t;
@@ -123,6 +123,7 @@ module Make (F : Func_params.S) = struct
     let (params_names, params_tlist) = List.split params in
     let rest_param = F.rest fparams in
     let def_reason = reason in
+    let this = F.this fparams in
     let t =
       DefT
         ( reason,
@@ -131,6 +132,7 @@ module Make (F : Func_params.S) = struct
             ( dummy_static reason,
               dummy_prototype,
               mk_boundfunctiontype
+                ?this
                 params_tlist
                 ~rest_param
                 ~def_reason
@@ -149,7 +151,7 @@ module Make (F : Func_params.S) = struct
   let toplevels
       id
       cx
-      this
+      this_recipe
       super
       ~decls
       ~stmts
@@ -185,6 +187,8 @@ module Make (F : Func_params.S) = struct
     in
     (* push the scope early so default exprs can reference earlier params *)
     Env.push_var_scope cx function_scope;
+
+    let (this_t, this) = this_recipe fparams in
 
     (* add `this` and `super` before looking at parameter bindings as when using
      * `this` in default parameter values it refers to the function scope and
@@ -371,7 +375,7 @@ module Make (F : Func_params.S) = struct
        - the field initializer is Some expr' if the func sig's kind was FieldInit expr,
          where expr' is the typed AST translation of expr.
     *)
-    (params_ast, body_ast, init_ast)
+    (this_t, params_ast, body_ast, init_ast)
 
   let to_ctor_sig f = { f with kind = Ctor }
 end

@@ -1,0 +1,471 @@
+Error ---------------------------------------------------------------------------------------- declare_function.js:14:19
+
+boolean [1] is incompatible with number [2]. [incompatible-type]
+
+   declare_function.js:14:19
+   14| myFun.bind({prop: true}); // Error - bool ~> number
+                         ^^^^ [1]
+
+References:
+   declare_function.js:3:37
+    3| declare function myFun(this: {prop: number}): string;
+                                           ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------- declare_function.js:15:20
+
+Cannot call `myFun.apply` because boolean [1] is incompatible with number [2] in property `prop`. [incompatible-call]
+
+   declare_function.js:15:20
+   15| myFun.apply({prop: true}, []); // Error - bool ~> number
+                          ^^^^ [1]
+
+References:
+   declare_function.js:3:37
+    3| declare function myFun(this: {prop: number}): string;
+                                           ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------- declare_function.js:16:19
+
+Cannot call `myFun.call` because boolean [1] is incompatible with number [2] in property `prop`. [incompatible-call]
+
+   declare_function.js:16:19
+   16| myFun.call({prop: true}); // Error - bool ~> number
+                         ^^^^ [1]
+
+References:
+   declare_function.js:3:37
+    3| declare function myFun(this: {prop: number}): string;
+                                           ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------- declare_function.js:17:23
+
+boolean [1] is incompatible with number [2]. [incompatible-type]
+
+   declare_function.js:17:23
+   17| myPolyFun.bind({prop: true}); // Error - bool ~> number
+                             ^^^^ [1]
+
+References:
+   declare_function.js:4:44
+    4| declare function myPolyFun<T>(this: {prop: number}, x: T): T;
+                                                  ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------- declare_function.js:18:24
+
+Cannot call `myPolyFun.apply` because boolean [1] is incompatible with number [2] in property `prop`.
+[incompatible-call]
+
+   declare_function.js:18:24
+   18| myPolyFun.apply({prop: true}, []); // Error - bool ~> number
+                              ^^^^ [1]
+
+References:
+   declare_function.js:4:44
+    4| declare function myPolyFun<T>(this: {prop: number}, x: T): T;
+                                                  ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------- declare_function.js:19:23
+
+Cannot call `myPolyFun.call` because boolean [1] is incompatible with number [2] in property `prop`. [incompatible-call]
+
+   declare_function.js:19:23
+   19| myPolyFun.call({prop: true}); // Error - bool ~> number
+                             ^^^^ [1]
+
+References:
+   declare_function.js:4:44
+    4| declare function myPolyFun<T>(this: {prop: number}, x: T): T;
+                                                  ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------- declare_function.js:21:7
+
+Cannot call `myFun.bind` because a call signature declaring the expected parameter / return type is missing in function
+type [1]. [prop-missing]
+
+   declare_function.js:21:7
+   21| myFun.bind(); // Error - void ~> number
+             ^^^^
+
+References:
+   declare_function.js:21:1
+   21| myFun.bind(); // Error - void ~> number
+       ^^^^^^^^^^ [1]
+
+
+Error ----------------------------------------------------------------------------------------- declare_function.js:22:7
+
+Cannot call `myFun.apply` because undefined [1] is incompatible with object type [2]. [incompatible-call]
+
+   declare_function.js:22:7
+   22| myFun.apply(); // Error - void ~> number
+             ^^^^^
+
+References:
+   declare_function.js:22:1
+   22| myFun.apply(); // Error - void ~> number
+       ^^^^^^^^^^^^^ [1]
+   declare_function.js:3:30
+    3| declare function myFun(this: {prop: number}): string;
+                                    ^^^^^^^^^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------- declare_function.js:23:7
+
+Cannot call `myFun.call` because undefined [1] is incompatible with object type [2]. [incompatible-call]
+
+   declare_function.js:23:7
+   23| myFun.call(); // Error - void ~> number
+             ^^^^
+
+References:
+   declare_function.js:23:1
+   23| myFun.call(); // Error - void ~> number
+       ^^^^^^^^^^^^ [1]
+   declare_function.js:3:30
+    3| declare function myFun(this: {prop: number}): string;
+                                    ^^^^^^^^^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------- declare_function.js:24:11
+
+Cannot call `myPolyFun.bind` because a call signature declaring the expected parameter / return type is missing in
+function type [1]. [prop-missing]
+
+   declare_function.js:24:11
+   24| myPolyFun.bind(); // Error - void ~> number
+                 ^^^^
+
+References:
+   declare_function.js:24:1
+   24| myPolyFun.bind(); // Error - void ~> number
+       ^^^^^^^^^^^^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------- declare_function.js:25:11
+
+Cannot call `myPolyFun.apply` because undefined [1] is incompatible with object type [2]. [incompatible-call]
+
+   declare_function.js:25:11
+   25| myPolyFun.apply(); // Error - void ~> number
+                 ^^^^^
+
+References:
+   declare_function.js:25:1
+   25| myPolyFun.apply(); // Error - void ~> number
+       ^^^^^^^^^^^^^^^^^ [1]
+   declare_function.js:4:37
+    4| declare function myPolyFun<T>(this: {prop: number}, x: T): T;
+                                           ^^^^^^^^^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------- declare_function.js:26:11
+
+Cannot call `myPolyFun.call` because undefined [1] is incompatible with object type [2]. [incompatible-call]
+
+   declare_function.js:26:11
+   26| myPolyFun.call(); // Error - void ~> number
+                 ^^^^
+
+References:
+   declare_function.js:26:1
+   26| myPolyFun.call(); // Error - void ~> number
+       ^^^^^^^^^^^^^^^^ [1]
+   declare_function.js:4:37
+    4| declare function myPolyFun<T>(this: {prop: number}, x: T): T;
+                                           ^^^^^^^^^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------- function_type.js:7:9
+
+string [1] is incompatible with number [2]. [incompatible-type]
+
+   function_type.js:7:9
+   7| (x.bind("")()); // error: number incompatible with string
+              ^^ [1]
+
+References:
+   function_type.js:4:25
+   4| declare var x : (this : number) => void;
+                              ^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------- function_type.js:14:8
+
+string [1] is incompatible with number [2]. [incompatible-type]
+
+   function_type.js:14:8
+   14| y.bind(""); // error: number incompatible with string
+              ^^ [1]
+
+References:
+   function_type.js:12:19
+   12| declare var y : F<number>;
+                         ^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------- function_type.js:17:2
+
+Cannot cast `y` to `F` because number [1] is incompatible with string [2] in type argument `T` [3]. [incompatible-cast]
+
+   function_type.js:17:2
+   17| (y : F<string>); // error: number incompatible with string
+        ^
+
+References:
+   function_type.js:12:19
+   12| declare var y : F<number>;
+                         ^^^^^^ [1]
+   function_type.js:17:8
+   17| (y : F<string>); // error: number incompatible with string
+              ^^^^^^ [2]
+   function_type.js:10:8
+   10| type F<T> = (this : T) => void;
+              ^ [3]
+
+
+Error -------------------------------------------------------------------------------------------- function_type.js:22:2
+
+Cannot cast `z.bind(...)()` to string because number [1] is incompatible with string [2]. [incompatible-cast]
+
+   function_type.js:22:2
+   22| (z.bind(3)() : string); // error: number incompatible with string
+        ^^^^^^^^^^^
+
+References:
+   function_type.js:22:9
+   22| (z.bind(3)() : string); // error: number incompatible with string
+               ^ [1]
+   function_type.js:22:16
+   22| (z.bind(3)() : string); // error: number incompatible with string
+                      ^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------- function_type.js:23:2
+
+Cannot cast `z.bind(...)()` to number because string [1] is incompatible with number [2]. [incompatible-cast]
+
+   function_type.js:23:2
+   23| (z.bind("")() : number); // error: number incompatible with string
+        ^^^^^^^^^^^^
+
+References:
+   function_type.js:23:9
+   23| (z.bind("")() : number); // error: number incompatible with string
+               ^^ [1]
+   function_type.js:23:17
+   23| (z.bind("")() : number); // error: number incompatible with string
+                       ^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------- function_type.js:32:2
+
+Cannot cast `x` to `BotFn` because mixed [1] is incompatible with number [2]. [incompatible-cast]
+
+   function_type.js:32:2
+   32| (x : BotFn); // error
+        ^
+
+References:
+   function_type.js:29:22
+   29| type BotFn = (this : mixed) => empty;
+                            ^^^^^ [1]
+   function_type.js:4:25
+    4| declare var x : (this : number) => void;
+                               ^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------- function_type.js:32:2
+
+Cannot cast `x` to `BotFn` because undefined [1] is incompatible with empty [2] in the return value. [incompatible-cast]
+
+   function_type.js:32:2
+   32| (x : BotFn); // error
+        ^
+
+References:
+   function_type.js:4:36
+    4| declare var x : (this : number) => void;
+                                          ^^^^ [1]
+   function_type.js:29:32
+   29| type BotFn = (this : mixed) => empty;
+                                      ^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:8:17
+
+Cannot get `this.x` because property `x` is missing in mixed [1]. [incompatible-use]
+
+   test.js:8:17
+   8|     return this.x; // error: this is mixed
+                      ^
+
+References:
+   test.js:7:21
+   7| function foo(this : mixed) : void {
+                          ^^^^^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:11:5
+
+Cannot call `foo` because no arguments are expected by function [1]. [extra-arg]
+
+   test.js:11:5
+   11| foo(3); // error: foo does not take any arguments
+           ^
+
+References:
+   test.js:7:1
+    7| function foo(this : mixed) : void {
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:15:10
+
+Cannot get `this.y` because property `y` is missing in object type [1]. [prop-missing]
+
+   test.js:15:10
+   15|     this.y; // error no property y
+                ^
+
+References:
+   test.js:14:22
+   14| function bar (this : {f : number, ...}) : number {
+                            ^^^^^^^^^^^^^^^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:19:10
+
+Property `f` is missing in object type [1] but exists in object type [2]. [prop-missing]
+
+   test.js:19:10
+   19| bar.bind(y)(); // error : number incompatible with string
+                ^
+
+References:
+   test.js:5:17
+    5| declare var y : { y : string};
+                       ^^^^^^^^^^^^^ [1]
+   test.js:14:22
+   14| function bar (this : {f : number, ...}) : number {
+                            ^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:27:1
+
+Cannot call `o.foo` because property `y` is missing in object literal [1] but exists in object type [2]. [prop-missing]
+
+   test.js:27:1
+   27| o.foo(); // error o has no field y
+       ^
+
+References:
+   test.js:23:9
+               v
+   23| let o = {
+   24|     foo(this : {y : number, ...}) {}
+   25| }
+       ^ [1]
+   test.js:24:16
+   24|     foo(this : {y : number, ...}) {}
+                      ^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:41:16
+
+Property `foo` is missing in object type [1] but exists in object literal [2]. [prop-missing]
+
+   test.js:41:16
+   41|     foo(this : {|y : number|}) {},
+                      ^^^^^^^^^^^^^^ [1]
+
+References:
+   test.js:32:10
+                v
+   32| let o2 = {
+   33|     foo(this : {y : number , ...}) {},
+   34|     y : 3
+   35| }
+       ^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:45:4
+
+Cannot call `o3.foo` because property `foo` is missing in object type [1] but exists in object literal [2].
+[prop-missing]
+
+   test.js:45:4
+   45| o3.foo(); // error, foo is missing in type of this
+          ^^^
+
+References:
+   test.js:41:16
+   41|     foo(this : {|y : number|}) {},
+                      ^^^^^^^^^^^^^^ [1]
+   test.js:40:10
+                v
+   40| let o3 = {
+   41|     foo(this : {|y : number|}) {},
+   42|     y : 3
+   43| }
+       ^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:57:2
+
+Cannot cast `baz.bind(...)()` to string because number [1] is incompatible with string [2]. [incompatible-cast]
+
+   test.js:57:2
+   57| (baz.bind({f : 3})() : string); // error : number incompatible with string
+        ^^^^^^^^^^^^^^^^^^^
+
+References:
+   test.js:57:16
+   57| (baz.bind({f : 3})() : string); // error : number incompatible with string
+                      ^ [1]
+   test.js:57:24
+   57| (baz.bind({f : 3})() : string); // error : number incompatible with string
+                              ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:58:2
+
+Cannot cast `baz.bind(...)()` to number because string [1] is incompatible with number [2]. [incompatible-cast]
+
+   test.js:58:2
+   58| (baz.bind({f : ""})() : number); // error : number incompatible with string
+        ^^^^^^^^^^^^^^^^^^^^
+
+References:
+   test.js:58:16
+   58| (baz.bind({f : ""})() : number); // error : number incompatible with string
+                      ^^ [1]
+   test.js:58:25
+   58| (baz.bind({f : ""})() : number); // error : number incompatible with string
+                               ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:63:2
+
+Cannot cast `baz2.bind(...)(...)` to string because number [1] is incompatible with string [2]. [incompatible-cast]
+
+   test.js:63:2
+   63| (baz2.bind(3)("") : string); // error : number incompatible with string
+        ^^^^^^^^^^^^^^^^
+
+References:
+   test.js:63:12
+   63| (baz2.bind(3)("") : string); // error : number incompatible with string
+                  ^ [1]
+   test.js:63:21
+   63| (baz2.bind(3)("") : string); // error : number incompatible with string
+                           ^^^^^^ [2]
+
+
+
+Found 29 errors

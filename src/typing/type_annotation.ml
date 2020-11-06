@@ -24,9 +24,13 @@ module Func_type_params = Func_params.Make (struct
 
   type 'T rest_ast = (ALoc.t, 'T) Ast.Type.Function.RestParam.t
 
+  type 'T this_ast = (ALoc.t, ALoc.t * Type.t) Ast.Type.Function.ThisParam.t
+
   type param = Type.t * (ALoc.t * Type.t) param_ast
 
   type rest = Type.t * (ALoc.t * Type.t) rest_ast
+
+  type this_param = Type.t * (ALoc.t * Type.t) this_ast
 
   let id_name (_, { Ast.Identifier.name; _ }) = name
 
@@ -45,6 +49,8 @@ module Func_type_params = Func_params.Make (struct
     let name = Base.Option.map name ~f:id_name in
     (name, loc, t)
 
+  let this_type (t, _) = t
+
   let subst_param cx map (t, tast) =
     let t = Flow.subst cx map t in
     (t, tast)
@@ -53,9 +59,15 @@ module Func_type_params = Func_params.Make (struct
     let t = Flow.subst cx map t in
     (t, tast)
 
+  let subst_this cx map (t, tast) =
+    let t = Flow.subst cx map t in
+    (t, tast)
+
   let eval_param _cx (_, tast) = tast
 
   let eval_rest _cx (_, tast) = tast
+
+  let eval_this _cx (_, tast) = tast
 end)
 
 module Func_type_sig = Func_sig.Make (Func_type_params)
@@ -937,19 +949,12 @@ let rec convert cx tparams_map =
       Function
         {
           Function.params =
-            ( params_loc,
-              {
-                Function.Params.params;
-                rest;
-                (* TODO: handle `this` constraints *)
-                this_;
-                comments = params_comments;
-              } );
+            (params_loc, { Function.Params.params; rest; this_; comments = params_comments });
           return;
           tparams;
           comments = func_comments;
         } ) ->
-    if Context.enable_this_annot cx |> not then
+    if not @@ Context.enable_this_annot cx then
       Base.Option.iter this_ ~f:(fun (this_loc, _) ->
           Flow_js.add_output cx (Error_message.EExperimentalThisAnnot this_loc));
     let (tparams, tparams_map, tparams_ast) = mk_type_param_declarations cx ~tparams_map tparams in
@@ -969,6 +974,13 @@ let rec convert cx tparams_map =
             (param_loc, { Function.Param.name; annot = annot_ast; optional }) :: asts_acc ))
         ([], [])
         params
+    in
+    let (this_t, this_param_ast) =
+      match this_ with
+      | None -> (bound_function_dummy_this, None)
+      | Some (this_loc, { Function.ThisParam.annot = (loc, annot); comments }) ->
+        let (((_, this_t), _) as annot) = convert cx tparams_map annot in
+        (this_t, Some (this_loc, { Function.ThisParam.annot = (loc, annot); comments }))
     in
     let reason = mk_annot_reason RFunctionType loc in
     let (rest_param, rest_param_ast) =
@@ -1005,7 +1017,7 @@ let rec convert cx tparams_map =
             ( statics_t,
               mk_reason RPrototype loc |> Unsoundness.function_proto_any,
               {
-                this_t = bound_function_dummy_this;
+                this_t;
                 params = List.rev rev_params;
                 rest_param;
                 return_t;
@@ -1030,8 +1042,7 @@ let rec convert cx tparams_map =
               {
                 Function.Params.params = List.rev rev_param_asts;
                 rest = rest_param_ast;
-                (* TODO: handle `this` constraints *)
-                this_ = None;
+                this_ = this_param_ast;
                 comments = params_comments;
               } );
           return = return_ast;
@@ -1569,23 +1580,22 @@ and mk_func_sig =
     in
     Func_type_params.add_rest rest x
   in
-  let convert_params
-      cx
-      tparams_map
-      (loc, { Params.params; rest; (* TODO: handle `this` constraints *)
-                                   this_; comments }) =
-    if Context.enable_this_annot cx |> not then
-      Base.Option.iter this_ ~f:(fun (this_loc, _) ->
-          Flow_js.add_output cx (Error_message.EExperimentalThisAnnot this_loc));
+  let add_this cx tparams_map x this_param =
+    let (this_loc, { ThisParam.annot = (loc, annot); comments }) = this_param in
+    if not @@ Context.enable_this_annot cx then
+      Flow_js.add_output cx (Error_message.EExperimentalThisAnnot this_loc);
+    let (((_, t), _) as annot') = convert cx tparams_map annot in
+    let this = (t, (this_loc, { Ast.Type.Function.ThisParam.annot = (loc, annot'); comments })) in
+    Func_type_params.add_this this x
+  in
+  let convert_params cx tparams_map (loc, { Params.params; rest; this_; comments }) =
     let fparams =
-      Func_type_params.empty (fun params rest ->
-          Some
-            ( loc,
-              { Params.params; rest; (* TODO: handle `this` constraints *)
-                                     this_ = None; comments } ))
+      Func_type_params.empty (fun params rest this_ ->
+          Some (loc, { Params.params; rest; this_; comments }))
     in
     let fparams = List.fold_left (add_param cx tparams_map) fparams params in
     let fparams = Base.Option.fold ~f:(add_rest cx tparams_map) ~init:fparams rest in
+    let fparams = Base.Option.fold ~f:(add_this cx tparams_map) ~init:fparams this_ in
     let params_ast = Func_type_params.eval cx fparams in
     (fparams, Base.Option.value_exn params_ast)
   in

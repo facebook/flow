@@ -776,10 +776,13 @@ module Make (F : Func_sig.S) = struct
         let method_ this super ~set_asts f =
           let save_return = Abnormal.clear_saved Abnormal.Return in
           let save_throw = Abnormal.clear_saved Abnormal.Throw in
-          let asts =
-            f |> F.check_with_generics cx (F.toplevels None cx this super ~decls ~stmts ~expr)
+          let (_, params_ast, body_ast, init_ast) =
+            f
+            |> F.check_with_generics
+                 cx
+                 (F.toplevels None cx (Fn.const (Type.dummy_this, this)) super ~decls ~stmts ~expr)
           in
-          set_asts asts;
+          set_asts (params_ast, body_ast, init_ast);
           ignore (Abnormal.swap_saved Abnormal.Return save_return);
           ignore (Abnormal.swap_saved Abnormal.Throw save_throw)
         in

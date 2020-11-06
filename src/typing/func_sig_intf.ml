@@ -75,8 +75,8 @@ module type S = sig
     (ALoc.t, ALoc.t) Flow_ast.Identifier.t option ->
     (* id *)
     Context.t ->
-    Scope.Entry.t ->
-    (* this *)
+    (func_params -> Type.t * Scope.Entry.t) ->
+    (* this recipe *)
     Scope.Entry.t ->
     decls:((* super *)
            Context.t -> (ALoc.t, ALoc.t) Flow_ast.Statement.t list -> unit) ->
@@ -91,9 +91,11 @@ module type S = sig
       (ALoc.t, ALoc.t) Flow_ast.Expression.t ->
       (ALoc.t, ALoc.t * Type.t) Flow_ast.Expression.t) ->
     t ->
-    func_params_tast option
+    Type.t (* this *)
+    * func_params_tast option
     * (ALoc.t, ALoc.t * Type.t) Flow_ast.Function.body option
     * (ALoc.t, ALoc.t * Type.t) Flow_ast.Expression.t option
+
   (** Evaluate the function.
 
       This function creates a new scope, installs bindings for the function's

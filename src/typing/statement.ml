@@ -272,6 +272,8 @@ module Func_stmt_config = struct
 
   type 'T rest_ast = (ALoc.t, 'T) Ast.Function.RestParam.t
 
+  type 'T this_ast = (ALoc.t, 'T) Ast.Function.ThisParam.t
+
   type expr =
     Context.t ->
     (ALoc.t, ALoc.t) Flow_ast.Expression.t ->
@@ -308,6 +310,13 @@ module Func_stmt_config = struct
         id: (ALoc.t, ALoc.t * Type.t) Ast.Pattern.Identifier.t;
       }
 
+  type this_param =
+    | This of {
+        t: Type.t;
+        loc: ALoc.t;
+        annot: (ALoc.t, ALoc.t * Type.t) Ast.Type.annotation;
+      }
+
   let param_type (Param { t; pattern; default; _ }) =
     match pattern with
     | Id id ->
@@ -332,6 +341,8 @@ module Func_stmt_config = struct
     let { Ast.Pattern.Identifier.name = (_, { Ast.Identifier.name; _ }); _ } = id in
     (Some name, loc, t)
 
+  let this_type (This { t; _ }) = t
+
   let subst_param cx map param =
     let (Param { t; loc; ploc; pattern; default; expr }) = param in
     let t = Flow.subst cx map t in
@@ -341,6 +352,10 @@ module Func_stmt_config = struct
     let (Rest { t; loc; ploc; id }) = rest in
     let t = Flow.subst cx map t in
     Rest { t; loc; ploc; id }
+
+  let subst_this cx map (This { t; loc; annot }) =
+    let t = Flow.subst cx map t in
+    This { t; loc; annot }
 
   let bind cx name t loc =
     Scope.(
@@ -445,6 +460,10 @@ module Func_stmt_config = struct
     ( loc,
       { Ast.Function.RestParam.argument = ((ploc, t), Ast.Pattern.Identifier id); comments = None }
     )
+
+  let eval_this _ (This { t = _; annot; loc }) =
+    (* this does not bind any parameters *)
+    (loc, { Ast.Function.ThisParam.annot; comments = None })
 end
 
 module Func_stmt_params = Func_params.Make (Func_stmt_config)
@@ -7970,7 +7989,7 @@ and mk_func_sig =
   let predicate_function_kind cx loc params =
     let open Error_message in
     let (_, { Ast.Function.Params.params; rest; this_; comments = _ }) = params in
-    if Context.enable_this_annot cx |> not then
+    if not @@ Context.enable_this_annot cx then
       Base.Option.iter this_ ~f:(fun (this_loc, _) ->
           Flow_js.add_output cx (Error_message.EExperimentalThisAnnot this_loc));
     let kind = Func_sig.Predicate in
@@ -8059,13 +8078,18 @@ and mk_func_sig =
       (* TODO: this should be a parse error, unrepresentable AST *)
       Error Error_message.(EInternal (ploc, RestParameterNotIdentifierPattern))
   in
+  let mk_this
+      cx tparams_map (loc, { Ast.Function.ThisParam.annot = (annot_loc, annot); comments = _ }) =
+    let (((_, t), _) as annot) = Anno.convert cx tparams_map annot in
+    Func_stmt_config.This { t; loc; annot = (annot_loc, annot) }
+  in
   let mk_params cx ~annot tparams_map (loc, { Ast.Function.Params.params; rest; this_; comments }) =
-    if Context.enable_this_annot cx |> not then
+    if not @@ Context.enable_this_annot cx then
       Base.Option.iter this_ ~f:(fun (this_loc, _) ->
           Flow_js.add_output cx (Error_message.EExperimentalThisAnnot this_loc));
     let fparams =
-      Func_stmt_params.empty (fun params rest ->
-          Some (loc, { Ast.Function.Params.params; rest; this_ = None; comments }))
+      Func_stmt_params.empty (fun params rest this_ ->
+          Some (loc, { Ast.Function.Params.params; rest; this_; comments }))
     in
     let fparams =
       List.fold_left
@@ -8086,6 +8110,12 @@ and mk_func_sig =
             acc)
         ~init:fparams
         rest
+    in
+    let fparams =
+      Base.Option.fold
+        ~f:(fun acc this -> Func_stmt_params.add_this (mk_this cx tparams_map this) acc)
+        ~init:fparams
+        this_
     in
     fparams
   in
@@ -8219,18 +8249,18 @@ and mk_func_sig =
    signature consisting of type parameters, parameter types, parameter names,
    and return type, check the body against that signature by adding `this`
    and super` to the environment, and return the signature. *)
-and function_decl id cx ~annot reason func this super =
+and function_decl id cx ~annot reason func this_recipe super =
   let (func_sig, reconstruct_func) = mk_func_sig cx ~annot SMap.empty reason func in
   let save_return = Abnormal.clear_saved Abnormal.Return in
   let save_throw = Abnormal.clear_saved Abnormal.Throw in
-  let (params_ast, body_ast, _) =
+  let (this_t, params_ast, body_ast, _) =
     func_sig
     |> Func_stmt_sig.check_with_generics
          cx
          (Func_stmt_sig.toplevels
             id
             cx
-            this
+            this_recipe
             super
             ~decls:toplevel_decls
             ~stmts:toplevels
@@ -8238,7 +8268,8 @@ and function_decl id cx ~annot reason func this super =
   in
   ignore (Abnormal.swap_saved Abnormal.Return save_return);
   ignore (Abnormal.swap_saved Abnormal.Throw save_throw);
-  (func_sig, reconstruct_func (Base.Option.value_exn params_ast) (Base.Option.value_exn body_ast))
+  let fun_type = Func_stmt_sig.functiontype cx this_t func_sig in
+  (fun_type, reconstruct_func (Base.Option.value_exn params_ast) (Base.Option.value_exn body_ast))
 
 (* Switch back to the declared type for an internal name. *)
 and define_internal cx reason x =
@@ -8259,31 +8290,43 @@ and mk_function_expression id cx ~annot ~general reason func =
 (* Internal helper function. Use `mk_function_declaration` and `mk_function_expression` instead. *)
 and mk_function id cx ~annot ~general reason func =
   let loc = aloc_of_reason reason in
-  let this_t = Tvar.mk cx (mk_reason RThis loc) in
-  let this = Scope.Entry.new_let (Inferred this_t) ~loc ~state:Scope.State.Initialized in
   (* Normally, functions do not have access to super. *)
   let super =
     let t = ObjProtoT (mk_reason RNoSuper loc) in
     Scope.Entry.new_let (Inferred t) ~loc ~state:Scope.State.Initialized
   in
-  let (func_sig, reconstruct_ast) = function_decl id cx ~annot reason func this super in
-  let fun_type = Func_stmt_sig.functiontype cx this_t func_sig in
+  let this_recipe fparams =
+    let default = Tvar.mk cx (mk_reason RThis loc) in
+    (* If `this` is a bound type variable, we cannot create the type here, and
+       instead must wait until `check_with_generics` to instantiate the type.
+       However, the default behavior of `this` still depends on how it
+       was created, so we must provide the recipe based on where `function_decl`
+       is invoked. *)
+    let t =
+      match Func_stmt_params.this fparams with
+      | Some t -> Inferred t
+      | None -> Annotated default
+    in
+    let this = Scope.Entry.new_let t ~loc ~state:Scope.State.Initialized in
+    (type_t_of_annotated_or_inferred t, this)
+  in
+  let (fun_type, reconstruct_ast) = function_decl id cx ~annot reason func this_recipe super in
   (fun_type, reconstruct_ast general)
 
 (* Process an arrow function, returning a (polymorphic) function type. *)
 and mk_arrow cx ~annot reason func =
   let loc = aloc_of_reason reason in
-  let (_, this) = Env.find_entry cx (internal_name "this") loc in
   let (_, super) = Env.find_entry cx (internal_name "super") loc in
   let { Ast.Function.id; _ } = func in
-  (* If a return annot is available on func, use that. Otherwise try to extract the return annot
-   * from our annotation context *)
-  let (func_sig, reconstruct_ast) = function_decl id cx ~annot reason func this super in
-  (* Do not expose the type of `this` in the function's type. The call to
-     function_decl above has already done the necessary checking of `this` in
-     the body of the function. Now we want to avoid re-binding `this` to
-     objects through which the function may be called. *)
-  let fun_type = Func_stmt_sig.functiontype cx dummy_this func_sig in
+  let this_recipe _ =
+    let (_, this) = Env.find_entry cx (internal_name "this") loc in
+    (* Do not expose the type of `this` in the function's type. This call to
+    function_decl has already done the necessary checking of `this` in
+    the body of the function. Now we want to avoid re-binding `this` to
+    objects through which the function may be called. *)
+    (dummy_this, this)
+  in
+  let (fun_type, reconstruct_ast) = function_decl id cx ~annot reason func this_recipe super in
   (fun_type, reconstruct_ast fun_type)
 
 (* Transform predicate declare functions to functions whose body is the
@@ -8308,13 +8351,7 @@ and declare_function_to_function_declaration cx declare_loc func_decl =
               {
                 Ast.Type.Function.params =
                   ( params_loc,
-                    {
-                      Ast.Type.Function.Params.params;
-                      rest;
-                      (* TODO: handle `this` constraints *)
-                      this_;
-                      comments = params_comments;
-                    } );
+                    { Ast.Type.Function.Params.params; rest; this_; comments = params_comments } );
                 Ast.Type.Function.return;
                 Ast.Type.Function.tparams;
                 comments = func_comments;
@@ -8341,7 +8378,7 @@ and declare_function_to_function_declaration cx declare_loc func_decl =
             in
             (l, Ast.Pattern.Identifier name')
         in
-        if Context.enable_this_annot cx |> not then
+        if not @@ Context.enable_this_annot cx then
           Base.Option.iter this_ ~f:(fun (this_loc, _) ->
               Flow_js.add_output cx (Error_message.EExperimentalThisAnnot this_loc));
         let params =
@@ -8357,6 +8394,13 @@ and declare_function_to_function_declaration cx declare_loc func_decl =
           | Some (rest_loc, { RestParam.argument; comments }) ->
             let argument = param_type_to_param argument in
             Some (rest_loc, { Ast.Function.RestParam.argument; comments })
+          | None -> None
+        in
+        let this_ =
+          let open Ast.Type.Function in
+          match this_ with
+          | Some (this_loc, { ThisParam.annot; comments }) ->
+            Some (this_loc, { Ast.Function.ThisParam.annot; comments })
           | None -> None
         in
         let body =
@@ -8377,8 +8421,7 @@ and declare_function_to_function_declaration cx declare_loc func_decl =
           ( Ast.Statement.FunctionDeclaration
               {
                 Ast.Function.id = Some id;
-                params =
-                  (params_loc, { Ast.Function.Params.params; rest; this_ = None; comments = None });
+                params = (params_loc, { Ast.Function.Params.params; rest; this_; comments = None });
                 body;
                 async = false;
                 generator = false;
@@ -8425,7 +8468,7 @@ and declare_function_to_function_declaration cx declare_loc func_decl =
                   )
                 | _ -> assert_false "Function declaration AST has unexpected shape"
               in
-              if Context.enable_this_annot cx |> not then
+              if not @@ Context.enable_this_annot cx then
                 Base.Option.iter this_ ~f:(fun (this_loc, _) ->
                     Flow_js.add_output cx (Error_message.EExperimentalThisAnnot this_loc));
               let params =
@@ -8446,6 +8489,12 @@ and declare_function_to_function_declaration cx declare_loc func_decl =
                       } ))
                   rest
               in
+              let this_ =
+                Base.Option.map
+                  ~f:(fun (this_loc, { Ast.Function.ThisParam.annot; comments }) ->
+                    (this_loc, { Ast.Type.Function.ThisParam.annot; comments }))
+                  this_
+              in
               let annot : (ALoc.t, ALoc.t * Type.t) Ast.Type.annotation =
                 ( annot_loc,
                   ( (func_annot_loc, fun_type),
@@ -8456,8 +8505,7 @@ and declare_function_to_function_declaration cx declare_loc func_decl =
                             {
                               Ast.Type.Function.Params.params;
                               rest;
-                              (* TODO: handle `this` constraints *)
-                              this_ = None;
+                              this_;
                               comments = params_comments;
                             } );
                         return;

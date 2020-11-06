@@ -3288,9 +3288,9 @@ let default_obj_assign_kind = ObjAssign { assert_exact = false }
 
 (* A method type is a function type with `this` specified. *)
 let mk_methodtype
-    this tins ~rest_param ~def_reason ?(frame = 0) ?params_names ?(is_predicate = false) tout =
+    this_t tins ~rest_param ~def_reason ?(frame = 0) ?params_names ?(is_predicate = false) tout =
   {
-    this_t = this;
+    this_t;
     params =
       (match params_names with
       | None -> Base.List.map ~f:(fun t -> (None, t)) tins
@@ -3313,18 +3313,19 @@ let mk_methodcalltype this targs args ?(frame = 0) ?(call_strict_arity = true) t
     call_strict_arity;
   }
 
-(* A bound function type is a function type with `this` = `any`. Typically, such
-   a type is given to a method when it can be considered bound: in other words,
-   when calling that method through any object would be fine, since the object
-   would be ignored. *)
-let mk_boundfunctiontype = mk_methodtype bound_function_dummy_this
+(* A bound function type is a method type whose `this` parameter has been
+   bound to some type. Currently, if the function's `this` parameter is not
+   explicitly annotated we model this unsoundly using `any`, but if it is
+   then we create a methodtype with a specific `this` type.  *)
 
-(* A function type has `this` = `mixed`. Such a type can be given to functions
-   that are meant to be called directly. On the other hand, it deliberately
-   causes problems when they are given to methods in which `this` is used
-   non-trivially: indeed, calling them directly would cause `this` to be bound
-   to the global object, which is typically unintended. *)
-let mk_functiontype reason = mk_methodtype (global_this reason)
+let mk_boundfunctiontype ?(this = bound_function_dummy_this) = mk_methodtype this
+
+(* A function type is a method type whose `this` parameter has been
+   bound to to the global object. Currently, if the function's `this` parameter is not
+   explicitly annotated we model this using `mixed`, but if it is
+   then we create a methodtype with a specific `this` type.  *)
+
+let mk_functiontype reason ?(this = global_this reason) = mk_methodtype this
 
 let mk_functioncalltype reason = mk_methodcalltype (global_this reason)
 

@@ -1567,7 +1567,7 @@ and merge_fun
     component
     file
     reason
-    (FunSig { tparams; params; rest_param; this_param = _; return; predicate })
+    (FunSig { tparams; params; rest_param; this_param; return; predicate })
     statics =
   let prototype =
     let reason = Reason.(update_desc_reason (Fn.const RPrototype) reason) in
@@ -1588,6 +1588,11 @@ and merge_fun
       let t = merge component file t in
       Some (name, loc, t)
   in
+  let this_t =
+    match this_param with
+    | None -> Type.bound_function_dummy_this
+    | Some t -> merge component file t
+  in
   let return = merge component file return in
   let return =
     match predicate with
@@ -1598,7 +1603,7 @@ and merge_fun
     let open Type in
     let funtype =
       {
-        this_t = bound_function_dummy_this;
+        this_t;
         params;
         rest_param;
         return_t = return;
