@@ -137,7 +137,7 @@ module T = struct
       }
 
   and class_element_t =
-    | CMethod of object_key * Ast.Class.Method.kind * bool (* static *) * (Loc.t * function_t)
+    | CMethod of object_key * Ast.Class.Method.kind * bool (* static *) * (Loc.t, Loc.t) Ast.Type.Predicate.t option  * (Loc.t * function_t)
     | CProperty of object_key * bool (* static *) * Loc.t Ast.Variance.t option * type_
     | CPrivateField of string * bool (* static *) * Loc.t Ast.Variance.t option * type_
 
@@ -960,7 +960,7 @@ module T = struct
           } )
 
   and object_type_property_of_class_element outlined = function
-    | (loc, CMethod (object_key, kind, static, f)) ->
+    | (loc, CMethod (object_key, kind, static, _, f)) ->
       let (value, _method) =
         match kind with
         | Ast.Class.Method.Constructor
@@ -1580,14 +1580,14 @@ module Eval (Env : Signature_builder_verify.EvalEnv) = struct
                 body;
                 id = _;
                 async;
-                predicate = _;
+                predicate;
                 sig_loc = _;
                 comments = _;
               } ) =
           value
         in
         ( elem_loc,
-          T.CMethod (x, kind, static, (loc, function_ generator async tparams params return body))
+          T.CMethod (x, kind, static, function_predicate body predicate, (loc, function_ generator async tparams params return body))
         )
         :: acc
       | Body.Property (elem_loc, { Property.key; annot; static; variance; value = _; comments = _ })
