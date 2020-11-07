@@ -814,8 +814,8 @@ module Kit (Flow : Flow_common.S) : REACT = struct
             | Error _ -> AnyT.make (AnyError None) reason_op |> resolve))
         | Shape tool ->
           (* TODO: This is _very_ similar to `CreateClass.PropTypes` below, except
-           for reasons descriptions/locations, recursive ReactKit constraints, and
-           `resolve` behavior. *)
+             for reasons descriptions/locations, recursive ReactKit constraints, and
+             `resolve` behavior. *)
           let add_prop k t (reason, props, flags) =
             let props = SMap.add k (Field (None, t, Polarity.Neutral)) props in
             (reason, props, flags)
@@ -1087,8 +1087,8 @@ module Kit (Flow : Flow_common.S) : REACT = struct
           }
         and mk_class spec =
           (* If the component doesn't specify propTypes, allow anything. To be
-           stricter, we could use an empty object type, but that would require all
-           components to specify propTypes *)
+             stricter, we could use an empty object type, but that would require all
+             components to specify propTypes *)
           let props_t =
             match spec.prop_types with
             | None -> AnyT.make Untyped reason_op
@@ -1109,8 +1109,8 @@ module Kit (Flow : Flow_common.S) : REACT = struct
             |> SMap.add "state" (Field (None, knot.state_t, Polarity.Neutral))
           in
           (* Some spec fields are used to create the instance type, but are not
-           present on the resulting prototype or statics. Other spec fields should
-           become static props. Everything else should be on the prototype. *)
+             present on the resulting prototype or statics. Other spec fields should
+             become static props. Everything else should be on the prototype. *)
           let (_, spec_props, _) = spec.obj in
           let (props, static_props) =
             SMap.fold
@@ -1134,7 +1134,7 @@ module Kit (Flow : Flow_common.S) : REACT = struct
                   in
                   (props, SMap.add k v static_props)
                 (* Don't autobind ReactClassInterface props, like getInitialState.
-             Instead, call with the correct this when resolving types. *)
+                   Instead, call with the correct this when resolving types. *)
                 | "getInitialState"
                 | "getChildContext"
                 | "render"
@@ -1157,9 +1157,9 @@ module Kit (Flow : Flow_common.S) : REACT = struct
                       rec_flow cx trace (t, BindT (unknown_use, reason_op, calltype, true));
 
                       (* Because we are creating an instance type, which can be used as an
-                 upper bound (e.g., as a super class), it's more flexible to
-                 create covariant methods. Otherwise, a subclass could not
-                 override the `render` method, say. *)
+                         upper bound (e.g., as a super class), it's more flexible to
+                         create covariant methods. Otherwise, a subclass could not
+                         override the `render` method, say. *)
                       Method (loc, t)
                   in
                   (SMap.add k v props, static_props)

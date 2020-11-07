@@ -172,8 +172,8 @@ module type MODULE_SYSTEM = sig
     Modulename.t
 
   (* for a given module name, choose a provider from among a set of
-    files with that exported name. also check for duplicates and
-    generate warnings, as dictated by module system rules. *)
+     files with that exported name. also check for duplicates and
+     generate warnings, as dictated by module system rules. *)
   val choose_provider :
     string ->
     (* module name *)
@@ -643,7 +643,7 @@ let checked_file ~reader ~audit f =
 
 (** Resolve references to required modules in a file, and record the results.
 
-   TODO [perf]: measure size and possibly optimize *)
+    TODO [perf]: measure size and possibly optimize *)
 let resolved_requires_of ~options ~reader node_modules_containers file require_loc =
   let resolution_acc = { paths = SSet.empty; errors = [] } in
   let resolved_modules =
@@ -755,12 +755,12 @@ let commit_modules ~transaction ~workers ~options ~reader ~is_init new_or_change
           (Modulename.Set.add m rem, prov, rep, errmap, Modulename.Set.add m diff)
         | ps ->
           (* incremental: install empty error sets here for provider candidates.
-         this will have the effect of resetting downstream errors for these
-         files, when the returned error map is used by our caller.
-         IMPORTANT: since each file may (does) provide more than one module,
-         files may already have acquired errors earlier in this fold, so we
-         must only add an empty entry if no entry is already present
-      *)
+             this will have the effect of resetting downstream errors for these
+             files, when the returned error map is used by our caller.
+             IMPORTANT: since each file may (does) provide more than one module,
+             files may already have acquired errors earlier in this fold, so we
+             must only add an empty entry if no entry is already present
+          *)
           let errmap =
             FilenameSet.fold
               (fun f acc ->
@@ -777,8 +777,8 @@ let commit_modules ~transaction ~workers ~options ~reader ~is_init new_or_change
           | Some f ->
             if f = p then (
               (* When can this happen? Say m pointed to f before, a different file
-             f' that provides m changed (so m is not in old_modules), but f
-             continues to be the chosen provider = p (winning over f'). *)
+                 f' that provides m changed (so m is not in old_modules), but f
+                 continues to be the chosen provider = p (winning over f'). *)
               if debug then
                 prerr_endlinef
                   "unchanged provider: %S -> %s"
@@ -793,8 +793,8 @@ let commit_modules ~transaction ~workers ~options ~reader ~is_init new_or_change
               (rem, prov, rep, errmap, diff)
             ) else (
               (* When can this happen? Say m pointed to f before, a different file
-             f' that provides m changed (so m is not in old_modules), and
-             now f' becomes the chosen provider = p (winning over f). *)
+                 f' that provides m changed (so m is not in old_modules), and
+                 now f' becomes the chosen provider = p (winning over f). *)
               if debug then
                 prerr_endlinef
                   "new provider: %S -> %s replaces %s"
@@ -806,8 +806,8 @@ let commit_modules ~transaction ~workers ~options ~reader ~is_init new_or_change
             )
           | None ->
             (* When can this happen? Either m pointed to a file that used to
-             provide m and changed or got deleted (causing m to be in
-             old_modules), or m didn't have a provider before. *)
+               provide m and changed or got deleted (causing m to be in
+               old_modules), or m didn't have a provider before. *)
             if debug then
               prerr_endlinef
                 "initial provider %S -> %s"
@@ -964,7 +964,7 @@ end = struct
      parsed files are finished with local inference. But since we guess
      the module names of unparsed files, we're able to tell whether an
      unparsed file has been required/imported.
-   *)
+  *)
   let add_unparsed_info ~options =
     let exported_module = exported_module ~options in
     let force_check = Options.all options in

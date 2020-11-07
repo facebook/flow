@@ -214,7 +214,7 @@ module Normalizer = struct
           if props_map == props_map' then
             id
           (* When mapping results in a new property map, we have to use a
-           generated id, rather than a location from source. *)
+             generated id, rather than a location from source. *)
           else
             Context.generate_property_map cx props_map'
         in

@@ -8,7 +8,7 @@
 type relative_position = {
   line_offset: int;
   (* If line_offset is 0, this is the column offset. If line_offset is nonzero, this is the absolute
-  * column. *)
+   * column. *)
   column_or_offset: int;
 }
 

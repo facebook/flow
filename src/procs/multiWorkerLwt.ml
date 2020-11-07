@@ -25,7 +25,7 @@ let single_threaded_call_with_worker_id job merge neutral next =
     match !x with
     | Hh_bucket.Wait ->
       (* this state should never be reached in single threaded mode, since
-           there is no hope for ever getting out of this state *)
+         there is no hope for ever getting out of this state *)
       failwith "stuck!"
     | Hh_bucket.Job l ->
       let res = job neutral l in

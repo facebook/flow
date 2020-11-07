@@ -16,8 +16,6 @@ module PackageHeap =
     (struct
       type t = (Package_json.t, unit) result
 
-      let prefix = Prefix.make ()
-
       let description = "Package"
     end)
 
@@ -27,8 +25,6 @@ module ReversePackageHeap =
     (StringKey)
     (struct
       type t = string
-
-      let prefix = Prefix.make ()
 
       let description = "ReversePackage"
     end)
@@ -97,5 +93,7 @@ module For_saved_state = struct
   exception Package_not_found of string
 
   let get_package_json_unsafe file =
-    (try PackageHeap.find_unsafe file with Not_found -> raise (Package_not_found file))
+    match PackageHeap.get file with
+    | Some package -> package
+    | None -> raise (Package_not_found file)
 end

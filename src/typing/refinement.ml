@@ -15,7 +15,7 @@ module Ast = Flow_ast
    return Some (access key), otherwise None.
    Eligible expressions are simple ids and chains of property|index
    lookups from an id base
- *)
+*)
 let rec key ~allow_optional =
   let open Ast.Expression in
   function

@@ -170,8 +170,8 @@ and reason_of_use_t = function
 let reason_of_t_add_id = reason_of_t
 
 (* function
-| OpenT (r, id) -> prefix_reason (spf "%d: " id) r
-| t -> reason_of_t t *)
+   | OpenT (r, id) -> prefix_reason (spf "%d: " id) r
+   | t -> reason_of_t t *)
 let reason_of_use_t_add_id = reason_of_use_t
 
 let desc_of_t = reason_of_t %> desc_of_reason
@@ -651,7 +651,7 @@ let boolean_literal_eq x = function
 
 let trust_subtype_fixed tr1 tr2 =
   match (Trust.expand tr1, Trust.expand tr2) with
-  | (Trust.Qualifier trust1, Trust.Qualifier trust2) -> Trust.subtype_trust trust1 trust2
+  | (Trust.QualifiedTrust trust1, Trust.QualifiedTrust trust2) -> Trust.subtype_trust trust1 trust2
   | _ -> false
 
 let quick_subtype trust_checked t1 t2 =
@@ -681,6 +681,8 @@ let quick_subtype trust_checked t1 t2 =
     | (DefT (_, ltrust, BoolT actual), DefT (_, rtrust, SingletonBoolT expected)) ->
       ((not trust_checked) || trust_subtype_fixed ltrust rtrust)
       && boolean_literal_eq expected actual
+    | (DefT (_, _, ObjT { flags = { obj_kind = Exact; _ }; _ }), ExactT (_, t2')) ->
+      reasonless_eq t1 t2'
     | _ -> reasonless_eq t1 t2)
 
 let reason_of_propref = function
@@ -839,3 +841,13 @@ let pred_map_implies p1 p2 =
       | None -> false
       | Some v1 -> eq_predicate (v1, v2))
     p2
+
+let type_t_of_annotated_or_inferred (x : Type.annotated_or_inferred) =
+  match x with
+  | Inferred t
+  | Annotated t ->
+    t
+
+let map_annotated_or_inferred f = function
+  | Inferred t -> Inferred (f t)
+  | Annotated t -> Annotated (f t)

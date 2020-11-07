@@ -8,9 +8,42 @@
 module Ast = Flow_ast
 open Layout
 
+module Trailing_commas = struct
+  type t =
+    | All  (** Wherever possible (including function arguments). *)
+    | ES5  (** Where valid in ES5 (objects, arrays, etc.) *)
+    | Off  (** No trailing commas *)
+
+  let enabled_for_function_params = function
+    | All -> true
+    | ES5 -> false
+    | Off -> false
+
+  let enabled_for_function_args = function
+    | All -> true
+    | ES5 -> true
+    | Off -> false
+
+  let enabled_for_objects = function
+    | All -> true
+    | ES5 -> true
+    | Off -> false
+
+  let enabled_for_arrays = function
+    | All -> true
+    | ES5 -> true
+    | Off -> false
+
+  let enabled_for_types = function
+    | All -> true
+    | ES5 -> true
+    | Off -> false
+end
+
 type opts = {
   preserve_formatting: bool;
   bracket_spacing: bool;
+  trailing_commas: Trailing_commas.t;
 }
 
 (* There are some cases where expressions must be wrapped in parens to eliminate
@@ -38,7 +71,8 @@ and expression_context_group =
 
 (* `for ((x in y);;);` would become a for-in *)
 
-let default_opts = { preserve_formatting = false; bracket_spacing = true }
+let default_opts =
+  { preserve_formatting = false; bracket_spacing = true; trailing_commas = Trailing_commas.All }
 
 let normal_context = { left = Normal_left; group = Normal_group }
 
@@ -365,8 +399,8 @@ let utf8_escape =
         (* supplemental planes *)
         | n ->
           (* ES5 does not support the \u{} syntax, so print surrogate pairs
-         "\ud83d\udca9" instead of "\u{1f4A9}". if we add a flag to target
-         ES6, we should change this. *)
+             "\ud83d\udca9" instead of "\u{1f4A9}". if we add a flag to target
+             ES6, we should change this. *)
           let n' = n - 0x10000 in
           let hi = 0xD800 lor (n' lsr 10) in
           let lo = 0xDC00 lor (n' land 0x3FF) in
@@ -675,8 +709,8 @@ and statement ?(pretty_semicolon = false) ~opts (root_stmt : (Loc.t, Loc.t) Ast.
                    wrap_in_parens_on_break (expression ~opts arg)
                  | _ ->
                    (* If the return argument has a leading comment then we must wrap the argument
-                     and its comments in parens. Otherwise, the comments could push the argument
-                     to the next line, meaning the return would be parsed without an argument. *)
+                      and its comments in parens. Otherwise, the comments could push the argument
+                      to the next line, meaning the return would be parsed without an argument. *)
                    let (leading, _) = Comment_attachment.expression_comment_bounds arg in
                    let arg = expression ~opts arg in
                    if leading = None then
@@ -895,7 +929,7 @@ and expression ?(ctxt = normal_context) ~opts (root_expr : (Loc.t, Loc.t) Ast.Ex
         let trailing_comma =
           if has_trailing_hole then
             Atom ","
-          else if elements <> [] then
+          else if elements <> [] && Trailing_commas.enabled_for_arrays opts.trailing_commas then
             if_break (Atom ",") Empty
           else
             Empty
@@ -920,7 +954,11 @@ and expression ?(ctxt = normal_context) ~opts (root_expr : (Loc.t, Loc.t) Ast.Ex
             ~f:(fun i prop ->
               (* Add trailing comma to last property *)
               let prop_layout =
-                if i = num_props - 1 && internal_comments = [] then
+                if
+                  i = num_props - 1
+                  && internal_comments = []
+                  && Trailing_commas.enabled_for_objects opts.trailing_commas
+                then
                   fuse [object_property ~opts prop; if_break (Atom ",") Empty]
                 else
                   object_property ~opts prop
@@ -946,8 +984,8 @@ and expression ?(ctxt = normal_context) ~opts (root_expr : (Loc.t, Loc.t) Ast.Ex
         layout_node_with_comments_opt loc comments @@ group [props_layout]
       | E.Sequence { E.Sequence.expressions; comments } ->
         (* to get an AST like `x, (y, z)`, then there must've been parens
-         around the right side. we can force that by bumping the minimum
-         precedence. *)
+           around the right side. we can force that by bumping the minimum
+           precedence. *)
         let precedence = precedence + 1 in
         let layouts =
           Base.List.map ~f:(expression_with_parens ~precedence ~ctxt ~opts) expressions
@@ -1001,8 +1039,8 @@ and expression ?(ctxt = normal_context) ~opts (root_expr : (Loc.t, Loc.t) Ast.Ex
                    fuse [right_separator; expression ~ctxt ~opts right]
                  | _ ->
                    (* to get an AST like `x + (y - z)`, then there must've been parens
-             around the right side. we can force that by bumping the minimum
-             precedence to not have parens. *)
+                      around the right side. we can force that by bumping the minimum
+                      precedence to not have parens. *)
                    let precedence = precedence + 1 in
                    let ctxt =
                      {
@@ -1072,7 +1110,7 @@ and expression ?(ctxt = normal_context) ~opts (root_expr : (Loc.t, Loc.t) Ast.Ex
         in
         let right = expression_with_parens ~precedence:(precedence + 1) ~ctxt ~opts right in
         (* if we need to wrap, the op stays on the first line, with the RHS on a
-         new line and indented by 2 spaces *)
+           new line and indented by 2 spaces *)
         layout_node_with_comments_opt loc comments
         @@ Group [left; pretty_space; operator; Indent (fuse [right_separator; right])]
       | E.Member m -> member ~precedence ~ctxt ~opts m loc
@@ -1140,7 +1178,7 @@ and expression ?(ctxt = normal_context) ~opts (root_expr : (Loc.t, Loc.t) Ast.Ex
              | E.Update.Decrement -> Atom "--"
            in
            (* we never need to wrap `argument` in parens because it must be a valid
-         left-hand side expression *)
+              left-hand side expression *)
            if prefix then
              fuse [s_operator; expression ~ctxt ~opts argument]
            else
@@ -1708,8 +1746,8 @@ and arrow_function
              params_and_stuff;
            ];
          (* Babylon does not parse ():*=>{}` because it thinks the `*=` is an
-       unexpected multiply-and-assign operator. Thus, we format this with a
-       space e.g. `():* =>{}`. *)
+            unexpected multiply-and-assign operator. Thus, we format this with a
+            space e.g. `():* =>{}`. *)
          begin
            match return with
            | Ast.Type.Available (_, (_, Ast.Type.Exists _)) -> space
@@ -1855,7 +1893,11 @@ and function_params
   let params_layout = list_with_newlines ~sep:(Atom ",") ~sep_linebreak:pretty_line params in
   (* Add trailing comma *)
   let params_layout =
-    if params <> [] && rest = None then
+    if
+      params <> []
+      && rest = None
+      && Trailing_commas.enabled_for_function_params opts.trailing_commas
+    then
       params_layout @ [if_break (Atom ",") Empty]
     else
       params_layout
@@ -2657,7 +2699,7 @@ and jsx_children ~opts loc (_children_loc, children) =
               | Some last_line when loc.start.line > last_line + 1 ->
                 fuse [pretty_hardline; Newline; child_n]
               (* If the current child and the previous child line positions are offset match
-           this via forcing a newline *)
+                 this via forcing a newline *)
               | Some last_line when loc.start.line > last_line ->
                 (* TODO: Remove the `Newline` hack, this forces newlines to exist
                    when using the compact printer *)
@@ -2907,7 +2949,11 @@ and type_parameter ~opts (loc, { Ast.Type.TypeParams.params; comments }) =
         let param_layout = type_param ~opts param in
         (* Add trailing comma to last parameter *)
         let param_layout =
-          if i = num_params - 1 && internal_comments = [] then
+          if
+            i = num_params - 1
+            && internal_comments = []
+            && Trailing_commas.enabled_for_types opts.trailing_commas
+          then
             fuse [param_layout; if_break (Atom ",") Empty]
           else
             param_layout
@@ -2956,7 +3002,11 @@ and call_args ~opts ~is_new ~lparen (loc, { Ast.Expression.ArgList.arguments; co
         (* Add trailing comma to last argument *)
         let arg_layout = expression_or_spread ~opts arg in
         let arg_layout =
-          if i = num_args - 1 && internal_comments = [] then
+          if
+            i = num_args - 1
+            && internal_comments = []
+            && Trailing_commas.enabled_for_function_args opts.trailing_commas
+          then
             fuse [arg_layout; if_break (Atom ",") Empty]
           else
             arg_layout
@@ -3005,7 +3055,11 @@ and call_type_args ~opts ~less_than (loc, { Ast.Expression.CallTypeArgs.argument
         (* Add trailing comma to last argument *)
         let arg_layout = call_type_arg ~opts arg in
         let arg_layout =
-          if i = num_args - 1 && internal_comments = [] then
+          if
+            i = num_args - 1
+            && internal_comments = []
+            && Trailing_commas.enabled_for_types opts.trailing_commas
+          then
             fuse [arg_layout; if_break (Atom ",") Empty]
           else
             arg_layout
@@ -3043,7 +3097,11 @@ and type_args ~opts (loc, { Ast.Type.TypeArgs.arguments; comments }) =
         (* Add trailing comma to last argument *)
         let arg_layout = type_ ~opts arg in
         let arg_layout =
-          if i = num_args - 1 && internal_comments = [] then
+          if
+            i = num_args - 1
+            && internal_comments = []
+            && Trailing_commas.enabled_for_types opts.trailing_commas
+          then
             fuse [arg_layout; if_break (Atom ",") Empty]
           else
             arg_layout
@@ -3397,7 +3455,11 @@ and type_object ?(sep = Atom ",") ~opts loc { Ast.Type.Object.exact; properties;
       ~f:(fun i property ->
         let prop_layout =
           (* Add trailing comma to last property *)
-          if i = num_props - 1 && internal_comments = [] then
+          if
+            i = num_props - 1
+            && internal_comments = []
+            && Trailing_commas.enabled_for_types opts.trailing_commas
+          then
             let sep =
               if inexact then
                 sep

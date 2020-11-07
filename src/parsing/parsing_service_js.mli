@@ -92,7 +92,7 @@ val make_parse_options :
 val docblock_max_tokens : int
 
 (* Use default values for the various settings that parse takes. Each one can be overridden
-individually *)
+   individually *)
 val parse_with_defaults :
   ?types_mode:types_mode ->
   ?use_strict:bool ->

@@ -15,8 +15,6 @@ module SigContextHeap =
     (struct
       type t = Context.sig_t
 
-      let prefix = Prefix.make ()
-
       let description = "SigContext"
     end)
 
@@ -36,8 +34,6 @@ module SigHashHeap =
     (struct
       type t = Xx.hash
 
-      let prefix = Prefix.make ()
-
       let description = "SigHash"
     end)
 
@@ -46,8 +42,6 @@ module LeaderHeap =
     (File_key)
     (struct
       type t = File_key.t
-
-      let prefix = Prefix.make ()
 
       let description = "Leader"
     end)

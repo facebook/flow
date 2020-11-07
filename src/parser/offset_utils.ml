@@ -84,8 +84,8 @@ let make =
     | [] -> Array.of_list (List.rev acc)
     | Cr :: Nl :: rest ->
       (* https://www.ecma-international.org/ecma-262/5.1/#sec-7.3 says that "\r\n" should be treated
-       like a single line terminator, even though both '\r' and '\n' are line terminators in their
-       own right. *)
+         like a single line terminator, even though both '\r' and '\n' are line terminators in their
+         own right. *)
       let line = Array.of_list (List.rev (offset :: rev_line)) in
       build_table size_of_kind (offset + 2, [], line :: acc) rest
     | ((Cr | Nl | Ls) as kind) :: rest ->

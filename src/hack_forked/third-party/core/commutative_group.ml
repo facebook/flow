@@ -6,7 +6,7 @@
     2: identity: zero+a = a+zero = a for all elt's a
     3: inverses: given any elt a there exists a (unique) elt b such that a+b=b+a=zero
     4: commutativity: a+b = b+a
-*)
+ *)
 
 module type S = sig
   type t (* an element of the group *)

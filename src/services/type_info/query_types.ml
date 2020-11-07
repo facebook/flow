@@ -134,7 +134,7 @@ let insert_type_normalize
        * larger. *)
       evaluate_type_destructors = false;
       (* Optimize types is false because Insert_types manually calls the simplifier with
-       a custom comparison operation *)
+         a custom comparison operation *)
       optimize_types = false;
       omit_targ_defaults;
       merge_bot_and_any_kinds = true;

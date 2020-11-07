@@ -59,6 +59,7 @@
 #include <caml/fail.h>
 #include <caml/unixsupport.h>
 #include <caml/intext.h>
+#include <caml/bigarray.h>
 
 #ifdef _WIN32
 #include <windows.h>
@@ -169,6 +170,28 @@ static int win32_getpagesize(void) {
 
 /* Convention: .*_b = Size in bytes. */
 
+// Locations in the heap are encoded as byte offsets from the beginning of the
+// hash table. Because all data in the heap is word-aligned, these offsets will
+// always have 0 in the 3 low bits.
+//
+// Currently, we rely on the least significant bit being 0 to distinguish these
+// addresses from headers. Eventually we may want to rely on the 2 lower bits,
+// to represent 4 states in the GC tags instead of 3 (e.g., a gray color state
+// for incremental marking.)
+//
+// Note that the offsets do not start at the beginning of the heap, but the
+// start of the hash table. This has two important implications:
+//
+// 1. The offset 0 will always point to the hash of the first hash table entry,
+// which is never a meaningful offset. Because of this, we can take the address
+// 0 to be the "null" address.
+//
+// 2. During garbage collection, it is necessary to point from the heap to the
+// hash table itself, since we temporarily store heap headers in the addr field
+// of helt_t. By starting the offsets at the beginning of the hash table, we can
+// represent offsets into the hash table itself.
+typedef uintnat addr_t;
+
 typedef struct {
   /* Layout information, used by workers to create memory mappings. */
   size_t locals_size_b;
@@ -180,10 +203,10 @@ typedef struct {
   size_t hashtbl_slots;
 
   /* Where the heap started (bottom), offset from hashtbl pointer */
-  size_t heap_init;
+  addr_t heap_init;
 
   /* Where the heap will end (top), offset from hashtbl pointer */
-  size_t heap_max;
+  addr_t heap_max;
 
   /* Logging level for shared memory statistics
    * 0 = nothing
@@ -210,7 +233,7 @@ typedef struct {
   alignas(128) uintnat hcounter_filled;
 
   /* The top of the heap, offset from hashtbl pointer */
-  alignas(128) size_t heap;
+  alignas(128) addr_t heap;
 } shmem_info_t;
 
 /* Per-worker data which can be quickly updated non-atomically. Will be placed
@@ -225,47 +248,88 @@ typedef struct {
 
 // Every heap entry starts with a 64-bit header with the following layout:
 //
-//  6                               3                             0  0      0
-//  3                               6                             8  7      0
-// +-------------------------------+--------------------------------+--------+
-// |11111111 11111111 11111111 1111|1111 11111111 11111111 11111111 |11111111|
-// +-------------------------------+--------------------------------+--------+
+//  6                               3                             0  0    0 00
+//  3                               6                             8  7    2 10
+// +-------------------------------+--------------------------------+------+--+
+// |11111111 11111111 11111111 1111|1111 11111111 11111111 11111111 |111111|11|
+// +-------------------------------+--------------------------------+------+--+
+// |                               |                                |      |
+// |                               |                                |      * 0-1 GC
 // |                               |                                |
-// |                               |                                * 0-7 reserved
+// |                               |                                * 2-7 tag
 // |                               |
 // |                               * 31-1 decompress capacity (in words)
 // * 63-32 compressed size (in words)
 //
-// The tag bit is always 1 and is used to differentiate headers from addresses
-// during garbage collection (see hh_collect).
-typedef uint64_t hh_header_t;
+// For GC, to distinguish headers from (word-aligned) pointers, the least bit is
+// always set to 1. The second bit is used for marking. The remaining 6 bits of
+// the low word are used to encode a tag, describing the type of object.
+//
+// For serialized objects (tag = 0), the remaining 7 bytes of the header word
+// encode two sizes, as outlined above, but other kinds of objects can use these
+// bytes differently, as long as it's possible to recover the size of the heap
+// object -- i.e., implement Obj_wosize, below.
+typedef uintnat hh_header_t;
 
-// Locations in the heap are encoded as byte offsets from the beginning of
-// the hash table, shifted left by 1 with the least-significant bit always set
-// to 0 to distinguish addresses from headers during garbage collection.
-//
-// Note that the offsets do not start at the beginning of the heap, but the
-// start of the hash table. This has two important implications:
-//
-// 1. The offset 0 will always point to the hash of the first hash table entry,
-// which is never a meaningful offset. Because of this, we can take the
-// address 0 to be the "null" address.
-//
-// 2. During garbage collection, it is necessary to point from the heap to the
-// hash table itself, since we temporarily store heap headers in the addr field
-// of helt_t. By starting the offsets at the beginning of the hash table, we can
-// represent offsets into the hash table itself.
-typedef uint64_t addr_t;
+// The reserved header bits contain a tag used to distinguish between different
+// object layouts and find pointers within the object.
+typedef uintnat hh_tag_t;
+
+// Keep these in sync with "tag" type definition in sharedMem.ml
+#define Serialized_tag 0
+#define Addr_tbl_tag 9
+
+static _Bool should_scan(hh_tag_t tag) {
+  // By convention, tags below Addr_tbl_tag contain no pointers, whereas
+  // Addr_tbl_tag and above contain only pointers. We can exploit this fact to
+  // reduce pointer finding to a single branch.
+  //
+  // In the future, if we add different layouts with a mixture of pointers and
+  // other data, scanning for pointers will probably require a jump table.
+  return tag >= Addr_tbl_tag;
+}
 
 #define NULL_ADDR 0
-#define Offset_of_addr(addr) ((addr) >> 1)
-#define Addr_of_offset(offset) ((offset) << 1)
-#define Addr_of_ptr(entry) (Addr_of_offset((char *)(entry) - (char *)hashtbl))
-#define Ptr_of_offset(offset) ((char *)hashtbl + (offset))
-#define Ptr_of_addr(addr) (Ptr_of_offset(Offset_of_addr(addr)))
+#define Addr_of_ptr(entry) ((char *)(entry) - (char *)hashtbl)
+#define Ptr_of_addr(addr) ((char *)hashtbl + (addr))
 #define Entry_of_addr(addr) ((heap_entry_t *)Ptr_of_addr(addr))
-#define Entry_of_offset(offset) ((heap_entry_t *)Ptr_of_offset(offset))
-#define Header_of_addr(addr) ((hh_header_t *)Ptr_of_addr(addr))
+
+#define Deref(addr) (*(uintnat *)(Ptr_of_addr(addr))) /* also an l-value */
+
+// During GC, we read words from the heap which might be an addr or a header,
+// and we need to distinguish between them.
+#define Is_addr(x) ((x & 1) == 0)
+#define Is_unmarked_hd(x) ((x & 0b11) == 0b01)
+
+// Object headers contain a mark bit, tag, and size information. Objects with
+// the serialized tag contain the size information in a slightly different place
+// from other objects, so we need to look up the tag to read the size.
+
+#define Obj_tag(hd) (((hd) >> 2) & 0x3F)
+#define Obj_wosize_shift(tag) ((tag) == Serialized_tag ? 36 : 8)
+#define Obj_wosize_tag(hd, tag) ((hd) >> Obj_wosize_shift(tag))
+#define Obj_wosize(hd) (Obj_wosize_tag(hd, Obj_tag(hd)))
+#define Obj_whsize(hd) (1 + Obj_wosize(hd))
+#define Obj_bhsize(hd) (Bsize_wsize(Obj_whsize(hd)))
+
+// Addrs point to the object header, so field 0 is +1 word. We should consider
+// making addrs point to the first field, and accessing the header at a -1 word
+// offset instead.
+#define Obj_field(addr, i) ((addr) + ((i) + 1) * WORD_SIZE)
+
+// In OCaml, we can read and write to shared memory by either (a) calling into C
+// functions, passing along an address or by (b) indexing into a Bigarray with
+// the "nativeint" element kind.
+//
+// The Bigarray API naturally requires word offsets for indexing operations into
+// word-sized elements. To accomplish this, we convert between byte offsets and
+// OCaml-encoded word offsets when passing address from C into OCaml, and vice
+// versa.
+//
+// Use these macros instead of Val_long/Long_val when dealing with addrs across
+// the OCaml/C boundary.
+#define Val_addr(addr) (Val_long((addr) / WORD_SIZE))
+#define Addr_val(v) (Long_val(v) * WORD_SIZE)
 
 // Each heap entry starts with a word-sized header. The header encodes the size
 // (in words) of the entry in the heap and the capacity (in words) of the buffer
@@ -293,6 +357,39 @@ typedef union {
     addr_t addr;
   };
 } helt_t;
+
+/*****************************************************************************/
+/* Marking */
+/*****************************************************************************/
+
+typedef struct {
+  addr_t addr;
+  uintnat size;
+} mark_entry;
+
+struct mark_stack {
+  mark_entry* stack;
+  uintnat count;
+  uintnat size;
+};
+
+// When initializing the heap, we allocate stack space which is reused across
+// collections. During a marking pass, if we exceed the preallocated space, we
+// will grow the stack up to the max size.
+//
+// The max size is explicit to avoid exhausting available memory in the event of
+// a programmer error. We should not hit this limit, or come close to it.
+#define MARK_STACK_INIT_SIZE 2048
+#define MARK_STACK_MAX_SIZE (1024 * 1024 * 100)
+
+#define Is_marked(hd) ((hd) & 0b10)
+#define Marked_hd(hd) ((hd) | 0b10)
+#define Unmarked_hd(hd) ((hd) & ~0b10)
+
+// Because collection only happens on the master process, these are only
+// initialized in the master process and will remain NULL in workers.
+static mark_entry* mark_stack_init = NULL;
+static struct mark_stack* mark_stack = NULL;
 
 /*****************************************************************************/
 /* Globals */
@@ -583,6 +680,15 @@ static void define_mappings(int page_size) {
 #endif
 }
 
+static value alloc_heap_bigarray(void) {
+  CAMLparam0();
+  CAMLlocal1(heap);
+  int heap_flags = CAML_BA_NATIVE_INT | CAML_BA_C_LAYOUT | CAML_BA_EXTERNAL;
+  intnat heap_dim[1] = {Wsize_bsize(info->hashtbl_size_b + info->heap_size_b)};
+  heap = caml_ba_alloc(heap_flags, 1, hashtbl, heap_dim);
+  CAMLreturn(heap);
+}
+
 /*****************************************************************************/
 /* Must be called by the master BEFORE forking the workers! */
 /*****************************************************************************/
@@ -592,6 +698,7 @@ CAMLprim value hh_shared_init(
   value num_workers_val
 ) {
   CAMLparam2(config_val, num_workers_val);
+  CAMLlocal1(result);
 
   size_t page_size = getpagesize();
 
@@ -634,6 +741,12 @@ CAMLprim value hh_shared_init(
 
   define_mappings(page_size);
 
+  mark_stack = malloc(sizeof(struct mark_stack));
+  mark_stack_init = malloc(MARK_STACK_INIT_SIZE * sizeof(mark_entry));
+  mark_stack->stack = mark_stack_init;
+  mark_stack->count = 0;
+  mark_stack->size = MARK_STACK_INIT_SIZE;
+
 #ifndef _WIN32
   // Uninstall ocaml's segfault handler. It's supposed to throw an exception on
   // stack overflow, but we don't actually handle that exception, so what
@@ -646,7 +759,11 @@ CAMLprim value hh_shared_init(
   sigaction(SIGSEGV, &sigact, NULL);
 #endif
 
-  CAMLreturn(Val_handle(memfd));
+  result = caml_alloc_tuple(2);
+  Store_field(result, 0, alloc_heap_bigarray());
+  Store_field(result, 1, Val_handle(memfd));
+
+  CAMLreturn(result);
 }
 
 /* Must be called by every worker before any operation is performed */
@@ -662,7 +779,7 @@ value hh_connect(value handle_val, value worker_id_val) {
   map_info_page(page_size);
   define_mappings(page_size);
 
-  CAMLreturn(Val_unit);
+  CAMLreturn(alloc_heap_bigarray());
 }
 
 /*****************************************************************************/
@@ -754,82 +871,302 @@ CAMLprim value hh_check_should_exit(value unit) {
 }
 
 /*****************************************************************************/
-/* We compact the heap when it gets twice as large as its initial size.
- * Step one, copy the live values in a new heap.
- * Step two, memcopy the values back into the shared heap.
- * We could probably use something smarter, but this is fast enough.
+/* GC: Marking
  *
- * The collector should only be called by the master.
+ * Before compacting the heap, we must first find all live values. We can mark
+ * all live values in the heap by starting with the root objects in the hash
+ * table, then traversing the graph of all reachable objects from those roots.
  */
 /*****************************************************************************/
 
+static void mark_stack_overflow() {
+  caml_failwith("mark_stack_resize: could not allocate space for mark stack");
+}
+
+// Mark stack starts out with some initial capacity, which grows as needed.
+static void mark_stack_resize(struct mark_stack *stk) {
+  size_t new_size = 2 * stk->size;
+
+  // To avoid exhausting the heap in the event of a programmer error, we fail if
+  // the mark stack exceeds some fixed huge size (currently ~1.5 GB).
+  if (new_size >= MARK_STACK_MAX_SIZE) mark_stack_overflow();
+
+  // Keep the initial stack, which will be restored by mark_stack_reset.
+  // Otherwise realloc, which frees the underlying memory if necessary.
+  mark_entry *new_stack;
+  if (stk->stack == mark_stack_init) {
+    new_stack = malloc(new_size * sizeof(mark_entry));
+    if (new_stack == NULL) mark_stack_overflow();
+    memcpy(new_stack, mark_stack_init, MARK_STACK_INIT_SIZE * sizeof(mark_entry));
+  } else {
+    new_stack = realloc(&stk->stack, new_size * sizeof(mark_entry));
+    if (new_stack == NULL) mark_stack_overflow();
+  }
+
+  stk->stack = new_stack;
+  stk->size = new_size;
+}
+
+// Free any additional stack space allocated during marking. The initial stack
+// space allocation is re-used across marking passes.
+static void mark_stack_reset(struct mark_stack *stk) {
+  if (mark_stack->stack != mark_stack_init) {
+    free(stk->stack);
+    stk->stack = mark_stack_init;
+    stk->size = MARK_STACK_INIT_SIZE;
+  }
+}
+
+// Add a value to the mark stack, first checking that the object is not already
+// marked and that the object contains references.
+static void mark_push(struct mark_stack *stk, addr_t addr) {
+  hh_header_t hd = Deref(addr);
+
+  // Nothing to do if this object is already marked. If not, setting the mark
+  // bit will ensure the object is only scanned once.
+  if (Is_marked(hd)) return;
+  Deref(addr) = Marked_hd(hd);
+
+  // Only objects that contain pointers need to be scanned.
+  hh_tag_t tag = Obj_tag(hd);
+  if (should_scan(tag)) {
+    if (stk->count == stk->size) {
+      mark_stack_resize(stk);
+    }
+
+    mark_entry *entry = &stk->stack[stk->count++];
+    entry->addr = addr;
+    entry->size = Obj_wosize_tag(hd, tag);
+  }
+}
+
+// Iteratively mark all objects reachable from the stack.
+static void mark_rec(struct mark_stack *stk) {
+  while (stk->count > 0) {
+    mark_entry entry = stk->stack[--stk->count];
+
+    // Objects which contain any pointers currently contain only pointers, so we
+    // can simply enqueue the address in every (non-null) field.
+    for (intnat i = 0; i < entry.size; i++) {
+      uintnat field = Deref(Obj_field(entry.addr, i));
+      if (field != NULL_ADDR) {
+        mark_push(stk, field);
+      }
+    }
+  }
+}
+
+/*****************************************************************************/
+/* GC: Compact
+ *
+ * We collect the shared heap by compacting: moving live values "to the left"
+ * until there is no more wasted space. We can then continue to bump allocate
+ * from the end.
+ *
+ * The compaction algorithm is a Jonkers collector which performs the compaction
+ * "in place" without allocating additional memory to maintain state.
+ *
+ * The algorithm is published, unfortunately, behind a costly subscription.
+ * https://doi.org/10.1016/0020-0190(79)90103-0
+ *
+ * Happily, an excellent description of the algorithm can be found in a freely
+ * accessible paper by Benedikt Meurer, along with an extension for interior
+ * pointers which is unused here:
+ * https://benediktmeurer.de/files/fast-garbage-compaction-with-interior-pointers.pdf
+ *
+ * This particular algorithm has some nice properties, namely:
+ * - Heap objects can have varying size
+ * - We can compact the heap in-place without auxiliary storage
+ * - The compacted heap preserves order, keeping related objects close together
+ * - Is actually pretty simple, in the sense that it has few moving pieces,
+ *   although pointer reversal can take a moment to "click"
+ *
+ * However, there are also downsides to this choice:
+ * - Is fully stop-the-world and non-incremental
+ * - Pointer reversal techniques are not cache-friendly, and generally slow
+ *   compared to both contemporary and modern techniques
+ *
+ * Happily, the bursty nature of the type checker means that there are long (in
+ * human scale) periods of down time between requests, so a long pause is not a
+ * problem as long as it is well timed.
+ *
+ * For future work, it might be worthwhile to explore more incremental GC
+ * strategies, which could spread the work over more small pauses instead.
+ */
+/*****************************************************************************/
+
+// Threading is the fundamental operation of the GC. Moving objects potentially
+// invalidates every address in the heap. Threading makes it possible to update
+// those addresses without requiring extra storage.
+//
+// In a single step, threading replaces a pointer to a value with the value
+// itself. Where the value was, we insert a pointer to original pointer. This
+// swap is more easily understood when visualized:
+//
+// P       Q
+// +---+   +---+
+// | * |-->| X |
+// +---+   +---+
+//
+// becomes
+//
+// P       Q
+// +---+   +---+
+// | X |<--| * |
+// +---+   +---+
+//
+// Performing this single step repeatedly has the effect of replacing multiple
+// pointers to a given value with a linked list (or "thread") of pointers to the
+// value. For example:
+//
+// P       Q       R
+// +---+   +---+   +---+
+// | * |   | * |-->| X |
+// +---+   +---+   +---+
+//   |             ^
+//   +-------------+
+//
+// becomes (in two steps)
+//
+// P       Q       R
+// +---+   +---+   +---+
+// | X |<--| * |<--| * |
+// +---+   +---+   +---+
+static void gc_thread(addr_t p) {
+  if (Deref(p) == NULL_ADDR) { return; }
+  uintnat q = Deref(p);
+  Deref(p) = Deref(q);
+  Deref(q) = p;
+}
+
+// As we walk the heap, we must be sure to thread every pointer to live data, as
+// any live object may be relocated.
+static void gc_scan(addr_t addr) {
+  hh_header_t hd = Deref(addr);
+  hh_tag_t tag = Obj_tag(hd);
+  if (should_scan(tag)) {
+    for (int i = 0; i < Obj_wosize_tag(hd, tag); i++) {
+      gc_thread(Obj_field(addr, i));
+    }
+  }
+}
+
+// With the heap threaded, we can now relocate "R" to a different known address
+// by "unthreading," or following the linked list of pointers until we reach the
+// original value X. Each word in the thread is replaced with the new address
+// and the original value is copied back into place.
+static void gc_update(addr_t src, addr_t dst) {
+  uintnat p = Deref(src);
+  while (Is_addr(p)) {
+    uintnat q = Deref(p);
+    Deref(p) = dst;
+    p = q;
+  }
+  Deref(src) = p;
+}
+
+// A full collection proceeds in four phases:
+// 1. Marking
+// 2. Threading the root set
+// 3. Heap pass to update forward pointers
+// 4. Heap pass to update backward pointers and move objects
 CAMLprim value hh_collect(value unit) {
   CAMLparam1(unit);
   assert_master();
 
-  // Step 1: Walk the hashtbl entries, which are the roots of our marking pass.
-  size_t hashtbl_slots = info->hashtbl_slots;
-  for (size_t i = 0; i < hashtbl_slots; i++) {
+  intnat hashtbl_slots = info->hashtbl_slots;
+  struct mark_stack *stk = mark_stack;
+
+  // Step 1: Walk the hash table, which are the roots of our marking pass.
+  // Traverse entire heap marking every reachable object. After this step, any
+  // unmarked objects can be collected.
+  for (intnat i = 0; i < hashtbl_slots; i++) {
     // Skip empty slots
-    if (hashtbl[i].addr == NULL_ADDR) { continue; }
-
-    // The hashtbl addr will be wrong after we relocate the heap entry, but we
-    // don't know where the heap entry will relocate to yet. We need to first
-    // move the heap entry, then fix up the hashtbl addr.
-    //
-    // We accomplish this by storing the heap header in the now useless addr
-    // field and storing a pointer to the addr field where the header used to
-    // be. Then, after moving the heap entry, we can follow the pointer to
-    // restore our original header and update the addr field to our relocated
-    // address.
-
-    heap_entry_t *entry = Entry_of_addr(hashtbl[i].addr);
-    hashtbl[i].addr = entry->header;
-    entry->header = Addr_of_ptr(&hashtbl[i].addr);
-  }
-
-  // Step 2: Walk the heap and relocate entries, updating the hashtbl to point
-  // to relocated addresses.
-
-  // Offset of free space in the heap where moved values will move to.
-  size_t dest = info->heap_init;
-
-  // Pointer that walks the heap from bottom to top.
-  char *src = Ptr_of_offset(info->heap_init);
-  char *heap_ptr = Ptr_of_offset(info->heap);
-
-  size_t aligned_size;
-  hh_header_t header;
-  while (src < heap_ptr) {
-    if (*(hh_header_t *)src & 1) {
-      // If the lsb is set, this is a header. If it's a header, that means the
-      // entry was not marked in the first pass and should be collected. Don't
-      // move dest pointer, but advance src pointer to next heap entry.
-      header = *(hh_header_t *)src;
-      aligned_size = Heap_entry_slot_size(header);
-    } else {
-      // If the lsb is 0, this is an addr to the addr field of the hashtable
-      // element, which holds the header bytes. This entry is live.
-      hh_header_t *hashtbl_addr = Header_of_addr(*(addr_t *)src);
-      header = *hashtbl_addr;
-      aligned_size = Heap_entry_slot_size(header);
-
-      // Fix the hashtbl addr field to point to our new location and restore the
-      // heap header data temporarily stored in the addr field bits.
-      *hashtbl_addr = Addr_of_offset(dest);
-
-      // Restore the heap entry header
-      *(hh_header_t *)src = header;
-
-      // Move the entry as far to the left as possible.
-      memmove(Ptr_of_offset(dest), src, aligned_size);
-      dest += aligned_size;
+    if (hashtbl[i].addr != NULL_ADDR) {
+      mark_push(stk, hashtbl[i].addr);
+      mark_rec(stk);
     }
+  }
+  mark_stack_reset(stk);
 
-    src += aligned_size;
+  // Step 2: Scan the root set, threading any pointers to the heap. The
+  // threading performed during this step will be unthreaded in the next step,
+  // updating the hash table to point to the updated locations.
+  for (intnat i = 0; i < hashtbl_slots; i++) {
+    addr_t hashtbl_addr = Addr_of_ptr(&hashtbl[i].addr);
+    gc_thread(hashtbl_addr);
   }
 
-  // TODO: Space between dest and *heap is unused, but will almost certainly
+  // Step 3: Scan the heap object-by-object from bottom to top. The dst pointer
+  // keeps track of where objects will move to, but we do not move anything
+  // during this step.
+  //
+  // If we encounter an unmarked header, the object is unreachable, so do not
+  // update the dst pointer.
+  //
+  // If we encounter an address, then this object was reachable via "forward"
+  // reference, i.e., a pointer stored at a lower address. Because we know where
+  // the object will move to (dst), we eagerly update the forward references and
+  // copy the original header back.
+  //
+  // If we encounter a marked header, then the object is reachable only via
+  // "backwards" reference. These backwards references will be handled in the
+  // next step.
+  //
+  // NB: Instead of scanning the entire heap, it may be worthwhile to track the
+  // min/max live addresses during the marking phase, and only scan that part.
+  // Possible that the extra marking work would be more expensive than a linear
+  // memory scan, but worth experimenting.
+  //
+  // NB: Also worth experimenting with explicit prefetching.
+  addr_t src = info->heap_init;
+  addr_t dst = info->heap_init;
+  addr_t heap_ptr = info->heap;
+  while (src < heap_ptr) {
+    hh_header_t hd = Deref(src);
+    size_t size;
+    if (Is_unmarked_hd(hd)) {
+      size = Obj_bhsize(hd);
+    } else {
+      gc_update(src, dst);
+      hd = Deref(src);
+      size = Obj_bhsize(hd);
+      gc_scan(src);
+      dst += size;
+    }
+    src += size;
+  }
+
+  // Step 4: Scan the heap object-by-object again, actually moving objects this
+  // time around.
+  //
+  // Unmarked headers still indicate unreachable data and is not moved.
+  //
+  // If we encounter an address, then the object was reachable via a "backwards"
+  // reference from the previous step, and we fix up those references to point
+  // to the new location and copy the original header back.
+  //
+  // Finally we can move the object. We unset the mark bit on the header so that
+  // future collections can free the space if the object becomes unreachable.
+  src = info->heap_init;
+  dst = info->heap_init;
+  while (src < heap_ptr) {
+    hh_header_t hd = Deref(src);
+    size_t size;
+    if (Is_unmarked_hd(hd)) {
+      size = Obj_bhsize(hd);
+    } else {
+      gc_update(src, dst);
+      hd = Deref(src);
+      size = Obj_bhsize(hd);
+      Deref(src) = Unmarked_hd(hd);
+      memmove(Ptr_of_addr(dst), Ptr_of_addr(src), size);
+      dst += size;
+    }
+    src += size;
+  }
+
+  // TODO: Space between dst and info->heap is unused, but will almost certainly
   // become used again soon. Currently we will never decommit, which may cause
   // issues when there is memory pressure.
   //
@@ -837,7 +1174,7 @@ CAMLprim value hh_collect(value unit) {
   // which allows the kernel to reclaim the memory lazily under pressure, but
   // would not force page faults under healthy operation.
 
-  info->heap = dest;
+  info->heap = dst;
   info->wasted_heap_size = 0;
 
   CAMLreturn(Val_unit);
@@ -851,22 +1188,27 @@ static void raise_heap_full(void) {
 
 /*****************************************************************************/
 /* Allocates a slot in the shared heap, given a size (in words). The caller is
- * responsible for initializing the returned heap_entry_t with a valid header
- * and data segment. */
+ * responsible for initializing the allocated space with valid heap objects. */
 /*****************************************************************************/
 
-static heap_entry_t* hh_alloc(size_t wsize) {
+static addr_t hh_alloc(size_t wsize) {
   // The size of this allocation needs to be kept in sync with wasted_heap_size
   // modification in hh_remove and also when performing garbage collection. The
   // macro Heap_entry_slot_size can be used to get the slot size from a valid
   // header.
   size_t slot_size = Bsize_wsize(wsize);
-  size_t offset = __sync_fetch_and_add(&info->heap, slot_size);
-  if (offset + slot_size > info->heap_max) {
+  addr_t addr = __sync_fetch_and_add(&info->heap, slot_size);
+  if (addr + slot_size > info->heap_max) {
     raise_heap_full();
   }
-  memfd_reserve(Ptr_of_offset(offset), slot_size);
-  return Entry_of_offset(offset);
+  memfd_reserve(Ptr_of_addr(addr), slot_size);
+  return addr;
+}
+
+CAMLprim value hh_ml_alloc(value wsize) {
+  CAMLparam1(wsize);
+  addr_t addr = hh_alloc(Long_val(wsize));
+  CAMLreturn(Val_addr(addr));
 }
 
 /*****************************************************************************/
@@ -948,7 +1290,7 @@ CAMLprim value hh_store_ocaml(value v) {
     | 1;
 
   // Allocate space for the header and compressed data
-  heap_entry_t *entry = hh_alloc(1 + compressed_wsize);
+  heap_entry_t *entry = Entry_of_addr(hh_alloc(1 + compressed_wsize));
 
   // Write header and data into allocated space.
   entry->header = header;
@@ -963,7 +1305,7 @@ CAMLprim value hh_store_ocaml(value v) {
   free(compressed);
 
   result = caml_alloc_tuple(3);
-  Store_field(result, 0, Val_long(Addr_of_ptr(entry)));
+  Store_field(result, 0, Val_addr(Addr_of_ptr(entry)));
   Store_field(result, 1, Val_long(compressed_size));
   Store_field(result, 2, Val_long(serialized_size));
 
@@ -1008,7 +1350,7 @@ CAMLprim value hh_add(value key, value addr) {
 
   helt_t elt;
   elt.hash = get_hash(key);
-  elt.addr = Long_val(addr);
+  elt.addr = Addr_val(addr);
 
   size_t hashtbl_slots = info->hashtbl_slots;
   unsigned int slot = elt.hash & (hashtbl_slots - 1);
@@ -1119,7 +1461,7 @@ CAMLprim value hh_deserialize(value addr_val) {
   CAMLlocal1(result);
   check_should_exit();
 
-  heap_entry_t *entry = Entry_of_addr(Long_val(addr_val));
+  heap_entry_t *entry = Entry_of_addr(Addr_val(addr_val));
   size_t compressed_bsize = entry_compressed_bsize(entry);
   size_t decompress_capacity = Entry_decompress_capacity(entry->header);
 
@@ -1147,7 +1489,7 @@ CAMLprim value hh_get(value key) {
 
   unsigned int slot = find_slot(key);
   assert(hashtbl[slot].hash == get_hash(key));
-  CAMLreturn(Val_long(hashtbl[slot].addr));
+  CAMLreturn(Val_addr(hashtbl[slot].addr));
 }
 
 /*****************************************************************************/
@@ -1155,7 +1497,7 @@ CAMLprim value hh_get(value key) {
 /*****************************************************************************/
 CAMLprim value hh_get_size(value addr_val) {
   CAMLparam1(addr_val);
-  heap_entry_t *entry = Entry_of_addr(Val_long(addr_val));
+  heap_entry_t *entry = Entry_of_addr(Addr_val(addr_val));
   size_t compressed_bsize = entry_compressed_bsize(entry);
   CAMLreturn(Val_long(compressed_bsize));
 }
@@ -1200,9 +1542,44 @@ CAMLprim value hh_remove(value key) {
   assert(hashtbl[slot].hash == get_hash(key));
   // see hh_alloc for the source of this size
   heap_entry_t *entry = Entry_of_addr(hashtbl[slot].addr);
-  size_t slot_size = Heap_entry_slot_size(entry->header);
-  info->wasted_heap_size += slot_size;
+  // TODO: Wasted heap size calculation is under-counted. This will prevent GC
+  // from running, causing the shared heap to grow too large.
+  //
+  // Because we can have references between heap objects, the object being
+  // deleted in this function might be the only thing keeping other objects
+  // alive. The space occupied by those objects is also wasted, but not counted
+  // wasted_heap_size.
+  info->wasted_heap_size += Obj_bhsize(entry->header);
   hashtbl[slot].addr = NULL_ADDR;
   info->hcounter_filled -= 1;
   CAMLreturn(Val_unit);
+}
+
+/*****************************************************************************/
+/* Blits an OCaml string representation into the shared heap.
+ *
+ * Note that, like OCaml's heap, the shared heap is word-addressible. Like
+ * OCaml's strings, strings in the shared heap are encoded with a header
+ * containing the size in words, where the last byte of the last word contains
+ * an offset used to calculate the exact bytes size. */
+/*****************************************************************************/
+
+CAMLprim value hh_write_string(value addr, value s) {
+  memcpy(Ptr_of_addr(Addr_val(addr)), String_val(s), Bosize_val(s));
+  return Val_unit;
+}
+
+/*****************************************************************************/
+/* Reads a string in the shared heap into a the OCaml heap.
+ *
+ * Because we store string data in the shared heap in the same format as OCaml
+ * does for it's own heap, we can simply blit the data directly into the OCaml
+ * heap, instead of using the designated caml_alloc_string function. */
+/*****************************************************************************/
+CAMLprim value hh_read_string(value addr, value wsize) {
+  CAMLparam2(addr, wsize);
+  CAMLlocal1(s);
+  s = caml_alloc(Long_val(wsize), String_tag);
+  memcpy(String_val(s), Ptr_of_addr(Addr_val(addr)), Bsize_wsize(Long_val(wsize)));
+  CAMLreturn(s);
 }

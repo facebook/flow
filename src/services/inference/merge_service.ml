@@ -565,7 +565,7 @@ let merge_job ~worker_mutator ~reader ~job ~options merged elements =
     (fun merged -> function
       | Merge_stream.Component component ->
         (* A component may have several files: there's always at least one, and
-         multiple files indicate a cycle. *)
+           multiple files indicate a cycle. *)
         let files =
           component |> Nel.to_list |> Base.List.map ~f:File_key.to_string |> String.concat "\n\t"
         in
@@ -625,8 +625,8 @@ let merge_job ~worker_mutator ~reader ~job ~options merged elements =
           let file = Nel.hd component in
           let file_loc = Loc.{ none with source = Some file } |> ALoc.of_loc in
           (* We can't pattern match on the exception type once it's marshalled
-           back to the master process, so we pattern match on it here to create
-           an error result. *)
+             back to the master process, so we pattern match on it here to create
+             an error result. *)
           let result =
             Error
               Error_message.(

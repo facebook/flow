@@ -35,44 +35,35 @@ type client_handshake_wire = string * string
 
 type server_handshake_wire = string * string option
 
-(* What to do on a version mismatch *)
+(** What to do on a version mismatch *)
 type version_mismatch_strategy =
-  | Always_stop_server (* Always stop the server *)
-  | Stop_server_if_older (* Stop the server if it is older than the client. Otherwise send an error *)
-  | Error_client
-
-(* Don't stop the server, just send an error to the client *)
+  | Always_stop_server  (** Always stop the server *)
+  | Stop_server_if_older
+      (** Stop the server if it is older than the client. Otherwise send an error *)
+  | Error_client  (** Don't stop the server, just send an error to the client *)
 
 type client_to_monitor_1 = {
-  client_build_id: build_id;
-  (* Build_id.build_revision for the client *)
-  client_version: string;
-  (* Flow_version.version for the client *)
-  is_stop_request: bool;
-  (* are we requesting the server to stop? *)
+  client_build_id: build_id;  (** Build_id.build_revision for the client *)
+  client_version: string;  (** Flow_version.version for the client *)
+  is_stop_request: bool;  (** are we requesting the server to stop? *)
   server_should_hangup_if_still_initializing: bool;
-  version_mismatch_strategy: version_mismatch_strategy; (* What to do on a version mismatch *)
+  version_mismatch_strategy: version_mismatch_strategy;  (** What to do on a version mismatch *)
 }
 
 type server_intent =
-  | Server_will_exit (* after receiving a stop request or as a result of a version mismatch *)
-  | Server_will_hangup (* version mismatch but neither client nor server should restart *)
-  | Server_will_continue
-
-(* upon success *)
+  | Server_will_exit  (** after receiving a stop request or as a result of a version mismatch *)
+  | Server_will_hangup  (** version mismatch but neither client nor server should restart *)
+  | Server_will_continue  (** upon success *)
 
 type monitor_to_client_1 = {
-  server_build_id: build_id;
-  (* Build_id.build_revision for the server *)
-  server_bin: string;
-  (* filepath to the server binary *)
-  server_intent: server_intent;
-  (* The result of the handshake *)
-  server_version: string; (* Flow_version.version for the server *)
+  server_build_id: build_id;  (** Build_id.build_revision for the server *)
+  server_bin: string;  (** filepath to the server binary *)
+  server_intent: server_intent;  (** The result of the handshake *)
+  server_version: string;  (** Flow_version.version for the server *)
 }
 
 type client_type =
-  | Ephemeral (* a client that sends a request, gets a response, and disconnects *)
+  | Ephemeral  (** a client that sends a request, gets a response, and disconnects *)
   | Persistent of { lsp_init_params: Lsp.Initialize.params }
 
 type client_to_monitor_2 = { client_type: client_type }

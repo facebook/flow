@@ -66,9 +66,9 @@ let set_flow_mode_for_ide_command info =
   let flow =
     match flow info with
     (* If the file does not specify a @flow pragma, we still want to try
-    to infer something, but the file might be huge and unannotated,
-    which can cause performance issues (including non-termination).
-    To avoid this case, we infer the file using "weak mode." *)
+       to infer something, but the file might be huge and unannotated,
+       which can cause performance issues (including non-termination).
+       To avoid this case, we infer the file using "weak mode." *)
     | None -> OptInWeak
     (* Respect @flow pragma *)
     | Some OptIn -> OptIn
@@ -79,9 +79,9 @@ let set_flow_mode_for_ide_command info =
     (* Respect @flow weak pragma *)
     | Some OptInWeak -> OptInWeak
     (* Respect @noflow, which `apply_docblock_overrides` does not by
-    default. Again, large files can cause non-termination, so
-    respecting this pragma gives programmers a way to tell Flow to
-    avoid inference on such files. *)
+       default. Again, large files can cause non-termination, so
+       respecting this pragma gives programmers a way to tell Flow to
+       avoid inference on such files. *)
     | Some OptOut -> OptInWeak
   in
   { info with flow = Some flow }

@@ -50,7 +50,7 @@ module rec TypeTerm : sig
 
        Note: ids are globally unique. tvars are "owned" by a single context,
        but that context and its tvars may later be merged into other contexts.
-     *)
+    *)
     | OpenT of tvar
     (*************)
     (* def types *)
@@ -118,44 +118,44 @@ module rec TypeTerm : sig
     (* annotations *)
     (* A type that annotates a storage location performs two functions:
 
-        * it constrains the types of values stored into the location
+     * it constrains the types of values stored into the location
 
-        * it masks the actual type of values retrieved from the location, giving
-        instead a pro forma type which all such values are considered as having.
+     * it masks the actual type of values retrieved from the location, giving
+       instead a pro forma type which all such values are considered as having.
 
-        In the former role, the annotated type behaves as an upper bound
-        interacting with inflowing lower bounds - these interactions may
-        occur e.g. as a result of values being stored to type-annotated
-        variables, or arguments flowing to type-annotated parameters.
+       In the former role, the annotated type behaves as an upper bound
+       interacting with inflowing lower bounds - these interactions may
+       occur e.g. as a result of values being stored to type-annotated
+       variables, or arguments flowing to type-annotated parameters.
 
-        In the latter role, the annotated type behaves as a lower bound,
-        flowing to sites where values stored in the annotated location are
-        used (such as users of a variable, or users of a parameter within
-        a function body).
+       In the latter role, the annotated type behaves as a lower bound,
+       flowing to sites where values stored in the annotated location are
+       used (such as users of a variable, or users of a parameter within
+       a function body).
 
-        When a type annotation resolves immediately to a concrete type
-        (say, number = NumT or string = StrT), this single type would
-        suffice to perform both roles. However, when an annotation has
-        not yet been resolved, we can't simply use a type variable as a
-        placeholder as we can elsewhere.
+       When a type annotation resolves immediately to a concrete type
+       (say, number = NumT or string = StrT), this single type would
+       suffice to perform both roles. However, when an annotation has
+       not yet been resolved, we can't simply use a type variable as a
+       placeholder as we can elsewhere.
 
-        TL;DR type variables are conductors; annotated types are insulators. :)
+       TL;DR type variables are conductors; annotated types are insulators. :)
 
-        For an annotated type, we must collect incoming lower bounds and
-        downstream upper bounds without allowing them to interact with each
-        other. If we did, the annotation would be "translucent", leaking
-        type information about incoming values - failing to perform the
-        second of the two roles noted above.
+       For an annotated type, we must collect incoming lower bounds and
+       downstream upper bounds without allowing them to interact with each
+       other. If we did, the annotation would be "translucent", leaking
+       type information about incoming values - failing to perform the
+       second of the two roles noted above.
 
-        We accomplish the insulation by wrapping a tvar with AnnotT, and using a
-        "slingshot" trick to grab lowers bounds, wait for the wrapped tvar to
-        resolve to a type, then release the lower bounds to the resolved
-        type. Meanwhile, the tvar itself flows to its upper bounds as usual.
+       We accomplish the insulation by wrapping a tvar with AnnotT, and using a
+       "slingshot" trick to grab lowers bounds, wait for the wrapped tvar to
+       resolve to a type, then release the lower bounds to the resolved
+       type. Meanwhile, the tvar itself flows to its upper bounds as usual.
 
-        Note on usage: AnnotT can be used as a general wrapper for tvars as long
-        as the wrapped tvars are 0->1. If instead the possible types of a
-        wrapped tvar are T1 and T2, then the current rules would flow T1 | T2 to
-        upper bounds, and would flow lower bounds to T1 & T2. **)
+       Note on usage: AnnotT can be used as a general wrapper for tvars as long
+       as the wrapped tvars are 0->1. If instead the possible types of a
+       wrapped tvar are T1 and T2, then the current rules would flow T1 | T2 to
+       upper bounds, and would flow lower bounds to T1 & T2. **)
     | AnnotT of reason * t * bool (* use_desc *)
     (* Opaque type aliases. The opaquetype.opaque_id is its unique id, opaquetype.underlying_t is
      * the underlying type, which we only allow access to when inside the file the opaque type
@@ -169,7 +169,7 @@ module rec TypeTerm : sig
     (* Stores exports (and potentially other metadata) for a module *)
     | ModuleT of reason * exporttypes * bool (* is_strict *)
     (* Here's to the crazy ones. The misfits. The rebels. The troublemakers.
-        The round pegs in the square holes. **)
+       The round pegs in the square holes. **)
 
     (* types that should never appear in signatures *)
     | InternalT of internal_t
@@ -547,13 +547,13 @@ module rec TypeTerm : sig
     | NotT of reason * tvar
     (* operation on polymorphic types *)
     (* SpecializeT(_, _, _, cache, targs, tresult) instantiates a polymorphic type
-        with type arguments targs, and flows the result into tresult. If cache
-        is set, it looks up a cache of existing instantiations for the type
-        parameters of the polymorphic type, unifying the type arguments with
-        those instantiations if such exist.
+       with type arguments targs, and flows the result into tresult. If cache
+       is set, it looks up a cache of existing instantiations for the type
+       parameters of the polymorphic type, unifying the type arguments with
+       those instantiations if such exist.
 
-        The first reason is the reason why we're specializing. The second
-        reason points to the type application itself
+       The first reason is the reason why we're specializing. The second
+       reason points to the type application itself
     **)
     | SpecializeT of use_op * reason * reason * specialize_cache * t list option * t
     (* operation on this-abstracted classes *)
@@ -580,17 +580,17 @@ module rec TypeTerm : sig
           bool
     (* operation on prototypes *)
     (* LookupT(_, strict, try_ts_on_failure, x, lookup_action, ids) looks for
-        property x in an object type and emits a constraint according to the
-        provided lookup_action. It also carries with it a list of the prop_map ids it has already tried.
+       property x in an object type and emits a constraint according to the
+       provided lookup_action. It also carries with it a list of the prop_map ids it has already tried.
 
-        When x is not found, we have the following cases:
+       When x is not found, we have the following cases:
 
-        (1) try_ts_on_failure is not empty, and we try to look for property x in
-        the next object type in that list;
+       (1) try_ts_on_failure is not empty, and we try to look for property x in
+       the next object type in that list;
 
-        (2) strict = None, so no error is reported;
+       (2) strict = None, so no error is reported;
 
-        (3) strict = Some reason, so the position in reason is blamed.
+       (3) strict = Some reason, so the position in reason is blamed.
     **)
     | LookupT of {
         reason: reason;
@@ -945,7 +945,7 @@ module rec TypeTerm : sig
     | Zeroed
 
   and any_source =
-    | Annotated
+    | AnnotatedAny
     | AnyError of any_error_kind option
     | Unsound of unsoundness_kind
     | Untyped
@@ -1792,7 +1792,7 @@ end
    needs to interact with member types directly
    can do so via `members`, which provides access
    via the standard list representation.
- *)
+*)
 and UnionRep : sig
   type t
 
@@ -2225,7 +2225,7 @@ end
    needs to interact with member types directly
    can do so via `members`, which provides access
    via the standard list representation.
- *)
+*)
 and InterRep : sig
   type t
 
@@ -2249,7 +2249,7 @@ end = struct
   type t = TypeTerm.t * TypeTerm.t * TypeTerm.t list
   (** intersection rep is:
       - member list in declaration order
-    *)
+   *)
 
   let make t0 t1 ts = (t0, t1, ts)
 
@@ -2644,7 +2644,7 @@ end)
 
 module AnyT = struct
   let desc = function
-    | Annotated -> RAnyExplicit
+    | AnnotatedAny -> RAnyExplicit
     | _ -> RAnyImplicit
 
   let make source r = AnyT (r, source)
@@ -2653,7 +2653,7 @@ module AnyT = struct
 
   let why source = replace_desc_reason (desc source) %> make source
 
-  let annot = why Annotated
+  let annot = why AnnotatedAny
 
   let error = why (AnyError None)
 
@@ -3288,9 +3288,9 @@ let default_obj_assign_kind = ObjAssign { assert_exact = false }
 
 (* A method type is a function type with `this` specified. *)
 let mk_methodtype
-    this tins ~rest_param ~def_reason ?(frame = 0) ?params_names ?(is_predicate = false) tout =
+    this_t tins ~rest_param ~def_reason ?(frame = 0) ?params_names ?(is_predicate = false) tout =
   {
-    this_t = this;
+    this_t;
     params =
       (match params_names with
       | None -> Base.List.map ~f:(fun t -> (None, t)) tins
@@ -3313,18 +3313,19 @@ let mk_methodcalltype this targs args ?(frame = 0) ?(call_strict_arity = true) t
     call_strict_arity;
   }
 
-(* A bound function type is a function type with `this` = `any`. Typically, such
-   a type is given to a method when it can be considered bound: in other words,
-   when calling that method through any object would be fine, since the object
-   would be ignored. *)
-let mk_boundfunctiontype = mk_methodtype bound_function_dummy_this
+(* A bound function type is a method type whose `this` parameter has been
+   bound to some type. Currently, if the function's `this` parameter is not
+   explicitly annotated we model this unsoundly using `any`, but if it is
+   then we create a methodtype with a specific `this` type.  *)
 
-(* A function type has `this` = `mixed`. Such a type can be given to functions
-   that are meant to be called directly. On the other hand, it deliberately
-   causes problems when they are given to methods in which `this` is used
-   non-trivially: indeed, calling them directly would cause `this` to be bound
-   to the global object, which is typically unintended. *)
-let mk_functiontype reason = mk_methodtype (global_this reason)
+let mk_boundfunctiontype ?(this = bound_function_dummy_this) = mk_methodtype this
+
+(* A function type is a method type whose `this` parameter has been
+   bound to to the global object. Currently, if the function's `this` parameter is not
+   explicitly annotated we model this using `mixed`, but if it is
+   then we create a methodtype with a specific `this` type.  *)
+
+let mk_functiontype reason ?(this = global_this reason) = mk_methodtype this
 
 let mk_functioncalltype reason = mk_methodcalltype (global_this reason)
 
@@ -3409,3 +3410,7 @@ end = struct
 
   let map f tparams = Base.Option.map ~f:(fun (loc, params) -> (loc, Nel.map f params)) tparams
 end
+
+type annotated_or_inferred =
+  | Annotated of TypeTerm.t
+  | Inferred of TypeTerm.t

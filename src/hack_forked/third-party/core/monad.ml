@@ -92,11 +92,11 @@ module Make (M : Basic) : S with type 'a t := 'a M.t = struct
 end
 
 (**
-   Multi parameter monad.
-   The second parameter get unified across all the computation. This is used
-   to encode monads working on a multi parameter data structure like
-   ([('a,'b result)]).
-*)
+    Multi parameter monad.
+    The second parameter get unified across all the computation. This is used
+    to encode monads working on a multi parameter data structure like
+    ([('a,'b result)]).
+ *)
 module type Basic2 = sig
   type ('a, 'd) t
 

@@ -183,8 +183,8 @@ let docblock_max_tokens = 10
 let extract_docblock =
   Docblock.(
     (* walks a list of words, returns a list of errors and the extracted info.
-     if @flow or @providesModule is found more than once, the first one is used
-     and an error is returned. *)
+       if @flow or @providesModule is found more than once, the first one is used
+       and an error is returned. *)
     let rec parse_attributes (errors, info) = function
       | (loc, "@flow") :: (_, "strict") :: xs ->
         let acc =
@@ -431,13 +431,13 @@ let do_parse ~parse_options ~info content file =
         let (ast, parse_errors) = parse_source_file ~fail ~types:true ~use_strict content file in
         let prevent_munge = Docblock.preventMunge info || prevent_munge in
         (* NOTE: This is a temporary hack that makes the signature verifier ignore any static
-            property named `propTypes` in any class. It should be killed with fire or replaced with
-            something that only works for React classes, in which case we must make a corresponding
-            change in the type system that enforces that any such property is private. *)
+           property named `propTypes` in any class. It should be killed with fire or replaced with
+           something that only works for React classes, in which case we must make a corresponding
+           change in the type system that enforces that any such property is private. *)
         let ignore_static_propTypes = true in
         (* NOTE: This is a Facebook-specific hack that makes the signature verifier and generator
-            recognize and process a custom `keyMirror` function that makes an enum out of the keys
-            of an object. *)
+           recognize and process a custom `keyMirror` function that makes an enum out of the keys
+           of an object. *)
         let facebook_keyMirror = true in
         let exports_info = File_sig.With_Loc.program_with_exports_info ~ast ~module_ref_prefix in
         (match exports_info with
@@ -696,13 +696,13 @@ let opt_or_alternate opt alternate =
   | None -> alternate
 
 (* types_mode and use_strict aren't special, they just happen to be the ones that needed to be
-overridden *)
+   overridden *)
 let get_defaults ~types_mode ~use_strict options =
   let types_mode =
     opt_or_alternate
       types_mode
       (* force types when --all is set, but otherwise forbid them unless the file
-       has @flow in it. *)
+         has @flow in it. *)
       ( if Options.all options then
         TypesAllowed
       else

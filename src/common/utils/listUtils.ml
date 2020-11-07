@@ -26,7 +26,7 @@ let filter_map f lst = rev_filter_map f lst |> Base.List.rev
       fold_left_opt f 0 [1; 2; -3; 4; 5] => None
 
     Useful in situations where failure rules out List.fold_left.
-  *)
+ *)
 let rec fold_left_opt f acc = function
   | [] -> Some acc
   | v :: vs ->
@@ -43,7 +43,7 @@ let rec fold_left_opt f acc = function
 
     Like a reapeat-until loop, guaranteed to run f at least once.
     Useful in situations where shortcutting makes List.fold_left a bad fit.
-  *)
+ *)
 let rec fold_left_until f acc = function
   | [] -> acc
   | v :: vs ->
@@ -62,7 +62,7 @@ let rec fold_left_until f acc = function
     In effect p functions like a while loop test.
     Useful in situations where failure rules out List.fold_left,
     and test should precede action.
-  *)
+ *)
 let rec fold_left_while p f acc = function
   | [] -> acc
   | v :: vs ->
@@ -75,7 +75,7 @@ let rec fold_left_while p f acc = function
     Eg
       let f acc x = x :: acc
       fold_left_for 3 f 0 [1; 2; 3; 4; 5] => [1; 2; 3]
-  *)
+ *)
 let fold_left_for n f acc lst =
   snd (fold_left_while (fun (i, _) _ -> i < n) (fun (i, acc) x -> (i + 1, f acc x)) (0, acc) lst)
 
@@ -253,7 +253,7 @@ let rec cat_maybes = function
 (** fold over the elements of a list while keeping the results of
     each iteration and returning it in the end along with the
     accumulator
-  *)
+ *)
 let fold_map f acc xs =
   let (acc', ys) =
     Base.List.fold_left

@@ -67,8 +67,8 @@ let to_string t =
 let get_current_callstack_string n = Printexc.get_callstack n |> Printexc.raw_backtrace_to_string
 
 (** `internal_get_backtrace_slots_of_callstack x y` returns the top `y`
-  backtrace slots after skipping the top `x` slots. Skipping slots is
-  useful for hiding our own exception printing functions. *)
+    backtrace slots after skipping the top `x` slots. Skipping slots is
+    useful for hiding our own exception printing functions. *)
 let internal_get_backtrace_slots_of_callstack ~skip n =
   (* skip `Printexc.get_callstack` *)
   let skip = skip + 1 in
@@ -88,7 +88,7 @@ let internal_get_backtrace_slots_of_callstack ~skip n =
   | None -> None
 
 (** Appends the current callstack (up to `n` slots, after skipping `skip` frames) to
-  the given backtrace. *)
+    the given backtrace. *)
 let internal_get_full_backtrace_slots ~skip n backtrace =
   (* skip `internal_get_backtrace_slots_of_callstack` *)
   let callstack_slots = internal_get_backtrace_slots_of_callstack ~skip:(skip + 1) n in

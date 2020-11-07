@@ -2015,9 +2015,9 @@ class ['loc] mapper =
     method assignment_pattern (expr : ('loc, 'loc) Ast.Pattern.t) = this#pattern expr
 
     (* NOTE: Patterns are highly overloaded. A pattern can be a binding pattern,
-     which has a kind (Var/Let/Const, with Var being the default for all pre-ES5
-     bindings), or an assignment pattern, which has no kind. Subterms that are
-     patterns inherit the kind (or lack thereof). *)
+       which has a kind (Var/Let/Const, with Var being the default for all pre-ES5
+       bindings), or an assignment pattern, which has no kind. Subterms that are
+       patterns inherit the kind (or lack thereof). *)
     method pattern ?kind (expr : ('loc, 'loc) Ast.Pattern.t) =
       let open Ast.Pattern in
       let (loc, patt) = expr in

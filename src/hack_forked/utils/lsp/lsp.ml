@@ -36,7 +36,7 @@
  * - The spec has space for extra fields like "experimental". It obviously
  *   doesn't make sense to encode them in a type system. I've omitted them
  *   entirely.
-*)
+ *)
 
 type lsp_id =
   | NumberId of int
@@ -76,7 +76,7 @@ module Location = struct
 end
 
 (** Represents a location inside a resource which also wants to display a
-  friendly name to the user. *)
+    friendly name to the user. *)
 module DefinitionLocation = struct
   type t = {
     location: Location.t;
@@ -98,17 +98,17 @@ module MarkupContent = struct
 end
 
 (** markedString can be used to render human readable text. It is either a
-  markdown string or a code-block that provides a language and a code snippet.
-  Note that markdown strings will be sanitized by the client - including
-  escaping html *)
+    markdown string or a code-block that provides a language and a code snippet.
+    Note that markdown strings will be sanitized by the client - including
+    escaping html *)
 type markedString =
   | MarkedString of string
   | MarkedCode of string * string  (** lang, value *)
 
 (** Represents a reference to a command. Provides a title which will be used to
-  represent a command in the UI. Commands are identitifed using a string
-  identifier and the protocol currently doesn't specify a set of well known
-  commands. So executing a command requires some tool extension code. *)
+    represent a command in the UI. Commands are identitifed using a string
+    identifier and the protocol currently doesn't specify a set of well known
+    commands. So executing a command requires some tool extension code. *)
 module Command = struct
   type name = Command of string
 
@@ -120,9 +120,9 @@ module Command = struct
 end
 
 (** A textual edit applicable to a text document. If n textEdits are applied
-   to a text document all text edits describe changes to the initial document
-   version. Execution wise text edits should applied from the bottom to the
-   top of the text document. Overlapping text edits are not supported. *)
+    to a text document all text edits describe changes to the initial document
+    version. Execution wise text edits should applied from the bottom to the
+    top of the text document. Overlapping text edits are not supported. *)
 module TextEdit = struct
   type t = {
     range: range;  (** to insert text, use a range where start = end *)
@@ -144,8 +144,8 @@ module VersionedTextDocumentIdentifier = struct
 end
 
 (** Describes textual changes on a single text document. The text document is
-   referred to as a VersionedTextDocumentIdentifier to allow clients to check
-   the text document version before an edit is applied. *)
+    referred to as a VersionedTextDocumentIdentifier to allow clients to check
+    the text document version before an edit is applied. *)
 module TextDocumentEdit = struct
   type t = {
     textDocument: VersionedTextDocumentIdentifier.t;
@@ -154,14 +154,14 @@ module TextDocumentEdit = struct
 end
 
 (** A workspace edit represents changes to many resources managed in the
-   workspace. A workspace edit consists of a mapping from a URI to an
-   array of TextEdits to be applied to the document with that URI. *)
+    workspace. A workspace edit consists of a mapping from a URI to an
+    array of TextEdits to be applied to the document with that URI. *)
 module WorkspaceEdit = struct
   type t = { changes: TextEdit.t list UriMap.t  (** holds changes to existing docs *) }
 end
 
 (** An item to transfer a text document from the client to the server. The
-   version number strictly increases after each change, including undo/redo. *)
+    version number strictly increases after each change, including undo/redo. *)
 module TextDocumentItem = struct
   type t = {
     uri: DocumentUri.t;  (** the text document's URI *)
@@ -187,7 +187,7 @@ module CodeLens = struct
 end
 
 (** A parameter literal used in requests to pass a text document and a position
-   inside that document. *)
+    inside that document. *)
 module TextDocumentPositionParams = struct
   type t = {
     textDocument: TextDocumentIdentifier.t;  (** the text document *)
@@ -196,8 +196,8 @@ module TextDocumentPositionParams = struct
 end
 
 (** A document filter denotes a document through properties like language,
-   schema or pattern. E.g. language:"typescript",scheme:"file"
-   or language:"json",pattern:"**/package.json" *)
+    schema or pattern. E.g. language:"typescript",scheme:"file"
+    or language:"json",pattern:"**/package.json" *)
 module DocumentFilter = struct
   type t = {
     language: string option;  (** a language id, like "typescript" *)
@@ -263,13 +263,13 @@ end
 module CodeActionKind = struct
   type t = string * string list
   (** The kind of a code action.
-    Kinds are a hierarchical list of identifiers separated by `.`, e.g.
-    `"refactor.extract.function"`.
-    The set of kinds is open and client needs to announce the kinds it supports
-    to the server during initialization.
-    CodeActionKind.t uses a pair to represent a non-empty list and provides utility
-    functions for creation, membership, printing.
-    Module CodeAction below also references this module as Kind.
+      Kinds are a hierarchical list of identifiers separated by `.`, e.g.
+      `"refactor.extract.function"`.
+      The set of kinds is open and client needs to announce the kinds it supports
+      to the server during initialization.
+      CodeActionKind.t uses a pair to represent a non-empty list and provides utility
+      functions for creation, membership, printing.
+      Module CodeAction below also references this module as Kind.
    *)
 
   (** is x of kind k? *)
@@ -416,8 +416,8 @@ module Initialize = struct
     can_didSave: bool;  (** textDocument/didSave *)
   }
   (** synchronization capabilities say what messages the client is capable
-    of sending, should be be so asked by the server.
-    We use the "can_" prefix for OCaml naming reasons; it's absent in LSP *)
+      of sending, should be be so asked by the server.
+      We use the "can_" prefix for OCaml naming reasons; it's absent in LSP *)
 
   and completion = { completionItem: completionItem }
 
@@ -497,8 +497,8 @@ module Initialize = struct
     want_didSave: saveOptions option; (* textDocument/didSave *)
   }
   (** text document sync options say what messages the server requests the
-    client to send. We use the "want_" prefix for OCaml naming reasons;
-    this prefix is absent in LSP. *)
+      client to send. We use the "want_" prefix for OCaml naming reasons;
+      this prefix is absent in LSP. *)
 
   (* full only on open. Wire "Incremental" *)
   and saveOptions = { includeText: bool  (** the client should include content on save *) }
@@ -660,7 +660,7 @@ module TypeDefinition = struct
 end
 
 (** A code action represents a change that can be performed in code, e.g. to fix a problem or
-  to refactor code. *)
+    to refactor code. *)
 module CodeAction = struct
   type t = {
     title: string;  (** A short, human-readable, title for this code action. *)
@@ -1122,7 +1122,7 @@ module RegisterCapability = struct
 
   let make_registration (registerOptions : lsp_registration_options) : registration =
     (* The ID field is arbitrary but unique per type of capability (for future
-    deregistering, which we don't do). *)
+       deregistering, which we don't do). *)
     let (id, method_) =
       match registerOptions with
       | DidChangeWatchedFilesRegistrationOptions _ ->
@@ -1133,7 +1133,7 @@ end
 
 (**
  * Here are gathered-up ADTs for all the messages we handle
-*)
+ *)
 
 type lsp_request =
   | InitializeRequest of Initialize.params

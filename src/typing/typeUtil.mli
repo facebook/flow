@@ -86,3 +86,8 @@ val this_typeapp : ?annot_loc:ALoc.t -> Type.t -> Type.t -> Type.t list option -
 val push_type_alias_reason : reason -> Type.t -> Type.t
 
 val pred_map_implies : Type.predicate Key_map.t -> Type.predicate Key_map.t -> bool
+
+val type_t_of_annotated_or_inferred : Type.annotated_or_inferred -> Type.t
+
+val map_annotated_or_inferred :
+  (Type.t -> Type.t) -> Type.annotated_or_inferred -> Type.annotated_or_inferred

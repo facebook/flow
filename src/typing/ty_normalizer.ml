@@ -783,17 +783,17 @@ end = struct
               match desc_of_reason ~unwrap:false reason with
               | RTypeAlias (name, Some loc, _) ->
                 (* The default action is to avoid expansion by using the type alias name,
-                 when this can be trusted. The one case where we want to skip this process
-                 is when recovering the body of a type alias A. In that case the environment
-                 field under_type_alias will be 'Some A'. If the type alias name in the reason
-                 is also A, then we are still at the top-level of the type-alias, so we
-                 proceed by expanding one level preserving the same environment. *)
+                   when this can be trusted. The one case where we want to skip this process
+                   is when recovering the body of a type alias A. In that case the environment
+                   field under_type_alias will be 'Some A'. If the type alias name in the reason
+                   is also A, then we are still at the top-level of the type-alias, so we
+                   proceed by expanding one level preserving the same environment. *)
                 let symbol = symbol_from_loc env loc name in
                 return (generic_talias symbol None)
               | _ ->
                 (* We are now beyond the point of the one-off expansion. Reset the environment
-                 assigning None to under_type_alias, so that aliases are used in subsequent
-                 invocations. *)
+                   assigning None to under_type_alias, so that aliases are used in subsequent
+                   invocations. *)
                 next ~env t
             end)
 
@@ -933,8 +933,8 @@ end = struct
       Recursive.with_cache (TVarKey root_id) ~f:(fun () -> resolve_bounds ~env constraints)
 
     (* Resolving a type variable amounts to normalizing its lower bounds and
-     taking their union.
-  *)
+       taking their union.
+    *)
     and resolve_bounds ~env = function
       | Constraint.Resolved (_, t)
       | Constraint.FullyResolved (_, t) ->
@@ -958,7 +958,7 @@ end = struct
       Ty.Bot (Ty.NoLowerWithUpper use_kind)
 
     and any_t = function
-      | T.Annotated -> Ty.Annotated
+      | T.AnnotatedAny -> Ty.Annotated
       | T.AnyError kind -> Ty.AnyError (any_error_kind kind)
       | T.Unsound k -> Ty.Unsound (unsoundness_any_t k)
       | T.Untyped -> Ty.Untyped
@@ -1046,10 +1046,10 @@ end = struct
 
     and obj_prop_t =
       (* Value-level object types should not have properties of type type alias. For
-       convience reasons it is possible for a non-module-like Type.ObjT to include
-       such types as properties. Here we explicitly filter them out, since we
-       cannot use type__ to normalize them.
-    *)
+         convience reasons it is possible for a non-module-like Type.ObjT to include
+         such types as properties. Here we explicitly filter them out, since we
+         cannot use type__ to normalize them.
+      *)
       let is_type_alias = function
         | T.DefT (_, _, T.TypeT _)
         | T.DefT (_, _, T.PolyT { t_out = T.DefT (_, _, T.TypeT _); _ }) ->
@@ -1430,10 +1430,10 @@ end = struct
           in
           return (mk_fun ~params Ty.explicit_any)
         (* var idx:
-       <IdxObject: Any, IdxResult>
-       (obj: IdxObject, pathCallback: (demaybefiedObj: IdxObject) => IdxResult)
-       => ?IdxResult;
-    *)
+           <IdxObject: Any, IdxResult>
+           (obj: IdxObject, pathCallback: (demaybefiedObj: IdxObject) => IdxResult)
+           => ?IdxResult;
+        *)
         | Idx ->
           let idxObject = Ty.Bound (ALoc.none, "IdxObject") in
           let idxResult = Ty.Bound (ALoc.none, "IdxResult") in
@@ -1460,7 +1460,7 @@ end = struct
           let ret = Ty.Bound (ALoc.none, "TypeAssertT") in
           return (mk_fun ~tparams ~params ret)
         (* Result<T> = {success: true, value: T} | {success: false, error: string}
-         var TypeAssertWraps: <TypeAssertT>(value: mixed) => Result<TypeAssertT> *)
+           var TypeAssertWraps: <TypeAssertT>(value: mixed) => Result<TypeAssertT> *)
         | TypeAssertWraps ->
           let tparams = [mk_tparam "TypeAssertT"] in
           let params = [(Some "value", Ty.Top, non_opt_param)] in
@@ -1568,7 +1568,7 @@ end = struct
           let ret = builtin_t "TypeAssertT" in
           return (mk_fun ~tparams ~params ret)
         (* Result<T> = {success: true, value: T} | {success: false, error: string}
-      var TypeAssertWraps: <TypeAssertT>(value: mixed) => Result<TypeAssertT> *)
+           var TypeAssertWraps: <TypeAssertT>(value: mixed) => Result<TypeAssertT> *)
         | TypeAssertWraps ->
           let tparams = [mk_tparam "TypeAssertT"] in
           let params = [(Some "value", Ty.Top, non_opt_param)] in
@@ -1962,9 +1962,9 @@ end = struct
         | DefT (_, _, ClassT (DefT (r, _, InstanceT (static, super, _, inst)))) ->
           class_or_interface_decl ~env r (Some tparams) static super inst
         (* See flow_js.ml canonicalize_imported_type, case of PolyT (ThisClassT):
-         The initial abstraction is wrapper within an abstraction and a type application.
-         The current case unwraps the abstraction and application to reveal the
-         initial imported type. *)
+           The initial abstraction is wrapper within an abstraction and a type application.
+           The current case unwraps the abstraction and application to reveal the
+           initial imported type. *)
         | DefT (_, _, ClassT (TypeAppT (_, _, t, _))) -> toplevel ~env t
         (* Type Aliases *)
         | DefT (r, _, TypeT (kind, t)) ->

@@ -27,13 +27,28 @@ let get_libs dir =
 (* Turn the (name, contents) list into a PPX ast (string * string) array
  * expression *)
 let contents lib_dir =
-  get_libs lib_dir
-  |> List.map (fun (name, contents) ->
-         Exp.tuple [Exp.constant (Const.string name); Exp.constant (Const.string contents)])
-  |> Exp.array
+  let libs = get_libs lib_dir in
+  let hash =
+    let state = Xx.init 0L in
+    List.iter
+      (fun (file, contents) ->
+        Xx.update state file;
+        Xx.update state contents)
+      libs;
+    state |> Xx.digest |> Xx.to_string |> Const.string |> Exp.constant
+  in
+  let contents =
+    libs
+    |> List.map (fun (name, contents) ->
+           Exp.tuple [Exp.constant (Const.string name); Exp.constant (Const.string contents)])
+    |> Exp.array
+  in
+  (hash, contents)
 
 (* Whenever we see [%flowlib_contents], replace it wil the flowlib contents *)
-let ppx_gen_flowlibs_mapper ~flowlib_contents ~prelude_contents =
+let ppx_gen_flowlibs_mapper ~flowlib ~prelude =
+  let (flowlib_hash, flowlib_contents) = flowlib in
+  let (prelude_hash, prelude_contents) = prelude in
   {
     default_mapper with
     expr =
@@ -43,6 +58,8 @@ let ppx_gen_flowlibs_mapper ~flowlib_contents ~prelude_contents =
           flowlib_contents
         | { pexp_desc = Pexp_extension ({ txt = "prelude_contents"; _ }, PStr []); _ } ->
           prelude_contents
+        | { pexp_desc = Pexp_extension ({ txt = "flowlib_hash"; _ }, PStr []); _ } -> flowlib_hash
+        | { pexp_desc = Pexp_extension ({ txt = "prelude_hash"; _ }, PStr []); _ } -> prelude_hash
         | other -> default_mapper.expr mapper other);
   }
 
@@ -56,11 +73,11 @@ let () =
     ]
   in
   Driver.register ~name:"ppx_gen_flowlibs" ~args ocaml_version (fun _config _cookies ->
-      let (flowlib_contents, prelude_contents) =
+      let (flowlib, prelude) =
         match (!flowlib_dir_ref, !prelude_dir_ref) with
         | ("", _)
         | (_, "") ->
           failwith "Expected two arguments."
         | (flowlib_dir, prelude_dir) -> (contents flowlib_dir, contents prelude_dir)
       in
-      ppx_gen_flowlibs_mapper ~flowlib_contents ~prelude_contents)
+      ppx_gen_flowlibs_mapper ~flowlib ~prelude)

@@ -25,7 +25,7 @@ type remote_exception_data = {
 }
 
 (** Some say we should represent network communications failures with results,
-not exceptions. Here we go for those who favor results... *)
+    not exceptions. Here we go for those who favor results... *)
 type error =
   | Rpc_absent of Exception.t  (** socket isn't open to start with *)
   | Rpc_disconnected of Exception.t  (** closed while trying to read/write *)

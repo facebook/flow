@@ -1408,7 +1408,7 @@ module Eval (Env : Signature_builder_verify.EvalEnv) = struct
     | Void -> (loc, T.Void)
     | Delete -> (loc, T.Boolean)
     (* These operations may or may not have simple result types. See associated TODO: comment in
-         Signature_builder_verify. *)
+       Signature_builder_verify. *)
     | Minus ->
       begin
         match literal_expr argument with

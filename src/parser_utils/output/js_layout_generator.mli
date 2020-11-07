@@ -5,9 +5,17 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
+module Trailing_commas : sig
+  type t =
+    | All  (** Wherever possible (including function arguments). *)
+    | ES5  (** Where valid in ES5 (objects, arrays, etc.) *)
+    | Off  (** No trailing commas *)
+end
+
 type opts = {
   preserve_formatting: bool;
   bracket_spacing: bool;
+  trailing_commas: Trailing_commas.t;
 }
 
 type expression_context = {

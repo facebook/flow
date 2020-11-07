@@ -23,10 +23,15 @@ type 'a logger_fn = ?exn:exn -> ('a, unit, string, unit) format4 -> 'a
 
 type 'a logger_fn_s = ?exn:Exception.t -> ('a, unit, string, unit) format4 -> 'a
 
+type dest = {
+  file: bool;
+  stderr: bool;
+}
+
 let (msg_stream, push_to_msg_stream) = Lwt_stream.create ()
 
 module WriteLoop = LwtLoop.Make (struct
-  type acc = Lwt_unix.file_descr list
+  type acc = Lwt_unix.file_descr option
 
   (* Given a list of messages and a fd, write them serially to the fd *)
   let write_msgs msgs fd =
@@ -37,10 +42,17 @@ module WriteLoop = LwtLoop.Make (struct
       msgs
 
   (* Get a list of messages, write the list in parallel to each fd *)
-  let main fds =
-    let%lwt msgs = Lwt_stream.next msg_stream in
+  let main file_fd =
+    let%lwt (dest, msgs) = Lwt_stream.next msg_stream in
+    let fds =
+      match (dest, file_fd) with
+      | ({ stderr = true; file = true }, Some file_fd) -> [Lwt_unix.stderr; file_fd]
+      | ({ stderr = false; file = true }, Some file_fd) -> [file_fd]
+      | ({ stderr = true; _ }, None) -> [Lwt_unix.stderr]
+      | (_, _) -> []
+    in
     let%lwt () = Lwt_list.iter_p (write_msgs msgs) fds in
-    Lwt.return fds
+    Lwt.return file_fd
 
   (* If we failed to write to an fd throw an exception and exit. I'm not 100% sure this is the
    * best behavior - should logging errors cause the monitor (and server) to crash? *)
@@ -67,16 +79,18 @@ let init_logger log_fd =
   if !initialized then failwith "Cannot initialized FlowServerMonitorLogger more than once";
   initialized := true;
 
+  let min_level_file = Hh_logger.Level.min_level_file () |> lwt_level_of_hh_logger_level in
+  let min_level_stderr = Hh_logger.Level.min_level_stderr () |> lwt_level_of_hh_logger_level in
   let min_level = Hh_logger.Level.min_level () |> lwt_level_of_hh_logger_level in
   let template = "$(date).$(milliseconds) [$(level)] $(message)" in
   let log_fd =
     Base.Option.map log_fd ~f:(Lwt_unix.of_unix_file_descr ~blocking:false ~set_flags:true)
   in
-  let fds = Lwt_unix.stderr :: Base.Option.value_map log_fd ~default:[] ~f:(fun fd -> [fd]) in
-  Lwt.async (fun () -> WriteLoop.run fds);
+  Lwt.async (fun () -> WriteLoop.run log_fd);
 
   (* Format the messages and write the to the log and stderr *)
   let output section level messages =
+    let dest = { file = level >= min_level_file; stderr = level >= min_level_stderr } in
     let buffer = Buffer.create 42 in
     let formatted_messages =
       Base.List.map
@@ -87,7 +101,7 @@ let init_logger log_fd =
           Buffer.contents buffer)
         messages
     in
-    push_to_msg_stream (Some formatted_messages);
+    push_to_msg_stream (Some (dest, formatted_messages));
     Lwt.return_unit
   in
   (* Just close the log *)

@@ -101,8 +101,8 @@ let gather_declarations ast =
                 id
             in
             (* Gather simple variable declarations where the init is a function, of the forms:
-             const <ID> = function() { ... }
-             const <ID> = () => { ... } *)
+               const <ID> = function() { ... }
+               const <ID> = () => { ... } *)
             let acc =
               match (id, init) with
               | ( (_, Ast.Pattern.Identifier { Ast.Pattern.Identifier.name = (id_loc, _); _ }),

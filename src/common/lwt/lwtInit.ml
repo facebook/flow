@@ -88,7 +88,7 @@ class unix_select =
         try Unix.select fds_r fds_w [] timeout
         with Unix.Unix_error (Unix.EINVAL, fn, params) ->
           (* Ok, so either one of the fds is an invalid fd, or maybe it's a valid fd but too large
-        * for select *)
+           * for select *)
           begin
             try
               let explode_if_bad fd = Unix.fstat fd |> ignore in

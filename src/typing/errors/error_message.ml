@@ -1161,7 +1161,7 @@ let util_use_op_of_msg nope util = function
     nope
 
 (* Not all messages (i.e. those whose locations are based on use_ops) have locations that can be
-  determined while locations are abstract. We just return None in this case. *)
+   determined while locations are abstract. We just return None in this case. *)
 let loc_of_msg : 'loc t' -> 'loc option = function
   | EAnyValueUsedAsType { reason_use = primary }
   | EValueUsedAsType { reason_use = primary }
@@ -2267,7 +2267,7 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
         RIdentifier x
     in
     (* We can call to_loc here because reaching this point requires that everything else
-        in the error message is concretized already; making Scopes polymorphic is not a good idea *)
+       in the error message is concretized already; making Scopes polymorphic is not a good idea *)
     let x = mk_reason desc (Scope.Entry.entry_loc entry |> ALoc.to_loc_exn) in
     let features =
       match binding_error with

@@ -104,7 +104,7 @@ let standard_list_diff (old_list : 'a list) (new_list : 'a list) : 'a diff_resul
             let (x_old, y_old, advance_in_old_list) = follow_snake (x + 1) y trace in
             let (x_new, y_new, advance_in_new_list) = follow_snake x (y + 1) trace in
             (* if we have already visited this location, there is a shorter path to it, so we don't
-           store this trace *)
+               store this trace *)
             let () =
               if Hashtbl.mem visited (x_old, y_old) |> not then
                 let () = Queue.add (x_old, y_old) new_frontier in
@@ -143,7 +143,7 @@ let standard_list_diff (old_list : 'a list) (new_list : 'a list) : 'a diff_resul
         script
       else
         (* The algorithm treats the trace as though (-1,-1) were the (-1)th match point
-         in the list and (n,m) were the (len+1)th *)
+           in the list and (n,m) were the (len+1)th *)
         let first =
           if k = -1 then
             0
@@ -339,7 +339,7 @@ let _diff_if_changed_opt_arg f opt1 opt2 : node change list option =
   | _ -> f opt1 opt2
 
 (* This is needed if the function for the given node returns a node change
-* list instead of a node change list option (for instance, expression) *)
+ * list instead of a node change list option (for instance, expression) *)
 let diff_if_changed_nonopt_fn f opt1 opt2 : node change list option =
   match (opt1, opt2) with
   | (Some x1, Some x2) ->
@@ -401,24 +401,24 @@ let partition_imports (stmts : (Loc.t, Loc.t) Ast.Statement.t list) =
   partition_import_helper stmts ([], [])
 
 (* Outline:
-* - There is a function for every AST node that we want to be able to recurse into.
-* - Each function for an AST node represented in the `node` type above should return a list of
-*   changes.
-*   - If it cannot compute a more granular diff, it should return a list with a single element,
-*     which records the replacement of `old_node` with `new_node` (where `old_node` and
-*     `new_node` are the arguments passed to that function)
-* - Every other function should do the same, except if it is unable to return a granular diff, it
-*   should return `None` to indicate that its parent must be recorded as a replacement. This is
-*   because there is no way to record a replacement for a node which does not appear in the
-*   `node` type above.
-* - We can add additional functions as needed to improve the granularity of the diffs.
-* - We could eventually reach a point where no function would ever fail to generate a diff. That
-*   would require us to implement a function here for every AST node, and add a variant to the
-*   `node` type for every AST node as well. It would also likely require some tweaks to the AST.
-*   For example, a function return type is optional. If it is None, it has no location attached.
-*   What would we do if the original tree had no annotation, but the new tree did have one? We
-*   would not know what Loc.t to give to the insertion.
-*)
+ * - There is a function for every AST node that we want to be able to recurse into.
+ * - Each function for an AST node represented in the `node` type above should return a list of
+ *   changes.
+ *   - If it cannot compute a more granular diff, it should return a list with a single element,
+ *     which records the replacement of `old_node` with `new_node` (where `old_node` and
+ *     `new_node` are the arguments passed to that function)
+ * - Every other function should do the same, except if it is unable to return a granular diff, it
+ *   should return `None` to indicate that its parent must be recorded as a replacement. This is
+ *   because there is no way to record a replacement for a node which does not appear in the
+ *   `node` type above.
+ * - We can add additional functions as needed to improve the granularity of the diffs.
+ * - We could eventually reach a point where no function would ever fail to generate a diff. That
+ *   would require us to implement a function here for every AST node, and add a variant to the
+ *   `node` type for every AST node as well. It would also likely require some tweaks to the AST.
+ *   For example, a function return type is optional. If it is None, it has no location attached.
+ *   What would we do if the original tree had no annotation, but the new tree did have one? We
+ *   would not know what Loc.t to give to the insertion.
+ *)
 (* Entry point *)
 let program
     (algo : diff_algorithm)
