@@ -154,7 +154,7 @@ export default (suite(({addFile, flowCmd}) => [
              },
              {
                "name": "codePointAt",
-               "type": "(index: number) => (number | void)"
+               "type": "(index: number) => number"
              },
              {
                "name": "concat",

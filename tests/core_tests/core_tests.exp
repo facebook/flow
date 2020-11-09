@@ -176,33 +176,16 @@ Error --------------------------------------------------------------------------
 Cannot cast `''.codePointAt(...)` to number because undefined [1] is incompatible with number [2]. [incompatible-cast]
 
    string.js:9:6
-     9|     (''.codePointAt(123): number);
-             ^^^^^^^^^^^^^^^^^^^
+      9|     (''.codePointAt(123): number);
+              ^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:328:42
-   328|     codePointAt(index: number): number | void;
-                                                 ^^^^ [1]
+   <BUILTINS>/core.js:1092:42
+   1092|     codePointAt(index: number): number | void;
+                                                  ^^^^ [1]
    string.js:9:27
-     9|     (''.codePointAt(123): number);
-                                  ^^^^^^ [2]
-
-
-Error --------------------------------------------------------------------------------------------------- string.js:15:6
-
-Cannot cast `(new String())[123]` to string because undefined [1] is incompatible with string [2]. [incompatible-cast]
-
-   string.js:15:6
-    15|     (new String()[123]: string);
-             ^^^^^^^^^^^^^^^^^
-
-References:
-   <BUILTINS>/core.js:362:29
-   362|     [key: number]: string | void;
-                                    ^^^^ [1]
-   string.js:15:25
-    15|     (new String()[123]: string);
-                                ^^^^^^ [2]
+      9|     (''.codePointAt(123): number);
+                                   ^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------- weakset.js:19:23
@@ -309,4 +292,4 @@ References:
 
 
 
-Found 16 errors
+Found 15 errors

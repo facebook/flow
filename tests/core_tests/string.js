@@ -8,10 +8,4 @@ let tests = [
     // fails
     (''.codePointAt(123): number);
   },
-
-  // index
-  function() {
-    // fails
-    (new String()[123]: string);
-  },
 ];
