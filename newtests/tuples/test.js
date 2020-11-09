@@ -3,9 +3,10 @@
  */
 
 
+import type Suite from "flow-dev-tools/src/test/Suite.js";
 import {suite, test} from 'flow-dev-tools/src/test/Tester';
 
-export default suite(({addFile, addFiles, addCode}) => [
+export default (suite(({addFile, addFiles, addCode}) => [
   test('$ReadOnlyArray<T> is the supertype for all tuples', [
     addCode(`
       function tupleLength(tup: $ReadOnlyArray<mixed>): number {
@@ -102,8 +103,8 @@ export default suite(({addFile, addFiles, addCode}) => [
             6:           readOnlyRef.push(123);
                                      ^^^^ Cannot call \`readOnlyRef.push\` because property \`push\` is missing in \`$ReadOnlyArray\` [1]. [prop-missing]
             References:
-            229:     forEach(callbackfn: (value: T, index: number, array: $ReadOnlyArray<T>) => mixed, thisArg?: mixed): void;
-                                                                          ^^^^^^^^^^^^^^^^^ [1]. See lib: [LIB] core.js:229
+            739:     forEach(callbackfn: (value: T, index: number, array: $ReadOnlyArray<T>) => mixed, thisArg?: mixed): void;
+                                                                          ^^^^^^^^^^^^^^^^^ [1]. See lib: [LIB] core.js:739
 
           test.js:7
             7:           (readOnlyRef[0]: 1);
@@ -420,4 +421,4 @@ export default suite(({addFile, addFiles, addCode}) => [
         `,
       ),
   ]),
-]);
+]): Suite);

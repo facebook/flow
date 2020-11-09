@@ -23,3 +23,7 @@ const openModal = (
       return 0;
   }
 };
+
+const literal = require('./literal');
+(literal.foo: 'foo'); // ok
+(literal.foo: empty); // error, 'foo' </: empty

@@ -34,8 +34,8 @@ end = struct
     Lwt.try_bind
       (fun () ->
         (* `Lwt.pause` yields to allow other callbacks to run. We do that here because
-          we're in an infinite loop and yielding allows other threads an opportunity
-          to cancel this one. *)
+           we're in an infinite loop and yielding allows other threads an opportunity
+           to cancel this one. *)
         let%lwt () = Lwt.pause () in
         Loop.main acc)
       loop

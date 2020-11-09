@@ -2,6 +2,6 @@
 
 function foo<T>(x: T) {
   return {
-    f: x
+    f: (x: mixed)
   }
 }

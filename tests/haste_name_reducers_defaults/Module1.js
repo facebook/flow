@@ -1,6 +1,6 @@
 /* @flow */
 
-var test = require('test');
+const test = require('test');
 
 (test: boolean);
 

@@ -7,9 +7,9 @@ Cannot cast `test` to boolean because `Test` [1] is incompatible with boolean [2
        ^^^^
 
 References:
-   node_modules/test/Module1.js:4:18
-   4| module.exports = new Test();
-                       ^^^^^^^^^^ [1]
+   node_modules/test/Module1.js:4:31
+   4| module.exports = (new Test(): Test);
+                                    ^^^^ [1]
    Module1.js:5:8
    5| (test: boolean);
              ^^^^^^^ [2]
@@ -24,9 +24,9 @@ Cannot cast `require(...)` to boolean because `Test` [1] is incompatible with bo
        ^^^^^^^^^^^^^^^^^^
 
 References:
-   node_modules/test/Module1.js:4:18
-   4| module.exports = new Test();
-                       ^^^^^^^^^^ [1]
+   node_modules/test/Module1.js:4:31
+   4| module.exports = (new Test(): Test);
+                                    ^^^^ [1]
    index.js:3:22
    3| (require('Module1'): boolean);
                            ^^^^^^^ [2]

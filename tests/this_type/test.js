@@ -53,7 +53,7 @@ class Override2 extends Base2 {
 
   corge(that: this) { } // error
                         // see exploit below
-  grault(that: this) { } // error, too
+  grault(that: this) { } // error, too (only variance error with new-generics)
 }
 
 class InheritOverride2 extends Override2 { }

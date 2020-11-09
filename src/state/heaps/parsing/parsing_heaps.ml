@@ -15,8 +15,6 @@ module ASTHeap =
     (struct
       type t = (RelativeLoc.t, RelativeLoc.t) Flow_ast.Program.t
 
-      let prefix = Prefix.make ()
-
       let description = "AST"
     end)
 
@@ -26,8 +24,6 @@ module SigASTHeap =
     (struct
       type t = (ALoc.t, ALoc.t) Flow_ast.Program.t
 
-      let prefix = Prefix.make ()
-
       let description = "SigAST"
     end)
 
@@ -36,8 +32,6 @@ module SigASTALocTableHeap =
     (File_key)
     (struct
       type t = ALoc.table
-
-      let prefix = Prefix.make ()
 
       let description = "ALocTable"
     end)
@@ -56,8 +50,6 @@ module TypeSigHeap =
     (File_key)
     (struct
       type t = Type_sig_collections.Locs.index type_sig
-
-      let prefix = Prefix.make ()
 
       let description = "TypeSig"
     end)
@@ -122,8 +114,6 @@ module DocblockHeap =
     (struct
       type t = Docblock.t
 
-      let prefix = Prefix.make ()
-
       let description = "Docblock"
     end)
 
@@ -133,8 +123,6 @@ module FileSigHeap =
     (struct
       type t = File_sig.With_Loc.t
 
-      let prefix = Prefix.make ()
-
       let description = "Requires"
     end)
 
@@ -143,8 +131,6 @@ module SigFileSigHeap =
     (File_key)
     (struct
       type t = File_sig.With_ALoc.t
-
-      let prefix = Prefix.make ()
 
       let description = "SigRequires"
     end)
@@ -173,8 +159,6 @@ module FileHashHeap =
        *)
       type t = Xx.hash
 
-      let prefix = Prefix.make ()
-
       let description = "FileHash"
     end)
 
@@ -190,49 +174,53 @@ type sig_extra =
 (* Groups operations on the multiple heaps that need to stay in sync *)
 module ParsingHeaps = struct
   let add file info (ast, file_sig) extra =
-    ASTHeap.add file (compactify_loc ast);
-    DocblockHeap.add file info;
-    FileSigHeap.add file file_sig;
-    match extra with
-    | Classic -> ()
-    | TypesFirst { sig_ast; sig_file_sig; aloc_table } ->
-      SigASTHeap.add file (remove_source_aloc sig_ast);
-      Base.Option.iter aloc_table ~f:(SigASTALocTableHeap.add file);
-      SigFileSigHeap.add file sig_file_sig
-    | TypeSig (type_sig, aloc_table) ->
-      TypeSigHeap.add file type_sig;
-      SigASTALocTableHeap.add file aloc_table
+    WorkerCancel.with_no_cancellations (fun () ->
+        ASTHeap.add file (compactify_loc ast);
+        DocblockHeap.add file info;
+        FileSigHeap.add file file_sig;
+        match extra with
+        | Classic -> ()
+        | TypesFirst { sig_ast; sig_file_sig; aloc_table } ->
+          SigASTHeap.add file (remove_source_aloc sig_ast);
+          Base.Option.iter aloc_table ~f:(SigASTALocTableHeap.add file);
+          SigFileSigHeap.add file sig_file_sig
+        | TypeSig (type_sig, aloc_table) ->
+          TypeSigHeap.add file type_sig;
+          SigASTALocTableHeap.add file aloc_table)
 
   let oldify_batch files =
-    ASTHeap.oldify_batch files;
-    SigASTHeap.oldify_batch files;
-    TypeSigHeap.oldify_batch files;
-    SigASTALocTableHeap.oldify_batch files;
-    DocblockHeap.oldify_batch files;
-    FileSigHeap.oldify_batch files;
-    SigFileSigHeap.oldify_batch files;
-    FileHashHeap.oldify_batch files
+    WorkerCancel.with_no_cancellations (fun () ->
+        ASTHeap.oldify_batch files;
+        SigASTHeap.oldify_batch files;
+        TypeSigHeap.oldify_batch files;
+        SigASTALocTableHeap.oldify_batch files;
+        DocblockHeap.oldify_batch files;
+        FileSigHeap.oldify_batch files;
+        SigFileSigHeap.oldify_batch files;
+        FileHashHeap.oldify_batch files)
 
   let remove_old_batch files =
-    ASTHeap.remove_old_batch files;
-    SigASTHeap.remove_old_batch files;
-    TypeSigHeap.remove_old_batch files;
-    SigASTALocTableHeap.remove_old_batch files;
-    DocblockHeap.remove_old_batch files;
-    FileSigHeap.remove_old_batch files;
-    SigFileSigHeap.remove_old_batch files;
-    FileHashHeap.remove_old_batch files;
-    SharedMem_js.collect `gentle
+    WorkerCancel.with_no_cancellations (fun () ->
+        ASTHeap.remove_old_batch files;
+        SigASTHeap.remove_old_batch files;
+        TypeSigHeap.remove_old_batch files;
+        SigASTALocTableHeap.remove_old_batch files;
+        DocblockHeap.remove_old_batch files;
+        FileSigHeap.remove_old_batch files;
+        SigFileSigHeap.remove_old_batch files;
+        FileHashHeap.remove_old_batch files;
+        SharedMem_js.collect `gentle)
 
   let revive_batch files =
-    ASTHeap.revive_batch files;
-    SigASTHeap.revive_batch files;
-    TypeSigHeap.revive_batch files;
-    SigASTALocTableHeap.revive_batch files;
-    DocblockHeap.revive_batch files;
-    FileSigHeap.revive_batch files;
-    SigFileSigHeap.revive_batch files;
-    FileHashHeap.revive_batch files
+    WorkerCancel.with_no_cancellations (fun () ->
+        ASTHeap.revive_batch files;
+        SigASTHeap.revive_batch files;
+        TypeSigHeap.revive_batch files;
+        SigASTALocTableHeap.revive_batch files;
+        DocblockHeap.revive_batch files;
+        FileSigHeap.revive_batch files;
+        SigFileSigHeap.revive_batch files;
+        FileHashHeap.revive_batch files)
 end
 
 module type READER = sig
@@ -300,40 +288,48 @@ end = struct
 
   let get_old_file_hash ~reader:_ = FileHashHeap.get_old
 
-  let get_ast_unsafe ~reader:_ file =
-    try ASTHeap.find_unsafe file |> decompactify_loc file
-    with Not_found -> raise (Ast_not_found (File_key.to_string file))
+  let get_ast_unsafe ~reader file =
+    match get_ast ~reader file with
+    | Some ast -> ast
+    | None -> raise (Ast_not_found (File_key.to_string file))
 
   let get_sig_ast_unsafe ~reader:_ file =
-    try SigASTHeap.find_unsafe file |> add_source_aloc file
-    with Not_found -> raise (Sig_ast_not_found (File_key.to_string file))
+    match SigASTHeap.get file with
+    | Some sig_ast -> add_source_aloc file sig_ast
+    | None -> raise (Sig_ast_not_found (File_key.to_string file))
 
   let get_sig_ast_aloc_table_unsafe ~reader:_ file =
-    try SigASTALocTableHeap.find_unsafe file
-    with Not_found -> raise (Sig_ast_ALoc_table_not_found (File_key.to_string file))
+    match SigASTALocTableHeap.get file with
+    | Some aloc_table -> aloc_table
+    | None -> raise (Sig_ast_ALoc_table_not_found (File_key.to_string file))
 
   let get_sig_ast_aloc_table_unsafe_lazy =
     make_lazy_aloc_table_fetcher ~get_sig_ast_aloc_table_unsafe
 
-  let get_docblock_unsafe ~reader:_ file =
-    try DocblockHeap.find_unsafe file
-    with Not_found -> raise (Docblock_not_found (File_key.to_string file))
+  let get_docblock_unsafe ~reader file =
+    match get_docblock ~reader file with
+    | Some docblock -> docblock
+    | None -> raise (Docblock_not_found (File_key.to_string file))
 
-  let get_file_sig_unsafe ~reader:_ file =
-    try FileSigHeap.find_unsafe file
-    with Not_found -> raise (Requires_not_found (File_key.to_string file))
+  let get_file_sig_unsafe ~reader file =
+    match get_file_sig ~reader file with
+    | Some file_sig -> file_sig
+    | None -> raise (Requires_not_found (File_key.to_string file))
 
   let get_sig_file_sig_unsafe ~reader:_ file =
-    try SigFileSigHeap.find_unsafe file
-    with Not_found -> raise (Sig_requires_not_found (File_key.to_string file))
+    match SigFileSigHeap.get file with
+    | Some sig_file_sig -> sig_file_sig
+    | None -> raise (Sig_requires_not_found (File_key.to_string file))
 
   let get_type_sig_unsafe ~reader:_ file =
-    try TypeSigHeap.find_unsafe file
-    with Not_found -> raise (Type_sig_not_found (File_key.to_string file))
+    match TypeSigHeap.get file with
+    | Some type_sig -> type_sig
+    | None -> raise (Type_sig_not_found (File_key.to_string file))
 
-  let get_file_hash_unsafe ~reader:_ file =
-    try FileHashHeap.find_unsafe file
-    with Not_found -> raise (Hash_not_found (File_key.to_string file))
+  let get_file_hash_unsafe ~reader file =
+    match get_file_hash ~reader file with
+    | Some hash -> hash
+    | None -> raise (Hash_not_found (File_key.to_string file))
 end
 
 (* For use by a worker process *)
@@ -375,15 +371,17 @@ end = struct
   type master_mutator = FilenameSet.t ref
 
   let commit oldified_files =
-    Hh_logger.debug "Committing parsing heaps";
-    ParsingHeaps.remove_old_batch oldified_files;
-    currently_oldified_files := None;
+    WorkerCancel.with_no_cancellations (fun () ->
+        Hh_logger.debug "Committing parsing heaps";
+        ParsingHeaps.remove_old_batch oldified_files;
+        currently_oldified_files := None);
     Lwt.return_unit
 
   let rollback oldified_files =
-    Hh_logger.debug "Rolling back parsing heaps";
-    ParsingHeaps.revive_batch oldified_files;
-    currently_oldified_files := None;
+    WorkerCancel.with_no_cancellations (fun () ->
+        Hh_logger.debug "Rolling back parsing heaps";
+        ParsingHeaps.revive_batch oldified_files;
+        currently_oldified_files := None);
     Lwt.return_unit
 
   (* Ideally we'd assert that file was oldified and not revived, but it's too expensive to pass the
@@ -396,22 +394,24 @@ end = struct
   let add_hash file hash = FileHashHeap.add file hash
 
   let create transaction files =
-    let master_mutator = ref files in
-    currently_oldified_files := Some master_mutator;
-    let worker_mutator = { add_file; add_hash } in
-    ParsingHeaps.oldify_batch files;
+    WorkerCancel.with_no_cancellations (fun () ->
+        let master_mutator = ref files in
+        currently_oldified_files := Some master_mutator;
+        let worker_mutator = { add_file; add_hash } in
+        ParsingHeaps.oldify_batch files;
 
-    let commit () = commit !master_mutator in
-    let rollback () = rollback !master_mutator in
-    Transaction.add ~singleton:"Reparse" ~commit ~rollback transaction;
+        let commit () = commit !master_mutator in
+        let rollback () = rollback !master_mutator in
+        Transaction.add ~singleton:"Reparse" ~commit ~rollback transaction;
 
-    (master_mutator, worker_mutator)
+        (master_mutator, worker_mutator))
 
   let revive_files oldified_files files =
-    (* Every file in files should be in the oldified set *)
-    assert (FilenameSet.is_empty (FilenameSet.diff files !oldified_files));
-    oldified_files := FilenameSet.diff !oldified_files files;
-    ParsingHeaps.revive_batch files
+    WorkerCancel.with_no_cancellations (fun () ->
+        (* Every file in files should be in the oldified set *)
+        assert (FilenameSet.is_empty (FilenameSet.diff files !oldified_files));
+        oldified_files := FilenameSet.diff !oldified_files files;
+        ParsingHeaps.revive_batch files)
 end
 
 (* This peaks at the Reparse_mutator's state and uses that to determine whether to read from the

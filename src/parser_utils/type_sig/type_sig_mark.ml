@@ -34,6 +34,9 @@ let rec mark_parsed = function
     List.iter mark_parsed targs
   | P.AsyncVoidReturn loc -> mark_loc loc
   | P.BuiltinTyRef { ref_loc; name = _ } -> mark_loc ref_loc
+  | P.Err (loc, SigError err) ->
+    Signature_error.iter mark_loc err;
+    mark_loc loc
   | P.Err (loc, _) -> mark_loc loc
   | P.ValRef ref -> resolve_ref ref
   | P.Pattern p -> Patterns.mark p mark_pattern
@@ -104,8 +107,9 @@ and mark_local_binding = function
     begin
       match def with
       | None -> ()
-      | Some (lazy (rep, members)) ->
+      | Some (lazy (rep, members, has_unknown_members)) ->
         ignore rep;
+        ignore has_unknown_members;
         SMap.iter (fun _ -> mark_loc) members
     end
 

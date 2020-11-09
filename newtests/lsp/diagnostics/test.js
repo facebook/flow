@@ -3,9 +3,10 @@
  * @format
  */
 
+import type Suite from 'flow-dev-tools/src/test/Suite.js';
 import {suite, test} from 'flow-dev-tools/src/test/Tester';
 
-export default suite(
+export default (suite(
   ({
     lspStartAndConnect,
     lspRequestAndWaitUntilResponse,
@@ -604,4 +605,4 @@ export default suite(
       ),
     ]),
   ],
-);
+): Suite);

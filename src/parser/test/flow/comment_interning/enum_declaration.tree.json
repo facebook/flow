@@ -52,7 +52,8 @@
         "loc":{"source":null,"start":{"line":1,"column":56},"end":{"line":1,"column":58}},
         "range":[56,58],
         "members":[],
-        "explicitType":false
+        "explicitType":false,
+        "hasUnknownMembers":false
       }
     },
     {
@@ -112,7 +113,8 @@
         "loc":{"source":null,"start":{"line":3,"column":56},"end":{"line":3,"column":90}},
         "range":[138,172],
         "members":[],
-        "explicitType":true
+        "explicitType":true,
+        "hasUnknownMembers":false
       }
     },
     {
@@ -191,7 +193,8 @@
             }
           }
         ],
-        "explicitType":false
+        "explicitType":false,
+        "hasUnknownMembers":false
       }
     },
     {
@@ -264,7 +267,8 @@
             }
           }
         ],
-        "explicitType":false
+        "explicitType":false,
+        "hasUnknownMembers":false
       }
     },
     {
@@ -315,7 +319,8 @@
             "init":true
           }
         ],
-        "explicitType":false
+        "explicitType":false,
+        "hasUnknownMembers":false
       }
     },
     {
@@ -348,7 +353,8 @@
             "loc":{"source":null,"start":{"line":19,"column":28},"end":{"line":19,"column":30}},
             "range":[494,496],
             "members":[],
-            "explicitType":false
+            "explicitType":false,
+            "hasUnknownMembers":false
           }
         },
         {
@@ -390,7 +396,8 @@
             "loc":{"source":null,"start":{"line":19,"column":57},"end":{"line":19,"column":59}},
             "range":[523,525],
             "members":[],
-            "explicitType":false
+            "explicitType":false,
+            "hasUnknownMembers":false
           }
         }
       ]

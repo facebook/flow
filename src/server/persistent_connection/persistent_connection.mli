@@ -65,12 +65,12 @@ val client_did_close : single_client -> filenames:string Nel.t -> bool
 
 val get_opened_files : t -> SSet.t
 (** Returns the set of all opened files across all clients.
-   It's not meaningful to talk about the *content* of those opened files in
-   cases where clients differ. *)
+    It's not meaningful to talk about the *content* of those opened files in
+    cases where clients differ. *)
 
 val get_file : single_client -> string -> File_input.t
 (** Returns either FileContent for this file if it was opened by the persistent
-   client, or FileName if it wasn't. *)
+    client, or FileName if it wasn't. *)
 
 val get_client : LspProt.client_id -> single_client option
 
@@ -83,6 +83,7 @@ type type_contents_artifacts =
   * Docblock.t
   * File_sig.With_Loc.t
   * File_sig.With_Loc.tolerable_error list
+  * (Loc.t, Loc.t) Flow_ast.Program.t
   * (ALoc.t, ALoc.t * Type.t) Flow_ast.Program.t
   * (Loc.t * Parse_error.t) list
 

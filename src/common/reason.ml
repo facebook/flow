@@ -188,7 +188,7 @@ type 'loc virtual_reason_desc =
   | RCode of string
   | RCustom of string
   | RPolyType of 'loc virtual_reason_desc
-  | RPolyTest of string * 'loc virtual_reason_desc
+  | RPolyTest of string * 'loc virtual_reason_desc * ALoc.id * bool (* is it "this" or a explicit generic *)
   | RExactType of 'loc virtual_reason_desc
   | ROptional of 'loc virtual_reason_desc
   | RMaybe of 'loc virtual_reason_desc
@@ -207,6 +207,7 @@ type 'loc virtual_reason_desc =
   | RPredicateCall of 'loc virtual_reason_desc
   | RPredicateCallNeg of 'loc virtual_reason_desc
   | RRefined of 'loc virtual_reason_desc
+  | RRefinedElement of 'loc virtual_reason_desc
   | RIncompatibleInstantiation of string
   | RSpreadOf of 'loc virtual_reason_desc
   | RShapeOf of 'loc virtual_reason_desc
@@ -281,7 +282,7 @@ let rec map_desc_locs f = function
   | RNameProperty desc -> RNameProperty (map_desc_locs f desc)
   | RMissingAbstract desc -> RMissingAbstract (map_desc_locs f desc)
   | RPolyType desc -> RPolyType (map_desc_locs f desc)
-  | RPolyTest (s, desc) -> RPolyTest (s, map_desc_locs f desc)
+  | RPolyTest (s, desc, id, is_this) -> RPolyTest (s, map_desc_locs f desc, id, is_this)
   | RExactType desc -> RExactType (map_desc_locs f desc)
   | ROptional desc -> ROptional (map_desc_locs f desc)
   | RMaybe desc -> RMaybe (map_desc_locs f desc)
@@ -300,6 +301,7 @@ let rec map_desc_locs f = function
   | RPredicateCall desc -> RPredicateCall (map_desc_locs f desc)
   | RPredicateCallNeg desc -> RPredicateCallNeg (map_desc_locs f desc)
   | RRefined desc -> RRefined (map_desc_locs f desc)
+  | RRefinedElement desc -> RRefinedElement (map_desc_locs f desc)
   | RSpreadOf desc -> RSpreadOf (map_desc_locs f desc)
   | RShapeOf desc -> RShapeOf (map_desc_locs f desc)
   | RMatchingProp (s, desc) -> RMatchingProp (s, map_desc_locs f desc)
@@ -660,7 +662,7 @@ let rec string_of_desc = function
   | RCustom x -> x
   | RPolyType (RClass d) -> string_of_desc d
   | RPolyType d -> string_of_desc d
-  | RPolyTest (_, d) -> string_of_desc d
+  | RPolyTest (_, d, _, _) -> string_of_desc d
   | RExactType d -> string_of_desc d
   | ROptional d -> spf "optional %s" (string_of_desc d)
   | RMaybe d ->
@@ -684,6 +686,7 @@ let rec string_of_desc = function
   | RPredicateCall d -> spf "predicate call to %s" (string_of_desc d)
   | RPredicateCallNeg d -> spf "negation of predicate call to %s" (string_of_desc d)
   | RRefined d -> spf "refined %s" (string_of_desc d)
+  | RRefinedElement d -> spf "array element of refined %s" (string_of_desc d)
   | RIncompatibleInstantiation x -> spf "`%s`" x
   | RSpreadOf d -> spf "spread of %s" (string_of_desc d)
   | RShapeOf d -> spf "%s" (string_of_desc d)
@@ -738,7 +741,7 @@ let desc_of_reason =
   let rec loop = function
     | RTypeAlias (_, _, desc)
     | RUnionBranching (desc, _)
-    | RPolyTest (_, desc) ->
+    | RPolyTest (_, desc, _, _) ->
       loop desc
     | desc -> desc
   in
@@ -1180,7 +1183,7 @@ and code_desc_of_operation =
 
 and code_desc_of_jsx_element x =
   let open Ast.JSX in
-  match (snd x.openingElement).Opening.name with
+  match (snd x.opening_element).Opening.name with
   | Identifier (_, { Identifier.name; comments = _ }) -> "<" ^ name ^ " />"
   | NamespacedName
       ( _,
@@ -1426,6 +1429,7 @@ let classification_of_reason r =
   | RPredicateCall _
   | RPredicateCallNeg _
   | RRefined _
+  | RRefinedElement _
   | RIncompatibleInstantiation _
   | RSpreadOf _
   | RShapeOf _

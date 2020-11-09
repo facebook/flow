@@ -1,18 +1,3 @@
-Error -------------------------------------------------------------------------------------------- error_message.js:7:25
-
-Cannot return `this.x` because the expected type is not parametric in `Y` [1], perhaps due to the use of `*` or the lack
-of a type annotation in property `p`. [incompatible-return]
-
-   error_message.js:7:25
-   7|   foo(): D1<X> { return this.x; }
-                              ^^^^^^
-
-References:
-   error_message.js:6:11
-   6|   x: { p: Y };
-                ^ [1]
-
-
 Error ----------------------------------------------------------------------------------------------------- poly.js:3:36
 
 Cannot return `x` because `T` [1] is incompatible with `S` [2]. [incompatible-return]
@@ -32,8 +17,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- poly.js:10:38
 
-Cannot return `x` because the expected type is not parametric in `T` [1], perhaps due to the use of `*` or the lack of a
-type annotation in array element. [incompatible-return]
+Cannot return `x` because type variable `T` [1] cannot escape from the scope in which it was defined [2] (try adding a
+type annotation to `x` [3]) in array element. [escaped-generic]
 
    poly.js:10:38
    10| function foo5<T>():Array<T> { return x; }
@@ -43,6 +28,12 @@ References:
    poly.js:10:26
    10| function foo5<T>():Array<T> { return x; }
                                 ^ [1]
+   poly.js:10:15
+   10| function foo5<T>():Array<T> { return x; }
+                     ^ [2]
+   poly.js:9:5
+    9| var x = [];
+           ^ [3]
 
 
 Error ---------------------------------------------------------------------------------------------------- poly.js:20:34
@@ -60,6 +51,27 @@ References:
    poly.js:20:23
    20| function foo7<R>(x:R):R { return foo5(); }
                              ^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- poly.js:23:18
+
+Cannot call `foo8` with `x` bound to `y` because type variable `U` [1] cannot escape from the scope in which it was
+defined [2] (try adding a type annotation to `y` [3]). [escaped-generic]
+
+   poly.js:23:18
+   23|   var z = foo8(x,x);
+                        ^
+
+References:
+   poly.js:22:20
+   22| function foo8<U>(x:U,y):U {
+                          ^ [1]
+   poly.js:22:15
+   22| function foo8<U>(x:U,y):U {
+                     ^ [2]
+   poly.js:22:22
+   22| function foo8<U>(x:U,y):U {
+                            ^ [3]
 
 
 Error ----------------------------------------------------------------------------------------------------- poly.js:24:3

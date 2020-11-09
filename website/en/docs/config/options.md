@@ -519,7 +519,7 @@ checked. If this option is set to `false`, then these artifacts are built using
 inferred type information. If this option is set to `true`, then they are built
 using type annotations at module boundaries.
 
-The default value for `types_first` is `false`.
+The default value for `types_first` is `true` (as of version 0.134).
 
 #### `well_formed_exports` _`(boolean)`_ <a class="toc" id="toc-well-formed-exports-boolean" href="#toc-well-formed-exports-boolean"></a> {% since 0.125.0 %}
 
@@ -531,9 +531,9 @@ Enforce the following restrictions on file exports:
   numeric literal). This is a requirement for types-first mode to function properly.
   Failure to properly annotate exports raise `signature-verfication-failure`s.
 
-This option is implied by [`types_first`](#toc-types-first-boolean), but the option
-is useful on its own when upgrading a project to types-first mode. The default value
-is `false`.
+This option is set to `true` by default, since it is implied by [`types_first`](#toc-types-first-boolean),
+but the option is useful on its own when upgrading a project from classic mode to
+types-first mode.
 
 #### `well_formed_exports.includes` _`(string)`_ {% since 0.128.0 %} <a class="toc" id="toc-well-formed-exports-includes-string" href="#toc-well-formed-exports-includes-string"></a>
 

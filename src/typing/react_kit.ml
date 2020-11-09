@@ -81,7 +81,7 @@ let get_intrinsic
 
   (* Create a type variable which will represent the specific intrinsic we
    * find in the intrinsics map. *)
-  let intrinsic = Tvar.mk cx reason in
+  let intrinsic = Tvar.mk_no_wrap cx reason in
   (* Get the intrinsic from the map. *)
   rec_flow
     cx
@@ -93,7 +93,7 @@ let get_intrinsic
           (match literal with
           | Literal (_, name) -> Named (replace_desc_reason (RReactElement (Some name)) reason, name)
           | _ -> Computed component),
-          intrinsic ) );
+          (reason, intrinsic) ) );
 
   (* Get the artifact from the intrinsic. *)
   let propref =
@@ -109,7 +109,7 @@ let get_intrinsic
   rec_flow
     cx
     trace
-    ( intrinsic,
+    ( OpenT (reason, intrinsic),
       LookupT
         {
           reason = reason_op;
@@ -159,7 +159,7 @@ let lookup_defaults cx trace component ~reason_op ~rec_flow upper pole =
  * default props then either the type will be Some {||} or we will
  * return None. *)
 let get_defaults cx trace component ~reason_op ~rec_flow =
-  match component with
+  match drop_generic component with
   | DefT (_, _, ClassT _)
   | DefT (_, _, FunT _)
   | DefT (_, _, ObjT _) ->
@@ -183,7 +183,7 @@ let props_to_tout
     ~(add_output : Context.t -> ?trace:Trace.t -> Error_message.t -> unit)
     u
     tout =
-  match component with
+  match drop_generic component with
   (* Class components or legacy components. *)
   | DefT (_, _, ClassT _) ->
     let props = Tvar.mk cx reason_op in
@@ -246,7 +246,7 @@ let get_config
     u
     pole
     tout =
-  match component with
+  match drop_generic component with
   | DefT (_, _, ReactAbstractComponentT { config; _ }) ->
     let use_op = Frame (ReactGetConfig { polarity = pole }, use_op) in
     begin
@@ -301,7 +301,8 @@ module Kit (Flow : Flow_common.S) : REACT = struct
        inflows shouldn't cause additional errors. Also, if we expect an array, but
        we get one without any static information, we should fall back without
        erroring. This is best-effort, after all. *)
-    let coerce_object = function
+    let coerce_object t =
+      match drop_generic t with
       | DefT (reason, _, ObjT { props_tmap; flags; _ }) ->
         Ok (reason, Context.find_props cx props_tmap, flags)
       | AnyT (reason, _) -> Error reason
@@ -310,7 +311,8 @@ module Kit (Flow : Flow_common.S) : REACT = struct
         err_incompatible reason;
         Error reason
     in
-    let coerce_prop_type = function
+    let coerce_prop_type t =
+      match drop_generic t with
       | CustomFunT (reason, ReactPropType (PropType.Primitive (required, t))) ->
         let loc = aloc_of_reason reason in
         Ok (required, reposition cx ~trace ~annot_loc:loc loc t)
@@ -327,7 +329,8 @@ module Kit (Flow : Flow_common.S) : REACT = struct
         err_incompatible reason;
         Error reason
     in
-    let coerce_array = function
+    let coerce_array t =
+      match drop_generic t with
       | DefT (_, _, ArrT (ArrayAT (_, Some ts) | TupleAT (_, ts))) -> Ok ts
       | DefT (reason, _, ArrT _)
       | AnyT (reason, _) ->
@@ -339,17 +342,25 @@ module Kit (Flow : Flow_common.S) : REACT = struct
     in
     (* Unlike other coercions, don't add a Flow error if the incoming type doesn't
        have a singleton type representation. *)
-    let coerce_singleton = function
+    let coerce_singleton t =
+      let (t, f) =
+        match t with
+        | GenericT { bound; id; reason; name } ->
+          ( mod_reason_of_t (Fn.const reason) bound,
+            (fun bound -> GenericT { bound; id; reason = reason_of_t bound; name }) )
+        | _ -> (t, (fun x -> x))
+      in
+      match t with
       | DefT (reason, trust, StrT (Literal (_, x))) ->
         let reason = replace_desc_reason (RStringLit x) reason in
-        Ok (DefT (reason, trust, SingletonStrT x))
+        Ok (f (DefT (reason, trust, SingletonStrT x)))
       | DefT (reason, trust, NumT (Literal (_, x))) ->
         let reason = replace_desc_reason (RNumberLit (snd x)) reason in
-        Ok (DefT (reason, trust, SingletonNumT x))
+        Ok (f (DefT (reason, trust, SingletonNumT x)))
       | DefT (reason, trust, BoolT (Some x)) ->
         let reason = replace_desc_reason (RBooleanLit x) reason in
-        Ok (DefT (reason, trust, SingletonBoolT x))
-      | (DefT (_, _, NullT) | DefT (_, _, VoidT)) as t -> Ok t
+        Ok (f (DefT (reason, trust, SingletonBoolT x)))
+      | (DefT (_, _, NullT) | DefT (_, _, VoidT)) as t -> Ok (f t)
       | t -> Error (reason_of_t t)
     in
     let get_intrinsic = get_intrinsic cx trace l ~reason_op ~rec_flow ~get_builtin_type in
@@ -361,7 +372,7 @@ module Kit (Flow : Flow_common.S) : REACT = struct
      * inferred props type. *)
     let tin_to_props tin =
       let component = l in
-      match component with
+      match drop_generic component with
       (* Class components or legacy components. *)
       | DefT (_, _, ClassT _) ->
         (* The Props type parameter is invariant, but we only want to create a
@@ -473,7 +484,7 @@ module Kit (Flow : Flow_common.S) : REACT = struct
       (* If we are cloning an existing element, the config does not need to
        * provide the entire props type. *)
       let (props, defaults) =
-        match l with
+        match drop_generic l with
         | DefT (_, _, ReactAbstractComponentT { config; _ }) ->
           (* This is a bit of a hack. We will be passing these props and
            * default props to react_config in flow_js.ml to calculate the
@@ -667,7 +678,7 @@ module Kit (Flow : Flow_common.S) : REACT = struct
     in
     let get_instance tout =
       let component = l in
-      match component with
+      match drop_generic component with
       (* Class components or legacy components. *)
       | DefT (_, _, ClassT component) -> rec_flow_t ~use_op:unknown_use cx trace (component, tout)
       (* Stateless functional components. *)
@@ -803,8 +814,8 @@ module Kit (Flow : Flow_common.S) : REACT = struct
             | Error _ -> AnyT.make (AnyError None) reason_op |> resolve))
         | Shape tool ->
           (* TODO: This is _very_ similar to `CreateClass.PropTypes` below, except
-           for reasons descriptions/locations, recursive ReactKit constraints, and
-           `resolve` behavior. *)
+             for reasons descriptions/locations, recursive ReactKit constraints, and
+             `resolve` behavior. *)
           let add_prop k t (reason, props, flags) =
             let props = SMap.add k (Field (None, t, Polarity.Neutral)) props in
             (reason, props, flags)
@@ -922,10 +933,10 @@ module Kit (Flow : Flow_common.S) : REACT = struct
         in
         let resolve_call this tool t =
           let reason = reason_of_t t in
-          let return_t = Tvar.mk cx reason in
-          let funcall = mk_methodcalltype this None [] return_t in
+          let return_tvar = (reason, Tvar.mk_no_wrap cx reason) in
+          let funcall = mk_methodcalltype this None [] return_tvar in
           rec_flow cx trace (t, CallT (unknown_use, reason, funcall));
-          resolve tool return_t
+          resolve tool (OpenT return_tvar)
         in
         let merge_nullable f a b =
           match (a, b) with
@@ -1076,8 +1087,8 @@ module Kit (Flow : Flow_common.S) : REACT = struct
           }
         and mk_class spec =
           (* If the component doesn't specify propTypes, allow anything. To be
-           stricter, we could use an empty object type, but that would require all
-           components to specify propTypes *)
+             stricter, we could use an empty object type, but that would require all
+             components to specify propTypes *)
           let props_t =
             match spec.prop_types with
             | None -> AnyT.make Untyped reason_op
@@ -1098,8 +1109,8 @@ module Kit (Flow : Flow_common.S) : REACT = struct
             |> SMap.add "state" (Field (None, knot.state_t, Polarity.Neutral))
           in
           (* Some spec fields are used to create the instance type, but are not
-           present on the resulting prototype or statics. Other spec fields should
-           become static props. Everything else should be on the prototype. *)
+             present on the resulting prototype or statics. Other spec fields should
+             become static props. Everything else should be on the prototype. *)
           let (_, spec_props, _) = spec.obj in
           let (props, static_props) =
             SMap.fold
@@ -1123,7 +1134,7 @@ module Kit (Flow : Flow_common.S) : REACT = struct
                   in
                   (props, SMap.add k v static_props)
                 (* Don't autobind ReactClassInterface props, like getInitialState.
-             Instead, call with the correct this when resolving types. *)
+                   Instead, call with the correct this when resolving types. *)
                 | "getInitialState"
                 | "getChildContext"
                 | "render"
@@ -1141,14 +1152,14 @@ module Kit (Flow : Flow_common.S) : REACT = struct
                     | None -> v
                     | Some t ->
                       (* Tie the `this` knot with BindT *)
-                      let dummy_return = MixedT.make reason_op |> with_trust bogus_trust in
+                      let dummy_return = (reason_op, Tvar.mk_no_wrap cx reason_op) in
                       let calltype = mk_methodcalltype knot.this None [] dummy_return in
                       rec_flow cx trace (t, BindT (unknown_use, reason_op, calltype, true));
 
                       (* Because we are creating an instance type, which can be used as an
-                 upper bound (e.g., as a super class), it's more flexible to
-                 create covariant methods. Otherwise, a subclass could not
-                 override the `render` method, say. *)
+                         upper bound (e.g., as a super class), it's more flexible to
+                         create covariant methods. Otherwise, a subclass could not
+                         override the `render` method, say. *)
                       Method (loc, t)
                   in
                   (SMap.add k v props, static_props)

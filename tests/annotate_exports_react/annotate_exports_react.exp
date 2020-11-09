@@ -34,7 +34,7 @@ module.exports = (): React.Element<"div"> => div;
 // @flow
 
 import type {ComponentType} from "React";
-import type {ComponentType as $IMPORTED_TYPE$_ComponentType_1} from "./fake-react.js";import { foo } from "./lib";
+import type {ComponentType as $IMPORTED_TYPE$_ComponentType_1} from "./fake-react";import { foo } from "./lib";
 import { bar } from "./fake-react";
 
 export function my_foo(): ComponentType<any> {
@@ -109,7 +109,6 @@ Errors:
     Parsing heaps get ast error:            0
     Indeterminate module type:              0
     No matching export:                     0
-    Unrecognizable module error:            0
   Serializer error:                         0
   Unsupported error kind:                   0
 
@@ -155,7 +154,7 @@ module.exports = (): React$Element<"div"> => div;
 >>> ./no-import.js
 // @flow
 
-import type {ComponentType} from "./fake-react.js";import { foo } from "./lib";
+import type {ComponentType} from "./fake-react";import { foo } from "./lib";
 import { bar } from "./fake-react";
 
 export function my_foo(): ComponentType<any> {
@@ -230,9 +229,9 @@ module.exports = (): {
 >>> ./no-import.js
 3,4c3
 < import type {ComponentType} from "React";
-< import type {ComponentType as $IMPORTED_TYPE$_ComponentType_1} from "./fake-react.js";import { foo } from "./lib";
+< import type {ComponentType as $IMPORTED_TYPE$_ComponentType_1} from "./fake-react";import { foo } from "./lib";
 ---
-> import type {ComponentType} from "./fake-react.js";import { foo } from "./lib";
+> import type {ComponentType} from "./fake-react";import { foo } from "./lib";
 10c9
 < export function my_bar(): $IMPORTED_TYPE$_ComponentType_1<any> {
 ---

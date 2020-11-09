@@ -7,6 +7,7 @@
 [lints]
 
 [options]
+types_first=false
 no_flowlib=false
 well_formed_exports=true
 suppress_type=$FlowFixMe

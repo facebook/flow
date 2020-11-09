@@ -4,7 +4,7 @@
 >>> ./fileA.js
 // @flow
 
-import type {Base} from "./lib.js";import { foo } from "./lib";
+import type {Base} from "./lib";import { foo } from "./lib";
 
 module.exports = class C extends (foo(): Class<Base>) {};
 
@@ -26,7 +26,6 @@ Errors:
     Parsing heaps get ast error:            0
     Indeterminate module type:              0
     No matching export:                     0
-    Unrecognizable module error:            0
   Serializer error:                         0
   Unsupported error kind:                   0
 
@@ -43,7 +42,7 @@ Warnings:
 >>> ./fileA.js
 // @flow
 
-import type {Base} from "./lib.js";import { foo } from "./lib";
+import type {Base} from "./lib";import { foo } from "./lib";
 
 module.exports = class C extends (foo(): Class<Base>) {};
 

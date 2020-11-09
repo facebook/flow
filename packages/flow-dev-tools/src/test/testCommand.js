@@ -3,6 +3,8 @@
  * @format
  */
 
+import type {Flag} from '../command/Base';
+
 import {resolve} from 'path';
 import {format} from 'util';
 
@@ -77,7 +79,7 @@ SUITE
     If no suites are specified, every test in the test directory will be run.`;
   }
 
-  static getFlags() {
+  static getFlags(): Array<Flag> {
     return [
       commonFlags.bin,
       commonFlags.parallelism,

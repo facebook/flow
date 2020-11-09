@@ -92,8 +92,8 @@ let should_color color_mode =
 let emoji_spinner =
   List.map
   (* Some terminals display the emoji using only one column, even though they
-    may take up two columns, and put the cursor immediately after it in an
-    illegible manner. Add an extra space to separate the cursor from the emoji. *)
+     may take up two columns, and put the cursor immediately after it in an
+     illegible manner. Add an extra space to separate the cursor from the emoji. *)
     ~f:(fun x -> x ^ " ")
     [
       "\xF0\x9F\x98\xA1";

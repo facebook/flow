@@ -123,7 +123,7 @@ show_skipping_stats_types_first() {
 }
 
 show_help() {
-  printf "Usage: runtests.sh [-hlqrv] [-d DIR] [-t TEST] [-b] FLOW_BINARY [[-f] TEST_FILTER]\n\n"
+  printf "Usage: runtests.sh [-ghlqrv] [-d DIR] [-t TEST] [-b] FLOW_BINARY [[-f] TEST_FILTER]\n\n"
   printf "Runs Flow's tests.\n\n"
   echo "    [-b] FLOW_BINARY"
   echo "        path to Flow binary (the -b is optional)"
@@ -143,6 +143,8 @@ show_help() {
   echo "        test saved state"
   echo "    -z"
   echo "        test new signatures"
+  echo "    -g"
+  echo "        test with generate-tests"
   echo "    -v"
   echo "        verbose output (shows skipped tests)"
   echo "    -h"
@@ -157,11 +159,12 @@ OPTIND=1
 record=0
 saved_state=0
 new_signatures=0
+generate_tests=0
 verbose=0
 quiet=0
 relative="$THIS_DIR"
 list_tests=0
-while getopts "b:d:f:lqrszt:vh?" opt; do
+while getopts "b:d:f:glqrszt:vh?" opt; do
   case "$opt" in
   b)
     FLOW="$OPTARG"
@@ -190,6 +193,10 @@ while getopts "b:d:f:lqrszt:vh?" opt; do
     ;;
   z)
     new_signatures=1
+    ;;
+  g)
+    generate_tests=1
+    printf "Testing legacy generics using generate-tests\\n"
     ;;
   v)
     verbose=1
@@ -374,7 +381,7 @@ start_flow_unsafe () {
       PATH="$THIS_DIR/scripts/tests_bin:$PATH" \
       "$FLOW" start "$root" \
         $flowlib --wait \
-        $types_first_flag \
+        $generate_tests \
         $new_signatures_flag \
         --wait-for-recheck "$wait_for_recheck" \
         --saved-state-fetcher "local" \
@@ -393,7 +400,7 @@ start_flow_unsafe () {
     PATH="$THIS_DIR/scripts/tests_bin:$PATH" \
     "$FLOW" start "$root" \
       $flowlib --wait --wait-for-recheck "$wait_for_recheck" \
-      $types_first_flag \
+      $generate_tests \
       $new_signatures_flag \
       --file-watcher "$file_watcher" \
       --log-file "$abs_log_file" \
@@ -510,7 +517,6 @@ runtest() {
         start_args=""
         file_watcher="none"
         wait_for_recheck="true"
-        types_first_flag="--types-first"
         if [[ "$new_signatures" -eq 1 ]]; then
           new_signatures_flag="--new-signatures"
         else
@@ -560,13 +566,6 @@ runtest() {
                 cmd="$config_cmd"
             fi
 
-            # classic_only
-            if [ "$(awk '$1=="classic_only:"{print $2}' .testconfig)" == "true" ]
-            then
-                types_first_flag=""
-                new_signatures_flag=""
-            fi
-
             if [[ "$saved_state" -eq 1 ]] && \
               [ "$(awk '$1=="skip_saved_state:"{print $2}' .testconfig)" == "true" ]
             then
@@ -601,6 +600,22 @@ runtest() {
             flowlib=""
         fi
 
+        # Only run new-signatures with types-first
+        if [[ "$new_signatures" -eq 1 ]] && [ -f .flowconfig ] && grep -q "types_first=false" .flowconfig; then
+            return $RUNTEST_SKIP
+        fi
+
+        if [[ "$generate_tests" -eq 0 ]]; then
+          generate_tests=" --generate-tests=false"
+        else
+          generate_tests=" --generate-tests=true"
+        fi
+
+        # if .flowconfig sets generate_tests, don't pass the cli flag
+        if [ -f .flowconfig ] && grep -q "generate_tests" .flowconfig; then
+            generate_tests=""
+        fi
+
         # Helper function to generate saved state. If anything goes wrong, it
         # will fail
         create_saved_state () {
@@ -611,7 +626,7 @@ runtest() {
             # start lazy server and wait
             "$FLOW" start "$root" \
               $flowlib --wait \
-              $types_first_flag \
+              $generate_tests \
               $new_signatures_flag \
               --wait-for-recheck "$wait_for_recheck" \
               --lazy \
@@ -637,25 +652,11 @@ runtest() {
         if [ "$cmd" == "check" ]
         then
             if [[ "$saved_state" -eq 1 ]]; then
-              if create_saved_state . ".flowconfig"; then
-                # default command is check with configurable --no-flowlib
-                "$FLOW" check . \
-                  $flowlib --strip-root --show-all-errors \
-                  $types_first_flag \
-                  $new_signatures_flag \
-                  --saved-state-fetcher "local" \
-                  --saved-state-no-fallback \
-                   1>> "$abs_out_file" 2>> "$stderr_dest"
-                st=$?
-              else
-                printf "Failed to generate saved state\\n" >> "$stderr_dest"
-                return_status=$RUNTEST_ERROR
-              fi
+              return $RUNTEST_SKIP
             else
               # default command is check with configurable --no-flowlib
               "$FLOW" check . \
-                $flowlib --strip-root --show-all-errors \
-                $types_first_flag \
+                $flowlib $generate_tests --strip-root --show-all-errors \
                 $new_signatures_flag \
                  1>> "$abs_out_file" 2>> "$stderr_dest"
               st=$?
@@ -685,7 +686,6 @@ runtest() {
             "$FLOW" "codemod" "annotate-exports" \
                 $flowlib \
                 ${cmd_args[*]} \
-                $types_first_flag \
                 $new_signatures_flag \
                 --strip-root \
                 --quiet \

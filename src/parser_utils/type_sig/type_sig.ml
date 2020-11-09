@@ -94,6 +94,7 @@ type ('loc, 'a) fun_sig = FunSig of {
   tparams: ('loc, 'a) tparams;
   params: 'a fun_param list;
   rest_param: ('loc, 'a) fun_rest_param option;
+  this_param: 'a option;
   return: 'a;
   predicate: ('loc * (string, 'loc, 'a) predicate option) option;
 } [@@deriving iter, map, show {with_path = false}]
@@ -281,6 +282,7 @@ type ('loc, 'a) def =
       name: string;
       rep: enum_rep;
       members: 'loc smap;
+      has_unknown_members: bool;
     }
   | DisabledEnumBinding of {
       id_loc: 'loc;
@@ -508,26 +510,9 @@ type 'a op =
  *    syntax. These represent missing functionality in the analysis which should
  *    be fixed.
  *)
-type errno =
-  | UnexpectedTypeof
-  | TArgArity0
-  | TArgArity1
-  | TArgArity2
-  | TArgArity3
-  | TArgMinArity1
-  | UnexpectedTArg
-  | UnsupportedTemporaryType
-  | MissingAnnotation
-  | EmptyObjectLiteral
-  | EmptyArrayLiteral
-  | UnsupportedComputedProperty
-  | UnsupportedArrayHole
-  | UnsupportedArraySpread
-  | UnsupportedTemporaryObjectProp
-  | UnsupportedKeyMirrorProp
-  | UnsupportedJSXElement
-  | TODO_Literal
-  | TODO_Expression
-  [@@deriving show {with_path = false}]
+type 'loc errno =
+  | CheckError
+  | SigError of 'loc Signature_error.t
+  [@@deriving show {with_path = false}, map]
 
-type 'loc error = 'loc * errno [@@deriving show {with_path = false}]
+type 'loc error = 'loc * 'loc errno [@@deriving show {with_path = false}]

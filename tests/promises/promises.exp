@@ -106,16 +106,16 @@ Cannot call `Promise.all` because property `@@iterator` is missing in undefined 
 [incompatible-call]
 
    all.js:24:9
-    24| Promise.all(); // Error: expected array instead of undefined (too few arguments)
-                ^^^
+     24| Promise.all(); // Error: expected array instead of undefined (too few arguments)
+                 ^^^
 
 References:
    all.js:24:1
-    24| Promise.all(); // Error: expected array instead of undefined (too few arguments)
-        ^^^^^^^^^^^^^ [1]
-   <BUILTINS>/core.js:692:19
-   692|     static all<T: Iterable<mixed>>(promises: T): Promise<$TupleMap<T, typeof $await>>;
-                          ^^^^^^^^^^^^^^^ [2]
+     24| Promise.all(); // Error: expected array instead of undefined (too few arguments)
+         ^^^^^^^^^^^^^ [1]
+   <BUILTINS>/core.js:1873:19
+   1873|     static all<T: Iterable<mixed>>(promises: T): Promise<$TupleMap<T, typeof $await>>;
+                           ^^^^^^^^^^^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------------- all.js:27:13
@@ -124,13 +124,13 @@ Cannot call `Promise.all` with `0` bound to `promises` because property `@@itera
 in `$Iterable` [2]. [prop-missing]
 
    all.js:27:13
-    27| Promise.all(0); // Error: expected array instead of number
-                    ^ [1]
+     27| Promise.all(0); // Error: expected array instead of number
+                     ^ [1]
 
 References:
-   <BUILTINS>/core.js:692:19
-   692|     static all<T: Iterable<mixed>>(promises: T): Promise<$TupleMap<T, typeof $await>>;
-                          ^^^^^^^^^^^^^^^ [2]
+   <BUILTINS>/core.js:1873:19
+   1873|     static all<T: Iterable<mixed>>(promises: T): Promise<$TupleMap<T, typeof $await>>;
+                           ^^^^^^^^^^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------ allSettled.js:4:9
@@ -139,16 +139,16 @@ Cannot call `Promise.allSettled` because property `@@iterator` is missing in und
 `$Iterable` [2]. [incompatible-call]
 
    allSettled.js:4:9
-     4| Promise.allSettled(); // Error: expected $Iterable instead of undefined (too few arguments)
-                ^^^^^^^^^^
+      4| Promise.allSettled(); // Error: expected $Iterable instead of undefined (too few arguments)
+                 ^^^^^^^^^^
 
 References:
    allSettled.js:4:1
-     4| Promise.allSettled(); // Error: expected $Iterable instead of undefined (too few arguments)
-        ^^^^^^^^^^^^^^^^^^^^ [1]
-   <BUILTINS>/core.js:693:26
-   693|     static allSettled<T: Iterable<mixed>>(promises: T): Promise<$TupleMap<T, <T>(p: Promise<T> | T) => $SettledPromiseResult<T>>>;
-                                 ^^^^^^^^^^^^^^^ [2]
+      4| Promise.allSettled(); // Error: expected $Iterable instead of undefined (too few arguments)
+         ^^^^^^^^^^^^^^^^^^^^ [1]
+   <BUILTINS>/core.js:1880:26
+   1880|     static allSettled<T: Iterable<mixed>>(promises: T): Promise<$TupleMap<T, <T>(p: Promise<T> | T) => $SettledPromiseResult<T>>>;
+                                  ^^^^^^^^^^^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------- allSettled.js:7:20
@@ -157,13 +157,13 @@ Cannot call `Promise.allSettled` with `0` bound to `promises` because property `
 exists in `$Iterable` [2]. [prop-missing]
 
    allSettled.js:7:20
-     7| Promise.allSettled(0); // Error: expected $Iterable instead of number
-                           ^ [1]
+      7| Promise.allSettled(0); // Error: expected $Iterable instead of number
+                            ^ [1]
 
 References:
-   <BUILTINS>/core.js:693:26
-   693|     static allSettled<T: Iterable<mixed>>(promises: T): Promise<$TupleMap<T, <T>(p: Promise<T> | T) => $SettledPromiseResult<T>>>;
-                                 ^^^^^^^^^^^^^^^ [2]
+   <BUILTINS>/core.js:1880:26
+   1880|     static allSettled<T: Iterable<mixed>>(promises: T): Promise<$TupleMap<T, <T>(p: Promise<T> | T) => $SettledPromiseResult<T>>>;
+                                  ^^^^^^^^^^^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------- allSettled.js:36:8
@@ -172,16 +172,16 @@ Cannot cast `first.status` to empty because string literal `rejected` [1] is inc
 [incompatible-cast]
 
    allSettled.js:36:8
-    36|       (first.status: empty) // Error: 'rejected' case was not covered
-               ^^^^^^^^^^^^
+     36|       (first.status: empty) // Error: 'rejected' case was not covered
+                ^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:701:12
-   701|   +status: 'rejected',
-                   ^^^^^^^^^^ [1]
+   <BUILTINS>/core.js:1894:12
+   1894|   +status: 'rejected',
+                    ^^^^^^^^^^ [1]
    allSettled.js:36:22
-    36|       (first.status: empty) // Error: 'rejected' case was not covered
-                             ^^^^^ [2]
+     36|       (first.status: empty) // Error: 'rejected' case was not covered
+                              ^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------- allSettled.js:42:30
@@ -518,16 +518,16 @@ Cannot cast `Promise.resolve()` to `Promise` because undefined [1] is incompatib
 `R` [3]. [incompatible-cast]
 
    resolve_void.js:3:2
-     3| (Promise.resolve(): Promise<number>); // error
-         ^^^^^^^^^^^^^^^^^ [1]
+      3| (Promise.resolve(): Promise<number>); // error
+          ^^^^^^^^^^^^^^^^^ [1]
 
 References:
    resolve_void.js:3:29
-     3| (Promise.resolve(): Promise<number>); // error
-                                    ^^^^^^ [2]
-   <BUILTINS>/core.js:667:24
-   667| declare class Promise<+R> {
-                               ^ [3]
+      3| (Promise.resolve(): Promise<number>); // error
+                                     ^^^^^^ [2]
+   <BUILTINS>/core.js:1798:24
+   1798| declare class Promise<+R> {
+                                ^ [3]
 
 
 Error --------------------------------------------------------------------------------------------- resolve_void.js:5:18
@@ -536,16 +536,16 @@ Cannot cast `Promise.resolve(...)` to `Promise` because undefined [1] is incompa
 `R` [3]. [incompatible-cast]
 
    resolve_void.js:5:18
-     5| (Promise.resolve(undefined): Promise<number>); // error
-                         ^^^^^^^^^ [1]
+      5| (Promise.resolve(undefined): Promise<number>); // error
+                          ^^^^^^^^^ [1]
 
 References:
    resolve_void.js:5:38
-     5| (Promise.resolve(undefined): Promise<number>); // error
-                                             ^^^^^^ [2]
-   <BUILTINS>/core.js:667:24
-   667| declare class Promise<+R> {
-                               ^ [3]
+      5| (Promise.resolve(undefined): Promise<number>); // error
+                                              ^^^^^^ [2]
+   <BUILTINS>/core.js:1798:24
+   1798| declare class Promise<+R> {
+                                ^ [3]
 
 
 

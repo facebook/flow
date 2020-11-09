@@ -202,7 +202,7 @@ let typo_suggestion possible_names name =
 (* util to limit the number of calls to a (usually recursive) function *)
 let count_calls ~counter ~default f =
   (* Count number of calls to a function f, decrementing at each call and
-      returning default when count reaches 0. **)
+     returning default when count reaches 0. **)
   if !counter = 0 then
     default
   else (

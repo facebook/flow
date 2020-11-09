@@ -54,14 +54,12 @@ type metadata = {
   max_literal_length: int;
   enable_const_params: bool;
   enable_enums: bool;
+  enable_enums_with_unknown_members: bool;
+  enable_this_annot: bool;
   enforce_strict_call_arity: bool;
-  esproposal_class_static_fields: Options.esproposal_feature_mode;
-  esproposal_class_instance_fields: Options.esproposal_feature_mode;
-  esproposal_decorators: Options.esproposal_feature_mode;
-  esproposal_export_star_as: Options.esproposal_feature_mode;
-  esproposal_optional_chaining: Options.esproposal_feature_mode;
-  esproposal_nullish_coalescing: Options.esproposal_feature_mode;
+  enforce_local_inference_annotations: bool;
   exact_by_default: bool;
+  generate_tests: bool;
   facebook_fbs: string option;
   facebook_fbt: string option;
   facebook_module_interop: bool;
@@ -141,6 +139,10 @@ val enable_const_params : t -> bool
 
 val enable_enums : t -> bool
 
+val enable_enums_with_unknown_members : t -> bool
+
+val enable_this_annot : t -> bool
+
 val enforce_strict_call_arity : t -> bool
 
 val envs : t -> env IMap.t
@@ -149,23 +151,15 @@ val errors : t -> Flow_error.ErrorSet.t
 
 val error_suppressions : t -> Error_suppressions.t
 
-val esproposal_class_static_fields : t -> Options.esproposal_feature_mode
-
-val esproposal_class_instance_fields : t -> Options.esproposal_feature_mode
-
-val esproposal_decorators : t -> Options.esproposal_feature_mode
-
-val esproposal_export_star_as : t -> Options.esproposal_feature_mode
-
-val esproposal_optional_chaining : t -> Options.esproposal_feature_mode
-
-val esproposal_nullish_coalescing : t -> Options.esproposal_feature_mode
-
 val evaluated : t -> Type.t Type.Eval.Map.t
 
 val goals : t -> Type.t IMap.t
 
 val exact_by_default : t -> bool
+
+val enforce_local_inference_annotations : t -> bool
+
+val generate_tests : t -> bool
 
 val file : t -> File_key.t
 
@@ -192,10 +186,6 @@ val mem_nominal_poly_id : t -> Type.Poly.id -> bool
 val graph : t -> Constraint.node IMap.t
 
 val trust_graph : t -> Trust_constraint.node IMap.t
-
-val import_stmts : t -> (ALoc.t, ALoc.t) Flow_ast.Statement.ImportDeclaration.t list
-
-val imported_ts : t -> Type.t SMap.t
 
 val is_checked : t -> bool
 
@@ -309,10 +299,6 @@ val add_severity_cover : t -> File_key.t -> ExactCover.lint_severity_cover -> un
 
 val add_lint_suppressions : t -> LocSet.t -> unit
 
-val add_import_stmt : t -> (ALoc.t, ALoc.t) Flow_ast.Statement.ImportDeclaration.t -> unit
-
-val add_imported_t : t -> string -> Type.t -> unit
-
 val add_require : t -> ALoc.t -> Type.t -> unit
 
 val add_module : t -> string -> Type.t -> unit
@@ -425,6 +411,8 @@ val set_export : t -> Type.Exports.id -> string -> ALoc.t option * Type.t -> uni
 
 (* constructors *)
 val make_aloc_id : t -> ALoc.t -> ALoc.id
+
+val make_generic_id : t -> string -> ALoc.t -> Generic.id
 
 val generate_property_map : t -> Type.Properties.t -> Type.Properties.id
 

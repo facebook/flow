@@ -453,49 +453,77 @@ Flags: --lsp
   "kind":6,
   "detail":"string",
   "sortText":"00000000000000000000",
-  "insertTextFormat":1
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":7,"character":4},"end":{"line":7,"character":4}},
+    "newText":"baz"
+  }
 }
 {
   "label":"hasOwnProperty",
   "kind":3,
   "detail":"(prop: mixed) => boolean",
   "sortText":"00000000000000000001",
-  "insertTextFormat":1
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":7,"character":4},"end":{"line":7,"character":4}},
+    "newText":"hasOwnProperty"
+  }
 }
 {
   "label":"isPrototypeOf",
   "kind":3,
   "detail":"(o: mixed) => boolean",
   "sortText":"00000000000000000001",
-  "insertTextFormat":1
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":7,"character":4},"end":{"line":7,"character":4}},
+    "newText":"isPrototypeOf"
+  }
 }
 {
   "label":"propertyIsEnumerable",
   "kind":3,
   "detail":"(prop: mixed) => boolean",
   "sortText":"00000000000000000001",
-  "insertTextFormat":1
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":7,"character":4},"end":{"line":7,"character":4}},
+    "newText":"propertyIsEnumerable"
+  }
 }
 {
   "label":"toLocaleString",
   "kind":3,
   "detail":"() => string",
   "sortText":"00000000000000000001",
-  "insertTextFormat":1
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":7,"character":4},"end":{"line":7,"character":4}},
+    "newText":"toLocaleString"
+  }
 }
 {
   "label":"toString",
   "kind":3,
   "detail":"() => string",
   "sortText":"00000000000000000001",
-  "insertTextFormat":1
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":7,"character":4},"end":{"line":7,"character":4}},
+    "newText":"toString"
+  }
 }
 {
   "label":"valueOf",
   "kind":3,
   "detail":"() => mixed",
   "sortText":"00000000000000000001",
-  "insertTextFormat":1
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":7,"character":4},"end":{"line":7,"character":4}},
+    "newText":"valueOf"
+  }
 }
 
 member_class_static.js:7:5
@@ -1000,21 +1028,127 @@ Flags: --pretty
 }
 
 unqualified-type-annotation.js:28:18
-Flags: --pretty
+Flags: --lsp
 {
-  "result":[
-    {"name":"Typologies","type":"module Typologies"},
-    {"name":"Typography","type":"class Typewriter"},
-    {"name":"Typewriter","type":"class Typewriter"},
-    {"name":"Types","type":"module Types"},
-    {"name":"Typesafe","type":"interface Typesafety"},
-    {"name":"Typhoon","type":"type Typhoon = string"},
-    {"name":"Typnotism","type":"type Typnotism = number"},
-    {"name":"Tyrant","type":"type Tyrant = string"},
-    {"name":"Tympanic","type":"type Tympanic = number"},
-    {"name":"Typeset","type":"interface Typeset"},
-    {"name":"Typaram","type":"Typaram"}
-  ]
+  "label":"Typologies",
+  "kind":9,
+  "detail":"module Typologies",
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":27,"character":17},"end":{"line":27,"character":17}},
+    "newText":"Typologies."
+  }
+}
+{
+  "label":"Typography",
+  "kind":7,
+  "detail":"class Typewriter",
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":27,"character":17},"end":{"line":27,"character":17}},
+    "newText":"Typography"
+  }
+}
+{
+  "label":"Typewriter",
+  "kind":7,
+  "detail":"class Typewriter",
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":27,"character":17},"end":{"line":27,"character":17}},
+    "newText":"Typewriter"
+  }
+}
+{
+  "label":"Types",
+  "kind":9,
+  "detail":"module Types",
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":27,"character":17},"end":{"line":27,"character":17}},
+    "newText":"Types."
+  }
+}
+{
+  "label":"Typesafe",
+  "kind":8,
+  "detail":"interface Typesafety",
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":27,"character":17},"end":{"line":27,"character":17}},
+    "newText":"Typesafe"
+  }
+}
+{
+  "label":"Typhoon",
+  "kind":13,
+  "detail":"type Typhoon = string",
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":27,"character":17},"end":{"line":27,"character":17}},
+    "newText":"Typhoon"
+  }
+}
+{
+  "label":"Typnotism",
+  "kind":13,
+  "detail":"type Typnotism = number",
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":27,"character":17},"end":{"line":27,"character":17}},
+    "newText":"Typnotism"
+  }
+}
+{
+  "label":"Tyrant",
+  "kind":13,
+  "detail":"type Tyrant = string",
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":27,"character":17},"end":{"line":27,"character":17}},
+    "newText":"Tyrant"
+  }
+}
+{
+  "label":"Tympanic",
+  "kind":13,
+  "detail":"type Tympanic = number",
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":27,"character":17},"end":{"line":27,"character":17}},
+    "newText":"Tympanic"
+  }
+}
+{
+  "label":"Typeset",
+  "kind":8,
+  "detail":"interface Typeset",
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":27,"character":17},"end":{"line":27,"character":17}},
+    "newText":"Typeset"
+  }
+}
+{
+  "label":"Typaram",
+  "kind":25,
+  "detail":"Typaram",
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":27,"character":17},"end":{"line":27,"character":17}},
+    "newText":"Typaram"
+  }
 }
 
 qualified-type-annotation.js:5:23
@@ -1196,42 +1330,66 @@ Flags: --lsp
   "kind":3,
   "detail":"(prop: mixed) => boolean",
   "sortText":"00000000000000000001",
-  "insertTextFormat":1
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":6,"character":10},"end":{"line":6,"character":10}},
+    "newText":"hasOwnProperty"
+  }
 }
 {
   "label":"isPrototypeOf",
   "kind":3,
   "detail":"(o: mixed) => boolean",
   "sortText":"00000000000000000001",
-  "insertTextFormat":1
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":6,"character":10},"end":{"line":6,"character":10}},
+    "newText":"isPrototypeOf"
+  }
 }
 {
   "label":"propertyIsEnumerable",
   "kind":3,
   "detail":"(prop: mixed) => boolean",
   "sortText":"00000000000000000001",
-  "insertTextFormat":1
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":6,"character":10},"end":{"line":6,"character":10}},
+    "newText":"propertyIsEnumerable"
+  }
 }
 {
   "label":"toLocaleString",
   "kind":3,
   "detail":"() => string",
   "sortText":"00000000000000000001",
-  "insertTextFormat":1
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":6,"character":10},"end":{"line":6,"character":10}},
+    "newText":"toLocaleString"
+  }
 }
 {
   "label":"toString",
   "kind":6,
   "detail":"number",
   "sortText":"00000000000000000000",
-  "insertTextFormat":1
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":6,"character":10},"end":{"line":6,"character":10}},
+    "newText":"toString"
+  }
 }
 {
   "label":"valueOf",
   "kind":3,
   "detail":"() => mixed",
   "sortText":"00000000000000000001",
-  "insertTextFormat":1
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":6,"character":10},"end":{"line":6,"character":10}},
+    "newText":"valueOf"
+  }
 }
 
 rank_union.js:8:3
@@ -1241,42 +1399,66 @@ Flags: --lsp
   "kind":3,
   "detail":"(prop: mixed) => boolean",
   "sortText":"00000000000000000001",
-  "insertTextFormat":1
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":7,"character":2},"end":{"line":7,"character":2}},
+    "newText":"hasOwnProperty"
+  }
 }
 {
   "label":"isPrototypeOf",
   "kind":3,
   "detail":"(o: mixed) => boolean",
   "sortText":"00000000000000000001",
-  "insertTextFormat":1
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":7,"character":2},"end":{"line":7,"character":2}},
+    "newText":"isPrototypeOf"
+  }
 }
 {
   "label":"propertyIsEnumerable",
   "kind":3,
   "detail":"(prop: mixed) => boolean",
   "sortText":"00000000000000000001",
-  "insertTextFormat":1
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":7,"character":2},"end":{"line":7,"character":2}},
+    "newText":"propertyIsEnumerable"
+  }
 }
 {
   "label":"toLocaleString",
   "kind":3,
   "detail":"() => string",
   "sortText":"00000000000000000001",
-  "insertTextFormat":1
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":7,"character":2},"end":{"line":7,"character":2}},
+    "newText":"toLocaleString"
+  }
 }
 {
   "label":"toString",
   "kind":13,
   "detail":"(() => string) | number",
   "sortText":"00000000000000000000",
-  "insertTextFormat":1
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":7,"character":2},"end":{"line":7,"character":2}},
+    "newText":"toString"
+  }
 }
 {
   "label":"valueOf",
   "kind":3,
   "detail":"() => mixed",
   "sortText":"00000000000000000001",
-  "insertTextFormat":1
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":7,"character":2},"end":{"line":7,"character":2}},
+    "newText":"valueOf"
+  }
 }
 
 rank_intersection.js:8:3
@@ -1285,43 +1467,88 @@ Flags: --lsp
   "label":"hasOwnProperty",
   "kind":3,
   "detail":"(prop: mixed) => boolean",
+  "documentation":{
+    "kind":"markdown",
+    "value":"Determines whether an object has a property with the specified name."
+  },
   "sortText":"00000000000000000001",
-  "insertTextFormat":1
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":7,"character":2},"end":{"line":7,"character":2}},
+    "newText":"hasOwnProperty"
+  }
 }
 {
   "label":"isPrototypeOf",
   "kind":3,
   "detail":"(o: mixed) => boolean",
+  "documentation":{
+    "kind":"markdown",
+    "value":"Determines whether an object exists in another object's prototype chain."
+  },
   "sortText":"00000000000000000001",
-  "insertTextFormat":1
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":7,"character":2},"end":{"line":7,"character":2}},
+    "newText":"isPrototypeOf"
+  }
 }
 {
   "label":"propertyIsEnumerable",
   "kind":3,
   "detail":"(prop: mixed) => boolean",
+  "documentation":{
+    "kind":"markdown",
+    "value":"Determines whether a specified property is enumerable."
+  },
   "sortText":"00000000000000000001",
-  "insertTextFormat":1
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":7,"character":2},"end":{"line":7,"character":2}},
+    "newText":"propertyIsEnumerable"
+  }
 }
 {
   "label":"toLocaleString",
   "kind":3,
   "detail":"() => string",
+  "documentation":{
+    "kind":"markdown",
+    "value":"Returns a date converted to a string using the current locale."
+  },
   "sortText":"00000000000000000001",
-  "insertTextFormat":1
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":7,"character":2},"end":{"line":7,"character":2}},
+    "newText":"toLocaleString"
+  }
 }
 {
   "label":"toString",
   "kind":6,
   "detail":"(() => string) & number",
+  "documentation":{"kind":"markdown","value":"Returns a string representation of an object."},
   "sortText":"00000000000000000000",
-  "insertTextFormat":1
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":7,"character":2},"end":{"line":7,"character":2}},
+    "newText":"toString"
+  }
 }
 {
   "label":"valueOf",
   "kind":3,
   "detail":"() => mixed",
+  "documentation":{
+    "kind":"markdown",
+    "value":"Returns the primitive value of the specified object."
+  },
   "sortText":"00000000000000000001",
-  "insertTextFormat":1
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":7,"character":2},"end":{"line":7,"character":2}},
+    "newText":"valueOf"
+  }
 }
 
 suggest_optional_chaining_1.js:4:3
@@ -1341,6 +1568,10 @@ Flags: --lsp
   "label":"?.hasOwnProperty",
   "kind":13,
   "detail":"void | ((prop: mixed) => boolean)",
+  "documentation":{
+    "kind":"markdown",
+    "value":"Determines whether an object has a property with the specified name."
+  },
   "sortText":"00000000000000000001",
   "insertTextFormat":1,
   "textEdit":{
@@ -1352,6 +1583,10 @@ Flags: --lsp
   "label":"?.isPrototypeOf",
   "kind":13,
   "detail":"void | ((o: mixed) => boolean)",
+  "documentation":{
+    "kind":"markdown",
+    "value":"Determines whether an object exists in another object's prototype chain."
+  },
   "sortText":"00000000000000000001",
   "insertTextFormat":1,
   "textEdit":{
@@ -1363,6 +1598,10 @@ Flags: --lsp
   "label":"?.propertyIsEnumerable",
   "kind":13,
   "detail":"void | ((prop: mixed) => boolean)",
+  "documentation":{
+    "kind":"markdown",
+    "value":"Determines whether a specified property is enumerable."
+  },
   "sortText":"00000000000000000001",
   "insertTextFormat":1,
   "textEdit":{
@@ -1374,6 +1613,10 @@ Flags: --lsp
   "label":"?.toLocaleString",
   "kind":13,
   "detail":"void | (() => string)",
+  "documentation":{
+    "kind":"markdown",
+    "value":"Returns a date converted to a string using the current locale."
+  },
   "sortText":"00000000000000000001",
   "insertTextFormat":1,
   "textEdit":{
@@ -1385,6 +1628,7 @@ Flags: --lsp
   "label":"?.toString",
   "kind":13,
   "detail":"void | (() => string)",
+  "documentation":{"kind":"markdown","value":"Returns a string representation of an object."},
   "sortText":"00000000000000000001",
   "insertTextFormat":1,
   "textEdit":{
@@ -1396,6 +1640,10 @@ Flags: --lsp
   "label":"?.valueOf",
   "kind":13,
   "detail":"void | (() => mixed)",
+  "documentation":{
+    "kind":"markdown",
+    "value":"Returns the primitive value of the specified object."
+  },
   "sortText":"00000000000000000001",
   "insertTextFormat":1,
   "textEdit":{
@@ -1422,49 +1670,98 @@ Flags: --lsp
   "kind":6,
   "detail":"string",
   "sortText":"00000000000000000000",
-  "insertTextFormat":1
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":3,"character":2},"end":{"line":3,"character":2}},
+    "newText":"foo"
+  }
 }
 {
   "label":"hasOwnProperty",
   "kind":3,
   "detail":"(prop: mixed) => boolean",
+  "documentation":{
+    "kind":"markdown",
+    "value":"Determines whether an object has a property with the specified name."
+  },
   "sortText":"00000000000000000001",
-  "insertTextFormat":1
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":3,"character":2},"end":{"line":3,"character":2}},
+    "newText":"hasOwnProperty"
+  }
 }
 {
   "label":"isPrototypeOf",
   "kind":3,
   "detail":"(o: mixed) => boolean",
+  "documentation":{
+    "kind":"markdown",
+    "value":"Determines whether an object exists in another object's prototype chain."
+  },
   "sortText":"00000000000000000001",
-  "insertTextFormat":1
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":3,"character":2},"end":{"line":3,"character":2}},
+    "newText":"isPrototypeOf"
+  }
 }
 {
   "label":"propertyIsEnumerable",
   "kind":3,
   "detail":"(prop: mixed) => boolean",
+  "documentation":{
+    "kind":"markdown",
+    "value":"Determines whether a specified property is enumerable."
+  },
   "sortText":"00000000000000000001",
-  "insertTextFormat":1
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":3,"character":2},"end":{"line":3,"character":2}},
+    "newText":"propertyIsEnumerable"
+  }
 }
 {
   "label":"toLocaleString",
   "kind":3,
   "detail":"() => string",
+  "documentation":{
+    "kind":"markdown",
+    "value":"Returns a date converted to a string using the current locale."
+  },
   "sortText":"00000000000000000001",
-  "insertTextFormat":1
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":3,"character":2},"end":{"line":3,"character":2}},
+    "newText":"toLocaleString"
+  }
 }
 {
   "label":"toString",
   "kind":3,
   "detail":"() => string",
+  "documentation":{"kind":"markdown","value":"Returns a string representation of an object."},
   "sortText":"00000000000000000001",
-  "insertTextFormat":1
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":3,"character":2},"end":{"line":3,"character":2}},
+    "newText":"toString"
+  }
 }
 {
   "label":"valueOf",
   "kind":3,
   "detail":"() => mixed",
+  "documentation":{
+    "kind":"markdown",
+    "value":"Returns the primitive value of the specified object."
+  },
   "sortText":"00000000000000000001",
-  "insertTextFormat":1
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":3,"character":2},"end":{"line":3,"character":2}},
+    "newText":"valueOf"
+  }
 }
 
 suggest_optional_chaining_3.js:4:3
@@ -1484,43 +1781,88 @@ Flags: --lsp
   "label":"hasOwnProperty",
   "kind":3,
   "detail":"(prop: mixed) => boolean",
+  "documentation":{
+    "kind":"markdown",
+    "value":"Determines whether an object has a property with the specified name."
+  },
   "sortText":"00000000000000000001",
-  "insertTextFormat":1
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":3,"character":2},"end":{"line":3,"character":2}},
+    "newText":"hasOwnProperty"
+  }
 }
 {
   "label":"isPrototypeOf",
   "kind":3,
   "detail":"(o: mixed) => boolean",
+  "documentation":{
+    "kind":"markdown",
+    "value":"Determines whether an object exists in another object's prototype chain."
+  },
   "sortText":"00000000000000000001",
-  "insertTextFormat":1
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":3,"character":2},"end":{"line":3,"character":2}},
+    "newText":"isPrototypeOf"
+  }
 }
 {
   "label":"propertyIsEnumerable",
   "kind":3,
   "detail":"(prop: mixed) => boolean",
+  "documentation":{
+    "kind":"markdown",
+    "value":"Determines whether a specified property is enumerable."
+  },
   "sortText":"00000000000000000001",
-  "insertTextFormat":1
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":3,"character":2},"end":{"line":3,"character":2}},
+    "newText":"propertyIsEnumerable"
+  }
 }
 {
   "label":"toLocaleString",
   "kind":3,
   "detail":"() => string",
+  "documentation":{
+    "kind":"markdown",
+    "value":"Returns a date converted to a string using the current locale."
+  },
   "sortText":"00000000000000000001",
-  "insertTextFormat":1
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":3,"character":2},"end":{"line":3,"character":2}},
+    "newText":"toLocaleString"
+  }
 }
 {
   "label":"toString",
   "kind":3,
   "detail":"() => string",
+  "documentation":{"kind":"markdown","value":"Returns a string representation of an object."},
   "sortText":"00000000000000000001",
-  "insertTextFormat":1
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":3,"character":2},"end":{"line":3,"character":2}},
+    "newText":"toString"
+  }
 }
 {
   "label":"valueOf",
   "kind":3,
   "detail":"() => mixed",
+  "documentation":{
+    "kind":"markdown",
+    "value":"Returns the primitive value of the specified object."
+  },
   "sortText":"00000000000000000001",
-  "insertTextFormat":1
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":3,"character":2},"end":{"line":3,"character":2}},
+    "newText":"valueOf"
+  }
 }
 
 enums.js:10:3
@@ -1530,35 +1872,55 @@ Flags: --lsp
   "kind":6,
   "detail":"E",
   "sortText":"00000000000000000000",
-  "insertTextFormat":1
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":9,"character":2},"end":{"line":9,"character":2}},
+    "newText":"Bar"
+  }
 }
 {
   "label":"Foo",
   "kind":6,
   "detail":"E",
   "sortText":"00000000000000000000",
-  "insertTextFormat":1
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":9,"character":2},"end":{"line":9,"character":2}},
+    "newText":"Foo"
+  }
 }
 {
   "label":"cast",
   "kind":3,
   "detail":"(input: ?string) => (void | E)",
   "sortText":"00000000000000000001",
-  "insertTextFormat":1
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":9,"character":2},"end":{"line":9,"character":2}},
+    "newText":"cast"
+  }
 }
 {
   "label":"isValid",
   "kind":3,
   "detail":"(input: ?string) => boolean",
   "sortText":"00000000000000000001",
-  "insertTextFormat":1
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":9,"character":2},"end":{"line":9,"character":2}},
+    "newText":"isValid"
+  }
 }
 {
   "label":"members",
   "kind":3,
   "detail":"() => Iterable<E>",
   "sortText":"00000000000000000001",
-  "insertTextFormat":1
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":9,"character":2},"end":{"line":9,"character":2}},
+    "newText":"members"
+  }
 }
 
 enum-id.js:9:4
@@ -1642,7 +2004,11 @@ Flags: --lsp
   "detail":"enum SymbolEnum",
   "documentation":{"kind":"markdown","value":"a symbol enum"},
   "sortText":"00000000000000000000",
-  "insertTextFormat":1
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":14,"character":3},"end":{"line":14,"character":3}},
+    "newText":"SymbolEnum"
+  }
 }
 {
   "label":"NumberEnum",
@@ -1650,7 +2016,11 @@ Flags: --lsp
   "detail":"enum NumberEnum",
   "documentation":{"kind":"markdown","value":"a number enum"},
   "sortText":"00000000000000000000",
-  "insertTextFormat":1
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":14,"character":3},"end":{"line":14,"character":3}},
+    "newText":"NumberEnum"
+  }
 }
 {
   "label":"InitializedStringEnum",
@@ -1658,7 +2028,11 @@ Flags: --lsp
   "detail":"enum InitializedStringEnum",
   "documentation":{"kind":"markdown","value":"an initialized string enum"},
   "sortText":"00000000000000000000",
-  "insertTextFormat":1
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":14,"character":3},"end":{"line":14,"character":3}},
+    "newText":"InitializedStringEnum"
+  }
 }
 {
   "label":"DefaultedStringEnum",
@@ -1666,7 +2040,11 @@ Flags: --lsp
   "detail":"enum DefaultedStringEnum",
   "documentation":{"kind":"markdown","value":"a defaulted string enum"},
   "sortText":"00000000000000000000",
-  "insertTextFormat":1
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":14,"character":3},"end":{"line":14,"character":3}},
+    "newText":"DefaultedStringEnum"
+  }
 }
 {
   "label":"BooleanEnum",
@@ -1674,7 +2052,11 @@ Flags: --lsp
   "detail":"enum BooleanEnum",
   "documentation":{"kind":"markdown","value":"a boolean enum"},
   "sortText":"00000000000000000000",
-  "insertTextFormat":1
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":14,"character":3},"end":{"line":14,"character":3}},
+    "newText":"BooleanEnum"
+  }
 }
 {
   "label":"Bar",
@@ -1682,7 +2064,11 @@ Flags: --lsp
   "detail":"class Bar",
   "documentation":{"kind":"markdown","value":"the class Bar"},
   "sortText":"00000000000000000000",
-  "insertTextFormat":1
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":14,"character":3},"end":{"line":14,"character":3}},
+    "newText":"Bar"
+  }
 }
 
 jsdoc-members-1.js:43:5
@@ -1693,7 +2079,11 @@ Flags: --lsp
   "detail":"number",
   "documentation":{"kind":"markdown","value":"identifier property of an object literal"},
   "sortText":"00000000000000000000",
-  "insertTextFormat":1
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":42,"character":4},"end":{"line":42,"character":4}},
+    "newText":"a"
+  }
 }
 {
   "label":"b",
@@ -1701,7 +2091,11 @@ Flags: --lsp
   "detail":"number",
   "documentation":{"kind":"markdown","value":"literal property of an object literal"},
   "sortText":"00000000000000000000",
-  "insertTextFormat":1
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":42,"character":4},"end":{"line":42,"character":4}},
+    "newText":"b"
+  }
 }
 {
   "label":"c",
@@ -1709,7 +2103,11 @@ Flags: --lsp
   "detail":"number",
   "documentation":{"kind":"markdown","value":"computed property of an object literal"},
   "sortText":"00000000000000000000",
-  "insertTextFormat":1
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":42,"character":4},"end":{"line":42,"character":4}},
+    "newText":"c"
+  }
 }
 {
   "label":"d",
@@ -1717,14 +2115,22 @@ Flags: --lsp
   "detail":"number",
   "documentation":{"kind":"markdown","value":"annotated getter property of an object literal"},
   "sortText":"00000000000000000000",
-  "insertTextFormat":1
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":42,"character":4},"end":{"line":42,"character":4}},
+    "newText":"d"
+  }
 }
 {
   "label":"e",
   "kind":6,
   "detail":"void",
   "sortText":"00000000000000000000",
-  "insertTextFormat":1
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":42,"character":4},"end":{"line":42,"character":4}},
+    "newText":"e"
+  }
 }
 {
   "label":"f",
@@ -1732,7 +2138,11 @@ Flags: --lsp
   "detail":"() => void",
   "documentation":{"kind":"markdown","value":"method property of an object literal"},
   "sortText":"00000000000000000000",
-  "insertTextFormat":1
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":42,"character":4},"end":{"line":42,"character":4}},
+    "newText":"f"
+  }
 }
 {
   "label":"g",
@@ -1740,7 +2150,11 @@ Flags: --lsp
   "detail":"() => Promise<void>",
   "documentation":{"kind":"markdown","value":"async method property of an object literal"},
   "sortText":"00000000000000000000",
-  "insertTextFormat":1
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":42,"character":4},"end":{"line":42,"character":4}},
+    "newText":"g"
+  }
 }
 {
   "label":"h",
@@ -1751,49 +2165,98 @@ Flags: --lsp
     "value":"member h\n\n**@explorer-desc** this is h\nit's a member\n\n**@explorer-ignore**\n\n**@explorer-title** h the member"
   },
   "sortText":"00000000000000000000",
-  "insertTextFormat":1
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":42,"character":4},"end":{"line":42,"character":4}},
+    "newText":"h"
+  }
 }
 {
   "label":"hasOwnProperty",
   "kind":3,
   "detail":"(prop: mixed) => boolean",
+  "documentation":{
+    "kind":"markdown",
+    "value":"Determines whether an object has a property with the specified name."
+  },
   "sortText":"00000000000000000001",
-  "insertTextFormat":1
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":42,"character":4},"end":{"line":42,"character":4}},
+    "newText":"hasOwnProperty"
+  }
 }
 {
   "label":"isPrototypeOf",
   "kind":3,
   "detail":"(o: mixed) => boolean",
+  "documentation":{
+    "kind":"markdown",
+    "value":"Determines whether an object exists in another object's prototype chain."
+  },
   "sortText":"00000000000000000001",
-  "insertTextFormat":1
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":42,"character":4},"end":{"line":42,"character":4}},
+    "newText":"isPrototypeOf"
+  }
 }
 {
   "label":"propertyIsEnumerable",
   "kind":3,
   "detail":"(prop: mixed) => boolean",
+  "documentation":{
+    "kind":"markdown",
+    "value":"Determines whether a specified property is enumerable."
+  },
   "sortText":"00000000000000000001",
-  "insertTextFormat":1
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":42,"character":4},"end":{"line":42,"character":4}},
+    "newText":"propertyIsEnumerable"
+  }
 }
 {
   "label":"toLocaleString",
   "kind":3,
   "detail":"() => string",
+  "documentation":{
+    "kind":"markdown",
+    "value":"Returns a date converted to a string using the current locale."
+  },
   "sortText":"00000000000000000001",
-  "insertTextFormat":1
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":42,"character":4},"end":{"line":42,"character":4}},
+    "newText":"toLocaleString"
+  }
 }
 {
   "label":"toString",
   "kind":3,
   "detail":"() => string",
+  "documentation":{"kind":"markdown","value":"Returns a string representation of an object."},
   "sortText":"00000000000000000001",
-  "insertTextFormat":1
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":42,"character":4},"end":{"line":42,"character":4}},
+    "newText":"toString"
+  }
 }
 {
   "label":"valueOf",
   "kind":3,
   "detail":"() => mixed",
+  "documentation":{
+    "kind":"markdown",
+    "value":"Returns the primitive value of the specified object."
+  },
   "sortText":"00000000000000000001",
-  "insertTextFormat":1
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":42,"character":4},"end":{"line":42,"character":4}},
+    "newText":"valueOf"
+  }
 }
 
 jsdoc-members-2.js:5:17
@@ -1905,70 +2368,122 @@ Flags: --lsp
   "kind":3,
   "detail":"(thisArg: any, argArray?: any) => any",
   "sortText":"00000000000000000001",
-  "insertTextFormat":1
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":4,"character":4},"end":{"line":4,"character":4}},
+    "newText":"apply"
+  }
 }
 {
   "label":"arguments",
   "kind":6,
   "detail":"any",
   "sortText":"00000000000000000000",
-  "insertTextFormat":1
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":4,"character":4},"end":{"line":4,"character":4}},
+    "newText":"arguments"
+  }
 }
 {
   "label":"bind",
   "kind":3,
   "detail":"(thisArg: any, ...argArray: Array<any>) => any",
   "sortText":"00000000000000000001",
-  "insertTextFormat":1
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":4,"character":4},"end":{"line":4,"character":4}},
+    "newText":"bind"
+  }
 }
 {
   "label":"call",
   "kind":3,
   "detail":"(thisArg: any, ...argArray: Array<any>) => any",
   "sortText":"00000000000000000001",
-  "insertTextFormat":1
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":4,"character":4},"end":{"line":4,"character":4}},
+    "newText":"call"
+  }
 }
 {
   "label":"caller",
   "kind":13,
   "detail":"any | null",
   "sortText":"00000000000000000000",
-  "insertTextFormat":1
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":4,"character":4},"end":{"line":4,"character":4}},
+    "newText":"caller"
+  }
 }
 {
   "label":"hasOwnProperty",
   "kind":3,
   "detail":"(prop: mixed) => boolean",
+  "documentation":{
+    "kind":"markdown",
+    "value":"Determines whether an object has a property with the specified name."
+  },
   "sortText":"00000000000000000001",
-  "insertTextFormat":1
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":4,"character":4},"end":{"line":4,"character":4}},
+    "newText":"hasOwnProperty"
+  }
 }
 {
   "label":"isPrototypeOf",
   "kind":3,
   "detail":"(o: mixed) => boolean",
+  "documentation":{
+    "kind":"markdown",
+    "value":"Determines whether an object exists in another object's prototype chain."
+  },
   "sortText":"00000000000000000001",
-  "insertTextFormat":1
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":4,"character":4},"end":{"line":4,"character":4}},
+    "newText":"isPrototypeOf"
+  }
 }
 {
   "label":"length",
   "kind":6,
   "detail":"number",
   "sortText":"00000000000000000000",
-  "insertTextFormat":1
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":4,"character":4},"end":{"line":4,"character":4}},
+    "newText":"length"
+  }
 }
 {
   "label":"name",
   "kind":6,
   "detail":"string",
   "sortText":"00000000000000000000",
-  "insertTextFormat":1
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":4,"character":4},"end":{"line":4,"character":4}},
+    "newText":"name"
+  }
 }
 {
   "label":"propertyIsEnumerable",
   "kind":3,
   "detail":"(prop: mixed) => boolean",
+  "documentation":{
+    "kind":"markdown",
+    "value":"Determines whether a specified property is enumerable."
+  },
   "sortText":"00000000000000000001",
-  "insertTextFormat":1
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":4,"character":4},"end":{"line":4,"character":4}},
+    "newText":"propertyIsEnumerable"
+  }
 }
 {
   "label":"staticMethod",
@@ -1976,7 +2491,11 @@ Flags: --lsp
   "detail":"() => void",
   "documentation":{"kind":"markdown","value":"this is a static method"},
   "sortText":"00000000000000000000",
-  "insertTextFormat":1
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":4,"character":4},"end":{"line":4,"character":4}},
+    "newText":"staticMethod"
+  }
 }
 {
   "label":"staticProp",
@@ -1984,28 +2503,53 @@ Flags: --lsp
   "detail":"1",
   "documentation":{"kind":"markdown","value":"this is a static property"},
   "sortText":"00000000000000000000",
-  "insertTextFormat":1
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":4,"character":4},"end":{"line":4,"character":4}},
+    "newText":"staticProp"
+  }
 }
 {
   "label":"toLocaleString",
   "kind":3,
   "detail":"() => string",
+  "documentation":{
+    "kind":"markdown",
+    "value":"Returns a date converted to a string using the current locale."
+  },
   "sortText":"00000000000000000001",
-  "insertTextFormat":1
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":4,"character":4},"end":{"line":4,"character":4}},
+    "newText":"toLocaleString"
+  }
 }
 {
   "label":"toString",
   "kind":3,
   "detail":"() => string",
+  "documentation":{"kind":"markdown","value":"Returns a string representation of an object."},
   "sortText":"00000000000000000001",
-  "insertTextFormat":1
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":4,"character":4},"end":{"line":4,"character":4}},
+    "newText":"toString"
+  }
 }
 {
   "label":"valueOf",
   "kind":3,
   "detail":"() => mixed",
+  "documentation":{
+    "kind":"markdown",
+    "value":"Returns the primitive value of the specified object."
+  },
   "sortText":"00000000000000000001",
-  "insertTextFormat":1
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":4,"character":4},"end":{"line":4,"character":4}},
+    "newText":"valueOf"
+  }
 }
 
 jsdoc-members-5.js:5:13
@@ -2015,7 +2559,11 @@ Flags: --lsp
   "kind":3,
   "detail":"(prop: mixed) => boolean",
   "sortText":"00000000000000000001",
-  "insertTextFormat":1
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":4,"character":12},"end":{"line":4,"character":12}},
+    "newText":"hasOwnProperty"
+  }
 }
 {
   "label":"instanceMethod",
@@ -2023,7 +2571,11 @@ Flags: --lsp
   "detail":"() => void",
   "documentation":{"kind":"markdown","value":"this is an instance method"},
   "sortText":"00000000000000000001",
-  "insertTextFormat":1
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":4,"character":12},"end":{"line":4,"character":12}},
+    "newText":"instanceMethod"
+  }
 }
 {
   "label":"instanceProp",
@@ -2031,42 +2583,66 @@ Flags: --lsp
   "detail":"2",
   "documentation":{"kind":"markdown","value":"this is an instance property"},
   "sortText":"00000000000000000000",
-  "insertTextFormat":1
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":4,"character":12},"end":{"line":4,"character":12}},
+    "newText":"instanceProp"
+  }
 }
 {
   "label":"isPrototypeOf",
   "kind":3,
   "detail":"(o: mixed) => boolean",
   "sortText":"00000000000000000001",
-  "insertTextFormat":1
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":4,"character":12},"end":{"line":4,"character":12}},
+    "newText":"isPrototypeOf"
+  }
 }
 {
   "label":"propertyIsEnumerable",
   "kind":3,
   "detail":"(prop: mixed) => boolean",
   "sortText":"00000000000000000001",
-  "insertTextFormat":1
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":4,"character":12},"end":{"line":4,"character":12}},
+    "newText":"propertyIsEnumerable"
+  }
 }
 {
   "label":"toLocaleString",
   "kind":3,
   "detail":"() => string",
   "sortText":"00000000000000000001",
-  "insertTextFormat":1
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":4,"character":12},"end":{"line":4,"character":12}},
+    "newText":"toLocaleString"
+  }
 }
 {
   "label":"toString",
   "kind":3,
   "detail":"() => string",
   "sortText":"00000000000000000001",
-  "insertTextFormat":1
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":4,"character":12},"end":{"line":4,"character":12}},
+    "newText":"toString"
+  }
 }
 {
   "label":"valueOf",
   "kind":3,
   "detail":"() => mixed",
   "sortText":"00000000000000000001",
-  "insertTextFormat":1
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":4,"character":12},"end":{"line":4,"character":12}},
+    "newText":"valueOf"
+  }
 }
 {
   "label":"varianceProp",
@@ -2074,7 +2650,11 @@ Flags: --lsp
   "detail":"3",
   "documentation":{"kind":"markdown","value":"property with variance"},
   "sortText":"00000000000000000000",
-  "insertTextFormat":1
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":4,"character":12},"end":{"line":4,"character":12}},
+    "newText":"varianceProp"
+  }
 }
 
 jsdoc-members-6.js:6:5
@@ -2085,7 +2665,11 @@ Flags: --lsp
   "detail":"2",
   "documentation":{"kind":"markdown","value":"bar is a getter property"},
   "sortText":"00000000000000000000",
-  "insertTextFormat":1
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":5,"character":4},"end":{"line":5,"character":4}},
+    "newText":"bar"
+  }
 }
 {
   "label":"baz",
@@ -2093,7 +2677,11 @@ Flags: --lsp
   "detail":"3",
   "documentation":{"kind":"markdown","value":"baz is an identifier property with variance"},
   "sortText":"00000000000000000000",
-  "insertTextFormat":1
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":5,"character":4},"end":{"line":5,"character":4}},
+    "newText":"baz"
+  }
 }
 {
   "label":"foo",
@@ -2101,28 +2689,56 @@ Flags: --lsp
   "detail":"1",
   "documentation":{"kind":"markdown","value":"foo is an identifier property"},
   "sortText":"00000000000000000000",
-  "insertTextFormat":1
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":5,"character":4},"end":{"line":5,"character":4}},
+    "newText":"foo"
+  }
 }
 {
   "label":"hasOwnProperty",
   "kind":3,
   "detail":"(prop: mixed) => boolean",
+  "documentation":{
+    "kind":"markdown",
+    "value":"Determines whether an object has a property with the specified name."
+  },
   "sortText":"00000000000000000001",
-  "insertTextFormat":1
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":5,"character":4},"end":{"line":5,"character":4}},
+    "newText":"hasOwnProperty"
+  }
 }
 {
   "label":"isPrototypeOf",
   "kind":3,
   "detail":"(o: mixed) => boolean",
+  "documentation":{
+    "kind":"markdown",
+    "value":"Determines whether an object exists in another object's prototype chain."
+  },
   "sortText":"00000000000000000001",
-  "insertTextFormat":1
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":5,"character":4},"end":{"line":5,"character":4}},
+    "newText":"isPrototypeOf"
+  }
 }
 {
   "label":"propertyIsEnumerable",
   "kind":3,
   "detail":"(prop: mixed) => boolean",
+  "documentation":{
+    "kind":"markdown",
+    "value":"Determines whether a specified property is enumerable."
+  },
   "sortText":"00000000000000000001",
-  "insertTextFormat":1
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":5,"character":4},"end":{"line":5,"character":4}},
+    "newText":"propertyIsEnumerable"
+  }
 }
 {
   "label":"qux",
@@ -2130,28 +2746,53 @@ Flags: --lsp
   "detail":"4",
   "documentation":{"kind":"markdown","value":"qux is a literal property"},
   "sortText":"00000000000000000000",
-  "insertTextFormat":1
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":5,"character":4},"end":{"line":5,"character":4}},
+    "newText":"qux"
+  }
 }
 {
   "label":"toLocaleString",
   "kind":3,
   "detail":"() => string",
+  "documentation":{
+    "kind":"markdown",
+    "value":"Returns a date converted to a string using the current locale."
+  },
   "sortText":"00000000000000000001",
-  "insertTextFormat":1
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":5,"character":4},"end":{"line":5,"character":4}},
+    "newText":"toLocaleString"
+  }
 }
 {
   "label":"toString",
   "kind":3,
   "detail":"() => string",
+  "documentation":{"kind":"markdown","value":"Returns a string representation of an object."},
   "sortText":"00000000000000000001",
-  "insertTextFormat":1
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":5,"character":4},"end":{"line":5,"character":4}},
+    "newText":"toString"
+  }
 }
 {
   "label":"valueOf",
   "kind":3,
   "detail":"() => mixed",
+  "documentation":{
+    "kind":"markdown",
+    "value":"Returns the primitive value of the specified object."
+  },
   "sortText":"00000000000000000001",
-  "insertTextFormat":1
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":5,"character":4},"end":{"line":5,"character":4}},
+    "newText":"valueOf"
+  }
 }
 
 jsdoc-members-7.js:6:5
@@ -2196,6 +2837,10 @@ Flags: --lsp
   "label":"?.hasOwnProperty",
   "kind":13,
   "detail":"void | ((prop: mixed) => boolean)",
+  "documentation":{
+    "kind":"markdown",
+    "value":"Determines whether an object has a property with the specified name."
+  },
   "sortText":"00000000000000000001",
   "insertTextFormat":1,
   "textEdit":{
@@ -2207,6 +2852,10 @@ Flags: --lsp
   "label":"?.isPrototypeOf",
   "kind":13,
   "detail":"void | ((o: mixed) => boolean)",
+  "documentation":{
+    "kind":"markdown",
+    "value":"Determines whether an object exists in another object's prototype chain."
+  },
   "sortText":"00000000000000000001",
   "insertTextFormat":1,
   "textEdit":{
@@ -2218,6 +2867,10 @@ Flags: --lsp
   "label":"?.propertyIsEnumerable",
   "kind":13,
   "detail":"void | ((prop: mixed) => boolean)",
+  "documentation":{
+    "kind":"markdown",
+    "value":"Determines whether a specified property is enumerable."
+  },
   "sortText":"00000000000000000001",
   "insertTextFormat":1,
   "textEdit":{
@@ -2241,6 +2894,10 @@ Flags: --lsp
   "label":"?.toLocaleString",
   "kind":13,
   "detail":"void | (() => string)",
+  "documentation":{
+    "kind":"markdown",
+    "value":"Returns a date converted to a string using the current locale."
+  },
   "sortText":"00000000000000000001",
   "insertTextFormat":1,
   "textEdit":{
@@ -2252,6 +2909,7 @@ Flags: --lsp
   "label":"?.toString",
   "kind":13,
   "detail":"void | (() => string)",
+  "documentation":{"kind":"markdown","value":"Returns a string representation of an object."},
   "sortText":"00000000000000000001",
   "insertTextFormat":1,
   "textEdit":{
@@ -2263,6 +2921,10 @@ Flags: --lsp
   "label":"?.valueOf",
   "kind":13,
   "detail":"void | (() => mixed)",
+  "documentation":{
+    "kind":"markdown",
+    "value":"Returns the primitive value of the specified object."
+  },
   "sortText":"00000000000000000001",
   "insertTextFormat":1,
   "textEdit":{
@@ -2279,7 +2941,11 @@ Flags: --lsp
   "detail":"DefaultedStringEnum",
   "documentation":{"kind":"markdown","value":"first member of a defaulted string enum"},
   "sortText":"00000000000000000000",
-  "insertTextFormat":1
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":10,"character":20},"end":{"line":10,"character":21}},
+    "newText":"Member1"
+  }
 }
 {
   "label":"Member2",
@@ -2287,28 +2953,44 @@ Flags: --lsp
   "detail":"DefaultedStringEnum",
   "documentation":{"kind":"markdown","value":"second member of a defaulted string enum"},
   "sortText":"00000000000000000000",
-  "insertTextFormat":1
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":10,"character":20},"end":{"line":10,"character":21}},
+    "newText":"Member2"
+  }
 }
 {
   "label":"cast",
   "kind":3,
   "detail":"(input: ?string) => (void | DefaultedStringEnum)",
   "sortText":"00000000000000000001",
-  "insertTextFormat":1
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":10,"character":20},"end":{"line":10,"character":21}},
+    "newText":"cast"
+  }
 }
 {
   "label":"isValid",
   "kind":3,
   "detail":"(input: ?string) => boolean",
   "sortText":"00000000000000000001",
-  "insertTextFormat":1
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":10,"character":20},"end":{"line":10,"character":21}},
+    "newText":"isValid"
+  }
 }
 {
   "label":"members",
   "kind":3,
   "detail":"() => Iterable<DefaultedStringEnum>",
   "sortText":"00000000000000000001",
-  "insertTextFormat":1
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":10,"character":20},"end":{"line":10,"character":21}},
+    "newText":"members"
+  }
 }
 
 jsdoc-members-8.js:13:23
@@ -2319,7 +3001,11 @@ Flags: --lsp
   "detail":"InitializedStringEnum",
   "documentation":{"kind":"markdown","value":"first member of an initialized string enum"},
   "sortText":"00000000000000000000",
-  "insertTextFormat":1
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":12,"character":22},"end":{"line":12,"character":23}},
+    "newText":"Member1"
+  }
 }
 {
   "label":"Member2",
@@ -2327,28 +3013,44 @@ Flags: --lsp
   "detail":"InitializedStringEnum",
   "documentation":{"kind":"markdown","value":"second member of an initialized string enum"},
   "sortText":"00000000000000000000",
-  "insertTextFormat":1
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":12,"character":22},"end":{"line":12,"character":23}},
+    "newText":"Member2"
+  }
 }
 {
   "label":"cast",
   "kind":3,
   "detail":"(input: ?string) => (void | InitializedStringEnum)",
   "sortText":"00000000000000000001",
-  "insertTextFormat":1
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":12,"character":22},"end":{"line":12,"character":23}},
+    "newText":"cast"
+  }
 }
 {
   "label":"isValid",
   "kind":3,
   "detail":"(input: ?string) => boolean",
   "sortText":"00000000000000000001",
-  "insertTextFormat":1
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":12,"character":22},"end":{"line":12,"character":23}},
+    "newText":"isValid"
+  }
 }
 {
   "label":"members",
   "kind":3,
   "detail":"() => Iterable<InitializedStringEnum>",
   "sortText":"00000000000000000001",
-  "insertTextFormat":1
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":12,"character":22},"end":{"line":12,"character":23}},
+    "newText":"members"
+  }
 }
 
 jsdoc-members-8.js:15:12
@@ -2359,7 +3061,11 @@ Flags: --lsp
   "detail":"NumberEnum",
   "documentation":{"kind":"markdown","value":"first member of a number enum"},
   "sortText":"00000000000000000000",
-  "insertTextFormat":1
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":14,"character":11},"end":{"line":14,"character":12}},
+    "newText":"Member1"
+  }
 }
 {
   "label":"Member2",
@@ -2367,28 +3073,44 @@ Flags: --lsp
   "detail":"NumberEnum",
   "documentation":{"kind":"markdown","value":"second member of a number enum"},
   "sortText":"00000000000000000000",
-  "insertTextFormat":1
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":14,"character":11},"end":{"line":14,"character":12}},
+    "newText":"Member2"
+  }
 }
 {
   "label":"cast",
   "kind":3,
   "detail":"(input: ?number) => (void | NumberEnum)",
   "sortText":"00000000000000000001",
-  "insertTextFormat":1
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":14,"character":11},"end":{"line":14,"character":12}},
+    "newText":"cast"
+  }
 }
 {
   "label":"isValid",
   "kind":3,
   "detail":"(input: ?number) => boolean",
   "sortText":"00000000000000000001",
-  "insertTextFormat":1
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":14,"character":11},"end":{"line":14,"character":12}},
+    "newText":"isValid"
+  }
 }
 {
   "label":"members",
   "kind":3,
   "detail":"() => Iterable<NumberEnum>",
   "sortText":"00000000000000000001",
-  "insertTextFormat":1
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":14,"character":11},"end":{"line":14,"character":12}},
+    "newText":"members"
+  }
 }
 
 jsdoc-members-8.js:17:13
@@ -2399,7 +3121,11 @@ Flags: --lsp
   "detail":"BooleanEnum",
   "documentation":{"kind":"markdown","value":"first member of a boolean enum"},
   "sortText":"00000000000000000000",
-  "insertTextFormat":1
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":16,"character":12},"end":{"line":16,"character":13}},
+    "newText":"Member1"
+  }
 }
 {
   "label":"Member2",
@@ -2407,28 +3133,44 @@ Flags: --lsp
   "detail":"BooleanEnum",
   "documentation":{"kind":"markdown","value":"second member of a boolean enum"},
   "sortText":"00000000000000000000",
-  "insertTextFormat":1
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":16,"character":12},"end":{"line":16,"character":13}},
+    "newText":"Member2"
+  }
 }
 {
   "label":"cast",
   "kind":3,
   "detail":"(input: ?boolean) => (void | BooleanEnum)",
   "sortText":"00000000000000000001",
-  "insertTextFormat":1
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":16,"character":12},"end":{"line":16,"character":13}},
+    "newText":"cast"
+  }
 }
 {
   "label":"isValid",
   "kind":3,
   "detail":"(input: ?boolean) => boolean",
   "sortText":"00000000000000000001",
-  "insertTextFormat":1
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":16,"character":12},"end":{"line":16,"character":13}},
+    "newText":"isValid"
+  }
 }
 {
   "label":"members",
   "kind":3,
   "detail":"() => Iterable<BooleanEnum>",
   "sortText":"00000000000000000001",
-  "insertTextFormat":1
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":16,"character":12},"end":{"line":16,"character":13}},
+    "newText":"members"
+  }
 }
 
 jsdoc-members-8.js:19:12
@@ -2439,7 +3181,11 @@ Flags: --lsp
   "detail":"SymbolEnum",
   "documentation":{"kind":"markdown","value":"first member of a boolean enum"},
   "sortText":"00000000000000000000",
-  "insertTextFormat":1
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":18,"character":11},"end":{"line":18,"character":12}},
+    "newText":"Member1"
+  }
 }
 {
   "label":"Member2",
@@ -2447,27 +3193,241 @@ Flags: --lsp
   "detail":"SymbolEnum",
   "documentation":{"kind":"markdown","value":"second member of a boolean enum"},
   "sortText":"00000000000000000000",
-  "insertTextFormat":1
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":18,"character":11},"end":{"line":18,"character":12}},
+    "newText":"Member2"
+  }
 }
 {
   "label":"cast",
   "kind":3,
   "detail":"(input: ?symbol) => (void | SymbolEnum)",
   "sortText":"00000000000000000001",
-  "insertTextFormat":1
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":18,"character":11},"end":{"line":18,"character":12}},
+    "newText":"cast"
+  }
 }
 {
   "label":"isValid",
   "kind":3,
   "detail":"(input: ?symbol) => boolean",
   "sortText":"00000000000000000001",
-  "insertTextFormat":1
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":18,"character":11},"end":{"line":18,"character":12}},
+    "newText":"isValid"
+  }
 }
 {
   "label":"members",
   "kind":3,
   "detail":"() => Iterable<SymbolEnum>",
   "sortText":"00000000000000000001",
-  "insertTextFormat":1
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":18,"character":11},"end":{"line":18,"character":12}},
+    "newText":"members"
+  }
+}
+
+types-jsdoc.js:16:6
+Flags: --lsp
+{
+  "label":"myEnum",
+  "kind":13,
+  "detail":"enum myEnum",
+  "documentation":{"kind":"markdown","value":"this is myEnum"},
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":15,"character":5},"end":{"line":15,"character":5}},
+    "newText":"myEnum"
+  }
+}
+{
+  "label":"myClass",
+  "kind":7,
+  "detail":"class myClass",
+  "documentation":{"kind":"markdown","value":"this is myClass"},
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":15,"character":5},"end":{"line":15,"character":5}},
+    "newText":"myClass"
+  }
+}
+{
+  "label":"ExportClass",
+  "kind":7,
+  "detail":"class ExportClass",
+  "documentation":{"kind":"markdown","value":"this is ExportClass"},
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":15,"character":5},"end":{"line":15,"character":5}},
+    "newText":"ExportClass"
+  }
+}
+{
+  "label":"myFoo",
+  "kind":13,
+  "detail":"type myFoo = number",
+  "documentation":{"kind":"markdown","value":"this is myFoo"},
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":15,"character":5},"end":{"line":15,"character":5}},
+    "newText":"myFoo"
+  }
+}
+{
+  "label":"myBar",
+  "kind":13,
+  "detail":"type myBar<T> = ?T",
+  "documentation":{"kind":"markdown","value":"this is myBar"},
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":15,"character":5},"end":{"line":15,"character":5}},
+    "newText":"myBar"
+  }
+}
+{
+  "label":"myInterface",
+  "kind":8,
+  "detail":"interface myInterface",
+  "documentation":{"kind":"markdown","value":"this is myInterface"},
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":15,"character":5},"end":{"line":15,"character":5}},
+    "newText":"myInterface"
+  }
+}
+{
+  "label":"ExportFoo",
+  "kind":13,
+  "detail":"type ExportFoo = number",
+  "documentation":{"kind":"markdown","value":"this is ExportFoo"},
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":15,"character":5},"end":{"line":15,"character":5}},
+    "newText":"ExportFoo"
+  }
+}
+{
+  "label":"ExportBar",
+  "kind":13,
+  "detail":"type ExportBar<T> = ?T",
+  "documentation":{"kind":"markdown","value":"this is ExportBar"},
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":15,"character":5},"end":{"line":15,"character":5}},
+    "newText":"ExportBar"
+  }
+}
+{
+  "label":"ExportClass",
+  "kind":7,
+  "detail":"class ExportClass",
+  "documentation":{"kind":"markdown","value":"this is ExportClass"},
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":15,"character":5},"end":{"line":15,"character":5}},
+    "newText":"ExportClass"
+  }
+}
+{
+  "label":"ExportInterface",
+  "kind":8,
+  "detail":"interface ExportInterface",
+  "documentation":{"kind":"markdown","value":"this is ExportInterface"},
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":15,"character":5},"end":{"line":15,"character":5}},
+    "newText":"ExportInterface"
+  }
+}
+{
+  "label":"exportValue",
+  "kind":13,
+  "detail":"type exportValue = number",
+  "documentation":{"kind":"markdown","value":"this is ExportValue"},
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":15,"character":5},"end":{"line":15,"character":5}},
+    "newText":"exportValue"
+  }
+}
+
+qualified-types-jsdoc.js:5:12
+Flags: --lsp
+{
+  "label":"ExportBar",
+  "kind":13,
+  "detail":"type ExportBar<T> = ?T",
+  "documentation":{"kind":"markdown","value":"this is ExportBar"},
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":4,"character":11},"end":{"line":4,"character":11}},
+    "newText":"ExportBar"
+  }
+}
+{
+  "label":"ExportClass",
+  "kind":7,
+  "detail":"class ExportClass",
+  "documentation":{"kind":"markdown","value":"this is ExportClass"},
+  "sortText":"00000000000000000001",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":4,"character":11},"end":{"line":4,"character":11}},
+    "newText":"ExportClass"
+  }
+}
+{
+  "label":"ExportEnum",
+  "kind":13,
+  "detail":"enum ExportEnum",
+  "documentation":{"kind":"markdown","value":"this is ExportEnum"},
+  "sortText":"00000000000000000002",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":4,"character":11},"end":{"line":4,"character":11}},
+    "newText":"ExportEnum"
+  }
+}
+{
+  "label":"ExportFoo",
+  "kind":6,
+  "detail":"type ExportFoo = number",
+  "documentation":{"kind":"markdown","value":"this is ExportFoo"},
+  "sortText":"00000000000000000003",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":4,"character":11},"end":{"line":4,"character":11}},
+    "newText":"ExportFoo"
+  }
+}
+{
+  "label":"ExportInterface",
+  "kind":8,
+  "detail":"interface ExportInterface",
+  "documentation":{"kind":"markdown","value":"this is ExportInterface"},
+  "sortText":"00000000000000000004",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":4,"character":11},"end":{"line":4,"character":11}},
+    "newText":"ExportInterface"
+  }
 }
 

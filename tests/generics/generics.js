@@ -8,7 +8,7 @@ class D<T> {
   x:T;
   m<S>(z:S,u:T,v):S {
     this.x = u;
-    v.u = u;
+    v.u = u; 
     return z;
   }
 }

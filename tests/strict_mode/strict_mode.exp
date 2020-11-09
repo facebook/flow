@@ -17,8 +17,8 @@ Dependencies of a `@flow strict` module must also be `@flow strict`! [nonstrict-
 
 Error ------------------------------------------------------------------------------------------------------ test.js:6:5
 
-Cannot use `T` as a type. A name can be used as a type only if it refers to a type, interface, class, or enum
-definition. To get the type of a non-class value, use `typeof`. [value-as-type]
+Cannot use `T` as a type because it is an `any`-typed value. Type `T` properly, so it is no longer `any`-typed, to use
+it as an annotation. [value-as-type]
 
    6| (0: T);
           ^

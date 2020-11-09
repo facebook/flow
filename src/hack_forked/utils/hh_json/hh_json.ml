@@ -10,28 +10,28 @@
  *)
 
 (*
-<value> ::=
-  | <object>
-  | <array>
-  | <string>
-  | <number>
-  | 'true'
-  | 'false'
-  | 'null'
+   <value> ::=
+     | <object>
+     | <array>
+     | <string>
+     | <number>
+     | 'true'
+     | 'false'
+     | 'null'
 
-<object>   ::= '{' <members>* '}'
-<members>  ::= <pair> { ',' <pair> }* [',']
-<pair>     ::= <string> ':' <value>
+   <object>   ::= '{' <members>* '}'
+   <members>  ::= <pair> { ',' <pair> }* [',']
+   <pair>     ::= <string> ':' <value>
 
-<array>    ::= '{' <elements>* '}'
-<elements> ::= <value> { ',' <value> }* [',']
+   <array>    ::= '{' <elements>* '}'
+   <elements> ::= <value> { ',' <value> }* [',']
 
-<number>   ::=
+   <number>   ::=
 
-Caveats:
- (+) No handling of Unicode yet
- (+) Numbers are just stored as strings
- *)
+   Caveats:
+    (+) No handling of Unicode yet
+    (+) Numbers are just stored as strings
+*)
 
 module List = Base.List
 
@@ -65,7 +65,7 @@ exception Syntax_error of string
 
 (* Ignore whitespace in peek/eat/next/has_more to make code that uses them
    cleaner
- *)
+*)
 
 let peek env = env.data.[env.pos]
 

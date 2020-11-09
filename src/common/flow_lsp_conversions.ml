@@ -81,66 +81,59 @@ let flow_signature_help_to_lsp
 let flow_completion_to_lsp
     ~is_snippet_supported:(_ : bool)
     ~(is_preselect_supported : bool)
-    (item : ServerProt.Response.complete_autocomplete_result) : Lsp.Completion.completionItem =
-  Lsp.Completion.(
-    ServerProt.Response.(
-      let detail =
-        let trunc n s =
-          if String.length s < n then
-            s
-          else
-            String.sub s 0 n ^ "..."
-        in
-        let column_width = 80 in
-        Some (trunc column_width item.res_ty)
-      in
-      let insertTextFormat = Some PlainText in
-      let textEdits =
-        match item.res_insert_text with
-        | Some insert_text ->
-          let range = loc_to_lsp_range item.res_loc in
-          [{ Lsp.TextEdit.range; newText = insert_text }]
-        | None -> []
-      in
-      let sortText = Some (Printf.sprintf "%020u" item.rank) in
-      let documentation =
-        Base.Option.map item.res_documentation ~f:(fun doc -> [Lsp.MarkedString doc])
-      in
-      {
-        label = item.res_name;
-        kind = item.res_kind;
-        detail;
-        documentation;
-        (* This will be filled in by completionItem/resolve. *)
-        preselect = is_preselect_supported && item.res_preselect;
-        sortText;
-        filterText = None;
-        insertText = None (* deprecated and should not be used *);
-        insertTextFormat;
-        textEdits;
-        command = None;
-        data = None;
-      }))
+    (item : ServerProt.Response.Completion.completion_item) : Lsp.Completion.completionItem =
+  let open ServerProt.Response.Completion in
+  let detail =
+    let trunc n s =
+      if String.length s < n then
+        s
+      else
+        String.sub s 0 n ^ "..."
+    in
+    let column_width = 80 in
+    Some (trunc column_width item.detail)
+  in
+  let insertTextFormat = Some Lsp.Completion.PlainText in
+  let textEdits =
+    Base.List.map
+      ~f:(fun (loc, newText) -> { Lsp.TextEdit.range = loc_to_lsp_range loc; newText })
+      item.text_edits
+  in
+  let documentation = Base.Option.map item.documentation ~f:(fun doc -> [Lsp.MarkedString doc]) in
+  {
+    Lsp.Completion.label = item.name;
+    kind = item.kind;
+    detail;
+    documentation;
+    preselect = is_preselect_supported && item.preselect;
+    sortText = item.sort_text;
+    filterText = None;
+    insertText = None (* deprecated and should not be used *);
+    insertTextFormat;
+    textEdits;
+    command = None;
+    data = None;
+  }
 
-let file_key_to_uri (file_key_opt : File_key.t option) : (string, string) result =
+let file_key_to_uri (file_key_opt : File_key.t option) : (Lsp.DocumentUri.t, string) result =
   let ( >>| ) = Base.Result.( >>| ) in
   let ( >>= ) = Base.Result.( >>= ) in
   Base.Result.of_option file_key_opt ~error:"File_key is None"
   >>= File_key.to_path
   >>| File_url.create
+  >>| Lsp.DocumentUri.of_string
 
 let loc_to_lsp (loc : Loc.t) : (Lsp.Location.t, string) result =
   let ( >>| ) = Base.Result.( >>| ) in
-  file_key_to_uri loc.Loc.source >>| fun uri ->
-  { Lsp.Location.uri = Lsp.uri_of_string uri; range = loc_to_lsp_range loc }
+  file_key_to_uri loc.Loc.source >>| fun uri -> { Lsp.Location.uri; range = loc_to_lsp_range loc }
 
-let loc_to_lsp_with_default (loc : Loc.t) ~(default_uri : string) : Lsp.Location.t =
+let loc_to_lsp_with_default (loc : Loc.t) ~(default_uri : Lsp.DocumentUri.t) : Lsp.Location.t =
   let uri =
     match file_key_to_uri loc.Loc.source with
     | Ok uri -> uri
     | Error _ -> default_uri
   in
-  { Lsp.Location.uri = Lsp.uri_of_string uri; range = loc_to_lsp_range loc }
+  { Lsp.Location.uri; range = loc_to_lsp_range loc }
 
 let flow_edit_to_textedit (edit : Loc.t * string) : Lsp.TextEdit.t =
   let (loc, text) = edit in
@@ -197,7 +190,7 @@ module DocumentSymbols = struct
     Base.Option.map id_opt ~f:name_of_id
 
   let ast_name
-      ~(uri : Lsp.documentUri)
+      ~(uri : Lsp.DocumentUri.t)
       ~(acc : Lsp.SymbolInformation.t list)
       ~(loc : Loc.t)
       ~(containerName : string option)
@@ -228,7 +221,7 @@ module DocumentSymbols = struct
     ast_name_opt ~uri ~containerName ~acc ~loc ~name_opt:(name_of_id_opt id_opt) ~kind
 
   let ast_class_member
-      ~(uri : Lsp.documentUri)
+      ~(uri : Lsp.DocumentUri.t)
       ~(containerName : string option)
       (acc : Lsp.SymbolInformation.t list)
       (member : (Loc.t, Loc.t) Ast.Class.Body.element) : Lsp.SymbolInformation.t list =
@@ -254,7 +247,7 @@ module DocumentSymbols = struct
       ast_name ~uri ~containerName ~acc ~loc ~name ~kind:Lsp.SymbolInformation.Field
 
   let ast_class
-      ~(uri : Lsp.documentUri)
+      ~(uri : Lsp.DocumentUri.t)
       ~(containerName : string option)
       ~(acc : Lsp.SymbolInformation.t list)
       ~(loc : Loc.t)
@@ -268,7 +261,7 @@ module DocumentSymbols = struct
     Base.List.fold body.Body.body ~init:acc ~f:(ast_class_member ~uri ~containerName)
 
   let ast_type_object_property
-      ~(uri : Lsp.documentUri)
+      ~(uri : Lsp.DocumentUri.t)
       ~(containerName : string option)
       (acc : Lsp.SymbolInformation.t list)
       (property : (Loc.t, Loc.t) Ast.Type.Object.property) : Lsp.SymbolInformation.t list =
@@ -283,7 +276,7 @@ module DocumentSymbols = struct
     | _ -> acc
 
   let ast_type_object
-      ~(uri : Lsp.documentUri)
+      ~(uri : Lsp.DocumentUri.t)
       ~(containerName : string option)
       ~(acc : Lsp.SymbolInformation.t list)
       ~(object_ : (Loc.t, Loc.t) Ast.Type.Object.t) : Lsp.SymbolInformation.t list =
@@ -291,7 +284,7 @@ module DocumentSymbols = struct
     Base.List.fold object_.properties ~init:acc ~f:(ast_type_object_property ~uri ~containerName)
 
   let ast_type
-      ~(uri : Lsp.documentUri)
+      ~(uri : Lsp.DocumentUri.t)
       ~(containerName : string option)
       ~(acc : Lsp.SymbolInformation.t list)
       ~(type_ : (Loc.t, Loc.t) Ast.Type.t') : Lsp.SymbolInformation.t list =
@@ -303,7 +296,7 @@ module DocumentSymbols = struct
     | _ -> acc
 
   let ast_statement_declaration
-      ~(uri : Lsp.documentUri)
+      ~(uri : Lsp.DocumentUri.t)
       ~(containerName : string option)
       ~(acc : Lsp.SymbolInformation.t list)
       ~(declaration : (Loc.t, Loc.t) Ast.Statement.DeclareExportDeclaration.declaration) :
@@ -329,7 +322,7 @@ module DocumentSymbols = struct
       ast_type_object ~uri ~containerName:(Some (name_of_id id)) ~acc ~object_
 
   let ast_expression
-      ~(uri : Lsp.documentUri)
+      ~(uri : Lsp.DocumentUri.t)
       ~(containerName : string option)
       ~(acc : Lsp.SymbolInformation.t list)
       ~(expression : (Loc.t, Loc.t) Ast.Expression.t) : Lsp.SymbolInformation.t list =
@@ -339,7 +332,7 @@ module DocumentSymbols = struct
     | (_, _) -> acc
 
   let rec ast_statement
-      ~(uri : Lsp.documentUri)
+      ~(uri : Lsp.DocumentUri.t)
       ~(containerName : string option)
       (acc : Lsp.SymbolInformation.t list)
       (statement : (Loc.t, Loc.t) Ast.Statement.t) : Lsp.SymbolInformation.t list =
@@ -403,7 +396,7 @@ module DocumentSymbols = struct
     | _ -> acc
 end
 
-let flow_ast_to_lsp_symbols ~(uri : Lsp.documentUri) (program : (Loc.t, Loc.t) Ast.Program.t) :
+let flow_ast_to_lsp_symbols ~(uri : Lsp.DocumentUri.t) (program : (Loc.t, Loc.t) Ast.Program.t) :
     Lsp.SymbolInformation.t list =
   let (_loc, { Ast.Program.statements; _ }) = program in
   Base.List.fold statements ~init:[] ~f:(DocumentSymbols.ast_statement ~uri ~containerName:None)

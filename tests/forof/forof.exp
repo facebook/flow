@@ -37,16 +37,16 @@ Error --------------------------------------------------------------------------
 Cannot cast `x` to number because string [1] is incompatible with number [2]. [incompatible-cast]
 
    forof.js:25:6
-    25|     (x: number); // Error - string ~> number
-             ^
+     25|     (x: number); // Error - string ~> number
+              ^
 
 References:
-   <BUILTINS>/core.js:324:28
-   324|     @@iterator(): Iterator<string>;
-                                   ^^^^^^ [1]
+   <BUILTINS>/core.js:1069:28
+   1069|     @@iterator(): Iterator<string>;
+                                    ^^^^^^ [1]
    forof.js:25:9
-    25|     (x: number); // Error - string ~> number
-                ^^^^^^ [2]
+     25|     (x: number); // Error - string ~> number
+                 ^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- forof.js:32:6
@@ -54,16 +54,16 @@ Error --------------------------------------------------------------------------
 Cannot cast `elem` to number because tuple type [1] is incompatible with number [2]. [incompatible-cast]
 
    forof.js:32:6
-    32|     (elem: number); // Error - tuple ~> number
-             ^^^^
+     32|     (elem: number); // Error - tuple ~> number
+              ^^^^
 
 References:
-   <BUILTINS>/core.js:596:28
-   596|     @@iterator(): Iterator<[K, V]>;
-                                   ^^^^^^ [1]
+   <BUILTINS>/core.js:1698:28
+   1698|     @@iterator(): Iterator<[K, V]>;
+                                    ^^^^^^ [1]
    forof.js:32:12
-    32|     (elem: number); // Error - tuple ~> number
-                   ^^^^^^ [2]
+     32|     (elem: number); // Error - tuple ~> number
+                    ^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- forof.js:39:6
@@ -71,16 +71,16 @@ Error --------------------------------------------------------------------------
 Cannot cast `elem` to number because tuple type [1] is incompatible with number [2]. [incompatible-cast]
 
    forof.js:39:6
-    39|     (elem: number); // Error - tuple ~> number
-             ^^^^
+     39|     (elem: number); // Error - tuple ~> number
+              ^^^^
 
 References:
-   <BUILTINS>/core.js:596:28
-   596|     @@iterator(): Iterator<[K, V]>;
-                                   ^^^^^^ [1]
+   <BUILTINS>/core.js:1698:28
+   1698|     @@iterator(): Iterator<[K, V]>;
+                                    ^^^^^^ [1]
    forof.js:39:12
-    39|     (elem: number); // Error - tuple ~> number
-                   ^^^^^^ [2]
+     39|     (elem: number); // Error - tuple ~> number
+                    ^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- forof.js:45:6

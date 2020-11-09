@@ -3,7 +3,8 @@
  * @format
  */
 
-import {suite, test} from '../../../packages/flow-dev-tools/src/test/Tester';
+import type Suite from 'flow-dev-tools/src/test/Suite.js';
+import {suite, test} from 'flow-dev-tools/src/test/Tester';
 
 /**
  * This test suite takes each query tested by lsp/queries and runs it once with
@@ -12,7 +13,7 @@ import {suite, test} from '../../../packages/flow-dev-tools/src/test/Tester';
  * parallel with a recheck will return a response. Those that don't will
  * timeout
  */
-export default suite(
+export default (suite(
   ({
     lspStartAndConnect,
     lspNotification,
@@ -374,4 +375,4 @@ export default suite(
         .timeout(2000),
     ]).waitForRecheck(false),
   ],
-);
+): Suite);

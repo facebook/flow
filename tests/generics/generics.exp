@@ -1,3 +1,24 @@
+Error ------------------------------------------------------------------------------------------------ generics.js:11:11
+
+Cannot assign `u` to `v.u` because type variable `T` [1] cannot escape from the scope in which it was defined [2] (try
+adding a type annotation to `v` [3]). [escaped-generic]
+
+   generics.js:11:11
+   11|     v.u = u; 
+                 ^
+
+References:
+   generics.js:9:14
+    9|   m<S>(z:S,u:T,v):S {
+                    ^ [1]
+   generics.js:7:9
+    7| class D<T> {
+               ^ [2]
+   generics.js:9:16
+    9|   m<S>(z:S,u:T,v):S {
+                      ^ [3]
+
+
 Error ------------------------------------------------------------------------------------------------ generics.js:19:16
 
 Cannot assign `d.x` to `s` because number [1] is incompatible with string [2]. [incompatible-type]
@@ -112,4 +133,4 @@ Cannot apply type because it is not a polymorphic type. [nonpolymorphic-type-app
 
 
 
-Found 8 errors
+Found 9 errors

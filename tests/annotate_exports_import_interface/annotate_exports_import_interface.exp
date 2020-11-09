@@ -4,7 +4,7 @@
 >>> ./main.js
 // @flow
 
-import type {I} from "./lib.js";const i = require('./lib');
+import type {I} from "./lib";const i = require('./lib');
 
 module.exports = (i(): I);
 
@@ -26,7 +26,6 @@ Errors:
     Parsing heaps get ast error:            0
     Indeterminate module type:              0
     No matching export:                     0
-    Unrecognizable module error:            0
   Serializer error:                         0
   Unsupported error kind:                   0
 
@@ -43,7 +42,7 @@ Warnings:
 >>> ./main.js
 // @flow
 
-import type {I} from "./lib.js";const i = require('./lib');
+import type {I} from "./lib";const i = require('./lib');
 
 module.exports = (i(): I);
 

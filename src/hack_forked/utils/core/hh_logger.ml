@@ -20,6 +20,11 @@ let timestamp_string () =
       tm.tm_sec
       ms)
 
+type dest = {
+  file: bool;
+  stderr: bool;
+}
+
 (* We might want to log to both stderr and a file. Shelling out to tee isn't cross-platform.
  * We could dup2 stderr to a pipe and have a child process write to both original stderr and the
  * file, but that's kind of overkill. This is good enough *)
@@ -38,7 +43,7 @@ let id_string () =
   | None -> ""
   | Some id -> Printf.sprintf "[%s] " id
 
-let print_with_newline ?exn fmt =
+let print_with_newline_internal ~dest ?exn fmt =
   let print_raw ?exn s =
     let exn_str =
       Base.Option.value_map exn ~default:"" ~f:(fun exn ->
@@ -54,13 +59,17 @@ let print_with_newline ?exn fmt =
     let time = timestamp_string () in
     let id_str = id_string () in
     begin
-      match !dupe_log with
-      | None -> ()
-      | Some (_, dupe_log_oc) -> Printf.fprintf dupe_log_oc "%s %s%s%s\n%!" time id_str s exn_str
+      match (!dupe_log, dest.file) with
+      | (Some (_, dupe_log_oc), true) ->
+        Printf.fprintf dupe_log_oc "%s %s%s%s\n%!" time id_str s exn_str
+      | (_, _) -> ()
     end;
-    Printf.eprintf "%s %s%s%s\n%!" time id_str s exn_str
+    if dest.stderr then Printf.eprintf "%s %s%s%s\n%!" time id_str s exn_str
   in
   Printf.ksprintf (print_raw ?exn) fmt
+
+let print_with_newline ?exn fmt =
+  print_with_newline_internal ~dest:{ file = true; stderr = true } ?exn fmt
 
 let print_duration name t =
   let t2 = Unix.gettimeofday () in
@@ -82,7 +91,15 @@ module Level : sig
     | Info
     | Debug
 
+  val min_level_file : unit -> t
+
+  val min_level_stderr : unit -> t
+
   val min_level : unit -> t
+
+  val set_min_level_file : t -> unit
+
+  val set_min_level_stderr : t -> unit
 
   val set_min_level : t -> unit
 
@@ -108,17 +125,41 @@ end = struct
     | Info -> 2
     | Debug -> 1
 
-  let min_level_ref = ref Info
+  let min_level_file_ref = ref Info
 
-  let min_level () = !min_level_ref
+  let min_level_stderr_ref = ref Info
 
-  let set_min_level level = min_level_ref := level
+  let min_level_file () = !min_level_file_ref
 
-  let passes_min_level level = int_of_level level >= int_of_level !min_level_ref
+  let min_level_stderr () = !min_level_stderr_ref
+
+  let min_level () =
+    let file_int = int_of_level !min_level_file_ref in
+    let stderr_int = int_of_level !min_level_stderr_ref in
+    if file_int < stderr_int then
+      !min_level_file_ref
+    else
+      !min_level_stderr_ref
+
+  let set_min_level_file level = min_level_file_ref := level
+
+  let set_min_level_stderr level = min_level_stderr_ref := level
+
+  let set_min_level level =
+    set_min_level_file level;
+    set_min_level_stderr level;
+    ()
+
+  let passes_min_level_file level = int_of_level level >= int_of_level !min_level_file_ref
+
+  let passes_min_level_stderr level = int_of_level level >= int_of_level !min_level_stderr_ref
+
+  let passes_min_level level = passes_min_level_file level || passes_min_level_stderr level
 
   let log level ?exn fmt =
-    if passes_min_level level then
-      print_with_newline ?exn fmt
+    let dest = { file = passes_min_level_file level; stderr = passes_min_level_stderr level } in
+    if dest.file || dest.stderr then
+      print_with_newline_internal ~dest ?exn fmt
     else
       Printf.ifprintf () fmt
 

@@ -159,10 +159,21 @@ and Type : sig
       [@@deriving show]
     end
 
+    module ThisParam : sig
+      type ('M, 'T) t = 'M * ('M, 'T) t'
+
+      and ('M, 'T) t' = {
+        annot: ('M, 'T) Type.annotation;
+        comments: ('M, unit) Syntax.t option;
+      }
+      [@@deriving show]
+    end
+
     module Params : sig
       type ('M, 'T) t = 'M * ('M, 'T) t'
 
       and ('M, 'T) t' = {
+        this_: ('M, 'T) ThisParam.t option;
         params: ('M, 'T) Param.t list;
         rest: ('M, 'T) RestParam.t option;
         comments: ('M, 'M Comment.t list) Syntax.t option;
@@ -696,7 +707,8 @@ and Statement : sig
     module BooleanBody : sig
       type 'M t = {
         members: ('M BooleanLiteral.t, 'M) InitializedMember.t list;
-        explicitType: bool;
+        explicit_type: bool;
+        has_unknown_members: bool;
         comments: ('M, unit) Syntax.t option;
       }
       [@@deriving show]
@@ -705,7 +717,8 @@ and Statement : sig
     module NumberBody : sig
       type 'M t = {
         members: ('M NumberLiteral.t, 'M) InitializedMember.t list;
-        explicitType: bool;
+        explicit_type: bool;
+        has_unknown_members: bool;
         comments: ('M, unit) Syntax.t option;
       }
       [@@deriving show]
@@ -714,7 +727,8 @@ and Statement : sig
     module StringBody : sig
       type 'M t = {
         members: ('M StringLiteral.t, 'M) members;
-        explicitType: bool;
+        explicit_type: bool;
+        has_unknown_members: bool;
         comments: ('M, unit) Syntax.t option;
       }
 
@@ -727,6 +741,7 @@ and Statement : sig
     module SymbolBody : sig
       type 'M t = {
         members: 'M DefaultedMember.t list;
+        has_unknown_members: bool;
         comments: ('M, unit) Syntax.t option;
       }
       [@@deriving show]
@@ -832,7 +847,7 @@ and Statement : sig
       declaration: ('M, 'T) Statement.t option;
       specifiers: 'M specifier option;
       source: ('M * 'M StringLiteral.t) option;
-      exportKind: Statement.exportKind;
+      export_kind: Statement.export_kind;
       comments: ('M, unit) Syntax.t option;
     }
 
@@ -885,7 +900,7 @@ and Statement : sig
   end
 
   module ImportDeclaration : sig
-    type importKind =
+    type import_kind =
       | ImportType
       | ImportTypeof
       | ImportValue
@@ -895,13 +910,13 @@ and Statement : sig
       | ImportNamespaceSpecifier of ('M * ('M, 'T) Identifier.t)
 
     and ('M, 'T) named_specifier = {
-      kind: importKind option;
+      kind: import_kind option;
       local: ('M, 'T) Identifier.t option;
       remote: ('M, 'T) Identifier.t;
     }
 
     and ('M, 'T) t = {
-      importKind: importKind;
+      import_kind: import_kind;
       source: 'M * 'M StringLiteral.t;
       default: ('M, 'T) Identifier.t option;
       specifiers: ('M, 'T) specifier option;
@@ -923,7 +938,7 @@ and Statement : sig
     type 'M t = { comments: ('M, unit) Syntax.t option } [@@deriving show]
   end
 
-  type exportKind =
+  type export_kind =
     | ExportType
     | ExportValue
 
@@ -1501,7 +1516,7 @@ and JSX : sig
 
     and ('M, 'T) t' = {
       name: ('M, 'T) name;
-      selfClosing: bool;
+      self_closing: bool;
       attributes: ('M, 'T) attribute list;
     }
     [@@deriving show]
@@ -1531,15 +1546,15 @@ and JSX : sig
     | Text of Text.t
 
   and ('M, 'T) element = {
-    openingElement: ('M, 'T) Opening.t;
-    closingElement: ('M, 'T) Closing.t option;
+    opening_element: ('M, 'T) Opening.t;
+    closing_element: ('M, 'T) Closing.t option;
     children: 'M * ('M, 'T) child list;
     comments: ('M, unit) Syntax.t option;
   }
 
   and ('M, 'T) fragment = {
-    frag_openingElement: 'M;
-    frag_closingElement: 'M;
+    frag_opening_element: 'M;
+    frag_closing_element: 'M;
     frag_children: 'M * ('M, 'T) child list;
     frag_comments: ('M, unit) Syntax.t option;
   }
@@ -1764,7 +1779,7 @@ and Class : sig
     tparams: ('M, 'T) Type.TypeParams.t option;
     extends: ('M, 'T) Extends.t option;
     implements: ('M, 'T) Implements.t option;
-    classDecorators: ('M, 'T) Decorator.t list;
+    class_decorators: ('M, 'T) Decorator.t list;
     comments: ('M, unit) Syntax.t option;
   }
   [@@deriving show]
@@ -1792,10 +1807,21 @@ and Function : sig
     [@@deriving show]
   end
 
+  module ThisParam : sig
+    type ('M, 'T) t = 'M * ('M, 'T) t'
+
+    and ('M, 'T) t' = {
+      annot: ('M, 'T) Type.annotation;
+      comments: ('M, unit) Syntax.t option;
+    }
+    [@@deriving show]
+  end
+
   module Params : sig
     type ('M, 'T) t = 'M * ('M, 'T) t'
 
     and ('M, 'T) t' = {
+      this_: ('M, 'T) ThisParam.t option;
       params: ('M, 'T) Param.t list;
       rest: ('M, 'T) RestParam.t option;
       comments: ('M, 'M Comment.t list) Syntax.t option;

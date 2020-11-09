@@ -193,7 +193,7 @@ let max_files = 1000
 
     If kind_of_path fails, then we only emit a warning if error_filter passes *)
 let make_next_files_and_symlinks
-    ~node_module_filter ~path_filter ~realpath_filter ~error_filter paths =
+    ~node_module_filter ~path_filter ~realpath_filter ~error_filter ~dir_filter paths =
   let prefix_checkers = Base.List.map ~f:is_prefix paths in
   let rec process sz (acc, symlinks) files dir stack =
     if sz >= max_files then
@@ -215,28 +215,33 @@ let make_next_files_and_symlinks
           else
             process sz (acc, symlinks) files dir stack
         | Dir (path, is_symlink) ->
-          if node_module_filter file then
-            node_modules_containers :=
-              SMap.add
-                ~combine:SSet.union
-                (Filename.dirname file)
-                (file |> Filename.basename |> SSet.singleton)
-                !node_modules_containers;
-          if is_symlink then
-            let symlinks =
-              (* accumulates all of the symlinks that point to
-                directories outside of `paths`; symlinks that point to
-                directories already covered by `paths` will be found on
-                their own, so they are skipped. *)
-              if not (List.exists (fun check -> check path) prefix_checkers) then
-                SSet.add path symlinks
-              else
-                symlinks
-            in
+          if not (dir_filter file && (file = path || dir_filter path)) then
+            (* ignore the entire directory *)
             process sz (acc, symlinks) files dir stack
-          else
-            let dirfiles = Array.to_list @@ try_readdir path in
-            process sz (acc, symlinks) dirfiles file (S_Dir (files, dir, stack))
+          else (
+            if node_module_filter file then
+              node_modules_containers :=
+                SMap.add
+                  ~combine:SSet.union
+                  (Filename.dirname file)
+                  (file |> Filename.basename |> SSet.singleton)
+                  !node_modules_containers;
+            if is_symlink then
+              let symlinks =
+                (* accumulates all of the symlinks that point to
+                   directories outside of `paths`; symlinks that point to
+                   directories already covered by `paths` will be found on
+                   their own, so they are skipped. *)
+                if not (List.exists (fun check -> check path) prefix_checkers) then
+                  SSet.add path symlinks
+                else
+                  symlinks
+              in
+              process sz (acc, symlinks) files dir stack
+            else
+              let dirfiles = Array.to_list @@ try_readdir path in
+              process sz (acc, symlinks) dirfiles file (S_Dir (files, dir, stack))
+          )
         | StatError msg ->
           if error_filter file then prerr_endline msg;
           process sz (acc, symlinks) files dir stack
@@ -256,7 +261,7 @@ let make_next_files_and_symlinks
    and including any directories that are symlinked to even if they are outside
    of `paths`. *)
 let make_next_files_following_symlinks
-    ~node_module_filter ~path_filter ~realpath_filter ~error_filter paths =
+    ~node_module_filter ~path_filter ~realpath_filter ~error_filter ~dir_filter paths =
   let paths = Base.List.map ~f:Path.to_string paths in
   let cb =
     ref
@@ -265,6 +270,7 @@ let make_next_files_following_symlinks
          ~path_filter
          ~realpath_filter
          ~error_filter
+         ~dir_filter
          paths)
   in
   let symlinks = ref SSet.empty in
@@ -297,6 +303,7 @@ let make_next_files_following_symlinks
           ~path_filter:realpath_filter
           ~realpath_filter
           ~error_filter
+          ~dir_filter
           paths;
       rec_cb ()
   in
@@ -312,6 +319,43 @@ let get_all =
       get_all_rec next accum
   in
   (fun next -> get_all_rec next SSet.empty)
+
+(* Local reference to the module exported by a file. Like other local references
+   to modules imported by the file, it is a member of Context.module_map. *)
+let module_ref file = File_key.to_string file
+
+let lib_module_ref = ""
+
+let dir_sep = Str.regexp "[/\\\\]"
+
+let current_dir_name = Str.regexp_string Filename.current_dir_name
+
+let parent_dir_name = Str.regexp_string Filename.parent_dir_name
+
+let absolute_path_regexp = Str.regexp "^\\(/\\|[A-Za-z]:[/\\\\]\\)"
+
+let project_root_token = Str.regexp_string "<PROJECT_ROOT>"
+
+let dir_filter_of_options (options : options) f =
+  let can_prune =
+    (* for now, we can prune if there are no negations, and if none of the ignores
+       are matching specific files (by using $ to match the end of the filename).
+
+       TODO: if all negated ignores are absolute, then we can check whether a
+       directory is a prefix of the negation and so might contain a file that needs
+       to be un-ignored. similarly, if an ignore ends in $, we could still prune if
+       the current path isn't a prefix of it. *)
+    Base.List.for_all
+      ~f:(fun (pattern, _rx) ->
+        (not (String_utils.string_starts_with pattern "!"))
+        && not (String_utils.string_ends_with pattern "$"))
+      options.ignores
+  in
+  if can_prune then
+    f
+  else
+    fun _path ->
+  true
 
 let init ?(flowlibs_only = false) (options : options) =
   let node_module_filter = is_node_module options in
@@ -330,6 +374,7 @@ let init ?(flowlibs_only = false) (options : options) =
       let filter path = is_in_flowlib path || is_valid_path path in
       (root :: libs, filter)
   in
+  let dir_filter _path = true in
   (* preserve enumeration order *)
   let libs =
     if libs = [] then
@@ -344,27 +389,12 @@ let init ?(flowlibs_only = false) (options : options) =
           ~path_filter:filter'
           ~realpath_filter:filter'
           ~error_filter:(fun _ -> true)
+          ~dir_filter
           [lib]
       in
       libs |> Base.List.map ~f:(fun lib -> SSet.elements (get_all (get_next lib))) |> List.flatten
   in
   (libs, SSet.of_list libs)
-
-(* Local reference to the module exported by a file. Like other local references
-   to modules imported by the file, it is a member of Context.module_map. *)
-let module_ref file = File_key.to_string file
-
-let lib_module_ref = ""
-
-let dir_sep = Str.regexp "[/\\\\]"
-
-let current_dir_name = Str.regexp_string Filename.current_dir_name
-
-let parent_dir_name = Str.regexp_string Filename.parent_dir_name
-
-let absolute_path_regexp = Str.regexp "^\\(/\\|[A-Za-z]:[/\\\\]\\)"
-
-let project_root_token = Str.regexp_string "<PROJECT_ROOT>"
 
 let is_matching path pattern_list =
   List.fold_left
@@ -452,11 +482,13 @@ let make_next_files ~root ~all ~subdir ~options ~libs =
         && (String_utils.string_starts_with path root_str || is_included options path)
         && realpath_filter path
   in
+  let dir_filter = dir_filter_of_options options filter in
   make_next_files_following_symlinks
     ~node_module_filter
     ~path_filter
     ~realpath_filter
     ~error_filter:filter
+    ~dir_filter
     starting_points
 
 let is_windows_root root =

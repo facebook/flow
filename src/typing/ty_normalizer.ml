@@ -752,8 +752,9 @@ end = struct
        * may exit the scope of the structure that introduced them, in which case we
        * do not perform the substitution. There instead we unfold the underlying type. *)
       let reason = TypeUtil.reason_of_t t in
-      match desc_of_reason ~unwrap:false reason with
-      | RPolyTest (name, _) ->
+      match (t, desc_of_reason ~unwrap:false reason) with
+      | (Type.GenericT { name; _ }, _)
+      | (_, RPolyTest (name, _, _, _)) ->
         let loc = Reason.def_aloc_of_reason reason in
         let default t = next ~env t in
         lookup_tparam ~default env t name loc
@@ -782,17 +783,17 @@ end = struct
               match desc_of_reason ~unwrap:false reason with
               | RTypeAlias (name, Some loc, _) ->
                 (* The default action is to avoid expansion by using the type alias name,
-                 when this can be trusted. The one case where we want to skip this process
-                 is when recovering the body of a type alias A. In that case the environment
-                 field under_type_alias will be 'Some A'. If the type alias name in the reason
-                 is also A, then we are still at the top-level of the type-alias, so we
-                 proceed by expanding one level preserving the same environment. *)
+                   when this can be trusted. The one case where we want to skip this process
+                   is when recovering the body of a type alias A. In that case the environment
+                   field under_type_alias will be 'Some A'. If the type alias name in the reason
+                   is also A, then we are still at the top-level of the type-alias, so we
+                   proceed by expanding one level preserving the same environment. *)
                 let symbol = symbol_from_loc env loc name in
                 return (generic_talias symbol None)
               | _ ->
                 (* We are now beyond the point of the one-off expansion. Reset the environment
-                 assigning None to under_type_alias, so that aliases are used in subsequent
-                 invocations. *)
+                   assigning None to under_type_alias, so that aliases are used in subsequent
+                   invocations. *)
                 next ~env t
             end)
 
@@ -801,6 +802,9 @@ end = struct
       match t with
       | OpenT (_, id) -> type_variable ~env id
       | BoundT (reason, name) -> bound_t ~env reason name
+      | GenericT { bound; _ } ->
+        (* only hit when we were unable to lookup a type parameter *)
+        type__ ~env bound
       | AnnotT (_, t, _) -> type__ ~env t
       | EvalT (t, d, id) -> eval_t ~env ~cont t id d
       | ExactT (_, t) -> exact_t ~env t
@@ -852,7 +856,7 @@ end = struct
           (generic_talias
              (Ty_symbol.builtin_symbol "React$AbstractComponent")
              (Some [config; instance]))
-      | ThisClassT (_, t) -> this_class_t ~env t
+      | ThisClassT (_, t, _) -> this_class_t ~env t
       | ThisTypeAppT (_, c, _, ts) -> type_app ~env c ts
       | KeysT (_, t) ->
         let%map ty = type__ ~env t in
@@ -929,8 +933,8 @@ end = struct
       Recursive.with_cache (TVarKey root_id) ~f:(fun () -> resolve_bounds ~env constraints)
 
     (* Resolving a type variable amounts to normalizing its lower bounds and
-     taking their union.
-  *)
+       taking their union.
+    *)
     and resolve_bounds ~env = function
       | Constraint.Resolved (_, t)
       | Constraint.FullyResolved (_, t) ->
@@ -954,7 +958,7 @@ end = struct
       Ty.Bot (Ty.NoLowerWithUpper use_kind)
 
     and any_t = function
-      | T.Annotated -> Ty.Annotated
+      | T.AnnotatedAny -> Ty.Annotated
       | T.AnyError kind -> Ty.AnyError (any_error_kind kind)
       | T.Unsound k -> Ty.Unsound (unsoundness_any_t k)
       | T.Untyped -> Ty.Untyped
@@ -1042,10 +1046,10 @@ end = struct
 
     and obj_prop_t =
       (* Value-level object types should not have properties of type type alias. For
-       convience reasons it is possible for a non-module-like Type.ObjT to include
-       such types as properties. Here we explicitly filter them out, since we
-       cannot use type__ to normalize them.
-    *)
+         convience reasons it is possible for a non-module-like Type.ObjT to include
+         such types as properties. Here we explicitly filter them out, since we
+         cannot use type__ to normalize them.
+      *)
       let is_type_alias = function
         | T.DefT (_, _, T.TypeT _)
         | T.DefT (_, _, T.PolyT { t_out = T.DefT (_, _, T.TypeT _); _ }) ->
@@ -1290,7 +1294,7 @@ end = struct
     and poly_ty ~env t typeparams =
       let open Type in
       match t with
-      | ThisClassT (_, t) -> this_class_t ~env t
+      | ThisClassT (_, t, _) -> this_class_t ~env t
       | DefT (_, _, FunT (static, _, f)) ->
         let%bind (env, ps) = type_params_t ~env typeparams in
         let%map fun_t = fun_ty ~env static f ps in
@@ -1350,7 +1354,7 @@ end = struct
       let singleton_poly ~env targs tparams t =
         let open Type in
         match t with
-        | ThisClassT (_, DefT (r, _, InstanceT (_, _, _, i)))
+        | ThisClassT (_, DefT (r, _, InstanceT (_, _, _, i)), _)
         | DefT (_, _, TypeT (_, DefT (r, _, InstanceT (_, _, _, i))))
         | DefT (_, _, ClassT (DefT (r, _, InstanceT (_, _, _, i)))) ->
           instance_app ~env r i tparams targs
@@ -1365,7 +1369,7 @@ end = struct
         match t with
         | AnyT _ -> type__ ~env t
         | DefT (_, _, PolyT { tparams; t_out; _ }) -> singleton_poly ~env targs tparams t_out
-        | ThisClassT (_, t)
+        | ThisClassT (_, t, _)
         | DefT (_, _, TypeT (_, t)) ->
           (* This is likely an error - cannot apply on non-polymorphic type.
            * E.g type Foo = any; var x: Foo<number> *)
@@ -1426,10 +1430,10 @@ end = struct
           in
           return (mk_fun ~params Ty.explicit_any)
         (* var idx:
-       <IdxObject: Any, IdxResult>
-       (obj: IdxObject, pathCallback: (demaybefiedObj: IdxObject) => IdxResult)
-       => ?IdxResult;
-    *)
+           <IdxObject: Any, IdxResult>
+           (obj: IdxObject, pathCallback: (demaybefiedObj: IdxObject) => IdxResult)
+           => ?IdxResult;
+        *)
         | Idx ->
           let idxObject = Ty.Bound (ALoc.none, "IdxObject") in
           let idxResult = Ty.Bound (ALoc.none, "IdxResult") in
@@ -1456,7 +1460,7 @@ end = struct
           let ret = Ty.Bound (ALoc.none, "TypeAssertT") in
           return (mk_fun ~tparams ~params ret)
         (* Result<T> = {success: true, value: T} | {success: false, error: string}
-         var TypeAssertWraps: <TypeAssertT>(value: mixed) => Result<TypeAssertT> *)
+           var TypeAssertWraps: <TypeAssertT>(value: mixed) => Result<TypeAssertT> *)
         | TypeAssertWraps ->
           let tparams = [mk_tparam "TypeAssertT"] in
           let params = [(Some "value", Ty.Top, non_opt_param)] in
@@ -1564,7 +1568,7 @@ end = struct
           let ret = builtin_t "TypeAssertT" in
           return (mk_fun ~tparams ~params ret)
         (* Result<T> = {success: true, value: T} | {success: false, error: string}
-      var TypeAssertWraps: <TypeAssertT>(value: mixed) => Result<TypeAssertT> *)
+           var TypeAssertWraps: <TypeAssertT>(value: mixed) => Result<TypeAssertT> *)
         | TypeAssertWraps ->
           let tparams = [mk_tparam "TypeAssertT"] in
           let params = [(Some "value", Ty.Top, non_opt_param)] in
@@ -1678,7 +1682,7 @@ end = struct
         in
         Ty.Obj { Ty.obj_props; obj_kind; obj_literal = None; obj_frozen = false (* default *) }
       in
-      let spread_operand_slice ~env { T.Object.Spread.reason = _; prop_map; dict } =
+      let spread_operand_slice ~env { T.Object.Spread.reason = _; prop_map; dict; _ } =
         Type.TypeTerm.(
           let obj_frozen = false in
           let obj_literal = None in
@@ -1953,14 +1957,14 @@ end = struct
         | DefT (_, _, TypeT (ImportClassKind, DefT (r, _, InstanceT (static, super, _, inst)))) ->
           class_or_interface_decl ~env r (Some tparams) static super inst
         (* Classes *)
-        | ThisClassT (_, DefT (r, _, InstanceT (static, super, _, inst)))
+        | ThisClassT (_, DefT (r, _, InstanceT (static, super, _, inst)), _)
         (* Interfaces *)
         | DefT (_, _, ClassT (DefT (r, _, InstanceT (static, super, _, inst)))) ->
           class_or_interface_decl ~env r (Some tparams) static super inst
         (* See flow_js.ml canonicalize_imported_type, case of PolyT (ThisClassT):
-         The initial abstraction is wrapper within an abstraction and a type application.
-         The current case unwraps the abstraction and application to reveal the
-         initial imported type. *)
+           The initial abstraction is wrapper within an abstraction and a type application.
+           The current case unwraps the abstraction and application to reveal the
+           initial imported type. *)
         | DefT (_, _, ClassT (TypeAppT (_, _, t, _))) -> toplevel ~env t
         (* Type Aliases *)
         | DefT (r, _, TypeT (kind, t)) ->
@@ -1982,7 +1986,7 @@ end = struct
           let%map (name, exports, default) = module_of_object ~env r o in
           Ty.Decl (Ty.ModuleDecl { name; exports; default })
         (* Monomorphic Classes/Interfaces *)
-        | ThisClassT (_, DefT (r, _, InstanceT (static, super, _, inst)))
+        | ThisClassT (_, DefT (r, _, InstanceT (static, super, _, inst)), _)
         | DefT (_, _, ClassT (DefT (r, _, InstanceT (static, super, _, inst))))
         | DefT (_, _, TypeT (InstanceKind, DefT (r, _, InstanceT (static, super, _, inst))))
         | DefT (_, _, TypeT (ImportClassKind, DefT (r, _, InstanceT (static, super, _, inst)))) ->
@@ -2382,7 +2386,7 @@ end = struct
         | DefT (r, tr, EnumObjectT e) -> enum_t ~env r tr e
         | DefT (r, _, InstanceT (static, super, _, inst)) ->
           instance_t ~env ~imode r static super inst
-        | ThisClassT (_, t) -> this_class_t ~env ~proto ~imode t
+        | ThisClassT (_, t, _) -> this_class_t ~env ~proto ~imode t
         | DefT (_, _, PolyT { t_out; _ }) -> loop ~env ~proto ~imode t_out
         | MaybeT (_, t) ->
           let%map t = loop ~env ~proto ~imode t in
@@ -2402,6 +2406,7 @@ end = struct
           type_destructor_t ~env ~cont ~default ~non_eval (use_op, r, id, t, d)
         | EvalT (t, LatentPredT _, id) -> latent_pred_t ~env ~proto ~imode id t
         | ExactT (_, t) -> loop ~env ~proto ~imode t
+        | GenericT { bound; _ } -> loop ~env ~proto ~imode bound
         | t -> TypeConverter.convert_t ~env t
       in
       loop ~proto:false ~imode:IMUnset

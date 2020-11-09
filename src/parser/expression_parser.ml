@@ -175,6 +175,7 @@ module Expression
       | (T_YIELD, _) when allow_yield env -> Cover_expr (yield env)
       | ((T_LPAREN as t), _)
       | ((T_LESS_THAN as t), _)
+      | ((T_THIS as t), _)
       | (t, true) ->
         (* Ok, we don't know if this is going to be an arrow function or a
          * regular assignment expression. Let's first try to parse it as an
@@ -787,10 +788,10 @@ module Expression
           in
           let targs =
             (* If we are parsing types, then new C<T>(e) is a constructor with a
-           type application. If we aren't, it's a nested binary expression. *)
+               type application. If we aren't, it's a nested binary expression. *)
             if should_parse_types env then
               (* Parameterized call syntax is ambiguous, so we fall back to
-             standard parsing if it fails. *)
+                 standard parsing if it fails. *)
               let error_callback _ _ = raise Try.Rollback in
               let env = env |> with_error_callback error_callback in
               Try.or_else env ~fallback:None call_type_args
@@ -1012,12 +1013,12 @@ module Expression
               let (generator, leading_generator) = Declaration.generator env in
               let leading = List.concat [leading_async; leading_function; leading_generator] in
               (* `await` is a keyword in async functions:
-          - proposal-async-iteration/#prod-AsyncGeneratorExpression
-          - #prod-AsyncFunctionExpression *)
+                 - proposal-async-iteration/#prod-AsyncGeneratorExpression
+                 - #prod-AsyncFunctionExpression *)
               let await = async in
               (* `yield` is a keyword in generator functions:
-          - proposal-async-iteration/#prod-AsyncGeneratorExpression
-          - #prod-GeneratorExpression *)
+                 - proposal-async-iteration/#prod-AsyncGeneratorExpression
+                 - #prod-GeneratorExpression *)
               let yield = generator in
               let (id, tparams) =
                 if Peek.token env = T_LPAREN then
@@ -1441,9 +1442,9 @@ module Expression
         in
         let is_last = Peek.token env = T_RBRACKET in
         (* if this array is interpreted as a pattern, the spread becomes an AssignmentRestElement
-             which must be the last element. We can easily error about additional elements since
-             they will be in the element list, but a trailing elision, like `[...x,]`, is not part
-             of the AST. so, keep track of the error so we can raise it if this is a pattern. *)
+           which must be the last element. We can easily error about additional elements since
+           they will be in the element list, but a trailing elision, like `[...x,]`, is not part
+           of the AST. so, keep track of the error so we can raise it if this is a pattern. *)
         let new_errs =
           if (not is_last) && Peek.ith_token ~i:1 env = T_RBRACKET then
             let if_patt = (loc, Parse_error.ElementAfterRestElement) :: new_errs.if_patt in
@@ -1518,7 +1519,8 @@ module Expression
         | StrictReservedWord
         | ParameterAfterRestParameter
         | NewlineBeforeArrow
-        | YieldInFormalParameters ->
+        | YieldInFormalParameters
+        | ThisParamBannedInArrowFunctions ->
           ()
         (* Everything else causes a rollback *)
         | _ -> raise Try.Rollback)
@@ -1569,7 +1571,13 @@ module Expression
                   } )
               in
               ( tparams,
-                (loc, { Ast.Function.Params.params = [param]; rest = None; comments = None }),
+                ( loc,
+                  {
+                    Ast.Function.Params.params = [param];
+                    rest = None;
+                    comments = None;
+                    this_ = None;
+                  } ),
                 Ast.Type.Missing Loc.{ loc with start = loc._end },
                 None )
             else
@@ -1596,11 +1604,21 @@ module Expression
        * instead generate errors as if we were parsing an arrow function *)
       let env =
         match params with
-        | (_, { Ast.Function.Params.rest = Some _; _ })
-        | (_, { Ast.Function.Params.params = []; _ }) ->
+        | (_, { Ast.Function.Params.params = _; rest = Some _; this_ = None; comments = _ })
+        | (_, { Ast.Function.Params.params = []; rest = _; this_ = None; comments = _ }) ->
           without_error_callback env
         | _ -> env
       in
+
+      (* Disallow this param annotations in arrow functions *)
+      let params =
+        match params with
+        | (loc, ({ Ast.Function.Params.this_ = Some (this_loc, _); _ } as params)) ->
+          error_at env (this_loc, Parse_error.ThisParamBannedInArrowFunctions);
+          (loc, { params with Ast.Function.Params.this_ = None })
+        | _ -> params
+      in
+
       if Peek.is_line_terminator env && Peek.token env = T_ARROW then
         error env Parse_error.NewlineBeforeArrow;
       Expect.token env T_ARROW;

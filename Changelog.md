@@ -1,3 +1,94 @@
+### 0.137.0
+
+New Features:
+* Show code actions in the IDE for some parse errors with suggested fixes.
+
+Notable bug fixes:
+* Fixed infinite recursion case involving object rest destructuring.
+
+Library Definitions:
+* Changed return type of `Buffer.write` to `number` (thanks @fedotov).
+
+Misc:
+* Saved state files generated on one platform can now be used on another platform using the same version of Flow.
+* Improved saved state memory use and startup time with more efficient handling of file paths.
+* Improved error message when attempting to bind a class type.
+* Minimum supported MacOS version is now 10.13.
+
+### 0.136.0
+
+Likely to cause new Flow errors:
+
+* Flow now raises errors when generic type variables escape out of the scope in which they were defined.
+
+Notable bug fixes:
+
+* Fix a race condition related to saved state and cancelable rechecks that caused internal errors of `Requires_not_found` or `Sig_requires_not_found`.
+
+Misc:
+
+* Added documentation to core.js builtins.
+* Add optional `propTypes` to `React.AbstractComponentStatics` (thanks @brianzchen).
+
+### 0.135.0
+
+Likely to cause new Flow errors:
+
+* Turned the untyped-type-import lint into an error by default. In a later release, we will turn this into a regular type error instead of a lint error.
+
+Misc:
+
+* Improved exhaustiveness checking in switch statements.
+* Improved autocomplete results to show documentation in more cases.
+* Removed esproposal configuration options from the .flowconfig format.
+* Added library definition for MediaRecorder API.
+* Fixed Object.freeze to no longer incorrectly convert an inexact object into an exact object.
+* Fixed handling of exported objects with spreads in types-first mode.
+
+### 0.134.0
+
+Likely to cause new Flow errors:
+
+* Types-first is now the default mode, and has to be explicitly disabled with `types_first=false` in a flowconfig if desired. See https://medium.com/flow-type/types-first-a-scalable-new-architecture-for-flow-3d8c7ba1d4eb for more about types-first.
+
+New Features:
+
+* Added a `file_watcher.watchman.mergebase_with` flowconfig option and `--file-watcher-mergebase-with` CLI option to choose a tracking bookmark for Watchman to compute the mergebase against.
+* Show JSDoc documentation in type declarations.
+
+Misc:
+
+* Improved the consistency of what operation is pointed to in error messages, to ensure they aren't dependent on the order in which constraints are generated.
+* Filtered "did you mean" code actions to only send actions on code under cursor.
+* Changed the return type of fileURLToPath (thanks @aaronasachimp)
+
+### 0.133.0
+
+Likely to cause new Flow errors:
+
+* Improve reliability of inclusion check in strict equality conditionals.
+
+New Features:
+
+* Show JSDoc documentation in hover, autocomplete, and signature help.
+
+Notable bug fixes:
+
+* Fix a bug related to saved state that could cause crashes during initialization.
+* Fix a bug related to saved state that could cause internal errors during rechecks.
+* Fix crash with `flow focus-check` when a focused file has a syntax error.
+
+Misc:
+
+* Remove the `null-void-addition` lint now that it has been subsumed by an ordinary type error.
+* Improved signature help for inlined tuple rest params.
+* Enable the following language features by default, since they have reached stage 4:
+  * `export *`
+  * Nullish coalescing
+  * Optional chaining
+* Remove deprecated, nonstandard `itemType` and `inlineDetail` fields from the LSP `completionItem` implementation.
+* Exit the worker processes gracefully when the main process crashes.
+
 ### 0.132.0
 
 Likely to cause new Flow errors:

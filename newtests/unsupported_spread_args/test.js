@@ -3,11 +3,12 @@
  */
 
 
+import type Suite from "flow-dev-tools/src/test/Suite.js";
 import {suite, test} from 'flow-dev-tools/src/test/Tester';
 
 /* This test suite documents a bunch of places where using spread arguments
  * doesn't work, either intentionally or due to us being lazy */
-export default suite(({addFile, addFiles, addCode}) => [
+export default (suite(({addFile, addFiles, addCode}) => [
   test('idx', [
     addCode('declare var idx: $Facebookism$Idx;\n'),
     addCode('idx(...arr, obj => obj.foo)')
@@ -174,4 +175,4 @@ export default suite(({addFile, addFiles, addCode}) => [
       )
       .because('But this is an error since the array contains non-objects'),
   ]),
-]).beforeEach((({addCode}) => [ addCode('const arr = [1,2,3];') ]));
+]).beforeEach((({addCode}) => [ addCode('const arr = [1,2,3];') ])): Suite);

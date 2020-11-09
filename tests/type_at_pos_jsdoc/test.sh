@@ -14,3 +14,4 @@ queries_in_file "type-at-pos" "requires.js" --strip-root --pretty
 queries_in_file "type-at-pos" "imports.js" --strip-root --pretty
 queries_in_file "type-at-pos" "unrecognized_tags.js" --strip-root --pretty
 queries_in_file "type-at-pos" "parse_error.js" --strip-root --pretty
+queries_in_file "type-at-pos" "types.js" --strip-root --pretty

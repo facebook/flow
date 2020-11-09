@@ -26,6 +26,7 @@ type result =
 and parse_skip_reason =
   | Skip_resource_file
   | Skip_non_flow_file
+  | Skip_package_json of (parse_error list * package_json_error option)
 
 and parse_error = Loc.t * Parse_error.t
 
@@ -42,6 +43,8 @@ and docblock_error_kind =
   | MultipleJSXAttributes
   | InvalidJSXAttribute of string option
 
+and package_json_error = Loc.t * string
+
 (* results of parse job, returned by parse and reparse *)
 type results = {
   (* successfully parsed files *)
@@ -56,6 +59,8 @@ type results = {
   parse_fails: (File_key.t * Docblock.t * parse_failure) list;
   (* set of unchanged files *)
   parse_unchanged: FilenameSet.t;
+  (* package.json files parsed *)
+  parse_package_json: File_key.t list * package_json_error list;
 }
 
 type parse_options = {
@@ -72,6 +77,8 @@ type parse_options = {
   parse_max_literal_len: int;
   parse_exact_by_default: bool;
   parse_enable_enums: bool;
+  parse_enable_this_annot: bool;
+  parse_node_main_fields: string list;
 }
 
 val make_parse_options :
@@ -85,7 +92,7 @@ val make_parse_options :
 val docblock_max_tokens : int
 
 (* Use default values for the various settings that parse takes. Each one can be overridden
-individually *)
+   individually *)
 val parse_with_defaults :
   ?types_mode:types_mode ->
   ?use_strict:bool ->

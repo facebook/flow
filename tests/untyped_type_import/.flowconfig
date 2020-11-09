@@ -7,4 +7,3 @@
 [options]
 
 [lints]
-untyped-type-import=error

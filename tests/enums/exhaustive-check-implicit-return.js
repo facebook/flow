@@ -141,6 +141,18 @@ async function j(x: E): Promise<number> {
   }
 }
 
+function k(x: ?E): string {
+  if (x == null) {
+    return 'c';
+  }
+  switch (x) {
+    case E.A:
+      return 'a';
+    case E.B:
+      return 'b';
+  }
+}
+
 // Errors
 function q(x: E): number { // Error: switch isn't exhaustive
   switch (x) { // Error

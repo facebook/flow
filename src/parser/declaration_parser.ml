@@ -110,7 +110,7 @@ module Declaration (Parse : Parser_common.PARSER) (Type : Type_parser.TYPE) : DE
    * strict mode due to a directive in the function.
    * Simple is the IsSimpleParameterList thing from the ES6 spec *)
   let strict_post_check
-      env ~strict ~simple id (_, { Ast.Function.Params.params; rest; comments = _ }) =
+      env ~strict ~simple id (_, { Ast.Function.Params.params; rest; this_ = _; comments = _ }) =
     if strict || not simple then (
       (* If we are doing this check due to strict mode than there are two
        * cases to consider. The first is when we were already in strict mode
@@ -144,6 +144,7 @@ module Declaration (Parse : Parser_common.PARSER) (Type : Type_parser.TYPE) : DE
   let function_params =
     let rec param =
       with_loc (fun env ->
+          if Peek.token env = T_THIS then error env Parse_error.ThisParamMustBeFirst;
           let argument = Parse.pattern env Parse_error.StrictParamName in
           let default =
             if Peek.token env = T_ASSIGN then (
@@ -182,6 +183,33 @@ module Declaration (Parse : Parser_common.PARSER) (Type : Type_parser.TYPE) : DE
         if Peek.token env <> T_RPAREN then Expect.token env T_COMMA;
         param_list env (the_param :: acc)
     in
+    let this_param_annotation env =
+      if should_parse_types env && Peek.token env = T_THIS then (
+        let leading = Peek.comments env in
+        let (this_loc, this_param) =
+          with_loc
+            (fun env ->
+              Expect.token env T_THIS;
+              if Peek.token env <> T_COLON then begin
+                error env Parse_error.ThisParamAnnotationRequired;
+                None
+              end else
+                Some (Type.annotation env))
+            env
+        in
+        match this_param with
+        | None -> None
+        | Some annot ->
+          if Peek.token env = T_COMMA then Eat.token env;
+          Some
+            ( this_loc,
+              {
+                Ast.Function.ThisParam.annot;
+                comments = Flow_ast_utils.mk_comments_opt ~leading ();
+              } )
+      ) else
+        None
+    in
     fun ~await ~yield ->
       with_loc (fun env ->
           let env =
@@ -192,6 +220,7 @@ module Declaration (Parse : Parser_common.PARSER) (Type : Type_parser.TYPE) : DE
           in
           let leading = Peek.comments env in
           Expect.token env T_LPAREN;
+          let this_ = this_param_annotation env in
           let (params, rest) = param_list env [] in
           let internal = Peek.comments env in
           Expect.token env T_RPAREN;
@@ -200,6 +229,7 @@ module Declaration (Parse : Parser_common.PARSER) (Type : Type_parser.TYPE) : DE
             Ast.Function.Params.params;
             rest;
             comments = Flow_ast_utils.mk_comments_with_internal_opt ~leading ~trailing ~internal;
+            this_;
           })
 
   let function_body env ~async ~generator ~expression =
@@ -258,7 +288,7 @@ module Declaration (Parse : Parser_common.PARSER) (Type : Type_parser.TYPE) : DE
       | (_, { Ast.Function.Param.argument = (_, Pattern.Identifier _); default = None }) -> true
       | _ -> false
     in
-    fun (_, { Ast.Function.Params.params; rest; comments = _ }) ->
+    fun (_, { Ast.Function.Params.params; rest; comments = _; this_ = _ }) ->
       rest = None && List.for_all is_simple_param params
 
   let _function =

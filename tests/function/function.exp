@@ -3,18 +3,18 @@ Error --------------------------------------------------------------------------
 string [1] is incompatible with `$ArrayLike` [2]. [incompatible-type]
 
    apply-array-like.js:5:16
-     5| test.apply("", "foo"); // error: string ~> object
-                       ^^^^^ [1]
+      5| test.apply("", "foo"); // error: string ~> object
+                        ^^^^^ [1]
 
 References:
-   <BUILTINS>/core.js:309:22
-                             v
-   309| type $ArrayLike<T> = {
-   310|   [indexer: number]: T,
-   311|   length: number,
-   312|   ...
-   313| }
-        ^ [2]
+   <BUILTINS>/core.js:1051:22
+                              v
+   1051| type $ArrayLike<T> = {
+   1052|   [indexer: number]: T,
+   1053|   length: number,
+   1054|   ...
+   1055| }
+         ^ [2]
 
 
 Error ---------------------------------------------------------------------------------------- apply-array-like.js:20:16
@@ -22,21 +22,21 @@ Error --------------------------------------------------------------------------
 Property `length` is missing in `Generator` [1] but exists in `$ArrayLike` [2]. [prop-missing]
 
    apply-array-like.js:20:16
-    20| test.apply([], gen()); // error: iterable ~> array-like
-                       ^^^^^
+     20| test.apply([], gen()); // error: iterable ~> array-like
+                        ^^^^^
 
 References:
    apply-array-like.js:15:17
-    15| function * gen() {
-                        ^ [1]
-   <BUILTINS>/core.js:309:22
-                             v
-   309| type $ArrayLike<T> = {
-   310|   [indexer: number]: T,
-   311|   length: number,
-   312|   ...
-   313| }
-        ^ [2]
+     15| function * gen() {
+                         ^ [1]
+   <BUILTINS>/core.js:1051:22
+                              v
+   1051| type $ArrayLike<T> = {
+   1052|   [indexer: number]: T,
+   1053|   length: number,
+   1054|   ...
+   1055| }
+         ^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- apply.js:2:15
@@ -90,8 +90,8 @@ Cannot call `test.apply` because no more than 2 arguments are expected by functi
         ^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:127:18
-   127|     proto apply: Function$Prototype$Apply; // (thisArg: any, argArray?: any) => any
+   <BUILTINS>/core.js:340:18
+   340|     proto apply: Function$Prototype$Apply; // (thisArg: any, argArray?: any) => any
                          ^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
@@ -174,18 +174,18 @@ Error --------------------------------------------------------------------------
 string [1] is incompatible with `$ArrayLike` [2]. [incompatible-type]
 
    apply.js:28:16
-    28| test.apply("", "not array"); // error: string ~> object
-                       ^^^^^^^^^^^ [1]
+     28| test.apply("", "not array"); // error: string ~> object
+                        ^^^^^^^^^^^ [1]
 
 References:
-   <BUILTINS>/core.js:309:22
-                             v
-   309| type $ArrayLike<T> = {
-   310|   [indexer: number]: T,
-   311|   length: number,
-   312|   ...
-   313| }
-        ^ [2]
+   <BUILTINS>/core.js:1051:22
+                              v
+   1051| type $ArrayLike<T> = {
+   1052|   [indexer: number]: T,
+   1053|   length: number,
+   1054|   ...
+   1055| }
+         ^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- apply.js:35:2
@@ -319,6 +319,20 @@ References:
    bind.js:23:54
    23|   function(x: {(a: string, b: string): void, bind(a: string): void}) {
                                                             ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- bind.js:32:3
+
+Cannot call `A.bind` because class `A` [1] is not a function type. [incompatible-use]
+
+   bind.js:32:3
+   32| A.bind(3);
+         ^^^^
+
+References:
+   bind.js:30:7
+   30| class A {}
+             ^ [1]
 
 
 Error ----------------------------------------------------------------------------------------------------- call.js:4:15
@@ -517,14 +531,14 @@ References:
                               ^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------- call_error_generic.js:23:5
+Error -------------------------------------------------------------------------------------- call_error_generic.js:18:15
 
-Cannot call `bar` with `foo` bound to `x` because null or undefined [1] is incompatible with string [2] in type argument
-`T` [3]. [incompatible-call]
+Cannot call `from` with `set` bound to `set` because null or undefined [1] is incompatible with string [2] in type
+argument `T` [3]. [incompatible-call]
 
-   call_error_generic.js:23:5
-   23| bar(foo);
-           ^^^
+   call_error_generic.js:18:15
+   18|   return from(set);
+                     ^^^
 
 References:
    call_error_generic.js:3:19
@@ -536,27 +550,27 @@ References:
    call_error_generic.js:21:25
    21| function bar(x: ROArray<string>) { }
                                ^^^^^^ [2]
-   call_error_generic.js:10:24
-   10| declare class ROArray<+T> { }
-                              ^ [3]
+   call_error_generic.js:7:19
+    7| declare class Set<T> {
+                         ^ [3]
 
 
-Error -------------------------------------------------------------------------------------- call_error_generic2.js:11:8
+Error --------------------------------------------------------------------------------------- call_error_generic2.js:6:8
 
-Cannot call `bar2` with `userRef` bound to `fragmentRef` because property `$data` is missing in object type [1] but
-exists in object type [2]. [prop-missing]
+Cannot call `bar1` with `fragmentRef` bound to `key` because property `$data` is missing in object type [1] but exists
+in object type [2]. [prop-missing]
 
-   call_error_generic2.js:11:8
-   11|   bar2(userRef);
-              ^^^^^^^
+   call_error_generic2.js:6:8
+   6|   bar1(fragmentRef);
+             ^^^^^^^^^^^
 
 References:
    call_error_generic2.js:9:33
-    9| function foo(props: { userRef?: {} }) {
-                                       ^^ [1]
+   9| function foo(props: { userRef?: {} }) {
+                                      ^^ [1]
    call_error_generic2.js:3:30
-    3| declare function bar1<TKey: ?{+$data?: mixed}>(key: TKey): void;
-                                    ^^^^^^^^^^^^^^^^ [2]
+   3| declare function bar1<TKey: ?{+$data?: mixed}>(key: TKey): void;
+                                   ^^^^^^^^^^^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------- function.js:21:3
@@ -576,8 +590,8 @@ Cannot cast `x.length` to undefined because number [1] is incompatible with unde
              ^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:133:13
-   133|     length: number;
+   <BUILTINS>/core.js:347:13
+   347|     length: number;
                     ^^^^^^ [1]
    function.js:37:16
     37|     (x.length: void); // error, it's a number
@@ -593,8 +607,8 @@ Cannot cast `y.length` to undefined because number [1] is incompatible with unde
              ^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:133:13
-   133|     length: number;
+   <BUILTINS>/core.js:347:13
+   347|     length: number;
                     ^^^^^^ [1]
    function.js:38:16
     38|     (y.length: void); // error, it's a number
@@ -610,8 +624,8 @@ Cannot cast `x.name` to undefined because string [1] is incompatible with undefi
              ^^^^^^
 
 References:
-   <BUILTINS>/core.js:134:11
-   134|     name: string;
+   <BUILTINS>/core.js:351:11
+   351|     name: string;
                   ^^^^^^ [1]
    function.js:41:14
     41|     (x.name: void); // error, it's a string
@@ -627,8 +641,8 @@ Cannot cast `y.name` to undefined because string [1] is incompatible with undefi
              ^^^^^^
 
 References:
-   <BUILTINS>/core.js:134:11
-   134|     name: string;
+   <BUILTINS>/core.js:351:11
+   351|     name: string;
                   ^^^^^^ [1]
    function.js:42:14
     42|     (y.name: void); // error, it's a string
@@ -644,8 +658,8 @@ Cannot assign `'foo'` to `x.length` because string [1] is incompatible with numb
                        ^^^^^ [1]
 
 References:
-   <BUILTINS>/core.js:133:13
-   133|     length: number;
+   <BUILTINS>/core.js:347:13
+   347|     length: number;
                     ^^^^^^ [2]
 
 
@@ -658,8 +672,8 @@ Cannot assign `'foo'` to `y.length` because string [1] is incompatible with numb
                        ^^^^^ [1]
 
 References:
-   <BUILTINS>/core.js:133:13
-   133|     length: number;
+   <BUILTINS>/core.js:347:13
+   347|     length: number;
                     ^^^^^^ [2]
 
 
@@ -672,8 +686,8 @@ Cannot assign `123` to `x.name` because number [1] is incompatible with string [
                      ^^^ [1]
 
 References:
-   <BUILTINS>/core.js:134:11
-   134|     name: string;
+   <BUILTINS>/core.js:351:11
+   351|     name: string;
                   ^^^^^^ [2]
 
 
@@ -686,8 +700,8 @@ Cannot assign `123` to `y.name` because number [1] is incompatible with string [
                      ^^^ [1]
 
 References:
-   <BUILTINS>/core.js:134:11
-   134|     name: string;
+   <BUILTINS>/core.js:351:11
+   351|     name: string;
                   ^^^^^^ [2]
 
 
@@ -703,6 +717,24 @@ References:
    issue-7529.js:3:29
    3| const bar = function foo(x: string) {
                                   ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- rest.js:31:10
+
+Cannot return function because function [1] contains type variable `T` [2] which cannot escape from the scope in which
+it was defined [2] (try adding a type annotation to return [3]). [escaped-generic]
+
+   rest.js:31:10
+   31|   return function<U: T>(...xs: T): void {}
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+References:
+   rest.js:30:27
+   30| function bounds_on_bounds<T>() {
+                                 ^ [2]
+   rest.js:30:31
+   30| function bounds_on_bounds<T>() {
+                                      [3]
 
 
 Error ---------------------------------------------------------------------------------------------------- rest.js:36:13
@@ -852,4 +884,4 @@ References:
 
 
 
-Found 56 errors
+Found 58 errors

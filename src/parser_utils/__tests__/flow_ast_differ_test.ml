@@ -106,41 +106,45 @@ class useless_mapper =
 
     method! jsx_element _loc (elem : (Loc.t, Loc.t) Ast.JSX.element) =
       let open Ast.JSX in
-      let { openingElement = (_, open_elem) as openingElement; closingElement; children; comments }
-          =
+      let {
+        opening_element = (_, open_elem) as opening_element;
+        closing_element;
+        children;
+        comments;
+      } =
         elem
       in
-      let openingElement' = this#jsx_opening_element openingElement in
-      let closingElement' =
-        let (loc, open_elem') = openingElement' in
-        if open_elem'.Opening.selfClosing then
+      let opening_element' = this#jsx_opening_element opening_element in
+      let closing_element' =
+        let (loc, open_elem') = opening_element' in
+        if open_elem'.Opening.self_closing then
           None
-        (* if selfClosing changed from true to false, construct a closing element *)
-        else if open_elem.Opening.selfClosing then
+        (* if self_closing changed from true to false, construct a closing element *)
+        else if open_elem.Opening.self_closing then
           Some (loc, { Closing.name = open_elem'.Opening.name })
         else
-          Flow_ast_mapper.map_opt super#jsx_closing_element closingElement
+          Flow_ast_mapper.map_opt super#jsx_closing_element closing_element
       in
       let children' = this#jsx_children children in
       if
-        openingElement == openingElement'
-        && closingElement == closingElement'
+        opening_element == opening_element'
+        && closing_element == closing_element'
         && children == children'
       then
         elem
       else
         {
-          openingElement = openingElement';
-          closingElement = closingElement';
+          opening_element = opening_element';
+          closing_element = closing_element';
           children = children';
           comments;
         }
 
     method! jsx_opening_element (elem : (Loc.t, Loc.t) Ast.JSX.Opening.t) =
       let open Ast.JSX.Opening in
-      let (loc, { name; selfClosing; attributes }) = elem in
+      let (loc, { name; self_closing; attributes }) = elem in
       let name' = this#jsx_name name in
-      let selfClosing' =
+      let self_closing' =
         match name' with
         | Ast.JSX.Identifier (_, { Ast.JSX.Identifier.name = id_name; comments = _ }) ->
           if id_name = "selfClosing" then
@@ -148,14 +152,14 @@ class useless_mapper =
           else if id_name = "notSelfClosing" then
             false
           else
-            selfClosing
-        | _ -> selfClosing
+            self_closing
+        | _ -> self_closing
       in
       let attributes' = ListUtils.ident_map super#jsx_opening_attribute attributes in
-      if name == name' && selfClosing == selfClosing' && attributes == attributes' then
+      if name == name' && self_closing == self_closing' && attributes == attributes' then
         elem
       else
-        (loc, { name = name'; selfClosing = selfClosing'; attributes = attributes' })
+        (loc, { name = name'; self_closing = self_closing'; attributes = attributes' })
 
     method! jsx_identifier (id : (Loc.t, Loc.t) Ast.JSX.Identifier.t) =
       let open Ast.JSX.Identifier in
@@ -337,7 +341,7 @@ class insert_import_mapper =
           ( loc,
             Ast.Statement.ImportDeclaration
               {
-                importKind = Ast.Statement.ImportDeclaration.ImportValue;
+                import_kind = Ast.Statement.ImportDeclaration.ImportValue;
                 source = (loc, { value = "baz"; raw = "\"baz\""; comments = None });
                 default = None;
                 specifiers =
@@ -372,7 +376,7 @@ class insert_second_import_mapper =
           ( loc,
             Ast.Statement.ImportDeclaration
               {
-                importKind = Ast.Statement.ImportDeclaration.ImportValue;
+                import_kind = Ast.Statement.ImportDeclaration.ImportValue;
                 source = (loc, { value = "baz"; raw = "\"baz\""; comments = None });
                 default = None;
                 specifiers =
@@ -562,7 +566,14 @@ class insert_function_annot_mapper =
               Type.Function
                 {
                   Type.Function.tparams = None;
-                  params = (loc, { Type.Function.Params.params = []; rest = None; comments = None });
+                  params =
+                    ( loc,
+                      {
+                        Type.Function.Params.this_ = None;
+                        params = [];
+                        rest = None;
+                        comments = None;
+                      } );
                   return = (loc, Type.Number None);
                   comments = None;
                 } ) )
@@ -582,7 +593,14 @@ class insert_import_and_annot_mapper =
               Type.Function
                 {
                   Type.Function.tparams = None;
-                  params = (loc, { Type.Function.Params.params = []; rest = None; comments = None });
+                  params =
+                    ( loc,
+                      {
+                        Type.Function.Params.this_ = None;
+                        params = [];
+                        rest = None;
+                        comments = None;
+                      } );
                   return = (loc, Type.Number None);
                   comments = None;
                 } ) )
@@ -595,7 +613,7 @@ class insert_import_and_annot_mapper =
           ( Loc.none,
             ImportDeclaration
               {
-                ImportDeclaration.importKind = ImportDeclaration.ImportType;
+                ImportDeclaration.import_kind = ImportDeclaration.ImportType;
                 source = (Loc.none, { Ast.StringLiteral.value = imp; raw = imp; comments = None });
                 default = None;
                 specifiers =

@@ -208,6 +208,38 @@ function f23(): number {
 }
 f23();
 
+function f24(x: 'a' | 'b'): number {
+  switch (x) {
+    case 'a':
+      return 1;
+    case 'b':
+      return 2;
+  }
+}
+
+function f25(o: ?{x: 'a' | 'b'}): number {
+  if (o != null) {
+    switch (o.x) {
+      case 'a':
+        return 1;
+      case 'b':
+        return 2;
+    }
+  } else {
+    return 3;
+  }
+}
+
+// Because we do not call this function, this does not error now.
+// Hopefully in the future we will, either by asking for an annotation on the parameter
+// or saying that this is an implicit void return.
+function f26(x): number {
+  switch (x) {
+    case 'a':
+      return 1;
+  }
+}
+
 ///////////////////
 // Implicit void //
 ///////////////////
@@ -362,3 +394,20 @@ function g17(x: Object): number { // Error
   }
 }
 g17({});
+
+function g18(x: 'a' | 'b' | 'c'): number { // Error
+  switch (x) {
+    case 'a':
+      return 1;
+    case 'b':
+      return 2;
+  }
+}
+
+function g19(x): number { // Error
+  switch (x) {
+    case 'a':
+      return 1;
+  }
+}
+g19('b');

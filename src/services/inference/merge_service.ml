@@ -142,8 +142,10 @@ let merge_context_generic ~options ~reader ~get_ast_unsafe ~get_file_sig_unsafe 
   let get_aloc_table_unsafe =
     Parsing_heaps.Reader_dispatcher.get_sig_ast_aloc_table_unsafe ~reader
   in
+  assert (phase <> Context.Merging || Options.arch options <> Options.Classic);
   let (((full_cx, _, _), other_cxs) as cx_nel) =
     Merge_js.merge_component
+      ~arch:(Options.arch options)
       ~metadata
       ~lint_severities
       ~strict_mode
@@ -271,7 +273,7 @@ let merge_context_new_signatures ~options ~reader component =
           let dep_exports = Context.find_module_sig dep_cx (Files.module_ref dep) in
           Merge.AcyclicDep dep_exports
       else
-        Merge.LegacyUncheckedDepTryBuiltinsFirst (mref, Modulename.to_string mname)
+        Merge.LegacyUncheckedDepTryBuiltinsFirst mref
   in
 
   (* read type_sig from heap and create file record for merge *)
@@ -387,7 +389,7 @@ let merge_contents_context ~reader options file ast info file_sig =
             ~reader
             ~node_modules_containers:!Files.node_modules_containers
             file
-            locs
+            (Nel.hd locs)
             r
         in
         (r, locs, resolved_r, file) :: required)
@@ -409,6 +411,7 @@ let merge_contents_context ~reader options file ast info file_sig =
   in
   let ((cx, _, tast), _) =
     Merge_js.merge_component
+      ~arch:(Options.arch options)
       ~metadata
       ~lint_severities
       ~strict_mode
@@ -562,7 +565,7 @@ let merge_job ~worker_mutator ~reader ~job ~options merged elements =
     (fun merged -> function
       | Merge_stream.Component component ->
         (* A component may have several files: there's always at least one, and
-         multiple files indicate a cycle. *)
+           multiple files indicate a cycle. *)
         let files =
           component |> Nel.to_list |> Base.List.map ~f:File_key.to_string |> String.concat "\n\t"
         in
@@ -622,8 +625,8 @@ let merge_job ~worker_mutator ~reader ~job ~options merged elements =
           let file = Nel.hd component in
           let file_loc = Loc.{ none with source = Some file } |> ALoc.of_loc in
           (* We can't pattern match on the exception type once it's marshalled
-           back to the master process, so we pattern match on it here to create
-           an error result. *)
+             back to the master process, so we pattern match on it here to create
+             an error result. *)
           let result =
             Error
               Error_message.(

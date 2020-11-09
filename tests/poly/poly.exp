@@ -33,6 +33,24 @@ References:
                ^ [3]
 
 
+Error --------------------------------------------------------------------------------------------------- annot2.js:1:24
+
+Cannot return function because function [1] contains type variable `T` [2] which cannot escape from the scope in which
+it was defined [2] (try adding a type annotation to return [3]). [escaped-generic]
+
+   annot2.js:1:24
+   1| const f = <T>(x: T) => (y: T) => y;
+                             ^^^^^^^^^^^ [1]
+
+References:
+   annot2.js:1:12
+   1| const f = <T>(x: T) => (y: T) => y;
+                 ^ [2]
+   annot2.js:1:20
+   1| const f = <T>(x: T) => (y: T) => y;
+                          [3]
+
+
 Error ---------------------------------------------------------------------------------------------------- annot2.js:4:2
 
 Cannot cast `f(...)(...)` to number because `T` [1] is incompatible with number [2]. [incompatible-cast]
@@ -176,6 +194,48 @@ References:
    implicit_bounded_instantiation.js:7:12
     7| class C<T: Middle> {
                   ^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------- implicit_bounded_instantiation.js:15:15
+
+Cannot assign `new C()` to `a` because `Middle` [1] is incompatible with number [2] in type argument `T` [3].
+[incompatible-type-arg]
+
+   implicit_bounded_instantiation.js:15:15
+   15| var a: C<*> = new C();
+                     ^^^^^^^
+
+References:
+   implicit_bounded_instantiation.js:7:12
+    7| class C<T: Middle> {
+                  ^^^^^^ [1]
+   implicit_bounded_instantiation.js:19:8
+   19| a.meth(42); // Error: number ~> Middle
+              ^^ [2]
+   implicit_bounded_instantiation.js:7:9
+    7| class C<T: Middle> {
+               ^ [3]
+
+
+Error -------------------------------------------------------------------------- implicit_bounded_instantiation.js:15:15
+
+Cannot assign `new C()` to `a` because `Middle` [1] is incompatible with `Base` [2] in type argument `T` [3].
+[incompatible-type-arg]
+
+   implicit_bounded_instantiation.js:15:15
+   15| var a: C<*> = new C();
+                     ^^^^^^^
+
+References:
+   implicit_bounded_instantiation.js:7:12
+    7| class C<T: Middle> {
+                  ^^^^^^ [1]
+   implicit_bounded_instantiation.js:20:8
+   20| a.meth(new Base()); // Error: Base ~> Middle
+              ^^^^^^^^^^ [2]
+   implicit_bounded_instantiation.js:7:9
+    7| class C<T: Middle> {
+               ^ [3]
 
 
 Error --------------------------------------------------------------------------- implicit_bounded_instantiation.js:19:8
@@ -358,4 +418,4 @@ References:
 
 
 
-Found 21 errors
+Found 24 errors

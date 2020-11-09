@@ -586,7 +586,7 @@ struct
 
       method! import_declaration import_loc (decl : (L.t, L.t) Ast.Statement.ImportDeclaration.t) =
         let open Ast.Statement.ImportDeclaration in
-        let { importKind; source; specifiers; default; comments = _ } = decl in
+        let { import_kind; source; specifiers; default; comments = _ } = decl in
         let source =
           match source with
           | (loc, { Ast.StringLiteral.value = name; _ }) -> (loc, name)
@@ -622,13 +622,13 @@ struct
                   "default"
                   local
                   { remote_loc = loc; local_loc = loc }
-                  (ref_of_kind importKind))
+                  (ref_of_kind import_kind))
               default;
             Base.Option.iter
               ~f:(function
                 | ImportNamespaceSpecifier (loc, (_, { Ast.Identifier.name = local; comments = _ }))
                   ->
-                  (match importKind with
+                  (match import_kind with
                   | ImportType -> failwith "import type * is a parse error"
                   | ImportTypeof -> set_ns local loc typesof_ns
                   | ImportValue -> set_ns local loc ns)
@@ -636,10 +636,10 @@ struct
                   List.iter
                     (function
                       | { local; remote; kind } ->
-                        let importKind =
+                        let import_kind =
                           match kind with
                           | Some k -> k
-                          | None -> importKind
+                          | None -> import_kind
                         in
                         let (local_loc, { Ast.Identifier.name = local_name; comments = _ }) =
                           match local with
@@ -653,7 +653,7 @@ struct
                           remote_name
                           local_name
                           { remote_loc; local_loc }
-                          (ref_of_kind importKind))
+                          (ref_of_kind import_kind))
                     named_specifiers)
               specifiers;
             Import
@@ -693,7 +693,7 @@ struct
       method! export_named_declaration
           stmt_loc (decl : (L.t, L.t) Ast.Statement.ExportNamedDeclaration.t) =
         let open Ast.Statement.ExportNamedDeclaration in
-        let { exportKind; source; specifiers; declaration; comments = _ } = decl in
+        let { export_kind; source; specifiers; declaration; comments = _ } = decl in
         let source =
           match source with
           | Some (loc, { Ast.StringLiteral.value = mref; raw = _; comments = _ }) -> Some (loc, mref)
@@ -719,7 +719,7 @@ struct
             | VariableDeclaration { VariableDeclaration.declarations = decls; _ } ->
               let (rev_named, rev_info) =
                 Ast_utils.fold_bindings_of_variable_declarations
-                  (fun (named, infos) (loc, { Ast.Identifier.name; comments = _ }) ->
+                  (fun (named, infos) (loc, { Ast.Identifier.name; comments = _ }) _ ->
                     let export = (stmt_loc, ExportNamed { loc; kind }) in
                     ((name, export) :: named, export_info :: infos))
                   ([], [])
@@ -741,7 +741,7 @@ struct
         begin
           match specifiers with
           | None -> () (* assert declaration <> None *)
-          | Some specifiers -> this#export_specifiers stmt_loc exportKind source specifiers
+          | Some specifiers -> this#export_specifiers stmt_loc export_kind source specifiers
         end;
         super#export_named_declaration stmt_loc decl
 
@@ -814,8 +814,8 @@ struct
             assert (Base.Option.is_none default);
 
             (* declare export type unsupported *)
-            let exportKind = Ast.Statement.ExportValue in
-            this#export_specifiers stmt_loc exportKind source specifiers
+            let export_kind = Ast.Statement.ExportValue in
+            this#export_specifiers stmt_loc export_kind source specifiers
         end;
         super#declare_export_declaration stmt_loc decl
 
@@ -1435,12 +1435,6 @@ struct
                   tolerable_error
                 else
                   SignatureVerificationError (ExpectedAnnotation (loc', sort))
-              | InvalidTypeParamUse loc ->
-                let loc' = this#loc loc in
-                if loc == loc' then
-                  tolerable_error
-                else
-                  SignatureVerificationError (InvalidTypeParamUse loc')
               | UnexpectedObjectKey (loc, key_loc) ->
                 let loc' = this#loc loc in
                 let key_loc' = this#loc key_loc in
@@ -1448,13 +1442,6 @@ struct
                   tolerable_error
                 else
                   SignatureVerificationError (UnexpectedObjectKey (loc', key_loc'))
-              | UnexpectedObjectSpread (loc, spread_loc) ->
-                let loc' = this#loc loc in
-                let spread_loc' = this#loc spread_loc in
-                if loc == loc' && spread_loc == spread_loc' then
-                  tolerable_error
-                else
-                  SignatureVerificationError (UnexpectedObjectSpread (loc', spread_loc'))
               | UnexpectedArraySpread (loc, spread_loc) ->
                 let loc' = this#loc loc in
                 let spread_loc' = this#loc spread_loc in
@@ -1533,7 +1520,7 @@ let abstractify_tolerable_errors =
     | WL.BadExportPosition loc -> WA.BadExportPosition (ALoc.of_loc loc)
     | WL.BadExportContext (name, loc) -> WA.BadExportContext (name, ALoc.of_loc loc)
     | WL.SignatureVerificationError err ->
-      WA.SignatureVerificationError (Signature_error.map_locs ~f:ALoc.of_loc err)
+      WA.SignatureVerificationError (Signature_error.map ALoc.of_loc err)
   in
   Base.List.map ~f:abstractify_tolerable_error
 

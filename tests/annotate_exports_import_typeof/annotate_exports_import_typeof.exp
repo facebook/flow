@@ -4,7 +4,7 @@
 >>> ./b.js
 // @flow
 
-import typeof C from "./lib.js";import { foo } from './a';
+import typeof C from "./lib";import { foo } from './a';
 
 module.exports = (foo(): C);
 
@@ -26,7 +26,6 @@ Errors:
     Parsing heaps get ast error:            0
     Indeterminate module type:              0
     No matching export:                     0
-    Unrecognizable module error:            0
   Serializer error:                         0
   Unsupported error kind:                   0
 
@@ -43,7 +42,7 @@ Warnings:
 >>> ./b.js
 // @flow
 
-import typeof C from "./lib.js";import { foo } from './a';
+import typeof C from "./lib";import { foo } from './a';
 
 module.exports = (foo(): C);
 

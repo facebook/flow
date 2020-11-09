@@ -114,6 +114,8 @@ module Make () = struct
           loop0 head head head.next
 
   let index_exn node =
+    (* If this is failing, the marking pass is probably missing something.
+       See the comment at the top of `type_sig_pack *)
     assert (node.index >= 0);
     node.index
 
@@ -152,14 +154,5 @@ module Make () = struct
 
   let to_array x = x
 
-  module Heap = Type_sig_heap
-
-  let heap_size f xs =
-    let size = ref (Heap.addr_map_size xs) in
-    iter (fun x -> size := !size + f x) xs;
-    !size
-
-  let to_heap = Heap.write_addr_map
-
-  let from_heap = Heap.read_addr_map
+  let to_array_map = map
 end

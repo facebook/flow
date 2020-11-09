@@ -38,10 +38,6 @@ module type READER = sig
   val get_info : reader:reader -> (File_key.t -> info option) Expensive.t
 
   val is_tracked_file : reader:reader -> File_key.t -> bool
-
-  val get_package : reader:reader -> string -> (Package_json.t, unit) result option
-
-  val get_package_directory : reader:reader -> string -> string option
 end
 
 module Mutator_reader : READER with type reader = Mutator_state_reader.t
@@ -79,16 +75,6 @@ module Introduce_files_mutator : sig
   val add_info : t -> File_key.t -> info -> unit
 end
 
-module Package_heap_mutator : sig
-  val add_package_json : string -> Package_json.t -> unit
-
-  val add_error : string -> unit
-end
-
 module From_saved_state : sig
   val add_resolved_requires : File_key.t -> resolved_requires -> unit
-end
-
-module For_saved_state : sig
-  val get_package_json_unsafe : string -> (Package_json.t, unit) result
 end

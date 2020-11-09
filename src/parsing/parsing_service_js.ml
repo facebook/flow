@@ -23,6 +23,7 @@ type result =
 and parse_skip_reason =
   | Skip_resource_file
   | Skip_non_flow_file
+  | Skip_package_json of (parse_error list * package_json_error option)
 
 and parse_error = Loc.t * Parse_error.t
 
@@ -39,6 +40,8 @@ and docblock_error_kind =
   | MultipleJSXAttributes
   | InvalidJSXAttribute of string option
 
+and package_json_error = Loc.t * string
+
 (* results of parse job, returned by parse and reparse *)
 type results = {
   (* successfully parsed files *)
@@ -53,6 +56,8 @@ type results = {
   parse_fails: (File_key.t * Docblock.t * parse_failure) list;
   (* set of unchanged files *)
   parse_unchanged: FilenameSet.t;
+  (* package.json files parsed *)
+  parse_package_json: File_key.t list * package_json_error list;
 }
 
 let empty_result =
@@ -63,6 +68,7 @@ let empty_result =
     parse_hash_mismatch_skips = FilenameSet.empty;
     parse_fails = [];
     parse_unchanged = FilenameSet.empty;
+    parse_package_json = ([], []);
   }
 
 (**************************** internal *********************************)
@@ -87,6 +93,8 @@ type parse_options = {
   parse_max_literal_len: int;
   parse_exact_by_default: bool;
   parse_enable_enums: bool;
+  parse_enable_this_annot: bool;
+  parse_node_main_fields: string list;
 }
 
 let parse_source_file ~fail ~types ~use_strict content file =
@@ -175,8 +183,8 @@ let docblock_max_tokens = 10
 let extract_docblock =
   Docblock.(
     (* walks a list of words, returns a list of errors and the extracted info.
-     if @flow or @providesModule is found more than once, the first one is used
-     and an error is returned. *)
+       if @flow or @providesModule is found more than once, the first one is used
+       and an error is returned. *)
     let rec parse_attributes (errors, info) = function
       | (loc, "@flow") :: (_, "strict") :: xs ->
         let acc =
@@ -389,22 +397,29 @@ let do_parse ~parse_options ~info content file =
     parse_max_literal_len = max_literal_len;
     parse_exact_by_default = exact_by_default;
     parse_enable_enums = enable_enums;
+    parse_enable_this_annot = enable_this_annot;
+    parse_node_main_fields = node_main_fields;
   } =
     parse_options
   in
   try
     match file with
-    | File_key.JsonFile _ ->
-      let (ast, parse_errors) = parse_json_file ~fail content file in
-      (* NOTE: if ~fail:true, we'll never get parse errors here *)
-      Parse_ok
-        {
-          ast;
-          file_sig = File_sig.With_Loc.init;
-          sig_extra = Parsing_heaps.Classic;
-          tolerable_errors = [];
-          parse_errors;
-        }
+    | File_key.JsonFile str ->
+      if Filename.basename str = "package.json" then
+        let (ast, parse_errors) = parse_json_file ~fail content file in
+        let package = Package_json.parse ~node_main_fields ast in
+        let package_error_opt =
+          match package with
+          | Ok pkg ->
+            Package_heaps.Package_heap_mutator.add_package_json (File_key.to_string file) pkg;
+            None
+          | Error (loc, str) ->
+            Package_heaps.Package_heap_mutator.add_error (File_key.to_string file);
+            Some (loc, str)
+        in
+        Parse_skip (Skip_package_json (parse_errors, package_error_opt))
+      else
+        Parse_skip Skip_resource_file
     | File_key.ResourceFile _ -> Parse_skip Skip_resource_file
     | _ ->
       (* either all=true or @flow pragma exists *)
@@ -416,13 +431,13 @@ let do_parse ~parse_options ~info content file =
         let (ast, parse_errors) = parse_source_file ~fail ~types:true ~use_strict content file in
         let prevent_munge = Docblock.preventMunge info || prevent_munge in
         (* NOTE: This is a temporary hack that makes the signature verifier ignore any static
-            property named `propTypes` in any class. It should be killed with fire or replaced with
-            something that only works for React classes, in which case we must make a corresponding
-            change in the type system that enforces that any such property is private. *)
+           property named `propTypes` in any class. It should be killed with fire or replaced with
+           something that only works for React classes, in which case we must make a corresponding
+           change in the type system that enforces that any such property is private. *)
         let ignore_static_propTypes = true in
         (* NOTE: This is a Facebook-specific hack that makes the signature verifier and generator
-            recognize and process a custom `keyMirror` function that makes an enum out of the keys
-            of an object. *)
+           recognize and process a custom `keyMirror` function that makes an enum out of the keys
+           of an object. *)
         let facebook_keyMirror = true in
         let exports_info = File_sig.With_Loc.program_with_exports_info ~ast ~module_ref_prefix in
         (match exports_info with
@@ -489,21 +504,36 @@ let do_parse ~parse_options ~info content file =
                   exact_by_default;
                   module_ref_prefix;
                   enable_enums;
+                  enable_this_annot;
                 }
               in
               let (errors, locs, type_sig) =
                 let strict = Docblock.is_strict info in
                 Type_sig_utils.parse_and_pack_module ~strict sig_opts (Some file) ast
               in
-              (* TODO: extract env from type_sig *)
-              let env = None in
+              let env = ref SMap.empty in
+              let () =
+                let open Type_sig in
+                let (_, _, _, local_defs, _, _, _) = type_sig in
+                let f def =
+                  let name = def_name def in
+                  let loc = def_id_loc def in
+                  let loc = Type_sig_collections.Locs.get locs loc in
+                  let locs = Loc_collections.LocSet.singleton loc in
+                  let combine = Loc_collections.LocSet.union in
+                  env := SMap.add name locs ~combine !env
+                in
+                Type_sig_collections.Local_defs.iter f local_defs
+              in
               (* TODO: make type sig errors match signature builder errors *)
               let errors =
                 List.fold_left
-                  (fun acc (loc, err) ->
-                    let loc = Type_sig_collections.Locs.get locs loc in
-                    let err = Signature_error.TODO (Type_sig.show_errno err, loc) in
-                    Signature_builder_deps.PrintableErrorSet.add err acc)
+                  (fun acc (_, err) ->
+                    match err with
+                    | Type_sig.SigError err ->
+                      let err = Signature_error.map (Type_sig_collections.Locs.get locs) err in
+                      Signature_builder_deps.PrintableErrorSet.add err acc
+                    | Type_sig.CheckError -> acc)
                   Signature_builder_deps.PrintableErrorSet.empty
                   errors
               in
@@ -511,7 +541,7 @@ let do_parse ~parse_options ~info content file =
                 Type_sig_collections.Locs.to_array locs
                 |> ALoc.ALocRepresentationDoNotUse.make_table file
               in
-              (env, errors, Parsing_heaps.TypeSig (type_sig, aloc_table))
+              (Some !env, errors, Parsing_heaps.TypeSig (type_sig, aloc_table))
           in
           let tolerable_errors =
             Signature_builder_deps.PrintableErrorSet.fold
@@ -618,6 +648,18 @@ let reducer
               let fail = (file, info, converted) in
               let parse_fails = fail :: parse_results.parse_fails in
               { parse_results with parse_fails }
+            | Parse_skip (Skip_package_json (_parse_errors, package_json_error)) ->
+              (* if parse_options.fail == true, then parse errors will hit Parse_fail below. otherwise,
+                 ignore any parse errors we get here. *)
+              let parse_skips = (file, info) :: parse_results.parse_skips in
+              let (package_json, package_json_errors) = parse_results.parse_package_json in
+              let package_json_errors =
+                match package_json_error with
+                | Some e -> e :: package_json_errors
+                | None -> package_json_errors
+              in
+              let parse_package_json = (file :: package_json, package_json_errors) in
+              { parse_results with parse_skips; parse_package_json }
             | Parse_skip Skip_non_flow_file
             | Parse_skip Skip_resource_file ->
               let parse_skips = (file, info) :: parse_results.parse_skips in
@@ -642,6 +684,10 @@ let merge r1 r2 =
       FilenameSet.union r1.parse_hash_mismatch_skips r2.parse_hash_mismatch_skips;
     parse_fails = r1.parse_fails @ r2.parse_fails;
     parse_unchanged = FilenameSet.union r1.parse_unchanged r2.parse_unchanged;
+    parse_package_json =
+      (let (s1, e1) = r1.parse_package_json in
+       let (s2, e2) = r2.parse_package_json in
+       (List.rev_append s1 s2, List.rev_append e1 e2));
   }
 
 let opt_or_alternate opt alternate =
@@ -650,13 +696,13 @@ let opt_or_alternate opt alternate =
   | None -> alternate
 
 (* types_mode and use_strict aren't special, they just happen to be the ones that needed to be
-overridden *)
+   overridden *)
 let get_defaults ~types_mode ~use_strict options =
   let types_mode =
     opt_or_alternate
       types_mode
       (* force types when --all is set, but otherwise forbid them unless the file
-       has @flow in it. *)
+         has @flow in it. *)
       ( if Options.all options then
         TypesAllowed
       else
@@ -804,6 +850,8 @@ let make_parse_options_internal
     parse_max_literal_len = Options.max_literal_length options;
     parse_exact_by_default = Options.exact_by_default options;
     parse_enable_enums = Options.enums options;
+    parse_enable_this_annot = Options.this_annot options;
+    parse_node_main_fields = Options.node_main_fields options;
   }
 
 let make_parse_options ?fail ?types_mode ?use_strict docblock options =
@@ -891,6 +939,7 @@ let ensure_parsed ~reader options workers files =
         parse_hash_mismatch_skips;
         parse_fails = _;
         parse_unchanged = _;
+        parse_package_json = _;
       } =
     parse
       ~worker_mutator

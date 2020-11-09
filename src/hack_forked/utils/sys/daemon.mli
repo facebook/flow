@@ -52,7 +52,7 @@ val input_value : 'a in_channel -> 'b
    All required data must be passed through the typed channels.
    associated to the spawned process.
 
- *)
+*)
 
 (* Alternate entry points *)
 type ('param, 'input, 'output) entry

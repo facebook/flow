@@ -38,9 +38,9 @@ let substituter =
         if props_map == props_map' then
           id
         (* When substitution results in a new property map, we have to use a
-         generated id, rather than a location from source. The substituted
-         object will have the same location as the generic version, meaning
-         that this location will not serve as a unique identifier. *)
+           generated id, rather than a location from source. The substituted
+           object will have the same location as the generic version, meaning
+           that this location will not serve as a unique identifier. *)
         else
           Context.generate_property_map cx props_map'
       in
@@ -129,13 +129,13 @@ let substituter =
                 )
             else
               t
-          | ThisClassT (reason, this) ->
+          | ThisClassT (reason, this, i) ->
             let map = SMap.remove "this" map in
             let this_ = self#type_ cx (map, force, use_op) this in
             if this_ == this then
               t
             else
-              ThisClassT (reason, this_)
+              ThisClassT (reason, this_, i)
           | TypeAppT (r, op, c, ts) ->
             let c' = self#type_ cx map_cx c in
             let ts' = ListUtils.ident_map (self#type_ cx map_cx) ts in

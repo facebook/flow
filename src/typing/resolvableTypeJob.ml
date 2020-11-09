@@ -63,27 +63,27 @@ and collect_of_type ?log_unresolved cx acc = function
       match constraints with
       | FullyResolved _ ->
         (* Everything reachable from this type is certainly resolved, so we can
-         avoid walking the type entirely. *)
+           avoid walking the type entirely. *)
         acc
       | Resolved (_, t) ->
         let acc = IMap.add id OpenResolved acc in
         collect_of_type ?log_unresolved cx acc t
       | Unresolved _ ->
         (* It is important to consider reads of constant property names as fully
-         resolvable, especially since constant property names are often used to
-         store literals that serve as tags for disjoint unions. Unfortunately,
-         today we cannot distinguish such reads from others, so we rely on a
-         common style convention to recognize constant property names. For now
-         this hack pays for itself: we do not ask such reads to be annotated
-         with the corresponding literal types to decide membership in those
-         disjoint unions. *)
+           resolvable, especially since constant property names are often used to
+           store literals that serve as tags for disjoint unions. Unfortunately,
+           today we cannot distinguish such reads from others, so we rely on a
+           common style convention to recognize constant property names. For now
+           this hack pays for itself: we do not ask such reads to be annotated
+           with the corresponding literal types to decide membership in those
+           disjoint unions. *)
         if is_constant_reason r then
           IMap.add id (Binding (r, id)) acc
         (* Instantiable reasons indicate unresolved tvars that are created
-         "fresh" for the sole purpose of binding to other types, e.g. as
-         instantiations of type parameters or as existentials. Constraining
-         them during speculative matching typically do not cause side effects
-         across branches, and help make progress. *)
+           "fresh" for the sole purpose of binding to other types, e.g. as
+           instantiations of type parameters or as existentials. Constraining
+           them during speculative matching typically do not cause side effects
+           across branches, and help make progress. *)
         else if is_instantiable_reason r then
           acc
         else
@@ -193,12 +193,13 @@ and collect_of_type ?log_unresolved cx acc = function
   | ExactT (_, t)
   | DefT (_, _, TypeT (_, t))
   | DefT (_, _, ClassT t)
-  | ThisClassT (_, t) ->
+  | ThisClassT (_, t, _) ->
     collect_of_type ?log_unresolved cx acc t
   | KeysT (_, t) -> collect_of_type ?log_unresolved cx acc t
   | ShapeT (_, t) -> collect_of_type ?log_unresolved cx acc t
   | MatchingPropT (_, _, t) -> collect_of_type ?log_unresolved cx acc t
   | DefT (_, _, IdxWrapper t) -> collect_of_type ?log_unresolved cx acc t
+  | GenericT { bound; _ } -> collect_of_type ?log_unresolved cx acc bound
   | ReposT (_, t)
   | InternalT (ReposUpperT (_, t)) ->
     collect_of_type ?log_unresolved cx acc t
@@ -263,7 +264,7 @@ and collect_of_property ?log_unresolved cx name property acc =
     Property.fold_t (fun acc -> collect_of_type ?log_unresolved cx acc) acc property
 
 and collect_of_object_kit_spread_operand_slice
-    ?log_unresolved cx acc { Object.Spread.reason = _; prop_map; dict } =
+    ?log_unresolved cx acc { Object.Spread.reason = _; prop_map; dict; generics = _ } =
   let acc = SMap.fold (collect_of_property ?log_unresolved cx) prop_map acc in
   let ts =
     match dict with
@@ -299,7 +300,7 @@ and collect_of_binding ?log_unresolved cx acc = function
       match constraints with
       | FullyResolved _ ->
         (* Everything reachable from this type is certainly resolved, so we can
-         avoid walking the type entirely. *)
+           avoid walking the type entirely. *)
         acc
       | Resolved (_, t) ->
         let acc = IMap.add id OpenResolved acc in
@@ -323,6 +324,6 @@ and collect_of_use ?log_unresolved cx acc = function
             t)
         fct.call_args_tlist
     in
-    collect_of_types ?log_unresolved cx acc (arg_types @ [fct.call_tout])
-  | GetPropT (_, _, _, t_out) -> collect_of_type ?log_unresolved cx acc t_out
+    collect_of_types ?log_unresolved cx acc (arg_types @ [OpenT fct.call_tout])
+  | GetPropT (_, _, _, t_out) -> collect_of_type ?log_unresolved cx acc (OpenT t_out)
   | _ -> acc

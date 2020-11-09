@@ -54,9 +54,9 @@ module type S = sig
     ALoc.t option -> func_sig -> ?set_asts:set_asts -> ?set_type:set_type -> t -> t
   (** Add constructor to signature.
 
-    Overwrites any existing constructor. This implements the behavior of
-    classes, which permit duplicate definitions where latter definitions
-    overwrite former ones. *)
+      Overwrites any existing constructor. This implements the behavior of
+      classes, which permit duplicate definitions where latter definitions
+      overwrite former ones. *)
 
   val add_default_constructor : Reason.t -> t -> t
 
@@ -64,9 +64,9 @@ module type S = sig
     ALoc.t option -> func_sig -> ?set_asts:set_asts -> ?set_type:set_type -> t -> t
   (** Add constructor override to signature.
 
-    Does not overwrite existing constructors. This implements the behavior of
-    interfaces, which interpret duplicate definitions as branches of a single
-    overloaded constructor. *)
+      Does not overwrite existing constructors. This implements the behavior of
+      interfaces, which interpret duplicate definitions as branches of a single
+      overloaded constructor. *)
 
   val add_field : static:bool -> string -> ALoc.t -> Polarity.t -> field -> t -> t
   (** Add field to signature. *)
@@ -100,9 +100,9 @@ module type S = sig
     t
   (** Add method to signature.
 
-    Overwrites any existing synonymous method. This implements the behavior of
-    classes, which permit duplicate definitions where latter definitions
-    overwrite former ones. *)
+      Overwrites any existing synonymous method. This implements the behavior of
+      classes, which permit duplicate definitions where latter definitions
+      overwrite former ones. *)
 
   val append_method :
     static:bool ->
@@ -115,9 +115,9 @@ module type S = sig
     t
   (** Add method override to signature.
 
-    Does not overwrite existing synonymous methods. This implements the
-    behavior of interfaces, which interpret duplicate definitions as branches
-    of a single overloaded method. *)
+      Does not overwrite existing synonymous methods. This implements the
+      behavior of interfaces, which interpret duplicate definitions as branches
+      of a single overloaded method. *)
 
   val append_call : static:bool -> Type.t -> t -> t
 
@@ -165,13 +165,13 @@ module type S = sig
 
   val check_implements : Context.t -> Reason.reason -> t -> unit
   (** Emits constraints to ensure the signature is compatible with its declared
-    interface implementations (classes) *)
+      interface implementations (classes) *)
 
   val check_super : Context.t -> Reason.reason -> t -> unit
   (** Emits constraints to ensure the signature is compatible with its declared
-    superclass (classes) or extends/mixins (interfaces) *)
+      superclass (classes) or extends/mixins (interfaces) *)
 
-  val generate_tests : Context.t -> (t -> 'a) -> t -> 'a
+  val check_with_generics : Context.t -> (t -> 'a) -> t -> 'a
   (** Invoke callback with type parameters substituted by upper/lower bounds. *)
 
   val toplevels :
@@ -182,7 +182,9 @@ module type S = sig
       (ALoc.t, ALoc.t) Flow_ast.Statement.t list ->
       (ALoc.t, ALoc.t * Type.t) Flow_ast.Statement.t list) ->
     expr:
-      (Context.t ->
+      (?cond:Type.cond_context ->
+      Context.t ->
+      annot:unit option ->
       (ALoc.t, ALoc.t) Flow_ast.Expression.t ->
       (ALoc.t, ALoc.t * Type.t) Flow_ast.Expression.t) ->
     private_property_map:Type.Properties.id ->
@@ -194,8 +196,10 @@ module type S = sig
 
   val thistype : Context.t -> t -> Type.t
 
-  (* Create a (polymorphic) class type. *)
-  val classtype : Context.t -> ?check_polarity:bool -> t -> Type.t
+  (* Create a (polymorphic) class type. In the return tuple, the first type is the internal view of the
+     class and the second type is the external view--which differ because the internal view can be
+     comparible with `this`, while the external view shouldn't be. *)
+  val classtype : Context.t -> ?check_polarity:bool -> t -> Type.t * Type.t
 
   module This : sig
     val is_bound_to_empty : t -> bool

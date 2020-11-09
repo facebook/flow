@@ -15,7 +15,7 @@ let mk_id = Reason.mk_id
 
 (* these are basically owned by Env, but are here
    to break circularity between Env and Flow_js
- *)
+*)
 
 (* entry state *)
 module State = struct
@@ -96,7 +96,7 @@ module Entry = struct
     (* The last location (in this scope) where the entry value was assigned *)
     value_assign_loc: ALoc.t;
     specific: Type.t;
-    general: Type.t;
+    general: Type.annotated_or_inferred;
   }
 
   type type_binding_kind =
@@ -130,19 +130,22 @@ module Entry = struct
         general;
       }
 
-  let new_const ~loc ?(state = State.Undeclared) ?(kind = ConstVarBinding) t =
-    new_value (Const kind) state t t loc
+  let new_const ~loc ?(state = State.Undeclared) ?(kind = ConstVarBinding) general =
+    let specific = TypeUtil.type_t_of_annotated_or_inferred general in
+    new_value (Const kind) state specific general loc
 
-  let new_import ~loc t = new_value (Const ConstImportBinding) State.Initialized t t loc
+  let new_import ~loc t =
+    new_value (Const ConstImportBinding) State.Initialized t (Type.Inferred t) loc
 
-  let new_let ~loc ?(state = State.Undeclared) ?(kind = LetVarBinding) t =
-    new_value (Let kind) state t t loc
+  let new_let ~loc ?(state = State.Undeclared) ?(kind = LetVarBinding) general =
+    let specific = TypeUtil.type_t_of_annotated_or_inferred general in
+    new_value (Let kind) state specific general loc
 
   let new_var ~loc ?(state = State.Undeclared) ?(kind = VarBinding) ?specific general =
     let specific =
       match specific with
       | Some t -> t
-      | None -> general
+      | None -> TypeUtil.type_t_of_annotated_or_inferred general
     in
     new_value (Var kind) state specific general loc
 
@@ -165,7 +168,7 @@ module Entry = struct
     | Class _ -> ALoc.none
 
   let declared_type = function
-    | Value v -> v.general
+    | Value v -> TypeUtil.type_t_of_annotated_or_inferred v.general
     | Type t -> t.type_
     | Class _ -> assert_false "Internal Error: Class bindings have no type"
 
@@ -181,7 +184,8 @@ module Entry = struct
 
   let kind_of_value (value : value_binding) = value.kind
 
-  let general_of_value (value : value_binding) = value.general
+  let general_of_value (value : value_binding) =
+    TypeUtil.type_t_of_annotated_or_inferred value.general
 
   let state_of_value (value : value_binding) = value.value_state
 
@@ -189,7 +193,7 @@ module Entry = struct
       with general type for non-internal, non-Const value entries. Types, consts
       and internal vars are read-only, so specific types can be preserved.
       TODO: value_state should go from Declared to MaybeInitialized?
-    *)
+   *)
   let havoc name entry =
     match entry with
     | Type _ -> entry
@@ -198,7 +202,7 @@ module Entry = struct
       if Reason.is_internal_name name then
         entry
       else
-        Value { v with specific = v.general }
+        Value { v with specific = TypeUtil.type_t_of_annotated_or_inferred v.general }
     | Value { kind = Const _; _ } -> entry
     | Value { kind = Var ConstlikeVarBinding; _ } -> entry
     | Value { kind = Let ConstlikeLetVarBinding; _ } -> entry
@@ -207,7 +211,7 @@ module Entry = struct
       if Reason.is_internal_name name then
         entry
       else
-        Value { v with specific = v.general }
+        Value { v with specific = TypeUtil.type_t_of_annotated_or_inferred v.general }
     | Class _ -> entry
 
   let reset loc name entry =
@@ -308,7 +312,7 @@ let fresh_lex () = fresh_impl LexScope
 
 (* clone a scope: snapshot mutable entries.
    NOTE: tvars (OpenT) are essentially refs, and are shared by clones.
- *)
+*)
 let clone { id; kind; entries; refis; declare_func_annots } =
   { id; kind; entries; refis; declare_func_annots }
 
@@ -364,7 +368,7 @@ let filter_refis_using_propname ~private_ propname refis =
 (* havoc a scope's refinements:
    if name is passed, clear refis whose expressions involve it.
    otherwise, clear them all
- *)
+*)
 let havoc_refis ?name ~private_ scope =
   scope.refis <-
     (match name with
@@ -378,7 +382,7 @@ let havoc_all_refis ?name scope =
 (* havoc a scope:
    - clear all refinements
    - reset specific types of entries to their general types
- *)
+*)
 let havoc scope =
   havoc_all_refis scope;
   update_entries Entry.havoc scope

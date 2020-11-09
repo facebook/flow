@@ -8,6 +8,8 @@
  * @format
  */
 
+import type {Flag} from '../command/Base';
+
 import {format} from 'util';
 import {resolve} from 'path';
 
@@ -51,7 +53,7 @@ Queries Flow for the unused error suppressions for ROOT. Then removes them from 
 `;
   }
 
-  static getFlags() {
+  static getFlags(): Array<Flag> {
     return [
       commonFlags.bin,
       commonFlags.flowconfigName,

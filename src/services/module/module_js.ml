@@ -87,8 +87,8 @@ let module_name_candidates ~options =
       List.rev (name :: List.fold_left map_name [] mappers))
 
 let add_package filename = function
-  | Ok package -> Module_heaps.Package_heap_mutator.add_package_json filename package
-  | Error _ -> Module_heaps.Package_heap_mutator.add_error filename
+  | Ok package -> Package_heaps.Package_heap_mutator.add_package_json filename package
+  | Error _ -> Package_heaps.Package_heap_mutator.add_error filename
 
 type package_incompatible_reason =
   (* Didn't exist before, now it exists *)
@@ -123,8 +123,8 @@ type package_incompatible_return =
   | Incompatible of package_incompatible_reason
 
 let package_incompatible ~options ~reader filename ast =
-  let new_package = Package_json.parse ~options ast in
-  let old_package = Module_heaps.Reader.get_package ~reader filename in
+  let new_package = Package_json.parse ~node_main_fields:(Options.node_main_fields options) ast in
+  let old_package = Package_heaps.Reader.get_package ~reader filename in
   match (old_package, new_package) with
   | (None, Ok _) -> Incompatible New (* didn't exist before, found a new one *)
   | (None, Error _) -> Compatible (* didn't exist before, new one is invalid *)
@@ -166,14 +166,14 @@ module type MODULE_SYSTEM = sig
     reader:Abstract_state_reader.t ->
     SSet.t SMap.t ->
     File_key.t ->
-    ALoc.t Nel.t ->
+    ALoc.t ->
     ?resolution_acc:resolution_acc ->
     string ->
     Modulename.t
 
   (* for a given module name, choose a provider from among a set of
-    files with that exported name. also check for duplicates and
-    generate warnings, as dictated by module system rules. *)
+     files with that exported name. also check for duplicates and
+     generate warnings, as dictated by module system rules. *)
   val choose_provider :
     string ->
     (* module name *)
@@ -286,7 +286,7 @@ module Node = struct
       None
     else
       let package =
-        match Module_heaps.Reader_dispatcher.get_package ~reader package_filename with
+        match Package_heaps.Reader_dispatcher.get_package ~reader package_filename with
         | Some (Ok package) -> package
         | Some (Error ()) ->
           (* invalid, but we already raised an error when building PackageHeap *)
@@ -328,7 +328,7 @@ module Node = struct
             lazy (path_if_exists_with_file_exts ~file_options resolution_acc path_w_index file_exts);
           ]
 
-  let resolve_relative ~options ~reader ((loc : ALoc.t), _) ?resolution_acc root_path rel_path =
+  let resolve_relative ~options ~reader (loc : ALoc.t) ?resolution_acc root_path rel_path =
     let file_options = Options.file_options options in
     let path = Files.normalize_path root_path rel_path in
     if Files.is_flow_file ~options:file_options path then
@@ -398,7 +398,8 @@ module Node = struct
   let explicitly_relative r =
     Str.string_match Files.current_dir_name r 0 || Str.string_match Files.parent_dir_name r 0
 
-  let resolve_import ~options ~reader node_modules_containers f loc ?resolution_acc import_str =
+  let resolve_import
+      ~options ~reader node_modules_containers f (loc : ALoc.t) ?resolution_acc import_str =
     let file = File_key.to_string f in
     let dir = Filename.dirname file in
     let root_str = Options.root options |> Path.to_string in
@@ -529,7 +530,7 @@ module Haste : MODULE_SYSTEM = struct
     match Str.split_delim (Str.regexp_string "/") r with
     | [] -> None
     | package_name :: rest ->
-      Module_heaps.Reader_dispatcher.get_package_directory ~reader package_name
+      Package_heaps.Reader_dispatcher.get_package_directory ~reader package_name
       |> Base.Option.map ~f:(fun package -> Files.construct_path package rest)
 
   (* similar to Node resolution, with possible special cases *)
@@ -621,23 +622,6 @@ let imported_module ~options ~reader ~node_modules_containers file loc ?resoluti
   let module M = (val get_module_system options) in
   M.imported_module ~options ~reader node_modules_containers file loc ?resolution_acc r
 
-let imported_modules ~options ~reader node_modules_containers file require_loc =
-  (* Resolve all reqs relative to the given cx. Accumulate dependent paths in
-     resolution_acc. Return the map of reqs to their resolved names, and the set
-     containing the resolved names. *)
-  let resolution_acc = { paths = SSet.empty; errors = [] } in
-  let resolved_modules =
-    SMap.fold
-      (fun mref loc acc ->
-        let m =
-          imported_module file loc mref ~options ~reader ~node_modules_containers ~resolution_acc
-        in
-        SMap.add mref m acc)
-      require_loc
-      SMap.empty
-  in
-  (resolved_modules, resolution_acc)
-
 let choose_provider ~options m files errmap =
   let module M = (val get_module_system options) in
   M.choose_provider m files errmap
@@ -657,14 +641,24 @@ let checked_file ~reader ~audit f =
   let info = f |> Module_heaps.Reader_dispatcher.get_info_unsafe ~reader ~audit in
   info.Module_heaps.checked
 
-(* TODO [perf]: measure size and possibly optimize *)
-(* Extract and process information from context. In particular, resolve
-   references to required modules in a file, and record the results.  *)
-let resolved_requires_of ~options ~reader node_modules_containers f require_loc =
-  let (resolved_modules, { paths; errors }) =
-    imported_modules ~options ~reader node_modules_containers f require_loc
+(** Resolve references to required modules in a file, and record the results.
+
+    TODO [perf]: measure size and possibly optimize *)
+let resolved_requires_of ~options ~reader node_modules_containers file require_loc =
+  let resolution_acc = { paths = SSet.empty; errors = [] } in
+  let resolved_modules =
+    SMap.fold
+      (fun mref locs acc ->
+        let m =
+          let loc = Nel.hd locs in
+          imported_module file loc mref ~options ~reader ~node_modules_containers ~resolution_acc
+        in
+        SMap.add mref m acc)
+      require_loc
+      SMap.empty
   in
-  (errors, Module_heaps.mk_resolved_requires ~resolved_modules ~phantom_dependents:paths)
+  let { paths = phantom_dependents; errors } = resolution_acc in
+  (errors, Module_heaps.mk_resolved_requires ~resolved_modules ~phantom_dependents)
 
 let add_parsed_resolved_requires ~mutator ~reader ~options ~node_modules_containers file =
   let file_sig =
@@ -761,12 +755,12 @@ let commit_modules ~transaction ~workers ~options ~reader ~is_init new_or_change
           (Modulename.Set.add m rem, prov, rep, errmap, Modulename.Set.add m diff)
         | ps ->
           (* incremental: install empty error sets here for provider candidates.
-         this will have the effect of resetting downstream errors for these
-         files, when the returned error map is used by our caller.
-         IMPORTANT: since each file may (does) provide more than one module,
-         files may already have acquired errors earlier in this fold, so we
-         must only add an empty entry if no entry is already present
-      *)
+             this will have the effect of resetting downstream errors for these
+             files, when the returned error map is used by our caller.
+             IMPORTANT: since each file may (does) provide more than one module,
+             files may already have acquired errors earlier in this fold, so we
+             must only add an empty entry if no entry is already present
+          *)
           let errmap =
             FilenameSet.fold
               (fun f acc ->
@@ -783,8 +777,8 @@ let commit_modules ~transaction ~workers ~options ~reader ~is_init new_or_change
           | Some f ->
             if f = p then (
               (* When can this happen? Say m pointed to f before, a different file
-             f' that provides m changed (so m is not in old_modules), but f
-             continues to be the chosen provider = p (winning over f'). *)
+                 f' that provides m changed (so m is not in old_modules), but f
+                 continues to be the chosen provider = p (winning over f'). *)
               if debug then
                 prerr_endlinef
                   "unchanged provider: %S -> %s"
@@ -799,8 +793,8 @@ let commit_modules ~transaction ~workers ~options ~reader ~is_init new_or_change
               (rem, prov, rep, errmap, diff)
             ) else (
               (* When can this happen? Say m pointed to f before, a different file
-             f' that provides m changed (so m is not in old_modules), and
-             now f' becomes the chosen provider = p (winning over f). *)
+                 f' that provides m changed (so m is not in old_modules), and
+                 now f' becomes the chosen provider = p (winning over f). *)
               if debug then
                 prerr_endlinef
                   "new provider: %S -> %s replaces %s"
@@ -812,8 +806,8 @@ let commit_modules ~transaction ~workers ~options ~reader ~is_init new_or_change
             )
           | None ->
             (* When can this happen? Either m pointed to a file that used to
-             provide m and changed or got deleted (causing m to be in
-             old_modules), or m didn't have a provider before. *)
+               provide m and changed or got deleted (causing m to be in
+               old_modules), or m didn't have a provider before. *)
             if debug then
               prerr_endlinef
                 "initial provider %S -> %s"
@@ -970,7 +964,7 @@ end = struct
      parsed files are finished with local inference. But since we guess
      the module names of unparsed files, we're able to tell whether an
      unparsed file has been required/imported.
-   *)
+  *)
   let add_unparsed_info ~options =
     let exported_module = exported_module ~options in
     let force_check = Options.all options in

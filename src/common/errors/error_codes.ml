@@ -29,21 +29,19 @@ type error_code =
   | DuplicateModule
   | DuplicateProvideModuleDecl
   | EnumValueAsType
+  | EscapedGeneric
   | ExponentialSpread
   | ExportRenamedDefault
   | ExportValueAsType
   | ExtraArg
   | ExtraTypeArg
   | FunctionPredicate
-  | IllegalClassField
-  | IllegalDecorator
   | IllegalEnum
-  | IllegalExportStar
   | IllegalGetSet
   | IllegalKey
   | IllegalNewArray
-  | IllegalOptionalChain
   | IllegalThis
+  | IllegalThisAnnot
   | IllegalTypeof
   | ImplicitInexactObject
   | ImportTypeAsValue
@@ -96,6 +94,7 @@ type error_code =
   | LintSetting
   | MalformedPackage
   | MissingAnnot
+  | MissingLocalAnnot
   | MissingArg
   | MissingExport
   | MissingTypeArg
@@ -191,20 +190,18 @@ let string_of_code : error_code -> string = function
   | DuplicateModule -> "duplicate-module"
   | DuplicateProvideModuleDecl -> "duplicate-provide-module-decl"
   | EnumValueAsType -> "enum-value-as-type"
+  | EscapedGeneric -> "escaped-generic"
   | ExponentialSpread -> "exponential-spread"
   | ExportRenamedDefault -> "export-renamed-default"
   | ExportValueAsType -> "export-value-as-type"
   | ExtraArg -> "extra-arg"
   | ExtraTypeArg -> "extra-type-arg"
   | FunctionPredicate -> "function-predicate"
-  | IllegalClassField -> "illegal-class-field"
-  | IllegalDecorator -> "illegal-decorator"
   | IllegalEnum -> "illegal-enum"
-  | IllegalExportStar -> "illegal-export-star"
+  | IllegalThisAnnot -> "illegal-this-annot"
   | IllegalGetSet -> "illegal-get-set"
   | IllegalKey -> "illegal-key"
   | IllegalNewArray -> "illegal-new-array"
-  | IllegalOptionalChain -> "illegal-optional-chain"
   | IllegalThis -> "illegal-this"
   | IllegalTypeof -> "illegal-typeof"
   | ImplicitInexactObject -> "implicit-inexact-object"
@@ -258,6 +255,7 @@ let string_of_code : error_code -> string = function
   | LintSetting -> "lint-setting"
   | MalformedPackage -> "malformed-package"
   | MissingAnnot -> "missing-annot"
+  | MissingLocalAnnot -> "missing-local-annot"
   | MissingArg -> "missing-arg"
   | MissingExport -> "missing-export"
   | MissingTypeArg -> "missing-type-arg"

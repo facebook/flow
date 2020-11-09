@@ -3,9 +3,10 @@
  */
 
 
+import type Suite from "flow-dev-tools/src/test/Suite.js";
 import {suite, test} from 'flow-dev-tools/src/test/Tester';
 
-export default suite(({addFiles, flowCmd}) => [
+export default (suite(({addFiles, flowCmd}) => [
   test('Ignored directory', [
     addFiles(
       'ignore/dummy.js',
@@ -107,4 +108,4 @@ export default suite(({addFiles, flowCmd}) => [
       )
       .because('Should work even though no_flow/foo.js is missing @flow'),
   ]),
-]);
+]): Suite);

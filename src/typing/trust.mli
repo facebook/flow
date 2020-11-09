@@ -10,8 +10,8 @@ type trust_qualifier
 type trust_rep
 
 type expanded_trust =
-  | Qualifier of trust_qualifier
-  | Inferred of int
+  | QualifiedTrust of trust_qualifier
+  | InferredTrust of int
 
 val is_ident : trust_rep -> bool
 

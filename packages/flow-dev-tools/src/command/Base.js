@@ -79,8 +79,8 @@ class ShowUsageException {
 }
 
 export default class Base<T: Object> {
-  static BAD_ARGS = 64;
-  static OK = 0;
+  static BAD_ARGS: number = 64;
+  static OK: number = 0;
 
   // abstract
   static processArgv(argv: Object): T {
@@ -116,7 +116,7 @@ export default class Base<T: Object> {
   }
 
   // final
-  static parse() {
+  static parse(): any {
     const boolean = [];
     const string = [];
     const defaults = {};

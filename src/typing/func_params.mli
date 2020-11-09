@@ -12,5 +12,7 @@ module Make (C : Config) :
     with type 'T ast = 'T C.ast
      and type 'T param_ast = 'T C.param_ast
      and type 'T rest_ast = 'T C.rest_ast
+     and type 'T this_ast = 'T C.this_ast
      and type param = C.param
      and type rest = C.rest
+     and type this_param = C.this_param

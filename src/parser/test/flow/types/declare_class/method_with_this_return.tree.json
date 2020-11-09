@@ -39,6 +39,7 @@
               "loc":{"source":null,"start":{"line":2,"column":2},"end":{"line":2,"column":11}},
               "range":[22,31],
               "params":[],
+              "this":null,
               "returnType":{
                 "type":"GenericTypeAnnotation",
                 "loc":{"source":null,"start":{"line":2,"column":7},"end":{"line":2,"column":11}},

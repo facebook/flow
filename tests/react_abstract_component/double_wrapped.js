@@ -19,7 +19,7 @@ function wrapper2<TProps: {}, TInstance>(
   return base;
 }
 
-const WrappedBoth = wrapper(wrapper2(MyComponent));
+const WrappedBoth = wrapper(wrapper2(MyComponent)); // Errors-- props incompatible with component
 const _a = <WrappedBoth foo={42} bar={43} />; // Error, extra prop bar
 const _b = <WrappedBoth />; // Error, missing prop foo
 const _c = <WrappedBoth foo={42} />;

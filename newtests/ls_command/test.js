@@ -3,6 +3,7 @@
  */
 
 
+import type Suite from "flow-dev-tools/src/test/Suite.js";
 import {suite, test} from 'flow-dev-tools/src/test/Tester';
 
 const files = [
@@ -14,7 +15,7 @@ const files = [
   'src/flow-typed/implicit_lib.js',
 ];
 
-export default suite(({addFile, flowCmd, removeFile}) => [
+export default (suite(({addFile, flowCmd, removeFile}) => [
   test('No --all flag and implicit root', [
     flowCmd(['ls'])
       .stderr(
@@ -314,4 +315,4 @@ export default suite(({addFile, flowCmd, removeFile}) => [
   addFile('src/_flowconfig', 'src/.flowconfig')
     .addFiles(...files)
     .removeFile('.flowconfig')
-]);
+]): Suite);
