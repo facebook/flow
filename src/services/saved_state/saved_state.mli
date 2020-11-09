@@ -65,4 +65,4 @@ val load :
   options:Options.t ->
   (Profiling_js.finished * saved_state_data) Lwt.t
 
-val denormalize_parsed_data : root:string -> normalized_file_data -> denormalized_file_data
+val denormalize_file_data : root:string -> normalized_file_data -> denormalized_file_data

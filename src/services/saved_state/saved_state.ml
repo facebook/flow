@@ -193,13 +193,8 @@ end = struct
     in
     { info with Module_heaps.module_name }
 
-  let normalize_parsed_data ~normalizer parsed_file_data =
-    (* info *)
-    let info = normalize_info ~normalizer parsed_file_data.info in
-    (* resolved_requires *)
-    let { Module_heaps.resolved_modules; phantom_dependents; hash } =
-      parsed_file_data.normalized_file_data.resolved_requires
-    in
+  let normalize_resolved_requires
+      ~normalizer { Module_heaps.resolved_modules; phantom_dependents; hash } =
     let phantom_dependents =
       SSet.map (FileNormalizer.normalize_path normalizer) phantom_dependents
     in
@@ -208,12 +203,16 @@ end = struct
         (modulename_map_fn ~f:(FileNormalizer.normalize_file_key normalizer))
         resolved_modules
     in
-    let resolved_requires = { Module_heaps.resolved_modules; phantom_dependents; hash } in
-    {
-      info;
-      normalized_file_data =
-        { resolved_requires; hash = parsed_file_data.normalized_file_data.hash };
-    }
+    { Module_heaps.resolved_modules; phantom_dependents; hash }
+
+  let normalize_file_data ~normalizer { resolved_requires; hash } =
+    let resolved_requires = normalize_resolved_requires ~normalizer resolved_requires in
+    { resolved_requires; hash }
+
+  let normalize_parsed_data ~normalizer { info; normalized_file_data } =
+    let info = normalize_info ~normalizer info in
+    let normalized_file_data = normalize_file_data ~normalizer normalized_file_data in
+    { info; normalized_file_data }
 
   (* Collect all the data for a single parsed file *)
   let collect_normalized_data_for_parsed_file ~normalizer ~reader fn parsed_heaps =
@@ -439,7 +438,7 @@ module Load : sig
     profiling:Profiling_js.running ->
     saved_state_data Lwt.t
 
-  val denormalize_parsed_data : root:string -> normalized_file_data -> denormalized_file_data
+  val denormalize_file_data : root:string -> normalized_file_data -> denormalized_file_data
 end = struct
   module FileDenormalizer : sig
     type t
@@ -514,18 +513,19 @@ end = struct
   let denormalize_info_nocache ~root info =
     denormalize_info_generic ~denormalize:(denormalize_file_key_nocache ~root) info
 
-  (* Turns all the relative paths in a file's data back into absolute paths.
-   *
-   * We do our best to avoid reading the file system (which Path.make will do) *)
-  let denormalize_parsed_data ~root file_data =
-    (* resolved_requires *)
-    let { Module_heaps.resolved_modules; phantom_dependents; hash } = file_data.resolved_requires in
+  let denormalize_resolved_requires
+      ~root { Module_heaps.resolved_modules; phantom_dependents; hash } =
+    (* We do our best to avoid reading the file system (which Path.make will do) *)
     let phantom_dependents = SSet.map (Files.absolute_path root) phantom_dependents in
     let resolved_modules =
       SMap.map (modulename_map_fn ~f:(denormalize_file_key_nocache ~root)) resolved_modules
     in
-    let resolved_requires = { Module_heaps.resolved_modules; phantom_dependents; hash } in
-    { resolved_requires; hash = file_data.hash }
+    { Module_heaps.resolved_modules; phantom_dependents; hash }
+
+  (** Turns all the relative paths in a file's data back into absolute paths. *)
+  let denormalize_file_data ~root { resolved_requires; hash } =
+    let resolved_requires = denormalize_resolved_requires ~root resolved_requires in
+    { resolved_requires; hash }
 
   let partially_denormalize_parsed_data ~denormalizer { info; normalized_file_data } =
     let info = denormalize_info ~denormalizer info in
@@ -696,4 +696,4 @@ let load ~workers ~saved_state_filename ~options =
   Profiling_js.with_profiling_lwt ~label:"LoadSavedState" ~should_print_summary (fun profiling ->
       Load.load ~workers ~saved_state_filename ~options ~profiling)
 
-let denormalize_parsed_data = Load.denormalize_parsed_data
+let denormalize_file_data = Load.denormalize_file_data
