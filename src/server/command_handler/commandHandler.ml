@@ -107,7 +107,7 @@ let autocomplete ~trigger_character ~reader ~options ~env ~profiling ~filename ~
   let path = File_key.SourceFile path in
   let cursor_loc =
     let (line, column) = cursor in
-    Loc.make path line column
+    Loc.cursor (Some path) line column
   in
   let (contents, broader_context) =
     let (line, column) = cursor in
@@ -216,7 +216,7 @@ let check_file ~options ~env ~profiling ~force file_input =
 (* This returns result, json_data_to_log, where json_data_to_log is the json data from
  * getdef_get_result which we end up using *)
 let get_def_of_check_result ~options ~reader ~profiling ~check_result (file, line, col) =
-  let loc = Loc.make file line col in
+  let loc = Loc.cursor (Some file) line col in
   let (cx, _, file_sig, _, _ast, typed_ast, parse_errors) = check_result in
   let file_sig = File_sig.abstractify_locs file_sig in
   Profiling_js.with_timer_lwt profiling ~timer:"GetResult" ~f:(fun () ->
@@ -1653,7 +1653,7 @@ let handle_persistent_signaturehelp_lsp
     | Ok (cx, _info, file_sig, _, _ast, typed_ast, _parse_errors) ->
       let func_details =
         let file_sig = File_sig.abstractify_locs file_sig in
-        let cursor_loc = Loc.make path line col in
+        let cursor_loc = Loc.cursor (Some path) line col in
         Signature_help.find_signatures ~options ~reader ~cx ~file_sig ~typed_ast cursor_loc
       in
       (match func_details with

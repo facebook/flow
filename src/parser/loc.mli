@@ -47,8 +47,8 @@ val to_string_no_source : t -> string
 
 val source : t -> File_key.t option
 
-(* filename, line, column. produces a Loc.t at the given location *)
-val make : File_key.t -> int -> int -> t
+val cursor : File_key.t option -> int -> int -> t
+(** Produces a zero-width Loc.t, where start = end *)
 
 (* Produces a location at the start of the input location *)
 val start_loc : t -> t
