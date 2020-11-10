@@ -21,7 +21,7 @@ let type_at_pos
     file
     line
     col =
-  let loc = Loc.make file line col in
+  let loc = Loc.cursor (Some file) line col in
   let (json_data, loc, ty) =
     let mk_data result_str loc ty_json =
       [

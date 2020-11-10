@@ -53,7 +53,7 @@ let find_global_refs ~reader ~genv ~env ~profiling ~file_input ~line ~col ~multi
   let options = genv.ServerEnv.options in
   let filename = File_input.filename_of_file_input file_input in
   let file_key = File_key.SourceFile filename in
-  let loc = Loc.make file_key line col in
+  let loc = Loc.cursor (Some file_key) line col in
   let%lwt result =
     File_input.content_of_file_input file_input %>>= fun content ->
     FindRefsUtils.compute_ast_result options file_key content %>>= fun ast_info ->
@@ -88,7 +88,7 @@ let find_global_refs ~reader ~genv ~env ~profiling ~file_input ~line ~col ~multi
 let find_local_refs ~reader ~options ~env ~profiling ~file_input ~line ~col =
   let filename = File_input.filename_of_file_input file_input in
   let file_key = File_key.SourceFile filename in
-  let loc = Loc.make file_key line col in
+  let loc = Loc.cursor (Some file_key) line col in
   File_input.content_of_file_input file_input %>>= fun content ->
   FindRefsUtils.compute_ast_result options file_key content %>>= fun ast_info ->
   (* Start by running local variable find references *)
