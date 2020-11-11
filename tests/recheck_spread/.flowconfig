@@ -3,5 +3,3 @@
 <PROJECT_ROOT>/commit_b
 
 [options]
-well_formed_exports=true
-types_first=true

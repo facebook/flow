@@ -1,5 +1,4 @@
 [options]
-types_first=true
 
 [lints]
 all=error

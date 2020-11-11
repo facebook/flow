@@ -8,7 +8,6 @@
 
 [options]
 
-types_first=true
 exact_by_default=true
 no_flowlib=true
 
