@@ -163,3 +163,16 @@ function f() {}
 // Opaque types
 
 // Declare export
+
+//this params
+
+function z () {}
+function u (...a) {}
+
+function v (...a) {}
+
+function w (...a) {}
+
+const f = function() {}
+const g = function(...a) {}
+const h = function(...a) {}
