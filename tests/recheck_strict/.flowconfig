@@ -9,4 +9,3 @@ nonstrict-import
 no_flowlib=true
 well_formed_exports=true
 types_first=true
-experimental.abstract_locations=true

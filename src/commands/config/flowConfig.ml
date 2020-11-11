@@ -148,7 +148,7 @@ module Opts = struct
 
   let default_options =
     {
-      abstract_locations = false;
+      abstract_locations = true;
       all = false;
       automatic_require_default = false;
       babel_loose_array_spread = false;
