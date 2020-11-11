@@ -378,7 +378,7 @@ jobs:
       - run:
           name: Run tool tests
           shell: bash
-          command: ./tool test --bin bin/win64/flow.exe --parallelism 1 --max-errored-tests-pct 20
+          command: ./tool test --bin bin/win64/flow.exe --parallelism 1
 
   parser_test_win:
     executor: win/default
