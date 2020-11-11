@@ -12,7 +12,7 @@ import {format} from 'util';
 import EventEmitter from 'events';
 
 import * as rpc from 'vscode-jsonrpc';
-import {URI as VscodeURI} from 'vscode-uri';
+import {URI as VscodeURI, uriToFsPath} from 'vscode-uri';
 
 import type {LSPMessage, RpcConnection} from './lsp';
 
@@ -974,7 +974,8 @@ export default class Builder {
   static getDirForRun(runID: string): string {
     // tmpdir() is a symlink on macOS, canonicalize it
     const tmp = realpathSync(tmpdir());
-    return VscodeURI.file(join(tmp, 'flow', 'tests', runID)).fsPath;
+    const uri = VscodeURI.file(join(tmp, 'flow', 'tests', runID));
+    return uriToFsPath(uri, /* keepDriveLetterCasing */ true);
   }
 
   // doesMethodMatch(actual, 'M') judges whether the method name of the actual
