@@ -429,15 +429,28 @@ let detect_matching_props_violations cx =
   let matching_props = Context.matching_props cx in
   List.iter step matching_props
 
-let detect_literal_subtypes cx =
-  let resolver = new resolver_visitor in
-  let checks = Context.literal_subtypes cx in
-  List.iter
-    (fun (t, u) ->
-      let t = resolver#type_ cx () t in
-      let u = resolver#use_type cx () u in
-      Flow_js.flow cx (t, u))
-    checks
+let detect_literal_subtypes =
+  let lb_visitor = new resolver_visitor in
+  let ub_visitor =
+    object (self)
+      inherit resolver_visitor as super
+
+      method! type_ cx map_cx t =
+        let open Type in
+        match t with
+        | DefT (r, _, EmptyT Zeroed) -> AnyT.why Untyped r
+        | GenericT { bound; _ } -> self#type_ cx map_cx bound
+        | t -> super#type_ cx map_cx t
+    end
+  in
+  fun cx ->
+    let checks = Context.literal_subtypes cx in
+    List.iter
+      (fun (t, u) ->
+        let t = lb_visitor#type_ cx () t in
+        let u = ub_visitor#use_type cx () u in
+        Flow_js.flow cx (t, u))
+      checks
 
 (* Merge a component with its "implicit requires" and "explicit requires." The
    implicit requires are those defined in libraries. For the explicit
