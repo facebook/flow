@@ -29,7 +29,7 @@
     "source-map-support": "~0.4.0",
     "twit": "^2.1.5",
     "vscode-jsonrpc": "^4.0.0",
-    "vscode-uri": "^2.0.3"
+    "vscode-uri": "^2.1.2"
   },
   "babel": {
     "presets": [

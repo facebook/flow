@@ -12,31 +12,31 @@ let test_valid () =
     [
       ("file://localhost/etc/fstab", "/etc/fstab");
       ("file:///etc/fstab", "/etc/fstab");
-      ("file://localhost/c:/WINDOWS/clock.avi", "c:/WINDOWS/clock.avi");
-      ("file:///c:/WINDOWS/clock.avi", "c:/WINDOWS/clock.avi");
-      ("file:///c%3A/WINDOWS/clock.avi", "c:/WINDOWS/clock.avi");
-      ("file:///c|/WINDOWS/clock.avi", "c:/WINDOWS/clock.avi");
+      ("file://localhost/c:/WINDOWS/clock.avi", "C:/WINDOWS/clock.avi");
+      ("file:///c:/WINDOWS/clock.avi", "C:/WINDOWS/clock.avi");
+      ("file:///c%3A/WINDOWS/clock.avi", "C:/WINDOWS/clock.avi");
+      ("file:///c|/WINDOWS/clock.avi", "C:/WINDOWS/clock.avi");
       ("file://localhost/path/to/the%20file.txt", "/path/to/the file.txt");
-      ("file:///c:/path/to/the%20file.txt", "c:/path/to/the file.txt");
-      ("file:///c|/path/to/the%20file.txt", "c:/path/to/the file.txt");
+      ("file:///c:/path/to/the%20file.txt", "C:/path/to/the file.txt");
+      ("file:///c|/path/to/the%20file.txt", "C:/path/to/the file.txt");
       ( "file:///u/lai/tik/tik76002/public_html/lerman.files/chaps",
         "/u/lai/tik/tik76002/public_html/lerman.files/chaps" );
       ("file:///etc/motd", "/etc/motd");
       ( "file:///c:/windows/My%20Documents%20100%2520/foo.txt",
-        "c:/windows/My Documents 100%20/foo.txt" );
+        "C:/windows/My Documents 100%20/foo.txt" );
       ("file:///D:/Program%20Files/Viewer/startup.htm", "D:/Program Files/Viewer/startup.htm");
       ("file:///D:/Desktop/Book.pdf", "D:/Desktop/Book.pdf");
       ("file://localhost/D:/Desktop/", "D:/Desktop/");
       ( "file:///C:/Documents%20and%20Settings/davris/FileSchemeURIs.doc",
         "C:/Documents and Settings/davris/FileSchemeURIs.doc" );
       ("file:///abc/def/ghi.txt", "/abc/def/ghi.txt");
-      ("file:///a:/bcd/efg/hij.txt", "a:/bcd/efg/hij.txt");
+      ("file:///a:/bcd/efg/hij.txt", "A:/bcd/efg/hij.txt");
       ("file:///home/usr123/work/abc.txt", "/home/usr123/work/abc.txt");
       ("file:///usr/work/abc.txt", "/usr/work/abc.txt");
       ("file:///", "/");
       ("file://localhost/", "/");
       ("file:///c:", "/c:");
-      ("file:///c|/path", "c:/path");
+      ("file:///c|/path", "C:/path");
       ("file:///C:/Program%20Files", "C:/Program Files");
       ("file:///Macintosh%20HD/fileURLs/testof%3F.txt", "/Macintosh HD/fileURLs/testof?.txt");
       ("file:///fileURLs/test%3F.txt", "/fileURLs/test?.txt");
