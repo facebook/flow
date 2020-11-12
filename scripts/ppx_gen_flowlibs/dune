@@ -1,6 +1,6 @@
 (library
   (name ppx_gen_flowlibs)
   (modules ppx_gen_flowlibs)
-  (libraries flow_script_utils ocaml-migrate-parsetree)
+  (libraries flow_script_utils ocaml-migrate-parsetree xx)
   (kind ppx_rewriter)
 )

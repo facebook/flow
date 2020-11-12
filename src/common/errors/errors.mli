@@ -26,7 +26,7 @@ type 'a info = 'a * string list
     an info list looks like e.g.:
     [ location1, ["number"; "Type is incompatible with"];
       location2, ["string"] ]
-  *)
+ *)
 
 (** for extra info, enough structure to do simple tree-shaped output *)
 type 'a info_tree =

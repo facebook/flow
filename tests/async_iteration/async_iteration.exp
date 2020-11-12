@@ -105,16 +105,16 @@ Error --------------------------------------------------------------------------
 Cannot cast `result.value` to string because undefined [1] is incompatible with string [2]. [incompatible-cast]
 
    return.js:20:6
-    20|     (result.value: string); // error: number | void ~> string
-             ^^^^^^^^^^^^
+     20|     (result.value: string); // error: number | void ~> string
+              ^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:531:14
-   531|     +value?: Return,
-                     ^^^^^^ [1]
+   <BUILTINS>/core.js:1624:14
+   1624|     +value?: Return,
+                      ^^^^^^ [1]
    return.js:20:20
-    20|     (result.value: string); // error: number | void ~> string
-                           ^^^^^^ [2]
+     20|     (result.value: string); // error: number | void ~> string
+                            ^^^^^^ [2]
 
 
 Error --------------------------------------------------------------------------------------------------- return.js:20:6

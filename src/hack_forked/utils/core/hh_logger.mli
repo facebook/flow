@@ -32,7 +32,15 @@ module Level : sig
     | Info
     | Debug
 
+  val min_level_file : unit -> t
+
+  val min_level_stderr : unit -> t
+
   val min_level : unit -> t
+
+  val set_min_level_file : t -> unit
+
+  val set_min_level_stderr : t -> unit
 
   val set_min_level : t -> unit
 

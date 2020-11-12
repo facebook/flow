@@ -8,6 +8,8 @@
  * @format
  */
 
+import type {Flag} from '../command/Base';
+
 import {format} from 'util';
 import {resolve} from 'path';
 
@@ -59,7 +61,7 @@ Queries Flow for the errors for ROOT. Then logs how many times each error messag
 `;
   }
 
-  static getFlags() {
+  static getFlags(): Array<Flag> {
     return [
       commonFlags.bin,
       commonFlags.flowconfigName,

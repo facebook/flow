@@ -4,8 +4,8 @@
 >>> ./a.js
 // @flow
 
-import type {C as $IMPORTED_TYPE$_C_1} from "./lib2.js";
-import type {C} from "./lib1.js";import { foo1a } from './lib1';
+import type {C as $IMPORTED_TYPE$_C_1} from "./lib2";
+import type {C} from "./lib1";import { foo1a } from './lib1';
 import { foo2 } from './lib2';
 
 module.exports = [
@@ -16,8 +16,8 @@ module.exports = [
 >>> ./b.js
 // @flow
 
-import typeof {C} from "./lib1.js";
-import type {C as $IMPORTED_TYPE$_C_1} from "./lib2.js";import { foo1b } from './lib1';
+import typeof {C} from "./lib1";
+import type {C as $IMPORTED_TYPE$_C_1} from "./lib2";import { foo1b } from './lib1';
 import { foo2 } from './lib2';
 
 module.exports = [
@@ -28,8 +28,8 @@ module.exports = [
 >>> ./c.js
 // @flow
 
-import typeof {C as $IMPORTED_TYPEOF$_C_1} from "./lib1.js";
-import type {C} from "./lib1.js";import { foo1a, foo1b } from './lib1';
+import typeof {C as $IMPORTED_TYPEOF$_C_1} from "./lib1";
+import type {C} from "./lib1";import { foo1a, foo1b } from './lib1';
 
 module.exports = [
   (foo1a(): C),
@@ -54,7 +54,6 @@ Errors:
     Parsing heaps get ast error:            0
     Indeterminate module type:              0
     No matching export:                     0
-    Unrecognizable module error:            0
   Serializer error:                         0
   Unsupported error kind:                   0
 
@@ -71,8 +70,8 @@ Warnings:
 >>> ./a.js
 // @flow
 
-import type {C as $IMPORTED_TYPE$_C_1} from "./lib2.js";
-import type {C} from "./lib1.js";import { foo1a } from './lib1';
+import type {C as $IMPORTED_TYPE$_C_1} from "./lib2";
+import type {C} from "./lib1";import { foo1a } from './lib1';
 import { foo2 } from './lib2';
 
 module.exports = [
@@ -83,8 +82,8 @@ module.exports = [
 >>> ./b.js
 // @flow
 
-import typeof {C} from "./lib1.js";
-import type {C as $IMPORTED_TYPE$_C_1} from "./lib2.js";import { foo1b } from './lib1';
+import typeof {C} from "./lib1";
+import type {C as $IMPORTED_TYPE$_C_1} from "./lib2";import { foo1b } from './lib1';
 import { foo2 } from './lib2';
 
 module.exports = [
@@ -95,8 +94,8 @@ module.exports = [
 >>> ./c.js
 // @flow
 
-import typeof {C as $IMPORTED_TYPEOF$_C_1} from "./lib1.js";
-import type {C} from "./lib1.js";import { foo1a, foo1b } from './lib1';
+import typeof {C as $IMPORTED_TYPEOF$_C_1} from "./lib1";
+import type {C} from "./lib1";import { foo1a, foo1b } from './lib1';
 
 module.exports = [
   (foo1a(): C),

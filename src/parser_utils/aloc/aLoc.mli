@@ -36,7 +36,7 @@ val keyify : table -> reverse_table -> t -> t
  * Preconditions:
  * - The file key with which the table was created must match the `source` of the given location.
  * *)
-type id = private t
+type id = private t [@@deriving show]
 
 val id_none : id
 

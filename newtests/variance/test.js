@@ -2,9 +2,10 @@
  * @flow
  */
 
+import type Suite from "flow-dev-tools/src/test/Suite.js";
 import {suite, test} from 'flow-dev-tools/src/test/Tester';
 
-export default suite(({addFile, addFiles, addCode}) => [
+export default (suite(({addFile, addFiles, addCode}) => [
   test('X ~> A', [
     // literal A
     addCode('({p: new A}: RWA);').noNewErrors(),
@@ -889,4 +890,4 @@ export default suite(({addFile, addFiles, addCode}) => [
     declare var droB: dROB;
     declare var dwoB: dWOB;
   `),
-]);
+]): Suite);

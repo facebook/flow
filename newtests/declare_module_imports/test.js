@@ -3,9 +3,10 @@
  */
 
 
+import type Suite from "flow-dev-tools/src/test/Suite.js";
 import {suite, test} from 'flow-dev-tools/src/test/Tester';
 
-export default suite(({addFile, addFiles, addCode}) => [
+export default (suite(({addFile, addFiles, addCode}) => [
   test('import named', [
     addFile('flow-typed/lib.js'),
     addCode('import type {BT} from "B";').noNewErrors(),
@@ -81,4 +82,4 @@ export default suite(({addFile, addFiles, addCode}) => [
     ),
   ]),
   */
-]);
+]): Suite);

@@ -31,8 +31,8 @@ let make_private = unknown_qualifier () |> make_private |> strengthen
 let actual_trust cx t =
   Trust_constraint.(
     match expand t with
-    | Qualifier trust -> trust
-    | Inferred ident ->
+    | QualifiedTrust trust -> trust
+    | InferredTrust ident ->
       begin
         match Context.find_trust_graph cx ident with
         | TrustResolved trust -> trust

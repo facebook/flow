@@ -64,6 +64,7 @@ let collate_parse_results ~options parse_results =
     parse_hash_mismatch_skips;
     parse_fails;
     parse_unchanged;
+    parse_package_json;
   } =
     parse_results
   in
@@ -112,7 +113,7 @@ let collate_parse_results ~options parse_results =
   let parse_ok =
     FilenameMap.fold (fun k _ acc -> FilenameSet.add k acc) parse_ok FilenameSet.empty
   in
-  (parse_ok, unparsed, parse_unchanged, local_errors)
+  (parse_ok, unparsed, parse_unchanged, local_errors, parse_package_json)
 
 let parse ~options ~profiling ~workers ~reader parse_next =
   SharedMem_js.with_memory_timer_lwt ~options "Parsing" profiling (fun () ->
@@ -131,51 +132,50 @@ let reparse ~options ~profiling ~transaction ~reader ~workers ~modified ~deleted
           ~deleted
           options
       in
-      let (parse_ok, unparsed, unchanged, local_errors) = collate_parse_results ~options results in
+      let (parse_ok, unparsed, unchanged, local_errors, _) =
+        collate_parse_results ~options results
+      in
       Lwt.return (new_or_changed, parse_ok, unparsed, unchanged, local_errors))
 
 (* TODO: make this always return errors and deal with check_syntax at the caller *)
-let parse_contents ~options ~profiling ~check_syntax filename contents =
-  SharedMem_js.with_memory_timer_lwt ~options "Parsing" profiling (fun () ->
-      (* always enable types when checking an individual file *)
-      let types_mode = Parsing_service_js.TypesAllowed in
-      let max_tokens = Options.max_header_tokens options in
-      let (docblock_errors, info) =
-        Parsing_service_js.parse_docblock ~max_tokens filename contents
-      in
-      let errors = Inference_utils.set_of_docblock_errors ~source_file:filename docblock_errors in
-      let parse_options =
-        Parsing_service_js.make_parse_options ~fail:check_syntax ~types_mode info options
-      in
-      let parse_result = Parsing_service_js.do_parse ~info ~parse_options contents filename in
-      match parse_result with
-      | Parsing_service_js.Parse_ok { ast; file_sig; tolerable_errors; parse_errors; _ } ->
-        (* NOTE: parse errors are ignored because we don't surface them when ~check_syntax:false,
-           and they'll hit the Parse_fail case instead when ~check_syntax:true *)
-        (* TODO: docblock errors get dropped *)
-        Lwt.return (Ok (ast, file_sig, tolerable_errors, parse_errors), info)
-      | Parsing_service_js.Parse_fail fails ->
-        let errors =
-          match fails with
-          | Parsing_service_js.Parse_error err ->
-            let err = Inference_utils.error_of_parse_error ~source_file:filename err in
-            Flow_error.ErrorSet.add err errors
-          | Parsing_service_js.Docblock_errors errs ->
-            List.fold_left
-              (fun errors err ->
-                let err = Inference_utils.error_of_docblock_error ~source_file:filename err in
-                Flow_error.ErrorSet.add err errors)
-              errors
-              errs
-          | Parsing_service_js.File_sig_error err ->
-            let err = Inference_utils.error_of_file_sig_error ~source_file:filename err in
-            Flow_error.ErrorSet.add err errors
-        in
-        Lwt.return (Error errors, info)
-      | Parsing_service_js.Parse_skip
-          (Parsing_service_js.Skip_non_flow_file | Parsing_service_js.Skip_resource_file) ->
-        (* should never happen *)
-        Lwt.return (Error errors, info))
+let parse_contents ~options ~check_syntax filename contents =
+  (* always enable types when checking an individual file *)
+  let types_mode = Parsing_service_js.TypesAllowed in
+  let max_tokens = Options.max_header_tokens options in
+  let (docblock_errors, info) = Parsing_service_js.parse_docblock ~max_tokens filename contents in
+  let errors = Inference_utils.set_of_docblock_errors ~source_file:filename docblock_errors in
+  let parse_options =
+    Parsing_service_js.make_parse_options ~fail:check_syntax ~types_mode info options
+  in
+  let parse_result = Parsing_service_js.do_parse ~info ~parse_options contents filename in
+  match parse_result with
+  | Parsing_service_js.Parse_ok { ast; file_sig; tolerable_errors; parse_errors; _ } ->
+    (* NOTE: parse errors are ignored because we don't surface them when ~check_syntax:false,
+       and they'll hit the Parse_fail case instead when ~check_syntax:true *)
+    (* TODO: docblock errors get dropped *)
+    (Ok (ast, file_sig, tolerable_errors, parse_errors), info)
+  | Parsing_service_js.Parse_fail fails ->
+    let errors =
+      match fails with
+      | Parsing_service_js.Parse_error err ->
+        let err = Inference_utils.error_of_parse_error ~source_file:filename err in
+        Flow_error.ErrorSet.add err errors
+      | Parsing_service_js.Docblock_errors errs ->
+        List.fold_left
+          (fun errors err ->
+            let err = Inference_utils.error_of_docblock_error ~source_file:filename err in
+            Flow_error.ErrorSet.add err errors)
+          errors
+          errs
+      | Parsing_service_js.File_sig_error err ->
+        let err = Inference_utils.error_of_file_sig_error ~source_file:filename err in
+        Flow_error.ErrorSet.add err errors
+    in
+    (Error errors, info)
+  | Parsing_service_js.(Parse_skip (Skip_non_flow_file | Skip_resource_file | Skip_package_json _))
+    ->
+    (* should never happen *)
+    (Error errors, info)
 
 let flow_error_of_module_error file err =
   match err with
@@ -232,13 +232,13 @@ let (commit_modules, commit_modules_from_saved_state) =
         in
 
         (* Providers might be new but not changed. This typically happens when old
-      providers are deleted, and previously duplicate providers become new
-      providers. In such cases, we must clear the old duplicate provider errors
-      for the new providers.
+           providers are deleted, and previously duplicate providers become new
+           providers. In such cases, we must clear the old duplicate provider errors
+           for the new providers.
 
-      (Note that this is unncessary when the providers are changed, because in
-      that case they are rechecked and *all* their errors are cleared. But we
-      don't care about optimizing that case for now.) *)
+           (Note that this is unncessary when the providers are changed, because in
+           that case they are rechecked and *all* their errors are cleared. But we
+           don't care about optimizing that case for now.) *)
         let errors = List.fold_left filter_duplicate_provider local_errors providers in
         Lwt.return
           ( changed_modules,
@@ -459,7 +459,7 @@ let include_dependencies_and_dependents
           components
       in
       (* Definitely recheck input and dependencies. As merging proceeds, dependents may or may not be
-       rechecked. *)
+         rechecked. *)
       let definitely_to_merge = CheckedSet.add ~dependencies input in
       let to_merge = CheckedSet.add ~dependents:sig_dependent_files definitely_to_merge in
       (* This contains all of the files which may be merged or checked. Conveniently, this is
@@ -570,14 +570,14 @@ let mk_intermediate_result_callback
     | Some clients ->
       SharedMem_js.with_memory_timer_lwt ~options "MakeSendErrors" profiling (fun () ->
           (* In classic, each merge step uncovers new errors, warnings, suppressions.
-         While more suppressions may come in later steps, the suppressions we've seen so far are
-         sufficient to filter the errors and warnings we've seen so far.
-         Intuitively, we will not see an error (or warning) before we've seen all the files involved
-         in that error, and thus all the suppressions which could possibly suppress the error.
+             While more suppressions may come in later steps, the suppressions we've seen so far are
+             sufficient to filter the errors and warnings we've seen so far.
+             Intuitively, we will not see an error (or warning) before we've seen all the files involved
+             in that error, and thus all the suppressions which could possibly suppress the error.
 
-         In types-first, we have already accumulated suppressions in the overall merge step, and
-         each check step uses those suppressions to filter the errors and warnings uncovered.
-       *)
+             In types-first, we have already accumulated suppressions in the overall merge step, and
+             each check step uses those suppressions to filter the errors and warnings uncovered.
+          *)
           Errors.(
             let curr_errors = ref ConcreteLocPrintableErrorSet.empty in
             let curr_warnings = ref ConcreteLocPrintableErrorSet.empty in
@@ -613,7 +613,7 @@ let mk_intermediate_result_callback
                           errs_acc
                       in
                       (* Only add warnings we haven't seen before. Note that new warnings are stored by
-               filename, because the clients only receive warnings for files they have open. *)
+                         filename, because the clients only receive warnings for files they have open. *)
                       let warns_acc =
                         let acc =
                           Base.Option.value
@@ -1066,14 +1066,13 @@ let ensure_checked_dependencies ~options ~reader ~env file file_sig =
     let require_loc_map = File_sig.With_Loc.(require_loc_map file_sig.module_sig) in
     SMap.fold
       (fun r locs resolved_rs ->
-        let locs = Nel.map ALoc.of_loc locs in
         let resolved_r =
           Module_js.imported_module
             ~options
             ~reader:(Abstract_state_reader.State_reader reader)
             ~node_modules_containers:!Files.node_modules_containers
             file
-            locs
+            (Nel.hd locs |> ALoc.of_loc)
             r
         in
         Modulename.Set.add resolved_r resolved_rs)
@@ -1116,10 +1115,9 @@ let ensure_checked_dependencies ~options ~reader ~env file file_sig =
 (* Another special case, similar assumptions as above. *)
 
 (** TODO: handle case when file+contents don't agree with file system state **)
-let merge_contents ~options ~env ~profiling ~reader filename info (ast, file_sig) =
-  SharedMem_js.with_memory_timer_lwt ~options "MergeContents" profiling (fun () ->
-      let%lwt () = ensure_checked_dependencies ~options ~reader ~env filename file_sig in
-      Lwt.return (Merge_service.merge_contents_context ~reader options filename ast info file_sig))
+let merge_contents ~options ~env ~reader filename info (ast, file_sig) =
+  let%lwt () = ensure_checked_dependencies ~options ~reader ~env filename file_sig in
+  Lwt.return (Merge_service.merge_contents_context ~reader options filename ast info file_sig)
 
 let errors_of_context ~options ~env ~lazy_table_of_aloc filename tolerable_errors cx =
   let errors = Context.errors cx in
@@ -1192,14 +1190,16 @@ let typecheck_contents ~options ~env ~profiling contents filename =
   let reader = State_reader.create () in
   let lazy_table_of_aloc = Parsing_heaps.Reader.get_sig_ast_aloc_table_unsafe_lazy ~reader in
   let%lwt (parse_result, info) =
-    parse_contents ~options ~profiling ~check_syntax:true filename contents
+    SharedMem_js.with_memory_timer_lwt ~options "Parsing" profiling (fun () ->
+        Lwt.return (parse_contents ~options ~check_syntax:true filename contents))
   in
   (* override docblock info *)
   let info = Docblock.set_flow_mode_for_ide_command info in
   match parse_result with
   | Ok (ast, file_sig, tolerable_errors, _parse_errors) ->
     let%lwt (cx, typed_ast) =
-      merge_contents ~options ~env ~profiling ~reader filename info (ast, file_sig)
+      SharedMem_js.with_memory_timer_lwt ~options "MergeContents" profiling (fun () ->
+          merge_contents ~options ~env ~reader filename info (ast, file_sig))
     in
     let (errors, warnings) =
       errors_of_context ~options ~env ~lazy_table_of_aloc filename tolerable_errors cx
@@ -1215,16 +1215,18 @@ let type_contents ~options ~env ~profiling contents filename =
   try%lwt
     let reader = State_reader.create () in
     let%lwt (parse_result, info) =
-      parse_contents ~options ~profiling ~check_syntax:false filename contents
+      SharedMem_js.with_memory_timer_lwt ~options "Parsing" profiling (fun () ->
+          Lwt.return (parse_contents ~options ~check_syntax:false filename contents))
     in
     (* override docblock info *)
     let info = Docblock.set_flow_mode_for_ide_command info in
     match parse_result with
     | Ok (ast, file_sig, tolerable_errors, parse_errors) ->
       let%lwt (cx, typed_ast) =
-        merge_contents ~options ~env ~profiling ~reader filename info (ast, file_sig)
+        SharedMem_js.with_memory_timer_lwt ~options "MergeContents" profiling (fun () ->
+            merge_contents ~options ~env ~reader filename info (ast, file_sig))
       in
-      Lwt.return (Ok (cx, info, file_sig, tolerable_errors, typed_ast, parse_errors))
+      Lwt.return (Ok (cx, info, file_sig, tolerable_errors, ast, typed_ast, parse_errors))
     | Error _ -> failwith "Couldn't parse file"
   with
   | Lwt.Canceled as exn -> raise exn
@@ -1233,31 +1235,6 @@ let type_contents ~options ~env ~profiling contents filename =
     let e = Exception.to_string exn in
     Hh_logger.error "Uncaught exception in type_contents\n%s" e;
     Lwt.return (Error e)
-
-let init_package_heap ~options ~profiling ~reader parsed =
-  SharedMem_js.with_memory_timer_lwt ~options "PackageHeap" profiling (fun () ->
-      let errors =
-        FilenameSet.fold
-          (fun filename errors ->
-            match filename with
-            | File_key.JsonFile str when Filename.basename str = "package.json" ->
-              let ast = Parsing_heaps.Mutator_reader.get_ast_unsafe ~reader filename in
-              let package = Package_json.parse ~options ast in
-              Module_js.add_package str package;
-              begin
-                match package with
-                | Ok _ -> errors
-                | Error parse_err ->
-                  let errset =
-                    Inference_utils.set_of_package_json_error ~source_file:filename parse_err
-                  in
-                  update_errset errors filename errset
-              end
-            | _ -> errors)
-          parsed
-          FilenameMap.empty
-      in
-      Lwt.return errors)
 
 let init_libs ~options ~profiling ~local_errors ~warnings ~suppressions ~reader ordered_libs =
   SharedMem_js.with_memory_timer_lwt ~options "InitLibs" profiling (fun () ->
@@ -1607,8 +1584,8 @@ end = struct
     let files_to_force = CheckedSet.diff files_to_force env.ServerEnv.checked_files in
     (* split updates into deleted files and modified files *)
     (* NOTE: We use the term "modified" in the same sense as the underlying file
-        system: a modified file exists, and in relation to an old file system
-        state, a modified file could be any of "new," "changed," or "unchanged."
+       system: a modified file exists, and in relation to an old file system
+       state, a modified file could be any of "new," "changed," or "unchanged."
     **)
     let (modified, deleted) =
       FilenameSet.partition (fun f -> Sys.file_exists (File_key.to_string f)) updates
@@ -1623,7 +1600,15 @@ end = struct
         let _ =
           FilenameSet.fold
             (fun f i ->
-              Hh_logger.info "%d/%d: %s" i n (File_key.to_string f);
+              let cap = 500 in
+              if i <= cap then
+                Hh_logger.info "%d/%d: %s" i n (File_key.to_string f)
+              else if Hh_logger.Level.(passes_min_level Debug) then
+                Hh_logger.debug "%d/%d: %s" i n (File_key.to_string f)
+              else if i = cap + 1 then
+                Hh_logger.info "..."
+              else
+                ();
               i + 1)
             files
             1
@@ -1690,120 +1675,120 @@ end = struct
       (FilenameSet.cardinal unchanged);
 
     (* Here's where the interesting part of rechecking begins. Before diving into
-        code, let's think through the problem independently.
+       code, let's think through the problem independently.
 
-        Note that changing a file can be conceptually thought of as deleting the
-        file and then adding it back as a new file. While such a reduction might
-        miss optimization opportunities (so we don't actually implement it), it
-        simplifies thinking about correctness.
+       Note that changing a file can be conceptually thought of as deleting the
+       file and then adding it back as a new file. While such a reduction might
+       miss optimization opportunities (so we don't actually implement it), it
+       simplifies thinking about correctness.
 
-        We focus on dependency management. Specifically, we discuss how to
-        correctly update InfoHeap and NameHeap, and calculate the set of unchanged
-        files whose imports might resolve to different files. (With these results,
-        the remaining part of rechecking is relatively simple.)
+       We focus on dependency management. Specifically, we discuss how to
+       correctly update InfoHeap and NameHeap, and calculate the set of unchanged
+       files whose imports might resolve to different files. (With these results,
+       the remaining part of rechecking is relatively simple.)
 
-        Recall that InfoHeap maps file names in FS to module names in MS, where
-        each file name in FS must exist, different file names may map to the same
-        module name, and every module name in MS is mapped to by at least one file
-        name; and NameHeap maps module names in MS to file names in FS, where the
-        file name mapped to by a module name must map back to the same module name
-        in InfoHeap. A file's imports might resolve to different files if the
-        corresponding modules map to different files in NameHeap.
+       Recall that InfoHeap maps file names in FS to module names in MS, where
+       each file name in FS must exist, different file names may map to the same
+       module name, and every module name in MS is mapped to by at least one file
+       name; and NameHeap maps module names in MS to file names in FS, where the
+       file name mapped to by a module name must map back to the same module name
+       in InfoHeap. A file's imports might resolve to different files if the
+       corresponding modules map to different files in NameHeap.
 
-        Deleting a file
-        ===============
+       Deleting a file
+       ===============
 
-        Suppose that a file D is deleted. Let D |-> m in InfoHeap, and m |-> F in
-        NameHeap.
+       Suppose that a file D is deleted. Let D |-> m in InfoHeap, and m |-> F in
+       NameHeap.
 
-        Remove D |-> m from InfoHeap.
+       Remove D |-> m from InfoHeap.
 
-        If F = D, then remove m |-> F from NameHeap and mark m "dirty": any file
-        importing m will be affected. If other files map to m in InfoHeap, map m
-        to one of those files in NameHeap.
+       If F = D, then remove m |-> F from NameHeap and mark m "dirty": any file
+       importing m will be affected. If other files map to m in InfoHeap, map m
+       to one of those files in NameHeap.
 
-        Adding a file
-        =============
+       Adding a file
+       =============
 
-        Suppose that a new file N is added.
+       Suppose that a new file N is added.
 
-        Map N to some module name, say m, in InfoHeap. If m is not mapped to any
-        file in NameHeap, add m |-> N to NameHeap and mark m "dirty." Otherwise,
-        decide whether to replace the existing mapping to m |-> N in NameHeap, and
-        pessimistically assuming it might be, mark m "dirty."
+       Map N to some module name, say m, in InfoHeap. If m is not mapped to any
+       file in NameHeap, add m |-> N to NameHeap and mark m "dirty." Otherwise,
+       decide whether to replace the existing mapping to m |-> N in NameHeap, and
+       pessimistically assuming it might be, mark m "dirty."
 
-        Changing a file
-        =============
+       Changing a file
+       =============
 
-        What happens when a file C is changed? Suppose that C |-> m in InfoHeap,
-        and m |-> F in NameHeap.
+       What happens when a file C is changed? Suppose that C |-> m in InfoHeap,
+       and m |-> F in NameHeap.
 
-        Optimistically, C continues to map to m in InfoHeap and we do nothing.
+       Optimistically, C continues to map to m in InfoHeap and we do nothing.
 
-        However, let's pessimistically assume that C maps to a different m' in
-        InfoHeap. Considering C deleted and added back as new, we must remove C
-        |-> m from InfoHeap and add C |-> m' to InfoHeap. If F = C, then remove m
-        |-> F from NameHeap and mark m "dirty." If other files map to m in
-        InfoHeap, map m to one of those files in NameHeap. If m' is not mapped to
-        any file in NameHeap, add m' |-> C to NameHeap and mark m' "dirty."
-        Otherwise, decide whether to replace the existing mapping to m' |-> C in
-        NameHeap, and mark m' "dirty."
+       However, let's pessimistically assume that C maps to a different m' in
+       InfoHeap. Considering C deleted and added back as new, we must remove C
+       |-> m from InfoHeap and add C |-> m' to InfoHeap. If F = C, then remove m
+       |-> F from NameHeap and mark m "dirty." If other files map to m in
+       InfoHeap, map m to one of those files in NameHeap. If m' is not mapped to
+       any file in NameHeap, add m' |-> C to NameHeap and mark m' "dirty."
+       Otherwise, decide whether to replace the existing mapping to m' |-> C in
+       NameHeap, and mark m' "dirty."
 
-        Summary
-        =======
+       Summary
+       =======
 
-        Summarizing, if an existing file F1 is changed or deleted, and F1 |-> m in
-        InfoHeap and m |-> F in NameHeap, and F1 = F, then mark m "dirty." And if
-        a new file or a changed file F2 now maps to m' in InfoHeap, mark m' "dirty."
+       Summarizing, if an existing file F1 is changed or deleted, and F1 |-> m in
+       InfoHeap and m |-> F in NameHeap, and F1 = F, then mark m "dirty." And if
+       a new file or a changed file F2 now maps to m' in InfoHeap, mark m' "dirty."
 
-        Ideally, any module name that does not map to a different file in NameHeap
-        should not be considered "dirty."
+       Ideally, any module name that does not map to a different file in NameHeap
+       should not be considered "dirty."
 
-        In terms of implementation:
+       In terms of implementation:
 
-        Deleted file
-        ============
+       Deleted file
+       ============
 
-        Say it pointed to module OLD_M
+       Say it pointed to module OLD_M
 
-        1. need to repick a provider for OLD_M *if OLD_M's current provider is this
-        file*
-        2. files that depend on OLD_M need to be rechecked if:
-          a. the provider for OLD_M is **replaced** or **removed**; or
-          b. the provider for OLD_M is **unchanged**, but is a _changed file_
+       1. need to repick a provider for OLD_M *if OLD_M's current provider is this
+       file*
+       2. files that depend on OLD_M need to be rechecked if:
+         a. the provider for OLD_M is **replaced** or **removed**; or
+         b. the provider for OLD_M is **unchanged**, but is a _changed file_
 
-        New file
-        ========
+       New file
+       ========
 
-        Say it points to module NEW_M
+       Say it points to module NEW_M
 
-        1. need to repick a provider for NEW_M
-        2. files that depend on NEW_M need to be rechecked if:
-          a. the provider for NEW_M is **added** or **replaced**; or
-          b. the provider for NEW_M is **unchanged**, but is a _changed file_
+       1. need to repick a provider for NEW_M
+       2. files that depend on NEW_M need to be rechecked if:
+         a. the provider for NEW_M is **added** or **replaced**; or
+         b. the provider for NEW_M is **unchanged**, but is a _changed file_
 
-        Changed file
-        ============
+       Changed file
+       ============
 
-        Say it pointed to module OLD_M, now points to module NEW_M
+       Say it pointed to module OLD_M, now points to module NEW_M
 
-        * Is OLD_M different from NEW_M? *(= delete the file, then add it back)*
+       * Is OLD_M different from NEW_M? *(= delete the file, then add it back)*
 
-        1. need to repick providers for OLD_M *if OLD_M's current provider is this
-        file*.
-        2. files that depend on OLD_M need to be rechecked if:
-          a. the provider for OLD_M is **replaced** or **removed**; or
-          b. the provider for OLD_M is **unchanged**, but is a _changed file_
-        3. need to repick a provider for NEW_M
-        4. files that depend on NEW_M need to be rechecked if:
-          a. the provider for NEW_M is **added** or **replaced**; or
-          b. the provider for NEW_M is **unchanged**, but is a _changed file_
+       1. need to repick providers for OLD_M *if OLD_M's current provider is this
+       file*.
+       2. files that depend on OLD_M need to be rechecked if:
+         a. the provider for OLD_M is **replaced** or **removed**; or
+         b. the provider for OLD_M is **unchanged**, but is a _changed file_
+       3. need to repick a provider for NEW_M
+       4. files that depend on NEW_M need to be rechecked if:
+         a. the provider for NEW_M is **added** or **replaced**; or
+         b. the provider for NEW_M is **unchanged**, but is a _changed file_
 
-        * TODO: Is OLD_M the same as NEW_M?
+       * TODO: Is OLD_M the same as NEW_M?
 
-        1. *don't repick a provider!*
-        2. files that depend on OLD_M need to be rechecked if: OLD_M's current provider
-        is a _changed file_
+       1. *don't repick a provider!*
+       2. files that depend on OLD_M need to be rechecked if: OLD_M's current provider
+       is a _changed file_
 
     **)
 
@@ -2443,16 +2428,17 @@ let make_next_files ~libs ~file_options root =
 
     files |> Base.List.map ~f:(Files.filename_from_string ~options:file_options) |> Bucket.of_list
 
-let mk_init_env ~files ~unparsed ~dependency_info ~ordered_libs ~libs ~errors ~coverage =
+let mk_init_env ~files ~unparsed ~package_json_files ~dependency_info ~ordered_libs ~libs ~errors =
   {
     ServerEnv.files;
     unparsed;
     dependency_info;
     checked_files = CheckedSet.empty;
+    package_json_files;
     ordered_libs;
     libs;
     errors;
-    coverage;
+    coverage = FilenameMap.empty;
     collated_errors = ref None;
     connections = Persistent_connection.empty;
   }
@@ -2468,47 +2454,33 @@ let init_from_saved_state ~profiling ~workers ~saved_state ~updates options =
       Saved_state.flowconfig_hash = _;
       parsed_heaps;
       unparsed_heaps;
+      package_heaps;
       ordered_non_flowlib_libs;
       local_errors;
       warnings;
-      coverage;
       node_modules_containers;
       dependency_graph;
     } =
       saved_state
     in
+    let root = Options.root options |> Path.to_string in
     Files.node_modules_containers := node_modules_containers;
+    (* Restore PackageHeap and the ReversePackageHeap *)
+    FilenameMap.iter (fun fn -> Module_js.add_package (File_key.to_string fn)) package_heaps;
 
     Hh_logger.info "Restoring heaps";
     let%lwt () =
       SharedMem_js.with_memory_timer_lwt ~options "RestoreHeaps" profiling (fun () ->
-          let root = Options.root options |> Path.to_string in
           let%lwt () =
             MultiWorkerLwt.call
               workers
               ~job:
                 (List.fold_left (fun () (fn, parsed_file_data) ->
-                     let { Saved_state.package; hash; resolved_requires } =
-                       Saved_state.denormalize_parsed_data
+                     let { Saved_state.hash; resolved_requires } =
+                       Saved_state.denormalize_file_data
                          ~root
                          parsed_file_data.Saved_state.normalized_file_data
                      in
-                     (* Every package.json file should have a Package_json.t. Use those to restore the
-                      * PackageHeap and the ReversePackageHeap *)
-                     begin
-                       match fn with
-                       | File_key.JsonFile str when Filename.basename str = "package.json" ->
-                         begin
-                           match package with
-                           | None ->
-                             failwith
-                               (Printf.sprintf
-                                  "Saved state for `%s` missing Package_json.t data"
-                                  str)
-                           | Some package -> Module_js.add_package str package
-                         end
-                       | _ -> ()
-                     end;
 
                      (* Restore the FileHashHeap *)
                      Parsing_heaps.From_saved_state.add_file_hash fn hash;
@@ -2517,7 +2489,7 @@ let init_from_saved_state ~profiling ~workers ~saved_state ~updates options =
                      Module_heaps.From_saved_state.add_resolved_requires fn resolved_requires))
               ~merge:(fun () () -> ())
               ~neutral:()
-              ~next:(MultiWorkerLwt.next workers (FilenameMap.bindings parsed_heaps))
+              ~next:(MultiWorkerLwt.next workers parsed_heaps)
           in
           MultiWorkerLwt.call
             workers
@@ -2528,7 +2500,7 @@ let init_from_saved_state ~profiling ~workers ~saved_state ~updates options =
                    Parsing_heaps.From_saved_state.add_file_hash fn hash))
             ~merge:(fun () () -> ())
             ~neutral:()
-            ~next:(MultiWorkerLwt.next workers (FilenameMap.bindings unparsed_heaps)))
+            ~next:(MultiWorkerLwt.next workers unparsed_heaps))
     in
     Hh_logger.info "Loading libraries";
 
@@ -2555,22 +2527,22 @@ let init_from_saved_state ~profiling ~workers ~saved_state ~updates options =
     let%lwt (parsed_set, unparsed_set, all_files, parsed, unparsed) =
       SharedMem_js.with_memory_timer_lwt ~options "PrepareCommitModules" profiling (fun () ->
           let (parsed, parsed_set) =
-            FilenameMap.fold
-              (fun fn data (parsed, parsed_set) ->
+            List.fold_left
+              (fun (parsed, parsed_set) (fn, data) ->
                 let parsed = (fn, data.Saved_state.info) :: parsed in
                 let parsed_set = FilenameSet.add fn parsed_set in
                 (parsed, parsed_set))
-              parsed_heaps
               ([], FilenameSet.empty)
+              parsed_heaps
           in
           let (unparsed, unparsed_set) =
-            FilenameMap.fold
-              (fun fn data (unparsed, unparsed_set) ->
+            List.fold_left
+              (fun (unparsed, unparsed_set) (fn, data) ->
                 let unparsed = (fn, data.Saved_state.unparsed_info) :: unparsed in
                 let unparsed_set = FilenameSet.add fn unparsed_set in
                 (unparsed, unparsed_set))
-              unparsed_heaps
               ([], FilenameSet.empty)
+              unparsed_heaps
           in
           let all_files = FilenameSet.union parsed_set unparsed_set in
           Lwt.return (parsed_set, unparsed_set, all_files, parsed, unparsed))
@@ -2607,11 +2579,11 @@ let init_from_saved_state ~profiling ~workers ~saved_state ~updates options =
       mk_init_env
         ~files:parsed_set
         ~unparsed:unparsed_set
+        ~package_json_files:(FilenameMap.keys package_heaps)
         ~dependency_info
         ~ordered_libs
         ~libs
         ~errors
-        ~coverage
     in
     Lwt.return (env, libs_ok)
   in
@@ -2675,17 +2647,22 @@ let init_from_scratch ~profiling ~workers options =
   let next_files = make_next_files ~libs ~file_options (Options.root options) in
   Hh_logger.info "Parsing";
   MonitorRPC.status_update ServerStatus.(Parsing_progress { finished = 0; total = None });
-  let%lwt (parsed, unparsed, unchanged, local_errors) =
+  let%lwt (parsed, unparsed, unchanged, local_errors, (package_json_files, package_json_errors)) =
     parse ~options ~profiling ~workers ~reader next_files
   in
   (* Parsing won't raise warnings *)
   let warnings = FilenameMap.empty in
-  (* Libdefs have no coverage *)
-  let coverage = FilenameMap.empty in
   assert (FilenameSet.is_empty unchanged);
 
-  Hh_logger.info "Building package heap";
-  let%lwt package_errors = init_package_heap ~options ~profiling ~reader parsed in
+  let package_errors =
+    List.fold_left
+      (fun errors parse_err ->
+        let filename = Base.Option.value_exn (Loc.source (fst parse_err)) in
+        let errset = Inference_utils.set_of_package_json_error ~source_file:filename parse_err in
+        update_errset errors filename errset)
+      FilenameMap.empty
+      package_json_errors
+  in
   let local_errors = merge_error_maps package_errors local_errors in
   Hh_logger.info "Loading libraries";
   let%lwt (libs_ok, local_errors, warnings, suppressions) =
@@ -2731,11 +2708,11 @@ let init_from_scratch ~profiling ~workers options =
     mk_init_env
       ~files:parsed
       ~unparsed:unparsed_set
+      ~package_json_files
       ~dependency_info
       ~ordered_libs
       ~libs
       ~errors
-      ~coverage
   in
   Lwt.return (FilenameSet.empty, env, libs_ok)
 
@@ -2859,8 +2836,8 @@ let full_check ~profiling ~options ~workers ?focus_targets env =
           ~all_dependent_files
       in
       (* The values to_merge and recheck_set are essentially the same as input, aggregated. This
-       is not surprising because files_to_infer returns a closed checked set. Thus, the only purpose
-       of calling include_dependencies_and_dependents is to compute components. *)
+         is not surprising because files_to_infer returns a closed checked set. Thus, the only purpose
+         of calling include_dependencies_and_dependents is to compute components. *)
       let%lwt () =
         ensure_parsed_or_trigger_recheck
           ~options

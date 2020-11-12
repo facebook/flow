@@ -24,6 +24,7 @@ module Reqs : sig
 end
 
 val merge_component :
+  arch:Options.arch ->
   metadata:Context.metadata ->
   lint_severities:Severity.severity LintSettings.t ->
   strict_mode:StrictModeSettings.t ->

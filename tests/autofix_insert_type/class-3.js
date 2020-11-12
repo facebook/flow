@@ -1,7 +1,7 @@
 // @flow
 
 class A {
-  m() {
+  m(): this {
     return this;
   }
 }

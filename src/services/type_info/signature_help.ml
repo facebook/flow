@@ -100,23 +100,18 @@ module Callee_finder = struct
   exception Found of t option
 
   (* find the argument whose Loc contains `loc`, or the first one past it.
-      the latter covers the `f(x,| y)` case, where your cursor is after the
-      comma and before the space; this is not contained in `x` nor `y`, but should
-      select `y`. *)
+     the latter covers the `f(x,| y)` case, where your cursor is after the
+     comma and before the space; this is not contained in `x` nor `y`, but should
+     select `y`. *)
   let rec find_argument ~reader cursor arguments i =
     match arguments with
     | [] -> i
     | Flow_ast.Expression.(Expression ((arg_loc, _), _) | Spread (arg_loc, _)) :: rest ->
       let arg_loc = loc_of_aloc ~reader arg_loc in
-      (* if the cursor is within this arg, we obviously found it. if it's immediately after,
-         then we're between the arg and the comma/closing paren. if it's before the arg,
+      (* if the cursor is within this arg, we obviously found it. if it's before the arg,
          but hasn't been found by earlier args, then we must be in the whitespace before
          the current arg, so we found it. *)
-      if
-        Reason.in_range cursor arg_loc
-        || cursor.Loc.start = arg_loc.Loc._end
-        || Loc.compare cursor arg_loc < 0
-      then
+      if Reason.in_range cursor arg_loc || Loc.compare cursor arg_loc < 0 then
         i
       else
         find_argument ~reader cursor rest (i + 1)

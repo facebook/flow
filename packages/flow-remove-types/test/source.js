@@ -211,3 +211,25 @@ declare export opaque type B;
 declare export var x;
 declare export function x(): void;
 declare export default T;
+
+//this params
+
+declare function y (this : string) : void
+type T = (this : string) : void
+function z (this : string) {}
+function u (this : string, ...a) {}
+
+function v (this : string
+   , ...a) {}
+
+function w (this
+  : string
+
+   ,
+   ...a) {}
+
+const f = function(this: string) {}
+const g = function(this: string, ...a) {}
+const h = function(this
+: string,
+...a) {}

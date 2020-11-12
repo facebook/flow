@@ -114,7 +114,7 @@ let main
     let results =
       try
         (* Make the parser as permissive as possible.
-         TODO: make these CLI flags *)
+           TODO: make these CLI flags *)
         let parse_options =
           Some
             Parser_env.

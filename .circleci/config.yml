@@ -70,10 +70,11 @@ executors:
     working_directory: ~/flow
   mac:
     macos:
-      xcode: "9.0"
+      xcode: "12.1.0"
     environment:
       <<: *opam_env
       OPAM_VERSION: 2.0.5
+      MACOSX_DEPLOYMENT_TARGET: 10.13
     working_directory: ~/flow
   curl:
     docker:
@@ -377,7 +378,7 @@ jobs:
       - run:
           name: Run tool tests
           shell: bash
-          command: ./tool test --bin bin/win64/flow.exe --parallelism 1 --max-errored-tests-pct 20
+          command: ./tool test --bin bin/win64/flow.exe --parallelism 1
 
   parser_test_win:
     executor: win/default

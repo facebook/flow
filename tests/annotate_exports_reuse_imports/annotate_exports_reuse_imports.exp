@@ -39,10 +39,10 @@ module.exports = (new P<number>(): P<number>);
 >>> ./import-default.js
 // @flow
 
-import typeof $IMPORTED_TYPEOF$_C from "./exports-default-class-1.js";
-import typeof B from "./exports-default-class.js";
-import typeof $IMPORTED_TYPEOF$_B_1 from "./exports-default-poly-class.js";
-import typeof A from "./exports-default-instance.js";import typeof ImportedDefaultFunction from "./exports-default-function";
+import typeof $IMPORTED_TYPEOF$_C from "./exports-default-class-1";
+import typeof B from "./exports-default-class";
+import typeof $IMPORTED_TYPEOF$_B_1 from "./exports-default-poly-class";
+import typeof A from "./exports-default-instance";import typeof ImportedDefaultFunction from "./exports-default-function";
 
 import typeof ImportedDefaultInstance from "./exports-default-instance";
 import typeof ImportedDefaultPolyInstance from "./exports-default-poly-instance";
@@ -99,7 +99,6 @@ Errors:
     Parsing heaps get ast error:            0
     Indeterminate module type:              0
     No matching export:                     1
-    Unrecognizable module error:            0
   Serializer error:                         0
   Unsupported error kind:                   0
 
@@ -151,10 +150,10 @@ module.exports = (new P<number>(): P<number>);
 >>> ./import-default.js
 // @flow
 
-import typeof C from "./exports-default-class-1.js";
-import typeof B from "./exports-default-class.js";
-import typeof $IMPORTED_TYPEOF$_B_1 from "./exports-default-poly-class.js";
-import typeof A from "./exports-default-instance.js";import typeof ImportedDefaultFunction from "./exports-default-function";
+import typeof C from "./exports-default-class-1";
+import typeof B from "./exports-default-class";
+import typeof $IMPORTED_TYPEOF$_B_1 from "./exports-default-poly-class";
+import typeof A from "./exports-default-instance";import typeof ImportedDefaultFunction from "./exports-default-function";
 
 import typeof ImportedDefaultInstance from "./exports-default-instance";
 import typeof ImportedDefaultPolyInstance from "./exports-default-poly-instance";
@@ -197,9 +196,9 @@ module.exports = {
 === Diff between codemod-ed & autofix-ed ===
 >>> ./import-default.js
 3c3
-< import typeof $IMPORTED_TYPEOF$_C from "./exports-default-class-1.js";
+< import typeof $IMPORTED_TYPEOF$_C from "./exports-default-class-1";
 ---
-> import typeof C from "./exports-default-class-1.js";
+> import typeof C from "./exports-default-class-1";
 35c35
 <   x2: f2(),
 ---

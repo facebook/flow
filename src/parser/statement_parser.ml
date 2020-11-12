@@ -115,13 +115,13 @@ module Statement
         error_at env (loc, Parse_error.Unexpected (Token.quote_token_value name))
     | "await" ->
       (* `allow_await` means that `await` is allowed to be a keyword,
-          which makes it illegal to use as an identifier.
-          https://tc39.github.io/ecma262/#sec-identifiers-static-semantics-early-errors *)
+         which makes it illegal to use as an identifier.
+         https://tc39.github.io/ecma262/#sec-identifiers-static-semantics-early-errors *)
       if allow_await env then error_at env (loc, Parse_error.UnexpectedReserved)
     | "yield" ->
       (* `allow_yield` means that `yield` is allowed to be a keyword,
-          which makes it illegal to use as an identifier.
-          https://tc39.github.io/ecma262/#sec-identifiers-static-semantics-early-errors *)
+         which makes it illegal to use as an identifier.
+         https://tc39.github.io/ecma262/#sec-identifiers-static-semantics-early-errors *)
       if allow_yield env then
         error_at env (loc, Parse_error.UnexpectedReserved)
       else
@@ -146,9 +146,9 @@ module Statement
     )
 
   (* Semicolon insertion is handled here :(. There seem to be 2 cases where
-  * semicolons are inserted. First, if we reach the EOF. Second, if the next
-  * token is } or is separated by a LineTerminator.
-  *)
+   * semicolons are inserted. First, if we reach the EOF. Second, if the next
+   * token is } or is separated by a LineTerminator.
+   *)
   let semicolon ?(expected = "the token `;`") ?(required = true) env =
     match Peek.token env with
     | T_EOF
@@ -297,8 +297,8 @@ module Statement
         Expect.token env T_DO;
         let body = Parse.statement (env |> with_in_loop true) in
         (* Annex B allows labelled FunctionDeclarations (see
-       sec-labelled-function-declarations), but not in IterationStatement
-       (see sec-semantics-static-semantics-early-errors). *)
+           sec-labelled-function-declarations), but not in IterationStatement
+           (see sec-semantics-static-semantics-early-errors). *)
         if (not (in_strict_mode env)) && is_labelled_function body then
           function_as_statement_error_at env (fst body);
         let pre_keyword_trailing = Eat.trailing_comments env in
@@ -752,8 +752,8 @@ module Statement
         Expect.token env T_RPAREN;
         let body = Parse.statement (env |> with_in_loop true) in
         (* Annex B allows labelled FunctionDeclarations in non-strict mode
-       (see sec-labelled-function-declarations), but not in IterationStatement
-       (see sec-semantics-static-semantics-early-errors). *)
+           (see sec-labelled-function-declarations), but not in IterationStatement
+           (see sec-semantics-static-semantics-early-errors). *)
         if (not (in_strict_mode env)) && is_labelled_function body then
           function_as_statement_error_at env (fst body);
         Statement.While
@@ -771,8 +771,8 @@ module Statement
           Expect.token env T_RPAREN;
           let body = Parse.statement env in
           (* Annex B allows labelled FunctionDeclarations in non-strict mode
-         (see sec-labelled-function-declarations), but not in WithStatement
-         (see sec-with-statement-static-semantics-early-errors). *)
+             (see sec-labelled-function-declarations), but not in WithStatement
+             (see sec-with-statement-static-semantics-early-errors). *)
           if (not (in_strict_mode env)) && is_labelled_function body then
             function_as_statement_error_at env (fst body);
           Statement.With
@@ -800,7 +800,7 @@ module Statement
           let env = add_label env name in
           let body =
             (* labelled FunctionDeclarations are allowed in non-strict mode
-             (see #sec-labelled-function-declarations) *)
+               (see #sec-labelled-function-declarations) *)
             if Peek.is_function env then
               function_as_statement env
             else
@@ -883,9 +883,9 @@ module Statement
       env
 
   (** Type aliases squeeze into an unambiguous unused portion of the grammar: `type` is not a
-    reserved word, so `type T` is otherwise two identifiers in a row and that's never valid JS.
-    However, if there's a line separator between the two, ASI makes it valid JS, so line
-    separators are disallowed. *)
+      reserved word, so `type T` is otherwise two identifiers in a row and that's never valid JS.
+      However, if there's a line separator between the two, ASI makes it valid JS, so line
+      separators are disallowed. *)
   and type_alias env =
     if Peek.ith_is_identifier ~i:1 env && not (Peek.ith_is_implicit_semicolon ~i:1 env) then
       let (loc, type_alias) = with_loc (type_alias_helper ~leading:[]) env in
@@ -1326,7 +1326,7 @@ module Statement
         Parse.statement env
       | _ ->
         (* Oh boy, found some bad stuff in a declare module. Let's just
-              * pretend it's a declare var (arbitrary choice) *)
+         * pretend it's a declare var (arbitrary choice) *)
         declare_var_statement env)
     | _ -> Parse.statement env
 
@@ -1476,7 +1476,7 @@ module Statement
                   declaration = None;
                   specifiers = Some (ExportBatchSpecifier (specifier_loc, None));
                   source = Some source;
-                  exportKind = Statement.ExportType;
+                  export_kind = Statement.ExportType;
                   comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing ();
                 }
             | T_ENUM ->
@@ -1487,7 +1487,7 @@ module Statement
                   declaration = None;
                   specifiers = None;
                   source = None;
-                  exportKind = Statement.ExportType;
+                  export_kind = Statement.ExportType;
                   comments = Flow_ast_utils.mk_comments_opt ~leading ();
                 }
             | _ ->
@@ -1502,7 +1502,7 @@ module Statement
                   declaration = Some type_alias;
                   specifiers = None;
                   source = None;
-                  exportKind = Statement.ExportType;
+                  export_kind = Statement.ExportType;
                   comments = Flow_ast_utils.mk_comments_opt ~leading ();
                 }))
         | T_OPAQUE ->
@@ -1519,7 +1519,7 @@ module Statement
                 declaration = Some opaque_t;
                 specifiers = None;
                 source = None;
-                exportKind = Statement.ExportType;
+                export_kind = Statement.ExportType;
                 comments = Flow_ast_utils.mk_comments_opt ~leading ();
               })
         | T_INTERFACE ->
@@ -1539,18 +1539,18 @@ module Statement
                 declaration = Some interface;
                 specifiers = None;
                 source = None;
-                exportKind = Statement.ExportType;
+                export_kind = Statement.ExportType;
                 comments = Flow_ast_utils.mk_comments_opt ~leading ();
               })
         | T_LET
         | T_CONST
         | T_VAR
         (* not using Peek.is_class here because it would guard all of the
-      * cases *)
+         * cases *)
         | T_AT
         | T_CLASS
         (* not using Peek.is_function here because it would guard all of the
-      * cases *)
+         * cases *)
         | T_ASYNC
         | T_FUNCTION
         | T_ENUM ->
@@ -1584,7 +1584,7 @@ module Statement
                 declaration = Some stmt;
                 specifiers = None;
                 source = None;
-                exportKind = Statement.ExportValue;
+                export_kind = Statement.ExportValue;
                 comments = Flow_ast_utils.mk_comments_opt ~leading ();
               })
         | T_MULT ->
@@ -1611,12 +1611,12 @@ module Statement
                 declaration = None;
                 specifiers;
                 source = Some source;
-                exportKind = Statement.ExportValue;
+                export_kind = Statement.ExportValue;
                 comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing ();
               })
         | _ ->
           Statement.ExportNamedDeclaration.(
-            let exportKind =
+            let export_kind =
               match Peek.token env with
               | T_TYPE ->
                 Eat.token env;
@@ -1645,7 +1645,7 @@ module Statement
                 declaration = None;
                 specifiers = Some (ExportSpecifiers specifiers);
                 source;
-                exportKind;
+                export_kind;
                 comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing ();
               }))
 
@@ -1859,26 +1859,26 @@ module Statement
             | _ -> (identifier env, None)
           end
         (*
-      ImportSpecifier[Type]:
-        [~Type] ImportedBinding
-        [~Type] IdentifierName ImportedTypeBinding
-        [~Type] IdentifierName IdentifierName ImportedBinding
-        [~Type] IdentifierName IdentifierName IdentifierName ImportedTypeBinding
-        [+Type] ImportedTypeBinding
-        [+Type] IdentifierName IdentifierName ImportedTypeBinding
+           ImportSpecifier[Type]:
+             [~Type] ImportedBinding
+             [~Type] IdentifierName ImportedTypeBinding
+             [~Type] IdentifierName IdentifierName ImportedBinding
+             [~Type] IdentifierName IdentifierName IdentifierName ImportedTypeBinding
+             [+Type] ImportedTypeBinding
+             [+Type] IdentifierName IdentifierName ImportedTypeBinding
 
-      Static Semantics:
+           Static Semantics:
 
-      `IdentifierName ImportedTypeBinding`:
-      - It is a Syntax Error if IdentifierName's StringValue is not "type" or "typeof"
+           `IdentifierName ImportedTypeBinding`:
+           - It is a Syntax Error if IdentifierName's StringValue is not "type" or "typeof"
 
-      `IdentifierName IdentifierName ImportedBinding`:
-      - It is a Syntax Error if the second IdentifierName's StringValue is not "as"
+           `IdentifierName IdentifierName ImportedBinding`:
+           - It is a Syntax Error if the second IdentifierName's StringValue is not "as"
 
-      `IdentifierName IdentifierName IdentifierName  ImportedTypeBinding`:
-      - It is a Syntax Error if the first IdentifierName's StringValue is not "type"
-        or "typeof", and the third IdentifierName's StringValue is not "as"
-    *)
+           `IdentifierName IdentifierName IdentifierName  ImportedTypeBinding`:
+           - It is a Syntax Error if the first IdentifierName's StringValue is not "type"
+             or "typeof", and the third IdentifierName's StringValue is not "as"
+        *)
       in
 
       let specifier env =
@@ -1890,7 +1890,7 @@ module Statement
         in
         if is_type_import (Peek.token env) then
           (* consume `type`, but we don't know yet whether this is `type foo` or
-           `type as foo`. *)
+             `type as foo`. *)
           let type_keyword_or_remote = identifier_name env in
           match Peek.token env with
           (* `type` (a value) *)
@@ -2004,22 +2004,22 @@ module Statement
             remove_trailing source (fun remover (loc, source) ->
                 (loc, remover#string_literal_type loc source)) )
       in
-      let with_specifiers importKind env leading =
-        let specifiers = Some (named_or_namespace_specifier env importKind) in
+      let with_specifiers import_kind env leading =
+        let specifiers = Some (named_or_namespace_specifier env import_kind) in
         let source = source env in
         let (trailing, source) = semicolon_and_trailing env source in
         Statement.ImportDeclaration
           {
-            importKind;
+            import_kind;
             source;
             specifiers;
             default = None;
             comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing ();
           }
       in
-      let with_default importKind env leading =
+      let with_default import_kind env leading =
         let default_specifier =
-          match importKind with
+          match import_kind with
           | ImportType
           | ImportTypeof ->
             Type.type_identifier env
@@ -2030,14 +2030,14 @@ module Statement
           | T_COMMA ->
             (* `import Foo, ...` *)
             Expect.token env T_COMMA;
-            Some (named_or_namespace_specifier env importKind)
+            Some (named_or_namespace_specifier env import_kind)
           | _ -> None
         in
         let source = source env in
         let (trailing, source) = semicolon_and_trailing env source in
         Statement.ImportDeclaration
           {
-            importKind;
+            import_kind;
             source;
             specifiers = additional_specifiers;
             default = Some default_specifier;
@@ -2060,14 +2060,14 @@ module Statement
             let (trailing, source) = semicolon_and_trailing env source in
             Statement.ImportDeclaration
               {
-                importKind = ImportValue;
+                import_kind = ImportValue;
                 source;
                 specifiers = None;
                 default = None;
                 comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing ();
               }
           (* `import type [...] from "ModuleName";`
-         note that if [...] is missing, we're importing a value named `type`! *)
+             note that if [...] is missing, we're importing a value named `type`! *)
           | T_TYPE when should_parse_types env ->
             begin
               match Peek.ith_token ~i:1 env with

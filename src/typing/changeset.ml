@@ -11,7 +11,7 @@ module Utils = Utils_js
     First part of this module defines the structure and an API
     over it, second part hosts global changeset state and a
     separate API. Second part is embedded here due to dependencies.
-  *)
+ *)
 
 (* operations on vars and refis.
    refine is a read that results in a type update *)
@@ -142,7 +142,7 @@ let to_string =
     read/write ops and refinements as AST traversal duing infer
     drives calls into Env module.
     (Kill globals TODO: move to context.)
-  *)
+ *)
 
 (* due to the current dependency situation, we locate the
    global changeset stack here for now, so it can be accessed

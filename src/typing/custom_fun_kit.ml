@@ -35,7 +35,7 @@ module Kit (Flow : Flow_common.S) = struct
     | (false, fn :: fns, _) ->
       let reason = replace_desc_reason (RCustom "compose intermediate value") (reason_of_t fn) in
       let tvar =
-        Tvar.mk_where cx reason (fun tvar ->
+        Tvar.mk_no_wrap_where cx reason (fun tvar ->
             run_compose cx trace ~use_op reason_op reverse fns spread_fn tin tvar)
       in
       rec_flow
@@ -46,17 +46,17 @@ module Kit (Flow : Flow_common.S) = struct
      * functions in our array after we call the head function. *)
     | (true, fn :: fns, _) ->
       let reason = replace_desc_reason (RCustom "compose intermediate value") (reason_of_t fn) in
-      let tvar =
-        Tvar.mk_where cx reason (fun tvar ->
-            rec_flow
-              cx
-              trace
-              (fn, CallT (use_op, reason, mk_functioncalltype reason_op None [Arg tin] tvar)))
-      in
-      run_compose cx trace ~use_op reason_op reverse fns spread_fn tvar tout
+      let tvar = Tvar.mk_no_wrap cx reason in
+      rec_flow
+        cx
+        trace
+        ( fn,
+          CallT (use_op, reason, mk_functioncalltype reason_op None [Arg (OpenT tin)] (reason, tvar))
+        );
+      run_compose cx trace ~use_op reason_op reverse fns spread_fn (reason, tvar) tout
     (* If there are no functions and no spread function then we are an identity
      * function. *)
-    | (_, [], None) -> rec_flow_t ~use_op:unknown_use cx trace (tin, tout)
+    | (_, [], None) -> rec_flow_t ~use_op:unknown_use cx trace (OpenT tin, OpenT tout)
     (* Correctly implementing spreads of unknown arity for the compose function
      * is a little tricky. Let's look at a couple of cases.
      *
@@ -123,14 +123,19 @@ module Kit (Flow : Flow_common.S) = struct
           Op (FunCallMethod { op; fn; prop; args = []; local })
         | _ -> use_op
       in
-      let tin = Tvar.mk cx reason_op in
-      let tvar = Tvar.mk cx reason_op in
+      let tin = (reason_op, Tvar.mk_no_wrap cx reason_op) in
+      let tvar = (reason_op, Tvar.mk_no_wrap cx reason_op) in
       run_compose cx trace ~use_op reason_op reverse args spread_arg tin tvar;
       let funt =
         FunT
           ( dummy_static reason_op,
             dummy_prototype,
-            mk_functiontype reason_op [tin] ~rest_param:None ~def_reason:reason_op tvar )
+            mk_functiontype
+              reason_op
+              [OpenT tin]
+              ~rest_param:None
+              ~def_reason:reason_op
+              (OpenT tvar) )
       in
       rec_flow_t ~use_op:unknown_use cx trace (DefT (reason_op, bogus_trust (), funt), tout)
     | ReactCreateElement ->

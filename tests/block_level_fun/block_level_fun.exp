@@ -1,0 +1,10 @@
+Error ----------------------------------------------------------------------------------------------------- test.js:5:18
+
+Cannot resolve name `f`. [cannot-resolve-name]
+
+   5| module.exports = f;
+                       ^
+
+
+
+Found 1 error

@@ -179,8 +179,8 @@ Cannot call method `doesNotExist` because property `doesNotExist` is missing in 
                   ^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:45:15
-   45| declare class Object {
+   <BUILTINS>/core.js:90:15
+   90| declare class Object {
                      ^^^^^^ [1]
 
 
@@ -197,16 +197,16 @@ Error --------------------------------------------------------------------------
 Cannot assign `x.toString` to `xToString` because function type [1] is incompatible with number [2]. [incompatible-type]
 
    object_prototype.js:38:26
-   38| var xToString : number = x.toString; // error
-                                ^^^^^^^^^^
+    38| var xToString : number = x.toString; // error
+                                 ^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:85:5
-   85|     toString(): string;
-           ^^^^^^^^^^^^^^^^^^ [1]
+   <BUILTINS>/core.js:236:5
+   236|     toString(): string;
+            ^^^^^^^^^^^^^^^^^^ [1]
    object_prototype.js:38:17
-   38| var xToString : number = x.toString; // error
-                       ^^^^^^ [2]
+    38| var xToString : number = x.toString; // error
+                        ^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------- object_prototype.js:39:33
@@ -215,16 +215,16 @@ Cannot assign `x.toString` to `xToString2` because string [1] is incompatible wi
 [incompatible-type]
 
    object_prototype.js:39:33
-   39| var xToString2 : () => number = x.toString; // error
-                                       ^^^^^^^^^^
+    39| var xToString2 : () => number = x.toString; // error
+                                        ^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:85:17
-   85|     toString(): string;
-                       ^^^^^^ [1]
+   <BUILTINS>/core.js:236:17
+   236|     toString(): string;
+                        ^^^^^^ [1]
    object_prototype.js:39:24
-   39| var xToString2 : () => number = x.toString; // error
-                              ^^^^^^ [2]
+    39| var xToString2 : () => number = x.toString; // error
+                               ^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------- object_prototype.js:43:26
@@ -232,16 +232,16 @@ Error --------------------------------------------------------------------------
 Cannot assign `y.toString` to `yToString` because function type [1] is incompatible with number [2]. [incompatible-type]
 
    object_prototype.js:43:26
-   43| var yToString : number = y.toString; // error
-                                ^^^^^^^^^^
+    43| var yToString : number = y.toString; // error
+                                 ^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:85:5
-   85|     toString(): string;
-           ^^^^^^^^^^^^^^^^^^ [1]
+   <BUILTINS>/core.js:236:5
+   236|     toString(): string;
+            ^^^^^^^^^^^^^^^^^^ [1]
    object_prototype.js:43:17
-   43| var yToString : number = y.toString; // error
-                       ^^^^^^ [2]
+    43| var yToString : number = y.toString; // error
+                        ^^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------- object_prototype.js:49:7
@@ -268,8 +268,8 @@ Cannot call `123.toString` with `'foo'` bound to `radix` because string [1] is i
                        ^^^^^ [1]
 
 References:
-   <BUILTINS>/core.js:165:22
-   165|     toString(radix?: number): string;
+   <BUILTINS>/core.js:465:22
+   465|     toString(radix?: number): string;
                              ^^^^^^ [2]
 
 
@@ -283,8 +283,8 @@ Cannot call `123.toString` with `null` bound to `radix` because null [1] is inco
                        ^^^^ [1]
 
 References:
-   <BUILTINS>/core.js:165:22
-   165|     toString(radix?: number): string;
+   <BUILTINS>/core.js:465:22
+   465|     toString(radix?: number): string;
                              ^^^^^^ [2]
 
 
@@ -302,16 +302,16 @@ Cannot assign `x.hasOwnProperty` to `xHasOwnProperty` because function type [1] 
 [incompatible-type]
 
    object_prototype.js:71:32
-   71| var xHasOwnProperty : number = x.hasOwnProperty; // error
-                                      ^^^^^^^^^^^^^^^^
+    71| var xHasOwnProperty : number = x.hasOwnProperty; // error
+                                       ^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:81:5
-   81|     hasOwnProperty(prop: mixed): boolean;
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   <BUILTINS>/core.js:222:5
+   222|     hasOwnProperty(prop: mixed): boolean;
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    object_prototype.js:71:23
-   71| var xHasOwnProperty : number = x.hasOwnProperty; // error
-                             ^^^^^^ [2]
+    71| var xHasOwnProperty : number = x.hasOwnProperty; // error
+                              ^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------- object_prototype.js:72:51
@@ -320,16 +320,16 @@ Cannot assign `x.hasOwnProperty` to `xHasOwnProperty2` because boolean [1] is in
 value. [incompatible-type]
 
    object_prototype.js:72:51
-   72| var xHasOwnProperty2 : (prop: string) => number = x.hasOwnProperty; // error
-                                                         ^^^^^^^^^^^^^^^^
+    72| var xHasOwnProperty2 : (prop: string) => number = x.hasOwnProperty; // error
+                                                          ^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:81:34
-   81|     hasOwnProperty(prop: mixed): boolean;
-                                        ^^^^^^^ [1]
+   <BUILTINS>/core.js:222:34
+   222|     hasOwnProperty(prop: mixed): boolean;
+                                         ^^^^^^^ [1]
    object_prototype.js:72:42
-   72| var xHasOwnProperty2 : (prop: string) => number = x.hasOwnProperty; // error
-                                                ^^^^^^ [2]
+    72| var xHasOwnProperty2 : (prop: string) => number = x.hasOwnProperty; // error
+                                                 ^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------- object_prototype.js:76:32
@@ -338,16 +338,16 @@ Cannot assign `y.hasOwnProperty` to `yHasOwnProperty` because function type [1] 
 [incompatible-type]
 
    object_prototype.js:76:32
-   76| var yHasOwnProperty : number = y.hasOwnProperty; // error
-                                      ^^^^^^^^^^^^^^^^
+    76| var yHasOwnProperty : number = y.hasOwnProperty; // error
+                                       ^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:81:5
-   81|     hasOwnProperty(prop: mixed): boolean;
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   <BUILTINS>/core.js:222:5
+   222|     hasOwnProperty(prop: mixed): boolean;
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    object_prototype.js:76:23
-   76| var yHasOwnProperty : number = y.hasOwnProperty; // error
-                             ^^^^^^ [2]
+    76| var yHasOwnProperty : number = y.hasOwnProperty; // error
+                              ^^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------- object_prototype.js:93:3
@@ -365,16 +365,16 @@ Cannot assign `x.propertyIsEnumerable` to `xPropertyIsEnumerable` because functi
 number [2]. [incompatible-type]
 
    object_prototype.js:96:38
-   96| var xPropertyIsEnumerable : number = x.propertyIsEnumerable; // error
-                                            ^^^^^^^^^^^^^^^^^^^^^^
+    96| var xPropertyIsEnumerable : number = x.propertyIsEnumerable; // error
+                                             ^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:83:5
-   83|     propertyIsEnumerable(prop: mixed): boolean;
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   <BUILTINS>/core.js:232:5
+   232|     propertyIsEnumerable(prop: mixed): boolean;
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    object_prototype.js:96:29
-   96| var xPropertyIsEnumerable : number = x.propertyIsEnumerable; // error
-                                   ^^^^^^ [2]
+    96| var xPropertyIsEnumerable : number = x.propertyIsEnumerable; // error
+                                    ^^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------- object_prototype.js:98:3
@@ -383,16 +383,16 @@ Cannot assign `x.propertyIsEnumerable` to `xPropertyIsEnumerable2` because boole
 in the return value. [incompatible-type]
 
    object_prototype.js:98:3
-   98|   x.propertyIsEnumerable; // error
-         ^^^^^^^^^^^^^^^^^^^^^^
+    98|   x.propertyIsEnumerable; // error
+          ^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:83:40
-   83|     propertyIsEnumerable(prop: mixed): boolean;
-                                              ^^^^^^^ [1]
+   <BUILTINS>/core.js:232:40
+   232|     propertyIsEnumerable(prop: mixed): boolean;
+                                               ^^^^^^^ [1]
    object_prototype.js:97:48
-   97| var xPropertyIsEnumerable2 : (prop: string) => number =
-                                                      ^^^^^^ [2]
+    97| var xPropertyIsEnumerable2 : (prop: string) => number =
+                                                       ^^^^^^ [2]
 
 
 Error --------------------------------------------------------------------------------------- object_prototype.js:102:38
@@ -405,8 +405,8 @@ number [2]. [incompatible-type]
                                              ^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:83:5
-    83|     propertyIsEnumerable(prop: mixed): boolean;
+   <BUILTINS>/core.js:232:5
+   232|     propertyIsEnumerable(prop: mixed): boolean;
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    object_prototype.js:102:29
    102| var yPropertyIsEnumerable : number = y.propertyIsEnumerable; // error
@@ -426,16 +426,16 @@ Error --------------------------------------------------------------------------
 Cannot assign `x.valueOf` to `xValueOf` because function type [1] is incompatible with number [2]. [incompatible-type]
 
    object_prototype.js:122:25
-   122| var xValueOf : number = x.valueOf; // error
-                                ^^^^^^^^^
+    122| var xValueOf : number = x.valueOf; // error
+                                 ^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:436:5
-   436|     valueOf(): number;
-            ^^^^^^^^^^^^^^^^^ [1]
+   <BUILTINS>/core.js:1494:5
+   1494|     valueOf(): number;
+             ^^^^^^^^^^^^^^^^^ [1]
    object_prototype.js:122:16
-   122| var xValueOf : number = x.valueOf; // error
-                       ^^^^^^ [2]
+    122| var xValueOf : number = x.valueOf; // error
+                        ^^^^^^ [2]
 
 
 Error --------------------------------------------------------------------------------------- object_prototype.js:126:25
@@ -447,8 +447,8 @@ Cannot assign `y.valueOf` to `yValueOf` because function type [1] is incompatibl
                                 ^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:86:5
-    86|     valueOf(): mixed;
+   <BUILTINS>/core.js:238:5
+   238|     valueOf(): mixed;
             ^^^^^^^^^^^^^^^^ [1]
    object_prototype.js:126:16
    126| var yValueOf : number = y.valueOf; // error
@@ -469,16 +469,16 @@ Cannot assign `x.toLocaleString` to `xToLocaleString` because function type [1] 
 [incompatible-type]
 
    object_prototype.js:150:32
-   150| var xToLocaleString : number = x.toLocaleString; // error
-                                       ^^^^^^^^^^^^^^^^
+    150| var xToLocaleString : number = x.toLocaleString; // error
+                                        ^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:432:5
-   432|     toLocaleString(locales?: string | Array<string>, options?: Intl$DateTimeFormatOptions): string;
-            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   <BUILTINS>/core.js:1482:5
+   1482|     toLocaleString(locales?: string | Array<string>, options?: Intl$DateTimeFormatOptions): string;
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    object_prototype.js:150:23
-   150| var xToLocaleString : number = x.toLocaleString; // error
-                              ^^^^^^ [2]
+    150| var xToLocaleString : number = x.toLocaleString; // error
+                               ^^^^^^ [2]
 
 
 Error --------------------------------------------------------------------------------------- object_prototype.js:151:39
@@ -487,16 +487,16 @@ Cannot assign `x.toLocaleString` to `xToLocaleString2` because string [1] is inc
 value. [incompatible-type]
 
    object_prototype.js:151:39
-   151| var xToLocaleString2 : () => number = x.toLocaleString; // error
-                                              ^^^^^^^^^^^^^^^^
+    151| var xToLocaleString2 : () => number = x.toLocaleString; // error
+                                               ^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:432:93
-   432|     toLocaleString(locales?: string | Array<string>, options?: Intl$DateTimeFormatOptions): string;
-                                                                                                    ^^^^^^ [1]
+   <BUILTINS>/core.js:1482:93
+   1482|     toLocaleString(locales?: string | Array<string>, options?: Intl$DateTimeFormatOptions): string;
+                                                                                                     ^^^^^^ [1]
    object_prototype.js:151:30
-   151| var xToLocaleString2 : () => number = x.toLocaleString; // error
-                                     ^^^^^^ [2]
+    151| var xToLocaleString2 : () => number = x.toLocaleString; // error
+                                      ^^^^^^ [2]
 
 
 Error --------------------------------------------------------------------------------------- object_prototype.js:155:32
@@ -509,8 +509,8 @@ Cannot assign `y.toLocaleString` to `yToLocaleString` because function type [1] 
                                        ^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:84:5
-    84|     toLocaleString(): string;
+   <BUILTINS>/core.js:234:5
+   234|     toLocaleString(): string;
             ^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    object_prototype.js:155:23
    155| var yToLocaleString : number = y.toLocaleString; // error
@@ -522,16 +522,16 @@ Error --------------------------------------------------------------------------
 Cannot cast `o1_proto.toString` to empty because function type [1] is incompatible with empty [2]. [incompatible-cast]
 
    proto.js:3:2
-    3| (o1_proto.toString: empty); // error: function ~> empty
-        ^^^^^^^^^^^^^^^^^
+     3| (o1_proto.toString: empty); // error: function ~> empty
+         ^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:85:5
-   85|     toString(): string;
-           ^^^^^^^^^^^^^^^^^^ [1]
+   <BUILTINS>/core.js:236:5
+   236|     toString(): string;
+            ^^^^^^^^^^^^^^^^^^ [1]
    proto.js:3:21
-    3| (o1_proto.toString: empty); // error: function ~> empty
-                           ^^^^^ [2]
+     3| (o1_proto.toString: empty); // error: function ~> empty
+                            ^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------------- proto.js:7:2

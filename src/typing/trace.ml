@@ -11,37 +11,37 @@ open Type
 open TypeUtil
 
 (*
-  Terminology:
+   Terminology:
 
-   * A step records a single test of lower bound against
-   upper bound, analogous to an invocation of the flow function.
+    * A step records a single test of lower bound against
+    upper bound, analogous to an invocation of the flow function.
 
-   * A step may have a tvar as its lower or upper bound (or both).
-   tvars act as conduits for concrete types, so steps which
-   begin or end in tvars may be joined with other steps
-   representing tests which adjoin the same tvar.
+    * A step may have a tvar as its lower or upper bound (or both).
+    tvars act as conduits for concrete types, so steps which
+    begin or end in tvars may be joined with other steps
+    representing tests which adjoin the same tvar.
 
-   The resulting sequence of steps, corresponding to an invocation
-   of the flow function followed by the extension of the original
-   lower/upper pair through any adjacent type variables, forms the
-   basis of a trace. (In trace dumps this is called a "path".)
+    The resulting sequence of steps, corresponding to an invocation
+    of the flow function followed by the extension of the original
+    lower/upper pair through any adjacent type variables, forms the
+    basis of a trace. (In trace dumps this is called a "path".)
 
-   * When a step has been induced recursively from a prior invocation
-   of the flow function, it's said to have the trace associated with
-   that invocation as a parent.
+    * When a step has been induced recursively from a prior invocation
+    of the flow function, it's said to have the trace associated with
+    that invocation as a parent.
 
-   (Note that each step in a path may have its own parent: consider
-   an incoming, recursively induced step joining with a dormant step
-   attached to some tvar in an arbitrarily removed invocation of the
-   flow function.)
+    (Note that each step in a path may have its own parent: consider
+    an incoming, recursively induced step joining with a dormant step
+    attached to some tvar in an arbitrarily removed invocation of the
+    flow function.)
 
-   * A trace is just a sequence of steps along with a (possibly empty)
-   parent trace for each step. Since steps may share parents,
-   a trace forms a graph, though it is naturally built up as a tree
-   when recorded during evaluation of the flow function.
-   (The formatting we do in reasons_of_trace recovers the graph
-   structure for readability.)
- *)
+    * A trace is just a sequence of steps along with a (possibly empty)
+    parent trace for each step. Since steps may share parents,
+    a trace forms a graph, though it is naturally built up as a tree
+    when recorded during evaluation of the flow function.
+    (The formatting we do in reasons_of_trace recovers the graph
+    structure for readability.)
+*)
 type step =
   | Step of {
       lower: Type.t;
@@ -56,7 +56,7 @@ type step =
       depth;
 
    b) the recursion limiter in the flow function checks this on every call.
- *)
+*)
 and t = step list * int
 
 let compare = Stdlib.compare
@@ -108,7 +108,7 @@ end)
 
 (* index the nodes in a trace down to a given level.
    returns two maps, trace -> index and index -> trace
- *)
+*)
 let index_trace =
   let rec f (level, tmap, imap) trace =
     if level <= 0 || TraceMap.mem trace tmap then
@@ -147,7 +147,7 @@ let max_depth_of_trace limit (trace : t) =
 (* reformat a reason's description with
    - the given prefix and suffix: if either is nonempty,
      "desc" becomes "prefix[desc]suffix"
-  *)
+*)
 let pretty_r r prefix suffix =
   update_desc_new_reason
     (fun desc ->
@@ -171,7 +171,7 @@ let pretty_r r prefix suffix =
      step's upper.
      if the step was derived from another path, we append a note
      to that effect.
- *)
+*)
 let reasons_of_trace ?(level = 0) trace =
   let max_depth = max_depth_of_trace level trace in
   let level = min level max_depth in

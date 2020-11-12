@@ -9,6 +9,20 @@ open Type
 
 type ident = int
 
+module UseTypeKey = struct
+  type speculation_id = int
+
+  type case_id = int
+
+  type key = TypeTerm.use_t * (speculation_id * case_id) option
+
+  type t = key
+
+  let compare = Stdlib.compare
+end
+
+module UseTypeMap = WrappedMap.Make (UseTypeKey)
+
 (** Type variables are unknowns, and we are ultimately interested in constraints
     on their solutions for type inference.
 
@@ -21,7 +35,7 @@ type ident = int
     of the tree.
     - A Root node holds the actual non-trivial state of a tvar, represented by a
     root structure (see below).
-**)
+ **)
 type node =
   | Goto of ident
   | Root of root
@@ -54,7 +68,7 @@ and root = {
 
     - Unresolved constraints contain bounds that carry both concrete types and
     other tvars as upper and lower bounds (see below).
-**)
+ **)
 
 and constraints =
   | Resolved of Type.use_op * Type.t
@@ -64,8 +78,8 @@ and constraints =
 and bounds = {
   mutable lower: (Trace.t * Type.use_op) TypeMap.t;
   mutable upper: Trace.t UseTypeMap.t;
-  mutable lowertvars: Trace.t IMap.t;
-  mutable uppertvars: Trace.t IMap.t;
+  mutable lowertvars: (Trace.t * Type.use_op) IMap.t;
+  mutable uppertvars: (Trace.t * Type.use_op) IMap.t;
 }
 (** The bounds structure carries the evolving constraints on the solution of an
     unresolved tvar.
@@ -83,7 +97,7 @@ and bounds = {
 
     The use_op in the lower TypeMap represents the use_op when a lower bound
     was added.
-**)
+ **)
 
 let new_bounds () =
   {

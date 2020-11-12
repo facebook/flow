@@ -7,9 +7,9 @@ Cannot call `Symbol` because no more than 1 argument is expected by function typ
                         ^^^^^
 
 References:
-   <BUILTINS>/core.js:104:3
-   104|   static (value?:any): symbol;
-          ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   <BUILTINS>/core.js:260:10
+   260|   static (value?:any): symbol;
+                 ^^^^^^^^^^^^^^^^^^^^ [1]
 
 
 Error --------------------------------------------------------------------------------------------------- symbol.js:23:6
@@ -56,8 +56,8 @@ Cannot assign `Symbol.toPrimitive` to `y` because symbol [1] is incompatible wit
                                   ^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:118:23
-   118|   static toPrimitive: $SymbolToPrimitive;
+   <BUILTINS>/core.js:323:23
+   323|   static toPrimitive: $SymbolToPrimitive;
                               ^^^^^^^^^^^^^^^^^^ [1]
    symbol.js:45:12
     45|   const y: $SymbolMatch = Symbol.toPrimitive; // Error

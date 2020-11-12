@@ -34,22 +34,22 @@ exception Watchman_restarted
 type subscribe_mode =
   | All_changes
   | Defer_changes
-  (* See also Watchman docs on drop. This means the subscriber will not
-   * get a list of files changed during a repo update. Practically, this
-   * is not useful for the typechecker process which needs to actually
-   * know which files were changed. This is useful for the monitor to
-   * aggressively kill the server. *)
   | Drop_changes
-  | Scm_aware
+      (** See also Watchman docs on drop. This means the subscriber will not
+          get a list of files changed during a repo update. Practically, this
+          is not useful for the typechecker process which needs to actually
+          know which files were changed. This is useful for the monitor to
+          aggressively kill the server. *)
 
 type timeout = float option
 
 type init_settings = {
-  subscribe_mode: subscribe_mode;
-  expression_terms: Hh_json.json list;  (** See watchman expression terms. *)
   debug_logging: bool;
   defer_states: string list;
-  roots: Path.t list;
+  expression_terms: Hh_json.json list;  (** See watchman expression terms. *)
+  mergebase_with: string;
+  roots: Path.t list;  (** symbolic commit to find changes against *)
+  subscribe_mode: subscribe_mode;
   subscription_prefix: string;
   sync_timeout: int option;
 }
@@ -241,11 +241,12 @@ let request_json ?(extra_kv = []) ?(extra_expressions = []) watchman_command env
     request)
 
 let get_changes_since_mergebase_query env =
+  let mergebase_with = env.settings.mergebase_with in
   let extra_kv =
     [
       ( "since",
         Hh_json.JSON_Object
-          [("scm", Hh_json.JSON_Object [("mergebase-with", Hh_json.JSON_String "master")])] );
+          [("scm", Hh_json.JSON_Object [("mergebase-with", Hh_json.JSON_String mergebase_with)])] );
     ]
   in
   request_json ~extra_kv Query env
@@ -257,11 +258,6 @@ let subscribe ~mode ~states env =
     | All_changes -> (Hh_json.JSON_String env.clockspec, [])
     | Defer_changes -> (Hh_json.JSON_String env.clockspec, [("defer", J.strlist states)])
     | Drop_changes -> (Hh_json.JSON_String env.clockspec, [("drop", J.strlist states)])
-    | Scm_aware ->
-      Hh_logger.log "Making Scm_aware subscription";
-      let scm = Hh_json.JSON_Object [("mergebase-with", Hh_json.JSON_String "master")] in
-      let since = Hh_json.JSON_Object [("scm", scm); ("drop", J.strlist states)] in
-      (since, [])
   in
   request_json
     ~extra_kv:(([("since", since)] @ mode) @ [("empty_on_fresh_instance", Hh_json.JSON_Bool true)])
@@ -489,11 +485,12 @@ let prepend_relative_path_term ~relative_path ~terms =
 let re_init
     ?prior_clockspec
     {
-      subscribe_mode;
-      expression_terms;
       debug_logging;
       defer_states;
+      expression_terms;
+      mergebase_with;
       roots;
+      subscribe_mode;
       subscription_prefix;
       sync_timeout;
     } =
@@ -593,9 +590,10 @@ let re_init
         {
           debug_logging;
           defer_states;
-          subscribe_mode;
           expression_terms;
+          mergebase_with;
           roots;
+          subscribe_mode;
           subscription_prefix;
           sync_timeout;
         };
@@ -867,11 +865,12 @@ let conn_of_instance = function
 module Testing = struct
   let test_settings =
     {
-      subscribe_mode = Defer_changes;
-      expression_terms = [];
       debug_logging = false;
       defer_states = [];
+      expression_terms = [];
+      mergebase_with = "hash";
       roots = [Path.dummy_path];
+      subscribe_mode = Defer_changes;
       subscription_prefix = "dummy_prefix";
       sync_timeout = None;
     }

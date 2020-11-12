@@ -19,8 +19,6 @@ module DiffPatchHeap =
     (struct
       type t = patch
 
-      let prefix = Prefix.make ()
-
       let description = "DiffPatch"
     end)
 

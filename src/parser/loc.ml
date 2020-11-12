@@ -136,8 +136,8 @@ let to_string_no_source loc =
 
 let source loc = loc.source
 
-let make file line col =
-  { source = Some file; start = { line; column = col }; _end = { line; column = col + 1 } }
+(** Produces a zero-width Loc.t, where start = end *)
+let cursor source line column = { source; start = { line; column }; _end = { line; column } }
 
 let start_loc loc = { loc with _end = loc.start }
 

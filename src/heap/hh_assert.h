@@ -7,7 +7,6 @@
 
 #ifndef HH_ASSERT_H
 #define HH_ASSERT_H
-void raise_assertion_failure(char * msg);
 
 /**
  * Concatenate the __LINE__ and __FILE__ strings in a macro.
@@ -15,5 +14,5 @@ void raise_assertion_failure(char * msg);
 #define S1(x) #x
 #define S2(x) S1(x)
 #define LOCATION __FILE__ " : " S2(__LINE__)
-#define assert(f) ((f) ? 0 : raise_assertion_failure(LOCATION))
+#define assert(f) ((f) ? 0 : caml_failwith(LOCATION))
 #endif

@@ -64,7 +64,7 @@ let parse_lib_file ~reader options file =
    passed.
 
    returns list of (filename, success, errors, suppressions) tuples
- *)
+*)
 let load_lib_files ~ccx ~options ~reader files =
   let verbose = Options.verbose options in
   (* iterate in reverse override order *)
@@ -116,7 +116,7 @@ let load_lib_files ~ccx ~options ~reader files =
                  prerr_endlinef "load_lib %s: added symbols { %s }" file (String.concat ", " syms);
 
                (* symbols loaded from this file are suppressed
-             if found in later ones *)
+                  if found in later ones *)
                let exclude_syms = SSet.union exclude_syms (SSet.of_list syms) in
                let result = (lib_file, true, errors, warnings, suppressions) in
                (exclude_syms, result :: results)
@@ -134,7 +134,8 @@ let load_lib_files ~ccx ~options ~reader files =
                  (lib_file, false, errors, Flow_error.ErrorSet.empty, Error_suppressions.empty)
                in
                (exclude_syms, result :: results)
-             | Parsing.Parse_skip (Parsing.Skip_non_flow_file | Parsing.Skip_resource_file) ->
+             | Parsing.(Parse_skip (Skip_non_flow_file | Skip_resource_file | Skip_package_json _))
+               ->
                (* should never happen *)
                let errs = Flow_error.ErrorSet.empty in
                let warnings = Flow_error.ErrorSet.empty in
@@ -148,7 +149,7 @@ let load_lib_files ~ccx ~options ~reader files =
 (* initialize builtins:
    parse and do local inference on library files, and set up master context.
    returns list of (lib file, success) pairs.
- *)
+*)
 let init ~options ~reader lib_files =
   (* Lib files use only concrete locations, so this is not needed. *)
   let aloc_tables = FilenameMap.empty in

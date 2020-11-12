@@ -13,8 +13,8 @@ end
 
 module Types = struct
   module Functions = struct
-    let params ?(loc = Loc.none) ?rest ?comments params =
-      (loc, { Ast.Type.Function.Params.params; rest; comments })
+    let params ?(loc = Loc.none) ?rest ?this ?comments params =
+      (loc, { Ast.Type.Function.Params.params; rest; this_ = this; comments })
 
     let make ?tparams ?comments params return =
       { Ast.Type.Function.tparams; params; return; comments }
@@ -138,10 +138,13 @@ end
 module Functions = struct
   open Ast.Function
 
-  let params ?(loc = Loc.none) ?rest ?comments ps =
-    (loc, { Ast.Function.Params.params = ps; rest; comments })
+  let params ?(loc = Loc.none) ?rest ?this_ ?comments ps =
+    (loc, { Ast.Function.Params.params = ps; rest; comments; this_ })
 
   let param ?(loc = Loc.none) ?default argument = (loc, { Ast.Function.Param.argument; default })
+
+  let rest_param ?(loc = Loc.none) ?comments argument =
+    (loc, { Ast.Function.RestParam.argument; comments })
 
   let body ?(loc = Loc.none) ?comments stmts =
     BodyBlock (loc, { Ast.Statement.Block.body = stmts; comments })
@@ -196,7 +199,7 @@ module Classes = struct
       tparams = None;
       extends;
       implements;
-      classDecorators = [];
+      class_decorators = [];
       comments;
     }
 end
@@ -214,11 +217,11 @@ module JSXs = struct
   let attr ?(loc = Loc.none) name value = Opening.Attribute (loc, { Attribute.name; value })
 
   let element
-      ?selfclosing:(selfClosing = false) ?attrs:(attributes = []) ?(children = []) ?comments name =
+      ?selfclosing:(self_closing = false) ?attrs:(attributes = []) ?(children = []) ?comments name =
     {
-      openingElement = (Loc.none, { Opening.name; selfClosing; attributes });
-      closingElement =
-        ( if selfClosing then
+      opening_element = (Loc.none, { Opening.name; self_closing; attributes });
+      closing_element =
+        ( if self_closing then
           None
         else
           Some (Loc.none, { Closing.name }) );
@@ -240,6 +243,9 @@ module Statements = struct
   let while_ test ?comments body = (Loc.none, While { While.test; body; comments })
 
   let do_while body ?comments test = (Loc.none, DoWhile { DoWhile.body; test; comments })
+
+  let for_raw ?comments init test update body =
+    (Loc.none, For { For.init; test; update; body; comments })
 
   let for_ ?comments init test update body =
     (Loc.none, For { For.init = Some (For.InitExpression init); test; update; body; comments })
@@ -265,20 +271,21 @@ module Statements = struct
 
   let labeled ?comments label body = (Loc.none, Labeled { Labeled.label; body; comments })
 
-  let variable_declarator_generic id init = (Loc.none, { VariableDeclaration.Declarator.id; init })
+  let variable_declarator_generic ?(loc = Loc.none) id init =
+    (loc, { VariableDeclaration.Declarator.id; init })
 
-  let variable_declarator ?init ?annot ?(loc = Loc.none) str =
-    (loc, { VariableDeclaration.Declarator.id = Patterns.identifier ~loc ?annot str; init })
+  let variable_declarator ?loc ?init ?annot str =
+    variable_declarator_generic ?loc (Patterns.identifier ?loc ?annot str) init
 
   let variable_declaration
       ?(kind = Ast.Statement.VariableDeclaration.Var) ?(loc = Loc.none) ?comments declarations =
     (loc, VariableDeclaration { VariableDeclaration.kind; declarations; comments })
 
-  let let_declaration declarations =
-    variable_declaration ~kind:Ast.Statement.VariableDeclaration.Let declarations
+  let let_declaration ?loc declarations =
+    variable_declaration ~kind:Ast.Statement.VariableDeclaration.Let ?loc declarations
 
-  let const_declaration ?comments declarations =
-    variable_declaration ~kind:Ast.Statement.VariableDeclaration.Const ?comments declarations
+  let const_declaration ?loc ?comments declarations =
+    variable_declaration ~kind:Ast.Statement.VariableDeclaration.Const ?loc ?comments declarations
 
   let function_declaration ?(loc = Loc.none) ?(async = false) ?(generator = false) ?params ?body id
       =
@@ -288,26 +295,31 @@ module Statements = struct
   let class_declaration ?super ?implements ?id elements =
     (Loc.none, ClassDeclaration (Classes.make ?super ?implements ?id elements))
 
-  let if_ ?comments test consequent alternate =
-    (Loc.none, If { If.test; consequent; alternate; comments })
+  let import_declaration ?(loc = Loc.none) ?comments ~import_kind ~source ~default ~specifiers =
+    (loc, ImportDeclaration { ImportDeclaration.import_kind; source; default; specifiers; comments })
+
+  let named_import_specifier ?kind ?local remote = { ImportDeclaration.kind; local; remote }
+
+  let if_ ?(loc = Loc.none) ?comments test consequent alternate =
+    (loc, If { If.test; consequent; alternate; comments })
 
   let if_alternate ?(loc = Loc.none) ?comments body = (loc, { If.Alternate.body; comments })
 
   let return ?(loc = Loc.none) ?comments expr = (loc, Return { Return.argument = expr; comments })
 
-  let directive txt =
-    let expr = (Loc.none, Ast.Expression.Literal (Literals.string txt)) in
-    expression ~directive:txt expr
+  let directive ?(loc = Loc.none) txt =
+    let expr = (loc, Ast.Expression.Literal (Literals.string txt)) in
+    expression ~loc ~directive:txt expr
 
-  let switch ?comments discriminant cases =
-    (Loc.none, Switch { Switch.discriminant; cases; comments })
+  let switch ?(loc = Loc.none) ?comments discriminant cases =
+    (loc, Switch { Switch.discriminant; cases; comments })
 
   let switch_case ?(loc = Loc.none) ?test ?comments consequent =
     (loc, { Switch.Case.test; consequent; comments })
 
-  let break ?comments ?label () = (Loc.none, Break { Break.label; comments })
+  let break ?(loc = Loc.none) ?comments ?label () = (loc, Break { Break.label; comments })
 
-  let with_ ?comments _object body = (Loc.none, With { With._object; body; comments })
+  let with_ ?(loc = Loc.none) ?comments _object body = (loc, With { With._object; body; comments })
 
   let enum_declaration ?(loc = Loc.none) ?comments id body =
     (loc, EnumDeclaration { EnumDeclaration.id; body; comments })
@@ -316,26 +328,34 @@ module Statements = struct
     open EnumDeclaration
 
     let initialized_member ?(loc = Loc.none) id init_value =
-      (loc, { InitializedMember.id; init = (Loc.none, init_value) })
+      (loc, { InitializedMember.id; init = (loc, init_value) })
 
     let defaulted_member ?(loc = Loc.none) id = (loc, { DefaultedMember.id })
 
-    let boolean_body ?(loc = Loc.none) ?(explicit_type = false) ?comments members =
-      (loc, BooleanBody { BooleanBody.members; explicitType = explicit_type; comments })
+    let boolean_body
+        ?(loc = Loc.none) ?(explicit_type = false) ?(has_unknown_members = false) ?comments members
+        =
+      (loc, BooleanBody { BooleanBody.members; explicit_type; has_unknown_members; comments })
 
-    let number_body ?(loc = Loc.none) ?(explicit_type = false) ?comments members =
-      (loc, NumberBody { NumberBody.members; explicitType = explicit_type; comments })
+    let number_body
+        ?(loc = Loc.none) ?(explicit_type = false) ?(has_unknown_members = false) ?comments members
+        =
+      (loc, NumberBody { NumberBody.members; explicit_type; has_unknown_members; comments })
 
-    let string_defaulted_body ?(loc = Loc.none) ?(explicit_type = false) ?comments members =
+    let string_defaulted_body
+        ?(loc = Loc.none) ?(explicit_type = false) ?(has_unknown_members = false) ?comments members
+        =
       let members = StringBody.Defaulted members in
-      (loc, StringBody { StringBody.members; explicitType = explicit_type; comments })
+      (loc, StringBody { StringBody.members; explicit_type; has_unknown_members; comments })
 
-    let string_initialized_body ?(loc = Loc.none) ?(explicit_type = false) ?comments members =
+    let string_initialized_body
+        ?(loc = Loc.none) ?(explicit_type = false) ?(has_unknown_members = false) ?comments members
+        =
       let members = StringBody.Initialized members in
-      (loc, StringBody { StringBody.members; explicitType = explicit_type; comments })
+      (loc, StringBody { StringBody.members; explicit_type; has_unknown_members; comments })
 
-    let symbol_body ?(loc = Loc.none) ?comments members =
-      (loc, SymbolBody { SymbolBody.members; comments })
+    let symbol_body ?(loc = Loc.none) ?(has_unknown_members = false) ?comments members =
+      (loc, SymbolBody { SymbolBody.members; has_unknown_members; comments })
   end
 end
 
@@ -345,7 +365,7 @@ module Expressions = struct
   let identifier ?(loc = Loc.none) ?(comments = None) name =
     (loc, Identifier (loc, { Ast.Identifier.name; comments }))
 
-  let array ?comments elements = (Loc.none, Array { Array.elements; comments })
+  let array ?(loc = Loc.none) ?comments elements = (loc, Array { Array.elements; comments })
 
   let array_expression expr = Array.Expression expr
 
@@ -362,10 +382,10 @@ module Expressions = struct
     in
     { Call.callee; targs; arguments; comments }
 
-  let call ?args callee = (Loc.none, Call (call_node ?args callee))
+  let call ?(loc = Loc.none) ?args callee = (loc, Call (call_node ?args callee))
 
-  let optional_call ~optional ?args callee =
-    (Loc.none, OptionalCall { OptionalCall.call = call_node ?args callee; optional })
+  let optional_call ?(loc = Loc.none) ~optional ?args callee =
+    (loc, OptionalCall { OptionalCall.call = call_node ?args callee; optional })
 
   let function_ ?(loc = Loc.none) ?(async = false) ?(generator = false) ?params ?id ?body () =
     let fn = Functions.make ~async ~generator ?params ~id ?body () in
@@ -375,15 +395,15 @@ module Expressions = struct
     let fn = Functions.make ~async ~generator:false ?params ~id:None ?body () in
     (loc, ArrowFunction fn)
 
-  let class_ ?super ?id elements = (Loc.none, Class (Classes.make ?super ?id elements))
+  let class_ ?(loc = Loc.none) ?super ?id elements = (loc, Class (Classes.make ?super ?id elements))
 
   let literal ?(loc = Loc.none) lit = (loc, Literal lit)
 
   let assignment ?(loc = Loc.none) ?comments left ?operator right =
     (loc, Assignment { Assignment.operator; left; right; comments })
 
-  let binary ?comments ~op left right =
-    (Loc.none, Binary { Binary.operator = op; left; right; comments })
+  let binary ?(loc = Loc.none) ?comments ~op left right =
+    (loc, Binary { Binary.operator = op; left; right; comments })
 
   let plus left right = binary ~op:Binary.Plus left right
 
@@ -397,14 +417,14 @@ module Expressions = struct
 
   let equal left right = binary ~op:Binary.Equal left right
 
-  let conditional ?comments test consequent alternate =
-    (Loc.none, Conditional { Conditional.test; consequent; alternate; comments })
+  let conditional ?(loc = Loc.none) ?comments test consequent alternate =
+    (loc, Conditional { Conditional.test; consequent; alternate; comments })
 
-  let logical ?comments ~op left right =
-    (Loc.none, Logical { Logical.operator = op; left; right; comments })
+  let logical ?(loc = Loc.none) ?comments ~op left right =
+    (loc, Logical { Logical.operator = op; left; right; comments })
 
-  let unary ?(comments = None) ~op argument =
-    (Loc.none, Unary { Unary.operator = op; argument; comments })
+  let unary ?(loc = Loc.none) ?(comments = None) ~op argument =
+    (loc, Unary { Unary.operator = op; argument; comments })
 
   let unary_plus (b : (Loc.t, Loc.t) Ast.Expression.t) = unary ~op:Unary.Plus b
 
@@ -412,8 +432,8 @@ module Expressions = struct
 
   let unary_not (b : (Loc.t, Loc.t) Ast.Expression.t) = unary ~op:Unary.Not b
 
-  let update ?comments ~op ~prefix argument =
-    (Loc.none, Update { Update.operator = op; prefix; argument; comments })
+  let update ?(loc = Loc.none) ?comments ~op ~prefix argument =
+    (loc, Update { Update.operator = op; prefix; argument; comments })
 
   let increment ~prefix argument = update ~op:Update.Increment ~prefix argument
 
@@ -430,10 +450,10 @@ module Expressions = struct
   let object_property_computed_key ?comments ?(loc = Loc.none) expr =
     Object.Property.Computed (loc, { Ast.ComputedKey.expression = expr; comments })
 
-  let object_method ?body ?params ?(generator = false) ?(async = false) key =
+  let object_method ?(loc = Loc.none) ?body ?params ?(generator = false) ?(async = false) key =
     let fn = Functions.make ~id:None ?params ~generator ~async ?body () in
     let prop = Object.Property.Method { key; value = (Loc.none, fn) } in
-    Object.Property (Loc.none, prop)
+    Object.Property (loc, prop)
 
   let object_property ?(shorthand = false) ?(loc = Loc.none) key value =
     let module Prop = Object.Property in
@@ -457,7 +477,7 @@ module Expressions = struct
   let member_computed ?comments ~property _object =
     { Member._object; property = Member.PropertyExpression property; comments }
 
-  let member_expression expr = (Loc.none, Ast.Expression.Member expr)
+  let member_expression ?(loc = Loc.none) expr = (loc, Ast.Expression.Member expr)
 
   let member_expression_ident_by_name obj (name : string) =
     member_expression (member obj ~property:name)
@@ -465,18 +485,19 @@ module Expressions = struct
   let member_expression_computed_string obj (str : string) =
     member_expression (member_computed obj ~property:(literal (Literals.string str)))
 
-  let optional_member_expression ~optional expr =
-    (Loc.none, OptionalMember { OptionalMember.member = expr; optional })
+  let optional_member_expression ?(loc = Loc.none) ~optional expr =
+    (loc, OptionalMember { OptionalMember.member = expr; optional })
 
-  let new_ ?comments ?targs ?args callee =
-    (Loc.none, New { New.callee; targs; arguments = args; comments })
+  let new_ ?(loc = Loc.none) ?comments ?targs ?args callee =
+    (loc, New { New.callee; targs; arguments = args; comments })
 
   let sequence ?(loc = Loc.none) ?comments exprs =
     (loc, Sequence { Sequence.expressions = exprs; comments })
 
   let expression expr = Expression expr
 
-  let spread ?comments expr = Spread (Loc.none, { SpreadElement.argument = expr; comments })
+  let spread ?(loc = Loc.none) ?comments expr =
+    Spread (loc, { SpreadElement.argument = expr; comments })
 
   let jsx_element ?(loc = Loc.none) elem = (loc, JSXElement elem)
 
@@ -490,8 +511,8 @@ module Expressions = struct
 
   let logical_or (l : (Loc.t, Loc.t) Ast.Expression.t) r = logical ~op:Logical.Or l r
 
-  let typecast ?comments expression annotation =
-    (Loc.none, TypeCast { TypeCast.expression; annot = Types.annotation annotation; comments })
+  let typecast ?(loc = Loc.none) ?comments expression annotation =
+    (loc, TypeCast { TypeCast.expression; annot = Types.annotation annotation; comments })
 
   module Literals = struct
     let string ?loc value = literal ?loc (Literals.string value)
@@ -514,8 +535,8 @@ module Comments = struct
     (loc, { kind = Line; text; on_newline })
 end
 
-let mk_program ?(comments = None) ?(all_comments = []) stmts =
-  (Loc.none, { Ast.Program.statements = stmts; comments; all_comments })
+let mk_program ?(loc = Loc.none) ?(comments = None) ?(all_comments = []) stmts =
+  (loc, { Ast.Program.statements = stmts; comments; all_comments })
 
 let ast_of_string ~parser str =
   let parse_options =

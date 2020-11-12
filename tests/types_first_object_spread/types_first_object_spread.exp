@@ -111,6 +111,24 @@ References:
               ^^^^^^ [2]
 
 
+Error --------------------------------------------------------------------------------------------------- driver.js:19:2
+
+Cannot cast `b3` to object type because inexact object literal [1] is incompatible with exact object type [2].
+[incompatible-exact]
+
+   driver.js:19:2
+   19| (b3: {| |}); // Error inexact -> exact
+        ^^
+
+References:
+   test3.js:4:18
+    4| module.exports = { ...a };
+                        ^^^^^^^^ [1]
+   driver.js:19:6
+   19| (b3: {| |}); // Error inexact -> exact
+            ^^^^^ [2]
+
+
 Error ----------------------------------------------------------------------------------------------------- test1.js:7:2
 
 Cannot cast `b.x` to string because number [1] is incompatible with string [2]. [incompatible-cast]
@@ -225,4 +243,4 @@ References:
 
 
 
-Found 14 errors
+Found 15 errors

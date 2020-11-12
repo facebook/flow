@@ -64,3 +64,15 @@ exports.js:5:16
 Flags:
 helpers/exports_named.js:3:14,3:16
 
+identifier.js:5:4
+Flags:
+identifier.js:3:10,3:16
+
+identifier.js:8:10
+Flags:
+identifier.js:3:10,3:16
+
+identifier.js:11:11
+Flags:
+identifier.js:3:10,3:16
+

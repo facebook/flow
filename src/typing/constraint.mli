@@ -7,6 +7,22 @@
 
 type ident = int
 
+module UseTypeKey : sig
+  type speculation_id = int
+
+  type case_id = int
+
+  type key = Type.use_t * (speculation_id * case_id) option
+
+  type t = key
+
+  val compare : key -> key -> int
+end
+
+module UseTypeMap : sig
+  include module type of WrappedMap.Make (UseTypeKey)
+end
+
 (***************************************)
 
 type node =
@@ -25,9 +41,9 @@ and constraints =
 
 and bounds = {
   mutable lower: (Trace.t * Type.use_op) Type.TypeMap.t;
-  mutable upper: Trace.t Type.UseTypeMap.t;
-  mutable lowertvars: Trace.t IMap.t;
-  mutable uppertvars: Trace.t IMap.t;
+  mutable upper: Trace.t UseTypeMap.t;
+  mutable lowertvars: (Trace.t * Type.use_op) IMap.t;
+  mutable uppertvars: (Trace.t * Type.use_op) IMap.t;
 }
 
 val new_unresolved_root : unit -> node

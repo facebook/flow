@@ -28,3 +28,8 @@ type Mono = C<void>;
  */
 type Empty = empty;
 declare var a: Empty.T<number>;
+
+
+function f<X>(x: X) {
+    x;
+}

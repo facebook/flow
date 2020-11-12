@@ -3,9 +3,10 @@
  */
 
 
+import type Suite from "flow-dev-tools/src/test/Suite.js";
 import {suite, test} from 'flow-dev-tools/src/test/Tester';
 
-export default suite(({addFile, flowCmd}) => [
+export default (suite(({addFile, flowCmd}) => [
   test('non-json output', [
     addFile('foo_parse_fail.js'),
     flowCmd(
@@ -894,4 +895,4 @@ export default suite(({addFile, flowCmd}) => [
       `,
     ).exitCodes([0]),
   ]),
-]);
+]): Suite);

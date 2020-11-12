@@ -93,7 +93,7 @@ let to_string result ~strip_root =
    - global indicates whether to search for references in different files (much slower)
    - multi_hop indicates whether to include properties on related objects (even slower)
    - args is mandatory command args; see parse_args above
-    *)
+*)
 let main base_flags option_values json pretty root strip_root path global multi_hop args () =
   let (file, line, column) = parse_args path args in
   let flowconfig_name = base_flags.Base_flags.flowconfig_name in

@@ -58,14 +58,17 @@ let print_range (range : range) : json =
 let print_location (location : Location.t) : json =
   Location.(
     JSON_Object
-      [("uri", JSON_String (string_of_uri location.uri)); ("range", print_range location.range)])
+      [
+        ("uri", JSON_String (DocumentUri.to_string location.uri));
+        ("range", print_range location.range);
+      ])
 
 let print_definition_location (definition_location : DefinitionLocation.t) : json =
   DefinitionLocation.(
     let location = definition_location.location in
     Jprint.object_opt
       [
-        ("uri", Some (JSON_String (string_of_uri location.Location.uri)));
+        ("uri", Some (JSON_String (DocumentUri.to_string location.Location.uri)));
         ("range", Some (print_range location.Location.range));
         ("title", Base.Option.map definition_location.title ~f:string_);
       ])
@@ -79,7 +82,7 @@ let parse_range_exn (json : json option) : range =
 let parse_location (j : json option) : Location.t =
   Location.
     {
-      uri = Jget.string_exn j "uri" |> uri_of_string;
+      uri = Jget.string_exn j "uri" |> DocumentUri.of_string;
       range = Jget.obj_exn j "range" |> parse_range_exn;
     }
 
@@ -90,16 +93,19 @@ let parse_range_opt (json : json option) : range option =
     Some (parse_range_exn json)
 
 let parse_textDocumentIdentifier (json : json option) : TextDocumentIdentifier.t =
-  TextDocumentIdentifier.{ uri = Jget.string_exn json "uri" |> uri_of_string }
+  TextDocumentIdentifier.{ uri = Jget.string_exn json "uri" |> DocumentUri.of_string }
 
 let parse_versionedTextDocumentIdentifier (json : json option) : VersionedTextDocumentIdentifier.t =
   VersionedTextDocumentIdentifier.
-    { uri = Jget.string_exn json "uri" |> uri_of_string; version = Jget.int_d json "version" 0 }
+    {
+      uri = Jget.string_exn json "uri" |> DocumentUri.of_string;
+      version = Jget.int_d json "version" 0;
+    }
 
 let parse_textDocumentItem (json : json option) : TextDocumentItem.t =
   TextDocumentItem.
     {
-      uri = Jget.string_exn json "uri" |> uri_of_string;
+      uri = Jget.string_exn json "uri" |> DocumentUri.of_string;
       languageId = Jget.string_d json "languageId" "";
       version = Jget.int_d json "version" 0;
       text = Jget.string_exn json "text";
@@ -109,7 +115,7 @@ let print_textDocumentItem (item : TextDocumentItem.t) : json =
   TextDocumentItem.(
     JSON_Object
       [
-        ("uri", JSON_String (string_of_uri item.uri));
+        ("uri", JSON_String (DocumentUri.to_string item.uri));
         ("languageId", JSON_String item.languageId);
         ("version", JSON_Number (string_of_int item.version));
         ("text", JSON_String item.text);
@@ -145,11 +151,12 @@ let print_textEdit (edit : TextEdit.t) : json =
 let print_workspaceEdit (r : WorkspaceEdit.t) : json =
   WorkspaceEdit.(
     let print_workspace_edit_changes (uri, text_edits) =
-      (uri, JSON_Array (List.map ~f:print_textEdit text_edits))
+      (DocumentUri.to_string uri, JSON_Array (List.map ~f:print_textEdit text_edits))
     in
     JSON_Object
       [
-        ("changes", JSON_Object (List.map (SMap.elements r.changes) ~f:print_workspace_edit_changes));
+        ( "changes",
+          JSON_Object (List.map (UriMap.elements r.changes) ~f:print_workspace_edit_changes) );
       ])
 
 let print_command_name ~key name =
@@ -477,7 +484,7 @@ let print_diagnostics (r : PublishDiagnostics.params) : json =
   PublishDiagnostics.(
     JSON_Object
       [
-        ("uri", JSON_String (string_of_uri r.uri));
+        ("uri", JSON_String (DocumentUri.to_string r.uri));
         ("diagnostics", print_diagnostic_list r.diagnostics);
       ])
 
@@ -639,36 +646,6 @@ let print_showStatus (r : ShowStatus.showStatusParams) : json =
                 ("numerator", Some (int_ progress));
                 ("denominator", Base.Option.map r.ShowStatus.total ~f:int_);
               ]) );
-    ]
-
-(************************************************************************)
-(* window/progress notification                                         *)
-(************************************************************************)
-
-let print_progress (id : int) (label : string option) : json =
-  let r = { Progress.id; label } in
-  JSON_Object
-    [
-      ("id", r.Progress.id |> int_);
-      ( "label",
-        match r.Progress.label with
-        | None -> JSON_Null
-        | Some s -> JSON_String s );
-    ]
-
-(************************************************************************)
-(* window/actionRequired notification                                   *)
-(************************************************************************)
-
-let print_actionRequired (id : int) (label : string option) : json =
-  let r = { ActionRequired.id; label } in
-  JSON_Object
-    [
-      ("id", r.ActionRequired.id |> int_);
-      ( "label",
-        match r.ActionRequired.label with
-        | None -> JSON_Null
-        | Some s -> JSON_String s );
     ]
 
 (************************************************************************)
@@ -1007,7 +984,7 @@ let parse_initialize (params : json option) : Initialize.params =
       {
         processId = Jget.int_opt json "processId";
         rootPath = Jget.string_opt json "rootPath";
-        rootUri = Base.Option.map ~f:uri_of_string (Jget.string_opt json "rootUri");
+        rootUri = Base.Option.map ~f:DocumentUri.of_string (Jget.string_opt json "rootUri");
         initializationOptions =
           Jget.obj_opt json "initializationOptions" |> parse_initializationOptions;
         client_capabilities = Jget.obj_opt json "capabilities" |> parse_capabilities;
@@ -1059,12 +1036,7 @@ let parse_initialize (params : json option) : Initialize.params =
         snippetSupport = Jget.bool_d json "snippetSupport" ~default:false;
         preselectSupport = Jget.bool_d json "preselectSupport" ~default:false;
       }
-    and parse_window json =
-      {
-        status = Jget.obj_opt json "status" |> Base.Option.is_some;
-        progress = Jget.obj_opt json "progress" |> Base.Option.is_some;
-        actionRequired = Jget.obj_opt json "actionRequired" |> Base.Option.is_some;
-      }
+    and parse_window json = { status = Jget.obj_opt json "status" |> Base.Option.is_some }
     and parse_telemetry json =
       { connectionStatus = Jget.obj_opt json "connectionStatus" |> Base.Option.is_some }
     in
@@ -1191,7 +1163,7 @@ let parse_didChangeWatchedFiles (json : Hh_json.json option) : DidChangeWatchedF
   let changes =
     Jget.array_exn json "changes"
     |> List.map ~f:(fun change ->
-           let uri = Jget.string_exn change "uri" |> uri_of_string in
+           let uri = Jget.string_exn change "uri" |> DocumentUri.of_string in
            let type_ = Jget.int_exn change "type" in
            let type_ =
              match DidChangeWatchedFiles.fileChangeType_of_enum type_ with
@@ -1325,8 +1297,6 @@ let notification_name_to_string (notification : lsp_notification) : string =
   | TelemetryNotification _ -> "telemetry/event"
   | LogMessageNotification _ -> "window/logMessage"
   | ShowMessageNotification _ -> "window/showMessage"
-  | ProgressNotification _ -> "window/progress"
-  | ActionRequiredNotification _ -> "window/actionRequired"
   | ConnectionStatusNotification _ -> "telemetry/connectionStatus"
   | InitializedNotification -> "initialized"
   | SetTraceNotification -> "$/setTraceNotification"
@@ -1395,8 +1365,6 @@ let parse_lsp_notification (method_ : string) (params : json option) : lsp_notif
   | "textDocument/publishDiagnostics"
   | "window/logMessage"
   | "window/showMessage"
-  | "window/progress"
-  | "window/actionRequired"
   | "telemetry/connectionStatus"
   | _ ->
     UnknownNotification (method_, params)
@@ -1549,9 +1517,6 @@ let print_lsp_notification (notification : lsp_notification) : json =
     | TelemetryNotification r -> print_logMessage r.LogMessage.type_ r.LogMessage.message
     | LogMessageNotification r -> print_logMessage r.LogMessage.type_ r.LogMessage.message
     | ShowMessageNotification r -> print_showMessage r.ShowMessage.type_ r.ShowMessage.message
-    | ProgressNotification r -> print_progress r.Progress.id r.Progress.label
-    | ActionRequiredNotification r ->
-      print_actionRequired r.ActionRequired.id r.ActionRequired.label
     | ConnectionStatusNotification r -> print_connectionStatus r
     | ExitNotification
     | InitializedNotification

@@ -107,7 +107,7 @@ let autocomplete ~trigger_character ~reader ~options ~env ~profiling ~filename ~
   let path = File_key.SourceFile path in
   let cursor_loc =
     let (line, column) = cursor in
-    Loc.make path line column
+    Loc.cursor (Some path) line column
   in
   let (contents, broader_context) =
     let (line, column) = cursor in
@@ -134,7 +134,7 @@ let autocomplete ~trigger_character ~reader ~options ~env ~profiling ~filename ~
         :: initial_json_props )
     in
     Lwt.return (Error err, Some json_data_to_log)
-  | Ok (cx, info, file_sig, _, typed_ast, parse_errors) ->
+  | Ok (cx, info, file_sig, _, _ast, typed_ast, parse_errors) ->
     Profiling_js.with_timer_lwt profiling ~timer:"GetResults" ~f:(fun () ->
         try_with_json2 (fun () ->
             let open AutocompleteService_js in
@@ -163,10 +163,17 @@ let autocomplete ~trigger_character ~reader ~options ~env ~profiling ~filename ~
                   | ([], _ :: _) -> "FAILURE"
                   | (_ :: _, _ :: _) -> "PARTIAL"
                 in
+                let at_least_one_result_has_documentation =
+                  Base.List.exists
+                    results
+                    ~f:(fun ServerProt.Response.Completion.{ documentation; _ } ->
+                      Base.Option.is_some documentation)
+                in
                 ( Ok results,
                   ("result", JSON_String result_string)
                   :: ("count", JSON_Number (results |> List.length |> string_of_int))
                   :: ("errors", JSON_Array (Base.List.map ~f:(fun s -> JSON_String s) errors_to_log))
+                  :: ("documentation", JSON_Bool at_least_one_result_has_documentation)
                   :: json_props_to_log )
               | AcEmpty reason ->
                 ( Ok [],
@@ -209,8 +216,8 @@ let check_file ~options ~env ~profiling ~force file_input =
 (* This returns result, json_data_to_log, where json_data_to_log is the json data from
  * getdef_get_result which we end up using *)
 let get_def_of_check_result ~options ~reader ~profiling ~check_result (file, line, col) =
-  let loc = Loc.make file line col in
-  let (cx, _, file_sig, _, typed_ast, parse_errors) = check_result in
+  let loc = Loc.cursor (Some file) line col in
+  let (cx, _, file_sig, _, _ast, typed_ast, parse_errors) = check_result in
   let file_sig = File_sig.abstractify_locs file_sig in
   Profiling_js.with_timer_lwt profiling ~timer:"GetResult" ~f:(fun () ->
       try_with_json2 (fun () ->
@@ -281,7 +288,7 @@ let infer_type
             | Error str ->
               let json_props = add_cache_hit_data_to_json [] did_hit_cache in
               Lwt.return (Error (str, Some (Hh_json.JSON_Object json_props)))
-            | Ok ((cx, _info, file_sig, _, typed_ast, _parse_errors) as check_result) ->
+            | Ok ((cx, _info, file_sig, _, _ast, typed_ast, _parse_errors) as check_result) ->
               let ((loc, ty), type_at_pos_json_props) =
                 Type_info_service.type_at_pos
                   ~cx
@@ -296,7 +303,7 @@ let infer_type
                   line
                   column
               in
-              let%lwt (getdef_loc_result, get_def_json_props) =
+              let%lwt (getdef_loc_result, _) =
                 get_def_of_check_result
                   ~options
                   ~reader
@@ -312,12 +319,7 @@ let infer_type
                   |> Base.Option.bind ~f:Find_documentation.documentation_of_jsdoc
               in
               let json_props =
-                let documentation_get_def =
-                  match get_def_json_props with
-                  | None -> Hh_json.JSON_Null
-                  | Some props -> Hh_json.JSON_Object props
-                in
-                ("documentation_get_def", documentation_get_def)
+                ("documentation", Hh_json.JSON_Bool (Base.Option.is_some documentation))
                 :: add_cache_hit_data_to_json type_at_pos_json_props did_hit_cache
               in
               let exact_by_default = Options.exact_by_default options in
@@ -347,7 +349,7 @@ let insert_type
   File_input.content_of_file_input file_input %>>= fun file_content ->
   try_with (fun _ ->
       let%lwt result =
-        Type_info_service.insert_type
+        Code_action_service.insert_type
           ~options
           ~env
           ~profiling
@@ -367,7 +369,7 @@ let autofix_exports ~options ~env ~profiling ~input =
   File_input.content_of_file_input input %>>= fun file_content ->
   try_with (fun _ ->
       let%lwt result =
-        Type_info_service.autofix_exports ~options ~env ~profiling ~file_key ~file_content
+        Code_action_service.autofix_exports ~options ~env ~profiling ~file_key ~file_content
       in
       Lwt.return result)
 
@@ -464,7 +466,7 @@ let dump_types ~options ~env ~profiling ~expand_aliases ~evaluate_type_destructo
       let file = File_key.SourceFile file in
       Lwt.return (File_input.content_of_file_input file_input) >>= fun content ->
       Types_js.type_contents ~options ~env ~profiling content file
-      >>= fun (cx, _info, file_sig, _, typed_ast, _parse_errors) ->
+      >>= fun (cx, _info, file_sig, _, _ast, typed_ast, _parse_errors) ->
       Lwt.return
         (Ok
            (Type_info_service.dump_types
@@ -488,7 +490,7 @@ let coverage ~options ~env ~profiling ~type_contents_cache ~force ~trust file_in
           type_contents_with_cache ~options ~env ~profiling ~type_contents_cache content file
         in
         let result =
-          Base.Result.map type_contents_result ~f:(fun (cx, _, _, _, typed_ast, _) ->
+          Base.Result.map type_contents_result ~f:(fun (cx, _, _, _, _, typed_ast, _) ->
               Type_info_service.coverage ~cx ~typed_ast ~force ~trust file content)
         in
         Lwt.return result)
@@ -602,7 +604,7 @@ let find_module ~options ~reader (moduleref, filename) =
       ~reader:(Abstract_state_reader.State_reader reader)
       ~node_modules_containers:!Files.node_modules_containers
       file
-      (Nel.one (ALoc.of_loc loc))
+      (ALoc.of_loc loc)
       moduleref
   in
   Module_heaps.Reader.get_file ~reader ~audit:Expensive.warn module_name
@@ -914,7 +916,7 @@ let find_code_actions ~reader ~options ~env ~profiling ~params ~client =
   match File_input.content_of_file_input file with
   | Error msg -> Lwt.return (Error msg)
   | Ok file_contents ->
-    Type_info_service.code_actions_at_loc
+    Code_action_service.code_actions_at_loc
       ~reader
       ~options
       ~env
@@ -1467,7 +1469,7 @@ let handle_persistent_get_def ~reader ~options ~id ~params ~loc ~metadata ~clien
       let response = ResponseMessage (id, DefinitionResult []) in
       Lwt.return ((), LspProt.LspFromServer (Some response), metadata)
     | Ok loc ->
-      let default_uri = params.textDocument.TextDocumentIdentifier.uri |> Lsp.string_of_uri in
+      let default_uri = params.textDocument.TextDocumentIdentifier.uri in
       let location = Flow_lsp_conversions.loc_to_lsp_with_default ~default_uri loc in
       let definition_location = { Lsp.DefinitionLocation.location; title = None } in
       let response = ResponseMessage (id, DefinitionResult [definition_location]) in
@@ -1507,7 +1509,7 @@ let handle_persistent_infer_type ~options ~reader ~id ~params ~loc ~metadata ~cl
   | Ok (ServerProt.Response.Infer_type_response { loc; ty; exact_by_default; documentation }) ->
     (* loc may be the 'none' location; content may be None. *)
     (* If both are none then we'll return null; otherwise we'll return a hover *)
-    let default_uri = params.textDocument.TextDocumentIdentifier.uri |> Lsp.string_of_uri in
+    let default_uri = params.textDocument.TextDocumentIdentifier.uri in
     let location = Flow_lsp_conversions.loc_to_lsp_with_default ~default_uri loc in
     let range =
       if loc = Loc.none then
@@ -1648,17 +1650,33 @@ let handle_persistent_signaturehelp_lsp
     let%lwt check_contents_result = Types_js.type_contents ~options ~env ~profiling contents path in
     (match check_contents_result with
     | Error reason -> mk_lsp_error_response ~ret:() ~id:(Some id) ~reason metadata
-    | Ok (cx, _info, file_sig, _, typed_ast, _parse_errors) ->
+    | Ok (cx, _info, file_sig, _, _ast, typed_ast, _parse_errors) ->
       let func_details =
         let file_sig = File_sig.abstractify_locs file_sig in
-        let cursor_loc = Loc.make path line col in
+        let cursor_loc = Loc.cursor (Some path) line col in
         Signature_help.find_signatures ~options ~reader ~cx ~file_sig ~typed_ast cursor_loc
       in
       (match func_details with
       | Ok details ->
         let r = SignatureHelpResult (Flow_lsp_conversions.flow_signature_help_to_lsp details) in
         let response = ResponseMessage (id, r) in
-        Lwt.return ((), LspProt.LspFromServer (Some response), metadata)
+        let has_any_documentation =
+          match details with
+          | None -> false
+          | Some (details_list, _) ->
+            Base.List.exists
+              details_list
+              ~f:
+                ServerProt.Response.(
+                  fun { func_documentation; param_tys; _ } ->
+                    Base.Option.is_some func_documentation
+                    || Base.List.exists param_tys ~f:(fun { param_documentation; _ } ->
+                           Base.Option.is_some param_documentation))
+        in
+        let extra_data =
+          Some (Hh_json.JSON_Object [("documentation", Hh_json.JSON_Bool has_any_documentation)])
+        in
+        Lwt.return ((), LspProt.LspFromServer (Some response), with_data ~extra_data metadata)
       | Error _ ->
         mk_lsp_error_response ~ret:() ~id:(Some id) ~reason:"Failed to normalize type" metadata))
 
@@ -1697,6 +1715,62 @@ let handle_persistent_document_highlight
     Lwt.return ((), LspProt.LspFromServer (Some response), metadata)
   | Error reason -> mk_lsp_error_response ~ret:() ~id:(Some id) ~reason metadata
 
+(* This tries to simulate the logic from elsewhere which determines whether we would report
+ * errors for a given file. The criteria are
+ *
+ * 1) The file must be either implicitly included (be in the same dir structure as .flowconfig)
+ *    or explicitly included
+ * 2) The file must not be ignored
+ * 3) The file path must be a Flow file (e.g foo.js and not foo.php or foo/)
+ * 4) The file must either have `// @flow` or all=true must be set in the .flowconfig or CLI
+ *)
+let check_that_we_care_about_this_file =
+  let check_file_not_ignored ~file_options ~env ~file_path () =
+    if Files.wanted ~options:file_options env.ServerEnv.libs file_path then
+      Ok ()
+    else
+      Error "File is ignored"
+  in
+  let check_file_included ~options ~file_options ~file_path () =
+    let file_is_implicitly_included =
+      let root_str = spf "%s%s" (Path.to_string (Options.root options)) Filename.dir_sep in
+      String_utils.string_starts_with file_path root_str
+    in
+    if file_is_implicitly_included then
+      Ok ()
+    else if Files.is_included file_options file_path then
+      Ok ()
+    else
+      Error "File is not implicitly or explicitly included"
+  in
+  let check_is_flow_file ~file_options ~file_path () =
+    if Files.is_flow_file ~options:file_options file_path then
+      Ok ()
+    else
+      Error "File is not a Flow file"
+  in
+  let check_flow_pragma ~options ~content ~file_path () =
+    if Options.all options then
+      Ok ()
+    else
+      let (_, docblock) =
+        Parsing_service_js.(
+          parse_docblock docblock_max_tokens (File_key.SourceFile file_path) content)
+      in
+      if Docblock.is_flow docblock then
+        Ok ()
+      else
+        Error "File is missing @flow pragma and `all` is not set to `true`"
+  in
+  fun ~options ~env ~file_path ~content ->
+    let file_path = Files.imaginary_realpath file_path in
+    let file_options = Options.file_options options in
+    Ok ()
+    >>= check_file_not_ignored ~file_options ~env ~file_path
+    >>= check_file_included ~options ~file_options ~file_path
+    >>= check_is_flow_file ~file_options ~file_path
+    >>= check_flow_pragma ~options ~content ~file_path
+
 let handle_persistent_coverage ~options ~id ~params ~file ~metadata ~client ~profiling ~env =
   let textDocument = params.TypeCoverage.textDocument in
   let file =
@@ -1708,20 +1782,21 @@ let handle_persistent_coverage ~options ~id ~params ~file ~metadata ~client ~pro
       Flow_lsp_conversions.lsp_DocumentIdentifier_to_flow textDocument ~client
   in
   (* if it isn't a flow file (i.e. lacks a @flow directive) then we won't do anything *)
-  let fkey = File_key.SourceFile (File_input.filename_of_file_input file) in
   let content = File_input.content_of_file_input file in
+  let file_path = File_input.filename_of_file_input file in
   let is_flow =
     match content with
     | Ok content ->
-      let (_, docblock) = Parsing_service_js.(parse_docblock docblock_max_tokens fkey content) in
-      Docblock.is_flow docblock
+      (match check_that_we_care_about_this_file ~options ~env ~file_path ~content with
+      | Ok () -> true
+      | Error _ -> false)
     | Error _ -> false
   in
   let%lwt result =
     if is_flow then
-      let force = false in
-      let type_contents_cache = Some (Persistent_connection.type_contents_cache client) in
       (* 'true' makes it report "unknown" for all exprs in non-flow files *)
+      let force = Options.all options in
+      let type_contents_cache = Some (Persistent_connection.type_contents_cache client) in
       coverage ~options ~env ~profiling ~type_contents_cache ~force ~trust:false file
     else
       Lwt.return (Ok [])
@@ -1865,7 +1940,7 @@ let handle_persistent_rename ~reader ~genv ~id ~params ~metadata ~client ~profil
   let env = !env in
   let edits_to_response (edits : (Loc.t * string) list) =
     (* Extract the path from each edit and convert into a map from file to edits for that file *)
-    let file_to_edits : ((Loc.t * string) list SMap.t, string) result =
+    let file_to_edits : ((Loc.t * string) list UriMap.t, string) result =
       List.fold_left
         begin
           fun map edit ->
@@ -1873,18 +1948,18 @@ let handle_persistent_rename ~reader ~genv ~id ~params ~metadata ~client ~profil
           let (loc, _) = edit in
           let uri = Flow_lsp_conversions.file_key_to_uri Loc.(loc.source) in
           uri >>| fun uri ->
-          let lst = Base.Option.value ~default:[] (SMap.find_opt uri map) in
+          let lst = Base.Option.value ~default:[] (UriMap.find_opt uri map) in
           (* This reverses the list *)
-          SMap.add uri (edit :: lst) map
+          UriMap.add uri (edit :: lst) map
         end
-        (Ok SMap.empty)
+        (Ok UriMap.empty)
         edits
       (* Reverse the lists to restore the original order *)
-      >>| SMap.map List.rev
+      >>| UriMap.map List.rev
     in
     (* Convert all of the edits to LSP edits *)
-    let file_to_textedits : (TextEdit.t list SMap.t, string) result =
-      file_to_edits >>| SMap.map (Base.List.map ~f:Flow_lsp_conversions.flow_edit_to_textedit)
+    let file_to_textedits : (TextEdit.t list UriMap.t, string) result =
+      file_to_edits >>| UriMap.map (Base.List.map ~f:Flow_lsp_conversions.flow_edit_to_textedit)
     in
     let workspace_edit : (WorkspaceEdit.t, string) result =
       file_to_textedits >>| fun file_to_textedits -> { WorkspaceEdit.changes = file_to_textedits }
@@ -1937,62 +2012,6 @@ let handle_persistent_unsupported ?id ~unhandled ~metadata ~client:_ ~profiling:
   let reason = Printf.sprintf "not implemented: %s" (Lsp_fmt.message_name_to_string unhandled) in
   mk_lsp_error_response ~ret:() ~id ~reason metadata
 
-(* This tries to simulate the logic from elsewhere which determines whether we would report
- * errors for a given file. The criteria are
- *
- * 1) The file must be either implicitly included (be in the same dir structure as .flowconfig)
- *    or explicitly included
- * 2) The file must not be ignored
- * 3) The file path must be a Flow file (e.g foo.js and not foo.php or foo/)
- * 4) The file must either have `// @flow` or all=true must be set in the .flowconfig or CLI
- *)
-let check_that_we_care_about_this_file =
-  let check_file_not_ignored ~file_options ~env ~file_path () =
-    if Files.wanted ~options:file_options env.ServerEnv.libs file_path then
-      Ok ()
-    else
-      Error "File is ignored"
-  in
-  let check_file_included ~options ~file_options ~file_path () =
-    let file_is_implicitly_included =
-      let root_str = spf "%s%s" (Path.to_string (Options.root options)) Filename.dir_sep in
-      String_utils.string_starts_with file_path root_str
-    in
-    if file_is_implicitly_included then
-      Ok ()
-    else if Files.is_included file_options file_path then
-      Ok ()
-    else
-      Error "File is not implicitly or explicitly included"
-  in
-  let check_is_flow_file ~file_options ~file_path () =
-    if Files.is_flow_file ~options:file_options file_path then
-      Ok ()
-    else
-      Error "File is not a Flow file"
-  in
-  let check_flow_pragma ~options ~content ~file_path () =
-    if Options.all options then
-      Ok ()
-    else
-      let (_, docblock) =
-        Parsing_service_js.(
-          parse_docblock docblock_max_tokens (File_key.SourceFile file_path) content)
-      in
-      if Docblock.is_flow docblock then
-        Ok ()
-      else
-        Error "File is missing @flow pragma and `all` is not set to `true`"
-  in
-  fun ~options ~env ~file_path ~content ->
-    let file_path = Files.imaginary_realpath file_path in
-    let file_options = Options.file_options options in
-    Ok ()
-    >>= check_file_not_ignored ~file_options ~env ~file_path
-    >>= check_file_included ~options ~file_options ~file_path
-    >>= check_is_flow_file ~file_options ~file_path
-    >>= check_flow_pragma ~options ~content ~file_path
-
 (* What should we do if we get multiple requests for the same URI? Each request wants the most
  * up-to-date live errors, so if we have 10 pending requests then we would want to send the same
  * response to each. And we could do that, but it might have some weird side effects:
@@ -2024,13 +2043,13 @@ let handle_live_errors_request =
                    {
                      live_errors_failure_kind = Canceled_error_response;
                      live_errors_failure_reason = "Subsumed by a later request";
-                     live_errors_failure_uri = Lsp.uri_of_string uri;
+                     live_errors_failure_uri = Lsp.DocumentUri.of_string uri;
                    })),
             metadata )
       else
         (* This is the most recent live errors request we've received for this file. All the
          * older ones have already been responded to or canceled *)
-        let file_path = Lsp_helpers.lsp_uri_to_path (Lsp.uri_of_string uri) in
+        let file_path = Lsp_helpers.lsp_uri_to_path (Lsp.DocumentUri.of_string uri) in
         let%lwt ret =
           match Persistent_connection.get_file client file_path with
           | File_input.FileName _ ->
@@ -2045,7 +2064,7 @@ let handle_live_errors_request =
                          live_errors_failure_kind = Errored_error_response;
                          live_errors_failure_reason =
                            spf "Cannot get live errors for %s: File not open" file_path;
-                         live_errors_failure_uri = Lsp.uri_of_string uri;
+                         live_errors_failure_uri = Lsp.DocumentUri.of_string uri;
                        })),
                 metadata )
           | File_input.FileContent (_, content) ->
@@ -2077,7 +2096,7 @@ let handle_live_errors_request =
                      {
                        LspProt.live_errors;
                        live_warnings;
-                       live_errors_uri = uri |> Lsp.uri_of_string;
+                       live_errors_uri = uri |> Lsp.DocumentUri.of_string;
                      }),
                 metadata )
         in
@@ -2288,7 +2307,7 @@ let get_persistent_handler ~genv ~client_id ~request:(request, metadata) :
     (* We can reject unsupported stuff immediately *)
     Handle_persistent_immediately (handle_persistent_unsupported ?id ~unhandled ~metadata)
   | LiveErrorsRequest uri ->
-    let uri = Lsp.string_of_uri uri in
+    let uri = Lsp.DocumentUri.to_string uri in
     (* We can handle live errors even during a recheck *)
     mk_parallelizable_persistent ~options (handle_live_errors_request ~options ~uri ~metadata)
 

@@ -82,12 +82,12 @@ class visitor ~exact_by_default ~ty_query =
       match prop' with
       | (loc, Method { value = (fn_loc, fn); key }) ->
         (* NOTE here we are indexing the type tables through the location of
-         the entire method. The coverage tables should account for that.
-         Alternatively, we could have used the location of the identifier,
-         that gets logged in the type_info tables. (This would require some
-         deeper unfolding.) For the moment we need both tables, but revisit
-         this if this changes.
-      *)
+           the entire method. The coverage tables should account for that.
+           Alternatively, we could have used the location of the identifier,
+           that gets logged in the type_info tables. (This would require some
+           deeper unfolding.) For the moment we need both tables, but revisit
+           this if this changes.
+        *)
         let key' = this#object_key key in
         let fn' = this#callable_return fn_loc fn in
         if key == key' && fn == fn' then

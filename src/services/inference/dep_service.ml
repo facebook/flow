@@ -63,7 +63,7 @@ open Utils_js
     (sets of) modules and back that compose to give the dependency graph and the
     dependent graph are useful intermediate data structures.
 
-**)
+ **)
 
 (* produce, given files in fileset:
    (1) a dependent (reverse dependency) map for those files:
@@ -73,7 +73,7 @@ open Utils_js
 
    IMPORTANT!!! The only state this function can read is the resolved requires! If you need this
                 function to read any other state, make sure to update the DirectDependentFilesCache!
- *)
+*)
 let calc_direct_dependents_utils ~reader workers fileset root_fileset =
   let open Module_heaps in
   let root_fileset =
@@ -254,11 +254,7 @@ let calc_partial_dependency_graph ~options ~reader workers files ~parsed =
       workers
       ~job:
         (List.fold_left (fun dependency_info file ->
-             let dependencies =
-               match file with
-               | File_key.JsonFile _ -> (FilenameSet.empty, FilenameSet.empty)
-               | _ -> file_dependencies ~options ~audit:Expensive.ok ~reader file
-             in
+             let dependencies = file_dependencies ~options ~audit:Expensive.ok ~reader file in
              FilenameMap.add file dependencies dependency_info))
       ~neutral:FilenameMap.empty
       ~merge:FilenameMap.union

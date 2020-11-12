@@ -3,9 +3,10 @@
  */
 
 
+import type Suite from "flow-dev-tools/src/test/Suite.js";
 import {suite, test} from 'flow-dev-tools/src/test/Tester';
 
-export default suite(({addFile, addFiles, addCode}) => [
+export default (suite(({addFile, addFiles, addCode}) => [
   test('forwards type but not value exports', [
     addFile('./origin.js').noNewErrors(),
     addFile('./forward_only.js').noNewErrors(),
@@ -121,4 +122,4 @@ export default suite(({addFile, addFiles, addCode}) => [
                                  `,
                                ),
   ]),
-]);
+]): Suite);

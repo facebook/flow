@@ -312,7 +312,7 @@ with type t = Impl.t = struct
         node ?comments "DeclareModuleExports" loc [("typeAnnotation", type_annotation annot)]
       | ( loc,
           ExportNamedDeclaration
-            { ExportNamedDeclaration.specifiers; declaration; source; exportKind; comments } ) ->
+            { ExportNamedDeclaration.specifiers; declaration; source; export_kind; comments } ) ->
         begin
           match specifiers with
           | Some (ExportNamedDeclaration.ExportBatchSpecifier (_, None)) ->
@@ -322,7 +322,7 @@ with type t = Impl.t = struct
               loc
               [
                 ("source", option string_literal source);
-                ("exportKind", string (export_kind exportKind));
+                ("exportKind", string (string_of_export_kind export_kind));
               ]
           | _ ->
             node
@@ -333,7 +333,7 @@ with type t = Impl.t = struct
                 ("declaration", option statement declaration);
                 ("specifiers", export_specifiers specifiers);
                 ("source", option string_literal source);
-                ("exportKind", string (export_kind exportKind));
+                ("exportKind", string (string_of_export_kind export_kind));
               ]
         end
       | ( loc,
@@ -352,9 +352,12 @@ with type t = Impl.t = struct
           ?comments
           "ExportDefaultDeclaration"
           loc
-          [("declaration", declaration); ("exportKind", string (export_kind Statement.ExportValue))]
+          [
+            ("declaration", declaration);
+            ("exportKind", string (string_of_export_kind Statement.ExportValue));
+          ]
       | ( loc,
-          ImportDeclaration { ImportDeclaration.specifiers; default; importKind; source; comments }
+          ImportDeclaration { ImportDeclaration.specifiers; default; import_kind; source; comments }
         ) ->
         let specifiers =
           match specifiers with
@@ -372,7 +375,7 @@ with type t = Impl.t = struct
           | None -> specifiers
         in
         let import_kind =
-          match importKind with
+          match import_kind with
           | ImportDeclaration.ImportType -> "type"
           | ImportDeclaration.ImportTypeof -> "typeof"
           | ImportDeclaration.ImportValue -> "value"
@@ -672,8 +675,8 @@ with type t = Impl.t = struct
         loc
         [
           (* estree hasn't come around to the idea that function decls can have
-           optional ids, but acorn, babel, espree and esprima all have, so let's
-           do it too. see https://github.com/estree/estree/issues/98 *)
+             optional ids, but acorn, babel, espree and esprima all have, so let's
+             do it too. see https://github.com/estree/estree/issues/98 *)
           ("id", option identifier id);
           ("params", function_params params);
           ("body", block body);
@@ -832,7 +835,7 @@ with type t = Impl.t = struct
           ("body", object_type ~include_inexact:false body);
           ("extends", array_of_list interface_extends extends);
         ]
-    and export_kind = function
+    and string_of_export_kind = function
       | Statement.ExportType -> "type"
       | Statement.ExportValue -> "value"
     and export_specifiers =
@@ -843,7 +846,7 @@ with type t = Impl.t = struct
         array [node "ExportNamespaceSpecifier" loc [("exported", identifier name)]]
       | Some (ExportBatchSpecifier (_, None)) ->
         (* this should've been handled by callers, since this represents an
-             ExportAllDeclaration, not a specifier. *)
+           ExportAllDeclaration, not a specifier. *)
         array []
       | None -> array []
     and declare_type_alias (loc, { Statement.TypeAlias.id; tparams; right; comments }) =
@@ -887,7 +890,7 @@ with type t = Impl.t = struct
     and class_declaration ast = class_helper "ClassDeclaration" ast
     and class_expression ast = class_helper "ClassExpression" ast
     and class_helper
-        node_type (loc, { Class.id; extends; body; tparams; implements; classDecorators; comments })
+        node_type (loc, { Class.id; extends; body; tparams; implements; class_decorators; comments })
         =
       let (super, super_targs, comments) =
         match extends with
@@ -908,15 +911,15 @@ with type t = Impl.t = struct
         loc
         [
           (* estree hasn't come around to the idea that class decls can have
-           optional ids, but acorn, babel, espree and esprima all have, so let's
-           do it too. see https://github.com/estree/estree/issues/98 *)
+             optional ids, but acorn, babel, espree and esprima all have, so let's
+             do it too. see https://github.com/estree/estree/issues/98 *)
           ("id", option identifier id);
           ("body", class_body body);
           ("typeParameters", option type_parameter_declaration tparams);
           ("superClass", option expression super);
           ("superTypeParameters", option type_args super_targs);
           ("implements", implements);
-          ("decorators", array_of_list class_decorator classDecorators);
+          ("decorators", array_of_list class_decorator class_decorators);
         ]
     and class_decorator (loc, { Class.Decorator.expression = expr; comments }) =
       node ?comments "Decorator" loc [("expression", expression expr)]
@@ -1032,7 +1035,8 @@ with type t = Impl.t = struct
       let open Statement.EnumDeclaration in
       let enum_body =
         match body with
-        | (loc, BooleanBody { BooleanBody.members; explicitType; comments }) ->
+        | (loc, BooleanBody { BooleanBody.members; explicit_type; has_unknown_members; comments })
+          ->
           node
             ?comments
             "EnumBooleanBody"
@@ -1047,9 +1051,10 @@ with type t = Impl.t = struct
                          } ) ->
                     node "EnumBooleanMember" loc [("id", identifier id); ("init", bool value)])
                   members );
-              ("explicitType", bool explicitType);
+              ("explicitType", bool explicit_type);
+              ("hasUnknownMembers", bool has_unknown_members);
             ]
-        | (loc, NumberBody { NumberBody.members; explicitType; comments }) ->
+        | (loc, NumberBody { NumberBody.members; explicit_type; has_unknown_members; comments }) ->
           node
             ?comments
             "EnumNumberBody"
@@ -1063,9 +1068,10 @@ with type t = Impl.t = struct
                       loc
                       [("id", identifier id); ("init", number_literal init)])
                   members );
-              ("explicitType", bool explicitType);
+              ("explicitType", bool explicit_type);
+              ("hasUnknownMembers", bool has_unknown_members);
             ]
-        | (loc, StringBody { StringBody.members; explicitType; comments }) ->
+        | (loc, StringBody { StringBody.members; explicit_type; has_unknown_members; comments }) ->
           let members =
             match members with
             | StringBody.Defaulted defaulted_members ->
@@ -1083,8 +1089,12 @@ with type t = Impl.t = struct
             ?comments
             "EnumStringBody"
             loc
-            [("members", array members); ("explicitType", bool explicitType)]
-        | (loc, SymbolBody { SymbolBody.members; comments }) ->
+            [
+              ("members", array members);
+              ("explicitType", bool explicit_type);
+              ("hasUnknownMembers", bool has_unknown_members);
+            ]
+        | (loc, SymbolBody { SymbolBody.members; has_unknown_members; comments }) ->
           node
             ?comments
             "EnumSymbolBody"
@@ -1095,6 +1105,7 @@ with type t = Impl.t = struct
                   (fun (loc, { DefaultedMember.id }) ->
                     node "EnumDefaultedMember" loc [("id", identifier id)])
                   members );
+              ("hasUnknownMembers", bool has_unknown_members);
             ]
       in
       node ?comments "EnumDeclaration" loc [("id", identifier id); ("body", enum_body)]
@@ -1144,6 +1155,12 @@ with type t = Impl.t = struct
       | Some default ->
         node "AssignmentPattern" loc [("left", pattern argument); ("right", expression default)]
       | None -> pattern argument
+    and this_param (loc, { Function.ThisParam.annot; comments }) =
+      node
+        ?comments
+        "Identifier"
+        loc
+        [("name", string "this"); ("typeAnnotation", type_annotation annot)]
     and function_params =
       let open Ast.Function.Params in
       function
@@ -1152,12 +1169,25 @@ with type t = Impl.t = struct
             params;
             rest = Some (rest_loc, { Function.RestParam.argument; comments });
             comments = _;
+            this_;
           } ) ->
         let rest = node ?comments "RestElement" rest_loc [("argument", pattern argument)] in
         let rev_params = List.rev_map function_param params in
         let params = List.rev (rest :: rev_params) in
+        let params =
+          match this_ with
+          | Some this -> this_param this :: params
+          | None -> params
+        in
         array params
-      | (_, { params; rest = None; comments = _ }) -> array_of_list function_param params
+      | (_, { params; rest = None; this_; comments = _ }) ->
+        let params = List.map function_param params in
+        let params =
+          match this_ with
+          | Some this -> this_param this :: params
+          | None -> params
+        in
+        array params
     and rest_element loc { Pattern.RestElement.argument; comments } =
       node ?comments "RestElement" loc [("argument", pattern argument)]
     and array_pattern_element =
@@ -1371,7 +1401,7 @@ with type t = Impl.t = struct
         ( loc,
           {
             Type.Function.params =
-              (_, { Type.Function.Params.params; rest; comments = params_comments });
+              (_, { Type.Function.Params.this_; params; rest; comments = params_comments });
             return;
             tparams;
             comments = func_comments;
@@ -1387,6 +1417,7 @@ with type t = Impl.t = struct
         loc
         [
           ("params", array_of_list function_type_param params);
+          ("this", option function_type_this_constraint this_);
           ("returnType", _type return);
           ("rest", option function_type_rest rest);
           ("typeParameters", option type_parameter_declaration tparams);
@@ -1407,9 +1438,18 @@ with type t = Impl.t = struct
          coordinated with Babel, ast-types, etc. so keeping the status quo for
          now. Here's an example: *)
       (* node "FunctionTypeRestParam" loc [
-        "argument", function_type_param argument;
-      ] *)
+         "argument", function_type_param argument;
+       ] *)
       function_type_param ?comments argument
+    and function_type_this_constraint (loc, { Type.Function.ThisParam.annot = (_, annot); comments })
+        =
+      node
+        ?comments
+        "FunctionTypeParam"
+        loc
+        [
+          ("name", option identifier None); ("typeAnnotation", _type annot); ("optional", bool false);
+        ]
     and object_type ~include_inexact (loc, { Type.Object.properties; exact; inexact; comments }) =
       Type.Object.(
         let (props, ixs, calls, slots) =
@@ -1616,7 +1656,7 @@ with type t = Impl.t = struct
         loc
         [
           (* we track the location of the name, but don't expose it here for
-           backwards-compatibility. TODO: change this? *)
+             backwards-compatibility. TODO: change this? *)
           ("name", string name);
           ("bound", hint type_annotation bound);
           ("variance", option variance tp_var);
@@ -1647,21 +1687,21 @@ with type t = Impl.t = struct
               comments;
             } )
     and jsx_element
-        (loc, { JSX.openingElement; closingElement; children = (_loc, children); comments }) =
+        (loc, { JSX.opening_element; closing_element; children = (_loc, children); comments }) =
       node
         ?comments
         "JSXElement"
         loc
         [
-          ("openingElement", jsx_opening openingElement);
-          ("closingElement", option jsx_closing closingElement);
+          ("openingElement", jsx_opening opening_element);
+          ("closingElement", option jsx_closing closing_element);
           ("children", array_of_list jsx_child children);
         ]
     and jsx_fragment
         ( loc,
           {
-            JSX.frag_openingElement;
-            frag_closingElement;
+            JSX.frag_opening_element;
+            frag_closing_element;
             frag_children = (_loc, frag_children);
             frag_comments;
           } ) =
@@ -1670,18 +1710,18 @@ with type t = Impl.t = struct
         "JSXFragment"
         loc
         [
-          ("openingFragment", jsx_opening_fragment frag_openingElement);
+          ("openingFragment", jsx_opening_fragment frag_opening_element);
           ("children", array_of_list jsx_child frag_children);
-          ("closingFragment", jsx_closing_fragment frag_closingElement);
+          ("closingFragment", jsx_closing_fragment frag_closing_element);
         ]
-    and jsx_opening (loc, { JSX.Opening.name; attributes; selfClosing }) =
+    and jsx_opening (loc, { JSX.Opening.name; attributes; self_closing }) =
       node
         "JSXOpeningElement"
         loc
         [
           ("name", jsx_name name);
           ("attributes", array_of_list jsx_opening_attribute attributes);
-          ("selfClosing", bool selfClosing);
+          ("selfClosing", bool self_closing);
         ]
     and jsx_opening_fragment loc = node "JSXOpeningFragment" loc []
     and jsx_opening_attribute =

@@ -119,3 +119,12 @@ function arr0(x: mixed) {
     takesString(x[0]); // error
   }
 }
+
+const loop = (condition: boolean) => {
+  let node = (42: mixed);
+  while (condition) {
+    if (Array.isArray(node)) {
+      node = node[0];
+    }
+  }
+};

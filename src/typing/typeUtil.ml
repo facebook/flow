@@ -26,6 +26,7 @@ let rec reason_of_t = function
   | EvalT (_, defer_use_t, _) -> reason_of_defer_use_t defer_use_t
   | ExactT (reason, _) -> reason
   | ExistsT reason -> reason
+  | GenericT { reason; _ } -> reason
   | InternalT (ExtendsT (reason, _, _)) -> reason
   | FunProtoT reason -> reason
   | FunProtoApplyT reason -> reason
@@ -41,7 +42,7 @@ let rec reason_of_t = function
   | ReposT (reason, _) -> reason
   | InternalT (ReposUpperT (reason, _)) -> reason (* HUH? cf. mod_reason below *)
   | ShapeT (reason, _) -> reason
-  | ThisClassT (reason, _) -> reason
+  | ThisClassT (reason, _, _) -> reason
   | ThisTypeAppT (reason, _, _, _) -> reason
   | TypeAppT (reason, _, _, _) -> reason
   | AnyT (reason, _) -> reason
@@ -97,7 +98,7 @@ and reason_of_use_t = function
   | GetPrivatePropT (_, reason, _, _, _, _) -> reason
   | GetProtoT (reason, _) -> reason
   | GetStaticsT (reason, _) -> reason
-  | GuardT (_, _, t) -> reason_of_t t
+  | GuardT (_, _, (r, _)) -> r
   | HasOwnPropT (_, reason, _) -> reason
   | IdxUnMaybeifyT (reason, _) -> reason
   | IdxUnwrap (reason, _) -> reason
@@ -118,20 +119,19 @@ and reason_of_use_t = function
   | NullishCoalesceT (reason, _, _) -> reason
   | ObjAssignToT (_, reason, _, _, _) -> reason
   | ObjAssignFromT (_, reason, _, _, _) -> reason
-  | ObjFreezeT (reason, _) -> reason
-  | ObjRestT (reason, _, _) -> reason
+  | ObjRestT (reason, _, _, _) -> reason
   | ObjSealT (reason, _) -> reason
   | ObjTestProtoT (reason, _) -> reason
   | ObjTestT (reason, _, _) -> reason
   | OptionalChainT (reason, _, _, _, _) -> reason
   | OrT (reason, _, _) -> reason
-  | PredicateT (_, t) -> reason_of_t t
+  | PredicateT (_, (reason, _)) -> reason
   | ReactKitT (_, reason, _) -> reason
   | RefineT (reason, _, _) -> reason
   | ReposLowerT (reason, _, _) -> reason
   | ReposUseT (reason, _, _, _) -> reason
   | ResolveSpreadT (_, reason, _) -> reason
-  | SentinelPropTestT (_, _, _, _, _, result) -> reason_of_t result
+  | SentinelPropTestT (_, _, _, _, _, (reason, _)) -> reason
   | SetElemT (_, reason, _, _, _, _) -> reason
   | SetPropT (_, reason, _, _, _, _, _) -> reason
   | SetPrivatePropT (_, reason, _, _, _, _, _, _) -> reason
@@ -156,9 +156,10 @@ and reason_of_use_t = function
   | CondT (reason, _, _, _) -> reason
   | MatchPropT (_, reason, _, _) -> reason
   | ReactPropsToOut (reason, _)
-  | ReactInToProps (reason, _) ->
+  | ReactInToProps (reason, _)
+  | SealGenericT { reason; _ } ->
     reason
-  | DestructuringT (reason, _, _, _) -> reason
+  | DestructuringT (reason, _, _, _, _) -> reason
   | CreateObjWithComputedPropT { reason; value = _; tout_tvar = _ } -> reason
   | ResolveUnionT { reason; _ } -> reason
 
@@ -169,8 +170,8 @@ and reason_of_use_t = function
 let reason_of_t_add_id = reason_of_t
 
 (* function
-| OpenT (r, id) -> prefix_reason (spf "%d: " id) r
-| t -> reason_of_t t *)
+   | OpenT (r, id) -> prefix_reason (spf "%d: " id) r
+   | t -> reason_of_t t *)
 let reason_of_use_t_add_id = reason_of_use_t
 
 let desc_of_t = reason_of_t %> desc_of_reason
@@ -198,6 +199,7 @@ let rec mod_reason_of_t f = function
   | EvalT (t, defer_use_t, id) -> EvalT (t, mod_reason_of_defer_use_t f defer_use_t, id)
   | ExactT (reason, t) -> ExactT (f reason, t)
   | ExistsT reason -> ExistsT (f reason)
+  | GenericT ({ reason; _ } as generic) -> GenericT { generic with reason = f reason }
   | InternalT (ExtendsT (reason, t1, t2)) -> InternalT (ExtendsT (f reason, t1, t2))
   | FunProtoApplyT reason -> FunProtoApplyT (f reason)
   | FunProtoT reason -> FunProtoT (f reason)
@@ -214,7 +216,7 @@ let rec mod_reason_of_t f = function
   | ReposT (reason, t) -> ReposT (f reason, t)
   | InternalT (ReposUpperT (reason, t)) -> InternalT (ReposUpperT (reason, mod_reason_of_t f t))
   | ShapeT (reason, t) -> ShapeT (f reason, t)
-  | ThisClassT (reason, t) -> ThisClassT (f reason, t)
+  | ThisClassT (reason, t, is_this) -> ThisClassT (f reason, t, is_this)
   | ThisTypeAppT (reason, t1, t2, t3) -> ThisTypeAppT (f reason, t1, t2, t3)
   | TypeAppT (reason, t1, t2, t3) -> TypeAppT (f reason, t1, t2, t3)
 
@@ -255,8 +257,8 @@ and mod_reason_of_use_t f = function
   | ElemT (use_op, reason, t, action) -> ElemT (use_op, f reason, t, action)
   | EnumCastT { use_op; enum = (reason, trust, enum) } ->
     EnumCastT { use_op; enum = (f reason, trust, enum) }
-  | EnumExhaustiveCheckT { reason; check; incomplete_out } ->
-    EnumExhaustiveCheckT { reason = f reason; check; incomplete_out }
+  | EnumExhaustiveCheckT { reason; check; incomplete_out; discriminant_after_check } ->
+    EnumExhaustiveCheckT { reason = f reason; check; incomplete_out; discriminant_after_check }
   | EqT ({ reason; _ } as x) -> EqT { x with reason = f reason }
   | ExportNamedT (reason, tmap, export_kind, t_out) ->
     ExportNamedT (f reason, tmap, export_kind, t_out)
@@ -274,7 +276,7 @@ and mod_reason_of_use_t f = function
     GetPrivatePropT (use_op, f reason, name, bindings, static, t)
   | GetProtoT (reason, t) -> GetProtoT (f reason, t)
   | GetStaticsT (reason, t) -> GetStaticsT (f reason, t)
-  | GuardT (pred, result, t) -> GuardT (pred, result, mod_reason_of_t f t)
+  | GuardT (pred, result, (reason, tvar)) -> GuardT (pred, result, (f reason, tvar))
   | HasOwnPropT (use_op, reason, prop) -> HasOwnPropT (use_op, f reason, prop)
   | IdxUnMaybeifyT (reason, t_out) -> IdxUnMaybeifyT (f reason, t_out)
   | IdxUnwrap (reason, t_out) -> IdxUnwrap (f reason, t_out)
@@ -299,22 +301,22 @@ and mod_reason_of_use_t f = function
   | NullishCoalesceT (reason, t1, t2) -> NullishCoalesceT (f reason, t1, t2)
   | ObjAssignToT (op, reason, t, t2, kind) -> ObjAssignToT (op, f reason, t, t2, kind)
   | ObjAssignFromT (op, reason, t, t2, kind) -> ObjAssignFromT (op, f reason, t, t2, kind)
-  | ObjFreezeT (reason, t) -> ObjFreezeT (f reason, t)
-  | ObjRestT (reason, t, t2) -> ObjRestT (f reason, t, t2)
+  | ObjRestT (reason, t, t2, id) -> ObjRestT (f reason, t, t2, id)
   | ObjSealT (reason, t) -> ObjSealT (f reason, t)
   | ObjTestProtoT (reason, t) -> ObjTestProtoT (f reason, t)
   | ObjTestT (reason, t1, t2) -> ObjTestT (f reason, t1, t2)
   | OptionalChainT (reason, lhs_reason, this, us, vs) ->
     OptionalChainT (f reason, lhs_reason, this, us, vs)
   | OrT (reason, t1, t2) -> OrT (f reason, t1, t2)
-  | PredicateT (pred, t) -> PredicateT (pred, mod_reason_of_t f t)
+  | PredicateT (pred, (reason, t)) -> PredicateT (pred, (f reason, t))
   | ReactKitT (use_op, reason, tool) -> ReactKitT (use_op, f reason, tool)
   | RefineT (reason, p, t) -> RefineT (f reason, p, t)
   | ReposLowerT (reason, use_desc, t) -> ReposLowerT (f reason, use_desc, t)
   | ReposUseT (reason, use_desc, use_op, t) -> ReposUseT (f reason, use_desc, use_op, t)
   | ResolveSpreadT (use_op, reason_op, resolve) -> ResolveSpreadT (use_op, f reason_op, resolve)
-  | SentinelPropTestT (reason_op, l, key, sense, sentinel, result) ->
-    SentinelPropTestT (reason_op, l, key, sense, sentinel, mod_reason_of_t f result)
+  | SealGenericT ({ reason; _ } as generic) -> SealGenericT { generic with reason = f reason }
+  | SentinelPropTestT (reason_op, l, key, sense, sentinel, (reason, result)) ->
+    SentinelPropTestT (reason_op, l, key, sense, sentinel, (f reason, result))
   | SetElemT (use_op, reason, it, mode, et, t) -> SetElemT (use_op, f reason, it, mode, et, t)
   | SetPropT (use_op, reason, n, mode, i, t, tp) -> SetPropT (use_op, f reason, n, mode, i, t, tp)
   | SetPrivatePropT (use_op, reason, n, mode, scopes, static, t, tp) ->
@@ -347,7 +349,7 @@ and mod_reason_of_use_t f = function
   | MatchPropT (op, reason, prop, t) -> MatchPropT (op, f reason, prop, t)
   | ReactPropsToOut (reason, t) -> ReactPropsToOut (f reason, t)
   | ReactInToProps (reason, t) -> ReactInToProps (f reason, t)
-  | DestructuringT (reason, a, s, t) -> DestructuringT (f reason, a, s, t)
+  | DestructuringT (reason, a, s, t, id) -> DestructuringT (f reason, a, s, t, id)
   | CreateObjWithComputedPropT { reason; value; tout_tvar } ->
     CreateObjWithComputedPropT { reason = f reason; value; tout_tvar }
   | ResolveUnionT { reason; resolved; unresolved; upper; id } ->
@@ -443,8 +445,7 @@ let rec util_use_op_of_use_t :
   | ThisSpecializeT (_, _, _)
   | VarianceCheckT (_, _, _, _)
   | LookupT _
-  | ObjFreezeT (_, _)
-  | ObjRestT (_, _, _)
+  | ObjRestT (_, _, _, _)
   | ObjSealT (_, _)
   | ObjTestProtoT (_, _)
   | ObjTestT (_, _, _)
@@ -484,7 +485,8 @@ let rec util_use_op_of_use_t :
   | ModuleExportsAssignT _
   | CreateObjWithComputedPropT _
   | ResolveUnionT _
-  | EnumExhaustiveCheckT _ ->
+  | EnumExhaustiveCheckT _
+  | SealGenericT _ ->
     nope u
 
 let use_op_of_use_t = util_use_op_of_use_t (fun _ -> None) (fun _ op _ -> Some op)
@@ -649,7 +651,7 @@ let boolean_literal_eq x = function
 
 let trust_subtype_fixed tr1 tr2 =
   match (Trust.expand tr1, Trust.expand tr2) with
-  | (Trust.Qualifier trust1, Trust.Qualifier trust2) -> Trust.subtype_trust trust1 trust2
+  | (Trust.QualifiedTrust trust1, Trust.QualifiedTrust trust2) -> Trust.subtype_trust trust1 trust2
   | _ -> false
 
 let quick_subtype trust_checked t1 t2 =
@@ -679,6 +681,8 @@ let quick_subtype trust_checked t1 t2 =
     | (DefT (_, ltrust, BoolT actual), DefT (_, rtrust, SingletonBoolT expected)) ->
       ((not trust_checked) || trust_subtype_fixed ltrust rtrust)
       && boolean_literal_eq expected actual
+    | (DefT (_, _, ObjT { flags = { obj_kind = Exact; _ }; _ }), ExactT (_, t2')) ->
+      reasonless_eq t1 t2'
     | _ -> reasonless_eq t1 t2)
 
 let reason_of_propref = function
@@ -727,9 +731,9 @@ let class_type ?(structural = false) ?annot_loc t =
   in
   DefT (reason, bogus_trust (), ClassT t)
 
-let this_class_type t =
+let this_class_type t is_this =
   let reason = update_desc_new_reason (fun desc -> RClass desc) (reason_of_t t) in
-  ThisClassT (reason, t)
+  ThisClassT (reason, t, is_this)
 
 let extends_type r l u =
   let reason = update_desc_reason (fun desc -> RExtends desc) r in
@@ -837,3 +841,13 @@ let pred_map_implies p1 p2 =
       | None -> false
       | Some v1 -> eq_predicate (v1, v2))
     p2
+
+let type_t_of_annotated_or_inferred (x : Type.annotated_or_inferred) =
+  match x with
+  | Inferred t
+  | Annotated t ->
+    t
+
+let map_annotated_or_inferred f = function
+  | Inferred t -> Inferred (f t)
+  | Annotated t -> Annotated (f t)

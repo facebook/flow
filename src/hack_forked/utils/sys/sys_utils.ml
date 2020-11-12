@@ -204,7 +204,7 @@ let logname_impl () =
   | Some user -> user
   | None ->
     (* If this function is generally useful, it can be lifted to toplevel
-         in this file, but this is the only place we need it for now. *)
+       in this file, but this is the only place we need it for now. *)
     let exec_try_read cmd =
       let ic = Unix.open_process_in cmd in
       let out = (try Some (input_line ic) with End_of_file -> None) in

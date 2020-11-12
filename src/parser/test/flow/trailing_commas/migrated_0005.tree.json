@@ -56,6 +56,7 @@
             },
             "computed":false
           },
+          "typeArguments":null,
           "arguments":[
             {
               "type":"Identifier",

@@ -7,6 +7,5 @@
 [lints]
 
 [options]
-types_first=true
 
 [strict]

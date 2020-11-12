@@ -27,9 +27,9 @@ import typeof {BeepObj} from './nonexistent.js';
 import typeof BoopObj from './nonexistent.js';
 
 /* Suppressed Imports */
-/* flowlint untyped-type-import:off */
-
+/* $FlowFixMe[untyped-type-import] */
 import type {WhizType} from './untyped_exports.js'; //Error; Suppressed
+/* $FlowFixMe[untyped-type-import] */
 import typeof {WhizObj} from './untyped_exports.js'; //Error; Suppressed
-
+/* $FlowFixMe[untyped-type-import] */
 import typeof BangObj from './untyped_exports.js'; //Error; Suppressed

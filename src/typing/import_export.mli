@@ -19,8 +19,6 @@ val nameify_default_export_decl :
   ('M, 'M) Flow_ast.Statement.t ->
   ('M, 'M) Flow_ast.Statement.t * (('N, 'U) Flow_ast.Statement.t -> ('N, 'U) Flow_ast.Statement.t)
 
-val warn_or_ignore_export_star_as : Context.t -> (ALoc.t * 'a) option -> unit
-
 val get_module_exports : Context.t -> ALoc.t -> Type.t
 
 val set_module_exports : Context.t -> ALoc.t -> Type.t -> unit

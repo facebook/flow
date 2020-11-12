@@ -56,7 +56,7 @@ val get_message :
 (* 'respond to_this with_that' is for replying to a JsonRPC request. It will send either *)
 (* a response or an error depending on whether 'with_that' has an error id in it.        *)
 (* [powered_by] is our own non-standard extension to JsonRPC, which lets the
-client know which back-end served the request. *)
+   client know which back-end served the request. *)
 val respond : writer -> ?powered_by:string -> message -> Hh_json.json -> unit
 
 (* notify/request are for initiating JsonRPC messages *)

@@ -18,8 +18,11 @@ type 'a change' =
       leading_separator: bool;
     }
   | Delete of 'a
+[@@deriving show]
 
-type 'a change = Loc.t * 'a change'
+type 'a change = Loc.t * 'a change' [@@deriving show]
+
+type 'a changes = 'a change list [@@deriving show]
 
 type diff_algorithm =
   | Trivial
@@ -50,15 +53,17 @@ let change_compare (pos1, chg1) (pos2, chg2) =
 let trivial_list_diff (old_list : 'a list) (new_list : 'a list) : 'a diff_result list option =
   (* inspect the lists pairwise and record any items which are different as replacements. Give up if
    * the lists have different lengths.*)
-  let rec helper i lst1 lst2 =
+  let rec helper acc i lst1 lst2 =
     match (lst1, lst2) with
-    | ([], []) -> Some []
+    | ([], []) -> Some (List.rev acc)
     | (hd1 :: tl1, hd2 :: tl2) ->
-      let rest = helper (i + 1) tl1 tl2 in
-      if hd1 != hd2 then
-        Base.Option.map rest ~f:(List.cons (i, Replace (hd1, hd2)))
-      else
-        rest
+      let acc =
+        if hd1 != hd2 then
+          (i, Replace (hd1, hd2)) :: acc
+        else
+          acc
+      in
+      (helper [@tailcall]) acc (i + 1) tl1 tl2
     | (_, [])
     | ([], _) ->
       None
@@ -66,7 +71,7 @@ let trivial_list_diff (old_list : 'a list) (new_list : 'a list) : 'a diff_result
   if old_list == new_list then
     Some []
   else
-    helper 0 old_list new_list
+    helper [] 0 old_list new_list
 
 (* diffs based on http://www.xmailserver.org/diff2.pdf on page 6 *)
 let standard_list_diff (old_list : 'a list) (new_list : 'a list) : 'a diff_result list option =
@@ -99,7 +104,7 @@ let standard_list_diff (old_list : 'a list) (new_list : 'a list) : 'a diff_resul
             let (x_old, y_old, advance_in_old_list) = follow_snake (x + 1) y trace in
             let (x_new, y_new, advance_in_new_list) = follow_snake x (y + 1) trace in
             (* if we have already visited this location, there is a shorter path to it, so we don't
-           store this trace *)
+               store this trace *)
             let () =
               if Hashtbl.mem visited (x_old, y_old) |> not then
                 let () = Queue.add (x_old, y_old) new_frontier in
@@ -138,7 +143,7 @@ let standard_list_diff (old_list : 'a list) (new_list : 'a list) : 'a diff_resul
         script
       else
         (* The algorithm treats the trace as though (-1,-1) were the (-1)th match point
-         in the list and (n,m) were the (len+1)th *)
+           in the list and (n,m) were the (len+1)th *)
         let first =
           if k = -1 then
             0
@@ -229,6 +234,7 @@ type node =
   | TemplateLiteral of Loc.t * (Loc.t, Loc.t) Ast.Expression.TemplateLiteral.t
   | JSXChild of (Loc.t, Loc.t) Ast.JSX.child
   | JSXIdentifier of (Loc.t, Loc.t) Ast.JSX.Identifier.t
+[@@deriving show]
 
 let expand_loc_with_comments loc node =
   let open Comment_attachment in
@@ -333,7 +339,7 @@ let _diff_if_changed_opt_arg f opt1 opt2 : node change list option =
   | _ -> f opt1 opt2
 
 (* This is needed if the function for the given node returns a node change
-* list instead of a node change list option (for instance, expression) *)
+ * list instead of a node change list option (for instance, expression) *)
 let diff_if_changed_nonopt_fn f opt1 opt2 : node change list option =
   match (opt1, opt2) with
   | (Some x1, Some x2) ->
@@ -395,24 +401,24 @@ let partition_imports (stmts : (Loc.t, Loc.t) Ast.Statement.t list) =
   partition_import_helper stmts ([], [])
 
 (* Outline:
-* - There is a function for every AST node that we want to be able to recurse into.
-* - Each function for an AST node represented in the `node` type above should return a list of
-*   changes.
-*   - If it cannot compute a more granular diff, it should return a list with a single element,
-*     which records the replacement of `old_node` with `new_node` (where `old_node` and
-*     `new_node` are the arguments passed to that function)
-* - Every other function should do the same, except if it is unable to return a granular diff, it
-*   should return `None` to indicate that its parent must be recorded as a replacement. This is
-*   because there is no way to record a replacement for a node which does not appear in the
-*   `node` type above.
-* - We can add additional functions as needed to improve the granularity of the diffs.
-* - We could eventually reach a point where no function would ever fail to generate a diff. That
-*   would require us to implement a function here for every AST node, and add a variant to the
-*   `node` type for every AST node as well. It would also likely require some tweaks to the AST.
-*   For example, a function return type is optional. If it is None, it has no location attached.
-*   What would we do if the original tree had no annotation, but the new tree did have one? We
-*   would not know what Loc.t to give to the insertion.
-*)
+ * - There is a function for every AST node that we want to be able to recurse into.
+ * - Each function for an AST node represented in the `node` type above should return a list of
+ *   changes.
+ *   - If it cannot compute a more granular diff, it should return a list with a single element,
+ *     which records the replacement of `old_node` with `new_node` (where `old_node` and
+ *     `new_node` are the arguments passed to that function)
+ * - Every other function should do the same, except if it is unable to return a granular diff, it
+ *   should return `None` to indicate that its parent must be recorded as a replacement. This is
+ *   because there is no way to record a replacement for a node which does not appear in the
+ *   `node` type above.
+ * - We can add additional functions as needed to improve the granularity of the diffs.
+ * - We could eventually reach a point where no function would ever fail to generate a diff. That
+ *   would require us to implement a function here for every AST node, and add a variant to the
+ *   `node` type for every AST node as well. It would also likely require some tweaks to the AST.
+ *   For example, a function return type is optional. If it is None, it has no location attached.
+ *   What would we do if the original tree had no annotation, but the new tree did have one? We
+ *   would not know what Loc.t to give to the insertion.
+ *)
 (* Entry point *)
 let program
     (algo : diff_algorithm)
@@ -440,35 +446,33 @@ let program
       (old_list : a list)
       (index_offset : int)
       (diffs : a diff_result list) : b change list option =
-    Base.Option.(
-      let recurse_into_change = function
-        | (_, Replace (x1, x2)) -> f x1 x2
-        | (index, Insert { items = lst; separator; leading_separator }) ->
-          let index = index + index_offset in
-          let loc =
-            if List.length old_list = 0 then
-              None
-            else if
-              (* To insert at the start of the list, insert before the first element *)
-              index = -1
-            then
-              List.hd old_list |> trivial >>| fst >>| Loc.start_loc
+    let open Base.Option in
+    let recurse_into_change = function
+      | (_, Replace (x1, x2)) -> f x1 x2
+      | (index, Insert { items = lst; separator; leading_separator }) ->
+        let index = index + index_offset in
+        let loc =
+          if List.length old_list = 0 then
+            None
+          else if index = -1 then
+            (* To insert at the start of the list, insert before the first element *)
+            List.hd old_list |> trivial >>| fst >>| Loc.start_loc
+          else
             (* Otherwise insert it after the current element *)
-            else
-              List.nth old_list index |> trivial >>| fst >>| Loc.end_loc
-          in
-          Base.List.map ~f:trivial lst
-          |> all
-          >>| Base.List.map ~f:snd (* drop the loc *)
-          >>| (fun x -> Insert { items = x; separator; leading_separator })
-          |> both loc
-          >>| Base.List.return
-        | (_, Delete x) -> trivial x >>| (fun (loc, y) -> (loc, Delete y)) >>| Base.List.return
-      in
-      let recurse_into_changes =
-        Base.List.map ~f:recurse_into_change %> all %> map ~f:Base.List.concat
-      in
-      recurse_into_changes diffs)
+            List.nth old_list index |> trivial >>| fst >>| Loc.end_loc
+        in
+        Base.List.map ~f:trivial lst
+        |> all
+        >>| Base.List.map ~f:snd (* drop the loc *)
+        >>| (fun x -> Insert { items = x; separator; leading_separator })
+        |> both loc
+        >>| Base.List.return
+      | (_, Delete x) -> trivial x >>| (fun (loc, y) -> (loc, Delete y)) >>| Base.List.return
+    in
+    let recurse_into_changes =
+      Base.List.map ~f:recurse_into_change %> all %> map ~f:Base.List.concat
+    in
+    recurse_into_changes diffs
   in
   (* Runs `list_diff` and then recurses into replacements (using `f`) to get more granular diffs.
      For inserts and deletes, it uses `trivial` to produce a Loc.t and a b for the change *)
@@ -655,7 +659,7 @@ let program
       declaration = decl1;
       specifiers = specs1;
       source = src1;
-      exportKind = kind1;
+      export_kind = kind1;
       comments = comments1;
     } =
       export1
@@ -664,7 +668,7 @@ let program
       declaration = decl2;
       specifiers = specs2;
       source = src2;
-      exportKind = kind2;
+      export_kind = kind2;
       comments = comments2;
     } =
       export2
@@ -784,7 +788,7 @@ let program
       (import2 : (Loc.t, Loc.t) Ast.Statement.ImportDeclaration.t) : node change list option =
     let open Ast.Statement.ImportDeclaration in
     let {
-      importKind = imprt_knd1;
+      import_kind = imprt_knd1;
       source = src1;
       default = dflt1;
       specifiers = spec1;
@@ -793,7 +797,7 @@ let program
       import1
     in
     let {
-      importKind = imprt_knd2;
+      import_kind = imprt_knd2;
       source = src2;
       default = dflt2;
       specifiers = spec2;
@@ -852,8 +856,8 @@ let program
       let params =
         match (is_arrow, params1, params2, params) with
         | ( true,
-            (l, { Params.params = [_p1]; rest = None; comments = _ }),
-            (_, { Params.params = [_p2]; rest = None; comments = _ }),
+            (l, { Params.params = [_p1]; rest = None; this_ = None; comments = _ }),
+            (_, { Params.params = [_p2]; rest = None; this_ = None; comments = _ }),
             Some [_] ) ->
           (* reprint the parameter if it's the single parameter of a lambda to add () *)
           Some [replace l (Params params1) (Params params2)]
@@ -867,12 +871,24 @@ let program
       (params1 : (Loc.t, Loc.t) Ast.Function.Params.t)
       (params2 : (Loc.t, Loc.t) Ast.Function.Params.t) : node change list option =
     let open Ast.Function.Params in
-    let (loc, { params = param_lst1; rest = rest1; comments = comments1 }) = params1 in
-    let (_, { params = param_lst2; rest = rest2; comments = comments2 }) = params2 in
+    let (loc, { params = param_lst1; rest = rest1; this_ = this1; comments = comments1 }) =
+      params1
+    in
+    let (_, { params = param_lst2; rest = rest2; this_ = this2; comments = comments2 }) = params2 in
     let params_diff = diff_and_recurse_no_trivial function_param param_lst1 param_lst2 in
     let rest_diff = diff_if_changed_opt function_rest_param rest1 rest2 in
+    let this_diff = diff_if_changed_opt function_this_param this1 this2 in
     let comments_diff = syntax_opt loc comments1 comments2 in
-    join_diff_list [params_diff; rest_diff; comments_diff]
+    join_diff_list [params_diff; rest_diff; this_diff; comments_diff]
+  and function_this_param
+      (ftp1 : (Loc.t, Loc.t) Ast.Function.ThisParam.t)
+      (ftp2 : (Loc.t, Loc.t) Ast.Function.ThisParam.t) : node change list option =
+    let open Ast.Function.ThisParam in
+    let (loc, { annot = annot1; comments = comments1 }) = ftp1 in
+    let (_, { annot = annot2; comments = comments2 }) = ftp2 in
+    let annot_diff = Some (diff_if_changed type_annotation annot1 annot2) in
+    let comments_diff = syntax_opt loc comments1 comments2 in
+    join_diff_list [annot_diff; comments_diff]
   and function_param
       (param1 : (Loc.t, Loc.t) Ast.Function.Param.t) (param2 : (Loc.t, Loc.t) Ast.Function.Param.t)
       : node change list option =
@@ -998,7 +1014,7 @@ let program
       tparams = tparams1;
       extends = extends1;
       implements = implements1;
-      classDecorators = classDecorators1;
+      class_decorators = class_decorators1;
       comments = comments1;
     } =
       class1
@@ -1009,7 +1025,7 @@ let program
       tparams = tparams2;
       extends = extends2;
       implements = implements2;
-      classDecorators = classDecorators2;
+      class_decorators = class_decorators2;
       comments = comments2;
     } =
       class2
@@ -1022,7 +1038,7 @@ let program
       let implements_diff = diff_if_changed_opt class_implements implements1 implements2 in
       let body_diff = diff_if_changed_ret_opt class_body body1 body2 in
       let decorators_diff =
-        diff_and_recurse_no_trivial class_decorator classDecorators1 classDecorators2
+        diff_and_recurse_no_trivial class_decorator class_decorators1 class_decorators2
       in
       let comments_diff = syntax_opt loc comments1 comments2 in
       join_diff_list
@@ -1361,16 +1377,16 @@ let program
       (jsx_elem2 : (Loc.t, Loc.t) Ast.JSX.element) : node change list option =
     let open Ast.JSX in
     let {
-      openingElement = open_elem1;
-      closingElement = close_elem1;
+      opening_element = open_elem1;
+      closing_element = close_elem1;
       children = (_, children1);
       comments = comments1;
     } =
       jsx_elem1
     in
     let {
-      openingElement = open_elem2;
-      closingElement = close_elem2;
+      opening_element = open_elem2;
+      closing_element = close_elem2;
       children = (_, children2);
       comments = comments2;
     } =
@@ -1389,17 +1405,17 @@ let program
     (* Opening and closing elements contain no information besides loc, so we
      * ignore them for the diff *)
     let {
-      frag_openingElement = _;
+      frag_opening_element = _;
       frag_children = (_, children1);
-      frag_closingElement = _;
+      frag_closing_element = _;
       frag_comments = frag_comments1;
     } =
       frag1
     in
     let {
-      frag_openingElement = _;
+      frag_opening_element = _;
       frag_children = (_, children2);
-      frag_closingElement = _;
+      frag_closing_element = _;
       frag_comments = frag_comments2;
     } =
       frag2
@@ -1411,8 +1427,8 @@ let program
       (elem1 : (Loc.t, Loc.t) Ast.JSX.Opening.t) (elem2 : (Loc.t, Loc.t) Ast.JSX.Opening.t) :
       node change list option =
     let open Ast.JSX.Opening in
-    let (_, { name = name1; selfClosing = self_close1; attributes = attrs1 }) = elem1 in
-    let (_, { name = name2; selfClosing = self_close2; attributes = attrs2 }) = elem2 in
+    let (_, { name = name1; self_closing = self_close1; attributes = attrs1 }) = elem1 in
+    let (_, { name = name2; self_closing = self_close2; attributes = attrs2 }) = elem2 in
     if self_close1 != self_close2 then
       None
     else
@@ -2422,13 +2438,24 @@ let program
     let arg_diff = diff_if_changed_ret_opt function_param_type arg1 arg2 in
     let comments_diff = syntax_opt loc comments1 comments2 in
     join_diff_list [arg_diff; comments_diff]
+  and function_this_constraint_type
+      (ftct1 : (Loc.t, Loc.t) Ast.Type.Function.ThisParam.t)
+      (ftct2 : (Loc.t, Loc.t) Ast.Type.Function.ThisParam.t) : node change list option =
+    let open Ast.Type.Function.ThisParam in
+    let (loc, { annot = annot1; comments = comments1 }) = ftct1 in
+    let (_, { annot = annot2; comments = comments2 }) = ftct2 in
+    let annot_diff = Some (diff_if_changed type_annotation annot1 annot2) in
+    let comments_diff = syntax_opt loc comments1 comments2 in
+    join_diff_list [annot_diff; comments_diff]
   and function_type
       (loc : Loc.t)
       (ft1 : (Loc.t, Loc.t) Ast.Type.Function.t)
       (ft2 : (Loc.t, Loc.t) Ast.Type.Function.t) : node change list option =
     let open Ast.Type.Function in
     let {
-      params = (params_loc, { Params.params = params1; rest = rest1; comments = params_comments1 });
+      params =
+        ( params_loc,
+          { Params.this_ = this1; params = params1; rest = rest1; comments = params_comments1 } );
       return = return1;
       tparams = tparams1;
       comments = func_comments1;
@@ -2436,7 +2463,8 @@ let program
       ft1
     in
     let {
-      params = (_, { Params.params = params2; rest = rest2; comments = params_comments2 });
+      params =
+        (_, { Params.this_ = this2; params = params2; rest = rest2; comments = params_comments2 });
       return = return2;
       tparams = tparams2;
       comments = func_comments2;
@@ -2444,13 +2472,22 @@ let program
       ft2
     in
     let tparams_diff = diff_if_changed_opt type_params tparams1 tparams2 in
+    let this_diff = diff_if_changed_opt function_this_constraint_type this1 this2 in
     let params_diff = diff_and_recurse_no_trivial function_param_type params1 params2 in
     let rest_diff = diff_if_changed_opt function_rest_param_type rest1 rest2 in
     let return_diff = diff_if_changed type_ return1 return2 |> Base.Option.return in
     let func_comments_diff = syntax_opt loc func_comments1 func_comments2 in
     let params_comments_diff = syntax_opt params_loc params_comments1 params_comments2 in
     join_diff_list
-      [tparams_diff; params_diff; rest_diff; return_diff; func_comments_diff; params_comments_diff]
+      [
+        tparams_diff;
+        this_diff;
+        params_diff;
+        rest_diff;
+        return_diff;
+        func_comments_diff;
+        params_comments_diff;
+      ]
   and nullable_type
       (loc : Loc.t)
       (t1 : (Loc.t, Loc.t) Ast.Type.Nullable.t)

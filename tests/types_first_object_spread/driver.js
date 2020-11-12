@@ -14,3 +14,6 @@ const b2 = require('./test2');
 (b2: B2); // Error, number ~> string
 (b2.x: string); // Error number ~> string
 (b2.z: string); // Error number ~> string
+
+const b3 = require('./test3');
+(b3: {| |}); // Error inexact -> exact

@@ -2,9 +2,10 @@
  * @flow
  */
 
+import type Suite from "flow-dev-tools/src/test/Suite.js";
 import {suite, test} from 'flow-dev-tools/src/test/Tester';
 
-export default suite(({addFile, removeFile, flowCmd}) => [
+export default (suite(({addFile, removeFile, flowCmd}) => [
   test('node - Adding a package.json should kill the server', [
     addFile('start.json', 'package.json')
       .startFlowServer()
@@ -117,4 +118,4 @@ export default suite(({addFile, removeFile, flowCmd}) => [
       .waitUntilServerStatus(2000, 'stopped') // only 2s not 10s so as not to waste time
       .verifyServerStatus('running')
   ]).flowConfig('node_flowconfig_with_main_field'),
-]);
+]): Suite);

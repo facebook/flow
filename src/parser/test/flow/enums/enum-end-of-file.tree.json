@@ -34,7 +34,8 @@
         "loc":{"source":null,"start":{"line":2,"column":0},"end":{"line":2,"column":0}},
         "range":[5,5],
         "members":[],
-        "explicitType":false
+        "explicitType":false,
+        "hasUnknownMembers":false
       }
     }
   ],

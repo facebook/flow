@@ -67,8 +67,8 @@ val new_builder : File_key.t -> 'a -> 'a builder
 val update_range : Loc.t -> ('a -> 'a) -> 'a builder -> 'a builder
 
 (* Change the settings in the provided range by adding the provided settings list.
-* In the settings list, the kind is the type of lint, the value is the value to set to,
-* and the location is the position of the setting in the source code. *)
+ * In the settings list, the kind is the type of lint, the value is the value to set to,
+ * and the location is the position of the setting in the source code. *)
 val update_settings :
   Loc.t ->
   (* Range to operate on *)

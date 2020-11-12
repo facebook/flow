@@ -3,6 +3,7 @@ libA/
 libB/
 
 [options]
+types_first=false
 well_formed_exports=true
 well_formed_exports.includes=<PROJECT_ROOT>/a.js
 well_formed_exports.includes=<PROJECT_ROOT>/dirA

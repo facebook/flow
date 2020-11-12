@@ -17,7 +17,7 @@ class ['a] mapper =
   end
 
 (* these tests don't do much other than check that the mapper doesn't raise
-    exceptions *)
+   exceptions *)
 
 let run_mapper source =
   let (ast, _) = Parser_flow.program source in

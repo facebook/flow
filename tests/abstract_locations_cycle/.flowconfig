@@ -1,6 +1,4 @@
 [options]
-types_first=true
-experimental.abstract_locations=true
 
 [lints]
 all=error

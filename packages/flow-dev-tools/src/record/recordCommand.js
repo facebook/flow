@@ -8,6 +8,8 @@
  * @format
  */
 
+import type {Flag} from '../command/Base';
+
 import {format} from 'util';
 
 import Base, {commonFlags} from '../command/Base';
@@ -54,7 +56,7 @@ SUITE
     If no suites are specified, every test in the test directory will be recorded.`;
   }
 
-  static getFlags() {
+  static getFlags(): Array<Flag> {
     return [
       commonFlags.bin,
       commonFlags.parallelism,

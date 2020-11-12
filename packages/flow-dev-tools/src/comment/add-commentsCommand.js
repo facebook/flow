@@ -8,6 +8,8 @@
  * @format
  */
 
+import type {Flag} from '../command/Base';
+
 import {format} from 'util';
 import {resolve} from 'path';
 
@@ -55,7 +57,7 @@ Queries Flow for the errors for ROOT. Then opens a curses interface to let you s
 `;
   }
 
-  static getFlags() {
+  static getFlags(): Array<Flag> {
     return [
       commonFlags.bin,
       commonFlags.flowconfigName,

@@ -58,6 +58,7 @@ type hash =
   | ObjNotFrozenInexactH
   | ObjNotFrozenIndexedH
   | ObjNotFrozenUnsealedH
+  | GenericH
   | ObjProtoH
   | MatchingPropH
   | NullProtoH
@@ -165,7 +166,6 @@ type hash =
   | LookupH
   | ObjAssignToH
   | ObjAssignFromH
-  | ObjFreezeH
   | ObjRestH
   | ObjSealH
   | ObjTestH
@@ -235,6 +235,7 @@ type hash =
   | DestructReactElementConfigTypeH
   | DestructReactElementRefTypeH
   | DestructReactConfigTypeH
+  | SealGenericH
 
 let hash_of_def_ctor =
   Type.(
@@ -324,6 +325,7 @@ let hash_of_ctor =
     | FunProtoApplyT _ -> FunProtoApplyH
     | FunProtoBindT _ -> FunProtoBindH
     | FunProtoCallT _ -> FunProtoCallH
+    | GenericT _ -> GenericH
     | IntersectionT _ -> IntersectionH
     | KeysT _ -> KeysH
     | MaybeT _ -> MaybeH
@@ -411,7 +413,6 @@ let hash_of_use_ctor =
     | LookupT _ -> LookupH
     | ObjAssignToT _ -> ObjAssignToH
     | ObjAssignFromT _ -> ObjAssignFromH
-    | ObjFreezeT _ -> ObjFreezeH
     | ObjRestT _ -> ObjRestH
     | ObjSealT _ -> ObjSealH
     | ObjTestT _ -> ObjTestH
@@ -465,7 +466,8 @@ let hash_of_use_ctor =
     | ModuleExportsAssignT _ -> ModuleExportsAssignH
     | FilterOptionalT _ -> FilterOptionalH
     | FilterMaybeT _ -> FilterMaybeH
-    | FunImplicitVoidReturnT _ -> FunImplicitVoidReturnH)
+    | FunImplicitVoidReturnT _ -> FunImplicitVoidReturnH
+    | SealGenericT _ -> SealGenericH)
 
 let add = Xx.update
 

@@ -1,3 +1,94 @@
+Error --------------------------------------------------------------------------------- detect_literal_subtypes.js:17:15
+
+string literal `b` [1] is incompatible with string literal `a` [2]. [incompatible-type]
+
+   detect_literal_subtypes.js:17:15
+   17|     if (a === 'b'){ } // error 'b' not compatible with 'a'
+                     ^^^ [1]
+
+References:
+   detect_literal_subtypes.js:16:18
+   16|   function a1<A: 'a'>(a: A): void {
+                        ^^^ [2]
+
+
+Error --------------------------------------------------------------------------------- detect_literal_subtypes.js:17:15
+
+string literal `b` [1] is incompatible with string literal `a` [2]. [incompatible-type]
+
+   detect_literal_subtypes.js:17:15
+   17|     if (a === 'b'){ } // error 'b' not compatible with 'a'
+                     ^^^ [1]
+
+References:
+   detect_literal_subtypes.js:16:26
+   16|   function a1<A: 'a'>(a: A): void {
+                                ^ [2]
+
+
+Error --------------------------------------------------------------------------------- detect_literal_subtypes.js:21:15
+
+string literal `b` [1] is incompatible with string literal `a` [2]. [incompatible-type]
+
+   detect_literal_subtypes.js:21:15
+   21|     if (b === 'b'){ } // error 'b' not compatible with 'a'
+                     ^^^ [1]
+
+References:
+   detect_literal_subtypes.js:20:18
+   20|   function b1<A: 'a', B: A>(b: B): void {
+                        ^^^ [2]
+
+
+Error --------------------------------------------------------------------------------- detect_literal_subtypes.js:21:15
+
+string literal `b` [1] is incompatible with string literal `a` [2]. [incompatible-type]
+
+   detect_literal_subtypes.js:21:15
+   21|     if (b === 'b'){ } // error 'b' not compatible with 'a'
+                     ^^^ [1]
+
+References:
+   detect_literal_subtypes.js:20:32
+   20|   function b1<A: 'a', B: A>(b: B): void {
+                                      ^ [2]
+
+
+Error --------------------------------------------------------------------------------- detect_literal_subtypes.js:39:12
+
+Property `r` is missing in `T` [1]. [prop-missing]
+
+   detect_literal_subtypes.js:39:12
+   39|       case 'r': // error
+                  ^^^
+
+References:
+   detect_literal_subtypes.js:33:17
+   33|   function c<X: T>(x: $Keys<X>) {
+                       ^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------ generics.js:11:11
+
+Cannot assign `u` to `v.u` because type variable `T` [1] cannot escape from the scope in which it was defined [2] (try
+adding a type annotation to `v` [3]). [escaped-generic]
+
+   generics.js:11:11
+   11|     v.u = u; 
+                 ^
+
+References:
+   generics.js:9:14
+    9|   m<S>(z:S,u:T,v):S {
+                    ^ [1]
+   generics.js:7:9
+    7| class D<T> {
+               ^ [2]
+   generics.js:9:16
+    9|   m<S>(z:S,u:T,v):S {
+                      ^ [3]
+
+
 Error ------------------------------------------------------------------------------------------------ generics.js:19:16
 
 Cannot assign `d.x` to `s` because number [1] is incompatible with string [2]. [incompatible-type]
@@ -112,4 +203,4 @@ Cannot apply type because it is not a polymorphic type. [nonpolymorphic-type-app
 
 
 
-Found 8 errors
+Found 14 errors

@@ -309,7 +309,7 @@ let intersect_members cx members =
       map
 
 and instantiate_type = function
-  | ThisClassT (_, t)
+  | ThisClassT (_, t, _)
   | DefT (_, _, ClassT t)
   | (AnyT _ as t)
   | DefT (_, _, TypeT (_, t))
@@ -379,7 +379,7 @@ let rec resolve_type cx = function
     begin
       match Base.List.(uses >>= possible_types_of_use cx) with
       (* The unit of intersection is normally mixed, but MergedT is hacky and empty
-      fits better here *)
+         fits better here *)
       | [] -> locationless_reason REmpty |> EmptyT.make |> with_trust bogus_trust
       | [x] -> x
       | x :: y :: ts -> InterRep.make x y ts |> create_intersection
@@ -401,6 +401,7 @@ let rec extract_type cx this_t =
   | DefT (_, _, ObjT _) as t -> Success t
   | DefT (_, _, EnumObjectT _) as t -> Success t
   | ExactT (_, t) -> extract_type cx t
+  | GenericT { bound; _ } -> extract_type cx bound
   | ModuleT _ as t -> SuccessModule t
   | ThisTypeAppT (_, c, _, ts_opt) ->
     let c = resolve_type cx c in
@@ -415,7 +416,7 @@ let rec extract_type cx this_t =
   | DefT (_, _, PolyT { t_out = sub_type; _ }) ->
     (* TODO: replace type parameters with stable/proper names? *)
     extract_type cx sub_type
-  | ThisClassT (_, DefT (_, _, InstanceT (static, _, _, _)))
+  | ThisClassT (_, DefT (_, _, InstanceT (static, _, _, _)), _)
   | DefT (_, _, ClassT (DefT (_, _, InstanceT (static, _, _, _)))) ->
     extract_type cx static
   | DefT (_, _, FunT _) as t -> Success t
@@ -481,6 +482,7 @@ let rec extract_members ?(exclude_proto_members = false) cx = function
   | FailureAnyType -> FailureAnyType
   | FailureUnhandledType t -> FailureUnhandledType t
   | FailureUnhandledMembers t -> FailureUnhandledMembers t
+  | Success (GenericT { bound; _ }) -> extract_members ~exclude_proto_members cx (Success bound)
   | Success (DefT (_, _, InstanceT (_, super, _, { own_props; proto_props; _ }))) ->
     let members =
       SMap.fold
@@ -568,7 +570,7 @@ let rec extract_members ?(exclude_proto_members = false) cx = function
     Success (AugmentableSMap.augment proto_members ~with_bindings:result)
   | Success (IntersectionT (_, rep)) ->
     (* Intersection type should autocomplete for every property of
-         every type in the intersection *)
+       every type in the intersection *)
     let ts = InterRep.members rep in
     let members = Base.List.map ~f:(extract_members_as_map ~exclude_proto_members cx) ts in
     Success

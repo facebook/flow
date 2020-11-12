@@ -1,4 +1,3 @@
 shell: test.sh
 start_args: --lazy-mode ide
 skip_saved_state: true
-classic_only: true

@@ -19,7 +19,9 @@ type 'a t = {
   explicit_values: ('a * Loc.t option) LintMap.t;
 }
 
-let default_explicit_values = LintMap.singleton Lints.DeprecatedUtility (Severity.Err, None)
+let default_explicit_values =
+  LintMap.singleton Lints.DeprecatedUtility (Severity.Err, None)
+  |> LintMap.add Lints.UntypedTypeImport (Severity.Err, None)
 
 let ignored_by_all =
   [

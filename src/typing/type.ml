@@ -50,7 +50,7 @@ module rec TypeTerm : sig
 
        Note: ids are globally unique. tvars are "owned" by a single context,
        but that context and its tvars may later be merged into other contexts.
-     *)
+    *)
     | OpenT of tvar
     (*************)
     (* def types *)
@@ -70,10 +70,18 @@ module rec TypeTerm : sig
     | EvalT of t * defer_use_t * Eval.id
     (* bound type variable *)
     | BoundT of reason * string
+    | GenericT of {
+        reason: reason;
+        name: string;
+        bound: t;
+        id: Generic.id;
+      }
     (* existential type variable *)
     | ExistsT of reason
-    (* this-abstracted class *)
-    | ThisClassT of reason * t
+    (* this-abstracted class. If `is_this` is true, then this literally comes from
+       `this` as an annotation or expression, and should be fixed to an internal
+       view of the class, which is a generic whose upper bound is the class. *)
+    | ThisClassT of reason * t * (* is_this *) bool
     (* this instantiation *)
     | ThisTypeAppT of reason * t * t * t list option
     (* type application *)
@@ -110,44 +118,44 @@ module rec TypeTerm : sig
     (* annotations *)
     (* A type that annotates a storage location performs two functions:
 
-        * it constrains the types of values stored into the location
+     * it constrains the types of values stored into the location
 
-        * it masks the actual type of values retrieved from the location, giving
-        instead a pro forma type which all such values are considered as having.
+     * it masks the actual type of values retrieved from the location, giving
+       instead a pro forma type which all such values are considered as having.
 
-        In the former role, the annotated type behaves as an upper bound
-        interacting with inflowing lower bounds - these interactions may
-        occur e.g. as a result of values being stored to type-annotated
-        variables, or arguments flowing to type-annotated parameters.
+       In the former role, the annotated type behaves as an upper bound
+       interacting with inflowing lower bounds - these interactions may
+       occur e.g. as a result of values being stored to type-annotated
+       variables, or arguments flowing to type-annotated parameters.
 
-        In the latter role, the annotated type behaves as a lower bound,
-        flowing to sites where values stored in the annotated location are
-        used (such as users of a variable, or users of a parameter within
-        a function body).
+       In the latter role, the annotated type behaves as a lower bound,
+       flowing to sites where values stored in the annotated location are
+       used (such as users of a variable, or users of a parameter within
+       a function body).
 
-        When a type annotation resolves immediately to a concrete type
-        (say, number = NumT or string = StrT), this single type would
-        suffice to perform both roles. However, when an annotation has
-        not yet been resolved, we can't simply use a type variable as a
-        placeholder as we can elsewhere.
+       When a type annotation resolves immediately to a concrete type
+       (say, number = NumT or string = StrT), this single type would
+       suffice to perform both roles. However, when an annotation has
+       not yet been resolved, we can't simply use a type variable as a
+       placeholder as we can elsewhere.
 
-        TL;DR type variables are conductors; annotated types are insulators. :)
+       TL;DR type variables are conductors; annotated types are insulators. :)
 
-        For an annotated type, we must collect incoming lower bounds and
-        downstream upper bounds without allowing them to interact with each
-        other. If we did, the annotation would be "translucent", leaking
-        type information about incoming values - failing to perform the
-        second of the two roles noted above.
+       For an annotated type, we must collect incoming lower bounds and
+       downstream upper bounds without allowing them to interact with each
+       other. If we did, the annotation would be "translucent", leaking
+       type information about incoming values - failing to perform the
+       second of the two roles noted above.
 
-        We accomplish the insulation by wrapping a tvar with AnnotT, and using a
-        "slingshot" trick to grab lowers bounds, wait for the wrapped tvar to
-        resolve to a type, then release the lower bounds to the resolved
-        type. Meanwhile, the tvar itself flows to its upper bounds as usual.
+       We accomplish the insulation by wrapping a tvar with AnnotT, and using a
+       "slingshot" trick to grab lowers bounds, wait for the wrapped tvar to
+       resolve to a type, then release the lower bounds to the resolved
+       type. Meanwhile, the tvar itself flows to its upper bounds as usual.
 
-        Note on usage: AnnotT can be used as a general wrapper for tvars as long
-        as the wrapped tvars are 0->1. If instead the possible types of a
-        wrapped tvar are T1 and T2, then the current rules would flow T1 | T2 to
-        upper bounds, and would flow lower bounds to T1 & T2. **)
+       Note on usage: AnnotT can be used as a general wrapper for tvars as long
+       as the wrapped tvars are 0->1. If instead the possible types of a
+       wrapped tvar are T1 and T2, then the current rules would flow T1 | T2 to
+       upper bounds, and would flow lower bounds to T1 & T2. **)
     | AnnotT of reason * t * bool (* use_desc *)
     (* Opaque type aliases. The opaquetype.opaque_id is its unique id, opaquetype.underlying_t is
      * the underlying type, which we only allow access to when inside the file the opaque type
@@ -161,12 +169,12 @@ module rec TypeTerm : sig
     (* Stores exports (and potentially other metadata) for a module *)
     | ModuleT of reason * exporttypes * bool (* is_strict *)
     (* Here's to the crazy ones. The misfits. The rebels. The troublemakers.
-        The round pegs in the square holes. **)
+       The round pegs in the square holes. **)
 
     (* types that should never appear in signatures *)
     | InternalT of internal_t
     (* upper bound trigger for type destructors *)
-    | TypeDestructorTriggerT of use_op * reason * (reason * bool) option * destructor * t
+    | TypeDestructorTriggerT of use_op * reason * (reason * bool) option * destructor * tvar
     (* Sigil representing functions that the type system is not expressive
        enough to annotate, so we customize their behavior internally. *)
     | CustomFunT of reason * custom_fun_kind
@@ -257,6 +265,7 @@ module rec TypeTerm : sig
     enum_name: string;
     members: ALoc.t SMap.t;
     representation_t: t;
+    has_unknown_members: bool;
   }
 
   and internal_t =
@@ -464,22 +473,22 @@ module rec TypeTerm : sig
      * fields when the InstanceT ~> SetPrivatePropT constraint is processsed *)
     | SetPrivatePropT of
         use_op * reason * string * set_mode * class_binding list * bool * t * t option
-    | GetPropT of use_op * reason * propref * t
+    | GetPropT of use_op * reason * propref * tvar
     (* For shapes *)
-    | MatchPropT of use_op * reason * propref * t
+    | MatchPropT of use_op * reason * propref * tvar
     (* The same comment on SetPrivatePropT applies here *)
-    | GetPrivatePropT of use_op * reason * string * class_binding list * bool * t
-    | TestPropT of reason * ident * propref * t
+    | GetPrivatePropT of use_op * reason * string * class_binding list * bool * tvar
+    | TestPropT of reason * ident * propref * tvar
     (* SetElemT has a `tout` parameter to serve as a trigger for ordering
        operations. We only need this in one place: object literal initialization.
        In particular, a computed property in the object initializer users SetElemT
        to initialize the property value, but in order to avoid race conditions we
        need to ensure that reads happen after writes. *)
     | SetElemT of use_op * reason * t * set_mode * t * t option (*tout *)
-    | GetElemT of use_op * reason * t * t
+    | GetElemT of use_op * reason * t * tvar
     | CallElemT of (* call *) reason * (* lookup *) reason * t * method_action
-    | GetStaticsT of reason * t_out
-    | GetProtoT of reason * t_out
+    | GetStaticsT of tvar
+    | GetProtoT of reason * tvar
     | SetProtoT of reason * t
     (* repositioning *)
     | ReposLowerT of reason * bool (* use_desc *) * use_t
@@ -512,12 +521,12 @@ module rec TypeTerm : sig
         targs: t list;
       }
     (* operation specifying a type refinement via a predicate *)
-    | PredicateT of predicate * t
+    | PredicateT of predicate * tvar
     (* like PredicateT, GuardT guards a subsequent flow with a predicate on an
        incoming type. Unlike PredicateT, the subsequent flow (if any) uses
        an arbitrary LB specified in the GuardT value, rather than the filtered
        result of the predicate itself *)
-    | GuardT of predicate * t * t
+    | GuardT of predicate * t * tvar
     (* === *)
     | StrictEqT of {
         reason: Reason.t;
@@ -532,19 +541,19 @@ module rec TypeTerm : sig
         arg: t;
       }
     (* logical operators *)
-    | AndT of reason * t * t
-    | OrT of reason * t * t
-    | NullishCoalesceT of reason * t * t
-    | NotT of reason * t
+    | AndT of reason * t * tvar
+    | OrT of reason * t * tvar
+    | NullishCoalesceT of reason * t * tvar
+    | NotT of reason * tvar
     (* operation on polymorphic types *)
     (* SpecializeT(_, _, _, cache, targs, tresult) instantiates a polymorphic type
-        with type arguments targs, and flows the result into tresult. If cache
-        is set, it looks up a cache of existing instantiations for the type
-        parameters of the polymorphic type, unifying the type arguments with
-        those instantiations if such exist.
+       with type arguments targs, and flows the result into tresult. If cache
+       is set, it looks up a cache of existing instantiations for the type
+       parameters of the polymorphic type, unifying the type arguments with
+       those instantiations if such exist.
 
-        The first reason is the reason why we're specializing. The second
-        reason points to the type application itself
+       The first reason is the reason why we're specializing. The second
+       reason points to the type application itself
     **)
     | SpecializeT of use_op * reason * reason * specialize_cache * t list option * t
     (* operation on this-abstracted classes *)
@@ -571,17 +580,17 @@ module rec TypeTerm : sig
           bool
     (* operation on prototypes *)
     (* LookupT(_, strict, try_ts_on_failure, x, lookup_action, ids) looks for
-        property x in an object type and emits a constraint according to the
-        provided lookup_action. It also carries with it a list of the prop_map ids it has already tried.
+       property x in an object type and emits a constraint according to the
+       provided lookup_action. It also carries with it a list of the prop_map ids it has already tried.
 
-        When x is not found, we have the following cases:
+       When x is not found, we have the following cases:
 
-        (1) try_ts_on_failure is not empty, and we try to look for property x in
-        the next object type in that list;
+       (1) try_ts_on_failure is not empty, and we try to look for property x in
+       the next object type in that list;
 
-        (2) strict = None, so no error is reported;
+       (2) strict = None, so no error is reported;
 
-        (3) strict = Some reason, so the position in reason is blamed.
+       (3) strict = Some reason, so the position in reason is blamed.
     **)
     | LookupT of {
         reason: reason;
@@ -597,8 +606,7 @@ module rec TypeTerm : sig
     | ObjAssignToT of use_op * reason * t * t * obj_assign_kind
     (* Resolves the object from which the properties are assigned *)
     | ObjAssignFromT of use_op * reason * t * t * obj_assign_kind
-    | ObjFreezeT of reason * t
-    | ObjRestT of reason * string list * t
+    | ObjRestT of reason * string list * t * int
     | ObjSealT of reason * t
     (* test that something is a valid proto (object-like or null) *)
     | ObjTestProtoT of reason * t_out
@@ -657,7 +665,7 @@ module rec TypeTerm : sig
     | IntersectionPreprocessKitT of reason * intersection_preprocess_tool
     | DebugPrintT of reason
     | DebugSleepT of reason
-    | SentinelPropTestT of reason * t * string * bool * UnionEnum.star * t_out
+    | SentinelPropTestT of reason * t * string * bool * UnionEnum.star * tvar
     | IdxUnwrap of reason * t_out
     | IdxUnMaybeifyT of reason * t_out
     | OptionalChainT of reason * reason * (* this *) t * use_t * (* voids *) t_out
@@ -684,7 +692,7 @@ module rec TypeTerm : sig
      *
      * The boolean part is the sense of the conditional check.
      *)
-    | CallLatentPredT of reason * bool * index * t * t
+    | CallLatentPredT of reason * bool * index * t * tvar
     (*
      * CallOpenPredT is fired subsequently, after processing the flow
      * described above. This flow is necessary since the return type of the
@@ -697,7 +705,7 @@ module rec TypeTerm : sig
      * flow) we only keep the relevant key, which corresponds to the refining
      * parameter.
      *)
-    | CallOpenPredT of reason * bool * Key.t * t * t
+    | CallOpenPredT of reason * bool * Key.t * t * tvar
     (*
      * Even for the limited use of function predicates that is currently
      * allowed, we still have to build machinery to handle subtyping for
@@ -742,7 +750,7 @@ module rec TypeTerm : sig
      * flow using the predicate `pred`. The result will be stored in `tvar`,
      * which is expected to be a type variable.
      *)
-    | RefineT of reason * predicate * t
+    | RefineT of reason * predicate * tvar
     (* Spread elements show up in a bunch of places: array literals, function
      * parameters, function call arguments, method arguments. constructor
      * arguments, etc. Often we have logic that depends on what the spread
@@ -763,7 +771,7 @@ module rec TypeTerm : sig
     (* Used to calculate a destructured binding. If annot is true, the lower
      * bound is an annotation (0->1), and t_out will be unified with the
      * destructured type. The caller should wrap the tvar with an AnnotT. *)
-    | DestructuringT of reason * destruct_kind * selector * t_out
+    | DestructuringT of reason * destruct_kind * selector * tvar * int
     | CreateObjWithComputedPropT of {
         reason: reason;
         value: t;
@@ -786,6 +794,7 @@ module rec TypeTerm : sig
         reason: reason;
         check: enum_possible_exhaustive_check_t;
         incomplete_out: t;
+        discriminant_after_check: t option;
       }
     | FilterOptionalT of use_op * t
     | FilterMaybeT of use_op * t
@@ -794,6 +803,12 @@ module rec TypeTerm : sig
         reason: reason;
         return: t;
         void_t: t;
+      }
+    | SealGenericT of {
+        reason: reason;
+        id: Generic.id;
+        name: string;
+        cont: cont;
       }
 
   and enum_check_t =
@@ -930,7 +945,7 @@ module rec TypeTerm : sig
     | Zeroed
 
   and any_source =
-    | Annotated
+    | AnnotatedAny
     | AnyError of any_error_kind option
     | Unsound of unsoundness_kind
     | Untyped
@@ -977,7 +992,7 @@ module rec TypeTerm : sig
     call_this_t: t;
     call_targs: targ list option;
     call_args_tlist: call_arg list;
-    call_tout: t;
+    call_tout: tvar;
     call_closure_t: int;
     call_strict_arity: bool;
   }
@@ -1078,7 +1093,7 @@ module rec TypeTerm : sig
     | ReadProp of {
         use_op: use_op;
         obj_t: t;
-        tout: t;
+        tout: tvar;
       }
     | WriteProp of {
         use_op: use_op;
@@ -1125,7 +1140,7 @@ module rec TypeTerm : sig
      to initialize the property value, but in order to avoid race conditions we
      need to ensure that reads happen after writes. *)
   and elem_action =
-    | ReadElem of t
+    | ReadElem of tvar
     | WriteElem of t * t option (* tout *) * set_mode
     | CallElem of reason * method_action
 
@@ -1229,6 +1244,7 @@ module rec TypeTerm : sig
     bound: t;
     polarity: Polarity.t;
     default: t option;
+    is_this: bool;
   }
 
   and typeparams_nonempty = ALoc.t * typeparam Nel.t
@@ -1305,8 +1321,8 @@ module rec TypeTerm : sig
 
   and intersection_preprocess_tool =
     | ConcretizeTypes of t list * t list * t * use_t
-    | SentinelPropTest of bool * string * t * t * t
-    | PropExistsTest of bool * string * reason * t * t * (predicate * predicate)
+    | SentinelPropTest of bool * string * t * t * tvar
+    | PropExistsTest of bool * string * reason * t * tvar * (predicate * predicate)
 
   and spec =
     | UnionCases of use_op * t * UnionRep.t * t list
@@ -1332,12 +1348,12 @@ module rec TypeTerm : sig
   }
 
   and unresolved_param =
-    | UnresolvedArg of t
+    | UnresolvedArg of t * Generic.id option
     | UnresolvedSpreadArg of t
 
   and resolved_param =
-    | ResolvedArg of t
-    | ResolvedSpreadArg of reason * arrtype
+    | ResolvedArg of t * Generic.id option
+    | ResolvedSpreadArg of reason * arrtype * Generic.id option
     | ResolvedAnySpreadArg of reason
 
   and spread_resolve =
@@ -1776,7 +1792,7 @@ end
    needs to interact with member types directly
    can do so via `members`, which provides access
    via the standard list representation.
- *)
+*)
 and UnionRep : sig
   type t
 
@@ -2209,7 +2225,7 @@ end
    needs to interact with member types directly
    can do so via `members`, which provides access
    via the standard list representation.
- *)
+*)
 and InterRep : sig
   type t
 
@@ -2233,7 +2249,7 @@ end = struct
   type t = TypeTerm.t * TypeTerm.t * TypeTerm.t list
   (** intersection rep is:
       - member list in declaration order
-    *)
+   *)
 
   let make t0 t1 ts = (t0, t1, ts)
 
@@ -2292,14 +2308,6 @@ and UseTypeSet : (Set.S with type elt = TypeTerm.use_t) = Set.Make (struct
   let compare = Stdlib.compare
 end)
 
-and UseTypeMap : (WrappedMap.S with type key = TypeTerm.use_t) = WrappedMap.Make (struct
-  type key = TypeTerm.use_t
-
-  type t = key
-
-  let compare = Stdlib.compare
-end)
-
 and Object : sig
   type resolve_tool =
     (* Each part of a spread must be resolved in order to compute the result *)
@@ -2328,6 +2336,7 @@ and Object : sig
     reason: reason;
     props: props;
     flags: TypeTerm.flags;
+    generics: Generic.spread_id;
   }
 
   and props = prop SMap.t
@@ -2344,6 +2353,7 @@ and Object : sig
     type operand_slice = {
       reason: reason;
       prop_map: Properties.t;
+      generics: Generic.spread_id;
       dict: dict;
     }
 
@@ -2366,6 +2376,7 @@ and Object : sig
     type sealtype =
       | UnsealedInFile of File_key.t option
       | Sealed
+      | Frozen
 
     type target =
       (* When spreading values, the result is exact if all of the input types are
@@ -2625,7 +2636,7 @@ end)
 
 module AnyT = struct
   let desc = function
-    | Annotated -> RAnyExplicit
+    | AnnotatedAny -> RAnyExplicit
     | _ -> RAnyImplicit
 
   let make source r = AnyT (r, source)
@@ -2634,7 +2645,7 @@ module AnyT = struct
 
   let why source = replace_desc_reason (desc source) %> make source
 
-  let annot = why Annotated
+  let annot = why AnnotatedAny
 
   let error = why (AnyError None)
 
@@ -2794,6 +2805,10 @@ let is_any = function
   | AnyT _ -> true
   | _ -> false
 
+let drop_generic = function
+  | GenericT { bound; _ } -> bound
+  | t -> t
+
 (* Primitives, like string, will be promoted to their wrapper object types for
  * certain operations, like GetPropT, but not for others, like `UseT _`. *)
 let primitive_promoting_use_t = function
@@ -2952,6 +2967,7 @@ let string_of_ctor = function
   | FunProtoApplyT _ -> "FunProtoApplyT"
   | FunProtoBindT _ -> "FunProtoBindT"
   | FunProtoCallT _ -> "FunProtoCallT"
+  | GenericT _ -> "GenericT"
   | KeysT _ -> "KeysT"
   | ModuleT _ -> "ModuleT"
   | NullProtoT _ -> "NullProtoT"
@@ -3114,7 +3130,6 @@ let string_of_use_ctor = function
   | NullishCoalesceT _ -> "NullishCoalesceT"
   | ObjAssignToT _ -> "ObjAssignToT"
   | ObjAssignFromT _ -> "ObjAssignFromT"
-  | ObjFreezeT _ -> "ObjFreezeT"
   | ObjRestT _ -> "ObjRestT"
   | ObjSealT _ -> "ObjSealT"
   | ObjTestProtoT _ -> "ObjTestProtoT"
@@ -3168,6 +3183,7 @@ let string_of_use_ctor = function
   | ModuleExportsAssignT _ -> "ModuleExportsAssignT"
   | FilterOptionalT _ -> "FilterOptionalT"
   | FilterMaybeT _ -> "FilterMaybeT"
+  | SealGenericT _ -> "SealGenericT"
 
 let string_of_binary_test = function
   | InstanceofTest -> "instanceof"
@@ -3230,6 +3246,10 @@ and elemt_of_arrtype = function
   | TupleAT (elemt, _) ->
     elemt
 
+let ro_of_arrtype = function
+  | ArrayAT _ -> Generic.ArraySpread.NonROSpread
+  | _ -> Generic.ArraySpread.ROSpread
+
 let annot use_desc = function
   | OpenT (r, _) as t -> AnnotT (r, t, use_desc)
   | t -> t
@@ -3260,9 +3280,9 @@ let default_obj_assign_kind = ObjAssign { assert_exact = false }
 
 (* A method type is a function type with `this` specified. *)
 let mk_methodtype
-    this tins ~rest_param ~def_reason ?(frame = 0) ?params_names ?(is_predicate = false) tout =
+    this_t tins ~rest_param ~def_reason ?(frame = 0) ?params_names ?(is_predicate = false) tout =
   {
-    this_t = this;
+    this_t;
     params =
       (match params_names with
       | None -> Base.List.map ~f:(fun t -> (None, t)) tins
@@ -3285,18 +3305,19 @@ let mk_methodcalltype this targs args ?(frame = 0) ?(call_strict_arity = true) t
     call_strict_arity;
   }
 
-(* A bound function type is a function type with `this` = `any`. Typically, such
-   a type is given to a method when it can be considered bound: in other words,
-   when calling that method through any object would be fine, since the object
-   would be ignored. *)
-let mk_boundfunctiontype = mk_methodtype bound_function_dummy_this
+(* A bound function type is a method type whose `this` parameter has been
+   bound to some type. Currently, if the function's `this` parameter is not
+   explicitly annotated we model this unsoundly using `any`, but if it is
+   then we create a methodtype with a specific `this` type.  *)
 
-(* A function type has `this` = `mixed`. Such a type can be given to functions
-   that are meant to be called directly. On the other hand, it deliberately
-   causes problems when they are given to methods in which `this` is used
-   non-trivially: indeed, calling them directly would cause `this` to be bound
-   to the global object, which is typically unintended. *)
-let mk_functiontype reason = mk_methodtype (global_this reason)
+let mk_boundfunctiontype ?(this = bound_function_dummy_this) = mk_methodtype this
+
+(* A function type is a method type whose `this` parameter has been
+   bound to to the global object. Currently, if the function's `this` parameter is not
+   explicitly annotated we model this using `mixed`, but if it is
+   then we create a methodtype with a specific `this` type.  *)
+
+let mk_functiontype reason ?(this = global_this reason) = mk_methodtype this
 
 let mk_functioncalltype reason = mk_methodcalltype (global_this reason)
 
@@ -3381,3 +3402,7 @@ end = struct
 
   let map f tparams = Base.Option.map ~f:(fun (loc, params) -> (loc, Nel.map f params)) tparams
 end
+
+type annotated_or_inferred =
+  | Annotated of TypeTerm.t
+  | Inferred of TypeTerm.t

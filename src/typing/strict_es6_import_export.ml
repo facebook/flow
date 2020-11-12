@@ -55,11 +55,11 @@ let rec is_require =
 let has_value_import =
   let open Ast.Statement.ImportDeclaration in
   function
-  | { importKind = ImportValue; specifiers = Some (ImportNamedSpecifiers specifiers); _ } ->
+  | { import_kind = ImportValue; specifiers = Some (ImportNamedSpecifiers specifiers); _ } ->
     List.exists
       (fun { Ast.Statement.ImportDeclaration.kind; _ } -> kind = None || kind = Some ImportValue)
       specifiers
-  | { importKind = ImportValue; _ } -> true
+  | { import_kind = ImportValue; _ } -> true
   | _ -> false
 
 (* Gather information about top level declarations to be used when checking for import/export errors. *)
@@ -95,14 +95,14 @@ let gather_declarations ast =
             (* Gather all identifiers in variable declaration *)
             let acc =
               Flow_ast_utils.fold_bindings_of_pattern
-                (fun acc (id_loc, { Ast.Identifier.name; _ }) ->
+                (fun acc (id_loc, { Ast.Identifier.name; _ }) _ ->
                   add_var_decl acc id_loc loc name kind)
                 acc
                 id
             in
             (* Gather simple variable declarations where the init is a function, of the forms:
-             const <ID> = function() { ... }
-             const <ID> = () => { ... } *)
+               const <ID> = function() { ... }
+               const <ID> = () => { ... } *)
             let acc =
               match (id, init) with
               | ( (_, Ast.Pattern.Identifier { Ast.Pattern.Identifier.name = (id_loc, _); _ }),
@@ -359,7 +359,7 @@ class import_export_visitor ~cx ~scope_info ~declarations =
 
     method! jsx_element elem_loc elem =
       let open Ast.JSX in
-      let { openingElement = (_, { Opening.name; _ }); _ } = elem in
+      let { opening_element = (_, { Opening.name; _ }); _ } = elem in
       begin
         match name with
         (* Error on use of module object outside member expression *)

@@ -53,9 +53,9 @@ val promote_to_const_like : Context.t -> ALoc.t -> bool
 
 val bind_class : Context.t -> ALoc.id -> Type.Properties.id -> Type.Properties.id -> unit
 
-val bind_var : ?state:State.t -> Context.t -> string -> Type.t -> ALoc.t -> unit
+val bind_var : ?state:State.t -> Context.t -> string -> Type.annotated_or_inferred -> ALoc.t -> unit
 
-val bind_let : ?state:State.t -> Context.t -> string -> Type.t -> ALoc.t -> unit
+val bind_let : ?state:State.t -> Context.t -> string -> Type.annotated_or_inferred -> ALoc.t -> unit
 
 val bind_implicit_let :
   ?state:State.t -> Entry.let_binding_kind -> Context.t -> string -> Type.t -> ALoc.t -> unit
@@ -65,7 +65,8 @@ val bind_fun : ?state:State.t -> Context.t -> string -> Type.t -> ALoc.t -> unit
 val bind_implicit_const :
   ?state:State.t -> Entry.const_binding_kind -> Context.t -> string -> Type.t -> ALoc.t -> unit
 
-val bind_const : ?state:State.t -> Context.t -> string -> Type.t -> ALoc.t -> unit
+val bind_const :
+  ?state:State.t -> Context.t -> string -> Type.annotated_or_inferred -> ALoc.t -> unit
 
 val bind_import : Context.t -> string -> Type.t -> ALoc.t -> unit
 
@@ -142,6 +143,8 @@ val get_class_entries : unit -> Type.class_binding list
 val get_var : ?lookup_mode:LookupMode.t -> Context.t -> string -> ALoc.t -> Type.t
 
 val get_internal_var : Context.t -> string -> ALoc.t -> Type.t
+
+val get_var_annotation : Context.t -> string -> ALoc.t -> unit option
 
 val get_var_declared_type : ?lookup_mode:LookupMode.t -> Context.t -> string -> ALoc.t -> Type.t
 

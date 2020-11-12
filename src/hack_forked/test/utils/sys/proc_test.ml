@@ -8,11 +8,11 @@
 open Asserter
 
 (*
-1 (systemd) S 0 1 1
-118813 (java) R 1 420553 420553
-527674 (python3.6) R 118813 420553 420553
-527663 (python3.6) R 527663 420553 420553
-527674 (proc_test.opt) R 527663 420553 420553
+   1 (systemd) S 0 1 1
+   118813 (java) R 1 420553 420553
+   527674 (python3.6) R 118813 420553 420553
+   527663 (python3.6) R 527663 420553 420553
+   527674 (proc_test.opt) R 527663 420553 420553
 *)
 
 let systemd_pid = 1
@@ -187,7 +187,7 @@ let tests =
 
 let () =
   (* Note: if you're running the tests with the default dependency injector,
-      you need to remember to pass false to setup() because it's not
-      possible to write to files in procfs. *)
+     you need to remember to pass false to setup() because it's not
+     possible to write to files in procfs. *)
   setup ~use_test_stubbing:true;
   Unit_test.run_all tests

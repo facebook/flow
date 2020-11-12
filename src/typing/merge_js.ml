@@ -115,8 +115,10 @@ let explicit_decl_require cx (m, loc, resolved_m, cx_to) =
   let reason = Reason.(mk_reason (RCustom m) loc) in
   (* lookup module declaration from builtin context *)
   let m_name = resolved_m |> Modulename.to_string |> Reason.internal_module_name in
-  let from_t = Tvar.mk cx reason in
-  Flow_js.lookup_builtin cx m_name reason (Type.Strict reason) from_t;
+  let from_t =
+    Tvar.mk_no_wrap_where cx reason (fun from_t ->
+        Flow_js.lookup_builtin cx m_name reason (Type.Strict reason) from_t)
+  in
 
   (* flow the declared module type to importing context *)
   let to_t = Context.find_require cx_to loc in
@@ -131,13 +133,15 @@ let explicit_unchecked_require cx (m, loc, cx_to) =
    * from an untyped module and an any-typed type import from a nonexistent module. *)
   let reason = Reason.(mk_reason (RUntypedModule m) loc) in
   let m_name = Reason.internal_module_name m in
-  let from_t = Tvar.mk cx reason in
-  Flow_js.lookup_builtin
-    cx
-    m_name
-    reason
-    (Type.NonstrictReturning (Some (Type.AnyT (reason, Type.Untyped), from_t), None))
-    from_t;
+  let from_t =
+    Tvar.mk_no_wrap_where cx reason (fun from_t ->
+        Flow_js.lookup_builtin
+          cx
+          m_name
+          reason
+          (Type.NonstrictReturning (Some (Type.AnyT (reason, Type.Untyped), Type.OpenT from_t), None))
+          from_t)
+  in
 
   (* flow the declared module type to importing context *)
   let to_t = Context.find_require cx_to loc in
@@ -201,14 +205,21 @@ let detect_unnecessary_invariants cx =
 let detect_invalid_type_assert_calls cx file_sigs cxs tasts =
   if Context.type_asserts cx then Type_asserts.detect_invalid_calls ~full_cx:cx file_sigs cxs tasts
 
-let force_annotations leader_cx other_cxs =
+let force_annotations ~arch leader_cx other_cxs =
+  if arch = Options.Classic then
+    Base.List.iter
+      ~f:(fun cx ->
+        let should_munge_underscores = Context.should_munge_underscores cx in
+        Context.module_ref cx
+        |> Flow_js.lookup_module leader_cx
+        |> Flow_js.enforce_strict leader_cx ~should_munge_underscores)
+      (leader_cx :: other_cxs)
+
+let detect_escaped_generics results =
   Base.List.iter
-    ~f:(fun cx ->
-      let should_munge_underscores = Context.should_munge_underscores cx in
-      Context.module_ref cx
-      |> Flow_js.lookup_module leader_cx
-      |> Flow_js.enforce_strict leader_cx ~should_munge_underscores)
-    (leader_cx :: other_cxs)
+    ~f:(fun (cx, _, (_, { Flow_ast.Program.statements; _ })) ->
+      Generic_escape.scan_for_escapes cx ~add_output:Flow_js.add_output statements)
+    results
 
 let detect_non_voidable_properties cx =
   (* This function approximately checks whether VoidT can flow to the provided
@@ -396,7 +407,8 @@ let detect_matching_props_violations cx =
   let step (reason, key, sentinel, obj) =
     let obj = resolver#type_ cx () obj in
     let sentinel = resolver#type_ cx () sentinel in
-    match sentinel with
+    match drop_generic sentinel with
+    (* TODO: it should not be possible to create a MatchingPropT with a non-tvar tout *)
     | DefT (_, _, (BoolT (Some _) | StrT (Literal _) | NumT (Literal _))) ->
       (* Limit the check to promitive literal sentinels *)
       let use_op =
@@ -409,21 +421,36 @@ let detect_matching_props_violations cx =
                sentinel_reason = TypeUtil.reason_of_t sentinel;
              })
       in
-      Flow_js.flow cx (MatchingPropT (reason, key, sentinel), UseT (use_op, obj))
+      (* If `obj` is a GenericT, we replace it with it's upper bound, since ultimately it will flow into
+         `sentinel` rather than the other way around. *)
+      Flow_js.flow cx (MatchingPropT (reason, key, sentinel), UseT (use_op, drop_generic obj))
     | _ -> ()
   in
   let matching_props = Context.matching_props cx in
   List.iter step matching_props
 
-let detect_literal_subtypes cx =
-  let resolver = new resolver_visitor in
-  let checks = Context.literal_subtypes cx in
-  List.iter
-    (fun (t, u) ->
-      let t = resolver#type_ cx () t in
-      let u = resolver#use_type cx () u in
-      Flow_js.flow cx (t, u))
-    checks
+let detect_literal_subtypes =
+  let lb_visitor = new resolver_visitor in
+  let ub_visitor =
+    object (self)
+      inherit resolver_visitor as super
+
+      method! type_ cx map_cx t =
+        let open Type in
+        match t with
+        | DefT (r, _, EmptyT Zeroed) -> AnyT.why Untyped r
+        | GenericT { bound; _ } -> self#type_ cx map_cx bound
+        | t -> super#type_ cx map_cx t
+    end
+  in
+  fun cx ->
+    let checks = Context.literal_subtypes cx in
+    List.iter
+      (fun (t, u) ->
+        let t = lb_visitor#type_ cx () t in
+        let u = ub_visitor#use_type cx () u in
+        Flow_js.flow cx (t, u))
+      checks
 
 (* Merge a component with its "implicit requires" and "explicit requires." The
    implicit requires are those defined in libraries. For the explicit
@@ -458,6 +485,7 @@ let detect_literal_subtypes cx =
    5. Link the local references to libraries in master_cx and component_cxs.
 *)
 let merge_component
+    ~arch
     ~metadata
     ~lint_severities
     ~strict_mode
@@ -576,12 +604,13 @@ let merge_component
     detect_unnecessary_invariants cx;
     detect_invalid_type_assert_calls cx file_sigs cxs tasts;
     Strict_es6_import_export.detect_errors ~metadata ~phase cx results;
+    if phase = Context.Checking then detect_escaped_generics results;
 
     (* Well-formed conditionals *)
     detect_matching_props_violations cx;
     detect_literal_subtypes cx;
 
-    force_annotations cx other_cxs;
+    force_annotations ~arch cx other_cxs;
 
     match results with
     | [] -> failwith "there is at least one cx"
@@ -959,6 +988,17 @@ module ContextOptimizer = struct
           else
             Poly.id_as_int poly_id |> Base.Option.iter ~f:(SigHash.add_int sig_hash);
           super#type_ cx pole t
+        | UnionT (_, rep) ->
+          if not (UnionRep.is_optimized_finally rep) then
+            UnionRep.optimize
+              rep
+              ~reasonless_eq:TypeUtil.reasonless_eq
+              ~flatten:(Type_mapper.union_flatten cx)
+              ~find_resolved:(Context.find_resolved cx)
+              ~find_props:(Context.find_props cx);
+          let t' = super#type_ cx pole t in
+          SigHash.add_type sig_hash t';
+          t'
         | _ ->
           let t' = super#type_ cx pole t in
           SigHash.add_type sig_hash t';
@@ -979,11 +1019,11 @@ module ContextOptimizer = struct
 
       method! choice_use_tool =
         (* Even with MergedT, any choice kit constraints should be fully
-         discharged by this point. This preserves a key invariant, that type
-         graphs are local to a single merge job. In other words, we will not see
-         a FullyResolveType constraint that corresponds to a tvar from another
-         context. This makes it possible to clear the type graph before storing
-         in the heap. *)
+           discharged by this point. This preserves a key invariant, that type
+           graphs are local to a single merge job. In other words, we will not see
+           a FullyResolveType constraint that corresponds to a tvar from another
+           context. This makes it possible to clear the type graph before storing
+           in the heap. *)
         Utils_js.assert_false "choice kit uses should not appear in signatures"
 
       (* We need to make sure to hash the keys in any spread intermediate types! *)

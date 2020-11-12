@@ -19,7 +19,7 @@ Trace:
  15: var a: string = foo('hi'); // error number ~> string
                      ^^^^^^^^^ NumT [number]
  15: var a: string = foo('hi'); // error number ~> string
-                     ^^^^^^^^^ ~> UseT(UnknownUse, OpenT) [return] (from path 2)
+                     ^^^^^^^^^ ~> UseT(FunReturnStatement, OpenT) [return] (from path 2)
  15: var a: string = foo('hi'); // error number ~> string
                      ^^^^^^^^^ ~> UseT(UnknownUse, OpenT) [call of `foo`] (from path 5)
  15: var a: string = foo('hi'); // error number ~> string

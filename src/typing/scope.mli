@@ -52,7 +52,7 @@ module Entry : sig
     value_declare_loc: ALoc.t;
     value_assign_loc: ALoc.t;
     specific: Type.t;
-    general: Type.t;
+    general: Type.annotated_or_inferred;
   }
 
   type type_binding_kind =
@@ -73,16 +73,23 @@ module Entry : sig
 
   val new_class : ALoc.id -> Type.Properties.id -> Type.Properties.id -> t
 
-  val new_value : value_kind -> State.t -> Type.t -> Type.t -> ALoc.t -> t
+  val new_value : value_kind -> State.t -> Type.t -> Type.annotated_or_inferred -> ALoc.t -> t
 
-  val new_const : loc:ALoc.t -> ?state:State.t -> ?kind:const_binding_kind -> Type.t -> t
+  val new_const :
+    loc:ALoc.t -> ?state:State.t -> ?kind:const_binding_kind -> Type.annotated_or_inferred -> t
 
   val new_import : loc:ALoc.t -> Type.t -> t
 
-  val new_let : loc:ALoc.t -> ?state:State.t -> ?kind:let_binding_kind -> Type.t -> t
+  val new_let :
+    loc:ALoc.t -> ?state:State.t -> ?kind:let_binding_kind -> Type.annotated_or_inferred -> t
 
   val new_var :
-    loc:ALoc.t -> ?state:State.t -> ?kind:var_binding_kind -> ?specific:Type.t -> Type.t -> t
+    loc:ALoc.t ->
+    ?state:State.t ->
+    ?kind:var_binding_kind ->
+    ?specific:Type.t ->
+    Type.annotated_or_inferred ->
+    t
 
   val new_type : loc:ALoc.t -> ?state:State.t -> Type.t -> t
 

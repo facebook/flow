@@ -38,14 +38,12 @@ type metadata = {
   max_literal_length: int;
   enable_const_params: bool;
   enable_enums: bool;
+  enable_enums_with_unknown_members: bool;
+  enable_this_annot: bool;
   enforce_strict_call_arity: bool;
-  esproposal_class_static_fields: Options.esproposal_feature_mode;
-  esproposal_class_instance_fields: Options.esproposal_feature_mode;
-  esproposal_decorators: Options.esproposal_feature_mode;
-  esproposal_export_star_as: Options.esproposal_feature_mode;
-  esproposal_optional_chaining: Options.esproposal_feature_mode;
-  esproposal_nullish_coalescing: Options.esproposal_feature_mode;
+  enforce_local_inference_annotations: bool;
   exact_by_default: bool;
+  generate_tests: bool;
   facebook_fbs: string option;
   facebook_fbt: string option;
   facebook_module_interop: bool;
@@ -187,8 +185,6 @@ type t = {
   rev_aloc_table: ALoc.reverse_table Lazy.t;
   metadata: metadata;
   module_info: Module_info.t;
-  mutable import_stmts: (ALoc.t, ALoc.t) Flow_ast.Statement.ImportDeclaration.t list;
-  mutable imported_ts: Type.t SMap.t;
   mutable require_map: Type.t ALocMap.t;
   trust_constructor: unit -> Trust.trust_rep;
   mutable declare_module_ref: Module_info.t option;
@@ -213,14 +209,12 @@ let metadata_of_options options =
     max_literal_length = Options.max_literal_length options;
     enable_const_params = Options.enable_const_params options;
     enable_enums = Options.enums options;
+    enable_enums_with_unknown_members = Options.enums_with_unknown_members options;
+    enable_this_annot = Options.this_annot options;
     enforce_strict_call_arity = Options.enforce_strict_call_arity options;
-    esproposal_class_instance_fields = Options.esproposal_class_instance_fields options;
-    esproposal_class_static_fields = Options.esproposal_class_static_fields options;
-    esproposal_decorators = Options.esproposal_decorators options;
-    esproposal_export_star_as = Options.esproposal_export_star_as options;
-    esproposal_optional_chaining = Options.esproposal_optional_chaining options;
-    esproposal_nullish_coalescing = Options.esproposal_nullish_coalescing options;
+    enforce_local_inference_annotations = Options.enforce_local_inference_annotations options;
     exact_by_default = Options.exact_by_default options;
+    generate_tests = Options.generate_tests options;
     facebook_fbs = Options.facebook_fbs options;
     facebook_fbt = Options.facebook_fbt options;
     facebook_module_interop = Options.facebook_module_interop options;
@@ -259,10 +253,10 @@ let docblock_overrides docblock_info metadata =
     | Some Docblock.OptInStrictLocal -> { metadata with checked = true; strict_local = true }
     | Some Docblock.OptInWeak -> { metadata with checked = true; weak = true }
     (* --all (which sets metadata.checked = true) overrides @noflow, so there are
-   currently no scenarios where we'd change checked = true to false. in the
-   future, there may be a case where checked defaults to true (but is not
-   forced to be true ala --all), but for now we do *not* want to force
-   checked = false here. *)
+       currently no scenarios where we'd change checked = true to false. in the
+       future, there may be a case where checked defaults to true (but is not
+       forced to be true ala --all), but for now we do *not* want to force
+       checked = false here. *)
     | Some Docblock.OptOut -> metadata
   in
   let metadata =
@@ -323,7 +317,7 @@ let make_ccx sig_cx aloc_tables =
 
 (* create a new context structure.
    Flow_js.fresh_context prepares for actual use.
- *)
+*)
 let make ccx metadata file rev_aloc_table module_ref phase =
   {
     ccx;
@@ -332,8 +326,6 @@ let make ccx metadata file rev_aloc_table module_ref phase =
     rev_aloc_table;
     metadata;
     module_info = Module_info.empty_cjs_module module_ref;
-    import_stmts = [];
-    imported_ts = SMap.empty;
     require_map = ALocMap.empty;
     trust_constructor = Trust.literal_trust;
     declare_module_ref = None;
@@ -397,29 +389,25 @@ let enable_const_params cx =
 
 let enable_enums cx = cx.metadata.enable_enums
 
+let enable_enums_with_unknown_members cx = cx.metadata.enable_enums_with_unknown_members
+
+let enable_this_annot cx = cx.metadata.enable_this_annot
+
 let enforce_strict_call_arity cx = cx.metadata.enforce_strict_call_arity
 
 let errors cx = cx.ccx.errors
 
 let error_suppressions cx = cx.ccx.error_suppressions
 
-let esproposal_class_static_fields cx = cx.metadata.esproposal_class_static_fields
-
-let esproposal_class_instance_fields cx = cx.metadata.esproposal_class_instance_fields
-
-let esproposal_decorators cx = cx.metadata.esproposal_decorators
-
-let esproposal_export_star_as cx = cx.metadata.esproposal_export_star_as
-
-let esproposal_optional_chaining cx = cx.metadata.esproposal_optional_chaining
-
-let esproposal_nullish_coalescing cx = cx.metadata.esproposal_nullish_coalescing
-
 let evaluated cx = cx.ccx.sig_cx.evaluated
 
 let goals cx = cx.ccx.goal_map
 
 let exact_by_default cx = cx.metadata.exact_by_default
+
+let enforce_local_inference_annotations cx = cx.metadata.enforce_local_inference_annotations
+
+let generate_tests cx = cx.metadata.generate_tests
 
 let file cx = cx.file
 
@@ -452,10 +440,6 @@ let mem_nominal_prop_id cx id = ISet.mem id cx.ccx.nominal_prop_ids
 let graph cx = graph_sig cx.ccx.sig_cx
 
 let trust_graph cx = trust_graph_sig cx.ccx.sig_cx
-
-let import_stmts cx = cx.import_stmts
-
-let imported_ts cx = cx.imported_ts
 
 let is_checked cx = cx.metadata.checked
 
@@ -588,10 +572,6 @@ let add_severity_cover cx filekey severity_cover =
 let add_lint_suppressions cx suppressions =
   cx.ccx.error_suppressions <-
     Error_suppressions.add_lint_suppressions suppressions cx.ccx.error_suppressions
-
-let add_import_stmt cx stmt = cx.import_stmts <- stmt :: cx.import_stmts
-
-let add_imported_t cx name t = cx.imported_ts <- SMap.add name t cx.imported_ts
 
 let add_require cx loc tvar = cx.require_map <- ALocMap.add loc tvar cx.require_map
 
@@ -772,6 +752,8 @@ let set_export cx id name t = find_exports cx id |> SMap.add name t |> add_expor
 (* constructors *)
 let make_aloc_id cx aloc = ALoc.id_of_aloc cx.rev_aloc_table aloc
 
+let make_generic_id cx name loc = Generic.make_bound_id (make_aloc_id cx loc) name
+
 let generate_property_map cx pmap =
   let id = Reason.mk_id () in
   add_nominal_prop_id cx (id :> int);
@@ -909,3 +891,9 @@ let fix_cache cx = cx.ccx.fix_cache
 let spread_cache cx = cx.ccx.spread_cache
 
 let speculation_state cx = cx.ccx.speculation_state
+
+let speculation_id cx =
+  let open Speculation_state in
+  match !(speculation_state cx) with
+  | [] -> None
+  | { speculation_id; case = { case_id; _ }; _ } :: _ -> Some (speculation_id, case_id)

@@ -4,7 +4,7 @@
 >>> ./a.js
 // @flow
 
-import type {D, C} from "./lib.js";import { foo, bar } from "./lib";
+import type {D, C} from "./lib";import { foo, bar } from "./lib";
 
 const b = require("./b");
 
@@ -13,7 +13,7 @@ module.exports = [(foo(): C), (bar(): D)];
 >>> ./b.js
 // @flow
 
-import type {E, C} from "./lib.js";import { foo, baz } from "./lib";
+import type {E, C} from "./lib";import { foo, baz } from "./lib";
 
 const c = require("./c");
 
@@ -22,7 +22,7 @@ module.exports = [(foo(): C), (baz(): E)];
 >>> ./c.js
 // @flow
 
-import type {E, C} from "./lib.js";import { foo, baz } from "./lib";
+import type {E, C} from "./lib";import { foo, baz } from "./lib";
 
 const a = require("./a");
 
@@ -48,7 +48,6 @@ Errors:
     Parsing heaps get ast error:            0
     Indeterminate module type:              0
     No matching export:                     4
-    Unrecognizable module error:            0
   Serializer error:                         0
   Unsupported error kind:                   0
 
@@ -65,7 +64,7 @@ Warnings:
 >>> ./a.js
 // @flow
 
-import type {D, C} from "./lib.js";import { foo, bar } from "./lib";
+import type {D, C} from "./lib";import { foo, bar } from "./lib";
 
 const b = require("./b");
 
@@ -74,7 +73,7 @@ module.exports = [(foo(): C), (bar(): D)];
 >>> ./b.js
 // @flow
 
-import type {E, C} from "./lib.js";import { foo, baz } from "./lib";
+import type {E, C} from "./lib";import { foo, baz } from "./lib";
 
 const c = require("./c");
 
@@ -83,7 +82,7 @@ module.exports = [(foo(): C), (baz(): E)];
 >>> ./c.js
 // @flow
 
-import type {E, C} from "./lib.js";import { foo, baz } from "./lib";
+import type {E, C} from "./lib";import { foo, baz } from "./lib";
 
 const a = require("./a");
 

@@ -37,6 +37,6 @@ val concretize_error : (ALoc.t -> ALoc.table Lazy.t) -> ALoc.t t -> Loc.t t
 
 val concretize_errors : (ALoc.t -> ALoc.table Lazy.t) -> ErrorSet.t -> ConcreteErrorSet.t
 
-val make_error_printable : Loc.t t -> Loc.t Errors.printable_error
+val make_error_printable : ?speculation:bool -> Loc.t t -> Loc.t Errors.printable_error
 
 val make_errors_printable : ConcreteErrorSet.t -> Errors.ConcreteLocPrintableErrorSet.t

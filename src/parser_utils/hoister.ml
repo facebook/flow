@@ -89,25 +89,25 @@ class ['loc] hoister =
     method private add_binding entry = this#update_acc (Bindings.add entry)
 
     (* Ignore expressions. This includes, importantly, function expressions (whose
-     ids should not be hoisted). *)
+       ids should not be hoisted). *)
     method! expression (expr : ('loc, 'loc) Ast.Expression.t) = expr
 
     (* Ignore assignment patterns, whose targets should not be hoisted. *)
     method! assignment_pattern (patt : ('loc, 'loc) Ast.Pattern.t) = patt
 
     (* Ignore class declarations, since they are lexical bindings (thus not
-     hoisted). *)
+       hoisted). *)
     method! class_ _loc (cls : ('loc, 'loc) Ast.Class.t) = cls
 
     (* Ignore enum declarations, since they are lexical bindings. *)
     method! enum_declaration _loc (enum : ('loc, 'loc) Ast.Statement.EnumDeclaration.t) = enum
 
     (* Ignore import declarations, since they are lexical bindings (thus not
-     hoisted). *)
+       hoisted). *)
     method! import_declaration _loc (decl : ('loc, 'loc) Ast.Statement.ImportDeclaration.t) = decl
 
     (* This is visited by function parameters, variable declarations, and catch patterns (but not
-     assignment expressions). *)
+       assignment expressions). *)
     method! pattern ?kind (expr : ('loc, 'loc) Ast.Pattern.t) =
       match Utils.unsafe_opt kind with
       | Ast.Statement.VariableDeclaration.Var ->
@@ -175,8 +175,8 @@ class ['loc] lexical_hoister =
     method private add_binding entry = this#update_acc (Bindings.add entry)
 
     (* Ignore all statements except variable declarations, class declarations, and
-     import declarations. The ignored statements cannot contain lexical
-     bindings in the current scope. *)
+       import declarations. The ignored statements cannot contain lexical
+       bindings in the current scope. *)
     method! statement (stmt : ('loc, 'loc) Ast.Statement.t) =
       let open Ast.Statement in
       match stmt with
@@ -190,11 +190,11 @@ class ['loc] lexical_hoister =
       | _ -> stmt
 
     (* Ignore expressions. This includes, importantly, initializers of variable
-     declarations. *)
+       declarations. *)
     method! expression (expr : ('loc, 'loc) Ast.Expression.t) = expr
 
     (* This is visited by variable declarations, as well as other kinds of
-     patterns that we ignore. *)
+       patterns that we ignore. *)
     method! pattern ?kind (expr : ('loc, 'loc) Ast.Pattern.t) =
       match kind with
       | None -> expr
@@ -220,7 +220,7 @@ class ['loc] lexical_hoister =
         tparams = _;
         extends = _;
         implements = _;
-        classDecorators = _;
+        class_decorators = _;
         comments = _;
       } =
         cls

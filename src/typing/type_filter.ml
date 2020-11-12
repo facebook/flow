@@ -401,6 +401,16 @@ let not_function t =
 let array t =
   match t with
   | DefT (r, trust, MixedT _) ->
+    let r =
+      update_desc_reason
+        (function
+          (* If we always wrapped the reason desc in `RRefinedElement`, we may diverge
+             when typechecking loops instead of being caught by the constraint cache. Instead
+             we only wrap one element deep. *)
+          | RRefinedElement _ as desc -> desc
+          | d -> RRefinedElement d)
+        r
+    in
     DefT
       ( replace_desc_new_reason RROArrayType r,
         trust,
