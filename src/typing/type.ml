@@ -2308,14 +2308,6 @@ and UseTypeSet : (Set.S with type elt = TypeTerm.use_t) = Set.Make (struct
   let compare = Stdlib.compare
 end)
 
-and UseTypeMap : (WrappedMap.S with type key = TypeTerm.use_t) = WrappedMap.Make (struct
-  type key = TypeTerm.use_t
-
-  type t = key
-
-  let compare = Stdlib.compare
-end)
-
 and Object : sig
   type resolve_tool =
     (* Each part of a spread must be resolved in order to compute the result *)

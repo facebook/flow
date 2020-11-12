@@ -9,6 +9,20 @@ open Type
 
 type ident = int
 
+module UseTypeKey = struct
+  type speculation_id = int
+
+  type case_id = int
+
+  type key = TypeTerm.use_t * (speculation_id * case_id) option
+
+  type t = key
+
+  let compare = Stdlib.compare
+end
+
+module UseTypeMap = WrappedMap.Make (UseTypeKey)
+
 (** Type variables are unknowns, and we are ultimately interested in constraints
     on their solutions for type inference.
 

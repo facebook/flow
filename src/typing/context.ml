@@ -891,3 +891,9 @@ let fix_cache cx = cx.ccx.fix_cache
 let spread_cache cx = cx.ccx.spread_cache
 
 let speculation_state cx = cx.ccx.speculation_state
+
+let speculation_id cx =
+  let open Speculation_state in
+  match !(speculation_state cx) with
+  | [] -> None
+  | { speculation_id; case = { case_id; _ }; _ } :: _ -> Some (speculation_id, case_id)

@@ -172,7 +172,7 @@ let possible_types_of_type cx = function
 
 let uses_of constraints =
   match constraints with
-  | Unresolved { upper; _ } -> UseTypeMap.keys upper
+  | Unresolved { upper; _ } -> Base.List.map ~f:fst (UseTypeMap.keys upper)
   | Resolved (use_op, t)
   | FullyResolved (use_op, t) ->
     [UseT (use_op, t)]
@@ -11033,7 +11033,7 @@ struct
   (* for each u in us: l => u *)
   and flows_from_t cx trace ~new_use_op l us =
     us
-    |> UseTypeMap.iter (fun u trace_u ->
+    |> UseTypeMap.iter (fun (u, _) trace_u ->
            let u = flow_use_op cx new_use_op u in
            join_flow cx [trace; trace_u] (l, u))
 
@@ -11042,12 +11042,13 @@ struct
     ls
     |> TypeMap.iter (fun l (trace_l, use_op') ->
            us
-           |> UseTypeMap.iter (fun u trace_u ->
+           |> UseTypeMap.iter (fun (u, _) trace_u ->
                   let u = flow_use_op cx use_op' (flow_use_op cx use_op u) in
                   join_flow cx [trace_l; trace; trace_u] (l, u)))
 
   (* bounds.upper += u *)
-  and add_upper u trace bounds = bounds.upper <- UseTypeMap.add u trace bounds.upper
+  and add_upper cx u trace bounds =
+    bounds.upper <- UseTypeMap.add (u, Context.speculation_id cx) trace bounds.upper
 
   (* bounds.lower += l *)
   and add_lower l (trace, use_op) bounds =
@@ -11076,10 +11077,10 @@ struct
       goto node (so that updating its bounds is unnecessary). **)
   and edges_to_t cx trace ?(opt = false) (id1, bounds1) t2 =
     let max = Context.max_trace_depth cx in
-    if not opt then add_upper t2 trace bounds1;
+    if not opt then add_upper cx t2 trace bounds1;
     iter_with_filter cx bounds1.lowertvars id1 (fun (_, bounds) (trace_l, use_op) ->
         let t2 = flow_use_op cx use_op t2 in
-        add_upper t2 (Trace.concat_trace ~max [trace_l; trace]) bounds)
+        add_upper cx t2 (Trace.concat_trace ~max [trace_l; trace]) bounds)
     (* for each id in id2 + bounds2.uppertvars:
        id.bounds.lower += t1
     *)
@@ -11095,17 +11096,17 @@ struct
         add_lower t1 (Trace.concat_trace ~max [trace; trace_u], use_op) bounds)
 
   (* for each id' in id + bounds.lowertvars:
-     id'.bounds.upper += us
+       id'.bounds.upper += us
   *)
   and edges_to_ts ~new_use_op cx trace ?(opt = false) (id, bounds) us =
     let max = Context.max_trace_depth cx in
     us
-    |> UseTypeMap.iter (fun u trace_u ->
+    |> UseTypeMap.iter (fun (u, _) trace_u ->
            let u = flow_use_op cx new_use_op u in
            edges_to_t cx (Trace.concat_trace ~max [trace; trace_u]) ~opt (id, bounds) u)
 
   (* for each id' in id + bounds.uppertvars:
-     id'.bounds.lower += ls
+       id'.bounds.lower += ls
   *)
   and edges_from_ts cx trace ~new_use_op ?(opt = false) ls (id, bounds) =
     let max = Context.max_trace_depth cx in
@@ -11114,20 +11115,29 @@ struct
            let new_use_op = pick_use_op cx use_op new_use_op in
            edges_from_t cx (Trace.concat_trace ~max [trace_l; trace]) ~new_use_op ~opt l (id, bounds))
     (* for each id in id1 + bounds1.lowertvars:
-       id.bounds.upper += t2
-       for each l in bounds1.lower: l => t2
+         id.bounds.upper += t2
+         for each l in bounds1.lower: l => t2
     *)
 
   (** As an invariant, bounds1.lower should already contain id.bounds.lower for
       each id in bounds1.lowertvars. **)
   and edges_and_flows_to_t cx trace ?(opt = false) (id1, bounds1) t2 =
-    if not (UseTypeMap.mem t2 bounds1.upper) then (
+    (* Skip iff edge exists as part of the speculation path to the current branch *)
+    let skip =
+      List.exists
+        (fun branch ->
+          let Speculation_state.{ speculation_id; case = { case_id; _ }; _ } = branch in
+          UseTypeMap.mem (t2, Some (speculation_id, case_id)) bounds1.upper)
+        !(Context.speculation_state cx)
+      || UseTypeMap.mem (t2, None) bounds1.upper
+    in
+    if not skip then (
       edges_to_t cx trace ~opt (id1, bounds1) t2;
       flows_to_t cx trace bounds1.lower t2
     )
     (* for each id in id2 + bounds2.uppertvars:
-       id.bounds.lower += t1
-       for each u in bounds2.upper: t1 => u
+         id.bounds.lower += t1
+         for each u in bounds2.upper: t1 => u
     *)
 
   (** As an invariant, bounds2.upper should already contain id.bounds.upper for
@@ -11173,9 +11183,9 @@ struct
         add_lowertvar id1 (Trace.concat_trace ~max [trace; trace_u]) use_op bounds)
 
   (* for each id in id1 + bounds1.lowertvars:
-     id.bounds.upper += bounds2.upper
-     id.bounds.uppertvars += id2
-     id.bounds.uppertvars += bounds2.uppertvars
+       id.bounds.upper += bounds2.upper
+       id.bounds.uppertvars += id2
+       id.bounds.uppertvars += bounds2.uppertvars
   *)
   and add_upper_edges ~new_use_op cx trace ?(opt = false) (id1, bounds1) (id2, bounds2) =
     let max = Context.max_trace_depth cx in
@@ -11187,9 +11197,9 @@ struct
         edges_to_tvar cx trace ~new_use_op ~opt (id1, bounds1) tvar)
 
   (* for each id in id2 + bounds2.uppertvars:
-     id.bounds.lower += bounds1.lower
-     id.bounds.lowertvars += id1
-     id.bounds.lowertvars += bounds1.lowertvars
+       id.bounds.lower += bounds1.lower
+       id.bounds.lowertvars += id1
+       id.bounds.lowertvars += bounds1.lowertvars
   *)
   and add_lower_edges cx trace ~new_use_op ?(opt = false) (id1, bounds1) (id2, bounds2) =
     let max = Context.max_trace_depth cx in

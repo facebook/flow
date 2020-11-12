@@ -914,7 +914,7 @@ and dump_tvar_ (depth, tvars) cx id =
                  "; "
                  (List.rev
                     (UseTypeMap.fold
-                       (fun use_t _ acc -> dump_use_t_ (depth - 1, stack) cx use_t :: acc)
+                       (fun (use_t, _) _ acc -> dump_use_t_ (depth - 1, stack) cx use_t :: acc)
                        upper
                        [])))
       with Context.Tvar_not_found _ -> spf "Not Found: %d" id)
