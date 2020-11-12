@@ -1,3 +1,24 @@
+### 0.138.0
+
+Likely to cause new Flow errors:
+* Improved positioning of existing errors involving unions or intersections. Will not cause new errors, but may require suppressions to be moved.
+
+Bug Fixes:
+* Fixed soundness bug involving union and intersection types
+* Improved performance of typechecking exact objects against `$Exact`
+
+Editor Integration:
+* Fixed hover and go-to-definition over the LSP when the cursor is at the end of a token
+* Fixed type coverage over the LSP when using `all=true` (thanks @mochja)
+* Fixed an issue with running the `flow` CLI at the same time as VS Code caused by case-insensitivity of Windows paths
+
+Library Definitions:
+* Added `inputType` to `InputEvent` (thanks @Brianzchen)
+* Added `intersectsNode` to `Range` (thanks @Brianzchen)
+
+Misc:
+* Built-in library definitions are now extracted to a consistent temp directory, like `/tmp/flow/flowlibs_<HASH>`, to take up less space.
+
 ### 0.137.0
 
 New Features:
