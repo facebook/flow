@@ -953,7 +953,7 @@ end = struct
       >>| Base.List.dedup_and_sort ~compare:Stdlib.compare
 
     and empty_with_upper_bounds ~env bounds =
-      let uses = T.UseTypeMap.keys bounds.Constraint.upper in
+      let uses = Base.List.map ~f:fst (Constraint.UseTypeMap.keys bounds.Constraint.upper) in
       let%map use_kind = uses_t ~env uses in
       Ty.Bot (Ty.NoLowerWithUpper use_kind)
 

@@ -701,7 +701,17 @@ class virtual ['a] t =
       Constraint.(
         let lower' = TypeMap.ident_map_key (self#type_ cx map_cx) t.lower in
         if lower' != t.lower then t.lower <- lower';
-        let upper' = UseTypeMap.ident_map_key (self#use_type cx map_cx) t.upper in
+        let upper' =
+          UseTypeMap.ident_map_key
+            (fun u ->
+              let (t, speculation) = u in
+              let t' = self#use_type cx map_cx t in
+              if t == t' then
+                u
+              else
+                (t', speculation))
+            t.upper
+        in
         if upper' != t.upper then t.upper <- upper';
         t)
 
