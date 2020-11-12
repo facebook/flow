@@ -516,7 +516,8 @@ and normalize_path_ dir names =
     (* /<names> => /<names> *)
     construct_path Filename.dir_sep names
   | root :: names when is_windows_root root ->
-    (* C:\<names> => C:\<names> *)
+    (* c:\<names> => C:\<names> *)
+    let root = String.uppercase_ascii root in
     construct_path (root ^ Filename.dir_sep) names
   | _ ->
     (* <names> => dir/<names> *)
