@@ -1,4 +1,10 @@
-# Flow
+<p align="center">
+  <img src="website/static/logo.png" alt="logo" width="15%" />
+</p>
+<h1 align="center">
+  Flow
+</h1>
+
 <p align="center">
   <a href="https://circleci.com/gh/facebook/flow/tree/master">
     <img src="https://circleci.com/gh/facebook/flow/tree/master.svg?style=shield" alt="CircleCI" />
