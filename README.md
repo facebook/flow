@@ -26,10 +26,12 @@
   </a>
 </p>
 
-
-Flow is a static typechecker for JavaScript. To find out more about Flow, check out [flow.org](https://flow.org/).
-
-For a background on the project, please read [this overview](https://flow.org/en/docs/lang/).
+<p align="center">
+  Flow is a static typechecker for JavaScript. To find out more about Flow, check out <a href="https://flow.org/">flow.org</a>.
+</p>
+<p align="center">
+  For a background on the project, please read <a href="https://flow.org/en/docs/lang/">this overview</a>.
+</p>
 
 ## Contents
 
