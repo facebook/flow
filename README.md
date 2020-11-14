@@ -2,7 +2,7 @@
   <img src="website/static/logo.png" alt="logo" width="15%" />
 </p>
 <h1 align="center">
-  Flow
+  <a href="https://flow.org/">Flow</a>
 </h1>
 
 <p align="center">
@@ -27,7 +27,7 @@
 </p>
 
 <p align="center">
-  Flow is a static typechecker for JavaScript. To find out more about Flow, check out <a href="https://flow.org/">flow.org</a>.
+  Flow is a static typechecker with a focus on <a href="https://philosophy.stackexchange.com/a/6993">soundness</a> for JavaScript. To find out more, check out <a href="https://flow.org/">flow.org</a>.
 </p>
 <p align="center">
   For a background on the project, please read <a href="https://flow.org/en/docs/lang/">this overview</a>.
