@@ -293,6 +293,20 @@ Flags: --pretty
   ]
 }
 
+jsx-attribute-member.js:6:23
+Flags: --pretty
+{
+  "result":[
+    {"name":"bar","type":"string"},
+    {"name":"hasOwnProperty","type":"(prop: mixed) => boolean"},
+    {"name":"isPrototypeOf","type":"(o: mixed) => boolean"},
+    {"name":"propertyIsEnumerable","type":"(prop: mixed) => boolean"},
+    {"name":"toLocaleString","type":"() => string"},
+    {"name":"toString","type":"() => string"},
+    {"name":"valueOf","type":"() => mixed"}
+  ]
+}
+
 jsx-function-component.js:9:4
 Flags: --pretty
 {"result":[{"name":"x","type":"number"},{"name":"y","type":"string"}]}
