@@ -77,7 +77,11 @@ let get_intrinsic
    * non-literal without a dictionary. *)
   (match literal with
   | Literal _ -> ()
-  | _ -> rec_flow cx trace (intrinsics, HasOwnPropT (use_op, reason, literal)));
+  | _ ->
+    rec_flow
+      cx
+      trace
+      (intrinsics, HasOwnPropT (use_op, reason, DefT (reason, bogus_trust (), StrT literal))));
 
   (* Create a type variable which will represent the specific intrinsic we
    * find in the intrinsics map. *)

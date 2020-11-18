@@ -418,7 +418,11 @@ let error_message_kind_of_upper = function
   | ThisSpecializeT _ -> Error_message.IncompatibleThisSpecializeT
   | VarianceCheckT _ -> Error_message.IncompatibleVarianceCheckT
   | GetKeysT _ -> Error_message.IncompatibleGetKeysT
-  | HasOwnPropT (_, r, Literal (_, name)) ->
+  | HasOwnPropT
+      ( _,
+        r,
+        ( DefT (_, _, StrT (Literal (_, name)))
+        | GenericT { bound = DefT (_, _, StrT (Literal (_, name))); _ } ) ) ->
     Error_message.IncompatibleHasOwnPropT (aloc_of_reason r, Some name)
   | HasOwnPropT (_, r, _) -> Error_message.IncompatibleHasOwnPropT (aloc_of_reason r, None)
   | GetValuesT _ -> Error_message.IncompatibleGetValuesT
@@ -2648,14 +2652,16 @@ struct
         (*****************************************************)
         (* keys (NOTE: currently we only support string keys *)
         (*****************************************************)
-        | (DefT (reason_s, _, StrT literal), UseT (use_op, KeysT (reason_op, o))) ->
+        | ( ( DefT (reason_s, _, StrT literal)
+            | GenericT { reason = reason_s; bound = DefT (_, _, StrT literal); _ } ),
+            UseT (use_op, KeysT (reason_op, o)) ) ->
           let reason_next =
             match literal with
             | Literal (_, x) -> replace_desc_new_reason (RProperty (Some x)) reason_s
             | _ -> replace_desc_new_reason RUnknownString reason_s
           in
           (* check that o has key x *)
-          let u = HasOwnPropT (use_op, reason_next, literal) in
+          let u = HasOwnPropT (use_op, reason_next, l) in
           rec_flow cx trace (o, ReposLowerT (reason_op, false, u))
         | (KeysT _, ToStringT (_, t)) ->
           (* KeysT outputs strings, so we know ToStringT will be a no-op. *)
@@ -2665,17 +2671,18 @@ struct
           rec_flow cx trace (o1, GetKeysT (reason1, u))
         (* helpers *)
         | ( DefT (reason_o, _, ObjT { props_tmap = mapr; flags; _ }),
-            HasOwnPropT (use_op, reason_op, x) ) ->
-          (match (x, flags.obj_kind) with
+            HasOwnPropT (use_op, reason_op, key) ) ->
+          (match (drop_generic key, flags.obj_kind) with
           (* If we have a literal string and that property exists *)
-          | (Literal (_, x), _) when Context.has_prop cx mapr x -> ()
+          | (DefT (_, _, StrT (Literal (_, x))), _) when Context.has_prop cx mapr x -> ()
           (* If we have a dictionary, try that next *)
-          | (_, Indexed { key; _ }) ->
-            rec_flow_t ~use_op:unknown_use cx trace (DefT (reason_op, bogus_trust (), StrT x), key)
+          | (_, Indexed { key = expected_key; _ }) ->
+            rec_flow_t ~use_op cx trace (mod_reason_of_t (Fn.const reason_op) key, expected_key)
           | _ ->
             let (prop, suggestion) =
-              match x with
-              | Literal (_, prop) -> (Some prop, prop_typo_suggestion cx [mapr] prop)
+              match drop_generic key with
+              | DefT (_, _, StrT (Literal (_, prop))) ->
+                (Some prop, prop_typo_suggestion cx [mapr] prop)
               | _ -> (None, None)
             in
             let err =
@@ -2690,7 +2697,11 @@ struct
             in
             add_output cx ~trace err)
         | ( DefT (reason_o, _, InstanceT (_, _, _, instance)),
-            HasOwnPropT (use_op, reason_op, Literal (_, x)) ) ->
+            HasOwnPropT
+              ( use_op,
+                reason_op,
+                ( DefT (_, _, StrT (Literal (_, x)))
+                | GenericT { bound = DefT (_, _, StrT (Literal (_, x))); _ } ) ) ) ->
           let own_props = Context.find_props cx instance.own_props in
           (match SMap.find_opt x own_props with
           | Some _ -> ()
@@ -8050,6 +8061,7 @@ struct
           distribute_union_intersection ()
         else
           wait_for_concrete_bound ()
+      | UseT (_, KeysT _)
       | UseT (_, TypeDestructorTriggerT _) ->
         if is_concrete bound then
           false

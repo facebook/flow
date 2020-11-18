@@ -1290,7 +1290,12 @@ class virtual ['a] t_with_uses =
           t
         else
           GetKeysT (r, t'')
-      | HasOwnPropT _ -> t
+      | HasOwnPropT (op, r, t') ->
+        let t'' = self#type_ cx map_cx t' in
+        if t'' == t' then
+          t
+        else
+          HasOwnPropT (op, r, t')
       | GetValuesT (r, t') ->
         let t'' = self#type_ cx map_cx t' in
         if t'' == t' then
