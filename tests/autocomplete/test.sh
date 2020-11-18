@@ -26,6 +26,7 @@ queries_in_file autocomplete "jsx1.js" --pretty
 queries_in_file autocomplete "jsx2.js" --pretty
 queries_in_file autocomplete "jsx3.js" --pretty
 queries_in_file autocomplete "jsx4.js" --pretty
+queries_in_file autocomplete "jsx-attribute-member.js" --pretty
 queries_in_file autocomplete "jsx-function-component.js" --pretty
 queries_in_file autocomplete "jsx-function-component-2.js" --pretty
 queries_in_file autocomplete "jsx-function-component-3.js" --pretty

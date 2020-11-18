@@ -6222,42 +6222,43 @@ and jsx_mk_props cx reason c name attributes children =
               } ) ->
           (* Get the type for the attribute's value. *)
           let (atype, value) =
-            if Type_inference_hooks_js.dispatch_jsx_hook cx aname attr_loc c then
-              (Unsoundness.at InferenceHooks attr_loc, None)
-            else
-              match value with
-              (* <element name="literal" /> *)
-              | Some (Attribute.Literal (loc, lit)) ->
-                let t = literal cx loc lit in
-                (t, Some (Attribute.Literal ((loc, t), lit)))
-              (* <element name={expression} /> *)
-              | Some
+            match value with
+            (* <element name="literal" /> *)
+            | Some (Attribute.Literal (loc, lit)) ->
+              let t = literal cx loc lit in
+              (t, Some (Attribute.Literal ((loc, t), lit)))
+            (* <element name={expression} /> *)
+            | Some
+                (Attribute.ExpressionContainer
+                  ( ec_loc,
+                    {
+                      ExpressionContainer.expression = ExpressionContainer.Expression (loc, e);
+                      comments;
+                    } )) ->
+              let (((_, t), _) as e) = expression cx ~annot:(Some ()) (loc, e) in
+              ( t,
+                Some
                   (Attribute.ExpressionContainer
-                    ( ec_loc,
-                      {
-                        ExpressionContainer.expression = ExpressionContainer.Expression (loc, e);
-                        comments;
-                      } )) ->
-                let (((_, t), _) as e) = expression cx ~annot:(Some ()) (loc, e) in
-                ( t,
-                  Some
-                    (Attribute.ExpressionContainer
-                       ( (ec_loc, t),
-                         {
-                           ExpressionContainer.expression = ExpressionContainer.Expression e;
-                           comments;
-                         } )) )
-              (* <element name={} /> *)
-              | Some (Attribute.ExpressionContainer _ as ec) ->
-                let t = EmptyT.at attr_loc |> with_trust bogus_trust in
-                (t, Some (Tast_utils.unchecked_mapper#jsx_attribute_value ec))
-              (* <element name /> *)
-              | None -> (DefT (mk_reason RBoolean attr_loc, bogus_trust (), BoolT (Some true)), None)
+                     ( (ec_loc, t),
+                       {
+                         ExpressionContainer.expression = ExpressionContainer.Expression e;
+                         comments;
+                       } )) )
+            (* <element name={} /> *)
+            | Some (Attribute.ExpressionContainer _ as ec) ->
+              let t = EmptyT.at attr_loc |> with_trust bogus_trust in
+              (t, Some (Tast_utils.unchecked_mapper#jsx_attribute_value ec))
+            (* <element name /> *)
+            | None -> (DefT (mk_reason RBoolean attr_loc, bogus_trust (), BoolT (Some true)), None)
           in
           let acc =
-            ObjectExpressionAcc.add_prop
-              (Properties.add_field aname Polarity.Neutral (Some id_loc) atype)
+            if Type_inference_hooks_js.dispatch_jsx_hook cx aname id_loc c then
+              (* don't add `aname` to the prop map because it is the autocomplete token *)
               acc
+            else
+              ObjectExpressionAcc.add_prop
+                (Properties.add_field aname Polarity.Neutral (Some id_loc) atype)
+                acc
           in
           let att =
             Opening.Attribute
