@@ -38,7 +38,13 @@
               "typeAnnotation":null,
               "optional":false
             },
-            "init":true
+            "init":{
+              "type":"Literal",
+              "loc":{"source":null,"start":{"line":3,"column":6},"end":{"line":3,"column":10}},
+              "range":[20,24],
+              "value":true,
+              "raw":"true"
+            }
           }
         ],
         "explicitType":false,
