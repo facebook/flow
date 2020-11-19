@@ -1,3 +1,21 @@
+Error --------------------------------------------------------------------------- predicate_with_non_bool_annot.js:10:37
+
+Cannot return `(x === 'a') || (x === 'c') ? x : null` because string literal `c` [1] is incompatible with literal
+union [2]. [incompatible-return]
+
+   predicate_with_non_bool_annot.js:10:37
+   10|   return (x === 'a' || x === 'c') ? x : null; // error: 'c' incompatible with T
+                                           ^
+
+References:
+   predicate_with_non_bool_annot.js:9:25
+    9| function validate_2(x: ?string): ?T %checks {
+                               ^^^^^^ [1]
+   predicate_with_non_bool_annot.js:9:35
+    9| function validate_2(x: ?string): ?T %checks {
+                                         ^ [2]
+
+
 Error ------------------------------------------------------------------------------------- sanity-multi-params.js:10:12
 
 Cannot return `x` because array type [1] is incompatible with string [2]. [incompatible-return]
@@ -168,4 +186,4 @@ The return type of a predicate function cannot contain a generic type. The funct
 
 
 
-Found 13 errors
+Found 14 errors

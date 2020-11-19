@@ -2847,6 +2847,60 @@ struct
         (* Any will always be ok *)
         | (AnyT (_, src), GetValuesT (reason, values)) ->
           rec_flow_t ~use_op:unknown_use cx trace (AnyT.why src reason, values)
+        (*******************************************)
+        (* Refinement based on function predicates *)
+        (*******************************************)
+
+        (* Trap the return type of a predicated function *)
+        | ( OpenPredT { m_pos = p_pos; m_neg = p_neg; reason = _; base_t = _ },
+            CallOpenPredT (_, sense, key, unrefined_t, fresh_t) ) ->
+          let preds =
+            if sense then
+              p_pos
+            else
+              p_neg
+          in
+          (match Key_map.find_opt key preds with
+          | Some p -> rec_flow cx trace (unrefined_t, PredicateT (p, fresh_t))
+          | _ -> rec_flow_t ~use_op:unknown_use cx trace (unrefined_t, OpenT fresh_t))
+        (* Any other flow to `CallOpenPredT` does not actually refine the
+           type in question so we just fall back to regular flow. *)
+        | (_, CallOpenPredT (_, _, _, unrefined_t, fresh_t)) ->
+          rec_flow_t ~use_op:unknown_use cx trace (unrefined_t, OpenT fresh_t)
+        (********************************)
+        (* Function-predicate subtyping *)
+        (********************************)
+
+        (* When decomposing function subtyping for predicated functions we need to
+         * pair-up the predicates that each of the two functions established
+         * before we can check for predicate implication. The predicates encoded
+         * inside the two `OpenPredT`s refer to the formal parameters of the two
+         * functions (which are not the same). `SubstOnPredT` is a use that does
+         * this matching by carrying a substitution (`subst`) from keys from the
+         * function in the left-hand side to keys in the right-hand side.
+         *)
+        | ( OpenPredT { base_t = t1; m_pos = _p_pos_1; m_neg = _p_neg_1; reason = _ },
+            SubstOnPredT
+              (use_op, _, _, OpenPredT { base_t = t2; m_pos = p_pos_2; m_neg = p_neg_2; reason = _ })
+          )
+          when Key_map.(is_empty p_pos_2 && is_empty p_neg_2) ->
+          rec_flow_t ~use_op cx trace (t1, t2)
+        (* Identical predicates are okay, just do the base type check. *)
+        | ( OpenPredT { base_t = t1; m_pos = p_pos_1; m_neg = _; reason = lreason },
+            UseT (use_op, OpenPredT { base_t = t2; m_pos = p_pos_2; m_neg = _; reason = ureason })
+          ) ->
+          if TypeUtil.pred_map_implies p_pos_1 p_pos_2 then
+            rec_flow_t ~use_op cx trace (t1, t2)
+          else
+            let error =
+              Error_message.EIncompatibleWithUseOp
+                { reason_lower = lreason; reason_upper = ureason; use_op }
+            in
+            add_output cx ~trace error
+        (*********************************************)
+        (* Using predicate functions as regular ones *)
+        (*********************************************)
+        | (OpenPredT { base_t = l; m_pos = _; m_neg = _; reason = _ }, _) -> rec_flow cx trace (l, u)
         (********************************)
         (* union and intersection types *)
         (********************************)
@@ -3677,56 +3731,6 @@ struct
         (* Fall through all the remaining cases *)
         | (_, CallLatentPredT (_, _, _, unrefined_t, fresh_t)) ->
           rec_flow_t ~use_op:unknown_use cx trace (unrefined_t, OpenT fresh_t)
-        (* Trap the return type of a predicated function *)
-        | ( OpenPredT { m_pos = p_pos; m_neg = p_neg; reason = _; base_t = _ },
-            CallOpenPredT (_, sense, key, unrefined_t, fresh_t) ) ->
-          let preds =
-            if sense then
-              p_pos
-            else
-              p_neg
-          in
-          (match Key_map.find_opt key preds with
-          | Some p -> rec_flow cx trace (unrefined_t, PredicateT (p, fresh_t))
-          | _ -> rec_flow_t ~use_op:unknown_use cx trace (unrefined_t, OpenT fresh_t))
-        (* Any other flow to `CallOpenPredT` does not actually refine the
-           type in question so we just fall back to regular flow. *)
-        | (_, CallOpenPredT (_, _, _, unrefined_t, fresh_t)) ->
-          rec_flow_t ~use_op:unknown_use cx trace (unrefined_t, OpenT fresh_t)
-        (********************************)
-        (* Function-predicate subtyping *)
-        (********************************)
-
-        (* When decomposing function subtyping for predicated functions we need to
-         * pair-up the predicates that each of the two functions established
-         * before we can check for predicate implication. The predicates encoded
-         * inside the two `OpenPredT`s refer to the formal parameters of the two
-         * functions (which are not the same). `SubstOnPredT` is a use that does
-         * this matching by carrying a substitution (`subst`) from keys from the
-         * function in the left-hand side to keys in the right-hand side.
-         *)
-        | ( OpenPredT { base_t = t1; m_pos = _p_pos_1; m_neg = _p_neg_1; reason = _ },
-            SubstOnPredT
-              (use_op, _, _, OpenPredT { base_t = t2; m_pos = p_pos_2; m_neg = p_neg_2; reason = _ })
-          )
-          when Key_map.(is_empty p_pos_2 && is_empty p_neg_2) ->
-          rec_flow_t ~use_op cx trace (t1, t2)
-        (* Identical predicates are okay, just do the base type check. *)
-        | ( OpenPredT { base_t = t1; m_pos = p_pos_1; m_neg = _; reason = lreason },
-            UseT (use_op, OpenPredT { base_t = t2; m_pos = p_pos_2; m_neg = _; reason = ureason })
-          ) ->
-          if TypeUtil.pred_map_implies p_pos_1 p_pos_2 then
-            rec_flow_t ~use_op cx trace (t1, t2)
-          else
-            let error =
-              Error_message.EIncompatibleWithUseOp
-                { reason_lower = lreason; reason_upper = ureason; use_op }
-            in
-            add_output cx ~trace error
-        (*********************************************)
-        (* Using predicate functions as regular ones *)
-        (*********************************************)
-        | (OpenPredT { base_t = l; m_pos = _; m_neg = _; reason = _ }, _) -> rec_flow cx trace (l, u)
         (********************)
         (* mixin conversion *)
         (********************)
