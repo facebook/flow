@@ -39,6 +39,7 @@ queries_in_file autocomplete "if.js" --pretty
 queries_in_file autocomplete "override.js" --pretty
 queries_in_file autocomplete "member_class_property.js" --lsp
 queries_in_file autocomplete "member_class_static.js" --pretty
+queries_in_file autocomplete "member_interface_property.js" --lsp
 queries_in_file autocomplete "member_middle.js" --pretty
 queries_in_file autocomplete "optional_chaining_middle.js" --pretty
 queries_in_file autocomplete "optional_chaining_new.js" --pretty
