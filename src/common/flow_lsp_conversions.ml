@@ -78,7 +78,7 @@ let flow_signature_help_to_lsp
     in
     Some { signatures; activeSignature = 0; activeParameter = active_parameter }
 
-let flow_completion_to_lsp
+let flow_completion_item_to_lsp
     ~is_snippet_supported:(_ : bool)
     ~(is_preselect_supported : bool)
     (item : ServerProt.Response.Completion.completion_item) : Lsp.Completion.completionItem =
@@ -114,6 +114,18 @@ let flow_completion_to_lsp
     command = None;
     data = None;
   }
+
+let flow_completions_to_lsp
+    ~(is_snippet_supported : bool)
+    ~(is_preselect_supported : bool)
+    (completions : ServerProt.Response.Completion.t) : Lsp.Completion.result =
+  let { ServerProt.Response.Completion.items; is_incomplete } = completions in
+  let items =
+    Base.List.map
+      ~f:(flow_completion_item_to_lsp ~is_snippet_supported ~is_preselect_supported)
+      items
+  in
+  { Lsp.Completion.isIncomplete = is_incomplete; items }
 
 let file_key_to_uri (file_key_opt : File_key.t option) : (Lsp.DocumentUri.t, string) result =
   let ( >>| ) = Base.Result.( >>| ) in

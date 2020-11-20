@@ -7,7 +7,7 @@
 
 type autocomplete_service_result =
   | AcResult of {
-      results: ServerProt.Response.Completion.t;
+      result: ServerProt.Response.Completion.t;
       errors_to_log: string list;
     }
   | AcEmpty of string

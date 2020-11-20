@@ -156,27 +156,28 @@ let autocomplete ~trigger_character ~reader ~options ~env ~profiling ~filename ~
             let (response, json_props_to_log) =
               let open Hh_json in
               match results_res with
-              | AcResult { results; errors_to_log } ->
+              | AcResult { result; errors_to_log } ->
+                let { ServerProt.Response.Completion.items; is_incomplete = _ } = result in
                 let result_string =
-                  match (results, errors_to_log) with
+                  match (items, errors_to_log) with
                   | (_, []) -> "SUCCESS"
                   | ([], _ :: _) -> "FAILURE"
                   | (_ :: _, _ :: _) -> "PARTIAL"
                 in
                 let at_least_one_result_has_documentation =
                   Base.List.exists
-                    results
+                    items
                     ~f:(fun ServerProt.Response.Completion.{ documentation; _ } ->
                       Base.Option.is_some documentation)
                 in
-                ( Ok results,
+                ( Ok result,
                   ("result", JSON_String result_string)
-                  :: ("count", JSON_Number (results |> List.length |> string_of_int))
+                  :: ("count", JSON_Number (items |> List.length |> string_of_int))
                   :: ("errors", JSON_Array (Base.List.map ~f:(fun s -> JSON_String s) errors_to_log))
                   :: ("documentation", JSON_Bool at_least_one_result_has_documentation)
                   :: json_props_to_log )
               | AcEmpty reason ->
-                ( Ok [],
+                ( Ok { ServerProt.Response.Completion.items = []; is_incomplete = false },
                   ("result", JSON_String "SUCCESS")
                   :: ("count", JSON_Number "0")
                   :: ("empty_reason", JSON_String reason)
@@ -1604,17 +1605,14 @@ let handle_persistent_autocomplete_lsp
       let metadata = with_data ~extra_data metadata in
       begin
         match result with
-        | Ok items ->
-          let items =
-            Base.List.map
-              ~f:
-                (Flow_lsp_conversions.flow_completion_to_lsp
-                   ~is_snippet_supported
-                   ~is_preselect_supported)
-              items
+        | Ok completions ->
+          let result =
+            Flow_lsp_conversions.flow_completions_to_lsp
+              ~is_snippet_supported
+              ~is_preselect_supported
+              completions
           in
-          let r = CompletionResult { Lsp.Completion.isIncomplete = false; items } in
-          let response = ResponseMessage (id, r) in
+          let response = ResponseMessage (id, CompletionResult result) in
           Lwt.return ((), LspProt.LspFromServer (Some response), metadata)
         | Error reason -> mk_lsp_error_response ~ret:() ~id:(Some id) ~reason metadata
       end)
