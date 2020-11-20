@@ -2477,7 +2477,7 @@ let init_from_saved_state ~profiling ~workers ~saved_state ~updates options =
               ~job:
                 (List.fold_left (fun () (fn, parsed_file_data) ->
                      let { Saved_state.hash; resolved_requires } =
-                       Saved_state.denormalize_parsed_data
+                       Saved_state.denormalize_file_data
                          ~root
                          parsed_file_data.Saved_state.normalized_file_data
                      in

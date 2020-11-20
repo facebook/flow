@@ -107,7 +107,7 @@ let autocomplete ~trigger_character ~reader ~options ~env ~profiling ~filename ~
   let path = File_key.SourceFile path in
   let cursor_loc =
     let (line, column) = cursor in
-    Loc.make path line column
+    Loc.cursor (Some path) line column
   in
   let (contents, broader_context) =
     let (line, column) = cursor in
@@ -156,27 +156,28 @@ let autocomplete ~trigger_character ~reader ~options ~env ~profiling ~filename ~
             let (response, json_props_to_log) =
               let open Hh_json in
               match results_res with
-              | AcResult { results; errors_to_log } ->
+              | AcResult { result; errors_to_log } ->
+                let { ServerProt.Response.Completion.items; is_incomplete = _ } = result in
                 let result_string =
-                  match (results, errors_to_log) with
+                  match (items, errors_to_log) with
                   | (_, []) -> "SUCCESS"
                   | ([], _ :: _) -> "FAILURE"
                   | (_ :: _, _ :: _) -> "PARTIAL"
                 in
                 let at_least_one_result_has_documentation =
                   Base.List.exists
-                    results
+                    items
                     ~f:(fun ServerProt.Response.Completion.{ documentation; _ } ->
                       Base.Option.is_some documentation)
                 in
-                ( Ok results,
+                ( Ok result,
                   ("result", JSON_String result_string)
-                  :: ("count", JSON_Number (results |> List.length |> string_of_int))
+                  :: ("count", JSON_Number (items |> List.length |> string_of_int))
                   :: ("errors", JSON_Array (Base.List.map ~f:(fun s -> JSON_String s) errors_to_log))
                   :: ("documentation", JSON_Bool at_least_one_result_has_documentation)
                   :: json_props_to_log )
               | AcEmpty reason ->
-                ( Ok [],
+                ( Ok { ServerProt.Response.Completion.items = []; is_incomplete = false },
                   ("result", JSON_String "SUCCESS")
                   :: ("count", JSON_Number "0")
                   :: ("empty_reason", JSON_String reason)
@@ -216,7 +217,7 @@ let check_file ~options ~env ~profiling ~force file_input =
 (* This returns result, json_data_to_log, where json_data_to_log is the json data from
  * getdef_get_result which we end up using *)
 let get_def_of_check_result ~options ~reader ~profiling ~check_result (file, line, col) =
-  let loc = Loc.make file line col in
+  let loc = Loc.cursor (Some file) line col in
   let (cx, _, file_sig, _, _ast, typed_ast, parse_errors) = check_result in
   let file_sig = File_sig.abstractify_locs file_sig in
   Profiling_js.with_timer_lwt profiling ~timer:"GetResult" ~f:(fun () ->
@@ -1604,17 +1605,14 @@ let handle_persistent_autocomplete_lsp
       let metadata = with_data ~extra_data metadata in
       begin
         match result with
-        | Ok items ->
-          let items =
-            Base.List.map
-              ~f:
-                (Flow_lsp_conversions.flow_completion_to_lsp
-                   ~is_snippet_supported
-                   ~is_preselect_supported)
-              items
+        | Ok completions ->
+          let result =
+            Flow_lsp_conversions.flow_completions_to_lsp
+              ~is_snippet_supported
+              ~is_preselect_supported
+              completions
           in
-          let r = CompletionResult { Lsp.Completion.isIncomplete = false; items } in
-          let response = ResponseMessage (id, r) in
+          let response = ResponseMessage (id, CompletionResult result) in
           Lwt.return ((), LspProt.LspFromServer (Some response), metadata)
         | Error reason -> mk_lsp_error_response ~ret:() ~id:(Some id) ~reason metadata
       end)
@@ -1653,7 +1651,7 @@ let handle_persistent_signaturehelp_lsp
     | Ok (cx, _info, file_sig, _, _ast, typed_ast, _parse_errors) ->
       let func_details =
         let file_sig = File_sig.abstractify_locs file_sig in
-        let cursor_loc = Loc.make path line col in
+        let cursor_loc = Loc.cursor (Some path) line col in
         Signature_help.find_signatures ~options ~reader ~cx ~file_sig ~typed_ast cursor_loc
       in
       (match func_details with
@@ -1715,6 +1713,62 @@ let handle_persistent_document_highlight
     Lwt.return ((), LspProt.LspFromServer (Some response), metadata)
   | Error reason -> mk_lsp_error_response ~ret:() ~id:(Some id) ~reason metadata
 
+(* This tries to simulate the logic from elsewhere which determines whether we would report
+ * errors for a given file. The criteria are
+ *
+ * 1) The file must be either implicitly included (be in the same dir structure as .flowconfig)
+ *    or explicitly included
+ * 2) The file must not be ignored
+ * 3) The file path must be a Flow file (e.g foo.js and not foo.php or foo/)
+ * 4) The file must either have `// @flow` or all=true must be set in the .flowconfig or CLI
+ *)
+let check_that_we_care_about_this_file =
+  let check_file_not_ignored ~file_options ~env ~file_path () =
+    if Files.wanted ~options:file_options env.ServerEnv.libs file_path then
+      Ok ()
+    else
+      Error "File is ignored"
+  in
+  let check_file_included ~options ~file_options ~file_path () =
+    let file_is_implicitly_included =
+      let root_str = spf "%s%s" (Path.to_string (Options.root options)) Filename.dir_sep in
+      String_utils.string_starts_with file_path root_str
+    in
+    if file_is_implicitly_included then
+      Ok ()
+    else if Files.is_included file_options file_path then
+      Ok ()
+    else
+      Error "File is not implicitly or explicitly included"
+  in
+  let check_is_flow_file ~file_options ~file_path () =
+    if Files.is_flow_file ~options:file_options file_path then
+      Ok ()
+    else
+      Error "File is not a Flow file"
+  in
+  let check_flow_pragma ~options ~content ~file_path () =
+    if Options.all options then
+      Ok ()
+    else
+      let (_, docblock) =
+        Parsing_service_js.(
+          parse_docblock docblock_max_tokens (File_key.SourceFile file_path) content)
+      in
+      if Docblock.is_flow docblock then
+        Ok ()
+      else
+        Error "File is missing @flow pragma and `all` is not set to `true`"
+  in
+  fun ~options ~env ~file_path ~content ->
+    let file_path = Files.imaginary_realpath file_path in
+    let file_options = Options.file_options options in
+    Ok ()
+    >>= check_file_not_ignored ~file_options ~env ~file_path
+    >>= check_file_included ~options ~file_options ~file_path
+    >>= check_is_flow_file ~file_options ~file_path
+    >>= check_flow_pragma ~options ~content ~file_path
+
 let handle_persistent_coverage ~options ~id ~params ~file ~metadata ~client ~profiling ~env =
   let textDocument = params.TypeCoverage.textDocument in
   let file =
@@ -1726,20 +1780,21 @@ let handle_persistent_coverage ~options ~id ~params ~file ~metadata ~client ~pro
       Flow_lsp_conversions.lsp_DocumentIdentifier_to_flow textDocument ~client
   in
   (* if it isn't a flow file (i.e. lacks a @flow directive) then we won't do anything *)
-  let fkey = File_key.SourceFile (File_input.filename_of_file_input file) in
   let content = File_input.content_of_file_input file in
+  let file_path = File_input.filename_of_file_input file in
   let is_flow =
     match content with
     | Ok content ->
-      let (_, docblock) = Parsing_service_js.(parse_docblock docblock_max_tokens fkey content) in
-      Docblock.is_flow docblock
+      (match check_that_we_care_about_this_file ~options ~env ~file_path ~content with
+      | Ok () -> true
+      | Error _ -> false)
     | Error _ -> false
   in
   let%lwt result =
     if is_flow then
-      let force = false in
-      let type_contents_cache = Some (Persistent_connection.type_contents_cache client) in
       (* 'true' makes it report "unknown" for all exprs in non-flow files *)
+      let force = Options.all options in
+      let type_contents_cache = Some (Persistent_connection.type_contents_cache client) in
       coverage ~options ~env ~profiling ~type_contents_cache ~force ~trust:false file
     else
       Lwt.return (Ok [])
@@ -1954,62 +2009,6 @@ let handle_persistent_execute_command ~id ~params ~metadata ~client:_ ~profiling
 let handle_persistent_unsupported ?id ~unhandled ~metadata ~client:_ ~profiling:_ =
   let reason = Printf.sprintf "not implemented: %s" (Lsp_fmt.message_name_to_string unhandled) in
   mk_lsp_error_response ~ret:() ~id ~reason metadata
-
-(* This tries to simulate the logic from elsewhere which determines whether we would report
- * errors for a given file. The criteria are
- *
- * 1) The file must be either implicitly included (be in the same dir structure as .flowconfig)
- *    or explicitly included
- * 2) The file must not be ignored
- * 3) The file path must be a Flow file (e.g foo.js and not foo.php or foo/)
- * 4) The file must either have `// @flow` or all=true must be set in the .flowconfig or CLI
- *)
-let check_that_we_care_about_this_file =
-  let check_file_not_ignored ~file_options ~env ~file_path () =
-    if Files.wanted ~options:file_options env.ServerEnv.libs file_path then
-      Ok ()
-    else
-      Error "File is ignored"
-  in
-  let check_file_included ~options ~file_options ~file_path () =
-    let file_is_implicitly_included =
-      let root_str = spf "%s%s" (Path.to_string (Options.root options)) Filename.dir_sep in
-      String_utils.string_starts_with file_path root_str
-    in
-    if file_is_implicitly_included then
-      Ok ()
-    else if Files.is_included file_options file_path then
-      Ok ()
-    else
-      Error "File is not implicitly or explicitly included"
-  in
-  let check_is_flow_file ~file_options ~file_path () =
-    if Files.is_flow_file ~options:file_options file_path then
-      Ok ()
-    else
-      Error "File is not a Flow file"
-  in
-  let check_flow_pragma ~options ~content ~file_path () =
-    if Options.all options then
-      Ok ()
-    else
-      let (_, docblock) =
-        Parsing_service_js.(
-          parse_docblock docblock_max_tokens (File_key.SourceFile file_path) content)
-      in
-      if Docblock.is_flow docblock then
-        Ok ()
-      else
-        Error "File is missing @flow pragma and `all` is not set to `true`"
-  in
-  fun ~options ~env ~file_path ~content ->
-    let file_path = Files.imaginary_realpath file_path in
-    let file_options = Options.file_options options in
-    Ok ()
-    >>= check_file_not_ignored ~file_options ~env ~file_path
-    >>= check_file_included ~options ~file_options ~file_path
-    >>= check_is_flow_file ~file_options ~file_path
-    >>= check_flow_pragma ~options ~content ~file_path
 
 (* What should we do if we get multiple requests for the same URI? Each request wants the most
  * up-to-date live errors, so if we have 10 pending requests then we would want to send the same

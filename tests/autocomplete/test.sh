@@ -26,6 +26,7 @@ queries_in_file autocomplete "jsx1.js" --pretty
 queries_in_file autocomplete "jsx2.js" --pretty
 queries_in_file autocomplete "jsx3.js" --pretty
 queries_in_file autocomplete "jsx4.js" --pretty
+queries_in_file autocomplete "jsx-attribute-member.js" --pretty
 queries_in_file autocomplete "jsx-function-component.js" --pretty
 queries_in_file autocomplete "jsx-function-component-2.js" --pretty
 queries_in_file autocomplete "jsx-function-component-3.js" --pretty
@@ -38,6 +39,7 @@ queries_in_file autocomplete "if.js" --pretty
 queries_in_file autocomplete "override.js" --pretty
 queries_in_file autocomplete "member_class_property.js" --lsp
 queries_in_file autocomplete "member_class_static.js" --pretty
+queries_in_file autocomplete "member_interface_property.js" --lsp
 queries_in_file autocomplete "member_middle.js" --pretty
 queries_in_file autocomplete "optional_chaining_middle.js" --pretty
 queries_in_file autocomplete "optional_chaining_new.js" --pretty
@@ -80,6 +82,7 @@ queries_in_file autocomplete "suggest_optional_chaining_1.js" --lsp
 queries_in_file autocomplete "suggest_optional_chaining_2.js" --lsp
 queries_in_file autocomplete "suggest_optional_chaining_3.js" --lsp
 queries_in_file autocomplete "enums.js" --lsp
+queries_in_file autocomplete "enum-key.js" --lsp
 queries_in_file autocomplete "enum-id.js" --pretty
 queries_in_file autocomplete "class_declaration_name.js" --pretty
 queries_in_file autocomplete "pattern_object_key_middle.js" --pretty

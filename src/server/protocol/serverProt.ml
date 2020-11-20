@@ -237,7 +237,10 @@ module Response = struct
       documentation: string option;
     }
 
-    type t = completion_item list
+    type t = {
+      items: completion_item list;
+      is_incomplete: bool;
+    }
   end
 
   type autocomplete_response = (Completion.t, string) result

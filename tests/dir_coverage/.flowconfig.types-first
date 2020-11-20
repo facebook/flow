@@ -2,5 +2,3 @@
 libs/
 
 [options]
-well_formed_exports=true
-types_first=true

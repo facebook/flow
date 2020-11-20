@@ -237,7 +237,8 @@ let ordered_reasons ((rl, ru) as reasons) =
 let error_of_msg ~trace_reasons ~source_file (msg : 'loc Error_message.t') : 'loc t =
   { loc = loc_of_msg msg; msg; source_file; trace_reasons }
 
-let rec make_error_printable (error : Loc.t t) : Loc.t Errors.printable_error =
+let rec make_error_printable ?(speculation = false) (error : Loc.t t) : Loc.t Errors.printable_error
+    =
   Errors.(
     let {
       loc : Loc.t option;
@@ -385,7 +386,8 @@ let rec make_error_printable (error : Loc.t t) : Loc.t Errors.printable_error =
             | Op UnknownUse
             | Op (Internal _) ->
               `UnknownRoot false
-            | Op (Type.Speculation _) -> `UnknownRoot true
+            | Op (Type.Speculation _) when speculation -> `UnknownRoot true
+            | Op (Type.Speculation use) -> `Next use
             | Op (ObjectSpread { op }) -> `Root (op, None, [text "Cannot spread "; desc op])
             | Op (ObjectChain { op }) ->
               `Root (op, None, [text "Incorrect arguments passed to "; desc op])
@@ -669,7 +671,10 @@ let rec make_error_printable (error : Loc.t t) : Loc.t Errors.printable_error =
         Base.List.map
           ~f:(fun (_, (msg : Loc.t Error_message.t')) ->
             let score = score_of_msg msg in
-            let error = error_of_msg ~trace_reasons:[] ~source_file msg |> make_error_printable in
+            let error =
+              error_of_msg ~trace_reasons:[] ~source_file msg
+              |> make_error_printable ~speculation:true
+            in
             (score, error))
           branches
       in
@@ -1053,6 +1058,6 @@ let concretize_errors lazy_table_of_aloc set =
 
 let make_errors_printable set =
   ConcreteErrorSet.fold
-    (make_error_printable %> Errors.ConcreteLocPrintableErrorSet.add)
+    (make_error_printable ~speculation:false %> Errors.ConcreteLocPrintableErrorSet.add)
     set
     Errors.ConcreteLocPrintableErrorSet.empty

@@ -953,7 +953,7 @@ end = struct
       >>| Base.List.dedup_and_sort ~compare:Stdlib.compare
 
     and empty_with_upper_bounds ~env bounds =
-      let uses = T.UseTypeMap.keys bounds.Constraint.upper in
+      let uses = Base.List.map ~f:fst (Constraint.UseTypeMap.keys bounds.Constraint.upper) in
       let%map use_kind = uses_t ~env uses in
       Ty.Bot (Ty.NoLowerWithUpper use_kind)
 
@@ -2345,11 +2345,11 @@ end = struct
         let { T.inst_kind; _ } = inst in
         let desc = desc_of_reason ~unwrap:false r in
         match (inst_kind, desc, imode) with
-        | (_, Reason.RReactComponent, _)
-        | (T.InterfaceKind _, _, _) ->
-          TypeConverter.convert_instance_t ~env r super inst
+        | (_, Reason.RReactComponent, _) -> TypeConverter.convert_instance_t ~env r super inst
         | (T.ClassKind, _, IMStatic) -> loop ~env ~proto:false ~imode static
-        | (T.ClassKind, _, (IMUnset | IMInstance)) -> member_expand_object ~env super inst
+        | (T.ClassKind, _, (IMUnset | IMInstance))
+        | (T.InterfaceKind _, _, _) ->
+          member_expand_object ~env super inst
       and latent_pred_t ~env ~proto ~imode id t =
         let cx = Env.get_cx env in
         let evaluated = Context.evaluated cx in

@@ -701,7 +701,17 @@ class virtual ['a] t =
       Constraint.(
         let lower' = TypeMap.ident_map_key (self#type_ cx map_cx) t.lower in
         if lower' != t.lower then t.lower <- lower';
-        let upper' = UseTypeMap.ident_map_key (self#use_type cx map_cx) t.upper in
+        let upper' =
+          UseTypeMap.ident_map_key
+            (fun u ->
+              let (t, speculation) = u in
+              let t' = self#use_type cx map_cx t in
+              if t == t' then
+                u
+              else
+                (t', speculation))
+            t.upper
+        in
         if upper' != t.upper then t.upper <- upper';
         t)
 
@@ -1280,7 +1290,12 @@ class virtual ['a] t_with_uses =
           t
         else
           GetKeysT (r, t'')
-      | HasOwnPropT _ -> t
+      | HasOwnPropT (op, r, t') ->
+        let t'' = self#type_ cx map_cx t' in
+        if t'' == t' then
+          t
+        else
+          HasOwnPropT (op, r, t')
       | GetValuesT (r, t') ->
         let t'' = self#type_ cx map_cx t' in
         if t'' == t' then

@@ -148,3 +148,12 @@ class C<TConfig: t> {
     const config = updater(this._config);
   }
 }
+
+// Keys
+function gejses<TMapKey: string>(
+  key: $Keys<{[TMapKey]: $FlowFixMe, ...}>,
+): null {
+  if (key) {
+  }
+  return null;
+}

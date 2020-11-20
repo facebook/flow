@@ -209,6 +209,12 @@ class process_request_searcher (from_trigger_character : bool) (cursor : Loc.t) 
       else
         ident
 
+    method! enum_identifier ((loc, _) as ident) =
+      if this#covers_target loc then
+        this#find loc Ackey
+      else
+        ident
+
     method! class_body x =
       try super#class_body x
       with Found (tparams, loc, Acid _) ->

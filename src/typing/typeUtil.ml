@@ -277,7 +277,7 @@ and mod_reason_of_use_t f = function
   | GetProtoT (reason, t) -> GetProtoT (f reason, t)
   | GetStaticsT (reason, t) -> GetStaticsT (f reason, t)
   | GuardT (pred, result, (reason, tvar)) -> GuardT (pred, result, (f reason, tvar))
-  | HasOwnPropT (use_op, reason, prop) -> HasOwnPropT (use_op, f reason, prop)
+  | HasOwnPropT (use_op, reason, t) -> HasOwnPropT (use_op, f reason, t)
   | IdxUnMaybeifyT (reason, t_out) -> IdxUnMaybeifyT (f reason, t_out)
   | IdxUnwrap (reason, t_out) -> IdxUnwrap (f reason, t_out)
   | ImplementsT (use_op, t) -> ImplementsT (use_op, mod_reason_of_t f t)
@@ -408,7 +408,7 @@ let rec util_use_op_of_use_t :
   | ConcretizeTypeAppsT (u, (ts1, op, r1), x2, b) ->
     util op (fun op -> ConcretizeTypeAppsT (u, (ts1, op, r1), x2, b))
   | ArrRestT (op, r, i, t) -> util op (fun op -> ArrRestT (op, r, i, t))
-  | HasOwnPropT (op, r, p) -> util op (fun op -> HasOwnPropT (op, r, p))
+  | HasOwnPropT (op, r, t) -> util op (fun op -> HasOwnPropT (op, r, t))
   | GetKeysT (r, u2) -> nested_util u2 (fun u2 -> GetKeysT (r, u2))
   | ElemT (op, r, t, a) -> util op (fun op -> ElemT (op, r, t, a))
   | ObjKitT (op, r, x, y, t) -> util op (fun op -> ObjKitT (op, r, x, y, t))

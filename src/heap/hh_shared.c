@@ -168,7 +168,7 @@ static int win32_getpagesize(void) {
 /* Types */
 /*****************************************************************************/
 
-/* Convention: .*_b = Size in bytes. */
+/* Convention: bsize = size in bytes, wsize = size in words. */
 
 // Locations in the heap are encoded as byte offsets from the beginning of the
 // hash table. Because all data in the heap is word-aligned, these offsets will
@@ -194,10 +194,10 @@ typedef uintnat addr_t;
 
 typedef struct {
   /* Layout information, used by workers to create memory mappings. */
-  size_t locals_size_b;
-  size_t hashtbl_size_b;
-  size_t heap_size_b;
-  size_t shared_mem_size_b;
+  size_t locals_bsize;
+  size_t hashtbl_bsize;
+  size_t heap_bsize;
+  size_t shared_mem_bsize;
 
   /* Maximum number of hashtable elements */
   size_t hashtbl_slots;
@@ -636,39 +636,39 @@ static void memfd_reserve(char *mem, size_t sz) {
 
 #endif
 
-static void map_info_page(int page_size) {
+static void map_info_page(int page_bsize) {
   // The first page of shared memory contains (1) size information describing
   // the layout of the rest of the shared file; (2) values which are atomically
   // updated by workers, like the heap pointer; and (3) various configuration
   // which is convenient to stick here, like the log level.
-  assert(page_size >= sizeof(shmem_info_t));
-  info = (shmem_info_t*)memfd_map(page_size);
+  assert(page_bsize >= sizeof(shmem_info_t));
+  info = (shmem_info_t*)memfd_map(page_bsize);
 
 #ifdef _WIN32
   // Memory must be reserved on Windows
-  win_reserve((char *)info, page_size);
+  win_reserve((char *)info, page_bsize);
 #endif
 }
 
-static void define_mappings(int page_size) {
+static void define_mappings(int page_bsize) {
   assert(info != NULL);
-  size_t locals_size = info->locals_size_b;
-  size_t hashtbl_size = info->hashtbl_size_b;
-  size_t heap_size = info->heap_size_b;
+  size_t locals_bsize = info->locals_bsize;
+  size_t hashtbl_bsize = info->hashtbl_bsize;
+  size_t heap_bsize = info->heap_bsize;
 
-  shared_mem = memfd_map(info->shared_mem_size_b);
+  shared_mem = memfd_map(info->shared_mem_bsize);
 
   /* Process-local storage */
-  locals = (local_t*)(shared_mem + page_size);
+  locals = (local_t*)(shared_mem + page_bsize);
 
   /* Hashtable */
-  hashtbl = (helt_t*)(shared_mem + page_size + locals_size);
+  hashtbl = (helt_t*)(shared_mem + page_bsize + locals_bsize);
 
 #ifdef _WIN32
   // Memory must be reserved on Windows. Heap allocations will be reserved
   // in hh_alloc, so we just reserve the locals and hashtbl memory here.
-  win_reserve((char *)locals, locals_size);
-  win_reserve((char *)hashtbl, hashtbl_size);
+  win_reserve((char *)locals, locals_bsize);
+  win_reserve((char *)hashtbl, hashtbl_bsize);
 #endif
 
 #ifdef MADV_DONTDUMP
@@ -676,7 +676,7 @@ static void define_mappings(int page_size) {
   // a core file. Moreover, it can be HUGE, and the extensive work done dumping
   // it once for each CPU can mean that the user will reboot their machine
   // before the much more useful stack gets dumped!
-  madvise(hashtbl, hashtbl_size + heap_size, MADV_DONTDUMP);
+  madvise(hashtbl, hashtbl_bsize + heap_bsize, MADV_DONTDUMP);
 #endif
 }
 
@@ -684,7 +684,7 @@ static value alloc_heap_bigarray(void) {
   CAMLparam0();
   CAMLlocal1(heap);
   int heap_flags = CAML_BA_NATIVE_INT | CAML_BA_C_LAYOUT | CAML_BA_EXTERNAL;
-  intnat heap_dim[1] = {Wsize_bsize(info->hashtbl_size_b + info->heap_size_b)};
+  intnat heap_dim[1] = {Wsize_bsize(info->hashtbl_bsize + info->heap_bsize)};
   heap = caml_ba_alloc(heap_flags, 1, hashtbl, heap_dim);
   CAMLreturn(heap);
 }
@@ -700,37 +700,37 @@ CAMLprim value hh_shared_init(
   CAMLparam2(config_val, num_workers_val);
   CAMLlocal1(result);
 
-  size_t page_size = getpagesize();
+  int page_bsize = getpagesize();
 
   /* Calculate layout information. We need to figure out how big the shared file
    * needs to be in order to create the file. We will also store enough of the
    * layout information in the first page of the shared file so that workers can
    * create mappings for the rest of the shared data. */
   size_t num_workers = Long_val(num_workers_val);
-  size_t locals_size_b = CACHE_ALIGN((1 + num_workers) * sizeof(local_t));
+  size_t locals_bsize = CACHE_ALIGN((1 + num_workers) * sizeof(local_t));
   size_t hashtbl_slots = 1ul << Long_val(Field(config_val, 1));
-  size_t hashtbl_size_b = CACHE_ALIGN(hashtbl_slots * sizeof(helt_t));
-  size_t heap_size_b = Long_val(Field(config_val, 0));
+  size_t hashtbl_bsize = CACHE_ALIGN(hashtbl_slots * sizeof(helt_t));
+  size_t heap_bsize = Long_val(Field(config_val, 0));
 
   /* The total size of the shared file must have space for the info page, local
    * data, the hash table, and the heap. */
-  size_t shared_mem_size_b =
-    page_size + locals_size_b + hashtbl_size_b + heap_size_b;
+  size_t shared_mem_bsize =
+    page_bsize + locals_bsize + hashtbl_bsize + heap_bsize;
 
-  memfd_init(shared_mem_size_b);
+  memfd_init(shared_mem_bsize);
 
   /* The info page contains (1) size information describing the layout of the
    * rest of the shared file; (2) values which are atomically updated by
    * workers, like the heap pointer; and (3) various configuration which is
    * conventient to stick here, like the log level. */
-  map_info_page(page_size);
-  info->locals_size_b = locals_size_b;
-  info->hashtbl_size_b = hashtbl_size_b;
-  info->heap_size_b = heap_size_b;
-  info->shared_mem_size_b = shared_mem_size_b;
+  map_info_page(page_bsize);
+  info->locals_bsize = locals_bsize;
+  info->hashtbl_bsize = hashtbl_bsize;
+  info->heap_bsize = heap_bsize;
+  info->shared_mem_bsize = shared_mem_bsize;
   info->hashtbl_slots = hashtbl_slots;
-  info->heap_init = hashtbl_size_b;
-  info->heap_max = info->heap_init + heap_size_b;
+  info->heap_init = hashtbl_bsize;
+  info->heap_max = info->heap_init + heap_bsize;
   info->log_level = Long_val(Field(config_val, 2));
 
   // Ensure the global counter starts on a COUNTER_RANGE boundary
@@ -739,7 +739,7 @@ CAMLprim value hh_shared_init(
   // Initialize top heap pointers
   info->heap = info->heap_init;
 
-  define_mappings(page_size);
+  define_mappings(page_bsize);
 
   mark_stack = malloc(sizeof(struct mark_stack));
   mark_stack_init = malloc(MARK_STACK_INIT_SIZE * sizeof(mark_entry));
@@ -775,9 +775,9 @@ value hh_connect(value handle_val, value worker_id_val) {
   // Avoid confusion with master process, which is designated 0
   assert(worker_id > 0);
 
-  int page_size = getpagesize();
-  map_info_page(page_size);
-  define_mappings(page_size);
+  int page_bsize = getpagesize();
+  map_info_page(page_bsize);
+  define_mappings(page_bsize);
 
   CAMLreturn(alloc_heap_bigarray());
 }

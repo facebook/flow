@@ -623,7 +623,7 @@ module rec TypeTerm : sig
     | BecomeT of reason * t
     (* Keys *)
     | GetKeysT of reason * use_t
-    | HasOwnPropT of use_op * reason * string literal
+    | HasOwnPropT of use_op * reason * t (* The incoming string that we want to check against *)
     (* Values *)
     | GetValuesT of reason * t
     (* Element access *)
@@ -2304,14 +2304,6 @@ and UseTypeSet : (Set.S with type elt = TypeTerm.use_t) = Set.Make (struct
   type elt = TypeTerm.use_t
 
   type t = elt
-
-  let compare = Stdlib.compare
-end)
-
-and UseTypeMap : (WrappedMap.S with type key = TypeTerm.use_t) = WrappedMap.Make (struct
-  type key = TypeTerm.use_t
-
-  type t = key
 
   let compare = Stdlib.compare
 end)

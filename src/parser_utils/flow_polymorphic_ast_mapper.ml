@@ -575,7 +575,7 @@ class virtual ['M, 'T, 'N, 'U] mapper =
         : 'N Ast.Statement.EnumDeclaration.DefaultedMember.t =
       let open Ast.Statement.EnumDeclaration.DefaultedMember in
       let (annot, { id }) = member in
-      (this#on_loc_annot annot, { id = this#identifier id })
+      (this#on_loc_annot annot, { id = this#enum_identifier id })
 
     method enum_boolean_member
         (member : ('M Ast.BooleanLiteral.t, 'M) Ast.Statement.EnumDeclaration.InitializedMember.t)
@@ -583,7 +583,7 @@ class virtual ['M, 'T, 'N, 'U] mapper =
       let open Ast.Statement.EnumDeclaration.InitializedMember in
       let (annot, { id; init = (init_annot, init_val) }) = member in
       let init' = (this#on_loc_annot init_annot, this#boolean_literal init_val) in
-      (this#on_loc_annot annot, { id = this#identifier id; init = init' })
+      (this#on_loc_annot annot, { id = this#enum_identifier id; init = init' })
 
     method enum_number_member
         (member : ('M Ast.NumberLiteral.t, 'M) Ast.Statement.EnumDeclaration.InitializedMember.t)
@@ -591,7 +591,7 @@ class virtual ['M, 'T, 'N, 'U] mapper =
       let open Ast.Statement.EnumDeclaration.InitializedMember in
       let (annot, { id; init = (init_annot, init_val) }) = member in
       let init' = (this#on_loc_annot init_annot, this#number_literal init_val) in
-      (this#on_loc_annot annot, { id = this#identifier id; init = init' })
+      (this#on_loc_annot annot, { id = this#enum_identifier id; init = init' })
 
     method enum_string_member
         (member : ('M Ast.StringLiteral.t, 'M) Ast.Statement.EnumDeclaration.InitializedMember.t)
@@ -599,7 +599,10 @@ class virtual ['M, 'T, 'N, 'U] mapper =
       let open Ast.Statement.EnumDeclaration.InitializedMember in
       let (annot, { id; init = (init_annot, init_val) }) = member in
       let init' = (this#on_loc_annot init_annot, this#string_literal init_val) in
-      (this#on_loc_annot annot, { id = this#identifier id; init = init' })
+      (this#on_loc_annot annot, { id = this#enum_identifier id; init = init' })
+
+    method enum_identifier (ident : ('M, 'M) Ast.Identifier.t) : ('N, 'N) Ast.Identifier.t =
+      this#identifier ident
 
     method export_default_declaration
         _loc (decl : ('M, 'T) Ast.Statement.ExportDefaultDeclaration.t)

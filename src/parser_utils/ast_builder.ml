@@ -244,6 +244,9 @@ module Statements = struct
 
   let do_while body ?comments test = (Loc.none, DoWhile { DoWhile.body; test; comments })
 
+  let for_raw ?comments init test update body =
+    (Loc.none, For { For.init; test; update; body; comments })
+
   let for_ ?comments init test update body =
     (Loc.none, For { For.init = Some (For.InitExpression init); test; update; body; comments })
 

@@ -463,3 +463,5 @@ val fix_cache : t -> (Reason.t * Type.t, Type.t) Hashtbl.t
 val spread_cache : t -> Spread_cache.t
 
 val speculation_state : t -> Speculation_state.t
+
+val speculation_id : t -> (int * int) option

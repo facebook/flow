@@ -172,7 +172,7 @@ let possible_types_of_type cx = function
 
 let uses_of constraints =
   match constraints with
-  | Unresolved { upper; _ } -> UseTypeMap.keys upper
+  | Unresolved { upper; _ } -> Base.List.map ~f:fst (UseTypeMap.keys upper)
   | Resolved (use_op, t)
   | FullyResolved (use_op, t) ->
     [UseT (use_op, t)]
@@ -418,7 +418,11 @@ let error_message_kind_of_upper = function
   | ThisSpecializeT _ -> Error_message.IncompatibleThisSpecializeT
   | VarianceCheckT _ -> Error_message.IncompatibleVarianceCheckT
   | GetKeysT _ -> Error_message.IncompatibleGetKeysT
-  | HasOwnPropT (_, r, Literal (_, name)) ->
+  | HasOwnPropT
+      ( _,
+        r,
+        ( DefT (_, _, StrT (Literal (_, name)))
+        | GenericT { bound = DefT (_, _, StrT (Literal (_, name))); _ } ) ) ->
     Error_message.IncompatibleHasOwnPropT (aloc_of_reason r, Some name)
   | HasOwnPropT (_, r, _) -> Error_message.IncompatibleHasOwnPropT (aloc_of_reason r, None)
   | GetValuesT _ -> Error_message.IncompatibleGetValuesT
@@ -973,6 +977,8 @@ struct
             rec_flow cx trace (l, UseT (use_op, result))
         | (EvalT (t, LatentPredT (reason, p), i), _) ->
           rec_flow cx trace (eval_latent_pred cx ~trace reason t p i, u)
+        | (_, UseT (use_op, EvalT (t, LatentPredT (reason, p), i))) ->
+          rec_flow cx trace (l, UseT (use_op, eval_latent_pred cx ~trace reason t p i))
         (******************)
         (* process X ~> Y *)
         (******************)
@@ -1039,11 +1045,6 @@ struct
         (*****************)
         | (_, UseT (_, MergedT (_, uses))) -> List.iter (fun u -> rec_flow cx trace (l, u)) uses
         | (MergedT (reason, _), _) -> rec_flow cx trace (Unsoundness.why Merged reason, u)
-        (****************)
-        (* eval, contd. *)
-        (****************)
-        | (_, UseT (use_op, EvalT (t, LatentPredT (reason, p), i))) ->
-          rec_flow cx trace (l, UseT (use_op, eval_latent_pred cx ~trace reason t p i))
         (***************************)
         (* type destructor trigger *)
         (***************************)
@@ -2648,14 +2649,16 @@ struct
         (*****************************************************)
         (* keys (NOTE: currently we only support string keys *)
         (*****************************************************)
-        | (DefT (reason_s, _, StrT literal), UseT (use_op, KeysT (reason_op, o))) ->
+        | ( ( DefT (reason_s, _, StrT literal)
+            | GenericT { reason = reason_s; bound = DefT (_, _, StrT literal); _ } ),
+            UseT (use_op, KeysT (reason_op, o)) ) ->
           let reason_next =
             match literal with
             | Literal (_, x) -> replace_desc_new_reason (RProperty (Some x)) reason_s
             | _ -> replace_desc_new_reason RUnknownString reason_s
           in
           (* check that o has key x *)
-          let u = HasOwnPropT (use_op, reason_next, literal) in
+          let u = HasOwnPropT (use_op, reason_next, l) in
           rec_flow cx trace (o, ReposLowerT (reason_op, false, u))
         | (KeysT _, ToStringT (_, t)) ->
           (* KeysT outputs strings, so we know ToStringT will be a no-op. *)
@@ -2665,17 +2668,18 @@ struct
           rec_flow cx trace (o1, GetKeysT (reason1, u))
         (* helpers *)
         | ( DefT (reason_o, _, ObjT { props_tmap = mapr; flags; _ }),
-            HasOwnPropT (use_op, reason_op, x) ) ->
-          (match (x, flags.obj_kind) with
+            HasOwnPropT (use_op, reason_op, key) ) ->
+          (match (drop_generic key, flags.obj_kind) with
           (* If we have a literal string and that property exists *)
-          | (Literal (_, x), _) when Context.has_prop cx mapr x -> ()
+          | (DefT (_, _, StrT (Literal (_, x))), _) when Context.has_prop cx mapr x -> ()
           (* If we have a dictionary, try that next *)
-          | (_, Indexed { key; _ }) ->
-            rec_flow_t ~use_op:unknown_use cx trace (DefT (reason_op, bogus_trust (), StrT x), key)
+          | (_, Indexed { key = expected_key; _ }) ->
+            rec_flow_t ~use_op cx trace (mod_reason_of_t (Fn.const reason_op) key, expected_key)
           | _ ->
             let (prop, suggestion) =
-              match x with
-              | Literal (_, prop) -> (Some prop, prop_typo_suggestion cx [mapr] prop)
+              match drop_generic key with
+              | DefT (_, _, StrT (Literal (_, prop))) ->
+                (Some prop, prop_typo_suggestion cx [mapr] prop)
               | _ -> (None, None)
             in
             let err =
@@ -2690,7 +2694,11 @@ struct
             in
             add_output cx ~trace err)
         | ( DefT (reason_o, _, InstanceT (_, _, _, instance)),
-            HasOwnPropT (use_op, reason_op, Literal (_, x)) ) ->
+            HasOwnPropT
+              ( use_op,
+                reason_op,
+                ( DefT (_, _, StrT (Literal (_, x)))
+                | GenericT { bound = DefT (_, _, StrT (Literal (_, x))); _ } ) ) ) ->
           let own_props = Context.find_props cx instance.own_props in
           (match SMap.find_opt x own_props with
           | Some _ -> ()
@@ -2836,6 +2844,60 @@ struct
         (* Any will always be ok *)
         | (AnyT (_, src), GetValuesT (reason, values)) ->
           rec_flow_t ~use_op:unknown_use cx trace (AnyT.why src reason, values)
+        (*******************************************)
+        (* Refinement based on function predicates *)
+        (*******************************************)
+
+        (* Trap the return type of a predicated function *)
+        | ( OpenPredT { m_pos = p_pos; m_neg = p_neg; reason = _; base_t = _ },
+            CallOpenPredT (_, sense, key, unrefined_t, fresh_t) ) ->
+          let preds =
+            if sense then
+              p_pos
+            else
+              p_neg
+          in
+          (match Key_map.find_opt key preds with
+          | Some p -> rec_flow cx trace (unrefined_t, PredicateT (p, fresh_t))
+          | _ -> rec_flow_t ~use_op:unknown_use cx trace (unrefined_t, OpenT fresh_t))
+        (* Any other flow to `CallOpenPredT` does not actually refine the
+           type in question so we just fall back to regular flow. *)
+        | (_, CallOpenPredT (_, _, _, unrefined_t, fresh_t)) ->
+          rec_flow_t ~use_op:unknown_use cx trace (unrefined_t, OpenT fresh_t)
+        (********************************)
+        (* Function-predicate subtyping *)
+        (********************************)
+
+        (* When decomposing function subtyping for predicated functions we need to
+         * pair-up the predicates that each of the two functions established
+         * before we can check for predicate implication. The predicates encoded
+         * inside the two `OpenPredT`s refer to the formal parameters of the two
+         * functions (which are not the same). `SubstOnPredT` is a use that does
+         * this matching by carrying a substitution (`subst`) from keys from the
+         * function in the left-hand side to keys in the right-hand side.
+         *)
+        | ( OpenPredT { base_t = t1; m_pos = _p_pos_1; m_neg = _p_neg_1; reason = _ },
+            SubstOnPredT
+              (use_op, _, _, OpenPredT { base_t = t2; m_pos = p_pos_2; m_neg = p_neg_2; reason = _ })
+          )
+          when Key_map.(is_empty p_pos_2 && is_empty p_neg_2) ->
+          rec_flow_t ~use_op cx trace (t1, t2)
+        (* Identical predicates are okay, just do the base type check. *)
+        | ( OpenPredT { base_t = t1; m_pos = p_pos_1; m_neg = _; reason = lreason },
+            UseT (use_op, OpenPredT { base_t = t2; m_pos = p_pos_2; m_neg = _; reason = ureason })
+          ) ->
+          if TypeUtil.pred_map_implies p_pos_1 p_pos_2 then
+            rec_flow_t ~use_op cx trace (t1, t2)
+          else
+            let error =
+              Error_message.EIncompatibleWithUseOp
+                { reason_lower = lreason; reason_upper = ureason; use_op }
+            in
+            add_output cx ~trace error
+        (*********************************************)
+        (* Using predicate functions as regular ones *)
+        (*********************************************)
+        | (OpenPredT { base_t = l; m_pos = _; m_neg = _; reason = _ }, _) -> rec_flow cx trace (l, u)
         (********************************)
         (* union and intersection types *)
         (********************************)
@@ -3666,56 +3728,6 @@ struct
         (* Fall through all the remaining cases *)
         | (_, CallLatentPredT (_, _, _, unrefined_t, fresh_t)) ->
           rec_flow_t ~use_op:unknown_use cx trace (unrefined_t, OpenT fresh_t)
-        (* Trap the return type of a predicated function *)
-        | ( OpenPredT { m_pos = p_pos; m_neg = p_neg; reason = _; base_t = _ },
-            CallOpenPredT (_, sense, key, unrefined_t, fresh_t) ) ->
-          let preds =
-            if sense then
-              p_pos
-            else
-              p_neg
-          in
-          (match Key_map.find_opt key preds with
-          | Some p -> rec_flow cx trace (unrefined_t, PredicateT (p, fresh_t))
-          | _ -> rec_flow_t ~use_op:unknown_use cx trace (unrefined_t, OpenT fresh_t))
-        (* Any other flow to `CallOpenPredT` does not actually refine the
-           type in question so we just fall back to regular flow. *)
-        | (_, CallOpenPredT (_, _, _, unrefined_t, fresh_t)) ->
-          rec_flow_t ~use_op:unknown_use cx trace (unrefined_t, OpenT fresh_t)
-        (********************************)
-        (* Function-predicate subtyping *)
-        (********************************)
-
-        (* When decomposing function subtyping for predicated functions we need to
-         * pair-up the predicates that each of the two functions established
-         * before we can check for predicate implication. The predicates encoded
-         * inside the two `OpenPredT`s refer to the formal parameters of the two
-         * functions (which are not the same). `SubstOnPredT` is a use that does
-         * this matching by carrying a substitution (`subst`) from keys from the
-         * function in the left-hand side to keys in the right-hand side.
-         *)
-        | ( OpenPredT { base_t = t1; m_pos = _p_pos_1; m_neg = _p_neg_1; reason = _ },
-            SubstOnPredT
-              (use_op, _, _, OpenPredT { base_t = t2; m_pos = p_pos_2; m_neg = p_neg_2; reason = _ })
-          )
-          when Key_map.(is_empty p_pos_2 && is_empty p_neg_2) ->
-          rec_flow_t ~use_op cx trace (t1, t2)
-        (* Identical predicates are okay, just do the base type check. *)
-        | ( OpenPredT { base_t = t1; m_pos = p_pos_1; m_neg = _; reason = lreason },
-            UseT (use_op, OpenPredT { base_t = t2; m_pos = p_pos_2; m_neg = _; reason = ureason })
-          ) ->
-          if TypeUtil.pred_map_implies p_pos_1 p_pos_2 then
-            rec_flow_t ~use_op cx trace (t1, t2)
-          else
-            let error =
-              Error_message.EIncompatibleWithUseOp
-                { reason_lower = lreason; reason_upper = ureason; use_op }
-            in
-            add_output cx ~trace error
-        (*********************************************)
-        (* Using predicate functions as regular ones *)
-        (*********************************************)
-        | (OpenPredT { base_t = l; m_pos = _; m_neg = _; reason = _ }, _) -> rec_flow cx trace (l, u)
         (********************)
         (* mixin conversion *)
         (********************)
@@ -8050,6 +8062,7 @@ struct
           distribute_union_intersection ()
         else
           wait_for_concrete_bound ()
+      | UseT (_, KeysT _)
       | UseT (_, TypeDestructorTriggerT _) ->
         if is_concrete bound then
           false
@@ -11033,7 +11046,7 @@ struct
   (* for each u in us: l => u *)
   and flows_from_t cx trace ~new_use_op l us =
     us
-    |> UseTypeMap.iter (fun u trace_u ->
+    |> UseTypeMap.iter (fun (u, _) trace_u ->
            let u = flow_use_op cx new_use_op u in
            join_flow cx [trace; trace_u] (l, u))
 
@@ -11042,12 +11055,13 @@ struct
     ls
     |> TypeMap.iter (fun l (trace_l, use_op') ->
            us
-           |> UseTypeMap.iter (fun u trace_u ->
+           |> UseTypeMap.iter (fun (u, _) trace_u ->
                   let u = flow_use_op cx use_op' (flow_use_op cx use_op u) in
                   join_flow cx [trace_l; trace; trace_u] (l, u)))
 
   (* bounds.upper += u *)
-  and add_upper u trace bounds = bounds.upper <- UseTypeMap.add u trace bounds.upper
+  and add_upper cx u trace bounds =
+    bounds.upper <- UseTypeMap.add (u, Context.speculation_id cx) trace bounds.upper
 
   (* bounds.lower += l *)
   and add_lower l (trace, use_op) bounds =
@@ -11076,10 +11090,10 @@ struct
       goto node (so that updating its bounds is unnecessary). **)
   and edges_to_t cx trace ?(opt = false) (id1, bounds1) t2 =
     let max = Context.max_trace_depth cx in
-    if not opt then add_upper t2 trace bounds1;
+    if not opt then add_upper cx t2 trace bounds1;
     iter_with_filter cx bounds1.lowertvars id1 (fun (_, bounds) (trace_l, use_op) ->
         let t2 = flow_use_op cx use_op t2 in
-        add_upper t2 (Trace.concat_trace ~max [trace_l; trace]) bounds)
+        add_upper cx t2 (Trace.concat_trace ~max [trace_l; trace]) bounds)
     (* for each id in id2 + bounds2.uppertvars:
        id.bounds.lower += t1
     *)
@@ -11095,17 +11109,17 @@ struct
         add_lower t1 (Trace.concat_trace ~max [trace; trace_u], use_op) bounds)
 
   (* for each id' in id + bounds.lowertvars:
-     id'.bounds.upper += us
+       id'.bounds.upper += us
   *)
   and edges_to_ts ~new_use_op cx trace ?(opt = false) (id, bounds) us =
     let max = Context.max_trace_depth cx in
     us
-    |> UseTypeMap.iter (fun u trace_u ->
+    |> UseTypeMap.iter (fun (u, _) trace_u ->
            let u = flow_use_op cx new_use_op u in
            edges_to_t cx (Trace.concat_trace ~max [trace; trace_u]) ~opt (id, bounds) u)
 
   (* for each id' in id + bounds.uppertvars:
-     id'.bounds.lower += ls
+       id'.bounds.lower += ls
   *)
   and edges_from_ts cx trace ~new_use_op ?(opt = false) ls (id, bounds) =
     let max = Context.max_trace_depth cx in
@@ -11114,20 +11128,29 @@ struct
            let new_use_op = pick_use_op cx use_op new_use_op in
            edges_from_t cx (Trace.concat_trace ~max [trace_l; trace]) ~new_use_op ~opt l (id, bounds))
     (* for each id in id1 + bounds1.lowertvars:
-       id.bounds.upper += t2
-       for each l in bounds1.lower: l => t2
+         id.bounds.upper += t2
+         for each l in bounds1.lower: l => t2
     *)
 
   (** As an invariant, bounds1.lower should already contain id.bounds.lower for
       each id in bounds1.lowertvars. **)
   and edges_and_flows_to_t cx trace ?(opt = false) (id1, bounds1) t2 =
-    if not (UseTypeMap.mem t2 bounds1.upper) then (
+    (* Skip iff edge exists as part of the speculation path to the current branch *)
+    let skip =
+      List.exists
+        (fun branch ->
+          let Speculation_state.{ speculation_id; case = { case_id; _ }; _ } = branch in
+          UseTypeMap.mem (t2, Some (speculation_id, case_id)) bounds1.upper)
+        !(Context.speculation_state cx)
+      || UseTypeMap.mem (t2, None) bounds1.upper
+    in
+    if not skip then (
       edges_to_t cx trace ~opt (id1, bounds1) t2;
       flows_to_t cx trace bounds1.lower t2
     )
     (* for each id in id2 + bounds2.uppertvars:
-       id.bounds.lower += t1
-       for each u in bounds2.upper: t1 => u
+         id.bounds.lower += t1
+         for each u in bounds2.upper: t1 => u
     *)
 
   (** As an invariant, bounds2.upper should already contain id.bounds.upper for
@@ -11173,9 +11196,9 @@ struct
         add_lowertvar id1 (Trace.concat_trace ~max [trace; trace_u]) use_op bounds)
 
   (* for each id in id1 + bounds1.lowertvars:
-     id.bounds.upper += bounds2.upper
-     id.bounds.uppertvars += id2
-     id.bounds.uppertvars += bounds2.uppertvars
+       id.bounds.upper += bounds2.upper
+       id.bounds.uppertvars += id2
+       id.bounds.uppertvars += bounds2.uppertvars
   *)
   and add_upper_edges ~new_use_op cx trace ?(opt = false) (id1, bounds1) (id2, bounds2) =
     let max = Context.max_trace_depth cx in
@@ -11187,9 +11210,9 @@ struct
         edges_to_tvar cx trace ~new_use_op ~opt (id1, bounds1) tvar)
 
   (* for each id in id2 + bounds2.uppertvars:
-     id.bounds.lower += bounds1.lower
-     id.bounds.lowertvars += id1
-     id.bounds.lowertvars += bounds1.lowertvars
+       id.bounds.lower += bounds1.lower
+       id.bounds.lowertvars += id1
+       id.bounds.lowertvars += bounds1.lowertvars
   *)
   and add_lower_edges cx trace ~new_use_op ?(opt = false) (id1, bounds1) (id2, bounds2) =
     let max = Context.max_trace_depth cx in

@@ -148,7 +148,7 @@ module Opts = struct
 
   let default_options =
     {
-      abstract_locations = false;
+      abstract_locations = true;
       all = false;
       automatic_require_default = false;
       babel_loose_array_spread = false;
@@ -163,7 +163,7 @@ module Opts = struct
       enums_with_unknown_members = false;
       this_annot = false;
       exact_by_default = false;
-      generate_tests = true;
+      generate_tests = false;
       facebook_fbs = None;
       facebook_fbt = None;
       facebook_module_interop = false;

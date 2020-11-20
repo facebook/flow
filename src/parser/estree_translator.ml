@@ -1044,12 +1044,11 @@ with type t = Impl.t = struct
             [
               ( "members",
                 array_of_list
-                  (fun ( loc,
-                         {
-                           InitializedMember.id;
-                           init = (_, { BooleanLiteral.value; comments = _ });
-                         } ) ->
-                    node "EnumBooleanMember" loc [("id", identifier id); ("init", bool value)])
+                  (fun (loc, { InitializedMember.id; init }) ->
+                    node
+                      "EnumBooleanMember"
+                      loc
+                      [("id", identifier id); ("init", boolean_literal init)])
                   members );
               ("explicitType", bool explicit_type);
               ("hasUnknownMembers", bool has_unknown_members);
@@ -1311,6 +1310,14 @@ with type t = Impl.t = struct
       node ?comments "BigIntLiteral" loc [("value", null); ("bigint", string raw)]
     and string_literal (loc, { StringLiteral.value; raw; comments }) =
       node ?comments "Literal" loc [("value", string value); ("raw", string raw)]
+    and boolean_literal (loc, { BooleanLiteral.value; comments }) =
+      let raw =
+        if value then
+          "true"
+        else
+          "false"
+      in
+      node ?comments "Literal" loc [("value", bool value); ("raw", string raw)]
     and template_literal (loc, { Expression.TemplateLiteral.quasis; expressions; comments }) =
       node
         ?comments
