@@ -977,6 +977,8 @@ struct
             rec_flow cx trace (l, UseT (use_op, result))
         | (EvalT (t, LatentPredT (reason, p), i), _) ->
           rec_flow cx trace (eval_latent_pred cx ~trace reason t p i, u)
+        | (_, UseT (use_op, EvalT (t, LatentPredT (reason, p), i))) ->
+          rec_flow cx trace (l, UseT (use_op, eval_latent_pred cx ~trace reason t p i))
         (******************)
         (* process X ~> Y *)
         (******************)
@@ -1043,11 +1045,6 @@ struct
         (*****************)
         | (_, UseT (_, MergedT (_, uses))) -> List.iter (fun u -> rec_flow cx trace (l, u)) uses
         | (MergedT (reason, _), _) -> rec_flow cx trace (Unsoundness.why Merged reason, u)
-        (****************)
-        (* eval, contd. *)
-        (****************)
-        | (_, UseT (use_op, EvalT (t, LatentPredT (reason, p), i))) ->
-          rec_flow cx trace (l, UseT (use_op, eval_latent_pred cx ~trace reason t p i))
         (***************************)
         (* type destructor trigger *)
         (***************************)
