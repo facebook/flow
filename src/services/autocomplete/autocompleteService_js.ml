@@ -83,15 +83,15 @@ let lsp_completion_of_decl =
 
 let sort_text_of_rank rank = Some (Printf.sprintf "%020u" rank)
 
-let text_edits ?insert_text (name, loc) =
+let text_edit ?insert_text (name, loc) =
   let newText = Base.Option.value ~default:name insert_text in
-  [(loc, newText)]
+  (loc, newText)
 
 let autocomplete_create_result
     ?insert_text ?(rank = 0) ?(preselect = false) ?documentation ~exact_by_default (name, loc) ty =
   let detail = Ty_printer.string_of_t_single_line ~with_comments:false ~exact_by_default ty in
   let kind = lsp_completion_of_type ty in
-  let text_edits = text_edits ?insert_text (name, loc) in
+  let text_edits = [text_edit ?insert_text (name, loc)] in
   let sort_text = sort_text_of_rank rank in
   {
     ServerProt.Response.Completion.kind;
@@ -116,7 +116,7 @@ let autocomplete_create_result_decl
       ( Some (lsp_completion_of_decl d),
         Ty_printer.string_of_decl_single_line ~with_comments:false ~exact_by_default d )
   in
-  let text_edits = text_edits ?insert_text (name, loc) in
+  let text_edits = [text_edit ?insert_text (name, loc)] in
   let sort_text = sort_text_of_rank rank in
   {
     ServerProt.Response.Completion.kind;
@@ -609,7 +609,7 @@ let autocomplete_id
         kind = Some Lsp.Completion.Variable;
         name = "this";
         detail = "this";
-        text_edits = text_edits ("this", ac_loc);
+        text_edits = [text_edit ("this", ac_loc)];
         sort_text = sort_text_of_rank 0;
         preselect = false;
         documentation = None;
@@ -625,7 +625,7 @@ let autocomplete_id
         kind = Some Lsp.Completion.Variable;
         name = "super";
         detail = "super";
-        text_edits = text_edits ("super", ac_loc);
+        text_edits = [text_edit ("super", ac_loc)];
         sort_text = sort_text_of_rank 0;
         preselect = false;
         documentation = None;
@@ -758,7 +758,7 @@ let type_exports_of_module_ty ~ac_loc ~exact_by_default ~documentation_of_module
             {
               kind = lsp_completion_of_type t;
               name = sym_name;
-              text_edits = text_edits (sym_name, ac_loc);
+              text_edits = [text_edit (sym_name, ac_loc)];
               detail = Ty_printer.string_of_decl_single_line ~exact_by_default d;
               sort_text = None;
               preselect = false;
@@ -769,7 +769,7 @@ let type_exports_of_module_ty ~ac_loc ~exact_by_default ~documentation_of_module
             {
               kind = Some Lsp.Completion.Interface;
               name = sym_name;
-              text_edits = text_edits (sym_name, ac_loc);
+              text_edits = [text_edit (sym_name, ac_loc)];
               detail = Ty_printer.string_of_decl_single_line ~exact_by_default d;
               sort_text = None;
               preselect = false;
@@ -780,7 +780,7 @@ let type_exports_of_module_ty ~ac_loc ~exact_by_default ~documentation_of_module
             {
               kind = Some Lsp.Completion.Class;
               name = sym_name;
-              text_edits = text_edits (sym_name, ac_loc);
+              text_edits = [text_edit (sym_name, ac_loc)];
               detail = Ty_printer.string_of_decl_single_line ~exact_by_default d;
               sort_text = None;
               preselect = false;
@@ -791,7 +791,7 @@ let type_exports_of_module_ty ~ac_loc ~exact_by_default ~documentation_of_module
             {
               kind = Some Lsp.Completion.Enum;
               name = sym_name;
-              text_edits = text_edits (sym_name, ac_loc);
+              text_edits = [text_edit (sym_name, ac_loc)];
               detail = Ty_printer.string_of_decl_single_line ~exact_by_default d;
               sort_text = None;
               preselect = false;
@@ -814,7 +814,7 @@ let autocomplete_unqualified_type ~options ~reader ~cx ~tparams ~file_sig ~ac_lo
           kind = Some Lsp.Completion.TypeParameter;
           name;
           detail = name;
-          text_edits = text_edits (name, ac_loc);
+          text_edits = [text_edit (name, ac_loc)];
           sort_text = sort_text_of_rank 0;
           preselect = false;
           documentation = None;
