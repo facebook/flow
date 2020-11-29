@@ -4,7 +4,7 @@ The Flow Parser is a JavaScript parser written in OCaml. It produces an AST that
 
 ## Building the Flow Parser
 
-Building the Flow Parser requires OCaml. Compiling to JavaScript requires js_of_ocaml >= 2.8.
+Building the Flow Parser requires OCaml. Compiling to JavaScript requires js_of_ocaml >= 3.6.
 
 ### Initial set up
 
@@ -14,7 +14,7 @@ Building the Flow Parser requires OCaml. Compiling to JavaScript requires js_of_
 ### Building the OCaml Flow Parser library
 
     make
-    
+
 ### Compiling the Flow Parser to JavaScript
 
     make js

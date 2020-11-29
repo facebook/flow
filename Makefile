@@ -312,9 +312,6 @@ clean:
 	rm -f flow.odocl
 
 build-flow: _build/scripts/ppx_gen_flowlibs.exe $(BUILT_OBJECT_FILES) $(COPIED_FLOWLIB) $(COPIED_PRELUDE) $(INTERNAL_BUILD_FLAGS)
-	# Both lwt and lwt_ppx provide ppx stuff. Fixed in lwt 4.0.0
-	# https://github.com/ocsigen/lwt/issues/453
-	export OCAMLFIND_IGNORE_DUPS_IN="$(shell ocamlfind query lwt)"; \
 	$(OCB) $(INTERNAL_FLAGS) $(INCLUDE_OPTS) -tag thread $(NATIVE_FINDLIB_OPTS) \
 		-lflags "$(LINKER_FLAGS)" \
 		$(RELEASE_TAGS) \
@@ -383,7 +380,6 @@ bin/flow$(EXE): build-flow
 	cp _build/src/flow.native $@
 
 $(BUILT_OUNIT_TESTS): $(BUILT_OBJECT_FILES) FORCE
-	export OCAMLFIND_IGNORE_DUPS_IN="$(shell ocamlfind query lwt)"; \
 	$(OCB) $(INTERNAL_FLAGS) $(INCLUDE_OPTS) -tag thread $(NATIVE_FINDLIB_OPTS) \
 		-I $(patsubst _build/%,%,$(@D)) \
 		-lflags "$(LINKER_FLAGS)" \
@@ -391,7 +387,6 @@ $(BUILT_OUNIT_TESTS): $(BUILT_OBJECT_FILES) FORCE
 
 .PHONY: build-ounit-tests
 build-ounit-tests: $(BUILT_OBJECT_FILES) FORCE
-	export OCAMLFIND_IGNORE_DUPS_IN="$(shell ocamlfind query lwt)"; \
 	$(OCB) $(INTERNAL_FLAGS) $(INCLUDE_OPTS) -tag thread $(NATIVE_FINDLIB_OPTS) \
 		$(foreach dir,$(dir $(OUNIT_TESTS)),-I $(dir)) \
 		-lflags "$(LINKER_FLAGS)" \
@@ -421,16 +416,12 @@ test: bin/flow$(EXE)
 
 js: _build/scripts/ppx_gen_flowlibs.exe $(BUILT_OBJECT_FILES) $(COPIED_FLOWLIB)
 	mkdir -p bin
-	# NOTE: temporarily disabling warning 31 because
-	# src/hack_forked/third-party/core/result.ml and the opam `result` module both define
-	# result.cma, and this is the most expedient (though fragile) way to unblock
-	# ourselves.
 	$(OCB) \
 		-pkg js_of_ocaml \
 		-build-dir _build \
 		-lflags -custom \
 		$(INCLUDE_OPTS) $(JS_FINDLIB_OPTS) \
-		-lflags "$(BYTECODE_LINKER_FLAGS) -warn-error -31" \
+		-lflags "$(BYTECODE_LINKER_FLAGS)" \
 		src/flow_dot_js.byte
 	# js_of_ocaml has no ability to upgrade warnings to errors, but we want to
 	# error if, for example, there are any unimplemented C primitives.
