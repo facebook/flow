@@ -119,7 +119,6 @@ let should_collect (effort : [ `gentle | `aggressive | `always_TEST ]) =
 
 let collect (effort : [ `gentle | `aggressive | `always_TEST ]) =
   let old_size = heap_size () in
-  Stats.update_max_heap_size old_size;
   let start_t = Unix.gettimeofday () in
   (* The wrapper is used to run the function in a worker instead of master. *)
   if should_collect effort then hh_collect ();
