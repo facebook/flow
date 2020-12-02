@@ -290,7 +290,15 @@ let merge_context_new_signatures ~options ~reader component =
         else
           ALoc.of_loc (ALoc.to_loc aloc_table aloc)
     in
-    let (exports, export_def, module_refs, local_defs, remote_refs, pattern_defs, patterns) =
+    let {
+      Packed_type_sig.exports;
+      export_def;
+      module_refs;
+      local_defs;
+      remote_refs;
+      pattern_defs;
+      patterns;
+    } =
       Parsing_heaps.Reader_dispatcher.get_type_sig_unsafe ~reader file
     in
     let dependencies =

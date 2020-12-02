@@ -514,7 +514,7 @@ let do_parse ~parse_options ~info content file =
               let env = ref SMap.empty in
               let () =
                 let open Type_sig in
-                let (_, _, _, local_defs, _, _, _) = type_sig in
+                let { Packed_type_sig.local_defs; _ } = type_sig in
                 let f def =
                   let name = def_name def in
                   let loc = def_id_loc def in
