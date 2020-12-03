@@ -235,11 +235,11 @@ let detect_non_voidable_properties cx =
         if ISet.mem id seen_ids then
           false
         else (
-          match Flow_js.possible_types cx id with
+          match Flow_js_utils.possible_types cx id with
           (* tvar has no lower bounds: we conservatively assume it's non-voidable
            * except in the special case when it also has no upper bounds
            *)
-          | [] -> Flow_js.possible_uses cx id = []
+          | [] -> Flow_js_utils.possible_uses cx id = []
           (* tvar is resolved: look at voidability of the resolved type *)
           | [t] -> is_voidable (ISet.add id seen_ids) t
           (* tvar is unresolved: conservatively assume it is non-voidable *)
@@ -285,7 +285,7 @@ let detect_non_voidable_properties cx =
 
 let merge_tvar =
   Type.(
-    let possible_types = Flow_js.possible_types in
+    let possible_types = Flow_js_utils.possible_types in
     let rec collect_lowers ~filter_empty cx seen acc = function
       | [] -> Base.List.rev acc
       | t :: ts ->
@@ -331,7 +331,7 @@ let merge_tvar =
       | [t] -> t
       | t0 :: t1 :: ts -> UnionT (r, UnionRep.make t0 t1 ts)
       | [] ->
-        let uses = Flow_js.possible_uses cx id in
+        let uses = Flow_js_utils.possible_uses cx id in
         if uses = [] || existential then
           AnyT.locationless Unsoundness.existential
         else

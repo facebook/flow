@@ -150,35 +150,6 @@ let visit_eval_id cx id f =
   | None -> ()
   | Some t -> f t
 
-(***************)
-(* strict mode *)
-(***************)
-
-(* For any constraints, return a list of def types that form either the lower
-   bounds of the solution, or a singleton containing the solution itself. *)
-let types_of constraints =
-  match constraints with
-  | Unresolved { lower; _ } -> TypeMap.keys lower
-  | Resolved (_, t)
-  | FullyResolved (_, t) ->
-    [t]
-
-(* Def types that describe the solution of a type variable. *)
-let possible_types cx id = types_of (Context.find_graph cx id) |> List.filter is_proper_def
-
-let possible_types_of_type cx = function
-  | OpenT (_, id) -> possible_types cx id
-  | _ -> []
-
-let uses_of constraints =
-  match constraints with
-  | Unresolved { upper; _ } -> Base.List.map ~f:fst (UseTypeMap.keys upper)
-  | Resolved (use_op, t)
-  | FullyResolved (use_op, t) ->
-    [UseT (use_op, t)]
-
-let possible_uses cx id = uses_of (Context.find_graph cx id) |> List.filter is_proper_use
-
 (**************)
 (* builtins *)
 (**************)

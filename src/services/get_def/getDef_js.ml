@@ -80,7 +80,7 @@ let rec process_request ~options ~reader ~cx ~is_legit_require ~typed_ast :
       let open Type in
       function
       | OpenT _ as t ->
-        (match Flow_js.possible_types_of_type cx t with
+        (match Flow_js_utils.possible_types_of_type cx t with
         | [t'] -> loop t'
         | [] -> Error "No possible types"
         | _ :: _ -> Error "More than one possible type")
