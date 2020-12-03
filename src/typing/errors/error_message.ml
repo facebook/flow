@@ -2228,12 +2228,6 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
     let default = [text "Missing type annotation for "; desc reason; text "."] in
     let features =
       match desc_of_reason reason with
-      | RTypeParam (_, (RImplicitInstantiation, _), _) ->
-        [
-          text "Please use a concrete type annotation instead of ";
-          code "_";
-          text " in this position.";
-        ]
       | RTypeParam (_, (reason_op_desc, reason_op_loc), (reason_tapp_desc, reason_tapp_loc)) ->
         let reason_op = mk_reason reason_op_desc reason_op_loc in
         let reason_tapp = mk_reason reason_tapp_desc reason_tapp_loc in

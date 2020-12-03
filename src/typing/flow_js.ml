@@ -4056,16 +4056,16 @@ struct
                without fearing regressions in termination guarantees.
             *)
             | CallT (use_op, _, calltype) when not (is_typemap_reason reason_op) ->
+              let arg_reasons =
+                Base.List.map
+                  ~f:(function
+                    | Arg t -> reason_of_t t
+                    | SpreadArg t -> reason_of_t t)
+                  calltype.call_args_tlist
+              in
               begin
                 match calltype.call_targs with
                 | None ->
-                  let arg_reasons =
-                    Base.List.map
-                      ~f:(function
-                        | Arg t -> reason_of_t t
-                        | SpreadArg t -> reason_of_t t)
-                      calltype.call_args_tlist
-                  in
                   let t_ =
                     instantiate_poly
                       cx
@@ -4087,6 +4087,7 @@ struct
                       ~use_op
                       ~reason_op
                       ~reason_tapp
+                      ~cache:arg_reasons
                   in
                   rec_flow
                     cx
@@ -8847,20 +8848,30 @@ struct
           | [] -> ([], ts)
           | ExplicitArg t :: targs -> (targs, t :: ts)
           | ImplicitArg (r, id) :: targs ->
+            (* `_` can introduce non-termination, just like omitting type arguments
+             * can. In order to protect against that non-termination we use cache_instantiate.
+             * Instead of letting instantiate_poly do that for us on every type argument, we
+             * do it ourselves here so that explicit type arguments do not have their reasons
+             * needlessly changed. Note that the ImplicitTypeParam reason that cache instatiations
+             * introduce can also change the use_op in a flow. In the NumT ~> StrT case,
+             * this can make meaningful differences in type checking behavior. Ensuring that
+             * the use_op/reason change happens _only_ on actually implicitly instantiated
+             * type variables helps preserve the correct type checking behavior. *)
             let reason = mk_reason RImplicitInstantiation (aloc_of_reason r) in
             let t = ImplicitTypeArgument.mk_targ cx typeparam reason reason_tapp in
-            rec_flow_t cx trace ~use_op (t, OpenT (r, id));
-            (targs, t :: ts))
+            let t_ = cache_instantiate cx trace ~use_op ?cache typeparam reason_op reason_tapp t in
+            rec_flow_t cx trace ~use_op (t_, OpenT (r, id));
+            (targs, t_ :: ts))
         (targs, [])
         xs
     in
+    (* Intentionally omit `cache`, which is handled above *)
     instantiate_poly_with_targs
       cx
       trace
       ~use_op
       ~reason_op
       ~reason_tapp
-      ?cache
       ?errs_ref
       (tparams_loc, xs, t)
       (List.rev ts)
