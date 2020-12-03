@@ -283,60 +283,6 @@ let detect_non_voidable_properties cx =
       check_properties private_property_map private_property_errors)
     (Context.voidable_checks cx)
 
-let merge_tvar =
-  Type.(
-    let possible_types = Flow_js_utils.possible_types in
-    let rec collect_lowers ~filter_empty cx seen acc = function
-      | [] -> Base.List.rev acc
-      | t :: ts ->
-        (match t with
-        (* Recursively unwrap unseen tvars *)
-        | OpenT (_, id) ->
-          if ISet.mem id seen then
-            collect_lowers ~filter_empty cx seen acc ts
-          (* already unwrapped *)
-          else
-            let seen = ISet.add id seen in
-            collect_lowers ~filter_empty cx seen acc (possible_types cx id @ ts)
-        (* Ignore empty in existentials. This behavior is sketchy, but the error
-           behavior without this filtering is worse. If an existential accumulates
-           an empty, we error but it's very non-obvious how the empty arose. *)
-        | DefT (_, _, EmptyT flavor) when filter_empty flavor ->
-          collect_lowers ~filter_empty cx seen acc ts
-        (* Everything else becomes part of the merge typed *)
-        | _ -> collect_lowers ~filter_empty cx seen (t :: acc) ts)
-    in
-    fun ?filter_empty cx r id ->
-      (* Because the behavior of existentials are so difficult to predict, they
-         enjoy some special casing here. When existential types are finally
-         removed, this logic can be removed. *)
-      let existential =
-        Reason.(
-          match desc_of_reason r with
-          | RExistential -> true
-          | _ -> false)
-      in
-      let filter_empty flavor =
-        existential
-        ||
-        match filter_empty with
-        | Some filter_empty -> filter_empty flavor
-        | None -> false
-      in
-      let lowers =
-        let seen = ISet.singleton id in
-        collect_lowers cx seen [] (possible_types cx id) ~filter_empty
-      in
-      match lowers with
-      | [t] -> t
-      | t0 :: t1 :: ts -> UnionT (r, UnionRep.make t0 t1 ts)
-      | [] ->
-        let uses = Flow_js_utils.possible_uses cx id in
-        if uses = [] || existential then
-          AnyT.locationless Unsoundness.existential
-        else
-          MergedT (r, uses))
-
 let merge_trust_var constr =
   Trust_constraint.(
     match constr with
@@ -358,7 +304,7 @@ class resolver_visitor =
     method! type_ cx map_cx t =
       let open Type in
       match t with
-      | OpenT (r, id) -> merge_tvar ~filter_empty cx r id
+      | OpenT (r, id) -> Flow_js_utils.merge_tvar ~filter_empty cx r id
       | EvalT (t', dt, _id) ->
         let t'' = self#type_ cx map_cx t' in
         let dt' = self#defer_use_type cx map_cx dt in
@@ -722,7 +668,7 @@ module ContextOptimizer = struct
             SigHash.add_int sig_hash stable_id;
             id
           ) else
-            let t = merge_tvar cx r id in
+            let t = Flow_js_utils.merge_tvar cx r id in
             let node = Root { rank = 0; constraints = FullyResolved (unknown_use, t) } in
             reduced_graph <- IMap.add id node reduced_graph;
             let () =
