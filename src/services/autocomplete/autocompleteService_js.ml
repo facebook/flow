@@ -471,21 +471,10 @@ let autocomplete_member
     let result = { ServerProt.Response.Completion.items; is_incomplete = false } in
     AcResult { result; errors_to_log }
 
-(* turns typed AST into normal AST so we can run Scope_builder on it *)
-(* TODO(vijayramamurthy): make scope builder polymorphic *)
-class type_killer (reader : Parsing_heaps.Reader.reader) =
-  object
-    inherit [ALoc.t, ALoc.t * Type.t, Loc.t, Loc.t] Flow_polymorphic_ast_mapper.mapper
-
-    method on_loc_annot x = loc_of_aloc ~reader x
-
-    method on_type_annot (x, _) = loc_of_aloc ~reader x
-  end
-
 (* The fact that we need this feels convoluted.
-   We started with a typed AST, then stripped the types off of it to run Scope_builder on it,
-   and now we go back to the typed AST to get the types of the locations we got from Scope_api.
-   We wouldn't need to do this separate pass if Scope_builder/Scope_api were polymorphic.
+   We run Scope_builder on the untyped AST and now we go back to the typed AST to get the types
+   of the locations we got from Scope_api. We wouldn't need to do this separate pass if
+   Scope_builder/Scope_api were polymorphic.
 *)
 class type_collector (reader : Parsing_heaps.Reader.reader) (locs : LocSet.t) =
   object
@@ -521,8 +510,8 @@ let documentation_of_loc ~options ~reader ~cx ~file_sig ~typed_ast loc =
   | Def_error _ ->
     None
 
-let local_value_identifiers ~options ~reader ~cx ~ac_loc ~file_sig ~typed_ast ~tparams =
-  let scope_info = Scope_builder.program ((new type_killer reader)#program typed_ast) in
+let local_value_identifiers ~options ~reader ~cx ~ac_loc ~file_sig ~ast ~typed_ast ~tparams =
+  let scope_info = Scope_builder.program ast in
   let open Scope_api.With_Loc in
   (* get the innermost scope enclosing the requested location *)
   let (ac_scope_id, _) =
@@ -578,12 +567,12 @@ let local_value_identifiers ~options ~reader ~cx ~ac_loc ~file_sig ~typed_ast ~t
 
 (* env is all visible bound names at cursor *)
 let autocomplete_id
-    ~options ~reader ~cx ~ac_loc ~file_sig ~typed_ast ~include_super ~include_this ~tparams =
+    ~options ~reader ~cx ~ac_loc ~file_sig ~ast ~typed_ast ~include_super ~include_this ~tparams =
   let open ServerProt.Response.Completion in
   let ac_loc = loc_of_aloc ~reader ac_loc |> remove_autocomplete_token_from_loc in
   let exact_by_default = Context.exact_by_default cx in
   let (items, errors_to_log) =
-    local_value_identifiers ~options ~reader ~cx ~ac_loc ~file_sig ~typed_ast ~tparams
+    local_value_identifiers ~options ~reader ~cx ~ac_loc ~file_sig ~typed_ast ~ast ~tparams
     |> List.fold_left
          (fun (items, errors_to_log) ((name, documentation), elt_result) ->
            match elt_result with
@@ -803,7 +792,7 @@ let type_exports_of_module_ty ~ac_loc ~exact_by_default ~documentation_of_module
     |> Base.List.mapi ~f:(fun i r -> { r with sort_text = sort_text_of_rank i })
   | _ -> []
 
-let autocomplete_unqualified_type ~options ~reader ~cx ~tparams ~file_sig ~ac_loc ~typed_ast =
+let autocomplete_unqualified_type ~options ~reader ~cx ~tparams ~file_sig ~ac_loc ~ast ~typed_ast =
   let open ServerProt.Response.Completion in
   let ac_loc = loc_of_aloc ~reader ac_loc |> remove_autocomplete_token_from_loc in
   let exact_by_default = Context.exact_by_default cx in
@@ -844,7 +833,7 @@ let autocomplete_unqualified_type ~options ~reader ~cx ~tparams ~file_sig ~ac_lo
      - classes
      - modules (followed by a dot) *)
   let (items, errors_to_log) =
-    local_value_identifiers ~options ~typed_ast ~reader ~ac_loc ~tparams ~cx ~file_sig
+    local_value_identifiers ~options ~ast ~typed_ast ~reader ~ac_loc ~tparams ~cx ~file_sig
     |> List.fold_left
          (fun (items, errors_to_log) ((name, documentation), ty_res) ->
            match ty_res with
@@ -899,7 +888,8 @@ let autocomplete_qualified_type ~reader ~cx ~ac_loc ~file_sig ~typed_ast ~tparam
   AcResult
     { result = { ServerProt.Response.Completion.items; is_incomplete = false }; errors_to_log }
 
-let autocomplete_get_results ~options ~reader ~cx ~file_sig ~typed_ast trigger_character cursor =
+let autocomplete_get_results ~options ~reader ~cx ~file_sig ~ast ~typed_ast trigger_character cursor
+    =
   let file_sig = File_sig.abstractify_locs file_sig in
   match Autocomplete_js.process_location ~trigger_character ~cursor ~typed_ast with
   | Some (_, _, Acbinding) -> ("Empty", AcEmpty "Binding")
@@ -922,6 +912,7 @@ let autocomplete_get_results ~options ~reader ~cx ~file_sig ~typed_ast trigger_c
         ~cx
         ~ac_loc
         ~file_sig
+        ~ast
         ~typed_ast
         ~include_super
         ~include_this
@@ -943,7 +934,8 @@ let autocomplete_get_results ~options ~reader ~cx ~file_sig ~typed_ast trigger_c
       autocomplete_jsx ~reader cx file_sig typed_ast cls ac_name ~used_attr_names ac_loc ~tparams )
   | Some (tparams, ac_loc, Actype) ->
     ( "Actype",
-      autocomplete_unqualified_type ~options ~reader ~cx ~tparams ~ac_loc ~typed_ast ~file_sig )
+      autocomplete_unqualified_type ~options ~reader ~cx ~tparams ~ac_loc ~ast ~typed_ast ~file_sig
+    )
   | Some (tparams, ac_loc, Acqualifiedtype qtype) ->
     ( "Acqualifiedtype",
       autocomplete_qualified_type ~reader ~cx ~ac_loc ~file_sig ~typed_ast ~tparams ~qtype )
