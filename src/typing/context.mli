@@ -328,7 +328,7 @@ val add_literal_subtypes : t -> Type.t * Type.use_t -> unit
 
 val add_voidable_check : t -> voidable_check -> unit
 
-val add_implicit_instantiation_check : t -> implicit_instantiation_check -> unit
+val add_implicit_instantiation_check : t -> Type.t -> unit
 
 val remove_tvar : t -> Constraint.ident -> unit
 
