@@ -53,6 +53,7 @@ type metadata = {
   react_runtime: Options.react_runtime;
   recursion_limit: int;
   root: Path.t;
+  run_post_inference_implicit_instantiation: bool;
   strict_es6_import_export: bool;
   strict_es6_import_export_excludes: string list;
   strip_root: bool;
@@ -225,6 +226,8 @@ let metadata_of_options options =
     react_runtime = Options.react_runtime options;
     recursion_limit = Options.recursion_limit options;
     root = Options.root options;
+    run_post_inference_implicit_instantiation =
+      Options.run_post_inference_implicit_instantiation options;
     strict_es6_import_export = Options.strict_es6_import_export options;
     strict_es6_import_export_excludes = Options.strict_es6_import_export_excludes options;
     strip_root = Options.should_strip_root options;
@@ -406,6 +409,9 @@ let goals cx = cx.ccx.goal_map
 let exact_by_default cx = cx.metadata.exact_by_default
 
 let enforce_local_inference_annotations cx = cx.metadata.enforce_local_inference_annotations
+
+let run_post_inference_implicit_instantiation cx =
+  cx.metadata.run_post_inference_implicit_instantiation
 
 let generate_tests cx = cx.metadata.generate_tests
 

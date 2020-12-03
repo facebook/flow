@@ -69,6 +69,7 @@ type metadata = {
   react_runtime: Options.react_runtime;
   recursion_limit: int;
   root: Path.t;
+  run_post_inference_implicit_instantiation: bool;
   strict_es6_import_export: bool;
   strict_es6_import_export_excludes: string list;
   strip_root: bool;
@@ -158,6 +159,8 @@ val goals : t -> Type.t IMap.t
 val exact_by_default : t -> bool
 
 val enforce_local_inference_annotations : t -> bool
+
+val run_post_inference_implicit_instantiation : t -> bool
 
 val generate_tests : t -> bool
 

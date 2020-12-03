@@ -159,6 +159,8 @@ val recursion_limit : config -> int
 
 val root_name : config -> string option
 
+val run_post_inference_implicit_instantiation : config -> bool
+
 val saved_state_fetcher : config -> Options.saved_state_fetcher
 
 val shm_hash_table_pow : config -> int

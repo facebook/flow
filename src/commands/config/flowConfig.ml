@@ -95,6 +95,7 @@ module Opts = struct
     react_runtime: Options.react_runtime;
     recursion_limit: int;
     root_name: string option;
+    run_post_inference_implicit_instantiation: bool;
     saved_state_fetcher: Options.saved_state_fetcher;
     shm_hash_table_pow: int;
     shm_heap_size: int;
@@ -205,6 +206,7 @@ module Opts = struct
       react_runtime = Options.ReactRuntimeClassic;
       recursion_limit = 10000;
       root_name = None;
+      run_post_inference_implicit_instantiation = false;
       saved_state_fetcher = Options.Dummy_fetcher;
       shm_hash_table_pow = 19;
       shm_heap_size = 1024 * 1024 * 1024 * 25;
@@ -403,6 +405,9 @@ module Opts = struct
   let local_inference_annotations =
     boolean (fun opts v -> Ok { opts with enforce_local_inference_annotations = v })
 
+  let post_inference_implicit_instantiation =
+    boolean (fun opts v -> Ok { opts with run_post_inference_implicit_instantiation = v })
+
   type deprecated_esproposal_setting =
     | Enable
     | Ignore
@@ -595,6 +600,8 @@ module Opts = struct
       ("types_first", types_first_parser);
       ("experimental.new_signatures", new_signatures_parser);
       ("experimental.enforce_local_inference_annotations", local_inference_annotations);
+      ( "experimental.run_post_inference_implicit_instantiation",
+        post_inference_implicit_instantiation );
       ( "experimental.abstract_locations",
         boolean (fun opts v -> Ok { opts with abstract_locations = v }) );
       ( "experimental.disable_live_non_parse_errors",
@@ -1272,6 +1279,9 @@ let types_first c = c.options.Opts.types_first
 let new_signatures c = c.options.Opts.new_signatures
 
 let required_version c = c.version
+
+let run_post_inference_implicit_instantiation c =
+  c.options.Opts.run_post_inference_implicit_instantiation
 
 let wait_for_recheck c = c.options.Opts.wait_for_recheck
 
