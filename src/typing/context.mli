@@ -96,7 +96,10 @@ type voidable_check = {
   errors: ALoc.t Property_assignment.errors;
 }
 
-type implicit_instantiation_check = { fun_or_class: Type.t }
+type implicit_instantiation_check = {
+  fun_or_class: Type.t;
+  call_or_constructor: Type.use_t;
+}
 
 type computed_property_state =
   | ResolvedOnce of Reason.t
@@ -328,7 +331,7 @@ val add_literal_subtypes : t -> Type.t * Type.use_t -> unit
 
 val add_voidable_check : t -> voidable_check -> unit
 
-val add_implicit_instantiation_check : t -> Type.t -> unit
+val add_implicit_instantiation_check : t -> Type.t -> Type.use_t -> unit
 
 val remove_tvar : t -> Constraint.ident -> unit
 

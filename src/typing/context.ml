@@ -79,7 +79,10 @@ type voidable_check = {
   errors: ALoc.t Property_assignment.errors;
 }
 
-type implicit_instantiation_check = { fun_or_class: Type.t }
+type implicit_instantiation_check = {
+  fun_or_class: Type.t;
+  call_or_constructor: Type.use_t;
+}
 
 (* Equivalently, we could use a Reason.t option, but this is more self-documenting. *)
 type computed_property_state =
@@ -617,8 +620,8 @@ let add_literal_subtypes cx c = cx.ccx.literal_subtypes <- c :: cx.ccx.literal_s
 let add_voidable_check cx voidable_check =
   cx.ccx.voidable_checks <- voidable_check :: cx.ccx.voidable_checks
 
-let add_implicit_instantiation_check cx fun_or_class =
-  let implicit_instantiation_check = { fun_or_class } in
+let add_implicit_instantiation_check cx fun_or_class call_or_constructor =
+  let implicit_instantiation_check = { fun_or_class; call_or_constructor } in
   if cx.metadata.run_post_inference_implicit_instantiation then
     cx.ccx.implicit_instantiation_checks <-
       implicit_instantiation_check :: cx.ccx.implicit_instantiation_checks

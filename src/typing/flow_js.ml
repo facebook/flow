@@ -4037,7 +4037,7 @@ struct
               begin
                 match calltype.call_targs with
                 | None ->
-                  Context.add_implicit_instantiation_check cx l;
+                  Context.add_implicit_instantiation_check cx l u;
                   let t_ =
                     instantiate_poly
                       cx
@@ -4079,7 +4079,7 @@ struct
               in
               rec_flow cx trace (t_, ConstructorT (use_op, reason_op, None, args, tout))
             | ConstructorT (_, _, None, _, _) ->
-              Context.add_implicit_instantiation_check cx l;
+              Context.add_implicit_instantiation_check cx l u;
               let use_op =
                 match use_op_of_use_t u with
                 | Some use_op -> use_op
