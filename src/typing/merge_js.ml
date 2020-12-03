@@ -283,6 +283,11 @@ let detect_non_voidable_properties cx =
       check_properties private_property_map private_property_errors)
     (Context.voidable_checks cx)
 
+let check_implicit_instantiations cx =
+  if Context.run_post_inference_implicit_instantiation cx then
+    let implicit_instantiation_checks = Context.implicit_instantiation_checks cx in
+    List.iter (Implicit_instantiation.check_implicit_instantiation cx) implicit_instantiation_checks
+
 let merge_trust_var constr =
   Trust_constraint.(
     match constr with
@@ -545,6 +550,7 @@ let merge_component
      *)
     detect_sketchy_null_checks cx;
     detect_non_voidable_properties cx;
+    check_implicit_instantiations cx;
     detect_test_prop_misses cx;
     detect_unnecessary_optional_chains cx;
     detect_unnecessary_invariants cx;
