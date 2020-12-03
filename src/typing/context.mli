@@ -96,6 +96,8 @@ type voidable_check = {
   errors: ALoc.t Property_assignment.errors;
 }
 
+type implicit_instantiation_check = { fun_or_class: Type.t }
+
 type computed_property_state =
   | ResolvedOnce of Reason.t
   | ResolvedMultipleTimes
@@ -274,6 +276,8 @@ val exists_excuses : t -> ExistsCheck.t ALocMap.t
 
 val voidable_checks : t -> voidable_check list
 
+val implicit_instantiation_checks : t -> implicit_instantiation_check list
+
 val use_def : t -> Scope_api.With_ALoc.info * Ssa_api.With_ALoc.values
 
 val pid_prefix : t -> string
@@ -323,6 +327,8 @@ val add_matching_props : t -> Reason.reason * string * Type.t * Type.t -> unit
 val add_literal_subtypes : t -> Type.t * Type.use_t -> unit
 
 val add_voidable_check : t -> voidable_check -> unit
+
+val add_implicit_instantiation_check : t -> implicit_instantiation_check -> unit
 
 val remove_tvar : t -> Constraint.ident -> unit
 

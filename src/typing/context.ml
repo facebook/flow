@@ -79,6 +79,8 @@ type voidable_check = {
   errors: ALoc.t Property_assignment.errors;
 }
 
+type implicit_instantiation_check = { fun_or_class: Type.t }
+
 (* Equivalently, we could use a Reason.t option, but this is more self-documenting. *)
 type computed_property_state =
   | ResolvedOnce of Reason.t
@@ -172,6 +174,7 @@ type component_t = {
   (* Post-inference checks *)
   mutable literal_subtypes: (Type.t * Type.use_t) list;
   mutable matching_props: (Reason.reason * string * Type.t * Type.t) list;
+  mutable implicit_instantiation_checks: implicit_instantiation_check list;
 }
 
 type phase =
@@ -302,6 +305,7 @@ let make_ccx sig_cx aloc_tables =
     exists_checks = ALocMap.empty;
     exists_excuses = ALocMap.empty;
     voidable_checks = [];
+    implicit_instantiation_checks = [];
     test_prop_hits_and_misses = IMap.empty;
     computed_property_states = IMap.empty;
     spread_widened_types = IMap.empty;
@@ -521,6 +525,8 @@ let exists_excuses cx = cx.ccx.exists_excuses
 
 let voidable_checks cx = cx.ccx.voidable_checks
 
+let implicit_instantiation_checks cx = cx.ccx.implicit_instantiation_checks
+
 let use_def cx = cx.use_def
 
 let exported_locals cx = cx.exported_locals
@@ -610,6 +616,11 @@ let add_literal_subtypes cx c = cx.ccx.literal_subtypes <- c :: cx.ccx.literal_s
 
 let add_voidable_check cx voidable_check =
   cx.ccx.voidable_checks <- voidable_check :: cx.ccx.voidable_checks
+
+let add_implicit_instantiation_check cx implicit_instantiation_check =
+  if cx.metadata.run_post_inference_implicit_instantiation then
+    cx.ccx.implicit_instantiation_checks <-
+      implicit_instantiation_check :: cx.ccx.implicit_instantiation_checks
 
 let remove_tvar cx id = cx.ccx.sig_cx.graph <- IMap.remove id cx.ccx.sig_cx.graph
 
