@@ -66,7 +66,7 @@ let init ~profiling ?focus_targets genv =
 let rec log_on_idle =
   (* The time in seconds to gather data before logging. Shouldn't be too small or we'll flood the
    * logs. *)
-  let idle_period_in_seconds = 300 in
+  let idle_period_in_seconds = 300. in
   (* Grab memory stats. Since we're idle, we don't really care much about sharedmemory stats. But
    * our cgroup stats may change depending on the memory pressure *)
   let sample profiling =
@@ -83,23 +83,21 @@ let rec log_on_idle =
     end;
     Lwt.return_unit
   in
-  (* Sample every second for `seconds_remaining` seconds *)
-  let rec sample_and_sleep profiling seconds_remaining =
-    if seconds_remaining > 0 then
-      let%lwt () = sample profiling in
-      let%lwt () = Lwt_unix.sleep 1.0 in
-      sample_and_sleep profiling (seconds_remaining - 1)
-    else
-      Lwt.return_unit
+  (* Sample every second *)
+  let rec sample_loop profiling =
+    let%lwt () = Lwt.join [sample profiling; Lwt_unix.sleep 1.0] in
+    sample_loop profiling
   in
   fun ~options start_time ->
     let should_print_summary = Options.should_profile options in
     let%lwt (profiling, ()) =
       Profiling_js.with_profiling_lwt ~label:"Idle" ~should_print_summary (fun profiling ->
-          let%lwt () = sample_and_sleep profiling idle_period_in_seconds in
-          sample profiling)
+          let sampler_thread = sample_loop profiling in
+          let timeout = Lwt_unix.sleep idle_period_in_seconds in
+          Lwt.pick [sampler_thread; timeout])
     in
     FlowEventLogger.idle_heartbeat ~idle_time:(Unix.gettimeofday () -. start_time) ~profiling;
+    Lwt.async EventLoggerLwt.flush;
     log_on_idle ~options start_time
 
 let rec serve ~genv ~env =
