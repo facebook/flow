@@ -1937,6 +1937,9 @@ Flags: --lsp
   }
 }
 
+enum-key.js:4:4
+Flags: --lsp
+
 enum-id.js:9:4
 Flags: --pretty
 {"result":[{"name":"Foo","type":"enum Foo"},{"name":"Fab","type":"enum Fab"}]}
