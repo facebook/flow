@@ -910,22 +910,43 @@ let handle_save_state ~saved_state_filename ~genv ~profiling ~env =
   Lwt.return (env, ServerProt.Response.SAVE_STATE result, None)
 
 let find_code_actions ~reader ~options ~env ~profiling ~params ~client =
-  let CodeActionRequest.{ textDocument; range; _ } = params in
+  let CodeActionRequest.{ textDocument; range; context = { only = _; diagnostics } } = params in
   let (file_key, file, loc) =
     Flow_lsp_conversions.lsp_textDocument_and_range_to_flow textDocument range client
   in
   match File_input.content_of_file_input file with
   | Error msg -> Lwt.return (Error msg)
   | Ok file_contents ->
-    Code_action_service.code_actions_at_loc
-      ~reader
-      ~options
-      ~env
-      ~profiling
-      ~params
-      ~file_key
-      ~file_contents
-      ~loc
+    if not (Code_action_service.client_supports_quickfixes params) then
+      Lwt.return (Ok [])
+    else
+      let type_contents_cache = Some (Persistent_connection.type_contents_cache client) in
+      let uri = TextDocumentIdentifier.(textDocument.uri) in
+      let%lwt (type_contents_result, _did_hit_cache) =
+        type_contents_with_cache
+          ~options
+          ~env
+          ~profiling
+          ~type_contents_cache
+          file_contents
+          file_key
+      in
+      (match type_contents_result with
+      | Error _ -> Lwt.return (Ok [])
+      | Ok (cx, _info, file_sig, tolerable_errors, ast, typed_ast, parse_errors) ->
+        Code_action_service.code_actions_at_loc
+          ~reader
+          ~options
+          ~file_key
+          ~cx
+          ~file_sig
+          ~tolerable_errors
+          ~ast
+          ~typed_ast
+          ~parse_errors
+          ~diagnostics
+          ~uri
+          ~loc)
 
 type command_handler =
   (* A command can be handled immediately if it is super duper fast and doesn't require the env.

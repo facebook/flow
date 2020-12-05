@@ -5,14 +5,20 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
+val client_supports_quickfixes : Lsp.CodeActionRequest.params -> bool
+
 val code_actions_at_loc :
   reader:Parsing_heaps.Reader.reader ->
   options:Options.t ->
-  env:ServerEnv.env ->
-  profiling:Profiling_js.running ->
-  params:Lsp.CodeActionRequest.params ->
   file_key:File_key.t ->
-  file_contents:string ->
+  cx:Context.t ->
+  file_sig:File_sig.With_Loc.t ->
+  tolerable_errors:File_sig.With_Loc.tolerable_error list ->
+  ast:(Loc.t, Loc.t) Flow_ast.Program.t ->
+  typed_ast:(ALoc.t, ALoc.t * Type.t) Flow_ast.Program.t ->
+  parse_errors:(Loc.t * Parse_error.t) Base.List.t ->
+  diagnostics:Lsp.PublishDiagnostics.diagnostic list ->
+  uri:Lsp.DocumentUri.t ->
   loc:Loc.t ->
   (Lsp.CodeAction.command_or_action list, string) result Lwt.t
 
