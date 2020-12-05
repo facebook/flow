@@ -98,39 +98,44 @@ let code_actions_of_parse_errors ~diagnostics ~uri ~loc parse_errors =
     ~init:[]
     parse_errors
 
-let client_supports_quickfixes only =
+(** currently all of our code actions are quickfixes, so we can short circuit if the client
+    doesn't support those. *)
+let client_supports_quickfixes params =
+  let Lsp.CodeActionRequest.{ context = { only; _ }; _ } = params in
   Lsp.CodeActionKind.contains_kind_opt ~default:true Lsp.CodeActionKind.quickfix only
 
-let code_actions_at_loc ~reader ~options ~env ~profiling ~params ~file_key ~file_contents ~loc =
-  let open Lsp in
-  let CodeActionRequest.{ textDocument; range = _; context = { only; diagnostics } } = params in
-  if not (client_supports_quickfixes only) then
-    (* currently all of our code actions are quickfixes, so we can short circuit *)
-    Lwt.return (Ok [])
-  else
-    let uri = TextDocumentIdentifier.(textDocument.uri) in
-    match%lwt Types_js.type_contents ~options ~env ~profiling file_contents file_key with
-    | Ok (full_cx, _info, file_sig, tolerable_errors, ast, typed_ast, parse_errors) ->
-      let experimental_code_actions =
-        if Inference_utils.well_formed_exports_enabled options file_key then
-          autofix_exports_code_actions
-            ~full_cx
-            ~ast
-            ~file_sig
-            ~tolerable_errors
-            ~typed_ast
-            ~diagnostics
-            uri
-            loc
-        else
-          []
-      in
-      let error_fixes =
-        code_actions_of_errors ~reader ~diagnostics ~errors:(Context.errors full_cx) uri loc
-      in
-      let parse_error_fixes = code_actions_of_parse_errors ~diagnostics ~uri ~loc parse_errors in
-      Lwt.return (Ok (parse_error_fixes @ experimental_code_actions @ error_fixes))
-    | Error _ -> Lwt.return (Ok [])
+let code_actions_at_loc
+    ~reader
+    ~options
+    ~file_key
+    ~cx
+    ~file_sig
+    ~tolerable_errors
+    ~ast
+    ~typed_ast
+    ~parse_errors
+    ~diagnostics
+    ~uri
+    ~loc =
+  let experimental_code_actions =
+    if Inference_utils.well_formed_exports_enabled options file_key then
+      autofix_exports_code_actions
+        ~full_cx:cx
+        ~ast
+        ~file_sig
+        ~tolerable_errors
+        ~typed_ast
+        ~diagnostics
+        uri
+        loc
+    else
+      []
+  in
+  let error_fixes =
+    code_actions_of_errors ~reader ~diagnostics ~errors:(Context.errors cx) uri loc
+  in
+  let parse_error_fixes = code_actions_of_parse_errors ~diagnostics ~uri ~loc parse_errors in
+  Lwt.return (Ok (parse_error_fixes @ experimental_code_actions @ error_fixes))
 
 let autofix_exports ~options ~env ~profiling ~file_key ~file_content =
   let open Autofix_exports in
