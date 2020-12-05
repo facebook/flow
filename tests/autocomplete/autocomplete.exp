@@ -561,6 +561,97 @@ Flags: --pretty
   ]
 }
 
+member_interface_property.js:9:5
+Flags: --lsp
+{
+  "label":"bar",
+  "kind":6,
+  "detail":"string",
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":8,"character":4},"end":{"line":8,"character":4}},
+    "newText":"bar"
+  }
+}
+{
+  "label":"baz",
+  "kind":6,
+  "detail":"string",
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":8,"character":4},"end":{"line":8,"character":4}},
+    "newText":"baz"
+  }
+}
+{
+  "label":"hasOwnProperty",
+  "kind":3,
+  "detail":"(prop: mixed) => boolean",
+  "sortText":"00000000000000000001",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":8,"character":4},"end":{"line":8,"character":4}},
+    "newText":"hasOwnProperty"
+  }
+}
+{
+  "label":"isPrototypeOf",
+  "kind":3,
+  "detail":"(o: mixed) => boolean",
+  "sortText":"00000000000000000001",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":8,"character":4},"end":{"line":8,"character":4}},
+    "newText":"isPrototypeOf"
+  }
+}
+{
+  "label":"propertyIsEnumerable",
+  "kind":3,
+  "detail":"(prop: mixed) => boolean",
+  "sortText":"00000000000000000001",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":8,"character":4},"end":{"line":8,"character":4}},
+    "newText":"propertyIsEnumerable"
+  }
+}
+{
+  "label":"toLocaleString",
+  "kind":3,
+  "detail":"() => string",
+  "sortText":"00000000000000000001",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":8,"character":4},"end":{"line":8,"character":4}},
+    "newText":"toLocaleString"
+  }
+}
+{
+  "label":"toString",
+  "kind":3,
+  "detail":"() => string",
+  "sortText":"00000000000000000001",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":8,"character":4},"end":{"line":8,"character":4}},
+    "newText":"toString"
+  }
+}
+{
+  "label":"valueOf",
+  "kind":3,
+  "detail":"() => mixed",
+  "sortText":"00000000000000000001",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":8,"character":4},"end":{"line":8,"character":4}},
+    "newText":"valueOf"
+  }
+}
+
 member_middle.js:5:4
 Flags: --pretty
 {
