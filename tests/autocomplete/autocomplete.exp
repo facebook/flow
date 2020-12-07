@@ -1040,6 +1040,14 @@ Flags: --pretty
   "result":[{"name":"foobaz","type":"number"},{"name":"foobarbaz","type":"number"}]
 }
 
+identifier_import_type.js:14:4
+Flags: --pretty
+{"result":[{"name":"ThisIsAValue","type":"string"}]}
+
+identifier_type.js:7:4
+Flags: --pretty
+{"result":[{"name":"baz","type":"bar"}]}
+
 super.js:4:8
 Flags: --pretty
 {
@@ -3365,18 +3373,6 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":15,"character":5},"end":{"line":15,"character":5}},
     "newText":"myClass"
-  }
-}
-{
-  "label":"ExportClass",
-  "kind":7,
-  "detail":"class ExportClass",
-  "documentation":{"kind":"markdown","value":"this is ExportClass"},
-  "sortText":"00000000000000000000",
-  "insertTextFormat":1,
-  "textEdit":{
-    "range":{"start":{"line":15,"character":5},"end":{"line":15,"character":5}},
-    "newText":"ExportClass"
   }
 }
 {

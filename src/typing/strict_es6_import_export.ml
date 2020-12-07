@@ -457,7 +457,7 @@ let detect_mixed_import_and_require_error cx declarations =
   | _ -> ()
 
 let detect_errors_from_ast cx ast =
-  let scope_info = Scope_builder.With_ALoc.program ast in
+  let scope_info = Scope_builder.With_ALoc.program ~with_types:true ast in
   let declarations = gather_declarations ast in
   detect_mixed_import_and_require_error cx declarations;
   let visitor = new import_export_visitor ~cx ~scope_info ~declarations in

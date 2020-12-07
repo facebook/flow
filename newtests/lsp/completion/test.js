@@ -163,34 +163,6 @@ export default (suite(
                   },
                 },
                 {
-                  label: 'anInterface',
-                  kind: 8,
-                  detail: 'interface anInterface',
-                  sortText: '00000000000000000000',
-                  insertTextFormat: 1,
-                  textEdit: {
-                    range: {
-                      start: {line: 13, character: 15},
-                      end: {line: 13, character: 15},
-                    },
-                    newText: 'anInterface',
-                  },
-                },
-                {
-                  label: 'aUnion',
-                  kind: 13,
-                  detail: 'type aUnion = "a" | "b"',
-                  sortText: '00000000000000000000',
-                  insertTextFormat: 1,
-                  textEdit: {
-                    range: {
-                      start: {line: 13, character: 15},
-                      end: {line: 13, character: 15},
-                    },
-                    newText: 'aUnion',
-                  },
-                },
-                {
                   label: 'aNumber',
                   kind: 6,
                   detail: 'number',
@@ -410,20 +382,6 @@ export default (suite(
                       end: {line: 11, character: 1},
                     },
                     newText: 'React',
-                  },
-                },
-                {
-                  label: 'Props',
-                  kind: 13,
-                  detail: 'type Props = {a: number, ...}',
-                  sortText: '00000000000000000000',
-                  insertTextFormat: 1,
-                  textEdit: {
-                    range: {
-                      start: {line: 11, character: 1},
-                      end: {line: 11, character: 1},
-                    },
-                    newText: 'Props',
                   },
                 },
                 {

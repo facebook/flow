@@ -48,7 +48,7 @@ let rec process_request ~options ~reader ~cx ~is_legit_require ~typed_ast :
   | Get_def_request.Identifier { name = _; loc = aloc; type_ } ->
     let loc = loc_of_aloc ~reader aloc in
     let ast = (new type_killer reader)#program typed_ast in
-    let scope_info = Scope_builder.program ast in
+    let scope_info = Scope_builder.program ~with_types:true ast in
     let all_uses = Scope_api.With_Loc.all_uses scope_info in
     Loc_collections.(
       let matching_uses = LocSet.filter (fun use -> Loc.contains use loc) all_uses in
