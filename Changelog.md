@@ -1,3 +1,19 @@
+### 0.139.0
+
+New Features:
+* Support for `this` annotations in functions, like `function f(this: {foo: string}, param1: string): string { return this.foo; }`
+* The `experimental.abstract_locations` config option is now `true` by default, as it enables significant performance improvements. This option is now deprecated and will be removed in a coming version.
+
+Notable bug fixes:
+* Fixed a false positive when a bounded generic like `K: string` flows into `$Keys<{[K]: ...}>`
+* Fixed a false positive when a bounded generic like `K: 'literal'` is checked against itself like `k === 'literal'`
+* Fixed autocomplete inside of JSX attribute values
+* Fixed autocomplete of properties of interfaces
+
+Misc:
+* Updated `flow-remove-types` to support `this` parameters
+* Added SpeechRecognition definitions (thanks @ayshiff)
+
 ### 0.138.0
 
 Likely to cause new Flow errors:
