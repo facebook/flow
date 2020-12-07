@@ -1952,6 +1952,11 @@ end = struct
           let%map symbol = Reason_utils.instance_symbol env r in
           Ty.Decl (Ty.ClassDecl (symbol, ps))
       in
+      let enum_decl ~env reason enum =
+        let { T.enum_name; _ } = enum in
+        let symbol = symbol_from_reason env reason enum_name in
+        return (Ty.Decl Ty.(EnumDecl symbol))
+      in
       let singleton_poly ~env ~orig_t tparams = function
         (* Imported interfaces *)
         | DefT (_, _, TypeT (ImportClassKind, DefT (r, _, InstanceT (static, super, _, inst)))) ->
@@ -1991,6 +1996,10 @@ end = struct
         | DefT (_, _, TypeT (InstanceKind, DefT (r, _, InstanceT (static, super, _, inst))))
         | DefT (_, _, TypeT (ImportClassKind, DefT (r, _, InstanceT (static, super, _, inst)))) ->
           class_or_interface_decl ~env r None static super inst
+        (* Enums *)
+        | DefT (reason, _, EnumObjectT enum)
+        | DefT (_, _, TypeT (ImportEnumKind, DefT (reason, _, EnumT enum))) ->
+          enum_decl ~env reason enum
         (* Monomorphic Type Aliases *)
         | DefT (r, _, TypeT (kind, t)) ->
           let r =
@@ -1999,11 +2008,6 @@ end = struct
             | _ -> TypeUtil.reason_of_t t
           in
           type_t ~env r kind t None
-        (* Enums *)
-        | DefT (reason, _, EnumObjectT enum) ->
-          let { T.enum_name; _ } = enum in
-          let symbol = symbol_from_reason env reason enum_name in
-          return (Ty.Decl Ty.(EnumDecl symbol))
         (* Types *)
         | _ ->
           let%map t = TypeConverter.convert_t ~env orig_t in
@@ -2174,7 +2178,8 @@ end = struct
       let def_loc_of_decl = function
         | TypeAliasDecl { import = false; name = { sym_def_loc; _ }; _ }
         | ClassDecl ({ sym_def_loc; _ }, _)
-        | InterfaceDecl ({ sym_def_loc; _ }, _) ->
+        | InterfaceDecl ({ sym_def_loc; _ }, _)
+        | EnumDecl { sym_def_loc; _ } ->
           Some sym_def_loc
         | TypeAliasDecl { import = true; type_ = Some t; _ } -> def_loc_of_ty t
         | _ -> None
