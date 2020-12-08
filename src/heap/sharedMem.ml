@@ -209,7 +209,9 @@ module HashtblSegment (Key : Key) = struct
 
   let get_old k = get_hash (old_hash_of_key k)
 
-  let remove k = hh_remove (new_hash_of_key k)
+  let remove k =
+    let new_hash = new_hash_of_key k in
+    if hh_mem new_hash then hh_remove new_hash
 
   (* We oldify entries that might be changed by an operation, which involves
    * moving the address of the current heap value from the "new" key to the
