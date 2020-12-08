@@ -539,13 +539,15 @@ let remove_exclusion pattern =
 
 let file_options =
   let default_lib_dir ~no_flowlib tmp_dir =
-    let lib_dir = Flowlib.mkdir ~no_flowlib tmp_dir in
     try
+      let lib_dir = Flowlib.mkdir ~no_flowlib tmp_dir in
       Flowlib.extract ~no_flowlib lib_dir;
       lib_dir
-    with _ ->
-      let msg = "Could not locate flowlib files" in
-      FlowExitStatus.(exit ~msg Could_not_find_flowconfig)
+    with e ->
+      let e = Exception.wrap e in
+      let err = Exception.get_ctor_string e in
+      let msg = Printf.sprintf "Could not locate flowlib files: %s" err in
+      FlowExitStatus.(exit ~msg Could_not_extract_flowlibs)
   in
   let ignores_of_arg root patterns extras =
     let expand_project_root_token = Files.expand_project_root_token ~root in

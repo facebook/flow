@@ -36,6 +36,8 @@ type t =
   | Lock_stolen
   (* Specific error for not being able to find a .flowconfig *)
   | Could_not_find_flowconfig
+  (* Failed to extract flowlibs into temp dir *)
+  | Could_not_extract_flowlibs
   (* Generic out-of-date error. This could be a version thing or maybe
    * something changed and Flow can't handle it incrementally yet *)
   | Server_out_of_date
@@ -113,6 +115,7 @@ let error_code = function
   | Killed_by_monitor -> 19
   | Invalid_saved_state -> 20
   | Restart -> 21
+  | Could_not_extract_flowlibs -> 22
   | Commandline_usage_error -> 64
   | No_input -> 66
   | Server_start_failed _ -> 78
@@ -150,6 +153,7 @@ let error_type = function
   | 19 -> Killed_by_monitor
   | 20 -> Invalid_saved_state
   | 21 -> Restart
+  | 22 -> Could_not_extract_flowlibs
   | 64 -> Commandline_usage_error
   | 66 -> No_input
   (* The process status is made up *)
@@ -176,6 +180,7 @@ let to_string = function
   | No_error -> "Ok"
   | Input_error -> "Input_error"
   | Could_not_find_flowconfig -> "Could_not_find_flowconfig"
+  | Could_not_extract_flowlibs -> "Could_not_extract_flowlibs"
   | Server_out_of_date -> "Server_out_of_date"
   | Server_client_directory_mismatch -> "Server_client_directory_mismatch"
   | Out_of_shared_memory -> "Out_of_shared_memory"
