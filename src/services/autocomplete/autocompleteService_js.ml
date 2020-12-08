@@ -511,7 +511,7 @@ let documentation_of_loc ~options ~reader ~cx ~file_sig ~typed_ast loc =
     None
 
 let local_value_identifiers ~options ~reader ~cx ~ac_loc ~file_sig ~ast ~typed_ast ~tparams =
-  let scope_info = Scope_builder.program ast in
+  let scope_info = Scope_builder.program ~with_types:false ast in
   let open Scope_api.With_Loc in
   (* get the innermost scope enclosing the requested location *)
   let (ac_scope_id, _) =
