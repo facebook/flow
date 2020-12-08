@@ -567,7 +567,18 @@ let local_value_identifiers ~options ~reader ~cx ~ac_loc ~file_sig ~ast ~typed_a
 
 (* env is all visible bound names at cursor *)
 let autocomplete_id
-    ~options ~reader ~cx ~ac_loc ~file_sig ~ast ~typed_ast ~include_super ~include_this ~tparams =
+    ~options
+    ~reader
+    ~cx
+    ~ac_loc
+    ~file_sig
+    ~ast
+    ~typed_ast
+    ~include_super
+    ~include_this
+    ~tparams
+    ~token:_ =
+  (* TODO: filter to results that match `token` *)
   let open ServerProt.Response.Completion in
   let ac_loc = loc_of_aloc ~reader ac_loc |> remove_autocomplete_token_from_loc in
   let exact_by_default = Context.exact_by_default cx in
@@ -792,7 +803,9 @@ let type_exports_of_module_ty ~ac_loc ~exact_by_default ~documentation_of_module
     |> Base.List.mapi ~f:(fun i r -> { r with sort_text = sort_text_of_rank i })
   | _ -> []
 
-let autocomplete_unqualified_type ~options ~reader ~cx ~tparams ~file_sig ~ac_loc ~ast ~typed_ast =
+let autocomplete_unqualified_type
+    ~options ~reader ~cx ~tparams ~file_sig ~ac_loc ~ast ~typed_ast ~token:_ =
+  (* TODO: filter to results that match `token` *)
   let open ServerProt.Response.Completion in
   let ac_loc = loc_of_aloc ~reader ac_loc |> remove_autocomplete_token_from_loc in
   let exact_by_default = Context.exact_by_default cx in
@@ -904,7 +917,7 @@ let autocomplete_get_results ~options ~reader ~cx ~file_sig ~ast ~typed_ast trig
     (* TODO: complete object keys based on their upper bounds *)
     let result = { ServerProt.Response.Completion.items = []; is_incomplete = false } in
     ("Ackey", AcResult { result; errors_to_log = [] })
-  | Some (tparams, ac_loc, Acid { include_super; include_this }) ->
+  | Some (tparams, ac_loc, Acid { token; include_super; include_this }) ->
     ( "Acid",
       autocomplete_id
         ~options
@@ -916,7 +929,8 @@ let autocomplete_get_results ~options ~reader ~cx ~file_sig ~ast ~typed_ast trig
         ~typed_ast
         ~include_super
         ~include_this
-        ~tparams )
+        ~tparams
+        ~token )
   | Some (tparams, ac_loc, Acmem { obj_type; in_optional_chain }) ->
     ( "Acmem",
       autocomplete_member
@@ -932,10 +946,18 @@ let autocomplete_get_results ~options ~reader ~cx ~file_sig ~ast ~typed_ast trig
   | Some (tparams, ac_loc, Acjsx (ac_name, used_attr_names, cls)) ->
     ( "Acjsx",
       autocomplete_jsx ~reader cx file_sig typed_ast cls ac_name ~used_attr_names ac_loc ~tparams )
-  | Some (tparams, ac_loc, Actype) ->
+  | Some (tparams, ac_loc, Actype { token }) ->
     ( "Actype",
-      autocomplete_unqualified_type ~options ~reader ~cx ~tparams ~ac_loc ~ast ~typed_ast ~file_sig
-    )
+      autocomplete_unqualified_type
+        ~options
+        ~reader
+        ~cx
+        ~tparams
+        ~ac_loc
+        ~ast
+        ~typed_ast
+        ~file_sig
+        ~token )
   | Some (tparams, ac_loc, Acqualifiedtype qtype) ->
     ( "Acqualifiedtype",
       autocomplete_qualified_type ~reader ~cx ~ac_loc ~file_sig ~typed_ast ~tparams ~qtype )
