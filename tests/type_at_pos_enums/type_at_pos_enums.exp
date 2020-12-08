@@ -13,18 +13,73 @@ Flags:
 E
 test.js:9:13,9:13
 
-test.js:12:6
+test.js:12:10
+Flags:
+enum E
+test.js:12:10,12:10
+
+test.js:15:6
 Flags:
 type T = Class<E>
-test.js:12:6,12:6
+test.js:15:6,15:6
 
-test.js:16:13
+test.js:18:14
 Flags:
-F
-test.js:16:13,16:13
+enum F
+test.js:18:14,18:14
 
 test.js:20:13
 Flags:
-G
+F
 test.js:20:13,20:13
+
+test.js:22:17
+Flags:
+enum F
+test.js:22:17,22:17
+
+test.js:25:13
+Flags:
+enum G
+test.js:25:13,25:13
+
+test.js:27:13
+Flags:
+G
+test.js:27:13,27:13
+
+test.js:29:17
+Flags:
+enum G
+test.js:29:17,29:17
+
+test.js:32:8
+Flags:
+enum G
+test.js:32:8,32:8
+
+test.js:34:13
+Flags:
+G
+test.js:34:13,34:13
+
+test.js:36:17
+Flags:
+enum G
+test.js:36:17,36:17
+
+test.js:39:14
+Flags:
+type FType = F
+test.js:39:14,39:18
+
+test.js:41:13
+Flags:
+FType
+test.js:41:13,41:13
+
+test.js:43:17
+Flags:
+type FType = F
+test.js:43:17,43:21
 

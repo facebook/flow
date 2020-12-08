@@ -3460,6 +3460,18 @@ Flags: --lsp
   }
 }
 {
+  "label":"ExportEnum",
+  "kind":13,
+  "detail":"enum ExportEnum",
+  "documentation":{"kind":"markdown","value":"this is ExportEnum"},
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":15,"character":5},"end":{"line":15,"character":5}},
+    "newText":"ExportEnum"
+  }
+}
+{
   "label":"exportValue",
   "kind":13,
   "detail":"type exportValue = number",
