@@ -4,6 +4,8 @@
 export type ExportFoo = number;
 /** this is ExportBar */
 export type ExportBar<T> = ?T;
+/** this is ExportOpaque */
+export opaque type ExportOpaque<T> = [T,T];
 /** this is ExportClass */
 export class ExportClass {};
 /** this is ExportInterface */

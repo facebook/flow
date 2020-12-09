@@ -217,6 +217,12 @@ class documentation_searcher find (def_loc : Loc.t) =
       if this#is_target id_loc then find comments;
       super#type_alias loc type_alias
 
+    method! opaque_type loc opaque_type =
+      let open Flow_ast.Statement.OpaqueType in
+      let { id = (id_loc, _); comments; _ } = opaque_type in
+      if this#is_target id_loc then find comments;
+      super#opaque_type loc opaque_type
+
     method! interface loc interface =
       let open Flow_ast.Statement.Interface in
       let { id = (id_loc, _); comments; _ } = interface in
