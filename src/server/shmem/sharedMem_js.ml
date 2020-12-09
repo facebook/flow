@@ -27,8 +27,7 @@ let with_memory_profiling_lwt ~profiling f =
 
 let with_memory_info callback =
   let%lwt cgroup_stats = CGroup.get_stats () in
-  (* Reading hash_stats while workers are writing can cause assertion errors *)
-  let hash_stats = (try Some (SharedMem.hash_stats ()) with _ -> None) in
+  let hash_stats = SharedMem.hash_stats () in
   let heap_size = SharedMem.heap_size () in
   callback ~cgroup_stats ~hash_stats ~heap_size;
   Lwt.return_unit
@@ -36,7 +35,7 @@ let with_memory_info callback =
 module MemorySamplingLoop = LwtLoop.Make (struct
   type acc =
     cgroup_stats:(CGroup.stats, string) result ->
-    hash_stats:SharedMem.table_stats option ->
+    hash_stats:SharedMem.table_stats ->
     heap_size:int ->
     unit
 
@@ -67,16 +66,16 @@ let with_memory_timer_lwt =
   let sample_memory timer profiling ~cgroup_stats ~hash_stats ~heap_size =
     P.sample_memory profiling ~group:timer ~metric:"heap" ~value:(float heap_size);
 
-    Base.Option.iter hash_stats ~f:(fun { SharedMem.nonempty_slots; used_slots; slots } ->
-        P.sample_memory
-          profiling
-          ~group:timer
-          ~metric:"hash_nonempty_slots"
-          ~value:(float nonempty_slots);
+    let { SharedMem.nonempty_slots; used_slots; slots } = hash_stats in
+    P.sample_memory
+      profiling
+      ~group:timer
+      ~metric:"hash_nonempty_slots"
+      ~value:(float nonempty_slots);
 
-        P.sample_memory profiling ~group:timer ~metric:"hash_used_slots" ~value:(float used_slots);
+    P.sample_memory profiling ~group:timer ~metric:"hash_used_slots" ~value:(float used_slots);
 
-        P.sample_memory profiling ~group:timer ~metric:"hash_slots" ~value:(float slots));
+    P.sample_memory profiling ~group:timer ~metric:"hash_slots" ~value:(float slots);
 
     match cgroup_stats with
     | Error _ -> ()
