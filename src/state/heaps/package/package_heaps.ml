@@ -11,7 +11,7 @@
 
 (* shared heap for package.json tokens by filename *)
 module PackageHeap =
-  SharedMem_js.WithCache
+  SharedMem.WithCache
     (StringKey)
     (struct
       type t = (Package_json.t, unit) result
@@ -21,7 +21,7 @@ module PackageHeap =
 
 (* shared heap for package.json directories by package name *)
 module ReversePackageHeap =
-  SharedMem_js.WithCache
+  SharedMem.WithCache
     (StringKey)
     (struct
       type t = string

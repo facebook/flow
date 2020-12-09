@@ -9,7 +9,7 @@
 (* Maps module names to the filenames which provide those modules             *)
 
 module NameHeap =
-  SharedMem_js.WithCache
+  SharedMem.WithCache
     (Modulename.Key)
     (struct
       type t = File_key.t
@@ -53,7 +53,7 @@ let mk_resolved_requires ~resolved_modules ~phantom_dependents =
   { resolved_modules; phantom_dependents; hash = Xx.digest state }
 
 module ResolvedRequiresHeap =
-  SharedMem_js.WithCache
+  SharedMem.WithCache
     (File_key)
     (struct
       type t = resolved_requires
@@ -74,7 +74,7 @@ type info = {
 }
 
 module InfoHeap =
-  SharedMem_js.WithCache
+  SharedMem.WithCache
     (File_key)
     (struct
       type t = info

@@ -209,9 +209,9 @@ let include_dependencies_and_dependents
 (* There is memory sampling embedded throughout the code under test. It polls the shared memory
  * system to get information about its usage. If the shared memory system is not initialized, we get
  * crashes, so we have to initialize it before running tests. *)
-let sharedmem_config = { SharedMem_js.heap_size = 1024 * 1024; hash_table_pow = 19; log_level = 0 }
+let sharedmem_config = { SharedMem.heap_size = 1024 * 1024; hash_table_pow = 19; log_level = 0 }
 
-let _ = SharedMem_js.init sharedmem_config ~num_workers:1
+let _ = SharedMem.init sharedmem_config ~num_workers:1
 
 let tests =
   "types_js"

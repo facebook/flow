@@ -211,7 +211,7 @@ let rec recheck_single
          * may have introduced garbage into shared memory. Since we immediately start another
          * recheck, we should first check whether we need to compact. Otherwise, sharedmem could
          * potentially grow unbounded. *)
-        SharedMem_js.collect `aggressive;
+        SharedMem.collect `aggressive;
         recheck_single
           ~files_to_recheck
           ~files_to_force

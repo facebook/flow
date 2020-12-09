@@ -13,6 +13,6 @@ let tests =
 
 let _handle =
   let one_gig = 1024 * 1024 * 1024 in
-  SharedMem_js.(init ~num_workers:0 { heap_size = 5 * one_gig; hash_table_pow = 19; log_level = 0 })
+  SharedMem.(init ~num_workers:0 { heap_size = 5 * one_gig; hash_table_pow = 19; log_level = 0 })
 
 let () = run_test_tt_main tests

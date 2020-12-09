@@ -9,7 +9,7 @@ open Utils_js
 module Server_files = Server_files_js
 
 type args = {
-  shared_mem_config: SharedMem_js.config;
+  shared_mem_config: SharedMem.config;
   options: Options.t;
   init_id: string;
   logging_context: FlowEventLogger.logging_context;
@@ -51,7 +51,7 @@ let register_entry_point
     (main :
       init_id:string ->
       monitor_channels:MonitorRPC.channels ->
-      shared_mem_config:SharedMem_js.config ->
+      shared_mem_config:SharedMem.config ->
       Options.t ->
       unit) : entry_point =
   Daemon.register_entry_point (new_entry_point ()) (fun args monitor_channels ->

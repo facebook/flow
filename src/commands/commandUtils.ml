@@ -274,7 +274,7 @@ let shm_config shm_flags flowconfig =
   let log_level =
     Base.Option.value shm_flags.shm_log_level ~default:(FlowConfig.shm_log_level flowconfig)
   in
-  { SharedMem_js.heap_size = FlowConfig.shm_heap_size flowconfig; hash_table_pow; log_level }
+  { SharedMem.heap_size = FlowConfig.shm_heap_size flowconfig; hash_table_pow; log_level }
 
 let from_flag =
   let collector main from =

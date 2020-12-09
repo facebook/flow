@@ -6,7 +6,7 @@
  *)
 
 let sample_init_memory profiling =
-  SharedMem_js.(
+  SharedMem.(
     let hash_stats = hash_stats () in
     let heap_size = heap_size () in
     let memory_metrics =
@@ -54,7 +54,7 @@ let init ~profiling ?focus_targets genv =
   in
   sample_init_memory profiling;
 
-  SharedMem_js.init_done ();
+  SharedMem.init_done ();
 
   (* Return an env that initializes invariants required and maintained by
      recheck, namely that `files` contains files that parsed successfully, and
@@ -102,7 +102,7 @@ let rec log_on_idle =
 
 let rec serve ~genv ~env =
   Hh_logger.debug "Starting aggressive shared mem GC";
-  SharedMem_js.collect `aggressive;
+  SharedMem.collect `aggressive;
   Hh_logger.debug "Finished aggressive shared mem GC";
 
   MonitorRPC.status_update ~event:ServerStatus.Ready;
@@ -137,10 +137,10 @@ let rec serve ~genv ~env =
 
 let on_compact effort =
   MonitorRPC.status_update ~event:ServerStatus.GC_start;
-  let old_size = SharedMem_js.heap_size () in
+  let old_size = SharedMem.heap_size () in
   let start_t = Unix.gettimeofday () in
   fun () ->
-    let new_size = SharedMem_js.heap_size () in
+    let new_size = SharedMem.heap_size () in
     let time_taken = Unix.gettimeofday () -. start_t in
     if old_size <> new_size then (
       Hh_logger.log
@@ -158,13 +158,13 @@ let on_compact effort =
  * we look if env.modified changed.
  *)
 let create_program_init ~shared_mem_config ~init_id ?focus_targets options =
-  SharedMem_js.on_compact := on_compact;
+  SharedMem.on_compact := on_compact;
   let num_workers = Options.max_workers options in
-  let handle = SharedMem_js.init ~num_workers shared_mem_config in
+  let handle = SharedMem.init ~num_workers shared_mem_config in
   let genv = ServerEnvBuild.make_genv ~options ~init_id handle in
   let program_init profiling =
     let%lwt ret = init ~profiling ?focus_targets genv in
-    if shared_mem_config.SharedMem_js.log_level > 0 then Measure.print_stats ();
+    if shared_mem_config.SharedMem.log_level > 0 then Measure.print_stats ();
     Lwt.return ret
   in
   (genv, program_init)
@@ -238,15 +238,15 @@ let exit_msg_of_exception exn msg =
 
 let run_from_daemonize ~init_id ~monitor_channels ~shared_mem_config options =
   try run ~monitor_channels ~shared_mem_config ~init_id options with
-  | SharedMem_js.Out_of_shared_memory as exn ->
+  | SharedMem.Out_of_shared_memory as exn ->
     let exn = Exception.wrap exn in
     let msg = exit_msg_of_exception exn "Out of shared memory" in
     FlowExitStatus.(exit ~msg Out_of_shared_memory)
-  | SharedMem_js.Hash_table_full as exn ->
+  | SharedMem.Hash_table_full as exn ->
     let exn = Exception.wrap exn in
     let msg = exit_msg_of_exception exn "Hash table is full" in
     FlowExitStatus.(exit ~msg Hash_table_full)
-  | SharedMem_js.Heap_full as exn ->
+  | SharedMem.Heap_full as exn ->
     let exn = Exception.wrap exn in
     let msg = exit_msg_of_exception exn "Heap is full" in
     FlowExitStatus.(exit ~msg Heap_full)
