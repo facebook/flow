@@ -5,10 +5,10 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
-exception Found of Jsdoc.t
+exception FoundJsdoc of Jsdoc.t
 
-let find comments =
-  Base.Option.iter (Jsdoc.of_comments comments) ~f:(fun jsdoc -> raise (Found jsdoc))
+let find_jsdoc comments =
+  Base.Option.iter (Jsdoc.of_comments comments) ~f:(fun jsdoc -> raise (FoundJsdoc jsdoc))
 
 let loc_of_object_key =
   let open Flow_ast.Expression.Object.Property in
@@ -54,7 +54,7 @@ let replace_comments_of_statement ~comments =
       | EnumDeclaration x -> EnumDeclaration EnumDeclaration.{ x with comments }
       | other -> other)
 
-class documentation_searcher (def_loc : Loc.t) =
+class documentation_searcher find (def_loc : Loc.t) =
   object (this)
     inherit [unit, Loc.t] Flow_ast_visitor.visitor ~init:() as super
 
@@ -224,12 +224,12 @@ class documentation_searcher (def_loc : Loc.t) =
       super#interface loc interface
   end
 
-let search def_loc ast =
-  let searcher = new documentation_searcher def_loc in
+let search_jsdoc def_loc ast =
+  let searcher = new documentation_searcher find_jsdoc def_loc in
   try
     ignore (searcher#program ast);
     None
-  with Found documentation -> Some documentation
+  with FoundJsdoc documentation -> Some documentation
 
 module Remove_types = struct
   open Parsing_heaps_utils
@@ -264,7 +264,7 @@ let jsdoc_of_getdef_loc ?current_ast ~reader def_loc =
     | Some _ as some_ast -> some_ast
     | None -> Parsing_heaps.Reader.get_ast ~reader source
   in
-  search def_loc ast
+  search_jsdoc def_loc ast
 
 let documentation_of_jsdoc jsdoc =
   let documentation_of_unrecognized_tag (tag_name, tag_description) =
@@ -283,3 +283,16 @@ let documentation_of_jsdoc jsdoc =
   match documentation_strings with
   | [] -> None
   | _ -> Some (String.concat "\n\n" documentation_strings)
+
+exception FoundCommentLoc of Loc.t
+
+let find_comment_loc =
+  Base.Option.iter ~f:(fun Flow_ast.Syntax.{ leading; _ } ->
+      Base.Option.iter (Base.List.last leading) ~f:(fun (loc, _) -> raise (FoundCommentLoc loc)))
+
+let comment_loc_of_getdef_loc ast def_loc =
+  let searcher = new documentation_searcher find_comment_loc def_loc in
+  try
+    ignore (searcher#program ast);
+    None
+  with FoundCommentLoc comment_loc -> Some comment_loc
