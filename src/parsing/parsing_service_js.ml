@@ -813,7 +813,6 @@ let reparse
   in
   let modified = FilenameSet.union modified results.parse_not_found_skips in
   let modified = FilenameSet.union modified results.parse_hash_mismatch_skips in
-  SharedMem_js.collect `gentle;
   let unchanged = FilenameSet.diff files modified in
   (* restore old parsing info for unchanged files *)
   Parsing_heaps.Reparse_mutator.revive_files master_mutator unchanged;

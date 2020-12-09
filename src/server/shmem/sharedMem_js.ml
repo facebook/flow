@@ -12,8 +12,7 @@ module Ident = Ident
 module Collect : sig
   val collect : [ `gentle | `aggressive | `always_TEST ] -> unit
 
-  val with_memory_profiling_lwt :
-    profiling:Profiling_js.running -> collect_at_end:bool -> (unit -> 'a Lwt.t) -> 'a Lwt.t
+  val with_memory_profiling_lwt : profiling:Profiling_js.running -> (unit -> 'a Lwt.t) -> 'a Lwt.t
 
   val with_memory_timer_lwt :
     ?options:Options.t -> string -> Profiling_js.running -> (unit -> 'a Lwt.t) -> 'a Lwt.t
@@ -38,12 +37,11 @@ end = struct
     Profiling_js.sample_memory profiling ~metric:"hash_slots" ~value:(float_of_int slots);
     Profiling_js.sample_memory profiling ~metric:"hash_used_slots" ~value:(float_of_int used_slots)
 
-  let with_memory_profiling_lwt ~profiling ~collect_at_end f =
+  let with_memory_profiling_lwt ~profiling f =
     sample_memory profiling;
     (profile_before_collect_callback := (fun () -> sample_memory profiling));
 
     let%lwt ret = f () in
-    if collect_at_end then collect `aggressive;
 
     sample_memory profiling;
     (profile_before_collect_callback := (fun () -> ()));

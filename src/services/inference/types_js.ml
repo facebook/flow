@@ -2322,7 +2322,7 @@ let recheck
     ~recheck_reasons
     ~will_be_checked_files =
   let%lwt (env, stats, first_internal_error) =
-    SharedMem_js.with_memory_profiling_lwt ~profiling ~collect_at_end:true (fun () ->
+    SharedMem_js.with_memory_profiling_lwt ~profiling (fun () ->
         with_transaction (fun transaction reader ->
             Recheck.full
               ~profiling

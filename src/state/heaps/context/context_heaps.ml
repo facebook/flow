@@ -56,8 +56,7 @@ let remove_old_merge_batch files =
   WorkerCancel.with_no_cancellations (fun () ->
       LeaderHeap.remove_old_batch files;
       SigContextHeap.remove_old_batch files;
-      SigHashHeap.remove_old_batch files;
-      SharedMem_js.collect `gentle)
+      SigHashHeap.remove_old_batch files)
 
 let revive_merge_batch files =
   WorkerCancel.with_no_cancellations (fun () ->

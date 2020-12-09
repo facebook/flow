@@ -201,8 +201,7 @@ module ParsingHeaps = struct
         DocblockHeap.remove_old_batch files;
         FileSigHeap.remove_old_batch files;
         SigFileSigHeap.remove_old_batch files;
-        FileHashHeap.remove_old_batch files;
-        SharedMem_js.collect `gentle)
+        FileHashHeap.remove_old_batch files)
 
   let revive_batch files =
     WorkerCancel.with_no_cancellations (fun () ->
