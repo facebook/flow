@@ -17,11 +17,8 @@ module Collect : sig
   val with_memory_timer_lwt :
     ?options:Options.t -> string -> Profiling_js.running -> (unit -> 'a Lwt.t) -> 'a Lwt.t
 end = struct
-  let profile_before_collect_callback = ref (fun () -> ())
-
   let collect effort =
     if SharedMem.should_collect effort then (
-      !profile_before_collect_callback ();
       MonitorRPC.status_update ~event:ServerStatus.GC_start;
       SharedMem.collect effort
     )
@@ -39,12 +36,10 @@ end = struct
 
   let with_memory_profiling_lwt ~profiling f =
     sample_memory profiling;
-    (profile_before_collect_callback := (fun () -> sample_memory profiling));
 
     let%lwt ret = f () in
 
     sample_memory profiling;
-    (profile_before_collect_callback := (fun () -> ()));
 
     Lwt.return ret
 
