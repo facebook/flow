@@ -658,11 +658,8 @@ module ContextOptimizer = struct
 
       val mutable export_reason = None
 
-      val mutable export_file = None
-
       method reduce cx module_ref =
         let export = Context.find_module cx module_ref in
-        export_file <- reason_of_t export |> Reason.aloc_of_reason |> ALoc.source;
         let export' = self#type_ cx Polarity.Neutral export in
         reduced_module_map <- SMap.add module_ref export' reduced_module_map
 
