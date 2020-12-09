@@ -514,13 +514,13 @@ end = struct
     denormalize_info_generic ~denormalize:(denormalize_file_key_nocache ~root) info
 
   let denormalize_resolved_requires
-      ~root { Module_heaps.resolved_modules; phantom_dependents; hash } =
+      ~root { Module_heaps.resolved_modules; phantom_dependents; hash = _ } =
     (* We do our best to avoid reading the file system (which Path.make will do) *)
     let phantom_dependents = SSet.map (Files.absolute_path root) phantom_dependents in
     let resolved_modules =
       SMap.map (modulename_map_fn ~f:(denormalize_file_key_nocache ~root)) resolved_modules
     in
-    { Module_heaps.resolved_modules; phantom_dependents; hash }
+    Module_heaps.mk_resolved_requires ~resolved_modules ~phantom_dependents
 
   (** Turns all the relative paths in a file's data back into absolute paths. *)
   let denormalize_file_data ~root { resolved_requires; hash } =
