@@ -21,7 +21,6 @@ type 'k addr [@@immediate]
 type effort =
   [ `aggressive
   | `always_TEST
-  | `gentle
   ]
 
 exception Out_of_shared_memory

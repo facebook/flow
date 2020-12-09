@@ -32,7 +32,6 @@ type _ addr = int
 type effort =
   [ `aggressive
   | `always_TEST
-  | `gentle
   ]
 
 let heap_ref : heap option ref = ref None
@@ -118,7 +117,6 @@ let should_collect effort =
     match effort with
     | `always_TEST -> 1.0
     | `aggressive -> 1.2
-    | `gentle -> 2.0
   in
   let used = heap_size () in
   let wasted = wasted_heap_size () in
