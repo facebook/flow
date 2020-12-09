@@ -18,6 +18,12 @@ type handle = Unix.file_descr
  * passed where a `bar addr` is expected. *)
 type 'k addr [@@immediate]
 
+type effort =
+  [ `aggressive
+  | `always_TEST
+  | `gentle
+  ]
+
 exception Out_of_shared_memory
 
 exception Hash_table_full
@@ -26,10 +32,9 @@ exception Heap_full
 
 val connect : handle -> worker_id:int -> unit
 
-(* TODO - can we hide after inlining SharedMem_js? *)
-val should_collect : [ `aggressive | `always_TEST | `gentle ] -> bool
+val on_compact : (effort -> unit -> unit) ref
 
-val collect : [ `aggressive | `always_TEST | `gentle ] -> unit
+val collect : effort -> unit
 
 type table_stats = {
   nonempty_slots: int;

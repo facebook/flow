@@ -29,6 +29,12 @@ type heap = (nativeint, Bigarray.nativeint_elt, Bigarray.c_layout) Bigarray.Arra
  * Internally, these are all just ints, so be careful! *)
 type _ addr = int
 
+type effort =
+  [ `aggressive
+  | `always_TEST
+  | `gentle
+  ]
+
 let heap_ref : heap option ref = ref None
 
 exception Out_of_shared_memory
@@ -105,7 +111,9 @@ external hash_stats : unit -> table_stats = "hh_hash_stats"
 (*****************************************************************************)
 let init_done () = EventLogger.sharedmem_init_done (heap_size ())
 
-let should_collect (effort : [ `gentle | `aggressive | `always_TEST ]) =
+let on_compact = ref (fun _ _ -> ())
+
+let should_collect effort =
   let overhead =
     match effort with
     | `always_TEST -> 1.0
@@ -117,21 +125,12 @@ let should_collect (effort : [ `gentle | `aggressive | `always_TEST ]) =
   let reachable = used - wasted in
   used >= truncate (float reachable *. overhead)
 
-let collect (effort : [ `gentle | `aggressive | `always_TEST ]) =
-  let old_size = heap_size () in
-  let start_t = Unix.gettimeofday () in
-  (* The wrapper is used to run the function in a worker instead of master. *)
-  if should_collect effort then hh_collect ();
-  let new_size = heap_size () in
-  let time_taken = Unix.gettimeofday () -. start_t in
-  if old_size <> new_size then (
-    Hh_logger.log
-      "Sharedmem GC: %d bytes before; %d bytes after; in %f seconds"
-      old_size
-      new_size
-      time_taken;
-    EventLogger.sharedmem_gc_ran effort old_size new_size time_taken
-  )
+let collect effort =
+  if should_collect effort then begin
+    let k = !on_compact effort in
+    hh_collect ();
+    k ()
+  end
 
 (* Compute size of values in the garbage-collected heap *)
 let value_size r =

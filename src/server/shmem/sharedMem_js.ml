@@ -10,19 +10,11 @@ module Prefix = Prefix
 module Ident = Ident
 
 module Collect : sig
-  val collect : [ `gentle | `aggressive | `always_TEST ] -> unit
-
   val with_memory_profiling_lwt : profiling:Profiling_js.running -> (unit -> 'a Lwt.t) -> 'a Lwt.t
 
   val with_memory_timer_lwt :
     ?options:Options.t -> string -> Profiling_js.running -> (unit -> 'a Lwt.t) -> 'a Lwt.t
 end = struct
-  let collect effort =
-    if SharedMem.should_collect effort then (
-      MonitorRPC.status_update ~event:ServerStatus.GC_start;
-      SharedMem.collect effort
-    )
-
   let sample_memory profiling =
     let heap = heap_size () in
     let { nonempty_slots; used_slots; slots } = hash_stats () in

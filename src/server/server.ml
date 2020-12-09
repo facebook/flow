@@ -135,6 +135,22 @@ let rec serve ~genv ~env =
 
   serve ~genv ~env
 
+let on_compact effort =
+  MonitorRPC.status_update ~event:ServerStatus.GC_start;
+  let old_size = SharedMem_js.heap_size () in
+  let start_t = Unix.gettimeofday () in
+  fun () ->
+    let new_size = SharedMem_js.heap_size () in
+    let time_taken = Unix.gettimeofday () -. start_t in
+    if old_size <> new_size then (
+      Hh_logger.log
+        "Sharedmem GC: %d bytes before; %d bytes after; in %f seconds"
+        old_size
+        new_size
+        time_taken;
+      EventLogger.sharedmem_gc_ran effort old_size new_size time_taken
+    )
+
 (* The main entry point of the daemon
  * the only trick to understand here, is that env.modified is the set
  * of files that changed, it is only set back to SSet.empty when the
@@ -142,6 +158,7 @@ let rec serve ~genv ~env =
  * we look if env.modified changed.
  *)
 let create_program_init ~shared_mem_config ~init_id ?focus_targets options =
+  SharedMem_js.on_compact := on_compact;
   let num_workers = Options.max_workers options in
   let handle = SharedMem_js.init ~num_workers shared_mem_config in
   let genv = ServerEnvBuild.make_genv ~options ~init_id handle in

@@ -84,27 +84,25 @@ let expect_get key expected =
     ~msg:(Printf.sprintf "Expected key '%s' to have value '%s', got '%s" key expected value)
     (value = expected)
 
-let expect_gentle_collect expected =
+let expect_compact effort expected =
+  let old_cb = !SharedMem.on_compact in
+  let actual = ref false in
+  (SharedMem.on_compact := (fun _ _ -> actual := true));
+  SharedMem.collect effort;
+  SharedMem.on_compact := old_cb;
   expect
     ~msg:
       (Printf.sprintf
-         "Expected gentle collection to be %sneeded"
+         "Expected %s collection to be %sneeded"
+         (match effort with
+         | `gentle -> "gentle"
+         | `aggressive -> "aggressive"
+         | `always_TEST -> "always")
          ( if expected then
            ""
          else
            "not " ))
-    (SharedMem.should_collect `gentle = expected)
-
-let expect_aggressive_collect expected =
-  expect
-    ~msg:
-      (Printf.sprintf
-         "Expected aggressive collection to be %sneeded"
-         ( if expected then
-           ""
-         else
-           "not " ))
-    (SharedMem.should_collect `aggressive = expected)
+    (!actual = expected)
 
 let test_ops () =
   expect_stats ~nonempty:0 ~used:0;
@@ -226,8 +224,8 @@ let test_gc_collect () =
   add "1" "1";
 
   (* no memory is wasted *)
-  expect_gentle_collect false;
-  expect_aggressive_collect false;
+  expect_compact `gentle false;
+  expect_compact `aggressive false;
   expect_heap_size 2;
   expect_mem "0";
   expect_mem "1";
@@ -235,7 +233,7 @@ let test_gc_collect () =
   expect_heap_size 2;
 
   (* Garbage collection should remove the space taken by the removed element *)
-  SharedMem.collect `gentle;
+  expect_compact `gentle true;
   expect_heap_size 1;
   expect_mem "0"
 
@@ -249,21 +247,18 @@ let test_gc_aggressive () =
   (* Since latest heap size is zero,
      now it should gc, but theres nothing to gc,
      so the heap will stay the same *)
-  expect_gentle_collect false;
-  SharedMem.collect `gentle;
+  expect_compact `gentle false;
   expect_heap_size 2;
   remove "1";
   add "2" "2";
   expect_heap_size 3;
 
   (* Gentle garbage collection shouldn't catch this *)
-  expect_gentle_collect false;
-  SharedMem.collect `gentle;
+  expect_compact `gentle false;
   expect_heap_size 3;
 
   (* Aggressive garbage collection should run *)
-  expect_aggressive_collect true;
-  SharedMem.collect `aggressive;
+  expect_compact `aggressive true;
   expect_heap_size 2
 
 let test_heapsize_decrease () =
