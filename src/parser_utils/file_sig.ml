@@ -626,7 +626,7 @@ struct
               default;
             Base.Option.iter
               ~f:(function
-                | ImportNamespaceSpecifier (loc, (_, { Ast.Identifier.name = local; comments = _ }))
+                | ImportNamespaceSpecifier (_, (loc, { Ast.Identifier.name = local; comments = _ }))
                   ->
                   (match import_kind with
                   | ImportType -> failwith "import type * is a parse error"
