@@ -12,7 +12,8 @@ let tests =
   >::: [
          ( "type_object_property_get" >:: fun ctxt ->
            let getter =
-             Ty.NamedProp { name = "foo"; prop = Ty.Get (Ty.Str None); from_proto = false }
+             Ty.NamedProp
+               { name = "foo"; prop = Ty.Get (Ty.Str None); from_proto = false; def_loc = None }
            in
            let obj =
              Ty.Obj
@@ -27,7 +28,8 @@ let tests =
            assert_equal ~ctxt ~printer:(fun x -> x) "{get foo(): string}" str );
          ( "type_object_property_set" >:: fun ctxt ->
            let setter =
-             Ty.NamedProp { name = "foo"; prop = Ty.Set (Ty.Str None); from_proto = false }
+             Ty.NamedProp
+               { name = "foo"; prop = Ty.Set (Ty.Str None); from_proto = false; def_loc = None }
            in
            let obj =
              Ty.Obj
