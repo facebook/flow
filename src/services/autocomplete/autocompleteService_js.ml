@@ -83,15 +83,15 @@ let lsp_completion_of_decl =
 
 let sort_text_of_rank rank = Some (Printf.sprintf "%020u" rank)
 
-let text_edits ?insert_text (name, loc) =
+let text_edit ?insert_text (name, loc) =
   let newText = Base.Option.value ~default:name insert_text in
-  [(loc, newText)]
+  (loc, newText)
 
 let autocomplete_create_result
     ?insert_text ?(rank = 0) ?(preselect = false) ?documentation ~exact_by_default (name, loc) ty =
   let detail = Ty_printer.string_of_t_single_line ~with_comments:false ~exact_by_default ty in
   let kind = lsp_completion_of_type ty in
-  let text_edits = text_edits ?insert_text (name, loc) in
+  let text_edits = [text_edit ?insert_text (name, loc)] in
   let sort_text = sort_text_of_rank rank in
   {
     ServerProt.Response.Completion.kind;
@@ -116,7 +116,7 @@ let autocomplete_create_result_decl
       ( Some (lsp_completion_of_decl d),
         Ty_printer.string_of_decl_single_line ~with_comments:false ~exact_by_default d )
   in
-  let text_edits = text_edits ?insert_text (name, loc) in
+  let text_edits = [text_edit ?insert_text (name, loc)] in
   let sort_text = sort_text_of_rank rank in
   {
     ServerProt.Response.Completion.kind;
@@ -168,7 +168,7 @@ let ty_normalizer_options =
 
 type autocomplete_service_result =
   | AcResult of {
-      results: ServerProt.Response.Completion.t;
+      result: ServerProt.Response.Completion.t;
       errors_to_log: string list;
     }
   | AcEmpty of string
@@ -433,7 +433,7 @@ let autocomplete_member
   with
   | Error err -> AcFatalError err
   | Ok (mems, errors_to_log) ->
-    let results =
+    let items =
       mems
       |> Base.List.map
            ~f:(fun (name, documentation, MemberInfo.{ ty; from_proto; from_nullable }) ->
@@ -468,23 +468,13 @@ let autocomplete_member
                  (name, ac_loc)
                  opt_chain_ty)
     in
-    AcResult { results; errors_to_log }
-
-(* turns typed AST into normal AST so we can run Scope_builder on it *)
-(* TODO(vijayramamurthy): make scope builder polymorphic *)
-class type_killer (reader : Parsing_heaps.Reader.reader) =
-  object
-    inherit [ALoc.t, ALoc.t * Type.t, Loc.t, Loc.t] Flow_polymorphic_ast_mapper.mapper
-
-    method on_loc_annot x = loc_of_aloc ~reader x
-
-    method on_type_annot (x, _) = loc_of_aloc ~reader x
-  end
+    let result = { ServerProt.Response.Completion.items; is_incomplete = false } in
+    AcResult { result; errors_to_log }
 
 (* The fact that we need this feels convoluted.
-   We started with a typed AST, then stripped the types off of it to run Scope_builder on it,
-   and now we go back to the typed AST to get the types of the locations we got from Scope_api.
-   We wouldn't need to do this separate pass if Scope_builder/Scope_api were polymorphic.
+   We run Scope_builder on the untyped AST and now we go back to the typed AST to get the types
+   of the locations we got from Scope_api. We wouldn't need to do this separate pass if
+   Scope_builder/Scope_api were polymorphic.
 *)
 class type_collector (reader : Parsing_heaps.Reader.reader) (locs : LocSet.t) =
   object
@@ -520,8 +510,8 @@ let documentation_of_loc ~options ~reader ~cx ~file_sig ~typed_ast loc =
   | Def_error _ ->
     None
 
-let local_value_identifiers ~options ~reader ~cx ~ac_loc ~file_sig ~typed_ast ~tparams =
-  let scope_info = Scope_builder.program ((new type_killer reader)#program typed_ast) in
+let local_value_identifiers ~options ~reader ~cx ~ac_loc ~file_sig ~ast ~typed_ast ~tparams =
+  let scope_info = Scope_builder.program ~with_types:false ast in
   let open Scope_api.With_Loc in
   (* get the innermost scope enclosing the requested location *)
   let (ac_scope_id, _) =
@@ -577,14 +567,25 @@ let local_value_identifiers ~options ~reader ~cx ~ac_loc ~file_sig ~typed_ast ~t
 
 (* env is all visible bound names at cursor *)
 let autocomplete_id
-    ~options ~reader ~cx ~ac_loc ~file_sig ~typed_ast ~include_super ~include_this ~tparams =
+    ~options
+    ~reader
+    ~cx
+    ~ac_loc
+    ~file_sig
+    ~ast
+    ~typed_ast
+    ~include_super
+    ~include_this
+    ~tparams
+    ~token:_ =
+  (* TODO: filter to results that match `token` *)
   let open ServerProt.Response.Completion in
   let ac_loc = loc_of_aloc ~reader ac_loc |> remove_autocomplete_token_from_loc in
   let exact_by_default = Context.exact_by_default cx in
-  let (results, errors_to_log) =
-    local_value_identifiers ~options ~reader ~cx ~ac_loc ~file_sig ~typed_ast ~tparams
+  let (items, errors_to_log) =
+    local_value_identifiers ~options ~reader ~cx ~ac_loc ~file_sig ~typed_ast ~ast ~tparams
     |> List.fold_left
-         (fun (results, errors_to_log) ((name, documentation), elt_result) ->
+         (fun (items, errors_to_log) ((name, documentation), elt_result) ->
            match elt_result with
            | Ok elt ->
              let result =
@@ -595,45 +596,46 @@ let autocomplete_id
                  (name, ac_loc)
                  elt
              in
-             (result :: results, errors_to_log)
+             (result :: items, errors_to_log)
            | Error err ->
              let error_to_log = Ty_normalizer.error_to_string err in
-             (results, error_to_log :: errors_to_log))
+             (items, error_to_log :: errors_to_log))
          ([], [])
   in
   (* "this" is legal inside classes and (non-arrow) functions *)
-  let results =
+  let items =
     if include_this then
       {
         kind = Some Lsp.Completion.Variable;
         name = "this";
         detail = "this";
-        text_edits = text_edits ("this", ac_loc);
+        text_edits = [text_edit ("this", ac_loc)];
         sort_text = sort_text_of_rank 0;
         preselect = false;
         documentation = None;
       }
-      :: results
+      :: items
     else
-      results
+      items
   in
   (* "super" is legal inside classes *)
-  let results =
+  let items =
     if include_super then
       {
         kind = Some Lsp.Completion.Variable;
         name = "super";
         detail = "super";
-        text_edits = text_edits ("super", ac_loc);
+        text_edits = [text_edit ("super", ac_loc)];
         sort_text = sort_text_of_rank 0;
         preselect = false;
         documentation = None;
       }
-      :: results
+      :: items
     else
-      results
+      items
   in
-  AcResult { results; errors_to_log }
+  let result = { ServerProt.Response.Completion.items; is_incomplete = false } in
+  AcResult { result; errors_to_log }
 
 (* Similar to autocomplete_member, except that we're not directly given an
    object type whose members we want to enumerate: instead, we are given a
@@ -668,7 +670,7 @@ let autocomplete_jsx ~reader cx file_sig typed_ast cls ac_name ~used_attr_names 
   match mems_result with
   | Error err -> AcFatalError err
   | Ok (mems, errors_to_log) ->
-    let results =
+    let items =
       mems
       |> Base.List.map ~f:(fun (name, documentation, MemberInfo.{ ty; _ }) ->
              autocomplete_create_result
@@ -678,7 +680,8 @@ let autocomplete_jsx ~reader cx file_sig typed_ast cls ac_name ~used_attr_names 
                (name, ac_loc)
                ty)
     in
-    AcResult { results; errors_to_log }
+    let result = { ServerProt.Response.Completion.items; is_incomplete = false } in
+    AcResult { result; errors_to_log }
 
 (* TODO(vijayramamurthy) think about how to break this file down into smaller modules *)
 (* NOTE: excludes classes, because we'll get those from local_value_identifiers *)
@@ -755,7 +758,7 @@ let type_exports_of_module_ty ~ac_loc ~exact_by_default ~documentation_of_module
             {
               kind = lsp_completion_of_type t;
               name = sym_name;
-              text_edits = text_edits (sym_name, ac_loc);
+              text_edits = [text_edit (sym_name, ac_loc)];
               detail = Ty_printer.string_of_decl_single_line ~exact_by_default d;
               sort_text = None;
               preselect = false;
@@ -766,7 +769,7 @@ let type_exports_of_module_ty ~ac_loc ~exact_by_default ~documentation_of_module
             {
               kind = Some Lsp.Completion.Interface;
               name = sym_name;
-              text_edits = text_edits (sym_name, ac_loc);
+              text_edits = [text_edit (sym_name, ac_loc)];
               detail = Ty_printer.string_of_decl_single_line ~exact_by_default d;
               sort_text = None;
               preselect = false;
@@ -777,7 +780,7 @@ let type_exports_of_module_ty ~ac_loc ~exact_by_default ~documentation_of_module
             {
               kind = Some Lsp.Completion.Class;
               name = sym_name;
-              text_edits = text_edits (sym_name, ac_loc);
+              text_edits = [text_edit (sym_name, ac_loc)];
               detail = Ty_printer.string_of_decl_single_line ~exact_by_default d;
               sort_text = None;
               preselect = false;
@@ -788,7 +791,7 @@ let type_exports_of_module_ty ~ac_loc ~exact_by_default ~documentation_of_module
             {
               kind = Some Lsp.Completion.Enum;
               name = sym_name;
-              text_edits = text_edits (sym_name, ac_loc);
+              text_edits = [text_edit (sym_name, ac_loc)];
               detail = Ty_printer.string_of_decl_single_line ~exact_by_default d;
               sort_text = None;
               preselect = false;
@@ -800,7 +803,9 @@ let type_exports_of_module_ty ~ac_loc ~exact_by_default ~documentation_of_module
     |> Base.List.mapi ~f:(fun i r -> { r with sort_text = sort_text_of_rank i })
   | _ -> []
 
-let autocomplete_unqualified_type ~options ~reader ~cx ~tparams ~file_sig ~ac_loc ~typed_ast =
+let autocomplete_unqualified_type
+    ~options ~reader ~cx ~tparams ~file_sig ~ac_loc ~ast ~typed_ast ~token:_ =
+  (* TODO: filter to results that match `token` *)
   let open ServerProt.Response.Completion in
   let ac_loc = loc_of_aloc ~reader ac_loc |> remove_autocomplete_token_from_loc in
   let exact_by_default = Context.exact_by_default cx in
@@ -811,7 +816,7 @@ let autocomplete_unqualified_type ~options ~reader ~cx ~tparams ~file_sig ~ac_lo
           kind = Some Lsp.Completion.TypeParameter;
           name;
           detail = name;
-          text_edits = text_edits (name, ac_loc);
+          text_edits = [text_edit (name, ac_loc)];
           sort_text = sort_text_of_rank 0;
           preselect = false;
           documentation = None;
@@ -840,19 +845,19 @@ let autocomplete_unqualified_type ~options ~reader ~cx ~tparams ~file_sig ~ac_lo
   (* The value-level identifiers we suggest in type autocompletion:
      - classes
      - modules (followed by a dot) *)
-  let (results, errors_to_log) =
-    local_value_identifiers ~options ~typed_ast ~reader ~ac_loc ~tparams ~cx ~file_sig
+  let (items, errors_to_log) =
+    local_value_identifiers ~options ~ast ~typed_ast ~reader ~ac_loc ~tparams ~cx ~file_sig
     |> List.fold_left
-         (fun (results, errors_to_log) ((name, documentation), ty_res) ->
+         (fun (items, errors_to_log) ((name, documentation), ty_res) ->
            match ty_res with
            | Error err ->
              let error_to_log = Ty_normalizer.error_to_string err in
-             (results, error_to_log :: errors_to_log)
+             (items, error_to_log :: errors_to_log)
            | Ok (Ty.Decl (Ty.ClassDecl _ | Ty.EnumDecl _) as elt) ->
              let result =
                autocomplete_create_result_elt ?documentation ~exact_by_default (name, ac_loc) elt
              in
-             (result :: results, errors_to_log)
+             (result :: items, errors_to_log)
            | Ok elt
              when type_exports_of_module_ty
                     ~ac_loc
@@ -868,11 +873,12 @@ let autocomplete_unqualified_type ~options ~reader ~cx ~tparams ~file_sig ~ac_lo
                  elt
                  ~insert_text:(name ^ ".")
              in
-             (result :: results, errors_to_log)
-           | Ok _ -> (results, errors_to_log))
+             (result :: items, errors_to_log)
+           | Ok _ -> (items, errors_to_log))
          (tparam_and_tident_results, tparam_and_tident_errors_to_log)
   in
-  AcResult { results; errors_to_log }
+  let result = { ServerProt.Response.Completion.items; is_incomplete = false } in
+  AcResult { result; errors_to_log }
 
 let autocomplete_qualified_type ~reader ~cx ~ac_loc ~file_sig ~typed_ast ~tparams ~qtype =
   let ac_loc = loc_of_aloc ~reader ac_loc |> remove_autocomplete_token_from_loc in
@@ -885,21 +891,18 @@ let autocomplete_qualified_type ~reader ~cx ~ac_loc ~file_sig ~typed_ast ~tparam
       qtype_scheme
   in
   let documentation_of_module_member = documentation_of_member ~reader ~cx ~typed_ast qtype in
-  match module_ty_res with
-  | Error err -> AcResult { results = []; errors_to_log = [Ty_normalizer.error_to_string err] }
-  | Ok module_ty ->
-    AcResult
-      {
-        results =
-          type_exports_of_module_ty
-            ~ac_loc
-            ~exact_by_default
-            ~documentation_of_module_member
-            module_ty;
-        errors_to_log = [];
-      }
+  let (items, errors_to_log) =
+    match module_ty_res with
+    | Error err -> ([], [Ty_normalizer.error_to_string err])
+    | Ok module_ty ->
+      ( type_exports_of_module_ty ~ac_loc ~exact_by_default ~documentation_of_module_member module_ty,
+        [] )
+  in
+  AcResult
+    { result = { ServerProt.Response.Completion.items; is_incomplete = false }; errors_to_log }
 
-let autocomplete_get_results ~options ~reader ~cx ~file_sig ~typed_ast trigger_character cursor =
+let autocomplete_get_results ~options ~reader ~cx ~file_sig ~ast ~typed_ast trigger_character cursor
+    =
   let file_sig = File_sig.abstractify_locs file_sig in
   match Autocomplete_js.process_location ~trigger_character ~cursor ~typed_ast with
   | Some (_, _, Acbinding) -> ("Empty", AcEmpty "Binding")
@@ -912,8 +915,9 @@ let autocomplete_get_results ~options ~reader ~cx ~file_sig ~typed_ast trigger_c
     ("Acmodule", AcEmpty "Module")
   | Some (_, _, Ackey) ->
     (* TODO: complete object keys based on their upper bounds *)
-    ("Ackey", AcResult { results = []; errors_to_log = [] })
-  | Some (tparams, ac_loc, Acid { include_super; include_this }) ->
+    let result = { ServerProt.Response.Completion.items = []; is_incomplete = false } in
+    ("Ackey", AcResult { result; errors_to_log = [] })
+  | Some (tparams, ac_loc, Acid { token; include_super; include_this }) ->
     ( "Acid",
       autocomplete_id
         ~options
@@ -921,10 +925,12 @@ let autocomplete_get_results ~options ~reader ~cx ~file_sig ~typed_ast trigger_c
         ~cx
         ~ac_loc
         ~file_sig
+        ~ast
         ~typed_ast
         ~include_super
         ~include_this
-        ~tparams )
+        ~tparams
+        ~token )
   | Some (tparams, ac_loc, Acmem { obj_type; in_optional_chain }) ->
     ( "Acmem",
       autocomplete_member
@@ -940,11 +946,21 @@ let autocomplete_get_results ~options ~reader ~cx ~file_sig ~typed_ast trigger_c
   | Some (tparams, ac_loc, Acjsx (ac_name, used_attr_names, cls)) ->
     ( "Acjsx",
       autocomplete_jsx ~reader cx file_sig typed_ast cls ac_name ~used_attr_names ac_loc ~tparams )
-  | Some (tparams, ac_loc, Actype) ->
+  | Some (tparams, ac_loc, Actype { token }) ->
     ( "Actype",
-      autocomplete_unqualified_type ~options ~reader ~cx ~tparams ~ac_loc ~typed_ast ~file_sig )
+      autocomplete_unqualified_type
+        ~options
+        ~reader
+        ~cx
+        ~tparams
+        ~ac_loc
+        ~ast
+        ~typed_ast
+        ~file_sig
+        ~token )
   | Some (tparams, ac_loc, Acqualifiedtype qtype) ->
     ( "Acqualifiedtype",
       autocomplete_qualified_type ~reader ~cx ~ac_loc ~file_sig ~typed_ast ~tparams ~qtype )
   | None ->
-    ("None", AcResult { results = []; errors_to_log = ["Autocomplete token not found in AST"] })
+    let result = { ServerProt.Response.Completion.items = []; is_incomplete = false } in
+    ("None", AcResult { result; errors_to_log = ["Autocomplete token not found in AST"] })

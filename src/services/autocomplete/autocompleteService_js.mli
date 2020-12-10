@@ -7,7 +7,7 @@
 
 type autocomplete_service_result =
   | AcResult of {
-      results: ServerProt.Response.Completion.t;
+      result: ServerProt.Response.Completion.t;
       errors_to_log: string list;
     }
   | AcEmpty of string
@@ -18,6 +18,7 @@ val autocomplete_get_results :
   reader:Parsing_heaps.Reader.reader ->
   cx:Context.t ->
   file_sig:File_sig.With_Loc.t ->
+  ast:(Loc.t, Loc.t) Flow_ast.Program.t ->
   typed_ast:(ALoc.t, ALoc.t * Type.t) Flow_ast.Program.t ->
   string option ->
   Loc.t ->

@@ -150,35 +150,6 @@ let visit_eval_id cx id f =
   | None -> ()
   | Some t -> f t
 
-(***************)
-(* strict mode *)
-(***************)
-
-(* For any constraints, return a list of def types that form either the lower
-   bounds of the solution, or a singleton containing the solution itself. *)
-let types_of constraints =
-  match constraints with
-  | Unresolved { lower; _ } -> TypeMap.keys lower
-  | Resolved (_, t)
-  | FullyResolved (_, t) ->
-    [t]
-
-(* Def types that describe the solution of a type variable. *)
-let possible_types cx id = types_of (Context.find_graph cx id) |> List.filter is_proper_def
-
-let possible_types_of_type cx = function
-  | OpenT (_, id) -> possible_types cx id
-  | _ -> []
-
-let uses_of constraints =
-  match constraints with
-  | Unresolved { upper; _ } -> Base.List.map ~f:fst (UseTypeMap.keys upper)
-  | Resolved (use_op, t)
-  | FullyResolved (use_op, t) ->
-    [UseT (use_op, t)]
-
-let possible_uses cx id = uses_of (Context.find_graph cx id) |> List.filter is_proper_use
-
 (**************)
 (* builtins *)
 (**************)
@@ -977,6 +948,8 @@ struct
             rec_flow cx trace (l, UseT (use_op, result))
         | (EvalT (t, LatentPredT (reason, p), i), _) ->
           rec_flow cx trace (eval_latent_pred cx ~trace reason t p i, u)
+        | (_, UseT (use_op, EvalT (t, LatentPredT (reason, p), i))) ->
+          rec_flow cx trace (l, UseT (use_op, eval_latent_pred cx ~trace reason t p i))
         (******************)
         (* process X ~> Y *)
         (******************)
@@ -1043,11 +1016,6 @@ struct
         (*****************)
         | (_, UseT (_, MergedT (_, uses))) -> List.iter (fun u -> rec_flow cx trace (l, u)) uses
         | (MergedT (reason, _), _) -> rec_flow cx trace (Unsoundness.why Merged reason, u)
-        (****************)
-        (* eval, contd. *)
-        (****************)
-        | (_, UseT (use_op, EvalT (t, LatentPredT (reason, p), i))) ->
-          rec_flow cx trace (l, UseT (use_op, eval_latent_pred cx ~trace reason t p i))
         (***************************)
         (* type destructor trigger *)
         (***************************)
@@ -4059,16 +4027,17 @@ struct
                without fearing regressions in termination guarantees.
             *)
             | CallT (use_op, _, calltype) when not (is_typemap_reason reason_op) ->
+              let arg_reasons =
+                Base.List.map
+                  ~f:(function
+                    | Arg t -> reason_of_t t
+                    | SpreadArg t -> reason_of_t t)
+                  calltype.call_args_tlist
+              in
               begin
                 match calltype.call_targs with
                 | None ->
-                  let arg_reasons =
-                    Base.List.map
-                      ~f:(function
-                        | Arg t -> reason_of_t t
-                        | SpreadArg t -> reason_of_t t)
-                      calltype.call_args_tlist
-                  in
+                  Context.add_implicit_instantiation_check cx l u;
                   let t_ =
                     instantiate_poly
                       cx
@@ -4090,6 +4059,7 @@ struct
                       ~use_op
                       ~reason_op
                       ~reason_tapp
+                      ~cache:arg_reasons
                   in
                   rec_flow
                     cx
@@ -4108,6 +4078,17 @@ struct
                   ~reason_tapp
               in
               rec_flow cx trace (t_, ConstructorT (use_op, reason_op, None, args, tout))
+            | ConstructorT (_, _, None, _, _) ->
+              Context.add_implicit_instantiation_check cx l u;
+              let use_op =
+                match use_op_of_use_t u with
+                | Some use_op -> use_op
+                | None -> unknown_use
+              in
+              let t_ =
+                instantiate_poly cx trace ~use_op ~reason_op ~reason_tapp (tparams_loc, ids, t)
+              in
+              rec_flow cx trace (t_, u)
             | _ ->
               let use_op =
                 match use_op_of_use_t u with
@@ -7216,9 +7197,14 @@ struct
         (**********************)
         (* Array library call *)
         (**********************)
-        | ( DefT (reason, _, ArrT (ArrayAT (t, _))),
-            (GetPropT _ | SetPropT _ | MethodT _ | LookupT _) ) ->
+        | (DefT (reason, _, ArrT (ArrayAT (t, _))), (GetPropT _ | SetPropT _ | LookupT _)) ->
           rec_flow cx trace (get_builtin_typeapp cx ~trace reason "Array" [t], u)
+        | ( DefT (reason, _, ArrT (ArrayAT (t, _))),
+            MethodT (use_op, call_r, lookup_r, propref, action, t_opt) ) ->
+          let arr_t = get_builtin_typeapp cx ~trace reason "Array" [t] in
+          (* Substitute the typeapp for the array primitive in the method call's `this` position *)
+          let action = replace_this_t_in_method_action arr_t action in
+          rec_flow cx trace (arr_t, MethodT (use_op, call_r, lookup_r, propref, action, t_opt))
         (*************************)
         (* Tuple "length" access *)
         (*************************)
@@ -7231,27 +7217,50 @@ struct
           let t = tuple_length reason trust ts in
           rec_flow_t cx trace ~use_op:unknown_use (reposition cx ~trace loc t, OpenT tout)
         | ( DefT (reason, _, ArrT ((TupleAT _ | ROArrayAT _) as arrtype)),
-            (GetPropT _ | SetPropT _ | MethodT _ | LookupT _) ) ->
+            (GetPropT _ | SetPropT _ | LookupT _) ) ->
           let t = elemt_of_arrtype arrtype in
           rec_flow cx trace (get_builtin_typeapp cx ~trace reason "$ReadOnlyArray" [t], u)
+        | ( DefT (reason, _, ArrT ((TupleAT _ | ROArrayAT _) as arrtype)),
+            MethodT (use_op, call_r, lookup_r, propref, action, t_opt) ) ->
+          let t = elemt_of_arrtype arrtype in
+          let arr_t = get_builtin_typeapp cx ~trace reason "$ReadOnlyArray" [t] in
+          (* Substitute the typeapp for the array primitive in the method call's `this` position *)
+          let action = replace_this_t_in_method_action arr_t action in
+          rec_flow cx trace (arr_t, MethodT (use_op, call_r, lookup_r, propref, action, t_opt))
         (***********************)
         (* String library call *)
         (***********************)
+        | (DefT (reason, _, StrT _), MethodT (use_op, call_r, lookup_r, propref, action, t_opt)) ->
+          let promoted = get_builtin_type cx ~trace reason "String" in
+          let action = replace_this_t_in_method_action promoted action in
+          rec_flow cx trace (promoted, MethodT (use_op, call_r, lookup_r, propref, action, t_opt))
         | (DefT (reason, _, StrT _), u) when primitive_promoting_use_t u ->
           rec_flow cx trace (get_builtin_type cx ~trace reason "String", u)
         (***********************)
         (* Number library call *)
         (***********************)
+        | (DefT (reason, _, NumT _), MethodT (use_op, call_r, lookup_r, propref, action, t_opt)) ->
+          let promoted = get_builtin_type cx ~trace reason "Number" in
+          let action = replace_this_t_in_method_action promoted action in
+          rec_flow cx trace (promoted, MethodT (use_op, call_r, lookup_r, propref, action, t_opt))
         | (DefT (reason, _, NumT _), u) when primitive_promoting_use_t u ->
           rec_flow cx trace (get_builtin_type cx ~trace reason "Number", u)
         (***********************)
         (* Boolean library call *)
         (***********************)
+        | (DefT (reason, _, BoolT _), MethodT (use_op, call_r, lookup_r, propref, action, t_opt)) ->
+          let promoted = get_builtin_type cx ~trace reason "Boolean" in
+          let action = replace_this_t_in_method_action promoted action in
+          rec_flow cx trace (promoted, MethodT (use_op, call_r, lookup_r, propref, action, t_opt))
         | (DefT (reason, _, BoolT _), u) when primitive_promoting_use_t u ->
           rec_flow cx trace (get_builtin_type cx ~trace reason "Boolean", u)
         (***********************)
         (* Symbol library call *)
         (***********************)
+        | (DefT (reason, _, SymbolT), MethodT (use_op, call_r, lookup_r, propref, action, t_opt)) ->
+          let promoted = get_builtin_type cx ~trace reason "Symbol" in
+          let action = replace_this_t_in_method_action promoted action in
+          rec_flow cx trace (promoted, MethodT (use_op, call_r, lookup_r, propref, action, t_opt))
         | (DefT (reason, _, SymbolT), u) when primitive_promoting_use_t u ->
           rec_flow cx trace (get_builtin_type cx ~trace reason "Symbol", u)
         (*****************************************************)
@@ -8850,20 +8859,30 @@ struct
           | [] -> ([], ts)
           | ExplicitArg t :: targs -> (targs, t :: ts)
           | ImplicitArg (r, id) :: targs ->
+            (* `_` can introduce non-termination, just like omitting type arguments
+             * can. In order to protect against that non-termination we use cache_instantiate.
+             * Instead of letting instantiate_poly do that for us on every type argument, we
+             * do it ourselves here so that explicit type arguments do not have their reasons
+             * needlessly changed. Note that the ImplicitTypeParam reason that cache instatiations
+             * introduce can also change the use_op in a flow. In the NumT ~> StrT case,
+             * this can make meaningful differences in type checking behavior. Ensuring that
+             * the use_op/reason change happens _only_ on actually implicitly instantiated
+             * type variables helps preserve the correct type checking behavior. *)
             let reason = mk_reason RImplicitInstantiation (aloc_of_reason r) in
             let t = ImplicitTypeArgument.mk_targ cx typeparam reason reason_tapp in
-            rec_flow_t cx trace ~use_op (t, OpenT (r, id));
-            (targs, t :: ts))
+            let t_ = cache_instantiate cx trace ~use_op ?cache typeparam reason_op reason_tapp t in
+            rec_flow_t cx trace ~use_op (t_, OpenT (r, id));
+            (targs, t_ :: ts))
         (targs, [])
         xs
     in
+    (* Intentionally omit `cache`, which is handled above *)
     instantiate_poly_with_targs
       cx
       trace
       ~use_op
       ~reason_op
       ~reason_tapp
-      ?cache
       ?errs_ref
       (tparams_loc, xs, t)
       (List.rev ts)

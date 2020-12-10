@@ -410,6 +410,7 @@ and 'loc t' =
       blame_reasons: 'loc virtual_reason list;
     }
   | EMalformedCode of 'loc
+  | EImplicitInstantiationTemporaryError of 'loc * string
 
 and 'loc exponential_spread_reason_group = {
   first_reason: 'loc virtual_reason;
@@ -952,6 +953,8 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
         blame_reasons = Base.List.map ~f:map_reason blame_reasons;
       }
   | EMalformedCode loc -> EMalformedCode (f loc)
+  | EImplicitInstantiationTemporaryError (loc, msg) ->
+    EImplicitInstantiationTemporaryError (f loc, msg)
 
 let desc_of_reason r = Reason.desc_of_reason ~unwrap:(is_scalar_reason r) r
 
@@ -1157,7 +1160,8 @@ let util_use_op_of_msg nope util = function
   | EEnumInvalidCheck _
   | EEnumMemberUsedAsType _
   | EAssignExportedConstLikeBinding _
-  | EMalformedCode _ ->
+  | EMalformedCode _
+  | EImplicitInstantiationTemporaryError _ ->
     nope
 
 (* Not all messages (i.e. those whose locations are based on use_ops) have locations that can be
@@ -1297,7 +1301,8 @@ let loc_of_msg : 'loc t' -> 'loc option = function
   | EUnexpectedThisType loc
   | ETypeParamMinArity (loc, _)
   | EAssignExportedConstLikeBinding { loc; _ }
-  | EMalformedCode loc ->
+  | EMalformedCode loc
+  | EImplicitInstantiationTemporaryError (loc, _) ->
     Some loc
   | ELintSetting (loc, _) -> Some loc
   | ETypeParamArity (loc, _) -> Some loc
@@ -2228,12 +2233,6 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
     let default = [text "Missing type annotation for "; desc reason; text "."] in
     let features =
       match desc_of_reason reason with
-      | RTypeParam (_, (RImplicitInstantiation, _), _) ->
-        [
-          text "Please use a concrete type annotation instead of ";
-          code "_";
-          text " in this position.";
-        ]
       | RTypeParam (_, (reason_op_desc, reason_op_loc), (reason_tapp_desc, reason_tapp_loc)) ->
         let reason_op = mk_reason reason_op_desc reason_op_loc in
         let reason_tapp = mk_reason reason_tapp_desc reason_tapp_loc in
@@ -3400,6 +3399,7 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
             text ".";
           ];
       }
+  | EImplicitInstantiationTemporaryError (_, msg) -> Normal { features = [text msg] }
 
 let is_lint_error = function
   | EUntypedTypeImport _
@@ -3642,6 +3642,7 @@ let error_code_of_message err : error_code option =
   | EUnsupportedSetProto _ -> Some CannotWrite
   | EUnsupportedSyntax (_, _) -> Some UnsupportedSyntax
   | EMalformedCode _
+  | EImplicitInstantiationTemporaryError _
   | EUnusedSuppression _ ->
     None
   | EUseArrayLiteral _ -> Some IllegalNewArray

@@ -10,7 +10,7 @@ open Utils_js
 (****************** shared context heap *********************)
 
 module SigContextHeap =
-  SharedMem_js.WithCache
+  SharedMem.WithCache
     (File_key)
     (struct
       type t = Context.sig_t
@@ -29,7 +29,7 @@ let add_sig ~audit cx =
       add_sig_context ~audit cx_file (Context.sig_cx cx))
 
 module SigHashHeap =
-  SharedMem_js.NoCache
+  SharedMem.NoCache
     (File_key)
     (struct
       type t = Xx.hash
@@ -38,7 +38,7 @@ module SigHashHeap =
     end)
 
 module LeaderHeap =
-  SharedMem_js.WithCache
+  SharedMem.WithCache
     (File_key)
     (struct
       type t = File_key.t
@@ -56,8 +56,7 @@ let remove_old_merge_batch files =
   WorkerCancel.with_no_cancellations (fun () ->
       LeaderHeap.remove_old_batch files;
       SigContextHeap.remove_old_batch files;
-      SigHashHeap.remove_old_batch files;
-      SharedMem_js.collect `gentle)
+      SigHashHeap.remove_old_batch files)
 
 let revive_merge_batch files =
   WorkerCancel.with_no_cancellations (fun () ->

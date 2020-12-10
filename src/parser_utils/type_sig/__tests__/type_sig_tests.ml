@@ -120,8 +120,17 @@ let pp_errors pp_loc fmt errs =
 
 let pp_sig
     fmt
-    (errs, locs, (exports, export_def, module_refs, local_defs, remote_refs, pattern_defs, patterns))
-    =
+    ( errs,
+      locs,
+      {
+        Packed_type_sig.exports;
+        export_def;
+        module_refs;
+        local_defs;
+        remote_refs;
+        pattern_defs;
+        patterns;
+      } ) =
   let open Format in
   let pp_loc = mk_pp_loc locs in
   pp_exports pp_loc fmt exports;

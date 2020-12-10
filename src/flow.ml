@@ -108,7 +108,7 @@ let _ =
     (* this call might not return *)
     FlowShell.main ()
   with
-  | SharedMem_js.Out_of_shared_memory as e ->
+  | SharedMem.Out_of_shared_memory as e ->
     let e = Exception.wrap e in
     let bt = Exception.get_backtrace_string e in
     let msg =

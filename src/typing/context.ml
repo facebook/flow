@@ -53,6 +53,7 @@ type metadata = {
   react_runtime: Options.react_runtime;
   recursion_limit: int;
   root: Path.t;
+  run_post_inference_implicit_instantiation: bool;
   strict_es6_import_export: bool;
   strict_es6_import_export_excludes: string list;
   strip_root: bool;
@@ -76,6 +77,11 @@ type voidable_check = {
   public_property_map: Type.Properties.id;
   private_property_map: Type.Properties.id;
   errors: ALoc.t Property_assignment.errors;
+}
+
+type implicit_instantiation_check = {
+  fun_or_class: Type.t;
+  call_or_constructor: Type.use_t;
 }
 
 (* Equivalently, we could use a Reason.t option, but this is more self-documenting. *)
@@ -171,6 +177,7 @@ type component_t = {
   (* Post-inference checks *)
   mutable literal_subtypes: (Type.t * Type.use_t) list;
   mutable matching_props: (Reason.reason * string * Type.t * Type.t) list;
+  mutable implicit_instantiation_checks: implicit_instantiation_check list;
 }
 
 type phase =
@@ -225,6 +232,8 @@ let metadata_of_options options =
     react_runtime = Options.react_runtime options;
     recursion_limit = Options.recursion_limit options;
     root = Options.root options;
+    run_post_inference_implicit_instantiation =
+      Options.run_post_inference_implicit_instantiation options;
     strict_es6_import_export = Options.strict_es6_import_export options;
     strict_es6_import_export_excludes = Options.strict_es6_import_export_excludes options;
     strip_root = Options.should_strip_root options;
@@ -299,6 +308,7 @@ let make_ccx sig_cx aloc_tables =
     exists_checks = ALocMap.empty;
     exists_excuses = ALocMap.empty;
     voidable_checks = [];
+    implicit_instantiation_checks = [];
     test_prop_hits_and_misses = IMap.empty;
     computed_property_states = IMap.empty;
     spread_widened_types = IMap.empty;
@@ -406,6 +416,9 @@ let goals cx = cx.ccx.goal_map
 let exact_by_default cx = cx.metadata.exact_by_default
 
 let enforce_local_inference_annotations cx = cx.metadata.enforce_local_inference_annotations
+
+let run_post_inference_implicit_instantiation cx =
+  cx.metadata.run_post_inference_implicit_instantiation
 
 let generate_tests cx = cx.metadata.generate_tests
 
@@ -515,6 +528,8 @@ let exists_excuses cx = cx.ccx.exists_excuses
 
 let voidable_checks cx = cx.ccx.voidable_checks
 
+let implicit_instantiation_checks cx = cx.ccx.implicit_instantiation_checks
+
 let use_def cx = cx.use_def
 
 let exported_locals cx = cx.exported_locals
@@ -604,6 +619,12 @@ let add_literal_subtypes cx c = cx.ccx.literal_subtypes <- c :: cx.ccx.literal_s
 
 let add_voidable_check cx voidable_check =
   cx.ccx.voidable_checks <- voidable_check :: cx.ccx.voidable_checks
+
+let add_implicit_instantiation_check cx fun_or_class call_or_constructor =
+  let implicit_instantiation_check = { fun_or_class; call_or_constructor } in
+  if cx.metadata.run_post_inference_implicit_instantiation then
+    cx.ccx.implicit_instantiation_checks <-
+      implicit_instantiation_check :: cx.ccx.implicit_instantiation_checks
 
 let remove_tvar cx id = cx.ccx.sig_cx.graph <- IMap.remove id cx.ccx.sig_cx.graph
 

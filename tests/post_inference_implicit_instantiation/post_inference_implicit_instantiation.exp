@@ -1,0 +1,290 @@
+Error ----------------------------------------------------------------------------------------------------- test.js:4:21
+
+T appears negatively in the params
+
+   4| declare function f1<T>(Covariant<T>): Covariant<T>; // Contra param, Co return
+                          ^
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:4:21
+
+T appears positively in the return
+
+   4| declare function f1<T>(Covariant<T>): Covariant<T>; // Contra param, Co return
+                          ^
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:5:21
+
+T appears negatively in the params
+
+   5| declare function f2<T>(Covariant<T>): Contravariant<T>; // Contra param, Contra return
+                          ^
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:5:21
+
+T appears negatively in the return
+
+   5| declare function f2<T>(Covariant<T>): Contravariant<T>; // Contra param, Contra return
+                          ^
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:6:21
+
+T appears negatively in the params
+
+   6| declare function f3<T>(Covariant<T>): Invariant<T>; // Contra param, Inv return
+                          ^
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:6:21
+
+T appears neutrally in the return
+
+   6| declare function f3<T>(Covariant<T>): Invariant<T>; // Contra param, Inv return
+                          ^
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:7:21
+
+T appears positively in the params
+
+   7| declare function f4<T>(Contravariant<T>): Covariant<T>; // Co param, Co return
+                          ^
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:7:21
+
+T appears positively in the return
+
+   7| declare function f4<T>(Contravariant<T>): Covariant<T>; // Co param, Co return
+                          ^
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:8:21
+
+T appears negatively in the return
+
+   8| declare function f5<T>(Contravariant<T>): Contravariant<T>; // Co param, Contra return
+                          ^
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:8:21
+
+T appears positively in the params
+
+   8| declare function f5<T>(Contravariant<T>): Contravariant<T>; // Co param, Contra return
+                          ^
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:9:21
+
+T appears neutrally in the return
+
+   9| declare function f6<T>(Contravariant<T>): Invariant<T>; // Co param, Inv return
+                          ^
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:9:21
+
+T appears positively in the params
+
+   9| declare function f6<T>(Contravariant<T>): Invariant<T>; // Co param, Inv return
+                          ^
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:10:21
+
+T appears neutrally in the params
+
+   10| declare function f7<T>(Invariant<T>): Covariant<T>; // Inv Param, Co return
+                           ^
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:10:21
+
+T appears positively in the return
+
+   10| declare function f7<T>(Invariant<T>): Covariant<T>; // Inv Param, Co return
+                           ^
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:11:21
+
+T appears negatively in the return
+
+   11| declare function f8<T>(Invariant<T>): Contravariant<T>; // Inv Param, Contra Return
+                           ^
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:11:21
+
+T appears neutrally in the params
+
+   11| declare function f8<T>(Invariant<T>): Contravariant<T>; // Inv Param, Contra Return
+                           ^
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:12:21
+
+T appears neutrally in the params
+
+   12| declare function f9<T>(Invariant<T>): Invariant<T>; // Inv Param, Inv Return
+                           ^
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:12:21
+
+T appears neutrally in the return
+
+   12| declare function f9<T>(Invariant<T>): Invariant<T>; // Inv Param, Inv Return
+                           ^
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:23:26
+
+T does not appear in the params
+
+   23| declare function missing<T>(): void; // Missing param and return
+                                ^
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:23:26
+
+T does not appear in the return
+
+   23| declare function missing<T>(): void; // Missing param and return
+                                ^
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:27:39
+
+T appears negatively in the params
+
+   27| declare function InterdependentBounds<T, U: Covariant<T>>( // Follow bounds in each position we see U
+                                             ^
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:27:39
+
+T appears positively in the return
+
+   27| declare function InterdependentBounds<T, U: Covariant<T>>( // Follow bounds in each position we see U
+                                             ^
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:27:42
+
+U appears negatively in the params
+
+   27| declare function InterdependentBounds<T, U: Covariant<T>>( // Follow bounds in each position we see U
+                                                ^
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:27:42
+
+U appears positively in the return
+
+   27| declare function InterdependentBounds<T, U: Covariant<T>>( // Follow bounds in each position we see U
+                                                ^
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:33:31
+
+T appears negatively in the params
+
+   33| declare function NameOverride<T>(<T>(T) => T, T): <T>(T) => T; // Contra Param, no return 
+                                     ^
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:33:31
+
+T does not appear in the return
+
+   33| declare function NameOverride<T>(<T>(T) => T, T): <T>(T) => T; // Contra Param, no return 
+                                     ^
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:36:28
+
+T appears positively in the params
+
+   36| declare function RestParam<T>(...$ReadOnlyArray<Contravariant<T>>): void; // Co param, no return
+                                  ^
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:36:28
+
+T does not appear in the return
+
+   36| declare function RestParam<T>(...$ReadOnlyArray<Contravariant<T>>): void; // Co param, no return
+                                  ^
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:39:27
+
+T appears positively in the return
+
+   39| declare var Overloaded: (<T>(null) => T) & (<T>(T) => T);
+                                 ^
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:39:27
+
+T does not appear in the params
+
+   39| declare var Overloaded: (<T>(null) => T) & (<T>(T) => T);
+                                 ^
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:39:46
+
+T appears negatively in the params
+
+   39| declare var Overloaded: (<T>(null) => T) & (<T>(T) => T);
+                                                    ^
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:39:46
+
+T appears positively in the return
+
+   39| declare var Overloaded: (<T>(null) => T) & (<T>(T) => T);
+                                                    ^
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:43:22
+
+T appears negatively in the params
+
+   43| declare var Union: (<T>(T) => T) | (<T>(null) => T);
+                            ^
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:43:22
+
+T appears positively in the return
+
+   43| declare var Union: (<T>(T) => T) | (<T>(null) => T);
+                            ^
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:43:38
+
+T appears positively in the return
+
+   43| declare var Union: (<T>(T) => T) | (<T>(null) => T);
+                                            ^
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:43:38
+
+T does not appear in the params
+
+   43| declare var Union: (<T>(T) => T) | (<T>(null) => T);
+                                            ^
+
+
+
+Found 36 errors

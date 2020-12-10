@@ -207,6 +207,11 @@ let rec recheck_single
       let post_cancel () =
         Hh_logger.info
           "Recheck successfully canceled. Restarting the recheck to include new file changes";
+        (* The canceled recheck, or a preceding sequence of canceled rechecks where none completed,
+         * may have introduced garbage into shared memory. Since we immediately start another
+         * recheck, we should first check whether we need to compact. Otherwise, sharedmem could
+         * potentially grow unbounded. *)
+        SharedMem.collect `aggressive;
         recheck_single
           ~files_to_recheck
           ~files_to_force

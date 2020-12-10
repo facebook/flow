@@ -49,3 +49,7 @@ and bounds = {
 val new_unresolved_root : unit -> node
 
 val new_resolved_root : Type.t -> Type.use_op -> node
+
+val types_of : constraints -> Type.t list
+
+val uses_of : constraints -> Type.use_t list

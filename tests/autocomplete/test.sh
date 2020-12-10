@@ -56,6 +56,8 @@ queries_in_file autocomplete "poly.js" --pretty
 queries_in_file autocomplete "poly_no_args.js" --pretty
 queries_in_file autocomplete "identifier.js" --pretty
 queries_in_file autocomplete "identifier_middle.js" --pretty
+queries_in_file autocomplete "identifier_import_type.js" --pretty
+queries_in_file autocomplete "identifier_type.js" --pretty
 queries_in_file autocomplete "super.js" --pretty
 queries_in_file autocomplete "this-2.js" --pretty
 queries_in_file autocomplete "pattern.js" --pretty

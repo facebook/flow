@@ -12,3 +12,5 @@ val jsdoc_of_getdef_loc :
   Jsdoc.t option
 
 val documentation_of_jsdoc : Jsdoc.t -> string option
+
+val comment_loc_of_getdef_loc : (Loc.t, Loc.t) Flow_ast.Program.t -> Loc.t -> Loc.t option

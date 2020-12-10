@@ -10,7 +10,7 @@ type entry_point
 val register_entry_point :
   (init_id:string ->
   monitor_channels:MonitorRPC.channels ->
-  shared_mem_config:SharedMem_js.config ->
+  shared_mem_config:SharedMem.config ->
   Options.t ->
   unit) ->
   entry_point
@@ -20,7 +20,7 @@ val open_log_file : string -> Unix.file_descr
 val daemonize :
   init_id:string ->
   log_file:string ->
-  shared_mem_config:SharedMem_js.config ->
+  shared_mem_config:SharedMem.config ->
   argv:string array ->
   options:Options.t ->
   file_watcher_pid:int option ->

@@ -69,6 +69,7 @@ type metadata = {
   react_runtime: Options.react_runtime;
   recursion_limit: int;
   root: Path.t;
+  run_post_inference_implicit_instantiation: bool;
   strict_es6_import_export: bool;
   strict_es6_import_export_excludes: string list;
   strip_root: bool;
@@ -93,6 +94,11 @@ type voidable_check = {
   public_property_map: Type.Properties.id;
   private_property_map: Type.Properties.id;
   errors: ALoc.t Property_assignment.errors;
+}
+
+type implicit_instantiation_check = {
+  fun_or_class: Type.t;
+  call_or_constructor: Type.use_t;
 }
 
 type computed_property_state =
@@ -158,6 +164,8 @@ val goals : t -> Type.t IMap.t
 val exact_by_default : t -> bool
 
 val enforce_local_inference_annotations : t -> bool
+
+val run_post_inference_implicit_instantiation : t -> bool
 
 val generate_tests : t -> bool
 
@@ -271,6 +279,8 @@ val exists_excuses : t -> ExistsCheck.t ALocMap.t
 
 val voidable_checks : t -> voidable_check list
 
+val implicit_instantiation_checks : t -> implicit_instantiation_check list
+
 val use_def : t -> Scope_api.With_ALoc.info * Ssa_api.With_ALoc.values
 
 val pid_prefix : t -> string
@@ -320,6 +330,8 @@ val add_matching_props : t -> Reason.reason * string * Type.t * Type.t -> unit
 val add_literal_subtypes : t -> Type.t * Type.use_t -> unit
 
 val add_voidable_check : t -> voidable_check -> unit
+
+val add_implicit_instantiation_check : t -> Type.t -> Type.use_t -> unit
 
 val remove_tvar : t -> Constraint.ident -> unit
 

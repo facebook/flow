@@ -95,6 +95,7 @@ type t = {
   opt_recursion_limit: int;
   opt_root: Path.t;
   opt_root_name: string option;
+  opt_run_post_inference_implicit_instantiation: bool;
   opt_saved_state_fetcher: saved_state_fetcher;
   opt_saved_state_force_recheck: bool;
   opt_saved_state_no_fallback: bool;
@@ -205,6 +206,9 @@ let facebook_fbs opts = opts.opt_facebook_fbs
 let facebook_fbt opts = opts.opt_facebook_fbt
 
 let facebook_module_interop opts = opts.opt_facebook_module_interop
+
+let run_post_inference_implicit_instantiation opts =
+  opts.opt_run_post_inference_implicit_instantiation
 
 let saved_state_fetcher opts = opts.opt_saved_state_fetcher
 

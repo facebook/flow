@@ -235,11 +235,11 @@ let detect_non_voidable_properties cx =
         if ISet.mem id seen_ids then
           false
         else (
-          match Flow_js.possible_types cx id with
+          match Flow_js_utils.possible_types cx id with
           (* tvar has no lower bounds: we conservatively assume it's non-voidable
            * except in the special case when it also has no upper bounds
            *)
-          | [] -> Flow_js.possible_uses cx id = []
+          | [] -> Flow_js_utils.possible_uses cx id = []
           (* tvar is resolved: look at voidability of the resolved type *)
           | [t] -> is_voidable (ISet.add id seen_ids) t
           (* tvar is unresolved: conservatively assume it is non-voidable *)
@@ -283,59 +283,10 @@ let detect_non_voidable_properties cx =
       check_properties private_property_map private_property_errors)
     (Context.voidable_checks cx)
 
-let merge_tvar =
-  Type.(
-    let possible_types = Flow_js.possible_types in
-    let rec collect_lowers ~filter_empty cx seen acc = function
-      | [] -> Base.List.rev acc
-      | t :: ts ->
-        (match t with
-        (* Recursively unwrap unseen tvars *)
-        | OpenT (_, id) ->
-          if ISet.mem id seen then
-            collect_lowers ~filter_empty cx seen acc ts
-          (* already unwrapped *)
-          else
-            let seen = ISet.add id seen in
-            collect_lowers ~filter_empty cx seen acc (possible_types cx id @ ts)
-        (* Ignore empty in existentials. This behavior is sketchy, but the error
-           behavior without this filtering is worse. If an existential accumulates
-           an empty, we error but it's very non-obvious how the empty arose. *)
-        | DefT (_, _, EmptyT flavor) when filter_empty flavor ->
-          collect_lowers ~filter_empty cx seen acc ts
-        (* Everything else becomes part of the merge typed *)
-        | _ -> collect_lowers ~filter_empty cx seen (t :: acc) ts)
-    in
-    fun ?filter_empty cx r id ->
-      (* Because the behavior of existentials are so difficult to predict, they
-         enjoy some special casing here. When existential types are finally
-         removed, this logic can be removed. *)
-      let existential =
-        Reason.(
-          match desc_of_reason r with
-          | RExistential -> true
-          | _ -> false)
-      in
-      let filter_empty flavor =
-        existential
-        ||
-        match filter_empty with
-        | Some filter_empty -> filter_empty flavor
-        | None -> false
-      in
-      let lowers =
-        let seen = ISet.singleton id in
-        collect_lowers cx seen [] (possible_types cx id) ~filter_empty
-      in
-      match lowers with
-      | [t] -> t
-      | t0 :: t1 :: ts -> UnionT (r, UnionRep.make t0 t1 ts)
-      | [] ->
-        let uses = Flow_js.possible_uses cx id in
-        if uses = [] || existential then
-          AnyT.locationless Unsoundness.existential
-        else
-          MergedT (r, uses))
+let check_implicit_instantiations cx =
+  if Context.run_post_inference_implicit_instantiation cx then
+    let implicit_instantiation_checks = Context.implicit_instantiation_checks cx in
+    List.iter (Implicit_instantiation.check_implicit_instantiation cx) implicit_instantiation_checks
 
 let merge_trust_var constr =
   Trust_constraint.(
@@ -358,7 +309,7 @@ class resolver_visitor =
     method! type_ cx map_cx t =
       let open Type in
       match t with
-      | OpenT (r, id) -> merge_tvar ~filter_empty cx r id
+      | OpenT (r, id) -> Flow_js_utils.merge_tvar ~filter_empty cx r id
       | EvalT (t', dt, _id) ->
         let t'' = self#type_ cx map_cx t' in
         let dt' = self#defer_use_type cx map_cx dt in
@@ -599,6 +550,7 @@ let merge_component
      *)
     detect_sketchy_null_checks cx;
     detect_non_voidable_properties cx;
+    check_implicit_instantiations cx;
     detect_test_prop_misses cx;
     detect_unnecessary_optional_chains cx;
     detect_unnecessary_invariants cx;
@@ -706,11 +658,8 @@ module ContextOptimizer = struct
 
       val mutable export_reason = None
 
-      val mutable export_file = None
-
       method reduce cx module_ref =
         let export = Context.find_module cx module_ref in
-        export_file <- reason_of_t export |> Reason.aloc_of_reason |> ALoc.source;
         let export' = self#type_ cx Polarity.Neutral export in
         reduced_module_map <- SMap.add module_ref export' reduced_module_map
 
@@ -722,7 +671,7 @@ module ContextOptimizer = struct
             SigHash.add_int sig_hash stable_id;
             id
           ) else
-            let t = merge_tvar cx r id in
+            let t = Flow_js_utils.merge_tvar cx r id in
             let node = Root { rank = 0; constraints = FullyResolved (unknown_use, t) } in
             reduced_graph <- IMap.add id node reduced_graph;
             let () =

@@ -418,7 +418,7 @@ struct
         [(exports_info t' * tolerable_error list, error) result, L.t] visitor
           ~init:(Ok (mk_file_sig init_exports_info, [])) as super
 
-      val scope_info = Scope_builder.program ast
+      val scope_info : Scope_api.info = Scope_builder.program ~with_types:true ast
 
       val mutable curr_declare_module : exports_info module_sig' option = None
 
@@ -626,7 +626,7 @@ struct
               default;
             Base.Option.iter
               ~f:(function
-                | ImportNamespaceSpecifier (loc, (_, { Ast.Identifier.name = local; comments = _ }))
+                | ImportNamespaceSpecifier (_, (loc, { Ast.Identifier.name = local; comments = _ }))
                   ->
                   (match import_kind with
                   | ImportType -> failwith "import type * is a parse error"

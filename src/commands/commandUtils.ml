@@ -274,7 +274,7 @@ let shm_config shm_flags flowconfig =
   let log_level =
     Base.Option.value shm_flags.shm_log_level ~default:(FlowConfig.shm_log_level flowconfig)
   in
-  { SharedMem_js.heap_size = FlowConfig.shm_heap_size flowconfig; hash_table_pow; log_level }
+  { SharedMem.heap_size = FlowConfig.shm_heap_size flowconfig; hash_table_pow; log_level }
 
 let from_flag =
   let collector main from =
@@ -539,13 +539,15 @@ let remove_exclusion pattern =
 
 let file_options =
   let default_lib_dir ~no_flowlib tmp_dir =
-    let lib_dir = Flowlib.mkdir ~no_flowlib tmp_dir in
     try
+      let lib_dir = Flowlib.mkdir ~no_flowlib tmp_dir in
       Flowlib.extract ~no_flowlib lib_dir;
       lib_dir
-    with _ ->
-      let msg = "Could not locate flowlib files" in
-      FlowExitStatus.(exit ~msg Could_not_find_flowconfig)
+    with e ->
+      let e = Exception.wrap e in
+      let err = Exception.get_ctor_string e in
+      let msg = Printf.sprintf "Could not locate flowlib files: %s" err in
+      FlowExitStatus.(exit ~msg Could_not_extract_flowlibs)
   in
   let ignores_of_arg root patterns extras =
     let expand_project_root_token = Files.expand_project_root_token ~root in
@@ -1244,6 +1246,8 @@ let make_options
     opt_enabled_rollouts = FlowConfig.enabled_rollouts flowconfig;
     opt_enforce_local_inference_annotations =
       FlowConfig.enforce_local_inference_annotations flowconfig;
+    opt_run_post_inference_implicit_instantiation =
+      FlowConfig.run_post_inference_implicit_instantiation flowconfig;
     opt_enforce_strict_call_arity = FlowConfig.enforce_strict_call_arity flowconfig;
     opt_enforce_well_formed_exports;
     opt_enums = FlowConfig.enums flowconfig;

@@ -2827,6 +2827,10 @@ let primitive_promoting_use_t = function
   (* TODO: enumerate all use types *)
   | _ -> false
 
+let replace_this_t_in_method_action call_this_t = function
+  | CallM fct -> CallM { fct with call_this_t }
+  | ChainM (r1, r2, t, fct, tout) -> ChainM (r1, r2, t, { fct with call_this_t }, tout)
+
 let rec fold_use_op f1 f2 = function
   | Op root -> f1 root
   | Frame (frame, use_op) ->

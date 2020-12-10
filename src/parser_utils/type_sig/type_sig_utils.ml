@@ -99,7 +99,7 @@ let pack (locs, file_loc, (tbls, exports)) =
   let pattern_defs = Pattern_defs.copy (Pack.pack_parsed cx) pattern_defs in
   let patterns = Patterns.copy Pack.pack_pattern patterns in
   let exports, export_def = Pack.pack_exports cx file_loc exports in
-  cx.Pack.errs, locs, (exports, export_def, module_refs, local_defs, remote_refs, pattern_defs, patterns)
+  cx.Pack.errs, locs, { Packed_type_sig.exports; export_def; module_refs; local_defs; remote_refs; pattern_defs; patterns }
 
 let parse_and_pack_module ~strict opts source ast =
   pack (parse_module ~strict source opts ast)

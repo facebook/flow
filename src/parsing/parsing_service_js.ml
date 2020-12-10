@@ -514,7 +514,7 @@ let do_parse ~parse_options ~info content file =
               let env = ref SMap.empty in
               let () =
                 let open Type_sig in
-                let (_, _, _, local_defs, _, _, _) = type_sig in
+                let { Packed_type_sig.local_defs; _ } = type_sig in
                 let f def =
                   let name = def_name def in
                   let loc = def_id_loc def in
@@ -813,7 +813,6 @@ let reparse
   in
   let modified = FilenameSet.union modified results.parse_not_found_skips in
   let modified = FilenameSet.union modified results.parse_hash_mismatch_skips in
-  SharedMem_js.collect `gentle;
   let unchanged = FilenameSet.diff files modified in
   (* restore old parsing info for unchanged files *)
   Parsing_heaps.Reparse_mutator.revive_files master_mutator unchanged;

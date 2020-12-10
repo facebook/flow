@@ -110,3 +110,19 @@ let new_bounds () =
 let new_unresolved_root () = Root { rank = 0; constraints = Unresolved (new_bounds ()) }
 
 let new_resolved_root t op = Root { rank = 0; constraints = FullyResolved (op, t) }
+
+(* For any constraints, return a list of def types that form either the lower
+   bounds of the solution, or a singleton containing the solution itself. *)
+let types_of constraints =
+  match constraints with
+  | Unresolved { lower; _ } -> TypeMap.keys lower
+  | Resolved (_, t)
+  | FullyResolved (_, t) ->
+    [t]
+
+let uses_of constraints =
+  match constraints with
+  | Unresolved { upper; _ } -> Base.List.map ~f:fst (UseTypeMap.keys upper)
+  | Resolved (use_op, t)
+  | FullyResolved (use_op, t) ->
+    [UseT (use_op, t)]

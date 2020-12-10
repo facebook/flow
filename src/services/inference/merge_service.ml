@@ -290,7 +290,15 @@ let merge_context_new_signatures ~options ~reader component =
         else
           ALoc.of_loc (ALoc.to_loc aloc_table aloc)
     in
-    let (exports, export_def, module_refs, local_defs, remote_refs, pattern_defs, patterns) =
+    let {
+      Packed_type_sig.exports;
+      export_def;
+      module_refs;
+      local_defs;
+      remote_refs;
+      pattern_defs;
+      patterns;
+    } =
       Parsing_heaps.Reader_dispatcher.get_type_sig_unsafe ~reader file
     in
     let dependencies =
@@ -597,8 +605,8 @@ let merge_job ~worker_mutator ~reader ~job ~options merged elements =
                );
                (Nel.hd component, ret) :: merged)
          with
-        | (SharedMem_js.Out_of_shared_memory | SharedMem_js.Heap_full | SharedMem_js.Hash_table_full)
-          as exc ->
+        | (SharedMem.Out_of_shared_memory | SharedMem.Heap_full | SharedMem.Hash_table_full) as exc
+          ->
           raise exc
         (* A catch all suppression is probably a bad idea... *)
         | unwrapped_exc ->
@@ -726,8 +734,7 @@ let check options ~reader file =
                 raise (Error_message.ECheckTimeout (run_time, file_str))))
         ~f:(fun () -> Ok (check_file options ~reader file))
     with
-    | (SharedMem_js.Out_of_shared_memory | SharedMem_js.Heap_full | SharedMem_js.Hash_table_full) as
-      exc ->
+    | (SharedMem.Out_of_shared_memory | SharedMem.Heap_full | SharedMem.Hash_table_full) as exc ->
       raise exc
     (* A catch all suppression is probably a bad idea... *)
     | unwrapped_exc ->

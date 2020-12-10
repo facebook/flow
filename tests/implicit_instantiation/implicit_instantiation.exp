@@ -49,12 +49,19 @@ References:
            ^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:22:22
+Error ----------------------------------------------------------------------------------------------------- test.js:22:6
 
-Please use a concrete type annotation instead of `_` in this position. [missing-annot]
+Missing type annotation for `T`. `T` is a type parameter declared in function type [1] and was implicitly instantiated
+at call of `unimplementable` [2]. [missing-annot]
 
+   test.js:22:6
    22|   x: unimplementable<_>(), // Error, requires concrete annot
-                            ^
+            ^^^^^^^^^^^^^^^^^^^^ [2]
+
+References:
+   test.js:7:33
+    7| declare function unimplementable<T>(): {x: T};
+                                       ^^^^^^^^^^^^^ [1]
 
 
 

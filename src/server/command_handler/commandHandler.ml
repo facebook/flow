@@ -134,7 +134,7 @@ let autocomplete ~trigger_character ~reader ~options ~env ~profiling ~filename ~
         :: initial_json_props )
     in
     Lwt.return (Error err, Some json_data_to_log)
-  | Ok (cx, info, file_sig, _, _ast, typed_ast, parse_errors) ->
+  | Ok (cx, info, file_sig, _, ast, typed_ast, parse_errors) ->
     Profiling_js.with_timer_lwt profiling ~timer:"GetResults" ~f:(fun () ->
         try_with_json2 (fun () ->
             let open AutocompleteService_js in
@@ -144,6 +144,7 @@ let autocomplete ~trigger_character ~reader ~options ~env ~profiling ~filename ~
                 ~reader
                 ~cx
                 ~file_sig
+                ~ast
                 ~typed_ast
                 trigger_character
                 cursor_loc
@@ -156,27 +157,28 @@ let autocomplete ~trigger_character ~reader ~options ~env ~profiling ~filename ~
             let (response, json_props_to_log) =
               let open Hh_json in
               match results_res with
-              | AcResult { results; errors_to_log } ->
+              | AcResult { result; errors_to_log } ->
+                let { ServerProt.Response.Completion.items; is_incomplete = _ } = result in
                 let result_string =
-                  match (results, errors_to_log) with
+                  match (items, errors_to_log) with
                   | (_, []) -> "SUCCESS"
                   | ([], _ :: _) -> "FAILURE"
                   | (_ :: _, _ :: _) -> "PARTIAL"
                 in
                 let at_least_one_result_has_documentation =
                   Base.List.exists
-                    results
+                    items
                     ~f:(fun ServerProt.Response.Completion.{ documentation; _ } ->
                       Base.Option.is_some documentation)
                 in
-                ( Ok results,
+                ( Ok result,
                   ("result", JSON_String result_string)
-                  :: ("count", JSON_Number (results |> List.length |> string_of_int))
+                  :: ("count", JSON_Number (items |> List.length |> string_of_int))
                   :: ("errors", JSON_Array (Base.List.map ~f:(fun s -> JSON_String s) errors_to_log))
                   :: ("documentation", JSON_Bool at_least_one_result_has_documentation)
                   :: json_props_to_log )
               | AcEmpty reason ->
-                ( Ok [],
+                ( Ok { ServerProt.Response.Completion.items = []; is_incomplete = false },
                   ("result", JSON_String "SUCCESS")
                   :: ("count", JSON_Number "0")
                   :: ("empty_reason", JSON_String reason)
@@ -909,22 +911,43 @@ let handle_save_state ~saved_state_filename ~genv ~profiling ~env =
   Lwt.return (env, ServerProt.Response.SAVE_STATE result, None)
 
 let find_code_actions ~reader ~options ~env ~profiling ~params ~client =
-  let CodeActionRequest.{ textDocument; range; _ } = params in
+  let CodeActionRequest.{ textDocument; range; context = { only = _; diagnostics } } = params in
   let (file_key, file, loc) =
     Flow_lsp_conversions.lsp_textDocument_and_range_to_flow textDocument range client
   in
   match File_input.content_of_file_input file with
   | Error msg -> Lwt.return (Error msg)
   | Ok file_contents ->
-    Code_action_service.code_actions_at_loc
-      ~reader
-      ~options
-      ~env
-      ~profiling
-      ~params
-      ~file_key
-      ~file_contents
-      ~loc
+    if not (Code_action_service.client_supports_quickfixes params) then
+      Lwt.return (Ok [])
+    else
+      let type_contents_cache = Some (Persistent_connection.type_contents_cache client) in
+      let uri = TextDocumentIdentifier.(textDocument.uri) in
+      let%lwt (type_contents_result, _did_hit_cache) =
+        type_contents_with_cache
+          ~options
+          ~env
+          ~profiling
+          ~type_contents_cache
+          file_contents
+          file_key
+      in
+      (match type_contents_result with
+      | Error _ -> Lwt.return (Ok [])
+      | Ok (cx, _info, file_sig, tolerable_errors, ast, typed_ast, parse_errors) ->
+        Code_action_service.code_actions_at_loc
+          ~reader
+          ~options
+          ~file_key
+          ~cx
+          ~file_sig
+          ~tolerable_errors
+          ~ast
+          ~typed_ast
+          ~parse_errors
+          ~diagnostics
+          ~uri
+          ~loc)
 
 type command_handler =
   (* A command can be handled immediately if it is super duper fast and doesn't require the env.
@@ -1604,17 +1627,14 @@ let handle_persistent_autocomplete_lsp
       let metadata = with_data ~extra_data metadata in
       begin
         match result with
-        | Ok items ->
-          let items =
-            Base.List.map
-              ~f:
-                (Flow_lsp_conversions.flow_completion_to_lsp
-                   ~is_snippet_supported
-                   ~is_preselect_supported)
-              items
+        | Ok completions ->
+          let result =
+            Flow_lsp_conversions.flow_completions_to_lsp
+              ~is_snippet_supported
+              ~is_preselect_supported
+              completions
           in
-          let r = CompletionResult { Lsp.Completion.isIncomplete = false; items } in
-          let response = ResponseMessage (id, r) in
+          let response = ResponseMessage (id, CompletionResult result) in
           Lwt.return ((), LspProt.LspFromServer (Some response), metadata)
         | Error reason -> mk_lsp_error_response ~ret:() ~id:(Some id) ~reason metadata
       end)

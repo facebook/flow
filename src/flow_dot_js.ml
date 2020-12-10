@@ -155,7 +155,7 @@ let stub_metadata ~root ~checked =
     enforce_local_inference_annotations = false;
     enforce_strict_call_arity = true;
     exact_by_default = false;
-    generate_tests = true;
+    generate_tests = false;
     facebook_fbs = None;
     facebook_fbt = None;
     facebook_module_interop = false;
@@ -166,6 +166,7 @@ let stub_metadata ~root ~checked =
     react_runtime = Options.ReactRuntimeClassic;
     recursion_limit = 10000;
     root;
+    run_post_inference_implicit_instantiation = false;
     strict_es6_import_export = false;
     strict_es6_import_export_excludes = [];
     strip_root = true;
