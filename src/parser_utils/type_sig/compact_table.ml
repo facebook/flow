@@ -155,4 +155,10 @@ module Make () = struct
   let to_array x = x
 
   let to_array_map = map
+
+  module IndexSet = Set.Make (struct
+    type t = index
+
+    let compare a b = a - b
+  end)
 end
