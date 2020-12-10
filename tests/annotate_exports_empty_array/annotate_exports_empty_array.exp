@@ -6,7 +6,7 @@
 
 const a0: Array<$FlowFixMeEmpty> = [];
 
-const a1: Array<$FlowFixMe | number> = [];
+const a1: Array<number> = [];
 a1.push(1);
 
 const a2: Array<number> = [];
@@ -22,7 +22,7 @@ module.exports = { a0, a1, a2, a3 };
 Stats:
   Files changed:                            1
   Number of annotations added:              3
-  Total size of annotations:               10
+  Total size of annotations:                8
   Number of sig. ver. errors:               4
   Number of annotations required:           4
   Number of annotations skipped:            0
@@ -56,7 +56,7 @@ Warnings:
 ---
 > const a0 = [];
 5c5
-< const a1: Array<$FlowFixMe | number> = [];
+< const a1: Array<number> = [];
 ---
 > const a1 = [];
 8c8

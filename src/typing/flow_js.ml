@@ -7197,9 +7197,14 @@ struct
         (**********************)
         (* Array library call *)
         (**********************)
-        | ( DefT (reason, _, ArrT (ArrayAT (t, _))),
-            (GetPropT _ | SetPropT _ | MethodT _ | LookupT _) ) ->
+        | (DefT (reason, _, ArrT (ArrayAT (t, _))), (GetPropT _ | SetPropT _ | LookupT _)) ->
           rec_flow cx trace (get_builtin_typeapp cx ~trace reason "Array" [t], u)
+        | ( DefT (reason, _, ArrT (ArrayAT (t, _))),
+            MethodT (use_op, call_r, lookup_r, propref, action, t_opt) ) ->
+          let arr_t = get_builtin_typeapp cx ~trace reason "Array" [t] in
+          (* Substitute the typeapp for the array primitive in the method call's `this` position *)
+          let action = replace_this_t_in_method_action arr_t action in
+          rec_flow cx trace (arr_t, MethodT (use_op, call_r, lookup_r, propref, action, t_opt))
         (*************************)
         (* Tuple "length" access *)
         (*************************)
@@ -7212,27 +7217,50 @@ struct
           let t = tuple_length reason trust ts in
           rec_flow_t cx trace ~use_op:unknown_use (reposition cx ~trace loc t, OpenT tout)
         | ( DefT (reason, _, ArrT ((TupleAT _ | ROArrayAT _) as arrtype)),
-            (GetPropT _ | SetPropT _ | MethodT _ | LookupT _) ) ->
+            (GetPropT _ | SetPropT _ | LookupT _) ) ->
           let t = elemt_of_arrtype arrtype in
           rec_flow cx trace (get_builtin_typeapp cx ~trace reason "$ReadOnlyArray" [t], u)
+        | ( DefT (reason, _, ArrT ((TupleAT _ | ROArrayAT _) as arrtype)),
+            MethodT (use_op, call_r, lookup_r, propref, action, t_opt) ) ->
+          let t = elemt_of_arrtype arrtype in
+          let arr_t = get_builtin_typeapp cx ~trace reason "$ReadOnlyArray" [t] in
+          (* Substitute the typeapp for the array primitive in the method call's `this` position *)
+          let action = replace_this_t_in_method_action arr_t action in
+          rec_flow cx trace (arr_t, MethodT (use_op, call_r, lookup_r, propref, action, t_opt))
         (***********************)
         (* String library call *)
         (***********************)
+        | (DefT (reason, _, StrT _), MethodT (use_op, call_r, lookup_r, propref, action, t_opt)) ->
+          let promoted = get_builtin_type cx ~trace reason "String" in
+          let action = replace_this_t_in_method_action promoted action in
+          rec_flow cx trace (promoted, MethodT (use_op, call_r, lookup_r, propref, action, t_opt))
         | (DefT (reason, _, StrT _), u) when primitive_promoting_use_t u ->
           rec_flow cx trace (get_builtin_type cx ~trace reason "String", u)
         (***********************)
         (* Number library call *)
         (***********************)
+        | (DefT (reason, _, NumT _), MethodT (use_op, call_r, lookup_r, propref, action, t_opt)) ->
+          let promoted = get_builtin_type cx ~trace reason "Number" in
+          let action = replace_this_t_in_method_action promoted action in
+          rec_flow cx trace (promoted, MethodT (use_op, call_r, lookup_r, propref, action, t_opt))
         | (DefT (reason, _, NumT _), u) when primitive_promoting_use_t u ->
           rec_flow cx trace (get_builtin_type cx ~trace reason "Number", u)
         (***********************)
         (* Boolean library call *)
         (***********************)
+        | (DefT (reason, _, BoolT _), MethodT (use_op, call_r, lookup_r, propref, action, t_opt)) ->
+          let promoted = get_builtin_type cx ~trace reason "Boolean" in
+          let action = replace_this_t_in_method_action promoted action in
+          rec_flow cx trace (promoted, MethodT (use_op, call_r, lookup_r, propref, action, t_opt))
         | (DefT (reason, _, BoolT _), u) when primitive_promoting_use_t u ->
           rec_flow cx trace (get_builtin_type cx ~trace reason "Boolean", u)
         (***********************)
         (* Symbol library call *)
         (***********************)
+        | (DefT (reason, _, SymbolT), MethodT (use_op, call_r, lookup_r, propref, action, t_opt)) ->
+          let promoted = get_builtin_type cx ~trace reason "Symbol" in
+          let action = replace_this_t_in_method_action promoted action in
+          rec_flow cx trace (promoted, MethodT (use_op, call_r, lookup_r, propref, action, t_opt))
         | (DefT (reason, _, SymbolT), u) when primitive_promoting_use_t u ->
           rec_flow cx trace (get_builtin_type cx ~trace reason "Symbol", u)
         (*****************************************************)
