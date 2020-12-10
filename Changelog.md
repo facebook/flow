@@ -1,3 +1,20 @@
+### 0.140.0
+
+Likely to cause new Flow errors:
+* New generic type checking is now enabled by default, and has to be explicitly disabled with `generate_tests=true` in a flowconfig if desired. See https://medium.com/flow-type/flows-improved-handling-of-generic-types-b5909cc5e3c5 for more about Flow's new handling of generic types.
+
+Notable bug fixes:
+* Fixed "Could not locate flowlib files" errors when multiple users run Flow on the same machine
+* Fixed autocomplete and hover for imported enum types
+* Fixed autocomplete suggesting types in value positions
+* Fixed a bug where correct non-boolean predicate functions were rejected
+
+Parser:
+* ESTree AST now uses Literal node for init of boolean enum members
+
+Misc:
+* Updated `ShadowRoot` library definition (thanks @Brianzchen)
+
 ### 0.139.0
 
 New Features:
