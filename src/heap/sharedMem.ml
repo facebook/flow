@@ -804,7 +804,7 @@ module NewAPI = struct
     | Pattern_def_tag
     | Pattern_tag
     (* tags defined below this point are scanned for pointers *)
-    | Addr_map_tag (* 9 *)
+    | Addr_tbl_tag (* 9 *)
     | Checked_file_tag
 
   (* avoid unused constructor warning *)
@@ -860,7 +860,7 @@ module NewAPI = struct
 
   let addr_tbl_header xs =
     let size = addr_tbl_size xs in
-    mk_header Addr_map_tag size
+    mk_header Addr_tbl_tag size
 
   let checked_file_header = mk_header Checked_file_tag checked_file_size
 
@@ -952,7 +952,7 @@ module NewAPI = struct
 
   let read_addr_tbl_generic f addr init =
     let heap = get_heap () in
-    let hd = read_header_checked heap Addr_map_tag addr in
+    let hd = read_header_checked heap Addr_tbl_tag addr in
     init (obj_size hd) (fun i -> f (read_addr heap (addr + header_size + i)))
 
   let read_addr_tbl f addr = read_addr_tbl_generic f addr Array.init
