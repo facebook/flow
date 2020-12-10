@@ -435,3 +435,7 @@ let jsx_pragma_expression =
   fun content filename ->
     let env = init_env ~token_sink:None ~parse_options:None filename content in
     do_parse env left_hand_side true
+
+let string_is_valid_identifier_name str =
+  let lexbuf = Sedlexing.Utf8.from_string str in
+  Flow_lexer.is_valid_identifier_name lexbuf
