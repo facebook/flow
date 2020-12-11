@@ -1240,8 +1240,8 @@ References:
    exhaustive-check.js:3:6
       3| enum E {
               ^ [2]
-   <BUILTINS>/core.js:2449:3
-   2449|   isValid(input: ?TRepresentation): boolean,
+   <BUILTINS>/core.js:2451:3
+   2451|   isValid(input: ?TRepresentation): boolean,
            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
 
 
@@ -1850,14 +1850,14 @@ Cannot get `E.nonExistent` because property `nonExistent` is missing in `$EnumPr
            ^^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:2447:43
+   <BUILTINS>/core.js:2449:43
                                                    v-
-   2447| type $EnumProto<TEnum, TRepresentation> = {|
-   2448|   cast(input: ?TRepresentation): void | TEnum,
-   2449|   isValid(input: ?TRepresentation): boolean,
-   2450|   members(): Iterable<TEnum>,
-   2451|   __proto__: null,
-   2452| |}
+   2449| type $EnumProto<TEnum, TRepresentation> = {|
+   2450|   cast(input: ?TRepresentation): void | TEnum,
+   2451|   isValid(input: ?TRepresentation): boolean,
+   2452|   members(): Iterable<TEnum>,
+   2453|   __proto__: null,
+   2454| |}
          -^ [1]
 
 
@@ -1870,14 +1870,14 @@ Cannot call `E.nonExistent` because property `nonExistent` is missing in `$EnumP
            ^^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:2447:43
+   <BUILTINS>/core.js:2449:43
                                                    v-
-   2447| type $EnumProto<TEnum, TRepresentation> = {|
-   2448|   cast(input: ?TRepresentation): void | TEnum,
-   2449|   isValid(input: ?TRepresentation): boolean,
-   2450|   members(): Iterable<TEnum>,
-   2451|   __proto__: null,
-   2452| |}
+   2449| type $EnumProto<TEnum, TRepresentation> = {|
+   2450|   cast(input: ?TRepresentation): void | TEnum,
+   2451|   isValid(input: ?TRepresentation): boolean,
+   2452|   members(): Iterable<TEnum>,
+   2453|   __proto__: null,
+   2454| |}
          -^ [1]
 
 
@@ -1904,14 +1904,14 @@ Cannot call `E.A` because property `A` is missing in `$EnumProto` [1]. [prop-mis
            ^
 
 References:
-   <BUILTINS>/core.js:2447:43
+   <BUILTINS>/core.js:2449:43
                                                    v-
-   2447| type $EnumProto<TEnum, TRepresentation> = {|
-   2448|   cast(input: ?TRepresentation): void | TEnum,
-   2449|   isValid(input: ?TRepresentation): boolean,
-   2450|   members(): Iterable<TEnum>,
-   2451|   __proto__: null,
-   2452| |}
+   2449| type $EnumProto<TEnum, TRepresentation> = {|
+   2450|   cast(input: ?TRepresentation): void | TEnum,
+   2451|   isValid(input: ?TRepresentation): boolean,
+   2452|   members(): Iterable<TEnum>,
+   2453|   __proto__: null,
+   2454| |}
          -^ [1]
 
 
@@ -1924,14 +1924,14 @@ Cannot call `E.toString` because property `toString` is missing in `$EnumProto` 
            ^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:2447:43
+   <BUILTINS>/core.js:2449:43
                                                    v-
-   2447| type $EnumProto<TEnum, TRepresentation> = {|
-   2448|   cast(input: ?TRepresentation): void | TEnum,
-   2449|   isValid(input: ?TRepresentation): boolean,
-   2450|   members(): Iterable<TEnum>,
-   2451|   __proto__: null,
-   2452| |}
+   2449| type $EnumProto<TEnum, TRepresentation> = {|
+   2450|   cast(input: ?TRepresentation): void | TEnum,
+   2451|   isValid(input: ?TRepresentation): boolean,
+   2452|   members(): Iterable<TEnum>,
+   2453|   __proto__: null,
+   2454| |}
          -^ [1]
 
 
