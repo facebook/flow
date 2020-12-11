@@ -578,7 +578,7 @@ let merge_component ~opts ~getters ~file_sigs component reqs dep_cxs master_cx =
   merge_imports cx sig_cx reqs impl_cxs;
 
   (* Post-inference checks *)
-  post_merge_checks cx metadata arch file_sigs rev_results;
+  if arch = Options.Classic then post_merge_checks cx metadata arch file_sigs rev_results;
   match results with
   | [] -> failwith "there is at least one cx"
   | x :: xs -> (x, xs)
