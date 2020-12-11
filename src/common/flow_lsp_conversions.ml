@@ -12,6 +12,7 @@ let flow_position_to_lsp (line : int) (char : int) : Lsp.position =
 
 let lsp_position_to_flow (position : Lsp.position) : int * int =
   Lsp.(
+    (* Flow's line numbers are 1-indexed; LSP's are 0-indexed *)
     let line = position.line + 1 in
     let char = position.character in
     (line, char))
@@ -33,8 +34,6 @@ let loc_to_lsp_range (loc : Loc.t) : Lsp.range =
     let loc_start = loc.start in
     let loc_end = loc._end in
     let start = flow_position_to_lsp loc_start.line loc_start.column in
-    (* Flow's end range is inclusive, LSP's is exclusive.
-     * +1 for that, but -1 to make it 0-based *)
     let end_ = flow_position_to_lsp loc_end.line loc_end.column in
     { Lsp.start; end_ })
 
