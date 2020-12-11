@@ -230,7 +230,7 @@ let rec members_of_ty : Ty.t -> Ty.t MemberInfo.t SMap.t * string list =
     |> Base.List.fold_left ~init:(SMap.empty, []) ~f:(fun (mems1, errs1) prop ->
            let (mems2, errs2) =
              match prop with
-             | NamedProp { name; prop; from_proto } ->
+             | NamedProp { name; prop; from_proto; def_loc = _ } ->
                ( SMap.singleton
                    name
                    MemberInfo.{ ty = ty_of_named_prop prop; from_proto; from_nullable = false },

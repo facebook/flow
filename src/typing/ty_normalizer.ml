@@ -1063,25 +1063,30 @@ end = struct
       in
       fun ~env ?(proto = false) (x, p) ->
         match p with
-        | T.Field (_, t, polarity) ->
+        | T.Field (loc_opt, t, polarity) ->
           if keep_field ~env t then
+            let def_loc = Some (Base.Option.value loc_opt ~default:(TypeUtil.loc_of_t t)) in
             let polarity = type_polarity polarity in
             let%map (t, optional) = opt_t ~env t in
             let prop = Ty.Field { t; polarity; optional } in
-            [Ty.NamedProp { name = x; prop; from_proto = proto }]
+            [Ty.NamedProp { name = x; prop; from_proto = proto; def_loc }]
           else
             return []
-        | T.Method (_, t) ->
+        | T.Method (loc_opt, t) ->
           let%map tys = method_ty ~env t in
+          let def_loc = Some (Base.Option.value loc_opt ~default:(TypeUtil.loc_of_t t)) in
           Base.List.map
-            ~f:(fun ty -> Ty.NamedProp { name = x; prop = Ty.Method ty; from_proto = proto })
+            ~f:(fun ty ->
+              Ty.NamedProp { name = x; prop = Ty.Method ty; from_proto = proto; def_loc })
             tys
-        | T.Get (_, t) ->
+        | T.Get (loc_opt, t) ->
+          let def_loc = Some (Base.Option.value loc_opt ~default:(TypeUtil.loc_of_t t)) in
           let%map t = type__ ~env t in
-          [Ty.NamedProp { name = x; prop = Ty.Get t; from_proto = proto }]
-        | T.Set (_, t) ->
+          [Ty.NamedProp { name = x; prop = Ty.Get t; from_proto = proto; def_loc }]
+        | T.Set (loc_opt, t) ->
+          let def_loc = Some (Base.Option.value loc_opt ~default:(TypeUtil.loc_of_t t)) in
           let%map t = type__ ~env t in
-          [Ty.NamedProp { name = x; prop = Ty.Set t; from_proto = proto }]
+          [Ty.NamedProp { name = x; prop = Ty.Set t; from_proto = proto; def_loc }]
         | T.GetSet (loc1, t1, loc2, t2) ->
           let%bind p1 = obj_prop_t ~env (x, T.Get (loc1, t1)) in
           let%map p2 = obj_prop_t ~env (x, T.Set (loc2, t2)) in
@@ -2257,7 +2262,8 @@ end = struct
     let rec set_proto_prop =
       let open Ty in
       function
-      | NamedProp { name; prop; from_proto = _ } -> NamedProp { name; prop; from_proto = true }
+      | NamedProp { name; prop; def_loc; from_proto = _ } ->
+        NamedProp { name; prop; def_loc; from_proto = true }
       | CallProp _ as p -> p
       | SpreadProp t -> SpreadProp (set_proto_t t)
 
@@ -2314,10 +2320,10 @@ end = struct
       let%map enum_ty = TypeConverter.convert_t ~env enum_ty in
       let members_ty =
         List.map
-          (fun name ->
+          (fun (name, loc) ->
             let prop = Ty.Field { t = enum_ty; polarity = Ty.Positive; optional = false } in
-            Ty.NamedProp { name; prop; from_proto = false })
-          (SMap.keys members)
+            Ty.NamedProp { name; prop; from_proto = false; def_loc = Some loc })
+          (SMap.bindings members)
       in
       Ty.mk_object (Ty.SpreadProp proto_ty :: members_ty)
 

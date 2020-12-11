@@ -804,7 +804,7 @@ module NewAPI = struct
     | Pattern_def_tag
     | Pattern_tag
     (* tags defined below this point are scanned for pointers *)
-    | Addr_map_tag (* 9 *)
+    | Addr_tbl_tag (* 9 *)
     | Checked_file_tag
 
   (* avoid unused constructor warning *)
@@ -814,13 +814,15 @@ module NewAPI = struct
   let tag_val : tag -> int = Obj.magic
 
   let mk_header tag size =
-    (* lower byte of header is reserved for tag, lsb will be set when converting
-     * to intnat before writing to shmem, see unsafe_write_header. *)
-    (tag_val tag lsl 1) lor (size lsl 7)
+    (* lower byte of header is reserved for 6-bit tag and 2 GC bits, OCaml
+     * representation of the header does not include the GC bits, which will be
+     * set when converting to intnat before writing to shmem, see
+     * unsafe_write_header. *)
+    tag_val tag lor (size lsl 6)
 
-  let obj_tag hd = (hd lsr 1) land 0x3F
+  let obj_tag hd = hd land 0x3F
 
-  let obj_size hd = hd lsr 7
+  let obj_size hd = hd lsr 6
 
   (* sizes *)
 
@@ -860,7 +862,7 @@ module NewAPI = struct
 
   let addr_tbl_header xs =
     let size = addr_tbl_size xs in
-    mk_header Addr_map_tag size
+    mk_header Addr_tbl_tag size
 
   let checked_file_header = mk_header Checked_file_tag checked_file_size
 
@@ -919,14 +921,14 @@ module NewAPI = struct
    * must ensure that the given destination contains string data. *)
   external unsafe_read_string : _ addr -> int -> string = "hh_read_string"
 
-  (* Read a header from the heap. The low bit of the header word is always set,
-   * but when converting to an OCaml int we forfeit that bit to OCaml's own tag.
-   *)
+  (* Read a header from the heap. The low 2 bits of the header are reserved for
+   * GC and not used in OCaml. *)
   let read_header heap addr =
     let hd_nat = Array1.get heap addr in
-    (* double-check that the data looks like a header *)
+    (* Double-check that the data looks like a header. All reachable headers
+     * will have the lsb set. *)
     assert (Nativeint.(logand hd_nat 1n = 1n));
-    Nativeint.(to_int (shift_right_logical hd_nat 1))
+    Nativeint.(to_int (shift_right_logical hd_nat 2))
 
   let read_header_checked heap tag addr =
     let hd = read_header heap addr in
@@ -952,7 +954,7 @@ module NewAPI = struct
 
   let read_addr_tbl_generic f addr init =
     let heap = get_heap () in
-    let hd = read_header_checked heap Addr_map_tag addr in
+    let hd = read_header_checked heap Addr_tbl_tag addr in
     init (obj_size hd) (fun i -> f (read_addr heap (addr + header_size + i)))
 
   let read_addr_tbl f addr = read_addr_tbl_generic f addr Array.init
@@ -999,7 +1001,7 @@ module NewAPI = struct
    * bounds checked; caller must ensure the given destination has already been
    * allocated. *)
   let unsafe_write_header_at heap dst hd =
-    Array1.unsafe_set heap dst Nativeint.(logor 1n (shift_left (of_int hd) 1))
+    Array1.unsafe_set heap dst Nativeint.(logor 1n (shift_left (of_int hd) 2))
 
   (* Write an address at a specified address in the heap. This write is not
    * bounds checked; caller must ensure the given destination has already been

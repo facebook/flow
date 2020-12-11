@@ -1,0 +1,21 @@
+{
+  "name": "babel-plugin-transform-flow-enums",
+  "version": "0.0.1",
+  "description": "Babel transform for Flow Enums.",
+  "main": "index.js",
+  "license": "MIT",
+  "scripts": {
+    "test": "jest"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/facebook/flow.git"
+  },
+  "dependencies": {
+    "@babel/plugin-syntax-flow": "^7.12.1"
+  },
+  "devDependencies": {
+    "babel-plugin-tester": "^10.0.0",
+    "jest": "^26.6.3"
+  }
+}

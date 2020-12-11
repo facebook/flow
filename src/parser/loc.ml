@@ -5,12 +5,14 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
+(* line numbers are 1-indexed; column numbers are 0-indexed *)
 type position = {
   line: int;
   column: int;
 }
 [@@deriving show]
 
+(* start is inclusive; end is exclusive *)
 (* If you are modifying this record, go look at ALoc.ml and make sure you understand the
  * representation there. *)
 type t = {
