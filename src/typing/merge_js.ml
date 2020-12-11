@@ -202,18 +202,20 @@ let detect_unnecessary_invariants cx =
       Flow_js.add_output cx (Error_message.EUnnecessaryInvariant (loc, reason)))
     (Context.unnecessary_invariants cx)
 
-let detect_invalid_type_assert_calls cx file_sigs cxs tasts =
-  if Context.type_asserts cx then Type_asserts.detect_invalid_calls ~full_cx:cx file_sigs cxs tasts
+let detect_invalid_type_assert_calls cx file_sigs results =
+  if Context.type_asserts cx then Type_asserts.detect_invalid_calls ~full_cx:cx file_sigs results
 
-let force_annotations ~arch leader_cx other_cxs =
+let detect_es6_import_export_errors = Strict_es6_import_export.detect_errors
+
+let force_annotations arch leader_cx cxs =
   if arch = Options.Classic then
     Base.List.iter
-      ~f:(fun cx ->
+      ~f:(fun (cx, _, _) ->
         let should_munge_underscores = Context.should_munge_underscores cx in
         Context.module_ref cx
         |> Flow_js.lookup_module leader_cx
         |> Flow_js.enforce_strict leader_cx ~should_munge_underscores)
-      (leader_cx :: other_cxs)
+      cxs
 
 let detect_escaped_generics results =
   Base.List.iter
@@ -403,6 +405,105 @@ let detect_literal_subtypes =
         Flow_js.flow cx (t, u))
       checks
 
+let get_aloc_tables ~get_aloc_table_unsafe component =
+  Nel.fold_left
+    (fun tables filename ->
+      let table = lazy (get_aloc_table_unsafe filename) in
+      FilenameMap.add filename table tables)
+    FilenameMap.empty
+    component
+
+let get_aloc_table_rev filename aloc_tables =
+  let table = FilenameMap.find filename aloc_tables in
+  lazy
+    (try Lazy.force table |> ALoc.reverse_table
+     with
+     (* If we aren't in abstract locations mode, or are in a libdef, we
+        won't have an aloc table, so we just create an empty reverse
+        table. We handle this exception here rather than explicitly
+        making an optional version of the get_aloc_table function for
+        simplicity. *)
+     | Parsing_heaps_exceptions.Sig_ast_ALoc_table_not_found _ ->
+       ALoc.make_empty_reverse_table ())
+
+let merge_builtins cx sig_cx master_cx =
+  Flow_js.mk_builtins cx;
+  Context.merge_into sig_cx master_cx;
+  implicit_require cx master_cx cx
+
+let get_lint_severities metadata strict_mode lint_severities =
+  if metadata.Context.strict || metadata.Context.strict_local then
+    StrictModeSettings.fold
+      (fun lint_kind lint_severities ->
+        LintSettings.set_value lint_kind (Severity.Err, None) lint_severities)
+      strict_mode
+      lint_severities
+  else
+    lint_severities
+
+let merge_imports cx sig_cx reqs impl_cxs =
+  let open Reqs in
+  reqs.impls
+  |> RequireMap.iter (fun (m, fn_to) locs ->
+         let cx_to = FilenameMap.find fn_to impl_cxs in
+         ALocSet.iter (fun loc -> explicit_impl_require cx (sig_cx, m, loc, cx_to)) locs);
+
+  reqs.dep_impls
+  |> RequireMap.iter (fun (m, fn_to) (cx_from, locs) ->
+         let cx_to = FilenameMap.find fn_to impl_cxs in
+         ALocSet.iter (fun loc -> explicit_impl_require cx (cx_from, m, loc, cx_to)) locs);
+
+  reqs.res
+  |> RequireMap.iter (fun (f, fn_to) locs ->
+         let cx_to = FilenameMap.find fn_to impl_cxs in
+         ALocSet.iter (fun loc -> explicit_res_require cx (loc, f, cx_to)) locs);
+
+  reqs.decls
+  |> RequireMap.iter (fun (m, fn_to) (locs, resolved_m) ->
+         let cx_to = FilenameMap.find fn_to impl_cxs in
+         ALocSet.iter (fun loc -> explicit_decl_require cx (m, loc, resolved_m, cx_to)) locs);
+
+  reqs.unchecked
+  |> RequireMap.iter (fun (m, fn_to) locs ->
+         let cx_to = FilenameMap.find fn_to impl_cxs in
+         ALocSet.iter (fun loc -> explicit_unchecked_require cx (m, loc, cx_to)) locs)
+
+(* Post-merge errors.
+ *
+ * At this point, all dependencies have been merged and the component has been
+ * linked together. Any constraints should have already been evaluated, which
+ * means we can complain about things that either haven't happened yet, or
+ * which require complete knowledge of tvar bounds.
+ *)
+let post_merge_checks cx metadata arch file_sigs results =
+  detect_sketchy_null_checks cx;
+  detect_non_voidable_properties cx;
+  check_implicit_instantiations cx;
+  detect_test_prop_misses cx;
+  detect_unnecessary_optional_chains cx;
+  detect_unnecessary_invariants cx;
+  detect_invalid_type_assert_calls cx file_sigs results;
+  detect_es6_import_export_errors cx metadata results;
+  detect_escaped_generics results;
+  detect_matching_props_violations cx;
+  detect_literal_subtypes cx;
+  force_annotations arch cx results
+
+type merge_options =
+  | Merge_options of {
+      arch: Options.arch;
+      phase: Context.phase;
+      metadata: Context.metadata;
+      lint_severities: Severity.severity LintSettings.t;
+      strict_mode: StrictModeSettings.t;
+    }
+
+type merge_getters = {
+  get_ast_unsafe: File_key.t -> get_ast_return;
+  get_aloc_table_unsafe: File_key.t -> ALoc.table;
+  get_docblock_unsafe: File_key.t -> Docblock.t;
+}
+
 (* Merge a component with its "implicit requires" and "explicit requires." The
    implicit requires are those defined in libraries. For the explicit
    requires, we need to merge only those parts of the dependency graph that the
@@ -435,72 +536,32 @@ let detect_literal_subtypes =
 
    5. Link the local references to libraries in master_cx and component_cxs.
 *)
-let merge_component
-    ~arch
-    ~metadata
-    ~lint_severities
-    ~strict_mode
-    ~file_sigs
-    ~get_ast_unsafe
-    ~get_aloc_table_unsafe
-    ~get_docblock_unsafe
-    ~phase
-    component
-    reqs
-    dep_cxs
-    (master_cx : Context.sig_t) =
-  let aloc_tables =
-    Nel.fold_left
-      (fun tables filename ->
-        let table = lazy (get_aloc_table_unsafe filename) in
-        FilenameMap.add filename table tables)
-      FilenameMap.empty
-      component
-  in
+let merge_component ~opts ~getters ~file_sigs component reqs dep_cxs master_cx =
+  let (Merge_options { arch; phase; metadata; lint_severities; strict_mode }) = opts in
+  let { get_ast_unsafe; get_aloc_table_unsafe; get_docblock_unsafe } = getters in
+  let aloc_tables = get_aloc_tables ~get_aloc_table_unsafe component in
   let sig_cx = Context.make_sig () in
   let ccx = Context.make_ccx sig_cx aloc_tables in
   let need_merge_master_cx = ref true in
+  (* Iterate over component *)
   let (rev_results, impl_cxs) =
     Nel.fold_left
       (fun (results, impl_cxs) filename ->
-        (* create cx *)
         let info = get_docblock_unsafe filename in
         let metadata = Context.docblock_overrides info metadata in
         let module_ref = Files.module_ref filename in
-        let rev_table =
-          let table = FilenameMap.find filename aloc_tables in
-          lazy
-            (try Lazy.force table |> ALoc.reverse_table
-             with
-             (* If we aren't in abstract locations mode, or are in a libdef, we
-                won't have an aloc table, so we just create an empty reverse
-                table. We handle this exception here rather than explicitly
-                making an optional version of the get_aloc_table function for
-                simplicity. *)
-             | Parsing_heaps_exceptions.Sig_ast_ALoc_table_not_found _ ->
-               ALoc.make_empty_reverse_table ())
-        in
+        let rev_table = get_aloc_table_rev filename aloc_tables in
         let cx = Context.make ccx metadata filename rev_table module_ref phase in
-        (* create builtins *)
+
+        (* Builtins *)
         if !need_merge_master_cx then (
           need_merge_master_cx := false;
-          Flow_js.mk_builtins cx;
-          Context.merge_into sig_cx master_cx;
-          implicit_require cx master_cx cx
+          merge_builtins cx sig_cx master_cx
         );
 
-        (* local inference *)
+        (* AST inference *)
         let (comments, ast) = get_ast_unsafe filename in
-        let lint_severities =
-          if metadata.Context.strict || metadata.Context.strict_local then
-            StrictModeSettings.fold
-              (fun lint_kind lint_severities ->
-                LintSettings.set_value lint_kind (Severity.Err, None) lint_severities)
-              strict_mode
-              lint_severities
-          else
-            lint_severities
-        in
+        let lint_severities = get_lint_severities metadata strict_mode lint_severities in
         let file_sig = FilenameMap.find filename file_sigs in
         let tast =
           Type_inference_js.infer_ast cx filename comments ast ~lint_severities ~file_sig
@@ -509,64 +570,18 @@ let merge_component
       ([], FilenameMap.empty)
       component
   in
-  let results = Base.List.rev rev_results in
-  let (cxs, _, tasts) = Base.List.unzip3 results in
-  let (cx, other_cxs) = (Base.List.hd_exn cxs, Base.List.tl_exn cxs) in
+  let results = List.rev rev_results in
+  let (cx, _, _) = Base.List.hd_exn results in
 
+  (* Imports *)
   dep_cxs |> Base.List.iter ~f:(Context.merge_into sig_cx);
+  merge_imports cx sig_cx reqs impl_cxs;
 
-  Reqs.(
-    reqs.impls
-    |> RequireMap.iter (fun (m, fn_to) locs ->
-           let cx_to = FilenameMap.find fn_to impl_cxs in
-           ALocSet.iter (fun loc -> explicit_impl_require cx (sig_cx, m, loc, cx_to)) locs);
-
-    reqs.dep_impls
-    |> RequireMap.iter (fun (m, fn_to) (cx_from, locs) ->
-           let cx_to = FilenameMap.find fn_to impl_cxs in
-           ALocSet.iter (fun loc -> explicit_impl_require cx (cx_from, m, loc, cx_to)) locs);
-
-    reqs.res
-    |> RequireMap.iter (fun (f, fn_to) locs ->
-           let cx_to = FilenameMap.find fn_to impl_cxs in
-           ALocSet.iter (fun loc -> explicit_res_require cx (loc, f, cx_to)) locs);
-
-    reqs.decls
-    |> RequireMap.iter (fun (m, fn_to) (locs, resolved_m) ->
-           let cx_to = FilenameMap.find fn_to impl_cxs in
-           ALocSet.iter (fun loc -> explicit_decl_require cx (m, loc, resolved_m, cx_to)) locs);
-
-    reqs.unchecked
-    |> RequireMap.iter (fun (m, fn_to) locs ->
-           let cx_to = FilenameMap.find fn_to impl_cxs in
-           ALocSet.iter (fun loc -> explicit_unchecked_require cx (m, loc, cx_to)) locs);
-
-    (* Post-merge errors.
-     *
-     * At this point, all dependencies have been merged and the component has been
-     * linked together. Any constraints should have already been evaluated, which
-     * means we can complain about things that either haven't happened yet, or
-     * which require complete knowledge of tvar bounds.
-     *)
-    detect_sketchy_null_checks cx;
-    detect_non_voidable_properties cx;
-    check_implicit_instantiations cx;
-    detect_test_prop_misses cx;
-    detect_unnecessary_optional_chains cx;
-    detect_unnecessary_invariants cx;
-    detect_invalid_type_assert_calls cx file_sigs cxs tasts;
-    Strict_es6_import_export.detect_errors ~metadata ~phase cx results;
-    if phase = Context.Checking then detect_escaped_generics results;
-
-    (* Well-formed conditionals *)
-    detect_matching_props_violations cx;
-    detect_literal_subtypes cx;
-
-    force_annotations ~arch cx other_cxs;
-
-    match results with
-    | [] -> failwith "there is at least one cx"
-    | x :: xs -> (x, xs))
+  (* Post-inference checks *)
+  post_merge_checks cx metadata arch file_sigs rev_results;
+  match results with
+  | [] -> failwith "there is at least one cx"
+  | x :: xs -> (x, xs)
 
 (****************** signature contexts *********************)
 
