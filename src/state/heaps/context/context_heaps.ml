@@ -86,8 +86,6 @@ module Merge_context_mutator : sig
     (worker_mutator -> options:Options.t -> File_key.t Nel.t -> unit) Expensive.t
 
   val revive_files : master_mutator -> Utils_js.FilenameSet.t -> unit
-
-  val unrevived_files : master_mutator -> Utils_js.FilenameSet.t
 end = struct
   type master_mutator = Utils_js.FilenameSet.t ref
 
@@ -184,16 +182,6 @@ end = struct
     WorkerCancel.with_no_cancellations (fun () ->
         oldified_files := FilenameSet.diff !oldified_files files;
         revive_merge_batch files)
-
-  (* WARNING: Only call this function at the end of merge!!! Calling it during merge will return
-     meaningless results.
-
-     Initially, `oldified_files` contains the set of files to be merged (see Merge_stream). During
-     merge, we call `revive_files` for files whose signatures have not changed. So the remaining
-     `oldified_files` at the end of merge must contain the set of files whose signatures are new or
-     have changed. In principle, we could maintain this state separately in Merge_stream, but it
-     seems wasteful to do so. *)
-  let unrevived_files oldified_files = !oldified_files
 end
 
 module type READER = sig

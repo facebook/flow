@@ -41,6 +41,4 @@ module Merge_context_mutator : sig
     (worker_mutator -> options:Options.t -> File_key.t Nel.t -> unit) Expensive.t
 
   val revive_files : master_mutator -> Utils_js.FilenameSet.t -> unit
-
-  val unrevived_files : master_mutator -> Utils_js.FilenameSet.t
 end
