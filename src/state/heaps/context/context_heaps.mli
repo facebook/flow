@@ -11,6 +11,8 @@ module type READER = sig
   val find_sig : reader:reader -> File_key.t -> Context.sig_t
 
   val find_leader : reader:reader -> File_key.t -> File_key.t
+
+  val sig_hash_opt : reader:reader -> File_key.t -> Xx.hash option
 end
 
 module Mutator_reader : sig
@@ -41,6 +43,4 @@ module Merge_context_mutator : sig
     (worker_mutator -> options:Options.t -> File_key.t Nel.t -> unit) Expensive.t
 
   val revive_files : master_mutator -> Utils_js.FilenameSet.t -> unit
-
-  val unrevived_files : master_mutator -> Utils_js.FilenameSet.t
 end

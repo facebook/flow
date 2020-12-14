@@ -61,6 +61,7 @@ type 'a t = {
   mutable merged_files: int;
   mutable skipped_components: int;
   mutable skipped_files: int;
+  mutable new_or_changed_files: FilenameSet.t;
   intermediate_result_callback: 'a merge_result Lazy.t -> unit;
 }
 
@@ -156,6 +157,7 @@ let create
       merged_files = 0;
       skipped_components = 0;
       skipped_files = 0;
+      new_or_changed_files = FilenameSet.empty;
       intermediate_result_callback;
     }
   in
@@ -213,13 +215,21 @@ let merge ~master_mutator ~reader stream =
     |> FilenameSet.of_list
     |> Context_heaps.Merge_context_mutator.revive_files master_mutator
   in
+  let mark_new_or_changed node =
+    stream.new_or_changed_files <-
+      node.component
+      |> Nel.fold_left (fun acc x -> FilenameSet.add x acc) stream.new_or_changed_files
+  in
   (* Record that a component was merged (or skipped) and recursively unblock its
    * dependents. If a dependent has no more unmerged dependencies, make it
    * available for scheduling. *)
   let rec push diff node =
     stream.merged_components <- stream.merged_components + 1;
     stream.merged_files <- stream.merged_files + node.size;
-    if not diff then revive node;
+    if diff then
+      mark_new_or_changed node
+    else
+      revive node;
     FilenameMap.iter (fun _ node -> unblock diff node) node.dependents
   and unblock diff node =
     (* dependent blocked on one less *)
@@ -258,6 +268,4 @@ let total_files stream = stream.total_files
 
 let skipped_count stream = stream.skipped_files
 
-(* See explanation in Context_heaps for why calling this function at the end of merge returns files
-   whose signatures are new or have changed. *)
-let sig_new_or_changed = Context_heaps.Merge_context_mutator.unrevived_files
+let sig_new_or_changed stream = stream.new_or_changed_files

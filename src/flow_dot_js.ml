@@ -240,25 +240,22 @@ let infer_and_merge ~root filename ast file_sig =
   let file_sigs = Utils_js.FilenameMap.singleton filename file_sig in
   let (_, { Flow_ast.Program.all_comments; _ }) = ast in
   let aloc_ast = Ast_loc_utils.loc_to_aloc_mapper#program ast in
+  let arch = Options.TypesFirst { new_signatures = false } in
+  let phase = Context.Checking in
+  let opts = Merge_js.Merge_options { arch; phase; metadata; lint_severities; strict_mode } in
+  let getters =
+    {
+      Merge_js.get_ast_unsafe = (fun _ -> (all_comments, aloc_ast));
+      (* TODO (nmote, sainati) - Exceptions should mainly be used for exceptional code flows. We
+       * shouldn't use them to decide whether or not to use abstract locations. We should pass through
+       * whatever options we need instead *)
+      get_aloc_table_unsafe =
+        (fun _ -> raise (Parsing_heaps_exceptions.Sig_ast_ALoc_table_not_found ""));
+      get_docblock_unsafe = (fun _ -> stub_docblock);
+    }
+  in
   let ((cx, _, tast), _other_cxs) =
-    Merge_js.merge_component
-      ~arch:(Options.TypesFirst { new_signatures = false })
-      ~metadata
-      ~lint_severities
-      ~strict_mode
-      ~file_sigs
-      ~get_ast_unsafe:(fun _ -> (all_comments, aloc_ast))
-        (* TODO (nmote, sainati) - Exceptions should mainly be used for exceptional code flows. We
-         * shouldn't use them to decide whether or not to use abstract locations. We should pass through
-         * whatever options we need instead *)
-      ~get_aloc_table_unsafe:(fun _ ->
-        raise (Parsing_heaps_exceptions.Sig_ast_ALoc_table_not_found ""))
-      ~get_docblock_unsafe:(fun _ -> stub_docblock)
-      ~phase:Context.Checking
-      (Nel.one filename)
-      reqs
-      []
-      master_cx
+    Merge_js.merge_component ~opts ~getters ~file_sigs (Nel.one filename) reqs [] master_cx
   in
   (cx, tast)
 
