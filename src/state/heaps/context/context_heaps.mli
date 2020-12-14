@@ -11,6 +11,8 @@ module type READER = sig
   val find_sig : reader:reader -> File_key.t -> Context.sig_t
 
   val find_leader : reader:reader -> File_key.t -> File_key.t
+
+  val sig_hash_opt : reader:reader -> File_key.t -> Xx.hash option
 end
 
 module Mutator_reader : sig

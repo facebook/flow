@@ -190,6 +190,8 @@ module type READER = sig
   val find_sig : reader:reader -> File_key.t -> Context.sig_t
 
   val find_leader : reader:reader -> File_key.t -> File_key.t
+
+  val sig_hash_opt : reader:reader -> File_key.t -> Xx.hash option
 end
 
 let find_sig ~get_sig ~reader:_ file =
@@ -221,6 +223,8 @@ end = struct
     match LeaderHeap.get file with
     | Some leader -> leader
     | None -> raise (Key_not_found ("LeaderHeap", File_key.to_string file))
+
+  let sig_hash_opt ~reader:_ = SigHashHeap.get
 
   let sig_hash_changed ~reader:_ f =
     match SigHashHeap.get f with
@@ -255,6 +259,12 @@ module Reader : READER with type reader = State_reader.t = struct
     match leader with
     | Some leader -> leader
     | None -> raise (Key_not_found ("LeaderHeap", File_key.to_string file))
+
+  let sig_hash_opt ~reader:_ file =
+    if should_use_oldified file then
+      SigHashHeap.get_old file
+    else
+      SigHashHeap.get file
 end
 
 module Reader_dispatcher : READER with type reader = Abstract_state_reader.t = struct
@@ -271,4 +281,9 @@ module Reader_dispatcher : READER with type reader = Abstract_state_reader.t = s
     match reader with
     | Mutator_state_reader reader -> Mutator_reader.find_leader ~reader
     | State_reader reader -> Reader.find_leader ~reader
+
+  let sig_hash_opt ~reader =
+    match reader with
+    | Mutator_state_reader reader -> Mutator_reader.sig_hash_opt ~reader
+    | State_reader reader -> Reader.sig_hash_opt ~reader
 end
