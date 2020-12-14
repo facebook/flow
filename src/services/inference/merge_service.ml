@@ -711,7 +711,7 @@ let merge_runner
   in
   let total_files = Merge_stream.total_files stream in
   let skipped_count = Merge_stream.skipped_count stream in
-  let sig_new_or_changed = Merge_stream.sig_new_or_changed master_mutator in
+  let sig_new_or_changed = Merge_stream.sig_new_or_changed stream in
   Hh_logger.info "Merge skipped %d of %d modules" skipped_count total_files;
   let elapsed = Unix.gettimeofday () -. start_time in
   if Options.should_profile options then Hh_logger.info "merged in %f" elapsed;

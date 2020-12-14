@@ -780,6 +780,13 @@ let merge
     Hh_logger.info "Done";
     Lwt.return (result, time_to_merge)
   in
+  (* It is not clear whether we want or need sig_new_or_changed to include deleted or unparsed
+   * (i.e. failed to parse or non-@flow) files, but for the sake of consistency with previous
+   * logic, we'll add them in here. It may be worth determining whether we can stop including these
+   * files. *)
+  let sig_new_or_changed =
+    sig_new_or_changed |> FilenameSet.union deleted |> FilenameSet.union unparsed_set
+  in
   let errors = { ServerEnv.local_errors; merge_errors; warnings; suppressions } in
   (* compute the largest cycle, for logging *)
   let top_cycle =
