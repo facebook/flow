@@ -613,7 +613,12 @@ runtest() {
     fi
 }
 
-runtest "$@"
+index=${1%:*}
+dir=${1#*:}
+
+runtest "$dir"
 code=$?
 trap - EXIT
+
+echo "$index" "$code"
 exit "$code"

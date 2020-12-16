@@ -248,34 +248,9 @@ if [[ "$quiet" -eq 0 ]]; then
   printf "Running up to %d test(s) in parallel\n" "$num_to_run_in_parallel"
 fi
 
-# Index N of pids should correspond to the test at index N of dirs
+# Index N of results should correspond to the test at index N of dirs
 dirs=(tests/*/)
-pids=()
-next_test_index=0
-next_test_to_reap=0
-
-function term_tests() {
-  if (( next_test_to_reap < ${#dirs[@]} )); then
-    local to_kill=(${pids[@]:$next_test_to_reap})
-    #printf "Aborting, killing %s\n" "${to_kill[*]}" >&2;
-    printf "\nAborting, killing running tests...\n" >&2
-    kill -TERM "${to_kill[@]}" 2>/dev/null
-    wait "${to_kill[@]}" 2>/dev/null
-    exit 1
-  fi
-}
-trap term_tests TERM SIGINT
-
-# Starts running a test in the background. If there are no more tests then it
-# does nothing
-start_test() {
-    if (( next_test_index < ${#dirs[@]} )); then
-        test_dir="${dirs[next_test_index]}"
-        scripts/run-one-test "$test_dir" &
-        pids[$next_test_index]=$!
-    fi
-    ((next_test_index++))
-}
+results=()
 
 if [[ "$list_tests" -eq 1 ]]; then
   for dir in "${dirs[@]}"; do
@@ -296,18 +271,26 @@ if [[ "$list_tests" -eq 1 ]]; then
   exit 0
 fi
 
-# Kick off a bunch of test runs
-for ignore_me in $(seq $num_to_run_in_parallel); do
-  start_test
-done
+# Run all tests, num_to_run_in_parallel at a time
+parallel_run_tests() {
+    (
+        i=0
+        for dir in "${dirs[@]}"; do
+            echo "$(( i++ )):$dir"
+        done
+    ) | xargs -P"$num_to_run_in_parallel" -n1 \
+          scripts/run-one-test
+}
 
-while (( next_test_to_reap < ${#dirs[@]} )); do
-    # We reap the tests in order, so that we can output them in a pretty way.
-    testname="${dirs[next_test_to_reap]}"
-    print_run "$testname"
-    wait "${pids[$next_test_to_reap]}"
+# Kick off all tests, reporting results over a pipe to our fd 3
+exec 3< <(parallel_run_tests)
 
-    case $? in
+# Print a test's result, given its index in dirs and results
+print_result() {
+    local test_to_print=$1
+    code=${results[$test_to_print]}
+    testname=${dirs[$test_to_print]}
+    case $code in
       $RUNTEST_SUCCESS )
         (( passed++ ))
         print_success "$testname" ;;
@@ -323,15 +306,35 @@ while (( next_test_to_reap < ${#dirs[@]} )); do
         name=${testname%*/}
         name=${name##*/}
         printf "Missing %s.exp file or .flowconfig file\n" "$name" ;;
-      $RUNTEST_ERROR )
+      $RUNTEST_ERROR | '')
+        # '' means the parallel runner stopped before giving a result
         (( errored++ ))
         print_error "$testname" ;;
     esac
+}
 
-    ((next_test_to_reap++))
+# Collect the results in the order the tests finish
+next_test_to_print=0
+print_run "${dirs[$next_test_to_print]}"
+while read -ru 3 index code; do
+    results[$index]=$code
 
-    # Start up the next test
-    start_test
+    # Print the results in order in a pretty way
+    while [ -n "${results[$next_test_to_print]}" ]; do
+        print_result "$next_test_to_print"
+        (( next_test_to_print++ ))
+    done
+
+    if (( next_test_to_print < ${#dirs[@]} )); then
+        print_run "${dirs[$next_test_to_print]}"
+    fi
+done
+
+while (( next_test_to_print < ${#dirs[@]} )); do
+    # If the parallel runner stopped early, print the remaining tests
+    # (as errors, except any where we already have a result)
+    print_result "$next_test_to_print"
+    (( next_test_to_print++ ))
 done
 
 if [ $failed -eq 0 ]; then
