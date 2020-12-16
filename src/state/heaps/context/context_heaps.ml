@@ -291,3 +291,7 @@ module Reader_dispatcher : READER with type reader = Abstract_state_reader.t = s
     | Mutator_state_reader reader -> Mutator_reader.sig_hash_opt ~reader
     | State_reader reader -> Reader.sig_hash_opt ~reader
 end
+
+module From_saved_state = struct
+  let add_sig_hash = SigHashHeap.add
+end

@@ -46,3 +46,7 @@ module Merge_context_mutator : sig
 
   val revive_files : master_mutator -> Utils_js.FilenameSet.t -> unit
 end
+
+module From_saved_state : sig
+  val add_sig_hash : File_key.t -> Xx.hash -> unit
+end
