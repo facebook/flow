@@ -214,6 +214,8 @@ module Mutator_reader : sig
   include READER with type reader = Mutator_state_reader.t
 
   val sig_hash_changed : reader:reader -> File_key.t -> bool
+
+  val sig_cx_mem_old : reader:reader -> File_key.t -> bool
 end = struct
   type reader = Mutator_state_reader.t
 
@@ -225,6 +227,8 @@ end = struct
     | None -> raise (Key_not_found ("LeaderHeap", File_key.to_string file))
 
   let sig_hash_opt ~reader:_ = SigHashHeap.get
+
+  let sig_cx_mem_old ~reader:_ = SigContextHeap.mem_old
 
   let sig_hash_changed ~reader:_ f =
     match SigHashHeap.get f with
