@@ -30,7 +30,7 @@ Flags: --pretty
 
 bar.js:4:5
 Flags: --pretty
-{"error":"not enough type information to autocomplete","result":[]}
+{"error":"not enough type information to extract members","result":[]}
 
 str.js:3:9
 Flags: --pretty
@@ -164,11 +164,11 @@ Flags: --pretty
 
 object_builtins.js:4:5
 Flags: --pretty
-{"error":"not enough type information to autocomplete","result":[]}
+{"error":"not enough type information to extract members","result":[]}
 
 function_builtins.js:4:5
 Flags: --pretty
-{"error":"not enough type information to autocomplete","result":[]}
+{"error":"not enough type information to extract members","result":[]}
 
 fun.js:4:5
 Flags: --pretty
