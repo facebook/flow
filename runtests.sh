@@ -623,13 +623,13 @@ runtest() {
           local flowconfig_name="$2"
           (
             set -e
-            # start lazy server and wait
+            # start server and wait
             "$FLOW" start "$root" \
               $flowlib --wait \
               $generate_tests \
               $new_signatures_flag \
               --wait-for-recheck "$wait_for_recheck" \
-              --lazy \
+              --lazy-mode none \
               --file-watcher "$file_watcher" \
               --flowconfig-name "$flowconfig_name" \
               --log-file "$abs_log_file" \
