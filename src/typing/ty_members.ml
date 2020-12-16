@@ -59,12 +59,6 @@ let rec members_of_ty : Ty.t -> Ty.t member_info SMap.t * string list =
            let (mems2, errs2) =
              match prop with
              | NamedProp { name; prop; from_proto; def_loc } ->
-               Hh_logger.info
-                 "%s def_loc = %s"
-                 name
-                 (match def_loc with
-                 | None -> "None"
-                 | Some loc -> Printf.sprintf "Some %s" (Reason.string_of_aloc loc));
                ( SMap.singleton
                    name
                    { ty = ty_of_named_prop prop; from_proto; from_nullable = false; def_loc },
