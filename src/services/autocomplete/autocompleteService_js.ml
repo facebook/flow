@@ -745,9 +745,18 @@ let autocomplete_get_results ~options ~reader ~cx ~file_sig ~ast ~typed_ast trig
         in_optional_chain
         ac_loc
         ~tparams )
-  | Some (tparams, ac_loc, Acjsx (ac_name, used_attr_names, cls)) ->
+  | Some (tparams, ac_loc, Acjsx { attribute_name; used_attr_names; component_t }) ->
     ( "Acjsx",
-      autocomplete_jsx ~reader cx file_sig typed_ast cls ac_name ~used_attr_names ac_loc ~tparams )
+      autocomplete_jsx
+        ~reader
+        cx
+        file_sig
+        typed_ast
+        component_t
+        attribute_name
+        ~used_attr_names
+        ac_loc
+        ~tparams )
   | Some (tparams, ac_loc, Actype { token }) ->
     ( "Actype",
       autocomplete_unqualified_type

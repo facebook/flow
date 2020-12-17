@@ -34,7 +34,11 @@ type autocomplete_type =
       in_optional_chain: bool;
     }
   (* JSX attributes *)
-  | Acjsx of string * SSet.t * Type.t
+  | Acjsx of {
+      attribute_name: string;
+      used_attr_names: SSet.t;
+      component_t: Type.t;
+    }
   (* JSX text child *)
   | Acjsxtext
 
@@ -176,7 +180,7 @@ class process_request_searcher (from_trigger_character : bool) (cursor : Loc.t) 
       in
       Base.Option.iter
         ~f:(fun (attribute_name, loc, component_t) ->
-          this#find loc (Acjsx (attribute_name, used_attr_names, component_t)))
+          this#find loc (Acjsx { attribute_name; used_attr_names; component_t }))
         found;
       super#jsx_opening_element elt
 
