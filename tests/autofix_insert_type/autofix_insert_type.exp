@@ -103,30 +103,6 @@ class A {
 function foo(x: (() => A)) {}
 foo(new A().m);
 No errors!
-class-poly-0.js 5 10
-// @flow
-
-class D<T> {}
-class C<T> extends D<T> {
-  m(x: T): T {
-    //$FlowFixMe[escaped-generic]
-    return x;
-  }
-}
-
-module.exports = C;
-No errors!
-comments-0.js 4 33
-// @flow
-
-// BEFORE FUNCTION
-export function test (x: number): string {
-  // ONE
-  const a = 4 + x; // END OF a = 4...
-  // TWO
-  return /* BETWEEEN */ `${a}` // END OF return ...
-} // END
-No errors!
 dictionary.js 12 12
 // @flow
 
@@ -382,24 +358,6 @@ replacement-dictionary.js 3 3 --strategy=generalize
 () => ({
   ab: null, 'a b': null, 'a"b': null, '1': null, '"': null, ' ': null, '_': null, '': null,
   get 'x'() {return null;}, set 'y'(z: string) {} } );
-No errors!
-replacement-function.js 7 47
-// @flow
-
-// Spaced out comments /* non-comments
-
-// BEFORE FUNCTION
-export //too many comments
-function /*Random*/ test /*weird*/ (x: number): string /*Comments*/ {
-// ONE
-/* Two */  const a = 4 + x;    // END OF a = 4...
-
-
-
-  // Three
-
-  return /* BETWEEEN */ `${a}` // END OF return ...
-} // END */
 No errors!
 replacement-object.js 2 16
 // @flow
