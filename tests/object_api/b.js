@@ -1,6 +1,6 @@
 /* @flow */
 
-var a = require('./a');
-var b = Object.assign({ bar() {}, ...{} }, a);
+const a = require('./a');
+const b: { a(): void, bar(): void } = Object.assign({ bar() {}, ...{} }, a);
 b.a(); // works here
 module.exports = b;
