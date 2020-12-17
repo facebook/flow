@@ -49,20 +49,5 @@ References:
            ^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- test.js:22:6
 
-Missing type annotation for `T`. `T` is a type parameter declared in function type [1] and was implicitly instantiated
-at call of `unimplementable` [2]. [missing-annot]
-
-   test.js:22:6
-   22|   x: unimplementable<_>(), // Error, requires concrete annot
-            ^^^^^^^^^^^^^^^^^^^^ [2]
-
-References:
-   test.js:7:33
-    7| declare function unimplementable<T>(): {x: T};
-                                       ^^^^^^^^^^^^^ [1]
-
-
-
-Found 4 errors
+Found 3 errors
