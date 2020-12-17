@@ -441,24 +441,6 @@ References:
           ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
-Error --------------------------------------------------------------------- error_positioning/error_positioning.js:39:13
-
-Cannot create `C` element because property `component` is missing in object type [1] but exists in props [2] in property
-`component`. [prop-missing]
-
-   error_positioning/error_positioning.js:39:13
-   39| const _a = <C component={View}></ C>;
-                   ^
-
-References:
-   error_positioning/View.js:4:54
-    4| type ViewNativeComponentType = Class<React.Component<{||}>>;
-                                                            ^^^^ [1]
-   error_positioning/C.js:16:7
-   16|       <Component {...this.props} />
-             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
-
-
 Error -------------------------------------------------------------------------------------------- function_lower.js:7:2
 
 Cannot cast `Component` to AbstractComponent because property `foo` is missing in props [1] but exists in `Props` [2].
@@ -746,24 +728,16 @@ References:
 
 Error -------------------------------------------------------------------------------------------- type_visitor.js:10:18
 
-Missing type annotation for `Config`. `Config` is a type parameter declared in function type [1] and was implicitly
-instantiated at call of `HOC` [2]. [missing-annot]
+Cannot build a typed interface for this module. You should annotate the exports of this module with types. Cannot
+determine the type of this call expression. Please provide an annotation, e.g., by adding a type cast around this
+expression. [signature-verification-failure]
 
-   type_visitor.js:10:18
    10| module.exports = HOC(A); // Error, missing annotation only for Config
-                        ^^^^^^ [2]
-
-References:
-   type_visitor.js:4:21
-                           v----------------------
-    4| declare function HOC<Config: {}, Instance>(
-    5|     x: React.AbstractComponent<Config, Instance>,
-    6| ): React.AbstractComponent<Config, Instance>;
-       -------------------------------------------^ [1]
+                        ^^^^^^
 
 
 
-Found 45 errors
+Found 44 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches

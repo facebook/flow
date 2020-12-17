@@ -4,7 +4,11 @@
  */
 
 import * as React from 'react';
-import {type Fragment, createFragmentContainer} from './Relay';
+import {
+  type Fragment,
+  createFragmentContainer,
+  type GetPropFragmentRef,
+} from './Relay';
 import ProfilePic from './ProfilePic';
 
 import type {Profile_user} from './Profile.graphql';
@@ -32,4 +36,6 @@ class Profile extends React.Component<Props> {
   }
 }
 
-export default createFragmentContainer(Profile);
+export default (createFragmentContainer(Profile): React.ComponentType<
+  $ObjMap<Props, GetPropFragmentRef>,
+>);

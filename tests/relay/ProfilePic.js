@@ -4,7 +4,7 @@
  */
 
 import * as React from 'react';
-import {createFragmentContainer} from './Relay';
+import {createFragmentContainer, type GetPropFragmentRef} from './Relay';
 
 import type {ProfilePic_image} from './ProfilePic.graphql';
 
@@ -19,4 +19,6 @@ class ProfilePic extends React.Component<Props> {
   }
 }
 
-export default createFragmentContainer(ProfilePic);
+export default (createFragmentContainer(ProfilePic): React.ComponentType<
+  $ObjMap<Props, GetPropFragmentRef>,
+>);
