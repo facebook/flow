@@ -1,37 +1,3 @@
-Error ------------------------------------------------------------------------------------------------- API.react.js:4:5
-
-Cannot call `app.setProps` because property `setProps` is missing in `React.Element` [1]. [prop-missing]
-
-   API.react.js:4:5
-    4| app.setProps({y:42}); // error, y:number but foo expects string in App.react
-           ^^^^^^^^
-
-References:
-   JSX.js:8:3
-         v-------------------------------------------------------------------
-    8|   <App y={42}> // error, y: number but foo expects string in App.react
-    9|     Some text.
-   10|   </App>;
-         -----^ [1]
-
-
-Error ------------------------------------------------------------------------------------------------- API.react.js:5:5
-
-Cannot call `app.setState` because property `setState` is missing in `React.Element` [1]. [prop-missing]
-
-   API.react.js:5:5
-    5| app.setState({z:42}); // error, z:number but foo expects string in App.react
-           ^^^^^^^^
-
-References:
-   JSX.js:8:3
-         v-------------------------------------------------------------------
-    8|   <App y={42}> // error, y: number but foo expects string in App.react
-    9|     Some text.
-   10|   </App>;
-         -----^ [1]
-
-
 Error ----------------------------------------------------------------------------------------------- App.react.js:36:14
 
 Cannot call `foo` with `z` bound to `p` because number [1] is incompatible with string [2]. [incompatible-call]
@@ -327,4 +293,4 @@ References:
 
 
 
-Found 18 errors
+Found 16 errors

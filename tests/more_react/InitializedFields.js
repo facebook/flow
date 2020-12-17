@@ -10,5 +10,3 @@ var React = require('react');
 var App = React.createClass({
   metrics: [1,2,3],
 });
-
-module.exports = App;
