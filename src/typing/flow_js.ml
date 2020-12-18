@@ -12542,31 +12542,39 @@ struct
       | Some d -> replace_desc_new_reason d reason
       | None -> reason
     in
+    let mk_cached_tvar_where reason t_open (r, id) f =
+      let repos_cache = Context.repos_cache cx in
+      match Repos_cache.find id reason !repos_cache with
+      | Some t -> t
+      | None ->
+        let mk_tvar_where =
+          if is_derivable_reason r then
+            Tvar.mk_derivable_where
+          else
+            Tvar.mk_where
+        in
+        mk_tvar_where cx reason (fun tvar ->
+            repos_cache := Repos_cache.add reason t_open tvar !repos_cache;
+            f tvar)
+    in
     let rec recurse seen = function
-      | OpenT (r, id) as t ->
+      | OpenT (r, id) as t_open ->
         let reason = mod_reason r in
         let use_desc = Base.Option.is_some desc in
         let constraints = Context.find_graph cx id in
         begin
           match constraints with
           (* TODO: In the FullyResolved case, repositioning will cause us to "lose"
-             the fully resolved status. We should be able to preserve it. *)
+           * the fully resolved status. We should be able to preserve it. *)
           | Resolved (use_op, t)
           | FullyResolved (use_op, t) ->
             (* A tvar may be resolved to a type that has special repositioning logic,
-               like UnionT. We want to recurse to pick up that logic, but must be
-               careful as the union may refer back to the tvar itself, causing a loop.
-               To break the loop, we pass down a map of "already seen" tvars. *)
+             * like UnionT. We want to recurse to pick up that logic, but must be
+             * careful as the union may refer back to the tvar itself, causing a loop.
+             * To break the loop, we pass down a map of "already seen" tvars. *)
             (match IMap.find_opt id seen with
             | Some t -> t
             | None ->
-              (* Create a fresh tvar which can be passed in `seen` *)
-              let mk_tvar_where =
-                if is_derivable_reason r then
-                  Tvar.mk_derivable_where
-                else
-                  Tvar.mk_where
-              in
               (* The resulting tvar should be fully resolved if this one is *)
               let fully_resolved =
                 match constraints with
@@ -12574,12 +12582,12 @@ struct
                 | FullyResolved _ -> true
                 | Unresolved _ -> assert_false "handled below"
               in
-              mk_tvar_where cx reason (fun tvar ->
+              mk_cached_tvar_where reason t_open (r, id) (fun tvar ->
                   (* All `t` in `Resolved (_, t)` are concrete. Because `t` is a concrete
-                     type, `t'` is also necessarily concrete (i.e., reposition preserves
-                     open -> open, concrete -> concrete). The unification below thus
-                     results in resolving `tvar` to `t'`, so we end up with a resolved
-                     tvar whenever we started with one. *)
+                   * type, `t'` is also necessarily concrete (i.e., reposition preserves
+                   * open -> open, concrete -> concrete). The unification below thus
+                   * results in resolving `tvar` to `t'`, so we end up with a resolved
+                   * tvar whenever we started with one. *)
                   let t' = recurse (IMap.add id tvar seen) t in
                   (* resolve_id requires a trace param *)
                   let trace =
@@ -12592,21 +12600,8 @@ struct
                   let (_, id) = open_tvar tvar in
                   resolve_id cx trace ~use_op ~fully_resolved id t'))
           | Unresolved _ ->
-            (* Try to re-use an already created repositioning tvar.
-             * See repos_cache.ml for details. *)
-            let repos_cache = Context.repos_cache cx in
-            (match Repos_cache.find id reason !repos_cache with
-            | Some t -> t
-            | None ->
-              let mk_tvar_where =
-                if is_derivable_reason r then
-                  Tvar.mk_derivable_where
-                else
-                  Tvar.mk_where
-              in
-              mk_tvar_where cx reason (fun tvar ->
-                  repos_cache := Repos_cache.add reason t tvar !repos_cache;
-                  flow_opt cx ?trace (t, ReposLowerT (reason, use_desc, UseT (unknown_use, tvar)))))
+            mk_cached_tvar_where reason t_open (r, id) (fun tvar ->
+                flow_opt cx ?trace (t_open, ReposLowerT (reason, use_desc, UseT (unknown_use, tvar))))
         end
       | EvalT (root, defer_use_t, id) as t ->
         (* Modifying the reason of `EvalT`, as we do for other types, is not
