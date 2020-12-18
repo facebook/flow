@@ -388,7 +388,7 @@ let add_require_tvars =
 
 (* build module graph *)
 (* Lint suppressions are handled iff lint_severities is Some. *)
-let infer_ast ~lint_severities cx filename comments aloc_ast =
+let infer_ast ~lint_severities ~file_sig cx filename comments aloc_ast =
   assert (Context.is_checked cx);
 
   let ( prog_aloc,
@@ -399,6 +399,8 @@ let infer_ast ~lint_severities cx filename comments aloc_ast =
         } ) =
     aloc_ast
   in
+  add_require_tvars cx file_sig;
+  Context.set_local_env cx file_sig.File_sig.With_ALoc.exported_locals;
 
   let module_ref = Context.module_ref cx in
   begin

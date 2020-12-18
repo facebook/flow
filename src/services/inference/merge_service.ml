@@ -69,11 +69,6 @@ type merge_context_result =
 
    (c) impls: edges between files within the component
 
-   Note for Checking phase of Types-First: All components here are of size 1. The
-   only candidate for the impls set would be a recursive import of the file itself.
-   Given that we processes imports before doing inference on the file, we simplify
-   this case by using the sig cx that we have already computed during merge.
-
    (d) dep_impls: edges from files in the component to cxs of direct
    dependencies, when implementations are found.
 
@@ -87,12 +82,7 @@ type merge_context_result =
    (g) decls: edges between files in the component and libraries, classified
    by requires (when implementations of such requires are not found).
 *)
-let reqs_of_component ~arch ~phase ~reader component required =
-  let types_first_checking =
-    match (arch, phase) with
-    | (Options.TypesFirst _, Context.Checking) -> true
-    | _ -> false
-  in
+let reqs_of_component ~reader component required =
   let (dep_cxs, reqs) =
     List.fold_left
       (fun (dep_cxs, reqs) req ->
@@ -106,7 +96,7 @@ let reqs_of_component ~arch ~phase ~reader component required =
             if info.checked && info.parsed then
               (* checked implementation exists *)
               let m = Files.module_ref dep in
-              if (not types_first_checking) && Nel.mem ~equal:File_key.equal dep component then
+              if Nel.mem ~equal:File_key.equal dep component then
                 (* impl is part of component *)
                 (dep_cxs, Reqs.add_impl m file locs reqs)
               else
@@ -145,8 +135,7 @@ let merge_context_generic ~options ~reader ~get_ast_unsafe ~get_file_sig_unsafe 
       ([], FilenameMap.empty)
       component
   in
-  let arch = Options.arch options in
-  let (master_cx, dep_cxs, file_reqs) = reqs_of_component ~arch ~phase ~reader component required in
+  let (master_cx, dep_cxs, file_reqs) = reqs_of_component ~reader component required in
   let metadata = Context.metadata_of_options options in
   let lint_severities = Options.lint_severities options in
   let strict_mode = Options.strict_mode options in
@@ -417,7 +406,7 @@ let merge_contents_context ~reader options file ast info file_sig =
   let file_sigs = FilenameMap.singleton file file_sig in
   let component = Nel.one file in
   let (master_cx, dep_cxs, file_reqs) =
-    try reqs_of_component ~arch ~phase ~reader component required with
+    try reqs_of_component ~reader component required with
     | Key_not_found _ -> failwith "not all dependencies are ready yet, aborting..."
     | e -> raise e
   in

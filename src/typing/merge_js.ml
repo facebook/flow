@@ -563,9 +563,9 @@ let merge_component ~opts ~getters ~file_sigs component reqs dep_cxs master_cx =
         let (comments, ast) = get_ast_unsafe filename in
         let lint_severities = get_lint_severities metadata strict_mode lint_severities in
         let file_sig = FilenameMap.find filename file_sigs in
-        Type_inference_js.add_require_tvars cx file_sig;
-        Context.set_local_env cx file_sig.File_sig.With_ALoc.exported_locals;
-        let tast = Type_inference_js.infer_ast cx filename comments ast ~lint_severities in
+        let tast =
+          Type_inference_js.infer_ast cx filename comments ast ~lint_severities ~file_sig
+        in
         ((cx, ast, tast) :: results, FilenameMap.add filename cx impl_cxs))
       ([], FilenameMap.empty)
       component
@@ -582,54 +582,6 @@ let merge_component ~opts ~getters ~file_sigs component reqs dep_cxs master_cx =
   match results with
   | [] -> failwith "there is at least one cx"
   | x :: xs -> (x, xs)
-
-(* This function is similar to merge_component in that it merges a component with
-   its requires. The difference is that, here, requires are merged _before_ running
-   inference on the component. This will be useful in making imported types available
-   for local inference of the input component. What makes this change possible is
-   that the input component is of size 1 and all imports have already been resolved
-   and optimized.
-*)
-let check_component ~opts ~getters ~file_sigs singleton_component reqs dep_cxs master_cx =
-  let (Merge_options { arch; phase; metadata; lint_severities; strict_mode }) = opts in
-  let { get_ast_unsafe; get_aloc_table_unsafe; get_docblock_unsafe } = getters in
-
-  let (filename, tl) = singleton_component in
-  assert (List.length tl = 0);
-
-  let aloc_tables = get_aloc_tables ~get_aloc_table_unsafe singleton_component in
-  let sig_cx = Context.make_sig () in
-  let ccx = Context.make_ccx sig_cx aloc_tables in
-
-  let info = get_docblock_unsafe filename in
-  let metadata = Context.docblock_overrides info metadata in
-  let module_ref = Files.module_ref filename in
-  let rev_table = get_aloc_table_rev filename aloc_tables in
-  let cx = Context.make ccx metadata filename rev_table module_ref phase in
-  let (comments, ast) = get_ast_unsafe filename in
-  let lint_severities = get_lint_severities metadata strict_mode lint_severities in
-  let file_sig = FilenameMap.find filename file_sigs in
-
-  (* Builtins *)
-  merge_builtins cx sig_cx master_cx;
-
-  (* Imports *)
-  Type_inference_js.add_require_tvars cx file_sig;
-  Context.set_local_env cx file_sig.File_sig.With_ALoc.exported_locals;
-  dep_cxs |> Base.List.iter ~f:(Context.merge_into sig_cx);
-  merge_imports cx sig_cx reqs (FilenameMap.singleton filename cx);
-
-  (* AST inference  *)
-  let tast = Type_inference_js.infer_ast cx filename comments ast ~lint_severities in
-
-  (* Post-inference checks *)
-  post_merge_checks cx metadata arch file_sigs [(cx, ast, tast)];
-  Nel.one (cx, ast, tast)
-
-let merge_component ~opts:(Merge_options { arch; phase; _ } as opts) =
-  match (arch, phase) with
-  | (Options.TypesFirst _, Context.Checking) -> check_component ~opts
-  | _ -> merge_component ~opts
 
 (****************** signature contexts *********************)
 

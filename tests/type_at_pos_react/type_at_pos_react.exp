@@ -178,7 +178,7 @@ react_component.js:3:9 = module "react" {
 react_component.js:3:7,3:11
 react_component.js:13:33 = class React$Component<Props, State = void>
 react_component.js:13:29,13:37
-react_component.js:18:17 = State
+react_component.js:18:17 = {|enabled: boolean|}
 react_component.js:18:14,18:18
 react_component.js:31:7 = {
   "expanded_type":{
