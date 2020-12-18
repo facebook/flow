@@ -463,13 +463,18 @@ let detect_errors_from_ast cx ast =
   let visitor = new import_export_visitor ~cx ~scope_info ~declarations in
   ignore (visitor#program ast)
 
-let detect_errors cx metadata results =
+let detect_errors ~metadata ~phase cx results =
   if metadata.Context.strict_es6_import_export then
-    let excludes = Base.List.map ~f:Str.regexp metadata.Context.strict_es6_import_export_excludes in
-    Base.List.iter
-      ~f:(fun (ctx, ast, _) ->
-        let file_key = Context.file ctx in
-        let file_str = File_key.to_string file_key |> Sys_utils.normalize_filename_dir_sep in
-        let excluded = Base.List.exists ~f:(fun r -> Str.string_match r file_str 0) excludes in
-        if not excluded then detect_errors_from_ast cx ast)
-      results
+    match phase with
+    | Context.Checking ->
+      let excludes =
+        Base.List.map ~f:Str.regexp metadata.Context.strict_es6_import_export_excludes
+      in
+      Base.List.iter
+        ~f:(fun (ctx, ast, _) ->
+          let file_key = Context.file ctx in
+          let file_str = File_key.to_string file_key |> Sys_utils.normalize_filename_dir_sep in
+          let excluded = Base.List.exists ~f:(fun r -> Str.string_match r file_str 0) excludes in
+          if not excluded then detect_errors_from_ast cx ast)
+        results
+    | _ -> ()

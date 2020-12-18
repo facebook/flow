@@ -7,21 +7,6 @@
 
 type get_ast_return = Loc.t Flow_ast.Comment.t list * (ALoc.t, ALoc.t) Flow_ast.Program.t
 
-type merge_options =
-  | Merge_options of {
-      arch: Options.arch;
-      phase: Context.phase;
-      metadata: Context.metadata;
-      lint_severities: Severity.severity LintSettings.t;
-      strict_mode: StrictModeSettings.t;
-    }
-
-type merge_getters = {
-  get_ast_unsafe: File_key.t -> get_ast_return;
-  get_aloc_table_unsafe: File_key.t -> ALoc.table;
-  get_docblock_unsafe: File_key.t -> Docblock.t;
-}
-
 module Reqs : sig
   type t
 
@@ -39,9 +24,15 @@ module Reqs : sig
 end
 
 val merge_component :
-  opts:merge_options ->
-  getters:merge_getters ->
+  arch:Options.arch ->
+  metadata:Context.metadata ->
+  lint_severities:Severity.severity LintSettings.t ->
+  strict_mode:StrictModeSettings.t ->
   file_sigs:File_sig.With_ALoc.t Utils_js.FilenameMap.t ->
+  get_ast_unsafe:(File_key.t -> get_ast_return) ->
+  get_aloc_table_unsafe:(File_key.t -> ALoc.table) ->
+  get_docblock_unsafe:(File_key.t -> Docblock.t) ->
+  phase:Context.phase ->
   (* component *)
   File_key.t Nel.t ->
   (* requires *)

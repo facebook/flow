@@ -143,18 +143,21 @@ let merge_context_generic ~options ~reader ~get_ast_unsafe ~get_file_sig_unsafe 
     Parsing_heaps.Reader_dispatcher.get_sig_ast_aloc_table_unsafe ~reader
   in
   assert (phase <> Context.Merging || Options.arch options <> Options.Classic);
-
-  let arch = Options.arch options in
-  let opts = Merge_js.Merge_options { arch; phase; metadata; lint_severities; strict_mode } in
-  let getters =
-    {
-      Merge_js.get_ast_unsafe = get_ast_unsafe ~reader;
-      get_aloc_table_unsafe;
-      get_docblock_unsafe = Parsing_heaps.Reader_dispatcher.get_docblock_unsafe ~reader;
-    }
-  in
   let (((full_cx, _, _), other_cxs) as cx_nel) =
-    Merge_js.merge_component ~opts ~getters ~file_sigs component file_reqs dep_cxs master_cx
+    Merge_js.merge_component
+      ~arch:(Options.arch options)
+      ~metadata
+      ~lint_severities
+      ~strict_mode
+      ~file_sigs
+      ~phase
+      ~get_ast_unsafe:(get_ast_unsafe ~reader)
+      ~get_aloc_table_unsafe
+      ~get_docblock_unsafe:(Parsing_heaps.Reader_dispatcher.get_docblock_unsafe ~reader)
+      component
+      file_reqs
+      dep_cxs
+      master_cx
   in
   match (Options.arch options, phase) with
   | (_, Context.Normalizing) -> failwith "unexpected phase: Normalizing"
@@ -381,8 +384,6 @@ let merge_context ~options ~reader component =
    resolved. This is used by commands that make up a context on the fly. *)
 let merge_contents_context ~reader options file ast info file_sig =
   let (_, { Flow_ast.Program.all_comments; _ }) = ast in
-  let arch = Options.arch options in
-  let phase = Context.Checking in
   let aloc_ast = Ast_loc_utils.loc_to_aloc_mapper#program ast in
   let reader = Abstract_state_reader.State_reader reader in
   let file_sig = File_sig.abstractify_locs file_sig in
@@ -416,16 +417,21 @@ let merge_contents_context ~reader options file ast info file_sig =
   let get_aloc_table_unsafe =
     Parsing_heaps.Reader_dispatcher.get_sig_ast_aloc_table_unsafe ~reader
   in
-  let opts = Merge_js.Merge_options { arch; phase; metadata; lint_severities; strict_mode } in
-  let getters =
-    {
-      Merge_js.get_ast_unsafe = (fun _ -> (all_comments, aloc_ast));
-      get_aloc_table_unsafe;
-      get_docblock_unsafe = (fun _ -> info);
-    }
-  in
   let ((cx, _, tast), _) =
-    Merge_js.merge_component ~opts ~getters ~file_sigs component file_reqs dep_cxs master_cx
+    Merge_js.merge_component
+      ~arch:(Options.arch options)
+      ~metadata
+      ~lint_severities
+      ~strict_mode
+      ~file_sigs
+      ~get_ast_unsafe:(fun _ -> (all_comments, aloc_ast))
+      ~get_aloc_table_unsafe
+      ~get_docblock_unsafe:(fun _ -> info)
+      ~phase:Context.Checking
+      component
+      file_reqs
+      dep_cxs
+      master_cx
   in
   (cx, tast)
 
