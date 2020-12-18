@@ -443,7 +443,8 @@ let autocomplete_id
    object type whose members we want to enumerate: instead, we are given a
    component class and we want to enumerate the members of its declared props
    type, so we need to extract that and then route to autocomplete_member. *)
-let autocomplete_jsx ~reader cx file_sig typed_ast cls ac_name ~used_attr_names ac_loc ~tparams =
+let autocomplete_jsx
+    ~reader cx file_sig typed_ast cls ac_name ~used_attr_names ~has_value ac_loc ~tparams =
   let open Flow_js in
   let reason = Reason.mk_reason (Reason.RCustom ac_name) ac_loc in
   let props_object =
@@ -475,8 +476,14 @@ let autocomplete_jsx ~reader cx file_sig typed_ast cls ac_name ~used_attr_names 
     let items =
       mems
       |> Base.List.map ~f:(fun (name, documentation, Ty_members.{ ty; _ }) ->
+             let insert_text =
+               if has_value then
+                 name
+               else
+                 name ^ "="
+             in
              autocomplete_create_result
-               ~insert_text:(name ^ "=")
+               ~insert_text
                ?documentation
                ~exact_by_default
                (name, ac_loc)
@@ -745,7 +752,7 @@ let autocomplete_get_results ~options ~reader ~cx ~file_sig ~ast ~typed_ast trig
         in_optional_chain
         ac_loc
         ~tparams )
-  | Some (tparams, ac_loc, Acjsx { attribute_name; used_attr_names; component_t }) ->
+  | Some (tparams, ac_loc, Acjsx { attribute_name; used_attr_names; component_t; has_value }) ->
     ( "Acjsx",
       autocomplete_jsx
         ~reader
@@ -755,6 +762,7 @@ let autocomplete_get_results ~options ~reader ~cx ~file_sig ~ast ~typed_ast trig
         component_t
         attribute_name
         ~used_attr_names
+        ~has_value
         ac_loc
         ~tparams )
   | Some (tparams, ac_loc, Actype { token }) ->

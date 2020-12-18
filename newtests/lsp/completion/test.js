@@ -1281,5 +1281,66 @@ export default (suite(
         ['textDocument/publishDiagnostics', ...lspIgnoreStatusAndCancellation],
       ),
     ]),
+    test('textDocument/completion invoked in jsx attribute with value', [
+      addFile('jsx-attr-with-value.js'),
+      lspStartAndConnect(),
+      lspRequestAndWaitUntilResponse('textDocument/completion', {
+        textDocument: {uri: '<PLACEHOLDER_PROJECT_URL>/jsx-attr-with-value.js'},
+        position: {line: 9, character: 4},
+        context: {triggerKind: 1},
+      }).verifyAllLSPMessagesInStep(
+        [
+          [
+            'textDocument/completion',
+            JSON.stringify({
+              isIncomplete: false,
+              items: [
+                {
+                  label: 'aaaa',
+                  kind: 6,
+                  detail: 'number',
+                  sortText: '00000000000000000000',
+                  insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {
+                        line: 9,
+                        character: 3,
+                      },
+                      end: {
+                        line: 9,
+                        character: 4,
+                      },
+                    },
+                    newText: 'aaaa',
+                  },
+                },
+                {
+                  label: 'aaab',
+                  kind: 6,
+                  detail: 'number',
+                  sortText: '00000000000000000000',
+                  insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {
+                        line: 9,
+                        character: 3,
+                      },
+                      end: {
+                        line: 9,
+                        character: 4,
+                      },
+                    },
+                    newText: 'aaab',
+                  },
+                },
+              ],
+            }),
+          ],
+        ],
+        ['textDocument/publishDiagnostics', ...lspIgnoreStatusAndCancellation],
+      ),
+    ]),
   ],
 ): Suite);

@@ -38,6 +38,7 @@ type autocomplete_type =
       attribute_name: string;
       used_attr_names: SSet.t;
       component_t: Type.t;
+      has_value: bool;
     }
   (* JSX text child *)
   | Acjsxtext
@@ -164,13 +165,14 @@ class process_request_searcher (from_trigger_character : bool) (cursor : Loc.t) 
                     Attribute.name =
                       Attribute.Identifier
                         ((loc, _), { Identifier.name = attribute_name; comments = _ });
-                    _;
+                    value;
                   } ) ->
               let found' =
                 match found with
                 | Some _ -> found
                 | None when this#covers_target loc ->
-                  Some (attribute_name, loc, type_of_jsx_name component_name)
+                  let has_value = Base.Option.is_some value in
+                  Some (attribute_name, loc, type_of_jsx_name component_name, has_value)
                 | None -> None
               in
               (SSet.add attribute_name used_attr_names, found')
@@ -179,8 +181,8 @@ class process_request_searcher (from_trigger_character : bool) (cursor : Loc.t) 
           attributes
       in
       Base.Option.iter
-        ~f:(fun (attribute_name, loc, component_t) ->
-          this#find loc (Acjsx { attribute_name; used_attr_names; component_t }))
+        ~f:(fun (attribute_name, loc, component_t, has_value) ->
+          this#find loc (Acjsx { attribute_name; used_attr_names; component_t; has_value }))
         found;
       super#jsx_opening_element elt
 
