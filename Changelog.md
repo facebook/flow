@@ -1,3 +1,11 @@
+### 0.141.0
+
+* Improved inference of chained generic method calls, such as `Array` methods. For example, given `[1, 2].map(a => a).forEach(b => b)`, Flow now infers that `b` is a `number` rather than `any | number`.
+* Fixed non-termination bugs involving recursive types
+* Fixed a non-termination bug involving implicit instantiation with `_`
+* Fixed autocomplete so it no longer inserts a `=` in JSX attributes that already have one
+* Hovering over a use of an opaque type now includes the type's documentation
+
 ### 0.140.0
 
 Likely to cause new Flow errors:
