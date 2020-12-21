@@ -42,7 +42,8 @@ let type_of_jsx_name =
   | MemberExpression (_, MemberExpression.{ property = ((_, t), _); _ }) ->
     t
 
-class searcher (target_loc : Loc.t) (is_legit_require : ALoc.t -> bool) =
+class searcher
+  ~(is_legit_require : ALoc.t -> bool) ~(module_ref_prefix : string option) (target_loc : Loc.t) =
   object (this)
     inherit
       [ALoc.t, ALoc.t * Type.t, ALoc.t, ALoc.t * Type.t] Flow_polymorphic_ast_mapper.mapper as super
@@ -210,26 +211,30 @@ class searcher (target_loc : Loc.t) (is_legit_require : ALoc.t -> bool) =
       super#t_pattern_identifier ?kind ((loc, t), name)
 
     method! expression ((loc, t), expr) =
-      match expr with
-      | Flow_ast.Expression.(
-          Call
-            {
-              Call.callee = (_, Identifier (_, { Flow_ast.Identifier.name = "require"; _ }));
-              arguments =
-                ( _,
-                  {
-                    Flow_ast.Expression.ArgList.arguments =
-                      [
-                        Expression
-                          ( (source_loc, _),
-                            Literal Flow_ast.Literal.{ value = String module_name; _ } );
-                      ];
-                    comments = _;
-                  } );
-              _;
-            })
+      match (expr, module_ref_prefix) with
+      | ( Flow_ast.Expression.(
+            Call
+              {
+                Call.callee = (_, Identifier (_, { Flow_ast.Identifier.name = "require"; _ }));
+                arguments =
+                  ( _,
+                    {
+                      Flow_ast.Expression.ArgList.arguments =
+                        [
+                          Expression
+                            ( (source_loc, _),
+                              Literal Flow_ast.Literal.{ value = String module_name; _ } );
+                        ];
+                      comments = _;
+                    } );
+                _;
+              }),
+          _ )
         when this#covers_target loc && is_legit_require source_loc ->
         this#request (Get_def_request.Require ((source_loc, module_name), loc))
+      | (Flow_ast.Expression.Literal Flow_ast.Literal.{ value = String str; _ }, Some prefix)
+        when this#covers_target loc && Base.String.is_prefix str ~prefix ->
+        this#request (Get_def_request.Require ((loc, str), loc))
       | _ -> super#expression ((loc, t), expr)
 
     (* object keys would normally hit this#t_identifier; this circumvents that. *)
@@ -256,8 +261,8 @@ type result =
   | Request of Get_def_request.t
   | LocNotFound
 
-let process_location ~typed_ast ~is_legit_require loc =
-  let searcher = new searcher loc is_legit_require in
+let process_location ~typed_ast ~is_legit_require ~module_ref_prefix loc =
+  let searcher = new searcher ~is_legit_require ~module_ref_prefix loc in
   try
     ignore (searcher#program typed_ast);
     LocNotFound

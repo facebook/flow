@@ -154,9 +154,10 @@ let get_def ~options ~reader ~cx ~file_sig ~typed_ast requested_loc =
         Nel.exists (fun aloc -> loc_of_aloc ~reader aloc = loc_of_aloc ~reader source_aloc) alocs)
       require_aloc_map
   in
+  let module_ref_prefix = Context.haste_module_ref_prefix cx in
   let rec loop req_loc =
     let open Get_def_process_location in
-    match process_location ~is_legit_require ~typed_ast req_loc with
+    match process_location ~is_legit_require ~typed_ast ~module_ref_prefix req_loc with
     | OwnDef aloc -> Def (loc_of_aloc ~reader aloc)
     | Request request ->
       (match process_request ~options ~reader ~cx ~is_legit_require ~typed_ast request with
