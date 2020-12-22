@@ -1,3 +1,76 @@
+Error ------------------------------------------------------------------------------------------ class-predicate.js:23:5
+
+Cannot extend `Hello` [1] with `D2` because predicate encoded in return [2] is incompatible with predicate encoded in
+return [3] in property `test`. [incompatible-extend]
+
+   class-predicate.js:23:5
+   23|     return typeof x === "number";
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+References:
+   class-predicate.js:21:18
+   21| class D2 extends Hello {
+                        ^^^^^ [1]
+   class-predicate.js:5:5
+    5|     return typeof x === "string";
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
+
+
+Error ------------------------------------------------------------------------------------------ class-predicate.js:28:3
+
+Cannot extend `Hello` [1] with `D3` because function [2] is incompatible with function [3] in property `test`.
+[incompatible-extend]
+
+   class-predicate.js:28:3
+         v------------------------------------------------------
+   28|   test(x: mixed): boolean { // error non-predicate method
+   29|     return typeof x === "string";
+   30|   }
+         ^ [2]
+
+References:
+   class-predicate.js:27:18
+   27| class D3 extends Hello {
+                        ^^^^^ [1]
+   class-predicate.js:4:3
+         v--------------------------------
+    4|   test(x: mixed): boolean %checks {
+    5|     return typeof x === "string";
+    6|   }
+         ^ [3]
+
+
+Error ------------------------------------------------------------------------------------------------ issue-7920.js:9:4
+
+Cannot cast `null` to `typeof test` because null [1] is incompatible with string [2]. [incompatible-cast]
+
+   issue-7920.js:9:4
+   9|   (null: typeof test); // error
+         ^^^^ [1]
+
+References:
+   issue-7920.js:9:10
+   9|   (null: typeof test); // error
+               ^^^^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------ namespace-import.js:8:4
+
+Cannot cast `a` to number because null or undefined [1] is incompatible with number [2]. [incompatible-cast]
+
+   namespace-import.js:8:4
+   8|   (a: number); // error
+         ^
+
+References:
+   namespace-import.js:4:8
+   4| let a: ?number = 1;
+             ^^^^^^^ [1]
+   namespace-import.js:8:7
+   8|   (a: number); // error
+            ^^^^^^ [2]
+
+
 Error --------------------------------------------------------------------------------------- sanity-conditional.js:5:50
 
 Unexpected token `=`, expected the token `)`
@@ -104,7 +177,7 @@ References:
 
 
 
-Found 9 errors
+Found 13 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches

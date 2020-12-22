@@ -71,7 +71,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------- sanity-filter.js:13:24
 
-function [1]. Function is incompatible with abstract predicate function [2]. [function-predicate]
+Cannot call `my_filter` with `is_string_regular` bound to `cb` because function [1] is incompatible with abstract
+predicate function [2]. [incompatible-call]
 
    sanity-filter.js:13:24
    13| const d = my_filter(c, is_string_regular);
@@ -105,7 +106,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- sanity-refine.js:4:55
 
-refined type that uses predicate on parameter at position 2 [1]. This is incompatible with function with 1
+refined type that uses predicate on parameter at position 2 [1] This is incompatible with function with 1
 parameters [2]. [function-predicate]
 
    sanity-refine.js:4:55
@@ -137,8 +138,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------- sanity-refine.js:19:26
 
-predicate function with 2 arguments [1]. Predicate function is incompatible with predicate function with 3
-arguments [2]. [function-predicate]
+Cannot call `refine3` with `is_string_and_number` bound to `cb` because predicate function with 2 arguments [1]
+Predicate function is incompatible with predicate function with 3 arguments [2]. [incompatible-call]
 
    sanity-refine.js:19:26
    19| var e = refine3(c, d, e, is_string_and_number);
@@ -155,7 +156,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------- sanity-refine.js:28:19
 
-function [1]. Function is incompatible with abstract predicate function [2]. [function-predicate]
+Cannot call `refine` with `is_string_regular` bound to `cb` because function [1] is incompatible with abstract predicate
+function [2]. [incompatible-call]
 
    sanity-refine.js:28:19
    28| var e = refine(a, is_string_regular);   // ERROR: is_string_regular is not a

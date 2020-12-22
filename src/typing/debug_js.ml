@@ -1376,8 +1376,12 @@ let dump_error_message =
     | ETrustedAnnot loc -> spf "ETrustedAnnot (%s)" (string_of_aloc loc)
     | EPrivateAnnot loc -> spf "EPrivateAnnot (%s)" (string_of_aloc loc)
     | EUnexpectedTypeof loc -> spf "EUnexpectedTypeof (%s)" (string_of_aloc loc)
-    | EFunPredCustom ((reason1, reason2), msg) ->
-      spf "EFunPredCustom (%s, %s, %S)" (dump_reason cx reason1) (dump_reason cx reason2) msg
+    | EFunPredCustom ((reason1, reason2), msg, use_op) ->
+      spf
+        "EFunPredCustom (%s, %s, %S, %s)"
+        (dump_reason cx reason1)
+        (dump_reason cx reason2)
+        msg (string_of_use_op use_op)
     | EIncompatibleWithShape (lower, upper, use_op) ->
       spf
         "EIncompatibleWithShape (%s, %s, %s)"

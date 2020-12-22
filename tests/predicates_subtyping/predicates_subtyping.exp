@@ -36,8 +36,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- file.js:47:2
 
-predicate function with 1 arguments [1]. Predicate function is incompatible with predicate function with 2
-arguments [2]. [function-predicate]
+Cannot cast `b4` to `typeof is_number_def_2a` because predicate function with 1 arguments [1] Predicate function is
+incompatible with predicate function with 2 arguments [2]. [incompatible-cast]
 
    file.js:47:2
    47| (b4: typeof is_number_def_2a); // error: arrity mismatch

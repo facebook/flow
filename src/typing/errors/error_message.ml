@@ -196,7 +196,7 @@ and 'loc t' =
   | ETrustedAnnot of 'loc
   | EPrivateAnnot of 'loc
   | EUnexpectedTypeof of 'loc
-  | EFunPredCustom of ('loc virtual_reason * 'loc virtual_reason) * string
+  | EFunPredCustom of ('loc virtual_reason * 'loc virtual_reason) * string * 'loc virtual_use_op
   | EIncompatibleWithShape of 'loc virtual_reason * 'loc virtual_reason * 'loc virtual_use_op
   | EInternal of 'loc * internal_error
   | EUnsupportedSyntax of 'loc * 'loc unsupported_syntax
@@ -777,7 +777,7 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
   | ETrustedAnnot loc -> ETrustedAnnot (f loc)
   | EPrivateAnnot loc -> EPrivateAnnot (f loc)
   | EUnexpectedTypeof loc -> EUnexpectedTypeof (f loc)
-  | EFunPredCustom ((r1, r2), s) -> EFunPredCustom ((map_reason r1, map_reason r2), s)
+  | EFunPredCustom ((r1, r2), s, use_op) -> EFunPredCustom ((map_reason r1, map_reason r2), s, map_use_op use_op)
   | EInternal (loc, i) -> EInternal (f loc, i)
   | EUnsupportedSyntax (loc, u) -> EUnsupportedSyntax (f loc, map_unsupported_syntax u)
   | EUseArrayLiteral loc -> EUseArrayLiteral (f loc)
@@ -1084,7 +1084,7 @@ let util_use_op_of_msg nope util = function
   | ETrustedAnnot _
   | EPrivateAnnot _
   | EUnexpectedTypeof _
-  | EFunPredCustom (_, _)
+  | EFunPredCustom (_, _, _)
   | EInternal (_, _)
   | EUnsupportedSyntax (_, _)
   | EUseArrayLiteral _
@@ -1171,7 +1171,6 @@ let loc_of_msg : 'loc t' -> 'loc option = function
   | EValueUsedAsType { reason_use = primary }
   | EComparison (primary, _)
   | ENonStrictEqualityComparison (primary, _)
-  | EFunPredCustom ((primary, _), _)
   | EInvalidTypeArgs (_, primary)
   | ETooFewTypeArgs (primary, _, _)
   | ETooManyTypeArgs (primary, _, _) ->
@@ -1336,6 +1335,7 @@ let loc_of_msg : 'loc t' -> 'loc option = function
   | EInexactMayOverwriteIndexer _
   | EFunctionCallExtraArg _
   | ENotAReactComponent _
+  | EFunPredCustom (_, _, _)
   | EInvalidReactConfigType _
   | EInvalidReactPropType _
   | EInvalidReactCreateClass _
@@ -2144,8 +2144,13 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
     Normal { features = [text "Not a valid type to mark as "; code "$Private"; text "."] }
   | EUnexpectedTypeof _ ->
     Normal { features = [code "typeof"; text " can only be used to get the type of variables."] }
-  | EFunPredCustom ((a, b), msg) ->
-    Normal { features = [ref a; text ". "; text msg; text " "; ref b; text "."] }
+  | EFunPredCustom ((a, b), msg, use_op) ->
+    UseOp
+      {
+        loc = loc_of_reason a;
+        features = [ref a; text " "; text msg; text " "; ref b];
+        use_op;
+      }
   | EIncompatibleWithShape (lower, upper, use_op) ->
     UseOp
       {
@@ -3542,7 +3547,7 @@ let error_code_of_message err : error_code option =
   | EExportValueAsType (_, _) -> Some ExportValueAsType
   | EForInRHS _ -> Some InvalidInRhs
   | EFunctionCallExtraArg _ -> Some ExtraArg
-  | EFunPredCustom (_, _) -> Some FunctionPredicate
+  | EFunPredCustom (_, _, use_op) -> error_code_of_use_op use_op ~default:FunctionPredicate
   | EIdxArity _ -> Some InvalidIdx
   | EIdxUse1 _ -> Some InvalidIdx
   | EIdxUse2 _ -> Some InvalidIdx
