@@ -68,6 +68,15 @@ module type BASE = sig
     Type.t ->
     Type.t list ->
     Type.t
+
+  val resolve_id :
+    Context.t ->
+    Trace.t ->
+    use_op:Type.use_op ->
+    ?fully_resolved:bool ->
+    Constraint.ident ->
+    Type.t ->
+    unit
 end
 
 (* This is here instead of assert_ground.ml to avoid the duplication of the enforce strict
