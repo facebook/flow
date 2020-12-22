@@ -464,8 +464,8 @@ let infer_ast ~lint_severities cx filename comments aloc_ast =
 *)
 let with_libdef_builtins cx f =
   (* Store the original builtins and replace with a fresh tvar. *)
-  let orig_builtins = Flow_js.builtins cx in
-  Flow_js.mk_builtins cx;
+  let orig_builtins = Flow_js_utils.builtins cx in
+  Flow_js_utils.mk_builtins cx;
 
   (* This function call might replace the builtins we just installed. *)
   f ();

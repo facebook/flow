@@ -6,6 +6,7 @@
  *)
 
 open Constraint
+open Flow_js_utils
 open Reason
 open Utils_js
 open Type

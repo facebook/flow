@@ -200,7 +200,7 @@ let init_builtins filenames =
       Files.lib_module_ref
       Context.Checking
   in
-  Flow_js.mk_builtins master_cx;
+  Flow_js_utils.mk_builtins master_cx;
   let () =
     let metadata = stub_metadata ~root ~checked:true in
     load_lib_files
@@ -214,7 +214,7 @@ let init_builtins filenames =
   in
   let reason = Reason.builtin_reason (Reason.RCustom "module") in
   let builtin_module = Obj_type.mk_unsealed master_cx reason in
-  Flow_js.flow_t master_cx (builtin_module, Flow_js.builtins master_cx);
+  Flow_js.flow_t master_cx (builtin_module, Flow_js_utils.builtins master_cx);
   ignore (Merge_js.ContextOptimizer.sig_context master_cx [Files.lib_module_ref]);
   master_cx_ref := Some (root, sig_cx)
 

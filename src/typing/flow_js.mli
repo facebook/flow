@@ -77,10 +77,6 @@ val resolve_spread_list :
 
 val subst : Context.t -> ?use_op:Type.use_op -> ?force:bool -> Type.t SMap.t -> Type.t -> Type.t
 
-val check_with_generics : Context.t -> Type.typeparam list -> (Type.t SMap.t -> 'a) -> 'a
-
-val match_this_binding : Type.t SMap.t -> (Type.t -> bool) -> bool
-
 val check_polarity :
   Context.t -> ?trace:Trace.t -> Type.typeparam SMap.t -> Polarity.t -> Type.t -> unit
 
@@ -109,19 +105,11 @@ val mk_type_destructor :
 
 val mk_default : Context.t -> reason -> Type.t Default.t -> Type.t
 
-val is_munged_prop_name : Context.t -> string -> bool
-
-(* val graph: bounds IMap.t ref *)
-val lookup_module : Context.t -> string -> Type.t
-
 (* contexts *)
-val mk_builtins : Context.t -> unit
 
 val add_output : Context.t -> ?trace:Trace.t -> Error_message.t -> unit
 
 (* builtins *)
-
-val builtins : Context.t -> Type.t
 
 val get_builtin : Context.t -> ?trace:Trace.t -> string -> reason -> Type.t
 

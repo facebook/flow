@@ -164,12 +164,12 @@ let init ~options ~reader lib_files =
     let rev_table = lazy (ALoc.make_empty_reverse_table ()) in
     Context.make ccx metadata File_key.Builtins rev_table Files.lib_module_ref Context.Checking
   in
-  Flow_js.mk_builtins master_cx;
+  Flow_js_utils.mk_builtins master_cx;
 
   let%lwt result = load_lib_files ~ccx ~options ~reader lib_files in
   let reason = Reason.builtin_reason (Reason.RCustom "module") in
   let builtin_module = Obj_type.mk_unsealed master_cx reason in
-  Flow.flow_t master_cx (builtin_module, Flow.builtins master_cx);
+  Flow.flow_t master_cx (builtin_module, Flow_js_utils.builtins master_cx);
   Merge_js.ContextOptimizer.sig_context master_cx [Files.lib_module_ref] |> ignore;
 
   (* store master signature context to heap *)

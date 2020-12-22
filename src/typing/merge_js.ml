@@ -213,7 +213,7 @@ let force_annotations arch leader_cx cxs =
       ~f:(fun (cx, _, _) ->
         let should_munge_underscores = Context.should_munge_underscores cx in
         Context.module_ref cx
-        |> Flow_js.lookup_module leader_cx
+        |> Flow_js_utils.lookup_module leader_cx
         |> Flow_js.enforce_strict leader_cx ~should_munge_underscores)
       cxs
 
@@ -427,7 +427,7 @@ let get_aloc_table_rev filename aloc_tables =
        ALoc.make_empty_reverse_table ())
 
 let merge_builtins cx sig_cx master_cx =
-  Flow_js.mk_builtins cx;
+  Flow_js_utils.mk_builtins cx;
   Context.merge_into sig_cx master_cx;
   implicit_require cx master_cx cx
 

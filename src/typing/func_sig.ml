@@ -82,7 +82,7 @@ module Make (F : Func_params.S) = struct
 
   let check_with_generics cx f x =
     let { tparams; tparams_map; fparams; return_t; _ } = x in
-    Flow.check_with_generics cx (tparams |> TypeParams.to_list) (fun map ->
+    Flow_js_utils.check_with_generics cx (tparams |> TypeParams.to_list) (fun map ->
         f
           {
             x with

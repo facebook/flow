@@ -341,7 +341,7 @@ let merge_context_new_signatures ~options ~reader component =
 
   (* create builtins, merge master cx *)
   let master_cx = Context_heaps.Reader_dispatcher.find_sig ~reader File_key.Builtins in
-  Flow_js.mk_builtins cx;
+  Flow_js_utils.mk_builtins cx;
   Context.merge_into sig_cx master_cx;
   Flow_js.flow_t
     cx

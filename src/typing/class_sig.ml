@@ -342,7 +342,7 @@ module Make (F : Func_sig.S) = struct
         }
 
   let check_with_generics cx f x =
-    Flow.check_with_generics cx (Type.TypeParams.to_list x.tparams) (fun map ->
+    Flow_js_utils.check_with_generics cx (Type.TypeParams.to_list x.tparams) (fun map ->
         f
           {
             id = x.id;
@@ -872,7 +872,7 @@ module Make (F : Func_sig.S) = struct
   module This = struct
     let is_bound_to_empty x =
       Type.(
-        Flow.match_this_binding x.tparams_map (function
+        Flow_js_utils.match_this_binding x.tparams_map (function
             | DefT (_, _, EmptyT _) -> true
             | _ -> false))
 

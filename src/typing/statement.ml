@@ -1141,7 +1141,7 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t =
       let () =
         match (underlying_t, super_t) with
         | (Some l, Some u) ->
-          check_with_generics cx (TypeParams.to_list tparams) (fun map_ ->
+          Flow_js_utils.check_with_generics cx (TypeParams.to_list tparams) (fun map_ ->
               flow_t cx (subst cx map_ l, subst cx map_ u))
           |> ignore
         | _ -> ()

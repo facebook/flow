@@ -30,8 +30,6 @@ module type TRUST_CHECKING = sig
 end
 
 module type S = sig
-  val add_output : Context.t -> ?trace:Trace.t -> Error_message.t -> unit
-
   val eval_evalt :
     Context.t -> ?trace:Trace.t -> Type.t -> Type.defer_use_t -> Type.Eval.id -> Type.t
 
@@ -55,8 +53,6 @@ module type S = sig
 
   val flow_t : Context.t -> Type.t * Type.t -> unit
 
-  val check_with_generics : Context.t -> Type.typeparam list -> (Type.t SMap.t -> 'a) -> 'a
-
   val get_builtin : Context.t -> ?trace:Trace.t -> string -> reason -> Type.t
 
   val get_builtin_type : Context.t -> ?trace:Trace.t -> reason -> ?use_desc:bool -> string -> Type.t
@@ -74,14 +70,8 @@ module type S = sig
     Type.t list ->
     Type.t
 
-  val is_munged_prop_name : Context.t -> name -> bool
-
-  val is_munged_prop_name_with_munge : name -> should_munge_underscores:bool -> bool
-
   val lookup_builtin :
     Context.t -> ?trace:Trace.t -> string -> reason -> Type.lookup_kind -> Type.tvar -> unit
-
-  val match_this_binding : Type.t SMap.t -> (Type.t -> bool) -> bool
 
   val mk_instance : Context.t -> ?trace:Trace.t -> reason -> ?use_desc:bool -> Type.t -> Type.t
 
@@ -124,16 +114,12 @@ module type S = sig
 
   val set_builtin : Context.t -> ?trace:Trace.t -> string -> Type.t -> unit
 
-  val string_key : string -> reason -> Type.t
-
   val tvar_with_constraint : Context.t -> ?trace:Trace.t -> ?derivable:bool -> Type.use_t -> Type.t
 
   val unify : Context.t -> Type.t -> Type.t -> unit
 
   val unify_opt :
     Context.t -> ?trace:Trace.t -> use_op:Type.use_op -> ?unify_any:bool -> Type.t -> Type.t -> unit
-
-  val union_of_ts : reason -> Type.t list -> Type.t
 
   val widen_obj_type :
     Context.t -> ?trace:Trace.t -> use_op:Type.use_op -> Reason.reason -> Type.t -> Type.t

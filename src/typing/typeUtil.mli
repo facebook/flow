@@ -91,3 +91,5 @@ val type_t_of_annotated_or_inferred : Type.annotated_or_inferred -> Type.t
 
 val map_annotated_or_inferred :
   (Type.t -> Type.t) -> Type.annotated_or_inferred -> Type.annotated_or_inferred
+
+val union_of_ts : reason -> Type.t list -> Type.t
