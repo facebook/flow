@@ -8876,13 +8876,13 @@ struct
         (targs, [])
         xs
     in
-    (* Intentionally omit `cache`, which is handled above *)
     instantiate_poly_with_targs
       cx
       trace
       ~use_op
       ~reason_op
       ~reason_tapp
+      ?cache:None
       ?errs_ref
       (tparams_loc, xs, t)
       (List.rev ts)
