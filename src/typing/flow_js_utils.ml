@@ -580,6 +580,18 @@ let iter_union ~f cx trace rep u =
   |> Base.List.iteri ~f:(fun i ->
          mod_reason_of_t (union_reason i) %> mk_tuple_swapped u %> f cx trace)
 
+let iter_resolve_union ~f cx trace reason rep upper =
+  (* We can't guarantee that tvars or typeapps get resolved, even though we'd like
+   * to believe they will. Instead, we separate out all the resolvable types from
+   * the union, resolve them (f), and then rejoin them with the other types once
+   * they have been resolved. *)
+  let (evals, resolved) = UnionRep.members rep |> List.partition is_union_resolvable in
+  match evals with
+  | first :: unresolved ->
+    f cx trace (first, ResolveUnionT { reason; resolved; unresolved; upper; id = Reason.mk_id () })
+  (* No evals, but we can't get here *)
+  | [] -> ()
+
 (** Generics *)
 
 (** Harness for testing parameterized types. Given a test function and a list

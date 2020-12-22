@@ -2384,20 +2384,7 @@ struct
           end
         | (UnionT (reason, rep), upper) when UnionRep.members rep |> List.exists is_union_resolvable
           ->
-          (* We can't guarantee that  tvars or typeapps get resolved, even though we'd like to believe they will. Instead,
-             we separate out all the resolvable types from the union, resolve them, and then rejoin them with the other types once
-             they have been resolved. *)
-          let (evals, resolved) = UnionRep.members rep |> List.partition is_union_resolvable in
-          begin
-            match evals with
-            | first :: unresolved ->
-              rec_flow
-                cx
-                trace
-                (first, ResolveUnionT { reason; resolved; unresolved; upper; id = Reason.mk_id () })
-            (* No evals, but we can't get here *)
-            | [] -> ()
-          end
+          iter_resolve_union ~f:rec_flow cx trace reason rep upper
         (* Don't split the union type into its constituent members. Instead,
            reposition the entire union type. *)
         | (UnionT _, ReposLowerT (reason, use_desc, u)) ->
