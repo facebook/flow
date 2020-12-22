@@ -178,10 +178,6 @@ let function_like = function
     true
   | _ -> false
 
-let function_use = function
-  | UseT (_, DefT (_, _, FunT _)) -> true
-  | _ -> false
-
 let object_like = function
   | DefT (_, _, (ObjT _ | InstanceT _))
   | ObjProtoT _
@@ -189,10 +185,6 @@ let object_like = function
   | AnyT _ ->
     true
   | t -> function_like t
-
-let object_use = function
-  | UseT (_, DefT (_, _, ObjT _)) -> true
-  | _ -> false
 
 let object_like_op = function
   | SetPropT _
