@@ -1330,6 +1330,12 @@ let dump_error_message =
         (dump_reason cx reason1)
         (dump_reason cx reason2)
         (string_of_use_op use_op)
+    | EFunctionIncompatibleWithIndexer ((reason1, reason2), use_op) ->
+      spf
+        "EFunctionIncompatibleWithIndexer((%s, %s), %s)"
+        (dump_reason cx reason1)
+        (dump_reason cx reason2)
+        (string_of_use_op use_op)
     | EUnsupportedExact (reason1, reason2) ->
       spf "EUnsupportedExact (%s, %s)" (dump_reason cx reason1) (dump_reason cx reason2)
     | EIdxArity reason -> spf "EIdxArity (%s)" (dump_reason cx reason)

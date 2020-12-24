@@ -166,6 +166,8 @@ and 'loc t' =
     }
   | EIncompatibleWithExact of
       ('loc virtual_reason * 'loc virtual_reason) * 'loc virtual_use_op * exactness_error_kind
+  | EFunctionIncompatibleWithIndexer of
+      ('loc virtual_reason * 'loc virtual_reason) * 'loc virtual_use_op
   | EUnsupportedExact of ('loc virtual_reason * 'loc virtual_reason)
   | EIdxArity of 'loc virtual_reason
   | EIdxUse1 of 'loc virtual_reason
@@ -683,6 +685,8 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
       }
   | EIncompatibleWithExact ((r1, r2), op, kind) ->
     EIncompatibleWithExact ((map_reason r1, map_reason r2), map_use_op op, kind)
+  | EFunctionIncompatibleWithIndexer ((r1, r2), op) ->
+    EFunctionIncompatibleWithIndexer ((map_reason r1, map_reason r2), map_use_op op)
   | EInvalidCharSet { invalid = (ir, set); valid; use_op } ->
     EInvalidCharSet
       { invalid = (map_reason ir, set); valid = map_reason valid; use_op = map_use_op use_op }
@@ -1004,6 +1008,8 @@ let util_use_op_of_msg nope util = function
     util use_op (fun use_op -> EUnionSpeculationFailed { use_op; reason; reason_op; branches })
   | EIncompatibleWithExact (rs, op, kind) ->
     util op (fun op -> EIncompatibleWithExact (rs, op, kind))
+  | EFunctionIncompatibleWithIndexer (rs, op) ->
+    util op (fun op -> EFunctionIncompatibleWithIndexer (rs, op))
   | EInvalidCharSet { invalid; valid; use_op } ->
     util use_op (fun use_op -> EInvalidCharSet { invalid; valid; use_op })
   | EIncompatibleWithShape (l, u, use_op) ->
@@ -1347,6 +1353,7 @@ let loc_of_msg : 'loc t' -> 'loc option = function
   | EIncompatibleWithShape _
   | EInvalidCharSet _
   | EIncompatibleWithExact _
+  | EFunctionIncompatibleWithIndexer _
   | EUnionSpeculationFailed _
   | ETupleUnsafeWrite _
   | EROArrayWrite _
@@ -2031,6 +2038,13 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
       {
         loc = loc_of_reason lower;
         features = [text object_kind; ref lower; text " is incompatible with exact "; ref upper];
+        use_op;
+      }
+  | EFunctionIncompatibleWithIndexer ((lower, upper), use_op) ->
+    UseOp
+      {
+        loc = loc_of_reason lower;
+        features = [ref lower; text " is incompatible with indexed "; ref upper];
         use_op;
       }
   | EUnsupportedExact (_, lower) ->
@@ -3560,6 +3574,7 @@ let error_code_of_message err : error_code option =
   | EIncompatibleProp { use_op = None; _ } -> Some IncompatibleType
   | EIncompatibleWithExact (_, _, Inexact) -> Some IncompatibleExact
   | EIncompatibleWithExact (_, _, Indexer) -> Some IncompatibleIndexer
+  | EFunctionIncompatibleWithIndexer _ -> Some IncompatibleFunctionIndexer
   | EIncompatibleWithShape _ -> Some IncompatibleShape
   | EEnumIncompatible { use_op; _ }
   | EIncompatibleWithUseOp { use_op; _ } ->

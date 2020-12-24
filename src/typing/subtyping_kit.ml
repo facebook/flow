@@ -1577,30 +1577,19 @@ module Make (Flow : INPUT) : OUTPUT = struct
      * egregious to emit this constraint. This only serves to maintain buggy
      * behavior, which should be fixed, and this code removed.
      *)
-    | (DefT (lreason, _, FunT _), DefT (ureason, _, ObjT { flags = { obj_kind = Exact; _ }; _ })) ->
-      let reasons = FlowError.ordered_reasons (lreason, ureason) in
-      add_output
-        cx
-        ~trace
-        (Error_message.EIncompatibleWithExact (reasons, use_op, Error_message.Inexact))
     | ( DefT (lreason, _, FunT _),
-        DefT (ureason, _, ObjT { flags = { obj_kind = Indexed udict; _ }; _ }) ) ->
-      let { value; dict_polarity; _ } = udict in
-      let lit = is_literal_object_reason lreason in
-      let s = "$call" in
-      let use_op =
-        Frame (PropertyCompatibility { prop = Some s; lower = lreason; upper = ureason }, use_op)
-      in
-      let lp = Field (None, l, Polarity.Positive) in
-      let up = Field (None, value, dict_polarity) in
-      if lit then
-        match (Property.read_t lp, Property.read_t up) with
-        | (Some lt, Some ut) -> rec_flow cx trace (lt, UseT (use_op, ut))
-        | _ -> ()
-      else
-        let reason_prop = replace_desc_reason (RProperty (Some s)) lreason in
-        let propref = Named (reason_prop, s) in
-        rec_flow_p cx ~trace ~use_op lreason ureason propref (lp, up)
+        DefT (ureason, _, ObjT { flags = { obj_kind = (Exact | Indexed _) as obj_kind; _ }; _ }) )
+      ->
+      let reasons = FlowError.ordered_reasons (lreason, ureason) in
+      (match obj_kind with
+      | Exact ->
+        add_output
+          cx
+          ~trace
+          (Error_message.EIncompatibleWithExact (reasons, use_op, Error_message.Inexact))
+      | Indexed _ ->
+        add_output cx ~trace (Error_message.EFunctionIncompatibleWithIndexer (reasons, use_op))
+      | _ -> failwith "Impossible")
     (*
      * TODO: This rule doesn't interact very well with union-type checking. It
      * looks up Function.prototype, which currently doesn't appear structurally
