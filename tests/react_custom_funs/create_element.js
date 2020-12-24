@@ -7,7 +7,7 @@ declare var any: any;
 React.createElement(); // Error: Needs a minimum of two arguments.
 React.createElement('div'); // OK
 React.createElement(42); // Error: Number is not a valid component type.
-React.createElement('div', {}); // OK
+React.createElement('div', {...null}); // OK
 React.createElement(42, {}); // Error: Number is not a valid component type.
 React.createElement({}, {}); // Error: Object is not a valid component type.
 React.createElement(() => { return null }, {}); // OK

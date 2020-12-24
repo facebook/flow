@@ -173,6 +173,7 @@ type 'loc virtual_reason_desc =
   | RPropertyIsAString of string
   | RMissingProperty of string option
   | RUnknownProperty of string option
+  | RUnknownUnspecifiedProperty of 'loc virtual_reason_desc
   | RUndefinedProperty of string
   | RSomeProperty
   | RNameProperty of 'loc virtual_reason_desc
@@ -254,6 +255,7 @@ let rec map_desc_locs f = function
       ) as r ->
     r
   | RFunctionCall desc -> RFunctionCall (map_desc_locs f desc)
+  | RUnknownUnspecifiedProperty desc -> RUnknownUnspecifiedProperty (map_desc_locs f desc)
   | RUnaryOperator (s, desc) -> RUnaryOperator (s, map_desc_locs f desc)
   | RBinaryOperator (s, d1, d2) -> RBinaryOperator (s, map_desc_locs f d1, map_desc_locs f d2)
   | RLogical (s, d1, d2) -> RLogical (s, map_desc_locs f d1, map_desc_locs f d2)
@@ -646,6 +648,8 @@ let rec string_of_desc = function
   | RMissingProperty None -> "computed property does not exist"
   | RUnknownProperty (Some x) -> spf "property `%s` of unknown type" x
   | RUnknownProperty None -> "computed property of unknown type"
+  | RUnknownUnspecifiedProperty d ->
+    spf "an unknown property that may exist on the inexact %s" (string_of_desc d)
   | RUndefinedProperty x -> spf "undefined property `%s`" x
   | RSomeProperty -> "some property"
   | RNameProperty d -> spf "property `name` of %s" (string_of_desc d)
@@ -1395,6 +1399,7 @@ let classification_of_reason r =
   | RPropertyIsAString _
   | RMissingProperty _
   | RUnknownProperty _
+  | RUnknownUnspecifiedProperty _
   | RUndefinedProperty _
   | RSomeProperty
   | RNameProperty _

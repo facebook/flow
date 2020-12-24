@@ -121,6 +121,7 @@ type 'loc virtual_reason_desc =
   | RPropertyIsAString of string
   | RMissingProperty of string option
   | RUnknownProperty of string option
+  | RUnknownUnspecifiedProperty of 'loc virtual_reason_desc
   | RUndefinedProperty of string
   | RSomeProperty
   | RNameProperty of 'loc virtual_reason_desc

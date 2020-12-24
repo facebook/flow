@@ -367,7 +367,17 @@ module Make (Flow : INPUT) : OUTPUT = struct
         ( keys,
           UseT (Frame (IndexerKeyCompatibility { lower = lreason; upper = ureason }, use_op), key)
         );
-
+      (* If the left is inexact and the right is indexed, Flow mixed to the indexer
+       * value. Mixed represents the possibly unknown properties on the inexact object
+       *)
+      (match lflags.obj_kind with
+      | Inexact ->
+        let r =
+          mk_reason (RUnknownUnspecifiedProperty (desc_of_reason lreason)) (aloc_of_reason lreason)
+        in
+        let mixed = DefT (r, bogus_trust (), MixedT Mixed_everything) in
+        rec_flow_t cx trace ~use_op (mixed, value)
+      | _ -> ());
       (* Previously, call properties were stored in the props map, and were
          checked against dictionary upper bounds. This is wrong, but useful for
          distinguishing between thunk-like types found in graphql-js.
