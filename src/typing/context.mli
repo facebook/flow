@@ -230,6 +230,8 @@ val export_maps : t -> Type.Exports.map
 
 val react_runtime : t -> Options.react_runtime
 
+val in_react_server_component_file : t -> bool
+
 val recursion_limit : t -> int
 
 val root : t -> Path.t

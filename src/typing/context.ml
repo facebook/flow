@@ -484,6 +484,11 @@ let export_maps cx = cx.ccx.sig_cx.export_maps
 
 let react_runtime cx = cx.metadata.react_runtime
 
+let in_react_server_component_file cx =
+  let file = file cx in
+  let exts = cx.metadata.react_server_component_exts in
+  SSet.exists (File_key.check_suffix file) exts
+
 let recursion_limit cx = cx.metadata.recursion_limit
 
 let root cx = cx.metadata.root
