@@ -155,6 +155,8 @@ val required_version : config -> string option
 
 val react_runtime : config -> Options.react_runtime
 
+val react_server_component_exts : config -> SSet.t
+
 val recursion_limit : config -> int
 
 val root_name : config -> string option

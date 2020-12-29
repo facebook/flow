@@ -51,6 +51,7 @@ type metadata = {
   ignore_non_literal_requires: bool;
   max_trace_depth: int;
   react_runtime: Options.react_runtime;
+  react_server_component_exts: SSet.t;
   recursion_limit: int;
   root: Path.t;
   run_post_inference_implicit_instantiation: bool;
@@ -230,6 +231,7 @@ let metadata_of_options options =
     max_trace_depth = Options.max_trace_depth options;
     max_workers = Options.max_workers options;
     react_runtime = Options.react_runtime options;
+    react_server_component_exts = Options.react_server_component_exts options;
     recursion_limit = Options.recursion_limit options;
     root = Options.root options;
     run_post_inference_implicit_instantiation =

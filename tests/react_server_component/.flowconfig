@@ -1,0 +1,3 @@
+[options]
+experimental.react.server_component_ext=.hybrid.js
+experimental.react.server_component_ext=.server.js

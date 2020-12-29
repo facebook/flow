@@ -39,6 +39,7 @@ let metadata =
     max_trace_depth = 0;
     max_workers = 0;
     react_runtime = Options.ReactRuntimeClassic;
+    react_server_component_exts = SSet.empty;
     recursion_limit = 10000;
     root = Path.dummy_path;
     run_post_inference_implicit_instantiation = false;

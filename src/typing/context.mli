@@ -67,6 +67,7 @@ type metadata = {
   ignore_non_literal_requires: bool;
   max_trace_depth: int;
   react_runtime: Options.react_runtime;
+  react_server_component_exts: SSet.t;
   recursion_limit: int;
   root: Path.t;
   run_post_inference_implicit_instantiation: bool;

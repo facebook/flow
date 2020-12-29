@@ -92,6 +92,7 @@ type t = {
   opt_profile: bool;
   opt_quiet: bool;
   opt_react_runtime: react_runtime;
+  opt_react_server_component_exts: SSet.t;
   opt_recursion_limit: int;
   opt_root: Path.t;
   opt_root_name: string option;
@@ -194,6 +195,8 @@ let node_resolver_allow_root_relative opts = opts.opt_node_resolver_allow_root_r
 let node_resolver_root_relative_dirnames opts = opts.opt_node_resolver_root_relative_dirnames
 
 let react_runtime opts = opts.opt_react_runtime
+
+let react_server_component_exts opts = opts.opt_react_server_component_exts
 
 let recursion_limit opts = opts.opt_recursion_limit
 

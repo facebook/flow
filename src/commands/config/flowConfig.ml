@@ -93,6 +93,7 @@ module Opts = struct
     node_resolver_dirnames: string list;
     node_resolver_root_relative_dirnames: string list;
     react_runtime: Options.react_runtime;
+    react_server_component_exts: SSet.t;
     recursion_limit: int;
     root_name: string option;
     run_post_inference_implicit_instantiation: bool;
@@ -146,6 +147,8 @@ module Opts = struct
     |> SSet.add ".woff2"
     |> SSet.add ".mp4"
     |> SSet.add ".webm"
+
+  let react_server_component_exts = SSet.empty |> SSet.add ".server.js" |> SSet.add ".hybrid.js"
 
   let default_options =
     {
@@ -204,6 +207,7 @@ module Opts = struct
       node_resolver_dirnames = ["node_modules"];
       node_resolver_root_relative_dirnames = [""];
       react_runtime = Options.ReactRuntimeClassic;
+      react_server_component_exts;
       recursion_limit = 10000;
       root_name = None;
       run_post_inference_implicit_instantiation = false;
@@ -617,6 +621,13 @@ module Opts = struct
         enum
           [("classic", Options.ReactRuntimeClassic); ("automatic", Options.ReactRuntimeAutomatic)]
           (fun opts react_runtime -> Ok { opts with react_runtime }) );
+      ( "experimental.react.server_component_ext",
+        string
+          ~init:(fun opts -> { opts with react_server_component_exts = SSet.empty })
+          ~multiple:true
+          (fun opts v ->
+            let react_server_component_exts = SSet.add v opts.react_server_component_exts in
+            Ok { opts with react_server_component_exts }) );
       ("recursion_limit", uint (fun opts v -> Ok { opts with recursion_limit = v }));
       ("types_first.max_files_checked_per_worker", types_first_max_files_checked_per_worker_parser);
       ( "types_first.max_seconds_for_check_per_worker",
@@ -1247,6 +1258,8 @@ let node_resolver_dirnames c = c.options.Opts.node_resolver_dirnames
 let node_resolver_root_relative_dirnames c = c.options.Opts.node_resolver_root_relative_dirnames
 
 let react_runtime c = c.options.Opts.react_runtime
+
+let react_server_component_exts c = c.options.Opts.react_server_component_exts
 
 let recursion_limit c = c.options.Opts.recursion_limit
 
