@@ -1053,7 +1053,14 @@ let rec convert cx tparams_map =
     let exact_by_default = Context.exact_by_default cx in
     let exact_type = exact || ((not inexact) && exact_by_default) in
     let (t, properties) = convert_object cx tparams_map loc ~exact:exact_type properties in
-    if (not exact) && not inexact then (
+    let has_indexer =
+      properties
+      |> List.exists (fun property ->
+             match property with
+             | Ast.Type.Object.Indexer _ -> true
+             | _ -> false)
+    in
+    if (not exact) && (not inexact) && not has_indexer then (
       Flow.add_output cx Error_message.(EAmbiguousObjectType loc);
       if not exact_by_default then Flow.add_output cx Error_message.(EImplicitInexactObject loc)
     );
