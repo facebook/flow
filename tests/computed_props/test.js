@@ -1,16 +1,16 @@
-var ColorId = {
+const ColorId = {
   RED: 'R',
   GREEN: 'G',
   BLUE: 'B',
 };
 
-var ColorNumber = {
+const ColorNumber = {
   RED: 'ff0000',
   GREEN: '00ff00',
   BLUE: '0000ff',
 };
 
-var ColorIdToNumber = {
+const ColorIdToNumber = {
   [ColorId.RED]: ColorNumber.RED,
   [ColorId.GREEN]: ColorNumber.GREEN,
   [ColorId.BLUE]: ColorNumber.BLUE,

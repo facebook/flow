@@ -55,9 +55,9 @@ Cannot get `ColorIdToNumber.XXX` because property `XXX` is missing in object lit
                        ^^^
 
 References:
-   test.js:13:23
-                             v
-   13| var ColorIdToNumber = {
+   test.js:13:25
+                               v
+   13| const ColorIdToNumber = {
    14|   [ColorId.RED]: ColorNumber.RED,
    15|   [ColorId.GREEN]: ColorNumber.GREEN,
    16|   [ColorId.BLUE]: ColorNumber.BLUE,
@@ -65,92 +65,85 @@ References:
        ^ [1]
 
 
-Error ----------------------------------------------------------------------------------------------------- test2.js:8:2
+Error ---------------------------------------------------------------------------------------------------- test2.js:3:25
+
+Cannot build a typed interface for this module. You should annotate the exports of this module with types. Expected
+simple key in object: [signature-verification-failure]
+
+                              v
+   3| const ColorIdToNumber = {
+   4|   [ColorId.RED]: ColorNumber.RED,
+   5|   [ColorId.GREEN]: ColorNumber.GREEN,
+   6|   [ColorId.BLUE]: ColorNumber.BLUE,
+   7| };
+      ^
+
+
+Error ----------------------------------------------------------------------------------------------------- test2.js:9:2
 
 Cannot cast `ColorIdToNumber[ColorId.GREEN]` to string literal `ffffff` because string [1] is incompatible with string
 literal `ffffff` [2]. [incompatible-cast]
 
-   test2.js:8:2
-   8| (ColorIdToNumber[ColorId.GREEN]: 'ffffff'); // oops
+   test2.js:9:2
+   9| (ColorIdToNumber[ColorId.GREEN]: 'ffffff'); // oops
        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
    test.js:9:10
    9|   GREEN: '00ff00',
                ^^^^^^^^ [1]
-   test2.js:8:34
-   8| (ColorIdToNumber[ColorId.GREEN]: 'ffffff'); // oops
+   test2.js:9:34
+   9| (ColorIdToNumber[ColorId.GREEN]: 'ffffff'); // oops
                                        ^^^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- test3.js:4:2
+Error ---------------------------------------------------------------------------------------------------- test5.js:3:18
 
-Cannot cast `ColorIdToNumber[ColorId.BLUE]` to string literal `ffffff` because string [1] is incompatible with string
-literal `ffffff` [2]. [incompatible-cast]
+Cannot build a typed interface for this module. You should annotate the exports of this module with types. Expected
+simple key in object: [signature-verification-failure]
 
-   test3.js:4:2
-    4| (ColorIdToNumber[ColorId.BLUE]: 'ffffff'); // oops
-        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-References:
-   test.js:10:9
-   10|   BLUE: '0000ff',
-               ^^^^^^^^ [1]
-   test3.js:4:33
-    4| (ColorIdToNumber[ColorId.BLUE]: 'ffffff'); // oops
-                                       ^^^^^^^^ [2]
+                       v
+   3| module.exports = {
+   4|   ...dummy,
+   5|   // TODO allow computed prop (T64194787)
+   6|   [hello]: 'world',
+   7|   ...dummy,
+   8| };
+      ^
 
 
-Error ----------------------------------------------------------------------------------------------------- test6.js:2:2
-
-Cannot cast `o.hello` to string literal `nothing` because string [1] is incompatible with string literal `nothing` [2].
-[incompatible-cast]
-
-   test6.js:2:2
-   2| (o.hello: 'nothing'); // oops
-       ^^^^^^^
-
-References:
-   test5.js:5:12
-   5|   [hello]: 'world',
-                 ^^^^^^^ [1]
-   test6.js:2:11
-   2| (o.hello: 'nothing'); // oops
-                ^^^^^^^^^ [2]
-
-
-Error ---------------------------------------------------------------------------------------------------- test7.js:2:17
+Error ---------------------------------------------------------------------------------------------------- test7.js:2:19
 
 Cannot assign `obj['m']()` to `x` because number [1] is incompatible with string [2]. [incompatible-type]
 
-   test7.js:2:17
-   2| var x: string = obj['m'](); // error, number ~> string
-                      ^^^^^^^^^^
+   test7.js:2:19
+   2| const x: string = obj['m'](); // error, number ~> string
+                        ^^^^^^^^^^
 
 References:
-   test7.js:1:15
-   1| var obj = {x: 0, m() { return this.x }}
-                    ^ [1]
-   test7.js:2:8
-   2| var x: string = obj['m'](); // error, number ~> string
-             ^^^^^^ [2]
+   test7.js:1:17
+   1| const obj = {x: 0, m() { return this.x }}
+                      ^ [1]
+   test7.js:2:10
+   2| const x: string = obj['m'](); // error, number ~> string
+               ^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- test7.js:5:17
+Error ---------------------------------------------------------------------------------------------------- test7.js:5:19
 
 Cannot assign `arr[0]()` to `y` because number [1] is incompatible with string [2]. [incompatible-type]
 
-   test7.js:5:17
-      5| var y: string = arr[0](); // error: number ~> string
-                         ^^^^^^^^
+   test7.js:5:19
+      5| const y: string = arr[0](); // error: number ~> string
+                           ^^^^^^^^
 
 References:
    <BUILTINS>/core.js:1005:13
    1005|     length: number;
                      ^^^^^^ [1]
-   test7.js:5:8
-      5| var y: string = arr[0](); // error: number ~> string
-                ^^^^^^ [2]
+   test7.js:5:10
+      5| const y: string = arr[0](); // error: number ~> string
+                  ^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- union.js:5:13

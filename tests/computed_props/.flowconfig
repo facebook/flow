@@ -1,4 +1,4 @@
 [options]
-types_first=false
+experimental.new_signatures=true
 no_flowlib=false
 all=true
