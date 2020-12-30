@@ -1,41 +1,6 @@
 
 === Codemod annotate-exports ===
 
->>> ./exports-default-class-funcall-a.js
-// @flow
-
-declare class Base {}
-class B extends Base {}
-
-function foo() { return B };
-
-module.exports = (foo(): typeof B);
-
->>> ./exports-default-class-funcall-b.js
-// @flow
-
-declare class Base {}
-class B extends Base {}
-
-function foo() { return B };
-
-module.exports = (foo(): typeof B);
-
->>> ./exports-default-instance.js
-// @flow
-
-declare class Base {}
-class A extends Base {}
-
-module.exports = (new A(): A);
-
->>> ./exports-default-poly-instance.js
-// @flow
-
-class P<X> {}
-
-module.exports = (new P<number>(): P<number>);
-
 >>> ./import-default.js
 // @flow
 
@@ -84,11 +49,11 @@ module.exports = {
 >>> Launching report...
 
 Stats:
-  Files changed:                            5
-  Number of annotations added:             12
-  Total size of annotations:               14
-  Number of sig. ver. errors:              13
-  Number of annotations required:          13
+  Files changed:                            1
+  Number of annotations added:              8
+  Total size of annotations:                9
+  Number of sig. ver. errors:               9
+  Number of annotations required:           9
   Number of annotations skipped:            0
 
 Errors:
@@ -111,41 +76,6 @@ Warnings:
 
 
 === Autofix exports ===
-
->>> ./exports-default-class-funcall-a.js
-// @flow
-
-declare class Base {}
-class B extends Base {}
-
-function foo() { return B };
-
-module.exports = (foo(): typeof B);
-
->>> ./exports-default-class-funcall-b.js
-// @flow
-
-declare class Base {}
-class B extends Base {}
-
-function foo() { return B };
-
-module.exports = (foo(): typeof B);
-
->>> ./exports-default-instance.js
-// @flow
-
-declare class Base {}
-class A extends Base {}
-
-module.exports = (new A(): A);
-
->>> ./exports-default-poly-instance.js
-// @flow
-
-class P<X> {}
-
-module.exports = (new P<number>(): P<number>);
 
 >>> ./import-default.js
 // @flow
