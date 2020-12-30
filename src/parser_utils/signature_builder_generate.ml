@@ -724,9 +724,13 @@ module T = struct
     | Type { tparams; right } ->
       ( decl_loc,
         Ast.Statement.TypeAlias { Ast.Statement.TypeAlias.id; tparams; right; comments = None } )
-    | OpaqueType { tparams; impltype; supertype } ->
+    | OpaqueType { tparams; impltype = Some _ as impltype; supertype } ->
       ( decl_loc,
         Ast.Statement.OpaqueType
+          { Ast.Statement.OpaqueType.id; tparams; impltype; supertype; comments = None } )
+    | OpaqueType { tparams; impltype = None as impltype; supertype } ->
+      ( decl_loc,
+        Ast.Statement.DeclareOpaqueType
           { Ast.Statement.OpaqueType.id; tparams; impltype; supertype; comments = None } )
     | Interface { tparams; extends; body } ->
       ( decl_loc,

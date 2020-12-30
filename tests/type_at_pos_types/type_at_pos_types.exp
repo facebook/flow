@@ -224,7 +224,7 @@ destructuring.js:3:6 = {
   "end":6
 }
 destructuring.js:17:13 = {
-  "type":"any (implicit)",
+  "type":"empty",
   "reasons":[],
   "loc":{
     "source":"destructuring.js",
