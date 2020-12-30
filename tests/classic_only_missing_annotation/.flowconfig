@@ -1,5 +1,0 @@
-[options]
-types_first=false
-module.system=haste
-no_flowlib=false
-all=true

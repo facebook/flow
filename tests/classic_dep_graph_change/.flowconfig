@@ -1,5 +1,0 @@
-[ignore]
-<PROJECT_ROOT>/tmp
-
-[options]
-types_first=false
