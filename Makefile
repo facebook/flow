@@ -111,6 +111,7 @@ MODULES=\
   src/parser_utils\
   src/parser_utils/aloc\
   src/parser_utils/iloc\
+  src/parser_utils/exports\
   src/parser_utils/output\
   src/parser_utils/output/printers\
   src/parser_utils/signature_builder\
