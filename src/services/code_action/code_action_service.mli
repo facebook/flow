@@ -9,8 +9,6 @@ val client_supports_quickfixes : Lsp.CodeActionRequest.params -> bool
 
 val code_actions_at_loc :
   reader:Parsing_heaps.Reader.reader ->
-  options:Options.t ->
-  file_key:File_key.t ->
   cx:Context.t ->
   file_sig:File_sig.With_Loc.t ->
   tolerable_errors:File_sig.With_Loc.tolerable_error list ->

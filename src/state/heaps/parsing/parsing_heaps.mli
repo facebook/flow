@@ -50,7 +50,7 @@ module Reader : READER with type reader = State_reader.t
 module Reader_dispatcher : READER with type reader = Abstract_state_reader.t
 
 type sig_extra =
-  | Classic
+  | InitLibs
   | TypesFirst of {
       sig_ast: (ALoc.t, ALoc.t) Flow_ast.Program.t;
       sig_file_sig: File_sig.With_ALoc.t;

@@ -937,8 +937,6 @@ let find_code_actions ~reader ~options ~env ~profiling ~params ~client =
       | Ok (cx, _info, file_sig, tolerable_errors, ast, typed_ast, parse_errors) ->
         Code_action_service.code_actions_at_loc
           ~reader
-          ~options
-          ~file_key
           ~cx
           ~file_sig
           ~tolerable_errors

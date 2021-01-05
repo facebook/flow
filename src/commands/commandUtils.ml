@@ -1186,26 +1186,7 @@ let make_options
     in
     Base.Option.value lazy_mode ~default
   in
-  let opt_arch =
-    if options_flags.new_signatures || FlowConfig.types_first flowconfig then
-      let new_signatures = options_flags.new_signatures || FlowConfig.new_signatures flowconfig in
-      Options.TypesFirst { new_signatures }
-    else
-      Options.Classic
-  in
-  let opt_enforce_well_formed_exports =
-    if options_flags.new_signatures || FlowConfig.types_first flowconfig then
-      Some []
-    else if FlowConfig.enforce_well_formed_exports flowconfig then
-      let paths =
-        Base.List.map
-          ~f:(Files.expand_project_root_token ~root)
-          (FlowConfig.enforce_well_formed_exports_includes flowconfig)
-      in
-      Some paths
-    else
-      None
-  in
+  let opt_new_signatures = options_flags.new_signatures || FlowConfig.new_signatures flowconfig in
   let opt_abstract_locations =
     options_flags.abstract_locations || FlowConfig.abstract_locations flowconfig
   in
@@ -1249,7 +1230,6 @@ let make_options
     opt_run_post_inference_implicit_instantiation =
       FlowConfig.run_post_inference_implicit_instantiation flowconfig;
     opt_enforce_strict_call_arity = FlowConfig.enforce_strict_call_arity flowconfig;
-    opt_enforce_well_formed_exports;
     opt_enums = FlowConfig.enums flowconfig;
     opt_enums_with_unknown_members = FlowConfig.enums_with_unknown_members flowconfig;
     opt_this_annot = FlowConfig.this_annot flowconfig;
@@ -1284,7 +1264,7 @@ let make_options
     opt_node_resolver_allow_root_relative = FlowConfig.node_resolver_allow_root_relative flowconfig;
     opt_node_resolver_root_relative_dirnames =
       FlowConfig.node_resolver_root_relative_dirnames flowconfig;
-    opt_arch;
+    opt_new_signatures;
     opt_abstract_locations;
     opt_include_suppressions = options_flags.include_suppressions;
     opt_trust_mode =

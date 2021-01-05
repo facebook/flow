@@ -122,8 +122,6 @@ val mk_instance : Context.t -> ?trace:Trace.t -> reason -> ?use_desc:bool -> Typ
 val mk_typeof_annotation :
   Context.t -> ?trace:Trace.t -> reason -> ?use_desc:bool -> ?internal:bool -> Type.t -> Type.t
 
-val enforce_strict : Context.t -> Type.t -> should_munge_underscores:bool -> unit
-
 (* trust *)
 val mk_trust_var : Context.t -> ?initial:Trust.trust_qualifier -> unit -> Type.ident
 

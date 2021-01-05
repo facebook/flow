@@ -207,16 +207,6 @@ let detect_invalid_type_assert_calls cx file_sigs results =
 
 let detect_es6_import_export_errors = Strict_es6_import_export.detect_errors
 
-let force_annotations arch leader_cx cxs =
-  if arch = Options.Classic then
-    Base.List.iter
-      ~f:(fun (cx, _, _) ->
-        let should_munge_underscores = Context.should_munge_underscores cx in
-        Context.module_ref cx
-        |> Flow_js_utils.lookup_module leader_cx
-        |> Flow_js.enforce_strict leader_cx ~should_munge_underscores)
-      cxs
-
 let detect_escaped_generics results =
   Base.List.iter
     ~f:(fun (cx, _, (_, { Flow_ast.Program.statements; _ })) ->
@@ -475,7 +465,7 @@ let merge_imports cx sig_cx reqs impl_cxs =
  * means we can complain about things that either haven't happened yet, or
  * which require complete knowledge of tvar bounds.
  *)
-let post_merge_checks cx metadata arch file_sigs results =
+let post_merge_checks cx metadata file_sigs results =
   detect_sketchy_null_checks cx;
   detect_non_voidable_properties cx;
   check_implicit_instantiations cx;
@@ -486,12 +476,11 @@ let post_merge_checks cx metadata arch file_sigs results =
   detect_es6_import_export_errors cx metadata results;
   detect_escaped_generics results;
   detect_matching_props_violations cx;
-  detect_literal_subtypes cx;
-  force_annotations arch cx results
+  detect_literal_subtypes cx
 
 type merge_options =
   | Merge_options of {
-      arch: Options.arch;
+      new_signatures: bool;
       phase: Context.phase;
       metadata: Context.metadata;
       lint_severities: Severity.severity LintSettings.t;
@@ -537,7 +526,7 @@ type merge_getters = {
    5. Link the local references to libraries in master_cx and component_cxs.
 *)
 let merge_component ~opts ~getters ~file_sigs component reqs dep_cxs master_cx =
-  let (Merge_options { arch; phase; metadata; lint_severities; strict_mode }) = opts in
+  let (Merge_options { phase; metadata; lint_severities; strict_mode; _ }) = opts in
   let { get_ast_unsafe; get_aloc_table_unsafe; get_docblock_unsafe } = getters in
   let aloc_tables = get_aloc_tables ~get_aloc_table_unsafe component in
   let sig_cx = Context.make_sig () in
@@ -577,8 +566,6 @@ let merge_component ~opts ~getters ~file_sigs component reqs dep_cxs master_cx =
   dep_cxs |> Base.List.iter ~f:(Context.merge_into sig_cx);
   merge_imports cx sig_cx reqs impl_cxs;
 
-  (* Post-inference checks *)
-  if arch = Options.Classic then post_merge_checks cx metadata arch file_sigs rev_results;
   match results with
   | [] -> failwith "there is at least one cx"
   | x :: xs -> (x, xs)
@@ -591,7 +578,7 @@ let merge_component ~opts ~getters ~file_sigs component reqs dep_cxs master_cx =
    and optimized.
 *)
 let check_component ~opts ~getters ~file_sigs singleton_component reqs dep_cxs master_cx =
-  let (Merge_options { arch; phase; metadata; lint_severities; strict_mode }) = opts in
+  let (Merge_options { phase; metadata; lint_severities; strict_mode; _ }) = opts in
   let { get_ast_unsafe; get_aloc_table_unsafe; get_docblock_unsafe } = getters in
 
   let (filename, tl) = singleton_component in
@@ -623,13 +610,14 @@ let check_component ~opts ~getters ~file_sigs singleton_component reqs dep_cxs m
   let tast = Type_inference_js.infer_ast cx filename comments ast ~lint_severities in
 
   (* Post-inference checks *)
-  post_merge_checks cx metadata arch file_sigs [(cx, ast, tast)];
+  post_merge_checks cx metadata file_sigs [(cx, ast, tast)];
   Nel.one (cx, ast, tast)
 
-let merge_component ~opts:(Merge_options { arch; phase; _ } as opts) =
-  match (arch, phase) with
-  | (Options.TypesFirst _, Context.Checking) -> check_component ~opts
-  | _ -> merge_component ~opts
+let merge_component ~opts:(Merge_options { phase; _ } as opts) =
+  match phase with
+  | Context.Checking -> check_component ~opts
+  | Context.Merging -> merge_component ~opts
+  | Context.Normalizing -> failwith "Normalizer should not be accessible through merge_js.ml"
 
 (****************** signature contexts *********************)
 

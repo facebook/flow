@@ -69,11 +69,6 @@ type merge_context_result =
 
    (c) impls: edges between files within the component
 
-   Note for Checking phase of Types-First: All components here are of size 1. The
-   only candidate for the impls set would be a recursive import of the file itself.
-   Given that we processes imports before doing inference on the file, we simplify
-   this case by using the sig cx that we have already computed during merge.
-
    (d) dep_impls: edges from files in the component to cxs of direct
    dependencies, when implementations are found.
 
@@ -87,12 +82,7 @@ type merge_context_result =
    (g) decls: edges between files in the component and libraries, classified
    by requires (when implementations of such requires are not found).
 *)
-let reqs_of_component ~arch ~phase ~reader component required =
-  let types_first_checking =
-    match (arch, phase) with
-    | (Options.TypesFirst _, Context.Checking) -> true
-    | _ -> false
-  in
+let reqs_of_component ~phase ~reader component required =
   let (dep_cxs, reqs) =
     List.fold_left
       (fun (dep_cxs, reqs) req ->
@@ -106,7 +96,7 @@ let reqs_of_component ~arch ~phase ~reader component required =
             if info.checked && info.parsed then
               (* checked implementation exists *)
               let m = Files.module_ref dep in
-              if (not types_first_checking) && Nel.mem ~equal:File_key.equal dep component then
+              if phase <> Context.Checking && Nel.mem ~equal:File_key.equal dep component then
                 (* impl is part of component *)
                 (dep_cxs, Reqs.add_impl m file locs reqs)
               else
@@ -145,18 +135,17 @@ let merge_context_generic ~options ~reader ~get_ast_unsafe ~get_file_sig_unsafe 
       ([], FilenameMap.empty)
       component
   in
-  let arch = Options.arch options in
-  let (master_cx, dep_cxs, file_reqs) = reqs_of_component ~arch ~phase ~reader component required in
+  let (master_cx, dep_cxs, file_reqs) = reqs_of_component ~reader ~phase component required in
   let metadata = Context.metadata_of_options options in
   let lint_severities = Options.lint_severities options in
   let strict_mode = Options.strict_mode options in
   let get_aloc_table_unsafe =
     Parsing_heaps.Reader_dispatcher.get_sig_ast_aloc_table_unsafe ~reader
   in
-  assert (phase <> Context.Merging || Options.arch options <> Options.Classic);
-
-  let arch = Options.arch options in
-  let opts = Merge_js.Merge_options { arch; phase; metadata; lint_severities; strict_mode } in
+  let new_signatures = Options.new_signatures options in
+  let opts =
+    Merge_js.Merge_options { new_signatures; phase; metadata; lint_severities; strict_mode }
+  in
   let getters =
     {
       Merge_js.get_ast_unsafe = get_ast_unsafe ~reader;
@@ -167,11 +156,10 @@ let merge_context_generic ~options ~reader ~get_ast_unsafe ~get_file_sig_unsafe 
   let (((full_cx, _, _), other_cxs) as cx_nel) =
     Merge_js.merge_component ~opts ~getters ~file_sigs component file_reqs dep_cxs master_cx
   in
-  match (Options.arch options, phase) with
-  | (_, Context.Normalizing) -> failwith "unexpected phase: Normalizing"
-  | (Options.TypesFirst _, Context.Merging) -> MergeResult { cx = full_cx; master_cx }
-  | (Options.TypesFirst _, Context.Checking)
-  | (Options.Classic, _) ->
+  match phase with
+  | Context.Normalizing -> failwith "unexpected phase: Normalizing"
+  | Context.Merging -> MergeResult { cx = full_cx; master_cx }
+  | Context.Checking ->
     let coverage =
       Nel.fold_left
         (fun acc (ctx, _, typed_ast) ->
@@ -355,22 +343,7 @@ let merge_context_new_signatures ~options ~reader component =
 
 let merge_context ~options ~reader component =
   let merge_generic_args =
-    match Options.arch options with
-    | Options.Classic ->
-      let phase = Context.Checking in
-      let get_ast_unsafe ~reader file =
-        let ((_, { Flow_ast.Program.all_comments; _ }) as ast) =
-          Parsing_heaps.Reader_dispatcher.get_ast_unsafe ~reader file
-        in
-        let aloc_ast = Ast_loc_utils.loc_to_aloc_mapper#program ast in
-        (all_comments, aloc_ast)
-      in
-      let get_file_sig_unsafe ~reader file =
-        let loc_file_sig = Parsing_heaps.Reader_dispatcher.get_file_sig_unsafe ~reader file in
-        File_sig.abstractify_locs loc_file_sig
-      in
-      Some (phase, get_ast_unsafe, get_file_sig_unsafe)
-    | Options.TypesFirst { new_signatures = false } ->
+    if not (Options.new_signatures options) then
       let phase = Context.Merging in
       let get_ast_unsafe ~reader file =
         let (_, { Flow_ast.Program.all_comments; _ }) =
@@ -381,7 +354,8 @@ let merge_context ~options ~reader component =
       in
       let get_file_sig_unsafe = Parsing_heaps.Reader_dispatcher.get_sig_file_sig_unsafe in
       Some (phase, get_ast_unsafe, get_file_sig_unsafe)
-    | Options.TypesFirst { new_signatures = true } -> None
+    else
+      None
   in
   match merge_generic_args with
   | Some (phase, get_ast_unsafe, get_file_sig_unsafe) ->
@@ -392,7 +366,6 @@ let merge_context ~options ~reader component =
    resolved. This is used by commands that make up a context on the fly. *)
 let merge_contents_context ~reader options file ast info file_sig =
   let (_, { Flow_ast.Program.all_comments; _ }) = ast in
-  let arch = Options.arch options in
   let phase = Context.Checking in
   let aloc_ast = Ast_loc_utils.loc_to_aloc_mapper#program ast in
   let reader = Abstract_state_reader.State_reader reader in
@@ -417,7 +390,7 @@ let merge_contents_context ~reader options file ast info file_sig =
   let file_sigs = FilenameMap.singleton file file_sig in
   let component = Nel.one file in
   let (master_cx, dep_cxs, file_reqs) =
-    try reqs_of_component ~arch ~phase ~reader component required with
+    try reqs_of_component ~reader ~phase component required with
     | Key_not_found _ -> failwith "not all dependencies are ready yet, aborting..."
     | e -> raise e
   in
@@ -427,7 +400,10 @@ let merge_contents_context ~reader options file ast info file_sig =
   let get_aloc_table_unsafe =
     Parsing_heaps.Reader_dispatcher.get_sig_ast_aloc_table_unsafe ~reader
   in
-  let opts = Merge_js.Merge_options { arch; phase; metadata; lint_severities; strict_mode } in
+  let new_signatures = Options.new_signatures options in
+  let opts =
+    Merge_js.Merge_options { new_signatures; phase; metadata; lint_severities; strict_mode }
+  in
   let getters =
     {
       Merge_js.get_ast_unsafe = (fun _ -> (all_comments, aloc_ast));
@@ -691,7 +667,6 @@ let merge_runner
   let stream =
     Merge_stream.create
       ~num_workers
-      ~arch:(Options.arch options)
       ~sig_dependency_graph
       ~leader_map
       ~component_map

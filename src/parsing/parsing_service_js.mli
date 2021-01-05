@@ -70,7 +70,7 @@ type parse_options = {
   parse_prevent_munge: bool;
   parse_module_ref_prefix: string option;
   parse_facebook_fbt: string option;
-  parse_arch: Options.arch;
+  parse_new_signatures: bool;
   parse_abstract_locations: bool;
   parse_type_asserts: bool;
   parse_suppress_types: SSet.t;

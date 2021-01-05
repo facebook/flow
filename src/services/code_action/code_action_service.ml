@@ -105,31 +105,17 @@ let client_supports_quickfixes params =
   Lsp.CodeActionKind.contains_kind_opt ~default:true Lsp.CodeActionKind.quickfix only
 
 let code_actions_at_loc
-    ~reader
-    ~options
-    ~file_key
-    ~cx
-    ~file_sig
-    ~tolerable_errors
-    ~ast
-    ~typed_ast
-    ~parse_errors
-    ~diagnostics
-    ~uri
-    ~loc =
+    ~reader ~cx ~file_sig ~tolerable_errors ~ast ~typed_ast ~parse_errors ~diagnostics ~uri ~loc =
   let experimental_code_actions =
-    if Inference_utils.well_formed_exports_enabled options file_key then
-      autofix_exports_code_actions
-        ~full_cx:cx
-        ~ast
-        ~file_sig
-        ~tolerable_errors
-        ~typed_ast
-        ~diagnostics
-        uri
-        loc
-    else
-      []
+    autofix_exports_code_actions
+      ~full_cx:cx
+      ~ast
+      ~file_sig
+      ~tolerable_errors
+      ~typed_ast
+      ~diagnostics
+      uri
+      loc
   in
   let error_fixes =
     code_actions_of_errors ~reader ~diagnostics ~errors:(Context.errors cx) uri loc

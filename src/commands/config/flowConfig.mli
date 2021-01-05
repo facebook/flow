@@ -73,10 +73,6 @@ val enforce_local_inference_annotations : config -> bool
 
 val enforce_strict_call_arity : config -> bool
 
-val enforce_well_formed_exports : config -> bool
-
-val enforce_well_formed_exports_includes : config -> string list
-
 val enums : config -> bool
 
 val enums_with_unknown_members : config -> bool
@@ -184,8 +180,6 @@ val traces : config -> int
 val trust_mode : config -> Options.trust_mode
 
 val type_asserts : config -> bool
-
-val types_first : config -> bool
 
 val new_signatures : config -> bool
 

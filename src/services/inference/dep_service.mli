@@ -36,4 +36,4 @@ val calc_partial_dependency_graph :
   FilenameSet.t ->
   parsed:(* files *)
          FilenameSet.t ->
-  Partial_dependency_graph.t Lwt.t
+  Dependency_info.partial_dependency_graph Lwt.t

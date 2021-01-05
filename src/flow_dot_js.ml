@@ -241,9 +241,11 @@ let infer_and_merge ~root filename ast file_sig =
   let file_sigs = Utils_js.FilenameMap.singleton filename file_sig in
   let (_, { Flow_ast.Program.all_comments; _ }) = ast in
   let aloc_ast = Ast_loc_utils.loc_to_aloc_mapper#program ast in
-  let arch = Options.TypesFirst { new_signatures = false } in
+  let new_signatures = false in
   let phase = Context.Checking in
-  let opts = Merge_js.Merge_options { arch; phase; metadata; lint_severities; strict_mode } in
+  let opts =
+    Merge_js.Merge_options { new_signatures; phase; metadata; lint_severities; strict_mode }
+  in
   let getters =
     {
       Merge_js.get_ast_unsafe = (fun _ -> (all_comments, aloc_ast));

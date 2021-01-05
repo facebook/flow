@@ -30,10 +30,6 @@ type saved_state_fetcher =
   | Local_fetcher
   | Fb_fetcher
 
-type arch =
-  | Classic
-  | TypesFirst of { new_signatures: bool }
-
 type trust_mode =
   | NoTrust
   | CheckTrust
@@ -47,14 +43,13 @@ type t = {
   opt_abstract_locations: bool;
   opt_all: bool;
   opt_automatic_require_default: bool;
-  opt_arch: arch;
+  opt_new_signatures: bool;
   opt_babel_loose_array_spread: bool;
   opt_debug: bool;
   opt_enable_const_params: bool;
   opt_enabled_rollouts: string SMap.t;
   opt_enforce_local_inference_annotations: bool;
   opt_enforce_strict_call_arity: bool;
-  opt_enforce_well_formed_exports: string list option;
   opt_enums: bool;
   opt_enums_with_unknown_members: bool;
   opt_this_annot: bool;
@@ -122,7 +117,7 @@ let automatic_require_default opts = opts.opt_automatic_require_default
 
 let babel_loose_array_spread opts = opts.opt_babel_loose_array_spread
 
-let arch opts = opts.opt_arch
+let new_signatures opts = opts.opt_new_signatures
 
 let max_literal_length opts = opts.opt_max_literal_length
 
@@ -131,8 +126,6 @@ let enable_const_params opts = opts.opt_enable_const_params
 let enabled_rollouts opts = opts.opt_enabled_rollouts
 
 let enforce_strict_call_arity opts = opts.opt_enforce_strict_call_arity
-
-let enforce_well_formed_exports opts = opts.opt_enforce_well_formed_exports
 
 let enforce_local_inference_annotations opts = opts.opt_enforce_local_inference_annotations
 

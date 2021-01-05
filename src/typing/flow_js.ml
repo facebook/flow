@@ -347,7 +347,6 @@ let inherited_method x = x <> "constructor"
 (********************** start of slab **********************************)
 module M__flow
     (ReactJs : React_kit.REACT)
-    (AssertGround : Flow_common.ASSERT_GROUND)
     (CheckPolarity : Flow_common.CHECK_POLARITY)
     (TrustChecking : Flow_common.TRUST_CHECKING)
     (CustomFunKit : Custom_fun_kit.CUSTOM_FUN)
@@ -9987,22 +9986,19 @@ struct
     | Lower (use_op, l) -> rec_flow cx trace (t, ReposUseT (reason, use_desc, use_op, l))
     | Upper u -> rec_flow cx trace (t, ReposLowerT (reason, use_desc, u))
 
-  include AssertGround
   include CheckPolarity
   include TrustChecking
 end
 
 module rec FlowJs : Flow_common.S = struct
   module React = React_kit.Kit (FlowJs)
-  module AssertGround = Assert_ground.Kit (FlowJs)
   module CheckPolarity = Check_polarity.Kit (FlowJs)
   module TrustKit = Trust_checking.TrustKit (FlowJs)
   module CustomFun = Custom_fun_kit.Kit (FlowJs)
   module ObjectKit = Object_kit.Kit (FlowJs)
   module SpeculationKit = Speculation_kit.Make (FlowJs)
   module SubtypingKit = Subtyping_kit.Make (FlowJs)
-  include M__flow (React) (AssertGround) (CheckPolarity) (TrustKit) (CustomFun) (ObjectKit)
-            (SpeculationKit)
+  include M__flow (React) (CheckPolarity) (TrustKit) (CustomFun) (ObjectKit) (SpeculationKit)
             (SubtypingKit)
 
   let widen_obj_type = ObjectKit.widen_obj_type

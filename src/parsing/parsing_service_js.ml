@@ -86,7 +86,7 @@ type parse_options = {
   parse_prevent_munge: bool;
   parse_module_ref_prefix: string option;
   parse_facebook_fbt: string option;
-  parse_arch: Options.arch;
+  parse_new_signatures: bool;
   parse_abstract_locations: bool;
   parse_type_asserts: bool;
   parse_suppress_types: SSet.t;
@@ -390,7 +390,7 @@ let do_parse ~parse_options ~info content file =
     parse_prevent_munge = prevent_munge;
     parse_module_ref_prefix = module_ref_prefix;
     parse_facebook_fbt = facebook_fbt;
-    parse_arch = arch;
+    parse_new_signatures = new_signatures;
     parse_abstract_locations = abstract_locations;
     parse_type_asserts = type_asserts;
     parse_suppress_types = suppress_types;
@@ -444,19 +444,7 @@ let do_parse ~parse_options ~info content file =
         | Error e -> Parse_fail (File_sig_error e)
         | Ok (exports_info, tolerable_errors) ->
           let (env, errors, sig_extra) =
-            match arch with
-            | Options.Classic ->
-              let signature = Signature_builder.program ast ~exports_info in
-              let (errors, _, _) =
-                Signature_builder.Signature.verify
-                  ~prevent_munge
-                  ~facebook_fbt
-                  ~ignore_static_propTypes
-                  ~facebook_keyMirror
-                  signature
-              in
-              (None, errors, Parsing_heaps.Classic)
-            | Options.TypesFirst { new_signatures = false } ->
+            if not new_signatures then
               let signature = Signature_builder.program ast ~exports_info in
               let (errors, env, sig_ast) =
                 Signature_builder.Signature.verify_and_generate
@@ -491,7 +479,7 @@ let do_parse ~parse_options ~info content file =
                 | Error _ -> assert false
               in
               (env, errors, Parsing_heaps.TypesFirst { sig_ast; sig_file_sig; aloc_table })
-            | Options.TypesFirst { new_signatures = true } ->
+            else
               let sig_opts =
                 {
                   Type_sig_parse.type_asserts;
@@ -827,7 +815,7 @@ let make_parse_options_internal
   in
   let module_ref_prefix = Options.haste_module_ref_prefix options in
   let facebook_fbt = Options.facebook_fbt options in
-  let arch = Options.arch options in
+  let new_signatures = Options.new_signatures options in
   let abstract_locations = Options.abstract_locations options in
   let prevent_munge =
     let default = not (Options.should_munge_underscores options) in
@@ -842,7 +830,7 @@ let make_parse_options_internal
     parse_prevent_munge = prevent_munge;
     parse_module_ref_prefix = module_ref_prefix;
     parse_facebook_fbt = facebook_fbt;
-    parse_arch = arch;
+    parse_new_signatures = new_signatures;
     parse_abstract_locations = abstract_locations;
     parse_type_asserts = Options.type_asserts options;
     parse_suppress_types = Options.suppress_types options;
