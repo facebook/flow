@@ -208,6 +208,7 @@ class documentation_searcher find =
     method! type_alias loc type_alias =
       let open Flow_ast.Statement.TypeAlias in
       let { id = (id_loc, _); comments; _ } = type_alias in
+      find loc comments;
       find id_loc comments;
       super#type_alias loc type_alias
 
@@ -220,6 +221,7 @@ class documentation_searcher find =
     method! interface loc interface =
       let open Flow_ast.Statement.Interface in
       let { id = (id_loc, _); comments; _ } = interface in
+      find loc comments;
       find id_loc comments;
       super#interface loc interface
   end

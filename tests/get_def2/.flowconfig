@@ -2,7 +2,6 @@
 lib
 
 [options]
-types_first=false
 module.system=haste
 module.system.haste.module_ref_prefix=m#
 no_flowlib=false

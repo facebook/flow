@@ -1,4 +1,4 @@
 // @flow
 
-var { ParentFoo } = require('./Parent');
+const { ParentFoo } = require('./Parent');
 module.exports = { ChildFoo : ParentFoo }

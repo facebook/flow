@@ -2,7 +2,7 @@
 Trace `ParentFoo` back to its def
 main.js:6:5,6:13
 Parent.js:4:19,4:27
-Parent.js:3:5,3:13
+Parent.js:3:7,3:15
 
 Trace `Parent2` back to its def (TODO #2)
 main.js:11:5,11:11
@@ -17,12 +17,12 @@ Parent.js:4:18,4:28
 Parent.js:4:18,4:28
 
 Trace `NonDestructuredFoo` back to its def
-Parent.js:3:23,3:27
-Parent.js:3:23,3:27
-Parent.js:3:18,3:20
+Parent.js:3:25,3:29
+Parent.js:3:25,3:29
+Parent.js:3:20,3:22
 
 Trace `ParentFoo` back to its def
-Parent.js:3:17,3:28
+Parent.js:3:19,3:30
 
 React class and attribute expressions
 react.js:6:7,6:7
@@ -63,4 +63,4 @@ Child.js:4:18,4:41
 
 Chaining `require`s through multiple files
 Child.js:4:20,4:27
-Parent.js:3:18,3:20
+Parent.js:3:20,3:22
