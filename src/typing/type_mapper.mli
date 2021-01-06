@@ -95,6 +95,8 @@ class virtual ['a] t_with_uses :
 
     method fun_call_type : Context.t -> 'a -> Type.funcalltype -> Type.funcalltype
 
+    method method_call_type : Context.t -> 'a -> Type.methodcalltype -> Type.methodcalltype
+
     method method_action : Context.t -> 'a -> Type.method_action -> Type.method_action
 
     method initial_state :

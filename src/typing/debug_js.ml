@@ -626,6 +626,17 @@ and dump_use_t_ (depth, tvars) cx t =
       in
       (fun a b -> spf "(%s, %s)" (resolve_tool a) (tool b)))
   in
+  let method_action = function
+    | CallM { meth_args_tlist; meth_tout = (call_r, call_tvar); meth_generic_this; _ }
+    | ChainM (_, _, _, { meth_args_tlist; meth_tout = (call_r, call_tvar); meth_generic_this; _ }, _)
+      ->
+      spf
+        "<this: %s>(%s) => (%s, %s)"
+        (Base.Option.value_map ~f:kid ~default:"None" meth_generic_this)
+        (String.concat "; " (Base.List.map ~f:call_arg_kid meth_args_tlist))
+        (string_of_reason call_r)
+        (tvar call_tvar)
+  in
   if depth = 0 then
     string_of_use_ctor t
   else
@@ -743,7 +754,8 @@ and dump_use_t_ (depth, tvars) cx t =
         t
     | MakeExactT _ -> p t
     | MapTypeT _ -> p t
-    | MethodT (_, _, _, prop, _, _) -> p ~extra:(spf "(%s)" (propref prop)) t
+    | MethodT (_, _, _, prop, action, _) ->
+      p ~extra:(spf "(%s, %s)" (propref prop) (method_action action)) t
     | MixinT (_, arg) -> p ~extra:(kid arg) t
     | NotT (_, arg) -> p ~extra:(tout arg) t
     | NullishCoalesceT (_, x, y) -> p ~extra:(spf "%s, %s" (kid x) (tout y)) t

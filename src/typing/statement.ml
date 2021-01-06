@@ -4141,7 +4141,7 @@ and optional_chain ~cond ~is_existence_check ?sentinel_refine cx ((loc, e) as ex
       let prop_t = Tvar.mk cx reason_prop in
       let lhs_t =
         Tvar.mk_no_wrap_where cx reason (fun t ->
-            let funtype = mk_methodcalltype super_t targts argts t in
+            let funtype = mk_methodcalltype targts argts t in
             let use_op =
               Op
                 (FunCallMethod
@@ -4190,12 +4190,12 @@ and optional_chain ~cond ~is_existence_check ?sentinel_refine cx ((loc, e) as ex
       define_internal cx reason "this";
       define_internal cx reason "super";
 
-      let this = this_ cx loc { This.comments = None } in
+      let meth_generic_this = this_ cx loc { This.comments = None } in
       let super_t = super_ cx super_loc in
       let super_reason = reason_of_t super_t in
       let lhs_t =
         Tvar.mk_no_wrap_where cx reason (fun t ->
-            let funtype = mk_methodcalltype this targts argts t in
+            let funtype = mk_methodcalltype ~meth_generic_this targts argts t in
             let propref = Named (super_reason, "constructor") in
             let use_op =
               Op
@@ -4878,10 +4878,9 @@ and optional_chain ~cond ~is_existence_check ?sentinel_refine cx ((loc, e) as ex
           in
           let prop_t = Tvar.mk cx reason_prop in
           let call_voided_out = Tvar.mk cx reason_call in
-          let get_opt_use argts _ this_t =
+          let get_opt_use argts _ _ =
             method_call_opt_use
               opt_state
-              ~this_t
               ~prop_t
               ~voided_out:call_voided_out
               reason_call
@@ -4902,7 +4901,9 @@ and optional_chain ~cond ~is_existence_check ?sentinel_refine cx ((loc, e) as ex
             Env.havoc_heap_refinements ();
             Tvar.mk_no_wrap_where cx reason_call (fun t ->
                 let frame = Env.peek_frame () in
-                let app = mk_methodcalltype obj_t targts argts t ~frame ~call_strict_arity:true in
+                let app =
+                  mk_boundfunctioncalltype obj_t targts argts t ~frame ~call_strict_arity:true
+                in
                 Flow.unify cx f prop_t;
                 let call_t =
                   match opt_state with
@@ -4958,10 +4959,9 @@ and optional_chain ~cond ~is_existence_check ?sentinel_refine cx ((loc, e) as ex
           let reason_lookup = mk_reason (RProperty None) lookup_loc in
           let call_voided_out = Tvar.mk cx expr_reason in
           let prop_t = Tvar.mk cx reason_lookup in
-          let get_opt_use (argts, elem_t) _ this_t =
+          let get_opt_use (argts, elem_t) _ _ =
             elem_call_opt_use
               opt_state
-              ~this_t
               ~prop_t
               ~voided_out:call_voided_out
               ~reason_call
@@ -5185,7 +5185,6 @@ and method_call_opt_use
     opt_state
     ~voided_out
     ~prop_t
-    ~this_t
     reason
     ~use_op
     ?(call_strict_arity = true)
@@ -5199,7 +5198,7 @@ and method_call_opt_use
   let reason_prop = mk_reason (RProperty (Some name)) prop_loc in
   let frame = Env.peek_frame () in
   let reason_expr = mk_reason (RProperty (Some name)) expr_loc in
-  let app = mk_opt_methodcalltype this_t targts argts frame call_strict_arity in
+  let app = mk_opt_methodcalltype targts argts frame call_strict_arity in
   let propref = Named (reason_prop, name) in
   let action =
     match opt_state with
@@ -5227,7 +5226,7 @@ and method_call
     ( f,
       Tvar.mk_no_wrap_where cx reason (fun t ->
           let frame = Env.peek_frame () in
-          let app = mk_methodcalltype obj_t targts argts t ~frame ~call_strict_arity in
+          let app = mk_boundfunctioncalltype obj_t targts argts t ~frame ~call_strict_arity in
           Flow.flow cx (f, CallT (use_op, reason, app))) )
   | None ->
     Env.havoc_heap_refinements ();
@@ -5237,7 +5236,7 @@ and method_call
       Tvar.mk_no_wrap_where cx reason (fun t ->
           let frame = Env.peek_frame () in
           let reason_expr = mk_reason (RProperty (Some name)) expr_loc in
-          let app = mk_methodcalltype obj_t targts argts t ~frame ~call_strict_arity in
+          let app = mk_methodcalltype targts argts t ~frame ~meth_strict_arity:call_strict_arity in
           let propref = Named (reason_prop, name) in
           Flow.flow
             cx
@@ -5246,7 +5245,6 @@ and method_call
 and elem_call_opt_use
     opt_state
     ~voided_out
-    ~this_t
     ~prop_t
     ~reason_call
     ~reason_lookup
@@ -5257,7 +5255,7 @@ and elem_call_opt_use
     elem_t =
   Env.havoc_heap_refinements ();
   let frame = Env.peek_frame () in
-  let app = mk_opt_methodcalltype this_t targts argts frame true in
+  let app = mk_opt_methodcalltype targts argts frame true in
   let action =
     match opt_state with
     | NewChain -> OptChainM (reason_chain, reason_expr, prop_t, app, voided_out)
@@ -6391,7 +6389,6 @@ and jsx_desugar cx name component_t props attributes children locs =
               Named (reason_createElement, "createElement"),
               CallM
                 (mk_methodcalltype
-                   react
                    None
                    ([Arg component_t; Arg props] @ Base.List.map ~f:(fun c -> Arg c) children)
                    tvar),

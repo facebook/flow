@@ -939,7 +939,7 @@ module Kit (Flow : Flow_common.S) : REACT = struct
         let resolve_call this tool t =
           let reason = reason_of_t t in
           let return_tvar = (reason, Tvar.mk_no_wrap cx reason) in
-          let funcall = mk_methodcalltype this None [] return_tvar in
+          let funcall = mk_boundfunctioncalltype this None [] return_tvar in
           rec_flow cx trace (t, CallT (unknown_use, reason, funcall));
           resolve tool (OpenT return_tvar)
         in
@@ -1158,7 +1158,7 @@ module Kit (Flow : Flow_common.S) : REACT = struct
                     | Some t ->
                       (* Tie the `this` knot with BindT *)
                       let dummy_return = (reason_op, Tvar.mk_no_wrap cx reason_op) in
-                      let calltype = mk_methodcalltype knot.this None [] dummy_return in
+                      let calltype = mk_boundfunctioncalltype knot.this None [] dummy_return in
                       rec_flow cx trace (t, BindT (unknown_use, reason_op, calltype, true));
 
                       (* Because we are creating an instance type, which can be used as an
