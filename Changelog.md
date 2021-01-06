@@ -1,3 +1,12 @@
+### 0.142.0
+
+Likely to cause new Flow errors:
+* Disallow flowing functions or inexact objects to indexed objects to improve object soundness. This can cause errors if you are passing a function or inexact objects when an indexed object is expected.
+* Flow now processes imports before checking the body of a file. In some rare cases this can expose previously skipped errors due to the processing order.
+
+Notable bug fixes:
+* Fix `No available version of ocaml-base-compiler satisfies the constraints` error from `make all-homebrew` (thanks @bayandin).
+
 ### 0.141.0
 
 * Improved inference of chained generic method calls, such as `Array` methods. For example, given `[1, 2].map(a => a).forEach(b => b)`, Flow now infers that `b` is a `number` rather than `any | number`.
