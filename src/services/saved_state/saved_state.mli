@@ -7,6 +7,7 @@
 
 type denormalized_file_data = {
   resolved_requires: Module_heaps.resolved_requires;
+  exports: Exports.t;
   hash: Xx.hash;
 }
 

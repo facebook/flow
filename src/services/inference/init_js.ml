@@ -37,11 +37,12 @@ let parse_lib_file ~reader options file =
         let ast = Parsing_heaps.Mutator_reader.get_ast_unsafe reader lib_file in
         let file_sig = Parsing_heaps.Mutator_reader.get_file_sig_unsafe reader lib_file in
         let sig_extra = Parsing_heaps.InitLibs in
+        let exports = (* TODO *) ([] : Exports.t) in
         (* Parsing_service_js.result only returns tolerable file sig errors, dropping parse
            errors. So there may actually have been some, but they were ignored.
            TODO: where do we surface lib parse errors? *)
         let parse_errors = [] in
-        Parsing.Parse_ok { ast; file_sig; sig_extra; tolerable_errors; parse_errors }
+        Parsing.Parse_ok { ast; file_sig; sig_extra; tolerable_errors; parse_errors; exports }
       else if List.length results.Parsing.parse_fails > 0 then
         let (_, _, parse_fails) = List.hd results.Parsing.parse_fails in
         Parsing.Parse_fail parse_fails

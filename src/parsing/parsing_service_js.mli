@@ -19,6 +19,7 @@ type result =
       sig_extra: Parsing_heaps.sig_extra;
       tolerable_errors: File_sig.With_Loc.tolerable_error list;
       parse_errors: parse_error list;
+      exports: Exports.t;
     }
   | Parse_fail of parse_failure
   | Parse_skip of parse_skip_reason

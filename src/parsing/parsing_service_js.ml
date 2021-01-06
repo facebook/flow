@@ -16,6 +16,7 @@ type result =
       sig_extra: Parsing_heaps.sig_extra;
       tolerable_errors: File_sig.With_Loc.tolerable_error list;
       parse_errors: parse_error list;
+      exports: Exports.t;
     }
   | Parse_fail of parse_failure
   | Parse_skip of parse_skip_reason
@@ -443,7 +444,7 @@ let do_parse ~parse_options ~info content file =
         (match exports_info with
         | Error e -> Parse_fail (File_sig_error e)
         | Ok (exports_info, tolerable_errors) ->
-          let (env, errors, sig_extra) =
+          let (env, errors, sig_extra, exports) =
             if not new_signatures then
               let signature = Signature_builder.program ast ~exports_info in
               let (errors, env, sig_ast) =
@@ -478,7 +479,29 @@ let do_parse ~parse_options ~info content file =
                 | Ok fs -> fs
                 | Error _ -> assert false
               in
-              (env, errors, Parsing_heaps.TypesFirst { sig_ast; sig_file_sig; aloc_table })
+              let exports =
+                let sig_opts =
+                  {
+                    Type_sig_parse.type_asserts;
+                    suppress_types;
+                    munge = not prevent_munge;
+                    ignore_static_propTypes;
+                    facebook_keyMirror;
+                    facebook_fbt;
+                    max_literal_len;
+                    exact_by_default;
+                    module_ref_prefix;
+                    enable_enums;
+                    enable_this_annot;
+                  }
+                in
+                let (_errors, _locs, type_sig) =
+                  let strict = Docblock.is_strict info in
+                  Type_sig_utils.parse_and_pack_module ~strict sig_opts (Some file) ast
+                in
+                Exports.of_type_sig type_sig
+              in
+              (env, errors, Parsing_heaps.TypesFirst { sig_ast; sig_file_sig; aloc_table }, exports)
             else
               let sig_opts =
                 {
@@ -529,7 +552,8 @@ let do_parse ~parse_options ~info content file =
                 Type_sig_collections.Locs.to_array locs
                 |> ALoc.ALocRepresentationDoNotUse.make_table file
               in
-              (Some !env, errors, Parsing_heaps.TypeSig (type_sig, aloc_table))
+              let exports = Exports.of_type_sig type_sig in
+              (Some !env, errors, Parsing_heaps.TypeSig (type_sig, aloc_table), exports)
           in
           let tolerable_errors =
             Signature_builder_deps.PrintableErrorSet.fold
@@ -538,7 +562,7 @@ let do_parse ~parse_options ~info content file =
               tolerable_errors
           in
           let file_sig = File_sig.With_Loc.verified env exports_info in
-          Parse_ok { ast; file_sig; sig_extra; tolerable_errors; parse_errors })
+          Parse_ok { ast; file_sig; sig_extra; tolerable_errors; parse_errors; exports })
   with
   | Parse_error.Error (first_parse_error :: _) -> Parse_fail (Parse_error first_parse_error)
   | e ->
@@ -626,10 +650,10 @@ let reducer
           in
           begin
             match do_parse ~parse_options ~info content file with
-            | Parse_ok { ast; file_sig; sig_extra; tolerable_errors; parse_errors = _ } ->
+            | Parse_ok { ast; file_sig; exports; sig_extra; tolerable_errors; parse_errors = _ } ->
               (* if parse_options.fail == true, then parse errors will hit Parse_fail below. otherwise,
                  ignore any parse errors we get here. *)
-              worker_mutator.Parsing_heaps.add_file file info (ast, file_sig) sig_extra;
+              worker_mutator.Parsing_heaps.add_file file ~exports info (ast, file_sig) sig_extra;
               let parse_ok = FilenameMap.add file tolerable_errors parse_results.parse_ok in
               { parse_results with parse_ok }
             | Parse_fail converted ->

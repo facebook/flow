@@ -9,6 +9,7 @@ open Utils_js
 
 type denormalized_file_data = {
   resolved_requires: Module_heaps.resolved_requires;
+  exports: Exports.t;
   hash: Xx.hash;
 }
 
@@ -198,9 +199,9 @@ end = struct
     in
     { Module_heaps.resolved_modules; phantom_dependents; hash }
 
-  let normalize_file_data ~normalizer { resolved_requires; hash } =
+  let normalize_file_data ~normalizer { resolved_requires; exports; hash } =
     let resolved_requires = normalize_resolved_requires ~normalizer resolved_requires in
-    { resolved_requires; hash }
+    { resolved_requires; exports; hash }
 
   let normalize_parsed_data ~normalizer { info; normalized_file_data } =
     let info = normalize_info ~normalizer info in
@@ -216,6 +217,7 @@ end = struct
           {
             resolved_requires =
               Module_heaps.Reader.get_resolved_requires_unsafe ~reader ~audit:Expensive.ok fn;
+            exports = Parsing_heaps.Reader.get_exports_unsafe ~reader fn;
             hash = Parsing_heaps.Reader.get_file_hash_unsafe ~reader fn;
           };
       }
@@ -510,9 +512,9 @@ end = struct
     Module_heaps.mk_resolved_requires ~resolved_modules ~phantom_dependents
 
   (** Turns all the relative paths in a file's data back into absolute paths. *)
-  let denormalize_file_data ~root { resolved_requires; hash } =
+  let denormalize_file_data ~root { resolved_requires; exports; hash } =
     let resolved_requires = denormalize_resolved_requires ~root resolved_requires in
-    { resolved_requires; hash }
+    { resolved_requires; exports; hash }
 
   let partially_denormalize_parsed_data ~denormalizer { info; normalized_file_data } =
     let info = denormalize_info ~denormalizer info in

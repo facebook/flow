@@ -16,6 +16,8 @@ module type READER = sig
 
   val get_docblock : reader:reader -> File_key.t -> Docblock.t option
 
+  val get_exports : reader:reader -> File_key.t -> Exports.t option
+
   val get_file_sig : reader:reader -> File_key.t -> File_sig.With_Loc.t option
 
   val get_file_hash : reader:reader -> File_key.t -> Xx.hash option
@@ -29,6 +31,8 @@ module type READER = sig
   val get_sig_ast_aloc_table_unsafe_lazy : reader:reader -> ALoc.t -> ALoc.table Lazy.t
 
   val get_docblock_unsafe : reader:reader -> File_key.t -> Docblock.t
+
+  val get_exports_unsafe : reader:reader -> File_key.t -> Exports.t
 
   val get_file_sig_unsafe : reader:reader -> File_key.t -> File_sig.With_Loc.t
 
@@ -62,6 +66,7 @@ type sig_extra =
 type worker_mutator = {
   add_file:
     File_key.t ->
+    exports:Exports.t ->
     Docblock.t ->
     (Loc.t, Loc.t) Flow_ast.Program.t * File_sig.With_Loc.t ->
     sig_extra ->
@@ -85,6 +90,8 @@ module From_saved_state : sig
   val add_file_sig : File_key.t -> File_sig.With_Loc.t -> unit
 
   val add_file_hash : File_key.t -> Xx.hash -> unit
+
+  val add_exports : File_key.t -> Exports.t -> unit
 end
 
 (* Temporary API. This is needed for the types-first 2.0 demo, which produces

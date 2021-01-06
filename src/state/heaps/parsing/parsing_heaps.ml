@@ -155,6 +155,15 @@ module FileHashHeap =
       let description = "FileHash"
     end)
 
+module ExportsHeap =
+  SharedMem.NoCache
+    (File_key)
+    (struct
+      type t = Exports.t
+
+      let description = "Exports"
+    end)
+
 type sig_extra =
   | InitLibs
   | TypesFirst of {
@@ -166,10 +175,11 @@ type sig_extra =
 
 (* Groups operations on the multiple heaps that need to stay in sync *)
 module ParsingHeaps = struct
-  let add file info (ast, file_sig) extra =
+  let add file ~exports info (ast, file_sig) extra =
     WorkerCancel.with_no_cancellations (fun () ->
         ASTHeap.add file (compactify_loc ast);
         DocblockHeap.add file info;
+        ExportsHeap.add file exports;
         FileSigHeap.add file file_sig;
         match extra with
         | InitLibs -> ()
@@ -188,6 +198,7 @@ module ParsingHeaps = struct
         TypeSigHeap.oldify_batch files;
         SigASTALocTableHeap.oldify_batch files;
         DocblockHeap.oldify_batch files;
+        ExportsHeap.oldify_batch files;
         FileSigHeap.oldify_batch files;
         SigFileSigHeap.oldify_batch files;
         FileHashHeap.oldify_batch files)
@@ -199,6 +210,7 @@ module ParsingHeaps = struct
         TypeSigHeap.remove_old_batch files;
         SigASTALocTableHeap.remove_old_batch files;
         DocblockHeap.remove_old_batch files;
+        ExportsHeap.remove_old_batch files;
         FileSigHeap.remove_old_batch files;
         SigFileSigHeap.remove_old_batch files;
         FileHashHeap.remove_old_batch files)
@@ -210,6 +222,7 @@ module ParsingHeaps = struct
         TypeSigHeap.revive_batch files;
         SigASTALocTableHeap.revive_batch files;
         DocblockHeap.revive_batch files;
+        ExportsHeap.revive_batch files;
         FileSigHeap.revive_batch files;
         SigFileSigHeap.revive_batch files;
         FileHashHeap.revive_batch files)
@@ -224,6 +237,8 @@ module type READER = sig
 
   val get_docblock : reader:reader -> File_key.t -> Docblock.t option
 
+  val get_exports : reader:reader -> File_key.t -> Exports.t option
+
   val get_file_sig : reader:reader -> File_key.t -> File_sig.With_Loc.t option
 
   val get_file_hash : reader:reader -> File_key.t -> Xx.hash option
@@ -237,6 +252,8 @@ module type READER = sig
   val get_sig_ast_aloc_table_unsafe_lazy : reader:reader -> ALoc.t -> ALoc.table Lazy.t
 
   val get_docblock_unsafe : reader:reader -> File_key.t -> Docblock.t
+
+  val get_exports_unsafe : reader:reader -> File_key.t -> Exports.t
 
   val get_file_sig_unsafe : reader:reader -> File_key.t -> File_sig.With_Loc.t
 
@@ -274,6 +291,8 @@ end = struct
 
   let get_docblock ~reader:_ = DocblockHeap.get
 
+  let get_exports ~reader:_ = ExportsHeap.get
+
   let get_file_sig ~reader:_ = FileSigHeap.get
 
   let get_file_hash ~reader:_ = FileHashHeap.get
@@ -303,6 +322,11 @@ end = struct
     | Some docblock -> docblock
     | None -> raise (Docblock_not_found (File_key.to_string file))
 
+  let get_exports_unsafe ~reader:_ file =
+    match ExportsHeap.get file with
+    | Some exports -> exports
+    | None -> raise (Exports_not_found (File_key.to_string file))
+
   let get_file_sig_unsafe ~reader file =
     match get_file_sig ~reader file with
     | Some file_sig -> file_sig
@@ -328,6 +352,7 @@ end
 type worker_mutator = {
   add_file:
     File_key.t ->
+    exports:Exports.t ->
     Docblock.t ->
     (Loc.t, Loc.t) Flow_ast.Program.t * File_sig.With_Loc.t ->
     sig_extra ->
@@ -378,8 +403,8 @@ end = struct
 
   (* Ideally we'd assert that file was oldified and not revived, but it's too expensive to pass the
    * set of oldified files to the worker *)
-  let add_file file info (ast, file_sig) sig_opt =
-    ParsingHeaps.add file info (ast, file_sig) sig_opt
+  let add_file file ~exports info (ast, file_sig) sig_opt =
+    ParsingHeaps.add file ~exports info (ast, file_sig) sig_opt
 
   (* Ideally we'd assert that file was oldified and not revived, but it's too expensive to pass the
    * set of oldified files to the worker *)
@@ -452,6 +477,12 @@ module Reader : READER with type reader = State_reader.t = struct
     else
       DocblockHeap.get key
 
+  let get_exports ~reader:_ key =
+    if should_use_oldified key then
+      ExportsHeap.get_old key
+    else
+      ExportsHeap.get key
+
   let get_file_sig ~reader:_ key =
     if should_use_oldified key then
       FileSigHeap.get_old key
@@ -499,6 +530,11 @@ module Reader : READER with type reader = State_reader.t = struct
     | Some docblock -> docblock
     | None -> raise (Docblock_not_found (File_key.to_string file))
 
+  let get_exports_unsafe ~reader file =
+    match get_exports ~reader file with
+    | Some exports -> exports
+    | None -> raise (Exports_not_found (File_key.to_string file))
+
   let get_file_sig_unsafe ~reader file =
     match get_file_sig ~reader file with
     | Some file_sig -> file_sig
@@ -541,6 +577,11 @@ module Reader_dispatcher : READER with type reader = Abstract_state_reader.t = s
     | Mutator_state_reader reader -> Mutator_reader.get_docblock ~reader
     | State_reader reader -> Reader.get_docblock ~reader
 
+  let get_exports ~reader =
+    match reader with
+    | Mutator_state_reader reader -> Mutator_reader.get_exports ~reader
+    | State_reader reader -> Reader.get_exports ~reader
+
   let get_file_sig ~reader =
     match reader with
     | Mutator_state_reader reader -> Mutator_reader.get_file_sig ~reader
@@ -574,6 +615,11 @@ module Reader_dispatcher : READER with type reader = Abstract_state_reader.t = s
     | Mutator_state_reader reader -> Mutator_reader.get_docblock_unsafe ~reader
     | State_reader reader -> Reader.get_docblock_unsafe ~reader
 
+  let get_exports_unsafe ~reader =
+    match reader with
+    | Mutator_state_reader reader -> Mutator_reader.get_exports_unsafe ~reader
+    | State_reader reader -> Reader.get_exports_unsafe ~reader
+
   let get_file_sig_unsafe ~reader =
     match reader with
     | Mutator_state_reader reader -> Mutator_reader.get_file_sig_unsafe ~reader
@@ -599,10 +645,14 @@ module From_saved_state : sig
   val add_file_sig : File_key.t -> File_sig.With_Loc.t -> unit
 
   val add_file_hash : File_key.t -> Xx.hash -> unit
+
+  val add_exports : File_key.t -> Exports.t -> unit
 end = struct
   let add_file_sig = FileSigHeap.add
 
   let add_file_hash = FileHashHeap.add
+
+  let add_exports = ExportsHeap.add
 end
 
 let add_aloc_table = SigASTALocTableHeap.add

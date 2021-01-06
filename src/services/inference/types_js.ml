@@ -2465,7 +2465,7 @@ let init_from_saved_state ~profiling ~workers ~saved_state ~updates options =
               workers
               ~job:
                 (List.fold_left (fun () (fn, parsed_file_data) ->
-                     let { Saved_state.hash; resolved_requires } =
+                     let { Saved_state.hash; exports; resolved_requires } =
                        Saved_state.denormalize_file_data
                          ~root
                          parsed_file_data.Saved_state.normalized_file_data
@@ -2473,6 +2473,9 @@ let init_from_saved_state ~profiling ~workers ~saved_state ~updates options =
 
                      (* Restore the FileHashHeap *)
                      Parsing_heaps.From_saved_state.add_file_hash fn hash;
+
+                     (* Restore the ExportsHeap *)
+                     Parsing_heaps.From_saved_state.add_exports fn exports;
 
                      (* Restore the ResolvedRequiresHeap *)
                      Module_heaps.From_saved_state.add_resolved_requires fn resolved_requires))
