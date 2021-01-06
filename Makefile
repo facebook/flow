@@ -152,6 +152,7 @@ MODULES=\
   src/state/heaps/parsing/exceptions\
   src/state/locals/module\
   src/state/readers\
+  src/third-party/fuzzy-path/src\
   src/third-party/lz4\
   src/third-party/ocaml-sourcemaps/src\
   src/third-party/ocaml-vlq/src\
@@ -291,6 +292,12 @@ FRAMEWORK_OPTS=$(foreach framework, $(FRAMEWORKS),-cclib -framework -cclib $(fra
 BYTECODE_LINKER_FLAGS=$(NATIVE_OBJECT_FILES) $(NATIVE_LIB_OPTS) $(EXTRA_LIB_OPTS) $(FRAMEWORK_OPTS)
 LINKER_FLAGS=$(BYTECODE_LINKER_FLAGS)
 
+# For fuzzy-path
+CXX=g++
+CXXFLAGS=-s -std=c++11 -Wall -O3 -static-libstdc++
+FUZZY_PATH_DEPS=src/third-party/fuzzy-path/libfuzzy-path.a
+BUILT_FUZZY_PATH_DEPS=$(addprefix _build/,$(FUZZY_PATH_DEPS))
+
 RELEASE_TAGS=$(if $(FLOW_RELEASE),-tag warn_a,)
 
 OCB=ocamlbuild -use-ocamlfind -no-links -j $(OCAMLBUILD_JOBS)
@@ -378,6 +385,18 @@ _build/scripts/ppx_gen_flowlibs.exe: $(BUILT_LZ4_OBJECT_FILES) _build/src/common
 		_build/scripts/ppx_gen_flowlibs/ppx_gen_flowlibs.cmxa \
 		_build/scripts/ppx_gen_flowlibs/ppx_gen_flowlibs_standalone.cmxa \
 		-o "$@"
+
+_build/src/third-party/fuzzy-path _build/src/third-party/fuzzy-path/src _build/src/third-party/fuzzy-path/vendor:
+	mkdir -p $@
+
+_build/src/third-party/fuzzy-path/src/%.o: src/third-party/fuzzy-path/src/%.cpp | _build/src/third-party/fuzzy-path/src
+	$(CXX) $(CXXFLAGS) -o $@ -c $<
+
+_build/src/third-party/fuzzy-path/vendor/%.o: src/third-party/fuzzy-path/vendor/%.cpp | _build/src/third-party/fuzzy-path/vendor
+	$(CXX) $(CXXFLAGS) -o $@ -c $<
+
+_build/src/third-party/fuzzy-path/libfuzzy-path.a: _build/src/third-party/fuzzy-path/src/fuzzy_path_wrapper.o _build/src/third-party/fuzzy-path/vendor/MatcherBase.o _build/src/third-party/fuzzy-path/vendor/score_match.o | _build/src/third-party/fuzzy-path
+	ar $(ARFLAGS) $@ $^
 
 bin/flow$(EXE): build-flow
 	mkdir -p $(@D)
