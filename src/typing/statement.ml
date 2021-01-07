@@ -4443,7 +4443,7 @@ and optional_chain ~cond ~is_existence_check ?sentinel_refine cx ((loc, e) as ex
        * exp = ast for `a?.b?.c` with type T1 U T2
        * preds = assuming the overall function was called with ~cond,
              "a exists and has non-nullish property b", "a.b exists and has
-             truthy property c", and "a.b.c is truthy", as well as the the
+             truthy property c", and "a.b.c is truthy", as well as the
              types of a, a.b, and a.b.c
        * possibly an additional refinement based on the sentinel_refine function,
          passed in by the caller.
