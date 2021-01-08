@@ -172,11 +172,23 @@ let is_lazy_mode_set_in_flowconfig flowconfig_name (root : Path.t) : bool =
   in
   lazy_mode <> None
 
-let get_root (state : state) : Path.t option =
+let get_ienv (state : state) : initialized_env option =
   match state with
-  | Connected cenv -> Some cenv.c_ienv.i_root
-  | Disconnected denv -> Some denv.d_ienv.i_root
-  | _ -> None
+  | Connected cenv -> Some cenv.c_ienv
+  | Disconnected denv -> Some denv.d_ienv
+  | Pre_init _ -> None
+  | Post_shutdown -> None
+
+let update_ienv f state =
+  match state with
+  | Connected cenv -> Connected { cenv with c_ienv = f cenv.c_ienv }
+  | Disconnected denv -> Disconnected { denv with d_ienv = f denv.d_ienv }
+  | Pre_init _
+  | Post_shutdown ->
+    state
+
+let get_root (state : state) : Path.t option =
+  get_ienv state |> Base.Option.map ~f:(fun ienv -> ienv.i_root)
 
 let command_key_of_path (path : Path.t) : string = File_url.create (Path.to_string path)
 
@@ -184,33 +196,19 @@ let command_key_of_state (state : state) : string =
   Base.Option.value_map ~f:command_key_of_path ~default:"" (get_root state)
 
 let get_open_files (state : state) : open_file_info Lsp.UriMap.t option =
-  match state with
-  | Connected cenv -> Some cenv.c_ienv.i_open_files
-  | Disconnected denv -> Some denv.d_ienv.i_open_files
-  | _ -> None
+  get_ienv state |> Base.Option.map ~f:(fun ienv -> ienv.i_open_files)
 
 let update_open_file
     (uri : Lsp.DocumentUri.t) (open_file_info : open_file_info option) (state : state) : state =
-  let update_ienv ienv =
+  let f ienv =
     match open_file_info with
     | Some open_file_info ->
       { ienv with i_open_files = Lsp.UriMap.add uri open_file_info ienv.i_open_files }
     | None -> { ienv with i_open_files = Lsp.UriMap.remove uri ienv.i_open_files }
   in
-  match state with
-  | Connected cenv -> Connected { cenv with c_ienv = update_ienv cenv.c_ienv }
-  | Disconnected denv -> Disconnected { denv with d_ienv = update_ienv denv.d_ienv }
-  | _ -> failwith ("client shouldn't be updating files in state " ^ string_of_state state)
+  update_ienv f state
 
-let update_errors f state =
-  match state with
-  | Connected cenv ->
-    Connected { cenv with c_ienv = { cenv.c_ienv with i_errors = f cenv.c_ienv.i_errors } }
-  | Disconnected denv ->
-    Disconnected { denv with d_ienv = { denv.d_ienv with i_errors = f denv.d_ienv.i_errors } }
-  | Pre_init _
-  | Post_shutdown ->
-    state
+let update_errors f state = update_ienv (fun ienv -> { ienv with i_errors = f ienv.i_errors }) state
 
 let new_metadata (state : state) (message : Jsonrpc.message) : LspProt.metadata =
   let (start_lsp_state, start_lsp_state_reason, start_server_status, start_watcher_status) =
@@ -434,12 +432,7 @@ let show_status
         { future_ienv with i_status = Shown (None, future_params) }
       | _ -> future_ienv
     in
-    let mark_state_shown state =
-      match state with
-      | Connected cenv -> Connected { cenv with c_ienv = mark_ienv_shown cenv.c_ienv }
-      | Disconnected denv -> Disconnected { denv with d_ienv = mark_ienv_shown denv.d_ienv }
-      | _ -> state
-    in
+    let mark_state_shown state = update_ienv mark_ienv_shown state in
     let handle_error _e state = mark_state_shown state in
     let handle_result (r : ShowMessageRequest.result) state =
       let state = mark_state_shown state in
@@ -1190,13 +1183,7 @@ let do_rage flowconfig_name (state : state) : Rage.result =
        (minimum tmp_dir and flowconfig) as the server was launched with.
        Therefore there's no need to ask the monitor. We'll just work with what
        log files we'd write to were we ourselves asked to start a server. *)
-    let ienv =
-      match state with
-      | Pre_init _ -> None
-      | Disconnected denv -> Some denv.d_ienv
-      | Connected cenv -> Some cenv.c_ienv
-      | Post_shutdown -> None
-    in
+    let ienv = get_ienv state in
     let items =
       match ienv with
       | None -> items
@@ -1236,10 +1223,7 @@ let parse_json (state : state) (json : Jsonrpc.message) : lsp_message =
   (* to know how to parse a response, we must provide the corresponding request *)
   let outstanding (id : lsp_id) : lsp_request =
     let ienv =
-      match state with
-      | Connected env -> env.c_ienv
-      | Disconnected env -> env.d_ienv
-      | _ -> failwith "Didn't expect an LSP response yet"
+      Base.Option.value_exn ~message:"Didn't expect an LSP response yet" (get_ienv state)
     in
     try IdMap.find id ienv.i_outstanding_local_requests
     with Not_found -> WrappedMap.find (decode_wrapped id) ienv.i_outstanding_requests_from_server
@@ -1719,10 +1703,7 @@ and main_handle_unsafe flowconfig_name (state : state) (event : event) :
          })
   | (_, Client_message ((ResponseMessage (id, result) as c), metadata)) ->
     let ienv =
-      match state with
-      | Connected env -> env.c_ienv
-      | Disconnected env -> env.d_ienv
-      | _ -> failwith "Didn't expect an LSP response yet"
+      Base.Option.value_exn ~message:"Didn't expect an LSP response yet" (get_ienv state)
     in
     begin
       try
@@ -1731,12 +1712,7 @@ and main_handle_unsafe flowconfig_name (state : state) (event : event) :
         let i_outstanding_local_handlers = IdMap.remove id ienv.i_outstanding_local_handlers in
         let i_outstanding_local_requests = IdMap.remove id ienv.i_outstanding_local_requests in
         let ienv = { ienv with i_outstanding_local_handlers; i_outstanding_local_requests } in
-        let state =
-          match state with
-          | Connected env -> Connected { env with c_ienv = ienv }
-          | Disconnected env -> Disconnected { env with d_ienv = ienv }
-          | _ -> failwith "Didn't expect an LSP response to be found yet"
-        in
+        let state = update_ienv (fun _ -> ienv) state in
         match (result, handle) with
         | (ShowMessageRequestResult result, ShowMessageHandler handle) ->
           Ok (handle result state, LogNotNeeded)
