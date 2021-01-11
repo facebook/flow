@@ -47,6 +47,8 @@ module Mutator_reader : sig
   include READER with type reader = Mutator_state_reader.t
 
   val get_old_file_hash : reader:Mutator_state_reader.t -> File_key.t -> Xx.hash option
+
+  val get_old_exports : reader:Mutator_state_reader.t -> File_key.t -> Exports.t option
 end
 
 module Reader : READER with type reader = State_reader.t

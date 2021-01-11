@@ -1920,7 +1920,20 @@ end = struct
       || deleted_count > 0
       || not (FilenameSet.is_empty unparsed_set)
     in
-    let env = { env with ServerEnv.files = parsed; unparsed; dependency_info } in
+
+    Hh_logger.info "Updating index";
+    let%lwt exports =
+      Memory_utils.with_memory_timer_lwt ~options "Indexing" profiling (fun () ->
+          Export_service.update
+            ~workers
+            ~reader
+            ~update:new_or_changed
+            ~remove:deleted
+            env.ServerEnv.exports)
+    in
+    Hh_logger.info "Done updating index";
+
+    let env = { env with ServerEnv.files = parsed; unparsed; dependency_info; exports } in
     let intermediate_values =
       ( deleted,
         direct_dependent_files,
@@ -2417,7 +2430,8 @@ let make_next_files ~libs ~file_options root =
 
     files |> Base.List.map ~f:(Files.filename_from_string ~options:file_options) |> Bucket.of_list
 
-let mk_init_env ~files ~unparsed ~package_json_files ~dependency_info ~ordered_libs ~libs ~errors =
+let mk_init_env
+    ~files ~unparsed ~package_json_files ~dependency_info ~ordered_libs ~libs ~errors ~exports =
   {
     ServerEnv.files;
     unparsed;
@@ -2430,6 +2444,7 @@ let mk_init_env ~files ~unparsed ~package_json_files ~dependency_info ~ordered_l
     coverage = FilenameMap.empty;
     collated_errors = ref None;
     connections = Persistent_connection.empty;
+    exports;
   }
 
 let init_from_saved_state ~profiling ~workers ~saved_state ~updates options =
@@ -2563,6 +2578,13 @@ let init_from_saved_state ~profiling ~workers ~saved_state ~updates options =
       { ServerEnv.local_errors; merge_errors = FilenameMap.empty; warnings; suppressions }
     in
     let dependency_info = Dependency_info.of_map dependency_graph in
+
+    Hh_logger.info "Indexing files";
+    let%lwt exports =
+      Memory_utils.with_memory_timer_lwt ~options "Indexing" profiling (fun () ->
+          Export_service.init ~workers ~reader parsed_set)
+    in
+
     let env =
       mk_init_env
         ~files:parsed_set
@@ -2572,6 +2594,7 @@ let init_from_saved_state ~profiling ~workers ~saved_state ~updates options =
         ~ordered_libs
         ~libs
         ~errors
+        ~exports
     in
     Lwt.return (env, libs_ok)
   in
@@ -2692,6 +2715,14 @@ let init_from_scratch ~profiling ~workers options =
     Memory_utils.with_memory_timer_lwt ~options "CalcDepsTypecheck" profiling (fun () ->
         Dep_service.calc_dependency_info ~options ~reader workers ~parsed)
   in
+
+  Hh_logger.info "Indexing files";
+  let%lwt exports =
+    Memory_utils.with_memory_timer_lwt ~options "Indexing" profiling (fun () ->
+        Export_service.init ~workers ~reader parsed)
+  in
+  Hh_logger.info "Done";
+
   let env =
     mk_init_env
       ~files:parsed
@@ -2701,6 +2732,7 @@ let init_from_scratch ~profiling ~workers options =
       ~ordered_libs
       ~libs
       ~errors
+      ~exports
   in
   Lwt.return (FilenameSet.empty, env, libs_ok)
 
