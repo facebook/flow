@@ -24,11 +24,37 @@ module Make (F : Func_sig.S) = struct
 
   type set_type = Type.t -> unit
 
-  and field =
+  type field =
     | Annot of Type.t
     | Infer of func_sig * set_asts
 
   type field' = ALoc.t option * Polarity.t * field
+
+  type typeapp = ALoc.t * Type.t * Type.t list option
+
+  type extends =
+    | Explicit of typeapp
+    | Implicit of { null: bool }
+
+  type class_super = {
+    extends: extends;
+    mixins: typeapp list;
+    (* declare class only *)
+    implements: typeapp list;
+    this_tparam: Type.typeparam;
+    this_t: Type.t;
+  }
+
+  type interface_super = {
+    inline: bool;
+    (* Anonymous interface, can appear anywhere inside a type *)
+    extends: typeapp list;
+    callable: bool;
+  }
+
+  type super =
+    | Interface of interface_super
+    | Class of class_super
 
   type func_info = ALoc.t option * func_sig * set_asts * set_type
 
@@ -56,26 +82,6 @@ module Make (F : Func_sig.S) = struct
     static: signature;
     instance: signature;
   }
-
-  and super =
-    | Interface of {
-        inline: bool;
-        (* Anonymous interface, can appear anywhere inside a type *)
-        extends: typeapp list;
-        callable: bool;
-      }
-    | Class of {
-        extends: extends;
-        mixins: typeapp list;
-        (* declare class only *)
-        implements: typeapp list;
-      }
-
-  and extends =
-    | Explicit of typeapp
-    | Implicit of { null: bool }
-
-  and typeapp = ALoc.t * Type.t * Type.t list option
 
   let empty id reason tparams tparams_map super =
     let empty_sig reason =
@@ -335,16 +341,39 @@ module Make (F : Func_sig.S) = struct
   let subst_super cx map = function
     | Interface { inline; extends; callable } ->
       Interface { inline; extends = Base.List.map ~f:(subst_typeapp cx map) extends; callable }
-    | Class { extends; mixins; implements } ->
+    | Class { extends; mixins; implements; this_t; this_tparam } ->
       Class
         {
           extends = subst_extends cx map extends;
           mixins = Base.List.map ~f:(subst_typeapp cx map) mixins;
           implements = Base.List.map ~f:(subst_typeapp cx map) implements;
+          this_t = Flow.subst cx map this_t;
+          this_tparam;
         }
 
+  let this_tparam x =
+    match x.super with
+    | Class { this_tparam; _ } -> Some this_tparam
+    | Interface _ -> None
+
+  let tparams_with_this tparams this_tp =
+    (* Use the loc for the original tparams, or just the loc for the this type if there are no
+    * tparams *)
+    let loc = Base.Option.value_map ~default:(aloc_of_reason this_tp.Type.reason) ~f:fst tparams in
+    (* Add the type of `this` to the end of the list of type
+      parameters. Remember, order is important, since we don't have recursive
+      bounds (aka F-bounds): the bound of This refers to all the other type
+      parameters! *)
+    let tparams_lst = Type.TypeParams.to_list tparams @ [this_tp] in
+    (* Obviously there is at least one element since we just added `this_tp` *)
+    let tparams_nel = Base.Option.value_exn (Nel.of_list tparams_lst) in
+    Some (loc, tparams_nel)
+
   let check_with_generics cx f x =
-    Flow_js_utils.check_with_generics cx (Type.TypeParams.to_list x.tparams) (fun map ->
+    let tparams_with_this =
+      this_tparam x |> Base.Option.value_map ~default:x.tparams ~f:(tparams_with_this x.tparams)
+    in
+    Flow_js_utils.check_with_generics cx (Type.TypeParams.to_list tparams_with_this) (fun map ->
         f
           {
             id = x.id;
@@ -517,7 +546,7 @@ module Make (F : Func_sig.S) = struct
       inst_kind = inst_kind s;
     }
 
-  let add_this self cx reason tparams tparams_map =
+  let mk_this self cx reason tparams =
     (* We haven't computed the instance type yet, but we can still capture a
        reference to it using the class name (as long as the class has a name).
        We need this reference to constrain the `this` in the class. *)
@@ -542,39 +571,9 @@ module Make (F : Func_sig.S) = struct
         is_this = true;
       }
     in
-    let tparams =
-      (* Use the loc for the original tparams, or just the loc for the this type if there are no
-       * tparams *)
-      let loc = Base.Option.value_map ~default:(aloc_of_reason this_reason) ~f:fst tparams in
-      (* Add the type of `this` to the end of the list of type
-         parameters. Remember, order is important, since we don't have recursive
-         bounds (aka F-bounds): the bound of This refers to all the other type
-         parameters! *)
-      let tparams_lst = Type.TypeParams.to_list tparams @ [this_tp] in
-      (* Obviously there is at least one element since we just added `this_tp` *)
-      let tparams_nel = Base.Option.value_exn (Nel.of_list tparams_lst) in
-      Some (loc, tparams_nel)
-    in
-    (tparams, SMap.add "this" (Type.BoundT (this_reason, "this")) tparams_map)
+    (this_tp, Type.BoundT (this_reason, "this"))
 
-  let remove_this x =
-    if structural x then
-      x
-    else
-      let tparams =
-        (* Remove the last type param. Assert that we have at least one type param. *)
-        let (loc, tparams_nel) = Base.Option.value_exn x.tparams in
-        tparams_nel
-        |> Nel.to_list
-        |> List.rev
-        |> List.tl
-        |> List.rev
-        |> Nel.of_list
-        |> Base.Option.map ~f:(fun nel -> (loc, nel))
-      in
-      { x with tparams; tparams_map = SMap.remove "this" x.tparams_map }
-
-  let supertype cx tparams_with_this x =
+  let supertype cx x =
     let super_reason = update_desc_reason (fun d -> RSuperOf d) x.instance.reason in
     let static_reason = x.static.reason in
     let open Type in
@@ -612,8 +611,7 @@ module Make (F : Func_sig.S) = struct
       (* interfaces don't have statics *)
       let static_proto = Type.NullProtoT static_reason in
       (super, static_proto)
-    | Class { extends; mixins; _ } ->
-      let this = SMap.find "this" tparams_with_this in
+    | Class { extends; mixins; this_t; _ } ->
       let (extends_t, static_proto) =
         match extends with
         | Explicit (annot_loc, c, targs) ->
@@ -624,7 +622,7 @@ module Make (F : Func_sig.S) = struct
             else
               c
           in
-          let t = this_typeapp ~annot_loc c this targs in
+          let t = this_typeapp ~annot_loc c this_t targs in
           (* class B extends A {}; B.__proto__ === A *)
           let static_proto = class_type ~annot_loc t in
           (t, static_proto)
@@ -649,7 +647,7 @@ module Make (F : Func_sig.S) = struct
               else
                 c
             in
-            this_typeapp ~annot_loc c this targs)
+            this_typeapp ~annot_loc c this_t targs)
           mixins
       in
       let super =
@@ -661,10 +659,8 @@ module Make (F : Func_sig.S) = struct
       (super, static_proto)
 
   let thistype cx x =
-    let tparams_with_this = x.tparams_map in
-    let x = remove_this x in
     let { static = { reason = sreason; _ }; instance = { reason; _ }; _ } = x in
-    let (super, static_proto) = supertype cx tparams_with_this x in
+    let (super, static_proto) = supertype cx x in
     let implements =
       match x.super with
       | Interface _ -> []
@@ -691,7 +687,7 @@ module Make (F : Func_sig.S) = struct
     let self =
       match x.super with
       | Interface _ -> thistype cx x
-      | Class _ -> SMap.find "this" x.tparams_map
+      | Class { this_t; _ } -> this_t
     in
     let check_method msig ~static name id_loc =
       (* The this parameter of the method, if annotated, must be a supertype
@@ -755,8 +751,6 @@ module Make (F : Func_sig.S) = struct
         implements
 
   let check_super cx def_reason x =
-    let tparams_with_this = x.tparams_map in
-    let x = remove_this x in
     let reason = x.instance.reason in
     let open Type in
     let open TypeUtil in
@@ -785,7 +779,7 @@ module Make (F : Func_sig.S) = struct
           Flow.flow_p cx ~use_op reason reason propref (p1, p2))
       own;
 
-    let (super, _) = supertype cx tparams_with_this x in
+    let (super, _) = supertype cx x in
     let use_op =
       Op (ClassExtendsCheck { def = def_reason; name = reason; extends = reason_of_t super })
     in
@@ -795,15 +789,17 @@ module Make (F : Func_sig.S) = struct
      flipped off for interface/declare class currently. *)
   let classtype cx ?(check_polarity = true) x =
     let this = thistype cx x in
+    let tparams_with_this =
+      this_tparam x |> Base.Option.value_map ~default:x.tparams ~f:(tparams_with_this x.tparams)
+    in
     begin
-      match x.tparams with
+      match tparams_with_this with
       | Some (_, tps) when check_polarity ->
         (* TODO: use tparams_map instead of calculating this here *)
         let tparams = Nel.fold_left (fun acc tp -> SMap.add tp.Type.name tp acc) SMap.empty tps in
         Flow.check_polarity cx tparams Polarity.Positive this
       | _ -> ()
     end;
-    let { tparams; _ } = remove_this x in
     let open TypeUtil in
     let (t_inner, t_outer) =
       if structural x then
@@ -812,7 +808,7 @@ module Make (F : Func_sig.S) = struct
       else
         (this_class_type this true, this_class_type this false)
     in
-    let poly t = poly_type_of_tparams (Context.generate_poly_id cx) tparams t in
+    let poly t = poly_type_of_tparams (Context.generate_poly_id cx) x.tparams t in
     (poly t_inner, poly t_outer)
 
   (* Processes the bodies of instance and static class members. *)
@@ -826,8 +822,52 @@ module Make (F : Func_sig.S) = struct
             t
         in
 
-        let instance_this_default = SMap.find "this" x.tparams_map in
-        let static_this_default = TypeUtil.class_type instance_this_default in
+        let method_ this_recipe super ~set_asts f =
+          let save_return = Abnormal.clear_saved Abnormal.Return in
+          let save_throw = Abnormal.clear_saved Abnormal.Throw in
+          let (_, params_ast, body_ast, init_ast) =
+            f
+            |> F.check_with_generics cx (F.toplevels None cx this_recipe super ~decls ~stmts ~expr)
+          in
+          set_asts (params_ast, body_ast, init_ast);
+          ignore (Abnormal.swap_saved Abnormal.Return save_return);
+          ignore (Abnormal.swap_saved Abnormal.Throw save_throw)
+        in
+        let field this_recipe super _name (_, _, value) =
+          match value with
+          | Annot _ -> ()
+          | Infer (fsig, set_asts) -> method_ this_recipe super ~set_asts fsig
+        in
+        let (instance_this_default, static_this_default, super, static_super) =
+          let super_reason = update_desc_reason (fun d -> RSuperOf d) x.instance.reason in
+          match x.super with
+          | Interface _ -> failwith "tried to evaluate toplevel of interface"
+          | Class { extends; this_t; _ } ->
+            let (super, static_super) =
+              match extends with
+              | Explicit (annot_loc, c, targs) ->
+                (* Eagerly specialize when there are no targs *)
+                (* TODO: We can also specialize when there are targs, because this
+             code executes within check_with_generics. However, the type normalizer
+             expects a PolyT here. *)
+                let c =
+                  if targs = None then
+                    specialize cx targs c
+                  else
+                    c
+                in
+                let t = TypeUtil.this_typeapp ~annot_loc c this_t targs in
+                (t, TypeUtil.class_type ~annot_loc t)
+              | Implicit { null } ->
+                Type.
+                  ( ( if null then
+                      NullProtoT super_reason
+                    else
+                      ObjProtoT super_reason ),
+                    FunProtoT super_reason )
+            in
+            (this_t, TypeUtil.class_type this_t, super, static_super)
+        in
 
         let instance_this_recipe fparams =
           let t =
@@ -847,49 +887,6 @@ module Make (F : Func_sig.S) = struct
           (TypeUtil.type_t_of_annotated_or_inferred t, this)
         in
 
-        let method_ this_recipe super ~set_asts f =
-          let save_return = Abnormal.clear_saved Abnormal.Return in
-          let save_throw = Abnormal.clear_saved Abnormal.Throw in
-          let (_, params_ast, body_ast, init_ast) =
-            f
-            |> F.check_with_generics cx (F.toplevels None cx this_recipe super ~decls ~stmts ~expr)
-          in
-          set_asts (params_ast, body_ast, init_ast);
-          ignore (Abnormal.swap_saved Abnormal.Return save_return);
-          ignore (Abnormal.swap_saved Abnormal.Throw save_throw)
-        in
-        let field this_recipe super _name (_, _, value) =
-          match value with
-          | Annot _ -> ()
-          | Infer (fsig, set_asts) -> method_ this_recipe super ~set_asts fsig
-        in
-        let (super, static_super) =
-          let super_reason = update_desc_reason (fun d -> RSuperOf d) x.instance.reason in
-          match x.super with
-          | Interface _ -> failwith "tried to evaluate toplevel of interface"
-          | Class { extends; _ } ->
-            (match extends with
-            | Explicit (annot_loc, c, targs) ->
-              (* Eagerly specialize when there are no targs *)
-              (* TODO: We can also specialize when there are targs, because this
-                 code executes within check_with_generics. However, the type normalizer
-                 expects a PolyT here. *)
-              let c =
-                if targs = None then
-                  specialize cx targs c
-                else
-                  c
-              in
-              let t = TypeUtil.this_typeapp ~annot_loc c instance_this_default targs in
-              (t, TypeUtil.class_type ~annot_loc t)
-            | Implicit { null } ->
-              Type.
-                ( ( if null then
-                    NullProtoT super_reason
-                  else
-                    ObjProtoT super_reason ),
-                  FunProtoT super_reason ))
-        in
         (* Bind private fields to the environment *)
         Env.bind_class cx x.id private_property_map (to_prop_map cx x.static.private_fields);
 
@@ -943,11 +940,13 @@ module Make (F : Func_sig.S) = struct
                SMap.iter (field instance_this_recipe super) s.proto_fields))
 
   module This = struct
-    let is_bound_to_empty x =
+    let is_bound_to_empty { super; _ } =
       Type.(
-        Flow_js_utils.match_this_binding x.tparams_map (function
-            | DefT (_, _, EmptyT _) -> true
-            | _ -> false))
+        match super with
+        | Class { this_t = DefT (_, _, EmptyT _); _ }
+        | Class { this_t = ReposT (_, DefT (_, _, EmptyT _)); _ } ->
+          true
+        | _ -> false)
 
     exception FoundInClass
 

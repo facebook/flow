@@ -7714,10 +7714,11 @@ and mk_class_sig =
         Base.List.map ~f:Tast_utils.error_mapper#class_decorator class_decorators
       in
       let (tparams, tparams_map, tparams_ast) = Anno.mk_type_param_declarations cx tparams in
-      let (tparams, tparams_map) = add_this self cx reason tparams tparams_map in
+      let (this_tparam, this_t) = mk_this self cx reason tparams in
+      let tparams_map_with_this = SMap.add "this" this_t tparams_map in
       let (class_sig, extends_ast, implements_ast) =
         let id = Context.make_aloc_id cx name_loc in
-        let (extends, extends_ast) = mk_extends ~class_annot cx tparams_map extends in
+        let (extends, extends_ast) = mk_extends ~class_annot cx tparams_map_with_this extends in
         let (implements, implements_ast) =
           match implements with
           | None -> ([], None)
@@ -7737,7 +7738,7 @@ and mk_class_sig =
                        match targs with
                        | None -> ((loc, c, None), None)
                        | Some (targs_loc, { Ast.Type.TypeArgs.arguments = targs; comments }) ->
-                         let (ts, targs_ast) = Anno.convert_list cx tparams_map targs in
+                         let (ts, targs_ast) = Anno.convert_list cx tparams_map_with_this targs in
                          ( (loc, c, Some ts),
                            Some (targs_loc, { Ast.Type.TypeArgs.arguments = targs_ast; comments })
                          )
@@ -7750,7 +7751,9 @@ and mk_class_sig =
               Some (implements_loc, { Ast.Class.Implements.interfaces = interfaces_ast; comments })
             )
         in
-        let super = Class { extends; mixins = []; implements } in
+        let super =
+          Class { Class_stmt_sig.extends; mixins = []; implements; this_t; this_tparam }
+        in
         (empty id reason tparams tparams_map super, extends_ast, implements_ast)
       in
       (* In case there is no constructor, pick up a default one. *)
@@ -7823,7 +7826,7 @@ and mk_class_sig =
                 mk_method
                   ~method_annot:(annot_decompose_todo class_annot)
                   cx
-                  tparams_map
+                  tparams_map_with_this
                   reason
                   func
               in
@@ -7899,7 +7902,7 @@ and mk_class_sig =
               let (field, annot_t, annot_ast, get_value) =
                 (* We could never find a private field in an annotation-- that's the point! So
                  * we make field_annot None here *)
-                mk_field ~field_annot:None cx tparams_map reason annot value
+                mk_field ~field_annot:None cx tparams_map_with_this reason annot value
               in
               let get_element () =
                 Body.PrivateField
@@ -7933,7 +7936,7 @@ and mk_class_sig =
                 mk_field
                   ~field_annot:(annot_decompose_todo class_annot)
                   cx
-                  tparams_map
+                  tparams_map_with_this
                   reason
                   annot
                   value
