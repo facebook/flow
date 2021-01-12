@@ -1195,6 +1195,12 @@ let make_options
       options_flags.wait_for_recheck
       ~default:(FlowConfig.wait_for_recheck flowconfig)
   in
+  let opt_format =
+    {
+      Options.opt_single_quotes =
+        Base.Option.value (FlowConfig.format_single_quotes flowconfig) ~default:false;
+    }
+  in
   let strict_mode = FlowConfig.strict_mode flowconfig in
   {
     Options.opt_flowconfig_name = flowconfig_name;
@@ -1285,6 +1291,7 @@ let make_options
     opt_automatic_require_default = FlowConfig.automatic_require_default flowconfig;
     opt_generate_tests =
       Base.Option.value options_flags.generate_tests ~default:(FlowConfig.generate_tests flowconfig);
+    opt_format;
   }
 
 let make_env flowconfig_name connect_flags root =

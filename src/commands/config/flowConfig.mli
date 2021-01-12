@@ -93,6 +93,8 @@ val file_watcher : config -> file_watcher option
 
 val file_watcher_timeout : config -> int option
 
+val format_single_quotes : config -> bool option
+
 val haste_module_ref_prefix : config -> string option
 
 val haste_name_reducers : config -> (Str.regexp * string) list

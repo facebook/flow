@@ -41,8 +41,9 @@ module Trailing_commas = struct
 end
 
 type opts = {
-  preserve_formatting: bool;
   bracket_spacing: bool;
+  preserve_formatting: bool;
+  single_quotes: bool;
   trailing_commas: Trailing_commas.t;
 }
 
@@ -72,7 +73,12 @@ and expression_context_group =
 (* `for ((x in y);;);` would become a for-in *)
 
 let default_opts =
-  { preserve_formatting = false; bracket_spacing = true; trailing_commas = Trailing_commas.All }
+  {
+    bracket_spacing = true;
+    preserve_formatting = false;
+    single_quotes = false;
+    trailing_commas = Trailing_commas.All;
+  }
 
 let normal_context = { left = Normal_left; group = Normal_group }
 
@@ -310,12 +316,20 @@ let better_quote =
       in
       count acc str (pred i)
   in
-  fun str ->
-    let (double, single) = count (0, 0) str (String.length str - 1) in
-    if double > single then
-      "'"
+  fun ~prefer_single_quotes str ->
+    let (double_count, single_count) = count (0, 0) str (String.length str - 1) in
+    let double = ("\"", double_count) in
+    let single = ("'", single_count) in
+    let (preferred, alternate) =
+      if prefer_single_quotes then
+        (single, double)
+      else
+        (double, single)
+    in
+    if snd preferred > snd alternate then
+      fst alternate
     else
-      "\""
+      fst preferred
 
 let utf8_escape =
   (* a null character can be printed as \x00 or \0. but if the next character is an ASCII digit,
@@ -864,7 +878,7 @@ and statement ?(pretty_semicolon = false) ~opts (root_stmt : (Loc.t, Loc.t) Ast.
                     ]);
                statement_after_test ~opts ~pretty_semicolon body;
              ]
-      | S.ImportDeclaration import -> import_declaration loc import
+      | S.ImportDeclaration import -> import_declaration ~opts loc import
       | S.ExportNamedDeclaration export -> export_declaration ~opts loc export
       | S.ExportDefaultDeclaration export -> export_default_declaration ~opts loc export
       | S.TypeAlias typeAlias -> type_alias ~opts ~declare:false loc typeAlias
@@ -1330,7 +1344,7 @@ and literal ~opts loc { Ast.Literal.raw; value; comments } =
   | _ when opts.preserve_formatting -> Atom raw
   | Number num -> number_literal ~in_member_object:false raw num
   | String str ->
-    let quote = better_quote str in
+    let quote = better_quote ~prefer_single_quotes:opts.single_quotes str in
     fuse [Atom quote; Atom (utf8_escape ~quote str); Atom quote]
   | RegExp { RegExp.pattern; flags } ->
     let flags = flags |> String_utils.to_list |> List.sort Char.compare |> String_utils.of_list in
@@ -1423,8 +1437,9 @@ and member ?(optional = false) ~opts ~precedence ~ctxt member_node loc =
          property_layout_with_delims;
        ]
 
-and string_literal (loc, { Ast.StringLiteral.value; comments; _ }) =
-  let quote = better_quote value in
+and string_literal ~opts (loc, { Ast.StringLiteral.value; comments; _ }) =
+  let prefer_single_quotes = opts.single_quotes in
+  let quote = better_quote ~prefer_single_quotes value in
   source_location_with_comments
     ?comments
     (loc, fuse [Atom quote; Atom (utf8_escape ~quote value); Atom quote])
@@ -2771,7 +2786,8 @@ and import_named_specifiers named_specifiers =
     ]
 
 and import_declaration
-    loc { Ast.Statement.ImportDeclaration.import_kind; source; specifiers; default; comments } =
+    ~opts loc { Ast.Statement.ImportDeclaration.import_kind; source; specifiers; default; comments }
+    =
   let s_from = fuse [Atom "from"; pretty_space] in
   let module I = Ast.Statement.ImportDeclaration in
   layout_node_with_comments_opt loc comments
@@ -2802,14 +2818,14 @@ and import_declaration
               | ((special, Some named), _) ->
                 fuse [space; fuse_list ~sep:(Atom ",") (special @ [named]); pretty_space; s_from]
             end;
-            string_literal source;
+            string_literal ~opts source;
           ])
 
-and export_source ~prefix = function
-  | Some lit -> fuse [prefix; Atom "from"; pretty_space; string_literal lit]
+and export_source ~opts ~prefix = function
+  | Some lit -> fuse [prefix; Atom "from"; pretty_space; string_literal ~opts lit]
   | None -> Empty
 
-and export_specifier source =
+and export_specifier ~opts source =
   let open Ast.Statement.ExportNamedDeclaration in
   function
   | ExportSpecifiers specifiers ->
@@ -2835,17 +2851,21 @@ and export_specifier source =
                          ] ))
                  specifiers);
           ];
-        export_source ~prefix:pretty_space source;
+        export_source ~opts ~prefix:pretty_space source;
       ]
   | ExportBatchSpecifier (loc, Some ident) ->
     fuse
       [
         source_location_with_comments
           (loc, fuse [Atom "*"; pretty_space; Atom "as"; space; identifier ident]);
-        export_source ~prefix:space source;
+        export_source ~opts ~prefix:space source;
       ]
   | ExportBatchSpecifier (loc, None) ->
-    fuse [source_location_with_comments (loc, Atom "*"); export_source ~prefix:pretty_space source]
+    fuse
+      [
+        source_location_with_comments (loc, Atom "*");
+        export_source ~opts ~prefix:pretty_space source;
+      ]
 
 and export_declaration
     ~opts
@@ -2869,7 +2889,7 @@ and export_declaration
                       | Ast.Statement.ExportValue -> Empty
                     end;
                     pretty_space;
-                    export_specifier source specifier;
+                    export_specifier ~opts source specifier;
                   ])
            | (_, _) -> failwith "Invalid export declaration"
          end;
@@ -3768,7 +3788,7 @@ and declare_module ~opts loc { Ast.Statement.DeclareModule.id; body; kind = _; c
           begin
             match id with
             | Ast.Statement.DeclareModule.Identifier id -> identifier id
-            | Ast.Statement.DeclareModule.Literal lit -> string_literal lit
+            | Ast.Statement.DeclareModule.Literal lit -> string_literal ~opts lit
           end;
           pretty_space;
           block ~opts body;
@@ -3829,6 +3849,12 @@ and declare_export_declaration
     source_location_with_comments
       ?comments
       ( loc,
-        fuse [Atom "declare"; space; Atom "export"; pretty_space; export_specifier source specifier]
-      )
+        fuse
+          [
+            Atom "declare";
+            space;
+            Atom "export";
+            pretty_space;
+            export_specifier ~opts source specifier;
+          ] )
   | (_, _) -> failwith "Invalid declare export declaration"

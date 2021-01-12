@@ -39,6 +39,8 @@ type react_runtime =
   | ReactRuntimeAutomatic
   | ReactRuntimeClassic
 
+type format = { opt_single_quotes: bool }
+
 type t = {
   opt_abstract_locations: bool;
   opt_all: bool;
@@ -57,6 +59,7 @@ type t = {
   opt_facebook_module_interop: bool;
   opt_file_options: Files.options;
   opt_flowconfig_name: string;
+  opt_format: format;
   opt_generate_tests: bool;
   opt_haste_module_ref_prefix: string option;
   opt_haste_name_reducers: (Str.regexp * string) list;
@@ -132,6 +135,8 @@ let enforce_local_inference_annotations opts = opts.opt_enforce_local_inference_
 let enums opts = opts.opt_enums
 
 let enums_with_unknown_members opts = opts.opt_enums_with_unknown_members
+
+let format_single_quotes opts = opts.opt_format.opt_single_quotes
 
 let this_annot opts = opts.opt_this_annot
 

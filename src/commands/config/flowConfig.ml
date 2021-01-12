@@ -58,6 +58,7 @@ module Opts = struct
     facebook_module_interop: bool;
     file_watcher_timeout: int option;
     file_watcher: file_watcher option;
+    format_single_quotes: bool option;  (** prefer single-quoted strings *)
     generate_tests: bool;
     haste_module_ref_prefix: string option;
     haste_name_reducers: (Str.regexp * string) list;
@@ -166,6 +167,7 @@ module Opts = struct
       facebook_module_interop = false;
       file_watcher = None;
       file_watcher_timeout = None;
+      format_single_quotes = None;
       generate_tests = false;
       haste_module_ref_prefix = None;
       haste_name_reducers =
@@ -431,6 +433,9 @@ module Opts = struct
     enum [("none", NoFileWatcher); ("dfind", DFind); ("watchman", Watchman)] (fun opts v ->
         Ok { opts with file_watcher = Some v })
 
+  let format_single_quotes_parser =
+    boolean (fun opts v -> Ok { opts with format_single_quotes = Some v })
+
   let haste_module_ref_prefix_parser =
     string (fun opts v -> Ok { opts with haste_module_ref_prefix = Some v })
 
@@ -615,6 +620,7 @@ module Opts = struct
       ("file_watcher.watchman.mergebase_with", watchman_mergebase_with_parser);
       ("file_watcher.watchman.sync_timeout", watchman_sync_timeout_parser);
       ("file_watcher", file_watcher_parser);
+      ("format.single_quotes", format_single_quotes_parser);
       ("generate_tests", boolean (fun opts v -> Ok { opts with generate_tests = v }));
       ("include_warnings", boolean (fun opts v -> Ok { opts with include_warnings = v }));
       ("lazy_mode", lazy_mode_parser);
@@ -1179,6 +1185,8 @@ let babel_loose_array_spread c = c.options.Opts.babel_loose_array_spread
 let disable_live_non_parse_errors c = c.options.Opts.disable_live_non_parse_errors
 
 let emoji c = c.options.Opts.emoji
+
+let format_single_quotes c = c.options.Opts.format_single_quotes
 
 let max_literal_length c = c.options.Opts.max_literal_length
 
