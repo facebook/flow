@@ -514,7 +514,7 @@ function f(x: MyObject) {
 No errors!
 replacement-object.js 2 5 --strategy=generalize
 // @flow
-var obj: {m: (x: number) => string, n: (y: number) => string,...} = {n(y) {return this.m(y);},m(x) {return "";}}
+var obj: {m(x: number): string, n(y: number): string,...} = {n(y) {return this.m(y);},m(x) {return "";}}
 obj.n(0)
 
 
@@ -527,7 +527,7 @@ obj.n(0)
 No errors!
 replacement-object.js 2 6 --strategy=specialize
 // @flow
-var obj: {|m: (x: number) => string, n: (y: number) => string|} = {n(y) {return this.m(y);},m(x) {return "";}}
+var obj: {|m(x: number): string, n(y: number): string|} = {n(y) {return this.m(y);},m(x) {return "";}}
 obj.n(0)
 
 
@@ -539,7 +539,7 @@ obj.n(0)
 // This is kinda trailing whitespace
 No errors!
 // @flow
-var obj: {m: (x: number) => string, n: (y: number) => string,...} = {n(y) {return this.m(y);},m(x) {return "";}}
+var obj: {m(x: number): string, n(y: number): string,...} = {n(y) {return this.m(y);},m(x) {return "";}}
 obj.n(0)
 
 
@@ -551,7 +551,7 @@ obj.n(0)
 // This is kinda trailing whitespace
 replacement-object.js 2 8 --strategy=fixme
 // @flow
-var obj: {|m: (x: number) => string, n: (y: number) => string|} = {n(y) {return this.m(y);},m(x) {return "";}}
+var obj: {|m(x: number): string, n(y: number): string|} = {n(y) {return this.m(y);},m(x) {return "";}}
 obj.n(0)
 
 
@@ -564,7 +564,7 @@ obj.n(0)
 No errors!
 replacement-object.js 2 5 2 8 --strategy=generalize
 // @flow
-var obj: {m: (x: number) => string, n: (y: number) => string,...} = {n(y) {return this.m(y);},m(x) {return "";}}
+var obj: {m(x: number): string, n(y: number): string,...} = {n(y) {return this.m(y);},m(x) {return "";}}
 obj.n(0)
 
 

@@ -940,7 +940,7 @@ class ['a] t =
           acc)
 
     method private object_kit_slice cx acc { Object.reason = _; props; flags; generics = _ } =
-      let acc = self#smap (fun acc (t, _) -> self#type_ cx pole_TODO acc t) acc props in
+      let acc = self#smap (fun acc (t, _, _) -> self#type_ cx pole_TODO acc t) acc props in
       let acc = self#obj_flags cx pole_TODO acc flags in
       acc
 

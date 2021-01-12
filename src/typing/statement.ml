@@ -2772,7 +2772,7 @@ and object_prop cx ~object_annot acc prop =
         func
     in
     Flow.flow_t cx (t, tvar);
-    ( ObjectExpressionAcc.add_prop (Properties.add_field name Polarity.Neutral (Some loc) t) acc,
+    ( ObjectExpressionAcc.add_prop (Properties.add_method name (Some loc) t) acc,
       Property
         ( prop_loc,
           Property.Method

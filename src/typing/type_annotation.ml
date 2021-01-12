@@ -1336,13 +1336,13 @@ and convert_object =
               else
                 t
             in
-            let polarity =
+            let prop =
               if _method then
-                Polarity.Positive
+                Properties.add_method name (Some loc) t
               else
-                polarity variance
+                Properties.add_field name (polarity variance) (Some loc) t
             in
-            (Acc.add_prop (Properties.add_field name polarity (Some loc) t) acc, prop_ast t)
+            (Acc.add_prop prop acc, prop_ast t)
         | Ast.Expression.Object.Property.Literal (loc, _)
         | Ast.Expression.Object.Property.PrivateName (loc, _)
         | Ast.Expression.Object.Property.Computed (loc, _) ->

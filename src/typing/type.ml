@@ -2362,7 +2362,7 @@ and Object : sig
 
   and props = prop SMap.t
 
-  and prop = TypeTerm.t * bool
+  and prop = TypeTerm.t * bool * (* method *) bool
 
   (* own *)
   and dict = TypeTerm.dicttype option

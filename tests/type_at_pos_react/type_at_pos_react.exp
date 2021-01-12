@@ -38,7 +38,7 @@ create_class.js:31:7 =
 create_class.js:31:7,31:20
 create_class_state.js:16:5 = React$Component<any, State> | any
 create_class_state.js:16:5,16:8
-lazy_ref.js:14:9 = {|default: React$AbstractComponent<empty, {|moo: (x: string) => void|}>|}
+lazy_ref.js:14:9 = {|default: React$AbstractComponent<empty, {|moo(x: string): void|}>|}
 lazy_ref.js:14:9,14:9
 lazy_ref.js:19:9 = Promise<{|default: React$AbstractComponent<empty, void>|}>
 lazy_ref.js:19:9,19:9
@@ -154,19 +154,19 @@ react_component.js:3:9 = module "react" {
   class React$Component<Props, State = void>;
   type ChildrenArray<+T> = $ReadOnlyArray<ChildrenArray<T>> | T;
   declare var Children: {
-    +count: (children: ChildrenArray<any>) => number,
-    +forEach: <T>(
+    count(children: ChildrenArray<any>): number,
+    forEach<T>(
       children: ChildrenArray<T>,
       fn: (child: T, index: number) => mixed,
       thisArg?: mixed
-    ) => void,
-    +map: <T, U>(
+    ): void,
+    map<T, U>(
       children: ChildrenArray<T>,
       fn: (child: $NonMaybeType<T>, index: number) => U,
       thisArg?: mixed
-    ) => Array<$NonMaybeType<U>>,
-    +only: <T>(children: ChildrenArray<T>) => $NonMaybeType<T>,
-    +toArray: <T>(children: ChildrenArray<T>) => Array<$NonMaybeType<T>>,
+    ): Array<$NonMaybeType<U>>,
+    only<T>(children: ChildrenArray<T>): $NonMaybeType<T>,
+    toArray<T>(children: ChildrenArray<T>): Array<$NonMaybeType<T>>,
     ...
   };
   type AbstractComponent<-Config, +Instance = mixed> = React$AbstractComponent<

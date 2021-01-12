@@ -61,8 +61,8 @@ react-component.js:14:6,14:12
 react-component.js:20:13
 Flags:
 {
-  x: {+m: <T>(x: $NonMaybeType<T>) => T, ...},
-  y: {+m: <T>(x: $NonMaybeType<T>) => T, ...},
+  x: {m<T>(x: $NonMaybeType<T>): T, ...},
+  y: {m<T>(x: $NonMaybeType<T>): T, ...},
   ...
 }
 react-component.js:20:13,20:13

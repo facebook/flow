@@ -2039,7 +2039,7 @@ class virtual ['a] t_with_uses =
             Resolve r'
         | Super ({ Object.reason; props; flags; generics }, r) ->
           let flags' = self#obj_flags cx map_cx flags in
-          let props' = SMap.ident_map (fun (t, b) -> (self#type_ cx map_cx t, b)) props in
+          let props' = SMap.ident_map (fun (t, b1, b2) -> (self#type_ cx map_cx t, b1, b2)) props in
           let r' = self#resolve cx map_cx r in
           if flags' == flags && r' == r && props' == props then
             t
@@ -2321,12 +2321,12 @@ class virtual ['a] t_with_uses =
           else
             List (tlist', resolvednelist', join))
 
-    method resolved_prop cx map_cx ((t, own) as prop) =
+    method resolved_prop cx map_cx ((t, own, meth) as prop) =
       let t' = self#type_ cx map_cx t in
       if t' == t then
         prop
       else
-        (t', own)
+        (t', own, meth)
 
     method object_kit_slice cx map_cx ({ Object.reason = _; props; flags; generics = _ } as slice) =
       let props' = SMap.ident_map (self#resolved_prop cx map_cx) props in
