@@ -3333,7 +3333,7 @@ Cannot call `BAZ.stuff` because undefined [1] is not a function. [not-a-function
 
 References:
    lib.js:3:27
-    3| declare var BAZ: {stuff?: (x: number) => void} | void;
+    3| declare var BAZ: {stuff?: (x: number) => void, ...} | void;
                                  ^^^^^^^^^^^^^^^^^^^ [1]
 
 
@@ -3346,9 +3346,9 @@ Cannot call `BAZ.stuff` because property `stuff` is missing in undefined [1]. [i
              ^^^^^
 
 References:
-   lib.js:3:50
-    3| declare var BAZ: {stuff?: (x: number) => void} | void;
-                                                        ^^^^ [1]
+   lib.js:3:55
+    3| declare var BAZ: {stuff?: (x: number) => void, ...} | void;
+                                                             ^^^^ [1]
 
 
 Error --------------------------------------------------------------------------------------------------- typeof.js:26:7
@@ -3360,9 +3360,9 @@ Cannot get `BAZ.stuff` because property `stuff` is missing in undefined [1]. [in
              ^^^^^
 
 References:
-   lib.js:3:50
-    3| declare var BAZ: {stuff?: (x: number) => void} | void;
-                                                        ^^^^ [1]
+   lib.js:3:55
+    3| declare var BAZ: {stuff?: (x: number) => void, ...} | void;
+                                                             ^^^^ [1]
 
 
 Error --------------------------------------------------------------------------------------------------- typeof.js:30:9
@@ -3375,7 +3375,7 @@ Cannot call `BAZ.stuff` because undefined [1] is not a function. [not-a-function
 
 References:
    lib.js:3:27
-    3| declare var BAZ: {stuff?: (x: number) => void} | void;
+    3| declare var BAZ: {stuff?: (x: number) => void, ...} | void;
                                  ^^^^^^^^^^^^^^^^^^^ [1]
 
 
