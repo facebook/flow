@@ -335,14 +335,37 @@ module Opts = struct
 
   let new_signatures_parser = boolean (fun opts v -> Ok { opts with new_signatures = v })
 
-  let types_first_max_files_checked_per_worker_parser =
+  let max_files_checked_per_worker_parser =
     uint (fun opts v -> Ok { opts with max_files_checked_per_worker = v })
 
-  let types_first_max_seconds_for_check_per_worker_parser =
+  let max_seconds_for_check_per_worker_parser =
     uint (fun opts v -> Ok { opts with max_seconds_for_check_per_worker = float v })
 
-  let types_first_max_rss_bytes_for_check_per_worker_parser =
+  let max_rss_bytes_for_check_per_worker_parser =
     uint (fun opts v -> Ok { opts with max_rss_bytes_for_check_per_worker = v })
+
+  let file_ext_parser =
+    string
+      ~init:(fun opts -> { opts with module_file_exts = SSet.empty })
+      ~multiple:true
+      (fun opts v ->
+        if String_utils.string_ends_with v Files.flow_ext then
+          Error
+            ( "Cannot use file extension '"
+            ^ v
+            ^ "' since it ends with the reserved extension '"
+            ^ Files.flow_ext
+            ^ "'" )
+        else
+          let module_file_exts = SSet.add v opts.module_file_exts in
+          Ok { opts with module_file_exts })
+
+  let haste_name_reducers_parser =
+    mapping
+      ~init:(fun opts -> { opts with haste_name_reducers = [] })
+      ~multiple:true
+      (fun (pattern, template) -> Ok (Str.regexp pattern, template))
+      (fun opts v -> Ok { opts with haste_name_reducers = v :: opts.haste_name_reducers })
 
   let haste_paths_excludes_parser =
     string
@@ -356,21 +379,10 @@ module Opts = struct
       ~multiple:true
       (fun opts v -> Ok { opts with haste_paths_includes = v :: opts.haste_paths_includes })
 
-  let strict_es6_import_export_excludes_parser =
-    string
-      ~init:(fun opts -> { opts with strict_es6_import_export_excludes = [] })
-      ~multiple:true
-      (fun opts v ->
-        Ok
-          {
-            opts with
-            strict_es6_import_export_excludes = v :: opts.strict_es6_import_export_excludes;
-          })
-
   let local_inference_annotations =
     boolean (fun opts v -> Ok { opts with enforce_local_inference_annotations = v })
 
-  let post_inference_implicit_instantiation =
+  let post_inference_implicit_instantiation_parser =
     boolean (fun opts v -> Ok { opts with run_post_inference_implicit_instantiation = v })
 
   type deprecated_esproposal_setting =
@@ -395,210 +407,255 @@ module Opts = struct
     in
     enum [("enable", Enable); ("ignore", Ignore); ("warn", Warn)] f
 
+  let abstract_locations_parser = boolean (fun opts v -> Ok { opts with abstract_locations = v })
+
+  let automatic_require_default_parser =
+    boolean (fun opts v -> Ok { opts with automatic_require_default = v })
+
+  let babel_loose_array_spread_parser =
+    boolean (fun opts v -> Ok { opts with babel_loose_array_spread = v })
+
+  let disable_live_non_parse_errors_parser =
+    boolean (fun opts v -> Ok { opts with disable_live_non_parse_errors = v })
+
+  let enforce_strict_call_arity_parser =
+    boolean (fun opts v -> Ok { opts with enforce_strict_call_arity = v })
+
+  let enums_with_unknown_members_parser =
+    boolean (fun opts v -> Ok { opts with enums_with_unknown_members = v })
+
+  let facebook_module_interop_parser =
+    boolean (fun opts v -> Ok { opts with facebook_module_interop = v })
+
+  let file_watcher_parser =
+    enum [("none", NoFileWatcher); ("dfind", DFind); ("watchman", Watchman)] (fun opts v ->
+        Ok { opts with file_watcher = Some v })
+
+  let haste_module_ref_prefix_parser =
+    string (fun opts v -> Ok { opts with haste_module_ref_prefix = Some v })
+
+  let haste_use_name_reducers_parser =
+    boolean
+      ~init:(fun opts -> { opts with haste_use_name_reducers = false })
+      (fun opts v -> Ok { opts with haste_use_name_reducers = v })
+
+  let ignore_non_literal_requires_parser =
+    boolean (fun opts v -> Ok { opts with ignore_non_literal_requires = v })
+
+  let lazy_mode_parser =
+    enum
+      [
+        ("fs", Options.LAZY_MODE_FILESYSTEM);
+        ("ide", Options.LAZY_MODE_IDE);
+        ("watchman", Options.LAZY_MODE_WATCHMAN);
+        ("none", Options.NON_LAZY_MODE);
+      ]
+      (fun opts v -> Ok { opts with lazy_mode = Some v })
+
+  let merge_timeout_parser =
+    uint (fun opts v ->
+        let merge_timeout =
+          if v = 0 then
+            None
+          else
+            Some v
+        in
+        Ok { opts with merge_timeout })
+
+  let module_system_parser =
+    enum [("node", Options.Node); ("haste", Options.Haste)] (fun opts v ->
+        Ok { opts with module_system = v })
+
+  let name_mapper_parser =
+    mapping
+      ~multiple:true
+      (fun (pattern, template) -> Ok (Str.regexp pattern, template))
+      (fun opts v ->
+        let module_name_mappers = v :: opts.module_name_mappers in
+        Ok { opts with module_name_mappers })
+
+  let name_mapper_extension_parser =
+    mapping
+      ~multiple:true
+      (fun (file_ext, template) ->
+        Ok (Str.regexp ("^\\(.*\\)\\." ^ Str.quote file_ext ^ "$"), template))
+      (fun opts v ->
+        let module_name_mappers = v :: opts.module_name_mappers in
+        Ok { opts with module_name_mappers })
+
+  let node_main_field_parser =
+    string
+      ~init:(fun opts -> { opts with node_main_fields = [] })
+      ~multiple:true
+      (fun opts v ->
+        let node_main_fields = v :: opts.node_main_fields in
+        Ok { opts with node_main_fields })
+
+  let node_resolve_dirname_parser =
+    string
+      ~init:(fun opts -> { opts with node_resolver_dirnames = [] })
+      ~multiple:true
+      (fun opts v ->
+        if v = Filename.current_dir_name || v = Filename.parent_dir_name then
+          Error
+            (spf
+               "%S is not a valid value for `module.system.node.resolve_dirname`. Each value must be a valid directory name. Maybe try `module.system.node.allow_root_relative=true`?"
+               v)
+        else
+          let node_resolver_dirnames = v :: opts.node_resolver_dirnames in
+          Ok { opts with node_resolver_dirnames })
+
+  let node_resolver_allow_root_relative_parser =
+    boolean (fun opts v -> Ok { opts with node_resolver_allow_root_relative = v })
+
+  let node_resolver_root_relative_dirnames_parser =
+    string
+      ~init:(fun opts -> { opts with node_resolver_root_relative_dirnames = [] })
+      ~multiple:true
+      (fun opts v ->
+        let node_resolver_root_relative_dirnames = v :: opts.node_resolver_root_relative_dirnames in
+        Ok { opts with node_resolver_root_relative_dirnames })
+
+  let react_runtime_parser =
+    enum
+      [("classic", Options.ReactRuntimeClassic); ("automatic", Options.ReactRuntimeAutomatic)]
+      (fun opts react_runtime -> Ok { opts with react_runtime })
+
+  let react_server_component_exts_parser =
+    string
+      ~init:(fun opts -> { opts with react_server_component_exts = SSet.empty })
+      ~multiple:true
+      (fun opts v ->
+        let react_server_component_exts = SSet.add v opts.react_server_component_exts in
+        Ok { opts with react_server_component_exts })
+
+  let root_name_parser =
+    string (fun opts v ->
+        FlowEventLogger.set_root_name (Some v);
+        Ok { opts with root_name = Some v })
+
+  let saved_state_fetcher_parser =
+    enum
+      [
+        ("none", Options.Dummy_fetcher); ("local", Options.Local_fetcher); ("fb", Options.Fb_fetcher);
+      ]
+      (fun opts saved_state_fetcher -> Ok { opts with saved_state_fetcher })
+
+  let shm_hash_table_pow_parser =
+    uint (fun opts shm_hash_table_pow -> Ok { opts with shm_hash_table_pow })
+
+  let strict_es6_import_export_excludes_parser =
+    string
+      ~init:(fun opts -> { opts with strict_es6_import_export_excludes = [] })
+      ~multiple:true
+      (fun opts v ->
+        Ok
+          {
+            opts with
+            strict_es6_import_export_excludes = v :: opts.strict_es6_import_export_excludes;
+          })
+
+  let strict_es6_import_export_parser =
+    boolean (fun opts v -> Ok { opts with strict_es6_import_export = v })
+
+  let suppress_types_parser =
+    string
+      ~init:(fun opts -> { opts with suppress_types = SSet.empty })
+      ~multiple:true
+      (fun opts v -> Ok { opts with suppress_types = SSet.add v opts.suppress_types })
+
+  let trust_mode_parser =
+    enum
+      [("check", Options.CheckTrust); ("silent", Options.SilentTrust); ("none", Options.NoTrust)]
+      (fun opts trust_mode -> Ok { opts with trust_mode })
+
+  let watchman_defer_states_parser =
+    string ~multiple:true (fun opts v ->
+        Ok { opts with watchman_defer_states = v :: opts.watchman_defer_states })
+
+  let watchman_mergebase_with_parser =
+    string (fun opts v -> Ok { opts with watchman_mergebase_with = Some v })
+
+  let watchman_sync_timeout_parser =
+    uint (fun opts v -> Ok { opts with watchman_sync_timeout = Some v })
+
   let parsers =
     [
+      ("all", boolean (fun opts v -> Ok { opts with all = v }));
+      ("babel_loose_array_spread", babel_loose_array_spread_parser);
       ("emoji", boolean (fun opts v -> Ok { opts with emoji = v }));
       ("esproposal.class_instance_fields", deprecated_esproposal_flag Enable);
       ("esproposal.class_static_fields", deprecated_esproposal_flag Enable);
       ("esproposal.decorators", deprecated_esproposal_flag Ignore);
       ("esproposal.export_star_as", deprecated_esproposal_flag Enable);
-      ("esproposal.optional_chaining", deprecated_esproposal_flag Enable);
       ("esproposal.nullish_coalescing", deprecated_esproposal_flag Enable);
+      ("esproposal.optional_chaining", deprecated_esproposal_flag Enable);
       ("exact_by_default", boolean (fun opts v -> Ok { opts with exact_by_default = v }));
-      ("generate_tests", boolean (fun opts v -> Ok { opts with generate_tests = v }));
+      ("experimental.abstract_locations", abstract_locations_parser);
+      ("experimental.const_params", boolean (fun opts v -> Ok { opts with enable_const_params = v }));
+      ("experimental.disable_live_non_parse_errors", disable_live_non_parse_errors_parser);
+      ("experimental.enforce_local_inference_annotations", local_inference_annotations);
+      ("experimental.enums_with_unknown_members", enums_with_unknown_members_parser);
+      ("experimental.enums", boolean (fun opts v -> Ok { opts with enums = v }));
+      ("experimental.facebook_module_interop", facebook_module_interop_parser);
+      ("experimental.module.automatic_require_default", automatic_require_default_parser);
+      ("experimental.new_signatures", new_signatures_parser);
+      ("experimental.react.server_component_ext", react_server_component_exts_parser);
+      ( "experimental.run_post_inference_implicit_instantiation",
+        post_inference_implicit_instantiation_parser );
+      ("experimental.strict_call_arity", enforce_strict_call_arity_parser);
+      ("experimental.strict_es6_import_export.excludes", strict_es6_import_export_excludes_parser);
+      ("experimental.strict_es6_import_export", strict_es6_import_export_parser);
+      ("experimental.this_annot", boolean (fun opts v -> Ok { opts with this_annot = v }));
+      ("experimental.type_asserts", boolean (fun opts v -> Ok { opts with type_asserts = v }));
       ("facebook.fbs", string (fun opts v -> Ok { opts with facebook_fbs = Some v }));
       ("facebook.fbt", string (fun opts v -> Ok { opts with facebook_fbt = Some v }));
-      ( "file_watcher",
-        enum [("none", NoFileWatcher); ("dfind", DFind); ("watchman", Watchman)] (fun opts v ->
-            Ok { opts with file_watcher = Some v }) );
       ("file_watcher_timeout", uint (fun opts v -> Ok { opts with file_watcher_timeout = Some v }));
-      ( "file_watcher.watchman.sync_timeout",
-        uint (fun opts v -> Ok { opts with watchman_sync_timeout = Some v }) );
-      ( "file_watcher.watchman.defer_state",
-        string ~multiple:true (fun opts v ->
-            Ok { opts with watchman_defer_states = v :: opts.watchman_defer_states }) );
-      ( "file_watcher.watchman.mergebase_with",
-        string (fun opts v -> Ok { opts with watchman_mergebase_with = Some v }) );
+      ("file_watcher.watchman.defer_state", watchman_defer_states_parser);
+      ("file_watcher.watchman.mergebase_with", watchman_mergebase_with_parser);
+      ("file_watcher.watchman.sync_timeout", watchman_sync_timeout_parser);
+      ("file_watcher", file_watcher_parser);
+      ("generate_tests", boolean (fun opts v -> Ok { opts with generate_tests = v }));
       ("include_warnings", boolean (fun opts v -> Ok { opts with include_warnings = v }));
-      ( "lazy_mode",
-        enum
-          [
-            ("fs", Options.LAZY_MODE_FILESYSTEM);
-            ("ide", Options.LAZY_MODE_IDE);
-            ("watchman", Options.LAZY_MODE_WATCHMAN);
-            ("none", Options.NON_LAZY_MODE);
-          ]
-          (fun opts v -> Ok { opts with lazy_mode = Some v }) );
-      ( "merge_timeout",
-        uint (fun opts v ->
-            let merge_timeout =
-              if v = 0 then
-                None
-              else
-                Some v
-            in
-            Ok { opts with merge_timeout }) );
-      ( "module.system.haste.module_ref_prefix",
-        string (fun opts v -> Ok { opts with haste_module_ref_prefix = Some v }) );
-      ( "module.system.haste.name_reducers",
-        mapping
-          ~init:(fun opts -> { opts with haste_name_reducers = [] })
-          ~multiple:true
-          (fun (pattern, template) -> Ok (Str.regexp pattern, template))
-          (fun opts v -> Ok { opts with haste_name_reducers = v :: opts.haste_name_reducers }) );
-      ("module.system.haste.paths.excludes", haste_paths_excludes_parser);
-      ("module.system.haste.paths.includes", haste_paths_includes_parser);
-      ( "module.system.haste.use_name_reducers",
-        boolean
-          ~init:(fun opts -> { opts with haste_use_name_reducers = false })
-          (fun opts v -> Ok { opts with haste_use_name_reducers = v }) );
+      ("lazy_mode", lazy_mode_parser);
       ("log.file", filepath (fun opts v -> Ok { opts with log_file = Some v }));
       ("max_header_tokens", uint (fun opts v -> Ok { opts with max_header_tokens = v }));
-      ( "module.ignore_non_literal_requires",
-        boolean (fun opts v -> Ok { opts with ignore_non_literal_requires = v }) );
-      ( "module.file_ext",
-        string
-          ~init:(fun opts -> { opts with module_file_exts = SSet.empty })
-          ~multiple:true
-          (fun opts v ->
-            if String_utils.string_ends_with v Files.flow_ext then
-              Error
-                ( "Cannot use file extension '"
-                ^ v
-                ^ "' since it ends with the reserved extension '"
-                ^ Files.flow_ext
-                ^ "'" )
-            else
-              let module_file_exts = SSet.add v opts.module_file_exts in
-              Ok { opts with module_file_exts }) );
-      ( "module.name_mapper",
-        mapping
-          ~multiple:true
-          (fun (pattern, template) -> Ok (Str.regexp pattern, template))
-          (fun opts v ->
-            let module_name_mappers = v :: opts.module_name_mappers in
-            Ok { opts with module_name_mappers }) );
-      ( "module.name_mapper.extension",
-        mapping
-          ~multiple:true
-          (fun (file_ext, template) ->
-            Ok (Str.regexp ("^\\(.*\\)\\." ^ Str.quote file_ext ^ "$"), template))
-          (fun opts v ->
-            let module_name_mappers = v :: opts.module_name_mappers in
-            Ok { opts with module_name_mappers }) );
-      ( "module.system",
-        enum [("node", Options.Node); ("haste", Options.Haste)] (fun opts v ->
-            Ok { opts with module_system = v }) );
-      ( "module.system.node.main_field",
-        string
-          ~init:(fun opts -> { opts with node_main_fields = [] })
-          ~multiple:true
-          (fun opts v ->
-            let node_main_fields = v :: opts.node_main_fields in
-            Ok { opts with node_main_fields }) );
-      ( "module.system.node.allow_root_relative",
-        boolean (fun opts v -> Ok { opts with node_resolver_allow_root_relative = v }) );
-      ( "module.system.node.resolve_dirname",
-        string
-          ~init:(fun opts -> { opts with node_resolver_dirnames = [] })
-          ~multiple:true
-          (fun opts v ->
-            if v = Filename.current_dir_name || v = Filename.parent_dir_name then
-              Error
-                (spf
-                   "%S is not a valid value for `module.system.node.resolve_dirname`. Each value must be a valid directory name. Maybe try `module.system.node.allow_root_relative=true`?"
-                   v)
-            else
-              let node_resolver_dirnames = v :: opts.node_resolver_dirnames in
-              Ok { opts with node_resolver_dirnames }) );
-      ( "module.system.node.root_relative_dirname",
-        string
-          ~init:(fun opts -> { opts with node_resolver_root_relative_dirnames = [] })
-          ~multiple:true
-          (fun opts v ->
-            let node_resolver_root_relative_dirnames =
-              v :: opts.node_resolver_root_relative_dirnames
-            in
-            Ok { opts with node_resolver_root_relative_dirnames }) );
+      ("max_literal_length", uint (fun opts v -> Ok { opts with max_literal_length = v }));
+      ("merge_timeout", merge_timeout_parser);
+      ("module.file_ext", file_ext_parser);
+      ("module.ignore_non_literal_requires", ignore_non_literal_requires_parser);
+      ("module.name_mapper.extension", name_mapper_extension_parser);
+      ("module.name_mapper", name_mapper_parser);
+      ("module.system.haste.module_ref_prefix", haste_module_ref_prefix_parser);
+      ("module.system.haste.name_reducers", haste_name_reducers_parser);
+      ("module.system.haste.paths.excludes", haste_paths_excludes_parser);
+      ("module.system.haste.paths.includes", haste_paths_includes_parser);
+      ("module.system.haste.use_name_reducers", haste_use_name_reducers_parser);
+      ("module.system.node.allow_root_relative", node_resolver_allow_root_relative_parser);
+      ("module.system.node.main_field", node_main_field_parser);
+      ("module.system.node.resolve_dirname", node_resolve_dirname_parser);
+      ("module.system.node.root_relative_dirname", node_resolver_root_relative_dirnames_parser);
+      ("module.system", module_system_parser);
       ("module.use_strict", boolean (fun opts v -> Ok { opts with modules_are_use_strict = v }));
       ("munge_underscores", boolean (fun opts v -> Ok { opts with munge_underscores = v }));
-      ( "name",
-        string (fun opts v ->
-            FlowEventLogger.set_root_name (Some v);
-            Ok { opts with root_name = Some v }) );
+      ("name", root_name_parser);
+      ("no_flowlib", boolean (fun opts v -> Ok { opts with no_flowlib = v }));
+      ("react.runtime", react_runtime_parser);
+      ("recursion_limit", uint (fun opts v -> Ok { opts with recursion_limit = v }));
+      ("saved_state.fetcher", saved_state_fetcher_parser);
       ("server.max_workers", uint (fun opts v -> Ok { opts with max_workers = v }));
-      ("all", boolean (fun opts v -> Ok { opts with all = v }));
-      ( "babel_loose_array_spread",
-        boolean (fun opts v -> Ok { opts with babel_loose_array_spread = v }) );
-      ("wait_for_recheck", boolean (fun opts v -> Ok { opts with wait_for_recheck = v }));
-      ("weak", boolean (fun opts v -> Ok { opts with weak = v }));
-      ( "suppress_type",
-        string
-          ~init:(fun opts -> { opts with suppress_types = SSet.empty })
-          ~multiple:true
-          (fun opts v -> Ok { opts with suppress_types = SSet.add v opts.suppress_types }) );
-      ("temp_dir", string (fun opts v -> Ok { opts with temp_dir = v }));
-      ( "saved_state.fetcher",
-        enum
-          [
-            ("none", Options.Dummy_fetcher);
-            ("local", Options.Local_fetcher);
-            ("fb", Options.Fb_fetcher);
-          ]
-          (fun opts saved_state_fetcher -> Ok { opts with saved_state_fetcher }) );
-      ( "sharedmemory.hash_table_pow",
-        uint (fun opts shm_hash_table_pow -> Ok { opts with shm_hash_table_pow }) );
+      ("sharedmemory.hash_table_pow", shm_hash_table_pow_parser);
       ("sharedmemory.heap_size", uint (fun opts shm_heap_size -> Ok { opts with shm_heap_size }));
       ("sharedmemory.log_level", uint (fun opts shm_log_level -> Ok { opts with shm_log_level }));
+      ("suppress_type", suppress_types_parser);
+      ("temp_dir", string (fun opts v -> Ok { opts with temp_dir = v }));
       ("traces", uint (fun opts v -> Ok { opts with traces = v }));
-      ("max_literal_length", uint (fun opts v -> Ok { opts with max_literal_length = v }));
-      ("experimental.const_params", boolean (fun opts v -> Ok { opts with enable_const_params = v }));
-      ("experimental.enums", boolean (fun opts v -> Ok { opts with enums = v }));
-      ( "experimental.enums_with_unknown_members",
-        boolean (fun opts v -> Ok { opts with enums_with_unknown_members = v }) );
-      ("experimental.this_annot", boolean (fun opts v -> Ok { opts with this_annot = v }));
-      ( "experimental.strict_call_arity",
-        boolean (fun opts v -> Ok { opts with enforce_strict_call_arity = v }) );
-      ("experimental.type_asserts", boolean (fun opts v -> Ok { opts with type_asserts = v }));
-      ("experimental.new_signatures", new_signatures_parser);
-      ("experimental.enforce_local_inference_annotations", local_inference_annotations);
-      ( "experimental.run_post_inference_implicit_instantiation",
-        post_inference_implicit_instantiation );
-      ( "experimental.abstract_locations",
-        boolean (fun opts v -> Ok { opts with abstract_locations = v }) );
-      ( "experimental.disable_live_non_parse_errors",
-        boolean (fun opts v -> Ok { opts with disable_live_non_parse_errors = v }) );
-      ("no_flowlib", boolean (fun opts v -> Ok { opts with no_flowlib = v }));
-      ( "trust_mode",
-        enum
-          [
-            ("check", Options.CheckTrust); ("silent", Options.SilentTrust); ("none", Options.NoTrust);
-          ]
-          (fun opts trust_mode -> Ok { opts with trust_mode }) );
-      ( "react.runtime",
-        enum
-          [("classic", Options.ReactRuntimeClassic); ("automatic", Options.ReactRuntimeAutomatic)]
-          (fun opts react_runtime -> Ok { opts with react_runtime }) );
-      ( "experimental.react.server_component_ext",
-        string
-          ~init:(fun opts -> { opts with react_server_component_exts = SSet.empty })
-          ~multiple:true
-          (fun opts v ->
-            let react_server_component_exts = SSet.add v opts.react_server_component_exts in
-            Ok { opts with react_server_component_exts }) );
-      ("recursion_limit", uint (fun opts v -> Ok { opts with recursion_limit = v }));
-      ("types_first.max_files_checked_per_worker", types_first_max_files_checked_per_worker_parser);
-      ( "types_first.max_seconds_for_check_per_worker",
-        types_first_max_seconds_for_check_per_worker_parser );
-      ( "types_first.max_rss_bytes_for_check_per_worker",
-        types_first_max_rss_bytes_for_check_per_worker_parser );
-      ( "experimental.strict_es6_import_export",
-        boolean (fun opts v -> Ok { opts with strict_es6_import_export = v }) );
-      ("experimental.strict_es6_import_export.excludes", strict_es6_import_export_excludes_parser);
-      ( "experimental.module.automatic_require_default",
-        boolean (fun opts v -> Ok { opts with automatic_require_default = v }) );
-      ( "experimental.facebook_module_interop",
-        boolean (fun opts v -> Ok { opts with facebook_module_interop = v }) );
+      ("trust_mode", trust_mode_parser);
+      ("types_first.max_files_checked_per_worker", max_files_checked_per_worker_parser);
+      ("types_first.max_rss_bytes_for_check_per_worker", max_rss_bytes_for_check_per_worker_parser);
+      ("types_first.max_seconds_for_check_per_worker", max_seconds_for_check_per_worker_parser);
+      ("wait_for_recheck", boolean (fun opts v -> Ok { opts with wait_for_recheck = v }));
+      ("weak", boolean (fun opts v -> Ok { opts with weak = v }));
     ]
 
   let parse =
