@@ -312,6 +312,10 @@ module rec TypeTerm : sig
         own_loc: 'loc option;
         proto_loc: 'loc option;
       }
+    | ClassMethodDefinition of {
+        def: 'loc virtual_reason;
+        name: 'loc virtual_reason;
+      }
     | Coercion of {
         from: 'loc virtual_reason;
         target: 'loc virtual_reason;
@@ -2881,6 +2885,7 @@ let aloc_of_root_use_op : root_use_op -> ALoc.t = function
   | AssignVar { init = op; _ }
   | Cast { lower = op; _ }
   | ClassExtendsCheck { def = op; _ }
+  | ClassMethodDefinition { def = op; _ }
   | ClassImplementsCheck { def = op; _ }
   | Coercion { from = op; _ }
   | DeleteProperty { lhs = op; _ }
@@ -3019,6 +3024,7 @@ let string_of_root_use_op (type a) : a virtual_root_use_op -> string = function
   | ClassExtendsCheck _ -> "ClassExtendsCheck"
   | ClassImplementsCheck _ -> "ClassImplementsCheck"
   | ClassOwnProtoCheck _ -> "ClassOwnProtoCheck"
+  | ClassMethodDefinition _ -> "ClassMethodDefinition"
   | Coercion _ -> "Coercion"
   | DeleteProperty _ -> "DeleteProperty"
   | DeleteVar _ -> "DeleteVar"

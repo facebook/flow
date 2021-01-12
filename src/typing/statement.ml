@@ -792,7 +792,8 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t =
       cx
       (fun iface_sig ->
         Class_type_sig.check_super cx def_reason iface_sig;
-        Class_type_sig.check_implements cx def_reason iface_sig)
+        Class_type_sig.check_implements cx def_reason iface_sig;
+        Class_type_sig.check_methods cx def_reason iface_sig)
       iface_sig;
     let (t_internal, t) = Class_type_sig.classtype ~check_polarity:false cx iface_sig in
     Flow.unify cx self t_internal;
@@ -7629,6 +7630,7 @@ and mk_class cx class_loc ~class_annot ~name_loc ~general reason c =
          in
          Class_stmt_sig.check_super cx def_reason class_sig;
          Class_stmt_sig.check_implements cx def_reason class_sig;
+         Class_stmt_sig.check_methods cx def_reason class_sig;
          if this_in_class || not (Class_stmt_sig.This.is_bound_to_empty class_sig) then
            Class_stmt_sig.toplevels
              cx

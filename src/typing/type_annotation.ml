@@ -1094,7 +1094,8 @@ let rec convert cx tparams_map =
       cx
       (fun iface_sig ->
         Class_type_sig.check_super cx reason iface_sig;
-        Class_type_sig.check_implements cx reason iface_sig)
+        Class_type_sig.check_implements cx reason iface_sig;
+        Class_type_sig.check_methods cx reason iface_sig)
       iface_sig
     |> ignore;
     ( (loc, Class_type_sig.thistype cx iface_sig),

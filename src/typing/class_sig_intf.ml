@@ -171,6 +171,10 @@ module type S = sig
   (** Emits constraints to ensure the signature is compatible with its declared
       superclass (classes) or extends/mixins (interfaces) *)
 
+  val check_methods : Context.t -> Reason.reason -> t -> unit
+  (** Emits constraints to ensure that the signature's methods are compatible
+      with its type **)
+
   val check_with_generics : Context.t -> (t -> 'a) -> t -> 'a
   (** Invoke callback with type parameters substituted by upper/lower bounds. *)
 

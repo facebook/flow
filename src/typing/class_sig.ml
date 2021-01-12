@@ -295,10 +295,12 @@ module Make (F : Func_sig.S) = struct
 
   let mem_field x = with_sig (fun s -> SMap.mem x s.fields)
 
-  let iter_methods f s =
-    SMap.iter (fun _ -> Nel.iter f) s.methods;
-    SMap.iter (fun _ -> f) s.getters;
-    SMap.iter (fun _ -> f) s.setters
+  let iter_methods_with_name f s =
+    SMap.iter (f %> Nel.iter) s.methods;
+    SMap.iter f s.getters;
+    SMap.iter f s.setters
+
+  let iter_methods f = iter_methods_with_name (fun _ -> f)
 
   (* TODO? *)
   let subst_field cx map (loc, polarity, field) =
@@ -367,7 +369,7 @@ module Make (F : Func_sig.S) = struct
 
   let to_prop_map cx = SMap.map to_field %> Context.generate_property_map cx
 
-  let elements cx ?constructor s =
+  let elements cx ?constructor ?(ignore_this = false) s =
     let methods =
       (* If this is an overloaded method, create an intersection, attributed
          to the first declared function signature. If there is a single
@@ -377,7 +379,9 @@ module Make (F : Func_sig.S) = struct
       SMap.mapi
         (fun _name xs ->
           let ms =
-            Nel.rev_map (fun (loc, x, _, set_type) -> (loc, F.methodtype cx x, set_type)) xs
+            Nel.rev_map
+              (fun (loc, x, _, set_type) -> (loc, F.methodtype ~ignore_this cx x, set_type))
+              xs
           in
           (* Keep track of these before intersections are merged, to enable
            * type information on every member of the intersection. *)
@@ -682,6 +686,50 @@ module Make (F : Func_sig.S) = struct
     let static = DefT (sreason, bogus_trust (), ObjT static_objtype) in
     DefT (reason, bogus_trust (), InstanceT (static, super, implements, insttype))
 
+  let check_methods cx def_reason x =
+    let open Type in
+    let self =
+      match x.super with
+      | Interface _ -> thistype cx x
+      | Class _ -> SMap.find "this" x.tparams_map
+    in
+    let check_method msig ~static name id_loc =
+      (* The this parameter of the method, if annotated, must be a supertype
+        of the instance *)
+      Base.Option.iter
+        ~f:(fun this_param ->
+          let self =
+            if static then
+              TypeUtil.class_type self
+            else
+              self
+          in
+          let reason = mk_reason (RMethod (Some name)) id_loc in
+          let use_op = Op (ClassMethodDefinition { def = reason; name = def_reason }) in
+          Flow.flow cx (self, UseT (use_op, this_param)))
+        (F.this_param msig.F.fparams)
+    in
+
+    with_sig
+      ~static:true
+      (fun s ->
+        iter_methods_with_name
+          (fun name (loc, msig, _, _) ->
+            (* Constructors don't bind this *)
+            Base.Option.iter ~f:(check_method msig ~static:true name) loc)
+          s)
+      x;
+
+    with_sig
+      ~static:false
+      (fun s ->
+        iter_methods_with_name
+          (* Constructors don't bind this *)
+            (fun name (loc, msig, _, _) ->
+            Base.Option.iter ~f:(check_method msig ~static:false name) loc)
+          s)
+      x
+
   let check_implements cx def_reason x =
     match x.super with
     | Interface _ -> ()
@@ -714,10 +762,13 @@ module Make (F : Func_sig.S) = struct
     let open TypeUtil in
     (* NOTE: SuperT ignores the constructor anyway, so we don't pass it here.
        Call properties are also ignored, so we ignore that result. *)
-    let (_, own, proto, _call) = elements cx ?constructor:None x.instance in
+    (* The this parameter of a class method is irrelvant for class subtyping, since
+       dynamic dispatch enforces that the method is called on the right subclass
+       at runtime even if the static type is a supertype. *)
+    let (_, own, proto, _call) = elements ~ignore_this:true cx ?constructor:None x.instance in
     let static =
       (* NOTE: The own, proto maps are disjoint by construction. *)
-      let (_, own, proto, _call) = elements cx x.static in
+      let (_, own, proto, _call) = elements ~ignore_this:true cx x.static in
       SMap.union own proto
     in
     SMap.iter
@@ -766,6 +817,7 @@ module Make (F : Func_sig.S) = struct
 
   (* Processes the bodies of instance and static class members. *)
   let toplevels cx ~decls ~stmts ~expr ~private_property_map x =
+    let open Type in
     Env.in_lex_scope cx (fun () ->
         let new_entry ?(state = Scope.State.Initialized) t =
           Scope.Entry.new_let
@@ -773,26 +825,44 @@ module Make (F : Func_sig.S) = struct
             ~state
             t
         in
-        let method_ this super ~set_asts f =
+
+        let instance_this_default = SMap.find "this" x.tparams_map in
+        let static_this_default = TypeUtil.class_type instance_this_default in
+
+        let instance_this_recipe fparams =
+          let t =
+            F.this_param fparams
+            |> TypeUtil.annotated_or_inferred_of_option ~default:instance_this_default
+          in
+          let this = new_entry t in
+          (TypeUtil.type_t_of_annotated_or_inferred t, this)
+        in
+
+        let static_this_recipe fparams =
+          let t =
+            F.this_param fparams
+            |> TypeUtil.annotated_or_inferred_of_option ~default:static_this_default
+          in
+          let this = new_entry t in
+          (TypeUtil.type_t_of_annotated_or_inferred t, this)
+        in
+
+        let method_ this_recipe super ~set_asts f =
           let save_return = Abnormal.clear_saved Abnormal.Return in
           let save_throw = Abnormal.clear_saved Abnormal.Throw in
           let (_, params_ast, body_ast, init_ast) =
             f
-            |> F.check_with_generics
-                 cx
-                 (F.toplevels None cx (Fn.const (Type.dummy_this, this)) super ~decls ~stmts ~expr)
+            |> F.check_with_generics cx (F.toplevels None cx this_recipe super ~decls ~stmts ~expr)
           in
           set_asts (params_ast, body_ast, init_ast);
           ignore (Abnormal.swap_saved Abnormal.Return save_return);
           ignore (Abnormal.swap_saved Abnormal.Throw save_throw)
         in
-        let field this super _name (_, _, value) =
+        let field this_recipe super _name (_, _, value) =
           match value with
           | Annot _ -> ()
-          | Infer (fsig, set_asts) -> method_ this super ~set_asts fsig
+          | Infer (fsig, set_asts) -> method_ this_recipe super ~set_asts fsig
         in
-        let this = SMap.find "this" x.tparams_map in
-        let static = TypeUtil.class_type this in
         let (super, static_super) =
           let super_reason = update_desc_reason (fun d -> RSuperOf d) x.instance.reason in
           match x.super with
@@ -810,7 +880,7 @@ module Make (F : Func_sig.S) = struct
                 else
                   c
               in
-              let t = TypeUtil.this_typeapp ~annot_loc c this targs in
+              let t = TypeUtil.this_typeapp ~annot_loc c instance_this_default targs in
               (t, TypeUtil.class_type ~annot_loc t)
             | Implicit { null } ->
               Type.
@@ -826,12 +896,12 @@ module Make (F : Func_sig.S) = struct
         x
         |> with_sig ~static:true (fun s ->
                (* process static methods and fields *)
-               let (this, super) =
-                 (new_entry (Type.Inferred static), new_entry (Type.Inferred static_super))
-               in
-               iter_methods (fun (_loc, f, set_asts, _) -> method_ this super ~set_asts f) s;
-               SMap.iter (field this super) s.fields;
-               SMap.iter (field this super) s.private_fields);
+               let super = new_entry (Inferred static_super) in
+               iter_methods
+                 (fun (_loc, f, set_asts, _) -> method_ static_this_recipe super ~set_asts f)
+                 s;
+               SMap.iter (field static_this_recipe super) s.fields;
+               SMap.iter (field static_this_recipe super) s.private_fields);
 
         x
         |> with_sig ~static:false (fun s ->
@@ -853,21 +923,24 @@ module Make (F : Func_sig.S) = struct
                    else
                      new_entry t
                  in
+                 (* This parameters are banned in constructors *)
                  let (this, super) =
-                   (new_entry (Type.Inferred this), new_entry (Type.Inferred super))
+                   (new_entry (Inferred instance_this_default), new_entry (Inferred super))
                  in
+                 let this_recipe _ = (instance_this_default, this) in
                  x.constructor
-                 |> List.iter (fun (_, fsig, set_asts, _) -> method_ this super ~set_asts fsig)
+                 |> List.iter (fun (_, fsig, set_asts, _) ->
+                        method_ this_recipe super ~set_asts fsig)
                end;
 
                (* process instance methods and fields *)
-               let (this, super) =
-                 (new_entry (Type.Inferred this), new_entry (Type.Inferred super))
-               in
-               iter_methods (fun (_, msig, set_asts, _) -> method_ this super ~set_asts msig) s;
-               SMap.iter (field this super) s.fields;
-               SMap.iter (field this super) s.private_fields;
-               SMap.iter (field this super) s.proto_fields))
+               let super = new_entry (Inferred super) in
+               iter_methods
+                 (fun (_, msig, set_asts, _) -> method_ instance_this_recipe super ~set_asts msig)
+                 s;
+               SMap.iter (field instance_this_recipe super) s.fields;
+               SMap.iter (field instance_this_recipe super) s.private_fields;
+               SMap.iter (field instance_this_recipe super) s.proto_fields))
 
   module This = struct
     let is_bound_to_empty x =

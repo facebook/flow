@@ -519,6 +519,8 @@ let rec mod_loc_of_virtual_use_op f =
     | ClassExtendsCheck { def; name; extends } ->
       ClassExtendsCheck
         { def = mod_reason def; name = mod_reason name; extends = mod_reason extends }
+    | ClassMethodDefinition { def; name } ->
+      ClassMethodDefinition { def = mod_reason def; name = mod_reason name }
     | ClassImplementsCheck { def; name; implements } ->
       ClassImplementsCheck
         { def = mod_reason def; name = mod_reason name; implements = mod_reason implements }
@@ -863,3 +865,7 @@ let union_of_ts reason ts =
   | [t0] -> t0
   (* If we have more than one type then we make a union type. *)
   | t0 :: t1 :: ts -> UnionT (reason, UnionRep.make t0 t1 ts)
+
+let annotated_or_inferred_of_option ~default = function
+  | Some t -> Annotated t
+  | None -> Inferred default

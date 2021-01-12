@@ -1,3 +1,337 @@
+Error --------------------------------------------------------------------------------------------- class_method.js:8:12
+
+Cannot return `this.prop` because boolean [1] is incompatible with string [2]. [incompatible-return]
+
+   class_method.js:8:12
+   8|     return this.prop; // Error - number ~> string
+                 ^^^^^^^^^
+
+References:
+   class_method.js:7:23
+   7|   method(this: {prop: boolean}): string {
+                            ^^^^^^^ [1]
+   class_method.js:7:34
+   7|   method(this: {prop: boolean}): string {
+                                       ^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------- class_method.js:12:12
+
+Cannot return `this.prop` because boolean [1] is incompatible with string [2]. [incompatible-return]
+
+   class_method.js:12:12
+   12|     return this.prop; // Error - number ~> string
+                  ^^^^^^^^^
+
+References:
+   class_method.js:11:36
+   11|   static staticMethod(this: {prop: boolean}): string {
+                                          ^^^^^^^ [1]
+   class_method.js:11:47
+   11|   static staticMethod(this: {prop: boolean}): string {
+                                                     ^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------- class_method.js:16:12
+
+Cannot return `this.prop` because boolean [1] is incompatible with string [2]. [incompatible-return]
+
+   class_method.js:16:12
+   16|     return this.prop; // Error - number ~> string
+                  ^^^^^^^^^
+
+References:
+   class_method.js:15:84
+   15|   propUnboundNonMethod : (this: {prop: boolean}) => string = function(this: {prop: boolean}): string {
+                                                                                          ^^^^^^^ [1]
+   class_method.js:15:95
+   15|   propUnboundNonMethod : (this: {prop: boolean}) => string = function(this: {prop: boolean}): string {
+                                                                                                     ^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------- class_method.js:20:12
+
+Cannot return `this.prop` because boolean [1] is incompatible with string [2]. [incompatible-return]
+
+   class_method.js:20:12
+   20|     return this.prop; // Error - number ~> string
+                  ^^^^^^^^^
+
+References:
+   class_method.js:19:97
+   19|   static staticPropUnboundNonMethod : (this: {prop: boolean}) => string = function(this: {prop: boolean}): string {
+                                                                                                       ^^^^^^^ [1]
+   class_method.js:19:108
+   19|   static staticPropUnboundNonMethod : (this: {prop: boolean}) => string = function(this: {prop: boolean}): string {
+                                                                                                                  ^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------- class_method.js:27:18
+
+Cannot call `{...}.method` because number [1] is incompatible with boolean [2] in property `prop`. [incompatible-call]
+
+   class_method.js:27:18
+   27| let _2 = {prop : 123, method : (new A()).method }.method(); // Error - bool ~> number
+                        ^^^ [1]
+
+References:
+   class_method.js:7:23
+    7|   method(this: {prop: boolean}): string {
+                             ^^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------- class_method.js:29:10
+
+Cannot call `{...}.method` because property `prop` is missing in object literal [1] but exists in object type [2].
+[prop-missing]
+
+   class_method.js:29:10
+   29| let _3 = {method : (new A()).method }.method(); // Error prop missing
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+References:
+   class_method.js:7:16
+    7|   method(this: {prop: boolean}): string {
+                      ^^^^^^^^^^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------- class_method.js:34:18
+
+Cannot call `{...}.method` because number [1] is incompatible with boolean [2] in property `prop`. [incompatible-call]
+
+   class_method.js:34:18
+   34| let _5 = {prop : 123, method : A.staticMethod }.method();// Error - bool ~> number
+                        ^^^ [1]
+
+References:
+   class_method.js:11:36
+   11|   static staticMethod(this: {prop: boolean}): string {
+                                          ^^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------- class_method.js:36:10
+
+Cannot call `{...}.method` because property `prop` is missing in object literal [1] but exists in object type [2].
+[prop-missing]
+
+   class_method.js:36:10
+   36| let _6 = {method : A.staticMethod }.method(); // error prop missing
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+References:
+   class_method.js:11:29
+   11|   static staticMethod(this: {prop: boolean}): string {
+                                   ^^^^^^^^^^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------- class_method.js:41:18
+
+Cannot call `{...}.method` because number [1] is incompatible with boolean [2] in property `prop`. [incompatible-call]
+
+   class_method.js:41:18
+   41| let _8 = {prop : 123, method : (new A()).propUnboundNonMethod }.method(); // Error - bool ~> number
+                        ^^^ [1]
+
+References:
+   class_method.js:15:40
+   15|   propUnboundNonMethod : (this: {prop: boolean}) => string = function(this: {prop: boolean}): string {
+                                              ^^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------- class_method.js:43:10
+
+Cannot call `{...}.method` because property `prop` is missing in object literal [1] but exists in object type [2].
+[prop-missing]
+
+   class_method.js:43:10
+   43| let _9 = {method : (new A()).propUnboundNonMethod }.method(); // Error prop missing
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+References:
+   class_method.js:15:33
+   15|   propUnboundNonMethod : (this: {prop: boolean}) => string = function(this: {prop: boolean}): string {
+                                       ^^^^^^^^^^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------- class_method.js:48:19
+
+Cannot call `{...}.method` because number [1] is incompatible with boolean [2] in property `prop`. [incompatible-call]
+
+   class_method.js:48:19
+   48| let _11 = {prop : 123, method : A.staticPropUnboundNonMethod }.method();// Error - bool ~> number
+                         ^^^ [1]
+
+References:
+   class_method.js:19:53
+   19|   static staticPropUnboundNonMethod : (this: {prop: boolean}) => string = function(this: {prop: boolean}): string {
+                                                           ^^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------- class_method.js:50:11
+
+Cannot call `{...}.method` because property `prop` is missing in object literal [1] but exists in object type [2].
+[prop-missing]
+
+   class_method.js:50:11
+   50| let _12 = {method : A.staticPropUnboundNonMethod }.method(); // error prop missing
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+References:
+   class_method.js:19:46
+   19|   static staticPropUnboundNonMethod : (this: {prop: boolean}) => string = function(this: {prop: boolean}): string {
+                                                    ^^^^^^^^^^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------- class_poly_method.js:20:2
+
+Cannot cast `n.method()` to string because number [1] is incompatible with string [2]. [incompatible-cast]
+
+   class_poly_method.js:20:2
+   20| (n.method() : string); // error (number incompatible with string)
+        ^^^^^^^^^^
+
+References:
+   class_poly_method.js:16:15
+   16| let n = new A<number>(3);
+                     ^^^^^^ [1]
+   class_poly_method.js:20:15
+   20| (n.method() : string); // error (number incompatible with string)
+                     ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------- class_poly_method.js:22:2
+
+Cannot cast `s.method()` to number because string [1] is incompatible with number [2]. [incompatible-cast]
+
+   class_poly_method.js:22:2
+   22| (s.method() : number); // error (number incompatible with string)
+        ^^^^^^^^^^
+
+References:
+   class_poly_method.js:17:15
+   17| let s = new A<string>("");
+                     ^^^^^^ [1]
+   class_poly_method.js:22:15
+   22| (s.method() : number); // error (number incompatible with string)
+                     ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------ declare_class_method.js:19:18
+
+Cannot call `{...}.method` because boolean [1] is incompatible with number [2] in property `prop`. [incompatible-call]
+
+   declare_class_method.js:19:18
+   19| let _2 = {prop : true, method : (new A()).method }.method(); // Error - bool ~> number
+                        ^^^^ [1]
+
+References:
+   declare_class_method.js:7:23
+    7|   method(this: {prop: number}): string;
+                             ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------ declare_class_method.js:21:10
+
+Cannot call `{...}.method` because property `prop` is missing in object literal [1] but exists in object type [2].
+[prop-missing]
+
+   declare_class_method.js:21:10
+   21| let _3 = {method : (new A()).method }.method(); // Error prop missing
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+References:
+   declare_class_method.js:7:16
+    7|   method(this: {prop: number}): string;
+                      ^^^^^^^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------ declare_class_method.js:26:18
+
+Cannot call `{...}.method` because boolean [1] is incompatible with number [2] in property `prop`. [incompatible-call]
+
+   declare_class_method.js:26:18
+   26| let _5 = {prop : true, method : A.staticMethod }.method();// Error - bool ~> number
+                        ^^^^ [1]
+
+References:
+   declare_class_method.js:9:36
+    9|   static staticMethod(this: {prop: number}): string;
+                                          ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------ declare_class_method.js:28:10
+
+Cannot call `{...}.method` because property `prop` is missing in object literal [1] but exists in object type [2].
+[prop-missing]
+
+   declare_class_method.js:28:10
+   28| let _6 = {method : A.staticMethod }.method(); // error prop missing
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+References:
+   declare_class_method.js:9:29
+    9|   static staticMethod(this: {prop: number}): string;
+                                   ^^^^^^^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------ declare_class_method.js:33:18
+
+Cannot call `{...}.method` because boolean [1] is incompatible with number [2] in property `prop`. [incompatible-call]
+
+   declare_class_method.js:33:18
+   33| let _8 = {prop : true, method : (new A()).propUnboundNonMethod }.method(); // Error - bool ~> number
+                        ^^^^ [1]
+
+References:
+   declare_class_method.js:11:39
+   11|   propUnboundNonMethod: (this: {prop: number}) => string;
+                                             ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------ declare_class_method.js:35:10
+
+Cannot call `{...}.method` because property `prop` is missing in object literal [1] but exists in object type [2].
+[prop-missing]
+
+   declare_class_method.js:35:10
+   35| let _9 = {method : (new A()).propUnboundNonMethod }.method(); // Error prop missing
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+References:
+   declare_class_method.js:11:32
+   11|   propUnboundNonMethod: (this: {prop: number}) => string;
+                                      ^^^^^^^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------ declare_class_method.js:40:19
+
+Cannot call `{...}.method` because boolean [1] is incompatible with number [2] in property `prop`. [incompatible-call]
+
+   declare_class_method.js:40:19
+   40| let _11 = {prop : true, method : A.staticPropUnboundNonMethod }.method();// Error - bool ~> number
+                         ^^^^ [1]
+
+References:
+   declare_class_method.js:13:52
+   13|   static staticPropUnboundNonMethod: (this: {prop: number}) => string;
+                                                          ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------ declare_class_method.js:42:11
+
+Cannot call `{...}.method` because property `prop` is missing in object literal [1] but exists in object type [2].
+[prop-missing]
+
+   declare_class_method.js:42:11
+   42| let _12 = {method : A.staticPropUnboundNonMethod }.method(); // error prop missing
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+References:
+   declare_class_method.js:13:45
+   13|   static staticPropUnboundNonMethod: (this: {prop: number}) => string;
+                                                   ^^^^^^^^^^^^^^ [2]
+
+
 Error ---------------------------------------------------------------------------------------- declare_function.js:14:19
 
 Cannot call `myFun.bind` because boolean [1] is incompatible with number [2] in property `prop`. [incompatible-call]
@@ -297,6 +631,236 @@ References:
                                       ^^^^^ [2]
 
 
+Error ---------------------------------------------------------------------------------- incompatible_this_param.js:5:10
+
+Cannot define method `foo2` [1] on `A` because class `this` type [2] is incompatible with number [3].
+[incompatible-type]
+
+   incompatible_this_param.js:5:10
+   5|   static foo2(this : number) {} // error
+               ^^^^ [1]
+
+References:
+   incompatible_this_param.js:3:7
+   3| class A {
+            ^ [2]
+   incompatible_this_param.js:5:22
+   5|   static foo2(this : number) {} // error
+                           ^^^^^^ [3]
+
+
+Error ---------------------------------------------------------------------------------- incompatible_this_param.js:7:10
+
+Cannot define method `foo4` [1] on `A` because class `this` type [2] is incompatible with `A` [3]. [incompatible-type]
+
+   incompatible_this_param.js:7:10
+   7|   static foo4(this : A) {} // error
+               ^^^^ [1]
+
+References:
+   incompatible_this_param.js:3:7
+   3| class A {
+            ^ [2]
+   incompatible_this_param.js:7:22
+   7|   static foo4(this : A) {} // error
+                           ^ [3]
+
+
+Error ----------------------------------------------------------------------------------- incompatible_this_param.js:9:3
+
+Cannot define method `bar2` [1] on `A` because `A` [2] is incompatible with number [3]. [incompatible-type]
+
+   incompatible_this_param.js:9:3
+   9|   bar2 (this : number) {} // error
+        ^^^^ [1]
+
+References:
+   incompatible_this_param.js:3:7
+   3| class A {
+            ^ [2]
+   incompatible_this_param.js:9:16
+   9|   bar2 (this : number) {} // error
+                     ^^^^^^ [3]
+
+
+Error ---------------------------------------------------------------------------------- incompatible_this_param.js:11:3
+
+Cannot define method `bar4` [1] on `A` because `A` [2] is incompatible with class `A` [3]. [incompatible-type]
+
+   incompatible_this_param.js:11:3
+   11|   bar4 (this : typeof A) {} // error
+         ^^^^ [1]
+
+References:
+   incompatible_this_param.js:3:7
+    3| class A {
+             ^ [2]
+   incompatible_this_param.js:11:16
+   11|   bar4 (this : typeof A) {} // error
+                      ^^^^^^^^ [3]
+
+
+Error --------------------------------------------------------------------------------- incompatible_this_param.js:16:10
+
+Cannot define method `foo2` [1] on `B` because class `this` type [2] is incompatible with number [3].
+[incompatible-type]
+
+   incompatible_this_param.js:16:10
+   16|   static foo2(this : number) : void, // error
+                ^^^^ [1]
+
+References:
+   incompatible_this_param.js:14:15
+   14| declare class B {
+                     ^ [2]
+   incompatible_this_param.js:16:22
+   16|   static foo2(this : number) : void, // error
+                            ^^^^^^ [3]
+
+
+Error --------------------------------------------------------------------------------- incompatible_this_param.js:18:10
+
+Cannot define method `foo4` [1] on `B` because class `this` type [2] is incompatible with `B` [3]. [incompatible-type]
+
+   incompatible_this_param.js:18:10
+   18|   static foo4(this : B) : void, // error
+                ^^^^ [1]
+
+References:
+   incompatible_this_param.js:14:15
+   14| declare class B {
+                     ^ [2]
+   incompatible_this_param.js:18:22
+   18|   static foo4(this : B) : void, // error
+                            ^ [3]
+
+
+Error ---------------------------------------------------------------------------------- incompatible_this_param.js:20:3
+
+Cannot define method `bar2` [1] on `B` because `B` [2] is incompatible with number [3]. [incompatible-type]
+
+   incompatible_this_param.js:20:3
+   20|   bar2 (this : number) : void, // error
+         ^^^^ [1]
+
+References:
+   incompatible_this_param.js:14:15
+   14| declare class B {
+                     ^ [2]
+   incompatible_this_param.js:20:16
+   20|   bar2 (this : number) : void, // error
+                      ^^^^^^ [3]
+
+
+Error ---------------------------------------------------------------------------------- incompatible_this_param.js:22:3
+
+Cannot define method `bar4` [1] on `B` because `B` [2] is incompatible with class `B` [3]. [incompatible-type]
+
+   incompatible_this_param.js:22:3
+   22|   bar4 (this : typeof B) : void // error
+         ^^^^ [1]
+
+References:
+   incompatible_this_param.js:14:15
+   14| declare class B {
+                     ^ [2]
+   incompatible_this_param.js:22:16
+   22|   bar4 (this : typeof B) : void // error
+                      ^^^^^^^^ [3]
+
+
+Error ---------------------------------------------------------------------------------- incompatible_this_param.js:27:3
+
+Cannot define method `bar2` [1] on `C` because `C` [2] is incompatible with number [3]. [incompatible-type]
+
+   incompatible_this_param.js:27:3
+   27|   bar2 (this : number) : void, // error
+         ^^^^ [1]
+
+References:
+   incompatible_this_param.js:25:11
+   25| interface C {
+                 ^ [2]
+   incompatible_this_param.js:27:16
+   27|   bar2 (this : number) : void, // error
+                      ^^^^^^ [3]
+
+
+Error ---------------------------------------------------------------------------------- incompatible_this_param.js:40:3
+
+Cannot define method `bar2` [1] on `E` because `E` [2] is incompatible with number [3]. [incompatible-type]
+
+   incompatible_this_param.js:40:3
+   40|   bar2 (this : number) : void, // error
+         ^^^^ [1]
+
+References:
+   incompatible_this_param.js:38:11
+   38| interface E {
+                 ^ [2]
+   incompatible_this_param.js:40:16
+   40|   bar2 (this : number) : void, // error
+                      ^^^^^^ [3]
+
+
+Error ----------------------------------------------------------------------------------------------- interface.js:16:18
+
+Cannot call `{...}.method` because boolean [1] is incompatible with number [2] in property `prop`. [incompatible-call]
+
+   interface.js:16:18
+   16| let _2 = {prop : true, method : AImpl.method }.method(); // Error - bool ~> number
+                        ^^^^ [1]
+
+References:
+   interface.js:6:23
+    6|   method(this: {prop: number}): string;
+                             ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- interface.js:18:10
+
+Cannot call `{...}.method` because property `prop` is missing in object literal [1] but exists in object type [2].
+[prop-missing]
+
+   interface.js:18:10
+   18| let _3 = {method : AImpl.method }.method(); // Error prop missing
+                ^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+References:
+   interface.js:6:16
+    6|   method(this: {prop: number}): string;
+                      ^^^^^^^^^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- interface.js:23:18
+
+Cannot call `{...}.method` because boolean [1] is incompatible with number [2] in property `prop`. [incompatible-call]
+
+   interface.js:23:18
+   23| let _5 = {prop : true, method : AImpl.propUnboundNonMethod }.method(); // Error - bool ~> number
+                        ^^^^ [1]
+
+References:
+   interface.js:8:39
+    8|   propUnboundNonMethod: (this: {prop: number}) => string;
+                                             ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- interface.js:25:10
+
+Cannot call `{...}.method` because property `prop` is missing in object literal [1] but exists in object type [2].
+[prop-missing]
+
+   interface.js:25:10
+   25| let _6 = {method : AImpl.propUnboundNonMethod }.method(); // Error prop missing
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+References:
+   interface.js:8:32
+    8|   propUnboundNonMethod: (this: {prop: number}) => string;
+                                      ^^^^^^^^^^^^^^ [2]
+
+
 Error ----------------------------------------------------------------------------------------------------- test.js:8:17
 
 Cannot get `this.x` because property `x` is missing in mixed [1]. [incompatible-use]
@@ -472,4 +1036,4 @@ References:
 
 
 
-Found 29 errors
+Found 65 errors

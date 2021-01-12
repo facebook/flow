@@ -407,6 +407,8 @@ let rec make_error_printable ?(speculation = false) (error : Loc.t t) : Loc.t Er
               `Root (lower, None, [text "Cannot cast "; desc lower; text " to "; desc upper])
             | Op (ClassExtendsCheck { extends; def; _ }) ->
               `Root (def, None, [text "Cannot extend "; ref extends; text " with "; desc def])
+            | Op (ClassMethodDefinition { name; def }) ->
+              `Root (def, None, [text "Cannot define "; ref def; text " on "; desc name])
             | Op (ClassImplementsCheck { implements; def; _ }) ->
               `Root (def, None, [text "Cannot implement "; ref implements; text " with "; desc def])
             | Op (ClassOwnProtoCheck { prop; own_loc; proto_loc }) ->

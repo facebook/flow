@@ -8336,6 +8336,7 @@ struct
               | Cast _
               | SwitchCheck _
               | ClassExtendsCheck _
+              | ClassMethodDefinition _
               | ClassImplementsCheck _
               | ClassOwnProtoCheck _
               | GeneratorYield _
