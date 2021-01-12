@@ -301,7 +301,6 @@ BYTECODE_LINKER_FLAGS=$(NATIVE_OBJECT_FILES) $(FUZZY_PATH_LINKER_FLAGS) $(NATIVE
 LINKER_FLAGS=$(BYTECODE_LINKER_FLAGS)
 
 # For fuzzy-path
-CXX=g++
 CXXFLAGS=-s -std=c++11 -Wall -O3 -static-libstdc++
 
 RELEASE_TAGS=$(if $(FLOW_RELEASE),-tag warn_a,)
@@ -402,7 +401,7 @@ _build/src/third-party/fuzzy-path/vendor/%.o: src/third-party/fuzzy-path/vendor/
 	$(CXX) $(CXXFLAGS) -o $@ -c $<
 
 _build/src/third-party/fuzzy-path/libfuzzy-path.a: _build/src/third-party/fuzzy-path/src/fuzzy_path_wrapper.o _build/src/third-party/fuzzy-path/vendor/MatcherBase.o _build/src/third-party/fuzzy-path/vendor/score_match.o | _build/src/third-party/fuzzy-path
-	ar $(ARFLAGS) $@ $^
+	$(AR) $(ARFLAGS) $@ $^
 
 bin/flow$(EXE): build-flow
 	mkdir -p $(@D)

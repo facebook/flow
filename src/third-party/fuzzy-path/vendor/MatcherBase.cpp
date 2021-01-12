@@ -25,11 +25,11 @@ inline uint64_t letter_bitmask(const std::string &str) {
       count_bit = ((count_bit << 1) | 1) & 3;
       result |= count_bit << (index * 2);
     } else if (c == '-') {
-      result |= (1UL << 52);
+      result |= (1ULL << 52);
     } else if (c == '_') {
-      result |= (1UL << 53);
+      result |= (1ULL << 53);
     } else if (c >= '0' && c <= '9') {
-      result |= (1UL << (c - '0' + 54));
+      result |= (1ULL << (c - '0' + 54));
     }
   }
   return result;
