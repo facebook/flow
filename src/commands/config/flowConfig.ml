@@ -48,21 +48,17 @@ module Opts = struct
     disable_live_non_parse_errors: bool;
     emoji: bool;
     enable_const_params: bool;
-    enforce_strict_call_arity: bool;
     enforce_local_inference_annotations: bool;
-    enums: bool;
+    enforce_strict_call_arity: bool;
     enums_with_unknown_members: bool;
-    this_annot: bool;
+    enums: bool;
     exact_by_default: bool;
-    generate_tests: bool;
     facebook_fbs: string option;
     facebook_fbt: string option;
     facebook_module_interop: bool;
-    file_watcher: file_watcher option;
     file_watcher_timeout: int option;
-    watchman_sync_timeout: int option;
-    watchman_defer_states: string list;
-    watchman_mergebase_with: string option;
+    file_watcher: file_watcher option;
+    generate_tests: bool;
     haste_module_ref_prefix: string option;
     haste_name_reducers: (Str.regexp * string) list;
     haste_paths_excludes: string list;
@@ -85,6 +81,7 @@ module Opts = struct
     module_system: Options.module_system;
     modules_are_use_strict: bool;
     munge_underscores: bool;
+    new_signatures: bool;
     no_flowlib: bool;
     node_main_fields: string list;
     node_resolver_allow_root_relative: bool;
@@ -99,15 +96,18 @@ module Opts = struct
     shm_hash_table_pow: int;
     shm_heap_size: int;
     shm_log_level: int;
-    strict_es6_import_export: bool;
     strict_es6_import_export_excludes: string list;
+    strict_es6_import_export: bool;
     suppress_types: SSet.t;
     temp_dir: string;
+    this_annot: bool;
     traces: int;
     trust_mode: Options.trust_mode;
     type_asserts: bool;
-    new_signatures: bool;
     wait_for_recheck: bool;
+    watchman_defer_states: string list;
+    watchman_mergebase_with: string option;
+    watchman_sync_timeout: int option;
     weak: bool;
   }
 
@@ -156,21 +156,17 @@ module Opts = struct
       disable_live_non_parse_errors = false;
       emoji = false;
       enable_const_params = false;
-      enforce_strict_call_arity = true;
       enforce_local_inference_annotations = false;
+      enforce_strict_call_arity = true;
       enums = false;
       enums_with_unknown_members = false;
-      this_annot = false;
       exact_by_default = false;
-      generate_tests = false;
       facebook_fbs = None;
       facebook_fbt = None;
       facebook_module_interop = false;
       file_watcher = None;
       file_watcher_timeout = None;
-      watchman_sync_timeout = None;
-      watchman_defer_states = [];
-      watchman_mergebase_with = None;
+      generate_tests = false;
       haste_module_ref_prefix = None;
       haste_name_reducers =
         [(Str.regexp "^\\(.*/\\)?\\([a-zA-Z0-9$_.-]+\\)\\.js\\(\\.flow\\)?$", "\\2")];
@@ -184,8 +180,7 @@ module Opts = struct
       max_files_checked_per_worker = 100;
       max_header_tokens = 10;
       max_literal_length = 100;
-      max_rss_bytes_for_check_per_worker = 200 * 1024 * 1024;
-      (* 200MB *)
+      max_rss_bytes_for_check_per_worker = (* 200MB *) 200 * 1024 * 1024;
       max_seconds_for_check_per_worker = 5.0;
       max_workers = Sys_utils.nbr_procs;
       merge_timeout = Some 100;
@@ -208,17 +203,20 @@ module Opts = struct
       run_post_inference_implicit_instantiation = false;
       saved_state_fetcher = Options.Dummy_fetcher;
       shm_hash_table_pow = 19;
-      shm_heap_size = 1024 * 1024 * 1024 * 25;
-      (* 25 gigs *)
+      shm_heap_size = (* 25GB *) 1024 * 1024 * 1024 * 25;
       shm_log_level = 0;
       strict_es6_import_export = false;
       strict_es6_import_export_excludes = [];
       suppress_types = SSet.empty |> SSet.add "$FlowFixMe";
       temp_dir = default_temp_dir;
+      this_annot = false;
       traces = 0;
       trust_mode = Options.NoTrust;
       type_asserts = false;
       wait_for_recheck = false;
+      watchman_defer_states = [];
+      watchman_mergebase_with = None;
+      watchman_sync_timeout = None;
       weak = false;
     }
 
