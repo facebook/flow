@@ -44,6 +44,7 @@ type format = { opt_single_quotes: bool }
 type t = {
   opt_abstract_locations: bool;
   opt_all: bool;
+  opt_autoimports: bool;
   opt_automatic_require_default: bool;
   opt_babel_loose_array_spread: bool;
   opt_debug: bool;
@@ -115,6 +116,8 @@ type t = {
 let abstract_locations opts = opts.opt_abstract_locations
 
 let all opts = opts.opt_all
+
+let autoimports opts = opts.opt_autoimports
 
 let automatic_require_default opts = opts.opt_automatic_require_default
 

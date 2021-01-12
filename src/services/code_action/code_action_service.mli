@@ -7,7 +7,24 @@
 
 val client_supports_quickfixes : Lsp.CodeActionRequest.params -> bool
 
+type text_edits = {
+  title: string;
+  edits: Lsp.TextEdit.t list;
+}
+
+val text_edits_of_import :
+  options:Js_layout_generator.opts ->
+  reader:State_reader.t ->
+  src_dir:string option ->
+  ast:(Loc.t, Loc.t) Flow_ast.Program.t ->
+  Export_index.kind ->
+  string ->
+  File_key.t ->
+  (text_edits, unit) result
+
 val code_actions_at_loc :
+  options:Options.t ->
+  env:ServerEnv.env ->
   reader:Parsing_heaps.Reader.reader ->
   cx:Context.t ->
   file_sig:File_sig.With_Loc.t ->

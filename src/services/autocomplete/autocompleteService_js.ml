@@ -10,6 +10,16 @@ open Base.Result
 open Parsing_heaps_utils
 open Loc_collections
 
+let max_autoimport_suggestions = 100
+
+let default_autoimport_options =
+  Fuzzy_path.
+    {
+      default_options with
+      max_results = max_autoimport_suggestions;
+      num_threads = Base.Int.max 1 (Sys_utils.nbr_procs - 2);
+    }
+
 let autocomplete_suffix = "AUTO332"
 
 let suffix_len = String.length autocomplete_suffix
@@ -38,6 +48,14 @@ let add_autocomplete_token contents line column =
  * showing `ac_loc` to the client. *)
 let remove_autocomplete_token_from_loc loc =
   Loc.{ loc with _end = { loc._end with column = loc._end.column - suffix_len } }
+
+let remove_autocomplete_token =
+  let regexp = Str.regexp_string autocomplete_suffix in
+  fun str ->
+    match Str.bounded_split_delim regexp str 2 with
+    | [] -> ("", "")
+    | [str] -> (str, "")
+    | before :: after :: _ -> (before, after)
 
 let lsp_completion_of_type =
   let open Ty in
@@ -367,8 +385,50 @@ let local_value_identifiers ~options ~reader ~cx ~ac_loc ~file_sig ~ast ~typed_a
        ~options:ty_normalizer_options
        ~genv:(Ty_normalizer_env.mk_genv ~full_cx:cx ~file:(Context.file cx) ~typed_ast ~file_sig)
 
+let src_dir_of_loc ac_loc =
+  Loc.source ac_loc |> Base.Option.map ~f:(fun key -> File_key.to_string key |> Filename.dirname)
+
+let completion_item_of_autoimport
+    ~options ~reader ~src_dir ~ast ~ac_loc { Export_search.name; file_key; kind } =
+  let options =
+    Js_layout_generator.{ default_opts with single_quotes = Options.format_single_quotes options }
+  in
+  match
+    Code_action_service.text_edits_of_import ~options ~reader ~src_dir ~ast kind name file_key
+  with
+  | Error () -> None
+  | Ok { Code_action_service.title; edits } ->
+    let edits =
+      Base.List.map
+        ~f:(fun { Lsp.TextEdit.range; newText } ->
+          let loc = Flow_lsp_conversions.lsp_range_to_flow_loc ~source:file_key range in
+          (loc, newText))
+        edits
+    in
+    Some
+      {
+        ServerProt.Response.Completion.kind = Some Lsp.Completion.Variable;
+        name;
+        detail = name;
+        text_edits = text_edit (name, ac_loc) :: edits;
+        sort_text = sort_text_of_rank 100 (* TODO: use a constant *);
+        preselect = false;
+        documentation = Some title;
+      }
+
+let append_completion_items_of_autoimports ~options ~reader ~ast ~ac_loc auto_imports acc =
+  let src_dir = src_dir_of_loc ac_loc in
+  Base.List.fold_left
+    ~init:acc
+    ~f:(fun acc auto_import ->
+      match completion_item_of_autoimport ~options ~reader ~src_dir ~ast ~ac_loc auto_import with
+      | Some item -> item :: acc
+      | None -> acc)
+    auto_imports
+
 (* env is all visible bound names at cursor *)
 let autocomplete_id
+    ~env
     ~options
     ~reader
     ~cx
@@ -378,8 +438,9 @@ let autocomplete_id
     ~typed_ast
     ~include_super
     ~include_this
+    ~imports
     ~tparams
-    ~token:_ =
+    ~token =
   (* TODO: filter to results that match `token` *)
   let open ServerProt.Response.Completion in
   let ac_loc = loc_of_aloc ~reader ac_loc |> remove_autocomplete_token_from_loc in
@@ -436,7 +497,19 @@ let autocomplete_id
     else
       items
   in
-  let result = { ServerProt.Response.Completion.items; is_incomplete = false } in
+  let result =
+    if imports then
+      let { Export_search.results = auto_imports; is_incomplete } =
+        let (before, _after) = remove_autocomplete_token token in
+        Export_search.search_values ~options:default_autoimport_options before env.ServerEnv.exports
+      in
+      let items =
+        append_completion_items_of_autoimports ~options ~reader ~ast ~ac_loc auto_imports items
+      in
+      { ServerProt.Response.Completion.items; is_incomplete }
+    else
+      { ServerProt.Response.Completion.items; is_incomplete = false }
+  in
   AcResult { result; errors_to_log }
 
 (* Similar to autocomplete_member, except that we're not directly given an
@@ -613,7 +686,7 @@ let type_exports_of_module_ty ~ac_loc ~exact_by_default ~documentation_of_module
   | _ -> []
 
 let autocomplete_unqualified_type
-    ~options ~reader ~cx ~tparams ~file_sig ~ac_loc ~ast ~typed_ast ~token:_ =
+    ~env ~options ~reader ~cx ~imports ~tparams ~file_sig ~ac_loc ~ast ~typed_ast ~token =
   (* TODO: filter to results that match `token` *)
   let open ServerProt.Response.Completion in
   let ac_loc = loc_of_aloc ~reader ac_loc |> remove_autocomplete_token_from_loc in
@@ -686,7 +759,19 @@ let autocomplete_unqualified_type
            | Ok _ -> (items, errors_to_log))
          (tparam_and_tident_results, tparam_and_tident_errors_to_log)
   in
-  let result = { ServerProt.Response.Completion.items; is_incomplete = false } in
+  let result =
+    if imports then
+      let { Export_search.results = auto_imports; is_incomplete } =
+        let (before, _after) = remove_autocomplete_token token in
+        Export_search.search_types ~options:default_autoimport_options before env.ServerEnv.exports
+      in
+      let items =
+        append_completion_items_of_autoimports ~options ~reader ~ast ~ac_loc auto_imports items
+      in
+      { ServerProt.Response.Completion.items; is_incomplete }
+    else
+      { ServerProt.Response.Completion.items; is_incomplete = false }
+  in
   AcResult { result; errors_to_log }
 
 let autocomplete_qualified_type ~reader ~cx ~ac_loc ~file_sig ~typed_ast ~tparams ~qtype =
@@ -710,8 +795,8 @@ let autocomplete_qualified_type ~reader ~cx ~ac_loc ~file_sig ~typed_ast ~tparam
   AcResult
     { result = { ServerProt.Response.Completion.items; is_incomplete = false }; errors_to_log }
 
-let autocomplete_get_results ~options ~reader ~cx ~file_sig ~ast ~typed_ast trigger_character cursor
-    =
+let autocomplete_get_results
+    ~env ~options ~reader ~cx ~file_sig ~ast ~typed_ast ~imports trigger_character cursor =
   let file_sig = File_sig.abstractify_locs file_sig in
   match Autocomplete_js.process_location ~trigger_character ~cursor ~typed_ast with
   | Some (_, _, Acbinding) -> ("Empty", AcEmpty "Binding")
@@ -729,6 +814,7 @@ let autocomplete_get_results ~options ~reader ~cx ~file_sig ~ast ~typed_ast trig
   | Some (tparams, ac_loc, Acid { token; include_super; include_this }) ->
     ( "Acid",
       autocomplete_id
+        ~env
         ~options
         ~reader
         ~cx
@@ -738,6 +824,7 @@ let autocomplete_get_results ~options ~reader ~cx ~file_sig ~ast ~typed_ast trig
         ~typed_ast
         ~include_super
         ~include_this
+        ~imports
         ~tparams
         ~token )
   | Some (tparams, ac_loc, Acmem { obj_type; in_optional_chain }) ->
@@ -768,9 +855,11 @@ let autocomplete_get_results ~options ~reader ~cx ~file_sig ~ast ~typed_ast trig
   | Some (tparams, ac_loc, Actype { token }) ->
     ( "Actype",
       autocomplete_unqualified_type
+        ~env
         ~options
         ~reader
         ~cx
+        ~imports
         ~tparams
         ~ac_loc
         ~ast

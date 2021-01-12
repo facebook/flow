@@ -59,6 +59,8 @@ val abstract_locations : config -> bool
 
 val all : config -> bool
 
+val autoimports : config -> bool option
+
 val automatic_require_default : config -> bool
 
 val babel_loose_array_spread : config -> bool

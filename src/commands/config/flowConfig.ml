@@ -43,6 +43,7 @@ module Opts = struct
   type t = {
     abstract_locations: bool;
     all: bool;
+    autoimports: bool option;
     automatic_require_default: bool;
     babel_loose_array_spread: bool;
     disable_live_non_parse_errors: bool;
@@ -152,6 +153,7 @@ module Opts = struct
     {
       abstract_locations = true;
       all = false;
+      autoimports = None;
       automatic_require_default = false;
       babel_loose_array_spread = false;
       disable_live_non_parse_errors = false;
@@ -587,6 +589,7 @@ module Opts = struct
   let parsers =
     [
       ("all", boolean (fun opts v -> Ok { opts with all = v }));
+      ("autoimports", boolean (fun opts v -> Ok { opts with autoimports = Some v }));
       ("babel_loose_array_spread", babel_loose_array_spread_parser);
       ("emoji", boolean (fun opts v -> Ok { opts with emoji = v }));
       ("esproposal.class_instance_fields", deprecated_esproposal_flag Enable);
@@ -1177,6 +1180,8 @@ let libs config = config.libs
 let abstract_locations c = c.options.Opts.abstract_locations
 
 let all c = c.options.Opts.all
+
+let autoimports c = c.options.Opts.autoimports
 
 let automatic_require_default c = c.options.Opts.automatic_require_default
 

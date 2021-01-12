@@ -38,6 +38,7 @@ let spec =
         |> from_flag
         |> wait_for_recheck_flag
         |> lsp_flag
+        |> flag "--imports" no_arg ~doc:"Include suggestions that can be imported from other files"
         |> anon "args" (optional (list_of string)));
   }
 
@@ -111,7 +112,7 @@ let autocomplete_response_to_json ~strip_root response =
       let results = Base.List.map ~f:(autocomplete_result_to_json ~strip_root) items in
       JSON_Object [("result", JSON_Array results)])
 
-let main base_flags option_values json pretty root strip_root wait_for_recheck lsp args () =
+let main base_flags option_values json pretty root strip_root wait_for_recheck lsp imports args () =
   let (filename, contents, cursor_opt) = parse_args args in
   let flowconfig_name = base_flags.Base_flags.flowconfig_name in
   let root =
@@ -137,7 +138,7 @@ let main base_flags option_values json pretty root strip_root wait_for_recheck l
   | Some cursor ->
     let request =
       ServerProt.Request.AUTOCOMPLETE
-        { filename; contents; cursor; wait_for_recheck; trigger_character = None }
+        { filename; contents; cursor; wait_for_recheck; trigger_character = None; imports }
     in
     let results =
       match connect_and_make_request flowconfig_name option_values root request with

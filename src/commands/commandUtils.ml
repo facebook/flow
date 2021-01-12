@@ -1292,6 +1292,7 @@ let make_options
     opt_generate_tests =
       Base.Option.value options_flags.generate_tests ~default:(FlowConfig.generate_tests flowconfig);
     opt_format;
+    opt_autoimports = Base.Option.value (FlowConfig.autoimports flowconfig) ~default:false;
   }
 
 let make_env flowconfig_name connect_flags root =

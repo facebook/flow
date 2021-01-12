@@ -98,7 +98,8 @@ let get_status ~profiling ~reader genv env client_root =
   in
   (status_response, lazy_stats)
 
-let autocomplete ~trigger_character ~reader ~options ~env ~profiling ~filename ~contents ~cursor =
+let autocomplete
+    ~trigger_character ~reader ~options ~env ~profiling ~filename ~contents ~cursor ~imports =
   let path =
     match filename with
     | Some filename -> filename
@@ -140,12 +141,14 @@ let autocomplete ~trigger_character ~reader ~options ~env ~profiling ~filename ~
             let open AutocompleteService_js in
             let (ac_type_string, results_res) =
               autocomplete_get_results
+                ~env
                 ~options
                 ~reader
                 ~cx
                 ~file_sig
                 ~ast
                 ~typed_ast
+                ~imports
                 trigger_character
                 cursor_loc
             in
@@ -712,9 +715,18 @@ let save_state ~saved_state_filename ~genv ~env ~profiling =
       Lwt.return (Ok ()))
 
 let handle_autocomplete
-    ~trigger_character ~reader ~options ~profiling ~env ~filename ~contents ~cursor =
+    ~trigger_character ~reader ~options ~profiling ~env ~filename ~contents ~cursor ~imports =
   let%lwt (result, json_data) =
-    autocomplete ~trigger_character ~reader ~options ~env ~profiling ~filename ~contents ~cursor
+    autocomplete
+      ~trigger_character
+      ~reader
+      ~options
+      ~env
+      ~profiling
+      ~filename
+      ~contents
+      ~cursor
+      ~imports
   in
   Lwt.return (ServerProt.Response.AUTOCOMPLETE result, json_data)
 
@@ -935,6 +947,8 @@ let find_code_actions ~reader ~options ~env ~profiling ~params ~client =
       | Error _ -> Lwt.return (Ok [])
       | Ok (cx, _info, file_sig, tolerable_errors, ast, typed_ast, parse_errors) ->
         Code_action_service.code_actions_at_loc
+          ~options
+          ~env
           ~reader
           ~cx
           ~file_sig
@@ -994,11 +1008,11 @@ let get_ephemeral_handler genv command =
   let reader = State_reader.create () in
   match command with
   | ServerProt.Request.AUTOCOMPLETE
-      { filename; contents; cursor; trigger_character; wait_for_recheck } ->
+      { filename; contents; cursor; trigger_character; wait_for_recheck; imports } ->
     mk_parallelizable
       ~wait_for_recheck
       ~options
-      (handle_autocomplete ~trigger_character ~reader ~options ~filename ~contents ~cursor)
+      (handle_autocomplete ~trigger_character ~reader ~options ~filename ~contents ~cursor ~imports)
   | ServerProt.Request.AUTOFIX_EXPORTS { input; verbose; wait_for_recheck } ->
     let options = { options with Options.opt_verbose = verbose } in
     mk_parallelizable ~wait_for_recheck ~options (handle_autofix_exports ~input ~options)
@@ -1606,6 +1620,7 @@ let handle_persistent_autocomplete_lsp
          let e = Exception.wrap e in
          Error (Exception.get_ctor_string e, Utils.Callstack (Exception.get_backtrace_string e)))
   in
+  let imports = Options.autoimports options in
   match fn_content with
   | Error (reason, stack) -> mk_lsp_error_response ~ret:() ~id:(Some id) ~reason ~stack metadata
   | Ok (filename, contents) ->
@@ -1619,6 +1634,7 @@ let handle_persistent_autocomplete_lsp
         ~filename
         ~contents
         ~cursor:(line, char)
+        ~imports
     in
     let metadata = with_data ~extra_data metadata in
     begin
