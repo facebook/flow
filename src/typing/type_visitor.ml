@@ -791,26 +791,41 @@ class ['a] t =
       let acc = self#tout cx pole_TODO acc call_tout in
       acc
 
+    method private meth_call_type cx acc call =
+      let { meth_generic_this; meth_targs; meth_args_tlist; meth_tout; _ } = call in
+      let acc = self#opt (self#type_ cx pole_TODO) acc meth_generic_this in
+      let acc = self#opt (self#list (self#targ cx pole_TODO)) acc meth_targs in
+      let acc = self#list (self#call_arg cx) acc meth_args_tlist in
+      let acc = self#tout cx pole_TODO acc meth_tout in
+      acc
+
     method private opt_fun_call_type cx acc (call_this_t, call_targs, call_args_tlist, _, _) =
       let acc = self#type_ cx pole_TODO acc call_this_t in
       let acc = self#opt (self#list (self#targ cx pole_TODO)) acc call_targs in
       let acc = self#list (self#call_arg cx) acc call_args_tlist in
       acc
 
+    method private opt_meth_call_type
+        cx acc { opt_meth_generic_this; opt_meth_targs; opt_meth_args_tlist; _ } =
+      let acc = self#opt (self#type_ cx pole_TODO) acc opt_meth_generic_this in
+      let acc = self#opt (self#list (self#targ cx pole_TODO)) acc opt_meth_targs in
+      let acc = self#list (self#call_arg cx) acc opt_meth_args_tlist in
+      acc
+
     method private method_action cx acc =
       function
-      | CallM call -> self#fun_call_type cx acc call
+      | CallM call -> self#meth_call_type cx acc call
       | ChainM (_, _, this, call, void_out) ->
         let acc = self#type_ cx pole_TODO acc this in
-        let acc = self#fun_call_type cx acc call in
+        let acc = self#meth_call_type cx acc call in
         self#type_ cx pole_TODO acc void_out
 
     method private opt_method_action cx acc =
       function
-      | OptCallM call -> self#opt_fun_call_type cx acc call
+      | OptCallM call -> self#opt_meth_call_type cx acc call
       | OptChainM (_, _, this, call, void_out) ->
         let acc = self#type_ cx pole_TODO acc this in
-        let acc = self#opt_fun_call_type cx acc call in
+        let acc = self#opt_meth_call_type cx acc call in
         self#type_ cx pole_TODO acc void_out
 
     method private propref cx acc =
@@ -925,7 +940,7 @@ class ['a] t =
           acc)
 
     method private object_kit_slice cx acc { Object.reason = _; props; flags; generics = _ } =
-      let acc = self#smap (fun acc (t, _) -> self#type_ cx pole_TODO acc t) acc props in
+      let acc = self#smap (fun acc (t, _, _) -> self#type_ cx pole_TODO acc t) acc props in
       let acc = self#obj_flags cx pole_TODO acc flags in
       acc
 

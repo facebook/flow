@@ -1053,7 +1053,14 @@ let rec convert cx tparams_map =
     let exact_by_default = Context.exact_by_default cx in
     let exact_type = exact || ((not inexact) && exact_by_default) in
     let (t, properties) = convert_object cx tparams_map loc ~exact:exact_type properties in
-    if (not exact) && not inexact then (
+    let has_indexer =
+      properties
+      |> List.exists (fun property ->
+             match property with
+             | Ast.Type.Object.Indexer _ -> true
+             | _ -> false)
+    in
+    if (not exact) && (not inexact) && not has_indexer then (
       Flow.add_output cx Error_message.(EAmbiguousObjectType loc);
       if not exact_by_default then Flow.add_output cx Error_message.(EImplicitInexactObject loc)
     );
@@ -1078,7 +1085,7 @@ let rec convert cx tparams_map =
               | _ -> false)
             properties
         in
-        Class_type_sig.Interface { inline = true; extends; callable }
+        Class_type_sig.Interface { Class_type_sig.inline = true; extends; callable }
       in
       (Class_type_sig.empty id reason None tparams_map super, extend_asts)
     in
@@ -1087,7 +1094,8 @@ let rec convert cx tparams_map =
       cx
       (fun iface_sig ->
         Class_type_sig.check_super cx reason iface_sig;
-        Class_type_sig.check_implements cx reason iface_sig)
+        Class_type_sig.check_implements cx reason iface_sig;
+        Class_type_sig.check_methods cx reason iface_sig)
       iface_sig
     |> ignore;
     ( (loc, Class_type_sig.thistype cx iface_sig),
@@ -1328,13 +1336,13 @@ and convert_object =
               else
                 t
             in
-            let polarity =
+            let prop =
               if _method then
-                Polarity.Positive
+                Properties.add_method name (Some loc) t
               else
-                polarity variance
+                Properties.add_field name (polarity variance) (Some loc) t
             in
-            (Acc.add_prop (Properties.add_field name polarity (Some loc) t) acc, prop_ast t)
+            (Acc.add_prop prop acc, prop_ast t)
         | Ast.Expression.Object.Property.Literal (loc, _)
         | Ast.Expression.Object.Property.PrivateName (loc, _)
         | Ast.Expression.Object.Property.Computed (loc, _) ->
@@ -2036,7 +2044,8 @@ let mk_declare_class_sig =
       in
       let self = Tvar.mk cx reason in
       let (tparams, tparams_map, tparam_asts) = mk_type_param_declarations cx tparams in
-      let (tparams, tparams_map) = Class_type_sig.add_this self cx reason tparams tparams_map in
+      let (this_tparam, this_t) = mk_this self cx reason tparams in
+      let tparams_map_with_this = SMap.add "this" this_t tparams_map in
       let (iface_sig, extends_ast, mixins_ast, implements_ast) =
         let id = Context.make_aloc_id cx id_loc in
         let (extends, extends_ast) =
@@ -2044,12 +2053,12 @@ let mk_declare_class_sig =
           | Some (loc, { Ast.Type.Generic.id; targs; comments }) ->
             let lookup_mode = Env.LookupMode.ForValue in
             let (i, id) = convert_qualification ~lookup_mode cx "mixins" id in
-            let (t, targs) = mk_super cx tparams_map loc i targs in
+            let (t, targs) = mk_super cx tparams_map_with_this loc i targs in
             (Some t, Some (loc, { Ast.Type.Generic.id; targs; comments }))
           | None -> (None, None)
         in
         let (mixins, mixins_ast) =
-          mixins |> Base.List.map ~f:(mk_mixins cx tparams_map) |> List.split
+          mixins |> Base.List.map ~f:(mk_mixins cx tparams_map_with_this) |> List.split
         in
         let (implements, implements_ast) =
           let open Ast.Class.Implements in
@@ -2066,7 +2075,7 @@ let mk_declare_class_sig =
                        match targs with
                        | None -> ((loc, c, None), None)
                        | Some (targs_loc, { Ast.Type.TypeArgs.arguments = targs; comments }) ->
-                         let (ts, targs_ast) = convert_list cx tparams_map targs in
+                         let (ts, targs_ast) = convert_list cx tparams_map_with_this targs in
                          ( (loc, c, Some ts),
                            Some (targs_loc, { Ast.Type.TypeArgs.arguments = targs_ast; comments })
                          )
@@ -2082,13 +2091,15 @@ let mk_declare_class_sig =
             | None -> Implicit { null = is_object_builtin_libdef ident }
             | Some extends -> Explicit extends
           in
-          Class { extends; mixins; implements }
+          Class { Class_type_sig.extends; mixins; implements; this_t; this_tparam }
         in
         (empty id reason tparams tparams_map super, extends_ast, mixins_ast, implements_ast)
       in
       (* All classes have a static "name" property. *)
       let iface_sig = add_name_field iface_sig in
-      let (iface_sig, properties) = add_interface_properties cx tparams_map properties iface_sig in
+      let (iface_sig, properties) =
+        add_interface_properties cx tparams_map_with_this properties iface_sig
+      in
       (* Add a default ctor if we don't have a ctor and won't inherit one from a super *)
       let iface_sig =
         if mem_constructor iface_sig || extends <> None || mixins <> [] then

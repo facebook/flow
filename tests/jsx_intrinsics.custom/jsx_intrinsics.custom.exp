@@ -8,7 +8,7 @@ Cannot create `div` element because number [1] is incompatible with string [2] i
 
 References:
    lib/jsx.js:4:27
-   4|   div: $JSXIntrinsic<{id: string}>,
+   4|   div: $JSXIntrinsic<{id: string, ...}>,
                                 ^^^^^^ [2]
 
 
@@ -22,7 +22,7 @@ Cannot cast `<div />.props.id` to number because string [1] is incompatible with
 
 References:
    lib/jsx.js:4:27
-   4|   div: $JSXIntrinsic<{id: string}>,
+   4|   div: $JSXIntrinsic<{id: string, ...}>,
                                 ^^^^^^ [1]
    main.js:9:29
    9| (<div id="foo" />.props.id: number); // Error: (`id` prop) number ~> string
@@ -42,8 +42,8 @@ References:
    9| <Div />; // This is fine
       ^^^^^^^ [1]
    lib/jsx.js:4:22
-   4|   div: $JSXIntrinsic<{id: string}>,
-                           ^^^^^^^^^^^^ [2]
+   4|   div: $JSXIntrinsic<{id: string, ...}>,
+                           ^^^^^^^^^^^^^^^^^ [2]
 
 
 Error -------------------------------------------------------------------------------------------------- strings.js:10:2
@@ -58,9 +58,10 @@ References:
    lib/jsx.js:3:23
                              v
     3| type $JSXIntrinsics = {
-    4|   div: $JSXIntrinsic<{id: string}>,
-    5|   span: $JSXIntrinsic<{id: string, class: string}>,
-    6| };
+    4|   div: $JSXIntrinsic<{id: string, ...}>,
+    5|   span: $JSXIntrinsic<{id: string, class: string, ...}>,
+    6|   ...
+    7| };
        ^ [1]
 
 
@@ -77,9 +78,10 @@ References:
    lib/jsx.js:3:23
                              v
     3| type $JSXIntrinsics = {
-    4|   div: $JSXIntrinsic<{id: string}>,
-    5|   span: $JSXIntrinsic<{id: string, class: string}>,
-    6| };
+    4|   div: $JSXIntrinsic<{id: string, ...}>,
+    5|   span: $JSXIntrinsic<{id: string, class: string, ...}>,
+    6|   ...
+    7| };
        ^ [1]
 
 
@@ -94,8 +96,8 @@ Cannot call `React.createElement` because property `id` is missing in props [1] 
 
 References:
    lib/jsx.js:4:22
-    4|   div: $JSXIntrinsic<{id: string}>,
-                            ^^^^^^^^^^^^ [2]
+    4|   div: $JSXIntrinsic<{id: string, ...}>,
+                            ^^^^^^^^^^^^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------- strings.js:14:21
@@ -110,9 +112,10 @@ References:
    lib/jsx.js:3:23
                              v
     3| type $JSXIntrinsics = {
-    4|   div: $JSXIntrinsic<{id: string}>,
-    5|   span: $JSXIntrinsic<{id: string, class: string}>,
-    6| };
+    4|   div: $JSXIntrinsic<{id: string, ...}>,
+    5|   span: $JSXIntrinsic<{id: string, class: string, ...}>,
+    6|   ...
+    7| };
        ^ [1]
 
 
@@ -129,9 +132,10 @@ References:
    lib/jsx.js:3:23
                              v
     3| type $JSXIntrinsics = {
-    4|   div: $JSXIntrinsic<{id: string}>,
-    5|   span: $JSXIntrinsic<{id: string, class: string}>,
-    6| };
+    4|   div: $JSXIntrinsic<{id: string, ...}>,
+    5|   span: $JSXIntrinsic<{id: string, class: string, ...}>,
+    6|   ...
+    7| };
        ^ [1]
 
 
@@ -145,7 +149,7 @@ Cannot create `Div` element because number [1] is incompatible with string [2] i
 
 References:
    lib/jsx.js:4:27
-    4|   div: $JSXIntrinsic<{id: string}>,
+    4|   div: $JSXIntrinsic<{id: string, ...}>,
                                  ^^^^^^ [2]
 
 

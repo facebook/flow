@@ -80,7 +80,7 @@ export default (suite(({addFile, flowCmd}) => [
       'bar.js',
     ).stdout(
 `{
-  "error": "not enough type information to autocomplete",
+  "error": "not enough type information to extract members",
   "result": []
 }`,
 ).exitCodes([0]),
@@ -443,7 +443,7 @@ export default (suite(({addFile, flowCmd}) => [
     ).stdout(
        `
          {
-           "error": "not enough type information to autocomplete",
+           "error": "not enough type information to extract members",
            "result": []
          }
        `,
@@ -457,7 +457,7 @@ export default (suite(({addFile, flowCmd}) => [
     ).stdout(
        `
          {
-           "error": "not enough type information to autocomplete",
+           "error": "not enough type information to extract members",
            "result": []
          }
        `,

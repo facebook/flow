@@ -159,21 +159,18 @@ let merge_targets ~env ~options ~profiling ~get_dependent_files roots =
   in
   Lwt.return (sig_dependency_graph, component_map, roots, to_check)
 
-(* As we merge, we will process the target files in Classic mode. These are
-   included in roots set. *)
-let merge_job ~visit ~roots ~iteration ~worker_mutator ~options ~reader component =
+let merge_job ~worker_mutator ~options ~reader component =
   let leader = Nel.hd component in
   let reader = Abstract_state_reader.Mutator_state_reader reader in
   let result =
     if Module_js.checked_file ~reader ~audit:Expensive.ok leader then (
-      let (cx, master_cx, check_opt) =
+      let (cx, master_cx, _) =
         let open Merge_service in
         match merge_context ~options ~reader component with
         | MergeResult { cx; master_cx } -> (cx, master_cx, None)
         | CheckResult { cx; master_cx; file_sigs; typed_asts; _ } ->
           (cx, master_cx, Some (file_sigs, typed_asts))
       in
-      let full_cx = Context.copy_of_context cx in
       let module_refs = List.rev_map Files.module_ref (Nel.to_list component) in
       let md5 = Merge_js.ContextOptimizer.sig_context cx module_refs in
       Context.clear_master_shared cx master_cx;
@@ -183,39 +180,8 @@ let merge_job ~visit ~roots ~iteration ~worker_mutator ~options ~reader componen
         cx
         component
         md5;
-      let metadata = Context.metadata_of_options options in
-      match check_opt with
-      | None -> FilenameMap.empty
-      | Some (file_sigs, typed_asts) ->
-        Nel.fold_left
-          (fun acc file ->
-            (* Merge will have potentially merged more that the target files (roots).
-               To avoid processing all those files, we pick the ones in the roots set. *)
-            if FilenameSet.mem file roots then
-              let file_sig = FilenameMap.find file file_sigs in
-              let typed_ast = FilenameMap.find file typed_asts in
-              let ast = Parsing_heaps.Reader_dispatcher.get_ast_unsafe ~reader file in
-              let docblock = Parsing_heaps.Reader_dispatcher.get_docblock_unsafe ~reader file in
-              let ccx =
-                {
-                  Codemod_context.Typed.file;
-                  file_sig;
-                  metadata;
-                  options;
-                  full_cx;
-                  typed_ast;
-                  docblock;
-                  iteration;
-                }
-              in
-              let result = visit ast ccx in
-              FilenameMap.add file (Ok result) acc
-            else
-              acc)
-          FilenameMap.empty
-          component
-    ) else
-      FilenameMap.empty
+      ()
+    )
   in
   Ok result
 
@@ -311,9 +277,9 @@ module SimpleTypedRunner (C : SIMPLE_TYPED_RUNNER_CONFIG) : TYPED_RUNNER_CONFIG 
           Context_heaps.Merge_context_mutator.create transaction files_to_merge
         in
         Hh_logger.info "Merging %d files" (FilenameSet.cardinal files_to_merge);
-        let%lwt (merge_result, _) =
+        let%lwt _ =
           Merge_service.merge_runner
-            ~job:(merge_job ~visit:C.visit ~roots ~iteration)
+            ~job:merge_job
             ~master_mutator
             ~worker_mutator
             ~reader
@@ -325,31 +291,17 @@ module SimpleTypedRunner (C : SIMPLE_TYPED_RUNNER_CONFIG) : TYPED_RUNNER_CONFIG 
             ~recheck_set:files_to_merge
         in
         Hh_logger.info "Merging done.";
-        let merge_result =
-          List.fold_left
-            (fun acc (file, result) ->
-              match result with
-              | Ok result -> FilenameMap.union result acc
-              | Error e -> FilenameMap.add file (Error e) acc)
-            FilenameMap.empty
-            merge_result
+        Hh_logger.info "Checking %d files" (FilenameSet.cardinal roots);
+        let%lwt result =
+          MultiWorkerLwt.call
+            workers
+            ~job:(check_job ~visit:C.visit ~iteration ~reader ~options)
+            ~neutral:FilenameMap.empty
+            ~merge:FilenameMap.union
+            ~next:(MultiWorkerLwt.next workers (FilenameSet.elements roots))
         in
-        match Options.arch options with
-        | Options.Classic ->
-          (* Nothing to do here *)
-          Lwt.return merge_result
-        | Options.TypesFirst _ ->
-          Hh_logger.info "Checking %d files" (FilenameSet.cardinal roots);
-          let%lwt result =
-            MultiWorkerLwt.call
-              workers
-              ~job:(check_job ~visit:C.visit ~iteration ~reader ~options)
-              ~neutral:FilenameMap.empty
-              ~merge:FilenameMap.union
-              ~next:(MultiWorkerLwt.next workers (FilenameSet.elements roots))
-          in
-          Hh_logger.info "Done";
-          Lwt.return result)
+        Hh_logger.info "Done";
+        Lwt.return result)
 end
 
 (* This mode will run a prepass analysis over the input files and their downstream
@@ -389,7 +341,7 @@ module TypedRunnerWithPrepass (C : TYPED_RUNNER_WITH_PREPASS_CONFIG) : TYPED_RUN
         (* Calculate dependencies that need to be merged *)
         let%lwt (sig_dependency_graph, component_map, files_to_merge, files_to_check) =
           let get_dependent_files sig_dependency_graph implementation_dependency_graph roots =
-            SharedMem_js.with_memory_timer_lwt ~options "AllDependentFiles" profiling (fun () ->
+            Memory_utils.with_memory_timer_lwt ~options "AllDependentFiles" profiling (fun () ->
                 Lwt.return
                   (Pure_dep_graph_operations.calc_all_dependents
                      ~sig_dependency_graph
@@ -402,9 +354,9 @@ module TypedRunnerWithPrepass (C : TYPED_RUNNER_WITH_PREPASS_CONFIG) : TYPED_RUN
           Context_heaps.Merge_context_mutator.create transaction files_to_merge
         in
         Hh_logger.info "Merging %d files" (FilenameSet.cardinal files_to_merge);
-        let%lwt (merge_result, _) =
+        let%lwt _ =
           Merge_service.merge_runner
-            ~job:(merge_job ~visit:C.visit ~roots ~iteration)
+            ~job:merge_job
             ~master_mutator
             ~worker_mutator
             ~reader
@@ -416,45 +368,31 @@ module TypedRunnerWithPrepass (C : TYPED_RUNNER_WITH_PREPASS_CONFIG) : TYPED_RUN
             ~recheck_set:files_to_merge
         in
         Hh_logger.info "Merging done.";
-        let merge_result =
-          List.fold_left
-            (fun acc (file, result) ->
-              match result with
-              | Ok result -> FilenameMap.union result acc
-              | Error e -> FilenameMap.add file (Error e) acc)
-            FilenameMap.empty
-            merge_result
+        let files_to_check = CheckedSet.all files_to_check in
+        Hh_logger.info "Pre-Checking %d files" (FilenameSet.cardinal files_to_check);
+        let%lwt result =
+          MultiWorkerLwt.call
+            workers
+            ~job:(pre_check_job ~reader ~options)
+            ~neutral:FilenameMap.empty
+            ~merge:FilenameMap.union
+            ~next:(MultiWorkerLwt.next workers (FilenameSet.elements files_to_check))
         in
-        match Options.arch options with
-        | Options.Classic ->
-          (* Nothing to do here *)
-          Lwt.return merge_result
-        | Options.TypesFirst _ ->
-          let files_to_check = CheckedSet.all files_to_check in
-          Hh_logger.info "Pre-Checking %d files" (FilenameSet.cardinal files_to_check);
-          let%lwt result =
-            MultiWorkerLwt.call
-              workers
-              ~job:(pre_check_job ~reader ~options)
-              ~neutral:FilenameMap.empty
-              ~merge:FilenameMap.union
-              ~next:(MultiWorkerLwt.next workers (FilenameSet.elements files_to_check))
-          in
-          Hh_logger.info "Pre-checking Done";
-          Hh_logger.info "Storing pre-checking results";
-          C.store_precheck_result result;
-          Hh_logger.info "Storing pre-checking results Done";
-          Hh_logger.info "Checking+Codemodding %d files" (FilenameSet.cardinal roots);
-          let%lwt result =
-            MultiWorkerLwt.call
-              workers
-              ~job:(check_job ~visit:C.visit ~iteration ~reader ~options)
-              ~neutral:FilenameMap.empty
-              ~merge:FilenameMap.union
-              ~next:(MultiWorkerLwt.next workers (FilenameSet.elements roots))
-          in
-          Hh_logger.info "Checking+Codemodding Done";
-          Lwt.return result)
+        Hh_logger.info "Pre-checking Done";
+        Hh_logger.info "Storing pre-checking results";
+        C.store_precheck_result result;
+        Hh_logger.info "Storing pre-checking results Done";
+        Hh_logger.info "Checking+Codemodding %d files" (FilenameSet.cardinal roots);
+        let%lwt result =
+          MultiWorkerLwt.call
+            workers
+            ~job:(check_job ~visit:C.visit ~iteration ~reader ~options)
+            ~neutral:FilenameMap.empty
+            ~merge:FilenameMap.union
+            ~next:(MultiWorkerLwt.next workers (FilenameSet.elements roots))
+        in
+        Hh_logger.info "Checking+Codemodding Done";
+        Lwt.return result)
 end
 
 module TypedRunner (TypedRunnerConfig : TYPED_RUNNER_CONFIG) : STEP_RUNNER = struct

@@ -82,7 +82,7 @@ type merge_context_result =
    (g) decls: edges between files in the component and libraries, classified
    by requires (when implementations of such requires are not found).
 *)
-let reqs_of_component ~reader component required =
+let reqs_of_component ~phase ~reader component required =
   let (dep_cxs, reqs) =
     List.fold_left
       (fun (dep_cxs, reqs) req ->
@@ -96,7 +96,7 @@ let reqs_of_component ~reader component required =
             if info.checked && info.parsed then
               (* checked implementation exists *)
               let m = Files.module_ref dep in
-              if Nel.mem ~equal:File_key.equal dep component then
+              if phase <> Context.Checking && Nel.mem ~equal:File_key.equal dep component then
                 (* impl is part of component *)
                 (dep_cxs, Reqs.add_impl m file locs reqs)
               else
@@ -135,35 +135,31 @@ let merge_context_generic ~options ~reader ~get_ast_unsafe ~get_file_sig_unsafe 
       ([], FilenameMap.empty)
       component
   in
-  let (master_cx, dep_cxs, file_reqs) = reqs_of_component ~reader component required in
+  let (master_cx, dep_cxs, file_reqs) = reqs_of_component ~reader ~phase component required in
   let metadata = Context.metadata_of_options options in
   let lint_severities = Options.lint_severities options in
   let strict_mode = Options.strict_mode options in
   let get_aloc_table_unsafe =
     Parsing_heaps.Reader_dispatcher.get_sig_ast_aloc_table_unsafe ~reader
   in
-  assert (phase <> Context.Merging || Options.arch options <> Options.Classic);
-  let (((full_cx, _, _), other_cxs) as cx_nel) =
-    Merge_js.merge_component
-      ~arch:(Options.arch options)
-      ~metadata
-      ~lint_severities
-      ~strict_mode
-      ~file_sigs
-      ~phase
-      ~get_ast_unsafe:(get_ast_unsafe ~reader)
-      ~get_aloc_table_unsafe
-      ~get_docblock_unsafe:(Parsing_heaps.Reader_dispatcher.get_docblock_unsafe ~reader)
-      component
-      file_reqs
-      dep_cxs
-      master_cx
+  let new_signatures = Options.new_signatures options in
+  let opts =
+    Merge_js.Merge_options { new_signatures; phase; metadata; lint_severities; strict_mode }
   in
-  match (Options.arch options, phase) with
-  | (_, Context.Normalizing) -> failwith "unexpected phase: Normalizing"
-  | (Options.TypesFirst _, Context.Merging) -> MergeResult { cx = full_cx; master_cx }
-  | (Options.TypesFirst _, Context.Checking)
-  | (Options.Classic, _) ->
+  let getters =
+    {
+      Merge_js.get_ast_unsafe = get_ast_unsafe ~reader;
+      get_aloc_table_unsafe;
+      get_docblock_unsafe = Parsing_heaps.Reader_dispatcher.get_docblock_unsafe ~reader;
+    }
+  in
+  let (((full_cx, _, _), other_cxs) as cx_nel) =
+    Merge_js.merge_component ~opts ~getters ~file_sigs component file_reqs dep_cxs master_cx
+  in
+  match phase with
+  | Context.Normalizing -> failwith "unexpected phase: Normalizing"
+  | Context.Merging -> MergeResult { cx = full_cx; master_cx }
+  | Context.Checking ->
     let coverage =
       Nel.fold_left
         (fun acc (ctx, _, typed_ast) ->
@@ -290,7 +286,15 @@ let merge_context_new_signatures ~options ~reader component =
         else
           ALoc.of_loc (ALoc.to_loc aloc_table aloc)
     in
-    let (exports, export_def, module_refs, local_defs, remote_refs, pattern_defs, patterns) =
+    let {
+      Packed_type_sig.exports;
+      export_def;
+      module_refs;
+      local_defs;
+      remote_refs;
+      pattern_defs;
+      patterns;
+    } =
       Parsing_heaps.Reader_dispatcher.get_type_sig_unsafe ~reader file
     in
     let dependencies =
@@ -325,7 +329,7 @@ let merge_context_new_signatures ~options ~reader component =
 
   (* create builtins, merge master cx *)
   let master_cx = Context_heaps.Reader_dispatcher.find_sig ~reader File_key.Builtins in
-  Flow_js.mk_builtins cx;
+  Flow_js_utils.mk_builtins cx;
   Context.merge_into sig_cx master_cx;
   Flow_js.flow_t
     cx
@@ -339,22 +343,7 @@ let merge_context_new_signatures ~options ~reader component =
 
 let merge_context ~options ~reader component =
   let merge_generic_args =
-    match Options.arch options with
-    | Options.Classic ->
-      let phase = Context.Checking in
-      let get_ast_unsafe ~reader file =
-        let ((_, { Flow_ast.Program.all_comments; _ }) as ast) =
-          Parsing_heaps.Reader_dispatcher.get_ast_unsafe ~reader file
-        in
-        let aloc_ast = Ast_loc_utils.loc_to_aloc_mapper#program ast in
-        (all_comments, aloc_ast)
-      in
-      let get_file_sig_unsafe ~reader file =
-        let loc_file_sig = Parsing_heaps.Reader_dispatcher.get_file_sig_unsafe ~reader file in
-        File_sig.abstractify_locs loc_file_sig
-      in
-      Some (phase, get_ast_unsafe, get_file_sig_unsafe)
-    | Options.TypesFirst { new_signatures = false } ->
+    if not (Options.new_signatures options) then
       let phase = Context.Merging in
       let get_ast_unsafe ~reader file =
         let (_, { Flow_ast.Program.all_comments; _ }) =
@@ -365,7 +354,8 @@ let merge_context ~options ~reader component =
       in
       let get_file_sig_unsafe = Parsing_heaps.Reader_dispatcher.get_sig_file_sig_unsafe in
       Some (phase, get_ast_unsafe, get_file_sig_unsafe)
-    | Options.TypesFirst { new_signatures = true } -> None
+    else
+      None
   in
   match merge_generic_args with
   | Some (phase, get_ast_unsafe, get_file_sig_unsafe) ->
@@ -376,6 +366,7 @@ let merge_context ~options ~reader component =
    resolved. This is used by commands that make up a context on the fly. *)
 let merge_contents_context ~reader options file ast info file_sig =
   let (_, { Flow_ast.Program.all_comments; _ }) = ast in
+  let phase = Context.Checking in
   let aloc_ast = Ast_loc_utils.loc_to_aloc_mapper#program ast in
   let reader = Abstract_state_reader.State_reader reader in
   let file_sig = File_sig.abstractify_locs file_sig in
@@ -399,7 +390,7 @@ let merge_contents_context ~reader options file ast info file_sig =
   let file_sigs = FilenameMap.singleton file file_sig in
   let component = Nel.one file in
   let (master_cx, dep_cxs, file_reqs) =
-    try reqs_of_component ~reader component required with
+    try reqs_of_component ~reader ~phase component required with
     | Key_not_found _ -> failwith "not all dependencies are ready yet, aborting..."
     | e -> raise e
   in
@@ -409,21 +400,19 @@ let merge_contents_context ~reader options file ast info file_sig =
   let get_aloc_table_unsafe =
     Parsing_heaps.Reader_dispatcher.get_sig_ast_aloc_table_unsafe ~reader
   in
+  let new_signatures = Options.new_signatures options in
+  let opts =
+    Merge_js.Merge_options { new_signatures; phase; metadata; lint_severities; strict_mode }
+  in
+  let getters =
+    {
+      Merge_js.get_ast_unsafe = (fun _ -> (all_comments, aloc_ast));
+      get_aloc_table_unsafe;
+      get_docblock_unsafe = (fun _ -> info);
+    }
+  in
   let ((cx, _, tast), _) =
-    Merge_js.merge_component
-      ~arch:(Options.arch options)
-      ~metadata
-      ~lint_severities
-      ~strict_mode
-      ~file_sigs
-      ~get_ast_unsafe:(fun _ -> (all_comments, aloc_ast))
-      ~get_aloc_table_unsafe
-      ~get_docblock_unsafe:(fun _ -> info)
-      ~phase:Context.Checking
-      component
-      file_reqs
-      dep_cxs
-      master_cx
+    Merge_js.merge_component ~opts ~getters ~file_sigs component file_reqs dep_cxs master_cx
   in
   (cx, tast)
 
@@ -597,8 +586,8 @@ let merge_job ~worker_mutator ~reader ~job ~options merged elements =
                );
                (Nel.hd component, ret) :: merged)
          with
-        | (SharedMem_js.Out_of_shared_memory | SharedMem_js.Heap_full | SharedMem_js.Hash_table_full)
-          as exc ->
+        | (SharedMem.Out_of_shared_memory | SharedMem.Heap_full | SharedMem.Hash_table_full) as exc
+          ->
           raise exc
         (* A catch all suppression is probably a bad idea... *)
         | unwrapped_exc ->
@@ -678,7 +667,6 @@ let merge_runner
   let stream =
     Merge_stream.create
       ~num_workers
-      ~arch:(Options.arch options)
       ~sig_dependency_graph
       ~leader_map
       ~component_map
@@ -698,7 +686,7 @@ let merge_runner
   in
   let total_files = Merge_stream.total_files stream in
   let skipped_count = Merge_stream.skipped_count stream in
-  let sig_new_or_changed = Merge_stream.sig_new_or_changed master_mutator in
+  let sig_new_or_changed = Merge_stream.sig_new_or_changed stream in
   Hh_logger.info "Merge skipped %d of %d modules" skipped_count total_files;
   let elapsed = Unix.gettimeofday () -. start_time in
   if Options.should_profile options then Hh_logger.info "merged in %f" elapsed;
@@ -726,8 +714,7 @@ let check options ~reader file =
                 raise (Error_message.ECheckTimeout (run_time, file_str))))
         ~f:(fun () -> Ok (check_file options ~reader file))
     with
-    | (SharedMem_js.Out_of_shared_memory | SharedMem_js.Heap_full | SharedMem_js.Hash_table_full) as
-      exc ->
+    | (SharedMem.Out_of_shared_memory | SharedMem.Heap_full | SharedMem.Hash_table_full) as exc ->
       raise exc
     (* A catch all suppression is probably a bad idea... *)
     | unwrapped_exc ->

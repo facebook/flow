@@ -58,14 +58,14 @@ Cannot assign `c` to `e` because: [incompatible-type]
                   ^
 
 References:
-   lib/lib.js:33:27
-   33| type C = { [key: string]: number } & { [key: string]: number };
+   lib/lib.js:35:27
+   35| type C = { [key: string]: number } & { [key: string]: number };
                                  ^^^^^^ [1]
    test_obj.js:28:27
    28| type E = { [key: string]: string };
                                  ^^^^^^ [2]
-   lib/lib.js:33:55
-   33| type C = { [key: string]: number } & { [key: string]: number };
+   lib/lib.js:35:55
+   35| type C = { [key: string]: number } & { [key: string]: number };
                                                              ^^^^^^ [3]
 
 

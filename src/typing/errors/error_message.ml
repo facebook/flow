@@ -166,6 +166,8 @@ and 'loc t' =
     }
   | EIncompatibleWithExact of
       ('loc virtual_reason * 'loc virtual_reason) * 'loc virtual_use_op * exactness_error_kind
+  | EFunctionIncompatibleWithIndexer of
+      ('loc virtual_reason * 'loc virtual_reason) * 'loc virtual_use_op
   | EUnsupportedExact of ('loc virtual_reason * 'loc virtual_reason)
   | EIdxArity of 'loc virtual_reason
   | EIdxUse1 of 'loc virtual_reason
@@ -410,6 +412,7 @@ and 'loc t' =
       blame_reasons: 'loc virtual_reason list;
     }
   | EMalformedCode of 'loc
+  | EImplicitInstantiationTemporaryError of 'loc * string
 
 and 'loc exponential_spread_reason_group = {
   first_reason: 'loc virtual_reason;
@@ -682,6 +685,8 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
       }
   | EIncompatibleWithExact ((r1, r2), op, kind) ->
     EIncompatibleWithExact ((map_reason r1, map_reason r2), map_use_op op, kind)
+  | EFunctionIncompatibleWithIndexer ((r1, r2), op) ->
+    EFunctionIncompatibleWithIndexer ((map_reason r1, map_reason r2), map_use_op op)
   | EInvalidCharSet { invalid = (ir, set); valid; use_op } ->
     EInvalidCharSet
       { invalid = (map_reason ir, set); valid = map_reason valid; use_op = map_use_op use_op }
@@ -952,6 +957,8 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
         blame_reasons = Base.List.map ~f:map_reason blame_reasons;
       }
   | EMalformedCode loc -> EMalformedCode (f loc)
+  | EImplicitInstantiationTemporaryError (loc, msg) ->
+    EImplicitInstantiationTemporaryError (f loc, msg)
 
 let desc_of_reason r = Reason.desc_of_reason ~unwrap:(is_scalar_reason r) r
 
@@ -1001,6 +1008,8 @@ let util_use_op_of_msg nope util = function
     util use_op (fun use_op -> EUnionSpeculationFailed { use_op; reason; reason_op; branches })
   | EIncompatibleWithExact (rs, op, kind) ->
     util op (fun op -> EIncompatibleWithExact (rs, op, kind))
+  | EFunctionIncompatibleWithIndexer (rs, op) ->
+    util op (fun op -> EFunctionIncompatibleWithIndexer (rs, op))
   | EInvalidCharSet { invalid; valid; use_op } ->
     util use_op (fun use_op -> EInvalidCharSet { invalid; valid; use_op })
   | EIncompatibleWithShape (l, u, use_op) ->
@@ -1157,7 +1166,8 @@ let util_use_op_of_msg nope util = function
   | EEnumInvalidCheck _
   | EEnumMemberUsedAsType _
   | EAssignExportedConstLikeBinding _
-  | EMalformedCode _ ->
+  | EMalformedCode _
+  | EImplicitInstantiationTemporaryError _ ->
     nope
 
 (* Not all messages (i.e. those whose locations are based on use_ops) have locations that can be
@@ -1297,7 +1307,8 @@ let loc_of_msg : 'loc t' -> 'loc option = function
   | EUnexpectedThisType loc
   | ETypeParamMinArity (loc, _)
   | EAssignExportedConstLikeBinding { loc; _ }
-  | EMalformedCode loc ->
+  | EMalformedCode loc
+  | EImplicitInstantiationTemporaryError (loc, _) ->
     Some loc
   | ELintSetting (loc, _) -> Some loc
   | ETypeParamArity (loc, _) -> Some loc
@@ -1342,6 +1353,7 @@ let loc_of_msg : 'loc t' -> 'loc option = function
   | EIncompatibleWithShape _
   | EInvalidCharSet _
   | EIncompatibleWithExact _
+  | EFunctionIncompatibleWithIndexer _
   | EUnionSpeculationFailed _
   | ETupleUnsafeWrite _
   | EROArrayWrite _
@@ -2028,6 +2040,13 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
         features = [text object_kind; ref lower; text " is incompatible with exact "; ref upper];
         use_op;
       }
+  | EFunctionIncompatibleWithIndexer ((lower, upper), use_op) ->
+    UseOp
+      {
+        loc = loc_of_reason lower;
+        features = [ref lower; text " is incompatible with indexed "; ref upper];
+        use_op;
+      }
   | EUnsupportedExact (_, lower) ->
     Normal { features = [text "Cannot create exact type from "; ref lower; text "."] }
   | EIdxArity _ ->
@@ -2228,12 +2247,6 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
     let default = [text "Missing type annotation for "; desc reason; text "."] in
     let features =
       match desc_of_reason reason with
-      | RTypeParam (_, (RImplicitInstantiation, _), _) ->
-        [
-          text "Please use a concrete type annotation instead of ";
-          code "_";
-          text " in this position.";
-        ]
       | RTypeParam (_, (reason_op_desc, reason_op_loc), (reason_tapp_desc, reason_tapp_loc)) ->
         let reason_op = mk_reason reason_op_desc reason_op_loc in
         let reason_tapp = mk_reason reason_tapp_desc reason_tapp_loc in
@@ -3400,6 +3413,7 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
             text ".";
           ];
       }
+  | EImplicitInstantiationTemporaryError (_, msg) -> Normal { features = [text msg] }
 
 let is_lint_error = function
   | EUntypedTypeImport _
@@ -3560,6 +3574,7 @@ let error_code_of_message err : error_code option =
   | EIncompatibleProp { use_op = None; _ } -> Some IncompatibleType
   | EIncompatibleWithExact (_, _, Inexact) -> Some IncompatibleExact
   | EIncompatibleWithExact (_, _, Indexer) -> Some IncompatibleIndexer
+  | EFunctionIncompatibleWithIndexer _ -> Some IncompatibleFunctionIndexer
   | EIncompatibleWithShape _ -> Some IncompatibleShape
   | EEnumIncompatible { use_op; _ }
   | EIncompatibleWithUseOp { use_op; _ } ->
@@ -3642,6 +3657,7 @@ let error_code_of_message err : error_code option =
   | EUnsupportedSetProto _ -> Some CannotWrite
   | EUnsupportedSyntax (_, _) -> Some UnsupportedSyntax
   | EMalformedCode _
+  | EImplicitInstantiationTemporaryError _
   | EUnusedSuppression _ ->
     None
   | EUseArrayLiteral _ -> Some IllegalNewArray

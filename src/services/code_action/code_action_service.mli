@@ -5,14 +5,35 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
+val client_supports_quickfixes : Lsp.CodeActionRequest.params -> bool
+
+type text_edits = {
+  title: string;
+  edits: Lsp.TextEdit.t list;
+}
+
+val text_edits_of_import :
+  options:Js_layout_generator.opts ->
+  reader:State_reader.t ->
+  src_dir:string option ->
+  ast:(Loc.t, Loc.t) Flow_ast.Program.t ->
+  Export_index.kind ->
+  string ->
+  File_key.t ->
+  (text_edits, unit) result
+
 val code_actions_at_loc :
-  reader:Parsing_heaps.Reader.reader ->
   options:Options.t ->
   env:ServerEnv.env ->
-  profiling:Profiling_js.running ->
-  params:Lsp.CodeActionRequest.params ->
-  file_key:File_key.t ->
-  file_contents:string ->
+  reader:Parsing_heaps.Reader.reader ->
+  cx:Context.t ->
+  file_sig:File_sig.With_Loc.t ->
+  tolerable_errors:File_sig.With_Loc.tolerable_error list ->
+  ast:(Loc.t, Loc.t) Flow_ast.Program.t ->
+  typed_ast:(ALoc.t, ALoc.t * Type.t) Flow_ast.Program.t ->
+  parse_errors:(Loc.t * Parse_error.t) Base.List.t ->
+  diagnostics:Lsp.PublishDiagnostics.diagnostic list ->
+  uri:Lsp.DocumentUri.t ->
   loc:Loc.t ->
   (Lsp.CodeAction.command_or_action list, string) result Lwt.t
 

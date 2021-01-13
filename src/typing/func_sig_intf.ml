@@ -110,7 +110,7 @@ module type S = sig
                                             t -> Type.t
   (** Create a function type for function declarations/expressions. *)
 
-  val methodtype : Context.t -> t -> Type.t
+  val methodtype : Context.t -> ?ignore_this:bool -> t -> Type.t
   (** Create a function type for class/interface methods. *)
 
   val gettertype : t -> Type.t
@@ -128,4 +128,6 @@ module type S = sig
   (** 1. Util *)
 
   val to_ctor_sig : t -> t
+
+  val this_param : func_params -> Type.t option
 end

@@ -33,6 +33,8 @@ module Make (F : Func_params.S) = struct
     knot: Type.t;
   }
 
+  let this_param = F.this
+
   let default_constructor reason =
     {
       reason;
@@ -82,7 +84,7 @@ module Make (F : Func_params.S) = struct
 
   let check_with_generics cx f x =
     let { tparams; tparams_map; fparams; return_t; _ } = x in
-    Flow.check_with_generics cx (tparams |> TypeParams.to_list) (fun map ->
+    Flow_js_utils.check_with_generics cx (tparams |> TypeParams.to_list) (fun map ->
         f
           {
             x with
@@ -118,12 +120,17 @@ module Make (F : Func_params.S) = struct
     Flow.unify cx t knot;
     t
 
-  let methodtype cx { reason; tparams; fparams; return_t; _ } =
+  let methodtype cx ?(ignore_this = false) { reason; tparams; fparams; return_t; _ } =
     let params = F.value fparams in
     let (params_names, params_tlist) = List.split params in
     let rest_param = F.rest fparams in
     let def_reason = reason in
-    let this = F.this fparams in
+    let this =
+      if ignore_this then
+        Some Type.(MixedT.why reason (bogus_trust ()))
+      else
+        F.this fparams
+    in
     let t =
       DefT
         ( reason,

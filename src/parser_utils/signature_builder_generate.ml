@@ -724,9 +724,13 @@ module T = struct
     | Type { tparams; right } ->
       ( decl_loc,
         Ast.Statement.TypeAlias { Ast.Statement.TypeAlias.id; tparams; right; comments = None } )
-    | OpaqueType { tparams; impltype; supertype } ->
+    | OpaqueType { tparams; impltype = Some _ as impltype; supertype } ->
       ( decl_loc,
         Ast.Statement.OpaqueType
+          { Ast.Statement.OpaqueType.id; tparams; impltype; supertype; comments = None } )
+    | OpaqueType { tparams; impltype = None as impltype; supertype } ->
+      ( decl_loc,
+        Ast.Statement.DeclareOpaqueType
           { Ast.Statement.OpaqueType.id; tparams; impltype; supertype; comments = None } )
     | Interface { tparams; extends; body } ->
       ( decl_loc,
@@ -1978,6 +1982,7 @@ module Generator (Env : Signature_builder_verify.EvalEnv) = struct
     | Expression expr -> `Expr (Eval.literal_expr expr)
 
   let export_name export_loc ?exported ?source local export_kind =
+    let (id_loc, _) = local in
     ( export_loc,
       Ast.Statement.ExportNamedDeclaration
         {
@@ -1986,7 +1991,7 @@ module Generator (Env : Signature_builder_verify.EvalEnv) = struct
             Some
               (Ast.Statement.ExportNamedDeclaration.ExportSpecifiers
                  [
-                   ( approx_loc export_loc,
+                   ( approx_loc id_loc,
                      {
                        Ast.Statement.ExportNamedDeclaration.ExportSpecifier.local =
                          Flow_ast_utils.ident_of_source local;

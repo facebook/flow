@@ -17,6 +17,7 @@ module Request = struct
         cursor: int * int;
         trigger_character: string option;
         wait_for_recheck: bool option;
+        imports: bool;  (** include auto-import suggestions *)
       }
     | AUTOFIX_EXPORTS of {
         input: File_input.t;
@@ -128,7 +129,14 @@ module Request = struct
 
   let to_string = function
     | AUTOCOMPLETE
-        { filename; contents = _; cursor = _; wait_for_recheck = _; trigger_character = _ } ->
+        {
+          filename;
+          contents = _;
+          cursor = _;
+          wait_for_recheck = _;
+          trigger_character = _;
+          imports = _;
+        } ->
       let filename =
         match filename with
         | None -> "-"

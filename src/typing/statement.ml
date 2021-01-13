@@ -792,7 +792,8 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t =
       cx
       (fun iface_sig ->
         Class_type_sig.check_super cx def_reason iface_sig;
-        Class_type_sig.check_implements cx def_reason iface_sig)
+        Class_type_sig.check_implements cx def_reason iface_sig;
+        Class_type_sig.check_methods cx def_reason iface_sig)
       iface_sig;
     let (t_internal, t) = Class_type_sig.classtype ~check_polarity:false cx iface_sig in
     Flow.unify cx self t_internal;
@@ -1141,7 +1142,7 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t =
       let () =
         match (underlying_t, super_t) with
         | (Some l, Some u) ->
-          check_with_generics cx (TypeParams.to_list tparams) (fun map_ ->
+          Flow_js_utils.check_with_generics cx (TypeParams.to_list tparams) (fun map_ ->
               flow_t cx (subst cx map_ l, subst cx map_ u))
           |> ignore
         | _ -> ()
@@ -2771,7 +2772,7 @@ and object_prop cx ~object_annot acc prop =
         func
     in
     Flow.flow_t cx (t, tvar);
-    ( ObjectExpressionAcc.add_prop (Properties.add_field name Polarity.Neutral (Some loc) t) acc,
+    ( ObjectExpressionAcc.add_prop (Properties.add_method name (Some loc) t) acc,
       Property
         ( prop_loc,
           Property.Method
@@ -4141,7 +4142,7 @@ and optional_chain ~cond ~is_existence_check ?sentinel_refine cx ((loc, e) as ex
       let prop_t = Tvar.mk cx reason_prop in
       let lhs_t =
         Tvar.mk_no_wrap_where cx reason (fun t ->
-            let funtype = mk_methodcalltype super_t targts argts t in
+            let funtype = mk_methodcalltype targts argts t in
             let use_op =
               Op
                 (FunCallMethod
@@ -4190,12 +4191,12 @@ and optional_chain ~cond ~is_existence_check ?sentinel_refine cx ((loc, e) as ex
       define_internal cx reason "this";
       define_internal cx reason "super";
 
-      let this = this_ cx loc { This.comments = None } in
+      let meth_generic_this = this_ cx loc { This.comments = None } in
       let super_t = super_ cx super_loc in
       let super_reason = reason_of_t super_t in
       let lhs_t =
         Tvar.mk_no_wrap_where cx reason (fun t ->
-            let funtype = mk_methodcalltype this targts argts t in
+            let funtype = mk_methodcalltype ~meth_generic_this targts argts t in
             let propref = Named (super_reason, "constructor") in
             let use_op =
               Op
@@ -4443,7 +4444,7 @@ and optional_chain ~cond ~is_existence_check ?sentinel_refine cx ((loc, e) as ex
        * exp = ast for `a?.b?.c` with type T1 U T2
        * preds = assuming the overall function was called with ~cond,
              "a exists and has non-nullish property b", "a.b exists and has
-             truthy property c", and "a.b.c is truthy", as well as the the
+             truthy property c", and "a.b.c is truthy", as well as the
              types of a, a.b, and a.b.c
        * possibly an additional refinement based on the sentinel_refine function,
          passed in by the caller.
@@ -4878,10 +4879,9 @@ and optional_chain ~cond ~is_existence_check ?sentinel_refine cx ((loc, e) as ex
           in
           let prop_t = Tvar.mk cx reason_prop in
           let call_voided_out = Tvar.mk cx reason_call in
-          let get_opt_use argts _ this_t =
+          let get_opt_use argts _ _ =
             method_call_opt_use
               opt_state
-              ~this_t
               ~prop_t
               ~voided_out:call_voided_out
               reason_call
@@ -4902,7 +4902,9 @@ and optional_chain ~cond ~is_existence_check ?sentinel_refine cx ((loc, e) as ex
             Env.havoc_heap_refinements ();
             Tvar.mk_no_wrap_where cx reason_call (fun t ->
                 let frame = Env.peek_frame () in
-                let app = mk_methodcalltype obj_t targts argts t ~frame ~call_strict_arity:true in
+                let app =
+                  mk_boundfunctioncalltype obj_t targts argts t ~frame ~call_strict_arity:true
+                in
                 Flow.unify cx f prop_t;
                 let call_t =
                   match opt_state with
@@ -4958,10 +4960,9 @@ and optional_chain ~cond ~is_existence_check ?sentinel_refine cx ((loc, e) as ex
           let reason_lookup = mk_reason (RProperty None) lookup_loc in
           let call_voided_out = Tvar.mk cx expr_reason in
           let prop_t = Tvar.mk cx reason_lookup in
-          let get_opt_use (argts, elem_t) _ this_t =
+          let get_opt_use (argts, elem_t) _ _ =
             elem_call_opt_use
               opt_state
-              ~this_t
               ~prop_t
               ~voided_out:call_voided_out
               ~reason_call
@@ -5185,7 +5186,6 @@ and method_call_opt_use
     opt_state
     ~voided_out
     ~prop_t
-    ~this_t
     reason
     ~use_op
     ?(call_strict_arity = true)
@@ -5199,7 +5199,7 @@ and method_call_opt_use
   let reason_prop = mk_reason (RProperty (Some name)) prop_loc in
   let frame = Env.peek_frame () in
   let reason_expr = mk_reason (RProperty (Some name)) expr_loc in
-  let app = mk_opt_methodcalltype this_t targts argts frame call_strict_arity in
+  let app = mk_opt_methodcalltype targts argts frame call_strict_arity in
   let propref = Named (reason_prop, name) in
   let action =
     match opt_state with
@@ -5227,7 +5227,7 @@ and method_call
     ( f,
       Tvar.mk_no_wrap_where cx reason (fun t ->
           let frame = Env.peek_frame () in
-          let app = mk_methodcalltype obj_t targts argts t ~frame ~call_strict_arity in
+          let app = mk_boundfunctioncalltype obj_t targts argts t ~frame ~call_strict_arity in
           Flow.flow cx (f, CallT (use_op, reason, app))) )
   | None ->
     Env.havoc_heap_refinements ();
@@ -5237,7 +5237,7 @@ and method_call
       Tvar.mk_no_wrap_where cx reason (fun t ->
           let frame = Env.peek_frame () in
           let reason_expr = mk_reason (RProperty (Some name)) expr_loc in
-          let app = mk_methodcalltype obj_t targts argts t ~frame ~call_strict_arity in
+          let app = mk_methodcalltype targts argts t ~frame ~meth_strict_arity:call_strict_arity in
           let propref = Named (reason_prop, name) in
           Flow.flow
             cx
@@ -5246,7 +5246,6 @@ and method_call
 and elem_call_opt_use
     opt_state
     ~voided_out
-    ~this_t
     ~prop_t
     ~reason_call
     ~reason_lookup
@@ -5257,7 +5256,7 @@ and elem_call_opt_use
     elem_t =
   Env.havoc_heap_refinements ();
   let frame = Env.peek_frame () in
-  let app = mk_opt_methodcalltype this_t targts argts frame true in
+  let app = mk_opt_methodcalltype targts argts frame true in
   let action =
     match opt_state with
     | NewChain -> OptChainM (reason_chain, reason_expr, prop_t, app, voided_out)
@@ -6391,7 +6390,6 @@ and jsx_desugar cx name component_t props attributes children locs =
               Named (reason_createElement, "createElement"),
               CallM
                 (mk_methodcalltype
-                   react
                    None
                    ([Arg component_t; Arg props] @ Base.List.map ~f:(fun c -> Arg c) children)
                    tvar),
@@ -7632,6 +7630,7 @@ and mk_class cx class_loc ~class_annot ~name_loc ~general reason c =
          in
          Class_stmt_sig.check_super cx def_reason class_sig;
          Class_stmt_sig.check_implements cx def_reason class_sig;
+         Class_stmt_sig.check_methods cx def_reason class_sig;
          if this_in_class || not (Class_stmt_sig.This.is_bound_to_empty class_sig) then
            Class_stmt_sig.toplevels
              cx
@@ -7715,10 +7714,11 @@ and mk_class_sig =
         Base.List.map ~f:Tast_utils.error_mapper#class_decorator class_decorators
       in
       let (tparams, tparams_map, tparams_ast) = Anno.mk_type_param_declarations cx tparams in
-      let (tparams, tparams_map) = add_this self cx reason tparams tparams_map in
+      let (this_tparam, this_t) = mk_this self cx reason tparams in
+      let tparams_map_with_this = SMap.add "this" this_t tparams_map in
       let (class_sig, extends_ast, implements_ast) =
         let id = Context.make_aloc_id cx name_loc in
-        let (extends, extends_ast) = mk_extends ~class_annot cx tparams_map extends in
+        let (extends, extends_ast) = mk_extends ~class_annot cx tparams_map_with_this extends in
         let (implements, implements_ast) =
           match implements with
           | None -> ([], None)
@@ -7738,7 +7738,7 @@ and mk_class_sig =
                        match targs with
                        | None -> ((loc, c, None), None)
                        | Some (targs_loc, { Ast.Type.TypeArgs.arguments = targs; comments }) ->
-                         let (ts, targs_ast) = Anno.convert_list cx tparams_map targs in
+                         let (ts, targs_ast) = Anno.convert_list cx tparams_map_with_this targs in
                          ( (loc, c, Some ts),
                            Some (targs_loc, { Ast.Type.TypeArgs.arguments = targs_ast; comments })
                          )
@@ -7751,7 +7751,9 @@ and mk_class_sig =
               Some (implements_loc, { Ast.Class.Implements.interfaces = interfaces_ast; comments })
             )
         in
-        let super = Class { extends; mixins = []; implements } in
+        let super =
+          Class { Class_stmt_sig.extends; mixins = []; implements; this_t; this_tparam }
+        in
         (empty id reason tparams tparams_map super, extends_ast, implements_ast)
       in
       (* In case there is no constructor, pick up a default one. *)
@@ -7824,7 +7826,7 @@ and mk_class_sig =
                 mk_method
                   ~method_annot:(annot_decompose_todo class_annot)
                   cx
-                  tparams_map
+                  tparams_map_with_this
                   reason
                   func
               in
@@ -7900,7 +7902,7 @@ and mk_class_sig =
               let (field, annot_t, annot_ast, get_value) =
                 (* We could never find a private field in an annotation-- that's the point! So
                  * we make field_annot None here *)
-                mk_field ~field_annot:None cx tparams_map reason annot value
+                mk_field ~field_annot:None cx tparams_map_with_this reason annot value
               in
               let get_element () =
                 Body.PrivateField
@@ -7934,7 +7936,7 @@ and mk_class_sig =
                 mk_field
                   ~field_annot:(annot_decompose_todo class_annot)
                   cx
-                  tparams_map
+                  tparams_map_with_this
                   reason
                   annot
                   value

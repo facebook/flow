@@ -20,30 +20,36 @@ module type S = sig
 
   type set_type = Type.t -> unit
 
-  and field =
+  type field =
     | Annot of Type.t
     | Infer of func_sig * set_asts
 
   type field' = ALoc.t option * Polarity.t * field
 
-  type super =
-    | Interface of {
-        inline: bool;
-        extends: typeapp list;
-        callable: bool;
-      }
-    | Class of {
-        extends: extends;
-        mixins: typeapp list;
-        (* declare class only *)
-        implements: typeapp list;
-      }
+  type typeapp = ALoc.t * Type.t * Type.t list option
 
-  and extends =
+  type extends =
     | Explicit of typeapp
     | Implicit of { null: bool }
 
-  and typeapp = ALoc.t * Type.t * Type.t list option
+  type class_super = {
+    extends: extends;
+    mixins: typeapp list;
+    (* declare class only *)
+    implements: typeapp list;
+    this_tparam: Type.typeparam;
+    this_t: Type.t;
+  }
+
+  type interface_super = {
+    inline: bool;
+    extends: typeapp list;
+    callable: bool;
+  }
+
+  type super =
+    | Interface of interface_super
+    | Class of class_super
 
   (** 1. Constructors **)
 
@@ -149,15 +155,9 @@ module type S = sig
   val mem_constructor : t -> bool
   (** Check if this signature defines a constructor *)
 
-  val add_this :
-    Type.t ->
-    (* self *)
-    Context.t ->
-    Reason.t ->
-    Type.typeparams ->
-    Type.t SMap.t ->
-    (* tparams_map *)
-    Type.typeparams * Type.t SMap.t
+  val mk_this :
+    Type.t -> (* self *)
+              Context.t -> Reason.t -> Type.typeparams -> Type.typeparam * Type.t
 
   val to_prop_map : Context.t -> field' SMap.t -> Type.Properties.id
 
@@ -170,6 +170,10 @@ module type S = sig
   val check_super : Context.t -> Reason.reason -> t -> unit
   (** Emits constraints to ensure the signature is compatible with its declared
       superclass (classes) or extends/mixins (interfaces) *)
+
+  val check_methods : Context.t -> Reason.reason -> t -> unit
+  (** Emits constraints to ensure that the signature's methods are compatible
+      with its type **)
 
   val check_with_generics : Context.t -> (t -> 'a) -> t -> 'a
   (** Invoke callback with type parameters substituted by upper/lower bounds. *)

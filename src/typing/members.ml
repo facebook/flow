@@ -318,7 +318,7 @@ and instantiate_type = function
   | t -> "cannot instantiate non-class type " ^ string_of_ctor t |> assert_false
 
 let possible_types_of_use cx = function
-  | UseT (_, t) -> possible_types_of_type cx t
+  | UseT (_, t) -> Flow_js_utils.possible_types_of_type cx t
   | _ -> []
 
 let string_of_extracted_type = function
@@ -354,7 +354,7 @@ let find_props cx =
          not (String.length key >= 1 && key.[0] = '$'))
 
 let resolve_tvar cx (_, id) =
-  let ts = possible_types cx id in
+  let ts = Flow_js_utils.possible_types cx id in
 
   (* The list of types returned by possible_types is often empty, and the
      most common reason is that we don't have enough type coverage to

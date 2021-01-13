@@ -60,4 +60,5 @@ type env = {
   coverage: Coverage_response.file_coverage Utils_js.FilenameMap.t;
   collated_errors: collated_errors option ref;
   connections: Persistent_connection.t;
+  exports: Export_search.t;
 }

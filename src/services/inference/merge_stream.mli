@@ -15,7 +15,6 @@ type 'a t
 
 val create :
   num_workers:int ->
-  arch:Options.arch ->
   sig_dependency_graph:FilenameSet.t FilenameMap.t ->
   leader_map:File_key.t FilenameMap.t ->
   component_map:File_key.t Nel.t FilenameMap.t ->
@@ -39,4 +38,4 @@ val total_files : 'a t -> int
 
 val skipped_count : 'a t -> int
 
-val sig_new_or_changed : Context_heaps.Merge_context_mutator.master_mutator -> FilenameSet.t
+val sig_new_or_changed : 'a t -> FilenameSet.t

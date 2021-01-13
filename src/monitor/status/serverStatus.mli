@@ -30,6 +30,7 @@ type event =
   | Read_saved_state
   | Load_saved_state_progress of progress
   | Parsing_progress of progress
+  | Indexing_progress of progress
   | Resolving_dependencies_progress
   | Calculating_dependencies_progress
   | Merging_progress of progress

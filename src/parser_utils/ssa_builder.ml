@@ -223,7 +223,8 @@ struct
 
   class ssa_builder =
     object (this)
-      inherit scope_builder as super
+      (* TODO: with_types should probably be false, but this maintains previous behavior *)
+      inherit scope_builder ~with_types:true as super
 
       (* We maintain a map of read locations to raw Val.t terms, which are
          simplified to lists of write locations once the analysis is done. *)
@@ -1107,7 +1108,8 @@ struct
       if ignore_toplevel then
         Bindings.empty
       else
-        let hoist = new hoister in
+        (* TODO: with_types should probably be false, but this maintains previous behavior *)
+        let hoist = new hoister ~with_types:true in
         hoist#eval hoist#program program
     in
     ignore @@ ssa_walk#with_bindings loc bindings ssa_walk#program program;

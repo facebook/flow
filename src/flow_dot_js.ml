@@ -164,8 +164,10 @@ let stub_metadata ~root ~checked =
     max_trace_depth = 0;
     max_workers = 0;
     react_runtime = Options.ReactRuntimeClassic;
+    react_server_component_exts = SSet.empty;
     recursion_limit = 10000;
     root;
+    run_post_inference_implicit_instantiation = false;
     strict_es6_import_export = false;
     strict_es6_import_export_excludes = [];
     strip_root = true;
@@ -199,7 +201,7 @@ let init_builtins filenames =
       Files.lib_module_ref
       Context.Checking
   in
-  Flow_js.mk_builtins master_cx;
+  Flow_js_utils.mk_builtins master_cx;
   let () =
     let metadata = stub_metadata ~root ~checked:true in
     load_lib_files
@@ -213,7 +215,7 @@ let init_builtins filenames =
   in
   let reason = Reason.builtin_reason (Reason.RCustom "module") in
   let builtin_module = Obj_type.mk_unsealed master_cx reason in
-  Flow_js.flow_t master_cx (builtin_module, Flow_js.builtins master_cx);
+  Flow_js.flow_t master_cx (builtin_module, Flow_js_utils.builtins master_cx);
   ignore (Merge_js.ContextOptimizer.sig_context master_cx [Files.lib_module_ref]);
   master_cx_ref := Some (root, sig_cx)
 
@@ -239,25 +241,24 @@ let infer_and_merge ~root filename ast file_sig =
   let file_sigs = Utils_js.FilenameMap.singleton filename file_sig in
   let (_, { Flow_ast.Program.all_comments; _ }) = ast in
   let aloc_ast = Ast_loc_utils.loc_to_aloc_mapper#program ast in
+  let new_signatures = false in
+  let phase = Context.Checking in
+  let opts =
+    Merge_js.Merge_options { new_signatures; phase; metadata; lint_severities; strict_mode }
+  in
+  let getters =
+    {
+      Merge_js.get_ast_unsafe = (fun _ -> (all_comments, aloc_ast));
+      (* TODO (nmote, sainati) - Exceptions should mainly be used for exceptional code flows. We
+       * shouldn't use them to decide whether or not to use abstract locations. We should pass through
+       * whatever options we need instead *)
+      get_aloc_table_unsafe =
+        (fun _ -> raise (Parsing_heaps_exceptions.Sig_ast_ALoc_table_not_found ""));
+      get_docblock_unsafe = (fun _ -> stub_docblock);
+    }
+  in
   let ((cx, _, tast), _other_cxs) =
-    Merge_js.merge_component
-      ~arch:(Options.TypesFirst { new_signatures = false })
-      ~metadata
-      ~lint_severities
-      ~strict_mode
-      ~file_sigs
-      ~get_ast_unsafe:(fun _ -> (all_comments, aloc_ast))
-        (* TODO (nmote, sainati) - Exceptions should mainly be used for exceptional code flows. We
-         * shouldn't use them to decide whether or not to use abstract locations. We should pass through
-         * whatever options we need instead *)
-      ~get_aloc_table_unsafe:(fun _ ->
-        raise (Parsing_heaps_exceptions.Sig_ast_ALoc_table_not_found ""))
-      ~get_docblock_unsafe:(fun _ -> stub_docblock)
-      ~phase:Context.Checking
-      (Nel.one filename)
-      reqs
-      []
-      master_cx
+    Merge_js.merge_component ~opts ~getters ~file_sigs (Nel.one filename) reqs [] master_cx
   in
   (cx, tast)
 

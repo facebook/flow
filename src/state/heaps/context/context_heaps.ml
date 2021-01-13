@@ -10,7 +10,7 @@ open Utils_js
 (****************** shared context heap *********************)
 
 module SigContextHeap =
-  SharedMem_js.WithCache
+  SharedMem.WithCache
     (File_key)
     (struct
       type t = Context.sig_t
@@ -29,7 +29,7 @@ let add_sig ~audit cx =
       add_sig_context ~audit cx_file (Context.sig_cx cx))
 
 module SigHashHeap =
-  SharedMem_js.NoCache
+  SharedMem.NoCache
     (File_key)
     (struct
       type t = Xx.hash
@@ -38,7 +38,7 @@ module SigHashHeap =
     end)
 
 module LeaderHeap =
-  SharedMem_js.WithCache
+  SharedMem.WithCache
     (File_key)
     (struct
       type t = File_key.t
@@ -56,8 +56,7 @@ let remove_old_merge_batch files =
   WorkerCancel.with_no_cancellations (fun () ->
       LeaderHeap.remove_old_batch files;
       SigContextHeap.remove_old_batch files;
-      SigHashHeap.remove_old_batch files;
-      SharedMem_js.collect `gentle)
+      SigHashHeap.remove_old_batch files)
 
 let revive_merge_batch files =
   WorkerCancel.with_no_cancellations (fun () ->
@@ -87,8 +86,6 @@ module Merge_context_mutator : sig
     (worker_mutator -> options:Options.t -> File_key.t Nel.t -> unit) Expensive.t
 
   val revive_files : master_mutator -> Utils_js.FilenameSet.t -> unit
-
-  val unrevived_files : master_mutator -> Utils_js.FilenameSet.t
 end = struct
   type master_mutator = Utils_js.FilenameSet.t ref
 
@@ -185,16 +182,6 @@ end = struct
     WorkerCancel.with_no_cancellations (fun () ->
         oldified_files := FilenameSet.diff !oldified_files files;
         revive_merge_batch files)
-
-  (* WARNING: Only call this function at the end of merge!!! Calling it during merge will return
-     meaningless results.
-
-     Initially, `oldified_files` contains the set of files to be merged (see Merge_stream). During
-     merge, we call `revive_files` for files whose signatures have not changed. So the remaining
-     `oldified_files` at the end of merge must contain the set of files whose signatures are new or
-     have changed. In principle, we could maintain this state separately in Merge_stream, but it
-     seems wasteful to do so. *)
-  let unrevived_files oldified_files = !oldified_files
 end
 
 module type READER = sig
@@ -203,6 +190,8 @@ module type READER = sig
   val find_sig : reader:reader -> File_key.t -> Context.sig_t
 
   val find_leader : reader:reader -> File_key.t -> File_key.t
+
+  val sig_hash_opt : reader:reader -> File_key.t -> Xx.hash option
 end
 
 let find_sig ~get_sig ~reader:_ file =
@@ -225,6 +214,8 @@ module Mutator_reader : sig
   include READER with type reader = Mutator_state_reader.t
 
   val sig_hash_changed : reader:reader -> File_key.t -> bool
+
+  val sig_cx_mem_old : reader:reader -> File_key.t -> bool
 end = struct
   type reader = Mutator_state_reader.t
 
@@ -234,6 +225,10 @@ end = struct
     match LeaderHeap.get file with
     | Some leader -> leader
     | None -> raise (Key_not_found ("LeaderHeap", File_key.to_string file))
+
+  let sig_hash_opt ~reader:_ = SigHashHeap.get
+
+  let sig_cx_mem_old ~reader:_ = SigContextHeap.mem_old
 
   let sig_hash_changed ~reader:_ f =
     match SigHashHeap.get f with
@@ -268,6 +263,12 @@ module Reader : READER with type reader = State_reader.t = struct
     match leader with
     | Some leader -> leader
     | None -> raise (Key_not_found ("LeaderHeap", File_key.to_string file))
+
+  let sig_hash_opt ~reader:_ file =
+    if should_use_oldified file then
+      SigHashHeap.get_old file
+    else
+      SigHashHeap.get file
 end
 
 module Reader_dispatcher : READER with type reader = Abstract_state_reader.t = struct
@@ -284,4 +285,13 @@ module Reader_dispatcher : READER with type reader = Abstract_state_reader.t = s
     match reader with
     | Mutator_state_reader reader -> Mutator_reader.find_leader ~reader
     | State_reader reader -> Reader.find_leader ~reader
+
+  let sig_hash_opt ~reader =
+    match reader with
+    | Mutator_state_reader reader -> Mutator_reader.sig_hash_opt ~reader
+    | State_reader reader -> Reader.sig_hash_opt ~reader
+end
+
+module From_saved_state = struct
+  let add_sig_hash = SigHashHeap.add
 end

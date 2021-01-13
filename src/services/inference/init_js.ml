@@ -36,12 +36,13 @@ let parse_lib_file ~reader options file =
         let tolerable_errors = FilenameMap.find lib_file results.Parsing.parse_ok in
         let ast = Parsing_heaps.Mutator_reader.get_ast_unsafe reader lib_file in
         let file_sig = Parsing_heaps.Mutator_reader.get_file_sig_unsafe reader lib_file in
-        let sig_extra = Parsing_heaps.Classic in
+        let sig_extra = Parsing_heaps.InitLibs in
+        let exports = (* TODO *) ([] : Exports.t) in
         (* Parsing_service_js.result only returns tolerable file sig errors, dropping parse
            errors. So there may actually have been some, but they were ignored.
            TODO: where do we surface lib parse errors? *)
         let parse_errors = [] in
-        Parsing.Parse_ok { ast; file_sig; sig_extra; tolerable_errors; parse_errors }
+        Parsing.Parse_ok { ast; file_sig; sig_extra; tolerable_errors; parse_errors; exports }
       else if List.length results.Parsing.parse_fails > 0 then
         let (_, _, parse_fails) = List.hd results.Parsing.parse_fails in
         Parsing.Parse_fail parse_fails
@@ -93,12 +94,9 @@ let load_lib_files ~ccx ~options ~reader files =
                let syms = Infer.infer_lib_file cx ast ~exclude_syms ~lint_severities ~file_sig in
                let errors = Context.errors cx in
                let errors =
-                 if Inference_utils.well_formed_exports_enabled options lib_file then
-                   tolerable_errors
-                   |> Inference_utils.set_of_file_sig_tolerable_errors ~source_file:lib_file
-                   |> Flow_error.ErrorSet.union errors
-                 else
-                   errors
+                 tolerable_errors
+                 |> Inference_utils.set_of_file_sig_tolerable_errors ~source_file:lib_file
+                 |> Flow_error.ErrorSet.union errors
                in
                let suppressions = Context.error_suppressions cx in
                let severity_cover = Context.severity_cover cx in
@@ -164,12 +162,12 @@ let init ~options ~reader lib_files =
     let rev_table = lazy (ALoc.make_empty_reverse_table ()) in
     Context.make ccx metadata File_key.Builtins rev_table Files.lib_module_ref Context.Checking
   in
-  Flow_js.mk_builtins master_cx;
+  Flow_js_utils.mk_builtins master_cx;
 
   let%lwt result = load_lib_files ~ccx ~options ~reader lib_files in
   let reason = Reason.builtin_reason (Reason.RCustom "module") in
   let builtin_module = Obj_type.mk_unsealed master_cx reason in
-  Flow.flow_t master_cx (builtin_module, Flow.builtins master_cx);
+  Flow.flow_t master_cx (builtin_module, Flow_js_utils.builtins master_cx);
   Merge_js.ContextOptimizer.sig_context master_cx [Files.lib_module_ref] |> ignore;
 
   (* store master signature context to heap *)

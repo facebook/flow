@@ -5,4 +5,4 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
-val make : n:int -> init_id:string -> SharedMem_js.handle -> MultiWorkerLwt.worker list
+val make : n:int -> init_id:string -> SharedMem.handle -> MultiWorkerLwt.worker list

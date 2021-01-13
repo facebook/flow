@@ -21,6 +21,7 @@ type t =
   | Input_error
   | Lock_stolen
   | Could_not_find_flowconfig
+  | Could_not_extract_flowlibs
   | Server_out_of_date
   | Out_of_shared_memory
   | Flowconfig_changed

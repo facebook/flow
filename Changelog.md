@@ -1,3 +1,53 @@
+### 0.142.0
+
+Likely to cause new Flow errors:
+* Disallow flowing functions or inexact objects to indexed objects to improve object soundness. This can cause errors if you are passing a function or inexact objects when an indexed object is expected.
+* Flow now processes imports before checking the body of a file. In some rare cases this can expose previously skipped errors due to the processing order.
+
+Notable bug fixes:
+* Fix `No available version of ocaml-base-compiler satisfies the constraints` error from `make all-homebrew` (thanks @bayandin).
+
+### 0.141.0
+
+* Improved inference of chained generic method calls, such as `Array` methods. For example, given `[1, 2].map(a => a).forEach(b => b)`, Flow now infers that `b` is a `number` rather than `any | number`.
+* Fixed non-termination bugs involving recursive types
+* Fixed a non-termination bug involving implicit instantiation with `_`
+* Fixed autocomplete so it no longer inserts a `=` in JSX attributes that already have one
+* Hovering over a use of an opaque type now includes the type's documentation
+
+### 0.140.0
+
+Likely to cause new Flow errors:
+* New generic type checking is now enabled by default, and has to be explicitly disabled with `generate_tests=true` in a flowconfig if desired. See https://medium.com/flow-type/flows-improved-handling-of-generic-types-b5909cc5e3c5 for more about Flow's new handling of generic types.
+
+Notable bug fixes:
+* Fixed "Could not locate flowlib files" errors when multiple users run Flow on the same machine
+* Fixed autocomplete and hover for imported enum types
+* Fixed autocomplete suggesting types in value positions
+* Fixed a bug where correct non-boolean predicate functions were rejected
+
+Parser:
+* ESTree AST now uses Literal node for init of boolean enum members
+
+Misc:
+* Updated `ShadowRoot` library definition (thanks @Brianzchen)
+
+### 0.139.0
+
+New Features:
+* Support for `this` annotations in functions, like `function f(this: {foo: string}, param1: string): string { return this.foo; }`
+* The `experimental.abstract_locations` config option is now `true` by default, as it enables significant performance improvements. This option is now deprecated and will be removed in a coming version.
+
+Notable bug fixes:
+* Fixed a false positive when a bounded generic like `K: string` flows into `$Keys<{[K]: ...}>`
+* Fixed a false positive when a bounded generic like `K: 'literal'` is checked against itself like `k === 'literal'`
+* Fixed autocomplete inside of JSX attribute values
+* Fixed autocomplete of properties of interfaces
+
+Misc:
+* Updated `flow-remove-types` to support `this` parameters
+* Added SpeechRecognition definitions (thanks @ayshiff)
+
 ### 0.138.0
 
 Likely to cause new Flow errors:

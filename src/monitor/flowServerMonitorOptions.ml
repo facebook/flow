@@ -34,7 +34,7 @@ type t = {
   (* The server's options *)
   server_options: Options.t;
   (* The shared memory config *)
-  shared_mem_config: SharedMem_js.config;
+  shared_mem_config: SharedMem.config;
   (* The argv of the process which created the server monitor *)
   argv: string array;
   (* What to use for file watching *)

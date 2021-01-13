@@ -312,6 +312,10 @@ module rec TypeTerm : sig
         own_loc: 'loc option;
         proto_loc: 'loc option;
       }
+    | ClassMethodDefinition of {
+        def: 'loc virtual_reason;
+        name: 'loc virtual_reason;
+      }
     | Coercion of {
         from: 'loc virtual_reason;
         target: 'loc virtual_reason;
@@ -878,12 +882,12 @@ module rec TypeTerm : sig
     | ContinueChain
 
   and method_action =
-    | CallM of funcalltype
-    | ChainM of reason * reason * t * funcalltype * t_out
+    | CallM of methodcalltype
+    | ChainM of reason * reason * t * methodcalltype * t_out
 
   and opt_method_action =
-    | OptCallM of opt_funcalltype
-    | OptChainM of reason * reason * t * opt_funcalltype * t_out
+    | OptCallM of opt_methodcalltype
+    | OptChainM of reason * reason * t * opt_methodcalltype * t_out
 
   and specialize_cache = reason list option
 
@@ -997,6 +1001,15 @@ module rec TypeTerm : sig
     call_strict_arity: bool;
   }
 
+  and methodcalltype = {
+    meth_generic_this: t option;
+    meth_targs: targ list option;
+    meth_args_tlist: call_arg list;
+    meth_tout: tvar;
+    meth_closure_t: int;
+    meth_strict_arity: bool;
+  }
+
   and targ =
     (* This tvar gets lower bounds from the instantiations of _. It is used to power type-services
      * like type-at-pos and should not be used for type checking
@@ -1005,6 +1018,14 @@ module rec TypeTerm : sig
     | ExplicitArg of t
 
   and opt_funcalltype = t * targ list option * call_arg list * int * bool
+
+  and opt_methodcalltype = {
+    opt_meth_generic_this: t option;
+    opt_meth_targs: targ list option;
+    opt_meth_args_tlist: call_arg list;
+    opt_meth_closure_t: int;
+    opt_meth_strict_arity: bool;
+  }
 
   and call_arg =
     | Arg of t
@@ -2341,7 +2362,7 @@ and Object : sig
 
   and props = prop SMap.t
 
-  and prop = TypeTerm.t * bool
+  and prop = TypeTerm.t * bool * (* method *) bool
 
   (* own *)
   and dict = TypeTerm.dicttype option
@@ -2864,6 +2885,7 @@ let aloc_of_root_use_op : root_use_op -> ALoc.t = function
   | AssignVar { init = op; _ }
   | Cast { lower = op; _ }
   | ClassExtendsCheck { def = op; _ }
+  | ClassMethodDefinition { def = op; _ }
   | ClassImplementsCheck { def = op; _ }
   | Coercion { from = op; _ }
   | DeleteProperty { lhs = op; _ }
@@ -3002,6 +3024,7 @@ let string_of_root_use_op (type a) : a virtual_root_use_op -> string = function
   | ClassExtendsCheck _ -> "ClassExtendsCheck"
   | ClassImplementsCheck _ -> "ClassImplementsCheck"
   | ClassOwnProtoCheck _ -> "ClassOwnProtoCheck"
+  | ClassMethodDefinition _ -> "ClassMethodDefinition"
   | Coercion _ -> "Coercion"
   | DeleteProperty _ -> "DeleteProperty"
   | DeleteVar _ -> "DeleteVar"
@@ -3295,14 +3318,14 @@ let mk_methodtype
     def_reason;
   }
 
-let mk_methodcalltype this targs args ?(frame = 0) ?(call_strict_arity = true) tout =
+let mk_methodcalltype targs args ?(frame = 0) ?meth_generic_this ?(meth_strict_arity = true) tout =
   {
-    call_this_t = this;
-    call_targs = targs;
-    call_args_tlist = args;
-    call_tout = tout;
-    call_closure_t = frame;
-    call_strict_arity;
+    meth_generic_this;
+    meth_targs = targs;
+    meth_args_tlist = args;
+    meth_tout = tout;
+    meth_closure_t = frame;
+    meth_strict_arity;
   }
 
 (* A bound function type is a method type whose `this` parameter has been
@@ -3319,12 +3342,36 @@ let mk_boundfunctiontype ?(this = bound_function_dummy_this) = mk_methodtype thi
 
 let mk_functiontype reason ?(this = global_this reason) = mk_methodtype this
 
-let mk_functioncalltype reason = mk_methodcalltype (global_this reason)
+let mk_boundfunctioncalltype this targs args ?(frame = 0) ?(call_strict_arity = true) tout =
+  {
+    call_this_t = this;
+    call_targs = targs;
+    call_args_tlist = args;
+    call_tout = tout;
+    call_closure_t = frame;
+    call_strict_arity;
+  }
+
+let mk_functioncalltype reason = mk_boundfunctioncalltype (global_this reason)
 
 let mk_opt_functioncalltype reason targs args clos strict =
   (global_this reason, targs, args, clos, strict)
 
-let mk_opt_methodcalltype this targs args clos strict = (this, targs, args, clos, strict)
+let mk_opt_boundfunctioncalltype this targs args clos strict = (this, targs, args, clos, strict)
+
+let mk_opt_methodcalltype
+    ?opt_meth_generic_this
+    opt_meth_targs
+    opt_meth_args_tlist
+    opt_meth_closure_t
+    opt_meth_strict_arity =
+  {
+    opt_meth_generic_this;
+    opt_meth_targs;
+    opt_meth_args_tlist;
+    opt_meth_closure_t;
+    opt_meth_strict_arity;
+  }
 
 (* An object type has two flags, sealed and exact. A sealed object type cannot
    be extended. An exact object type accurately describes objects without
@@ -3355,13 +3402,31 @@ let apply_opt_funcalltype (this, targs, args, clos, strict) t_out =
     call_strict_arity = strict;
   }
 
+let apply_opt_methodcalltype
+    {
+      opt_meth_generic_this;
+      opt_meth_targs;
+      opt_meth_args_tlist;
+      opt_meth_closure_t;
+      opt_meth_strict_arity;
+    }
+    meth_tout =
+  {
+    meth_generic_this = opt_meth_generic_this;
+    meth_targs = opt_meth_targs;
+    meth_args_tlist = opt_meth_args_tlist;
+    meth_tout;
+    meth_closure_t = opt_meth_closure_t;
+    meth_strict_arity = opt_meth_strict_arity;
+  }
+
 let create_intersection rep = IntersectionT (locationless_reason (RCustom "intersection"), rep)
 
 let apply_opt_action action t_out =
   match action with
-  | OptCallM f -> CallM (apply_opt_funcalltype f t_out)
+  | OptCallM f -> CallM (apply_opt_methodcalltype f t_out)
   | OptChainM (exp_reason, lhs_reason, this, f, vs) ->
-    ChainM (exp_reason, lhs_reason, this, apply_opt_funcalltype f t_out, vs)
+    ChainM (exp_reason, lhs_reason, this, apply_opt_methodcalltype f t_out, vs)
 
 let apply_opt_use opt_use t_out =
   match opt_use with
@@ -3379,11 +3444,29 @@ let mk_enum_type ~loc ~trust enum =
   let reason = mk_reason (RType enum_name) loc in
   DefT (reason, trust, EnumT enum)
 
-let apply_method_action use_op reason_call action =
+let call_of_method_app
+    call_this_t
+    { meth_generic_this; meth_targs; meth_args_tlist; meth_tout; meth_closure_t; meth_strict_arity }
+    =
+  {
+    call_this_t = Base.Option.value ~default:call_this_t meth_generic_this;
+    call_targs = meth_targs;
+    call_args_tlist = meth_args_tlist;
+    call_tout = meth_tout;
+    call_closure_t = meth_closure_t;
+    call_strict_arity = meth_strict_arity;
+  }
+
+let apply_method_action use_op reason_call this_arg action =
   match action with
-  | CallM app -> CallT (use_op, reason_call, app)
+  | CallM app -> CallT (use_op, reason_call, call_of_method_app this_arg app)
   | ChainM (exp_reason, lhs_reason, this, app, vs) ->
-    OptionalChainT (exp_reason, lhs_reason, this, CallT (use_op, reason_call, app), vs)
+    OptionalChainT
+      ( exp_reason,
+        lhs_reason,
+        this,
+        CallT (use_op, reason_call, call_of_method_app this_arg app),
+        vs )
 
 module TypeParams : sig
   val to_list : typeparams -> typeparam list

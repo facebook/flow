@@ -1063,25 +1063,30 @@ end = struct
       in
       fun ~env ?(proto = false) (x, p) ->
         match p with
-        | T.Field (_, t, polarity) ->
+        | T.Field (loc_opt, t, polarity) ->
           if keep_field ~env t then
+            let def_loc = Some (Base.Option.value loc_opt ~default:(TypeUtil.loc_of_t t)) in
             let polarity = type_polarity polarity in
             let%map (t, optional) = opt_t ~env t in
             let prop = Ty.Field { t; polarity; optional } in
-            [Ty.NamedProp { name = x; prop; from_proto = proto }]
+            [Ty.NamedProp { name = x; prop; from_proto = proto; def_loc }]
           else
             return []
-        | T.Method (_, t) ->
+        | T.Method (loc_opt, t) ->
           let%map tys = method_ty ~env t in
+          let def_loc = Some (Base.Option.value loc_opt ~default:(TypeUtil.loc_of_t t)) in
           Base.List.map
-            ~f:(fun ty -> Ty.NamedProp { name = x; prop = Ty.Method ty; from_proto = proto })
+            ~f:(fun ty ->
+              Ty.NamedProp { name = x; prop = Ty.Method ty; from_proto = proto; def_loc })
             tys
-        | T.Get (_, t) ->
+        | T.Get (loc_opt, t) ->
+          let def_loc = Some (Base.Option.value loc_opt ~default:(TypeUtil.loc_of_t t)) in
           let%map t = type__ ~env t in
-          [Ty.NamedProp { name = x; prop = Ty.Get t; from_proto = proto }]
-        | T.Set (_, t) ->
+          [Ty.NamedProp { name = x; prop = Ty.Get t; from_proto = proto; def_loc }]
+        | T.Set (loc_opt, t) ->
+          let def_loc = Some (Base.Option.value loc_opt ~default:(TypeUtil.loc_of_t t)) in
           let%map t = type__ ~env t in
-          [Ty.NamedProp { name = x; prop = Ty.Set t; from_proto = proto }]
+          [Ty.NamedProp { name = x; prop = Ty.Set t; from_proto = proto; def_loc }]
         | T.GetSet (loc1, t1, loc2, t2) ->
           let%bind p1 = obj_prop_t ~env (x, T.Get (loc1, t1)) in
           let%map p2 = obj_prop_t ~env (x, T.Set (loc2, t2)) in
@@ -1952,6 +1957,11 @@ end = struct
           let%map symbol = Reason_utils.instance_symbol env r in
           Ty.Decl (Ty.ClassDecl (symbol, ps))
       in
+      let enum_decl ~env reason enum =
+        let { T.enum_name; _ } = enum in
+        let symbol = symbol_from_reason env reason enum_name in
+        return (Ty.Decl Ty.(EnumDecl symbol))
+      in
       let singleton_poly ~env ~orig_t tparams = function
         (* Imported interfaces *)
         | DefT (_, _, TypeT (ImportClassKind, DefT (r, _, InstanceT (static, super, _, inst)))) ->
@@ -1991,6 +2001,10 @@ end = struct
         | DefT (_, _, TypeT (InstanceKind, DefT (r, _, InstanceT (static, super, _, inst))))
         | DefT (_, _, TypeT (ImportClassKind, DefT (r, _, InstanceT (static, super, _, inst)))) ->
           class_or_interface_decl ~env r None static super inst
+        (* Enums *)
+        | DefT (reason, _, EnumObjectT enum)
+        | DefT (_, _, TypeT (ImportEnumKind, DefT (reason, _, EnumT enum))) ->
+          enum_decl ~env reason enum
         (* Monomorphic Type Aliases *)
         | DefT (r, _, TypeT (kind, t)) ->
           let r =
@@ -1999,11 +2013,6 @@ end = struct
             | _ -> TypeUtil.reason_of_t t
           in
           type_t ~env r kind t None
-        (* Enums *)
-        | DefT (reason, _, EnumObjectT enum) ->
-          let { T.enum_name; _ } = enum in
-          let symbol = symbol_from_reason env reason enum_name in
-          return (Ty.Decl Ty.(EnumDecl symbol))
         (* Types *)
         | _ ->
           let%map t = TypeConverter.convert_t ~env orig_t in
@@ -2174,7 +2183,8 @@ end = struct
       let def_loc_of_decl = function
         | TypeAliasDecl { import = false; name = { sym_def_loc; _ }; _ }
         | ClassDecl ({ sym_def_loc; _ }, _)
-        | InterfaceDecl ({ sym_def_loc; _ }, _) ->
+        | InterfaceDecl ({ sym_def_loc; _ }, _)
+        | EnumDecl { sym_def_loc; _ } ->
           Some sym_def_loc
         | TypeAliasDecl { import = true; type_ = Some t; _ } -> def_loc_of_ty t
         | _ -> None
@@ -2218,17 +2228,20 @@ end = struct
       |> extract_schemes typed_ast
       |> normalize_imports ~options ~genv)
 
+  module type EXPAND_MEMBERS_CONVERTER = sig
+    val include_proto_members : bool
+
+    val idx_hook : unit -> unit
+  end
+
   (* Expand the toplevel structure of the input type into an object type. This is
    * useful for services like autocomplete for properties.
    *)
-  module ExpandMembersConverter : sig
-    val convert_t :
-      include_proto_members:bool ->
-      idx_hook:(unit -> unit) ->
-      env:Env.t ->
-      Type.t ->
-      (Ty.t, error) t
+  module ExpandMembersConverter (Conf : EXPAND_MEMBERS_CONVERTER) : sig
+    val convert_t : env:Env.t -> Type.t -> (Ty.t, error) t
   end = struct
+    open Conf
+
     (* Sets how to expand members upon encountering an InstanceT:
      * - if set to IMStatic then expand the static members
      * - if set to IMUnset or IMInstance then expand the instance members.
@@ -2246,176 +2259,198 @@ end = struct
       | IMStatic
       | IMInstance
 
-    let convert_t ~include_proto_members ~idx_hook =
-      let rec set_proto_prop =
-        let open Ty in
-        function
-        | NamedProp { name; prop; from_proto = _ } -> NamedProp { name; prop; from_proto = true }
-        | CallProp _ as p -> p
-        | SpreadProp t -> SpreadProp (set_proto_t t)
-      and set_proto_t =
-        let open Ty in
-        function
-        | Obj o -> Obj { o with obj_props = Base.List.map ~f:set_proto_prop o.obj_props }
-        | t -> t
+    let rec set_proto_prop =
+      let open Ty in
+      function
+      | NamedProp { name; prop; def_loc; from_proto = _ } ->
+        NamedProp { name; prop; def_loc; from_proto = true }
+      | CallProp _ as p -> p
+      | SpreadProp t -> SpreadProp (set_proto_t t)
+
+    and set_proto_t =
+      let open Ty in
+      function
+      | Obj o -> Obj { o with obj_props = Base.List.map ~f:set_proto_prop o.obj_props }
+      | t -> t
+
+    let rec arr_t ~env r a =
+      let builtin =
+        match a with
+        | T.ArrayAT _ -> "Array"
+        | T.ROArrayAT _
+        | T.TupleAT _ ->
+          "$ReadOnlyArray"
       in
-      let rec loop ~env ~proto ~imode t =
-        match Lookahead.peek ~env t with
-        | Lookahead.Recursive
-        | Lookahead.LowerBounds [] ->
-          terr ~kind:UnsupportedTypeCtor ~msg:"no-lower bounds" None
-        | Lookahead.LowerBounds (l :: ls) ->
-          let%bind t = type_ctor ~env ~proto ~imode l in
-          let%map ts = mapM (type_ctor ~env ~proto ~imode) ls in
-          Ty.mk_union (t, ts)
-      and arr_t ~env r a =
-        let builtin =
-          match a with
-          | T.ArrayAT _ -> "Array"
-          | T.ROArrayAT _
-          | T.TupleAT _ ->
-            "$ReadOnlyArray"
-        in
-        loop ~env ~proto:true ~imode:IMInstance (Flow_js.get_builtin (Env.get_cx env) builtin r)
-      and member_expand_object ~env super inst =
-        let { T.own_props; proto_props; _ } = inst in
-        let%bind own_ty_props = TypeConverter.convert_obj_props_t ~env own_props None in
-        let%bind proto_ty_props =
-          TypeConverter.convert_obj_props_t ~env ~proto:true proto_props None
-        in
-        let%map obj_props =
-          if include_proto_members then
-            let%map super_ty = loop ~env ~proto:true ~imode:IMInstance super in
-            (Ty.SpreadProp super_ty :: own_ty_props) @ proto_ty_props
-          else
-            return (own_ty_props @ proto_ty_props)
-        in
-        Ty.Obj { Ty.obj_kind = Ty.InexactObj; obj_frozen = false; obj_literal = None; obj_props }
-      and type_app_t ~env ~proto ~imode reason use_op c ts =
-        let cx = Env.get_cx env in
-        Context.with_normalizer_mode cx (fun cx ->
-            let trace = Trace.dummy_trace in
-            let reason_op = reason in
-            let reason_tapp = reason in
-            match Flow_js.mk_typeapp_instance cx ~trace ~use_op ~reason_op ~reason_tapp c ts with
-            | exception Flow_js.Attempted_operation_on_bound _ ->
-              terr ~kind:UnsupportedTypeCtor ~msg:"type_app" None
-            | t -> loop ~env ~proto ~imode t)
-      and enum_t ~env reason trust enum =
-        let { T.members; representation_t; _ } = enum in
-        let enum_ty = T.mk_enum_type ~loc:(def_aloc_of_reason reason) ~trust enum in
-        let proto_t =
-          let enum_t = T.mk_enum_type ~loc:(def_aloc_of_reason reason) ~trust enum in
-          Flow_js.get_builtin_typeapp
-            Env.(env.genv.cx)
-            reason
-            "$EnumProto"
-            [enum_t; representation_t]
-        in
-        let%bind proto_ty = loop ~env ~proto:true ~imode:IMUnset proto_t in
-        let%map enum_ty = TypeConverter.convert_t ~env enum_ty in
-        let members_ty =
-          List.map
-            (fun name ->
-              let prop = Ty.Field { t = enum_ty; polarity = Ty.Positive; optional = false } in
-              Ty.NamedProp { name; prop; from_proto = false })
-            (SMap.keys members)
-        in
-        Ty.mk_object (Ty.SpreadProp proto_ty :: members_ty)
-      and obj_t ~env ~proto ~imode reason o =
-        let%bind obj = TypeConverter.convert_obj_t ~env reason o in
-        let obj =
-          if include_proto_members && proto then
-            { obj with Ty.obj_props = Base.List.map ~f:set_proto_prop obj.Ty.obj_props }
-          else
-            obj
-        in
-        let%map extra_props =
-          if include_proto_members then
-            let%map proto = loop ~env ~proto:true ~imode o.T.proto_t in
-            [Ty.SpreadProp proto]
-          else
-            return []
-        in
-        { obj with Ty.obj_props = obj.Ty.obj_props @ extra_props }
-      and primitive ~env reason builtin =
-        let t = Flow_js.get_builtin_type (Env.get_cx env) reason builtin in
-        loop ~env ~proto:true ~imode:IMUnset t
-      and instance_t ~env ~imode r static super inst =
-        let { T.inst_kind; _ } = inst in
-        let desc = desc_of_reason ~unwrap:false r in
-        match (inst_kind, desc, imode) with
-        | (_, Reason.RReactComponent, _) -> TypeConverter.convert_instance_t ~env r super inst
-        | (T.ClassKind, _, IMStatic) -> loop ~env ~proto:false ~imode static
-        | (T.ClassKind, _, (IMUnset | IMInstance))
-        | (T.InterfaceKind _, _, _) ->
-          member_expand_object ~env super inst
-      and latent_pred_t ~env ~proto ~imode id t =
-        let cx = Env.get_cx env in
-        let evaluated = Context.evaluated cx in
-        let t' =
-          match T.Eval.Map.find_opt id evaluated with
-          | Some evaled_t -> evaled_t
-          | None -> t
-        in
-        loop ~env ~proto ~imode t'
-      and this_class_t ~env ~proto ~imode t =
-        match imode with
-        | IMUnset -> loop ~env ~proto ~imode:IMStatic t
-        | IMInstance
-        | IMStatic ->
-          loop ~env ~proto ~imode t
-      and type_ctor ~env ~proto ~(imode : instance_mode) =
-        let open Type in
-        function
-        | DefT (_, _, IdxWrapper t) ->
-          idx_hook ();
-          loop ~env ~proto ~imode t
-        | ThisTypeAppT (_, c, _, _) -> loop ~env ~proto ~imode c
-        | DefT (r, _, (NumT _ | SingletonNumT _)) -> primitive ~env r "Number"
-        | DefT (r, _, (StrT _ | SingletonStrT _)) -> primitive ~env r "String"
-        | DefT (r, _, (BoolT _ | SingletonBoolT _)) -> primitive ~env r "Boolean"
-        | DefT (r, _, SymbolT) -> primitive ~env r "Symbol"
-        | ObjProtoT r -> primitive ~env r "Object"
-        | FunProtoT r -> primitive ~env r "Function"
-        | DefT (r, _, ObjT o) ->
-          let%map o = obj_t ~env ~proto ~imode r o in
-          Ty.Obj o
-        | DefT (_, _, ClassT t) -> loop ~env ~proto ~imode t
-        | DefT (r, _, ArrT a) -> arr_t ~env r a
-        | DefT (r, tr, EnumObjectT e) -> enum_t ~env r tr e
-        | DefT (r, _, InstanceT (static, super, _, inst)) ->
-          instance_t ~env ~imode r static super inst
-        | ThisClassT (_, t, _) -> this_class_t ~env ~proto ~imode t
-        | DefT (_, _, PolyT { t_out; _ }) -> loop ~env ~proto ~imode t_out
-        | MaybeT (_, t) ->
-          let%map t = loop ~env ~proto ~imode t in
-          Ty.mk_union (Ty.Void, [Ty.Null; t])
-        | IntersectionT (_, rep) -> app_intersection ~f:(loop ~env ~proto ~imode) rep
-        | UnionT (_, rep) -> app_union ~f:(loop ~env ~proto ~imode) rep
-        | DefT (_, _, FunT (static, _, _)) -> loop ~env ~proto ~imode static
-        | TypeAppT (r, use_op, t, ts) -> type_app_t ~env ~proto ~imode r use_op t ts
-        | DefT (_, _, TypeT (_, t)) -> loop ~env ~proto ~imode t
-        | OptionalT { type_ = t; _ } ->
-          let%map t = loop ~env ~proto ~imode t in
-          Ty.mk_union (Ty.Void, [t])
-        | EvalT (t, TypeDestructorT (use_op, r, d), id) ->
-          let cont = loop ~proto ~imode in
-          let non_eval = TypeConverter.convert_type_destructor_unevaluated in
-          let default = TypeConverter.convert_t ~skip_reason:false in
-          type_destructor_t ~env ~cont ~default ~non_eval (use_op, r, id, t, d)
-        | EvalT (t, LatentPredT _, id) -> latent_pred_t ~env ~proto ~imode id t
-        | ExactT (_, t) -> loop ~env ~proto ~imode t
-        | GenericT { bound; _ } -> loop ~env ~proto ~imode bound
-        | t -> TypeConverter.convert_t ~env t
+      type__ ~env ~proto:true ~imode:IMInstance (Flow_js.get_builtin (Env.get_cx env) builtin r)
+
+    and member_expand_object ~env super inst =
+      let { T.own_props; proto_props; _ } = inst in
+      let%bind own_ty_props = TypeConverter.convert_obj_props_t ~env own_props None in
+      let%bind proto_ty_props =
+        TypeConverter.convert_obj_props_t ~env ~proto:true proto_props None
       in
-      loop ~proto:false ~imode:IMUnset
+      let%map obj_props =
+        if include_proto_members then
+          let%map super_ty = type__ ~env ~proto:true ~imode:IMInstance super in
+          (Ty.SpreadProp super_ty :: own_ty_props) @ proto_ty_props
+        else
+          return (own_ty_props @ proto_ty_props)
+      in
+      Ty.Obj { Ty.obj_kind = Ty.InexactObj; obj_frozen = false; obj_literal = None; obj_props }
+
+    and type_app_t ~env ~proto ~imode reason use_op c ts =
+      let cx = Env.get_cx env in
+      Context.with_normalizer_mode cx (fun cx ->
+          let trace = Trace.dummy_trace in
+          let reason_op = reason in
+          let reason_tapp = reason in
+          match Flow_js.mk_typeapp_instance cx ~trace ~use_op ~reason_op ~reason_tapp c ts with
+          | exception Flow_js.Attempted_operation_on_bound _ ->
+            terr ~kind:UnsupportedTypeCtor ~msg:"type_app" None
+          | t -> type__ ~env ~proto ~imode t)
+
+    and enum_t ~env reason trust enum =
+      let { T.members; representation_t; _ } = enum in
+      let enum_ty = T.mk_enum_type ~loc:(def_aloc_of_reason reason) ~trust enum in
+      let proto_t =
+        let enum_t = T.mk_enum_type ~loc:(def_aloc_of_reason reason) ~trust enum in
+        Flow_js.get_builtin_typeapp Env.(env.genv.cx) reason "$EnumProto" [enum_t; representation_t]
+      in
+      let%bind proto_ty = type__ ~env ~proto:true ~imode:IMUnset proto_t in
+      let%map enum_ty = TypeConverter.convert_t ~env enum_ty in
+      let members_ty =
+        List.map
+          (fun (name, loc) ->
+            let prop = Ty.Field { t = enum_ty; polarity = Ty.Positive; optional = false } in
+            Ty.NamedProp { name; prop; from_proto = false; def_loc = Some loc })
+          (SMap.bindings members)
+      in
+      Ty.mk_object (Ty.SpreadProp proto_ty :: members_ty)
+
+    and obj_t ~env ~proto ~imode reason o =
+      let%bind obj = TypeConverter.convert_obj_t ~env reason o in
+      let obj =
+        if include_proto_members && proto then
+          { obj with Ty.obj_props = Base.List.map ~f:set_proto_prop obj.Ty.obj_props }
+        else
+          obj
+      in
+      let%map extra_props =
+        if include_proto_members then
+          let%map proto = type__ ~env ~proto:true ~imode o.T.proto_t in
+          [Ty.SpreadProp proto]
+        else
+          return []
+      in
+      { obj with Ty.obj_props = obj.Ty.obj_props @ extra_props }
+
+    and primitive ~env reason builtin =
+      let t = Flow_js.get_builtin_type (Env.get_cx env) reason builtin in
+      type__ ~env ~proto:true ~imode:IMUnset t
+
+    and instance_t ~env ~imode r static super inst =
+      let { T.inst_kind; _ } = inst in
+      let desc = desc_of_reason ~unwrap:false r in
+      match (inst_kind, desc, imode) with
+      | (_, Reason.RReactComponent, _) -> TypeConverter.convert_instance_t ~env r super inst
+      | (T.ClassKind, _, IMStatic) -> type__ ~env ~proto:false ~imode static
+      | (T.ClassKind, _, (IMUnset | IMInstance))
+      | (T.InterfaceKind _, _, _) ->
+        member_expand_object ~env super inst
+
+    and latent_pred_t ~env ~proto ~imode id t =
+      let cx = Env.get_cx env in
+      let evaluated = Context.evaluated cx in
+      let t' =
+        match T.Eval.Map.find_opt id evaluated with
+        | Some evaled_t -> evaled_t
+        | None -> t
+      in
+      type__ ~env ~proto ~imode t'
+
+    and this_class_t ~env ~proto ~imode t =
+      match imode with
+      | IMUnset -> type__ ~env ~proto ~imode:IMStatic t
+      | IMInstance
+      | IMStatic ->
+        type__ ~env ~proto ~imode t
+
+    and type_variable ~env ~proto ~imode id =
+      let (root_id, constraints) = Context.find_constraints Env.(env.genv.cx) id in
+      Recursive.with_cache (TVarKey root_id) ~f:(fun () ->
+          match constraints with
+          | Constraint.Resolved (_, t)
+          | Constraint.FullyResolved (_, t) ->
+            type__ ~env ~proto ~imode t
+          | Constraint.Unresolved bounds ->
+            let%map lowers =
+              mapM
+                (fun t -> type__ ~env ~proto ~imode t >>| Ty.bk_union >>| Nel.to_list)
+                (T.TypeMap.keys bounds.Constraint.lower)
+            in
+            let lowers = Base.List.(dedup_and_sort ~compare:Stdlib.compare (concat lowers)) in
+            (match lowers with
+            | [] -> Ty.Bot Ty.EmptyType
+            | hd :: tl -> Ty.mk_union ~flattened:true (hd, tl)))
+
+    and type__ ~env ~proto ~(imode : instance_mode) t =
+      let open Type in
+      match t with
+      | OpenT (_, id) -> type_variable ~env ~proto ~imode id
+      | AnnotT (_, t, _)
+      | ReposT (_, t) ->
+        type__ ~env ~proto ~imode t
+      | DefT (_, _, IdxWrapper t) ->
+        idx_hook ();
+        type__ ~env ~proto ~imode t
+      | ThisTypeAppT (_, c, _, _) -> type__ ~env ~proto ~imode c
+      | DefT (r, _, (NumT _ | SingletonNumT _)) -> primitive ~env r "Number"
+      | DefT (r, _, (StrT _ | SingletonStrT _)) -> primitive ~env r "String"
+      | DefT (r, _, (BoolT _ | SingletonBoolT _)) -> primitive ~env r "Boolean"
+      | DefT (r, _, SymbolT) -> primitive ~env r "Symbol"
+      | ObjProtoT r -> primitive ~env r "Object"
+      | FunProtoT r -> primitive ~env r "Function"
+      | DefT (r, _, ObjT o) ->
+        let%map o = obj_t ~env ~proto ~imode r o in
+        Ty.Obj o
+      | DefT (_, _, ClassT t) -> type__ ~env ~proto ~imode t
+      | DefT (r, _, ArrT a) -> arr_t ~env r a
+      | DefT (r, tr, EnumObjectT e) -> enum_t ~env r tr e
+      | DefT (r, _, InstanceT (static, super, _, inst)) ->
+        instance_t ~env ~imode r static super inst
+      | ThisClassT (_, t, _) -> this_class_t ~env ~proto ~imode t
+      | DefT (_, _, PolyT { t_out; _ }) -> type__ ~env ~proto ~imode t_out
+      | MaybeT (_, t) ->
+        let%map t = type__ ~env ~proto ~imode t in
+        Ty.mk_union (Ty.Void, [Ty.Null; t])
+      | IntersectionT (_, rep) -> app_intersection ~f:(type__ ~env ~proto ~imode) rep
+      | UnionT (_, rep) -> app_union ~f:(type__ ~env ~proto ~imode) rep
+      | DefT (_, _, FunT (static, _, _)) -> type__ ~env ~proto ~imode static
+      | TypeAppT (r, use_op, t, ts) -> type_app_t ~env ~proto ~imode r use_op t ts
+      | DefT (_, _, TypeT (_, t)) -> type__ ~env ~proto ~imode t
+      | OptionalT { type_ = t; _ } ->
+        let%map t = type__ ~env ~proto ~imode t in
+        Ty.mk_union (Ty.Void, [t])
+      | EvalT (t, TypeDestructorT (use_op, r, d), id) ->
+        let cont = type__ ~proto ~imode in
+        let non_eval = TypeConverter.convert_type_destructor_unevaluated in
+        let default = TypeConverter.convert_t ~skip_reason:false in
+        type_destructor_t ~env ~cont ~default ~non_eval (use_op, r, id, t, d)
+      | EvalT (t, LatentPredT _, id) -> latent_pred_t ~env ~proto ~imode id t
+      | ExactT (_, t) -> type__ ~env ~proto ~imode t
+      | GenericT { bound; _ } -> type__ ~env ~proto ~imode bound
+      | t -> TypeConverter.convert_t ~env t
+
+    let convert_t ~env t = type__ ~env ~proto:false ~imode:IMUnset t
   end
 
   let run_expand_members ~include_proto_members ~idx_hook =
-    run_type_aux
-      ~f:(ExpandMembersConverter.convert_t ~include_proto_members ~idx_hook)
-      ~simpl:Ty_utils.simplify_type
+    let module Converter = ExpandMembersConverter (struct
+      let include_proto_members = include_proto_members
+
+      let idx_hook = idx_hook
+    end) in
+    run_type_aux ~f:Converter.convert_t ~simpl:Ty_utils.simplify_type
 end
 
 open NormalizerMonad

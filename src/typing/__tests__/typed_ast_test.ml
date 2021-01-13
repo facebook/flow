@@ -39,8 +39,10 @@ let metadata =
     max_trace_depth = 0;
     max_workers = 0;
     react_runtime = Options.ReactRuntimeClassic;
+    react_server_component_exts = SSet.empty;
     recursion_limit = 10000;
     root = Path.dummy_path;
+    run_post_inference_implicit_instantiation = false;
     strict_es6_import_export = false;
     strict_es6_import_export_excludes = [];
     strip_root = true;
@@ -123,7 +125,7 @@ let before_and_after_stmts file_name =
       let ccx = Context.make_ccx sig_cx aloc_tables in
       Context.make ccx metadata file_key rev_table Files.lib_module_ref Context.Checking
     in
-    Flow_js.mk_builtins cx;
+    Flow_js_utils.mk_builtins cx;
     add_require_tvars cx file_sig;
     let module_scope = Scope.fresh () in
     Env.init_env cx module_scope;

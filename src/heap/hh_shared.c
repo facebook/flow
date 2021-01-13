@@ -1540,6 +1540,7 @@ CAMLprim value hh_remove(value key) {
 
   assert_master();
   assert(hashtbl[slot].hash == get_hash(key));
+  assert(hashtbl[slot].addr != NULL_ADDR);
   // see hh_alloc for the source of this size
   heap_entry_t *entry = Entry_of_addr(hashtbl[slot].addr);
   // TODO: Wasted heap size calculation is under-counted. This will prevent GC

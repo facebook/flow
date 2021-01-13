@@ -14,11 +14,14 @@ type autocomplete_service_result =
   | AcFatalError of string
 
 val autocomplete_get_results :
+  env:ServerEnv.env ->
   options:Options.t ->
   reader:Parsing_heaps.Reader.reader ->
   cx:Context.t ->
   file_sig:File_sig.With_Loc.t ->
+  ast:(Loc.t, Loc.t) Flow_ast.Program.t ->
   typed_ast:(ALoc.t, ALoc.t * Type.t) Flow_ast.Program.t ->
+  imports:bool ->
   string option ->
   Loc.t ->
   string * autocomplete_service_result

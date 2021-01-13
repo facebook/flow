@@ -40,7 +40,11 @@ module type READER = sig
   val is_tracked_file : reader:reader -> File_key.t -> bool
 end
 
-module Mutator_reader : READER with type reader = Mutator_state_reader.t
+module Mutator_reader : sig
+  include READER with type reader = Mutator_state_reader.t
+
+  val get_old_info : reader:reader -> (File_key.t -> info option) Expensive.t
+end
 
 module Reader : READER with type reader = State_reader.t
 

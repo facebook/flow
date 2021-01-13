@@ -1686,7 +1686,7 @@ and merge_exports =
     (fun file reason stars acc -> loop file reason acc stars)
   in
   fun component file reason -> function
-    | Pack.CJSExports { types; type_stars; strict } ->
+    | Pack.(CJSExports { types; type_stars; strict }) ->
       let value =
         match file.export_def with
         | Some t -> merge component file t
@@ -1697,7 +1697,7 @@ and merge_exports =
       mk_commonjs_module_t file reason strict value
       |> export_named file reason Type.ExportType types
       |> copy_star_exports file reason ([], type_stars)
-    | Pack.ESExports { names; types; stars; type_stars; strict } ->
+    | Pack.(ESExports { names; types; stars; type_stars; strict }) ->
       let names = SMap.map (merge_export component file) names in
       let types = SMap.map (merge_export_type component file) types in
       let stars = List.map (merge_star component file) stars in

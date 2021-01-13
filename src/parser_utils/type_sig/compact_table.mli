@@ -115,4 +115,6 @@ module Make () : sig
   val to_array : 'a t -> 'a array
 
   val to_array_map : ('a -> 'b) -> 'a t -> 'b array
+
+  module IndexSet : Set.S with type elt = index
 end

@@ -1,1 +1,1 @@
-type LibK = {}
+type LibK = {...}

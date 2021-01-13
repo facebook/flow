@@ -160,6 +160,7 @@ and prop =
       name: string;
       prop: named_prop;
       from_proto: bool;
+      def_loc: aloc option;
     }
   | CallProp of fun_t
   | SpreadProp of t
@@ -326,6 +327,20 @@ class ['A] comparator_ty =
         ()
       else
         super#on_t env x y
+
+    (* When comparing NamedProps ignore def_loc, because properties having different
+     * def_locs doesn't mean that they should be thought of as different *)
+    method! private on_NamedProp
+        env
+        (name_0 : string)
+        (name_1 : string)
+        (prop_0 : named_prop)
+        (prop_1 : named_prop)
+        (from_proto_0 : bool)
+        (from_proto_1 : bool)
+        (_def_loc_0 : aloc option)
+        (_def_loc_1 : aloc option) =
+      super#on_NamedProp env name_0 name_1 prop_0 prop_1 from_proto_0 from_proto_1 None None
 
     (* Base fields originally handled in the ancestor *)
     method! private on_int _env x y = assert0 (x - y)
@@ -585,7 +600,12 @@ let mk_field_props prop_list =
   Base.List.map
     ~f:(fun (id, t, opt) ->
       NamedProp
-        { name = id; prop = Field { t; polarity = Neutral; optional = opt }; from_proto = false })
+        {
+          name = id;
+          prop = Field { t; polarity = Neutral; optional = opt };
+          from_proto = false;
+          def_loc = None;
+        })
     prop_list
 
 let mk_object ?(obj_kind = InexactObj) ?(obj_frozen = false) ?obj_literal obj_props =

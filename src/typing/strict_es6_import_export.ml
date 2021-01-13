@@ -457,24 +457,19 @@ let detect_mixed_import_and_require_error cx declarations =
   | _ -> ()
 
 let detect_errors_from_ast cx ast =
-  let scope_info = Scope_builder.With_ALoc.program ast in
+  let scope_info = Scope_builder.With_ALoc.program ~with_types:true ast in
   let declarations = gather_declarations ast in
   detect_mixed_import_and_require_error cx declarations;
   let visitor = new import_export_visitor ~cx ~scope_info ~declarations in
   ignore (visitor#program ast)
 
-let detect_errors ~metadata ~phase cx results =
+let detect_errors cx metadata results =
   if metadata.Context.strict_es6_import_export then
-    match phase with
-    | Context.Checking ->
-      let excludes =
-        Base.List.map ~f:Str.regexp metadata.Context.strict_es6_import_export_excludes
-      in
-      Base.List.iter
-        ~f:(fun (ctx, ast, _) ->
-          let file_key = Context.file ctx in
-          let file_str = File_key.to_string file_key |> Sys_utils.normalize_filename_dir_sep in
-          let excluded = Base.List.exists ~f:(fun r -> Str.string_match r file_str 0) excludes in
-          if not excluded then detect_errors_from_ast cx ast)
-        results
-    | _ -> ()
+    let excludes = Base.List.map ~f:Str.regexp metadata.Context.strict_es6_import_export_excludes in
+    Base.List.iter
+      ~f:(fun (ctx, ast, _) ->
+        let file_key = Context.file ctx in
+        let file_str = File_key.to_string file_key |> Sys_utils.normalize_filename_dir_sep in
+        let excluded = Base.List.exists ~f:(fun r -> Str.string_match r file_str 0) excludes in
+        if not excluded then detect_errors_from_ast cx ast)
+      results

@@ -601,8 +601,8 @@ let tests =
                  "export opaque type T7 = number;";
                ]
                [
-                 "opaque type T1;";
-                 "opaque type T2: number;";
+                 "declare opaque type T1;";
+                 "declare opaque type T2: number;";
                  "opaque type T3 = number;";
                  "opaque type T4: number = T3;";
                  "opaque type T5 = number;";

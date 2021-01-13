@@ -43,6 +43,23 @@ into the `[options]` section of your `.flowconfig`. [illegal-this-annot]
                 ^^^^^^^^^^^^^
 
 
+Error ----------------------------------------------------------------------------------------------------- test.js:18:5
+
+Cannot define method `foo` [1] on `A` because `A` [2] is incompatible with number [3]. [incompatible-type]
+
+   test.js:18:5
+   18|     foo(this : number) : void
+           ^^^ [1]
+
+References:
+   test.js:17:15
+   17| declare class A {
+                     ^ [2]
+   test.js:18:16
+   18|     foo(this : number) : void
+                      ^^^^^^ [3]
+
+
 Error ----------------------------------------------------------------------------------------------------- test.js:18:9
 
 Experimental `this` annotation. You may opt-in to using `this` annotations by putting `experimental.this_annot=true`
@@ -52,6 +69,23 @@ into the `[options]` section of your `.flowconfig`. [illegal-this-annot]
                ^^^^^^^^^^^^^
 
 
+Error ----------------------------------------------------------------------------------------------------- test.js:22:5
+
+Cannot define method `foo` [1] on `B` because `B` [2] is incompatible with number [3]. [incompatible-type]
+
+   test.js:22:5
+   22|     foo(this : number) : void {}
+           ^^^ [1]
+
+References:
+   test.js:21:7
+   21| class B {
+             ^ [2]
+   test.js:22:16
+   22|     foo(this : number) : void {}
+                      ^^^^^^ [3]
+
+
 Error ----------------------------------------------------------------------------------------------------- test.js:22:9
 
 Experimental `this` annotation. You may opt-in to using `this` annotations by putting `experimental.this_annot=true`
@@ -59,6 +93,23 @@ into the `[options]` section of your `.flowconfig`. [illegal-this-annot]
 
    22|     foo(this : number) : void {}
                ^^^^^^^^^^^^^
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:26:5
+
+Cannot define method `foo` [1] on `C` because `C` [2] is incompatible with number [3]. [incompatible-type]
+
+   test.js:26:5
+   26|     foo(this : number) : void
+           ^^^ [1]
+
+References:
+   test.js:25:11
+   25| interface C {
+                 ^ [2]
+   test.js:26:16
+   26|     foo(this : number) : void
+                      ^^^^^^ [3]
 
 
 Error ----------------------------------------------------------------------------------------------------- test.js:26:9
@@ -71,4 +122,4 @@ into the `[options]` section of your `.flowconfig`. [illegal-this-annot]
 
 
 
-Found 8 errors
+Found 11 errors

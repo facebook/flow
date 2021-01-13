@@ -274,7 +274,7 @@ let shm_config shm_flags flowconfig =
   let log_level =
     Base.Option.value shm_flags.shm_log_level ~default:(FlowConfig.shm_log_level flowconfig)
   in
-  { SharedMem_js.heap_size = FlowConfig.shm_heap_size flowconfig; hash_table_pow; log_level }
+  { SharedMem.heap_size = FlowConfig.shm_heap_size flowconfig; hash_table_pow; log_level }
 
 let from_flag =
   let collector main from =
@@ -539,13 +539,15 @@ let remove_exclusion pattern =
 
 let file_options =
   let default_lib_dir ~no_flowlib tmp_dir =
-    let lib_dir = Flowlib.mkdir ~no_flowlib tmp_dir in
     try
+      let lib_dir = Flowlib.mkdir ~no_flowlib tmp_dir in
       Flowlib.extract ~no_flowlib lib_dir;
       lib_dir
-    with _ ->
-      let msg = "Could not locate flowlib files" in
-      FlowExitStatus.(exit ~msg Could_not_find_flowconfig)
+    with e ->
+      let e = Exception.wrap e in
+      let err = Exception.get_ctor_string e in
+      let msg = Printf.sprintf "Could not locate flowlib files: %s" err in
+      FlowExitStatus.(exit ~msg Could_not_extract_flowlibs)
   in
   let ignores_of_arg root patterns extras =
     let expand_project_root_token = Files.expand_project_root_token ~root in
@@ -1184,26 +1186,7 @@ let make_options
     in
     Base.Option.value lazy_mode ~default
   in
-  let opt_arch =
-    if options_flags.new_signatures || FlowConfig.types_first flowconfig then
-      let new_signatures = options_flags.new_signatures || FlowConfig.new_signatures flowconfig in
-      Options.TypesFirst { new_signatures }
-    else
-      Options.Classic
-  in
-  let opt_enforce_well_formed_exports =
-    if options_flags.new_signatures || FlowConfig.types_first flowconfig then
-      Some []
-    else if FlowConfig.enforce_well_formed_exports flowconfig then
-      let paths =
-        Base.List.map
-          ~f:(Files.expand_project_root_token ~root)
-          (FlowConfig.enforce_well_formed_exports_includes flowconfig)
-      in
-      Some paths
-    else
-      None
-  in
+  let opt_new_signatures = options_flags.new_signatures || FlowConfig.new_signatures flowconfig in
   let opt_abstract_locations =
     options_flags.abstract_locations || FlowConfig.abstract_locations flowconfig
   in
@@ -1211,6 +1194,12 @@ let make_options
     Base.Option.value
       options_flags.wait_for_recheck
       ~default:(FlowConfig.wait_for_recheck flowconfig)
+  in
+  let opt_format =
+    {
+      Options.opt_single_quotes =
+        Base.Option.value (FlowConfig.format_single_quotes flowconfig) ~default:false;
+    }
   in
   let strict_mode = FlowConfig.strict_mode flowconfig in
   {
@@ -1244,8 +1233,9 @@ let make_options
     opt_enabled_rollouts = FlowConfig.enabled_rollouts flowconfig;
     opt_enforce_local_inference_annotations =
       FlowConfig.enforce_local_inference_annotations flowconfig;
+    opt_run_post_inference_implicit_instantiation =
+      FlowConfig.run_post_inference_implicit_instantiation flowconfig;
     opt_enforce_strict_call_arity = FlowConfig.enforce_strict_call_arity flowconfig;
-    opt_enforce_well_formed_exports;
     opt_enums = FlowConfig.enums flowconfig;
     opt_enums_with_unknown_members = FlowConfig.enums_with_unknown_members flowconfig;
     opt_this_annot = FlowConfig.this_annot flowconfig;
@@ -1280,12 +1270,13 @@ let make_options
     opt_node_resolver_allow_root_relative = FlowConfig.node_resolver_allow_root_relative flowconfig;
     opt_node_resolver_root_relative_dirnames =
       FlowConfig.node_resolver_root_relative_dirnames flowconfig;
-    opt_arch;
+    opt_new_signatures;
     opt_abstract_locations;
     opt_include_suppressions = options_flags.include_suppressions;
     opt_trust_mode =
       Base.Option.value options_flags.trust_mode ~default:(FlowConfig.trust_mode flowconfig);
     opt_react_runtime = FlowConfig.react_runtime flowconfig;
+    opt_react_server_component_exts = FlowConfig.react_server_component_exts flowconfig;
     opt_recursion_limit = FlowConfig.recursion_limit flowconfig;
     opt_max_files_checked_per_worker = FlowConfig.max_files_checked_per_worker flowconfig;
     opt_max_rss_bytes_for_check_per_worker =
@@ -1300,6 +1291,8 @@ let make_options
     opt_automatic_require_default = FlowConfig.automatic_require_default flowconfig;
     opt_generate_tests =
       Base.Option.value options_flags.generate_tests ~default:(FlowConfig.generate_tests flowconfig);
+    opt_format;
+    opt_autoimports = Base.Option.value (FlowConfig.autoimports flowconfig) ~default:false;
   }
 
 let make_env flowconfig_name connect_flags root =

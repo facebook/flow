@@ -120,8 +120,17 @@ let pp_errors pp_loc fmt errs =
 
 let pp_sig
     fmt
-    (errs, locs, (exports, export_def, module_refs, local_defs, remote_refs, pattern_defs, patterns))
-    =
+    ( errs,
+      locs,
+      {
+        Packed_type_sig.exports;
+        export_def;
+        module_refs;
+        local_defs;
+        remote_refs;
+        pattern_defs;
+        patterns;
+      } ) =
   let open Format in
   let pp_loc = mk_pp_loc locs in
   pp_exports pp_loc fmt exports;
@@ -255,9 +264,10 @@ let%expect_test "export_number_literal" =
     export default 0;
   |};
   [%expect {|
-    ESExports {names = { "default" -> ExportDefault {default_loc = [1:7-14]} };
-      types = {}; stars = []; type_stars = [];
-      strict = true}
+    (ESExports
+       { names = { "default" -> ExportDefault {default_loc = [1:7-14]} };
+         types = {}; stars = []; type_stars = [];
+         strict = true })
 
     Export_def:
     (Value (NumberLit ([1:15-16], 0., "0")))
@@ -268,9 +278,10 @@ let%expect_test "export_function_literal" =
     export default function(x: number): number { return x };
   |};
   [%expect {|
-    ESExports {names = { "default" -> ExportDefault {default_loc = [1:7-14]} };
-      types = {}; stars = []; type_stars = [];
-      strict = true}
+    (ESExports
+       { names = { "default" -> ExportDefault {default_loc = [1:7-14]} };
+         types = {}; stars = []; type_stars = [];
+         strict = true })
 
     Export_def:
     (Value
@@ -290,9 +301,10 @@ let%expect_test "export_function_literal_check1" =
     export default function(x): number { return x };
   |};
   [%expect {|
-    ESExports {names = { "default" -> ExportDefault {default_loc = [1:7-14]} };
-      types = {}; stars = []; type_stars = [];
-      strict = true}
+    (ESExports
+       { names = { "default" -> ExportDefault {default_loc = [1:7-14]} };
+         types = {}; stars = []; type_stars = [];
+         strict = true })
 
     Export_def:
     (Value
@@ -316,9 +328,10 @@ let%expect_test "export_function_literal_check2" =
     export default function(x: number) { return x };
   |};
   [%expect {|
-    ESExports {names = { "default" -> ExportDefault {default_loc = [1:7-14]} };
-      types = {}; stars = []; type_stars = [];
-      strict = true}
+    (ESExports
+       { names = { "default" -> ExportDefault {default_loc = [1:7-14]} };
+         types = {}; stars = []; type_stars = [];
+         strict = true })
 
     Export_def:
     (Value
@@ -343,9 +356,10 @@ let%expect_test "export_function_reference" =
     export default foo;
   |};
   [%expect {|
-    ESExports {names = { "default" -> ExportDefault {default_loc = [2:7-14]} };
-      types = {}; stars = []; type_stars = [];
-      strict = true}
+    (ESExports
+       { names = { "default" -> ExportDefault {default_loc = [2:7-14]} };
+         types = {}; stars = []; type_stars = [];
+         strict = true })
 
     Export_def:
     (Ref LocalRef {ref_loc = [2:15-18]; index = 0})
@@ -369,9 +383,10 @@ let%expect_test "export_function_reference_check1" =
     export default foo;
   |};
   [%expect {|
-    ESExports {names = { "default" -> ExportDefault {default_loc = [2:7-14]} };
-      types = {}; stars = []; type_stars = [];
-      strict = true}
+    (ESExports
+       { names = { "default" -> ExportDefault {default_loc = [2:7-14]} };
+         types = {}; stars = []; type_stars = [];
+         strict = true })
 
     Export_def:
     (Ref LocalRef {ref_loc = [2:15-18]; index = 0})
@@ -399,9 +414,10 @@ let%expect_test "export_function_reference_check2" =
     export default foo;
   |};
   [%expect {|
-    ESExports {names = { "default" -> ExportDefault {default_loc = [2:7-14]} };
-      types = {}; stars = []; type_stars = [];
-      strict = true}
+    (ESExports
+       { names = { "default" -> ExportDefault {default_loc = [2:7-14]} };
+         types = {}; stars = []; type_stars = [];
+         strict = true })
 
     Export_def:
     (Ref LocalRef {ref_loc = [2:15-18]; index = 0})
@@ -428,9 +444,10 @@ let%expect_test "function_param_optional" =
     export default function(p?: string): void {};
   |};
   [%expect {|
-    ESExports {names = { "default" -> ExportDefault {default_loc = [1:7-14]} };
-      types = {}; stars = []; type_stars = [];
-      strict = true}
+    (ESExports
+       { names = { "default" -> ExportDefault {default_loc = [1:7-14]} };
+         types = {}; stars = []; type_stars = [];
+         strict = true })
 
     Export_def:
     (Value
@@ -450,9 +467,10 @@ let%expect_test "function_param_default" =
     export default function(p: string = "foo"): void {};
   |};
   [%expect {|
-    ESExports {names = { "default" -> ExportDefault {default_loc = [1:7-14]} };
-      types = {}; stars = []; type_stars = [];
-      strict = true}
+    (ESExports
+       { names = { "default" -> ExportDefault {default_loc = [1:7-14]} };
+         types = {}; stars = []; type_stars = [];
+         strict = true })
 
     Export_def:
     (Value
@@ -472,9 +490,10 @@ let%expect_test "export_object_literal_property_literal" =
     export default { p: 0 };
   |};
   [%expect {|
-    ESExports {names = { "default" -> ExportDefault {default_loc = [1:7-14]} };
-      types = {}; stars = []; type_stars = [];
-      strict = true}
+    (ESExports
+       { names = { "default" -> ExportDefault {default_loc = [1:7-14]} };
+         types = {}; stars = []; type_stars = [];
+         strict = true })
 
     Export_def:
     (Value
@@ -491,9 +510,10 @@ let%expect_test "export_object_literal_property_reference" =
     export default { p: x };
   |};
   [%expect {|
-    ESExports {names = { "default" -> ExportDefault {default_loc = [2:7-14]} };
-      types = {}; stars = []; type_stars = [];
-      strict = true}
+    (ESExports
+       { names = { "default" -> ExportDefault {default_loc = [2:7-14]} };
+         types = {}; stars = []; type_stars = [];
+         strict = true })
 
     Export_def:
     (Value
@@ -514,9 +534,10 @@ let%expect_test "export_object_literal_property_reference_check" =
     export default { p: x };
   |};
   [%expect {|
-    ESExports {names = { "default" -> ExportDefault {default_loc = [2:7-14]} };
-      types = {}; stars = []; type_stars = [];
-      strict = true}
+    (ESExports
+       { names = { "default" -> ExportDefault {default_loc = [2:7-14]} };
+         types = {}; stars = []; type_stars = [];
+         strict = true })
 
     Export_def:
     (Value
@@ -542,9 +563,10 @@ let%expect_test "empty_object_literal" =
     export default { };
   |};
   [%expect {|
-    ESExports {names = { "default" -> ExportDefault {default_loc = [1:7-14]} };
-      types = {}; stars = []; type_stars = [];
-      strict = true}
+    (ESExports
+       { names = { "default" -> ExportDefault {default_loc = [1:7-14]} };
+         types = {}; stars = []; type_stars = [];
+         strict = true })
 
     Export_def:
     (Err [1:15-18])
@@ -562,9 +584,10 @@ let%expect_test "export_class_reference" =
     export default C;
   |};
   [%expect {|
-    ESExports {names = { "default" -> ExportDefault {default_loc = [5:7-14]} };
-      types = {}; stars = []; type_stars = [];
-      strict = true}
+    (ESExports
+       { names = { "default" -> ExportDefault {default_loc = [5:7-14]} };
+         types = {}; stars = []; type_stars = [];
+         strict = true })
 
     Export_def:
     (Ref LocalRef {ref_loc = [5:15-16]; index = 0})
@@ -599,9 +622,10 @@ let%expect_test "export_class_reference_check1" =
     export default C;
   |};
   [%expect {|
-    ESExports {names = { "default" -> ExportDefault {default_loc = [5:7-14]} };
-      types = {}; stars = []; type_stars = [];
-      strict = true}
+    (ESExports
+       { names = { "default" -> ExportDefault {default_loc = [5:7-14]} };
+         types = {}; stars = []; type_stars = [];
+         strict = true })
 
     Export_def:
     (Ref LocalRef {ref_loc = [5:15-16]; index = 0})
@@ -641,9 +665,10 @@ let%expect_test "export_class_reference_check2" =
     export default C;
   |};
   [%expect {|
-    ESExports {names = { "default" -> ExportDefault {default_loc = [5:7-14]} };
-      types = {}; stars = []; type_stars = [];
-      strict = true}
+    (ESExports
+       { names = { "default" -> ExportDefault {default_loc = [5:7-14]} };
+         types = {}; stars = []; type_stars = [];
+         strict = true })
 
     Export_def:
     (Ref LocalRef {ref_loc = [5:15-16]; index = 0})
@@ -683,9 +708,10 @@ let%expect_test "export_class_reference_check3" =
     export default C;
   |};
   [%expect {|
-    ESExports {names = { "default" -> ExportDefault {default_loc = [5:7-14]} };
-      types = {}; stars = []; type_stars = [];
-      strict = true}
+    (ESExports
+       { names = { "default" -> ExportDefault {default_loc = [5:7-14]} };
+         types = {}; stars = []; type_stars = [];
+         strict = true })
 
     Export_def:
     (Ref LocalRef {ref_loc = [5:15-16]; index = 0})
@@ -728,9 +754,10 @@ let%expect_test "type_alias_dependencies" =
     export default C;
   |};
   [%expect {|
-    ESExports {names = { "default" -> ExportDefault {default_loc = [8:7-14]} };
-      types = {}; stars = []; type_stars = [];
-      strict = true}
+    (ESExports
+       { names = { "default" -> ExportDefault {default_loc = [8:7-14]} };
+         types = {}; stars = []; type_stars = [];
+         strict = true })
 
     Export_def:
     (Ref LocalRef {ref_loc = [8:15-16]; index = 3})
@@ -774,9 +801,10 @@ let%expect_test "class_dependencies" =
     export default C;
   |};
   [%expect {|
-    ESExports {names = { "default" -> ExportDefault {default_loc = [6:7-14]} };
-      types = {}; stars = []; type_stars = [];
-      strict = true}
+    (ESExports
+       { names = { "default" -> ExportDefault {default_loc = [6:7-14]} };
+         types = {}; stars = []; type_stars = [];
+         strict = true })
 
     Export_def:
     (Ref LocalRef {ref_loc = [6:15-16]; index = 1})
@@ -825,9 +853,10 @@ let%expect_test "class_dependencies_check" =
     export default C;
   |};
   [%expect {|
-    ESExports {names = { "default" -> ExportDefault {default_loc = [6:7-14]} };
-      types = {}; stars = []; type_stars = [];
-      strict = true}
+    (ESExports
+       { names = { "default" -> ExportDefault {default_loc = [6:7-14]} };
+         types = {}; stars = []; type_stars = [];
+         strict = true })
 
     Export_def:
     (Ref LocalRef {ref_loc = [6:15-16]; index = 1})
@@ -881,9 +910,10 @@ let%expect_test "export_new_typecast" =
     export default (new C: C);
   |};
   [%expect {|
-    ESExports {names = { "default" -> ExportDefault {default_loc = [6:7-14]} };
-      types = {}; stars = []; type_stars = [];
-      strict = true}
+    (ESExports
+       { names = { "default" -> ExportDefault {default_loc = [6:7-14]} };
+         types = {}; stars = []; type_stars = [];
+         strict = true })
 
     Export_def:
     (TyRef (Unqualified LocalRef {ref_loc = [6:23-24]; index = 1}))
@@ -932,9 +962,10 @@ let%expect_test "export_new_typecast_check" =
     export default (new C: C);
   |};
   [%expect {|
-    ESExports {names = { "default" -> ExportDefault {default_loc = [6:7-14]} };
-      types = {}; stars = []; type_stars = [];
-      strict = true}
+    (ESExports
+       { names = { "default" -> ExportDefault {default_loc = [6:7-14]} };
+         types = {}; stars = []; type_stars = [];
+         strict = true })
 
     Export_def:
     (TyRef (Unqualified LocalRef {ref_loc = [6:23-24]; index = 1}))
@@ -987,9 +1018,10 @@ let%expect_test "recursive_dependencies" =
     export default C;
   |};
   [%expect {|
-    ESExports {names = { "default" -> ExportDefault {default_loc = [5:7-14]} };
-      types = {}; stars = []; type_stars = [];
-      strict = true}
+    (ESExports
+       { names = { "default" -> ExportDefault {default_loc = [5:7-14]} };
+         types = {}; stars = []; type_stars = [];
+         strict = true })
 
     Export_def:
     (Ref LocalRef {ref_loc = [5:15-16]; index = 0})
@@ -1029,9 +1061,10 @@ let%expect_test "recursive_dependencies_check" =
     export default C;
   |};
   [%expect {|
-    ESExports {names = { "default" -> ExportDefault {default_loc = [5:7-14]} };
-      types = {}; stars = []; type_stars = [];
-      strict = true}
+    (ESExports
+       { names = { "default" -> ExportDefault {default_loc = [5:7-14]} };
+         types = {}; stars = []; type_stars = [];
+         strict = true })
 
     Export_def:
     (Ref LocalRef {ref_loc = [5:15-16]; index = 0})
@@ -1074,9 +1107,10 @@ let%expect_test "typeof_dependencies" =
     export default (new C: C);
   |};
   [%expect {|
-    ESExports {names = { "default" -> ExportDefault {default_loc = [5:7-14]} };
-      types = {}; stars = []; type_stars = [];
-      strict = true}
+    (ESExports
+       { names = { "default" -> ExportDefault {default_loc = [5:7-14]} };
+         types = {}; stars = []; type_stars = [];
+         strict = true })
 
     Export_def:
     (TyRef (Unqualified LocalRef {ref_loc = [5:23-24]; index = 1}))
@@ -1107,9 +1141,10 @@ let%expect_test "typeof_dependencies_check" =
     export default (new C: C);
   |};
   [%expect {|
-    ESExports {names = { "default" -> ExportDefault {default_loc = [5:7-14]} };
-      types = {}; stars = []; type_stars = [];
-      strict = true}
+    (ESExports
+       { names = { "default" -> ExportDefault {default_loc = [5:7-14]} };
+         types = {}; stars = []; type_stars = [];
+         strict = true })
 
     Export_def:
     (TyRef (Unqualified LocalRef {ref_loc = [5:23-24]; index = 1}))
@@ -1143,9 +1178,10 @@ let%expect_test "const_initializer" =
     export default { x };
   |};
   [%expect {|
-    ESExports {names = { "default" -> ExportDefault {default_loc = [2:7-14]} };
-      types = {}; stars = []; type_stars = [];
-      strict = true}
+    (ESExports
+       { names = { "default" -> ExportDefault {default_loc = [2:7-14]} };
+         types = {}; stars = []; type_stars = [];
+         strict = true })
 
     Export_def:
     (Value
@@ -1165,9 +1201,10 @@ let%expect_test "empty_array_literal" =
     export default [ ];
   |};
   [%expect {|
-    ESExports {names = { "default" -> ExportDefault {default_loc = [1:7-14]} };
-      types = {}; stars = []; type_stars = [];
-      strict = true}
+    (ESExports
+       { names = { "default" -> ExportDefault {default_loc = [1:7-14]} };
+         types = {}; stars = []; type_stars = [];
+         strict = true })
 
     Export_def:
     (Err [1:15-18])
@@ -1183,9 +1220,10 @@ let%expect_test "non_empty_array_literal" =
     export default [ x, y ];
   |};
   [%expect {|
-    ESExports {names = { "default" -> ExportDefault {default_loc = [3:7-14]} };
-      types = {}; stars = []; type_stars = [];
-      strict = true}
+    (ESExports
+       { names = { "default" -> ExportDefault {default_loc = [3:7-14]} };
+         types = {}; stars = []; type_stars = [];
+         strict = true })
 
     Export_def:
     (Value
@@ -1209,9 +1247,10 @@ let%expect_test "void_function" =
     export default foo;
   |};
   [%expect {|
-    ESExports {names = { "default" -> ExportDefault {default_loc = [2:7-14]} };
-      types = {}; stars = []; type_stars = [];
-      strict = true}
+    (ESExports
+       { names = { "default" -> ExportDefault {default_loc = [2:7-14]} };
+         types = {}; stars = []; type_stars = [];
+         strict = true })
 
     Export_def:
     (Ref LocalRef {ref_loc = [2:15-18]; index = 0})
@@ -1234,9 +1273,10 @@ let%expect_test "void_generator" =
     export default foo;
   |};
   [%expect {|
-    ESExports {names = { "default" -> ExportDefault {default_loc = [2:7-14]} };
-      types = {}; stars = []; type_stars = [];
-      strict = true}
+    (ESExports
+       { names = { "default" -> ExportDefault {default_loc = [2:7-14]} };
+         types = {}; stars = []; type_stars = [];
+         strict = true })
 
     Export_def:
     (Ref LocalRef {ref_loc = [2:15-18]; index = 0})
@@ -1266,9 +1306,10 @@ let%expect_test "import_default_dependencies" =
     export default (new C: C);
   |};
   [%expect {|
-    ESExports {names = { "default" -> ExportDefault {default_loc = [5:7-14]} };
-      types = {}; stars = []; type_stars = [];
-      strict = true}
+    (ESExports
+       { names = { "default" -> ExportDefault {default_loc = [5:7-14]} };
+         types = {}; stars = []; type_stars = [];
+         strict = true })
 
     Module refs:
     0. ./import_default_dependencies_helper
@@ -1305,9 +1346,10 @@ let%expect_test "import_type_dependencies" =
     export default C;
   |};
   [%expect {|
-    ESExports {names = { "default" -> ExportDefault {default_loc = [6:7-14]} };
-      types = {}; stars = []; type_stars = [];
-      strict = true}
+    (ESExports
+       { names = { "default" -> ExportDefault {default_loc = [6:7-14]} };
+         types = {}; stars = []; type_stars = [];
+         strict = true })
 
     Module refs:
     0. ./import_type_dependencies_helper
@@ -1356,9 +1398,10 @@ let%expect_test "qualified_references" =
     export default C;
   |};
   [%expect {|
-    ESExports {names = { "default" -> ExportDefault {default_loc = [6:7-14]} };
-      types = {}; stars = []; type_stars = [];
-      strict = true}
+    (ESExports
+       { names = { "default" -> ExportDefault {default_loc = [6:7-14]} };
+         types = {}; stars = []; type_stars = [];
+         strict = true })
 
     Module refs:
     0. ./qualified_references_helper
@@ -1418,7 +1461,7 @@ let%expect_test "hoisted_requires" =
     module.exports = C;
   |};
   [%expect {|
-    CJSExports {types = {}; type_stars = []; strict = true}
+    (CJSExports { types = {}; type_stars = []; strict = true })
 
     Module refs:
     0. ./hoisted_requires_helper
@@ -1469,7 +1512,7 @@ let%expect_test "hoisted_locals" =
     module.exports = C;
   |};
   [%expect {|
-    CJSExports {types = {}; type_stars = []; strict = true}
+    (CJSExports { types = {}; type_stars = []; strict = true })
 
     Module refs:
     0. ./hoisted_locals_helper
@@ -1506,7 +1549,7 @@ let%expect_test "dynamic_requires" =
     module.exports = require('./dynamic_requires_helper');
   |};
   [%expect {|
-    CJSExports {types = {}; type_stars = []; strict = true}
+    (CJSExports { types = {}; type_stars = []; strict = true })
 
     Module refs:
     0. ./dynamic_requires_helper
@@ -1527,7 +1570,7 @@ let%expect_test "scope_extrusion" =
     module.exports = x;
   |};
   [%expect {|
-    CJSExports {types = {}; type_stars = []; strict = true}
+    (CJSExports { types = {}; type_stars = []; strict = true })
 
     Export_def:
     (Ref LocalRef {ref_loc = [8:17-18]; index = 1})
@@ -1558,7 +1601,7 @@ let%expect_test "scope_extrusion_nested" =
     module.exports = { x, y };
   |};
   [%expect {|
-    CJSExports {types = {}; type_stars = []; strict = true}
+    (CJSExports { types = {}; type_stars = []; strict = true })
 
     Export_def:
     (Value
@@ -1594,7 +1637,7 @@ let%expect_test "report_all_errors" =
     };
   |};
   [%expect {|
-    CJSExports {types = {}; type_stars = []; strict = true}
+    (CJSExports { types = {}; type_stars = []; strict = true })
 
     Export_def:
     (Value
@@ -1646,9 +1689,10 @@ let%expect_test "munged_methods_ignored_if_directive" =
     export default C;
   |};
   [%expect {|
-    ESExports {names = { "default" -> ExportDefault {default_loc = [4:7-14]} };
-      types = {}; stars = []; type_stars = [];
-      strict = true}
+    (ESExports
+       { names = { "default" -> ExportDefault {default_loc = [4:7-14]} };
+         types = {}; stars = []; type_stars = [];
+         strict = true })
 
     Export_def:
     (Ref LocalRef {ref_loc = [4:15-16]; index = 0})
@@ -1670,9 +1714,10 @@ let%expect_test "munged_methods_not_ignored" =
     export default C;
   |};
   [%expect {|
-    ESExports {names = { "default" -> ExportDefault {default_loc = [4:7-14]} };
-      types = {}; stars = []; type_stars = [];
-      strict = true}
+    (ESExports
+       { names = { "default" -> ExportDefault {default_loc = [4:7-14]} };
+         types = {}; stars = []; type_stars = [];
+         strict = true })
 
     Export_def:
     (Ref LocalRef {ref_loc = [4:15-16]; index = 0})
@@ -1709,9 +1754,10 @@ let%expect_test "munged_fields_ignored_if_directive" =
     export default C;
   |};
   [%expect {|
-    ESExports {names = { "default" -> ExportDefault {default_loc = [4:7-14]} };
-      types = {}; stars = []; type_stars = [];
-      strict = true}
+    (ESExports
+       { names = { "default" -> ExportDefault {default_loc = [4:7-14]} };
+         types = {}; stars = []; type_stars = [];
+         strict = true })
 
     Export_def:
     (Ref LocalRef {ref_loc = [4:15-16]; index = 0})
@@ -1733,9 +1779,10 @@ let%expect_test "munged_fields_not_ignored" =
     export default C;
   |};
   [%expect {|
-    ESExports {names = { "default" -> ExportDefault {default_loc = [4:7-14]} };
-      types = {}; stars = []; type_stars = [];
-      strict = true}
+    (ESExports
+       { names = { "default" -> ExportDefault {default_loc = [4:7-14]} };
+         types = {}; stars = []; type_stars = [];
+         strict = true })
 
     Export_def:
     (Ref LocalRef {ref_loc = [4:15-16]; index = 0})
@@ -1764,9 +1811,10 @@ let%expect_test "propTypes_static_ignored" =
     export default C;
   |};
   [%expect {|
-    ESExports {names = { "default" -> ExportDefault {default_loc = [4:7-14]} };
-      types = {}; stars = []; type_stars = [];
-      strict = true}
+    (ESExports
+       { names = { "default" -> ExportDefault {default_loc = [4:7-14]} };
+         types = {}; stars = []; type_stars = [];
+         strict = true })
 
     Export_def:
     (Ref LocalRef {ref_loc = [4:15-16]; index = 0})
@@ -1790,9 +1838,10 @@ let%expect_test "propTypes_static_failure" =
     export default C;
   |};
   [%expect {|
-    ESExports {names = { "default" -> ExportDefault {default_loc = [4:7-14]} };
-      types = {}; stars = []; type_stars = [];
-      strict = true}
+    (ESExports
+       { names = { "default" -> ExportDefault {default_loc = [4:7-14]} };
+         types = {}; stars = []; type_stars = [];
+         strict = true })
 
     Export_def:
     (Ref LocalRef {ref_loc = [4:15-16]; index = 0})
@@ -1819,7 +1868,7 @@ let%expect_test "array_spread" =
     module.exports = [1, ...[2, 3], 4];
   |};
   [%expect {|
-    CJSExports {types = {}; type_stars = []; strict = true}
+    (CJSExports { types = {}; type_stars = []; strict = true })
 
     Export_def:
     (Err [1:17-34])
@@ -1833,7 +1882,7 @@ let%expect_test "array_hole" =
     module.exports = [,];
   |};
   [%expect {|
-    CJSExports {types = {}; type_stars = []; strict = true}
+    (CJSExports { types = {}; type_stars = []; strict = true })
 
     Export_def:
     (Err [1:17-20])
@@ -1847,7 +1896,7 @@ let%expect_test "object_spread" =
     module.exports = { x: 'x', ...{ y: 'y' }, z: 'z' };
   |};
   [%expect {|
-    CJSExports {types = {}; type_stars = []; strict = true}
+    (CJSExports { types = {}; type_stars = []; strict = true })
 
     Export_def:
     (Value
@@ -1877,7 +1926,7 @@ let%expect_test "reference_expression1" =
     module.exports = Number.NaN;
   |};
   [%expect {|
-    CJSExports {types = {}; type_stars = []; strict = true}
+    (CJSExports { types = {}; type_stars = []; strict = true })
 
     Export_def:
     (Eval ([1:17-27], (Ref BuiltinRef {ref_loc = [1:17-23]; name = "Number"}), (GetProp "NaN")))
@@ -1888,7 +1937,7 @@ let%expect_test "reference_expression2" =
     module.exports = 'x'.length;
   |};
   [%expect {|
-    CJSExports {types = {}; type_stars = []; strict = true}
+    (CJSExports { types = {}; type_stars = []; strict = true })
 
     Export_def:
     (Err [1:17-27])
@@ -1904,7 +1953,7 @@ let%expect_test "arith_expression1" =
     module.exports = 6*7;
   |};
   [%expect {|
-    CJSExports {types = {}; type_stars = []; strict = true}
+    (CJSExports { types = {}; type_stars = []; strict = true })
 
     Export_def:
     (Value (NumberVal [1:17-20]))
@@ -1915,7 +1964,7 @@ let%expect_test "arith_expression2" =
     module.exports = 6+7;
   |};
   [%expect {|
-    CJSExports {types = {}; type_stars = []; strict = true}
+    (CJSExports { types = {}; type_stars = []; strict = true })
 
     Export_def:
     (Err [1:17-20])
@@ -1935,14 +1984,14 @@ let%expect_test "update_expression" =
     export const post_decr = foo--;
   |};
   [%expect {|
-    ESExports {
-      names =
-      { "post_decr" -> (ExportBinding 3);
-        "post_incr" -> (ExportBinding 2);
-        "pre_decr" -> (ExportBinding 1);
-        "pre_incr" -> (ExportBinding 0) };
-      types = {}; stars = []; type_stars = [];
-      strict = true}
+    (ESExports
+       { names =
+         { "post_decr" -> (ExportBinding 3);
+           "post_incr" -> (ExportBinding 2);
+           "pre_decr" -> (ExportBinding 1);
+           "pre_incr" -> (ExportBinding 0) };
+         types = {}; stars = []; type_stars = [];
+         strict = true })
 
     Local defs:
     0. Variable {id_loc = [2:13-21]; name = "pre_incr"; def = (Value (NumberVal [2:24-29]))}
@@ -1956,9 +2005,10 @@ let%expect_test "sequence_expression" =
     export default (x, null);
   |};
   [%expect {|
-    ESExports {names = { "default" -> ExportDefault {default_loc = [2:7-14]} };
-      types = {}; stars = []; type_stars = [];
-      strict = true}
+    (ESExports
+       { names = { "default" -> ExportDefault {default_loc = [2:7-14]} };
+         types = {}; stars = []; type_stars = [];
+         strict = true })
 
     Export_def:
     (Value (NullLit [2:19-23])) |}]
@@ -1968,7 +2018,7 @@ let%expect_test "named_class_expression" =
     module.exports = class C { };
   |};
   [%expect {|
-    CJSExports {types = {}; type_stars = []; strict = true}
+    (CJSExports { types = {}; type_stars = []; strict = true })
 
     Export_def:
     (Ref LocalRef {ref_loc = [1:23-24]; index = 0})
@@ -1987,7 +2037,7 @@ let%expect_test "named_function_expression" =
     module.exports = function foo() { };
   |};
   [%expect {|
-    CJSExports {types = {}; type_stars = []; strict = true}
+    (CJSExports { types = {}; type_stars = []; strict = true })
 
     Export_def:
     (Ref LocalRef {ref_loc = [1:26-29]; index = 0})
@@ -2012,9 +2062,10 @@ let%expect_test "interface_coverage" =
     }
   |};
   [%expect {|
-    ESExports {names = { "C" -> (ExportBinding 1) };
-      types = {}; stars = []; type_stars = [];
-      strict = true}
+    (ESExports
+       { names = { "C" -> (ExportBinding 1) };
+         types = {}; stars = []; type_stars = [];
+         strict = true })
 
     Local defs:
     0. Interface {id_loc = [1:18-21];
@@ -2050,7 +2101,7 @@ let%expect_test "bound_coverage" =
     export type T = <X: Foo> (X) => void;
   |};
   [%expect {|
-    CJSExports {types = { "T" -> (ExportTypeBinding 1) }; type_stars = []; strict = true}
+    (CJSExports { types = { "T" -> (ExportTypeBinding 1) }; type_stars = []; strict = true })
 
     Local defs:
     0. TypeAlias {id_loc = [1:5-8]; name = "Foo"; tparams = Mono; body = (Annot (Number [1:11-17]))}
@@ -2081,7 +2132,7 @@ let%expect_test "recursive_class_coverage" =
     module.exports = class C { x: C; };
   |};
   [%expect {|
-    CJSExports {types = {}; type_stars = []; strict = true}
+    (CJSExports { types = {}; type_stars = []; strict = true })
 
     Export_def:
     (Ref LocalRef {ref_loc = [1:23-24]; index = 0})
@@ -2105,7 +2156,7 @@ let%expect_test "shadowed_class_expression" =
     module.exports = class C { }
   |};
   [%expect {|
-    CJSExports {types = {}; type_stars = []; strict = true}
+    (CJSExports { types = {}; type_stars = []; strict = true })
 
     Export_def:
     (Ref LocalRef {ref_loc = [2:23-24]; index = 0})
@@ -2124,7 +2175,7 @@ let%expect_test "frozen_object" =
     module.exports = Object.freeze({ foo: 42, bar: 'hello' });
   |};
   [%expect {|
-    CJSExports {types = {}; type_stars = []; strict = true}
+    (CJSExports { types = {}; type_stars = []; strict = true })
 
     Export_def:
     (Value
@@ -2143,7 +2194,7 @@ let%expect_test "frozen_object_empty" =
     module.exports = Object.freeze({});
   |};
   [%expect {|
-    CJSExports {types = {}; type_stars = []; strict = true}
+    (CJSExports { types = {}; type_stars = []; strict = true })
 
     Export_def:
     (Value ObjLit {loc = [1:31-33]; frozen = true; proto = None; props = {}}) |}]
@@ -2153,7 +2204,7 @@ let%expect_test "fbt_empty_open_close" =
     module.exports = <fbt></fbt>;
   |};
   [%expect {|
-    CJSExports {types = {}; type_stars = []; strict = true}
+    (CJSExports { types = {}; type_stars = []; strict = true })
 
     Export_def:
     (TyRef (Unqualified BuiltinRef {ref_loc = [1:18-21]; name = "FbtElement"}))
@@ -2164,7 +2215,7 @@ let%expect_test "fbt_empty_open" =
     module.exports = <fbt/>;
   |};
   [%expect {|
-    CJSExports {types = {}; type_stars = []; strict = true}
+    (CJSExports { types = {}; type_stars = []; strict = true })
 
     Export_def:
     (TyRef (Unqualified BuiltinRef {ref_loc = [1:18-21]; name = "FbtElement"}))
@@ -2176,7 +2227,7 @@ let%expect_test "fbt_with_child" =
     module.exports = <fbt desc={foo()}></fbt>;
   |};
   [%expect {|
-    CJSExports {types = {}; type_stars = []; strict = true}
+    (CJSExports { types = {}; type_stars = []; strict = true })
 
     Export_def:
     (TyRef (Unqualified BuiltinRef {ref_loc = [2:18-21]; name = "FbtElement"}))
@@ -2190,7 +2241,7 @@ let%expect_test "keymirror" =
     })
   |};
   [%expect {|
-    CJSExports {types = {}; type_stars = []; strict = true}
+    (CJSExports { types = {}; type_stars = []; strict = true })
 
     Export_def:
     (Value
@@ -2208,7 +2259,7 @@ let%expect_test "jsx_div" =
     module.exports = <div></div>;
   |};
   [%expect {|
-    CJSExports {types = {}; type_stars = []; strict = true}
+    (CJSExports { types = {}; type_stars = []; strict = true })
 
     Export_def:
     (Err [1:17-28])
@@ -2226,9 +2277,10 @@ let%expect_test "function_return" =
     export function foo<X: typeof n>(x: X) { return 1; };
   |};
   [%expect {|
-    ESExports {names = { "foo" -> (ExportBinding 1) };
-      types = {}; stars = []; type_stars = [];
-      strict = true}
+    (ESExports
+       { names = { "foo" -> (ExportBinding 1) };
+         types = {}; stars = []; type_stars = [];
+         strict = true })
 
     Local defs:
     0. Variable {id_loc = [1:4-5]; name = "n"; def = (Err [1:4-5])}
@@ -2270,9 +2322,10 @@ let%expect_test "function_return_2" =
     export function bar(x: (typeof n) => void) { return 1; };
   |};
   [%expect {|
-    ESExports {names = { "bar" -> (ExportBinding 1) };
-      types = {}; stars = []; type_stars = [];
-      strict = true}
+    (ESExports
+       { names = { "bar" -> (ExportBinding 1) };
+         types = {}; stars = []; type_stars = [];
+         strict = true })
 
     Local defs:
     0. Variable {id_loc = [1:4-5]; name = "n"; def = (Err [1:4-5])}
@@ -2323,7 +2376,7 @@ let%expect_test "function_statics" =
     module.exports = bar;
   |};
   [%expect {|
-    CJSExports {types = {}; type_stars = []; strict = true}
+    (CJSExports { types = {}; type_stars = []; strict = true })
 
     Export_def:
     (Ref LocalRef {ref_loc = [4:17-20]; index = 0})
@@ -2349,9 +2402,10 @@ let%expect_test "function_predicates_1" =
     }
   |};
   [%expect {|
-    ESExports {names = { "foo" -> (ExportBinding 0) };
-      types = {}; stars = []; type_stars = [];
-      strict = true}
+    (ESExports
+       { names = { "foo" -> (ExportBinding 0) };
+         types = {}; stars = []; type_stars = [];
+         strict = true })
 
     Local defs:
     0. FunBinding {id_loc = [2:16-19];
@@ -2373,9 +2427,10 @@ let%expect_test "function_predicates_2" =
     }
   |};
   [%expect {|
-    ESExports {names = { "foo" -> (ExportBinding 1) };
-      types = {}; stars = []; type_stars = [];
-      strict = true}
+    (ESExports
+       { names = { "foo" -> (ExportBinding 1) };
+         types = {}; stars = []; type_stars = [];
+         strict = true })
 
     Local defs:
     0. DeclareFun {id_loc = [1:17-20];
@@ -2406,9 +2461,10 @@ let%expect_test "function_predicates_3" =
     declare export function foo(x: mixed): boolean %checks(bar(x));
   |};
   [%expect {|
-    ESExports {names = { "foo" -> (ExportBinding 1) };
-      types = {}; stars = []; type_stars = [];
-      strict = true}
+    (ESExports
+       { names = { "foo" -> (ExportBinding 1) };
+         types = {}; stars = []; type_stars = [];
+         strict = true })
 
     Local defs:
     0. FunBinding {id_loc = [1:9-12];
@@ -2446,9 +2502,10 @@ let%expect_test "function_predicates_4" =
     }
   |};
   [%expect {|
-    ESExports {names = { "isOne" -> (ExportBinding 0) };
-      types = {}; stars = []; type_stars = [];
-      strict = true}
+    (ESExports
+       { names = { "isOne" -> (ExportBinding 0) };
+         types = {}; stars = []; type_stars = [];
+         strict = true })
 
     Local defs:
     0. FunBinding {id_loc = [3:16-21];
@@ -2470,9 +2527,10 @@ let%expect_test "function_predicates_5" =
     }
   |};
   [%expect {|
-    ESExports {names = { "isOne" -> (ExportBinding 0) };
-      types = {}; stars = []; type_stars = [];
-      strict = true}
+    (ESExports
+       { names = { "isOne" -> (ExportBinding 0) };
+         types = {}; stars = []; type_stars = [];
+         strict = true })
 
     Local defs:
     0. FunBinding {id_loc = [2:16-21];
@@ -2492,7 +2550,7 @@ let%expect_test "async_function_1" =
     module.exports = foo;
   |};
   [%expect {|
-    CJSExports {types = {}; type_stars = []; strict = true}
+    (CJSExports { types = {}; type_stars = []; strict = true })
 
     Export_def:
     (Ref LocalRef {ref_loc = [2:17-20]; index = 0})
@@ -2515,7 +2573,7 @@ let%expect_test "async_function_2" =
     module.exports = foo;
   |};
   [%expect {|
-    CJSExports {types = {}; type_stars = []; strict = true}
+    (CJSExports { types = {}; type_stars = []; strict = true })
 
     Export_def:
     (Ref LocalRef {ref_loc = [2:17-20]; index = 0})
@@ -2541,7 +2599,7 @@ let%expect_test "async_function_3" =
     module.exports = async () => await 1;
   |};
   [%expect {|
-    CJSExports {types = {}; type_stars = []; strict = true}
+    (CJSExports { types = {}; type_stars = []; strict = true })
 
     Export_def:
     (Value
@@ -2566,7 +2624,7 @@ let%expect_test "type_spread" =
     export type C = { ...A, ...B, c: null }
   |};
   [%expect {|
-    CJSExports {types = { "C" -> (ExportTypeBinding 2) }; type_stars = []; strict = true}
+    (CJSExports { types = { "C" -> (ExportTypeBinding 2) }; type_stars = []; strict = true })
 
     Local defs:
     0. TypeAlias {id_loc = [1:5-6]; name = "A";
@@ -2609,7 +2667,7 @@ let%expect_test "inline_interface" =
     export type B = interface extends A { p: string };
   |};
   [%expect {|
-    CJSExports {types = { "B" -> (ExportTypeBinding 1) }; type_stars = []; strict = true}
+    (CJSExports { types = { "B" -> (ExportTypeBinding 1) }; type_stars = []; strict = true })
 
     Local defs:
     0. TypeAlias {id_loc = [1:5-6]; name = "A";
@@ -2636,7 +2694,7 @@ let%expect_test "object_annot_optional" =
     export type A = { p?: string };
   |};
   [%expect {|
-    CJSExports {types = { "A" -> (ExportTypeBinding 0) }; type_stars = []; strict = true}
+    (CJSExports { types = { "A" -> (ExportTypeBinding 0) }; type_stars = []; strict = true })
 
     Local defs:
     0. TypeAlias {id_loc = [1:12-13];
@@ -2656,7 +2714,7 @@ let%expect_test "interface_optional" =
     export interface I { p?: string }
   |};
   [%expect {|
-    CJSExports {types = { "I" -> (ExportTypeBinding 0) }; type_stars = []; strict = true}
+    (CJSExports { types = { "I" -> (ExportTypeBinding 0) }; type_stars = []; strict = true })
 
     Local defs:
     0. Interface {id_loc = [1:17-18];
@@ -2674,7 +2732,7 @@ let%expect_test "interface_method" =
     export interface I { m(): void }
   |};
   [%expect {|
-    CJSExports {types = { "I" -> (ExportTypeBinding 0) }; type_stars = []; strict = true}
+    (CJSExports { types = { "I" -> (ExportTypeBinding 0) }; type_stars = []; strict = true })
 
     Local defs:
     0. Interface {id_loc = [1:17-18];
@@ -2699,7 +2757,7 @@ let%expect_test "object_annot_method" =
     export type A = { m(): void };
   |};
   [%expect {|
-    CJSExports {types = { "A" -> (ExportTypeBinding 0) }; type_stars = []; strict = true}
+    (CJSExports { types = { "A" -> (ExportTypeBinding 0) }; type_stars = []; strict = true })
 
     Local defs:
     0. TypeAlias {id_loc = [1:12-13];
@@ -2725,7 +2783,7 @@ let%expect_test "object_annot_call_poly" =
     export type A = { <T>(X): X };
   |};
   [%expect {|
-    CJSExports {types = { "A" -> (ExportTypeBinding 0) }; type_stars = []; strict = true}
+    (CJSExports { types = { "A" -> (ExportTypeBinding 0) }; type_stars = []; strict = true })
 
     Local defs:
     0. TypeAlias {id_loc = [1:12-13];
@@ -2766,7 +2824,7 @@ let%expect_test "object_annot_multiple_call" =
     export type A = { (): number, (): string };
   |};
   [%expect {|
-    CJSExports {types = { "A" -> (ExportTypeBinding 0) }; type_stars = []; strict = true}
+    (CJSExports { types = { "A" -> (ExportTypeBinding 0) }; type_stars = []; strict = true })
 
     Local defs:
     0. TypeAlias {id_loc = [1:12-13];
@@ -2805,10 +2863,10 @@ let%expect_test "destruct_object_shared" =
     export const {a, b: {c, d}} = e;
   |};
   [%expect {|
-    ESExports {
-      names = { "a" -> (ExportBinding 0); "c" -> (ExportBinding 1); "d" -> (ExportBinding 2) };
-      types = {}; stars = []; type_stars = [];
-      strict = true}
+    (ESExports
+       { names = { "a" -> (ExportBinding 0); "c" -> (ExportBinding 1); "d" -> (ExportBinding 2) };
+         types = {}; stars = []; type_stars = [];
+         strict = true })
 
     Local defs:
     0. Variable {id_loc = [1:14-15]; name = "a"; def = (Pattern 1)}
@@ -2831,14 +2889,14 @@ let%expect_test "destruct_array_shared" =
     export const [a, b, {c, d}] = e;
   |};
   [%expect {|
-    ESExports {
-      names =
-      { "a" -> (ExportBinding 0);
-        "b" -> (ExportBinding 1);
-        "c" -> (ExportBinding 2);
-        "d" -> (ExportBinding 3) };
-      types = {}; stars = []; type_stars = [];
-      strict = true}
+    (ESExports
+       { names =
+         { "a" -> (ExportBinding 0);
+           "b" -> (ExportBinding 1);
+           "c" -> (ExportBinding 2);
+           "d" -> (ExportBinding 3) };
+         types = {}; stars = []; type_stars = [];
+         strict = true })
 
     Local defs:
     0. Variable {id_loc = [1:14-15]; name = "a"; def = (Pattern 1)}
@@ -2864,8 +2922,9 @@ let%expect_test "cycle" =
     export type B = { p: ?A };
   |};
   [%expect {|
-    CJSExports {types = { "A" -> (ExportTypeBinding 0); "B" -> (ExportTypeBinding 1) };
-      type_stars = []; strict = true}
+    (CJSExports
+       { types = { "A" -> (ExportTypeBinding 0); "B" -> (ExportTypeBinding 1) };
+         type_stars = []; strict = true })
 
     Local defs:
     0. TypeAlias {id_loc = [1:12-13];
@@ -2903,9 +2962,10 @@ let%expect_test "typeof loc" =
     export var a: typeof o.p.q;
   |};
   [%expect {|
-    ESExports {names = { "a" -> (ExportBinding 0) };
-      types = {}; stars = []; type_stars = [];
-      strict = true}
+    (ESExports
+       { names = { "a" -> (ExportBinding 0) };
+         types = {}; stars = []; type_stars = [];
+         strict = true })
 
     Local defs:
     0. Variable {id_loc = [1:11-12];
@@ -2925,9 +2985,10 @@ let%expect_test "qualified_generic_typeapp_loc" =
     declare export var a: O.P.Q<T>;
   |};
   [%expect {|
-    ESExports {names = { "a" -> (ExportBinding 0) };
-      types = {}; stars = []; type_stars = [];
-      strict = true}
+    (ESExports
+       { names = { "a" -> (ExportBinding 0) };
+         types = {}; stars = []; type_stars = [];
+         strict = true })
 
     Local defs:
     0. Variable {id_loc = [1:19-20];
@@ -2948,9 +3009,10 @@ let%expect_test "temporary_object_annot" =
     declare export var a: $TEMPORARY$object<{foo: string}>;
   |};
   [%expect {|
-    ESExports {names = { "a" -> (ExportBinding 0) };
-      types = {}; stars = []; type_stars = [];
-      strict = true}
+    (ESExports
+       { names = { "a" -> (ExportBinding 0) };
+         types = {}; stars = []; type_stars = [];
+         strict = true })
 
     Local defs:
     0. Variable {id_loc = [1:19-20];
@@ -2972,9 +3034,10 @@ let%expect_test "export_ref_renaming" =
     export {a as b};
   |};
   [%expect {|
-    ESExports {names = { "b" -> (ExportRef LocalRef {ref_loc = [2:13-14]; index = 0}) };
-      types = {}; stars = []; type_stars = [];
-      strict = true}
+    (ESExports
+       { names = { "b" -> (ExportRef LocalRef {ref_loc = [2:13-14]; index = 0}) };
+         types = {}; stars = []; type_stars = [];
+         strict = true })
 
     Local defs:
     0. Variable {id_loc = [1:12-13]; name = "a"; def = (Annot (String [1:15-21]))} |}]
@@ -2984,9 +3047,10 @@ let%expect_test "union_annot" =
     declare export var a: string | number | null;
   |};
   [%expect {|
-    ESExports {names = { "a" -> (ExportBinding 0) };
-      types = {}; stars = []; type_stars = [];
-      strict = true}
+    (ESExports
+       { names = { "a" -> (ExportBinding 0) };
+         types = {}; stars = []; type_stars = [];
+         strict = true })
 
     Local defs:
     0. Variable {id_loc = [1:19-20];
@@ -3002,9 +3066,10 @@ let%expect_test "intersection_annot" =
     declare export var a: string & number & null;
   |};
   [%expect {|
-    ESExports {names = { "a" -> (ExportBinding 0) };
-      types = {}; stars = []; type_stars = [];
-      strict = true}
+    (ESExports
+       { names = { "a" -> (ExportBinding 0) };
+         types = {}; stars = []; type_stars = [];
+         strict = true })
 
     Local defs:
     0. Variable {id_loc = [1:19-20];
@@ -3026,14 +3091,14 @@ let%expect_test "class_extends" =
     declare export class C4 extends M.C {};
   |};
   [%expect {|
-    ESExports {
-      names =
-      { "C1" -> (ExportBinding 2);
-        "C2" -> (ExportBinding 3);
-        "C3" -> (ExportBinding 4);
-        "C4" -> (ExportBinding 5) };
-      types = {}; stars = []; type_stars = [];
-      strict = true}
+    (ESExports
+       { names =
+         { "C1" -> (ExportBinding 2);
+           "C2" -> (ExportBinding 3);
+           "C3" -> (ExportBinding 4);
+           "C4" -> (ExportBinding 5) };
+         types = {}; stars = []; type_stars = [];
+         strict = true })
 
     Local defs:
     0. DeclareClassBinding {id_loc = [1:14-15];
@@ -3102,9 +3167,10 @@ let%expect_test "class_this" =
     }
   |};
   [%expect {|
-    ESExports {names = { "C" -> (ExportBinding 0) };
-      types = {}; stars = []; type_stars = [];
-      strict = true}
+    (ESExports
+       { names = { "C" -> (ExportBinding 0) };
+         types = {}; stars = []; type_stars = [];
+         strict = true })
 
     Local defs:
     0. ClassBinding {id_loc = [1:13-14];
@@ -3131,9 +3197,10 @@ let%expect_test "declare_class_this" =
     }
   |};
   [%expect {|
-    ESExports {names = { "C" -> (ExportBinding 0) };
-      types = {}; stars = []; type_stars = [];
-      strict = true}
+    (ESExports
+       { names = { "C" -> (ExportBinding 0) };
+         types = {}; stars = []; type_stars = [];
+         strict = true })
 
     Local defs:
     0. DeclareClassBinding {id_loc = [1:21-22];
@@ -3163,9 +3230,10 @@ let%expect_test "existential" =
     declare export default C<*>;
   |};
   [%expect {|
-    ESExports {names = { "default" -> ExportDefault {default_loc = [4:15-22]} };
-      types = {}; stars = []; type_stars = [];
-      strict = true}
+    (ESExports
+       { names = { "default" -> ExportDefault {default_loc = [4:15-22]} };
+         types = {}; stars = []; type_stars = [];
+         strict = true })
 
     Export_def:
     TyRefApp {loc = [4:23-27]; name = (Unqualified LocalRef {ref_loc = [4:23-24]; index = 0});
@@ -3195,7 +3263,7 @@ let%expect_test "exact_by_default" =
     export type T = { p: string }
   |};
   [%expect {|
-    CJSExports {types = { "T" -> (ExportTypeBinding 0) }; type_stars = []; strict = true}
+    (CJSExports { types = { "T" -> (ExportTypeBinding 0) }; type_stars = []; strict = true })
 
     Local defs:
     0. TypeAlias {id_loc = [1:12-13];
@@ -3214,7 +3282,7 @@ let%expect_test "cjs_export_props" =
     exports.bar = 1;
   |};
   [%expect {|
-    CJSExports {types = {}; type_stars = []; strict = true}
+    (CJSExports { types = {}; type_stars = []; strict = true })
 
     Export_def:
     (Value
@@ -3232,7 +3300,7 @@ let%expect_test "cjs_export_alias_TODO" =
     function module() {}
   |};
   [%expect {|
-    CJSExports {types = {}; type_stars = []; strict = true}
+    (CJSExports { types = {}; type_stars = []; strict = true })
 
     Export_def:
     (Value
@@ -3250,7 +3318,7 @@ let%expect_test "cjs_export_fun_expr_props" =
     exports.bar = 1;
   |};
   [%expect {|
-    CJSExports {types = {}; type_stars = []; strict = true}
+    (CJSExports { types = {}; type_stars = []; strict = true })
 
     Export_def:
     (Value
@@ -3272,7 +3340,7 @@ let%expect_test "cjs_export_fun_binding_props" =
     exports.bar = 1;
   |};
   [%expect {|
-    CJSExports {types = {}; type_stars = []; strict = true}
+    (CJSExports { types = {}; type_stars = []; strict = true })
 
     Export_def:
     (Ref LocalRef {ref_loc = [1:26-29]; index = 0})
@@ -3296,9 +3364,10 @@ let%expect_test "es_export_named_fun_props" =
     foo.bar = 1;
   |};
   [%expect {|
-    ESExports {names = { "foo" -> (ExportBinding 0) };
-      types = {}; stars = []; type_stars = [];
-      strict = true}
+    (ESExports
+       { names = { "foo" -> (ExportBinding 0) };
+         types = {}; stars = []; type_stars = [];
+         strict = true })
 
     Local defs:
     0. FunBinding {id_loc = [1:16-19];
@@ -3317,9 +3386,10 @@ let%expect_test "es_export_default_fun_props" =
     foo.bar = 1;
   |};
   [%expect {|
-    ESExports {names = { "default" -> ExportDefaultBinding {default_loc = [1:7-14]; index = 0} };
-      types = {}; stars = []; type_stars = [];
-      strict = true}
+    (ESExports
+       { names = { "default" -> ExportDefaultBinding {default_loc = [1:7-14]; index = 0} };
+         types = {}; stars = []; type_stars = [];
+         strict = true })
 
     Local defs:
     0. FunBinding {id_loc = [1:24-27];
@@ -3339,7 +3409,7 @@ let%expect_test "fun_binding_assign" =
     module.exports = foo;
   |};
   [%expect {|
-    CJSExports {types = {}; type_stars = []; strict = true}
+    (CJSExports { types = {}; type_stars = []; strict = true })
 
     Export_def:
     (Ref LocalRef {ref_loc = [3:17-20]; index = 0})
@@ -3362,7 +3432,7 @@ let%expect_test "fun_const_assign" =
     module.exports = foo;
   |};
   [%expect {|
-    CJSExports {types = {}; type_stars = []; strict = true}
+    (CJSExports { types = {}; type_stars = []; strict = true })
 
     Export_def:
     (Ref LocalRef {ref_loc = [3:17-20]; index = 0})
@@ -3387,7 +3457,7 @@ let%expect_test "ref_const_assign" =
     module.exports = foo;
   |};
   [%expect {|
-    CJSExports {types = {}; type_stars = []; strict = true}
+    (CJSExports { types = {}; type_stars = []; strict = true })
 
     Export_def:
     (Ref LocalRef {ref_loc = [3:17-20]; index = 1})
@@ -3410,9 +3480,10 @@ let%expect_test "obj_annot_proto" =
     declare export var o: { __proto__: null };
   |};
   [%expect {|
-    ESExports {names = { "o" -> (ExportBinding 0) };
-      types = {}; stars = []; type_stars = [];
-      strict = true}
+    (ESExports
+       { names = { "o" -> (ExportBinding 0) };
+         types = {}; stars = []; type_stars = [];
+         strict = true })
 
     Local defs:
     0. Variable {id_loc = [1:19-20];
@@ -3442,17 +3513,17 @@ let%expect_test "getter_setter" =
     };
   |};
   [%expect {|
-    ESExports {
-      names =
-      { "a" -> (ExportBinding 0);
-        "b" -> (ExportBinding 1);
-        "c" -> (ExportBinding 2);
-        "d" -> (ExportBinding 3);
-        "e" -> (ExportBinding 4);
-        "f" -> (ExportBinding 5);
-        "g" -> (ExportBinding 6) };
-      types = {}; stars = []; type_stars = [];
-      strict = true}
+    (ESExports
+       { names =
+         { "a" -> (ExportBinding 0);
+           "b" -> (ExportBinding 1);
+           "c" -> (ExportBinding 2);
+           "d" -> (ExportBinding 3);
+           "e" -> (ExportBinding 4);
+           "f" -> (ExportBinding 5);
+           "g" -> (ExportBinding 6) };
+         types = {}; stars = []; type_stars = [];
+         strict = true })
 
     Local defs:
     0. Variable {id_loc = [1:13-14];
@@ -3528,9 +3599,10 @@ let%expect_test "predicate_exists" =
     }
   |};
   [%expect {|
-    ESExports {names = { "default" -> ExportDefault {default_loc = [1:7-14]} };
-      types = {}; stars = []; type_stars = [];
-      strict = true}
+    (ESExports
+       { names = { "default" -> ExportDefault {default_loc = [1:7-14]} };
+         types = {}; stars = []; type_stars = [];
+         strict = true })
 
     Export_def:
     (Value
@@ -3555,9 +3627,10 @@ let%expect_test "predicate_instanceof" =
     }
   |};
   [%expect {|
-    ESExports {names = { "default" -> ExportDefault {default_loc = [2:7-14]} };
-      types = {}; stars = []; type_stars = [];
-      strict = true}
+    (ESExports
+       { names = { "default" -> ExportDefault {default_loc = [2:7-14]} };
+         types = {}; stars = []; type_stars = [];
+         strict = true })
 
     Export_def:
     (Value
@@ -3588,9 +3661,10 @@ let%expect_test "predicate_typeof" =
     }
   |};
   [%expect {|
-    ESExports {names = { "default" -> ExportDefault {default_loc = [1:7-14]} };
-      types = {}; stars = []; type_stars = [];
-      strict = true}
+    (ESExports
+       { names = { "default" -> ExportDefault {default_loc = [1:7-14]} };
+         types = {}; stars = []; type_stars = [];
+         strict = true })
 
     Export_def:
     (Value
@@ -3611,9 +3685,10 @@ let%expect_test "predicate_typeof_template_literal" =
     }
   |};
   [%expect {|
-    ESExports {names = { "default" -> ExportDefault {default_loc = [1:7-14]} };
-      types = {}; stars = []; type_stars = [];
-      strict = true}
+    (ESExports
+       { names = { "default" -> ExportDefault {default_loc = [1:7-14]} };
+         types = {}; stars = []; type_stars = [];
+         strict = true })
 
     Export_def:
     (Value
@@ -3634,9 +3709,10 @@ let%expect_test "predicate_literal_string" =
     }
   |};
   [%expect {|
-    ESExports {names = { "default" -> ExportDefault {default_loc = [1:7-14]} };
-      types = {}; stars = []; type_stars = [];
-      strict = true}
+    (ESExports
+       { names = { "default" -> ExportDefault {default_loc = [1:7-14]} };
+         types = {}; stars = []; type_stars = [];
+         strict = true })
 
     Export_def:
     (Value
@@ -3657,9 +3733,10 @@ let%expect_test "predicate_literal_number" =
     }
   |};
   [%expect {|
-    ESExports {names = { "default" -> ExportDefault {default_loc = [1:7-14]} };
-      types = {}; stars = []; type_stars = [];
-      strict = true}
+    (ESExports
+       { names = { "default" -> ExportDefault {default_loc = [1:7-14]} };
+         types = {}; stars = []; type_stars = [];
+         strict = true })
 
     Export_def:
     (Value
@@ -3680,9 +3757,10 @@ let%expect_test "predicate_literal_boolean" =
     }
   |};
   [%expect {|
-    ESExports {names = { "default" -> ExportDefault {default_loc = [1:7-14]} };
-      types = {}; stars = []; type_stars = [];
-      strict = true}
+    (ESExports
+       { names = { "default" -> ExportDefault {default_loc = [1:7-14]} };
+         types = {}; stars = []; type_stars = [];
+         strict = true })
 
     Export_def:
     (Value
@@ -3703,9 +3781,10 @@ let%expect_test "predicate_literal_null" =
     }
   |};
   [%expect {|
-    ESExports {names = { "default" -> ExportDefault {default_loc = [1:7-14]} };
-      types = {}; stars = []; type_stars = [];
-      strict = true}
+    (ESExports
+       { names = { "default" -> ExportDefault {default_loc = [1:7-14]} };
+         types = {}; stars = []; type_stars = [];
+         strict = true })
 
     Export_def:
     (Value
@@ -3726,9 +3805,10 @@ let%expect_test "predicate_maybe" =
     }
   |};
   [%expect {|
-    ESExports {names = { "default" -> ExportDefault {default_loc = [1:7-14]} };
-      types = {}; stars = []; type_stars = [];
-      strict = true}
+    (ESExports
+       { names = { "default" -> ExportDefault {default_loc = [1:7-14]} };
+         types = {}; stars = []; type_stars = [];
+         strict = true })
 
     Export_def:
     (Value
@@ -3749,9 +3829,10 @@ let%expect_test "predicate_template_literal" =
     }
   |};
   [%expect {|
-    ESExports {names = { "default" -> ExportDefault {default_loc = [1:7-14]} };
-      types = {}; stars = []; type_stars = [];
-      strict = true}
+    (ESExports
+       { names = { "default" -> ExportDefault {default_loc = [1:7-14]} };
+         types = {}; stars = []; type_stars = [];
+         strict = true })
 
     Export_def:
     (Value
@@ -3772,9 +3853,10 @@ let%expect_test "predicate_negative_number_literal" =
     }
   |};
   [%expect {|
-    ESExports {names = { "default" -> ExportDefault {default_loc = [1:7-14]} };
-      types = {}; stars = []; type_stars = [];
-      strict = true}
+    (ESExports
+       { names = { "default" -> ExportDefault {default_loc = [1:7-14]} };
+         types = {}; stars = []; type_stars = [];
+         strict = true })
 
     Export_def:
     (Value
@@ -3796,9 +3878,10 @@ let%expect_test "predicate_undefined" =
     }
   |};
   [%expect {|
-    ESExports {names = { "default" -> ExportDefault {default_loc = [1:7-14]} };
-      types = {}; stars = []; type_stars = [];
-      strict = true}
+    (ESExports
+       { names = { "default" -> ExportDefault {default_loc = [1:7-14]} };
+         types = {}; stars = []; type_stars = [];
+         strict = true })
 
     Export_def:
     (Value
@@ -3821,9 +3904,10 @@ let%expect_test "predicate_undefined_shadow" =
     var undefined = 42;
   |};
   [%expect {|
-    ESExports {names = { "default" -> ExportDefault {default_loc = [1:7-14]} };
-      types = {}; stars = []; type_stars = [];
-      strict = true}
+    (ESExports
+       { names = { "default" -> ExportDefault {default_loc = [1:7-14]} };
+         types = {}; stars = []; type_stars = [];
+         strict = true })
 
     Export_def:
     (Value
@@ -3844,9 +3928,10 @@ let%expect_test "predicate_void" =
     }
   |};
   [%expect {|
-    ESExports {names = { "default" -> ExportDefault {default_loc = [1:7-14]} };
-      types = {}; stars = []; type_stars = [];
-      strict = true}
+    (ESExports
+       { names = { "default" -> ExportDefault {default_loc = [1:7-14]} };
+         types = {}; stars = []; type_stars = [];
+         strict = true })
 
     Export_def:
     (Value
@@ -3868,9 +3953,10 @@ let%expect_test "predicate_sentinel_string" =
     }
   |};
   [%expect {|
-    ESExports {names = { "default" -> ExportDefault {default_loc = [2:7-14]} };
-      types = {}; stars = []; type_stars = [];
-      strict = true}
+    (ESExports
+       { names = { "default" -> ExportDefault {default_loc = [2:7-14]} };
+         types = {}; stars = []; type_stars = [];
+         strict = true })
 
     Module refs:
     0. foo
@@ -3902,9 +3988,10 @@ let%expect_test "predicate_sentinel_expr" =
     }
   |};
   [%expect {|
-    ESExports {names = { "default" -> ExportDefault {default_loc = [3:7-14]} };
-      types = {}; stars = []; type_stars = [];
-      strict = true}
+    (ESExports
+       { names = { "default" -> ExportDefault {default_loc = [3:7-14]} };
+         types = {}; stars = []; type_stars = [];
+         strict = true })
 
     Module refs:
     0. foo
@@ -3940,9 +4027,10 @@ let%expect_test "predicate_Array_isArray" =
     }
   |};
   [%expect {|
-    ESExports {names = { "default" -> ExportDefault {default_loc = [1:7-14]} };
-      types = {}; stars = []; type_stars = [];
-      strict = true}
+    (ESExports
+       { names = { "default" -> ExportDefault {default_loc = [1:7-14]} };
+         types = {}; stars = []; type_stars = [];
+         strict = true })
 
     Export_def:
     (Value
@@ -3969,9 +4057,10 @@ let%expect_test "predicate_latent" =
     }
   |};
   [%expect {|
-    ESExports {names = { "h" -> (ExportBinding 2) };
-      types = {}; stars = []; type_stars = [];
-      strict = true}
+    (ESExports
+       { names = { "h" -> (ExportBinding 2) };
+         types = {}; stars = []; type_stars = [];
+         strict = true })
 
     Local defs:
     0. FunBinding {id_loc = [1:9-10];
@@ -4026,14 +4115,14 @@ let%expect_test "long_string_lit" =
     declare export var d: $TEMPORARY$string<"dddd">;
   |};
   [%expect {|
-    ESExports {
-      names =
-      { "a" -> (ExportBinding 0);
-        "b" -> (ExportBinding 1);
-        "c" -> (ExportBinding 2);
-        "d" -> (ExportBinding 3) };
-      types = {}; stars = []; type_stars = [];
-      strict = true}
+    (ESExports
+       { names =
+         { "a" -> (ExportBinding 0);
+           "b" -> (ExportBinding 1);
+           "c" -> (ExportBinding 2);
+           "d" -> (ExportBinding 3) };
+         types = {}; stars = []; type_stars = [];
+         strict = true })
 
     Local defs:
     0. Variable {id_loc = [1:13-14]; name = "a"; def = (Value (StringLit ([1:17-22], "aaa")))}
@@ -4047,9 +4136,10 @@ let%expect_test "export_default_function_binding" =
     export default function f(): void {}
   |};
   [%expect {|
-    ESExports {names = { "default" -> ExportDefaultBinding {default_loc = [1:7-14]; index = 0} };
-      types = {}; stars = []; type_stars = [];
-      strict = true}
+    (ESExports
+       { names = { "default" -> ExportDefaultBinding {default_loc = [1:7-14]; index = 0} };
+         types = {}; stars = []; type_stars = [];
+         strict = true })
 
     Local defs:
     0. FunBinding {id_loc = [1:24-25];
@@ -4067,9 +4157,10 @@ let%expect_test "export_default_class_binding" =
     export default class C {}
   |};
   [%expect {|
-    ESExports {names = { "default" -> ExportDefaultBinding {default_loc = [1:7-14]; index = 0} };
-      types = {}; stars = []; type_stars = [];
-      strict = true}
+    (ESExports
+       { names = { "default" -> ExportDefaultBinding {default_loc = [1:7-14]; index = 0} };
+         types = {}; stars = []; type_stars = [];
+         strict = true })
 
     Local defs:
     0. ClassBinding {id_loc = [1:21-22];
@@ -4084,9 +4175,10 @@ let%expect_test "declared_export_default_function_binding" =
     declare export default function f(): void;
   |};
   [%expect {|
-    ESExports {names = { "default" -> ExportDefaultBinding {default_loc = [1:15-22]; index = 0} };
-      types = {}; stars = []; type_stars = [];
-      strict = true}
+    (ESExports
+       { names = { "default" -> ExportDefaultBinding {default_loc = [1:15-22]; index = 0} };
+         types = {}; stars = []; type_stars = [];
+         strict = true })
 
     Local defs:
     0. DeclareFun {id_loc = [1:32-33];
@@ -4103,9 +4195,10 @@ let%expect_test "declared_export_default_class_binding" =
     declare export default class C {};
   |};
   [%expect {|
-    ESExports {names = { "default" -> ExportDefaultBinding {default_loc = [1:15-22]; index = 0} };
-      types = {}; stars = []; type_stars = [];
-      strict = true}
+    (ESExports
+       { names = { "default" -> ExportDefaultBinding {default_loc = [1:15-22]; index = 0} };
+         types = {}; stars = []; type_stars = [];
+         strict = true })
 
     Local defs:
     0. DeclareClassBinding {id_loc = [1:29-30];
@@ -4123,7 +4216,7 @@ let%expect_test "module_ref_prefix" =
     module.exports = "m#foo";
   |};
   [%expect {|
-    CJSExports {types = {}; type_stars = []; strict = true}
+    (CJSExports { types = {}; type_stars = []; strict = true })
 
     Module refs:
     0. foo
@@ -4136,9 +4229,10 @@ let%expect_test "enum_export" =
     export enum E { A, B };
   |};
   [%expect {|
-    ESExports {names = { "E" -> (ExportBinding 0) };
-      types = {}; stars = []; type_stars = [];
-      strict = true}
+    (ESExports
+       { names = { "E" -> (ExportBinding 0) };
+         types = {}; stars = []; type_stars = [];
+         strict = true })
 
     Local defs:
     0. EnumBinding {id_loc = [1:12-13];
@@ -4151,9 +4245,10 @@ let%expect_test "enum_default_export" =
     export default enum E { A, B }
   |};
   [%expect {|
-    ESExports {names = { "default" -> ExportDefaultBinding {default_loc = [1:7-14]; index = 0} };
-      types = {}; stars = []; type_stars = [];
-      strict = true}
+    (ESExports
+       { names = { "default" -> ExportDefaultBinding {default_loc = [1:7-14]; index = 0} };
+         types = {}; stars = []; type_stars = [];
+         strict = true })
 
     Local defs:
     0. EnumBinding {id_loc = [1:20-21];
@@ -4168,9 +4263,10 @@ let%expect_test "enum_stmt" =
     export {E}
   |};
   [%expect {|
-    ESExports {names = { "E" -> (ExportRef LocalRef {ref_loc = [2:8-9]; index = 0}) };
-      types = {}; stars = []; type_stars = [];
-      strict = true}
+    (ESExports
+       { names = { "E" -> (ExportRef LocalRef {ref_loc = [2:8-9]; index = 0}) };
+         types = {}; stars = []; type_stars = [];
+         strict = true })
 
     Local defs:
     0. EnumBinding {id_loc = [1:5-6];
@@ -4183,9 +4279,10 @@ let%expect_test "enum_bool_lit" =
     export enum E { A = true }
   |};
   [%expect {|
-    ESExports {names = { "E" -> (ExportBinding 0) };
-      types = {}; stars = []; type_stars = [];
-      strict = true}
+    (ESExports
+       { names = { "E" -> (ExportBinding 0) };
+         types = {}; stars = []; type_stars = [];
+         strict = true })
 
     Local defs:
     0. EnumBinding {id_loc = [1:12-13];
@@ -4198,9 +4295,10 @@ let%expect_test "enum_bool" =
     export enum E { A = true, B = false }
   |};
   [%expect {|
-    ESExports {names = { "E" -> (ExportBinding 0) };
-      types = {}; stars = []; type_stars = [];
-      strict = true}
+    (ESExports
+       { names = { "E" -> (ExportBinding 0) };
+         types = {}; stars = []; type_stars = [];
+         strict = true })
 
     Local defs:
     0. EnumBinding {id_loc = [1:12-13];
@@ -4213,9 +4311,10 @@ let%expect_test "enum_number_truthy" =
     export enum E { A = 1, B = 2 }
   |};
   [%expect {|
-    ESExports {names = { "E" -> (ExportBinding 0) };
-      types = {}; stars = []; type_stars = [];
-      strict = true}
+    (ESExports
+       { names = { "E" -> (ExportBinding 0) };
+         types = {}; stars = []; type_stars = [];
+         strict = true })
 
     Local defs:
     0. EnumBinding {id_loc = [1:12-13];
@@ -4228,9 +4327,10 @@ let%expect_test "enum_number_any" =
     export enum E { A = 0, B = 1 }
   |};
   [%expect {|
-    ESExports {names = { "E" -> (ExportBinding 0) };
-      types = {}; stars = []; type_stars = [];
-      strict = true}
+    (ESExports
+       { names = { "E" -> (ExportBinding 0) };
+         types = {}; stars = []; type_stars = [];
+         strict = true })
 
     Local defs:
     0. EnumBinding {id_loc = [1:12-13];
@@ -4243,9 +4343,10 @@ let%expect_test "enum_string_any" =
     export enum E { A = "", B = "B" }
   |};
   [%expect {|
-    ESExports {names = { "E" -> (ExportBinding 0) };
-      types = {}; stars = []; type_stars = [];
-      strict = true}
+    (ESExports
+       { names = { "E" -> (ExportBinding 0) };
+         types = {}; stars = []; type_stars = [];
+         strict = true })
 
     Local defs:
     0. EnumBinding {id_loc = [1:12-13];
@@ -4258,9 +4359,10 @@ let%expect_test "enum_symbol" =
     export enum E of symbol { A, B }
   |};
   [%expect {|
-    ESExports {names = { "E" -> (ExportBinding 0) };
-      types = {}; stars = []; type_stars = [];
-      strict = true}
+    (ESExports
+       { names = { "E" -> (ExportBinding 0) };
+         types = {}; stars = []; type_stars = [];
+         strict = true })
 
     Local defs:
     0. EnumBinding {id_loc = [1:12-13];
@@ -4273,9 +4375,10 @@ let%expect_test "enum_unknown_members" =
     export enum E { A, B, ... };
   |};
   [%expect {|
-    ESExports {names = { "E" -> (ExportBinding 0) };
-      types = {}; stars = []; type_stars = [];
-      strict = true}
+    (ESExports
+       { names = { "E" -> (ExportBinding 0) };
+         types = {}; stars = []; type_stars = [];
+         strict = true })
 
     Local defs:
     0. EnumBinding {id_loc = [1:12-13];
@@ -4288,9 +4391,10 @@ let%expect_test "enum_disabled" =
     export enum E {}
   |};
   [%expect {|
-    ESExports {names = { "E" -> (ExportBinding 0) };
-      types = {}; stars = []; type_stars = [];
-      strict = true}
+    (ESExports
+       { names = { "E" -> (ExportBinding 0) };
+         types = {}; stars = []; type_stars = [];
+         strict = true })
 
     Local defs:
     0. DisabledEnumBinding {id_loc = [1:12-13]; name = "E"} |}]
@@ -4318,7 +4422,7 @@ let%expect_test "builtin_module" =
     0. TypeAlias {id_loc = [1:5-6]; name = "T"; tparams = Mono; body = (Annot (String [1:9-15]))}
 
     Builtin module foo:
-    CJSExports {types = {}; type_stars = []; strict = true}
+    (CJSExports { types = {}; type_stars = []; strict = true })
 
     Export_def:
     (TyRef (Unqualified LocalRef {ref_loc = [3:26-27]; index = 0})) |}]
@@ -4334,13 +4438,13 @@ let%expect_test "builtin_module_2" =
   |}];
   [%expect {|
     Builtin module bar:
-    CJSExports {types = {}; type_stars = []; strict = true}
+    (CJSExports { types = {}; type_stars = []; strict = true })
 
     Export_def:
     (Annot (Number [5:26-32]))
 
     Builtin module foo:
-    CJSExports {types = {}; type_stars = []; strict = true}
+    (CJSExports { types = {}; type_stars = []; strict = true })
 
     Export_def:
     (Annot (String [2:26-32])) |}]
@@ -4350,9 +4454,10 @@ let%expect_test "this_param_1" =
     export function foo(this : mixed) : void {}
   |};
   [%expect {|
-    ESExports {names = { "foo" -> (ExportBinding 0) };
-      types = {}; stars = []; type_stars = [];
-      strict = true}
+    (ESExports
+       { names = { "foo" -> (ExportBinding 0) };
+         types = {}; stars = []; type_stars = [];
+         strict = true })
 
     Local defs:
     0. FunBinding {id_loc = [1:16-19];
@@ -4372,9 +4477,10 @@ let%expect_test "this_param_2" =
     }
   |};
   [%expect {|
-    ESExports {names = { "A" -> (ExportBinding 0) };
-      types = {}; stars = []; type_stars = [];
-      strict = true}
+    (ESExports
+       { names = { "A" -> (ExportBinding 0) };
+         types = {}; stars = []; type_stars = [];
+         strict = true })
 
     Local defs:
     0. ClassBinding {id_loc = [1:13-14];
@@ -4400,9 +4506,10 @@ let%expect_test "this_param_3" =
     declare export function foo(this : mixed) : void;
   |};
   [%expect {|
-    ESExports {names = { "foo" -> (ExportBinding 0) };
-      types = {}; stars = []; type_stars = [];
-      strict = true}
+    (ESExports
+       { names = { "foo" -> (ExportBinding 0) };
+         types = {}; stars = []; type_stars = [];
+         strict = true })
 
     Local defs:
     0. DeclareFun {id_loc = [1:24-27];
@@ -4421,9 +4528,10 @@ let%expect_test "this_param_4" =
     }
   |};
   [%expect {|
-    ESExports {names = { "A" -> (ExportBinding 0) };
-      types = {}; stars = []; type_stars = [];
-      strict = true}
+    (ESExports
+       { names = { "A" -> (ExportBinding 0) };
+         types = {}; stars = []; type_stars = [];
+         strict = true })
 
     Local defs:
     0. DeclareClassBinding {id_loc = [1:21-22];
@@ -4450,7 +4558,7 @@ let%expect_test "this_param_5" =
     export type Foo = (this : mixed) => void
   |};
   [%expect {|
-    CJSExports {types = { "Foo" -> (ExportTypeBinding 0) }; type_stars = []; strict = true}
+    (CJSExports { types = { "Foo" -> (ExportTypeBinding 0) }; type_stars = []; strict = true })
 
     Local defs:
     0. TypeAlias {id_loc = [1:12-15];
@@ -4470,7 +4578,7 @@ let%expect_test "this_param_6" =
     export type O = { f : (this : mixed) => void, a : number }
   |};
   [%expect {|
-    CJSExports {types = { "O" -> (ExportTypeBinding 0) }; type_stars = []; strict = true}
+    (CJSExports { types = { "O" -> (ExportTypeBinding 0) }; type_stars = []; strict = true })
 
     Local defs:
     0. TypeAlias {id_loc = [1:12-13];

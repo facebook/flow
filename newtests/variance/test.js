@@ -84,10 +84,10 @@ export default (suite(({addFile, addFiles, addCode}) => [
            62: (rwB: RWA);
                 ^^^ Cannot cast \`rwB\` to \`RWA\` because \`B\` [1] is incompatible with \`A\` [2] in property \`p\`. [incompatible-cast]
             References:
-             12:     type RWB = {p: B}
-                                    ^ [1]
-              9:     type RWA = {p: A}
-                                    ^ [2]
+             12:     type RWB = {|p: B|}
+                                     ^ [1]
+              9:     type RWA = {|p: A|}
+                                     ^ [2]
         `,
       ),
     addCode('(drwB: dRWA);')
@@ -149,10 +149,10 @@ export default (suite(({addFile, addFiles, addCode}) => [
            70: (woB: RWA);
                 ^^^ Cannot cast \`woB\` to \`RWA\` because \`A\` [1] is incompatible with \`B\` [2] in property \`p\`. [incompatible-cast]
             References:
-              9:     type RWA = {p: A}
-                                    ^ [1]
-             14:     type WOB = {-p: B}
-                                     ^ [2]
+              9:     type RWA = {|p: A|}
+                                     ^ [1]
+             14:     type WOB = {|-p: B|}
+                                      ^ [2]
         `,
       ),
     addCode('(dwoB: dRWA);')
@@ -314,10 +314,10 @@ export default (suite(({addFile, addFiles, addCode}) => [
            62: (rwB: WOA);
                 ^^^ Cannot cast \`rwB\` to \`WOA\` because \`A\` [1] is incompatible with \`B\` [2] in property \`p\`. [incompatible-cast]
             References:
-             11:     type WOA = {-p: A}
-                                     ^ [1]
-             12:     type RWB = {p: B}
-                                    ^ [2]
+             11:     type WOA = {|-p: A|}
+                                      ^ [1]
+             12:     type RWB = {|p: B|}
+                                     ^ [2]
         `,
       ),
     addCode('(drwB: dWOA);')
@@ -370,10 +370,10 @@ export default (suite(({addFile, addFiles, addCode}) => [
            70: (woB: WOA);
                 ^^^ Cannot cast \`woB\` to \`WOA\` because \`A\` [1] is incompatible with \`B\` [2] in property \`p\`. [incompatible-cast]
             References:
-             11:     type WOA = {-p: A}
-                                     ^ [1]
-             14:     type WOB = {-p: B}
-                                     ^ [2]
+             11:     type WOA = {|-p: A|}
+                                      ^ [1]
+             14:     type WOB = {|-p: B|}
+                                      ^ [2]
         `,
       ),
     addCode('(dwoB: dWOA);')
@@ -402,8 +402,8 @@ export default (suite(({addFile, addFiles, addCode}) => [
             References:
              42: ({p: new A}: RWB);
                       ^^^^^ [1]
-             12:     type RWB = {p: B}
-                                    ^ [2]
+             12:     type RWB = {|p: B|}
+                                     ^ [2]
         `,
       ),
     addCode('({p: new A}: dRWB);')
@@ -428,10 +428,10 @@ export default (suite(({addFile, addFiles, addCode}) => [
            46: (rwA: RWB);
                 ^^^ Cannot cast \`rwA\` to \`RWB\` because \`A\` [1] is incompatible with \`B\` [2] in property \`p\`. [incompatible-cast]
             References:
-              9:     type RWA = {p: A}
-                                    ^ [1]
-             12:     type RWB = {p: B}
-                                    ^ [2]
+              9:     type RWA = {|p: A|}
+                                     ^ [1]
+             12:     type RWB = {|p: B|}
+                                     ^ [2]
         `,
       ),
     addCode('(drwA: dRWB);')
@@ -465,10 +465,10 @@ export default (suite(({addFile, addFiles, addCode}) => [
            50: (roA: RWB);
                 ^^^ Cannot cast \`roA\` to \`RWB\` because \`A\` [1] is incompatible with \`B\` [2] in property \`p\`. [incompatible-cast]
             References:
-             10:     type ROA = {+p: A}
-                                     ^ [1]
-             12:     type RWB = {p: B}
-                                    ^ [2]
+             10:     type ROA = {|+p: A|}
+                                      ^ [1]
+             12:     type RWB = {|p: B|}
+                                     ^ [2]
         `,
       ),
     addCode('(droA: dRWB);')
@@ -534,8 +534,8 @@ export default (suite(({addFile, addFiles, addCode}) => [
             References:
              42: ({p: new A}: ROB);
                       ^^^^^ [1]
-             13:     type ROB = {+p: B}
-                                     ^ [2]
+             13:     type ROB = {|+p: B|}
+                                      ^ [2]
         `,
       ),
     addCode('({p: new A}: dROB);')
@@ -560,10 +560,10 @@ export default (suite(({addFile, addFiles, addCode}) => [
            46: (rwA: ROB);
                 ^^^ Cannot cast \`rwA\` to \`ROB\` because \`A\` [1] is incompatible with \`B\` [2] in property \`p\`. [incompatible-cast]
             References:
-              9:     type RWA = {p: A}
-                                    ^ [1]
-             13:     type ROB = {+p: B}
-                                     ^ [2]
+              9:     type RWA = {|p: A|}
+                                     ^ [1]
+             13:     type ROB = {|+p: B|}
+                                      ^ [2]
         `,
       ),
     addCode('(drwA: dROB);')
@@ -588,10 +588,10 @@ export default (suite(({addFile, addFiles, addCode}) => [
            50: (roA: ROB);
                 ^^^ Cannot cast \`roA\` to \`ROB\` because \`A\` [1] is incompatible with \`B\` [2] in property \`p\`. [incompatible-cast]
             References:
-             10:     type ROA = {+p: A}
-                                     ^ [1]
-             13:     type ROB = {+p: B}
-                                     ^ [2]
+             10:     type ROA = {|+p: A|}
+                                      ^ [1]
+             13:     type ROB = {|+p: B|}
+                                      ^ [2]
         `,
       ),
     addCode('(droA: dROB);')
@@ -818,10 +818,10 @@ export default (suite(({addFile, addFiles, addCode}) => [
           54: (rwA: $Shape<RWB>);
                ^^^ Cannot cast \`rwA\` to \`RWB\` because \`A\` [1] is incompatible with \`B\` [2] in property \`p\`. [incompatible-cast]
            References:
-             9:     type RWA = {p: A}
-                                   ^ [1]
-            12:     type RWB = {p: B}
-                                   ^ [2]
+             9:     type RWA = {|p: A|}
+                                    ^ [1]
+            12:     type RWB = {|p: B|}
+                                    ^ [2]
        `,
      ),
 
@@ -833,10 +833,10 @@ export default (suite(({addFile, addFiles, addCode}) => [
           56: (roA: $Shape<RWB>);
                ^^^ Cannot cast \`roA\` to \`RWB\` because \`A\` [1] is incompatible with \`B\` [2] in property \`p\`. [incompatible-cast]
            References:
-            10:     type ROA = {+p: A}
-                                    ^ [1]
-            12:     type RWB = {p: B}
-                                   ^ [2]
+            10:     type ROA = {|+p: A|}
+                                     ^ [1]
+            12:     type RWB = {|p: B|}
+                                    ^ [2]
        `,
      ),
 
@@ -858,12 +858,12 @@ export default (suite(({addFile, addFiles, addCode}) => [
 
     // named properties
 
-    type RWA = {p: A}
-    type ROA = {+p: A}
-    type WOA = {-p: A}
-    type RWB = {p: B}
-    type ROB = {+p: B}
-    type WOB = {-p: B}
+    type RWA = {|p: A|}
+    type ROA = {|+p: A|}
+    type WOA = {|-p: A|}
+    type RWB = {|p: B|}
+    type ROB = {|+p: B|}
+    type WOB = {|-p: B|}
 
     declare var rwA: RWA;
     declare var roA: ROA;

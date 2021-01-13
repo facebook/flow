@@ -154,8 +154,8 @@ class ['loc] mapper =
       | (loc, With stuff) -> id_loc this#with_ loc stuff stmt (fun stuff -> (loc, With stuff))
       | (loc, TypeAlias stuff) ->
         id_loc this#type_alias loc stuff stmt (fun stuff -> (loc, TypeAlias stuff))
-      (* TODO: Flow specific stuff *)
-      | (_loc, DeclareOpaqueType _) -> stmt
+      | (loc, DeclareOpaqueType otype) ->
+        id_loc this#opaque_type loc otype stmt (fun otype -> (loc, OpaqueType otype))
 
     method comment (c : 'loc Ast.Comment.t) = c
 

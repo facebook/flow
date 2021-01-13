@@ -195,7 +195,7 @@ obj['n'](0)
 object-2.js
 // @flow
 
-function foo(x: {|l: () => void, m: () => number, n: () => number|}): void {}
+function foo(x: {|l: () => void, m(): number, n: () => number|}): void {}
 
 foo({
   m(): number { return 1; },

@@ -14,6 +14,7 @@ type autocomplete_type =
   | Accomment
   (* identifier references *)
   | Acid of {
+      token: string;
       include_super: bool;
       include_this: bool;
     }
@@ -24,7 +25,7 @@ type autocomplete_type =
   (* a module name *)
   | Acmodule
   (* type identifiers *)
-  | Actype
+  | Actype of { token: string }
   (* qualified type identifiers *)
   | Acqualifiedtype of Type.t
   (* member expressions *)
@@ -33,7 +34,12 @@ type autocomplete_type =
       in_optional_chain: bool;
     }
   (* JSX attributes *)
-  | Acjsx of string * SSet.t * Type.t
+  | Acjsx of {
+      attribute_name: string;
+      used_attr_names: SSet.t;
+      component_t: Type.t;
+      has_value: bool;
+    }
   (* JSX text child *)
   | Acjsxtext
 
@@ -81,15 +87,15 @@ class process_request_searcher (from_trigger_character : bool) (cursor : Loc.t) 
       else
         super#comment c
 
-    method! t_identifier (((loc, _), _) as ident) =
+    method! t_identifier (((loc, _), { Flow_ast.Identifier.name; _ }) as ident) =
       if this#covers_target loc then
-        this#find loc (Acid { include_super = false; include_this = false })
+        this#find loc (Acid { token = name; include_super = false; include_this = false })
       else
         super#t_identifier ident
 
-    method! jsx_identifier (((ac_loc, _), _) as ident) =
+    method! jsx_identifier (((ac_loc, _), { Flow_ast.JSX.Identifier.name; _ }) as ident) =
       if this#covers_target ac_loc then
-        this#find ac_loc (Acid { include_super = false; include_this = false });
+        this#find ac_loc (Acid { token = name; include_super = false; include_this = false });
       ident
 
     method! member expr =
@@ -159,13 +165,14 @@ class process_request_searcher (from_trigger_character : bool) (cursor : Loc.t) 
                     Attribute.name =
                       Attribute.Identifier
                         ((loc, _), { Identifier.name = attribute_name; comments = _ });
-                    _;
+                    value;
                   } ) ->
               let found' =
                 match found with
                 | Some _ -> found
                 | None when this#covers_target loc ->
-                  Some (attribute_name, loc, type_of_jsx_name component_name)
+                  let has_value = Base.Option.is_some value in
+                  Some (attribute_name, loc, type_of_jsx_name component_name, has_value)
                 | None -> None
               in
               (SSet.add attribute_name used_attr_names, found')
@@ -174,8 +181,8 @@ class process_request_searcher (from_trigger_character : bool) (cursor : Loc.t) 
           attributes
       in
       Base.Option.iter
-        ~f:(fun (attribute_name, loc, component_t) ->
-          this#find loc (Acjsx (attribute_name, used_attr_names, component_t)))
+        ~f:(fun (attribute_name, loc, component_t, has_value) ->
+          this#find loc (Acjsx { attribute_name; used_attr_names; component_t; has_value }))
         found;
       super#jsx_opening_element elt
 
@@ -217,8 +224,8 @@ class process_request_searcher (from_trigger_character : bool) (cursor : Loc.t) 
 
     method! class_body x =
       try super#class_body x
-      with Found (tparams, loc, Acid _) ->
-        raise (Found (tparams, loc, Acid { include_super = true; include_this = true }))
+      with Found (tparams, loc, Acid id) ->
+        raise (Found (tparams, loc, Acid { id with include_super = true; include_this = true }))
 
     method! function_expression x =
       try super#function_expression x
@@ -234,7 +241,8 @@ class process_request_searcher (from_trigger_character : bool) (cursor : Loc.t) 
       let open Flow_ast.Type.Generic.Identifier in
       begin
         match id with
-        | Unqualified ((loc, _), _) when this#covers_target loc -> this#find loc Actype
+        | Unqualified ((loc, _), { Flow_ast.Identifier.name; _ }) when this#covers_target loc ->
+          this#find loc (Actype { token = name })
         | Qualified (_, { qualification; id = ((loc, _), _) }) when this#covers_target loc ->
           let qualification_type = type_of_qualification qualification in
           this#find loc (Acqualifiedtype qualification_type)

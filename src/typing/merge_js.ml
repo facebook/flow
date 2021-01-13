@@ -202,18 +202,10 @@ let detect_unnecessary_invariants cx =
       Flow_js.add_output cx (Error_message.EUnnecessaryInvariant (loc, reason)))
     (Context.unnecessary_invariants cx)
 
-let detect_invalid_type_assert_calls cx file_sigs cxs tasts =
-  if Context.type_asserts cx then Type_asserts.detect_invalid_calls ~full_cx:cx file_sigs cxs tasts
+let detect_invalid_type_assert_calls cx file_sigs results =
+  if Context.type_asserts cx then Type_asserts.detect_invalid_calls ~full_cx:cx file_sigs results
 
-let force_annotations ~arch leader_cx other_cxs =
-  if arch = Options.Classic then
-    Base.List.iter
-      ~f:(fun cx ->
-        let should_munge_underscores = Context.should_munge_underscores cx in
-        Context.module_ref cx
-        |> Flow_js.lookup_module leader_cx
-        |> Flow_js.enforce_strict leader_cx ~should_munge_underscores)
-      (leader_cx :: other_cxs)
+let detect_es6_import_export_errors = Strict_es6_import_export.detect_errors
 
 let detect_escaped_generics results =
   Base.List.iter
@@ -235,11 +227,11 @@ let detect_non_voidable_properties cx =
         if ISet.mem id seen_ids then
           false
         else (
-          match Flow_js.possible_types cx id with
+          match Flow_js_utils.possible_types cx id with
           (* tvar has no lower bounds: we conservatively assume it's non-voidable
            * except in the special case when it also has no upper bounds
            *)
-          | [] -> Flow_js.possible_uses cx id = []
+          | [] -> Flow_js_utils.possible_uses cx id = []
           (* tvar is resolved: look at voidability of the resolved type *)
           | [t] -> is_voidable (ISet.add id seen_ids) t
           (* tvar is unresolved: conservatively assume it is non-voidable *)
@@ -283,59 +275,10 @@ let detect_non_voidable_properties cx =
       check_properties private_property_map private_property_errors)
     (Context.voidable_checks cx)
 
-let merge_tvar =
-  Type.(
-    let possible_types = Flow_js.possible_types in
-    let rec collect_lowers ~filter_empty cx seen acc = function
-      | [] -> Base.List.rev acc
-      | t :: ts ->
-        (match t with
-        (* Recursively unwrap unseen tvars *)
-        | OpenT (_, id) ->
-          if ISet.mem id seen then
-            collect_lowers ~filter_empty cx seen acc ts
-          (* already unwrapped *)
-          else
-            let seen = ISet.add id seen in
-            collect_lowers ~filter_empty cx seen acc (possible_types cx id @ ts)
-        (* Ignore empty in existentials. This behavior is sketchy, but the error
-           behavior without this filtering is worse. If an existential accumulates
-           an empty, we error but it's very non-obvious how the empty arose. *)
-        | DefT (_, _, EmptyT flavor) when filter_empty flavor ->
-          collect_lowers ~filter_empty cx seen acc ts
-        (* Everything else becomes part of the merge typed *)
-        | _ -> collect_lowers ~filter_empty cx seen (t :: acc) ts)
-    in
-    fun ?filter_empty cx r id ->
-      (* Because the behavior of existentials are so difficult to predict, they
-         enjoy some special casing here. When existential types are finally
-         removed, this logic can be removed. *)
-      let existential =
-        Reason.(
-          match desc_of_reason r with
-          | RExistential -> true
-          | _ -> false)
-      in
-      let filter_empty flavor =
-        existential
-        ||
-        match filter_empty with
-        | Some filter_empty -> filter_empty flavor
-        | None -> false
-      in
-      let lowers =
-        let seen = ISet.singleton id in
-        collect_lowers cx seen [] (possible_types cx id) ~filter_empty
-      in
-      match lowers with
-      | [t] -> t
-      | t0 :: t1 :: ts -> UnionT (r, UnionRep.make t0 t1 ts)
-      | [] ->
-        let uses = Flow_js.possible_uses cx id in
-        if uses = [] || existential then
-          AnyT.locationless Unsoundness.existential
-        else
-          MergedT (r, uses))
+let check_implicit_instantiations cx =
+  if Context.run_post_inference_implicit_instantiation cx then
+    let implicit_instantiation_checks = Context.implicit_instantiation_checks cx in
+    List.iter (Implicit_instantiation.check_implicit_instantiation cx) implicit_instantiation_checks
 
 let merge_trust_var constr =
   Trust_constraint.(
@@ -358,7 +301,7 @@ class resolver_visitor =
     method! type_ cx map_cx t =
       let open Type in
       match t with
-      | OpenT (r, id) -> merge_tvar ~filter_empty cx r id
+      | OpenT (r, id) -> Flow_js_utils.merge_tvar ~filter_empty cx r id
       | EvalT (t', dt, _id) ->
         let t'' = self#type_ cx map_cx t' in
         let dt' = self#defer_use_type cx map_cx dt in
@@ -452,6 +395,104 @@ let detect_literal_subtypes =
         Flow_js.flow cx (t, u))
       checks
 
+let get_aloc_tables ~get_aloc_table_unsafe component =
+  Nel.fold_left
+    (fun tables filename ->
+      let table = lazy (get_aloc_table_unsafe filename) in
+      FilenameMap.add filename table tables)
+    FilenameMap.empty
+    component
+
+let get_aloc_table_rev filename aloc_tables =
+  let table = FilenameMap.find filename aloc_tables in
+  lazy
+    (try Lazy.force table |> ALoc.reverse_table
+     with
+     (* If we aren't in abstract locations mode, or are in a libdef, we
+        won't have an aloc table, so we just create an empty reverse
+        table. We handle this exception here rather than explicitly
+        making an optional version of the get_aloc_table function for
+        simplicity. *)
+     | Parsing_heaps_exceptions.Sig_ast_ALoc_table_not_found _ ->
+       ALoc.make_empty_reverse_table ())
+
+let merge_builtins cx sig_cx master_cx =
+  Flow_js_utils.mk_builtins cx;
+  Context.merge_into sig_cx master_cx;
+  implicit_require cx master_cx cx
+
+let get_lint_severities metadata strict_mode lint_severities =
+  if metadata.Context.strict || metadata.Context.strict_local then
+    StrictModeSettings.fold
+      (fun lint_kind lint_severities ->
+        LintSettings.set_value lint_kind (Severity.Err, None) lint_severities)
+      strict_mode
+      lint_severities
+  else
+    lint_severities
+
+let merge_imports cx sig_cx reqs impl_cxs =
+  let open Reqs in
+  reqs.impls
+  |> RequireMap.iter (fun (m, fn_to) locs ->
+         let cx_to = FilenameMap.find fn_to impl_cxs in
+         ALocSet.iter (fun loc -> explicit_impl_require cx (sig_cx, m, loc, cx_to)) locs);
+
+  reqs.dep_impls
+  |> RequireMap.iter (fun (m, fn_to) (cx_from, locs) ->
+         let cx_to = FilenameMap.find fn_to impl_cxs in
+         ALocSet.iter (fun loc -> explicit_impl_require cx (cx_from, m, loc, cx_to)) locs);
+
+  reqs.res
+  |> RequireMap.iter (fun (f, fn_to) locs ->
+         let cx_to = FilenameMap.find fn_to impl_cxs in
+         ALocSet.iter (fun loc -> explicit_res_require cx (loc, f, cx_to)) locs);
+
+  reqs.decls
+  |> RequireMap.iter (fun (m, fn_to) (locs, resolved_m) ->
+         let cx_to = FilenameMap.find fn_to impl_cxs in
+         ALocSet.iter (fun loc -> explicit_decl_require cx (m, loc, resolved_m, cx_to)) locs);
+
+  reqs.unchecked
+  |> RequireMap.iter (fun (m, fn_to) locs ->
+         let cx_to = FilenameMap.find fn_to impl_cxs in
+         ALocSet.iter (fun loc -> explicit_unchecked_require cx (m, loc, cx_to)) locs)
+
+(* Post-merge errors.
+ *
+ * At this point, all dependencies have been merged and the component has been
+ * linked together. Any constraints should have already been evaluated, which
+ * means we can complain about things that either haven't happened yet, or
+ * which require complete knowledge of tvar bounds.
+ *)
+let post_merge_checks cx metadata file_sigs results =
+  detect_sketchy_null_checks cx;
+  detect_non_voidable_properties cx;
+  check_implicit_instantiations cx;
+  detect_test_prop_misses cx;
+  detect_unnecessary_optional_chains cx;
+  detect_unnecessary_invariants cx;
+  detect_invalid_type_assert_calls cx file_sigs results;
+  detect_es6_import_export_errors cx metadata results;
+  detect_escaped_generics results;
+  detect_matching_props_violations cx;
+  detect_literal_subtypes cx
+
+type merge_options =
+  | Merge_options of {
+      new_signatures: bool;
+      phase: Context.phase;
+      metadata: Context.metadata;
+      lint_severities: Severity.severity LintSettings.t;
+      strict_mode: StrictModeSettings.t;
+    }
+
+type merge_getters = {
+  get_ast_unsafe: File_key.t -> get_ast_return;
+  get_aloc_table_unsafe: File_key.t -> ALoc.table;
+  get_docblock_unsafe: File_key.t -> Docblock.t;
+}
+
 (* Merge a component with its "implicit requires" and "explicit requires." The
    implicit requires are those defined in libraries. For the explicit
    requires, we need to merge only those parts of the dependency graph that the
@@ -484,137 +525,99 @@ let detect_literal_subtypes =
 
    5. Link the local references to libraries in master_cx and component_cxs.
 *)
-let merge_component
-    ~arch
-    ~metadata
-    ~lint_severities
-    ~strict_mode
-    ~file_sigs
-    ~get_ast_unsafe
-    ~get_aloc_table_unsafe
-    ~get_docblock_unsafe
-    ~phase
-    component
-    reqs
-    dep_cxs
-    (master_cx : Context.sig_t) =
-  let aloc_tables =
-    Nel.fold_left
-      (fun tables filename ->
-        let table = lazy (get_aloc_table_unsafe filename) in
-        FilenameMap.add filename table tables)
-      FilenameMap.empty
-      component
-  in
+let merge_component ~opts ~getters ~file_sigs component reqs dep_cxs master_cx =
+  let (Merge_options { phase; metadata; lint_severities; strict_mode; _ }) = opts in
+  let { get_ast_unsafe; get_aloc_table_unsafe; get_docblock_unsafe } = getters in
+  let aloc_tables = get_aloc_tables ~get_aloc_table_unsafe component in
   let sig_cx = Context.make_sig () in
   let ccx = Context.make_ccx sig_cx aloc_tables in
   let need_merge_master_cx = ref true in
+  (* Iterate over component *)
   let (rev_results, impl_cxs) =
     Nel.fold_left
       (fun (results, impl_cxs) filename ->
-        (* create cx *)
         let info = get_docblock_unsafe filename in
         let metadata = Context.docblock_overrides info metadata in
         let module_ref = Files.module_ref filename in
-        let rev_table =
-          let table = FilenameMap.find filename aloc_tables in
-          lazy
-            (try Lazy.force table |> ALoc.reverse_table
-             with
-             (* If we aren't in abstract locations mode, or are in a libdef, we
-                won't have an aloc table, so we just create an empty reverse
-                table. We handle this exception here rather than explicitly
-                making an optional version of the get_aloc_table function for
-                simplicity. *)
-             | Parsing_heaps_exceptions.Sig_ast_ALoc_table_not_found _ ->
-               ALoc.make_empty_reverse_table ())
-        in
+        let rev_table = get_aloc_table_rev filename aloc_tables in
         let cx = Context.make ccx metadata filename rev_table module_ref phase in
-        (* create builtins *)
+
+        (* Builtins *)
         if !need_merge_master_cx then (
           need_merge_master_cx := false;
-          Flow_js.mk_builtins cx;
-          Context.merge_into sig_cx master_cx;
-          implicit_require cx master_cx cx
+          merge_builtins cx sig_cx master_cx
         );
 
-        (* local inference *)
+        (* AST inference *)
         let (comments, ast) = get_ast_unsafe filename in
-        let lint_severities =
-          if metadata.Context.strict || metadata.Context.strict_local then
-            StrictModeSettings.fold
-              (fun lint_kind lint_severities ->
-                LintSettings.set_value lint_kind (Severity.Err, None) lint_severities)
-              strict_mode
-              lint_severities
-          else
-            lint_severities
-        in
+        let lint_severities = get_lint_severities metadata strict_mode lint_severities in
         let file_sig = FilenameMap.find filename file_sigs in
-        let tast =
-          Type_inference_js.infer_ast cx filename comments ast ~lint_severities ~file_sig
-        in
+        Type_inference_js.add_require_tvars cx file_sig;
+        Context.set_local_env cx file_sig.File_sig.With_ALoc.exported_locals;
+        let tast = Type_inference_js.infer_ast cx filename comments ast ~lint_severities in
         ((cx, ast, tast) :: results, FilenameMap.add filename cx impl_cxs))
       ([], FilenameMap.empty)
       component
   in
-  let results = Base.List.rev rev_results in
-  let (cxs, _, tasts) = Base.List.unzip3 results in
-  let (cx, other_cxs) = (Base.List.hd_exn cxs, Base.List.tl_exn cxs) in
+  let results = List.rev rev_results in
+  let (cx, _, _) = Base.List.hd_exn results in
 
+  (* Imports *)
   dep_cxs |> Base.List.iter ~f:(Context.merge_into sig_cx);
+  merge_imports cx sig_cx reqs impl_cxs;
 
-  Reqs.(
-    reqs.impls
-    |> RequireMap.iter (fun (m, fn_to) locs ->
-           let cx_to = FilenameMap.find fn_to impl_cxs in
-           ALocSet.iter (fun loc -> explicit_impl_require cx (sig_cx, m, loc, cx_to)) locs);
+  match results with
+  | [] -> failwith "there is at least one cx"
+  | x :: xs -> (x, xs)
 
-    reqs.dep_impls
-    |> RequireMap.iter (fun (m, fn_to) (cx_from, locs) ->
-           let cx_to = FilenameMap.find fn_to impl_cxs in
-           ALocSet.iter (fun loc -> explicit_impl_require cx (cx_from, m, loc, cx_to)) locs);
+(* This function is similar to merge_component in that it merges a component with
+   its requires. The difference is that, here, requires are merged _before_ running
+   inference on the component. This will be useful in making imported types available
+   for local inference of the input component. What makes this change possible is
+   that the input component is of size 1 and all imports have already been resolved
+   and optimized.
+*)
+let check_component ~opts ~getters ~file_sigs singleton_component reqs dep_cxs master_cx =
+  let (Merge_options { phase; metadata; lint_severities; strict_mode; _ }) = opts in
+  let { get_ast_unsafe; get_aloc_table_unsafe; get_docblock_unsafe } = getters in
 
-    reqs.res
-    |> RequireMap.iter (fun (f, fn_to) locs ->
-           let cx_to = FilenameMap.find fn_to impl_cxs in
-           ALocSet.iter (fun loc -> explicit_res_require cx (loc, f, cx_to)) locs);
+  let (filename, tl) = singleton_component in
+  assert (List.length tl = 0);
 
-    reqs.decls
-    |> RequireMap.iter (fun (m, fn_to) (locs, resolved_m) ->
-           let cx_to = FilenameMap.find fn_to impl_cxs in
-           ALocSet.iter (fun loc -> explicit_decl_require cx (m, loc, resolved_m, cx_to)) locs);
+  let aloc_tables = get_aloc_tables ~get_aloc_table_unsafe singleton_component in
+  let sig_cx = Context.make_sig () in
+  let ccx = Context.make_ccx sig_cx aloc_tables in
 
-    reqs.unchecked
-    |> RequireMap.iter (fun (m, fn_to) locs ->
-           let cx_to = FilenameMap.find fn_to impl_cxs in
-           ALocSet.iter (fun loc -> explicit_unchecked_require cx (m, loc, cx_to)) locs);
+  let info = get_docblock_unsafe filename in
+  let metadata = Context.docblock_overrides info metadata in
+  let module_ref = Files.module_ref filename in
+  let rev_table = get_aloc_table_rev filename aloc_tables in
+  let cx = Context.make ccx metadata filename rev_table module_ref phase in
+  let (comments, ast) = get_ast_unsafe filename in
+  let lint_severities = get_lint_severities metadata strict_mode lint_severities in
+  let file_sig = FilenameMap.find filename file_sigs in
 
-    (* Post-merge errors.
-     *
-     * At this point, all dependencies have been merged and the component has been
-     * linked together. Any constraints should have already been evaluated, which
-     * means we can complain about things that either haven't happened yet, or
-     * which require complete knowledge of tvar bounds.
-     *)
-    detect_sketchy_null_checks cx;
-    detect_non_voidable_properties cx;
-    detect_test_prop_misses cx;
-    detect_unnecessary_optional_chains cx;
-    detect_unnecessary_invariants cx;
-    detect_invalid_type_assert_calls cx file_sigs cxs tasts;
-    Strict_es6_import_export.detect_errors ~metadata ~phase cx results;
-    if phase = Context.Checking then detect_escaped_generics results;
+  (* Builtins *)
+  merge_builtins cx sig_cx master_cx;
 
-    (* Well-formed conditionals *)
-    detect_matching_props_violations cx;
-    detect_literal_subtypes cx;
+  (* Imports *)
+  Type_inference_js.add_require_tvars cx file_sig;
+  Context.set_local_env cx file_sig.File_sig.With_ALoc.exported_locals;
+  dep_cxs |> Base.List.iter ~f:(Context.merge_into sig_cx);
+  merge_imports cx sig_cx reqs (FilenameMap.singleton filename cx);
 
-    force_annotations ~arch cx other_cxs;
+  (* AST inference  *)
+  let tast = Type_inference_js.infer_ast cx filename comments ast ~lint_severities in
 
-    match results with
-    | [] -> failwith "there is at least one cx"
-    | x :: xs -> (x, xs))
+  (* Post-inference checks *)
+  post_merge_checks cx metadata file_sigs [(cx, ast, tast)];
+  Nel.one (cx, ast, tast)
+
+let merge_component ~opts:(Merge_options { phase; _ } as opts) =
+  match phase with
+  | Context.Checking -> check_component ~opts
+  | Context.Merging -> merge_component ~opts
+  | Context.Normalizing -> failwith "Normalizer should not be accessible through merge_js.ml"
 
 (****************** signature contexts *********************)
 
@@ -706,11 +709,8 @@ module ContextOptimizer = struct
 
       val mutable export_reason = None
 
-      val mutable export_file = None
-
       method reduce cx module_ref =
         let export = Context.find_module cx module_ref in
-        export_file <- reason_of_t export |> Reason.aloc_of_reason |> ALoc.source;
         let export' = self#type_ cx Polarity.Neutral export in
         reduced_module_map <- SMap.add module_ref export' reduced_module_map
 
@@ -722,7 +722,7 @@ module ContextOptimizer = struct
             SigHash.add_int sig_hash stable_id;
             id
           ) else
-            let t = merge_tvar cx r id in
+            let t = Flow_js_utils.merge_tvar cx r id in
             let node = Root { rank = 0; constraints = FullyResolved (unknown_use, t) } in
             reduced_graph <- IMap.add id node reduced_graph;
             let () =

@@ -50,6 +50,7 @@ type error_code =
   | IncompatibleCast
   | IncompatibleExact
   | IncompatibleExtend
+  | IncompatibleFunctionIndexer
   | IncompatibleIndexer
   | IncompatibleReturn
   | IncompatibleShape
@@ -211,6 +212,7 @@ let string_of_code : error_code -> string = function
   | IncompatibleCast -> "incompatible-cast"
   | IncompatibleExact -> "incompatible-exact"
   | IncompatibleExtend -> "incompatible-extend"
+  | IncompatibleFunctionIndexer -> "incompatible-function-indexer"
   | IncompatibleIndexer -> "incompatible-indexer"
   | IncompatibleReturn -> "incompatible-return"
   | IncompatibleShape -> "incompatible-shape"

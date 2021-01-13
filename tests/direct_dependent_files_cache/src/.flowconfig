@@ -1,5 +1,2 @@
 [include]
 ../node_modules
-
-[options]
-types_first=false

@@ -57,7 +57,89 @@ let create_suggestion ~diagnostics ~original ~suggestion uri loc =
               } );
       }
 
-let code_actions_of_errors ~reader ~diagnostics ~errors uri loc =
+(** [path_of_modulename src_dir t] converts the Modulename.t [t] to a string
+    suitable for importing [t] from a file in [src_dir]. that is, if it is a
+    filename, returns the path relative to [src_dir]. *)
+let path_of_modulename src_dir = function
+  | Modulename.String str -> Some str
+  | Modulename.Filename f ->
+    Base.Option.map
+      ~f:(fun src_dir ->
+        let rel = Files.relative_path src_dir (File_key.to_string f) in
+        if rel.[0] <> '.' then
+          "./" ^ rel
+        else
+          rel)
+      src_dir
+
+type text_edits = {
+  title: string;
+  edits: Lsp.TextEdit.t list;
+}
+
+let text_edits_of_import ~options ~reader ~src_dir ~ast kind name from =
+  match Module_heaps.Reader.get_info ~reader ~audit:Expensive.ok from with
+  | None -> Error ()
+  | Some info ->
+    (match path_of_modulename src_dir info.Module_heaps.module_name with
+    | None -> Error ()
+    | Some from ->
+      let title =
+        match kind with
+        | Export_index.Default -> Printf.sprintf "Import default from %s" from
+        | Export_index.Named -> Printf.sprintf "Import from %s" from
+        | Export_index.NamedType -> Printf.sprintf "Import type from %s" from
+        | Export_index.Namespace -> Printf.sprintf "Import * from %s" from
+      in
+      let binding = (kind, name) in
+      let edits =
+        Autofix_imports.add_import ~options ~binding ~from ast
+        |> Flow_lsp_conversions.flow_loc_patch_to_lsp_edits
+      in
+      Ok { title; edits })
+
+let suggest_imports ~options ~reader ~ast ~diagnostics ~exports ~name uri loc =
+  let open Lsp in
+  match Export_search.find_opt name exports with
+  | None -> []
+  | Some files ->
+    let src_dir = Lsp_helpers.lsp_uri_to_path uri |> Filename.dirname |> Base.Option.return in
+    let error_range = Flow_lsp_conversions.loc_to_lsp_range loc in
+    let relevant_diagnostics =
+      let open PublishDiagnostics in
+      diagnostics
+      |> List.filter (fun { source; code; range; _ } ->
+             source = Some "Flow" && code = StringCode "cannot-resolve-name" && range = error_range)
+    in
+    let options =
+      Js_layout_generator.{ default_opts with single_quotes = Options.format_single_quotes options }
+    in
+    Export_index.ExportSet.fold
+      (fun (file_key, export_kind) acc ->
+        match text_edits_of_import ~options ~reader ~src_dir ~ast export_kind name file_key with
+        | Error () -> acc
+        | Ok { edits; title } ->
+          let command =
+            CodeAction.Action
+              {
+                CodeAction.title;
+                kind = CodeActionKind.quickfix;
+                diagnostics = relevant_diagnostics;
+                action =
+                  CodeAction.BothEditThenCommand
+                    ( WorkspaceEdit.{ changes = UriMap.singleton uri edits },
+                      {
+                        Command.title = "";
+                        command = Command.Command "log";
+                        arguments = [Hh_json.JSON_String "import"];
+                      } );
+              }
+          in
+          command :: acc)
+      files
+      []
+
+let code_actions_of_errors ~options ~reader ~env ~ast ~diagnostics ~errors uri loc =
   Flow_error.ErrorSet.fold
     (fun error actions ->
       match
@@ -69,6 +151,13 @@ let code_actions_of_errors ~reader ~diagnostics ~errors uri loc =
         if Loc.contains error_loc loc then
           let original = reason |> Reason.desc_of_reason |> Reason.string_of_desc in
           create_suggestion ~diagnostics ~original ~suggestion uri error_loc :: actions
+        else
+          actions
+      | Error_message.EBuiltinLookupFailed { reason; name = Some name } ->
+        let error_loc = Reason.loc_of_reason reason in
+        if Loc.contains error_loc loc then
+          let { ServerEnv.exports; _ } = env in
+          suggest_imports ~options ~reader ~ast ~diagnostics ~exports ~name uri loc @ actions
         else
           actions
       | error_message ->
@@ -98,39 +187,49 @@ let code_actions_of_parse_errors ~diagnostics ~uri ~loc parse_errors =
     ~init:[]
     parse_errors
 
-let client_supports_quickfixes only =
+(** currently all of our code actions are quickfixes, so we can short circuit if the client
+    doesn't support those. *)
+let client_supports_quickfixes params =
+  let Lsp.CodeActionRequest.{ context = { only; _ }; _ } = params in
   Lsp.CodeActionKind.contains_kind_opt ~default:true Lsp.CodeActionKind.quickfix only
 
-let code_actions_at_loc ~reader ~options ~env ~profiling ~params ~file_key ~file_contents ~loc =
-  let open Lsp in
-  let CodeActionRequest.{ textDocument; range = _; context = { only; diagnostics } } = params in
-  if not (client_supports_quickfixes only) then
-    (* currently all of our code actions are quickfixes, so we can short circuit *)
-    Lwt.return (Ok [])
-  else
-    let uri = TextDocumentIdentifier.(textDocument.uri) in
-    match%lwt Types_js.type_contents ~options ~env ~profiling file_contents file_key with
-    | Ok (full_cx, _info, file_sig, tolerable_errors, ast, typed_ast, parse_errors) ->
-      let experimental_code_actions =
-        if Inference_utils.well_formed_exports_enabled options file_key then
-          autofix_exports_code_actions
-            ~full_cx
-            ~ast
-            ~file_sig
-            ~tolerable_errors
-            ~typed_ast
-            ~diagnostics
-            uri
-            loc
-        else
-          []
-      in
-      let error_fixes =
-        code_actions_of_errors ~reader ~diagnostics ~errors:(Context.errors full_cx) uri loc
-      in
-      let parse_error_fixes = code_actions_of_parse_errors ~diagnostics ~uri ~loc parse_errors in
-      Lwt.return (Ok (parse_error_fixes @ experimental_code_actions @ error_fixes))
-    | Error _ -> Lwt.return (Ok [])
+let code_actions_at_loc
+    ~options
+    ~env
+    ~reader
+    ~cx
+    ~file_sig
+    ~tolerable_errors
+    ~ast
+    ~typed_ast
+    ~parse_errors
+    ~diagnostics
+    ~uri
+    ~loc =
+  let experimental_code_actions =
+    autofix_exports_code_actions
+      ~full_cx:cx
+      ~ast
+      ~file_sig
+      ~tolerable_errors
+      ~typed_ast
+      ~diagnostics
+      uri
+      loc
+  in
+  let error_fixes =
+    code_actions_of_errors
+      ~options
+      ~reader
+      ~env
+      ~ast
+      ~diagnostics
+      ~errors:(Context.errors cx)
+      uri
+      loc
+  in
+  let parse_error_fixes = code_actions_of_parse_errors ~diagnostics ~uri ~loc parse_errors in
+  Lwt.return (Ok (parse_error_fixes @ experimental_code_actions @ error_fixes))
 
 let autofix_exports ~options ~env ~profiling ~file_key ~file_content =
   let open Autofix_exports in

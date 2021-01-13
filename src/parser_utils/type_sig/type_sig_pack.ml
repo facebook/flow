@@ -135,19 +135,25 @@ type 'loc export_type =
   | ExportTypeFrom of Remote_refs.index
 [@@deriving map, show { with_path = false }]
 
+type 'loc cjs_exports = {
+  types: 'loc export_type smap;
+  type_stars: ('loc * Module_refs.index) list;
+  strict: bool;
+}
+[@@deriving map, show { with_path = false }]
+
+type 'loc es_exports = {
+  names: 'loc export smap;
+  types: 'loc export_type smap;
+  stars: ('loc * Module_refs.index) list;
+  type_stars: ('loc * Module_refs.index) list;
+  strict: bool;
+}
+[@@deriving map, show { with_path = false }]
+
 type 'loc exports =
-  | CJSExports of {
-      types: 'loc export_type smap;
-      type_stars: ('loc * Module_refs.index) list;
-      strict: bool;
-    }
-  | ESExports of {
-      names: 'loc export smap;
-      types: 'loc export_type smap;
-      stars: ('loc * Module_refs.index) list;
-      type_stars: ('loc * Module_refs.index) list;
-      strict: bool;
-    }
+  | CJSExports of 'loc cjs_exports
+  | ESExports of 'loc es_exports
 [@@deriving map, show { with_path = false }]
 
 type 'loc pattern =

@@ -30,7 +30,7 @@ Flags: --pretty
 
 bar.js:4:5
 Flags: --pretty
-{"error":"not enough type information to autocomplete","result":[]}
+{"error":"not enough type information to extract members","result":[]}
 
 str.js:3:9
 Flags: --pretty
@@ -164,11 +164,11 @@ Flags: --pretty
 
 object_builtins.js:4:5
 Flags: --pretty
-{"error":"not enough type information to autocomplete","result":[]}
+{"error":"not enough type information to extract members","result":[]}
 
 function_builtins.js:4:5
 Flags: --pretty
-{"error":"not enough type information to autocomplete","result":[]}
+{"error":"not enough type information to extract members","result":[]}
 
 fun.js:4:5
 Flags: --pretty
@@ -1039,6 +1039,14 @@ Flags: --pretty
 {
   "result":[{"name":"foobaz","type":"number"},{"name":"foobarbaz","type":"number"}]
 }
+
+identifier_import_type.js:14:4
+Flags: --pretty
+{"result":[{"name":"ThisIsAValue","type":"string"}]}
+
+identifier_type.js:7:4
+Flags: --pretty
+{"result":[{"name":"baz","type":"bar"}]}
 
 super.js:4:8
 Flags: --pretty
@@ -3368,18 +3376,6 @@ Flags: --lsp
   }
 }
 {
-  "label":"ExportClass",
-  "kind":7,
-  "detail":"class ExportClass",
-  "documentation":{"kind":"markdown","value":"this is ExportClass"},
-  "sortText":"00000000000000000000",
-  "insertTextFormat":1,
-  "textEdit":{
-    "range":{"start":{"line":15,"character":5},"end":{"line":15,"character":5}},
-    "newText":"ExportClass"
-  }
-}
-{
   "label":"myFoo",
   "kind":13,
   "detail":"type myFoo = number",
@@ -3461,6 +3457,18 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":15,"character":5},"end":{"line":15,"character":5}},
     "newText":"ExportInterface"
+  }
+}
+{
+  "label":"ExportEnum",
+  "kind":13,
+  "detail":"enum ExportEnum",
+  "documentation":{"kind":"markdown","value":"this is ExportEnum"},
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":15,"character":5},"end":{"line":15,"character":5}},
+    "newText":"ExportEnum"
   }
 }
 {

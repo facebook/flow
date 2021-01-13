@@ -7,6 +7,8 @@
 
 open OUnit2
 
-let tests = "code_action" >::: [Insert_type_utils_tests.tests; Validation_tests.tests]
+let tests =
+  "code_action"
+  >::: [Autofix_imports_tests.tests; Insert_type_utils_tests.tests; Validation_tests.tests]
 
 let () = run_test_tt_main tests

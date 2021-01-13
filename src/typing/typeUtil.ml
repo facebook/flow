@@ -519,6 +519,8 @@ let rec mod_loc_of_virtual_use_op f =
     | ClassExtendsCheck { def; name; extends } ->
       ClassExtendsCheck
         { def = mod_reason def; name = mod_reason name; extends = mod_reason extends }
+    | ClassMethodDefinition { def; name } ->
+      ClassMethodDefinition { def = mod_reason def; name = mod_reason name }
     | ClassImplementsCheck { def; name; implements } ->
       ClassImplementsCheck
         { def = mod_reason def; name = mod_reason name; implements = mod_reason implements }
@@ -851,3 +853,19 @@ let type_t_of_annotated_or_inferred (x : Type.annotated_or_inferred) =
 let map_annotated_or_inferred f = function
   | Inferred t -> Inferred (f t)
   | Annotated t -> Annotated (f t)
+
+(* Creates a union from a list of types. Since unions require a minimum of two
+   types this function will return an empty type when there are no types in the
+   list, or the list head when there is one type in the list. *)
+let union_of_ts reason ts =
+  match ts with
+  (* If we have no types then this is an error. *)
+  | [] -> DefT (reason, bogus_trust (), EmptyT Bottom)
+  (* If we only have one type then only that should be used. *)
+  | [t0] -> t0
+  (* If we have more than one type then we make a union type. *)
+  | t0 :: t1 :: ts -> UnionT (reason, UnionRep.make t0 t1 ts)
+
+let annotated_or_inferred_of_option ~default = function
+  | Some t -> Annotated t
+  | None -> Inferred default

@@ -171,7 +171,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- optional.js:7:14
 
-Missing type annotation for `x`. [missing-annot]
+Cannot build a typed interface for this module. You should annotate the exports of this module with types. Missing type
+annotation at array pattern: [signature-verification-failure]
 
    7| function qux(x="hello",...y):string { foo(x); return y[0]; }
                    ^
@@ -179,7 +180,8 @@ Missing type annotation for `x`. [missing-annot]
 
 Error ------------------------------------------------------------------------------------------------- optional.js:7:27
 
-Missing type annotation for rest parameter `y`. [missing-annot]
+Cannot build a typed interface for this module. You should annotate the exports of this module with types. Missing type
+annotation at array pattern: [signature-verification-failure]
 
    7| function qux(x="hello",...y):string { foo(x); return y[0]; }
                                 ^

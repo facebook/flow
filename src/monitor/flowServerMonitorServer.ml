@@ -520,6 +520,7 @@ module KeepAliveLoop = LwtLoop.Make (struct
         (* The heap is full. Restarting might help clear out cruft, but it could also just
            be too small, leading to a crash loop. We should limit how often we try restarting
            before recovering from this. *)
+        | Could_not_extract_flowlibs
         (**** Things that the server shouldn't use, but would imply that the monitor should exit ****)
         | Interrupted
         | Build_id_mismatch

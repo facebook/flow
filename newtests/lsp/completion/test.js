@@ -163,34 +163,6 @@ export default (suite(
                   },
                 },
                 {
-                  label: 'anInterface',
-                  kind: 8,
-                  detail: 'interface anInterface',
-                  sortText: '00000000000000000000',
-                  insertTextFormat: 1,
-                  textEdit: {
-                    range: {
-                      start: {line: 13, character: 15},
-                      end: {line: 13, character: 15},
-                    },
-                    newText: 'anInterface',
-                  },
-                },
-                {
-                  label: 'aUnion',
-                  kind: 13,
-                  detail: 'type aUnion = "a" | "b"',
-                  sortText: '00000000000000000000',
-                  insertTextFormat: 1,
-                  textEdit: {
-                    range: {
-                      start: {line: 13, character: 15},
-                      end: {line: 13, character: 15},
-                    },
-                    newText: 'aUnion',
-                  },
-                },
-                {
                   label: 'aNumber',
                   kind: 6,
                   detail: 'number',
@@ -410,20 +382,6 @@ export default (suite(
                       end: {line: 11, character: 1},
                     },
                     newText: 'React',
-                  },
-                },
-                {
-                  label: 'Props',
-                  kind: 13,
-                  detail: 'type Props = {a: number, ...}',
-                  sortText: '00000000000000000000',
-                  insertTextFormat: 1,
-                  textEdit: {
-                    range: {
-                      start: {line: 11, character: 1},
-                      end: {line: 11, character: 1},
-                    },
-                    newText: 'Props',
                   },
                 },
                 {
@@ -1314,6 +1272,67 @@ export default (suite(
                       end: {line: 27, character: 18},
                     },
                     newText: 'Typaram',
+                  },
+                },
+              ],
+            }),
+          ],
+        ],
+        ['textDocument/publishDiagnostics', ...lspIgnoreStatusAndCancellation],
+      ),
+    ]),
+    test('textDocument/completion invoked in jsx attribute with value', [
+      addFile('jsx-attr-with-value.js'),
+      lspStartAndConnect(),
+      lspRequestAndWaitUntilResponse('textDocument/completion', {
+        textDocument: {uri: '<PLACEHOLDER_PROJECT_URL>/jsx-attr-with-value.js'},
+        position: {line: 9, character: 4},
+        context: {triggerKind: 1},
+      }).verifyAllLSPMessagesInStep(
+        [
+          [
+            'textDocument/completion',
+            JSON.stringify({
+              isIncomplete: false,
+              items: [
+                {
+                  label: 'aaaa',
+                  kind: 6,
+                  detail: 'number',
+                  sortText: '00000000000000000000',
+                  insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {
+                        line: 9,
+                        character: 3,
+                      },
+                      end: {
+                        line: 9,
+                        character: 4,
+                      },
+                    },
+                    newText: 'aaaa',
+                  },
+                },
+                {
+                  label: 'aaab',
+                  kind: 6,
+                  detail: 'number',
+                  sortText: '00000000000000000000',
+                  insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {
+                        line: 9,
+                        character: 3,
+                      },
+                      end: {
+                        line: 9,
+                        character: 4,
+                      },
+                    },
+                    newText: 'aaab',
                   },
                 },
               ],

@@ -26,5 +26,3 @@ function mk_factorial() {
 
 var factorial = mk_factorial();
 factorial("...");
-
-module.exports = {fn: fix};

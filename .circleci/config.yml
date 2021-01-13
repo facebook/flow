@@ -24,7 +24,7 @@ orbs:
               command: |
                 choco install --no-progress cygwin
                 if (-not $?) { throw "Failed to install cygwin" }
-                choco install --no-progress rsync patch diffutils curl make zip unzip git m4 perl mingw64-x86_64-gcc-core --source=cygwin
+                choco install --no-progress rsync patch diffutils curl make zip unzip git m4 perl mingw64-x86_64-gcc-core mingw64-x86_64-gcc-g++ --source=cygwin
                 if (-not $?) { throw "Failed to install deps from cygwin" }
           - run:
               name: Install opam
@@ -294,6 +294,9 @@ jobs:
           shell: C:/tools/cygwin/bin/bash.exe --noprofile --norc -eo pipefail
           environment:
             PATH: /usr/local/bin:/usr/bin:/cygdrive/c/Windows/system32:/cygdrive/c/Windows:/cygdrive/c/Windows/System32/Wbem:/cygdrive/c/Windows/System32/WindowsPowerShell/v1.0
+            CC: x86_64-w64-mingw32-gcc
+            CXX: x86_64-w64-mingw32-g++
+            AR: x86_64-w64-mingw32-gcc-ar
           command: |
              eval $(opam env)
              make bin/flow.exe dist/flow.zip
