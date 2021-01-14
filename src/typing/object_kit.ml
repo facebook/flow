@@ -1177,7 +1177,7 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
              *
              * NOTE: React will copy any enumerable prop whether or not it
              * is own to the config. *)
-            let (props, flags, generics) =
+            let (props_map, flags, generics) =
               match defaults with
               (* If we have some default props then we want to add the types for those
                * default props to our final props object. *)
@@ -1197,22 +1197,8 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
                       let p2 = get_prop defaults_reason p2 defaults_dict in
                       match (p1, p2) with
                       | (None, None) -> None
-                      | (Some (t, _, m), None) ->
-                        let p =
-                          if m then
-                            Method (None, t)
-                          else
-                            Field (None, t, prop_polarity)
-                        in
-                        Some p
-                      | (None, Some (t, _, m)) ->
-                        let p =
-                          if m then
-                            Method (None, t)
-                          else
-                            Field (None, t, prop_polarity)
-                        in
-                        Some p
+                      | (Some (t, _, m), None) -> Some (t, m)
+                      | (None, Some (t, _, m)) -> Some (t, m)
                       (* If a property is defined in both objects, and the first property's
                        * type includes void then we want to replace every occurrence of void
                        * with the second property's type. This is consistent with the behavior
@@ -1230,13 +1216,7 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
                                 ( OpenT (reason, filter_optional cx ~trace reason t1),
                                   CondT (reason, None, t2, tvar) ))
                         in
-                        let p =
-                          if m1 || m2 then
-                            Method (None, t)
-                          else
-                            Field (None, t, prop_polarity)
-                        in
-                        Some p)
+                        Some (t, m1 || m2))
                     config_props
                     defaults_props
                 in
@@ -1276,16 +1256,7 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
                 (props, flags, generics)
               (* Otherwise turn our slice props map into an object props. *)
               | None ->
-                (* All of the fields are read-only so we create positive fields. *)
-                let props =
-                  SMap.map
-                    (fun (t, _, is_method) ->
-                      if is_method then
-                        Method (None, t)
-                      else
-                        Field (None, t, prop_polarity))
-                    config_props
-                in
+                let props = SMap.map (fun (t, _, is_method) -> (t, is_method)) config_props in
                 (* Create a new dictionary from our config's dictionary with a
                  * positive polarity. *)
                 let dict =
@@ -1313,6 +1284,15 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
             in
             let call = None in
             (* Finish creating our props object. *)
+            let props =
+              SMap.map
+                (fun (t, is_method) ->
+                  if is_method then
+                    Method (None, t)
+                  else
+                    Field (None, t, prop_polarity))
+                props_map
+            in
             let id = Context.generate_property_map cx props in
             let proto = ObjProtoT reason in
             mk_object_type
