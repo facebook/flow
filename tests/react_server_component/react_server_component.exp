@@ -1,3 +1,12 @@
+Error ------------------------------------------------------------------------------------------------ badImport.js:2:23
+
+Do not import `#flow-internal-react-server-module` directly. Instead, ensure you are in a React Server file and import
+`react` normally.
+
+   2| const React = require('#flow-internal-react-server-module');
+                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
 Error --------------------------------------------------------------------------------------------- test.hybrid.js:11:58
 
 Cannot create `Component` element because: [incompatible-type]
@@ -288,7 +297,7 @@ References:
 
 
 
-Found 12 errors
+Found 13 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches
