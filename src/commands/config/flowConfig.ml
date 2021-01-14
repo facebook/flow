@@ -147,7 +147,7 @@ module Opts = struct
     |> SSet.add ".mp4"
     |> SSet.add ".webm"
 
-  let react_server_component_exts = SSet.empty |> SSet.add ".server.js" |> SSet.add ".hybrid.js"
+  let react_server_component_exts = SSet.empty
 
   let default_options =
     {
