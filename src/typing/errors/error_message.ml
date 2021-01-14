@@ -413,6 +413,7 @@ and 'loc t' =
     }
   | EMalformedCode of 'loc
   | EImplicitInstantiationTemporaryError of 'loc * string
+  | EImportInternalReactServerModule of 'loc
 
 and 'loc exponential_spread_reason_group = {
   first_reason: 'loc virtual_reason;
@@ -959,6 +960,7 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
   | EMalformedCode loc -> EMalformedCode (f loc)
   | EImplicitInstantiationTemporaryError (loc, msg) ->
     EImplicitInstantiationTemporaryError (f loc, msg)
+  | EImportInternalReactServerModule loc -> EImportInternalReactServerModule (f loc)
 
 let desc_of_reason r = Reason.desc_of_reason ~unwrap:(is_scalar_reason r) r
 
@@ -1167,7 +1169,8 @@ let util_use_op_of_msg nope util = function
   | EEnumMemberUsedAsType _
   | EAssignExportedConstLikeBinding _
   | EMalformedCode _
-  | EImplicitInstantiationTemporaryError _ ->
+  | EImplicitInstantiationTemporaryError _
+  | EImportInternalReactServerModule _ ->
     nope
 
 (* Not all messages (i.e. those whose locations are based on use_ops) have locations that can be
@@ -1308,7 +1311,8 @@ let loc_of_msg : 'loc t' -> 'loc option = function
   | ETypeParamMinArity (loc, _)
   | EAssignExportedConstLikeBinding { loc; _ }
   | EMalformedCode loc
-  | EImplicitInstantiationTemporaryError (loc, _) ->
+  | EImplicitInstantiationTemporaryError (loc, _)
+  | EImportInternalReactServerModule loc ->
     Some loc
   | ELintSetting (loc, _) -> Some loc
   | ETypeParamArity (loc, _) -> Some loc
@@ -3414,6 +3418,18 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
           ];
       }
   | EImplicitInstantiationTemporaryError (_, msg) -> Normal { features = [text msg] }
+  | EImportInternalReactServerModule _ ->
+    Normal
+      {
+        features =
+          [
+            text "Do not import ";
+            code Type.react_server_module_ref;
+            text " directly. Instead, ensure you are in a React Server file and import ";
+            code "react";
+            text " normally.";
+          ];
+      }
 
 let is_lint_error = function
   | EUntypedTypeImport _
@@ -3658,7 +3674,8 @@ let error_code_of_message err : error_code option =
   | EUnsupportedSyntax (_, _) -> Some UnsupportedSyntax
   | EMalformedCode _
   | EImplicitInstantiationTemporaryError _
-  | EUnusedSuppression _ ->
+  | EUnusedSuppression _
+  | EImportInternalReactServerModule _ ->
     None
   | EUseArrayLiteral _ -> Some IllegalNewArray
   | EAnyValueUsedAsType _
