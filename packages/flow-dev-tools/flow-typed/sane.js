@@ -5,8 +5,8 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import type {Stats} from 'fs';
 declare module 'sane' {
+  import type {Stats} from 'fs';
   declare type Sane$Options = {
     glob?: Array<string>,
     poll?: boolean,

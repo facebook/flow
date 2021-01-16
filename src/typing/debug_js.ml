@@ -1449,6 +1449,7 @@ let dump_error_message =
     | EThisInExportedFunction loc -> spf "EThisInExportedFunction (%s)" (string_of_aloc loc)
     | EMixedImportAndRequire (loc, reason) ->
       spf "EMixedImportAndRequire (%s, %s)" (string_of_aloc loc) (dump_reason cx reason)
+    | EToplevelLibraryImport loc -> spf "EToplevelLibraryImport (%s)" (string_of_aloc loc)
     | EExportRenamedDefault (loc, s) -> spf "EExportRenamedDefault (%s, %s)" (string_of_aloc loc) s
     | EUnreachable loc -> spf "EUnreachable (%s)" (string_of_aloc loc)
     | EInvalidObjectKit { reason; reason_op; use_op } ->

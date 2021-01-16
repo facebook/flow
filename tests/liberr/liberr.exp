@@ -1,6 +1,41 @@
 ============================================
 No warnings:
 ============================================
+Error ---------------------------------------------------------------------------------------------- libs/imports.js:3:1
+
+Cannot use an import statement at the toplevel of a library file. Import statements may only appear inside a
+`declare module`. [toplevel-library-import]
+
+   3| import type {t1} from 'm1'; // error toplevel import
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Error -------------------------------------------------------------------------------------------- libs/imports.js:13:27
+
+Cannot resolve module `missing_module`. [cannot-resolve-module]
+
+   13|     import type {t2} from 'missing_module'; // error missing module
+                                 ^^^^^^^^^^^^^^^^
+
+
+Error -------------------------------------------------------------------------------------------- libs/imports.js:20:14
+
+Cannot extend `A` [1] with `D` because number [2] is incompatible with string [3] in the return value of property `m`.
+[incompatible-extend]
+
+   libs/imports.js:20:14
+   20|         m(): number; // error number <: string
+                    ^^^^^^ [2]
+
+References:
+   libs/imports.js:19:36
+   19|     declare export class D extends A {
+                                          ^ [1]
+   libs/imports.js:7:14
+    7|         m(): string;
+                    ^^^^^^ [3]
+
+
 Error ----------------------------------------------------------------------------------------------- libs/lints.js:3:17
 
 Deprecated utility. Using `$Supertype` types is not recommended! [deprecated-utility]
@@ -48,11 +83,46 @@ References:
 
 
 
-Found 5 errors
+Found 8 errors
 
 ============================================
 With warnings:
 ============================================
+Error ---------------------------------------------------------------------------------------------- libs/imports.js:3:1
+
+Cannot use an import statement at the toplevel of a library file. Import statements may only appear inside a
+`declare module`. [toplevel-library-import]
+
+   3| import type {t1} from 'm1'; // error toplevel import
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Error -------------------------------------------------------------------------------------------- libs/imports.js:13:27
+
+Cannot resolve module `missing_module`. [cannot-resolve-module]
+
+   13|     import type {t2} from 'missing_module'; // error missing module
+                                 ^^^^^^^^^^^^^^^^
+
+
+Error -------------------------------------------------------------------------------------------- libs/imports.js:20:14
+
+Cannot extend `A` [1] with `D` because number [2] is incompatible with string [3] in the return value of property `m`.
+[incompatible-extend]
+
+   libs/imports.js:20:14
+   20|         m(): number; // error number <: string
+                    ^^^^^^ [2]
+
+References:
+   libs/imports.js:19:36
+   19|     declare export class D extends A {
+                                          ^ [1]
+   libs/imports.js:7:14
+    7|         m(): string;
+                    ^^^^^^ [3]
+
+
 Error ----------------------------------------------------------------------------------------------- libs/lints.js:3:17
 
 Deprecated utility. Using `$Supertype` types is not recommended! [deprecated-utility]
@@ -116,4 +186,4 @@ Suppression is missing a code. Please update this suppression to use an error co
 
 
 
-Found 5 errors and 2 warnings
+Found 8 errors and 2 warnings

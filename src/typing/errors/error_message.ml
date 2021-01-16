@@ -223,6 +223,7 @@ and 'loc t' =
   | ENonConstVarExport of 'loc * 'loc virtual_reason option
   | EThisInExportedFunction of 'loc
   | EMixedImportAndRequire of 'loc * 'loc virtual_reason
+  | EToplevelLibraryImport of 'loc
   | EExportRenamedDefault of 'loc * string
   | EUnreachable of 'loc
   | EInvalidObjectKit of {
@@ -806,6 +807,7 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
   | ENonConstVarExport (loc, r) -> ENonConstVarExport (f loc, Base.Option.map ~f:map_reason r)
   | EThisInExportedFunction loc -> EThisInExportedFunction (f loc)
   | EMixedImportAndRequire (loc, r) -> EMixedImportAndRequire (f loc, map_reason r)
+  | EToplevelLibraryImport loc -> EToplevelLibraryImport (f loc)
   | EExportRenamedDefault (loc, s) -> EExportRenamedDefault (f loc, s)
   | EUnreachable loc -> EUnreachable (f loc)
   | EInvalidTypeof (loc, s) -> EInvalidTypeof (f loc, s)
@@ -1116,6 +1118,7 @@ let util_use_op_of_msg nope util = function
   | ENonConstVarExport _
   | EThisInExportedFunction _
   | EMixedImportAndRequire _
+  | EToplevelLibraryImport _
   | EExportRenamedDefault _
   | EUnreachable _
   | EInvalidTypeof (_, _)
@@ -1286,6 +1289,7 @@ let loc_of_msg : 'loc t' -> 'loc option = function
   | ENonConstVarExport (loc, _)
   | EThisInExportedFunction loc
   | EMixedImportAndRequire (loc, _)
+  | EToplevelLibraryImport loc
   | EExportRenamedDefault (loc, _)
   | EIndeterminateModuleType loc
   | EExperimentalEnums loc
@@ -2518,6 +2522,17 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
             text " statements in the same file.";
           ];
       }
+  | EToplevelLibraryImport _ ->
+    Normal
+      {
+        features =
+          [
+            text "Cannot use an import statement at the toplevel of a library file. ";
+            text "Import statements may only appear inside a ";
+            code "declare module";
+            text ".";
+          ];
+      }
   | EExportRenamedDefault (_, name) ->
     Normal
       {
@@ -3614,6 +3629,7 @@ let error_code_of_message err : error_code option =
   | EMissingLocalAnnotation _ -> Some MissingLocalAnnot
   | EMissingTypeArgs _ -> Some MissingTypeArg
   | EMixedImportAndRequire _ -> Some MixedImportAndRequire
+  | EToplevelLibraryImport _ -> Some ToplevelLibraryImport
   | EModuleOutsideRoot (_, _) -> Some InvalidModule
   | ENoDefaultExport (_, _, _) -> Some MissingExport
   | ENoNamedExport (_, _, _, _) -> Some MissingExport

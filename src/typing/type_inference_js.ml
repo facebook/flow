@@ -488,6 +488,13 @@ let infer_lib_file ~exclude_syms ~lint_severities ~file_sig cx ast =
   let (_, { Ast.Program.all_comments; _ }) = ast in
   let (_, { Ast.Program.statements = aloc_statements; _ }) = aloc_ast in
 
+  List.iter
+    (function
+      | (loc, Ast.Statement.ImportDeclaration _) ->
+        Flow_js.add_output cx Error_message.(EToplevelLibraryImport loc)
+      | _ -> ())
+    aloc_statements;
+
   let () =
     (* TODO: Wait a minute, why do we bother with requires for lib files? Pretty
        confident that we don't support them in any sensible way. *)
