@@ -5,14 +5,16 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
+type init_result = {
+  ok: bool;
+  errors: Flow_error.ErrorSet.t Utils_js.FilenameMap.t;
+  warnings: Flow_error.ErrorSet.t Utils_js.FilenameMap.t;
+  suppressions: Error_suppressions.t;
+}
+
 (* called to initialize library code on initial full pass.
    params are functions to save errors and suppressions:
    circular deps in Ocaml prevent direct calls from here
    to Types_js, where error management stuff lives.
 *)
-val init :
-  options:Options.t ->
-  reader:Mutator_state_reader.t ->
-  string list ->
-  (File_key.t * bool * Flow_error.ErrorSet.t * Flow_error.ErrorSet.t * Error_suppressions.t) list
-  Lwt.t
+val init : options:Options.t -> reader:Mutator_state_reader.t -> string list -> init_result Lwt.t
