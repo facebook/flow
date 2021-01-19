@@ -1228,35 +1228,21 @@ let type_contents ~options ~env ~profiling contents filename =
 
 let init_libs ~options ~profiling ~local_errors ~warnings ~suppressions ~reader ordered_libs =
   Memory_utils.with_memory_timer_lwt ~options "InitLibs" profiling (fun () ->
-      let%lwt lib_files =
-        let options =
-          match Options.verbose options with
-          | Some { Verbose.enabled_during_flowlib = false; _ } ->
-            (* Normally we disable verbosity while loading the libs. But if we're running with
-             * --verbose-flowlib then we want to leave verbosity on *)
-            { options with Options.opt_verbose = None }
-          | _ -> options
-        in
-        Init_js.init ~options ~reader ordered_libs
+      let options =
+        match Options.verbose options with
+        | Some { Verbose.enabled_during_flowlib = false; _ } ->
+          (* Normally we disable verbosity while loading the libs. But if we're running with
+           * --verbose-flowlib then we want to leave verbosity on *)
+          { options with Options.opt_verbose = None }
+        | _ -> options
       in
+      let%lwt result = Init_js.init ~options ~reader ordered_libs in
       Lwt.return
-      @@ List.fold_left
-           (fun acc (lib_file, ok, errs, warnings, suppressions) ->
-             let (all_ok, errors_acc, warnings_acc, suppressions_acc) = acc in
-             let all_ok =
-               if ok then
-                 all_ok
-               else
-                 false
-             in
-             let errors_acc = update_errset errors_acc lib_file errs in
-             let warnings_acc = update_errset warnings_acc lib_file warnings in
-             let suppressions_acc =
-               Error_suppressions.update_suppressions suppressions_acc suppressions
-             in
-             (all_ok, errors_acc, warnings_acc, suppressions_acc))
-           (true, local_errors, warnings, suppressions)
-           lib_files)
+        Init_js.
+          ( result.ok,
+            FilenameMap.union result.errors local_errors,
+            FilenameMap.union result.warnings warnings,
+            Error_suppressions.update_suppressions result.suppressions suppressions ))
 
 let is_file_tracked_and_checked ~reader filename =
   Module_heaps.Reader_dispatcher.is_tracked_file ~reader filename

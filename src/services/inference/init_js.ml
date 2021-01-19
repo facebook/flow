@@ -64,15 +64,15 @@ let parse_lib_file ~reader options file =
    preserve lib path declaration order in the (flattened) list of files
    passed.
 
-   returns list of (filename, success, errors, suppressions) tuples
+   returns (success, parse and signature errors)
 *)
 let load_lib_files ~ccx ~options ~reader files =
   let verbose = Options.verbose options in
   (* iterate in reverse override order *)
-  let%lwt (_, result) =
+  let%lwt (_, ok, errors) =
     List.rev files
     |> Lwt_list.fold_left_s
-         (fun (exclude_syms, results) file ->
+         (fun (exclude_syms, ok_acc, errors_acc) file ->
            let lib_file = File_key.LibFile file in
            let lint_severities = options.Options.opt_lint_severities in
            let%lwt result = parse_lib_file ~reader options file in
@@ -92,22 +92,9 @@ let load_lib_files ~ccx ~options ~reader files =
                  Context.make ccx metadata lib_file rev_table Files.lib_module_ref Context.Checking
                in
                let syms = Infer.infer_lib_file cx ast ~exclude_syms ~lint_severities ~file_sig in
-               let errors = Context.errors cx in
                let errors =
                  tolerable_errors
                  |> Inference_utils.set_of_file_sig_tolerable_errors ~source_file:lib_file
-                 |> Flow_error.ErrorSet.union errors
-               in
-               let suppressions = Context.error_suppressions cx in
-               let severity_cover = Context.severity_cover cx in
-               let include_suppressions = Context.include_suppressions cx in
-               let (errors, warnings, suppressions) =
-                 Error_suppressions.filter_lints
-                   ~include_suppressions
-                   suppressions
-                   errors
-                   (Context.aloc_tables cx)
-                   severity_cover
                in
 
                if verbose != None then
@@ -116,8 +103,7 @@ let load_lib_files ~ccx ~options ~reader files =
                (* symbols loaded from this file are suppressed
                   if found in later ones *)
                let exclude_syms = SSet.union exclude_syms (SSet.of_list syms) in
-               let result = (lib_file, true, errors, warnings, suppressions) in
-               (exclude_syms, result :: results)
+               (exclude_syms, ok_acc, Flow_error.ErrorSet.union errors errors_acc)
              | Parsing.Parse_fail fail ->
                let errors =
                  match fail with
@@ -128,21 +114,33 @@ let load_lib_files ~ccx ~options ~reader files =
                  | Parsing.File_sig_error error ->
                    Inference_utils.set_of_file_sig_error ~source_file:lib_file error
                in
-               let result =
-                 (lib_file, false, errors, Flow_error.ErrorSet.empty, Error_suppressions.empty)
-               in
-               (exclude_syms, result :: results)
+               (exclude_syms, false, Flow_error.ErrorSet.union errors errors_acc)
              | Parsing.(Parse_skip (Skip_non_flow_file | Skip_resource_file | Skip_package_json _))
                ->
-               (* should never happen *)
-               let errs = Flow_error.ErrorSet.empty in
-               let warnings = Flow_error.ErrorSet.empty in
-               let suppressions = Error_suppressions.empty in
-               let result = (lib_file, false, errs, warnings, suppressions) in
-               (exclude_syms, result :: results)))
-         (SSet.empty, [])
+               (exclude_syms, false, errors_acc)))
+         (SSet.empty, true, Flow_error.ErrorSet.empty)
   in
-  Lwt.return result
+  Lwt.return (ok, errors)
+
+type init_result = {
+  ok: bool;
+  errors: Flow_error.ErrorSet.t FilenameMap.t;
+  warnings: Flow_error.ErrorSet.t FilenameMap.t;
+  suppressions: Error_suppressions.t;
+}
+
+let error_set_to_filemap err_set =
+  Flow_error.ErrorSet.fold
+    (fun error map ->
+      let file = Flow_error.source_file error in
+      FilenameMap.update
+        file
+        (function
+          | None -> Some (Flow_error.ErrorSet.singleton error)
+          | Some set -> Some (Flow_error.ErrorSet.add error set))
+        map)
+    err_set
+    FilenameMap.empty
 
 (* initialize builtins:
    parse and do local inference on library files, and set up master context.
@@ -164,13 +162,29 @@ let init ~options ~reader lib_files =
   in
   Flow_js_utils.mk_builtins master_cx;
 
-  let%lwt result = load_lib_files ~ccx ~options ~reader lib_files in
+  let%lwt (ok, parse_and_sig_errors) = load_lib_files ~ccx ~options ~reader lib_files in
   let reason = Reason.builtin_reason (Reason.RCustom "module") in
   let builtin_module = Obj_type.mk_unsealed master_cx reason in
   Flow.flow_t master_cx (builtin_module, Flow_js_utils.builtins master_cx);
   Merge_js.ContextOptimizer.sig_context master_cx [Files.lib_module_ref] |> ignore;
 
+  let (errors, warnings, suppressions) =
+    let suppressions = Context.error_suppressions master_cx in
+    let severity_cover = Context.severity_cover master_cx in
+    let include_suppressions = Context.include_suppressions master_cx in
+    let (errors, warnings, suppressions) =
+      Error_suppressions.filter_lints
+        ~include_suppressions
+        suppressions
+        (Context.errors master_cx)
+        (Context.aloc_tables master_cx)
+        severity_cover
+    in
+    ( error_set_to_filemap (Flow_error.ErrorSet.union parse_and_sig_errors errors),
+      error_set_to_filemap warnings,
+      suppressions )
+  in
   (* store master signature context to heap *)
   Context_heaps.Init_master_context_mutator.add_master_sig ~audit:Expensive.ok master_cx;
 
-  Lwt.return result
+  Lwt.return { ok; errors; warnings; suppressions }
