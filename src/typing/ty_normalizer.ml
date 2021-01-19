@@ -2368,6 +2368,17 @@ end = struct
       in
       type__ ~env ~proto ~imode t'
 
+    and opaque_t ~env ~proto ~imode r opaquetype =
+      let current_source = Env.current_file env in
+      let opaque_source = ALoc.source (def_aloc_of_reason r) in
+      (* Compare the current file (of the query) and the file that the opaque
+         type is defined. If they differ, then hide the underlying type. *)
+      let same_file = Some current_source = opaque_source in
+      match opaquetype with
+      | { Type.underlying_t = Some t; _ } when same_file -> type__ ~env ~proto ~imode t
+      | { Type.super_t = Some t; _ } -> type__ ~env ~proto ~imode t
+      | _ -> return (Ty.mk_object ~obj_kind:Ty.ExactObj [])
+
     and this_class_t ~env ~proto ~imode t =
       match imode with
       | IMUnset -> type__ ~env ~proto ~imode:IMStatic t
@@ -2439,6 +2450,7 @@ end = struct
       | EvalT (t, LatentPredT _, id) -> latent_pred_t ~env ~proto ~imode id t
       | ExactT (_, t) -> type__ ~env ~proto ~imode t
       | GenericT { bound; _ } -> type__ ~env ~proto ~imode bound
+      | OpaqueT (r, o) -> opaque_t ~env ~proto ~imode r o
       | t -> TypeConverter.convert_t ~env t
 
     let convert_t ~env t = type__ ~env ~proto:false ~imode:IMUnset t
