@@ -422,8 +422,7 @@ let infer_ast ~lint_severities cx filename comments aloc_ast =
         (Reason.internal_name "exports")
         (Entry.new_var
            ~loc:(Reason.aloc_of_reason reason_exports_module)
-           ~specific:
-             (Type.DefT (reason_exports_module, Type.bogus_trust (), Type.EmptyT Type.Bottom))
+           ~specific:(Type.DefT (reason_exports_module, Type.bogus_trust (), Type.EmptyT))
            (Type.Inferred (Type.Unsoundness.exports_any reason_exports_module)))
         scope;
 

@@ -68,7 +68,7 @@ let union_flatten =
     | OptionalT { reason = r; type_ = t; use_desc } ->
       let void_t = VoidT.why_with_use_desc ~use_desc r |> with_trust Trust.bogus_trust in
       void_t :: flatten cx seen t
-    | DefT (_, _, EmptyT _) -> []
+    | DefT (_, _, EmptyT) -> []
     | _ -> [t]
   in
   (fun cx ts -> union_flatten cx (ref ISet.empty) ts)
@@ -303,7 +303,7 @@ class virtual ['a] t =
       | NumT _
       | StrT _
       | BoolT _
-      | EmptyT _
+      | EmptyT
       | MixedT _
       | SymbolT
       | NullT

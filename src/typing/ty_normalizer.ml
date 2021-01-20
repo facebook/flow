@@ -803,7 +803,7 @@ end = struct
       | DefT (_, _, BoolT (Some x)) when Env.preserve_inferred_literal_types env ->
         return (Ty.Bool (Some x))
       | DefT (_, _, BoolT _) -> return (Ty.Bool None)
-      | DefT (_, _, EmptyT _) -> return (mk_empty Ty.EmptyType)
+      | DefT (_, _, EmptyT) -> return (mk_empty Ty.EmptyType)
       | DefT (_, _, NullT) -> return Ty.Null
       | DefT (_, _, SymbolT) -> return Ty.Symbol
       | DefT (_, _, SingletonNumT (_, lit)) -> return (Ty.NumLit lit)

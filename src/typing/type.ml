@@ -200,7 +200,7 @@ module rec TypeTerm : sig
     | NumT of number_literal literal
     | StrT of string literal
     | BoolT of bool option
-    | EmptyT of empty_flavor
+    | EmptyT
     | MixedT of mixed_flavor
     | NullT
     | VoidT
@@ -943,10 +943,6 @@ module rec TypeTerm : sig
     | Mixed_non_null
     | Mixed_non_void
     | Mixed_function
-
-  and empty_flavor =
-    | Bottom
-    | Zeroed
 
   and any_source =
     | AnnotatedAny
@@ -2652,7 +2648,7 @@ end)
 module EmptyT = Primitive (struct
   let desc = REmpty
 
-  let make r trust = DefT (r, trust, EmptyT Bottom)
+  let make r trust = DefT (r, trust, EmptyT)
 end)
 
 module AnyT = struct
@@ -2815,7 +2811,7 @@ let is_proper_use = function
 
 (* convenience *)
 let is_bot = function
-  | DefT (_, _, EmptyT _) -> true
+  | DefT (_, _, EmptyT) -> true
   | _ -> false
 
 let is_top = function
@@ -2945,7 +2941,7 @@ let string_of_def_ctor = function
   | BoolT _ -> "BoolT"
   | CharSetT _ -> "CharSetT"
   | ClassT _ -> "ClassT"
-  | EmptyT _ -> "EmptyT"
+  | EmptyT -> "EmptyT"
   | EnumT _ -> "EnumT"
   | EnumObjectT _ -> "EnumObjectT"
   | FunT _ -> "FunT"

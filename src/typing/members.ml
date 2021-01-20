@@ -39,8 +39,8 @@ let rec merge_type cx =
   | (AnyT _, t)
   | (t, AnyT _) ->
     t
-  | (DefT (_, _, EmptyT _), t)
-  | (t, DefT (_, _, EmptyT _)) ->
+  | (DefT (_, _, EmptyT), t)
+  | (t, DefT (_, _, EmptyT)) ->
     t
   | (_, (DefT (_, _, MixedT _) as t))
   | ((DefT (_, _, MixedT _) as t), _) ->
@@ -270,7 +270,7 @@ let instantiate_poly_t cx t args =
         t
       ) else
         subst cx map t_
-  | DefT (_, _, EmptyT _)
+  | DefT (_, _, EmptyT)
   | DefT (_, _, MixedT _)
   | AnyT _
   | DefT (_, _, TypeT (_, AnyT _)) ->
@@ -313,7 +313,7 @@ and instantiate_type = function
   | DefT (_, _, ClassT t)
   | (AnyT _ as t)
   | DefT (_, _, TypeT (_, t))
-  | (DefT (_, _, EmptyT _) as t) ->
+  | (DefT (_, _, EmptyT) as t) ->
     t
   | t -> "cannot instantiate non-class type " ^ string_of_ctor t |> assert_false
 
@@ -458,7 +458,7 @@ let rec extract_type cx this_t =
   | DefT (_, _, ClassT _)
   | CustomFunT (_, _)
   | MatchingPropT (_, _, _)
-  | DefT (_, _, EmptyT _)
+  | DefT (_, _, EmptyT)
   | ExistsT _
   | InternalT (ExtendsT _)
   | FunProtoApplyT _

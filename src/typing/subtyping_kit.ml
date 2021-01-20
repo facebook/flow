@@ -945,7 +945,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
         rec_flow_t cx trace ~use_op (l, t)
       )
     (* any ~> $Exact<UB>. unwrap exact *)
-    | ((DefT (_, _, EmptyT _) | AnyT _), ExactT (_, t)) -> rec_flow_t cx trace ~use_op (l, t)
+    | ((DefT (_, _, EmptyT) | AnyT _), ExactT (_, t)) -> rec_flow_t cx trace ~use_op (l, t)
     (*
      * Shapes need to be trapped here to avoid error-ing when used as exact types.
      * Below (see "matching shapes of objects"), we have a rule that allows ShapeT(o)
@@ -1746,7 +1746,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
       rec_flow_t cx trace ~use_op (position_generic_bound reason bound, u)
     | (_, GenericT { reason; name; _ }) ->
       let desc = RIncompatibleInstantiation name in
-      let bot = DefT (replace_desc_reason desc reason, literal_trust (), EmptyT Zeroed) in
+      let bot = DefT (replace_desc_reason desc reason, literal_trust (), EmptyT) in
       rec_flow_t cx trace ~use_op (l, bot)
     | (ObjProtoT reason, _) ->
       let use_desc = true in

@@ -299,19 +299,13 @@ let merge_trust_var constr =
     | TrustUnresolved bound -> get_trust bound |> Trust.fix)
 
 class resolver_visitor =
-  (* Filter out EmptyT types from unions. *)
-  let filter_empty flavor =
-    match flavor with
-    | Type.Zeroed -> false
-    | Type.Bottom -> true
-  in
   object (self)
     inherit [unit] Type_mapper.t_with_uses as super
 
     method! type_ cx map_cx t =
       let open Type in
       match t with
-      | OpenT (r, id) -> Flow_js_utils.merge_tvar ~filter_empty cx r id
+      | OpenT (r, id) -> Flow_js_utils.merge_tvar ~filter_empty:true cx r id
       | EvalT (t', dt, _id) ->
         let t'' = self#type_ cx map_cx t' in
         let dt' = self#defer_use_type cx map_cx dt in
@@ -391,7 +385,6 @@ let detect_literal_subtypes =
       method! type_ cx map_cx t =
         let open Type in
         match t with
-        | DefT (r, _, EmptyT Zeroed) -> AnyT.why Untyped r
         | GenericT { bound; _ } -> self#type_ cx map_cx bound
         | t -> super#type_ cx map_cx t
     end

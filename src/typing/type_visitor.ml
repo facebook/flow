@@ -111,7 +111,7 @@ class ['a] t =
       | NumT _
       | StrT _
       | BoolT _
-      | EmptyT _
+      | EmptyT
       | MixedT _
       | SymbolT
       | NullT

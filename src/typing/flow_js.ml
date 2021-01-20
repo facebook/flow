@@ -417,7 +417,7 @@ struct
         ()
       else if
         match l with
-        | DefT (_, _, EmptyT flavor) -> empty_success flavor u
+        | DefT (_, _, EmptyT) -> empty_success u
         | _ -> false
       then
         ()
@@ -1603,7 +1603,7 @@ struct
             (reason_of_t l)
             ~useful:
               (match Type_filter.not_exists l with
-              | DefT (_, _, EmptyT Bottom) -> false
+              | DefT (_, _, EmptyT) -> false
               | _ -> true)
         (***************)
         (* maybe types *)
@@ -1750,12 +1750,12 @@ struct
              a truthy && b ~> b
              a && b ~> a falsy | b *)
           (match Type_filter.exists left with
-          | DefT (_, _, EmptyT Bottom) ->
+          | DefT (_, _, EmptyT) ->
             (* falsy *)
             rec_flow cx trace (left, PredicateT (NotP (ExistsP None), u))
           | _ ->
             (match Type_filter.not_exists left with
-            | DefT (_, _, EmptyT Bottom) ->
+            | DefT (_, _, EmptyT) ->
               (* truthy *)
               rec_flow cx trace (right, UseT (unknown_use, OpenT u))
             | _ ->
@@ -1766,12 +1766,12 @@ struct
              a falsy || b ~> b
              a || b ~> a truthy | b *)
           (match Type_filter.not_exists left with
-          | DefT (_, _, EmptyT Bottom) ->
+          | DefT (_, _, EmptyT) ->
             (* truthy *)
             rec_flow cx trace (left, PredicateT (ExistsP None, u))
           | _ ->
             (match Type_filter.exists left with
-            | DefT (_, _, EmptyT Bottom) ->
+            | DefT (_, _, EmptyT) ->
               (* falsy *)
               rec_flow cx trace (right, UseT (unknown_use, OpenT u))
             | _ ->
@@ -1782,14 +1782,14 @@ struct
            a ?? b ~> a not-nullish | b *)
         | (left, NullishCoalesceT (_, right, u)) ->
           (match Type_filter.maybe left with
-          | DefT (_, _, EmptyT Bottom)
+          | DefT (_, _, EmptyT)
           (* This `AnyT` case is required to have similar behavior to the other logical operators. *)
           | AnyT _ ->
             (* not-nullish *)
             rec_flow cx trace (left, PredicateT (NotP MaybeP, u))
           | _ ->
             (match Type_filter.not_maybe left with
-            | DefT (_, _, EmptyT Bottom) ->
+            | DefT (_, _, EmptyT) ->
               (* nullish *)
               rec_flow cx trace (right, UseT (unknown_use, OpenT u))
             | _ ->
@@ -2752,7 +2752,7 @@ struct
         | (AnyT (_, src), MakeExactT (reason_op, k)) -> continue cx trace (AnyT.why src reason_op) k
         | (DefT (_, trust, VoidT), MakeExactT (reason_op, k)) ->
           continue cx trace (VoidT.why reason_op trust) k
-        | (DefT (_, trust, EmptyT _), MakeExactT (reason_op, k)) ->
+        | (DefT (_, trust, EmptyT), MakeExactT (reason_op, k)) ->
           continue cx trace (EmptyT.why reason_op trust) k
         (* unsupported kind *)
         | (_, MakeExactT (reason_op, k)) ->
@@ -5191,7 +5191,7 @@ struct
             reasons;
           enum_exhaustive_check_incomplete cx ~trace ~reason incomplete_out
         (* If the discriminant is empty, the check is successful. *)
-        | ( DefT (_, _, EmptyT _),
+        | ( DefT (_, _, EmptyT),
             EnumExhaustiveCheckT
               {
                 check =
@@ -5330,7 +5330,7 @@ struct
         (***************************)
 
         (* Use our alternate if our lower bound is empty. *)
-        | (DefT (_, _, EmptyT Bottom), CondT (_, _, else_t, tout)) ->
+        | (DefT (_, _, EmptyT), CondT (_, _, else_t, tout)) ->
           rec_flow_t cx trace ~use_op:unknown_use (else_t, tout)
         (* Otherwise continue by Flowing out lower bound to tout. *)
         | (_, CondT (_, then_t_opt, _, tout)) ->
@@ -5838,15 +5838,12 @@ struct
       | (DefT (_, _, NumT _), DefT (_, _, StrT _)) ->
         rec_flow_t cx trace ~use_op:unknown_use (StrT.at loc |> with_trust bogus_trust, u)
       (* unreachable additions are unreachable *)
-      | (DefT (_, _, EmptyT Bottom), _)
-      | (_, DefT (_, _, EmptyT Bottom)) ->
+      | (DefT (_, _, EmptyT), _)
+      | (_, DefT (_, _, EmptyT)) ->
         rec_flow_t cx trace ~use_op:unknown_use (EmptyT.at loc |> with_trust bogus_trust, u)
       | (DefT (reason, _, MixedT _), _)
       | (_, DefT (reason, _, MixedT _)) ->
         add_output cx ~trace (Error_message.EAdditionMixed (reason, use_op))
-      | (DefT (_, _, EmptyT Zeroed), t)
-      | (t, DefT (_, _, EmptyT Zeroed)) ->
-        rec_flow_t cx trace ~use_op:unknown_use (t, u)
       | (DefT (_, _, (NumT _ | BoolT _)), DefT (_, _, (NumT _ | BoolT _))) ->
         rec_flow_t cx trace ~use_op:unknown_use (NumT.at loc |> with_trust bogus_trust, u)
       | (DefT (_, _, StrT _), _) ->
@@ -5894,8 +5891,8 @@ struct
       match (l, r) with
       | (DefT (_, _, StrT _), DefT (_, _, StrT _)) -> ()
       | (_, _) when numberesque l && numberesque r -> ()
-      | (DefT (_, _, EmptyT _), _)
-      | (_, DefT (_, _, EmptyT _)) ->
+      | (DefT (_, _, EmptyT), _)
+      | (_, DefT (_, _, EmptyT)) ->
         ()
       | _ ->
         let reasons = FlowError.ordered_reasons (reason_of_t l, reason_of_t r) in
@@ -5938,153 +5935,25 @@ struct
       | Some error -> add_output cx ~trace error
       | None -> ()
 
-  (* Returns true when __flow should succeed immediately if EmptyT of a given
-     flavor flows into u. *)
-  and empty_success flavor u =
-    match (flavor, u) with
-    (* Work has to happen when Empty flows to these types whether the EmptyT
-       originates from generic testing or elsewhere. This logic was previously
-       captured in ground_subtype. *)
-    | (_, UseT (_, OpenT _))
-    | (_, UseT (_, TypeDestructorTriggerT _))
-    | (_, ChoiceKitUseT _)
-    | (_, CondT _)
-    | (_, DestructuringT _)
-    | (_, EnumExhaustiveCheckT _)
-    | (_, MakeExactT _)
-    | (_, ObjKitT _)
-    | (_, ReposLowerT _)
-    | (_, ReposUseT _)
-    | (_, UnifyT _)
-    | (_, SealGenericT _)
-    | (_, ResolveUnionT _) ->
+  (* Returns true when __flow should succeed immediately if EmptyT flows into u. *)
+  and empty_success u =
+    match u with
+    (* Work has to happen when Empty flows to these types *)
+    | UseT (_, OpenT _)
+    | UseT (_, TypeDestructorTriggerT _)
+    | ChoiceKitUseT _
+    | CondT _
+    | DestructuringT _
+    | EnumExhaustiveCheckT _
+    | MakeExactT _
+    | ObjKitT _
+    | ReposLowerT _
+    | ReposUseT _
+    | UnifyT _
+    | SealGenericT _
+    | ResolveUnionT _ ->
       false
-    | (Bottom, _) -> true
-    (* After this line, flavor is always Zeroed. *)
-    (* Special cases: these cases actually utilize the fact that the LHS is Empty,
-       either by specially propagating it or selecting cases, etc. *)
-    | (_, UseT (_, ExactT _))
-    | (_, AdderT _)
-    | (_, AndT _)
-    | (_, OrT _)
-    (* Propagation cases: these cases don't use the fact that the LHS is
-       empty, but they propagate the LHS to other types and trigger additional
-       flows that may need to occur. *)
-    | (_, UseT (_, DefT (_, _, PolyT _)))
-    | (_, UseT (_, TypeAppT _))
-    | (_, UseT (_, MaybeT _))
-    | (_, UseT (_, MergedT _))
-    | (_, UseT (_, OpaqueT _))
-    | (_, UseT (_, OptionalT _))
-    | (_, UseT (_, ReposT _))
-    | (_, UseT (_, ThisClassT _))
-    | (_, UseT (_, ThisTypeAppT _))
-    | (_, UseT (_, UnionT _))
-    | (_, AssertExportIsTypeT _)
-    | (_, AssertImportIsValueT _)
-    | (_, BecomeT _)
-    | (_, BindT _)
-    | (_, CallLatentPredT _)
-    | (_, CallOpenPredT _)
-    | (_, CJSExtractNamedExportsT _)
-    | (_, ComparatorT _)
-    | (_, DebugPrintT _)
-    | (_, StrictEqT _)
-    | (_, EqT _)
-    | (_, ExportTypeT _)
-    | (_, IdxUnwrap _)
-    | (_, ImportTypeT _)
-    | (_, ImportTypeofT _)
-    | (_, IntersectionPreprocessKitT _)
-    | (_, InvariantT _)
-    | (_, MapTypeT (_, _, TupleMap _, _))
-    | (_, NotT _)
-    | (_, NullishCoalesceT _)
-    | (_, ObjAssignToT _)
-    | (_, ObjTestT _)
-    | (_, ObjTestProtoT _)
-    | (_, OptionalChainT _)
-    | (_, SentinelPropTestT _)
-    | (_, TestPropT _) ->
-      false
-    (* Error prevention: we should succeed because otherwise we'll hit
-       a case with a wildcard on the LHS that raises an error, which in
-       this situation would be spurious *)
-    | (_, UseT (_, AnnotT _))
-    | (_, UseT (_, EvalT _))
-    | (_, UseT (_, DefT (_, _, TypeT _)))
-    | (_, UseT (_, ShapeT _))
-    | (_, AssertArithmeticOperandT _)
-    | (_, AssertBinaryInLHST _)
-    | (_, AssertBinaryInRHST _)
-    | (_, AssertForInRHST _)
-    | (_, LookupT _)
-    | (_, ImplementsT _)
-    | (_, SetProtoT _)
-    (* No more work: we can succeed without flowing EmptyT any further
-       because the relevant cases don't propagate the LHS to any other
-       types; either the flow would succeed anyways or it would fall
-       through to the final catch-all error case and cause a spurious
-       error. *)
-    | (_, UseT _)
-    | (_, ArrRestT _)
-    | (_, AssertIterableT _)
-    | (_, CallElemT _)
-    | (_, CallT _)
-    | (_, CJSRequireT _)
-    | (_, ConcretizeTypeAppsT _)
-    | (_, ConstructorT _)
-    | (_, CopyNamedExportsT _)
-    | (_, CopyTypeExportsT _)
-    | (_, CreateObjWithComputedPropT _)
-    | (_, DebugSleepT _)
-    | (_, ElemT _)
-    | (_, ExportNamedT _)
-    | (_, ExtendsUseT _)
-    | (_, FunImplicitVoidReturnT _)
-    | (_, GetElemT _)
-    | (_, GetKeysT _)
-    | (_, GetPrivatePropT _)
-    | (_, GetPropT _)
-    | (_, GetProtoT _)
-    | (_, GetStaticsT _)
-    | (_, GetValuesT _)
-    | (_, GuardT _)
-    | (_, HasOwnPropT _)
-    | (_, IdxUnMaybeifyT _)
-    | (_, ImportDefaultT _)
-    | (_, ImportModuleNsT _)
-    | (_, ImportNamedT _)
-    | (_, MatchPropT _)
-    | (_, MapTypeT _) (* Note the TupleMap case above *)
-    | (_, MethodT _)
-    | (_, MixinT _)
-    | (_, ObjAssignFromT _)
-    | (_, ObjRestT _)
-    | (_, ObjSealT _)
-    | (_, PredicateT _)
-    | (_, ReactInToProps _)
-    | (_, ReactKitT _)
-    | (_, ReactPropsToOut _)
-    | (_, RefineT _)
-    | (_, ResolveSpreadT _)
-    | (_, SetElemT _)
-    | (_, SetPrivatePropT _)
-    | (_, SetPropT _)
-    | (_, SpecializeT _)
-    | (_, SubstOnPredT _)
-    | (_, SuperT _)
-    | (_, ThisSpecializeT _)
-    | (_, ToStringT _)
-    | (_, TypeAppVarianceCheckT _)
-    | (_, TypeCastT _)
-    | (_, EnumCastT _)
-    | (_, UnaryMinusT _)
-    | (_, VarianceCheckT _)
-    | (_, ModuleExportsAssignT _)
-    | (_, FilterOptionalT _)
-    | (_, FilterMaybeT _) ->
-      true
+    | _ -> true
 
   and handle_generic cx trace bound reason id name u =
     let make_generic t = GenericT { reason; id; name; bound = t } in
@@ -6138,7 +6007,7 @@ struct
           trace
           (position_generic_bound reason bound, SealGenericT { reason; id; name; cont = Upper u });
         true
-      | DefT (_, _, EmptyT flavor) -> empty_success flavor u
+      | DefT (_, _, EmptyT) -> empty_success u
       | _ -> false
     then
       true
@@ -7356,7 +7225,7 @@ struct
         rec_flow cx trace (next, ResolveUnionT { reason; resolved; unresolved = rest; upper; id })
     in
     match l with
-    | DefT (_, _, EmptyT _) -> continue resolved
+    | DefT (_, _, EmptyT) -> continue resolved
     | _ ->
       let reason_elemt = reason_of_t l in
       let pos = Base.List.length resolved in
@@ -7683,7 +7552,7 @@ struct
           in
           let exists_check =
             match Type_filter.maybe t with
-            | DefT (_, _, EmptyT _) -> exists_check
+            | DefT (_, _, EmptyT) -> exists_check
             | _ -> { exists_check with null_loc = t_loc }
           in
           let exists_check =
@@ -7717,26 +7586,26 @@ struct
       update_sketchy_null cx loc source;
       begin
         match Type_filter.exists source with
-        | DefT (_, _, EmptyT _) -> ()
+        | DefT (_, _, EmptyT) -> ()
         | _ -> rec_flow_t cx trace ~use_op:unknown_use (result, OpenT sink)
       end
     | NotP (ExistsP loc) ->
       update_sketchy_null cx loc source;
       begin
         match Type_filter.not_exists source with
-        | DefT (_, _, EmptyT _) -> ()
+        | DefT (_, _, EmptyT) -> ()
         | _ -> rec_flow_t cx trace ~use_op:unknown_use (result, OpenT sink)
       end
     | MaybeP ->
       begin
         match Type_filter.maybe source with
-        | DefT (_, _, EmptyT _) -> ()
+        | DefT (_, _, EmptyT) -> ()
         | _ -> rec_flow_t cx trace ~use_op:unknown_use (result, OpenT sink)
       end
     | NotP MaybeP ->
       begin
         match Type_filter.not_maybe source with
-        | DefT (_, _, EmptyT _) -> ()
+        | DefT (_, _, EmptyT) -> ()
         | _ -> rec_flow_t cx trace ~use_op:unknown_use (result, OpenT sink)
       end
     | NotP (NotP p) -> guard cx trace source p result sink

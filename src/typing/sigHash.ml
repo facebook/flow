@@ -249,7 +249,7 @@ let hash_of_def_ctor =
     | BoolT _ -> BoolH
     | CharSetT _ -> CharSetH
     | ClassT _ -> ClassH
-    | EmptyT _ -> EmptyH
+    | EmptyT -> EmptyH
     | EnumT _ -> EnumH
     | EnumObjectT _ -> EnumObjectH
     | FunT _ -> FunH

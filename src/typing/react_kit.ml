@@ -723,7 +723,7 @@ module Kit (Flow : Flow_common.S) : REACT = struct
           (CustomFunT (reason_op, ReactPropType (PropType.Primitive (false, t))), tout)
       in
       let mk_union reason = function
-        | [] -> DefT (replace_desc_reason REmpty reason, bogus_trust (), EmptyT Bottom)
+        | [] -> DefT (replace_desc_reason REmpty reason, bogus_trust (), EmptyT)
         | [t] -> t
         | t0 :: t1 :: ts ->
           let reason = replace_desc_reason RUnionType reason in

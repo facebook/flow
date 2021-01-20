@@ -1654,7 +1654,7 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
           in
           resolved cx trace use_op reason resolve_tool tool tout x
         (* If we see an empty then propagate empty to tout. *)
-        | DefT (r, trust, EmptyT _) -> rec_flow cx trace (EmptyT.make r trust, UseT (use_op, tout))
+        | DefT (r, trust, EmptyT) -> rec_flow cx trace (EmptyT.make r trust, UseT (use_op, tout))
         (* Propagate any. *)
         | AnyT (_, src) -> rec_flow cx trace (AnyT.why src reason, UseT (use_op, tout))
         (* Other types have reasonable object representations that may be added as

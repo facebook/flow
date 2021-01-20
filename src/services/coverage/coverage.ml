@@ -232,7 +232,7 @@ class visitor =
       | MatchingPropT _
       | TypeDestructorTriggerT _ ->
         (Kind.Empty, Taint.Untainted)
-      | DefT (_, t, EmptyT _) -> (Kind.Empty, Taint.of_trust cx t)
+      | DefT (_, t, EmptyT) -> (Kind.Empty, Taint.of_trust cx t)
       | AnyT _ -> (Kind.Any, Taint.Tainted)
 
     method private types_of_use acc =

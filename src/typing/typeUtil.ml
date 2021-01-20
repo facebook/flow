@@ -668,10 +668,10 @@ let quick_subtype trust_checked t1 t2 =
     | (DefT (_, ltrust, NullT), DefT (_, rtrust, NullT))
     | (DefT (_, ltrust, VoidT), DefT (_, rtrust, VoidT))
     | (DefT (_, ltrust, SymbolT), DefT (_, rtrust, SymbolT))
-    | (DefT (_, ltrust, EmptyT _), DefT (_, rtrust, _))
+    | (DefT (_, ltrust, EmptyT), DefT (_, rtrust, _))
     | (DefT (_, ltrust, _), DefT (_, rtrust, MixedT _)) ->
       (not trust_checked) || trust_subtype_fixed ltrust rtrust
-    | (DefT (_, ltrust, EmptyT _), _) ->
+    | (DefT (_, ltrust, EmptyT), _) ->
       (not trust_checked) || trust_value_map ~f:is_public ~default:false ltrust
     | (_, DefT (_, rtrust, MixedT _)) ->
       (not trust_checked) || trust_value_map ~f:is_tainted ~default:false rtrust
@@ -860,7 +860,7 @@ let map_annotated_or_inferred f = function
 let union_of_ts reason ts =
   match ts with
   (* If we have no types then this is an error. *)
-  | [] -> DefT (reason, bogus_trust (), EmptyT Bottom)
+  | [] -> DefT (reason, bogus_trust (), EmptyT)
   (* If we only have one type then only that should be used. *)
   | [t0] -> t0
   (* If we have more than one type then we make a union type. *)

@@ -69,7 +69,7 @@ class implicit_instantiation_visitor ~bounds_map =
         match get_t cx t with
         | AnnotT (_, t, _) -> self#typeapp targs cx pole acc t
         | DefT (_, _, PolyT { tparams; _ }) -> loop cx pole acc (Some (Nel.to_list tparams), targs)
-        | DefT (_, _, EmptyT _)
+        | DefT (_, _, EmptyT)
         | AnyT _
         | MergedT _ ->
           loop cx pole acc (None, targs)

@@ -943,8 +943,8 @@ module Make (F : Func_sig.S) = struct
     let is_bound_to_empty { super; _ } =
       Type.(
         match super with
-        | Class { this_t = DefT (_, _, EmptyT _); _ }
-        | Class { this_t = ReposT (_, DefT (_, _, EmptyT _)); _ } ->
+        | Class { this_t = DefT (_, _, EmptyT); _ }
+        | Class { this_t = ReposT (_, DefT (_, _, EmptyT)); _ } ->
           true
         | _ -> false)
 
