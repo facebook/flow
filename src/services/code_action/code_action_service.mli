@@ -57,3 +57,7 @@ val insert_type :
   location_is_strict:bool ->
   ambiguity_strategy:Autofix_options.ambiguity_strategy ->
   (Replacement_printer.patch, string) result Lwt.t
+
+module For_tests : sig
+  val path_of_modulename : string option -> Modulename.t -> string option
+end
