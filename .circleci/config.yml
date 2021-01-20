@@ -43,15 +43,14 @@ orbs:
         steps:
           - run:
               name: Init opam
-              shell: C:/tools/cygwin/bin/bash.exe --noprofile --norc -eo pipefail
+              shell: C:/tools/cygwin/bin/bash.exe -leo pipefail
               command: |
-                export PATH=$PATH:/usr/local/bin:/usr/bin
                 [ -d ~/.opam ] || opam init default 'https://github.com/fdopen/opam-repository-mingw.git#opam2' --bare --disable-sandboxing
       create_switch:
         steps:
           - run:
               name: Create opam switch
-              shell: C:/tools/cygwin/bin/bash.exe --noprofile --norc -eo pipefail
+              shell: C:/tools/cygwin/bin/bash.exe -leo pipefail
               environment:
                 PATH: /usr/local/bin:/usr/bin:/cygdrive/c/Windows/system32:/cygdrive/c/Windows:/cygdrive/c/Windows/System32/Wbem:/cygdrive/c/Windows/System32/WindowsPowerShell/v1.0
               command: |
@@ -271,8 +270,13 @@ jobs:
       - attach_workspace:
           at: .
       - run:
+          name: Set default directory
+          shell: C:/tools/cygwin/bin/bash.exe -leo pipefail
+          command: |
+            echo "cd /cygdrive/c/Users/circleci/project" >> $BASH_ENV
+      - run:
           name: Create cache breaker
-          shell: C:/tools/cygwin/bin/bash.exe --noprofile --norc -eo pipefail
+          shell: C:/tools/cygwin/bin/bash.exe -leo pipefail
           command: |
             /usr/local/bin/opam --version > /cygdrive/c/tmp/flow/opamcachebreaker
             echo "ocaml-4.07.1" >> /cygdrive/c/tmp/flow/opamcachebreaker
@@ -291,7 +295,7 @@ jobs:
             - _opam
       - run:
           name: Build flow.exe
-          shell: C:/tools/cygwin/bin/bash.exe --noprofile --norc -eo pipefail
+          shell: C:/tools/cygwin/bin/bash.exe -leo pipefail
           environment:
             PATH: /usr/local/bin:/usr/bin:/cygdrive/c/Windows/system32:/cygdrive/c/Windows:/cygdrive/c/Windows/System32/Wbem:/cygdrive/c/Windows/System32/WindowsPowerShell/v1.0
             CC: x86_64-w64-mingw32-gcc
@@ -304,7 +308,7 @@ jobs:
              cp dist/flow.zip dist/flow-win64.zip
       - run:
           name: Build parser test runner
-          shell: C:/tools/cygwin/bin/bash.exe --noprofile --norc -eo pipefail
+          shell: C:/tools/cygwin/bin/bash.exe -leo pipefail
           environment:
             PATH: /usr/local/bin:/usr/bin:/cygdrive/c/Windows/system32:/cygdrive/c/Windows:/cygdrive/c/Windows/System32/Wbem:/cygdrive/c/Windows/System32/WindowsPowerShell/v1.0
           command: |
