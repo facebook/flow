@@ -244,17 +244,24 @@ let input_file_flag verb prev =
            ^ "read from the standard input." ))
 
 type shared_mem_params = {
+  shm_heap_size: int option;
   shm_hash_table_pow: int option;
   shm_log_level: int option;
 }
 
-let collect_shm_flags main shm_hash_table_pow shm_log_level =
-  main { shm_hash_table_pow; shm_log_level }
+let collect_shm_flags main shm_heap_size shm_hash_table_pow shm_log_level =
+  main { shm_heap_size; shm_hash_table_pow; shm_log_level }
 
 let shm_flags prev =
   CommandSpec.ArgSpec.(
     prev
     |> collect collect_shm_flags
+    |> flag
+         "--sharedmemory-heap-size"
+         int
+         ~doc:
+           "The maximum size of the shared memory heap. The default is 26843545600 (25 * 2^30 bytes = 25 GiB)"
+         ~env:"FLOW_SHAREDMEM_HEAP_SIZE"
     |> flag
          "--sharedmemory-hash-table-pow"
          int
@@ -266,6 +273,9 @@ let shm_flags prev =
          ~doc:"The logging level for shared memory statistics. 0=none, 1=some")
 
 let shm_config shm_flags flowconfig =
+  let heap_size =
+    Base.Option.value shm_flags.shm_heap_size ~default:(FlowConfig.shm_heap_size flowconfig)
+  in
   let hash_table_pow =
     Base.Option.value
       shm_flags.shm_hash_table_pow
@@ -274,7 +284,7 @@ let shm_config shm_flags flowconfig =
   let log_level =
     Base.Option.value shm_flags.shm_log_level ~default:(FlowConfig.shm_log_level flowconfig)
   in
-  { SharedMem.heap_size = FlowConfig.shm_heap_size flowconfig; hash_table_pow; log_level }
+  { SharedMem.heap_size; hash_table_pow; log_level }
 
 let from_flag =
   let collector main from =
