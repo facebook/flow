@@ -1026,7 +1026,7 @@ module ContextOptimizer = struct
           super#use_type cx pole use
 
       method! choice_use_tool =
-        (* Even with MergedT, any choice kit constraints should be fully
+        (* Any choice kit constraints should be fully
            discharged by this point. This preserves a key invariant, that type
            graphs are local to a single merge job. In other words, we will not see
            a FullyResolveType constraint that corresponds to a tvar from another

@@ -80,7 +80,6 @@ type hash =
   | MaybeH
   | IntersectionH
   | UnionH
-  | MergedH
   | ShapeH
   | KeysH
   | SingletonStrH
@@ -285,7 +284,6 @@ let hash_of_ctor =
     | OpaqueT _ -> failwith "undefined hash of OpaqueT"
     | AnyT _ -> AnyH
     | AnnotT _ -> AnnotH
-    | MergedT _ -> MergedH
     | BoundT _ -> BoundH
     | TypeDestructorTriggerT _ -> TvarDestructorH
     | CustomFunT (_, ObjectAssign) -> CustomFunObjectAssignH

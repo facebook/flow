@@ -849,7 +849,6 @@ end = struct
       | TypeDestructorTriggerT (_, r, _, _, _) ->
         let loc = Reason.def_aloc_of_reason r in
         return (mk_empty (Ty.EmptyTypeDestructorTriggerT loc))
-      | MergedT (_, uses) -> merged_t ~env uses
       | ExistsT _ -> return Ty.(Utility Exists)
       | ObjProtoT _ -> return Ty.(TypeOf ObjProto)
       | FunProtoT _ -> return Ty.(TypeOf FunProto)
@@ -1783,18 +1782,6 @@ end = struct
         | u :: _ -> return (Ty.SomeUnknownUpper (T.string_of_use_ctor u))
       in
       (fun ~env uses -> uses_t_aux ~env [] uses)
-
-    and merged_t ~env uses =
-      match%bind uses_t ~env uses with
-      | Ty.SomeUnknownUpper _ ->
-        (* un-normalizable *)
-        terr ~kind:BadUse None
-      | Ty.NoUpper ->
-        (* shouldn't happen - MergedT has at least one use by construction *)
-        return (mk_empty (Ty.NoLowerWithUpper Ty.NoUpper))
-      | Ty.SomeKnownUpper t ->
-        (* return the recorded use type *)
-        return t
 
     let rec type_ctor_ = type_ctor ~cont:type_ctor_
 

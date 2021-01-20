@@ -168,7 +168,6 @@ class visitor =
     method type_ cx =
       function
       | OpenT (_, id) -> self#tvar cx id
-      | MergedT (_, uses) -> self#merged_t cx uses
       | EvalT (t, _, id) -> self#eval_t cx t id
       (* Non-concrete (fallthrough) constructors *)
       | AnnotT (_, t, _)

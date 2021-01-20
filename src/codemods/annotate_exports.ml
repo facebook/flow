@@ -94,8 +94,7 @@ module SignatureVerification = struct
     in
     let norm_opts =
       {
-        Ty_normalizer_env.fall_through_merged = false;
-        expand_internal_types = false;
+        Ty_normalizer_env.expand_internal_types = false;
         expand_type_aliases = false;
         flag_shadowed_type_params = false;
         preserve_inferred_literal_types;

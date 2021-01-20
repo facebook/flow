@@ -171,7 +171,6 @@ let autocomplete_create_result_elt
 let ty_normalizer_options =
   Ty_normalizer_env.
     {
-      fall_through_merged = true;
       expand_internal_types = true;
       expand_type_aliases = false;
       flag_shadowed_type_params = true;

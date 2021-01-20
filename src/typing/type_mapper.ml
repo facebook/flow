@@ -146,12 +146,6 @@ class virtual ['a] t =
           t
         else
           GenericT { generic with bound = bound' }
-      | MergedT (r, uses) ->
-        let uses' = ListUtils.ident_map (self#use_type cx map_cx) uses in
-        if uses == uses' then
-          t
-        else
-          MergedT (r, uses')
       | ShapeT (r, t') ->
         let t'' = self#type_ cx map_cx t' in
         if t'' == t' then

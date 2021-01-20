@@ -511,11 +511,6 @@ module Make (Flow : INPUT) : OUTPUT = struct
 
   let rec_sub_t cx use_op l u trace =
     match (l, u) with
-    (*****************)
-    (* any with uses *)
-    (*****************)
-    | (_, MergedT (_, uses)) -> List.iter (fun u -> rec_flow cx trace (l, u)) uses
-    | (MergedT (reason, _), _) -> rec_flow_t cx trace ~use_op (Unsoundness.why Merged reason, u)
     (***************************)
     (* type destructor trigger *)
     (***************************)

@@ -300,13 +300,6 @@ let rec dump_t_ (depth, tvars) cx t =
              (String.concat "; " (Base.List.map ~f:kid (UnionRep.members rep)))
              (UnionRep.string_of_specialization rep))
         t
-    | MergedT (_, uses) ->
-      p
-        ~extra:
-          ( "["
-          ^ String.concat ", " (Base.List.map ~f:(dump_use_t_ (depth - 1, tvars) cx) uses)
-          ^ "]" )
-        t
     | DefT (_, trust, IdxWrapper inner_obj) -> p ~trust:(Some trust) ~extra:(kid inner_obj) t
     | DefT (_, trust, ReactAbstractComponentT _) -> p ~trust:(Some trust) t
     | ShapeT (_, arg) -> p ~extra:(kid arg) t

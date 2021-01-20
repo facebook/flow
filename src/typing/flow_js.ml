@@ -506,10 +506,6 @@ struct
         (* Subtyping *)
         (*************)
         | (_, UseT (use_op, u)) -> rec_sub_t cx use_op l u trace
-        (*****************)
-        (* any with uses *)
-        (*****************)
-        | (MergedT (reason, _), _) -> rec_flow cx trace (Unsoundness.why Merged reason, u)
         (***************************)
         (* type destructor trigger *)
         (***************************)
@@ -6297,7 +6293,6 @@ struct
     | UnifyT _
     | UseT (_, AnnotT _) (* this transforms into a ReposUseT *)
     | UseT (_, MaybeT _) (* used to filter maybe *)
-    | UseT (_, MergedT _) (* Already handled in __flow *)
     | UseT (_, OptionalT _) (* used to filter optional *)
     | ObjAssignFromT _
     (* Handled in __flow *)
@@ -6417,7 +6412,6 @@ struct
     | ThisClassT _
     | ReposT _
     | EvalT _
-    | MergedT _
     | OpenPredT _
     | InternalT (ReposUpperT _)
     | MatchingPropT _
@@ -6705,9 +6699,7 @@ struct
     in
     let slingshot =
       match drop_generic t with
-      | OpenT _
-      | MergedT _ ->
-        false
+      | OpenT _ -> false
       | _ -> true
     in
     let result =
@@ -6721,15 +6713,11 @@ struct
          * The second branch then uses AnnotT to both concretize the result for use
          * as a lower or upper bound and prevent new bounds from being added to
          * the result.
-         *
-         * MergedT should also get this treatment as it is a merged "description" of
-         * an OpenT. *)
+         *)
         let f tvar =
           match t with
           | OpenT _
-          | MergedT _
-          | GenericT { bound = OpenT _; _ }
-          | GenericT { bound = MergedT _; _ } ->
+          | GenericT { bound = OpenT _; _ } ->
             let x = TypeDestructorTriggerT (use_op, reason, None, d, tvar) in
             rec_flow_t cx trace ~use_op:unknown_use (t, x);
             rec_flow_t cx trace ~use_op:unknown_use (x, t)
@@ -8540,15 +8528,13 @@ struct
      unification with any, we will miss the string/number incompatibility error.
 
      However, unifying with any-like types is sometimes desirable /
-     intentional. Thus, we limit the set of types on which unification is banned
-     to just MergedT which is an internal type.
+     intentional.
   *)
   and ok_unify ~unify_any desc = function
     | AnyT _ ->
       (match desc with
       | RExistential -> true
       | _ -> unify_any)
-    | MergedT _ -> false
     | _ -> true
 
   and __unify cx ~use_op ~unify_any t1 t2 trace =

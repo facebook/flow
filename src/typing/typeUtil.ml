@@ -17,7 +17,6 @@ open Type
 let rec reason_of_t = function
   | OpenT (reason, _) -> reason
   | AnnotT (reason, _, _) -> reason
-  | MergedT (reason, _) -> reason
   | BoundT (reason, _) -> reason
   | InternalT (ChoiceKitT (reason, _)) -> reason
   | TypeDestructorTriggerT (_, reason, _, _, _) -> reason
@@ -184,7 +183,6 @@ let def_loc_of_t = reason_of_t %> def_aloc_of_reason
 let rec mod_reason_of_t f = function
   | OpenT (reason, id) -> OpenT (f reason, id)
   | AnnotT (reason, t, use_desc) -> AnnotT (f reason, t, use_desc)
-  | MergedT (reason, uses) -> MergedT (f reason, uses)
   | BoundT (reason, name) -> BoundT (f reason, name)
   | InternalT (ChoiceKitT (reason, tool)) -> InternalT (ChoiceKitT (f reason, tool))
   | TypeDestructorTriggerT (use_op, reason, repos, d, t) ->

@@ -96,8 +96,6 @@ module rec TypeTerm : sig
     | FunProtoApplyT of reason (* Function.prototype.apply *)
     | FunProtoBindT of reason (* Function.prototype.bind *)
     | FunProtoCallT of reason (* Function.prototype.call *)
-    (* a merged tvar that had no lowers *)
-    | MergedT of reason * use_t list
     (* constrains some properties of an object *)
     | ShapeT of reason * t
     | MatchingPropT of reason * string * t
@@ -2965,7 +2963,6 @@ let string_of_ctor = function
   | OpenT _ -> "OpenT"
   | AnyT _ -> "AnyT"
   | AnnotT _ -> "AnnotT"
-  | MergedT _ -> "MergedT"
   | BoundT _ -> "BoundT"
   | InternalT (ChoiceKitT (_, tool)) ->
     spf
