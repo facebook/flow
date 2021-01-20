@@ -449,10 +449,14 @@ CAMLprim value hh_hash_stats(value unit) {
   CAMLreturn(stats);
 }
 
-static void raise_failed_memfd_init(int errcode) {
+static void raise_failed_memfd_init(char *msg, int errcode) {
   static value *exn = NULL;
+  CAMLparam0();
+  CAMLlocalN(args, 2);
   if (!exn) exn = caml_named_value("failed_memfd_init");
-  caml_raise_with_arg(*exn, unix_error_of_code(errcode));
+  args[0] = caml_copy_string(msg);
+  args[1] = unix_error_of_code(errcode);
+  caml_raise_with_args(*exn, 2, args);
 }
 
 #ifdef _WIN32
@@ -484,11 +488,11 @@ static void memfd_init(size_t shared_mem_size) {
     NULL);
   if (memfd == NULL) {
     win32_maperr(GetLastError());
-    raise_failed_memfd_init(errno);
+    raise_failed_memfd_init("CreateFileMapping", errno);
   }
   if (!SetHandleInformation(memfd, HANDLE_FLAG_INHERIT, HANDLE_FLAG_INHERIT)) {
     win32_maperr(GetLastError());
-    raise_failed_memfd_init(errno);
+    raise_failed_memfd_init("SetHandleInformation", errno);
   }
 }
 
@@ -523,7 +527,7 @@ static void memfd_init(size_t shared_mem_size) {
     shm_unlink(memname);
     memfd = shm_open(memname, O_CREAT | O_RDWR, 0666);
     if (memfd < 0) {
-      raise_failed_memfd_init(errno);
+      raise_failed_memfd_init("shm_open", errno);
     }
 
     // shm_open sets FD_CLOEXEC automatically. This is undesirable, because
@@ -531,15 +535,15 @@ static void memfd_init(size_t shared_mem_size) {
     // reconnect to the shared memory.
     int flags = fcntl(memfd, F_GETFD);
     if (flags == -1) {
-      raise_failed_memfd_init(errno);
+      raise_failed_memfd_init("getting flags", errno);
     }
     // Unset close-on-exec
     if (fcntl(memfd, F_SETFD, flags & ~FD_CLOEXEC) == -1) {
-      raise_failed_memfd_init(errno);
+      raise_failed_memfd_init("unsetting close-on-exec", errno);
     };
   }
   if (ftruncate(memfd, shared_mem_size) == -1) {
-    raise_failed_memfd_init(errno);
+    raise_failed_memfd_init("ftruncate", errno);
   }
 }
 
@@ -584,11 +588,15 @@ static char *memfd_map(size_t size) {
  * `SIGBUS`.
  ****************************************************************************/
 
-static void raise_out_of_shared_memory(void)
+static void raise_out_of_shared_memory(char *msg, int errcode)
 {
   static value *exn = NULL;
+  CAMLparam0();
+  CAMLlocalN(args, 2);
   if (!exn) exn = caml_named_value("out_of_shared_memory");
-  caml_raise_constant(*exn);
+  args[0] = caml_copy_string(msg);
+  args[1] = unix_error_of_code(errcode);
+  caml_raise_with_args(*exn, 2, args);
 }
 
 #ifdef _WIN32
@@ -597,7 +605,7 @@ static void raise_out_of_shared_memory(void)
 static void win_reserve(char * mem, size_t sz) {
   if (!VirtualAlloc(mem, sz, MEM_COMMIT, PAGE_READWRITE)) {
     win32_maperr(GetLastError());
-    raise_out_of_shared_memory();
+    raise_out_of_shared_memory("win_reserve", errno);
   }
 }
 
@@ -630,7 +638,7 @@ static void memfd_reserve(char *mem, size_t sz) {
     err = posix_fallocate(memfd, offset, sz);
   } while (err == EINTR);
   if (err) {
-    raise_out_of_shared_memory();
+    raise_out_of_shared_memory("memfd_reserve", err);
   }
 }
 

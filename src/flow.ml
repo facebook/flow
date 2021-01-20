@@ -108,12 +108,14 @@ let _ =
     (* this call might not return *)
     FlowShell.main ()
   with
-  | SharedMem.Out_of_shared_memory as e ->
+  | SharedMem.Out_of_shared_memory (msg, err) as e ->
     let e = Exception.wrap e in
     let bt = Exception.get_backtrace_string e in
     let msg =
       Utils.spf
-        "Out of shared memory%s"
+        "Out of shared memory: %s (%s)%s"
+        msg
+        (Unix.error_message err)
         ( if bt = "" then
           bt
         else

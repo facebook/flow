@@ -23,7 +23,7 @@ type effort =
   | `always_TEST
   ]
 
-exception Out_of_shared_memory
+exception Out_of_shared_memory of (string * Unix.error)
 
 exception Hash_table_full
 

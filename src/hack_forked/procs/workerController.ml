@@ -309,7 +309,8 @@ let read (type result) worker_pid infd : (result * Measure.record_data) Lwt.t =
         Exception.reraise exn
       | (_, Unix.WEXITED i) ->
         (match FlowExitStatus.error_type_opt i with
-        | Some FlowExitStatus.Out_of_shared_memory -> raise SharedMem.Out_of_shared_memory
+        | Some FlowExitStatus.Out_of_shared_memory ->
+          raise (SharedMem.Out_of_shared_memory ("reraised from worker", Unix.EUNKNOWNERR ~-1))
         | Some FlowExitStatus.Hash_table_full -> raise SharedMem.Hash_table_full
         | Some FlowExitStatus.Heap_full -> raise SharedMem.Heap_full
         | _ ->

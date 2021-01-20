@@ -36,19 +36,21 @@ type effort =
 
 let heap_ref : heap option ref = ref None
 
-exception Out_of_shared_memory
+exception Out_of_shared_memory of (string * Unix.error)
 
 exception Hash_table_full
 
 exception Heap_full
 
-exception Failed_memfd_init of Unix.error
+exception Failed_memfd_init of (string * Unix.error)
 
 let () =
-  Callback.register_exception "out_of_shared_memory" Out_of_shared_memory;
+  Callback.register_exception
+    "out_of_shared_memory"
+    (Out_of_shared_memory ("", Unix.EUNKNOWNERR ~-1));
   Callback.register_exception "hash_table_full" Hash_table_full;
   Callback.register_exception "heap_full" Heap_full;
-  Callback.register_exception "failed_memfd_init" (Failed_memfd_init Unix.EINVAL)
+  Callback.register_exception "failed_memfd_init" (Failed_memfd_init ("", Unix.EINVAL))
 
 (*****************************************************************************)
 (* Initializes the shared memory. Must be called before forking. *)
@@ -60,14 +62,15 @@ let init config ~num_workers =
     let (heap, handle) = init config ~num_workers in
     heap_ref := Some heap;
     handle
-  with Failed_memfd_init _ ->
-    if EventLogger.should_log () then EventLogger.sharedmem_failed_memfd_init ();
-    Hh_logger.log "Failed to use anonymous memfd init";
+  with Failed_memfd_init (msg, err) ->
+    if EventLogger.should_log () then EventLogger.sharedmem_failed_memfd_init msg;
+    let err_str = Unix.error_message err in
+    Hh_logger.error "Failed to use anonymous memfd init: %s (%s)" msg err_str;
     (* TODO: The server should exit, but we should exit with a different
      * message, since Out_of_shared_memory is also raised when memfd_reserve
      * fails. This error condition is specifically when the memfd could not be
      * initialized. *)
-    raise Out_of_shared_memory
+    raise (Out_of_shared_memory (Printf.sprintf "SharedMem.init: %s" msg, err))
 
 external connect : handle -> worker_id:int -> heap = "hh_connect"
 

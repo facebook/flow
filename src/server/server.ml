@@ -238,9 +238,13 @@ let exit_msg_of_exception exn msg =
 
 let run_from_daemonize ~init_id ~monitor_channels ~shared_mem_config options =
   try run ~monitor_channels ~shared_mem_config ~init_id options with
-  | SharedMem.Out_of_shared_memory as exn ->
+  | SharedMem.Out_of_shared_memory (msg, err) as exn ->
     let exn = Exception.wrap exn in
-    let msg = exit_msg_of_exception exn "Out of shared memory" in
+    let msg =
+      exit_msg_of_exception
+        exn
+        (Utils.spf "Out of shared memory: %s (%s)" msg (Unix.error_message err))
+    in
     FlowExitStatus.(exit ~msg Out_of_shared_memory)
   | SharedMem.Hash_table_full as exn ->
     let exn = Exception.wrap exn in

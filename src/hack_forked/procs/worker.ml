@@ -143,7 +143,9 @@ let worker_main ic oc =
       exit 0
     with
     | Connection_closed -> exit 1
-    | SharedMem.Out_of_shared_memory -> FlowExitStatus.(exit Out_of_shared_memory)
+    | SharedMem.Out_of_shared_memory (msg, err) ->
+      let msg = Printf.sprintf "Out of shared memory: %s (%s)" msg (Unix.error_message err) in
+      FlowExitStatus.(exit ~msg Out_of_shared_memory)
     | SharedMem.Hash_table_full -> FlowExitStatus.(exit Hash_table_full)
     | SharedMem.Heap_full -> FlowExitStatus.(exit Heap_full)
   with e ->
