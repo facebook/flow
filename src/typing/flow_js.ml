@@ -2465,7 +2465,7 @@ struct
         (************)
         (* matching *)
         (************)
-        (* TODO we will be able to get rid of this case when we kill MergedT *)
+        (* TODO get rid of this  *)
         | (MatchingPropT _, _) when is_use u -> ()
         (*************************)
         (* Resolving rest params *)

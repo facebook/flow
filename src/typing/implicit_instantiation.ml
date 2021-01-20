@@ -11,8 +11,10 @@ module IdMarked = Marked.IdMarked
 module TypeParamMarked = Marked.Make (StringKey)
 module Marked = TypeParamMarked
 
-let get_t cx = function
-  | OpenT (r, id) -> Flow_js_utils.merge_tvar cx r id
+let get_t cx =
+  let no_lowers _cx r = Type.Unsoundness.merged_any r in
+  function
+  | OpenT (r, id) -> Flow_js_utils.merge_tvar ~no_lowers cx r id
   | t -> t
 
 (* This visitor records the polarities at which BoundTs are found. We follow the bounds of each

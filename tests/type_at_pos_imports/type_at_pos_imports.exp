@@ -598,7 +598,7 @@ import-default.js:26:7 = {
   "end":8
 }
 import-rec-export.js:3:10 = {
-  "type":"empty",
+  "type":"any (implicit)",
   "reasons":[],
   "loc":{
     "source":"import-rec-export.js",

@@ -299,13 +299,14 @@ let merge_trust_var constr =
     | TrustUnresolved bound -> get_trust bound |> Trust.fix)
 
 class resolver_visitor =
+  let no_lowers _cx r = Type.Unsoundness.merged_any r in
   object (self)
     inherit [unit] Type_mapper.t_with_uses as super
 
     method! type_ cx map_cx t =
       let open Type in
       match t with
-      | OpenT (r, id) -> Flow_js_utils.merge_tvar ~filter_empty:true cx r id
+      | OpenT (r, id) -> Flow_js_utils.merge_tvar ~filter_empty:true ~no_lowers cx r id
       | EvalT (t', dt, _id) ->
         let t'' = self#type_ cx map_cx t' in
         let dt' = self#defer_use_type cx map_cx dt in
@@ -670,6 +671,10 @@ module ContextOptimizer = struct
   open TypeUtil
 
   class context_optimizer =
+    let no_lowers cx r =
+      Flow_js_utils.add_output cx (Error_message.EMissingAnnotation (r, []));
+      Type.Unsoundness.merged_any r
+    in
     object (self)
       inherit [Polarity.t] Type_mapper.t_with_uses as super
 
@@ -725,7 +730,7 @@ module ContextOptimizer = struct
             SigHash.add_int sig_hash stable_id;
             id
           ) else
-            let t = Flow_js_utils.merge_tvar cx r id in
+            let t = Flow_js_utils.merge_tvar ~no_lowers cx r id in
             let node = Root { rank = 0; constraints = FullyResolved (unknown_use, t) } in
             reduced_graph <- IMap.add id node reduced_graph;
             let () =

@@ -47,10 +47,10 @@ let merge_tvar =
       (* Everything else becomes part of the merge typed *)
       | _ -> collect_lowers ~filter_empty cx seen (t :: acc) ts)
   in
-  fun ?(filter_empty = false) cx r id ->
+  fun ?(filter_empty = false) ~no_lowers cx r id ->
     (* Because the behavior of existentials are so difficult to predict, they
-         enjoy some special casing here. When existential types are finally
-         removed, this logic can be removed. *)
+       enjoy some special casing here. When existential types are finally
+       removed, this logic can be removed. *)
     let existential =
       Reason.(
         match desc_of_reason r with
@@ -70,7 +70,7 @@ let merge_tvar =
       if uses = [] || existential then
         AnyT.locationless Unsoundness.existential
       else
-        MergedT (r, uses)
+        no_lowers cx r
 
 (** Type predicates *)
 
