@@ -66,6 +66,18 @@ let path_of_modulename src_dir = function
     Base.Option.map
       ~f:(fun src_dir ->
         let rel = Files.relative_path src_dir (File_key.to_string f) in
+        let rel =
+          if String_utils.string_ends_with rel ".js" then
+            Filename.chop_suffix rel ".js"
+          else
+            rel
+        in
+        let rel =
+          if Filename.basename rel = "index" then
+            Filename.dirname rel
+          else
+            rel
+        in
         if rel.[0] <> '.' then
           "./" ^ rel
         else
@@ -275,3 +287,7 @@ let insert_type
     in
     Lwt.return result
   | (None, errs, _) -> Lwt.return (Error (error_to_string (Expected (FailedToTypeCheck errs))))
+
+module For_tests = struct
+  let path_of_modulename = path_of_modulename
+end

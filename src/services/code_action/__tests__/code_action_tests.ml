@@ -9,6 +9,11 @@ open OUnit2
 
 let tests =
   "code_action"
-  >::: [Autofix_imports_tests.tests; Insert_type_utils_tests.tests; Validation_tests.tests]
+  >::: [
+         Autofix_imports_tests.tests;
+         Code_action_service_tests.tests;
+         Insert_type_utils_tests.tests;
+         Validation_tests.tests;
+       ]
 
 let () = run_test_tt_main tests
