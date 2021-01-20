@@ -676,7 +676,7 @@ and statement_decl cx =
       let (stmt, _) = Import_export.nameify_default_export_decl stmt in
       statement_decl cx stmt
     | ExportDefaultDeclaration.Expression _ -> ())
-  | ( _,
+  | ( decl_loc,
       ImportDeclaration
         { ImportDeclaration.import_kind; specifiers; default; source = _; comments = _ } ) ->
     let isType =
@@ -685,6 +685,11 @@ and statement_decl cx =
       | ImportDeclaration.ImportTypeof -> true
       | ImportDeclaration.ImportValue -> false
     in
+    let is_global_lib_scope =
+      File_key.is_lib_file (Context.file cx) && Scope.is_global (Env.peek_scope ())
+    in
+    if is_global_lib_scope then
+      Flow_js.add_output cx Error_message.(EToplevelLibraryImport decl_loc);
     let bind_import local_name (loc : ALoc.t) isType =
       let reason =
         if isType then
@@ -692,11 +697,16 @@ and statement_decl cx =
         else
           mk_reason (RIdentifier local_name) loc
       in
-      let tvar = Tvar.mk cx reason in
+      let t =
+        if is_global_lib_scope then
+          AnyT.error reason
+        else
+          Tvar.mk cx reason
+      in
       if isType then
-        Env.bind_import_type cx local_name tvar loc
+        Env.bind_import_type cx local_name t loc
       else
-        Env.bind_import cx local_name tvar loc
+        Env.bind_import cx local_name t loc
     in
     Base.Option.iter ~f:(fun local -> bind_import (ident_name local) (fst local) isType) default;
 
