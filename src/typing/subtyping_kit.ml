@@ -1744,10 +1744,8 @@ module Make (Flow : INPUT) : OUTPUT = struct
       end
     | (GenericT { reason; bound; _ }, _) ->
       rec_flow_t cx trace ~use_op (position_generic_bound reason bound, u)
-    | (_, GenericT { reason; name; id; _ }) ->
-      let desc =
-        RPolyTest (name, RIncompatibleInstantiation name, id |> Generic.aloc_of_id, false)
-      in
+    | (_, GenericT { reason; name; _ }) ->
+      let desc = RIncompatibleInstantiation name in
       let bot = DefT (replace_desc_reason desc reason, literal_trust (), EmptyT Zeroed) in
       rec_flow_t cx trace ~use_op (l, bot)
     | (ObjProtoT reason, _) ->

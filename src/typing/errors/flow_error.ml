@@ -800,16 +800,6 @@ let rec make_error_printable ?(speculation = false) (error : Loc.t t) : Loc.t Er
         | _ ->
           begin
             match (desc_of_reason lower, desc_of_reason upper) with
-            | (RPolyTest _, RPolyTest _) when loc_of_reason lower = loc_of_reason upper ->
-              make_error
-                (loc_of_reason lower)
-                [
-                  text "the expected type is not parametric in ";
-                  ref upper;
-                  text ", perhaps due to the use of ";
-                  code "*";
-                  text " or the lack of a type annotation";
-                ]
             | (RLongStringLit n, RStringLit _) ->
               make_error
                 (loc_of_reason lower)

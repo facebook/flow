@@ -46,8 +46,8 @@ let set_get_refs_hook ~reader potential_refs potential_matching_literals target_
   let hook ret _ctxt name loc ty =
     if name = target_name then
       (* Replace previous bindings of `loc`. We should always use the result of the last call to
-       * the hook for a given location. For details see the comment on the generate_tests function
-       * in flow_js.ml *)
+       * the hook for a given location (this may no longer be relevant with the removal of
+         generate-tests) *)
       potential_refs := ALocMap.add loc ty !potential_refs;
     ret
   in

@@ -150,7 +150,6 @@ start_flow_unsafe () {
       PATH="$THIS_DIR/scripts/tests_bin:$PATH" \
       "$FLOW" start "$root" \
         $flowlib --wait \
-        $generate_tests \
         $new_signatures_flag \
         --wait-for-recheck "$wait_for_recheck" \
         --saved-state-fetcher "local" \
@@ -169,7 +168,6 @@ start_flow_unsafe () {
     PATH="$THIS_DIR/scripts/tests_bin:$PATH" \
     "$FLOW" start "$root" \
       $flowlib --wait --wait-for-recheck "$wait_for_recheck" \
-      $generate_tests \
       $new_signatures_flag \
       --file-watcher "$file_watcher" \
       --log-file "$abs_log_file" \
@@ -374,17 +372,6 @@ runtest() {
             return $RUNTEST_SKIP
         fi
 
-        if [[ "$generate_tests" -eq 0 ]]; then
-          generate_tests=" --generate-tests=false"
-        else
-          generate_tests=" --generate-tests=true"
-        fi
-
-        # if .flowconfig sets generate_tests, don't pass the cli flag
-        if [ -f .flowconfig ] && grep -q "generate_tests" .flowconfig; then
-            generate_tests=""
-        fi
-
         # Helper function to generate saved state. If anything goes wrong, it
         # will fail
         create_saved_state () {
@@ -395,7 +382,6 @@ runtest() {
             # start server and wait
             "$FLOW" start "$root" \
               $flowlib --wait \
-              $generate_tests \
               $new_signatures_flag \
               --wait-for-recheck "$wait_for_recheck" \
               --lazy-mode none \
@@ -425,7 +411,7 @@ runtest() {
             else
               # default command is check with configurable --no-flowlib
               "$FLOW" check . \
-                $flowlib $generate_tests --strip-root --show-all-errors \
+                $flowlib --strip-root --show-all-errors \
                 $new_signatures_flag \
                  1>> "$abs_out_file" 2>> "$stderr_dest"
               st=$?

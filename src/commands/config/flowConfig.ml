@@ -624,7 +624,6 @@ module Opts = struct
       ("file_watcher.watchman.sync_timeout", watchman_sync_timeout_parser);
       ("file_watcher", file_watcher_parser);
       ("format.single_quotes", format_single_quotes_parser);
-      ("generate_tests", boolean (fun opts v -> Ok { opts with generate_tests = v }));
       ("include_warnings", boolean (fun opts v -> Ok { opts with include_warnings = v }));
       ("lazy_mode", lazy_mode_parser);
       ("log.file", filepath (fun opts v -> Ok { opts with log_file = Some v }));
@@ -1208,8 +1207,6 @@ let enums_with_unknown_members c = c.options.Opts.enums_with_unknown_members
 let this_annot c = c.options.Opts.this_annot
 
 let exact_by_default c = c.options.Opts.exact_by_default
-
-let generate_tests c = c.options.Opts.generate_tests
 
 let file_watcher c = c.options.Opts.file_watcher
 

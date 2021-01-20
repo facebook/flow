@@ -299,9 +299,7 @@ let merge_trust_var constr =
     | TrustUnresolved bound -> get_trust bound |> Trust.fix)
 
 class resolver_visitor =
-  (* Filter out EmptyT types from unions, when they're not the result of generate_tests.
-     (The flavor in this case will be `Zeroed`.) This helps keep types clean from
-     EmptyTs that have been left over from refinement. *)
+  (* Filter out EmptyT types from unions. *)
   let filter_empty flavor =
     match flavor with
     | Type.Zeroed -> false

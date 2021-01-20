@@ -28,8 +28,6 @@ show_help() {
   echo "        test saved state"
   echo "    -z"
   echo "        test new signatures"
-  echo "    -g"
-  echo "        test with generate-tests"
   echo "    -v"
   echo "        verbose output (shows skipped tests)"
   echo "    -h"
@@ -44,13 +42,12 @@ OPTIND=1
 record=0
 saved_state=0
 new_signatures=0
-generate_tests=0
 verbose=0
 quiet=0
 relative="$THIS_DIR"
 list_tests=0
-export saved_state generate_tests filter new_signatures
-while getopts "b:d:f:glqrszt:vh?" opt; do
+export saved_state filter new_signatures
+while getopts "b:d:f:lqrszt:vh?" opt; do
   case "$opt" in
   b)
     FLOW="$OPTARG"
@@ -79,10 +76,6 @@ while getopts "b:d:f:glqrszt:vh?" opt; do
     ;;
   z)
     new_signatures=1
-    ;;
-  g)
-    generate_tests=1
-    printf "Testing legacy generics using generate-tests\\n"
     ;;
   v)
     verbose=1

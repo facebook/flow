@@ -189,7 +189,6 @@ type 'loc virtual_reason_desc =
   | RCode of string
   | RCustom of string
   | RPolyType of 'loc virtual_reason_desc
-  | RPolyTest of string * 'loc virtual_reason_desc * ALoc.id * bool (* is it "this" or a explicit generic *)
   | RExactType of 'loc virtual_reason_desc
   | ROptional of 'loc virtual_reason_desc
   | RMaybe of 'loc virtual_reason_desc
@@ -284,7 +283,6 @@ let rec map_desc_locs f = function
   | RNameProperty desc -> RNameProperty (map_desc_locs f desc)
   | RMissingAbstract desc -> RMissingAbstract (map_desc_locs f desc)
   | RPolyType desc -> RPolyType (map_desc_locs f desc)
-  | RPolyTest (s, desc, id, is_this) -> RPolyTest (s, map_desc_locs f desc, id, is_this)
   | RExactType desc -> RExactType (map_desc_locs f desc)
   | ROptional desc -> ROptional (map_desc_locs f desc)
   | RMaybe desc -> RMaybe (map_desc_locs f desc)
@@ -666,7 +664,6 @@ let rec string_of_desc = function
   | RCustom x -> x
   | RPolyType (RClass d) -> string_of_desc d
   | RPolyType d -> string_of_desc d
-  | RPolyTest (_, d, _, _) -> string_of_desc d
   | RExactType d -> string_of_desc d
   | ROptional d -> spf "optional %s" (string_of_desc d)
   | RMaybe d ->
@@ -744,8 +741,7 @@ let dump_reason ?(strip_root = None) r =
 let desc_of_reason =
   let rec loop = function
     | RTypeAlias (_, _, desc)
-    | RUnionBranching (desc, _)
-    | RPolyTest (_, desc, _, _) ->
+    | RUnionBranching (desc, _) ->
       loop desc
     | desc -> desc
   in
@@ -1416,7 +1412,6 @@ let classification_of_reason r =
   | RCustom _
   | RExports
   | RPolyType _
-  | RPolyTest _
   | RExactType _
   | ROptional _
   | RMaybe _

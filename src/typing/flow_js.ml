@@ -7172,7 +7172,7 @@ struct
       | None ->
         let this = Tvar.mk cx reason in
         let this_generic =
-          if is_this && not (Context.generate_tests cx) then
+          if is_this then
             GenericT
               {
                 id = Context.make_generic_id cx "this" (def_aloc_of_reason r);

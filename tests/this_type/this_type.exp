@@ -433,7 +433,7 @@ Cannot return `this` because `this` [1] cannot escape from its class [1] (try ad
 [escaped-generic]
 
    self.js:2:18
-   2|   foo() { return this; } // return of foo is not annotated to get around
+   2|   foo() { return this; } // escaped this
                        ^^^^
 
 References:
@@ -441,7 +441,7 @@ References:
    1| class A {
             ^ [1]
    self.js:2:8
-   2|   foo() { return this; } // return of foo is not annotated to get around
+   2|   foo() { return this; } // escaped this
               [2]
 
 

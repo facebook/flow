@@ -137,7 +137,6 @@ type 'loc virtual_reason_desc =
   | RCode of string
   | RCustom of string
   | RPolyType of 'loc virtual_reason_desc
-  | RPolyTest of string * 'loc virtual_reason_desc * ALoc.id * bool
   | RExactType of 'loc virtual_reason_desc
   | ROptional of 'loc virtual_reason_desc
   | RMaybe of 'loc virtual_reason_desc

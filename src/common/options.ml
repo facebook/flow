@@ -61,7 +61,6 @@ type t = {
   opt_file_options: Files.options;
   opt_flowconfig_name: string;
   opt_format: format;
-  opt_generate_tests: bool;
   opt_haste_module_ref_prefix: string option;
   opt_haste_name_reducers: (Str.regexp * string) list;
   opt_haste_paths_excludes: string list;
@@ -144,8 +143,6 @@ let format_single_quotes opts = opts.opt_format.opt_single_quotes
 let this_annot opts = opts.opt_this_annot
 
 let exact_by_default opts = opts.opt_exact_by_default
-
-let generate_tests opts = opts.opt_generate_tests
 
 let haste_module_ref_prefix opts = opts.opt_haste_module_ref_prefix
 

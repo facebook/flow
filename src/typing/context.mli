@@ -59,7 +59,6 @@ type metadata = {
   enforce_strict_call_arity: bool;
   enforce_local_inference_annotations: bool;
   exact_by_default: bool;
-  generate_tests: bool;
   facebook_fbs: string option;
   facebook_fbt: string option;
   facebook_module_interop: bool;
@@ -167,8 +166,6 @@ val exact_by_default : t -> bool
 val enforce_local_inference_annotations : t -> bool
 
 val run_post_inference_implicit_instantiation : t -> bool
-
-val generate_tests : t -> bool
 
 val file : t -> File_key.t
 

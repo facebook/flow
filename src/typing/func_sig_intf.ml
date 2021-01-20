@@ -66,7 +66,7 @@ module type S = sig
       provided map.
 
       This signature's own type parameters will be subtituted by the
-      `generate-tests` function. *)
+      `check_with_generics` function. *)
 
   val check_with_generics : Context.t -> (t -> 'a) -> t -> 'a
   (** Invoke callback with type parameters substituted by upper/lower bounds. *)

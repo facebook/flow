@@ -116,8 +116,10 @@ let set_def_loc_hook ~reader prop_access_info literal_key_info target_loc =
         | (Use _, Use _)
         | (Class_def _, Class_def _)
         | (Obj_def _, Obj_def _) ->
-          (* Due to generate_tests, we sometimes see hooks firing multiple times for the same
-           * location. This is innocuous and we should take the last result. *)
+          (* If we see hooks firing multiple times for the same
+           * location, this is innocuous and we should take the last result.
+           * Previously, this would occur due to generate-tests.
+           *)
           set_ok new_info
         (* Literals can flow into multiple types. Include them all. *)
         | (Use_in_literal (types, name), Use_in_literal (new_types, new_name)) ->

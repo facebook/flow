@@ -718,7 +718,7 @@ end = struct
         let cx = Env.get_cx env in
         let prefix = spf "%*s[Norm|run_id:%d|depth:%d]" (2 * depth) "" (get_run_id ()) depth in
         prerr_endlinef "%s Input: %s\n" prefix (Debug_js.dump_t cx t);
-        let result = type_poly ~env t state in
+        let result = type_with_alias_reason ~env t state in
         let result_str =
           match result with
           | (Ok ty, _) -> "[Ok] " ^ Ty_debug.dump_t ty
@@ -737,28 +737,7 @@ end = struct
           if options.Env.verbose_normalizer then
             type_debug ~env ~depth t
           else
-            type_poly ~env t
-
-    (* Before we start pattern-matching on the structure of the input type, we can
-     * reconstruct some types based on attached reasons. Two cases are of interest here:
-     * - Type parameters: we use RPolyTest reasons for these
-     * - Type aliases: we use RTypeAlias reasons for these *)
-    and type_poly ~env t =
-      let next = type_with_alias_reason in
-      (* The RPolyTest description is used for types that represent type parameters.
-       * When normalizing, we want such types to be replaced by the type parameter,
-       * whose name is part of the description, but only in the case that the parameter
-       * is in scope. The reason we need to make this distinction is that bound tests
-       * may exit the scope of the structure that introduced them, in which case we
-       * do not perform the substitution. There instead we unfold the underlying type. *)
-      let reason = TypeUtil.reason_of_t t in
-      match (t, desc_of_reason ~unwrap:false reason) with
-      | (Type.GenericT { name; _ }, _)
-      | (_, RPolyTest (name, _, _, _)) ->
-        let loc = Reason.def_aloc_of_reason reason in
-        let default t = next ~env t in
-        lookup_tparam ~default env t name loc
-      | _ -> next ~env t
+            type_with_alias_reason ~env t
 
     and type_with_alias_reason ~env t =
       let next = type_ctor ~cont:type_with_alias_reason in
@@ -802,9 +781,10 @@ end = struct
       match t with
       | OpenT (_, id) -> type_variable ~env id
       | BoundT (reason, name) -> bound_t ~env reason name
-      | GenericT { bound; _ } ->
-        (* only hit when we were unable to lookup a type parameter *)
-        type__ ~env bound
+      | GenericT { bound; reason; name; _ } ->
+        let loc = Reason.def_aloc_of_reason reason in
+        let default t = type_with_alias_reason ~env t in
+        lookup_tparam ~default env bound name loc
       | AnnotT (_, t, _) -> type__ ~env t
       | EvalT (t, d, id) -> eval_t ~env ~cont t id d
       | ExactT (_, t) -> exact_t ~env t
