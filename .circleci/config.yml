@@ -54,6 +54,7 @@ orbs:
               environment:
                 PATH: /usr/local/bin:/usr/bin:/cygdrive/c/Windows/system32:/cygdrive/c/Windows:/cygdrive/c/Windows/System32/Wbem:/cygdrive/c/Windows/System32/WindowsPowerShell/v1.0
               command: |
+                cd /cygdrive/c/Users/circleci/project
                 [ -d _opam ] || opam switch create . ocaml-variants.4.07.1+mingw64c --deps-only --yes -vvv
 
 executors:
@@ -270,14 +271,10 @@ jobs:
       - attach_workspace:
           at: .
       - run:
-          name: Set default directory
-          shell: C:/tools/cygwin/bin/bash.exe -leo pipefail
-          command: |
-            echo "cd /cygdrive/c/Users/circleci/project" >> $BASH_ENV
-      - run:
           name: Create cache breaker
           shell: C:/tools/cygwin/bin/bash.exe -leo pipefail
           command: |
+            cd /cygdrive/c/Users/circleci/project
             /usr/local/bin/opam --version > /cygdrive/c/tmp/flow/opamcachebreaker
             echo "ocaml-4.07.1" >> /cygdrive/c/tmp/flow/opamcachebreaker
             /usr/bin/cat flowtype.opam >> /cygdrive/c/tmp/flow/opamcachebreaker
@@ -302,6 +299,7 @@ jobs:
             CXX: x86_64-w64-mingw32-g++
             AR: x86_64-w64-mingw32-gcc-ar
           command: |
+             cd /cygdrive/c/Users/circleci/project
              eval $(opam env)
              make bin/flow.exe dist/flow.zip
              mkdir -p bin/win64 && cp bin/flow.exe bin/win64/flow.exe
@@ -312,6 +310,7 @@ jobs:
           environment:
             PATH: /usr/local/bin:/usr/bin:/cygdrive/c/Windows/system32:/cygdrive/c/Windows:/cygdrive/c/Windows/System32/Wbem:/cygdrive/c/Windows/System32/WindowsPowerShell/v1.0
           command: |
+            cd /cygdrive/c/Users/circleci/project
             eval $(opam env)
             make -C src/parser/ ../../_build/src/parser/test/run_tests.native
             cp _build/src/parser/test/run_tests.native bin/win64/run_parser_tests.exe
