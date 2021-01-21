@@ -5,4 +5,4 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
-let version = "0.142.0"
+let version = "0.143.0"
