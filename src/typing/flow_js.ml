@@ -1731,6 +1731,9 @@ struct
             cx
             trace
             (DefT (reason, bogus_trust (), BoolT (Some false)), OpenT tout)
+        | (UnionT (_, rep), (AndT _ | OrT _ | NullishCoalesceT _))
+          when not (UnionRep.is_optimized_finally rep) ->
+          flow_all_in_union cx trace rep u
         | (left, AndT (_, right, u)) ->
           begin
             match left with
