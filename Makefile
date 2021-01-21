@@ -237,8 +237,19 @@ NATIVE_FINDLIB_PACKAGES=\
   unix
 
 NATIVE_LIBRARIES=\
+  stdc++\
   pthread\
   $(EXTRA_LIBS)
+
+# On Windows, the linker (flexlink) handles -lfoo by searching for "libfoo",
+# then "libfoo.dll.a" (dynamic linking), then "libfoo.a". Since we don't want
+# users to have to install mingw64, we can either package the DLLs or
+# statically link them. We choose to statically link them to maintain a single
+# binary, by passing `-lfoo.a` which finds `libfoo.a` before looking (in vain)
+# for `libfoo.a.dll.a`.
+ifeq ($(UNAME_S), Windows)
+NATIVE_LIBRARIES:=$(addsuffix .a,$(NATIVE_LIBRARIES))
+endif
 
 COPIED_FLOWLIB=\
 	$(foreach lib,$(wildcard lib/*.js),_build/$(lib))
@@ -282,7 +293,7 @@ BUILT_LZ4_OBJECT_FILES=$(addprefix _build/,$(LZ4_OBJECT_FILES))
 
 FUZZY_PATH_DEPS=src/third-party/fuzzy-path/libfuzzy-path.a
 BUILT_FUZZY_PATH_DEPS=$(addprefix _build/,$(FUZZY_PATH_DEPS))
-FUZZY_PATH_LINKER_FLAGS=-cclib -lstdc++ $(FUZZY_PATH_DEPS)
+FUZZY_PATH_LINKER_FLAGS=$(FUZZY_PATH_DEPS)
 
 # Any additional C flags can be added here
 CC_FLAGS=-mcx16
