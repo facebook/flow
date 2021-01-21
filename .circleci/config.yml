@@ -60,7 +60,7 @@ orbs:
 executors:
   linux-opam:
     docker:
-      - image: ocaml/opam2:debian-8
+      - image: ocaml/opam2:centos-7-opam
         environment:
           <<: *opam_env
     working_directory: ~/flow
@@ -143,27 +143,14 @@ jobs:
       - attach_workspace:
           at: ~/flow
       - run:
-          # installs `zip` and `m4` but also has to fix some apt issues:
-          # https://discuss.circleci.com/t/failed-to-fetch-jessie-updates/29246
-          # https://www.reddit.com/r/debian/comments/g9is3p/debian_8_jessie_keyexpired_drive_my_crazy/
-          # TODO: remove this when updating to ocaml/opam2:debian-9
           name: Install deps
           command: |
-            sudo rm /etc/apt/sources.list
-            echo "deb [trusted=yes] http://archive.debian.org/debian/ jessie main contrib non-free" | sudo tee -a /etc/apt/sources.list
-            echo "deb [trusted=yes] http://archive.debian.org/debian/ jessie-backports main contrib non-free" | sudo tee -a /etc/apt/sources.list
-            echo "deb-src [trusted=yes] http://archive.debian.org/debian/ jessie main contrib non-free" | sudo tee -a /etc/apt/sources.list
-            echo "deb-src [trusted=yes] http://archive.debian.org/debian/ jessie-backports main contrib non-free" | sudo tee -a /etc/apt/sources.list
-            echo "Acquire::Check-Valid-Until false;" | sudo tee -a /etc/apt/apt.conf.d/10-nocheckvalid
-            echo 'Package: *\nPin: origin "archive.debian.org"\nPin-Priority: 500' | sudo tee -a /etc/apt/preferences.d/10-archive-pin
-            sudo apt-get update && sudo apt-get --yes install zip m4
+            sudo yum -y update && sudo yum -y install zip m4
       - restore-opam-cache
       - run:
-          name: Update opam repo
+          name: Init opam
           command: |
-            opam remote list -s | grep upstream >/dev/null || \
-              opam remote add upstream https://opam.ocaml.org --all-switches --set-default | cat
-            opam update | cat
+            [ -d ~/.opam ] || opam init --bare --disable-sandboxing
       - create-opam-switch
       - run:
           name: Install extra deps from opam
