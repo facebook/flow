@@ -1,3 +1,17 @@
+### 0.143.0
+
+Likely to cause new Flow errors:
+- Support for Classic mode has been dropped and Types-First mode is now always enabled (Types-First has been the default mode since v0.134). The `types_first` and `well_formed_exports` flowconfig options are no longer recognized. See https://medium.com/flow-type/types-first-a-scalable-new-architecture-for-flow-3d8c7ba1d4eb/ for more about Types-First mode.
+- Previously, errors in library files were sometimes being missed due to a bug. This has been fixed, which may expose errors in library files that were not previously being reported.
+- Import statements are no longer allowed at the toplevel of library files. To use import statements in library files they must appear within a "declare module".
+
+New Features:
+- Added experimental support for cross-module autocompletion and code actions that fix missing import declarations. Can be enabled with the `autoimports=true` flowconfig option.
+- Added `--sharedmem-heap-size` CLI flag and `FLOW_SHAREDMEM_HEAP_SIZE` environment variable, which can be used instead of the `sharedmem.heap_size` flowconfig option for setting the amount of shared memory available.
+
+Misc:
+- Added `ErrorEvent` library definition (thanks @kegluneq)
+
 ### 0.142.0
 
 Likely to cause new Flow errors:
