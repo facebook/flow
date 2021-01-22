@@ -115,11 +115,11 @@ let explicit_decl_require cx (m, loc, resolved_m, cx_to) =
   let reason = Reason.(mk_reason (RCustom m) loc) in
   (* lookup module declaration from builtin context *)
   let resolved_m_name = resolved_m |> Modulename.to_string in
-  if resolved_m_name = Type.react_server_module_ref then
+  if resolved_m = Modulename.String Type.react_server_module_ref then
     Flow_js.add_output cx (Error_message.EImportInternalReactServerModule loc);
   let m_name =
     if
-      (resolved_m_name = "react" || resolved_m_name = "React")
+      (resolved_m = Modulename.String "react" || resolved_m = Modulename.String "React")
       && Context.in_react_server_component_file cx
     then
       Type.react_server_module_ref
