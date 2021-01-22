@@ -1,3 +1,8 @@
+### 0.143.1
+
+Notable bug fixes:
+- Fixed [crash on Windows](https://github.com/facebook/flow/issues/8574) and [crash on Linux](https://github.com/facebook/flow/issues/8577) introduced in 0.143.0
+
 ### 0.143.0
 
 Likely to cause new Flow errors:
