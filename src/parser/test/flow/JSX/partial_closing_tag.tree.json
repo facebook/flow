@@ -1,0 +1,101 @@
+{
+  "errors":[
+    {
+      "loc":{"source":null,"start":{"line":3,"column":0},"end":{"line":3,"column":1}},
+      "message":"Unexpected token `<`, expected the token `>`"
+    },
+    {
+      "loc":{"source":null,"start":{"line":3,"column":1},"end":{"line":4,"column":0}},
+      "message":"Expected corresponding JSX closing tag for bar"
+    },
+    {
+      "loc":{"source":null,"start":{"line":4,"column":0},"end":{"line":4,"column":0}},
+      "message":"Unexpected token ILLEGAL"
+    },
+    {
+      "loc":{"source":null,"start":{"line":4,"column":0},"end":{"line":4,"column":0}},
+      "message":"Unexpected end of input"
+    },
+    {
+      "loc":{"source":null,"start":{"line":4,"column":0},"end":{"line":4,"column":0}},
+      "message":"Unexpected end of input, expected the token `)`"
+    }
+  ],
+  "type":"Program",
+  "loc":{"source":null,"start":{"line":1,"column":0},"end":{"line":4,"column":0}},
+  "range":[0,26],
+  "body":[
+    {
+      "type":"ExpressionStatement",
+      "loc":{"source":null,"start":{"line":1,"column":0},"end":{"line":4,"column":0}},
+      "range":[0,26],
+      "expression":{
+        "type":"JSXElement",
+        "loc":{"source":null,"start":{"line":1,"column":1},"end":{"line":1,"column":6}},
+        "range":[1,6],
+        "openingElement":{
+          "type":"JSXOpeningElement",
+          "loc":{"source":null,"start":{"line":1,"column":1},"end":{"line":1,"column":6}},
+          "range":[1,6],
+          "name":{
+            "type":"JSXIdentifier",
+            "loc":{"source":null,"start":{"line":1,"column":2},"end":{"line":1,"column":5}},
+            "range":[2,5],
+            "name":"foo"
+          },
+          "attributes":[],
+          "selfClosing":false
+        },
+        "closingElement":null,
+        "children":[
+          {
+            "type":"JSXText",
+            "loc":{"source":null,"start":{"line":1,"column":6},"end":{"line":2,"column":2}},
+            "range":[6,9],
+            "value":"\n  ",
+            "raw":"\n  "
+          },
+          {
+            "type":"JSXElement",
+            "loc":{"source":null,"start":{"line":2,"column":2},"end":{"line":3,"column":1}},
+            "range":[9,19],
+            "openingElement":{
+              "type":"JSXOpeningElement",
+              "loc":{"source":null,"start":{"line":2,"column":2},"end":{"line":2,"column":7}},
+              "range":[9,14],
+              "name":{
+                "type":"JSXIdentifier",
+                "loc":{"source":null,"start":{"line":2,"column":3},"end":{"line":2,"column":6}},
+                "range":[10,13],
+                "name":"bar"
+              },
+              "attributes":[],
+              "selfClosing":false
+            },
+            "closingElement":{
+              "type":"JSXClosingElement",
+              "loc":{"source":null,"start":{"line":2,"column":7},"end":{"line":3,"column":1}},
+              "range":[14,19],
+              "name":{
+                "type":"JSXIdentifier",
+                "loc":{"source":null,"start":{"line":2,"column":9},"end":{"line":2,"column":10}},
+                "range":[16,17],
+                "name":"b"
+              }
+            },
+            "children":[]
+          },
+          {
+            "type":"JSXText",
+            "loc":{"source":null,"start":{"line":3,"column":1},"end":{"line":4,"column":0}},
+            "range":[19,26],
+            "value":"/foo>)\n",
+            "raw":"/foo>)\n"
+          }
+        ]
+      },
+      "directive":null
+    }
+  ],
+  "comments":[]
+}
