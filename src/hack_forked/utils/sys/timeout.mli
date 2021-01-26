@@ -25,7 +25,7 @@ type t
    On Unix, the function `check_timeout` is no-op.
 
    On Unix, the type `in_channel` is in fact an alias for
-   `Pervasives.in_channel`.
+   `Pervasives/Stdlib.in_channel`.
 
 *)
 val with_timeout : timeout:int -> on_timeout:(unit -> 'a) -> do_:(t -> 'a) -> 'a
