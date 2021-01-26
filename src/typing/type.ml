@@ -1661,20 +1661,20 @@ end = struct
   let add_field x polarity loc t = SMap.add x (Field (loc, t, polarity))
 
   let add_getter x loc get_t map =
-    let p =
-      match SMap.find_opt x map with
-      | Some (Set (set_loc, set_t)) -> GetSet (loc, get_t, set_loc, set_t)
-      | _ -> Get (loc, get_t)
-    in
-    SMap.add x p map
+    SMap.update
+      x
+      (function
+        | Some (Set (set_loc, set_t)) -> Some (GetSet (loc, get_t, set_loc, set_t))
+        | _ -> Some (Get (loc, get_t)))
+      map
 
   let add_setter x loc set_t map =
-    let p =
-      match SMap.find_opt x map with
-      | Some (Get (get_loc, get_t)) -> GetSet (get_loc, get_t, loc, set_t)
-      | _ -> Set (loc, set_t)
-    in
-    SMap.add x p map
+    SMap.update
+      x
+      (function
+        | Some (Get (get_loc, get_t)) -> Some (GetSet (get_loc, get_t, loc, set_t))
+        | _ -> Some (Set (loc, set_t)))
+      map
 
   let add_method x loc t = SMap.add x (Method (loc, t))
 
