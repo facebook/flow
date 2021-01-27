@@ -19,6 +19,13 @@ module Flow = Flow_js
 module Parsing = Parsing_service_js
 module Infer = Type_inference_js
 
+let is_ok { Parsing.parse_ok; _ } = not (FilenameMap.is_empty parse_ok)
+
+let is_fail { Parsing.parse_fails; _ } = not (Base.List.is_empty parse_fails)
+
+let is_skip { Parsing.parse_skips; parse_not_found_skips; _ } =
+  (not (Base.List.is_empty parse_skips)) || not (FilenameSet.is_empty parse_not_found_skips)
+
 let parse_lib_file ~reader options file =
   (* types are always allowed in lib files *)
   let types_mode = Parsing.TypesAllowed in
@@ -32,7 +39,7 @@ let parse_lib_file ~reader options file =
       Parsing.parse_with_defaults ~types_mode ~use_strict ~reader options (* workers *) None next
     in
     Lwt.return
-      ( if not (FilenameMap.is_empty results.Parsing.parse_ok) then
+      ( if is_ok results then
         let tolerable_errors = FilenameMap.find lib_file results.Parsing.parse_ok in
         let ast = Parsing_heaps.Mutator_reader.get_ast_unsafe reader lib_file in
         let file_sig = Parsing_heaps.Mutator_reader.get_file_sig_unsafe reader lib_file in
@@ -43,14 +50,10 @@ let parse_lib_file ~reader options file =
            TODO: where do we surface lib parse errors? *)
         let parse_errors = [] in
         Parsing.Parse_ok { ast; file_sig; sig_extra; tolerable_errors; parse_errors; exports }
-      else if List.length results.Parsing.parse_fails > 0 then
+      else if is_fail results then
         let (_, _, parse_fails) = List.hd results.Parsing.parse_fails in
         Parsing.Parse_fail parse_fails
-      else if
-      List.length results.Parsing.parse_skips
-      + FilenameSet.cardinal results.Parsing.parse_not_found_skips
-      > 0
-    then
+      else if is_skip results then
         Parsing.Parse_skip Parsing.Skip_non_flow_file
       else
         failwith "Internal error: no parse results found" )
