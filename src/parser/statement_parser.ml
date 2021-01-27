@@ -1810,15 +1810,23 @@ module Statement
 
   and import_declaration =
     Statement.ImportDeclaration.(
+      let missing_source env =
+        (* Just make up a string for the error case *)
+        let loc = Peek.loc_skip_lookahead env in
+        (loc, { StringLiteral.value = ""; raw = ""; comments = None })
+      in
       let source env =
-        Expect.identifier env "from";
         match Peek.token env with
-        | T_STRING str -> string_literal env str
+        | T_IDENTIFIER { raw = "from"; _ } ->
+          Eat.token env;
+          (match Peek.token env with
+          | T_STRING str -> string_literal env str
+          | _ ->
+            error_unexpected ~expected:"a string" env;
+            missing_source env)
         | _ ->
-          (* Just make up a string for the error case *)
-          let ret = (Peek.loc env, { StringLiteral.value = ""; raw = ""; comments = None }) in
-          error_unexpected ~expected:"a string" env;
-          ret
+          error_unexpected ~expected:"the keyword `from`" env;
+          missing_source env
       in
       let is_type_import = function
         | T_TYPE
@@ -1977,24 +1985,35 @@ module Statement
           specifier_list ~preceding_comma env statement_kind (specifier :: acc)
       in
       let named_or_namespace_specifier env import_kind =
-        let start_loc = Peek.loc env in
         match Peek.token env with
         | T_MULT ->
-          Expect.token env T_MULT;
-          Expect.identifier env "as";
           let id =
-            match import_kind with
-            | ImportType
-            | ImportTypeof ->
-              Type.type_identifier env
-            | ImportValue -> Parse.identifier env
+            with_loc_opt
+              (fun env ->
+                (* consume T_MULT *)
+                Eat.token env;
+                match Peek.token env with
+                | T_IDENTIFIER { raw = "as"; _ } ->
+                  (* consume "as" *)
+                  Eat.token env;
+                  (match import_kind with
+                  | ImportType
+                  | ImportTypeof ->
+                    Some (Type.type_identifier env)
+                  | ImportValue -> Some (Parse.identifier env))
+                | _ ->
+                  error_unexpected ~expected:"the keyword `as`" env;
+                  None)
+              env
           in
-          ImportNamespaceSpecifier (Loc.btwn start_loc (fst id), id)
+          (match id with
+          | Some id -> Some (ImportNamespaceSpecifier id)
+          | None -> None)
         | _ ->
           Expect.token env T_LCURLY;
           let specifiers = specifier_list env import_kind [] in
           Expect.token env T_RCURLY;
-          ImportNamedSpecifiers specifiers
+          Some (ImportNamedSpecifiers specifiers)
       in
       let semicolon_and_trailing env source =
         match semicolon env with
@@ -2005,7 +2024,7 @@ module Statement
                 (loc, remover#string_literal_type loc source)) )
       in
       let with_specifiers import_kind env leading =
-        let specifiers = Some (named_or_namespace_specifier env import_kind) in
+        let specifiers = named_or_namespace_specifier env import_kind in
         let source = source env in
         let (trailing, source) = semicolon_and_trailing env source in
         Statement.ImportDeclaration
@@ -2030,7 +2049,7 @@ module Statement
           | T_COMMA ->
             (* `import Foo, ...` *)
             Expect.token env T_COMMA;
-            Some (named_or_namespace_specifier env import_kind)
+            named_or_namespace_specifier env import_kind
           | _ -> None
         in
         let source = source env in
@@ -2073,28 +2092,28 @@ module Statement
               match Peek.ith_token ~i:1 env with
               (* `import type, { other, names } from "ModuleName";` *)
               | T_COMMA
-              (* Importing the exported value named "type." This is not a type-import.
-               * `import type from "ModuleName";` *)
+              (* `import type from "ModuleName";` *)
               | T_IDENTIFIER { raw = "from"; _ } ->
+                (* Importing the exported value named "type". This is not a type-import.*)
                 with_default ImportValue env leading
+              (* `import type *` is invalid, since the namespace can't be a type *)
               | T_MULT ->
-                (* `import type *` is invalid, since the namespace can't be a type *)
-                Eat.token env;
-
                 (* consume `type` *)
-                error_unexpected env;
+                Eat.token env;
 
                 (* unexpected `*` *)
+                error_unexpected env;
+
                 with_specifiers ImportType env leading
               | T_LCURLY ->
+                (* consume `type` *)
                 Eat.token env;
 
-                (* consume `type` *)
                 with_specifiers ImportType env leading
               | _ ->
+                (* consume `type` *)
                 Eat.token env;
 
-                (* consume `type` *)
                 with_default ImportType env leading
             end
           (* `import typeof ... from "ModuleName";` *)
