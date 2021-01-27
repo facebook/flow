@@ -4153,6 +4153,7 @@ struct
                   | UnsealedInFile _
                   | Exact ->
                     Exact
+                  | Indexed d -> Indexed d
                   | _ -> Inexact
                 in
                 let o = Obj_type.mk_with_proto cx reason ~props proto ~obj_kind in
