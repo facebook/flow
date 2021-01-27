@@ -299,7 +299,7 @@ foo(5);
 foo([]);
 ```
 
-Another limitaion is on the range of predicates that can be encoded. The refinements
+Another limitation is on the range of predicates that can be encoded. The refinements
 that are supported in a predicate function must refer directly to the value that
 is passed in as an argument to the respective call.
 
