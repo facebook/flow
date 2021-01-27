@@ -26,6 +26,15 @@ let is_fail { Parsing.parse_fails; _ } = not (Base.List.is_empty parse_fails)
 let is_skip { Parsing.parse_skips; parse_not_found_skips; _ } =
   (not (Base.List.is_empty parse_skips)) || not (FilenameSet.is_empty parse_not_found_skips)
 
+type lib_result =
+  | Lib_ok of {
+      ast: (Loc.t, Loc.t) Flow_ast.Program.t;
+      file_sig: File_sig.With_Loc.t;
+      tolerable_errors: File_sig.With_Loc.tolerable_error list;
+    }
+  | Lib_fail of Parsing.parse_failure
+  | Lib_skip
+
 let parse_lib_file ~reader options file =
   (* types are always allowed in lib files *)
   let types_mode = Parsing.TypesAllowed in
@@ -43,18 +52,12 @@ let parse_lib_file ~reader options file =
         let tolerable_errors = FilenameMap.find lib_file results.Parsing.parse_ok in
         let ast = Parsing_heaps.Mutator_reader.get_ast_unsafe reader lib_file in
         let file_sig = Parsing_heaps.Mutator_reader.get_file_sig_unsafe reader lib_file in
-        let sig_extra = Parsing_heaps.InitLibs in
-        let exports = (* TODO *) ([] : Exports.t) in
-        (* Parsing_service_js.result only returns tolerable file sig errors, dropping parse
-           errors. So there may actually have been some, but they were ignored.
-           TODO: where do we surface lib parse errors? *)
-        let parse_errors = [] in
-        Parsing.Parse_ok { ast; file_sig; sig_extra; tolerable_errors; parse_errors; exports }
+        Lib_ok { ast; file_sig; tolerable_errors }
       else if is_fail results then
-        let (_, _, parse_fails) = List.hd results.Parsing.parse_fails in
-        Parsing.Parse_fail parse_fails
+        let (_, _, parse_fail) = List.hd results.Parsing.parse_fails in
+        Lib_fail parse_fail
       else if is_skip results then
-        Parsing.Parse_skip Parsing.Skip_non_flow_file
+        Lib_skip
       else
         failwith "Internal error: no parse results found" )
   with _ -> failwith (spf "Can't read library definitions file %s, exiting." file)
@@ -78,49 +81,43 @@ let load_lib_files ~ccx ~options ~reader files =
          (fun (exclude_syms, ok_acc, errors_acc) file ->
            let lib_file = File_key.LibFile file in
            let lint_severities = options.Options.opt_lint_severities in
-           let%lwt result = parse_lib_file ~reader options file in
-           Lwt.return
-             (match result with
-             | Parsing.Parse_ok { ast; file_sig; tolerable_errors; _ } ->
-               (* parse_lib_file doesn't return any parse errors right now *)
-               let file_sig = File_sig.abstractify_locs file_sig in
-               let tolerable_errors = File_sig.abstractify_tolerable_errors tolerable_errors in
-               let metadata =
-                 Context.(
-                   let metadata = metadata_of_options options in
-                   { metadata with checked = false; weak = false })
-               in
-               let rev_table = lazy (ALoc.make_empty_reverse_table ()) in
-               let cx =
-                 Context.make ccx metadata lib_file rev_table Files.lib_module_ref Context.Checking
-               in
-               let syms = Infer.infer_lib_file cx ast ~exclude_syms ~lint_severities ~file_sig in
-               let errors =
-                 tolerable_errors
-                 |> Inference_utils.set_of_file_sig_tolerable_errors ~source_file:lib_file
-               in
+           match%lwt parse_lib_file ~reader options file with
+           | Lib_ok { ast; file_sig; tolerable_errors } ->
+             let file_sig = File_sig.abstractify_locs file_sig in
+             let tolerable_errors = File_sig.abstractify_tolerable_errors tolerable_errors in
+             let metadata =
+               Context.(
+                 let metadata = metadata_of_options options in
+                 { metadata with checked = false; weak = false })
+             in
+             let rev_table = lazy (ALoc.make_empty_reverse_table ()) in
+             let cx =
+               Context.make ccx metadata lib_file rev_table Files.lib_module_ref Context.Checking
+             in
+             let syms = Infer.infer_lib_file cx ast ~exclude_syms ~lint_severities ~file_sig in
+             let errors =
+               tolerable_errors
+               |> Inference_utils.set_of_file_sig_tolerable_errors ~source_file:lib_file
+             in
 
-               if verbose != None then
-                 prerr_endlinef "load_lib %s: added symbols { %s }" file (String.concat ", " syms);
+             if verbose != None then
+               prerr_endlinef "load_lib %s: added symbols { %s }" file (String.concat ", " syms);
 
-               (* symbols loaded from this file are suppressed
-                  if found in later ones *)
-               let exclude_syms = SSet.union exclude_syms (SSet.of_list syms) in
-               (exclude_syms, ok_acc, Flow_error.ErrorSet.union errors errors_acc)
-             | Parsing.Parse_fail fail ->
-               let errors =
-                 match fail with
-                 | Parsing.Parse_error error ->
-                   Inference_utils.set_of_parse_error ~source_file:lib_file error
-                 | Parsing.Docblock_errors errs ->
-                   Inference_utils.set_of_docblock_errors ~source_file:lib_file errs
-                 | Parsing.File_sig_error error ->
-                   Inference_utils.set_of_file_sig_error ~source_file:lib_file error
-               in
-               (exclude_syms, false, Flow_error.ErrorSet.union errors errors_acc)
-             | Parsing.(Parse_skip (Skip_non_flow_file | Skip_resource_file | Skip_package_json _))
-               ->
-               (exclude_syms, false, errors_acc)))
+             (* symbols loaded from this file are suppressed if found in later ones *)
+             let exclude_syms = SSet.union exclude_syms (SSet.of_list syms) in
+             Lwt.return (exclude_syms, ok_acc, Flow_error.ErrorSet.union errors errors_acc)
+           | Lib_fail fail ->
+             let errors =
+               match fail with
+               | Parsing.Parse_error error ->
+                 Inference_utils.set_of_parse_error ~source_file:lib_file error
+               | Parsing.Docblock_errors errs ->
+                 Inference_utils.set_of_docblock_errors ~source_file:lib_file errs
+               | Parsing.File_sig_error error ->
+                 Inference_utils.set_of_file_sig_error ~source_file:lib_file error
+             in
+             Lwt.return (exclude_syms, false, Flow_error.ErrorSet.union errors errors_acc)
+           | Lib_skip -> Lwt.return (exclude_syms, false, errors_acc))
          (SSet.empty, true, Flow_error.ErrorSet.empty)
   in
   Lwt.return (ok, errors)

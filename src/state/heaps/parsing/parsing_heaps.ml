@@ -165,7 +165,6 @@ module ExportsHeap =
     end)
 
 type sig_extra =
-  | InitLibs
   | TypesFirst of {
       sig_ast: (ALoc.t, ALoc.t) Flow_ast.Program.t;
       sig_file_sig: File_sig.With_ALoc.t;
@@ -182,7 +181,6 @@ module ParsingHeaps = struct
         ExportsHeap.add file exports;
         FileSigHeap.add file file_sig;
         match extra with
-        | InitLibs -> ()
         | TypesFirst { sig_ast; sig_file_sig; aloc_table } ->
           SigASTHeap.add file (remove_source_aloc sig_ast);
           Base.Option.iter aloc_table ~f:(SigASTALocTableHeap.add file);
