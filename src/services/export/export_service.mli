@@ -18,3 +18,7 @@ val update :
   remove:Utils_js.FilenameSet.t ->
   Export_search.t ->
   Export_search.t Lwt.t
+
+module For_test : sig
+  val string_of_modulename : Modulename.t -> string
+end

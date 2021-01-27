@@ -8,12 +8,27 @@
 open Export_index
 open Utils_js
 
-let string_of_modulename = function
-  | Modulename.String str -> str
-  | Modulename.Filename f ->
-    (* TODO: need to handle reserved words, like a file called package.js *)
-    let str = Filename.basename (File_key.to_string f) in
-    Str.global_replace (Str.regexp "\\([a-zA-Z1-9$_]+\\).*") "\\1" str
+let camelize str =
+  match String.split_on_char '-' str with
+  | [] -> str
+  | [str] -> str
+  | hd :: rest ->
+    let parts = hd :: Base.List.map ~f:String.capitalize_ascii rest in
+    String.concat "" parts
+
+let string_of_modulename modulename =
+  (* TODO: need to handle reserved words, like a file called package.js *)
+  let str =
+    match modulename with
+    | Modulename.String str -> str
+    | Modulename.Filename f -> Filename.basename (File_key.to_string f)
+  in
+  let stripped =
+    match String.index_opt str '.' with
+    | Some index -> String.sub str 0 index
+    | None -> str
+  in
+  camelize stripped
 
 let entry_of_export ~module_name = function
   | Exports.Default -> (string_of_modulename module_name, Default)
@@ -129,3 +144,7 @@ let update ~workers ~reader ~update ~remove previous : Export_search.t Lwt.t =
   let dirty_files = FilenameSet.union update remove in
   let%lwt (to_add, to_remove) = index ~workers ~reader dirty_files in
   previous |> Export_search.subtract to_remove |> Export_search.merge to_add |> Lwt.return
+
+module For_test = struct
+  let string_of_modulename = string_of_modulename
+end
