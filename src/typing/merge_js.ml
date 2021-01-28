@@ -214,8 +214,8 @@ let detect_unnecessary_invariants cx =
       Flow_js.add_output cx (Error_message.EUnnecessaryInvariant (loc, reason)))
     (Context.unnecessary_invariants cx)
 
-let detect_invalid_type_assert_calls cx file_sigs results =
-  if Context.type_asserts cx then Type_asserts.detect_invalid_calls ~full_cx:cx file_sigs results
+let detect_invalid_type_assert_calls cx typed_ast file_sig =
+  if Context.type_asserts cx then Type_asserts.detect_invalid_calls ~full_cx:cx typed_ast file_sig
 
 let detect_es6_import_export_errors = Strict_es6_import_export.detect_errors
 
@@ -469,14 +469,15 @@ let merge_imports cx sig_cx reqs impl_cxs =
  * means we can complain about things that either haven't happened yet, or
  * which require complete knowledge of tvar bounds.
  *)
-let post_merge_checks cx metadata file_sigs results =
+let post_merge_checks cx ast tast metadata file_sig =
+  let results = [(cx, ast, tast)] in
   detect_sketchy_null_checks cx;
   detect_non_voidable_properties cx;
   check_implicit_instantiations cx;
   detect_test_prop_misses cx;
   detect_unnecessary_optional_chains cx;
   detect_unnecessary_invariants cx;
-  detect_invalid_type_assert_calls cx file_sigs results;
+  detect_invalid_type_assert_calls cx tast file_sig;
   detect_es6_import_export_errors cx metadata results;
   detect_escaped_generics results;
   detect_matching_props_violations cx;
@@ -614,7 +615,7 @@ let check_component ~opts ~getters ~file_sigs singleton_component reqs dep_cxs m
   let tast = Type_inference_js.infer_ast cx filename comments ast ~lint_severities in
 
   (* Post-inference checks *)
-  post_merge_checks cx metadata file_sigs [(cx, ast, tast)];
+  post_merge_checks cx ast tast metadata file_sig;
   Nel.one (cx, ast, tast)
 
 let merge_component ~opts:(Merge_options { phase; _ } as opts) =
