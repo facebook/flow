@@ -1,0 +1,23 @@
+task:
+  persistent_worker:
+    labels:
+      os: darwin
+      arch: arm64
+  env:
+    OPAMYES: 1
+  script: |
+    uname -m
+    opam switch create . 4.10.2
+    opam pin add flow_parser.dev . --no-action
+    opam pin add flowtype.dev . --no-action
+    opam depext flow_parser flowtype --yes
+    opam install . js_of_ocaml --deps-only
+    opam exec -- make bin/flow dist/flow.zip
+    mkdir -p bin/macos && cp bin/flow bin/macos/flow
+    opam exec -- make -C src/parser dist/libflowparser.zip
+    cp dist/flow.zip dist/flow-osx.zip
+    cp src/parser/dist/libflowparser.zip dist/libflowparser-osx.zip
+    zip flow.zip -r dist
+  artifacts:
+    path: flow.zip
+    type: application/zip
