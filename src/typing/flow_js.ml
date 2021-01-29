@@ -1206,7 +1206,7 @@ struct
               t
             | (_, None) ->
               let num_exports = SMap.cardinal exports_tmap in
-              let has_default_export = SMap.find_opt "default" exports_tmap <> None in
+              let has_default_export = SMap.mem "default" exports_tmap in
               let msg =
                 if num_exports = 1 && has_default_export then
                   Error_message.EOnlyDefaultExport (reason, module_name, export_name)
