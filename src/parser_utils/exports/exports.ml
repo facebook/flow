@@ -15,13 +15,13 @@ type export =
 type t = export list [@@deriving show { with_path = false }]
 
 let local_def_of_index type_sig index =
-  Type_sig_collections.Local_defs.get type_sig.Packed_type_sig.local_defs index
+  Type_sig_collections.Local_defs.get type_sig.Packed_type_sig.Module.local_defs index
 
 let pattern_of_index type_sig index =
-  Type_sig_collections.Patterns.get type_sig.Packed_type_sig.patterns index
+  Type_sig_collections.Patterns.get type_sig.Packed_type_sig.Module.patterns index
 
 let pattern_def_of_index type_sig index =
-  Type_sig_collections.Pattern_defs.get type_sig.Packed_type_sig.pattern_defs index
+  Type_sig_collections.Pattern_defs.get type_sig.Packed_type_sig.Module.pattern_defs index
 
 module Eval = struct
   open Type_sig
@@ -270,7 +270,7 @@ module CJS = struct
       acc
 
   let add_default_exports type_sig acc =
-    match type_sig.Packed_type_sig.export_def with
+    match type_sig.Packed_type_sig.Module.export_def with
     | Some module_exports -> Default :: add_named_exports acc type_sig module_exports
     | None -> acc
 
@@ -294,7 +294,7 @@ module CJS = struct
     [] |> add_default_exports type_sig |> add_type_exports type_sig types
 end
 
-let of_type_sig type_sig : t =
-  match type_sig.Packed_type_sig.exports with
+let of_module type_sig : t =
+  match type_sig.Packed_type_sig.Module.exports with
   | Type_sig_pack.ESExports exp -> ESM.exports type_sig exp
   | Type_sig_pack.CJSExports exp -> CJS.exports type_sig exp

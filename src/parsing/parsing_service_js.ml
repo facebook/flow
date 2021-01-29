@@ -499,7 +499,7 @@ let do_parse ~parse_options ~info content file =
                   let strict = Docblock.is_strict info in
                   Type_sig_utils.parse_and_pack_module ~strict sig_opts (Some file) ast
                 in
-                Exports.of_type_sig type_sig
+                Exports.of_module type_sig
               in
               (env, errors, Parsing_heaps.TypesFirst { sig_ast; sig_file_sig; aloc_table }, exports)
             else
@@ -525,7 +525,7 @@ let do_parse ~parse_options ~info content file =
               let env = ref SMap.empty in
               let () =
                 let open Type_sig in
-                let { Packed_type_sig.local_defs; _ } = type_sig in
+                let { Packed_type_sig.Module.local_defs; _ } = type_sig in
                 let f def =
                   let name = def_name def in
                   let loc = def_id_loc def in
@@ -552,7 +552,7 @@ let do_parse ~parse_options ~info content file =
                 Type_sig_collections.Locs.to_array locs
                 |> ALoc.ALocRepresentationDoNotUse.make_table file
               in
-              let exports = Exports.of_type_sig type_sig in
+              let exports = Exports.of_module type_sig in
               (Some !env, errors, Parsing_heaps.TypeSig (type_sig, aloc_table), exports)
           in
           let tolerable_errors =

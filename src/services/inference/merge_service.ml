@@ -287,7 +287,7 @@ let merge_context_new_signatures ~options ~reader component =
           ALoc.of_loc (ALoc.to_loc aloc_table aloc)
     in
     let {
-      Packed_type_sig.exports;
+      Packed_type_sig.Module.exports;
       export_def;
       module_refs;
       local_defs;

@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
-type type_sig = Type_sig_collections.Locs.index Packed_type_sig.t
+type type_sig = Type_sig_collections.Locs.index Packed_type_sig.Module.t
 
 module type READER = sig
   type reader

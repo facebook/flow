@@ -123,7 +123,7 @@ let pp_sig
     ( errs,
       locs,
       {
-        Packed_type_sig.exports;
+        Packed_type_sig.Module.exports;
         export_def;
         module_refs;
         local_defs;
