@@ -143,8 +143,9 @@ let pp_sig
   pp_patterns pp_loc fmt patterns;
   pp_errors pp_loc fmt errs
 
-let pp_builtin_module pp_loc fmt (_loc, exports, export_def) =
+let pp_builtin_module pp_loc fmt (loc, exports, export_def) =
   let open Format in
+  fprintf fmt "%a " pp_loc loc;
   pp_exports pp_loc fmt exports;
   pp_print_newline fmt ();
   pp_export_def pp_loc fmt export_def
@@ -4422,7 +4423,7 @@ let%expect_test "builtin_module" =
     0. TypeAlias {id_loc = [1:5-6]; name = "T"; tparams = Mono; body = (Annot (String [1:9-15]))}
 
     Builtin module foo:
-    (CJSExports { types = {}; type_stars = []; strict = true })
+    [2:0-4:1] (CJSExports { types = {}; type_stars = []; strict = true })
 
     Export_def:
     (TyRef (Unqualified LocalRef {ref_loc = [3:26-27]; index = 0})) |}]
@@ -4438,13 +4439,13 @@ let%expect_test "builtin_module_2" =
   |}];
   [%expect {|
     Builtin module bar:
-    (CJSExports { types = {}; type_stars = []; strict = true })
+    [4:0-6:1] (CJSExports { types = {}; type_stars = []; strict = true })
 
     Export_def:
     (Annot (Number [5:26-32]))
 
     Builtin module foo:
-    (CJSExports { types = {}; type_stars = []; strict = true })
+    [1:0-3:1] (CJSExports { types = {}; type_stars = []; strict = true })
 
     Export_def:
     (Annot (String [2:26-32])) |}]
