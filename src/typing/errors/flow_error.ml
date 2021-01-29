@@ -422,8 +422,8 @@ let rec make_error_printable ?(speculation = false) (error : Loc.t t) : Loc.t Er
                 `Root (def, None, [text "Cannot define shadowed proto property"])
               | (Some own_loc, Some proto_loc) ->
                 let def = mk_reason (RProperty (Some prop)) own_loc in
-                let proto = mk_reason (RIdentifier prop) proto_loc in
-                `Root (def, None, [text "Cannot shadow proto property "; ref proto]))
+                let proto = mk_reason (RProperty (Some prop)) proto_loc in
+                `Root (def, None, [text "Cannot shadow proto "; ref proto]))
             | Op (Coercion { from; target }) ->
               `Root (from, None, [text "Cannot coerce "; desc from; text " to "; desc target])
             | Op (FunCall { op; fn; _ }) -> `Root (op, Some fn, [text "Cannot call "; desc fn])
