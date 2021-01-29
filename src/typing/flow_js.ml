@@ -2045,8 +2045,11 @@ struct
           let keylist =
             SMap.fold
               (fun x _ acc ->
-                let reason = replace_desc_new_reason (RStringLit x) reason_op in
-                DefT (reason, bogus_trust (), SingletonStrT x) :: acc)
+                if Reason.is_internal_name x then
+                  acc
+                else
+                  let reason = replace_desc_new_reason (RStringLit x) reason_op in
+                  DefT (reason, bogus_trust (), SingletonStrT x) :: acc)
               own_props
               []
           in
