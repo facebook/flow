@@ -478,7 +478,6 @@ and 'loc unsupported_syntax =
   | ClassPropertyComputed
   | ReactCreateClassPropertyNonInit
   | RequireDynamicArgument
-  | RequireLazyDynamicArgument
   | CatchParameterAnnotation
   | CatchParameterDeclaration
   | DestructuringObjectPropertyLiteralNonString
@@ -573,14 +572,13 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
     | ( ComprehensionExpression | GeneratorExpression | MetaPropertyExpression
       | ObjectPropertyLiteralNonString | ObjectPropertyGetSet | ObjectPropertyComputedGetSet
       | InvariantSpreadArgument | ClassPropertyLiteral | ClassPropertyComputed
-      | ReactCreateClassPropertyNonInit | RequireDynamicArgument | RequireLazyDynamicArgument
-      | CatchParameterAnnotation | CatchParameterDeclaration
-      | DestructuringObjectPropertyLiteralNonString | DestructuringExpressionPattern
-      | PredicateDeclarationForImplementation | PredicateDeclarationWithoutExpression
-      | PredicateDeclarationAnonymousParameters | PredicateInvalidBody
-      | PredicateFunctionAbstractReturnType | PredicateVoidReturn | MultipleIndexers
-      | MultipleProtos | ExplicitCallAfterProto | ExplicitProtoAfterCall | SpreadArgument
-      | ImportDynamicArgument | IllegalName | UnsupportedInternalSlot _ ) as u ->
+      | ReactCreateClassPropertyNonInit | RequireDynamicArgument | CatchParameterAnnotation
+      | CatchParameterDeclaration | DestructuringObjectPropertyLiteralNonString
+      | DestructuringExpressionPattern | PredicateDeclarationForImplementation
+      | PredicateDeclarationWithoutExpression | PredicateDeclarationAnonymousParameters
+      | PredicateInvalidBody | PredicateFunctionAbstractReturnType | PredicateVoidReturn
+      | MultipleIndexers | MultipleProtos | ExplicitCallAfterProto | ExplicitProtoAfterCall
+      | SpreadArgument | ImportDynamicArgument | IllegalName | UnsupportedInternalSlot _ ) as u ->
       u
   in
   function
@@ -2198,14 +2196,6 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
         [text "The parameter passed to "; code "require"; text " must be a string literal."]
       | ImportDynamicArgument ->
         [text "The parameter passed to "; code "import"; text " must be a string literal."]
-      | RequireLazyDynamicArgument ->
-        [
-          text "The first argument to ";
-          code "requireLazy";
-          text " must be an ";
-          text "array literal of string literals and the second argument must ";
-          text "be a callback.";
-        ]
       | CatchParameterAnnotation ->
         [text "Type annotations for catch parameters are not yet supported."]
       | CatchParameterDeclaration -> [text "Unsupported catch parameter declaration."]
