@@ -947,6 +947,14 @@ module Eat = struct
 
     Lookahead.junk !(env.lookahead)
 
+  (** [maybe env t] eats the next token and returns [true] if it is [t], else return [false] *)
+  let maybe env t =
+    if Peek.token env = t then (
+      token env;
+      true
+    ) else
+      false
+
   let push_lex_mode env mode =
     env.lex_mode_stack := mode :: !(env.lex_mode_stack);
     env.lookahead := Lookahead.create !(env.lex_env) (lex_mode env)
@@ -1070,15 +1078,6 @@ module Expect = struct
         error_unexpected ~expected env
     end;
     Eat.token env
-
-  (* If the next token is t, then eat it and return true
-   * else return false *)
-  let maybe env t =
-    if Peek.token env = t then (
-      Eat.token env;
-      true
-    ) else
-      false
 end
 
 (* This module allows you to try parsing and rollback if you need. This is not

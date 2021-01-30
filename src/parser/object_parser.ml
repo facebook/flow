@@ -560,7 +560,7 @@ module Object
   let class_heritage env =
     let extends =
       let leading = Peek.comments env in
-      if Expect.maybe env T_EXTENDS then
+      if Eat.maybe env T_EXTENDS then
         let (loc, extends) = class_extends ~leading env in
         let { remove_trailing; _ } = trailing_and_remover env in
         Some
@@ -970,7 +970,7 @@ module Object
       with_loc
         (fun env ->
           let leading = Peek.comments env in
-          if Expect.maybe env T_LCURLY then (
+          if Eat.maybe env T_LCURLY then (
             enter_class env;
             let body = elements env false SMap.empty [] in
             exit_class env;

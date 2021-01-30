@@ -269,9 +269,9 @@ module JSX (Parse : Parser_common.PARSER) = struct
           | T_JSX_IDENTIFIER _ ->
             let name = name env in
             let attributes = attributes env [] in
-            let self_closing = Expect.maybe env T_DIV in
+            let self_closing = Eat.maybe env T_DIV in
             let element = `Element { JSX.Opening.name; self_closing; attributes } in
-            if Expect.maybe env T_GREATER_THAN then
+            if Eat.maybe env T_GREATER_THAN then
               Ok element
             else (
               Expect.error env T_GREATER_THAN;

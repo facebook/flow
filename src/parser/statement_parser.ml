@@ -358,7 +358,7 @@ module Statement
     with_loc (fun env ->
         let leading = Peek.comments env in
         Expect.token env T_FOR;
-        let async = allow_await env && Expect.maybe env T_AWAIT in
+        let async = allow_await env && Eat.maybe env T_AWAIT in
         let leading = leading @ Peek.comments env in
         Expect.token env T_LPAREN;
         let comments = Flow_ast_utils.mk_comments_opt ~leading () in
@@ -1061,7 +1061,7 @@ module Statement
         | _ -> tparams
       in
       let extends =
-        if Expect.maybe env T_EXTENDS then
+        if Eat.maybe env T_EXTENDS then
           let extends = Type.generic env in
           match Peek.token env with
           | T_LCURLY -> Some (generic_type_remove_trailing env extends)
@@ -1414,7 +1414,7 @@ module Statement
             { Statement.ExportNamedDeclaration.ExportSpecifier.local; exported })
           env
       in
-      let preceding_comma = Expect.maybe env T_COMMA in
+      let preceding_comma = Eat.maybe env T_COMMA in
       export_specifiers ~preceding_comma env (specifier :: specifiers)
 
   and assert_export_specifier_identifiers env specifiers =
@@ -1990,7 +1990,7 @@ module Statement
             | ImportTypeof -> typeof_specifier env
             | ImportValue -> specifier env
           in
-          let preceding_comma = Expect.maybe env T_COMMA in
+          let preceding_comma = Eat.maybe env T_COMMA in
           specifier_list ~preceding_comma env statement_kind (specifier :: acc)
       in
       let named_or_namespace_specifier env import_kind =
