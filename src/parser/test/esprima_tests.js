@@ -1501,7 +1501,7 @@ module.exports = {
             'root.errors.0.message': {
               type: 'Wrong error message',
               expected: 'Unexpected token .',
-              actual: 'Unexpected token `.`, expected an identifier'
+              actual: 'Unexpected token `.`, expected the token `>`'
             }
           }
         },
@@ -1512,7 +1512,7 @@ module.exports = {
             'root.errors.0.message': {
               type: 'Wrong error message',
               expected: 'Unexpected token :',
-              actual: 'Unexpected token `:`, expected an identifier'
+              actual: 'Unexpected token `:`, expected the token `>`'
             }
           }
         },
@@ -1524,7 +1524,7 @@ module.exports = {
             'root.errors.0.message': {
               type: 'Wrong error message',
               expected: 'Unexpected token .',
-              actual: 'Unexpected token `.`, expected an identifier'
+              actual: 'Unexpected token `.`, expected the token `>`'
             }
           }
         },
@@ -1535,7 +1535,7 @@ module.exports = {
             'root.errors.0.message': {
               type: 'Wrong error message',
               expected: 'Unexpected token [',
-              actual: 'Unexpected token `[`, expected an identifier'
+              actual: 'Unexpected token `[`, expected the token `>`'
             }
           }
         },
@@ -1546,7 +1546,7 @@ module.exports = {
             'root.errors.0.message': {
               type: 'Wrong error message',
               expected: 'Unexpected token [',
-              actual: 'Unexpected token `[`, expected an identifier'
+              actual: 'Unexpected token `[`, expected the token `>`'
             }
           }
         },
@@ -1569,7 +1569,7 @@ module.exports = {
             'root.errors.0.message': {
               type: 'Wrong error message',
               expected: 'Unexpected token ,',
-              actual: 'Unexpected token `,`, expected an identifier'
+              actual: 'Unexpected token `,`, expected the token `>`'
             }
           }
         },
@@ -1580,7 +1580,7 @@ module.exports = {
             'root.errors.0.message': {
               type: 'Wrong error message',
               expected: 'Unexpected string',
-              actual: 'Unexpected string, expected an identifier'
+              actual: 'Unexpected string, expected the token `>`'
             }
           }
         },

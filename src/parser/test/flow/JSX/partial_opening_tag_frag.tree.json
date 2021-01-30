@@ -2,37 +2,21 @@
   "errors":[
     {
       "loc":{"source":null,"start":{"line":3,"column":0},"end":{"line":3,"column":1}},
-      "message":"Unexpected token `<`, expected an identifier"
-    },
-    {
-      "loc":{"source":null,"start":{"line":3,"column":2},"end":{"line":3,"column":5}},
-      "message":"Unexpected identifier, expected the token `>`"
-    },
-    {
-      "loc":{"source":null,"start":{"line":4,"column":0},"end":{"line":4,"column":0}},
-      "message":"Unexpected token ILLEGAL"
-    },
-    {
-      "loc":{"source":null,"start":{"line":4,"column":0},"end":{"line":4,"column":0}},
-      "message":"Unexpected end of input"
-    },
-    {
-      "loc":{"source":null,"start":{"line":4,"column":0},"end":{"line":4,"column":0}},
-      "message":"Unexpected end of input, expected the token `)`"
+      "message":"Unexpected token `<`, expected the token `>`"
     }
   ],
   "type":"Program",
-  "loc":{"source":null,"start":{"line":1,"column":0},"end":{"line":4,"column":0}},
-  "range":[0,19],
+  "loc":{"source":null,"start":{"line":1,"column":0},"end":{"line":3,"column":7}},
+  "range":[0,18],
   "body":[
     {
       "type":"ExpressionStatement",
-      "loc":{"source":null,"start":{"line":1,"column":0},"end":{"line":4,"column":0}},
-      "range":[0,19],
+      "loc":{"source":null,"start":{"line":1,"column":0},"end":{"line":3,"column":7}},
+      "range":[0,18],
       "expression":{
         "type":"JSXElement",
-        "loc":{"source":null,"start":{"line":1,"column":1},"end":{"line":1,"column":6}},
-        "range":[1,6],
+        "loc":{"source":null,"start":{"line":1,"column":1},"end":{"line":3,"column":6}},
+        "range":[1,17],
         "openingElement":{
           "type":"JSXOpeningElement",
           "loc":{"source":null,"start":{"line":1,"column":1},"end":{"line":1,"column":6}},
@@ -46,7 +30,17 @@
           "attributes":[],
           "selfClosing":false
         },
-        "closingElement":null,
+        "closingElement":{
+          "type":"JSXClosingElement",
+          "loc":{"source":null,"start":{"line":3,"column":0},"end":{"line":3,"column":6}},
+          "range":[11,17],
+          "name":{
+            "type":"JSXIdentifier",
+            "loc":{"source":null,"start":{"line":3,"column":2},"end":{"line":3,"column":5}},
+            "range":[13,16],
+            "name":"foo"
+          }
+        },
         "children":[
           {
             "type":"JSXText",
@@ -56,31 +50,27 @@
             "raw":"\n  "
           },
           {
-            "type":"JSXElement",
-            "loc":{"source":null,"start":{"line":2,"column":2},"end":{"line":3,"column":5}},
-            "range":[9,16],
-            "openingElement":{
-              "type":"JSXOpeningElement",
-              "loc":{"source":null,"start":{"line":2,"column":2},"end":{"line":3,"column":5}},
-              "range":[9,16],
-              "name":{
-                "type":"JSXIdentifier",
-                "loc":{"source":null,"start":{"line":3,"column":0},"end":{"line":3,"column":1}},
-                "range":[11,12],
-                "name":""
-              },
-              "attributes":[],
-              "selfClosing":true
+            "type":"JSXFragment",
+            "loc":{"source":null,"start":{"line":2,"column":2},"end":{"line":2,"column":3}},
+            "range":[9,10],
+            "openingFragment":{
+              "type":"JSXOpeningFragment",
+              "loc":{"source":null,"start":{"line":2,"column":2},"end":{"line":2,"column":3}},
+              "range":[9,10]
             },
-            "closingElement":null,
-            "children":[]
+            "children":[],
+            "closingFragment":{
+              "type":"JSXClosingFragment",
+              "loc":{"source":null,"start":{"line":2,"column":2},"end":{"line":2,"column":3}},
+              "range":[9,10]
+            }
           },
           {
             "type":"JSXText",
-            "loc":{"source":null,"start":{"line":3,"column":5},"end":{"line":4,"column":0}},
-            "range":[16,19],
-            "value":">)\n",
-            "raw":">)\n"
+            "loc":{"source":null,"start":{"line":2,"column":3},"end":{"line":3,"column":0}},
+            "range":[10,11],
+            "value":"\n",
+            "raw":"\n"
           }
         ]
       },
