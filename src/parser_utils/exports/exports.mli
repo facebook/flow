@@ -13,4 +13,4 @@ type export =
 
 type t = export list [@@deriving show { with_path = false }]
 
-val of_type_sig : 'a Packed_type_sig.t -> t
+val of_module : 'a Packed_type_sig.Module.t -> t

@@ -36,7 +36,7 @@ module SigASTALocTableHeap =
       let description = "ALocTable"
     end)
 
-type type_sig = Type_sig_collections.Locs.index Packed_type_sig.t
+type type_sig = Type_sig_collections.Locs.index Packed_type_sig.Module.t
 
 module TypeSigHeap =
   SharedMem.NoCache

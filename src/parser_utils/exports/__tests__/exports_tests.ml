@@ -68,7 +68,7 @@ let print_index contents_indent =
     }
   in
   let (_, _, packed_sig) = parse_and_pack_module ~strict:true sig_opts contents in
-  let exports = Exports.of_type_sig packed_sig in
+  let exports = Exports.of_module packed_sig in
   let fmt = make_test_formatter () in
   Format.pp_open_box fmt 0;
   Exports.pp fmt exports;
