@@ -257,7 +257,7 @@ let print_builtins ordered_contents_indent =
       ordered_contents_indent
   in
   let sig_opts = sig_options () in
-  let builtins = Type_sig_utils.(pack_builtins (parse_libs sig_opts ordered_asts)) in
+  let builtins = Type_sig_utils.parse_and_pack_builtins sig_opts ordered_asts in
   let fmt = make_test_formatter () in
   pp_builtins fmt builtins
 
