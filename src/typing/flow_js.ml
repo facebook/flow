@@ -5959,6 +5959,7 @@ struct
     | SealGenericT _
     | ResolveUnionT _ ->
       false
+    | BecomeT { empty_success; _ } -> empty_success
     | _ -> true
 
   and handle_generic cx trace bound reason id name u =

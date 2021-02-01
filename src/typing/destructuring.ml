@@ -246,9 +246,10 @@ let identifier cx ~f acc loc name =
          {
            var = Some reason;
            init =
-             (match init with
-             | Some init -> mk_expression_reason init
-             | None -> reason_of_t current);
+             (match (default, init) with
+             | (Some (Default.Expr t), _) -> reason_of_t t
+             | (_, Some init) -> mk_expression_reason init
+             | _ -> reason_of_t current);
          })
   in
   f ~use_op loc name default current

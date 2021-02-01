@@ -80,3 +80,9 @@ function obj_prop_union({p}:{p:number|string}={p:true}) {}
 function obj_prop_union2({p}:{p:number}|{p:string}={p:true}) {}
 
 function default_expr_scope({a, b = a}) {}
+
+function Component({
+  name = 123456, // Not string type, error!
+}: {| name?: string |}) {
+  (name: string);
+}

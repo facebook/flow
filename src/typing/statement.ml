@@ -374,12 +374,12 @@ module Func_stmt_config = struct
         in
         Env.bind_implicit_let ~state:State.Initialized kind cx name t loc)
 
-  let destruct cx ~use_op:_ loc name default t =
+  let destruct cx ~use_op loc name default t =
     Base.Option.iter
       ~f:(fun d ->
         let reason = mk_reason (RIdentifier name) loc in
         let default_t = Flow.mk_default cx reason d in
-        Flow.flow_t cx (default_t, t))
+        Flow.flow cx (default_t, UseT (use_op, t)))
       default;
     bind cx name t loc;
     t
