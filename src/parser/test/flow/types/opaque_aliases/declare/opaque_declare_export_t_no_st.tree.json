@@ -2,15 +2,7 @@
   "errors":[
     {
       "loc":{"source":null,"start":{"line":1,"column":31},"end":{"line":1,"column":32}},
-      "message":"Unexpected token `=`, expected the token `;`"
-    },
-    {
-      "loc":{"source":null,"start":{"line":1,"column":31},"end":{"line":1,"column":32}},
-      "message":"Unexpected token `=`"
-    },
-    {
-      "loc":{"source":null,"start":{"line":1,"column":31},"end":{"line":1,"column":32}},
-      "message":"Invalid left-hand side in assignment"
+      "message":"Unexpected token `=`. Initializers are not allowed in a `declare opaque type`."
     }
   ],
   "type":"Program",
@@ -19,13 +11,13 @@
   "body":[
     {
       "type":"DeclareExportDeclaration",
-      "loc":{"source":null,"start":{"line":1,"column":0},"end":{"line":1,"column":30}},
-      "range":[0,30],
+      "loc":{"source":null,"start":{"line":1,"column":0},"end":{"line":1,"column":36}},
+      "range":[0,36],
       "default":false,
       "declaration":{
         "type":"DeclareOpaqueType",
-        "loc":{"source":null,"start":{"line":1,"column":15},"end":{"line":1,"column":30}},
-        "range":[15,30],
+        "loc":{"source":null,"start":{"line":1,"column":15},"end":{"line":1,"column":36}},
+        "range":[15,36],
         "id":{
           "type":"Identifier",
           "loc":{"source":null,"start":{"line":1,"column":27},"end":{"line":1,"column":30}},
@@ -35,38 +27,24 @@
           "optional":false
         },
         "typeParameters":null,
-        "impltype":null,
+        "impltype":{
+          "type":"GenericTypeAnnotation",
+          "loc":{"source":null,"start":{"line":1,"column":33},"end":{"line":1,"column":36}},
+          "range":[33,36],
+          "id":{
+            "type":"Identifier",
+            "loc":{"source":null,"start":{"line":1,"column":33},"end":{"line":1,"column":36}},
+            "range":[33,36],
+            "name":"Bar",
+            "typeAnnotation":null,
+            "optional":false
+          },
+          "typeParameters":null
+        },
         "supertype":null
       },
       "specifiers":[],
       "source":null
-    },
-    {
-      "type":"ExpressionStatement",
-      "loc":{"source":null,"start":{"line":1,"column":31},"end":{"line":1,"column":36}},
-      "range":[31,36],
-      "expression":{
-        "type":"AssignmentExpression",
-        "loc":{"source":null,"start":{"line":1,"column":31},"end":{"line":1,"column":36}},
-        "range":[31,36],
-        "operator":"=",
-        "left":{
-          "type":"Literal",
-          "loc":{"source":null,"start":{"line":1,"column":31},"end":{"line":1,"column":32}},
-          "range":[31,32],
-          "value":null,
-          "raw":"null"
-        },
-        "right":{
-          "type":"Identifier",
-          "loc":{"source":null,"start":{"line":1,"column":33},"end":{"line":1,"column":36}},
-          "range":[33,36],
-          "name":"Bar",
-          "typeAnnotation":null,
-          "optional":false
-        }
-      },
-      "directive":null
     }
   ],
   "comments":[]

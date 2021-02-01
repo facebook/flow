@@ -917,11 +917,20 @@ module Statement
       | _ -> None
     in
     let impltype =
-      if not declare then (
+      if declare then
+        match Peek.token env with
+        | T_ASSIGN ->
+          error env Parse_error.DeclareOpaqueTypeInitializer;
+          Eat.token env;
+          if Peek.token env = T_SEMICOLON || Peek.is_implicit_semicolon env then
+            None
+          else
+            Some (Type._type env)
+        | _ -> None
+      else (
         Expect.token env T_ASSIGN;
         Some (Type._type env)
-      ) else
-        None
+      )
     in
     Eat.pop_lex_mode env;
     let (trailing, id, tparams, supertype, impltype) =
