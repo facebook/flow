@@ -256,6 +256,8 @@ module Expect : sig
 
   val token : env -> Token.t -> unit
 
+  val token_opt : env -> Token.t -> unit
+
   val identifier : env -> string -> unit
 
   val maybe : env -> Token.t -> bool

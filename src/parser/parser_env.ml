@@ -1050,6 +1050,16 @@ module Expect = struct
     if Peek.token env <> t then error env t;
     Eat.token env
 
+  (** [token_opt env T_FOO] eats a token if it is [T_FOO], and errors without consuming if not.
+      This differs from [token], which always consumes. Only use [token_opt] when it's ok for
+      the parser to not advance, like if you are guaranteed that something else has eaten a
+      token. *)
+  let token_opt env t =
+    if Peek.token env <> t then
+      error env t
+    else
+      Eat.token env
+
   let identifier env name =
     let t = Peek.token env in
     begin

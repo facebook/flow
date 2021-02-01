@@ -307,6 +307,26 @@ Flags: --pretty
   ]
 }
 
+jsx-closing-tag.js:10:14
+Flags: --pretty
+{
+  "result":[
+    {"name":"React","type":"module React"},
+    {"name":"Foo","type":"(props: {+x: number, +y: string, ...}) => void"},
+    {"name":"Bar","type":"(props: {+x: number, +y: string, ...}) => void"}
+  ]
+}
+
+jsx-closing-tag-unclosed.js:10:14
+Flags: --pretty
+{
+  "result":[
+    {"name":"React","type":"module React"},
+    {"name":"Foo","type":"(props: {+x: number, +y: string, ...}) => void"},
+    {"name":"Bar","type":"(props: {+x: number, +y: string, ...}) => void"}
+  ]
+}
+
 jsx-function-component.js:9:4
 Flags: --pretty
 {"result":[{"name":"x","type":"number"},{"name":"y","type":"string"}]}
