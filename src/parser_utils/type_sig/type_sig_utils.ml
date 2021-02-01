@@ -47,8 +47,15 @@ let pack_builtins (locs, (tbls, globals, modules)) =
   let local_defs = Local_defs.copy (Pack.pack_local_binding cx) local_defs in
   let remote_refs = Remote_refs.copy Pack.pack_remote_binding remote_refs in
   let globals = SMap.map Pack.pack_builtin globals in
-  let modules = SMap.map (Pack.pack_builtin_module cx) modules in
-  cx.Pack.errs, locs, (module_refs, local_defs, remote_refs, globals, modules)
+  let modules =
+    SMap.map
+      (fun m ->
+        let (loc, exports, export_def) = Pack.pack_builtin_module cx m in
+        { Packed_type_sig.Builtins.loc; exports; export_def}
+      )
+      modules
+  in
+  cx.Pack.errs, locs, { Packed_type_sig.Builtins.module_refs; local_defs; remote_refs; globals; modules }
 
 (* Modules are parsed and packed separately, then merged component wise
    according to the dependency DAG. *)

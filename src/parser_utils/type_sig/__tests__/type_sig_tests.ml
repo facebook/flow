@@ -143,14 +143,18 @@ let pp_sig
   pp_patterns pp_loc fmt patterns;
   pp_errors pp_loc fmt errs
 
-let pp_builtin_module pp_loc fmt (loc, exports, export_def) =
+let pp_builtin_module pp_loc fmt { Packed_type_sig.Builtins.loc; exports; export_def } =
   let open Format in
   fprintf fmt "%a " pp_loc loc;
   pp_exports pp_loc fmt exports;
   pp_print_newline fmt ();
   pp_export_def pp_loc fmt export_def
 
-let pp_builtins fmt (errs, locs, (module_refs, local_defs, remote_refs, _globals, modules)) =
+let pp_builtins
+    fmt
+    ( errs,
+      locs,
+      { Packed_type_sig.Builtins.module_refs; local_defs; remote_refs; globals = _; modules } ) =
   let open Format in
   let pp_loc = mk_pp_loc locs in
   pp_module_refs fmt module_refs;
