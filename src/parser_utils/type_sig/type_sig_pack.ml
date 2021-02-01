@@ -436,3 +436,8 @@ and pack_op cx op = map_op (pack_parsed cx) op
 and pack_builtin = function
   | P.LocalBinding b -> Local_defs.index_exn b
   | P.RemoteBinding _ -> failwith "unexpected remote builtin"
+
+and pack_builtin_module cx (loc, exports) =
+  let (exports, export_def) = pack_exports cx loc exports in
+  let loc = pack_loc loc in
+  (loc, exports, export_def)
