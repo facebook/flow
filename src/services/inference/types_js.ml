@@ -1236,13 +1236,19 @@ let init_libs ~options ~profiling ~local_errors ~warnings ~suppressions ~reader 
           { options with Options.opt_verbose = None }
         | _ -> options
       in
-      let%lwt result = Init_js.init ~options ~reader ordered_libs in
+      let%lwt {
+            Init_js.ok;
+            errors = lib_errors;
+            warnings = lib_warnings;
+            suppressions = lib_suppressions;
+          } =
+        Init_js.init ~options ~reader ordered_libs
+      in
       Lwt.return
-        Init_js.
-          ( result.ok,
-            FilenameMap.union result.errors local_errors,
-            FilenameMap.union result.warnings warnings,
-            Error_suppressions.update_suppressions result.suppressions suppressions ))
+        ( ok,
+          FilenameMap.union lib_errors local_errors,
+          FilenameMap.union lib_warnings warnings,
+          Error_suppressions.update_suppressions lib_suppressions suppressions ))
 
 let is_file_tracked_and_checked ~reader filename =
   Module_heaps.Reader_dispatcher.is_tracked_file ~reader filename

@@ -62,6 +62,27 @@ let parse_lib_file ~reader options file =
         failwith "Internal error: no parse results found" )
   with _ -> failwith (spf "Can't read library definitions file %s, exiting." file)
 
+let infer_lib_file ~ccx ~options ~exclude_syms lib_file ast file_sig =
+  let verbose = Options.verbose options in
+  let lint_severities = Options.lint_severities options in
+  let metadata =
+    Context.(
+      let metadata = metadata_of_options options in
+      { metadata with checked = false; weak = false })
+  in
+  let rev_table = lazy (ALoc.make_empty_reverse_table ()) in
+  let cx = Context.make ccx metadata lib_file rev_table Files.lib_module_ref Context.Checking in
+  let syms = Infer.infer_lib_file cx ast ~exclude_syms ~lint_severities ~file_sig in
+
+  if verbose != None then
+    prerr_endlinef
+      "load_lib %s: added symbols { %s }"
+      (File_key.to_string lib_file)
+      (String.concat ", " syms);
+
+  (* symbols loaded from this file are suppressed if found in later ones *)
+  SSet.union exclude_syms (SSet.of_list syms)
+
 (* process all lib files: parse, infer, and add the symbols they define
    to the builtins object.
 
@@ -73,39 +94,23 @@ let parse_lib_file ~reader options file =
    returns (success, parse and signature errors)
 *)
 let load_lib_files ~ccx ~options ~reader files =
-  let verbose = Options.verbose options in
   (* iterate in reverse override order *)
   let%lwt (_, ok, errors) =
     List.rev files
     |> Lwt_list.fold_left_s
          (fun (exclude_syms, ok_acc, errors_acc) file ->
            let lib_file = File_key.LibFile file in
-           let lint_severities = options.Options.opt_lint_severities in
            match%lwt parse_lib_file ~reader options file with
            | Lib_ok { ast; file_sig; tolerable_errors } ->
              let file_sig = File_sig.abstractify_locs file_sig in
              let tolerable_errors = File_sig.abstractify_tolerable_errors tolerable_errors in
-             let metadata =
-               Context.(
-                 let metadata = metadata_of_options options in
-                 { metadata with checked = false; weak = false })
-             in
-             let rev_table = lazy (ALoc.make_empty_reverse_table ()) in
-             let cx =
-               Context.make ccx metadata lib_file rev_table Files.lib_module_ref Context.Checking
-             in
-             let syms = Infer.infer_lib_file cx ast ~exclude_syms ~lint_severities ~file_sig in
+             let exclude_syms = infer_lib_file ~ccx ~options ~exclude_syms lib_file ast file_sig in
              let errors =
                tolerable_errors
                |> Inference_utils.set_of_file_sig_tolerable_errors ~source_file:lib_file
              in
-
-             if verbose != None then
-               prerr_endlinef "load_lib %s: added symbols { %s }" file (String.concat ", " syms);
-
-             (* symbols loaded from this file are suppressed if found in later ones *)
-             let exclude_syms = SSet.union exclude_syms (SSet.of_list syms) in
-             Lwt.return (exclude_syms, ok_acc, Flow_error.ErrorSet.union errors errors_acc)
+             let errors_acc = Flow_error.ErrorSet.union errors errors_acc in
+             Lwt.return (exclude_syms, ok_acc, errors_acc)
            | Lib_fail fail ->
              let errors =
                match fail with
