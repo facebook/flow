@@ -1272,12 +1272,12 @@ class virtual ['a] t_with_uses =
           t
         else
           UnifyT (t1', t2')
-      | BecomeT (r, t') ->
+      | BecomeT { reason; t = t'; empty_success } ->
         let t'' = self#type_ cx map_cx t' in
         if t'' == t' then
           t
         else
-          BecomeT (r, t'')
+          BecomeT { reason; empty_success; t = t'' }
       | GetKeysT (r, t') ->
         let t'' = self#use_type cx map_cx t' in
         if t'' == t' then

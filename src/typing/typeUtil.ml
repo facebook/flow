@@ -66,7 +66,7 @@ and reason_of_use_t = function
   | AssertForInRHST reason -> reason
   | AssertIterableT { reason; _ } -> reason
   | AssertImportIsValueT (reason, _) -> reason
-  | BecomeT (reason, _) -> reason
+  | BecomeT { reason; _ } -> reason
   | BindT (_, reason, _, _) -> reason
   | CallElemT (reason, _, _, _) -> reason
   | CallLatentPredT (reason, _, _, _, _) -> reason
@@ -234,7 +234,7 @@ and mod_reason_of_use_t f = function
   | AssertIterableT ({ reason; _ } as contents) ->
     AssertIterableT { contents with reason = f reason }
   | AssertImportIsValueT (reason, name) -> AssertImportIsValueT (f reason, name)
-  | BecomeT (reason, t) -> BecomeT (f reason, t)
+  | BecomeT { reason; t; empty_success } -> BecomeT { reason = f reason; t; empty_success }
   | BindT (use_op, reason, ft, pass) -> BindT (use_op, f reason, ft, pass)
   | CallElemT (reason_call, reason_lookup, t, ft) -> CallElemT (f reason_call, reason_lookup, t, ft)
   | CallLatentPredT (reason, b, k, l, t) -> CallLatentPredT (f reason, b, k, l, t)
@@ -448,7 +448,7 @@ let rec util_use_op_of_use_t :
   | ObjTestProtoT (_, _)
   | ObjTestT (_, _, _)
   | UnifyT (_, _)
-  | BecomeT (_, _)
+  | BecomeT { reason = _; t = _; empty_success = _ }
   | GetValuesT (_, _)
   | CJSRequireT (_, _, _)
   | ImportModuleNsT (_, _, _)

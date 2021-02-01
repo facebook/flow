@@ -689,7 +689,7 @@ struct
         (****************************************************************)
         (* BecomeT unifies a tvar with an incoming concrete lower bound *)
         (****************************************************************)
-        | (_, BecomeT (reason, t)) when is_proper_def l ->
+        | (_, BecomeT { reason; t; empty_success = _ }) when is_proper_def l ->
           let l = reposition ~trace cx (aloc_of_reason reason) l in
           rec_unify cx trace ~use_op:unknown_use ~unify_any:true l t
         (***********************)
@@ -4510,7 +4510,10 @@ struct
                * recursively 0->1 -- e.g., class instance types. *)
               let tvar = Tvar.mk_no_wrap cx reason in
               eval_selector cx ~trace reason l s (reason, tvar) id;
-              rec_flow cx trace (OpenT (reason, tvar), BecomeT (reason, OpenT tout))
+              rec_flow
+                cx
+                trace
+                (OpenT (reason, tvar), BecomeT { reason; t = OpenT tout; empty_success = false })
             | DestructInfer -> eval_selector cx ~trace reason l s tout id
           end
         (**************)
@@ -9726,7 +9729,8 @@ struct
         (* Ensure that `source` is a 0->1 type by creating a tvar that resolves to
            the first lower bound. If there are multiple lower bounds, the typeof
            itself is an error. *)
-        Tvar.mk_where cx reason (fun t' -> flow_opt cx ?trace (t, BecomeT (reason, t')))
+        Tvar.mk_where cx reason (fun t' ->
+            flow_opt cx ?trace (t, BecomeT { reason; t = t'; empty_success = true }))
       | _ ->
         (* If this is not a tvar, then it should be 0->1 (see TODO). Note that
            BoundT types potentially appear unsubstituted at this point, so we can't

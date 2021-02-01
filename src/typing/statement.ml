@@ -177,7 +177,10 @@ let snd_fst ((_, x), _) = x
 let inference_hook_tvar cx ploc =
   let r = mk_annot_reason (AnyT.desc (Unsound InferenceHooks)) ploc in
   let tvar = Tvar.mk_no_wrap cx r in
-  Flow.flow cx (OpenT (r, tvar), BecomeT (r, Unsoundness.at InferenceHooks ploc));
+  Flow.flow
+    cx
+    ( OpenT (r, tvar),
+      BecomeT { reason = r; t = Unsoundness.at InferenceHooks ploc; empty_success = true } );
   (r, tvar)
 
 let translate_identifier_or_literal_key t =
@@ -3127,7 +3130,8 @@ and variable cx kind ?if_uninitialized id init =
             if has_anno then
               AnnotT
                 ( reason,
-                  Tvar.mk_where cx reason (fun t' -> Flow.flow cx (t, BecomeT (reason, t'))),
+                  Tvar.mk_where cx reason (fun t' ->
+                      Flow.flow cx (t, BecomeT { reason; t = t'; empty_success = true })),
                   false )
             else
               t

@@ -399,7 +399,7 @@ class ['a] t =
         let acc = self#type_ cx pole_TODO acc t1 in
         let acc = self#type_ cx pole_TODO acc t2 in
         acc
-      | BecomeT (_, t) -> self#type_ cx pole_TODO acc t
+      | BecomeT { reason = _; t; empty_success = _ } -> self#type_ cx pole_TODO acc t
       | GetKeysT (_, t) -> self#use_type_ cx acc t
       | GetValuesT (_, t) -> self#type_ cx pole_TODO acc t
       | HasOwnPropT _ -> acc

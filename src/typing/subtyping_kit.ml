@@ -1530,7 +1530,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
     (********************************************************)
     | (DefT (_, _, ClassT it), DefT (r, _, TypeT (_, t))) ->
       (* a class value annotation becomes the instance type *)
-      rec_flow cx trace (it, BecomeT (r, t))
+      rec_flow cx trace (it, BecomeT { reason = r; t; empty_success = true })
     | (DefT (_, _, TypeT (_, l)), DefT (_, _, TypeT (_, u))) ->
       rec_unify cx trace ~use_op ~unify_any:true l u
     | (DefT (lreason, trust, EnumObjectT enum), DefT (_r, _, TypeT (_, t))) ->
