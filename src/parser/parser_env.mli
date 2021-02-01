@@ -238,6 +238,8 @@ end
 module Eat : sig
   val token : env -> unit
 
+  val maybe : env -> Token.t -> bool
+
   val push_lex_mode : env -> Lex_mode.t -> unit
 
   val pop_lex_mode : env -> unit
@@ -259,8 +261,6 @@ module Expect : sig
   val token_opt : env -> Token.t -> unit
 
   val identifier : env -> string -> unit
-
-  val maybe : env -> Token.t -> bool
 end
 
 module Try : sig
