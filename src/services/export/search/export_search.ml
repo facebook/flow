@@ -13,7 +13,7 @@ type t = {
 
 type search_result = {
   name: string;
-  file_key: File_key.t;
+  source: Export_index.source;
   kind: Export_index.kind;
 }
 [@@deriving show]
@@ -87,12 +87,12 @@ type query =
   | Value of string
   | Type of string
 
-let search_result_of_export ~query name file_key kind =
+let search_result_of_export ~query name source kind =
   let open Export_index in
   match (query, kind) with
   | (Value _, (Default | Named | Namespace))
   | (Type _, NamedType) ->
-    Some { name; file_key; kind }
+    Some { name; source; kind }
   | (Value _, NamedType)
   | (Type _, (Default | Named | Namespace)) ->
     None
@@ -101,14 +101,14 @@ let search_result_of_export ~query name file_key kind =
     where each match in [matches] might contribute multiple results.
     sets [is_incomplete] if [n] is exceeded. *)
 let take =
-  let rec helper ~n ~query acc (seq : (File_key.t * Export_index.kind * string) Seq.t) =
+  let rec helper ~n ~query acc (seq : (Export_index.source * Export_index.kind * string) Seq.t) =
     match seq () with
     | Seq.Nil -> { results = Base.List.rev acc; is_incomplete = false }
-    | Seq.Cons ((file_key, kind, value), rest) ->
+    | Seq.Cons ((source, kind, value), rest) ->
       if n <= 0 then
         { results = Base.List.rev acc; is_incomplete = true }
       else (
-        match search_result_of_export ~query value file_key kind with
+        match search_result_of_export ~query value source kind with
         | Some result -> helper ~n:(n - 1) ~query (result :: acc) rest
         | None -> helper ~n ~query acc rest
       )
@@ -119,7 +119,7 @@ let take =
       |> List.to_seq
       |> Seq.flat_map (fun { Fuzzy_path.value; _ } ->
              Export_index.find_seq value index
-             |> Seq.map (fun (file_key, kind) -> (file_key, kind, value)))
+             |> Seq.map (fun (source, kind) -> (source, kind, value)))
     in
     helper ~n ~query [] seq
 

@@ -91,14 +91,14 @@ let infer_lib_file ~ccx ~options ~exclude_syms lib_file ast file_sig =
    preserve lib path declaration order in the (flattened) list of files
    passed.
 
-   returns (success, parse and signature errors)
+   returns (success, parse and signature errors, exports)
 *)
 let load_lib_files ~ccx ~options ~reader files =
   (* iterate in reverse override order *)
-  let%lwt (_, ok, errors) =
+  let%lwt (_, ok, errors, ordered_asts) =
     List.rev files
     |> Lwt_list.fold_left_s
-         (fun (exclude_syms, ok_acc, errors_acc) file ->
+         (fun (exclude_syms, ok_acc, errors_acc, asts_acc) file ->
            let lib_file = File_key.LibFile file in
            match%lwt parse_lib_file ~reader options file with
            | Lib_ok { ast; file_sig; tolerable_errors } ->
@@ -110,7 +110,8 @@ let load_lib_files ~ccx ~options ~reader files =
                |> Inference_utils.set_of_file_sig_tolerable_errors ~source_file:lib_file
              in
              let errors_acc = Flow_error.ErrorSet.union errors errors_acc in
-             Lwt.return (exclude_syms, ok_acc, errors_acc)
+             let asts_acc = ast :: asts_acc in
+             Lwt.return (exclude_syms, ok_acc, errors_acc, asts_acc)
            | Lib_fail fail ->
              let errors =
                match fail with
@@ -121,17 +122,49 @@ let load_lib_files ~ccx ~options ~reader files =
                | Parsing.File_sig_error error ->
                  Inference_utils.set_of_file_sig_error ~source_file:lib_file error
              in
-             Lwt.return (exclude_syms, false, Flow_error.ErrorSet.union errors errors_acc)
-           | Lib_skip -> Lwt.return (exclude_syms, false, errors_acc))
-         (SSet.empty, true, Flow_error.ErrorSet.empty)
+             let errors_acc = Flow_error.ErrorSet.union errors errors_acc in
+             Lwt.return (exclude_syms, false, errors_acc, asts_acc)
+           | Lib_skip -> Lwt.return (exclude_syms, false, errors_acc, asts_acc))
+         (SSet.empty, true, Flow_error.ErrorSet.empty, [])
   in
-  Lwt.return (ok, errors)
+  let builtin_exports =
+    if ok then
+      let sig_opts =
+        {
+          Type_sig_parse.type_asserts = Options.type_asserts options;
+          suppress_types = Options.suppress_types options;
+          munge = (* libs shouldn't have private fields *) false;
+          ignore_static_propTypes = true;
+          facebook_keyMirror = (* irrelevant for libs *) false;
+          facebook_fbt = Options.facebook_fbt options;
+          max_literal_len = Options.max_literal_length options;
+          exact_by_default = Options.exact_by_default options;
+          module_ref_prefix = Options.haste_module_ref_prefix options;
+          enable_enums = Options.enums options;
+          enable_this_annot = Options.this_annot options;
+        }
+      in
+      let (_builtin_errors, _builtin_locs, builtins) =
+        Type_sig_utils.parse_and_pack_builtins sig_opts ordered_asts
+      in
+      let builtins =
+        (* hide #flow-internal-react-server-module module *)
+        let { Packed_type_sig.Builtins.modules; _ } = builtins in
+        let modules = SMap.remove Type.react_server_module_ref modules in
+        { builtins with Packed_type_sig.Builtins.modules }
+      in
+      Exports.of_builtins builtins
+    else
+      Exports.empty
+  in
+  Lwt.return (ok, errors, builtin_exports)
 
 type init_result = {
   ok: bool;
   errors: Flow_error.ErrorSet.t FilenameMap.t;
   warnings: Flow_error.ErrorSet.t FilenameMap.t;
   suppressions: Error_suppressions.t;
+  exports: Exports.t;
 }
 
 let error_set_to_filemap err_set =
@@ -167,7 +200,7 @@ let init ~options ~reader lib_files =
   in
   Flow_js_utils.mk_builtins master_cx;
 
-  let%lwt (ok, parse_and_sig_errors) = load_lib_files ~ccx ~options ~reader lib_files in
+  let%lwt (ok, parse_and_sig_errors, exports) = load_lib_files ~ccx ~options ~reader lib_files in
   let reason = Reason.builtin_reason (Reason.RCustom "module") in
   let builtin_module = Obj_type.mk_unsealed master_cx reason in
   Flow.flow_t master_cx (builtin_module, Flow_js_utils.builtins master_cx);
@@ -192,4 +225,4 @@ let init ~options ~reader lib_files =
   (* store master signature context to heap *)
   Context_heaps.Init_master_context_mutator.add_master_sig ~audit:Expensive.ok master_cx;
 
-  Lwt.return { ok; errors; warnings; suppressions }
+  Lwt.return { ok; errors; warnings; suppressions; exports }

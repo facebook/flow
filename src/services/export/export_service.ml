@@ -30,37 +30,50 @@ let string_of_modulename modulename =
   in
   camelize stripped
 
-let entry_of_export ~module_name = function
-  | Exports.Default -> (string_of_modulename module_name, Default)
-  | Exports.Named name -> (name, Named)
-  | Exports.NamedType name -> (name, NamedType)
-
-let entries_of_exports ~module_name exports =
-  let (has_named, entries) =
-    Base.List.fold_map
-      ~f:(fun has_named export ->
-        let entry = entry_of_export ~module_name export in
-        let has_named =
-          match entry with
-          | (_, Named) -> true
-          | _ -> has_named
-        in
-        (has_named, entry))
-      ~init:false
-      exports
+let entries_of_exports =
+  let rec helper ~module_name exports (acc : (string * Export_index.kind) list) =
+    let (has_named, acc) =
+      Base.List.fold_left
+        ~f:(fun (has_named, acc) export ->
+          match export with
+          | Exports.Default -> (has_named, (string_of_modulename module_name, Default) :: acc)
+          | Exports.Named name -> (true, (name, Named) :: acc)
+          | Exports.NamedType name -> (has_named, (name, NamedType) :: acc)
+          | Exports.Module (module_name, exports) ->
+            let module_name = Modulename.String module_name in
+            (has_named, helper ~module_name exports acc))
+        ~init:(false, acc)
+        exports
+    in
+    if has_named then
+      (string_of_modulename module_name, Namespace) :: acc
+    else
+      acc
   in
-  if has_named then
-    (string_of_modulename module_name, Namespace) :: entries
-  else
-    entries
+  (fun ~module_name exports -> helper ~module_name exports [])
 
-let add_imports_of_exports ~file_key ~info ~exports index =
-  let module_name = info.Module_heaps.module_name in
+let add_imports_of_module ~source ~module_name exports index =
   let names = entries_of_exports ~module_name exports in
   Base.List.fold_left
-    ~f:(fun acc (name, kind) -> Export_index.add name file_key kind acc)
+    ~f:(fun acc (name, kind) -> Export_index.add name source kind acc)
     ~init:index
     names
+
+let add_imports_of_exports ~source ~info ~exports index =
+  let module_name = info.Module_heaps.module_name in
+  add_imports_of_module ~source ~module_name exports index
+
+let add_imports_of_builtins lib_exports index =
+  Base.List.fold_left
+    ~f:(fun acc export ->
+      match export with
+      | Exports.Module (module_name, exports) ->
+        let source = Export_index.Builtin module_name in
+        let module_name = Modulename.String module_name in
+        add_imports_of_module ~source ~module_name exports acc
+      | _ -> acc)
+    ~init:index
+    lib_exports
 
 let index ~workers ~reader parsed : (Export_index.t * Export_index.t) Lwt.t =
   let total_count = FilenameSet.cardinal parsed in
@@ -79,7 +92,9 @@ let index ~workers ~reader parsed : (Export_index.t * Export_index.t) Lwt.t =
           match Module_heaps.Mutator_reader.get_old_info ~reader ~audit file_key with
           | Some info when info.Module_heaps.checked ->
             (match Parsing_heaps.Mutator_reader.get_old_exports ~reader file_key with
-            | Some exports -> add_imports_of_exports ~file_key ~info ~exports to_remove
+            | Some exports ->
+              let source = Export_index.File_key file_key in
+              add_imports_of_exports ~source ~info ~exports to_remove
             | None -> to_remove)
           | _ ->
             (* if it wasn't checked before, there were no entries added *)
@@ -89,7 +104,9 @@ let index ~workers ~reader parsed : (Export_index.t * Export_index.t) Lwt.t =
           match Module_heaps.Mutator_reader.get_info ~reader ~audit file_key with
           | Some info when info.Module_heaps.checked ->
             (match Parsing_heaps.Mutator_reader.get_exports ~reader file_key with
-            | Some exports -> add_imports_of_exports ~file_key ~info ~exports to_add
+            | Some exports ->
+              let source = Export_index.File_key file_key in
+              add_imports_of_exports ~source ~info ~exports to_add
             | None -> to_add)
           | _ ->
             (* TODO: handle unchecked module names, maybe still parse? *)
@@ -135,8 +152,9 @@ let index ~workers ~reader parsed : (Export_index.t * Export_index.t) Lwt.t =
 
   Lwt.return (to_add, to_remove)
 
-let init ~workers ~reader parsed =
+let init ~workers ~reader ~libs parsed =
   let%lwt (to_add, _to_remove) = index ~workers ~reader parsed in
+  let to_add = add_imports_of_builtins libs to_add in
   (* TODO: assert that _to_remove is empty? should be on init *)
   Lwt.return (Export_search.init to_add)
 

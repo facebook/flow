@@ -388,19 +388,19 @@ let src_dir_of_loc ac_loc =
   Loc.source ac_loc |> Base.Option.map ~f:(fun key -> File_key.to_string key |> Filename.dirname)
 
 let completion_item_of_autoimport
-    ~options ~reader ~src_dir ~ast ~ac_loc { Export_search.name; file_key; kind } =
+    ~options ~reader ~src_dir ~ast ~ac_loc { Export_search.name; source; kind } =
   let options =
     Js_layout_generator.{ default_opts with single_quotes = Options.format_single_quotes options }
   in
   match
-    Code_action_service.text_edits_of_import ~options ~reader ~src_dir ~ast kind name file_key
+    Code_action_service.text_edits_of_import ~options ~reader ~src_dir ~ast kind name source
   with
   | Error () -> None
   | Ok { Code_action_service.title; edits } ->
     let edits =
       Base.List.map
         ~f:(fun { Lsp.TextEdit.range; newText } ->
-          let loc = Flow_lsp_conversions.lsp_range_to_flow_loc ~source:file_key range in
+          let loc = Flow_lsp_conversions.lsp_range_to_flow_loc range in
           (loc, newText))
         edits
     in

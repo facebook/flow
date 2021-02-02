@@ -8,6 +8,7 @@
 val init :
   workers:MultiWorkerLwt.worker list option ->
   reader:Mutator_state_reader.t ->
+  libs:Exports.t ->
   Utils_js.FilenameSet.t ->
   Export_search.t Lwt.t
 
