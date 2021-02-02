@@ -6,14 +6,6 @@ T appears negatively in the return
                          ^
 
 
-Error ----------------------------------------------------------------------------------- contravariant_fun_call.js:2:20
-
-T appears positively in the params
-
-   2| declare function f<T>(T => mixed): T => mixed;
-                         ^
-
-
 Error ------------------------------------------------------------------------------------ contravariant_fun_call.js:3:1
 
 T is pinned to type number
@@ -25,14 +17,6 @@ T is pinned to type number
 Error ----------------------------------------------------------------------------------- contravariant_fun_call.js:6:20
 
 T appears negatively in the return
-
-   6| declare function g<T>(T => mixed, T => mixed): T => mixed;
-                         ^
-
-
-Error ----------------------------------------------------------------------------------- contravariant_fun_call.js:6:20
-
-T appears positively in the params
 
    6| declare function g<T>(T => mixed, T => mixed): T => mixed;
                          ^
@@ -54,14 +38,6 @@ T appears negatively in the return
                          ^
 
 
-Error ---------------------------------------------------------------------------- contravariant_fun_constructor.js:2:20
-
-T appears positively in the params
-
-   2| declare function f<T>(T => mixed): T => mixed;
-                         ^
-
-
 Error ----------------------------------------------------------------------------- contravariant_fun_constructor.js:3:1
 
 T is pinned to type number
@@ -78,28 +54,12 @@ T appears negatively in the return
                          ^
 
 
-Error ---------------------------------------------------------------------------- contravariant_fun_constructor.js:6:20
-
-T appears positively in the params
-
-   6| declare function g<T>(T => mixed, T => mixed): T => mixed;
-                         ^
-
-
 Error ----------------------------------------------------------------------------- contravariant_fun_constructor.js:7:1
 
 T is pinned to type string & number
 
    7| new g((x: string) => 3, (x: number) => 'string');
       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-
-Error --------------------------------------------------------------------------------------- covariant_fun_call.js:2:20
-
-T appears negatively in the params
-
-   2| declare function f<T>(T): T;
-                         ^
 
 
 Error --------------------------------------------------------------------------------------- covariant_fun_call.js:2:20
@@ -128,14 +88,6 @@ T is pinned to type (x: number) => string
 
 Error --------------------------------------------------------------------------------------- covariant_fun_call.js:7:20
 
-T appears negatively in the params
-
-   7| declare function g<T>(T, T): T;
-                         ^
-
-
-Error --------------------------------------------------------------------------------------- covariant_fun_call.js:7:20
-
 T appears positively in the return
 
    7| declare function g<T>(T, T): T;
@@ -156,14 +108,6 @@ T is pinned to type ((x: number) => string) | string
 
    9| g('string', (x: number) => 'string');
       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-
-Error -------------------------------------------------------------------------------- covariant_fun_constructor.js:2:20
-
-T appears negatively in the params
-
-   2| declare function f<T>(T): T;
-                         ^
 
 
 Error -------------------------------------------------------------------------------- covariant_fun_constructor.js:2:20
@@ -192,14 +136,6 @@ T is pinned to type (x: number) => string
 
 Error -------------------------------------------------------------------------------- covariant_fun_constructor.js:7:20
 
-T appears negatively in the params
-
-   7| declare function g<T>(T, T): T;
-                         ^
-
-
-Error -------------------------------------------------------------------------------- covariant_fun_constructor.js:7:20
-
 T appears positively in the return
 
    7| declare function g<T>(T, T): T;
@@ -224,14 +160,6 @@ T is pinned to type ((x: number) => string) | string
 
 Error --------------------------------------------------------------------------------------- invariant_fun_call.js:2:20
 
-T appears negatively in the params
-
-   2| declare function f<T>(T): Array<T>;
-                         ^
-
-
-Error --------------------------------------------------------------------------------------- invariant_fun_call.js:2:20
-
 T appears neutrally in the return
 
    2| declare function f<T>(T): Array<T>;
@@ -252,14 +180,6 @@ T is pinned to type (x: number) => string
 
    4| f((x: number) => 'string');
       ^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-
-Error -------------------------------------------------------------------------------- invariant_fun_constructor.js:2:20
-
-T appears negatively in the params
-
-   2| declare function f<T>(T): Array<T>;
-                         ^
 
 
 Error -------------------------------------------------------------------------------- invariant_fun_constructor.js:2:20
@@ -294,28 +214,12 @@ T appears positively in the return
                          ^
 
 
-Error -------------------------------------------------------------------------------- underconstrained_fun_call.js:2:20
-
-T does not appear in the params
-
-   2| declare function f<T>(): T;
-                         ^
-
-
 Error --------------------------------------------------------------------------------- underconstrained_fun_call.js:3:1
 
 T does not have enough information to pin down its type
 
    3| f();
       ^^^
-
-
-Error -------------------------------------------------------------------------------- underconstrained_fun_call.js:5:20
-
-T appears positively in the params
-
-   5| declare function g<T>(T => mixed): T;
-                         ^
 
 
 Error -------------------------------------------------------------------------------- underconstrained_fun_call.js:5:20
@@ -332,14 +236,6 @@ T does not have enough information to pin down its type
 
    6| g((x: number) => 'string');
       ^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-
-Error -------------------------------------------------------------------------------- underconstrained_fun_call.js:8:20
-
-T appears negatively in the params
-
-   8| declare function h<T>(T): T => mixed;
-                         ^
 
 
 Error -------------------------------------------------------------------------------- underconstrained_fun_call.js:8:20
@@ -366,14 +262,6 @@ T appears neutrally in the return
                           ^
 
 
-Error ------------------------------------------------------------------------------- underconstrained_fun_call.js:11:20
-
-T does not appear in the params
-
-   11| declare function i<T>(): Array<T>;
-                          ^
-
-
 Error -------------------------------------------------------------------------------- underconstrained_fun_call.js:12:1
 
 T does not have enough information to pin down its type
@@ -390,28 +278,12 @@ T appears positively in the return
                          ^
 
 
-Error ------------------------------------------------------------------------- underconstrained_fun_constructor.js:2:20
-
-T does not appear in the params
-
-   2| declare function f<T>(): T;
-                         ^
-
-
 Error -------------------------------------------------------------------------- underconstrained_fun_constructor.js:3:1
 
 T does not have enough information to pin down its type
 
    3| new f();
       ^^^^^^^
-
-
-Error ------------------------------------------------------------------------- underconstrained_fun_constructor.js:5:20
-
-T appears positively in the params
-
-   5| declare function g<T>(T => mixed): T;
-                         ^
 
 
 Error ------------------------------------------------------------------------- underconstrained_fun_constructor.js:5:20
@@ -428,14 +300,6 @@ T does not have enough information to pin down its type
 
    6| new g((x: number) => 'string');
       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-
-Error ------------------------------------------------------------------------- underconstrained_fun_constructor.js:8:20
-
-T appears negatively in the params
-
-   8| declare function h<T>(T): T => mixed;
-                         ^
 
 
 Error ------------------------------------------------------------------------- underconstrained_fun_constructor.js:8:20
@@ -462,14 +326,6 @@ T appears neutrally in the return
                           ^
 
 
-Error ------------------------------------------------------------------------ underconstrained_fun_constructor.js:11:20
-
-T does not appear in the params
-
-   11| declare function i<T>(): Array<T>;
-                          ^
-
-
 Error ------------------------------------------------------------------------- underconstrained_fun_constructor.js:12:1
 
 T does not have enough information to pin down its type
@@ -479,4 +335,4 @@ T does not have enough information to pin down its type
 
 
 
-Found 60 errors
+Found 42 errors

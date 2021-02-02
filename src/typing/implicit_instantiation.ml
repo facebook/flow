@@ -170,16 +170,7 @@ let mk_non_upper_msg tparam_name tparam_reason u =
   let msg = tparam_name ^ " contains a non-Type.t upper bound " ^ string_of_use_ctor u in
   Error_message.EImplicitInstantiationTemporaryError (Reason.aloc_of_reason tparam_reason, msg)
 
-let check_fun_call
-    cx
-    ~tparams
-    ~params
-    ?rest_param
-    ~return_t
-    ~f_params
-    ~f_return
-    ~implicit_instantiation
-    ~print_type =
+let check_fun_call cx ~tparams ~return_t ~f_return ~implicit_instantiation ~print_type =
   let tparams = Nel.to_list tparams in
   let (bounds_map, tparam_names) =
     List.fold_left
@@ -189,28 +180,9 @@ let check_fun_call
   in
   let visitor = new implicit_instantiation_visitor ~bounds_map in
 
-  (* Visit params *)
-  let (marked_params, _) =
-    List.fold_left
-      (fun acc (_, t) -> visitor#type_ cx Negative acc t)
-      (Marked.empty, tparam_names)
-      params
-  in
-
-  (* Visit rest param *)
-  let (marked_params, _) =
-    Base.Option.fold
-      ~init:(marked_params, tparam_names)
-      ~f:(fun map_cx (_, _, t) -> visitor#type_ cx Negative map_cx t)
-      rest_param
-  in
-
   (* Visit the return type *)
   let (marked_return, _) = visitor#type_ cx Positive (Marked.empty, tparam_names) return_t in
-  tparams
-  |> List.iter (fun tparam ->
-         f_params tparam (Marked.get tparam.name marked_params);
-         f_return tparam (Marked.get tparam.name marked_return));
+  tparams |> List.iter (fun tparam -> f_return tparam (Marked.get tparam.name marked_return));
 
   let (call_targs, tparam_map) =
     List.fold_right
@@ -297,10 +269,7 @@ let check_implicit_instantiation cx tast file_sig implicit_instantiation =
       check_fun_call
         cx
         ~tparams
-        ~params:funtype.params
-        ?rest_param:funtype.rest_param
         ~return_t:funtype.return_t
-        ~f_params:(fun tparam pole -> Flow_js.add_output cx (mk_error_msg tparam pole "params"))
         ~f_return:(fun tparam pole -> Flow_js.add_output cx (mk_error_msg tparam pole "return"))
         ~implicit_instantiation
         ~print_type
