@@ -170,20 +170,19 @@ let mk_non_upper_msg tparam_name tparam_reason u =
   let msg = tparam_name ^ " contains a non-Type.t upper bound " ^ string_of_use_ctor u in
   Error_message.EImplicitInstantiationTemporaryError (Reason.aloc_of_reason tparam_reason, msg)
 
-let check_fun_call cx ~tparams ~return_t ~f_return ~implicit_instantiation ~print_type =
-  let tparams = Nel.to_list tparams in
-  let (bounds_map, tparam_names) =
-    List.fold_left
-      (fun (map, names) x -> (SMap.add x.name x.bound map, SSet.add x.name names))
-      (SMap.empty, SSet.empty)
-      tparams
+let mk_polarity_log_msg tparam pole position =
+  let pole_msg pole =
+    match pole with
+    | None -> "does not appear in the "
+    | Some Positive -> "appears positively in the "
+    | Some Neutral -> "appears neutrally in the "
+    | Some Negative -> "appears negatively in the "
   in
-  let visitor = new implicit_instantiation_visitor ~bounds_map in
+  let msg = tparam.name ^ " " ^ pole_msg pole ^ position in
+  Error_message.EImplicitInstantiationTemporaryError (Reason.aloc_of_reason tparam.reason, msg)
 
-  (* Visit the return type *)
-  let (marked_return, _) = visitor#type_ cx Positive (Marked.empty, tparam_names) return_t in
-  tparams |> List.iter (fun tparam -> f_return tparam (Marked.get tparam.name marked_return));
-
+let check_instantiation cx ~bounds_map ~tparams ~marked_tparams ~implicit_instantiation ~print_type
+    =
   let (call_targs, tparam_map) =
     List.fold_right
       (fun tparam (targs, map) ->
@@ -218,7 +217,7 @@ let check_fun_call cx ~tparams ~return_t ~f_return ~implicit_instantiation ~prin
   |> SMap.iter (fun name t ->
          let reason = TypeUtil.reason_of_t t in
          let msg =
-           match Marked.get name marked_return with
+           match Marked.get name marked_tparams with
            | None ->
              (* TODO(jmbrown): For now, we don't need to infer implicit instantiations if the
               * type param doesn't appear in the return type. A future extension here
@@ -248,31 +247,33 @@ let check_fun_call cx ~tparams ~return_t ~f_return ~implicit_instantiation ~prin
          | None -> ()
          | Some msg -> Flow_js.add_output cx msg)
 
+let check_fun cx ~tparams ~return_t ~implicit_instantiation ~print_type =
+  let tparams = Nel.to_list tparams in
+  let (bounds_map, tparam_names) =
+    List.fold_left
+      (fun (map, names) x -> (SMap.add x.name x.bound map, SSet.add x.name names))
+      (SMap.empty, SSet.empty)
+      tparams
+  in
+  let visitor = new implicit_instantiation_visitor ~bounds_map in
+
+  (* Visit the return type *)
+  let (marked_tparams, _) = visitor#type_ cx Positive (Marked.empty, tparam_names) return_t in
+  tparams
+  |> List.iter (fun tparam ->
+         let pole = Marked.get tparam.name marked_tparams in
+         Flow_js.add_output cx (mk_polarity_log_msg tparam pole "return"));
+
+  check_instantiation cx ~bounds_map ~tparams ~marked_tparams ~implicit_instantiation ~print_type
+
 let check_implicit_instantiation cx tast file_sig implicit_instantiation =
   let print_type = print_type cx tast file_sig in
   let t = implicit_instantiation.Context.fun_or_class in
-  let mk_error_msg tparam pole position =
-    let pole_msg pole =
-      match pole with
-      | None -> "does not appear in the "
-      | Some Positive -> "appears positively in the "
-      | Some Neutral -> "appears neutrally in the "
-      | Some Negative -> "appears negatively in the "
-    in
-    let msg = tparam.name ^ " " ^ pole_msg pole ^ position in
-    Error_message.EImplicitInstantiationTemporaryError (Reason.aloc_of_reason tparam.reason, msg)
-  in
   match t with
   | DefT (_, _, PolyT { t_out = t; tparams; _ }) ->
     (match get_t cx t with
     | DefT (_, _, FunT (_, _, funtype)) ->
-      check_fun_call
-        cx
-        ~tparams
-        ~return_t:funtype.return_t
-        ~f_return:(fun tparam pole -> Flow_js.add_output cx (mk_error_msg tparam pole "return"))
-        ~implicit_instantiation
-        ~print_type
+      check_fun cx ~tparams ~return_t:funtype.return_t ~implicit_instantiation ~print_type
     | _t -> (* TODO Handle ThisClassT ~> CallT | ConstructorT *) ())
   | _t ->
     failwith "Implicit instantiation checks should always have a polymorphic class or function"
