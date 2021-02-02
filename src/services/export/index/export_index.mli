@@ -36,6 +36,8 @@ val subtract : t -> t -> t * string list
 
 val find_opt : string -> t -> ExportSet.t option
 
+val find_seq : string -> t -> export Seq.t
+
 val fold_names : f:('acc -> string -> ExportSet.t -> 'acc) -> init:'acc -> t -> 'acc
 
 val fold : f:('acc -> string -> export -> 'acc) -> init:'acc -> t -> 'acc
