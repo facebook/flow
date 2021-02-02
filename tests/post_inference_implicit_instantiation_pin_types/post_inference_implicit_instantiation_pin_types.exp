@@ -1,3 +1,35 @@
+Error -------------------------------------------------------------------------- contravariant_class_constructor.js:2:18
+
+T appears negatively in the polymorphic definition
+
+   2| declare class A<-T> {
+                       ^
+
+
+Error --------------------------------------------------------------------------- contravariant_class_constructor.js:5:1
+
+T is pinned to type number
+
+   5| new A((x: number) => 'string');
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Error -------------------------------------------------------------------------- contravariant_class_constructor.js:8:18
+
+T appears negatively in the polymorphic definition
+
+   8| declare class B<-T> {
+                       ^
+
+
+Error -------------------------------------------------------------------------- contravariant_class_constructor.js:11:1
+
+T is pinned to type string & number
+
+   11| new B((x: string) => 3, (x: number) => 'string');
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
 Error ----------------------------------------------------------------------------------- contravariant_fun_call.js:2:20
 
 T appears negatively in the return
@@ -60,6 +92,54 @@ T is pinned to type string & number
 
    7| new g((x: string) => 3, (x: number) => 'string');
       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Error ------------------------------------------------------------------------------ covariant_class_constructor.js:2:18
+
+T appears positively in the polymorphic definition
+
+   2| declare class A<+T>{
+                       ^
+
+
+Error ------------------------------------------------------------------------------- covariant_class_constructor.js:5:1
+
+T is pinned to type number
+
+   5| new A(3);
+      ^^^^^^^^
+
+
+Error ------------------------------------------------------------------------------- covariant_class_constructor.js:6:1
+
+T is pinned to type (x: number) => string
+
+   6| new A((x: number) => 'string');
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Error ------------------------------------------------------------------------------ covariant_class_constructor.js:9:18
+
+T appears positively in the polymorphic definition
+
+   9| declare class B<+T>{
+                       ^
+
+
+Error ------------------------------------------------------------------------------ covariant_class_constructor.js:12:1
+
+T is pinned to type string | number
+
+   12| new B(3, 'string');
+       ^^^^^^^^^^^^^^^^^^
+
+
+Error ------------------------------------------------------------------------------ covariant_class_constructor.js:13:1
+
+T is pinned to type ((x: number) => string) | string
+
+   13| new B('string', (x: number) => 'string');
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
 Error --------------------------------------------------------------------------------------- covariant_fun_call.js:2:20
@@ -158,6 +238,30 @@ T is pinned to type ((x: number) => string) | string
       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
+Error ------------------------------------------------------------------------------ invariant_class_constructor.js:2:17
+
+T appears neutrally in the polymorphic definition
+
+   2| declare class A<T>{
+                      ^
+
+
+Error ------------------------------------------------------------------------------- invariant_class_constructor.js:5:1
+
+T is pinned to type number
+
+   5| new A(3);
+      ^^^^^^^^
+
+
+Error ------------------------------------------------------------------------------- invariant_class_constructor.js:6:1
+
+T is pinned to type (x: number) => string
+
+   6| new A((x: number) => 'string');
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
 Error --------------------------------------------------------------------------------------- invariant_fun_call.js:2:20
 
 T appears neutrally in the return
@@ -204,6 +308,54 @@ T is pinned to type (x: number) => string
 
    4| new f((x: number) => 'string');
       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Error ----------------------------------------------------------------------- underconstrained_class_constructor.js:2:17
+
+T appears neutrally in the polymorphic definition
+
+   2| declare class A<T>{
+                      ^
+
+
+Error ------------------------------------------------------------------------ underconstrained_class_constructor.js:5:1
+
+T does not have enough information to pin down its type
+
+   5| new A();
+      ^^^^^^^
+
+
+Error ----------------------------------------------------------------------- underconstrained_class_constructor.js:7:18
+
+T appears positively in the polymorphic definition
+
+   7| declare class B<+T>{
+                       ^
+
+
+Error ----------------------------------------------------------------------- underconstrained_class_constructor.js:10:1
+
+T does not have enough information to pin down its type
+
+   10| new B((x: number) => 'string');
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Error ---------------------------------------------------------------------- underconstrained_class_constructor.js:12:18
+
+T appears negatively in the polymorphic definition
+
+   12| declare class C<-T>{
+                        ^
+
+
+Error ----------------------------------------------------------------------- underconstrained_class_constructor.js:16:1
+
+T does not have enough information to pin down its type
+
+   16| new C(3);
+       ^^^^^^^^
 
 
 Error -------------------------------------------------------------------------------- underconstrained_fun_call.js:2:20
@@ -335,4 +487,4 @@ T does not have enough information to pin down its type
 
 
 
-Found 42 errors
+Found 61 errors

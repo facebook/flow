@@ -247,17 +247,12 @@ let check_instantiation cx ~bounds_map ~tparams ~marked_tparams ~implicit_instan
          | None -> ()
          | Some msg -> Flow_js.add_output cx msg)
 
-let check_fun cx ~tparams ~return_t ~implicit_instantiation ~print_type =
-  let tparams = Nel.to_list tparams in
-  let (bounds_map, tparam_names) =
-    List.fold_left
-      (fun (map, names) x -> (SMap.add x.name x.bound map, SSet.add x.name names))
-      (SMap.empty, SSet.empty)
-      tparams
-  in
-  let visitor = new implicit_instantiation_visitor ~bounds_map in
-
+let check_fun cx ~tparams ~bounds_map ~return_t ~implicit_instantiation ~print_type =
   (* Visit the return type *)
+  let visitor = new implicit_instantiation_visitor ~bounds_map in
+  let tparam_names =
+    tparams |> List.fold_left (fun set tparam -> SSet.add tparam.name set) SSet.empty
+  in
   let (marked_tparams, _) = visitor#type_ cx Positive (Marked.empty, tparam_names) return_t in
   tparams
   |> List.iter (fun tparam ->
@@ -266,14 +261,48 @@ let check_fun cx ~tparams ~return_t ~implicit_instantiation ~print_type =
 
   check_instantiation cx ~bounds_map ~tparams ~marked_tparams ~implicit_instantiation ~print_type
 
+let check_instance cx ~tparams ~bounds_map ~implicit_instantiation ~print_type =
+  let marked_tparams =
+    tparams
+    |> List.fold_left
+         (fun marked tparam ->
+           match Marked.add tparam.name tparam.polarity marked with
+           | None -> marked
+           | Some (_, marked) -> marked)
+         Marked.empty
+  in
+  tparams
+  |> List.iter (fun tparam ->
+         let pole = Marked.get tparam.name marked_tparams in
+         Flow_js.add_output cx (mk_polarity_log_msg tparam pole "polymorphic definition"));
+  check_instantiation cx ~bounds_map ~tparams ~marked_tparams ~implicit_instantiation ~print_type
+
 let check_implicit_instantiation cx tast file_sig implicit_instantiation =
   let print_type = print_type cx tast file_sig in
   let t = implicit_instantiation.Context.fun_or_class in
   match t with
   | DefT (_, _, PolyT { t_out = t; tparams; _ }) ->
+    let tparams = Nel.to_list tparams in
+    let bounds_map = List.fold_left (fun map x -> SMap.add x.name x.bound map) SMap.empty tparams in
     (match get_t cx t with
     | DefT (_, _, FunT (_, _, funtype)) ->
-      check_fun cx ~tparams ~return_t:funtype.return_t ~implicit_instantiation ~print_type
-    | _t -> (* TODO Handle ThisClassT ~> CallT | ConstructorT *) ())
+      check_fun
+        cx
+        ~tparams
+        ~bounds_map
+        ~return_t:funtype.return_t
+        ~implicit_instantiation
+        ~print_type
+    | ThisClassT (_, DefT (_, _, InstanceT (_, _, _, _insttype)), _) ->
+      (match implicit_instantiation.Context.call_or_constructor with
+      | CallT _ ->
+        (* This case is hit when calling a static function. We will implicitly
+         * instantiate the type variables on the class, but using an instance's
+         * type params in a static method does not make sense. We ignore this case
+         * intentionally *)
+        ()
+      | ConstructorT _ -> check_instance cx ~tparams ~bounds_map ~implicit_instantiation ~print_type
+      | _ -> failwith "Not possible")
+    | _ -> failwith "No other possible lower bounds")
   | _t ->
     failwith "Implicit instantiation checks should always have a polymorphic class or function"
