@@ -213,6 +213,13 @@ let check_instantiation
     let constructor_t = ConstructorT (use_op, reason_op, Some call_targs, call_args, new_tout) in
     Flow_js.flow cx (implicit_instantiation.Context.fun_or_class, constructor_t)
   | u -> failwith ("FunT ~> " ^ string_of_use_ctor u));
+  let use_upper_bounds cx name tvar reason reason_u =
+    let upper_t = merge_upper_bounds reason (SMap.find name bounds_map) cx tvar in
+    match upper_t with
+    | UpperEmpty -> Some (mk_not_enough_info_msg name reason_u reason)
+    | UpperNonT _ -> None
+    | UpperT _ -> None
+  in
   tparam_map
   |> SMap.iter (fun name t ->
          let reason = TypeUtil.reason_of_t t in
@@ -227,23 +234,21 @@ let check_instantiation
               * will still pin down types when that type is needed to check the body of an
               * unannotated lambda passed into a polymorphic function call *)
              None
-           | Some Positive
            | Some Neutral ->
              (* TODO(jmbrown): The neutral case should also unify upper/lower bounds. In order
               * to avoid cluttering the output we are actually interested in from this module,
               * I'm not going to start doing that until we need error diff information for
               * switching to Pierce's algorithm for implicit instantiation *)
+             let lower_t = merge_lower_bounds cx t in
+             (match lower_t with
+             | None -> use_upper_bounds cx name t reason reason_u
+             | Some _ -> None)
+           | Some Positive ->
              let t = merge_lower_bounds cx t in
-
              (match t with
              | None -> Some (mk_not_enough_info_msg name reason_u reason)
              | Some _ -> None)
-           | Some Negative ->
-             let t = merge_upper_bounds reason (SMap.find name bounds_map) cx t in
-             (match t with
-             | UpperEmpty -> Some (mk_not_enough_info_msg name reason_u reason)
-             | UpperT _ -> None
-             | UpperNonT _ -> None)
+           | Some Negative -> use_upper_bounds cx name t reason reason_u
          in
          match msg with
          | None -> ()
