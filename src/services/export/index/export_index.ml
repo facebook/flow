@@ -86,5 +86,10 @@ let subtract old_t t =
 (** [find_opt name t] returns a list of [(File_key.t, kind)] that export [name] *)
 let find_opt name t = SMap.find_opt name t
 
+let find_seq name t =
+  match find_opt name t with
+  | Some t -> ExportSet.to_seq t
+  | None -> Seq.empty
+
 (** [keys t] returns all of the exported names from every file in [t] *)
 let keys t = SMap.keys t
