@@ -142,6 +142,78 @@ T appears neutrally in the return
                            ^
 
 
+Error ----------------------------------------------------------------------------------------------------- test.js:13:1
+
+T does not have enough information to pin down its type
+
+   13| f1(arg);
+       ^^^^^^^
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:14:1
+
+T does not have enough information to pin down its type
+
+   14| f2(arg);
+       ^^^^^^^
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:15:1
+
+T does not have enough information to pin down its type
+
+   15| f3(arg);
+       ^^^^^^^
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:16:1
+
+T does not have enough information to pin down its type
+
+   16| f4(arg);
+       ^^^^^^^
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:17:1
+
+T does not have enough information to pin down its type
+
+   17| f5(arg);
+       ^^^^^^^
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:18:1
+
+T does not have enough information to pin down its type
+
+   18| f6(arg);
+       ^^^^^^^
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:19:1
+
+T does not have enough information to pin down its type
+
+   19| f7(arg);
+       ^^^^^^^
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:20:1
+
+T does not have enough information to pin down its type
+
+   20| f8(arg);
+       ^^^^^^^
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:21:1
+
+T does not have enough information to pin down its type
+
+   21| f9(arg);
+       ^^^^^^^
+
+
 Error ---------------------------------------------------------------------------------------------------- test.js:23:26
 
 T does not appear in the params
@@ -188,6 +260,22 @@ U appears positively in the return
 
    27| declare function InterdependentBounds<T, U: Covariant<T>>( // Follow bounds in each position we see U
                                                 ^
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:31:1
+
+T does not have enough information to pin down its type
+
+   31| InterdependentBounds(arg);
+       ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:31:1
+
+U does not have enough information to pin down its type
+
+   31| InterdependentBounds(arg);
+       ^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
 Error ---------------------------------------------------------------------------------------------------- test.js:33:31
@@ -254,6 +342,44 @@ T appears positively in the return
                                                     ^
 
 
+Error ----------------------------------------------------------------------------------------------------- test.js:40:1
+
+T does not have enough information to pin down its type
+
+   40| Overloaded(null);
+       ^^^^^^^^^^^^^^^^
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:41:12
+
+Cannot call `Overloaded` because number [1] is incompatible with null [2]. [incompatible-type]
+
+   test.js:41:12
+   41| Overloaded(3); // Need a not-any value so the second branch is hit
+                  ^ [1]
+
+References:
+   test.js:39:30
+   39| declare var Overloaded: (<T>(null) => T) & (<T>(T) => T);
+                                    ^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:41:1
+
+T does not have enough information to pin down its type
+
+   41| Overloaded(3); // Need a not-any value so the second branch is hit
+       ^^^^^^^^^^^^^
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:41:1
+
+T is pinned to type number
+
+   41| Overloaded(3); // Need a not-any value so the second branch is hit
+       ^^^^^^^^^^^^^
+
+
 Error ---------------------------------------------------------------------------------------------------- test.js:43:22
 
 T appears negatively in the params
@@ -286,5 +412,21 @@ T does not appear in the params
                                             ^
 
 
+Error ----------------------------------------------------------------------------------------------------- test.js:44:1
 
-Found 36 errors
+T does not have enough information to pin down its type
+
+   44| Union(arg);
+       ^^^^^^^^^^
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:44:1
+
+T is pinned to type any
+
+   44| Union(arg);
+       ^^^^^^^^^^
+
+
+
+Found 53 errors

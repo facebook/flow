@@ -1,0 +1,242 @@
+Error -------------------------------------------------------------------------------------------- contravariant.js:2:20
+
+T appears negatively in the return
+
+   2| declare function f<T>(T => mixed): T => mixed;
+                         ^
+
+
+Error -------------------------------------------------------------------------------------------- contravariant.js:2:20
+
+T appears positively in the params
+
+   2| declare function f<T>(T => mixed): T => mixed;
+                         ^
+
+
+Error --------------------------------------------------------------------------------------------- contravariant.js:3:1
+
+T is pinned to type number
+
+   3| f((x: number) => 'string');
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Error -------------------------------------------------------------------------------------------- contravariant.js:6:20
+
+T appears negatively in the return
+
+   6| declare function g<T>(T => mixed, T => mixed): T => mixed;
+                         ^
+
+
+Error -------------------------------------------------------------------------------------------- contravariant.js:6:20
+
+T appears positively in the params
+
+   6| declare function g<T>(T => mixed, T => mixed): T => mixed;
+                         ^
+
+
+Error --------------------------------------------------------------------------------------------- contravariant.js:7:1
+
+T is pinned to type string & number
+
+   7| g((x: string) => 3, (x: number) => 'string');
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Error ------------------------------------------------------------------------------------------------ covariant.js:2:20
+
+T appears negatively in the params
+
+   2| declare function f<T>(T): T;
+                         ^
+
+
+Error ------------------------------------------------------------------------------------------------ covariant.js:2:20
+
+T appears positively in the return
+
+   2| declare function f<T>(T): T;
+                         ^
+
+
+Error ------------------------------------------------------------------------------------------------- covariant.js:3:1
+
+T is pinned to type number
+
+   3| f(3);
+      ^^^^
+
+
+Error ------------------------------------------------------------------------------------------------- covariant.js:4:1
+
+T is pinned to type (x: number) => string
+
+   4| f((x: number) => 'string');
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Error ------------------------------------------------------------------------------------------------ covariant.js:7:20
+
+T appears negatively in the params
+
+   7| declare function g<T>(T, T): T;
+                         ^
+
+
+Error ------------------------------------------------------------------------------------------------ covariant.js:7:20
+
+T appears positively in the return
+
+   7| declare function g<T>(T, T): T;
+                         ^
+
+
+Error ------------------------------------------------------------------------------------------------- covariant.js:8:1
+
+T is pinned to type string | number
+
+   8| g(3, 'string');
+      ^^^^^^^^^^^^^^
+
+
+Error ------------------------------------------------------------------------------------------------- covariant.js:9:1
+
+T is pinned to type ((x: number) => string) | string
+
+   9| g('string', (x: number) => 'string');
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Error ------------------------------------------------------------------------------------------------ invariant.js:2:20
+
+T appears negatively in the params
+
+   2| declare function f<T>(T): Array<T>;
+                         ^
+
+
+Error ------------------------------------------------------------------------------------------------ invariant.js:2:20
+
+T appears neutrally in the return
+
+   2| declare function f<T>(T): Array<T>;
+                         ^
+
+
+Error ------------------------------------------------------------------------------------------------- invariant.js:3:1
+
+T is pinned to type number
+
+   3| f(3);
+      ^^^^
+
+
+Error ------------------------------------------------------------------------------------------------- invariant.js:4:1
+
+T is pinned to type (x: number) => string
+
+   4| f((x: number) => 'string');
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Error ----------------------------------------------------------------------------------------- underconstrained.js:2:20
+
+T appears positively in the return
+
+   2| declare function f<T>(): T;
+                         ^
+
+
+Error ----------------------------------------------------------------------------------------- underconstrained.js:2:20
+
+T does not appear in the params
+
+   2| declare function f<T>(): T;
+                         ^
+
+
+Error ------------------------------------------------------------------------------------------ underconstrained.js:3:1
+
+T does not have enough information to pin down its type
+
+   3| f();
+      ^^^
+
+
+Error ----------------------------------------------------------------------------------------- underconstrained.js:5:20
+
+T appears positively in the params
+
+   5| declare function g<T>(T => mixed): T;
+                         ^
+
+
+Error ----------------------------------------------------------------------------------------- underconstrained.js:5:20
+
+T appears positively in the return
+
+   5| declare function g<T>(T => mixed): T;
+                         ^
+
+
+Error ------------------------------------------------------------------------------------------ underconstrained.js:6:1
+
+T does not have enough information to pin down its type
+
+   6| g((x: number) => 'string');
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Error ----------------------------------------------------------------------------------------- underconstrained.js:8:20
+
+T appears negatively in the params
+
+   8| declare function h<T>(T): T => mixed;
+                         ^
+
+
+Error ----------------------------------------------------------------------------------------- underconstrained.js:8:20
+
+T appears negatively in the return
+
+   8| declare function h<T>(T): T => mixed;
+                         ^
+
+
+Error ------------------------------------------------------------------------------------------ underconstrained.js:9:1
+
+T does not have enough information to pin down its type
+
+   9| h(3);
+      ^^^^
+
+
+Error ---------------------------------------------------------------------------------------- underconstrained.js:11:20
+
+T appears neutrally in the return
+
+   11| declare function i<T>(): Array<T>;
+                          ^
+
+
+Error ---------------------------------------------------------------------------------------- underconstrained.js:11:20
+
+T does not appear in the params
+
+   11| declare function i<T>(): Array<T>;
+                          ^
+
+
+Error ----------------------------------------------------------------------------------------- underconstrained.js:12:1
+
+T does not have enough information to pin down its type
+
+   12| i();
+       ^^^
+
+
+
+Found 30 errors

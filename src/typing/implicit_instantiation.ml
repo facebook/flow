@@ -17,6 +17,15 @@ let get_t cx =
   | OpenT (r, id) -> Flow_js_utils.merge_tvar ~no_lowers cx r id
   | t -> t
 
+let print_type cx typed_ast file_sig =
+  let options = { Ty_normalizer_env.default_options with Ty_normalizer_env.max_depth = Some 10 } in
+  let genv = Ty_normalizer_env.mk_genv ~full_cx:cx ~file:(Context.file cx) ~typed_ast ~file_sig in
+  fun t ->
+    let ty = Ty_normalizer.from_type ~options ~genv t in
+    match ty with
+    | Error _ -> "ERROR PRINTING TYPE"
+    | Ok ty -> Ty_printer.string_of_elt ~with_comments:false ty ~exact_by_default:true
+
 (* This visitor records the polarities at which BoundTs are found. We follow the bounds of each
  * type parameter as well, since some type params are only used in the bounds of another.
  *)
@@ -81,15 +90,104 @@ class implicit_instantiation_visitor ~bounds_map =
           ^ " in typepapp case of fully constrained analysis"
   end
 
-let check_fun_call cx ~tparams ~params ?rest_param ~return_t ~f_params ~f_return =
+type use_t_result =
+  | UpperEmpty
+  | UpperNonT of Type.use_t
+  | UpperT of Type.t
+
+(* We never want to use the bound of the type variable in its inferred type. Instead, we will pin
+ * the type and then check it against the bound. This prevents us from adding trivial `& bound` to
+ * instantiations, and also prevents us from pinning to the bound when no actual upper bounds are added *)
+let t_not_bound t bound =
+  if t = bound then
+    UpperEmpty
+  else
+    UpperT t
+
+let t_of_use_t bound = function
+  | UseT (_, t) -> t_not_bound t bound
+  | u -> UpperNonT u
+
+let merge_upper_bounds upper_r bound cx = function
+  | OpenT (_, id) ->
+    let (_, constraints) = Context.find_constraints cx id in
+    (match constraints with
+    | Constraint.FullyResolved (_, t)
+    | Constraint.Resolved (_, t) ->
+      t_not_bound t bound
+    | Constraint.Unresolved bounds ->
+      let uppers = Constraint.UseTypeMap.keys bounds.Constraint.upper in
+      (match uppers with
+      | [] -> UpperEmpty
+      | [(t, _)] -> t_of_use_t bound t
+      | ts ->
+        ts
+        |> List.fold_left
+             (fun acc (t, _) ->
+               match (acc, t_of_use_t bound t) with
+               | (UpperNonT u, _) -> UpperNonT u
+               | (_, UpperNonT u) -> UpperNonT u
+               | (UpperEmpty, UpperT t) -> UpperT t
+               | (UpperT t', UpperT t) ->
+                 (match (t', t) with
+                 | (IntersectionT (_, rep1), IntersectionT (_, rep2)) ->
+                   UpperT (IntersectionT (upper_r, InterRep.append (InterRep.members rep2) rep1))
+                 | (_, IntersectionT (_, rep)) ->
+                   UpperT (IntersectionT (upper_r, InterRep.append [t'] rep))
+                 | (IntersectionT (_, rep), _) ->
+                   UpperT (IntersectionT (upper_r, InterRep.append [t] rep))
+                 | (t', t) -> UpperT (IntersectionT (upper_r, InterRep.make t' t [])))
+               | (UpperT _, UpperEmpty) -> acc
+               | (UpperEmpty, UpperEmpty) -> acc)
+             UpperEmpty))
+  | _ -> failwith "Implicit instantiation is not an OpenT"
+
+let merge_lower_bounds cx t =
+  match t with
+  | OpenT (_, id) ->
+    let (_, constraints) = Context.find_constraints cx id in
+    (match constraints with
+    | Constraint.FullyResolved (_, t)
+    | Constraint.Resolved (_, t) ->
+      Some t
+    | Constraint.Unresolved bounds ->
+      let lowers = bounds.Constraint.lower in
+      if TypeMap.cardinal lowers = 0 then
+        None
+      else
+        Some (get_t cx t))
+  | _ -> failwith "Implicit instantiation is not an OpenT"
+
+let mk_not_enough_info_msg tparam_name tparam_reason =
+  let msg = tparam_name ^ " does not have enough information to pin down its type" in
+  Error_message.EImplicitInstantiationTemporaryError (Reason.aloc_of_reason tparam_reason, msg)
+
+let mk_has_type_msg ~print_type tparam_name tparam_reason t =
+  let msg = tparam_name ^ " is pinned to type " ^ print_type t in
+  Error_message.EImplicitInstantiationTemporaryError (Reason.aloc_of_reason tparam_reason, msg)
+
+let mk_non_upper_msg tparam_name tparam_reason u =
+  let msg = tparam_name ^ " contains a non-Type.t upper bound " ^ string_of_use_ctor u in
+  Error_message.EImplicitInstantiationTemporaryError (Reason.aloc_of_reason tparam_reason, msg)
+
+let check_fun_call
+    cx
+    ~tparams
+    ~params
+    ?rest_param
+    ~return_t
+    ~f_params
+    ~f_return
+    ~implicit_instantiation
+    ~print_type =
   let tparams = Nel.to_list tparams in
-  let (tparams_map, tparam_names) =
+  let (bounds_map, tparam_names) =
     List.fold_left
       (fun (map, names) x -> (SMap.add x.name x.bound map, SSet.add x.name names))
       (SMap.empty, SSet.empty)
       tparams
   in
-  let visitor = new implicit_instantiation_visitor ~bounds_map:tparams_map in
+  let visitor = new implicit_instantiation_visitor ~bounds_map in
 
   (* Visit params *)
   let (marked_params, _) =
@@ -112,9 +210,67 @@ let check_fun_call cx ~tparams ~params ?rest_param ~return_t ~f_params ~f_return
   tparams
   |> List.iter (fun tparam ->
          f_params tparam (Marked.get tparam.name marked_params);
-         f_return tparam (Marked.get tparam.name marked_return))
+         f_return tparam (Marked.get tparam.name marked_return));
+  match implicit_instantiation.Context.call_or_constructor with
+  | CallT (use_op, reason_op, calltype) ->
+    let (call_targs, tparam_map) =
+      List.fold_right
+        (fun tparam (targs, map) ->
+          let reason_tapp = TypeUtil.reason_of_t implicit_instantiation.Context.fun_or_class in
+          let targ =
+            Instantiation_utils.ImplicitTypeArgument.mk_targ cx tparam reason_op reason_tapp
+          in
+          (ExplicitArg targ :: targs, SMap.add tparam.name targ map))
+        tparams
+        ([], SMap.empty)
+    in
+    let new_tout = Tvar.mk_no_wrap cx reason_op in
+    let call_t =
+      CallT
+        ( use_op,
+          reason_op,
+          { calltype with call_targs = Some call_targs; call_tout = (reason_op, new_tout) } )
+    in
+    Flow_js.flow cx (implicit_instantiation.Context.fun_or_class, call_t);
+    tparam_map
+    |> SMap.iter (fun name t ->
+           let reason = TypeUtil.reason_of_t t in
+           let msg =
+             match Marked.get name marked_return with
+             | None ->
+               (* TODO(jmbrown): For now, we don't need to infer implicit instantiations if the
+                * type param doesn't appear in the return type. A future extension here
+                * will still pin down types when that type is needed to check the body of an
+                * unannotated lambda passed into a polymorphic function call *)
+               None
+             | Some Positive
+             | Some Neutral ->
+               (* TODO(jmbrown): The neutral case should also unify upper/lower bounds. In order
+                * to avoid cluttering the output we are actually interested in from this module,
+                * I'm not going to start doing that until we need error diff information for
+                * switching to Pierce's algorithm for implicit instantiation *)
+               let t = merge_lower_bounds cx t in
+               Some
+                 (match t with
+                 | None -> mk_not_enough_info_msg name reason
+                 | Some t -> mk_has_type_msg ~print_type name reason t)
+             | Some Negative ->
+               let t = merge_upper_bounds reason (SMap.find name bounds_map) cx t in
+               Some
+                 (match t with
+                 | UpperEmpty -> mk_not_enough_info_msg name reason
+                 | UpperT t -> mk_has_type_msg ~print_type name reason t
+                 | UpperNonT u -> mk_non_upper_msg name reason u)
+           in
+           match msg with
+           | None -> ()
+           | Some msg -> Flow_js.add_output cx msg)
+  | _u ->
+    (* TODO(jmbrown): Handle ConstructorTs *)
+    ()
 
-let check_implicit_instantiation cx implicit_instantiation =
+let check_implicit_instantiation cx tast file_sig implicit_instantiation =
+  let print_type = print_type cx tast file_sig in
   let t = implicit_instantiation.Context.fun_or_class in
   let mk_error_msg tparam pole position =
     let pole_msg pole =
@@ -139,6 +295,8 @@ let check_implicit_instantiation cx implicit_instantiation =
         ~return_t:funtype.return_t
         ~f_params:(fun tparam pole -> Flow_js.add_output cx (mk_error_msg tparam pole "params"))
         ~f_return:(fun tparam pole -> Flow_js.add_output cx (mk_error_msg tparam pole "return"))
+        ~implicit_instantiation
+        ~print_type
     | _t -> ())
   | _t ->
     failwith "Implicit instantiation checks should always have a polymorphic class or function"
