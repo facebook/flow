@@ -1,288 +1,172 @@
-Error ----------------------------------------------------------------------------------------------------- test.js:4:21
-
-T appears positively in the return
-
-   4| declare function f1<T>(Covariant<T>): Covariant<T>; // Contra param, Co return
-                          ^
-
-
-Error ----------------------------------------------------------------------------------------------------- test.js:5:21
-
-T appears negatively in the return
-
-   5| declare function f2<T>(Covariant<T>): Contravariant<T>; // Contra param, Contra return
-                          ^
-
-
-Error ----------------------------------------------------------------------------------------------------- test.js:6:21
-
-T appears neutrally in the return
-
-   6| declare function f3<T>(Covariant<T>): Invariant<T>; // Contra param, Inv return
-                          ^
-
-
-Error ----------------------------------------------------------------------------------------------------- test.js:7:21
-
-T appears positively in the return
-
-   7| declare function f4<T>(Contravariant<T>): Covariant<T>; // Co param, Co return
-                          ^
-
-
-Error ----------------------------------------------------------------------------------------------------- test.js:8:21
-
-T appears negatively in the return
-
-   8| declare function f5<T>(Contravariant<T>): Contravariant<T>; // Co param, Contra return
-                          ^
-
-
-Error ----------------------------------------------------------------------------------------------------- test.js:9:21
-
-T appears neutrally in the return
-
-   9| declare function f6<T>(Contravariant<T>): Invariant<T>; // Co param, Inv return
-                          ^
-
-
-Error ---------------------------------------------------------------------------------------------------- test.js:10:21
-
-T appears positively in the return
-
-   10| declare function f7<T>(Invariant<T>): Covariant<T>; // Inv Param, Co return
-                           ^
-
-
-Error ---------------------------------------------------------------------------------------------------- test.js:11:21
-
-T appears negatively in the return
-
-   11| declare function f8<T>(Invariant<T>): Contravariant<T>; // Inv Param, Contra Return
-                           ^
-
-
-Error ---------------------------------------------------------------------------------------------------- test.js:12:21
-
-T appears neutrally in the return
-
-   12| declare function f9<T>(Invariant<T>): Invariant<T>; // Inv Param, Inv Return
-                           ^
-
-
 Error ----------------------------------------------------------------------------------------------------- test.js:13:1
 
-T does not have enough information to pin down its type
+`T` is underconstrained by call of `f1` [1] and is defined in `T` [2] [underconstrained-implicit-instantiation]
 
+   test.js:13:1
    13| f1(arg);
-       ^^^^^^^
+       ^^^^^^^ [1]
+
+References:
+   test.js:4:21
+    4| declare function f1<T>(Covariant<T>): Covariant<T>; // Contra param, Co return
+                           ^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------------- test.js:14:1
 
-T does not have enough information to pin down its type
+`T` is underconstrained by call of `f2` [1] and is defined in `T` [2] [underconstrained-implicit-instantiation]
 
+   test.js:14:1
    14| f2(arg);
-       ^^^^^^^
+       ^^^^^^^ [1]
+
+References:
+   test.js:5:21
+    5| declare function f2<T>(Covariant<T>): Contravariant<T>; // Contra param, Contra return
+                           ^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------------- test.js:15:1
 
-T does not have enough information to pin down its type
+`T` is underconstrained by call of `f3` [1] and is defined in `T` [2] [underconstrained-implicit-instantiation]
 
+   test.js:15:1
    15| f3(arg);
-       ^^^^^^^
+       ^^^^^^^ [1]
+
+References:
+   test.js:6:21
+    6| declare function f3<T>(Covariant<T>): Invariant<T>; // Contra param, Inv return
+                           ^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------------- test.js:16:1
 
-T does not have enough information to pin down its type
+`T` is underconstrained by call of `f4` [1] and is defined in `T` [2] [underconstrained-implicit-instantiation]
 
+   test.js:16:1
    16| f4(arg);
-       ^^^^^^^
+       ^^^^^^^ [1]
+
+References:
+   test.js:7:21
+    7| declare function f4<T>(Contravariant<T>): Covariant<T>; // Co param, Co return
+                           ^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------------- test.js:17:1
 
-T does not have enough information to pin down its type
+`T` is underconstrained by call of `f5` [1] and is defined in `T` [2] [underconstrained-implicit-instantiation]
 
+   test.js:17:1
    17| f5(arg);
-       ^^^^^^^
+       ^^^^^^^ [1]
+
+References:
+   test.js:8:21
+    8| declare function f5<T>(Contravariant<T>): Contravariant<T>; // Co param, Contra return
+                           ^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------------- test.js:18:1
 
-T does not have enough information to pin down its type
+`T` is underconstrained by call of `f6` [1] and is defined in `T` [2] [underconstrained-implicit-instantiation]
 
+   test.js:18:1
    18| f6(arg);
-       ^^^^^^^
+       ^^^^^^^ [1]
+
+References:
+   test.js:9:21
+    9| declare function f6<T>(Contravariant<T>): Invariant<T>; // Co param, Inv return
+                           ^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------------- test.js:19:1
 
-T does not have enough information to pin down its type
+`T` is underconstrained by call of `f7` [1] and is defined in `T` [2] [underconstrained-implicit-instantiation]
 
+   test.js:19:1
    19| f7(arg);
-       ^^^^^^^
+       ^^^^^^^ [1]
+
+References:
+   test.js:10:21
+   10| declare function f7<T>(Invariant<T>): Covariant<T>; // Inv Param, Co return
+                           ^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------------- test.js:20:1
 
-T does not have enough information to pin down its type
+`T` is underconstrained by call of `f8` [1] and is defined in `T` [2] [underconstrained-implicit-instantiation]
 
+   test.js:20:1
    20| f8(arg);
-       ^^^^^^^
+       ^^^^^^^ [1]
+
+References:
+   test.js:11:21
+   11| declare function f8<T>(Invariant<T>): Contravariant<T>; // Inv Param, Contra Return
+                           ^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------------- test.js:21:1
 
-T does not have enough information to pin down its type
+`T` is underconstrained by call of `f9` [1] and is defined in `T` [2] [underconstrained-implicit-instantiation]
 
+   test.js:21:1
    21| f9(arg);
-       ^^^^^^^
-
-
-Error ---------------------------------------------------------------------------------------------------- test.js:23:26
-
-T does not appear in the return
-
-   23| declare function missing<T>(): void; // Missing param and return
-                                ^
-
-
-Error ---------------------------------------------------------------------------------------------------- test.js:27:39
-
-T appears positively in the return
-
-   27| declare function InterdependentBounds<T, U: Covariant<T>>( // Follow bounds in each position we see U
-                                             ^
-
-
-Error ---------------------------------------------------------------------------------------------------- test.js:27:42
-
-U appears positively in the return
-
-   27| declare function InterdependentBounds<T, U: Covariant<T>>( // Follow bounds in each position we see U
-                                                ^
-
-
-Error ----------------------------------------------------------------------------------------------------- test.js:31:1
-
-T does not have enough information to pin down its type
-
-   31| InterdependentBounds(arg);
-       ^^^^^^^^^^^^^^^^^^^^^^^^^
-
-
-Error ----------------------------------------------------------------------------------------------------- test.js:31:1
-
-U does not have enough information to pin down its type
-
-   31| InterdependentBounds(arg);
-       ^^^^^^^^^^^^^^^^^^^^^^^^^
-
-
-Error ---------------------------------------------------------------------------------------------------- test.js:33:31
-
-T does not appear in the return
-
-   33| declare function NameOverride<T>(<T>(T) => T, T): <T>(T) => T; // Contra Param, no return 
-                                     ^
-
-
-Error ---------------------------------------------------------------------------------------------------- test.js:36:28
-
-T does not appear in the return
-
-   36| declare function RestParam<T>(...$ReadOnlyArray<Contravariant<T>>): void; // Co param, no return
-                                  ^
-
-
-Error ---------------------------------------------------------------------------------------------------- test.js:39:27
-
-T appears positively in the return
-
-   39| declare var Overloaded: (<T>(null) => T) & (<T>(T) => T);
-                                 ^
-
-
-Error ---------------------------------------------------------------------------------------------------- test.js:39:46
-
-T appears positively in the return
-
-   39| declare var Overloaded: (<T>(null) => T) & (<T>(T) => T);
-                                                    ^
-
-
-Error ----------------------------------------------------------------------------------------------------- test.js:40:1
-
-T does not have enough information to pin down its type
-
-   40| Overloaded(null);
-       ^^^^^^^^^^^^^^^^
-
-
-Error ---------------------------------------------------------------------------------------------------- test.js:41:12
-
-Cannot call `Overloaded` because number [1] is incompatible with null [2]. [incompatible-type]
-
-   test.js:41:12
-   41| Overloaded(3); // Need a not-any value so the second branch is hit
-                  ^ [1]
+       ^^^^^^^ [1]
 
 References:
-   test.js:39:30
-   39| declare var Overloaded: (<T>(null) => T) & (<T>(T) => T);
-                                    ^^^^ [2]
+   test.js:12:21
+   12| declare function f9<T>(Invariant<T>): Invariant<T>; // Inv Param, Inv Return
+                           ^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- test.js:41:1
+Error ----------------------------------------------------------------------------------------------------- test.js:31:1
 
-T does not have enough information to pin down its type
+`T` is underconstrained by call of `InterdependentBounds` [1] and is defined in `T` [2]
+[underconstrained-implicit-instantiation]
 
-   41| Overloaded(3); // Need a not-any value so the second branch is hit
-       ^^^^^^^^^^^^^
+   test.js:31:1
+   31| InterdependentBounds(arg);
+       ^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
-
-Error ----------------------------------------------------------------------------------------------------- test.js:41:1
-
-T is pinned to type number
-
-   41| Overloaded(3); // Need a not-any value so the second branch is hit
-       ^^^^^^^^^^^^^
-
-
-Error ---------------------------------------------------------------------------------------------------- test.js:43:22
-
-T appears positively in the return
-
-   43| declare var Union: (<T>(T) => T) | (<T>(null) => T);
-                            ^
+References:
+   test.js:27:39
+   27| declare function InterdependentBounds<T, U: Covariant<T>>( // Follow bounds in each position we see U
+                                             ^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:43:38
+Error ----------------------------------------------------------------------------------------------------- test.js:31:1
 
-T appears positively in the return
+`U` is underconstrained by call of `InterdependentBounds` [1] and is defined in `U` [2]
+[underconstrained-implicit-instantiation]
 
-   43| declare var Union: (<T>(T) => T) | (<T>(null) => T);
-                                            ^
+   test.js:31:1
+   31| InterdependentBounds(arg);
+       ^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
-
-Error ----------------------------------------------------------------------------------------------------- test.js:44:1
-
-T does not have enough information to pin down its type
-
-   44| Union(arg);
-       ^^^^^^^^^^
+References:
+   test.js:27:42
+   27| declare function InterdependentBounds<T, U: Covariant<T>>( // Follow bounds in each position we see U
+                                                ^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------------- test.js:44:1
 
-T is pinned to type any
+`T` is underconstrained by call of `Union` [1] and is defined in `T` [2] [underconstrained-implicit-instantiation]
 
+   test.js:44:1
    44| Union(arg);
-       ^^^^^^^^^^
+       ^^^^^^^^^^ [1]
+
+References:
+   test.js:43:38
+   43| declare var Union: (<T>(T) => T) | (<T>(null) => T);
+                                            ^ [2]
 
 
 
-Found 35 errors
+Found 12 errors

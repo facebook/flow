@@ -158,9 +158,9 @@ let merge_lower_bounds cx t =
         Some (get_t cx t))
   | _ -> failwith "Implicit instantiation is not an OpenT"
 
-let mk_not_enough_info_msg tparam_name tparam_reason =
-  let msg = tparam_name ^ " does not have enough information to pin down its type" in
-  Error_message.EImplicitInstantiationTemporaryError (Reason.aloc_of_reason tparam_reason, msg)
+let mk_not_enough_info_msg tparam_name reason_call reason_l =
+  Error_message.EImplicitInstantiationUnderconstrainedError
+    { bound = tparam_name; reason_call; reason_l }
 
 let mk_has_type_msg ~print_type tparam_name tparam_reason t =
   let msg = tparam_name ^ " is pinned to type " ^ print_type t in
@@ -181,8 +181,8 @@ let mk_polarity_log_msg tparam pole position =
   let msg = tparam.name ^ " " ^ pole_msg pole ^ position in
   Error_message.EImplicitInstantiationTemporaryError (Reason.aloc_of_reason tparam.reason, msg)
 
-let check_instantiation cx ~bounds_map ~tparams ~marked_tparams ~implicit_instantiation ~print_type
-    =
+let check_instantiation
+    cx ~bounds_map ~tparams ~marked_tparams ~implicit_instantiation ~print_type:_ =
   let (call_targs, tparam_map) =
     List.fold_right
       (fun tparam (targs, map) ->
@@ -216,6 +216,9 @@ let check_instantiation cx ~bounds_map ~tparams ~marked_tparams ~implicit_instan
   tparam_map
   |> SMap.iter (fun name t ->
          let reason = TypeUtil.reason_of_t t in
+         let reason_u =
+           TypeUtil.reason_of_use_t implicit_instantiation.Context.call_or_constructor
+         in
          let msg =
            match Marked.get name marked_tparams with
            | None ->
@@ -231,17 +234,16 @@ let check_instantiation cx ~bounds_map ~tparams ~marked_tparams ~implicit_instan
               * I'm not going to start doing that until we need error diff information for
               * switching to Pierce's algorithm for implicit instantiation *)
              let t = merge_lower_bounds cx t in
-             Some
-               (match t with
-               | None -> mk_not_enough_info_msg name reason
-               | Some t -> mk_has_type_msg ~print_type name reason t)
+
+             (match t with
+             | None -> Some (mk_not_enough_info_msg name reason_u reason)
+             | Some _ -> None)
            | Some Negative ->
              let t = merge_upper_bounds reason (SMap.find name bounds_map) cx t in
-             Some
-               (match t with
-               | UpperEmpty -> mk_not_enough_info_msg name reason
-               | UpperT t -> mk_has_type_msg ~print_type name reason t
-               | UpperNonT u -> mk_non_upper_msg name reason u)
+             (match t with
+             | UpperEmpty -> Some (mk_not_enough_info_msg name reason_u reason)
+             | UpperT _ -> None
+             | UpperNonT _ -> None)
          in
          match msg with
          | None -> ()
@@ -254,11 +256,6 @@ let check_fun cx ~tparams ~bounds_map ~return_t ~implicit_instantiation ~print_t
     tparams |> List.fold_left (fun set tparam -> SSet.add tparam.name set) SSet.empty
   in
   let (marked_tparams, _) = visitor#type_ cx Positive (Marked.empty, tparam_names) return_t in
-  tparams
-  |> List.iter (fun tparam ->
-         let pole = Marked.get tparam.name marked_tparams in
-         Flow_js.add_output cx (mk_polarity_log_msg tparam pole "return"));
-
   check_instantiation cx ~bounds_map ~tparams ~marked_tparams ~implicit_instantiation ~print_type
 
 let check_instance cx ~tparams ~bounds_map ~implicit_instantiation ~print_type =
@@ -271,10 +268,6 @@ let check_instance cx ~tparams ~bounds_map ~implicit_instantiation ~print_type =
            | Some (_, marked) -> marked)
          Marked.empty
   in
-  tparams
-  |> List.iter (fun tparam ->
-         let pole = Marked.get tparam.name marked_tparams in
-         Flow_js.add_output cx (mk_polarity_log_msg tparam pole "polymorphic definition"));
   check_instantiation cx ~bounds_map ~tparams ~marked_tparams ~implicit_instantiation ~print_type
 
 let check_implicit_instantiation cx tast file_sig implicit_instantiation =

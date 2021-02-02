@@ -415,6 +415,11 @@ and 'loc t' =
   | EMalformedCode of 'loc
   | EImplicitInstantiationTemporaryError of 'loc * string
   | EImportInternalReactServerModule of 'loc
+  | EImplicitInstantiationUnderconstrainedError of {
+      reason_call: 'loc virtual_reason;
+      reason_l: 'loc virtual_reason;
+      bound: string;
+    }
 
 and 'loc exponential_spread_reason_group = {
   first_reason: 'loc virtual_reason;
@@ -961,6 +966,9 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
   | EImplicitInstantiationTemporaryError (loc, msg) ->
     EImplicitInstantiationTemporaryError (f loc, msg)
   | EImportInternalReactServerModule loc -> EImportInternalReactServerModule (f loc)
+  | EImplicitInstantiationUnderconstrainedError { reason_call; reason_l; bound } ->
+    EImplicitInstantiationUnderconstrainedError
+      { reason_call = map_reason reason_call; reason_l = map_reason reason_l; bound }
 
 let desc_of_reason r = Reason.desc_of_reason ~unwrap:(is_scalar_reason r) r
 
@@ -1171,7 +1179,8 @@ let util_use_op_of_msg nope util = function
   | EAssignExportedConstLikeBinding _
   | EMalformedCode _
   | EImplicitInstantiationTemporaryError _
-  | EImportInternalReactServerModule _ ->
+  | EImportInternalReactServerModule _
+  | EImplicitInstantiationUnderconstrainedError _ ->
     nope
 
 (* Not all messages (i.e. those whose locations are based on use_ops) have locations that can be
@@ -1316,6 +1325,8 @@ let loc_of_msg : 'loc t' -> 'loc option = function
   | EImplicitInstantiationTemporaryError (loc, _)
   | EImportInternalReactServerModule loc ->
     Some loc
+  | EImplicitInstantiationUnderconstrainedError { reason_call; _ } ->
+    Some (poly_loc_of_reason reason_call)
   | ELintSetting (loc, _) -> Some loc
   | ETypeParamArity (loc, _) -> Some loc
   | ESketchyNullLint { loc; _ } -> Some loc
@@ -3435,6 +3446,18 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
             text " normally.";
           ];
       }
+  | EImplicitInstantiationUnderconstrainedError { reason_call; reason_l; bound } ->
+    Normal
+      {
+        features =
+          [
+            code bound;
+            text " is underconstrained by ";
+            ref reason_call;
+            text " and is defined in ";
+            ref reason_l;
+          ];
+      }
 
 let is_lint_error = function
   | EUntypedTypeImport _
@@ -3678,6 +3701,7 @@ let error_code_of_message err : error_code option =
   | EUnsupportedKeyInObjectType _ -> Some IllegalKey
   | EUnsupportedSetProto _ -> Some CannotWrite
   | EUnsupportedSyntax (_, _) -> Some UnsupportedSyntax
+  | EImplicitInstantiationUnderconstrainedError _ -> Some UnderconstrainedImplicitInstantiation
   | EMalformedCode _
   | EImplicitInstantiationTemporaryError _
   | EUnusedSuppression _

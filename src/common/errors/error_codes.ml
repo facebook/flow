@@ -131,6 +131,7 @@ type error_code =
   | TypeAsValue
   | UnclearAddition
   | UnclearType
+  | UnderconstrainedImplicitInstantiation
   | UninitializedInstanceProperty
   | UnnecessaryInvariant
   | UnnecessaryOptionalChain
@@ -294,6 +295,7 @@ let string_of_code : error_code -> string = function
   | TypeAsValue -> "type-as-value"
   | UnclearAddition -> "unclear-addition"
   | UnclearType -> "unclear-type"
+  | UnderconstrainedImplicitInstantiation -> "underconstrained-implicit-instantiation"
   | UninitializedInstanceProperty -> "uninitialized-instance-property"
   | UnnecessaryInvariant -> "unnecessary-invariant"
   | UnnecessaryOptionalChain -> "unnecessary-optional-chain"
