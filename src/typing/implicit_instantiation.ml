@@ -211,19 +211,24 @@ let check_fun_call
   |> List.iter (fun tparam ->
          f_params tparam (Marked.get tparam.name marked_params);
          f_return tparam (Marked.get tparam.name marked_return));
-  match implicit_instantiation.Context.call_or_constructor with
+
+  let (call_targs, tparam_map) =
+    List.fold_right
+      (fun tparam (targs, map) ->
+        let reason_tapp = TypeUtil.reason_of_t implicit_instantiation.Context.fun_or_class in
+        let targ =
+          Instantiation_utils.ImplicitTypeArgument.mk_targ
+            cx
+            tparam
+            (TypeUtil.reason_of_use_t implicit_instantiation.Context.call_or_constructor)
+            reason_tapp
+        in
+        (ExplicitArg targ :: targs, SMap.add tparam.name targ map))
+      tparams
+      ([], SMap.empty)
+  in
+  (match implicit_instantiation.Context.call_or_constructor with
   | CallT (use_op, reason_op, calltype) ->
-    let (call_targs, tparam_map) =
-      List.fold_right
-        (fun tparam (targs, map) ->
-          let reason_tapp = TypeUtil.reason_of_t implicit_instantiation.Context.fun_or_class in
-          let targ =
-            Instantiation_utils.ImplicitTypeArgument.mk_targ cx tparam reason_op reason_tapp
-          in
-          (ExplicitArg targ :: targs, SMap.add tparam.name targ map))
-        tparams
-        ([], SMap.empty)
-    in
     let new_tout = Tvar.mk_no_wrap cx reason_op in
     let call_t =
       CallT
@@ -231,43 +236,45 @@ let check_fun_call
           reason_op,
           { calltype with call_targs = Some call_targs; call_tout = (reason_op, new_tout) } )
     in
-    Flow_js.flow cx (implicit_instantiation.Context.fun_or_class, call_t);
-    tparam_map
-    |> SMap.iter (fun name t ->
-           let reason = TypeUtil.reason_of_t t in
-           let msg =
-             match Marked.get name marked_return with
-             | None ->
-               (* TODO(jmbrown): For now, we don't need to infer implicit instantiations if the
-                * type param doesn't appear in the return type. A future extension here
-                * will still pin down types when that type is needed to check the body of an
-                * unannotated lambda passed into a polymorphic function call *)
-               None
-             | Some Positive
-             | Some Neutral ->
-               (* TODO(jmbrown): The neutral case should also unify upper/lower bounds. In order
-                * to avoid cluttering the output we are actually interested in from this module,
-                * I'm not going to start doing that until we need error diff information for
-                * switching to Pierce's algorithm for implicit instantiation *)
-               let t = merge_lower_bounds cx t in
-               Some
-                 (match t with
-                 | None -> mk_not_enough_info_msg name reason
-                 | Some t -> mk_has_type_msg ~print_type name reason t)
-             | Some Negative ->
-               let t = merge_upper_bounds reason (SMap.find name bounds_map) cx t in
-               Some
-                 (match t with
-                 | UpperEmpty -> mk_not_enough_info_msg name reason
-                 | UpperT t -> mk_has_type_msg ~print_type name reason t
-                 | UpperNonT u -> mk_non_upper_msg name reason u)
-           in
-           match msg with
-           | None -> ()
-           | Some msg -> Flow_js.add_output cx msg)
-  | _u ->
-    (* TODO(jmbrown): Handle ConstructorTs *)
-    ()
+    Flow_js.flow cx (implicit_instantiation.Context.fun_or_class, call_t)
+  | ConstructorT (use_op, reason_op, _, call_args, _) ->
+    let new_tout = Tvar.mk cx reason_op in
+    let constructor_t = ConstructorT (use_op, reason_op, Some call_targs, call_args, new_tout) in
+    Flow_js.flow cx (implicit_instantiation.Context.fun_or_class, constructor_t)
+  | u -> failwith ("FunT ~> " ^ string_of_use_ctor u));
+  tparam_map
+  |> SMap.iter (fun name t ->
+         let reason = TypeUtil.reason_of_t t in
+         let msg =
+           match Marked.get name marked_return with
+           | None ->
+             (* TODO(jmbrown): For now, we don't need to infer implicit instantiations if the
+              * type param doesn't appear in the return type. A future extension here
+              * will still pin down types when that type is needed to check the body of an
+              * unannotated lambda passed into a polymorphic function call *)
+             None
+           | Some Positive
+           | Some Neutral ->
+             (* TODO(jmbrown): The neutral case should also unify upper/lower bounds. In order
+              * to avoid cluttering the output we are actually interested in from this module,
+              * I'm not going to start doing that until we need error diff information for
+              * switching to Pierce's algorithm for implicit instantiation *)
+             let t = merge_lower_bounds cx t in
+             Some
+               (match t with
+               | None -> mk_not_enough_info_msg name reason
+               | Some t -> mk_has_type_msg ~print_type name reason t)
+           | Some Negative ->
+             let t = merge_upper_bounds reason (SMap.find name bounds_map) cx t in
+             Some
+               (match t with
+               | UpperEmpty -> mk_not_enough_info_msg name reason
+               | UpperT t -> mk_has_type_msg ~print_type name reason t
+               | UpperNonT u -> mk_non_upper_msg name reason u)
+         in
+         match msg with
+         | None -> ()
+         | Some msg -> Flow_js.add_output cx msg)
 
 let check_implicit_instantiation cx tast file_sig implicit_instantiation =
   let print_type = print_type cx tast file_sig in
@@ -297,6 +304,6 @@ let check_implicit_instantiation cx tast file_sig implicit_instantiation =
         ~f_return:(fun tparam pole -> Flow_js.add_output cx (mk_error_msg tparam pole "return"))
         ~implicit_instantiation
         ~print_type
-    | _t -> ())
+    | _t -> (* TODO Handle ThisClassT ~> CallT | ConstructorT *) ())
   | _t ->
     failwith "Implicit instantiation checks should always have a polymorphic class or function"
