@@ -168,5 +168,13 @@ References:
                                             ^ [2]
 
 
+Error ---------------------------------------------------------------------------------------------- upper_non_t.js:8:11
 
-Found 12 errors
+OwnProps contains a non-Type.t upper bound ObjKitT
+
+   8| const x = HOC((x: {| foo: number, bar: number |}) => null);
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+
+Found 13 errors

@@ -87,7 +87,7 @@ class implicit_instantiation_visitor ~bounds_map =
           failwith
           @@ "Encountered a "
           ^ string_of_ctor t
-          ^ " in typepapp case of fully constrained analysis"
+          ^ " in typeapp case of fully constrained analysis"
   end
 
 type use_t_result =
@@ -217,7 +217,7 @@ let check_instantiation
     let upper_t = merge_upper_bounds reason (SMap.find name bounds_map) cx tvar in
     match upper_t with
     | UpperEmpty -> Some (mk_not_enough_info_msg name reason_u reason)
-    | UpperNonT _ -> None
+    | UpperNonT u -> Some (mk_non_upper_msg name reason u)
     | UpperT _ -> None
   in
   tparam_map
