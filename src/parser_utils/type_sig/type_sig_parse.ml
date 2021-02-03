@@ -103,6 +103,7 @@ and 'loc module_kind =
   | UnknownModule
   | CJSModule of 'loc parsed
   | CJSModuleProps of ('loc loc_node * 'loc parsed) smap
+  | CJSDeclareModule of 'loc local_def_node smap
   | ESModule of {
       names: 'loc export smap;
       stars: ('loc loc_node * module_ref_node) list
@@ -358,7 +359,7 @@ module Exports = struct
       let names = SMap.singleton name t in
       let stars = [] in
       e.kind <- ESModule { names; stars }
-    | CJSModule _ | CJSModuleProps _ ->
+    | CJSModule _ | CJSModuleProps _ | CJSDeclareModule _ ->
       (* indeterminate *)
       ()
 
@@ -371,13 +372,13 @@ module Exports = struct
       let names = SMap.empty in
       let stars = [(loc, mref)] in
       e.kind <- ESModule { names; stars }
-    | CJSModule _ | CJSModuleProps _ ->
+    | CJSModule _ | CJSModuleProps _ | CJSDeclareModule _ ->
       (* indeterminate *)
       ()
 
   let cjs_clobber t (Exports e) =
     match e.kind with
-    | UnknownModule | CJSModule _ | CJSModuleProps _ ->
+    | UnknownModule | CJSModule _ | CJSModuleProps _ | CJSDeclareModule _ ->
       e.kind <- CJSModule t
     | ESModule _ ->
       (* indeterminate *)
@@ -385,7 +386,8 @@ module Exports = struct
 
   let cjs_set_prop ~assign name prop (Exports e) =
     match e.kind with
-    | UnknownModule ->
+    | UnknownModule
+    | CJSDeclareModule _ ->
       let props = SMap.singleton name prop in
       e.kind <- CJSModuleProps props
     | CJSModuleProps props ->
@@ -394,6 +396,18 @@ module Exports = struct
     | CJSModule t ->
       e.kind <- CJSModule (assign name prop t)
     | ESModule _ ->
+      (* indeterminate *)
+      ()
+
+  let cjs_declare_module_set_prop name prop (Exports e) =
+    match e.kind with
+    | UnknownModule ->
+      let props = SMap.singleton name prop in
+      e.kind <- CJSDeclareModule props
+    | CJSDeclareModule props ->
+      let props = SMap.add name prop props in
+      e.kind <- CJSDeclareModule props
+    | CJSModuleProps _ | CJSModule _ | ESModule _ ->
       (* indeterminate *)
       ()
 
@@ -762,6 +776,39 @@ module Scope = struct
 
   let cjs_set_prop scope name prop =
     modify_exports (Exports.cjs_set_prop ~assign name prop) scope
+
+  (* a `declare module` that has no explicit exports via `declare module.exports =` or
+     `declare exports` defaults to exporting everything as CJS named properties. *)
+  let finalize_declare_module_exports_exn = function
+    | (DeclareModule { names; exports; parent = _ }) as scope ->
+      (match exports with
+      | Exports { kind = CJSModule _ | CJSModuleProps _ | ESModule _; _ } ->
+        (* has explicit exports so do nothing here *)
+        ()
+      | Exports { kind = UnknownModule; _ } ->
+        (* add a CJS export for each declared binding *)
+        modify_exports (fun exports ->
+          SMap.iter (fun name binding ->
+            match binding with
+            | LocalBinding node ->
+              Local_defs.modify node (fun def ->
+                (match def with
+                | VarBinding _
+                | DeclareClassBinding _
+                | DeclareFunBinding _ ->
+                  Exports.cjs_declare_module_set_prop name node exports
+                | TypeBinding _ ->
+                  Exports.add_type name (ExportTypeBinding node) exports
+                | _ -> ());
+                def)
+            | RemoteBinding _ -> ()
+          ) names
+        ) scope
+      | Exports { kind = CJSDeclareModule _; _ } ->
+        (* is already the right kind? shouldn't happen *)
+        failwith "only call finalize_declare_module_exports_exn once per DeclareModule")
+    | Global _ | Module _ | Lexical _ -> failwith "expected DeclareModule to still be the scope"
+
 end
 
 module ObjAnnotAcc = struct
@@ -3941,7 +3988,8 @@ let rec statement opts scope locs (loc, stmt) =
     in
     let scope = Scope.push_declare_module loc name scope in
     let _, {S.Block.body = stmts; comments = _} = body in
-    List.iter (statement opts scope locs) stmts
+    List.iter (statement opts scope locs) stmts;
+    Scope.finalize_declare_module_exports_exn scope
 
   | S.EnumDeclaration decl ->
     enum_decl opts scope locs decl

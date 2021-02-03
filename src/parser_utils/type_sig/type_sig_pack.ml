@@ -378,6 +378,18 @@ and pack_exports cx file_loc (P.Exports { kind; types; type_stars; strict }) =
     in
     let export_def = Some (Value (ObjLit { loc = file_loc; frozen = true; proto = None; props })) in
     (CJSExports { types; type_stars; strict }, export_def)
+  | P.CJSDeclareModule props ->
+    let file_loc = pack_loc file_loc in
+    let props =
+      SMap.map
+        (fun binding ->
+          let index = Local_defs.index_exn binding in
+          let t = Ref (LocalRef { ref_loc = file_loc; index }) in
+          ObjValueField (file_loc, t, Polarity.Neutral))
+        props
+    in
+    let export_def = Some (Value (ObjLit { loc = file_loc; frozen = true; proto = None; props })) in
+    (CJSExports { types; type_stars; strict }, export_def)
   | P.ESModule { names; stars } ->
     let export_def = ref None in
     let names = SMap.map (pack_export cx export_def) names in

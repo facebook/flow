@@ -4415,7 +4415,7 @@ let%expect_test "builtins" =
          name = "x"; def = (TyRef (Unqualified LocalRef {ref_loc = [1:15-16]; index = 1}))}
     1. TypeAlias {id_loc = [2:5-6]; name = "T"; tparams = Mono; body = (Annot (String [2:9-15]))} |}]
 
-let%expect_test "builtin_module" =
+let%expect_test "builtin_cjs_module" =
   print_builtins [{|
     type T = string;
     declare module foo {
@@ -4432,27 +4432,157 @@ let%expect_test "builtin_module" =
     Export_def:
     (TyRef (Unqualified LocalRef {ref_loc = [3:26-27]; index = 0})) |}]
 
-let%expect_test "builtin_module_2" =
+let%expect_test "builtin_cjs_module_unused_type" =
+  (* `T` is not exported because `declare module.exports` means that
+     unused exports must be explicitly exported. *)
   print_builtins [{|
     declare module foo {
+      declare type T = number;
       declare module.exports: string;
-    }
-    declare module bar {
-      declare module.exports: number;
     }
   |}];
   [%expect {|
-    Builtin module bar:
-    [4:0-6:1] (CJSExports { types = {}; type_stars = []; strict = true })
+    Builtin module foo:
+    [1:0-4:1] (CJSExports { types = {}; type_stars = []; strict = true })
 
     Export_def:
-    (Annot (Number [5:26-32]))
+    (Annot (String [3:26-32])) |}]
+
+let%expect_test "builtin_cjs_module_unused_type_exported" =
+  (* T is exported because it has an `export` keyword *)
+  print_builtins [{|
+    declare module foo {
+      declare export type T = number;
+      declare module.exports: string;
+    }
+  |}];
+  [%expect {|
+    Local defs:
+    0. TypeAlias {id_loc = [2:22-23]; name = "T"; tparams = Mono; body = (Annot (Number [2:26-32]))}
 
     Builtin module foo:
-    [1:0-3:1] (CJSExports { types = {}; type_stars = []; strict = true })
+    [1:0-4:1] (CJSExports
+                 { types = { "T" -> (ExportTypeBinding 0) }; type_stars = []; strict = true })
 
     Export_def:
-    (Annot (String [2:26-32])) |}]
+    (Annot (String [3:26-32])) |}]
+
+let%expect_test "builtin_cjs_module_used_type" =
+  (* T is included because it is reachable, but not a named export because it does not
+     have an `export` keyword *)
+  print_builtins [{|
+    declare module foo {
+      declare type T = number;
+      declare module.exports: T;
+    }
+  |}];
+  [%expect {|
+    Local defs:
+    0. TypeAlias {id_loc = [2:15-16]; name = "T"; tparams = Mono; body = (Annot (Number [2:19-25]))}
+
+    Builtin module foo:
+    [1:0-4:1] (CJSExports { types = {}; type_stars = []; strict = true })
+
+    Export_def:
+    (TyRef (Unqualified LocalRef {ref_loc = [3:26-27]; index = 0})) |}]
+
+let%expect_test "builtin_cjs_module_used_type_exported" =
+  (* `T` is exported because it has an `export` keyword, and is also reachable via the default export *)
+  print_builtins [{|
+    declare module foo {
+      declare export type T = number;
+      declare module.exports: T;
+    }
+  |}];
+  [%expect {|
+    Local defs:
+    0. TypeAlias {id_loc = [2:22-23]; name = "T"; tparams = Mono; body = (Annot (Number [2:26-32]))}
+
+    Builtin module foo:
+    [1:0-4:1] (CJSExports
+                 { types = { "T" -> (ExportTypeBinding 0) }; type_stars = []; strict = true })
+
+    Export_def:
+    (TyRef (Unqualified LocalRef {ref_loc = [3:26-27]; index = 0})) |}]
+
+let%expect_test "builtin_cjs_module_with_implicit_exports" =
+  (* when a `declare module` doesn't have explicit value exports via `declare export` (which
+     makes it an ES module) or `declare module.exports = ...` (which makes it a CJS module),
+     it is implicitly a CJS module where all values are exported.
+
+     types are always exported in CJS modules, and require the `export` keyword in ES modules.
+     NOTE: `declare export type` does not an ES module make!
+
+     so in this test:
+      - there are no explicitly exported values, so everything is implicitly exported
+      - explicitly exporting type U does not hide T; T is also exported *)
+  print_builtins [{|
+    declare module foo {
+      declare var x: string;
+      declare function f(): void;
+      declare class Y {}
+      declare type T = number;
+      declare export type U = string;
+    }
+  |}];
+  [%expect {|
+    Local defs:
+    0. Variable {id_loc = [2:14-15]; name = "x"; def = (Annot (String [2:17-23]))}
+    1. DeclareFun {id_loc = [3:19-20];
+         name = "f"; fn_loc = [3:20-28];
+         def =
+         FunSig {tparams = Mono; params = [];
+           rest_param = None; this_param = None;
+           return = (Annot (Void [3:24-28]));
+           predicate = None};
+         tail = []}
+    2. DeclareClassBinding {id_loc = [4:16-17];
+         name = "Y";
+         def =
+         DeclareClassSig {tparams = Mono;
+           extends = ClassImplicitExtends;
+           mixins = []; implements = [];
+           static_props = {}; own_props = {};
+           proto_props = {}; static_calls = [];
+           calls = []}}
+    3. TypeAlias {id_loc = [5:15-16]; name = "T"; tparams = Mono; body = (Annot (Number [5:19-25]))}
+    4. TypeAlias {id_loc = [6:22-23]; name = "U"; tparams = Mono; body = (Annot (String [6:26-32]))}
+
+    Builtin module foo:
+    [1:0-7:1] (CJSExports
+                 { types = { "T" -> (ExportTypeBinding 3); "U" -> (ExportTypeBinding 4) };
+                   type_stars = []; strict = true })
+
+    Export_def:
+    (Value
+       ObjLit {loc = [1:0-7:1]; frozen = true;
+         proto = None;
+         props =
+         { "Y" ->
+           (ObjValueField ([1:0-7:1], (
+              Ref LocalRef {ref_loc = [1:0-7:1]; index = 2}), Polarity.Neutral));
+           "f" ->
+           (ObjValueField ([1:0-7:1], (
+              Ref LocalRef {ref_loc = [1:0-7:1]; index = 1}), Polarity.Neutral));
+           "x" ->
+           (ObjValueField ([1:0-7:1], (
+              Ref LocalRef {ref_loc = [1:0-7:1]; index = 0}), Polarity.Neutral)) }}) |}]
+
+let%expect_test "builtin_es_module_default" =
+  print_builtins [{|
+    declare module foo {
+      declare export default string;
+    }
+  |}];
+  [%expect {|
+    Builtin module foo:
+    [1:0-3:1] (ESExports
+                 { names = { "default" -> ExportDefault {default_loc = [2:17-24]} };
+                   types = {}; stars = [];
+                   type_stars = []; strict = true })
+
+    Export_def:
+    (Annot (String [2:25-31])) |}]
 
 let%expect_test "builtin_module_import_typeof" =
   print_builtins [{|
