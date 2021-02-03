@@ -525,7 +525,7 @@ let autocomplete_id
    object type whose members we want to enumerate: instead, we are given a
    component class and we want to enumerate the members of its declared props
    type, so we need to extract that and then route to autocomplete_member. *)
-let autocomplete_jsx
+let autocomplete_jsx_attribute
     ~reader cx file_sig typed_ast cls ac_name ~used_attr_names ~has_value ac_loc ~tparams =
   let open Flow_js in
   let reason = Reason.mk_reason (Reason.RCustom ac_name) ac_loc in
@@ -808,19 +808,19 @@ let autocomplete_get_results
     ~env ~options ~reader ~cx ~file_sig ~ast ~typed_ast ~imports trigger_character cursor =
   let file_sig = File_sig.abstractify_locs file_sig in
   match Autocomplete_js.process_location ~trigger_character ~cursor ~typed_ast with
-  | Some (_, _, Acbinding) -> ("Empty", AcEmpty "Binding")
-  | Some (_, _, Acignored) -> ("Empty", AcEmpty "Ignored")
-  | Some (_, _, Accomment) -> ("Empty", AcEmpty "Comment")
-  | Some (_, _, Acliteral) -> ("Empty", AcEmpty "Literal")
-  | Some (_, _, Acjsxtext) -> ("Empty", AcEmpty "JSXText")
-  | Some (_, _, Acmodule) ->
+  | Some (_, _, Ac_binding) -> ("Empty", AcEmpty "Binding")
+  | Some (_, _, Ac_ignored) -> ("Empty", AcEmpty "Ignored")
+  | Some (_, _, Ac_comment) -> ("Empty", AcEmpty "Comment")
+  | Some (_, _, Ac_literal) -> ("Empty", AcEmpty "Literal")
+  | Some (_, _, Ac_jsx_text) -> ("Empty", AcEmpty "JSXText")
+  | Some (_, _, Ac_module) ->
     (* TODO: complete module names *)
     ("Acmodule", AcEmpty "Module")
-  | Some (_, _, Ackey) ->
+  | Some (_, _, Ac_key) ->
     (* TODO: complete object keys based on their upper bounds *)
     let result = { ServerProt.Response.Completion.items = []; is_incomplete = false } in
     ("Ackey", AcResult { result; errors_to_log = [] })
-  | Some (tparams, ac_loc, Acid { token; include_super; include_this }) ->
+  | Some (tparams, ac_loc, Ac_id { token; include_super; include_this }) ->
     ( "Acid",
       autocomplete_id
         ~env
@@ -836,7 +836,7 @@ let autocomplete_get_results
         ~imports
         ~tparams
         ~token )
-  | Some (tparams, ac_loc, Acmem { obj_type; in_optional_chain }) ->
+  | Some (tparams, ac_loc, Ac_member { obj_type; in_optional_chain }) ->
     ( "Acmem",
       autocomplete_member
         ~reader
@@ -848,9 +848,11 @@ let autocomplete_get_results
         in_optional_chain
         ac_loc
         ~tparams )
-  | Some (tparams, ac_loc, Acjsx { attribute_name; used_attr_names; component_t; has_value }) ->
+  | Some
+      (tparams, ac_loc, Ac_jsx_attribute { attribute_name; used_attr_names; component_t; has_value })
+    ->
     ( "Acjsx",
-      autocomplete_jsx
+      autocomplete_jsx_attribute
         ~reader
         cx
         file_sig
@@ -861,7 +863,7 @@ let autocomplete_get_results
         ~has_value
         ac_loc
         ~tparams )
-  | Some (tparams, ac_loc, Actype { token }) ->
+  | Some (tparams, ac_loc, Ac_type { token }) ->
     ( "Actype",
       autocomplete_unqualified_type
         ~env
@@ -875,7 +877,7 @@ let autocomplete_get_results
         ~typed_ast
         ~file_sig
         ~token )
-  | Some (tparams, ac_loc, Acqualifiedtype qtype) ->
+  | Some (tparams, ac_loc, Ac_qualified_type qtype) ->
     ( "Acqualifiedtype",
       autocomplete_qualified_type ~reader ~cx ~ac_loc ~file_sig ~typed_ast ~tparams ~qtype )
   | None ->

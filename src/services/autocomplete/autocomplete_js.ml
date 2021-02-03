@@ -6,42 +6,30 @@
  *)
 
 type autocomplete_type =
-  (* ignore extraneous requests the IDE sends *)
-  | Acignored
-  (* binding identifiers introduce new names *)
-  | Acbinding
-  (* inside a comment *)
-  | Accomment
-  (* identifier references *)
-  | Acid of {
+  | Ac_ignored  (** ignore extraneous requests the IDE sends *)
+  | Ac_binding  (** binding identifiers introduce new names *)
+  | Ac_comment  (** inside a comment *)
+  | Ac_id of {
       token: string;
       include_super: bool;
       include_this: bool;
-    }
-  (* object key, not supported yet *)
-  | Ackey
-  (* inside a literal like a string or regex *)
-  | Acliteral
-  (* a module name *)
-  | Acmodule
-  (* type identifiers *)
-  | Actype of { token: string }
-  (* qualified type identifiers *)
-  | Acqualifiedtype of Type.t
-  (* member expressions *)
-  | Acmem of {
+    }  (** identifier references *)
+  | Ac_key  (** object key, not supported yet *)
+  | Ac_literal  (** inside a literal like a string or regex *)
+  | Ac_module  (** a module name *)
+  | Ac_type of { token: string }  (** type identifiers *)
+  | Ac_qualified_type of Type.t  (** qualified type identifiers *)
+  | Ac_member of {
       obj_type: Type.t;
       in_optional_chain: bool;
-    }
-  (* JSX attributes *)
-  | Acjsx of {
+    }  (** member expressions *)
+  | Ac_jsx_attribute of {
       attribute_name: string;
       used_attr_names: SSet.t;
       component_t: Type.t;
       has_value: bool;
-    }
-  (* JSX text child *)
-  | Acjsxtext
+    }  (** JSX attributes *)
+  | Ac_jsx_text  (** JSX text child *)
 
 let type_of_jsx_name =
   let open Flow_ast.JSX in
@@ -72,10 +60,10 @@ class process_request_searcher (from_trigger_character : bool) (cursor : Loc.t) 
       fun loc x ->
         let x =
           match x with
-          | Acid _ when from_trigger_character ->
+          | Ac_id _ when from_trigger_character ->
             (* space is a trigger character, so this avoids completing immediately following
                a space ('.' is also a trigger, but it'd be an Acmem for member expressions) *)
-            Acignored
+            Ac_ignored
           | _ -> x
         in
         this#annot_with_tparams (fun tparams -> raise (Found (tparams, loc, x)))
@@ -83,19 +71,19 @@ class process_request_searcher (from_trigger_character : bool) (cursor : Loc.t) 
     method! comment ((loc, _) as c) =
       if this#covers_target loc then
         (* don't autocomplete in comments *)
-        this#find loc Accomment
+        this#find loc Ac_comment
       else
         super#comment c
 
     method! t_identifier (((loc, _), { Flow_ast.Identifier.name; _ }) as ident) =
       if this#covers_target loc then
-        this#find loc (Acid { token = name; include_super = false; include_this = false })
+        this#find loc (Ac_id { token = name; include_super = false; include_this = false })
       else
         super#t_identifier ident
 
     method! jsx_identifier (((ac_loc, _), { Flow_ast.JSX.Identifier.name; _ }) as ident) =
       if this#covers_target ac_loc then
-        this#find ac_loc (Acid { token = name; include_super = false; include_this = false });
+        this#find ac_loc (Ac_id { token = name; include_super = false; include_this = false });
       ident
 
     method! member expr =
@@ -104,7 +92,7 @@ class process_request_searcher (from_trigger_character : bool) (cursor : Loc.t) 
       begin
         match property with
         | PropertyIdentifier ((prop_loc, _), _) when this#covers_target prop_loc ->
-          this#find prop_loc (Acmem { obj_type; in_optional_chain = false })
+          this#find prop_loc (Ac_member { obj_type; in_optional_chain = false })
         | _ -> ()
       end;
       super#member expr
@@ -118,7 +106,7 @@ class process_request_searcher (from_trigger_character : bool) (cursor : Loc.t) 
       begin
         match property with
         | PropertyIdentifier ((prop_loc, _), _) when this#covers_target prop_loc ->
-          this#find prop_loc (Acmem { obj_type; in_optional_chain = true })
+          this#find prop_loc (Ac_member { obj_type; in_optional_chain = true })
         | _ -> ()
       end;
       (* the reason we don't simply call `super#optional_member` is because that would
@@ -134,7 +122,7 @@ class process_request_searcher (from_trigger_character : bool) (cursor : Loc.t) 
             (function
               | Object.(Property (_, { Property.key = Property.Identifier ((prop_loc, _), _); _ }))
                 when this#covers_target prop_loc ->
-                this#find prop_loc (Acmem { obj_type; in_optional_chain = false })
+                this#find prop_loc (Ac_member { obj_type; in_optional_chain = false })
               | _ -> ())
             properties
         | _ -> ()
@@ -149,13 +137,13 @@ class process_request_searcher (from_trigger_character : bool) (cursor : Loc.t) 
         if this#covers_target loc then
           (* don't offer suggestions for bindings, because this is where names are created,
              so existing names aren't useful. *)
-          this#find loc Acbinding
+          this#find loc Ac_binding
         else
           ident
 
     method! jsx_opening_element elt =
       let open Flow_ast.JSX in
-      let (_, Opening.{ name = component_name; attributes; _ }) = elt in
+      let (_, Opening.{ name = component_name; attributes; self_closing = _ }) = elt in
       let (used_attr_names, found) =
         List.fold_left
           (fun (used_attr_names, found) -> function
@@ -182,70 +170,72 @@ class process_request_searcher (from_trigger_character : bool) (cursor : Loc.t) 
       in
       Base.Option.iter
         ~f:(fun (attribute_name, loc, component_t, has_value) ->
-          this#find loc (Acjsx { attribute_name; used_attr_names; component_t; has_value }))
+          this#find
+            loc
+            (Ac_jsx_attribute { attribute_name; used_attr_names; component_t; has_value }))
         found;
       super#jsx_opening_element elt
 
     method! jsx_attribute_value value =
       let open Flow_ast.JSX.Attribute in
       match value with
-      | Literal ((loc, _), _) when this#covers_target loc -> this#find loc Acliteral
+      | Literal ((loc, _), _) when this#covers_target loc -> this#find loc Ac_literal
       | _ -> super#jsx_attribute_value value
 
     method! jsx_child child =
       match child with
-      | (loc, Flow_ast.JSX.Text _) when this#covers_target loc -> this#find loc Acjsxtext
+      | (loc, Flow_ast.JSX.Text _) when this#covers_target loc -> this#find loc Ac_jsx_text
       | _ -> super#jsx_child child
 
     method! pattern_object_property_key ?kind key =
       let open Flow_ast.Pattern.Object.Property in
       match key with
-      | Literal (loc, _) when this#covers_target loc -> this#find loc Acliteral
+      | Literal (loc, _) when this#covers_target loc -> this#find loc Ac_literal
       | _ -> super#pattern_object_property_key ?kind key
 
     method! object_key key =
       let open Flow_ast.Expression.Object.Property in
       match key with
-      | Literal ((loc, _), _) when this#covers_target loc -> this#find loc Acliteral
+      | Literal ((loc, _), _) when this#covers_target loc -> this#find loc Ac_literal
       | _ -> super#object_key key
 
     (* we don't currently autocomplete object keys *)
     method! object_key_identifier (((loc, _), _) as ident) =
       if this#covers_target loc then
-        this#find loc Ackey
+        this#find loc Ac_key
       else
         ident
 
     method! enum_identifier ((loc, _) as ident) =
       if this#covers_target loc then
-        this#find loc Ackey
+        this#find loc Ac_key
       else
         ident
 
     method! class_body x =
       try super#class_body x
-      with Found (tparams, loc, Acid id) ->
-        raise (Found (tparams, loc, Acid { id with include_super = true; include_this = true }))
+      with Found (tparams, loc, Ac_id id) ->
+        raise (Found (tparams, loc, Ac_id { id with include_super = true; include_this = true }))
 
     method! function_expression x =
       try super#function_expression x
-      with Found (tparams, loc, Acid id) ->
-        raise (Found (tparams, loc, Acid { id with include_this = true }))
+      with Found (tparams, loc, Ac_id id) ->
+        raise (Found (tparams, loc, Ac_id { id with include_this = true }))
 
     method! function_declaration x =
       try super#function_declaration x
-      with Found (tparams, loc, Acid id) ->
-        raise (Found (tparams, loc, Acid { id with include_this = true }))
+      with Found (tparams, loc, Ac_id id) ->
+        raise (Found (tparams, loc, Ac_id { id with include_this = true }))
 
     method! generic_identifier_type id =
       let open Flow_ast.Type.Generic.Identifier in
       begin
         match id with
         | Unqualified ((loc, _), { Flow_ast.Identifier.name; _ }) when this#covers_target loc ->
-          this#find loc (Actype { token = name })
+          this#find loc (Ac_type { token = name })
         | Qualified (_, { qualification; id = ((loc, _), _) }) when this#covers_target loc ->
           let qualification_type = type_of_qualification qualification in
-          this#find loc (Acqualifiedtype qualification_type)
+          this#find loc (Ac_qualified_type qualification_type)
         | _ -> ()
       end;
       id
@@ -253,26 +243,26 @@ class process_request_searcher (from_trigger_character : bool) (cursor : Loc.t) 
     method! expression expr =
       let open Flow_ast.Expression in
       match expr with
-      | ((loc, _), Literal _) when this#covers_target loc -> this#find loc Acliteral
+      | ((loc, _), Literal _) when this#covers_target loc -> this#find loc Ac_literal
       | _ -> super#expression expr
 
     method! template_literal_element elem =
       match elem with
-      | (loc, _) when this#covers_target loc -> this#find loc Acliteral
+      | (loc, _) when this#covers_target loc -> this#find loc Ac_literal
       | _ -> super#template_literal_element elem
 
     method! import_declaration decl_loc decl =
       let open Flow_ast.Statement.ImportDeclaration in
       let { import_kind = _; source; specifiers = _; default = _; comments = _ } = decl in
       match source with
-      | (loc, _) when this#covers_target loc -> this#find loc Acmodule
+      | (loc, _) when this#covers_target loc -> this#find loc Ac_module
       | _ -> super#import_declaration decl_loc decl
 
     method! type_ t =
       let open Flow_ast.Type in
       match t with
       | ((loc, _), (StringLiteral _ | NumberLiteral _)) when this#covers_target loc ->
-        this#find loc Acliteral
+        this#find loc Ac_literal
       | _ -> super#type_ t
   end
 
