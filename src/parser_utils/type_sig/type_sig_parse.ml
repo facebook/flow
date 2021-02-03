@@ -3474,6 +3474,44 @@ let declare_class_decl opts scope locs decl =
   let def = lazy (Locs.splice id_loc (fun locs -> declare_class_def opts scope locs decl)) in
   Scope.bind_declare_class scope id_loc name def
 
+let import_decl _opts scope locs decl =
+  let module I = Ast.Statement.ImportDeclaration in
+  let {I.
+    source = (_, {Ast.StringLiteral.value = mref; _});
+    default;
+    specifiers;
+    import_kind = kind;
+    comments = _;
+  } = decl in
+  begin match default with
+  | None -> ()
+  | Some (id_loc, {Ast.Identifier.name = local; comments = _}) ->
+    let id_loc = Locs.push locs id_loc in
+    Scope.bind_import scope kind id_loc ~local ~remote:"default" mref
+  end;
+  begin match specifiers with
+  | None -> ()
+  | Some (I.ImportNamespaceSpecifier (_, id)) ->
+    let id_loc, {Ast.Identifier.name; comments = _} = id in
+    let id_loc = Locs.push locs id_loc in
+    Scope.bind_import_ns scope kind id_loc name mref
+  | Some (I.ImportNamedSpecifiers specifiers) ->
+    List.iter (fun specifier ->
+      let {I.
+        kind = kind_opt;
+        local = local_opt;
+        remote = (remote_id_loc, {Ast.Identifier.name = remote; comments = _});
+      } = specifier in
+      let kind = match kind_opt with Some k -> k | None -> kind in
+      let local_id_loc, local = match local_opt with
+      | Some (id_loc, {Ast.Identifier.name; comments = _}) -> id_loc, name
+      | None -> remote_id_loc, remote
+      in
+      let local_id_loc = Locs.push locs local_id_loc in
+      Scope.bind_import scope kind local_id_loc ~local ~remote mref;
+    ) specifiers
+  end
+
 let interface_decl opts scope locs decl =
   let module Acc = ClassAcc in
   let {Ast.Statement.Interface.
@@ -3771,42 +3809,11 @@ let rec statement opts scope locs (loc, stmt) =
     declare_function_decl opts scope locs decl
 
   | S.ImportDeclaration decl ->
-    let module I = S.ImportDeclaration in
-    let {I.
-      source = (_, {Ast.StringLiteral.value = mref; _});
-      default;
-      specifiers;
-      import_kind = kind;
-      comments = _;
-    } = decl in
-    begin match default with
-    | None -> ()
-    | Some (id_loc, {Ast.Identifier.name = local; comments = _}) ->
-      let id_loc = Locs.push locs id_loc in
-      Scope.bind_import scope kind id_loc ~local ~remote:"default" mref
-    end;
-    begin match specifiers with
-    | None -> ()
-    | Some (I.ImportNamespaceSpecifier (_, id)) ->
-      let id_loc, {Ast.Identifier.name; comments = _} = id in
-      let id_loc = Locs.push locs id_loc in
-      Scope.bind_import_ns scope kind id_loc name mref
-    | Some (I.ImportNamedSpecifiers specifiers) ->
-      List.iter (fun specifier ->
-        let {I.
-          kind = kind_opt;
-          local = local_opt;
-          remote = (remote_id_loc, {Ast.Identifier.name = remote; comments = _});
-        } = specifier in
-        let kind = match kind_opt with Some k -> k | None -> kind in
-        let local_id_loc, local = match local_opt with
-        | Some (id_loc, {Ast.Identifier.name; comments = _}) -> id_loc, name
-        | None -> remote_id_loc, remote
-        in
-        let local_id_loc = Locs.push locs local_id_loc in
-        Scope.bind_import scope kind local_id_loc ~local ~remote mref;
-      ) specifiers
-    end
+    (match scope with
+    | Global _ ->
+      (* this is illegal. it should be caught in the parser. *)
+      ()
+    | _ -> import_decl opts scope locs decl)
 
   | S.ExportNamedDeclaration decl ->
     let module E = S.ExportNamedDeclaration in

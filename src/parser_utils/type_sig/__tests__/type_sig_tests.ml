@@ -4454,6 +4454,70 @@ let%expect_test "builtin_module_2" =
     Export_def:
     (Annot (String [2:26-32])) |}]
 
+let%expect_test "builtin_module_import_typeof" =
+  print_builtins [{|
+    declare module foo {
+      declare export var x: string;
+    }
+    declare module bar {
+      import typeof {x} from 'foo';
+      declare export var y: x;
+    }
+  |}];
+  [%expect {|
+    Module refs:
+    0. foo
+
+    Local defs:
+    0. Variable {id_loc = [2:21-22]; name = "x"; def = (Annot (String [2:24-30]))}
+    1. Variable {id_loc = [6:21-22];
+         name = "y"; def = (TyRef (Unqualified RemoteRef {ref_loc = [6:24-25]; index = 0}))}
+
+    Remote refs:
+    0. ImportTypeof {id_loc = [5:17-18]; name = "x"; index = 0; remote = "x"}
+
+    Builtin module bar:
+    [4:0-7:1] (ESExports
+                 { names = { "y" -> (ExportBinding 1) };
+                   types = {}; stars = [];
+                   type_stars = []; strict = true })
+
+    Builtin module foo:
+    [1:0-3:1] (ESExports
+                 { names = { "x" -> (ExportBinding 0) };
+                   types = {}; stars = [];
+                   type_stars = []; strict = true }) |}]
+
+let%expect_test "builtin_toplevel_import" =
+  (* this should be a parse error, but in the meantime, make sure we don't fatal.
+     the `import` gets ignored and the `x` becomes a BuiltinRef. *)
+  print_builtins [{|
+    declare module foo {
+      declare export var x: string;
+    }
+    import typeof {x} from 'foo';
+    declare module bar {
+      declare export var y: x;
+    }
+  |}];
+  [%expect{|
+    Local defs:
+    0. Variable {id_loc = [2:21-22]; name = "x"; def = (Annot (String [2:24-30]))}
+    1. Variable {id_loc = [6:21-22];
+         name = "y"; def = (TyRef (Unqualified BuiltinRef {ref_loc = [6:24-25]; name = "x"}))}
+
+    Builtin module bar:
+    [5:0-7:1] (ESExports
+                 { names = { "y" -> (ExportBinding 1) };
+                   types = {}; stars = [];
+                   type_stars = []; strict = true })
+
+    Builtin module foo:
+    [1:0-3:1] (ESExports
+                 { names = { "x" -> (ExportBinding 0) };
+                   types = {}; stars = [];
+                   type_stars = []; strict = true }) |}]
+
 let%expect_test "this_param_1" =
   print_sig {|
     export function foo(this : mixed) : void {}
