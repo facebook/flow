@@ -192,6 +192,9 @@ let mark_exports file_loc (P.Exports { kind; types; type_stars; strict = _ }) =
         mark_loc loc;
         mark_parsed t)
       props
+  | P.CJSDeclareModule props ->
+    mark_loc file_loc;
+    SMap.iter (fun _ binding -> Local_defs.mark binding mark_local_binding) props
   | P.ESModule { names; stars } ->
     SMap.iter (fun _ t -> mark_export t) names;
     List.iter mark_star stars
