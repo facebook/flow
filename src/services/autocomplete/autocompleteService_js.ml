@@ -498,15 +498,25 @@ let autocomplete_id
   in
   let result =
     if imports then
-      let { Export_search.results = auto_imports; is_incomplete } =
-        let (before, _after) = remove_autocomplete_token token in
-        Export_search.search_values ~options:default_autoimport_options before env.ServerEnv.exports
-      in
-      let items =
-        append_completion_items_of_autoimports ~options ~reader ~ast ~ac_loc auto_imports items
-      in
-      { ServerProt.Response.Completion.items; is_incomplete }
+      let (before, _after) = remove_autocomplete_token token in
+      if before = "" then
+        (* for empty autocomplete requests (hitting ctrl-space without typing anything),
+           don't include any autoimport results, but do set `is_incomplete` so that
+           it queries again when you type something. *)
+        { ServerProt.Response.Completion.items; is_incomplete = true }
+      else
+        let { Export_search.results = auto_imports; is_incomplete } =
+          Export_search.search_values
+            ~options:default_autoimport_options
+            before
+            env.ServerEnv.exports
+        in
+        let items =
+          append_completion_items_of_autoimports ~options ~reader ~ast ~ac_loc auto_imports items
+        in
+        { ServerProt.Response.Completion.items; is_incomplete }
     else
+      (* if autoimports are not enabled, then we have all the results *)
       { ServerProt.Response.Completion.items; is_incomplete = false }
   in
   AcResult { result; errors_to_log }
