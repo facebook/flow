@@ -20,7 +20,7 @@ val text_edits_of_import :
   Export_index.kind ->
   string ->
   Export_index.source ->
-  (text_edits, unit) result
+  text_edits option
 
 val code_actions_at_loc :
   options:Options.t ->
