@@ -10,18 +10,66 @@ type export =
   | Default  (** e.g. `export default function() {}` *)
   | Named of string  (** `export const foo: string = "foo"` *)
   | NamedType of string  (** `export type T = string` *)
+  | Module of string * export list  (** `declare module "foo" { ... exports ... }` *)
 [@@deriving show { with_path = false }]
 
 type t = export list [@@deriving show { with_path = false }]
 
+module Export_sig = struct
+  type 'loc t = {
+    exports: 'loc Type_sig_pack.exports;
+    export_def: 'loc Type_sig_pack.packed option;
+    module_refs: string Type_sig_collections.Module_refs.t;
+    local_defs: 'loc Type_sig_pack.packed_def Type_sig_collections.Local_defs.t;
+    remote_refs: 'loc Type_sig_pack.remote_ref Type_sig_collections.Remote_refs.t;
+    pattern_defs: 'loc Type_sig_pack.packed Type_sig_collections.Pattern_defs.t option;
+    patterns: 'loc Type_sig_pack.pattern Type_sig_collections.Patterns.t option;
+  }
+
+  let of_module
+      {
+        Packed_type_sig.Module.exports;
+        export_def;
+        module_refs;
+        local_defs;
+        remote_refs;
+        pattern_defs;
+        patterns;
+      } =
+    {
+      exports;
+      export_def;
+      module_refs;
+      local_defs;
+      remote_refs;
+      pattern_defs = Some pattern_defs;
+      patterns = Some patterns;
+    }
+
+  let of_builtin_module ~module_refs ~local_defs ~remote_refs ~exports ~export_def =
+    {
+      exports;
+      export_def;
+      module_refs;
+      local_defs;
+      remote_refs;
+      pattern_defs = None;
+      patterns = None;
+    }
+end
+
 let local_def_of_index type_sig index =
-  Type_sig_collections.Local_defs.get type_sig.Packed_type_sig.Module.local_defs index
+  Type_sig_collections.Local_defs.get type_sig.Export_sig.local_defs index
 
 let pattern_of_index type_sig index =
-  Type_sig_collections.Patterns.get type_sig.Packed_type_sig.Module.patterns index
+  match type_sig.Export_sig.patterns with
+  | Some patterns -> Type_sig_collections.Patterns.get patterns index
+  | None -> failwith "unexpected pattern in builtin module"
 
 let pattern_def_of_index type_sig index =
-  Type_sig_collections.Pattern_defs.get type_sig.Packed_type_sig.Module.pattern_defs index
+  match type_sig.Export_sig.pattern_defs with
+  | Some pattern_defs -> Type_sig_collections.Pattern_defs.get pattern_defs index
+  | None -> failwith "unexpected pattern_def in builtin module"
 
 module Eval = struct
   open Type_sig
@@ -270,11 +318,11 @@ module CJS = struct
       acc
 
   let add_default_exports type_sig acc =
-    match type_sig.Packed_type_sig.Module.export_def with
+    match type_sig.Export_sig.export_def with
     | Some module_exports -> Default :: add_named_exports acc type_sig module_exports
     | None -> acc
 
-  let add_type_exports _type_sig types acc =
+  let add_type_exports types acc =
     SMap.fold
       (fun name value acc ->
         let open Type_sig_pack in
@@ -291,10 +339,24 @@ module CJS = struct
       acc
 
   let exports type_sig ({ types; type_stars = (* TODO *) _; strict = _ } : 'loc cjs_exports) =
-    [] |> add_default_exports type_sig |> add_type_exports type_sig types
+    [] |> add_default_exports type_sig |> add_type_exports types
 end
 
-let of_module type_sig : t =
-  match type_sig.Packed_type_sig.Module.exports with
-  | Type_sig_pack.ESExports exp -> ESM.exports type_sig exp
-  | Type_sig_pack.CJSExports exp -> CJS.exports type_sig exp
+let of_sig export_sig : t =
+  match export_sig.Export_sig.exports with
+  | Type_sig_pack.ESExports exp -> ESM.exports export_sig exp
+  | Type_sig_pack.CJSExports exp -> CJS.exports export_sig exp
+
+let of_module type_sig : t = type_sig |> Export_sig.of_module |> of_sig
+
+let of_builtins { Packed_type_sig.Builtins.modules; module_refs; local_defs; remote_refs; _ } =
+  SMap.fold
+    (fun name { Packed_type_sig.Builtins.loc = _; exports; export_def } acc ->
+      let export_sig =
+        Export_sig.of_builtin_module ~module_refs ~local_defs ~remote_refs ~exports ~export_def
+      in
+      Module (name, of_sig export_sig) :: acc)
+    modules
+    []
+
+let empty = []

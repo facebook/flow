@@ -18,7 +18,7 @@ export default (suite(
     lspIgnoreStatusAndCancellation,
   }) => [
     test('textDocument/completion with autoimports', [
-      addFiles('foo.js', 'bar.js', 'foobar.js'),
+      addFiles('foo.js', 'bar.js', 'foobar.js', 'lib/builtins.js'),
       addCode(`f`),
       lspStartAndConnect(),
       lspRequestAndWaitUntilResponse('textDocument/completion', {
@@ -110,6 +110,45 @@ export default (suite(
                         end: {line: 2, character: 0},
                       },
                       newText: 'import foo from "./foo";\n\n',
+                    },
+                  ],
+                },
+                {
+                  label: 'foo',
+                  kind: 6,
+                  detail: 'foo',
+                  documentation: {
+                    kind: 'markdown',
+                    value: 'Import from LibA',
+                  },
+                  sortText: '00000000000000000100',
+                  insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {
+                        line: 2,
+                        character: 0,
+                      },
+                      end: {
+                        line: 2,
+                        character: 1,
+                      },
+                    },
+                    newText: 'foo',
+                  },
+                  additionalTextEdits: [
+                    {
+                      range: {
+                        start: {
+                          line: 2,
+                          character: 0,
+                        },
+                        end: {
+                          line: 2,
+                          character: 0,
+                        },
+                      },
+                      newText: 'import {foo} from "LibA";\n\n',
                     },
                   ],
                 },

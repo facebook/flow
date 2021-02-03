@@ -89,26 +89,34 @@ type text_edits = {
   edits: Lsp.TextEdit.t list;
 }
 
-let text_edits_of_import ~options ~reader ~src_dir ~ast kind name from =
-  match Module_heaps.Reader.get_info ~reader ~audit:Expensive.ok from with
-  | None -> Error ()
-  | Some info ->
-    (match path_of_modulename src_dir info.Module_heaps.module_name with
-    | None -> Error ()
-    | Some from ->
-      let title =
-        match kind with
-        | Export_index.Default -> Printf.sprintf "Import default from %s" from
-        | Export_index.Named -> Printf.sprintf "Import from %s" from
-        | Export_index.NamedType -> Printf.sprintf "Import type from %s" from
-        | Export_index.Namespace -> Printf.sprintf "Import * from %s" from
-      in
-      let binding = (kind, name) in
-      let edits =
-        Autofix_imports.add_import ~options ~binding ~from ast
-        |> Flow_lsp_conversions.flow_loc_patch_to_lsp_edits
-      in
-      Ok { title; edits })
+let text_edits_of_import ~options ~reader ~src_dir ~ast kind name source =
+  let from =
+    match source with
+    | Export_index.Builtin from -> Ok from
+    | Export_index.File_key from ->
+      (match Module_heaps.Reader.get_info ~reader ~audit:Expensive.ok from with
+      | None -> Error ()
+      | Some info ->
+        (match path_of_modulename src_dir info.Module_heaps.module_name with
+        | None -> Error ()
+        | Some from -> Ok from))
+  in
+  match from with
+  | Error () -> Error ()
+  | Ok from ->
+    let title =
+      match kind with
+      | Export_index.Default -> Printf.sprintf "Import default from %s" from
+      | Export_index.Named -> Printf.sprintf "Import from %s" from
+      | Export_index.NamedType -> Printf.sprintf "Import type from %s" from
+      | Export_index.Namespace -> Printf.sprintf "Import * from %s" from
+    in
+    let binding = (kind, name) in
+    let edits =
+      Autofix_imports.add_import ~options ~binding ~from ast
+      |> Flow_lsp_conversions.flow_loc_patch_to_lsp_edits
+    in
+    Ok { title; edits }
 
 let suggest_imports ~options ~reader ~ast ~diagnostics ~exports ~name uri loc =
   let open Lsp in
@@ -127,8 +135,8 @@ let suggest_imports ~options ~reader ~ast ~diagnostics ~exports ~name uri loc =
       Js_layout_generator.{ default_opts with single_quotes = Options.format_single_quotes options }
     in
     Export_index.ExportSet.fold
-      (fun (file_key, export_kind) acc ->
-        match text_edits_of_import ~options ~reader ~src_dir ~ast export_kind name file_key with
+      (fun (source, export_kind) acc ->
+        match text_edits_of_import ~options ~reader ~src_dir ~ast export_kind name source with
         | Error () -> acc
         | Ok { edits; title } ->
           let command =

@@ -10,9 +10,12 @@ type kind =
   | Named
   | NamedType
   | Namespace
-[@@deriving show, ord]
 
-type export = File_key.t * kind [@@deriving show, ord]
+and source =
+  | Builtin of string  (** [Builtin "foo"] refers to a `declare module "foo"` lib *)
+  | File_key of File_key.t
+
+and export = source * kind [@@deriving show, ord]
 
 module ExportSet = struct
   include Set.Make (struct
@@ -47,7 +50,7 @@ type t = ExportSet.t SMap.t [@@deriving show]
 
 let empty = SMap.empty
 
-let add : string -> File_key.t -> kind -> t -> t =
+let add : string -> source -> kind -> t -> t =
   let add_file file_key kind = function
     | None -> Some (ExportSet.singleton (file_key, kind))
     | Some exports -> Some (ExportSet.add (file_key, kind) exports)

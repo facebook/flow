@@ -12,7 +12,7 @@ let named = Export_index.Named
 
 let named_type = Export_index.NamedType
 
-let sf name = File_key.SourceFile name
+let sf name = Export_index.File_key (File_key.SourceFile name)
 
 let index =
   let open Export_index in
@@ -27,10 +27,7 @@ let index =
   |> add "Baz" (sf "/a/baz.js") named
 
 let mk_results ?(is_incomplete = false) results =
-  {
-    results = List.map (fun (name, file_key, kind) -> { name; file_key; kind }) results;
-    is_incomplete;
-  }
+  { results = List.map (fun (name, source, kind) -> { name; source; kind }) results; is_incomplete }
 
 let tests =
   [

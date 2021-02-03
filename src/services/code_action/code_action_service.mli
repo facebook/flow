@@ -19,7 +19,7 @@ val text_edits_of_import :
   ast:(Loc.t, Loc.t) Flow_ast.Program.t ->
   Export_index.kind ->
   string ->
-  File_key.t ->
+  Export_index.source ->
   (text_edits, unit) result
 
 val code_actions_at_loc :

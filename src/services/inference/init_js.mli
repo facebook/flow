@@ -10,6 +10,7 @@ type init_result = {
   errors: Flow_error.ErrorSet.t Utils_js.FilenameMap.t;
   warnings: Flow_error.ErrorSet.t Utils_js.FilenameMap.t;
   suppressions: Error_suppressions.t;
+  exports: Exports.t;
 }
 
 (* called to initialize library code on initial full pass.

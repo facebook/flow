@@ -10,9 +10,12 @@ type kind =
   | Named
   | NamedType
   | Namespace
-[@@deriving show, ord]
 
-type export = File_key.t * kind [@@deriving show]
+and source =
+  | Builtin of string  (** [Builtin "foo"] refers to a `declare module "foo"` lib *)
+  | File_key of File_key.t
+
+and export = source * kind [@@deriving show, ord]
 
 module ExportSet : sig
   include Set.S with type elt = export
@@ -26,7 +29,7 @@ type t [@@deriving show]
 
 val empty : t
 
-val add : string -> File_key.t -> kind -> t -> t
+val add : string -> source -> kind -> t -> t
 
 val merge : t -> t -> t
 
