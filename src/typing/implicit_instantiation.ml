@@ -307,3 +307,22 @@ let check_implicit_instantiation cx implicit_instantiation =
     implicitly_instantiate cx implicit_instantiation
   in
   emit_missing_annot_errors cx tparams_map marked_tparams bounds_map implicit_instantiation
+
+let get_inferred_types cx implicit_instantiation =
+  let (tparams_map, marked_tparams, bounds_map) =
+    implicitly_instantiate cx implicit_instantiation
+  in
+  let f_constant _ = None in
+  let f_no_bounds _ _ _ = None in
+  let f_upper_non_t _ _ _ = None in
+  let f_pinned _ t = Some t in
+  pin_types
+    cx
+    tparams_map
+    marked_tparams
+    bounds_map
+    implicit_instantiation
+    ~f_constant
+    ~f_no_bounds
+    ~f_upper_non_t
+    ~f_pinned

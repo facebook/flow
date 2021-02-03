@@ -7,3 +7,5 @@
 
 (* Emits missing annotation errors if the implicit instantiation produces underconstrained tvars *)
 val check_implicit_instantiation : Context.t -> Context.implicit_instantiation_check -> unit
+
+val get_inferred_types : Context.t -> Context.implicit_instantiation_check -> Type.t option SMap.t
