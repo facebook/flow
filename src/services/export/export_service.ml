@@ -71,7 +71,9 @@ let add_imports_of_builtins lib_exports index =
         let source = Export_index.Builtin module_name in
         let module_name = Modulename.String module_name in
         add_imports_of_module ~source ~module_name exports acc
-      | _ -> acc)
+      | Exports.Named name -> Export_index.add name Global Named acc
+      | Exports.NamedType name -> Export_index.add name Global NamedType acc
+      | Exports.Default -> (* impossible *) acc)
     ~init:index
     lib_exports
 

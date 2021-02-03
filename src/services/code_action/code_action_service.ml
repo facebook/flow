@@ -92,18 +92,19 @@ type text_edits = {
 let text_edits_of_import ~options ~reader ~src_dir ~ast kind name source =
   let from =
     match source with
-    | Export_index.Builtin from -> Ok from
+    | Export_index.Global -> None
+    | Export_index.Builtin from -> Some from
     | Export_index.File_key from ->
       (match Module_heaps.Reader.get_info ~reader ~audit:Expensive.ok from with
-      | None -> Error ()
+      | None -> None
       | Some info ->
         (match path_of_modulename src_dir info.Module_heaps.module_name with
-        | None -> Error ()
-        | Some from -> Ok from))
+        | None -> None
+        | Some from -> Some from))
   in
   match from with
-  | Error () -> Error ()
-  | Ok from ->
+  | None -> None
+  | Some from ->
     let title =
       match kind with
       | Export_index.Default -> Printf.sprintf "Import default from %s" from
@@ -116,7 +117,7 @@ let text_edits_of_import ~options ~reader ~src_dir ~ast kind name source =
       Autofix_imports.add_import ~options ~binding ~from ast
       |> Flow_lsp_conversions.flow_loc_patch_to_lsp_edits
     in
-    Ok { title; edits }
+    Some { title; edits }
 
 let suggest_imports ~options ~reader ~ast ~diagnostics ~exports ~name uri loc =
   let open Lsp in
@@ -137,8 +138,8 @@ let suggest_imports ~options ~reader ~ast ~diagnostics ~exports ~name uri loc =
     Export_index.ExportSet.fold
       (fun (source, export_kind) acc ->
         match text_edits_of_import ~options ~reader ~src_dir ~ast export_kind name source with
-        | Error () -> acc
-        | Ok { edits; title } ->
+        | None -> acc
+        | Some { edits; title } ->
           let command =
             CodeAction.Action
               {

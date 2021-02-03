@@ -395,8 +395,17 @@ let completion_item_of_autoimport
   match
     Code_action_service.text_edits_of_import ~options ~reader ~src_dir ~ast kind name source
   with
-  | Error () -> None
-  | Ok { Code_action_service.title; edits } ->
+  | None ->
+    {
+      ServerProt.Response.Completion.kind = Some Lsp.Completion.Variable;
+      name;
+      detail = name;
+      text_edits = [text_edit (name, ac_loc)];
+      sort_text = sort_text_of_rank 101 (* TODO: use a constant *);
+      preselect = false;
+      documentation = None;
+    }
+  | Some { Code_action_service.title; edits } ->
     let edits =
       Base.List.map
         ~f:(fun { Lsp.TextEdit.range; newText } ->
@@ -404,25 +413,23 @@ let completion_item_of_autoimport
           (loc, newText))
         edits
     in
-    Some
-      {
-        ServerProt.Response.Completion.kind = Some Lsp.Completion.Variable;
-        name;
-        detail = name;
-        text_edits = text_edit (name, ac_loc) :: edits;
-        sort_text = sort_text_of_rank 100 (* TODO: use a constant *);
-        preselect = false;
-        documentation = Some title;
-      }
+    {
+      ServerProt.Response.Completion.kind = Some Lsp.Completion.Variable;
+      name;
+      detail = name;
+      text_edits = text_edit (name, ac_loc) :: edits;
+      sort_text = sort_text_of_rank 100 (* TODO: use a constant *);
+      preselect = false;
+      documentation = Some title;
+    }
 
 let append_completion_items_of_autoimports ~options ~reader ~ast ~ac_loc auto_imports acc =
   let src_dir = src_dir_of_loc ac_loc in
   Base.List.fold_left
     ~init:acc
     ~f:(fun acc auto_import ->
-      match completion_item_of_autoimport ~options ~reader ~src_dir ~ast ~ac_loc auto_import with
-      | Some item -> item :: acc
-      | None -> acc)
+      let item = completion_item_of_autoimport ~options ~reader ~src_dir ~ast ~ac_loc auto_import in
+      item :: acc)
     auto_imports
 
 (* env is all visible bound names at cursor *)

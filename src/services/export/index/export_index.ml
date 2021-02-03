@@ -12,6 +12,7 @@ type kind =
   | Namespace
 
 and source =
+  | Global
   | Builtin of string  (** [Builtin "foo"] refers to a `declare module "foo"` lib *)
   | File_key of File_key.t
 

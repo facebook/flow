@@ -17,7 +17,7 @@ type t = export list [@@deriving show { with_path = false }]
 
 module Export_sig = struct
   type 'loc t = {
-    exports: 'loc Type_sig_pack.exports;
+    exports: 'loc Type_sig_pack.exports option;
     export_def: 'loc Type_sig_pack.packed option;
     module_refs: string Type_sig_collections.Module_refs.t;
     local_defs: 'loc Type_sig_pack.packed_def Type_sig_collections.Local_defs.t;
@@ -37,7 +37,7 @@ module Export_sig = struct
         patterns;
       } =
     {
-      exports;
+      exports = Some exports;
       export_def;
       module_refs;
       local_defs;
@@ -46,9 +46,20 @@ module Export_sig = struct
       patterns = Some patterns;
     }
 
+  let of_builtins ~module_refs ~local_defs ~remote_refs =
+    {
+      exports = None;
+      export_def = None;
+      module_refs;
+      local_defs;
+      remote_refs;
+      pattern_defs = None;
+      patterns = None;
+    }
+
   let of_builtin_module ~module_refs ~local_defs ~remote_refs ~exports ~export_def =
     {
-      exports;
+      exports = Some exports;
       export_def;
       module_refs;
       local_defs;
@@ -342,21 +353,50 @@ module CJS = struct
     [] |> add_default_exports type_sig |> add_type_exports types
 end
 
+let add_global =
+  let add_named name acc =
+    if String.contains name '$' then
+      acc
+    else
+      Named name :: acc
+  in
+  fun global_sig name index acc ->
+    let def = local_def_of_index global_sig index in
+    match def with
+    | Type_sig.Variable _ ->
+      add_named_type acc name (Eval.def global_sig empty_seen def) |> add_named name
+    | Type_sig.FunBinding _
+    | Type_sig.DeclareFun _ ->
+      add_named name acc
+    | Type_sig.TypeAlias _
+    | Type_sig.Interface _
+    | Type_sig.OpaqueType _ ->
+      NamedType name :: acc
+    | Type_sig.ClassBinding _
+    | Type_sig.DeclareClassBinding _
+    | Type_sig.EnumBinding _
+    | Type_sig.DisabledEnumBinding _ ->
+      add_named name (NamedType name :: acc)
+
 let of_sig export_sig : t =
   match export_sig.Export_sig.exports with
-  | Type_sig_pack.ESExports exp -> ESM.exports export_sig exp
-  | Type_sig_pack.CJSExports exp -> CJS.exports export_sig exp
+  | Some (Type_sig_pack.ESExports exp) -> ESM.exports export_sig exp
+  | Some (Type_sig_pack.CJSExports exp) -> CJS.exports export_sig exp
+  | None -> failwith "unexpected exports in global scope"
 
 let of_module type_sig : t = type_sig |> Export_sig.of_module |> of_sig
 
-let of_builtins { Packed_type_sig.Builtins.modules; module_refs; local_defs; remote_refs; _ } =
-  SMap.fold
-    (fun name { Packed_type_sig.Builtins.loc = _; exports; export_def } acc ->
-      let export_sig =
-        Export_sig.of_builtin_module ~module_refs ~local_defs ~remote_refs ~exports ~export_def
-      in
-      Module (name, of_sig export_sig) :: acc)
-    modules
-    []
+let of_builtins { Packed_type_sig.Builtins.modules; module_refs; local_defs; remote_refs; globals }
+    =
+  let global_sig = Export_sig.of_builtins ~module_refs ~local_defs ~remote_refs in
+  []
+  |> SMap.fold (add_global global_sig) globals
+  |> SMap.fold
+       (fun name { Packed_type_sig.Builtins.loc = _; exports; export_def } acc ->
+         let export_sig =
+           Export_sig.of_builtin_module ~module_refs ~local_defs ~remote_refs ~exports ~export_def
+         in
+         Module (name, of_sig export_sig) :: acc)
+       modules
 
 let empty = []

@@ -33,6 +33,34 @@ export default (suite(
               isIncomplete: false,
               items: [
                 {
+                  label: 'undefined',
+                  kind: 6,
+                  detail: 'undefined',
+                  sortText: '00000000000000000101',
+                  insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {line: 2, character: 0},
+                      end: {line: 2, character: 1},
+                    },
+                    newText: 'undefined',
+                  },
+                },
+                {
+                  label: 'Function',
+                  kind: 6,
+                  detail: 'Function',
+                  sortText: '00000000000000000101',
+                  insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {line: 2, character: 0},
+                      end: {line: 2, character: 1},
+                    },
+                    newText: 'Function',
+                  },
+                },
+                {
                   label: 'foobar',
                   kind: 6,
                   detail: 'foobar',
@@ -56,6 +84,30 @@ export default (suite(
                         end: {line: 2, character: 0},
                       },
                       newText: 'import foobar from "./foobar";\n\n',
+                    },
+                  ],
+                },
+                {
+                  label: 'Foo',
+                  kind: 6,
+                  detail: 'Foo',
+                  documentation: {kind: 'markdown', value: 'Import from ./foo'},
+                  sortText: '00000000000000000100',
+                  insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {line: 2, character: 0},
+                      end: {line: 2, character: 1},
+                    },
+                    newText: 'Foo',
+                  },
+                  additionalTextEdits: [
+                    {
+                      range: {
+                        start: {line: 2, character: 0},
+                        end: {line: 2, character: 0},
+                      },
+                      newText: 'import {Foo} from "./foo";\n\n',
                     },
                   ],
                 },
@@ -117,49 +169,7 @@ export default (suite(
                   label: 'foo',
                   kind: 6,
                   detail: 'foo',
-                  documentation: {
-                    kind: 'markdown',
-                    value: 'Import from LibA',
-                  },
-                  sortText: '00000000000000000100',
-                  insertTextFormat: 1,
-                  textEdit: {
-                    range: {
-                      start: {
-                        line: 2,
-                        character: 0,
-                      },
-                      end: {
-                        line: 2,
-                        character: 1,
-                      },
-                    },
-                    newText: 'foo',
-                  },
-                  additionalTextEdits: [
-                    {
-                      range: {
-                        start: {
-                          line: 2,
-                          character: 0,
-                        },
-                        end: {
-                          line: 2,
-                          character: 0,
-                        },
-                      },
-                      newText: 'import {foo} from "LibA";\n\n',
-                    },
-                  ],
-                },
-                {
-                  label: 'Foo',
-                  kind: 6,
-                  detail: 'Foo',
-                  documentation: {
-                    kind: 'markdown',
-                    value: 'Import from ./foo',
-                  },
+                  documentation: {kind: 'markdown', value: 'Import from LibA'},
                   sortText: '00000000000000000100',
                   insertTextFormat: 1,
                   textEdit: {
@@ -167,7 +177,7 @@ export default (suite(
                       start: {line: 2, character: 0},
                       end: {line: 2, character: 1},
                     },
-                    newText: 'Foo',
+                    newText: 'foo',
                   },
                   additionalTextEdits: [
                     {
@@ -175,7 +185,7 @@ export default (suite(
                         start: {line: 2, character: 0},
                         end: {line: 2, character: 0},
                       },
-                      newText: 'import {Foo} from "./foo";\n\n',
+                      newText: 'import {foo} from "LibA";\n\n',
                     },
                   ],
                 },
