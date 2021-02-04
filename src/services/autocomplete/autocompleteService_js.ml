@@ -387,11 +387,16 @@ let local_value_identifiers ~options ~reader ~cx ~ac_loc ~file_sig ~ast ~typed_a
 let src_dir_of_loc ac_loc =
   Loc.source ac_loc |> Base.Option.map ~f:(fun key -> File_key.to_string key |> Filename.dirname)
 
+let text_edit_options options =
+  Js_layout_generator.{ default_opts with single_quotes = Options.format_single_quotes options }
+
+let flow_text_edit_of_lsp_text_edit { Lsp.TextEdit.range; newText } =
+  let loc = Flow_lsp_conversions.lsp_range_to_flow_loc range in
+  (loc, newText)
+
 let completion_item_of_autoimport
     ~options ~reader ~src_dir ~ast ~ac_loc { Export_search.name; source; kind } =
-  let options =
-    Js_layout_generator.{ default_opts with single_quotes = Options.format_single_quotes options }
-  in
+  let options = text_edit_options options in
   match
     Code_action_service.text_edits_of_import ~options ~reader ~src_dir ~ast kind name source
   with
@@ -406,13 +411,7 @@ let completion_item_of_autoimport
       documentation = None;
     }
   | Some { Code_action_service.title; edits } ->
-    let edits =
-      Base.List.map
-        ~f:(fun { Lsp.TextEdit.range; newText } ->
-          let loc = Flow_lsp_conversions.lsp_range_to_flow_loc range in
-          (loc, newText))
-        edits
-    in
+    let edits = Base.List.map ~f:flow_text_edit_of_lsp_text_edit edits in
     {
       ServerProt.Response.Completion.kind = Some Lsp.Completion.Variable;
       name;
@@ -528,22 +527,97 @@ let autocomplete_id
   in
   AcResult { result; errors_to_log }
 
+let rec binds_react = function
+  | File_sig.With_ALoc.BindIdent (_, name) -> name = "React"
+  | File_sig.With_ALoc.BindNamed bindings ->
+    Base.List.exists ~f:(fun (_remote, local) -> binds_react local) bindings
+
+(** Determines whether to autoimport React when autocompleting a JSX element.
+
+    By default JSX transforms into [React.createElement] which needs [React] to be
+    in scope. However, when [react.runtime=automatic] is set in [.flowconfig], this
+    happens behind the scenes.
+
+    We use a bit of a heuristic here. If [React] is imported or required anywhere
+    in the file, we won't autoimport it, even if it's not in scope for the JSX
+    component being completed. This is because imports are top-level so we'd cause
+    potential shadowing issues elsewhere in the file. *)
+let should_autoimport_react ~options ~imports ~file_sig =
+  if imports then
+    match Options.react_runtime options with
+    | Options.ReactRuntimeAutomatic -> false
+    | Options.ReactRuntimeClassic ->
+      let open File_sig.With_ALoc in
+      let requires_react =
+        Base.List.exists
+          ~f:(function
+            | Require { bindings = Some bindings; _ } -> binds_react bindings
+            | Import { ns = Some (_, "React"); _ } -> true
+            | Import { named; _ } ->
+              SMap.exists
+                (fun _remote local -> SMap.exists (fun name _locs -> name = "React") local)
+                named
+            | Require { bindings = None; _ }
+            | Import0 _
+            | ImportDynamic _ ->
+              false)
+          file_sig.module_sig.requires
+      in
+      not requires_react
+  else
+    false
+
 let autocomplete_jsx_element
     ~env ~options ~reader ~cx ~ac_loc ~file_sig ~ast ~typed_ast ~imports ~tparams ~token =
-  autocomplete_id
-    ~env
-    ~options
-    ~reader
-    ~cx
-    ~ac_loc
-    ~file_sig
-    ~ast
-    ~typed_ast
-    ~include_super:false
-    ~include_this:false
-    ~imports
-    ~tparams
-    ~token
+  let results =
+    autocomplete_id
+      ~env
+      ~options
+      ~reader
+      ~cx
+      ~ac_loc
+      ~file_sig
+      ~ast
+      ~typed_ast
+      ~include_super:false
+      ~include_this:false
+      ~imports
+      ~tparams
+      ~token
+  in
+  match results with
+  | AcResult { result; errors_to_log } ->
+    if should_autoimport_react ~options ~imports ~file_sig then
+      let open ServerProt.Response.Completion in
+      let options = text_edit_options options in
+      let import_edit =
+        let src_dir = src_dir_of_loc (loc_of_aloc ~reader ac_loc) in
+        let kind = Export_index.Namespace in
+        let name = "React" in
+        (* TODO: make this configurable between React and react *)
+        let source = Export_index.Builtin "react" in
+        Code_action_service.text_edits_of_import ~options ~reader ~src_dir ~ast kind name source
+      in
+      match import_edit with
+      | None -> results
+      | Some { Code_action_service.title = _; edits } ->
+        let edits = Base.List.map ~f:flow_text_edit_of_lsp_text_edit edits in
+        let { items; _ } = result in
+        let items =
+          Base.List.map
+            ~f:(fun item ->
+              let { text_edits; _ } = item in
+              let text_edits = text_edits @ edits in
+              { item with text_edits })
+            items
+        in
+        let result = { result with items } in
+        AcResult { result; errors_to_log }
+    else
+      results
+  | AcEmpty _
+  | AcFatalError _ ->
+    results
 
 (* Similar to autocomplete_member, except that we're not directly given an
    object type whose members we want to enumerate: instead, we are given a
