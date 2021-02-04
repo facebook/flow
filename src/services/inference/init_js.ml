@@ -71,7 +71,7 @@ let infer_lib_file ~ccx ~options ~exclude_syms lib_file ast file_sig =
       { metadata with checked = false; weak = false })
   in
   let rev_table = lazy (ALoc.make_empty_reverse_table ()) in
-  let cx = Context.make ccx metadata lib_file rev_table Files.lib_module_ref Context.Checking in
+  let cx = Context.make ccx metadata lib_file rev_table Files.lib_module_ref Context.InitLib in
   let syms = Infer.infer_lib_file cx ast ~exclude_syms ~lint_severities ~file_sig in
 
   if verbose != None then
@@ -196,7 +196,7 @@ let init ~options ~reader lib_files =
         { metadata with checked = false; weak = false })
     in
     let rev_table = lazy (ALoc.make_empty_reverse_table ()) in
-    Context.make ccx metadata File_key.Builtins rev_table Files.lib_module_ref Context.Checking
+    Context.make ccx metadata File_key.Builtins rev_table Files.lib_module_ref Context.InitLib
   in
   Flow_js_utils.mk_builtins master_cx;
 

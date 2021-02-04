@@ -157,7 +157,9 @@ let merge_context_generic ~options ~reader ~get_ast_unsafe ~get_file_sig_unsafe 
     Merge_js.merge_component ~opts ~getters ~file_sigs component file_reqs dep_cxs master_cx
   in
   match phase with
-  | Context.Normalizing -> failwith "unexpected phase: Normalizing"
+  | Context.Normalizing
+  | Context.InitLib ->
+    failwith (Utils_js.spf "unexpected phase: %s" (Context.string_of_phase phase))
   | Context.Merging -> MergeResult { cx = full_cx; master_cx }
   | Context.Checking ->
     let coverage =

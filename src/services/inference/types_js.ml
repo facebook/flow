@@ -477,7 +477,8 @@ let remove_old_results phase current_results file =
   let new_coverage =
     match phase with
     | Context.Merging
-    | Context.Normalizing ->
+    | Context.Normalizing
+    | Context.InitLib ->
       coverage
     | Context.Checking -> FilenameMap.remove file coverage
   in

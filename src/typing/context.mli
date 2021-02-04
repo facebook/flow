@@ -81,9 +81,12 @@ type metadata = {
 }
 
 type phase =
+  | InitLib
   | Checking
   | Merging
   | Normalizing
+
+val string_of_phase : phase -> string
 
 type type_assert_kind =
   | Is

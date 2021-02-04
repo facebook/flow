@@ -181,9 +181,16 @@ type component_t = {
 }
 
 type phase =
+  | InitLib
   | Checking
   | Merging
   | Normalizing
+
+let string_of_phase = function
+  | InitLib -> "InitLib"
+  | Checking -> "Checking"
+  | Merging -> "Merging"
+  | Normalizing -> "Normalizing"
 
 type t = {
   ccx: component_t;

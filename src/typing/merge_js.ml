@@ -622,7 +622,12 @@ let merge_component ~opts:(Merge_options { phase; _ } as opts) =
   match phase with
   | Context.Checking -> check_component ~opts
   | Context.Merging -> merge_component ~opts
-  | Context.Normalizing -> failwith "Normalizer should not be accessible through merge_js.ml"
+  | Context.InitLib
+  | Context.Normalizing ->
+    failwith
+      (Utils_js.spf
+         "%s phase should not be accessible through merge_js.ml"
+         (Context.string_of_phase phase))
 
 (****************** signature contexts *********************)
 
