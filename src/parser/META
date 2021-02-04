@@ -1,5 +1,5 @@
 name="parser_flow"
-version="0.143.1"
+version="0.144.0"
 requires = "sedlex wtf8"
 description="flow parser ocamlfind package"
 archive(byte)="parser_flow.cma"
