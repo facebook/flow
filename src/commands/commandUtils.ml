@@ -481,6 +481,12 @@ let read_config_or_exit ?(enforce_warnings = true) ?allow_cache flowconfig_path 
     config
   | Error err -> flowconfig_multi_error [err]
 
+let read_config_and_hash_or_exit ?enforce_warnings ?allow_cache flowconfig_path =
+  let config = read_config_or_exit ?enforce_warnings ?allow_cache flowconfig_path in
+  (* allow cache here because we just read the config, don't need to do it again *)
+  let hash = FlowConfig.get_hash ~allow_cache:true flowconfig_path |> Xx.to_string in
+  (config, hash)
+
 let check_version required_version =
   match required_version with
   | None -> Ok ()
@@ -1144,7 +1150,13 @@ let no_cgroup_flag =
            ~doc:"Don't automatically run this command in a cgroup (if cgroups are available)")
 
 let make_options
-    ~flowconfig_name ~flowconfig ~lazy_mode ~root ~options_flags ~saved_state_options_flags =
+    ~flowconfig_name
+    ~flowconfig_hash
+    ~flowconfig
+    ~lazy_mode
+    ~root
+    ~options_flags
+    ~saved_state_options_flags =
   let open Options_flags in
   let open Saved_state_flags in
   let temp_dir =
@@ -1297,6 +1309,7 @@ let make_options
     opt_automatic_require_default = FlowConfig.automatic_require_default flowconfig;
     opt_format;
     opt_autoimports = Base.Option.value (FlowConfig.autoimports flowconfig) ~default:false;
+    opt_flowconfig_hash = flowconfig_hash;
   }
 
 let make_env flowconfig_name connect_flags root =
