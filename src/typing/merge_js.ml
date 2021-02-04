@@ -89,6 +89,27 @@ module Reqs = struct
       { reqs with decls }
 end
 
+module ImplicitInstantiationKit : Implicit_instantiation.KIT = Implicit_instantiation.Make (struct
+  type output = unit
+
+  let on_constant_tparam _ _ = ()
+
+  let on_pinned_tparam _ _ _ = ()
+
+  let on_missing_bounds cx name ~tparam_binder_reason ~instantiation_reason =
+    Flow_js.add_output
+      cx
+      (Error_message.EImplicitInstantiationUnderconstrainedError
+         { bound = name; reason_call = instantiation_reason; reason_l = tparam_binder_reason })
+
+  let on_upper_non_t cx name u ~tparam_binder_reason ~instantiation_reason:_ =
+    let msg = name ^ " contains a non-Type.t upper bound " ^ Type.string_of_use_ctor u in
+    Flow_js.add_output
+      cx
+      (Error_message.EImplicitInstantiationTemporaryError
+         (Reason.aloc_of_reason tparam_binder_reason, msg))
+end)
+
 (* Connect the builtins object in master_cx to the builtins reference in some
    arbitrary cx. *)
 let implicit_require cx master_cx cx_to =
@@ -300,7 +321,11 @@ let detect_non_voidable_properties cx =
 let check_implicit_instantiations cx =
   if Context.run_post_inference_implicit_instantiation cx then
     let implicit_instantiation_checks = Context.implicit_instantiation_checks cx in
-    List.iter (Implicit_instantiation.check_implicit_instantiation cx) implicit_instantiation_checks
+    List.iter
+      (fun instantiation ->
+        let _ = ImplicitInstantiationKit.run cx instantiation in
+        ())
+      implicit_instantiation_checks
 
 let merge_trust_var constr =
   Trust_constraint.(

@@ -5,7 +5,33 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
-(* Emits missing annotation errors if the implicit instantiation produces underconstrained tvars *)
-val check_implicit_instantiation : Context.t -> Context.implicit_instantiation_check -> unit
+module type OBSERVER = sig
+  type output
 
-val get_inferred_types : Context.t -> Context.implicit_instantiation_check -> Type.t option SMap.t
+  val on_constant_tparam : Context.t -> string -> output
+
+  val on_pinned_tparam : Context.t -> string -> Type.t -> output
+
+  val on_missing_bounds :
+    Context.t ->
+    string ->
+    tparam_binder_reason:Reason.reason ->
+    instantiation_reason:Reason.reason ->
+    output
+
+  val on_upper_non_t :
+    Context.t ->
+    string ->
+    Type.use_t ->
+    tparam_binder_reason:Reason.reason ->
+    instantiation_reason:Reason.reason ->
+    output
+end
+
+module type KIT = sig
+  type output
+
+  val run : Context.t -> Context.implicit_instantiation_check -> output SMap.t
+end
+
+module Make (Observer : OBSERVER) : KIT with type output = Observer.output
