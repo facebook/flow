@@ -5,6 +5,7 @@
 - [Object rest properties](https://github.com/tc39/proposal-object-rest-spread) (`let {foo, ...rest} = obj`) now retain the indexer of the object being destructured. In this example, if `obj` is `{[string]: string}`, then `rest` is also `{[string]: string}`.
 - Made the parser recover gracefully in some cases when in the middle of typing, allowing language services to work better in the rest of the file
 - Improved experimental cross-module autocomplete to include globals and built-in modules. Can be enabled with the `autoimports=true` flowconfig option.
+- Fixed a bug so that the server no longer exits when merely `touch`-ing the `.flowconfig` without changing it
 
 ### 0.143.1
 
