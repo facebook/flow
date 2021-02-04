@@ -528,6 +528,23 @@ let autocomplete_id
   in
   AcResult { result; errors_to_log }
 
+let autocomplete_jsx_element
+    ~env ~options ~reader ~cx ~ac_loc ~file_sig ~ast ~typed_ast ~imports ~tparams ~token =
+  autocomplete_id
+    ~env
+    ~options
+    ~reader
+    ~cx
+    ~ac_loc
+    ~file_sig
+    ~ast
+    ~typed_ast
+    ~include_super:false
+    ~include_this:false
+    ~imports
+    ~tparams
+    ~token
+
 (* Similar to autocomplete_member, except that we're not directly given an
    object type whose members we want to enumerate: instead, we are given a
    component class and we want to enumerate the members of its declared props
@@ -855,6 +872,20 @@ let autocomplete_get_results
         in_optional_chain
         ac_loc
         ~tparams )
+  | Some (tparams, ac_loc, Ac_jsx_element { token }) ->
+    ( "Ac_jsx_element",
+      autocomplete_jsx_element
+        ~env
+        ~options
+        ~reader
+        ~cx
+        ~ac_loc
+        ~file_sig
+        ~ast
+        ~typed_ast
+        ~imports
+        ~tparams
+        ~token )
   | Some
       (tparams, ac_loc, Ac_jsx_attribute { attribute_name; used_attr_names; component_t; has_value })
     ->

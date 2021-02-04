@@ -23,6 +23,7 @@ type autocomplete_type =
       obj_type: Type.t;
       in_optional_chain: bool;
     }  (** member expressions *)
+  | Ac_jsx_element of { token: string }  (** JSX element name *)
   | Ac_jsx_attribute of {
       attribute_name: string;
       used_attr_names: SSet.t;
@@ -144,6 +145,15 @@ class process_request_searcher (from_trigger_character : bool) (cursor : Loc.t) 
     method! jsx_opening_element elt =
       let open Flow_ast.JSX in
       let (_, Opening.{ name = component_name; attributes; self_closing = _ }) = elt in
+
+      (match component_name with
+      | Identifier ((loc, _), { Identifier.name; comments = _ }) ->
+        if this#covers_target loc then this#find loc (Ac_jsx_element { token = name })
+      | NamespacedName _
+      | MemberExpression _ ->
+        (* TODO: these are rare so we haven't implemented them yet *)
+        ());
+
       let (used_attr_names, found) =
         List.fold_left
           (fun (used_attr_names, found) -> function
@@ -175,6 +185,19 @@ class process_request_searcher (from_trigger_character : bool) (cursor : Loc.t) 
             (Ac_jsx_attribute { attribute_name; used_attr_names; component_t; has_value }))
         found;
       super#jsx_opening_element elt
+
+    method! jsx_closing_element elem =
+      let open Flow_ast.JSX in
+      let open Flow_ast.JSX.Closing in
+      let (_, { name }) = elem in
+      match name with
+      | Identifier ((loc, _), { Identifier.name; comments = _ }) ->
+        if this#covers_target loc then this#find loc (Ac_jsx_element { token = name });
+        elem
+      | NamespacedName _
+      | MemberExpression _ ->
+        (* TODO: these are rare so we haven't implemented them yet *)
+        super#jsx_closing_element elem
 
     method! jsx_attribute_value value =
       let open Flow_ast.JSX.Attribute in
