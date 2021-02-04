@@ -256,9 +256,7 @@ let infer_and_merge ~root filename ast file_sig =
       get_docblock_unsafe = (fun _ -> stub_docblock);
     }
   in
-  let ((cx, _, tast), _other_cxs) =
-    Merge_js.merge_component ~opts ~getters ~file_sigs (Nel.one filename) reqs [] master_cx
-  in
+  let (cx, _, tast) = Merge_js.check_file ~opts ~getters ~file_sigs filename reqs [] master_cx in
   (cx, tast)
 
 let check_content ~filename ~content =
