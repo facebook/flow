@@ -432,7 +432,7 @@ let get_def_info ~reader ~options env profiling file_key ast_info loc :
             Types_js.ensure_checked_dependencies ~options ~reader ~env file_key file_sig
           in
           Lwt.return
-          @@ Merge_service.merge_contents_context ~reader options file_key ast info file_sig)
+          @@ Merge_service.check_contents_context ~reader options file_key ast info file_sig)
     in
     Lwt.return cx
   in

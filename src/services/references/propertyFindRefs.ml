@@ -126,7 +126,7 @@ let property_find_refs_in_file ~reader options ast_info file_key def_info name =
     Ok local_defs
   else (
     set_get_refs_hook ~reader potential_refs potential_matching_literals name;
-    let (cx, _) = Merge_service.merge_contents_context ~reader options file_key ast info file_sig in
+    let (cx, _) = Merge_service.check_contents_context ~reader options file_key ast info file_sig in
     unset_hooks ();
     let literal_prop_refs_result =
       (* Lazy to avoid this computation if there are no potentially-relevant object literals to
@@ -307,7 +307,7 @@ let find_related_defs_in_file ~reader options name file =
   Type_inference_hooks_js.set_instance_to_obj_hook hook;
   let cx_result =
     get_ast_result ~reader file >>| fun (ast, file_sig, docblock) ->
-    Merge_service.merge_contents_context ~reader options file ast docblock file_sig
+    Merge_service.check_contents_context ~reader options file ast docblock file_sig
   in
   unset_hooks ();
   cx_result >>= fun (cx, _) ->

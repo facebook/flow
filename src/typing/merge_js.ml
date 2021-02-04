@@ -32,10 +32,20 @@ module Reqs = struct
   type decl = ALocSet.t * Modulename.t
 
   type t = {
+    (* impls: edges between files within the component *)
     impls: impl RequireMap.t;
+    (* dep_impls: edges from files in the component to cxs of direct dependencies,
+     * when implementations are found *)
     dep_impls: dep_impl RequireMap.t;
+    (* unchecked: edges from files in the component to files which are known to
+     * exist are not checked (no @flow, @noflow, unparsed). Note that these
+     * dependencies might be provided by a (typed) libdef, but we don't know yet. *)
     unchecked: unchecked RequireMap.t;
+    (* res: edges between files in the component and resource files, labeled
+     * with the requires they denote. *)
     res: res RequireMap.t;
+    (* decls: edges between files in the component and libraries, classified
+     * by requires (when implementations of such requires are not found). *)
     decls: decl RequireMap.t;
   }
 
@@ -498,6 +508,9 @@ type merge_getters = {
   get_docblock_unsafe: File_key.t -> Docblock.t;
 }
 
+type output =
+  Context.t * (ALoc.t, ALoc.t) Flow_ast.Program.t * (ALoc.t, ALoc.t * Type.t) Flow_ast.Program.t
+
 (* Merge a component with its "implicit requires" and "explicit requires." The
    implicit requires are those defined in libraries. For the explicit
    requires, we need to merge only those parts of the dependency graph that the
@@ -582,17 +595,12 @@ let merge_component ~opts ~getters ~file_sigs component reqs dep_cxs master_cx =
    that the input component is of size 1 and all imports have already been resolved
    and optimized.
 *)
-let check_component ~opts ~getters ~file_sigs singleton_component reqs dep_cxs master_cx =
+let check_file ~opts ~getters ~file_sigs filename reqs dep_cxs master_cx =
   let (Merge_options { phase; metadata; lint_severities; strict_mode; _ }) = opts in
   let { get_ast_unsafe; get_aloc_table_unsafe; get_docblock_unsafe } = getters in
-
-  let (filename, tl) = singleton_component in
-  assert (List.length tl = 0);
-
-  let aloc_tables = get_aloc_tables ~get_aloc_table_unsafe singleton_component in
+  let aloc_tables = get_aloc_tables ~get_aloc_table_unsafe (Nel.one filename) in
   let sig_cx = Context.make_sig () in
   let ccx = Context.make_ccx sig_cx aloc_tables in
-
   let info = get_docblock_unsafe filename in
   let metadata = Context.docblock_overrides info metadata in
   let module_ref = Files.module_ref filename in
@@ -616,18 +624,7 @@ let check_component ~opts ~getters ~file_sigs singleton_component reqs dep_cxs m
 
   (* Post-inference checks *)
   post_merge_checks cx ast tast metadata file_sig;
-  Nel.one (cx, ast, tast)
-
-let merge_component ~opts:(Merge_options { phase; _ } as opts) =
-  match phase with
-  | Context.Checking -> check_component ~opts
-  | Context.Merging -> merge_component ~opts
-  | Context.InitLib
-  | Context.Normalizing ->
-    failwith
-      (Utils_js.spf
-         "%s phase should not be accessible through merge_js.ml"
-         (Context.string_of_phase phase))
+  (cx, ast, tast)
 
 (****************** signature contexts *********************)
 
