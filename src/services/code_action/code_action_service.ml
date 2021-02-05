@@ -174,7 +174,8 @@ let code_actions_of_errors ~options ~reader ~env ~ast ~diagnostics ~errors uri l
           create_suggestion ~diagnostics ~original ~suggestion uri error_loc :: actions
         else
           actions
-      | Error_message.EBuiltinLookupFailed { reason; name = Some name } ->
+      | Error_message.EBuiltinLookupFailed { reason; name = Some name }
+        when Options.autoimports options ->
         let error_loc = Reason.loc_of_reason reason in
         if Loc.contains error_loc loc then
           let { ServerEnv.exports; _ } = env in
