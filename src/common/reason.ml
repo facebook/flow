@@ -751,9 +751,13 @@ let desc_of_reason =
     else
       loop r.desc
 
-let internal_name name = spf ".%s" name
-
 let is_internal_name name = String.length name >= 1 && name.[0] = '.'
+
+let internal_name name =
+  if is_internal_name name then
+    name
+  else
+    spf ".%s" name
 
 let internal_module_name name = spf ".$module__%s" name
 
