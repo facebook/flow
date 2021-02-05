@@ -262,6 +262,28 @@ let add_import_tests =
       |} in
       assert_patch ~ctxt expected binding from contents );
 
+    ( "import_type_in_existing_type" >:: fun ctxt ->
+      let binding = (Export_index.NamedType, "IBar") in
+      let from = "./foo" in
+      let contents = {|
+        import type {IFoo} from "./foo";
+      |} in
+      let expected = {|
+        import type {IBar, IFoo} from "./foo";
+      |} in
+      assert_patch ~ctxt expected binding from contents );
+
+    ( "import_type_in_existing_type_unsorted" >:: fun ctxt ->
+      let binding = (Export_index.NamedType, "IBar") in
+      let from = "./foo" in
+      let contents = {|
+        import type {IFoo, IBaz} from "./foo";
+      |} in
+      let expected = {|
+        import type {IFoo, IBaz, IBar} from "./foo";
+      |} in
+      assert_patch ~ctxt expected binding from contents );
+
     ( "import_type_above_existing_named" >:: fun ctxt ->
       let binding = (Export_index.NamedType, "IFoo") in
       let from = "./foo" in
