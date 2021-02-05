@@ -10,7 +10,6 @@ type get_ast_return = Loc.t Flow_ast.Comment.t list * (ALoc.t, ALoc.t) Flow_ast.
 type merge_options =
   | Merge_options of {
       new_signatures: bool;
-      phase: Context.phase;
       metadata: Context.metadata;
       lint_severities: Severity.severity LintSettings.t;
       strict_mode: StrictModeSettings.t;

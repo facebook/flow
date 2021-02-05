@@ -521,7 +521,6 @@ let post_merge_checks cx ast tast metadata file_sig =
 type merge_options =
   | Merge_options of {
       new_signatures: bool;
-      phase: Context.phase;
       metadata: Context.metadata;
       lint_severities: Severity.severity LintSettings.t;
       strict_mode: StrictModeSettings.t;
@@ -569,7 +568,7 @@ type output =
    5. Link the local references to libraries in master_cx and component_cxs.
 *)
 let merge_component ~opts ~getters ~file_sigs component reqs dep_cxs master_cx =
-  let (Merge_options { phase; metadata; lint_severities; strict_mode; _ }) = opts in
+  let (Merge_options { metadata; lint_severities; strict_mode; _ }) = opts in
   let { get_ast_unsafe; get_aloc_table_unsafe; get_docblock_unsafe } = getters in
   let aloc_tables = get_aloc_tables ~get_aloc_table_unsafe component in
   let sig_cx = Context.make_sig () in
@@ -583,7 +582,7 @@ let merge_component ~opts ~getters ~file_sigs component reqs dep_cxs master_cx =
         let metadata = Context.docblock_overrides info metadata in
         let module_ref = Files.module_ref filename in
         let rev_table = get_aloc_table_rev filename aloc_tables in
-        let cx = Context.make ccx metadata filename rev_table module_ref phase in
+        let cx = Context.make ccx metadata filename rev_table module_ref Context.Merging in
 
         (* Builtins *)
         if !need_merge_master_cx then (
@@ -621,7 +620,7 @@ let merge_component ~opts ~getters ~file_sigs component reqs dep_cxs master_cx =
    and optimized.
 *)
 let check_file ~opts ~getters ~file_sigs filename reqs dep_cxs master_cx =
-  let (Merge_options { phase; metadata; lint_severities; strict_mode; _ }) = opts in
+  let (Merge_options { metadata; lint_severities; strict_mode; _ }) = opts in
   let { get_ast_unsafe; get_aloc_table_unsafe; get_docblock_unsafe } = getters in
   let aloc_tables = get_aloc_tables ~get_aloc_table_unsafe (Nel.one filename) in
   let sig_cx = Context.make_sig () in
@@ -630,7 +629,7 @@ let check_file ~opts ~getters ~file_sigs filename reqs dep_cxs master_cx =
   let metadata = Context.docblock_overrides info metadata in
   let module_ref = Files.module_ref filename in
   let rev_table = get_aloc_table_rev filename aloc_tables in
-  let cx = Context.make ccx metadata filename rev_table module_ref phase in
+  let cx = Context.make ccx metadata filename rev_table module_ref Context.Checking in
   let (comments, ast) = get_ast_unsafe filename in
   let lint_severities = get_lint_severities metadata strict_mode lint_severities in
   let file_sig = FilenameMap.find filename file_sigs in

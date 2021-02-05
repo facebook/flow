@@ -55,8 +55,6 @@ module type PHASE_CONFIG = sig
 
   type output
 
-  val phase : Context.phase
-
   val get_ast_unsafe : reader:reader -> File_key.t -> Merge_js.get_ast_return
 
   val get_file_sig_unsafe : reader:reader -> Utils_js.FilenameMap.key -> File_sig.With_ALoc.t
@@ -95,8 +93,6 @@ module Process_unit (C : PHASE_CONFIG) = struct
   type input = C.input
 
   type output = C.output
-
-  let phase = C.phase
 
   let reqs_of_input ~reader input required =
     (* dep_cxs: the copied signature contexts of such dependencies. *)
@@ -162,9 +158,7 @@ module Process_unit (C : PHASE_CONFIG) = struct
       Parsing_heaps.Reader_dispatcher.get_sig_ast_aloc_table_unsafe ~reader
     in
     let new_signatures = Options.new_signatures options in
-    let opts =
-      Merge_js.Merge_options { new_signatures; phase; metadata; lint_severities; strict_mode }
-    in
+    let opts = Merge_js.Merge_options { new_signatures; metadata; lint_severities; strict_mode } in
     let getters =
       {
         Merge_js.get_ast_unsafe = C.get_ast_unsafe ~reader;
@@ -176,8 +170,6 @@ module Process_unit (C : PHASE_CONFIG) = struct
 end
 
 module Merge_config = struct
-  let phase = Context.Merging
-
   (* The "merge" phase needs to consider _all_ files in a strongly connected component
    * at once, to handle possible recursive definitions. *)
   type input = File_key.t Nel.t
@@ -422,8 +414,6 @@ module Check_config = struct
   (* The "check" phase only needs to consider _one file_ at a time. *)
   type input = File_key.t
 
-  let phase = Context.Checking
-
   type output = {
     cx: Context.t;
     master_cx: Context.sig_t;
@@ -494,7 +484,6 @@ let check_file options ~reader file =
    resolved. This is used by commands that make up a context on the fly. *)
 let check_contents_context ~reader options file ast info file_sig =
   let (_, { Flow_ast.Program.all_comments; _ }) = ast in
-  let phase = Context.Checking in
   let aloc_ast = Ast_loc_utils.loc_to_aloc_mapper#program ast in
   let reader = Abstract_state_reader.State_reader reader in
   let file_sig = File_sig.abstractify_locs file_sig in
@@ -528,9 +517,7 @@ let check_contents_context ~reader options file ast info file_sig =
     Parsing_heaps.Reader_dispatcher.get_sig_ast_aloc_table_unsafe ~reader
   in
   let new_signatures = Options.new_signatures options in
-  let opts =
-    Merge_js.Merge_options { new_signatures; phase; metadata; lint_severities; strict_mode }
-  in
+  let opts = Merge_js.Merge_options { new_signatures; metadata; lint_severities; strict_mode } in
   let getters =
     {
       Merge_js.get_ast_unsafe = (fun _ -> (all_comments, aloc_ast));
