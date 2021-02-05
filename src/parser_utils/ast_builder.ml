@@ -319,6 +319,14 @@ module Statements = struct
 
   let break ?(loc = Loc.none) ?comments ?label () = (loc, Break { Break.label; comments })
 
+  let try_ ?(loc = Loc.none) ?comments ?handler ?finalizer stmts =
+    let block = (loc, { Block.body = stmts; comments = None }) in
+    (loc, Try { Try.block; handler; finalizer; comments })
+
+  let catch ?(loc = Loc.none) ?comments ?param stmts =
+    let body = (loc, { Block.body = stmts; comments = None }) in
+    (loc, { Try.CatchClause.param; body; comments })
+
   let with_ ?(loc = Loc.none) ?comments _object body = (loc, With { With._object; body; comments })
 
   let enum_declaration ?(loc = Loc.none) ?comments id body =
