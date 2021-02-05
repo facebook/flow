@@ -621,7 +621,7 @@ module rec TypeTerm : sig
     | ArrRestT of use_op * reason * int * t
     (* Guarded unification *)
     | UnifyT of t * t (* bidirectional *)
-    (* unifies with incoming concrete lower bound 
+    (* unifies with incoming concrete lower bound
      * empty_success is a hack that we will likely be able to get rid of once we move to
      * local inference. When empty_success is true, we short circuit on the EmptyT ~> BecomeT
      * flow. This is clearly a bug, but there are too many spurious errors due to typeof when
