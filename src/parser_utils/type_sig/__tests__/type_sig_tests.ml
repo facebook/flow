@@ -4648,6 +4648,27 @@ let%expect_test "builtin_toplevel_import" =
                    types = {}; stars = [];
                    type_stars = []; strict = true }) |}]
 
+let%expect_test "builtin_module_export_specifiers" =
+  print_builtins [{|
+    declare module "foo" {
+      declare var x : string;
+      declare var y : string;
+      declare export {x, y};
+    }
+  |}];
+  [%expect {|
+    Local defs:
+    0. Variable {id_loc = [2:14-15]; name = "x"; def = (Annot (String [2:18-24]))}
+    1. Variable {id_loc = [3:14-15]; name = "y"; def = (Annot (String [3:18-24]))}
+
+    Builtin module foo:
+    [1:0-5:1] (ESExports
+                 { names =
+                   { "x" -> (ExportRef LocalRef {ref_loc = [4:18-19]; index = 0});
+                     "y" -> (ExportRef LocalRef {ref_loc = [4:21-22]; index = 1}) };
+                   types = {}; stars = [];
+                   type_stars = []; strict = true }) |}]
+
 let%expect_test "this_param_1" =
   print_sig {|
     export function foo(this : mixed) : void {}
