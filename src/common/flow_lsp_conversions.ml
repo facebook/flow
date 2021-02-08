@@ -207,13 +207,19 @@ module DocumentSymbols = struct
       ~(containerName : string option)
       ~(name : string)
       ~(kind : Lsp.SymbolInformation.symbolKind) : Lsp.SymbolInformation.t list =
-    {
-      Lsp.SymbolInformation.name;
-      kind;
-      location = { Lsp.Location.uri; range = loc_to_lsp_range loc };
-      containerName;
-    }
-    :: acc
+    if name = "" then
+      (* sometimes due to parse errors, we end up with empty names. hide them!
+         in fact, VS Code throws out the entire response if any symbol name is falsy!
+         https://github.com/microsoft/vscode/blob/afd102cbd2e17305a510701d7fd963ec2528e4ea/src/vs/workbench/api/common/extHostTypes.ts#L1068-L1072 *)
+      acc
+    else
+      {
+        Lsp.SymbolInformation.name;
+        kind;
+        location = { Lsp.Location.uri; range = loc_to_lsp_range loc };
+        containerName;
+      }
+      :: acc
 
   let ast_name_opt ~uri ~containerName ~acc ~loc ~(name_opt : string option) ~kind =
     Base.Option.value_map name_opt ~default:acc ~f:(fun name ->
