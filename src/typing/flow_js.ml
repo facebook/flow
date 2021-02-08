@@ -5569,13 +5569,11 @@ struct
             match SMap.find_opt x pmap with
             | Some p -> p
             | None ->
-              (match SMap.find_opt (internal_name x) pmap with
+              let internal_x = internal_name x in
+              (match SMap.find_opt internal_x pmap with
               | Some p ->
                 (* unshadow *)
-                pmap
-                |> SMap.remove (internal_name x)
-                |> SMap.add x p
-                |> Context.add_property_map cx id;
+                pmap |> SMap.remove internal_x |> SMap.add x p |> Context.add_property_map cx id;
                 p
               | None ->
                 (* Create prop and link shadow props along the proto chain. *)
