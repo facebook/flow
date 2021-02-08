@@ -356,7 +356,7 @@ module Kit (Flow : Flow_common.S) : REACT = struct
         | _ -> (t, (fun x -> x))
       in
       match t with
-      | DefT (reason, trust, StrT (Literal (_, x))) ->
+      | DefT (reason, trust, StrT (Literal (_, x))) when not (is_internal_name x) ->
         let reason = replace_desc_reason (RStringLit x) reason in
         Ok (f (DefT (reason, trust, SingletonStrT x)))
       | DefT (reason, trust, NumT (Literal (_, x))) ->
