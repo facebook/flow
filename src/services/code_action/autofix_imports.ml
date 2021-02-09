@@ -128,6 +128,37 @@ let string_of_statement ~options stmt : string =
   let src = Pretty_printer.print ~source_maps:None ~skip_endline:true layout in
   Source.contents src
 
+(** [sorted_insert ~cmp item items], where [items] must be sorted, inserts [item]
+    to maintain the sort. if [cmp item x = 0] for some existing item [x], then
+    [item] comes first. *)
+let sorted_insert ~cmp item items =
+  let (rev, inserted) =
+    Base.List.fold_left
+      ~f:(fun (acc, inserted) next ->
+        if (not inserted) && cmp item next <= 0 then
+          (next :: item :: acc, true)
+        else
+          (next :: acc, inserted))
+      ~init:([], false)
+      items
+  in
+  let rev =
+    if inserted then
+      rev
+    else
+      item :: rev
+  in
+  Base.List.rev rev
+
+(** compares import specifiers by remote name, ignoring kind and local name
+
+    so, given [import { A, type T, C as Z } ...], A < T and C > T. *)
+let compare_specifiers a b =
+  let open Statement.ImportDeclaration in
+  let { remote = (_, { Identifier.name = a_name; comments = _ }); _ } = a in
+  let { remote = (_, { Identifier.name = b_name; comments = _ }); _ } = b in
+  String.compare a_name b_name
+
 let insert_import ~options ~binding ~from = string_of_statement ~options (mk_import ~binding ~from)
 
 let update_import ~options ~binding stmt =
@@ -175,15 +206,21 @@ let update_import ~options ~binding stmt =
       | (Export_index.Named, _, Some (ImportNamedSpecifiers specifiers))
       | (Export_index.NamedType, _, Some (ImportNamedSpecifiers specifiers)) ->
         let open ImportDeclaration in
+        let kind =
+          match (import_kind, kind) with
+          | (ImportValue, Export_index.NamedType) -> Some ImportType
+          | _ -> None
+        in
         let new_specifier =
-          let kind =
-            match kind with
-            | Export_index.NamedType -> Some ImportType
-            | _ -> None
-          in
           { kind; local = None; remote = Ast_builder.Identifiers.identifier bound_name }
         in
-        let specifiers = Some (ImportNamedSpecifiers (specifiers @ [new_specifier])) in
+        let new_specifiers =
+          if Base.List.is_sorted ~compare:compare_specifiers specifiers then
+            sorted_insert ~cmp:compare_specifiers new_specifier specifiers
+          else
+            specifiers @ [new_specifier]
+        in
+        let specifiers = Some (ImportNamedSpecifiers new_specifiers) in
         let stmt =
           (loc, ImportDeclaration { import_kind; source; default; specifiers; comments })
         in
