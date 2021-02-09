@@ -136,15 +136,15 @@ type token_sink_result = {
 }
 
 type parse_options = {
-  enums: bool;
-  esproposal_class_instance_fields: bool;
-  esproposal_class_static_fields: bool;
-  esproposal_decorators: bool;
-  esproposal_export_star_as: bool;
-  esproposal_optional_chaining: bool;
-  esproposal_nullish_coalescing: bool;
-  types: bool;
-  use_strict: bool;
+  enums: bool;  (** enable parsing of Flow enums *)
+  esproposal_class_instance_fields: bool;  (** enable parsing of class instance fields *)
+  esproposal_class_static_fields: bool;  (** enable parsing of class static fields *)
+  esproposal_decorators: bool;  (** enable parsing of decorators *)
+  esproposal_export_star_as: bool;  (** enable parsing of `export * as` syntax *)
+  esproposal_nullish_coalescing: bool;  (** enable parsing of nullish coalescing (`??`) *)
+  esproposal_optional_chaining: bool;  (** enable parsing of optional chaining (`?.`) *)
+  types: bool;  (** enable parsing of Flow types *)
+  use_strict: bool;  (** treat the file as strict, without needing a "use strict" directive *)
 }
 
 let default_parse_options =
