@@ -1,3 +1,7 @@
+### 0.144.1
+
+* Fixed a bug in autoimport code actions that resulted in `import type { type T } ...`
+
 ### 0.144.0
 
 - [Improved generic type checking](https://medium.com/flow-type/flows-improved-handling-of-generic-types-b5909cc5e3c5) launched in v0.140. The deprecated implementation and the temporary `generate_tests=true` flowconfig option have now been removed.
