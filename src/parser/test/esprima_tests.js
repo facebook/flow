@@ -1630,7 +1630,6 @@ module.exports = {
     'ES6 Template Strings': [
         '`Hello\rworld`',
         '`foo ${\n  "bar"\n} baz`',
-        '`foo ${/* a */ "bar" /* b */} baz`',
         '( foo)`bar`',
         '[...a.b`hi`.c`bye`]',
         'foo`foo`.bar`bar`.baz',
