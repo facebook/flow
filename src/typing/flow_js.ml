@@ -2092,7 +2092,8 @@ struct
                   let t =
                     if flags.frozen then
                       match t with
-                      | DefT (t_reason, trust, StrT (Literal (_, lit))) ->
+                      | DefT (t_reason, trust, StrT (Literal (_, lit)))
+                        when not (is_internal_name lit) ->
                         let t_reason = replace_desc_reason (RStringLit lit) t_reason in
                         DefT (t_reason, trust, SingletonStrT lit)
                       | DefT (t_reason, trust, NumT (Literal (_, lit))) ->
