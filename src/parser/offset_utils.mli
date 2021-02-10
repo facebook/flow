@@ -50,3 +50,7 @@ exception Offset_lookup_failed of Loc.position * string
 val offset : t -> Loc.position -> int
 
 val debug_string : t -> string
+
+val line_lengths : t -> int list
+
+val contains_multibyte_character : t -> bool

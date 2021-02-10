@@ -143,3 +143,28 @@ let debug_string table =
       Buffer.add_char buf '\n')
     table;
   Buffer.contents buf
+
+let line_lengths table =
+  Array.fold_left
+    (fun (prev_line_end, lengths_rev) line ->
+      let line_end = line.(Array.length line - 1) in
+      (line_end, (line_end - prev_line_end) :: lengths_rev))
+    (0, [])
+    table
+  |> snd
+  |> List.rev
+
+let contains_multibyte_character table =
+  let exception FoundMultibyte in
+  try
+    Array.iter
+      (fun line ->
+        Array.iteri
+          (fun i offset ->
+            if i > 0 then
+              let offset_before = line.(i - 1) in
+              if offset - offset_before > 1 then raise FoundMultibyte)
+          line)
+      table;
+    false
+  with FoundMultibyte -> true
