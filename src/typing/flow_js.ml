@@ -6497,6 +6497,7 @@ struct
   and structural_subtype cx trace ~use_op lower reason_struct (own_props_id, proto_props_id, call_id)
       =
     let lreason = reason_of_t lower in
+    let lit = is_literal_object_reason lreason in
     let own_props = Context.find_props cx own_props_id in
     let proto_props = Context.find_props cx proto_props_id in
     let call_t = Base.Option.map call_id ~f:(Context.find_call cx) in
@@ -6508,12 +6509,18 @@ struct
                  use_op )
            in
            match p with
-           | Field (_, OptionalT { reason = _; type_ = t; use_desc = _ }, polarity) ->
+           | Field (_, (OptionalT _ as t), polarity) ->
              let propref =
                let reason_prop =
                  update_desc_reason (fun desc -> ROptional (RPropertyOf (s, desc))) reason_struct
                in
                Named (reason_prop, s)
+             in
+             let polarity =
+               if lit then
+                 Polarity.Positive
+               else
+                 polarity
              in
              rec_flow
                cx
@@ -6534,6 +6541,15 @@ struct
                  update_desc_reason (fun desc -> RPropertyOf (s, desc)) reason_struct
                in
                Named (reason_prop, s)
+             in
+             let p =
+               match p with
+               | Field (x, t, _) ->
+                 if lit then
+                   Field (x, t, Polarity.Positive)
+                 else
+                   p
+               | _ -> p
              in
              rec_flow
                cx
@@ -6560,6 +6576,15 @@ struct
                update_desc_reason (fun desc -> RPropertyOf (s, desc)) reason_struct
              in
              Named (reason_prop, s)
+           in
+           let p =
+             match p with
+             | Field (x, t, _) ->
+               if lit then
+                 Field (x, t, Polarity.Positive)
+               else
+                 p
+             | _ -> p
            in
            rec_flow
              cx

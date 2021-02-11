@@ -236,6 +236,23 @@ References:
                                      ^ [1]
 
 
+Error ------------------------------------------------------------------------------------------------ interface.js:29:2
+
+Cannot cast `new D` to `J` because number [1] is incompatible with undefined [2] in property `x`. [incompatible-cast]
+
+   interface.js:29:2
+   29| (new D : J); // error, x is invariant
+        ^^^^^
+
+References:
+   interface.js:26:6
+   26|   x: number;
+            ^^^^^^ [1]
+   interface.js:22:7
+   22|   x?: number;
+             ^^^^^^ [2]
+
+
 Error ----------------------------------------------------------------------------------------------------- test.js:6:17
 
 Cannot assign object literal to `k` because string [1] is incompatible with number [2] in property `x`.
@@ -464,7 +481,7 @@ References:
 
 
 
-Found 30 errors
+Found 31 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches
