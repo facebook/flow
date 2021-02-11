@@ -2081,8 +2081,7 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t =
     let { Ast.Function.id; sig_loc; async; generator; _ } = func in
     let reason = func_reason ~async ~generator sig_loc in
     let func_ast =
-      match id with
-      | Some (_, { Ast.Identifier.name; comments = _ }) ->
+      let handle_named_function name =
         let general = Tvar.mk_where cx reason (Env.unify_declared_type cx name) in
         let (fn_type, func_ast) = mk_function_declaration None cx ~general reason func in
         let use_op =
@@ -2091,10 +2090,10 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t =
         in
         Env.init_fun cx ~use_op name fn_type loc;
         func_ast
-      | None ->
-        let general = Tvar.mk cx reason in
-        let (_, func_ast) = mk_function_declaration None cx ~general reason func in
-        func_ast
+      in
+      match id with
+      | Some (_, { Ast.Identifier.name; comments = _ }) -> handle_named_function name
+      | None -> handle_named_function (internal_name "*default*")
     in
     (loc, FunctionDeclaration func_ast)
   | (loc, EnumDeclaration enum) ->
@@ -2163,7 +2162,7 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t =
     let (name_loc, name) =
       match Ast.Class.(c.id) with
       | Some (name_loc, { Ast.Identifier.name; comments = _ }) -> (name_loc, name)
-      | None -> (class_loc, "<<anonymous class>>")
+      | None -> (class_loc, internal_name "*default*")
     in
     let reason = DescFormat.instance_reason name name_loc in
     Env.declare_implicit_let Scope.Entry.ClassNameBinding cx name name_loc;
@@ -2425,8 +2424,7 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t =
     let (declaration, export_info) =
       match declaration with
       | ExportDefaultDeclaration.Declaration decl ->
-        let (decl, undo_nameify) = Import_export.nameify_default_export_decl decl in
-        ( ExportDefaultDeclaration.Declaration (undo_nameify (statement cx decl)),
+        ( ExportDefaultDeclaration.Declaration (statement cx decl),
           (match decl with
           | (loc, FunctionDeclaration { Ast.Function.id = None; _ }) ->
             [("function() {}", loc, internal_name "*default*", None)]
