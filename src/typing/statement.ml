@@ -2160,7 +2160,11 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t =
           { DeclareFunction.id = ((id_loc, t), id_name); annot = annot_ast; predicate; comments } ))
   | (loc, VariableDeclaration decl) -> (loc, VariableDeclaration (variables cx decl))
   | (class_loc, ClassDeclaration c) ->
-    let (name_loc, name) = extract_class_name class_loc c in
+    let (name_loc, name) =
+      match Ast.Class.(c.id) with
+      | Some (name_loc, { Ast.Identifier.name; comments = _ }) -> (name_loc, name)
+      | None -> (class_loc, "<<anonymous class>>")
+    in
     let reason = DescFormat.instance_reason name name_loc in
     Env.declare_implicit_let Scope.Entry.ClassNameBinding cx name name_loc;
     let general = Tvar.mk_where cx reason (Env.unify_declared_type cx name) in
@@ -3605,7 +3609,11 @@ and expression_ ~cond ~annot cx loc e : (ALoc.t, ALoc.t * Type.t) Ast.Expression
     ((loc, t), JSXFragment f)
   | Class c ->
     let class_loc = loc in
-    let (name_loc, name) = extract_class_name class_loc c in
+    let (name_loc, name) =
+      match Ast.Class.(c.id) with
+      | Some (name_loc, { Ast.Identifier.name; comments = _ }) -> (name_loc, name)
+      | None -> (class_loc, "<<anonymous class>>")
+    in
     let reason = mk_reason (RIdentifier name) class_loc in
     let tvar = Tvar.mk cx reason in
     (match c.Ast.Class.id with
@@ -7514,14 +7522,6 @@ and static_method_call_Object cx loc callee_loc prop_loc expr obj_t m targs args
            })
     in
     (snd (method_call cx reason ~use_op prop_loc (expr, obj_t, m) targts argts), targ_asts, arg_asts)
-
-and extract_class_name class_loc =
-  let open Ast.Class in
-  function
-  | { id; _ } ->
-    (match id with
-    | Some (name_loc, { Ast.Identifier.name; comments = _ }) -> (name_loc, name)
-    | None -> (class_loc, "<<anonymous class>>"))
 
 and mk_class cx class_loc ~class_annot ~name_loc ~general reason c =
   let def_reason = repos_reason class_loc reason in
