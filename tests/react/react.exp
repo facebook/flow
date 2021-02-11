@@ -1375,9 +1375,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- hoc.js:36:43
 
-Cannot call `myHOC` with function bound to `Component` because: [incompatible-call]
- - Either undefined [1] is incompatible with null [2].
- - Or property `@@iterator` is missing in undefined [1] but exists in `$Iterable` [3].
+Cannot call `myHOC` with function bound to `Component` because undefined [1] is incompatible with null [2].
+[incompatible-call]
 
    hoc.js:36:43
    36| myHOC(function Empty(props: {foo: string}) {}); // Error
@@ -1387,16 +1386,11 @@ References:
    <BUILTINS>/react.js:14:5
    14|   | null
            ^^^^ [2]
-   <BUILTINS>/react.js:20:5
-   20|   | Iterable<?React$Node>;
-           ^^^^^^^^^^^^^^^^^^^^^ [3]
 
 
 Error ----------------------------------------------------------------------------------------------------- hoc.js:36:43
 
-All branches are incompatible: [incompatible-type]
- - Either undefined [1] is incompatible with null [2].
- - Or property `@@iterator` is missing in undefined [1] but exists in `$Iterable` [3].
+undefined [1] is incompatible with null [2]. [incompatible-type]
 
    hoc.js:36:43
    36| myHOC(function Empty(props: {foo: string}) {}); // Error
@@ -1406,9 +1400,6 @@ References:
    <BUILTINS>/react.js:14:5
    14|   | null
            ^^^^ [2]
-   <BUILTINS>/react.js:20:5
-   20|   | Iterable<?React$Node>;
-           ^^^^^^^^^^^^^^^^^^^^^ [3]
 
 
 Error ------------------------------------------------------------------------------------------------------ hoc.js:41:2
@@ -2937,9 +2928,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- render.js:9:17
 
-Cannot extend `React.Component` [1] with `A` because in the return value of property `render`: [incompatible-extend]
- - Either undefined [2] is incompatible with null [3].
- - Or property `@@iterator` is missing in undefined [2] but exists in `$Iterable` [4].
+Cannot extend `React.Component` [1] with `A` because undefined [2] is incompatible with null [3] in the return value of
+property `render`. [incompatible-extend]
 
    render.js:9:17
     9|   render = () => {};
@@ -2952,16 +2942,12 @@ References:
    <BUILTINS>/react.js:14:5
    14|   | null
            ^^^^ [3]
-   <BUILTINS>/react.js:20:5
-   20|   | Iterable<?React$Node>;
-           ^^^^^^^^^^^^^^^^^^^^^ [4]
 
 
 Error -------------------------------------------------------------------------------------------------- render.js:24:59
 
-Cannot assign function to `C` because in the return value: [incompatible-type]
- - Either undefined [1] is incompatible with null [2].
- - Or property `@@iterator` is missing in undefined [1] but exists in `$Iterable` [3].
+Cannot assign function to `C` because undefined [1] is incompatible with null [2] in the return value.
+[incompatible-type]
 
    render.js:24:59
    24| const C: React$StatelessFunctionalComponent<{}> = props => {};
@@ -2971,16 +2957,12 @@ References:
    <BUILTINS>/react.js:14:5
    14|   | null
            ^^^^ [2]
-   <BUILTINS>/react.js:20:5
-   20|   | Iterable<?React$Node>;
-           ^^^^^^^^^^^^^^^^^^^^^ [3]
 
 
 Error --------------------------------------------------------------------------------------------------- render.js:26:3
 
-Cannot assign function to `D` because in the return value: [incompatible-type]
- - Either undefined [1] is incompatible with null [2].
- - Or property `@@iterator` is missing in undefined [1] but exists in `$Iterable` [3].
+Cannot assign function to `D` because undefined [1] is incompatible with null [2] in the return value.
+[incompatible-type]
 
    render.js:26:3
    26|   return;
@@ -2990,16 +2972,12 @@ References:
    <BUILTINS>/react.js:14:5
    14|   | null
            ^^^^ [2]
-   <BUILTINS>/react.js:20:5
-   20|   | Iterable<?React$Node>;
-           ^^^^^^^^^^^^^^^^^^^^^ [3]
 
 
 Error -------------------------------------------------------------------------------------------------- render.js:47:18
 
-Cannot extend `React.Component` [1] with `F` because in the return value of property `render`: [incompatible-extend]
- - Either undefined [2] is incompatible with null [3].
- - Or property `@@iterator` is missing in undefined [2] but exists in `$Iterable` [4].
+Cannot extend `React.Component` [1] with `F` because undefined [2] is incompatible with null [3] in the return value of
+property `render`. [incompatible-extend]
 
    render.js:47:18
    47|   render = () => this.props.foo;
@@ -3015,16 +2993,12 @@ References:
    <BUILTINS>/react.js:14:5
    14|   | null
            ^^^^ [3]
-   <BUILTINS>/react.js:20:5
-   20|   | Iterable<?React$Node>;
-           ^^^^^^^^^^^^^^^^^^^^^ [4]
 
 
 Error -------------------------------------------------------------------------------------------------- render.js:55:10
 
-Cannot assign function to `G` because in the return value: [incompatible-type]
- - Either undefined [1] is incompatible with null [2].
- - Or property `@@iterator` is missing in undefined [1] but exists in `$Iterable` [3].
+Cannot assign function to `G` because undefined [1] is incompatible with null [2] in the return value.
+[incompatible-type]
 
    render.js:55:10
    55|   return props.foo;
@@ -3037,9 +3011,6 @@ References:
    <BUILTINS>/react.js:14:5
    14|   | null
            ^^^^ [2]
-   <BUILTINS>/react.js:20:5
-   20|   | Iterable<?React$Node>;
-           ^^^^^^^^^^^^^^^^^^^^^ [3]
 
 
 Error ------------------------------------------------------------------------------------------- undefined_prop.js:7:21

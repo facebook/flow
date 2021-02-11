@@ -1640,6 +1640,12 @@ module Make (Flow : INPUT) : OUTPUT = struct
     (***************************************************************)
     (* Enable structural subtyping for upperbounds like interfaces *)
     (***************************************************************)
+    | (DefT (reason_lower, _, (MixedT _ | VoidT)), DefT (reason_upper, _, InstanceT _)) ->
+      add_output
+        cx
+        ~trace
+        (Error_message.EIncompatibleWithUseOp { reason_lower; reason_upper; use_op });
+      rec_flow_t cx trace ~use_op (AnyT.make (AnyError None) reason_lower, u)
     | (_, (DefT (_, _, InstanceT (_, _, _, { inst_kind = InterfaceKind _; _ })) as i)) ->
       rec_flow cx trace (i, ImplementsT (use_op, l))
     (* Opaque types may be treated as their supertype when they are a lower bound for a use *)
