@@ -585,16 +585,15 @@ and statement_decl cx =
         | _ -> ());
         statement_decl cx body)
   | (_, Debugger _) -> ()
-  | (_, FunctionDeclaration { Ast.Function.id; async; generator; _ }) ->
-    (match id with
-    | Some (name_loc, { Ast.Identifier.name; comments = _ }) ->
+  | (function_loc, FunctionDeclaration { Ast.Function.id; async; generator; _ }) ->
+    let handle_named_function name_loc name =
       let r = func_reason ~async ~generator name_loc in
       let tvar = Tvar.mk cx r in
       Env.bind_fun cx name tvar name_loc
-    | None ->
-      failwith
-        ( "Flow Error: Nameless function declarations should always be given "
-        ^ "an implicit name before they get hoisted!" ))
+    in
+    (match id with
+    | Some (name_loc, { Ast.Identifier.name; comments = _ }) -> handle_named_function name_loc name
+    | None -> handle_named_function function_loc (internal_name "*default*"))
   | (_, EnumDeclaration { EnumDeclaration.id = (name_loc, { Ast.Identifier.name; _ }); _ }) ->
     if Context.enable_enums cx then
       let r = DescFormat.type_reason name name_loc in
@@ -616,13 +615,15 @@ and statement_decl cx =
       Env.bind_declare_fun cx name t id_loc
     | Some (func_decl, _) -> statement_decl cx (loc, func_decl))
   | (_, VariableDeclaration decl) -> variable_decl cx decl
-  | (_, ClassDeclaration { Ast.Class.id; _ }) ->
-    (match id with
-    | Some (name_loc, { Ast.Identifier.name; comments = _ }) ->
+  | (class_loc, ClassDeclaration { Ast.Class.id; _ }) ->
+    let handle_named_class name_loc name =
       let r = mk_reason (RType name) name_loc in
       let tvar = Tvar.mk cx r in
       Env.bind_implicit_let Scope.Entry.ClassNameBinding cx name tvar name_loc
-    | None -> ())
+    in
+    (match id with
+    | Some (name_loc, { Ast.Identifier.name; comments = _ }) -> handle_named_class name_loc name
+    | None -> handle_named_class class_loc (internal_name "*default*"))
   | ( (_, DeclareClass { DeclareClass.id = (name_loc, { Ast.Identifier.name; comments = _ }); _ })
     | (_, DeclareInterface { Interface.id = (name_loc, { Ast.Identifier.name; comments = _ }); _ })
     | ( _,
@@ -675,9 +676,7 @@ and statement_decl cx =
     | None -> ())
   | (_, ExportDefaultDeclaration { ExportDefaultDeclaration.declaration; _ }) ->
     (match declaration with
-    | ExportDefaultDeclaration.Declaration stmt ->
-      let (stmt, _) = Import_export.nameify_default_export_decl stmt in
-      statement_decl cx stmt
+    | ExportDefaultDeclaration.Declaration stmt -> statement_decl cx stmt
     | ExportDefaultDeclaration.Expression _ -> ())
   | ( decl_loc,
       ImportDeclaration
