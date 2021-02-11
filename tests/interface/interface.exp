@@ -253,6 +253,198 @@ References:
              ^^^^^^ [2]
 
 
+Error ------------------------------------------------------------------------------------------------ interface.js:38:2
+
+Cannot cast `o2["b"]` to boolean because number [1] is incompatible with boolean [2]. [incompatible-cast]
+
+   interface.js:38:2
+   38| (o2["b"] : boolean); // error
+        ^^^^^^^
+
+References:
+   interface.js:36:40
+   36| declare var o2 : interface {[string] : number};
+                                              ^^^^^^ [1]
+   interface.js:38:12
+   38| (o2["b"] : boolean); // error
+                  ^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ interface.js:43:2
+
+Cannot cast `o3` to interface type because number [1] is incompatible with boolean [2] in the indexer property.
+[incompatible-cast]
+
+   interface.js:43:2
+   43| (o3 : interface {[string] : boolean}); // error
+        ^^
+
+References:
+   interface.js:41:30
+   41| declare var o3 : {[string] : number};
+                                    ^^^^^^ [1]
+   interface.js:43:29
+   43| (o3 : interface {[string] : boolean}); // error
+                                   ^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ interface.js:44:7
+
+Cannot cast object literal to interface type because number [1] is incompatible with boolean [2] in property `x`.
+[incompatible-cast]
+
+   interface.js:44:7
+   44| ({x : 3} : interface {[string] : boolean}); // error
+             ^ [1]
+
+References:
+   interface.js:44:34
+   44| ({x : 3} : interface {[string] : boolean}); // error
+                                        ^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ interface.js:46:2
+
+Cannot cast `o3` to interface type because string [1] is incompatible with number [2] in the indexer property's key.
+[incompatible-cast]
+
+   interface.js:46:2
+   46| (o3: interface {[number] : number}); // error
+        ^^
+
+References:
+   interface.js:41:20
+   41| declare var o3 : {[string] : number};
+                          ^^^^^^ [1]
+   interface.js:46:18
+   46| (o3: interface {[number] : number}); // error
+                        ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ interface.js:47:2
+
+Cannot cast object literal to interface type because string `x` [1] is incompatible with number [2] in the indexer
+property's key. [incompatible-cast]
+
+   interface.js:47:2
+   47| ({x : 3} : interface {[number] : number}); // error
+        ^^^^^^^ [1]
+
+References:
+   interface.js:47:24
+   47| ({x : 3} : interface {[number] : number}); // error
+                              ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ interface.js:51:2
+
+Cannot cast `o4` to interface type because string literal `asdf` [1] is incompatible with string [2] in the indexer
+property's key. [incompatible-cast]
+
+   interface.js:51:2
+   51| (o4 : interface {[string] : number}); // error
+        ^^
+
+References:
+   interface.js:49:20
+   49| declare var o4 : {["asdf"] : number};
+                          ^^^^^^ [1]
+   interface.js:51:19
+   51| (o4 : interface {[string] : number}); // error
+                         ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ interface.js:59:2
+
+Cannot cast `o6` to interface type because string [1] is incompatible with string literal `asdf` [2] in the indexer
+property's key. [incompatible-cast]
+
+   interface.js:59:2
+   59| (o6 : interface {["asdf"] : number}); // error
+        ^^
+
+References:
+   interface.js:57:20
+   57| declare var o6 : {[string] : number};
+                          ^^^^^^ [1]
+   interface.js:59:19
+   59| (o6 : interface {["asdf"] : number}); // error
+                         ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ subtyping.js:35:2
+
+Cannot cast `new A` to `J` because property `y` is missing in `A` [1] but exists in `J` [2]. [prop-missing]
+
+   subtyping.js:35:2
+   35| (new A : J); // error
+        ^^^^^ [1]
+
+References:
+   subtyping.js:35:10
+   35| (new A : J); // error
+                ^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ subtyping.js:47:2
+
+Cannot cast `new D` to `K` because property `x` is missing in `D` [1] but exists in `K` [2]. [prop-missing]
+
+   subtyping.js:47:2
+   47| (new D : K); // error
+        ^^^^^ [1]
+
+References:
+   subtyping.js:47:10
+   47| (new D : K); // error
+                ^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ subtyping.js:64:2
+
+Cannot cast `E` to `L` because property `y` is missing in class `E` [1] but exists in `L` [2]. [prop-missing]
+
+   subtyping.js:64:2
+   64| (E : L); // error
+        ^
+
+References:
+   subtyping.js:51:7
+   51| class E {
+             ^ [1]
+   subtyping.js:64:6
+   64| (E : L); // error
+            ^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ subtyping.js:77:2
+
+Cannot cast `new G` to `M` because property `z` is missing in `G` [1] but exists in `M` [2]. [prop-missing]
+
+   subtyping.js:77:2
+   77| (new G : M); // error
+        ^^^^^ [1]
+
+References:
+   subtyping.js:77:10
+   77| (new G : M); // error
+                ^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ subtyping.js:78:2
+
+Cannot cast `new G` to `N` because property `z` is missing in `G` [1] but exists in `M` [2]. [prop-missing]
+
+   subtyping.js:78:2
+   78| (new G : N); // error
+        ^^^^^ [1]
+
+References:
+   subtyping.js:74:21
+   74| interface N extends M {
+                           ^ [2]
+
+
 Error ----------------------------------------------------------------------------------------------------- test.js:6:17
 
 Cannot assign object literal to `k` because string [1] is incompatible with number [2] in property `x`.
@@ -481,7 +673,7 @@ References:
 
 
 
-Found 31 errors
+Found 43 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches

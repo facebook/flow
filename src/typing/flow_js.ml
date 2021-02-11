@@ -6496,12 +6496,105 @@ struct
      which don't have an own/proto distinction. *)
   and structural_subtype cx trace ~use_op lower reason_struct (own_props_id, proto_props_id, call_id)
       =
+    match lower with
+    (* Object <: Interface subtyping creates an object out of the interface to dispatch to the
+      existing object <: object logic *)
+    | DefT
+        ( lreason,
+          ltrust,
+          ObjT
+            {
+              flags = { obj_kind = lkind; frozen = lfrozen };
+              props_tmap = lprops;
+              proto_t = lproto;
+              call_t = lcall;
+            } ) ->
+      let own_props = Context.find_props cx own_props_id in
+      let own_props_without_dict = own_props |> SMap.remove "$key" |> SMap.remove "$value" in
+      let dict =
+        (* If these are physically equal, $key and $value were not present, and thus there is no indexer *)
+        if own_props == own_props_without_dict then
+          None
+        else
+          match (SMap.find "$key" own_props, SMap.find "$value" own_props) with
+          | (Field (_, key, _), Field (_, value, dict_polarity)) ->
+            Some { key; value; dict_polarity; dict_name = None }
+          | _ -> failwith "$key and $value must be added as fields"
+      in
+      let proto_props = Context.find_props cx proto_props_id in
+      let props_tmap = Reason.mk_id () |> Properties.id_of_int in
+      Context.add_property_map cx props_tmap (SMap.union own_props_without_dict proto_props);
+      (* Interfaces with an indexer type are indexed, all others are inexact *)
+      let obj_kind =
+        match dict with
+        | Some d -> Indexed d
+        | None -> Inexact
+      in
+      let o =
+        {
+          flags = { obj_kind; frozen = false };
+          props_tmap;
+          (* Interfaces have no prototype *)
+          proto_t = ObjProtoT reason_struct;
+          call_t = call_id;
+        }
+      in
+      let lkind =
+        match lkind with
+        (* ObjT <: Interface subtyping treats lower bounds as if they were sealed *)
+        | UnsealedInFile _ -> Exact
+        | _ -> lkind
+      in
+      let lower =
+        DefT
+          ( lreason,
+            ltrust,
+            ObjT
+              {
+                flags = { obj_kind = lkind; frozen = lfrozen };
+                props_tmap = lprops;
+                proto_t = lproto;
+                call_t = lcall;
+              } )
+      in
+      rec_flow_t cx trace ~use_op (lower, DefT (reason_struct, bogus_trust (), ObjT o))
+    | _ ->
+      inst_structural_subtype
+        cx
+        trace
+        ~use_op
+        lower
+        reason_struct
+        (own_props_id, proto_props_id, call_id)
+
+  and inst_structural_subtype
+      cx trace ~use_op lower reason_struct (own_props_id, proto_props_id, call_id) =
     let lreason = reason_of_t lower in
     let lit = is_literal_object_reason lreason in
     let own_props = Context.find_props cx own_props_id in
     let proto_props = Context.find_props cx proto_props_id in
+    let own_props_without_dict = own_props |> SMap.remove "$key" |> SMap.remove "$value" in
+    let dict =
+      (* If these are physically equal, $key and $value were not present, and thus there is no indexer *)
+      if own_props == own_props_without_dict then
+        None
+      else
+        match (SMap.find "$key" own_props, SMap.find "$value" own_props) with
+        | (Field (_, key, _), Field (_, value, dict_polarity)) ->
+          Some { key; value; dict_polarity; dict_name = None }
+        | _ -> failwith "$key and $value must be added as fields"
+    in
     let call_t = Base.Option.map call_id ~f:(Context.find_call cx) in
-    own_props
+    let read_only_if_lit p =
+      match p with
+      | Field (x, t, _) ->
+        if lit then
+          Field (x, t, Polarity.Positive)
+        else
+          p
+      | _ -> p
+    in
+    own_props_without_dict
     |> SMap.iter (fun s p ->
            let use_op =
              Frame
@@ -6529,7 +6622,9 @@ struct
                  LookupT
                    {
                      reason = reason_struct;
-                     lookup_kind = NonstrictReturning (None, None);
+                     lookup_kind =
+                       NonstrictReturning
+                         (Base.Option.map ~f:(fun { value; _ } -> (value, t)) dict, None);
                      ts = [];
                      propref;
                      lookup_action = LookupProp (use_op, Field (None, t, polarity));
@@ -6542,15 +6637,6 @@ struct
                in
                Named (reason_prop, s)
              in
-             let p =
-               match p with
-               | Field (x, t, _) ->
-                 if lit then
-                   Field (x, t, Polarity.Positive)
-                 else
-                   p
-               | _ -> p
-             in
              rec_flow
                cx
                trace
@@ -6561,7 +6647,7 @@ struct
                      lookup_kind = Strict lreason;
                      ts = [];
                      propref;
-                     lookup_action = LookupProp (use_op, p);
+                     lookup_action = LookupProp (use_op, read_only_if_lit p);
                      ids = Some Properties.Set.empty;
                    } ));
     proto_props
@@ -6577,15 +6663,6 @@ struct
              in
              Named (reason_prop, s)
            in
-           let p =
-             match p with
-             | Field (x, t, _) ->
-               if lit then
-                 Field (x, t, Polarity.Positive)
-               else
-                 p
-             | _ -> p
-           in
            rec_flow
              cx
              trace
@@ -6596,7 +6673,7 @@ struct
                    lookup_kind = Strict lreason;
                    ts = [];
                    propref;
-                   lookup_action = LookupProp (use_op, p);
+                   lookup_action = LookupProp (use_op, read_only_if_lit p);
                    ids = Some Properties.Set.empty;
                  } ));
     call_t
