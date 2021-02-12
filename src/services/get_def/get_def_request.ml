@@ -23,6 +23,7 @@ type t =
       type_: Type.t;
     }
   | Type of Type.t
+  | Typeof of Type.t
   | Member of member_info
   | Require of (ALoc.t * string) * ALoc.t
   | JsxAttribute of {
