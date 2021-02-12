@@ -63,6 +63,16 @@ module Types = struct
 
   let object_ ?(loc = Loc.none) ?exact ?inexact properties =
     (loc, Ast.Type.Object (Objects.make ?exact ?inexact properties))
+
+  let unqualified_generic ?comments ?(loc = Loc.none) ?targs name =
+    ( loc,
+      Ast.Type.Generic
+        {
+          Ast.Type.Generic.id =
+            Ast.Type.Generic.Identifier.Unqualified (Identifiers.identifier name);
+          targs;
+          comments;
+        } )
 end
 
 let string_literal ?comments value =

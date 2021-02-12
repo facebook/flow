@@ -2176,22 +2176,8 @@ let tests =
                ( Loc.none,
                  IndexedAccess
                    {
-                     IndexedAccess._object =
-                       ( Loc.none,
-                         Generic
-                           {
-                             Generic.id = Generic.Identifier.Unqualified (I.identifier "T");
-                             targs = None;
-                             comments = None;
-                           } );
-                     index =
-                       ( Loc.none,
-                         Generic
-                           {
-                             Generic.id = Generic.Identifier.Unqualified (I.identifier "K");
-                             targs = None;
-                             comments = None;
-                           } );
+                     IndexedAccess._object = Ast_builder.Types.unqualified_generic "T";
+                     index = Ast_builder.Types.unqualified_generic "K";
                      comments = None;
                    } )
            in
