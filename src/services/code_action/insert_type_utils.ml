@@ -629,7 +629,7 @@ class patch_up_react_mapper ?(imports_react = false) () =
           when Reason.is_internal_name name ->
           Hh_logger.warn "ShadowProp %s at %s" name (Reason.string_of_loc loc);
           (* Shadow props appear as regular props *)
-          let name = String.sub name 1 (String.length name - 1) in
+          let name = Reason.uninternal_name name in
           Ty.NamedProp { name; prop = named_prop; from_proto; def_loc }
         | prop -> prop
       in
