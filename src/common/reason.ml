@@ -763,9 +763,11 @@ let internal_module_name name = spf ".$module__%s" name
 
 let is_internal_module_name name = string_starts_with name ".$module__"
 
-let uninternal_module_name name =
+let uninternal_name name =
   if is_internal_module_name name then
     String.sub name 10 (String.length name - 10)
+  else if is_internal_name name then
+    String.sub name 1 (String.length name - 1)
   else
     name
 

@@ -1889,7 +1889,7 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
     let features =
       match name with
       | Some x when is_internal_module_name x ->
-        [text "Cannot resolve module "; code (uninternal_module_name x); text "."]
+        [text "Cannot resolve module "; code (uninternal_name x); text "."]
       | None -> [text "Cannot resolve name "; desc reason; text "."]
       | Some x when is_internal_name x -> [text "Cannot resolve name "; desc reason; text "."]
       | Some x -> [text "Cannot resolve name "; code x; text "."]

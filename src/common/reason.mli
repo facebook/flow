@@ -248,7 +248,7 @@ val is_internal_module_name : string -> bool
 
 val internal_module_name : string -> string
 
-val uninternal_module_name : string -> string
+val uninternal_name : string -> string
 
 val is_instantiable_reason : 'loc virtual_reason -> bool
 
