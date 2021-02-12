@@ -1,3 +1,17 @@
+Error ---------------------------------------------------------------------------------------------------- import.js:4:2
+
+Cannot cast `1` to `ObjFoo` because number [1] is incompatible with boolean [2]. [incompatible-cast]
+
+   import.js:4:2
+   4| (1: ObjFoo); // Error
+       ^ [1]
+
+References:
+   import.js:4:5
+   4| (1: ObjFoo); // Error
+          ^^^^^^ [2]
+
+
 Error ------------------------------------------------------------------------------------------------------ test.js:5:2
 
 Cannot cast `'hello world'` to `ArrElem` because string [1] is incompatible with number [2]. [incompatible-cast]
@@ -94,4 +108,4 @@ Cannot access boolean on `Arr` because boolean [1] is not an array index. [incom
 
 
 
-Found 7 errors
+Found 8 errors

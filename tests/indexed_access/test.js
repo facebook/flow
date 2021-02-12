@@ -26,7 +26,7 @@ type Obj = {
   ...
 };
 
-type ObjFoo = Obj['foo'];
+export type ObjFoo = Obj['foo'];
 (true: ObjFoo); // OK
 (1: ObjFoo); // Error
 
