@@ -190,10 +190,21 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
         with_loc
           ~start_loc:(fst t)
           (fun env ->
-            Expect.token env T_RBRACKET;
-            let trailing = Eat.trailing_comments env in
-            Type.Array
-              { Type.Array.argument = t; comments = Flow_ast_utils.mk_comments_opt ~trailing () })
+            if Eat.maybe env T_RBRACKET then
+              (* Legacy Array syntax `T[]` <-> `Array<T>` *)
+              let trailing = Eat.trailing_comments env in
+              Type.Array
+                { Type.Array.argument = t; comments = Flow_ast_utils.mk_comments_opt ~trailing () }
+            else
+              let index = _type env in
+              Expect.token env T_RBRACKET;
+              let trailing = Eat.trailing_comments env in
+              Type.IndexedAccess
+                {
+                  Type.IndexedAccess._object = t;
+                  index;
+                  comments = Flow_ast_utils.mk_comments_opt ~trailing ();
+                })
           env
       in
       postfix_with env t
