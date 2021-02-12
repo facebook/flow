@@ -254,6 +254,7 @@ let rec convert cx tparams_map =
     ((loc, AnyT.error reason), t_ast)
   | (loc, (BooleanLiteral { Ast.BooleanLiteral.value; _ } as t_ast)) ->
     ((loc, mk_singleton_boolean cx loc value), t_ast)
+  | (_, IndexedAccess _) -> failwith "TODO - done in later diff in stack"
   (* TODO *)
   | ( loc,
       Generic

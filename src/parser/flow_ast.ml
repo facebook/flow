@@ -213,6 +213,15 @@ and Type : sig
     [@@deriving show]
   end
 
+  module IndexedAccess : sig
+    type ('M, 'T) t = {
+      _object: ('M, 'T) Type.t;
+      index: ('M, 'T) Type.t;
+      comments: ('M, unit) Syntax.t option;
+    }
+    [@@deriving show]
+  end
+
   module Object : sig
     module Property : sig
       type ('M, 'T) t = 'M * ('M, 'T) t'
@@ -387,6 +396,7 @@ and Type : sig
     | Interface of ('M, 'T) Interface.t
     | Array of ('M, 'T) Array.t
     | Generic of ('M, 'T) Generic.t
+    | IndexedAccess of ('M, 'T) IndexedAccess.t
     | Union of ('M, 'T) Union.t
     | Intersection of ('M, 'T) Intersection.t
     | Typeof of ('M, 'T) Typeof.t

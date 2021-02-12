@@ -2168,6 +2168,34 @@ let tests =
            in
            assert_output ~ctxt "with(x);" layout;
            assert_output ~ctxt ~pretty:true "with (x);" layout );
+         ( "indexed_access" >:: fun ctxt ->
+           let open Flow_ast.Type in
+           let layout =
+             Js_layout_generator.type_
+               ~opts
+               ( Loc.none,
+                 IndexedAccess
+                   {
+                     IndexedAccess._object =
+                       ( Loc.none,
+                         Generic
+                           {
+                             Generic.id = Generic.Identifier.Unqualified (I.identifier "T");
+                             targs = None;
+                             comments = None;
+                           } );
+                     index =
+                       ( Loc.none,
+                         Generic
+                           {
+                             Generic.id = Generic.Identifier.Unqualified (I.identifier "K");
+                             targs = None;
+                             comments = None;
+                           } );
+                     comments = None;
+                   } )
+           in
+           assert_output ~ctxt "T[K]" layout );
          ( "enum_of_boolean" >:: fun ctxt ->
            S.EnumDeclarations.(
              let layout ~explicit_type =

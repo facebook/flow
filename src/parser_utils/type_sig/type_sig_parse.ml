@@ -1234,6 +1234,7 @@ let rec annot opts scope locs xs (loc, t) =
     Annot (InlineInterface (loc, def))
   | T.Generic g ->
     maybe_special_generic opts scope locs xs loc g
+  | T.IndexedAccess _ -> failwith "TODO - done in later diff in stack"
   | T.Tuple {T.Tuple.types; _} ->
     let ts_rev = List.rev_map (annot opts scope locs xs) types in
     Annot (Tuple {loc; ts = List.rev ts_rev})

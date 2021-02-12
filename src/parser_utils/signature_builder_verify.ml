@@ -152,6 +152,7 @@ module Eval (Env : EvalEnv) = struct
     | (_, Function ft) -> function_type tps ft
     | (_, Object ot) -> object_type tps ot
     | (loc, Generic tr) -> type_ref tps (loc, tr)
+    | (_, IndexedAccess _) -> failwith "TODO - done in later diff in stack"
     | (_, Typeof { Typeof.argument = v; internal = _; comments = _ }) ->
       begin
         match v with

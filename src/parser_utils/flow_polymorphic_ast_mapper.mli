@@ -260,6 +260,9 @@ class virtual ['M, 'T, 'N, 'U] mapper :
 
     method generic_type : ('M, 'T) Ast.Type.Generic.t -> ('N, 'U) Ast.Type.Generic.t
 
+    method indexed_access_type :
+      ('M, 'T) Ast.Type.IndexedAccess.t -> ('N, 'U) Ast.Type.IndexedAccess.t
+
     method identifier : ('M, 'M) Ast.Identifier.t -> ('N, 'N) Ast.Identifier.t
 
     method if_consequent_statement :
