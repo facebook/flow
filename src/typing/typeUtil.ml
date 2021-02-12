@@ -546,6 +546,8 @@ let rec mod_loc_of_virtual_use_op f =
       FunImplicitReturn { fn = mod_reason fn; upper = mod_reason upper }
     | GeneratorYield { value } -> GeneratorYield { value = mod_reason value }
     | GetProperty reason -> GetProperty (mod_reason reason)
+    | IndexedTypeAccess { _object; index } ->
+      IndexedTypeAccess { _object = mod_reason _object; index = mod_reason index }
     | Internal o -> Internal o
     | JSXCreateElement { op; component } ->
       JSXCreateElement { op = mod_reason op; component = mod_reason component }

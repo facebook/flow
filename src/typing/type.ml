@@ -343,6 +343,10 @@ module rec TypeTerm : sig
       }
     | GeneratorYield of { value: 'loc virtual_reason }
     | GetProperty of 'loc virtual_reason
+    | IndexedTypeAccess of {
+        _object: 'loc virtual_reason;
+        index: 'loc virtual_reason;
+      }
     | InitField of {
         op: 'loc virtual_reason;
         body: 'loc virtual_reason;
@@ -2898,6 +2902,7 @@ let aloc_of_root_use_op : root_use_op -> ALoc.t = function
   | FunImplicitReturn { upper = op; _ }
   | GeneratorYield { value = op }
   | GetProperty op
+  | IndexedTypeAccess { index = op; _ }
   | JSXCreateElement { op; _ }
   | ReactCreateElementCall { op; _ }
   | TypeApplication { type' = op }
@@ -3035,6 +3040,7 @@ let string_of_root_use_op (type a) : a virtual_root_use_op -> string = function
   | FunReturnStatement _ -> "FunReturnStatement"
   | GeneratorYield _ -> "GeneratorYield"
   | GetProperty _ -> "GetProperty"
+  | IndexedTypeAccess _ -> "IndexedTypeAccess"
   | Internal op -> spf "Internal(%s)" (string_of_internal_use_op op)
   | JSXCreateElement _ -> "JSXCreateElement"
   | ReactCreateElementCall _ -> "ReactCreateElementCall"

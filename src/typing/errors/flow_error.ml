@@ -464,6 +464,8 @@ let rec make_error_printable ?(speculation = false) (error : Loc.t t) : Loc.t Er
             | Op (GeneratorYield { value }) ->
               `Root (value, None, [text "Cannot yield "; desc value])
             | Op (GetProperty prop) -> `Root (prop, None, [text "Cannot get "; desc prop])
+            | Op (IndexedTypeAccess { _object; index }) ->
+              `Root (index, None, [text "Cannot access "; desc index; text " on "; desc _object])
             | Frame (FunParam _, Op (JSXCreateElement { op; component; _ }))
             | Op (JSXCreateElement { op; component; _ }) ->
               `Root (op, Some component, [text "Cannot create "; desc component; text " element"])

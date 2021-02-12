@@ -8298,6 +8298,7 @@ struct
               | FunImplicitReturn _
               | FunReturnStatement _
               | GetProperty _
+              | IndexedTypeAccess _
               | SetProperty _
               | UpdateProperty _
               | JSXCreateElement _
