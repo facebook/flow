@@ -780,7 +780,7 @@ end = struct
       let open Type in
       match t with
       | OpenT (_, id) -> type_variable ~env id
-      | BoundT (reason, name) -> bound_t ~env reason name
+      | BoundT (reason, name) -> bound_t reason name
       | GenericT { bound; reason; name; _ } ->
         let loc = Reason.def_aloc_of_reason reason in
         let default t = type_with_alias_reason ~env t in
@@ -963,9 +963,9 @@ end = struct
       | T.UnresolvedType -> Ty.UnresolvedType
       | T.WeakContext -> Ty.WeakContext
 
-    and bound_t ~env reason name =
-      let { Ty.sym_def_loc; sym_name; _ } = symbol_from_reason env reason name in
-      return (Ty.Bound (sym_def_loc, sym_name))
+    and bound_t reason name =
+      let loc = Reason.def_aloc_of_reason reason in
+      return (Ty.Bound (loc, name))
 
     and fun_ty ~env static f fun_type_params =
       let%bind fun_static = type__ ~env static in
