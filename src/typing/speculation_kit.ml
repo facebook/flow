@@ -689,7 +689,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
     | UnionRep.No ->
       (* membership check failed *)
       let r = UnionRep.specialized_reason ~reason_of_t:TypeUtil.reason_of_t reason_op rep in
-      rec_flow cx trace (l, UseT (use_op, DefT (r, bogus_trust (), EmptyT Bottom)));
+      rec_flow cx trace (l, UseT (use_op, DefT (r, bogus_trust (), EmptyT)));
       true
     (* Our work here is done, so no need to continue. *)
     | UnionRep.Conditional t ->

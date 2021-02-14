@@ -157,16 +157,6 @@ let in_generator_scope () =
 
 let in_predicate_scope () = is_func_kind Predicate (peek_var_scope ())
 
-(* build a map of all var entries - no refis - in the current
-   scope stack.
-   Note that we accumulate entries bottom-up, so that
-   shadowing is properly maintained *)
-let all_entries () =
-  List.fold_left
-    (fun entries scope -> SMap.union scope.entries entries)
-    SMap.empty
-    (List.rev !scopes)
-
 (* whole env *)
 
 (* clear environment *)

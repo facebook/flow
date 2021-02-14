@@ -3557,6 +3557,10 @@ and type_generic ~opts loc { Ast.Type.Generic.id; targs; comments } =
   layout_node_with_comments_opt loc comments
   @@ fuse [generic_identifier id; option (type_args ~opts) targs]
 
+and type_indexed_access ~opts loc { Ast.Type.IndexedAccess._object; index; comments } =
+  layout_node_with_comments_opt loc comments
+  @@ fuse [type_ ~opts _object; Atom "["; type_ ~opts index; Atom "]"]
+
 and type_nullable ~opts loc { Ast.Type.Nullable.argument; comments } =
   layout_node_with_comments_opt loc comments (fuse [Atom "?"; type_with_parens ~opts argument])
 
@@ -3615,6 +3619,7 @@ and type_ ~opts ((loc, t) : (Loc.t, Loc.t) Ast.Type.t) =
       | T.Interface i -> type_interface ~opts loc i
       | T.Array t -> type_array ~opts loc t
       | T.Generic generic -> type_generic ~opts loc generic
+      | T.IndexedAccess indexed_access -> type_indexed_access ~opts loc indexed_access
       | T.Union t -> type_union ~opts loc t
       | T.Intersection t -> type_intersection ~opts loc t
       | T.Typeof t -> type_typeof ~opts loc t

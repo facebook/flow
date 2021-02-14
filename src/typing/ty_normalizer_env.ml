@@ -27,16 +27,6 @@ type options = {
    * WARNING: This can cause a blow-up in the size of the produced types.
    *)
   expand_type_aliases: bool;
-  (* MergedT is somewhat unconventional. It introduces UseT's that the
-   * normalizer is not intended to handle. If this flag is set to true, all
-   * instances of MergedT will fall through and return Top. Otherwise, we
-   * attempt to convert the use_t's under the MergedT. This operation only
-   * succeeds if the use is a UseT and the underlying type is successfully
-   * normalized.
-   *
-   * Pick `true` if the result does not need to be "parseable", e.g. coverage.
-   *)
-  fall_through_merged: bool;
   (* The normalizer keeps a stack of type parameters that are in scope. This stack
    * may contain the same name twice (but with different associated locations).
    * This is a case of shadowing. For certain uses of normalized types (e.g. suggest)
@@ -87,7 +77,6 @@ let default_options =
     evaluate_type_destructors = false;
     expand_internal_types = false;
     expand_type_aliases = false;
-    fall_through_merged = false;
     flag_shadowed_type_params = false;
     merge_bot_and_any_kinds = true;
     omit_targ_defaults = false;
@@ -179,8 +168,6 @@ let init ~options ~genv ~tparams ~imported_names =
 let descend e = { e with depth = e.depth + 1 }
 
 let get_cx e = e.genv.cx
-
-let fall_through_merged e = e.options.fall_through_merged
 
 let expand_internal_types e = e.options.expand_internal_types
 

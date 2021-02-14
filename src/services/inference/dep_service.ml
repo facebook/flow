@@ -217,7 +217,7 @@ let file_dependencies ~options ~audit ~reader file =
       let sig_file_sig = Parsing_heaps.Mutator_reader.get_sig_file_sig_unsafe reader file in
       File_sig.With_ALoc.(require_set sig_file_sig.module_sig)
     else
-      let { Packed_type_sig.module_refs = mrefs; _ } =
+      let { Packed_type_sig.Module.module_refs = mrefs; _ } =
         Parsing_heaps.Mutator_reader.get_type_sig_unsafe reader file
       in
       let acc = ref SSet.empty in

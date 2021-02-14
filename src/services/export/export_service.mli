@@ -8,6 +8,7 @@
 val init :
   workers:MultiWorkerLwt.worker list option ->
   reader:Mutator_state_reader.t ->
+  libs:Exports.t ->
   Utils_js.FilenameSet.t ->
   Export_search.t Lwt.t
 
@@ -18,3 +19,7 @@ val update :
   remove:Utils_js.FilenameSet.t ->
   Export_search.t ->
   Export_search.t Lwt.t
+
+module For_test : sig
+  val string_of_modulename : Modulename.t -> string
+end

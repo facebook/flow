@@ -10,7 +10,6 @@ type get_ast_return = Loc.t Flow_ast.Comment.t list * (ALoc.t, ALoc.t) Flow_ast.
 type merge_options =
   | Merge_options of {
       new_signatures: bool;
-      phase: Context.phase;
       metadata: Context.metadata;
       lint_severities: Severity.severity LintSettings.t;
       strict_mode: StrictModeSettings.t;
@@ -38,6 +37,9 @@ module Reqs : sig
   val add_decl : string -> File_key.t -> Loc_collections.ALocSet.t * Modulename.t -> t -> t
 end
 
+type output =
+  Context.t * (ALoc.t, ALoc.t) Flow_ast.Program.t * (ALoc.t, ALoc.t * Type.t) Flow_ast.Program.t
+
 val merge_component :
   opts:merge_options ->
   getters:merge_getters ->
@@ -50,9 +52,20 @@ val merge_component :
   Context.sig_t list ->
   (* master cx *)
   Context.sig_t ->
-  (* cxs in component order, hd is merged leader, along with a coverage summary for each file *)
-  (Context.t * (ALoc.t, ALoc.t) Flow_ast.Program.t * (ALoc.t, ALoc.t * Type.t) Flow_ast.Program.t)
-  Nel.t
+  (* output in component order, hd is merged leader, along with a coverage summary for each file *)
+  output Nel.t
+
+val check_file :
+  opts:merge_options ->
+  getters:merge_getters ->
+  file_sigs:File_sig.With_ALoc.t Utils_js.FilenameMap.t ->
+  File_key.t ->
+  Reqs.t ->
+  (* dependency cxs *)
+  Context.sig_t list ->
+  (* master cx *)
+  Context.sig_t ->
+  output
 
 module ContextOptimizer : sig
   val sig_context : Context.t -> string list -> Xx.hash

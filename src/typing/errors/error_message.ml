@@ -223,6 +223,7 @@ and 'loc t' =
   | ENonConstVarExport of 'loc * 'loc virtual_reason option
   | EThisInExportedFunction of 'loc
   | EMixedImportAndRequire of 'loc * 'loc virtual_reason
+  | EToplevelLibraryImport of 'loc
   | EExportRenamedDefault of 'loc * string
   | EUnreachable of 'loc
   | EInvalidObjectKit of {
@@ -413,6 +414,12 @@ and 'loc t' =
     }
   | EMalformedCode of 'loc
   | EImplicitInstantiationTemporaryError of 'loc * string
+  | EImportInternalReactServerModule of 'loc
+  | EImplicitInstantiationUnderconstrainedError of {
+      reason_call: 'loc virtual_reason;
+      reason_l: 'loc virtual_reason;
+      bound: string;
+    }
 
 and 'loc exponential_spread_reason_group = {
   first_reason: 'loc virtual_reason;
@@ -476,7 +483,6 @@ and 'loc unsupported_syntax =
   | ClassPropertyComputed
   | ReactCreateClassPropertyNonInit
   | RequireDynamicArgument
-  | RequireLazyDynamicArgument
   | CatchParameterAnnotation
   | CatchParameterDeclaration
   | DestructuringObjectPropertyLiteralNonString
@@ -571,14 +577,13 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
     | ( ComprehensionExpression | GeneratorExpression | MetaPropertyExpression
       | ObjectPropertyLiteralNonString | ObjectPropertyGetSet | ObjectPropertyComputedGetSet
       | InvariantSpreadArgument | ClassPropertyLiteral | ClassPropertyComputed
-      | ReactCreateClassPropertyNonInit | RequireDynamicArgument | RequireLazyDynamicArgument
-      | CatchParameterAnnotation | CatchParameterDeclaration
-      | DestructuringObjectPropertyLiteralNonString | DestructuringExpressionPattern
-      | PredicateDeclarationForImplementation | PredicateDeclarationWithoutExpression
-      | PredicateDeclarationAnonymousParameters | PredicateInvalidBody
-      | PredicateFunctionAbstractReturnType | PredicateVoidReturn | MultipleIndexers
-      | MultipleProtos | ExplicitCallAfterProto | ExplicitProtoAfterCall | SpreadArgument
-      | ImportDynamicArgument | IllegalName | UnsupportedInternalSlot _ ) as u ->
+      | ReactCreateClassPropertyNonInit | RequireDynamicArgument | CatchParameterAnnotation
+      | CatchParameterDeclaration | DestructuringObjectPropertyLiteralNonString
+      | DestructuringExpressionPattern | PredicateDeclarationForImplementation
+      | PredicateDeclarationWithoutExpression | PredicateDeclarationAnonymousParameters
+      | PredicateInvalidBody | PredicateFunctionAbstractReturnType | PredicateVoidReturn
+      | MultipleIndexers | MultipleProtos | ExplicitCallAfterProto | ExplicitProtoAfterCall
+      | SpreadArgument | ImportDynamicArgument | IllegalName | UnsupportedInternalSlot _ ) as u ->
       u
   in
   function
@@ -805,6 +810,7 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
   | ENonConstVarExport (loc, r) -> ENonConstVarExport (f loc, Base.Option.map ~f:map_reason r)
   | EThisInExportedFunction loc -> EThisInExportedFunction (f loc)
   | EMixedImportAndRequire (loc, r) -> EMixedImportAndRequire (f loc, map_reason r)
+  | EToplevelLibraryImport loc -> EToplevelLibraryImport (f loc)
   | EExportRenamedDefault (loc, s) -> EExportRenamedDefault (f loc, s)
   | EUnreachable loc -> EUnreachable (f loc)
   | EInvalidTypeof (loc, s) -> EInvalidTypeof (f loc, s)
@@ -959,6 +965,10 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
   | EMalformedCode loc -> EMalformedCode (f loc)
   | EImplicitInstantiationTemporaryError (loc, msg) ->
     EImplicitInstantiationTemporaryError (f loc, msg)
+  | EImportInternalReactServerModule loc -> EImportInternalReactServerModule (f loc)
+  | EImplicitInstantiationUnderconstrainedError { reason_call; reason_l; bound } ->
+    EImplicitInstantiationUnderconstrainedError
+      { reason_call = map_reason reason_call; reason_l = map_reason reason_l; bound }
 
 let desc_of_reason r = Reason.desc_of_reason ~unwrap:(is_scalar_reason r) r
 
@@ -1114,6 +1124,7 @@ let util_use_op_of_msg nope util = function
   | ENonConstVarExport _
   | EThisInExportedFunction _
   | EMixedImportAndRequire _
+  | EToplevelLibraryImport _
   | EExportRenamedDefault _
   | EUnreachable _
   | EInvalidTypeof (_, _)
@@ -1167,7 +1178,9 @@ let util_use_op_of_msg nope util = function
   | EEnumMemberUsedAsType _
   | EAssignExportedConstLikeBinding _
   | EMalformedCode _
-  | EImplicitInstantiationTemporaryError _ ->
+  | EImplicitInstantiationTemporaryError _
+  | EImportInternalReactServerModule _
+  | EImplicitInstantiationUnderconstrainedError _ ->
     nope
 
 (* Not all messages (i.e. those whose locations are based on use_ops) have locations that can be
@@ -1283,6 +1296,7 @@ let loc_of_msg : 'loc t' -> 'loc option = function
   | ENonConstVarExport (loc, _)
   | EThisInExportedFunction loc
   | EMixedImportAndRequire (loc, _)
+  | EToplevelLibraryImport loc
   | EExportRenamedDefault (loc, _)
   | EIndeterminateModuleType loc
   | EExperimentalEnums loc
@@ -1308,8 +1322,11 @@ let loc_of_msg : 'loc t' -> 'loc option = function
   | ETypeParamMinArity (loc, _)
   | EAssignExportedConstLikeBinding { loc; _ }
   | EMalformedCode loc
-  | EImplicitInstantiationTemporaryError (loc, _) ->
+  | EImplicitInstantiationTemporaryError (loc, _)
+  | EImportInternalReactServerModule loc ->
     Some loc
+  | EImplicitInstantiationUnderconstrainedError { reason_call; _ } ->
+    Some (poly_loc_of_reason reason_call)
   | ELintSetting (loc, _) -> Some loc
   | ETypeParamArity (loc, _) -> Some loc
   | ESketchyNullLint { loc; _ } -> Some loc
@@ -1872,7 +1889,7 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
     let features =
       match name with
       | Some x when is_internal_module_name x ->
-        [text "Cannot resolve module "; code (uninternal_module_name x); text "."]
+        [text "Cannot resolve module "; code (uninternal_name x); text "."]
       | None -> [text "Cannot resolve name "; desc reason; text "."]
       | Some x when is_internal_name x -> [text "Cannot resolve name "; desc reason; text "."]
       | Some x -> [text "Cannot resolve name "; code x; text "."]
@@ -2190,14 +2207,6 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
         [text "The parameter passed to "; code "require"; text " must be a string literal."]
       | ImportDynamicArgument ->
         [text "The parameter passed to "; code "import"; text " must be a string literal."]
-      | RequireLazyDynamicArgument ->
-        [
-          text "The first argument to ";
-          code "requireLazy";
-          text " must be an ";
-          text "array literal of string literals and the second argument must ";
-          text "be a callback.";
-        ]
       | CatchParameterAnnotation ->
         [text "Type annotations for catch parameters are not yet supported."]
       | CatchParameterDeclaration -> [text "Unsupported catch parameter declaration."]
@@ -2512,6 +2521,17 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
             text " and ";
             code "require";
             text " statements in the same file.";
+          ];
+      }
+  | EToplevelLibraryImport _ ->
+    Normal
+      {
+        features =
+          [
+            text "Cannot use an import statement at the toplevel of a library file. ";
+            text "Import statements may only appear inside a ";
+            code "declare module";
+            text ".";
           ];
       }
   | EExportRenamedDefault (_, name) ->
@@ -3414,6 +3434,30 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
           ];
       }
   | EImplicitInstantiationTemporaryError (_, msg) -> Normal { features = [text msg] }
+  | EImportInternalReactServerModule _ ->
+    Normal
+      {
+        features =
+          [
+            text "Do not import ";
+            code Type.react_server_module_ref;
+            text " directly. Instead, ensure you are in a React Server file and import ";
+            code "react";
+            text " normally.";
+          ];
+      }
+  | EImplicitInstantiationUnderconstrainedError { reason_call; reason_l; bound } ->
+    Normal
+      {
+        features =
+          [
+            code bound;
+            text " is underconstrained by ";
+            ref reason_call;
+            text " and is defined in ";
+            ref reason_l;
+          ];
+      }
 
 let is_lint_error = function
   | EUntypedTypeImport _
@@ -3598,6 +3642,7 @@ let error_code_of_message err : error_code option =
   | EMissingLocalAnnotation _ -> Some MissingLocalAnnot
   | EMissingTypeArgs _ -> Some MissingTypeArg
   | EMixedImportAndRequire _ -> Some MixedImportAndRequire
+  | EToplevelLibraryImport _ -> Some ToplevelLibraryImport
   | EModuleOutsideRoot (_, _) -> Some InvalidModule
   | ENoDefaultExport (_, _, _) -> Some MissingExport
   | ENoNamedExport (_, _, _, _) -> Some MissingExport
@@ -3656,9 +3701,11 @@ let error_code_of_message err : error_code option =
   | EUnsupportedKeyInObjectType _ -> Some IllegalKey
   | EUnsupportedSetProto _ -> Some CannotWrite
   | EUnsupportedSyntax (_, _) -> Some UnsupportedSyntax
+  | EImplicitInstantiationUnderconstrainedError _ -> Some UnderconstrainedImplicitInstantiation
   | EMalformedCode _
   | EImplicitInstantiationTemporaryError _
-  | EUnusedSuppression _ ->
+  | EUnusedSuppression _
+  | EImportInternalReactServerModule _ ->
     None
   | EUseArrayLiteral _ -> Some IllegalNewArray
   | EAnyValueUsedAsType _

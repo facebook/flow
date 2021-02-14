@@ -68,7 +68,7 @@ let union_flatten =
     | OptionalT { reason = r; type_ = t; use_desc } ->
       let void_t = VoidT.why_with_use_desc ~use_desc r |> with_trust Trust.bogus_trust in
       void_t :: flatten cx seen t
-    | DefT (_, _, EmptyT _) -> []
+    | DefT (_, _, EmptyT) -> []
     | _ -> [t]
   in
   (fun cx ts -> union_flatten cx (ref ISet.empty) ts)
@@ -146,12 +146,6 @@ class virtual ['a] t =
           t
         else
           GenericT { generic with bound = bound' }
-      | MergedT (r, uses) ->
-        let uses' = ListUtils.ident_map (self#use_type cx map_cx) uses in
-        if uses == uses' then
-          t
-        else
-          MergedT (r, uses')
       | ShapeT (r, t') ->
         let t'' = self#type_ cx map_cx t' in
         if t'' == t' then
@@ -303,7 +297,7 @@ class virtual ['a] t =
       | NumT _
       | StrT _
       | BoolT _
-      | EmptyT _
+      | EmptyT
       | MixedT _
       | SymbolT
       | NullT
@@ -1278,12 +1272,12 @@ class virtual ['a] t_with_uses =
           t
         else
           UnifyT (t1', t2')
-      | BecomeT (r, t') ->
+      | BecomeT { reason; t = t'; empty_success } ->
         let t'' = self#type_ cx map_cx t' in
         if t'' == t' then
           t
         else
-          BecomeT (r, t'')
+          BecomeT { reason; empty_success; t = t'' }
       | GetKeysT (r, t') ->
         let t'' = self#use_type cx map_cx t' in
         if t'' == t' then

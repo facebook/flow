@@ -80,7 +80,6 @@ type hash =
   | MaybeH
   | IntersectionH
   | UnionH
-  | MergedH
   | ShapeH
   | KeysH
   | SingletonStrH
@@ -249,7 +248,7 @@ let hash_of_def_ctor =
     | BoolT _ -> BoolH
     | CharSetT _ -> CharSetH
     | ClassT _ -> ClassH
-    | EmptyT _ -> EmptyH
+    | EmptyT -> EmptyH
     | EnumT _ -> EnumH
     | EnumObjectT _ -> EnumObjectH
     | FunT _ -> FunH
@@ -285,7 +284,6 @@ let hash_of_ctor =
     | OpaqueT _ -> failwith "undefined hash of OpaqueT"
     | AnyT _ -> AnyH
     | AnnotT _ -> AnnotH
-    | MergedT _ -> MergedH
     | BoundT _ -> BoundH
     | TypeDestructorTriggerT _ -> TvarDestructorH
     | CustomFunT (_, ObjectAssign) -> CustomFunObjectAssignH

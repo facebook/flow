@@ -19,10 +19,7 @@ type error_acc =
   * float
 
 type type_acc =
-  ( Context.t
-  * File_sig.With_ALoc.t FilenameMap.t
-  * (ALoc.t, ALoc.t * Type.t) Flow_ast.Program.t Utils_js.FilenameMap.t )
-  option
+  (Context.t * File_sig.With_ALoc.t * (ALoc.t, ALoc.t * Type.t) Flow_ast.Program.t) option
 
 type acc = type_acc * error_acc
 
@@ -44,24 +41,13 @@ type sig_opts_data = {
 
 type 'a merge_results = 'a merge_job_results * sig_opts_data
 
-type merge_context_result =
-  | MergeResult of {
-      cx: Context.t;
-      master_cx: Context.sig_t;
-    }
-  | CheckResult of {
-      cx: Context.t;
-      other_cxs: Context.t list;
-      master_cx: Context.sig_t;
-      file_sigs: File_sig.With_ALoc.t FilenameMap.t;
-      typed_asts: (ALoc.t, ALoc.t * Type.t) Flow_ast.Program.t FilenameMap.t;
-      coverage: Coverage_response.file_coverage FilenameMap.t;
-    }
-
 val merge_context :
-  options:Options.t -> reader:Abstract_state_reader.t -> File_key.t Nel.t -> merge_context_result
+  options:Options.t ->
+  reader:Abstract_state_reader.t ->
+  File_key.t Nel.t ->
+  Context.t * Context.sig_t
 
-val merge_contents_context :
+val check_contents_context :
   reader:State_reader.t ->
   Options.t ->
   File_key.t ->

@@ -370,13 +370,5 @@ Cannot resolve module `foo`. [cannot-resolve-module]
                       ^^^^^
 
 
-Error --------------------------------------------------------------------------------------------------- require.js:2:1
 
-Cannot call non-polymorphic function with type arguments. [nonpolymorphic-type-arg]
-
-   2| requireLazy<string>("foo");
-      ^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-
-
-Found 26 errors
+Found 25 errors

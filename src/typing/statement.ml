@@ -177,7 +177,10 @@ let snd_fst ((_, x), _) = x
 let inference_hook_tvar cx ploc =
   let r = mk_annot_reason (AnyT.desc (Unsound InferenceHooks)) ploc in
   let tvar = Tvar.mk_no_wrap cx r in
-  Flow.flow cx (OpenT (r, tvar), BecomeT (r, Unsoundness.at InferenceHooks ploc));
+  Flow.flow
+    cx
+    ( OpenT (r, tvar),
+      BecomeT { reason = r; t = Unsoundness.at InferenceHooks ploc; empty_success = true } );
   (r, tvar)
 
 let translate_identifier_or_literal_key t =
@@ -371,12 +374,12 @@ module Func_stmt_config = struct
         in
         Env.bind_implicit_let ~state:State.Initialized kind cx name t loc)
 
-  let destruct cx ~use_op:_ loc name default t =
+  let destruct cx ~use_op loc name default t =
     Base.Option.iter
       ~f:(fun d ->
         let reason = mk_reason (RIdentifier name) loc in
         let default_t = Flow.mk_default cx reason d in
-        Flow.flow_t cx (default_t, t))
+        Flow.flow cx (default_t, UseT (use_op, t)))
       default;
     bind cx name t loc;
     t
@@ -582,16 +585,15 @@ and statement_decl cx =
         | _ -> ());
         statement_decl cx body)
   | (_, Debugger _) -> ()
-  | (_, FunctionDeclaration { Ast.Function.id; async; generator; _ }) ->
-    (match id with
-    | Some (name_loc, { Ast.Identifier.name; comments = _ }) ->
+  | (function_loc, FunctionDeclaration { Ast.Function.id; async; generator; _ }) ->
+    let handle_named_function name_loc name =
       let r = func_reason ~async ~generator name_loc in
       let tvar = Tvar.mk cx r in
       Env.bind_fun cx name tvar name_loc
-    | None ->
-      failwith
-        ( "Flow Error: Nameless function declarations should always be given "
-        ^ "an implicit name before they get hoisted!" ))
+    in
+    (match id with
+    | Some (name_loc, { Ast.Identifier.name; comments = _ }) -> handle_named_function name_loc name
+    | None -> handle_named_function function_loc (internal_name "*default*"))
   | (_, EnumDeclaration { EnumDeclaration.id = (name_loc, { Ast.Identifier.name; _ }); _ }) ->
     if Context.enable_enums cx then
       let r = DescFormat.type_reason name name_loc in
@@ -613,13 +615,15 @@ and statement_decl cx =
       Env.bind_declare_fun cx name t id_loc
     | Some (func_decl, _) -> statement_decl cx (loc, func_decl))
   | (_, VariableDeclaration decl) -> variable_decl cx decl
-  | (_, ClassDeclaration { Ast.Class.id; _ }) ->
-    (match id with
-    | Some (name_loc, { Ast.Identifier.name; comments = _ }) ->
+  | (class_loc, ClassDeclaration { Ast.Class.id; _ }) ->
+    let handle_named_class name_loc name =
       let r = mk_reason (RType name) name_loc in
       let tvar = Tvar.mk cx r in
       Env.bind_implicit_let Scope.Entry.ClassNameBinding cx name tvar name_loc
-    | None -> ())
+    in
+    (match id with
+    | Some (name_loc, { Ast.Identifier.name; comments = _ }) -> handle_named_class name_loc name
+    | None -> handle_named_class class_loc (internal_name "*default*"))
   | ( (_, DeclareClass { DeclareClass.id = (name_loc, { Ast.Identifier.name; comments = _ }); _ })
     | (_, DeclareInterface { Interface.id = (name_loc, { Ast.Identifier.name; comments = _ }); _ })
     | ( _,
@@ -672,11 +676,9 @@ and statement_decl cx =
     | None -> ())
   | (_, ExportDefaultDeclaration { ExportDefaultDeclaration.declaration; _ }) ->
     (match declaration with
-    | ExportDefaultDeclaration.Declaration stmt ->
-      let (stmt, _) = Import_export.nameify_default_export_decl stmt in
-      statement_decl cx stmt
+    | ExportDefaultDeclaration.Declaration stmt -> statement_decl cx stmt
     | ExportDefaultDeclaration.Expression _ -> ())
-  | ( _,
+  | ( decl_loc,
       ImportDeclaration
         { ImportDeclaration.import_kind; specifiers; default; source = _; comments = _ } ) ->
     let isType =
@@ -685,6 +687,11 @@ and statement_decl cx =
       | ImportDeclaration.ImportTypeof -> true
       | ImportDeclaration.ImportValue -> false
     in
+    let is_global_lib_scope =
+      File_key.is_lib_file (Context.file cx) && Scope.is_global (Env.peek_scope ())
+    in
+    if is_global_lib_scope then
+      Flow_js.add_output cx Error_message.(EToplevelLibraryImport decl_loc);
     let bind_import local_name (loc : ALoc.t) isType =
       let reason =
         if isType then
@@ -692,11 +699,16 @@ and statement_decl cx =
         else
           mk_reason (RIdentifier local_name) loc
       in
-      let tvar = Tvar.mk cx reason in
+      let t =
+        if is_global_lib_scope then
+          AnyT.error reason
+        else
+          Tvar.mk cx reason
+      in
       if isType then
-        Env.bind_import_type cx local_name tvar loc
+        Env.bind_import_type cx local_name t loc
       else
-        Env.bind_import cx local_name tvar loc
+        Env.bind_import cx local_name t loc
     in
     Base.Option.iter ~f:(fun local -> bind_import (ident_name local) (fst local) isType) default;
 
@@ -2068,8 +2080,7 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t =
     let { Ast.Function.id; sig_loc; async; generator; _ } = func in
     let reason = func_reason ~async ~generator sig_loc in
     let func_ast =
-      match id with
-      | Some (_, { Ast.Identifier.name; comments = _ }) ->
+      let handle_named_function name =
         let general = Tvar.mk_where cx reason (Env.unify_declared_type cx name) in
         let (fn_type, func_ast) = mk_function_declaration None cx ~general reason func in
         let use_op =
@@ -2078,10 +2089,10 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t =
         in
         Env.init_fun cx ~use_op name fn_type loc;
         func_ast
-      | None ->
-        let general = Tvar.mk cx reason in
-        let (_, func_ast) = mk_function_declaration None cx ~general reason func in
-        func_ast
+      in
+      match id with
+      | Some (_, { Ast.Identifier.name; comments = _ }) -> handle_named_function name
+      | None -> handle_named_function (internal_name "*default*")
     in
     (loc, FunctionDeclaration func_ast)
   | (loc, EnumDeclaration enum) ->
@@ -2147,7 +2158,11 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t =
           { DeclareFunction.id = ((id_loc, t), id_name); annot = annot_ast; predicate; comments } ))
   | (loc, VariableDeclaration decl) -> (loc, VariableDeclaration (variables cx decl))
   | (class_loc, ClassDeclaration c) ->
-    let (name_loc, name) = extract_class_name class_loc c in
+    let (name_loc, name) =
+      match Ast.Class.(c.id) with
+      | Some (name_loc, { Ast.Identifier.name; comments = _ }) -> (name_loc, name)
+      | None -> (class_loc, internal_name "*default*")
+    in
     let reason = DescFormat.instance_reason name name_loc in
     Env.declare_implicit_let Scope.Entry.ClassNameBinding cx name name_loc;
     let general = Tvar.mk_where cx reason (Env.unify_declared_type cx name) in
@@ -2408,8 +2423,7 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t =
     let (declaration, export_info) =
       match declaration with
       | ExportDefaultDeclaration.Declaration decl ->
-        let (decl, undo_nameify) = Import_export.nameify_default_export_decl decl in
-        ( ExportDefaultDeclaration.Declaration (undo_nameify (statement cx decl)),
+        ( ExportDefaultDeclaration.Declaration (statement cx decl),
           (match decl with
           | (loc, FunctionDeclaration { Ast.Function.id = None; _ }) ->
             [("function() {}", loc, internal_name "*default*", None)]
@@ -3117,7 +3131,8 @@ and variable cx kind ?if_uninitialized id init =
             if has_anno then
               AnnotT
                 ( reason,
-                  Tvar.mk_where cx reason (fun t' -> Flow.flow cx (t, BecomeT (reason, t'))),
+                  Tvar.mk_where cx reason (fun t' ->
+                      Flow.flow cx (t, BecomeT { reason; t = t'; empty_success = true })),
                   false )
             else
               t
@@ -3591,7 +3606,11 @@ and expression_ ~cond ~annot cx loc e : (ALoc.t, ALoc.t * Type.t) Ast.Expression
     ((loc, t), JSXFragment f)
   | Class c ->
     let class_loc = loc in
-    let (name_loc, name) = extract_class_name class_loc c in
+    let (name_loc, name) =
+      match Ast.Class.(c.id) with
+      | Some (name_loc, { Ast.Identifier.name; comments = _ }) -> (name_loc, name)
+      | None -> (class_loc, "<<anonymous class>>")
+    in
     let reason = mk_reason (RIdentifier name) class_loc in
     let tvar = Tvar.mk cx reason in
     (match c.Ast.Class.id with
@@ -3959,110 +3978,6 @@ and optional_chain ~cond ~is_existence_check ?sentinel_refine cx ((loc, e) as ex
           let ignore_non_literals = Context.should_ignore_non_literal_requires cx in
           if not ignore_non_literals then
             Flow.add_output cx Error_message.(EUnsupportedSyntax (loc, RequireDynamicArgument));
-          (AnyT.at (AnyError None) loc, Tast_utils.error_mapper#arg_list arguments)
-      in
-      let id_t = bogus_trust () |> MixedT.at callee_loc in
-      Some
-        ( ( (loc, lhs_t),
-            call_ast
-              {
-                Call.callee = ((callee_loc, id_t), Identifier ((id_loc, id_t), name));
-                targs;
-                arguments;
-                comments;
-              } ),
-          None,
-          None )
-    | Call
-        {
-          Call.callee =
-            ( callee_loc,
-              Identifier
-                (id_loc, ({ Ast.Identifier.name = "requireLazy" as n; comments = _ } as name)) );
-          targs;
-          arguments;
-          comments;
-        }
-      when not (Env.local_scope_entry_exists n) ->
-      let targs =
-        Base.Option.map targs (fun (loc, args) ->
-            (loc, snd (convert_call_targs cx SMap.empty args)))
-      in
-      let (lhs_t, arguments) =
-        match (targs, arguments) with
-        | ( None,
-            ( args_loc,
-              {
-                ArgList.arguments =
-                  [
-                    Expression ((_, Array { Array.elements; comments = _ }) as elems_exp);
-                    Expression callback_expr;
-                  ];
-                comments;
-              } ) ) ->
-          (*
-           * From a static perspective (and as long as side-effects aren't
-           * considered in Flow), a requireLazy call can be viewed as an immediate
-           * call to require() for each of the modules, and then an immediate call
-           * to the requireLazy() callback with the results of each of the prior
-           * calls to require().
-           *
-           * TODO: requireLazy() is FB-specific. Let's find a way to either
-           *       generalize or toggle this only for the FB environment.
-           *)
-          let element_to_module_tvar tvars = function
-            | Array.Expression
-                ( source_loc,
-                  Ast.Expression.Literal { Ast.Literal.value = Ast.Literal.String module_name; _ }
-                ) ->
-              let module_tvar = Import_export.require cx (source_loc, module_name) loc in
-              module_tvar :: tvars
-            | _ ->
-              Flow.add_output
-                cx
-                Error_message.(EUnsupportedSyntax (loc, RequireLazyDynamicArgument));
-              tvars
-          in
-          let rev_module_tvars = List.fold_left element_to_module_tvar [] elements in
-          let module_tvars = List.rev_map (fun e -> Arg e) rev_module_tvars in
-          let (((_, callback_expr_t), _) as callback_ast) =
-            expression cx ~annot:None callback_expr
-          in
-          let reason = mk_reason (RCustom "requireLazy() callback") loc in
-          let use_op =
-            Op
-              (FunCall
-                 {
-                   op = mk_expression_reason ex;
-                   fn = mk_expression_reason callback_expr;
-                   args = [];
-                   local = true;
-                 })
-          in
-          let _ = func_call cx reason ~use_op callback_expr_t None module_tvars in
-          ( NullT.at loc |> with_trust bogus_trust,
-            ( args_loc,
-              {
-                ArgList.arguments =
-                  [Expression (expression cx ~annot:None elems_exp); Expression callback_ast];
-                comments;
-              } ) )
-        | (Some _, arguments) ->
-          ignore (arg_list cx arguments);
-          Flow.add_output
-            cx
-            Error_message.(
-              ECallTypeArity
-                {
-                  call_loc = loc;
-                  is_new = false;
-                  reason_arity = Reason.(locationless_reason (RFunction RNormal));
-                  expected_arity = 0;
-                });
-          (AnyT.at (AnyError None) loc, Tast_utils.error_mapper#arg_list arguments)
-        | (None, arguments) ->
-          ignore (arg_list cx arguments);
-          Flow.add_output cx Error_message.(EUnsupportedSyntax (loc, RequireLazyDynamicArgument));
           (AnyT.at (AnyError None) loc, Tast_utils.error_mapper#arg_list arguments)
       in
       let id_t = bogus_trust () |> MixedT.at callee_loc in
@@ -7604,14 +7519,6 @@ and static_method_call_Object cx loc callee_loc prop_loc expr obj_t m targs args
            })
     in
     (snd (method_call cx reason ~use_op prop_loc (expr, obj_t, m) targts argts), targ_asts, arg_asts)
-
-and extract_class_name class_loc =
-  let open Ast.Class in
-  function
-  | { id; _ } ->
-    (match id with
-    | Some (name_loc, { Ast.Identifier.name; comments = _ }) -> (name_loc, name)
-    | None -> (class_loc, "<<anonymous class>>"))
 
 and mk_class cx class_loc ~class_annot ~name_loc ~general reason c =
   let def_reason = repos_reason class_loc reason in

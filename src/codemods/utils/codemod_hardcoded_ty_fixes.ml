@@ -82,7 +82,7 @@ module Make (Extra : BASE_STATS) = struct
           (* `empty` annotations remain *)
           t
         | Ty.Bot (Ty.NoLowerWithUpper (Ty.SomeKnownUpper ub)) ->
-          (* empty with `UseT ub` upper bounds becomes `ub` - equivalent to `MergedT (UseT ub)` *)
+          (* empty with `UseT ub` upper bounds becomes `ub` *)
           acc <- Acc.warn acc loc Warning.Empty_SomeKnownUpper;
           this#on_t env ub
         (* Heuristic: These are rarely useful as full precision literal types *)

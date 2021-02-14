@@ -422,8 +422,8 @@ let rec make_error_printable ?(speculation = false) (error : Loc.t t) : Loc.t Er
                 `Root (def, None, [text "Cannot define shadowed proto property"])
               | (Some own_loc, Some proto_loc) ->
                 let def = mk_reason (RProperty (Some prop)) own_loc in
-                let proto = mk_reason (RIdentifier prop) proto_loc in
-                `Root (def, None, [text "Cannot shadow proto property "; ref proto]))
+                let proto = mk_reason (RProperty (Some prop)) proto_loc in
+                `Root (def, None, [text "Cannot shadow proto "; ref proto]))
             | Op (Coercion { from; target }) ->
               `Root (from, None, [text "Cannot coerce "; desc from; text " to "; desc target])
             | Op (FunCall { op; fn; _ }) -> `Root (op, Some fn, [text "Cannot call "; desc fn])
@@ -464,6 +464,8 @@ let rec make_error_printable ?(speculation = false) (error : Loc.t t) : Loc.t Er
             | Op (GeneratorYield { value }) ->
               `Root (value, None, [text "Cannot yield "; desc value])
             | Op (GetProperty prop) -> `Root (prop, None, [text "Cannot get "; desc prop])
+            | Op (IndexedTypeAccess { _object; index }) ->
+              `Root (index, None, [text "Cannot access "; desc index; text " on "; desc _object])
             | Frame (FunParam _, Op (JSXCreateElement { op; component; _ }))
             | Op (JSXCreateElement { op; component; _ }) ->
               `Root (op, Some component, [text "Cannot create "; desc component; text " element"])
@@ -800,16 +802,6 @@ let rec make_error_printable ?(speculation = false) (error : Loc.t t) : Loc.t Er
         | _ ->
           begin
             match (desc_of_reason lower, desc_of_reason upper) with
-            | (RPolyTest _, RPolyTest _) when loc_of_reason lower = loc_of_reason upper ->
-              make_error
-                (loc_of_reason lower)
-                [
-                  text "the expected type is not parametric in ";
-                  ref upper;
-                  text ", perhaps due to the use of ";
-                  code "*";
-                  text " or the lack of a type annotation";
-                ]
             | (RLongStringLit n, RStringLit _) ->
               make_error
                 (loc_of_reason lower)

@@ -198,7 +198,7 @@ let rec dump_t_ (depth, tvars) cx t =
     | AnyT (_, src) -> p ~extra:(string_of_any_source src) t
     | DefT (_, trust, MixedT flavor) ->
       p ~trust:(Some trust) ~extra:(string_of_mixed_flavor flavor) t
-    | DefT (_, trust, EmptyT _)
+    | DefT (_, trust, EmptyT)
     | DefT (_, trust, SymbolT)
     | DefT (_, trust, NullT)
     | DefT (_, trust, VoidT) ->
@@ -299,13 +299,6 @@ let rec dump_t_ (depth, tvars) cx t =
              "[%s]%s"
              (String.concat "; " (Base.List.map ~f:kid (UnionRep.members rep)))
              (UnionRep.string_of_specialization rep))
-        t
-    | MergedT (_, uses) ->
-      p
-        ~extra:
-          ( "["
-          ^ String.concat ", " (Base.List.map ~f:(dump_use_t_ (depth - 1, tvars) cx) uses)
-          ^ "]" )
         t
     | DefT (_, trust, IdxWrapper inner_obj) -> p ~trust:(Some trust) ~extra:(kid inner_obj) t
     | DefT (_, trust, ReactAbstractComponentT _) -> p ~trust:(Some trust) t
@@ -663,7 +656,7 @@ and dump_use_t_ (depth, tvars) cx t =
     | AssertForInRHST _ -> p t
     | AssertIterableT _ -> p t
     | AssertImportIsValueT _ -> p t
-    | BecomeT (_, arg) -> p ~extra:(kid arg) t
+    | BecomeT { reason = _; t = arg; empty_success = _ } -> p ~extra:(kid arg) t
     | BindT (use_op, _, _, _) -> p t ~extra:(string_of_use_op use_op)
     | CallElemT (_, _, _, _) -> p t
     | CallT (use_op, _, { call_args_tlist; call_tout = (call_r, call_tvar); call_this_t; _ }) ->
@@ -1449,6 +1442,7 @@ let dump_error_message =
     | EThisInExportedFunction loc -> spf "EThisInExportedFunction (%s)" (string_of_aloc loc)
     | EMixedImportAndRequire (loc, reason) ->
       spf "EMixedImportAndRequire (%s, %s)" (string_of_aloc loc) (dump_reason cx reason)
+    | EToplevelLibraryImport loc -> spf "EToplevelLibraryImport (%s)" (string_of_aloc loc)
     | EExportRenamedDefault (loc, s) -> spf "EExportRenamedDefault (%s, %s)" (string_of_aloc loc) s
     | EUnreachable loc -> spf "EUnreachable (%s)" (string_of_aloc loc)
     | EInvalidObjectKit { reason; reason_op; use_op } ->
@@ -1726,6 +1720,9 @@ let dump_error_message =
         (ListUtils.to_string ", " (dump_reason cx) blame_reasons)
     | EMalformedCode loc -> spf "EMalformedCode (%s)" (string_of_aloc loc)
     | EImplicitInstantiationTemporaryError _ -> "EImplicitInstantiationTemporaryError"
+    | EImportInternalReactServerModule loc ->
+      spf "EImportInternalReactServerModule (%s)" (string_of_aloc loc)
+    | EImplicitInstantiationUnderconstrainedError _ -> "EImplicitInstantiationUnderconstrainedError"
 
 module Verbose = struct
   let print_if_verbose_lazy cx trace ?(delim = "") ?(indent = 0) (lines : string list Lazy.t) =

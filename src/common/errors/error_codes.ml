@@ -100,6 +100,7 @@ type error_code =
   | MissingExport
   | MissingTypeArg
   | MixedImportAndRequire
+  | ToplevelLibraryImport
   | ModuleTypeConflict
   | NameAlreadyBound
   | NonConstVarExport
@@ -130,6 +131,7 @@ type error_code =
   | TypeAsValue
   | UnclearAddition
   | UnclearType
+  | UnderconstrainedImplicitInstantiation
   | UninitializedInstanceProperty
   | UnnecessaryInvariant
   | UnnecessaryOptionalChain
@@ -289,9 +291,11 @@ let string_of_code : error_code -> string = function
   | Speculation -> "speculation"
   | SpeculationAmbiguous -> "speculation-ambiguous"
   | ThisInExportedFunction -> "this-in-exported-function"
+  | ToplevelLibraryImport -> "toplevel-library-import"
   | TypeAsValue -> "type-as-value"
   | UnclearAddition -> "unclear-addition"
   | UnclearType -> "unclear-type"
+  | UnderconstrainedImplicitInstantiation -> "underconstrained-implicit-instantiation"
   | UninitializedInstanceProperty -> "uninitialized-instance-property"
   | UnnecessaryInvariant -> "unnecessary-invariant"
   | UnnecessaryOptionalChain -> "unnecessary-optional-chain"

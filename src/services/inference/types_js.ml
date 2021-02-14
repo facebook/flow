@@ -477,7 +477,8 @@ let remove_old_results phase current_results file =
   let new_coverage =
     match phase with
     | Context.Merging
-    | Context.Normalizing ->
+    | Context.Normalizing
+    | Context.InitLib ->
       coverage
     | Context.Checking -> FilenameMap.remove file coverage
   in
@@ -1110,7 +1111,7 @@ let ensure_checked_dependencies ~options ~reader ~env file file_sig =
 (** TODO: handle case when file+contents don't agree with file system state **)
 let merge_contents ~options ~env ~reader filename info (ast, file_sig) =
   let%lwt () = ensure_checked_dependencies ~options ~reader ~env filename file_sig in
-  Lwt.return (Merge_service.merge_contents_context ~reader options filename ast info file_sig)
+  Lwt.return (Merge_service.check_contents_context ~reader options filename ast info file_sig)
 
 let errors_of_context ~options ~env ~lazy_table_of_aloc filename tolerable_errors cx =
   let errors = Context.errors cx in
@@ -1228,35 +1229,29 @@ let type_contents ~options ~env ~profiling contents filename =
 
 let init_libs ~options ~profiling ~local_errors ~warnings ~suppressions ~reader ordered_libs =
   Memory_utils.with_memory_timer_lwt ~options "InitLibs" profiling (fun () ->
-      let%lwt lib_files =
-        let options =
-          match Options.verbose options with
-          | Some { Verbose.enabled_during_flowlib = false; _ } ->
-            (* Normally we disable verbosity while loading the libs. But if we're running with
-             * --verbose-flowlib then we want to leave verbosity on *)
-            { options with Options.opt_verbose = None }
-          | _ -> options
-        in
+      let options =
+        match Options.verbose options with
+        | Some { Verbose.enabled_during_flowlib = false; _ } ->
+          (* Normally we disable verbosity while loading the libs. But if we're running with
+           * --verbose-flowlib then we want to leave verbosity on *)
+          { options with Options.opt_verbose = None }
+        | _ -> options
+      in
+      let%lwt {
+            Init_js.ok;
+            errors = lib_errors;
+            warnings = lib_warnings;
+            suppressions = lib_suppressions;
+            exports;
+          } =
         Init_js.init ~options ~reader ordered_libs
       in
       Lwt.return
-      @@ List.fold_left
-           (fun acc (lib_file, ok, errs, warnings, suppressions) ->
-             let (all_ok, errors_acc, warnings_acc, suppressions_acc) = acc in
-             let all_ok =
-               if ok then
-                 all_ok
-               else
-                 false
-             in
-             let errors_acc = update_errset errors_acc lib_file errs in
-             let warnings_acc = update_errset warnings_acc lib_file warnings in
-             let suppressions_acc =
-               Error_suppressions.update_suppressions suppressions_acc suppressions
-             in
-             (all_ok, errors_acc, warnings_acc, suppressions_acc))
-           (true, local_errors, warnings, suppressions)
-           lib_files)
+        ( ok,
+          FilenameMap.union lib_errors local_errors,
+          FilenameMap.union lib_warnings warnings,
+          Error_suppressions.update_suppressions lib_suppressions suppressions,
+          exports ))
 
 let is_file_tracked_and_checked ~reader filename =
   Module_heaps.Reader_dispatcher.is_tracked_file ~reader filename
@@ -2524,7 +2519,7 @@ let init_from_saved_state ~profiling ~workers ~saved_state ~updates options =
      *)
     let ordered_libs = List.rev_append (List.rev ordered_flowlib_libs) ordered_non_flowlib_libs in
     let libs = SSet.of_list ordered_libs in
-    let%lwt (libs_ok, local_errors, warnings, suppressions) =
+    let%lwt (libs_ok, local_errors, warnings, suppressions, lib_exports) =
       let suppressions = Error_suppressions.empty in
       init_libs ~options ~profiling ~local_errors ~warnings ~suppressions ~reader ordered_libs
     in
@@ -2582,7 +2577,7 @@ let init_from_saved_state ~profiling ~workers ~saved_state ~updates options =
     Hh_logger.info "Indexing files";
     let%lwt exports =
       Memory_utils.with_memory_timer_lwt ~options "Indexing" profiling (fun () ->
-          Export_service.init ~workers ~reader parsed_set)
+          Export_service.init ~workers ~reader ~libs:lib_exports parsed_set)
     in
 
     let env =
@@ -2676,7 +2671,7 @@ let init_from_scratch ~profiling ~workers options =
   in
   let local_errors = merge_error_maps package_errors local_errors in
   Hh_logger.info "Loading libraries";
-  let%lwt (libs_ok, local_errors, warnings, suppressions) =
+  let%lwt (libs_ok, local_errors, warnings, suppressions, lib_exports) =
     let suppressions = Error_suppressions.empty in
     init_libs ~options ~profiling ~local_errors ~warnings ~suppressions ~reader ordered_libs
   in
@@ -2719,7 +2714,7 @@ let init_from_scratch ~profiling ~workers options =
   Hh_logger.info "Indexing files";
   let%lwt exports =
     Memory_utils.with_memory_timer_lwt ~options "Indexing" profiling (fun () ->
-        Export_service.init ~workers ~reader parsed)
+        Export_service.init ~workers ~reader ~libs:lib_exports parsed)
   in
   Hh_logger.info "Done";
 

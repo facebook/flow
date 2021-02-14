@@ -1,6 +1,6 @@
 Error ----------------------------------------------------------------------------------------------- issue-4070.js:6:17
 
-Property `@@iterator` is missing in undefined [1] but exists in `$Iterable` [2]. [incompatible-type]
+undefined [1] is incompatible with `$Iterable` [2]. [incompatible-type]
 
    issue-4070.js:6:17
       6| ys.set('a', [...y]);
@@ -17,7 +17,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- issue-4070.js:7:17
 
-Property `@@iterator` is missing in undefined [1] but exists in `$Iterable` [2]. [incompatible-type]
+undefined [1] is incompatible with `$Iterable` [2]. [incompatible-type]
 
    issue-4070.js:7:17
       7| ys.set('a', [...y]);
@@ -34,7 +34,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- issue-4070.js:8:17
 
-Property `@@iterator` is missing in undefined [1] but exists in `$Iterable` [2]. [incompatible-type]
+undefined [1] is incompatible with `$Iterable` [2]. [incompatible-type]
 
    issue-4070.js:8:17
       8| ys.set('a', [...y]);
@@ -51,7 +51,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- issue-4070.js:9:17
 
-Property `@@iterator` is missing in undefined [1] but exists in `$Iterable` [2]. [incompatible-type]
+undefined [1] is incompatible with `$Iterable` [2]. [incompatible-type]
 
    issue-4070.js:9:17
       9| ys.set('a', [...y]);

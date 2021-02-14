@@ -422,8 +422,7 @@ let infer_ast ~lint_severities cx filename comments aloc_ast =
         (Reason.internal_name "exports")
         (Entry.new_var
            ~loc:(Reason.aloc_of_reason reason_exports_module)
-           ~specific:
-             (Type.DefT (reason_exports_module, Type.bogus_trust (), Type.EmptyT Type.Bottom))
+           ~specific:(Type.DefT (reason_exports_module, Type.bogus_trust (), Type.EmptyT))
            (Type.Inferred (Type.Unsoundness.exports_any reason_exports_module)))
         scope;
 
@@ -493,7 +492,7 @@ let infer_lib_file ~exclude_syms ~lint_severities ~file_sig cx ast =
        confident that we don't support them in any sensible way. *)
     add_require_tvars cx file_sig
   in
-  let module_scope = Scope.fresh () in
+  let module_scope = Scope.fresh ~var_scope_kind:Scope.Global () in
   Env.init_env ~exclude_syms cx module_scope;
 
   with_libdef_builtins cx (fun () ->

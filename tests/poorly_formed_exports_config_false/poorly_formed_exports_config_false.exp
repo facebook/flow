@@ -1,4 +1,12 @@
 FLOW STATUS:
+Error ------------------------------------------------------------------------------------------------- libs/libs.js:4:3
+
+Cannot resolve name `exports`. [cannot-resolve-name]
+
+   4|   exports.foo = 5;
+        ^^^^^^^
+
+
 Error ---------------------------------------------------------------------------------------- bad-default-export.js:4:3
 
 Exports can only appear at the top level [invalid-export]
@@ -8,7 +16,7 @@ Exports can only appear at the top level [invalid-export]
 
 
 
-Found 1 error
+Found 2 errors
 FLOW CHECK-CONTENTS:
 Error ---------------------------------------------------------------------------------------- bad-default-export.js:4:3
 

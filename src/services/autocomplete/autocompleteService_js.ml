@@ -171,7 +171,6 @@ let autocomplete_create_result_elt
 let ty_normalizer_options =
   Ty_normalizer_env.
     {
-      fall_through_merged = true;
       expand_internal_types = true;
       expand_type_aliases = false;
       flag_shadowed_type_params = true;
@@ -388,42 +387,48 @@ let local_value_identifiers ~options ~reader ~cx ~ac_loc ~file_sig ~ast ~typed_a
 let src_dir_of_loc ac_loc =
   Loc.source ac_loc |> Base.Option.map ~f:(fun key -> File_key.to_string key |> Filename.dirname)
 
+let text_edit_options options =
+  Js_layout_generator.{ default_opts with single_quotes = Options.format_single_quotes options }
+
+let flow_text_edit_of_lsp_text_edit { Lsp.TextEdit.range; newText } =
+  let loc = Flow_lsp_conversions.lsp_range_to_flow_loc range in
+  (loc, newText)
+
 let completion_item_of_autoimport
-    ~options ~reader ~src_dir ~ast ~ac_loc { Export_search.name; file_key; kind } =
-  let options =
-    Js_layout_generator.{ default_opts with single_quotes = Options.format_single_quotes options }
-  in
+    ~options ~reader ~src_dir ~ast ~ac_loc { Export_search.name; source; kind } =
+  let options = text_edit_options options in
   match
-    Code_action_service.text_edits_of_import ~options ~reader ~src_dir ~ast kind name file_key
+    Code_action_service.text_edits_of_import ~options ~reader ~src_dir ~ast kind name source
   with
-  | Error () -> None
-  | Ok { Code_action_service.title; edits } ->
-    let edits =
-      Base.List.map
-        ~f:(fun { Lsp.TextEdit.range; newText } ->
-          let loc = Flow_lsp_conversions.lsp_range_to_flow_loc ~source:file_key range in
-          (loc, newText))
-        edits
-    in
-    Some
-      {
-        ServerProt.Response.Completion.kind = Some Lsp.Completion.Variable;
-        name;
-        detail = name;
-        text_edits = text_edit (name, ac_loc) :: edits;
-        sort_text = sort_text_of_rank 100 (* TODO: use a constant *);
-        preselect = false;
-        documentation = Some title;
-      }
+  | None ->
+    {
+      ServerProt.Response.Completion.kind = Some Lsp.Completion.Variable;
+      name;
+      detail = name;
+      text_edits = [text_edit (name, ac_loc)];
+      sort_text = sort_text_of_rank 101 (* TODO: use a constant *);
+      preselect = false;
+      documentation = None;
+    }
+  | Some { Code_action_service.title; edits } ->
+    let edits = Base.List.map ~f:flow_text_edit_of_lsp_text_edit edits in
+    {
+      ServerProt.Response.Completion.kind = Some Lsp.Completion.Variable;
+      name;
+      detail = name;
+      text_edits = text_edit (name, ac_loc) :: edits;
+      sort_text = sort_text_of_rank 100 (* TODO: use a constant *);
+      preselect = false;
+      documentation = Some title;
+    }
 
 let append_completion_items_of_autoimports ~options ~reader ~ast ~ac_loc auto_imports acc =
   let src_dir = src_dir_of_loc ac_loc in
   Base.List.fold_left
     ~init:acc
     ~f:(fun acc auto_import ->
-      match completion_item_of_autoimport ~options ~reader ~src_dir ~ast ~ac_loc auto_import with
-      | Some item -> item :: acc
-      | None -> acc)
+      let item = completion_item_of_autoimport ~options ~reader ~src_dir ~ast ~ac_loc auto_import in
+      item :: acc)
     auto_imports
 
 (* env is all visible bound names at cursor *)
@@ -499,24 +504,126 @@ let autocomplete_id
   in
   let result =
     if imports then
-      let { Export_search.results = auto_imports; is_incomplete } =
-        let (before, _after) = remove_autocomplete_token token in
-        Export_search.search_values ~options:default_autoimport_options before env.ServerEnv.exports
-      in
-      let items =
-        append_completion_items_of_autoimports ~options ~reader ~ast ~ac_loc auto_imports items
-      in
-      { ServerProt.Response.Completion.items; is_incomplete }
+      let (before, _after) = remove_autocomplete_token token in
+      if before = "" then
+        (* for empty autocomplete requests (hitting ctrl-space without typing anything),
+           don't include any autoimport results, but do set `is_incomplete` so that
+           it queries again when you type something. *)
+        { ServerProt.Response.Completion.items; is_incomplete = true }
+      else
+        let { Export_search.results = auto_imports; is_incomplete } =
+          Export_search.search_values
+            ~options:default_autoimport_options
+            before
+            env.ServerEnv.exports
+        in
+        let items =
+          append_completion_items_of_autoimports ~options ~reader ~ast ~ac_loc auto_imports items
+        in
+        { ServerProt.Response.Completion.items; is_incomplete }
     else
+      (* if autoimports are not enabled, then we have all the results *)
       { ServerProt.Response.Completion.items; is_incomplete = false }
   in
   AcResult { result; errors_to_log }
+
+let rec binds_react = function
+  | File_sig.With_ALoc.BindIdent (_, name) -> name = "React"
+  | File_sig.With_ALoc.BindNamed bindings ->
+    Base.List.exists ~f:(fun (_remote, local) -> binds_react local) bindings
+
+(** Determines whether to autoimport React when autocompleting a JSX element.
+
+    By default JSX transforms into [React.createElement] which needs [React] to be
+    in scope. However, when [react.runtime=automatic] is set in [.flowconfig], this
+    happens behind the scenes.
+
+    We use a bit of a heuristic here. If [React] is imported or required anywhere
+    in the file, we won't autoimport it, even if it's not in scope for the JSX
+    component being completed. This is because imports are top-level so we'd cause
+    potential shadowing issues elsewhere in the file. *)
+let should_autoimport_react ~options ~imports ~file_sig =
+  if imports then
+    match Options.react_runtime options with
+    | Options.ReactRuntimeAutomatic -> false
+    | Options.ReactRuntimeClassic ->
+      let open File_sig.With_ALoc in
+      let requires_react =
+        Base.List.exists
+          ~f:(function
+            | Require { bindings = Some bindings; _ } -> binds_react bindings
+            | Import { ns = Some (_, "React"); _ } -> true
+            | Import { named; _ } ->
+              SMap.exists
+                (fun _remote local -> SMap.exists (fun name _locs -> name = "React") local)
+                named
+            | Require { bindings = None; _ }
+            | Import0 _
+            | ImportDynamic _ ->
+              false)
+          file_sig.module_sig.requires
+      in
+      not requires_react
+  else
+    false
+
+let autocomplete_jsx_element
+    ~env ~options ~reader ~cx ~ac_loc ~file_sig ~ast ~typed_ast ~imports ~tparams ~token =
+  let results =
+    autocomplete_id
+      ~env
+      ~options
+      ~reader
+      ~cx
+      ~ac_loc
+      ~file_sig
+      ~ast
+      ~typed_ast
+      ~include_super:false
+      ~include_this:false
+      ~imports
+      ~tparams
+      ~token
+  in
+  match results with
+  | AcResult { result; errors_to_log } ->
+    if should_autoimport_react ~options ~imports ~file_sig then
+      let open ServerProt.Response.Completion in
+      let options = text_edit_options options in
+      let import_edit =
+        let src_dir = src_dir_of_loc (loc_of_aloc ~reader ac_loc) in
+        let kind = Export_index.Namespace in
+        let name = "React" in
+        (* TODO: make this configurable between React and react *)
+        let source = Export_index.Builtin "react" in
+        Code_action_service.text_edits_of_import ~options ~reader ~src_dir ~ast kind name source
+      in
+      match import_edit with
+      | None -> results
+      | Some { Code_action_service.title = _; edits } ->
+        let edits = Base.List.map ~f:flow_text_edit_of_lsp_text_edit edits in
+        let { items; _ } = result in
+        let items =
+          Base.List.map
+            ~f:(fun item ->
+              let { text_edits; _ } = item in
+              let text_edits = text_edits @ edits in
+              { item with text_edits })
+            items
+        in
+        let result = { result with items } in
+        AcResult { result; errors_to_log }
+    else
+      results
+  | AcEmpty _
+  | AcFatalError _ ->
+    results
 
 (* Similar to autocomplete_member, except that we're not directly given an
    object type whose members we want to enumerate: instead, we are given a
    component class and we want to enumerate the members of its declared props
    type, so we need to extract that and then route to autocomplete_member. *)
-let autocomplete_jsx
+let autocomplete_jsx_attribute
     ~reader cx file_sig typed_ast cls ac_name ~used_attr_names ~has_value ac_loc ~tparams =
   let open Flow_js in
   let reason = Reason.mk_reason (Reason.RCustom ac_name) ac_loc in
@@ -799,19 +906,19 @@ let autocomplete_get_results
     ~env ~options ~reader ~cx ~file_sig ~ast ~typed_ast ~imports trigger_character cursor =
   let file_sig = File_sig.abstractify_locs file_sig in
   match Autocomplete_js.process_location ~trigger_character ~cursor ~typed_ast with
-  | Some (_, _, Acbinding) -> ("Empty", AcEmpty "Binding")
-  | Some (_, _, Acignored) -> ("Empty", AcEmpty "Ignored")
-  | Some (_, _, Accomment) -> ("Empty", AcEmpty "Comment")
-  | Some (_, _, Acliteral) -> ("Empty", AcEmpty "Literal")
-  | Some (_, _, Acjsxtext) -> ("Empty", AcEmpty "JSXText")
-  | Some (_, _, Acmodule) ->
+  | Some (_, _, Ac_binding) -> ("Empty", AcEmpty "Binding")
+  | Some (_, _, Ac_ignored) -> ("Empty", AcEmpty "Ignored")
+  | Some (_, _, Ac_comment) -> ("Empty", AcEmpty "Comment")
+  | Some (_, _, Ac_literal) -> ("Empty", AcEmpty "Literal")
+  | Some (_, _, Ac_jsx_text) -> ("Empty", AcEmpty "JSXText")
+  | Some (_, _, Ac_module) ->
     (* TODO: complete module names *)
     ("Acmodule", AcEmpty "Module")
-  | Some (_, _, Ackey) ->
+  | Some (_, _, Ac_key) ->
     (* TODO: complete object keys based on their upper bounds *)
     let result = { ServerProt.Response.Completion.items = []; is_incomplete = false } in
     ("Ackey", AcResult { result; errors_to_log = [] })
-  | Some (tparams, ac_loc, Acid { token; include_super; include_this }) ->
+  | Some (tparams, ac_loc, Ac_id { token; include_super; include_this }) ->
     ( "Acid",
       autocomplete_id
         ~env
@@ -827,7 +934,7 @@ let autocomplete_get_results
         ~imports
         ~tparams
         ~token )
-  | Some (tparams, ac_loc, Acmem { obj_type; in_optional_chain }) ->
+  | Some (tparams, ac_loc, Ac_member { obj_type; in_optional_chain }) ->
     ( "Acmem",
       autocomplete_member
         ~reader
@@ -839,9 +946,25 @@ let autocomplete_get_results
         in_optional_chain
         ac_loc
         ~tparams )
-  | Some (tparams, ac_loc, Acjsx { attribute_name; used_attr_names; component_t; has_value }) ->
+  | Some (tparams, ac_loc, Ac_jsx_element { token }) ->
+    ( "Ac_jsx_element",
+      autocomplete_jsx_element
+        ~env
+        ~options
+        ~reader
+        ~cx
+        ~ac_loc
+        ~file_sig
+        ~ast
+        ~typed_ast
+        ~imports
+        ~tparams
+        ~token )
+  | Some
+      (tparams, ac_loc, Ac_jsx_attribute { attribute_name; used_attr_names; component_t; has_value })
+    ->
     ( "Acjsx",
-      autocomplete_jsx
+      autocomplete_jsx_attribute
         ~reader
         cx
         file_sig
@@ -852,7 +975,7 @@ let autocomplete_get_results
         ~has_value
         ac_loc
         ~tparams )
-  | Some (tparams, ac_loc, Actype { token }) ->
+  | Some (tparams, ac_loc, Ac_type { token }) ->
     ( "Actype",
       autocomplete_unqualified_type
         ~env
@@ -866,7 +989,7 @@ let autocomplete_get_results
         ~typed_ast
         ~file_sig
         ~token )
-  | Some (tparams, ac_loc, Acqualifiedtype qtype) ->
+  | Some (tparams, ac_loc, Ac_qualified_type qtype) ->
     ( "Acqualifiedtype",
       autocomplete_qualified_type ~reader ~cx ~ac_loc ~file_sig ~typed_ast ~tparams ~qtype )
   | None ->

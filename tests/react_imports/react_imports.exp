@@ -8,8 +8,8 @@ Cannot cast `React.Component` to number because class `React.Component` [1] is i
         ^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:26:15
-   26| declare class React$Component<Props, State = void> {
+   <BUILTINS>/react.js:41:15
+   41| declare class React$Component<Props, State = void> {
                      ^^^^^^^^^^^^^^^ [1]
    commonjs-pascal.js:4:19
     4| (React.Component: number); // Error
@@ -48,8 +48,8 @@ Cannot get `React.Missing` because property `Missing` is missing in module `reac
                      ^^^^^^^
 
 References:
-   <BUILTINS>/react.js:455:27
-   455|   declare module.exports: $Exports<'react'>;
+   <BUILTINS>/react.js:472:27
+   472|   declare module.exports: $Exports<'react'>;
                                   ^^^^^^^^^^^^^^^^^ [1]
 
 
@@ -63,8 +63,8 @@ Cannot cast `React.Component` to number because class `React.Component` [1] is i
         ^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:26:15
-   26| declare class React$Component<Props, State = void> {
+   <BUILTINS>/react.js:41:15
+   41| declare class React$Component<Props, State = void> {
                      ^^^^^^^^^^^^^^^ [1]
    commonjs.js:4:19
     4| (React.Component: number); // Error
@@ -118,8 +118,8 @@ Cannot cast `React.Component` to number because class `React.Component` [1] is i
         ^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:26:15
-   26| declare class React$Component<Props, State = void> {
+   <BUILTINS>/react.js:41:15
+   41| declare class React$Component<Props, State = void> {
                      ^^^^^^^^^^^^^^^ [1]
    es-default-pascal.js:4:19
     4| (React.Component: number); // Error
@@ -158,8 +158,8 @@ Cannot get `React.Missing` because property `Missing` is missing in module `reac
                      ^^^^^^^
 
 References:
-   <BUILTINS>/react.js:455:27
-   455|   declare module.exports: $Exports<'react'>;
+   <BUILTINS>/react.js:472:27
+   472|   declare module.exports: $Exports<'react'>;
                                   ^^^^^^^^^^^^^^^^^ [1]
 
 
@@ -173,8 +173,8 @@ Cannot cast `React.Component` to number because class `React.Component` [1] is i
         ^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:26:15
-   26| declare class React$Component<Props, State = void> {
+   <BUILTINS>/react.js:41:15
+   41| declare class React$Component<Props, State = void> {
                      ^^^^^^^^^^^^^^^ [1]
    es-default.js:4:19
     4| (React.Component: number); // Error
@@ -190,39 +190,39 @@ Cannot get `React.Node` because property `Node` is missing in object type [1]. [
                                 ^^^^
 
 References:
-   <BUILTINS>/react.js:415:26
+   <BUILTINS>/react.js:432:26
                                  v-
-   415|   declare export default {|
-   416|     +DOM: typeof DOM,
-   417|     +PropTypes: typeof PropTypes,
-   418|     +version: typeof version,
-   419|     +checkPropTypes: typeof checkPropTypes,
-   420|     +memo: typeof memo,
-   421|     +lazy: typeof lazy,
-   422|     +createClass: typeof createClass,
-   423|     +createContext: typeof createContext,
-   424|     +createElement: typeof createElement,
-   425|     +cloneElement: typeof cloneElement,
-   426|     +createFactory: typeof createFactory,
-   427|     +createRef: typeof createRef,
-   428|     +forwardRef: typeof forwardRef,
-   429|     +isValidElement: typeof isValidElement,
+   432|   declare export default {|
+   433|     +DOM: typeof DOM,
+   434|     +PropTypes: typeof PropTypes,
+   435|     +version: typeof version,
+   436|     +checkPropTypes: typeof checkPropTypes,
+   437|     +memo: typeof memo,
+   438|     +lazy: typeof lazy,
+   439|     +createClass: typeof createClass,
+   440|     +createContext: typeof createContext,
+   441|     +createElement: typeof createElement,
+   442|     +cloneElement: typeof cloneElement,
+   443|     +createFactory: typeof createFactory,
+   444|     +createRef: typeof createRef,
+   445|     +forwardRef: typeof forwardRef,
+   446|     +isValidElement: typeof isValidElement,
       :
-   435|     +StrictMode: typeof StrictMode,
-   436|     +Profiler: typeof Profiler,
-   437|     +Suspense: typeof Suspense,
-   438|     +useContext: typeof useContext,
-   439|     +useState: typeof useState,
-   440|     +useReducer: typeof useReducer,
-   441|     +useRef: typeof useRef,
-   442|     +useEffect: typeof useEffect,
-   443|     +useLayoutEffect: typeof useLayoutEffect,
-   444|     +useCallback: typeof useCallback,
-   445|     +useMemo: typeof useMemo,
-   446|     +useImperativeHandle: typeof useImperativeHandle,
-   447|     +useTransition: typeof useTransition,
-   448|     +useDeferredValue: typeof useDeferredValue,
-   449|   |};
+   452|     +StrictMode: typeof StrictMode,
+   453|     +Profiler: typeof Profiler,
+   454|     +Suspense: typeof Suspense,
+   455|     +useContext: typeof useContext,
+   456|     +useState: typeof useState,
+   457|     +useReducer: typeof useReducer,
+   458|     +useRef: typeof useRef,
+   459|     +useEffect: typeof useEffect,
+   460|     +useLayoutEffect: typeof useLayoutEffect,
+   461|     +useCallback: typeof useCallback,
+   462|     +useMemo: typeof useMemo,
+   463|     +useImperativeHandle: typeof useImperativeHandle,
+   464|     +useTransition: typeof useTransition,
+   465|     +useDeferredValue: typeof useDeferredValue,
+   466|   |};
           -^ [1]
 
 
@@ -235,39 +235,39 @@ Cannot get `React.Node` because property `Node` is missing in object type [1]. [
                    ^^^^
 
 References:
-   <BUILTINS>/react.js:415:26
+   <BUILTINS>/react.js:432:26
                                  v-
-   415|   declare export default {|
-   416|     +DOM: typeof DOM,
-   417|     +PropTypes: typeof PropTypes,
-   418|     +version: typeof version,
-   419|     +checkPropTypes: typeof checkPropTypes,
-   420|     +memo: typeof memo,
-   421|     +lazy: typeof lazy,
-   422|     +createClass: typeof createClass,
-   423|     +createContext: typeof createContext,
-   424|     +createElement: typeof createElement,
-   425|     +cloneElement: typeof cloneElement,
-   426|     +createFactory: typeof createFactory,
-   427|     +createRef: typeof createRef,
-   428|     +forwardRef: typeof forwardRef,
-   429|     +isValidElement: typeof isValidElement,
+   432|   declare export default {|
+   433|     +DOM: typeof DOM,
+   434|     +PropTypes: typeof PropTypes,
+   435|     +version: typeof version,
+   436|     +checkPropTypes: typeof checkPropTypes,
+   437|     +memo: typeof memo,
+   438|     +lazy: typeof lazy,
+   439|     +createClass: typeof createClass,
+   440|     +createContext: typeof createContext,
+   441|     +createElement: typeof createElement,
+   442|     +cloneElement: typeof cloneElement,
+   443|     +createFactory: typeof createFactory,
+   444|     +createRef: typeof createRef,
+   445|     +forwardRef: typeof forwardRef,
+   446|     +isValidElement: typeof isValidElement,
       :
-   435|     +StrictMode: typeof StrictMode,
-   436|     +Profiler: typeof Profiler,
-   437|     +Suspense: typeof Suspense,
-   438|     +useContext: typeof useContext,
-   439|     +useState: typeof useState,
-   440|     +useReducer: typeof useReducer,
-   441|     +useRef: typeof useRef,
-   442|     +useEffect: typeof useEffect,
-   443|     +useLayoutEffect: typeof useLayoutEffect,
-   444|     +useCallback: typeof useCallback,
-   445|     +useMemo: typeof useMemo,
-   446|     +useImperativeHandle: typeof useImperativeHandle,
-   447|     +useTransition: typeof useTransition,
-   448|     +useDeferredValue: typeof useDeferredValue,
-   449|   |};
+   452|     +StrictMode: typeof StrictMode,
+   453|     +Profiler: typeof Profiler,
+   454|     +Suspense: typeof Suspense,
+   455|     +useContext: typeof useContext,
+   456|     +useState: typeof useState,
+   457|     +useReducer: typeof useReducer,
+   458|     +useRef: typeof useRef,
+   459|     +useEffect: typeof useEffect,
+   460|     +useLayoutEffect: typeof useLayoutEffect,
+   461|     +useCallback: typeof useCallback,
+   462|     +useMemo: typeof useMemo,
+   463|     +useImperativeHandle: typeof useImperativeHandle,
+   464|     +useTransition: typeof useTransition,
+   465|     +useDeferredValue: typeof useDeferredValue,
+   466|   |};
           -^ [1]
 
 
@@ -280,39 +280,39 @@ Cannot get `React.Missing` because property `Missing` is missing in object type 
                      ^^^^^^^
 
 References:
-   <BUILTINS>/react.js:415:26
+   <BUILTINS>/react.js:432:26
                                  v-
-   415|   declare export default {|
-   416|     +DOM: typeof DOM,
-   417|     +PropTypes: typeof PropTypes,
-   418|     +version: typeof version,
-   419|     +checkPropTypes: typeof checkPropTypes,
-   420|     +memo: typeof memo,
-   421|     +lazy: typeof lazy,
-   422|     +createClass: typeof createClass,
-   423|     +createContext: typeof createContext,
-   424|     +createElement: typeof createElement,
-   425|     +cloneElement: typeof cloneElement,
-   426|     +createFactory: typeof createFactory,
-   427|     +createRef: typeof createRef,
-   428|     +forwardRef: typeof forwardRef,
-   429|     +isValidElement: typeof isValidElement,
+   432|   declare export default {|
+   433|     +DOM: typeof DOM,
+   434|     +PropTypes: typeof PropTypes,
+   435|     +version: typeof version,
+   436|     +checkPropTypes: typeof checkPropTypes,
+   437|     +memo: typeof memo,
+   438|     +lazy: typeof lazy,
+   439|     +createClass: typeof createClass,
+   440|     +createContext: typeof createContext,
+   441|     +createElement: typeof createElement,
+   442|     +cloneElement: typeof cloneElement,
+   443|     +createFactory: typeof createFactory,
+   444|     +createRef: typeof createRef,
+   445|     +forwardRef: typeof forwardRef,
+   446|     +isValidElement: typeof isValidElement,
       :
-   435|     +StrictMode: typeof StrictMode,
-   436|     +Profiler: typeof Profiler,
-   437|     +Suspense: typeof Suspense,
-   438|     +useContext: typeof useContext,
-   439|     +useState: typeof useState,
-   440|     +useReducer: typeof useReducer,
-   441|     +useRef: typeof useRef,
-   442|     +useEffect: typeof useEffect,
-   443|     +useLayoutEffect: typeof useLayoutEffect,
-   444|     +useCallback: typeof useCallback,
-   445|     +useMemo: typeof useMemo,
-   446|     +useImperativeHandle: typeof useImperativeHandle,
-   447|     +useTransition: typeof useTransition,
-   448|     +useDeferredValue: typeof useDeferredValue,
-   449|   |};
+   452|     +StrictMode: typeof StrictMode,
+   453|     +Profiler: typeof Profiler,
+   454|     +Suspense: typeof Suspense,
+   455|     +useContext: typeof useContext,
+   456|     +useState: typeof useState,
+   457|     +useReducer: typeof useReducer,
+   458|     +useRef: typeof useRef,
+   459|     +useEffect: typeof useEffect,
+   460|     +useLayoutEffect: typeof useLayoutEffect,
+   461|     +useCallback: typeof useCallback,
+   462|     +useMemo: typeof useMemo,
+   463|     +useImperativeHandle: typeof useImperativeHandle,
+   464|     +useTransition: typeof useTransition,
+   465|     +useDeferredValue: typeof useDeferredValue,
+   466|   |};
           -^ [1]
 
 
@@ -326,8 +326,8 @@ Cannot cast `React.Component` to number because class `React.Component` [1] is i
         ^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:26:15
-   26| declare class React$Component<Props, State = void> {
+   <BUILTINS>/react.js:41:15
+   41| declare class React$Component<Props, State = void> {
                      ^^^^^^^^^^^^^^^ [1]
    es-namespace-pascal.js:4:19
     4| (React.Component: number); // Error
@@ -381,8 +381,8 @@ Cannot cast `React.Component` to number because class `React.Component` [1] is i
         ^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:26:15
-   26| declare class React$Component<Props, State = void> {
+   <BUILTINS>/react.js:41:15
+   41| declare class React$Component<Props, State = void> {
                      ^^^^^^^^^^^^^^^ [1]
    es-namespace.js:4:19
     4| (React.Component: number); // Error

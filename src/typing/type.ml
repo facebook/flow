@@ -96,8 +96,6 @@ module rec TypeTerm : sig
     | FunProtoApplyT of reason (* Function.prototype.apply *)
     | FunProtoBindT of reason (* Function.prototype.bind *)
     | FunProtoCallT of reason (* Function.prototype.call *)
-    (* a merged tvar that had no lowers *)
-    | MergedT of reason * use_t list
     (* constrains some properties of an object *)
     | ShapeT of reason * t
     | MatchingPropT of reason * string * t
@@ -200,7 +198,7 @@ module rec TypeTerm : sig
     | NumT of number_literal literal
     | StrT of string literal
     | BoolT of bool option
-    | EmptyT of empty_flavor
+    | EmptyT
     | MixedT of mixed_flavor
     | NullT
     | VoidT
@@ -345,6 +343,10 @@ module rec TypeTerm : sig
       }
     | GeneratorYield of { value: 'loc virtual_reason }
     | GetProperty of 'loc virtual_reason
+    | IndexedTypeAccess of {
+        _object: 'loc virtual_reason;
+        index: 'loc virtual_reason;
+      }
     | InitField of {
         op: 'loc virtual_reason;
         body: 'loc virtual_reason;
@@ -623,8 +625,16 @@ module rec TypeTerm : sig
     | ArrRestT of use_op * reason * int * t
     (* Guarded unification *)
     | UnifyT of t * t (* bidirectional *)
-    (* unifies with incoming concrete lower bound *)
-    | BecomeT of reason * t
+    (* unifies with incoming concrete lower bound
+     * empty_success is a hack that we will likely be able to get rid of once we move to
+     * local inference. When empty_success is true, we short circuit on the EmptyT ~> BecomeT
+     * flow. This is clearly a bug, but there are too many spurious errors due to typeof when
+     * we try to fix it. *)
+    | BecomeT of {
+        reason: reason;
+        t: t;
+        empty_success: bool;
+      }
     (* Keys *)
     | GetKeysT of reason * use_t
     | HasOwnPropT of use_op * reason * t (* The incoming string that we want to check against *)
@@ -943,10 +953,6 @@ module rec TypeTerm : sig
     | Mixed_non_null
     | Mixed_non_void
     | Mixed_function
-
-  and empty_flavor =
-    | Bottom
-    | Zeroed
 
   and any_source =
     | AnnotatedAny
@@ -1667,20 +1673,20 @@ end = struct
   let add_field x polarity loc t = SMap.add x (Field (loc, t, polarity))
 
   let add_getter x loc get_t map =
-    let p =
-      match SMap.find_opt x map with
-      | Some (Set (set_loc, set_t)) -> GetSet (loc, get_t, set_loc, set_t)
-      | _ -> Get (loc, get_t)
-    in
-    SMap.add x p map
+    SMap.update
+      x
+      (function
+        | Some (Set (set_loc, set_t)) -> Some (GetSet (loc, get_t, set_loc, set_t))
+        | _ -> Some (Get (loc, get_t)))
+      map
 
   let add_setter x loc set_t map =
-    let p =
-      match SMap.find_opt x map with
-      | Some (Get (get_loc, get_t)) -> GetSet (get_loc, get_t, loc, set_t)
-      | _ -> Set (loc, set_t)
-    in
-    SMap.add x p map
+    SMap.update
+      x
+      (function
+        | Some (Get (get_loc, get_t)) -> Some (GetSet (get_loc, get_t, loc, set_t))
+        | _ -> Some (Set (loc, set_t)))
+      map
 
   let add_method x loc t = SMap.add x (Method (loc, t))
 
@@ -2652,7 +2658,7 @@ end)
 module EmptyT = Primitive (struct
   let desc = REmpty
 
-  let make r trust = DefT (r, trust, EmptyT Bottom)
+  let make r trust = DefT (r, trust, EmptyT)
 end)
 
 module AnyT = struct
@@ -2815,7 +2821,7 @@ let is_proper_use = function
 
 (* convenience *)
 let is_bot = function
-  | DefT (_, _, EmptyT _) -> true
+  | DefT (_, _, EmptyT) -> true
   | _ -> false
 
 let is_top = function
@@ -2896,6 +2902,7 @@ let aloc_of_root_use_op : root_use_op -> ALoc.t = function
   | FunImplicitReturn { upper = op; _ }
   | GeneratorYield { value = op }
   | GetProperty op
+  | IndexedTypeAccess { index = op; _ }
   | JSXCreateElement { op; _ }
   | ReactCreateElementCall { op; _ }
   | TypeApplication { type' = op }
@@ -2945,7 +2952,7 @@ let string_of_def_ctor = function
   | BoolT _ -> "BoolT"
   | CharSetT _ -> "CharSetT"
   | ClassT _ -> "ClassT"
-  | EmptyT _ -> "EmptyT"
+  | EmptyT -> "EmptyT"
   | EnumT _ -> "EnumT"
   | EnumObjectT _ -> "EnumObjectT"
   | FunT _ -> "FunT"
@@ -2969,7 +2976,6 @@ let string_of_ctor = function
   | OpenT _ -> "OpenT"
   | AnyT _ -> "AnyT"
   | AnnotT _ -> "AnnotT"
-  | MergedT _ -> "MergedT"
   | BoundT _ -> "BoundT"
   | InternalT (ChoiceKitT (_, tool)) ->
     spf
@@ -3034,6 +3040,7 @@ let string_of_root_use_op (type a) : a virtual_root_use_op -> string = function
   | FunReturnStatement _ -> "FunReturnStatement"
   | GeneratorYield _ -> "GeneratorYield"
   | GetProperty _ -> "GetProperty"
+  | IndexedTypeAccess _ -> "IndexedTypeAccess"
   | Internal op -> spf "Internal(%s)" (string_of_internal_use_op op)
   | JSXCreateElement _ -> "JSXCreateElement"
   | ReactCreateElementCall _ -> "ReactCreateElementCall"
@@ -3489,3 +3496,5 @@ end
 type annotated_or_inferred =
   | Annotated of TypeTerm.t
   | Inferred of TypeTerm.t
+
+let react_server_module_ref = "#flow-internal-react-server-module"

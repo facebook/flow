@@ -54,7 +54,6 @@ class ['a] t =
       | GenericT { bound; _ } -> self#type_ cx pole acc bound
       | ExistsT _ -> acc
       | ExactT (_, t) -> self#type_ cx pole acc t
-      | MergedT (_, uses) -> List.fold_left (self#use_type_ cx) acc uses
       | ShapeT (_, t) -> self#type_ cx pole acc t
       | MatchingPropT (_, _, t) -> self#type_ cx pole_TODO acc t
       | KeysT (_, t) -> self#type_ cx P.Positive acc t
@@ -111,7 +110,7 @@ class ['a] t =
       | NumT _
       | StrT _
       | BoolT _
-      | EmptyT _
+      | EmptyT
       | MixedT _
       | SymbolT
       | NullT
@@ -400,7 +399,7 @@ class ['a] t =
         let acc = self#type_ cx pole_TODO acc t1 in
         let acc = self#type_ cx pole_TODO acc t2 in
         acc
-      | BecomeT (_, t) -> self#type_ cx pole_TODO acc t
+      | BecomeT { reason = _; t; empty_success = _ } -> self#type_ cx pole_TODO acc t
       | GetKeysT (_, t) -> self#use_type_ cx acc t
       | GetValuesT (_, t) -> self#type_ cx pole_TODO acc t
       | HasOwnPropT _ -> acc

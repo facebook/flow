@@ -126,133 +126,6 @@ let gen_import_statements file (symbols : Ty_symbol.symbol SymbolMap.t) =
   in
   SymbolMap.fold (fun remote local acc -> gen_import_statement remote local :: acc) symbols []
 
-(* Turn T[empty] into empty, if the empty came from generate-tests *)
-
-module Normalizer = struct
-  exception EmptyFound
-
-  class simplify_empty =
-    object (self)
-      inherit [unit] Type_mapper.t as super
-
-      val mutable seen = ISet.empty
-
-      method! def_type cx map_cx t =
-        let open Type in
-        match t with
-        | EmptyT Zeroed -> raise EmptyFound
-        | _ -> super#def_type cx map_cx t
-
-      method! type_ cx map_cx t =
-        let open Type in
-        match t with
-        | UnionT (r, urep) ->
-          let any_non_empty = ref false in
-          let test_member r t =
-            try
-              let t = self#type_ cx map_cx t in
-              any_non_empty := true;
-              t
-            with EmptyFound -> DefT (r, bogus_trust (), EmptyT Zeroed)
-          in
-          let urep' = UnionRep.ident_map (test_member r) urep in
-          if not !any_non_empty then
-            raise EmptyFound
-          else if urep' == urep then
-            t
-          else
-            UnionT (r, urep')
-        | _ -> super#type_ cx map_cx t
-
-      method tvar cx map_cx _r id =
-        let open Constraint in
-        let open Type in
-        let (root_id, root) = Context.find_root cx id in
-        if ISet.mem root_id seen then
-          id
-        else begin
-          seen <- ISet.add root_id seen;
-
-          let constraints =
-            match root.constraints with
-            | FullyResolved (u, t) -> FullyResolved (u, self#type_ cx map_cx t)
-            | Resolved (u, t) -> Resolved (u, self#type_ cx map_cx t)
-            | Unresolved bounds ->
-              let any_non_empty = ref (TypeMap.cardinal bounds.lower = 0) in
-              let test_member r t =
-                try
-                  let t = self#type_ cx map_cx t in
-                  any_non_empty := true;
-                  t
-                with EmptyFound -> DefT (r, bogus_trust (), EmptyT Zeroed)
-              in
-              let lower =
-                TypeMap.fold
-                  (fun t tr map -> TypeMap.add (test_member (TypeUtil.reason_of_t t) t) tr map)
-                  bounds.lower
-                  TypeMap.empty
-              in
-              if not !any_non_empty then
-                raise EmptyFound
-              else
-                Unresolved { bounds with lower }
-          in
-          let root = Root { root with constraints } in
-          Context.add_tvar cx root_id root;
-          id
-        end
-
-      (* overridden in type_ *)
-      method eval_id _cx _map_cx id = id
-
-      method props cx map_cx id =
-        let props_map = Context.find_props cx id in
-        let props_map' =
-          SMap.ident_map (Type.Property.ident_map_t (self#type_ cx map_cx)) props_map
-        in
-        let id' =
-          if props_map == props_map' then
-            id
-          (* When mapping results in a new property map, we have to use a
-             generated id, rather than a location from source. *)
-          else
-            Context.generate_property_map cx props_map'
-        in
-        id'
-
-      (* These should already be fully-resolved. *)
-      method exports _cx _map_cx id = id
-
-      method call_prop cx map_cx id =
-        let t = Context.find_call cx id in
-        let t' = self#type_ cx map_cx t in
-        if t == t' then
-          id
-        else
-          Context.make_call_prop cx t'
-
-      method use_type _cx _map_cx ut = ut
-
-      method visit cx t =
-        let open Type in
-        try self#type_ cx () t
-        with EmptyFound -> DefT (TypeUtil.reason_of_t t, bogus_trust (), EmptyT Zeroed)
-    end
-
-  let ty_at_loc norm_opts ccx loc =
-    let open Type.TypeScheme in
-    let { Codemod_context.Typed.full_cx; file; file_sig; typed_ast; _ } = ccx in
-    let aloc = ALoc.of_loc loc in
-    match Typed_ast_utils.find_exact_match_annotation typed_ast aloc with
-    | None -> Error Codemod_context.Typed.MissingTypeAnnotation
-    | Some scheme ->
-      let scheme = { scheme with type_ = (new simplify_empty)#visit full_cx scheme.type_ } in
-      let genv = Ty_normalizer_env.mk_genv ~full_cx ~file ~file_sig ~typed_ast in
-      (match Ty_normalizer.from_scheme ~options:norm_opts ~genv scheme with
-      | Ok ty -> Ok ty
-      | Error e -> Error (Codemod_context.Typed.NormalizationError e))
-end
-
 (* The mapper *)
 
 module UnitStats : Insert_type_utils.BASE_STATS with type t = unit = struct
@@ -369,7 +242,9 @@ let mapper ~default_any ~preserve_literals ~max_type_size (ask : Codemod_context
       | Identifier ({ Identifier.name = (loc, _); annot = Ast.Type.Missing annot_loc; _ } as id) ->
         let aloc = ALoc.of_loc loc in
         if ALocSet.mem aloc escape_locs then
-          let annot = this#make_annotation annot_loc (Normalizer.ty_at_loc norm_opts ask loc) in
+          let annot =
+            this#make_annotation annot_loc (Codemod_context.Typed.ty_at_loc norm_opts ask loc)
+          in
           super#binding_pattern ~kind (pat_loc, Identifier { id with annot })
         else
           super#binding_pattern ~kind expr
@@ -381,7 +256,7 @@ let mapper ~default_any ~preserve_literals ~max_type_size (ask : Codemod_context
       | Flow_ast.Type.Missing loc ->
         let aloc = ALoc.of_loc loc in
         if ALocSet.mem aloc escape_locs then
-          this#make_annotation loc (Normalizer.ty_at_loc norm_opts ask loc)
+          this#make_annotation loc (Codemod_context.Typed.ty_at_loc norm_opts ask loc)
         else
           annot
 

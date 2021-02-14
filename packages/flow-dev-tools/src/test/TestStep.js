@@ -478,7 +478,7 @@ export class TestStepFirstStage extends TestStepFirstOrSecondStage {
     const assertLoc = searchStackForTestAssertion();
     const ret = this._cloneWithAssertion((reason, env) => {
       const actualMessages = env.getLSPMessagesSinceStartOfStep();
-      let actuals: Array<string> = [];
+      let actuals: Array<?string> = [];
       let iExpect = 0;
       let doesMatch = (
         actual: LSPMessage,
@@ -491,18 +491,18 @@ export class TestStepFirstStage extends TestStepFirstOrSecondStage {
         }
       };
       for (let iActual = 0; iActual < actualMessages.length; iActual++) {
-        if (
-          iExpect < expects.length &&
-          doesMatch(actualMessages[iActual], expects[iExpect])
-        ) {
+        let actual = actualMessages[iActual];
+        if (iExpect < expects.length && doesMatch(actual, expects[iExpect])) {
           actuals.push(expects[iExpect].toString());
           iExpect++;
-        } else if (
-          ignores.some(ignore => doesMatch(actualMessages[iActual], ignore))
-        ) {
+        } else if (ignores.some(ignore => doesMatch(actual, ignore))) {
           // ignore it
         } else {
-          actuals.push(actualMessages[iActual].method);
+          actuals.push(actual.method);
+          if (actual.result) {
+            let result = actual.result;
+            actuals.push(JSON.stringify(result));
+          }
         }
       }
 
@@ -510,6 +510,7 @@ export class TestStepFirstStage extends TestStepFirstOrSecondStage {
         method: 'verifyAllLSPMessagesInStep',
         args: [actuals, ignores],
       };
+
       return simpleDiffAssertion(
         expects.join(','),
         actuals.join(','),

@@ -66,6 +66,18 @@ let path_of_modulename src_dir = function
     Base.Option.map
       ~f:(fun src_dir ->
         let rel = Files.relative_path src_dir (File_key.to_string f) in
+        let rel =
+          if String_utils.string_ends_with rel ".js" then
+            Filename.chop_suffix rel ".js"
+          else
+            rel
+        in
+        let rel =
+          if Filename.basename rel = "index" then
+            Filename.dirname rel
+          else
+            rel
+        in
         if rel.[0] <> '.' then
           "./" ^ rel
         else
@@ -77,26 +89,35 @@ type text_edits = {
   edits: Lsp.TextEdit.t list;
 }
 
-let text_edits_of_import ~options ~reader ~src_dir ~ast kind name from =
-  match Module_heaps.Reader.get_info ~reader ~audit:Expensive.ok from with
-  | None -> Error ()
-  | Some info ->
-    (match path_of_modulename src_dir info.Module_heaps.module_name with
-    | None -> Error ()
-    | Some from ->
-      let title =
-        match kind with
-        | Export_index.Default -> Printf.sprintf "Import default from %s" from
-        | Export_index.Named -> Printf.sprintf "Import from %s" from
-        | Export_index.NamedType -> Printf.sprintf "Import type from %s" from
-        | Export_index.Namespace -> Printf.sprintf "Import * from %s" from
-      in
-      let binding = (kind, name) in
-      let edits =
-        Autofix_imports.add_import ~options ~binding ~from ast
-        |> Flow_lsp_conversions.flow_loc_patch_to_lsp_edits
-      in
-      Ok { title; edits })
+let text_edits_of_import ~options ~reader ~src_dir ~ast kind name source =
+  let from =
+    match source with
+    | Export_index.Global -> None
+    | Export_index.Builtin from -> Some from
+    | Export_index.File_key from ->
+      (match Module_heaps.Reader.get_info ~reader ~audit:Expensive.ok from with
+      | None -> None
+      | Some info ->
+        (match path_of_modulename src_dir info.Module_heaps.module_name with
+        | None -> None
+        | Some from -> Some from))
+  in
+  match from with
+  | None -> None
+  | Some from ->
+    let title =
+      match kind with
+      | Export_index.Default -> Printf.sprintf "Import default from %s" from
+      | Export_index.Named -> Printf.sprintf "Import from %s" from
+      | Export_index.NamedType -> Printf.sprintf "Import type from %s" from
+      | Export_index.Namespace -> Printf.sprintf "Import * from %s" from
+    in
+    let binding = (kind, name) in
+    let edits =
+      Autofix_imports.add_import ~options ~binding ~from ast
+      |> Flow_lsp_conversions.flow_loc_patch_to_lsp_edits
+    in
+    Some { title; edits }
 
 let suggest_imports ~options ~reader ~ast ~diagnostics ~exports ~name uri loc =
   let open Lsp in
@@ -115,10 +136,10 @@ let suggest_imports ~options ~reader ~ast ~diagnostics ~exports ~name uri loc =
       Js_layout_generator.{ default_opts with single_quotes = Options.format_single_quotes options }
     in
     Export_index.ExportSet.fold
-      (fun (file_key, export_kind) acc ->
-        match text_edits_of_import ~options ~reader ~src_dir ~ast export_kind name file_key with
-        | Error () -> acc
-        | Ok { edits; title } ->
+      (fun (source, export_kind) acc ->
+        match text_edits_of_import ~options ~reader ~src_dir ~ast export_kind name source with
+        | None -> acc
+        | Some { edits; title } ->
           let command =
             CodeAction.Action
               {
@@ -153,7 +174,8 @@ let code_actions_of_errors ~options ~reader ~env ~ast ~diagnostics ~errors uri l
           create_suggestion ~diagnostics ~original ~suggestion uri error_loc :: actions
         else
           actions
-      | Error_message.EBuiltinLookupFailed { reason; name = Some name } ->
+      | Error_message.EBuiltinLookupFailed { reason; name = Some name }
+        when Options.autoimports options ->
         let error_loc = Reason.loc_of_reason reason in
         if Loc.contains error_loc loc then
           let { ServerEnv.exports; _ } = env in
@@ -275,3 +297,7 @@ let insert_type
     in
     Lwt.return result
   | (None, errs, _) -> Lwt.return (Error (error_to_string (Expected (FailedToTypeCheck errs))))
+
+module For_tests = struct
+  let path_of_modulename = path_of_modulename
+end

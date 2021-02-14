@@ -41,7 +41,7 @@ module Kit (Flow : Flow_common.S) : Flow_common.CHECK_POLARITY = struct
     | AnyT _
     | DefT (_, _, BoolT _)
     | DefT (_, _, CharSetT _)
-    | DefT (_, _, EmptyT _)
+    | DefT (_, _, EmptyT)
     | DefT (_, _, EnumObjectT _)
     | DefT (_, _, EnumT _)
     | DefT (_, _, MixedT _)
@@ -166,8 +166,7 @@ module Kit (Flow : Flow_common.S) : Flow_common.CHECK_POLARITY = struct
     | ( InternalT _ | ReposT _
       | DefT (_, _, TypeT _)
       | DefT (_, _, IdxWrapper _)
-      | OpaqueT _ | ThisClassT _ | ModuleT _ | MatchingPropT _ | TypeDestructorTriggerT _
-      | MergedT _ ) as t ->
+      | OpaqueT _ | ThisClassT _ | ModuleT _ | MatchingPropT _ | TypeDestructorTriggerT _ ) as t ->
       raise (UnexpectedType (Debug_js.dump_t cx t))
 
   and check_polarity_propmap cx ?trace ?(skip_ctor = false) tparams polarity id =

@@ -155,7 +155,6 @@ let stub_metadata ~root ~checked =
     enforce_local_inference_annotations = false;
     enforce_strict_call_arity = true;
     exact_by_default = false;
-    generate_tests = false;
     facebook_fbs = None;
     facebook_fbt = None;
     facebook_module_interop = false;
@@ -242,10 +241,7 @@ let infer_and_merge ~root filename ast file_sig =
   let (_, { Flow_ast.Program.all_comments; _ }) = ast in
   let aloc_ast = Ast_loc_utils.loc_to_aloc_mapper#program ast in
   let new_signatures = false in
-  let phase = Context.Checking in
-  let opts =
-    Merge_js.Merge_options { new_signatures; phase; metadata; lint_severities; strict_mode }
-  in
+  let opts = Merge_js.Merge_options { new_signatures; metadata; lint_severities; strict_mode } in
   let getters =
     {
       Merge_js.get_ast_unsafe = (fun _ -> (all_comments, aloc_ast));
@@ -257,9 +253,7 @@ let infer_and_merge ~root filename ast file_sig =
       get_docblock_unsafe = (fun _ -> stub_docblock);
     }
   in
-  let ((cx, _, tast), _other_cxs) =
-    Merge_js.merge_component ~opts ~getters ~file_sigs (Nel.one filename) reqs [] master_cx
-  in
+  let (cx, _, tast) = Merge_js.check_file ~opts ~getters ~file_sigs filename reqs [] master_cx in
   (cx, tast)
 
 let check_content ~filename ~content =

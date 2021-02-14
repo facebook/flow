@@ -88,14 +88,18 @@ class searcher
         this#request (Get_def_request.Require ((source_loc, module_name), import_loc));
       res
 
-    method! import_named_specifier decl =
+    method! import_named_specifier ~import_kind decl =
       let open Flow_ast.Statement.ImportDeclaration in
-      let { local; remote = ((remote_loc, t), _); kind = _ } = decl in
-      if
+      let { local; remote = ((remote_loc, t), _); kind } = decl in
+      ( if
         this#covers_target remote_loc
         || Base.Option.exists local ~f:(fun ((local_loc, _), _) -> this#covers_target local_loc)
       then
-        this#request (Get_def_request.Type t);
+        match (kind, import_kind) with
+        | (Some ImportTypeof, _)
+        | (_, ImportTypeof) ->
+          this#request (Get_def_request.Typeof t)
+        | _ -> this#request (Get_def_request.Type t) );
       decl
 
     method! import_default_specifier decl =

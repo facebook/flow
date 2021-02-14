@@ -36,7 +36,7 @@ module SigASTALocTableHeap =
       let description = "ALocTable"
     end)
 
-type type_sig = Type_sig_collections.Locs.index Packed_type_sig.t
+type type_sig = Type_sig_collections.Locs.index Packed_type_sig.Module.t
 
 module TypeSigHeap =
   SharedMem.NoCache
@@ -165,7 +165,6 @@ module ExportsHeap =
     end)
 
 type sig_extra =
-  | InitLibs
   | TypesFirst of {
       sig_ast: (ALoc.t, ALoc.t) Flow_ast.Program.t;
       sig_file_sig: File_sig.With_ALoc.t;
@@ -182,7 +181,6 @@ module ParsingHeaps = struct
         ExportsHeap.add file exports;
         FileSigHeap.add file file_sig;
         match extra with
-        | InitLibs -> ()
         | TypesFirst { sig_ast; sig_file_sig; aloc_table } ->
           SigASTHeap.add file (remove_source_aloc sig_ast);
           Base.Option.iter aloc_table ~f:(SigASTALocTableHeap.add file);

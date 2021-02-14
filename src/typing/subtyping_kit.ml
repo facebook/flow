@@ -511,11 +511,6 @@ module Make (Flow : INPUT) : OUTPUT = struct
 
   let rec_sub_t cx use_op l u trace =
     match (l, u) with
-    (*****************)
-    (* any with uses *)
-    (*****************)
-    | (_, MergedT (_, uses)) -> List.iter (fun u -> rec_flow cx trace (l, u)) uses
-    | (MergedT (reason, _), _) -> rec_flow_t cx trace ~use_op (Unsoundness.why Merged reason, u)
     (***************************)
     (* type destructor trigger *)
     (***************************)
@@ -945,7 +940,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
         rec_flow_t cx trace ~use_op (l, t)
       )
     (* any ~> $Exact<UB>. unwrap exact *)
-    | ((DefT (_, _, EmptyT _) | AnyT _), ExactT (_, t)) -> rec_flow_t cx trace ~use_op (l, t)
+    | ((DefT (_, _, EmptyT) | AnyT _), ExactT (_, t)) -> rec_flow_t cx trace ~use_op (l, t)
     (*
      * Shapes need to be trapped here to avoid error-ing when used as exact types.
      * Below (see "matching shapes of objects"), we have a rule that allows ShapeT(o)
@@ -1535,7 +1530,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
     (********************************************************)
     | (DefT (_, _, ClassT it), DefT (r, _, TypeT (_, t))) ->
       (* a class value annotation becomes the instance type *)
-      rec_flow cx trace (it, BecomeT (r, t))
+      rec_flow cx trace (it, BecomeT { reason = r; t; empty_success = true })
     | (DefT (_, _, TypeT (_, l)), DefT (_, _, TypeT (_, u))) ->
       rec_unify cx trace ~use_op ~unify_any:true l u
     | (DefT (lreason, trust, EnumObjectT enum), DefT (_r, _, TypeT (_, t))) ->
@@ -1645,6 +1640,12 @@ module Make (Flow : INPUT) : OUTPUT = struct
     (***************************************************************)
     (* Enable structural subtyping for upperbounds like interfaces *)
     (***************************************************************)
+    | (DefT (reason_lower, _, (MixedT _ | VoidT)), DefT (reason_upper, _, InstanceT _)) ->
+      add_output
+        cx
+        ~trace
+        (Error_message.EIncompatibleWithUseOp { reason_lower; reason_upper; use_op });
+      rec_flow_t cx trace ~use_op (AnyT.make (AnyError None) reason_lower, u)
     | (_, (DefT (_, _, InstanceT (_, _, _, { inst_kind = InterfaceKind _; _ })) as i)) ->
       rec_flow cx trace (i, ImplementsT (use_op, l))
     (* Opaque types may be treated as their supertype when they are a lower bound for a use *)
@@ -1744,11 +1745,9 @@ module Make (Flow : INPUT) : OUTPUT = struct
       end
     | (GenericT { reason; bound; _ }, _) ->
       rec_flow_t cx trace ~use_op (position_generic_bound reason bound, u)
-    | (_, GenericT { reason; name; id; _ }) ->
-      let desc =
-        RPolyTest (name, RIncompatibleInstantiation name, id |> Generic.aloc_of_id, false)
-      in
-      let bot = DefT (replace_desc_reason desc reason, literal_trust (), EmptyT Zeroed) in
+    | (_, GenericT { reason; name; _ }) ->
+      let desc = RIncompatibleInstantiation name in
+      let bot = DefT (replace_desc_reason desc reason, literal_trust (), EmptyT) in
       rec_flow_t cx trace ~use_op (l, bot)
     | (ObjProtoT reason, _) ->
       let use_desc = true in

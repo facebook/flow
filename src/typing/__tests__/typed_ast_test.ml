@@ -30,7 +30,6 @@ let metadata =
     enforce_strict_call_arity = true;
     enforce_local_inference_annotations = false;
     exact_by_default = false;
-    generate_tests = false;
     facebook_fbs = None;
     facebook_fbt = None;
     facebook_module_interop = false;

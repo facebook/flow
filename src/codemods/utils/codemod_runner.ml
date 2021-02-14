@@ -164,13 +164,7 @@ let merge_job ~worker_mutator ~options ~reader component =
   let reader = Abstract_state_reader.Mutator_state_reader reader in
   let result =
     if Module_js.checked_file ~reader ~audit:Expensive.ok leader then (
-      let (cx, master_cx, _) =
-        let open Merge_service in
-        match merge_context ~options ~reader component with
-        | MergeResult { cx; master_cx } -> (cx, master_cx, None)
-        | CheckResult { cx; master_cx; file_sigs; typed_asts; _ } ->
-          (cx, master_cx, Some (file_sigs, typed_asts))
-      in
+      let (cx, master_cx) = Merge_service.merge_context ~options ~reader component in
       let module_refs = List.rev_map Files.module_ref (Nel.to_list component) in
       let md5 = Merge_js.ContextOptimizer.sig_context cx module_refs in
       Context.clear_master_shared cx master_cx;
@@ -193,9 +187,7 @@ let check_job ~visit ~iteration ~reader ~options acc roots =
   List.fold_left
     (fun acc file ->
       match Merge_service.check options ~reader file with
-      | (file, Ok (Some (full_cx, file_sigs, typed_asts), _)) ->
-        let file_sig = FilenameMap.find file file_sigs in
-        let typed_ast = FilenameMap.find file typed_asts in
+      | (file, Ok (Some (full_cx, file_sig, typed_ast), _)) ->
         let reader = Abstract_state_reader.Mutator_state_reader reader in
         let ast = Parsing_heaps.Reader_dispatcher.get_ast_unsafe ~reader file in
         let docblock = Parsing_heaps.Reader_dispatcher.get_docblock_unsafe ~reader file in
@@ -324,9 +316,7 @@ module TypedRunnerWithPrepass (C : TYPED_RUNNER_WITH_PREPASS_CONFIG) : TYPED_RUN
     List.fold_left
       (fun acc file ->
         match Merge_service.check options ~reader file with
-        | (file, Ok (Some (cx, file_sigs, typed_asts), _)) ->
-          let file_sig = FilenameMap.find file file_sigs in
-          let typed_ast = FilenameMap.find file typed_asts in
+        | (file, Ok (Some (cx, file_sig, typed_ast), _)) ->
           let result = C.prepass_run cx state file reader file_sig typed_ast in
           FilenameMap.add file (Ok result) acc
         | (_, Ok (None, _)) -> acc

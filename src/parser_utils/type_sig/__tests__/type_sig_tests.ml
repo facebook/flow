@@ -123,7 +123,7 @@ let pp_sig
     ( errs,
       locs,
       {
-        Packed_type_sig.exports;
+        Packed_type_sig.Module.exports;
         export_def;
         module_refs;
         local_defs;
@@ -143,13 +143,18 @@ let pp_sig
   pp_patterns pp_loc fmt patterns;
   pp_errors pp_loc fmt errs
 
-let pp_builtin_module pp_loc fmt (_loc, exports, export_def) =
+let pp_builtin_module pp_loc fmt { Packed_type_sig.Builtins.loc; exports; export_def } =
   let open Format in
+  fprintf fmt "%a " pp_loc loc;
   pp_exports pp_loc fmt exports;
   pp_print_newline fmt ();
   pp_export_def pp_loc fmt export_def
 
-let pp_builtins fmt (errs, locs, (module_refs, local_defs, remote_refs, _globals, modules)) =
+let pp_builtins
+    fmt
+    ( errs,
+      locs,
+      { Packed_type_sig.Builtins.module_refs; local_defs; remote_refs; globals = _; modules } ) =
   let open Format in
   let pp_loc = mk_pp_loc locs in
   pp_module_refs fmt module_refs;
@@ -252,7 +257,7 @@ let print_builtins ordered_contents_indent =
       ordered_contents_indent
   in
   let sig_opts = sig_options () in
-  let builtins = Type_sig_utils.(pack_builtins (parse_libs sig_opts ordered_asts)) in
+  let builtins = Type_sig_utils.parse_and_pack_builtins sig_opts ordered_asts in
   let fmt = make_test_formatter () in
   pp_builtins fmt builtins
 
@@ -4410,7 +4415,7 @@ let%expect_test "builtins" =
          name = "x"; def = (TyRef (Unqualified LocalRef {ref_loc = [1:15-16]; index = 1}))}
     1. TypeAlias {id_loc = [2:5-6]; name = "T"; tparams = Mono; body = (Annot (String [2:9-15]))} |}]
 
-let%expect_test "builtin_module" =
+let%expect_test "builtin_cjs_module" =
   print_builtins [{|
     type T = string;
     declare module foo {
@@ -4422,32 +4427,247 @@ let%expect_test "builtin_module" =
     0. TypeAlias {id_loc = [1:5-6]; name = "T"; tparams = Mono; body = (Annot (String [1:9-15]))}
 
     Builtin module foo:
-    (CJSExports { types = {}; type_stars = []; strict = true })
+    [2:0-4:1] (CJSExports { types = {}; type_stars = []; strict = true })
 
     Export_def:
     (TyRef (Unqualified LocalRef {ref_loc = [3:26-27]; index = 0})) |}]
 
-let%expect_test "builtin_module_2" =
+let%expect_test "builtin_cjs_module_unused_type" =
+  (* `T` is not exported because `declare module.exports` means that
+     unused exports must be explicitly exported. *)
   print_builtins [{|
     declare module foo {
+      declare type T = number;
       declare module.exports: string;
-    }
-    declare module bar {
-      declare module.exports: number;
     }
   |}];
   [%expect {|
-    Builtin module bar:
-    (CJSExports { types = {}; type_stars = []; strict = true })
+    Builtin module foo:
+    [1:0-4:1] (CJSExports { types = {}; type_stars = []; strict = true })
 
     Export_def:
-    (Annot (Number [5:26-32]))
+    (Annot (String [3:26-32])) |}]
+
+let%expect_test "builtin_cjs_module_unused_type_exported" =
+  (* T is exported because it has an `export` keyword *)
+  print_builtins [{|
+    declare module foo {
+      declare export type T = number;
+      declare module.exports: string;
+    }
+  |}];
+  [%expect {|
+    Local defs:
+    0. TypeAlias {id_loc = [2:22-23]; name = "T"; tparams = Mono; body = (Annot (Number [2:26-32]))}
 
     Builtin module foo:
-    (CJSExports { types = {}; type_stars = []; strict = true })
+    [1:0-4:1] (CJSExports
+                 { types = { "T" -> (ExportTypeBinding 0) }; type_stars = []; strict = true })
 
     Export_def:
-    (Annot (String [2:26-32])) |}]
+    (Annot (String [3:26-32])) |}]
+
+let%expect_test "builtin_cjs_module_used_type" =
+  (* T is included because it is reachable, but not a named export because it does not
+     have an `export` keyword *)
+  print_builtins [{|
+    declare module foo {
+      declare type T = number;
+      declare module.exports: T;
+    }
+  |}];
+  [%expect {|
+    Local defs:
+    0. TypeAlias {id_loc = [2:15-16]; name = "T"; tparams = Mono; body = (Annot (Number [2:19-25]))}
+
+    Builtin module foo:
+    [1:0-4:1] (CJSExports { types = {}; type_stars = []; strict = true })
+
+    Export_def:
+    (TyRef (Unqualified LocalRef {ref_loc = [3:26-27]; index = 0})) |}]
+
+let%expect_test "builtin_cjs_module_used_type_exported" =
+  (* `T` is exported because it has an `export` keyword, and is also reachable via the default export *)
+  print_builtins [{|
+    declare module foo {
+      declare export type T = number;
+      declare module.exports: T;
+    }
+  |}];
+  [%expect {|
+    Local defs:
+    0. TypeAlias {id_loc = [2:22-23]; name = "T"; tparams = Mono; body = (Annot (Number [2:26-32]))}
+
+    Builtin module foo:
+    [1:0-4:1] (CJSExports
+                 { types = { "T" -> (ExportTypeBinding 0) }; type_stars = []; strict = true })
+
+    Export_def:
+    (TyRef (Unqualified LocalRef {ref_loc = [3:26-27]; index = 0})) |}]
+
+let%expect_test "builtin_cjs_module_with_implicit_exports" =
+  (* when a `declare module` doesn't have explicit value exports via `declare export` (which
+     makes it an ES module) or `declare module.exports = ...` (which makes it a CJS module),
+     it is implicitly a CJS module where all values are exported.
+
+     types are always exported in CJS modules, and require the `export` keyword in ES modules.
+     NOTE: `declare export type` does not an ES module make!
+
+     so in this test:
+      - there are no explicitly exported values, so everything is implicitly exported
+      - explicitly exporting type U does not hide T; T is also exported *)
+  print_builtins [{|
+    declare module foo {
+      declare var x: string;
+      declare function f(): void;
+      declare class Y {}
+      declare type T = number;
+      declare export type U = string;
+    }
+  |}];
+  [%expect {|
+    Local defs:
+    0. Variable {id_loc = [2:14-15]; name = "x"; def = (Annot (String [2:17-23]))}
+    1. DeclareFun {id_loc = [3:19-20];
+         name = "f"; fn_loc = [3:20-28];
+         def =
+         FunSig {tparams = Mono; params = [];
+           rest_param = None; this_param = None;
+           return = (Annot (Void [3:24-28]));
+           predicate = None};
+         tail = []}
+    2. DeclareClassBinding {id_loc = [4:16-17];
+         name = "Y";
+         def =
+         DeclareClassSig {tparams = Mono;
+           extends = ClassImplicitExtends;
+           mixins = []; implements = [];
+           static_props = {}; own_props = {};
+           proto_props = {}; static_calls = [];
+           calls = []}}
+    3. TypeAlias {id_loc = [5:15-16]; name = "T"; tparams = Mono; body = (Annot (Number [5:19-25]))}
+    4. TypeAlias {id_loc = [6:22-23]; name = "U"; tparams = Mono; body = (Annot (String [6:26-32]))}
+
+    Builtin module foo:
+    [1:0-7:1] (CJSExports
+                 { types = { "T" -> (ExportTypeBinding 3); "U" -> (ExportTypeBinding 4) };
+                   type_stars = []; strict = true })
+
+    Export_def:
+    (Value
+       ObjLit {loc = [1:0-7:1]; frozen = true;
+         proto = None;
+         props =
+         { "Y" ->
+           (ObjValueField ([1:0-7:1], (
+              Ref LocalRef {ref_loc = [1:0-7:1]; index = 2}), Polarity.Neutral));
+           "f" ->
+           (ObjValueField ([1:0-7:1], (
+              Ref LocalRef {ref_loc = [1:0-7:1]; index = 1}), Polarity.Neutral));
+           "x" ->
+           (ObjValueField ([1:0-7:1], (
+              Ref LocalRef {ref_loc = [1:0-7:1]; index = 0}), Polarity.Neutral)) }}) |}]
+
+let%expect_test "builtin_es_module_default" =
+  print_builtins [{|
+    declare module foo {
+      declare export default string;
+    }
+  |}];
+  [%expect {|
+    Builtin module foo:
+    [1:0-3:1] (ESExports
+                 { names = { "default" -> ExportDefault {default_loc = [2:17-24]} };
+                   types = {}; stars = [];
+                   type_stars = []; strict = true })
+
+    Export_def:
+    (Annot (String [2:25-31])) |}]
+
+let%expect_test "builtin_module_import_typeof" =
+  print_builtins [{|
+    declare module foo {
+      declare export var x: string;
+    }
+    declare module bar {
+      import typeof {x} from 'foo';
+      declare export var y: x;
+    }
+  |}];
+  [%expect {|
+    Module refs:
+    0. foo
+
+    Local defs:
+    0. Variable {id_loc = [2:21-22]; name = "x"; def = (Annot (String [2:24-30]))}
+    1. Variable {id_loc = [6:21-22];
+         name = "y"; def = (TyRef (Unqualified RemoteRef {ref_loc = [6:24-25]; index = 0}))}
+
+    Remote refs:
+    0. ImportTypeof {id_loc = [5:17-18]; name = "x"; index = 0; remote = "x"}
+
+    Builtin module bar:
+    [4:0-7:1] (ESExports
+                 { names = { "y" -> (ExportBinding 1) };
+                   types = {}; stars = [];
+                   type_stars = []; strict = true })
+
+    Builtin module foo:
+    [1:0-3:1] (ESExports
+                 { names = { "x" -> (ExportBinding 0) };
+                   types = {}; stars = [];
+                   type_stars = []; strict = true }) |}]
+
+let%expect_test "builtin_toplevel_import" =
+  (* this should be a parse error, but in the meantime, make sure we don't fatal.
+     the `import` gets ignored and the `x` becomes a BuiltinRef. *)
+  print_builtins [{|
+    declare module foo {
+      declare export var x: string;
+    }
+    import typeof {x} from 'foo';
+    declare module bar {
+      declare export var y: x;
+    }
+  |}];
+  [%expect{|
+    Local defs:
+    0. Variable {id_loc = [2:21-22]; name = "x"; def = (Annot (String [2:24-30]))}
+    1. Variable {id_loc = [6:21-22];
+         name = "y"; def = (TyRef (Unqualified BuiltinRef {ref_loc = [6:24-25]; name = "x"}))}
+
+    Builtin module bar:
+    [5:0-7:1] (ESExports
+                 { names = { "y" -> (ExportBinding 1) };
+                   types = {}; stars = [];
+                   type_stars = []; strict = true })
+
+    Builtin module foo:
+    [1:0-3:1] (ESExports
+                 { names = { "x" -> (ExportBinding 0) };
+                   types = {}; stars = [];
+                   type_stars = []; strict = true }) |}]
+
+let%expect_test "builtin_module_export_specifiers" =
+  print_builtins [{|
+    declare module "foo" {
+      declare var x : string;
+      declare var y : string;
+      declare export {x, y};
+    }
+  |}];
+  [%expect {|
+    Local defs:
+    0. Variable {id_loc = [2:14-15]; name = "x"; def = (Annot (String [2:18-24]))}
+    1. Variable {id_loc = [3:14-15]; name = "y"; def = (Annot (String [3:18-24]))}
+
+    Builtin module foo:
+    [1:0-5:1] (ESExports
+                 { names =
+                   { "x" -> (ExportRef LocalRef {ref_loc = [4:18-19]; index = 0});
+                     "y" -> (ExportRef LocalRef {ref_loc = [4:21-22]; index = 1}) };
+                   types = {}; stars = [];
+                   type_stars = []; strict = true }) |}]
 
 let%expect_test "this_param_1" =
   print_sig {|

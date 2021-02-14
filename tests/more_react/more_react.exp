@@ -24,15 +24,15 @@ Cannot call `checkPropTypes` because function [1] requires another argument. [in
         ^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:230:41
+   <BUILTINS>/react.js:245:41
                                                 v---
-   230|   declare export function checkPropTypes<V>(
-   231|     propTypes : any,
-   232|     values: V,
-   233|     location: string,
-   234|     componentName: string,
-   235|     getStack: ?(() => ?string)
-   236|   ) : void;
+   245|   declare export function checkPropTypes<V>(
+   246|     propTypes : any,
+   247|     values: V,
+   248|     location: string,
+   249|     componentName: string,
+   250|     getStack: ?(() => ?string)
+   251|   ) : void;
           -------^ [1]
 
 
@@ -45,15 +45,15 @@ Cannot call `checkPropTypes` because function [1] requires another argument. [in
         ^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:230:41
+   <BUILTINS>/react.js:245:41
                                                 v---
-   230|   declare export function checkPropTypes<V>(
-   231|     propTypes : any,
-   232|     values: V,
-   233|     location: string,
-   234|     componentName: string,
-   235|     getStack: ?(() => ?string)
-   236|   ) : void;
+   245|   declare export function checkPropTypes<V>(
+   246|     propTypes : any,
+   247|     values: V,
+   248|     location: string,
+   249|     componentName: string,
+   250|     getStack: ?(() => ?string)
+   251|   ) : void;
           -------^ [1]
 
 
@@ -67,8 +67,8 @@ return value. [incompatible-call]
                                                                                                   ^^^ [1]
 
 References:
-   <BUILTINS>/react.js:235:24
-   235|     getStack: ?(() => ?string)
+   <BUILTINS>/react.js:250:24
+   250|     getStack: ?(() => ?string)
                                ^^^^^^ [2]
 
 
@@ -253,8 +253,8 @@ References:
    subclassComponent.js:21:15
    21| declare class D extends React$Component2<Props2, void> {}
                      ^ [1]
-   <BUILTINS>/react.js:26:15
-   26| declare class React$Component<Props, State = void> {
+   <BUILTINS>/react.js:41:15
+   41| declare class React$Component<Props, State = void> {
                      ^^^^^^^^^^^^^^^ [2]
 
 
@@ -270,8 +270,8 @@ References:
    subclassComponent.js:23:15
    23| declare class E extends D {}
                      ^ [1]
-   <BUILTINS>/react.js:26:15
-   26| declare class React$Component<Props, State = void> {
+   <BUILTINS>/react.js:41:15
+   41| declare class React$Component<Props, State = void> {
                      ^^^^^^^^^^^^^^^ [2]
 
 
@@ -287,8 +287,8 @@ References:
    subclassComponent.js:25:15
    25| declare class F {
                      ^ [1]
-   <BUILTINS>/react.js:26:15
-   26| declare class React$Component<Props, State = void> {
+   <BUILTINS>/react.js:41:15
+   41| declare class React$Component<Props, State = void> {
                      ^^^^^^^^^^^^^^^ [2]
 
 

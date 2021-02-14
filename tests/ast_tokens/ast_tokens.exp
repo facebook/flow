@@ -297,6 +297,14 @@
       "range":[46,54],
       "expression":{
         "type":"Literal",
+        "leadingComments":[
+          {
+            "type":"Line",
+            "loc":{"source":null,"start":{"line":1,"column":0},"end":{"line":1,"column":45}},
+            "range":[0,45],
+            "value":" Regex literals require a lexer mode change"
+          }
+        ],
         "loc":{"source":null,"start":{"line":2,"column":0},"end":{"line":2,"column":7}},
         "range":[46,53],
         "value":null,
@@ -311,6 +319,14 @@
       "range":[97,140],
       "expression":{
         "type":"JSXElement",
+        "leadingComments":[
+          {
+            "type":"Line",
+            "loc":{"source":null,"start":{"line":4,"column":0},"end":{"line":4,"column":40}},
+            "range":[56,96],
+            "value":" JSX also requires a lexer mode change"
+          }
+        ],
         "loc":{"source":null,"start":{"line":5,"column":0},"end":{"line":5,"column":42}},
         "range":[97,139],
         "openingElement":{
@@ -393,6 +409,14 @@
     },
     {
       "type":"VariableDeclaration",
+      "leadingComments":[
+        {
+          "type":"Line",
+          "loc":{"source":null,"start":{"line":7,"column":0},"end":{"line":7,"column":45}},
+          "range":[142,187],
+          "value":" Async arrow functions require backtracking"
+        }
+      ],
       "loc":{"source":null,"start":{"line":8,"column":0},"end":{"line":8,"column":23}},
       "range":[188,211],
       "declarations":[
@@ -434,6 +458,14 @@
     },
     {
       "type":"VariableDeclaration",
+      "leadingComments":[
+        {
+          "type":"Line",
+          "loc":{"source":null,"start":{"line":10,"column":0},"end":{"line":10,"column":43}},
+          "range":[213,256],
+          "value":" Type annotations have a special lex mode"
+        }
+      ],
       "loc":{"source":null,"start":{"line":11,"column":0},"end":{"line":11,"column":19}},
       "range":[257,276],
       "declarations":[
@@ -471,6 +503,14 @@
     },
     {
       "type":"VariableDeclaration",
+      "leadingComments":[
+        {
+          "type":"Line",
+          "loc":{"source":null,"start":{"line":13,"column":0},"end":{"line":13,"column":54}},
+          "range":[278,332],
+          "value":" Token stream should continue even with parse errors"
+        }
+      ],
       "loc":{"source":null,"start":{"line":14,"column":0},"end":{"line":14,"column":7}},
       "range":[333,340],
       "declarations":[

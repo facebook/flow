@@ -25,8 +25,6 @@ val in_generator_scope : unit -> bool
 
 val in_predicate_scope : unit -> bool
 
-val all_entries : unit -> Entry.t SMap.t
-
 val find_entry : Context.t -> string -> ?desc:Reason.reason_desc -> ALoc.t -> Scope.t * Entry.t
 
 val peek_frame : unit -> int

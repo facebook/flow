@@ -2,19 +2,7 @@
   "errors":[
     {
       "loc":{"source":null,"start":{"line":2,"column":36},"end":{"line":2,"column":37}},
-      "message":"Unexpected token `=`, expected the token `;`"
-    },
-    {
-      "loc":{"source":null,"start":{"line":2,"column":36},"end":{"line":2,"column":37}},
-      "message":"Unexpected token `=`, expected the token `declare`"
-    },
-    {
-      "loc":{"source":null,"start":{"line":2,"column":38},"end":{"line":2,"column":44}},
-      "message":"Unexpected identifier, expected the token `var`"
-    },
-    {
-      "loc":{"source":null,"start":{"line":2,"column":44},"end":{"line":2,"column":45}},
-      "message":"Unexpected token `;`, expected an identifier"
+      "message":"Unexpected token `=`. Initializers are not allowed in a `declare opaque type`."
     }
   ],
   "type":"Program",
@@ -39,13 +27,13 @@
         "body":[
           {
             "type":"DeclareExportDeclaration",
-            "loc":{"source":null,"start":{"line":2,"column":2},"end":{"line":2,"column":35}},
-            "range":[25,58],
+            "loc":{"source":null,"start":{"line":2,"column":2},"end":{"line":2,"column":45}},
+            "range":[25,68],
             "default":false,
             "declaration":{
               "type":"DeclareOpaqueType",
-              "loc":{"source":null,"start":{"line":2,"column":17},"end":{"line":2,"column":35}},
-              "range":[40,58],
+              "loc":{"source":null,"start":{"line":2,"column":17},"end":{"line":2,"column":45}},
+              "range":[40,68],
               "id":{
                 "type":"Identifier",
                 "loc":{"source":null,"start":{"line":2,"column":29},"end":{"line":2,"column":35}},
@@ -55,24 +43,15 @@
                 "optional":false
               },
               "typeParameters":null,
-              "impltype":null,
+              "impltype":{
+                "type":"StringTypeAnnotation",
+                "loc":{"source":null,"start":{"line":2,"column":38},"end":{"line":2,"column":44}},
+                "range":[61,67]
+              },
               "supertype":null
             },
             "specifiers":[],
             "source":null
-          },
-          {
-            "type":"DeclareVariable",
-            "loc":{"source":null,"start":{"line":2,"column":36},"end":{"line":2,"column":45}},
-            "range":[59,68],
-            "id":{
-              "type":"Identifier",
-              "loc":{"source":null,"start":{"line":2,"column":44},"end":{"line":2,"column":45}},
-              "range":[67,68],
-              "name":"",
-              "typeAnnotation":null,
-              "optional":false
-            }
           }
         ]
       },

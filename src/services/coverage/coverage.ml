@@ -168,7 +168,6 @@ class visitor =
     method type_ cx =
       function
       | OpenT (_, id) -> self#tvar cx id
-      | MergedT (_, uses) -> self#merged_t cx uses
       | EvalT (t, _, id) -> self#eval_t cx t id
       (* Non-concrete (fallthrough) constructors *)
       | AnnotT (_, t, _)
@@ -232,7 +231,7 @@ class visitor =
       | MatchingPropT _
       | TypeDestructorTriggerT _ ->
         (Kind.Empty, Taint.Untainted)
-      | DefT (_, t, EmptyT _) -> (Kind.Empty, Taint.of_trust cx t)
+      | DefT (_, t, EmptyT) -> (Kind.Empty, Taint.of_trust cx t)
       | AnyT _ -> (Kind.Any, Taint.Tainted)
 
     method private types_of_use acc =

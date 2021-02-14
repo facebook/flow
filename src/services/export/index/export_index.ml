@@ -10,9 +10,13 @@ type kind =
   | Named
   | NamedType
   | Namespace
-[@@deriving show, ord]
 
-type export = File_key.t * kind [@@deriving show, ord]
+and source =
+  | Global
+  | Builtin of string  (** [Builtin "foo"] refers to a `declare module "foo"` lib *)
+  | File_key of File_key.t
+
+and export = source * kind [@@deriving show, ord]
 
 module ExportSet = struct
   include Set.Make (struct
@@ -47,7 +51,7 @@ type t = ExportSet.t SMap.t [@@deriving show]
 
 let empty = SMap.empty
 
-let add : string -> File_key.t -> kind -> t -> t =
+let add : string -> source -> kind -> t -> t =
   let add_file file_key kind = function
     | None -> Some (ExportSet.singleton (file_key, kind))
     | Some exports -> Some (ExportSet.add (file_key, kind) exports)
@@ -85,6 +89,11 @@ let subtract old_t t =
 
 (** [find_opt name t] returns a list of [(File_key.t, kind)] that export [name] *)
 let find_opt name t = SMap.find_opt name t
+
+let find_seq name t =
+  match find_opt name t with
+  | Some t -> ExportSet.to_seq t
+  | None -> Seq.empty
 
 (** [keys t] returns all of the exported names from every file in [t] *)
 let keys t = SMap.keys t

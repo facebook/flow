@@ -43,24 +43,24 @@ orbs:
         steps:
           - run:
               name: Init opam
-              shell: C:/tools/cygwin/bin/bash.exe --noprofile --norc -eo pipefail
+              shell: C:/tools/cygwin/bin/bash.exe -leo pipefail
               command: |
-                export PATH=$PATH:/usr/local/bin:/usr/bin
                 [ -d ~/.opam ] || opam init default 'https://github.com/fdopen/opam-repository-mingw.git#opam2' --bare --disable-sandboxing
       create_switch:
         steps:
           - run:
               name: Create opam switch
-              shell: C:/tools/cygwin/bin/bash.exe --noprofile --norc -eo pipefail
+              shell: C:/tools/cygwin/bin/bash.exe -leo pipefail
               environment:
                 PATH: /usr/local/bin:/usr/bin:/cygdrive/c/Windows/system32:/cygdrive/c/Windows:/cygdrive/c/Windows/System32/Wbem:/cygdrive/c/Windows/System32/WindowsPowerShell/v1.0
               command: |
+                cd /cygdrive/c/Users/circleci/project
                 [ -d _opam ] || opam switch create . ocaml-variants.4.07.1+mingw64c --deps-only --yes -vvv
 
 executors:
   linux-opam:
     docker:
-      - image: ocaml/opam2:debian-8
+      - image: ocaml/opam2:centos-7-opam
         environment:
           <<: *opam_env
     working_directory: ~/flow
@@ -143,27 +143,14 @@ jobs:
       - attach_workspace:
           at: ~/flow
       - run:
-          # installs `zip` and `m4` but also has to fix some apt issues:
-          # https://discuss.circleci.com/t/failed-to-fetch-jessie-updates/29246
-          # https://www.reddit.com/r/debian/comments/g9is3p/debian_8_jessie_keyexpired_drive_my_crazy/
-          # TODO: remove this when updating to ocaml/opam2:debian-9
           name: Install deps
           command: |
-            sudo rm /etc/apt/sources.list
-            echo "deb [trusted=yes] http://archive.debian.org/debian/ jessie main contrib non-free" | sudo tee -a /etc/apt/sources.list
-            echo "deb [trusted=yes] http://archive.debian.org/debian/ jessie-backports main contrib non-free" | sudo tee -a /etc/apt/sources.list
-            echo "deb-src [trusted=yes] http://archive.debian.org/debian/ jessie main contrib non-free" | sudo tee -a /etc/apt/sources.list
-            echo "deb-src [trusted=yes] http://archive.debian.org/debian/ jessie-backports main contrib non-free" | sudo tee -a /etc/apt/sources.list
-            echo "Acquire::Check-Valid-Until false;" | sudo tee -a /etc/apt/apt.conf.d/10-nocheckvalid
-            echo 'Package: *\nPin: origin "archive.debian.org"\nPin-Priority: 500' | sudo tee -a /etc/apt/preferences.d/10-archive-pin
-            sudo apt-get update && sudo apt-get --yes install zip m4
+            sudo yum -y update && sudo yum -y install zip m4
       - restore-opam-cache
       - run:
-          name: Update opam repo
+          name: Init opam
           command: |
-            opam remote list -s | grep upstream >/dev/null || \
-              opam remote add upstream https://opam.ocaml.org --all-switches --set-default | cat
-            opam update | cat
+            [ -d ~/.opam ] || opam init --bare --disable-sandboxing
       - create-opam-switch
       - run:
           name: Install extra deps from opam
@@ -272,8 +259,9 @@ jobs:
           at: .
       - run:
           name: Create cache breaker
-          shell: C:/tools/cygwin/bin/bash.exe --noprofile --norc -eo pipefail
+          shell: C:/tools/cygwin/bin/bash.exe -leo pipefail
           command: |
+            cd /cygdrive/c/Users/circleci/project
             /usr/local/bin/opam --version > /cygdrive/c/tmp/flow/opamcachebreaker
             echo "ocaml-4.07.1" >> /cygdrive/c/tmp/flow/opamcachebreaker
             /usr/bin/cat flowtype.opam >> /cygdrive/c/tmp/flow/opamcachebreaker
@@ -291,23 +279,25 @@ jobs:
             - _opam
       - run:
           name: Build flow.exe
-          shell: C:/tools/cygwin/bin/bash.exe --noprofile --norc -eo pipefail
+          shell: C:/tools/cygwin/bin/bash.exe -leo pipefail
           environment:
             PATH: /usr/local/bin:/usr/bin:/cygdrive/c/Windows/system32:/cygdrive/c/Windows:/cygdrive/c/Windows/System32/Wbem:/cygdrive/c/Windows/System32/WindowsPowerShell/v1.0
             CC: x86_64-w64-mingw32-gcc
             CXX: x86_64-w64-mingw32-g++
             AR: x86_64-w64-mingw32-gcc-ar
           command: |
+             cd /cygdrive/c/Users/circleci/project
              eval $(opam env)
              make bin/flow.exe dist/flow.zip
              mkdir -p bin/win64 && cp bin/flow.exe bin/win64/flow.exe
              cp dist/flow.zip dist/flow-win64.zip
       - run:
           name: Build parser test runner
-          shell: C:/tools/cygwin/bin/bash.exe --noprofile --norc -eo pipefail
+          shell: C:/tools/cygwin/bin/bash.exe -leo pipefail
           environment:
             PATH: /usr/local/bin:/usr/bin:/cygdrive/c/Windows/system32:/cygdrive/c/Windows:/cygdrive/c/Windows/System32/Wbem:/cygdrive/c/Windows/System32/WindowsPowerShell/v1.0
           command: |
+            cd /cygdrive/c/Users/circleci/project
             eval $(opam env)
             make -C src/parser/ ../../_build/src/parser/test/run_tests.native
             cp _build/src/parser/test/run_tests.native bin/win64/run_parser_tests.exe

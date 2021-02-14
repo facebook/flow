@@ -77,14 +77,12 @@ let substituter =
                 ReposT (annot_reason ~annot_loc tp_reason, param_t)
               | Some param_t when name = "this" ->
                 ReposT (annot_reason ~annot_loc tp_reason, param_t)
-              | Some param_t ->
-                (match desc_of_reason ~unwrap:false (reason_of_t param_t) with
-                | RPolyTest _ ->
-                  mod_reason_of_t
-                    (fun param_reason ->
-                      annot_reason ~annot_loc @@ repos_reason annot_loc param_reason)
-                    param_t
-                | _ -> param_t)
+              | Some (GenericT _ as param_t) ->
+                mod_reason_of_t
+                  (fun param_reason ->
+                    annot_reason ~annot_loc @@ repos_reason annot_loc param_reason)
+                  param_t
+              | Some param_t -> param_t
             end
           | ExistsT reason ->
             if force then

@@ -19,8 +19,8 @@ val text_edits_of_import :
   ast:(Loc.t, Loc.t) Flow_ast.Program.t ->
   Export_index.kind ->
   string ->
-  File_key.t ->
-  (text_edits, unit) result
+  Export_index.source ->
+  text_edits option
 
 val code_actions_at_loc :
   options:Options.t ->
@@ -57,3 +57,7 @@ val insert_type :
   location_is_strict:bool ->
   ambiguity_strategy:Autofix_options.ambiguity_strategy ->
   (Replacement_printer.patch, string) result Lwt.t
+
+module For_tests : sig
+  val path_of_modulename : string option -> Modulename.t -> string option
+end

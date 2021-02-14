@@ -11,7 +11,7 @@ type search_options = Fuzzy_path.options
 
 type search_result = {
   name: string;
-  file_key: File_key.t;
+  source: Export_index.source;
   kind: Export_index.kind;
 }
 [@@deriving show]

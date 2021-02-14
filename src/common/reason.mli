@@ -29,6 +29,7 @@ type 'loc virtual_reason_desc =
   | RNumberLit of string
   | RBigIntLit of string
   | RBooleanLit of bool
+  | RIndexedAccess
   | RMatchingProp of string * 'loc virtual_reason_desc
   | RObject
   | RObjectLit
@@ -137,7 +138,6 @@ type 'loc virtual_reason_desc =
   | RCode of string
   | RCustom of string
   | RPolyType of 'loc virtual_reason_desc
-  | RPolyTest of string * 'loc virtual_reason_desc * ALoc.id * bool
   | RExactType of 'loc virtual_reason_desc
   | ROptional of 'loc virtual_reason_desc
   | RMaybe of 'loc virtual_reason_desc
@@ -249,7 +249,7 @@ val is_internal_module_name : string -> bool
 
 val internal_module_name : string -> string
 
-val uninternal_module_name : string -> string
+val uninternal_name : string -> string
 
 val is_instantiable_reason : 'loc virtual_reason -> bool
 

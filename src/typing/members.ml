@@ -39,8 +39,8 @@ let rec merge_type cx =
   | (AnyT _, t)
   | (t, AnyT _) ->
     t
-  | (DefT (_, _, EmptyT _), t)
-  | (t, DefT (_, _, EmptyT _)) ->
+  | (DefT (_, _, EmptyT), t)
+  | (t, DefT (_, _, EmptyT)) ->
     t
   | (_, (DefT (_, _, MixedT _) as t))
   | ((DefT (_, _, MixedT _) as t), _) ->
@@ -270,7 +270,7 @@ let instantiate_poly_t cx t args =
         t
       ) else
         subst cx map t_
-  | DefT (_, _, EmptyT _)
+  | DefT (_, _, EmptyT)
   | DefT (_, _, MixedT _)
   | AnyT _
   | DefT (_, _, TypeT (_, AnyT _)) ->
@@ -313,13 +313,9 @@ and instantiate_type = function
   | DefT (_, _, ClassT t)
   | (AnyT _ as t)
   | DefT (_, _, TypeT (_, t))
-  | (DefT (_, _, EmptyT _) as t) ->
+  | (DefT (_, _, EmptyT) as t) ->
     t
   | t -> "cannot instantiate non-class type " ^ string_of_ctor t |> assert_false
-
-let possible_types_of_use cx = function
-  | UseT (_, t) -> Flow_js_utils.possible_types_of_type cx t
-  | _ -> []
 
 let string_of_extracted_type = function
   | Success t -> Printf.sprintf "Success (%s)" (Type.string_of_ctor t)
@@ -375,22 +371,12 @@ let resolve_tvar cx (_, id) =
 let rec resolve_type cx = function
   | OpenT tvar -> resolve_tvar cx tvar |> resolve_type cx
   | AnnotT (_, t, _) -> resolve_type cx t
-  | MergedT (_, uses) ->
-    begin
-      match Base.List.(uses >>= possible_types_of_use cx) with
-      (* The unit of intersection is normally mixed, but MergedT is hacky and empty
-         fits better here *)
-      | [] -> locationless_reason REmpty |> EmptyT.make |> with_trust bogus_trust
-      | [x] -> x
-      | x :: y :: ts -> InterRep.make x y ts |> create_intersection
-    end
   | t -> t
 
 let rec extract_type cx this_t =
   match this_t with
   | OpenT _
-  | AnnotT _
-  | MergedT _ ->
+  | AnnotT _ ->
     resolve_type cx this_t |> extract_type cx
   | OptionalT { reason = _; type_ = ty; use_desc = _ }
   | MaybeT (_, ty) ->
@@ -458,7 +444,7 @@ let rec extract_type cx this_t =
   | DefT (_, _, ClassT _)
   | CustomFunT (_, _)
   | MatchingPropT (_, _, _)
-  | DefT (_, _, EmptyT _)
+  | DefT (_, _, EmptyT)
   | ExistsT _
   | InternalT (ExtendsT _)
   | FunProtoApplyT _

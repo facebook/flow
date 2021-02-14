@@ -14,7 +14,7 @@ module Fn = Base.Fn
 module Component : sig
   type 'a t
 
-  type index = private int
+  type index = private int [@@deriving show]
 
   val make : 'a Nel.t -> (index -> 'a -> 'b) -> 'b t
 
@@ -30,7 +30,7 @@ module Component : sig
 end = struct
   type 'a t = 'a array
 
-  type index = int
+  type index = int [@@deriving show]
 
   let make (x, xs) f =
     let len = 1 + List.length xs in
@@ -51,22 +51,24 @@ end
 
 type dependency =
   | CyclicDep of Component.index
-  | AcyclicDep of Type.t (* ModuleT *)
+  | AcyclicDep of (Type.t[@opaque]) (* ModuleT *)
   | ResourceDep of string
   | UncheckedDep of string
   | BuiltinDep of string * string
   | UnknownDep of string
   | LegacyUncheckedDepTryBuiltinsFirst of string
+[@@deriving show]
 
 type 'a node =
   | Node of {
-      mutable merged: Type.t option;
+      mutable merged: Type.t option; [@opaque] (* TODO *)
       packed: 'a;
     }
+[@@deriving show]
 
 type file = {
   key: File_key.t;
-  cx: Context.t;
+  cx: Context.t; [@opaque]
   dependencies: (string * dependency) Module_refs.t;
   exports: ALoc.t Pack.exports node;
   export_def: ALoc.t Pack.packed option;
@@ -75,6 +77,7 @@ type file = {
   patterns: ALoc.t Pack.pattern node Patterns.t;
   pattern_defs: ALoc.t Pack.packed Pattern_defs.t;
 }
+[@@deriving show]
 
 let remote_ref_loc = function
   | Pack.Import { id_loc; _ }
@@ -1393,7 +1396,7 @@ and merge_class component file reason id def =
       }
     in
     let inst = DefT (reason, trust, InstanceT (static, super, implements, insttype)) in
-    TypeUtil.this_class_type inst true
+    TypeUtil.this_class_type inst false
   in
   merge_tparams_targs component file reason t tparams
 
@@ -1467,7 +1470,7 @@ and merge_declare_class component file reason id def =
       }
     in
     let inst = DefT (reason, trust, InstanceT (static, super, implements, insttype)) in
-    TypeUtil.this_class_type inst true
+    TypeUtil.this_class_type inst false
   in
   merge_tparams_targs component file reason t tparams
 

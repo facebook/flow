@@ -718,7 +718,7 @@ end = struct
         let cx = Env.get_cx env in
         let prefix = spf "%*s[Norm|run_id:%d|depth:%d]" (2 * depth) "" (get_run_id ()) depth in
         prerr_endlinef "%s Input: %s\n" prefix (Debug_js.dump_t cx t);
-        let result = type_poly ~env t state in
+        let result = type_with_alias_reason ~env t state in
         let result_str =
           match result with
           | (Ok ty, _) -> "[Ok] " ^ Ty_debug.dump_t ty
@@ -737,28 +737,7 @@ end = struct
           if options.Env.verbose_normalizer then
             type_debug ~env ~depth t
           else
-            type_poly ~env t
-
-    (* Before we start pattern-matching on the structure of the input type, we can
-     * reconstruct some types based on attached reasons. Two cases are of interest here:
-     * - Type parameters: we use RPolyTest reasons for these
-     * - Type aliases: we use RTypeAlias reasons for these *)
-    and type_poly ~env t =
-      let next = type_with_alias_reason in
-      (* The RPolyTest description is used for types that represent type parameters.
-       * When normalizing, we want such types to be replaced by the type parameter,
-       * whose name is part of the description, but only in the case that the parameter
-       * is in scope. The reason we need to make this distinction is that bound tests
-       * may exit the scope of the structure that introduced them, in which case we
-       * do not perform the substitution. There instead we unfold the underlying type. *)
-      let reason = TypeUtil.reason_of_t t in
-      match (t, desc_of_reason ~unwrap:false reason) with
-      | (Type.GenericT { name; _ }, _)
-      | (_, RPolyTest (name, _, _, _)) ->
-        let loc = Reason.def_aloc_of_reason reason in
-        let default t = next ~env t in
-        lookup_tparam ~default env t name loc
-      | _ -> next ~env t
+            type_with_alias_reason ~env t
 
     and type_with_alias_reason ~env t =
       let next = type_ctor ~cont:type_with_alias_reason in
@@ -801,10 +780,11 @@ end = struct
       let open Type in
       match t with
       | OpenT (_, id) -> type_variable ~env id
-      | BoundT (reason, name) -> bound_t ~env reason name
-      | GenericT { bound; _ } ->
-        (* only hit when we were unable to lookup a type parameter *)
-        type__ ~env bound
+      | BoundT (reason, name) -> bound_t reason name
+      | GenericT { bound; reason; name; _ } ->
+        let loc = Reason.def_aloc_of_reason reason in
+        let default t = type_with_alias_reason ~env t in
+        lookup_tparam ~default env bound name loc
       | AnnotT (_, t, _) -> type__ ~env t
       | EvalT (t, d, id) -> eval_t ~env ~cont t id d
       | ExactT (_, t) -> exact_t ~env t
@@ -823,7 +803,7 @@ end = struct
       | DefT (_, _, BoolT (Some x)) when Env.preserve_inferred_literal_types env ->
         return (Ty.Bool (Some x))
       | DefT (_, _, BoolT _) -> return (Ty.Bool None)
-      | DefT (_, _, EmptyT _) -> return (mk_empty Ty.EmptyType)
+      | DefT (_, _, EmptyT) -> return (mk_empty Ty.EmptyType)
       | DefT (_, _, NullT) -> return Ty.Null
       | DefT (_, _, SymbolT) -> return Ty.Symbol
       | DefT (_, _, SingletonNumT (_, lit)) -> return (Ty.NumLit lit)
@@ -869,7 +849,6 @@ end = struct
       | TypeDestructorTriggerT (_, r, _, _, _) ->
         let loc = Reason.def_aloc_of_reason r in
         return (mk_empty (Ty.EmptyTypeDestructorTriggerT loc))
-      | MergedT (_, uses) -> merged_t ~env uses
       | ExistsT _ -> return Ty.(Utility Exists)
       | ObjProtoT _ -> return Ty.(TypeOf ObjProto)
       | FunProtoT _ -> return Ty.(TypeOf FunProto)
@@ -984,9 +963,9 @@ end = struct
       | T.UnresolvedType -> Ty.UnresolvedType
       | T.WeakContext -> Ty.WeakContext
 
-    and bound_t ~env reason name =
-      let { Ty.sym_def_loc; sym_name; _ } = symbol_from_reason env reason name in
-      return (Ty.Bound (sym_def_loc, sym_name))
+    and bound_t reason name =
+      let loc = Reason.def_aloc_of_reason reason in
+      return (Ty.Bound (loc, name))
 
     and fun_ty ~env static f fun_type_params =
       let%bind fun_static = type__ ~env static in
@@ -1804,18 +1783,6 @@ end = struct
       in
       (fun ~env uses -> uses_t_aux ~env [] uses)
 
-    and merged_t ~env uses =
-      match%bind uses_t ~env uses with
-      | Ty.SomeUnknownUpper _ ->
-        (* un-normalizable *)
-        terr ~kind:BadUse None
-      | Ty.NoUpper ->
-        (* shouldn't happen - MergedT has at least one use by construction *)
-        return (mk_empty (Ty.NoLowerWithUpper Ty.NoUpper))
-      | Ty.SomeKnownUpper t ->
-        (* return the recorded use type *)
-        return t
-
     let rec type_ctor_ = type_ctor ~cont:type_ctor_
 
     let convert_t ?(skip_reason = false) =
@@ -2368,6 +2335,17 @@ end = struct
       in
       type__ ~env ~proto ~imode t'
 
+    and opaque_t ~env ~proto ~imode r opaquetype =
+      let current_source = Env.current_file env in
+      let opaque_source = ALoc.source (def_aloc_of_reason r) in
+      (* Compare the current file (of the query) and the file that the opaque
+         type is defined. If they differ, then hide the underlying type. *)
+      let same_file = Some current_source = opaque_source in
+      match opaquetype with
+      | { Type.underlying_t = Some t; _ } when same_file -> type__ ~env ~proto ~imode t
+      | { Type.super_t = Some t; _ } -> type__ ~env ~proto ~imode t
+      | _ -> return (Ty.mk_object ~obj_kind:Ty.ExactObj [])
+
     and this_class_t ~env ~proto ~imode t =
       match imode with
       | IMUnset -> type__ ~env ~proto ~imode:IMStatic t
@@ -2439,6 +2417,7 @@ end = struct
       | EvalT (t, LatentPredT _, id) -> latent_pred_t ~env ~proto ~imode id t
       | ExactT (_, t) -> type__ ~env ~proto ~imode t
       | GenericT { bound; _ } -> type__ ~env ~proto ~imode bound
+      | OpaqueT (r, o) -> opaque_t ~env ~proto ~imode r o
       | t -> TypeConverter.convert_t ~env t
 
     let convert_t ~env t = type__ ~env ~proto:false ~imode:IMUnset t

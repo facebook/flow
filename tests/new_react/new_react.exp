@@ -21,8 +21,8 @@ Cannot use `React.Component` [1] with fewer than 1 type argument. [missing-type-
                         ^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:26:30
-   26| declare class React$Component<Props, State = void> {
+   <BUILTINS>/react.js:41:30
+   41| declare class React$Component<Props, State = void> {
                                     ^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
@@ -35,8 +35,8 @@ Cannot use `React.Component` [1] with fewer than 1 type argument. [missing-type-
                         ^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:26:30
-   26| declare class React$Component<Props, State = void> {
+   <BUILTINS>/react.js:41:30
+   41| declare class React$Component<Props, State = void> {
                                     ^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
@@ -53,8 +53,8 @@ References:
    classes.js:7:19
     7| class Foo extends React.Component<Props, State> {
                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   <BUILTINS>/react.js:35:37
-   35|     partialState: ?$Shape<State> | ((State, Props) => ?$Shape<State>),
+   <BUILTINS>/react.js:50:37
+   50|     partialState: ?$Shape<State> | ((State, Props) => ?$Shape<State>),
                                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
    classes.js:23:15
    23|   setState(o: { y_: string }): void { }
@@ -95,8 +95,8 @@ References:
    classes.js:7:19
     7| class Foo extends React.Component<Props, State> {
                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   <BUILTINS>/react.js:35:19
-   35|     partialState: ?$Shape<State> | ((State, Props) => ?$Shape<State>),
+   <BUILTINS>/react.js:50:19
+   50|     partialState: ?$Shape<State> | ((State, Props) => ?$Shape<State>),
                          ^^^^^^^^^^^^^^ [3]
 
 
@@ -173,8 +173,8 @@ References:
    classes.js:39:15
     39| var foo: $jsx<number> = <Foo/>;
                       ^^^^^^ [1]
-   <BUILTINS>/react.js:171:5
-   171|   | string
+   <BUILTINS>/react.js:186:5
+   186|   | string
             ^^^^^^ [2]
 
 
@@ -239,8 +239,8 @@ Property `y_` is missing in function type [1] but exists in object type [2]. [pr
          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:35:37
-   35|     partialState: ?$Shape<State> | ((State, Props) => ?$Shape<State>),
+   <BUILTINS>/react.js:50:37
+   50|     partialState: ?$Shape<State> | ((State, Props) => ?$Shape<State>),
                                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    classes.js:64:15
    64|   setState(o: { y_: string }): void { },
@@ -273,8 +273,8 @@ object type [1] is incompatible with null or undefined [2]. [incompatible-type]
                      ^^^^^^^^^^^^^^ [1]
 
 References:
-   <BUILTINS>/react.js:35:19
-   35|     partialState: ?$Shape<State> | ((State, Props) => ?$Shape<State>),
+   <BUILTINS>/react.js:50:19
+   50|     partialState: ?$Shape<State> | ((State, Props) => ?$Shape<State>),
                          ^^^^^^^^^^^^^^ [2]
 
 
@@ -305,8 +305,8 @@ References:
    classes.js:79:22
     79| var foo_legacy: $jsx<number> = <FooLegacy/>;
                              ^^^^^^ [1]
-   <BUILTINS>/react.js:171:5
-   171|   | string
+   <BUILTINS>/react.js:186:5
+   186|   | string
             ^^^^^^ [2]
 
 
@@ -572,16 +572,16 @@ Error --------------------------------------------------------------------------
 Cannot assign `C.displayName` to `x` because null or undefined [1] is incompatible with number [2]. [incompatible-type]
 
    new_react.js:32:17
-   32| var x: number = C.displayName;
-                       ^^^^^^^^^^^^^
+    32| var x: number = C.displayName;
+                        ^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:87:24
-   87|   static displayName?: ?string;
-                              ^^^^^^^ [1]
+   <BUILTINS>/react.js:102:24
+   102|   static displayName?: ?string;
+                               ^^^^^^^ [1]
    new_react.js:32:8
-   32| var x: number = C.displayName;
-              ^^^^^^ [2]
+    32| var x: number = C.displayName;
+               ^^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------- new_react.js:32:17
@@ -589,16 +589,16 @@ Error --------------------------------------------------------------------------
 Cannot assign `C.displayName` to `x` because undefined [1] is incompatible with number [2]. [incompatible-type]
 
    new_react.js:32:17
-   32| var x: number = C.displayName;
-                       ^^^^^^^^^^^^^
+    32| var x: number = C.displayName;
+                        ^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:87:24
-   87|   static displayName?: ?string;
-                              ^^^^^^^ [1]
+   <BUILTINS>/react.js:102:24
+   102|   static displayName?: ?string;
+                               ^^^^^^^ [1]
    new_react.js:32:8
-   32| var x: number = C.displayName;
-              ^^^^^^ [2]
+    32| var x: number = C.displayName;
+               ^^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------- new_react.js:32:17
@@ -606,16 +606,16 @@ Error --------------------------------------------------------------------------
 Cannot assign `C.displayName` to `x` because string [1] is incompatible with number [2]. [incompatible-type]
 
    new_react.js:32:17
-   32| var x: number = C.displayName;
-                       ^^^^^^^^^^^^^
+    32| var x: number = C.displayName;
+                        ^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:87:25
-   87|   static displayName?: ?string;
-                               ^^^^^^ [1]
+   <BUILTINS>/react.js:102:25
+   102|   static displayName?: ?string;
+                                ^^^^^^ [1]
    new_react.js:32:8
-   32| var x: number = C.displayName;
-              ^^^^^^ [2]
+    32| var x: number = C.displayName;
+               ^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------- object_component.js:14:13
@@ -894,8 +894,8 @@ Cannot get `React.PropTypes.imaginaryType` because property `imaginaryType` is m
                                        ^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:227:33
-   227|   declare export var PropTypes: ReactPropTypes;
+   <BUILTINS>/react.js:242:33
+   242|   declare export var PropTypes: ReactPropTypes;
                                         ^^^^^^^^^^^^^^ [1]
 
 
@@ -909,13 +909,13 @@ Cannot get `React.PropTypes.string.inRequired` because property `inRequired` (di
                                               ^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:464:39
+   <BUILTINS>/react.js:481:39
                                               v
-   464| type ReactPropsChainableTypeChecker = {
-   465|   (props: any, propName: string, componentName: string, href?: string): ?Error,
-   466|   isRequired: ReactPropsCheckType,
-   467|   ...
-   468| };
+   481| type ReactPropsChainableTypeChecker = {
+   482|   (props: any, propName: string, componentName: string, href?: string): ?Error,
+   483|   isRequired: ReactPropsCheckType,
+   484|   ...
+   485| };
         ^ [1]
 
 
@@ -1041,8 +1041,8 @@ Cannot get `this.state.x` because property `x` is missing in undefined [1]. [inc
                              ^
 
 References:
-   <BUILTINS>/react.js:26:46
-   26| declare class React$Component<Props, State = void> {
+   <BUILTINS>/react.js:41:46
+   41| declare class React$Component<Props, State = void> {
                                                     ^^^^ [1]
 
 

@@ -27,6 +27,8 @@ queries_in_file autocomplete "jsx2.js" --pretty
 queries_in_file autocomplete "jsx3.js" --pretty
 queries_in_file autocomplete "jsx4.js" --pretty
 queries_in_file autocomplete "jsx-attribute-member.js" --pretty
+queries_in_file autocomplete "jsx-closing-tag.js" --pretty
+queries_in_file autocomplete "jsx-closing-tag-unclosed.js" --pretty
 queries_in_file autocomplete "jsx-function-component.js" --pretty
 queries_in_file autocomplete "jsx-function-component-2.js" --pretty
 queries_in_file autocomplete "jsx-function-component-3.js" --pretty
@@ -41,6 +43,7 @@ queries_in_file autocomplete "member_class_property.js" --lsp
 queries_in_file autocomplete "member_class_static.js" --pretty
 queries_in_file autocomplete "member_interface_property.js" --lsp
 queries_in_file autocomplete "member_middle.js" --pretty
+queries_in_file autocomplete "opaque_types.js" --pretty
 queries_in_file autocomplete "optional_chaining_middle.js" --pretty
 queries_in_file autocomplete "optional_chaining_new.js" --pretty
 queries_in_file autocomplete "optional_chaining_continue.js" --pretty

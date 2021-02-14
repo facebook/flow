@@ -13,7 +13,7 @@ type t = {
 
 type search_result = {
   name: string;
-  file_key: File_key.t;
+  source: Export_index.source;
   kind: Export_index.kind;
 }
 [@@deriving show]
@@ -87,44 +87,41 @@ type query =
   | Value of string
   | Type of string
 
-let fold_search_result_of_export ~query name file_key kind acc =
+let search_result_of_export ~query name source kind =
   let open Export_index in
   match (query, kind) with
   | (Value _, (Default | Named | Namespace))
   | (Type _, NamedType) ->
-    { name; file_key; kind } :: acc
+    Some { name; source; kind }
   | (Value _, NamedType)
   | (Type _, (Default | Named | Namespace)) ->
-    acc
+    None
 
-(** [flatten_results ~n:20 ~index [] matches] will accumulate up to 20
-    search results, where each match in [matches] might contribute multiple results.
+(** [take ~n:20 ~index matches] will return up to 20 search results,
+    where each match in [matches] might contribute multiple results.
     sets [is_incomplete] if [n] is exceeded. *)
-let rec flatten_results ~n ~index ~query acc fuzzy_matches =
-  if n = 0 then
-    let is_incomplete = fuzzy_matches <> [] in
-    { results = Base.List.rev acc; is_incomplete }
-  else
-    match fuzzy_matches with
-    | [] -> { results = Base.List.rev acc; is_incomplete = false }
-    | { Fuzzy_path.value; _ } :: fuzzy_matches ->
-      let (n, acc) =
-        match Export_index.find_opt value index with
-        | Some files ->
-          Export_index.ExportSet.fold
-            (fun (file_key, kind) (n, acc) ->
-              let acc =
-                if n > 0 then
-                  fold_search_result_of_export ~query value file_key kind acc
-                else
-                  acc
-              in
-              (n - 1, acc))
-            files
-            (n, acc)
-        | None -> (n, acc)
-      in
-      flatten_results ~n ~index ~query acc fuzzy_matches
+let take =
+  let rec helper ~n ~query acc (seq : (Export_index.source * Export_index.kind * string) Seq.t) =
+    match seq () with
+    | Seq.Nil -> { results = Base.List.rev acc; is_incomplete = false }
+    | Seq.Cons ((source, kind, value), rest) ->
+      if n <= 0 then
+        { results = Base.List.rev acc; is_incomplete = true }
+      else (
+        match search_result_of_export ~query value source kind with
+        | Some result -> helper ~n:(n - 1) ~query (result :: acc) rest
+        | None -> helper ~n ~query acc rest
+      )
+  in
+  fun ~n ~index ~query fuzzy_matches ->
+    let seq =
+      fuzzy_matches
+      |> List.to_seq
+      |> Seq.flat_map (fun { Fuzzy_path.value; _ } ->
+             Export_index.find_seq value index
+             |> Seq.map (fun (source, kind) -> (source, kind, value)))
+    in
+    helper ~n ~query [] seq
 
 let search ?(options = Fuzzy_path.default_options) query { index; value_matcher; type_matcher } =
   let (matcher, query_txt) =
@@ -144,7 +141,7 @@ let search ?(options = Fuzzy_path.default_options) query { index; value_matcher;
       options
   in
 
-  Fuzzy_path.search ~options query_txt matcher |> flatten_results ~n:max_results ~index ~query []
+  Fuzzy_path.search ~options query_txt matcher |> take ~n:max_results ~index ~query
 
 let search_values ?options query t = search ?options (Value query) t
 

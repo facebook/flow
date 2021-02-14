@@ -417,7 +417,7 @@ struct
         ()
       else if
         match l with
-        | DefT (_, _, EmptyT flavor) -> empty_success flavor u
+        | DefT (_, _, EmptyT) -> empty_success u
         | _ -> false
       then
         ()
@@ -506,10 +506,6 @@ struct
         (* Subtyping *)
         (*************)
         | (_, UseT (use_op, u)) -> rec_sub_t cx use_op l u trace
-        (*****************)
-        (* any with uses *)
-        (*****************)
-        | (MergedT (reason, _), _) -> rec_flow cx trace (Unsoundness.why Merged reason, u)
         (***************************)
         (* type destructor trigger *)
         (***************************)
@@ -693,7 +689,7 @@ struct
         (****************************************************************)
         (* BecomeT unifies a tvar with an incoming concrete lower bound *)
         (****************************************************************)
-        | (_, BecomeT (reason, t)) when is_proper_def l ->
+        | (_, BecomeT { reason; t; empty_success = _ }) when is_proper_def l ->
           let l = reposition ~trace cx (aloc_of_reason reason) l in
           rec_unify cx trace ~use_op:unknown_use ~unify_any:true l t
         (***********************)
@@ -1210,7 +1206,7 @@ struct
               t
             | (_, None) ->
               let num_exports = SMap.cardinal exports_tmap in
-              let has_default_export = SMap.find_opt "default" exports_tmap <> None in
+              let has_default_export = SMap.mem "default" exports_tmap in
               let msg =
                 if num_exports = 1 && has_default_export then
                   Error_message.EOnlyDefaultExport (reason, module_name, export_name)
@@ -1603,7 +1599,7 @@ struct
             (reason_of_t l)
             ~useful:
               (match Type_filter.not_exists l with
-              | DefT (_, _, EmptyT Bottom) -> false
+              | DefT (_, _, EmptyT) -> false
               | _ -> true)
         (***************)
         (* maybe types *)
@@ -1735,6 +1731,9 @@ struct
             cx
             trace
             (DefT (reason, bogus_trust (), BoolT (Some false)), OpenT tout)
+        | (UnionT (_, rep), (AndT _ | OrT _ | NullishCoalesceT _))
+          when not (UnionRep.is_optimized_finally rep) ->
+          flow_all_in_union cx trace rep u
         | (left, AndT (_, right, u)) ->
           begin
             match left with
@@ -1750,12 +1749,12 @@ struct
              a truthy && b ~> b
              a && b ~> a falsy | b *)
           (match Type_filter.exists left with
-          | DefT (_, _, EmptyT Bottom) ->
+          | DefT (_, _, EmptyT) ->
             (* falsy *)
             rec_flow cx trace (left, PredicateT (NotP (ExistsP None), u))
           | _ ->
             (match Type_filter.not_exists left with
-            | DefT (_, _, EmptyT Bottom) ->
+            | DefT (_, _, EmptyT) ->
               (* truthy *)
               rec_flow cx trace (right, UseT (unknown_use, OpenT u))
             | _ ->
@@ -1766,12 +1765,12 @@ struct
              a falsy || b ~> b
              a || b ~> a truthy | b *)
           (match Type_filter.not_exists left with
-          | DefT (_, _, EmptyT Bottom) ->
+          | DefT (_, _, EmptyT) ->
             (* truthy *)
             rec_flow cx trace (left, PredicateT (ExistsP None, u))
           | _ ->
             (match Type_filter.exists left with
-            | DefT (_, _, EmptyT Bottom) ->
+            | DefT (_, _, EmptyT) ->
               (* falsy *)
               rec_flow cx trace (right, UseT (unknown_use, OpenT u))
             | _ ->
@@ -1782,14 +1781,14 @@ struct
            a ?? b ~> a not-nullish | b *)
         | (left, NullishCoalesceT (_, right, u)) ->
           (match Type_filter.maybe left with
-          | DefT (_, _, EmptyT Bottom)
+          | DefT (_, _, EmptyT)
           (* This `AnyT` case is required to have similar behavior to the other logical operators. *)
           | AnyT _ ->
             (* not-nullish *)
             rec_flow cx trace (left, PredicateT (NotP MaybeP, u))
           | _ ->
             (match Type_filter.not_maybe left with
-            | DefT (_, _, EmptyT Bottom) ->
+            | DefT (_, _, EmptyT) ->
               (* nullish *)
               rec_flow cx trace (right, UseT (unknown_use, OpenT u))
             | _ ->
@@ -2031,8 +2030,11 @@ struct
               let keylist =
                 SMap.fold
                   (fun x _ acc ->
-                    let reason = replace_desc_new_reason (RStringLit x) reason_op in
-                    DefT (reason, bogus_trust (), SingletonStrT x) :: acc)
+                    if Reason.is_internal_name x then
+                      acc
+                    else
+                      let reason = replace_desc_new_reason (RStringLit x) reason_op in
+                      DefT (reason, bogus_trust (), SingletonStrT x) :: acc)
                   (Context.find_props cx props_tmap)
                   []
               in
@@ -2046,8 +2048,11 @@ struct
           let keylist =
             SMap.fold
               (fun x _ acc ->
-                let reason = replace_desc_new_reason (RStringLit x) reason_op in
-                DefT (reason, bogus_trust (), SingletonStrT x) :: acc)
+                if Reason.is_internal_name x then
+                  acc
+                else
+                  let reason = replace_desc_new_reason (RStringLit x) reason_op in
+                  DefT (reason, bogus_trust (), SingletonStrT x) :: acc)
               own_props
               []
           in
@@ -2087,7 +2092,8 @@ struct
                   let t =
                     if flags.frozen then
                       match t with
-                      | DefT (t_reason, trust, StrT (Literal (_, lit))) ->
+                      | DefT (t_reason, trust, StrT (Literal (_, lit)))
+                        when not (is_internal_name lit) ->
                         let t_reason = replace_desc_reason (RStringLit lit) t_reason in
                         DefT (t_reason, trust, SingletonStrT lit)
                       | DefT (t_reason, trust, NumT (Literal (_, lit))) ->
@@ -2465,7 +2471,7 @@ struct
         (************)
         (* matching *)
         (************)
-        (* TODO we will be able to get rid of this case when we kill MergedT *)
+        (* TODO get rid of this  *)
         | (MatchingPropT _, _) when is_use u -> ()
         (*************************)
         (* Resolving rest params *)
@@ -2752,7 +2758,7 @@ struct
         | (AnyT (_, src), MakeExactT (reason_op, k)) -> continue cx trace (AnyT.why src reason_op) k
         | (DefT (_, trust, VoidT), MakeExactT (reason_op, k)) ->
           continue cx trace (VoidT.why reason_op trust) k
-        | (DefT (_, trust, EmptyT _), MakeExactT (reason_op, k)) ->
+        | (DefT (_, trust, EmptyT), MakeExactT (reason_op, k)) ->
           continue cx trace (EmptyT.why reason_op trust) k
         (* unsupported kind *)
         | (_, MakeExactT (reason_op, k)) ->
@@ -3073,7 +3079,8 @@ struct
               begin
                 match calltype.call_targs with
                 | None ->
-                  Context.add_implicit_instantiation_check cx l u;
+                  if not (Speculation.speculating cx) then
+                    Context.add_implicit_instantiation_check cx l u;
                   let t_ =
                     instantiate_poly
                       cx
@@ -3115,7 +3122,8 @@ struct
               in
               rec_flow cx trace (t_, ConstructorT (use_op, reason_op, None, args, tout))
             | ConstructorT (_, _, None, _, _) ->
-              Context.add_implicit_instantiation_check cx l u;
+              if not (Speculation.speculating cx) then
+                Context.add_implicit_instantiation_check cx l u;
               let use_op =
                 match use_op_of_use_t u with
                 | Some use_op -> use_op
@@ -4154,6 +4162,7 @@ struct
                   | UnsealedInFile _
                   | Exact ->
                     Exact
+                  | Indexed d -> Indexed d
                   | _ -> Inexact
                 in
                 let o = Obj_type.mk_with_proto cx reason ~props proto ~obj_kind in
@@ -4507,7 +4516,10 @@ struct
                * recursively 0->1 -- e.g., class instance types. *)
               let tvar = Tvar.mk_no_wrap cx reason in
               eval_selector cx ~trace reason l s (reason, tvar) id;
-              rec_flow cx trace (OpenT (reason, tvar), BecomeT (reason, OpenT tout))
+              rec_flow
+                cx
+                trace
+                (OpenT (reason, tvar), BecomeT { reason; t = OpenT tout; empty_success = false })
             | DestructInfer -> eval_selector cx ~trace reason l s tout id
           end
         (**************)
@@ -5191,7 +5203,7 @@ struct
             reasons;
           enum_exhaustive_check_incomplete cx ~trace ~reason incomplete_out
         (* If the discriminant is empty, the check is successful. *)
-        | ( DefT (_, _, EmptyT _),
+        | ( DefT (_, _, EmptyT),
             EnumExhaustiveCheckT
               {
                 check =
@@ -5330,7 +5342,7 @@ struct
         (***************************)
 
         (* Use our alternate if our lower bound is empty. *)
-        | (DefT (_, _, EmptyT Bottom), CondT (_, _, else_t, tout)) ->
+        | (DefT (_, _, EmptyT), CondT (_, _, else_t, tout)) ->
           rec_flow_t cx trace ~use_op:unknown_use (else_t, tout)
         (* Otherwise continue by Flowing out lower bound to tout. *)
         | (_, CondT (_, then_t_opt, _, tout)) ->
@@ -5558,13 +5570,11 @@ struct
             match SMap.find_opt x pmap with
             | Some p -> p
             | None ->
-              (match SMap.find_opt (internal_name x) pmap with
+              let internal_x = internal_name x in
+              (match SMap.find_opt internal_x pmap with
               | Some p ->
                 (* unshadow *)
-                pmap
-                |> SMap.remove (internal_name x)
-                |> SMap.add x p
-                |> Context.add_property_map cx id;
+                pmap |> SMap.remove internal_x |> SMap.add x p |> Context.add_property_map cx id;
                 p
               | None ->
                 (* Create prop and link shadow props along the proto chain. *)
@@ -5838,15 +5848,12 @@ struct
       | (DefT (_, _, NumT _), DefT (_, _, StrT _)) ->
         rec_flow_t cx trace ~use_op:unknown_use (StrT.at loc |> with_trust bogus_trust, u)
       (* unreachable additions are unreachable *)
-      | (DefT (_, _, EmptyT Bottom), _)
-      | (_, DefT (_, _, EmptyT Bottom)) ->
+      | (DefT (_, _, EmptyT), _)
+      | (_, DefT (_, _, EmptyT)) ->
         rec_flow_t cx trace ~use_op:unknown_use (EmptyT.at loc |> with_trust bogus_trust, u)
       | (DefT (reason, _, MixedT _), _)
       | (_, DefT (reason, _, MixedT _)) ->
         add_output cx ~trace (Error_message.EAdditionMixed (reason, use_op))
-      | (DefT (_, _, EmptyT Zeroed), t)
-      | (t, DefT (_, _, EmptyT Zeroed)) ->
-        rec_flow_t cx trace ~use_op:unknown_use (t, u)
       | (DefT (_, _, (NumT _ | BoolT _)), DefT (_, _, (NumT _ | BoolT _))) ->
         rec_flow_t cx trace ~use_op:unknown_use (NumT.at loc |> with_trust bogus_trust, u)
       | (DefT (_, _, StrT _), _) ->
@@ -5894,8 +5901,8 @@ struct
       match (l, r) with
       | (DefT (_, _, StrT _), DefT (_, _, StrT _)) -> ()
       | (_, _) when numberesque l && numberesque r -> ()
-      | (DefT (_, _, EmptyT _), _)
-      | (_, DefT (_, _, EmptyT _)) ->
+      | (DefT (_, _, EmptyT), _)
+      | (_, DefT (_, _, EmptyT)) ->
         ()
       | _ ->
         let reasons = FlowError.ordered_reasons (reason_of_t l, reason_of_t r) in
@@ -5938,153 +5945,26 @@ struct
       | Some error -> add_output cx ~trace error
       | None -> ()
 
-  (* Returns true when __flow should succeed immediately if EmptyT of a given
-     flavor flows into u. *)
-  and empty_success flavor u =
-    match (flavor, u) with
-    (* Work has to happen when Empty flows to these types whether the EmptyT
-       originates from generic testing or elsewhere. This logic was previously
-       captured in ground_subtype. *)
-    | (_, UseT (_, OpenT _))
-    | (_, UseT (_, TypeDestructorTriggerT _))
-    | (_, ChoiceKitUseT _)
-    | (_, CondT _)
-    | (_, DestructuringT _)
-    | (_, EnumExhaustiveCheckT _)
-    | (_, MakeExactT _)
-    | (_, ObjKitT _)
-    | (_, ReposLowerT _)
-    | (_, ReposUseT _)
-    | (_, UnifyT _)
-    | (_, SealGenericT _)
-    | (_, ResolveUnionT _) ->
+  (* Returns true when __flow should succeed immediately if EmptyT flows into u. *)
+  and empty_success u =
+    match u with
+    (* Work has to happen when Empty flows to these types *)
+    | UseT (_, OpenT _)
+    | UseT (_, TypeDestructorTriggerT _)
+    | ChoiceKitUseT _
+    | CondT _
+    | DestructuringT _
+    | EnumExhaustiveCheckT _
+    | MakeExactT _
+    | ObjKitT _
+    | ReposLowerT _
+    | ReposUseT _
+    | UnifyT _
+    | SealGenericT _
+    | ResolveUnionT _ ->
       false
-    | (Bottom, _) -> true
-    (* After this line, flavor is always Zeroed. *)
-    (* Special cases: these cases actually utilize the fact that the LHS is Empty,
-       either by specially propagating it or selecting cases, etc. *)
-    | (_, UseT (_, ExactT _))
-    | (_, AdderT _)
-    | (_, AndT _)
-    | (_, OrT _)
-    (* Propagation cases: these cases don't use the fact that the LHS is
-       empty, but they propagate the LHS to other types and trigger additional
-       flows that may need to occur. *)
-    | (_, UseT (_, DefT (_, _, PolyT _)))
-    | (_, UseT (_, TypeAppT _))
-    | (_, UseT (_, MaybeT _))
-    | (_, UseT (_, MergedT _))
-    | (_, UseT (_, OpaqueT _))
-    | (_, UseT (_, OptionalT _))
-    | (_, UseT (_, ReposT _))
-    | (_, UseT (_, ThisClassT _))
-    | (_, UseT (_, ThisTypeAppT _))
-    | (_, UseT (_, UnionT _))
-    | (_, AssertExportIsTypeT _)
-    | (_, AssertImportIsValueT _)
-    | (_, BecomeT _)
-    | (_, BindT _)
-    | (_, CallLatentPredT _)
-    | (_, CallOpenPredT _)
-    | (_, CJSExtractNamedExportsT _)
-    | (_, ComparatorT _)
-    | (_, DebugPrintT _)
-    | (_, StrictEqT _)
-    | (_, EqT _)
-    | (_, ExportTypeT _)
-    | (_, IdxUnwrap _)
-    | (_, ImportTypeT _)
-    | (_, ImportTypeofT _)
-    | (_, IntersectionPreprocessKitT _)
-    | (_, InvariantT _)
-    | (_, MapTypeT (_, _, TupleMap _, _))
-    | (_, NotT _)
-    | (_, NullishCoalesceT _)
-    | (_, ObjAssignToT _)
-    | (_, ObjTestT _)
-    | (_, ObjTestProtoT _)
-    | (_, OptionalChainT _)
-    | (_, SentinelPropTestT _)
-    | (_, TestPropT _) ->
-      false
-    (* Error prevention: we should succeed because otherwise we'll hit
-       a case with a wildcard on the LHS that raises an error, which in
-       this situation would be spurious *)
-    | (_, UseT (_, AnnotT _))
-    | (_, UseT (_, EvalT _))
-    | (_, UseT (_, DefT (_, _, TypeT _)))
-    | (_, UseT (_, ShapeT _))
-    | (_, AssertArithmeticOperandT _)
-    | (_, AssertBinaryInLHST _)
-    | (_, AssertBinaryInRHST _)
-    | (_, AssertForInRHST _)
-    | (_, LookupT _)
-    | (_, ImplementsT _)
-    | (_, SetProtoT _)
-    (* No more work: we can succeed without flowing EmptyT any further
-       because the relevant cases don't propagate the LHS to any other
-       types; either the flow would succeed anyways or it would fall
-       through to the final catch-all error case and cause a spurious
-       error. *)
-    | (_, UseT _)
-    | (_, ArrRestT _)
-    | (_, AssertIterableT _)
-    | (_, CallElemT _)
-    | (_, CallT _)
-    | (_, CJSRequireT _)
-    | (_, ConcretizeTypeAppsT _)
-    | (_, ConstructorT _)
-    | (_, CopyNamedExportsT _)
-    | (_, CopyTypeExportsT _)
-    | (_, CreateObjWithComputedPropT _)
-    | (_, DebugSleepT _)
-    | (_, ElemT _)
-    | (_, ExportNamedT _)
-    | (_, ExtendsUseT _)
-    | (_, FunImplicitVoidReturnT _)
-    | (_, GetElemT _)
-    | (_, GetKeysT _)
-    | (_, GetPrivatePropT _)
-    | (_, GetPropT _)
-    | (_, GetProtoT _)
-    | (_, GetStaticsT _)
-    | (_, GetValuesT _)
-    | (_, GuardT _)
-    | (_, HasOwnPropT _)
-    | (_, IdxUnMaybeifyT _)
-    | (_, ImportDefaultT _)
-    | (_, ImportModuleNsT _)
-    | (_, ImportNamedT _)
-    | (_, MatchPropT _)
-    | (_, MapTypeT _) (* Note the TupleMap case above *)
-    | (_, MethodT _)
-    | (_, MixinT _)
-    | (_, ObjAssignFromT _)
-    | (_, ObjRestT _)
-    | (_, ObjSealT _)
-    | (_, PredicateT _)
-    | (_, ReactInToProps _)
-    | (_, ReactKitT _)
-    | (_, ReactPropsToOut _)
-    | (_, RefineT _)
-    | (_, ResolveSpreadT _)
-    | (_, SetElemT _)
-    | (_, SetPrivatePropT _)
-    | (_, SetPropT _)
-    | (_, SpecializeT _)
-    | (_, SubstOnPredT _)
-    | (_, SuperT _)
-    | (_, ThisSpecializeT _)
-    | (_, ToStringT _)
-    | (_, TypeAppVarianceCheckT _)
-    | (_, TypeCastT _)
-    | (_, EnumCastT _)
-    | (_, UnaryMinusT _)
-    | (_, VarianceCheckT _)
-    | (_, ModuleExportsAssignT _)
-    | (_, FilterOptionalT _)
-    | (_, FilterMaybeT _) ->
-      true
+    | BecomeT { empty_success; _ } -> empty_success
+    | _ -> true
 
   and handle_generic cx trace bound reason id name u =
     let make_generic t = GenericT { reason; id; name; bound = t } in
@@ -6138,7 +6018,7 @@ struct
           trace
           (position_generic_bound reason bound, SealGenericT { reason; id; name; cont = Upper u });
         true
-      | DefT (_, _, EmptyT flavor) -> empty_success flavor u
+      | DefT (_, _, EmptyT) -> empty_success u
       | _ -> false
     then
       true
@@ -6428,7 +6308,6 @@ struct
     | UnifyT _
     | UseT (_, AnnotT _) (* this transforms into a ReposUseT *)
     | UseT (_, MaybeT _) (* used to filter maybe *)
-    | UseT (_, MergedT _) (* Already handled in __flow *)
     | UseT (_, OptionalT _) (* used to filter optional *)
     | ObjAssignFromT _
     (* Handled in __flow *)
@@ -6548,7 +6427,6 @@ struct
     | ThisClassT _
     | ReposT _
     | EvalT _
-    | MergedT _
     | OpenPredT _
     | InternalT (ReposUpperT _)
     | MatchingPropT _
@@ -6618,11 +6496,105 @@ struct
      which don't have an own/proto distinction. *)
   and structural_subtype cx trace ~use_op lower reason_struct (own_props_id, proto_props_id, call_id)
       =
+    match lower with
+    (* Object <: Interface subtyping creates an object out of the interface to dispatch to the
+      existing object <: object logic *)
+    | DefT
+        ( lreason,
+          ltrust,
+          ObjT
+            {
+              flags = { obj_kind = lkind; frozen = lfrozen };
+              props_tmap = lprops;
+              proto_t = lproto;
+              call_t = lcall;
+            } ) ->
+      let own_props = Context.find_props cx own_props_id in
+      let own_props_without_dict = own_props |> SMap.remove "$key" |> SMap.remove "$value" in
+      let dict =
+        (* If these are physically equal, $key and $value were not present, and thus there is no indexer *)
+        if own_props == own_props_without_dict then
+          None
+        else
+          match (SMap.find "$key" own_props, SMap.find "$value" own_props) with
+          | (Field (_, key, _), Field (_, value, dict_polarity)) ->
+            Some { key; value; dict_polarity; dict_name = None }
+          | _ -> failwith "$key and $value must be added as fields"
+      in
+      let proto_props = Context.find_props cx proto_props_id in
+      let props_tmap = Reason.mk_id () |> Properties.id_of_int in
+      Context.add_property_map cx props_tmap (SMap.union own_props_without_dict proto_props);
+      (* Interfaces with an indexer type are indexed, all others are inexact *)
+      let obj_kind =
+        match dict with
+        | Some d -> Indexed d
+        | None -> Inexact
+      in
+      let o =
+        {
+          flags = { obj_kind; frozen = false };
+          props_tmap;
+          (* Interfaces have no prototype *)
+          proto_t = ObjProtoT reason_struct;
+          call_t = call_id;
+        }
+      in
+      let lkind =
+        match lkind with
+        (* ObjT <: Interface subtyping treats lower bounds as if they were sealed *)
+        | UnsealedInFile _ -> Exact
+        | _ -> lkind
+      in
+      let lower =
+        DefT
+          ( lreason,
+            ltrust,
+            ObjT
+              {
+                flags = { obj_kind = lkind; frozen = lfrozen };
+                props_tmap = lprops;
+                proto_t = lproto;
+                call_t = lcall;
+              } )
+      in
+      rec_flow_t cx trace ~use_op (lower, DefT (reason_struct, bogus_trust (), ObjT o))
+    | _ ->
+      inst_structural_subtype
+        cx
+        trace
+        ~use_op
+        lower
+        reason_struct
+        (own_props_id, proto_props_id, call_id)
+
+  and inst_structural_subtype
+      cx trace ~use_op lower reason_struct (own_props_id, proto_props_id, call_id) =
     let lreason = reason_of_t lower in
+    let lit = is_literal_object_reason lreason in
     let own_props = Context.find_props cx own_props_id in
     let proto_props = Context.find_props cx proto_props_id in
+    let own_props_without_dict = own_props |> SMap.remove "$key" |> SMap.remove "$value" in
+    let dict =
+      (* If these are physically equal, $key and $value were not present, and thus there is no indexer *)
+      if own_props == own_props_without_dict then
+        None
+      else
+        match (SMap.find "$key" own_props, SMap.find "$value" own_props) with
+        | (Field (_, key, _), Field (_, value, dict_polarity)) ->
+          Some { key; value; dict_polarity; dict_name = None }
+        | _ -> failwith "$key and $value must be added as fields"
+    in
     let call_t = Base.Option.map call_id ~f:(Context.find_call cx) in
-    own_props
+    let read_only_if_lit p =
+      match p with
+      | Field (x, t, _) ->
+        if lit then
+          Field (x, t, Polarity.Positive)
+        else
+          p
+      | _ -> p
+    in
+    own_props_without_dict
     |> SMap.iter (fun s p ->
            let use_op =
              Frame
@@ -6630,12 +6602,18 @@ struct
                  use_op )
            in
            match p with
-           | Field (_, OptionalT { reason = _; type_ = t; use_desc = _ }, polarity) ->
+           | Field (_, (OptionalT _ as t), polarity) ->
              let propref =
                let reason_prop =
                  update_desc_reason (fun desc -> ROptional (RPropertyOf (s, desc))) reason_struct
                in
                Named (reason_prop, s)
+             in
+             let polarity =
+               if lit then
+                 Polarity.Positive
+               else
+                 polarity
              in
              rec_flow
                cx
@@ -6644,7 +6622,9 @@ struct
                  LookupT
                    {
                      reason = reason_struct;
-                     lookup_kind = NonstrictReturning (None, None);
+                     lookup_kind =
+                       NonstrictReturning
+                         (Base.Option.map ~f:(fun { value; _ } -> (value, t)) dict, None);
                      ts = [];
                      propref;
                      lookup_action = LookupProp (use_op, Field (None, t, polarity));
@@ -6667,7 +6647,7 @@ struct
                      lookup_kind = Strict lreason;
                      ts = [];
                      propref;
-                     lookup_action = LookupProp (use_op, p);
+                     lookup_action = LookupProp (use_op, read_only_if_lit p);
                      ids = Some Properties.Set.empty;
                    } ));
     proto_props
@@ -6693,7 +6673,7 @@ struct
                    lookup_kind = Strict lreason;
                    ts = [];
                    propref;
-                   lookup_action = LookupProp (use_op, p);
+                   lookup_action = LookupProp (use_op, read_only_if_lit p);
                    ids = Some Properties.Set.empty;
                  } ));
     call_t
@@ -6836,9 +6816,7 @@ struct
     in
     let slingshot =
       match drop_generic t with
-      | OpenT _
-      | MergedT _ ->
-        false
+      | OpenT _ -> false
       | _ -> true
     in
     let result =
@@ -6852,15 +6830,11 @@ struct
          * The second branch then uses AnnotT to both concretize the result for use
          * as a lower or upper bound and prevent new bounds from being added to
          * the result.
-         *
-         * MergedT should also get this treatment as it is a merged "description" of
-         * an OpenT. *)
+         *)
         let f tvar =
           match t with
           | OpenT _
-          | MergedT _
-          | GenericT { bound = OpenT _; _ }
-          | GenericT { bound = MergedT _; _ } ->
+          | GenericT { bound = OpenT _; _ } ->
             let x = TypeDestructorTriggerT (use_op, reason, None, d, tvar) in
             rec_flow_t cx trace ~use_op:unknown_use (t, x);
             rec_flow_t cx trace ~use_op:unknown_use (x, t)
@@ -7172,7 +7146,7 @@ struct
       | None ->
         let this = Tvar.mk cx reason in
         let this_generic =
-          if is_this && not (Context.generate_tests cx) then
+          if is_this then
             GenericT
               {
                 id = Context.make_generic_id cx "this" (def_aloc_of_reason r);
@@ -7356,7 +7330,7 @@ struct
         rec_flow cx trace (next, ResolveUnionT { reason; resolved; unresolved = rest; upper; id })
     in
     match l with
-    | DefT (_, _, EmptyT _) -> continue resolved
+    | DefT (_, _, EmptyT) -> continue resolved
     | _ ->
       let reason_elemt = reason_of_t l in
       let pos = Base.List.length resolved in
@@ -7683,7 +7657,7 @@ struct
           in
           let exists_check =
             match Type_filter.maybe t with
-            | DefT (_, _, EmptyT _) -> exists_check
+            | DefT (_, _, EmptyT) -> exists_check
             | _ -> { exists_check with null_loc = t_loc }
           in
           let exists_check =
@@ -7717,26 +7691,26 @@ struct
       update_sketchy_null cx loc source;
       begin
         match Type_filter.exists source with
-        | DefT (_, _, EmptyT _) -> ()
+        | DefT (_, _, EmptyT) -> ()
         | _ -> rec_flow_t cx trace ~use_op:unknown_use (result, OpenT sink)
       end
     | NotP (ExistsP loc) ->
       update_sketchy_null cx loc source;
       begin
         match Type_filter.not_exists source with
-        | DefT (_, _, EmptyT _) -> ()
+        | DefT (_, _, EmptyT) -> ()
         | _ -> rec_flow_t cx trace ~use_op:unknown_use (result, OpenT sink)
       end
     | MaybeP ->
       begin
         match Type_filter.maybe source with
-        | DefT (_, _, EmptyT _) -> ()
+        | DefT (_, _, EmptyT) -> ()
         | _ -> rec_flow_t cx trace ~use_op:unknown_use (result, OpenT sink)
       end
     | NotP MaybeP ->
       begin
         match Type_filter.not_maybe source with
-        | DefT (_, _, EmptyT _) -> ()
+        | DefT (_, _, EmptyT) -> ()
         | _ -> rec_flow_t cx trace ~use_op:unknown_use (result, OpenT sink)
       end
     | NotP (NotP p) -> guard cx trace source p result sink
@@ -8324,6 +8298,7 @@ struct
               | FunImplicitReturn _
               | FunReturnStatement _
               | GetProperty _
+              | IndexedTypeAccess _
               | SetProperty _
               | UpdateProperty _
               | JSXCreateElement _
@@ -8671,15 +8646,13 @@ struct
      unification with any, we will miss the string/number incompatibility error.
 
      However, unifying with any-like types is sometimes desirable /
-     intentional. Thus, we limit the set of types on which unification is banned
-     to just MergedT which is an internal type.
+     intentional.
   *)
   and ok_unify ~unify_any desc = function
     | AnyT _ ->
       (match desc with
       | RExistential -> true
       | _ -> unify_any)
-    | MergedT _ -> false
     | _ -> true
 
   and __unify cx ~use_op ~unify_any t1 t2 trace =
@@ -9864,7 +9837,8 @@ struct
         (* Ensure that `source` is a 0->1 type by creating a tvar that resolves to
            the first lower bound. If there are multiple lower bounds, the typeof
            itself is an error. *)
-        Tvar.mk_where cx reason (fun t' -> flow_opt cx ?trace (t, BecomeT (reason, t')))
+        Tvar.mk_where cx reason (fun t' ->
+            flow_opt cx ?trace (t, BecomeT { reason; t = t'; empty_success = true }))
       | _ ->
         (* If this is not a tvar, then it should be 0->1 (see TODO). Note that
            BoundT types potentially appear unsubstituted at this point, so we can't

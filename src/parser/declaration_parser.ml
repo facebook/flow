@@ -367,7 +367,7 @@ module Declaration (Parse : Parser_common.PARSER) (Type : Type_parser.TYPE) : DE
           (fun env ->
             let id = Parse.pattern env Parse_error.StrictVarName in
             let (init, err) =
-              if Expect.maybe env T_ASSIGN then
+              if Eat.maybe env T_ASSIGN then
                 (Some (Parse.assignment env), None)
               else
                 match id with
@@ -387,7 +387,7 @@ module Declaration (Parse : Parser_common.PARSER) (Type : Type_parser.TYPE) : DE
         | Some x -> x :: errs
         | None -> errs
       in
-      if Expect.maybe env T_COMMA then
+      if Eat.maybe env T_COMMA then
         helper env decls errs
       else
         (List.rev decls, List.rev errs)

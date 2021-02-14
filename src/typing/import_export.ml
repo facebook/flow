@@ -76,47 +76,6 @@ let import_ns cx reason source =
   Tvar.mk_where cx reason (fun t ->
       Flow.flow cx (module_t, ImportModuleNsT (reason, t, Context.is_strict cx)))
 
-(**
- * Given an exported default declaration, identify nameless declarations and
- * name them with a special internal name that can be used to reference them
- * when assigning the export value.
- *
- * Paired with function which undoes this, for typed AST construction
- *)
-let nameify_default_export_decl decl =
-  let open Flow_ast.Statement in
-  let identity x = x in
-  match decl with
-  | (loc, FunctionDeclaration func_decl) ->
-    let open Flow_ast.Function in
-    if func_decl.id <> None then
-      (decl, identity)
-    else
-      ( ( loc,
-          FunctionDeclaration
-            {
-              func_decl with
-              id = Some (Flow_ast_utils.ident_of_source (loc, internal_name "*default*"));
-            } ),
-        (function
-        | (x, FunctionDeclaration func_decl) -> (x, FunctionDeclaration { func_decl with id = None })
-        | _ -> failwith "expected FunctionDeclaration") )
-  | (loc, ClassDeclaration class_decl) ->
-    let open Flow_ast.Class in
-    if class_decl.id <> None then
-      (decl, identity)
-    else
-      ( ( loc,
-          ClassDeclaration
-            {
-              class_decl with
-              id = Some (Flow_ast_utils.ident_of_source (loc, internal_name "*default*"));
-            } ),
-        (function
-        | (x, ClassDeclaration class_decl) -> (x, ClassDeclaration { class_decl with id = None })
-        | _ -> failwith "expected ClassDeclaration") )
-  | _ -> (decl, identity)
-
 (* Module exports are treated differently than `exports`. The latter is a
    variable that is implicitly set to the empty object at the top of a
    module. As such, properties can be added to it throughout the module,

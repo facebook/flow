@@ -1151,7 +1151,7 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
            * add a positive variance annotation. We may consider marking that type as
            * constant in the future as well. *)
           let prop_polarity = Polarity.Neutral in
-          let finish cx trace reason config defaults children =
+          let finish cx trace ~use_op reason config defaults children =
             let {
               Object.reason = config_reason;
               props = config_props;
@@ -1177,7 +1177,7 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
              *
              * NOTE: React will copy any enumerable prop whether or not it
              * is own to the config. *)
-            let (props, flags, generics) =
+            let (props_map, flags, generics) =
               match defaults with
               (* If we have some default props then we want to add the types for those
                * default props to our final props object. *)
@@ -1197,22 +1197,8 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
                       let p2 = get_prop defaults_reason p2 defaults_dict in
                       match (p1, p2) with
                       | (None, None) -> None
-                      | (Some (t, _, m), None) ->
-                        let p =
-                          if m then
-                            Method (None, t)
-                          else
-                            Field (None, t, prop_polarity)
-                        in
-                        Some p
-                      | (None, Some (t, _, m)) ->
-                        let p =
-                          if m then
-                            Method (None, t)
-                          else
-                            Field (None, t, prop_polarity)
-                        in
-                        Some p
+                      | (Some (t, _, m), None) -> Some (t, m)
+                      | (None, Some (t, _, m)) -> Some (t, m)
                       (* If a property is defined in both objects, and the first property's
                        * type includes void then we want to replace every occurrence of void
                        * with the second property's type. This is consistent with the behavior
@@ -1230,13 +1216,7 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
                                 ( OpenT (reason, filter_optional cx ~trace reason t1),
                                   CondT (reason, None, t2, tvar) ))
                         in
-                        let p =
-                          if m1 || m2 then
-                            Method (None, t)
-                          else
-                            Field (None, t, prop_polarity)
-                        in
-                        Some p)
+                        Some (t, m1 || m2))
                     config_props
                     defaults_props
                 in
@@ -1276,16 +1256,7 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
                 (props, flags, generics)
               (* Otherwise turn our slice props map into an object props. *)
               | None ->
-                (* All of the fields are read-only so we create positive fields. *)
-                let props =
-                  SMap.map
-                    (fun (t, _, is_method) ->
-                      if is_method then
-                        Method (None, t)
-                      else
-                        Field (None, t, prop_polarity))
-                    config_props
-                in
+                let props = SMap.map (fun (t, _, is_method) -> (t, is_method)) config_props in
                 (* Create a new dictionary from our config's dictionary with a
                  * positive polarity. *)
                 let dict =
@@ -1312,7 +1283,63 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
                 (props, flags, config_generics)
             in
             let call = None in
+            (* This code should not be here, but it has to be. In a React Server Component file,
+             * we need to check all the props against React$TransportValue. The ideal way to do
+             * this would be to take the final config object computed here and flow it to
+             * React$TransportObject. However, doing that directly can lead to a subtle bug that
+             * causes spurious errors. The config object produced here has a literal object
+             * reason-- and it should! It's a new fresh object. It's also important that this
+             * object is a literal so that it gets the less strict type checking behavior when
+             * flowing to the Component's props. Many Props types are not specified as
+             * read-only, so this literal reason is required in order to get the
+             * covariant property type checking.
+             *
+             * However, literal objects flowing to object types with optional properties will
+             * take on optional properties in the object types. This behavior is spooky, but
+             * in place because we do not have a proper aliasing analysis.
+             *
+             * In order to avoid accidentally comparing optional properties from the Props
+             * that may be adopted by the config to React$TransportValue, we flow each property
+             * to React$TransportValue directly. If a dictionary is present then we also flow
+             * the dict's value type to React$TransportValue. If the object is Inexact then
+             * we also flow mixed to React$TransportValue to represent properties that may
+             * exist but are not present in the type. This case will always error, but is
+             * unlikely to be hit because it requires an inexact object to be spread into
+             * the props in jsx.
+             *)
+            if Context.in_react_server_component_file cx then (
+              let reason_transport_value_reason =
+                replace_desc_reason (RCustom "React.TransportValue") reason
+              in
+              let react_transport_value =
+                get_builtin_type cx reason_transport_value_reason "React$TransportValue"
+              in
+              SMap.iter
+                (fun _ (t, _) -> rec_flow_t cx trace ~use_op (t, react_transport_value))
+                props_map;
+              match flags.obj_kind with
+              | UnsealedInFile _ -> failwith "React config should never be unsealed"
+              | Exact -> ()
+              | Inexact ->
+                let r =
+                  mk_reason
+                    (RUnknownUnspecifiedProperty (desc_of_reason reason))
+                    (aloc_of_reason reason)
+                in
+                let mixed = DefT (r, bogus_trust (), MixedT Mixed_everything) in
+                rec_flow_t cx trace ~use_op (mixed, react_transport_value)
+              | Indexed d -> rec_flow_t cx trace ~use_op (d.value, react_transport_value)
+            );
             (* Finish creating our props object. *)
+            let props =
+              SMap.map
+                (fun (t, is_method) ->
+                  if is_method then
+                    Method (None, t)
+                  else
+                    Field (None, t, prop_polarity))
+                props_map
+            in
             let id = Context.generate_property_map cx props in
             let proto = ObjProtoT reason in
             mk_object_type
@@ -1336,7 +1363,7 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
             (* If we have no default props then finish our object and flow it to our
              * tout type. *)
             | Config { defaults = None; children } ->
-              let ts = Nel.map (fun x -> finish cx trace reason x None children) x in
+              let ts = Nel.map (fun x -> finish cx trace ~use_op reason x None children) x in
               let t =
                 match ts with
                 | (t, []) -> t
@@ -1348,7 +1375,7 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
             | Defaults { config; children } ->
               let ts =
                 Nel.map_concat
-                  (fun c -> Nel.map (fun d -> finish cx trace reason c (Some d) children) x)
+                  (fun c -> Nel.map (fun d -> finish cx trace ~use_op reason c (Some d) children) x)
                   config
               in
               let t =
@@ -1627,7 +1654,7 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
           in
           resolved cx trace use_op reason resolve_tool tool tout x
         (* If we see an empty then propagate empty to tout. *)
-        | DefT (r, trust, EmptyT _) -> rec_flow cx trace (EmptyT.make r trust, UseT (use_op, tout))
+        | DefT (r, trust, EmptyT) -> rec_flow cx trace (EmptyT.make r trust, UseT (use_op, tout))
         (* Propagate any. *)
         | AnyT (_, src) -> rec_flow cx trace (AnyT.why src reason, UseT (use_op, tout))
         (* Other types have reasonable object representations that may be added as

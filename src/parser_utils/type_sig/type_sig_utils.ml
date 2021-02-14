@@ -34,7 +34,7 @@ let pack_builtins (locs, (tbls, globals, modules)) =
   let {Parse.module_refs; local_defs; remote_refs; _} = tbls in
   (* mark *)
   SMap.iter (fun _ b -> Mark.mark_binding b) globals;
-  SMap.iter (fun _ (loc, exports) -> Mark.mark_exports loc exports) modules;
+  SMap.iter (fun _ m -> Mark.mark_builtin_module m) modules;
   (* compact *)
   let locs = Locs.compact locs in
   let module_refs = Module_refs.compact module_refs in
@@ -49,12 +49,13 @@ let pack_builtins (locs, (tbls, globals, modules)) =
   let globals = SMap.map Pack.pack_builtin globals in
   let modules =
     SMap.map
-      (fun (loc, exports) ->
-        let exports, export_def = Pack.pack_exports cx loc exports in
-        (loc, exports, export_def))
+      (fun m ->
+        let (loc, exports, export_def) = Pack.pack_builtin_module cx m in
+        { Packed_type_sig.Builtins.loc; exports; export_def}
+      )
       modules
   in
-  cx.Pack.errs, locs, (module_refs, local_defs, remote_refs, globals, modules)
+  cx.Pack.errs, locs, { Packed_type_sig.Builtins.module_refs; local_defs; remote_refs; globals; modules }
 
 (* Modules are parsed and packed separately, then merged component wise
    according to the dependency DAG. *)
@@ -99,7 +100,10 @@ let pack (locs, file_loc, (tbls, exports)) =
   let pattern_defs = Pattern_defs.copy (Pack.pack_parsed cx) pattern_defs in
   let patterns = Patterns.copy Pack.pack_pattern patterns in
   let exports, export_def = Pack.pack_exports cx file_loc exports in
-  cx.Pack.errs, locs, { Packed_type_sig.exports; export_def; module_refs; local_defs; remote_refs; pattern_defs; patterns }
+  cx.Pack.errs, locs, { Packed_type_sig.Module.exports; export_def; module_refs; local_defs; remote_refs; pattern_defs; patterns }
 
 let parse_and_pack_module ~strict opts source ast =
   pack (parse_module ~strict source opts ast)
+
+let parse_and_pack_builtins opts ordered_asts =
+  pack_builtins (parse_libs opts ordered_asts)

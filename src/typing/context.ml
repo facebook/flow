@@ -43,7 +43,6 @@ type metadata = {
   enforce_strict_call_arity: bool;
   enforce_local_inference_annotations: bool;
   exact_by_default: bool;
-  generate_tests: bool;
   facebook_fbs: string option;
   facebook_fbt: string option;
   facebook_module_interop: bool;
@@ -182,9 +181,16 @@ type component_t = {
 }
 
 type phase =
+  | InitLib
   | Checking
   | Merging
   | Normalizing
+
+let string_of_phase = function
+  | InitLib -> "InitLib"
+  | Checking -> "Checking"
+  | Merging -> "Merging"
+  | Normalizing -> "Normalizing"
 
 type t = {
   ccx: component_t;
@@ -222,7 +228,6 @@ let metadata_of_options options =
     enforce_strict_call_arity = Options.enforce_strict_call_arity options;
     enforce_local_inference_annotations = Options.enforce_local_inference_annotations options;
     exact_by_default = Options.exact_by_default options;
-    generate_tests = Options.generate_tests options;
     facebook_fbs = Options.facebook_fbs options;
     facebook_fbt = Options.facebook_fbt options;
     facebook_module_interop = Options.facebook_module_interop options;
@@ -421,8 +426,6 @@ let enforce_local_inference_annotations cx = cx.metadata.enforce_local_inference
 
 let run_post_inference_implicit_instantiation cx =
   cx.metadata.run_post_inference_implicit_instantiation
-
-let generate_tests cx = cx.metadata.generate_tests
 
 let file cx = cx.file
 

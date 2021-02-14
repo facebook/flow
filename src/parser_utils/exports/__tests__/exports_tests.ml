@@ -41,6 +41,10 @@ let parse_and_pack_module ~strict sig_opts contents =
   let (ast, _errors) = Parser_flow.program ~parse_options contents in
   Type_sig_utils.parse_and_pack_module ~strict sig_opts None ast
 
+let parse_and_pack_builtins sig_opts contents =
+  let (ast, _errors) = Parser_flow.program ~parse_options contents in
+  Type_sig_utils.(pack_builtins (parse_libs sig_opts [ast]))
+
 let make_test_formatter () =
   let open Format in
   let fmt = formatter_of_out_channel stdout in
@@ -50,36 +54,45 @@ let make_test_formatter () =
   pp_set_max_indent fmt 32;
   fmt
 
-let print_index contents_indent =
-  let contents = dedent_trim contents_indent in
-  let sig_opts =
-    {
-      Type_sig_parse.type_asserts = true;
-      suppress_types = SSet.empty;
-      munge = false;
-      ignore_static_propTypes = false;
-      facebook_keyMirror = false;
-      facebook_fbt = None;
-      max_literal_len = 100;
-      exact_by_default = true;
-      module_ref_prefix = None;
-      enable_enums = true;
-      enable_this_annot = true;
-    }
-  in
-  let (_, _, packed_sig) = parse_and_pack_module ~strict:true sig_opts contents in
-  let exports = Exports.of_type_sig packed_sig in
+let sig_opts =
+  {
+    Type_sig_parse.type_asserts = true;
+    suppress_types = SSet.empty;
+    munge = false;
+    ignore_static_propTypes = false;
+    facebook_keyMirror = false;
+    facebook_fbt = None;
+    max_literal_len = 100;
+    exact_by_default = true;
+    module_ref_prefix = None;
+    enable_enums = true;
+    enable_this_annot = true;
+  }
+
+let print_index exports =
   let fmt = make_test_formatter () in
   Format.pp_open_box fmt 0;
   Exports.pp fmt exports;
   Format.pp_close_box fmt ();
   Format.pp_print_newline fmt ()
 
+let print_module contents_indent =
+  let contents = dedent_trim contents_indent in
+  let (_, _, packed_sig) = parse_and_pack_module ~strict:true sig_opts contents in
+  let exports = Exports.of_module packed_sig in
+  print_index exports
+
+let print_builtins contents_indent =
+  let contents = dedent_trim contents_indent in
+  let (_, _, packed_sig) = parse_and_pack_builtins sig_opts contents in
+  let exports = Exports.of_builtins packed_sig in
+  print_index exports
+
 (* TODO: ocamlformat mangles the ppx syntax. *)
 [@@@ocamlformat "disable=true"]
 
 let%expect_test "es6_named_const" =
-  print_index {|
+  print_module {|
     export const x : string = "foo"
   |};
   [%expect {|
@@ -87,7 +100,7 @@ let%expect_test "es6_named_const" =
   |}]
 
 let%expect_test "cjs_named_const" =
-  print_index {|
+  print_module {|
     const x : string = "foo";
     exports.x = x;
   |};
@@ -96,7 +109,7 @@ let%expect_test "cjs_named_const" =
   |}]
 
 let%expect_test "es6_default_string_literal" =
-  print_index {|
+  print_module {|
     export default "foo";
   |};
   [%expect {|
@@ -104,7 +117,7 @@ let%expect_test "es6_default_string_literal" =
   |}]
 
 let%expect_test "cjs_default_string_literal" =
-  print_index {|
+  print_module {|
     module.exports = "foo";
   |};
   [%expect {|
@@ -112,7 +125,7 @@ let%expect_test "cjs_default_string_literal" =
   |}]
 
 let%expect_test "es6_default_number_literal" =
-  print_index {|
+  print_module {|
     export default 0;
   |};
   [%expect {|
@@ -120,7 +133,7 @@ let%expect_test "es6_default_number_literal" =
   |}]
 
 let%expect_test "cjs_default_number_literal" =
-  print_index {|
+  print_module {|
     module.exports = 0;
   |};
   [%expect {|
@@ -128,7 +141,7 @@ let%expect_test "cjs_default_number_literal" =
   |}]
 
 let%expect_test "es6_named_type_ref" =
-  print_index {|
+  print_module {|
     type T = string;
     export type U = T;
     export default 0; // need an exported value to force ES6 modules
@@ -138,7 +151,7 @@ let%expect_test "es6_named_type_ref" =
   |}]
 
 let%expect_test "cjs_named_type_ref" =
-  print_index {|
+  print_module {|
     type T = string;
     export type U = T;
   |};
@@ -147,7 +160,7 @@ let%expect_test "cjs_named_type_ref" =
   |}]
 
 let%expect_test "es6_named_type_binding" =
-  print_index {|
+  print_module {|
     export type T = string;
     export default 0; // need an exported value to force ES6 modules
   |};
@@ -156,7 +169,7 @@ let%expect_test "es6_named_type_binding" =
   |}]
 
 let%expect_test "cjs_named_type_binding" =
-  print_index {|
+  print_module {|
     export type T = string;
   |};
   [%expect {|
@@ -164,7 +177,7 @@ let%expect_test "cjs_named_type_binding" =
   |}]
 
 let%expect_test "es6_named_opaque_type_binding" =
-  print_index {|
+  print_module {|
     export opaque type T = string;
     export default 0; // need an exported value to force ES6 modules
   |};
@@ -173,7 +186,7 @@ let%expect_test "es6_named_opaque_type_binding" =
   |}]
 
 let%expect_test "cjs_named_opaque_type_binding" =
-  print_index {|
+  print_module {|
     export opaque type T = string;
   |};
   [%expect {|
@@ -181,7 +194,7 @@ let%expect_test "cjs_named_opaque_type_binding" =
   |}]
 
 let%expect_test "es6_default_class" =
-  print_index {|
+  print_module {|
     export default class Foo {
       static foo(): void {}
       bar(): void {}
@@ -193,7 +206,7 @@ let%expect_test "es6_default_class" =
   |}]
 
 let%expect_test "cjs_default_class_ref" =
-  print_index {|
+  print_module {|
     class Foo {
       static foo(): void {}
       bar(): void {}
@@ -206,7 +219,7 @@ let%expect_test "cjs_default_class_ref" =
   |}]
 
 let%expect_test "cjs_default_class_expr" =
-  print_index {|
+  print_module {|
     module.exports = class Foo {
       static foo(): void {}
       bar(): void {}
@@ -218,7 +231,7 @@ let%expect_test "cjs_default_class_expr" =
   |}]
 
 let%expect_test "es6_enum" =
-  print_index {|
+  print_module {|
     export enum E {
       FOO,
       BAR,
@@ -229,7 +242,7 @@ let%expect_test "es6_enum" =
   |}]
 
 let%expect_test "cjs_enum" =
-  print_index {|
+  print_module {|
     enum E {
       FOO,
       BAR,
@@ -241,7 +254,7 @@ let%expect_test "cjs_enum" =
   |}]
 
 let%expect_test "es6_type_enum" =
-  print_index {|
+  print_module {|
     enum EImpl {}
     export type E = EImpl;
     export default 0; // need an exported value to force ES6 modules
@@ -251,7 +264,7 @@ let%expect_test "es6_type_enum" =
   |}]
 
 let%expect_test "cjs_type_enum" =
-  print_index {|
+  print_module {|
     enum EImpl {}
     export type E = EImpl;
   |};
@@ -260,7 +273,7 @@ let%expect_test "cjs_type_enum" =
   |}]
 
 let%expect_test "es6_default_enum" =
-  print_index {|
+  print_module {|
     export default enum E {
       FOO,
       BAR,
@@ -272,7 +285,7 @@ let%expect_test "es6_default_enum" =
   |}]
 
 let%expect_test "cjs_default_enum" =
-  print_index {|
+  print_module {|
     enum E {
       FOO,
       BAR,
@@ -285,7 +298,7 @@ let%expect_test "cjs_default_enum" =
   |}]
 
 let%expect_test "cjs_default_named_enum" =
-  print_index {|
+  print_module {|
     enum E {
       FOO,
       BAR,
@@ -297,7 +310,7 @@ let%expect_test "cjs_default_named_enum" =
   |}]
 
 let%expect_test "es6_named_class_ref" =
-  print_index {|
+  print_module {|
     class Foo {}
     export { Foo };
   |};
@@ -306,7 +319,7 @@ let%expect_test "es6_named_class_ref" =
   |}]
 
 let%expect_test "cjs_named_class_ref" =
-  print_index {|
+  print_module {|
     class Foo {}
     exports.Foo = Foo;
   |};
@@ -315,7 +328,7 @@ let%expect_test "cjs_named_class_ref" =
   |}]
 
 let%expect_test "es6_named_class_ref_ref" =
-  print_index {|
+  print_module {|
     class Foo {}
     const Bar = Foo;
     export { Bar };
@@ -325,7 +338,7 @@ let%expect_test "es6_named_class_ref_ref" =
   |}]
 
 let%expect_test "cjs_named_class_ref_inline" =
-  print_index {|
+  print_module {|
     exports.Foo = class Foo {};
   |};
   [%expect {|
@@ -333,7 +346,7 @@ let%expect_test "cjs_named_class_ref_inline" =
   |}]
 
 let%expect_test "es6_named_class_binding" =
-  print_index {|
+  print_module {|
     export class Foo {};
   |};
   [%expect {|
@@ -341,7 +354,7 @@ let%expect_test "es6_named_class_binding" =
   |}]
 
 let%expect_test "es6_default_obj" =
-  print_index {|
+  print_module {|
     export default {
       foo: 123,
       bar: "bar",
@@ -353,7 +366,7 @@ let%expect_test "es6_default_obj" =
   |}]
 
 let%expect_test "cjs_default_obj" =
-  print_index {|
+  print_module {|
     module.exports = {
       foo: 123,
       bar: "bar",
@@ -365,7 +378,7 @@ let%expect_test "cjs_default_obj" =
   |}]
 
 let%expect_test "cjs_default_obj_ref" =
-  print_index {|
+  print_module {|
     const O = {
       foo: 123,
       bar: "bar",
@@ -377,7 +390,7 @@ let%expect_test "cjs_default_obj_ref" =
   |}]
 
 let%expect_test "cjs_default_obj_ref_annot" =
-  print_index {|
+  print_module {|
     var O: {bar: string, foo: number,...} = {
       foo: 123,
       bar: "bar",
@@ -389,7 +402,7 @@ let%expect_test "cjs_default_obj_ref_annot" =
   |}]
 
 let%expect_test "cjs_default_obj_ref_annot_ref" =
-  print_index {|
+  print_module {|
     type T = { bar: string, foo: number };
     var O: T = { foo: 123, bar: "bar" };
     module.exports = O;
@@ -399,7 +412,7 @@ let%expect_test "cjs_default_obj_ref_annot_ref" =
   |}]
 
 let%expect_test "es6_default_obj_type" =
-  print_index {|
+  print_module {|
     export default ({
       foo: 123,
       bar: "bar",
@@ -410,7 +423,7 @@ let%expect_test "es6_default_obj_type" =
   |}]
 
 let%expect_test "cjs_default_obj_type" =
-  print_index {|
+  print_module {|
     module.exports = ({
       foo: 123,
       bar: "bar",
@@ -421,7 +434,7 @@ let%expect_test "cjs_default_obj_type" =
   |}]
 
 let%expect_test "cjs_default_obj_type_app" =
-  print_index {|
+  print_module {|
     type O<T> = { foo: T }
     module.exports = ({ foo: 123 }: O<number>)
   |};
@@ -430,7 +443,7 @@ let%expect_test "cjs_default_obj_type_app" =
   |}]
 
 let%expect_test "cjs_default_obj_type_ref" =
-  print_index {|
+  print_module {|
     type O = { foo: number, bar: string }
     module.exports = ({ foo: 123, bar: "bar"} : O);
   |};
@@ -439,7 +452,7 @@ let%expect_test "cjs_default_obj_type_ref" =
   |}]
 
 let%expect_test "es6_default_obj_type_opaque" =
-  print_index {|
+  print_module {|
     opaque type T = { foo: number, bar: string };
     export default ({
       foo: 123,
@@ -451,7 +464,7 @@ let%expect_test "es6_default_obj_type_opaque" =
   |}]
 
 let%expect_test "cjs_default_obj_type_opaque" =
-  print_index {|
+  print_module {|
     opaque type T = { foo: number, bar: string };
     module.exports = ({
       foo: 123,
@@ -464,7 +477,7 @@ let%expect_test "cjs_default_obj_type_opaque" =
 
 let%expect_test "es6_default_obj_with_class_expr" =
   (* can't destructure the default export, so don't include its props *)
-  print_index {|
+  print_module {|
     export default {
       Foo: class {}
     };
@@ -474,7 +487,7 @@ let%expect_test "es6_default_obj_with_class_expr" =
   |}]
 
 let%expect_test "cjs_default_obj_with_class_expr" =
-  print_index {|
+  print_module {|
     module.exports = {
       Foo: class {}
     };
@@ -484,7 +497,7 @@ let%expect_test "cjs_default_obj_with_class_expr" =
   |}]
 
 let%expect_test "cjs_default_obj_with_class_ref" =
-  print_index {|
+  print_module {|
     class Foo {}
     module.exports = { Foo };
   |};
@@ -493,7 +506,7 @@ let%expect_test "cjs_default_obj_with_class_ref" =
   |}]
 
 let%expect_test "cjs_default_obj_with_class_ref_inline" =
-  print_index {|
+  print_module {|
     module.exports = {
       Foo: class Foo {}
     };
@@ -504,7 +517,7 @@ let%expect_test "cjs_default_obj_with_class_ref_inline" =
 
 let%expect_test "cjs_default_obj_with_string_literal" =
   (* string literals currently can't be imported via destructuring *)
-  print_index {|
+  print_module {|
     module.exports = { 'Foo bar': 123 }
   |};
   [%expect {|
@@ -512,7 +525,7 @@ let%expect_test "cjs_default_obj_with_string_literal" =
   |}]
 
 let%expect_test "cjs_default_pattern_ref" =
-  print_index {|
+  print_module {|
     const {Foo} = {
       Foo: { foo: 123 }
     };
@@ -523,7 +536,7 @@ let%expect_test "cjs_default_pattern_ref" =
   |}]
 
 let%expect_test "cjs_default_pattern_ref_of_ref" =
-  print_index {|
+  print_module {|
     const T = {
       Foo: { foo: 123 }
     };
@@ -535,7 +548,7 @@ let%expect_test "cjs_default_pattern_ref_of_ref" =
   |}]
 
 let%expect_test "cjs_default_pattern_tyref" =
-  print_index {|
+  print_module {|
     const {Foo} = {
       Foo: class {}
     };
@@ -547,7 +560,7 @@ let%expect_test "cjs_default_pattern_tyref" =
   |}]
 
 let%expect_test "cjs_default_eval_getprop" =
-  print_index {|
+  print_module {|
     const O = { prop: { foo: 123 } };
     module.exports = O.prop;
   |};
@@ -556,7 +569,7 @@ let%expect_test "cjs_default_eval_getprop" =
   |}]
 
 let%expect_test "cjs_default_eval_getprop_method" =
-  print_index {|
+  print_module {|
     const O = { prop(): void {} };
     module.exports = O.prop;
   |};
@@ -565,7 +578,7 @@ let%expect_test "cjs_default_eval_getprop_method" =
   |}]
 
 let%expect_test "cjs_default_eval_getprop_of_variable" =
-  print_index {|
+  print_module {|
     const O = { prop: { foo: 123 } };
     const T = O.prop;
     module.exports = T;
@@ -575,7 +588,7 @@ let%expect_test "cjs_default_eval_getprop_of_variable" =
   |}]
 
 let%expect_test "cjs_default_nested_typealias" =
-  print_index {|
+  print_module {|
     type T<U> = { foo: U, bar: string };
     type O = T<number>;
     const X : O = { foo: 123, bar: "bar" };
@@ -586,7 +599,7 @@ let%expect_test "cjs_default_nested_typealias" =
   |}]
 
 let%expect_test "cjs_default_nested_ref" =
-  print_index {|
+  print_module {|
     const O = { foo: 123, bar: "bar" };
     const X = O;
     const Y = X;
@@ -597,7 +610,7 @@ let%expect_test "cjs_default_nested_ref" =
   |}]
 
 let%expect_test "es6_default_function" =
-  print_index {|
+  print_module {|
     export default function() {}
   |};
   [%expect {|
@@ -605,7 +618,7 @@ let%expect_test "es6_default_function" =
   |}]
 
 let%expect_test "cjs_default_function" =
-  print_index {|
+  print_module {|
     module.exports = function foo(): void {}
   |};
   [%expect {|
@@ -613,7 +626,7 @@ let%expect_test "cjs_default_function" =
   |}]
 
 let%expect_test "cjs_default_function_ref" =
-  print_index {|
+  print_module {|
     function foo(): void {}
     foo.bar = 123;
     module.exports = foo;
@@ -623,7 +636,7 @@ let%expect_test "cjs_default_function_ref" =
   |}]
 
 let%expect_test "es6_named_function" =
-  print_index {|
+  print_module {|
     export function foo(): string {}
   |};
   [%expect {|
@@ -631,7 +644,7 @@ let%expect_test "es6_named_function" =
   |}]
 
 let%expect_test "es6_named_alias" =
-  print_index {|
+  print_module {|
     const foo = 123;
     export {foo as bar};
   |};
@@ -640,7 +653,7 @@ let%expect_test "es6_named_alias" =
   |}]
 
 let%expect_test "cjs_default_remote_ref" =
-  print_index {|
+  print_module {|
     import type {T} from './foo';
     module.exports = ({ foo: 123, bar: "bar" }: T);
   |};
@@ -649,7 +662,7 @@ let%expect_test "cjs_default_remote_ref" =
   |}]
 
 let%expect_test "cjs_recursive_type" =
-  print_index {|
+  print_module {|
     export type T = T;
   |};
   [%expect {|
@@ -657,7 +670,7 @@ let%expect_test "cjs_recursive_type" =
   |}]
 
 let%expect_test "cjs_recursive_ref" =
-  print_index {|
+  print_module {|
     const T : T = { foo: 123, bar: "bar" };
     module.exports = T;
   |};
@@ -666,7 +679,7 @@ let%expect_test "cjs_recursive_ref" =
   |}]
 
 let%expect_test "es6_declare_function" =
-  print_index {|
+  print_module {|
     declare function foo(): string;
     export {foo}
   |};
@@ -675,7 +688,7 @@ let%expect_test "es6_declare_function" =
   |}]
 
 let%expect_test "es6_declare_class" =
-  print_index {|
+  print_module {|
     declare class Foo {};
     export {Foo}
   |};
@@ -684,7 +697,7 @@ let%expect_test "es6_declare_class" =
   |}]
 
 let%expect_test "es6_interface" =
-  print_index {|
+  print_module {|
     export interface Foo { bar: string }
     export default 0; // need an exported value to force ES6 modules
   |};
@@ -693,9 +706,33 @@ let%expect_test "es6_interface" =
   |}]
 
 let%expect_test "cjs_interface" =
-  print_index {|
+  print_module {|
     export interface Foo { bar: string }
   |};
   [%expect {|
     [(NamedType "Foo")]
+  |}]
+
+let%expect_test "lib_class" =
+  print_builtins {|
+    declare class Foo {}
+  |};
+  [%expect {|
+    [(Named "Foo"); (NamedType "Foo")]
+  |}]
+
+let%expect_test "lib_type" =
+  print_builtins {|
+    declare type T = string;
+  |};
+  [%expect {|
+    [(NamedType "T")]
+  |}]
+
+let%expect_test "lib_value" =
+  print_builtins {|
+    declare var foo : string;
+  |};
+  [%expect {|
+    [(Named "foo")]
   |}]

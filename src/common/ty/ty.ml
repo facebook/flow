@@ -91,10 +91,7 @@ and unsoundness_kind =
 and upper_bound_kind =
   (* No upper bounds are exported as `any` *)
   | NoUpper
-  (* If there is some upper bound (use), this is exported as `MergedT use`. This
-   * type is not helpful in a normalized form. So instead we attempt to normalize
-   * the use to a type `t`. If this succeeds then we create `SomeKnownUpper t`.
-   *)
+  (* Some upper bound use type. *)
   | SomeKnownUpper of t
   (* If the above case fails we resort to this last case. *)
   | SomeUnknownUpper of string

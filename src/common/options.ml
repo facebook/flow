@@ -60,8 +60,8 @@ type t = {
   opt_facebook_module_interop: bool;
   opt_file_options: Files.options;
   opt_flowconfig_name: string;
+  opt_flowconfig_hash: string;
   opt_format: format;
-  opt_generate_tests: bool;
   opt_haste_module_ref_prefix: string option;
   opt_haste_name_reducers: (Str.regexp * string) list;
   opt_haste_paths_excludes: string list;
@@ -145,8 +145,6 @@ let this_annot opts = opts.opt_this_annot
 
 let exact_by_default opts = opts.opt_exact_by_default
 
-let generate_tests opts = opts.opt_generate_tests
-
 let haste_module_ref_prefix opts = opts.opt_haste_module_ref_prefix
 
 let haste_name_reducers opts = opts.opt_haste_name_reducers
@@ -158,6 +156,8 @@ let haste_paths_includes opts = opts.opt_haste_paths_includes
 let haste_use_name_reducers opts = opts.opt_haste_use_name_reducers
 
 let flowconfig_name opts = opts.opt_flowconfig_name
+
+let flowconfig_hash opts = opts.opt_flowconfig_hash
 
 let file_options opts = opts.opt_file_options
 

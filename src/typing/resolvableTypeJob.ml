@@ -209,7 +209,7 @@ and collect_of_type ?log_unresolved cx acc = function
   | DefT (_, _, SymbolT)
   | DefT (_, _, VoidT)
   | DefT (_, _, NullT)
-  | DefT (_, _, EmptyT _)
+  | DefT (_, _, EmptyT)
   | DefT (_, _, MixedT _)
   | DefT (_, _, SingletonBoolT _)
   | DefT (_, _, SingletonNumT _)
@@ -219,9 +219,6 @@ and collect_of_type ?log_unresolved cx acc = function
   | DefT (_, _, EnumObjectT _)
   | AnyT _ ->
     acc
-  (* Since MergedT only arises from context opt, we can be certain that its
-   * uses are all fully resolved. No need to traverse the structure. *)
-  | MergedT _ -> acc
   | FunProtoBindT _
   | FunProtoCallT _
   | FunProtoApplyT _
