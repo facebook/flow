@@ -224,7 +224,7 @@ module Make (L : Loc_sig.S) (Api : Scope_api_sig.S with module L = L) :
 
       (* don't rename the `foo` in `import {foo as bar} from ...;` *)
       method! import_named_specifier
-          (specifier : (L.t, L.t) Ast.Statement.ImportDeclaration.named_specifier) =
+          ~import_kind:_ (specifier : (L.t, L.t) Ast.Statement.ImportDeclaration.named_specifier) =
         let open Ast.Statement.ImportDeclaration in
         (* when `with_types` is false, only visit values, not types. `import_declaration`
            avoids visiting specifiers for `import type` and `import typeof`, so
