@@ -18,6 +18,8 @@ let ( >>= ) = Base.Result.( >>= )
 
 let empty = { name = None; main = None }
 
+let create ~name ~main = { name; main }
+
 let name package = package.name
 
 let main package = package.main

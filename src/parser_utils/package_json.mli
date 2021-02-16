@@ -11,6 +11,8 @@ type 'a t_or_error = (t, 'a * string) result
 
 val empty : t
 
+val create : name:string option -> main:string option -> t
+
 val name : t -> string option
 
 val main : t -> string option
