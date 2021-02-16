@@ -57,20 +57,19 @@ type expression_context = {
   group: expression_context_group;
 }
 
+(** certain contexts where the left parenthesis matters. this is set back to [Normal_left]
+    as soon as we output something (see [context_after_token]). *)
 and expression_context_left =
   | Normal_left
-  | In_expression_statement (* `(function x(){});` would become a declaration *)
-  | In_tagged_template (* `(new a)``` would become `new (a``)` *)
-  | In_plus_op (* `x+(+y)` would become `(x++)y` *)
-  | In_minus_op
+  | In_expression_statement  (** [(function x(){});] would become a declaration w/o the paren **)
+  | In_tagged_template  (** [(new a)``] would become [new (a``)] w/o the paren *)
+  | In_plus_op  (** [x+(+y)] would become [(x++)y] w/o the paren *)
+  | In_minus_op  (** [x-(-y)] would become [(x--)y] w/o the paren *)
 
-(* `x-(-y)` would become `(x--)y` *)
 and expression_context_group =
   | Normal_group
-  | In_arrow_func (* `() => ({a: b})` would become `() => {a: b}` *)
-  | In_for_init
-
-(* `for ((x in y);;);` would become a for-in *)
+  | In_arrow_func  (** [() => ({a: b})] would be a block w/ a labeled statement w/o the parens *)
+  | In_for_init  (** [for ((x in y);;);] would become a for-in w/o the parens *)
 
 let default_opts =
   {
@@ -82,10 +81,10 @@ let default_opts =
 
 let normal_context = { left = Normal_left; group = Normal_group }
 
-(* Some contexts only matter to the left-most token. If we output some other
-   token, like an `=`, then we can reset the context. Note that all contexts
-   reset when wrapped in parens, brackets, braces, etc, so we don't need to call
-   this in those cases, we can just set it back to Normal. *)
+(** Some contexts only matter to the left-most token. If we output some other
+    token, like an `=`, then we can reset the context. Note that all contexts
+    reset when wrapped in parens, brackets, braces, etc, so we don't need to call
+    this in those cases, we can just set it back to Normal. *)
 let context_after_token ctxt = { ctxt with left = Normal_left }
 
 (* JS layout helpers *)
