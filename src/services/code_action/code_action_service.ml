@@ -53,7 +53,9 @@ let create_suggestion ~diagnostics ~original ~suggestion uri loc =
                 (* https://github.com/microsoft/language-server-protocol/issues/933 *)
                 Command.title = "";
                 command = Command.Command "log";
-                arguments = [Hh_json.JSON_String title];
+                arguments =
+                  ["textDocument/codeAction"; "typo"; title]
+                  |> List.map (fun str -> Hh_json.JSON_String str);
               } );
       }
 
@@ -152,7 +154,9 @@ let suggest_imports ~options ~reader ~ast ~diagnostics ~exports ~name uri loc =
                       {
                         Command.title = "";
                         command = Command.Command "log";
-                        arguments = [Hh_json.JSON_String "import"];
+                        arguments =
+                          ["textDocument/codeAction"; "import"; title]
+                          |> List.map (fun str -> Hh_json.JSON_String str);
                       } );
               }
           in

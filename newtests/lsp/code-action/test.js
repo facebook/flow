@@ -134,7 +134,11 @@ export default (suite(
                 command: {
                   title: '',
                   command: 'log:<PLACEHOLDER_PROJECT_URL>',
-                  arguments: ['Replace `faceboy` with `facebook`'],
+                  arguments: [
+                    'textDocument/codeAction',
+                    'typo',
+                    'Replace `faceboy` with `facebook`',
+                  ],
                 },
               },
             ]),
@@ -235,7 +239,11 @@ export default (suite(
                 command: {
                   title: '',
                   command: 'log:<PLACEHOLDER_PROJECT_URL>',
-                  arguments: ['Replace `Foobat` with `Foobar`'],
+                  arguments: [
+                    'textDocument/codeAction',
+                    'typo',
+                    'Replace `Foobat` with `Foobar`',
+                  ],
                 },
               },
             ]),
@@ -388,7 +396,11 @@ export default (suite(
                 command: {
                   title: '',
                   command: 'log:<PLACEHOLDER_PROJECT_URL>',
-                  arguments: ["Replace `>` with `{'>'}`"],
+                  arguments: [
+                    'textDocument/codeAction',
+                    'typo',
+                    "Replace `>` with `{'>'}`",
+                  ],
                 },
               },
             ]),
