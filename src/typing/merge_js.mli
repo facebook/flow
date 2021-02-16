@@ -70,3 +70,9 @@ val check_file :
 module ContextOptimizer : sig
   val sig_context : Context.t -> string list -> Xx.hash
 end
+
+val get_lint_severities :
+  Context.metadata ->
+  StrictModeSettings.t ->
+  Severity.severity LintSettings.t ->
+  Severity.severity LintSettings.t

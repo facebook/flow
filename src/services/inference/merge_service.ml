@@ -200,6 +200,18 @@ module Merge_component :
   PROCESS_UNIT with type input = File_key.t Nel.t and type output = Merge_config.output =
   Process_unit (Merge_config)
 
+let scan_for_component_suppressions ~options ~get_ast_unsafe component =
+  let lint_severities = Options.lint_severities options in
+  let strict_mode = Options.strict_mode options in
+  Type_sig_merge.Component.iter
+    (fun file ->
+      let { Type_sig_merge.key; cx; _ } = file in
+      let (_, { Flow_ast.Program.all_comments; _ }) = get_ast_unsafe key in
+      let metadata = Context.metadata cx in
+      let lint_severities = Merge_js.get_lint_severities metadata strict_mode lint_severities in
+      Type_inference_js.scan_for_suppressions cx lint_severities all_comments)
+    component
+
 let merge_context_new_signatures ~options ~reader component =
   let module Pack = Type_sig_pack in
   let module Merge = Type_sig_merge in
@@ -355,6 +367,12 @@ let merge_context_new_signatures ~options ~reader component =
     cx
     ( Context.find_module_sig master_cx Files.lib_module_ref,
       Context.find_module cx Files.lib_module_ref );
+
+  (* scan for suppressions *)
+  scan_for_component_suppressions
+    ~options
+    ~get_ast_unsafe:(Parsing_heaps.Reader_dispatcher.get_ast_unsafe ~reader)
+    component;
 
   (* merge *)
   Merge.merge_component component;
