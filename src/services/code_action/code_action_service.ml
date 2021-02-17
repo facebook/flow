@@ -181,7 +181,12 @@ let text_edits_of_import ~options ~layout_options ~reader ~src_dir ~ast kind nam
 
 let suggest_imports ~options ~reader ~ast ~diagnostics ~exports ~name uri loc =
   let open Lsp in
-  let files = Export_search.get name exports in
+  let files =
+    if Autofix_imports.loc_is_type ~ast loc then
+      Export_search.get_types name exports
+    else
+      Export_search.get_values name exports
+  in
   if Export_index.ExportSet.is_empty files then
     []
   else
