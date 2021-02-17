@@ -430,13 +430,28 @@ let completion_item_of_autoimport
       documentation = Some title;
     }
 
+let is_reserved name kind =
+  if Export_index.kind_is_value kind then
+    Parser_env.is_reserved name || Parser_env.is_strict_reserved name
+  else
+    Parser_env.is_reserved_type name
+
 let append_completion_items_of_autoimports ~options ~reader ~ast ~ac_loc auto_imports acc =
   let src_dir = src_dir_of_loc ac_loc in
   Base.List.fold_left
     ~init:acc
     ~f:(fun acc auto_import ->
-      let item = completion_item_of_autoimport ~options ~reader ~src_dir ~ast ~ac_loc auto_import in
-      item :: acc)
+      let { Export_search.name; kind; source = _ } = auto_import in
+      if is_reserved name kind then
+        (* exclude reserved words because they can't be imported without aliasing them, which we
+           can't do automatically in autocomplete. for example, `import {null} from ...` is
+           invalid. *)
+        acc
+      else
+        let item =
+          completion_item_of_autoimport ~options ~reader ~src_dir ~ast ~ac_loc auto_import
+        in
+        item :: acc)
     auto_imports
 
 (* env is all visible bound names at cursor *)
