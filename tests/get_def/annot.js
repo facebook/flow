@@ -1,13 +1,22 @@
 // @flow
 
-import imported from './helpers/exports_annot';
+import def, {x, y, z} from './helpers/exports_annot';
 
-type T = string
-
-const x : T = "foo";
+   def
+// ^
 
    x
 // ^
 
-   imported
+   y
+// ^
+
+   z
+// ^
+
+
+type T = string
+const t : T = "foo";
+
+   t
 // ^
