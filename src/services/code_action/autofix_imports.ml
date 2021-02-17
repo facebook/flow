@@ -401,3 +401,37 @@ let add_import ~options ~binding ~from ast : (Loc.t * string) list =
     | (Replace, str) -> (loc, str)
   in
   [edit]
+
+module Identifier_finder = struct
+  type kind =
+    | Type_identifier
+    | Value_identifier
+
+  exception Found of kind
+
+  class mapper target =
+    object (this)
+      inherit [Loc.t] Flow_ast_contains_mapper.mapper
+
+      method loc_annot_contains_target loc = Loc.contains loc target
+
+      method! identifier id =
+        let (loc, _) = id in
+        if this#loc_annot_contains_target loc then raise (Found Value_identifier);
+        id
+
+      method! type_identifier id =
+        let (loc, _) = id in
+        if this#loc_annot_contains_target loc then raise (Found Type_identifier);
+        id
+    end
+end
+
+let loc_is_type ~ast loc =
+  let mapper = new Identifier_finder.mapper loc in
+  try
+    let _ast = mapper#program ast in
+    false
+  with
+  | Identifier_finder.(Found Value_identifier) -> false
+  | Identifier_finder.(Found Type_identifier) -> true

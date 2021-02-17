@@ -13,3 +13,5 @@ val add_import :
   from:string ->
   (Loc.t, Loc.t) Flow_ast.Program.t ->
   (Loc.t * string) list
+
+val loc_is_type : ast:(Loc.t, Loc.t) Flow_ast.Program.t -> Loc.t -> bool
