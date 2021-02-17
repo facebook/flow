@@ -181,9 +181,10 @@ let text_edits_of_import ~options ~layout_options ~reader ~src_dir ~ast kind nam
 
 let suggest_imports ~options ~reader ~ast ~diagnostics ~exports ~name uri loc =
   let open Lsp in
-  match Export_search.find_opt name exports with
-  | None -> []
-  | Some files ->
+  let files = Export_search.get name exports in
+  if Export_index.ExportSet.is_empty files then
+    []
+  else
     let src_dir = Lsp_helpers.lsp_uri_to_path uri |> Filename.dirname |> Base.Option.return in
     let error_range = Flow_lsp_conversions.loc_to_lsp_range loc in
     let relevant_diagnostics =

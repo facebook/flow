@@ -147,7 +147,7 @@ let search_values ?options query t = search ?options (Value query) t
 
 let search_types ?options query t = search ?options (Type query) t
 
-let find_opt name { index; value_matcher = _; type_matcher = _ } = Export_index.find_opt name index
+let get name { index; value_matcher = _; type_matcher = _ } = Export_index.find name index
 
 let pp fmt { index; _ } = Export_index.pp fmt index
 

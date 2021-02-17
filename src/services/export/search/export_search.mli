@@ -34,4 +34,4 @@ val search_values : ?options:search_options -> string -> t -> search_results
 
 val search_types : ?options:search_options -> string -> t -> search_results
 
-val find_opt : string -> t -> Export_index.ExportSet.t option
+val get : string -> t -> Export_index.ExportSet.t
