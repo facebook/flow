@@ -717,45 +717,38 @@ let merge_runner
 let merge = merge_runner ~job:merge_component
 
 let check options ~reader file =
-  let result =
-    let check_timeout = Options.merge_timeout options in
-    (* TODO: add new option *)
-    let interval = Base.Option.value_map ~f:(min 5.0) ~default:5.0 check_timeout in
-    let file_str = File_key.to_string file in
-    try
-      with_async_logging_timer
-        ~interval
-        ~on_timer:(fun run_time ->
-          Hh_logger.info
-            "[%d] Slow CHECK (%f seconds so far): %s"
-            (Unix.getpid ())
-            run_time
-            file_str;
-          Base.Option.iter check_timeout ~f:(fun check_timeout ->
-              if run_time >= check_timeout then
-                raise (Error_message.ECheckTimeout (run_time, file_str))))
-        ~f:(fun () -> Ok (check_file options ~reader file))
-    with
-    | (SharedMem.Out_of_shared_memory | SharedMem.Heap_full | SharedMem.Hash_table_full) as exc ->
-      raise exc
-    (* A catch all suppression is probably a bad idea... *)
-    | unwrapped_exc ->
-      let exc = Exception.wrap unwrapped_exc in
-      let exn_str = Printf.sprintf "%s: %s" (File_key.to_string file) (Exception.to_string exc) in
-      (* In dev mode, fail hard, but log and continue in prod. *)
-      if Build_mode.dev then
-        Exception.reraise exc
-      else
-        prerr_endlinef "(%d) check_job THROWS: %s\n" (Unix.getpid ()) exn_str;
-      let file_loc = Loc.{ none with source = Some file } |> ALoc.of_loc in
-      (* We can't pattern match on the exception type once it's marshalled
-         back to the master process, so we pattern match on it here to create
-         an error result. *)
-      Error
-        Error_message.(
-          match unwrapped_exc with
-          | EDebugThrow loc -> (loc, DebugThrow)
-          | ECheckTimeout (s, _) -> (file_loc, CheckTimeout s)
-          | _ -> (file_loc, CheckJobException exc))
-  in
-  (file, result)
+  let check_timeout = Options.merge_timeout options in
+  (* TODO: add new option *)
+  let interval = Base.Option.value_map ~f:(min 5.0) ~default:5.0 check_timeout in
+  let file_str = File_key.to_string file in
+  try
+    with_async_logging_timer
+      ~interval
+      ~on_timer:(fun run_time ->
+        Hh_logger.info "[%d] Slow CHECK (%f seconds so far): %s" (Unix.getpid ()) run_time file_str;
+        Base.Option.iter check_timeout ~f:(fun check_timeout ->
+            if run_time >= check_timeout then
+              raise (Error_message.ECheckTimeout (run_time, file_str))))
+      ~f:(fun () -> Ok (check_file options ~reader file))
+  with
+  | (SharedMem.Out_of_shared_memory | SharedMem.Heap_full | SharedMem.Hash_table_full) as exc ->
+    raise exc
+  (* A catch all suppression is probably a bad idea... *)
+  | unwrapped_exc ->
+    let exc = Exception.wrap unwrapped_exc in
+    let exn_str = Printf.sprintf "%s: %s" (File_key.to_string file) (Exception.to_string exc) in
+    (* In dev mode, fail hard, but log and continue in prod. *)
+    if Build_mode.dev then
+      Exception.reraise exc
+    else
+      prerr_endlinef "(%d) check_job THROWS: %s\n" (Unix.getpid ()) exn_str;
+    let file_loc = Loc.{ none with source = Some file } |> ALoc.of_loc in
+    (* We can't pattern match on the exception type once it's marshalled
+       back to the master process, so we pattern match on it here to create
+       an error result. *)
+    Error
+      Error_message.(
+        match unwrapped_exc with
+        | EDebugThrow loc -> (loc, DebugThrow)
+        | ECheckTimeout (s, _) -> (file_loc, CheckTimeout s)
+        | _ -> (file_loc, CheckJobException exc))

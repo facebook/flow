@@ -81,8 +81,7 @@ val merge :
   recheck_set:FilenameSet.t ->
   error_acc merge_results Lwt.t
 
-val check :
-  Options.t -> reader:Module_heaps.Mutator_reader.reader -> File_key.t -> acc file_keyed_result
+val check : Options.t -> reader:Module_heaps.Mutator_reader.reader -> File_key.t -> acc unit_result
 
 val scan_for_component_suppressions :
   options:Options.t ->

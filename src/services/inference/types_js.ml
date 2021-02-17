@@ -862,10 +862,10 @@ end = struct
     | file :: rest ->
       let result =
         match Merge_service.check options ~reader file with
-        | (f, Ok (_, acc)) -> (f, Ok acc)
-        | (f, Error e) -> (f, Error e)
+        | Ok (_, acc) -> Ok acc
+        | Error e -> Error e
       in
-      job_helper ~reader ~options ~start_time ~start_rss (result :: acc) rest
+      job_helper ~reader ~options ~start_time ~start_rss ((file, result) :: acc) rest
 
   let job ~reader ~options acc files =
     let start_time = Unix.gettimeofday () in
