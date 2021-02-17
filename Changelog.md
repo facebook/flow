@@ -1,3 +1,15 @@
+### 0.145.0
+
+Likely to cause new Flow errors:
+- Correctly typecheck destructuring defaults in function params. e.g. `function i({name = 1}: {| name?: string |}) {}` was previously not an error.
+
+New Features:
+- New options added to `flow_parser.js` to support configuring comment output. `comments` enables comment attachment and `all_comments` enables the legacy list of all comments.
+
+Notable bug fixes:
+- Correctly handle import paths within `node_modules` for auto imports.
+- Fixed a bug in Go to Definition on imported values that skipped all the way to the value's type definition instead of the value's definition.
+
 ### 0.144.1
 
 * Fixed a bug in autoimport code actions that resulted in `import type { type T } ...`
