@@ -38,7 +38,7 @@ val subtract : t -> t -> t * string list
 (** [subtract to_remove t] removes all of the exports in [to_remove] from [t], and
     also returns a list of keys that no longer are exported by any file. *)
 
-val find_opt : string -> t -> ExportSet.t option
+val find : string -> t -> ExportSet.t
 
 val find_seq : string -> t -> export Seq.t
 

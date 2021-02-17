@@ -87,11 +87,14 @@ let subtract old_t t =
   in
   (t, dead_names)
 
-(** [find_opt name t] returns a list of [(File_key.t, kind)] that export [name] *)
-let find_opt name t = SMap.find_opt name t
+(** [find name t] returns all of the [(file_key, kind)] tuples that export [name] *)
+let find name (t : t) =
+  match SMap.find_opt name t with
+  | Some exports -> exports
+  | None -> ExportSet.empty
 
 let find_seq name t =
-  match find_opt name t with
+  match SMap.find_opt name t with
   | Some t -> ExportSet.to_seq t
   | None -> Seq.empty
 
