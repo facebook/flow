@@ -249,7 +249,7 @@ class ['loc] lexical_hoister ~with_types =
       | _ -> super#import_declaration loc decl
 
     method! import_named_specifier
-        (specifier : ('loc, 'loc) Ast.Statement.ImportDeclaration.named_specifier) =
+        ~import_kind:_ (specifier : ('loc, 'loc) Ast.Statement.ImportDeclaration.named_specifier) =
       let open Ast.Statement.ImportDeclaration in
       (* when `with_types` is false, only add bindings for values, not types.
          `import_declaration` avoids visiting specifiers for `import type` and
