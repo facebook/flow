@@ -88,7 +88,7 @@ class searcher
         this#request (Get_def_request.Require ((source_loc, module_name), import_loc));
       res
 
-    method! import_named_specifier decl =
+    method! import_named_specifier ~import_kind:_ decl =
       let open Flow_ast.Statement.ImportDeclaration in
       let { local; remote = ((remote_loc, t), _); kind = _ } = decl in
       if
