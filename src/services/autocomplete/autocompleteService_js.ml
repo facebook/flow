@@ -396,9 +396,17 @@ let flow_text_edit_of_lsp_text_edit { Lsp.TextEdit.range; newText } =
 
 let completion_item_of_autoimport
     ~options ~reader ~src_dir ~ast ~ac_loc { Export_search.name; source; kind } =
-  let options = text_edit_options options in
+  let layout_options = text_edit_options options in
   match
-    Code_action_service.text_edits_of_import ~options ~reader ~src_dir ~ast kind name source
+    Code_action_service.text_edits_of_import
+      ~options
+      ~layout_options
+      ~reader
+      ~src_dir
+      ~ast
+      kind
+      name
+      source
   with
   | None ->
     {
@@ -589,14 +597,22 @@ let autocomplete_jsx_element
   | AcResult { result; errors_to_log } ->
     if should_autoimport_react ~options ~imports ~file_sig then
       let open ServerProt.Response.Completion in
-      let options = text_edit_options options in
+      let layout_options = text_edit_options options in
       let import_edit =
         let src_dir = src_dir_of_loc (loc_of_aloc ~reader ac_loc) in
         let kind = Export_index.Namespace in
         let name = "React" in
         (* TODO: make this configurable between React and react *)
         let source = Export_index.Builtin "react" in
-        Code_action_service.text_edits_of_import ~options ~reader ~src_dir ~ast kind name source
+        Code_action_service.text_edits_of_import
+          ~options
+          ~layout_options
+          ~reader
+          ~src_dir
+          ~ast
+          kind
+          name
+          source
       in
       match import_edit with
       | None -> results

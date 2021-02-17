@@ -57,31 +57,88 @@ let create_suggestion ~diagnostics ~original ~suggestion uri loc =
               } );
       }
 
+let main_of_package ~reader package_dir =
+  let json_path = package_dir ^ "/package.json" in
+  match Package_heaps.Reader.get_package ~reader json_path with
+  | Some (Ok package) -> Package_json.main package
+  | Some (Error _)
+  | None ->
+    None
+
+(** [find_ancestor_rev a_parts b_parts], where [a_parts] and [b_parts] are two paths split
+    into segments (see [Files.split_path]), returns [(ancestor_parts, a_relative, b_relative)],
+    where [ancestor_parts] are the common prefix parts **reversed**, [a_relative] is the
+    remaining parts from the ancestor to [a_parts], and [b_relative] is the remaining parts
+    from the ancestor to [b_parts].
+
+    for example, [find_ancestor_rev ["/a"; "b"; "c"; "d"] ["/a"; "b"; "e"; "f"]] returns
+    [(["b"; "/a"], ["c"; "d"], ["e"; "f"])] *)
+let find_ancestor_rev =
+  let rec helper acc = function
+    | (dir1 :: rest1, dir2 :: rest2) when dir1 = dir2 -> helper (dir1 :: acc) (rest1, rest2)
+    | (a_rel, b_rel) -> (acc, a_rel, b_rel)
+  in
+  (fun a_parts b_parts -> helper [] (a_parts, b_parts))
+
+(** [path_matches expected actual] returns true if [actual] is the same as [expected], ignoring
+    a potential leading [./] on [actual]. *)
+let path_matches expected actual =
+  expected = actual || (Filename.is_relative actual && actual = "./" ^ expected)
+
+(** [node_path ~node_resolver_dirnames ~reader src_dir require_path] converts absolute path
+    [require_path] into a Node-compatible "require" path relative to [src_dir], taking into
+    account node's hierarchical search for [node_modules].
+
+    That is, if [require_path] is within a [node_modules] folder in [src_dir] or one of
+    [src_dir]'s parents, then the [node_modules] prefix is removed. If the package's
+    [package.json] has a [main] field, that suffix is also removed.
+
+    If not part of [node_modules], then [require_path] is relativized with respect to
+    [src_dir].
+
+    Lastly, if the path ends with [index.js] or [.js], those default suffixes are also
+    removed. *)
+let node_path ~node_resolver_dirnames ~reader ~src_dir require_path =
+  let require_path = String_utils.rstrip require_path Files.flow_ext in
+  let src_parts = Files.split_path src_dir in
+  let req_parts = Files.split_path require_path in
+  let string_of_parts parts =
+    let str = String.concat "/" parts in
+    let str' = String_utils.rstrip str "/index.js" in
+    if str == str' then
+      String_utils.rstrip str ".js"
+    else
+      str'
+  in
+  let (ancestor_rev, to_src, to_req) = find_ancestor_rev src_parts req_parts in
+  match to_req with
+  | node_modules :: package_dir :: rest when List.mem node_modules node_resolver_dirnames ->
+    let package_path =
+      package_dir :: node_modules :: ancestor_rev |> Base.List.rev |> String.concat "/"
+    in
+    (match main_of_package ~reader package_path with
+    | Some main when path_matches (String.concat "/" rest) main -> package_dir
+    | _ -> string_of_parts (package_dir :: rest))
+  | _ ->
+    let parts =
+      if Base.List.is_empty to_src then
+        Filename.current_dir_name :: to_req
+      else
+        (* add `..` for each dir in `to_src`, to relativize `to_req` *)
+        Base.List.fold_left ~f:(fun path _ -> Filename.parent_dir_name :: path) ~init:to_req to_src
+    in
+    string_of_parts parts
+
 (** [path_of_modulename src_dir t] converts the Modulename.t [t] to a string
     suitable for importing [t] from a file in [src_dir]. that is, if it is a
     filename, returns the path relative to [src_dir]. *)
-let path_of_modulename src_dir = function
+let path_of_modulename ~node_resolver_dirnames ~reader src_dir = function
   | Modulename.String str -> Some str
-  | Modulename.Filename f ->
+  | Modulename.Filename file_key ->
     Base.Option.map
       ~f:(fun src_dir ->
-        let rel = Files.relative_path src_dir (File_key.to_string f) in
-        let rel =
-          if String_utils.string_ends_with rel ".js" then
-            Filename.chop_suffix rel ".js"
-          else
-            rel
-        in
-        let rel =
-          if Filename.basename rel = "index" then
-            Filename.dirname rel
-          else
-            rel
-        in
-        if rel.[0] <> '.' then
-          "./" ^ rel
-        else
-          rel)
+        let path = File_key.to_string file_key in
+        node_path ~node_resolver_dirnames ~reader ~src_dir path)
       src_dir
 
 type text_edits = {
@@ -89,7 +146,7 @@ type text_edits = {
   edits: Lsp.TextEdit.t list;
 }
 
-let text_edits_of_import ~options ~reader ~src_dir ~ast kind name source =
+let text_edits_of_import ~options ~layout_options ~reader ~src_dir ~ast kind name source =
   let from =
     match source with
     | Export_index.Global -> None
@@ -98,7 +155,10 @@ let text_edits_of_import ~options ~reader ~src_dir ~ast kind name source =
       (match Module_heaps.Reader.get_info ~reader ~audit:Expensive.ok from with
       | None -> None
       | Some info ->
-        (match path_of_modulename src_dir info.Module_heaps.module_name with
+        let node_resolver_dirnames = Options.file_options options |> Files.node_resolver_dirnames in
+        (match
+           path_of_modulename ~node_resolver_dirnames ~reader src_dir info.Module_heaps.module_name
+         with
         | None -> None
         | Some from -> Some from))
   in
@@ -114,7 +174,7 @@ let text_edits_of_import ~options ~reader ~src_dir ~ast kind name source =
     in
     let binding = (kind, name) in
     let edits =
-      Autofix_imports.add_import ~options ~binding ~from ast
+      Autofix_imports.add_import ~options:layout_options ~binding ~from ast
       |> Flow_lsp_conversions.flow_loc_patch_to_lsp_edits
     in
     Some { title; edits }
@@ -132,12 +192,22 @@ let suggest_imports ~options ~reader ~ast ~diagnostics ~exports ~name uri loc =
       |> List.filter (fun { source; code; range; _ } ->
              source = Some "Flow" && code = StringCode "cannot-resolve-name" && range = error_range)
     in
-    let options =
+    let layout_options =
       Js_layout_generator.{ default_opts with single_quotes = Options.format_single_quotes options }
     in
     Export_index.ExportSet.fold
       (fun (source, export_kind) acc ->
-        match text_edits_of_import ~options ~reader ~src_dir ~ast export_kind name source with
+        match
+          text_edits_of_import
+            ~options
+            ~layout_options
+            ~reader
+            ~src_dir
+            ~ast
+            export_kind
+            name
+            source
+        with
         | None -> acc
         | Some { edits; title } ->
           let command =

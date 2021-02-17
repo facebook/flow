@@ -525,30 +525,30 @@ and normalize_path_ dir names =
 
 and construct_path = List.fold_left Filename.concat
 
+let split_path =
+  let rec f acc rest =
+    let dir = Filename.dirname rest in
+    if rest = dir then
+      if Filename.is_relative dir (* True for things like ".", false for "/", "C:/" *) then
+        acc
+      (* "path/to/foo.js" becomes ["path"; "to"; "foo.js"] *)
+      else
+        match acc with
+        | [] -> [dir] (* "/" becomes ["/"] *)
+        | last_dir :: rest ->
+          (* "/path/to/foo.js" becomes ["/path"; "to"; "foo.js"] *)
+          Filename.concat dir last_dir :: rest
+    else
+      f (Filename.basename rest :: acc) dir
+  in
+  (fun path -> f [] path)
+
 (* relative_path: (/path/to/foo, /path/to/bar/baz) -> ../bar/baz
  * absolute_path (/path/to/foo, ../bar/baz) -> /path/to/bar/baz
  *
  * Both of these are designed to avoid using Path and realpath so that we don't actually read the
  * file system *)
 let (relative_path, absolute_path) =
-  let split_path =
-    let rec f acc rest =
-      let dir = Filename.dirname rest in
-      if rest = dir then
-        if Filename.is_relative dir (* True for things like ".", false for "/", "C:/" *) then
-          acc
-        (* "path/to/foo.js" becomes ["path"; "to"; "foo.js"] *)
-        else
-          match acc with
-          | [] -> [dir] (* "/" becomes ["/"] *)
-          | last_dir :: rest ->
-            (* "/path/to/foo.js" becomes ["/path"; "to"; "foo.js"] *)
-            Filename.concat dir last_dir :: rest
-      else
-        f (Filename.basename rest :: acc) dir
-    in
-    (fun path -> f [] path)
-  in
   let rec make_relative = function
     | (dir1 :: root, dir2 :: file) when dir1 = dir2 -> make_relative (root, file)
     | (root, file) -> List.fold_left (fun path _ -> Filename.parent_dir_name :: path) file root

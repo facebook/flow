@@ -13,7 +13,8 @@ type text_edits = {
 }
 
 val text_edits_of_import :
-  options:Js_layout_generator.opts ->
+  options:Options.t ->
+  layout_options:Js_layout_generator.opts ->
   reader:State_reader.t ->
   src_dir:string option ->
   ast:(Loc.t, Loc.t) Flow_ast.Program.t ->
@@ -59,5 +60,10 @@ val insert_type :
   (Replacement_printer.patch, string) result Lwt.t
 
 module For_tests : sig
-  val path_of_modulename : string option -> Modulename.t -> string option
+  val path_of_modulename :
+    node_resolver_dirnames:string list ->
+    reader:State_reader.t ->
+    string option ->
+    Modulename.t ->
+    string option
 end
