@@ -225,7 +225,7 @@ module Unix : sig
 
   val unlink : string -> unit
 
-  val link : string -> string -> unit
+  val link : ?follow:bool -> string -> string -> unit
 
   type access_permission = Unix.access_permission =
     | R_OK
