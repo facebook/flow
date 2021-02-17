@@ -58,15 +58,15 @@ object destructuring key = {"path":"destructuring.js","line":4,"endline":4,"star
 object destructuring binding = {"path":"destructuring.js","line":5,"endline":5,"start":13,"end":15}
 annot.js:5:4
 Flags:
-helpers/exports_annot.js:3:10,3:15
+helpers/exports_annot.js:7:18,7:18
 
 annot.js:8:4
 Flags:
-helpers/exports_annot.js:3:10,3:15
+helpers/exports_annot.js:7:18,7:18
 
 annot.js:11:4
 Flags:
-helpers/exports_annot.js:5:10,5:15
+helpers/exports_annot.js:13:24,13:32
 
 annot.js:14:4
 Flags:
