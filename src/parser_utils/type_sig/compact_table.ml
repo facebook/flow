@@ -21,7 +21,7 @@ module Make () = struct
 
   type 'a indexed = (int * 'a node) option
 
-  type 'a t = 'a array [@@deriving show]
+  type 'a t = 'a array
 
   let create () = ref None
 

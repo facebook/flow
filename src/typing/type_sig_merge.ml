@@ -14,7 +14,7 @@ module Fn = Base.Fn
 module Component : sig
   type 'a t
 
-  type index = private int [@@deriving show]
+  type index = private int
 
   val make : 'a Nel.t -> (index -> 'a -> 'b) -> 'b t
 
@@ -30,7 +30,7 @@ module Component : sig
 end = struct
   type 'a t = 'a array
 
-  type index = int [@@deriving show]
+  type index = int
 
   let make (x, xs) f =
     let len = 1 + List.length xs in
@@ -51,24 +51,22 @@ end
 
 type dependency =
   | CyclicDep of Component.index
-  | AcyclicDep of (Type.t[@opaque]) (* ModuleT *)
+  | AcyclicDep of Type.t (* ModuleT *)
   | ResourceDep of string
   | UncheckedDep of string
   | BuiltinDep of string * string
   | UnknownDep of string
   | LegacyUncheckedDepTryBuiltinsFirst of string
-[@@deriving show]
 
 type 'a node =
   | Node of {
-      mutable merged: Type.t option; [@opaque] (* TODO *)
+      mutable merged: Type.t option;
       packed: 'a;
     }
-[@@deriving show]
 
 type file = {
   key: File_key.t;
-  cx: Context.t; [@opaque]
+  cx: Context.t;
   dependencies: (string * dependency) Module_refs.t;
   exports: ALoc.t Pack.exports node;
   export_def: ALoc.t Pack.packed option;
@@ -77,7 +75,6 @@ type file = {
   patterns: ALoc.t Pack.pattern node Patterns.t;
   pattern_defs: ALoc.t Pack.packed Pattern_defs.t;
 }
-[@@deriving show]
 
 let remote_ref_loc = function
   | Pack.Import { id_loc; _ }
