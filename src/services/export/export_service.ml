@@ -17,7 +17,6 @@ let camelize str =
     String.concat "" parts
 
 let string_of_modulename modulename =
-  (* TODO: need to handle reserved words, like a file called package.js *)
   let str =
     match modulename with
     | Modulename.String str -> str

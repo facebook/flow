@@ -97,3 +97,17 @@ let find_seq name t =
 
 (** [keys t] returns all of the exported names from every file in [t] *)
 let keys t = SMap.keys t
+
+let kind_is_value = function
+  | Default
+  | Named
+  | Namespace ->
+    true
+  | NamedType -> false
+
+let kind_is_type = function
+  | Default
+  | Named
+  | Namespace ->
+    false
+  | NamedType -> true

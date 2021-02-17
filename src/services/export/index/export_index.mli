@@ -49,3 +49,7 @@ val fold : f:('acc -> string -> export -> 'acc) -> init:'acc -> t -> 'acc
 val map : f:(export -> export) -> t -> t
 
 val keys : t -> string list
+
+val kind_is_type : kind -> bool
+
+val kind_is_value : kind -> bool
