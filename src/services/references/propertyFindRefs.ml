@@ -8,11 +8,12 @@
 module Ast = Flow_ast
 module File_sig = File_sig.With_Loc
 open Utils_js
-open Parsing_heaps_utils
 open Loc_collections
 open ServerEnv
 open FindRefsUtils
 open GetDefUtils
+
+let loc_of_aloc = Parsing_heaps.Reader.loc_of_aloc
 
 let add_ref_kind kind = Base.List.map ~f:(fun loc -> (kind, loc))
 

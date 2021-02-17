@@ -7,7 +7,8 @@
 
 open Base.Result
 open Utils_js
-open Parsing_heaps_utils
+
+let loc_of_aloc = Parsing_heaps.Reader.loc_of_aloc
 
 module Get_def_result = struct
   type t =

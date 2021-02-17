@@ -28,8 +28,6 @@ module type READER = sig
 
   val get_sig_ast_aloc_table_unsafe : reader:reader -> File_key.t -> ALoc.table
 
-  val get_sig_ast_aloc_table_unsafe_lazy : reader:reader -> ALoc.t -> ALoc.table Lazy.t
-
   val get_docblock_unsafe : reader:reader -> File_key.t -> Docblock.t
 
   val get_exports_unsafe : reader:reader -> File_key.t -> Exports.t
@@ -41,6 +39,8 @@ module type READER = sig
   val get_type_sig_unsafe : reader:reader -> File_key.t -> type_sig
 
   val get_file_hash_unsafe : reader:reader -> File_key.t -> Xx.hash
+
+  val loc_of_aloc : reader:reader -> ALoc.t -> Loc.t
 end
 
 module Mutator_reader : sig

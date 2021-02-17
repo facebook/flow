@@ -37,10 +37,7 @@ let map_loc_of_error f { loc; msg; source_file; trace_reasons } =
     trace_reasons = Base.List.map ~f:(Reason.map_reason_locs f) trace_reasons;
   }
 
-let concretize_error lazy_table_of_aloc =
-  map_loc_of_error (fun aloc ->
-      let table = lazy_table_of_aloc aloc in
-      ALoc.to_loc table aloc)
+let concretize_error = map_loc_of_error
 
 let kind_of_error err = msg_of_error err |> kind_of_msg
 
@@ -1044,11 +1041,8 @@ let rec make_error_printable ?(speculation = false) (error : Loc.t t) : Loc.t Er
     | (Some _, _) ->
       raise (ImproperlyFormattedError msg))
 
-let concretize_errors lazy_table_of_aloc set =
-  ErrorSet.fold
-    (concretize_error lazy_table_of_aloc %> ConcreteErrorSet.add)
-    set
-    ConcreteErrorSet.empty
+let concretize_errors loc_of_aloc set =
+  ErrorSet.fold (concretize_error loc_of_aloc %> ConcreteErrorSet.add) set ConcreteErrorSet.empty
 
 let make_errors_printable set =
   ConcreteErrorSet.fold

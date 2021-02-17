@@ -245,7 +245,7 @@ let code_actions_of_errors ~options ~reader ~env ~ast ~diagnostics ~errors uri l
     (fun error actions ->
       match
         Flow_error.msg_of_error error
-        |> Error_message.map_loc_of_error_message (Parsing_heaps_utils.loc_of_aloc ~reader)
+        |> Error_message.map_loc_of_error_message (Parsing_heaps.Reader.loc_of_aloc ~reader)
       with
       | Error_message.EEnumInvalidMemberAccess { reason; suggestion = Some suggestion; _ } ->
         let error_loc = Reason.loc_of_reason reason in

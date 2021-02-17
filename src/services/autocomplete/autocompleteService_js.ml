@@ -7,8 +7,9 @@
 
 open Autocomplete_js
 open Base.Result
-open Parsing_heaps_utils
 open Loc_collections
+
+let loc_of_aloc = Parsing_heaps.Reader.loc_of_aloc
 
 let max_autoimport_suggestions = 100
 

@@ -8,13 +8,13 @@
 module Js = Js_of_ocaml.Js
 module Sys_js = Js_of_ocaml.Sys_js
 
-let lazy_table_of_aloc _ =
-  lazy (failwith "Did not expect to encounter an abstract location in flow_dot_js")
+(* We do not expect to encounter a keyed location in flow_dot_js *)
+let loc_of_aloc = ALoc.to_loc_exn
 
 let error_of_parse_error source_file (loc, err) =
   Error_message.EParseError (ALoc.of_loc loc, err)
   |> Flow_error.error_of_msg ~trace_reasons:[] ~source_file
-  |> Flow_error.concretize_error lazy_table_of_aloc
+  |> Flow_error.concretize_error loc_of_aloc
   |> Flow_error.make_error_printable
 
 let error_of_file_sig_error source_file e =
@@ -22,7 +22,7 @@ let error_of_file_sig_error source_file e =
     match e with
     | IndeterminateModuleType loc -> Error_message.EIndeterminateModuleType (ALoc.of_loc loc))
   |> Flow_error.error_of_msg ~trace_reasons:[] ~source_file
-  |> Flow_error.concretize_error lazy_table_of_aloc
+  |> Flow_error.concretize_error loc_of_aloc
   |> Flow_error.make_error_printable
 
 let parse_content file content =
@@ -280,14 +280,10 @@ let check_content ~filename ~content =
           severity_cover
       in
       let errors =
-        errors
-        |> Flow_error.concretize_errors lazy_table_of_aloc
-        |> Flow_error.make_errors_printable
+        errors |> Flow_error.concretize_errors loc_of_aloc |> Flow_error.make_errors_printable
       in
       let warnings =
-        warnings
-        |> Flow_error.concretize_errors lazy_table_of_aloc
-        |> Flow_error.make_errors_printable
+        warnings |> Flow_error.concretize_errors loc_of_aloc |> Flow_error.make_errors_printable
       in
       let (errors, _, suppressions) =
         Error_suppressions.filter_suppressed_errors
