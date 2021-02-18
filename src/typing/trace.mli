@@ -5,18 +5,16 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
-type t
+val compare : Type.trace -> Type.trace -> int
 
-val compare : t -> t -> int
+val trace_depth : Type.trace -> int
 
-val trace_depth : t -> int
+val unit_trace : Type.t -> Type.use_t -> Type.trace
 
-val unit_trace : Type.t -> Type.use_t -> t
+val rec_trace : max:int -> Type.t -> Type.use_t -> Type.trace -> Type.trace
 
-val rec_trace : max:int -> Type.t -> Type.use_t -> t -> t
+val concat_trace : max:int -> Type.trace list -> Type.trace
 
-val concat_trace : max:int -> t list -> t
+val dummy_trace : Type.trace
 
-val dummy_trace : t
-
-val reasons_of_trace : ?level:int -> t -> Reason.reason list
+val reasons_of_trace : ?level:int -> Type.trace -> Reason.reason list

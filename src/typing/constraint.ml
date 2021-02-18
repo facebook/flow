@@ -76,10 +76,10 @@ and constraints =
   | Unresolved of bounds
 
 and bounds = {
-  mutable lower: (Trace.t * Type.use_op) TypeMap.t;
-  mutable upper: Trace.t UseTypeMap.t;
-  mutable lowertvars: (Trace.t * Type.use_op) IMap.t;
-  mutable uppertvars: (Trace.t * Type.use_op) IMap.t;
+  mutable lower: (Type.trace * Type.use_op) TypeMap.t;
+  mutable upper: Type.trace UseTypeMap.t;
+  mutable lowertvars: (Type.trace * Type.use_op) IMap.t;
+  mutable uppertvars: (Type.trace * Type.use_op) IMap.t;
 }
 (** The bounds structure carries the evolving constraints on the solution of an
     unresolved tvar.

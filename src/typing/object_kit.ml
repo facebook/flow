@@ -13,7 +13,7 @@ open TypeUtil
 module type OBJECT = sig
   val run :
     Context.t ->
-    Trace.t ->
+    Type.trace ->
     use_op:Type.use_op ->
     Reason.t ->
     Type.Object.resolve_tool ->
@@ -23,7 +23,7 @@ module type OBJECT = sig
     unit
 
   val widen_obj_type :
-    Context.t -> ?trace:Trace.t -> use_op:Type.use_op -> Reason.reason -> Type.t -> Type.t
+    Context.t -> ?trace:Type.trace -> use_op:Type.use_op -> Reason.reason -> Type.t -> Type.t
 end
 
 module Kit (Flow : Flow_common.S) : OBJECT = struct

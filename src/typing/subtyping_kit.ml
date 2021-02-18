@@ -22,11 +22,11 @@ module type INPUT = sig
 end
 
 module type OUTPUT = sig
-  val rec_sub_t : Context.t -> Type.use_op -> Type.t -> Type.t -> Trace.t -> unit
+  val rec_sub_t : Context.t -> Type.use_op -> Type.t -> Type.t -> Type.trace -> unit
 
   val rec_flow_p :
     Context.t ->
-    ?trace:Trace.t ->
+    ?trace:Type.trace ->
     use_op:use_op ->
     ?report_polarity:bool ->
     reason ->

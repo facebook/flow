@@ -171,11 +171,11 @@ module Cache = Flow_cache
 *)
 
 module RecursionCheck : sig
-  exception LimitExceeded of Trace.t
+  exception LimitExceeded of Type.trace
 
-  val check : Context.t -> Trace.t -> unit
+  val check : Context.t -> Type.trace -> unit
 end = struct
-  exception LimitExceeded of Trace.t
+  exception LimitExceeded of Type.trace
 
   (* check trace depth as a proxy for recursion depth
      and throw when limit is exceeded *)

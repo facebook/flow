@@ -11,7 +11,7 @@ open Type
 module type BASE = sig
   val flow : Context.t -> Type.t * Type.use_t -> unit
 
-  val flow_opt : Context.t -> ?trace:Trace.t -> Type.t * Type.use_t -> unit
+  val flow_opt : Context.t -> ?trace:Type.trace -> Type.t * Type.use_t -> unit
 
   val flow_p :
     Context.t ->
@@ -26,30 +26,36 @@ module type BASE = sig
 
   val reposition :
     Context.t ->
-    ?trace:Trace.t ->
+    ?trace:Type.trace ->
     ALoc.t ->
     ?desc:reason_desc ->
     ?annot_loc:ALoc.t ->
     Type.t ->
     Type.t
 
-  val rec_flow : Context.t -> Trace.t -> Type.t * Type.use_t -> unit
+  val rec_flow : Context.t -> Type.trace -> Type.t * Type.use_t -> unit
 
-  val rec_flow_t : Context.t -> Trace.t -> use_op:Type.use_op -> Type.t * Type.t -> unit
+  val rec_flow_t : Context.t -> Type.trace -> use_op:Type.use_op -> Type.t * Type.t -> unit
 
   val rec_unify :
-    Context.t -> Trace.t -> use_op:Type.use_op -> ?unify_any:bool -> Type.t -> Type.t -> unit
+    Context.t -> Type.trace -> use_op:Type.use_op -> ?unify_any:bool -> Type.t -> Type.t -> unit
 
   val unify : Context.t -> Type.t -> Type.t -> unit
 
   val unify_opt :
-    Context.t -> ?trace:Trace.t -> use_op:Type.use_op -> ?unify_any:bool -> Type.t -> Type.t -> unit
+    Context.t ->
+    ?trace:Type.trace ->
+    use_op:Type.use_op ->
+    ?unify_any:bool ->
+    Type.t ->
+    Type.t ->
+    unit
 
-  val filter_optional : Context.t -> ?trace:Trace.t -> reason -> Type.t -> Type.ident
+  val filter_optional : Context.t -> ?trace:Type.trace -> reason -> Type.t -> Type.ident
 
   val mk_typeapp_instance :
     Context.t ->
-    ?trace:Trace.t ->
+    ?trace:Type.trace ->
     use_op:Type.use_op ->
     reason_op:Reason.reason ->
     reason_tapp:Reason.reason ->
@@ -60,7 +66,7 @@ module type BASE = sig
 
   val resolve_id :
     Context.t ->
-    Trace.t ->
+    Type.trace ->
     use_op:Type.use_op ->
     ?fully_resolved:bool ->
     Constraint.ident ->
@@ -70,13 +76,13 @@ end
 
 module type CHECK_POLARITY = sig
   val check_polarity :
-    Context.t -> ?trace:Trace.t -> Type.typeparam SMap.t -> Polarity.t -> Type.t -> unit
+    Context.t -> ?trace:Type.trace -> Type.typeparam SMap.t -> Polarity.t -> Type.t -> unit
 end
 
 module type TRUST_CHECKING = sig
-  val trust_flow_to_use_t : Context.t -> Trace.t -> Type.t -> Type.use_t -> unit
+  val trust_flow_to_use_t : Context.t -> Type.trace -> Type.t -> Type.use_t -> unit
 
-  val trust_flow : Context.t -> Trace.t -> Type.use_op -> Type.t -> Type.t -> unit
+  val trust_flow : Context.t -> Type.trace -> Type.use_op -> Type.t -> Type.t -> unit
 
   val mk_trust_var : Context.t -> ?initial:Trust.trust_qualifier -> unit -> Type.ident
 
@@ -85,31 +91,32 @@ end
 
 module type BUILTINS = sig
   val get_builtin_type :
-    Context.t -> ?trace:Trace.t -> Reason.reason -> ?use_desc:bool -> string -> Type.t
+    Context.t -> ?trace:Type.trace -> Reason.reason -> ?use_desc:bool -> string -> Type.t
 
   val get_builtin_prop_type :
-    Context.t -> ?trace:Trace.t -> Reason.reason -> Type.React.PropType.complex -> Type.t
+    Context.t -> ?trace:Type.trace -> Reason.reason -> Type.React.PropType.complex -> Type.t
 
-  val get_builtin : Context.t -> ?trace:Trace.t -> string -> reason -> Type.t
+  val get_builtin : Context.t -> ?trace:Type.trace -> string -> reason -> Type.t
 
-  val get_builtin_typeapp : Context.t -> ?trace:Trace.t -> reason -> string -> Type.t list -> Type.t
+  val get_builtin_typeapp :
+    Context.t -> ?trace:Type.trace -> reason -> string -> Type.t list -> Type.t
 
   val lookup_builtin :
-    Context.t -> ?trace:Trace.t -> string -> reason -> Type.lookup_kind -> Type.tvar -> unit
+    Context.t -> ?trace:Type.trace -> string -> reason -> Type.lookup_kind -> Type.tvar -> unit
 
-  val set_builtin : Context.t -> ?trace:Trace.t -> string -> Type.t -> unit
+  val set_builtin : Context.t -> ?trace:Type.trace -> string -> Type.t -> unit
 end
 
 module type SUBTYPING = sig
   val fix_this_class :
-    Context.t -> Trace.t -> Reason.reason -> Reason.reason * Type.t * bool -> Type.t
+    Context.t -> Type.trace -> Reason.reason -> Reason.reason * Type.t * bool -> Type.t
 
   val reposition_reason :
-    Context.t -> ?trace:Trace.t -> Reason.reason -> ?use_desc:bool -> Type.t -> Type.t
+    Context.t -> ?trace:Type.trace -> Reason.reason -> ?use_desc:bool -> Type.t -> Type.t
 
   val eval_destructor :
     Context.t ->
-    trace:Trace.t ->
+    trace:Type.trace ->
     Type.use_op ->
     Reason.reason ->
     Type.t ->
@@ -119,7 +126,7 @@ module type SUBTYPING = sig
 
   val multiflow_subtype :
     Context.t ->
-    Trace.t ->
+    Type.trace ->
     use_op:ALoc.t Type.virtual_use_op ->
     Reason.reason ->
     Type.call_arg list ->
@@ -128,7 +135,7 @@ module type SUBTYPING = sig
 
   val flow_type_args :
     Context.t ->
-    Trace.t ->
+    Type.trace ->
     use_op:use_op ->
     reason ->
     reason ->
@@ -137,11 +144,11 @@ module type SUBTYPING = sig
     unit
 
   val instantiate_this_class :
-    Context.t -> Trace.t -> Reason.reason -> Type.t -> Type.t -> Type.cont -> unit
+    Context.t -> Type.trace -> Reason.reason -> Type.t -> Type.t -> Type.cont -> unit
 
   val instantiate_poly :
     Context.t ->
-    Trace.t ->
+    Type.trace ->
     use_op:Type.use_op ->
     reason_op:Reason.reason ->
     reason_tapp:Reason.reason ->
@@ -151,7 +158,7 @@ module type SUBTYPING = sig
 
   val specialize_class :
     Context.t ->
-    Trace.t ->
+    Type.trace ->
     reason_op:reason ->
     reason_tapp:reason ->
     Type.t ->
@@ -160,7 +167,7 @@ module type SUBTYPING = sig
 
   val mk_typeapp_of_poly :
     Context.t ->
-    Trace.t ->
+    Type.trace ->
     use_op:Type.use_op ->
     reason_op:Reason.reason ->
     reason_tapp:Reason.reason ->
@@ -175,14 +182,14 @@ end
 
 module type EVAL = sig
   val eval_evalt :
-    Context.t -> ?trace:Trace.t -> Type.t -> Type.defer_use_t -> Type.Eval.id -> Type.t
+    Context.t -> ?trace:Type.trace -> Type.t -> Type.defer_use_t -> Type.Eval.id -> Type.t
 
   val eval_selector :
-    Context.t -> ?trace:Trace.t -> reason -> Type.t -> Type.selector -> Type.tvar -> int -> unit
+    Context.t -> ?trace:Type.trace -> reason -> Type.t -> Type.selector -> Type.tvar -> int -> unit
 
   val mk_type_destructor :
     Context.t ->
-    trace:Trace.t ->
+    trace:Type.trace ->
     use_op ->
     reason ->
     Type.t ->
@@ -192,7 +199,7 @@ module type EVAL = sig
 end
 
 module type REACT = sig
-  val mk_instance : Context.t -> ?trace:Trace.t -> reason -> ?use_desc:bool -> Type.t -> Type.t
+  val mk_instance : Context.t -> ?trace:Type.trace -> reason -> ?use_desc:bool -> Type.t -> Type.t
 end
 
 module type S = sig
@@ -211,7 +218,7 @@ module type S = sig
   include TRUST_CHECKING
 
   val mk_typeof_annotation :
-    Context.t -> ?trace:Trace.t -> reason -> ?use_desc:bool -> ?internal:bool -> Type.t -> Type.t
+    Context.t -> ?trace:Type.trace -> reason -> ?use_desc:bool -> ?internal:bool -> Type.t -> Type.t
 
   val resolve_spread_list :
     Context.t ->
@@ -222,5 +229,5 @@ module type S = sig
     unit
 
   val widen_obj_type :
-    Context.t -> ?trace:Trace.t -> use_op:Type.use_op -> Reason.reason -> Type.t -> Type.t
+    Context.t -> ?trace:Type.trace -> use_op:Type.use_op -> Reason.reason -> Type.t -> Type.t
 end

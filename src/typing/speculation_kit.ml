@@ -18,14 +18,14 @@ end
 
 module type OUTPUT = sig
   val try_union :
-    Context.t -> Trace.t -> Type.use_op -> Type.t -> Reason.reason -> Type.UnionRep.t -> unit
+    Context.t -> Type.trace -> Type.use_op -> Type.t -> Reason.reason -> Type.UnionRep.t -> unit
 
   val try_intersection :
-    Context.t -> Trace.t -> Type.use_t -> Reason.reason -> Type.InterRep.t -> unit
+    Context.t -> Type.trace -> Type.use_t -> Reason.reason -> Type.InterRep.t -> unit
 
   val prep_try_intersection :
     Context.t ->
-    Trace.t ->
+    Type.trace ->
     reason ->
     Type.t list ->
     Type.t list ->
@@ -35,10 +35,10 @@ module type OUTPUT = sig
     unit
 
   val fully_resolve_type :
-    Context.t -> Trace.t -> reason -> Graph_explorer.Tbl.key -> Type.t -> unit
+    Context.t -> Type.trace -> reason -> Graph_explorer.Tbl.key -> Type.t -> unit
 
   val speculative_matches :
-    Context.t -> Trace.t -> ALoc.t Reason.virtual_reason -> int -> Type.spec -> unit
+    Context.t -> Type.trace -> ALoc.t Reason.virtual_reason -> int -> Type.spec -> unit
 
   val intersection_preprocess_kit : reason -> Type.intersection_preprocess_tool -> Type.use_t
 end

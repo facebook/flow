@@ -14,7 +14,7 @@ module FlowError = Flow_error
 module type CUSTOM_FUN = sig
   val run :
     Context.t ->
-    Trace.t ->
+    Type.trace ->
     use_op:Type.use_op ->
     Reason.t ->
     Type.custom_fun_kind ->

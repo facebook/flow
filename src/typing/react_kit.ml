@@ -15,7 +15,7 @@ let err_incompatible
     cx
     trace
     ~use_op
-    ~(add_output : Context.t -> ?trace:Trace.t -> Error_message.t -> unit)
+    ~(add_output : Context.t -> ?trace:Type.trace -> Error_message.t -> unit)
     reason
     tool =
   React.(
@@ -38,7 +38,7 @@ let component_class
     cx
     reason
     ~(get_builtin_typeapp :
-       Context.t -> ?trace:Trace.t -> reason -> string -> Type.t list -> Type.t)
+       Context.t -> ?trace:Type.trace -> reason -> string -> Type.t list -> Type.t)
     props =
   DefT
     ( reason,
@@ -55,7 +55,7 @@ let get_intrinsic
     prop
     ~rec_flow
     ~(get_builtin_type :
-       Context.t -> ?trace:Trace.t -> reason -> ?use_desc:bool -> string -> Type.t) =
+       Context.t -> ?trace:Type.trace -> reason -> ?use_desc:bool -> string -> Type.t) =
   let reason = reason_of_t component in
   (* Get the internal $JSXIntrinsics map. *)
   let intrinsics =
@@ -181,11 +181,11 @@ let props_to_tout
     component
     ~use_op
     ~reason_op
-    ~(rec_flow_t : Context.t -> Trace.t -> use_op:Type.use_op -> Type.t * Type.t -> unit)
+    ~(rec_flow_t : Context.t -> Type.trace -> use_op:Type.use_op -> Type.t * Type.t -> unit)
     ~rec_flow
     ~(get_builtin_type :
-       Context.t -> ?trace:Trace.t -> reason -> ?use_desc:bool -> string -> Type.t)
-    ~(add_output : Context.t -> ?trace:Trace.t -> Error_message.t -> unit)
+       Context.t -> ?trace:Type.trace -> reason -> ?use_desc:bool -> string -> Type.t)
+    ~(add_output : Context.t -> ?trace:Type.trace -> Error_message.t -> unit)
     u
     tout =
   match drop_generic component with
@@ -242,12 +242,12 @@ let get_config
     component
     ~use_op
     ~reason_op
-    ~(rec_flow_t : Context.t -> Trace.t -> use_op:Type.use_op -> Type.t * Type.t -> unit)
+    ~(rec_flow_t : Context.t -> Type.trace -> use_op:Type.use_op -> Type.t * Type.t -> unit)
     ~rec_flow
     ~(rec_unify :
-       Context.t -> Trace.t -> use_op:Type.use_op -> ?unify_any:bool -> Type.t -> Type.t -> unit)
+       Context.t -> Type.trace -> use_op:Type.use_op -> ?unify_any:bool -> Type.t -> Type.t -> unit)
     ~get_builtin_type
-    ~(add_output : Context.t -> ?trace:Trace.t -> Error_message.t -> unit)
+    ~(add_output : Context.t -> ?trace:Type.trace -> Error_message.t -> unit)
     u
     pole
     tout =
@@ -292,7 +292,7 @@ let get_config
             (props, ObjKitT (use_op, reason_op, tool, Rest (ReactConfigMerge pole, state), tout)))))
 
 module type REACT = sig
-  val run : Context.t -> Trace.t -> use_op:use_op -> reason -> Type.t -> Type.React.tool -> unit
+  val run : Context.t -> Type.trace -> use_op:use_op -> reason -> Type.t -> Type.React.tool -> unit
 end
 
 module Kit (Flow : Flow_common.S) : REACT = struct

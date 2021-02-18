@@ -1410,6 +1410,55 @@ module rec TypeTerm : sig
     | ImportClassKind (* import type { SomeClass } from ... *)
     | ImportEnumKind
     | InstanceKind
+
+  (*
+     Terminology:
+
+      * A step records a single test of lower bound against
+      upper bound, analogous to an invocation of the flow function.
+
+      * A step may have a tvar as its lower or upper bound (or both).
+      tvars act as conduits for concrete types, so steps which
+      begin or end in tvars may be joined with other steps
+      representing tests which adjoin the same tvar.
+
+      The resulting sequence of steps, corresponding to an invocation
+      of the flow function followed by the extension of the original
+      lower/upper pair through any adjacent type variables, forms the
+      basis of a trace. (In trace dumps this is called a "path".)
+
+      * When a step has been induced recursively from a prior invocation
+      of the flow function, it's said to have the trace associated with
+      that invocation as a parent.
+
+      (Note that each step in a path may have its own parent: consider
+      an incoming, recursively induced step joining with a dormant step
+      attached to some tvar in an arbitrarily removed invocation of the
+      flow function.)
+
+      * A trace is just a sequence of steps along with a (possibly empty)
+      parent trace for each step. Since steps may share parents,
+      a trace forms a graph, though it is naturally built up as a tree
+      when recorded during evaluation of the flow function.
+      (The formatting we do in reasons_of_trace recovers the graph
+      structure for readability.)
+  *)
+  type trace_step =
+    | Step of {
+        lower: t;
+        upper: use_t;
+        parent: trace_step list;
+      }
+
+  (* A list of steps and the depth of the trace, trace depth is 1 + the length of
+     the longest ancestor chain in the trace. We keep this precomputed because
+
+     a) actual ancestors may be thrown away due to externally imposed limits on trace
+        depth;
+
+     b) the recursion limiter in the flow function checks this on every call.
+  *)
+  type trace = trace_step list * int
 end =
   TypeTerm
 

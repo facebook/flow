@@ -43,9 +43,11 @@ val dump_flow : ?depth:int -> Context.t -> Type.t * Type.use_t -> string
 
 module Verbose : sig
   val print_if_verbose_lazy :
-    Context.t -> Trace.t -> ?delim:string -> ?indent:int -> string list Lazy.t -> unit
+    Context.t -> Type.trace -> ?delim:string -> ?indent:int -> string list Lazy.t -> unit
 
-  val print_if_verbose : Context.t -> Trace.t -> ?delim:string -> ?indent:int -> string list -> unit
+  val print_if_verbose :
+    Context.t -> Type.trace -> ?delim:string -> ?indent:int -> string list -> unit
 
-  val print_types_if_verbose : Context.t -> Trace.t -> ?note:string -> Type.t * Type.use_t -> unit
+  val print_types_if_verbose :
+    Context.t -> Type.trace -> ?note:string -> Type.t * Type.use_t -> unit
 end
