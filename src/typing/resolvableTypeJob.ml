@@ -5,9 +5,9 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
-open Constraint
 open Reason
 open Type
+open Constraint
 
 (* Helper module for full type resolution as needed to check union and
    intersection types.
@@ -47,7 +47,7 @@ open Type
 type t =
   | Binding of Type.tvar
   | OpenResolved
-  | OpenUnresolved of int option * reason * Constraint.ident
+  | OpenUnresolved of int option * reason * Type.ident
 
 (* log_unresolved is a mode that determines whether to log unresolved tvars:
    it is None when resolving annotations, and Some speculation_id when

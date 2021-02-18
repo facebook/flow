@@ -69,7 +69,7 @@ module type BASE = sig
     Type.trace ->
     use_op:Type.use_op ->
     ?fully_resolved:bool ->
-    Constraint.ident ->
+    Type.ident ->
     Type.t ->
     unit
 end

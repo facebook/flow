@@ -585,11 +585,11 @@ end = struct
           else
             let seen = ISet.add root_id seen in
             (match constraints with
-            | Constraint.Resolved (_, t)
-            | Constraint.FullyResolved (_, t) ->
+            | T.Constraint.Resolved (_, t)
+            | T.Constraint.FullyResolved (_, t) ->
               loop cx acc seen t
-            | Constraint.Unresolved bounds ->
-              let ts = T.TypeMap.keys bounds.Constraint.lower in
+            | T.Constraint.Unresolved bounds ->
+              let ts = T.TypeMap.keys bounds.T.Constraint.lower in
               List.fold_left (fun a t -> loop cx a seen t) acc ts)
         | T.AnnotT (_, t, _) -> loop cx acc seen t
         | T.ReposT (_, t) -> loop cx acc seen t
@@ -915,16 +915,16 @@ end = struct
        taking their union.
     *)
     and resolve_bounds ~env = function
-      | Constraint.Resolved (_, t)
-      | Constraint.FullyResolved (_, t) ->
+      | T.Constraint.Resolved (_, t)
+      | T.Constraint.FullyResolved (_, t) ->
         type__ ~env t
-      | Constraint.Unresolved bounds ->
+      | T.Constraint.Unresolved bounds ->
         (match%bind resolve_from_lower_bounds ~env bounds with
         | [] -> empty_with_upper_bounds ~env bounds
         | hd :: tl -> return (Ty.mk_union ~flattened:true (hd, tl)))
 
     and resolve_from_lower_bounds ~env bounds =
-      T.TypeMap.keys bounds.Constraint.lower
+      T.TypeMap.keys bounds.T.Constraint.lower
       |> mapM (fun t ->
              let%map ty = type__ ~env t in
              Nel.to_list (Ty.bk_union ty))
@@ -932,7 +932,7 @@ end = struct
       >>| Base.List.dedup_and_sort ~compare:Stdlib.compare
 
     and empty_with_upper_bounds ~env bounds =
-      let uses = Base.List.map ~f:fst (Constraint.UseTypeMap.keys bounds.Constraint.upper) in
+      let uses = Base.List.map ~f:fst (T.Constraint.UseTypeMap.keys bounds.T.Constraint.upper) in
       let%map use_kind = uses_t ~env uses in
       Ty.Bot (Ty.NoLowerWithUpper use_kind)
 
@@ -2357,14 +2357,14 @@ end = struct
       let (root_id, constraints) = Context.find_constraints Env.(env.genv.cx) id in
       Recursive.with_cache (TVarKey root_id) ~f:(fun () ->
           match constraints with
-          | Constraint.Resolved (_, t)
-          | Constraint.FullyResolved (_, t) ->
+          | T.Constraint.Resolved (_, t)
+          | T.Constraint.FullyResolved (_, t) ->
             type__ ~env ~proto ~imode t
-          | Constraint.Unresolved bounds ->
+          | T.Constraint.Unresolved bounds ->
             let%map lowers =
               mapM
                 (fun t -> type__ ~env ~proto ~imode t >>| Ty.bk_union >>| Nel.to_list)
-                (T.TypeMap.keys bounds.Constraint.lower)
+                (T.TypeMap.keys bounds.T.Constraint.lower)
             in
             let lowers = Base.List.(dedup_and_sort ~compare:Stdlib.compare (concat lowers)) in
             (match lowers with

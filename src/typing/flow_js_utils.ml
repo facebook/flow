@@ -5,10 +5,10 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
-open Constraint
 open Reason
 open Subst
 open Type
+open Constraint
 open TypeUtil
 open Utils_js
 module FlowError = Flow_error

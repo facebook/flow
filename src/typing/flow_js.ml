@@ -22,9 +22,9 @@ open Flow_js_utils
 open Utils_js
 open Loc_collections
 open Reason
-open Constraint
 open Type
 open TypeUtil
+open Constraint
 open Debug_js.Verbose
 module FlowError = Flow_error
 

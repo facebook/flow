@@ -693,9 +693,9 @@ let check_file ~opts ~getters ~file_sigs filename reqs dep_cxs master_cx =
    second actually changes the entity in the exports.
 *)
 module ContextOptimizer = struct
-  open Constraint
   open Type
   open TypeUtil
+  open Constraint
 
   class context_optimizer =
     let no_lowers cx r =

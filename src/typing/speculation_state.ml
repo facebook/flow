@@ -43,7 +43,7 @@ type case = {
    benign. Such tvars can be explicitly designated to be ignored. Also, tvars
    that instantiate type parameters, this types, existentials, etc. are
    ignored. *)
-type ignore = Constraint.ident option
+type ignore = Type.ident option
 
 (* A branch is a wrapper around a case, that also carries the speculation id of
    the spec currently being processed, as well as any explicitly designated

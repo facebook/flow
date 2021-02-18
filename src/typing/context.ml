@@ -18,7 +18,7 @@ exception Require_not_found of string
 
 exception Module_not_found of string
 
-exception Tvar_not_found of Constraint.ident
+exception Tvar_not_found of Type.ident
 
 type env = Scope.t list
 
@@ -95,7 +95,7 @@ type subst_cache_err =
 
 type sig_t = {
   (* map from tvar ids to nodes (type info structures) *)
-  mutable graph: Constraint.node IMap.t;
+  mutable graph: Type.Constraint.node IMap.t;
   (* map from tvar ids to trust nodes *)
   mutable trust_graph: Trust_constraint.node IMap.t;
   (* obj types point to mutable property maps *)
@@ -841,13 +841,13 @@ let rec find_graph cx id =
 
 and find_constraints cx id =
   let (root_id, root) = find_root cx id in
-  (root_id, root.Constraint.constraints)
+  (root_id, root.Type.Constraint.constraints)
 
 (* Find the root of a type variable, potentially traversing a chain of type
    variables, while short-circuiting all the type variables in the chain to the
    root during traversal to speed up future traversals. *)
 and find_root cx id =
-  Constraint.(
+  Type.Constraint.(
     match IMap.find_opt id (graph cx) with
     | Some (Goto next_id) ->
       let (root_id, root) = find_root cx next_id in
@@ -865,7 +865,7 @@ and find_root cx id =
 
 let rec find_resolved cx = function
   | Type.OpenT (_, id) ->
-    Constraint.(
+    Type.Constraint.(
       begin
         match find_graph cx id with
         | Resolved (_, t)

@@ -15,7 +15,7 @@ exception Require_not_found of string
 
 exception Module_not_found of string
 
-exception Tvar_not_found of Constraint.ident
+exception Tvar_not_found of Type.ident
 
 type env = Scope.t list
 
@@ -129,7 +129,7 @@ val cx_with_trust : t -> (unit -> Trust.trust_rep) -> t
 
 val sig_cx : t -> sig_t
 
-val graph_sig : sig_t -> Constraint.node IMap.t
+val graph_sig : sig_t -> Type.Constraint.node IMap.t
 
 val find_module_sig : sig_t -> string -> Type.t
 
@@ -186,13 +186,13 @@ val find_require : t -> ALoc.t -> Type.t
 
 val find_module : t -> string -> Type.t
 
-val find_tvar : t -> Constraint.ident -> Constraint.node
+val find_tvar : t -> Type.ident -> Type.Constraint.node
 
-val mem_nominal_prop_id : t -> Constraint.ident -> bool
+val mem_nominal_prop_id : t -> Type.ident -> bool
 
 val mem_nominal_poly_id : t -> Type.Poly.id -> bool
 
-val graph : t -> Constraint.node IMap.t
+val graph : t -> Type.Constraint.node IMap.t
 
 val trust_graph : t -> Trust_constraint.node IMap.t
 
@@ -322,7 +322,7 @@ val add_call_prop : t -> int -> Type.t -> unit
 
 val add_export_map : t -> Type.Exports.id -> Type.Exports.t -> unit
 
-val add_tvar : t -> Constraint.ident -> Constraint.node -> unit
+val add_tvar : t -> Type.ident -> Type.Constraint.node -> unit
 
 val add_trust_var : t -> Trust_constraint.ident -> Trust_constraint.node -> unit
 
@@ -336,7 +336,7 @@ val add_voidable_check : t -> voidable_check -> unit
 
 val add_implicit_instantiation_check : t -> Type.t -> Type.use_t -> unit
 
-val remove_tvar : t -> Constraint.ident -> unit
+val remove_tvar : t -> Type.ident -> unit
 
 val set_envs : t -> env IMap.t -> unit
 
@@ -348,7 +348,7 @@ val set_type_graph : t -> Graph_explorer.graph -> unit
 
 val set_all_unresolved : t -> ISet.t IMap.t -> unit
 
-val set_graph : t -> Constraint.node IMap.t -> unit
+val set_graph : t -> Type.Constraint.node IMap.t -> unit
 
 val set_trust_graph : t -> Trust_constraint.node IMap.t -> unit
 
@@ -382,22 +382,21 @@ val clear_master_shared : t -> sig_t -> unit
  * we record if testing a property ever succeeds. If if never succeeds after typechecking is done,
  * we emit an error.
  *)
-val test_prop_hit : t -> Constraint.ident -> unit
+val test_prop_hit : t -> Type.ident -> unit
 
-val test_prop_miss :
-  t -> Constraint.ident -> string option -> Reason.t * Reason.t -> Type.use_op -> unit
+val test_prop_miss : t -> Type.ident -> string option -> Reason.t * Reason.t -> Type.use_op -> unit
 
 val test_prop_get_never_hit : t -> (string option * (Reason.t * Reason.t) * Type.use_op) list
 
-val computed_property_state_for_id : t -> Constraint.ident -> computed_property_state option
+val computed_property_state_for_id : t -> Type.ident -> computed_property_state option
 
-val computed_property_add_lower_bound : t -> Constraint.ident -> Reason.t -> unit
+val computed_property_add_lower_bound : t -> Type.ident -> Reason.t -> unit
 
-val computed_property_add_multiple_lower_bounds : t -> Constraint.ident -> unit
+val computed_property_add_multiple_lower_bounds : t -> Type.ident -> unit
 
-val spread_widened_types_get_widest : t -> Constraint.ident -> Type.Object.slice option
+val spread_widened_types_get_widest : t -> Type.ident -> Type.Object.slice option
 
-val spread_widened_types_add_widest : t -> Constraint.ident -> Type.Object.slice -> unit
+val spread_widened_types_add_widest : t -> Type.ident -> Type.Object.slice -> unit
 
 val mark_optional_chain : t -> ALoc.t -> Reason.t -> useful:bool -> unit
 
@@ -441,11 +440,11 @@ val generate_poly_id : t -> Type.Poly.id
 
 val make_source_poly_id : t -> ALoc.t -> Type.Poly.id
 
-val find_constraints : t -> Constraint.ident -> Constraint.ident * Constraint.constraints
+val find_constraints : t -> Type.ident -> Type.ident * Type.Constraint.constraints
 
-val find_graph : t -> Constraint.ident -> Constraint.constraints
+val find_graph : t -> Type.ident -> Type.Constraint.constraints
 
-val find_root : t -> Constraint.ident -> Constraint.ident * Constraint.root
+val find_root : t -> Type.ident -> Type.ident * Type.Constraint.root
 
 val find_resolved : t -> Type.t -> Type.t option
 

@@ -26,7 +26,7 @@ let unwrap_type =
         t
       else (
         seen := ISet.add id !seen;
-        Constraint.(
+        Type.Constraint.(
           match Context.find_graph cx id with
           | Resolved (_, t')
           | FullyResolved (_, t') ->
@@ -51,7 +51,7 @@ let union_flatten =
         []
       else (
         seen := ISet.add id !seen;
-        Constraint.(
+        Type.Constraint.(
           match Context.find_graph cx id with
           | Resolved (_, t')
           | FullyResolved (_, t') ->
@@ -272,7 +272,7 @@ class virtual ['a] t =
       else
         (r, tvar')
 
-    method virtual tvar : Context.t -> 'a -> Reason.t -> Constraint.ident -> Constraint.ident
+    method virtual tvar : Context.t -> 'a -> Reason.t -> Type.ident -> Type.ident
 
     method targ cx map_cx t =
       match t with
@@ -692,7 +692,7 @@ class virtual ['a] t =
           ROArrayAT t''
 
     method bounds cx map_cx t =
-      Constraint.(
+      Type.Constraint.(
         let lower' = TypeMap.ident_map_key (self#type_ cx map_cx) t.lower in
         if lower' != t.lower then t.lower <- lower';
         let upper' =
