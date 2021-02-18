@@ -196,9 +196,9 @@ let suggest_imports ~options ~reader ~ast ~diagnostics ~exports ~name uri loc =
     let error_range = Flow_lsp_conversions.loc_to_lsp_range loc in
     let relevant_diagnostics =
       let open PublishDiagnostics in
-      diagnostics
-      |> List.filter (fun { source; code; range; _ } ->
-             source = Some "Flow" && code = StringCode "cannot-resolve-name" && range = error_range)
+      let lsp_code = StringCode Error_codes.(string_of_code CannotResolveName) in
+      Base.List.filter diagnostics ~f:(fun { source; code; range; _ } ->
+          source = Some "Flow" && code = lsp_code && Lsp_helpers.ranges_overlap range error_range)
     in
     let layout_options =
       Js_layout_generator.{ default_opts with single_quotes = Options.format_single_quotes options }

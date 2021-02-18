@@ -42,6 +42,8 @@ val apply_changes_unsafe : string -> Lsp.DidChange.textDocumentContentChangeEven
 
 val pos_compare : Lsp.position -> Lsp.position -> int
 
+val ranges_overlap : Lsp.range -> Lsp.range -> bool
+
 type range_overlap =
   | Selection_before_start_of_squiggle
   | Selection_overlaps_start_of_squiggle
