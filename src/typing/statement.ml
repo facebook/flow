@@ -5086,6 +5086,8 @@ and predicated_call_expression_
    then those values are returned by constructions.
 *)
 and new_call cx reason ~use_op class_ targs args =
+  Env.havoc_heap_refinements ();
+  Env.havoc_local_refinements cx;
   Tvar.mk_where cx reason (fun t ->
       Flow.flow cx (class_, ConstructorT (use_op, reason, targs, args, t)))
 
