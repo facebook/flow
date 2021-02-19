@@ -43,9 +43,8 @@ val update_env : ALoc.t -> t -> unit
 
 (***)
 
-val promote_to_const_like : Context.t -> ALoc.t -> bool
-
-val is_not_written_by_closure : Context.t -> ALoc.t -> bool
+val promote_non_const :
+  Context.t -> ALoc.t -> Entry.non_const_specialization -> Entry.non_const_specialization
 
 val bind_class : Context.t -> ALoc.id -> Type.Properties.id -> Type.Properties.id -> unit
 
@@ -54,7 +53,13 @@ val bind_var : ?state:State.t -> Context.t -> string -> Type.annotated_or_inferr
 val bind_let : ?state:State.t -> Context.t -> string -> Type.annotated_or_inferred -> ALoc.t -> unit
 
 val bind_implicit_let :
-  ?state:State.t -> Entry.let_binding_kind -> Context.t -> string -> Type.t -> ALoc.t -> unit
+  ?state:State.t ->
+  Entry.let_binding_kind * Entry.non_const_specialization ->
+  Context.t ->
+  string ->
+  Type.t ->
+  ALoc.t ->
+  unit
 
 val bind_fun : ?state:State.t -> Context.t -> string -> Type.t -> ALoc.t -> unit
 

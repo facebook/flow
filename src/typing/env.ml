@@ -426,9 +426,9 @@ let bind_entry cx name entry loc =
           Entry.(
             let can_shadow = function
               (* funcs/vars can shadow other funcs/vars -- only in var scope *)
-              | ((Var _ | Let (FunctionBinding _)), (Var _ | Let (FunctionBinding _))) -> true
+              | ((Var _ | Let (FunctionBinding, _)), (Var _ | Let (FunctionBinding, _))) -> true
               (* vars can shadow function params *)
-              | (Var _, (Let (ParamBinding _) | Const ConstParamBinding)) -> true
+              | (Var _, (Let (ParamBinding, _) | Const ConstParamBinding)) -> true
               | _ -> false
             in
             (match (entry, prev) with
@@ -463,7 +463,8 @@ let bind_let ?(state = State.Undeclared) cx name t loc =
 let bind_implicit_let ?(state = State.Undeclared) kind cx name t loc =
   bind_entry cx name (Entry.new_let (Inferred t) ~kind ~loc ~state) loc
 
-let bind_fun ?(state = State.Declared) = bind_implicit_let ~state Entry.(FunctionBinding Havocable)
+let bind_fun ?(state = State.Declared) =
+  bind_implicit_let ~state (Entry.FunctionBinding, Entry.Havocable)
 
 (* bind const entry *)
 let bind_const ?(state = State.Undeclared) cx name t loc =
@@ -541,15 +542,15 @@ let declare_value_entry kind cx name loc =
         Scope.add_entry name new_entry scope
       | _ -> already_bound_error cx name entry loc)
 
-let declare_let = declare_value_entry Entry.(Let (LetVarBinding Havocable))
+let declare_let = declare_value_entry Entry.(Let (LetVarBinding, Havocable))
 
-let declare_implicit_let kind = declare_value_entry (Entry.Let kind)
+let declare_implicit_let kind = declare_value_entry Entry.(Let (kind, Havocable))
 
 let declare_const = declare_value_entry Entry.(Const ConstVarBinding)
 
 let declare_implicit_const kind = declare_value_entry (Entry.Const kind)
 
-let promote_to_const_like cx loc =
+let is_const_like cx loc =
   try
     let (info, values) = Context.use_def cx in
     let uses = Scope_api.uses_of_use info loc in
@@ -616,43 +617,29 @@ let is_not_written_by_closure cx loc =
       true
   with _ -> true
 
+let promote_non_const cx loc spec =
+  if spec <> Entry.ConstLike && is_const_like cx loc then
+    Entry.ConstLike
+  else if spec <> Entry.NotWrittenByClosure && is_not_written_by_closure cx loc then
+    Entry.NotWrittenByClosure
+  else
+    spec
+
 let initialized_value_entry cx kind specific loc v =
   Entry.(
     (* Maybe promote to const-like *)
     let new_kind =
       match kind with
-      | Var (VarBinding spec) ->
-        if promote_to_const_like cx loc then
-          Entry.(Var (VarBinding ConstLike))
-        else if spec <> NotWrittenByClosure && is_not_written_by_closure cx loc then
-          Entry.(Var (VarBinding NotWrittenByClosure))
+      | Var spec ->
+        let spec' = promote_non_const cx loc spec in
+        if spec' != spec then
+          Entry.(Var spec')
         else
           kind
-      | Let (LetVarBinding spec) ->
-        if promote_to_const_like cx loc then
-          Entry.(Let (LetVarBinding ConstLike))
-        else if spec <> NotWrittenByClosure && is_not_written_by_closure cx loc then
-          Entry.(Let (LetVarBinding NotWrittenByClosure))
-        else
-          kind
-      | Let (ClassNameBinding spec) ->
-        if spec <> NotWrittenByClosure && is_not_written_by_closure cx loc then
-          Entry.(Let (ClassNameBinding NotWrittenByClosure))
-        else
-          kind
-      | Let (CatchParamBinding spec) ->
-        if spec <> NotWrittenByClosure && is_not_written_by_closure cx loc then
-          Entry.(Let (CatchParamBinding NotWrittenByClosure))
-        else
-          kind
-      | Let (FunctionBinding spec) ->
-        if spec <> NotWrittenByClosure && is_not_written_by_closure cx loc then
-          Entry.(Let (FunctionBinding NotWrittenByClosure))
-        else
-          kind
-      | Let (ParamBinding spec) ->
-        if spec <> NotWrittenByClosure && is_not_written_by_closure cx loc then
-          Entry.(Let (ParamBinding NotWrittenByClosure))
+      | Let (let_binding, spec) ->
+        let spec' = promote_non_const cx loc spec in
+        if spec' != spec then
+          Entry.(Let (let_binding, spec'))
         else
           kind
       | _ -> kind
@@ -694,13 +681,13 @@ let init_value_entry kind cx ~use_op name ~has_anno specific loc =
            so we can prune this case here. *)
         ())
 
-let init_var = init_value_entry Entry.(Var (VarBinding Havocable))
+let init_var = init_value_entry Entry.(Var Havocable)
 
-let init_let = init_value_entry Entry.(Let (LetVarBinding Havocable))
+let init_let = init_value_entry Entry.(Let (LetVarBinding, Havocable))
 
-let init_implicit_let kind = init_value_entry (Entry.Let kind)
+let init_implicit_let kind = init_value_entry Entry.(Let (kind, Havocable))
 
-let init_fun = init_implicit_let ~has_anno:false Entry.(FunctionBinding Havocable)
+let init_fun = init_implicit_let ~has_anno:false Entry.FunctionBinding
 
 let init_const = init_value_entry Entry.(Const ConstVarBinding)
 
@@ -773,7 +760,7 @@ let value_entry_types ?(lookup_mode = ForValue) scope =
     (* from value positions, a same-activation ref to var or an explicit let
        before initialization yields undefined. *)
     | {
-        Entry.kind = Var _ | Let (LetVarBinding _);
+        Entry.kind = Var _ | Let (LetVarBinding, _);
         value_state = (State.Declared | State.MaybeInitialized) as state;
         value_declare_loc;
         specific;
@@ -807,7 +794,7 @@ let allow_forward_ref =
   Scope.Entry.(
     function
     | Var _
-    | Let (FunctionBinding _) ->
+    | Let (FunctionBinding, _) ->
       true
     | _ -> false)
 
@@ -944,7 +931,7 @@ let check_exported_let_bound_reassignment op cx name entry loc =
   | ( Changeset.Write,
       Value
         {
-          Entry.kind = Let Entry.((ClassNameBinding _ | FunctionBinding _) as binding_kind);
+          Entry.kind = Let Entry.(((ClassNameBinding | FunctionBinding) as binding_kind), _);
           value_declare_loc;
           _;
         },

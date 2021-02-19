@@ -20,8 +20,8 @@ end
 module Entry : sig
   type value_kind =
     | Const of const_binding_kind
-    | Let of let_binding_kind
-    | Var of var_binding_kind
+    | Let of (let_binding_kind * non_const_specialization)
+    | Var of non_const_specialization
 
   and const_binding_kind =
     | ConstImportBinding
@@ -30,13 +30,11 @@ module Entry : sig
     | EnumNameBinding
 
   and let_binding_kind =
-    | LetVarBinding of non_const_specialization
-    | ClassNameBinding of non_const_specialization
-    | CatchParamBinding of non_const_specialization
-    | FunctionBinding of non_const_specialization
-    | ParamBinding of non_const_specialization
-
-  and var_binding_kind = VarBinding of non_const_specialization
+    | LetVarBinding
+    | ClassNameBinding
+    | CatchParamBinding
+    | FunctionBinding
+    | ParamBinding
 
   and non_const_specialization =
     | Havocable
@@ -82,15 +80,13 @@ module Entry : sig
   val new_import : loc:ALoc.t -> Type.t -> t
 
   val new_let :
-    loc:ALoc.t -> ?state:State.t -> ?kind:let_binding_kind -> Type.annotated_or_inferred -> t
-
-  val new_var :
     loc:ALoc.t ->
     ?state:State.t ->
-    ?kind:var_binding_kind ->
-    ?specific:Type.t ->
+    ?kind:let_binding_kind * non_const_specialization ->
     Type.annotated_or_inferred ->
     t
+
+  val new_var : loc:ALoc.t -> ?state:State.t -> ?specific:Type.t -> Type.annotated_or_inferred -> t
 
   val new_type : loc:ALoc.t -> ?state:State.t -> Type.t -> t
 

@@ -48,8 +48,8 @@ module Entry = struct
     (* Some let bindings are explicit (like you wrote let x = 123) and some
      * are implicit (like class declarations). For implicit lets, we should
      * track why this is a let binding for better error messages *)
-    | Let of let_binding_kind
-    | Var of var_binding_kind
+    | Let of (let_binding_kind * non_const_specialization)
+    | Var of non_const_specialization
 
   and const_binding_kind =
     | ConstImportBinding
@@ -58,13 +58,11 @@ module Entry = struct
     | EnumNameBinding
 
   and let_binding_kind =
-    | LetVarBinding of non_const_specialization
-    | ClassNameBinding of non_const_specialization
-    | CatchParamBinding of non_const_specialization
-    | FunctionBinding of non_const_specialization
-    | ParamBinding of non_const_specialization
-
-  and var_binding_kind = VarBinding of non_const_specialization
+    | LetVarBinding
+    | ClassNameBinding
+    | CatchParamBinding
+    | FunctionBinding
+    | ParamBinding
 
   and non_const_specialization =
     | Havocable
@@ -72,19 +70,19 @@ module Entry = struct
     | ConstLike
 
   let string_of_let_binding_kind = function
-    | LetVarBinding _ -> "let"
-    | ClassNameBinding _ -> "class"
-    | CatchParamBinding _ -> "catch"
-    | FunctionBinding _ -> "function"
-    | ParamBinding _ -> "param"
+    | LetVarBinding -> "let"
+    | ClassNameBinding -> "class"
+    | CatchParamBinding -> "catch"
+    | FunctionBinding -> "function"
+    | ParamBinding -> "param"
 
   let string_of_value_kind = function
     | Const ConstImportBinding -> "import"
     | Const ConstParamBinding -> "const param"
     | Const ConstVarBinding -> "const"
     | Const EnumNameBinding -> "enum"
-    | Let kind -> string_of_let_binding_kind kind
-    | Var (VarBinding _) -> "var"
+    | Let (kind, _) -> string_of_let_binding_kind kind
+    | Var _ -> "var"
 
   type value_binding = {
     kind: value_kind;
@@ -135,17 +133,17 @@ module Entry = struct
   let new_import ~loc t =
     new_value (Const ConstImportBinding) State.Initialized t (Type.Inferred t) loc
 
-  let new_let ~loc ?(state = State.Undeclared) ?(kind = LetVarBinding Havocable) general =
+  let new_let ~loc ?(state = State.Undeclared) ?(kind = (LetVarBinding, Havocable)) general =
     let specific = TypeUtil.type_t_of_annotated_or_inferred general in
     new_value (Let kind) state specific general loc
 
-  let new_var ~loc ?(state = State.Undeclared) ?(kind = VarBinding Havocable) ?specific general =
+  let new_var ~loc ?(state = State.Undeclared) ?specific general =
     let specific =
       match specific with
       | Some t -> t
       | None -> TypeUtil.type_t_of_annotated_or_inferred general
     in
-    new_value (Var kind) state specific general loc
+    new_value (Var Havocable) state specific general loc
 
   let new_type_ type_binding_kind state loc type_ =
     Type { type_binding_kind; type_state = state; type_loc = loc; type_ }
@@ -202,16 +200,11 @@ module Entry = struct
       else
         Value { v with specific = TypeUtil.type_t_of_annotated_or_inferred v.general }
     | Value { kind = Const _; _ }
-    | Value { kind = Var (VarBinding ConstLike); _ }
-    | Value { kind = Let (LetVarBinding ConstLike); _ }
-    | Value { kind = Let (ParamBinding ConstLike); _ } ->
+    | Value { kind = Let (_, ConstLike); _ }
+    | Value { kind = Var ConstLike; _ } ->
       entry
-    | Value { kind = Let (LetVarBinding NotWrittenByClosure); _ }
-    | Value { kind = Let (ClassNameBinding NotWrittenByClosure); _ }
-    | Value { kind = Let (CatchParamBinding NotWrittenByClosure); _ }
-    | Value { kind = Let (FunctionBinding NotWrittenByClosure); _ }
-    | Value { kind = Let (ParamBinding NotWrittenByClosure); _ }
-    | Value { kind = Var (VarBinding NotWrittenByClosure); _ }
+    | Value { kind = Let (_, NotWrittenByClosure); _ }
+    | Value { kind = Var NotWrittenByClosure; _ }
       when on_call ->
       entry
     | Value v ->

@@ -366,15 +366,8 @@ module Func_stmt_config = struct
         let kind = Entry.ConstParamBinding in
         Env.bind_implicit_const ~state:State.Initialized kind cx name t loc
       else
-        let kind =
-          if Env.promote_to_const_like cx loc then
-            Entry.(ParamBinding ConstLike)
-          else if Env.is_not_written_by_closure cx loc then
-            Entry.(ParamBinding NotWrittenByClosure)
-          else
-            Entry.(ParamBinding Havocable)
-        in
-        Env.bind_implicit_let ~state:State.Initialized kind cx name t loc)
+        let spec = Env.promote_non_const cx loc Entry.Havocable in
+        Env.bind_implicit_let ~state:State.Initialized (Entry.ParamBinding, spec) cx name t loc)
 
   let destruct cx ~use_op loc name default t =
     Base.Option.iter
@@ -621,7 +614,7 @@ and statement_decl cx =
     let handle_named_class name_loc name =
       let r = mk_reason (RType name) name_loc in
       let tvar = Tvar.mk cx r in
-      Env.bind_implicit_let Scope.Entry.(ClassNameBinding Havocable) cx name tvar name_loc
+      Env.bind_implicit_let Scope.Entry.(ClassNameBinding, Havocable) cx name tvar name_loc
     in
     (match id with
     | Some (name_loc, { Ast.Identifier.name; comments = _ }) -> handle_named_class name_loc name
@@ -857,7 +850,7 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t =
               Scope.(
                 Env.bind_implicit_let
                   ~state:State.Initialized
-                  Entry.(CatchParamBinding Havocable)
+                  Entry.(CatchParamBinding, Havocable)
                   cx
                   name
                   t
@@ -2171,7 +2164,7 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t =
       | Some (name_loc, { Ast.Identifier.name; comments = _ }) -> (name_loc, name)
       | None -> (class_loc, internal_name "*default*")
     in
-    let kind = Scope.Entry.(ClassNameBinding Havocable) in
+    let kind = Scope.Entry.ClassNameBinding in
     let reason = DescFormat.instance_reason name name_loc in
     Env.declare_implicit_let kind cx name name_loc;
     let general = Tvar.mk_where cx reason (Env.unify_declared_type cx name) in
@@ -3626,7 +3619,7 @@ and expression_ ~cond ~annot cx loc e : (ALoc.t, ALoc.t * Type.t) Ast.Expression
     | Some _ ->
       let scope = Scope.fresh () in
       Scope.(
-        let kind = Entry.(ClassNameBinding Havocable) in
+        let kind = Entry.(ClassNameBinding, Havocable) in
         let entry =
           Entry.(new_let (annotated_todo tvar) ~loc:name_loc ~state:State.Declared ~kind)
         in
