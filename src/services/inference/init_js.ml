@@ -70,8 +70,9 @@ let infer_lib_file ~ccx ~options ~exclude_syms lib_file ast file_sig =
       let metadata = metadata_of_options options in
       { metadata with checked = false; weak = false })
   in
-  let rev_table = lazy (ALoc.make_empty_reverse_table ()) in
-  let cx = Context.make ccx metadata lib_file rev_table Files.lib_module_ref Context.InitLib in
+  (* Lib files use only concrete locations, so this is not used. *)
+  let aloc_table = lazy (ALoc.make_table lib_file) in
+  let cx = Context.make ccx metadata lib_file aloc_table Files.lib_module_ref Context.InitLib in
   let syms = Infer.infer_lib_file cx ast ~exclude_syms ~lint_severities ~file_sig in
 
   if verbose != None then
@@ -185,18 +186,17 @@ let error_set_to_filemap err_set =
    returns list of (lib file, success) pairs.
 *)
 let init ~options ~reader lib_files =
-  (* Lib files use only concrete locations, so this is not needed. *)
-  let aloc_tables = FilenameMap.empty in
   let sig_cx = Context.make_sig () in
-  let ccx = Context.make_ccx sig_cx aloc_tables in
+  let ccx = Context.make_ccx sig_cx in
   let master_cx =
     let metadata =
       Context.(
         let metadata = metadata_of_options options in
         { metadata with checked = false; weak = false })
     in
-    let rev_table = lazy (ALoc.make_empty_reverse_table ()) in
-    Context.make ccx metadata File_key.Builtins rev_table Files.lib_module_ref Context.InitLib
+    (* Lib files use only concrete locations, so this is not used. *)
+    let aloc_table = lazy (ALoc.make_table File_key.Builtins) in
+    Context.make ccx metadata File_key.Builtins aloc_table Files.lib_module_ref Context.InitLib
   in
   Flow_js_utils.mk_builtins master_cx;
 

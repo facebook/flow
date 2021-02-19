@@ -218,38 +218,15 @@ let merge_context_new_signatures ~options ~reader component =
   let module Component = Merge.Component in
   (* make sig context, shared by all file contexts in component *)
   let sig_cx = Context.make_sig () in
-  let aloc_tables =
-    Nel.fold_left
-      (fun tables (file : File_key.t) ->
-        let table =
-          lazy (Parsing_heaps.Reader_dispatcher.get_sig_ast_aloc_table_unsafe ~reader file)
-        in
-        FilenameMap.add file table tables)
-      FilenameMap.empty
-      component
-  in
-  let ccx = Context.make_ccx sig_cx aloc_tables in
+  let ccx = Context.make_ccx sig_cx in
 
   (* create per-file contexts *)
   let metadata = Context.metadata_of_options options in
-  let create_cx file =
+  let create_cx file aloc_table =
     let docblock = Parsing_heaps.Reader_dispatcher.get_docblock_unsafe ~reader file in
     let metadata = Context.docblock_overrides docblock metadata in
-    let rev_table =
-      let table = FilenameMap.find file aloc_tables in
-      lazy
-        (try Lazy.force table |> ALoc.reverse_table
-         with
-         (* If we aren't in abstract locations mode, or are in a libdef, we
-            won't have an aloc table, so we just create an empty reverse
-            table. We handle this exception here rather than explicitly
-            making an optional version of the get_aloc_table function for
-            simplicity. *)
-         | Parsing_heaps_exceptions.Sig_ast_ALoc_table_not_found _ ->
-           ALoc.make_empty_reverse_table ())
-    in
     let module_ref = Files.module_ref file in
-    Context.make ccx metadata file rev_table module_ref Context.Merging
+    Context.make ccx metadata file aloc_table module_ref Context.Merging
   in
 
   (* build a reverse lookup, used to detect in-cycle dependencies *)
@@ -308,7 +285,9 @@ let merge_context_new_signatures ~options ~reader component =
   let abstract_locations = Options.abstract_locations options in
   let component_file file =
     let open Type_sig_collections in
-    let aloc_table = FilenameMap.find file aloc_tables in
+    let aloc_table =
+      lazy (Parsing_heaps.Reader_dispatcher.get_sig_ast_aloc_table_unsafe ~reader file)
+    in
     let aloc =
       let source = Some file in
       fun (loc : Locs.index) ->
@@ -344,7 +323,7 @@ let merge_context_new_signatures ~options ~reader component =
     let patterns = Patterns.map (fun p -> Merge.create_node (Pack.map_pattern aloc p)) patterns in
     {
       Merge.key = file;
-      cx = create_cx file;
+      cx = create_cx file aloc_table;
       dependencies;
       exports;
       export_def;

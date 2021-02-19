@@ -434,27 +434,6 @@ let detect_literal_subtypes =
         Flow_js.flow cx (t, u))
       checks
 
-let get_aloc_tables ~get_aloc_table_unsafe component =
-  Nel.fold_left
-    (fun tables filename ->
-      let table = lazy (get_aloc_table_unsafe filename) in
-      FilenameMap.add filename table tables)
-    FilenameMap.empty
-    component
-
-let get_aloc_table_rev filename aloc_tables =
-  let table = FilenameMap.find filename aloc_tables in
-  lazy
-    (try Lazy.force table |> ALoc.reverse_table
-     with
-     (* If we aren't in abstract locations mode, or are in a libdef, we
-        won't have an aloc table, so we just create an empty reverse
-        table. We handle this exception here rather than explicitly
-        making an optional version of the get_aloc_table function for
-        simplicity. *)
-     | Parsing_heaps_exceptions.Sig_ast_ALoc_table_not_found _ ->
-       ALoc.make_empty_reverse_table ())
-
 let merge_builtins cx sig_cx master_cx =
   Flow_js_utils.mk_builtins cx;
   Context.merge_into sig_cx master_cx;
@@ -570,9 +549,8 @@ type output =
 let merge_component ~opts ~getters ~file_sigs component reqs dep_cxs master_cx =
   let (Merge_options { metadata; lint_severities; strict_mode; _ }) = opts in
   let { get_ast_unsafe; get_aloc_table_unsafe; get_docblock_unsafe } = getters in
-  let aloc_tables = get_aloc_tables ~get_aloc_table_unsafe component in
   let sig_cx = Context.make_sig () in
-  let ccx = Context.make_ccx sig_cx aloc_tables in
+  let ccx = Context.make_ccx sig_cx in
   let need_merge_master_cx = ref true in
   (* Iterate over component *)
   let (rev_results, impl_cxs) =
@@ -581,8 +559,8 @@ let merge_component ~opts ~getters ~file_sigs component reqs dep_cxs master_cx =
         let info = get_docblock_unsafe filename in
         let metadata = Context.docblock_overrides info metadata in
         let module_ref = Files.module_ref filename in
-        let rev_table = get_aloc_table_rev filename aloc_tables in
-        let cx = Context.make ccx metadata filename rev_table module_ref Context.Merging in
+        let aloc_table = lazy (get_aloc_table_unsafe filename) in
+        let cx = Context.make ccx metadata filename aloc_table module_ref Context.Merging in
 
         (* Builtins *)
         if !need_merge_master_cx then (
@@ -622,14 +600,13 @@ let merge_component ~opts ~getters ~file_sigs component reqs dep_cxs master_cx =
 let check_file ~opts ~getters ~file_sigs filename reqs dep_cxs master_cx =
   let (Merge_options { metadata; lint_severities; strict_mode; _ }) = opts in
   let { get_ast_unsafe; get_aloc_table_unsafe; get_docblock_unsafe } = getters in
-  let aloc_tables = get_aloc_tables ~get_aloc_table_unsafe (Nel.one filename) in
   let sig_cx = Context.make_sig () in
-  let ccx = Context.make_ccx sig_cx aloc_tables in
+  let ccx = Context.make_ccx sig_cx in
   let info = get_docblock_unsafe filename in
   let metadata = Context.docblock_overrides info metadata in
   let module_ref = Files.module_ref filename in
-  let rev_table = get_aloc_table_rev filename aloc_tables in
-  let cx = Context.make ccx metadata filename rev_table module_ref Context.Checking in
+  let aloc_table = lazy (get_aloc_table_unsafe filename) in
+  let cx = Context.make ccx metadata filename aloc_table module_ref Context.Checking in
   let (comments, ast) = get_ast_unsafe filename in
   let lint_severities = get_lint_severities metadata strict_mode lint_severities in
   let file_sig = FilenameMap.find filename file_sigs in

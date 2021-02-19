@@ -113,7 +113,7 @@ type sig_t = {
 type component_t = {
   sig_cx: sig_t;
   (* mapping from keyed alocs to concrete locations *)
-  aloc_tables: ALoc.table Lazy.t Utils_js.FilenameMap.t;
+  mutable aloc_tables: ALoc.table Lazy.t Utils_js.FilenameMap.t;
   (* map from goal ids to types *)
   mutable goal_map: Type.t IMap.t;
   (* graph tracking full resolution of types *)
@@ -296,10 +296,10 @@ let make_sig () =
     module_map = SMap.empty;
   }
 
-let make_ccx sig_cx aloc_tables =
+let make_ccx sig_cx =
   {
     sig_cx;
-    aloc_tables;
+    aloc_tables = Utils_js.FilenameMap.empty;
     goal_map = IMap.empty;
     type_graph = Graph_explorer.new_graph ();
     all_unresolved = IMap.empty;
@@ -335,7 +335,20 @@ let make_ccx sig_cx aloc_tables =
 (* create a new context structure.
    Flow_js.fresh_context prepares for actual use.
 *)
-let make ccx metadata file rev_aloc_table module_ref phase =
+let make ccx metadata file aloc_table module_ref phase =
+  ccx.aloc_tables <- Utils_js.FilenameMap.add file aloc_table ccx.aloc_tables;
+  let rev_aloc_table =
+    lazy
+      (try Lazy.force aloc_table |> ALoc.reverse_table
+       with
+       (* If we aren't in abstract locations mode, or are in a libdef, we
+          won't have an aloc table, so we just create an empty reverse
+          table. We handle this exception here rather than explicitly
+          making an optional version of the get_aloc_table function for
+          simplicity. *)
+       | Parsing_heaps_exceptions.Sig_ast_ALoc_table_not_found _ ->
+         ALoc.make_empty_reverse_table ())
+  in
   {
     ccx;
     file;

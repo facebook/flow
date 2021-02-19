@@ -118,11 +118,10 @@ let before_and_after_stmts file_name =
   | Error e -> Error e
   | Ok ((_, { Flow_ast.Program.statements = stmts; _ }), file_sig) ->
     let cx =
-      let aloc_tables = Utils_js.FilenameMap.empty in
-      let rev_table = lazy (ALoc.make_empty_reverse_table ()) in
+      let aloc_table = lazy (ALoc.make_table file_key) in
       let sig_cx = Context.make_sig () in
-      let ccx = Context.make_ccx sig_cx aloc_tables in
-      Context.make ccx metadata file_key rev_table Files.lib_module_ref Context.Checking
+      let ccx = Context.make_ccx sig_cx in
+      Context.make ccx metadata file_key aloc_table Files.lib_module_ref Context.Checking
     in
     Flow_js_utils.mk_builtins cx;
     add_require_tvars cx file_sig;
