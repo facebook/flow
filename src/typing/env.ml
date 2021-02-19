@@ -619,8 +619,10 @@ let written_by_closure cx loc =
   in
   writes_by_closure
 
-let promote_non_const cx loc spec =
-  if spec <> Entry.ConstLike && is_const_like cx loc then
+let promote_non_const cx name loc spec =
+  if Reason.is_internal_name name then
+    (None, spec)
+  else if spec <> Entry.ConstLike && is_const_like cx loc then
     (None, Entry.ConstLike)
   else if spec <> Entry.NotWrittenByClosure then
     let writes_by_closure = written_by_closure cx loc in
@@ -647,7 +649,7 @@ let initialized_value_entry cx name kind specific loc v =
     let (closure_writes, new_kind) =
       match kind with
       | Var spec ->
-        let (writes_by_closure_opt, spec') = promote_non_const cx loc spec in
+        let (writes_by_closure_opt, spec') = promote_non_const cx name loc spec in
         ( mk_closure_writes
             cx
             name
@@ -660,7 +662,7 @@ let initialized_value_entry cx name kind specific loc v =
           else
             kind )
       | Let (let_binding, spec) ->
-        let (writes_by_closure_opt, spec') = promote_non_const cx loc spec in
+        let (writes_by_closure_opt, spec') = promote_non_const cx name loc spec in
         ( mk_closure_writes
             cx
             name

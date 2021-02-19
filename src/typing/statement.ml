@@ -366,17 +366,17 @@ module Func_stmt_config = struct
         let kind = Entry.ConstParamBinding in
         Env.bind_implicit_const ~state:State.Initialized kind cx name t loc
       else
-        let (_, spec) = Env.promote_non_const cx loc Entry.Havocable in
+        let (_, spec) = Env.promote_non_const cx name loc Entry.Havocable in
         Env.bind_implicit_let ~state:State.Initialized (Entry.ParamBinding, spec) cx name t loc)
 
-  let destruct cx ~use_op loc name default t =
+  let destruct cx ~use_op ~name_loc name default t =
     Base.Option.iter
       ~f:(fun d ->
-        let reason = mk_reason (RIdentifier name) loc in
+        let reason = mk_reason (RIdentifier name) name_loc in
         let default_t = Flow.mk_default cx reason d in
         Flow.flow cx (default_t, UseT (use_op, t)))
       default;
-    bind cx name t loc;
+    bind cx name t name_loc;
     t
 
   let eval_default cx ~expr = function
@@ -811,7 +811,7 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t =
     let reason = DescFormat.instance_reason name name_loc in
     let (iface_sig, iface_t, decl_ast) = Anno.mk_interface_sig cx reason decl in
     let t = interface_helper cx loc (iface_sig, iface_t) in
-    Env.init_type cx name t loc;
+    Env.init_type cx name t name_loc;
     decl_ast
   in
   let declare_class cx loc decl =
@@ -822,7 +822,7 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t =
     let use_op =
       Op (AssignVar { var = Some (mk_reason (RIdentifier name) loc); init = reason_of_t t })
     in
-    Env.init_var ~has_anno:false cx ~use_op name t loc;
+    Env.init_var ~has_anno:false cx ~use_op name t name_loc;
     decl_ast
   in
   let check cx b =
@@ -2081,19 +2081,20 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t =
     let { Ast.Function.id; sig_loc; async; generator; _ } = func in
     let reason = func_reason ~async ~generator sig_loc in
     let func_ast =
-      let handle_named_function name =
+      let handle_named_function name name_loc =
         let general = Tvar.mk_where cx reason (Env.unify_declared_type cx name) in
         let (fn_type, func_ast) = mk_function_declaration None cx ~general reason func in
         let use_op =
           Op
             (AssignVar { var = Some (mk_reason (RIdentifier name) loc); init = reason_of_t fn_type })
         in
-        Env.init_fun cx ~use_op name fn_type loc;
+        Env.init_fun cx ~use_op name fn_type name_loc;
         func_ast
       in
       match id with
-      | Some (_, { Ast.Identifier.name; comments = _ }) -> handle_named_function name
-      | None -> handle_named_function (internal_name "*default*")
+      | Some (name_loc, { Ast.Identifier.name; comments = _ }) ->
+        handle_named_function name name_loc
+      | None -> handle_named_function (internal_name "*default*") loc
     in
     (loc, FunctionDeclaration func_ast)
   | (loc, EnumDeclaration enum) ->
@@ -3122,9 +3123,9 @@ and variable cx kind ?if_uninitialized id init =
         ~expr:(expression ~annot:None)
         init
         id
-        ~f:(fun ~use_op loc name default t ->
-          let reason = mk_reason (RIdentifier name) loc in
-          declare_var cx name loc;
+        ~f:(fun ~use_op ~name_loc name default t ->
+          let reason = mk_reason (RIdentifier name) name_loc in
+          declare_var cx name name_loc;
 
           (* The bindings introduced by destructuring an annotation should themselves behave
            * like annotations. That is, subsequent writes to this binding should be compatible
@@ -3150,11 +3151,11 @@ and variable cx kind ?if_uninitialized id init =
           let id_node_type =
             if has_anno then (
               Env.unify_declared_type cx name t;
-              Env.pseudo_init_declared_type cx name loc;
+              Env.pseudo_init_declared_type cx name name_loc;
               t
             ) else (
-              init_var cx ~use_op name ~has_anno t loc;
-              Env.get_var_declared_type cx name loc
+              init_var cx ~use_op name ~has_anno t name_loc;
+              Env.get_var_declared_type cx name name_loc
             )
           in
           Flow.flow cx (t, AssertImportIsValueT (reason, name));

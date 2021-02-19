@@ -45,6 +45,7 @@ val update_env : ALoc.t -> t -> unit
 
 val promote_non_const :
   Context.t ->
+  string ->
   ALoc.t ->
   Entry.non_const_specialization ->
   Loc_collections.ALocSet.t option * Entry.non_const_specialization
