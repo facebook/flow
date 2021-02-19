@@ -1623,6 +1623,26 @@ end = struct
       [TypeTerm.UseT (use_op, t)]
 end
 
+and TypeContext : sig
+  type t = {
+    (* map from tvar ids to nodes (type info structures) *)
+    graph: Constraint.node IMap.t;
+    (* map from tvar ids to trust nodes *)
+    trust_graph: Trust_constraint.node IMap.t;
+    (* obj types point to mutable property maps *)
+    property_maps: Properties.map;
+    (* indirection to support context opt *)
+    call_props: TypeTerm.t IMap.t;
+    (* modules point to mutable export maps *)
+    export_maps: Exports.map;
+    (* map from evaluation ids to types *)
+    evaluated: TypeTerm.t Eval.Map.t;
+    (* map from module names to their types *)
+    module_map: TypeTerm.t SMap.t;
+  }
+end =
+  TypeContext
+
 and UnionEnum : sig
   type t =
     | Str of string

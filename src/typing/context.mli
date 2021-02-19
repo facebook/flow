@@ -36,7 +36,7 @@ type component_t
 (* 3. Inter-component information, i.e., stuff that we might want to know about
  * dependencies, like what modules they export and what types correspond to what
  * resolved tvars. *)
-type sig_t
+type sig_t = Type.TypeContext.t
 
 type metadata = {
   (* local *)
@@ -112,9 +112,7 @@ type subst_cache_err =
   | ETooFewTypeArgs of ALoc.t Reason.virtual_reason * int
   | ETooManyTypeArgs of ALoc.t Reason.virtual_reason * int
 
-val make_sig : unit -> sig_t
-
-val make_ccx : sig_t -> component_t
+val make_ccx : unit -> component_t
 
 val make : component_t -> metadata -> File_key.t -> ALoc.table Lazy.t -> string -> phase -> t
 
@@ -289,7 +287,7 @@ val pid_prefix : t -> string
 
 val copy_of_context : t -> t
 
-val merge_into : sig_t -> sig_t -> unit
+val merge_into : component_t -> sig_t -> unit
 
 val automatic_require_default : t -> bool
 

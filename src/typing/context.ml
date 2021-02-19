@@ -5,6 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
+open Type.TypeContext
 module ALocMap = Loc_collections.ALocMap
 module Scope_api = Scope_api.With_ALoc
 
@@ -93,25 +94,10 @@ type subst_cache_err =
   | ETooFewTypeArgs of ALoc.t Reason.virtual_reason * int
   | ETooManyTypeArgs of ALoc.t Reason.virtual_reason * int
 
-type sig_t = {
-  (* map from tvar ids to nodes (type info structures) *)
-  mutable graph: Type.Constraint.node IMap.t;
-  (* map from tvar ids to trust nodes *)
-  mutable trust_graph: Trust_constraint.node IMap.t;
-  (* obj types point to mutable property maps *)
-  mutable property_maps: Type.Properties.map;
-  (* indirection to support context opt *)
-  mutable call_props: Type.t IMap.t;
-  (* modules point to mutable export maps *)
-  mutable export_maps: Type.Exports.map;
-  (* map from evaluation ids to types *)
-  mutable evaluated: Type.t Type.Eval.Map.t;
-  (* map from module names to their types *)
-  mutable module_map: Type.t SMap.t;
-}
+type sig_t = Type.TypeContext.t
 
 type component_t = {
-  sig_cx: sig_t;
+  mutable sig_cx: sig_t;
   (* mapping from keyed alocs to concrete locations *)
   mutable aloc_tables: ALoc.table Lazy.t Utils_js.FilenameMap.t;
   (* map from goal ids to types *)
@@ -285,7 +271,7 @@ let docblock_overrides docblock_info metadata =
 
 let empty_use_def = (Scope_api.{ max_distinct = 0; scopes = IMap.empty }, ALocMap.empty)
 
-let make_sig () =
+let empty_sig_cx =
   {
     graph = IMap.empty;
     trust_graph = IMap.empty;
@@ -296,9 +282,9 @@ let make_sig () =
     module_map = SMap.empty;
   }
 
-let make_ccx sig_cx =
+let make_ccx () =
   {
-    sig_cx;
+    sig_cx = empty_sig_cx;
     aloc_tables = Utils_js.FilenameMap.empty;
     goal_map = IMap.empty;
     type_graph = Graph_explorer.new_graph ();
@@ -581,20 +567,7 @@ let pid_prefix (cx : t) =
 
 (* Create a shallow copy of this context, so that mutations to the sig_cx's
  * fields will not affect the copy. *)
-let copy_of_context cx =
-  {
-    cx with
-    ccx =
-      {
-        cx.ccx with
-        sig_cx =
-          {
-            cx.ccx.sig_cx with
-            graph = cx.ccx.sig_cx.graph;
-            trust_graph = cx.ccx.sig_cx.trust_graph;
-          };
-      };
-  }
+let copy_of_context cx = { cx with ccx = { cx.ccx with sig_cx = cx.ccx.sig_cx } }
 
 (* mutators *)
 let add_env cx frame env = cx.ccx.envs <- IMap.add frame env cx.ccx.envs
@@ -614,20 +587,28 @@ let add_lint_suppressions cx suppressions =
 let add_require cx loc tvar = cx.require_map <- ALocMap.add loc tvar cx.require_map
 
 let add_module cx name tvar =
-  cx.ccx.sig_cx.module_map <- SMap.add name tvar cx.ccx.sig_cx.module_map
+  let module_map = SMap.add name tvar cx.ccx.sig_cx.module_map in
+  cx.ccx.sig_cx <- { cx.ccx.sig_cx with module_map }
 
 let add_property_map cx id pmap =
-  cx.ccx.sig_cx.property_maps <- Type.Properties.Map.add id pmap cx.ccx.sig_cx.property_maps
+  let property_maps = Type.Properties.Map.add id pmap cx.ccx.sig_cx.property_maps in
+  cx.ccx.sig_cx <- { cx.ccx.sig_cx with property_maps }
 
-let add_call_prop cx id t = cx.ccx.sig_cx.call_props <- IMap.add id t cx.ccx.sig_cx.call_props
+let add_call_prop cx id t =
+  let call_props = IMap.add id t cx.ccx.sig_cx.call_props in
+  cx.ccx.sig_cx <- { cx.ccx.sig_cx with call_props }
 
 let add_export_map cx id tmap =
-  cx.ccx.sig_cx.export_maps <- Type.Exports.Map.add id tmap cx.ccx.sig_cx.export_maps
+  let export_maps = Type.Exports.Map.add id tmap cx.ccx.sig_cx.export_maps in
+  cx.ccx.sig_cx <- { cx.ccx.sig_cx with export_maps }
 
-let add_tvar cx id bounds = cx.ccx.sig_cx.graph <- IMap.add id bounds cx.ccx.sig_cx.graph
+let add_tvar cx id bounds =
+  let graph = IMap.add id bounds cx.ccx.sig_cx.graph in
+  cx.ccx.sig_cx <- { cx.ccx.sig_cx with graph }
 
 let add_trust_var cx id bounds =
-  cx.ccx.sig_cx.trust_graph <- IMap.add id bounds cx.ccx.sig_cx.trust_graph
+  let trust_graph = IMap.add id bounds cx.ccx.sig_cx.trust_graph in
+  cx.ccx.sig_cx <- { cx.ccx.sig_cx with trust_graph }
 
 let add_nominal_prop_id cx id = cx.ccx.nominal_prop_ids <- ISet.add id cx.ccx.nominal_prop_ids
 
@@ -649,25 +630,27 @@ let add_implicit_instantiation_check cx fun_or_class call_or_constructor =
     cx.ccx.implicit_instantiation_checks <-
       implicit_instantiation_check :: cx.ccx.implicit_instantiation_checks
 
-let remove_tvar cx id = cx.ccx.sig_cx.graph <- IMap.remove id cx.ccx.sig_cx.graph
+let remove_tvar cx id =
+  let graph = IMap.remove id cx.ccx.sig_cx.graph in
+  cx.ccx.sig_cx <- { cx.ccx.sig_cx with graph }
 
 let set_all_unresolved cx all_unresolved = cx.ccx.all_unresolved <- all_unresolved
 
 let set_envs cx envs = cx.ccx.envs <- envs
 
-let set_evaluated cx evaluated = cx.ccx.sig_cx.evaluated <- evaluated
+let set_evaluated cx evaluated = cx.ccx.sig_cx <- { cx.ccx.sig_cx with evaluated }
 
 let set_goals cx goals = cx.ccx.goal_map <- goals
 
-let set_graph cx graph = cx.ccx.sig_cx.graph <- graph
+let set_graph cx graph = cx.ccx.sig_cx <- { cx.ccx.sig_cx with graph }
 
-let set_trust_graph cx trust_graph = cx.ccx.sig_cx.trust_graph <- trust_graph
+let set_trust_graph cx trust_graph = cx.ccx.sig_cx <- { cx.ccx.sig_cx with trust_graph }
 
-let set_property_maps cx property_maps = cx.ccx.sig_cx.property_maps <- property_maps
+let set_property_maps cx property_maps = cx.ccx.sig_cx <- { cx.ccx.sig_cx with property_maps }
 
-let set_call_props cx call_props = cx.ccx.sig_cx.call_props <- call_props
+let set_call_props cx call_props = cx.ccx.sig_cx <- { cx.ccx.sig_cx with call_props }
 
-let set_export_maps cx export_maps = cx.ccx.sig_cx.export_maps <- export_maps
+let set_export_maps cx export_maps = cx.ccx.sig_cx <- { cx.ccx.sig_cx with export_maps }
 
 let set_type_graph cx type_graph = cx.ccx.type_graph <- type_graph
 
@@ -679,7 +662,7 @@ let set_use_def cx use_def = cx.use_def <- use_def
 
 let set_local_env cx exported_locals = cx.exported_locals <- exported_locals
 
-let set_module_map cx module_map = cx.ccx.sig_cx.module_map <- module_map
+let set_module_map cx module_map = cx.ccx.sig_cx <- { cx.ccx.sig_cx with module_map }
 
 (* Given a sig context, it makes sense to clear the parts that are shared with
    the master sig context. Why? The master sig context, which contains global
@@ -691,20 +674,23 @@ let clear_master_shared cx master_cx =
   let module PMap = Type.Properties.Map in
   let module EMap = Type.Exports.Map in
   let sig_cx = cx.ccx.sig_cx in
-  sig_cx.graph <- IMap.filter (fun id _ -> not (IMap.mem id master_cx.graph)) sig_cx.graph;
-  sig_cx.trust_graph <-
-    IMap.filter (fun id _ -> not (IMap.mem id master_cx.trust_graph)) sig_cx.trust_graph;
-  sig_cx.property_maps <-
-    PMap.filter (fun id _ -> not (PMap.mem id master_cx.property_maps)) sig_cx.property_maps;
-  sig_cx.call_props <-
-    IMap.filter (fun id _ -> not (IMap.mem id master_cx.call_props)) sig_cx.call_props;
-  sig_cx.evaluated <-
-    Type.Eval.Map.filter
-      (fun id _ -> not (Type.Eval.Map.mem id master_cx.evaluated))
-      sig_cx.evaluated;
-  sig_cx.export_maps <-
-    EMap.filter (fun id _ -> not (EMap.mem id master_cx.export_maps)) sig_cx.export_maps;
-  ()
+  cx.ccx.sig_cx <-
+    {
+      graph = IMap.filter (fun id _ -> not (IMap.mem id master_cx.graph)) sig_cx.graph;
+      trust_graph =
+        IMap.filter (fun id _ -> not (IMap.mem id master_cx.trust_graph)) sig_cx.trust_graph;
+      property_maps =
+        PMap.filter (fun id _ -> not (PMap.mem id master_cx.property_maps)) sig_cx.property_maps;
+      call_props =
+        IMap.filter (fun id _ -> not (IMap.mem id master_cx.call_props)) sig_cx.call_props;
+      evaluated =
+        Type.Eval.Map.filter
+          (fun id _ -> not (Type.Eval.Map.mem id master_cx.evaluated))
+          sig_cx.evaluated;
+      export_maps =
+        EMap.filter (fun id _ -> not (EMap.mem id master_cx.export_maps)) sig_cx.export_maps;
+      module_map = cx.ccx.sig_cx.module_map;
+    }
 
 let test_prop_hit cx id =
   cx.ccx.test_prop_hits_and_misses <- IMap.add id Hit cx.ccx.test_prop_hits_and_misses
@@ -832,14 +818,18 @@ let generate_poly_id cx =
 let make_source_poly_id cx aloc = make_aloc_id cx aloc |> Type.Poly.id_of_aloc_id
 
 (* Copy context from cx_other to cx *)
-let merge_into sig_cx sig_cx_other =
-  sig_cx.property_maps <- Type.Properties.Map.union sig_cx_other.property_maps sig_cx.property_maps;
-  sig_cx.call_props <- IMap.union sig_cx_other.call_props sig_cx.call_props;
-  sig_cx.export_maps <- Type.Exports.Map.union sig_cx_other.export_maps sig_cx.export_maps;
-  sig_cx.evaluated <- Type.Eval.Map.union sig_cx_other.evaluated sig_cx.evaluated;
-  sig_cx.graph <- IMap.union sig_cx_other.graph sig_cx.graph;
-  sig_cx.trust_graph <- IMap.union sig_cx_other.trust_graph sig_cx.trust_graph;
-  ()
+let merge_into ccx sig_cx_other =
+  let sig_cx = ccx.sig_cx in
+  ccx.sig_cx <-
+    {
+      sig_cx with
+      property_maps = Type.Properties.Map.union sig_cx_other.property_maps sig_cx.property_maps;
+      call_props = IMap.union sig_cx_other.call_props sig_cx.call_props;
+      export_maps = Type.Exports.Map.union sig_cx_other.export_maps sig_cx.export_maps;
+      evaluated = Type.Eval.Map.union sig_cx_other.evaluated sig_cx.evaluated;
+      graph = IMap.union sig_cx_other.graph sig_cx.graph;
+      trust_graph = IMap.union sig_cx_other.trust_graph sig_cx.trust_graph;
+    }
 
 (* Find the constraints of a type variable in the graph.
 

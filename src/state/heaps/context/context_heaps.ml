@@ -147,8 +147,7 @@ end = struct
     (* Ideally we'd assert that leader_f is a member of the oldified files, but it's a little too
      * expensive to send the set of oldified files to the worker *)
     let leader_f = Nel.hd component in
-    let sig_cx = Context.make_sig () in
-    let ccx = Context.make_ccx sig_cx in
+    let ccx = Context.make_ccx () in
     let cx =
       let metadata = Context.metadata_of_options options in
       (* This context is only used to add *something* to the sighash when we encounter an unexpected
@@ -172,7 +171,7 @@ end = struct
             (Nel.to_list component)
         in
         let xx = Merge_js.ContextOptimizer.sig_context cx module_refs in
-        add_sig_context ~audit leader_f sig_cx;
+        add_sig_context ~audit leader_f (Context.sig_cx cx);
         SigHashHeap.add leader_f xx)
 
   let revive_files oldified_files files =

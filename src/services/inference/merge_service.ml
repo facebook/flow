@@ -216,8 +216,7 @@ let merge_context_new_signatures ~options ~reader component =
   let module Pack = Type_sig_pack in
   let module Merge = Type_sig_merge in
   (* make sig context, shared by all file contexts in component *)
-  let sig_cx = Context.make_sig () in
-  let ccx = Context.make_ccx sig_cx in
+  let ccx = Context.make_ccx () in
 
   (* create per-file contexts *)
   let metadata = Context.metadata_of_options options in
@@ -255,7 +254,7 @@ let merge_context_new_signatures ~options ~reader component =
       | Some dep_sig -> dep_sig
       | None ->
         let dep_sig = Context_heaps.Reader_dispatcher.find_sig ~reader leader in
-        Context.merge_into sig_cx dep_sig;
+        Context.merge_into ccx dep_sig;
         Hashtbl.add cache leader dep_sig;
         dep_sig
   in
@@ -426,7 +425,7 @@ let merge_context_new_signatures ~options ~reader component =
   (* create builtins, merge master cx *)
   let master_cx = Context_heaps.Reader_dispatcher.find_sig ~reader File_key.Builtins in
   Flow_js_utils.mk_builtins cx;
-  Context.merge_into sig_cx master_cx;
+  Context.merge_into ccx master_cx;
   Flow_js.flow_t
     cx
     ( Context.find_module_sig master_cx Files.lib_module_ref,

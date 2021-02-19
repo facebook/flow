@@ -188,8 +188,7 @@ let get_master_cx root =
 
 let init_builtins filenames =
   let root = Path.dummy_path in
-  let sig_cx = Context.make_sig () in
-  let ccx = Context.make_ccx sig_cx in
+  let ccx = Context.make_ccx () in
   let master_cx =
     (* Lib files use only concrete locations, so this is not used. *)
     let aloc_table = lazy (ALoc.make_table File_key.Builtins) in
@@ -217,7 +216,7 @@ let init_builtins filenames =
   let builtin_module = Obj_type.mk_unsealed master_cx reason in
   Flow_js.flow_t master_cx (builtin_module, Flow_js_utils.builtins master_cx);
   ignore (Merge_js.ContextOptimizer.sig_context master_cx [Files.lib_module_ref]);
-  master_cx_ref := Some (root, sig_cx)
+  master_cx_ref := Some (root, Context.sig_cx master_cx)
 
 let infer_and_merge ~root filename ast file_sig =
   (* this is a VERY pared-down version of Merge_service.merge_strict_context.
