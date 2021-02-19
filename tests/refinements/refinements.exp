@@ -893,6 +893,23 @@ References:
                           ^^^^^ [2]
 
 
+Error ---------------------------------------------------------------------------------------------- issue-7104.js:22:15
+
+Cannot cast `box` to empty because object literal [1] is incompatible with empty [2]. [incompatible-cast]
+
+   issue-7104.js:22:15
+   22|       return (box: empty).value;
+                     ^^^
+
+References:
+   issue-7104.js:11:15
+   11|         box = { type: "BAD", value: t };
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   issue-7104.js:22:20
+   22|       return (box: empty).value;
+                          ^^^^^ [2]
+
+
 Error ---------------------------------------------------------------------------------------------- issue-7541.js:10:10
 
 Cannot return `a` because number [1] is incompatible with string [2]. [incompatible-return]
@@ -3910,7 +3927,7 @@ Cannot perform arithmetic operation because undefined [1] is not a number. [unsa
 
 
 
-Found 257 errors
+Found 258 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches

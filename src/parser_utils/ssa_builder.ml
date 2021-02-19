@@ -1051,6 +1051,17 @@ struct
         this#havoc_current_ssa_env;
         expr
 
+      method! unary_expression _loc (expr : (L.t, L.t) Ast.Expression.Unary.t) =
+        Ast.Expression.Unary.(
+          let { argument; operator; comments = _ } = expr in
+          ignore @@ this#expression argument;
+          begin
+            match operator with
+            | Await -> this#havoc_current_ssa_env
+            | _ -> ()
+          end;
+          expr)
+
       (* Labeled statements handle labeled breaks, but also push labeled continues
          that are expected to be handled by immediately nested loops. *)
       method! labeled_statement _loc (stmt : (L.t, L.t) Ast.Statement.Labeled.t) =

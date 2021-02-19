@@ -5318,7 +5318,7 @@ and unary cx loc =
              local = true;
            })
     in
-    ( func_call cx reason ~use_op ~havoc:false await None [Arg arg],
+    ( func_call cx reason ~use_op await None [Arg arg],
       { operator = Await; argument = argument_ast; comments } )
 
 (* numeric pre/post inc/dec *)
