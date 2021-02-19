@@ -200,6 +200,37 @@ let add_name_field reason =
   in
   SMap.update "name" f
 
+let require file loc index =
+  let (mref, mk_module_t) = Module_refs.get file.dependencies index in
+  let reason = Reason.(mk_reason (RCommonJSExports mref) loc) in
+  Tvar.mk_where file.cx reason (fun tout ->
+      Flow_js.flow file.cx (mk_module_t loc, Type.CJSRequireT (reason, tout, false)))
+
+let import file reason id_loc index kind ~remote ~local =
+  let (mref, mk_module_t) = Module_refs.get file.dependencies index in
+  Tvar.mk_where file.cx reason (fun tout ->
+      Flow_js.flow
+        file.cx
+        ( mk_module_t id_loc,
+          if remote = "default" then
+            Type.ImportDefaultT (reason, kind, (local, mref), tout, false)
+          else
+            Type.ImportNamedT (reason, kind, remote, mref, tout, false) ))
+
+let import_ns file reason id_loc index =
+  let (_, mk_module_t) = Module_refs.get file.dependencies index in
+  Tvar.mk_where file.cx reason (fun tout ->
+      Flow_js.flow file.cx (mk_module_t id_loc, Type.ImportModuleNsT (reason, tout, false)))
+
+let import_typeof_ns file reason id_loc index =
+  let (_, mk_module_t) = Module_refs.get file.dependencies index in
+  let ns_t =
+    Tvar.mk_where file.cx reason (fun tout ->
+        Flow_js.flow file.cx (mk_module_t id_loc, Type.ImportModuleNsT (reason, tout, false)))
+  in
+  Tvar.mk_where file.cx reason (fun tout ->
+      Flow_js.flow file.cx (ns_t, Type.ImportTypeofT (reason, "*", tout)))
+
 let merge_enum file reason id_loc enum_name rep members has_unknown_members =
   let rep_reason desc = Reason.(mk_reason (REnumRepresentation desc) id_loc) in
   let rep_t desc def_t = Type.DefT (rep_reason desc, trust, def_t) in
@@ -232,34 +263,7 @@ let merge_enum file reason id_loc enum_name rep members has_unknown_members =
         trust,
         EnumObjectT { enum_id; enum_name; members; representation_t; has_unknown_members } ))
 
-let rec merge file = function
-  | Pack.Annot t -> merge_annot file t
-  | Pack.Value t -> merge_value file t
-  | Pack.Ref ref -> merge_ref file (fun t _ _ -> t) ref
-  | Pack.TyRef name ->
-    let f t ref_loc (name, _) =
-      let reason = Reason.(mk_annot_reason (RType name) ref_loc) in
-      Flow_js.mk_instance file.cx reason t
-    in
-    merge_tyref file f name
-  | Pack.TyRefApp { loc; name; targs } ->
-    let targs = List.map (merge file) targs in
-    let f t _ _ = TypeUtil.typeapp_annot loc t targs in
-    merge_tyref file f name
-  | Pack.AsyncVoidReturn loc -> async_void_return file loc
-  | Pack.Pattern i -> Lazy.force (Patterns.get file.patterns i)
-  | Pack.Err loc -> Type.(AnyT.at (AnyError None) loc)
-  | Pack.Eval (loc, t, op) ->
-    let t = merge file t in
-    let op = merge_op file op in
-    eval file loc t op
-  | Pack.Require { loc; index } -> require file loc index
-  | Pack.ModuleRef { loc; index } ->
-    let t = require file loc index in
-    let reason = Reason.(mk_reason (RCustom "module reference") loc) in
-    Flow_js.get_builtin_typeapp file.cx reason "$Flow$ModuleRef" [t]
-
-and merge_pattern file = function
+let merge_pattern file = function
   | Pack.PDef i -> Lazy.force (Pattern_defs.get file.pattern_defs i)
   | Pack.PropP { id_loc; name; def } ->
     let t = Lazy.force (Patterns.get file.patterns def) in
@@ -302,35 +306,7 @@ and merge_pattern file = function
     Tvar.mk_where file.cx reason (fun tout ->
         Flow_js.flow file.cx (t, Type.ArrRestT (use_op, reason, i, tout)))
 
-and merge_def file reason = function
-  | TypeAlias { id_loc = _; name; tparams; body } -> merge_type_alias file reason name tparams body
-  | OpaqueType { id_loc; name; tparams; body; bound } ->
-    let id = Context.make_aloc_id file.cx id_loc in
-    merge_opaque_type file reason id name tparams bound body
-  | Interface { id_loc; name = _; tparams; def } ->
-    let id = Context.make_aloc_id file.cx id_loc in
-    let t targs =
-      let t = merge_interface ~inline:false file reason id def targs in
-      TypeUtil.class_type t
-    in
-    merge_tparams_targs file reason t tparams
-  | ClassBinding { id_loc; name = _; def } ->
-    let id = Context.make_aloc_id file.cx id_loc in
-    merge_class file reason id def
-  | DeclareClassBinding { id_loc; name = _; def } ->
-    let id = Context.make_aloc_id file.cx id_loc in
-    merge_declare_class file reason id def
-  | FunBinding { id_loc = _; name = _; async = _; generator = _; fn_loc = _; def; statics } ->
-    let statics = merge_fun_statics file reason statics in
-    merge_fun file reason def statics
-  | DeclareFun { id_loc; fn_loc; name = _; def; tail } ->
-    merge_declare_fun file ((id_loc, fn_loc, def), tail)
-  | Variable { id_loc = _; name = _; def } -> merge file def
-  | DisabledEnumBinding _ -> Type.AnyT.error reason
-  | EnumBinding { id_loc; name; rep; members; has_unknown_members } ->
-    merge_enum file reason id_loc name rep members has_unknown_members
-
-and merge_remote_ref file reason = function
+let merge_remote_ref file reason = function
   | Pack.Import { id_loc; name; index; remote } ->
     import file reason id_loc index Type.ImportValue ~remote ~local:name
   | Pack.ImportType { id_loc; name; index; remote } ->
@@ -340,42 +316,23 @@ and merge_remote_ref file reason = function
   | Pack.ImportNs { id_loc; name = _; index } -> import_ns file reason id_loc index
   | Pack.ImportTypeofNs { id_loc; name = _; index } -> import_typeof_ns file reason id_loc index
 
-and require file loc index =
-  let (mref, mk_module_t) = Module_refs.get file.dependencies index in
-  let reason = Reason.(mk_reason (RCommonJSExports mref) loc) in
-  Tvar.mk_where file.cx reason (fun tout ->
-      Flow_js.flow file.cx (mk_module_t loc, Type.CJSRequireT (reason, tout, false)))
+let merge_ref : 'a. _ -> (_ -> _ -> _ -> 'a) -> _ -> 'a =
+ fun file f ref ->
+  match ref with
+  | Pack.LocalRef { ref_loc; index } ->
+    let (_loc, name, t) = visit (Local_defs.get file.local_defs index) in
+    let t = Flow_js.reposition file.cx ref_loc t in
+    f t ref_loc name
+  | Pack.RemoteRef { ref_loc; index } ->
+    let (_loc, name, t) = visit (Remote_refs.get file.remote_refs index) in
+    let t = Flow_js.reposition file.cx ref_loc t in
+    f t ref_loc name
+  | Pack.BuiltinRef { ref_loc; name } ->
+    let reason = Reason.(mk_reason (RIdentifier name) ref_loc) in
+    let t = Flow_js.get_builtin file.cx name reason in
+    f t ref_loc name
 
-and import file reason id_loc index kind ~remote ~local =
-  let (mref, mk_module_t) = Module_refs.get file.dependencies index in
-  Tvar.mk_where file.cx reason (fun tout ->
-      Flow_js.flow
-        file.cx
-        ( mk_module_t id_loc,
-          if remote = "default" then
-            Type.ImportDefaultT (reason, kind, (local, mref), tout, false)
-          else
-            Type.ImportNamedT (reason, kind, remote, mref, tout, false) ))
-
-and import_ns file reason id_loc index =
-  let (_, mk_module_t) = Module_refs.get file.dependencies index in
-  Tvar.mk_where file.cx reason (fun tout ->
-      Flow_js.flow file.cx (mk_module_t id_loc, Type.ImportModuleNsT (reason, tout, false)))
-
-and import_typeof_ns file reason id_loc index =
-  let (_, mk_module_t) = Module_refs.get file.dependencies index in
-  let ns_t =
-    Tvar.mk_where file.cx reason (fun tout ->
-        Flow_js.flow file.cx (mk_module_t id_loc, Type.ImportModuleNsT (reason, tout, false)))
-  in
-  Tvar.mk_where file.cx reason (fun tout ->
-      Flow_js.flow file.cx (ns_t, Type.ImportTypeofT (reason, "*", tout)))
-
-and merge_star file (loc, index) =
-  let (_, mk_module_t) = Module_refs.get file.dependencies index in
-  (loc, mk_module_t loc)
-
-and merge_tyref file f = function
+let rec merge_tyref file f = function
   | Pack.Unqualified ref ->
     let f t loc name = f t loc (Nel.one name) in
     merge_ref file f ref
@@ -396,21 +353,135 @@ and merge_tyref file f = function
     in
     merge_tyref file f qualification
 
-and merge_ref : 'a. _ -> (_ -> _ -> _ -> 'a) -> _ -> 'a =
- fun file f ref ->
-  match ref with
-  | Pack.LocalRef { ref_loc; index } ->
-    let (_loc, name, t) = visit (Local_defs.get file.local_defs index) in
-    let t = Flow_js.reposition file.cx ref_loc t in
-    f t ref_loc name
-  | Pack.RemoteRef { ref_loc; index } ->
-    let (_loc, name, t) = visit (Remote_refs.get file.remote_refs index) in
-    let t = Flow_js.reposition file.cx ref_loc t in
-    f t ref_loc name
-  | Pack.BuiltinRef { ref_loc; name } ->
-    let reason = Reason.(mk_reason (RIdentifier name) ref_loc) in
-    let t = Flow_js.get_builtin file.cx name reason in
-    f t ref_loc name
+let merge_export file = function
+  | Pack.ExportRef ref -> merge_ref file (fun t ref_loc _ -> (Some ref_loc, t)) ref
+  | Pack.ExportBinding index ->
+    let (loc, _name, t) = visit (Local_defs.get file.local_defs index) in
+    (Some loc, t)
+  | Pack.ExportDefault { default_loc } ->
+    let (lazy t) = Option.value_exn file.export_def in
+    (Some default_loc, t)
+  | Pack.ExportDefaultBinding { default_loc; index } ->
+    let (_loc, _name, t) = visit (Local_defs.get file.local_defs index) in
+    (Some default_loc, t)
+  | Pack.ExportFrom index ->
+    let (loc, _name, t) = visit (Remote_refs.get file.remote_refs index) in
+    (Some loc, t)
+
+let merge_export_type file = function
+  | Pack.ExportTypeRef ref -> merge_ref file (fun t ref_loc _ -> (Some ref_loc, t)) ref
+  | Pack.ExportTypeBinding index ->
+    let (loc, _name, t) = visit (Local_defs.get file.local_defs index) in
+    (Some loc, t)
+  | Pack.ExportTypeFrom index ->
+    let (loc, _name, t) = visit (Remote_refs.get file.remote_refs index) in
+    (Some loc, t)
+
+let merge_exports =
+  let merge_star file (loc, index) =
+    let (_, mk_module_t) = Module_refs.get file.dependencies index in
+    (loc, mk_module_t loc)
+  in
+  let mk_es_module_t file reason is_strict =
+    let open Type in
+    let exportstype =
+      {
+        exports_tmap = Context.make_export_map file.cx SMap.empty;
+        cjs_export = None;
+        has_every_named_export = false;
+      }
+    in
+    ModuleT (reason, exportstype, is_strict)
+  in
+  let mk_commonjs_module_t file reason is_strict t =
+    let open Type in
+    let exporttypes =
+      {
+        exports_tmap = Context.make_export_map file.cx SMap.empty;
+        cjs_export = Some t;
+        has_every_named_export = false;
+      }
+    in
+    Tvar.mk_where file.cx reason (fun tout ->
+        Flow_js.flow
+          file.cx
+          (t, CJSExtractNamedExportsT (reason, (reason, exporttypes, is_strict), tout)))
+  in
+  let export_named file reason kind named module_t =
+    Tvar.mk_where file.cx reason (fun tout ->
+        Flow_js.flow file.cx (module_t, Type.ExportNamedT (reason, named, kind, tout)))
+  in
+  let copy_named_exports file reason module_t (loc, from_ns) =
+    let reason = Reason.repos_reason loc reason in
+    Tvar.mk_where file.cx reason (fun tout ->
+        Flow_js.flow file.cx (from_ns, Type.CopyNamedExportsT (reason, module_t, tout)))
+  in
+  let copy_type_exports file reason module_t (loc, from_ns) =
+    let reason = Reason.repos_reason loc reason in
+    Tvar.mk_where file.cx reason (fun tout ->
+        Flow_js.flow file.cx (from_ns, Type.CopyTypeExportsT (reason, module_t, tout)))
+  in
+  let copy_star_exports =
+    let rec loop file reason acc = function
+      | ([], []) -> acc
+      | (xs, []) -> List.fold_left (copy_named_exports file reason) acc xs
+      | ([], ys) -> List.fold_left (copy_type_exports file reason) acc ys
+      | ((x :: xs' as xs), (y :: ys' as ys)) ->
+        if ALoc.compare (fst x) (fst y) > 0 then
+          loop file reason (copy_named_exports file reason acc x) (xs', ys)
+        else
+          loop file reason (copy_type_exports file reason acc y) (xs, ys')
+    in
+    (fun file reason stars acc -> loop file reason acc stars)
+  in
+  fun file reason -> function
+    | Pack.CJSExports { types; type_stars; strict } ->
+      let value =
+        match file.export_def with
+        | Some (lazy t) -> t
+        | None -> Obj_type.mk_unsealed file.cx reason
+      in
+      let types = SMap.map (merge_export_type file) types in
+      let type_stars = List.map (merge_star file) type_stars in
+      mk_commonjs_module_t file reason strict value
+      |> export_named file reason Type.ExportType types
+      |> copy_star_exports file reason ([], type_stars)
+    | Pack.ESExports { names; types; stars; type_stars; strict } ->
+      let names = SMap.map (merge_export file) names in
+      let types = SMap.map (merge_export_type file) types in
+      let stars = List.map (merge_star file) stars in
+      let type_stars = List.map (merge_star file) type_stars in
+      mk_es_module_t file reason strict
+      |> export_named file reason Type.ExportValue names
+      |> export_named file reason Type.ExportType types
+      |> copy_star_exports file reason (stars, type_stars)
+
+let rec merge file = function
+  | Pack.Annot t -> merge_annot file t
+  | Pack.Value t -> merge_value file t
+  | Pack.Ref ref -> merge_ref file (fun t _ _ -> t) ref
+  | Pack.TyRef name ->
+    let f t ref_loc (name, _) =
+      let reason = Reason.(mk_annot_reason (RType name) ref_loc) in
+      Flow_js.mk_instance file.cx reason t
+    in
+    merge_tyref file f name
+  | Pack.TyRefApp { loc; name; targs } ->
+    let targs = List.map (merge file) targs in
+    let f t _ _ = TypeUtil.typeapp_annot loc t targs in
+    merge_tyref file f name
+  | Pack.AsyncVoidReturn loc -> async_void_return file loc
+  | Pack.Pattern i -> Lazy.force (Patterns.get file.patterns i)
+  | Pack.Err loc -> Type.(AnyT.at (AnyError None) loc)
+  | Pack.Eval (loc, t, op) ->
+    let t = merge file t in
+    let op = merge_op file op in
+    eval file loc t op
+  | Pack.Require { loc; index } -> require file loc index
+  | Pack.ModuleRef { loc; index } ->
+    let t = require file loc index in
+    let reason = Reason.(mk_reason (RCustom "module reference") loc) in
+    Flow_js.get_builtin_typeapp file.cx reason "$Flow$ModuleRef" [t]
 
 and merge_annot file = function
   | Any loc -> Type.AnyT.at Type.AnnotatedAny loc
@@ -1119,36 +1190,6 @@ and merge_tparam file tp =
 
 and merge_op file op = map_op (merge file) op
 
-and merge_type_alias file reason name tparams body =
-  let t = merge file body in
-  let t =
-    let open Reason in
-    let open TypeUtil in
-    let t_loc = loc_of_t t in
-    mod_reason_of_t (update_desc_reason (fun desc -> RTypeAlias (name, Some t_loc, desc))) t
-  in
-  let t = Type.(DefT (reason, trust, TypeT (TypeAliasKind, t))) in
-  merge_tparams file reason t tparams
-
-and merge_opaque_type file reason id name tparams bound body =
-  let opaque_reason = Reason.(replace_desc_reason (ROpaqueType name) reason) in
-  let bound = Option.map ~f:(merge file) bound in
-  let body = Option.map ~f:(merge file) body in
-  let t targs =
-    let open Type in
-    let opaquetype =
-      {
-        underlying_t = body;
-        super_t = bound;
-        opaque_id = id;
-        opaque_type_args = targs;
-        opaque_name = name;
-      }
-    in
-    DefT (reason, trust, TypeT (OpaqueKind, OpaqueT (opaque_reason, opaquetype)))
-  in
-  merge_tparams_targs file reason t tparams
-
 and merge_interface ~inline file reason id def =
   let (InterfaceSig { extends; props; calls }) = def in
   let super =
@@ -1305,79 +1346,6 @@ and merge_class file reason id def =
   in
   merge_tparams_targs file reason t tparams
 
-and merge_declare_class file reason id def =
-  let (DeclareClassSig
-        {
-          tparams;
-          extends;
-          mixins;
-          implements;
-          static_props;
-          own_props;
-          proto_props;
-          static_calls;
-          calls;
-        }) =
-    def
-  in
-  let t targs =
-    let this =
-      let reason = Reason.(replace_desc_reason RThisType reason) in
-      Type.BoundT (reason, "this")
-    in
-    let (super, static_proto) = merge_class_extends file this reason extends mixins in
-    let implements = List.map (merge file) implements in
-    let static =
-      let static_reason = Reason.(update_desc_reason (fun d -> RStatics d) reason) in
-      let props = SMap.map (merge_interface_prop file) static_props in
-      let props = add_name_field reason props in
-      let call =
-        match List.rev_map (merge file) static_calls with
-        | [] -> None
-        | [t] -> Some t
-        | t0 :: t1 :: ts ->
-          let reason = TypeUtil.reason_of_t t0 in
-          let t = Type.(IntersectionT (reason, InterRep.make t0 t1 ts)) in
-          Some t
-      in
-      Obj_type.mk_with_proto file.cx static_reason static_proto ~props ?call ~obj_kind:Type.Inexact
-    in
-    let own_props =
-      SMap.map (merge_interface_prop file) own_props |> Context.generate_property_map file.cx
-    in
-    let proto_props =
-      SMap.map (merge_interface_prop file) proto_props
-      |> add_default_constructor reason extends
-      |> Context.generate_property_map file.cx
-    in
-    let inst_call_t =
-      match List.rev_map (merge file) calls with
-      | [] -> None
-      | [t] -> Some (Context.make_call_prop file.cx t)
-      | t0 :: t1 :: ts ->
-        let reason = TypeUtil.reason_of_t t0 in
-        let t = Type.(IntersectionT (reason, InterRep.make t0 t1 ts)) in
-        Some (Context.make_call_prop file.cx t)
-    in
-    let open Type in
-    let insttype =
-      {
-        class_id = id;
-        type_args = targs;
-        own_props;
-        proto_props;
-        inst_call_t;
-        initialized_fields = SSet.empty;
-        initialized_static_fields = SSet.empty;
-        has_unknown_react_mixins = false;
-        inst_kind = ClassKind;
-      }
-    in
-    let inst = DefT (reason, trust, InstanceT (static, super, implements, insttype)) in
-    TypeUtil.this_class_type inst false
-  in
-  merge_tparams_targs file reason t tparams
-
 and merge_fun_statics file reason statics =
   let props =
     SMap.map
@@ -1520,7 +1488,110 @@ and merge_fun
   in
   merge_tparams file reason t tparams
 
-and merge_declare_fun file defs =
+let merge_type_alias file reason name tparams body =
+  let t = merge file body in
+  let t =
+    let open Reason in
+    let open TypeUtil in
+    let t_loc = loc_of_t t in
+    mod_reason_of_t (update_desc_reason (fun desc -> RTypeAlias (name, Some t_loc, desc))) t
+  in
+  let t = Type.(DefT (reason, trust, TypeT (TypeAliasKind, t))) in
+  merge_tparams file reason t tparams
+
+let merge_opaque_type file reason id name tparams bound body =
+  let opaque_reason = Reason.(replace_desc_reason (ROpaqueType name) reason) in
+  let bound = Option.map ~f:(merge file) bound in
+  let body = Option.map ~f:(merge file) body in
+  let t targs =
+    let open Type in
+    let opaquetype =
+      {
+        underlying_t = body;
+        super_t = bound;
+        opaque_id = id;
+        opaque_type_args = targs;
+        opaque_name = name;
+      }
+    in
+    DefT (reason, trust, TypeT (OpaqueKind, OpaqueT (opaque_reason, opaquetype)))
+  in
+  merge_tparams_targs file reason t tparams
+
+let merge_declare_class file reason id def =
+  let (DeclareClassSig
+        {
+          tparams;
+          extends;
+          mixins;
+          implements;
+          static_props;
+          own_props;
+          proto_props;
+          static_calls;
+          calls;
+        }) =
+    def
+  in
+  let t targs =
+    let this =
+      let reason = Reason.(replace_desc_reason RThisType reason) in
+      Type.BoundT (reason, "this")
+    in
+    let (super, static_proto) = merge_class_extends file this reason extends mixins in
+    let implements = List.map (merge file) implements in
+    let static =
+      let static_reason = Reason.(update_desc_reason (fun d -> RStatics d) reason) in
+      let props = SMap.map (merge_interface_prop file) static_props in
+      let props = add_name_field reason props in
+      let call =
+        match List.rev_map (merge file) static_calls with
+        | [] -> None
+        | [t] -> Some t
+        | t0 :: t1 :: ts ->
+          let reason = TypeUtil.reason_of_t t0 in
+          let t = Type.(IntersectionT (reason, InterRep.make t0 t1 ts)) in
+          Some t
+      in
+      Obj_type.mk_with_proto file.cx static_reason static_proto ~props ?call ~obj_kind:Type.Inexact
+    in
+    let own_props =
+      SMap.map (merge_interface_prop file) own_props |> Context.generate_property_map file.cx
+    in
+    let proto_props =
+      SMap.map (merge_interface_prop file) proto_props
+      |> add_default_constructor reason extends
+      |> Context.generate_property_map file.cx
+    in
+    let inst_call_t =
+      match List.rev_map (merge file) calls with
+      | [] -> None
+      | [t] -> Some (Context.make_call_prop file.cx t)
+      | t0 :: t1 :: ts ->
+        let reason = TypeUtil.reason_of_t t0 in
+        let t = Type.(IntersectionT (reason, InterRep.make t0 t1 ts)) in
+        Some (Context.make_call_prop file.cx t)
+    in
+    let open Type in
+    let insttype =
+      {
+        class_id = id;
+        type_args = targs;
+        own_props;
+        proto_props;
+        inst_call_t;
+        initialized_fields = SSet.empty;
+        initialized_static_fields = SSet.empty;
+        has_unknown_react_mixins = false;
+        inst_kind = ClassKind;
+      }
+    in
+    let inst = DefT (reason, trust, InstanceT (static, super, implements, insttype)) in
+    TypeUtil.this_class_type inst false
+  in
+  merge_tparams_targs file reason t tparams
+
+let merge_declare_fun file defs =
   let ts =
     Nel.map
       (fun (_, fn_loc, def) ->
@@ -1535,104 +1606,33 @@ and merge_declare_fun file defs =
     let reason = TypeUtil.reason_of_t t0 |> Reason.(replace_desc_reason RIntersectionType) in
     Type.(IntersectionT (reason, InterRep.make t0 t1 ts))
 
-and merge_exports =
-  let mk_es_module_t file reason is_strict =
-    let open Type in
-    let exportstype =
-      {
-        exports_tmap = Context.make_export_map file.cx SMap.empty;
-        cjs_export = None;
-        has_every_named_export = false;
-      }
+let merge_def file reason = function
+  | TypeAlias { id_loc = _; name; tparams; body } -> merge_type_alias file reason name tparams body
+  | OpaqueType { id_loc; name; tparams; body; bound } ->
+    let id = Context.make_aloc_id file.cx id_loc in
+    merge_opaque_type file reason id name tparams bound body
+  | Interface { id_loc; name = _; tparams; def } ->
+    let id = Context.make_aloc_id file.cx id_loc in
+    let t targs =
+      let t = merge_interface ~inline:false file reason id def targs in
+      TypeUtil.class_type t
     in
-    ModuleT (reason, exportstype, is_strict)
-  in
-  let mk_commonjs_module_t file reason is_strict t =
-    let open Type in
-    let exporttypes =
-      {
-        exports_tmap = Context.make_export_map file.cx SMap.empty;
-        cjs_export = Some t;
-        has_every_named_export = false;
-      }
-    in
-    Tvar.mk_where file.cx reason (fun tout ->
-        Flow_js.flow
-          file.cx
-          (t, CJSExtractNamedExportsT (reason, (reason, exporttypes, is_strict), tout)))
-  in
-  let export_named file reason kind named module_t =
-    Tvar.mk_where file.cx reason (fun tout ->
-        Flow_js.flow file.cx (module_t, Type.ExportNamedT (reason, named, kind, tout)))
-  in
-  let copy_named_exports file reason module_t (loc, from_ns) =
-    let reason = Reason.repos_reason loc reason in
-    Tvar.mk_where file.cx reason (fun tout ->
-        Flow_js.flow file.cx (from_ns, Type.CopyNamedExportsT (reason, module_t, tout)))
-  in
-  let copy_type_exports file reason module_t (loc, from_ns) =
-    let reason = Reason.repos_reason loc reason in
-    Tvar.mk_where file.cx reason (fun tout ->
-        Flow_js.flow file.cx (from_ns, Type.CopyTypeExportsT (reason, module_t, tout)))
-  in
-  let copy_star_exports =
-    let rec loop file reason acc = function
-      | ([], []) -> acc
-      | (xs, []) -> List.fold_left (copy_named_exports file reason) acc xs
-      | ([], ys) -> List.fold_left (copy_type_exports file reason) acc ys
-      | ((x :: xs' as xs), (y :: ys' as ys)) ->
-        if ALoc.compare (fst x) (fst y) > 0 then
-          loop file reason (copy_named_exports file reason acc x) (xs', ys)
-        else
-          loop file reason (copy_type_exports file reason acc y) (xs, ys')
-    in
-    (fun file reason stars acc -> loop file reason acc stars)
-  in
-  fun file reason -> function
-    | Pack.CJSExports { types; type_stars; strict } ->
-      let value =
-        match file.export_def with
-        | Some (lazy t) -> t
-        | None -> Obj_type.mk_unsealed file.cx reason
-      in
-      let types = SMap.map (merge_export_type file) types in
-      let type_stars = List.map (merge_star file) type_stars in
-      mk_commonjs_module_t file reason strict value
-      |> export_named file reason Type.ExportType types
-      |> copy_star_exports file reason ([], type_stars)
-    | Pack.ESExports { names; types; stars; type_stars; strict } ->
-      let names = SMap.map (merge_export file) names in
-      let types = SMap.map (merge_export_type file) types in
-      let stars = List.map (merge_star file) stars in
-      let type_stars = List.map (merge_star file) type_stars in
-      mk_es_module_t file reason strict
-      |> export_named file reason Type.ExportValue names
-      |> export_named file reason Type.ExportType types
-      |> copy_star_exports file reason (stars, type_stars)
-
-and merge_export file = function
-  | Pack.ExportRef ref -> merge_ref file (fun t ref_loc _ -> (Some ref_loc, t)) ref
-  | Pack.ExportBinding index ->
-    let (loc, _name, t) = visit (Local_defs.get file.local_defs index) in
-    (Some loc, t)
-  | Pack.ExportDefault { default_loc } ->
-    let (lazy t) = Option.value_exn file.export_def in
-    (Some default_loc, t)
-  | Pack.ExportDefaultBinding { default_loc; index } ->
-    let (_loc, _name, t) = visit (Local_defs.get file.local_defs index) in
-    (Some default_loc, t)
-  | Pack.ExportFrom index ->
-    let (loc, _name, t) = visit (Remote_refs.get file.remote_refs index) in
-    (Some loc, t)
-
-and merge_export_type file = function
-  | Pack.ExportTypeRef ref -> merge_ref file (fun t ref_loc _ -> (Some ref_loc, t)) ref
-  | Pack.ExportTypeBinding index ->
-    let (loc, _name, t) = visit (Local_defs.get file.local_defs index) in
-    (Some loc, t)
-  | Pack.ExportTypeFrom index ->
-    let (loc, _name, t) = visit (Remote_refs.get file.remote_refs index) in
-    (Some loc, t)
+    merge_tparams_targs file reason t tparams
+  | ClassBinding { id_loc; name = _; def } ->
+    let id = Context.make_aloc_id file.cx id_loc in
+    merge_class file reason id def
+  | DeclareClassBinding { id_loc; name = _; def } ->
+    let id = Context.make_aloc_id file.cx id_loc in
+    merge_declare_class file reason id def
+  | FunBinding { id_loc = _; name = _; async = _; generator = _; fn_loc = _; def; statics } ->
+    let statics = merge_fun_statics file reason statics in
+    merge_fun file reason def statics
+  | DeclareFun { id_loc; fn_loc; name = _; def; tail } ->
+    merge_declare_fun file ((id_loc, fn_loc, def), tail)
+  | Variable { id_loc = _; name = _; def } -> merge file def
+  | DisabledEnumBinding _ -> Type.AnyT.error reason
+  | EnumBinding { id_loc; name; rep; members; has_unknown_members } ->
+    merge_enum file reason id_loc name rep members has_unknown_members
 
 let merge_file file =
   let module_t = visit file.exports in
