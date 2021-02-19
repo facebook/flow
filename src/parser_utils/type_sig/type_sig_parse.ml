@@ -3787,28 +3787,28 @@ let assignment =
     match operator, left with
     (* module.exports = ... *)
     | None, P.Expression (_, E.Member {E.Member.
-        _object = (_, E.Identifier (_, {I.name = "module"; comments = _}));
+        _object = (_, E.Identifier (_, {I.name = "module" as object_name; comments = _}));
         property = E.Member.PropertyIdentifier (_, {I.name = "exports"; comments = _});
         comments = _;
-      }) ->
+      }) when Scope.lookup scope object_name = None ->
       let t = expression opts scope locs right in
       Scope.cjs_clobber scope t
     (* exports.foo = ... *)
     | None, P.Expression (_, E.Member {E.Member.
-        _object = (_, E.Identifier (_, {I.name = "exports"; comments = _}));
+        _object = (_, E.Identifier (_, {I.name = "exports" as object_name; comments = _}));
         property = E.Member.PropertyIdentifier (id_loc, {I.name; comments = _});
         comments = _;
       })
     (* module.exports.foo = ... *)
     | None, P.Expression (_, E.Member {E.Member.
         _object = (_, E.Member {E.Member.
-          _object = (_, E.Identifier (_, {I.name = "module"; comments = _}));
+          _object = (_, E.Identifier (_, {I.name = "module" as object_name; comments = _}));
           property = E.Member.PropertyIdentifier (_, {I.name = "exports"; comments = _});
           comments = _;
         });
         property = E.Member.PropertyIdentifier (id_loc, {I.name; comments = _});
         comments = _;
-      }) ->
+      }) when Scope.lookup scope object_name = None ->
       let id_loc = Locs.push locs id_loc in
       let t = expression opts scope locs right in
       Scope.cjs_set_prop scope name (id_loc, t)

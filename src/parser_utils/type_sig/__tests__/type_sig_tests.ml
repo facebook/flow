@@ -3268,7 +3268,28 @@ let%expect_test "cjs_export_props" =
            "foo" ->
            (ObjValueField ([1:15-18], (Value (NumberLit ([1:21-22], 0., "0"))), Polarity.Neutral)) }}) |}]
 
-let%expect_test "cjs_export_alias_TODO" =
+let%expect_test "cjs_exports_clobber_shadowed_module_global" =
+  print_sig {|
+    var module;
+    module.exports = 0;
+  |};
+  [%expect {| CJSExports {types = {}; type_stars = []; strict = true} |}]
+
+let%expect_test "cjs_exports_assign_shadowed_exports_global" =
+  print_sig {|
+    var exports;
+    exports.foo = 0;
+  |};
+  [%expect {| CJSExports {types = {}; type_stars = []; strict = true} |}]
+
+let%expect_test "cjs_exports_assign_shadowed_module_global" =
+  print_sig {|
+    var module;
+    module.exports.foo = 0;
+  |};
+  [%expect {| CJSExports {types = {}; type_stars = []; strict = true} |}]
+
+let%expect_test "cjs_export_shadowed_hoisted_TODO" =
   print_sig {|
     module.exports.foo = 0;
     function module() {}
