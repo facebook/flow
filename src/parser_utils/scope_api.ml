@@ -119,8 +119,10 @@ module Make (L : Loc_sig.S) = struct
       L.LSet.empty
 
   let uses_of_use info ?exclude_def use =
-    let def = def_of_use info use in
-    uses_of_def info ?exclude_def def
+    try
+      let def = def_of_use info use in
+      uses_of_def info ?exclude_def def
+    with _ -> L.LSet.empty
 
   let def_is_unused info def = L.LSet.is_empty (uses_of_def info ~exclude_def:true def)
 
