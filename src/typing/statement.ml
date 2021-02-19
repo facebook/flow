@@ -369,8 +369,10 @@ module Func_stmt_config = struct
         let kind =
           if Env.promote_to_const_like cx loc then
             Entry.ConstlikeParamBinding
+          else if Env.is_not_written_by_closure cx loc then
+            Entry.(ParamBinding NotWrittenByClosure)
           else
-            Entry.ParamBinding
+            Entry.(ParamBinding Havocable)
         in
         Env.bind_implicit_let ~state:State.Initialized kind cx name t loc)
 
@@ -619,7 +621,7 @@ and statement_decl cx =
     let handle_named_class name_loc name =
       let r = mk_reason (RType name) name_loc in
       let tvar = Tvar.mk cx r in
-      Env.bind_implicit_let Scope.Entry.ClassNameBinding cx name tvar name_loc
+      Env.bind_implicit_let Scope.Entry.(ClassNameBinding Havocable) cx name tvar name_loc
     in
     (match id with
     | Some (name_loc, { Ast.Identifier.name; comments = _ }) -> handle_named_class name_loc name
@@ -853,7 +855,13 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t =
         let (stmts, abnormal_opt) =
           Env.in_lex_scope cx (fun () ->
               Scope.(
-                Env.bind_implicit_let ~state:State.Initialized Entry.CatchParamBinding cx name t loc);
+                Env.bind_implicit_let
+                  ~state:State.Initialized
+                  Entry.(CatchParamBinding Havocable)
+                  cx
+                  name
+                  t
+                  loc);
 
               check cx b)
         in
@@ -2163,13 +2171,14 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t =
       | Some (name_loc, { Ast.Identifier.name; comments = _ }) -> (name_loc, name)
       | None -> (class_loc, internal_name "*default*")
     in
+    let kind = Scope.Entry.(ClassNameBinding Havocable) in
     let reason = DescFormat.instance_reason name name_loc in
-    Env.declare_implicit_let Scope.Entry.ClassNameBinding cx name name_loc;
+    Env.declare_implicit_let kind cx name name_loc;
     let general = Tvar.mk_where cx reason (Env.unify_declared_type cx name) in
     (* ClassDeclarations are statements, so we will never have an annotation to push down here *)
     let (class_t, c_ast) = mk_class cx ~class_annot:None class_loc ~name_loc ~general reason c in
     Env.init_implicit_let
-      Scope.Entry.ClassNameBinding
+      kind
       cx
       ~use_op:
         (Op
@@ -3617,7 +3626,7 @@ and expression_ ~cond ~annot cx loc e : (ALoc.t, ALoc.t * Type.t) Ast.Expression
     | Some _ ->
       let scope = Scope.fresh () in
       Scope.(
-        let kind = Entry.ClassNameBinding in
+        let kind = Entry.(ClassNameBinding Havocable) in
         let entry =
           Entry.(new_let (annotated_todo tvar) ~loc:name_loc ~state:State.Declared ~kind)
         in
@@ -4815,6 +4824,7 @@ and optional_chain ~cond ~is_existence_check ?sentinel_refine cx ((loc, e) as ex
           in
           let handle_refined_callee argts obj_t f =
             Env.havoc_heap_refinements ();
+            Env.havoc_local_refinements ();
             Tvar.mk_no_wrap_where cx reason_call (fun t ->
                 let frame = Env.peek_frame () in
                 let app =
@@ -5087,14 +5097,15 @@ and new_call cx reason ~use_op class_ targs args =
   Tvar.mk_where cx reason (fun t ->
       Flow.flow cx (class_, ConstructorT (use_op, reason, targs, args, t)))
 
-and func_call_opt_use reason ~use_op ?(call_strict_arity = true) targts argts =
+and func_call_opt_use reason ~use_op ?(havoc = true) ?(call_strict_arity = true) targts argts =
   Env.havoc_heap_refinements ();
+  if havoc then Env.havoc_local_refinements ();
   let frame = Env.peek_frame () in
   let opt_app = mk_opt_functioncalltype reason targts argts frame call_strict_arity in
   OptCallT (use_op, reason, opt_app)
 
-and func_call cx reason ~use_op ?(call_strict_arity = true) func_t targts argts =
-  let opt_use = func_call_opt_use reason ~use_op ~call_strict_arity targts argts in
+and func_call cx reason ~use_op ?(havoc = true) ?(call_strict_arity = true) func_t targts argts =
+  let opt_use = func_call_opt_use reason ~use_op ~havoc ~call_strict_arity targts argts in
   Tvar.mk_no_wrap_where cx reason (fun t -> Flow.flow cx (func_t, apply_opt_use opt_use t))
 
 and method_call_opt_use
@@ -5103,6 +5114,7 @@ and method_call_opt_use
     ~prop_t
     reason
     ~use_op
+    ?(havoc = true)
     ?(call_strict_arity = true)
     prop_loc
     (expr, name)
@@ -5110,6 +5122,7 @@ and method_call_opt_use
     targts
     argts =
   Env.havoc_heap_refinements ();
+  if havoc then Env.havoc_local_refinements ();
   let (expr_loc, _) = expr in
   let reason_prop = mk_reason (RProperty (Some name)) prop_loc in
   let frame = Env.peek_frame () in
@@ -5127,7 +5140,15 @@ and method_call_opt_use
 
 (* returns (type of method itself, type returned from method) *)
 and method_call
-    cx reason ~use_op ?(call_strict_arity = true) prop_loc (expr, obj_t, name) targts argts =
+    cx
+    reason
+    ~use_op
+    ?(havoc = true)
+    ?(call_strict_arity = true)
+    prop_loc
+    (expr, obj_t, name)
+    targts
+    argts =
   Type_inference_hooks_js.dispatch_call_hook cx name prop_loc obj_t;
   let (expr_loc, _) = expr in
   match Refinement.get ~allow_optional:true cx expr (aloc_of_reason reason) with
@@ -5139,6 +5160,7 @@ and method_call
        meanwhile, here we must hijack the property selection normally
        performed by the flow algorithm itself. *)
     Env.havoc_heap_refinements ();
+    if havoc then Env.havoc_local_refinements ();
     ( f,
       Tvar.mk_no_wrap_where cx reason (fun t ->
           let frame = Env.peek_frame () in
@@ -5146,6 +5168,7 @@ and method_call
           Flow.flow cx (f, CallT (use_op, reason, app))) )
   | None ->
     Env.havoc_heap_refinements ();
+    if havoc then Env.havoc_local_refinements ();
     let reason_prop = mk_reason (RProperty (Some name)) prop_loc in
     let prop_t = Tvar.mk cx reason_prop in
     ( prop_t,
@@ -5305,7 +5328,7 @@ and unary cx loc =
              local = true;
            })
     in
-    ( func_call cx reason ~use_op await None [Arg arg],
+    ( func_call cx reason ~use_op ~havoc:false await None [Arg arg],
       { operator = Await; argument = argument_ast; comments } )
 
 (* numeric pre/post inc/dec *)
@@ -6344,13 +6367,14 @@ and jsx_desugar cx name component_t props attributes children locs =
            reason
            ~use_op
            ~call_strict_arity:false
+           ~havoc:false
            prop_loc
            (jsx_expr, ot, name)
            None
            argts)
     | _ ->
       let f = jsx_pragma_expression cx raw_jsx_expr loc_element jsx_expr in
-      func_call cx reason ~use_op ~call_strict_arity:false f None argts)
+      func_call cx reason ~use_op ~call_strict_arity:false ~havoc:false f None argts)
 
 (* The @jsx pragma specifies a left hand side expression EXPR such that
  *
@@ -7518,7 +7542,9 @@ and static_method_call_Object cx loc callee_loc prop_loc expr obj_t m targs args
              local = true;
            })
     in
-    (snd (method_call cx reason ~use_op prop_loc (expr, obj_t, m) targts argts), targ_asts, arg_asts)
+    ( snd (method_call cx reason ~use_op ~havoc:false prop_loc (expr, obj_t, m) targts argts),
+      targ_asts,
+      arg_asts )
 
 and mk_class cx class_loc ~class_annot ~name_loc ~general reason c =
   let def_reason = repos_reason class_loc reason in

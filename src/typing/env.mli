@@ -49,6 +49,8 @@ val update_env : Context.t -> ALoc.t -> t -> unit
 
 val promote_to_const_like : Context.t -> ALoc.t -> bool
 
+val is_not_written_by_closure : Context.t -> ALoc.t -> bool
+
 val bind_class : Context.t -> ALoc.id -> Type.Properties.id -> Type.Properties.id -> unit
 
 val bind_var : ?state:State.t -> Context.t -> string -> Type.annotated_or_inferred -> ALoc.t -> unit
@@ -182,6 +184,8 @@ val reset_current_activation : ALoc.t -> unit
 val havoc_vars : Changeset.t -> unit
 
 val havoc_heap_refinements : unit -> unit
+
+val havoc_local_refinements : unit -> unit
 
 val havoc_heap_refinements_with_propname : private_:bool -> string -> unit
 

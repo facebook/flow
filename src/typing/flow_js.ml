@@ -44,105 +44,6 @@ let not_linked (id1, _bounds1) (_id2, bounds2) =
      bounds of id1. *)
   not (IMap.mem id1 bounds2.lowertvars)
 
-(**********)
-(* frames *)
-(**********)
-
-(* note: this is here instead of Env because of circular deps:
-   Env is downstream of Flow_js due general utility funcs such as
-   Tvar.mk and builtins services. If the flow algorithm can
-   be split away from these, then Env can be moved upstream and
-   this code can be merged into it. *)
-
-(* background:
-   - each scope has an id. scope ids are unique, mod cloning
-   for path-dependent analysis.
-   - an environment is a scope list
-   - each context holds a map of environment snapshots, keyed
-   by their topmost scope ids
-   - every function type contains a frame id, which maps to
-   the environment in which it was defined; as well as a
-   changeset containing its reads/writes/refinements on
-   closed-over variables
-
-   Given frame ids for calling function and called function and
-   the changeset of the called function, here we retrieve the
-   environment snapshots for the two functions, find the prefix
-   of scopes they share, and havoc the variables in the called
-   function's write set which live in those scopes.
-*)
-let havoc_call_env =
-  Scope.(
-    let overlapped_call_scopes func_env call_env =
-      let rec loop = function
-        | (func_scope :: func_scopes, call_scope :: call_scopes) when func_scope.id = call_scope.id
-          ->
-          call_scope :: loop (func_scopes, call_scopes)
-        | _ -> []
-      in
-      loop (List.rev func_env, List.rev call_env)
-    in
-    let havoc_entry cx scope ((_, name, _) as entry_ref) =
-      if Context.is_verbose cx then
-        prerr_endlinef
-          "%shavoc_entry %s %s"
-          (Context.pid_prefix cx)
-          (Changeset.string_of_entry_ref entry_ref)
-          (Debug_js.string_of_scope cx scope);
-      match get_entry name scope with
-      | Some _ ->
-        havoc_entry name scope;
-        Changeset.(if Global.is_active () then Global.change_var entry_ref)
-      | None ->
-        (* global scopes may lack entries, if function closes over
-           path-refined global vars (artifact of deferred lookup) *)
-        if is_global scope then
-          ()
-        else
-          assert_false
-            (spf
-               "missing entry %S in scope %d: { %s }"
-               name
-               scope.id
-               (String.concat ", " (SMap.fold (fun n _ acc -> n :: acc) scope.entries [])))
-    in
-    let havoc_refi cx scope ((_, key, _) as refi_ref) =
-      if Context.is_verbose cx then
-        prerr_endlinef
-          "%shavoc_refi %s"
-          (Context.pid_prefix cx)
-          (Changeset.string_of_refi_ref refi_ref);
-      match get_refi key scope with
-      | Some _ ->
-        havoc_refi key scope;
-        Changeset.(if Global.is_active () then Global.change_refi refi_ref)
-      | None ->
-        (* global scopes may lack entries, if function closes over
-           path-refined global vars (artifact of deferred lookup) *)
-        if is_global scope then
-          ()
-        else
-          assert_false
-            (spf
-               "missing refi %S in scope %d: { %s }"
-               (Key.string_of_key key)
-               scope.id
-               (String.concat
-                  ", "
-                  (Key_map.fold (fun k _ acc -> Key.string_of_key k :: acc) scope.refis [])))
-    in
-    fun cx func_frame call_frame changeset ->
-      if func_frame = 0 || call_frame = 0 || Changeset.is_empty changeset then
-        ()
-      else
-        let func_env = IMap.find_opt func_frame (Context.envs cx) in
-        let call_env = IMap.find_opt call_frame (Context.envs cx) in
-        Base.Option.iter (Base.Option.both func_env call_env) ~f:(fun (func_env, call_env) ->
-            overlapped_call_scopes func_env call_env
-            |> List.iter (fun ({ id; _ } as scope) ->
-                   Changeset.include_scopes [id] changeset
-                   |> Changeset.iter_writes (havoc_entry cx scope) (havoc_refi cx scope))))
-
 (********************************************************************)
 
 (* visit an optional evaluated type at an evaluation id *)
@@ -3218,7 +3119,7 @@ struct
         (* FunT ~> CallT *)
         | (DefT (reason_fundef, _, FunT (_, _, funtype)), CallT (use_op, reason_callsite, calltype))
           ->
-          let { this_t = o1; params = _; return_t = t1; closure_t = func_scope_id; changeset; _ } =
+          let { this_t = o1; params = _; return_t = t1; closure_t = _; changeset = _; _ } =
             funtype
           in
           let {
@@ -3226,7 +3127,7 @@ struct
             call_targs;
             call_args_tlist = tins2;
             call_tout = t2;
-            call_closure_t = call_scope_id;
+            call_closure_t = _;
             call_strict_arity;
           } =
             calltype
@@ -3258,15 +3159,7 @@ struct
             ~use_op:unknown_use
             cx
             trace
-            (reposition cx ~trace (aloc_of_reason reason_callsite) t1, OpenT t2);
-
-          if Context.is_verbose cx then
-            prerr_endlinef
-              "%shavoc_call_env fundef %s callsite %s"
-              (Context.pid_prefix cx)
-              (Debug_js.string_of_reason cx reason_fundef)
-              (Debug_js.string_of_reason cx reason_callsite);
-          havoc_call_env cx func_scope_id call_scope_id changeset
+            (reposition cx ~trace (aloc_of_reason reason_callsite) t1, OpenT t2)
         | (AnyT (reason_fundef, _), CallT (use_op, reason_op, calltype)) ->
           let {
             call_this_t;

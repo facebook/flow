@@ -30,17 +30,21 @@ module Entry : sig
     | EnumNameBinding
 
   and let_binding_kind =
-    | LetVarBinding
+    | LetVarBinding of kind_specialization
     | ConstlikeLetVarBinding
-    | ClassNameBinding
-    | CatchParamBinding
-    | FunctionBinding
-    | ParamBinding
+    | ClassNameBinding of kind_specialization
+    | CatchParamBinding of kind_specialization
+    | FunctionBinding of kind_specialization
+    | ParamBinding of kind_specialization
     | ConstlikeParamBinding
 
   and var_binding_kind =
-    | VarBinding
+    | VarBinding of kind_specialization
     | ConstlikeVarBinding
+
+  and kind_specialization =
+    | Havocable
+    | NotWrittenByClosure
 
   val string_of_let_binding_kind : let_binding_kind -> string
 
@@ -111,7 +115,7 @@ module Entry : sig
 
   val state_of_value : value_binding -> State.t
 
-  val havoc : string -> t -> t
+  val havoc : on_call:bool -> string -> t -> t
 
   val reset : ALoc.t -> string -> t -> t
 

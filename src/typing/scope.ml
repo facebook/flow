@@ -58,25 +58,29 @@ module Entry = struct
     | EnumNameBinding
 
   and let_binding_kind =
-    | LetVarBinding
+    | LetVarBinding of kind_specialization
     | ConstlikeLetVarBinding
-    | ClassNameBinding
-    | CatchParamBinding
-    | FunctionBinding
-    | ParamBinding
+    | ClassNameBinding of kind_specialization
+    | CatchParamBinding of kind_specialization
+    | FunctionBinding of kind_specialization
+    | ParamBinding of kind_specialization
     | ConstlikeParamBinding
 
   and var_binding_kind =
-    | VarBinding
+    | VarBinding of kind_specialization
     | ConstlikeVarBinding
 
+  and kind_specialization =
+    | Havocable
+    | NotWrittenByClosure
+
   let string_of_let_binding_kind = function
-    | LetVarBinding -> "let"
+    | LetVarBinding _ -> "let"
     | ConstlikeLetVarBinding -> "let"
-    | ClassNameBinding -> "class"
-    | CatchParamBinding -> "catch"
-    | FunctionBinding -> "function"
-    | ParamBinding -> "param"
+    | ClassNameBinding _ -> "class"
+    | CatchParamBinding _ -> "catch"
+    | FunctionBinding _ -> "function"
+    | ParamBinding _ -> "param"
     | ConstlikeParamBinding -> "param"
 
   let string_of_value_kind = function
@@ -85,7 +89,7 @@ module Entry = struct
     | Const ConstVarBinding -> "const"
     | Const EnumNameBinding -> "enum"
     | Let kind -> string_of_let_binding_kind kind
-    | Var VarBinding -> "var"
+    | Var (VarBinding _) -> "var"
     | Var ConstlikeVarBinding -> "var"
 
   type value_binding = {
@@ -137,11 +141,11 @@ module Entry = struct
   let new_import ~loc t =
     new_value (Const ConstImportBinding) State.Initialized t (Type.Inferred t) loc
 
-  let new_let ~loc ?(state = State.Undeclared) ?(kind = LetVarBinding) general =
+  let new_let ~loc ?(state = State.Undeclared) ?(kind = LetVarBinding Havocable) general =
     let specific = TypeUtil.type_t_of_annotated_or_inferred general in
     new_value (Let kind) state specific general loc
 
-  let new_var ~loc ?(state = State.Undeclared) ?(kind = VarBinding) ?specific general =
+  let new_var ~loc ?(state = State.Undeclared) ?(kind = VarBinding Havocable) ?specific general =
     let specific =
       match specific with
       | Some t -> t
@@ -194,7 +198,7 @@ module Entry = struct
       and internal vars are read-only, so specific types can be preserved.
       TODO: value_state should go from Declared to MaybeInitialized?
    *)
-  let havoc name entry =
+  let havoc ~on_call name entry =
     match entry with
     | Type _ -> entry
     | Value ({ kind = Const _; specific = Type.DefT (_, _, Type.EmptyT); _ } as v) ->
@@ -207,6 +211,12 @@ module Entry = struct
     | Value { kind = Var ConstlikeVarBinding; _ } -> entry
     | Value { kind = Let ConstlikeLetVarBinding; _ } -> entry
     | Value { kind = Let ConstlikeParamBinding; _ } -> entry
+    | Value { kind = Let (LetVarBinding NotWrittenByClosure); _ } when on_call -> entry
+    | Value { kind = Let (ClassNameBinding NotWrittenByClosure); _ } when on_call -> entry
+    | Value { kind = Let (CatchParamBinding NotWrittenByClosure); _ } when on_call -> entry
+    | Value { kind = Let (FunctionBinding NotWrittenByClosure); _ } when on_call -> entry
+    | Value { kind = Let (ParamBinding NotWrittenByClosure); _ } when on_call -> entry
+    | Value { kind = Var (VarBinding NotWrittenByClosure); _ } when on_call -> entry
     | Value v ->
       if Reason.is_internal_name name then
         entry
@@ -335,7 +345,7 @@ let get_entry name scope = SMap.find_opt name scope.entries
 let havoc_entry name scope =
   match get_entry name scope with
   | Some entry ->
-    let entry = Entry.havoc name entry in
+    let entry = Entry.havoc ~on_call:false name entry in
     scope.entries <- SMap.add name entry scope.entries
   | None ->
     assert_false
@@ -385,7 +395,7 @@ let havoc_all_refis ?name scope =
 *)
 let havoc scope =
   havoc_all_refis scope;
-  update_entries Entry.havoc scope
+  update_entries (Entry.havoc ~on_call:false) scope
 
 let reset loc scope =
   havoc_all_refis scope;

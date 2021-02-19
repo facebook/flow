@@ -1038,11 +1038,8 @@ struct
                   completion_state)
               ~finally:(fun () -> this#reset_ssa_env env))
 
-      method! call _loc (expr : (L.t, L.t) Ast.Expression.Call.t) =
-        let open Ast.Expression.Call in
-        let { callee; targs = _; arguments; comments = _ } = expr in
-        ignore @@ this#expression callee;
-        ignore @@ this#call_arguments arguments;
+      method! call loc (expr : (L.t, L.t) Ast.Expression.Call.t) =
+        ignore @@ super#call loc expr;
         this#havoc_current_ssa_env;
         expr
 

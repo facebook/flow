@@ -465,9 +465,9 @@ let bind_entry cx name entry loc =
           Entry.(
             let can_shadow = function
               (* funcs/vars can shadow other funcs/vars -- only in var scope *)
-              | ((Var _ | Let FunctionBinding), (Var _ | Let FunctionBinding)) -> true
+              | ((Var _ | Let (FunctionBinding _)), (Var _ | Let (FunctionBinding _))) -> true
               (* vars can shadow function params *)
-              | (Var _, Let ParamBinding) -> true
+              | (Var _, Let (ParamBinding _)) -> true
               | (Var _, Let ConstlikeParamBinding) -> true
               | (Var _, Const ConstParamBinding) -> true
               | _ -> false
@@ -504,7 +504,7 @@ let bind_let ?(state = State.Undeclared) cx name t loc =
 let bind_implicit_let ?(state = State.Undeclared) kind cx name t loc =
   bind_entry cx name (Entry.new_let (Inferred t) ~kind ~loc ~state) loc
 
-let bind_fun ?(state = State.Declared) = bind_implicit_let ~state Entry.FunctionBinding
+let bind_fun ?(state = State.Declared) = bind_implicit_let ~state Entry.(FunctionBinding Havocable)
 
 (* bind const entry *)
 let bind_const ?(state = State.Undeclared) cx name t loc =
@@ -582,7 +582,7 @@ let declare_value_entry kind cx name loc =
         Scope.add_entry name new_entry scope
       | _ -> already_bound_error cx name entry loc)
 
-let declare_let = declare_value_entry Entry.(Let LetVarBinding)
+let declare_let = declare_value_entry Entry.(Let (LetVarBinding Havocable))
 
 let declare_implicit_let kind = declare_value_entry (Entry.Let kind)
 
@@ -616,19 +616,84 @@ let promote_to_const_like cx loc =
     ALocSet.cardinal writes <= 1
   with _ -> false
 
+let is_not_captured_by_closure =
+  let rec lookup in_current_var_scope info scope def =
+    if SMap.exists (fun _ def' -> def = def') scope.Scope_api.Scope.defs then
+      in_current_var_scope
+    else
+      match scope.Scope_api.Scope.parent with
+      | None -> true
+      | Some scope_id' ->
+        let scope' = Scope_api.scope info scope_id' in
+        lookup (in_current_var_scope && scope.Scope_api.Scope.lexical) info scope' def
+  in
+  fun info use ->
+    let scopes = info.Scope_api.scopes in
+    IMap.fold
+      (fun _scope_id scope acc ->
+        match ALocMap.find_opt use scope.Scope_api.Scope.locals with
+        | Some def -> acc && lookup true info scope def
+        | None -> acc)
+      scopes
+      true
+
+let is_not_written_by_closure cx loc =
+  try
+    let (info, values) = Context.use_def cx in
+    let uses = Scope_api.uses_of_use info loc in
+    (* We consider a binding to be const-like if all reads point to the same
+       write, modulo initialization. *)
+    ALocSet.fold
+      (fun use acc ->
+        match ALocMap.find_opt use values with
+        | None ->
+          (* use is a write *)
+          acc && is_not_captured_by_closure info use
+        | Some _write_locs ->
+          (* use is a read *)
+          (* collect writes pointed to by the read, modulo initialization *)
+          acc)
+      uses
+      true
+  with _ -> true
+
 let initialized_value_entry cx kind specific loc v =
   Entry.(
     (* Maybe promote to const-like *)
     let new_kind =
       match kind with
-      | Var VarBinding ->
+      | Var (VarBinding spec) ->
         if promote_to_const_like cx loc then
-          Var ConstlikeVarBinding
+          Entry.(Var ConstlikeVarBinding)
+        else if spec <> NotWrittenByClosure && is_not_written_by_closure cx loc then
+          Entry.(Var (VarBinding NotWrittenByClosure))
         else
           kind
-      | Let LetVarBinding ->
+      | Let (LetVarBinding spec) ->
         if promote_to_const_like cx loc then
-          Let ConstlikeLetVarBinding
+          Entry.(Let ConstlikeLetVarBinding)
+        else if spec <> NotWrittenByClosure && is_not_written_by_closure cx loc then
+          Entry.(Let (LetVarBinding NotWrittenByClosure))
+        else
+          kind
+      | Let (ClassNameBinding spec) ->
+        if spec <> NotWrittenByClosure && is_not_written_by_closure cx loc then
+          Entry.(Let (ClassNameBinding NotWrittenByClosure))
+        else
+          kind
+      | Let (CatchParamBinding spec) ->
+        if spec <> NotWrittenByClosure && is_not_written_by_closure cx loc then
+          Entry.(Let (CatchParamBinding NotWrittenByClosure))
+        else
+          kind
+      | Let (FunctionBinding spec) ->
+        if spec <> NotWrittenByClosure && is_not_written_by_closure cx loc then
+          Entry.(Let (FunctionBinding NotWrittenByClosure))
+        else
+          kind
+      | Let (ParamBinding spec) ->
+        if spec <> NotWrittenByClosure && is_not_written_by_closure cx loc then
+          Entry.(Let (ParamBinding NotWrittenByClosure))
         else
           kind
       | _ -> kind
@@ -670,13 +735,13 @@ let init_value_entry kind cx ~use_op name ~has_anno specific loc =
            so we can prune this case here. *)
         ())
 
-let init_var = init_value_entry Entry.(Var VarBinding)
+let init_var = init_value_entry Entry.(Var (VarBinding Havocable))
 
-let init_let = init_value_entry Entry.(Let LetVarBinding)
+let init_let = init_value_entry Entry.(Let (LetVarBinding Havocable))
 
 let init_implicit_let kind = init_value_entry (Entry.Let kind)
 
-let init_fun = init_implicit_let ~has_anno:false Entry.FunctionBinding
+let init_fun = init_implicit_let ~has_anno:false Entry.(FunctionBinding Havocable)
 
 let init_const = init_value_entry Entry.(Const ConstVarBinding)
 
@@ -749,7 +814,7 @@ let value_entry_types ?(lookup_mode = ForValue) scope =
     (* from value positions, a same-activation ref to var or an explicit let
        before initialization yields undefined. *)
     | {
-        Entry.kind = Var _ | Let LetVarBinding;
+        Entry.kind = Var _ | Let (LetVarBinding _);
         value_state = (State.Declared | State.MaybeInitialized) as state;
         value_declare_loc;
         specific;
@@ -783,7 +848,7 @@ let allow_forward_ref =
   Scope.Entry.(
     function
     | Var _
-    | Let FunctionBinding ->
+    | Let (FunctionBinding _) ->
       true
     | _ -> false)
 
@@ -920,7 +985,7 @@ let check_exported_let_bound_reassignment op cx name entry loc =
   | ( Changeset.Write,
       Value
         {
-          Entry.kind = Let Entry.((ClassNameBinding | FunctionBinding) as binding_kind);
+          Entry.kind = Let Entry.((ClassNameBinding _ | FunctionBinding _) as binding_kind);
           value_declare_loc;
           _;
         },
@@ -1340,7 +1405,7 @@ let havoc_vars =
         | scope :: scopes ->
           (match get_entry name scope with
           | Some entry ->
-            let entry = Entry.havoc name entry in
+            let entry = Entry.havoc ~on_call:false name entry in
             add_entry name entry scope
           | None -> loop scopes)
       in
@@ -1364,6 +1429,17 @@ let havoc_vars =
    Real variables are left untouched.
 *)
 let havoc_heap_refinements () = iter_scopes Scope.havoc_all_refis
+
+let havoc_local_refinements () =
+  iter_scopes (fun scope ->
+      Scope.update_entries
+        (fun name entry ->
+          let entry' = Entry.havoc ~on_call:true name entry in
+          ( if entry' != entry then
+            let entry_ref = (scope.id, name, Changeset.Write) in
+            Changeset.(if Global.is_active () then Global.change_var entry_ref) );
+          entry')
+        scope)
 
 let havoc_heap_refinements_with_propname ~private_ name =
   iter_scopes (Scope.havoc_refis ~private_ ~name)
