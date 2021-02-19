@@ -203,7 +203,7 @@ module Merge_component :
 let scan_for_component_suppressions ~options ~get_ast_unsafe component =
   let lint_severities = Options.lint_severities options in
   let strict_mode = Options.strict_mode options in
-  Type_sig_merge.Component.iter
+  Array.iter
     (fun file ->
       let { Type_sig_merge.key; cx; _ } = file in
       let (_, { Flow_ast.Program.all_comments; _ }) = get_ast_unsafe key in
@@ -215,7 +215,6 @@ let scan_for_component_suppressions ~options ~get_ast_unsafe component =
 let merge_context_new_signatures ~options ~reader component =
   let module Pack = Type_sig_pack in
   let module Merge = Type_sig_merge in
-  let module Component = Merge.Component in
   (* make sig context, shared by all file contexts in component *)
   let sig_cx = Context.make_sig () in
   let ccx = Context.make_ccx sig_cx in
@@ -230,13 +229,12 @@ let merge_context_new_signatures ~options ~reader component =
   in
 
   (* build a reverse lookup, used to detect in-cycle dependencies *)
-  let component_map = ref FilenameMap.empty in
-  let component =
-    Component.make component (fun i file ->
-        component_map := FilenameMap.add file i !component_map;
-        file)
+  let component = Array.of_list (Nel.to_list component) in
+  let component_map =
+    let acc = ref FilenameMap.empty in
+    Array.iteri (fun i file -> acc := FilenameMap.add file i !acc) component;
+    !acc
   in
-  let component_map = !component_map in
 
   (* dependencies *)
   let get_leader =
@@ -261,35 +259,66 @@ let merge_context_new_signatures ~options ~reader component =
         Hashtbl.add cache leader dep_sig;
         dep_sig
   in
-  let find_dependency file mref =
+  let mk_builtin_module_t cx mref mname =
+    let desc = Reason.RCustom mref in
+    let builtin_name = Reason.internal_module_name (Modulename.to_string mname) in
+    fun loc ->
+      let reason = Reason.mk_reason desc loc in
+      let strict = Type.Strict reason in
+      Tvar.mk_no_wrap_where cx reason (fun tout ->
+          Flow_js.lookup_builtin cx builtin_name reason strict tout)
+  in
+  let mk_resource_module_t cx filename loc = Import_export.mk_resource_module_t cx loc filename in
+  let mk_cyclic_module_t component_rec i _loc =
+    let (lazy component) = component_rec in
+    let file = component.(i) in
+    Merge.(visit_exports file file.Merge.exports)
+  in
+  let mk_acyclic_module_t dep =
+    let dep_cx = get_dep_cx dep in
+    let dep_exports = Context.find_module_sig dep_cx (Files.module_ref dep) in
+    (fun _loc -> dep_exports)
+  in
+  let mk_legacy_unchecked_module cx mref =
+    let desc = Reason.RCustom mref in
+    let builtin_name = Reason.internal_module_name mref in
+    fun loc ->
+      let reason = Reason.(mk_reason desc loc) in
+      Tvar.mk_no_wrap_where cx reason (fun tout ->
+          let strict =
+            Type.(NonstrictReturning (Some (AnyT (reason, Untyped), OpenT tout), None))
+          in
+          Flow_js.lookup_builtin cx builtin_name reason strict tout)
+  in
+  let file_dependency component_rec cx file_key mref =
     let open Module_heaps in
-    let mname = Module_js.find_resolved_module ~reader ~audit:Expensive.ok file mref in
-    let file = Reader_dispatcher.get_file ~reader ~audit:Expensive.ok mname in
-    match file with
-    | None -> Merge.BuiltinDep (mref, Modulename.to_string mname)
-    | Some (File_key.ResourceFile fn) -> Merge.ResourceDep fn
-    | Some dep ->
-      let info = Reader_dispatcher.get_info_unsafe ~reader ~audit:Expensive.ok dep in
-      if info.checked && info.parsed then
-        match FilenameMap.find_opt dep component_map with
-        | Some i -> Merge.CyclicDep i
-        | None ->
-          let dep_cx = get_dep_cx dep in
-          let dep_exports = Context.find_module_sig dep_cx (Files.module_ref dep) in
-          Merge.AcyclicDep dep_exports
-      else
-        Merge.LegacyUncheckedDepTryBuiltinsFirst mref
+    let mname = Module_js.find_resolved_module ~reader ~audit:Expensive.ok file_key mref in
+    let dep_opt = Reader_dispatcher.get_file ~reader ~audit:Expensive.ok mname in
+    let mk_module_t =
+      match dep_opt with
+      | None -> mk_builtin_module_t cx mref mname
+      | Some (File_key.ResourceFile filename) -> mk_resource_module_t cx filename
+      | Some dep ->
+        let info = Reader_dispatcher.get_info_unsafe ~reader ~audit:Expensive.ok dep in
+        if info.checked && info.parsed then
+          match FilenameMap.find_opt dep component_map with
+          | Some i -> mk_cyclic_module_t component_rec i
+          | None -> mk_acyclic_module_t dep
+        else
+          mk_legacy_unchecked_module cx mref
+    in
+    (mref, mk_module_t)
   in
 
   (* read type_sig from heap and create file record for merge *)
   let abstract_locations = Options.abstract_locations options in
-  let component_file file =
+  let component_file component_rec file_key =
     let open Type_sig_collections in
     let aloc_table =
-      lazy (Parsing_heaps.Reader_dispatcher.get_sig_ast_aloc_table_unsafe ~reader file)
+      lazy (Parsing_heaps.Reader_dispatcher.get_sig_ast_aloc_table_unsafe ~reader file_key)
     in
     let aloc =
-      let source = Some file in
+      let source = Some file_key in
       fun (loc : Locs.index) ->
         let aloc = ALoc.ALocRepresentationDoNotUse.make_keyed source (loc :> int) in
         if abstract_locations then
@@ -306,11 +335,10 @@ let merge_context_new_signatures ~options ~reader component =
       pattern_defs;
       patterns;
     } =
-      Parsing_heaps.Reader_dispatcher.get_type_sig_unsafe ~reader file
+      Parsing_heaps.Reader_dispatcher.get_type_sig_unsafe ~reader file_key
     in
-    let dependencies =
-      Module_refs.map (fun mref -> (mref, find_dependency file mref)) module_refs
-    in
+    let cx = create_cx file_key aloc_table in
+    let dependencies = Module_refs.map (file_dependency component_rec cx file_key) module_refs in
     let exports = Merge.create_node (Pack.map_exports aloc exports) in
     let export_def = Base.Option.map ~f:(Pack.map_packed aloc) export_def in
     let local_defs =
@@ -322,8 +350,8 @@ let merge_context_new_signatures ~options ~reader component =
     let pattern_defs = Pattern_defs.map (Pack.map_packed aloc) pattern_defs in
     let patterns = Patterns.map (fun p -> Merge.create_node (Pack.map_pattern aloc p)) patterns in
     {
-      Merge.key = file;
-      cx = create_cx file aloc_table;
+      Merge.key = file_key;
+      cx;
       dependencies;
       exports;
       export_def;
@@ -334,9 +362,14 @@ let merge_context_new_signatures ~options ~reader component =
     }
   in
 
-  (* create component for merge, pick out leader/representative cx *)
-  let component = Component.map component_file component in
-  let { Merge.cx; _ } = Component.leader component in
+  (* create component for merge *)
+  let component =
+    let rec component_rec = lazy (Array.map (component_file component_rec) component) in
+    Lazy.force component_rec
+  in
+
+  (* pick out leader/representative cx *)
+  let { Merge.cx; _ } = component.(0) in
 
   (* create builtins, merge master cx *)
   let master_cx = Context_heaps.Reader_dispatcher.find_sig ~reader File_key.Builtins in
@@ -354,7 +387,7 @@ let merge_context_new_signatures ~options ~reader component =
     component;
 
   (* merge *)
-  Merge.merge_component component;
+  Array.iter Merge.merge_file component;
 
   (cx, master_cx)
 

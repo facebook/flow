@@ -82,9 +82,3 @@ val merge :
   error_acc merge_results Lwt.t
 
 val check : Options.t -> reader:Module_heaps.Mutator_reader.reader -> File_key.t -> acc unit_result
-
-val scan_for_component_suppressions :
-  options:Options.t ->
-  get_ast_unsafe:(File_key.t -> (Loc.t, Loc.t) Flow_ast.Program.t) ->
-  Type_sig_merge.file Type_sig_merge.Component.t ->
-  unit
