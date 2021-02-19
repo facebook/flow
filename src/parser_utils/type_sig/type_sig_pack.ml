@@ -64,6 +64,24 @@ type 'loc remote_ref =
     }
 [@@deriving map, show { with_path = false }]
 
+(* These accessors will compile to code that does not have a branch because
+ * id_loc and name have the same offset for each constructor. *)
+let remote_ref_loc = function
+  | Import { id_loc; _ }
+  | ImportType { id_loc; _ }
+  | ImportTypeof { id_loc; _ }
+  | ImportNs { id_loc; _ }
+  | ImportTypeofNs { id_loc; _ } ->
+    id_loc
+
+let remote_ref_name = function
+  | Import { name; _ }
+  | ImportType { name; _ }
+  | ImportTypeof { name; _ }
+  | ImportNs { name; _ }
+  | ImportTypeofNs { name; _ } ->
+    name
+
 type 'loc packed_ref =
   | LocalRef of {
       ref_loc: 'loc;

@@ -272,7 +272,7 @@ let merge_context_new_signatures ~options ~reader component =
   let mk_cyclic_module_t component_rec i _loc =
     let (lazy component) = component_rec in
     let file = component.(i) in
-    Merge.(visit_exports file file.Merge.exports)
+    file.Merge.exports ()
   in
   let mk_acyclic_module_t dep =
     let dep_cx = get_dep_cx dep in
@@ -338,28 +338,80 @@ let merge_context_new_signatures ~options ~reader component =
       Parsing_heaps.Reader_dispatcher.get_type_sig_unsafe ~reader file_key
     in
     let cx = create_cx file_key aloc_table in
+    let visit_packed file_rec def =
+      let def = Pack.map_packed aloc def in
+      lazy (Merge.merge (Lazy.force file_rec) def)
+    in
+    let visit_exports file_rec =
+      let merged = ref None in
+      let exports = Pack.map_exports aloc exports in
+      fun () ->
+        match !merged with
+        | Some t -> t
+        | None ->
+          let file_loc = ALoc.of_loc { Loc.none with Loc.source = Some file_key } in
+          let reason = Reason.(mk_reason RExports file_loc) in
+          Tvar.mk_where cx reason (fun tvar ->
+              merged := Some tvar;
+              let t = Merge.merge_exports (Lazy.force file_rec) reason exports in
+              Flow_js.unify cx tvar t)
+    in
+    let visit_def file_rec def =
+      let merged = ref None in
+      let def = Pack.map_packed_def aloc def in
+      fun () ->
+        let loc = Type_sig.def_id_loc def in
+        let name = Type_sig.def_name def in
+        let t =
+          match !merged with
+          | Some t -> t
+          | None ->
+            let reason = Merge.def_reason def in
+            Tvar.mk_where cx reason (fun tvar ->
+                merged := Some tvar;
+                let t = Merge.merge_def (Lazy.force file_rec) reason def in
+                Flow_js.unify cx tvar t)
+        in
+        (loc, name, t)
+    in
+    let visit_remote_ref file_rec remote_ref =
+      let merged = ref None in
+      let remote_ref = Pack.map_remote_ref aloc remote_ref in
+      fun () ->
+        let loc = Pack.remote_ref_loc remote_ref in
+        let name = Pack.remote_ref_name remote_ref in
+        let t =
+          match !merged with
+          | Some t -> t
+          | None ->
+            let reason = Merge.remote_ref_reason remote_ref in
+            Tvar.mk_where cx reason (fun tvar ->
+                merged := Some tvar;
+                let t = Merge.merge_remote_ref (Lazy.force file_rec) reason remote_ref in
+                Flow_js.unify cx tvar t)
+        in
+        (loc, name, t)
+    in
+    let visit_pattern file_rec pattern =
+      let pattern = Pack.map_pattern aloc pattern in
+      lazy (Merge.merge_pattern (Lazy.force file_rec) pattern)
+    in
     let dependencies = Module_refs.map (file_dependency component_rec cx file_key) module_refs in
-    let exports = Merge.create_node (Pack.map_exports aloc exports) in
-    let export_def = Base.Option.map ~f:(Pack.map_packed aloc) export_def in
-    let local_defs =
-      Local_defs.map (fun def -> Merge.create_node (Pack.map_packed_def aloc def)) local_defs
+    let rec file_rec =
+      lazy
+        {
+          Merge.key = file_key;
+          cx;
+          dependencies;
+          exports = visit_exports file_rec;
+          export_def = Base.Option.map ~f:(visit_packed file_rec) export_def;
+          local_defs = Local_defs.map (visit_def file_rec) local_defs;
+          remote_refs = Remote_refs.map (visit_remote_ref file_rec) remote_refs;
+          pattern_defs = Pattern_defs.map (visit_packed file_rec) pattern_defs;
+          patterns = Patterns.map (visit_pattern file_rec) patterns;
+        }
     in
-    let remote_refs =
-      Remote_refs.map (fun ref -> Merge.create_node (Pack.map_remote_ref aloc ref)) remote_refs
-    in
-    let pattern_defs = Pattern_defs.map (Pack.map_packed aloc) pattern_defs in
-    let patterns = Patterns.map (fun p -> Merge.create_node (Pack.map_pattern aloc p)) patterns in
-    {
-      Merge.key = file_key;
-      cx;
-      dependencies;
-      exports;
-      export_def;
-      local_defs;
-      remote_refs;
-      pattern_defs;
-      patterns;
-    }
+    Lazy.force file_rec
   in
 
   (* create component for merge *)

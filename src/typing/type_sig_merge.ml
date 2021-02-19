@@ -49,41 +49,19 @@ end = struct
   let iteri = Array.iteri
 end
 
-type 'a node =
-  | Node of {
-      mutable merged: Type.t option;
-      packed: 'a;
-    }
-
 type file = {
   key: File_key.t;
   cx: Context.t;
   dependencies: (string * (ALoc.t -> Type.t)) Module_refs.t;
-  exports: ALoc.t Pack.exports node;
-  export_def: ALoc.t Pack.packed option;
-  local_defs: ALoc.t Pack.packed_def node Local_defs.t;
-  remote_refs: ALoc.t Pack.remote_ref node Remote_refs.t;
-  patterns: ALoc.t Pack.pattern node Patterns.t;
-  pattern_defs: ALoc.t Pack.packed Pattern_defs.t;
+  exports: unit -> Type.t;
+  export_def: Type.t Lazy.t option;
+  local_defs: (unit -> ALoc.t * string * Type.t) Local_defs.t;
+  remote_refs: (unit -> ALoc.t * string * Type.t) Remote_refs.t;
+  patterns: Type.t Lazy.t Patterns.t;
+  pattern_defs: Type.t Lazy.t Pattern_defs.t;
 }
 
-let remote_ref_loc = function
-  | Pack.Import { id_loc; _ }
-  | Pack.ImportType { id_loc; _ }
-  | Pack.ImportTypeof { id_loc; _ }
-  | Pack.ImportNs { id_loc; _ }
-  | Pack.ImportTypeofNs { id_loc; _ } ->
-    id_loc
-
-let remote_ref_name = function
-  | Pack.Import { name; _ }
-  | Pack.ImportType { name; _ }
-  | Pack.ImportTypeof { name; _ }
-  | Pack.ImportNs { name; _ }
-  | Pack.ImportTypeofNs { name; _ } ->
-    name
-
-let create_node packed = Node { merged = None; packed }
+let visit f = f ()
 
 let def_reason = function
   | TypeAlias { id_loc; name; _ }
@@ -269,9 +247,7 @@ let rec merge file = function
     let f t _ _ = TypeUtil.typeapp_annot loc t targs in
     merge_tyref file f name
   | Pack.AsyncVoidReturn loc -> async_void_return file loc
-  | Pack.Pattern i ->
-    let p = Patterns.get file.patterns i in
-    visit_pattern file p
+  | Pack.Pattern i -> Lazy.force (Patterns.get file.patterns i)
   | Pack.Err loc -> Type.(AnyT.at (AnyError None) loc)
   | Pack.Eval (loc, t, op) ->
     let t = merge file t in
@@ -284,22 +260,17 @@ let rec merge file = function
     Flow_js.get_builtin_typeapp file.cx reason "$Flow$ModuleRef" [t]
 
 and merge_pattern file = function
-  | Pack.PDef i ->
-    let def = Pattern_defs.get file.pattern_defs i in
-    merge file def
+  | Pack.PDef i -> Lazy.force (Pattern_defs.get file.pattern_defs i)
   | Pack.PropP { id_loc; name; def } ->
-    let def = Patterns.get file.patterns def in
-    let t = visit_pattern file def in
+    let t = Lazy.force (Patterns.get file.patterns def) in
     let reason = Reason.(mk_reason (RProperty (Some name)) id_loc) in
     (* TODO: use_op *)
     let use_op = Type.unknown_use in
     Tvar.mk_no_wrap_where file.cx reason (fun tout ->
         Flow_js.flow file.cx (t, Type.GetPropT (use_op, reason, Type.Named (reason, name), tout)))
   | Pack.ComputedP { elem; def } ->
-    let elem = Pattern_defs.get file.pattern_defs elem in
-    let def = Patterns.get file.patterns def in
-    let elem = merge file elem in
-    let t = visit_pattern file def in
+    let elem = Lazy.force (Pattern_defs.get file.pattern_defs elem) in
+    let t = Lazy.force (Patterns.get file.patterns def) in
     let loc = TypeUtil.loc_of_t elem in
     let reason = Reason.(mk_reason (RProperty None) loc) in
     (* TODO: use_op *)
@@ -308,14 +279,12 @@ and merge_pattern file = function
         Flow_js.flow file.cx (t, Type.GetElemT (use_op, reason, elem, tout)))
   | Pack.UnsupportedLiteralP loc -> Type.(AnyT.at (AnyError None) loc)
   | Pack.ObjRestP { loc; xs; def } ->
-    let def = Patterns.get file.patterns def in
-    let t = visit_pattern file def in
+    let t = Lazy.force (Patterns.get file.patterns def) in
     let reason = Reason.(mk_reason RObjectPatternRestProp loc) in
     Tvar.mk_where file.cx reason (fun tout ->
         Flow_js.flow file.cx (t, Type.ObjRestT (reason, xs, tout, Reason.mk_id ())))
   | Pack.IndexP { loc; i; def } ->
-    let def = Patterns.get file.patterns def in
-    let t = visit_pattern file def in
+    let t = Lazy.force (Patterns.get file.patterns def) in
     let reason = Reason.(mk_reason (RCustom (Utils_js.spf "element %d" i)) loc) in
     let i =
       let reason = Reason.(mk_reason RNumber loc) in
@@ -326,8 +295,7 @@ and merge_pattern file = function
     Tvar.mk_no_wrap_where file.cx reason (fun tout ->
         Flow_js.flow file.cx (t, Type.GetElemT (use_op, reason, i, tout)))
   | Pack.ArrRestP { loc; i; def } ->
-    let def = Patterns.get file.patterns def in
-    let t = visit_pattern file def in
+    let t = Lazy.force (Patterns.get file.patterns def) in
     let reason = Reason.(mk_reason RArrayPatternRestProp loc) in
     (* TODO: use_op *)
     let use_op = Type.unknown_use in
@@ -432,21 +400,11 @@ and merge_ref : 'a. _ -> (_ -> _ -> _ -> 'a) -> _ -> 'a =
  fun file f ref ->
   match ref with
   | Pack.LocalRef { ref_loc; index } ->
-    let def = Local_defs.get file.local_defs index in
-    let name =
-      let (Node n) = def in
-      def_name n.packed
-    in
-    let t = visit_def file def in
+    let (_loc, name, t) = visit (Local_defs.get file.local_defs index) in
     let t = Flow_js.reposition file.cx ref_loc t in
     f t ref_loc name
   | Pack.RemoteRef { ref_loc; index } ->
-    let ref = Remote_refs.get file.remote_refs index in
-    let name =
-      let (Node n) = ref in
-      remote_ref_name n.packed
-    in
-    let t = visit_remote_ref file ref in
+    let (_loc, name, t) = visit (Remote_refs.get file.remote_refs index) in
     let t = Flow_js.reposition file.cx ref_loc t in
     f t ref_loc name
   | Pack.BuiltinRef { ref_loc; name } ->
@@ -1634,7 +1592,7 @@ and merge_exports =
     | Pack.CJSExports { types; type_stars; strict } ->
       let value =
         match file.export_def with
-        | Some t -> merge file t
+        | Some (lazy t) -> t
         | None -> Obj_type.mk_unsealed file.cx reason
       in
       let types = SMap.map (merge_export_type file) types in
@@ -1655,92 +1613,28 @@ and merge_exports =
 and merge_export file = function
   | Pack.ExportRef ref -> merge_ref file (fun t ref_loc _ -> (Some ref_loc, t)) ref
   | Pack.ExportBinding index ->
-    let def = Local_defs.get file.local_defs index in
-    let loc =
-      let (Node n) = def in
-      def_id_loc n.packed
-    in
-    let t = visit_def file def in
+    let (loc, _name, t) = visit (Local_defs.get file.local_defs index) in
     (Some loc, t)
   | Pack.ExportDefault { default_loc } ->
-    let def = Option.value_exn file.export_def in
-    let t = merge file def in
+    let (lazy t) = Option.value_exn file.export_def in
     (Some default_loc, t)
   | Pack.ExportDefaultBinding { default_loc; index } ->
-    let def = Local_defs.get file.local_defs index in
-    let t = visit_def file def in
+    let (_loc, _name, t) = visit (Local_defs.get file.local_defs index) in
     (Some default_loc, t)
   | Pack.ExportFrom index ->
-    let ref = Remote_refs.get file.remote_refs index in
-    let loc =
-      let (Node n) = ref in
-      remote_ref_loc n.packed
-    in
-    let t = visit_remote_ref file ref in
+    let (loc, _name, t) = visit (Remote_refs.get file.remote_refs index) in
     (Some loc, t)
 
 and merge_export_type file = function
   | Pack.ExportTypeRef ref -> merge_ref file (fun t ref_loc _ -> (Some ref_loc, t)) ref
   | Pack.ExportTypeBinding index ->
-    let def = Local_defs.get file.local_defs index in
-    let loc =
-      let (Node n) = def in
-      def_id_loc n.packed
-    in
-    let t = visit_def file def in
+    let (loc, _name, t) = visit (Local_defs.get file.local_defs index) in
     (Some loc, t)
   | Pack.ExportTypeFrom index ->
-    let ref = Remote_refs.get file.remote_refs index in
-    let loc =
-      let (Node n) = ref in
-      remote_ref_loc n.packed
-    in
-    let t = visit_remote_ref file ref in
+    let (loc, _name, t) = visit (Remote_refs.get file.remote_refs index) in
     (Some loc, t)
 
-and visit_exports file (Node n) =
-  match n.merged with
-  | Some t -> t
-  | None ->
-    let file_loc = ALoc.of_loc { Loc.none with Loc.source = Some file.key } in
-    let reason = Reason.(mk_reason RExports file_loc) in
-    let tvar = Tvar.mk file.cx reason in
-    n.merged <- Some tvar;
-    let t = merge_exports file reason n.packed in
-    Flow_js.unify file.cx tvar t;
-    tvar
-
-and visit_def file (Node n) =
-  match n.merged with
-  | Some t -> t
-  | None ->
-    let reason = def_reason n.packed in
-    let tvar = Tvar.mk file.cx reason in
-    n.merged <- Some tvar;
-    let t = merge_def file reason n.packed in
-    Flow_js.unify file.cx tvar t;
-    tvar
-
-and visit_remote_ref file (Node n) =
-  match n.merged with
-  | Some t -> t
-  | None ->
-    let reason = remote_ref_reason n.packed in
-    let tvar = Tvar.mk file.cx reason in
-    n.merged <- Some tvar;
-    let t = merge_remote_ref file reason n.packed in
-    Flow_js.unify file.cx tvar t;
-    tvar
-
-and visit_pattern file (Node n) =
-  match n.merged with
-  | Some t -> t
-  | None ->
-    let t = merge_pattern file n.packed in
-    n.merged <- Some t;
-    t
-
 let merge_file file =
-  let module_t = visit_exports file file.exports in
+  let module_t = visit file.exports in
   let module_ref = Files.module_ref file.key in
   Context.add_module file.cx module_ref module_t
