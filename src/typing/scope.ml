@@ -58,30 +58,25 @@ module Entry = struct
     | EnumNameBinding
 
   and let_binding_kind =
-    | LetVarBinding of kind_specialization
-    | ConstlikeLetVarBinding
-    | ClassNameBinding of kind_specialization
-    | CatchParamBinding of kind_specialization
-    | FunctionBinding of kind_specialization
-    | ParamBinding of kind_specialization
-    | ConstlikeParamBinding
+    | LetVarBinding of non_const_specialization
+    | ClassNameBinding of non_const_specialization
+    | CatchParamBinding of non_const_specialization
+    | FunctionBinding of non_const_specialization
+    | ParamBinding of non_const_specialization
 
-  and var_binding_kind =
-    | VarBinding of kind_specialization
-    | ConstlikeVarBinding
+  and var_binding_kind = VarBinding of non_const_specialization
 
-  and kind_specialization =
+  and non_const_specialization =
     | Havocable
     | NotWrittenByClosure
+    | ConstLike
 
   let string_of_let_binding_kind = function
     | LetVarBinding _ -> "let"
-    | ConstlikeLetVarBinding -> "let"
     | ClassNameBinding _ -> "class"
     | CatchParamBinding _ -> "catch"
     | FunctionBinding _ -> "function"
     | ParamBinding _ -> "param"
-    | ConstlikeParamBinding -> "param"
 
   let string_of_value_kind = function
     | Const ConstImportBinding -> "import"
@@ -90,7 +85,6 @@ module Entry = struct
     | Const EnumNameBinding -> "enum"
     | Let kind -> string_of_let_binding_kind kind
     | Var (VarBinding _) -> "var"
-    | Var ConstlikeVarBinding -> "var"
 
   type value_binding = {
     kind: value_kind;
@@ -207,16 +201,19 @@ module Entry = struct
         entry
       else
         Value { v with specific = TypeUtil.type_t_of_annotated_or_inferred v.general }
-    | Value { kind = Const _; _ } -> entry
-    | Value { kind = Var ConstlikeVarBinding; _ } -> entry
-    | Value { kind = Let ConstlikeLetVarBinding; _ } -> entry
-    | Value { kind = Let ConstlikeParamBinding; _ } -> entry
-    | Value { kind = Let (LetVarBinding NotWrittenByClosure); _ } when on_call -> entry
-    | Value { kind = Let (ClassNameBinding NotWrittenByClosure); _ } when on_call -> entry
-    | Value { kind = Let (CatchParamBinding NotWrittenByClosure); _ } when on_call -> entry
-    | Value { kind = Let (FunctionBinding NotWrittenByClosure); _ } when on_call -> entry
-    | Value { kind = Let (ParamBinding NotWrittenByClosure); _ } when on_call -> entry
-    | Value { kind = Var (VarBinding NotWrittenByClosure); _ } when on_call -> entry
+    | Value { kind = Const _; _ }
+    | Value { kind = Var (VarBinding ConstLike); _ }
+    | Value { kind = Let (LetVarBinding ConstLike); _ }
+    | Value { kind = Let (ParamBinding ConstLike); _ } ->
+      entry
+    | Value { kind = Let (LetVarBinding NotWrittenByClosure); _ }
+    | Value { kind = Let (ClassNameBinding NotWrittenByClosure); _ }
+    | Value { kind = Let (CatchParamBinding NotWrittenByClosure); _ }
+    | Value { kind = Let (FunctionBinding NotWrittenByClosure); _ }
+    | Value { kind = Let (ParamBinding NotWrittenByClosure); _ }
+    | Value { kind = Var (VarBinding NotWrittenByClosure); _ }
+      when on_call ->
+      entry
     | Value v ->
       if Reason.is_internal_name name then
         entry

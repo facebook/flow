@@ -368,7 +368,7 @@ module Func_stmt_config = struct
       else
         let kind =
           if Env.promote_to_const_like cx loc then
-            Entry.ConstlikeParamBinding
+            Entry.(ParamBinding ConstLike)
           else if Env.is_not_written_by_closure cx loc then
             Entry.(ParamBinding NotWrittenByClosure)
           else

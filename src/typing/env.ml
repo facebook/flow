@@ -428,9 +428,7 @@ let bind_entry cx name entry loc =
               (* funcs/vars can shadow other funcs/vars -- only in var scope *)
               | ((Var _ | Let (FunctionBinding _)), (Var _ | Let (FunctionBinding _))) -> true
               (* vars can shadow function params *)
-              | (Var _, Let (ParamBinding _)) -> true
-              | (Var _, Let ConstlikeParamBinding) -> true
-              | (Var _, Const ConstParamBinding) -> true
+              | (Var _, (Let (ParamBinding _) | Const ConstParamBinding)) -> true
               | _ -> false
             in
             (match (entry, prev) with
@@ -625,14 +623,14 @@ let initialized_value_entry cx kind specific loc v =
       match kind with
       | Var (VarBinding spec) ->
         if promote_to_const_like cx loc then
-          Entry.(Var ConstlikeVarBinding)
+          Entry.(Var (VarBinding ConstLike))
         else if spec <> NotWrittenByClosure && is_not_written_by_closure cx loc then
           Entry.(Var (VarBinding NotWrittenByClosure))
         else
           kind
       | Let (LetVarBinding spec) ->
         if promote_to_const_like cx loc then
-          Entry.(Let ConstlikeLetVarBinding)
+          Entry.(Let (LetVarBinding ConstLike))
         else if spec <> NotWrittenByClosure && is_not_written_by_closure cx loc then
           Entry.(Let (LetVarBinding NotWrittenByClosure))
         else

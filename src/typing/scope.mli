@@ -30,21 +30,18 @@ module Entry : sig
     | EnumNameBinding
 
   and let_binding_kind =
-    | LetVarBinding of kind_specialization
-    | ConstlikeLetVarBinding
-    | ClassNameBinding of kind_specialization
-    | CatchParamBinding of kind_specialization
-    | FunctionBinding of kind_specialization
-    | ParamBinding of kind_specialization
-    | ConstlikeParamBinding
+    | LetVarBinding of non_const_specialization
+    | ClassNameBinding of non_const_specialization
+    | CatchParamBinding of non_const_specialization
+    | FunctionBinding of non_const_specialization
+    | ParamBinding of non_const_specialization
 
-  and var_binding_kind =
-    | VarBinding of kind_specialization
-    | ConstlikeVarBinding
+  and var_binding_kind = VarBinding of non_const_specialization
 
-  and kind_specialization =
+  and non_const_specialization =
     | Havocable
     | NotWrittenByClosure
+    | ConstLike
 
   val string_of_let_binding_kind : let_binding_kind -> string
 
