@@ -188,8 +188,8 @@ class import_export_visitor ~cx ~scope_info ~declarations =
     method private add_this_in_exported_function_error loc =
       this#add_error (Error_message.EThisInExportedFunction loc)
 
-    method private add_export_named_default_error loc name =
-      this#add_error (Error_message.EExportRenamedDefault (loc, name))
+    method private add_export_named_default_error loc name is_reexport =
+      this#add_error (Error_message.EExportRenamedDefault { loc; name; is_reexport })
 
     method private import_star_from_use =
       (* Create a map from import star use locs to the import star specifier *)
@@ -374,7 +374,7 @@ class import_export_visitor ~cx ~scope_info ~declarations =
     method! export_named_declaration loc decl =
       let open Ast.Statement in
       let open ExportNamedDeclaration in
-      let { declaration; specifiers; _ } = decl in
+      let { declaration; specifiers; source; _ } = decl in
       (* Only const variables can be exported *)
       begin
         match declaration with
@@ -410,7 +410,9 @@ class import_export_visitor ~cx ~scope_info ~declarations =
               begin
                 match exported with
                 | Some (_, { Ast.Identifier.name = "default"; _ }) ->
-                  this#add_export_named_default_error spec_loc name
+                  this#add_export_named_default_error spec_loc (Some name) (source <> None)
+                | None when name = "default" && source <> None ->
+                  this#add_export_named_default_error spec_loc None true
                 | _ -> ()
               end;
               match Scopes.def_of_use_opt scope_info id_loc with

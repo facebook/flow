@@ -224,7 +224,11 @@ and 'loc t' =
   | EThisInExportedFunction of 'loc
   | EMixedImportAndRequire of 'loc * 'loc virtual_reason
   | EToplevelLibraryImport of 'loc
-  | EExportRenamedDefault of 'loc * string
+  | EExportRenamedDefault of {
+      loc: 'loc;
+      name: string option;
+      is_reexport: bool;
+    }
   | EUnreachable of 'loc
   | EInvalidObjectKit of {
       reason: 'loc virtual_reason;
@@ -811,7 +815,8 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
   | EThisInExportedFunction loc -> EThisInExportedFunction (f loc)
   | EMixedImportAndRequire (loc, r) -> EMixedImportAndRequire (f loc, map_reason r)
   | EToplevelLibraryImport loc -> EToplevelLibraryImport (f loc)
-  | EExportRenamedDefault (loc, s) -> EExportRenamedDefault (f loc, s)
+  | EExportRenamedDefault { loc; name; is_reexport } ->
+    EExportRenamedDefault { loc = f loc; name; is_reexport }
   | EUnreachable loc -> EUnreachable (f loc)
   | EInvalidTypeof (loc, s) -> EInvalidTypeof (f loc, s)
   | EBinaryInLHS r -> EBinaryInLHS (map_reason r)
@@ -1297,7 +1302,7 @@ let loc_of_msg : 'loc t' -> 'loc option = function
   | EThisInExportedFunction loc
   | EMixedImportAndRequire (loc, _)
   | EToplevelLibraryImport loc
-  | EExportRenamedDefault (loc, _)
+  | EExportRenamedDefault { loc; _ }
   | EIndeterminateModuleType loc
   | EExperimentalEnums loc
   | EExperimentalEnumsWithUnknownMembers loc
@@ -2534,20 +2539,46 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
             text ".";
           ];
       }
-  | EExportRenamedDefault (_, name) ->
-    Normal
-      {
-        features =
-          [
-            text "Cannot set the default export of a module by renaming ";
-            code name;
-            text " to ";
-            code "default";
-            text ". If you intended to set the default export use ";
-            code (spf "export default %s" name);
-            text " instead.";
-          ];
-      }
+  | EExportRenamedDefault { loc = _; name; is_reexport } ->
+    let reexport_message () =
+      [
+        text "If you intended to set the default export please ";
+        code "import";
+        text " and then ";
+        code "export default";
+        text " instead.";
+      ]
+    in
+    let features =
+      match (name, is_reexport) with
+      | (None, _) ->
+        [
+          text "Cannot set the default export of a module by re-exporting the ";
+          code "default";
+          text " property. ";
+        ]
+        @ reexport_message ()
+      | (Some name, true) ->
+        [
+          text "Cannot set the default export of a module by re-exporting ";
+          code name;
+          text " as ";
+          code "default";
+          text ". ";
+        ]
+        @ reexport_message ()
+      | (Some name, false) ->
+        [
+          text "Cannot set the default export of a module by renaming ";
+          code name;
+          text " to ";
+          code "default";
+          text ". If you intended to set the default export use ";
+          code (spf "export default %s" name);
+          text " instead.";
+        ]
+    in
+    Normal { features }
   | EUnexpectedTemporaryBaseType _ ->
     Normal
       {

@@ -1458,7 +1458,12 @@ let dump_error_message =
     | EMixedImportAndRequire (loc, reason) ->
       spf "EMixedImportAndRequire (%s, %s)" (string_of_aloc loc) (dump_reason cx reason)
     | EToplevelLibraryImport loc -> spf "EToplevelLibraryImport (%s)" (string_of_aloc loc)
-    | EExportRenamedDefault (loc, s) -> spf "EExportRenamedDefault (%s, %s)" (string_of_aloc loc) s
+    | EExportRenamedDefault { loc; name; is_reexport } ->
+      spf
+        "EExportRenamedDefault { loc = %s; name = %s; is_reexport = %B }"
+        (string_of_aloc loc)
+        (Base.Option.value ~default:"None" name)
+        is_reexport
     | EUnreachable loc -> spf "EUnreachable (%s)" (string_of_aloc loc)
     | EInvalidObjectKit { reason; reason_op; use_op } ->
       spf

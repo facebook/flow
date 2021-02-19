@@ -463,5 +463,23 @@ References:
        ^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
+Error ---------------------------------------------------------------------------------- reexport_renamed_default.js:3:9
 
-Found 38 errors
+Cannot set the default export of a module by re-exporting `named1` as `default`. If you intended to set the default
+export please `import` and then `export default` instead. [export-renamed-default]
+
+   3| export {named1 as default} from './foo';
+              ^^^^^^^^^^^^^^^^^
+
+
+Error ---------------------------------------------------------------------------------------- reexported_default.js:3:9
+
+Cannot set the default export of a module by re-exporting the `default` property. If you intended to set the default
+export please `import` and then `export default` instead. [export-renamed-default]
+
+   3| export {default} from './foo';
+              ^^^^^^^
+
+
+
+Found 40 errors
