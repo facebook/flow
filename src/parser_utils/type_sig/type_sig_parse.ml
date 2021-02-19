@@ -2610,15 +2610,15 @@ and function_def =
     let {F.Param.argument = (_, patt); default} = p in
     match patt with
     | P.Identifier {P.Identifier.name = id; annot = t; optional} ->
-      let name = Some (id_name id) in
-      let loc = (Locs.push locs loc) in
+      let (id_loc, {Ast.Identifier.name; comments = _}) = id in
+      let loc = (Locs.push locs id_loc) in
       let t = annot_or_hint
         ~err_loc:(Some loc)
         ~sort:(Expected_annotation_sort.ArrayPattern) (*Seems wrong, matches original behavior*)
         opts scope locs xs t
       in
       let t = if optional || default <> None then Annot (Optional t) else t in
-      FunParam {name; t}
+      FunParam {name = Some name; t}
     | P.Object {P.Object.annot = t; properties = _; comments = _}
     | P.Array {P.Array.annot = t; elements = _; comments = _} ->
       let loc = Locs.push locs loc in

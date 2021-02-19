@@ -481,6 +481,34 @@ let%expect_test "function_param_default" =
            predicate = None};
          statics = {}}) |}]
 
+let%expect_test "function_param_default_check" =
+  print_sig {|
+    export default function(p = "foo") {}
+  |};
+  [%expect {|
+    ESExports {names = { "default" -> ExportDefault {default_loc = [1:7-14]} };
+      types = {}; stars = []; type_stars = [];
+      strict = true}
+
+    Export_def:
+    (Value
+       FunExpr {loc = [1:15-37]; async = false;
+         generator = false;
+         def =
+         FunSig {tparams = Mono;
+           params = [FunParam {name = (Some "p"); t = (Annot (Optional (Err [1:24-25])))}];
+           rest_param = None; this_param = None;
+           return = (Annot (Void [1:34]));
+           predicate = None};
+         statics = {}})
+
+    Errors:
+    ([1:24-25],
+     (SigError
+        (Signature_error.ExpectedAnnotation ([1:24-25], Expected_annotation_sort.ArrayPattern))))
+
+  |}]
+
 let%expect_test "export_object_literal_property_literal" =
   print_sig {|
     export default { p: 0 };
