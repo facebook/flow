@@ -52,6 +52,7 @@ module Entry : sig
     value_assign_loc: ALoc.t;
     specific: Type.t;
     general: Type.annotated_or_inferred;
+    closure_writes: (Loc_collections.ALocSet.t * Type.t) option;
   }
 
   type type_binding_kind =
@@ -72,8 +73,6 @@ module Entry : sig
 
   val new_class : ALoc.id -> Type.Properties.id -> Type.Properties.id -> t
 
-  val new_value : value_kind -> State.t -> Type.t -> Type.annotated_or_inferred -> ALoc.t -> t
-
   val new_const :
     loc:ALoc.t -> ?state:State.t -> ?kind:const_binding_kind -> Type.annotated_or_inferred -> t
 
@@ -83,10 +82,17 @@ module Entry : sig
     loc:ALoc.t ->
     ?state:State.t ->
     ?kind:let_binding_kind * non_const_specialization ->
+    ?closure_writes:Loc_collections.ALocSet.t * Type.t ->
     Type.annotated_or_inferred ->
     t
 
-  val new_var : loc:ALoc.t -> ?state:State.t -> ?specific:Type.t -> Type.annotated_or_inferred -> t
+  val new_var :
+    loc:ALoc.t ->
+    ?state:State.t ->
+    ?specific:Type.t ->
+    ?closure_writes:Loc_collections.ALocSet.t * Type.t ->
+    Type.annotated_or_inferred ->
+    t
 
   val new_type : loc:ALoc.t -> ?state:State.t -> Type.t -> t
 
@@ -108,7 +114,7 @@ module Entry : sig
 
   val state_of_value : value_binding -> State.t
 
-  val havoc : on_call:bool -> string -> t -> t
+  val havoc : ?on_call:(Type.t -> Type.t -> Type.t -> Type.t) -> string -> t -> t
 
   val reset : ALoc.t -> string -> t -> t
 

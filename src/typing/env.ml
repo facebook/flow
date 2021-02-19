@@ -597,54 +597,89 @@ let is_not_captured_by_closure =
       scopes
       true
 
-let is_not_written_by_closure cx loc =
+let written_by_closure cx loc =
   try
     let (info, values) = Context.use_def cx in
     let uses = Scope_api.uses_of_use info loc in
     (* We consider a binding to be const-like if all reads point to the same
        write, modulo initialization. *)
-    ALocSet.fold
-      (fun use acc ->
-        match ALocMap.find_opt use values with
-        | None ->
-          (* use is a write *)
-          acc && is_not_captured_by_closure info use
-        | Some _write_locs ->
-          (* use is a read *)
-          (* collect writes pointed to by the read, modulo initialization *)
-          acc)
-      uses
-      true
-  with _ -> true
+    let writes_by_closure =
+      ALocSet.fold
+        (fun use acc ->
+          match ALocMap.find_opt use values with
+          | None ->
+            (* use is a write *)
+            if is_not_captured_by_closure info use then
+              acc
+            else
+              ALocSet.add use acc
+          | Some _write_locs ->
+            (* use is a read *)
+            (* collect writes pointed to by the read, modulo initialization *)
+            acc)
+        uses
+        ALocSet.empty
+    in
+    writes_by_closure
+  with _ -> ALocSet.empty
 
 let promote_non_const cx loc spec =
   if spec <> Entry.ConstLike && is_const_like cx loc then
-    Entry.ConstLike
-  else if spec <> Entry.NotWrittenByClosure && is_not_written_by_closure cx loc then
-    Entry.NotWrittenByClosure
+    (None, Entry.ConstLike)
+  else if spec <> Entry.NotWrittenByClosure then
+    let writes_by_closure = written_by_closure cx loc in
+    if ALocSet.is_empty writes_by_closure then
+      (None, Entry.NotWrittenByClosure)
+    else
+      (Some writes_by_closure, spec)
   else
-    spec
+    (None, spec)
 
-let initialized_value_entry cx kind specific loc v =
+let initialized_value_entry cx name kind specific loc v =
   Entry.(
+    let mk_closure_writes cx name loc general default_closure_writes writes_by_closure_opt =
+      match (default_closure_writes, writes_by_closure_opt) with
+      | (None, Some writes_by_closure) ->
+        let writes_by_closure_t =
+          Tvar.mk_where cx (mk_reason (RIdentifier name) loc) (fun tvar ->
+              Flow.flow_t cx (tvar, general))
+        in
+        Some (writes_by_closure, writes_by_closure_t)
+      | _ -> default_closure_writes
+    in
     (* Maybe promote to const-like *)
-    let new_kind =
+    let (closure_writes, new_kind) =
       match kind with
       | Var spec ->
-        let spec' = promote_non_const cx loc spec in
-        if spec' != spec then
-          Entry.(Var spec')
-        else
-          kind
+        let (writes_by_closure_opt, spec') = promote_non_const cx loc spec in
+        ( mk_closure_writes
+            cx
+            name
+            loc
+            (TypeUtil.type_t_of_annotated_or_inferred v.general)
+            v.closure_writes
+            writes_by_closure_opt,
+          if spec' != spec then
+            Entry.(Var spec')
+          else
+            kind )
       | Let (let_binding, spec) ->
-        let spec' = promote_non_const cx loc spec in
-        if spec' != spec then
-          Entry.(Let (let_binding, spec'))
-        else
-          kind
-      | _ -> kind
+        let (writes_by_closure_opt, spec') = promote_non_const cx loc spec in
+        ( mk_closure_writes
+            cx
+            name
+            loc
+            (TypeUtil.type_t_of_annotated_or_inferred v.general)
+            v.closure_writes
+            writes_by_closure_opt,
+          if spec' != spec then
+            Entry.(Let (let_binding, spec'))
+          else
+            kind )
+      | _ -> (None, kind)
     in
-    Value { v with Entry.kind = new_kind; value_state = State.Initialized; specific })
+    Value
+      { v with Entry.kind = new_kind; value_state = State.Initialized; specific; closure_writes })
 
 (* helper - update var entry to reflect assignment/initialization *)
 (* note: here is where we understand that a name can be multiply var-bound
@@ -664,7 +699,7 @@ let init_value_entry kind cx ~use_op name ~has_anno specific loc =
         ) ->
         Changeset.Global.change_var (scope.id, name, Changeset.Write);
         let general = TypeUtil.type_t_of_annotated_or_inferred v.general in
-        if specific != general then Flow_js.flow cx (specific, UseT (use_op, general));
+        if specific != general then Flow.flow cx (specific, UseT (use_op, general));
 
         (* note that annotation supercedes specific initializer type *)
         let specific =
@@ -673,7 +708,7 @@ let init_value_entry kind cx ~use_op name ~has_anno specific loc =
           else
             specific
         in
-        let new_entry = initialized_value_entry cx kind specific loc v in
+        let new_entry = initialized_value_entry cx name kind specific loc v in
         Scope.add_entry name new_entry scope
       | _ ->
         (* Incompatible or non-redeclarable new and previous entries.
@@ -721,7 +756,13 @@ let pseudo_init_declared_type cx name loc =
         Changeset.Global.change_var (scope.id, name, Changeset.Write);
         let kind = v.Entry.kind in
         let entry =
-          initialized_value_entry cx kind (TypeUtil.type_t_of_annotated_or_inferred v.general) loc v
+          initialized_value_entry
+            cx
+            name
+            kind
+            (TypeUtil.type_t_of_annotated_or_inferred v.general)
+            loc
+            v
         in
         Scope.add_entry name entry scope
       | _ ->
@@ -955,7 +996,7 @@ let update_var op cx ~use_op name specific loc =
       when (not (allow_forward_ref kind)) && same_activation scope ->
       tdz_error cx name loc v;
       None
-    | Value ({ Entry.kind = Let _ | Var _; _ } as v) ->
+    | Value ({ Entry.kind = Let _ | Var _; closure_writes; _ } as v) ->
       let change = (scope.id, name, op) in
       Changeset.Global.change_var change;
       let use_op =
@@ -965,7 +1006,12 @@ let update_var op cx ~use_op name specific loc =
         | Changeset.Read -> unknown_use
         (* this is impossible *)
       in
-      Flow.flow cx (specific, UseT (use_op, Entry.general_of_value v));
+      begin
+        match closure_writes with
+        | Some (writes_by_closure, t) when ALocSet.mem loc writes_by_closure ->
+          Flow.flow cx (specific, UseT (use_op, t))
+        | _ -> Flow.flow cx (specific, UseT (use_op, Entry.general_of_value v))
+      end;
 
       (* add updated entry *)
       let update =
@@ -1351,7 +1397,7 @@ let havoc_vars =
         | scope :: scopes ->
           (match get_entry name scope with
           | Some entry ->
-            let entry = Entry.havoc ~on_call:false name entry in
+            let entry = Entry.havoc name entry in
             add_entry name entry scope
           | None -> loop scopes)
       in
@@ -1376,11 +1422,34 @@ let havoc_vars =
 *)
 let havoc_heap_refinements () = iter_scopes Scope.havoc_all_refis
 
-let havoc_local_refinements () =
+let havoc_local_refinements cx =
   iter_scopes (fun scope ->
       Scope.update_entries
         (fun name entry ->
-          let entry' = Entry.havoc ~on_call:true name entry in
+          let entry' =
+            Entry.havoc
+              ~on_call:(fun specific t general ->
+                if specific == general (* We already know t ~> general, so specific | t = general *)
+                then
+                  general
+                else
+                  let (_, tvar_t) = open_tvar t in
+                  let (_, constraints_t) = Context.find_constraints cx tvar_t in
+                  match (specific, constraints_t) with
+                  | (OpenT (_, tvar_specific), Constraint.Unresolved bounds_t)
+                    when IMap.mem tvar_specific bounds_t.Constraint.uppertvars ->
+                    (* If t ~> specific, then specific | t = specific *)
+                    specific
+                  | _ ->
+                    (* Compute specific | t = tvar where specific, t ~> tvar ~> general *)
+                    let tvar = Tvar.mk cx (reason_of_t t) in
+                    Flow.flow cx (specific, UseT (Op (Internal WidenEnv), tvar));
+                    Flow.flow cx (t, UseT (Op (Internal WidenEnv), tvar));
+                    Flow.flow cx (tvar, UseT (Op (Internal WidenEnv), general));
+                    tvar)
+              name
+              entry
+          in
           ( if entry' != entry then
             let entry_ref = (scope.id, name, Changeset.Write) in
             Changeset.(if Global.is_active () then Global.change_var entry_ref) );

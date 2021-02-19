@@ -19,7 +19,7 @@ takes_string(global_x); // error (can't distinguish between calls to global_f an
 global_g();
 takes_string(global_x);
 
-global_x = 42; // blame
+global_x = 42;
 
 // local write from function
 //
@@ -37,7 +37,7 @@ function local_func() {
   local_g();
   takes_string(local_x); // error
 
-  local_x = 42;  // blame
+  local_x = 42;
 }
 
 // global write from method
@@ -56,7 +56,7 @@ takes_string(global_y); // error (can't distinguish between calls to global_o.f 
 global_o.g();
 takes_string(global_y); // error
 
-global_y = 42;  // blame
+global_y = 42;
 
 // local write from method
 //
@@ -76,5 +76,5 @@ function local_meth() {
   local_o.g();
   takes_string(local_y); // error
 
-  local_y = 42;  // blame
+  local_y = 42;
 }

@@ -44,7 +44,10 @@ val update_env : ALoc.t -> t -> unit
 (***)
 
 val promote_non_const :
-  Context.t -> ALoc.t -> Entry.non_const_specialization -> Entry.non_const_specialization
+  Context.t ->
+  ALoc.t ->
+  Entry.non_const_specialization ->
+  Loc_collections.ALocSet.t option * Entry.non_const_specialization
 
 val bind_class : Context.t -> ALoc.id -> Type.Properties.id -> Type.Properties.id -> unit
 
@@ -186,7 +189,7 @@ val havoc_vars : Changeset.t -> unit
 
 val havoc_heap_refinements : unit -> unit
 
-val havoc_local_refinements : unit -> unit
+val havoc_local_refinements : Context.t -> unit
 
 val havoc_heap_refinements_with_propname : private_:bool -> string -> unit
 

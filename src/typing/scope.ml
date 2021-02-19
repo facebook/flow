@@ -6,6 +6,7 @@
  *)
 
 open Utils_js
+open Loc_collections
 
 let mk_id = Reason.mk_id
 
@@ -93,6 +94,7 @@ module Entry = struct
     value_assign_loc: ALoc.t;
     specific: Type.t;
     general: Type.annotated_or_inferred;
+    closure_writes: (ALocSet.t * Type.t) option;
   }
 
   type type_binding_kind =
@@ -115,7 +117,7 @@ module Entry = struct
   let new_class class_binding_id class_private_fields class_private_static_fields =
     Class { Type.class_binding_id; Type.class_private_fields; Type.class_private_static_fields }
 
-  let new_value kind state specific general value_declare_loc =
+  let new_value kind state specific ?closure_writes general value_declare_loc =
     Value
       {
         kind;
@@ -124,6 +126,7 @@ module Entry = struct
         value_assign_loc = value_declare_loc;
         specific;
         general;
+        closure_writes;
       }
 
   let new_const ~loc ?(state = State.Undeclared) ?(kind = ConstVarBinding) general =
@@ -133,17 +136,19 @@ module Entry = struct
   let new_import ~loc t =
     new_value (Const ConstImportBinding) State.Initialized t (Type.Inferred t) loc
 
-  let new_let ~loc ?(state = State.Undeclared) ?(kind = (LetVarBinding, Havocable)) general =
+  let new_let
+      ~loc ?(state = State.Undeclared) ?(kind = (LetVarBinding, Havocable)) ?closure_writes general
+      =
     let specific = TypeUtil.type_t_of_annotated_or_inferred general in
-    new_value (Let kind) state specific general loc
+    new_value (Let kind) state specific ?closure_writes general loc
 
-  let new_var ~loc ?(state = State.Undeclared) ?specific general =
+  let new_var ~loc ?(state = State.Undeclared) ?specific ?closure_writes general =
     let specific =
       match specific with
       | Some t -> t
       | None -> TypeUtil.type_t_of_annotated_or_inferred general
     in
-    new_value (Var Havocable) state specific general loc
+    new_value (Var Havocable) state specific ?closure_writes general loc
 
   let new_type_ type_binding_kind state loc type_ =
     Type { type_binding_kind; type_state = state; type_loc = loc; type_ }
@@ -190,7 +195,7 @@ module Entry = struct
       and internal vars are read-only, so specific types can be preserved.
       TODO: value_state should go from Declared to MaybeInitialized?
    *)
-  let havoc ~on_call name entry =
+  let havoc ?on_call name entry =
     match entry with
     | Type _ -> entry
     | Value ({ kind = Const _; specific = Type.DefT (_, _, Type.EmptyT); _ } as v) ->
@@ -205,13 +210,18 @@ module Entry = struct
       entry
     | Value { kind = Let (_, NotWrittenByClosure); _ }
     | Value { kind = Var NotWrittenByClosure; _ }
-      when on_call ->
+      when on_call <> None ->
       entry
     | Value v ->
       if Reason.is_internal_name name then
         entry
-      else
-        Value { v with specific = TypeUtil.type_t_of_annotated_or_inferred v.general }
+      else (
+        match (on_call, v.closure_writes) with
+        | (Some widen_on_call, Some (_, t)) ->
+          let t = widen_on_call v.specific t (TypeUtil.type_t_of_annotated_or_inferred v.general) in
+          Value { v with specific = t }
+        | _ -> Value { v with specific = TypeUtil.type_t_of_annotated_or_inferred v.general }
+      )
     | Class _ -> entry
 
   let reset loc name entry =
@@ -335,7 +345,7 @@ let get_entry name scope = SMap.find_opt name scope.entries
 let havoc_entry name scope =
   match get_entry name scope with
   | Some entry ->
-    let entry = Entry.havoc ~on_call:false name entry in
+    let entry = Entry.havoc name entry in
     scope.entries <- SMap.add name entry scope.entries
   | None ->
     assert_false
@@ -385,7 +395,7 @@ let havoc_all_refis ?name scope =
 *)
 let havoc scope =
   havoc_all_refis scope;
-  update_entries (Entry.havoc ~on_call:false) scope
+  update_entries Entry.havoc scope
 
 let reset loc scope =
   havoc_all_refis scope;

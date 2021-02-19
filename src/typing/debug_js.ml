@@ -9,6 +9,7 @@ open Reason
 open Type
 open TypeUtil
 open Utils_js
+open Loc_collections
 
 let string_of_polarity = function
   | Polarity.Negative -> "Negative"
@@ -955,20 +956,34 @@ let dump_flow ?(depth = 3) cx (l, u) =
 let string_of_scope_entry =
   Scope.(
     let string_of_value_binding
-        cx { Entry.kind; value_state; value_declare_loc; value_assign_loc; specific; general } =
+        cx
+        {
+          Entry.kind;
+          value_state;
+          value_declare_loc;
+          value_assign_loc;
+          specific;
+          general;
+          closure_writes;
+        } =
       let general_str =
         match general with
         | Annotated t -> spf "Annotated %s" (dump_t cx t)
         | Inferred t -> spf "Inferred %s" (dump_t cx t)
       in
       spf
-        "{ kind: %s; value_state: %s; value_declare_loc: %S; value_assign_loc: %s; specific: %s; general: %s }"
+        "{ kind: %s; value_state: %s; value_declare_loc: %S; value_assign_loc: %s; specific: %s; general: %s%s }"
         (Entry.string_of_value_kind kind)
         (State.to_string value_state)
         (string_of_aloc value_declare_loc)
         (string_of_aloc value_assign_loc)
         (dump_t cx specific)
         general_str
+        (Base.Option.value_map closure_writes ~default:"" ~f:(fun (locs, t) ->
+             spf
+               "; closure_writes: { locs: { %s }; t: %s }"
+               (ListUtils.to_string ", " string_of_aloc @@ ALocSet.elements locs)
+               (dump_t cx t)))
     in
     let string_of_type_binding cx { Entry.type_state; type_loc; type_; type_binding_kind = _ } =
       spf

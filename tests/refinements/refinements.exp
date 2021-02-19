@@ -624,16 +624,16 @@ References:
 
 Error -------------------------------------------------------------------------------------- func_call_recursive.js:12:4
 
-Cannot cast `x` to number because null or undefined [1] is incompatible with number [2]. [incompatible-cast]
+Cannot cast `x` to number because null [1] is incompatible with number [2]. [incompatible-cast]
 
    func_call_recursive.js:12:4
    12|   (x: number);
           ^
 
 References:
-   func_call_recursive.js:3:8
-    3| var x: ?number = 0;
-              ^^^^^^^ [1]
+   func_call_recursive.js:8:7
+    8|   x = null;
+             ^^^^ [1]
    func_call_recursive.js:12:7
    12|   (x: number);
              ^^^^^^ [2]

@@ -366,7 +366,7 @@ module Func_stmt_config = struct
         let kind = Entry.ConstParamBinding in
         Env.bind_implicit_const ~state:State.Initialized kind cx name t loc
       else
-        let spec = Env.promote_non_const cx loc Entry.Havocable in
+        let (_, spec) = Env.promote_non_const cx loc Entry.Havocable in
         Env.bind_implicit_let ~state:State.Initialized (Entry.ParamBinding, spec) cx name t loc)
 
   let destruct cx ~use_op loc name default t =
@@ -4798,6 +4798,7 @@ and optional_chain ~cond ~is_existence_check ?sentinel_refine cx ((loc, e) as ex
           let call_voided_out = Tvar.mk cx reason_call in
           let get_opt_use argts _ _ =
             method_call_opt_use
+              cx
               opt_state
               ~prop_t
               ~voided_out:call_voided_out
@@ -4817,7 +4818,7 @@ and optional_chain ~cond ~is_existence_check ?sentinel_refine cx ((loc, e) as ex
           in
           let handle_refined_callee argts obj_t f =
             Env.havoc_heap_refinements ();
-            Env.havoc_local_refinements ();
+            Env.havoc_local_refinements cx;
             Tvar.mk_no_wrap_where cx reason_call (fun t ->
                 let app = mk_boundfunctioncalltype obj_t targts argts t ~call_strict_arity:true in
                 Flow.unify cx f prop_t;
@@ -4963,7 +4964,7 @@ and optional_chain ~cond ~is_existence_check ?sentinel_refine cx ((loc, e) as ex
                local = true;
              })
       in
-      let get_opt_use argts reason _ = func_call_opt_use reason ~use_op targts argts in
+      let get_opt_use argts reason _ = func_call_opt_use cx reason ~use_op targts argts in
       let get_reason lhs_t = mk_reason (RFunctionCall (desc_of_t lhs_t)) loc in
       let get_result argts reason f =
         Tvar.mk_no_wrap_where cx reason (fun t ->
@@ -5087,17 +5088,18 @@ and new_call cx reason ~use_op class_ targs args =
   Tvar.mk_where cx reason (fun t ->
       Flow.flow cx (class_, ConstructorT (use_op, reason, targs, args, t)))
 
-and func_call_opt_use reason ~use_op ?(havoc = true) ?(call_strict_arity = true) targts argts =
+and func_call_opt_use cx reason ~use_op ?(havoc = true) ?(call_strict_arity = true) targts argts =
   Env.havoc_heap_refinements ();
-  if havoc then Env.havoc_local_refinements ();
+  if havoc then Env.havoc_local_refinements cx;
   let opt_app = mk_opt_functioncalltype reason targts argts call_strict_arity in
   OptCallT (use_op, reason, opt_app)
 
 and func_call cx reason ~use_op ?(havoc = true) ?(call_strict_arity = true) func_t targts argts =
-  let opt_use = func_call_opt_use reason ~use_op ~havoc ~call_strict_arity targts argts in
+  let opt_use = func_call_opt_use cx reason ~use_op ~havoc ~call_strict_arity targts argts in
   Tvar.mk_no_wrap_where cx reason (fun t -> Flow.flow cx (func_t, apply_opt_use opt_use t))
 
 and method_call_opt_use
+    cx
     opt_state
     ~voided_out
     ~prop_t
@@ -5111,7 +5113,7 @@ and method_call_opt_use
     targts
     argts =
   Env.havoc_heap_refinements ();
-  if havoc then Env.havoc_local_refinements ();
+  if havoc then Env.havoc_local_refinements cx;
   let (expr_loc, _) = expr in
   let reason_prop = mk_reason (RProperty (Some name)) prop_loc in
   let reason_expr = mk_reason (RProperty (Some name)) expr_loc in
@@ -5148,14 +5150,14 @@ and method_call
        meanwhile, here we must hijack the property selection normally
        performed by the flow algorithm itself. *)
     Env.havoc_heap_refinements ();
-    if havoc then Env.havoc_local_refinements ();
+    if havoc then Env.havoc_local_refinements cx;
     ( f,
       Tvar.mk_no_wrap_where cx reason (fun t ->
           let app = mk_boundfunctioncalltype obj_t targts argts t ~call_strict_arity in
           Flow.flow cx (f, CallT (use_op, reason, app))) )
   | None ->
     Env.havoc_heap_refinements ();
-    if havoc then Env.havoc_local_refinements ();
+    if havoc then Env.havoc_local_refinements cx;
     let reason_prop = mk_reason (RProperty (Some name)) prop_loc in
     let prop_t = Tvar.mk cx reason_prop in
     ( prop_t,
