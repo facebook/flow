@@ -428,7 +428,7 @@ let infer_ast ~lint_severities cx filename comments aloc_ast =
 
       scope)
   in
-  Env.init_env cx module_scope;
+  Env.init_env module_scope;
 
   let file_loc = Loc.{ none with source = Some filename } |> ALoc.of_loc in
   let reason = Reason.mk_reason Reason.RExports file_loc in
@@ -493,7 +493,7 @@ let infer_lib_file ~exclude_syms ~lint_severities ~file_sig cx ast =
     add_require_tvars cx file_sig
   in
   let module_scope = Scope.fresh ~var_scope_kind:Scope.Global () in
-  Env.init_env ~exclude_syms cx module_scope;
+  Env.init_env ~exclude_syms module_scope;
 
   with_libdef_builtins cx (fun () ->
       ignore (infer_core cx aloc_statements : (ALoc.t, ALoc.t * Type.t) Ast.Statement.t list);

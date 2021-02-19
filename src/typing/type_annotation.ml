@@ -1034,8 +1034,6 @@ let rec convert cx tparams_map =
                 rest_param;
                 return_t;
                 is_predicate = false;
-                closure_t = 0;
-                changeset = Changeset.empty;
                 def_reason = reason;
               } ) )
     in

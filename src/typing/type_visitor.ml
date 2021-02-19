@@ -698,18 +698,7 @@ class ['a] t =
       self#opt (self#type_ cx pole) acc default
 
     method fun_type cx pole acc ft =
-      let {
-        this_t;
-        params;
-        rest_param;
-        return_t;
-        closure_t = _;
-        is_predicate = _;
-        changeset = _;
-        def_reason = _;
-      } =
-        ft
-      in
+      let { this_t; params; rest_param; return_t; is_predicate = _; def_reason = _ } = ft in
       let acc = self#type_ cx pole acc this_t in
       let acc = self#list (fun acc (_, t) -> self#type_ cx (P.inv pole) acc t) acc params in
       let acc = self#opt (fun acc (_, _, t) -> self#type_ cx (P.inv pole) acc t) acc rest_param in
@@ -774,16 +763,7 @@ class ['a] t =
       acc
 
     method private fun_call_type cx acc call =
-      let {
-        call_this_t;
-        call_targs;
-        call_args_tlist;
-        call_tout;
-        call_closure_t = _;
-        call_strict_arity = _;
-      } =
-        call
-      in
+      let { call_this_t; call_targs; call_args_tlist; call_tout; call_strict_arity = _ } = call in
       let acc = self#type_ cx pole_TODO acc call_this_t in
       let acc = self#opt (self#list (self#targ cx pole_TODO)) acc call_targs in
       let acc = self#list (self#call_arg cx) acc call_args_tlist in
@@ -798,7 +778,7 @@ class ['a] t =
       let acc = self#tout cx pole_TODO acc meth_tout in
       acc
 
-    method private opt_fun_call_type cx acc (call_this_t, call_targs, call_args_tlist, _, _) =
+    method private opt_fun_call_type cx acc (call_this_t, call_targs, call_args_tlist, _) =
       let acc = self#type_ cx pole_TODO acc call_this_t in
       let acc = self#opt (self#list (self#targ cx pole_TODO)) acc call_targs in
       let acc = self#list (self#call_arg cx) acc call_args_tlist in

@@ -106,9 +106,6 @@ let rec top_var_scope = function
 (* get top var scope of current env *)
 let peek_var_scope () = top_var_scope (peek_env ())
 
-(* each varscope carries a frame id *)
-let peek_frame () = (peek_scope ()).id
-
 (* use the passed f to iterate over all scopes *)
 let iter_scopes f = List.iter f !scopes
 
@@ -164,48 +161,15 @@ let havoc_current_activation () =
   scopes := [];
   Changeset.Global.init ()
 
-(* save environment to context *)
-let snapshot_env cx =
-  let scopes = peek_env () in
-  let id = (List.hd scopes).id in
-  Context.add_env cx id scopes
-
 (* push a new var scope into the environment.
    current env state is stored to cx under scope id *)
 (* TODO maintain changelist here too *)
-let push_var_scope cx scope =
+let push_var_scope scope =
   (match scope.kind with
   | VarScope _ -> ()
   | _ -> assert_false "push_var_scope on non-var scope");
   scopes := scope :: !scopes;
-  Changeset.Global.push ();
-  snapshot_env cx
-
-(***
- * when we pop a var scope, we save the accumulated changeset over the
- * surrounding environment. for var scopes that correspond to function
- * activations, this saved changeset contains the read write and
- * refinement operations on closed-over variables.
- *
- * We make this available out of band rather than simply returning it
- * from pop_var_scope only to avoid the current logistics of getting it
- * to where the function's type is actually built, but this may change.
- * It would certainly be better to avoid the extra state.
- *)
-
-let saved_closure_changeset = ref (Some Changeset.empty)
-
-let save_closure_changeset scopes =
-  let ids = Base.List.map ~f:(fun { id; _ } -> id) scopes in
-  let changeset = Changeset.(include_scopes ids (Global.peek ())) in
-  saved_closure_changeset := Some changeset
-
-let retrieve_closure_changeset () =
-  match !saved_closure_changeset with
-  | None -> assert_false "no saved closure changeset"
-  | Some changeset ->
-    saved_closure_changeset := None;
-    changeset
+  Changeset.Global.push ()
 
 (* --- *)
 
@@ -214,7 +178,6 @@ let retrieve_closure_changeset () =
 let pop_var_scope () =
   match !scopes with
   | { kind = VarScope _; _ } :: tail_scopes ->
-    save_closure_changeset tail_scopes;
     scopes := tail_scopes;
     Changeset.Global.pop ()
   | [] -> assert_false "empty scope list"
@@ -222,10 +185,9 @@ let pop_var_scope () =
 
 (* push a lex scope but NOT a changeset
    (which is 1-1 with var scopes). *)
-let push_lex_scope cx =
+let push_lex_scope () =
   let scope = Scope.fresh_lex () in
-  scopes := scope :: !scopes;
-  snapshot_env cx
+  scopes := scope :: !scopes
 
 let pop_lex_scope () =
   match !scopes with
@@ -238,8 +200,8 @@ let pop_lex_scope () =
   | [] -> assert_false "empty scope list"
   | _ -> assert_false "top scope is non-lex"
 
-let in_lex_scope cx f =
-  push_lex_scope cx;
+let in_lex_scope f =
+  push_lex_scope ();
   let result = f () in
   pop_lex_scope ();
   result
@@ -261,17 +223,17 @@ let trunc_env =
     scopes := trunc (List.length cur - depth, cur)
 
 (* initialize a new environment (once per module) *)
-let init_env ?(exclude_syms = SSet.empty) cx module_scope =
+let init_env ?(exclude_syms = SSet.empty) module_scope =
   set_exclude_symbols exclude_syms;
   havoc_current_activation ();
   let global_scope = Scope.fresh ~var_scope_kind:Global () in
-  push_var_scope cx global_scope;
-  push_var_scope cx module_scope
+  push_var_scope global_scope;
+  push_var_scope module_scope
 
 (* replace the current env with the passed one.
    envs must be congruent - we measure length as a quick check,
    with a more thorough check on env merge/copy *)
-let update_env cx loc new_scopes =
+let update_env loc new_scopes =
   if List.length new_scopes != List.length (peek_env ()) then
     assert_false
       (spf
@@ -280,8 +242,7 @@ let update_env cx loc new_scopes =
          (List.length new_scopes)
          (List.length (peek_env ())));
 
-  scopes := new_scopes;
-  snapshot_env cx
+  scopes := new_scopes
 
 (* end of basic env API *)
 
@@ -1558,11 +1519,11 @@ let in_refined_env cx loc preds orig_types f =
   let oldset = Changeset.Global.clear () in
   let orig_env = peek_env () in
   let new_env = clone_env orig_env in
-  update_env cx loc new_env;
+  update_env loc new_env;
   let _ = refine_with_preds cx loc preds orig_types in
   let result = f () in
   let newset = Changeset.Global.merge oldset in
   merge_env cx loc (orig_env, orig_env, new_env) newset;
-  update_env cx loc orig_env;
+  update_env loc orig_env;
 
   result

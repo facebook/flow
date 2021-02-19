@@ -21,8 +21,6 @@ exception Module_not_found of string
 
 exception Tvar_not_found of Type.ident
 
-type env = Scope.t list
-
 type metadata = {
   (* local *)
   checked: bool;
@@ -106,8 +104,6 @@ type component_t = {
   mutable type_graph: Graph_explorer.graph;
   (* map of speculation ids to sets of unresolved tvars *)
   mutable all_unresolved: ISet.t IMap.t;
-  (* map from frame ids to env snapshots *)
-  mutable envs: env IMap.t;
   (* We track nominal ids in the context to help decide when the types exported by a module have
      meaningfully changed: see Merge_js.ContextOptimizer. We care about two different types of
      nominal ids, one for object properties and one for polymorphic types. **)
@@ -289,7 +285,6 @@ let make_ccx () =
     goal_map = IMap.empty;
     type_graph = Graph_explorer.new_graph ();
     all_unresolved = IMap.empty;
-    envs = IMap.empty;
     nominal_poly_ids = Type.Poly.Set.empty;
     nominal_prop_ids = ISet.empty;
     type_asserts_map = ALocMap.empty;
@@ -387,8 +382,6 @@ let module_ref cx =
 let current_phase cx = cx.phase
 
 let all_unresolved cx = cx.ccx.all_unresolved
-
-let envs cx = cx.ccx.envs
 
 let trust_constructor cx = cx.trust_constructor
 
@@ -570,7 +563,6 @@ let pid_prefix (cx : t) =
 let copy_of_context cx = { cx with ccx = { cx.ccx with sig_cx = cx.ccx.sig_cx } }
 
 (* mutators *)
-let add_env cx frame env = cx.ccx.envs <- IMap.add frame env cx.ccx.envs
 
 let add_error cx error = cx.ccx.errors <- Flow_error.ErrorSet.add error cx.ccx.errors
 
@@ -635,8 +627,6 @@ let remove_tvar cx id =
   cx.ccx.sig_cx <- { cx.ccx.sig_cx with graph }
 
 let set_all_unresolved cx all_unresolved = cx.ccx.all_unresolved <- all_unresolved
-
-let set_envs cx envs = cx.ccx.envs <- envs
 
 let set_evaluated cx evaluated = cx.ccx.sig_cx <- { cx.ccx.sig_cx with evaluated }
 

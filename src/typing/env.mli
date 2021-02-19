@@ -27,23 +27,19 @@ val in_predicate_scope : unit -> bool
 
 val find_entry : Context.t -> string -> ?desc:Reason.reason_desc -> ALoc.t -> Scope.t * Entry.t
 
-val peek_frame : unit -> int
-
-val push_var_scope : Context.t -> Scope.t -> unit
+val push_var_scope : Scope.t -> unit
 
 val pop_var_scope : unit -> unit
 
-val retrieve_closure_changeset : unit -> Changeset.t
-
-val in_lex_scope : Context.t -> (unit -> 'a) -> 'a
+val in_lex_scope : (unit -> 'a) -> 'a
 
 val env_depth : unit -> int
 
 val trunc_env : int -> unit
 
-val init_env : ?exclude_syms:SSet.t -> Context.t -> Scope.t -> unit
+val init_env : ?exclude_syms:SSet.t -> Scope.t -> unit
 
-val update_env : Context.t -> ALoc.t -> t -> unit
+val update_env : ALoc.t -> t -> unit
 
 (***)
 

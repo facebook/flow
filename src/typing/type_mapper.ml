@@ -407,10 +407,7 @@ class virtual ['a] t =
         { exports_tmap = exports_tmap'; cjs_export = cjs_export'; has_every_named_export }
 
     method fun_type
-        cx
-        map_cx
-        ( { this_t; params; rest_param; return_t; closure_t; is_predicate; changeset; def_reason }
-        as t ) =
+        cx map_cx ({ this_t; params; rest_param; return_t; is_predicate; def_reason } as t) =
       let this_t' = self#type_ cx map_cx this_t in
       let params' =
         ListUtils.ident_map
@@ -442,7 +439,7 @@ class virtual ['a] t =
         let return_t = return_t' in
         let params = params' in
         let rest_param = rest_param' in
-        { this_t; params; rest_param; return_t; closure_t; is_predicate; changeset; def_reason }
+        { this_t; params; rest_param; return_t; is_predicate; def_reason }
 
     method inst_type cx map_cx i =
       let {
@@ -1603,25 +1600,20 @@ class virtual ['a] t_with_uses =
         else
           OptCallElemT (r1, r2, t'', action')
 
-    method private opt_fun_call_type cx map_cx ((this, targs, args, clos, strict) as t) =
+    method private opt_fun_call_type cx map_cx ((this, targs, args, strict) as t) =
       let this' = self#type_ cx map_cx this in
       let targs' = OptionUtils.ident_map (ListUtils.ident_map (self#targ cx map_cx)) targs in
       let args' = ListUtils.ident_map (self#call_arg cx map_cx) args in
       if this' == this && targs' == targs && args' == args then
         t
       else
-        (this', targs', args', clos, strict)
+        (this', targs', args', strict)
 
     method private opt_meth_call_type
         cx
         map_cx
-        ( {
-            opt_meth_generic_this;
-            opt_meth_targs;
-            opt_meth_args_tlist;
-            opt_meth_closure_t;
-            opt_meth_strict_arity;
-          } as t ) =
+        ({ opt_meth_generic_this; opt_meth_targs; opt_meth_args_tlist; opt_meth_strict_arity } as t)
+        =
       let this' = OptionUtils.ident_map (self#type_ cx map_cx) opt_meth_generic_this in
       let targs' =
         OptionUtils.ident_map (ListUtils.ident_map (self#targ cx map_cx)) opt_meth_targs
@@ -1635,7 +1627,6 @@ class virtual ['a] t_with_uses =
           opt_meth_generic_this = this';
           opt_meth_targs = targs';
           opt_meth_args_tlist = args';
-          opt_meth_closure_t;
           opt_meth_strict_arity;
         }
 
@@ -1783,10 +1774,7 @@ class virtual ['a] t_with_uses =
           ChainM (r, lhs_r, this', funtype', void_out')
 
     method fun_call_type cx map_cx t =
-      let { call_this_t; call_targs; call_args_tlist; call_tout; call_closure_t; call_strict_arity }
-          =
-        t
-      in
+      let { call_this_t; call_targs; call_args_tlist; call_tout; call_strict_arity } = t in
       let call_this_t' = self#type_ cx map_cx call_this_t in
       let call_targs' =
         OptionUtils.ident_map (ListUtils.ident_map (self#targ cx map_cx)) call_targs
@@ -1806,21 +1794,11 @@ class virtual ['a] t_with_uses =
           call_targs = call_targs';
           call_args_tlist = call_args_tlist';
           call_tout = call_tout';
-          call_closure_t;
           call_strict_arity;
         }
 
     method method_call_type cx map_cx t =
-      let {
-        meth_generic_this;
-        meth_targs;
-        meth_args_tlist;
-        meth_tout;
-        meth_closure_t;
-        meth_strict_arity;
-      } =
-        t
-      in
+      let { meth_generic_this; meth_targs; meth_args_tlist; meth_tout; meth_strict_arity } = t in
       let this' = OptionUtils.ident_map (self#type_ cx map_cx) meth_generic_this in
       let meth_targs' =
         OptionUtils.ident_map (ListUtils.ident_map (self#targ cx map_cx)) meth_targs
@@ -1840,7 +1818,6 @@ class virtual ['a] t_with_uses =
           meth_targs = meth_targs';
           meth_args_tlist = meth_args_tlist';
           meth_tout = meth_tout';
-          meth_closure_t;
           meth_strict_arity;
         }
 

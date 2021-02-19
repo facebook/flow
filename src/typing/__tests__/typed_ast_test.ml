@@ -125,7 +125,7 @@ let before_and_after_stmts file_name =
     Flow_js_utils.mk_builtins cx;
     add_require_tvars cx file_sig;
     let module_scope = Scope.fresh () in
-    Env.init_env cx module_scope;
+    Env.init_env module_scope;
     let stmts = Base.List.map ~f:Ast_loc_utils.loc_to_aloc_mapper#statement stmts in
     let t_stmts =
       try

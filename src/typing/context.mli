@@ -17,8 +17,6 @@ exception Module_not_found of string
 
 exception Tvar_not_found of Type.ident
 
-type env = Scope.t list
-
 (* The Context module defines types for data which is passed around during type
  * checking, providing access to commonly needed state. The data is layered
  * according to their lifetimes and falls into three categories: *)
@@ -150,8 +148,6 @@ val enable_enums_with_unknown_members : t -> bool
 val enable_this_annot : t -> bool
 
 val enforce_strict_call_arity : t -> bool
-
-val envs : t -> env IMap.t
 
 val errors : t -> Flow_error.ErrorSet.t
 
@@ -299,8 +295,6 @@ val pop_declare_module : t -> unit
 val module_info : t -> Module_info.t
 
 (* mutators *)
-val add_env : t -> int -> env -> unit
-
 val add_error : t -> ALoc.t Flow_error.t -> unit
 
 val add_error_suppression : t -> Loc.t -> Suppression_comments.applicable_codes -> unit
@@ -334,8 +328,6 @@ val add_voidable_check : t -> voidable_check -> unit
 val add_implicit_instantiation_check : t -> Type.t -> Type.use_t -> unit
 
 val remove_tvar : t -> Type.ident -> unit
-
-val set_envs : t -> env IMap.t -> unit
 
 val set_evaluated : t -> Type.t Type.Eval.Map.t -> unit
 

@@ -1479,8 +1479,6 @@ and merge_fun
         rest_param;
         return_t = return;
         is_predicate = predicate <> None;
-        closure_t = 0;
-        changeset = Changeset.empty;
         def_reason = reason;
       }
     in

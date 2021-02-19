@@ -110,8 +110,6 @@ module Make (F : Func_params.S) = struct
         rest_param = F.rest fparams;
         return_t = TypeUtil.type_t_of_annotated_or_inferred return_t;
         is_predicate = kind = Predicate;
-        closure_t = Env.peek_frame ();
-        changeset = Env.retrieve_closure_changeset ();
         def_reason = reason;
       }
     in
@@ -174,7 +172,7 @@ module Make (F : Func_params.S) = struct
     let reason = mk_reason RFunctionBody loc in
     let env = Env.peek_env () in
     let new_env = Env.clone_env env in
-    Env.update_env cx loc new_env;
+    Env.update_env loc new_env;
     Env.havoc_all ();
 
     (* create and prepopulate function scope *)
@@ -193,7 +191,7 @@ module Make (F : Func_params.S) = struct
       Scope.fresh ~var_scope_kind ()
     in
     (* push the scope early so default exprs can reference earlier params *)
-    Env.push_var_scope cx function_scope;
+    Env.push_var_scope function_scope;
 
     let (this_t, this) = this_recipe fparams in
 
@@ -374,7 +372,7 @@ module Make (F : Func_params.S) = struct
     in
     Env.pop_var_scope ();
 
-    Env.update_env cx loc env;
+    Env.update_env loc env;
 
     (*  return a tuple of (function body AST option, field initializer AST option).
        - the function body option is Some _ if the func sig's body was Some, and

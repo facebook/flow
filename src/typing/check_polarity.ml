@@ -95,9 +95,7 @@ module Kit (Flow : Flow_common.S) : Flow_common.CHECK_POLARITY = struct
         params;
         rest_param;
         return_t;
-        closure_t = _;
         is_predicate = _;
-        changeset = _;
         def_reason = _;
       } =
         f

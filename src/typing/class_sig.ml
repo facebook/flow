@@ -814,7 +814,7 @@ module Make (F : Func_sig.S) = struct
   (* Processes the bodies of instance and static class members. *)
   let toplevels cx ~decls ~stmts ~expr ~private_property_map x =
     let open Type in
-    Env.in_lex_scope cx (fun () ->
+    Env.in_lex_scope (fun () ->
         let new_entry ?(state = Scope.State.Initialized) t =
           Scope.Entry.new_let
             ~loc:(TypeUtil.loc_of_t (TypeUtil.type_t_of_annotated_or_inferred t))

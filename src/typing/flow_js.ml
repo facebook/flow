@@ -1230,14 +1230,7 @@ struct
             CallT
               ( use_op,
                 reason_op,
-                {
-                  call_this_t;
-                  call_targs;
-                  call_args_tlist;
-                  call_tout;
-                  call_closure_t;
-                  call_strict_arity;
-                } ) ) ->
+                { call_this_t; call_targs; call_args_tlist; call_tout; call_strict_arity } ) ) ->
           let tout =
             match (call_targs, call_args_tlist) with
             | (None, [Arg obj; Arg cb]) ->
@@ -1256,7 +1249,6 @@ struct
                               call_targs = None;
                               call_args_tlist = [Arg wrapped_obj];
                               call_tout;
-                              call_closure_t;
                               call_strict_arity;
                             } ) ))
               in
@@ -1443,8 +1435,6 @@ struct
                       rest_param = None;
                       return_t;
                       is_predicate = false;
-                      closure_t = 0;
-                      changeset = Changeset.empty;
                       def_reason = fun_reason_new;
                     } ) )
           in
@@ -3119,15 +3109,12 @@ struct
         (* FunT ~> CallT *)
         | (DefT (reason_fundef, _, FunT (_, _, funtype)), CallT (use_op, reason_callsite, calltype))
           ->
-          let { this_t = o1; params = _; return_t = t1; closure_t = _; changeset = _; _ } =
-            funtype
-          in
+          let { this_t = o1; params = _; return_t = t1; _ } = funtype in
           let {
             call_this_t = o2;
             call_targs;
             call_args_tlist = tins2;
             call_tout = t2;
-            call_closure_t = _;
             call_strict_arity;
           } =
             calltype
@@ -3167,7 +3154,6 @@ struct
             (* An untyped receiver can't do anything with type args *)
             call_args_tlist;
             call_tout;
-            call_closure_t = _;
             call_strict_arity = _;
           } =
             calltype
@@ -3324,7 +3310,6 @@ struct
             call_args_tlist = args;
             call_tout = tout;
             call_this_t = _;
-            call_closure_t = _;
             call_strict_arity = _;
           } =
             calltype
@@ -4708,7 +4693,6 @@ struct
             (* always None *)
             call_args_tlist = tins2;
             call_tout;
-            call_closure_t = _;
             call_strict_arity = _;
           } =
             calltype
@@ -4731,7 +4715,6 @@ struct
             (* always None *)
             call_args_tlist;
             call_tout;
-            call_closure_t = _;
             call_strict_arity = _;
           } =
             calltype
@@ -6070,16 +6053,7 @@ struct
 
   and any_prop_to_function
       use_op
-      {
-        this_t;
-        params;
-        rest_param;
-        return_t;
-        closure_t = _;
-        is_predicate = _;
-        changeset = _;
-        def_reason = _;
-      }
+      { this_t; params; rest_param; return_t; is_predicate = _; def_reason = _ }
       covariant
       contravariant =
     List.iter (snd %> contravariant ~use_op) params;

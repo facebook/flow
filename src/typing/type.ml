@@ -991,9 +991,7 @@ module rec TypeTerm : sig
     params: fun_param list;
     rest_param: fun_rest_param option;
     return_t: t;
-    closure_t: int;
     is_predicate: bool;
-    changeset: Changeset.t;
     def_reason: Reason.t;
   }
 
@@ -1003,7 +1001,6 @@ module rec TypeTerm : sig
     call_targs: targ list option;
     call_args_tlist: call_arg list;
     call_tout: tvar;
-    call_closure_t: int;
     call_strict_arity: bool;
   }
 
@@ -1012,7 +1009,6 @@ module rec TypeTerm : sig
     meth_targs: targ list option;
     meth_args_tlist: call_arg list;
     meth_tout: tvar;
-    meth_closure_t: int;
     meth_strict_arity: bool;
   }
 
@@ -1023,13 +1019,12 @@ module rec TypeTerm : sig
     | ImplicitArg of tvar
     | ExplicitArg of t
 
-  and opt_funcalltype = t * targ list option * call_arg list * int * bool
+  and opt_funcalltype = t * targ list option * call_arg list * bool
 
   and opt_methodcalltype = {
     opt_meth_generic_this: t option;
     opt_meth_targs: targ list option;
     opt_meth_args_tlist: call_arg list;
-    opt_meth_closure_t: int;
     opt_meth_strict_arity: bool;
   }
 
@@ -3539,8 +3534,7 @@ let global_this reason =
 let default_obj_assign_kind = ObjAssign { assert_exact = false }
 
 (* A method type is a function type with `this` specified. *)
-let mk_methodtype
-    this_t tins ~rest_param ~def_reason ?(frame = 0) ?params_names ?(is_predicate = false) tout =
+let mk_methodtype this_t tins ~rest_param ~def_reason ?params_names ?(is_predicate = false) tout =
   {
     this_t;
     params =
@@ -3550,18 +3544,15 @@ let mk_methodtype
     rest_param;
     return_t = tout;
     is_predicate;
-    closure_t = frame;
-    changeset = Changeset.empty;
     def_reason;
   }
 
-let mk_methodcalltype targs args ?(frame = 0) ?meth_generic_this ?(meth_strict_arity = true) tout =
+let mk_methodcalltype targs args ?meth_generic_this ?(meth_strict_arity = true) tout =
   {
     meth_generic_this;
     meth_targs = targs;
     meth_args_tlist = args;
     meth_tout = tout;
-    meth_closure_t = frame;
     meth_strict_arity;
   }
 
@@ -3579,36 +3570,24 @@ let mk_boundfunctiontype ?(this = bound_function_dummy_this) = mk_methodtype thi
 
 let mk_functiontype reason ?(this = global_this reason) = mk_methodtype this
 
-let mk_boundfunctioncalltype this targs args ?(frame = 0) ?(call_strict_arity = true) tout =
+let mk_boundfunctioncalltype this targs args ?(call_strict_arity = true) tout =
   {
     call_this_t = this;
     call_targs = targs;
     call_args_tlist = args;
     call_tout = tout;
-    call_closure_t = frame;
     call_strict_arity;
   }
 
 let mk_functioncalltype reason = mk_boundfunctioncalltype (global_this reason)
 
-let mk_opt_functioncalltype reason targs args clos strict =
-  (global_this reason, targs, args, clos, strict)
+let mk_opt_functioncalltype reason targs args strict = (global_this reason, targs, args, strict)
 
-let mk_opt_boundfunctioncalltype this targs args clos strict = (this, targs, args, clos, strict)
+let mk_opt_boundfunctioncalltype this targs args strict = (this, targs, args, strict)
 
 let mk_opt_methodcalltype
-    ?opt_meth_generic_this
-    opt_meth_targs
-    opt_meth_args_tlist
-    opt_meth_closure_t
-    opt_meth_strict_arity =
-  {
-    opt_meth_generic_this;
-    opt_meth_targs;
-    opt_meth_args_tlist;
-    opt_meth_closure_t;
-    opt_meth_strict_arity;
-  }
+    ?opt_meth_generic_this opt_meth_targs opt_meth_args_tlist opt_meth_strict_arity =
+  { opt_meth_generic_this; opt_meth_targs; opt_meth_args_tlist; opt_meth_strict_arity }
 
 (* An object type has two flags, sealed and exact. A sealed object type cannot
    be extended. An exact object type accurately describes objects without
@@ -3629,31 +3608,23 @@ let mk_object_def_type ~reason ?(flags = default_flags) ~call pmap proto =
   let reason = update_desc_reason invalidate_rtype_alias reason in
   DefT (reason, bogus_trust (), ObjT (mk_objecttype ~flags ~call pmap proto))
 
-let apply_opt_funcalltype (this, targs, args, clos, strict) t_out =
+let apply_opt_funcalltype (this, targs, args, strict) t_out =
   {
     call_this_t = this;
     call_targs = targs;
     call_args_tlist = args;
     call_tout = t_out;
-    call_closure_t = clos;
     call_strict_arity = strict;
   }
 
 let apply_opt_methodcalltype
-    {
-      opt_meth_generic_this;
-      opt_meth_targs;
-      opt_meth_args_tlist;
-      opt_meth_closure_t;
-      opt_meth_strict_arity;
-    }
-    meth_tout =
+    { opt_meth_generic_this; opt_meth_targs; opt_meth_args_tlist; opt_meth_strict_arity } meth_tout
+    =
   {
     meth_generic_this = opt_meth_generic_this;
     meth_targs = opt_meth_targs;
     meth_args_tlist = opt_meth_args_tlist;
     meth_tout;
-    meth_closure_t = opt_meth_closure_t;
     meth_strict_arity = opt_meth_strict_arity;
   }
 
@@ -3682,15 +3653,12 @@ let mk_enum_type ~loc ~trust enum =
   DefT (reason, trust, EnumT enum)
 
 let call_of_method_app
-    call_this_t
-    { meth_generic_this; meth_targs; meth_args_tlist; meth_tout; meth_closure_t; meth_strict_arity }
-    =
+    call_this_t { meth_generic_this; meth_targs; meth_args_tlist; meth_tout; meth_strict_arity } =
   {
     call_this_t = Base.Option.value ~default:call_this_t meth_generic_this;
     call_targs = meth_targs;
     call_args_tlist = meth_args_tlist;
     call_tout = meth_tout;
-    call_closure_t = meth_closure_t;
     call_strict_arity = meth_strict_arity;
   }
 
