@@ -62,17 +62,15 @@ module ResolvedRequiresHeap =
     end)
 
 (********************************** Info Heap *********************************)
-(* Maps filenames to info about a module, including the module's name.        *)
-(* note: currently we may have many files for one module name.                *)
-(* this is an issue.                                                          *)
 
 type info = {
   module_name: Modulename.t;
-  checked: bool;
-  (* in flow? *)
-  parsed: bool; (* if false, it's a tracking record only *)
+  checked: bool;  (** in flow? *)
+  parsed: bool;  (** if false, it's a tracking record only *)
 }
 
+(** Maps filenames to info about a module, including the module's name.
+    note: currently we may have many files for one module name. this is an issue. *)
 module InfoHeap =
   SharedMem.WithCache
     (File_key)
@@ -264,8 +262,8 @@ module type READER = sig
 
   val get_resolved_requires_unsafe : reader:reader -> (File_key.t -> resolved_requires) Expensive.t
 
-  (* given a filename, returns module info *)
   val get_info_unsafe : reader:reader -> (File_key.t -> info) Expensive.t
+  (** given a filename, returns module info *)
 
   val get_info : reader:reader -> (File_key.t -> info option) Expensive.t
 
