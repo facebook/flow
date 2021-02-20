@@ -10,7 +10,7 @@
 type action =
   | FlowAction of Type.t * Type.use_t
   | UnifyAction of Type.use_op * Type.t * Type.t
-  | UnsealedObjectProperty of Type.Properties.id * string * Type.Property.t
+  | UnsealedObjectProperty of Type.Properties.id * Reason.name * Type.Property.t
   | ErrorAction of Error_message.t
 
 (* Action extended with a bit that determines whether the action is "benign."

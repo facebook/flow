@@ -210,23 +210,26 @@ let members_of_type
       ~file_sig
       Type.TypeScheme.{ tparams; type_ }
   in
-  let is_valid_member (s, _) =
-    (* filter out constructor, it shouldn't be called manually *)
-    s <> "constructor"
-    (* filter out indexer/call properties *)
-    && (not (String.length s >= 1 && s.[0] = '$'))
-    (* strip out members from prototypes which are implicitly created for internal reasons *)
-    && (not (Reason.is_internal_name s))
-    && (* exclude members the caller told us to exclude *)
-    not (SSet.mem s exclude_keys)
+  let include_valid_member (s, info) =
+    let open Reason in
+    match s with
+    | OrdinaryName "constructor"
+    | InternalName _
+    | InternalModuleName _ ->
+      None
+    (* TODO consider making the $-prefixed names internal *)
+    | OrdinaryName str when (String.length str >= 1 && str.[0] = '$') || SSet.mem str exclude_keys
+      ->
+      None
+    | OrdinaryName str -> Some (str, info)
   in
   match ty_members with
   | Error error -> fail error
   | Ok Ty_members.{ members; errors; in_idx } ->
     return
       ( members
-        |> SMap.bindings
-        |> List.filter is_valid_member
+        |> NameUtils.Map.bindings
+        |> Base.List.filter_map ~f:include_valid_member
         |> List.map (fun (name, info) ->
                (name, documentation_of_member ~reader ~cx ~typed_ast type_ name, info)),
         (match errors with
@@ -775,6 +778,8 @@ let type_exports_of_module_ty ~ac_loc ~exact_by_default ~documentation_of_module
     Base.List.filter_map
       ~f:(function
         | TypeAliasDecl { name = { Ty.sym_name; _ }; type_ = Some t; _ } as d ->
+          (* TODO consider omitting items with internal names throughout *)
+          let sym_name = Reason.display_string_of_name sym_name in
           Some
             {
               kind = lsp_completion_of_type t;
@@ -786,6 +791,7 @@ let type_exports_of_module_ty ~ac_loc ~exact_by_default ~documentation_of_module
               documentation = documentation_of_module_member sym_name;
             }
         | InterfaceDecl ({ Ty.sym_name; _ }, _) as d ->
+          let sym_name = Reason.display_string_of_name sym_name in
           Some
             {
               kind = Some Lsp.Completion.Interface;
@@ -797,6 +803,7 @@ let type_exports_of_module_ty ~ac_loc ~exact_by_default ~documentation_of_module
               documentation = documentation_of_module_member sym_name;
             }
         | ClassDecl ({ Ty.sym_name; _ }, _) as d ->
+          let sym_name = Reason.display_string_of_name sym_name in
           Some
             {
               kind = Some Lsp.Completion.Class;
@@ -808,6 +815,7 @@ let type_exports_of_module_ty ~ac_loc ~exact_by_default ~documentation_of_module
               documentation = documentation_of_module_member sym_name;
             }
         | EnumDecl { Ty.sym_name; _ } as d ->
+          let sym_name = Reason.display_string_of_name sym_name in
           Some
             {
               kind = Some Lsp.Completion.Enum;

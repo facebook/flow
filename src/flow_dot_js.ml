@@ -98,7 +98,13 @@ let load_lib_files
              (* Lib files use only concrete locations, so this is not used. *)
              let aloc_table = lazy (ALoc.make_table lib_file) in
              let cx =
-               Context.make ccx metadata lib_file aloc_table Files.lib_module_ref Context.Checking
+               Context.make
+                 ccx
+                 metadata
+                 lib_file
+                 aloc_table
+                 (Reason.OrdinaryName Files.lib_module_ref)
+                 Context.Checking
              in
              let syms =
                Type_inference_js.infer_lib_file
@@ -118,11 +124,11 @@ let load_lib_files
              save_lint_suppressions lib_file severity_cover;
 
              (* symbols loaded from this file are suppressed if found in later ones *)
-             SSet.union exclude_syms (SSet.of_list syms)
+             NameUtils.Set.union exclude_syms (NameUtils.Set.of_list syms)
            | Error parse_errors ->
              save_parse_errors lib_file parse_errors;
              exclude_syms)
-         SSet.empty
+         NameUtils.Set.empty
   in
   ()
 
@@ -197,7 +203,7 @@ let init_builtins filenames =
       (stub_metadata ~root ~checked:false)
       File_key.Builtins
       aloc_table
-      Files.lib_module_ref
+      (Reason.OrdinaryName Files.lib_module_ref)
       Context.Checking
   in
   Flow_js_utils.mk_builtins master_cx;

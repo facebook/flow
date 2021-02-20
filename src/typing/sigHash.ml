@@ -490,6 +490,19 @@ let add_literal state f =
 
 let add_number_literal state (_, x) = add state x
 
+let add_name state =
+  Reason.(
+    function
+    | OrdinaryName x ->
+      add_int state 0;
+      add state x
+    | InternalName x ->
+      add_int state 1;
+      add state x
+    | InternalModuleName x ->
+      add_int state 2;
+      add state x)
+
 let add_type state t =
   add_int state (hash_of_ctor t);
   Type.(
@@ -499,8 +512,8 @@ let add_type state t =
     | DefT (_, _, NumT n) -> add_literal state add_number_literal n
     | DefT (_, _, SingletonBoolT b) -> add_bool state b
     | DefT (_, _, SingletonNumT n) -> add_number_literal state n
-    | DefT (_, _, SingletonStrT s) -> add state s
-    | DefT (_, _, StrT s) -> add_literal state add s
+    | DefT (_, _, SingletonStrT s) -> add_name state s
+    | DefT (_, _, StrT s) -> add_literal state add_name s
     | _ -> ())
 
 let add_use state use = add_int state (hash_of_use_ctor use)
@@ -568,8 +581,8 @@ let add_prop state =
     | Method _ -> add_int state 4)
 
 let add_props_map state =
-  SMap.iter (fun k p ->
-      add state k;
+  NameUtils.Map.iter (fun k p ->
+      add_name state k;
       add_prop state p)
 
-let add_exports_map state = SMap.iter (fun k _ -> add state k)
+let add_exports_map state = NameUtils.Map.iter (fun k _ -> add_name state k)

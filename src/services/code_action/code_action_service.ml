@@ -259,7 +259,16 @@ let code_actions_of_errors ~options ~reader ~env ~ast ~diagnostics ~errors uri l
         let error_loc = Reason.loc_of_reason reason in
         if Loc.intersects error_loc loc then
           let { ServerEnv.exports; _ } = env in
-          suggest_imports ~options ~reader ~ast ~diagnostics ~exports ~name uri loc @ actions
+          suggest_imports
+            ~options
+            ~reader
+            ~ast
+            ~diagnostics
+            ~exports (* TODO consider filtering out internal names *)
+            ~name:(Reason.display_string_of_name name)
+            uri
+            loc
+          @ actions
         else
           actions
       | error_message ->

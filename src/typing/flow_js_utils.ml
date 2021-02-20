@@ -89,25 +89,15 @@ let is_generic = function
   | _ -> false
 
 let is_object_prototype_method = function
-  | "isPrototypeOf"
-  | "hasOwnProperty"
-  | "propertyIsEnumerable"
-  | "toLocaleString"
-  | "toString"
-  | "valueOf" ->
+  | OrdinaryName
+      ( "isPrototypeOf" | "hasOwnProperty" | "propertyIsEnumerable" | "toLocaleString" | "toString"
+      | "valueOf" ) ->
     true
   | _ -> false
 
 (* This must list all of the properties on Function.prototype. *)
 let is_function_prototype = function
-  | "apply"
-  | "bind"
-  | "call"
-  | "arguments"
-  | "caller"
-  | "length"
-  | "name" ->
-    true
+  | OrdinaryName ("apply" | "bind" | "call" | "arguments" | "caller" | "length" | "name") -> true
   | x -> is_object_prototype_method x
 
 (* neither object prototype methods nor callable signatures should be
@@ -638,23 +628,23 @@ let quick_error_fun_as_obj cx trace ~use_op reason statics reason_o props =
     | DefT (_, _, ObjT { props_tmap; _ }) -> Some (Context.find_props cx props_tmap)
     | AnyT _
     | DefT (_, _, MixedT _) ->
-      Some SMap.empty
+      Some NameUtils.Map.empty
     | _ -> None
   in
   match statics_own_props with
   | Some statics_own_props ->
     let props_not_found =
-      SMap.filter
+      NameUtils.Map.filter
         (fun x p ->
           let optional =
             match p with
             | Field (_, OptionalT _, _) -> true
             | _ -> false
           in
-          not (optional || is_function_prototype x || SMap.mem x statics_own_props))
+          not (optional || is_function_prototype x || NameUtils.Map.mem x statics_own_props))
         props
     in
-    SMap.iter
+    NameUtils.Map.iter
       (fun x _ ->
         let use_op =
           Frame (PropertyCompatibility { prop = Some x; lower = reason; upper = reason_o }, use_op)
@@ -666,7 +656,7 @@ let quick_error_fun_as_obj cx trace ~use_op reason statics reason_o props =
         in
         add_output cx ~trace err)
       props_not_found;
-    not (SMap.is_empty props_not_found)
+    not (NameUtils.Map.is_empty props_not_found)
   | None -> false
 
 (** Instantiation *)
@@ -690,7 +680,7 @@ let instantiate_poly_param_upper_bounds cx typeparams =
    required by it, the module it provides, and so on). *)
 let mk_builtins cx =
   let builtins = Tvar.mk cx (builtin_reason (RCustom "module")) in
-  Context.add_module cx Files.lib_module_ref builtins
+  Context.add_module cx (OrdinaryName Files.lib_module_ref) builtins
 
 (* Local references to modules can be looked up. *)
 let lookup_module cx m = Context.find_module cx m

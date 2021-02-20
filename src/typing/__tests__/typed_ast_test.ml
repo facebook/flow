@@ -120,7 +120,13 @@ let before_and_after_stmts file_name =
     let cx =
       let aloc_table = lazy (ALoc.make_table file_key) in
       let ccx = Context.make_ccx () in
-      Context.make ccx metadata file_key aloc_table Files.lib_module_ref Context.Checking
+      Context.make
+        ccx
+        metadata
+        file_key
+        aloc_table
+        (Reason.OrdinaryName Files.lib_module_ref)
+        Context.Checking
     in
     Flow_js_utils.mk_builtins cx;
     add_require_tvars cx file_sig;

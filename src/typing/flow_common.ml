@@ -91,20 +91,20 @@ end
 
 module type BUILTINS = sig
   val get_builtin_type :
-    Context.t -> ?trace:Type.trace -> Reason.reason -> ?use_desc:bool -> string -> Type.t
+    Context.t -> ?trace:Type.trace -> Reason.reason -> ?use_desc:bool -> name -> Type.t
 
   val get_builtin_prop_type :
     Context.t -> ?trace:Type.trace -> Reason.reason -> Type.React.PropType.complex -> Type.t
 
-  val get_builtin : Context.t -> ?trace:Type.trace -> string -> reason -> Type.t
+  val get_builtin : Context.t -> ?trace:Type.trace -> name -> reason -> Type.t
 
   val get_builtin_typeapp :
-    Context.t -> ?trace:Type.trace -> reason -> string -> Type.t list -> Type.t
+    Context.t -> ?trace:Type.trace -> reason -> name -> Type.t list -> Type.t
 
   val lookup_builtin :
-    Context.t -> ?trace:Type.trace -> string -> reason -> Type.lookup_kind -> Type.tvar -> unit
+    Context.t -> ?trace:Type.trace -> name -> reason -> Type.lookup_kind -> Type.tvar -> unit
 
-  val set_builtin : Context.t -> ?trace:Type.trace -> string -> Type.t -> unit
+  val set_builtin : Context.t -> ?trace:Type.trace -> name -> Type.t -> unit
 end
 
 module type SUBTYPING = sig

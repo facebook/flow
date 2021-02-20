@@ -32,7 +32,8 @@ let id_from_symbol x =
   if sym_anonymous then
     Error (Utils_js.spf "Cannot output anonymous elements.")
   else
-    Ok (id_from_string sym_name)
+    (* TODO consider issuing an error when we encounter an internal name *)
+    Ok (id_from_string (Reason.display_string_of_name sym_name))
 
 let mk_generic x targs =
   { T.Generic.id = T.Generic.Identifier.Unqualified x; targs; comments = None }
@@ -76,7 +77,8 @@ let type_ options =
       return
         (builtin_from_string
            "$TEMPORARY$string"
-           ~targs:(mk_targs [(Loc.none, T.StringLiteral (str_lit lit))]))
+           ~targs:
+             (mk_targs [(Loc.none, T.StringLiteral (str_lit (Reason.display_string_of_name lit)))]))
     | Str None -> just (T.String None)
     | Bool (Some lit) ->
       return
@@ -85,7 +87,7 @@ let type_ options =
            ~targs:(mk_targs [(Loc.none, T.BooleanLiteral (bool_lit lit))]))
     | Bool None -> just (T.Boolean None)
     | NumLit lit -> just (T.NumberLiteral (num_lit lit))
-    | StrLit lit -> just (T.StringLiteral (str_lit lit))
+    | StrLit lit -> just (T.StringLiteral (str_lit (Reason.display_string_of_name lit)))
     | BoolLit lit -> just (T.BooleanLiteral (bool_lit lit))
     | Fun f ->
       let%map f = function_ f in
@@ -208,7 +210,8 @@ let type_ options =
       | Field { t; polarity; optional } ->
         let%map t = type_ t in
         {
-          T.Object.Property.key = to_key x;
+          (* TODO consider making it an error to try to serialize an internal name *)
+          T.Object.Property.key = to_key (Reason.display_string_of_name x);
           value = T.Object.Property.Init t;
           optional;
           static = false;
@@ -220,7 +223,7 @@ let type_ options =
       | Method f ->
         let%map fun_t = function_ f in
         {
-          T.Object.Property.key = to_key x;
+          T.Object.Property.key = to_key (Reason.display_string_of_name x);
           value = T.Object.Property.Init (Loc.none, T.Function fun_t);
           optional = false;
           static = false;
@@ -232,7 +235,7 @@ let type_ options =
       | Get t ->
         let%map t = getter t in
         {
-          T.Object.Property.key = to_key x;
+          T.Object.Property.key = to_key (Reason.display_string_of_name x);
           value = T.Object.Property.Get (Loc.none, t);
           optional = false;
           static = false;
@@ -244,7 +247,7 @@ let type_ options =
       | Set t ->
         let%map t = setter t in
         {
-          T.Object.Property.key = to_key x;
+          T.Object.Property.key = to_key (Reason.display_string_of_name x);
           value = T.Object.Property.Set (Loc.none, t);
           optional = false;
           static = false;

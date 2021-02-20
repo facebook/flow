@@ -15,7 +15,7 @@ let mk_module_t cx reason =
   ModuleT
     ( reason,
       {
-        exports_tmap = Context.make_export_map cx SMap.empty;
+        exports_tmap = Context.make_export_map cx NameUtils.Map.empty;
         cjs_export = None;
         has_every_named_export = false;
       },
@@ -33,7 +33,7 @@ let mk_module_t cx reason =
 let mk_commonjs_module_t cx reason_exports_module reason export_t =
   let exporttypes =
     {
-      exports_tmap = Context.make_export_map cx SMap.empty;
+      exports_tmap = Context.make_export_map cx NameUtils.Map.empty;
       cjs_export = Some export_t;
       has_every_named_export = false;
     }
@@ -109,7 +109,7 @@ let export_star cx loc ns =
   | Ok () -> ()
   | Error msg -> Flow.add_output cx msg
 
-let export_type cx = Module_info.export_type (Context.module_info cx)
+let export_type cx name = Module_info.export_type (Context.module_info cx) name
 
 let export_type_star cx = Module_info.export_type_star (Context.module_info cx)
 

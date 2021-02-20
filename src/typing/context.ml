@@ -65,7 +65,7 @@ type metadata = {
 
 type test_prop_hit_or_miss =
   | Hit
-  | Miss of string option * (Reason.t * Reason.t) * Type.use_op
+  | Miss of Reason.name option * (Reason.t * Reason.t) * Type.use_op
 
 type type_assert_kind =
   | Is
@@ -275,7 +275,7 @@ let empty_sig_cx =
     call_props = IMap.empty;
     export_maps = Type.Exports.Map.empty;
     evaluated = Type.Eval.Map.empty;
-    module_map = SMap.empty;
+    module_map = NameUtils.Map.empty;
   }
 
 let make_ccx () =
@@ -351,7 +351,8 @@ let graph_sig sig_cx = sig_cx.graph
 let trust_graph_sig sig_cx = sig_cx.trust_graph
 
 let find_module_sig sig_cx m =
-  (try SMap.find m sig_cx.module_map with Not_found -> raise (Module_not_found m))
+  try NameUtils.Map.find (Reason.OrdinaryName m) sig_cx.module_map
+  with Not_found -> raise (Module_not_found m)
 
 (* modules *)
 
@@ -579,7 +580,7 @@ let add_lint_suppressions cx suppressions =
 let add_require cx loc tvar = cx.require_map <- ALocMap.add loc tvar cx.require_map
 
 let add_module cx name tvar =
-  let module_map = SMap.add name tvar cx.ccx.sig_cx.module_map in
+  let module_map = NameUtils.Map.add name tvar cx.ccx.sig_cx.module_map in
   cx.ccx.sig_cx <- { cx.ccx.sig_cx with module_map }
 
 let add_property_map cx id pmap =
@@ -751,23 +752,23 @@ let unnecessary_invariants cx =
 
 (* utils *)
 let find_real_props cx id =
-  find_props cx id |> SMap.filter (fun x _ -> not (Reason.is_internal_name x))
+  find_props cx id |> NameUtils.Map.filter (fun x _ -> not (Reason.is_internal_name x))
 
-let iter_props cx id f = find_props cx id |> SMap.iter f
+let iter_props cx id f = find_props cx id |> NameUtils.Map.iter f
 
-let iter_real_props cx id f = find_real_props cx id |> SMap.iter f
+let iter_real_props cx id f = find_real_props cx id |> NameUtils.Map.iter f
 
-let fold_real_props cx id f = find_real_props cx id |> SMap.fold f
+let fold_real_props cx id f = find_real_props cx id |> NameUtils.Map.fold f
 
-let has_prop cx id x = find_props cx id |> SMap.mem x
+let has_prop cx id x = find_props cx id |> NameUtils.Map.mem x
 
-let get_prop cx id x = find_props cx id |> SMap.find_opt x
+let get_prop cx id x = find_props cx id |> NameUtils.Map.find_opt x
 
-let set_prop cx id x p = find_props cx id |> SMap.add x p |> add_property_map cx id
+let set_prop cx id x p = find_props cx id |> NameUtils.Map.add x p |> add_property_map cx id
 
-let has_export cx id name = find_exports cx id |> SMap.mem name
+let has_export cx id name = find_exports cx id |> NameUtils.Map.mem name
 
-let set_export cx id name t = find_exports cx id |> SMap.add name t |> add_export_map cx id
+let set_export cx id name t = find_exports cx id |> NameUtils.Map.add name t |> add_export_map cx id
 
 (* constructors *)
 let make_aloc_id cx aloc = ALoc.id_of_aloc cx.rev_aloc_table aloc

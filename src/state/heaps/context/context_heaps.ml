@@ -155,7 +155,7 @@ end = struct
        * make it the empty table. *)
       let aloc_table = lazy (ALoc.make_table leader_f) in
       let module_ref = Files.module_ref leader_f in
-      Context.make ccx metadata leader_f aloc_table module_ref Context.Merging
+      Context.make ccx metadata leader_f aloc_table (Reason.OrdinaryName module_ref) Context.Merging
     in
     WorkerCancel.with_no_cancellations (fun () ->
         let module_refs =
@@ -163,7 +163,7 @@ end = struct
             ~f:(fun f ->
               let module_ref = Files.module_ref f in
               let module_t = Type.AnyT.locationless (Type.AnyError None) in
-              Context.add_module cx module_ref module_t;
+              Context.add_module cx (Reason.OrdinaryName module_ref) module_t;
 
               (* Ideally we'd assert that f is a member of the oldified files too *)
               LeaderHeap.add f leader_f;

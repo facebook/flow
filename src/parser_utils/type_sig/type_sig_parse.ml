@@ -2969,7 +2969,7 @@ and class_def =
           decorators = _;
           comments = _;
         }) ->
-        if opts.munge && Signature_utils.is_munged_property_name name
+        if opts.munge && Signature_utils.is_munged_property_string name
         then acc
         else
           begin match kind with
@@ -2996,7 +2996,7 @@ and class_def =
           variance;
           comments = _;
         }) ->
-        if opts.munge && Signature_utils.is_munged_property_name name
+        if opts.munge && Signature_utils.is_munged_property_string name
         then acc
         else
           let id_loc, t = match t with

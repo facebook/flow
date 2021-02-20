@@ -33,7 +33,9 @@ let substituter =
 
     method props cx map_cx id =
       let props_map = Context.find_props cx id in
-      let props_map' = SMap.ident_map (Property.ident_map_t (self#type_ cx map_cx)) props_map in
+      let props_map' =
+        NameUtils.Map.ident_map (Property.ident_map_t (self#type_ cx map_cx)) props_map
+      in
       let id' =
         if props_map == props_map' then
           id
@@ -55,7 +57,7 @@ let substituter =
         else
           (loc, t')
       in
-      let exps' = SMap.ident_map map_loc_type_pair exps in
+      let exps' = NameUtils.Map.ident_map map_loc_type_pair exps in
       if exps == exps' then
         id
       else

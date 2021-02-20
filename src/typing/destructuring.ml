@@ -105,7 +105,7 @@ let array_rest_element cx acc i loc =
 
 let object_named_property ~has_default cx acc loc x comments =
   let { current; init; default; annot; _ } = acc in
-  let reason = mk_reason (RProperty (Some x)) loc in
+  let reason = mk_reason (RProperty (Some (OrdinaryName x))) loc in
   let init =
     Base.Option.map init (fun init ->
         ( loc,
@@ -219,11 +219,11 @@ let identifier cx ~f acc name_loc name =
           | RDefaultValue
           | RArrayPatternRestProp
           | RObjectPatternRestProp ->
-            RIdentifier name
+            RIdentifier (OrdinaryName name)
           | desc -> desc))
       current
   in
-  let reason = mk_reason (RIdentifier name) name_loc in
+  let reason = mk_reason (RIdentifier (OrdinaryName name)) name_loc in
   let current =
     (* If we are destructuring an annotation, the chain of constraints leading
      * to here will preserve the 0->1 constraint. The mk_typeof_annotation

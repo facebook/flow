@@ -112,7 +112,7 @@ type subst_cache_err =
 
 val make_ccx : unit -> component_t
 
-val make : component_t -> metadata -> File_key.t -> ALoc.table Lazy.t -> string -> phase -> t
+val make : component_t -> metadata -> File_key.t -> ALoc.table Lazy.t -> Reason.name -> phase -> t
 
 val metadata_of_options : Options.t -> metadata
 
@@ -209,11 +209,11 @@ val module_kind : t -> Module_info.kind
 
 val require_map : t -> Type.t ALocMap.t
 
-val module_map : t -> Type.t SMap.t
+val module_map : t -> Type.t NameUtils.Map.t
 
 val exported_locals : t -> ALocSet.t SMap.t option
 
-val module_ref : t -> string
+val module_ref : t -> Reason.name
 
 val property_maps : t -> Type.Properties.map
 
@@ -305,7 +305,7 @@ val add_lint_suppressions : t -> LocSet.t -> unit
 
 val add_require : t -> ALoc.t -> Type.t -> unit
 
-val add_module : t -> string -> Type.t -> unit
+val add_module : t -> Reason.name -> Type.t -> unit
 
 val add_property_map : t -> Type.Properties.id -> Type.Properties.t -> unit
 
@@ -353,7 +353,7 @@ val set_exists_excuses : t -> ExistsCheck.t ALocMap.t -> unit
 
 val set_use_def : t -> Scope_api.With_ALoc.info * Ssa_api.With_ALoc.values -> unit
 
-val set_module_map : t -> Type.t SMap.t -> unit
+val set_module_map : t -> Type.t NameUtils.Map.t -> unit
 
 val set_local_env : t -> ALocSet.t SMap.t option -> unit
 
@@ -373,9 +373,10 @@ val clear_master_shared : t -> sig_t -> unit
  *)
 val test_prop_hit : t -> Type.ident -> unit
 
-val test_prop_miss : t -> Type.ident -> string option -> Reason.t * Reason.t -> Type.use_op -> unit
+val test_prop_miss :
+  t -> Type.ident -> Reason.name option -> Reason.t * Reason.t -> Type.use_op -> unit
 
-val test_prop_get_never_hit : t -> (string option * (Reason.t * Reason.t) * Type.use_op) list
+val test_prop_get_never_hit : t -> (Reason.name option * (Reason.t * Reason.t) * Type.use_op) list
 
 val computed_property_state_for_id : t -> Type.ident -> computed_property_state option
 
@@ -396,21 +397,22 @@ val mark_invariant : t -> ALoc.t -> Reason.t -> useful:bool -> unit
 val unnecessary_invariants : t -> (ALoc.t * Reason.t) list
 
 (* utils *)
-val iter_props : t -> Type.Properties.id -> (string -> Type.Property.t -> unit) -> unit
+val iter_props : t -> Type.Properties.id -> (Reason.name -> Type.Property.t -> unit) -> unit
 
-val iter_real_props : t -> Type.Properties.id -> (string -> Type.Property.t -> unit) -> unit
+val iter_real_props : t -> Type.Properties.id -> (Reason.name -> Type.Property.t -> unit) -> unit
 
-val fold_real_props : t -> Type.Properties.id -> (string -> Type.Property.t -> 'a -> 'a) -> 'a -> 'a
+val fold_real_props :
+  t -> Type.Properties.id -> (Reason.name -> Type.Property.t -> 'a -> 'a) -> 'a -> 'a
 
-val has_prop : t -> Type.Properties.id -> string -> bool
+val has_prop : t -> Type.Properties.id -> Reason.name -> bool
 
-val get_prop : t -> Type.Properties.id -> string -> Type.Property.t option
+val get_prop : t -> Type.Properties.id -> Reason.name -> Type.Property.t option
 
-val set_prop : t -> Type.Properties.id -> string -> Type.Property.t -> unit
+val set_prop : t -> Type.Properties.id -> Reason.name -> Type.Property.t -> unit
 
-val has_export : t -> Type.Exports.id -> string -> bool
+val has_export : t -> Type.Exports.id -> Reason.name -> bool
 
-val set_export : t -> Type.Exports.id -> string -> ALoc.t option * Type.t -> unit
+val set_export : t -> Type.Exports.id -> Reason.name -> ALoc.t option * Type.t -> unit
 
 (* constructors *)
 val make_aloc_id : t -> ALoc.t -> ALoc.id

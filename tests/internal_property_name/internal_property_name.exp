@@ -1,1 +1,20 @@
-Found 0 errors
+Error ------------------------------------------------------------------------------------------------------ foo.js:6:16
+
+Cannot assign object literal to `x` because property `.baz` is missing in object literal [1] but exists in `Foo` [2].
+[prop-missing]
+
+   foo.js:6:16
+                     v
+   6| const x: Foo = {
+   7|   bar: '',
+   8| }
+      ^ [1]
+
+References:
+   foo.js:6:10
+   6| const x: Foo = {
+               ^^^ [2]
+
+
+
+Found 1 error

@@ -224,7 +224,7 @@ let merge_context_new_signatures ~options ~reader component =
     let docblock = Parsing_heaps.Reader_dispatcher.get_docblock_unsafe ~reader file in
     let metadata = Context.docblock_overrides docblock metadata in
     let module_ref = Files.module_ref file in
-    Context.make ccx metadata file aloc_table module_ref Context.Merging
+    Context.make ccx metadata file aloc_table (Reason.OrdinaryName module_ref) Context.Merging
   in
 
   (* build a reverse lookup, used to detect in-cycle dependencies *)

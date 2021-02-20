@@ -16,7 +16,7 @@
  *)
 
 type t = {
-  ref: string;
+  ref: Reason.name;
   mutable kind: kind;
   mutable type_named: Type.Exports.t;
   mutable type_star: (ALoc.t * Type.t) list;
@@ -29,29 +29,30 @@ and kind =
       star: (ALoc.t * Type.t) list;
     }
 
-let empty_cjs_module ref = { ref; kind = CJS None; type_named = SMap.empty; type_star = [] }
+let empty_cjs_module ref =
+  { ref; kind = CJS None; type_named = NameUtils.Map.empty; type_star = [] }
 
 let export info name loc t =
   match info.kind with
   | CJS None ->
-    info.kind <- ES { named = SMap.singleton name (Some loc, t); star = [] };
+    info.kind <- ES { named = NameUtils.Map.singleton name (Some loc, t); star = [] };
     Ok ()
   | ES { named; star } ->
-    info.kind <- ES { named = SMap.add name (Some loc, t) named; star };
+    info.kind <- ES { named = NameUtils.Map.add name (Some loc, t) named; star };
     Ok ()
   | CJS (Some _) -> Error (Error_message.EIndeterminateModuleType loc)
 
 let export_star info loc ns =
   match info.kind with
   | CJS None ->
-    info.kind <- ES { named = SMap.empty; star = [(loc, ns)] };
+    info.kind <- ES { named = NameUtils.Map.empty; star = [(loc, ns)] };
     Ok ()
   | ES { named; star } ->
     info.kind <- ES { named; star = (loc, ns) :: star };
     Ok ()
   | CJS (Some _) -> Error (Error_message.EIndeterminateModuleType loc)
 
-let export_type info name loc t = info.type_named <- SMap.add name (loc, t) info.type_named
+let export_type info name loc t = info.type_named <- NameUtils.Map.add name (loc, t) info.type_named
 
 let export_type_star info loc ns = info.type_star <- (loc, ns) :: info.type_star
 

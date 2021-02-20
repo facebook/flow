@@ -48,7 +48,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
       unify_opt cx ?trace ~use_op lt ut
     (* directional cases *)
     | (lp, up) ->
-      let x =
+      let propref_error =
         match propref with
         | Named (_, x) -> Some x
         | Computed _ -> None
@@ -60,7 +60,10 @@ module Make (Flow : INPUT) : OUTPUT = struct
           cx
           ?trace
           (Error_message.EPropPolarityMismatch
-             ((lreason, ureason), x, (Property.polarity lp, Property.polarity up), use_op))
+             ( (lreason, ureason),
+               propref_error,
+               (Property.polarity lp, Property.polarity up),
+               use_op ))
       | _ -> ());
       (match (Property.write_t lp, Property.write_t up) with
       | (Some lt, Some ut) -> flow_opt cx ?trace (ut, UseT (use_op, lt))
@@ -69,7 +72,10 @@ module Make (Flow : INPUT) : OUTPUT = struct
           cx
           ?trace
           (Error_message.EPropPolarityMismatch
-             ((lreason, ureason), x, (Property.polarity lp, Property.polarity up), use_op))
+             ( (lreason, ureason),
+               propref_error,
+               (Property.polarity lp, Property.polarity up),
+               use_op ))
       | _ -> ())
 
   let flow_predicate_func =
@@ -77,13 +83,13 @@ module Make (Flow : INPUT) : OUTPUT = struct
       | ((Some k, _) :: ps1, (Some v, _) :: ps2) ->
         let map' =
           if k <> v then
-            SMap.add k (v, []) map
+            SMap.add k (OrdinaryName v, []) map
           else
             (* Skip trivial entry *)
             map
         in
         subst_map (n + 1, map') (ps1, ps2)
-      | (_, []) -> Ok map
+      | (_, []) -> Ok (map : Type.substitution)
       | ([], ps2) ->
         (* Flag an error if predicate counts do not coincide
            TODO: somehow the original flow needs to be propagated as well *)
@@ -183,7 +189,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
             add_output cx ~trace err);
       Base.Option.iter lcall ~f:(fun _ ->
           if Base.Option.is_none ucall then
-            let prop = Some "$call" in
+            let prop = Some (OrdinaryName "$call") in
             let use_op =
               Frame
                 ( PropertyCompatibility
@@ -206,7 +212,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
 
     (match ucall with
     | Some ucall ->
-      let prop_name = Some "$call" in
+      let prop_name = Some (OrdinaryName "$call") in
       let use_op =
         Frame (PropertyCompatibility { prop = prop_name; lower = lreason; upper = ureason }, use_op)
       in
@@ -387,7 +393,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
          behavior, which should be fixed, and this code removed. *)
       (match (lcall, ucall) with
       | (Some lcall, None) ->
-        let s = "$call" in
+        let s = OrdinaryName "$call" in
         let use_op =
           Frame (PropertyCompatibility { prop = Some s; lower = lreason; upper = ureason }, use_op)
         in
@@ -414,7 +420,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
 
   let match_shape cx trace ~use_op proto reason props =
     let reason_op = reason_of_t proto in
-    SMap.iter
+    NameUtils.Map.iter
       (fun x p ->
         let reason_prop = update_desc_reason (fun desc -> RPropertyOf (x, desc)) reason in
         match Property.read_t p with
@@ -871,9 +877,9 @@ module Make (Flow : INPUT) : OUTPUT = struct
      * slices, but that approach behaves in nonobvious ways. TODO why?
      *)
     | (IntersectionT _, DefT (r, _, ObjT { flags; props_tmap; proto_t; call_t }))
-      when SMap.cardinal (Context.find_props cx props_tmap) > 1 ->
+      when NameUtils.Map.cardinal (Context.find_props cx props_tmap) > 1 ->
       Context.iter_real_props cx props_tmap (fun x p ->
-          let pmap = SMap.singleton x p in
+          let pmap = NameUtils.Map.singleton x p in
           let id = Context.generate_property_map cx pmap in
           let obj = mk_objecttype ~flags ~call:call_t id dummy_prototype in
           rec_flow cx trace (l, UseT (use_op, DefT (r, bogus_trust (), ObjT obj))));
@@ -896,7 +902,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
        * and their exact versions). Notably, "meta" types like union, annot,
        * typeapp, eval, maybe, optional, and intersection should have boiled
        * away by this point. Generics should have been "unsealed" as well. *)
-      let propref = Named (reason, x) in
+      let propref = Named (reason, OrdinaryName x) in
       let strict = NonstrictReturning (None, None) in
       let u =
         LookupT
@@ -1143,7 +1149,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
       rec_flow cx trace (l, ReactKitT (use_op, reasonl, React.ConfigCheck config));
 
       (* Ensure this is a function component *)
-      rec_flow_t ~use_op cx trace (return_t, get_builtin_type cx reasonl "React$Node");
+      rec_flow_t ~use_op cx trace (return_t, get_builtin_type cx reasonl (OrdinaryName "React$Node"));
 
       (* A function component instance type is always void, so flow void to instance *)
       rec_flow_t
@@ -1168,7 +1174,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
                  aloc_of_reason reasonu,
                  EmptyT.why (replace_desc_new_reason REmpty reasonu) (bogus_trust ()) ))
           ~def_reason:reasonl
-          (get_builtin_type cx reasonu "React$Node")
+          (get_builtin_type cx reasonu (OrdinaryName "React$Node"))
       in
       let mixed = MixedT.why reasonu (bogus_trust ()) in
       rec_flow_t
@@ -1200,7 +1206,8 @@ module Make (Flow : INPUT) : OUTPUT = struct
             (* The $call PropertyCompatibility is redundant when we have a
              * FunCompatibility use_op. *)
             match use_op with
-            | Frame (PropertyCompatibility { prop = Some "$call"; _ }, use_op) -> use_op
+            | Frame (PropertyCompatibility { prop = Some (OrdinaryName "$call"); _ }, use_op) ->
+              use_op
             | _ -> use_op )
       in
       rec_flow cx trace (ft2.this_t, UseT (use_op, ft1.this_t));
@@ -1238,7 +1245,8 @@ module Make (Flow : INPUT) : OUTPUT = struct
               use_op )
         in
         rec_flow cx trace (ft1.return_t, UseT (use_op, ft2.return_t))
-    | (DefT (reason, _, StrT (Literal (_, str))), DefT (reason_op, _, CharSetT chars)) ->
+    | (DefT (reason, _, StrT (Literal (_, name))), DefT (reason_op, _, CharSetT chars)) ->
+      let str = display_string_of_name name in
       let module CharSet = String_utils.CharSet in
       Error_message.(
         let (invalid, _) =
@@ -1259,7 +1267,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
             ~trace
             (EInvalidCharSet
                {
-                 invalid = (replace_desc_reason (RStringLit str) reason, invalid);
+                 invalid = (replace_desc_reason (RStringLit name) reason, invalid);
                  valid = reason_op;
                  use_op;
                }))
@@ -1273,7 +1281,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
         else
           "ReactPropsChainableTypeChecker"
       in
-      let l = get_builtin_type cx ~trace reason builtin_name in
+      let l = get_builtin_type cx ~trace reason (OrdinaryName builtin_name) in
       rec_flow_t cx trace ~use_op (l, u)
     | ( CustomFunT (reason, ReactPropType (React.PropType.Complex kind)),
         (DefT (_, _, ObjT _) | DefT (_, _, FunT _) | AnyT _) ) ->
@@ -1325,10 +1333,10 @@ module Make (Flow : INPUT) : OUTPUT = struct
       let lflds =
         let own_props = Context.find_props cx lown in
         let proto_props = Context.find_props cx lproto in
-        SMap.union own_props proto_props
+        NameUtils.Map.union own_props proto_props
       in
       Base.Option.iter ucall ~f:(fun ucall ->
-          let prop_name = Some "$call" in
+          let prop_name = Some (OrdinaryName "$call") in
           let use_op =
             Frame
               (PropertyCompatibility { prop = prop_name; lower = lreason; upper = ureason }, use_op)
@@ -1361,7 +1369,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
             let reason_prop = replace_desc_reason (RProperty (Some s)) ureason in
             Named (reason_prop, s)
           in
-          match SMap.find_opt s lflds with
+          match NameUtils.Map.find_opt s lflds with
           | Some lp -> rec_flow_p cx ~trace ~use_op lreason ureason propref (lp, up)
           | _ ->
             let strict =
@@ -1397,7 +1405,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
     (****************************************)
     | (DefT (reason, _, (ObjT _ | InstanceT _)), (DefT (reason_op, _, FunT _) | AnyT (reason_op, _)))
       ->
-      let prop_name = Some "$call" in
+      let prop_name = Some (OrdinaryName "$call") in
       let use_op =
         match u with
         | DefT (_, _, FunT _)
@@ -1457,9 +1465,9 @@ module Make (Flow : INPUT) : OUTPUT = struct
       let proto_props =
         match i.inst_kind with
         | InterfaceKind _ -> proto_props
-        | ClassKind -> SMap.remove "constructor" proto_props
+        | ClassKind -> NameUtils.Map.remove (OrdinaryName "constructor") proto_props
       in
-      let props = SMap.union own_props proto_props in
+      let props = NameUtils.Map.union own_props proto_props in
       match_shape cx trace ~use_op proto reason props
     (* Function definitions are incompatible with ShapeT. ShapeT is meant to
      * match an object type with a subset of the props in the type being
@@ -1515,10 +1523,10 @@ module Make (Flow : INPUT) : OUTPUT = struct
       let use_op = Frame (ArrayElementCompatibility { lower = r1; upper = r2 }, use_op) in
       rec_flow cx trace (t1, UseT (use_op, t2))
     | (DefT (_, _, InstanceT _), DefT (r2, _, ArrT (ArrayAT (elemt, _)))) ->
-      let arrt = get_builtin_typeapp cx ~trace r2 "Array" [elemt] in
+      let arrt = get_builtin_typeapp cx ~trace r2 (OrdinaryName "Array") [elemt] in
       rec_flow cx trace (l, UseT (use_op, arrt))
     | (DefT (_, _, InstanceT _), DefT (r2, _, ArrT (ROArrayAT elemt))) ->
-      let arrt = get_builtin_typeapp cx ~trace r2 "$ReadOnlyArray" [elemt] in
+      let arrt = get_builtin_typeapp cx ~trace r2 (OrdinaryName "$ReadOnlyArray") [elemt] in
       rec_flow cx trace (l, UseT (use_op, arrt))
     (**************************************************)
     (* instances of classes follow declared hierarchy *)
@@ -1634,7 +1642,9 @@ module Make (Flow : INPUT) : OUTPUT = struct
              reason
              statics
              reason_inst
-             (SMap.filter (fun x _ -> x = "constructor") (Context.find_props cx own_props)))
+             (NameUtils.Map.filter
+                (fun x _ -> x = OrdinaryName "constructor")
+                (Context.find_props cx own_props)))
       then
         rec_flow_t cx trace ~use_op (statics, u)
     (***************************************************************)
@@ -1751,19 +1761,19 @@ module Make (Flow : INPUT) : OUTPUT = struct
       rec_flow_t cx trace ~use_op (l, bot)
     | (ObjProtoT reason, _) ->
       let use_desc = true in
-      let obj_proto = get_builtin_type cx ~trace reason ~use_desc "Object" in
+      let obj_proto = get_builtin_type cx ~trace reason ~use_desc (OrdinaryName "Object") in
       rec_flow_t cx trace ~use_op (obj_proto, u)
     | (_, ObjProtoT reason) ->
       let use_desc = true in
-      let obj_proto = get_builtin_type cx ~trace reason ~use_desc "Object" in
+      let obj_proto = get_builtin_type cx ~trace reason ~use_desc (OrdinaryName "Object") in
       rec_flow_t cx trace ~use_op (l, obj_proto)
     | (FunProtoT reason, _) ->
       let use_desc = true in
-      let fun_proto = get_builtin_type cx ~trace reason ~use_desc "Function" in
+      let fun_proto = get_builtin_type cx ~trace reason ~use_desc (OrdinaryName "Function") in
       rec_flow_t cx trace ~use_op (fun_proto, u)
     | (_, FunProtoT reason) ->
       let use_desc = true in
-      let fun_proto = get_builtin_type cx ~trace reason ~use_desc "Function" in
+      let fun_proto = get_builtin_type cx ~trace reason ~use_desc (OrdinaryName "Function") in
       rec_flow_t cx trace ~use_op (l, fun_proto)
     | (DefT (lreason, _, MixedT Mixed_function), DefT (ureason, _, FunT _)) ->
       add_output

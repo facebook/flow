@@ -7,7 +7,7 @@
 
 val string_of_scope_entry : Context.t -> Scope.Entry.t -> string
 
-val string_of_scope_entries : Context.t -> Scope.Entry.t SMap.t -> string
+val string_of_scope_entries : Context.t -> Scope.Entry.t NameUtils.Map.t -> string
 
 val string_of_scope_refi : Context.t -> Scope.refi_binding -> string
 

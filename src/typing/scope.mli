@@ -114,9 +114,9 @@ module Entry : sig
 
   val state_of_value : value_binding -> State.t
 
-  val havoc : ?on_call:(Type.t -> Type.t -> Type.t -> Type.t) -> string -> t -> t
+  val havoc : ?on_call:(Type.t -> Type.t -> Type.t -> Type.t) -> Reason.name -> t -> t
 
-  val reset : ALoc.t -> string -> t -> t
+  val reset : ALoc.t -> Reason.name -> t -> t
 
   val is_lex : t -> bool
 end
@@ -148,7 +148,7 @@ type refi_binding = {
 type t = {
   id: int;
   kind: kind;
-  mutable entries: Entry.t SMap.t;
+  mutable entries: Entry.t NameUtils.Map.t;
   mutable refis: refi_binding Key_map.t;
   mutable declare_func_annots: (ALoc.t, ALoc.t * Type.t) Flow_ast.Type.annotation SMap.t;
 }
@@ -161,17 +161,17 @@ val fresh_lex : unit -> t
 
 val clone : t -> t
 
-val iter_entries : (SMap.key -> Entry.t -> unit) -> t -> unit
+val iter_entries : (Reason.name -> Entry.t -> unit) -> t -> unit
 
-val update_entries : (SMap.key -> Entry.t -> Entry.t) -> t -> unit
+val update_entries : (Reason.name -> Entry.t -> Entry.t) -> t -> unit
 
-val add_entry : SMap.key -> Entry.t -> t -> unit
+val add_entry : Reason.name -> Entry.t -> t -> unit
 
-val remove_entry : SMap.key -> t -> unit
+val remove_entry : Reason.name -> t -> unit
 
-val get_entry : SMap.key -> t -> Entry.t option
+val get_entry : Reason.name -> t -> Entry.t option
 
-val havoc_entry : SMap.key -> t -> unit
+val havoc_entry : Reason.name -> t -> unit
 
 val update_refis : (Key_map.key -> refi_binding -> refi_binding) -> t -> unit
 

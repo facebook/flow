@@ -17,7 +17,7 @@ let string_of_polarity = function
   | Polarity.Positive -> "Positive"
 
 let string_of_union_enum = function
-  | UnionEnum.Str x -> spf "string %s" x
+  | UnionEnum.Str x -> spf "string %s" (display_string_of_name x)
   | UnionEnum.Num (_, x) -> spf "number %s" x
   | UnionEnum.Bool x -> spf "boolean %b" x
   | UnionEnum.Null -> "null"
@@ -37,7 +37,7 @@ let string_of_selector = function
 
 let string_of_destructor = function
   | NonMaybeType -> "NonMaybeType"
-  | PropertyType x -> spf "PropertyType %s" x
+  | PropertyType x -> spf "PropertyType %s" (display_string_of_name x)
   | ElementType _ -> "ElementType"
   | Bind _ -> "Bind"
   | ReadOnlyType -> "ReadOnly"
@@ -174,7 +174,7 @@ let rec dump_t_ (depth, tvars) cx t =
         ~trust:(Some trust)
         ~extra:
           (match c with
-          | Literal (_, s) -> spf "%S" s
+          | Literal (_, s) -> spf "%S" (display_string_of_name s)
           | Truthy -> "truthy"
           | AnyLiteral -> "")
         t
@@ -306,7 +306,8 @@ let rec dump_t_ (depth, tvars) cx t =
     | ShapeT (_, arg) -> p ~extra:(kid arg) t
     | MatchingPropT (_, _, arg) -> p ~extra:(kid arg) t
     | KeysT (_, arg) -> p ~extra:(kid arg) t
-    | DefT (_, trust, SingletonStrT s) -> p ~trust:(Some trust) ~extra:(spf "%S" s) t
+    | DefT (_, trust, SingletonStrT s) ->
+      p ~trust:(Some trust) ~extra:(spf "%S" (display_string_of_name s)) t
     | DefT (_, trust, SingletonNumT (_, s)) -> p ~trust:(Some trust) ~extra:s t
     | DefT (_, trust, SingletonBoolT b) -> p ~trust:(Some trust) ~extra:(spf "%B" b) t
     | ModuleT (_, { exports_tmap; _ }, _) ->
@@ -314,8 +315,9 @@ let rec dump_t_ (depth, tvars) cx t =
         t
         ~extra:
           ( Context.find_exports cx exports_tmap
-          |> SMap.bindings
-          |> Base.List.map ~f:(fun (name, (_, t)) -> kid t |> spf "%s: %s" name)
+          |> NameUtils.Map.bindings
+          |> Base.List.map ~f:(fun (name, (_, t)) ->
+                 kid t |> spf "%s: %s" (display_string_of_name name))
           |> String.concat ", "
           |> spf "[%s]" )
     | InternalT (ExtendsT (_, l, u)) -> p ~extra:(spf "%s, %s" (kid l) (kid u)) t
@@ -375,10 +377,15 @@ and dump_use_t_ (depth, tvars) cx t =
   let props map =
     spf
       "{%s}"
-      (String.concat "; " (SMap.fold (fun k p acc -> spf "%s = %s" k (prop p) :: acc) map []))
+      (String.concat
+         "; "
+         (NameUtils.Map.fold
+            (fun k p acc -> spf "%s = %s" (display_string_of_name k) (prop p) :: acc)
+            map
+            []))
   in
   let propref = function
-    | Named (r, x) -> spf "%S %s" (dump_reason cx r) x
+    | Named (r, x) -> spf "%S %s" (dump_reason cx r) (display_string_of_name x)
     | Computed t -> kid t
   in
   let lookup_kind = function
@@ -432,7 +439,11 @@ and dump_use_t_ (depth, tvars) cx t =
         | ResolveDict (_, todo, acc) ->
           spf "ResolveDict (%s, %s)" (props todo) (resolved_object acc)
         | ResolveProp (k, todo, acc) ->
-          spf "ResolveProp (%s, %s, %s)" k (props todo) (resolved_object acc)
+          spf
+            "ResolveProp (%s, %s, %s)"
+            (display_string_of_name k)
+            (props todo)
+            (resolved_object acc)
       in
       let simplify_prop_type =
         SimplifyPropType.(
@@ -499,14 +510,14 @@ and dump_use_t_ (depth, tvars) cx t =
         []
     in
     let xs =
-      SMap.fold
+      NameUtils.Map.fold
         (fun k (t, _, _) xs ->
           let opt =
             match t with
             | OptionalT _ -> "?"
             | _ -> ""
           in
-          (k ^ opt) :: xs)
+          (display_string_of_name k ^ opt) :: xs)
         props
         xs
     in
@@ -517,15 +528,15 @@ and dump_use_t_ (depth, tvars) cx t =
   in
   let operand_slice reason prop_map dict =
     let props =
-      SMap.fold
+      NameUtils.Map.fold
         (fun k p acc ->
           match (Type.Property.read_t p, Type.Property.write_t p) with
           | (Some t, _)
           | (_, Some t) ->
-            SMap.add k (t, true, false) acc
+            NameUtils.Map.add k (t, true, false) acc
           | _ -> acc)
         prop_map
-        SMap.empty
+        NameUtils.Map.empty
     in
     let obj_kind =
       match dict with
@@ -691,7 +702,11 @@ and dump_use_t_ (depth, tvars) cx t =
           (spf
              "%s, {%s}"
              (kid arg)
-             (String.concat "; " (Base.List.map ~f:(fun (x, _) -> x) (SMap.bindings tmap))))
+             (String.concat
+                "; "
+                (Base.List.map
+                   ~f:(fun (x, _) -> display_string_of_name x)
+                   (NameUtils.Map.bindings tmap))))
     | ExportTypeT _ -> p t
     | FunImplicitVoidReturnT _ -> p t
     | AssertExportIsTypeT _ -> p t
@@ -1001,8 +1016,9 @@ let string_of_scope_entry =
 
 let string_of_scope_entries cx entries =
   let strings =
-    SMap.fold
-      (fun name entry acc -> spf "%s: %s" name (string_of_scope_entry cx entry) :: acc)
+    NameUtils.Map.fold
+      (fun name entry acc ->
+        spf "%s: %s" (Reason.display_string_of_name name) (string_of_scope_entry cx entry) :: acc)
       entries
       []
     |> String.concat "; \n"
@@ -1176,15 +1192,16 @@ let dump_error_message =
         (dump_reason cx reason_prop)
         (dump_reason cx reason_obj)
     | EDebugPrint (reason, _) -> spf "EDebugPrint (%s, _)" (dump_reason cx reason)
-    | EExportValueAsType (reason, str) ->
-      spf "EExportValueAsType (%s, %s)" (dump_reason cx reason) str
+    | EExportValueAsType (reason, name) ->
+      spf "EExportValueAsType (%s, %s)" (dump_reason cx reason) (display_string_of_name name)
     | EImportValueAsType (reason, str) ->
       spf "EImportValueAsType (%s, %s)" (dump_reason cx reason) str
     | EImportTypeAsTypeof (reason, str) ->
       spf "EImportTypeAsTypeof (%s, %s)" (dump_reason cx reason) str
     | EImportTypeAsValue (reason, str) ->
       spf "EImportTypeAsValue (%s, %s)" (dump_reason cx reason) str
-    | ERefineAsValue (reason, str) -> spf "ERefineAsValue (%s, %s)" (dump_reason cx reason) str
+    | ERefineAsValue (reason, name) ->
+      spf "ERefineAsValue (%s, %s)" (dump_reason cx reason) (display_string_of_name name)
     | ENoDefaultExport (reason, module_name, _) ->
       spf "ENoDefaultExport (%s, %s)" (dump_reason cx reason) module_name
     | EOnlyDefaultExport (reason, module_name, export_name) ->
@@ -1224,7 +1241,7 @@ let dump_error_message =
       spf
         "EPropNotFound (%s, %s, %s, %s, %s)"
         (match prop with
-        | Some prop -> spf "Some %s" prop
+        | Some prop -> spf "Some %s" (display_string_of_name prop)
         | None -> "None")
         (dump_reason cx reason_prop)
         (dump_reason cx reason_obj)
@@ -1237,7 +1254,7 @@ let dump_error_message =
         "EPropNotReadable { reason_prop = %s; prop_name = %s; use_op = %s }"
         (dump_reason cx reason_prop)
         (match prop_name with
-        | Some x -> spf "%S" x
+        | Some x -> spf "%S" (display_string_of_name x)
         | None -> "(computed)")
         (string_of_use_op use_op)
     | EPropNotWritable { reason_prop; prop_name; use_op } ->
@@ -1245,7 +1262,7 @@ let dump_error_message =
         "EPropNotWritable { reason_prop = %s; prop_name = %s; use_op = %s }"
         (dump_reason cx reason_prop)
         (match prop_name with
-        | Some x -> spf "%S" x
+        | Some x -> spf "%S" (display_string_of_name x)
         | None -> "(computed)")
         (string_of_use_op use_op)
     | EPropPolarityMismatch ((reason1, reason2), x, _, _) ->
@@ -1254,7 +1271,7 @@ let dump_error_message =
         (dump_reason cx reason1)
         (dump_reason cx reason2)
         (match x with
-        | Some x -> spf "%S" x
+        | Some x -> spf "%S" (display_string_of_name x)
         | None -> "(computed)")
     | EPolarityMismatch { reason; name; expected_polarity; actual_polarity } ->
       spf
@@ -1268,7 +1285,7 @@ let dump_error_message =
         "EBuiltinLookupFailed { reason = %s; name = %S }"
         (dump_reason cx reason)
         (match name with
-        | Some x -> spf "Some(%S)" x
+        | Some x -> spf "Some(%S)" (Reason.display_string_of_name x)
         | None -> "None")
     | EStrictLookupFailed { reason_prop; reason_obj; name; suggestion; use_op } ->
       spf
@@ -1276,7 +1293,7 @@ let dump_error_message =
         (dump_reason cx reason_prop)
         (dump_reason cx reason_obj)
         (match name with
-        | Some x -> spf "Some(%S)" x
+        | Some x -> spf "Some(%S)" (display_string_of_name x)
         | None -> "None")
         (match suggestion with
         | Some x -> spf "Some(%S)" x
@@ -1289,7 +1306,7 @@ let dump_error_message =
         "EPrivateLookupFailed ((%s, %s), %s, %s)"
         (dump_reason cx reason1)
         (dump_reason cx reason2)
-        x
+        (display_string_of_name x)
         (string_of_use_op use_op)
     | EAdditionMixed (reason, use_op) ->
       spf "EAdditionMixed (%s, %s)" (dump_reason cx reason) (string_of_use_op use_op)
@@ -1417,7 +1434,11 @@ let dump_error_message =
     | EMissingAnnotation (reason, _) -> spf "EMissingAnnotation (%s)" (dump_reason cx reason)
     | EMissingLocalAnnotation reason -> spf "EMissingLocalAnnotation (%s)" (dump_reason cx reason)
     | EBindingError (_binding_error, loc, x, entry) ->
-      spf "EBindingError (_, %s, %s, %s)" (string_of_aloc loc) x (Scope.Entry.string_of_kind entry)
+      spf
+        "EBindingError (_, %s, %s, %s)"
+        (string_of_aloc loc)
+        (Reason.display_string_of_name x)
+        (Scope.Entry.string_of_kind entry)
     | ERecursionLimit (reason1, reason2) ->
       spf "ERecursionLimit (%s, %s)" (dump_reason cx reason1) (dump_reason cx reason2)
     | EModuleOutsideRoot (loc, name) -> spf "EModuleOutsideRoot (%s, %S)" (string_of_aloc loc) name
@@ -1629,7 +1650,7 @@ let dump_error_message =
         (dump_reason cx spread_reason)
         (dump_reason cx object1_reason)
         (dump_reason cx object2_reason)
-        propname
+        (display_string_of_name propname)
         (string_of_use_op use_op)
     | EInexactMayOverwriteIndexer
         { spread_reason; key_reason; value_reason; object2_reason; use_op } ->
@@ -1667,7 +1688,7 @@ let dump_error_message =
     | EEnumInvalidMemberAccess { member_name; suggestion; reason; enum_reason } ->
       spf
         "EEnumInvalidMemberAccess (%s) (%s) (%s) (%s)"
-        (Base.Option.value ~default:"<None>" member_name)
+        (Base.Option.value_map ~default:"<None>" ~f:display_string_of_name member_name)
         (Base.Option.value ~default:"<None>" suggestion)
         (dump_reason cx reason)
         (dump_reason cx enum_reason)

@@ -66,11 +66,11 @@ let visit f = f ()
 let def_reason = function
   | TypeAlias { id_loc; name; _ }
   | OpaqueType { id_loc; name; _ } ->
-    Type.DescFormat.type_reason name id_loc
+    Type.DescFormat.type_reason (Reason.OrdinaryName name) id_loc
   | Interface { id_loc; name; _ }
   | ClassBinding { id_loc; name; _ }
   | DeclareClassBinding { id_loc; name; _ } ->
-    Type.DescFormat.instance_reason name id_loc
+    Type.DescFormat.instance_reason (Reason.OrdinaryName name) id_loc
   | FunBinding { fn_loc; _ } ->
     (* RFunctionType should be Reason.func_reason instead, but this matches the
      * behavior of types-first where function bindings are converted to declared
@@ -79,7 +79,7 @@ let def_reason = function
      * TODO Fix once T71257430 is closed. *)
     Reason.(mk_reason RFunctionType fn_loc)
   | DeclareFun { id_loc; _ } -> Reason.(mk_reason RFunctionType id_loc)
-  | Variable { id_loc; name; _ } -> Reason.(mk_reason (RIdentifier name) id_loc)
+  | Variable { id_loc; name; _ } -> Reason.(mk_reason (RIdentifier (OrdinaryName name)) id_loc)
   | DisabledEnumBinding { id_loc; name; _ }
   | EnumBinding { id_loc; name; _ } ->
     Reason.(mk_reason (REnum name) id_loc)
@@ -87,11 +87,11 @@ let def_reason = function
 let remote_ref_reason = function
   | Pack.Import { id_loc; name; _ }
   | Pack.ImportNs { id_loc; name; _ } ->
-    Reason.(mk_reason (RIdentifier name) id_loc)
+    Reason.(mk_reason (RIdentifier (OrdinaryName name)) id_loc)
   | Pack.ImportType { id_loc; name; _ }
   | Pack.ImportTypeof { id_loc; name; _ }
   | Pack.ImportTypeofNs { id_loc; name; _ } ->
-    Type.DescFormat.type_reason name id_loc
+    Type.DescFormat.type_reason (Reason.OrdinaryName name) id_loc
 
 let obj_lit_reason ~frozen loc =
   let open Reason in
@@ -130,7 +130,7 @@ let eval_unary file loc t =
   | U.Delete -> Type.BoolT.at loc trust
   | U.Await ->
     let reason = Reason.(mk_reason (RCustom "await") loc) in
-    let await = Flow_js.get_builtin file.cx "$await" reason in
+    let await = Flow_js.get_builtin file.cx (Reason.OrdinaryName "$await") reason in
     (* TODO: use_op *)
     let use_op = Type.unknown_use in
     Tvar.mk_no_wrap_where file.cx reason (fun tout ->
@@ -142,11 +142,13 @@ let eval_unary file loc t =
 let eval file loc t = function
   | Unary op -> eval_unary file loc t op
   | GetProp name ->
-    let reason = Reason.(mk_reason (RProperty (Some name)) loc) in
+    let reason = Reason.(mk_reason (RProperty (Some (OrdinaryName name))) loc) in
     (* TODO: use_op *)
     let use_op = Type.unknown_use in
     Tvar.mk_no_wrap_where file.cx reason (fun tout ->
-        Flow_js.flow file.cx (t, Type.GetPropT (use_op, reason, Type.Named (reason, name), tout)))
+        Flow_js.flow
+          file.cx
+          (t, Type.GetPropT (use_op, reason, Type.Named (reason, Reason.OrdinaryName name), tout)))
   | GetElem index ->
     let reason = Reason.(mk_reason (RProperty None) loc) in
     (* TODO: use_op *)
@@ -160,10 +162,10 @@ let async_void_return file loc =
   Flow_js.get_builtin_typeapp
     file.cx
     reason
-    "Promise"
+    (Reason.OrdinaryName "Promise")
     [
       Tvar.mk_derivable_where file.cx reason (fun tvar ->
-          let funt = Flow_js.get_builtin file.cx "$await" reason in
+          let funt = Flow_js.get_builtin file.cx (Reason.OrdinaryName "$await") reason in
           let callt = Type.mk_functioncalltype reason None [Type.Arg t] (Type.open_tvar tvar) in
           let reason =
             Reason.repos_reason (Reason.aloc_of_reason (TypeUtil.reason_of_t t)) reason
@@ -267,11 +269,13 @@ let merge_pattern file = function
   | Pack.PDef i -> Lazy.force (Pattern_defs.get file.pattern_defs i)
   | Pack.PropP { id_loc; name; def } ->
     let t = Lazy.force (Patterns.get file.patterns def) in
-    let reason = Reason.(mk_reason (RProperty (Some name)) id_loc) in
+    let reason = Reason.(mk_reason (RProperty (Some (Reason.OrdinaryName name))) id_loc) in
     (* TODO: use_op *)
     let use_op = Type.unknown_use in
     Tvar.mk_no_wrap_where file.cx reason (fun tout ->
-        Flow_js.flow file.cx (t, Type.GetPropT (use_op, reason, Type.Named (reason, name), tout)))
+        Flow_js.flow
+          file.cx
+          (t, Type.GetPropT (use_op, reason, Type.Named (reason, Reason.OrdinaryName name), tout)))
   | Pack.ComputedP { elem; def } ->
     let elem = Lazy.force (Pattern_defs.get file.pattern_defs elem) in
     let t = Lazy.force (Patterns.get file.patterns def) in
@@ -328,8 +332,8 @@ let merge_ref : 'a. _ -> (_ -> _ -> _ -> 'a) -> _ -> 'a =
     let t = Flow_js.reposition file.cx ref_loc t in
     f t ref_loc name
   | Pack.BuiltinRef { ref_loc; name } ->
-    let reason = Reason.(mk_reason (RIdentifier name) ref_loc) in
-    let t = Flow_js.get_builtin file.cx name reason in
+    let reason = Reason.(mk_reason (RIdentifier (Reason.OrdinaryName name)) ref_loc) in
+    let t = Flow_js.get_builtin file.cx (Reason.OrdinaryName name) reason in
     f t ref_loc name
 
 let rec merge_tyref file f = function
@@ -340,14 +344,17 @@ let rec merge_tyref file f = function
     let f t _ names =
       let names = Nel.cons name names in
       let qname = String.concat "." (List.rev (Nel.to_list names)) in
-      let id_reason = Reason.(mk_reason (RType name) id_loc) in
-      let reason_op = Reason.(mk_reason (RType qname) loc) in
+      let id_reason = Reason.(mk_reason (RType (OrdinaryName name)) id_loc) in
+      let reason_op = Reason.(mk_reason (RType (OrdinaryName qname)) loc) in
       let use_op = Type.(Op (GetProperty reason_op)) in
       let t =
         Tvar.mk_no_wrap_where file.cx reason_op (fun tout ->
             Flow_js.flow
               file.cx
-              (t, Type.(GetPropT (use_op, reason_op, Named (id_reason, name), tout))))
+              ( t,
+                Type.(
+                  GetPropT (use_op, reason_op, Named (id_reason, Reason.OrdinaryName name), tout))
+              ))
       in
       f t loc names
     in
@@ -386,7 +393,7 @@ let merge_exports =
     let open Type in
     let exportstype =
       {
-        exports_tmap = Context.make_export_map file.cx SMap.empty;
+        exports_tmap = Context.make_export_map file.cx NameUtils.Map.empty;
         cjs_export = None;
         has_every_named_export = false;
       }
@@ -397,7 +404,7 @@ let merge_exports =
     let open Type in
     let exporttypes =
       {
-        exports_tmap = Context.make_export_map file.cx SMap.empty;
+        exports_tmap = Context.make_export_map file.cx NameUtils.Map.empty;
         cjs_export = Some t;
         has_every_named_export = false;
       }
@@ -441,14 +448,14 @@ let merge_exports =
         | Some (lazy t) -> t
         | None -> Obj_type.mk_unsealed file.cx reason
       in
-      let types = SMap.map (merge_export_type file) types in
+      let types = SMap.map (merge_export_type file) types |> NameUtils.namemap_of_smap in
       let type_stars = List.map (merge_star file) type_stars in
       mk_commonjs_module_t file reason strict value
       |> export_named file reason Type.ExportType types
       |> copy_star_exports file reason ([], type_stars)
     | Pack.ESExports { names; types; stars; type_stars; strict } ->
-      let names = SMap.map (merge_export file) names in
-      let types = SMap.map (merge_export_type file) types in
+      let names = SMap.map (merge_export file) names |> NameUtils.namemap_of_smap in
+      let types = SMap.map (merge_export_type file) types |> NameUtils.namemap_of_smap in
       let stars = List.map (merge_star file) stars in
       let type_stars = List.map (merge_star file) type_stars in
       mk_es_module_t file reason strict
@@ -462,7 +469,7 @@ let rec merge file = function
   | Pack.Ref ref -> merge_ref file (fun t _ _ -> t) ref
   | Pack.TyRef name ->
     let f t ref_loc (name, _) =
-      let reason = Reason.(mk_annot_reason (RType name) ref_loc) in
+      let reason = Reason.(mk_annot_reason (RType (Reason.OrdinaryName name)) ref_loc) in
       Flow_js.mk_instance file.cx reason t
     in
     merge_tyref file f name
@@ -481,7 +488,7 @@ let rec merge file = function
   | Pack.ModuleRef { loc; index } ->
     let t = require file loc index in
     let reason = Reason.(mk_reason (RCustom "module reference") loc) in
-    Flow_js.get_builtin_typeapp file.cx reason "$Flow$ModuleRef" [t]
+    Flow_js.get_builtin_typeapp file.cx reason (Reason.OrdinaryName "$Flow$ModuleRef") [t]
 
 and merge_annot file = function
   | Any loc -> Type.AnyT.at Type.AnnotatedAny loc
@@ -553,8 +560,8 @@ and merge_annot file = function
     let t = merge file t in
     Type.(DefT (reason, trust, ArrT (ROArrayAT t)))
   | SingletonString (loc, str) ->
-    let reason = Reason.(mk_annot_reason (RStringLit str) loc) in
-    Type.(DefT (reason, trust, SingletonStrT str))
+    let reason = Reason.(mk_annot_reason (RStringLit (OrdinaryName str)) loc) in
+    Type.(DefT (reason, trust, SingletonStrT (Reason.OrdinaryName str)))
   | SingletonNumber (loc, num, raw) ->
     let reason = Reason.(mk_annot_reason (RNumberLit raw) loc) in
     Type.(DefT (reason, trust, SingletonNumT (num, raw)))
@@ -570,14 +577,14 @@ and merge_annot file = function
     let t = merge file t in
     Flow_js.mk_typeof_annotation file.cx reason t
   | Bound { ref_loc; name } ->
-    let reason = Reason.(mk_annot_reason (RType name) ref_loc) in
+    let reason = Reason.(mk_annot_reason (RType (OrdinaryName name)) ref_loc) in
     Type.BoundT (reason, name)
   | TEMPORARY_Number (loc, num, raw) ->
     let reason = Reason.(mk_annot_reason RNumber loc) in
     Type.(DefT (reason, trust, NumT (Literal (None, (num, raw)))))
   | TEMPORARY_String (loc, str) ->
     let reason = Reason.(mk_annot_reason RString loc) in
-    Type.(DefT (reason, trust, StrT (Literal (None, str))))
+    Type.(DefT (reason, trust, StrT (Literal (None, Reason.OrdinaryName str))))
   | TEMPORARY_LongString loc ->
     let len = Context.max_literal_length file.cx in
     let reason = Reason.(mk_annot_reason (RLongStringLit len) loc) in
@@ -613,20 +620,21 @@ and merge_annot file = function
     let t = merge file t in
     Type.AnyT.annot (TypeUtil.reason_of_t t)
   | PropertyType { loc; obj; prop } ->
-    let reason = Reason.(mk_reason (RType "$PropertyType") loc) in
+    let reason = Reason.(mk_reason (RType (OrdinaryName "$PropertyType")) loc) in
     let use_op = Type.Op (Type.TypeApplication { type' = reason }) in
     let obj = merge file obj in
     let id = Type.Eval.id_of_aloc_id (Context.make_aloc_id file.cx loc) in
-    Type.(EvalT (obj, TypeDestructorT (use_op, reason, Type.PropertyType prop), id))
+    Type.(
+      EvalT (obj, TypeDestructorT (use_op, reason, Type.PropertyType (Reason.OrdinaryName prop)), id))
   | ElementType { loc; obj; elem } ->
-    let reason = Reason.(mk_reason (RType "$ElementType") loc) in
+    let reason = Reason.(mk_reason (RType (OrdinaryName "$ElementType")) loc) in
     let use_op = Type.Op (Type.TypeApplication { type' = reason }) in
     let obj = merge file obj in
     let elem = merge file elem in
     let id = Type.Eval.id_of_aloc_id (Context.make_aloc_id file.cx loc) in
     Type.(EvalT (obj, TypeDestructorT (use_op, reason, Type.ElementType elem), id))
   | NonMaybeType (loc, t) ->
-    let reason = Reason.(mk_reason (RType "$NonMaybeType") loc) in
+    let reason = Reason.(mk_reason (RType (OrdinaryName "$NonMaybeType")) loc) in
     let use_op = Type.Op (Type.TypeApplication { type' = reason }) in
     let t = merge file t in
     let id = Type.Eval.id_of_aloc_id (Context.make_aloc_id file.cx loc) in
@@ -638,7 +646,7 @@ and merge_annot file = function
     let reason = Reason.(mk_reason (RShapeOf desc) loc) in
     Type.ShapeT (reason, t)
   | Diff (loc, t1, t2) ->
-    let reason = Reason.(mk_reason (RType "$Diff") loc) in
+    let reason = Reason.(mk_reason (RType (OrdinaryName "$Diff")) loc) in
     let use_op = Type.Op (Type.TypeApplication { type' = reason }) in
     let t1 = merge file t1 in
     let t2 = merge file t2 in
@@ -646,7 +654,7 @@ and merge_annot file = function
     Type.(
       EvalT (t1, TypeDestructorT (use_op, reason, RestType (Object.Rest.IgnoreExactAndOwn, t2)), id))
   | ReadOnly (loc, t) ->
-    let reason = Reason.(mk_reason (RType "$ReadOnly") loc) in
+    let reason = Reason.(mk_reason (RType (OrdinaryName "$ReadOnly")) loc) in
     let use_op = Type.Op (Type.TypeApplication { type' = reason }) in
     let t = merge file t in
     let id = Type.Eval.id_of_aloc_id (Context.make_aloc_id file.cx loc) in
@@ -656,7 +664,7 @@ and merge_annot file = function
     let t = merge file t in
     Type.KeysT (reason, t)
   | Values (loc, t) ->
-    let reason = Reason.(mk_reason (RType "$Values") loc) in
+    let reason = Reason.(mk_reason (RType (OrdinaryName "$Values")) loc) in
     let use_op = Type.Op (Type.TypeApplication { type' = reason }) in
     let t = merge file t in
     let id = Type.Eval.id_of_aloc_id (Context.make_aloc_id file.cx loc) in
@@ -667,14 +675,14 @@ and merge_annot file = function
     let reason = Reason.(mk_annot_reason (RExactType desc) loc) in
     Type.ExactT (reason, t)
   | Rest (loc, t1, t2) ->
-    let reason = Reason.(mk_reason (RType "$Rest") loc) in
+    let reason = Reason.(mk_reason (RType (OrdinaryName "$Rest")) loc) in
     let use_op = Type.Op (Type.TypeApplication { type' = reason }) in
     let t1 = merge file t1 in
     let t2 = merge file t2 in
     let id = Type.Eval.id_of_aloc_id (Context.make_aloc_id file.cx loc) in
     Type.(EvalT (t1, TypeDestructorT (use_op, reason, RestType (Object.Rest.Sound, t2)), id))
   | ExportsT (loc, ref) ->
-    let reason = Reason.(mk_annot_reason (RModule ref) loc) in
+    let reason = Reason.(mk_annot_reason (RModule (OrdinaryName ref)) loc) in
     let m_name = Reason.internal_module_name ref in
     let module_t =
       Tvar.mk_no_wrap_where file.cx reason (fun tout ->
@@ -797,19 +805,19 @@ and merge_annot file = function
     let t = merge file t in
     Type.CustomFunT (reason, Type.ReactElementFactory t)
   | ReactElementProps (loc, t) ->
-    let reason = Reason.(mk_reason (RType "React$ElementProps") loc) in
+    let reason = Reason.(mk_reason (RType (OrdinaryName "React$ElementProps")) loc) in
     let use_op = Type.Op (Type.TypeApplication { type' = reason }) in
     let t = merge file t in
     let id = Type.Eval.id_of_aloc_id (Context.make_aloc_id file.cx loc) in
     Type.(EvalT (t, TypeDestructorT (use_op, reason, ReactElementPropsType), id))
   | ReactElementConfig (loc, t) ->
-    let reason = Reason.(mk_reason (RType "React$ElementConfig") loc) in
+    let reason = Reason.(mk_reason (RType (OrdinaryName "React$ElementConfig")) loc) in
     let use_op = Type.Op (Type.TypeApplication { type' = reason }) in
     let t = merge file t in
     let id = Type.Eval.id_of_aloc_id (Context.make_aloc_id file.cx loc) in
     Type.(EvalT (t, TypeDestructorT (use_op, reason, ReactElementConfigType), id))
   | ReactElementRef (loc, t) ->
-    let reason = Reason.(mk_reason (RType "React$ElementRef") loc) in
+    let reason = Reason.(mk_reason (RType (OrdinaryName "React$ElementRef")) loc) in
     let use_op = Type.Op (Type.TypeApplication { type' = reason }) in
     let t = merge file t in
     let id = Type.Eval.id_of_aloc_id (Context.make_aloc_id file.cx loc) in
@@ -893,7 +901,7 @@ and merge_annot file = function
       | InexactObj -> Type.Inexact
       | IndexedObj dict -> Type.Indexed ((merge_dict file) dict)
     in
-    let props = SMap.map (merge_obj_annot_prop file) props in
+    let props = SMap.map (merge_obj_annot_prop file) props |> NameUtils.namemap_of_smap in
     let mk_object call proto =
       let t = Obj_type.mk_with_proto file.cx reason proto ?call ~props ~obj_kind ~loc in
       if obj_kind = Type.Exact then
@@ -931,7 +939,7 @@ and merge_annot file = function
     let target = Type.Object.Spread.Annot { make_exact = exact } in
     let merge_slice dict props =
       let dict = Option.map ~f:(merge_dict file) dict in
-      let prop_map = SMap.map (merge_obj_annot_prop file) props in
+      let prop_map = SMap.map (merge_obj_annot_prop file) props |> NameUtils.namemap_of_smap in
       { Type.Object.Spread.reason; prop_map; dict; generics = Generic.spread_empty }
     in
     let merge_elem = function
@@ -957,7 +965,7 @@ and merge_annot file = function
 and merge_value file = function
   | ClassExpr (loc, def) ->
     let name = "<<anonymous class>>" in
-    let reason = Type.DescFormat.instance_reason name loc in
+    let reason = Type.DescFormat.instance_reason (Reason.OrdinaryName name) loc in
     let id = Context.make_aloc_id file.cx loc in
     merge_class file reason id def
   | FunExpr { loc; async = _; generator = _; def; statics } ->
@@ -974,7 +982,7 @@ and merge_value file = function
     Type.(DefT (reason, trust, StrT AnyLiteral))
   | StringLit (loc, lit) ->
     let reason = Reason.(mk_reason RString loc) in
-    Type.(DefT (reason, trust, StrT (Literal (None, lit))))
+    Type.(DefT (reason, trust, StrT (Literal (None, Reason.OrdinaryName lit))))
   | LongStringLit loc ->
     let len = Context.max_literal_length file.cx in
     let reason = Reason.(mk_annot_reason (RLongStringLit len) loc) in
@@ -1003,14 +1011,14 @@ and merge_value file = function
         Flow_js.flow file.cx (merge file t, Type.ObjTestProtoT (reason, proto));
         Flow_js.mk_typeof_annotation file.cx reason proto
     in
-    let props = SMap.map (merge_obj_value_prop file) props in
+    let props = SMap.map (merge_obj_value_prop file) props |> NameUtils.namemap_of_smap in
     Obj_type.mk_with_proto file.cx reason proto ~obj_kind:Type.Exact ~props ~frozen
   | ObjSpreadLit { loc; frozen; proto; elems_rev } ->
     let reason = obj_lit_reason ~frozen loc in
     (* TODO: fix spread to use provided __proto__ prop *)
     ignore proto;
     let merge_slice props =
-      let prop_map = SMap.map (merge_obj_value_prop file) props in
+      let prop_map = SMap.map (merge_obj_value_prop file) props |> NameUtils.namemap_of_smap in
       { Type.Object.Spread.reason; prop_map; dict = None; generics = Generic.spread_empty }
     in
     let merge_elem = function
@@ -1175,7 +1183,7 @@ and merge_tparams_helper file reason t = function
 
 and merge_tparam file tp =
   let (TParam { name_loc; name; polarity; bound; default }) = tp in
-  let reason = Reason.(mk_reason (RType name) name_loc) in
+  let reason = Reason.(mk_reason (RType (OrdinaryName name)) name_loc) in
   let bound =
     match bound with
     | None -> Type.(DefT (reason, trust, MixedT Mixed_everything))
@@ -1209,21 +1217,22 @@ and merge_interface ~inline file reason id def =
   let static =
     let static_reason = Reason.(update_desc_reason (fun d -> RStatics d) reason) in
     (* TODO: interfaces don't have a name field, or even statics *)
-    let props = add_name_field reason SMap.empty in
+    let props = add_name_field reason SMap.empty |> NameUtils.namemap_of_smap in
     let proto = Type.NullProtoT static_reason in
     Obj_type.mk_with_proto file.cx static_reason proto ~props ~obj_kind:Type.Inexact
   in
   let (own_props, proto_props) =
+    let open Reason in
     SMap.fold
       (fun k prop (own, proto) ->
         let t = merge_interface_prop file prop in
         match prop with
-        | InterfaceField _ -> (SMap.add k t own, proto)
+        | InterfaceField _ -> (NameUtils.Map.add (OrdinaryName k) t own, proto)
         | InterfaceAccess _
         | InterfaceMethod _ ->
-          (own, SMap.add k t proto))
+          (own, NameUtils.Map.add (OrdinaryName k) t proto))
       props
-      (SMap.empty, SMap.empty)
+      (NameUtils.Map.empty, NameUtils.Map.empty)
   in
   let inst_call_t =
     let ts = List.rev_map (merge file) calls in
@@ -1291,7 +1300,7 @@ and merge_class_mixin =
   let merge_mixin_ref file loc ref =
     let (t, names_rev) = loop file ref in
     let name = String.concat "." (List.rev names_rev) in
-    let reason = Reason.(mk_annot_reason (RType name) loc) in
+    let reason = Reason.(mk_annot_reason (RType (OrdinaryName name)) loc) in
     Tvar.mk_derivable_where file.cx reason (fun tout ->
         Flow_js.flow file.cx (t, Type.MixinT (reason, tout)))
   in
@@ -1317,14 +1326,18 @@ and merge_class file reason id def =
       let static_reason = Reason.(update_desc_reason (fun d -> RStatics d) reason) in
       let props = SMap.map (merge_class_prop file) static_props in
       let props = add_name_field reason props in
+      let props = NameUtils.namemap_of_smap props in
       Obj_type.mk_with_proto file.cx static_reason static_proto ~props ~obj_kind:Type.Inexact
     in
     let own_props =
-      SMap.map (merge_class_prop file) own_props |> Context.generate_property_map file.cx
+      SMap.map (merge_class_prop file) own_props
+      |> NameUtils.namemap_of_smap
+      |> Context.generate_property_map file.cx
     in
     let proto_props =
       SMap.map (merge_class_prop file) proto_props
       |> add_default_constructor reason extends
+      |> NameUtils.namemap_of_smap
       |> Context.generate_property_map file.cx
     in
     let open Type in
@@ -1353,6 +1366,7 @@ and merge_fun_statics file reason statics =
         let t = merge file t in
         Type.Field (Some id_loc, t, Polarity.Neutral))
       statics
+    |> NameUtils.namemap_of_smap
   in
   let reason = Reason.(update_desc_reason (fun d -> RStatics d) reason) in
   Obj_type.mk_with_proto
@@ -1365,7 +1379,7 @@ and merge_fun_statics file reason statics =
 
 and merge_predicate file base_t loc p =
   let singleton key pos =
-    let key = (key, []) in
+    let key = (Reason.OrdinaryName key, []) in
     (Key_map.singleton key pos, Key_map.singleton key (Type.NotP pos))
   in
   let pred_and = Key_map.union ~combine:(fun _ p1 p2 -> Some (Type.AndP (p1, p2))) in
@@ -1402,7 +1416,7 @@ and merge_predicate file base_t loc p =
     | VoidP key -> singleton key Type.VoidP
     | SentinelStrP (key, prop, loc, x) ->
       let reason = Reason.(mk_reason RString loc) in
-      let t = Type.(DefT (reason, trust, StrT (Literal (None, x)))) in
+      let t = Type.(DefT (reason, trust, StrT (Literal (None, Reason.OrdinaryName x)))) in
       singleton key Type.(LeftP (SentinelProp prop, t))
     | SentinelNumP (key, prop, loc, x, raw) ->
       let reason = Reason.(mk_reason RNumber loc) in
@@ -1542,6 +1556,7 @@ let merge_declare_class file reason id def =
       let static_reason = Reason.(update_desc_reason (fun d -> RStatics d) reason) in
       let props = SMap.map (merge_interface_prop file) static_props in
       let props = add_name_field reason props in
+      let props = NameUtils.namemap_of_smap props in
       let call =
         match List.rev_map (merge file) static_calls with
         | [] -> None
@@ -1554,11 +1569,14 @@ let merge_declare_class file reason id def =
       Obj_type.mk_with_proto file.cx static_reason static_proto ~props ?call ~obj_kind:Type.Inexact
     in
     let own_props =
-      SMap.map (merge_interface_prop file) own_props |> Context.generate_property_map file.cx
+      SMap.map (merge_interface_prop file) own_props
+      |> NameUtils.namemap_of_smap
+      |> Context.generate_property_map file.cx
     in
     let proto_props =
       SMap.map (merge_interface_prop file) proto_props
       |> add_default_constructor reason extends
+      |> NameUtils.namemap_of_smap
       |> Context.generate_property_map file.cx
     in
     let inst_call_t =
@@ -1635,4 +1653,4 @@ let merge_def file reason = function
 let merge_file file =
   let module_t = visit file.exports in
   let module_ref = Files.module_ref file.key in
-  Context.add_module file.cx module_ref module_t
+  Context.add_module file.cx (Reason.OrdinaryName module_ref) module_t

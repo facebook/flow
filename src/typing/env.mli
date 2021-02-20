@@ -25,7 +25,7 @@ val in_generator_scope : unit -> bool
 
 val in_predicate_scope : unit -> bool
 
-val find_entry : Context.t -> string -> ?desc:Reason.reason_desc -> ALoc.t -> Scope.t * Entry.t
+val find_entry : Context.t -> Reason.name -> ?desc:Reason.reason_desc -> ALoc.t -> Scope.t * Entry.t
 
 val push_var_scope : Scope.t -> unit
 
@@ -37,7 +37,7 @@ val env_depth : unit -> int
 
 val trunc_env : int -> unit
 
-val init_env : ?exclude_syms:SSet.t -> Scope.t -> unit
+val init_env : ?exclude_syms:NameUtils.Set.t -> Scope.t -> unit
 
 val update_env : ALoc.t -> t -> unit
 
@@ -45,7 +45,7 @@ val update_env : ALoc.t -> t -> unit
 
 val promote_non_const :
   Context.t ->
-  string ->
+  Reason.name ->
   ALoc.t ->
   Entry.non_const_specialization ->
   Loc_collections.ALocSet.t option * Entry.non_const_specialization
@@ -60,12 +60,12 @@ val bind_implicit_let :
   ?state:State.t ->
   Entry.let_binding_kind * Entry.non_const_specialization ->
   Context.t ->
-  string ->
+  Reason.name ->
   Type.t ->
   ALoc.t ->
   unit
 
-val bind_fun : ?state:State.t -> Context.t -> string -> Type.t -> ALoc.t -> unit
+val bind_fun : ?state:State.t -> Context.t -> Reason.name -> Type.t -> ALoc.t -> unit
 
 val bind_implicit_const :
   ?state:State.t -> Entry.const_binding_kind -> Context.t -> string -> Type.t -> ALoc.t -> unit
@@ -79,44 +79,44 @@ val bind_type : ?state:State.t -> Context.t -> string -> Type.t -> ALoc.t -> uni
 
 val bind_import_type : Context.t -> string -> Type.t -> ALoc.t -> unit
 
-val bind_declare_var : Context.t -> string -> Type.t -> ALoc.t -> unit
+val bind_declare_var : Context.t -> Reason.name -> Type.t -> ALoc.t -> unit
 
 val bind_declare_fun : Context.t -> string -> Type.t -> ALoc.t -> unit
 
-val declare_let : Context.t -> string -> ALoc.t -> unit
+val declare_let : Context.t -> Reason.name -> ALoc.t -> unit
 
-val declare_implicit_let : Entry.let_binding_kind -> Context.t -> string -> ALoc.t -> unit
+val declare_implicit_let : Entry.let_binding_kind -> Context.t -> Reason.name -> ALoc.t -> unit
 
-val declare_const : Context.t -> string -> ALoc.t -> unit
+val declare_const : Context.t -> Reason.name -> ALoc.t -> unit
 
-val declare_implicit_const : Entry.const_binding_kind -> Context.t -> string -> ALoc.t -> unit
+val declare_implicit_const : Entry.const_binding_kind -> Context.t -> Reason.name -> ALoc.t -> unit
 
 val init_var :
-  Context.t -> use_op:Type.use_op -> string -> has_anno:bool -> Type.t -> ALoc.t -> unit
+  Context.t -> use_op:Type.use_op -> Reason.name -> has_anno:bool -> Type.t -> ALoc.t -> unit
 
 val init_let :
-  Context.t -> use_op:Type.use_op -> string -> has_anno:bool -> Type.t -> ALoc.t -> unit
+  Context.t -> use_op:Type.use_op -> Reason.name -> has_anno:bool -> Type.t -> ALoc.t -> unit
 
 val init_implicit_let :
   Entry.let_binding_kind ->
   Context.t ->
   use_op:Type.use_op ->
-  string ->
+  Reason.name ->
   has_anno:bool ->
   Type.t ->
   ALoc.t ->
   unit
 
-val init_fun : Context.t -> use_op:Type.use_op -> string -> Type.t -> ALoc.t -> unit
+val init_fun : Context.t -> use_op:Type.use_op -> Reason.name -> Type.t -> ALoc.t -> unit
 
 val init_const :
-  Context.t -> use_op:Type.use_op -> string -> has_anno:bool -> Type.t -> ALoc.t -> unit
+  Context.t -> use_op:Type.use_op -> Reason.name -> has_anno:bool -> Type.t -> ALoc.t -> unit
 
 val init_implicit_const :
   Entry.const_binding_kind ->
   Context.t ->
   use_op:Type.use_op ->
-  string ->
+  Reason.name ->
   has_anno:bool ->
   Type.t ->
   ALoc.t ->
@@ -135,9 +135,9 @@ end
 
 val local_scope_entry_exists : string -> bool
 
-val get_env_entry : string -> t -> Scope.Entry.t option
+val get_env_entry : Reason.name -> t -> Scope.Entry.t option
 
-val get_current_env_entry : string -> Scope.Entry.t option
+val get_current_env_entry : Reason.name -> Scope.Entry.t option
 
 val get_env_refi : Key.t -> t -> Scope.refi_binding option
 
@@ -149,19 +149,30 @@ val get_var : ?lookup_mode:LookupMode.t -> Context.t -> string -> ALoc.t -> Type
 
 val get_internal_var : Context.t -> string -> ALoc.t -> Type.t
 
-val get_var_annotation : Context.t -> string -> ALoc.t -> unit option
+val get_var_annotation : Context.t -> Reason.name -> ALoc.t -> unit option
 
-val get_var_declared_type : ?lookup_mode:LookupMode.t -> Context.t -> string -> ALoc.t -> Type.t
+val get_var_declared_type :
+  ?lookup_mode:LookupMode.t -> Context.t -> Reason.name -> ALoc.t -> Type.t
 
-val unify_declared_type : ?lookup_mode:LookupMode.t -> Context.t -> string -> Type.t -> unit
+val unify_declared_type : ?lookup_mode:LookupMode.t -> Context.t -> Reason.name -> Type.t -> unit
 
-val unify_declared_fun_type : Context.t -> string -> ALoc.t -> Type.t -> unit
+val unify_declared_fun_type : Context.t -> Reason.name -> ALoc.t -> Type.t -> unit
 
 val var_ref :
-  ?lookup_mode:LookupMode.t -> Context.t -> string -> ?desc:Reason.reason_desc -> ALoc.t -> Type.t
+  ?lookup_mode:LookupMode.t ->
+  Context.t ->
+  Reason.name ->
+  ?desc:Reason.reason_desc ->
+  ALoc.t ->
+  Type.t
 
 val query_var :
-  ?lookup_mode:LookupMode.t -> Context.t -> string -> ?desc:Reason.reason_desc -> ALoc.t -> Type.t
+  ?lookup_mode:LookupMode.t ->
+  Context.t ->
+  Reason.name ->
+  ?desc:Reason.reason_desc ->
+  ALoc.t ->
+  Type.t
 
 val set_var :
   Context.t -> use_op:Type.use_op -> string -> Type.t -> ALoc.t -> Changeset.EntryRef.t option

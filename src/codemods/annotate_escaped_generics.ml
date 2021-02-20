@@ -17,7 +17,15 @@ end)
 let norm_opts = Ty_normalizer_env.default_options
 
 (* Change the name of the symbol to avoid local aliases *)
-let localize (str : string) = Printf.sprintf "$IMPORTED$_%s" str
+let localize_str (str : string) = Printf.sprintf "$IMPORTED$_%s" str
+
+(* TODO consider just excluding internal names here. *)
+let localize =
+  Reason.(
+    function
+    | OrdinaryName str -> OrdinaryName (localize_str str)
+    | InternalName str -> InternalName (localize_str str)
+    | InternalModuleName str -> InternalModuleName (localize_str str))
 
 let localize_type =
   let remote_syms = ref SymbolMap.empty in
@@ -25,9 +33,17 @@ let localize_type =
     match symbol.Ty.sym_provenance with
     | Ty.Remote { Ty.imported_as = None } ->
       let local_name = localize symbol.Ty.sym_name in
-      Utils_js.print_endlinef "local_name: %s" local_name;
+      Utils_js.print_endlinef "local_name: %s" (Reason.display_string_of_name local_name);
       let sym_provenance =
-        Ty.Remote { Ty.imported_as = Some (ALoc.none, local_name, Ty.TypeMode) }
+        Ty.Remote
+          {
+            Ty.imported_as =
+              Some
+                ( ALoc.none,
+                  (* TODO this use of display_string_of_name is a bit sketchy *)
+                  Reason.display_string_of_name local_name,
+                  Ty.TypeMode );
+          }
       in
       let imported = { symbol with Ty.sym_provenance; sym_name = local_name } in
       remote_syms := SymbolMap.add symbol imported !remote_syms;
@@ -67,7 +83,9 @@ let remote_symbols_map tys =
                    sym_name = localize sym_name;
                  }
                in
-               Utils_js.print_endlinef "Localizing: %s" local_alias.Ty.sym_name;
+               Utils_js.print_endlinef
+                 "Localizing: %s"
+                 (Reason.display_string_of_name local_alias.Ty.sym_name);
                SymbolMap.add symbol local_alias a
              | _ -> a)
            acc)
@@ -101,8 +119,14 @@ let gen_import_statements file (symbols : Ty_symbol.symbol SymbolMap.t) =
         let dir = Filename.dirname (File_key.to_string file) in
         Filename.concat "./" (Files.relative_path dir f)
     in
-    let remote_name = Flow_ast_utils.ident_of_source (dummy_loc, remote_name) in
-    let local_name = Flow_ast_utils.ident_of_source (dummy_loc, local_name) in
+    (* TODO we should probably abort if we encounter an internal name here, rather than
+     * constructing AST nodes with stringified internal names. *)
+    let remote_name =
+      Flow_ast_utils.ident_of_source (dummy_loc, Reason.display_string_of_name remote_name)
+    in
+    let local_name =
+      Flow_ast_utils.ident_of_source (dummy_loc, Reason.display_string_of_name local_name)
+    in
     Ast.Statement.
       ( dummy_loc,
         ImportDeclaration

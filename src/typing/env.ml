@@ -78,11 +78,11 @@ let scopes : t ref = ref []
    register it as a deferred global lookup, which will then be linked
    to the override. See Init_js.load_lib_files.
 *)
-let exclude_symbols : SSet.t ref = ref SSet.empty
+let exclude_symbols : NameUtils.Set.t ref = ref NameUtils.Set.empty
 
 let set_exclude_symbols syms = exclude_symbols := syms
 
-let is_excluded name = SSet.mem name !exclude_symbols
+let is_excluded name = NameUtils.Set.mem name !exclude_symbols
 
 (* scopes *)
 
@@ -223,7 +223,7 @@ let trunc_env =
     scopes := trunc (List.length cur - depth, cur)
 
 (* initialize a new environment (once per module) *)
-let init_env ?(exclude_syms = SSet.empty) module_scope =
+let init_env ?(exclude_syms = NameUtils.Set.empty) module_scope =
   set_exclude_symbols exclude_syms;
   havoc_current_activation ();
   let global_scope = Scope.fresh ~var_scope_kind:Global () in
@@ -248,8 +248,8 @@ let update_env loc new_scopes =
 
 let global_any =
   [
-    "eval";
-    "arguments";
+    OrdinaryName "eval";
+    OrdinaryName "arguments";
     (* For `switch` statements not in a function body, so we don't get an error. *)
     internal_name "maybe_exhaustively_checked";
   ]
@@ -303,6 +303,7 @@ let cache_global cx name ?desc loc global_scope =
   (global_scope, entry)
 
 let local_scope_entry_exists name =
+  let name = OrdinaryName name in
   let rec loop = function
     | [] -> assert_false "empty scope list"
     | scope :: scopes ->
@@ -452,12 +453,14 @@ let bind_class cx class_id class_private_fields class_private_static_fields =
     ALoc.none
 
 (* bind var entry *)
-let bind_var ?(state = State.Declared) cx name t loc =
+let bind_var_to_name ?(state = State.Declared) cx name t loc =
   bind_entry cx name (Entry.new_var t ~loc ~state) loc
+
+let bind_var ?state cx name t loc = bind_var_to_name ?state cx (OrdinaryName name) t loc
 
 (* bind let entry *)
 let bind_let ?(state = State.Undeclared) cx name t loc =
-  bind_entry cx name (Entry.new_let t ~loc ~state) loc
+  bind_entry cx (OrdinaryName name) (Entry.new_let t ~loc ~state) loc
 
 (* bind implicit let entry *)
 let bind_implicit_let ?(state = State.Undeclared) kind cx name t loc =
@@ -468,22 +471,23 @@ let bind_fun ?(state = State.Declared) =
 
 (* bind const entry *)
 let bind_const ?(state = State.Undeclared) cx name t loc =
-  bind_entry cx name (Entry.new_const t ~loc ~state) loc
+  bind_entry cx (OrdinaryName name) (Entry.new_const t ~loc ~state) loc
 
-let bind_import cx name t loc = bind_entry cx name (Entry.new_import t ~loc) loc
+let bind_import cx name t loc = bind_entry cx (OrdinaryName name) (Entry.new_import t ~loc) loc
 
 (* bind implicit const entry *)
 let bind_implicit_const ?(state = State.Undeclared) kind cx name t loc =
-  bind_entry cx name (Entry.new_const (Inferred t) ~kind ~loc ~state) loc
+  bind_entry cx (OrdinaryName name) (Entry.new_const (Inferred t) ~kind ~loc ~state) loc
 
 (* bind type entry *)
 let bind_type ?(state = State.Declared) cx name t loc =
-  bind_entry cx name (Entry.new_type t ~loc ~state) loc
+  bind_entry cx (OrdinaryName name) (Entry.new_type t ~loc ~state) loc
 
-let bind_import_type cx name t loc = bind_entry cx name (Entry.new_import_type t ~loc) loc
+let bind_import_type cx name t loc =
+  bind_entry cx (OrdinaryName name) (Entry.new_import_type t ~loc) loc
 
 (* vars coming from 'declare' statements are preinitialized *)
-let bind_declare_var cx name t = bind_var ~state:State.Initialized cx name (Annotated t)
+let bind_declare_var cx name t = bind_var_to_name ~state:State.Initialized cx name (Annotated t)
 
 (* bind entry for declare function *)
 let bind_declare_fun =
@@ -500,12 +504,12 @@ let bind_declare_fun =
     | Annotated t -> Annotated (update_type t new_t)
   in
   fun cx name t loc ->
-    if not (is_excluded name) then
+    if not (is_excluded (OrdinaryName name)) then
       let scope = peek_scope () in
-      match Scope.get_entry name scope with
+      match Scope.get_entry (OrdinaryName name) scope with
       | None ->
         let entry = Entry.new_var (Inferred t) ~loc ~state:State.Initialized in
-        Scope.add_entry name entry scope
+        Scope.add_entry (OrdinaryName name) entry scope
       | Some prev ->
         Entry.(
           (match prev with
@@ -522,10 +526,10 @@ let bind_declare_fun =
                   general = update_general_type v.general t;
                 }
             in
-            Scope.add_entry name entry scope
+            Scope.add_entry (OrdinaryName name) entry scope
           | _ ->
             (* declare function shadows some other kind of binding *)
-            already_bound_error cx name prev loc))
+            already_bound_error cx (OrdinaryName name) prev loc))
 
 (* helper: move a Let/Const's entry's state from Undeclared to Declared.
    Only needed for let and const to push things into scope for potentially
@@ -728,6 +732,7 @@ let init_implicit_const kind = init_value_entry Entry.(Const kind)
 
 (* update type alias to reflect initialization in code *)
 let init_type cx name type_ loc =
+  let name = OrdinaryName name in
   if not (is_excluded name) then
     Entry.(
       let (scope, entry) = find_entry cx name loc in
@@ -744,6 +749,7 @@ let init_type cx name type_ loc =
 
 (* treat a var's declared (annotated) type as an initializer *)
 let pseudo_init_declared_type cx name loc =
+  let name = OrdinaryName name in
   if not (is_excluded name) then
     Entry.(
       let (scope, entry) = find_entry cx name loc in
@@ -882,7 +888,8 @@ let get_env_refi key = seek_env (Scope.get_refi key)
 let get_current_env_refi key = get_env_refi key !scopes
 
 (* get var's specific type (and track the reference) *)
-let get_var ?(lookup_mode = ForValue) = read_entry ~lookup_mode ~specific:true ?desc:None
+let get_var ?(lookup_mode = ForValue) cx name loc =
+  read_entry ~lookup_mode ~specific:true ?desc:None cx (OrdinaryName name) loc
 
 (* query var's specific type *)
 let query_var ?(lookup_mode = ForValue) = read_entry ~lookup_mode ~specific:true
@@ -903,8 +910,8 @@ let get_var_annotation cx name loc =
    annotated type, and for others it's the union of all
    types assigned to the var throughout its lifetime.
 *)
-let get_var_declared_type ?(lookup_mode = ForValue) =
-  read_entry ~lookup_mode ~specific:false ?desc:None
+let get_var_declared_type ?(lookup_mode = ForValue) cx name loc =
+  read_entry ~lookup_mode ~specific:false ?desc:None cx name loc
 
 (* Unify declared type with another type. This is useful for allowing forward
    references in declared types to other types declared later in scope. *)
@@ -938,7 +945,7 @@ let is_global_var _cx name =
   let rec loop = function
     | [] -> true
     | scope :: scopes ->
-      (match Scope.get_entry name scope with
+      (match Scope.get_entry (OrdinaryName name) scope with
       | Some _ -> Scope.is_global scope
       | None -> loop scopes)
   in
@@ -975,7 +982,7 @@ let check_exported_let_bound_reassignment op cx name entry loc =
           _;
         },
       Some exported_locals ) ->
-    (match SMap.find_opt name exported_locals with
+    (match NameUtils.smap_find_opt name exported_locals with
     | Some loc_set when ALocSet.mem value_declare_loc loc_set ->
       let reason = mk_reason (RType name) value_declare_loc in
       Flow.add_output
@@ -1042,7 +1049,7 @@ let update_var op cx ~use_op name specific loc =
     | Class _ -> assert_false "Internal error: update_var called on Class")
 
 (* update var by direct assignment *)
-let set_var = update_var Changeset.Write
+let set_var cx ~use_op name t loc = update_var Changeset.Write cx ~use_op (OrdinaryName name) t loc
 
 let set_internal_var cx name t loc =
   update_var Changeset.Write cx ~use_op:unknown_use (internal_name name) t loc
@@ -1067,7 +1074,12 @@ let refine_const cx name specific loc =
       let update = Value { v with value_state = State.Initialized; specific } in
       Scope.add_entry name update scope;
       Some change
-    | _ -> assert_false (spf "refine_const called on %s %s" (Entry.string_of_kind entry) name))
+    | _ ->
+      assert_false
+        (spf
+           "refine_const called on %s %s"
+           (Entry.string_of_kind entry)
+           (display_string_of_name name)))
 
 (* given a list of envs (scope lists), return true iff all envs are
    the same length and all scope ids and kinds match *)
@@ -1187,7 +1199,10 @@ let merge_env =
       (* type aliases can't be refined or reassigned, shouldn't be here *)
       | (Some (Type _), Some (Type _), Some (Type _)) ->
         assert_false
-          (spf "merge_env %s: type alias %s found in changelist" (string_of_aloc loc) name)
+          (spf
+             "merge_env %s: type alias %s found in changelist"
+             (string_of_aloc loc)
+             (display_string_of_name name))
       (* global lookups may leave uneven new entries, which we can forget *)
       | (_, _, _) when is_global scope0 -> ()
       (* missing completely from non-global scope *)
@@ -1217,7 +1232,7 @@ let merge_env =
           (spf
              "merge_env %s: non-uniform distribution of entry %s: %s, %s, %s"
              (string_of_aloc loc)
-             name
+             (display_string_of_name name)
              (print_entry_kind_opt orig)
              (print_entry_kind_opt child1)
              (print_entry_kind_opt child2)))
@@ -1289,7 +1304,10 @@ let copy_env =
       (* type aliases shouldn't be here *)
       | (Some (Type _), Some (Type _)) ->
         assert_false
-          (spf "copy_env %s: type alias %s found in changelist" (string_of_aloc loc) name)
+          (spf
+             "copy_env %s: type alias %s found in changelist"
+             (string_of_aloc loc)
+             (display_string_of_name name))
       (* global lookups may leave new entries in env2, or orphan changes *)
       (* ...which we can forget *)
       | (None, _) when is_global scope1 -> ()
@@ -1306,7 +1324,7 @@ let copy_env =
           (spf
              "copy_env %s: non-uniform distribution of entry %s: %s, %s"
              (string_of_aloc loc)
-             name
+             (display_string_of_name name)
              (print_entry_kind_opt entry1)
              (print_entry_kind_opt entry2)))
   in
@@ -1502,8 +1520,8 @@ let refine_with_preds cx loc preds orig_types =
       let u = UseT (Op (Internal Refinement), general_type) in
       Context.add_literal_subtypes cx (l, u)
     | SingletonStrP (loc, b, str) ->
-      let reason = loc |> mk_reason (RStringLit str) in
-      let l = DefT (reason, bogus_trust (), StrT (Literal (Some b, str))) in
+      let reason = loc |> mk_reason (RStringLit (OrdinaryName str)) in
+      let l = DefT (reason, bogus_trust (), StrT (Literal (Some b, OrdinaryName str))) in
       let u = UseT (Op (Internal Refinement), general_type) in
       Context.add_literal_subtypes cx (l, u)
     | SingletonNumP (loc, b, ((_, str) as num)) ->
@@ -1533,7 +1551,7 @@ let refine_with_preds cx loc preds orig_types =
     let refi_reason = mk_reason (RRefined (Key.reason_desc key)) loc in
     match key with
     (* for real consts/lets/vars, we model assignment/initialization *)
-    | (name, []) when not (is_internal_name name) ->
+    | ((OrdinaryName _ as name), []) ->
       Entry.(
         (match find_entry cx name loc with
         | (_, Value v) ->

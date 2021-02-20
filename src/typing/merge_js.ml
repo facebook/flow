@@ -298,7 +298,7 @@ let detect_non_voidable_properties cx =
     let pmap = Context.find_props cx property_map in
     SMap.iter (fun name errors ->
         let should_error =
-          match SMap.find_opt name pmap with
+          match NameUtils.Map.find_opt (Reason.OrdinaryName name) pmap with
           | Some (Type.Field (_, t, _)) -> not @@ is_voidable ISet.empty t
           | _ -> true
         in
@@ -360,7 +360,7 @@ class resolver_visitor =
     method props cx map_cx id =
       let props_map = Context.find_props cx id in
       let props_map' =
-        SMap.ident_map (Type.Property.ident_map_t (self#type_ cx map_cx)) props_map
+        NameUtils.Map.ident_map (Type.Property.ident_map_t (self#type_ cx map_cx)) props_map
       in
       let id' =
         if props_map == props_map' then
@@ -560,7 +560,15 @@ let merge_component ~opts ~getters ~file_sigs component reqs dep_cxs master_cx =
         let metadata = Context.docblock_overrides info metadata in
         let module_ref = Files.module_ref filename in
         let aloc_table = lazy (get_aloc_table_unsafe filename) in
-        let cx = Context.make ccx metadata filename aloc_table module_ref Context.Merging in
+        let cx =
+          Context.make
+            ccx
+            metadata
+            filename
+            aloc_table
+            (Reason.OrdinaryName module_ref)
+            Context.Merging
+        in
 
         (* Builtins *)
         if !need_merge_master_cx then (
@@ -605,7 +613,9 @@ let check_file ~opts ~getters ~file_sigs filename reqs dep_cxs master_cx =
   let metadata = Context.docblock_overrides info metadata in
   let module_ref = Files.module_ref filename in
   let aloc_table = lazy (get_aloc_table_unsafe filename) in
-  let cx = Context.make ccx metadata filename aloc_table module_ref Context.Checking in
+  let cx =
+    Context.make ccx metadata filename aloc_table (Reason.OrdinaryName module_ref) Context.Checking
+  in
   let (comments, ast) = get_ast_unsafe filename in
   let lint_severities = get_lint_severities metadata strict_mode lint_severities in
   let file_sig = FilenameMap.find filename file_sigs in
@@ -704,7 +714,7 @@ module ContextOptimizer = struct
 
       val mutable stable_call_prop_ids = IMap.empty
 
-      val mutable reduced_module_map = SMap.empty
+      val mutable reduced_module_map = NameUtils.Map.empty
 
       val mutable reduced_graph = IMap.empty
 
@@ -723,7 +733,8 @@ module ContextOptimizer = struct
       method reduce cx module_ref =
         let export = Context.find_module cx module_ref in
         let export' = self#type_ cx Polarity.Neutral export in
-        reduced_module_map <- SMap.add module_ref export' reduced_module_map
+        reduced_module_map <-
+          NameUtils.Map.add (Reason.OrdinaryName module_ref) export' reduced_module_map
 
       method tvar cx pole r id =
         let (root_id, _) = Context.find_constraints cx id in
@@ -807,7 +818,7 @@ module ContextOptimizer = struct
           let pmap = Context.find_props cx id in
           let () = SigHash.add_props_map sig_hash pmap in
           reduced_property_maps <- Properties.Map.add id pmap reduced_property_maps;
-          let pmap' = SMap.ident_map (self#prop cx pole) pmap in
+          let pmap' = NameUtils.Map.ident_map (self#prop cx pole) pmap in
           reduced_property_maps <- Properties.Map.add id pmap' reduced_property_maps;
           id
 
@@ -857,7 +868,7 @@ module ContextOptimizer = struct
               (loc, t')
           in
           reduced_export_maps <- Exports.Map.add id tmap reduced_export_maps;
-          let tmap' = SMap.ident_map map_pair tmap in
+          let tmap' = NameUtils.Map.ident_map map_pair tmap in
           reduced_export_maps <- Exports.Map.add id tmap' reduced_export_maps;
           SigHash.add_exports_map sig_hash tmap';
           id
@@ -886,7 +897,7 @@ module ContextOptimizer = struct
         match t with
         | NonMaybeType -> t
         | PropertyType s ->
-          SigHash.add sig_hash s;
+          SigHash.add_name sig_hash s;
           t
         | ElementType t' ->
           let t'' = self#type_ cx map_cx t' in
@@ -1039,7 +1050,7 @@ module ContextOptimizer = struct
 
       (* We need to make sure to hash the keys in any spread intermediate types! *)
       method! object_kit_spread_operand_slice cx map_cx slice =
-        SMap.iter (fun k _ -> SigHash.add sig_hash k) slice.Object.Spread.prop_map;
+        NameUtils.Map.iter (fun k _ -> SigHash.add_name sig_hash k) slice.Object.Spread.prop_map;
         super#object_kit_spread_operand_slice cx map_cx slice
 
       method get_reduced_module_map = reduced_module_map

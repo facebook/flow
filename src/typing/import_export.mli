@@ -21,9 +21,9 @@ val set_module_exports : Context.t -> ALoc.t -> Type.t -> unit
 
 val cjs_clobber : Context.t -> ALoc.t -> Type.t -> unit
 
-val export : Context.t -> string -> ALoc.t -> Type.t -> unit
+val export : Context.t -> Reason.name -> ALoc.t -> Type.t -> unit
 
-val export_type : Context.t -> string -> ALoc.t option -> Type.t -> unit
+val export_type : Context.t -> Reason.name -> ALoc.t option -> Type.t -> unit
 
 val export_star : Context.t -> ALoc.t -> Type.t -> unit
 

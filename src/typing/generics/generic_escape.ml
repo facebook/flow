@@ -84,7 +84,7 @@ class escape_finder ~gcx ~(add_output : Context.t -> ?trace:Type.trace -> Error_
     method! eval_id _ _ acc _ = acc
 
     method! props cx pole acc id =
-      SMap.fold
+      NameUtils.Map.fold
         (fun name t acc ->
           if Signature_utils.is_munged_property_name name && Context.should_munge_underscores cx
           then

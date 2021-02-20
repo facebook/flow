@@ -570,7 +570,9 @@ class virtual ['a] t =
 
     method object_kit_spread_operand_slice
         cx map_cx ({ Object.Spread.reason; prop_map; dict; generics } as slice) =
-      let prop_map' = SMap.ident_map (Property.ident_map_t (self#type_ cx map_cx)) prop_map in
+      let prop_map' =
+        NameUtils.Map.ident_map (Property.ident_map_t (self#type_ cx map_cx)) prop_map
+      in
       let dict' = OptionUtils.ident_map (self#dict_type cx map_cx) dict in
       if prop_map' == prop_map && dict' == dict then
         slice
@@ -963,9 +965,9 @@ class virtual ['a] t_with_uses =
         else
           ConstructorT (op, r, targs', args', t'')
       | SuperT (op, r, Derived { own = o; proto = p; static = s }) ->
-        let o' = SMap.ident_map (Property.ident_map_t (self#type_ cx map_cx)) o in
-        let p' = SMap.ident_map (Property.ident_map_t (self#type_ cx map_cx)) p in
-        let s' = SMap.ident_map (Property.ident_map_t (self#type_ cx map_cx)) s in
+        let o' = NameUtils.Map.ident_map (Property.ident_map_t (self#type_ cx map_cx)) o in
+        let p' = NameUtils.Map.ident_map (Property.ident_map_t (self#type_ cx map_cx)) p in
+        let s' = NameUtils.Map.ident_map (Property.ident_map_t (self#type_ cx map_cx)) s in
         if o' == o && p' == p && s' == s then
           t
         else
@@ -1390,7 +1392,7 @@ class virtual ['a] t_with_uses =
           else
             (loc, t')
         in
-        let tmap' = SMap.ident_map map_loc_type_pair tmap in
+        let tmap' = NameUtils.Map.ident_map map_loc_type_pair tmap in
         let t'' = self#type_ cx map_cx t' in
         if tmap' == tmap && t'' == t' then
           t
@@ -2010,7 +2012,9 @@ class virtual ['a] t_with_uses =
             Resolve r'
         | Super ({ Object.reason; props; flags; generics }, r) ->
           let flags' = self#obj_flags cx map_cx flags in
-          let props' = SMap.ident_map (fun (t, b1, b2) -> (self#type_ cx map_cx t, b1, b2)) props in
+          let props' =
+            NameUtils.Map.ident_map (fun (t, b1, b2) -> (self#type_ cx map_cx t, b1, b2)) props
+          in
           let r' = self#resolve cx map_cx r in
           if flags' == flags && r' == r && props' == props then
             t
@@ -2244,14 +2248,18 @@ class virtual ['a] t_with_uses =
         | ResolveObject -> t
         | ResolveDict (dict, props, obj) ->
           let dict' = self#dict_type cx map_cx dict in
-          let props' = SMap.ident_map (Property.ident_map_t (self#type_ cx map_cx)) props in
+          let props' =
+            NameUtils.Map.ident_map (Property.ident_map_t (self#type_ cx map_cx)) props
+          in
           let obj' = self#resolved_object cx map_cx obj in
           if dict' == dict && props' == props && obj' == obj then
             t
           else
             ResolveDict (dict', props', obj')
         | ResolveProp (s, props, obj) ->
-          let props' = SMap.ident_map (Property.ident_map_t (self#type_ cx map_cx)) props in
+          let props' =
+            NameUtils.Map.ident_map (Property.ident_map_t (self#type_ cx map_cx)) props
+          in
           let obj' = self#resolved_object cx map_cx obj in
           if props' == props && obj' == obj then
             t
@@ -2300,7 +2308,7 @@ class virtual ['a] t_with_uses =
         (t', own, meth)
 
     method object_kit_slice cx map_cx ({ Object.reason = _; props; flags; generics = _ } as slice) =
-      let props' = SMap.ident_map (self#resolved_prop cx map_cx) props in
+      let props' = NameUtils.Map.ident_map (self#resolved_prop cx map_cx) props in
       let flags' = self#obj_flags cx map_cx flags in
       if props' == props && flags' == flags then
         slice
@@ -2402,7 +2410,7 @@ class virtual ['a] t_with_uses =
 
     method resolved_object cx map_cx ((r, props, flags) as t) =
       let flags' = self#obj_flags cx map_cx flags in
-      let props' = SMap.ident_map (Property.ident_map_t (self#type_ cx map_cx)) props in
+      let props' = NameUtils.Map.ident_map (Property.ident_map_t (self#type_ cx map_cx)) props in
       if flags' == flags && props' == props then
         t
       else

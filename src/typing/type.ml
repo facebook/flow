@@ -35,8 +35,6 @@ open Utils_js
 
 type ident = int
 
-type name = string
-
 type index = int
 
 type tvar = reason * ident
@@ -196,7 +194,8 @@ module rec TypeTerm : sig
 
   and def_t =
     | NumT of number_literal literal
-    | StrT of string literal
+    (* TODO StrT should perhaps not allow internal names *)
+    | StrT of name literal
     | BoolT of bool option
     | EmptyT
     | MixedT of mixed_flavor
@@ -211,7 +210,8 @@ module rec TypeTerm : sig
     (* type of an instance of a class *)
     | InstanceT of static * super * implements * insttype
     (* singleton string, matches exactly a given string literal *)
-    | SingletonStrT of string
+    (* TODO SingletonStrT should not include internal names *)
+    | SingletonStrT of name
     (* matches exactly a given number literal, for some definition of "exactly"
        when it comes to floats... *)
     | SingletonNumT of number_literal
@@ -306,7 +306,7 @@ module rec TypeTerm : sig
         implements: 'loc virtual_reason;
       }
     | ClassOwnProtoCheck of {
-        prop: string;
+        prop: name;
         own_loc: 'loc option;
         proto_loc: 'loc option;
       }
@@ -426,7 +426,7 @@ module rec TypeTerm : sig
         value: 'loc virtual_reason;
       }
     | PropertyCompatibility of {
-        prop: string option;
+        prop: name option;
         lower: 'loc virtual_reason;
         upper: 'loc virtual_reason;
       }
@@ -667,9 +667,10 @@ module rec TypeTerm : sig
           (* 't_out' to receive the resolved ModuleT *) t_out
     | CopyNamedExportsT of reason * t * t_out
     | CopyTypeExportsT of reason * t * t_out
-    | ExportNamedT of reason * (ALoc.t option * t) SMap.t (* exports_tmap *) * export_kind * t_out
-    | ExportTypeT of reason * string (* export_name *) * t (* target_module_t *) * t_out
-    | AssertExportIsTypeT of reason * string (* export name *) * t_out
+    | ExportNamedT of
+        reason * (ALoc.t option * t) NameUtils.Map.t (* exports_tmap *) * export_kind * t_out
+    | ExportTypeT of reason * name (* export_name *) * t (* target_module_t *) * t_out
+    | AssertExportIsTypeT of reason * name (* export name *) * t_out
     (* Map a FunT over a structure *)
     | MapTypeT of use_op * reason * type_map * t_out
     | ObjKitT of use_op * reason * Object.resolve_tool * Object.tool * t_out
@@ -1067,9 +1068,9 @@ module rec TypeTerm : sig
      properties instead of creating the full InstanceT/ObjT. *)
   and derived_type =
     | Derived of {
-        own: property SMap.t;
-        proto: property SMap.t;
-        static: property SMap.t;
+        own: property NameUtils.Map.t;
+        proto: property NameUtils.Map.t;
+        static: property NameUtils.Map.t;
       }
 
   (* LookupT is a general-purpose tool for traversing prototype chains in search
@@ -1282,7 +1283,7 @@ module rec TypeTerm : sig
 
   and destructor =
     | NonMaybeType
-    | PropertyType of string
+    | PropertyType of name
     | ElementType of t
     | Bind of t
     | ReadOnlyType
@@ -1633,14 +1634,15 @@ and TypeContext : sig
     (* map from evaluation ids to types *)
     evaluated: TypeTerm.t Eval.Map.t;
     (* map from module names to their types *)
-    module_map: TypeTerm.t SMap.t;
+    module_map: TypeTerm.t NameUtils.Map.t;
   }
 end =
   TypeContext
 
 and UnionEnum : sig
   type t =
-    | Str of string
+    (* TODO this should not allow internal names *)
+    | Str of name
     | Num of TypeTerm.number_literal
     | Bool of bool
     | Void
@@ -1653,7 +1655,7 @@ and UnionEnum : sig
     | Many of UnionEnumSet.t
 end = struct
   type t =
-    | Str of string
+    | Str of name
     | Num of TypeTerm.number_literal
     | Bool of bool
     | Void
@@ -1835,7 +1837,7 @@ end = struct
 end
 
 and Properties : sig
-  type t = Property.t SMap.t
+  type t = Property.t NameUtils.Map.t
 
   type id
 
@@ -1845,13 +1847,13 @@ and Properties : sig
 
   type map = t Map.t
 
-  val add_field : string -> Polarity.t -> ALoc.t option -> TypeTerm.t -> t -> t
+  val add_field : name -> Polarity.t -> ALoc.t option -> TypeTerm.t -> t -> t
 
-  val add_getter : string -> ALoc.t option -> TypeTerm.t -> t -> t
+  val add_getter : name -> ALoc.t option -> TypeTerm.t -> t -> t
 
-  val add_setter : string -> ALoc.t option -> TypeTerm.t -> t -> t
+  val add_setter : name -> ALoc.t option -> TypeTerm.t -> t -> t
 
-  val add_method : string -> ALoc.t option -> TypeTerm.t -> t -> t
+  val add_method : name -> ALoc.t option -> TypeTerm.t -> t -> t
 
   val generate_id : unit -> id
 
@@ -1873,11 +1875,11 @@ and Properties : sig
 
   val map_fields : (TypeTerm.t -> TypeTerm.t) -> t -> t
 
-  val mapi_fields : (string -> TypeTerm.t -> TypeTerm.t) -> t -> t
+  val mapi_fields : (name -> TypeTerm.t -> TypeTerm.t) -> t -> t
 end = struct
   open TypeTerm
 
-  type t = Property.t SMap.t
+  type t = Property.t NameUtils.Map.t
 
   include Source_or_generated_id
 
@@ -1895,10 +1897,10 @@ end = struct
 
   type map = t Map.t
 
-  let add_field x polarity loc t = SMap.add x (Field (loc, t, polarity))
+  let add_field x polarity loc t = NameUtils.Map.add x (Field (loc, t, polarity))
 
   let add_getter x loc get_t map =
-    SMap.update
+    NameUtils.Map.update
       x
       (function
         | Some (Set (set_loc, set_t)) -> Some (GetSet (loc, get_t, set_loc, set_t))
@@ -1906,37 +1908,37 @@ end = struct
       map
 
   let add_setter x loc set_t map =
-    SMap.update
+    NameUtils.Map.update
       x
       (function
         | Some (Get (get_loc, get_t)) -> Some (GetSet (get_loc, get_t, loc, set_t))
         | _ -> Some (Set (loc, set_t)))
       map
 
-  let add_method x loc t = SMap.add x (Method (loc, t))
+  let add_method x loc t = NameUtils.Map.add x (Method (loc, t))
 
   let fake_id = id_of_int 0
 
   let extract_named_exports pmap =
-    SMap.fold
+    NameUtils.Map.fold
       (fun x p tmap ->
         match Property.read_t p with
-        | Some t -> SMap.add x (Property.read_loc p, t) tmap
+        | Some t -> NameUtils.Map.add x (Property.read_loc p, t) tmap
         | None -> tmap)
       pmap
-      SMap.empty
+      NameUtils.Map.empty
 
-  let iter_t f = SMap.iter (fun _ -> Property.iter_t f)
+  let iter_t f = NameUtils.Map.iter (fun _ -> Property.iter_t f)
 
-  let map_t f = SMap.map (Property.map_t f)
+  let map_t f = NameUtils.Map.map (Property.map_t f)
 
   let map_fields f =
-    SMap.map (function
+    NameUtils.Map.map (function
         | Field (loc, t, polarity) -> Field (loc, f t, polarity)
         | p -> p)
 
   let mapi_fields f =
-    SMap.mapi (fun k ->
+    NameUtils.Map.mapi (fun k ->
       function
       | Field (loc, t, polarity) -> Field (loc, f k t, polarity)
       | p -> p)
@@ -2003,7 +2005,7 @@ end = struct
 end
 
 and Exports : sig
-  type t = (ALoc.t option * TypeTerm.t) SMap.t
+  type t = (ALoc.t option * TypeTerm.t) NameUtils.Map.t
 
   type id
 
@@ -2015,7 +2017,7 @@ and Exports : sig
 
   val string_of_id : id -> string
 end = struct
-  type t = (ALoc.t option * TypeTerm.t) SMap.t
+  type t = (ALoc.t option * TypeTerm.t) NameUtils.Map.t
 
   type id = int
 
@@ -2072,7 +2074,7 @@ and UnionRep : sig
     reasonless_eq:(TypeTerm.t -> TypeTerm.t -> bool) ->
     flatten:(TypeTerm.t list -> TypeTerm.t list) ->
     find_resolved:(TypeTerm.t -> TypeTerm.t option) ->
-    find_props:(Properties.id -> TypeTerm.property SMap.t) ->
+    find_props:(Properties.id -> TypeTerm.property NameUtils.Map.t) ->
     unit
 
   val is_optimized_finally : t -> bool
@@ -2091,7 +2093,7 @@ and UnionRep : sig
 
   val quick_mem_disjoint_union :
     find_resolved:(TypeTerm.t -> TypeTerm.t option) ->
-    find_props:(Properties.id -> TypeTerm.property SMap.t) ->
+    find_props:(Properties.id -> TypeTerm.property NameUtils.Map.t) ->
     quick_subtype:(TypeTerm.t -> TypeTerm.t -> bool) ->
     TypeTerm.t ->
     t ->
@@ -2137,8 +2139,8 @@ end = struct
   type finally_optimized_rep =
     | UnionEnum of UnionEnumSet.t
     | PartiallyOptimizedUnionEnum of UnionEnumSet.t
-    | DisjointUnion of TypeTerm.t UnionEnumMap.t SMap.t
-    | PartiallyOptimizedDisjointUnion of TypeTerm.t UnionEnumMap.t SMap.t
+    | DisjointUnion of TypeTerm.t UnionEnumMap.t NameUtils.Map.t
+    | PartiallyOptimizedDisjointUnion of TypeTerm.t UnionEnumMap.t NameUtils.Map.t
     | Empty
     | Singleton of TypeTerm.t
     | Unoptimized
@@ -2262,13 +2264,13 @@ end = struct
     let base_props_of find_resolved find_props t =
       Base.Option.(
         props_of find_props t >>| fun prop_map ->
-        SMap.fold
+        NameUtils.Map.fold
           (fun key p acc ->
             match base_prop find_resolved p with
-            | Some enum -> SMap.add key (enum, t) acc
+            | Some enum -> NameUtils.Map.add key (enum, t) acc
             | _ -> acc)
           prop_map
-          SMap.empty)
+          NameUtils.Map.empty)
     in
     let split_disjoint_union find_resolved find_props ts =
       List.fold_left
@@ -2296,24 +2298,24 @@ end = struct
       unique_values UnionEnumMap.empty
     in
     let unique ~reasonless_eq idx =
-      SMap.fold
+      NameUtils.Map.fold
         (fun key values acc ->
           match unique_values ~reasonless_eq values with
           | None -> acc
-          | Some idx -> SMap.add key idx acc)
+          | Some idx -> NameUtils.Map.add key idx acc)
         idx
-        SMap.empty
+        NameUtils.Map.empty
     in
     let index ~reasonless_eq candidates =
       match candidates with
-      | [] -> SMap.empty
+      | [] -> NameUtils.Map.empty
       | base_props :: candidates ->
         (* Compute the intersection of properties of objects that have singleton types *)
-        let init = SMap.map (fun enum_t -> [enum_t]) base_props in
+        let init = NameUtils.Map.map (fun enum_t -> [enum_t]) base_props in
         let idx =
           List.fold_left
             (fun acc base_props ->
-              SMap.merge
+              NameUtils.Map.merge
                 (fun _key enum_t_opt values_opt ->
                   Base.Option.(
                     both enum_t_opt values_opt >>| fun (enum_t, values) -> List.cons enum_t values))
@@ -2331,7 +2333,7 @@ end = struct
       | ts ->
         let (candidates, partial) = split_disjoint_union find_resolved find_props ts in
         let map = index ~reasonless_eq candidates in
-        if SMap.is_empty map then
+        if NameUtils.Map.is_empty map then
           Unoptimized
         else if partial then
           PartiallyOptimizedDisjointUnion map
@@ -2400,12 +2402,12 @@ end = struct
     | None -> failwith "quick_mem_enum is defined only for canonizable type"
 
   let lookup_disjoint_union find_resolved prop_map ~partial map =
-    SMap.fold
+    NameUtils.Map.fold
       (fun key idx acc ->
         if acc <> Unknown then
           acc
         else
-          match SMap.find_opt key prop_map with
+          match NameUtils.Map.find_opt key prop_map with
           | Some p ->
             begin
               match canon_prop find_resolved p with
@@ -2591,7 +2593,7 @@ and Object : sig
     generics: Generic.spread_id;
   }
 
-  and props = prop SMap.t
+  and props = prop NameUtils.Map.t
 
   and prop = TypeTerm.t * bool * (* method *) bool
 
@@ -2695,7 +2697,7 @@ and React : sig
   type resolve_object =
     | ResolveObject
     | ResolveDict of (TypeTerm.dicttype * Properties.t * resolved_object)
-    | ResolveProp of (string * Properties.t * resolved_object)
+    | ResolveProp of (name * Properties.t * resolved_object)
 
   type resolve_array =
     | ResolveArray
@@ -3155,7 +3157,7 @@ module DescFormat = struct
 
   let name_of_instance_reason r =
     match desc_of_reason r with
-    | RType name -> name
+    | RType name -> display_string_of_name name
     | desc -> string_of_desc desc
 
   (* TypeT reasons have desc = type `name` *)
@@ -3649,7 +3651,7 @@ let apply_opt_use opt_use t_out =
 
 let mk_enum_type ~loc ~trust enum =
   let { enum_name; _ } = enum in
-  let reason = mk_reason (RType enum_name) loc in
+  let reason = mk_reason (RType (OrdinaryName enum_name)) loc in
   DefT (reason, trust, EnumT enum)
 
 let call_of_method_app

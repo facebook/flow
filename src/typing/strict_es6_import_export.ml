@@ -424,7 +424,9 @@ class import_export_visitor ~cx ~scope_info ~declarations =
                   | Some
                       { decl_loc; name; kind = VariableDeclaration.Var | VariableDeclaration.Let }
                     ->
-                    this#add_non_const_var_export_error id_loc (Some (decl_loc, name))
+                    this#add_non_const_var_export_error
+                      id_loc
+                      (Some (decl_loc, Reason.OrdinaryName name))
                   | _ -> ()
                 end;
                 (* Check for `this` if exported variable is bound to a function *)

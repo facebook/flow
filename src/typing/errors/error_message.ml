@@ -41,18 +41,18 @@ and 'loc t' =
       branches: ('loc Reason.virtual_reason * 'loc t') list;
     }
   | EIncompatibleProp of {
-      prop: string option;
+      prop: name option;
       reason_prop: 'loc virtual_reason;
       reason_obj: 'loc virtual_reason;
       special: lower_kind option;
       use_op: 'loc virtual_use_op option;
     }
   | EDebugPrint of 'loc virtual_reason * string
-  | EExportValueAsType of 'loc virtual_reason * string
+  | EExportValueAsType of 'loc virtual_reason * name
   | EImportValueAsType of 'loc virtual_reason * string
   | EImportTypeAsTypeof of 'loc virtual_reason * string
   | EImportTypeAsValue of 'loc virtual_reason * string
-  | ERefineAsValue of 'loc virtual_reason * string
+  | ERefineAsValue of 'loc virtual_reason * name
   | ENoDefaultExport of 'loc virtual_reason * string * string option
   | EOnlyDefaultExport of 'loc virtual_reason * string * string
   | ENoNamedExport of 'loc virtual_reason * string * string * string option
@@ -80,7 +80,7 @@ and 'loc t' =
       use_op: 'loc virtual_use_op;
     }
   | EPropNotFound of {
-      prop_name: string option;
+      prop_name: name option;
       reason_prop: 'loc virtual_reason;
       reason_obj: 'loc virtual_reason;
       use_op: 'loc virtual_use_op;
@@ -88,17 +88,17 @@ and 'loc t' =
     }
   | EPropNotReadable of {
       reason_prop: 'loc virtual_reason;
-      prop_name: string option;
+      prop_name: name option;
       use_op: 'loc virtual_use_op;
     }
   | EPropNotWritable of {
       reason_prop: 'loc virtual_reason;
-      prop_name: string option;
+      prop_name: name option;
       use_op: 'loc virtual_use_op;
     }
   | EPropPolarityMismatch of
       ('loc virtual_reason * 'loc virtual_reason)
-      * string option
+      * name option
       * (Polarity.t * Polarity.t)
       * 'loc virtual_use_op
   | EPolarityMismatch of {
@@ -109,17 +109,16 @@ and 'loc t' =
     }
   | EBuiltinLookupFailed of {
       reason: 'loc virtual_reason;
-      name: string option;
+      name: Reason.name option;
     }
   | EStrictLookupFailed of {
       reason_prop: 'loc virtual_reason;
       reason_obj: 'loc virtual_reason;
-      name: string option;
+      name: name option;
       suggestion: string option;
       use_op: 'loc virtual_use_op option;
     }
-  | EPrivateLookupFailed of
-      ('loc virtual_reason * 'loc virtual_reason) * string * 'loc virtual_use_op
+  | EPrivateLookupFailed of ('loc virtual_reason * 'loc virtual_reason) * name * 'loc virtual_use_op
   | EAdditionMixed of 'loc virtual_reason * 'loc virtual_use_op
   | EComparison of ('loc virtual_reason * 'loc virtual_reason)
   | ENonStrictEqualityComparison of ('loc virtual_reason * 'loc virtual_reason)
@@ -205,7 +204,7 @@ and 'loc t' =
   | EUseArrayLiteral of 'loc
   | EMissingAnnotation of 'loc virtual_reason * 'loc virtual_reason list
   | EMissingLocalAnnotation of 'loc virtual_reason
-  | EBindingError of binding_error * 'loc * string * Scope.Entry.t
+  | EBindingError of binding_error * 'loc * name * Scope.Entry.t
   | ERecursionLimit of ('loc virtual_reason * 'loc virtual_reason)
   | EModuleOutsideRoot of 'loc * string
   | EMalformedPackageJson of 'loc * string
@@ -320,7 +319,7 @@ and 'loc t' =
       spread_reason: 'loc virtual_reason;
       object1_reason: 'loc virtual_reason;
       object2_reason: 'loc virtual_reason;
-      propname: string;
+      propname: name;
       error_kind: exactness_error_kind;
       use_op: 'loc virtual_use_op;
     }
@@ -347,7 +346,7 @@ and 'loc t' =
     }
   (* enums *)
   | EEnumInvalidMemberAccess of {
-      member_name: string option;
+      member_name: name option;
       suggestion: string option;
       reason: 'loc virtual_reason;
       enum_reason: 'loc virtual_reason;
@@ -517,12 +516,12 @@ and lower_kind =
   | Incompatible_intersection
 
 and 'loc upper_kind =
-  | IncompatibleGetPropT of 'loc * string option
-  | IncompatibleSetPropT of 'loc * string option
-  | IncompatibleMatchPropT of 'loc * string option
+  | IncompatibleGetPropT of 'loc * name option
+  | IncompatibleSetPropT of 'loc * name option
+  | IncompatibleMatchPropT of 'loc * name option
   | IncompatibleGetPrivatePropT
   | IncompatibleSetPrivatePropT
-  | IncompatibleMethodT of 'loc * string option
+  | IncompatibleMethodT of 'loc * name option
   | IncompatibleCallT
   | IncompatibleMixedCallT
   | IncompatibleConstructorT
@@ -541,7 +540,7 @@ and 'loc upper_kind =
   | IncompatibleThisSpecializeT
   | IncompatibleVarianceCheckT
   | IncompatibleGetKeysT
-  | IncompatibleHasOwnPropT of 'loc * string option
+  | IncompatibleHasOwnPropT of 'loc * name option
   | IncompatibleGetValuesT
   | IncompatibleUnaryMinusT
   | IncompatibleMapTypeTObject
@@ -1449,8 +1448,8 @@ let mk_prop_message =
   Errors.Friendly.(
     function
     | None
-    | Some "$key"
-    | Some "$value" ->
+    (* TODO the $-prefixed names should be internal *)
+    | Some ("$key" | "$value") ->
       [text "an index signature declaring the expected key / value type"]
     | Some "$call" -> [text "a call signature declaring the expected parameter / return type"]
     | Some prop -> [text "property "; code prop])
@@ -1573,14 +1572,22 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
     PropMissing
       {
         loc = loc_of_reason reason_prop;
-        prop;
+        prop = Base.Option.map ~f:display_string_of_name prop;
         reason_obj;
         suggestion = None;
         use_op = Base.Option.value ~default:unknown_use use_op;
       }
   | EDebugPrint (_, str) -> Normal { features = [text str] }
   | EExportValueAsType (_, export_name) ->
-    Normal { features = [text "Cannot export the value "; code export_name; text " as a type."] }
+    Normal
+      {
+        features =
+          [
+            text "Cannot export the value ";
+            code (display_string_of_name export_name);
+            text " as a type.";
+          ];
+      }
   | EImportValueAsType (_, export_name) ->
     let (prefix, export) = msg_export "the value " export_name in
     let features =
@@ -1629,7 +1636,7 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
     in
     Normal { features }
   | ERefineAsValue (_, name) ->
-    let (_, export) = msg_export "" name in
+    let (_, export) = msg_export "" (display_string_of_name name) in
     let features = [text "Cannot refine "; export; text " as a value. "] in
     Normal { features }
   | ENoDefaultExport (_, module_name, suggestion) ->
@@ -1850,25 +1857,40 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
     Incompatible { reason_lower; reason_upper; use_op }
   | EPropNotFound { prop_name; reason_obj; reason_prop; use_op; suggestion } ->
     PropMissing
-      { loc = loc_of_reason reason_prop; prop = prop_name; reason_obj; use_op; suggestion }
+      {
+        loc = loc_of_reason reason_prop;
+        prop = Base.Option.map ~f:display_string_of_name prop_name;
+        reason_obj;
+        use_op;
+        suggestion;
+      }
   | EPropNotReadable { reason_prop; prop_name = x; use_op } ->
     UseOp
       {
         loc = loc_of_reason reason_prop;
-        features = mk_prop_message x @ [text " is not readable"];
+        features =
+          mk_prop_message (Base.Option.map ~f:display_string_of_name x) @ [text " is not readable"];
         use_op;
       }
   | EPropNotWritable { reason_prop; prop_name = x; use_op } ->
     UseOp
       {
         loc = loc_of_reason reason_prop;
-        features = mk_prop_message x @ [text " is not writable"];
+        features =
+          mk_prop_message (Base.Option.map ~f:display_string_of_name x) @ [text " is not writable"];
         use_op;
       }
   | EPropPolarityMismatch
       ((reason_lower, reason_upper), prop, (polarity_lower, polarity_upper), use_op) ->
     PropPolarityMismatch
-      { prop; reason_lower; polarity_lower; reason_upper; polarity_upper; use_op }
+      {
+        prop = Base.Option.map ~f:display_string_of_name prop;
+        reason_lower;
+        polarity_lower;
+        reason_upper;
+        polarity_upper;
+        use_op;
+      }
   | EPolarityMismatch { reason; name; expected_polarity; actual_polarity } ->
     let polarity_string = function
       | Polarity.Positive -> "output"
@@ -1877,7 +1899,7 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
     in
     let expected_polarity = polarity_string expected_polarity in
     let actual_polarity = polarity_string actual_polarity in
-    let reason_targ = mk_reason (RIdentifier name) (def_loc_of_reason reason) in
+    let reason_targ = mk_reason (RIdentifier (OrdinaryName name)) (def_loc_of_reason reason) in
     let features =
       [
         text "Cannot use ";
@@ -1897,14 +1919,14 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
         [text "Cannot resolve module "; code (uninternal_name x); text "."]
       | None -> [text "Cannot resolve name "; desc reason; text "."]
       | Some x when is_internal_name x -> [text "Cannot resolve name "; desc reason; text "."]
-      | Some x -> [text "Cannot resolve name "; code x; text "."]
+      | Some x -> [text "Cannot resolve name "; code (display_string_of_name x); text "."]
     in
     Normal { features }
   | EStrictLookupFailed { reason_prop; reason_obj; name; suggestion; use_op } ->
     PropMissing
       {
         loc = loc_of_reason reason_prop;
-        prop = name;
+        prop = Base.Option.map ~f:display_string_of_name name;
         suggestion;
         reason_obj;
         use_op = Base.Option.value ~default:unknown_use use_op;
@@ -1913,7 +1935,7 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
     PropMissing
       {
         loc = loc_of_reason (fst reasons);
-        prop = Some ("#" ^ x);
+        prop = Some ("#" ^ display_string_of_name x);
         reason_obj = snd reasons;
         use_op;
         suggestion = None;
@@ -2286,6 +2308,7 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
     Normal { features = [text "Missing an annotation on "; desc r; text "."] }
   | EBindingError (binding_error, _, x, entry) ->
     let desc =
+      (* TODO turn this into a pattern match now that name is a variant type *)
       if x = internal_name "this" then
         RThis
       else if x = internal_name "super" then
@@ -3163,7 +3186,7 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
             text " Try removing the indexer in ";
             ref object2_reason;
             text " or make ";
-            code propname;
+            code (display_string_of_name propname);
             text " a required property";
           ] )
     in
@@ -3176,9 +3199,9 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
         text " ";
         text error_reason;
         text ", so it may contain ";
-        code propname;
+        code (display_string_of_name propname);
         text " with a type that conflicts with ";
-        code propname;
+        code (display_string_of_name propname);
         text "'s definition in ";
         ref object1_reason;
         text ".";
@@ -3272,6 +3295,7 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
       @
       match member_name with
       | Some name ->
+        let name = display_string_of_name name in
         [text " because "; code name; text " is not a member of "; ref enum_reason; text "."]
         @ Base.Option.value_map suggestion ~default:[] ~f:(fun suggestion ->
               [text " Did you mean the member "; code suggestion; text "?"])
