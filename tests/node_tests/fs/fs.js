@@ -85,3 +85,63 @@ fs.readFile(0, {}, (_, data) => {
   (err: ?ErrnoError);
   (fd: number);
 }));
+
+/* readdir */
+
+(fs.readdir("file.exp", (err, files) => {
+  (err: ?ErrnoError);
+  (files: Array<string>);
+}): void);
+
+(fs.readdir("file.exp", "utf8", (err, files) => {
+  (err: ?ErrnoError);
+  (files: Array<string>);
+}): void);
+
+(fs.readdir("file.exp", { encoding: "utf8" }, (err, files) => {
+  (err: ?ErrnoError);
+  (files: Array<string>);
+}): void);
+
+(fs.readdir("file.exp", { withFileTypes: true }, (err, files) => {
+  (err: ?ErrnoError);
+  (files: Array<fs.Dirent>);
+}): void);
+
+(fs.readdir("file.exp", { withFileTypes: false }, (err, files) => {
+  (err: ?ErrnoError);
+  (files: Array<string>);
+}): void);
+
+(fs.readdir("file.exp", { withFileTypes: true }, (err, files) => {
+  (err: ?ErrnoError);
+  (files: Array<string>); // error
+}): void);
+
+(fs.readdir("file.exp", { encoding: "utf8", withFileTypes: true }, (err, files) => {
+  (err: ?ErrnoError);
+  (files: Array<fs.Dirent>);
+}): void);
+
+(fs.readdir("file.exp", { encoding: "utf8", withFileTypes: false }, (err, files) => {
+  (err: ?ErrnoError);
+  (files: Array<string>);
+}): void);
+
+/* readdirSync */
+
+(fs.readdirSync("file.exp"): Array<string>);
+
+(fs.readdirSync("file.exp", "utf8"): Array<string>);
+
+(fs.readdirSync("file.exp", { encoding: "utf8" }): Array<string>);
+
+(fs.readdirSync("file.exp", { withFileTypes: true }): Array<fs.Dirent>);
+
+(fs.readdirSync("file.exp", { withFileTypes: false }): Array<string>);
+
+(fs.readdirSync("file.exp", { withFileTypes: true }): Array<string>); // error
+
+(fs.readdirSync("file.exp", { encoding: "utf8", withFileTypes: true }): Array<fs.Dirent>);
+
+(fs.readdirSync("file.exp", { encoding: "utf8", withFileTypes: false }): Array<string>);
