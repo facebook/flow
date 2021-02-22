@@ -183,16 +183,22 @@ let text_edits_of_import ~options ~layout_options ~reader ~src_dir ~ast kind nam
 
 let suggest_imports ~options ~reader ~ast ~diagnostics ~exports ~name uri loc =
   let open Lsp in
-  match Export_search.find_opt name exports with
-  | None -> []
-  | Some files ->
+  let files =
+    if Autofix_imports.loc_is_type ~ast loc then
+      Export_search.get_types name exports
+    else
+      Export_search.get_values name exports
+  in
+  if Export_index.ExportSet.is_empty files then
+    []
+  else
     let src_dir = Lsp_helpers.lsp_uri_to_path uri |> Filename.dirname |> Base.Option.return in
     let error_range = Flow_lsp_conversions.loc_to_lsp_range loc in
     let relevant_diagnostics =
       let open PublishDiagnostics in
-      diagnostics
-      |> List.filter (fun { source; code; range; _ } ->
-             source = Some "Flow" && code = StringCode "cannot-resolve-name" && range = error_range)
+      let lsp_code = StringCode Error_codes.(string_of_code CannotResolveName) in
+      Base.List.filter diagnostics ~f:(fun { source; code; range; _ } ->
+          source = Some "Flow" && code = lsp_code && Lsp_helpers.ranges_overlap range error_range)
     in
     let layout_options =
       Js_layout_generator.{ default_opts with single_quotes = Options.format_single_quotes options }
@@ -239,7 +245,7 @@ let code_actions_of_errors ~options ~reader ~env ~ast ~diagnostics ~errors uri l
     (fun error actions ->
       match
         Flow_error.msg_of_error error
-        |> Error_message.map_loc_of_error_message (Parsing_heaps_utils.loc_of_aloc ~reader)
+        |> Error_message.map_loc_of_error_message (Parsing_heaps.Reader.loc_of_aloc ~reader)
       with
       | Error_message.EEnumInvalidMemberAccess { reason; suggestion = Some suggestion; _ } ->
         let error_loc = Reason.loc_of_reason reason in
@@ -253,7 +259,16 @@ let code_actions_of_errors ~options ~reader ~env ~ast ~diagnostics ~errors uri l
         let error_loc = Reason.loc_of_reason reason in
         if Loc.intersects error_loc loc then
           let { ServerEnv.exports; _ } = env in
-          suggest_imports ~options ~reader ~ast ~diagnostics ~exports ~name uri loc @ actions
+          suggest_imports
+            ~options
+            ~reader
+            ~ast
+            ~diagnostics
+            ~exports (* TODO consider filtering out internal names *)
+            ~name:(Reason.display_string_of_name name)
+            uri
+            loc
+          @ actions
         else
           actions
       | error_message ->

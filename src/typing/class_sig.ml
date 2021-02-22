@@ -396,7 +396,8 @@ module Make (F : Func_sig.S) = struct
     in
     Type.Field (loc, t, polarity)
 
-  let to_prop_map cx = SMap.map to_field %> Context.generate_property_map cx
+  let to_prop_map cx =
+    SMap.map to_field %> NameUtils.namemap_of_smap %> Context.generate_property_map cx
 
   let elements cx ?constructor ?(ignore_this = false) s =
     let methods =
@@ -502,6 +503,7 @@ module Make (F : Func_sig.S) = struct
             (Utils_js.spf
                "static fields and methods must be disjoint: %s"
                (Debug_js.dump_reason cx s.reason)))
+      |> NameUtils.namemap_of_smap
     in
     (* Statics are not exact, because we allow width subtyping between them.
        Specifically, given class A and class B extends A, Class<B> <: Class<A>. *)
@@ -537,8 +539,8 @@ module Make (F : Func_sig.S) = struct
     {
       Type.class_id = s.id;
       type_args;
-      own_props = Context.generate_property_map cx fields;
-      proto_props = Context.generate_property_map cx methods;
+      own_props = Context.generate_property_map cx (NameUtils.namemap_of_smap fields);
+      proto_props = Context.generate_property_map cx (NameUtils.namemap_of_smap methods);
       inst_call_t = Base.Option.map call ~f:(Context.make_call_prop cx);
       initialized_fields;
       initialized_static_fields;
@@ -773,9 +775,13 @@ module Make (F : Func_sig.S) = struct
           let use_op =
             Op
               (ClassOwnProtoCheck
-                 { prop = x; own_loc = Property.first_loc p1; proto_loc = Property.first_loc p2 })
+                 {
+                   prop = OrdinaryName x;
+                   own_loc = Property.first_loc p1;
+                   proto_loc = Property.first_loc p2;
+                 })
           in
-          let propref = Named (reason, x) in
+          let propref = Named (reason, OrdinaryName x) in
           Flow.flow_p cx ~use_op reason reason propref (p1, p2))
       own;
 
@@ -783,7 +789,18 @@ module Make (F : Func_sig.S) = struct
     let use_op =
       Op (ClassExtendsCheck { def = def_reason; name = reason; extends = reason_of_t super })
     in
-    Flow.flow cx (super, SuperT (use_op, reason, Derived { own; proto; static }))
+    Flow.flow
+      cx
+      ( super,
+        SuperT
+          ( use_op,
+            reason,
+            Derived
+              {
+                own = NameUtils.namemap_of_smap own;
+                proto = NameUtils.namemap_of_smap proto;
+                static = NameUtils.namemap_of_smap static;
+              } ) )
 
   (* TODO: Ideally we should check polarity for all class types, but this flag is
      flipped off for interface/declare class currently. *)
@@ -814,7 +831,7 @@ module Make (F : Func_sig.S) = struct
   (* Processes the bodies of instance and static class members. *)
   let toplevels cx ~decls ~stmts ~expr ~private_property_map x =
     let open Type in
-    Env.in_lex_scope cx (fun () ->
+    Env.in_lex_scope (fun () ->
         let new_entry ?(state = Scope.State.Initialized) t =
           Scope.Entry.new_let
             ~loc:(TypeUtil.loc_of_t (TypeUtil.type_t_of_annotated_or_inferred t))

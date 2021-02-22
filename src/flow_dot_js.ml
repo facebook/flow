@@ -8,13 +8,13 @@
 module Js = Js_of_ocaml.Js
 module Sys_js = Js_of_ocaml.Sys_js
 
-let lazy_table_of_aloc _ =
-  lazy (failwith "Did not expect to encounter an abstract location in flow_dot_js")
+(* We do not expect to encounter a keyed location in flow_dot_js *)
+let loc_of_aloc = ALoc.to_loc_exn
 
 let error_of_parse_error source_file (loc, err) =
   Error_message.EParseError (ALoc.of_loc loc, err)
   |> Flow_error.error_of_msg ~trace_reasons:[] ~source_file
-  |> Flow_error.concretize_error lazy_table_of_aloc
+  |> Flow_error.concretize_error loc_of_aloc
   |> Flow_error.make_error_printable
 
 let error_of_file_sig_error source_file e =
@@ -22,7 +22,7 @@ let error_of_file_sig_error source_file e =
     match e with
     | IndeterminateModuleType loc -> Error_message.EIndeterminateModuleType (ALoc.of_loc loc))
   |> Flow_error.error_of_msg ~trace_reasons:[] ~source_file
-  |> Flow_error.concretize_error lazy_table_of_aloc
+  |> Flow_error.concretize_error loc_of_aloc
   |> Flow_error.make_error_printable
 
 let parse_content file content =
@@ -95,9 +95,16 @@ let load_lib_files
            let lib_file = File_key.LibFile file in
            match parse_content lib_file lib_content with
            | Ok (ast, file_sig) ->
-             let rev_table = lazy (ALoc.make_empty_reverse_table ()) in
+             (* Lib files use only concrete locations, so this is not used. *)
+             let aloc_table = lazy (ALoc.make_table lib_file) in
              let cx =
-               Context.make ccx metadata lib_file rev_table Files.lib_module_ref Context.Checking
+               Context.make
+                 ccx
+                 metadata
+                 lib_file
+                 aloc_table
+                 (Reason.OrdinaryName Files.lib_module_ref)
+                 Context.Checking
              in
              let syms =
                Type_inference_js.infer_lib_file
@@ -117,11 +124,11 @@ let load_lib_files
              save_lint_suppressions lib_file severity_cover;
 
              (* symbols loaded from this file are suppressed if found in later ones *)
-             SSet.union exclude_syms (SSet.of_list syms)
+             NameUtils.Set.union exclude_syms (NameUtils.Set.of_list syms)
            | Error parse_errors ->
              save_parse_errors lib_file parse_errors;
              exclude_syms)
-         SSet.empty
+         NameUtils.Set.empty
   in
   ()
 
@@ -186,18 +193,17 @@ let get_master_cx root =
     sig_cx
 
 let init_builtins filenames =
-  let aloc_tables = Utils_js.FilenameMap.empty in
   let root = Path.dummy_path in
-  let sig_cx = Context.make_sig () in
-  let ccx = Context.make_ccx sig_cx aloc_tables in
+  let ccx = Context.make_ccx () in
   let master_cx =
-    let rev_table = lazy (ALoc.make_empty_reverse_table ()) in
+    (* Lib files use only concrete locations, so this is not used. *)
+    let aloc_table = lazy (ALoc.make_table File_key.Builtins) in
     Context.make
       ccx
       (stub_metadata ~root ~checked:false)
       File_key.Builtins
-      rev_table
-      Files.lib_module_ref
+      aloc_table
+      (Reason.OrdinaryName Files.lib_module_ref)
       Context.Checking
   in
   Flow_js_utils.mk_builtins master_cx;
@@ -216,7 +222,7 @@ let init_builtins filenames =
   let builtin_module = Obj_type.mk_unsealed master_cx reason in
   Flow_js.flow_t master_cx (builtin_module, Flow_js_utils.builtins master_cx);
   ignore (Merge_js.ContextOptimizer.sig_context master_cx [Files.lib_module_ref]);
-  master_cx_ref := Some (root, sig_cx)
+  master_cx_ref := Some (root, Context.sig_cx master_cx)
 
 let infer_and_merge ~root filename ast file_sig =
   (* this is a VERY pared-down version of Merge_service.merge_strict_context.
@@ -280,14 +286,10 @@ let check_content ~filename ~content =
           severity_cover
       in
       let errors =
-        errors
-        |> Flow_error.concretize_errors lazy_table_of_aloc
-        |> Flow_error.make_errors_printable
+        errors |> Flow_error.concretize_errors loc_of_aloc |> Flow_error.make_errors_printable
       in
       let warnings =
-        warnings
-        |> Flow_error.concretize_errors lazy_table_of_aloc
-        |> Flow_error.make_errors_printable
+        warnings |> Flow_error.concretize_errors loc_of_aloc |> Flow_error.make_errors_printable
       in
       let (errors, _, suppressions) =
         Error_suppressions.filter_suppressed_errors

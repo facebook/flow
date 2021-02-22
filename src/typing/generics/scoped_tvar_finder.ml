@@ -226,7 +226,7 @@ class finder cx =
       | Ast.Expression.Object.Property.Literal _ -> ("literal property", false)
       | Ast.Expression.Object.Property.Identifier (_, { Ast.Identifier.name = label; _ }) ->
         let is_munged =
-          Signature_utils.is_munged_property_name label && Context.should_munge_underscores cx
+          Signature_utils.is_munged_property_string label && Context.should_munge_underscores cx
         in
         (Utils_js.spf "property `%s`" label, is_munged)
       | Ast.Expression.Object.Property.PrivateName _ ->
@@ -303,7 +303,7 @@ class finder cx =
               annot = Ast.Type.Missing _;
               _;
             } ->
-          this#blame (mk_reason (RIdentifier name) loc) ty
+          this#blame (mk_reason (RIdentifier (OrdinaryName name)) loc) ty
         | _ -> ()
       end;
       super#binding_pattern ~kind expr

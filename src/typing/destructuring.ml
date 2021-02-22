@@ -34,7 +34,7 @@ type expr =
   (ALoc.t, ALoc.t * Type.t) Flow_ast.Expression.t
 
 type callback =
-  use_op:Type.use_op -> ALoc.t -> string -> Type.t Default.t option -> Type.t -> Type.t
+  use_op:Type.use_op -> name_loc:ALoc.t -> string -> Type.t Default.t option -> Type.t -> Type.t
 
 let empty ?init ?default ~annot current = { parent = None; current; init; default; annot }
 
@@ -105,7 +105,7 @@ let array_rest_element cx acc i loc =
 
 let object_named_property ~has_default cx acc loc x comments =
   let { current; init; default; annot; _ } = acc in
-  let reason = mk_reason (RProperty (Some x)) loc in
+  let reason = mk_reason (RProperty (Some (OrdinaryName x))) loc in
   let init =
     Base.Option.map init (fun init ->
         ( loc,
@@ -200,7 +200,7 @@ let object_property
       Error_message.(EUnsupportedSyntax (loc, DestructuringObjectPropertyLiteralNonString));
     (acc, xs, Tast_utils.error_mapper#pattern_object_property_key key)
 
-let identifier cx ~f acc loc name =
+let identifier cx ~f acc name_loc name =
   let { parent; current; init; default; annot } = acc in
   let () =
     match parent with
@@ -211,7 +211,7 @@ let identifier cx ~f acc loc name =
      * pattern and a `get-def` on this identifier should point at the
      * location where the binding is introduced.
      *)
-    | None -> Type_inference_hooks_js.dispatch_lval_hook cx name loc Type_inference_hooks_js.Id
+    | None -> Type_inference_hooks_js.dispatch_lval_hook cx name name_loc Type_inference_hooks_js.Id
   in
   let current =
     mod_reason_of_t
@@ -219,11 +219,11 @@ let identifier cx ~f acc loc name =
           | RDefaultValue
           | RArrayPatternRestProp
           | RObjectPatternRestProp ->
-            RIdentifier name
+            RIdentifier (OrdinaryName name)
           | desc -> desc))
       current
   in
-  let reason = mk_reason (RIdentifier name) loc in
+  let reason = mk_reason (RIdentifier (OrdinaryName name)) name_loc in
   let current =
     (* If we are destructuring an annotation, the chain of constraints leading
      * to here will preserve the 0->1 constraint. The mk_typeof_annotation
@@ -252,7 +252,7 @@ let identifier cx ~f acc loc name =
              | _ -> reason_of_t current);
          })
   in
-  f ~use_op loc name default current
+  f ~use_op ~name_loc name default current
 
 let rec pattern cx ~(expr : expr) ~(f : callback) acc (loc, p) =
   Ast.Pattern.
@@ -328,9 +328,9 @@ let type_of_pattern (_, p) =
 (* instantiate pattern visitor for assignments *)
 let assignment cx ~expr rhs_t init =
   let acc = empty ~init ~annot:false rhs_t in
-  let f ~use_op loc name _default t =
+  let f ~use_op ~name_loc name _default t =
     (* TODO destructuring+defaults unsupported in assignment expressions *)
-    ignore Env.(set_var cx ~use_op name t loc);
+    ignore Env.(set_var cx ~use_op name t name_loc);
     t
   in
   pattern cx ~expr ~f acc

@@ -18,7 +18,7 @@ type acc = {
   use_op: use_op;
 }
 
-class escape_finder ~gcx ~(add_output : Context.t -> ?trace:Trace.t -> Error_message.t -> unit) =
+class escape_finder ~gcx ~(add_output : Context.t -> ?trace:Type.trace -> Error_message.t -> unit) =
   object (self)
     inherit [acc] Type_visitor.t as super
 
@@ -84,7 +84,7 @@ class escape_finder ~gcx ~(add_output : Context.t -> ?trace:Trace.t -> Error_mes
     method! eval_id _ _ acc _ = acc
 
     method! props cx pole acc id =
-      SMap.fold
+      NameUtils.Map.fold
         (fun name t acc ->
           if Signature_utils.is_munged_property_name name && Context.should_munge_underscores cx
           then
@@ -148,7 +148,8 @@ class escape_finder ~gcx ~(add_output : Context.t -> ?trace:Trace.t -> Error_mes
         { acc with seen }
   end
 
-let scan_for_escapes cx ~(add_output : Context.t -> ?trace:Trace.t -> Error_message.t -> unit) ast =
+let scan_for_escapes
+    cx ~(add_output : Context.t -> ?trace:Type.trace -> Error_message.t -> unit) ast =
   let scan_for_escapes_in_scope escape_finder scope_id scoped_tvars =
     let scan_tvar var_id annot_reason seen =
       let scan_type ty (_, use_op) seen =

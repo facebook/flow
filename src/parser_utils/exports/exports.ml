@@ -267,8 +267,10 @@ module ESM = struct
          can't be imported. *)
       acc
 
-  let exports type_sig (exports : 'loc es_exports) =
-    let { names; types; stars = (* TODO *) _; type_stars = (* TODO *) _; strict = _ } = exports in
+  let exports type_sig names types stars type_stars =
+    (* TODO: re-exports *)
+    ignore stars;
+    ignore type_stars;
     [] |> SMap.fold (fold_name type_sig) names |> SMap.fold fold_type types
 end
 
@@ -349,7 +351,9 @@ module CJS = struct
       types
       acc
 
-  let exports type_sig ({ types; type_stars = (* TODO *) _; strict = _ } : 'loc cjs_exports) =
+  let exports type_sig types type_stars =
+    (* TODO: re-exports *)
+    ignore type_stars;
     [] |> add_default_exports type_sig |> add_type_exports types
 end
 
@@ -380,8 +384,10 @@ let add_global =
 
 let of_sig export_sig : t =
   match export_sig.Export_sig.exports with
-  | Some (Type_sig_pack.ESExports exp) -> ESM.exports export_sig exp
-  | Some (Type_sig_pack.CJSExports exp) -> CJS.exports export_sig exp
+  | Some (Type_sig_pack.ESExports { names; types; stars; type_stars; strict = _ }) ->
+    ESM.exports export_sig names types stars type_stars
+  | Some (Type_sig_pack.CJSExports { types; type_stars; strict = _ }) ->
+    CJS.exports export_sig types type_stars
   | None -> failwith "unexpected exports in global scope"
 
 let of_module type_sig : t = type_sig |> Export_sig.of_module |> of_sig

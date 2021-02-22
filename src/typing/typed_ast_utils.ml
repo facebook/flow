@@ -11,7 +11,7 @@ module ALocMap = Loc_collections.ALocMap
 (* TODO(nmote) come up with a consistent story for abstract/concrete locations in this module *)
 
 let mk_bound_t loc name =
-  let reason = Reason.(mk_annot_reason (RType name) loc) in
+  let reason = Reason.(mk_annot_reason (RType (OrdinaryName name)) loc) in
   Type.BoundT (reason, name)
 
 class type_parameter_mapper =

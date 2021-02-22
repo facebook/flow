@@ -37,10 +37,7 @@ let map_loc_of_error f { loc; msg; source_file; trace_reasons } =
     trace_reasons = Base.List.map ~f:(Reason.map_reason_locs f) trace_reasons;
   }
 
-let concretize_error lazy_table_of_aloc =
-  map_loc_of_error (fun aloc ->
-      let table = lazy_table_of_aloc aloc in
-      ALoc.to_loc table aloc)
+let concretize_error = map_loc_of_error
 
 let kind_of_error err = msg_of_error err |> kind_of_msg
 
@@ -519,10 +516,13 @@ let rec make_error_printable ?(speculation = false) (error : Loc.t t) : Loc.t Er
             | Frame (IndexerKeyCompatibility { lower; _ }, use_op) ->
               `Frame (lower, use_op, [text "the indexer property's key"])
             | Frame
-                ( PropertyCompatibility { prop = None | Some "$key" | Some "$value"; lower; _ },
+                ( PropertyCompatibility
+                    (* TODO the $-prefixed names should be internal *)
+                    { prop = None | Some (OrdinaryName ("$key" | "$value")); lower; _ },
                   use_op ) ->
               `Frame (lower, use_op, [text "the indexer property"])
-            | Frame (PropertyCompatibility { prop = Some "$call"; lower; _ }, use_op) ->
+            | Frame (PropertyCompatibility { prop = Some (OrdinaryName "$call"); lower; _ }, use_op)
+              ->
               `Frame (lower, use_op, [text "the callable signature"])
             | Frame (PropertyCompatibility { prop = Some prop; lower; _ }, use_op) ->
               let repos_small_reason loc reason = function
@@ -538,7 +538,10 @@ let rec make_error_printable ?(speculation = false) (error : Loc.t t) : Loc.t Er
                 (* Don't match $key/$value/$call properties since they have special
                  * meaning. As defined above. *)
                 | Frame (PropertyCompatibility { prop = Some prop; lower = lower'; _ }, use_op)
-                  when prop <> "$key" && prop <> "$value" && prop <> "$call" ->
+                (* TODO the $-prefixed names should be internal *)
+                  when prop <> OrdinaryName "$key"
+                       && prop <> OrdinaryName "$value"
+                       && prop <> OrdinaryName "$call" ->
                   let lower' = repos_small_reason (loc_of_reason lower) lower' use_op in
                   (* Perform the same frame location unwrapping as we do in our
                    * general code. *)
@@ -561,7 +564,11 @@ let rec make_error_printable ?(speculation = false) (error : Loc.t t) : Loc.t Er
                   use_op,
                   [
                     text "property ";
-                    code (List.fold_left (fun acc prop -> prop ^ "." ^ acc) prop props);
+                    code
+                      (List.fold_left
+                         (fun acc prop -> display_string_of_name prop ^ "." ^ acc)
+                         (display_string_of_name prop)
+                         props);
                   ] )
             | Frame (TupleElementCompatibility { n; lower; _ }, use_op) ->
               `Frame (lower, use_op, [text "index "; text (string_of_int (n - 1))])
@@ -891,7 +898,7 @@ let rec make_error_printable ?(speculation = false) (error : Loc.t t) : Loc.t Er
         (* If we are missing a property while performing property compatibility
          * then we are subtyping. Record the upper reason. *)
         | Frame (PropertyCompatibility { prop = compat_prop; lower; upper; _ }, use_op)
-          when prop = compat_prop ->
+          when prop = Base.Option.map ~f:display_string_of_name compat_prop ->
           (loc_of_reason lower, lower, Some upper, use_op)
         (* Otherwise this is a general property missing error. *)
         | _ -> (prop_loc, lower, None, use_op)
@@ -963,7 +970,12 @@ let rec make_error_printable ?(speculation = false) (error : Loc.t t) : Loc.t Er
       | IncompatibleMatchPropT (prop_loc, prop)
       | IncompatibleHasOwnPropT (prop_loc, prop)
       | IncompatibleMethodT (prop_loc, prop) ->
-        mk_prop_missing_error prop_loc prop lower use_op None
+        mk_prop_missing_error
+          prop_loc
+          (Base.Option.map ~f:display_string_of_name prop)
+          lower
+          use_op
+          None
       | IncompatibleGetElemT prop_loc
       | IncompatibleSetElemT prop_loc
       | IncompatibleCallElemT prop_loc ->
@@ -986,7 +998,9 @@ let rec make_error_printable ?(speculation = false) (error : Loc.t t) : Loc.t Er
       (* Remove redundant PropertyCompatibility if one exists. *)
       let use_op =
         match use_op with
-        | Frame (PropertyCompatibility c, use_op) when c.prop = prop -> use_op
+        | Frame (PropertyCompatibility c, use_op)
+          when Base.Option.map ~f:display_string_of_name c.prop = prop ->
+          use_op
         | _ -> use_op
       in
       let expected =
@@ -1044,11 +1058,8 @@ let rec make_error_printable ?(speculation = false) (error : Loc.t t) : Loc.t Er
     | (Some _, _) ->
       raise (ImproperlyFormattedError msg))
 
-let concretize_errors lazy_table_of_aloc set =
-  ErrorSet.fold
-    (concretize_error lazy_table_of_aloc %> ConcreteErrorSet.add)
-    set
-    ConcreteErrorSet.empty
+let concretize_errors loc_of_aloc set =
+  ErrorSet.fold (concretize_error loc_of_aloc %> ConcreteErrorSet.add) set ConcreteErrorSet.empty
 
 let make_errors_printable set =
   ConcreteErrorSet.fold

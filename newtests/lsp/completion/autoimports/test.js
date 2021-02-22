@@ -288,5 +288,55 @@ export default (suite(
         ['textDocument/publishDiagnostics', ...lspIgnoreStatusAndCancellation],
       ),
     ]).flowConfig('_flowconfig_autoimports'),
+
+    test('textDocument/completion should exclude reserved words', [
+      addFiles('reserved.js'),
+      addCode(`null`),
+      lspStartAndConnect(),
+      lspRequestAndWaitUntilResponse('textDocument/completion', {
+        textDocument: {uri: '<PLACEHOLDER_PROJECT_URL>/test.js'},
+        position: {line: 2, character: 3},
+        context: {triggerKind: 1},
+      }).verifyAllLSPMessagesInStep(
+        [
+          [
+            'textDocument/completion',
+            JSON.stringify({
+              isIncomplete: false,
+              items: [
+                {
+                  label: 'not_null',
+                  kind: 6,
+                  detail: 'not_null',
+                  documentation: {
+                    kind: 'markdown',
+                    value: 'Import from ./reserved',
+                  },
+                  sortText: '00000000000000000100',
+                  insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {line: 2, character: 0},
+                      end: {line: 2, character: 4},
+                    },
+                    newText: 'not_null',
+                  },
+                  additionalTextEdits: [
+                    {
+                      range: {
+                        start: {line: 2, character: 0},
+                        end: {line: 2, character: 0},
+                      },
+                      newText: 'import {not_null} from "./reserved";\n\n',
+                    },
+                  ],
+                },
+              ],
+            }),
+          ],
+        ],
+        ['textDocument/publishDiagnostics', ...lspIgnoreStatusAndCancellation],
+      ),
+    ]).flowConfig('_flowconfig_autoimports'),
   ],
 ): Suite);

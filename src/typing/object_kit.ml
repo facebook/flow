@@ -13,7 +13,7 @@ open TypeUtil
 module type OBJECT = sig
   val run :
     Context.t ->
-    Trace.t ->
+    Type.trace ->
     use_op:Type.use_op ->
     Reason.t ->
     Type.Object.resolve_tool ->
@@ -23,7 +23,7 @@ module type OBJECT = sig
     unit
 
   val widen_obj_type :
-    Context.t -> ?trace:Trace.t -> use_op:Type.use_op -> Reason.reason -> Type.t -> Type.t
+    Context.t -> ?trace:Type.trace -> use_op:Type.use_op -> Reason.reason -> Type.t -> Type.t
 end
 
 module Kit (Flow : Flow_common.S) : OBJECT = struct
@@ -270,8 +270,8 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
             let dict =
               match (dict1, dict2) with
               | (None, Some _) when inline2 -> Ok dict2
-              | (None, Some _) when SMap.is_empty props1 && exact1 -> Ok dict2
-              | (Some d1, Some d2) when SMap.is_empty props1 ->
+              | (None, Some _) when NameUtils.Map.is_empty props1 && exact1 -> Ok dict2
+              | (Some d1, Some d2) when NameUtils.Map.is_empty props1 ->
                 rec_flow_t cx trace ~use_op (d2.key, d1.key);
                 rec_unify cx trace ~use_op d1.value d2.value;
                 (* We take dict1 because we want to use the key from d1 *)
@@ -325,7 +325,7 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
               let props =
                 try
                   Ok
-                    (SMap.merge
+                    (NameUtils.Map.merge
                        (fun x p1 p2 ->
                          match (p1, p2) with
                          | (None, None) -> None
@@ -443,7 +443,7 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
                 | None -> Exact
               in
               let flags = { obj_kind; frozen = false } in
-              let props = SMap.mapi (read_prop reason flags) prop_map in
+              let props = NameUtils.Map.mapi (read_prop reason flags) prop_map in
               Nel.one (true, None, { Object.reason; props; flags; generics })
           in
           let spread cx trace ~use_op reason = function
@@ -453,7 +453,7 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
           in
           let mk_object cx reason target { Object.reason = _; props; flags; generics } =
             let props =
-              SMap.map
+              NameUtils.Map.map
                 (fun (t, _, is_method) ->
                   if is_method then
                     Method (None, t)
@@ -625,7 +625,7 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
             let dict1 = Obj_type.get_dict_opt flags1.obj_kind in
             let dict2 = Obj_type.get_dict_opt flags2.obj_kind in
             let props =
-              SMap.merge
+              NameUtils.Map.merge
                 (fun k p1 p2 ->
                   match
                     ( merge_mode,
@@ -875,7 +875,7 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
         let mk_read_only_object cx reason slice =
           let { Object.reason = r; props; flags; generics } = slice in
           let props =
-            SMap.map
+            NameUtils.Map.map
               (fun (t, _, is_method) ->
                 if is_method then
                   Method (None, t)
@@ -922,7 +922,7 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
           (* TODO(jmbrown): Add polarity information to props *)
           let polarity = Polarity.Neutral in
           let props =
-            SMap.map
+            NameUtils.Map.map
               (fun (t, _, is_method) ->
                 if is_method then
                   Method (None, t)
@@ -967,7 +967,7 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
         let mk_object cx reason { Object.reason = r; props; flags; generics } =
           let polarity = Polarity.Neutral in
           let props =
-            SMap.map
+            NameUtils.Map.map
               (fun (t, _, is_method) ->
                 if is_method then
                   Method (None, t)
@@ -1044,7 +1044,7 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
             let slice_dict = Obj_type.get_dict_opt slice.Object.flags.obj_kind in
             let new_pmap = slice.props in
             let pmap_and_changed =
-              SMap.merge
+              NameUtils.Map.merge
                 (fun propname p1 p2 ->
                   let p1 = get_prop widest.Object.reason p1 widest_dict in
                   let p2 = get_prop slice.Object.reason p2 slice_dict in
@@ -1088,11 +1088,11 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
                 new_pmap
             in
             let (pmap', changed) =
-              SMap.fold
+              NameUtils.Map.fold
                 (fun k (t, changed) (acc_map, acc_changed) ->
-                  (SMap.add k t acc_map, changed || acc_changed))
+                  (NameUtils.Map.add k t acc_map, changed || acc_changed))
                 pmap_and_changed
-                (SMap.empty, false)
+                (NameUtils.Map.empty, false)
             in
             (* TODO: (jmbrown) we can be less strict here than unifying. It may be possible to
              * also merge the dictionary types *)
@@ -1126,7 +1126,7 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
                 | _ -> Inexact
               in
               let flags = { obj_kind; frozen = false } in
-              let props = SMap.map (fun (t, m) -> (t, true, m)) pmap' in
+              let props = NameUtils.Map.map (fun (t, m) -> (t, true, m)) pmap' in
               let slice' =
                 { Object.reason = slice.Object.reason; props; flags; generics = widest.generics }
               in
@@ -1164,13 +1164,13 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
              * to our config props. *)
             let config_props =
               Base.Option.value_map children ~default:config_props ~f:(fun children ->
-                  SMap.add "children" (children, true, false) config_props)
+                  NameUtils.Map.add (OrdinaryName "children") (children, true, false) config_props)
             in
             (* Remove the key and ref props from our config. We check key and ref
              * independently of our config. So we must remove them so the user can't
              * see them. *)
-            let config_props = SMap.remove "key" config_props in
-            let config_props = SMap.remove "ref" config_props in
+            let config_props = NameUtils.Map.remove (OrdinaryName "key") config_props in
+            let config_props = NameUtils.Map.remove (OrdinaryName "ref") config_props in
 
             let config_dict = Obj_type.get_dict_opt config_flags.obj_kind in
             (* Create the final props map and dict.
@@ -1191,7 +1191,7 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
                 let defaults_dict = Obj_type.get_dict_opt defaults_flags.obj_kind in
                 (* Merge our props and default props. *)
                 let props =
-                  SMap.merge
+                  NameUtils.Map.merge
                     (fun _ p1 p2 ->
                       let p1 = get_prop config_reason p1 config_dict in
                       let p2 = get_prop defaults_reason p2 defaults_dict in
@@ -1256,7 +1256,9 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
                 (props, flags, generics)
               (* Otherwise turn our slice props map into an object props. *)
               | None ->
-                let props = SMap.map (fun (t, _, is_method) -> (t, is_method)) config_props in
+                let props =
+                  NameUtils.Map.map (fun (t, _, is_method) -> (t, is_method)) config_props
+                in
                 (* Create a new dictionary from our config's dictionary with a
                  * positive polarity. *)
                 let dict =
@@ -1312,9 +1314,12 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
                 replace_desc_reason (RCustom "React.TransportValue") reason
               in
               let react_transport_value =
-                get_builtin_type cx reason_transport_value_reason "React$TransportValue"
+                get_builtin_type
+                  cx
+                  reason_transport_value_reason
+                  (OrdinaryName "React$TransportValue")
               in
-              SMap.iter
+              NameUtils.Map.iter
                 (fun _ (t, _) -> rec_flow_t cx trace ~use_op (t, react_transport_value))
                 props_map;
               match flags.obj_kind with
@@ -1332,7 +1337,7 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
             );
             (* Finish creating our props object. *)
             let props =
-              SMap.map
+              NameUtils.Map.map
                 (fun (t, is_method) ->
                   if is_method then
                     Method (None, t)
@@ -1440,7 +1445,7 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
           (t, own1 || own2, m1 || m2)
         in
         let props =
-          SMap.merge
+          NameUtils.Map.merge
             (fun _ p1 p2 ->
               let read_dict r d = (optional (read_dict r d), true, false) in
               match (p1, p2) with
@@ -1510,7 +1515,7 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
       in
       let object_slice cx r id flags generics =
         let props = Context.find_props cx id in
-        let props = SMap.mapi (read_prop r flags) props in
+        let props = NameUtils.Map.mapi (read_prop r flags) props in
         let obj_kind =
           Obj_type.map_dict
             (fun dict ->
@@ -1528,10 +1533,19 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
       let interface_slice cx r id generics =
         let (id, obj_kind) =
           let props = Context.find_props cx id in
-          match (SMap.find_opt "$key" props, SMap.find_opt "$value" props) with
+          (* TODO $-prefixed names should be internal *)
+          match
+            ( NameUtils.Map.find_opt (OrdinaryName "$key") props,
+              NameUtils.Map.find_opt (OrdinaryName "$value") props )
+          with
           | (Some (Field (_, key, polarity)), Some (Field (_, value, polarity')))
             when polarity = polarity' ->
-            let props = props |> SMap.remove "$key" |> SMap.remove "$value" in
+            let props =
+              props
+              (* TODO $-prefixed names should be internal *)
+              |> NameUtils.Map.remove (OrdinaryName "$key")
+              |> NameUtils.Map.remove (OrdinaryName "$value")
+            in
             let id = Context.generate_property_map cx props in
             let dict = { dict_name = None; key; value; dict_polarity = polarity } in
             (id, Indexed dict)
@@ -1603,7 +1617,9 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
          * empty objects. *)
         | DefT (_, _, (NullT | VoidT)) ->
           let flags = { frozen = true; obj_kind = Exact } in
-          let x = Nel.one { Object.reason; props = SMap.empty; flags; generics = t_generic_id } in
+          let x =
+            Nel.one { Object.reason; props = NameUtils.Map.empty; flags; generics = t_generic_id }
+          in
           resolved cx trace use_op reason resolve_tool tool tout x
         (* TODO(jmbrown): Investigate if these cases can be used for ReactConfig/ObjecRep/Rest.
          * In principle, we should be able to use it for Rest, but right now
@@ -1617,7 +1633,9 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
                  true
                | _ -> false ->
           let flags = { frozen = true; obj_kind = Exact } in
-          let x = Nel.one { Object.reason; props = SMap.empty; flags; generics = t_generic_id } in
+          let x =
+            Nel.one { Object.reason; props = NameUtils.Map.empty; flags; generics = t_generic_id }
+          in
           resolved cx trace use_op reason resolve_tool tool tout x
         (* mixed is treated as {[string]: mixed} except in type spread and react config checking, where
          * it's treated as {}. Any JavaScript value may be treated as an object so this is safe.
@@ -1635,7 +1653,7 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
             | Spread _
             | ObjectRep
             | ReactConfig _ ->
-              Nel.one { Object.reason; props = SMap.empty; flags; generics = t_generic_id }
+              Nel.one { Object.reason; props = NameUtils.Map.empty; flags; generics = t_generic_id }
             | _ ->
               let flags =
                 {
@@ -1650,7 +1668,7 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
                       };
                 }
               in
-              Nel.one { Object.reason; props = SMap.empty; flags; generics = t_generic_id }
+              Nel.one { Object.reason; props = NameUtils.Map.empty; flags; generics = t_generic_id }
           in
           resolved cx trace use_op reason resolve_tool tool tout x
         (* If we see an empty then propagate empty to tout. *)

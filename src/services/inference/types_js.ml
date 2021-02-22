@@ -557,9 +557,7 @@ let run_merge_service
 
 let mk_intermediate_result_callback
     ~reader ~options ~profiling ~persistent_connections ~recheck_reasons suppressions =
-  let lazy_table_of_aloc =
-    Parsing_heaps.Mutator_reader.get_sig_ast_aloc_table_unsafe_lazy ~reader
-  in
+  let loc_of_aloc = Parsing_heaps.Mutator_reader.loc_of_aloc ~reader in
   let%lwt send_errors_over_connection =
     match persistent_connections with
     | None -> Lwt.return (fun _ -> ())
@@ -663,12 +661,12 @@ let mk_intermediate_result_callback
              | Ok (errors, warnings, suppressions, _, _) ->
                let errors =
                  errors
-                 |> Flow_error.concretize_errors lazy_table_of_aloc
+                 |> Flow_error.concretize_errors loc_of_aloc
                  |> Flow_error.make_errors_printable
                in
                let warnings =
                  warnings
-                 |> Flow_error.concretize_errors lazy_table_of_aloc
+                 |> Flow_error.concretize_errors loc_of_aloc
                  |> Flow_error.make_errors_printable
                in
                (file, errors, warnings, suppressions)
@@ -676,7 +674,7 @@ let mk_intermediate_result_callback
                let errors = error_set_of_internal_error file msg in
                let errors =
                  errors
-                 |> Flow_error.concretize_errors lazy_table_of_aloc
+                 |> Flow_error.concretize_errors loc_of_aloc
                  |> Flow_error.make_errors_printable
                in
                let suppressions = Error_suppressions.empty in
@@ -862,10 +860,10 @@ end = struct
     | file :: rest ->
       let result =
         match Merge_service.check options ~reader file with
-        | (f, Ok (_, acc)) -> (f, Ok acc)
-        | (f, Error e) -> (f, Error e)
+        | Ok (_, acc) -> Ok acc
+        | Error e -> Error e
       in
-      job_helper ~reader ~options ~start_time ~start_rss (result :: acc) rest
+      job_helper ~reader ~options ~start_time ~start_rss ((file, result) :: acc) rest
 
   let job ~reader ~options acc files =
     let start_time = Unix.gettimeofday () in
@@ -1113,7 +1111,7 @@ let merge_contents ~options ~env ~reader filename info (ast, file_sig) =
   let%lwt () = ensure_checked_dependencies ~options ~reader ~env filename file_sig in
   Lwt.return (Merge_service.check_contents_context ~reader options filename ast info file_sig)
 
-let errors_of_context ~options ~env ~lazy_table_of_aloc filename tolerable_errors cx =
+let errors_of_context ~options ~env ~loc_of_aloc filename tolerable_errors cx =
   let errors = Context.errors cx in
   let local_errors =
     tolerable_errors
@@ -1141,11 +1139,11 @@ let errors_of_context ~options ~env ~lazy_table_of_aloc filename tolerable_error
   let errors =
     errors
     |> Flow_error.ErrorSet.union local_errors
-    |> Flow_error.concretize_errors lazy_table_of_aloc
+    |> Flow_error.concretize_errors loc_of_aloc
     |> Flow_error.make_errors_printable
   in
   let warnings =
-    warnings |> Flow_error.concretize_errors lazy_table_of_aloc |> Flow_error.make_errors_printable
+    warnings |> Flow_error.concretize_errors loc_of_aloc |> Flow_error.make_errors_printable
   in
   let root = Options.root options in
   let file_options = Some (Options.file_options options) in
@@ -1179,7 +1177,7 @@ let errors_of_context ~options ~env ~lazy_table_of_aloc filename tolerable_error
 
 let typecheck_contents ~options ~env ~profiling contents filename =
   let reader = State_reader.create () in
-  let lazy_table_of_aloc = Parsing_heaps.Reader.get_sig_ast_aloc_table_unsafe_lazy ~reader in
+  let loc_of_aloc = Parsing_heaps.Reader.loc_of_aloc ~reader in
   let%lwt (parse_result, info) =
     Memory_utils.with_memory_timer_lwt ~options "Parsing" profiling (fun () ->
         Lwt.return (parse_contents ~options ~check_syntax:true filename contents))
@@ -1193,12 +1191,12 @@ let typecheck_contents ~options ~env ~profiling contents filename =
           merge_contents ~options ~env ~reader filename info (ast, file_sig))
     in
     let (errors, warnings) =
-      errors_of_context ~options ~env ~lazy_table_of_aloc filename tolerable_errors cx
+      errors_of_context ~options ~env ~loc_of_aloc filename tolerable_errors cx
     in
     Lwt.return (Some (cx, ast, file_sig, tolerable_errors, typed_ast), errors, warnings)
   | Error errors ->
     let errors =
-      errors |> Flow_error.concretize_errors lazy_table_of_aloc |> Flow_error.make_errors_printable
+      errors |> Flow_error.concretize_errors loc_of_aloc |> Flow_error.make_errors_printable
     in
     Lwt.return (None, errors, Errors.ConcreteLocPrintableErrorSet.empty)
 
@@ -1559,9 +1557,7 @@ end = struct
       ~files_to_force
       ~recheck_reasons
       ~env =
-    let lazy_table_of_aloc =
-      Parsing_heaps.Mutator_reader.get_sig_ast_aloc_table_unsafe_lazy ~reader
-    in
+    let loc_of_aloc = Parsing_heaps.Mutator_reader.loc_of_aloc ~reader in
     let errors = env.ServerEnv.errors in
     (* files_to_force is a request to promote certain files to be checked as a dependency, dependent,
      * or focused file. We can ignore a request if the file is already checked at the desired level
@@ -1635,9 +1631,7 @@ end = struct
             Flow_error.ErrorSet.empty
         in
         let error_set =
-          error_set
-          |> Flow_error.concretize_errors lazy_table_of_aloc
-          |> Flow_error.make_errors_printable
+          error_set |> Flow_error.concretize_errors loc_of_aloc |> Flow_error.make_errors_printable
         in
         if not (Errors.ConcreteLocPrintableErrorSet.is_empty error_set) then
           Persistent_connection.update_clients

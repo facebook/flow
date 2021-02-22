@@ -24,7 +24,7 @@ open Utils_js
 let regenerate ~reader =
   Errors.(
     Error_suppressions.(
-      let lazy_table_of_aloc = Parsing_heaps.Reader.get_sig_ast_aloc_table_unsafe_lazy ~reader in
+      let loc_of_aloc = Parsing_heaps.Reader.loc_of_aloc ~reader in
       let add_suppression_warnings checked unused warnings =
         (* For each unused suppression, create an warning *)
         let deps = CheckedSet.dependencies checked in
@@ -94,7 +94,7 @@ let regenerate ~reader =
         let file_options = Some (Options.file_options options) in
         let (file_errs, file_suppressed, unused) =
           file_errs
-          |> Flow_error.concretize_errors lazy_table_of_aloc
+          |> Flow_error.concretize_errors loc_of_aloc
           |> Flow_error.make_errors_printable
           |> filter_suppressed_errors ~root ~file_options suppressions ~unused
         in

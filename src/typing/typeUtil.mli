@@ -43,7 +43,7 @@ val reasonless_compare : Type.t -> Type.t -> int
 
 val reasonless_eq : Type.t -> Type.t -> bool
 
-val literal_eq : string -> string Type.literal -> bool
+val literal_eq : 'a -> 'a Type.literal -> bool
 
 val number_literal_eq : Type.number_literal -> Type.number_literal Type.literal -> bool
 

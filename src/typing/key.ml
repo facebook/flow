@@ -13,10 +13,10 @@ type proj =
   | Elem of t
   | PrivateField of string
 
-and t = string * proj list
+and t = Reason.name * proj list
 
 let rec string_of_key (base, projs) =
-  base
+  Reason.display_string_of_name base
   ^ String.concat
       ""
       ( List.rev projs
@@ -45,10 +45,10 @@ let is_simple (_, ps) = List.length ps = 0
 let reason_desc =
   Reason.(
     function
-    | (name, []) when not (is_internal_name name) -> RIdentifier name
-    | (name, []) -> RCustom name
+    | ((OrdinaryName _ as name), []) -> RIdentifier name
+    | (name, []) -> RCustom (display_string_of_name name)
     | (_, projs) ->
       (match List.hd (List.rev projs) with
-      | Prop x -> RProperty (Some x)
+      | Prop x -> RProperty (Some (OrdinaryName x))
       | PrivateField x -> RPrivateProperty x
       | Elem _ -> RProperty None))

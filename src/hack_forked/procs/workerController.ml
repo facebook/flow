@@ -150,12 +150,52 @@ type 'a entry = ('a entry_state * Unix.file_descr option, request, void) Daemon.
 
 let entry_counter = ref 0
 
+(** [Gc.set] has a bug in all ocaml releases since 4.08.0 and before 2021-01-07,
+    which causes the `custom_*` fields to be doubled, plus 1. To work around it, we
+    halve those values. still off by one, so you'll still see them change if you run
+    OCAMLRUNPARAM='v=0x20', but best we can do.
+
+    Fixed in https://github.com/ocaml/ocaml/pull/10125 *)
+let gc_set : Caml.Gc.control -> unit =
+  let fixed_set control =
+    let open Caml.Gc in
+    let { custom_major_ratio; custom_minor_ratio; custom_minor_max_size; _ } = control in
+    let control =
+      {
+        control with
+        custom_major_ratio = custom_major_ratio lsr 1;
+        custom_minor_ratio = custom_minor_ratio lsr 1;
+        custom_minor_max_size = custom_minor_max_size lsr 1;
+      }
+    in
+    Caml.Gc.set control
+  in
+  let v =
+    let v = Sys.ocaml_version in
+    match String.index v '+' with
+    | Some i -> String.sub v 0 i
+    | None -> v
+  in
+  (* the fix has been backported to all of these branches, so any
+     version after these will be fixed. *)
+  match v with
+  | "4.11.1"
+  | "4.11.0"
+  | "4.10.2"
+  | "4.10.1"
+  | "4.09.1"
+  | "4.09.0"
+  | "4.08.1"
+  | "4.08.0" ->
+    fixed_set
+  | _ -> Caml.Gc.set
+
 let register_entry_point ~restore =
   Int.incr entry_counter;
   let restore (st, gc_control, heap_handle, worker_id) =
     restore st ~worker_id;
     SharedMem.connect heap_handle ~worker_id;
-    Caml.Gc.set gc_control
+    gc_set gc_control
   in
   let name = Printf.sprintf "worker_%d" !entry_counter in
   Daemon.register_entry_point

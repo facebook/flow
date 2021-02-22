@@ -293,9 +293,9 @@ class ['a] t =
         let acc = self#type_ cx pole_TODO acc t in
         acc
       | SuperT (_, _, Derived { own; proto; static }) ->
-        let acc = self#smap (self#prop cx pole_TODO) acc own in
-        let acc = self#smap (self#prop cx pole_TODO) acc proto in
-        let acc = self#smap (self#prop cx pole_TODO) acc static in
+        let acc = self#namemap (self#prop cx pole_TODO) acc own in
+        let acc = self#namemap (self#prop cx pole_TODO) acc proto in
+        let acc = self#namemap (self#prop cx pole_TODO) acc static in
         acc
       | ImplementsT (_, t) -> self#type_ cx pole_TODO acc t
       | MixinT (_, t) -> self#type_ cx pole_TODO acc t
@@ -431,7 +431,7 @@ class ['a] t =
         acc
       | ExportNamedT (_, ts, _, tout) ->
         let visit_pair acc (_loc, t) = self#type_ cx pole_TODO acc t in
-        let acc = self#smap visit_pair acc ts in
+        let acc = self#namemap visit_pair acc ts in
         let acc = self#type_ cx pole_TODO acc tout in
         acc
       | MapTypeT (_, _, map, tout) ->
@@ -665,7 +665,7 @@ class ['a] t =
       let acc = self#type_ cx (P.mult (pole, p)) acc value in
       acc
 
-    method props cx pole acc id = Context.find_props cx id |> self#smap (self#prop cx pole) acc
+    method props cx pole acc id = Context.find_props cx id |> self#namemap (self#prop cx pole) acc
 
     method prop cx pole acc =
       function
@@ -684,7 +684,7 @@ class ['a] t =
 
     method exports cx pole acc id =
       let visit_pair acc (_loc, t) = self#type_ cx pole acc t in
-      Context.find_exports cx id |> self#smap visit_pair acc
+      Context.find_exports cx id |> self#namemap visit_pair acc
 
     method eval_id cx pole acc id =
       match Eval.Map.find_opt id (Context.evaluated cx) with
@@ -698,18 +698,7 @@ class ['a] t =
       self#opt (self#type_ cx pole) acc default
 
     method fun_type cx pole acc ft =
-      let {
-        this_t;
-        params;
-        rest_param;
-        return_t;
-        closure_t = _;
-        is_predicate = _;
-        changeset = _;
-        def_reason = _;
-      } =
-        ft
-      in
+      let { this_t; params; rest_param; return_t; is_predicate = _; def_reason = _ } = ft in
       let acc = self#type_ cx pole acc this_t in
       let acc = self#list (fun acc (_, t) -> self#type_ cx (P.inv pole) acc t) acc params in
       let acc = self#opt (fun acc (_, _, t) -> self#type_ cx (P.inv pole) acc t) acc rest_param in
@@ -774,16 +763,7 @@ class ['a] t =
       acc
 
     method private fun_call_type cx acc call =
-      let {
-        call_this_t;
-        call_targs;
-        call_args_tlist;
-        call_tout;
-        call_closure_t = _;
-        call_strict_arity = _;
-      } =
-        call
-      in
+      let { call_this_t; call_targs; call_args_tlist; call_tout; call_strict_arity = _ } = call in
       let acc = self#type_ cx pole_TODO acc call_this_t in
       let acc = self#opt (self#list (self#targ cx pole_TODO)) acc call_targs in
       let acc = self#list (self#call_arg cx) acc call_args_tlist in
@@ -798,7 +778,7 @@ class ['a] t =
       let acc = self#tout cx pole_TODO acc meth_tout in
       acc
 
-    method private opt_fun_call_type cx acc (call_this_t, call_targs, call_args_tlist, _, _) =
+    method private opt_fun_call_type cx acc (call_this_t, call_targs, call_args_tlist, _) =
       let acc = self#type_ cx pole_TODO acc call_this_t in
       let acc = self#opt (self#list (self#targ cx pole_TODO)) acc call_targs in
       let acc = self#list (self#call_arg cx) acc call_args_tlist in
@@ -939,13 +919,13 @@ class ['a] t =
           acc)
 
     method private object_kit_slice cx acc { Object.reason = _; props; flags; generics = _ } =
-      let acc = self#smap (fun acc (t, _, _) -> self#type_ cx pole_TODO acc t) acc props in
+      let acc = self#namemap (fun acc (t, _, _) -> self#type_ cx pole_TODO acc t) acc props in
       let acc = self#obj_flags cx pole_TODO acc flags in
       acc
 
     method private object_kit_spread_operand_slice
         cx acc { Object.Spread.reason = _; prop_map; dict; generics = _ } =
-      let acc = self#smap (Property.fold_t (self#type_ cx pole_TODO)) acc prop_map in
+      let acc = self#namemap (Property.fold_t (self#type_ cx pole_TODO)) acc prop_map in
       let acc = self#opt (self#dict_type cx pole_TODO) acc dict in
       acc
 
@@ -962,7 +942,7 @@ class ['a] t =
         | Type t -> self#type_ cx pole_TODO acc t)
 
     method private react_resolved_object cx acc (_, props, flags) =
-      let acc = self#smap (self#prop cx pole_TODO) acc props in
+      let acc = self#namemap (self#prop cx pole_TODO) acc props in
       let acc = self#obj_flags cx pole_TODO acc flags in
       acc
 
@@ -972,11 +952,11 @@ class ['a] t =
         | ResolveObject -> acc
         | ResolveDict (dict, props, o) ->
           let acc = self#dict_type cx pole_TODO acc dict in
-          let acc = self#smap (self#prop cx pole_TODO) acc props in
+          let acc = self#namemap (self#prop cx pole_TODO) acc props in
           let acc = self#react_resolved_object cx acc o in
           acc
         | ResolveProp (_, props, o) ->
-          let acc = self#smap (self#prop cx pole_TODO) acc props in
+          let acc = self#namemap (self#prop cx pole_TODO) acc props in
           let acc = self#react_resolved_object cx acc o in
           acc)
 
@@ -1063,4 +1043,7 @@ class ['a] t =
 
     method private smap : 't. ('a -> 't -> 'a) -> 'a -> 't SMap.t -> 'a =
       (fun f acc smap -> SMap.fold (fun _ t acc -> f acc t) smap acc)
+
+    method private namemap : 't. ('a -> 't -> 'a) -> 'a -> 't NameUtils.Map.t -> 'a =
+      (fun f acc smap -> NameUtils.Map.fold (fun _ t acc -> f acc t) smap acc)
   end

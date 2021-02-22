@@ -70,18 +70,27 @@ let infer_lib_file ~ccx ~options ~exclude_syms lib_file ast file_sig =
       let metadata = metadata_of_options options in
       { metadata with checked = false; weak = false })
   in
-  let rev_table = lazy (ALoc.make_empty_reverse_table ()) in
-  let cx = Context.make ccx metadata lib_file rev_table Files.lib_module_ref Context.InitLib in
+  (* Lib files use only concrete locations, so this is not used. *)
+  let aloc_table = lazy (ALoc.make_table lib_file) in
+  let cx =
+    Context.make
+      ccx
+      metadata
+      lib_file
+      aloc_table
+      (Reason.OrdinaryName Files.lib_module_ref)
+      Context.InitLib
+  in
   let syms = Infer.infer_lib_file cx ast ~exclude_syms ~lint_severities ~file_sig in
 
   if verbose != None then
     prerr_endlinef
       "load_lib %s: added symbols { %s }"
       (File_key.to_string lib_file)
-      (String.concat ", " syms);
+      (String.concat ", " (Base.List.map ~f:Reason.display_string_of_name syms));
 
   (* symbols loaded from this file are suppressed if found in later ones *)
-  SSet.union exclude_syms (SSet.of_list syms)
+  NameUtils.Set.union exclude_syms (NameUtils.Set.of_list syms)
 
 (* process all lib files: parse, infer, and add the symbols they define
    to the builtins object.
@@ -125,7 +134,7 @@ let load_lib_files ~ccx ~options ~reader files =
              let errors_acc = Flow_error.ErrorSet.union errors errors_acc in
              Lwt.return (exclude_syms, false, errors_acc, asts_acc)
            | Lib_skip -> Lwt.return (exclude_syms, false, errors_acc, asts_acc))
-         (SSet.empty, true, Flow_error.ErrorSet.empty, [])
+         (NameUtils.Set.empty, true, Flow_error.ErrorSet.empty, [])
   in
   let builtin_exports =
     if ok then
@@ -185,18 +194,22 @@ let error_set_to_filemap err_set =
    returns list of (lib file, success) pairs.
 *)
 let init ~options ~reader lib_files =
-  (* Lib files use only concrete locations, so this is not needed. *)
-  let aloc_tables = FilenameMap.empty in
-  let sig_cx = Context.make_sig () in
-  let ccx = Context.make_ccx sig_cx aloc_tables in
+  let ccx = Context.make_ccx () in
   let master_cx =
     let metadata =
       Context.(
         let metadata = metadata_of_options options in
         { metadata with checked = false; weak = false })
     in
-    let rev_table = lazy (ALoc.make_empty_reverse_table ()) in
-    Context.make ccx metadata File_key.Builtins rev_table Files.lib_module_ref Context.InitLib
+    (* Lib files use only concrete locations, so this is not used. *)
+    let aloc_table = lazy (ALoc.make_table File_key.Builtins) in
+    Context.make
+      ccx
+      metadata
+      File_key.Builtins
+      aloc_table
+      (Reason.OrdinaryName Files.lib_module_ref)
+      Context.InitLib
   in
   Flow_js_utils.mk_builtins master_cx;
 

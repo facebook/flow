@@ -515,7 +515,7 @@ end = struct
       | Some Builtins -> Ty.Builtin
       | None -> Ty.Local
     in
-    let sym_anonymous = sym_name = "<<anonymous class>>" in
+    let sym_anonymous = sym_name = OrdinaryName "<<anonymous class>>" in
     { Ty.sym_provenance; sym_name; sym_anonymous; sym_def_loc }
 
   (* NOTE Due to repositioning, `reason_loc` may not point to the actual location
@@ -585,11 +585,11 @@ end = struct
           else
             let seen = ISet.add root_id seen in
             (match constraints with
-            | Constraint.Resolved (_, t)
-            | Constraint.FullyResolved (_, t) ->
+            | T.Constraint.Resolved (_, t)
+            | T.Constraint.FullyResolved (_, t) ->
               loop cx acc seen t
-            | Constraint.Unresolved bounds ->
-              let ts = T.TypeMap.keys bounds.Constraint.lower in
+            | T.Constraint.Unresolved bounds ->
+              let ts = T.TypeMap.keys bounds.T.Constraint.lower in
               List.fold_left (fun a t -> loop cx a seen t) acc ts)
         | T.AnnotT (_, t, _) -> loop cx acc seen t
         | T.ReposT (_, t) -> loop cx acc seen t
@@ -627,7 +627,8 @@ end = struct
   module Reason_utils = struct
     let local_type_alias_symbol env reason =
       match desc_of_reason ~unwrap:false reason with
-      | RTypeAlias (name, Some loc, _) -> return (symbol_from_loc env loc name)
+      | RTypeAlias (name, Some loc, _) ->
+        return (symbol_from_loc env loc (Reason.OrdinaryName name))
       | RType name -> return (symbol_from_reason env reason name)
       | desc ->
         let desc = Reason.show_virtual_reason_desc (fun _ _ -> ()) desc in
@@ -641,7 +642,7 @@ end = struct
       | RImportStarType name
       | RImportStarTypeOf name
       | RImportStar name ->
-        return (symbol_from_reason env reason name)
+        return (symbol_from_reason env reason (Reason.OrdinaryName name))
       | desc ->
         let desc = Reason.show_virtual_reason_desc (fun _ _ -> ()) desc in
         let msg = "could not extract imported type alias name from reason: " ^ desc in
@@ -649,9 +650,8 @@ end = struct
 
     let opaque_type_alias_symbol env reason =
       match desc_of_reason ~unwrap:false reason with
-      | ROpaqueType name
-      | RType name ->
-        return (symbol_from_reason env reason name)
+      | ROpaqueType name -> return (symbol_from_reason env reason (Reason.OrdinaryName name))
+      | RType name -> return (symbol_from_reason env reason name)
       | desc ->
         let desc = Reason.show_virtual_reason_desc (fun _ _ -> ()) desc in
         let msg = "could not extract opaque name from reason: " ^ desc in
@@ -671,10 +671,12 @@ end = struct
 
     let module_symbol_opt env reason =
       match desc_of_reason reason with
-      | RModule name
+      | RModule name ->
+        let symbol = symbol_from_reason env reason name in
+        return (Some symbol)
       | RCommonJSExports name
       | RUntypedModule name ->
-        let symbol = symbol_from_reason env reason name in
+        let symbol = symbol_from_reason env reason (Reason.OrdinaryName name) in
         return (Some symbol)
       | RExports -> return None
       | desc ->
@@ -767,7 +769,7 @@ end = struct
                    field under_type_alias will be 'Some A'. If the type alias name in the reason
                    is also A, then we are still at the top-level of the type-alias, so we
                    proceed by expanding one level preserving the same environment. *)
-                let symbol = symbol_from_loc env loc name in
+                let symbol = symbol_from_loc env loc (Reason.OrdinaryName name) in
                 return (generic_talias symbol None)
               | _ ->
                 (* We are now beyond the point of the one-off expansion. Reset the environment
@@ -834,7 +836,7 @@ end = struct
         let%bind instance = type__ ~env instance in
         return
           (generic_talias
-             (Ty_symbol.builtin_symbol "React$AbstractComponent")
+             (Ty_symbol.builtin_symbol (Reason.OrdinaryName "React$AbstractComponent"))
              (Some [config; instance]))
       | ThisClassT (_, t, _) -> this_class_t ~env t
       | ThisTypeAppT (_, c, _, ts) -> type_app ~env c ts
@@ -896,7 +898,7 @@ end = struct
       | NullProtoT _ -> return Ty.Null
       | DefT (_, _, EnumObjectT _) -> terr ~kind:(UnexpectedTypeCtor "EnumObjectT") None
       | DefT (reason, _, EnumT { enum_name; _ }) ->
-        let symbol = symbol_from_reason env reason enum_name in
+        let symbol = symbol_from_reason env reason (Reason.OrdinaryName enum_name) in
         return (Ty.Generic (symbol, Ty.EnumKind, None))
       | DefT (_, _, CharSetT s) -> return (Ty.CharSet (String_utils.CharSet.to_string s))
       (* Top-level only *)
@@ -915,16 +917,16 @@ end = struct
        taking their union.
     *)
     and resolve_bounds ~env = function
-      | Constraint.Resolved (_, t)
-      | Constraint.FullyResolved (_, t) ->
+      | T.Constraint.Resolved (_, t)
+      | T.Constraint.FullyResolved (_, t) ->
         type__ ~env t
-      | Constraint.Unresolved bounds ->
+      | T.Constraint.Unresolved bounds ->
         (match%bind resolve_from_lower_bounds ~env bounds with
         | [] -> empty_with_upper_bounds ~env bounds
         | hd :: tl -> return (Ty.mk_union ~flattened:true (hd, tl)))
 
     and resolve_from_lower_bounds ~env bounds =
-      T.TypeMap.keys bounds.Constraint.lower
+      T.TypeMap.keys bounds.T.Constraint.lower
       |> mapM (fun t ->
              let%map ty = type__ ~env t in
              Nel.to_list (Ty.bk_union ty))
@@ -932,7 +934,7 @@ end = struct
       >>| Base.List.dedup_and_sort ~compare:Stdlib.compare
 
     and empty_with_upper_bounds ~env bounds =
-      let uses = Base.List.map ~f:fst (Constraint.UseTypeMap.keys bounds.Constraint.upper) in
+      let uses = Base.List.map ~f:fst (T.Constraint.UseTypeMap.keys bounds.T.Constraint.upper) in
       let%map use_kind = uses_t ~env uses in
       Ty.Bot (Ty.NoLowerWithUpper use_kind)
 
@@ -1092,7 +1094,10 @@ end = struct
       let do_props ~env ~proto props = concat_fold_m (obj_prop_t ~env ~proto) props in
       fun ~env ?(proto = false) props_id call_id_opt ->
         let cx = Env.get_cx env in
-        let props = SMap.bindings (Context.find_props cx props_id) in
+        let props =
+          NameUtils.Map.bindings (Context.find_props cx props_id)
+          |> Base.List.map ~f:(fun (k, v) -> (k, v))
+        in
         let%bind call_props = do_calls ~env call_id_opt in
         let%map props = do_props ~env ~proto props in
         call_props @ props
@@ -1121,7 +1126,7 @@ end = struct
     (* Used for instances of React.createClass(..) *)
     and react_component_instance =
       let react_props ~env ~default props name =
-        match SMap.find name props with
+        match NameUtils.Map.find (OrdinaryName name) props with
         | exception Not_found -> return default
         | Type.Field (_, t, _) -> type__ ~env t
         | _ -> return default
@@ -1140,7 +1145,7 @@ end = struct
          * However, Ty.t does not account for unsealed and exact sealed objects are
          * incompatible with exact and unsealed, so making state inexact here. *)
         let state_ty = inexactify state_ty in
-        return (generic_builtin_t "React$Component" [props_ty; state_ty])
+        return (generic_builtin_t (Reason.OrdinaryName "React$Component") [props_ty; state_ty])
 
     (* Used for return of React.createClass(..) *)
     and react_component_class =
@@ -1149,7 +1154,7 @@ end = struct
         match static with
         | T.DefT (_, _, T.ObjT { T.props_tmap; _ }) ->
           Context.find_props cx props_tmap
-          |> SMap.bindings
+          |> NameUtils.Map.bindings
           |> mapM (fun (name, p) -> obj_prop_t ~env (name, p))
           >>| Base.List.concat
         | _ -> return []
@@ -1214,10 +1219,11 @@ end = struct
           List.fold_left
             (fun (key, value, pole, ps) p ->
               match p with
-              | Ty.NamedProp { name = "$key"; prop = Ty.Field { t; _ }; _ } ->
+              | Ty.NamedProp { name = OrdinaryName "$key"; prop = Ty.Field { t; _ }; _ } ->
                 (* The $key's polarity is fixed to neutral so we ignore it *)
                 (Some t, value, pole, ps)
-              | Ty.NamedProp { name = "$value"; prop = Ty.Field { t; polarity; _ }; _ } ->
+              | Ty.NamedProp { name = OrdinaryName "$value"; prop = Ty.Field { t; polarity; _ }; _ }
+                ->
                 (* The dictionary's polarity is determined by that of $value *)
                 (key, Some t, Some polarity, ps)
               | _ -> (key, value, pole, p :: ps))
@@ -1388,7 +1394,7 @@ end = struct
 
     and opaque_t ~env reason opaque_type =
       let name = opaque_type.Type.opaque_name in
-      let opaque_symbol = symbol_from_reason env reason name in
+      let opaque_symbol = symbol_from_reason env reason (Reason.OrdinaryName name) in
       return (generic_talias opaque_symbol None)
 
     and custom_fun_expanded ~env =
@@ -1451,12 +1457,20 @@ end = struct
           let result_fail_ty =
             Ty.mk_object
               (Ty.mk_field_props
-                 [("success", Ty.BoolLit false, false); ("error", Ty.Str None, false)])
+                 [
+                   (Reason.OrdinaryName "success", Ty.BoolLit false, false);
+                   (Reason.OrdinaryName "error", Ty.Str None, false);
+                 ])
           in
           let result_succ_ty =
             Ty.mk_object
               (Ty.mk_field_props
-                 [("success", Ty.BoolLit true, false); ("value", builtin_t "TypeAssertT", false)])
+                 [
+                   (Reason.OrdinaryName "success", Ty.BoolLit true, false);
+                   ( Reason.OrdinaryName "value",
+                     builtin_t (Reason.OrdinaryName "TypeAssertT"),
+                     false );
+                 ])
           in
           let ret = Ty.mk_union (result_fail_ty, [result_succ_ty]) in
           return (mk_fun ~tparams ~params ret)
@@ -1481,7 +1495,7 @@ end = struct
         (* reactCreateClass: (spec: any) => ReactClass<any> *)
         | ReactCreateClass ->
           let params = [(Some "spec", Ty.explicit_any, non_opt_param)] in
-          let x = Ty.builtin_symbol "ReactClass" in
+          let x = Ty.builtin_symbol (Reason.OrdinaryName "ReactClass") in
           return (mk_fun ~params (generic_talias x (Some [Ty.explicit_any])))
         (*
          * 1. Component class:
@@ -1501,12 +1515,14 @@ end = struct
               let t = Bound (ALoc.none, "T") in
               let params =
                 [
-                  (Some "name", generic_builtin_t "ReactClass" [t], non_opt_param);
+                  ( Some "name",
+                    generic_builtin_t (Reason.OrdinaryName "ReactClass") [t],
+                    non_opt_param );
                   (Some "config", t, non_opt_param);
                   (Some "children", explicit_any, opt_param);
                 ]
               in
-              let reactElement = generic_builtin_t "React$Element" [t] in
+              let reactElement = generic_builtin_t (Reason.OrdinaryName "React$Element") [t] in
               let f1 = mk_fun ~tparams ~params reactElement in
               let params =
                 [(Some "config", t, non_opt_param); (Some "context", explicit_any, non_opt_param)]
@@ -1527,19 +1543,19 @@ end = struct
     and custom_fun_short ~env =
       Type.(
         function
-        | ObjectAssign -> return (builtin_t "Object$Assign")
-        | ObjectGetPrototypeOf -> return (builtin_t "Object$GetPrototypeOf")
-        | ObjectSetPrototypeOf -> return (builtin_t "Object$SetPrototypeOf")
-        | Compose false -> return (builtin_t "$Compose")
-        | Compose true -> return (builtin_t "$ComposeReverse")
+        | ObjectAssign -> return (builtin_t (Reason.OrdinaryName "Object$Assign"))
+        | ObjectGetPrototypeOf -> return (builtin_t (Reason.OrdinaryName "Object$GetPrototypeOf"))
+        | ObjectSetPrototypeOf -> return (builtin_t (Reason.OrdinaryName "Object$SetPrototypeOf"))
+        | Compose false -> return (builtin_t (Reason.OrdinaryName "$Compose"))
+        | Compose true -> return (builtin_t (Reason.OrdinaryName "$ComposeReverse"))
         | ReactPropType t -> react_prop_type ~env t
-        | ReactCreateClass -> return (builtin_t "React$CreateClass")
-        | ReactCreateElement -> return (builtin_t "React$CreateElement")
-        | ReactCloneElement -> return (builtin_t "React$CloneElement")
+        | ReactCreateClass -> return (builtin_t (Reason.OrdinaryName "React$CreateClass"))
+        | ReactCreateElement -> return (builtin_t (Reason.OrdinaryName "React$CreateElement"))
+        | ReactCloneElement -> return (builtin_t (Reason.OrdinaryName "React$CloneElement"))
         | ReactElementFactory t ->
           let%map t = type__ ~env t in
-          generic_builtin_t "React$ElementFactory" [t]
-        | Idx -> return (builtin_t "$Facebookism$Idx")
+          generic_builtin_t (Reason.OrdinaryName "React$ElementFactory") [t]
+        | Idx -> return (builtin_t (Reason.OrdinaryName "$Facebookism$Idx"))
         (* var TypeAssertIs: <TypeAssertT>(value: mixed) => boolean *)
         | TypeAssertIs ->
           let tparams = [mk_tparam "TypeAssertT"] in
@@ -1549,7 +1565,7 @@ end = struct
         | TypeAssertThrows ->
           let tparams = [mk_tparam "TypeAssertT"] in
           let params = [(Some "value", Ty.Top, non_opt_param)] in
-          let ret = builtin_t "TypeAssertT" in
+          let ret = builtin_t (Reason.OrdinaryName "TypeAssertT") in
           return (mk_fun ~tparams ~params ret)
         (* Result<T> = {success: true, value: T} | {success: false, error: string}
            var TypeAssertWraps: <TypeAssertT>(value: mixed) => Result<TypeAssertT> *)
@@ -1559,18 +1575,26 @@ end = struct
           let result_fail_ty =
             Ty.mk_object
               (Ty.mk_field_props
-                 [("success", Ty.BoolLit false, false); ("error", Ty.Str None, false)])
+                 [
+                   (Reason.OrdinaryName "success", Ty.BoolLit false, false);
+                   (Reason.OrdinaryName "error", Ty.Str None, false);
+                 ])
           in
           let result_succ_ty =
             Ty.mk_object
               (Ty.mk_field_props
-                 [("success", Ty.BoolLit true, false); ("value", builtin_t "TypeAssertT", false)])
+                 [
+                   (Reason.OrdinaryName "success", Ty.BoolLit true, false);
+                   ( Reason.OrdinaryName "value",
+                     builtin_t (Reason.OrdinaryName "TypeAssertT"),
+                     false );
+                 ])
           in
           let ret = Ty.mk_union (result_fail_ty, [result_succ_ty]) in
           return (mk_fun ~tparams ~params ret)
-        | DebugPrint -> return (builtin_t "$Flow$DebugPrint")
-        | DebugThrow -> return (builtin_t "$Flow$DebugThrow")
-        | DebugSleep -> return (builtin_t "$Flow$DebugSleep"))
+        | DebugPrint -> return (builtin_t (Reason.OrdinaryName "$Flow$DebugPrint"))
+        | DebugThrow -> return (builtin_t (Reason.OrdinaryName "$Flow$DebugThrow"))
+        | DebugSleep -> return (builtin_t (Reason.OrdinaryName "$Flow$DebugSleep")))
 
     and custom_fun ~env t =
       if Env.expand_internal_types env then
@@ -1584,17 +1608,18 @@ end = struct
         | Primitive (is_req, t) ->
           let%map t = type__ ~env t in
           generic_builtin_t
-            ( if is_req then
-              "React$PropType$Primitive$Required"
-            else
-              "React$PropType$Primitive" )
+            (Reason.OrdinaryName
+               ( if is_req then
+                 "React$PropType$Primitive$Required"
+               else
+                 "React$PropType$Primitive" ))
             [t]
-        | Complex ArrayOf -> return (builtin_t "React$PropType$ArrayOf")
-        | Complex InstanceOf -> return (builtin_t "React$PropType$ArrayOf")
-        | Complex ObjectOf -> return (builtin_t "React$PropType$dbjectOf")
-        | Complex OneOf -> return (builtin_t "React$PropType$OneOf")
-        | Complex OneOfType -> return (builtin_t "React$PropType$OneOfType")
-        | Complex Shape -> return (builtin_t "React$PropType$Shape"))
+        | Complex ArrayOf -> return (builtin_t (Reason.OrdinaryName "React$PropType$ArrayOf"))
+        | Complex InstanceOf -> return (builtin_t (Reason.OrdinaryName "React$PropType$ArrayOf"))
+        | Complex ObjectOf -> return (builtin_t (Reason.OrdinaryName "React$PropType$dbjectOf"))
+        | Complex OneOf -> return (builtin_t (Reason.OrdinaryName "React$PropType$OneOf"))
+        | Complex OneOfType -> return (builtin_t (Reason.OrdinaryName "React$PropType$OneOfType"))
+        | Complex Shape -> return (builtin_t (Reason.OrdinaryName "React$PropType$Shape")))
 
     and internal_t t =
       Type.(
@@ -1670,7 +1695,7 @@ end = struct
         Type.TypeTerm.(
           let obj_frozen = false in
           let obj_literal = None in
-          let props = SMap.fold (fun k p acc -> (k, p) :: acc) prop_map [] in
+          let props = NameUtils.Map.fold (fun k p acc -> (k, p) :: acc) prop_map [] in
           let%bind obj_props = concat_fold_m (obj_prop_t ~env) props in
           let%bind obj_kind =
             match dict with
@@ -1820,7 +1845,7 @@ end = struct
       let name = opaque_type.opaque_name in
       let current_source = Env.current_file env in
       let opaque_source = ALoc.source (def_aloc_of_reason reason) in
-      let name = symbol_from_reason env reason name in
+      let name = symbol_from_reason env reason (Reason.OrdinaryName name) in
       (* Compare the current file (of the query) and the file that the opaque
          type is defined. If they differ, then hide the underlying/super type.
          Otherwise, display the underlying/super type. *)
@@ -1866,7 +1891,7 @@ end = struct
         | RType name ->
           let loc = Reason.def_aloc_of_reason r in
           let default t = TypeConverter.convert_t ~env t in
-          let%map p = lookup_tparam ~default env t name loc in
+          let%map p = lookup_tparam ~default env t (display_string_of_name name) loc in
           Ty.Type p
         | desc -> terr ~kind:BadTypeAlias ~msg:(spf "type param: %s" (string_of_desc desc)) (Some t)
       in
@@ -1926,7 +1951,7 @@ end = struct
       in
       let enum_decl ~env reason enum =
         let { T.enum_name; _ } = enum in
-        let symbol = symbol_from_reason env reason enum_name in
+        let symbol = symbol_from_reason env reason (Reason.OrdinaryName enum_name) in
         return (Ty.Decl Ty.(EnumDecl symbol))
       in
       let singleton_poly ~env ~orig_t tparams = function
@@ -2013,7 +2038,7 @@ end = struct
           | Ty.Decl d -> d
           | Ty.Type t -> Ty.VariableDecl (x, t)
         in
-        Context.find_exports (Env.get_cx env) exports_tmap |> SMap.bindings |> mapM step
+        Context.find_exports (Env.get_cx env) exports_tmap |> NameUtils.Map.bindings |> mapM step
       in
       fun ~env reason { exports_tmap; cjs_export; _ } ->
         let%bind name = Reason_utils.module_symbol_opt env reason in
@@ -2025,8 +2050,8 @@ end = struct
       let obj_module_props ~env props_id =
         let step (decls, default) (x, t, _pol) =
           match%map toplevel ~env t with
-          | Ty.Type (Ty.Obj _) when x = "default" -> (decls, default)
-          | Ty.Type t when x = "default" -> (decls, Some t)
+          | Ty.Type (Ty.Obj _) when x = Reason.OrdinaryName "default" -> (decls, default)
+          | Ty.Type t when x = Reason.OrdinaryName "default" -> (decls, Some t)
           | Ty.Type t -> (Ty.VariableDecl (x, t) :: decls, default)
           | Ty.Decl d -> (d :: decls, default)
         in
@@ -2039,7 +2064,7 @@ end = struct
           | _ -> terr ~kind:UnsupportedTypeCtor ~msg:"module-prop" None
         in
         let cx = Env.get_cx env in
-        let props = SMap.bindings (Context.find_props cx props_id) in
+        let props = NameUtils.Map.bindings (Context.find_props cx props_id) in
         loop ([], None) props
       in
       fun ~env reason o ->
@@ -2248,7 +2273,11 @@ end = struct
         | T.TupleAT _ ->
           "$ReadOnlyArray"
       in
-      type__ ~env ~proto:true ~imode:IMInstance (Flow_js.get_builtin (Env.get_cx env) builtin r)
+      type__
+        ~env
+        ~proto:true
+        ~imode:IMInstance
+        (Flow_js.get_builtin (Env.get_cx env) (OrdinaryName builtin) r)
 
     and member_expand_object ~env super inst =
       let { T.own_props; proto_props; _ } = inst in
@@ -2281,7 +2310,11 @@ end = struct
       let enum_ty = T.mk_enum_type ~loc:(def_aloc_of_reason reason) ~trust enum in
       let proto_t =
         let enum_t = T.mk_enum_type ~loc:(def_aloc_of_reason reason) ~trust enum in
-        Flow_js.get_builtin_typeapp Env.(env.genv.cx) reason "$EnumProto" [enum_t; representation_t]
+        Flow_js.get_builtin_typeapp
+          Env.(env.genv.cx)
+          reason
+          (OrdinaryName "$EnumProto")
+          [enum_t; representation_t]
       in
       let%bind proto_ty = type__ ~env ~proto:true ~imode:IMUnset proto_t in
       let%map enum_ty = TypeConverter.convert_t ~env enum_ty in
@@ -2289,7 +2322,7 @@ end = struct
         List.map
           (fun (name, loc) ->
             let prop = Ty.Field { t = enum_ty; polarity = Ty.Positive; optional = false } in
-            Ty.NamedProp { name; prop; from_proto = false; def_loc = Some loc })
+            Ty.NamedProp { name = OrdinaryName name; prop; from_proto = false; def_loc = Some loc })
           (SMap.bindings members)
       in
       Ty.mk_object (Ty.SpreadProp proto_ty :: members_ty)
@@ -2312,7 +2345,7 @@ end = struct
       { obj with Ty.obj_props = obj.Ty.obj_props @ extra_props }
 
     and primitive ~env reason builtin =
-      let t = Flow_js.get_builtin_type (Env.get_cx env) reason builtin in
+      let t = Flow_js.get_builtin_type (Env.get_cx env) reason (OrdinaryName builtin) in
       type__ ~env ~proto:true ~imode:IMUnset t
 
     and instance_t ~env ~imode r static super inst =
@@ -2357,14 +2390,14 @@ end = struct
       let (root_id, constraints) = Context.find_constraints Env.(env.genv.cx) id in
       Recursive.with_cache (TVarKey root_id) ~f:(fun () ->
           match constraints with
-          | Constraint.Resolved (_, t)
-          | Constraint.FullyResolved (_, t) ->
+          | T.Constraint.Resolved (_, t)
+          | T.Constraint.FullyResolved (_, t) ->
             type__ ~env ~proto ~imode t
-          | Constraint.Unresolved bounds ->
+          | T.Constraint.Unresolved bounds ->
             let%map lowers =
               mapM
                 (fun t -> type__ ~env ~proto ~imode t >>| Ty.bk_union >>| Nel.to_list)
-                (T.TypeMap.keys bounds.Constraint.lower)
+                (T.TypeMap.keys bounds.T.Constraint.lower)
             in
             let lowers = Base.List.(dedup_and_sort ~compare:Stdlib.compare (concat lowers)) in
             (match lowers with

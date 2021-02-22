@@ -6,12 +6,13 @@
  *)
 
 open Utils_js
-open Parsing_heaps_utils
 module Result = Base.Result
 
 let ( >>= ) = Result.( >>= )
 
 let ( >>| ) = Result.( >>| )
+
+let loc_of_aloc = Parsing_heaps.Reader.loc_of_aloc
 
 (* The default visitor does not provide all of the context we need when visiting an object key. In
  * particular, we need the location of the enclosing object literal. *)

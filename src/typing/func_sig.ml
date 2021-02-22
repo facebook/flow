@@ -110,8 +110,6 @@ module Make (F : Func_params.S) = struct
         rest_param = F.rest fparams;
         return_t = TypeUtil.type_t_of_annotated_or_inferred return_t;
         is_predicate = kind = Predicate;
-        closure_t = Env.peek_frame ();
-        changeset = Env.retrieve_closure_changeset ();
         def_reason = reason;
       }
     in
@@ -174,7 +172,7 @@ module Make (F : Func_params.S) = struct
     let reason = mk_reason RFunctionBody loc in
     let env = Env.peek_env () in
     let new_env = Env.clone_env env in
-    Env.update_env cx loc new_env;
+    Env.update_env loc new_env;
     Env.havoc_all ();
 
     (* create and prepopulate function scope *)
@@ -193,7 +191,7 @@ module Make (F : Func_params.S) = struct
       Scope.fresh ~var_scope_kind ()
     in
     (* push the scope early so default exprs can reference earlier params *)
-    Env.push_var_scope cx function_scope;
+    Env.push_var_scope function_scope;
 
     let (this_t, this) = this_recipe fparams in
 
@@ -222,7 +220,7 @@ module Make (F : Func_params.S) = struct
     (* early-add our own name binding for recursive calls. *)
     Base.Option.iter id ~f:(fun (loc, { Ast.Identifier.name; comments = _ }) ->
         let entry = annotated_todo knot |> Scope.Entry.new_var ~loc in
-        Scope.add_entry name entry function_scope);
+        Scope.add_entry (OrdinaryName name) entry function_scope);
 
     let (yield_t, next_t) =
       if kind = Generator || kind = AsyncGenerator then
@@ -331,23 +329,35 @@ module Make (F : Func_params.S) = struct
             let use_op = Op (FunImplicitReturn { fn = reason_fn; upper = reason_of_t return_t }) in
             (use_op, t, None)
           | Async ->
-            let reason = mk_annot_reason (RType "Promise") loc in
+            let reason = mk_annot_reason (RType (OrdinaryName "Promise")) loc in
             let void_t = VoidT.at loc |> with_trust bogus_trust in
-            let t = Flow.get_builtin_typeapp cx reason "Promise" [void_t] in
+            let t = Flow.get_builtin_typeapp cx reason (OrdinaryName "Promise") [void_t] in
             let use_op = Op (FunImplicitReturn { fn = reason_fn; upper = reason_of_t return_t }) in
             let use_op = Frame (ImplicitTypeParam, use_op) in
             (use_op, t, None)
           | Generator ->
-            let reason = mk_annot_reason (RType "Generator") loc in
+            let reason = mk_annot_reason (RType (OrdinaryName "Generator")) loc in
             let void_t = VoidT.at loc |> with_trust bogus_trust in
-            let t = Flow.get_builtin_typeapp cx reason "Generator" [yield_t; void_t; next_t] in
+            let t =
+              Flow.get_builtin_typeapp
+                cx
+                reason
+                (OrdinaryName "Generator")
+                [yield_t; void_t; next_t]
+            in
             let use_op = Op (FunImplicitReturn { fn = reason_fn; upper = reason_of_t return_t }) in
             let use_op = Frame (ImplicitTypeParam, use_op) in
             (use_op, t, None)
           | AsyncGenerator ->
-            let reason = mk_annot_reason (RType "AsyncGenerator") loc in
+            let reason = mk_annot_reason (RType (OrdinaryName "AsyncGenerator")) loc in
             let void_t = VoidT.at loc |> with_trust bogus_trust in
-            let t = Flow.get_builtin_typeapp cx reason "AsyncGenerator" [yield_t; void_t; next_t] in
+            let t =
+              Flow.get_builtin_typeapp
+                cx
+                reason
+                (OrdinaryName "AsyncGenerator")
+                [yield_t; void_t; next_t]
+            in
             let use_op = Op (FunImplicitReturn { fn = reason_fn; upper = reason_of_t return_t }) in
             let use_op = Frame (ImplicitTypeParam, use_op) in
             (use_op, t, None)
@@ -374,7 +384,7 @@ module Make (F : Func_params.S) = struct
     in
     Env.pop_var_scope ();
 
-    Env.update_env cx loc env;
+    Env.update_env loc env;
 
     (*  return a tuple of (function body AST option, field initializer AST option).
        - the function body option is Some _ if the func sig's body was Some, and

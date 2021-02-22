@@ -95,9 +95,7 @@ module Kit (Flow : Flow_common.S) : Flow_common.CHECK_POLARITY = struct
         params;
         rest_param;
         return_t;
-        closure_t = _;
         is_predicate = _;
-        changeset = _;
         def_reason = _;
       } =
         f
@@ -171,9 +169,9 @@ module Kit (Flow : Flow_common.S) : Flow_common.CHECK_POLARITY = struct
 
   and check_polarity_propmap cx ?trace ?(skip_ctor = false) tparams polarity id =
     let pmap = Context.find_props cx id in
-    SMap.iter
+    NameUtils.Map.iter
       (fun x p ->
-        if skip_ctor && x = "constructor" then
+        if skip_ctor && x = Reason.OrdinaryName "constructor" then
           ()
         else
           check_polarity_prop cx ?trace tparams polarity p)

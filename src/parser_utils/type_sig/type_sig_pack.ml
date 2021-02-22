@@ -64,6 +64,24 @@ type 'loc remote_ref =
     }
 [@@deriving map, show { with_path = false }]
 
+(* These accessors will compile to code that does not have a branch because
+ * id_loc and name have the same offset for each constructor. *)
+let remote_ref_loc = function
+  | Import { id_loc; _ }
+  | ImportType { id_loc; _ }
+  | ImportTypeof { id_loc; _ }
+  | ImportNs { id_loc; _ }
+  | ImportTypeofNs { id_loc; _ } ->
+    id_loc
+
+let remote_ref_name = function
+  | Import { name; _ }
+  | ImportType { name; _ }
+  | ImportTypeof { name; _ }
+  | ImportNs { name; _ }
+  | ImportTypeofNs { name; _ } ->
+    name
+
 type 'loc packed_ref =
   | LocalRef of {
       ref_loc: 'loc;
@@ -135,25 +153,19 @@ type 'loc export_type =
   | ExportTypeFrom of Remote_refs.index
 [@@deriving map, show { with_path = false }]
 
-type 'loc cjs_exports = {
-  types: 'loc export_type smap;
-  type_stars: ('loc * Module_refs.index) list;
-  strict: bool;
-}
-[@@deriving map, show { with_path = false }]
-
-type 'loc es_exports = {
-  names: 'loc export smap;
-  types: 'loc export_type smap;
-  stars: ('loc * Module_refs.index) list;
-  type_stars: ('loc * Module_refs.index) list;
-  strict: bool;
-}
-[@@deriving map, show { with_path = false }]
-
 type 'loc exports =
-  | CJSExports of 'loc cjs_exports
-  | ESExports of 'loc es_exports
+  | CJSExports of {
+      types: 'loc export_type smap;
+      type_stars: ('loc * Module_refs.index) list;
+      strict: bool;
+    }
+  | ESExports of {
+      names: 'loc export smap;
+      types: 'loc export_type smap;
+      stars: ('loc * Module_refs.index) list;
+      type_stars: ('loc * Module_refs.index) list;
+      strict: bool;
+    }
 [@@deriving map, show { with_path = false }]
 
 type 'loc pattern =

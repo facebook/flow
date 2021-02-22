@@ -9,7 +9,7 @@ class virtual ['a] t :
   object
     method arr_type : Context.t -> 'a -> Type.arrtype -> Type.arrtype
 
-    method bounds : Context.t -> 'a -> Constraint.bounds -> Constraint.bounds
+    method bounds : Context.t -> 'a -> Type.Constraint.bounds -> Type.Constraint.bounds
 
     method virtual call_prop : Context.t -> 'a -> int -> int
 
@@ -53,7 +53,7 @@ class virtual ['a] t :
 
     method targ : Context.t -> 'a -> Type.targ -> Type.targ
 
-    method virtual tvar : Context.t -> 'a -> Reason.t -> Constraint.ident -> Constraint.ident
+    method virtual tvar : Context.t -> 'a -> Reason.t -> Type.ident -> Type.ident
 
     method type_ : Context.t -> 'a -> Type.t -> Type.t
 

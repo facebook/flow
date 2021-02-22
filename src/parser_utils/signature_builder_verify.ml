@@ -724,7 +724,7 @@ module Eval (Env : EvalEnv) = struct
                 Ast.Expression.Object.Property.Identifier (_, { Ast.Identifier.name; comments = _ });
               _;
             } )
-        when (not Env.prevent_munge) && Signature_utils.is_munged_property_name name ->
+        when (not Env.prevent_munge) && Signature_utils.is_munged_property_string name ->
         Deps.bot
       | Body.Property
           ( _,

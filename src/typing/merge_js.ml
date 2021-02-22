@@ -298,7 +298,7 @@ let detect_non_voidable_properties cx =
     let pmap = Context.find_props cx property_map in
     SMap.iter (fun name errors ->
         let should_error =
-          match SMap.find_opt name pmap with
+          match NameUtils.Map.find_opt (Reason.OrdinaryName name) pmap with
           | Some (Type.Field (_, t, _)) -> not @@ is_voidable ISet.empty t
           | _ -> true
         in
@@ -360,7 +360,7 @@ class resolver_visitor =
     method props cx map_cx id =
       let props_map = Context.find_props cx id in
       let props_map' =
-        SMap.ident_map (Type.Property.ident_map_t (self#type_ cx map_cx)) props_map
+        NameUtils.Map.ident_map (Type.Property.ident_map_t (self#type_ cx map_cx)) props_map
       in
       let id' =
         if props_map == props_map' then
@@ -434,30 +434,9 @@ let detect_literal_subtypes =
         Flow_js.flow cx (t, u))
       checks
 
-let get_aloc_tables ~get_aloc_table_unsafe component =
-  Nel.fold_left
-    (fun tables filename ->
-      let table = lazy (get_aloc_table_unsafe filename) in
-      FilenameMap.add filename table tables)
-    FilenameMap.empty
-    component
-
-let get_aloc_table_rev filename aloc_tables =
-  let table = FilenameMap.find filename aloc_tables in
-  lazy
-    (try Lazy.force table |> ALoc.reverse_table
-     with
-     (* If we aren't in abstract locations mode, or are in a libdef, we
-        won't have an aloc table, so we just create an empty reverse
-        table. We handle this exception here rather than explicitly
-        making an optional version of the get_aloc_table function for
-        simplicity. *)
-     | Parsing_heaps_exceptions.Sig_ast_ALoc_table_not_found _ ->
-       ALoc.make_empty_reverse_table ())
-
-let merge_builtins cx sig_cx master_cx =
+let merge_builtins cx ccx master_cx =
   Flow_js_utils.mk_builtins cx;
-  Context.merge_into sig_cx master_cx;
+  Context.merge_into ccx master_cx;
   implicit_require cx master_cx cx
 
 let get_lint_severities metadata strict_mode lint_severities =
@@ -470,12 +449,13 @@ let get_lint_severities metadata strict_mode lint_severities =
   else
     lint_severities
 
-let merge_imports cx sig_cx reqs impl_cxs =
+let merge_imports cx reqs impl_cxs =
   let open Reqs in
   reqs.impls
   |> RequireMap.iter (fun (m, fn_to) locs ->
+         let cx_from = Context.sig_cx cx in
          let cx_to = FilenameMap.find fn_to impl_cxs in
-         ALocSet.iter (fun loc -> explicit_impl_require cx (sig_cx, m, loc, cx_to)) locs);
+         ALocSet.iter (fun loc -> explicit_impl_require cx (cx_from, m, loc, cx_to)) locs);
 
   reqs.dep_impls
   |> RequireMap.iter (fun (m, fn_to) (cx_from, locs) ->
@@ -570,9 +550,7 @@ type output =
 let merge_component ~opts ~getters ~file_sigs component reqs dep_cxs master_cx =
   let (Merge_options { metadata; lint_severities; strict_mode; _ }) = opts in
   let { get_ast_unsafe; get_aloc_table_unsafe; get_docblock_unsafe } = getters in
-  let aloc_tables = get_aloc_tables ~get_aloc_table_unsafe component in
-  let sig_cx = Context.make_sig () in
-  let ccx = Context.make_ccx sig_cx aloc_tables in
+  let ccx = Context.make_ccx () in
   let need_merge_master_cx = ref true in
   (* Iterate over component *)
   let (rev_results, impl_cxs) =
@@ -581,13 +559,21 @@ let merge_component ~opts ~getters ~file_sigs component reqs dep_cxs master_cx =
         let info = get_docblock_unsafe filename in
         let metadata = Context.docblock_overrides info metadata in
         let module_ref = Files.module_ref filename in
-        let rev_table = get_aloc_table_rev filename aloc_tables in
-        let cx = Context.make ccx metadata filename rev_table module_ref Context.Merging in
+        let aloc_table = lazy (get_aloc_table_unsafe filename) in
+        let cx =
+          Context.make
+            ccx
+            metadata
+            filename
+            aloc_table
+            (Reason.OrdinaryName module_ref)
+            Context.Merging
+        in
 
         (* Builtins *)
         if !need_merge_master_cx then (
           need_merge_master_cx := false;
-          merge_builtins cx sig_cx master_cx
+          merge_builtins cx ccx master_cx
         );
 
         (* AST inference *)
@@ -605,8 +591,8 @@ let merge_component ~opts ~getters ~file_sigs component reqs dep_cxs master_cx =
   let (cx, _, _) = Base.List.hd_exn results in
 
   (* Imports *)
-  dep_cxs |> Base.List.iter ~f:(Context.merge_into sig_cx);
-  merge_imports cx sig_cx reqs impl_cxs;
+  dep_cxs |> Base.List.iter ~f:(Context.merge_into ccx);
+  merge_imports cx reqs impl_cxs;
 
   match results with
   | [] -> failwith "there is at least one cx"
@@ -622,26 +608,26 @@ let merge_component ~opts ~getters ~file_sigs component reqs dep_cxs master_cx =
 let check_file ~opts ~getters ~file_sigs filename reqs dep_cxs master_cx =
   let (Merge_options { metadata; lint_severities; strict_mode; _ }) = opts in
   let { get_ast_unsafe; get_aloc_table_unsafe; get_docblock_unsafe } = getters in
-  let aloc_tables = get_aloc_tables ~get_aloc_table_unsafe (Nel.one filename) in
-  let sig_cx = Context.make_sig () in
-  let ccx = Context.make_ccx sig_cx aloc_tables in
+  let ccx = Context.make_ccx () in
   let info = get_docblock_unsafe filename in
   let metadata = Context.docblock_overrides info metadata in
   let module_ref = Files.module_ref filename in
-  let rev_table = get_aloc_table_rev filename aloc_tables in
-  let cx = Context.make ccx metadata filename rev_table module_ref Context.Checking in
+  let aloc_table = lazy (get_aloc_table_unsafe filename) in
+  let cx =
+    Context.make ccx metadata filename aloc_table (Reason.OrdinaryName module_ref) Context.Checking
+  in
   let (comments, ast) = get_ast_unsafe filename in
   let lint_severities = get_lint_severities metadata strict_mode lint_severities in
   let file_sig = FilenameMap.find filename file_sigs in
 
   (* Builtins *)
-  merge_builtins cx sig_cx master_cx;
+  merge_builtins cx ccx master_cx;
 
   (* Imports *)
   Type_inference_js.add_require_tvars cx file_sig;
   Context.set_local_env cx file_sig.File_sig.With_ALoc.exported_locals;
-  dep_cxs |> Base.List.iter ~f:(Context.merge_into sig_cx);
-  merge_imports cx sig_cx reqs (FilenameMap.singleton filename cx);
+  dep_cxs |> Base.List.iter ~f:(Context.merge_into ccx);
+  merge_imports cx reqs (FilenameMap.singleton filename cx);
 
   (* AST inference  *)
   let tast = Type_inference_js.infer_ast cx filename comments ast ~lint_severities in
@@ -693,9 +679,9 @@ let check_file ~opts ~getters ~file_sigs filename reqs dep_cxs master_cx =
    second actually changes the entity in the exports.
 *)
 module ContextOptimizer = struct
-  open Constraint
   open Type
   open TypeUtil
+  open Constraint
 
   class context_optimizer =
     let no_lowers cx r =
@@ -728,7 +714,7 @@ module ContextOptimizer = struct
 
       val mutable stable_call_prop_ids = IMap.empty
 
-      val mutable reduced_module_map = SMap.empty
+      val mutable reduced_module_map = NameUtils.Map.empty
 
       val mutable reduced_graph = IMap.empty
 
@@ -747,7 +733,8 @@ module ContextOptimizer = struct
       method reduce cx module_ref =
         let export = Context.find_module cx module_ref in
         let export' = self#type_ cx Polarity.Neutral export in
-        reduced_module_map <- SMap.add module_ref export' reduced_module_map
+        reduced_module_map <-
+          NameUtils.Map.add (Reason.OrdinaryName module_ref) export' reduced_module_map
 
       method tvar cx pole r id =
         let (root_id, _) = Context.find_constraints cx id in
@@ -831,7 +818,7 @@ module ContextOptimizer = struct
           let pmap = Context.find_props cx id in
           let () = SigHash.add_props_map sig_hash pmap in
           reduced_property_maps <- Properties.Map.add id pmap reduced_property_maps;
-          let pmap' = SMap.ident_map (self#prop cx pole) pmap in
+          let pmap' = NameUtils.Map.ident_map (self#prop cx pole) pmap in
           reduced_property_maps <- Properties.Map.add id pmap' reduced_property_maps;
           id
 
@@ -881,7 +868,7 @@ module ContextOptimizer = struct
               (loc, t')
           in
           reduced_export_maps <- Exports.Map.add id tmap reduced_export_maps;
-          let tmap' = SMap.ident_map map_pair tmap in
+          let tmap' = NameUtils.Map.ident_map map_pair tmap in
           reduced_export_maps <- Exports.Map.add id tmap' reduced_export_maps;
           SigHash.add_exports_map sig_hash tmap';
           id
@@ -910,7 +897,7 @@ module ContextOptimizer = struct
         match t with
         | NonMaybeType -> t
         | PropertyType s ->
-          SigHash.add sig_hash s;
+          SigHash.add_name sig_hash s;
           t
         | ElementType t' ->
           let t'' = self#type_ cx map_cx t' in
@@ -1063,7 +1050,7 @@ module ContextOptimizer = struct
 
       (* We need to make sure to hash the keys in any spread intermediate types! *)
       method! object_kit_spread_operand_slice cx map_cx slice =
-        SMap.iter (fun k _ -> SigHash.add sig_hash k) slice.Object.Spread.prop_map;
+        NameUtils.Map.iter (fun k _ -> SigHash.add_name sig_hash k) slice.Object.Spread.prop_map;
         super#object_kit_spread_operand_slice cx map_cx slice
 
       method get_reduced_module_map = reduced_module_map

@@ -43,7 +43,7 @@ let membership_behavior =
     Nullish
   | _ -> Normal
 
-let rec members_of_ty : Ty.t -> Ty.t member_info SMap.t * string list =
+let rec members_of_ty : Ty.t -> Ty.t member_info NameUtils.Map.t * string list =
   let open Ty in
   let ty_of_named_prop = function
     | Field { t; optional = false; _ }
@@ -55,18 +55,18 @@ let rec members_of_ty : Ty.t -> Ty.t member_info SMap.t * string list =
   in
   let members_of_obj obj_props =
     obj_props
-    |> Base.List.fold_left ~init:(SMap.empty, []) ~f:(fun (mems1, errs1) prop ->
+    |> Base.List.fold_left ~init:(NameUtils.Map.empty, []) ~f:(fun (mems1, errs1) prop ->
            let (mems2, errs2) =
              match prop with
              | NamedProp { name; prop; from_proto; def_loc } ->
-               ( SMap.singleton
+               ( NameUtils.Map.singleton
                    name
                    { ty = ty_of_named_prop prop; from_proto; from_nullable = false; def_loc },
                  [] )
              | SpreadProp ty -> members_of_ty ty
-             | CallProp _ -> (SMap.empty, [])
+             | CallProp _ -> (NameUtils.Map.empty, [])
            in
-           (SMap.union ~combine:(fun _ _ snd -> Some snd) mems1 mems2, errs1 @ errs2))
+           (NameUtils.Map.union ~combine:(fun _ _ snd -> Some snd) mems1 mems2, errs1 @ errs2))
   in
   let members_of_union (t1, t2, ts) =
     let ((t1_members, errs1), (t2_members, errs2), (ts_members, errss)) =
@@ -76,20 +76,20 @@ let rec members_of_ty : Ty.t -> Ty.t member_info SMap.t * string list =
     let universe =
       (* set union of all child members *)
       List.fold_right
-        (SMap.merge (fun _ _ _ -> Some ()))
+        (NameUtils.Map.merge (fun _ _ _ -> Some ()))
         (t1_members :: t2_members :: ts_members)
-        SMap.empty
+        NameUtils.Map.empty
     in
     (* empty and any have all possible members *)
     let (t1_members, t2_members, ts_members) =
       let f ty ty_members =
         match membership_behavior ty with
         | EmptyOrAny ->
-          SMap.map
+          NameUtils.Map.map
             (Fn.const { ty; from_proto = true; from_nullable = false; def_loc = None })
             universe
         | Nullish ->
-          SMap.map
+          NameUtils.Map.map
             (* Bot is the identity of type union *)
             (Fn.const
                { ty = Bot EmptyType; from_proto = true; from_nullable = true; def_loc = None })
@@ -100,9 +100,9 @@ let rec members_of_ty : Ty.t -> Ty.t member_info SMap.t * string list =
     in
     let mems =
       (* set intersection of members; type union upon overlaps *)
-      SMap.map (map_member_info Nel.one) t1_members
+      NameUtils.Map.map (map_member_info Nel.one) t1_members
       |> List.fold_right
-           (SMap.merge (fun _ ty_opt tys_opt ->
+           (NameUtils.Map.merge (fun _ ty_opt tys_opt ->
                 match (ty_opt, tys_opt) with
                 | ( Some { ty; from_proto = fp; from_nullable = fn; def_loc = dl },
                     Some { ty = tys; from_proto = fps; from_nullable = fns; def_loc = dls } ) ->
@@ -121,7 +121,7 @@ let rec members_of_ty : Ty.t -> Ty.t member_info SMap.t * string list =
                 | (_, None) ->
                   None))
            (t2_members :: ts_members)
-      |> SMap.map
+      |> NameUtils.Map.map
            (map_member_info (function
                | (t, []) -> t
                | (t1, t2 :: ts) -> Ty_utils.simplify_type ~merge_kinds:true (Union (t1, t2, ts))))
@@ -145,9 +145,9 @@ let rec members_of_ty : Ty.t -> Ty.t member_info SMap.t * string list =
     in
     let mems =
       (* set union of members; type intersection upon overlaps *)
-      SMap.map (map_member_info Nel.one) t1_members
+      NameUtils.Map.map (map_member_info Nel.one) t1_members
       |> List.fold_right
-           (SMap.merge (fun _ ty_opt tys_opt ->
+           (NameUtils.Map.merge (fun _ ty_opt tys_opt ->
                 match (ty_opt, tys_opt) with
                 | ( Some { ty; from_proto = fp; from_nullable = fn; def_loc = dl },
                     Some { ty = tys; from_proto = fps; from_nullable = fns; def_loc = dls } ) ->
@@ -166,8 +166,8 @@ let rec members_of_ty : Ty.t -> Ty.t member_info SMap.t * string list =
                 | (None, Some info) -> Some info
                 | (None, None) -> None))
            (t2_members :: ts_members)
-      |> SMap.map (map_member_info (List.fold_right Nel.cons special_cases))
-      |> SMap.map
+      |> NameUtils.Map.map (map_member_info (List.fold_right Nel.cons special_cases))
+      |> NameUtils.Map.map
            (map_member_info (function
                | (t, []) -> t
                | (t1, t2 :: ts) -> Ty_utils.simplify_type ~merge_kinds:true (Inter (t1, t2, ts))))
@@ -181,7 +181,8 @@ let rec members_of_ty : Ty.t -> Ty.t member_info SMap.t * string list =
   | Inter (t1, t2, ts) -> members_of_intersection (t1, t2, ts)
   | ( TVar _ | Bound _ | Generic _ | Symbol | Num _ | Str _ | Bool _ | NumLit _ | StrLit _
     | BoolLit _ | Arr _ | Tup _ ) as t ->
-    (SMap.empty, [Printf.sprintf "members_of_ty unexpectedly applied to (%s)" (Ty_debug.dump_t t)])
+    ( NameUtils.Map.empty,
+      [Printf.sprintf "members_of_ty unexpectedly applied to (%s)" (Ty_debug.dump_t t)] )
   | Any _
   | Top
   | Bot _
@@ -192,10 +193,10 @@ let rec members_of_ty : Ty.t -> Ty.t member_info SMap.t * string list =
   | Utility _
   | Mu _
   | CharSet _ ->
-    (SMap.empty, [])
+    (NameUtils.Map.empty, [])
 
 type ty_members = {
-  members: Ty.t member_info SMap.t;
+  members: Ty.t member_info NameUtils.Map.t;
   errors: string list;
   in_idx: bool;
 }

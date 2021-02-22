@@ -18,7 +18,7 @@ type 'a member_info = {
 }
 
 type ty_members = {
-  members: Ty.t member_info SMap.t;
+  members: Ty.t member_info NameUtils.Map.t;
   errors: string list;
   in_idx: bool;
 }

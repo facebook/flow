@@ -70,7 +70,7 @@ module Make () : sig
 
   type 'a indexed
 
-  type 'a t [@@deriving show]
+  type 'a t
 
   type index = private int [@@deriving show]
 

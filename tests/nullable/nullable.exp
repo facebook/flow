@@ -143,24 +143,6 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ nullable.js:15:17
 
-Cannot call `qux` with `x` bound to `x` because null or undefined [1] is incompatible with string [2].
-[incompatible-call]
-
-   nullable.js:15:17
-   15|   grault(); qux(x);
-                       ^
-
-References:
-   nullable.js:3:16
-    3| function bar():?string { return null; }
-                      ^^^^^^^ [1]
-   nullable.js:5:16
-    5| function qux(x:string) { }
-                      ^^^^^^ [2]
-
-
-Error ------------------------------------------------------------------------------------------------ nullable.js:15:17
-
 Cannot call `qux` with `x` bound to `x` because null [1] is incompatible with string [2]. [incompatible-call]
 
    nullable.js:15:17
@@ -191,7 +173,7 @@ References:
 
 
 
-Found 13 errors
+Found 12 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches

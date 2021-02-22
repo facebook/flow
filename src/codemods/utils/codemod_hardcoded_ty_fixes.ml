@@ -50,7 +50,9 @@ module PreserveLiterals = struct
         Ty.Bool None
     in
     match t with
-    | Ty.Str (Some s) -> enforce_string s
+    | Ty.Str (Some s) ->
+      (* TODO consider handling internal names explicitly *)
+      enforce_string (Reason.display_string_of_name s)
     | Ty.Num (Some _) -> enforce_number
     | Ty.Bool (Some _) -> enforce_bool
     | _ -> t
@@ -93,7 +95,7 @@ module Make (Extra : BASE_STATS) = struct
         (* E.g. React$Element<'div'> will become React.Element<'div'> *)
         | Ty.Generic
             ( ( {
-                  Ty.sym_name = "React$Element";
+                  Ty.sym_name = Reason.OrdinaryName "React$Element";
                   sym_provenance = Ty_symbol.Library _;
                   sym_def_loc;
                   _;
@@ -101,12 +103,12 @@ module Make (Extra : BASE_STATS) = struct
               kind,
               (Some [(Ty.Str _ | Ty.StrLit _)] as args_opt) )
           when is_react_loc sym_def_loc ->
-          let symbol = { symbol with Ty.sym_name = "Element" } in
+          let symbol = { symbol with Ty.sym_name = Reason.OrdinaryName "Element" } in
           this#on_t env Ty.(Generic (symbol, kind, args_opt))
         (* E.g. React$Element<typeof A> will become React.Node *)
         | Ty.Generic
             ( ( {
-                  Ty.sym_name = "React$Element";
+                  Ty.sym_name = Reason.OrdinaryName "React$Element";
                   sym_provenance = Ty_symbol.Library _;
                   sym_def_loc;
                   _;
@@ -114,18 +116,18 @@ module Make (Extra : BASE_STATS) = struct
               kind,
               Some _ )
           when is_react_loc sym_def_loc ->
-          let symbol = { symbol with Ty.sym_name = "Node" } in
+          let symbol = { symbol with Ty.sym_name = Reason.OrdinaryName "Node" } in
           this#on_t env Ty.(Generic (symbol, kind, None))
         | Ty.Generic
             ( ( {
-                  Ty.sym_name = "FbtElement" | "FbtResultBase";
+                  Ty.sym_name = Reason.OrdinaryName ("FbtElement" | "FbtResultBase");
                   sym_provenance = Ty_symbol.Library _;
                   _;
                 } as symbol ),
               kind,
               None )
           when (Codemod_context.Typed.metadata cctx).Context.facebook_fbt = Some "FbtElement" ->
-          let symbol = { symbol with Ty.sym_name = "Fbt" } in
+          let symbol = { symbol with Ty.sym_name = Reason.OrdinaryName "Fbt" } in
           Ty.(Generic (symbol, kind, None))
         (* The following moves the `any` component of a union to the beginning of the
          * union. This is a heuristic that helps union resolution later on. *)

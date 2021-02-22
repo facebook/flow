@@ -14,7 +14,7 @@ type speculation_id = int
 
 val init_speculation : Context.t -> speculation_id -> unit
 
-val add_unresolved_to_speculation : Context.t -> speculation_id -> Constraint.ident -> unit
+val add_unresolved_to_speculation : Context.t -> speculation_id -> Type.ident -> unit
 
 (* Maintain a stack of speculative branches. See Speculation for the contents
    of the "branch" data structure.
@@ -35,4 +35,4 @@ val speculating : Context.t -> bool
    when speculating, actions that involve unresolved tvars are deferred. *)
 val defer_action : Context.t -> action -> bool
 
-val case_diff : Context.t -> case -> case -> (Constraint.ident * Reason.reason) list
+val case_diff : Context.t -> case -> case -> (Type.ident * Reason.reason) list

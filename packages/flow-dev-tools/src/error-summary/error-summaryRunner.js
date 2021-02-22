@@ -24,17 +24,35 @@ export default (async function(args: Args): Promise<void> {
   var files = new Set();
   flow_result.errors.forEach(error =>
     error.message.forEach(err => {
-      if (
-        (args.messageFilter == null ||
-          new RegExp(args.messageFilter).test(err.descr)) &&
-        (args.codeFilter == null ||
-          (err.context != null &&
-            new RegExp(args.codeFilter).test(err.context))) &&
-        (args.fileFilter == null ||
-          (err.loc != null &&
-            err.loc.source != null &&
-            new RegExp(args.fileFilter).test(err.loc.source)))
-      ) {
+      let messageFilter =
+        args.messageFilter == null ||
+        new RegExp(args.messageFilter).test(err.descr);
+
+      let codeFilter;
+      if (args.codeFilter == null) {
+        codeFilter = true;
+      } else {
+        const regexp = new RegExp(args.codeFilter);
+        if (err.context != null) {
+          codeFilter = regexp.test(err.context);
+        } else {
+          codeFilter = false;
+        }
+      }
+
+      let fileFilter;
+      if (args.fileFilter == null) {
+        fileFilter = true;
+      } else {
+        const regexp = new RegExp(args.fileFilter);
+        if (err.loc != null && err.loc.source != null) {
+          codeFilter = regexp.test(err.loc.source);
+        } else {
+          codeFilter = false;
+        }
+      }
+
+      if (messageFilter && codeFilter && fileFilter) {
         if (args.showErrors) {
           console.log(prettyPrintError(error));
         }

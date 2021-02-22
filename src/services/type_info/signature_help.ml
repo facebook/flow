@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
-open Parsing_heaps_utils
+let loc_of_aloc = Parsing_heaps.Reader.loc_of_aloc
 
 let parameter_name is_opt name =
   let opt =
