@@ -3688,6 +3688,7 @@ and expression_ ~cond ~annot cx loc e : (ALoc.t, ALoc.t * Type.t) Ast.Expression
       | None -> (VoidT.at loc |> with_trust bogus_trust, None)
     in
     Env.havoc_heap_refinements ();
+    Env.havoc_local_refinements ~all:true cx;
     let use_op =
       Op
         (GeneratorYield

@@ -1062,6 +1062,11 @@ struct
           end;
           expr)
 
+      method! yield loc (expr : ('loc, 'loc) Ast.Expression.Yield.t) =
+        ignore @@ super#yield loc expr;
+        this#havoc_current_ssa_env;
+        expr
+
       (* Labeled statements handle labeled breaks, but also push labeled continues
          that are expected to be handled by immediately nested loops. *)
       method! labeled_statement _loc (stmt : (L.t, L.t) Ast.Statement.Labeled.t) =

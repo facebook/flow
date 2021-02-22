@@ -1438,33 +1438,38 @@ let havoc_vars =
 *)
 let havoc_heap_refinements () = iter_scopes Scope.havoc_all_refis
 
-let havoc_local_refinements cx =
+let havoc_local_refinements ?(all = false) cx =
   iter_scopes (fun scope ->
       Scope.update_entries
         (fun name entry ->
           let entry' =
-            Entry.havoc
-              ~on_call:(fun specific t general ->
-                if specific == general (* We already know t ~> general, so specific | t = general *)
-                then
-                  general
-                else
-                  let (_, tvar_t) = open_tvar t in
-                  let (_, constraints_t) = Context.find_constraints cx tvar_t in
-                  match (specific, constraints_t) with
-                  | (OpenT (_, tvar_specific), Constraint.Unresolved bounds_t)
-                    when IMap.mem tvar_specific bounds_t.Constraint.uppertvars ->
-                    (* If t ~> specific, then specific | t = specific *)
-                    specific
-                  | _ ->
-                    (* Compute specific | t = tvar where specific, t ~> tvar ~> general *)
-                    let tvar = Tvar.mk cx (reason_of_t t) in
-                    Flow.flow cx (specific, UseT (Op (Internal WidenEnv), tvar));
-                    Flow.flow cx (t, UseT (Op (Internal WidenEnv), tvar));
-                    Flow.flow cx (tvar, UseT (Op (Internal WidenEnv), general));
-                    tvar)
-              name
-              entry
+            if all then
+              Entry.havoc name entry
+            else
+              Entry.havoc
+                ~on_call:(fun specific t general ->
+                  if
+                    specific == general
+                    (* We already know t ~> general, so specific | t = general *)
+                  then
+                    general
+                  else
+                    let (_, tvar_t) = open_tvar t in
+                    let (_, constraints_t) = Context.find_constraints cx tvar_t in
+                    match (specific, constraints_t) with
+                    | (OpenT (_, tvar_specific), Constraint.Unresolved bounds_t)
+                      when IMap.mem tvar_specific bounds_t.Constraint.uppertvars ->
+                      (* If t ~> specific, then specific | t = specific *)
+                      specific
+                    | _ ->
+                      (* Compute specific | t = tvar where specific, t ~> tvar ~> general *)
+                      let tvar = Tvar.mk cx (reason_of_t t) in
+                      Flow.flow cx (specific, UseT (Op (Internal WidenEnv), tvar));
+                      Flow.flow cx (t, UseT (Op (Internal WidenEnv), tvar));
+                      Flow.flow cx (tvar, UseT (Op (Internal WidenEnv), general));
+                      tvar)
+                name
+                entry
           in
           ( if entry' != entry then
             let entry_ref = (scope.id, name, Changeset.Write) in

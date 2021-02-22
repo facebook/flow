@@ -201,7 +201,7 @@ val havoc_vars : Changeset.t -> unit
 
 val havoc_heap_refinements : unit -> unit
 
-val havoc_local_refinements : Context.t -> unit
+val havoc_local_refinements : ?all:bool -> Context.t -> unit
 
 val havoc_heap_refinements_with_propname : private_:bool -> string -> unit
 
