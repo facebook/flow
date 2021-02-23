@@ -2805,7 +2805,7 @@ end
  * See normalizer for use. *)
 module TypeScheme = struct
   type t = {
-    tparams: (ALoc.t * string) list;
+    tparams: TypeTerm.typeparam list;
     type_: TypeTerm.t;
   }
 end

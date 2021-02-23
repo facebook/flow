@@ -91,7 +91,7 @@ let func_details ~jsdoc ~exact_by_default params rest_param return =
 (* given a Loc.t within a function call, returns the type of the function being called *)
 module Callee_finder = struct
   type t = {
-    tparams: (ALoc.t * string) list;
+    tparams: Type.typeparam list;
     type_: Type.t;
     active_parameter: int;
     loc: Loc.t;

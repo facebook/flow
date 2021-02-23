@@ -49,7 +49,7 @@ let type_of_qualification =
 
 let covers_target cursor loc = Reason.in_range cursor (ALoc.to_loc_exn loc)
 
-exception Found of (ALoc.t * string) list * ALoc.t * autocomplete_type
+exception Found of Type.typeparam list * ALoc.t * autocomplete_type
 
 class process_request_searcher (from_trigger_character : bool) (cursor : Loc.t) =
   object (this)

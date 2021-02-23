@@ -134,7 +134,7 @@ type t = {
      to `T` even though it's now out of scope. In this case we need to fall back to
      the actual bounds and return those instead. So the normalized type here would
      be: Empty | Mixed, which simplifies to Mixed. *)
-  tparams: (ALoc.t * string) list;
+  tparams: Type.typeparam list;
   (* In determining whether a symbol is Local, Imported, Remote, etc, it is
      useful to keep a map of imported names and the corresponding
      location available. We can then make this decision by comparing the

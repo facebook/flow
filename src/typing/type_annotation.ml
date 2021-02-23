@@ -144,10 +144,7 @@ let add_deprecated_type_error_if_not_lib_file cx loc =
     Flow_js.add_output cx (Error_message.EDeprecatedType loc)
   | _ -> ()
 
-let polarity = function
-  | Some (_, { Ast.Variance.kind = Ast.Variance.Plus; comments = _ }) -> Polarity.Positive
-  | Some (_, { Ast.Variance.kind = Ast.Variance.Minus; comments = _ }) -> Polarity.Negative
-  | None -> Polarity.Neutral
+let polarity = Typed_ast_utils.polarity
 
 (**********************************)
 (* Transform annotations to types *)

@@ -840,7 +840,7 @@ let autocomplete_unqualified_type
   let exact_by_default = Context.exact_by_default cx in
   let tparam_results =
     Base.List.map
-      ~f:(fun (_, name) ->
+      ~f:(fun { Type.name; _ } ->
         {
           kind = Some Lsp.Completion.TypeParameter;
           name;

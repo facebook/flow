@@ -82,7 +82,7 @@ module NormalizerMonad : sig
     options:Env.options ->
     genv:Env.genv ->
     imported_names:Ty.imported_ident ALocMap.t ->
-    tparams:(ALoc.t * string) list ->
+    tparams:Type.typeparam list ->
     State.t ->
     Type.t ->
     (Ty.elt, error) result * State.t
@@ -95,7 +95,7 @@ module NormalizerMonad : sig
     options:Env.options ->
     genv:Env.genv ->
     imported_names:Ty.imported_ident Loc_collections.ALocMap.t ->
-    tparams:(ALoc.t * string) list ->
+    tparams:Type.typeparam list ->
     State.t ->
     Type.t ->
     (Ty.t, error) result * State.t
@@ -207,14 +207,15 @@ end = struct
      3. The type parameter is not in env. Do the default action.
   *)
   let lookup_tparam ~default env t tp_name tp_loc =
-    let pred (loc, name) = name = tp_name && loc = tp_loc in
+    let pred { T.name; reason; _ } = name = tp_name && tp_loc = Reason.def_aloc_of_reason reason in
     match List.find_opt pred env.Env.tparams with
     | Some _ ->
       (* If we care about shadowing of type params, then flag an error *)
       if Env.flag_shadowed_type_params env then
-        let shadow_pred (_, name) = name = tp_name in
+        let shadow_pred { T.name; _ } = name = tp_name in
         match List.find_opt shadow_pred env.Env.tparams with
-        | Some (loc, _) when loc <> tp_loc -> terr ~kind:ShadowTypeParam (Some t)
+        | Some { T.reason; _ } when Reason.def_aloc_of_reason reason <> tp_loc ->
+          terr ~kind:ShadowTypeParam (Some t)
         | Some _ -> return (Ty.Bound (tp_loc, tp_name))
         | None -> assert false
       else
@@ -1267,9 +1268,7 @@ end = struct
         Nel.fold_left
           (fun (env, rs) tp ->
             let r = type_param ~env tp in
-            let loc = Reason.def_aloc_of_reason tp.T.reason in
-            let name = tp.T.name in
-            (Env.add_typeparam env (loc, name), r :: rs))
+            (Env.add_typeparam env tp, r :: rs))
           (env, [])
           tparams
       in
