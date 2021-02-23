@@ -345,6 +345,19 @@ let get_next_event
         let%lwt event = get_next_event_from_client state client parser in
         Lwt.return event
 
+let send_request_to_client id request ~on_response ~on_error (ienv : initialized_env) =
+  let json =
+    let key = command_key_of_path ienv.i_root in
+    Lsp_fmt.print_lsp ~key (RequestMessage (id, request))
+  in
+  to_stdout json;
+
+  let handlers = (on_response, on_error) in
+  let i_outstanding_local_requests = IdMap.add id request ienv.i_outstanding_local_requests in
+  let i_outstanding_local_handlers = IdMap.add id handlers ienv.i_outstanding_local_handlers in
+
+  { ienv with i_outstanding_local_requests; i_outstanding_local_handlers }
+
 (** What should we display/hide? It's a tricky question... *)
 let should_send_status (ienv : initialized_env) (status : ShowStatus.params) =
   let use_status = Lsp_helpers.supports_status ienv.i_initialize_params in
@@ -420,11 +433,6 @@ let show_status
       else
         ShowMessageRequestRequest params.ShowStatus.request
     in
-    let json =
-      let key = command_key_of_path ienv.i_root in
-      Lsp_fmt.print_lsp ~key (RequestMessage (id, request))
-    in
-    to_stdout json;
 
     let mark_ienv_shown future_ienv =
       match future_ienv.i_status with
@@ -433,28 +441,22 @@ let show_status
       | _ -> future_ienv
     in
     let mark_state_shown state = update_ienv mark_ienv_shown state in
-    let handle_error _e state = mark_state_shown state in
+    let on_error _e state = mark_state_shown state in
     let handle_result (r : ShowMessageRequest.result) state =
       let state = mark_state_shown state in
       match r with
       | Some { ShowMessageRequest.title } -> handler title state
       | None -> state
     in
-    let handle_result =
+    let on_response =
       if use_status then
         ShowStatusHandler handle_result
       else
         ShowMessageHandler handle_result
     in
-    let handlers = (handle_result, handle_error) in
-    let i_outstanding_local_requests = IdMap.add id request ienv.i_outstanding_local_requests in
-    let i_outstanding_local_handlers = IdMap.add id handlers ienv.i_outstanding_local_handlers in
-    {
-      ienv with
-      i_status = Shown (Some id, params);
-      i_outstanding_local_requests;
-      i_outstanding_local_handlers;
-    }
+
+    let ienv = send_request_to_client id request ~on_response ~on_error ienv in
+    { ienv with i_status = Shown (Some id, params) }
 
 let send_to_server (env : connected_env) (request : LspProt.request) (metadata : LspProt.metadata) :
     unit =
