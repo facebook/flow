@@ -189,7 +189,7 @@ react_component.js:31:7 = {
       "provenance":{"kind":"Library (Remote)","loc":"[LIB] react.js:238:35-80"},
       "name":"React$FragmentType"
     },
-    "kind":"type alias"
+    "generic_kind":"type alias"
   },
   "type":"React$FragmentType",
   "reasons":[],
@@ -213,7 +213,7 @@ react_component.js:32:13 = {
       "provenance":{"kind":"Library (Remote)","loc":"[LIB] react.js:272:23-35"},
       "name":"ComponentType"
     },
-    "kind":"type alias"
+    "generic_kind":"type alias"
   },
   "type":"ComponentType<number>",
   "reasons":[],
@@ -244,7 +244,7 @@ react_component.js:32:29 = {
         "provenance":{"kind":"Library (Remote)","loc":"[LIB] react.js:175:14-32"},
         "name":"React$ComponentType"
       },
-      "kind":"type alias"
+      "generic_kind":"type alias"
     }
   },
   "type":"type ComponentType<-P> = React$ComponentType<P>",

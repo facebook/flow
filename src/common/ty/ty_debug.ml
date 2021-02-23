@@ -404,7 +404,8 @@ let json_of_elt ~strip_root =
   and json_of_generic (s, k, targs_opt) =
     json_of_targs targs_opt
     @ [
-        ("type", json_of_symbol s); ("kind", Hh_json.JSON_String (Ty.debug_string_of_generic_kind k));
+        ("type", json_of_symbol s);
+        ("generic_kind", Hh_json.JSON_String (Ty.debug_string_of_generic_kind k));
       ]
   and json_of_fun_t { fun_params; fun_rest_param; fun_return; fun_type_params; fun_static } =
     let open Hh_json in
@@ -487,7 +488,7 @@ let json_of_elt ~strip_root =
                 ] );
           ]
         | CallProp ft ->
-          [("kind", JSON_String "NamedProp"); ("prop", JSON_Object (json_of_fun_t ft))]
+          [("kind", JSON_String "CallProp"); ("prop", JSON_Object (json_of_fun_t ft))]
         | SpreadProp t -> [("kind", JSON_String "SpreadProp"); ("prop", json_of_t t)]))
   and json_of_dict { dict_polarity; dict_name; dict_key; dict_value } =
     Hh_json.(
@@ -504,7 +505,7 @@ let json_of_elt ~strip_root =
         (match p with
         | Field { t; polarity; optional } ->
           [
-            ("kind", JSON_String "field");
+            ("kind", JSON_String "Field");
             ("type", json_of_t t);
             ("polarity", json_of_polarity polarity);
             ("optional", JSON_Bool optional);
