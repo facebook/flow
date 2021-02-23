@@ -9,10 +9,6 @@ open Reason
 
 (* exceptions *)
 
-exception Not_expect_bound of string
-
-exception Attempted_operation_on_bound of string
-
 (* propagates sources to sinks following a subtype relation *)
 val flow : Context.t -> Type.t * Type.use_t -> unit
 

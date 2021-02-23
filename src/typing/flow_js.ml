@@ -122,26 +122,11 @@ end
 
 exception Not_expect_bound of string
 
-exception Attempted_operation_on_bound of string
-
-let with_evaluated_cache cx id evaluated f tvar =
-  Context.set_evaluated cx (Eval.Map.add id (OpenT tvar) evaluated);
-  try f tvar
-  with Attempted_operation_on_bound _ as exn when Context.in_normalizer_mode cx ->
-    let e = Exception.wrap exn in
-    (* Raised exceptions are not recorded on the constraint graph or the eval-cache.
-       If this exception is hit during normalization, then `tvar` will likely not
-       have the expected lower-bounds. To avoid reusing this spurious result the
-       next time we evaluate the same EvalT, we need to restore the evaluation
-       cache. *)
-    Context.set_evaluated cx evaluated;
-    Exception.reraise e
-
 (* Sometimes we don't expect to see type parameters, e.g. when they should have
    been substituted away. *)
 let not_expect_bound cx t =
   match t with
-  | BoundT _ when not (Context.in_normalizer_mode cx) ->
+  | BoundT _ ->
     raise
       (Not_expect_bound
          (spf
@@ -283,12 +268,7 @@ struct
 
       (* Type parameters should always be substituted out, and as such they should
          never appear "exposed" in flows. (They can still appear bound inside
-         polymorphic definitions.)
-
-         An exception to this is when calling Flow_js from the normalizer. There,
-         BoundTs have not been substituted with their bounds. Doing so typically
-         leads to poor quality of normalized types when the BoundTs appear under
-         EvalT. The following checks take this into account in banning BoundTs. *)
+         polymorphic definitions.) *)
       not_expect_bound cx l;
       not_expect_bound_use cx u;
 
@@ -393,18 +373,6 @@ struct
           | FullyResolved (use_op', t2) ->
             let t2_use = flow_use_op cx use_op' (UseT (use_op, t2)) in
             rec_flow cx trace (t1, t2_use))
-        (*****************************************)
-        (* BoundTs - only used for normalization *)
-        (*****************************************)
-        | (BoundT (_, lname), UseT (_, BoundT (_, uname))) when lname = uname ->
-          assert (Context.in_normalizer_mode cx);
-          ()
-        | (BoundT (_, _), ReposLowerT (reason, use_desc, u)) ->
-          assert (Context.in_normalizer_mode cx);
-          rec_flow cx trace (reposition_reason cx ~trace reason ~use_desc l, u)
-        | (BoundT (_, name), _) ->
-          assert (Context.in_normalizer_mode cx);
-          raise (Attempted_operation_on_bound name)
         (*************)
         (* Subtyping *)
         (*************)
@@ -6670,11 +6638,9 @@ struct
     let evaluated = Context.evaluated cx in
     match Eval.Map.find_opt i evaluated with
     | None ->
-      Tvar.mk_no_wrap_where
-        cx
-        reason
-        (with_evaluated_cache cx i evaluated (fun tvar ->
-             flow_opt cx ?trace (curr_t, RefineT (reason, p, tvar))))
+      Tvar.mk_no_wrap_where cx reason (fun tvar ->
+          Context.set_evaluated cx (Eval.Map.add i (OpenT tvar) evaluated);
+          flow_opt cx ?trace (curr_t, RefineT (reason, p, tvar)))
     | Some it -> it
 
   and eval_evalt cx ?trace t evaluator id =
@@ -6800,7 +6766,9 @@ struct
             rec_flow_t cx trace ~use_op:unknown_use (t, x)
           | _ -> eval_destructor cx ~trace use_op reason t d tvar
         in
-        Tvar.mk_no_wrap_where cx reason (with_evaluated_cache cx id evaluated f)
+        Tvar.mk_no_wrap_where cx reason (fun tvar ->
+            Context.set_evaluated cx (Eval.Map.add id (OpenT tvar) evaluated);
+            f tvar)
     in
     (slingshot, result)
 

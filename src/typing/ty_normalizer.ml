@@ -611,17 +611,21 @@ end = struct
   let type_destructor_t ~env ~cont ~default ~non_eval (use_op, reason, id, t, d) =
     if Env.evaluate_type_destructors env then
       let cx = Env.get_cx env in
-      Context.with_normalizer_mode cx (fun cx ->
-          (* The evaluated type might be recursive. To avoid non-termination we
-           * wrap the evaluation with our caching mechanism. *)
-          Recursive.with_cache (EvalKey id) ~f:(fun () ->
+      Recursive.with_cache (EvalKey id) ~f:(fun () ->
+          Flow_js_utils.check_with_generics cx (List.rev env.Env.tparams) (fun map_ ->
               let trace = Trace.dummy_trace in
-              match Flow_js.mk_type_destructor cx ~trace use_op reason t d id with
-              | exception Flow_js.Attempted_operation_on_bound _ -> non_eval ~env t d
-              | (_, tout) ->
-                (match Lookahead.peek env tout with
-                | Lookahead.LowerBounds [t] -> cont ~env t
-                | _ -> default ~env tout)))
+              let t' = Subst.subst cx map_ t in
+              let d' = Subst.subst_destructor cx map_ d in
+              let id' =
+                if t == t' && d == d' then
+                  id
+                else
+                  Type.Eval.generate_id ()
+              in
+              let (_, tout) = Flow_js.mk_type_destructor cx ~trace use_op reason t' d' id' in
+              match Lookahead.peek env tout with
+              | Lookahead.LowerBounds [t] -> cont ~env t
+              | _ -> default ~env tout))
     else
       non_eval ~env t d
 
@@ -2295,14 +2299,11 @@ end = struct
 
     and type_app_t ~env ~proto ~imode reason use_op c ts =
       let cx = Env.get_cx env in
-      Context.with_normalizer_mode cx (fun cx ->
-          let trace = Trace.dummy_trace in
-          let reason_op = reason in
-          let reason_tapp = reason in
-          match Flow_js.mk_typeapp_instance cx ~trace ~use_op ~reason_op ~reason_tapp c ts with
-          | exception Flow_js.Attempted_operation_on_bound _ ->
-            terr ~kind:UnsupportedTypeCtor ~msg:"type_app" None
-          | t -> type__ ~env ~proto ~imode t)
+      let trace = Trace.dummy_trace in
+      let reason_op = reason in
+      let reason_tapp = reason in
+      let t = Flow_js.mk_typeapp_instance cx ~trace ~use_op ~reason_op ~reason_tapp c ts in
+      type__ ~env ~proto ~imode t
 
     and enum_t ~env reason trust enum =
       let { T.members; representation_t; _ } = enum in
@@ -2429,7 +2430,9 @@ end = struct
       | DefT (r, _, InstanceT (static, super, _, inst)) ->
         instance_t ~env ~imode r static super inst
       | ThisClassT (_, t, _) -> this_class_t ~env ~proto ~imode t
-      | DefT (_, _, PolyT { t_out; _ }) -> type__ ~env ~proto ~imode t_out
+      | DefT (_, _, PolyT { tparams; t_out; _ }) ->
+        let env = Env.{ env with tparams = Nel.to_list tparams @ env.tparams } in
+        type__ ~env ~proto ~imode t_out
       | MaybeT (_, t) ->
         let%map t = type__ ~env ~proto ~imode t in
         Ty.mk_union (Ty.Void, [Ty.Null; t])

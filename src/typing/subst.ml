@@ -198,3 +198,5 @@ let substituter =
   end
 
 let subst cx ?use_op ?(force = true) map = substituter#type_ cx (map, force, use_op)
+
+let subst_destructor cx ?use_op ?(force = true) map = substituter#destructor cx (map, force, use_op)

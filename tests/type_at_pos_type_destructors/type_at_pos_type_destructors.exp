@@ -459,12 +459,12 @@ type-destructor.js:31:6,31:25
 
 type-destructor.js:34:6
 Flags: --evaluate-type-destructors
-type ValuesPoly<X> = $Values<X>
+type ValuesPoly<X> = empty
 type-destructor.js:34:6,34:15
 
 type-destructor.js:37:6
 Flags: --evaluate-type-destructors
-type ValuesPolyBound<X: {f: number, ...}> = $Values<X>
+type ValuesPolyBound<X: {f: number, ...}> = number
 type-destructor.js:37:6,37:20
 
 type-destructor.js:41:6
@@ -489,7 +489,7 @@ type-destructor.js:55:6,55:28
 
 type-destructor.js:57:6
 Flags: --evaluate-type-destructors
-type DiffObjPoly<X> = $Diff<{|y: X|}, {[string]: X}>
+type DiffObjPoly<X> = {|y?: X|}
 type-destructor.js:57:6,57:16
 
 type-destructor.js:59:6
@@ -504,7 +504,7 @@ type-destructor.js:61:6,61:17
 
 type-destructor.js:63:6
 Flags: --evaluate-type-destructors
-type DiffObjPoly4<X, Y> = $Diff<{|x: X, y: Y|}, {|x?: X|}>
+type DiffObjPoly4<X, Y> = {|x?: X, y: Y|}
 type-destructor.js:63:6,63:17
 
 type-destructor.js:67:6
@@ -519,7 +519,7 @@ type-destructor.js:70:6,70:12
 
 type-destructor.js:72:6
 Flags: --evaluate-type-destructors
-type RestObjPoly<X> = $Rest<{|y: X|}, {[string]: X}>
+type RestObjPoly<X> = {|y?: X|}
 type-destructor.js:72:6,72:16
 
 type-destructor.js:74:6
@@ -539,17 +539,17 @@ type-destructor.js:82:6,82:21
 
 type-destructor.js:84:6
 Flags: --evaluate-type-destructors
-type ElementTypePropsPoly<K> = $ElementType<Props, K>
+type ElementTypePropsPoly<K> = empty
 type-destructor.js:84:6,84:25
 
 type-destructor.js:86:6
 Flags: --evaluate-type-destructors
-type ElementTypePropsPolyBounded<K: "name" | "age"> = $ElementType<Props, K>
+type ElementTypePropsPolyBounded<K: "name" | "age"> = number | string
 type-destructor.js:86:6,86:32
 
 type-destructor.js:88:6
 Flags: --evaluate-type-destructors
-type ElementTypePropsPolyBoundedEmpty<K: "phone"> = $ElementType<Props, K>
+type ElementTypePropsPolyBoundedEmpty<K: "phone"> = any (implicit)
 type-destructor.js:88:6,88:37
 
 type-destructor.js:92:6
@@ -559,7 +559,7 @@ type-destructor.js:92:6,92:23
 
 type-destructor.js:94:6
 Flags: --evaluate-type-destructors
-type NonMaybeTypeAbstract<X> = $NonMaybeType<X>
+type NonMaybeTypeAbstract<X> = X
 type-destructor.js:94:6,94:25
 
 type-destructor.js:98:6
@@ -637,12 +637,12 @@ type-destructor.js:165:6,165:13
 
 type-destructor.js:169:18
 Flags: --evaluate-type-destructors
-<T: {...}, K: T>() => $ElementType<T, K>
+<T: {...}, K: T>() => empty
 type-destructor.js:169:18,169:28
 
 type-destructor.js:171:18
 Flags: --evaluate-type-destructors
-<K: empty, T: {...}>() => $ElementType<T, K>
+<K: empty, T: {...}>() => empty
 type-destructor.js:171:18,171:28
 
 type-destructor.js:175:6
@@ -653,12 +653,12 @@ type-destructor.js:175:6,175:28
 
 type-destructor.js:182:6
 Flags: --evaluate-type-destructors
-type V$0 = {|h: V$0|} | X;
-type RecursiveTypeDestructorPoly<X> = {|f: ({|h: V$0|} | X)|}
+type V$1 = {|h: V$1|} | X;
+type RecursiveTypeDestructorPoly<X> = {|f: ({|h: ({|h: V$1|} | X)|} | X)|}
 type-destructor.js:182:6,182:32
 
 type-destructor.js:188:6
 Flags: --evaluate-type-destructors
-type $Pick<O: {...}, K: $Keys<O>> = $ElementType<$NonMaybeType<O>, K>
+type $Pick<O: {...}, K: $Keys<O>> = empty
 type-destructor.js:188:6,188:10
 

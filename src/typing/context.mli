@@ -82,7 +82,6 @@ type phase =
   | InitLib
   | Checking
   | Merging
-  | Normalizing
 
 val string_of_phase : phase -> string
 
@@ -445,10 +444,6 @@ val find_trust_constraints :
 val find_trust_graph : t -> Trust_constraint.ident -> Trust_constraint.constraints
 
 val find_trust_root : t -> Trust_constraint.ident -> Trust_constraint.ident * Trust_constraint.root
-
-val with_normalizer_mode : t -> (t -> 'a) -> 'a
-
-val in_normalizer_mode : t -> bool
 
 val constraint_cache : t -> Type.FlowSet.t ref
 
