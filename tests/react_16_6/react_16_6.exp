@@ -37,8 +37,8 @@ References:
    lazy.js:6:1
      6| function FunctionComponent(x: Props): React.Node { return null }
         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   <BUILTINS>/react.js:316:22
-   316|     component: () => Promise<{ default: React$AbstractComponent<Config, Instance>, ... }>,
+   <BUILTINS>/react.js:333:22
+   333|     component: () => Promise<{ default: React$AbstractComponent<Config, Instance>, ... }>,
                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
@@ -55,8 +55,8 @@ References:
    lazy.js:7:7
      7| class ClassComponent extends React.Component<Props> {}
               ^^^^^^^^^^^^^^ [1]
-   <BUILTINS>/react.js:316:22
-   316|     component: () => Promise<{ default: React$AbstractComponent<Config, Instance>, ... }>,
+   <BUILTINS>/react.js:333:22
+   333|     component: () => Promise<{ default: React$AbstractComponent<Config, Instance>, ... }>,
                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
@@ -73,8 +73,8 @@ References:
    lazy.js:6:1
       6| function FunctionComponent(x: Props): React.Node { return null }
          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   <BUILTINS>/react.js:316:30
-    316|     component: () => Promise<{ default: React$AbstractComponent<Config, Instance>, ... }>,
+   <BUILTINS>/react.js:333:30
+    333|     component: () => Promise<{ default: React$AbstractComponent<Config, Instance>, ... }>,
                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
    <BUILTINS>/core.js:1798:24
    1798| declare class Promise<+R> {
@@ -94,8 +94,8 @@ References:
    lazy.js:7:7
       7| class ClassComponent extends React.Component<Props> {}
                ^^^^^^^^^^^^^^ [1]
-   <BUILTINS>/react.js:316:30
-    316|     component: () => Promise<{ default: React$AbstractComponent<Config, Instance>, ... }>,
+   <BUILTINS>/react.js:333:30
+    333|     component: () => Promise<{ default: React$AbstractComponent<Config, Instance>, ... }>,
                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
    <BUILTINS>/core.js:1798:24
    1798| declare class Promise<+R> {

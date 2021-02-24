@@ -52,7 +52,6 @@ type 'a t = {
   num_workers: int;
   total_components: int;
   total_files: int;
-  arch: Options.arch;
   mutable ready_components: int;
   mutable ready_files: int;
   mutable blocked_components: int;
@@ -95,7 +94,6 @@ let is_done stream = stream.blocked_components = 0
 
 let create
     ~num_workers
-    ~arch
     ~sig_dependency_graph
     ~leader_map
     ~component_map
@@ -148,7 +146,6 @@ let create
       num_workers;
       total_components;
       total_files;
-      arch;
       ready_components = 0;
       ready_files = 0;
       blocked_components = 0;
@@ -176,13 +173,8 @@ let create
 
 let update_server_status stream =
   let status =
-    match stream.arch with
-    | Options.Classic ->
-      ServerStatus.(
-        Merging_progress { finished = stream.merged_files; total = Some stream.total_files })
-    | Options.TypesFirst _ ->
-      ServerStatus.(
-        Merging_types_progress { finished = stream.merged_files; total = Some stream.total_files })
+    ServerStatus.(
+      Merging_types_progress { finished = stream.merged_files; total = Some stream.total_files })
   in
   MonitorRPC.status_update status
 

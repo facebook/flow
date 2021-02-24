@@ -168,10 +168,10 @@ let lsp_DocumentIdentifier_to_flow
 let lsp_DocumentPosition_to_flow
     (params : Lsp.TextDocumentPositionParams.t) ~(client : Persistent_connection.single_client) :
     File_input.t * int * int =
-  Lsp.TextDocumentPositionParams.(
-    let file = lsp_DocumentIdentifier_to_flow params.textDocument client in
-    let (line, char) = lsp_position_to_flow params.position in
-    (file, line, char))
+  let { Lsp.TextDocumentPositionParams.textDocument; position } = params in
+  let file = lsp_DocumentIdentifier_to_flow textDocument client in
+  let (line, char) = lsp_position_to_flow position in
+  (file, line, char)
 
 let lsp_textDocument_and_range_to_flow
     ?(file_key_of_path = (fun p -> File_key.SourceFile p)) td range client =
@@ -207,13 +207,19 @@ module DocumentSymbols = struct
       ~(containerName : string option)
       ~(name : string)
       ~(kind : Lsp.SymbolInformation.symbolKind) : Lsp.SymbolInformation.t list =
-    {
-      Lsp.SymbolInformation.name;
-      kind;
-      location = { Lsp.Location.uri; range = loc_to_lsp_range loc };
-      containerName;
-    }
-    :: acc
+    if name = "" then
+      (* sometimes due to parse errors, we end up with empty names. hide them!
+         in fact, VS Code throws out the entire response if any symbol name is falsy!
+         https://github.com/microsoft/vscode/blob/afd102cbd2e17305a510701d7fd963ec2528e4ea/src/vs/workbench/api/common/extHostTypes.ts#L1068-L1072 *)
+      acc
+    else
+      {
+        Lsp.SymbolInformation.name;
+        kind;
+        location = { Lsp.Location.uri; range = loc_to_lsp_range loc };
+        containerName;
+      }
+      :: acc
 
   let ast_name_opt ~uri ~containerName ~acc ~loc ~(name_opt : string option) ~kind =
     Base.Option.value_map name_opt ~default:acc ~f:(fun name ->

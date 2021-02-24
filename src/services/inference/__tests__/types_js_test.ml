@@ -74,7 +74,6 @@ let dummy_options_flags =
     wait_for_recheck = None;
     weak = false;
     include_suppressions = false;
-    generate_tests = None;
   }
 
 let dummy_saved_state_flags =
@@ -106,6 +105,7 @@ let make_options () =
   let root = Path.dummy_path in
   CommandUtils.make_options
     ~flowconfig_name:".flowconfig"
+    ~flowconfig_hash:""
     ~flowconfig
     ~lazy_mode:None
     ~root

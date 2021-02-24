@@ -88,7 +88,7 @@ type json_type =
 
 (*
  * This module gives monadic recursive access to values within objects by key.
- * It uses Pervasives.result to manage control flow in the monad when an error
+ * It uses Stdlib.result to manage control flow in the monad when an error
  * is encountered. It also tracks the backtrace of the keys accessed to give
  * detailed error messages.
  *

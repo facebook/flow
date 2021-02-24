@@ -2,19 +2,7 @@
   "errors":[
     {
       "loc":{"source":null,"start":{"line":2,"column":44},"end":{"line":2,"column":45}},
-      "message":"Unexpected token `=`, expected the token `;`"
-    },
-    {
-      "loc":{"source":null,"start":{"line":2,"column":44},"end":{"line":2,"column":45}},
-      "message":"Unexpected token `=`, expected the token `declare`"
-    },
-    {
-      "loc":{"source":null,"start":{"line":2,"column":46},"end":{"line":2,"column":52}},
-      "message":"Unexpected identifier, expected the token `var`"
-    },
-    {
-      "loc":{"source":null,"start":{"line":2,"column":52},"end":{"line":2,"column":53}},
-      "message":"Unexpected token `;`, expected an identifier"
+      "message":"Unexpected token `=`. Initializers are not allowed in a `declare opaque type`."
     }
   ],
   "type":"Program",
@@ -39,13 +27,13 @@
         "body":[
           {
             "type":"DeclareExportDeclaration",
-            "loc":{"source":null,"start":{"line":2,"column":2},"end":{"line":2,"column":43}},
-            "range":[25,66],
+            "loc":{"source":null,"start":{"line":2,"column":2},"end":{"line":2,"column":53}},
+            "range":[25,76],
             "default":false,
             "declaration":{
               "type":"DeclareOpaqueType",
-              "loc":{"source":null,"start":{"line":2,"column":17},"end":{"line":2,"column":43}},
-              "range":[40,66],
+              "loc":{"source":null,"start":{"line":2,"column":17},"end":{"line":2,"column":53}},
+              "range":[40,76],
               "id":{
                 "type":"Identifier",
                 "loc":{"source":null,"start":{"line":2,"column":29},"end":{"line":2,"column":35}},
@@ -55,7 +43,11 @@
                 "optional":false
               },
               "typeParameters":null,
-              "impltype":null,
+              "impltype":{
+                "type":"StringTypeAnnotation",
+                "loc":{"source":null,"start":{"line":2,"column":46},"end":{"line":2,"column":52}},
+                "range":[69,75]
+              },
               "supertype":{
                 "type":"NumberTypeAnnotation",
                 "loc":{"source":null,"start":{"line":2,"column":37},"end":{"line":2,"column":43}},
@@ -64,19 +56,6 @@
             },
             "specifiers":[],
             "source":null
-          },
-          {
-            "type":"DeclareVariable",
-            "loc":{"source":null,"start":{"line":2,"column":44},"end":{"line":2,"column":53}},
-            "range":[67,76],
-            "id":{
-              "type":"Identifier",
-              "loc":{"source":null,"start":{"line":2,"column":52},"end":{"line":2,"column":53}},
-              "range":[75,76],
-              "name":"",
-              "typeAnnotation":null,
-              "optional":false
-            }
           }
         ]
       },

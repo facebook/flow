@@ -622,6 +622,23 @@ References:
            ^ [1]
 
 
+Error -------------------------------------------------------------------------------------- func_call_recursive.js:12:4
+
+Cannot cast `x` to number because null [1] is incompatible with number [2]. [incompatible-cast]
+
+   func_call_recursive.js:12:4
+   12|   (x: number);
+          ^
+
+References:
+   func_call_recursive.js:8:7
+    8|   x = null;
+             ^^^^ [1]
+   func_call_recursive.js:12:7
+   12|   (x: number);
+             ^^^^^^ [2]
+
+
 Error -------------------------------------------------------------------------------------------- hasOwnProperty.js:4:5
 
 Cannot call `x.y` because undefined [1] is not a function. [not-a-function]
@@ -857,6 +874,74 @@ References:
    inclusion_check_widening.js:52:23
    52| type State = { prop: ?C };
                              ^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- issue-7103.js:15:15
+
+Cannot cast `box` to empty because object literal [1] is incompatible with empty [2]. [incompatible-cast]
+
+   issue-7103.js:15:15
+   15|       return (box: empty).value;
+                     ^^^
+
+References:
+   issue-7103.js:12:13
+   12|       box = { type: "BAD", value: t };
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   issue-7103.js:15:20
+   15|       return (box: empty).value;
+                          ^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- issue-7104.js:22:15
+
+Cannot cast `box` to empty because object literal [1] is incompatible with empty [2]. [incompatible-cast]
+
+   issue-7104.js:22:15
+   22|       return (box: empty).value;
+                     ^^^
+
+References:
+   issue-7104.js:11:15
+   11|         box = { type: "BAD", value: t };
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   issue-7104.js:22:20
+   22|       return (box: empty).value;
+                          ^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- issue-7105.js:11:39
+
+Cannot cast `box` to empty because object type [1] is incompatible with empty [2]. [incompatible-cast]
+
+   issue-7105.js:11:39
+   11|         yield { type: "DONE", value: (box: empty).value };
+                                             ^^^
+
+References:
+   issue-7105.js:6:12
+    6|   let box: Box = { type: "GOOD", value: t };
+                  ^^^ [1]
+   issue-7105.js:11:44
+   11|         yield { type: "DONE", value: (box: empty).value };
+                                                  ^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- issue-7541.js:10:10
+
+Cannot return `a` because number [1] is incompatible with string [2]. [incompatible-return]
+
+   issue-7541.js:10:10
+   10|   return a; // a is string
+                ^
+
+References:
+   issue-7541.js:7:9
+    7|     a = 2;
+               ^ [1]
+   issue-7541.js:3:20
+    3| function myFunc(): string {
+                          ^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------- missing-property-cond.js:4:7
@@ -3333,7 +3418,7 @@ Cannot call `BAZ.stuff` because undefined [1] is not a function. [not-a-function
 
 References:
    lib.js:3:27
-    3| declare var BAZ: {stuff?: (x: number) => void} | void;
+    3| declare var BAZ: {stuff?: (x: number) => void, ...} | void;
                                  ^^^^^^^^^^^^^^^^^^^ [1]
 
 
@@ -3346,9 +3431,9 @@ Cannot call `BAZ.stuff` because property `stuff` is missing in undefined [1]. [i
              ^^^^^
 
 References:
-   lib.js:3:50
-    3| declare var BAZ: {stuff?: (x: number) => void} | void;
-                                                        ^^^^ [1]
+   lib.js:3:55
+    3| declare var BAZ: {stuff?: (x: number) => void, ...} | void;
+                                                             ^^^^ [1]
 
 
 Error --------------------------------------------------------------------------------------------------- typeof.js:26:7
@@ -3360,9 +3445,9 @@ Cannot get `BAZ.stuff` because property `stuff` is missing in undefined [1]. [in
              ^^^^^
 
 References:
-   lib.js:3:50
-    3| declare var BAZ: {stuff?: (x: number) => void} | void;
-                                                        ^^^^ [1]
+   lib.js:3:55
+    3| declare var BAZ: {stuff?: (x: number) => void, ...} | void;
+                                                             ^^^^ [1]
 
 
 Error --------------------------------------------------------------------------------------------------- typeof.js:30:9
@@ -3375,8 +3460,22 @@ Cannot call `BAZ.stuff` because undefined [1] is not a function. [not-a-function
 
 References:
    lib.js:3:27
-    3| declare var BAZ: {stuff?: (x: number) => void} | void;
+    3| declare var BAZ: {stuff?: (x: number) => void, ...} | void;
                                  ^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error --------------------------------------------------------------------------------------------------- typeof.js:30:9
+
+Cannot call `BAZ.stuff` because property `stuff` is missing in undefined [1]. [incompatible-use]
+
+   typeof.js:30:9
+   30|     BAZ.stuff(123); // error, refinement is gone
+               ^^^^^
+
+References:
+   lib.js:3:55
+    3| declare var BAZ: {stuff?: (x: number) => void, ...} | void;
+                                                             ^^^^ [1]
 
 
 Error -------------------------------------------------------------------------------------------------- typeof.js:49:20
@@ -3845,7 +3944,7 @@ Cannot perform arithmetic operation because undefined [1] is not a number. [unsa
 
 
 
-Found 253 errors
+Found 259 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches

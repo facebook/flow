@@ -263,7 +263,7 @@ let init () = FlowInteractionLogger.init ()
 
 let flush () = FlowInteractionLogger.flush ()
 
-(* Not every message the the lsp process receives triggers an interaction. This function
+(* Not every message the lsp process receives triggers an interaction. This function
  * enumerates which methods we care about and what trigger they correspond to *)
 let trigger_of_lsp_msg =
   let open Lsp in

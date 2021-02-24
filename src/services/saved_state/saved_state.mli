@@ -7,6 +7,7 @@
 
 type denormalized_file_data = {
   resolved_requires: Module_heaps.resolved_requires;
+  exports: Exports.t;
   hash: Xx.hash;
 }
 
@@ -23,9 +24,7 @@ type unparsed_file_data = {
 }
 
 type saved_state_dependency_graph =
-  | Classic_dep_graph of Utils_js.FilenameSet.t Utils_js.FilenameMap.t
-  | Types_first_dep_graph of
-      (Utils_js.FilenameSet.t * Utils_js.FilenameSet.t) Utils_js.FilenameMap.t
+  (Utils_js.FilenameSet.t * Utils_js.FilenameSet.t) Utils_js.FilenameMap.t
 
 type saved_state_data = {
   flowconfig_hash: Xx.hash;

@@ -13,6 +13,8 @@ exception Sig_ast_ALoc_table_not_found of string
 
 exception Docblock_not_found of string
 
+exception Exports_not_found of string
+
 exception Requires_not_found of string
 
 exception Sig_requires_not_found of string

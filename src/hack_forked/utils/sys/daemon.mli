@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
-(** Type-safe versions of the channels in Pervasives. *)
+(** Type-safe versions of the channels in Pervasives/Stdlib. *)
 
 type 'a in_channel
 
@@ -26,7 +26,7 @@ val descr_of_out_channel : 'a out_channel -> Unix.file_descr
 
 val cast_in : 'a in_channel -> Timeout.in_channel
 
-val cast_out : 'a out_channel -> Pervasives.out_channel
+val cast_out : 'a out_channel -> Stdlib.out_channel
 
 val close_out : 'a out_channel -> unit
 

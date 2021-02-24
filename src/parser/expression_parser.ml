@@ -213,7 +213,7 @@ module Expression
           if Peek.is_implicit_semicolon env then
             (None, false)
           else
-            let delegate = Expect.maybe env T_MULT in
+            let delegate = Eat.maybe env T_MULT in
             let has_argument =
               match Peek.token env with
               | T_SEMICOLON

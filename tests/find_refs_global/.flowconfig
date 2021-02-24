@@ -1,2 +1,2 @@
 [options]
-types_first=false
+experimental.new_signatures=true

@@ -33,10 +33,12 @@ let save_ast_diff file_key ast ast' =
     let file_path = File_key.to_string file_key in
     let file_input = File_input.FileName file_path in
     let layout_opts =
+      (* TODO: this should be configurable and/or obey flowconfig options *)
       Js_layout_generator.
         {
-          preserve_formatting = true;
           bracket_spacing = false;
+          preserve_formatting = true;
+          single_quotes = false;
           trailing_commas = Trailing_commas.All;
         }
     in

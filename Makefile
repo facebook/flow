@@ -111,6 +111,7 @@ MODULES=\
   src/parser_utils\
   src/parser_utils/aloc\
   src/parser_utils/iloc\
+  src/parser_utils/exports\
   src/parser_utils/output\
   src/parser_utils/output/printers\
   src/parser_utils/signature_builder\
@@ -133,6 +134,9 @@ MODULES=\
   src/services/autocomplete\
   src/services/code_action\
   src/services/coverage\
+  src/services/export\
+  src/services/export/index\
+  src/services/export/search\
   src/services/get_def\
   src/services/inference\
   src/services/jsdoc\
@@ -151,6 +155,7 @@ MODULES=\
   src/state/heaps/parsing/exceptions\
   src/state/locals/module\
   src/state/readers\
+  src/third-party/fuzzy-path/src\
   src/third-party/lz4\
   src/third-party/ocaml-sourcemaps/src\
   src/third-party/ocaml-vlq/src\
@@ -211,6 +216,7 @@ NATIVE_C_FILES=\
   src/hack_forked/utils/sys/processor_info.c\
   src/hack_forked/utils/sys/realpath.c\
   src/hack_forked/utils/sys/sysinfo.c\
+  src/third-party/fuzzy-path/src/fuzzy_path_stubs.c\
   $(LZ4_C_FILES)\
   $(INTERNAL_NATIVE_C_FILES)
 
@@ -231,8 +237,19 @@ NATIVE_FINDLIB_PACKAGES=\
   unix
 
 NATIVE_LIBRARIES=\
+  stdc++\
   pthread\
   $(EXTRA_LIBS)
+
+# On Windows, the linker (flexlink) handles -lfoo by searching for "libfoo",
+# then "libfoo.dll.a" (dynamic linking), then "libfoo.a". Since we don't want
+# users to have to install mingw64, we can either package the DLLs or
+# statically link them. We choose to statically link them to maintain a single
+# binary, by passing `-lfoo.a` which finds `libfoo.a` before looking (in vain)
+# for `libfoo.a.dll.a`.
+ifeq ($(UNAME_S), Windows)
+NATIVE_LIBRARIES:=$(addsuffix .a,$(NATIVE_LIBRARIES))
+endif
 
 COPIED_FLOWLIB=\
 	$(foreach lib,$(wildcard lib/*.js),_build/$(lib))
@@ -274,6 +291,10 @@ BUILT_OBJECT_FILES=$(addprefix _build/,$(NATIVE_OBJECT_FILES))
 BUILT_OUNIT_TESTS=$(addprefix _build/,$(OUNIT_TESTS))
 BUILT_LZ4_OBJECT_FILES=$(addprefix _build/,$(LZ4_OBJECT_FILES))
 
+FUZZY_PATH_DEPS=src/third-party/fuzzy-path/libfuzzy-path.a
+BUILT_FUZZY_PATH_DEPS=$(addprefix _build/,$(FUZZY_PATH_DEPS))
+FUZZY_PATH_LINKER_FLAGS=$(FUZZY_PATH_DEPS)
+
 # Any additional C flags can be added here
 CC_FLAGS=-mcx16
 CC_FLAGS += $(EXTRA_CC_FLAGS)
@@ -287,8 +308,11 @@ EXTRA_INCLUDE_OPTS=$(foreach dir, $(ALL_INCLUDE_PATHS),-ccopt -I -ccopt $(dir))
 EXTRA_LIB_OPTS=$(foreach dir, $(EXTRA_LIB_PATHS),-cclib -L -cclib $(dir))
 FRAMEWORK_OPTS=$(foreach framework, $(FRAMEWORKS),-cclib -framework -cclib $(framework))
 
-BYTECODE_LINKER_FLAGS=$(NATIVE_OBJECT_FILES) $(NATIVE_LIB_OPTS) $(EXTRA_LIB_OPTS) $(FRAMEWORK_OPTS)
+BYTECODE_LINKER_FLAGS=$(NATIVE_OBJECT_FILES) $(FUZZY_PATH_LINKER_FLAGS) $(NATIVE_LIB_OPTS) $(EXTRA_LIB_OPTS) $(FRAMEWORK_OPTS)
 LINKER_FLAGS=$(BYTECODE_LINKER_FLAGS)
+
+# For fuzzy-path
+CXXFLAGS=-s -std=c++11 -Wall -O3 -static-libstdc++
 
 RELEASE_TAGS=$(if $(FLOW_RELEASE),-tag warn_a,)
 
@@ -302,7 +326,7 @@ all-homebrew:
 	export FLOW_RELEASE="1"; \
 	opam init --bare --no-setup --disable-sandboxing && \
 	rm -rf _opam && \
-	opam switch create . --deps-only && \
+	opam switch create . --deps-only ocaml-base-compiler.4.09.1 && \
 	opam exec -- make
 
 clean:
@@ -311,7 +335,7 @@ clean:
 	rm -f src/hack_forked/utils/core/get_build_id.gen.c
 	rm -f flow.odocl
 
-build-flow: _build/scripts/ppx_gen_flowlibs.exe $(BUILT_OBJECT_FILES) $(COPIED_FLOWLIB) $(COPIED_PRELUDE) $(INTERNAL_BUILD_FLAGS)
+build-flow: _build/scripts/ppx_gen_flowlibs.exe $(BUILT_FUZZY_PATH_DEPS) $(BUILT_OBJECT_FILES) $(COPIED_FLOWLIB) $(COPIED_PRELUDE) $(INTERNAL_BUILD_FLAGS)
 	# Both lwt and lwt_ppx provide ppx stuff. Fixed in lwt 4.0.0
 	# https://github.com/ocsigen/lwt/issues/453
 	export OCAMLFIND_IGNORE_DUPS_IN="$(shell ocamlfind query lwt)"; \
@@ -320,7 +344,7 @@ build-flow: _build/scripts/ppx_gen_flowlibs.exe $(BUILT_OBJECT_FILES) $(COPIED_F
 		$(RELEASE_TAGS) \
 		src/flow.native
 
-build-flow-debug: _build/scripts/ppx_gen_flowlibs.exe $(BUILT_OBJECT_FILES) $(COPIED_FLOWLIB) $(COPIED_PRELUDE) $(INTERNAL_BUILD_FLAGS)
+build-flow-debug: _build/scripts/ppx_gen_flowlibs.exe $(BUILT_FUZZY_PATH_DEPS) $(BUILT_OBJECT_FILES) $(COPIED_FLOWLIB) $(COPIED_PRELUDE) $(INTERNAL_BUILD_FLAGS)
 	$(OCB) $(INTERNAL_FLAGS) $(INCLUDE_OPTS) -tag thread $(NATIVE_FINDLIB_OPTS) \
 		-lflags -custom -lflags "$(LINKER_FLAGS)" \
 		src/flow.d.byte
@@ -378,6 +402,18 @@ _build/scripts/ppx_gen_flowlibs.exe: $(BUILT_LZ4_OBJECT_FILES) _build/src/common
 		_build/scripts/ppx_gen_flowlibs/ppx_gen_flowlibs_standalone.cmxa \
 		-o "$@"
 
+_build/src/third-party/fuzzy-path _build/src/third-party/fuzzy-path/src _build/src/third-party/fuzzy-path/vendor:
+	mkdir -p $@
+
+_build/src/third-party/fuzzy-path/src/%.o: src/third-party/fuzzy-path/src/%.cpp | _build/src/third-party/fuzzy-path/src
+	$(CXX) $(CXXFLAGS) -o $@ -c $<
+
+_build/src/third-party/fuzzy-path/vendor/%.o: src/third-party/fuzzy-path/vendor/%.cpp | _build/src/third-party/fuzzy-path/vendor
+	$(CXX) $(CXXFLAGS) -o $@ -c $<
+
+_build/src/third-party/fuzzy-path/libfuzzy-path.a: _build/src/third-party/fuzzy-path/src/fuzzy_path_wrapper.o _build/src/third-party/fuzzy-path/vendor/MatcherBase.o _build/src/third-party/fuzzy-path/vendor/score_match.o | _build/src/third-party/fuzzy-path
+	$(AR) $(ARFLAGS) $@ $^
+
 bin/flow$(EXE): build-flow
 	mkdir -p $(@D)
 	cp _build/src/flow.native $@
@@ -419,7 +455,7 @@ test-tool: bin/flow$(EXE)
 test: bin/flow$(EXE)
 	${MAKE} do-test
 
-js: _build/scripts/ppx_gen_flowlibs.exe $(BUILT_OBJECT_FILES) $(COPIED_FLOWLIB)
+js: _build/scripts/ppx_gen_flowlibs.exe $(BUILT_FUZZY_PATH_DEPS) $(BUILT_OBJECT_FILES) $(COPIED_FLOWLIB)
 	mkdir -p bin
 	# NOTE: temporarily disabling warning 31 because
 	# src/hack_forked/third-party/core/result.ml and the opam `result` module both define

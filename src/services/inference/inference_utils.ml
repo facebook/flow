@@ -63,31 +63,3 @@ let error_of_file_sig_tolerable_error ~source_file err =
 
 let set_of_file_sig_tolerable_errors ~source_file =
   Base.List.map ~f:(error_of_file_sig_tolerable_error ~source_file) %> Flow_error.ErrorSet.of_list
-
-(* This is an options-aware fold over the files in `m`. Function `f` will be applied
- * to a file FILE in `m` iff:
- *  - flag 'enforce_well_formed_exports' is `Some paths`, and
- *  - either paths is [] or there exists a PATH for which FILE is within PATH.
- *)
-let fold_included_well_formed_exports ~f options m acc =
-  match Options.enforce_well_formed_exports options with
-  | None -> acc
-  | Some [] -> Utils_js.FilenameMap.fold f m acc
-  | Some paths ->
-    Utils_js.FilenameMap.fold
-      (fun file v b ->
-        let file_str = File_key.to_string file |> Sys_utils.normalize_filename_dir_sep in
-        if List.exists (fun r -> String_utils.is_substring r file_str) paths then
-          f file v b
-        else
-          b)
-      m
-      acc
-
-let well_formed_exports_enabled options file =
-  match Options.enforce_well_formed_exports options with
-  | None -> false
-  | Some [] -> true
-  | Some paths ->
-    let file_str = File_key.to_string file |> Sys_utils.normalize_filename_dir_sep in
-    List.exists (fun r -> String_utils.is_substring r file_str) paths

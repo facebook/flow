@@ -11,6 +11,8 @@ class ['self] iter_ty_base =
   object (_ : 'self)
     method private on_string : 'env. 'env -> string -> unit = (fun _env _x -> ())
 
+    method private on_name : 'env. 'env -> Reason.name -> unit = (fun _env _x -> ())
+
     method private on_bool : 'env. 'env -> bool -> unit = (fun _env _x -> ())
 
     method private on_int : 'env. 'env -> int -> unit = (fun _env _x -> ())
@@ -29,6 +31,9 @@ class ['self] iter_ty_base =
 class ['self] iter2_ty_base =
   object (self : 'self)
     method private on_string : 'env. 'env -> string -> string -> unit = (fun _env _x _y -> ())
+
+    method private on_name : 'env. 'env -> Reason.name -> Reason.name -> unit =
+      (fun _env _x _y -> ())
 
     method private on_bool : 'env. 'env -> bool -> bool -> unit = (fun _env _x _y -> ())
 
@@ -69,6 +74,8 @@ class ['self] map_ty_base =
   object (_ : 'self)
     method private on_string : 'env -> string -> string = (fun _ x -> x)
 
+    method private on_name : 'env -> Reason.name -> Reason.name = (fun _ x -> x)
+
     method private on_bool : 'env -> bool -> bool = (fun _ x -> x)
 
     method private on_int : 'env -> int -> int = (fun _ x -> x)
@@ -87,6 +94,8 @@ class ['self] map_ty_base =
 class ['self] endo_ty_base =
   object (_self : 'self)
     method private on_string : 'env -> string -> string = (fun _ x -> x)
+
+    method private on_name : 'env -> Reason.name -> Reason.name = (fun _ x -> x)
 
     method private on_bool : 'env -> bool -> bool = (fun _ x -> x)
 
@@ -198,6 +207,8 @@ class virtual ['self] reduce_ty_base =
 
     method private on_string : 'env. 'env -> string -> 'acc = (fun _ _ -> self#zero)
 
+    method private on_name : 'env. 'env -> Reason.name -> 'acc = (fun _ _ -> self#zero)
+
     method private on_int : 'env. 'env -> int -> 'acc = (fun _ _ -> self#zero)
 
     method private on_bool : 'env. 'env -> bool -> 'acc = (fun _ _ -> self#zero)
@@ -227,6 +238,8 @@ class virtual ['self] mapreduce_ty_base =
     inherit ['acc] monoid
 
     method private on_string : 'env -> string -> string * 'acc = (fun _ x -> (x, self#zero))
+
+    method private on_name : 'env -> Reason.name -> Reason.name * 'acc = (fun _ x -> (x, self#zero))
 
     method private on_bool : 'env -> bool -> bool * 'acc = (fun _ x -> (x, self#zero))
 

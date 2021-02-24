@@ -241,7 +241,7 @@ import-class_of_poly_instance-es6.js:4:8 = {
           },
           "name":"P"
         },
-        "kind":"class"
+        "generic_kind":"class"
       }
     ]
   },
@@ -274,7 +274,7 @@ import-class_of_poly_instance-es6.js:5:13 = {
           },
           "name":"P"
         },
-        "kind":"class"
+        "generic_kind":"class"
       }
     ]
   },
@@ -307,7 +307,7 @@ import-class_of_poly_instance-es6.js:7:13 = {
           },
           "name":"P"
         },
-        "kind":"class"
+        "generic_kind":"class"
       }
     ]
   },
@@ -336,7 +336,7 @@ import-class_of_poly_instance-es6.js:8:13 = {
       },
       "name":"P"
     },
-    "kind":"class"
+    "generic_kind":"class"
   },
   "type":"P<any>",
   "reasons":[],
@@ -364,7 +364,7 @@ import-class_of_poly_instance-cjs.js:3:8 = {
           "provenance":{"kind":"Remote","loc":"exports-class_of_poly_instance-cjs.js:3:7"},
           "name":"P"
         },
-        "kind":"class"
+        "generic_kind":"class"
       }
     ]
   },
@@ -394,7 +394,7 @@ import-class_of_poly_instance-cjs.js:4:13 = {
           "provenance":{"kind":"Remote","loc":"exports-class_of_poly_instance-cjs.js:3:7"},
           "name":"P"
         },
-        "kind":"class"
+        "generic_kind":"class"
       }
     ]
   },
@@ -424,7 +424,7 @@ import-class_of_poly_instance-cjs.js:6:13 = {
           "provenance":{"kind":"Remote","loc":"exports-class_of_poly_instance-cjs.js:3:7"},
           "name":"P"
         },
-        "kind":"class"
+        "generic_kind":"class"
       }
     ]
   },
@@ -450,7 +450,7 @@ import-class_of_poly_instance-cjs.js:7:13 = {
       "provenance":{"kind":"Remote","loc":"exports-class_of_poly_instance-cjs.js:3:7"},
       "name":"P"
     },
-    "kind":"class"
+    "generic_kind":"class"
   },
   "type":"P<any>",
   "reasons":[],
@@ -598,7 +598,7 @@ import-default.js:26:7 = {
   "end":8
 }
 import-rec-export.js:3:10 = {
-  "type":"empty",
+  "type":"any (implicit)",
   "reasons":[],
   "loc":{
     "source":"import-rec-export.js",
@@ -869,7 +869,7 @@ import-type.js:7:7 = {
       "provenance":{"kind":"Imported as `MyUnionType` (type)","loc":"exports-type.js:3:27-41"},
       "name":"MyUnionType"
     },
-    "kind":"type alias"
+    "generic_kind":"type alias"
   },
   "type":"MyUnionType",
   "reasons":[],

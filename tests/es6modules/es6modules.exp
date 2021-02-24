@@ -526,9 +526,9 @@ Cannot assign `specifierNumber1_1` to `r2` because number [1] is incompatible wi
                          ^^^^^^^^^^^^^^^^^^
 
 References:
-   ES6_Named1.js:6:24
-     6| var specifierNumber1 = 1;
-                               ^ [1]
+   ES6_Named1.js:6:26
+     6| const specifierNumber1 = 1;
+                                 ^ [1]
    es6modules.js:129:9
    129| var r2: string = specifierNumber1_1; // Error: number ~> string
                 ^^^^^^ [2]
@@ -543,9 +543,9 @@ Cannot assign `specifierNumber2Renamed` to `s2` because number [1] is incompatib
                          ^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   ES6_Named1.js:7:24
-     7| var specifierNumber2 = 2;
-                               ^ [1]
+   ES6_Named1.js:7:26
+     7| const specifierNumber2 = 2;
+                                 ^ [1]
    es6modules.js:133:9
    133| var s2: string = specifierNumber2Renamed; // Error: number ~> string
                 ^^^^^^ [2]
@@ -560,9 +560,9 @@ Cannot assign `specifierNumber3Renamed` to `t2` because number [1] is incompatib
                          ^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   ES6_Named1.js:8:24
-     8| var specifierNumber3 = 3;
-                               ^ [1]
+   ES6_Named1.js:8:26
+     8| const specifierNumber3 = 3;
+                                 ^ [1]
    es6modules.js:137:9
    137| var t2: string = specifierNumber3Renamed; // Error: number ~> string
                 ^^^^^^ [2]
@@ -577,9 +577,9 @@ Cannot assign `groupedSpecifierNumber1` to `u3` because number [1] is incompatib
                          ^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   ES6_Named1.js:9:31
-     9| var groupedSpecifierNumber1 = 1;
-                                      ^ [1]
+   ES6_Named1.js:9:33
+     9| const groupedSpecifierNumber1 = 1;
+                                        ^ [1]
    es6modules.js:142:9
    142| var u3: string = groupedSpecifierNumber1; // Error: number ~> string
                 ^^^^^^ [2]
@@ -594,9 +594,9 @@ Cannot assign `groupedSpecifierNumber2` to `u4` because number [1] is incompatib
                          ^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   ES6_Named1.js:10:31
-    10| var groupedSpecifierNumber2 = 2;
-                                      ^ [1]
+   ES6_Named1.js:10:33
+    10| const groupedSpecifierNumber2 = 2;
+                                        ^ [1]
    es6modules.js:143:9
    143| var u4: string = groupedSpecifierNumber2; // Error: number ~> string
                 ^^^^^^ [2]
@@ -646,9 +646,9 @@ Cannot assign `varDeclNumber1` to `x3` because number [1] is incompatible with s
                          ^^^^^^^^^^^^^^
 
 References:
-   ES6_Named1.js:20:29
-    20| export var varDeclNumber1 = 1, varDeclNumber2 = 2;
-                                    ^ [1]
+   ES6_Named1.js:20:31
+    20| export const varDeclNumber1 = 1, varDeclNumber2 = 2;
+                                      ^ [1]
    es6modules.js:156:9
    156| var x3: string = varDeclNumber1; // Error: number ~> string
                 ^^^^^^ [2]
@@ -663,9 +663,9 @@ Cannot assign `varDeclNumber2` to `x4` because number [1] is incompatible with s
                          ^^^^^^^^^^^^^^
 
 References:
-   ES6_Named1.js:20:49
-    20| export var varDeclNumber1 = 1, varDeclNumber2 = 2;
-                                                        ^ [1]
+   ES6_Named1.js:20:51
+    20| export const varDeclNumber1 = 1, varDeclNumber2 = 2;
+                                                          ^ [1]
    es6modules.js:157:9
    157| var x4: string = varDeclNumber2; // Error: number ~> string
                 ^^^^^^ [2]
@@ -680,9 +680,9 @@ Cannot assign `destructuredObjNumber` to `y2` because number [1] is incompatible
                          ^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   ES6_Named1.js:21:62
-    21| export var {destructuredObjNumber} = {destructuredObjNumber: 1};
-                                                                     ^ [1]
+   ES6_Named1.js:21:64
+    21| export const {destructuredObjNumber} = {destructuredObjNumber: 1};
+                                                                       ^ [1]
    es6modules.js:161:9
    161| var y2: string = destructuredObjNumber; // Error: number ~> string
                 ^^^^^^ [2]
@@ -697,9 +697,9 @@ Cannot assign `destructuredArrNumber` to `z2` because number [1] is incompatible
                          ^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   ES6_Named1.js:22:39
-    22| export var [destructuredArrNumber] = [1]
-                                              ^ [1]
+   ES6_Named1.js:22:41
+    22| export const [destructuredArrNumber] = [1]
+                                                ^ [1]
    es6modules.js:165:9
    165| var z2: string = destructuredArrNumber; // Error: number ~> string
                 ^^^^^^ [2]
@@ -714,9 +714,9 @@ Cannot assign `numberValue4` to `aa2` because number [1] is incompatible with st
                           ^^^^^^^^^^^^
 
 References:
-   ES6_ExportFrom_Source1.js:6:27
-     6| export var numberValue1 = 1, numberValue2 = 2;
-                                  ^ [1]
+   ES6_ExportFrom_Source1.js:6:29
+     6| export const numberValue1 = 1, numberValue2 = 2;
+                                    ^ [1]
    es6modules.js:169:10
    169| var aa2: string = numberValue4; // Error: number ~> string
                  ^^^^^^ [2]
@@ -731,9 +731,9 @@ Cannot assign `numberValue2_renamed` to `ab2` because number [1] is incompatible
                           ^^^^^^^^^^^^^^^^^^^^
 
 References:
-   ES6_ExportFrom_Source1.js:6:45
-     6| export var numberValue1 = 1, numberValue2 = 2;
-                                                    ^ [1]
+   ES6_ExportFrom_Source1.js:6:47
+     6| export const numberValue1 = 1, numberValue2 = 2;
+                                                      ^ [1]
    es6modules.js:173:10
    173| var ab2: string = numberValue2_renamed; // Error: number ~> string
                  ^^^^^^ [2]
@@ -748,9 +748,9 @@ Cannot assign `numberValue5` to `ac2` because number [1] is incompatible with st
                           ^^^^^^^^^^^^
 
 References:
-   ES6_ExportAllFrom_Source1.js:6:27
-     6| export var numberValue1 = 1;
-                                  ^ [1]
+   ES6_ExportAllFrom_Source1.js:6:29
+     6| export const numberValue1 = 1;
+                                    ^ [1]
    es6modules.js:177:10
    177| var ac2: string = numberValue5; // Error: number ~> string
                  ^^^^^^ [2]
@@ -850,9 +850,9 @@ Cannot assign `specifierNumber4` to `ah2` because number [1] is incompatible wit
                           ^^^^^^^^^^^^^^^^
 
 References:
-   ES6_Named2.js:6:24
-     6| var specifierNumber4 = 1;
-                               ^ [1]
+   ES6_Named2.js:6:26
+     6| const specifierNumber4 = 1;
+                                 ^ [1]
    es6modules.js:207:10
    207| var ah2: string = specifierNumber4; // Error: number ~> string
                  ^^^^^^ [2]
@@ -867,9 +867,9 @@ Cannot assign `specifierNumber5Renamed` to `ai2` because number [1] is incompati
                           ^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   ES6_Named2.js:7:24
-     7| var specifierNumber5 = 2;
-                               ^ [1]
+   ES6_Named2.js:7:26
+     7| const specifierNumber5 = 2;
+                                 ^ [1]
    es6modules.js:211:10
    211| var ai2: string = specifierNumber5Renamed; // Error: number ~> string
                  ^^^^^^ [2]
@@ -884,9 +884,9 @@ Cannot assign `groupedSpecifierNumber3` to `aj3` because number [1] is incompati
                           ^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   ES6_Named2.js:8:31
-     8| var groupedSpecifierNumber3 = 1;
-                                      ^ [1]
+   ES6_Named2.js:8:33
+     8| const groupedSpecifierNumber3 = 1;
+                                        ^ [1]
    es6modules.js:217:10
    217| var aj3: string = groupedSpecifierNumber3; // Error: number ~> string
                  ^^^^^^ [2]
@@ -901,9 +901,9 @@ Cannot assign `groupedSpecifierNumber4` to `aj4` because number [1] is incompati
                           ^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   ES6_Named2.js:9:31
-     9| var groupedSpecifierNumber4 = 2;
-                                      ^ [1]
+   ES6_Named2.js:9:33
+     9| const groupedSpecifierNumber4 = 2;
+                                        ^ [1]
    es6modules.js:218:10
    218| var aj4: string = groupedSpecifierNumber4; // Error: number ~> string
                  ^^^^^^ [2]
@@ -953,9 +953,9 @@ Cannot assign `varDeclNumber3` to `am3` because number [1] is incompatible with 
                           ^^^^^^^^^^^^^^
 
 References:
-   ES6_Named2.js:18:29
-    18| export var varDeclNumber3 = 1, varDeclNumber4 = 2;
-                                    ^ [1]
+   ES6_Named2.js:18:31
+    18| export const varDeclNumber3 = 1, varDeclNumber4 = 2;
+                                      ^ [1]
    es6modules.js:232:10
    232| var am3: string = varDeclNumber3; // Error: number ~> string
                  ^^^^^^ [2]
@@ -970,9 +970,9 @@ Cannot assign `varDeclNumber4` to `am4` because number [1] is incompatible with 
                           ^^^^^^^^^^^^^^
 
 References:
-   ES6_Named2.js:18:49
-    18| export var varDeclNumber3 = 1, varDeclNumber4 = 2;
-                                                        ^ [1]
+   ES6_Named2.js:18:51
+    18| export const varDeclNumber3 = 1, varDeclNumber4 = 2;
+                                                          ^ [1]
    es6modules.js:233:10
    233| var am4: string = varDeclNumber4; // Error: number ~> string
                  ^^^^^^ [2]
@@ -987,9 +987,9 @@ Cannot assign `destructuredObjNumber2` to `an2` because number [1] is incompatib
                           ^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   ES6_Named2.js:19:64
-    19| export var {destructuredObjNumber2} = {destructuredObjNumber2: 1};
-                                                                       ^ [1]
+   ES6_Named2.js:19:66
+    19| export const {destructuredObjNumber2} = {destructuredObjNumber2: 1};
+                                                                         ^ [1]
    es6modules.js:237:10
    237| var an2: string = destructuredObjNumber2; // Error: number ~> string
                  ^^^^^^ [2]
@@ -1004,9 +1004,9 @@ Cannot assign `destructuredArrNumber2` to `ao2` because number [1] is incompatib
                           ^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   ES6_Named2.js:20:40
-    20| export var [destructuredArrNumber2] = [1]
-                                               ^ [1]
+   ES6_Named2.js:20:42
+    20| export const [destructuredArrNumber2] = [1]
+                                                 ^ [1]
    es6modules.js:241:10
    241| var ao2: string = destructuredArrNumber2; // Error: number ~> string
                  ^^^^^^ [2]
@@ -1021,9 +1021,9 @@ Cannot assign `numberValue6` to `ap2` because number [1] is incompatible with st
                           ^^^^^^^^^^^^
 
 References:
-   ES6_ExportFrom_Source2.js:6:27
-     6| export var numberValue1 = 1, numberValue2 = 2;
-                                  ^ [1]
+   ES6_ExportFrom_Source2.js:6:29
+     6| export const numberValue1 = 1, numberValue2 = 2;
+                                    ^ [1]
    es6modules.js:245:10
    245| var ap2: string = numberValue6; // Error: number ~> string
                  ^^^^^^ [2]
@@ -1038,9 +1038,9 @@ Cannot assign `numberValue2_renamed2` to `aq2` because number [1] is incompatibl
                           ^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   ES6_ExportFrom_Source2.js:6:45
-     6| export var numberValue1 = 1, numberValue2 = 2;
-                                                    ^ [1]
+   ES6_ExportFrom_Source2.js:6:47
+     6| export const numberValue1 = 1, numberValue2 = 2;
+                                                      ^ [1]
    es6modules.js:249:10
    249| var aq2: string = numberValue2_renamed2; // Error: number ~> string
                  ^^^^^^ [2]
@@ -1055,9 +1055,9 @@ Cannot assign `numberValue7` to `ar2` because number [1] is incompatible with st
                           ^^^^^^^^^^^^
 
 References:
-   ES6_ExportAllFrom_Source2.js:6:27
-     6| export var numberValue2 = 1;
-                                  ^ [1]
+   ES6_ExportAllFrom_Source2.js:6:29
+     6| export const numberValue2 = 1;
+                                    ^ [1]
    es6modules.js:253:10
    253| var ar2: string = numberValue7; // Error: number ~> string
                  ^^^^^^ [2]
@@ -1089,9 +1089,9 @@ Cannot assign `namedStr` to `as4` because string [1] is incompatible with number
                           ^^^^^^^^
 
 References:
-   ES6_DefaultAndNamed.js:4:18
-     4| export var str = 'asdf';
-                         ^^^^^^ [1]
+   ES6_DefaultAndNamed.js:4:20
+     4| export const str = 'asdf';
+                           ^^^^^^ [1]
    es6modules.js:265:10
    265| var as4: number = namedStr; // Error: string ~> number
                  ^^^^^^ [2]
@@ -1124,9 +1124,9 @@ Cannot assign `numberValue8` to `at2` because number [1] is incompatible with st
                           ^^^^^^^^^^^^
 
 References:
-   ES6_ExportAllFrom_Source1.js:6:27
-     6| export var numberValue1 = 1;
-                                  ^ [1]
+   ES6_ExportAllFrom_Source1.js:6:29
+     6| export const numberValue1 = 1;
+                                    ^ [1]
    es6modules.js:288:10
    288| var at2: string = numberValue8; // Error: number ~> string
                  ^^^^^^ [2]
@@ -1141,9 +1141,9 @@ Cannot assign `numberValue9` to `at4` because number [1] is incompatible with st
                           ^^^^^^^^^^^^
 
 References:
-   ES6_ExportAllFrom_Source2.js:6:27
-     6| export var numberValue2 = 1;
-                                  ^ [1]
+   ES6_ExportAllFrom_Source2.js:6:29
+     6| export const numberValue2 = 1;
+                                    ^ [1]
    es6modules.js:291:10
    291| var at4: string = numberValue9; // Error: number ~> string
                  ^^^^^^ [2]
@@ -1208,6 +1208,14 @@ Cannot assign `123` to `CommonJS_Clobbering_Frozen.numberValue1` because propert
                                   ^^^^^^^^^^^^
 
 
+Error --------------------------------------------------------------------------------- test_imports_are_frozen.js:39:12
+
+Cannot assign `123` to `DefaultA.numberValue1` because property `numberValue1` is not writable. [cannot-write]
+
+   39|   DefaultA.numberValue1 = 123; // error: prop is not writable
+                  ^^^^^^^^^^^^
+
+
 Error --------------------------------------------------------------------------------- test_imports_are_frozen.js:43:14
 
 Cannot assign `123` to `ES6_Named1.numberValue` because property `numberValue` is not writable. [cannot-write]
@@ -1226,4 +1234,4 @@ Cannot assign `123` to `CommonJS_Frozen_Star.numberValue1` because property `num
 
 
 
-Found 82 errors
+Found 83 errors

@@ -14,8 +14,8 @@ References:
    test.js:21:35
     21| class Foo extends React.Component<Props> {}
                                           ^^^^^ [2]
-   <BUILTINS>/react.js:257:38
-   257|   declare export type ComponentType<-P> = React$ComponentType<P>;
+   <BUILTINS>/react.js:272:38
+   272|   declare export type ComponentType<-P> = React$ComponentType<P>;
                                              ^ [3]
 
 

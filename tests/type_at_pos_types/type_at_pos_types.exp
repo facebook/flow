@@ -224,7 +224,7 @@ destructuring.js:3:6 = {
   "end":6
 }
 destructuring.js:17:13 = {
-  "type":"any (implicit)",
+  "type":"empty",
   "reasons":[],
   "loc":{
     "source":"destructuring.js",
@@ -916,7 +916,7 @@ optional.js:14:10 = {
   "end":10
 }
 stack-overflow-bugfix.js:5:6 = {
-  "type":"type T = {+fn: <A, B>() => (value: B) => S<A, C<B>>, ...}",
+  "type":"type T = {fn<A, B>(): (value: B) => S<A, C<B>>, ...}",
   "reasons":[],
   "loc":{
     "source":"stack-overflow-bugfix.js",
@@ -931,7 +931,7 @@ stack-overflow-bugfix.js:5:6 = {
   "end":6
 }
 recursive.js:3:25 = {
-  "type":"type V$1 = {|m: () => V$1|}; {|m: () => V$1|}",
+  "type":"type V$1 = {|m(): V$1|}; {|m(): V$1|}",
   "reasons":[],
   "loc":{
     "source":"recursive.js",

@@ -6,12 +6,13 @@
  *)
 
 open Utils_js
-open Parsing_heaps_utils
 module Result = Base.Result
 
 let ( >>= ) = Result.( >>= )
 
 let ( >>| ) = Result.( >>| )
+
+let loc_of_aloc = Parsing_heaps.Reader.loc_of_aloc
 
 (* The default visitor does not provide all of the context we need when visiting an object key. In
  * particular, we need the location of the enclosing object literal. *)
@@ -116,8 +117,10 @@ let set_def_loc_hook ~reader prop_access_info literal_key_info target_loc =
         | (Use _, Use _)
         | (Class_def _, Class_def _)
         | (Obj_def _, Obj_def _) ->
-          (* Due to generate_tests, we sometimes see hooks firing multiple times for the same
-           * location. This is innocuous and we should take the last result. *)
+          (* If we see hooks firing multiple times for the same
+           * location, this is innocuous and we should take the last result.
+           * Previously, this would occur due to generate-tests.
+           *)
           set_ok new_info
         (* Literals can flow into multiple types. Include them all. *)
         | (Use_in_literal (types, name), Use_in_literal (new_types, new_name)) ->
@@ -430,7 +433,7 @@ let get_def_info ~reader ~options env profiling file_key ast_info loc :
             Types_js.ensure_checked_dependencies ~options ~reader ~env file_key file_sig
           in
           Lwt.return
-          @@ Merge_service.merge_contents_context ~reader options file_key ast info file_sig)
+          @@ Merge_service.check_contents_context ~reader options file_key ast info file_sig)
     in
     Lwt.return cx
   in

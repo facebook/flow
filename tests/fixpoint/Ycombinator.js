@@ -17,5 +17,3 @@ function func2(f) {
 
 Y(func1);
 Y(func2);
-
-module.exports = Y;

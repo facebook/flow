@@ -7,10 +7,26 @@
 
 val client_supports_quickfixes : Lsp.CodeActionRequest.params -> bool
 
-val code_actions_at_loc :
-  reader:Parsing_heaps.Reader.reader ->
+type text_edits = {
+  title: string;
+  edits: Lsp.TextEdit.t list;
+}
+
+val text_edits_of_import :
   options:Options.t ->
-  file_key:File_key.t ->
+  layout_options:Js_layout_generator.opts ->
+  reader:State_reader.t ->
+  src_dir:string option ->
+  ast:(Loc.t, Loc.t) Flow_ast.Program.t ->
+  Export_index.kind ->
+  string ->
+  Export_index.source ->
+  text_edits option
+
+val code_actions_at_loc :
+  options:Options.t ->
+  env:ServerEnv.env ->
+  reader:Parsing_heaps.Reader.reader ->
   cx:Context.t ->
   file_sig:File_sig.With_Loc.t ->
   tolerable_errors:File_sig.With_Loc.tolerable_error list ->
@@ -42,3 +58,12 @@ val insert_type :
   location_is_strict:bool ->
   ambiguity_strategy:Autofix_options.ambiguity_strategy ->
   (Replacement_printer.patch, string) result Lwt.t
+
+module For_tests : sig
+  val path_of_modulename :
+    node_resolver_dirnames:string list ->
+    reader:State_reader.t ->
+    string option ->
+    Modulename.t ->
+    string option
+end

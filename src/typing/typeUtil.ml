@@ -17,7 +17,6 @@ open Type
 let rec reason_of_t = function
   | OpenT (reason, _) -> reason
   | AnnotT (reason, _, _) -> reason
-  | MergedT (reason, _) -> reason
   | BoundT (reason, _) -> reason
   | InternalT (ChoiceKitT (reason, _)) -> reason
   | TypeDestructorTriggerT (_, reason, _, _, _) -> reason
@@ -67,7 +66,7 @@ and reason_of_use_t = function
   | AssertForInRHST reason -> reason
   | AssertIterableT { reason; _ } -> reason
   | AssertImportIsValueT (reason, _) -> reason
-  | BecomeT (reason, _) -> reason
+  | BecomeT { reason; _ } -> reason
   | BindT (_, reason, _, _) -> reason
   | CallElemT (reason, _, _, _) -> reason
   | CallLatentPredT (reason, _, _, _, _) -> reason
@@ -184,7 +183,6 @@ let def_loc_of_t = reason_of_t %> def_aloc_of_reason
 let rec mod_reason_of_t f = function
   | OpenT (reason, id) -> OpenT (f reason, id)
   | AnnotT (reason, t, use_desc) -> AnnotT (f reason, t, use_desc)
-  | MergedT (reason, uses) -> MergedT (f reason, uses)
   | BoundT (reason, name) -> BoundT (f reason, name)
   | InternalT (ChoiceKitT (reason, tool)) -> InternalT (ChoiceKitT (f reason, tool))
   | TypeDestructorTriggerT (use_op, reason, repos, d, t) ->
@@ -236,7 +234,7 @@ and mod_reason_of_use_t f = function
   | AssertIterableT ({ reason; _ } as contents) ->
     AssertIterableT { contents with reason = f reason }
   | AssertImportIsValueT (reason, name) -> AssertImportIsValueT (f reason, name)
-  | BecomeT (reason, t) -> BecomeT (f reason, t)
+  | BecomeT { reason; t; empty_success } -> BecomeT { reason = f reason; t; empty_success }
   | BindT (use_op, reason, ft, pass) -> BindT (use_op, f reason, ft, pass)
   | CallElemT (reason_call, reason_lookup, t, ft) -> CallElemT (f reason_call, reason_lookup, t, ft)
   | CallLatentPredT (reason, b, k, l, t) -> CallLatentPredT (f reason, b, k, l, t)
@@ -450,7 +448,7 @@ let rec util_use_op_of_use_t :
   | ObjTestProtoT (_, _)
   | ObjTestT (_, _, _)
   | UnifyT (_, _)
-  | BecomeT (_, _)
+  | BecomeT { reason = _; t = _; empty_success = _ }
   | GetValuesT (_, _)
   | CJSRequireT (_, _, _)
   | ImportModuleNsT (_, _, _)
@@ -519,6 +517,8 @@ let rec mod_loc_of_virtual_use_op f =
     | ClassExtendsCheck { def; name; extends } ->
       ClassExtendsCheck
         { def = mod_reason def; name = mod_reason name; extends = mod_reason extends }
+    | ClassMethodDefinition { def; name } ->
+      ClassMethodDefinition { def = mod_reason def; name = mod_reason name }
     | ClassImplementsCheck { def; name; implements } ->
       ClassImplementsCheck
         { def = mod_reason def; name = mod_reason name; implements = mod_reason implements }
@@ -546,6 +546,8 @@ let rec mod_loc_of_virtual_use_op f =
       FunImplicitReturn { fn = mod_reason fn; upper = mod_reason upper }
     | GeneratorYield { value } -> GeneratorYield { value = mod_reason value }
     | GetProperty reason -> GetProperty (mod_reason reason)
+    | IndexedTypeAccess { _object; index } ->
+      IndexedTypeAccess { _object = mod_reason _object; index = mod_reason index }
     | Internal o -> Internal o
     | JSXCreateElement { op; component } ->
       JSXCreateElement { op = mod_reason op; component = mod_reason component }
@@ -666,10 +668,10 @@ let quick_subtype trust_checked t1 t2 =
     | (DefT (_, ltrust, NullT), DefT (_, rtrust, NullT))
     | (DefT (_, ltrust, VoidT), DefT (_, rtrust, VoidT))
     | (DefT (_, ltrust, SymbolT), DefT (_, rtrust, SymbolT))
-    | (DefT (_, ltrust, EmptyT _), DefT (_, rtrust, _))
+    | (DefT (_, ltrust, EmptyT), DefT (_, rtrust, _))
     | (DefT (_, ltrust, _), DefT (_, rtrust, MixedT _)) ->
       (not trust_checked) || trust_subtype_fixed ltrust rtrust
-    | (DefT (_, ltrust, EmptyT _), _) ->
+    | (DefT (_, ltrust, EmptyT), _) ->
       (not trust_checked) || trust_value_map ~f:is_public ~default:false ltrust
     | (_, DefT (_, rtrust, MixedT _)) ->
       (not trust_checked) || trust_value_map ~f:is_tainted ~default:false rtrust
@@ -851,3 +853,19 @@ let type_t_of_annotated_or_inferred (x : Type.annotated_or_inferred) =
 let map_annotated_or_inferred f = function
   | Inferred t -> Inferred (f t)
   | Annotated t -> Annotated (f t)
+
+(* Creates a union from a list of types. Since unions require a minimum of two
+   types this function will return an empty type when there are no types in the
+   list, or the list head when there is one type in the list. *)
+let union_of_ts reason ts =
+  match ts with
+  (* If we have no types then this is an error. *)
+  | [] -> DefT (reason, bogus_trust (), EmptyT)
+  (* If we only have one type then only that should be used. *)
+  | [t0] -> t0
+  (* If we have more than one type then we make a union type. *)
+  | t0 :: t1 :: ts -> UnionT (reason, UnionRep.make t0 t1 ts)
+
+let annotated_or_inferred_of_option ~default = function
+  | Some t -> Annotated t
+  | None -> Inferred default

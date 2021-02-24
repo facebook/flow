@@ -7,7 +7,8 @@
 
 open Base.Result
 open Utils_js
-open Parsing_heaps_utils
+
+let loc_of_aloc = Parsing_heaps.Reader.loc_of_aloc
 
 module Get_def_result = struct
   type t =
@@ -75,7 +76,13 @@ let rec process_request ~options ~reader ~cx ~is_legit_require ~typed_ast :
       | Get_def_request.ObjectRequireLoc loc -> Context.find_require cx loc
     in
     extract_member_def ~reader cx obj_t name
-  | Get_def_request.Type v ->
+  | Get_def_request.(Type v | Typeof v) as request ->
+    (* here lies the difference between "Go to Definition" and "Go to Type Definition":
+      the former should stop on annot_loc (where the value was annotated), while the
+      latter should jump to the def_loc (where the type was defined).
+
+      for now, we only implement Go to Definition; if we want to do Go to Type
+      Definition, it would ignore the annot loc. *)
     let rec loop =
       let open Type in
       function
@@ -84,10 +91,25 @@ let rec process_request ~options ~reader ~cx ~is_legit_require ~typed_ast :
         | [t'] -> loop t'
         | [] -> Error "No possible types"
         | _ :: _ -> Error "More than one possible type")
-      | AnnotT (_, t, _)
-      | DefT (_, _, TypeT ((ImportTypeofKind | ImportClassKind | ImportEnumKind), t)) ->
-        loop t
-      | t -> Ok (TypeUtil.def_loc_of_t t |> loc_of_aloc ~reader)
+      | AnnotT (r, t, _) ->
+        (match request with
+        | Get_def_request.Typeof _ -> loop t
+        | _ ->
+          (* `annot_aloc` is set when an AnnotT is the result of an actual source annotation;
+           it's not set when it's the result of a synthesized `typeof` from Signature_builder.
+           see `Flow_js.mk_typeof_annotation ~internal:true` *)
+          (match Reason.annot_aloc_of_reason r with
+          | Some aloc -> Ok (loc_of_aloc ~reader aloc)
+          | None -> loop t))
+      | DefT (_, _, TypeT ((ImportTypeofKind | ImportClassKind | ImportEnumKind), t)) -> loop t
+      | t ->
+        let r = TypeUtil.reason_of_t t in
+        let aloc =
+          match Reason.annot_aloc_of_reason r with
+          | Some aloc -> aloc
+          | None -> Reason.def_aloc_of_reason r
+        in
+        Ok (loc_of_aloc ~reader aloc)
     in
     loop v
   | Get_def_request.Require ((source_loc, name), require_loc) ->
@@ -154,9 +176,10 @@ let get_def ~options ~reader ~cx ~file_sig ~typed_ast requested_loc =
         Nel.exists (fun aloc -> loc_of_aloc ~reader aloc = loc_of_aloc ~reader source_aloc) alocs)
       require_aloc_map
   in
+  let module_ref_prefix = Context.haste_module_ref_prefix cx in
   let rec loop req_loc =
     let open Get_def_process_location in
-    match process_location ~is_legit_require ~typed_ast req_loc with
+    match process_location ~is_legit_require ~typed_ast ~module_ref_prefix req_loc with
     | OwnDef aloc -> Def (loc_of_aloc ~reader aloc)
     | Request request ->
       (match process_request ~options ~reader ~cx ~is_legit_require ~typed_ast request with

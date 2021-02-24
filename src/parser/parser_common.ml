@@ -186,3 +186,8 @@ let with_loc ?start_loc fn env =
     | None -> start_loc
   in
   (loc, result)
+
+let with_loc_opt ?start_loc fn env =
+  match with_loc ?start_loc fn env with
+  | (loc, Some x) -> Some (loc, x)
+  | (_, None) -> None

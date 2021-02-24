@@ -36,8 +36,6 @@ val spread_append : spread_id -> spread_id -> spread_id
 
 val spread_exists : spread_id -> bool
 
-val aloc_of_id : id -> ALoc.id
-
 val fold_ids : f:(ALoc.id -> string -> 'a -> 'a) -> acc:'a -> id -> 'a
 
 val satisfies : printer:(string list Lazy.t -> unit) -> id -> id -> sat_result

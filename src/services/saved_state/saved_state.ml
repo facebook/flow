@@ -9,6 +9,7 @@ open Utils_js
 
 type denormalized_file_data = {
   resolved_requires: Module_heaps.resolved_requires;
+  exports: Exports.t;
   hash: Xx.hash;
 }
 
@@ -27,9 +28,7 @@ type unparsed_file_data = {
 }
 
 type saved_state_dependency_graph =
-  | Classic_dep_graph of Utils_js.FilenameSet.t Utils_js.FilenameMap.t
-  | Types_first_dep_graph of
-      (Utils_js.FilenameSet.t * Utils_js.FilenameSet.t) Utils_js.FilenameMap.t
+  (Utils_js.FilenameSet.t * Utils_js.FilenameSet.t) Utils_js.FilenameMap.t
 
 (* This is the complete saved state data representation *)
 type saved_state_data = {
@@ -77,17 +76,12 @@ let update_dependency_graph_filenames f graph =
       map
       FilenameMap.empty
   in
-  match graph with
-  | Classic_dep_graph map ->
-    let update_value = update_set in
-    Classic_dep_graph (update_map update_value map)
-  | Types_first_dep_graph map ->
-    let update_value (sig_deps, impl_deps) =
-      let sig_deps = update_set sig_deps in
-      let impl_deps = update_set impl_deps in
-      (sig_deps, impl_deps)
-    in
-    Types_first_dep_graph (update_map update_value map)
+  let update_value (sig_deps, impl_deps) =
+    let sig_deps = update_set sig_deps in
+    let impl_deps = update_set impl_deps in
+    (sig_deps, impl_deps)
+  in
+  update_map update_value graph
 
 (* It's simplest if the build ID is always the same length. Let's use 16, since that happens to
  * be the size of the build ID hash. *)
@@ -205,9 +199,9 @@ end = struct
     in
     { Module_heaps.resolved_modules; phantom_dependents; hash }
 
-  let normalize_file_data ~normalizer { resolved_requires; hash } =
+  let normalize_file_data ~normalizer { resolved_requires; exports; hash } =
     let resolved_requires = normalize_resolved_requires ~normalizer resolved_requires in
-    { resolved_requires; hash }
+    { resolved_requires; exports; hash }
 
   let normalize_parsed_data ~normalizer { info; normalized_file_data } =
     let info = normalize_info ~normalizer info in
@@ -223,6 +217,7 @@ end = struct
           {
             resolved_requires =
               Module_heaps.Reader.get_resolved_requires_unsafe ~reader ~audit:Expensive.ok fn;
+            exports = Parsing_heaps.Reader.get_exports_unsafe ~reader fn;
             hash = Parsing_heaps.Reader.get_file_hash_unsafe ~reader fn;
           };
       }
@@ -325,24 +320,18 @@ end = struct
         dependency_info |> Dependency_info.implementation_dependency_graph |> FilenameGraph.to_map
       in
       let dependency_graph =
-        if Dependency_info.is_types_first dependency_info then begin
-          let sig_map =
-            dependency_info |> Dependency_info.sig_dependency_graph |> FilenameGraph.to_map
-          in
-          (* The maps should have the same entries. Enforce this by asserting that they have the
-           * same size, and then by using `FilenameMap.find` below to ensure that each `impl_map`
-           * entry has a corresponding `sig_map` entry. *)
-          assert (FilenameMap.cardinal sig_map = FilenameMap.cardinal impl_map);
-          let combined_map =
-            FilenameMap.mapi
-              (fun file impl_deps ->
-                let sig_deps = FilenameMap.find file sig_map in
-                (sig_deps, impl_deps))
-              impl_map
-          in
-          Types_first_dep_graph combined_map
-        end else
-          Classic_dep_graph impl_map
+        let sig_map =
+          dependency_info |> Dependency_info.sig_dependency_graph |> FilenameGraph.to_map
+        in
+        (* The maps should have the same entries. Enforce this by asserting that they have the
+         * same size, and then by using `FilenameMap.find` below to ensure that each `impl_map`
+         * entry has a corresponding `sig_map` entry. *)
+        assert (FilenameMap.cardinal sig_map = FilenameMap.cardinal impl_map);
+        FilenameMap.mapi
+          (fun file impl_deps ->
+            let sig_deps = FilenameMap.find file sig_map in
+            (sig_deps, impl_deps))
+          impl_map
       in
 
       normalize_dependency_graph ~normalizer dependency_graph
@@ -523,9 +512,9 @@ end = struct
     Module_heaps.mk_resolved_requires ~resolved_modules ~phantom_dependents
 
   (** Turns all the relative paths in a file's data back into absolute paths. *)
-  let denormalize_file_data ~root { resolved_requires; hash } =
+  let denormalize_file_data ~root { resolved_requires; exports; hash } =
     let resolved_requires = denormalize_resolved_requires ~root resolved_requires in
-    { resolved_requires; hash }
+    { resolved_requires; exports; hash }
 
   let partially_denormalize_parsed_data ~denormalizer { info; normalized_file_data } =
     let info = denormalize_info ~denormalizer info in

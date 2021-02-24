@@ -28,10 +28,10 @@ let string_ends_with long short =
     long = short
   with Invalid_argument _ -> false
 
-(* Returns the index of the first occurrence of string `needle` in string
-   `haystack`. If not found, returns -1.
+(** [substring_index needle haystack] returns the index of the first occurrence of
+    string [needle] in string [haystack]. If not found, returns [-1].
 
-   An implementation of the Knuth-Morris-Pratt (KMP) algorithm. *)
+    An implementation of the Knuth-Morris-Pratt (KMP) algorithm. *)
 let substring_index needle =
   (* see Wikipedia pseudocode *)
   let needle_len = String.length needle in
@@ -73,20 +73,22 @@ let is_substring needle =
   let substring_index_memo = substring_index needle in
   (fun haystack -> substring_index_memo haystack >= 0)
 
-(* Return a copy of the string with prefixing string removed.
- * The function is a no-op if it s does not start with prefix.
- * Modeled after Python's string.lstrip.
- *)
+(** [lstrip s prefix] returns a copy of [s] with [prefix] removed from
+    the beginning if [s] begins with [prefix], or [s] itself if not.
+    Physical equality is maintained in the latter case. *)
 let lstrip s prefix =
-  let prefix_length = String.length prefix in
   if string_starts_with s prefix then
+    let prefix_length = String.length prefix in
     String.sub s prefix_length (String.length s - prefix_length)
   else
     s
 
+(** [rstrip s suffix] returns a copy of [s] with [suffix] removed from
+    the end if [s] ends with [suffix], or [s] itself if not. Physical
+    equality is maintained in the latter case. *)
 let rstrip s suffix =
-  let result_length = String.length s - String.length suffix in
   if string_ends_with s suffix then
+    let result_length = String.length s - String.length suffix in
     String.sub s 0 result_length
   else
     s
@@ -176,8 +178,8 @@ let split2_exn c s =
   | Some s -> s
   | None -> raise Incorrect_format
 
-(* Replaces all instances of the needle character with the replacement character
- *)
+(** [replace_char needle replacement str] replaces all instances of the [needle]
+    character in [str] with the [replacement] character *)
 let replace_char needle replacement =
   String.map (fun c ->
       if c = needle then
@@ -185,10 +187,9 @@ let replace_char needle replacement =
       else
         c)
 
-(* Splits a string into a list of strings using "\n", "\r" or "\r\n" as
- * delimiters. If the string starts or ends with a delimiter, there WILL be an
- * empty string at the beginning or end of the list, like Str.split_delim does
- *)
+(** Splits a string into a list of strings using "\n", "\r" or "\r\n" as
+    delimiters. If the string starts or ends with a delimiter, there WILL be an
+    empty string at the beginning or end of the list, like [Str.split_delim] does. *)
 let split_into_lines str =
   (* To avoid unnecessary string allocations, we're going to keep a list of
    * the start index of each line and how long it is. Then, at the end, we can
@@ -212,7 +213,7 @@ let split_into_lines str =
     []
     ((last_start, String.length str - last_start) :: lines)
 
-(* Splits a string into lines, indents each non-empty line, and concats with newlines *)
+(** Splits a string into lines, indents each non-empty line, and concats with newlines *)
 let indent indent_size str =
   let padding = String.make indent_size ' ' in
   str
@@ -224,10 +225,9 @@ let indent indent_size str =
            padding ^ str)
   |> String.concat "\n"
 
-(* Splits a string into a list of strings using only "\n" as a delimiter.
- * If the string ends with a delimiter, an empty string representing the
- * contents after the final delimiter is NOT included (unlike Str.split_delim).
- *)
+(** Splits a string into a list of strings using only "\n" as a delimiter.
+    If the string ends with a delimiter, an empty string representing the
+    contents after the final delimiter is NOT included (unlike [Str.split_delim]). *)
 let split_on_newlines content =
   let re = Str.regexp "[\n]" in
   let lines = Str.split_delim re content in
@@ -264,13 +264,11 @@ module CharSet = struct
   let to_string set = Internal.of_list (elements set)
 end
 
-(* Levenshtein distance algorithm.
+(** Levenshtein distance algorithm.
 
    Based on the public domain implementation at
    https://bitbucket.org/camlspotter/ocaml_levenshtein/src/default/
-
 *)
-
 let levenshtein_distance (xs : string) (ys : string) =
   let min3 (x : int) y z =
     let m' (a : int) b =

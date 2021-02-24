@@ -16,9 +16,8 @@ val mk_resolved_requires :
 
 type info = {
   module_name: Modulename.t;
-  checked: bool;
-  (* in flow? *)
-  parsed: bool; (* if false, it's a tracking record only *)
+  checked: bool;  (** in flow? *)
+  parsed: bool;  (** if false, it's a tracking record only *)
 }
 
 module type READER = sig
@@ -32,15 +31,19 @@ module type READER = sig
 
   val get_resolved_requires_unsafe : reader:reader -> (File_key.t -> resolved_requires) Expensive.t
 
-  (* given a filename, returns module info *)
   val get_info_unsafe : reader:reader -> (File_key.t -> info) Expensive.t
+  (** given a filename, returns module info *)
 
   val get_info : reader:reader -> (File_key.t -> info option) Expensive.t
 
   val is_tracked_file : reader:reader -> File_key.t -> bool
 end
 
-module Mutator_reader : READER with type reader = Mutator_state_reader.t
+module Mutator_reader : sig
+  include READER with type reader = Mutator_state_reader.t
+
+  val get_old_info : reader:reader -> (File_key.t -> info option) Expensive.t
+end
 
 module Reader : READER with type reader = State_reader.t
 

@@ -1,8 +1,8 @@
 
 /* @providesModule Foo */
 
-var Bar = require('Bar');
-var Qux = require('Qux');
+const Bar = require('Bar');
+const Qux = require('Qux');
 
 class Foo extends Qux {
   x:string;

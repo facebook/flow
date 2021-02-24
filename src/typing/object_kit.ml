@@ -5,6 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
+open Flow_js_utils
 open Reason
 open Type
 open TypeUtil
@@ -12,7 +13,7 @@ open TypeUtil
 module type OBJECT = sig
   val run :
     Context.t ->
-    Trace.t ->
+    Type.trace ->
     use_op:Type.use_op ->
     Reason.t ->
     Type.Object.resolve_tool ->
@@ -22,7 +23,7 @@ module type OBJECT = sig
     unit
 
   val widen_obj_type :
-    Context.t -> ?trace:Trace.t -> use_op:Type.use_op -> Reason.reason -> Type.t -> Type.t
+    Context.t -> ?trace:Type.trace -> use_op:Type.use_op -> Reason.reason -> Type.t -> Type.t
 end
 
 module Kit (Flow : Flow_common.S) : OBJECT = struct
@@ -89,7 +90,7 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
             rep )
     | t -> t
 
-  let type_optionality_and_missing_property (t, _) =
+  let type_optionality_and_missing_property (t, _, _) =
     match t with
     | OptionalT { reason; type_ = t; use_desc } ->
       let is_missing_property_desc =
@@ -129,6 +130,11 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
       (* Shared Object Kit Utilities *)
       (*******************************)
       let read_prop r flags x p =
+        let is_method =
+          match p with
+          | Method _ -> true
+          | _ -> false
+        in
         let t =
           match Property.read_t p with
           | Some t -> t
@@ -137,7 +143,7 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
             let t = DefT (reason, bogus_trust (), MixedT Mixed_everything) in
             t
         in
-        (t, Obj_type.is_legacy_exact_DO_NOT_USE flags.obj_kind)
+        (t, Obj_type.is_legacy_exact_DO_NOT_USE flags.obj_kind, is_method)
       in
       let read_dict r { value; dict_polarity; _ } =
         if Polarity.compat (dict_polarity, Polarity.Positive) then
@@ -154,7 +160,7 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
       let get_prop r p dict =
         match (p, dict) with
         | (Some _, _) -> p
-        | (None, Some d) -> Some (optional (read_dict r d), true)
+        | (None, Some d) -> Some (optional (read_dict r d), true, false)
         | (None, None) -> None
       in
       (* Lift a pairwise function to a function over a resolved list *)
@@ -264,8 +270,8 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
             let dict =
               match (dict1, dict2) with
               | (None, Some _) when inline2 -> Ok dict2
-              | (None, Some _) when SMap.is_empty props1 && exact1 -> Ok dict2
-              | (Some d1, Some d2) when SMap.is_empty props1 ->
+              | (None, Some _) when NameUtils.Map.is_empty props1 && exact1 -> Ok dict2
+              | (Some d1, Some d2) when NameUtils.Map.is_empty props1 ->
                 rec_flow_t cx trace ~use_op (d2.key, d1.key);
                 rec_unify cx trace ~use_op d1.value d2.value;
                 (* We take dict1 because we want to use the key from d1 *)
@@ -296,11 +302,11 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
             | Error e -> Error e
             | Ok dict ->
               let union t1 t2 = UnionT (reason, UnionRep.make t1 t2 []) in
-              let merge_props propname t1 t2 =
+              let merge_props propname ((_, _, method1) as t1) ((_, _, method2) as t2) =
                 let (t1, opt1, missing_prop1) = type_optionality_and_missing_property t1 in
                 let (t2, opt2, missing_prop2) = type_optionality_and_missing_property t2 in
                 if not opt2 then
-                  (t2, true)
+                  (t2, true, method2)
                 else if opt1 && opt2 then
                   ( make_optional_with_possible_missing_props
                       propname
@@ -308,23 +314,26 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
                       missing_prop2
                       r1
                       (union t1 t2),
-                    true )
+                    true,
+                    (* Since we cannot be sure which is spread, if either
+                    are methods we must treat the result as a method *)
+                    method2 || method1 )
                 (* In this case, we know opt2 is true and opt1 is false *)
                 else
-                  (union t1 t2, true)
+                  (union t1 t2, true, method2 || method1)
               in
               let props =
                 try
                   Ok
-                    (SMap.merge
+                    (NameUtils.Map.merge
                        (fun x p1 p2 ->
                          match (p1, p2) with
                          | (None, None) -> None
-                         | (_, Some p2) when inline2 -> Some (fst p2, true)
+                         | (_, Some (p2, _, m)) when inline2 -> Some (p2, true, m)
                          | (Some p1, Some p2) -> Some (merge_props x p1 p2)
-                         | (Some p1, None) ->
+                         | (Some (p1, _, m), None) ->
                            if exact2 || inline2 then
-                             Some (fst p1, true)
+                             Some (p1, true, m)
                            else
                              raise
                                (CannotSpreadError
@@ -355,7 +364,7 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
                           *  The if statement below handles 1. and 2., and the else statement
                           *  handles 3. and the case when p2 is not optional.
                           *)
-                         | (None, Some p2) ->
+                         | (None, Some ((t, _, m) as p2)) ->
                            let (_, opt2, _) = type_optionality_and_missing_property p2 in
                            (match flags1.obj_kind with
                            | Indexed _
@@ -386,7 +395,7 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
                                        error_kind;
                                        use_op;
                                      }))
-                           | _ -> Some (fst p2, true)))
+                           | _ -> Some (t, true, m)))
                        props1
                        props2)
                 with CannotSpreadError e -> Error e
@@ -434,7 +443,7 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
                 | None -> Exact
               in
               let flags = { obj_kind; frozen = false } in
-              let props = SMap.mapi (read_prop reason flags) prop_map in
+              let props = NameUtils.Map.mapi (read_prop reason flags) prop_map in
               Nel.one (true, None, { Object.reason; props; flags; generics })
           in
           let spread cx trace ~use_op reason = function
@@ -443,7 +452,15 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
               merge_result (spread2 cx trace ~use_op reason) resolved_of_acc_element x0 (x1, xs)
           in
           let mk_object cx reason target { Object.reason = _; props; flags; generics } =
-            let props = SMap.map (fun (t, _) -> Field (None, t, Polarity.Neutral)) props in
+            let props =
+              NameUtils.Map.map
+                (fun (t, _, is_method) ->
+                  if is_method then
+                    Method (None, t)
+                  else
+                    Field (None, t, Polarity.Neutral))
+                props
+            in
             let id = Context.generate_property_map cx props in
             let flags =
               let (exact, sealed) =
@@ -608,7 +625,7 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
             let dict1 = Obj_type.get_dict_opt flags1.obj_kind in
             let dict2 = Obj_type.get_dict_opt flags2.obj_kind in
             let props =
-              SMap.merge
+              NameUtils.Map.merge
                 (fun k p1 p2 ->
                   match
                     ( merge_mode,
@@ -625,30 +642,45 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
                    * optionality. If p2 is maybe-own then sometimes it may not be
                    * subtracted and so is optional. If props2 is not exact then we may
                    * optionally have some undocumented prop. *)
-                  | ((Sound | IgnoreExactAndOwn), Some (t1, _), Some ((OptionalT _ as t2), _), _)
-                  | (Sound, Some (t1, _), Some (t2, false), _)
-                  | (Sound, Some (t1, _), Some (t2, _), false) ->
+                  | ( (Sound | IgnoreExactAndOwn),
+                      Some (t1, _, m1),
+                      Some ((OptionalT _ as t2), _, _),
+                      _ )
+                  | (Sound, Some (t1, _, m1), Some (t2, false, _), _)
+                  | (Sound, Some (t1, _, m1), Some (t2, _, _), false) ->
                     rec_flow cx trace (t1, UseT (use_op, optional t2));
-                    Some (Field (None, optional t1, Polarity.Neutral))
+                    let p =
+                      if m1 then
+                        Method (None, optional t1)
+                      else
+                        Field (None, optional t1, Polarity.Neutral)
+                    in
+                    Some p
                   (* Otherwise if the object we are using to subtract has a non-optional own
                    * property and the object is exact then we never add that property to our
                    * source object. *)
-                  | ((Sound | IgnoreExactAndOwn), None, Some (t2, _), _) ->
+                  | ((Sound | IgnoreExactAndOwn), None, Some (t2, _, _), _) ->
                     let reason = replace_desc_reason (RUndefinedProperty k) r1 in
                     rec_flow
                       cx
                       trace
                       (VoidT.make reason |> with_trust bogus_trust, UseT (use_op, t2));
                     None
-                  | ((Sound | IgnoreExactAndOwn), Some (t1, _), Some (t2, _), _) ->
+                  | ((Sound | IgnoreExactAndOwn), Some (t1, _, _), Some (t2, _, _), _) ->
                     rec_flow cx trace (t1, UseT (use_op, t2));
                     None
                   (* If we have some property in our first object and none in our second
                    * object, but our second object is inexact then we want to make our
                    * property optional and flow that type to mixed. *)
-                  | (Sound, Some (t1, _), None, false) ->
+                  | (Sound, Some (t1, _, m1), None, false) ->
                     rec_flow cx trace (t1, UseT (use_op, MixedT.make r2 |> with_trust bogus_trust));
-                    Some (Field (None, optional t1, Polarity.Neutral))
+                    let p =
+                      if m1 then
+                        Method (None, optional t1)
+                      else
+                        Field (None, optional t1, Polarity.Neutral)
+                    in
+                    Some p
                   (* If neither object has the prop then we don't add a prop to our
                    * result here. *)
                   | ((Sound | IgnoreExactAndOwn | ReactConfigMerge _), None, None, _) -> None
@@ -656,13 +688,38 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
                    * prop then we will copy over that prop. If the first object's prop is
                    * non-own then sometimes we may not copy it over so we mark it
                    * as optional. *)
-                  | (IgnoreExactAndOwn, Some (t, _), None, _) ->
-                    Some (Field (None, t, Polarity.Neutral))
-                  | (ReactConfigMerge _, Some (t, _), None, _) ->
-                    Some (Field (None, t, Polarity.Positive))
-                  | (Sound, Some (t, true), None, _) -> Some (Field (None, t, Polarity.Neutral))
-                  | (Sound, Some (t, false), None, _) ->
-                    Some (Field (None, optional t, Polarity.Neutral))
+                  | (IgnoreExactAndOwn, Some (t, _, m1), None, _) ->
+                    let p =
+                      if m1 then
+                        Method (None, t)
+                      else
+                        Field (None, t, Polarity.Neutral)
+                    in
+                    Some p
+                  | (ReactConfigMerge _, Some (t, _, m1), None, _) ->
+                    let p =
+                      if m1 then
+                        Method (None, t)
+                      else
+                        Field (None, t, Polarity.Positive)
+                    in
+                    Some p
+                  | (Sound, Some (t, true, m1), None, _) ->
+                    let p =
+                      if m1 then
+                        Method (None, t)
+                      else
+                        Field (None, t, Polarity.Neutral)
+                    in
+                    Some p
+                  | (Sound, Some (t, false, m1), None, _) ->
+                    let p =
+                      if m1 then
+                        Method (None, optional t)
+                      else
+                        Field (None, optional t, Polarity.Neutral)
+                    in
+                    Some p
                   (* React config merging is special. We are trying to solve for C
                    * in the equation (where ... represents spread instead of rest):
                    *
@@ -677,8 +734,8 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
                    * the behavior of other object rest merge modes implemented in this
                    * pattern match. *)
                   | ( ReactConfigMerge _,
-                      Some (t1, _),
-                      Some (OptionalT { reason = _; type_ = t2; use_desc = _ }, _),
+                      Some (t1, _, m1),
+                      Some (OptionalT { reason = _; type_ = t2; use_desc = _ }, _, _),
                       _ ) ->
                     (* We only test the subtyping relation of t1 and t2 if both t1 and t2
                      * are optional types. If t1 is required then t2 will always
@@ -687,7 +744,13 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
                     | OptionalT { reason = _; type_ = t1; use_desc = _ } ->
                       rec_flow_t ~use_op:unknown_use cx trace (t2, t1)
                     | _ -> ());
-                    Some (Field (None, t1, Polarity.Positive))
+                    let p =
+                      if m1 then
+                        Method (None, t1)
+                      else
+                        Field (None, t1, Polarity.Neutral)
+                    in
+                    Some p
                   (* Using our same equation. Consider this case:
                    *
                    *     {...{p}, ...C} = {p}
@@ -696,17 +759,23 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
                    * solution unless that empty object is exact. Even for exact objects,
                    * {|p?|} is the best solution since it accepts more valid
                    * programs then {||}. *)
-                  | (ReactConfigMerge _, Some (t1, _), Some (t2, _), _) ->
+                  | (ReactConfigMerge _, Some (t1, _, m1), Some (t2, _, _), _) ->
                     (* The DP type for p must be a subtype of the P type for p. *)
                     rec_flow_t ~use_op:unknown_use cx trace (t2, t1);
-                    Some (Field (None, optional t1, Polarity.Positive))
+                    let p =
+                      if m1 then
+                        Method (None, optional t1)
+                      else
+                        Field (None, optional t1, Polarity.Positive)
+                    in
+                    Some p
                   (* Consider this case:
                    *
                    *     {...{p}, ...C} = {}
                    *
                    * For C there will be no prop. However, if the props object is exact
                    * then we need to throw an error. *)
-                  | (ReactConfigMerge _, None, Some (_, _), _) ->
+                  | (ReactConfigMerge _, None, Some (_, _, _), _) ->
                     ( if Obj_type.is_legacy_exact_DO_NOT_USE flags1.obj_kind then
                       let use_op =
                         Frame
@@ -805,7 +874,15 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
         let polarity = Polarity.Positive in
         let mk_read_only_object cx reason slice =
           let { Object.reason = r; props; flags; generics } = slice in
-          let props = SMap.map (fun (t, _) -> Field (None, t, polarity)) props in
+          let props =
+            NameUtils.Map.map
+              (fun (t, _, is_method) ->
+                if is_method then
+                  Method (None, t)
+                else
+                  Field (None, t, polarity))
+              props
+          in
           let flags =
             {
               flags with
@@ -844,7 +921,15 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
         let mk_object cx reason { Object.reason = r; props; flags; generics } =
           (* TODO(jmbrown): Add polarity information to props *)
           let polarity = Polarity.Neutral in
-          let props = SMap.map (fun (t, _) -> Field (None, t, polarity)) props in
+          let props =
+            NameUtils.Map.map
+              (fun (t, _, is_method) ->
+                if is_method then
+                  Method (None, t)
+                else
+                  Field (None, t, polarity))
+              props
+          in
           let flags =
             {
               flags with
@@ -881,7 +966,15 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
       let object_widen =
         let mk_object cx reason { Object.reason = r; props; flags; generics } =
           let polarity = Polarity.Neutral in
-          let props = SMap.map (fun (t, _) -> Field (None, t, polarity)) props in
+          let props =
+            NameUtils.Map.map
+              (fun (t, _, is_method) ->
+                if is_method then
+                  Method (None, t)
+                else
+                  Field (None, t, polarity))
+              props
+          in
           let flags =
             {
               flags with
@@ -951,13 +1044,13 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
             let slice_dict = Obj_type.get_dict_opt slice.Object.flags.obj_kind in
             let new_pmap = slice.props in
             let pmap_and_changed =
-              SMap.merge
+              NameUtils.Map.merge
                 (fun propname p1 p2 ->
                   let p1 = get_prop widest.Object.reason p1 widest_dict in
                   let p2 = get_prop slice.Object.reason p2 slice_dict in
                   match (p1, p2) with
                   | (None, None) -> None
-                  | (None, Some t) ->
+                  | (None, Some ((_, _, m) as t)) ->
                     let (t', opt, missing_prop) = type_optionality_and_missing_property t in
                     let t' =
                       if opt && not missing_prop then
@@ -965,8 +1058,8 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
                       else
                         possibly_missing_prop propname widest.Object.reason t'
                     in
-                    Some (t', true)
-                  | (Some t, None) ->
+                    Some ((t', m), true)
+                  | (Some ((_, _, m) as t), None) ->
                     let (t', opt, missing_prop) = type_optionality_and_missing_property t in
                     let t' =
                       if opt && not missing_prop then
@@ -974,31 +1067,32 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
                       else
                         possibly_missing_prop propname slice.Object.reason t'
                     in
-                    Some (t', not opt)
-                  | (Some t1, Some t2) ->
+                    Some ((t', m), not opt)
+                  | (Some ((_, _, m1) as t1), Some ((_, _, m2) as t2)) ->
                     let (t1', opt1, missing_prop1) = type_optionality_and_missing_property t1 in
                     let (t2', opt2, missing_prop2) = type_optionality_and_missing_property t2 in
                     let (t, changed) = widen_type cx trace obj_reason ~use_op t1' t2' in
                     if opt1 || opt2 then
                       Some
-                        ( make_optional_with_possible_missing_props
-                            propname
-                            missing_prop1
-                            missing_prop2
-                            widest.Object.reason
-                            t,
+                        ( ( make_optional_with_possible_missing_props
+                              propname
+                              missing_prop1
+                              missing_prop2
+                              widest.Object.reason
+                              t,
+                            m1 || m2 ),
                           changed )
                     else
-                      Some (t, changed))
+                      Some ((t, m1 || m2), changed))
                 widest_pmap
                 new_pmap
             in
             let (pmap', changed) =
-              SMap.fold
+              NameUtils.Map.fold
                 (fun k (t, changed) (acc_map, acc_changed) ->
-                  (SMap.add k t acc_map, changed || acc_changed))
+                  (NameUtils.Map.add k t acc_map, changed || acc_changed))
                 pmap_and_changed
-                (SMap.empty, false)
+                (NameUtils.Map.empty, false)
             in
             (* TODO: (jmbrown) we can be less strict here than unifying. It may be possible to
              * also merge the dictionary types *)
@@ -1032,7 +1126,7 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
                 | _ -> Inexact
               in
               let flags = { obj_kind; frozen = false } in
-              let props = SMap.map (fun t -> (t, true)) pmap' in
+              let props = NameUtils.Map.map (fun (t, m) -> (t, true, m)) pmap' in
               let slice' =
                 { Object.reason = slice.Object.reason; props; flags; generics = widest.generics }
               in
@@ -1057,7 +1151,7 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
            * add a positive variance annotation. We may consider marking that type as
            * constant in the future as well. *)
           let prop_polarity = Polarity.Neutral in
-          let finish cx trace reason config defaults children =
+          let finish cx trace ~use_op reason config defaults children =
             let {
               Object.reason = config_reason;
               props = config_props;
@@ -1070,20 +1164,20 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
              * to our config props. *)
             let config_props =
               Base.Option.value_map children ~default:config_props ~f:(fun children ->
-                  SMap.add "children" (children, true) config_props)
+                  NameUtils.Map.add (OrdinaryName "children") (children, true, false) config_props)
             in
             (* Remove the key and ref props from our config. We check key and ref
              * independently of our config. So we must remove them so the user can't
              * see them. *)
-            let config_props = SMap.remove "key" config_props in
-            let config_props = SMap.remove "ref" config_props in
+            let config_props = NameUtils.Map.remove (OrdinaryName "key") config_props in
+            let config_props = NameUtils.Map.remove (OrdinaryName "ref") config_props in
 
             let config_dict = Obj_type.get_dict_opt config_flags.obj_kind in
             (* Create the final props map and dict.
              *
              * NOTE: React will copy any enumerable prop whether or not it
              * is own to the config. *)
-            let (props, flags, generics) =
+            let (props_map, flags, generics) =
               match defaults with
               (* If we have some default props then we want to add the types for those
                * default props to our final props object. *)
@@ -1097,14 +1191,14 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
                 let defaults_dict = Obj_type.get_dict_opt defaults_flags.obj_kind in
                 (* Merge our props and default props. *)
                 let props =
-                  SMap.merge
+                  NameUtils.Map.merge
                     (fun _ p1 p2 ->
                       let p1 = get_prop config_reason p1 config_dict in
                       let p2 = get_prop defaults_reason p2 defaults_dict in
                       match (p1, p2) with
                       | (None, None) -> None
-                      | (Some (t, _), None) -> Some (Field (None, t, prop_polarity))
-                      | (None, Some (t, _)) -> Some (Field (None, t, prop_polarity))
+                      | (Some (t, _, m), None) -> Some (t, m)
+                      | (None, Some (t, _, m)) -> Some (t, m)
                       (* If a property is defined in both objects, and the first property's
                        * type includes void then we want to replace every occurrence of void
                        * with the second property's type. This is consistent with the behavior
@@ -1112,7 +1206,7 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
                        * `f(undefined)` and there is a default value for the first argument,
                        * then we will ignore the void type and use the type for the default
                        * parameter instead. *)
-                      | (Some (t1, _), Some (t2, _)) ->
+                      | (Some (t1, _, m1), Some (t2, _, m2)) ->
                         (* Use CondT to replace void with t1. *)
                         let t =
                           Tvar.mk_where cx reason (fun tvar ->
@@ -1122,7 +1216,7 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
                                 ( OpenT (reason, filter_optional cx ~trace reason t1),
                                   CondT (reason, None, t2, tvar) ))
                         in
-                        Some (Field (None, t, prop_polarity)))
+                        Some (t, m1 || m2))
                     config_props
                     defaults_props
                 in
@@ -1162,8 +1256,9 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
                 (props, flags, generics)
               (* Otherwise turn our slice props map into an object props. *)
               | None ->
-                (* All of the fields are read-only so we create positive fields. *)
-                let props = SMap.map (fun (t, _) -> Field (None, t, prop_polarity)) config_props in
+                let props =
+                  NameUtils.Map.map (fun (t, _, is_method) -> (t, is_method)) config_props
+                in
                 (* Create a new dictionary from our config's dictionary with a
                  * positive polarity. *)
                 let dict =
@@ -1190,7 +1285,66 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
                 (props, flags, config_generics)
             in
             let call = None in
+            (* This code should not be here, but it has to be. In a React Server Component file,
+             * we need to check all the props against React$TransportValue. The ideal way to do
+             * this would be to take the final config object computed here and flow it to
+             * React$TransportObject. However, doing that directly can lead to a subtle bug that
+             * causes spurious errors. The config object produced here has a literal object
+             * reason-- and it should! It's a new fresh object. It's also important that this
+             * object is a literal so that it gets the less strict type checking behavior when
+             * flowing to the Component's props. Many Props types are not specified as
+             * read-only, so this literal reason is required in order to get the
+             * covariant property type checking.
+             *
+             * However, literal objects flowing to object types with optional properties will
+             * take on optional properties in the object types. This behavior is spooky, but
+             * in place because we do not have a proper aliasing analysis.
+             *
+             * In order to avoid accidentally comparing optional properties from the Props
+             * that may be adopted by the config to React$TransportValue, we flow each property
+             * to React$TransportValue directly. If a dictionary is present then we also flow
+             * the dict's value type to React$TransportValue. If the object is Inexact then
+             * we also flow mixed to React$TransportValue to represent properties that may
+             * exist but are not present in the type. This case will always error, but is
+             * unlikely to be hit because it requires an inexact object to be spread into
+             * the props in jsx.
+             *)
+            if Context.in_react_server_component_file cx then (
+              let reason_transport_value_reason =
+                replace_desc_reason (RCustom "React.TransportValue") reason
+              in
+              let react_transport_value =
+                get_builtin_type
+                  cx
+                  reason_transport_value_reason
+                  (OrdinaryName "React$TransportValue")
+              in
+              NameUtils.Map.iter
+                (fun _ (t, _) -> rec_flow_t cx trace ~use_op (t, react_transport_value))
+                props_map;
+              match flags.obj_kind with
+              | UnsealedInFile _ -> failwith "React config should never be unsealed"
+              | Exact -> ()
+              | Inexact ->
+                let r =
+                  mk_reason
+                    (RUnknownUnspecifiedProperty (desc_of_reason reason))
+                    (aloc_of_reason reason)
+                in
+                let mixed = DefT (r, bogus_trust (), MixedT Mixed_everything) in
+                rec_flow_t cx trace ~use_op (mixed, react_transport_value)
+              | Indexed d -> rec_flow_t cx trace ~use_op (d.value, react_transport_value)
+            );
             (* Finish creating our props object. *)
+            let props =
+              NameUtils.Map.map
+                (fun (t, is_method) ->
+                  if is_method then
+                    Method (None, t)
+                  else
+                    Field (None, t, prop_polarity))
+                props_map
+            in
             let id = Context.generate_property_map cx props in
             let proto = ObjProtoT reason in
             mk_object_type
@@ -1214,7 +1368,7 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
             (* If we have no default props then finish our object and flow it to our
              * tout type. *)
             | Config { defaults = None; children } ->
-              let ts = Nel.map (fun x -> finish cx trace reason x None children) x in
+              let ts = Nel.map (fun x -> finish cx trace ~use_op reason x None children) x in
               let t =
                 match ts with
                 | (t, []) -> t
@@ -1226,7 +1380,7 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
             | Defaults { config; children } ->
               let ts =
                 Nel.map_concat
-                  (fun c -> Nel.map (fun d -> finish cx trace reason c (Some d) children) x)
+                  (fun c -> Nel.map (fun d -> finish cx trace ~use_op reason c (Some d) children) x)
                   config
               in
               let t =
@@ -1270,7 +1424,7 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
           else
             IntersectionT (reason, InterRep.make t1 t2 [])
         in
-        let merge_props (t1, own1) (t2, own2) =
+        let merge_props (t1, own1, m1) (t2, own2, m2) =
           let (t1, t2, opt) =
             match (t1, t2) with
             | ( OptionalT { reason = _; type_ = t1; use_desc = _ },
@@ -1288,12 +1442,12 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
             else
               t
           in
-          (t, own1 || own2)
+          (t, own1 || own2, m1 || m2)
         in
         let props =
-          SMap.merge
+          NameUtils.Map.merge
             (fun _ p1 p2 ->
-              let read_dict r d = (optional (read_dict r d), true) in
+              let read_dict r d = (optional (read_dict r d), true, false) in
               match (p1, p2) with
               | (None, None) -> None
               | (Some p1, Some p2) -> Some (merge_props p1 p2)
@@ -1361,7 +1515,7 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
       in
       let object_slice cx r id flags generics =
         let props = Context.find_props cx id in
-        let props = SMap.mapi (read_prop r flags) props in
+        let props = NameUtils.Map.mapi (read_prop r flags) props in
         let obj_kind =
           Obj_type.map_dict
             (fun dict ->
@@ -1379,10 +1533,19 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
       let interface_slice cx r id generics =
         let (id, obj_kind) =
           let props = Context.find_props cx id in
-          match (SMap.find_opt "$key" props, SMap.find_opt "$value" props) with
+          (* TODO $-prefixed names should be internal *)
+          match
+            ( NameUtils.Map.find_opt (OrdinaryName "$key") props,
+              NameUtils.Map.find_opt (OrdinaryName "$value") props )
+          with
           | (Some (Field (_, key, polarity)), Some (Field (_, value, polarity')))
             when polarity = polarity' ->
-            let props = props |> SMap.remove "$key" |> SMap.remove "$value" in
+            let props =
+              props
+              (* TODO $-prefixed names should be internal *)
+              |> NameUtils.Map.remove (OrdinaryName "$key")
+              |> NameUtils.Map.remove (OrdinaryName "$value")
+            in
             let id = Context.generate_property_map cx props in
             let dict = { dict_name = None; key; value; dict_polarity = polarity } in
             (id, Indexed dict)
@@ -1454,7 +1617,9 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
          * empty objects. *)
         | DefT (_, _, (NullT | VoidT)) ->
           let flags = { frozen = true; obj_kind = Exact } in
-          let x = Nel.one { Object.reason; props = SMap.empty; flags; generics = t_generic_id } in
+          let x =
+            Nel.one { Object.reason; props = NameUtils.Map.empty; flags; generics = t_generic_id }
+          in
           resolved cx trace use_op reason resolve_tool tool tout x
         (* TODO(jmbrown): Investigate if these cases can be used for ReactConfig/ObjecRep/Rest.
          * In principle, we should be able to use it for Rest, but right now
@@ -1468,7 +1633,9 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
                  true
                | _ -> false ->
           let flags = { frozen = true; obj_kind = Exact } in
-          let x = Nel.one { Object.reason; props = SMap.empty; flags; generics = t_generic_id } in
+          let x =
+            Nel.one { Object.reason; props = NameUtils.Map.empty; flags; generics = t_generic_id }
+          in
           resolved cx trace use_op reason resolve_tool tool tout x
         (* mixed is treated as {[string]: mixed} except in type spread and react config checking, where
          * it's treated as {}. Any JavaScript value may be treated as an object so this is safe.
@@ -1486,7 +1653,7 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
             | Spread _
             | ObjectRep
             | ReactConfig _ ->
-              Nel.one { Object.reason; props = SMap.empty; flags; generics = t_generic_id }
+              Nel.one { Object.reason; props = NameUtils.Map.empty; flags; generics = t_generic_id }
             | _ ->
               let flags =
                 {
@@ -1501,11 +1668,11 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
                       };
                 }
               in
-              Nel.one { Object.reason; props = SMap.empty; flags; generics = t_generic_id }
+              Nel.one { Object.reason; props = NameUtils.Map.empty; flags; generics = t_generic_id }
           in
           resolved cx trace use_op reason resolve_tool tool tout x
         (* If we see an empty then propagate empty to tout. *)
-        | DefT (r, trust, EmptyT _) -> rec_flow cx trace (EmptyT.make r trust, UseT (use_op, tout))
+        | DefT (r, trust, EmptyT) -> rec_flow cx trace (EmptyT.make r trust, UseT (use_op, tout))
         (* Propagate any. *)
         | AnyT (_, src) -> rec_flow cx trace (AnyT.why src reason, UseT (use_op, tout))
         (* Other types have reasonable object representations that may be added as

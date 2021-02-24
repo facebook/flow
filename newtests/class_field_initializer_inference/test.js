@@ -13,7 +13,7 @@ export default (suite(({addFile, addFiles, addCode}) => [
         `
           test.js:3
             3: export class Foo { a; }
-                                  ^^ Missing type annotation for property \`a\`. [missing-annot]
+                                  ^^ Cannot build a typed interface for this module. You should annotate the exports of this module with types. Missing type annotation at property \`a\`: [signature-verification-failure]
         `,
       )
   ]),
@@ -24,7 +24,7 @@ export default (suite(({addFile, addFiles, addCode}) => [
   ]),
 
   test('Initialized instance fields infer type from init value', [
-    addCode('export class Foo { a = 42; }')
+    addCode('export class Foo { a: number = 42; }')
       .noNewErrors()
   ]),
 
@@ -34,10 +34,10 @@ export default (suite(({addFile, addFiles, addCode}) => [
         `
           test.js:3
             3: export class Foo { a = (p) => 42; }
-                                       ^ Missing type annotation for \`p\`. [missing-annot]
+            ^^^^^^^^^^^^^^ Cannot build a typed interface for this module. You should annotate the exports of this module with types. Missing type annotation at property \`a\`: [signature-verification-failure]
         `,
       ),
-    addCode('export class Bar { a = (p: number) => 42; }')
+    addCode('export class Bar { a: (p: number) => number = (p) => 42; }')
       .noNewErrors()
   ]),
 

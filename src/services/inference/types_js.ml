@@ -56,7 +56,7 @@ let filter_duplicate_provider map file =
     FilenameMap.add file new_errset map
   | None -> map
 
-let collate_parse_results ~options parse_results =
+let collate_parse_results parse_results =
   let {
     Parsing_service_js.parse_ok;
     parse_skips;
@@ -90,14 +90,13 @@ let collate_parse_results ~options parse_results =
     (* In practice, the only `tolerable_errors` are related to well formed exports. If this flag
      * were not temporary in nature, it would be worth adding some complexity to avoid conflating
      * them. *)
-    Inference_utils.fold_included_well_formed_exports
-      ~f:(fun file file_sig_errors errors ->
+    Utils_js.FilenameMap.fold
+      (fun file file_sig_errors errors ->
         let file_sig_errors = File_sig.abstractify_tolerable_errors file_sig_errors in
         let errset =
           Inference_utils.set_of_file_sig_tolerable_errors ~source_file:file file_sig_errors
         in
         update_errset errors file errset)
-      options
       parse_ok
       local_errors
   in
@@ -118,7 +117,7 @@ let collate_parse_results ~options parse_results =
 let parse ~options ~profiling ~workers ~reader parse_next =
   Memory_utils.with_memory_timer_lwt ~options "Parsing" profiling (fun () ->
       let%lwt results = Parsing_service_js.parse_with_defaults ~reader options workers parse_next in
-      Lwt.return (collate_parse_results ~options results))
+      Lwt.return (collate_parse_results results))
 
 let reparse ~options ~profiling ~transaction ~reader ~workers ~modified ~deleted =
   Memory_utils.with_memory_timer_lwt ~options "Parsing" profiling (fun () ->
@@ -132,9 +131,7 @@ let reparse ~options ~profiling ~transaction ~reader ~workers ~modified ~deleted
           ~deleted
           options
       in
-      let (parse_ok, unparsed, unchanged, local_errors, _) =
-        collate_parse_results ~options results
-      in
+      let (parse_ok, unparsed, unchanged, local_errors, _) = collate_parse_results results in
       Lwt.return (new_or_changed, parse_ok, unparsed, unchanged, local_errors))
 
 (* TODO: make this always return errors and deal with check_syntax at the caller *)
@@ -475,16 +472,14 @@ let include_dependencies_and_dependents
       Lwt.return
         (to_merge, to_check, to_merge_or_check, components, CheckedSet.all definitely_to_merge))
 
-let remove_old_results options phase current_results file =
+let remove_old_results phase current_results file =
   let (errors, warnings, suppressions, coverage, first_internal_error) = current_results in
   let new_coverage =
-    match (Options.arch options, phase) with
-    | (Options.TypesFirst _, Context.Merging)
-    | (Options.TypesFirst _, Context.Normalizing) ->
+    match phase with
+    | Context.Merging
+    | Context.InitLib ->
       coverage
-    | (Options.TypesFirst _, Context.Checking)
-    | (Options.Classic, _) ->
-      FilenameMap.remove file coverage
+    | Context.Checking -> FilenameMap.remove file coverage
   in
   ( FilenameMap.remove file errors,
     FilenameMap.remove file warnings,
@@ -545,7 +540,7 @@ let run_merge_service
         List.fold_left
           (fun acc (file, result) ->
             let component = FilenameMap.find file component_map in
-            let acc = Nel.fold_left (remove_old_results options Context.Merging) acc component in
+            let acc = Nel.fold_left (remove_old_results Context.Merging) acc component in
             add_new_results ~record_slow_file:(fun _ _ -> ()) acc file result)
           acc
           merged
@@ -561,9 +556,7 @@ let run_merge_service
 
 let mk_intermediate_result_callback
     ~reader ~options ~profiling ~persistent_connections ~recheck_reasons suppressions =
-  let lazy_table_of_aloc =
-    Parsing_heaps.Mutator_reader.get_sig_ast_aloc_table_unsafe_lazy ~reader
-  in
+  let loc_of_aloc = Parsing_heaps.Mutator_reader.loc_of_aloc ~reader in
   let%lwt send_errors_over_connection =
     match persistent_connections with
     | None -> Lwt.return (fun _ -> ())
@@ -667,12 +660,12 @@ let mk_intermediate_result_callback
              | Ok (errors, warnings, suppressions, _, _) ->
                let errors =
                  errors
-                 |> Flow_error.concretize_errors lazy_table_of_aloc
+                 |> Flow_error.concretize_errors loc_of_aloc
                  |> Flow_error.make_errors_printable
                in
                let warnings =
                  warnings
-                 |> Flow_error.concretize_errors lazy_table_of_aloc
+                 |> Flow_error.concretize_errors loc_of_aloc
                  |> Flow_error.make_errors_printable
                in
                (file, errors, warnings, suppressions)
@@ -680,7 +673,7 @@ let mk_intermediate_result_callback
                let errors = error_set_of_internal_error file msg in
                let errors =
                  errors
-                 |> Flow_error.concretize_errors lazy_table_of_aloc
+                 |> Flow_error.concretize_errors loc_of_aloc
                  |> Flow_error.make_errors_printable
                in
                let suppressions = Error_suppressions.empty in
@@ -709,20 +702,14 @@ let merge
     ~sig_dependency_graph
     ~deleted
     ~unparsed_set
-    ~persistent_connections
     ~recheck_reasons =
   let { ServerEnv.local_errors; merge_errors; warnings; suppressions } = errors in
   let%lwt intermediate_result_callback =
-    let persistent_connections =
-      match Options.arch options with
-      | Options.Classic -> persistent_connections
-      | Options.TypesFirst _ -> None
-    in
     mk_intermediate_result_callback
       ~reader
       ~options
       ~profiling
-      ~persistent_connections
+      ~persistent_connections:None
       ~recheck_reasons
       suppressions
   in
@@ -872,10 +859,10 @@ end = struct
     | file :: rest ->
       let result =
         match Merge_service.check options ~reader file with
-        | (f, Ok (_, acc)) -> (f, Ok acc)
-        | (f, Error e) -> (f, Error e)
+        | Ok (_, acc) -> Ok acc
+        | Error e -> Error e
       in
-      job_helper ~reader ~options ~start_time ~start_rss (result :: acc) rest
+      job_helper ~reader ~options ~start_time ~start_rss ((file, result) :: acc) rest
 
   let job ~reader ~options acc files =
     let start_time = Unix.gettimeofday () in
@@ -942,92 +929,89 @@ end = struct
       ~persistent_connections
       ~recheck_reasons
       ~cannot_skip_direct_dependents =
-    match Options.arch options with
-    | Options.Classic -> Lwt.return (updated_errors, coverage, 0., 0, None, None, None)
-    | Options.TypesFirst _ ->
-      Memory_utils.with_memory_timer_lwt ~options "Check" profiling (fun () ->
-          Hh_logger.info "Check prep";
-          Hh_logger.info "new or changed signatures: %d" (FilenameSet.cardinal sig_new_or_changed);
-          let focused_to_check = CheckedSet.focused to_check in
-          let merged_dependents = CheckedSet.dependents to_check in
-          let skipped_count = ref 0 in
-          let (slowest_file, slowest_time, num_slow_files) = (ref None, ref 0., ref None) in
-          let record_slow_file file time =
-            (num_slow_files :=
-               match !num_slow_files with
-               | None -> Some 1
-               | Some n -> Some (n + 1));
-            if time > !slowest_time then (
-              slowest_time := time;
-              slowest_file := Some file
-            )
-          in
-          let implementation_dependency_graph =
-            Dependency_info.implementation_dependency_graph dependency_info
-          in
-          (* skip dependents whenever none of their dependencies have new or changed signatures *)
-          let dependents_to_check =
-            FilenameSet.filter (fun f ->
-                (cannot_skip_direct_dependents && FilenameSet.mem f direct_dependent_files)
-                || FilenameSet.exists (fun f' -> FilenameSet.mem f' sig_new_or_changed)
-                   @@ FilenameGraph.find f implementation_dependency_graph
-                ||
-                ( incr skipped_count;
-                  false ))
-            @@ merged_dependents
-          in
-          Hh_logger.info
-            "Check will skip %d of %d files"
-            !skipped_count
-            (* We can just add these counts without worrying about files which are in both sets. We
-             * got these both from a CheckedSet. CheckedSet's representation ensures that a single
-             * file cannot have more than one kind. *)
-            (FilenameSet.cardinal focused_to_check + FilenameSet.cardinal merged_dependents);
-          let files = FilenameSet.union focused_to_check dependents_to_check in
-          let%lwt intermediate_result_callback =
-            mk_intermediate_result_callback
-              ~reader
-              ~options
-              ~profiling
-              ~persistent_connections
-              ~recheck_reasons
-              updated_errors.ServerEnv.suppressions
-          in
-          Hh_logger.info "Checking files";
+    Memory_utils.with_memory_timer_lwt ~options "Check" profiling (fun () ->
+        Hh_logger.info "Check prep";
+        Hh_logger.info "new or changed signatures: %d" (FilenameSet.cardinal sig_new_or_changed);
+        let focused_to_check = CheckedSet.focused to_check in
+        let merged_dependents = CheckedSet.dependents to_check in
+        let skipped_count = ref 0 in
+        let (slowest_file, slowest_time, num_slow_files) = (ref None, ref 0., ref None) in
+        let record_slow_file file time =
+          (num_slow_files :=
+             match !num_slow_files with
+             | None -> Some 1
+             | Some n -> Some (n + 1));
+          if time > !slowest_time then (
+            slowest_time := time;
+            slowest_file := Some file
+          )
+        in
+        let implementation_dependency_graph =
+          Dependency_info.implementation_dependency_graph dependency_info
+        in
+        (* skip dependents whenever none of their dependencies have new or changed signatures *)
+        let dependents_to_check =
+          FilenameSet.filter (fun f ->
+              (cannot_skip_direct_dependents && FilenameSet.mem f direct_dependent_files)
+              || FilenameSet.exists (fun f' -> FilenameSet.mem f' sig_new_or_changed)
+                 @@ FilenameGraph.find f implementation_dependency_graph
+              ||
+              ( incr skipped_count;
+                false ))
+          @@ merged_dependents
+        in
+        Hh_logger.info
+          "Check will skip %d of %d files"
+          !skipped_count
+          (* We can just add these counts without worrying about files which are in both sets. We
+           * got these both from a CheckedSet. CheckedSet's representation ensures that a single
+           * file cannot have more than one kind. *)
+          (FilenameSet.cardinal focused_to_check + FilenameSet.cardinal merged_dependents);
+        let files = FilenameSet.union focused_to_check dependents_to_check in
+        let%lwt intermediate_result_callback =
+          mk_intermediate_result_callback
+            ~reader
+            ~options
+            ~profiling
+            ~persistent_connections
+            ~recheck_reasons
+            updated_errors.ServerEnv.suppressions
+        in
+        Hh_logger.info "Checking files";
 
-          let check_start_time = Unix.gettimeofday () in
-          let max_size = Options.max_files_checked_per_worker options in
-          let (next, merge) =
-            mk_next
-              ~intermediate_result_callback
-              ~max_size
-              ~workers
-              ~files:(FilenameSet.elements files)
-          in
-          let%lwt ret =
-            MultiWorkerLwt.call workers ~job:(job ~reader ~options) ~neutral:[] ~merge ~next
-          in
-          let { ServerEnv.merge_errors; warnings; _ } = errors in
-          let suppressions = updated_errors.ServerEnv.suppressions in
-          let (merge_errors, warnings, suppressions, coverage, first_internal_error) =
-            List.fold_left
-              (fun acc (file, result) ->
-                let acc = remove_old_results options Context.Checking acc file in
-                add_new_results ~record_slow_file acc file result)
-              (merge_errors, warnings, suppressions, coverage, None)
-              ret
-          in
-          let time_to_check_merged = Unix.gettimeofday () -. check_start_time in
-          Hh_logger.info "Done";
-          let errors = { errors with ServerEnv.merge_errors; warnings; suppressions } in
-          Lwt.return
-            ( errors,
-              coverage,
-              time_to_check_merged,
-              !skipped_count,
-              Base.Option.map ~f:File_key.to_string !slowest_file,
-              !num_slow_files,
-              Base.Option.map first_internal_error ~f:(spf "First check internal error:\n%s") ))
+        let check_start_time = Unix.gettimeofday () in
+        let max_size = Options.max_files_checked_per_worker options in
+        let (next, merge) =
+          mk_next
+            ~intermediate_result_callback
+            ~max_size
+            ~workers
+            ~files:(FilenameSet.elements files)
+        in
+        let%lwt ret =
+          MultiWorkerLwt.call workers ~job:(job ~reader ~options) ~neutral:[] ~merge ~next
+        in
+        let { ServerEnv.merge_errors; warnings; _ } = errors in
+        let suppressions = updated_errors.ServerEnv.suppressions in
+        let (merge_errors, warnings, suppressions, coverage, first_internal_error) =
+          List.fold_left
+            (fun acc (file, result) ->
+              let acc = remove_old_results Context.Checking acc file in
+              add_new_results ~record_slow_file acc file result)
+            (merge_errors, warnings, suppressions, coverage, None)
+            ret
+        in
+        let time_to_check_merged = Unix.gettimeofday () -. check_start_time in
+        Hh_logger.info "Done";
+        let errors = { errors with ServerEnv.merge_errors; warnings; suppressions } in
+        Lwt.return
+          ( errors,
+            coverage,
+            time_to_check_merged,
+            !skipped_count,
+            Base.Option.map ~f:File_key.to_string !slowest_file,
+            !num_slow_files,
+            Base.Option.map first_internal_error ~f:(spf "First check internal error:\n%s") ))
 end
 
 exception Unexpected_file_changes of File_key.t Nel.t
@@ -1124,17 +1108,14 @@ let ensure_checked_dependencies ~options ~reader ~env file file_sig =
 (** TODO: handle case when file+contents don't agree with file system state **)
 let merge_contents ~options ~env ~reader filename info (ast, file_sig) =
   let%lwt () = ensure_checked_dependencies ~options ~reader ~env filename file_sig in
-  Lwt.return (Merge_service.merge_contents_context ~reader options filename ast info file_sig)
+  Lwt.return (Merge_service.check_contents_context ~reader options filename ast info file_sig)
 
-let errors_of_context ~options ~env ~lazy_table_of_aloc filename tolerable_errors cx =
+let errors_of_context ~options ~env ~loc_of_aloc filename tolerable_errors cx =
   let errors = Context.errors cx in
   let local_errors =
-    if Inference_utils.well_formed_exports_enabled options filename then
-      tolerable_errors
-      |> File_sig.abstractify_tolerable_errors
-      |> Inference_utils.set_of_file_sig_tolerable_errors ~source_file:filename
-    else
-      Flow_error.ErrorSet.empty
+    tolerable_errors
+    |> File_sig.abstractify_tolerable_errors
+    |> Inference_utils.set_of_file_sig_tolerable_errors ~source_file:filename
   in
   (* Suppressions for errors in this file can come from dependencies *)
   let suppressions =
@@ -1157,11 +1138,11 @@ let errors_of_context ~options ~env ~lazy_table_of_aloc filename tolerable_error
   let errors =
     errors
     |> Flow_error.ErrorSet.union local_errors
-    |> Flow_error.concretize_errors lazy_table_of_aloc
+    |> Flow_error.concretize_errors loc_of_aloc
     |> Flow_error.make_errors_printable
   in
   let warnings =
-    warnings |> Flow_error.concretize_errors lazy_table_of_aloc |> Flow_error.make_errors_printable
+    warnings |> Flow_error.concretize_errors loc_of_aloc |> Flow_error.make_errors_printable
   in
   let root = Options.root options in
   let file_options = Some (Options.file_options options) in
@@ -1195,7 +1176,7 @@ let errors_of_context ~options ~env ~lazy_table_of_aloc filename tolerable_error
 
 let typecheck_contents ~options ~env ~profiling contents filename =
   let reader = State_reader.create () in
-  let lazy_table_of_aloc = Parsing_heaps.Reader.get_sig_ast_aloc_table_unsafe_lazy ~reader in
+  let loc_of_aloc = Parsing_heaps.Reader.loc_of_aloc ~reader in
   let%lwt (parse_result, info) =
     Memory_utils.with_memory_timer_lwt ~options "Parsing" profiling (fun () ->
         Lwt.return (parse_contents ~options ~check_syntax:true filename contents))
@@ -1209,12 +1190,12 @@ let typecheck_contents ~options ~env ~profiling contents filename =
           merge_contents ~options ~env ~reader filename info (ast, file_sig))
     in
     let (errors, warnings) =
-      errors_of_context ~options ~env ~lazy_table_of_aloc filename tolerable_errors cx
+      errors_of_context ~options ~env ~loc_of_aloc filename tolerable_errors cx
     in
     Lwt.return (Some (cx, ast, file_sig, tolerable_errors, typed_ast), errors, warnings)
   | Error errors ->
     let errors =
-      errors |> Flow_error.concretize_errors lazy_table_of_aloc |> Flow_error.make_errors_printable
+      errors |> Flow_error.concretize_errors loc_of_aloc |> Flow_error.make_errors_printable
     in
     Lwt.return (None, errors, Errors.ConcreteLocPrintableErrorSet.empty)
 
@@ -1245,35 +1226,29 @@ let type_contents ~options ~env ~profiling contents filename =
 
 let init_libs ~options ~profiling ~local_errors ~warnings ~suppressions ~reader ordered_libs =
   Memory_utils.with_memory_timer_lwt ~options "InitLibs" profiling (fun () ->
-      let%lwt lib_files =
-        let options =
-          match Options.verbose options with
-          | Some { Verbose.enabled_during_flowlib = false; _ } ->
-            (* Normally we disable verbosity while loading the libs. But if we're running with
-             * --verbose-flowlib then we want to leave verbosity on *)
-            { options with Options.opt_verbose = None }
-          | _ -> options
-        in
+      let options =
+        match Options.verbose options with
+        | Some { Verbose.enabled_during_flowlib = false; _ } ->
+          (* Normally we disable verbosity while loading the libs. But if we're running with
+           * --verbose-flowlib then we want to leave verbosity on *)
+          { options with Options.opt_verbose = None }
+        | _ -> options
+      in
+      let%lwt {
+            Init_js.ok;
+            errors = lib_errors;
+            warnings = lib_warnings;
+            suppressions = lib_suppressions;
+            exports;
+          } =
         Init_js.init ~options ~reader ordered_libs
       in
       Lwt.return
-      @@ List.fold_left
-           (fun acc (lib_file, ok, errs, warnings, suppressions) ->
-             let (all_ok, errors_acc, warnings_acc, suppressions_acc) = acc in
-             let all_ok =
-               if ok then
-                 all_ok
-               else
-                 false
-             in
-             let errors_acc = update_errset errors_acc lib_file errs in
-             let warnings_acc = update_errset warnings_acc lib_file warnings in
-             let suppressions_acc =
-               Error_suppressions.update_suppressions suppressions_acc suppressions
-             in
-             (all_ok, errors_acc, warnings_acc, suppressions_acc))
-           (true, local_errors, warnings, suppressions)
-           lib_files)
+        ( ok,
+          FilenameMap.union lib_errors local_errors,
+          FilenameMap.union lib_warnings warnings,
+          Error_suppressions.update_suppressions lib_suppressions suppressions,
+          exports ))
 
 let is_file_tracked_and_checked ~reader filename =
   Module_heaps.Reader_dispatcher.is_tracked_file ~reader filename
@@ -1581,9 +1556,7 @@ end = struct
       ~files_to_force
       ~recheck_reasons
       ~env =
-    let lazy_table_of_aloc =
-      Parsing_heaps.Mutator_reader.get_sig_ast_aloc_table_unsafe_lazy ~reader
-    in
+    let loc_of_aloc = Parsing_heaps.Mutator_reader.loc_of_aloc ~reader in
     let errors = env.ServerEnv.errors in
     (* files_to_force is a request to promote certain files to be checked as a dependency, dependent,
      * or focused file. We can ignore a request if the file is already checked at the desired level
@@ -1657,9 +1630,7 @@ end = struct
             Flow_error.ErrorSet.empty
         in
         let error_set =
-          error_set
-          |> Flow_error.concretize_errors lazy_table_of_aloc
-          |> Flow_error.make_errors_printable
+          error_set |> Flow_error.concretize_errors loc_of_aloc |> Flow_error.make_errors_printable
         in
         if not (Errors.ConcreteLocPrintableErrorSet.is_empty error_set) then
           Persistent_connection.update_clients
@@ -1937,7 +1908,20 @@ end = struct
       || deleted_count > 0
       || not (FilenameSet.is_empty unparsed_set)
     in
-    let env = { env with ServerEnv.files = parsed; unparsed; dependency_info } in
+
+    Hh_logger.info "Updating index";
+    let%lwt exports =
+      Memory_utils.with_memory_timer_lwt ~options "Indexing" profiling (fun () ->
+          Export_service.update
+            ~workers
+            ~reader
+            ~update:new_or_changed
+            ~remove:deleted
+            env.ServerEnv.exports)
+    in
+    Hh_logger.info "Done updating index";
+
+    let env = { env with ServerEnv.files = parsed; unparsed; dependency_info; exports } in
     let intermediate_values =
       ( deleted,
         direct_dependent_files,
@@ -2173,7 +2157,6 @@ end = struct
         ~sig_dependency_graph
         ~deleted
         ~unparsed_set
-        ~persistent_connections:(Some env.ServerEnv.connections)
         ~recheck_reasons
     in
     Base.Option.iter merge_internal_error ~f:(Hh_logger.error "%s");
@@ -2435,7 +2418,8 @@ let make_next_files ~libs ~file_options root =
 
     files |> Base.List.map ~f:(Files.filename_from_string ~options:file_options) |> Bucket.of_list
 
-let mk_init_env ~files ~unparsed ~package_json_files ~dependency_info ~ordered_libs ~libs ~errors =
+let mk_init_env
+    ~files ~unparsed ~package_json_files ~dependency_info ~ordered_libs ~libs ~errors ~exports =
   {
     ServerEnv.files;
     unparsed;
@@ -2448,6 +2432,7 @@ let mk_init_env ~files ~unparsed ~package_json_files ~dependency_info ~ordered_l
     coverage = FilenameMap.empty;
     collated_errors = ref None;
     connections = Persistent_connection.empty;
+    exports;
   }
 
 let init_from_saved_state ~profiling ~workers ~saved_state ~updates options =
@@ -2483,7 +2468,7 @@ let init_from_saved_state ~profiling ~workers ~saved_state ~updates options =
               workers
               ~job:
                 (List.fold_left (fun () (fn, parsed_file_data) ->
-                     let { Saved_state.hash; resolved_requires } =
+                     let { Saved_state.hash; exports; resolved_requires } =
                        Saved_state.denormalize_file_data
                          ~root
                          parsed_file_data.Saved_state.normalized_file_data
@@ -2491,6 +2476,9 @@ let init_from_saved_state ~profiling ~workers ~saved_state ~updates options =
 
                      (* Restore the FileHashHeap *)
                      Parsing_heaps.From_saved_state.add_file_hash fn hash;
+
+                     (* Restore the ExportsHeap *)
+                     Parsing_heaps.From_saved_state.add_exports fn exports;
 
                      (* Restore the ResolvedRequiresHeap *)
                      Module_heaps.From_saved_state.add_resolved_requires fn resolved_requires))
@@ -2524,7 +2512,7 @@ let init_from_saved_state ~profiling ~workers ~saved_state ~updates options =
      *)
     let ordered_libs = List.rev_append (List.rev ordered_flowlib_libs) ordered_non_flowlib_libs in
     let libs = SSet.of_list ordered_libs in
-    let%lwt (libs_ok, local_errors, warnings, suppressions) =
+    let%lwt (libs_ok, local_errors, warnings, suppressions, lib_exports) =
       let suppressions = Error_suppressions.empty in
       init_libs ~options ~profiling ~local_errors ~warnings ~suppressions ~reader ordered_libs
     in
@@ -2577,11 +2565,14 @@ let init_from_saved_state ~profiling ~workers ~saved_state ~updates options =
     let errors =
       { ServerEnv.local_errors; merge_errors = FilenameMap.empty; warnings; suppressions }
     in
-    let dependency_info =
-      match dependency_graph with
-      | Saved_state.Classic_dep_graph map -> Dependency_info.of_classic_map map
-      | Saved_state.Types_first_dep_graph map -> Dependency_info.of_types_first_map map
+    let dependency_info = Dependency_info.of_map dependency_graph in
+
+    Hh_logger.info "Indexing files";
+    let%lwt exports =
+      Memory_utils.with_memory_timer_lwt ~options "Indexing" profiling (fun () ->
+          Export_service.init ~workers ~reader ~libs:lib_exports parsed_set)
     in
+
     let env =
       mk_init_env
         ~files:parsed_set
@@ -2591,6 +2582,7 @@ let init_from_saved_state ~profiling ~workers ~saved_state ~updates options =
         ~ordered_libs
         ~libs
         ~errors
+        ~exports
     in
     Lwt.return (env, libs_ok)
   in
@@ -2672,7 +2664,7 @@ let init_from_scratch ~profiling ~workers options =
   in
   let local_errors = merge_error_maps package_errors local_errors in
   Hh_logger.info "Loading libraries";
-  let%lwt (libs_ok, local_errors, warnings, suppressions) =
+  let%lwt (libs_ok, local_errors, warnings, suppressions, lib_exports) =
     let suppressions = Error_suppressions.empty in
     init_libs ~options ~profiling ~local_errors ~warnings ~suppressions ~reader ordered_libs
   in
@@ -2711,6 +2703,14 @@ let init_from_scratch ~profiling ~workers options =
     Memory_utils.with_memory_timer_lwt ~options "CalcDepsTypecheck" profiling (fun () ->
         Dep_service.calc_dependency_info ~options ~reader workers ~parsed)
   in
+
+  Hh_logger.info "Indexing files";
+  let%lwt exports =
+    Memory_utils.with_memory_timer_lwt ~options "Indexing" profiling (fun () ->
+        Export_service.init ~workers ~reader ~libs:lib_exports parsed)
+  in
+  Hh_logger.info "Done";
+
   let env =
     mk_init_env
       ~files:parsed
@@ -2720,6 +2720,7 @@ let init_from_scratch ~profiling ~workers options =
       ~ordered_libs
       ~libs
       ~errors
+      ~exports
   in
   Lwt.return (FilenameSet.empty, env, libs_ok)
 
@@ -2869,7 +2870,6 @@ let full_check ~profiling ~options ~workers ?focus_targets env =
           ~sig_dependency_graph
           ~deleted:FilenameSet.empty
           ~unparsed_set:FilenameSet.empty
-          ~persistent_connections:None
           ~recheck_reasons
       in
       Base.Option.iter merge_internal_error ~f:(Hh_logger.error "%s");

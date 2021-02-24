@@ -205,7 +205,7 @@ module type S = sig
     module_ref_prefix:string option ->
     (exports_t * tolerable_error list, error) result
 
-  (* Use for debugging; not for exposing info the the end user *)
+  (* Use for debugging; not for exposing info to the end user *)
   val exports_info_to_string : exports_info -> string
 
   (* Applications may not care about the info carried by signatures. *)
@@ -222,7 +222,7 @@ module type S = sig
 
   val verified : L.LSet.t SMap.t option -> exports_info t' -> t
 
-  (* Use for debugging; not for exposing info the the end user *)
+  (* Use for debugging; not for exposing info to the end user *)
   val to_string : t -> string
 
   val require_loc_map : module_sig -> L.t Nel.t SMap.t

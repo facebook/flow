@@ -8,11 +8,12 @@
 module Ast = Flow_ast
 module File_sig = File_sig.With_Loc
 open Utils_js
-open Parsing_heaps_utils
 open Loc_collections
 open ServerEnv
 open FindRefsUtils
 open GetDefUtils
+
+let loc_of_aloc = Parsing_heaps.Reader.loc_of_aloc
 
 let add_ref_kind kind = Base.List.map ~f:(fun loc -> (kind, loc))
 
@@ -46,8 +47,8 @@ let set_get_refs_hook ~reader potential_refs potential_matching_literals target_
   let hook ret _ctxt name loc ty =
     if name = target_name then
       (* Replace previous bindings of `loc`. We should always use the result of the last call to
-       * the hook for a given location. For details see the comment on the generate_tests function
-       * in flow_js.ml *)
+       * the hook for a given location (this may no longer be relevant with the removal of
+         generate-tests) *)
       potential_refs := ALocMap.add loc ty !potential_refs;
     ret
   in
@@ -126,7 +127,7 @@ let property_find_refs_in_file ~reader options ast_info file_key def_info name =
     Ok local_defs
   else (
     set_get_refs_hook ~reader potential_refs potential_matching_literals name;
-    let (cx, _) = Merge_service.merge_contents_context ~reader options file_key ast info file_sig in
+    let (cx, _) = Merge_service.check_contents_context ~reader options file_key ast info file_sig in
     unset_hooks ();
     let literal_prop_refs_result =
       (* Lazy to avoid this computation if there are no potentially-relevant object literals to
@@ -307,7 +308,7 @@ let find_related_defs_in_file ~reader options name file =
   Type_inference_hooks_js.set_instance_to_obj_hook hook;
   let cx_result =
     get_ast_result ~reader file >>| fun (ast, file_sig, docblock) ->
-    Merge_service.merge_contents_context ~reader options file ast docblock file_sig
+    Merge_service.check_contents_context ~reader options file ast docblock file_sig
   in
   unset_hooks ();
   cx_result >>= fun (cx, _) ->

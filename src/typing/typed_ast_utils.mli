@@ -5,6 +5,8 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
+val polarity : 'a Flow_ast.Variance.t option -> Polarity.t
+
 class type_parameter_mapper :
   object
     inherit [ALoc.t, ALoc.t * Type.t, ALoc.t, ALoc.t * Type.t] Flow_polymorphic_ast_mapper.mapper
@@ -13,7 +15,7 @@ class type_parameter_mapper :
 
     method on_type_annot : ALoc.t * Type.t -> ALoc.t * Type.t
 
-    method annot_with_tparams : 'a. ((ALoc.t * string) list -> 'a) -> 'a
+    method annot_with_tparams : 'a. (Type.typeparam list -> 'a) -> 'a
   end
 
 val find_exact_match_annotation :

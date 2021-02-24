@@ -195,7 +195,7 @@ obj['n'](0)
 object-2.js
 // @flow
 
-function foo(x: {|l: () => void, m: () => number, n: () => number|}): void {}
+function foo(x: {|l: () => void, m(): number, n: () => number|}): void {}
 
 foo({
   m(): number { return 1; },
@@ -442,7 +442,7 @@ warn-func-poly-0.js
 Warning --------------------------------------------------------------------------------------- warn-func-poly-0.js:4:27
 
 Normalizer error:
-[Shadowed type parameters] Raised on type: GenericT
+[Shadowed type parameters] Raised on type: MixedT
 
    4|   function inner<T>(x: T, z) {
                                 ^

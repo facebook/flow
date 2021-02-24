@@ -57,7 +57,7 @@ Flow-typed JavaScript can use this to generate Flow's syntax tree with annotated
 
 ## Building Flow from source
 
-Flow is written in OCaml (OCaml 4.07.1 is required).
+Flow is written in OCaml (OCaml 4.09.1 is required).
 
 1. Install [`opam`](https://opam.ocaml.org):
 
@@ -101,7 +101,7 @@ Flow is written in OCaml (OCaml 4.07.1 is required).
 6. Build `flow.js` (optional):
 
   ```sh
-  opam install -y js_of_ocaml.3.4.0
+  opam install -y js_of_ocaml.3.5.2
   make js
   ```
 

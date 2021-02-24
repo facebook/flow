@@ -59,6 +59,8 @@ val abstract_locations : config -> bool
 
 val all : config -> bool
 
+val autoimports : config -> bool option
+
 val automatic_require_default : config -> bool
 
 val babel_loose_array_spread : config -> bool
@@ -73,10 +75,6 @@ val enforce_local_inference_annotations : config -> bool
 
 val enforce_strict_call_arity : config -> bool
 
-val enforce_well_formed_exports : config -> bool
-
-val enforce_well_formed_exports_includes : config -> string list
-
 val enums : config -> bool
 
 val enums_with_unknown_members : config -> bool
@@ -84,8 +82,6 @@ val enums_with_unknown_members : config -> bool
 val this_annot : config -> bool
 
 val exact_by_default : config -> bool
-
-val generate_tests : config -> bool
 
 val facebook_fbs : config -> string option
 
@@ -96,6 +92,8 @@ val facebook_module_interop : config -> bool
 val file_watcher : config -> file_watcher option
 
 val file_watcher_timeout : config -> int option
+
+val format_single_quotes : config -> bool option
 
 val haste_module_ref_prefix : config -> string option
 
@@ -155,6 +153,8 @@ val required_version : config -> string option
 
 val react_runtime : config -> Options.react_runtime
 
+val react_server_component_exts : config -> SSet.t
+
 val recursion_limit : config -> int
 
 val root_name : config -> string option
@@ -182,8 +182,6 @@ val traces : config -> int
 val trust_mode : config -> Options.trust_mode
 
 val type_asserts : config -> bool
-
-val types_first : config -> bool
 
 val new_signatures : config -> bool
 

@@ -1,4 +1,4 @@
 // @flow
 
-var ParentFoo = {foo: 'bar'};
+const ParentFoo = {foo: 'bar'};
 module.exports = {ParentFoo};

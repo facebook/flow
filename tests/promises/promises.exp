@@ -102,20 +102,16 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ all.js:24:9
 
-Cannot call `Promise.all` because property `@@iterator` is missing in undefined [1] but exists in `$Iterable` [2].
-[incompatible-call]
+Cannot call `Promise.all` because function [1] requires another argument. [incompatible-call]
 
    all.js:24:9
      24| Promise.all(); // Error: expected array instead of undefined (too few arguments)
                  ^^^
 
 References:
-   all.js:24:1
-     24| Promise.all(); // Error: expected array instead of undefined (too few arguments)
-         ^^^^^^^^^^^^^ [1]
-   <BUILTINS>/core.js:1873:19
+   <BUILTINS>/core.js:1873:5
    1873|     static all<T: Iterable<mixed>>(promises: T): Promise<$TupleMap<T, typeof $await>>;
-                           ^^^^^^^^^^^^^^^ [2]
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
 Error ----------------------------------------------------------------------------------------------------- all.js:27:13
@@ -135,20 +131,16 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ allSettled.js:4:9
 
-Cannot call `Promise.allSettled` because property `@@iterator` is missing in undefined [1] but exists in
-`$Iterable` [2]. [incompatible-call]
+Cannot call `Promise.allSettled` because function [1] requires another argument. [incompatible-call]
 
    allSettled.js:4:9
       4| Promise.allSettled(); // Error: expected $Iterable instead of undefined (too few arguments)
                  ^^^^^^^^^^
 
 References:
-   allSettled.js:4:1
-      4| Promise.allSettled(); // Error: expected $Iterable instead of undefined (too few arguments)
-         ^^^^^^^^^^^^^^^^^^^^ [1]
-   <BUILTINS>/core.js:1880:26
+   <BUILTINS>/core.js:1880:5
    1880|     static allSettled<T: Iterable<mixed>>(promises: T): Promise<$TupleMap<T, <T>(p: Promise<T> | T) => $SettledPromiseResult<T>>>;
-                                  ^^^^^^^^^^^^^^^ [2]
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
 Error ----------------------------------------------------------------------------------------------- allSettled.js:7:20

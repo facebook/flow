@@ -39,7 +39,8 @@ type FragmentData = {+$$typeof: $$TypeofFragment};
 
 export type Fragment<Ref, +Data: FragmentData> = Data;
 
-type GetPropFragmentRef = (<T>(Fragment<T, FragmentData>) => T) & (<T>(T) => T);
+export type GetPropFragmentRef = (<T>(Fragment<T, FragmentData>) => T) &
+  (<T>(T) => T);
 
 export function createFragmentContainer<Props>(
   Component: React.ComponentType<Props>,

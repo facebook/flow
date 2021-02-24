@@ -37,7 +37,7 @@ and key_of_identifier (_, { Ast.Identifier.name; comments = _ }) =
   if name = "undefined" then
     None
   else
-    Some (name, [])
+    Some (Reason.OrdinaryName name, [])
 
 and key_of_member ~allow_optional { Ast.Expression.Member._object; property; _ } =
   let open Ast.Expression.Member in

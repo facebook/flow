@@ -40,4 +40,11 @@ module Procedure_decider = struct
     decider#eval decider#function_body_any body
 end
 
-let is_munged_property_name name = String.length name >= 2 && name.[0] = '_' && name.[1] <> '_'
+let is_munged_property_string name = String.length name >= 2 && name.[0] = '_' && name.[1] <> '_'
+
+let is_munged_property_name = function
+  (* TODO consider adding another name variant for munged property strings *)
+  | Reason.OrdinaryName name -> is_munged_property_string name
+  | Reason.InternalName _
+  | Reason.InternalModuleName _ ->
+    false

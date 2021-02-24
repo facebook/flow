@@ -53,29 +53,229 @@ let create_suggestion ~diagnostics ~original ~suggestion uri loc =
                 (* https://github.com/microsoft/language-server-protocol/issues/933 *)
                 Command.title = "";
                 command = Command.Command "log";
-                arguments = [Hh_json.JSON_String title];
+                arguments =
+                  ["textDocument/codeAction"; "typo"; title]
+                  |> List.map (fun str -> Hh_json.JSON_String str);
               } );
       }
 
-let code_actions_of_errors ~reader ~diagnostics ~errors uri loc =
+let main_of_package ~reader package_dir =
+  let json_path = package_dir ^ "/package.json" in
+  match Package_heaps.Reader.get_package ~reader json_path with
+  | Some (Ok package) -> Package_json.main package
+  | Some (Error _)
+  | None ->
+    None
+
+(** [find_ancestor_rev a_parts b_parts], where [a_parts] and [b_parts] are two paths split
+    into segments (see [Files.split_path]), returns [(ancestor_parts, a_relative, b_relative)],
+    where [ancestor_parts] are the common prefix parts **reversed**, [a_relative] is the
+    remaining parts from the ancestor to [a_parts], and [b_relative] is the remaining parts
+    from the ancestor to [b_parts].
+
+    for example, [find_ancestor_rev ["/a"; "b"; "c"; "d"] ["/a"; "b"; "e"; "f"]] returns
+    [(["b"; "/a"], ["c"; "d"], ["e"; "f"])] *)
+let find_ancestor_rev =
+  let rec helper acc = function
+    | (dir1 :: rest1, dir2 :: rest2) when dir1 = dir2 -> helper (dir1 :: acc) (rest1, rest2)
+    | (a_rel, b_rel) -> (acc, a_rel, b_rel)
+  in
+  (fun a_parts b_parts -> helper [] (a_parts, b_parts))
+
+(** [path_matches expected actual] returns true if [actual] is the same as [expected], ignoring
+    a potential leading [./] on [actual]. *)
+let path_matches expected actual =
+  expected = actual || (Filename.is_relative actual && actual = "./" ^ expected)
+
+(** [node_path ~node_resolver_dirnames ~reader src_dir require_path] converts absolute path
+    [require_path] into a Node-compatible "require" path relative to [src_dir], taking into
+    account node's hierarchical search for [node_modules].
+
+    That is, if [require_path] is within a [node_modules] folder in [src_dir] or one of
+    [src_dir]'s parents, then the [node_modules] prefix is removed. If the package's
+    [package.json] has a [main] field, that suffix is also removed.
+
+    If not part of [node_modules], then [require_path] is relativized with respect to
+    [src_dir].
+
+    Lastly, if the path ends with [index.js] or [.js], those default suffixes are also
+    removed. *)
+let node_path ~node_resolver_dirnames ~reader ~src_dir require_path =
+  let require_path = String_utils.rstrip require_path Files.flow_ext in
+  let src_parts = Files.split_path src_dir in
+  let req_parts = Files.split_path require_path in
+  let string_of_parts parts =
+    let str = String.concat "/" parts in
+    let str' = String_utils.rstrip str "/index.js" in
+    if str == str' then
+      String_utils.rstrip str ".js"
+    else
+      str'
+  in
+  let (ancestor_rev, to_src, to_req) = find_ancestor_rev src_parts req_parts in
+  match to_req with
+  | node_modules :: package_dir :: rest when List.mem node_modules node_resolver_dirnames ->
+    let package_path =
+      package_dir :: node_modules :: ancestor_rev |> Base.List.rev |> String.concat "/"
+    in
+    (match main_of_package ~reader package_path with
+    | Some main when path_matches (String.concat "/" rest) main -> package_dir
+    | _ -> string_of_parts (package_dir :: rest))
+  | _ ->
+    let parts =
+      if Base.List.is_empty to_src then
+        Filename.current_dir_name :: to_req
+      else
+        (* add `..` for each dir in `to_src`, to relativize `to_req` *)
+        Base.List.fold_left ~f:(fun path _ -> Filename.parent_dir_name :: path) ~init:to_req to_src
+    in
+    string_of_parts parts
+
+(** [path_of_modulename src_dir t] converts the Modulename.t [t] to a string
+    suitable for importing [t] from a file in [src_dir]. that is, if it is a
+    filename, returns the path relative to [src_dir]. *)
+let path_of_modulename ~node_resolver_dirnames ~reader src_dir = function
+  | Modulename.String str -> Some str
+  | Modulename.Filename file_key ->
+    Base.Option.map
+      ~f:(fun src_dir ->
+        let path = File_key.to_string file_key in
+        node_path ~node_resolver_dirnames ~reader ~src_dir path)
+      src_dir
+
+type text_edits = {
+  title: string;
+  edits: Lsp.TextEdit.t list;
+}
+
+let text_edits_of_import ~options ~layout_options ~reader ~src_dir ~ast kind name source =
+  let from =
+    match source with
+    | Export_index.Global -> None
+    | Export_index.Builtin from -> Some from
+    | Export_index.File_key from ->
+      (match Module_heaps.Reader.get_info ~reader ~audit:Expensive.ok from with
+      | None -> None
+      | Some info ->
+        let node_resolver_dirnames = Options.file_options options |> Files.node_resolver_dirnames in
+        (match
+           path_of_modulename ~node_resolver_dirnames ~reader src_dir info.Module_heaps.module_name
+         with
+        | None -> None
+        | Some from -> Some from))
+  in
+  match from with
+  | None -> None
+  | Some from ->
+    let title =
+      match kind with
+      | Export_index.Default -> Printf.sprintf "Import default from %s" from
+      | Export_index.Named -> Printf.sprintf "Import from %s" from
+      | Export_index.NamedType -> Printf.sprintf "Import type from %s" from
+      | Export_index.Namespace -> Printf.sprintf "Import * from %s" from
+    in
+    let binding = (kind, name) in
+    let edits =
+      Autofix_imports.add_import ~options:layout_options ~binding ~from ast
+      |> Flow_lsp_conversions.flow_loc_patch_to_lsp_edits
+    in
+    Some { title; edits }
+
+let suggest_imports ~options ~reader ~ast ~diagnostics ~exports ~name uri loc =
+  let open Lsp in
+  let files =
+    if Autofix_imports.loc_is_type ~ast loc then
+      Export_search.get_types name exports
+    else
+      Export_search.get_values name exports
+  in
+  if Export_index.ExportSet.is_empty files then
+    []
+  else
+    let src_dir = Lsp_helpers.lsp_uri_to_path uri |> Filename.dirname |> Base.Option.return in
+    let error_range = Flow_lsp_conversions.loc_to_lsp_range loc in
+    let relevant_diagnostics =
+      let open PublishDiagnostics in
+      let lsp_code = StringCode Error_codes.(string_of_code CannotResolveName) in
+      Base.List.filter diagnostics ~f:(fun { source; code; range; _ } ->
+          source = Some "Flow" && code = lsp_code && Lsp_helpers.ranges_overlap range error_range)
+    in
+    let layout_options =
+      Js_layout_generator.{ default_opts with single_quotes = Options.format_single_quotes options }
+    in
+    Export_index.ExportSet.fold
+      (fun (source, export_kind) acc ->
+        match
+          text_edits_of_import
+            ~options
+            ~layout_options
+            ~reader
+            ~src_dir
+            ~ast
+            export_kind
+            name
+            source
+        with
+        | None -> acc
+        | Some { edits; title } ->
+          let command =
+            CodeAction.Action
+              {
+                CodeAction.title;
+                kind = CodeActionKind.quickfix;
+                diagnostics = relevant_diagnostics;
+                action =
+                  CodeAction.BothEditThenCommand
+                    ( WorkspaceEdit.{ changes = UriMap.singleton uri edits },
+                      {
+                        Command.title = "";
+                        command = Command.Command "log";
+                        arguments =
+                          ["textDocument/codeAction"; "import"; title]
+                          |> List.map (fun str -> Hh_json.JSON_String str);
+                      } );
+              }
+          in
+          command :: acc)
+      files
+      []
+
+let code_actions_of_errors ~options ~reader ~env ~ast ~diagnostics ~errors uri loc =
   Flow_error.ErrorSet.fold
     (fun error actions ->
       match
         Flow_error.msg_of_error error
-        |> Error_message.map_loc_of_error_message (Parsing_heaps_utils.loc_of_aloc ~reader)
+        |> Error_message.map_loc_of_error_message (Parsing_heaps.Reader.loc_of_aloc ~reader)
       with
       | Error_message.EEnumInvalidMemberAccess { reason; suggestion = Some suggestion; _ } ->
         let error_loc = Reason.loc_of_reason reason in
-        if Loc.contains error_loc loc then
+        if Loc.intersects error_loc loc then
           let original = reason |> Reason.desc_of_reason |> Reason.string_of_desc in
           create_suggestion ~diagnostics ~original ~suggestion uri error_loc :: actions
+        else
+          actions
+      | Error_message.EBuiltinLookupFailed { reason; name = Some name }
+        when Options.autoimports options ->
+        let error_loc = Reason.loc_of_reason reason in
+        if Loc.intersects error_loc loc then
+          let { ServerEnv.exports; _ } = env in
+          suggest_imports
+            ~options
+            ~reader
+            ~ast
+            ~diagnostics
+            ~exports (* TODO consider filtering out internal names *)
+            ~name:(Reason.display_string_of_name name)
+            uri
+            loc
+          @ actions
         else
           actions
       | error_message ->
         (match error_message |> Error_message.friendly_message_of_msg with
         | Error_message.PropMissing
             { loc = error_loc; suggestion = Some suggestion; prop = Some prop_name; _ } ->
-          if Loc.contains error_loc loc then
+          if Loc.intersects error_loc loc then
             let original = Printf.sprintf "`%s`" prop_name in
             create_suggestion ~diagnostics ~original ~suggestion uri error_loc :: actions
           else
@@ -89,7 +289,7 @@ let code_actions_of_parse_errors ~diagnostics ~uri ~loc parse_errors =
     ~f:(fun acc parse_error ->
       match parse_error with
       | (error_loc, Parse_error.UnexpectedTokenWithSuggestion (token, suggestion)) ->
-        if Loc.contains error_loc loc then
+        if Loc.intersects error_loc loc then
           let original = Printf.sprintf "`%s`" token in
           create_suggestion ~diagnostics ~original ~suggestion uri error_loc :: acc
         else
@@ -105,9 +305,9 @@ let client_supports_quickfixes params =
   Lsp.CodeActionKind.contains_kind_opt ~default:true Lsp.CodeActionKind.quickfix only
 
 let code_actions_at_loc
-    ~reader
     ~options
-    ~file_key
+    ~env
+    ~reader
     ~cx
     ~file_sig
     ~tolerable_errors
@@ -118,21 +318,26 @@ let code_actions_at_loc
     ~uri
     ~loc =
   let experimental_code_actions =
-    if Inference_utils.well_formed_exports_enabled options file_key then
-      autofix_exports_code_actions
-        ~full_cx:cx
-        ~ast
-        ~file_sig
-        ~tolerable_errors
-        ~typed_ast
-        ~diagnostics
-        uri
-        loc
-    else
-      []
+    autofix_exports_code_actions
+      ~full_cx:cx
+      ~ast
+      ~file_sig
+      ~tolerable_errors
+      ~typed_ast
+      ~diagnostics
+      uri
+      loc
   in
   let error_fixes =
-    code_actions_of_errors ~reader ~diagnostics ~errors:(Context.errors cx) uri loc
+    code_actions_of_errors
+      ~options
+      ~reader
+      ~env
+      ~ast
+      ~diagnostics
+      ~errors:(Context.errors cx)
+      uri
+      loc
   in
   let parse_error_fixes = code_actions_of_parse_errors ~diagnostics ~uri ~loc parse_errors in
   Lwt.return (Ok (parse_error_fixes @ experimental_code_actions @ error_fixes))
@@ -181,3 +386,7 @@ let insert_type
     in
     Lwt.return result
   | (None, errs, _) -> Lwt.return (Error (error_to_string (Expected (FailedToTypeCheck errs))))
+
+module For_tests = struct
+  let path_of_modulename = path_of_modulename
+end

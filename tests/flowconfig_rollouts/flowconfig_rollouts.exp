@@ -31,7 +31,17 @@ annotation at function return: [signature-verification-failure]
 Found 1 error
 
 0% on should always be off:
-Found 0 errors
+Error ---------------------------------------------------------------------------------- error_malformed_exports.js:3:31
+
+Cannot build a typed interface for this module. You should annotate the exports of this module with types. Missing type
+annotation at function return: [signature-verification-failure]
+
+   3| export function foo(x: number) { return x; }
+                                    
+
+
+
+Found 1 error
 
 Unknown rollout:
 .flowconfig:2 Unknown rollout "verify_sig"

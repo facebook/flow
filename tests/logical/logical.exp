@@ -453,5 +453,87 @@ References:
                        ^^^^^^ [2]
 
 
+Error ------------------------------------------------------------------------------------------------- logical.js:531:7
 
-Found 29 errors
+Cannot cast `a ?? false` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
+
+   logical.js:531:7
+   531|     ((a ?? false): empty); // should error on `a` and `false`
+              ^
+
+References:
+   logical.js:529:20
+   529|     declare var a: indirection1 | indirection2;
+                           ^^^^^^^^^^^^ [1]
+   logical.js:531:20
+   531|     ((a ?? false): empty); // should error on `a` and `false`
+                           ^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- logical.js:531:7
+
+Cannot cast `a ?? false` to empty because string [1] is incompatible with empty [2]. [incompatible-cast]
+
+   logical.js:531:7
+   531|     ((a ?? false): empty); // should error on `a` and `false`
+              ^
+
+References:
+   logical.js:529:35
+   529|     declare var a: indirection1 | indirection2;
+                                          ^^^^^^^^^^^^ [1]
+   logical.js:531:20
+   531|     ((a ?? false): empty); // should error on `a` and `false`
+                           ^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ logical.js:531:12
+
+Cannot cast `a ?? false` to empty because boolean [1] is incompatible with empty [2]. [incompatible-cast]
+
+   logical.js:531:12
+   531|     ((a ?? false): empty); // should error on `a` and `false`
+                   ^^^^^ [1]
+
+References:
+   logical.js:531:20
+   531|     ((a ?? false): empty); // should error on `a` and `false`
+                           ^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- logical.js:537:7
+
+Cannot cast `b && false` to empty because number literal `0` [1] is incompatible with empty [2]. [incompatible-cast]
+
+   logical.js:537:7
+   537|     ((b && false): empty); // should only error on `b`
+              ^
+
+References:
+   logical.js:535:20
+   535|     declare var b: indirection3 | indirection4;
+                           ^^^^^^^^^^^^ [1]
+   logical.js:537:20
+   537|     ((b && false): empty); // should only error on `b`
+                           ^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- logical.js:537:7
+
+Cannot cast `b && false` to empty because empty string [1] is incompatible with empty [2]. [incompatible-cast]
+
+   logical.js:537:7
+   537|     ((b && false): empty); // should only error on `b`
+              ^
+
+References:
+   logical.js:535:35
+   535|     declare var b: indirection3 | indirection4;
+                                          ^^^^^^^^^^^^ [1]
+   logical.js:537:20
+   537|     ((b && false): empty); // should only error on `b`
+                           ^^^^^ [2]
+
+
+
+Found 34 errors

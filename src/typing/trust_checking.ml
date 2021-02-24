@@ -5,6 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
+open Flow_js_utils
 open Type
 open Trust_constraint
 open Debug_js.Verbose

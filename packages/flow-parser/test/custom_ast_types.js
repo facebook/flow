@@ -12,6 +12,12 @@ export default function (fork) {
   def("ObjectTypeIndexer")
     .field("id", or(def("Identifier"), null));
 
+  def("IndexedAccessType")
+    .bases("FlowType")
+    .build("objectType", "indexType")
+    .field("objectType", def("FlowType"))
+    .field("indexType", def("FlowType"));
+
   // See https://github.com/benjamn/ast-types/issues/180
   def("ExportNamedDeclaration")
     // TODO: this is non-standard, upstream is standard

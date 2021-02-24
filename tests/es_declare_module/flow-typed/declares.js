@@ -8,6 +8,7 @@ declare module "CJS_Clobbered" {
   declare type numType = number;
   declare module.exports: {
     numExport: number,
+    ...
   };
 }
 

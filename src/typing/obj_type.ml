@@ -15,7 +15,8 @@ let mk_seal reason ~sealed ~frozen =
   else
     Object.Spread.UnsealedInFile (ALoc.source (Reason.aloc_of_reason reason))
 
-let mk_with_proto cx reason ~obj_kind ?(frozen = false) ?call ?(props = SMap.empty) ?loc proto =
+let mk_with_proto
+    cx reason ~obj_kind ?(frozen = false) ?call ?(props = NameUtils.Map.empty) ?loc proto =
   let flags = { obj_kind; frozen } in
   let call = Base.Option.map call ~f:(Context.make_call_prop cx) in
   let pmap =
@@ -25,7 +26,7 @@ let mk_with_proto cx reason ~obj_kind ?(frozen = false) ?call ?(props = SMap.emp
   in
   DefT (reason, bogus_trust (), ObjT (mk_objecttype ~flags ~call pmap proto))
 
-let mk_unsealed cx ?loc ?proto ?(props = SMap.empty) reason =
+let mk_unsealed cx ?loc ?proto ?(props = NameUtils.Map.empty) reason =
   let proto =
     match proto with
     | None -> ObjProtoT reason

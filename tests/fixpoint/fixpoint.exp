@@ -1,19 +1,3 @@
-Error ------------------------------------------------------------------------------------------------------ Fun.js:8:14
-
-Missing type annotation for `fold`. [missing-annot]
-
-   8| function fix(fold) {
-                   ^^^^
-
-
-Error ----------------------------------------------------------------------------------------------------- Fun.js:19:21
-
-Missing type annotation for `n`. [missing-annot]
-
-   19|     return function(n) {
-                           ^
-
-
 Error ----------------------------------------------------------------------------------------------------- Fun.js:20:15
 
 Cannot call `eq` with `n` bound to `x` because string [1] is incompatible with number [2]. [incompatible-call]
@@ -63,14 +47,6 @@ References:
    Fun.js:6:25
     6| function mul(x:number,y:number) { return 0; }
                                ^^^^^^ [2]
-
-
-Error ---------------------------------------------------------------------------------------------- Ycombinator.js:4:12
-
-Missing type annotation for `f`. [missing-annot]
-
-   4| function Y(f) {
-                 ^
 
 
 Error --------------------------------------------------------------------------------------------- Ycombinator.js:10:44
@@ -142,4 +118,4 @@ References:
 
 
 
-Found 10 errors
+Found 7 errors

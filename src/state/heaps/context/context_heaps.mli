@@ -19,6 +19,8 @@ module Mutator_reader : sig
   include READER with type reader = Mutator_state_reader.t
 
   val sig_hash_changed : reader:reader -> File_key.t -> bool
+
+  val sig_cx_mem_old : reader:reader -> File_key.t -> bool
 end
 
 module Reader : READER with type reader = State_reader.t
@@ -43,4 +45,8 @@ module Merge_context_mutator : sig
     (worker_mutator -> options:Options.t -> File_key.t Nel.t -> unit) Expensive.t
 
   val revive_files : master_mutator -> Utils_js.FilenameSet.t -> unit
+end
+
+module From_saved_state : sig
+  val add_sig_hash : File_key.t -> Xx.hash -> unit
 end

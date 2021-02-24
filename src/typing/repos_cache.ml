@@ -152,7 +152,7 @@
     9. ?T2v -> T2v  { cache hit reuses T2v }
  *)
 
-type ident = Constraint.ident
+type ident = Type.ident
 
 module ReposMap = WrappedMap.Make (struct
   type key = ident * Reason.t

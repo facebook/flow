@@ -414,7 +414,7 @@ let infer_ast ~lint_severities cx filename comments aloc_ast =
     Scope.(
       let scope = fresh ~var_scope_kind:Module () in
       add_entry
-        "exports"
+        (Reason.OrdinaryName "exports")
         (Entry.new_var ~loc:(TypeUtil.loc_of_t local_exports_var) (Type.Inferred local_exports_var))
         scope;
 
@@ -422,14 +422,13 @@ let infer_ast ~lint_severities cx filename comments aloc_ast =
         (Reason.internal_name "exports")
         (Entry.new_var
            ~loc:(Reason.aloc_of_reason reason_exports_module)
-           ~specific:
-             (Type.DefT (reason_exports_module, Type.bogus_trust (), Type.EmptyT Type.Bottom))
+           ~specific:(Type.DefT (reason_exports_module, Type.bogus_trust (), Type.EmptyT))
            (Type.Inferred (Type.Unsoundness.exports_any reason_exports_module)))
         scope;
 
       scope)
   in
-  Env.init_env cx module_scope;
+  Env.init_env module_scope;
 
   let file_loc = Loc.{ none with source = Some filename } |> ALoc.of_loc in
   let reason = Reason.mk_reason Reason.RExports file_loc in
@@ -464,8 +463,8 @@ let infer_ast ~lint_severities cx filename comments aloc_ast =
 *)
 let with_libdef_builtins cx f =
   (* Store the original builtins and replace with a fresh tvar. *)
-  let orig_builtins = Flow_js.builtins cx in
-  Flow_js.mk_builtins cx;
+  let orig_builtins = Flow_js_utils.builtins cx in
+  Flow_js_utils.mk_builtins cx;
 
   (* This function call might replace the builtins we just installed. *)
   f ();
@@ -476,7 +475,7 @@ let with_libdef_builtins cx f =
     Flow_js.flow_t cx (orig_builtins, builtins)
   in
   (* Restore the original builtins tvar for the next file. *)
-  Context.add_module cx Files.lib_module_ref orig_builtins
+  Context.add_module cx (Reason.OrdinaryName Files.lib_module_ref) orig_builtins
 
 (* infer a parsed library file.
    processing is similar to an ordinary module, except that
@@ -493,8 +492,8 @@ let infer_lib_file ~exclude_syms ~lint_severities ~file_sig cx ast =
        confident that we don't support them in any sensible way. *)
     add_require_tvars cx file_sig
   in
-  let module_scope = Scope.fresh () in
-  Env.init_env ~exclude_syms cx module_scope;
+  let module_scope = Scope.fresh ~var_scope_kind:Scope.Global () in
+  Env.init_env ~exclude_syms module_scope;
 
   with_libdef_builtins cx (fun () ->
       ignore (infer_core cx aloc_statements : (ALoc.t, ALoc.t * Type.t) Ast.Statement.t list);
@@ -504,4 +503,4 @@ let infer_lib_file ~exclude_syms ~lint_severities ~file_sig cx ast =
   |> Scope.(
        iter_entries Entry.((fun name entry -> Flow_js.set_builtin cx name (actual_type entry)))) );
 
-  SMap.keys Scope.(module_scope.entries)
+  NameUtils.Map.keys Scope.(module_scope.entries)

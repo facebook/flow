@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
-open Parsing_heaps_utils
+let loc_of_aloc = Parsing_heaps.Reader.loc_of_aloc
 
 let parameter_name is_opt name =
   let opt =
@@ -91,7 +91,7 @@ let func_details ~jsdoc ~exact_by_default params rest_param return =
 (* given a Loc.t within a function call, returns the type of the function being called *)
 module Callee_finder = struct
   type t = {
-    tparams: (ALoc.t * string) list;
+    tparams: Type.typeparam list;
     type_: Type.t;
     active_parameter: int;
     loc: Loc.t;
@@ -189,7 +189,6 @@ end
 let ty_normalizer_options =
   Ty_normalizer_env.
     {
-      fall_through_merged = true;
       expand_internal_types = true;
       expand_type_aliases = false;
       flag_shadowed_type_params = true;

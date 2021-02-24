@@ -64,6 +64,24 @@ type 'loc remote_ref =
     }
 [@@deriving map, show { with_path = false }]
 
+(* These accessors will compile to code that does not have a branch because
+ * id_loc and name have the same offset for each constructor. *)
+let remote_ref_loc = function
+  | Import { id_loc; _ }
+  | ImportType { id_loc; _ }
+  | ImportTypeof { id_loc; _ }
+  | ImportNs { id_loc; _ }
+  | ImportTypeofNs { id_loc; _ } ->
+    id_loc
+
+let remote_ref_name = function
+  | Import { name; _ }
+  | ImportType { name; _ }
+  | ImportTypeof { name; _ }
+  | ImportNs { name; _ }
+  | ImportTypeofNs { name; _ } ->
+    name
+
 type 'loc packed_ref =
   | LocalRef of {
       ref_loc: 'loc;
@@ -372,6 +390,18 @@ and pack_exports cx file_loc (P.Exports { kind; types; type_stars; strict }) =
     in
     let export_def = Some (Value (ObjLit { loc = file_loc; frozen = true; proto = None; props })) in
     (CJSExports { types; type_stars; strict }, export_def)
+  | P.CJSDeclareModule props ->
+    let file_loc = pack_loc file_loc in
+    let props =
+      SMap.map
+        (fun binding ->
+          let index = Local_defs.index_exn binding in
+          let t = Ref (LocalRef { ref_loc = file_loc; index }) in
+          ObjValueField (file_loc, t, Polarity.Neutral))
+        props
+    in
+    let export_def = Some (Value (ObjLit { loc = file_loc; frozen = true; proto = None; props })) in
+    (CJSExports { types; type_stars; strict }, export_def)
   | P.ESModule { names; stars } ->
     let export_def = ref None in
     let names = SMap.map (pack_export cx export_def) names in
@@ -430,3 +460,8 @@ and pack_op cx op = map_op (pack_parsed cx) op
 and pack_builtin = function
   | P.LocalBinding b -> Local_defs.index_exn b
   | P.RemoteBinding _ -> failwith "unexpected remote builtin"
+
+and pack_builtin_module cx (loc, exports) =
+  let (exports, export_def) = pack_exports cx loc exports in
+  let loc = pack_loc loc in
+  (loc, exports, export_def)

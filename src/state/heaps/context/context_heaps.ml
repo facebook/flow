@@ -147,17 +147,15 @@ end = struct
     (* Ideally we'd assert that leader_f is a member of the oldified files, but it's a little too
      * expensive to send the set of oldified files to the worker *)
     let leader_f = Nel.hd component in
-    (* This context is only used to add *something* to the sighash when we encounter an unexpected
-     * exception during typechecking. It doesn't really matter what we choose, so we might as well
-     * make it the empty map. *)
-    let aloc_tables = FilenameMap.empty in
-    let sig_cx = Context.make_sig () in
-    let ccx = Context.make_ccx sig_cx aloc_tables in
+    let ccx = Context.make_ccx () in
     let cx =
       let metadata = Context.metadata_of_options options in
-      let rev_table = lazy (ALoc.make_empty_reverse_table ()) in
+      (* This context is only used to add *something* to the sighash when we encounter an unexpected
+       * exception during typechecking. It doesn't really matter what we choose, so we might as well
+       * make it the empty table. *)
+      let aloc_table = lazy (ALoc.make_table leader_f) in
       let module_ref = Files.module_ref leader_f in
-      Context.make ccx metadata leader_f rev_table module_ref Context.Merging
+      Context.make ccx metadata leader_f aloc_table (Reason.OrdinaryName module_ref) Context.Merging
     in
     WorkerCancel.with_no_cancellations (fun () ->
         let module_refs =
@@ -165,7 +163,7 @@ end = struct
             ~f:(fun f ->
               let module_ref = Files.module_ref f in
               let module_t = Type.AnyT.locationless (Type.AnyError None) in
-              Context.add_module cx module_ref module_t;
+              Context.add_module cx (Reason.OrdinaryName module_ref) module_t;
 
               (* Ideally we'd assert that f is a member of the oldified files too *)
               LeaderHeap.add f leader_f;
@@ -173,7 +171,7 @@ end = struct
             (Nel.to_list component)
         in
         let xx = Merge_js.ContextOptimizer.sig_context cx module_refs in
-        add_sig_context ~audit leader_f sig_cx;
+        add_sig_context ~audit leader_f (Context.sig_cx cx);
         SigHashHeap.add leader_f xx)
 
   let revive_files oldified_files files =
@@ -214,6 +212,8 @@ module Mutator_reader : sig
   include READER with type reader = Mutator_state_reader.t
 
   val sig_hash_changed : reader:reader -> File_key.t -> bool
+
+  val sig_cx_mem_old : reader:reader -> File_key.t -> bool
 end = struct
   type reader = Mutator_state_reader.t
 
@@ -225,6 +225,8 @@ end = struct
     | None -> raise (Key_not_found ("LeaderHeap", File_key.to_string file))
 
   let sig_hash_opt ~reader:_ = SigHashHeap.get
+
+  let sig_cx_mem_old ~reader:_ = SigContextHeap.mem_old
 
   let sig_hash_changed ~reader:_ f =
     match SigHashHeap.get f with
@@ -286,4 +288,8 @@ module Reader_dispatcher : READER with type reader = Abstract_state_reader.t = s
     match reader with
     | Mutator_state_reader reader -> Mutator_reader.sig_hash_opt ~reader
     | State_reader reader -> Reader.sig_hash_opt ~reader
+end
+
+module From_saved_state = struct
+  let add_sig_hash = SigHashHeap.add
 end

@@ -47,6 +47,7 @@ assert_ok "$FLOW" get-def --strip-root main.js 3 26
 assert_ok "$FLOW" get-def --strip-root main.js 23 29
 assert_ok "$FLOW" get-def --strip-root main.js 23 14
 assert_ok "$FLOW" get-def --strip-root main.js 24 25
+queries_in_file "get-def" "module_ref.js"
 
 printf "\nRefinements\n"
 assert_ok "$FLOW" get-def --strip-root refinements.js 10 9

@@ -450,7 +450,7 @@ CAMLprim value hh_hash_stats(value unit) {
 }
 
 static void raise_failed_memfd_init(int errcode) {
-  static value *exn = NULL;
+  static const value *exn = NULL;
   if (!exn) exn = caml_named_value("failed_memfd_init");
   caml_raise_with_arg(*exn, unix_error_of_code(errcode));
 }
@@ -586,7 +586,7 @@ static char *memfd_map(size_t size) {
 
 static void raise_out_of_shared_memory(void)
 {
-  static value *exn = NULL;
+  static const value *exn = NULL;
   if (!exn) exn = caml_named_value("out_of_shared_memory");
   caml_raise_constant(*exn);
 }
@@ -858,7 +858,7 @@ CAMLprim value hh_get_can_worker_stop(value unit) {
 static void check_should_exit(void) {
   assert(info != NULL);
   if(worker_can_exit && info->workers_should_exit) {
-    static value *exn = NULL;
+    static const value *exn = NULL;
     if (!exn) exn = caml_named_value("worker_should_exit");
     caml_raise_constant(*exn);
   }
@@ -1181,7 +1181,7 @@ CAMLprim value hh_collect(value unit) {
 }
 
 static void raise_heap_full(void) {
-  static value *exn = NULL;
+  static const value *exn = NULL;
   if (!exn) exn = caml_named_value("heap_full");
   caml_raise_constant(*exn);
 }
@@ -1331,7 +1331,7 @@ static uint64_t get_hash(value key) {
 }
 
 static void raise_hash_table_full(void) {
-  static value *exn = NULL;
+  static const value *exn = NULL;
   if (!exn) exn = caml_named_value("hash_table_full");
   caml_raise_constant(*exn);
 }

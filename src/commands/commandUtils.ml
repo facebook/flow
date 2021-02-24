@@ -244,17 +244,24 @@ let input_file_flag verb prev =
            ^ "read from the standard input." ))
 
 type shared_mem_params = {
+  shm_heap_size: int option;
   shm_hash_table_pow: int option;
   shm_log_level: int option;
 }
 
-let collect_shm_flags main shm_hash_table_pow shm_log_level =
-  main { shm_hash_table_pow; shm_log_level }
+let collect_shm_flags main shm_heap_size shm_hash_table_pow shm_log_level =
+  main { shm_heap_size; shm_hash_table_pow; shm_log_level }
 
 let shm_flags prev =
   CommandSpec.ArgSpec.(
     prev
     |> collect collect_shm_flags
+    |> flag
+         "--sharedmemory-heap-size"
+         int
+         ~doc:
+           "The maximum size of the shared memory heap. The default is 26843545600 (25 * 2^30 bytes = 25 GiB)"
+         ~env:"FLOW_SHAREDMEM_HEAP_SIZE"
     |> flag
          "--sharedmemory-hash-table-pow"
          int
@@ -266,6 +273,9 @@ let shm_flags prev =
          ~doc:"The logging level for shared memory statistics. 0=none, 1=some")
 
 let shm_config shm_flags flowconfig =
+  let heap_size =
+    Base.Option.value shm_flags.shm_heap_size ~default:(FlowConfig.shm_heap_size flowconfig)
+  in
   let hash_table_pow =
     Base.Option.value
       shm_flags.shm_hash_table_pow
@@ -274,7 +284,7 @@ let shm_config shm_flags flowconfig =
   let log_level =
     Base.Option.value shm_flags.shm_log_level ~default:(FlowConfig.shm_log_level flowconfig)
   in
-  { SharedMem.heap_size = FlowConfig.shm_heap_size flowconfig; hash_table_pow; log_level }
+  { SharedMem.heap_size; hash_table_pow; log_level }
 
 let from_flag =
   let collector main from =
@@ -470,6 +480,12 @@ let read_config_or_exit ?(enforce_warnings = true) ?allow_cache flowconfig_path 
       flowconfig_multi_warn warnings;
     config
   | Error err -> flowconfig_multi_error [err]
+
+let read_config_and_hash_or_exit ?enforce_warnings ?allow_cache flowconfig_path =
+  let config = read_config_or_exit ?enforce_warnings ?allow_cache flowconfig_path in
+  (* allow cache here because we just read the config, don't need to do it again *)
+  let hash = FlowConfig.get_hash ~allow_cache:true flowconfig_path |> Xx.to_string in
+  (config, hash)
 
 let check_version required_version =
   match required_version with
@@ -805,7 +821,6 @@ module Options_flags = struct
     temp_dir: string option;
     traces: int option;
     trust_mode: Options.trust_mode option;
-    generate_tests: bool option;
     new_signatures: bool;
     abstract_locations: bool;
     verbose: Verbose.t option;
@@ -866,8 +881,7 @@ let options_flags =
       new_signatures
       abstract_locations
       include_suppressions
-      trust_mode
-      generate_tests =
+      trust_mode =
     (match merge_timeout with
     | Some timeout when timeout < 0 ->
       FlowExitStatus.(exit ~msg:"--merge-timeout must be non-negative" Commandline_usage_error)
@@ -893,7 +907,6 @@ let options_flags =
         quiet;
         merge_timeout;
         trust_mode;
-        generate_tests;
         new_signatures;
         abstract_locations;
         include_suppressions;
@@ -958,8 +971,7 @@ let options_flags =
                    ("silent", Options.SilentTrust);
                    ("none", Options.NoTrust);
                  ]))
-           ~doc:""
-      |> flag "--generate-tests" (optional bool) ~doc:"")
+           ~doc:"")
 
 let saved_state_flags =
   let collect_saved_state_flags
@@ -1138,7 +1150,13 @@ let no_cgroup_flag =
            ~doc:"Don't automatically run this command in a cgroup (if cgroups are available)")
 
 let make_options
-    ~flowconfig_name ~flowconfig ~lazy_mode ~root ~options_flags ~saved_state_options_flags =
+    ~flowconfig_name
+    ~flowconfig_hash
+    ~flowconfig
+    ~lazy_mode
+    ~root
+    ~options_flags
+    ~saved_state_options_flags =
   let open Options_flags in
   let open Saved_state_flags in
   let temp_dir =
@@ -1186,26 +1204,7 @@ let make_options
     in
     Base.Option.value lazy_mode ~default
   in
-  let opt_arch =
-    if options_flags.new_signatures || FlowConfig.types_first flowconfig then
-      let new_signatures = options_flags.new_signatures || FlowConfig.new_signatures flowconfig in
-      Options.TypesFirst { new_signatures }
-    else
-      Options.Classic
-  in
-  let opt_enforce_well_formed_exports =
-    if options_flags.new_signatures || FlowConfig.types_first flowconfig then
-      Some []
-    else if FlowConfig.enforce_well_formed_exports flowconfig then
-      let paths =
-        Base.List.map
-          ~f:(Files.expand_project_root_token ~root)
-          (FlowConfig.enforce_well_formed_exports_includes flowconfig)
-      in
-      Some paths
-    else
-      None
-  in
+  let opt_new_signatures = options_flags.new_signatures || FlowConfig.new_signatures flowconfig in
   let opt_abstract_locations =
     options_flags.abstract_locations || FlowConfig.abstract_locations flowconfig
   in
@@ -1213,6 +1212,12 @@ let make_options
     Base.Option.value
       options_flags.wait_for_recheck
       ~default:(FlowConfig.wait_for_recheck flowconfig)
+  in
+  let opt_format =
+    {
+      Options.opt_single_quotes =
+        Base.Option.value (FlowConfig.format_single_quotes flowconfig) ~default:false;
+    }
   in
   let strict_mode = FlowConfig.strict_mode flowconfig in
   {
@@ -1249,7 +1254,6 @@ let make_options
     opt_run_post_inference_implicit_instantiation =
       FlowConfig.run_post_inference_implicit_instantiation flowconfig;
     opt_enforce_strict_call_arity = FlowConfig.enforce_strict_call_arity flowconfig;
-    opt_enforce_well_formed_exports;
     opt_enums = FlowConfig.enums flowconfig;
     opt_enums_with_unknown_members = FlowConfig.enums_with_unknown_members flowconfig;
     opt_this_annot = FlowConfig.this_annot flowconfig;
@@ -1284,12 +1288,13 @@ let make_options
     opt_node_resolver_allow_root_relative = FlowConfig.node_resolver_allow_root_relative flowconfig;
     opt_node_resolver_root_relative_dirnames =
       FlowConfig.node_resolver_root_relative_dirnames flowconfig;
-    opt_arch;
+    opt_new_signatures;
     opt_abstract_locations;
     opt_include_suppressions = options_flags.include_suppressions;
     opt_trust_mode =
       Base.Option.value options_flags.trust_mode ~default:(FlowConfig.trust_mode flowconfig);
     opt_react_runtime = FlowConfig.react_runtime flowconfig;
+    opt_react_server_component_exts = FlowConfig.react_server_component_exts flowconfig;
     opt_recursion_limit = FlowConfig.recursion_limit flowconfig;
     opt_max_files_checked_per_worker = FlowConfig.max_files_checked_per_worker flowconfig;
     opt_max_rss_bytes_for_check_per_worker =
@@ -1302,8 +1307,9 @@ let make_options
         ~f:(Files.expand_project_root_token ~root)
         (FlowConfig.strict_es6_import_export_excludes flowconfig);
     opt_automatic_require_default = FlowConfig.automatic_require_default flowconfig;
-    opt_generate_tests =
-      Base.Option.value options_flags.generate_tests ~default:(FlowConfig.generate_tests flowconfig);
+    opt_format;
+    opt_autoimports = Base.Option.value (FlowConfig.autoimports flowconfig) ~default:false;
+    opt_flowconfig_hash = flowconfig_hash;
   }
 
 let make_env flowconfig_name connect_flags root =

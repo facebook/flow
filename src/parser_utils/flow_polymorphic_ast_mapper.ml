@@ -920,6 +920,15 @@ class virtual ['M, 'T, 'N, 'U] mapper =
       let comments' = Base.Option.map ~f:this#syntax comments in
       { id = id'; targs = targs'; comments = comments' }
 
+    method indexed_access_type (ia : ('M, 'T) Ast.Type.IndexedAccess.t)
+        : ('N, 'U) Ast.Type.IndexedAccess.t =
+      let open Ast.Type.IndexedAccess in
+      let { _object; index; comments } = ia in
+      let _object' = this#type_ _object in
+      let index' = this#type_ index in
+      let comments' = Base.Option.map ~f:this#syntax comments in
+      { _object = _object'; index = index'; comments = comments' }
+
     method type_predicate ((annot, pred) : ('M, 'T) Ast.Type.Predicate.t)
         : ('N, 'U) Ast.Type.Predicate.t =
       let open Ast.Type.Predicate in
@@ -1026,6 +1035,7 @@ class virtual ['M, 'T, 'N, 'U] mapper =
           | Object ot -> Object (this#object_type ot)
           | Interface i -> Interface (this#interface_type i)
           | Generic gt -> Generic (this#generic_type gt)
+          | IndexedAccess ia -> IndexedAccess (this#indexed_access_type ia)
           | Union t' -> Union (this#union_type t')
           | Intersection t' -> Intersection (this#intersection_type t')
           | Tuple t' -> Tuple (this#tuple_type t')
@@ -1232,7 +1242,7 @@ class virtual ['M, 'T, 'N, 'U] mapper =
         : ('N, 'U) Ast.Statement.ImportDeclaration.t =
       let open Ast.Statement.ImportDeclaration in
       let { import_kind; source; specifiers; default; comments } = decl in
-      let specifiers' = Base.Option.map ~f:this#import_specifier specifiers in
+      let specifiers' = Base.Option.map ~f:(this#import_specifier ~import_kind) specifiers in
       let default' = Base.Option.map ~f:this#import_default_specifier default in
       let source' = (this#on_loc_annot * this#string_literal) source in
       let comments' = Base.Option.map ~f:this#syntax comments in
@@ -1244,21 +1254,26 @@ class virtual ['M, 'T, 'N, 'U] mapper =
         comments = comments';
       }
 
-    method import_specifier (specifier : ('M, 'T) Ast.Statement.ImportDeclaration.specifier)
+    method import_specifier
+        ~import_kind (specifier : ('M, 'T) Ast.Statement.ImportDeclaration.specifier)
         : ('N, 'U) Ast.Statement.ImportDeclaration.specifier =
       let open Ast.Statement.ImportDeclaration in
       match specifier with
       | ImportNamedSpecifiers named_specifiers ->
-        let named_specifiers' = Base.List.map ~f:this#import_named_specifier named_specifiers in
+        let named_specifiers' =
+          Base.List.map ~f:(this#import_named_specifier ~import_kind) named_specifiers
+        in
         ImportNamedSpecifiers named_specifiers'
       | ImportNamespaceSpecifier (annot, ident) ->
         let ident' = this#import_namespace_specifier ident in
         ImportNamespaceSpecifier (this#on_loc_annot annot, ident')
 
     method import_named_specifier
+        ~(import_kind : Ast.Statement.ImportDeclaration.import_kind)
         (specifier : ('M, 'T) Ast.Statement.ImportDeclaration.named_specifier)
         : ('N, 'U) Ast.Statement.ImportDeclaration.named_specifier =
       let open Ast.Statement.ImportDeclaration in
+      ignore import_kind;
       let { kind; local; remote } = specifier in
       let local' = Base.Option.map ~f:this#t_pattern_identifier local in
       let remote' = this#t_pattern_identifier remote in

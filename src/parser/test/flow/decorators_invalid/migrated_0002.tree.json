@@ -6,50 +6,24 @@
     },
     {
       "loc":{"source":null,"start":{"line":2,"column":9},"end":{"line":2,"column":13}},
-      "message":"Unexpected identifier, expected the identifier `as`"
-    },
-    {
-      "loc":{"source":null,"start":{"line":2,"column":14},"end":{"line":2,"column":19}},
-      "message":"Unexpected string, expected an identifier"
-    },
-    {
-      "loc":{"source":null,"start":{"line":3,"column":0},"end":{"line":3,"column":0}},
-      "message":"Unexpected end of input, expected the identifier `from`"
-    },
-    {
-      "loc":{"source":null,"start":{"line":3,"column":0},"end":{"line":3,"column":0}},
-      "message":"Unexpected end of input, expected a string"
+      "message":"Unexpected identifier, expected the keyword `as`"
     }
   ],
   "type":"Program",
-  "loc":{"source":null,"start":{"line":2,"column":0},"end":{"line":3,"column":0}},
-  "range":[6,26],
+  "loc":{"source":null,"start":{"line":2,"column":0},"end":{"line":2,"column":19}},
+  "range":[6,25],
   "body":[
     {
       "type":"ImportDeclaration",
-      "loc":{"source":null,"start":{"line":2,"column":0},"end":{"line":3,"column":0}},
-      "range":[6,26],
-      "specifiers":[
-        {
-          "type":"ImportNamespaceSpecifier",
-          "loc":{"source":null,"start":{"line":2,"column":7},"end":{"line":2,"column":19}},
-          "range":[13,25],
-          "local":{
-            "type":"Identifier",
-            "loc":{"source":null,"start":{"line":2,"column":14},"end":{"line":2,"column":19}},
-            "range":[20,25],
-            "name":"",
-            "typeAnnotation":null,
-            "optional":false
-          }
-        }
-      ],
+      "loc":{"source":null,"start":{"line":2,"column":0},"end":{"line":2,"column":19}},
+      "range":[6,25],
+      "specifiers":[],
       "source":{
         "type":"Literal",
-        "loc":{"source":null,"start":{"line":3,"column":0},"end":{"line":3,"column":0}},
-        "range":[26,26],
-        "value":"",
-        "raw":""
+        "loc":{"source":null,"start":{"line":2,"column":14},"end":{"line":2,"column":19}},
+        "range":[20,25],
+        "value":"foo",
+        "raw":"\"foo\""
       },
       "importKind":"value"
     }

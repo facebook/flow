@@ -260,6 +260,9 @@ class virtual ['M, 'T, 'N, 'U] mapper :
 
     method generic_type : ('M, 'T) Ast.Type.Generic.t -> ('N, 'U) Ast.Type.Generic.t
 
+    method indexed_access_type :
+      ('M, 'T) Ast.Type.IndexedAccess.t -> ('N, 'U) Ast.Type.IndexedAccess.t
+
     method identifier : ('M, 'M) Ast.Identifier.t -> ('N, 'N) Ast.Identifier.t
 
     method if_consequent_statement :
@@ -282,12 +285,14 @@ class virtual ['M, 'T, 'N, 'U] mapper :
     method import_default_specifier : ('M, 'T) Ast.Identifier.t -> ('N, 'U) Ast.Identifier.t
 
     method import_named_specifier :
+      import_kind:Ast.Statement.ImportDeclaration.import_kind ->
       ('M, 'T) Ast.Statement.ImportDeclaration.named_specifier ->
       ('N, 'U) Ast.Statement.ImportDeclaration.named_specifier
 
     method import_namespace_specifier : ('M, 'T) Ast.Identifier.t -> ('N, 'U) Ast.Identifier.t
 
     method import_specifier :
+      import_kind:Ast.Statement.ImportDeclaration.import_kind ->
       ('M, 'T) Ast.Statement.ImportDeclaration.specifier ->
       ('N, 'U) Ast.Statement.ImportDeclaration.specifier
 
