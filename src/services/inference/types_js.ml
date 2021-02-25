@@ -555,101 +555,96 @@ let run_merge_service
           Base.Option.map first_internal_error ~f:(spf "First merge internal error:\n%s") ))
 
 let mk_intermediate_result_callback
-    ~reader ~options ~profiling ~persistent_connections ~recheck_reasons suppressions =
+    ~reader ~options ~persistent_connections ~recheck_reasons suppressions =
   let loc_of_aloc = Parsing_heaps.Mutator_reader.loc_of_aloc ~reader in
-  let%lwt send_errors_over_connection =
+  let send_errors_over_connection =
     match persistent_connections with
-    | None -> Lwt.return (fun _ -> ())
+    | None -> (fun _ -> ())
     | Some clients ->
-      Memory_utils.with_memory_timer_lwt ~options "MakeSendErrors" profiling (fun () ->
-          (* In classic, each merge step uncovers new errors, warnings, suppressions.
-             While more suppressions may come in later steps, the suppressions we've seen so far are
-             sufficient to filter the errors and warnings we've seen so far.
-             Intuitively, we will not see an error (or warning) before we've seen all the files involved
-             in that error, and thus all the suppressions which could possibly suppress the error.
+      (* In classic, each merge step uncovers new errors, warnings, suppressions.
+         While more suppressions may come in later steps, the suppressions we've seen so far are
+         sufficient to filter the errors and warnings we've seen so far.
+         Intuitively, we will not see an error (or warning) before we've seen all the files involved
+         in that error, and thus all the suppressions which could possibly suppress the error.
 
-             In types-first, we have already accumulated suppressions in the overall merge step, and
-             each check step uses those suppressions to filter the errors and warnings uncovered.
-          *)
-          Errors.(
-            let curr_errors = ref ConcreteLocPrintableErrorSet.empty in
-            let curr_warnings = ref ConcreteLocPrintableErrorSet.empty in
-            let curr_suppressions = ref suppressions in
-            let root = Options.root options in
-            let file_options = Some (Options.file_options options) in
-            let filter = Error_suppressions.filter_suppressed_errors ~root ~file_options in
-            Lwt.return (function (lazy results) ->
-                let (new_errors, new_warnings, suppressions) =
-                  List.fold_left
-                    (fun (errs_acc, warns_acc, supps_acc) result ->
-                      let (file, old_errs, old_warns, supps) = result in
-                      let supps_acc = Error_suppressions.union supps_acc supps in
-                      (* Filter errors and warnings based on suppressions we've seen so far. *)
-                      let (errs, _, _) =
-                        filter supps_acc old_errs ~unused:Error_suppressions.empty
-                        (* TODO: track unused suppressions *)
-                      in
-                      (* Filter errors and warnings based on suppressions we've seen so far. *)
-                      let (warns, _, _) =
-                        filter supps_acc old_warns ~unused:Error_suppressions.empty
-                        (* TODO: track unused suppressions *)
-                      in
-                      (* Only add errors we haven't seen before. *)
-                      let errs_acc =
-                        ConcreteLocPrintableErrorSet.fold
-                          (fun err acc ->
-                            if ConcreteLocPrintableErrorSet.mem err !curr_errors then
-                              acc
-                            else
-                              ConcreteLocPrintableErrorSet.add err acc)
-                          errs
-                          errs_acc
-                      in
-                      (* Only add warnings we haven't seen before. Note that new warnings are stored by
-                         filename, because the clients only receive warnings for files they have open. *)
-                      let warns_acc =
-                        let acc =
-                          Base.Option.value
-                            (FilenameMap.find_opt file warns_acc)
-                            ~default:ConcreteLocPrintableErrorSet.empty
-                        in
-                        let acc =
-                          ConcreteLocPrintableErrorSet.fold
-                            (fun warn acc ->
-                              if ConcreteLocPrintableErrorSet.mem warn !curr_warnings then
-                                acc
-                              else
-                                ConcreteLocPrintableErrorSet.add warn acc)
-                            warns
-                            acc
-                        in
-                        if ConcreteLocPrintableErrorSet.is_empty acc then
-                          warns_acc
-                        else
-                          FilenameMap.add file acc warns_acc
-                      in
-                      (errs_acc, warns_acc, supps_acc))
-                    (ConcreteLocPrintableErrorSet.empty, FilenameMap.empty, !curr_suppressions)
-                    results
+         In types-first, we have already accumulated suppressions in the overall
+         merge step, and each check step uses those suppressions to filter the
+         errors and warnings uncovered.
+      *)
+      let open Errors in
+      let curr_errors = ref ConcreteLocPrintableErrorSet.empty in
+      let curr_warnings = ref ConcreteLocPrintableErrorSet.empty in
+      let curr_suppressions = ref suppressions in
+      let root = Options.root options in
+      let file_options = Some (Options.file_options options) in
+      let filter = Error_suppressions.filter_suppressed_errors ~root ~file_options in
+      fun (lazy results) ->
+        let (new_errors, new_warnings, suppressions) =
+          List.fold_left
+            (fun (errs_acc, warns_acc, supps_acc) result ->
+              let (file, old_errs, old_warns, supps) = result in
+              let supps_acc = Error_suppressions.union supps_acc supps in
+              (* Filter errors and warnings based on suppressions we've seen so far. *)
+              let (errs, _, _) =
+                filter supps_acc old_errs ~unused:Error_suppressions.empty
+                (* TODO: track unused suppressions *)
+              in
+              (* Filter errors and warnings based on suppressions we've seen so far. *)
+              let (warns, _, _) =
+                filter supps_acc old_warns ~unused:Error_suppressions.empty
+                (* TODO: track unused suppressions *)
+              in
+              (* Only add errors we haven't seen before. *)
+              let errs_acc =
+                ConcreteLocPrintableErrorSet.fold
+                  (fun err acc ->
+                    if ConcreteLocPrintableErrorSet.mem err !curr_errors then
+                      acc
+                    else
+                      ConcreteLocPrintableErrorSet.add err acc)
+                  errs
+                  errs_acc
+              in
+              (* Only add warnings we haven't seen before. Note that new warnings are stored by
+                 filename, because the clients only receive warnings for files they have open. *)
+              let warns_acc =
+                let acc =
+                  Base.Option.value
+                    (FilenameMap.find_opt file warns_acc)
+                    ~default:ConcreteLocPrintableErrorSet.empty
                 in
-                curr_errors := ConcreteLocPrintableErrorSet.union new_errors !curr_errors;
-                curr_warnings :=
-                  FilenameMap.fold
-                    (fun _ -> ConcreteLocPrintableErrorSet.union)
-                    new_warnings
-                    !curr_warnings;
-                curr_suppressions := suppressions;
+                let acc =
+                  ConcreteLocPrintableErrorSet.fold
+                    (fun warn acc ->
+                      if ConcreteLocPrintableErrorSet.mem warn !curr_warnings then
+                        acc
+                      else
+                        ConcreteLocPrintableErrorSet.add warn acc)
+                    warns
+                    acc
+                in
+                if ConcreteLocPrintableErrorSet.is_empty acc then
+                  warns_acc
+                else
+                  FilenameMap.add file acc warns_acc
+              in
+              (errs_acc, warns_acc, supps_acc))
+            (ConcreteLocPrintableErrorSet.empty, FilenameMap.empty, !curr_suppressions)
+            results
+        in
+        curr_errors := ConcreteLocPrintableErrorSet.union new_errors !curr_errors;
+        curr_warnings :=
+          FilenameMap.fold (fun _ -> ConcreteLocPrintableErrorSet.union) new_warnings !curr_warnings;
+        curr_suppressions := suppressions;
 
-                if
-                  not
-                    ( ConcreteLocPrintableErrorSet.is_empty new_errors
-                    && FilenameMap.is_empty new_warnings )
-                then
-                  let errors_reason = LspProt.Recheck_streaming { recheck_reasons } in
-                  Persistent_connection.update_clients
-                    ~clients
-                    ~errors_reason
-                    ~calc_errors_and_warnings:(fun () -> (new_errors, new_warnings)))))
+        if
+          not (ConcreteLocPrintableErrorSet.is_empty new_errors && FilenameMap.is_empty new_warnings)
+        then
+          let errors_reason = LspProt.Recheck_streaming { recheck_reasons } in
+          Persistent_connection.update_clients
+            ~clients
+            ~errors_reason
+            ~calc_errors_and_warnings:(fun () -> (new_errors, new_warnings))
   in
   let intermediate_result_callback results =
     let errors =
@@ -683,7 +678,7 @@ let mk_intermediate_result_callback
     in
     send_errors_over_connection errors
   in
-  Lwt.return intermediate_result_callback
+  intermediate_result_callback
 
 (* This function does some last minute preparation and then calls into the merge service, which
  * typechecks the code. By the time this function is called, we know exactly what we want to merge
@@ -704,11 +699,10 @@ let merge
     ~unparsed_set
     ~recheck_reasons =
   let { ServerEnv.local_errors; merge_errors; warnings; suppressions } = errors in
-  let%lwt intermediate_result_callback =
+  let intermediate_result_callback =
     mk_intermediate_result_callback
       ~reader
       ~options
-      ~profiling
       ~persistent_connections:None
       ~recheck_reasons
       suppressions
@@ -968,11 +962,10 @@ end = struct
            * file cannot have more than one kind. *)
           (FilenameSet.cardinal focused_to_check + FilenameSet.cardinal merged_dependents);
         let files = FilenameSet.union focused_to_check dependents_to_check in
-        let%lwt intermediate_result_callback =
+        let intermediate_result_callback =
           mk_intermediate_result_callback
             ~reader
             ~options
-            ~profiling
             ~persistent_connections
             ~recheck_reasons
             updated_errors.ServerEnv.suppressions
