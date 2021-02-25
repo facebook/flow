@@ -2308,13 +2308,10 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
     Normal { features = [text "Missing an annotation on "; desc r; text "."] }
   | EBindingError (binding_error, _, x, entry) ->
     let desc =
-      (* TODO turn this into a pattern match now that name is a variant type *)
-      if x = internal_name "this" then
-        RThis
-      else if x = internal_name "super" then
-        RSuper
-      else
-        RIdentifier x
+      match x with
+      | InternalName "this" -> RThis
+      | InternalName "super" -> RSuper
+      | _ -> RIdentifier x
     in
     (* We can call to_loc here because reaching this point requires that everything else
        in the error message is concretized already; making Scopes polymorphic is not a good idea *)
