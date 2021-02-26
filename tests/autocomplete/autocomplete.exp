@@ -491,6 +491,11 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":7,"character":4},"end":{"line":7,"character":4}},
     "newText":"baz"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":["textDocument/completion","member",{"token":null,"completion":"baz"}]
   }
 }
 {
@@ -502,6 +507,15 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":7,"character":4},"end":{"line":7,"character":4}},
     "newText":"hasOwnProperty"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "member",
+      {"token":null,"completion":"hasOwnProperty"}
+    ]
   }
 }
 {
@@ -513,6 +527,15 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":7,"character":4},"end":{"line":7,"character":4}},
     "newText":"isPrototypeOf"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "member",
+      {"token":null,"completion":"isPrototypeOf"}
+    ]
   }
 }
 {
@@ -524,6 +547,15 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":7,"character":4},"end":{"line":7,"character":4}},
     "newText":"propertyIsEnumerable"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "member",
+      {"token":null,"completion":"propertyIsEnumerable"}
+    ]
   }
 }
 {
@@ -535,6 +567,15 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":7,"character":4},"end":{"line":7,"character":4}},
     "newText":"toLocaleString"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "member",
+      {"token":null,"completion":"toLocaleString"}
+    ]
   }
 }
 {
@@ -546,6 +587,11 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":7,"character":4},"end":{"line":7,"character":4}},
     "newText":"toString"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":["textDocument/completion","member",{"token":null,"completion":"toString"}]
   }
 }
 {
@@ -557,6 +603,11 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":7,"character":4},"end":{"line":7,"character":4}},
     "newText":"valueOf"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":["textDocument/completion","member",{"token":null,"completion":"valueOf"}]
   }
 }
 
@@ -592,6 +643,11 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":8,"character":4},"end":{"line":8,"character":4}},
     "newText":"bar"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":["textDocument/completion","member",{"token":null,"completion":"bar"}]
   }
 }
 {
@@ -603,6 +659,11 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":8,"character":4},"end":{"line":8,"character":4}},
     "newText":"baz"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":["textDocument/completion","member",{"token":null,"completion":"baz"}]
   }
 }
 {
@@ -614,6 +675,15 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":8,"character":4},"end":{"line":8,"character":4}},
     "newText":"hasOwnProperty"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "member",
+      {"token":null,"completion":"hasOwnProperty"}
+    ]
   }
 }
 {
@@ -625,6 +695,15 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":8,"character":4},"end":{"line":8,"character":4}},
     "newText":"isPrototypeOf"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "member",
+      {"token":null,"completion":"isPrototypeOf"}
+    ]
   }
 }
 {
@@ -636,6 +715,15 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":8,"character":4},"end":{"line":8,"character":4}},
     "newText":"propertyIsEnumerable"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "member",
+      {"token":null,"completion":"propertyIsEnumerable"}
+    ]
   }
 }
 {
@@ -647,6 +735,15 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":8,"character":4},"end":{"line":8,"character":4}},
     "newText":"toLocaleString"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "member",
+      {"token":null,"completion":"toLocaleString"}
+    ]
   }
 }
 {
@@ -658,6 +755,11 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":8,"character":4},"end":{"line":8,"character":4}},
     "newText":"toString"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":["textDocument/completion","member",{"token":null,"completion":"toString"}]
   }
 }
 {
@@ -669,6 +771,11 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":8,"character":4},"end":{"line":8,"character":4}},
     "newText":"valueOf"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":["textDocument/completion","member",{"token":null,"completion":"valueOf"}]
   }
 }
 
@@ -1219,6 +1326,15 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":27,"character":17},"end":{"line":27,"character":17}},
     "newText":"Typologies."
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "unqualified type -> qualified type",
+      {"token":null,"completion":"Typologies"}
+    ]
   }
 }
 {
@@ -1230,6 +1346,15 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":27,"character":17},"end":{"line":27,"character":17}},
     "newText":"Typography"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "unqualified type: class or enum",
+      {"token":null,"completion":"Typography"}
+    ]
   }
 }
 {
@@ -1241,6 +1366,15 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":27,"character":17},"end":{"line":27,"character":17}},
     "newText":"Typewriter"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "unqualified type: class or enum",
+      {"token":null,"completion":"Typewriter"}
+    ]
   }
 }
 {
@@ -1252,6 +1386,15 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":27,"character":17},"end":{"line":27,"character":17}},
     "newText":"Types."
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "unqualified type -> qualified type",
+      {"token":null,"completion":"Types"}
+    ]
   }
 }
 {
@@ -1263,6 +1406,15 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":27,"character":17},"end":{"line":27,"character":17}},
     "newText":"Typesafe"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "unqualified type: local type identifier",
+      {"token":null,"completion":"Typesafe"}
+    ]
   }
 }
 {
@@ -1274,6 +1426,15 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":27,"character":17},"end":{"line":27,"character":17}},
     "newText":"Typhoon"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "unqualified type: local type identifier",
+      {"token":null,"completion":"Typhoon"}
+    ]
   }
 }
 {
@@ -1285,6 +1446,15 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":27,"character":17},"end":{"line":27,"character":17}},
     "newText":"Typnotism"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "unqualified type: local type identifier",
+      {"token":null,"completion":"Typnotism"}
+    ]
   }
 }
 {
@@ -1296,6 +1466,15 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":27,"character":17},"end":{"line":27,"character":17}},
     "newText":"Tyrant"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "unqualified type: local type identifier",
+      {"token":null,"completion":"Tyrant"}
+    ]
   }
 }
 {
@@ -1307,6 +1486,15 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":27,"character":17},"end":{"line":27,"character":17}},
     "newText":"Tympanic"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "unqualified type: local type identifier",
+      {"token":null,"completion":"Tympanic"}
+    ]
   }
 }
 {
@@ -1318,6 +1506,15 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":27,"character":17},"end":{"line":27,"character":17}},
     "newText":"Typeset"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "unqualified type: local type identifier",
+      {"token":null,"completion":"Typeset"}
+    ]
   }
 }
 {
@@ -1329,6 +1526,15 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":27,"character":17},"end":{"line":27,"character":17}},
     "newText":"Typaram"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "unqualified type parameter",
+      {"token":null,"completion":"Typaram"}
+    ]
   }
 }
 
@@ -1515,6 +1721,15 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":6,"character":10},"end":{"line":6,"character":10}},
     "newText":"hasOwnProperty"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "member",
+      {"token":null,"completion":"hasOwnProperty"}
+    ]
   }
 }
 {
@@ -1526,6 +1741,15 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":6,"character":10},"end":{"line":6,"character":10}},
     "newText":"isPrototypeOf"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "member",
+      {"token":null,"completion":"isPrototypeOf"}
+    ]
   }
 }
 {
@@ -1537,6 +1761,15 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":6,"character":10},"end":{"line":6,"character":10}},
     "newText":"propertyIsEnumerable"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "member",
+      {"token":null,"completion":"propertyIsEnumerable"}
+    ]
   }
 }
 {
@@ -1548,6 +1781,15 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":6,"character":10},"end":{"line":6,"character":10}},
     "newText":"toLocaleString"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "member",
+      {"token":null,"completion":"toLocaleString"}
+    ]
   }
 }
 {
@@ -1559,6 +1801,11 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":6,"character":10},"end":{"line":6,"character":10}},
     "newText":"toString"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":["textDocument/completion","member",{"token":null,"completion":"toString"}]
   }
 }
 {
@@ -1570,6 +1817,11 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":6,"character":10},"end":{"line":6,"character":10}},
     "newText":"valueOf"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":["textDocument/completion","member",{"token":null,"completion":"valueOf"}]
   }
 }
 
@@ -1584,6 +1836,15 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":7,"character":2},"end":{"line":7,"character":2}},
     "newText":"hasOwnProperty"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "member",
+      {"token":null,"completion":"hasOwnProperty"}
+    ]
   }
 }
 {
@@ -1595,6 +1856,15 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":7,"character":2},"end":{"line":7,"character":2}},
     "newText":"isPrototypeOf"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "member",
+      {"token":null,"completion":"isPrototypeOf"}
+    ]
   }
 }
 {
@@ -1606,6 +1876,15 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":7,"character":2},"end":{"line":7,"character":2}},
     "newText":"propertyIsEnumerable"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "member",
+      {"token":null,"completion":"propertyIsEnumerable"}
+    ]
   }
 }
 {
@@ -1617,6 +1896,15 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":7,"character":2},"end":{"line":7,"character":2}},
     "newText":"toLocaleString"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "member",
+      {"token":null,"completion":"toLocaleString"}
+    ]
   }
 }
 {
@@ -1628,6 +1916,11 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":7,"character":2},"end":{"line":7,"character":2}},
     "newText":"toString"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":["textDocument/completion","member",{"token":null,"completion":"toString"}]
   }
 }
 {
@@ -1639,6 +1932,11 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":7,"character":2},"end":{"line":7,"character":2}},
     "newText":"valueOf"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":["textDocument/completion","member",{"token":null,"completion":"valueOf"}]
   }
 }
 
@@ -1657,6 +1955,15 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":7,"character":2},"end":{"line":7,"character":2}},
     "newText":"hasOwnProperty"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "member",
+      {"token":null,"completion":"hasOwnProperty"}
+    ]
   }
 }
 {
@@ -1672,6 +1979,15 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":7,"character":2},"end":{"line":7,"character":2}},
     "newText":"isPrototypeOf"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "member",
+      {"token":null,"completion":"isPrototypeOf"}
+    ]
   }
 }
 {
@@ -1687,6 +2003,15 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":7,"character":2},"end":{"line":7,"character":2}},
     "newText":"propertyIsEnumerable"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "member",
+      {"token":null,"completion":"propertyIsEnumerable"}
+    ]
   }
 }
 {
@@ -1702,6 +2027,15 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":7,"character":2},"end":{"line":7,"character":2}},
     "newText":"toLocaleString"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "member",
+      {"token":null,"completion":"toLocaleString"}
+    ]
   }
 }
 {
@@ -1714,6 +2048,11 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":7,"character":2},"end":{"line":7,"character":2}},
     "newText":"toString"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":["textDocument/completion","member",{"token":null,"completion":"toString"}]
   }
 }
 {
@@ -1729,6 +2068,11 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":7,"character":2},"end":{"line":7,"character":2}},
     "newText":"valueOf"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":["textDocument/completion","member",{"token":null,"completion":"valueOf"}]
   }
 }
 
@@ -1743,6 +2087,15 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":3,"character":1},"end":{"line":3,"character":2}},
     "newText":"?.foo"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "start optional chain",
+      {"token":null,"completion":"?.foo"}
+    ]
   }
 }
 {
@@ -1758,6 +2111,15 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":3,"character":1},"end":{"line":3,"character":2}},
     "newText":"?.hasOwnProperty"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "start optional chain",
+      {"token":null,"completion":"?.hasOwnProperty"}
+    ]
   }
 }
 {
@@ -1773,6 +2135,15 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":3,"character":1},"end":{"line":3,"character":2}},
     "newText":"?.isPrototypeOf"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "start optional chain",
+      {"token":null,"completion":"?.isPrototypeOf"}
+    ]
   }
 }
 {
@@ -1788,6 +2159,15 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":3,"character":1},"end":{"line":3,"character":2}},
     "newText":"?.propertyIsEnumerable"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "start optional chain",
+      {"token":null,"completion":"?.propertyIsEnumerable"}
+    ]
   }
 }
 {
@@ -1803,6 +2183,15 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":3,"character":1},"end":{"line":3,"character":2}},
     "newText":"?.toLocaleString"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "start optional chain",
+      {"token":null,"completion":"?.toLocaleString"}
+    ]
   }
 }
 {
@@ -1815,6 +2204,15 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":3,"character":1},"end":{"line":3,"character":2}},
     "newText":"?.toString"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "start optional chain",
+      {"token":null,"completion":"?.toString"}
+    ]
   }
 }
 {
@@ -1830,6 +2228,15 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":3,"character":1},"end":{"line":3,"character":2}},
     "newText":"?.valueOf"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "start optional chain",
+      {"token":null,"completion":"?.valueOf"}
+    ]
   }
 }
 
@@ -1844,6 +2251,15 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":3,"character":1},"end":{"line":3,"character":2}},
     "newText":"?.bar"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "start optional chain",
+      {"token":null,"completion":"?.bar"}
+    ]
   }
 }
 {
@@ -1855,6 +2271,11 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":3,"character":2},"end":{"line":3,"character":2}},
     "newText":"foo"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":["textDocument/completion","member",{"token":null,"completion":"foo"}]
   }
 }
 {
@@ -1870,6 +2291,15 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":3,"character":2},"end":{"line":3,"character":2}},
     "newText":"hasOwnProperty"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "member",
+      {"token":null,"completion":"hasOwnProperty"}
+    ]
   }
 }
 {
@@ -1885,6 +2315,15 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":3,"character":2},"end":{"line":3,"character":2}},
     "newText":"isPrototypeOf"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "member",
+      {"token":null,"completion":"isPrototypeOf"}
+    ]
   }
 }
 {
@@ -1900,6 +2339,15 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":3,"character":2},"end":{"line":3,"character":2}},
     "newText":"propertyIsEnumerable"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "member",
+      {"token":null,"completion":"propertyIsEnumerable"}
+    ]
   }
 }
 {
@@ -1915,6 +2363,15 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":3,"character":2},"end":{"line":3,"character":2}},
     "newText":"toLocaleString"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "member",
+      {"token":null,"completion":"toLocaleString"}
+    ]
   }
 }
 {
@@ -1927,6 +2384,11 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":3,"character":2},"end":{"line":3,"character":2}},
     "newText":"toString"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":["textDocument/completion","member",{"token":null,"completion":"toString"}]
   }
 }
 {
@@ -1942,6 +2404,11 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":3,"character":2},"end":{"line":3,"character":2}},
     "newText":"valueOf"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":["textDocument/completion","member",{"token":null,"completion":"valueOf"}]
   }
 }
 
@@ -1956,6 +2423,15 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":3,"character":1},"end":{"line":3,"character":2}},
     "newText":"?.foo"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "start optional chain",
+      {"token":null,"completion":"?.foo"}
+    ]
   }
 }
 {
@@ -1971,6 +2447,15 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":3,"character":2},"end":{"line":3,"character":2}},
     "newText":"hasOwnProperty"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "member",
+      {"token":null,"completion":"hasOwnProperty"}
+    ]
   }
 }
 {
@@ -1986,6 +2471,15 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":3,"character":2},"end":{"line":3,"character":2}},
     "newText":"isPrototypeOf"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "member",
+      {"token":null,"completion":"isPrototypeOf"}
+    ]
   }
 }
 {
@@ -2001,6 +2495,15 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":3,"character":2},"end":{"line":3,"character":2}},
     "newText":"propertyIsEnumerable"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "member",
+      {"token":null,"completion":"propertyIsEnumerable"}
+    ]
   }
 }
 {
@@ -2016,6 +2519,15 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":3,"character":2},"end":{"line":3,"character":2}},
     "newText":"toLocaleString"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "member",
+      {"token":null,"completion":"toLocaleString"}
+    ]
   }
 }
 {
@@ -2028,6 +2540,11 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":3,"character":2},"end":{"line":3,"character":2}},
     "newText":"toString"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":["textDocument/completion","member",{"token":null,"completion":"toString"}]
   }
 }
 {
@@ -2043,6 +2560,11 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":3,"character":2},"end":{"line":3,"character":2}},
     "newText":"valueOf"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":["textDocument/completion","member",{"token":null,"completion":"valueOf"}]
   }
 }
 
@@ -2057,6 +2579,11 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":9,"character":2},"end":{"line":9,"character":2}},
     "newText":"Bar"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":["textDocument/completion","member",{"token":null,"completion":"Bar"}]
   }
 }
 {
@@ -2068,6 +2595,11 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":9,"character":2},"end":{"line":9,"character":2}},
     "newText":"Foo"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":["textDocument/completion","member",{"token":null,"completion":"Foo"}]
   }
 }
 {
@@ -2079,6 +2611,11 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":9,"character":2},"end":{"line":9,"character":2}},
     "newText":"cast"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":["textDocument/completion","member",{"token":null,"completion":"cast"}]
   }
 }
 {
@@ -2090,6 +2627,11 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":9,"character":2},"end":{"line":9,"character":2}},
     "newText":"isValid"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":["textDocument/completion","member",{"token":null,"completion":"isValid"}]
   }
 }
 {
@@ -2101,6 +2643,11 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":9,"character":2},"end":{"line":9,"character":2}},
     "newText":"members"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":["textDocument/completion","member",{"token":null,"completion":"members"}]
   }
 }
 
@@ -2141,6 +2688,15 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":14,"character":3},"end":{"line":14,"character":3}},
     "newText":"x"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "local value identifier",
+      {"token":null,"completion":"x"}
+    ]
   }
 }
 {
@@ -2156,6 +2712,15 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":14,"character":3},"end":{"line":14,"character":3}},
     "newText":"qux"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "local value identifier",
+      {"token":null,"completion":"qux"}
+    ]
   }
 }
 {
@@ -2168,6 +2733,15 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":14,"character":3},"end":{"line":14,"character":3}},
     "newText":"foo"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "local value identifier",
+      {"token":null,"completion":"foo"}
+    ]
   }
 }
 {
@@ -2180,6 +2754,15 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":14,"character":3},"end":{"line":14,"character":3}},
     "newText":"baz"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "local value identifier",
+      {"token":null,"completion":"baz"}
+    ]
   }
 }
 {
@@ -2192,6 +2775,15 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":14,"character":3},"end":{"line":14,"character":3}},
     "newText":"SymbolEnum"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "local value identifier",
+      {"token":null,"completion":"SymbolEnum"}
+    ]
   }
 }
 {
@@ -2204,6 +2796,15 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":14,"character":3},"end":{"line":14,"character":3}},
     "newText":"NumberEnum"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "local value identifier",
+      {"token":null,"completion":"NumberEnum"}
+    ]
   }
 }
 {
@@ -2216,6 +2817,15 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":14,"character":3},"end":{"line":14,"character":3}},
     "newText":"InitializedStringEnum"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "local value identifier",
+      {"token":null,"completion":"InitializedStringEnum"}
+    ]
   }
 }
 {
@@ -2228,6 +2838,15 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":14,"character":3},"end":{"line":14,"character":3}},
     "newText":"DefaultedStringEnum"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "local value identifier",
+      {"token":null,"completion":"DefaultedStringEnum"}
+    ]
   }
 }
 {
@@ -2240,6 +2859,15 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":14,"character":3},"end":{"line":14,"character":3}},
     "newText":"BooleanEnum"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "local value identifier",
+      {"token":null,"completion":"BooleanEnum"}
+    ]
   }
 }
 {
@@ -2252,6 +2880,15 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":14,"character":3},"end":{"line":14,"character":3}},
     "newText":"Bar"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "local value identifier",
+      {"token":null,"completion":"Bar"}
+    ]
   }
 }
 
@@ -2267,6 +2904,11 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":42,"character":4},"end":{"line":42,"character":4}},
     "newText":"a"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":["textDocument/completion","member",{"token":null,"completion":"a"}]
   }
 }
 {
@@ -2279,6 +2921,11 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":42,"character":4},"end":{"line":42,"character":4}},
     "newText":"b"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":["textDocument/completion","member",{"token":null,"completion":"b"}]
   }
 }
 {
@@ -2291,6 +2938,11 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":42,"character":4},"end":{"line":42,"character":4}},
     "newText":"c"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":["textDocument/completion","member",{"token":null,"completion":"c"}]
   }
 }
 {
@@ -2303,6 +2955,11 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":42,"character":4},"end":{"line":42,"character":4}},
     "newText":"d"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":["textDocument/completion","member",{"token":null,"completion":"d"}]
   }
 }
 {
@@ -2314,6 +2971,11 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":42,"character":4},"end":{"line":42,"character":4}},
     "newText":"e"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":["textDocument/completion","member",{"token":null,"completion":"e"}]
   }
 }
 {
@@ -2326,6 +2988,11 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":42,"character":4},"end":{"line":42,"character":4}},
     "newText":"f"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":["textDocument/completion","member",{"token":null,"completion":"f"}]
   }
 }
 {
@@ -2338,6 +3005,11 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":42,"character":4},"end":{"line":42,"character":4}},
     "newText":"g"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":["textDocument/completion","member",{"token":null,"completion":"g"}]
   }
 }
 {
@@ -2353,6 +3025,11 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":42,"character":4},"end":{"line":42,"character":4}},
     "newText":"h"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":["textDocument/completion","member",{"token":null,"completion":"h"}]
   }
 }
 {
@@ -2368,6 +3045,15 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":42,"character":4},"end":{"line":42,"character":4}},
     "newText":"hasOwnProperty"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "member",
+      {"token":null,"completion":"hasOwnProperty"}
+    ]
   }
 }
 {
@@ -2383,6 +3069,15 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":42,"character":4},"end":{"line":42,"character":4}},
     "newText":"isPrototypeOf"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "member",
+      {"token":null,"completion":"isPrototypeOf"}
+    ]
   }
 }
 {
@@ -2398,6 +3093,15 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":42,"character":4},"end":{"line":42,"character":4}},
     "newText":"propertyIsEnumerable"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "member",
+      {"token":null,"completion":"propertyIsEnumerable"}
+    ]
   }
 }
 {
@@ -2413,6 +3117,15 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":42,"character":4},"end":{"line":42,"character":4}},
     "newText":"toLocaleString"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "member",
+      {"token":null,"completion":"toLocaleString"}
+    ]
   }
 }
 {
@@ -2425,6 +3138,11 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":42,"character":4},"end":{"line":42,"character":4}},
     "newText":"toString"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":["textDocument/completion","member",{"token":null,"completion":"toString"}]
   }
 }
 {
@@ -2440,6 +3158,11 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":42,"character":4},"end":{"line":42,"character":4}},
     "newText":"valueOf"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":["textDocument/completion","member",{"token":null,"completion":"valueOf"}]
   }
 }
 
@@ -2455,6 +3178,11 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":4,"character":16},"end":{"line":4,"character":16}},
     "newText":"bar="
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":["textDocument/completion","jsx attribute",{"token":null,"completion":"bar"}]
   }
 }
 {
@@ -2467,6 +3195,11 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":4,"character":16},"end":{"line":4,"character":16}},
     "newText":"baz="
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":["textDocument/completion","jsx attribute",{"token":null,"completion":"baz"}]
   }
 }
 {
@@ -2479,6 +3212,11 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":4,"character":16},"end":{"line":4,"character":16}},
     "newText":"foo="
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":["textDocument/completion","jsx attribute",{"token":null,"completion":"foo"}]
   }
 }
 {
@@ -2491,6 +3229,11 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":4,"character":16},"end":{"line":4,"character":16}},
     "newText":"qux="
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":["textDocument/completion","jsx attribute",{"token":null,"completion":"qux"}]
   }
 }
 
@@ -2506,6 +3249,11 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":4,"character":19},"end":{"line":4,"character":19}},
     "newText":"bar="
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":["textDocument/completion","jsx attribute",{"token":null,"completion":"bar"}]
   }
 }
 {
@@ -2518,6 +3266,11 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":4,"character":19},"end":{"line":4,"character":19}},
     "newText":"baz="
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":["textDocument/completion","jsx attribute",{"token":null,"completion":"baz"}]
   }
 }
 {
@@ -2530,6 +3283,11 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":4,"character":19},"end":{"line":4,"character":19}},
     "newText":"foo="
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":["textDocument/completion","jsx attribute",{"token":null,"completion":"foo"}]
   }
 }
 {
@@ -2542,6 +3300,11 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":4,"character":19},"end":{"line":4,"character":19}},
     "newText":"qux="
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":["textDocument/completion","jsx attribute",{"token":null,"completion":"qux"}]
   }
 }
 
@@ -2556,6 +3319,11 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":4,"character":4},"end":{"line":4,"character":4}},
     "newText":"apply"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":["textDocument/completion","member",{"token":null,"completion":"apply"}]
   }
 }
 {
@@ -2567,6 +3335,11 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":4,"character":4},"end":{"line":4,"character":4}},
     "newText":"arguments"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":["textDocument/completion","member",{"token":null,"completion":"arguments"}]
   }
 }
 {
@@ -2578,6 +3351,11 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":4,"character":4},"end":{"line":4,"character":4}},
     "newText":"bind"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":["textDocument/completion","member",{"token":null,"completion":"bind"}]
   }
 }
 {
@@ -2589,6 +3367,11 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":4,"character":4},"end":{"line":4,"character":4}},
     "newText":"call"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":["textDocument/completion","member",{"token":null,"completion":"call"}]
   }
 }
 {
@@ -2600,6 +3383,11 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":4,"character":4},"end":{"line":4,"character":4}},
     "newText":"caller"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":["textDocument/completion","member",{"token":null,"completion":"caller"}]
   }
 }
 {
@@ -2615,6 +3403,15 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":4,"character":4},"end":{"line":4,"character":4}},
     "newText":"hasOwnProperty"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "member",
+      {"token":null,"completion":"hasOwnProperty"}
+    ]
   }
 }
 {
@@ -2630,6 +3427,15 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":4,"character":4},"end":{"line":4,"character":4}},
     "newText":"isPrototypeOf"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "member",
+      {"token":null,"completion":"isPrototypeOf"}
+    ]
   }
 }
 {
@@ -2641,6 +3447,11 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":4,"character":4},"end":{"line":4,"character":4}},
     "newText":"length"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":["textDocument/completion","member",{"token":null,"completion":"length"}]
   }
 }
 {
@@ -2652,6 +3463,11 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":4,"character":4},"end":{"line":4,"character":4}},
     "newText":"name"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":["textDocument/completion","member",{"token":null,"completion":"name"}]
   }
 }
 {
@@ -2667,6 +3483,15 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":4,"character":4},"end":{"line":4,"character":4}},
     "newText":"propertyIsEnumerable"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "member",
+      {"token":null,"completion":"propertyIsEnumerable"}
+    ]
   }
 }
 {
@@ -2679,6 +3504,11 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":4,"character":4},"end":{"line":4,"character":4}},
     "newText":"staticMethod"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":["textDocument/completion","member",{"token":null,"completion":"staticMethod"}]
   }
 }
 {
@@ -2691,6 +3521,11 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":4,"character":4},"end":{"line":4,"character":4}},
     "newText":"staticProp"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":["textDocument/completion","member",{"token":null,"completion":"staticProp"}]
   }
 }
 {
@@ -2706,6 +3541,15 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":4,"character":4},"end":{"line":4,"character":4}},
     "newText":"toLocaleString"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "member",
+      {"token":null,"completion":"toLocaleString"}
+    ]
   }
 }
 {
@@ -2718,6 +3562,11 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":4,"character":4},"end":{"line":4,"character":4}},
     "newText":"toString"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":["textDocument/completion","member",{"token":null,"completion":"toString"}]
   }
 }
 {
@@ -2733,6 +3582,11 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":4,"character":4},"end":{"line":4,"character":4}},
     "newText":"valueOf"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":["textDocument/completion","member",{"token":null,"completion":"valueOf"}]
   }
 }
 
@@ -2747,6 +3601,15 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":4,"character":12},"end":{"line":4,"character":12}},
     "newText":"hasOwnProperty"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "member",
+      {"token":null,"completion":"hasOwnProperty"}
+    ]
   }
 }
 {
@@ -2759,6 +3622,15 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":4,"character":12},"end":{"line":4,"character":12}},
     "newText":"instanceMethod"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "member",
+      {"token":null,"completion":"instanceMethod"}
+    ]
   }
 }
 {
@@ -2771,6 +3643,11 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":4,"character":12},"end":{"line":4,"character":12}},
     "newText":"instanceProp"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":["textDocument/completion","member",{"token":null,"completion":"instanceProp"}]
   }
 }
 {
@@ -2782,6 +3659,15 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":4,"character":12},"end":{"line":4,"character":12}},
     "newText":"isPrototypeOf"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "member",
+      {"token":null,"completion":"isPrototypeOf"}
+    ]
   }
 }
 {
@@ -2793,6 +3679,15 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":4,"character":12},"end":{"line":4,"character":12}},
     "newText":"propertyIsEnumerable"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "member",
+      {"token":null,"completion":"propertyIsEnumerable"}
+    ]
   }
 }
 {
@@ -2804,6 +3699,15 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":4,"character":12},"end":{"line":4,"character":12}},
     "newText":"toLocaleString"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "member",
+      {"token":null,"completion":"toLocaleString"}
+    ]
   }
 }
 {
@@ -2815,6 +3719,11 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":4,"character":12},"end":{"line":4,"character":12}},
     "newText":"toString"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":["textDocument/completion","member",{"token":null,"completion":"toString"}]
   }
 }
 {
@@ -2826,6 +3735,11 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":4,"character":12},"end":{"line":4,"character":12}},
     "newText":"valueOf"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":["textDocument/completion","member",{"token":null,"completion":"valueOf"}]
   }
 }
 {
@@ -2838,6 +3752,11 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":4,"character":12},"end":{"line":4,"character":12}},
     "newText":"varianceProp"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":["textDocument/completion","member",{"token":null,"completion":"varianceProp"}]
   }
 }
 
@@ -2853,6 +3772,11 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":5,"character":4},"end":{"line":5,"character":4}},
     "newText":"bar"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":["textDocument/completion","member",{"token":null,"completion":"bar"}]
   }
 }
 {
@@ -2865,6 +3789,11 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":5,"character":4},"end":{"line":5,"character":4}},
     "newText":"baz"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":["textDocument/completion","member",{"token":null,"completion":"baz"}]
   }
 }
 {
@@ -2877,6 +3806,11 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":5,"character":4},"end":{"line":5,"character":4}},
     "newText":"foo"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":["textDocument/completion","member",{"token":null,"completion":"foo"}]
   }
 }
 {
@@ -2892,6 +3826,15 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":5,"character":4},"end":{"line":5,"character":4}},
     "newText":"hasOwnProperty"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "member",
+      {"token":null,"completion":"hasOwnProperty"}
+    ]
   }
 }
 {
@@ -2907,6 +3850,15 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":5,"character":4},"end":{"line":5,"character":4}},
     "newText":"isPrototypeOf"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "member",
+      {"token":null,"completion":"isPrototypeOf"}
+    ]
   }
 }
 {
@@ -2922,6 +3874,15 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":5,"character":4},"end":{"line":5,"character":4}},
     "newText":"propertyIsEnumerable"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "member",
+      {"token":null,"completion":"propertyIsEnumerable"}
+    ]
   }
 }
 {
@@ -2934,6 +3895,11 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":5,"character":4},"end":{"line":5,"character":4}},
     "newText":"qux"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":["textDocument/completion","member",{"token":null,"completion":"qux"}]
   }
 }
 {
@@ -2949,6 +3915,15 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":5,"character":4},"end":{"line":5,"character":4}},
     "newText":"toLocaleString"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "member",
+      {"token":null,"completion":"toLocaleString"}
+    ]
   }
 }
 {
@@ -2961,6 +3936,11 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":5,"character":4},"end":{"line":5,"character":4}},
     "newText":"toString"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":["textDocument/completion","member",{"token":null,"completion":"toString"}]
   }
 }
 {
@@ -2976,6 +3956,11 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":5,"character":4},"end":{"line":5,"character":4}},
     "newText":"valueOf"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":["textDocument/completion","member",{"token":null,"completion":"valueOf"}]
   }
 }
 
@@ -2991,6 +3976,15 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":5,"character":3},"end":{"line":5,"character":4}},
     "newText":"?.bar"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "start optional chain",
+      {"token":null,"completion":"?.bar"}
+    ]
   }
 }
 {
@@ -3003,6 +3997,15 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":5,"character":3},"end":{"line":5,"character":4}},
     "newText":"?.baz"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "start optional chain",
+      {"token":null,"completion":"?.baz"}
+    ]
   }
 }
 {
@@ -3015,6 +4018,15 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":5,"character":3},"end":{"line":5,"character":4}},
     "newText":"?.foo"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "start optional chain",
+      {"token":null,"completion":"?.foo"}
+    ]
   }
 }
 {
@@ -3030,6 +4042,15 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":5,"character":3},"end":{"line":5,"character":4}},
     "newText":"?.hasOwnProperty"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "start optional chain",
+      {"token":null,"completion":"?.hasOwnProperty"}
+    ]
   }
 }
 {
@@ -3045,6 +4066,15 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":5,"character":3},"end":{"line":5,"character":4}},
     "newText":"?.isPrototypeOf"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "start optional chain",
+      {"token":null,"completion":"?.isPrototypeOf"}
+    ]
   }
 }
 {
@@ -3060,6 +4090,15 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":5,"character":3},"end":{"line":5,"character":4}},
     "newText":"?.propertyIsEnumerable"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "start optional chain",
+      {"token":null,"completion":"?.propertyIsEnumerable"}
+    ]
   }
 }
 {
@@ -3072,6 +4111,15 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":5,"character":3},"end":{"line":5,"character":4}},
     "newText":"?.qux"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "start optional chain",
+      {"token":null,"completion":"?.qux"}
+    ]
   }
 }
 {
@@ -3087,6 +4135,15 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":5,"character":3},"end":{"line":5,"character":4}},
     "newText":"?.toLocaleString"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "start optional chain",
+      {"token":null,"completion":"?.toLocaleString"}
+    ]
   }
 }
 {
@@ -3099,6 +4156,15 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":5,"character":3},"end":{"line":5,"character":4}},
     "newText":"?.toString"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "start optional chain",
+      {"token":null,"completion":"?.toString"}
+    ]
   }
 }
 {
@@ -3114,6 +4180,15 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":5,"character":3},"end":{"line":5,"character":4}},
     "newText":"?.valueOf"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "start optional chain",
+      {"token":null,"completion":"?.valueOf"}
+    ]
   }
 }
 
@@ -3129,6 +4204,11 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":10,"character":20},"end":{"line":10,"character":21}},
     "newText":"Member1"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":["textDocument/completion","member",{"token":null,"completion":"Member1"}]
   }
 }
 {
@@ -3141,6 +4221,11 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":10,"character":20},"end":{"line":10,"character":21}},
     "newText":"Member2"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":["textDocument/completion","member",{"token":null,"completion":"Member2"}]
   }
 }
 {
@@ -3152,6 +4237,11 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":10,"character":20},"end":{"line":10,"character":21}},
     "newText":"cast"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":["textDocument/completion","member",{"token":null,"completion":"cast"}]
   }
 }
 {
@@ -3163,6 +4253,11 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":10,"character":20},"end":{"line":10,"character":21}},
     "newText":"isValid"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":["textDocument/completion","member",{"token":null,"completion":"isValid"}]
   }
 }
 {
@@ -3174,6 +4269,11 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":10,"character":20},"end":{"line":10,"character":21}},
     "newText":"members"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":["textDocument/completion","member",{"token":null,"completion":"members"}]
   }
 }
 
@@ -3189,6 +4289,11 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":12,"character":22},"end":{"line":12,"character":23}},
     "newText":"Member1"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":["textDocument/completion","member",{"token":null,"completion":"Member1"}]
   }
 }
 {
@@ -3201,6 +4306,11 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":12,"character":22},"end":{"line":12,"character":23}},
     "newText":"Member2"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":["textDocument/completion","member",{"token":null,"completion":"Member2"}]
   }
 }
 {
@@ -3212,6 +4322,11 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":12,"character":22},"end":{"line":12,"character":23}},
     "newText":"cast"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":["textDocument/completion","member",{"token":null,"completion":"cast"}]
   }
 }
 {
@@ -3223,6 +4338,11 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":12,"character":22},"end":{"line":12,"character":23}},
     "newText":"isValid"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":["textDocument/completion","member",{"token":null,"completion":"isValid"}]
   }
 }
 {
@@ -3234,6 +4354,11 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":12,"character":22},"end":{"line":12,"character":23}},
     "newText":"members"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":["textDocument/completion","member",{"token":null,"completion":"members"}]
   }
 }
 
@@ -3249,6 +4374,11 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":14,"character":11},"end":{"line":14,"character":12}},
     "newText":"Member1"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":["textDocument/completion","member",{"token":null,"completion":"Member1"}]
   }
 }
 {
@@ -3261,6 +4391,11 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":14,"character":11},"end":{"line":14,"character":12}},
     "newText":"Member2"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":["textDocument/completion","member",{"token":null,"completion":"Member2"}]
   }
 }
 {
@@ -3272,6 +4407,11 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":14,"character":11},"end":{"line":14,"character":12}},
     "newText":"cast"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":["textDocument/completion","member",{"token":null,"completion":"cast"}]
   }
 }
 {
@@ -3283,6 +4423,11 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":14,"character":11},"end":{"line":14,"character":12}},
     "newText":"isValid"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":["textDocument/completion","member",{"token":null,"completion":"isValid"}]
   }
 }
 {
@@ -3294,6 +4439,11 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":14,"character":11},"end":{"line":14,"character":12}},
     "newText":"members"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":["textDocument/completion","member",{"token":null,"completion":"members"}]
   }
 }
 
@@ -3309,6 +4459,11 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":16,"character":12},"end":{"line":16,"character":13}},
     "newText":"Member1"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":["textDocument/completion","member",{"token":null,"completion":"Member1"}]
   }
 }
 {
@@ -3321,6 +4476,11 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":16,"character":12},"end":{"line":16,"character":13}},
     "newText":"Member2"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":["textDocument/completion","member",{"token":null,"completion":"Member2"}]
   }
 }
 {
@@ -3332,6 +4492,11 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":16,"character":12},"end":{"line":16,"character":13}},
     "newText":"cast"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":["textDocument/completion","member",{"token":null,"completion":"cast"}]
   }
 }
 {
@@ -3343,6 +4508,11 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":16,"character":12},"end":{"line":16,"character":13}},
     "newText":"isValid"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":["textDocument/completion","member",{"token":null,"completion":"isValid"}]
   }
 }
 {
@@ -3354,6 +4524,11 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":16,"character":12},"end":{"line":16,"character":13}},
     "newText":"members"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":["textDocument/completion","member",{"token":null,"completion":"members"}]
   }
 }
 
@@ -3369,6 +4544,11 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":18,"character":11},"end":{"line":18,"character":12}},
     "newText":"Member1"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":["textDocument/completion","member",{"token":null,"completion":"Member1"}]
   }
 }
 {
@@ -3381,6 +4561,11 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":18,"character":11},"end":{"line":18,"character":12}},
     "newText":"Member2"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":["textDocument/completion","member",{"token":null,"completion":"Member2"}]
   }
 }
 {
@@ -3392,6 +4577,11 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":18,"character":11},"end":{"line":18,"character":12}},
     "newText":"cast"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":["textDocument/completion","member",{"token":null,"completion":"cast"}]
   }
 }
 {
@@ -3403,6 +4593,11 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":18,"character":11},"end":{"line":18,"character":12}},
     "newText":"isValid"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":["textDocument/completion","member",{"token":null,"completion":"isValid"}]
   }
 }
 {
@@ -3414,6 +4609,11 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":18,"character":11},"end":{"line":18,"character":12}},
     "newText":"members"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":["textDocument/completion","member",{"token":null,"completion":"members"}]
   }
 }
 
@@ -3429,6 +4629,15 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":15,"character":5},"end":{"line":15,"character":5}},
     "newText":"myEnum"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "unqualified type: class or enum",
+      {"token":null,"completion":"myEnum"}
+    ]
   }
 }
 {
@@ -3441,6 +4650,15 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":15,"character":5},"end":{"line":15,"character":5}},
     "newText":"myClass"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "unqualified type: class or enum",
+      {"token":null,"completion":"myClass"}
+    ]
   }
 }
 {
@@ -3453,6 +4671,15 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":15,"character":5},"end":{"line":15,"character":5}},
     "newText":"myFoo"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "unqualified type: local type identifier",
+      {"token":null,"completion":"myFoo"}
+    ]
   }
 }
 {
@@ -3465,6 +4692,15 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":15,"character":5},"end":{"line":15,"character":5}},
     "newText":"myBar"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "unqualified type: local type identifier",
+      {"token":null,"completion":"myBar"}
+    ]
   }
 }
 {
@@ -3477,6 +4713,15 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":15,"character":5},"end":{"line":15,"character":5}},
     "newText":"myInterface"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "unqualified type: local type identifier",
+      {"token":null,"completion":"myInterface"}
+    ]
   }
 }
 {
@@ -3489,6 +4734,15 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":15,"character":5},"end":{"line":15,"character":5}},
     "newText":"ExportFoo"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "unqualified type: local type identifier",
+      {"token":null,"completion":"ExportFoo"}
+    ]
   }
 }
 {
@@ -3501,6 +4755,15 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":15,"character":5},"end":{"line":15,"character":5}},
     "newText":"ExportBar"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "unqualified type: local type identifier",
+      {"token":null,"completion":"ExportBar"}
+    ]
   }
 }
 {
@@ -3513,6 +4776,15 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":15,"character":5},"end":{"line":15,"character":5}},
     "newText":"ExportClass"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "unqualified type: local type identifier",
+      {"token":null,"completion":"ExportClass"}
+    ]
   }
 }
 {
@@ -3525,6 +4797,15 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":15,"character":5},"end":{"line":15,"character":5}},
     "newText":"ExportInterface"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "unqualified type: local type identifier",
+      {"token":null,"completion":"ExportInterface"}
+    ]
   }
 }
 {
@@ -3537,6 +4818,15 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":15,"character":5},"end":{"line":15,"character":5}},
     "newText":"ExportEnum"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "unqualified type: local type identifier",
+      {"token":null,"completion":"ExportEnum"}
+    ]
   }
 }
 {
@@ -3549,6 +4839,15 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":15,"character":5},"end":{"line":15,"character":5}},
     "newText":"exportValue"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "unqualified type: local type identifier",
+      {"token":null,"completion":"exportValue"}
+    ]
   }
 }
 
@@ -3564,6 +4863,15 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":4,"character":11},"end":{"line":4,"character":11}},
     "newText":"ExportBar"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "qualified type alias",
+      {"token":null,"completion":"ExportBar"}
+    ]
   }
 }
 {
@@ -3576,6 +4884,15 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":4,"character":11},"end":{"line":4,"character":11}},
     "newText":"ExportClass"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "qualified class",
+      {"token":null,"completion":"ExportClass"}
+    ]
   }
 }
 {
@@ -3588,6 +4905,15 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":4,"character":11},"end":{"line":4,"character":11}},
     "newText":"ExportEnum"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "qualified enum",
+      {"token":null,"completion":"ExportEnum"}
+    ]
   }
 }
 {
@@ -3600,6 +4926,15 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":4,"character":11},"end":{"line":4,"character":11}},
     "newText":"ExportFoo"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "qualified type alias",
+      {"token":null,"completion":"ExportFoo"}
+    ]
   }
 }
 {
@@ -3612,6 +4947,15 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":4,"character":11},"end":{"line":4,"character":11}},
     "newText":"ExportInterface"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "qualified interface",
+      {"token":null,"completion":"ExportInterface"}
+    ]
   }
 }
 

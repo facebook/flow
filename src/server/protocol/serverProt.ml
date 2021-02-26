@@ -243,6 +243,7 @@ module Response = struct
       sort_text: string option;
       preselect: bool;
       documentation: string option;
+      log_info: string;
     }
 
     type t = {

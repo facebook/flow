@@ -5,7 +5,6 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
-open Autocomplete_js
 open Base.Result
 open Loc_collections
 
@@ -107,7 +106,14 @@ let text_edit ?insert_text (name, loc) =
   (loc, newText)
 
 let autocomplete_create_result
-    ?insert_text ?(rank = 0) ?(preselect = false) ?documentation ~exact_by_default (name, loc) ty =
+    ?insert_text
+    ?(rank = 0)
+    ?(preselect = false)
+    ?documentation
+    ~exact_by_default
+    ~log_info
+    (name, loc)
+    ty =
   let detail = Ty_printer.string_of_t_single_line ~with_comments:false ~exact_by_default ty in
   let kind = lsp_completion_of_type ty in
   let text_edits = [text_edit ?insert_text (name, loc)] in
@@ -120,10 +126,12 @@ let autocomplete_create_result
     sort_text;
     preselect;
     documentation;
+    log_info;
   }
 
 let autocomplete_create_result_decl
-    ?insert_text ~rank ?(preselect = false) ?documentation ~exact_by_default (name, loc) d =
+    ?insert_text ~rank ?(preselect = false) ?documentation ~exact_by_default ~log_info (name, loc) d
+    =
   let open Ty in
   let (kind, detail) =
     match d with
@@ -145,10 +153,11 @@ let autocomplete_create_result_decl
     sort_text;
     preselect;
     documentation;
+    log_info;
   }
 
 let autocomplete_create_result_elt
-    ?insert_text ?(rank = 0) ?preselect ?documentation ~exact_by_default (name, loc) elt =
+    ?insert_text ?(rank = 0) ?preselect ?documentation ~exact_by_default ~log_info (name, loc) elt =
   match elt with
   | Ty.Type t ->
     autocomplete_create_result
@@ -157,6 +166,7 @@ let autocomplete_create_result_elt
       ?preselect
       ?documentation
       ~exact_by_default
+      ~log_info
       (name, loc)
       t
   | Ty.Decl d ->
@@ -166,6 +176,7 @@ let autocomplete_create_result_elt
       ?preselect
       ?documentation
       ~exact_by_default
+      ~log_info
       (name, loc)
       d
 
@@ -272,7 +283,13 @@ let autocomplete_member
              match (from_nullable, in_optional_chain, in_idx) with
              | (false, _, _)
              | (_, _, true) ->
-               autocomplete_create_result ~rank ?documentation ~exact_by_default (name, ac_loc) ty
+               autocomplete_create_result
+                 ~rank
+                 ?documentation
+                 ~exact_by_default
+                 ~log_info:"member"
+                 (name, ac_loc)
+                 ty
              | (true, false, false) ->
                let opt_chain_name = "?." ^ name in
                let opt_chain_ac_loc = Loc.btwn (Loc.char_before ac_loc) ac_loc in
@@ -281,6 +298,7 @@ let autocomplete_member
                  ~rank
                  ?documentation
                  ~exact_by_default
+                 ~log_info:"start optional chain"
                  (opt_chain_name, opt_chain_ac_loc)
                  opt_chain_ty
              | (true, true, false) ->
@@ -288,6 +306,7 @@ let autocomplete_member
                  ~rank
                  ?documentation
                  ~exact_by_default
+                 ~log_info:"continue optional chain"
                  (name, ac_loc)
                  opt_chain_ty)
     in
@@ -421,6 +440,7 @@ let completion_item_of_autoimport
       sort_text = sort_text_of_rank 101 (* TODO: use a constant *);
       preselect = false;
       documentation = None;
+      log_info = "global";
     }
   | Some { Code_action_service.title; edits } ->
     let edits = Base.List.map ~f:flow_text_edit_of_lsp_text_edit edits in
@@ -432,6 +452,7 @@ let completion_item_of_autoimport
       sort_text = sort_text_of_rank 100 (* TODO: use a constant *);
       preselect = false;
       documentation = Some title;
+      log_info = "autoimport";
     }
 
 let is_reserved name kind =
@@ -488,6 +509,7 @@ let autocomplete_id
                  ~insert_text:name
                  ?documentation
                  ~exact_by_default
+                 ~log_info:"local value identifier"
                  (name, ac_loc)
                  elt
              in
@@ -508,6 +530,7 @@ let autocomplete_id
         sort_text = sort_text_of_rank 0;
         preselect = false;
         documentation = None;
+        log_info = "this";
       }
       :: items
     else
@@ -524,6 +547,7 @@ let autocomplete_id
         sort_text = sort_text_of_rank 0;
         preselect = false;
         documentation = None;
+        log_info = "super";
       }
       :: items
     else
@@ -701,6 +725,7 @@ let autocomplete_jsx_attribute
                ~insert_text
                ?documentation
                ~exact_by_default
+               ~log_info:"jsx attribute"
                (name, ac_loc)
                ty)
     in
@@ -789,6 +814,7 @@ let type_exports_of_module_ty ~ac_loc ~exact_by_default ~documentation_of_module
               sort_text = None;
               preselect = false;
               documentation = documentation_of_module_member sym_name;
+              log_info = "qualified type alias";
             }
         | InterfaceDecl ({ Ty.sym_name; _ }, _) as d ->
           let sym_name = Reason.display_string_of_name sym_name in
@@ -801,6 +827,7 @@ let type_exports_of_module_ty ~ac_loc ~exact_by_default ~documentation_of_module
               sort_text = None;
               preselect = false;
               documentation = documentation_of_module_member sym_name;
+              log_info = "qualified interface";
             }
         | ClassDecl ({ Ty.sym_name; _ }, _) as d ->
           let sym_name = Reason.display_string_of_name sym_name in
@@ -813,6 +840,7 @@ let type_exports_of_module_ty ~ac_loc ~exact_by_default ~documentation_of_module
               sort_text = None;
               preselect = false;
               documentation = documentation_of_module_member sym_name;
+              log_info = "qualified class";
             }
         | EnumDecl { Ty.sym_name; _ } as d ->
           let sym_name = Reason.display_string_of_name sym_name in
@@ -825,6 +853,7 @@ let type_exports_of_module_ty ~ac_loc ~exact_by_default ~documentation_of_module
               sort_text = None;
               preselect = false;
               documentation = documentation_of_module_member sym_name;
+              log_info = "qualified enum";
             }
         | _ -> None)
       exports
@@ -849,6 +878,7 @@ let autocomplete_unqualified_type
           sort_text = sort_text_of_rank 0;
           preselect = false;
           documentation = None;
+          log_info = "unqualified type parameter";
         })
       tparams
   in
@@ -863,7 +893,12 @@ let autocomplete_unqualified_type
            match ty_result with
            | Ok elt ->
              let result =
-               autocomplete_create_result_elt ?documentation ~exact_by_default (name, ac_loc) elt
+               autocomplete_create_result_elt
+                 ?documentation
+                 ~exact_by_default
+                 ~log_info:"unqualified type: local type identifier"
+                 (name, ac_loc)
+                 elt
              in
              (result :: results, errors_to_log)
            | Error err ->
@@ -873,6 +908,7 @@ let autocomplete_unqualified_type
   in
   (* The value-level identifiers we suggest in type autocompletion:
      - classes
+     - enums
      - modules (followed by a dot) *)
   let (items, errors_to_log) =
     local_value_identifiers ~options ~ast ~typed_ast ~reader ~ac_loc ~tparams ~cx ~file_sig
@@ -884,7 +920,12 @@ let autocomplete_unqualified_type
              (items, error_to_log :: errors_to_log)
            | Ok (Ty.Decl (Ty.ClassDecl _ | Ty.EnumDecl _) as elt) ->
              let result =
-               autocomplete_create_result_elt ?documentation ~exact_by_default (name, ac_loc) elt
+               autocomplete_create_result_elt
+                 ?documentation
+                 ~exact_by_default
+                 ~log_info:"unqualified type: class or enum"
+                 (name, ac_loc)
+                 elt
              in
              (result :: items, errors_to_log)
            | Ok elt
@@ -898,6 +939,7 @@ let autocomplete_unqualified_type
                autocomplete_create_result_elt
                  ?documentation
                  ~exact_by_default
+                 ~log_info:"unqualified type -> qualified type"
                  (name, ac_loc)
                  elt
                  ~insert_text:(name ^ ".")
@@ -945,93 +987,95 @@ let autocomplete_qualified_type ~reader ~cx ~ac_loc ~file_sig ~typed_ast ~tparam
 let autocomplete_get_results
     ~env ~options ~reader ~cx ~file_sig ~ast ~typed_ast ~imports trigger_character cursor =
   let file_sig = File_sig.abstractify_locs file_sig in
-  match Autocomplete_js.process_location ~trigger_character ~cursor ~typed_ast with
-  | Some (_, _, Ac_binding) -> ("Empty", AcEmpty "Binding")
-  | Some (_, _, Ac_ignored) -> ("Empty", AcEmpty "Ignored")
-  | Some (_, _, Ac_comment) -> ("Empty", AcEmpty "Comment")
-  | Some (_, _, Ac_literal) -> ("Empty", AcEmpty "Literal")
-  | Some (_, _, Ac_jsx_text) -> ("Empty", AcEmpty "JSXText")
-  | Some (_, _, Ac_module) ->
-    (* TODO: complete module names *)
-    ("Acmodule", AcEmpty "Module")
-  | Some (_, _, Ac_key) ->
-    (* TODO: complete object keys based on their upper bounds *)
-    let result = { ServerProt.Response.Completion.items = []; is_incomplete = false } in
-    ("Ackey", AcResult { result; errors_to_log = [] })
-  | Some (tparams, ac_loc, Ac_id { token; include_super; include_this }) ->
-    ( "Acid",
-      autocomplete_id
-        ~env
-        ~options
-        ~reader
-        ~cx
-        ~ac_loc
-        ~file_sig
-        ~ast
-        ~typed_ast
-        ~include_super
-        ~include_this
-        ~imports
-        ~tparams
-        ~token )
-  | Some (tparams, ac_loc, Ac_member { obj_type; in_optional_chain }) ->
-    ( "Acmem",
-      autocomplete_member
-        ~reader
-        ~exclude_proto_members:false
-        cx
-        file_sig
-        typed_ast
-        obj_type
-        in_optional_chain
-        ac_loc
-        ~tparams )
-  | Some (tparams, ac_loc, Ac_jsx_element { token }) ->
-    ( "Ac_jsx_element",
-      autocomplete_jsx_element
-        ~env
-        ~options
-        ~reader
-        ~cx
-        ~ac_loc
-        ~file_sig
-        ~ast
-        ~typed_ast
-        ~imports
-        ~tparams
-        ~token )
-  | Some
-      (tparams, ac_loc, Ac_jsx_attribute { attribute_name; used_attr_names; component_t; has_value })
-    ->
-    ( "Acjsx",
-      autocomplete_jsx_attribute
-        ~reader
-        cx
-        file_sig
-        typed_ast
-        component_t
-        attribute_name
-        ~used_attr_names
-        ~has_value
-        ac_loc
-        ~tparams )
-  | Some (tparams, ac_loc, Ac_type { token }) ->
-    ( "Actype",
-      autocomplete_unqualified_type
-        ~env
-        ~options
-        ~reader
-        ~cx
-        ~imports
-        ~tparams
-        ~ac_loc
-        ~ast
-        ~typed_ast
-        ~file_sig
-        ~token )
-  | Some (tparams, ac_loc, Ac_qualified_type qtype) ->
-    ( "Acqualifiedtype",
-      autocomplete_qualified_type ~reader ~cx ~ac_loc ~file_sig ~typed_ast ~tparams ~qtype )
+  let open Autocomplete_js in
+  match process_location ~trigger_character ~cursor ~typed_ast with
   | None ->
     let result = { ServerProt.Response.Completion.items = []; is_incomplete = false } in
-    ("None", AcResult { result; errors_to_log = ["Autocomplete token not found in AST"] })
+    (None, ("None", AcResult { result; errors_to_log = ["Autocomplete token not found in AST"] }))
+  | Some { tparams; ac_loc; token; autocomplete_type } ->
+    ( Some token,
+      (match autocomplete_type with
+      | Ac_binding -> ("Empty", AcEmpty "Binding")
+      | Ac_ignored -> ("Empty", AcEmpty "Ignored")
+      | Ac_comment -> ("Empty", AcEmpty "Comment")
+      | Ac_literal -> ("Empty", AcEmpty "Literal")
+      | Ac_jsx_text -> ("Empty", AcEmpty "JSXText")
+      | Ac_module ->
+        (* TODO: complete module names *)
+        ("Acmodule", AcEmpty "Module")
+      | Ac_key ->
+        (* TODO: complete object keys based on their upper bounds *)
+        let result = { ServerProt.Response.Completion.items = []; is_incomplete = false } in
+        ("Ackey", AcResult { result; errors_to_log = [] })
+      | Ac_id { include_super; include_this } ->
+        ( "Acid",
+          autocomplete_id
+            ~env
+            ~options
+            ~reader
+            ~cx
+            ~ac_loc
+            ~file_sig
+            ~ast
+            ~typed_ast
+            ~include_super
+            ~include_this
+            ~imports
+            ~tparams
+            ~token )
+      | Ac_member { obj_type; in_optional_chain } ->
+        ( "Acmem",
+          autocomplete_member
+            ~reader
+            ~exclude_proto_members:false
+            cx
+            file_sig
+            typed_ast
+            obj_type
+            in_optional_chain
+            ac_loc
+            ~tparams )
+      | Ac_jsx_element ->
+        ( "Ac_jsx_element",
+          autocomplete_jsx_element
+            ~env
+            ~options
+            ~reader
+            ~cx
+            ~ac_loc
+            ~file_sig
+            ~ast
+            ~typed_ast
+            ~imports
+            ~tparams
+            ~token )
+      | Ac_jsx_attribute { attribute_name; used_attr_names; component_t; has_value } ->
+        ( "Acjsx",
+          autocomplete_jsx_attribute
+            ~reader
+            cx
+            file_sig
+            typed_ast
+            component_t
+            attribute_name
+            ~used_attr_names
+            ~has_value
+            ac_loc
+            ~tparams )
+      | Ac_type ->
+        ( "Actype",
+          autocomplete_unqualified_type
+            ~env
+            ~options
+            ~reader
+            ~cx
+            ~imports
+            ~tparams
+            ~ac_loc
+            ~ast
+            ~typed_ast
+            ~file_sig
+            ~token )
+      | Ac_qualified_type qtype ->
+        ( "Acqualifiedtype",
+          autocomplete_qualified_type ~reader ~cx ~ac_loc ~file_sig ~typed_ast ~tparams ~qtype )) )

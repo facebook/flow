@@ -42,6 +42,15 @@ export default (suite(
                     },
                     newText: 'this',
                   },
+                  command: {
+                    title: '',
+                    command: 'log:<PLACEHOLDER_PROJECT_URL>',
+                    arguments: [
+                      'textDocument/completion',
+                      'this',
+                      {token: 'AUTO332', completion: 'this'},
+                    ],
+                  },
                 },
                 {
                   label: 'x',
@@ -56,11 +65,25 @@ export default (suite(
                     },
                     newText: 'x',
                   },
+                  command: {
+                    title: '',
+                    command: 'log:<PLACEHOLDER_PROJECT_URL>',
+                    arguments: [
+                      'textDocument/completion',
+                      'local value identifier',
+                      {token: 'AUTO332', completion: 'x'},
+                    ],
+                  },
                 },
                 {
                   label: 'fred',
                   kind: 3,
                   detail: '(a: number, b: string) => number',
+                  documentation: {
+                    kind: 'markdown',
+                    value:
+                      "Docblock for 'fred'\n\n**@return** {number} Docblock for return",
+                  },
                   sortText: '00000000000000000000',
                   insertTextFormat: 1,
                   textEdit: {
@@ -69,6 +92,15 @@ export default (suite(
                       end: {line: 10, character: 15},
                     },
                     newText: 'fred',
+                  },
+                  command: {
+                    title: '',
+                    command: 'log:<PLACEHOLDER_PROJECT_URL>',
+                    arguments: [
+                      'textDocument/completion',
+                      'local value identifier',
+                      {token: 'AUTO332', completion: 'fred'},
+                    ],
                   },
                 },
                 {
@@ -84,6 +116,15 @@ export default (suite(
                     },
                     newText: 'b',
                   },
+                  command: {
+                    title: '',
+                    command: 'log:<PLACEHOLDER_PROJECT_URL>',
+                    arguments: [
+                      'textDocument/completion',
+                      'local value identifier',
+                      {token: 'AUTO332', completion: 'b'},
+                    ],
+                  },
                 },
                 {
                   label: 'a',
@@ -97,6 +138,15 @@ export default (suite(
                       end: {line: 10, character: 15},
                     },
                     newText: 'a',
+                  },
+                  command: {
+                    title: '',
+                    command: 'log:<PLACEHOLDER_PROJECT_URL>',
+                    arguments: [
+                      'textDocument/completion',
+                      'local value identifier',
+                      {token: 'AUTO332', completion: 'a'},
+                    ],
                   },
                 },
               ],
@@ -133,6 +183,15 @@ export default (suite(
                     },
                     newText: 'this',
                   },
+                  command: {
+                    title: '',
+                    command: 'log:<PLACEHOLDER_PROJECT_URL>',
+                    arguments: [
+                      'textDocument/completion',
+                      'this',
+                      {token: 'AUTO332', completion: 'this'},
+                    ],
+                  },
                 },
                 {
                   label: 'x',
@@ -146,6 +205,15 @@ export default (suite(
                       end: {line: 13, character: 15},
                     },
                     newText: 'x',
+                  },
+                  command: {
+                    title: '',
+                    command: 'log:<PLACEHOLDER_PROJECT_URL>',
+                    arguments: [
+                      'textDocument/completion',
+                      'local value identifier',
+                      {token: 'AUTO332', completion: 'x'},
+                    ],
                   },
                 },
                 {
@@ -161,6 +229,15 @@ export default (suite(
                     },
                     newText: 'foo',
                   },
+                  command: {
+                    title: '',
+                    command: 'log:<PLACEHOLDER_PROJECT_URL>',
+                    arguments: [
+                      'textDocument/completion',
+                      'local value identifier',
+                      {token: 'AUTO332', completion: 'foo'},
+                    ],
+                  },
                 },
                 {
                   label: 'aNumber',
@@ -174,6 +251,15 @@ export default (suite(
                       end: {line: 13, character: 15},
                     },
                     newText: 'aNumber',
+                  },
+                  command: {
+                    title: '',
+                    command: 'log:<PLACEHOLDER_PROJECT_URL>',
+                    arguments: [
+                      'textDocument/completion',
+                      'local value identifier',
+                      {token: 'AUTO332', completion: 'aNumber'},
+                    ],
                   },
                 },
                 {
@@ -189,6 +275,15 @@ export default (suite(
                     },
                     newText: 'aFunction',
                   },
+                  command: {
+                    title: '',
+                    command: 'log:<PLACEHOLDER_PROJECT_URL>',
+                    arguments: [
+                      'textDocument/completion',
+                      'local value identifier',
+                      {token: 'AUTO332', completion: 'aFunction'},
+                    ],
+                  },
                 },
                 {
                   label: 'aClass',
@@ -202,6 +297,15 @@ export default (suite(
                       end: {line: 13, character: 15},
                     },
                     newText: 'aClass',
+                  },
+                  command: {
+                    title: '',
+                    command: 'log:<PLACEHOLDER_PROJECT_URL>',
+                    arguments: [
+                      'textDocument/completion',
+                      'local value identifier',
+                      {token: 'AUTO332', completion: 'aClass'},
+                    ],
                   },
                 },
               ],
@@ -252,6 +356,15 @@ export default (suite(
                     },
                     newText: 'this',
                   },
+                  command: {
+                    title: '',
+                    command: 'log:<PLACEHOLDER_PROJECT_URL>',
+                    arguments: [
+                      'textDocument/completion',
+                      'this',
+                      {token: 'AUTO332', completion: 'this'},
+                    ],
+                  },
                 },
                 {
                   label: 'x',
@@ -265,6 +378,15 @@ export default (suite(
                       end: {line: 9, character: 15},
                     },
                     newText: 'x',
+                  },
+                  command: {
+                    title: '',
+                    command: 'log:<PLACEHOLDER_PROJECT_URL>',
+                    arguments: [
+                      'textDocument/completion',
+                      'local value identifier',
+                      {token: 'AUTO332', completion: 'x'},
+                    ],
                   },
                 },
                 {
@@ -280,6 +402,15 @@ export default (suite(
                     },
                     newText: 'foo',
                   },
+                  command: {
+                    title: '',
+                    command: 'log:<PLACEHOLDER_PROJECT_URL>',
+                    arguments: [
+                      'textDocument/completion',
+                      'local value identifier',
+                      {token: 'AUTO332', completion: 'foo'},
+                    ],
+                  },
                 },
                 {
                   label: 'aFunction',
@@ -293,6 +424,15 @@ export default (suite(
                       end: {line: 9, character: 15},
                     },
                     newText: 'aFunction',
+                  },
+                  command: {
+                    title: '',
+                    command: 'log:<PLACEHOLDER_PROJECT_URL>',
+                    arguments: [
+                      'textDocument/completion',
+                      'local value identifier',
+                      {token: 'AUTO332', completion: 'aFunction'},
+                    ],
                   },
                 },
               ],
@@ -320,6 +460,7 @@ export default (suite(
                   label: 'a',
                   kind: 6,
                   detail: 'number',
+                  sortText: '00000000000000000000',
                   insertTextFormat: 1,
                   textEdit: {
                     range: {
@@ -327,6 +468,15 @@ export default (suite(
                       end: {line: 12, character: 4},
                     },
                     newText: 'a=',
+                  },
+                  command: {
+                    title: '',
+                    command: 'log:<PLACEHOLDER_PROJECT_URL>',
+                    arguments: [
+                      'textDocument/completion',
+                      'jsx attribute',
+                      {token: 'AUTO332', completion: 'a'},
+                    ],
                   },
                 },
               ],
@@ -383,6 +533,15 @@ export default (suite(
                     },
                     newText: 'React',
                   },
+                  command: {
+                    title: '',
+                    command: 'log:<PLACEHOLDER_PROJECT_URL>',
+                    arguments: [
+                      'textDocument/completion',
+                      'local value identifier',
+                      {token: 'AUTO332', completion: 'React'},
+                    ],
+                  },
                 },
                 {
                   label: 'D',
@@ -397,6 +556,15 @@ export default (suite(
                     },
                     newText: 'D',
                   },
+                  command: {
+                    title: '',
+                    command: 'log:<PLACEHOLDER_PROJECT_URL>',
+                    arguments: [
+                      'textDocument/completion',
+                      'local value identifier',
+                      {token: 'AUTO332', completion: 'D'},
+                    ],
+                  },
                 },
                 {
                   label: 'C',
@@ -410,6 +578,15 @@ export default (suite(
                       end: {line: 11, character: 1},
                     },
                     newText: 'C',
+                  },
+                  command: {
+                    title: '',
+                    command: 'log:<PLACEHOLDER_PROJECT_URL>',
+                    arguments: [
+                      'textDocument/completion',
+                      'local value identifier',
+                      {token: 'AUTO332', completion: 'C'},
+                    ],
                   },
                 },
               ],
@@ -437,6 +614,7 @@ export default (suite(
                   label: 'a',
                   kind: 6,
                   detail: 'number',
+                  sortText: '00000000000000000000',
                   insertTextFormat: 1,
                   textEdit: {
                     range: {
@@ -444,6 +622,15 @@ export default (suite(
                       end: {line: 12, character: 4},
                     },
                     newText: 'a=',
+                  },
+                  command: {
+                    title: '',
+                    command: 'log:<PLACEHOLDER_PROJECT_URL>',
+                    arguments: [
+                      'textDocument/completion',
+                      'jsx attribute',
+                      {token: 'AUTO332', completion: 'a'},
+                    ],
                   },
                 },
               ],
@@ -473,6 +660,7 @@ export default (suite(
                     label: 'a',
                     kind: 6,
                     detail: 'number',
+                    sortText: '00000000000000000000',
                     insertTextFormat: 1,
                     textEdit: {
                       range: {
@@ -480,6 +668,15 @@ export default (suite(
                         end: {line: 13, character: 4},
                       },
                       newText: 'a=',
+                    },
+                    command: {
+                      title: '',
+                      command: 'log:<PLACEHOLDER_PROJECT_URL>',
+                      arguments: [
+                        'textDocument/completion',
+                        'jsx attribute',
+                        {token: 'AUTO332', completion: 'a'},
+                      ],
                     },
                   },
                 ],
@@ -511,6 +708,7 @@ export default (suite(
                   label: 'a',
                   kind: 6,
                   detail: 'number',
+                  sortText: '00000000000000000000',
                   insertTextFormat: 1,
                   textEdit: {
                     range: {
@@ -518,6 +716,15 @@ export default (suite(
                       end: {line: 13, character: 4},
                     },
                     newText: 'a=',
+                  },
+                  command: {
+                    title: '',
+                    command: 'log:<PLACEHOLDER_PROJECT_URL>',
+                    arguments: [
+                      'textDocument/completion',
+                      'jsx attribute',
+                      {token: 'AUTO332', completion: 'a'},
+                    ],
                   },
                 },
               ],
@@ -554,6 +761,15 @@ export default (suite(
                     },
                     newText: 'apply',
                   },
+                  command: {
+                    title: '',
+                    command: 'log:<PLACEHOLDER_PROJECT_URL>',
+                    arguments: [
+                      'textDocument/completion',
+                      'member',
+                      {token: 'AUTO332', completion: 'apply'},
+                    ],
+                  },
                 },
                 {
                   label: 'arguments',
@@ -567,6 +783,15 @@ export default (suite(
                       end: {line: 14, character: 3},
                     },
                     newText: 'arguments',
+                  },
+                  command: {
+                    title: '',
+                    command: 'log:<PLACEHOLDER_PROJECT_URL>',
+                    arguments: [
+                      'textDocument/completion',
+                      'member',
+                      {token: 'AUTO332', completion: 'arguments'},
+                    ],
                   },
                 },
                 {
@@ -582,6 +807,15 @@ export default (suite(
                     },
                     newText: 'bind',
                   },
+                  command: {
+                    title: '',
+                    command: 'log:<PLACEHOLDER_PROJECT_URL>',
+                    arguments: [
+                      'textDocument/completion',
+                      'member',
+                      {token: 'AUTO332', completion: 'bind'},
+                    ],
+                  },
                 },
                 {
                   label: 'call',
@@ -595,6 +829,15 @@ export default (suite(
                       end: {line: 14, character: 3},
                     },
                     newText: 'call',
+                  },
+                  command: {
+                    title: '',
+                    command: 'log:<PLACEHOLDER_PROJECT_URL>',
+                    arguments: [
+                      'textDocument/completion',
+                      'member',
+                      {token: 'AUTO332', completion: 'call'},
+                    ],
                   },
                 },
                 {
@@ -610,6 +853,15 @@ export default (suite(
                     },
                     newText: 'caller',
                   },
+                  command: {
+                    title: '',
+                    command: 'log:<PLACEHOLDER_PROJECT_URL>',
+                    arguments: [
+                      'textDocument/completion',
+                      'member',
+                      {token: 'AUTO332', completion: 'caller'},
+                    ],
+                  },
                 },
                 {
                   label: 'childContextTypes',
@@ -623,6 +875,15 @@ export default (suite(
                       end: {line: 14, character: 3},
                     },
                     newText: 'childContextTypes',
+                  },
+                  command: {
+                    title: '',
+                    command: 'log:<PLACEHOLDER_PROJECT_URL>',
+                    arguments: [
+                      'textDocument/completion',
+                      'member',
+                      {token: 'AUTO332', completion: 'childContextTypes'},
+                    ],
                   },
                 },
                 {
@@ -638,6 +899,15 @@ export default (suite(
                     },
                     newText: 'contextTypes',
                   },
+                  command: {
+                    title: '',
+                    command: 'log:<PLACEHOLDER_PROJECT_URL>',
+                    arguments: [
+                      'textDocument/completion',
+                      'member',
+                      {token: 'AUTO332', completion: 'contextTypes'},
+                    ],
+                  },
                 },
                 {
                   label: 'displayName',
@@ -651,6 +921,15 @@ export default (suite(
                       end: {line: 14, character: 3},
                     },
                     newText: 'displayName',
+                  },
+                  command: {
+                    title: '',
+                    command: 'log:<PLACEHOLDER_PROJECT_URL>',
+                    arguments: [
+                      'textDocument/completion',
+                      'member',
+                      {token: 'AUTO332', completion: 'displayName'},
+                    ],
                   },
                 },
                 {
@@ -671,6 +950,15 @@ export default (suite(
                     },
                     newText: 'hasOwnProperty',
                   },
+                  command: {
+                    title: '',
+                    command: 'log:<PLACEHOLDER_PROJECT_URL>',
+                    arguments: [
+                      'textDocument/completion',
+                      'member',
+                      {token: 'AUTO332', completion: 'hasOwnProperty'},
+                    ],
+                  },
                 },
                 {
                   label: 'isPrototypeOf',
@@ -690,6 +978,15 @@ export default (suite(
                     },
                     newText: 'isPrototypeOf',
                   },
+                  command: {
+                    title: '',
+                    command: 'log:<PLACEHOLDER_PROJECT_URL>',
+                    arguments: [
+                      'textDocument/completion',
+                      'member',
+                      {token: 'AUTO332', completion: 'isPrototypeOf'},
+                    ],
+                  },
                 },
                 {
                   label: 'length',
@@ -703,6 +1000,15 @@ export default (suite(
                       end: {line: 14, character: 3},
                     },
                     newText: 'length',
+                  },
+                  command: {
+                    title: '',
+                    command: 'log:<PLACEHOLDER_PROJECT_URL>',
+                    arguments: [
+                      'textDocument/completion',
+                      'member',
+                      {token: 'AUTO332', completion: 'length'},
+                    ],
                   },
                 },
                 {
@@ -718,6 +1024,15 @@ export default (suite(
                     },
                     newText: 'name',
                   },
+                  command: {
+                    title: '',
+                    command: 'log:<PLACEHOLDER_PROJECT_URL>',
+                    arguments: [
+                      'textDocument/completion',
+                      'member',
+                      {token: 'AUTO332', completion: 'name'},
+                    ],
+                  },
                 },
                 {
                   label: 'propTypes',
@@ -731,6 +1046,15 @@ export default (suite(
                       end: {line: 14, character: 3},
                     },
                     newText: 'propTypes',
+                  },
+                  command: {
+                    title: '',
+                    command: 'log:<PLACEHOLDER_PROJECT_URL>',
+                    arguments: [
+                      'textDocument/completion',
+                      'member',
+                      {token: 'AUTO332', completion: 'propTypes'},
+                    ],
                   },
                 },
                 {
@@ -751,6 +1075,15 @@ export default (suite(
                     },
                     newText: 'propertyIsEnumerable',
                   },
+                  command: {
+                    title: '',
+                    command: 'log:<PLACEHOLDER_PROJECT_URL>',
+                    arguments: [
+                      'textDocument/completion',
+                      'member',
+                      {token: 'AUTO332', completion: 'propertyIsEnumerable'},
+                    ],
+                  },
                 },
                 {
                   label: 'toLocaleString',
@@ -770,6 +1103,15 @@ export default (suite(
                     },
                     newText: 'toLocaleString',
                   },
+                  command: {
+                    title: '',
+                    command: 'log:<PLACEHOLDER_PROJECT_URL>',
+                    arguments: [
+                      'textDocument/completion',
+                      'member',
+                      {token: 'AUTO332', completion: 'toLocaleString'},
+                    ],
+                  },
                 },
                 {
                   label: 'toString',
@@ -787,6 +1129,15 @@ export default (suite(
                       end: {line: 14, character: 3},
                     },
                     newText: 'toString',
+                  },
+                  command: {
+                    title: '',
+                    command: 'log:<PLACEHOLDER_PROJECT_URL>',
+                    arguments: [
+                      'textDocument/completion',
+                      'member',
+                      {token: 'AUTO332', completion: 'toString'},
+                    ],
                   },
                 },
                 {
@@ -806,6 +1157,15 @@ export default (suite(
                       end: {line: 14, character: 3},
                     },
                     newText: 'valueOf',
+                  },
+                  command: {
+                    title: '',
+                    command: 'log:<PLACEHOLDER_PROJECT_URL>',
+                    arguments: [
+                      'textDocument/completion',
+                      'member',
+                      {token: 'AUTO332', completion: 'valueOf'},
+                    ],
                   },
                 },
               ],
@@ -842,6 +1202,15 @@ export default (suite(
                     },
                     newText: 'apply',
                   },
+                  command: {
+                    title: '',
+                    command: 'log:<PLACEHOLDER_PROJECT_URL>',
+                    arguments: [
+                      'textDocument/completion',
+                      'member',
+                      {token: 'AUTO332', completion: 'apply'},
+                    ],
+                  },
                 },
                 {
                   label: 'arguments',
@@ -855,6 +1224,15 @@ export default (suite(
                       end: {line: 15, character: 2},
                     },
                     newText: 'arguments',
+                  },
+                  command: {
+                    title: '',
+                    command: 'log:<PLACEHOLDER_PROJECT_URL>',
+                    arguments: [
+                      'textDocument/completion',
+                      'member',
+                      {token: 'AUTO332', completion: 'arguments'},
+                    ],
                   },
                 },
                 {
@@ -870,6 +1248,15 @@ export default (suite(
                     },
                     newText: 'bind',
                   },
+                  command: {
+                    title: '',
+                    command: 'log:<PLACEHOLDER_PROJECT_URL>',
+                    arguments: [
+                      'textDocument/completion',
+                      'member',
+                      {token: 'AUTO332', completion: 'bind'},
+                    ],
+                  },
                 },
                 {
                   label: 'call',
@@ -883,6 +1270,15 @@ export default (suite(
                       end: {line: 15, character: 2},
                     },
                     newText: 'call',
+                  },
+                  command: {
+                    title: '',
+                    command: 'log:<PLACEHOLDER_PROJECT_URL>',
+                    arguments: [
+                      'textDocument/completion',
+                      'member',
+                      {token: 'AUTO332', completion: 'call'},
+                    ],
                   },
                 },
                 {
@@ -898,6 +1294,15 @@ export default (suite(
                     },
                     newText: 'caller',
                   },
+                  command: {
+                    title: '',
+                    command: 'log:<PLACEHOLDER_PROJECT_URL>',
+                    arguments: [
+                      'textDocument/completion',
+                      'member',
+                      {token: 'AUTO332', completion: 'caller'},
+                    ],
+                  },
                 },
                 {
                   label: 'childContextTypes',
@@ -911,6 +1316,15 @@ export default (suite(
                       end: {line: 15, character: 2},
                     },
                     newText: 'childContextTypes',
+                  },
+                  command: {
+                    title: '',
+                    command: 'log:<PLACEHOLDER_PROJECT_URL>',
+                    arguments: [
+                      'textDocument/completion',
+                      'member',
+                      {token: 'AUTO332', completion: 'childContextTypes'},
+                    ],
                   },
                 },
                 {
@@ -926,6 +1340,15 @@ export default (suite(
                     },
                     newText: 'contextTypes',
                   },
+                  command: {
+                    title: '',
+                    command: 'log:<PLACEHOLDER_PROJECT_URL>',
+                    arguments: [
+                      'textDocument/completion',
+                      'member',
+                      {token: 'AUTO332', completion: 'contextTypes'},
+                    ],
+                  },
                 },
                 {
                   label: 'displayName',
@@ -939,6 +1362,15 @@ export default (suite(
                       end: {line: 15, character: 2},
                     },
                     newText: 'displayName',
+                  },
+                  command: {
+                    title: '',
+                    command: 'log:<PLACEHOLDER_PROJECT_URL>',
+                    arguments: [
+                      'textDocument/completion',
+                      'member',
+                      {token: 'AUTO332', completion: 'displayName'},
+                    ],
                   },
                 },
                 {
@@ -959,6 +1391,15 @@ export default (suite(
                     },
                     newText: 'hasOwnProperty',
                   },
+                  command: {
+                    title: '',
+                    command: 'log:<PLACEHOLDER_PROJECT_URL>',
+                    arguments: [
+                      'textDocument/completion',
+                      'member',
+                      {token: 'AUTO332', completion: 'hasOwnProperty'},
+                    ],
+                  },
                 },
                 {
                   label: 'isPrototypeOf',
@@ -978,6 +1419,15 @@ export default (suite(
                     },
                     newText: 'isPrototypeOf',
                   },
+                  command: {
+                    title: '',
+                    command: 'log:<PLACEHOLDER_PROJECT_URL>',
+                    arguments: [
+                      'textDocument/completion',
+                      'member',
+                      {token: 'AUTO332', completion: 'isPrototypeOf'},
+                    ],
+                  },
                 },
                 {
                   label: 'length',
@@ -991,6 +1441,15 @@ export default (suite(
                       end: {line: 15, character: 2},
                     },
                     newText: 'length',
+                  },
+                  command: {
+                    title: '',
+                    command: 'log:<PLACEHOLDER_PROJECT_URL>',
+                    arguments: [
+                      'textDocument/completion',
+                      'member',
+                      {token: 'AUTO332', completion: 'length'},
+                    ],
                   },
                 },
                 {
@@ -1006,6 +1465,15 @@ export default (suite(
                     },
                     newText: 'name',
                   },
+                  command: {
+                    title: '',
+                    command: 'log:<PLACEHOLDER_PROJECT_URL>',
+                    arguments: [
+                      'textDocument/completion',
+                      'member',
+                      {token: 'AUTO332', completion: 'name'},
+                    ],
+                  },
                 },
                 {
                   label: 'propTypes',
@@ -1019,6 +1487,15 @@ export default (suite(
                       end: {line: 15, character: 2},
                     },
                     newText: 'propTypes',
+                  },
+                  command: {
+                    title: '',
+                    command: 'log:<PLACEHOLDER_PROJECT_URL>',
+                    arguments: [
+                      'textDocument/completion',
+                      'member',
+                      {token: 'AUTO332', completion: 'propTypes'},
+                    ],
                   },
                 },
                 {
@@ -1039,6 +1516,15 @@ export default (suite(
                     },
                     newText: 'propertyIsEnumerable',
                   },
+                  command: {
+                    title: '',
+                    command: 'log:<PLACEHOLDER_PROJECT_URL>',
+                    arguments: [
+                      'textDocument/completion',
+                      'member',
+                      {token: 'AUTO332', completion: 'propertyIsEnumerable'},
+                    ],
+                  },
                 },
                 {
                   label: 'toLocaleString',
@@ -1058,6 +1544,15 @@ export default (suite(
                     },
                     newText: 'toLocaleString',
                   },
+                  command: {
+                    title: '',
+                    command: 'log:<PLACEHOLDER_PROJECT_URL>',
+                    arguments: [
+                      'textDocument/completion',
+                      'member',
+                      {token: 'AUTO332', completion: 'toLocaleString'},
+                    ],
+                  },
                 },
                 {
                   label: 'toString',
@@ -1075,6 +1570,15 @@ export default (suite(
                       end: {line: 15, character: 2},
                     },
                     newText: 'toString',
+                  },
+                  command: {
+                    title: '',
+                    command: 'log:<PLACEHOLDER_PROJECT_URL>',
+                    arguments: [
+                      'textDocument/completion',
+                      'member',
+                      {token: 'AUTO332', completion: 'toString'},
+                    ],
                   },
                 },
                 {
@@ -1094,6 +1598,15 @@ export default (suite(
                       end: {line: 15, character: 2},
                     },
                     newText: 'valueOf',
+                  },
+                  command: {
+                    title: '',
+                    command: 'log:<PLACEHOLDER_PROJECT_URL>',
+                    arguments: [
+                      'textDocument/completion',
+                      'member',
+                      {token: 'AUTO332', completion: 'valueOf'},
+                    ],
                   },
                 },
               ],
@@ -1133,6 +1646,15 @@ export default (suite(
                     },
                     newText: 'Typologies.',
                   },
+                  command: {
+                    title: '',
+                    command: 'log:<PLACEHOLDER_PROJECT_URL>',
+                    arguments: [
+                      'textDocument/completion',
+                      'unqualified type -> qualified type',
+                      {token: 'AUTO332', completion: 'Typologies'},
+                    ],
+                  },
                 },
                 {
                   label: 'Typography',
@@ -1146,6 +1668,15 @@ export default (suite(
                       end: {line: 27, character: 18},
                     },
                     newText: 'Typography',
+                  },
+                  command: {
+                    title: '',
+                    command: 'log:<PLACEHOLDER_PROJECT_URL>',
+                    arguments: [
+                      'textDocument/completion',
+                      'unqualified type: class or enum',
+                      {token: 'AUTO332', completion: 'Typography'},
+                    ],
                   },
                 },
                 {
@@ -1161,6 +1692,15 @@ export default (suite(
                     },
                     newText: 'Typewriter',
                   },
+                  command: {
+                    title: '',
+                    command: 'log:<PLACEHOLDER_PROJECT_URL>',
+                    arguments: [
+                      'textDocument/completion',
+                      'unqualified type: class or enum',
+                      {token: 'AUTO332', completion: 'Typewriter'},
+                    ],
+                  },
                 },
                 {
                   label: 'Types',
@@ -1174,6 +1714,15 @@ export default (suite(
                       end: {line: 27, character: 18},
                     },
                     newText: 'Types.',
+                  },
+                  command: {
+                    title: '',
+                    command: 'log:<PLACEHOLDER_PROJECT_URL>',
+                    arguments: [
+                      'textDocument/completion',
+                      'unqualified type -> qualified type',
+                      {token: 'AUTO332', completion: 'Types'},
+                    ],
                   },
                 },
                 {
@@ -1189,6 +1738,15 @@ export default (suite(
                     },
                     newText: 'Typesafe',
                   },
+                  command: {
+                    title: '',
+                    command: 'log:<PLACEHOLDER_PROJECT_URL>',
+                    arguments: [
+                      'textDocument/completion',
+                      'unqualified type: local type identifier',
+                      {token: 'AUTO332', completion: 'Typesafe'},
+                    ],
+                  },
                 },
                 {
                   label: 'Typhoon',
@@ -1202,6 +1760,15 @@ export default (suite(
                       end: {line: 27, character: 18},
                     },
                     newText: 'Typhoon',
+                  },
+                  command: {
+                    title: '',
+                    command: 'log:<PLACEHOLDER_PROJECT_URL>',
+                    arguments: [
+                      'textDocument/completion',
+                      'unqualified type: local type identifier',
+                      {token: 'AUTO332', completion: 'Typhoon'},
+                    ],
                   },
                 },
                 {
@@ -1217,6 +1784,15 @@ export default (suite(
                     },
                     newText: 'Typnotism',
                   },
+                  command: {
+                    title: '',
+                    command: 'log:<PLACEHOLDER_PROJECT_URL>',
+                    arguments: [
+                      'textDocument/completion',
+                      'unqualified type: local type identifier',
+                      {token: 'AUTO332', completion: 'Typnotism'},
+                    ],
+                  },
                 },
                 {
                   label: 'Tyrant',
@@ -1230,6 +1806,15 @@ export default (suite(
                       end: {line: 27, character: 18},
                     },
                     newText: 'Tyrant',
+                  },
+                  command: {
+                    title: '',
+                    command: 'log:<PLACEHOLDER_PROJECT_URL>',
+                    arguments: [
+                      'textDocument/completion',
+                      'unqualified type: local type identifier',
+                      {token: 'AUTO332', completion: 'Tyrant'},
+                    ],
                   },
                 },
                 {
@@ -1245,6 +1830,15 @@ export default (suite(
                     },
                     newText: 'Tympanic',
                   },
+                  command: {
+                    title: '',
+                    command: 'log:<PLACEHOLDER_PROJECT_URL>',
+                    arguments: [
+                      'textDocument/completion',
+                      'unqualified type: local type identifier',
+                      {token: 'AUTO332', completion: 'Tympanic'},
+                    ],
+                  },
                 },
                 {
                   label: 'Typeset',
@@ -1259,6 +1853,15 @@ export default (suite(
                     },
                     newText: 'Typeset',
                   },
+                  command: {
+                    title: '',
+                    command: 'log:<PLACEHOLDER_PROJECT_URL>',
+                    arguments: [
+                      'textDocument/completion',
+                      'unqualified type: local type identifier',
+                      {token: 'AUTO332', completion: 'Typeset'},
+                    ],
+                  },
                 },
                 {
                   label: 'Typaram',
@@ -1272,6 +1875,15 @@ export default (suite(
                       end: {line: 27, character: 18},
                     },
                     newText: 'Typaram',
+                  },
+                  command: {
+                    title: '',
+                    command: 'log:<PLACEHOLDER_PROJECT_URL>',
+                    arguments: [
+                      'textDocument/completion',
+                      'unqualified type parameter',
+                      {token: 'AUTO332', completion: 'Typaram'},
+                    ],
                   },
                 },
               ],
@@ -1303,16 +1915,19 @@ export default (suite(
                   insertTextFormat: 1,
                   textEdit: {
                     range: {
-                      start: {
-                        line: 9,
-                        character: 3,
-                      },
-                      end: {
-                        line: 9,
-                        character: 4,
-                      },
+                      start: {line: 9, character: 3},
+                      end: {line: 9, character: 4},
                     },
                     newText: 'aaaa',
+                  },
+                  command: {
+                    title: '',
+                    command: 'log:<PLACEHOLDER_PROJECT_URL>',
+                    arguments: [
+                      'textDocument/completion',
+                      'jsx attribute',
+                      {token: 'aAUTO332', completion: 'aaaa'},
+                    ],
                   },
                 },
                 {
@@ -1323,16 +1938,19 @@ export default (suite(
                   insertTextFormat: 1,
                   textEdit: {
                     range: {
-                      start: {
-                        line: 9,
-                        character: 3,
-                      },
-                      end: {
-                        line: 9,
-                        character: 4,
-                      },
+                      start: {line: 9, character: 3},
+                      end: {line: 9, character: 4},
                     },
                     newText: 'aaab',
+                  },
+                  command: {
+                    title: '',
+                    command: 'log:<PLACEHOLDER_PROJECT_URL>',
+                    arguments: [
+                      'textDocument/completion',
+                      'jsx attribute',
+                      {token: 'aAUTO332', completion: 'aaab'},
+                    ],
                   },
                 },
               ],

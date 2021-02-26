@@ -139,7 +139,7 @@ let autocomplete
     Profiling_js.with_timer_lwt profiling ~timer:"GetResults" ~f:(fun () ->
         try_with_json2 (fun () ->
             let open AutocompleteService_js in
-            let (ac_type_string, results_res) =
+            let (token_opt, (ac_type_string, results_res)) =
               autocomplete_get_results
                 ~env
                 ~options
@@ -152,9 +152,14 @@ let autocomplete
                 trigger_character
                 cursor_loc
             in
+            Hh_logger.info "token_opt: %s" (Base.Option.value ~default:"NONE" token_opt);
             let json_props_to_log =
               ("ac_type", Hh_json.JSON_String ac_type_string)
               :: ("docblock", Docblock.json_of_docblock info)
+              :: ( "token",
+                   match token_opt with
+                   | None -> Hh_json.JSON_Null
+                   | Some token -> Hh_json.JSON_String token )
               :: initial_json_props
             in
             let (response, json_props_to_log) =
@@ -174,14 +179,15 @@ let autocomplete
                     ~f:(fun ServerProt.Response.Completion.{ documentation; _ } ->
                       Base.Option.is_some documentation)
                 in
-                ( Ok result,
+                ( Ok (token_opt, result),
                   ("result", JSON_String result_string)
                   :: ("count", JSON_Number (items |> List.length |> string_of_int))
                   :: ("errors", JSON_Array (Base.List.map ~f:(fun s -> JSON_String s) errors_to_log))
                   :: ("documentation", JSON_Bool at_least_one_result_has_documentation)
                   :: json_props_to_log )
               | AcEmpty reason ->
-                ( Ok { ServerProt.Response.Completion.items = []; is_incomplete = false },
+                ( Ok
+                    (token_opt, { ServerProt.Response.Completion.items = []; is_incomplete = false }),
                   ("result", JSON_String "SUCCESS")
                   :: ("count", JSON_Number "0")
                   :: ("empty_reason", JSON_String reason)
@@ -728,6 +734,7 @@ let handle_autocomplete
       ~cursor
       ~imports
   in
+  let result = Base.Result.map result ~f:snd in
   Lwt.return (ServerProt.Response.AUTOCOMPLETE result, json_data)
 
 let handle_autofix_exports ~options ~input ~profiling ~env =
@@ -1639,9 +1646,10 @@ let handle_persistent_autocomplete_lsp
     let metadata = with_data ~extra_data metadata in
     begin
       match result with
-      | Ok completions ->
+      | Ok (token, completions) ->
         let result =
           Flow_lsp_conversions.flow_completions_to_lsp
+            ?token
             ~is_snippet_supported
             ~is_preselect_supported
             completions

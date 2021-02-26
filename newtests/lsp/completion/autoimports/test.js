@@ -45,6 +45,15 @@ export default (suite(
                     },
                     newText: 'undefined',
                   },
+                  command: {
+                    title: '',
+                    command: 'log:<PLACEHOLDER_PROJECT_URL>',
+                    arguments: [
+                      'textDocument/completion',
+                      'global',
+                      {token: 'fAUTO332', completion: 'undefined'},
+                    ],
+                  },
                 },
                 {
                   label: 'Function',
@@ -58,6 +67,15 @@ export default (suite(
                       end: {line: 2, character: 1},
                     },
                     newText: 'Function',
+                  },
+                  command: {
+                    title: '',
+                    command: 'log:<PLACEHOLDER_PROJECT_URL>',
+                    arguments: [
+                      'textDocument/completion',
+                      'global',
+                      {token: 'fAUTO332', completion: 'Function'},
+                    ],
                   },
                 },
                 {
@@ -86,6 +104,15 @@ export default (suite(
                       newText: 'import foobar from "./foobar";\n\n',
                     },
                   ],
+                  command: {
+                    title: '',
+                    command: 'log:<PLACEHOLDER_PROJECT_URL>',
+                    arguments: [
+                      'textDocument/completion',
+                      'autoimport',
+                      {token: 'fAUTO332', completion: 'foobar'},
+                    ],
+                  },
                 },
                 {
                   label: 'Foo',
@@ -110,6 +137,15 @@ export default (suite(
                       newText: 'import {Foo} from "./foo";\n\n',
                     },
                   ],
+                  command: {
+                    title: '',
+                    command: 'log:<PLACEHOLDER_PROJECT_URL>',
+                    arguments: [
+                      'textDocument/completion',
+                      'autoimport',
+                      {token: 'fAUTO332', completion: 'Foo'},
+                    ],
+                  },
                 },
                 {
                   label: 'foo',
@@ -137,6 +173,15 @@ export default (suite(
                       newText: 'import * as foo from "./foo";\n\n',
                     },
                   ],
+                  command: {
+                    title: '',
+                    command: 'log:<PLACEHOLDER_PROJECT_URL>',
+                    arguments: [
+                      'textDocument/completion',
+                      'autoimport',
+                      {token: 'fAUTO332', completion: 'foo'},
+                    ],
+                  },
                 },
                 {
                   label: 'foo',
@@ -164,6 +209,15 @@ export default (suite(
                       newText: 'import foo from "./foo";\n\n',
                     },
                   ],
+                  command: {
+                    title: '',
+                    command: 'log:<PLACEHOLDER_PROJECT_URL>',
+                    arguments: [
+                      'textDocument/completion',
+                      'autoimport',
+                      {token: 'fAUTO332', completion: 'foo'},
+                    ],
+                  },
                 },
                 {
                   label: 'foo',
@@ -188,6 +242,15 @@ export default (suite(
                       newText: 'import {foo} from "LibA";\n\n',
                     },
                   ],
+                  command: {
+                    title: '',
+                    command: 'log:<PLACEHOLDER_PROJECT_URL>',
+                    arguments: [
+                      'textDocument/completion',
+                      'autoimport',
+                      {token: 'fAUTO332', completion: 'foo'},
+                    ],
+                  },
                 },
               ],
             }),
@@ -234,6 +297,15 @@ export default (suite(
                       newText: 'import * as React from "react";\n\n',
                     },
                   ],
+                  command: {
+                    title: '',
+                    command: 'log:<PLACEHOLDER_PROJECT_URL>',
+                    arguments: [
+                      'textDocument/completion',
+                      'global',
+                      {token: 'FAUTO332', completion: 'undefined'},
+                    ],
+                  },
                 },
                 {
                   label: 'Function',
@@ -257,6 +329,15 @@ export default (suite(
                       newText: 'import * as React from "react";\n\n',
                     },
                   ],
+                  command: {
+                    title: '',
+                    command: 'log:<PLACEHOLDER_PROJECT_URL>',
+                    arguments: [
+                      'textDocument/completion',
+                      'global',
+                      {token: 'FAUTO332', completion: 'Function'},
+                    ],
+                  },
                 },
                 {
                   label: 'Foo',
@@ -280,6 +361,15 @@ export default (suite(
                       newText: 'import * as React from "react";\n\n',
                     },
                   ],
+                  command: {
+                    title: '',
+                    command: 'log:<PLACEHOLDER_PROJECT_URL>',
+                    arguments: [
+                      'textDocument/completion',
+                      'local value identifier',
+                      {token: 'FAUTO332', completion: 'Foo'},
+                    ],
+                  },
                 },
               ],
             }),
@@ -330,6 +420,15 @@ export default (suite(
                       newText: 'import {not_null} from "./reserved";\n\n',
                     },
                   ],
+                  command: {
+                    title: '',
+                    command: 'log:<PLACEHOLDER_PROJECT_URL>',
+                    arguments: [
+                      'textDocument/completion',
+                      'autoimport',
+                      {token: 'nulAUTO332l', completion: 'not_null'},
+                    ],
+                  },
                 },
               ],
             }),

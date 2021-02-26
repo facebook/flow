@@ -24,7 +24,7 @@ val autocomplete_get_results :
   imports:bool ->
   string option ->
   Loc.t ->
-  string * autocomplete_service_result
+  string option * (string * autocomplete_service_result)
 
 val autocomplete_suffix : string
 

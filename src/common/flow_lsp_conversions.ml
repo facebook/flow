@@ -78,6 +78,7 @@ let flow_signature_help_to_lsp
     Some { signatures; activeSignature = 0; activeParameter = active_parameter }
 
 let flow_completion_item_to_lsp
+    ?token
     ~is_snippet_supported:(_ : bool)
     ~(is_preselect_supported : bool)
     (item : ServerProt.Response.Completion.completion_item) : Lsp.Completion.completionItem =
@@ -99,6 +100,28 @@ let flow_completion_item_to_lsp
       item.text_edits
   in
   let documentation = Base.Option.map item.documentation ~f:(fun doc -> [Lsp.MarkedString doc]) in
+  let command =
+    Some
+      Lsp.Command.
+        {
+          title = "";
+          command = Command "log";
+          arguments =
+            Hh_json.
+              [
+                JSON_String "textDocument/completion";
+                JSON_String item.log_info;
+                JSON_Object
+                  [
+                    ( "token",
+                      match token with
+                      | None -> JSON_Null
+                      | Some token -> JSON_String token );
+                    ("completion", JSON_String item.name);
+                  ];
+              ];
+        }
+  in
   {
     Lsp.Completion.label = item.name;
     kind = item.kind;
@@ -110,18 +133,19 @@ let flow_completion_item_to_lsp
     insertText = None (* deprecated and should not be used *);
     insertTextFormat;
     textEdits;
-    command = None;
+    command;
     data = None;
   }
 
 let flow_completions_to_lsp
+    ?token
     ~(is_snippet_supported : bool)
     ~(is_preselect_supported : bool)
     (completions : ServerProt.Response.Completion.t) : Lsp.Completion.result =
   let { ServerProt.Response.Completion.items; is_incomplete } = completions in
   let items =
     Base.List.map
-      ~f:(flow_completion_item_to_lsp ~is_snippet_supported ~is_preselect_supported)
+      ~f:(flow_completion_item_to_lsp ?token ~is_snippet_supported ~is_preselect_supported)
       items
   in
   { Lsp.Completion.isIncomplete = is_incomplete; items }
