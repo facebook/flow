@@ -43,6 +43,7 @@ type node = {
   (* the number of leaders this node is currently blocking on *)
   mutable blocking: int;
   mutable recheck: bool;
+  has_old_sig_cx: bool;
   size: int;
 }
 
@@ -94,6 +95,7 @@ let is_done stream = stream.blocked_components = 0
 
 let create
     ~num_workers
+    ~reader
     ~sig_dependency_graph
     ~leader_map
     ~component_map
@@ -103,6 +105,9 @@ let create
   let graph =
     FilenameMap.mapi
       (fun leader component ->
+        (* This runs after we have oldified the files to be merged, so we have to check if there
+         * is an old version of the sig cx to get useful results. *)
+        let has_old_sig_cx = Context_heaps.Mutator_reader.sig_cx_mem_old ~reader leader in
         {
           component;
           (* computed later *)
@@ -110,6 +115,7 @@ let create
           (* computed later *)
           blocking = 0;
           recheck = FilenameSet.mem leader recheck_leader_set;
+          has_old_sig_cx;
           size = Nel.length component;
         })
       component_map
@@ -215,13 +221,31 @@ let merge ~master_mutator ~reader stream =
   (* Record that a component was merged (or skipped) and recursively unblock its
    * dependents. If a dependent has no more unmerged dependencies, make it
    * available for scheduling. *)
-  let rec push diff node =
+  let rec push ~diff node =
     stream.merged_components <- stream.merged_components + 1;
     stream.merged_files <- stream.merged_files + node.size;
     if diff then
+      (* If the new sighash is different from the old one, mark the component as new or changed.
+       * This gets used downstream to drive recheck opts for the check phase. *)
       mark_new_or_changed node
+    else if node.has_old_sig_cx then
+      (* If the new sighash is the same as the old one, AND there was previously a sig cx for
+       * this component, then revive it, since the newly computed sig cx was not written (see
+       * Context_heaps.add_merge_on_diff). *)
+      revive node
     else
-      revive node;
+      (* Otherwise, there was no difference in sighash between the new and old, AND there was no
+       * old sig cx. This only happens when we load sighashes from the saved state, so we have the
+       * old sighash but not the old sig context. In this case, we write the new sig context (again,
+       * see Context_heaps.add_merge_on_diff), but if we called `revive` here it would get deleted,
+       * since there is no old one to revive.
+       *
+       * We also don't want to mark this as new or changed, since it's really neither. We leave it
+       * out of that set in order to allow recheck opts to fire in the check phase.
+       *
+       * This else branch could be omitted; it's just a vessel for this comment.
+       *)
+      ();
     FilenameMap.iter (fun _ node -> unblock diff node) node.dependents
   and unblock diff node =
     (* dependent blocked on one less *)
@@ -234,7 +258,9 @@ let merge ~master_mutator ~reader stream =
     if node.blocking = 0 then (
       stream.blocked_components <- stream.blocked_components - 1;
       stream.blocked_files <- stream.blocked_files - node.size;
-      if node.recheck then
+      (* If this node has no old sig context, we need to force it to be merged. This can happen
+       * when we load sig hashes from the saved state. *)
+      if node.recheck || not node.has_old_sig_cx then
         add_ready node stream
       else
         skip node
@@ -242,7 +268,7 @@ let merge ~master_mutator ~reader stream =
   and skip node =
     stream.skipped_components <- stream.skipped_components + 1;
     stream.skipped_files <- stream.skipped_files + node.size;
-    push false node
+    push ~diff:false node
   in
   fun merged acc ->
     stream.intermediate_result_callback (lazy merged);
@@ -250,7 +276,7 @@ let merge ~master_mutator ~reader stream =
       (fun (leader_f, _) ->
         let node = FilenameMap.find leader_f stream.graph in
         let diff = Context_heaps.Mutator_reader.sig_hash_changed ~reader leader_f in
-        push diff node)
+        push ~diff node)
       merged;
     update_server_status stream;
     List.rev_append merged acc

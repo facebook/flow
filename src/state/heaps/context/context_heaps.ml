@@ -132,8 +132,13 @@ end = struct
       | None -> true
       | Some xx_old -> xx <> xx_old
     in
+    let has_old_sig_cx = lazy (SigContextHeap.mem_old leader_f) in
     WorkerCancel.with_no_cancellations (fun () ->
-        if diff then (
+        (* The component might not have an old sig context, but is still marked as unchanged.
+         * This can happen when we load sig hashes from the saved state. Normally, if a component is
+         * unchanged, we skip writing the sig cx and instead just revive the old one, but in this
+         * case there is no old one so we have to write it. *)
+        if diff || not (Lazy.force has_old_sig_cx) then (
           Nel.iter
             (fun f ->
               (* Ideally we'd assert that f is a member of the oldified files too *)

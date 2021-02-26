@@ -752,6 +752,7 @@ let merge_runner
   let stream =
     Merge_stream.create
       ~num_workers
+      ~reader
       ~sig_dependency_graph
       ~leader_map
       ~component_map

@@ -163,6 +163,8 @@ val run_post_inference_implicit_instantiation : config -> bool
 
 val saved_state_fetcher : config -> Options.saved_state_fetcher
 
+val saved_state_load_sighashes : config -> bool
+
 val shm_hash_table_pow : config -> int
 
 val shm_heap_size : config -> int

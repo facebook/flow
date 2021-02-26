@@ -96,6 +96,7 @@ type t = {
   opt_root: Path.t;
   opt_run_post_inference_implicit_instantiation: bool;
   opt_saved_state_fetcher: saved_state_fetcher;
+  opt_saved_state_load_sighashes: bool;
   opt_saved_state_force_recheck: bool;
   opt_saved_state_no_fallback: bool;
   opt_strict_es6_import_export_excludes: string list;
@@ -215,6 +216,8 @@ let run_post_inference_implicit_instantiation opts =
   opts.opt_run_post_inference_implicit_instantiation
 
 let saved_state_fetcher opts = opts.opt_saved_state_fetcher
+
+let saved_state_load_sighashes opts = opts.opt_saved_state_load_sighashes
 
 let saved_state_force_recheck opts = opts.opt_saved_state_force_recheck
 

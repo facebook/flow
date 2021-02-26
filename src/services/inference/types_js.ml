@@ -2456,6 +2456,7 @@ let init_from_saved_state ~profiling ~workers ~saved_state ~updates options =
     Hh_logger.info "Restoring heaps";
     let%lwt () =
       Memory_utils.with_memory_timer_lwt ~options "RestoreHeaps" profiling (fun () ->
+          let load_sighashes = Options.saved_state_load_sighashes options in
           let%lwt () =
             MultiWorkerLwt.call
               workers
@@ -2474,7 +2475,13 @@ let init_from_saved_state ~profiling ~workers ~saved_state ~updates options =
                      Parsing_heaps.From_saved_state.add_exports fn exports;
 
                      (* Restore the ResolvedRequiresHeap *)
-                     Module_heaps.From_saved_state.add_resolved_requires fn resolved_requires))
+                     Module_heaps.From_saved_state.add_resolved_requires fn resolved_requires;
+
+                     if load_sighashes then
+                       (* Restore the SigHashHeap *)
+                       Base.Option.iter
+                         ~f:(Context_heaps.From_saved_state.add_sig_hash fn)
+                         parsed_file_data.Saved_state.sig_hash))
               ~merge:(fun () () -> ())
               ~neutral:()
               ~next:(MultiWorkerLwt.next workers parsed_heaps)
