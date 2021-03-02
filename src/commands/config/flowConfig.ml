@@ -68,6 +68,7 @@ module Opts = struct
     haste_use_name_reducers: bool;
     ignore_non_literal_requires: bool;
     include_warnings: bool;
+    indexed_access: bool;
     lazy_mode: Options.lazy_mode option;
     log_file: Path.t option;
     max_files_checked_per_worker: int;
@@ -180,6 +181,7 @@ module Opts = struct
       haste_use_name_reducers = false;
       ignore_non_literal_requires = false;
       include_warnings = false;
+      indexed_access = false;
       lazy_mode = None;
       log_file = None;
       max_files_checked_per_worker = 100;
@@ -627,6 +629,7 @@ module Opts = struct
       ("file_watcher", file_watcher_parser);
       ("format.single_quotes", format_single_quotes_parser);
       ("include_warnings", boolean (fun opts v -> Ok { opts with include_warnings = v }));
+      ("indexed_access", boolean (fun opts v -> Ok { opts with indexed_access = v }));
       ("lazy_mode", lazy_mode_parser);
       ("log.file", filepath (fun opts v -> Ok { opts with log_file = Some v }));
       ("max_header_tokens", uint (fun opts v -> Ok { opts with max_header_tokens = v }));
@@ -1241,6 +1244,8 @@ let haste_use_name_reducers c = c.options.Opts.haste_use_name_reducers
 let ignore_non_literal_requires c = c.options.Opts.ignore_non_literal_requires
 
 let include_warnings c = c.options.Opts.include_warnings
+
+let indexed_access c = c.options.Opts.indexed_access
 
 let lazy_mode c = c.options.Opts.lazy_mode
 

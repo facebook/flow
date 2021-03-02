@@ -1248,6 +1248,7 @@ let make_options
     opt_suppress_types = FlowConfig.suppress_types flowconfig;
     opt_max_literal_length = FlowConfig.max_literal_length flowconfig;
     opt_enable_const_params = FlowConfig.enable_const_params flowconfig;
+    opt_enable_indexed_access = FlowConfig.indexed_access flowconfig;
     opt_enabled_rollouts = FlowConfig.enabled_rollouts flowconfig;
     opt_enforce_local_inference_annotations =
       FlowConfig.enforce_local_inference_annotations flowconfig;
