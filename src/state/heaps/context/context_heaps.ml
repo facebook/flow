@@ -162,22 +162,17 @@ end = struct
       let module_ref = Files.module_ref leader_f in
       Context.make ccx metadata leader_f aloc_table (Reason.OrdinaryName module_ref) Context.Merging
     in
-    WorkerCancel.with_no_cancellations (fun () ->
-        let module_refs =
-          Base.List.map
-            ~f:(fun f ->
-              let module_ref = Files.module_ref f in
-              let module_t = Type.AnyT.locationless (Type.AnyError None) in
-              Context.add_module cx (Reason.OrdinaryName module_ref) module_t;
-
-              (* Ideally we'd assert that f is a member of the oldified files too *)
-              LeaderHeap.add f leader_f;
-              module_ref)
-            (Nel.to_list component)
-        in
-        let xx = Merge_js.ContextOptimizer.sig_context cx module_refs in
-        add_sig_context ~audit leader_f (Context.sig_cx cx);
-        SigHashHeap.add leader_f xx)
+    let module_refs =
+      Nel.map
+        (fun f ->
+          let module_ref = Files.module_ref f in
+          let module_t = Type.AnyT.locationless (Type.AnyError None) in
+          Context.add_module cx (Reason.OrdinaryName module_ref) module_t;
+          module_ref)
+        component
+    in
+    let xx = Merge_js.ContextOptimizer.sig_context cx (Nel.to_list module_refs) in
+    add_merge_on_diff ~audit () cx component xx
 
   let revive_files oldified_files files =
     (* Every file in files should be in the oldified set *)
