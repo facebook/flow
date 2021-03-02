@@ -559,39 +559,24 @@ let mk_intermediate_result_callback
     match persistent_connections with
     | None -> (fun _ -> ())
     | Some clients ->
-      (* In classic, each merge step uncovers new errors, warnings, suppressions.
-         While more suppressions may come in later steps, the suppressions we've seen so far are
-         sufficient to filter the errors and warnings we've seen so far.
-         Intuitively, we will not see an error (or warning) before we've seen all the files involved
-         in that error, and thus all the suppressions which could possibly suppress the error.
-
-         In types-first, we have already accumulated suppressions in the overall
+      (* In types-first, we have already accumulated suppressions in the overall
          merge step, and each check step uses those suppressions to filter the
-         errors and warnings uncovered.
-      *)
+         errors and warnings uncovered. *)
       let open Errors in
       let curr_errors = ref ConcreteLocPrintableErrorSet.empty in
       let curr_warnings = ref ConcreteLocPrintableErrorSet.empty in
-      let curr_suppressions = ref suppressions in
       let root = Options.root options in
       let file_options = Some (Options.file_options options) in
       let filter = Error_suppressions.filter_suppressed_errors ~root ~file_options in
       fun (lazy results) ->
-        let (new_errors, new_warnings, suppressions) =
+        let (new_errors, new_warnings) =
           List.fold_left
-            (fun (errs_acc, warns_acc, supps_acc) result ->
-              let (file, old_errs, old_warns, supps) = result in
-              let supps_acc = Error_suppressions.union supps_acc supps in
-              (* Filter errors and warnings based on suppressions we've seen so far. *)
-              let (errs, _, _) =
-                filter supps_acc old_errs ~unused:Error_suppressions.empty
-                (* TODO: track unused suppressions *)
-              in
-              (* Filter errors and warnings based on suppressions we've seen so far. *)
-              let (warns, _, _) =
-                filter supps_acc old_warns ~unused:Error_suppressions.empty
-                (* TODO: track unused suppressions *)
-              in
+            (fun (errs_acc, warns_acc) result ->
+              let (file, old_errs, old_warns) = result in
+              (* Filter errors and warnings.
+               * TODO: track unused suppressions *)
+              let (errs, _, _) = filter suppressions old_errs ~unused:Error_suppressions.empty in
+              let (warns, _, _) = filter suppressions old_warns ~unused:Error_suppressions.empty in
               (* Only add errors we haven't seen before. *)
               let errs_acc =
                 ConcreteLocPrintableErrorSet.fold
@@ -626,14 +611,13 @@ let mk_intermediate_result_callback
                 else
                   FilenameMap.add file acc warns_acc
               in
-              (errs_acc, warns_acc, supps_acc))
-            (ConcreteLocPrintableErrorSet.empty, FilenameMap.empty, !curr_suppressions)
+              (errs_acc, warns_acc))
+            (ConcreteLocPrintableErrorSet.empty, FilenameMap.empty)
             results
         in
         curr_errors := ConcreteLocPrintableErrorSet.union new_errors !curr_errors;
         curr_warnings :=
           FilenameMap.fold (fun _ -> ConcreteLocPrintableErrorSet.union) new_warnings !curr_warnings;
-        curr_suppressions := suppressions;
 
         if
           not (ConcreteLocPrintableErrorSet.is_empty new_errors && FilenameMap.is_empty new_warnings)
@@ -650,7 +634,7 @@ let mk_intermediate_result_callback
         (Base.List.map
            ~f:(fun (file, result) ->
              match result with
-             | Ok (errors, warnings, suppressions, _, _) ->
+             | Ok (errors, warnings, _, _, _) ->
                let errors =
                  errors
                  |> Flow_error.concretize_errors loc_of_aloc
@@ -661,7 +645,7 @@ let mk_intermediate_result_callback
                  |> Flow_error.concretize_errors loc_of_aloc
                  |> Flow_error.make_errors_printable
                in
-               (file, errors, warnings, suppressions)
+               (file, errors, warnings)
              | Error msg ->
                let errors = error_set_of_internal_error file msg in
                let errors =
@@ -669,9 +653,8 @@ let mk_intermediate_result_callback
                  |> Flow_error.concretize_errors loc_of_aloc
                  |> Flow_error.make_errors_printable
                in
-               let suppressions = Error_suppressions.empty in
                let warnings = Errors.ConcreteLocPrintableErrorSet.empty in
-               (file, errors, warnings, suppressions))
+               (file, errors, warnings))
            (Lazy.force results))
     in
     send_errors_over_connection errors
