@@ -7,25 +7,30 @@
 
 open Utils_js
 
+type duration = float
+
 type 'a unit_result = ('a, ALoc.t * Error_message.internal_error) result
 
-type 'a file_keyed_result = File_key.t * 'a unit_result
+type merge_result = Error_suppressions.t * duration
 
-type error_acc =
+type check_type_result =
+  Context.t * File_sig.With_ALoc.t * (ALoc.t, ALoc.t * Type.t) Flow_ast.Program.t
+
+type check_error_result =
   Flow_error.ErrorSet.t
   * Flow_error.ErrorSet.t
   * Error_suppressions.t
-  * Coverage_response.file_coverage FilenameMap.t option
-  * float
+  * Coverage_response.file_coverage
+  * duration
 
-type type_acc =
-  (Context.t * File_sig.With_ALoc.t * (ALoc.t, ALoc.t * Type.t) Flow_ast.Program.t) option
+type check_result = check_type_result * check_error_result
 
-type acc = type_acc * error_acc
+type sig_opts_data = {
+  skipped_count: int;
+  sig_new_or_changed: FilenameSet.t;
+}
 
-(* Time to check *)
-
-type 'a merge_job_results = 'a file_keyed_result list
+type 'a merge_results = (File_key.t * 'a unit_result) list * sig_opts_data
 
 type 'a merge_job =
   worker_mutator:Context_heaps.Merge_context_mutator.worker_mutator ->
@@ -33,13 +38,6 @@ type 'a merge_job =
   reader:Mutator_state_reader.t ->
   File_key.t Nel.t ->
   'a unit_result
-
-type sig_opts_data = {
-  skipped_count: int;
-  sig_new_or_changed: FilenameSet.t;
-}
-
-type 'a merge_results = 'a merge_job_results * sig_opts_data
 
 val merge_context :
   options:Options.t ->
@@ -77,6 +75,10 @@ val merge :
   sig_dependency_graph:FilenameSet.t FilenameMap.t ->
   component_map:File_key.t Nel.t FilenameMap.t ->
   recheck_set:FilenameSet.t ->
-  error_acc merge_results Lwt.t
+  merge_result option merge_results Lwt.t
 
-val check : Options.t -> reader:Module_heaps.Mutator_reader.reader -> File_key.t -> acc unit_result
+val check :
+  Options.t ->
+  reader:Module_heaps.Mutator_reader.reader ->
+  File_key.t ->
+  check_result option unit_result

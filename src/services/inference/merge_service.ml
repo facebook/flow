@@ -9,23 +9,30 @@ open Utils_js
 open Loc_collections
 module Reqs = Merge_js.Reqs
 
+type duration = float
+
 type 'a unit_result = ('a, ALoc.t * Error_message.internal_error) result
 
-type 'a file_keyed_result = File_key.t * 'a unit_result
+type merge_result = Error_suppressions.t * duration
 
-type error_acc =
+type check_type_result =
+  Context.t * File_sig.With_ALoc.t * (ALoc.t, ALoc.t * Type.t) Flow_ast.Program.t
+
+type check_error_result =
   Flow_error.ErrorSet.t
   * Flow_error.ErrorSet.t
   * Error_suppressions.t
-  * Coverage_response.file_coverage FilenameMap.t option
-  * float
+  * Coverage_response.file_coverage
+  * duration
 
-type type_acc =
-  (Context.t * File_sig.With_ALoc.t * (ALoc.t, ALoc.t * Type.t) Flow_ast.Program.t) option
+type check_result = check_type_result * check_error_result
 
-type acc = type_acc * error_acc
+type sig_opts_data = {
+  skipped_count: int;
+  sig_new_or_changed: FilenameSet.t;
+}
 
-type 'a merge_job_results = 'a file_keyed_result list
+type 'a merge_results = (File_key.t * 'a unit_result) list * sig_opts_data
 
 type 'a merge_job =
   worker_mutator:Context_heaps.Merge_context_mutator.worker_mutator ->
@@ -33,13 +40,6 @@ type 'a merge_job =
   reader:Mutator_state_reader.t ->
   File_key.t Nel.t ->
   'a unit_result
-
-type sig_opts_data = {
-  skipped_count: int;
-  sig_new_or_changed: FilenameSet.t;
-}
-
-type 'a merge_results = 'a merge_job_results * sig_opts_data
 
 type reader = Module_heaps.Reader_dispatcher.reader
 
@@ -450,7 +450,7 @@ let merge_context ~options ~reader component =
 
 (* Entry point for merging a component *)
 let merge_component ~worker_mutator ~options ~reader component =
-  let start_merge_time = Unix.gettimeofday () in
+  let start_time = Unix.gettimeofday () in
   let file = Nel.hd component in
 
   (* We choose file as the leader, and other_files are followers. It is always
@@ -469,8 +469,6 @@ let merge_component ~worker_mutator ~options ~reader component =
   if info.Module_heaps.checked then (
     let reader = Abstract_state_reader.Mutator_state_reader reader in
     let (cx, master_cx) = merge_context ~options ~reader component in
-    let errors = Flow_error.ErrorSet.empty in
-    let warnings = Flow_error.ErrorSet.empty in
     let suppressions = Context.error_suppressions cx in
     let module_refs = List.rev_map Files.module_ref (Nel.to_list component) in
     let md5 = Merge_js.ContextOptimizer.sig_context cx module_refs in
@@ -481,15 +479,10 @@ let merge_component ~worker_mutator ~options ~reader component =
       cx
       component
       md5;
-    let merge_time = Unix.gettimeofday () -. start_merge_time in
-    let coverage = None in
-    Ok (errors, warnings, suppressions, coverage, merge_time)
+    let duration = Unix.gettimeofday () -. start_time in
+    Ok (Some (suppressions, duration))
   ) else
-    let errors = Flow_error.ErrorSet.empty in
-    let suppressions = Error_suppressions.empty in
-    let warnings = Flow_error.ErrorSet.empty in
-    let coverage = None in
-    Ok (errors, warnings, suppressions, coverage, 0.0)
+    Ok None
 
 module Check_config = struct
   (* The "check" phase only needs to consider _one file_ at a time. *)
@@ -531,7 +524,7 @@ module Check_file :
   Process_unit (Check_config)
 
 let check_file options ~reader file =
-  let start_check_time = Unix.gettimeofday () in
+  let start_time = Unix.gettimeofday () in
   let info = Module_heaps.Mutator_reader.get_info_unsafe ~reader ~audit:Expensive.ok file in
   if info.Module_heaps.checked then
     let reader = Abstract_state_reader.Mutator_state_reader reader in
@@ -551,15 +544,10 @@ let check_file options ~reader file =
         aloc_tables
         severity_cover
     in
-    let coverage = Some (FilenameMap.singleton file coverage) in
-    let check_time = Unix.gettimeofday () -. start_check_time in
-    (Some (cx, file_sig, typed_ast), (errors, warnings, suppressions, coverage, check_time))
+    let duration = Unix.gettimeofday () -. start_time in
+    Some ((cx, file_sig, typed_ast), (errors, warnings, suppressions, coverage, duration))
   else
-    let errors = Flow_error.ErrorSet.empty in
-    let suppressions = Error_suppressions.empty in
-    let warnings = Flow_error.ErrorSet.empty in
-    let coverage = None in
-    (None, (errors, warnings, suppressions, coverage, 0.0))
+    None
 
 (* Variation of merge_context where requires may not have already been
    resolved. This is used by commands that make up a context on the fly. *)

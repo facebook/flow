@@ -187,7 +187,8 @@ let check_job ~visit ~iteration ~reader ~options acc roots =
   List.fold_left
     (fun acc file ->
       match Merge_service.check options ~reader file with
-      | Ok (Some (full_cx, file_sig, typed_ast), _) ->
+      | Ok None -> acc
+      | Ok (Some ((full_cx, file_sig, typed_ast), _)) ->
         let reader = Abstract_state_reader.Mutator_state_reader reader in
         let ast = Parsing_heaps.Reader_dispatcher.get_ast_unsafe ~reader file in
         let docblock = Parsing_heaps.Reader_dispatcher.get_docblock_unsafe ~reader file in
@@ -205,7 +206,6 @@ let check_job ~visit ~iteration ~reader ~options acc roots =
         in
         let result = visit ast ccx in
         FilenameMap.add file (Ok result) acc
-      | Ok (None, _) -> acc
       | Error e -> FilenameMap.add file (Error e) acc)
     acc
     roots
@@ -315,10 +315,10 @@ module TypedRunnerWithPrepass (C : TYPED_RUNNER_WITH_PREPASS_CONFIG) : TYPED_RUN
     List.fold_left
       (fun acc file ->
         match Merge_service.check options ~reader file with
-        | Ok (Some (cx, file_sig, typed_ast), _) ->
+        | Ok None -> acc
+        | Ok (Some ((cx, file_sig, typed_ast), _)) ->
           let result = C.prepass_run cx state file reader file_sig typed_ast in
           FilenameMap.add file (Ok result) acc
-        | Ok (None, _) -> acc
         | Error e -> FilenameMap.add file (Error e) acc)
       acc
       roots

@@ -38,12 +38,6 @@ let update_errset map file errset =
 let merge_error_maps =
   FilenameMap.union ~combine:(fun _ x y -> Some (Flow_error.ErrorSet.union x y))
 
-(* We just want to replace the old coverage with the new one *)
-let update_coverage coverage = function
-  | None -> coverage
-  | Some new_coverage ->
-    FilenameMap.union ~combine:(fun _ _ -> Base.Option.return) coverage new_coverage
-
 (* Filter out duplicate provider error, if any, for the given file. *)
 let filter_duplicate_provider map file =
   match FilenameMap.find_opt file map with
@@ -472,44 +466,75 @@ let include_dependencies_and_dependents
       Lwt.return
         (to_merge, to_check, to_merge_or_check, components, CheckedSet.all definitely_to_merge))
 
-let remove_old_results phase current_results file =
-  let (errors, warnings, suppressions, coverage, first_internal_error) = current_results in
-  let new_coverage =
+let remove_old_results phase acc file =
+  let (errors, warnings, suppressions, coverage, first_internal_error) = acc in
+  let coverage =
     match phase with
     | Context.Merging
     | Context.InitLib ->
       coverage
     | Context.Checking -> FilenameMap.remove file coverage
   in
-  ( FilenameMap.remove file errors,
-    FilenameMap.remove file warnings,
-    Error_suppressions.remove file suppressions,
-    new_coverage,
-    first_internal_error )
+  let errors = FilenameMap.remove file errors in
+  let warnings = FilenameMap.remove file warnings in
+  let suppressions = Error_suppressions.remove file suppressions in
+  (errors, warnings, suppressions, coverage, first_internal_error)
 
-let add_new_results
-    ~record_slow_file (errors, warnings, suppressions, coverage, first_internal_error) file result =
-  match result with
-  | Ok (new_errors, new_warnings, new_suppressions, new_coverage_option, check_time) ->
-    if check_time > 1. then record_slow_file file check_time;
-    ( update_errset errors file new_errors,
-      update_errset warnings file new_warnings,
-      Error_suppressions.update_suppressions suppressions new_suppressions,
-      update_coverage coverage new_coverage_option,
-      first_internal_error )
-  | Error (loc, internal_error) ->
-    let new_errors = error_set_of_internal_error file (loc, internal_error) in
-    let first_internal_error =
-      match first_internal_error with
-      | Some _ -> first_internal_error
-      | None ->
-        Some
-          (spf
-             "%s\n%s"
-             (ALoc.debug_to_string ~include_source:true loc)
-             (Error_message.string_of_internal_error internal_error))
+let add_internal_error (errors, first_internal_error) file (loc, internal_error) =
+  let new_errors = error_set_of_internal_error file (loc, internal_error) in
+  let errors = update_errset errors file new_errors in
+  let first_internal_error =
+    match first_internal_error with
+    | Some _ -> first_internal_error
+    | None ->
+      Some
+        (spf
+           "%s\n%s"
+           (ALoc.debug_to_string ~include_source:true loc)
+           (Error_message.string_of_internal_error internal_error))
+  in
+  (errors, first_internal_error)
+
+let add_merge_results acc leader =
+  let (errors, warnings, suppressions, coverage, first_internal_error) = acc in
+  function
+  | Ok None -> acc
+  | Ok (Some (new_suppressions, _duration)) ->
+    let suppressions = Error_suppressions.update_suppressions suppressions new_suppressions in
+    (errors, warnings, suppressions, coverage, first_internal_error)
+  | Error e ->
+    let (errors, first_internal_error) =
+      add_internal_error (errors, first_internal_error) leader e
     in
-    (update_errset errors file new_errors, warnings, suppressions, coverage, first_internal_error)
+    (errors, warnings, suppressions, coverage, first_internal_error)
+
+let update_slow_files acc file check_time =
+  if check_time > 1. then
+    let (num_slow_files, slowest_time, slowest_file) = acc in
+    let (slowest_time, slowest_file) =
+      if check_time > slowest_time then
+        (check_time, Some file)
+      else
+        (slowest_time, slowest_file)
+    in
+    (num_slow_files + 1, slowest_time, slowest_file)
+  else
+    acc
+
+let add_check_results acc slow_files file result =
+  let (errors, warnings, suppressions, coverage, first_internal_error) = acc in
+  match result with
+  | Ok None -> (acc, slow_files)
+  | Ok (Some (new_errors, new_warnings, new_suppressions, new_coverage, check_time)) ->
+    let errors = update_errset errors file new_errors in
+    let warnings = update_errset warnings file new_warnings in
+    let suppressions = Error_suppressions.update_suppressions suppressions new_suppressions in
+    let coverage = FilenameMap.add file new_coverage coverage in
+    let slow_files = update_slow_files slow_files file check_time in
+    ((errors, warnings, suppressions, coverage, first_internal_error), slow_files)
+  | Error e ->
+    let (errors, first_internal_error) = add_internal_error (errors, first_internal_error) file e in
+    ((errors, warnings, suppressions, coverage, first_internal_error), slow_files)
 
 let run_merge_service
     ~master_mutator
@@ -539,7 +564,7 @@ let run_merge_service
           (fun acc (file, result) ->
             let component = FilenameMap.find file component_map in
             let acc = Nel.fold_left (remove_old_results Context.Merging) acc component in
-            add_new_results ~record_slow_file:(fun _ _ -> ()) acc file result)
+            add_merge_results acc file result)
           acc
           merged
       in
@@ -631,10 +656,11 @@ let mk_intermediate_result_callback
   let intermediate_result_callback results =
     let errors =
       lazy
-        (Base.List.map
-           ~f:(fun (file, result) ->
+        (Base.List.fold_left
+           ~f:(fun acc (file, result) ->
              match result with
-             | Ok (errors, warnings, _, _, _) ->
+             | Ok None -> acc
+             | Ok (Some (errors, warnings, _, _, _)) ->
                let errors =
                  errors
                  |> Flow_error.concretize_errors loc_of_aloc
@@ -645,7 +671,7 @@ let mk_intermediate_result_callback
                  |> Flow_error.concretize_errors loc_of_aloc
                  |> Flow_error.make_errors_printable
                in
-               (file, errors, warnings)
+               (file, errors, warnings) :: acc
              | Error msg ->
                let errors = error_set_of_internal_error file msg in
                let errors =
@@ -654,7 +680,8 @@ let mk_intermediate_result_callback
                  |> Flow_error.make_errors_printable
                in
                let warnings = Errors.ConcreteLocPrintableErrorSet.empty in
-               (file, errors, warnings))
+               (file, errors, warnings) :: acc)
+           ~init:[]
            results)
     in
     send_errors_over_connection errors
@@ -824,8 +851,8 @@ end = struct
     | file :: rest ->
       let result =
         match Merge_service.check options ~reader file with
-        | Ok (_, acc) -> Ok acc
-        | Error e -> Error e
+        | Ok (Some (_, acc)) -> Ok (Some acc)
+        | (Ok None | Error _) as result -> result
       in
       job_helper ~reader ~options ~start_time ~start_rss ((file, result) :: acc) rest
 
@@ -900,14 +927,6 @@ end = struct
         let focused_to_check = CheckedSet.focused to_check in
         let merged_dependents = CheckedSet.dependents to_check in
         let skipped_count = ref 0 in
-        let (slowest_file, slowest_time, num_slow_files) = (ref None, ref 0., ref 0) in
-        let record_slow_file file time =
-          num_slow_files := !num_slow_files + 1;
-          if time > !slowest_time then (
-            slowest_time := time;
-            slowest_file := Some file
-          )
-        in
         let implementation_dependency_graph =
           Dependency_info.implementation_dependency_graph dependency_info
         in
@@ -954,14 +973,15 @@ end = struct
         in
         let { ServerEnv.merge_errors; warnings; _ } = errors in
         let suppressions = updated_errors.ServerEnv.suppressions in
-        let (merge_errors, warnings, suppressions, coverage, first_internal_error) =
+        let ((merge_errors, warnings, suppressions, coverage, first_internal_error), slow_files) =
           List.fold_left
-            (fun acc (file, result) ->
+            (fun (acc, slow_files) (file, result) ->
               let acc = remove_old_results Context.Checking acc file in
-              add_new_results ~record_slow_file acc file result)
-            (merge_errors, warnings, suppressions, coverage, None)
+              add_check_results acc slow_files file result)
+            ((merge_errors, warnings, suppressions, coverage, None), (0, 0., None))
             ret
         in
+        let (num_slow_files, _, slowest_file) = slow_files in
         let time_to_check_merged = Unix.gettimeofday () -. check_start_time in
         Hh_logger.info "Done";
         let errors = { errors with ServerEnv.merge_errors; warnings; suppressions } in
@@ -970,8 +990,8 @@ end = struct
             coverage,
             time_to_check_merged,
             !skipped_count,
-            Base.Option.map ~f:File_key.to_string !slowest_file,
-            !num_slow_files,
+            Base.Option.map ~f:File_key.to_string slowest_file,
+            num_slow_files,
             Base.Option.map first_internal_error ~f:(spf "First check internal error:\n%s") ))
 end
 
