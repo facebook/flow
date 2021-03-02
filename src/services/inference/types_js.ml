@@ -655,7 +655,7 @@ let mk_intermediate_result_callback
                in
                let warnings = Errors.ConcreteLocPrintableErrorSet.empty in
                (file, errors, warnings))
-           (Lazy.force results))
+           results)
     in
     send_errors_over_connection errors
   in
@@ -868,7 +868,7 @@ end = struct
         Bucket.Job bucket
     in
     let merge (finished_file_accs, unfinished_files) acc =
-      intermediate_result_callback (lazy finished_file_accs);
+      intermediate_result_callback finished_file_accs;
       let (remaining_files, remaining_count) = !todo in
       todo :=
         ( List.rev_append unfinished_files remaining_files,
