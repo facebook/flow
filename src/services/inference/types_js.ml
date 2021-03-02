@@ -515,7 +515,6 @@ let run_merge_service
     ~master_mutator
     ~worker_mutator
     ~reader
-    ~intermediate_result_callback
     ~options
     ~profiling
     ~workers
@@ -529,7 +528,6 @@ let run_merge_service
           ~master_mutator
           ~worker_mutator
           ~reader
-          ~intermediate_result_callback
           ~options
           ~workers
           ~sig_dependency_graph
@@ -696,17 +694,8 @@ let merge
     ~recheck_set
     ~sig_dependency_graph
     ~deleted
-    ~unparsed_set
-    ~recheck_reasons =
+    ~unparsed_set =
   let { ServerEnv.local_errors; merge_errors; warnings; suppressions } = errors in
-  let intermediate_result_callback =
-    mk_intermediate_result_callback
-      ~reader
-      ~options
-      ~persistent_connections:None
-      ~recheck_reasons
-      suppressions
-  in
 
   (* to_merge is the union of inferred (newly inferred files) and the
      transitive closure of all dependents.
@@ -741,7 +730,6 @@ let merge
         ~master_mutator
         ~worker_mutator
         ~reader
-        ~intermediate_result_callback
         ~options
         ~profiling
         ~workers
@@ -2150,7 +2138,6 @@ end = struct
         ~sig_dependency_graph
         ~deleted
         ~unparsed_set
-        ~recheck_reasons
     in
     Base.Option.iter merge_internal_error ~f:(Hh_logger.error "%s");
 
@@ -2870,7 +2857,6 @@ let full_check ~profiling ~options ~workers ?focus_targets env =
           ~sig_dependency_graph
           ~deleted:FilenameSet.empty
           ~unparsed_set:FilenameSet.empty
-          ~recheck_reasons
       in
       Base.Option.iter merge_internal_error ~f:(Hh_logger.error "%s");
 

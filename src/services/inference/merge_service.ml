@@ -718,7 +718,6 @@ let merge_runner
     ~master_mutator
     ~worker_mutator
     ~reader
-    ~intermediate_result_callback
     ~options
     ~workers
     ~sig_dependency_graph
@@ -757,7 +756,6 @@ let merge_runner
       ~leader_map
       ~component_map
       ~recheck_leader_set
-      ~intermediate_result_callback
   in
   Merge_stream.update_server_status stream;
 

@@ -62,7 +62,6 @@ type 'a t = {
   mutable skipped_components: int;
   mutable skipped_files: int;
   mutable new_or_changed_files: FilenameSet.t;
-  intermediate_result_callback: 'a merge_result Lazy.t -> unit;
 }
 
 let add_ready node stream =
@@ -93,14 +92,8 @@ let bucket_size stream =
 
 let is_done stream = stream.blocked_components = 0
 
-let create
-    ~num_workers
-    ~reader
-    ~sig_dependency_graph
-    ~leader_map
-    ~component_map
-    ~recheck_leader_set
-    ~intermediate_result_callback =
+let create ~num_workers ~reader ~sig_dependency_graph ~leader_map ~component_map ~recheck_leader_set
+    =
   (* create node for each component *)
   let graph =
     FilenameMap.mapi
@@ -161,7 +154,6 @@ let create
       skipped_components = 0;
       skipped_files = 0;
       new_or_changed_files = FilenameSet.empty;
-      intermediate_result_callback;
     }
   in
   (* calculate the components ready to schedule and blocked counts *)
@@ -271,7 +263,6 @@ let merge ~master_mutator ~reader stream =
     push ~diff:false node
   in
   fun merged acc ->
-    stream.intermediate_result_callback (lazy merged);
     List.iter
       (fun (leader_f, _) ->
         let node = FilenameMap.find leader_f stream.graph in

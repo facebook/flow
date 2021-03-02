@@ -275,7 +275,6 @@ module SimpleTypedRunner (C : SIMPLE_TYPED_RUNNER_CONFIG) : TYPED_RUNNER_CONFIG 
             ~master_mutator
             ~worker_mutator
             ~reader
-            ~intermediate_result_callback:(fun _ -> ())
             ~options
             ~workers
             ~sig_dependency_graph
@@ -350,7 +349,6 @@ module TypedRunnerWithPrepass (C : TYPED_RUNNER_WITH_PREPASS_CONFIG) : TYPED_RUN
             ~master_mutator
             ~worker_mutator
             ~reader
-            ~intermediate_result_callback:(fun _ -> ())
             ~options
             ~workers
             ~sig_dependency_graph

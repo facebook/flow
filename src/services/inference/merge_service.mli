@@ -61,7 +61,6 @@ val merge_runner :
   master_mutator:Context_heaps.Merge_context_mutator.master_mutator ->
   worker_mutator:Context_heaps.Merge_context_mutator.worker_mutator ->
   reader:Mutator_state_reader.t ->
-  intermediate_result_callback:('a merge_job_results Lazy.t -> unit) ->
   options:Options.t ->
   workers:MultiWorkerLwt.worker list option ->
   sig_dependency_graph:FilenameSet.t FilenameMap.t ->
@@ -73,7 +72,6 @@ val merge :
   master_mutator:Context_heaps.Merge_context_mutator.master_mutator ->
   worker_mutator:Context_heaps.Merge_context_mutator.worker_mutator ->
   reader:Mutator_state_reader.t ->
-  intermediate_result_callback:(error_acc merge_job_results Lazy.t -> unit) ->
   options:Options.t ->
   workers:MultiWorkerLwt.worker list option ->
   sig_dependency_graph:FilenameSet.t FilenameMap.t ->
