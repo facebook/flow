@@ -252,15 +252,20 @@ let rec convert cx tparams_map =
   | (loc, (BooleanLiteral { Ast.BooleanLiteral.value; _ } as t_ast)) ->
     ((loc, mk_singleton_boolean cx loc value), t_ast)
   | (loc, IndexedAccess { IndexedAccess._object; index; comments }) ->
+    let reason = mk_reason RIndexedAccess loc in
     let (((_, object_type), _) as _object) = convert cx tparams_map _object in
     let (((_, index_type), _) as index) = convert cx tparams_map index in
-    let reason = mk_reason RIndexedAccess loc in
-    let use_op =
-      Op (IndexedTypeAccess { _object = reason_of_t object_type; index = reason_of_t index_type })
-    in
     let t =
-      EvalT
-        (object_type, TypeDestructorT (use_op, reason, ElementType index_type), mk_eval_id cx loc)
+      if not @@ Context.enable_indexed_access cx then (
+        Flow.add_output cx (Error_message.EIndexedAccessNotEnabled loc);
+        AnyT.error reason
+      ) else
+        let use_op =
+          Op
+            (IndexedTypeAccess { _object = reason_of_t object_type; index = reason_of_t index_type })
+        in
+        EvalT
+          (object_type, TypeDestructorT (use_op, reason, ElementType index_type), mk_eval_id cx loc)
     in
     ((loc, t), IndexedAccess { IndexedAccess._object; index; comments })
   (* TODO *)
