@@ -788,7 +788,7 @@ module Check_files : sig
     * float
     * int
     * string option
-    * int option
+    * int
     * string option )
     Lwt.t
 end = struct
@@ -900,12 +900,9 @@ end = struct
         let focused_to_check = CheckedSet.focused to_check in
         let merged_dependents = CheckedSet.dependents to_check in
         let skipped_count = ref 0 in
-        let (slowest_file, slowest_time, num_slow_files) = (ref None, ref 0., ref None) in
+        let (slowest_file, slowest_time, num_slow_files) = (ref None, ref 0., ref 0) in
         let record_slow_file file time =
-          (num_slow_files :=
-             match !num_slow_files with
-             | None -> Some 1
-             | Some n -> Some (n + 1));
+          num_slow_files := !num_slow_files + 1;
           if time > !slowest_time then (
             slowest_time := time;
             slowest_file := Some file
@@ -1438,7 +1435,7 @@ module Recheck : sig
     merge_skip_count: int;
     check_skip_count: int;
     slowest_file: string option;
-    num_slow_files: int option;
+    num_slow_files: int;
     estimates: Recheck_stats.estimates option;
   }
 
@@ -1498,7 +1495,7 @@ end = struct
     merge_skip_count: int;
     check_skip_count: int;
     slowest_file: string option;
-    num_slow_files: int option;
+    num_slow_files: int;
     estimates: Recheck_stats.estimates option;
   }
 
