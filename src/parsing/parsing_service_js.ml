@@ -203,14 +203,6 @@ let extract_docblock =
             (errors, { info with flow = Some OptInStrictLocal })
         in
         parse_attributes acc xs
-      | (loc, "@flow") :: (_, "weak") :: xs ->
-        let acc =
-          if info.flow <> None then
-            ((loc, MultipleFlowAttributes) :: errors, info)
-          else
-            (errors, { info with flow = Some OptInWeak })
-        in
-        parse_attributes acc xs
       | (loc, "@flow") :: xs ->
         let acc =
           if info.flow <> None then
