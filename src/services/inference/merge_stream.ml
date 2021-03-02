@@ -35,7 +35,7 @@ open Utils_js
 
 type element = Component of File_key.t Nel.t
 
-type 'a merge_result = (File_key.t * 'a) list
+type 'a merge_result = (File_key.t * bool * 'a) list
 
 type node = {
   component: File_key.t Nel.t;
@@ -194,7 +194,7 @@ let next stream =
         Bucket.Wait
     | components -> Bucket.Job components
 
-let merge ~master_mutator ~reader stream =
+let merge ~master_mutator stream =
   (* If a component is unchanged, either because we merged it and the sig hash
    * was unchanged or because the component was skipped entirely, we need to
    * revive the shared heap entires corresponding to the component. These heap
@@ -264,9 +264,8 @@ let merge ~master_mutator ~reader stream =
   in
   fun merged acc ->
     List.iter
-      (fun (leader_f, _) ->
+      (fun (leader_f, diff, _) ->
         let node = FilenameMap.find leader_f stream.graph in
-        let diff = Context_heaps.Mutator_reader.sig_hash_changed ~reader leader_f in
         push ~diff node)
       merged;
     update_server_status stream;

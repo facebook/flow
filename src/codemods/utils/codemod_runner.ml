@@ -162,7 +162,7 @@ let merge_targets ~env ~options ~profiling ~get_dependent_files roots =
 let merge_job ~worker_mutator ~options ~reader component =
   let leader = Nel.hd component in
   let reader = Abstract_state_reader.Mutator_state_reader reader in
-  let result =
+  let diff =
     if Module_js.checked_file ~reader ~audit:Expensive.ok leader then (
       let (cx, master_cx) = Merge_service.merge_context ~options ~reader component in
       let module_refs = List.rev_map Files.module_ref (Nel.to_list component) in
@@ -173,11 +173,11 @@ let merge_job ~worker_mutator ~options ~reader component =
         worker_mutator
         cx
         component
-        md5;
-      ()
-    )
+        md5
+    ) else
+      false
   in
-  Ok result
+  (diff, Ok ())
 
 (* The processing step in Types-First needs to happen right after the check phase.
    We have already merged any necessary dependencies, so now we only check the

@@ -80,10 +80,10 @@ module Merge_context_mutator : sig
   val create : Transaction.t -> Utils_js.FilenameSet.t -> master_mutator * worker_mutator
 
   val add_merge_on_diff :
-    (worker_mutator -> Context.t -> File_key.t Nel.t -> Xx.hash -> unit) Expensive.t
+    (worker_mutator -> Context.t -> File_key.t Nel.t -> Xx.hash -> bool) Expensive.t
 
   val add_merge_on_exn :
-    (worker_mutator -> options:Options.t -> File_key.t Nel.t -> unit) Expensive.t
+    (options:Options.t -> worker_mutator -> File_key.t Nel.t -> bool) Expensive.t
 
   val revive_files : master_mutator -> Utils_js.FilenameSet.t -> unit
 end = struct
@@ -146,9 +146,10 @@ end = struct
             component_files;
           add_sig_context ~audit leader_f (Context.sig_cx leader_cx);
           SigHashHeap.add leader_f xx
-        ))
+        ));
+    diff
 
-  let add_merge_on_exn ~audit () ~options component =
+  let add_merge_on_exn ~audit ~options () component =
     (* Ideally we'd assert that leader_f is a member of the oldified files, but it's a little too
      * expensive to send the set of oldified files to the worker *)
     let leader_f = Nel.hd component in

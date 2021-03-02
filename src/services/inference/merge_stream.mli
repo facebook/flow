@@ -9,7 +9,7 @@ open Utils_js
 
 type element = Component of File_key.t Nel.t
 
-type 'a merge_result = (File_key.t * 'a) list
+type 'a merge_result = (File_key.t * bool * 'a) list
 
 type 'a t
 
@@ -28,7 +28,6 @@ val next : 'a t -> unit -> element list Bucket.bucket
 
 val merge :
   master_mutator:Context_heaps.Merge_context_mutator.master_mutator ->
-  reader:Mutator_state_reader.t ->
   'a t ->
   'a merge_result ->
   'a merge_result ->

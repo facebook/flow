@@ -32,14 +32,14 @@ type sig_opts_data = {
   sig_new_or_changed: FilenameSet.t;
 }
 
-type 'a merge_results = (File_key.t * 'a unit_result) list * sig_opts_data
+type 'a merge_results = (File_key.t * bool * 'a unit_result) list * sig_opts_data
 
 type 'a merge_job =
   worker_mutator:Context_heaps.Merge_context_mutator.worker_mutator ->
   options:Options.t ->
   reader:Mutator_state_reader.t ->
   File_key.t Nel.t ->
-  'a unit_result
+  bool * 'a unit_result
 
 type reader = Module_heaps.Reader_dispatcher.reader
 
@@ -473,16 +473,19 @@ let merge_component ~worker_mutator ~options ~reader component =
     let module_refs = List.rev_map Files.module_ref (Nel.to_list component) in
     let md5 = Merge_js.ContextOptimizer.sig_context cx module_refs in
     Context.clear_master_shared cx master_cx;
-    Context_heaps.Merge_context_mutator.add_merge_on_diff
-      ~audit:Expensive.ok
-      worker_mutator
-      cx
-      component
-      md5;
+    let diff =
+      Context_heaps.Merge_context_mutator.add_merge_on_diff
+        ~audit:Expensive.ok
+        worker_mutator
+        cx
+        component
+        md5
+    in
     let duration = Unix.gettimeofday () -. start_time in
-    Ok (Some (suppressions, duration))
+    (diff, Ok (Some (suppressions, duration)))
   ) else
-    Ok None
+    let diff = false in
+    (diff, Ok None)
 
 module Check_config = struct
   (* The "check" phase only needs to consider _one file_ at a time. *)
@@ -625,7 +628,7 @@ let with_async_logging_timer ~interval ~on_timer ~f =
 let merge_job ~worker_mutator ~reader ~job ~options merged elements =
   List.fold_left
     (fun merged -> function
-      | Merge_stream.Component component ->
+      | Merge_stream.Component ((leader, _) as component) ->
         (* A component may have several files: there's always at least one, and
            multiple files indicate a cycle. *)
         let files =
@@ -648,16 +651,16 @@ let merge_job ~worker_mutator ~reader ~job ~options merged elements =
              ~f:(fun () ->
                let start_time = Unix.gettimeofday () in
                (* prerr_endlinef "[%d] MERGE: %s" (Unix.getpid()) files; *)
-               let ret = job ~worker_mutator ~options ~reader component in
+               let (diff, result) = job ~worker_mutator ~options ~reader component in
                let merge_time = Unix.gettimeofday () -. start_time in
                if Options.should_profile options then (
                  let length = Nel.length component in
-                 let leader = Nel.hd component |> File_key.to_string in
+                 let leader = File_key.to_string leader in
                  Flow_server_profile.merge ~length ~merge_time ~leader;
                  if merge_time > 1.0 then
                    Hh_logger.info "[%d] perf: merged %s in %f" (Unix.getpid ()) files merge_time
                );
-               (Nel.hd component, ret) :: merged)
+               (leader, diff, result) :: merged)
          with
         | (SharedMem.Out_of_shared_memory | SharedMem.Heap_full | SharedMem.Hash_table_full) as exc
           ->
@@ -667,11 +670,13 @@ let merge_job ~worker_mutator ~reader ~job ~options merged elements =
           let exc = Exception.wrap unwrapped_exc in
           let exn_str = Printf.sprintf "%s: %s" files (Exception.to_string exc) in
           (* Ensure heaps are in a good state before continuing. *)
-          Context_heaps.Merge_context_mutator.add_merge_on_exn
-            ~audit:Expensive.ok
-            worker_mutator
-            ~options
-            component;
+          let diff =
+            Context_heaps.Merge_context_mutator.add_merge_on_exn
+              ~audit:Expensive.ok
+              ~options
+              worker_mutator
+              component
+          in
 
           (* In dev mode, fail hard, but log and continue in prod. *)
           if Build_mode.dev then
@@ -684,8 +689,7 @@ let merge_job ~worker_mutator ~reader ~job ~options merged elements =
               exn_str;
 
           (* An errored component is always changed. *)
-          let file = Nel.hd component in
-          let file_loc = Loc.{ none with source = Some file } |> ALoc.of_loc in
+          let file_loc = Loc.{ none with source = Some leader } |> ALoc.of_loc in
           (* We can't pattern match on the exception type once it's marshalled
              back to the master process, so we pattern match on it here to create
              an error result. *)
@@ -697,7 +701,7 @@ let merge_job ~worker_mutator ~reader ~job ~options merged elements =
                 | EMergeTimeout (s, _) -> (file_loc, MergeTimeout s)
                 | _ -> (file_loc, MergeJobException exc))
           in
-          (file, result) :: merged))
+          (leader, diff, result) :: merged))
     merged
     elements
 
@@ -753,7 +757,7 @@ let merge_runner
       workers
       ~job:(merge_job ~worker_mutator ~reader ~options ~job)
       ~neutral:[]
-      ~merge:(Merge_stream.merge ~master_mutator ~reader stream)
+      ~merge:(Merge_stream.merge ~master_mutator stream)
       ~next:(Merge_stream.next stream)
   in
   let total_files = Merge_stream.total_files stream in

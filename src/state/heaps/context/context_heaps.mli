@@ -39,10 +39,10 @@ module Merge_context_mutator : sig
   val create : Transaction.t -> Utils_js.FilenameSet.t -> master_mutator * worker_mutator
 
   val add_merge_on_diff :
-    (worker_mutator -> Context.t -> File_key.t Nel.t -> Xx.hash -> unit) Expensive.t
+    (worker_mutator -> Context.t -> File_key.t Nel.t -> Xx.hash -> bool) Expensive.t
 
   val add_merge_on_exn :
-    (worker_mutator -> options:Options.t -> File_key.t Nel.t -> unit) Expensive.t
+    (options:Options.t -> worker_mutator -> File_key.t Nel.t -> bool) Expensive.t
 
   val revive_files : master_mutator -> Utils_js.FilenameSet.t -> unit
 end

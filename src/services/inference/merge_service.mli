@@ -30,14 +30,14 @@ type sig_opts_data = {
   sig_new_or_changed: FilenameSet.t;
 }
 
-type 'a merge_results = (File_key.t * 'a unit_result) list * sig_opts_data
+type 'a merge_results = (File_key.t * bool * 'a unit_result) list * sig_opts_data
 
 type 'a merge_job =
   worker_mutator:Context_heaps.Merge_context_mutator.worker_mutator ->
   options:Options.t ->
   reader:Mutator_state_reader.t ->
   File_key.t Nel.t ->
-  'a unit_result
+  bool * 'a unit_result
 
 val merge_context :
   options:Options.t ->

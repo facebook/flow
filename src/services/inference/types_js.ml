@@ -561,7 +561,7 @@ let run_merge_service
       in
       let (errs, warnings, suppressions, coverage, first_internal_error) =
         List.fold_left
-          (fun acc (file, result) ->
+          (fun acc (file, _diff, result) ->
             let component = FilenameMap.find file component_map in
             let acc = Nel.fold_left (remove_old_results Context.Merging) acc component in
             add_merge_results acc file result)
