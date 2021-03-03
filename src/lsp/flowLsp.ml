@@ -1428,31 +1428,7 @@ let try_connect flowconfig_name (env : disconnected_env) : state =
         c_recent_summaries = [];
       }
     in
-    (* send the initial messages to the server *)
-    let () =
-      let metadata =
-        let method_name = "synthetic/subscribe" in
-        {
-          LspProt.empty_metadata with
-          LspProt.start_wall_time = Unix.gettimeofday ();
-          start_server_status = Some (fst new_env.c_server_status);
-          start_watcher_status = snd new_env.c_server_status;
-          start_json_truncated = Hh_json.(JSON_Object [("method", JSON_String method_name)]);
-          lsp_method_name = method_name;
-        }
-      in
-      send_to_server new_env LspProt.Subscribe metadata
-    in
-    let make_open_message (textDocument : TextDocumentItem.t) : lsp_message =
-      NotificationMessage (DidOpenNotification { DidOpen.textDocument })
-    in
-    let open_messages =
-      env.d_ienv.i_open_files
-      |> Lsp.UriMap.bindings
-      |> List.map ~f:(fun (_, { o_open_doc; _ }) -> make_open_message o_open_doc)
-    in
-    let method_name = "synthetic/open" in
-    let metadata =
+    let make_metadata method_name =
       {
         LspProt.empty_metadata with
         LspProt.start_wall_time = Unix.gettimeofday ();
@@ -1462,7 +1438,21 @@ let try_connect flowconfig_name (env : disconnected_env) : state =
         lsp_method_name = method_name;
       }
     in
-    List.iter open_messages ~f:(send_lsp_to_server new_env metadata);
+    (* send the initial messages to the server *)
+    let () =
+      let metadata = make_metadata "synthetic/subscribe" in
+      send_to_server new_env LspProt.Subscribe metadata
+    in
+    let metadata = make_metadata "synthetic/open" in
+    let () =
+      Lsp.UriMap.iter
+        (fun _ { o_open_doc; _ } ->
+          let msg =
+            NotificationMessage (DidOpenNotification { DidOpen.textDocument = o_open_doc })
+          in
+          send_lsp_to_server new_env metadata msg)
+        env.d_ienv.i_open_files
+    in
 
     (* close the old UI and bring up the new *)
     let new_state = show_connected new_env in
