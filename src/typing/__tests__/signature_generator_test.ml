@@ -269,7 +269,7 @@ let tests =
          "module_exports_import"
          >:: mk_signature_generator_test
                ["module.exports = import('./foo')"]
-               ["import * as $1 from \"./foo\";"; "declare module.exports: typeof $1;"];
+               ["import * as $1 from \"./foo\";"; "declare module.exports: Promise<typeof $1>;"];
          (* outlining *)
          "module_exports_bindings"
          >:: mk_signature_generator_test
