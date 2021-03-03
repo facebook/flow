@@ -716,7 +716,8 @@ module ContextOptimizer = struct
 
       val mutable reduced_module_map = NameUtils.Map.empty
 
-      val mutable reduced_graph = IMap.empty
+      val mutable reduced_graph : Type.Constraint.infer_phase Type.Constraint.node IMap.t =
+        IMap.empty
 
       val mutable reduced_trust_graph = IMap.empty
 

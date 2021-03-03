@@ -34,7 +34,7 @@ type component_t
 (* 3. Inter-component information, i.e., stuff that we might want to know about
  * dependencies, like what modules they export and what types correspond to what
  * resolved tvars. *)
-type sig_t = Type.TypeContext.t
+type sig_t = Type.Constraint.infer_phase Type.TypeContext.t
 
 type metadata = {
   (* local *)
@@ -124,7 +124,7 @@ val cx_with_trust : t -> (unit -> Trust.trust_rep) -> t
 
 val sig_cx : t -> sig_t
 
-val graph_sig : sig_t -> Type.Constraint.node IMap.t
+val graph_sig : sig_t -> Type.Constraint.infer_phase Type.Constraint.node IMap.t
 
 val find_module_sig : sig_t -> string -> Type.t
 
@@ -181,13 +181,13 @@ val find_require : t -> ALoc.t -> Type.t
 
 val find_module : t -> string -> Type.t
 
-val find_tvar : t -> Type.ident -> Type.Constraint.node
+val find_tvar : t -> Type.ident -> Type.Constraint.infer_phase Type.Constraint.node
 
 val mem_nominal_prop_id : t -> Type.ident -> bool
 
 val mem_nominal_poly_id : t -> Type.Poly.id -> bool
 
-val graph : t -> Type.Constraint.node IMap.t
+val graph : t -> Type.Constraint.infer_phase Type.Constraint.node IMap.t
 
 val trust_graph : t -> Trust_constraint.node IMap.t
 
@@ -315,7 +315,7 @@ val add_call_prop : t -> int -> Type.t -> unit
 
 val add_export_map : t -> Type.Exports.id -> Type.Exports.t -> unit
 
-val add_tvar : t -> Type.ident -> Type.Constraint.node -> unit
+val add_tvar : t -> Type.ident -> Type.Constraint.infer_phase Type.Constraint.node -> unit
 
 val add_trust_var : t -> Trust_constraint.ident -> Trust_constraint.node -> unit
 
@@ -339,7 +339,7 @@ val set_type_graph : t -> Graph_explorer.graph -> unit
 
 val set_all_unresolved : t -> ISet.t IMap.t -> unit
 
-val set_graph : t -> Type.Constraint.node IMap.t -> unit
+val set_graph : t -> Type.Constraint.infer_phase Type.Constraint.node IMap.t -> unit
 
 val set_trust_graph : t -> Trust_constraint.node IMap.t -> unit
 
@@ -433,11 +433,12 @@ val generate_poly_id : t -> Type.Poly.id
 
 val make_source_poly_id : t -> ALoc.t -> Type.Poly.id
 
-val find_constraints : t -> Type.ident -> Type.ident * Type.Constraint.constraints
+val find_constraints :
+  t -> Type.ident -> Type.ident * Type.Constraint.infer_phase Type.Constraint.constraints
 
-val find_graph : t -> Type.ident -> Type.Constraint.constraints
+val find_graph : t -> Type.ident -> Type.Constraint.infer_phase Type.Constraint.constraints
 
-val find_root : t -> Type.ident -> Type.ident * Type.Constraint.root
+val find_root : t -> Type.ident -> Type.ident * Type.Constraint.infer_phase Type.Constraint.root
 
 val find_resolved : t -> Type.t -> Type.t option
 

@@ -93,7 +93,7 @@ type subst_cache_err =
   | ETooFewTypeArgs of ALoc.t Reason.virtual_reason * int
   | ETooManyTypeArgs of ALoc.t Reason.virtual_reason * int
 
-type sig_t = Type.TypeContext.t
+type sig_t = Type.Constraint.infer_phase Type.TypeContext.t
 
 type component_t = {
   mutable sig_cx: sig_t;

@@ -1473,19 +1473,23 @@ and Constraint : sig
 
   (***************************************)
 
-  type node =
-    | Goto of ident
-    | Root of root
+  type infer_phase = private InferPhase [@@deriving eq, show]
 
-  and root = {
+  type resolved_phase = private ResolvedPhase [@@deriving eq, show]
+
+  type 'phase node =
+    | Goto of ident
+    | Root of 'phase root
+
+  and 'phase root = {
     rank: int;
-    constraints: constraints;
+    constraints: 'phase constraints;
   }
 
-  and constraints =
-    | Resolved of TypeTerm.use_op * TypeTerm.t
-    | FullyResolved of TypeTerm.use_op * TypeTerm.t
-    | Unresolved of bounds
+  and _ constraints =
+    | Resolved : TypeTerm.use_op * TypeTerm.t -> infer_phase constraints
+    | Unresolved : bounds -> infer_phase constraints
+    | FullyResolved : TypeTerm.use_op * TypeTerm.t -> 'phase constraints
 
   and bounds = {
     mutable lower: (TypeTerm.trace * TypeTerm.use_op) TypeMap.t;
@@ -1494,13 +1498,13 @@ and Constraint : sig
     mutable uppertvars: (TypeTerm.trace * TypeTerm.use_op) IMap.t;
   }
 
-  val new_unresolved_root : unit -> node
+  val new_unresolved_root : unit -> infer_phase node
 
-  val new_resolved_root : TypeTerm.t -> TypeTerm.use_op -> node
+  val new_resolved_root : TypeTerm.t -> TypeTerm.use_op -> 'phase node
 
-  val types_of : constraints -> TypeTerm.t list
+  val types_of : 'phase constraints -> TypeTerm.t list
 
-  val uses_of : constraints -> TypeTerm.use_t list
+  val uses_of : 'phase constraints -> TypeTerm.use_t list
 end = struct
   module UseTypeKey = struct
     type speculation_id = int
@@ -1513,6 +1517,10 @@ end = struct
   end
 
   module UseTypeMap = WrappedMap.Make (UseTypeKey)
+
+  type infer_phase = private InferPhase [@@deriving eq, show]
+
+  type resolved_phase = private ResolvedPhase [@@deriving eq, show]
 
   (** Type variables are unknowns, and we are ultimately interested in constraints
       on their solutions for type inference.
@@ -1527,9 +1535,9 @@ end = struct
       - A Root node holds the actual non-trivial state of a tvar, represented by a
       root structure (see below).
    **)
-  type node =
+  type 'phase node =
     | Goto of ident
-    | Root of root
+    | Root of 'phase root
 
   (** A root structure carries the actual non-trivial state of a tvar, and
       consists of:
@@ -1545,9 +1553,9 @@ end = struct
       - constraints, which carry type information that narrows down the possible
       solutions of the tvar (see below).  **)
 
-  and root = {
+  and 'phase root = {
     rank: int;
-    constraints: constraints;
+    constraints: 'phase constraints;
   }
 
   (** Constraints carry type information that narrows down the possible solutions
@@ -1561,10 +1569,10 @@ end = struct
       other tvars as upper and lower bounds (see below).
    **)
 
-  and constraints =
-    | Resolved of TypeTerm.use_op * TypeTerm.t
-    | FullyResolved of TypeTerm.use_op * TypeTerm.t
-    | Unresolved of bounds
+  and _ constraints =
+    | Resolved : TypeTerm.use_op * TypeTerm.t -> infer_phase constraints
+    | Unresolved : bounds -> infer_phase constraints
+    | FullyResolved : TypeTerm.use_op * TypeTerm.t -> 'phase constraints
 
   and bounds = {
     mutable lower: (TypeTerm.trace * TypeTerm.use_op) TypeMap.t;
@@ -1600,19 +1608,17 @@ end = struct
 
   let new_unresolved_root () = Root { rank = 0; constraints = Unresolved (new_bounds ()) }
 
-  let new_resolved_root t op = Root { rank = 0; constraints = FullyResolved (op, t) }
+  let new_resolved_root t op : 'phase node = Root { rank = 0; constraints = FullyResolved (op, t) }
 
   (* For any constraints, return a list of def types that form either the lower
      bounds of the solution, or a singleton containing the solution itself. *)
-  let types_of constraints =
-    match constraints with
+  let types_of : type phase. phase constraints -> TypeTerm.t list = function
     | Unresolved { lower; _ } -> TypeMap.keys lower
     | Resolved (_, t)
     | FullyResolved (_, t) ->
       [t]
 
-  let uses_of constraints =
-    match constraints with
+  let uses_of : type phase. phase constraints -> TypeTerm.use_t list = function
     | Unresolved { upper; _ } -> Base.List.map ~f:fst (UseTypeMap.keys upper)
     | Resolved (use_op, t)
     | FullyResolved (use_op, t) ->
@@ -1620,9 +1626,9 @@ end = struct
 end
 
 and TypeContext : sig
-  type t = {
+  type 'phase t = {
     (* map from tvar ids to nodes (type info structures) *)
-    graph: Constraint.node IMap.t;
+    graph: 'phase Constraint.node IMap.t;
     (* map from tvar ids to trust nodes *)
     trust_graph: Trust_constraint.node IMap.t;
     (* obj types point to mutable property maps *)
