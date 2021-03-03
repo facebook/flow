@@ -19,7 +19,8 @@ open Reason
     polymorphic type is applied. **)
 let substituter =
   object (self)
-    inherit [Type.t SMap.t * bool * use_op option] Type_mapper.t_with_uses as super
+    inherit
+      [Type.t SMap.t * bool * use_op option, Type.Constraint.infer_phase] Type_mapper.t_with_uses as super
 
     method tvar _cx _map_cx _r id = id
 

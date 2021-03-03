@@ -160,7 +160,7 @@ class import_export_visitor ~cx ~scope_info ~declarations =
   object (this)
     inherit [unit, ALoc.t] Flow_ast_visitor.visitor ~init:() as super
 
-    method private add_error err = Flow_js.add_output cx err
+    method private add_error err = Flow_js_utils.add_output cx err
 
     method private import_star_reason import_star =
       let (import_star_loc, _) = import_star in
@@ -457,7 +457,9 @@ let detect_mixed_import_and_require_error cx declarations =
   match declarations with
   | { first_import = Some first_import_loc; first_require = Some first_require_loc; _ } ->
     let import_reason = Reason.mk_reason (Reason.RCode "import") first_import_loc in
-    Flow_js.add_output cx (Error_message.EMixedImportAndRequire (first_require_loc, import_reason))
+    Flow_js_utils.add_output
+      cx
+      (Error_message.EMixedImportAndRequire (first_require_loc, import_reason))
   | _ -> ()
 
 let detect_errors_from_ast cx ast =

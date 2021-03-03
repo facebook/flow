@@ -336,7 +336,7 @@ let merge_trust_var constr =
 class resolver_visitor =
   let no_lowers _cx r = Type.Unsoundness.merged_any r in
   object (self)
-    inherit [unit] Type_mapper.t_with_uses as super
+    inherit [unit, Type.Constraint.infer_phase] Type_mapper.t_with_uses as super
 
     method! type_ cx map_cx t =
       let open Type in
@@ -689,7 +689,7 @@ module ContextOptimizer = struct
       Type.Unsoundness.merged_any r
     in
     object (self)
-      inherit [Polarity.t] Type_mapper.t_with_uses as super
+      inherit [Polarity.t, Type.Constraint.infer_phase] Type_mapper.t_with_uses as super
 
       val sig_hash = Xx.init 0L
 

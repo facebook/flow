@@ -28,7 +28,7 @@ let infer_core cx statements =
   | Abnormal.Exn (Abnormal.Stmts stmts, _) ->
     (* should never happen *)
     let loc = Loc.{ none with source = Some (Context.file cx) } |> ALoc.of_loc in
-    Flow_js.add_output cx Error_message.(EInternal (loc, AbnormalControlFlow));
+    Flow_js_utils.add_output cx Error_message.(EInternal (loc, AbnormalControlFlow));
     stmts
   | Abnormal.Exn _ -> failwith "Flow bug: Statement.toplevels threw with non-stmts payload"
   | exc -> raise exc
@@ -60,7 +60,7 @@ let scan_for_error_suppressions cx =
             Base.Option.iter ~f:(Context.add_error_suppression cx |> uncurry) acc;
             Base.Option.map codes ~f:(mk_tuple loc)
           | (Error (), _) ->
-            Flow_js.add_output cx Error_message.(EMalformedCode (ALoc.of_loc loc));
+            Flow_js_utils.add_output cx Error_message.(EMalformedCode (ALoc.of_loc loc));
             Base.Option.iter ~f:(Context.add_error_suppression cx |> uncurry) acc;
             None
         end)
@@ -185,7 +185,7 @@ let scan_for_lint_suppressions =
     List.rev parts
   in
   let add_error cx (loc, kind) =
-    Error_message.ELintSetting (ALoc.of_loc loc, kind) |> Flow_js.add_output cx
+    Error_message.ELintSetting (ALoc.of_loc loc, kind) |> Flow_js_utils.add_output cx
   in
   let parse_kind loc_str =
     match Lints.kinds_of_string loc_str.value with

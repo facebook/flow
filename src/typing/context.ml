@@ -93,10 +93,12 @@ type subst_cache_err =
   | ETooFewTypeArgs of ALoc.t Reason.virtual_reason * int
   | ETooManyTypeArgs of ALoc.t Reason.virtual_reason * int
 
+type 'phase sig_t_ = 'phase Type.TypeContext.t
+
 type sig_t = Type.Constraint.infer_phase Type.TypeContext.t
 
-type component_t = {
-  mutable sig_cx: sig_t;
+type 'phase component_t_ = {
+  mutable sig_cx: 'phase sig_t_;
   (* mapping from keyed alocs to concrete locations *)
   mutable aloc_tables: ALoc.table Lazy.t Utils_js.FilenameMap.t;
   (* map from goal ids to types *)
@@ -163,6 +165,8 @@ type component_t = {
   mutable implicit_instantiation_checks: implicit_instantiation_check list;
 }
 
+type component_t = Type.Constraint.infer_phase component_t_
+
 type phase =
   | InitLib
   | Checking
@@ -173,8 +177,8 @@ let string_of_phase = function
   | Checking -> "Checking"
   | Merging -> "Merging"
 
-type t = {
-  ccx: component_t;
+type 'phase t_ = {
+  ccx: 'phase component_t_;
   file: File_key.t;
   phase: phase;
   rev_aloc_table: ALoc.reverse_table Lazy.t;
@@ -186,6 +190,8 @@ type t = {
   mutable use_def: Scope_api.info * Ssa_api.With_ALoc.values;
   mutable exported_locals: Loc_collections.ALocSet.t SMap.t option;
 }
+
+type t = Type.Constraint.infer_phase t_
 
 let metadata_of_options options =
   {
@@ -555,7 +561,7 @@ let trust_errors cx =
   | Options.NoTrust ->
     false
 
-let pid_prefix (cx : t) =
+let pid_prefix (cx : 'phase t_) =
   if max_workers cx > 0 then
     Printf.sprintf "[%d] " (Unix.getpid ())
   else
@@ -859,7 +865,9 @@ and find_root cx id =
       in
       Utils_js.assert_false msg)
 
-let rec find_resolved cx = function
+let rec find_resolved : type phase. phase t_ -> Type.t -> Type.t option =
+ fun cx t_in ->
+  match t_in with
   | Type.OpenT (_, id) ->
     Type.Constraint.(
       begin

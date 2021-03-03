@@ -80,7 +80,8 @@ let dump_reason cx reason =
   in
   Reason.dump_reason ~strip_root reason
 
-let rec dump_t_ (depth, tvars) cx t =
+let rec dump_t_ : type phase. int * ISet.t -> phase Context.t_ -> Type.t -> string =
+ fun (depth, tvars) cx t ->
   let p ?(reason = true) ?(extra = "") ?(trust = None) t =
     spf
       "%s %s(%s%s%s)"
@@ -348,7 +349,8 @@ let rec dump_t_ (depth, tvars) cx t =
     | InternalT (ReposUpperT (_, arg)) ->
       p ~extra:(kid arg) t
 
-and dump_use_t_ (depth, tvars) cx t =
+and dump_use_t_ : type phase. int * ISet.t -> phase Context.t_ -> Type.use_t -> string =
+ fun (depth, tvars) cx t ->
   let p ?(reason = true) ?(extra = "") use_t =
     spf
       "%s (%s%s%s)"
@@ -909,7 +911,8 @@ and dump_use_t_ (depth, tvars) cx t =
              (use_kid upper))
     | ModuleExportsAssignT (_, _, _) -> p t
 
-and dump_tvar_ (depth, tvars) cx id =
+and dump_tvar_ : type phase. int * ISet.t -> phase Context.t_ -> Type.ident -> string =
+ fun (depth, tvars) cx id ->
   if ISet.mem id tvars then
     spf "%d, ^" id
   else
@@ -940,7 +943,8 @@ and dump_tvar_ (depth, tvars) cx id =
                        [])))
       with Context.Tvar_not_found _ -> spf "Not Found: %d" id)
 
-and dump_prop_ (depth, tvars) cx p =
+and dump_prop_ : type phase. int * ISet.t -> phase Context.t_ -> Type.TypeTerm.property -> string =
+ fun (depth, tvars) cx p ->
   let kid t = dump_t_ (depth, tvars) cx t in
   match p with
   | Field (_loc, t, polarity) -> spf "Field (%s) %s" (string_of_polarity polarity) (kid t)
