@@ -53,6 +53,7 @@ type metadata = {
   enable_const_params: bool;
   enable_enums: bool;
   enable_enums_with_unknown_members: bool;
+  enable_indexed_access: bool;
   enable_this_annot: bool;
   enforce_strict_call_arity: bool;
   enforce_local_inference_annotations: bool;
@@ -143,6 +144,8 @@ val enable_const_params : t -> bool
 val enable_enums : t -> bool
 
 val enable_enums_with_unknown_members : t -> bool
+
+val enable_indexed_access : t -> bool
 
 val enable_this_annot : t -> bool
 

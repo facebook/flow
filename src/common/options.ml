@@ -49,6 +49,7 @@ type t = {
   opt_babel_loose_array_spread: bool;
   opt_debug: bool;
   opt_enable_const_params: bool;
+  opt_enable_indexed_access: bool;
   opt_enabled_rollouts: string SMap.t;
   opt_enforce_local_inference_annotations: bool;
   opt_enforce_strict_call_arity: bool;
@@ -128,6 +129,8 @@ let new_signatures opts = opts.opt_new_signatures
 let max_literal_length opts = opts.opt_max_literal_length
 
 let enable_const_params opts = opts.opt_enable_const_params
+
+let enable_indexed_access opts = opts.opt_enable_indexed_access
 
 let enabled_rollouts opts = opts.opt_enabled_rollouts
 
