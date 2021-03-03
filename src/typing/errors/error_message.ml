@@ -212,6 +212,7 @@ and 'loc t' =
   | EExperimentalEnums of 'loc
   | EExperimentalEnumsWithUnknownMembers of 'loc
   | EExperimentalThisAnnot of 'loc
+  | EIndexedAccessNotEnabled of 'loc
   | EUnsafeGetSet of 'loc
   | EIndeterminateModuleType of 'loc
   | EBadExportPosition of 'loc
@@ -804,6 +805,7 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
   | EExperimentalEnums loc -> EExperimentalEnums (f loc)
   | EExperimentalEnumsWithUnknownMembers loc -> EExperimentalEnumsWithUnknownMembers (f loc)
   | EExperimentalThisAnnot loc -> EExperimentalThisAnnot (f loc)
+  | EIndexedAccessNotEnabled loc -> EIndexedAccessNotEnabled (f loc)
   | EIndeterminateModuleType loc -> EIndeterminateModuleType (f loc)
   | EBadExportPosition loc -> EBadExportPosition (f loc)
   | EBadExportContext (s, loc) -> EBadExportContext (s, f loc)
@@ -1119,6 +1121,7 @@ let util_use_op_of_msg nope util = function
   | EExperimentalEnums _
   | EExperimentalEnumsWithUnknownMembers _
   | EExperimentalThisAnnot _
+  | EIndexedAccessNotEnabled _
   | EIndeterminateModuleType _
   | EBadExportPosition _
   | EBadExportContext _
@@ -1306,6 +1309,7 @@ let loc_of_msg : 'loc t' -> 'loc option = function
   | EExperimentalEnums loc
   | EExperimentalEnumsWithUnknownMembers loc
   | EExperimentalThisAnnot loc
+  | EIndexedAccessNotEnabled loc
   | EUnsafeGetSet loc
   | EUninitializedInstanceProperty (loc, _)
   | EModuleOutsideRoot (loc, _)
@@ -1431,6 +1435,7 @@ let kind_of_msg =
     | EExperimentalEnums _
     | EExperimentalEnumsWithUnknownMembers _
     | EExperimentalThisAnnot _
+    | EIndexedAccessNotEnabled _
     | EIndeterminateModuleType _
     | EUnreachable _
     | EInvalidTypeof _ ->
@@ -2459,6 +2464,20 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
         text " annotations by putting ";
         code "experimental.this_annot=true";
         text " into the ";
+        code "[options]";
+        text " section of your ";
+        code ".flowconfig";
+        text ".";
+      ]
+    in
+    Normal { features }
+  | EIndexedAccessNotEnabled _ ->
+    let features =
+      [
+        text "Indexed Access is not enabled. ";
+        text "You may enable it by adding ";
+        code "indexed_access=true";
+        text " to the ";
         code "[options]";
         text " section of your ";
         code ".flowconfig";
@@ -3679,6 +3698,7 @@ let error_code_of_message err : error_code option =
   | EIncompatibleWithUseOp { use_op; _ } ->
     error_code_of_use_op use_op ~default:IncompatibleType
   | EIndeterminateModuleType _ -> Some ModuleTypeConflict
+  | EIndexedAccessNotEnabled _ -> Some IndexedAccessNotEnabled
   | EInexactMayOverwriteIndexer _ -> Some CannotSpreadInexact
   (* We don't want these to be suppressible *)
   | EInternal (_, _) -> None

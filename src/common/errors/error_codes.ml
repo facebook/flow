@@ -59,6 +59,7 @@ type error_code =
   | IncompatibleTypeArg
   | IncompatibleUse
   | IncompatibleVariance
+  | IndexedAccessNotEnabled
   | InvalidCallUtil
   | InvalidCharsetTypeArg
   | InvalidCompare
@@ -223,6 +224,7 @@ let string_of_code : error_code -> string = function
   | IncompatibleTypeArg -> "incompatible-type-arg"
   | IncompatibleUse -> "incompatible-use"
   | IncompatibleVariance -> "incompatible-variance"
+  | IndexedAccessNotEnabled -> "indexed-access-off"
   | InvalidCallUtil -> "invalid-call-util"
   | InvalidCharsetTypeArg -> "invalid-charset-type-arg"
   | InvalidCompare -> "invalid-compare"
