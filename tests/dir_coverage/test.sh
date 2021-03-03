@@ -68,6 +68,7 @@ coverage() {
   echo "delete file"
   echo "-----------------------------"
   assert_ok rm a.js
+  assert_ok "$FLOW" force-recheck a.js
   assert_ok "$FLOW" batch-coverage --strip-root --wait-for-recheck true .
   echo "-----------------------------"
   echo "trust"
