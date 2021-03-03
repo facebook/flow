@@ -44,9 +44,8 @@ let rec mark_parsed = function
     mark_loc loc;
     mark_parsed t;
     mark_op op
-  | P.Require { loc; mref } ->
-    mark_loc loc;
-    mark_mref mref
+  | P.Require { loc; mref }
+  | P.ImportDynamic { loc; mref }
   | P.ModuleRef { loc; mref } ->
     mark_loc loc;
     mark_mref mref

@@ -485,6 +485,12 @@ let rec merge file = function
     let op = merge_op file op in
     eval file loc t op
   | Pack.Require { loc; index } -> require file loc index
+  | Pack.ImportDynamic { loc; index } ->
+    let (mref, _) = Module_refs.get file.dependencies index in
+    let ns_reason = Reason.(mk_reason (RModule (OrdinaryName mref)) loc) in
+    let ns_t = import_ns file ns_reason loc index in
+    let reason = Reason.(mk_annot_reason RAsyncImport loc) in
+    Flow_js.get_builtin_typeapp file.cx reason (Reason.OrdinaryName "Promise") [ns_t]
   | Pack.ModuleRef { loc; index } ->
     let t = require file loc index in
     let reason = Reason.(mk_reason (RCustom "module reference") loc) in

@@ -180,7 +180,8 @@ module Eval = struct
     | TyRefApp { name; _ } -> tyref type_sig seen name
     | Eval (_, x, op) -> eval type_sig seen x op
     | Pattern index -> pattern type_sig seen (pattern_of_index type_sig index)
-    | Require _ ->
+    | Require _
+    | ImportDynamic _ ->
       (* TODO: remember these cross-module aliases. if the remote thing matches,
          we can also suggest everything that aliases to it. *)
       Nothing

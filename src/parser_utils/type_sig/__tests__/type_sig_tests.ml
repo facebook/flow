@@ -1557,6 +1557,19 @@ let%expect_test "dynamic_requires" =
     Require {loc = [1:17-53]; index = 0}
   |}]
 
+let%expect_test "import_dynamic" =
+  print_sig {|
+    module.exports = import('foo');
+  |};
+  [%expect {|
+    CJSExports {types = {}; type_stars = []; strict = true}
+
+    Module refs:
+    0. foo
+
+    Export_def:
+    ImportDynamic {loc = [1:17-30]; index = 0} |}]
+
 let%expect_test "scope_extrusion" =
   print_sig {|
     {
