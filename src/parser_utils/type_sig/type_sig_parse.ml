@@ -2484,25 +2484,19 @@ let rec expression opts scope locs (loc, expr) =
      * in the current scope. i.e., it should resolves to a builtin. The current
      * signature builder does not do this, so we should probably fix that first.
      *)
-    begin match targs, arguments with
-    | None, (_, {E.ArgList.
-        arguments = [E.Expression (_, (
-          E.Literal {Ast.Literal.value = Ast.Literal.String mref; _} |
-          E.TemplateLiteral {E.TemplateLiteral.
-            quasis = [(_, {E.TemplateLiteral.Element.
-              value = {E.TemplateLiteral.Element.cooked = mref; _};
-              _;
-            })];
-            expressions = [];
-            comments = _;
-          }
-        ))];
-        comments = _;
-      }) ->
+    let mref =
+      match targs, arguments with
+      | None, (_, {E.ArgList.arguments = [E.Expression (_, e)]; comments = _}) ->
+        extract_string_literal e
+      | _ -> None
+    in
+    begin match mref with
+    | Some mref ->
       let mref = Scope.push_module_ref mref scope in
       Require {loc; mref}
-    | _ ->
-      Annot (Any loc) (* error cases: explicit targs / non-literal require *)
+    | None ->
+      (* error cases: explicit targs / non-literal require *)
+      Annot (Any loc)
     end
   | E.Call {E.Call.
       callee = (_, E.Member {E.Member.
