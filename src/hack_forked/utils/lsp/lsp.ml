@@ -1107,26 +1107,24 @@ module Error = struct
   exception LspException of t
 end
 
-type lsp_registration_options =
-  | DidChangeWatchedFilesRegistrationOptions of DidChangeWatchedFiles.registerOptions
-
-(* Register capability request, method="client/registerCapability" *)
+(** Register capability request, method="client/registerCapability" *)
 module RegisterCapability = struct
   type params = { registrations: registration list }
 
   and registration = {
     id: string;
     method_: string;
-    registerOptions: lsp_registration_options;
+    registerOptions: options;
   }
 
-  let make_registration (registerOptions : lsp_registration_options) : registration =
+  and options = DidChangeWatchedFiles of DidChangeWatchedFiles.registerOptions
+
+  let make_registration (registerOptions : options) : registration =
     (* The ID field is arbitrary but unique per type of capability (for future
        deregistering, which we don't do). *)
     let (id, method_) =
       match registerOptions with
-      | DidChangeWatchedFilesRegistrationOptions _ ->
-        ("did-change-watched-files", "workspace/didChangeWatchedFiles")
+      | DidChangeWatchedFiles _ -> ("did-change-watched-files", "workspace/didChangeWatchedFiles")
     in
     { id; method_; registerOptions }
 end

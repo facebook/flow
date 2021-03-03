@@ -1123,56 +1123,64 @@ let print_initialize ~key (r : Initialize.result) : json =
             ] );
       ])
 
-(************************************************************************)
-(* capabilities                                                         *)
-(************************************************************************)
+module DidChangeWatchedFilesFmt = struct
+  open Lsp.DidChangeWatchedFiles
 
-let print_registrationOptions (registerOptions : Lsp.lsp_registration_options) : Hh_json.json =
-  match registerOptions with
-  | Lsp.DidChangeWatchedFilesRegistrationOptions registerOptions ->
-    Lsp.DidChangeWatchedFiles.(
-      JSON_Object
-        [
-          ( "watchers",
-            JSON_Array
-              (List.map registerOptions.watchers ~f:(fun watcher ->
-                   JSON_Object
-                     [
-                       ("globPattern", JSON_String watcher.globPattern);
-                       ("kind", int_ 7);
-                       (* all events: create, change, and delete *)
-                     ])) );
-        ])
+  let params_of_json (json : Hh_json.json option) : params =
+    let changes =
+      Jget.array_exn json "changes"
+      |> List.map ~f:(fun change ->
+             let uri = Jget.string_exn change "uri" |> DocumentUri.of_string in
+             let type_ = Jget.int_exn change "type" in
+             let type_ =
+               match fileChangeType_of_enum type_ with
+               | Some type_ -> type_
+               | None -> failwith (Printf.sprintf "Invalid file change type %d" type_)
+             in
+             { uri; type_ })
+    in
+    { changes }
 
-let print_registerCapability (params : Lsp.RegisterCapability.params) : Hh_json.json =
-  Lsp.RegisterCapability.(
+  let json_of_register_options registerOptions =
+    let open Hh_json in
+    JSON_Object
+      [
+        ( "watchers",
+          JSON_Array
+            (List.map registerOptions.watchers ~f:(fun watcher ->
+                 JSON_Object
+                   [
+                     ("globPattern", JSON_String watcher.globPattern);
+                     ("kind", int_ 7);
+                     (* all events: create, change, and delete *)
+                   ])) );
+      ]
+end
+
+(** capabilities *)
+module RegisterCapabilityFmt = struct
+  open Lsp.RegisterCapability
+
+  let json_of_options (registerOptions : options) : Hh_json.json option =
+    match registerOptions with
+    | DidChangeWatchedFiles registerOptions ->
+      Some (DidChangeWatchedFilesFmt.json_of_register_options registerOptions)
+
+  let json_of_params (params : params) : Hh_json.json =
+    let open Hh_json in
     JSON_Object
       [
         ( "registrations",
           JSON_Array
             (List.map params.registrations ~f:(fun registration ->
-                 JSON_Object
+                 Jprint.object_opt
                    [
-                     ("id", string_ registration.id);
-                     ("method", string_ registration.method_);
-                     ("registerOptions", print_registrationOptions registration.registerOptions);
+                     ("id", Some (string_ registration.id));
+                     ("method", Some (string_ registration.method_));
+                     ("registerOptions", json_of_options registration.registerOptions);
                    ])) );
-      ])
-
-let parse_didChangeWatchedFiles (json : Hh_json.json option) : DidChangeWatchedFiles.params =
-  let changes =
-    Jget.array_exn json "changes"
-    |> List.map ~f:(fun change ->
-           let uri = Jget.string_exn change "uri" |> DocumentUri.of_string in
-           let type_ = Jget.int_exn change "type" in
-           let type_ =
-             match DidChangeWatchedFiles.fileChangeType_of_enum type_ with
-             | Some type_ -> type_
-             | None -> failwith (Printf.sprintf "Invalid file change type %d" type_)
-           in
-           { DidChangeWatchedFiles.uri; type_ })
-  in
-  { DidChangeWatchedFiles.changes }
+      ]
+end
 
 (************************************************************************)
 (* error response                                                       *)
@@ -1361,7 +1369,7 @@ let parse_lsp_notification (method_ : string) (params : json option) : lsp_notif
   | "textDocument/didSave" -> DidSaveNotification (parse_didSave params)
   | "textDocument/didChange" -> DidChangeNotification (parse_didChange params)
   | "workspace/didChangeWatchedFiles" ->
-    DidChangeWatchedFilesNotification (parse_didChangeWatchedFiles params)
+    DidChangeWatchedFilesNotification (DidChangeWatchedFilesFmt.params_of_json params)
   | "textDocument/publishDiagnostics"
   | "window/logMessage"
   | "window/showMessage"
@@ -1437,7 +1445,7 @@ let print_lsp_request (id : lsp_id) (request : lsp_request) : json =
     match request with
     | ShowMessageRequestRequest r -> print_showMessageRequest r
     | ShowStatusRequest r -> print_showStatus r
-    | RegisterCapabilityRequest r -> print_registerCapability r
+    | RegisterCapabilityRequest r -> RegisterCapabilityFmt.json_of_params r
     | InitializeRequest _
     | ShutdownRequest
     | HoverRequest _

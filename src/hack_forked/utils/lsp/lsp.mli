@@ -917,19 +917,18 @@ module Error : sig
   exception LspException of t
 end
 
-type lsp_registration_options =
-  | DidChangeWatchedFilesRegistrationOptions of DidChangeWatchedFiles.registerOptions
-
 module RegisterCapability : sig
   type params = { registrations: registration list }
 
   and registration = {
     id: string;
     method_: string;
-    registerOptions: lsp_registration_options;
+    registerOptions: options;
   }
 
-  val make_registration : lsp_registration_options -> registration
+  and options = DidChangeWatchedFiles of DidChangeWatchedFiles.registerOptions
+
+  val make_registration : options -> registration
 end
 
 type lsp_request =
