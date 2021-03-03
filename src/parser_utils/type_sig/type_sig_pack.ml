@@ -125,6 +125,10 @@ type 'loc packed =
       loc: 'loc;
       index: Module_refs.index;
     }
+  | ImportDynamic of {
+      loc: 'loc;
+      index: Module_refs.index;
+    }
   | ModuleRef of {
       loc: 'loc;
       index: Module_refs.index;
@@ -225,6 +229,10 @@ let rec pack_parsed cx = function
     let loc = pack_loc loc in
     let index = Module_refs.index_exn mref in
     Require { loc; index }
+  | P.ImportDynamic { loc; mref } ->
+    let loc = pack_loc loc in
+    let index = Module_refs.index_exn mref in
+    ImportDynamic { loc; index }
   | P.ModuleRef { loc; mref } ->
     let loc = pack_loc loc in
     let index = Module_refs.index_exn mref in

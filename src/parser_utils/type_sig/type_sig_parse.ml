@@ -63,6 +63,7 @@ type 'loc parsed =
   | Pattern of 'loc pattern_node
   | Eval of 'loc loc_node * 'loc parsed * 'loc parsed op
   | Require of {loc: 'loc loc_node; mref: module_ref_node}
+  | ImportDynamic of {loc: 'loc loc_node; mref: module_ref_node}
   | ModuleRef of {loc: 'loc loc_node; mref: module_ref_node}
 
 and 'loc tyname =
@@ -2538,9 +2539,15 @@ let rec expression opts scope locs (loc, expr) =
     key_mirror locs obj_loc properties
   | E.JSXElement elem ->
     jsx_element opts locs loc elem
-  | E.Import _ ->
-    (* TODO: dynamic imports? *)
-    Err (loc, SigError (Signature_error.UnexpectedExpression (loc, Flow_ast_utils.ExpressionSort.Import)))
+  | E.Import { E.Import.argument = (_, e); comments = _} ->
+    begin match extract_string_literal e with
+    | None ->
+      (* error case: non-literal require *)
+      Annot (Any loc)
+    | Some mref ->
+      let mref = Scope.push_module_ref mref scope in
+      ImportDynamic {loc; mref}
+    end
   | E.Call _ ->
     Err (loc, SigError (Signature_error.UnexpectedExpression (loc, Flow_ast_utils.ExpressionSort.Call)))
   | E.Comprehension _ ->
