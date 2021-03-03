@@ -94,6 +94,7 @@ module T = struct
     | Promise of (Loc.t * expr_type)
     | TypeCast of type_
     | Outline of outlinable_t
+    | DynamicImport of Loc.t * Loc.t Ast.StringLiteral.t
     | ObjectDestruct of little_annotation * (Loc.t * string)
     | FixMe
 
@@ -103,7 +104,6 @@ module T = struct
 
   and outlinable_t =
     | Class of (Loc.t * string) option * class_t
-    | DynamicImport of Loc.t * Loc.t Ast.StringLiteral.t
     | DynamicRequire of (Loc.t, Loc.t) Ast.Expression.t
 
   and function_t =
@@ -443,6 +443,62 @@ module T = struct
             internal = true;
             comments = None;
           } )
+    | (loc, DynamicImport (source_loc, source_lit)) ->
+      let f mk_id =
+        let id = mk_id () in
+        let import_kind = Ast.Statement.ImportDeclaration.ImportValue in
+        let source = (source_loc, source_lit) in
+        let default = None in
+        let specifiers =
+          Some
+            (Ast.Statement.ImportDeclaration.ImportNamespaceSpecifier
+               (loc, Flow_ast_utils.ident_of_source id))
+        in
+        ( id,
+          ( loc,
+            Ast.Statement.ImportDeclaration
+              {
+                Ast.Statement.ImportDeclaration.import_kind;
+                source;
+                default;
+                specifiers;
+                comments = None;
+              } ) )
+      in
+      let id = Outlined.next outlined loc f in
+      ( loc,
+        Ast.Type.Generic
+          {
+            Ast.Type.Generic.id =
+              Ast.Type.Generic.Identifier.Unqualified
+                (Flow_ast_utils.ident_of_source (loc, "Promise"));
+            targs =
+              Some
+                ( loc,
+                  {
+                    Ast.Type.TypeArgs.arguments =
+                      [
+                        ( loc,
+                          Ast.Type.Typeof
+                            {
+                              Ast.Type.Typeof.argument =
+                                type_of_generic
+                                  ( loc,
+                                    {
+                                      Ast.Type.Generic.id =
+                                        Ast.Type.Generic.Identifier.Unqualified
+                                          (Flow_ast_utils.ident_of_source id);
+                                      targs = None;
+                                      comments = None;
+                                    } );
+                              internal = true;
+                              comments = None;
+                            } );
+                      ];
+                    comments = None;
+                  } );
+            comments = None;
+          } )
     | (loc, ObjectDestruct (annot_or_init, prop)) ->
       let t = type_of_little_annotation outlined annot_or_init in
       let f mk_id =
@@ -501,26 +557,6 @@ module T = struct
         | Some id -> id
       in
       (id, stmt_of_decl outlined decl_loc id (ClassDecl class_t))
-    | DynamicImport (source_loc, source_lit) ->
-      let id = mk_id () in
-      let import_kind = Ast.Statement.ImportDeclaration.ImportValue in
-      let source = (source_loc, source_lit) in
-      let default = None in
-      let specifiers =
-        Some
-          (Ast.Statement.ImportDeclaration.ImportNamespaceSpecifier
-             (decl_loc, Flow_ast_utils.ident_of_source id))
-      in
-      ( id,
-        ( decl_loc,
-          Ast.Statement.ImportDeclaration
-            {
-              Ast.Statement.ImportDeclaration.import_kind;
-              source;
-              default;
-              specifiers;
-              comments = None;
-            } ) )
     | DynamicRequire require ->
       let id = mk_id () in
       let kind = Ast.Statement.VariableDeclaration.Const in
@@ -1240,9 +1276,7 @@ module Eval (Env : Signature_builder_verify.EvalEnv) = struct
                     } ) );
             comments = _;
           } ) ->
-      ( loc,
-        T.Outline (T.DynamicImport (source_loc, { Ast.StringLiteral.value; raw; comments = None }))
-      )
+      (loc, T.DynamicImport (source_loc, { Ast.StringLiteral.value; raw; comments = None }))
     | ( loc,
         Call
           {
