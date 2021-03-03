@@ -284,6 +284,7 @@ let trigger_of_lsp_msg =
   (* Requests which we don't care about. Some are unsupported and some are sent from the lsp to
     * the client *)
   | RequestMessage (_, CompletionItemResolveRequest _)
+  | RequestMessage (_, ConfigurationRequest _)
   | RequestMessage (_, DocumentFormattingRequest _)
   | RequestMessage (_, DocumentOnTypeFormattingRequest _)
   | RequestMessage (_, DocumentRangeFormattingRequest _)
@@ -307,6 +308,7 @@ let trigger_of_lsp_msg =
   | ResponseMessage (_, DefinitionResult _)
   | ResponseMessage (_, CompletionResult _)
   | ResponseMessage (_, CompletionItemResolveResult _)
+  | ResponseMessage (_, ConfigurationResult _)
   | ResponseMessage (_, SignatureHelpResult _)
   | ResponseMessage (_, WorkspaceSymbolResult _)
   | ResponseMessage (_, DocumentSymbolResult _)
@@ -345,5 +347,6 @@ let trigger_of_lsp_msg =
   | NotificationMessage SetTraceNotification
   | NotificationMessage LogTraceNotification
   | NotificationMessage (UnknownNotification _)
+  | NotificationMessage (DidChangeConfigurationNotification _)
   | NotificationMessage (DidChangeWatchedFilesNotification _) ->
     None

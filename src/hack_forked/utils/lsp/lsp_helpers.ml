@@ -267,6 +267,9 @@ let supports_codeActionKinds (p : Lsp.Initialize.params) : CodeActionKind.t list
   | Some { CodeActionLiteralSupport.valueSet } -> valueSet
   | None -> []
 
+let supports_configuration (p : Lsp.Initialize.params) : bool =
+  Lsp.Initialize.(p.client_capabilities.workspace.configuration)
+
 let supports_status (p : Lsp.Initialize.params) : bool =
   Lsp.Initialize.(p.client_capabilities.window.status)
 

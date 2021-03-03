@@ -392,7 +392,10 @@ module Initialize = struct
 
   and workspaceClientCapabilities = {
     applyEdit: bool;  (** client supports appling batch edits *)
+    configuration: bool;  (** client supports workspace/configuration requests *)
     workspaceEdit: workspaceEdit;
+    didChangeConfiguration: dynamicRegistration;
+        (** client supports workspace/didChangeConfiguration notifications *)
     didChangeWatchedFiles: dynamicRegistration; (* omitted: other dynamic-registration fields *)
   }
 
@@ -623,6 +626,11 @@ module DidChange = struct
   }
 end
 
+(** Configuration changed notification, method="workspace/didChangeConfiguration" *)
+module DidChangeConfiguration = struct
+  type params = { settings: Hh_json.json }
+end
+
 (** Watched files changed notification, method="workspace/didChangeWatchedFiles" *)
 module DidChangeWatchedFiles = struct
   type registerOptions = { watchers: fileSystemWatcher list }
@@ -789,6 +797,18 @@ module CompletionItemResolve = struct
   type params = Completion.completionItem
 
   and result = Completion.completionItem
+end
+
+(* Configuration request, method="workspace/configuration" *)
+module Configuration = struct
+  type params = { items: item list }
+
+  and item = {
+    scope_uri: DocumentUri.t option;
+    section: string option;
+  }
+
+  and result = Hh_json.json list
 end
 
 (* Workspace Symbols request, method="workspace/symbol" *)
@@ -1117,13 +1137,16 @@ module RegisterCapability = struct
     registerOptions: options;
   }
 
-  and options = DidChangeWatchedFiles of DidChangeWatchedFiles.registerOptions
+  and options =
+    | DidChangeConfiguration  (** has no options *)
+    | DidChangeWatchedFiles of DidChangeWatchedFiles.registerOptions
 
   let make_registration (registerOptions : options) : registration =
     (* The ID field is arbitrary but unique per type of capability (for future
        deregistering, which we don't do). *)
     let (id, method_) =
       match registerOptions with
+      | DidChangeConfiguration -> ("did-change-configuration", "workspace/didChangeConfiguration")
       | DidChangeWatchedFiles _ -> ("did-change-watched-files", "workspace/didChangeWatchedFiles")
     in
     { id; method_; registerOptions }
@@ -1144,6 +1167,7 @@ type lsp_request =
   | CodeActionRequest of CodeActionRequest.params
   | CompletionRequest of Completion.params
   | CompletionItemResolveRequest of CompletionItemResolve.params
+  | ConfigurationRequest of Configuration.params
   | SignatureHelpRequest of SignatureHelp.params
   | WorkspaceSymbolRequest of WorkspaceSymbol.params
   | DocumentSymbolRequest of DocumentSymbol.params
@@ -1171,6 +1195,7 @@ type lsp_result =
   | CodeActionResult of CodeAction.result
   | CompletionResult of Completion.result
   | CompletionItemResolveResult of CompletionItemResolve.result
+  | ConfigurationResult of Configuration.result
   | SignatureHelpResult of SignatureHelp.result
   | WorkspaceSymbolResult of WorkspaceSymbol.result
   | DocumentSymbolResult of DocumentSymbol.result
@@ -1198,6 +1223,7 @@ type lsp_notification =
   | DidCloseNotification of DidClose.params
   | DidSaveNotification of DidSave.params
   | DidChangeNotification of DidChange.params
+  | DidChangeConfigurationNotification of DidChangeConfiguration.params
   | DidChangeWatchedFilesNotification of DidChangeWatchedFiles.params
   | LogMessageNotification of LogMessage.params
   | TelemetryNotification of LogMessage.params (* LSP allows 'any' but we only send these *)

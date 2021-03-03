@@ -288,7 +288,9 @@ module Initialize : sig
 
   and workspaceClientCapabilities = {
     applyEdit: bool;
+    configuration: bool;
     workspaceEdit: workspaceEdit;
+    didChangeConfiguration: dynamicRegistration;
     didChangeWatchedFiles: dynamicRegistration;
   }
 
@@ -488,6 +490,10 @@ module DidChange : sig
   }
 end
 
+module DidChangeConfiguration : sig
+  type params = { settings: Hh_json.json }
+end
+
 module DidChangeWatchedFiles : sig
   type registerOptions = { watchers: fileSystemWatcher list }
 
@@ -633,6 +639,17 @@ module CompletionItemResolve : sig
   type params = Completion.completionItem
 
   and result = Completion.completionItem
+end
+
+module Configuration : sig
+  type params = { items: item list }
+
+  and item = {
+    scope_uri: DocumentUri.t option;
+    section: string option;
+  }
+
+  and result = Hh_json.json list
 end
 
 module WorkspaceSymbol : sig
@@ -926,7 +943,9 @@ module RegisterCapability : sig
     registerOptions: options;
   }
 
-  and options = DidChangeWatchedFiles of DidChangeWatchedFiles.registerOptions
+  and options =
+    | DidChangeConfiguration  (** has no options *)
+    | DidChangeWatchedFiles of DidChangeWatchedFiles.registerOptions
 
   val make_registration : options -> registration
 end
@@ -942,6 +961,7 @@ type lsp_request =
   | CodeActionRequest of CodeActionRequest.params
   | CompletionRequest of Completion.params
   | CompletionItemResolveRequest of CompletionItemResolve.params
+  | ConfigurationRequest of Configuration.params
   | SignatureHelpRequest of SignatureHelp.params
   | WorkspaceSymbolRequest of WorkspaceSymbol.params
   | DocumentSymbolRequest of DocumentSymbol.params
@@ -969,6 +989,7 @@ type lsp_result =
   | CodeActionResult of CodeAction.result
   | CompletionResult of Completion.result
   | CompletionItemResolveResult of CompletionItemResolve.result
+  | ConfigurationResult of Configuration.result
   | SignatureHelpResult of SignatureHelp.result
   | WorkspaceSymbolResult of WorkspaceSymbol.result
   | DocumentSymbolResult of DocumentSymbol.result
@@ -996,6 +1017,7 @@ type lsp_notification =
   | DidCloseNotification of DidClose.params
   | DidSaveNotification of DidSave.params
   | DidChangeNotification of DidChange.params
+  | DidChangeConfigurationNotification of DidChangeConfiguration.params
   | DidChangeWatchedFilesNotification of DidChangeWatchedFiles.params
   | LogMessageNotification of LogMessage.params
   | TelemetryNotification of LogMessage.params (* LSP allows 'any' but we only send these *)

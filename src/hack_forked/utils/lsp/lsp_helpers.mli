@@ -67,6 +67,8 @@ val get_root : Lsp.Initialize.params -> string
 
 val supports_codeActionKinds : Lsp.Initialize.params -> Lsp.CodeActionKind.t list
 
+val supports_configuration : Lsp.Initialize.params -> bool
+
 val supports_status : Lsp.Initialize.params -> bool
 
 val supports_snippets : Lsp.Initialize.params -> bool
