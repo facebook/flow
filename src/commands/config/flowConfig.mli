@@ -95,6 +95,20 @@ val file_watcher_timeout : config -> int option
 
 val format_single_quotes : config -> bool option
 
+val gc_worker_custom_major_ratio : config -> int option
+
+val gc_worker_custom_minor_max_size : config -> int option
+
+val gc_worker_custom_minor_ratio : config -> int option
+
+val gc_worker_major_heap_increment : config -> int option
+
+val gc_worker_minor_heap_size : config -> int option
+
+val gc_worker_space_overhead : config -> int option
+
+val gc_worker_window_size : config -> int option
+
 val haste_module_ref_prefix : config -> string option
 
 val haste_name_reducers : config -> (Str.regexp * string) list

@@ -60,6 +60,13 @@ module Opts = struct
     file_watcher_timeout: int option;
     file_watcher: file_watcher option;
     format_single_quotes: bool option;  (** prefer single-quoted strings *)
+    gc_worker_custom_major_ratio: int option;  (** Gc.control's custom_major_ratio *)
+    gc_worker_custom_minor_max_size: int option;  (** Gc.control's custom_minor_max_size *)
+    gc_worker_custom_minor_ratio: int option;  (** Gc.control's custom_minor_ratio *)
+    gc_worker_major_heap_increment: int option;  (** Gc.control's major_heap_increment *)
+    gc_worker_minor_heap_size: int option;  (** Gc.control's minor_heap_size *)
+    gc_worker_space_overhead: int option;  (** Gc.control's space_overhead *)
+    gc_worker_window_size: int option;  (** Gc.control's window_size *)
     generate_tests: bool;
     haste_module_ref_prefix: string option;
     haste_name_reducers: (Str.regexp * string) list;
@@ -171,6 +178,13 @@ module Opts = struct
       file_watcher = None;
       file_watcher_timeout = None;
       format_single_quotes = None;
+      gc_worker_custom_major_ratio = None;
+      gc_worker_custom_minor_max_size = None;
+      gc_worker_custom_minor_ratio = None;
+      gc_worker_major_heap_increment = None;
+      gc_worker_minor_heap_size = None;
+      gc_worker_space_overhead = None;
+      gc_worker_window_size = None;
       generate_tests = false;
       haste_module_ref_prefix = None;
       haste_name_reducers =
@@ -448,6 +462,27 @@ module Opts = struct
       ~init:(fun opts -> { opts with haste_use_name_reducers = false })
       (fun opts v -> Ok { opts with haste_use_name_reducers = v })
 
+  let gc_worker_major_heap_increment_parser =
+    uint (fun opts v -> Ok { opts with gc_worker_major_heap_increment = Some v })
+
+  let gc_worker_minor_heap_size_parser =
+    uint (fun opts v -> Ok { opts with gc_worker_minor_heap_size = Some v })
+
+  let gc_worker_space_overhead_parser =
+    uint (fun opts v -> Ok { opts with gc_worker_space_overhead = Some v })
+
+  let gc_worker_window_size_parser =
+    uint (fun opts v -> Ok { opts with gc_worker_window_size = Some v })
+
+  let gc_worker_custom_major_ratio_parser =
+    uint (fun opts v -> Ok { opts with gc_worker_custom_major_ratio = Some v })
+
+  let gc_worker_custom_minor_ratio_parser =
+    uint (fun opts v -> Ok { opts with gc_worker_custom_minor_ratio = Some v })
+
+  let gc_worker_custom_minor_max_size_parser =
+    uint (fun opts v -> Ok { opts with gc_worker_custom_minor_max_size = Some v })
+
   let ignore_non_literal_requires_parser =
     boolean (fun opts v -> Ok { opts with ignore_non_literal_requires = v })
 
@@ -626,6 +661,13 @@ module Opts = struct
       ("file_watcher.watchman.sync_timeout", watchman_sync_timeout_parser);
       ("file_watcher", file_watcher_parser);
       ("format.single_quotes", format_single_quotes_parser);
+      ("gc.worker.custom_major_ratio", gc_worker_custom_major_ratio_parser);
+      ("gc.worker.custom_minor_max_size", gc_worker_custom_minor_max_size_parser);
+      ("gc.worker.custom_minor_ratio", gc_worker_custom_minor_ratio_parser);
+      ("gc.worker.major_heap_increment", gc_worker_major_heap_increment_parser);
+      ("gc.worker.minor_heap_size", gc_worker_minor_heap_size_parser);
+      ("gc.worker.space_overhead", gc_worker_space_overhead_parser);
+      ("gc.worker.window_size", gc_worker_window_size_parser);
       ("include_warnings", boolean (fun opts v -> Ok { opts with include_warnings = v }));
       ("indexed_access", boolean (fun opts v -> Ok { opts with indexed_access = v }));
       ("lazy_mode", lazy_mode_parser);
@@ -1326,3 +1368,17 @@ let weak c = c.options.Opts.weak
 let lint_severities c = c.lint_severities
 
 let strict_mode c = c.strict_mode
+
+let gc_worker_minor_heap_size c = c.options.Opts.gc_worker_minor_heap_size
+
+let gc_worker_major_heap_increment c = c.options.Opts.gc_worker_major_heap_increment
+
+let gc_worker_space_overhead c = c.options.Opts.gc_worker_space_overhead
+
+let gc_worker_window_size c = c.options.Opts.gc_worker_window_size
+
+let gc_worker_custom_major_ratio c = c.options.Opts.gc_worker_custom_major_ratio
+
+let gc_worker_custom_minor_ratio c = c.options.Opts.gc_worker_custom_minor_ratio
+
+let gc_worker_custom_minor_max_size c = c.options.Opts.gc_worker_custom_minor_max_size

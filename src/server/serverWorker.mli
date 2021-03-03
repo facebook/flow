@@ -5,4 +5,5 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
-val make : n:int -> init_id:string -> SharedMem.handle -> MultiWorkerLwt.worker list
+val make :
+  n:int -> gc_control:Gc.control -> init_id:string -> SharedMem.handle -> MultiWorkerLwt.worker list

@@ -1311,6 +1311,19 @@ let make_options
     opt_format;
     opt_autoimports = Base.Option.value (FlowConfig.autoimports flowconfig) ~default:false;
     opt_flowconfig_hash = flowconfig_hash;
+    opt_gc_worker =
+      {
+        Options.gc_minor_heap_size =
+          Base.Option.first_some
+            (FlowConfig.gc_worker_minor_heap_size flowconfig)
+            (Some (1024 * 1024 * 2));
+        gc_major_heap_increment = FlowConfig.gc_worker_major_heap_increment flowconfig;
+        gc_space_overhead = FlowConfig.gc_worker_space_overhead flowconfig;
+        gc_window_size = FlowConfig.gc_worker_window_size flowconfig;
+        gc_custom_major_ratio = FlowConfig.gc_worker_custom_major_ratio flowconfig;
+        gc_custom_minor_ratio = FlowConfig.gc_worker_custom_minor_ratio flowconfig;
+        gc_custom_minor_max_size = FlowConfig.gc_worker_custom_minor_max_size flowconfig;
+      };
   }
 
 let make_env flowconfig_name connect_flags root =
