@@ -168,6 +168,13 @@ let run_but_cancel_on_file_changes ~options env ~get_forced ~f ~pre_cancel ~post
     Lwt.cancel cancel_thread;
     post_cancel ()
 
+type recheck_outcome =
+  | Nothing_to_do of ServerEnv.env
+  | Completed_recheck of {
+      profiling: Profiling_js.finished;
+      env: ServerEnv.env;
+    }
+
 (* Perform a single recheck. This will incorporate any pending changes from the file watcher.
  * If any file watcher notifications come in during the recheck, it will be canceled and restarted
  * to include the new changes *)
@@ -200,7 +207,7 @@ let rec recheck_single
     let recheck_reasons_list_rev = workload.recheck_reasons_rev :: recheck_reasons_list_rev in
     if FilenameSet.is_empty files_to_recheck && CheckedSet.is_empty files_to_force then (
       List.iter (fun callback -> callback None) workload.profiling_callbacks;
-      Lwt.return (Error env) (* Nothing to do *)
+      Lwt.return (Nothing_to_do env)
     ) else
       (* Start the parallelizable workloads loop and return a function which will stop the loop *)
       let stop_parallelizable_workloads = start_parallelizable_workloads env in
@@ -250,7 +257,7 @@ let rec recheck_single
 
         (* Now that the recheck is done, it's safe to retry deferred parallelizable workloads *)
         ServerMonitorListenerState.requeue_deferred_parallelizable_workloads ();
-        Lwt.return (Ok (profiling, env))
+        Lwt.return (Completed_recheck { profiling; env })
       in
       run_but_cancel_on_file_changes
         ~options
@@ -267,10 +274,8 @@ let recheck_loop =
     let files_to_recheck = FilenameSet.empty in
     let files_to_force = CheckedSet.empty in
     match%lwt recheck_single ~files_to_recheck ~files_to_force genv env with
-    | Error env ->
-      (* No more work to do for now *)
-      Lwt.return (List.rev profiling, env)
-    | Ok (recheck_profiling, env) ->
+    | Nothing_to_do env -> Lwt.return (List.rev profiling, env)
+    | Completed_recheck { profiling = recheck_profiling; env } ->
       (* We just finished a recheck. Let's see if there's any more stuff to recheck *)
       loop ~profiling:(recheck_profiling :: profiling) genv env
   in
