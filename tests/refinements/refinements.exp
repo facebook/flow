@@ -48,8 +48,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- bool.js:12:5
 
-Cannot get `x[0]` because an index signature declaring the expected key / value type is missing in null or
-undefined [1]. [incompatible-use]
+Cannot get `x[0]` because null or undefined [1] does not have properties. [incompatible-use]
 
    bool.js:12:5
    12|   x[0]; // error on null and undefined
@@ -63,8 +62,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- bool.js:18:9
 
-Cannot get `x[0]` because an index signature declaring the expected key / value type is missing in null or
-undefined [1]. [incompatible-use]
+Cannot get `x[0]` because null or undefined [1] does not have properties. [incompatible-use]
 
    bool.js:18:9
    18|       x[0]; // error on null and undefined
@@ -1461,8 +1459,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ not.js:11:7
 
-Cannot get `x[0]` because an index signature declaring the expected key / value type is missing in null or
-undefined [1]. [incompatible-use]
+Cannot get `x[0]` because null or undefined [1] does not have properties. [incompatible-use]
 
    not.js:11:7
    11|     x[0]; // should error for null, void and number (0)

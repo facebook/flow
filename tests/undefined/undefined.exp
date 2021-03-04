@@ -12,6 +12,20 @@ References:
               ^ [1]
 
 
+Error ----------------------------------------------------------------------------------------------- undefined.js:13:11
+
+Cannot get `undefined['foo']` because undefined [1] does not have properties. [incompatible-use]
+
+   undefined.js:13:11
+   13| undefined['foo']; // Error
+                 ^^^^^
+
+References:
+   undefined.js:13:1
+   13| undefined['foo']; // Error
+       ^^^^^^^^^ [1]
+
+
 Error ------------------------------------------------------------------------------------------------ undefined2.js:7:6
 
 Cannot cast `name` to boolean because string [1] is incompatible with boolean [2]. [incompatible-cast]
@@ -130,4 +144,4 @@ References:
 
 
 
-Found 8 errors
+Found 9 errors

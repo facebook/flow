@@ -918,7 +918,10 @@ let rec make_error_printable ?(speculation = false) (error : Loc.t t) : Loc.t Er
           @ suggestion
           @ [text " is missing in "; ref lower; text " but exists in "]
           @ [ref upper]
-        | None -> prop_message @ suggestion @ [text " is missing in "; ref lower]
+        | None ->
+          (match prop with
+          | None when is_nullish_reason lower -> [ref lower; text " does not have properties"]
+          | _ -> prop_message @ suggestion @ [text " is missing in "; ref lower])
       in
       (* Finally, create our error message. *)
       mk_use_op_error loc use_op message

@@ -107,5 +107,33 @@ Cannot access boolean on `Arr` because boolean [1] is not an array index. [incom
                                  ^^^^^^^ [1]
 
 
+Error ---------------------------------------------------------------------------------------------------- test.js:50:10
 
-Found 8 errors
+Cannot access string literal `x` on undefined because undefined [1] does not have properties. [incompatible-use]
+
+   test.js:50:10
+   50| (1: void['x']); // Error
+                ^^^
+
+References:
+   test.js:50:5
+   50| (1: void['x']); // Error
+           ^^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:51:10
+
+Cannot access string literal `x` on null because null [1] does not have properties. [incompatible-use]
+
+   test.js:51:10
+   51| (1: null['x']); // Error
+                ^^^
+
+References:
+   test.js:51:5
+   51| (1: null['x']); // Error
+           ^^^^ [1]
+
+
+
+Found 10 errors

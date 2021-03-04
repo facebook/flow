@@ -535,7 +535,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ defaults.js:63:24
 
-An index signature declaring the expected key / value type is missing in null [1]. [incompatible-use]
+null [1] does not have properties. [incompatible-use]
 
    defaults.js:63:24
    63| function arr_elem_err([x]=null) {} // error: element 0 cannot be accessed on null

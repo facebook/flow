@@ -9,3 +9,5 @@ function bar() {
 }
 
 function qux(x?: number, y:string = "", z) { }
+
+undefined['foo']; // Error

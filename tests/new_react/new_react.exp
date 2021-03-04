@@ -517,8 +517,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- new_react.js:21:22
 
-Cannot get `this.props.y[0]` because an index signature declaring the expected key / value type is missing in
-undefined [1]. [incompatible-use]
+Cannot get `this.props.y[0]` because undefined [1] does not have properties. [incompatible-use]
 
    new_react.js:21:22
    21|         this.props.y[0];

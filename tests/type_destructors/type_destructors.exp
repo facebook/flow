@@ -78,8 +78,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- errors.js:19:1
 
-Cannot call `fn1` because an index signature declaring the expected key / value type is missing in null [1].
-[incompatible-use]
+Cannot call `fn1` because null [1] does not have properties. [incompatible-use]
 
    errors.js:19:1
    19| fn1(null); // We should get an error on this line.
@@ -107,8 +106,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- errors.js:22:1
 
-Cannot call `fn2` because an index signature declaring the expected key / value type is missing in null [1].
-[incompatible-use]
+Cannot call `fn2` because null [1] does not have properties. [incompatible-use]
 
    errors.js:22:1
    22| fn2(null)(); // We should get an error on this line.

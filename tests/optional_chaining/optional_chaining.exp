@@ -368,8 +368,7 @@ References:
 
 Error ------------------------------------------------------------------------------------- computed_properties.js:22:14
 
-Cannot get `y1?.["baz"]["foo"]` because an index signature declaring the expected key / value type is missing in null or
-undefined [1]. [incompatible-use]
+Cannot get `y1?.["baz"]["foo"]` because null or undefined [1] does not have properties. [incompatible-use]
 
    computed_properties.js:22:14
    22| (y1?.["baz"]["foo"]: empty);
@@ -415,8 +414,7 @@ References:
 
 Error ------------------------------------------------------------------------------------- computed_properties.js:23:14
 
-Cannot get `y2?.["baz"]["foo"]` because an index signature declaring the expected key / value type is missing in null or
-undefined [1]. [incompatible-use]
+Cannot get `y2?.["baz"]["foo"]` because null or undefined [1] does not have properties. [incompatible-use]
 
    computed_properties.js:23:14
    23| (y2?.["baz"]["foo"]: empty);
@@ -430,8 +428,7 @@ References:
 
 Error -------------------------------------------------------------------------------------- computed_properties.js:25:5
 
-Cannot get `y1["bar"]` because an index signature declaring the expected key / value type is missing in null or
-undefined [1]. [incompatible-use]
+Cannot get `y1["bar"]` because null or undefined [1] does not have properties. [incompatible-use]
 
    computed_properties.js:25:5
    25| (y1["bar"]?.["foo"]: empty);
@@ -509,8 +506,7 @@ References:
 
 Error -------------------------------------------------------------------------------------- computed_properties.js:27:5
 
-Cannot get `y1["baz"]` because an index signature declaring the expected key / value type is missing in null or
-undefined [1]. [incompatible-use]
+Cannot get `y1["baz"]` because null or undefined [1] does not have properties. [incompatible-use]
 
    computed_properties.js:27:5
    27| (y1["baz"]?.["foo"]: empty);
@@ -611,8 +607,7 @@ References:
 
 Error ------------------------------------------------------------------------------------- computed_properties.js:30:16
 
-Cannot get `y1?.["bar"]["foo"]` because an index signature declaring the expected key / value type is missing in null or
-undefined [1]. [incompatible-use]
+Cannot get `y1?.["bar"]["foo"]` because null or undefined [1] does not have properties. [incompatible-use]
 
    computed_properties.js:30:16
    30| ((y1?.["bar"])["foo"]: empty);
@@ -675,8 +670,7 @@ References:
 
 Error ------------------------------------------------------------------------------------- computed_properties.js:32:16
 
-Cannot get `y1?.["baz"]["foo"]` because an index signature declaring the expected key / value type is missing in null or
-undefined [1]. [incompatible-use]
+Cannot get `y1?.["baz"]["foo"]` because null or undefined [1] does not have properties. [incompatible-use]
 
    computed_properties.js:32:16
    32| ((y1?.["baz"])["foo"]: empty);
@@ -690,8 +684,7 @@ References:
 
 Error ------------------------------------------------------------------------------------- computed_properties.js:32:16
 
-Cannot get `y1?.["baz"]["foo"]` because an index signature declaring the expected key / value type is missing in null or
-undefined [1]. [incompatible-use]
+Cannot get `y1?.["baz"]["foo"]` because null or undefined [1] does not have properties. [incompatible-use]
 
    computed_properties.js:32:16
    32| ((y1?.["baz"])["foo"]: empty);
@@ -722,8 +715,7 @@ References:
 
 Error ------------------------------------------------------------------------------------- computed_properties.js:33:16
 
-Cannot get `y2?.["baz"]["foo"]` because an index signature declaring the expected key / value type is missing in null or
-undefined [1]. [incompatible-use]
+Cannot get `y2?.["baz"]["foo"]` because null or undefined [1] does not have properties. [incompatible-use]
 
    computed_properties.js:33:16
    33| ((y2?.["baz"])["foo"]: empty);
@@ -2264,8 +2256,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- refinements.js:136:9
 
-Cannot get `c[1][0]` because an index signature declaring the expected key / value type is missing in null or
-undefined [1]. [incompatible-use]
+Cannot get `c[1][0]` because null or undefined [1] does not have properties. [incompatible-use]
 
    refinements.js:136:9
    136|   (c[1][0]: {}); // no

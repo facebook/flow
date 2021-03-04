@@ -43,6 +43,20 @@ References:
                         ^ [2]
 
 
+Error ----------------------------------------------------------------------------------------------------- maybe.js:6:5
+
+Cannot get `x['bar']` because null or undefined [1] does not have properties. [incompatible-use]
+
+   maybe.js:6:5
+   6|   x['bar']; // Error
+          ^^^^^
+
+References:
+   maybe.js:5:17
+   5| function bar(x: ?{bar: number}) {
+                      ^^^^^^^^^^^^^^ [1]
+
+
 Error ------------------------------------------------------------------------------------------------- nullable.js:17:5
 
 Cannot perform arithmetic operation because null or undefined [1] is not a number. [unsafe-addition]
@@ -316,4 +330,4 @@ References:
 
 
 
-Found 22 errors
+Found 23 errors

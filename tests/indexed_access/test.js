@@ -46,3 +46,6 @@ type Nonexistant = Obj['bork']; // Error
 
 type ArrNonexistant = Arr[boolean]; // Error
 (1: ArrNonexistant);
+
+(1: void['x']); // Error
+(1: null['x']); // Error
