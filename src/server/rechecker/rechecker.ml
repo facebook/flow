@@ -173,6 +173,7 @@ type recheck_outcome =
   | Completed_recheck of {
       profiling: Profiling_js.finished;
       env: ServerEnv.env;
+      recheck_count: int;
     }
 
 (* Perform a single recheck. This will incorporate any pending changes from the file watcher.
@@ -183,6 +184,9 @@ let rec recheck_single
     ~files_to_force
     ?(file_watcher_metadata = MonitorProt.empty_file_watcher_metadata)
     ?(recheck_reasons_list_rev = [])
+    ?((* The number of rechecks in this series, including past canceled rechecks and the current
+       * one. *)
+    recheck_count = 1)
     genv
     env =
   ServerMonitorListenerState.(
@@ -224,6 +228,7 @@ let rec recheck_single
           ~files_to_force
           ~file_watcher_metadata
           ~recheck_reasons_list_rev
+          ~recheck_count:(recheck_count + 1)
           genv
           env
       in
@@ -257,7 +262,7 @@ let rec recheck_single
 
         (* Now that the recheck is done, it's safe to retry deferred parallelizable workloads *)
         ServerMonitorListenerState.requeue_deferred_parallelizable_workloads ();
-        Lwt.return (Completed_recheck { profiling; env })
+        Lwt.return (Completed_recheck { profiling; env; recheck_count })
       in
       run_but_cancel_on_file_changes
         ~options
@@ -273,9 +278,19 @@ let recheck_loop =
   let rec loop ~profiling genv env =
     let files_to_recheck = FilenameSet.empty in
     let files_to_force = CheckedSet.empty in
-    match%lwt recheck_single ~files_to_recheck ~files_to_force genv env with
+    let should_print_summary = Options.should_profile genv.options in
+    let%lwt (recheck_series_profiling, recheck_result) =
+      (* We are intentionally logging just the details around a single recursive `recheck_single`
+       * call so as to include only a series of canceled rechecks and the eventual completed one. *)
+      Profiling_js.with_profiling_lwt
+        ~label:"RecheckSeries"
+        ~should_print_summary
+        (fun _profiling -> recheck_single ~files_to_recheck ~files_to_force genv env)
+    in
+    match recheck_result with
     | Nothing_to_do env -> Lwt.return (List.rev profiling, env)
-    | Completed_recheck { profiling = recheck_profiling; env } ->
+    | Completed_recheck { profiling = recheck_profiling; env; recheck_count } ->
+      FlowEventLogger.recheck_series ~profiling:recheck_series_profiling ~recheck_count;
       (* We just finished a recheck. Let's see if there's any more stuff to recheck *)
       loop ~profiling:(recheck_profiling :: profiling) genv env
   in
