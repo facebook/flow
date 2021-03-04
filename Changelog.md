@@ -1,3 +1,24 @@
+### 0.146.0
+
+Likely to cause new Flow errors:
+- The rules around when refinements are invalidated have been strengthened for increased accuracy, and Flow will now invalidate refinements in a number of locations where they were not previously invalidated. This may expose new Flow errors due to variables that were previously refined to a more specific type now being treated as the unrefined, more general type.
+- Object literals now have covariant subtyping with interfaces
+- Interface optional properties are no longer unsafely covariant in all cases
+- Interfaces with indexed properties are now properly supertypes of classes/objects with named properties matching the indexer
+- `interface {}` is no longer a supertype of `void` and `mixed`
+
+Notable bug fixes:
+- Properties that begin with a `.` were sometimes being ignored by Flow, which has now been fixed
+
+Library Definitions:
+- Added missing attributes to `PerformanceResourceTiming` library definition (thanks @MIGreenberg)
+- Added `withFileTypes` option to `readdir` and `readdirSync` (thanks @mrtnzlml)
+- Added `composedPath` function to `Event` library definition (thanks @Brianzchen)
+- Added JSDocs to `Event` library definition and made most properties read-only
+
+Misc:
+- New flowconfig options to set garbage collector parameters for workers. The new flowconfig options are `gc.worker.custom_major_ratio`, `gc.worker.custom_minor_ratio`, `gc.worker.custom_minor_max_size`, `gc.worker.minor_heap_size`, `gc.worker.major_heap_increment`, `gc.worker.space_overhead`, and `gc.worker.window_size`.
+
 ### 0.145.0
 
 Likely to cause new Flow errors:
