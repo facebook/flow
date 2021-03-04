@@ -10,6 +10,7 @@ type recheck_outcome =
   | Completed_recheck of {
       profiling: Profiling_js.finished;
       env: ServerEnv.env;
+      recheck_count: int;
     }
 
 (* filter and relativize updated file paths *)
