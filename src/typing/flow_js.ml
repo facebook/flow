@@ -6787,15 +6787,12 @@ struct
     let destruct_maybe ?(f = (fun t -> t)) r t upper =
       let destructor = TypeDestructorT (use_op, reason, d) in
       let reason = replace_desc_new_reason RNullOrVoid r in
-      let rep =
-        UnionRep.make
-          (let null = NullT.make reason |> with_trust bogus_trust |> f in
-           Cache.Eval.id cx null destructor)
-          (let void = VoidT.make reason |> with_trust bogus_trust |> f in
-           Cache.Eval.id cx void destructor)
-          [Cache.Eval.id cx (f t) destructor]
-      in
-      rec_flow cx trace (UnionT (r, rep), upper)
+      let null = NullT.make reason |> with_trust bogus_trust |> f in
+      let void = VoidT.make reason |> with_trust bogus_trust |> f in
+      let first = Cache.Eval.id cx (f t) destructor in
+      let unresolved = [Cache.Eval.id cx null destructor; Cache.Eval.id cx void destructor] in
+      let u = ResolveUnionT { reason; unresolved; resolved = []; upper; id = Reason.mk_id () } in
+      rec_flow cx trace (first, u)
     in
     match t with
     | GenericT { bound = OpaqueT (_, { underlying_t = Some t; _ }); reason = r; id; name }
