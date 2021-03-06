@@ -15,7 +15,6 @@ this.
 
 The `.flowconfig` consists of 8 sections:
 
-* [`[declarations]`](declarations)
 * [`[include]`](include)
 * [`[ignore]`](ignore)
 * [`[untyped]`](untyped)
@@ -23,6 +22,7 @@ The `.flowconfig` consists of 8 sections:
 * [`[lints]`](lints)
 * [`[options]`](options)
 * [`[version]`](version)
+* [`[declarations]`](declarations)
 
 ### Comments <a class="toc" id="toc-comments" href="#toc-comments"></a>
 
