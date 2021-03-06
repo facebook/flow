@@ -39,8 +39,8 @@ For a background on the project, please read [this overview](https://flow.org/en
 
 Flow works with:
 
-* macOS
-* Linux (64-bit)
+* macOS (x86_64)
+* Linux (64-bit, x86_64 and arm64)
 * Windows (64-bit, Windows 10 recommended)
 
 There are [binary distributions](https://github.com/facebook/flow/releases) for each of these platforms and you can also build it from source on any of them as well.

@@ -1385,7 +1385,11 @@ CAMLprim value hh_add(value key, value addr) {
       // writing both the hash and the address at the same time. Whatever data
       // was in the slot at the time of the CAS will be stored in `old`.
       helt_t old;
-      old.value = __sync_val_compare_and_swap(&hashtbl[slot].value, 0, elt.value);
+      old.value = 0;
+      __atomic_compare_exchange(
+        &hashtbl[slot].value, &old.value, &elt.value, 0,
+        __ATOMIC_SEQ_CST, __ATOMIC_SEQ_CST
+      );
 
       if (old.hash == 0) {
         // The slot was still empty when we tried to CAS, meaning we
