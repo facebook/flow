@@ -31,9 +31,13 @@ exception Heap_full
 
 val connect : handle -> worker_id:int -> unit
 
-val on_compact : (effort -> unit -> unit) ref
+val on_compact : (unit -> unit -> unit) ref
 
-val collect : effort -> unit
+val collect_slice : ?force:bool -> int -> bool
+
+val collect_full : unit -> unit
+
+val compact : unit -> unit
 
 type table_stats = {
   nonempty_slots: int;

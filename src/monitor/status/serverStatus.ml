@@ -65,7 +65,6 @@ type typecheck_status =
   | Merging_types of progress
   | Checking of progress
   | Canceling of progress
-  | Garbage_collecting_typecheck (* We garbage collect during typechecks sometime *)
   | Collating_errors (* We sometimes collate errors during typecheck *)
   | Finishing_typecheck of summary (* haven't reached free state yet *)
   | Waiting_for_watchman of (* deadline *) float option
@@ -205,8 +204,6 @@ let string_of_typecheck_status ~use_emoji = function
       "%scanceling workers %s"
       (render_emoji ~use_emoji Recycling_symbol)
       (string_of_progress progress)
-  | Garbage_collecting_typecheck ->
-    spf "%sgarbage collecting shared memory" (render_emoji ~use_emoji Wastebasket)
   | Collating_errors -> spf "%scollating errors" (render_emoji ~use_emoji File_cabinet)
   | Waiting_for_watchman deadline ->
     let timeout =
@@ -272,7 +269,6 @@ let update ~event ~status =
     Typechecking (mode, Merging_types progress)
   | (Checking_progress progress, Typechecking (mode, _)) -> Typechecking (mode, Checking progress)
   | (Canceling_progress progress, Typechecking (mode, _)) -> Typechecking (mode, Canceling progress)
-  | (GC_start, Typechecking (mode, _)) -> Typechecking (mode, Garbage_collecting_typecheck)
   | (Collating_errors_start, Typechecking (mode, _)) -> Typechecking (mode, Collating_errors)
   | (Watchman_wait_start deadline, Typechecking (mode, _)) ->
     Typechecking (mode, Waiting_for_watchman deadline)
@@ -332,7 +328,6 @@ let is_significant_transition old_status new_status =
       | (_, Merging_types _)
       | (_, Checking _)
       | (_, Canceling _)
-      | (_, Garbage_collecting_typecheck)
       | (_, Waiting_for_watchman _)
       | (_, Collating_errors)
       | (_, Finishing_typecheck _) ->

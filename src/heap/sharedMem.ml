@@ -76,11 +76,14 @@ let connect handle ~worker_id =
   heap_ref := Some heap
 
 (*****************************************************************************)
-(* The shared memory garbage collector. It must be called every time we
- * free data (cf hh_shared.c for the underlying C implementation).
- *)
+(* The current state of the incremental GC. *)
 (*****************************************************************************)
-external hh_collect : unit -> unit = "hh_collect"
+type gc_phase =
+  | Phase_idle
+  | Phase_mark
+  | Phase_sweep
+
+external gc_phase : unit -> gc_phase = "hh_gc_phase"
 
 (*****************************************************************************)
 (* The size of the dynamically allocated shared memory section *)
@@ -88,9 +91,40 @@ external hh_collect : unit -> unit = "hh_collect"
 external heap_size : unit -> int = "hh_used_heap_size"
 
 (*****************************************************************************)
-(* Part of the heap not reachable from hashtable entries. *)
+(* The size of any new allocations since the previous full collection cycle *)
 (*****************************************************************************)
-external wasted_heap_size : unit -> int = "hh_wasted_heap_size"
+external new_alloc_size : unit -> int = "hh_new_alloc_size"
+
+(*****************************************************************************)
+(* The size of all free space in shared memory *)
+(*****************************************************************************)
+external free_size : unit -> int = "hh_free_heap_size"
+
+(*****************************************************************************)
+(* Force a new GC cycle to start. Precondition: gc_phase must be Phase_idle *)
+(*****************************************************************************)
+external start_cycle : unit -> unit = "hh_start_cycle"
+
+(*****************************************************************************)
+(* Perform a fixed amount of marking work. The return value is the unused work
+ * budget. If marking completed in the given budget, the returned value will be
+ * greater than 0. Precondition: gc_phase must be Phase_mark. *)
+(*****************************************************************************)
+external mark_slice : int -> int = "hh_mark_slice"
+
+(*****************************************************************************)
+(* Perform a fixed amount of sweeping work. The return value is the unused work
+ * budget. If weeping completed in the given budget, the returned value will be
+ * greater than 0. Precondition: gc_phase must be Phase_sweep. *)
+(*****************************************************************************)
+external sweep_slice : int -> int = "hh_sweep_slice"
+
+(*****************************************************************************)
+(* Compact the heap, sliding objects "to the left" over any free objects
+ * discovered during the previous full mark and sweep. Precondition: gc_phase
+ * must be Phase_idle. *)
+(*****************************************************************************)
+external hh_compact : unit -> unit = "hh_compact"
 
 (*****************************************************************************)
 (* The logging level for shared memory statistics *)
@@ -112,23 +146,84 @@ let init_done () = EventLogger.sharedmem_init_done (heap_size ())
 
 let on_compact = ref (fun _ _ -> ())
 
-let should_collect effort =
-  let overhead =
-    match effort with
-    | `always_TEST -> 1.0
-    | `aggressive -> 1.2
-  in
-  let used = heap_size () in
-  let wasted = wasted_heap_size () in
-  let reachable = used - wasted in
-  used >= truncate (float reachable *. overhead)
+let compact_helper () =
+  let k = !on_compact () in
+  hh_compact ();
+  k ()
 
-let collect effort =
-  if should_collect effort then begin
-    let k = !on_compact effort in
-    hh_collect ();
-    k ()
-  end
+(* GC will attempt to keep the overhead of garbage to no more than 20%. Before
+ * we actually mark and sweep, however, we don't know how much garbage there is,
+ * so we estimate.
+ *
+ * To estimate the amount of garbage, we consider all "new" allocations --
+ * allocations since the previous mark+sweep -- to be garbage. We add that
+ * number to the known free space. If that is at least 20% of the total space,
+ * we will kick of a new mark and sweep pass. *)
+let should_collect () =
+  let estimated_garbage = free_size () + new_alloc_size () in
+  estimated_garbage * 5 >= heap_size ()
+
+(* After a full mark and sweep, we want to compact the heap if the amount of
+ * free space is 20% of the scanned heap. *)
+let should_compact () =
+  let scanned_size = heap_size () - new_alloc_size () in
+  free_size () * 5 >= scanned_size
+
+(* Perform an incremental "slice" of GC work. The caller can control the amount
+ * of work performed by passing in a smaller or larger "work" budget. This
+ * function returns `true` when the GC phase was completed, and `false` if there
+ * is still more work to do. *)
+let collect_slice ?(force = false) work =
+  let work = ref work in
+
+  while !work > 0 do
+    match gc_phase () with
+    | Phase_idle ->
+      if force || should_collect () then
+        start_cycle ()
+      else
+        work := 0
+    | Phase_mark -> work := mark_slice !work
+    | Phase_sweep ->
+      ignore (sweep_slice !work);
+      work := 0
+  done;
+
+  let is_idle = gc_phase () = Phase_idle in
+
+  (* The GC will be in idle phase under two conditions: (1) we started in idle
+   * and did not start a new collect cycle, or (2) we just finished a sweep. In
+   * condition (1) should_compact should return false, so we will only possibly
+   * compact in condition (2), assuming 20% of the scanned heap is free. *)
+  if is_idle && should_compact () then compact_helper ();
+
+  is_idle
+
+(* Perform a full GC pass, or complete an in-progress GC pass. This call
+ * bypasses the `should_collect` heuristic and will instead always trigger a new
+ * mark and sweep pass if the GC is currently idle. *)
+let collect_full () =
+  while not (collect_slice ~force:true max_int) do
+    ()
+  done
+
+let finish_cycle () =
+  while gc_phase () == Phase_mark do
+    ignore (mark_slice max_int)
+  done;
+  while gc_phase () == Phase_sweep do
+    ignore (sweep_slice max_int)
+  done
+
+(* Perform a full compaction of shared memory, such that no heap space is
+ * wasted. We finish the current cycle, if one is in progress, then perform a
+ * full mark and sweep pass before collecting. This ensures that any "floating
+ * garbage" from a previous GC pass is also collected. *)
+let compact () =
+  finish_cycle ();
+  start_cycle ();
+  finish_cycle ();
+  compact_helper ()
 
 (* Compute size of values in the garbage-collected heap *)
 let value_size r =

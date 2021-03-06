@@ -88,7 +88,7 @@ let expect_compact expected =
   let old_cb = !SharedMem.on_compact in
   let actual = ref false in
   (SharedMem.on_compact := (fun _ _ -> actual := true));
-  SharedMem.collect `aggressive;
+  SharedMem.collect_full ();
   SharedMem.on_compact := old_cb;
   expect
     ~msg:

@@ -221,8 +221,13 @@ let rec recheck_single
         (* The canceled recheck, or a preceding sequence of canceled rechecks where none completed,
          * may have introduced garbage into shared memory. Since we immediately start another
          * recheck, we should first check whether we need to compact. Otherwise, sharedmem could
-         * potentially grow unbounded. *)
-        SharedMem.collect `aggressive;
+         * potentially grow unbounded.
+         *
+         * The constant budget provided here should be sufficient to fully scan a 25G heap within 5
+         * iterations. We want to avoid the scenario where repeatedly cancelled rechecks cause the
+         * heap to grow faster than we can scan. An algorithmic approach to determine the amount of
+         * work based on the allocation rate would be better. *)
+        let _done : bool = SharedMem.collect_slice 20000000 in
         recheck_single
           ~files_to_recheck
           ~files_to_force

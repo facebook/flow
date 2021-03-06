@@ -67,12 +67,12 @@ let collect_test _ctxt =
   assert_heap_size size;
 
   (* all objects reachable via live roots foo, tbl2 *)
-  SharedMem.collect `always_TEST;
+  SharedMem.compact ();
   assert_heap_size size;
 
   (* foo dead, tbl2 -> tbl1 -> bar kept alive *)
   H1.remove_batch (SSet.singleton foo_key);
-  SharedMem.collect `always_TEST;
+  SharedMem.compact ();
   assert_heap_size (size - foo_size);
 
   (* confirm tbl2 -> tbl1 -> bar pointers still valid *)
@@ -84,7 +84,7 @@ let collect_test _ctxt =
 
   (* tbl2 dead, tbl1, bar no longer reachable *)
   H3.remove_batch (SSet.singleton tbl2_key);
-  SharedMem.collect `always_TEST;
+  SharedMem.compact ();
   assert_heap_size 0
 
 let tests = "heap_tests" >::: ["collect" >:: collect_test]

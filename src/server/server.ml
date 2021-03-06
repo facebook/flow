@@ -63,7 +63,7 @@ let init ~profiling ?focus_targets genv =
 
 (* A thread that samples memory stats every second and then logs an idle heartbeat event even
  * `idle_period_in_seconds` seconds. *)
-let rec log_on_idle =
+let rec idle_logging_loop =
   (* The time in seconds to gather data before logging. Shouldn't be too small or we'll flood the
    * logs. *)
   let idle_period_in_seconds = 300. in
@@ -98,26 +98,44 @@ let rec log_on_idle =
     in
     FlowEventLogger.idle_heartbeat ~idle_time:(Unix.gettimeofday () -. start_time) ~profiling;
     Lwt.async EventLoggerLwt.flush;
-    log_on_idle ~options start_time
+    idle_logging_loop ~options start_time
+
+(* A thread which performs tiny incremental GC slices until it is canceled or
+ * finishes a full collection cycle. Each call to collect_slice should only
+ * block for a few milliseconds. *)
+let rec gc_loop () =
+  let%lwt () = Lwt.pause () in
+  if SharedMem.collect_slice 10000 then
+    Lwt.return_unit
+  else
+    gc_loop ()
 
 let rec serve ~genv ~env =
-  Hh_logger.debug "Starting aggressive shared mem GC";
-  SharedMem.collect `aggressive;
-  Hh_logger.debug "Finished aggressive shared mem GC";
-
   MonitorRPC.status_update ~event:ServerStatus.Ready;
 
   let options = genv.ServerEnv.options in
-  let idle_logging_thread = log_on_idle ~options (Unix.gettimeofday ()) in
-  (* Ok, server is settled. Let's go to sleep until we get a message from the monitor *)
-  let%lwt () =
+
+  (* Kick off the idle thread. This will loop forever, because the idle logging
+   * thread loops forever. *)
+  let idle_thread =
+    let start_time = Unix.gettimeofday () in
+    let logging_thread = idle_logging_loop ~options start_time in
+    let gc_thread = gc_loop () in
+    LwtUtils.iter_all [logging_thread; gc_thread]
+  in
+
+  (* Kick off a thread to wait for a message from the monitor. *)
+  let wait_thread =
     ServerMonitorListenerState.wait_for_anything
       ~process_updates:(fun ?skip_incompatible ->
         Rechecker.process_updates ?skip_incompatible ~options env)
       ~get_forced:(fun () -> env.ServerEnv.checked_files)
-    (* We're not in the middle of a recheck *)
   in
-  Lwt.cancel idle_logging_thread;
+
+  (* Run the idle and wait threads together until we get a message from the
+   * monitor. This will complete the wait thread and cause the idle thread to be
+   * canceled. *)
+  let%lwt () = Lwt.pick [idle_thread; wait_thread] in
 
   (* If there's anything to recheck or updates to the env from the monitor, let's consume them *)
   let%lwt (_profiling, env) = Rechecker.recheck_loop genv env in
@@ -135,7 +153,7 @@ let rec serve ~genv ~env =
 
   serve ~genv ~env
 
-let on_compact effort =
+let on_compact () =
   MonitorRPC.status_update ~event:ServerStatus.GC_start;
   let old_size = SharedMem.heap_size () in
   let start_t = Unix.gettimeofday () in
@@ -148,7 +166,7 @@ let on_compact effort =
         old_size
         new_size
         time_taken;
-      EventLogger.sharedmem_gc_ran effort old_size new_size time_taken
+      EventLogger.sharedmem_gc_ran `aggressive old_size new_size time_taken
     )
 
 (* The main entry point of the daemon
