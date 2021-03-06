@@ -13,7 +13,7 @@ not proud of our custom format and plan to support a better format in the
 future. [GitHub issue #153](https://github.com/facebook/flow/issues/153) tracks
 this.
 
-The `.flowconfig` consists of 7 sections:
+The `.flowconfig` consists of 8 sections:
 
 * [`[declarations]`](declarations)
 * [`[include]`](include)
