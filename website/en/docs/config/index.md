@@ -13,9 +13,8 @@ not proud of our custom format and plan to support a better format in the
 future. [GitHub issue #153](https://github.com/facebook/flow/issues/153) tracks
 this.
 
-The `.flowconfig` consists of 7 sections:
+The `.flowconfig` consists of 8 sections:
 
-* [`[declarations]`](declarations)
 * [`[include]`](include)
 * [`[ignore]`](ignore)
 * [`[untyped]`](untyped)
@@ -23,6 +22,7 @@ The `.flowconfig` consists of 7 sections:
 * [`[lints]`](lints)
 * [`[options]`](options)
 * [`[version]`](version)
+* [`[declarations]`](declarations)
 
 ### Comments <a class="toc" id="toc-comments" href="#toc-comments"></a>
 
