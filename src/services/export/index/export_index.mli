@@ -34,9 +34,9 @@ val add : string -> source -> kind -> t -> t
 
 val merge : t -> t -> t
 
-val subtract : t -> t -> t * string list
 (** [subtract to_remove t] removes all of the exports in [to_remove] from [t], and
     also returns a list of keys that no longer are exported by any file. *)
+val subtract : t -> t -> t * string list
 
 val find : string -> t -> ExportSet.t
 

@@ -36,8 +36,8 @@ type init_settings = {
   sync_timeout: int option;
 }
 
-type clock = string
 (** The message's clock. *)
+type clock = string
 
 type pushed_changes =
   (*

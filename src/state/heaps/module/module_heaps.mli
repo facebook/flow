@@ -31,8 +31,8 @@ module type READER = sig
 
   val get_resolved_requires_unsafe : reader:reader -> (File_key.t -> resolved_requires) Expensive.t
 
-  val get_info_unsafe : reader:reader -> (File_key.t -> info) Expensive.t
   (** given a filename, returns module info *)
+  val get_info_unsafe : reader:reader -> (File_key.t -> info) Expensive.t
 
   val get_info : reader:reader -> (File_key.t -> info option) Expensive.t
 

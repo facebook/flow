@@ -23,9 +23,9 @@ exception Timeout
 
 exception Watchman_error of string
 
-exception Read_payload_too_long
 (** Throw this exception when we know there is something to read from
     the watchman channel, but reading took too long. *)
+exception Read_payload_too_long
 
 exception Subscription_canceled_by_watchman
 
@@ -54,8 +54,8 @@ type init_settings = {
   sync_timeout: int option;
 }
 
-type clock = string
 (** The message's clock. *)
+type clock = string
 
 type pushed_changes =
   (*

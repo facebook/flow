@@ -119,7 +119,6 @@ type tvar_status =
 
 class visitor =
   object (self)
-    val mutable tvar_cache : tvar_status IMap.t = IMap.empty
     (**
      * Type variables may appear in a cycle in the dependency graph, which requires
      * us to track the ones we've visited to avoid infinite recursion. There are three
@@ -141,6 +140,7 @@ class visitor =
      *   be rare and it's arguable if we should be allowing it in the first place,
      *   so we assign the value that corresponds to the fewest guarantees.
      *)
+    val mutable tvar_cache : tvar_status IMap.t = IMap.empty
 
     method private tvar cx id =
       let (root_id, constraints) = Context.find_constraints cx id in

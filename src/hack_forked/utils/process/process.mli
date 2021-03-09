@@ -15,20 +15,13 @@ module Entry : sig
   val register : string -> ('param -> unit) -> 'param t
 end
 
-val exec :
-  string -> ?input:string -> ?env:Process_types.environment -> string list -> Process_types.t
 (**
  * Shells out the program with the given args.
  * Sends input to stdin of spawned process if given.
  *)
+val exec :
+  string -> ?input:string -> ?env:Process_types.environment -> string list -> Process_types.t
 
-val exec_with_working_directory :
-  dir:string ->
-  string ->
-  ?input:string ->
-  ?env:Process_types.environment ->
-  string list ->
-  Process_types.t
 (**
  * Shells out the program with the given args.
  * Sets the working directory to the one specified before executing.
@@ -43,15 +36,21 @@ val exec_with_working_directory :
  * Specify the desired environment if you want a different behavior.
  * Sends input to stdin of spawned process if given.
  *)
+val exec_with_working_directory :
+  dir:string ->
+  string ->
+  ?input:string ->
+  ?env:Process_types.environment ->
+  string list ->
+  Process_types.t
 
 val register_entry_point : string -> ('param -> unit) -> 'param Entry.t
 
-val run_entry : ?input:string -> 'a Entry.t -> 'a -> Process_types.t
 (** Wraps a entry point inside a Process, so we get Process's
  * goodness for free (read_and_wait_pid and is_ready). The entry will be
  * spawned into a separate process. *)
+val run_entry : ?input:string -> 'a Entry.t -> 'a -> Process_types.t
 
-val read_and_wait_pid : timeout:int -> Process_types.t -> process_result
 (**
  * Read data from stdout and stderr until EOF is reached. Waits for
  * process to terminate returns the stderr and stdout
@@ -62,10 +61,11 @@ val read_and_wait_pid : timeout:int -> Process_types.t -> process_result
  * If process exits with something other than (Unix.WEXITED 0), will return a
  * Error
  *)
+val read_and_wait_pid : timeout:int -> Process_types.t -> process_result
 
 val failure_msg : failure -> string
 
 val status_to_string : Unix.process_status -> string
 
-val is_ready : Process_types.t -> bool
 (** Returns true if read_and_close_pid would be nonblocking. *)
+val is_ready : Process_types.t -> bool

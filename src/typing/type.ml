@@ -1584,12 +1584,6 @@ end = struct
     | Unresolved : bounds -> infer_phase constraints
     | FullyResolved : TypeTerm.use_op * TypeTerm.t -> 'phase constraints
 
-  and bounds = {
-    mutable lower: (TypeTerm.trace * TypeTerm.use_op) TypeMap.t;
-    mutable upper: TypeTerm.trace UseTypeMap.t;
-    mutable lowertvars: (TypeTerm.trace * TypeTerm.use_op) IMap.t;
-    mutable uppertvars: (TypeTerm.trace * TypeTerm.use_op) IMap.t;
-  }
   (** The bounds structure carries the evolving constraints on the solution of an
       unresolved tvar.
 
@@ -1607,6 +1601,12 @@ end = struct
       The use_op in the lower TypeMap represents the use_op when a lower bound
       was added.
    **)
+  and bounds = {
+    mutable lower: (TypeTerm.trace * TypeTerm.use_op) TypeMap.t;
+    mutable upper: TypeTerm.trace UseTypeMap.t;
+    mutable lowertvars: (TypeTerm.trace * TypeTerm.use_op) IMap.t;
+    mutable uppertvars: (TypeTerm.trace * TypeTerm.use_op) IMap.t;
+  }
 
   let new_bounds () =
     {
@@ -2066,14 +2066,14 @@ end
 and UnionRep : sig
   type t
 
-  val make : TypeTerm.t -> TypeTerm.t -> TypeTerm.t list -> t
   (** build a rep from list of members *)
+  val make : TypeTerm.t -> TypeTerm.t -> TypeTerm.t list -> t
 
-  val specialized_reason : reason_of_t:(TypeTerm.t -> reason) -> reason -> t -> reason
   (** replace reason with specialized desc, if any *)
+  val specialized_reason : reason_of_t:(TypeTerm.t -> reason) -> reason -> t -> reason
 
-  val members : t -> TypeTerm.t list
   (** members in declaration order *)
+  val members : t -> TypeTerm.t list
 
   val members_nel : t -> TypeTerm.t * TypeTerm.t Nel.t
 
@@ -2081,9 +2081,9 @@ and UnionRep : sig
 
   val rev_append : t -> t -> t
 
-  val ident_map : (TypeTerm.t -> TypeTerm.t) -> t -> t
   (** map rep r to rep r' along type mapping f. if nothing would be changed,
       returns the physically-identical rep. *)
+  val ident_map : (TypeTerm.t -> TypeTerm.t) -> t -> t
 
   val optimize :
     t ->
@@ -2161,13 +2161,13 @@ end = struct
     | Singleton of TypeTerm.t
     | Unoptimized
 
-  type t = TypeTerm.t * TypeTerm.t * TypeTerm.t list * finally_optimized_rep option ref
   (** union rep is:
       - list of members in declaration order, with at least 2 elements
       - if union is an enum (set of singletons over a common base)
         then Some (base, set)
         (additional specializations probably to come)
    *)
+  type t = TypeTerm.t * TypeTerm.t * TypeTerm.t list * finally_optimized_rep option ref
 
   (** given a list of members, build a rep.
       specialized reps are used on compatible type lists *)
@@ -2499,27 +2499,27 @@ end
 and InterRep : sig
   type t
 
-  val make : TypeTerm.t -> TypeTerm.t -> TypeTerm.t list -> t
   (** build rep from list of members *)
+  val make : TypeTerm.t -> TypeTerm.t -> TypeTerm.t list -> t
 
-  val members : t -> TypeTerm.t list
   (** member list in declaration order *)
+  val members : t -> TypeTerm.t list
 
   val members_nel : t -> TypeTerm.t * TypeTerm.t Nel.t
 
-  val map : (TypeTerm.t -> TypeTerm.t) -> t -> t
   (** map rep r to rep r' along type mapping f. drops history *)
+  val map : (TypeTerm.t -> TypeTerm.t) -> t -> t
 
   val append : TypeTerm.t list -> t -> t
 
-  val ident_map : (TypeTerm.t -> TypeTerm.t) -> t -> t
   (** map rep r to rep r' along type mapping f. drops history. if nothing would
       be changed, returns the physically-identical rep. *)
+  val ident_map : (TypeTerm.t -> TypeTerm.t) -> t -> t
 end = struct
-  type t = TypeTerm.t * TypeTerm.t * TypeTerm.t list
   (** intersection rep is:
       - member list in declaration order
    *)
+  type t = TypeTerm.t * TypeTerm.t * TypeTerm.t list
 
   let make t0 t1 ts = (t0, t1, ts)
 

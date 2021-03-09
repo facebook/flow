@@ -23,6 +23,13 @@ module NameHeap =
 (* Subset of a file's context, with the important distinction that module
    references in the file have been resolved to module names. *)
 
+(** TODO [perf] Make resolved_requires tighter. For info:
+    (1) checked? We know that requires and phantom dependents for unchecked
+    files are empty.
+
+    (2) parsed? We only care about the module provided by an unparsed file, but
+    that's probably guessable.
+ **)
 type resolved_requires = {
   resolved_modules: Modulename.t SMap.t;
   (* map from module references in file
@@ -34,13 +41,6 @@ type resolved_requires = {
      references need to be re-resolved. *)
   hash: Xx.hash; (* An easy way to compare two resolved_requires to see if they've changed *)
 }
-(** TODO [perf] Make resolved_requires tighter. For info:
-    (1) checked? We know that requires and phantom dependents for unchecked
-    files are empty.
-
-    (2) parsed? We only care about the module provided by an unparsed file, but
-    that's probably guessable.
- **)
 
 let mk_resolved_requires ~resolved_modules ~phantom_dependents =
   let state = Xx.init 0L in
@@ -262,8 +262,8 @@ module type READER = sig
 
   val get_resolved_requires_unsafe : reader:reader -> (File_key.t -> resolved_requires) Expensive.t
 
-  val get_info_unsafe : reader:reader -> (File_key.t -> info) Expensive.t
   (** given a filename, returns module info *)
+  val get_info_unsafe : reader:reader -> (File_key.t -> info) Expensive.t
 
   val get_info : reader:reader -> (File_key.t -> info option) Expensive.t
 

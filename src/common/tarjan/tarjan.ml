@@ -30,6 +30,7 @@ struct
     mutable on_stack: bool;
   }
 
+  (** Nodes are N.t. Edges are dependencies. **)
   type topsort_state = {
     graph: node NMap.t;
     (* number of nodes visited *)
@@ -39,7 +40,6 @@ struct
     (* accumulated components *)
     mutable components: N.t Nel.t list;
   }
-  (** Nodes are N.t. Edges are dependencies. **)
 
   let initial_state graph =
     let graph =
