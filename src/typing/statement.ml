@@ -4481,8 +4481,14 @@ and optional_chain ~cond ~is_existence_check ?sentinel_refine cx ((loc, e) as ex
     Flow.flow
       cx
       ( chain_t,
-        OptionalChainT (chain_reason, lhs_reason, this_t, apply_opt_use opt_use mem_tvar, voided_out)
-      );
+        OptionalChainT
+          {
+            reason = chain_reason;
+            lhs_reason;
+            this_t;
+            t_out = apply_opt_use opt_use mem_tvar;
+            voided_out;
+          } );
     let lhs_t =
       Tvar.mk_where cx reason (fun t ->
           Flow.flow_t cx (OpenT mem_tvar, t);
@@ -4871,7 +4877,13 @@ and optional_chain ~cond ~is_existence_check ?sentinel_refine cx ((loc, e) as ex
                     let lhs_reason = mk_expression_reason callee in
                     let this_t = Tvar.mk cx this_reason in
                     OptionalChainT
-                      (chain_reason, lhs_reason, this_t, CallT (use_op, reason_call, app), OpenT t)
+                      {
+                        reason = chain_reason;
+                        lhs_reason;
+                        this_t;
+                        t_out = CallT (use_op, reason_call, app);
+                        voided_out = OpenT t;
+                      }
                   | _ -> CallT (use_op, reason_call, app)
                 in
                 Flow.flow cx (f, call_t))
@@ -5619,7 +5631,7 @@ and assign_member
   let maybe_chain lhs_reason use_t =
     match (optional, mode) with
     | (NewChain, Delete) ->
-      let chain_reason = mk_reason ROptionalChain lhs_loc in
+      let reason = mk_reason ROptionalChain lhs_loc in
 
       (* When deleting an optional chain, we only really care about the case
          where the object type is non-nullable. The specification is:
@@ -5631,7 +5643,7 @@ and assign_member
          and this-type for the optional chain are mixed.
       *)
       let mixed = MixedT.at lhs_loc (literal_trust ()) in
-      OptionalChainT (chain_reason, lhs_reason, mixed, use_t, mixed)
+      OptionalChainT { reason; lhs_reason; this_t = mixed; t_out = use_t; voided_out = mixed }
     | _ -> use_t
   in
   let typecheck_object obj =

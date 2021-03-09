@@ -776,7 +776,8 @@ and dump_use_t_ : type phase. int * ISet.t -> phase Context.t_ -> Type.use_t -> 
     | ObjSealT _ -> p t
     | ObjTestProtoT _ -> p t
     | ObjTestT _ -> p t
-    | OptionalChainT (_, _, _, t', void_t) -> p ~extra:(spf "%s, %s" (use_kid t') (kid void_t)) t
+    | OptionalChainT { t_out; voided_out; _ } ->
+      p ~extra:(spf "%s, %s" (use_kid t_out) (kid voided_out)) t
     | OrT (_, x, y) -> p ~extra:(spf "%s, %s" (kid x) (tout y)) t
     | PredicateT (pred, arg) ->
       p ~reason:false ~extra:(spf "%s, %s" (string_of_predicate pred) (tout arg)) t

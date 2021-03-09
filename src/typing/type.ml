@@ -683,7 +683,13 @@ module rec TypeTerm : sig
     | SentinelPropTestT of reason * t * string * bool * UnionEnum.star * tvar
     | IdxUnwrap of reason * t_out
     | IdxUnMaybeifyT of reason * t_out
-    | OptionalChainT of reason * reason * (* this *) t * use_t * (* voids *) t_out
+    | OptionalChainT of {
+        reason: reason;
+        lhs_reason: reason;
+        this_t: t;
+        t_out: use_t;
+        voided_out: t_out;
+      }
     | InvariantT of reason
     (* Function predicate uses *)
 
@@ -3675,11 +3681,13 @@ let apply_method_action use_op reason_call this_arg action =
   | CallM app -> CallT (use_op, reason_call, call_of_method_app this_arg app)
   | ChainM (exp_reason, lhs_reason, this, app, vs) ->
     OptionalChainT
-      ( exp_reason,
-        lhs_reason,
-        this,
-        CallT (use_op, reason_call, call_of_method_app this_arg app),
-        vs )
+      {
+        reason = exp_reason;
+        lhs_reason;
+        this_t = this;
+        t_out = CallT (use_op, reason_call, call_of_method_app this_arg app);
+        voided_out = vs;
+      }
 
 module TypeParams : sig
   val to_list : typeparams -> typeparam list

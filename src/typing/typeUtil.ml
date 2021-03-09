@@ -122,7 +122,7 @@ and reason_of_use_t = function
   | ObjSealT (reason, _) -> reason
   | ObjTestProtoT (reason, _) -> reason
   | ObjTestT (reason, _, _) -> reason
-  | OptionalChainT (reason, _, _, _, _) -> reason
+  | OptionalChainT { reason; _ } -> reason
   | OrT (reason, _, _) -> reason
   | PredicateT (_, (reason, _)) -> reason
   | ReactKitT (_, reason, _) -> reason
@@ -303,8 +303,8 @@ and mod_reason_of_use_t f = function
   | ObjSealT (reason, t) -> ObjSealT (f reason, t)
   | ObjTestProtoT (reason, t) -> ObjTestProtoT (f reason, t)
   | ObjTestT (reason, t1, t2) -> ObjTestT (f reason, t1, t2)
-  | OptionalChainT (reason, lhs_reason, this, us, vs) ->
-    OptionalChainT (f reason, lhs_reason, this, us, vs)
+  | OptionalChainT ({ reason; _ } as opt_chain) ->
+    OptionalChainT { opt_chain with reason = f reason }
   | OrT (reason, t1, t2) -> OrT (f reason, t1, t2)
   | PredicateT (pred, (reason, t)) -> PredicateT (pred, (f reason, t))
   | ReactKitT (use_op, reason, tool) -> ReactKitT (use_op, f reason, tool)
@@ -470,7 +470,7 @@ let rec util_use_op_of_use_t :
   | SentinelPropTestT (_, _, _, _, _, _)
   | IdxUnwrap (_, _)
   | IdxUnMaybeifyT (_, _)
-  | OptionalChainT (_, _, _, _, _)
+  | OptionalChainT _
   | InvariantT _
   | CallLatentPredT (_, _, _, _, _)
   | CallOpenPredT (_, _, _, _, _)

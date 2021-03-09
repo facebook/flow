@@ -1465,14 +1465,15 @@ class virtual ['a, 'phase] t_with_uses =
           t
         else
           IdxUnMaybeifyT (r, t'')
-      | OptionalChainT (r1, r2, this, t_out, void_out) ->
-        let this' = self#type_ cx map_cx this in
+      | OptionalChainT { reason; lhs_reason; this_t; t_out; voided_out } ->
+        let this_t' = self#type_ cx map_cx this_t in
         let t_out' = self#use_type cx map_cx t_out in
-        let void_out' = self#type_ cx map_cx void_out in
-        if t_out' == t_out && void_out' == void_out && this' == this then
+        let voided_out' = self#type_ cx map_cx voided_out in
+        if t_out' == t_out && voided_out' == voided_out && this_t' == this_t then
           t
         else
-          OptionalChainT (r1, r2, this', t_out', void_out')
+          OptionalChainT
+            { reason; lhs_reason; this_t = this_t'; t_out = t_out'; voided_out = voided_out' }
       | InvariantT _ -> t
       | CallLatentPredT (r, b, i, t1, t2) ->
         let t1' = self#type_ cx map_cx t1 in

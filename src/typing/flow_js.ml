@@ -1431,10 +1431,10 @@ struct
         (*********************)
         (* optional chaining *)
         (*********************)
-        | (DefT (_, _, VoidT), OptionalChainT (r', lhs_reason, _, _, void_out)) ->
-          Context.mark_optional_chain cx (aloc_of_reason r') lhs_reason ~useful:true;
-          rec_flow_t ~use_op:unknown_use cx trace (l, void_out)
-        | (DefT (r, trust, NullT), OptionalChainT (r', lhs_reason, _, _, void_out)) ->
+        | (DefT (_, _, VoidT), OptionalChainT { reason; lhs_reason; voided_out; _ }) ->
+          Context.mark_optional_chain cx (aloc_of_reason reason) lhs_reason ~useful:true;
+          rec_flow_t ~use_op:unknown_use cx trace (l, voided_out)
+        | (DefT (r, trust, NullT), OptionalChainT { reason; lhs_reason; voided_out; _ }) ->
           let void =
             match desc_of_reason r with
             | RNull ->
@@ -1444,9 +1444,9 @@ struct
               DefT (replace_desc_reason RVoidedNull r, trust, VoidT)
             | _ -> DefT (r, trust, VoidT)
           in
-          Context.mark_optional_chain cx (aloc_of_reason r') lhs_reason ~useful:true;
-          rec_flow_t ~use_op:unknown_use cx trace (void, void_out)
-        | (_, OptionalChainT (r', lhs_reason, this, t_out, _))
+          Context.mark_optional_chain cx (aloc_of_reason reason) lhs_reason ~useful:true;
+          rec_flow_t ~use_op:unknown_use cx trace (void, voided_out)
+        | (_, OptionalChainT { reason; lhs_reason; this_t; t_out; voided_out = _ })
           when match l with
                | MaybeT _
                | OptionalT _
@@ -1456,7 +1456,7 @@ struct
                | _ -> true ->
           Context.mark_optional_chain
             cx
-            (aloc_of_reason r')
+            (aloc_of_reason reason)
             lhs_reason
             ~useful:
               (match l with
@@ -1464,7 +1464,7 @@ struct
               | AnyT _ ->
                 true
               | _ -> false);
-          rec_flow_t ~use_op:unknown_use cx trace (l, this);
+          rec_flow_t ~use_op:unknown_use cx trace (l, this_t);
           rec_flow cx trace (l, t_out)
         (*************)
         (* invariant *)
@@ -2259,11 +2259,11 @@ struct
         | (IntersectionT _, TestPropT (reason, _, prop, tout)) ->
           rec_flow cx trace (l, GetPropT (unknown_use, reason, prop, tout))
         | ( IntersectionT _,
-            OptionalChainT (r1, r2, this, TestPropT (reason, _, prop, tout), void_out) ) ->
+            OptionalChainT ({ t_out = TestPropT (reason, _, prop, tout); _ } as opt_chain) ) ->
           rec_flow
             cx
             trace
-            (l, OptionalChainT (r1, r2, this, GetPropT (unknown_use, reason, prop, tout), void_out))
+            (l, OptionalChainT { opt_chain with t_out = GetPropT (unknown_use, reason, prop, tout) })
         (* extends **)
         | (IntersectionT (_, rep), ExtendsUseT (use_op, reason, try_ts_on_failure, l, u)) ->
           let (t, ts) = InterRep.members_nel rep in
