@@ -16,6 +16,7 @@ type result =
       sig_extra: Parsing_heaps.sig_extra;
       tolerable_errors: File_sig.With_Loc.tolerable_error list;
       parse_errors: parse_error list;
+      exports: Exports.t;
     }
   | Parse_fail of parse_failure
   | Parse_skip of parse_skip_reason
@@ -86,7 +87,7 @@ type parse_options = {
   parse_prevent_munge: bool;
   parse_module_ref_prefix: string option;
   parse_facebook_fbt: string option;
-  parse_arch: Options.arch;
+  parse_new_signatures: bool;
   parse_abstract_locations: bool;
   parse_type_asserts: bool;
   parse_suppress_types: SSet.t;
@@ -183,8 +184,8 @@ let docblock_max_tokens = 10
 let extract_docblock =
   Docblock.(
     (* walks a list of words, returns a list of errors and the extracted info.
-     if @flow or @providesModule is found more than once, the first one is used
-     and an error is returned. *)
+       if @flow or @providesModule is found more than once, the first one is used
+       and an error is returned. *)
     let rec parse_attributes (errors, info) = function
       | (loc, "@flow") :: (_, "strict") :: xs ->
         let acc =
@@ -200,14 +201,6 @@ let extract_docblock =
             ((loc, MultipleFlowAttributes) :: errors, info)
           else
             (errors, { info with flow = Some OptInStrictLocal })
-        in
-        parse_attributes acc xs
-      | (loc, "@flow") :: (_, "weak") :: xs ->
-        let acc =
-          if info.flow <> None then
-            ((loc, MultipleFlowAttributes) :: errors, info)
-          else
-            (errors, { info with flow = Some OptInWeak })
         in
         parse_attributes acc xs
       | (loc, "@flow") :: xs ->
@@ -390,7 +383,7 @@ let do_parse ~parse_options ~info content file =
     parse_prevent_munge = prevent_munge;
     parse_module_ref_prefix = module_ref_prefix;
     parse_facebook_fbt = facebook_fbt;
-    parse_arch = arch;
+    parse_new_signatures = new_signatures;
     parse_abstract_locations = abstract_locations;
     parse_type_asserts = type_asserts;
     parse_suppress_types = suppress_types;
@@ -431,32 +424,20 @@ let do_parse ~parse_options ~info content file =
         let (ast, parse_errors) = parse_source_file ~fail ~types:true ~use_strict content file in
         let prevent_munge = Docblock.preventMunge info || prevent_munge in
         (* NOTE: This is a temporary hack that makes the signature verifier ignore any static
-            property named `propTypes` in any class. It should be killed with fire or replaced with
-            something that only works for React classes, in which case we must make a corresponding
-            change in the type system that enforces that any such property is private. *)
+           property named `propTypes` in any class. It should be killed with fire or replaced with
+           something that only works for React classes, in which case we must make a corresponding
+           change in the type system that enforces that any such property is private. *)
         let ignore_static_propTypes = true in
         (* NOTE: This is a Facebook-specific hack that makes the signature verifier and generator
-            recognize and process a custom `keyMirror` function that makes an enum out of the keys
-            of an object. *)
+           recognize and process a custom `keyMirror` function that makes an enum out of the keys
+           of an object. *)
         let facebook_keyMirror = true in
         let exports_info = File_sig.With_Loc.program_with_exports_info ~ast ~module_ref_prefix in
         (match exports_info with
         | Error e -> Parse_fail (File_sig_error e)
         | Ok (exports_info, tolerable_errors) ->
-          let (env, errors, sig_extra) =
-            match arch with
-            | Options.Classic ->
-              let signature = Signature_builder.program ast ~exports_info in
-              let (errors, _, _) =
-                Signature_builder.Signature.verify
-                  ~prevent_munge
-                  ~facebook_fbt
-                  ~ignore_static_propTypes
-                  ~facebook_keyMirror
-                  signature
-              in
-              (None, errors, Parsing_heaps.Classic)
-            | Options.TypesFirst { new_signatures = false } ->
+          let (env, errors, sig_extra, exports) =
+            if not new_signatures then
               let signature = Signature_builder.program ast ~exports_info in
               let (errors, env, sig_ast) =
                 Signature_builder.Signature.verify_and_generate
@@ -490,8 +471,30 @@ let do_parse ~parse_options ~info content file =
                 | Ok fs -> fs
                 | Error _ -> assert false
               in
-              (env, errors, Parsing_heaps.TypesFirst { sig_ast; sig_file_sig; aloc_table })
-            | Options.TypesFirst { new_signatures = true } ->
+              let exports =
+                let sig_opts =
+                  {
+                    Type_sig_parse.type_asserts;
+                    suppress_types;
+                    munge = not prevent_munge;
+                    ignore_static_propTypes;
+                    facebook_keyMirror;
+                    facebook_fbt;
+                    max_literal_len;
+                    exact_by_default;
+                    module_ref_prefix;
+                    enable_enums;
+                    enable_this_annot;
+                  }
+                in
+                let (_errors, _locs, type_sig) =
+                  let strict = Docblock.is_strict info in
+                  Type_sig_utils.parse_and_pack_module ~strict sig_opts (Some file) ast
+                in
+                Exports.of_module type_sig
+              in
+              (env, errors, Parsing_heaps.TypesFirst { sig_ast; sig_file_sig; aloc_table }, exports)
+            else
               let sig_opts =
                 {
                   Type_sig_parse.type_asserts;
@@ -514,7 +517,7 @@ let do_parse ~parse_options ~info content file =
               let env = ref SMap.empty in
               let () =
                 let open Type_sig in
-                let (_, _, _, local_defs, _, _, _) = type_sig in
+                let { Packed_type_sig.Module.local_defs; _ } = type_sig in
                 let f def =
                   let name = def_name def in
                   let loc = def_id_loc def in
@@ -541,7 +544,8 @@ let do_parse ~parse_options ~info content file =
                 Type_sig_collections.Locs.to_array locs
                 |> ALoc.ALocRepresentationDoNotUse.make_table file
               in
-              (Some !env, errors, Parsing_heaps.TypeSig (type_sig, aloc_table))
+              let exports = Exports.of_module type_sig in
+              (Some !env, errors, Parsing_heaps.TypeSig (type_sig, aloc_table), exports)
           in
           let tolerable_errors =
             Signature_builder_deps.PrintableErrorSet.fold
@@ -550,7 +554,7 @@ let do_parse ~parse_options ~info content file =
               tolerable_errors
           in
           let file_sig = File_sig.With_Loc.verified env exports_info in
-          Parse_ok { ast; file_sig; sig_extra; tolerable_errors; parse_errors })
+          Parse_ok { ast; file_sig; sig_extra; tolerable_errors; parse_errors; exports })
   with
   | Parse_error.Error (first_parse_error :: _) -> Parse_fail (Parse_error first_parse_error)
   | e ->
@@ -638,10 +642,10 @@ let reducer
           in
           begin
             match do_parse ~parse_options ~info content file with
-            | Parse_ok { ast; file_sig; sig_extra; tolerable_errors; parse_errors = _ } ->
+            | Parse_ok { ast; file_sig; exports; sig_extra; tolerable_errors; parse_errors = _ } ->
               (* if parse_options.fail == true, then parse errors will hit Parse_fail below. otherwise,
                  ignore any parse errors we get here. *)
-              worker_mutator.Parsing_heaps.add_file file info (ast, file_sig) sig_extra;
+              worker_mutator.Parsing_heaps.add_file file ~exports info (ast, file_sig) sig_extra;
               let parse_ok = FilenameMap.add file tolerable_errors parse_results.parse_ok in
               { parse_results with parse_ok }
             | Parse_fail converted ->
@@ -696,13 +700,13 @@ let opt_or_alternate opt alternate =
   | None -> alternate
 
 (* types_mode and use_strict aren't special, they just happen to be the ones that needed to be
-overridden *)
+   overridden *)
 let get_defaults ~types_mode ~use_strict options =
   let types_mode =
     opt_or_alternate
       types_mode
       (* force types when --all is set, but otherwise forbid them unless the file
-       has @flow in it. *)
+         has @flow in it. *)
       ( if Options.all options then
         TypesAllowed
       else
@@ -813,7 +817,6 @@ let reparse
   in
   let modified = FilenameSet.union modified results.parse_not_found_skips in
   let modified = FilenameSet.union modified results.parse_hash_mismatch_skips in
-  SharedMem_js.collect `gentle;
   let unchanged = FilenameSet.diff files modified in
   (* restore old parsing info for unchanged files *)
   Parsing_heaps.Reparse_mutator.revive_files master_mutator unchanged;
@@ -828,7 +831,7 @@ let make_parse_options_internal
   in
   let module_ref_prefix = Options.haste_module_ref_prefix options in
   let facebook_fbt = Options.facebook_fbt options in
-  let arch = Options.arch options in
+  let new_signatures = Options.new_signatures options in
   let abstract_locations = Options.abstract_locations options in
   let prevent_munge =
     let default = not (Options.should_munge_underscores options) in
@@ -843,7 +846,7 @@ let make_parse_options_internal
     parse_prevent_munge = prevent_munge;
     parse_module_ref_prefix = module_ref_prefix;
     parse_facebook_fbt = facebook_fbt;
-    parse_arch = arch;
+    parse_new_signatures = new_signatures;
     parse_abstract_locations = abstract_locations;
     parse_type_asserts = Options.type_asserts options;
     parse_suppress_types = Options.suppress_types options;

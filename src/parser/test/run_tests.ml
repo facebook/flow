@@ -476,7 +476,7 @@ end = struct
                   if diff_index >= expected_length then
                     (* append the diff *)
                     (* TODO: this should insert gaps, but I don't expect people to
-                 write diffs that have gaps. *)
+                       write diffs that have gaps. *)
                     List.rev (Array.Expression diff_value :: List.rev elems)
                   else
                     (* apply the diff *)

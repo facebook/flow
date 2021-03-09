@@ -63,7 +63,7 @@ module Translate =
     (Json_of_estree)
     (struct
       (* TODO: make these configurable via CLI flags *)
-      let include_interned_comments = false
+      let include_interned_comments = true
 
       let include_comments = true
 
@@ -114,7 +114,7 @@ let main
     let results =
       try
         (* Make the parser as permissive as possible.
-         TODO: make these CLI flags *)
+           TODO: make these CLI flags *)
         let parse_options =
           Some
             Parser_env.

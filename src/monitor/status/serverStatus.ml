@@ -37,6 +37,7 @@ type event =
   | Read_saved_state
   | Load_saved_state_progress of progress
   | Parsing_progress of progress
+  | Indexing_progress of progress
   | Resolving_dependencies_progress
   | Calculating_dependencies_progress
   | Merging_progress of progress
@@ -57,13 +58,13 @@ type typecheck_status =
   | Reading_saved_state
   | Loading_saved_state of progress
   | Parsing of progress
+  | Indexing of progress
   | Resolving_dependencies
   | Calculating_dependencies
   | Merging of progress
   | Merging_types of progress
   | Checking of progress
   | Canceling of progress
-  | Garbage_collecting_typecheck (* We garbage collect during typechecks sometime *)
   | Collating_errors (* We sometimes collate errors during typecheck *)
   | Finishing_typecheck of summary (* haven't reached free state yet *)
   | Waiting_for_watchman of (* deadline *) float option
@@ -112,6 +113,7 @@ type emoji =
   | Wastebasket
   | Motorcycle
   | Skier
+  | Card_index_dividers
 
 let string_of_emoji = function
   | Bicyclist -> "\xF0\x9F\x9A\xB4"
@@ -129,6 +131,7 @@ let string_of_emoji = function
   | Wastebasket -> "\xF0\x9F\x97\x91"
   | Motorcycle -> "\xf0\x9f\x8f\x8d"
   | Skier -> "\xE2\x9B\xB7"
+  | Card_index_dividers -> "\xF0\x9F\x97\x82"
 
 type pad_emoji =
   | Before
@@ -157,6 +160,7 @@ let string_of_event = function
   | Load_saved_state_progress progress ->
     spf "Load_saved_state_progress %s" (string_of_progress progress)
   | Parsing_progress progress -> spf "Parsing_progress files %s" (string_of_progress progress)
+  | Indexing_progress progress -> spf "Indexing_progress %s" (string_of_progress progress)
   | Calculating_dependencies_progress -> "Calculating_dependencies_progress"
   | Resolving_dependencies_progress -> "Resolving_dependencies_progress"
   | Merging_progress progress -> spf "Merging_progress %s" (string_of_progress progress)
@@ -179,6 +183,11 @@ let string_of_typecheck_status ~use_emoji = function
     spf "%sloading saved state %s" (render_emoji ~use_emoji Open_book) (string_of_progress progress)
   | Parsing progress ->
     spf "%sparsed files %s" (render_emoji ~use_emoji Ghost) (string_of_progress progress)
+  | Indexing progress ->
+    spf
+      "%sindexing files %s"
+      (render_emoji ~use_emoji Card_index_dividers)
+      (string_of_progress progress)
   | Resolving_dependencies -> spf "%sresolving dependencies" (render_emoji ~use_emoji Taco)
   | Calculating_dependencies -> spf "%scalculating dependencies" (render_emoji ~use_emoji Taco)
   | Merging progress ->
@@ -195,8 +204,6 @@ let string_of_typecheck_status ~use_emoji = function
       "%scanceling workers %s"
       (render_emoji ~use_emoji Recycling_symbol)
       (string_of_progress progress)
-  | Garbage_collecting_typecheck ->
-    spf "%sgarbage collecting shared memory" (render_emoji ~use_emoji Wastebasket)
   | Collating_errors -> spf "%scollating errors" (render_emoji ~use_emoji File_cabinet)
   | Waiting_for_watchman deadline ->
     let timeout =
@@ -252,6 +259,7 @@ let update ~event ~status =
   | (Load_saved_state_progress progress, Typechecking (mode, _)) ->
     Typechecking (mode, Loading_saved_state progress)
   | (Parsing_progress progress, Typechecking (mode, _)) -> Typechecking (mode, Parsing progress)
+  | (Indexing_progress progress, Typechecking (mode, _)) -> Typechecking (mode, Indexing progress)
   | (Resolving_dependencies_progress, Typechecking (mode, _)) ->
     Typechecking (mode, Resolving_dependencies)
   | (Calculating_dependencies_progress, Typechecking (mode, _)) ->
@@ -261,7 +269,6 @@ let update ~event ~status =
     Typechecking (mode, Merging_types progress)
   | (Checking_progress progress, Typechecking (mode, _)) -> Typechecking (mode, Checking progress)
   | (Canceling_progress progress, Typechecking (mode, _)) -> Typechecking (mode, Canceling progress)
-  | (GC_start, Typechecking (mode, _)) -> Typechecking (mode, Garbage_collecting_typecheck)
   | (Collating_errors_start, Typechecking (mode, _)) -> Typechecking (mode, Collating_errors)
   | (Watchman_wait_start deadline, Typechecking (mode, _)) ->
     Typechecking (mode, Waiting_for_watchman deadline)
@@ -303,6 +310,7 @@ let is_significant_transition old_status new_status =
       match (old_tc_status, new_tc_status) with
       (* Making progress within parsing, merging or canceling is not significant *)
       | (Parsing _, Parsing _)
+      | (Indexing _, Indexing _)
       | (Merging _, Merging _)
       | (Merging_types _, Merging_types _)
       | (Checking _, Checking _)
@@ -313,13 +321,13 @@ let is_significant_transition old_status new_status =
       | (_, Reading_saved_state)
       | (_, Loading_saved_state _)
       | (_, Parsing _)
+      | (_, Indexing _)
       | (_, Resolving_dependencies)
       | (_, Calculating_dependencies)
       | (_, Merging _)
       | (_, Merging_types _)
       | (_, Checking _)
       | (_, Canceling _)
-      | (_, Garbage_collecting_typecheck)
       | (_, Waiting_for_watchman _)
       | (_, Collating_errors)
       | (_, Finishing_typecheck _) ->

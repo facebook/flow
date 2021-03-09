@@ -10,3 +10,9 @@ export class A2<X> {
 }
 
 export class A3<X> extends A2<X> {}
+
+declare export class A4 {
+  foo(): this;
+}
+
+export default { A4 };

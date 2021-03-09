@@ -63,7 +63,7 @@ open Utils_js
     (sets of) modules and back that compose to give the dependency graph and the
     dependent graph are useful intermediate data structures.
 
-**)
+ **)
 
 (* produce, given files in fileset:
    (1) a dependent (reverse dependency) map for those files:
@@ -73,7 +73,7 @@ open Utils_js
 
    IMPORTANT!!! The only state this function can read is the resolved requires! If you need this
                 function to read any other state, make sure to update the DirectDependentFilesCache!
- *)
+*)
 let calc_direct_dependents_utils ~reader workers fileset root_fileset =
   let open Module_heaps in
   let root_fileset =
@@ -213,13 +213,11 @@ let file_dependencies ~options ~audit ~reader file =
   let file_sig = Parsing_heaps.Mutator_reader.get_file_sig_unsafe reader file in
   let require_set = File_sig.With_Loc.(require_set file_sig.module_sig) in
   let sig_require_set =
-    match Options.arch options with
-    | Options.Classic -> require_set
-    | Options.TypesFirst { new_signatures = false } ->
+    if not (Options.new_signatures options) then
       let sig_file_sig = Parsing_heaps.Mutator_reader.get_sig_file_sig_unsafe reader file in
       File_sig.With_ALoc.(require_set sig_file_sig.module_sig)
-    | Options.TypesFirst { new_signatures = true } ->
-      let (_, _, mrefs, _, _, _, _) =
+    else
+      let { Packed_type_sig.Module.module_refs = mrefs; _ } =
         Parsing_heaps.Mutator_reader.get_type_sig_unsafe reader file
       in
       let acc = ref SSet.empty in
@@ -242,10 +240,6 @@ let file_dependencies ~options ~audit ~reader file =
     require_set
     (FilenameSet.empty, FilenameSet.empty)
 
-let dependency_info_of_dependency_graph = function
-  | Partial_dependency_graph.PartialClassicDepGraph map -> Dependency_info.of_classic_map map
-  | Partial_dependency_graph.PartialTypesFirstDepGraph map -> Dependency_info.of_types_first_map map
-
 (* Calculates the dependency graph as a map from files to their dependencies.
  * Dependencies not in parsed are ignored. *)
 let calc_partial_dependency_graph ~options ~reader workers files ~parsed =
@@ -261,18 +255,10 @@ let calc_partial_dependency_graph ~options ~reader workers files ~parsed =
       ~next:(MultiWorkerLwt.next workers (FilenameSet.elements files))
   in
   let dependency_graph =
-    match Options.arch options with
-    | Options.Classic ->
-      Partial_dependency_graph.PartialClassicDepGraph
-        (FilenameMap.map
-           (fun (_sig_files, all_files) -> FilenameSet.inter parsed all_files)
-           dependency_graph)
-    | Options.TypesFirst _ ->
-      Partial_dependency_graph.PartialTypesFirstDepGraph
-        (FilenameMap.map
-           (fun (sig_files, all_files) ->
-             (FilenameSet.inter parsed sig_files, FilenameSet.inter parsed all_files))
-           dependency_graph)
+    FilenameMap.map
+      (fun (sig_files, all_files) ->
+        (FilenameSet.inter parsed sig_files, FilenameSet.inter parsed all_files))
+      dependency_graph
   in
   Lwt.return dependency_graph
 
@@ -280,4 +266,4 @@ let calc_dependency_info ~options ~reader workers ~parsed =
   let%lwt dependency_graph =
     calc_partial_dependency_graph ~options ~reader workers parsed ~parsed
   in
-  Lwt.return (dependency_info_of_dependency_graph dependency_graph)
+  Lwt.return (Dependency_info.of_map dependency_graph)

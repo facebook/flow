@@ -5,9 +5,18 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
+module Trailing_commas : sig
+  type t =
+    | All  (** Wherever possible (including function arguments). *)
+    | ES5  (** Where valid in ES5 (objects, arrays, etc.) *)
+    | Off  (** No trailing commas *)
+end
+
 type opts = {
-  preserve_formatting: bool;
   bracket_spacing: bool;
+  preserve_formatting: bool;
+  single_quotes: bool;
+  trailing_commas: Trailing_commas.t;
 }
 
 type expression_context = {
@@ -105,7 +114,7 @@ val function_params :
   (Loc.t, Loc.t) Flow_ast.Function.Params.t ->
   Layout.layout_node
 
-val better_quote : string -> string
+val better_quote : prefer_single_quotes:bool -> string -> string
 
 val utf8_escape : quote:string -> string -> string
 

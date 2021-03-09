@@ -19,7 +19,8 @@ open Reason
     polymorphic type is applied. **)
 let substituter =
   object (self)
-    inherit [Type.t SMap.t * bool * use_op option] Type_mapper.t_with_uses as super
+    inherit
+      [Type.t SMap.t * bool * use_op option, Type.Constraint.infer_phase] Type_mapper.t_with_uses as super
 
     method tvar _cx _map_cx _r id = id
 
@@ -33,14 +34,16 @@ let substituter =
 
     method props cx map_cx id =
       let props_map = Context.find_props cx id in
-      let props_map' = SMap.ident_map (Property.ident_map_t (self#type_ cx map_cx)) props_map in
+      let props_map' =
+        NameUtils.Map.ident_map (Property.ident_map_t (self#type_ cx map_cx)) props_map
+      in
       let id' =
         if props_map == props_map' then
           id
         (* When substitution results in a new property map, we have to use a
-         generated id, rather than a location from source. The substituted
-         object will have the same location as the generic version, meaning
-         that this location will not serve as a unique identifier. *)
+           generated id, rather than a location from source. The substituted
+           object will have the same location as the generic version, meaning
+           that this location will not serve as a unique identifier. *)
         else
           Context.generate_property_map cx props_map'
       in
@@ -55,7 +58,7 @@ let substituter =
         else
           (loc, t')
       in
-      let exps' = SMap.ident_map map_loc_type_pair exps in
+      let exps' = NameUtils.Map.ident_map map_loc_type_pair exps in
       if exps == exps' then
         id
       else
@@ -77,14 +80,12 @@ let substituter =
                 ReposT (annot_reason ~annot_loc tp_reason, param_t)
               | Some param_t when name = "this" ->
                 ReposT (annot_reason ~annot_loc tp_reason, param_t)
-              | Some param_t ->
-                (match desc_of_reason ~unwrap:false (reason_of_t param_t) with
-                | RPolyTest _ ->
-                  mod_reason_of_t
-                    (fun param_reason ->
-                      annot_reason ~annot_loc @@ repos_reason annot_loc param_reason)
-                    param_t
-                | _ -> param_t)
+              | Some (GenericT _ as param_t) ->
+                mod_reason_of_t
+                  (fun param_reason ->
+                    annot_reason ~annot_loc @@ repos_reason annot_loc param_reason)
+                  param_t
+              | Some param_t -> param_t
             end
           | ExistsT reason ->
             if force then
@@ -198,3 +199,5 @@ let substituter =
   end
 
 let subst cx ?use_op ?(force = true) map = substituter#type_ cx (map, force, use_op)
+
+let subst_destructor cx ?use_op ?(force = true) map = substituter#destructor cx (map, force, use_op)

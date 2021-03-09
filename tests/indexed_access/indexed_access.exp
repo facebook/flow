@@ -1,0 +1,139 @@
+Error ---------------------------------------------------------------------------------------------------- import.js:4:2
+
+Cannot cast `1` to `ObjFoo` because number [1] is incompatible with boolean [2]. [incompatible-cast]
+
+   import.js:4:2
+   4| (1: ObjFoo); // Error
+       ^ [1]
+
+References:
+   import.js:4:5
+   4| (1: ObjFoo); // Error
+          ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------------ test.js:5:2
+
+Cannot cast `'hello world'` to `ArrElem` because string [1] is incompatible with number [2]. [incompatible-cast]
+
+   test.js:5:2
+   5| ('hello world': ArrElem); // Error
+       ^^^^^^^^^^^^^ [1]
+
+References:
+   test.js:5:17
+   5| ('hello world': ArrElem); // Error
+                      ^^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:16:2
+
+Cannot cast `'hello world'` to `DictElem` because string [1] is incompatible with number [2]. [incompatible-cast]
+
+   test.js:16:2
+   16| ('hello world': DictElem); // Error
+        ^^^^^^^^^^^^^ [1]
+
+References:
+   test.js:16:17
+   16| ('hello world': DictElem); // Error
+                       ^^^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:31:2
+
+Cannot cast `1` to `ObjFoo` because number [1] is incompatible with boolean [2]. [incompatible-cast]
+
+   test.js:31:2
+   31| (1: ObjFoo); // Error
+        ^ [1]
+
+References:
+   test.js:31:5
+   31| (1: ObjFoo); // Error
+           ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:34:2
+
+Cannot cast `1` to indexed access because number [1] is incompatible with string [2]. [incompatible-cast]
+
+   test.js:34:2
+   34| (1: Obj['baz']); // Error
+        ^ [1]
+
+References:
+   test.js:25:8
+   25|   baz: string,
+              ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:42:2
+
+Cannot cast `f(...)` to string because boolean [1] is incompatible with string [2]. [incompatible-cast]
+
+   test.js:42:2
+   42| (f(o): string); // Error
+        ^^^^
+
+References:
+   test.js:24:8
+   24|   foo: boolean,
+              ^^^^^^^ [1]
+   test.js:42:8
+   42| (f(o): string); // Error
+              ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:44:24
+
+Cannot access string literal `bork` on `Obj` because property `bork` is missing in `Obj` [1]. [prop-missing]
+
+   test.js:44:24
+   44| type Nonexistant = Obj['bork']; // Error
+                              ^^^^^^
+
+References:
+   test.js:44:20
+   44| type Nonexistant = Obj['bork']; // Error
+                          ^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:47:27
+
+Cannot access boolean on `Arr` because boolean [1] is not an array index. [incompatible-use]
+
+   47| type ArrNonexistant = Arr[boolean]; // Error
+                                 ^^^^^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:50:10
+
+Cannot access string literal `x` on undefined because undefined [1] does not have properties. [incompatible-use]
+
+   test.js:50:10
+   50| (1: void['x']); // Error
+                ^^^
+
+References:
+   test.js:50:5
+   50| (1: void['x']); // Error
+           ^^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:51:10
+
+Cannot access string literal `x` on null because null [1] does not have properties. [incompatible-use]
+
+   test.js:51:10
+   51| (1: null['x']); // Error
+                ^^^
+
+References:
+   test.js:51:5
+   51| (1: null['x']); // Error
+           ^^^^ [1]
+
+
+
+Found 10 errors

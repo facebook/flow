@@ -675,8 +675,8 @@ with type t = Impl.t = struct
         loc
         [
           (* estree hasn't come around to the idea that function decls can have
-           optional ids, but acorn, babel, espree and esprima all have, so let's
-           do it too. see https://github.com/estree/estree/issues/98 *)
+             optional ids, but acorn, babel, espree and esprima all have, so let's
+             do it too. see https://github.com/estree/estree/issues/98 *)
           ("id", option identifier id);
           ("params", function_params params);
           ("body", block body);
@@ -846,7 +846,7 @@ with type t = Impl.t = struct
         array [node "ExportNamespaceSpecifier" loc [("exported", identifier name)]]
       | Some (ExportBatchSpecifier (_, None)) ->
         (* this should've been handled by callers, since this represents an
-             ExportAllDeclaration, not a specifier. *)
+           ExportAllDeclaration, not a specifier. *)
         array []
       | None -> array []
     and declare_type_alias (loc, { Statement.TypeAlias.id; tparams; right; comments }) =
@@ -911,8 +911,8 @@ with type t = Impl.t = struct
         loc
         [
           (* estree hasn't come around to the idea that class decls can have
-           optional ids, but acorn, babel, espree and esprima all have, so let's
-           do it too. see https://github.com/estree/estree/issues/98 *)
+             optional ids, but acorn, babel, espree and esprima all have, so let's
+             do it too. see https://github.com/estree/estree/issues/98 *)
           ("id", option identifier id);
           ("body", class_body body);
           ("typeParameters", option type_parameter_declaration tparams);
@@ -1044,12 +1044,11 @@ with type t = Impl.t = struct
             [
               ( "members",
                 array_of_list
-                  (fun ( loc,
-                         {
-                           InitializedMember.id;
-                           init = (_, { BooleanLiteral.value; comments = _ });
-                         } ) ->
-                    node "EnumBooleanMember" loc [("id", identifier id); ("init", bool value)])
+                  (fun (loc, { InitializedMember.id; init }) ->
+                    node
+                      "EnumBooleanMember"
+                      loc
+                      [("id", identifier id); ("init", boolean_literal init)])
                   members );
               ("explicitType", bool explicit_type);
               ("hasUnknownMembers", bool has_unknown_members);
@@ -1155,11 +1154,12 @@ with type t = Impl.t = struct
       | Some default ->
         node "AssignmentPattern" loc [("left", pattern argument); ("right", expression default)]
       | None -> pattern argument
-    and this_param (loc, annotation) =
+    and this_param (loc, { Function.ThisParam.annot; comments }) =
       node
+        ?comments
         "Identifier"
         loc
-        [("name", string "this"); ("typeAnnotation", type_annotation annotation)]
+        [("name", string "this"); ("typeAnnotation", type_annotation annot)]
     and function_params =
       let open Ast.Function.Params in
       function
@@ -1310,6 +1310,14 @@ with type t = Impl.t = struct
       node ?comments "BigIntLiteral" loc [("value", null); ("bigint", string raw)]
     and string_literal (loc, { StringLiteral.value; raw; comments }) =
       node ?comments "Literal" loc [("value", string value); ("raw", string raw)]
+    and boolean_literal (loc, { BooleanLiteral.value; comments }) =
+      let raw =
+        if value then
+          "true"
+        else
+          "false"
+      in
+      node ?comments "Literal" loc [("value", bool value); ("raw", string raw)]
     and template_literal (loc, { Expression.TemplateLiteral.quasis; expressions; comments }) =
       node
         ?comments
@@ -1375,6 +1383,7 @@ with type t = Impl.t = struct
         | Interface i -> interface_type (loc, i)
         | Array t -> array_type loc t
         | Generic g -> generic_type (loc, g)
+        | IndexedAccess ia -> indexed_access (loc, ia)
         | Union t -> union_type (loc, t)
         | Intersection t -> intersection_type (loc, t)
         | Typeof t -> typeof_type (loc, t)
@@ -1437,10 +1446,11 @@ with type t = Impl.t = struct
          coordinated with Babel, ast-types, etc. so keeping the status quo for
          now. Here's an example: *)
       (* node "FunctionTypeRestParam" loc [
-        "argument", function_type_param argument;
-      ] *)
+         "argument", function_type_param argument;
+       ] *)
       function_type_param ?comments argument
-    and function_type_this_constraint (loc, { Type.Function.ThisParam.annot; comments }) =
+    and function_type_this_constraint (loc, { Type.Function.ThisParam.annot = (_, annot); comments })
+        =
       node
         ?comments
         "FunctionTypeParam"
@@ -1591,6 +1601,12 @@ with type t = Impl.t = struct
         "GenericTypeAnnotation"
         loc
         [("id", id); ("typeParameters", option type_args targs)]
+    and indexed_access (loc, { Type.IndexedAccess._object; index; comments }) =
+      node
+        ?comments
+        "IndexedAccessType"
+        loc
+        [("objectType", _type _object); ("indexType", _type index)]
     and union_type (loc, { Type.Union.types = (t0, t1, ts); comments }) =
       node ?comments "UnionTypeAnnotation" loc [("types", array_of_list _type (t0 :: t1 :: ts))]
     and intersection_type (loc, { Type.Intersection.types = (t0, t1, ts); comments }) =
@@ -1654,7 +1670,7 @@ with type t = Impl.t = struct
         loc
         [
           (* we track the location of the name, but don't expose it here for
-           backwards-compatibility. TODO: change this? *)
+             backwards-compatibility. TODO: change this? *)
           ("name", string name);
           ("bound", hint type_annotation bound);
           ("variance", option variance tp_var);

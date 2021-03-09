@@ -29,8 +29,15 @@ val first_char : t -> t
 val contains : t -> t -> bool
 (** [contains loc1 loc2] returns true if [loc1] entirely overlaps [loc2] *)
 
+val intersects : t -> t -> bool
+(** [intersects loc1 loc2] returns true if [loc1] intersects [loc2] at all *)
+
 val lines_intersect : t -> t -> bool
-(** [lines_intersect loc1 loc2] returns true if [loc1] intersects [loc2] at all *)
+(** [lines_intersect loc1 loc2] returns true if [loc1] and [loc2] cover any part of
+    the same line, even if they don't actually intersect.
+
+    For example, if [loc1] ends and then [loc2] begins later on the same line,
+    [intersects loc1 loc2] is false, but [lines_intersect loc1 loc2] is true. *)
 
 val pos_cmp : position -> position -> int
 
@@ -47,8 +54,8 @@ val to_string_no_source : t -> string
 
 val source : t -> File_key.t option
 
-(* filename, line, column. produces a Loc.t at the given location *)
-val make : File_key.t -> int -> int -> t
+val cursor : File_key.t option -> int -> int -> t
+(** Produces a zero-width Loc.t, where start = end *)
 
 (* Produces a location at the start of the input location *)
 val start_loc : t -> t

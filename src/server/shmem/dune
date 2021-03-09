@@ -1,9 +1,0 @@
-(library
-  (name flow_shared_mem)
-  (wrapped false)
-  (libraries
-    flow_monitor_rpc
-    heap_shared_mem ; hack
-  )
-  (preprocess (pps lwt_ppx))
-)

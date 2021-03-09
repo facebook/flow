@@ -55,7 +55,7 @@ let check_type_visitor wrap =
         ()
   end
 
-let detect_invalid_calls ~full_cx file_sigs cxs tasts =
+let detect_invalid_calls ~full_cx typed_ast file_sig =
   let options = Ty_normalizer_env.default_options in
   let check_valid_call ~genv (call_loc : ALoc.t) (_, targ_loc) =
     let typed_ast = genv.Ty_normalizer_env.typed_ast in
@@ -75,11 +75,6 @@ let detect_invalid_calls ~full_cx file_sigs cxs tasts =
           let { Type.TypeScheme.type_ = t; _ } = scheme in
           wrap (TypeUtil.desc_of_t t))
   in
-  Base.List.iter2_exn
-    ~f:(fun cx typed_ast ->
-      let file = Context.file cx in
-      let file_sig = FilenameMap.find file file_sigs in
-      let genv = Ty_normalizer_env.mk_genv ~full_cx ~file ~typed_ast ~file_sig in
-      Loc_collections.ALocMap.iter (check_valid_call ~genv) (Context.type_asserts_map cx))
-    cxs
-    tasts
+  let file = Context.file full_cx in
+  let genv = Ty_normalizer_env.mk_genv ~full_cx ~file ~typed_ast ~file_sig in
+  Loc_collections.ALocMap.iter (check_valid_call ~genv) (Context.type_asserts_map full_cx)

@@ -1,5 +1,5 @@
-var a = require("./cycle_A.js");
+const a = require("./cycle_A.js");
 
-var b = {a: a, b: 0};
+const b = {a: a, b: 0};
 
 module.exports = b;

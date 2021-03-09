@@ -51,13 +51,5 @@ Cannot get `React.unstable_AsyncMode` because property `unstable_AsyncMode` is m
                                        ^^^^^^^^^^^^^^^^^^
 
 
-Error ---------------------------------------------------------------------------- node_modules/react-d3/str2str.js:4:25
 
-Cannot get `React.unstable_AsyncMode` because property `unstable_AsyncMode` is missing in exports [1]. [prop-missing]
-
-   4| const AsyncMode = React.unstable_AsyncMode;
-                              ^^^^^^^^^^^^^^^^^^
-
-
-
-Found 5 errors
+Found 4 errors

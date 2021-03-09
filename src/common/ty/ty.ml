@@ -37,10 +37,10 @@ type t =
   | Null
   | Symbol
   | Num of string option
-  | Str of string option
+  | Str of Reason.name option
   | Bool of bool option
   | NumLit of string
-  | StrLit of string
+  | StrLit of Reason.name
   | BoolLit of bool
   | Fun of fun_t
   | Obj of obj_t
@@ -91,10 +91,7 @@ and unsoundness_kind =
 and upper_bound_kind =
   (* No upper bounds are exported as `any` *)
   | NoUpper
-  (* If there is some upper bound (use), this is exported as `MergedT use`. This
-   * type is not helpful in a normalized form. So instead we attempt to normalize
-   * the use to a type `t`. If this succeeds then we create `SomeKnownUpper t`.
-   *)
+  (* Some upper bound use type. *)
   | SomeKnownUpper of t
   (* If the above case fails we resort to this last case. *)
   | SomeUnknownUpper of string
@@ -157,9 +154,10 @@ and fun_param = { prm_optional: bool }
 
 and prop =
   | NamedProp of {
-      name: string;
+      name: Reason.name;
       prop: named_prop;
       from_proto: bool;
+      def_loc: aloc option;
     }
   | CallProp of fun_t
   | SpreadProp of t
@@ -226,7 +224,7 @@ and builtin_or_symbol =
   | TSymbol of symbol
 
 and decl =
-  | VariableDecl of string * t
+  | VariableDecl of Reason.name * t
   | TypeAliasDecl of {
       import: bool;
       name: symbol;
@@ -327,6 +325,25 @@ class ['A] comparator_ty =
       else
         super#on_t env x y
 
+    (* When comparing NamedProps ignore def_loc, because properties having different
+     * def_locs doesn't mean that they should be thought of as different *)
+    method! private on_NamedProp
+        env
+        (name_0 : Reason.name)
+        (name_1 : Reason.name)
+        (prop_0 : named_prop)
+        (prop_1 : named_prop)
+        (from_proto_0 : bool)
+        (from_proto_1 : bool)
+        (_def_loc_0 : aloc option)
+        (_def_loc_1 : aloc option) =
+      super#on_NamedProp env name_0 name_1 prop_0 prop_1 from_proto_0 from_proto_1 None None
+
+    method! on_name env name0 name1 =
+      (* TODO consider implementing this without the string conversion. For now, leaving it this
+       * way to avoid a behavior change. *)
+      this#on_string env (Reason.display_string_of_name name0) (Reason.display_string_of_name name1)
+
     (* Base fields originally handled in the ancestor *)
     method! private on_int _env x y = assert0 (x - y)
 
@@ -367,7 +384,7 @@ class ['A] comparator_ty =
 
     (* This class must override all fail_* methods on variant types to be correct. *)
     (* The following methods are ordered respectively with the
-     definitions in this file to make it easier to check *)
+       definitions in this file to make it easier to check *)
     method! private fail_t env x y = fail_gen this#tag_of_t env x y
 
     method! private fail_any_kind env x y = fail_gen this#tag_of_any_kind env x y
@@ -585,7 +602,12 @@ let mk_field_props prop_list =
   Base.List.map
     ~f:(fun (id, t, opt) ->
       NamedProp
-        { name = id; prop = Field { t; polarity = Neutral; optional = opt }; from_proto = false })
+        {
+          name = id;
+          prop = Field { t; polarity = Neutral; optional = opt };
+          from_proto = false;
+          def_loc = None;
+        })
     prop_list
 
 let mk_object ?(obj_kind = InexactObj) ?(obj_frozen = false) ?obj_literal obj_props =

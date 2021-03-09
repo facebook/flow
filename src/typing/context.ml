@@ -5,6 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
+open Type.TypeContext
 module ALocMap = Loc_collections.ALocMap
 module Scope_api = Scope_api.With_ALoc
 
@@ -18,9 +19,7 @@ exception Require_not_found of string
 
 exception Module_not_found of string
 
-exception Tvar_not_found of Constraint.ident
-
-type env = Scope.t list
+exception Tvar_not_found of Type.ident
 
 type metadata = {
   (* local *)
@@ -39,11 +38,11 @@ type metadata = {
   enable_const_params: bool;
   enable_enums: bool;
   enable_enums_with_unknown_members: bool;
+  enable_indexed_access: bool;
   enable_this_annot: bool;
   enforce_strict_call_arity: bool;
   enforce_local_inference_annotations: bool;
   exact_by_default: bool;
-  generate_tests: bool;
   facebook_fbs: string option;
   facebook_fbt: string option;
   facebook_module_interop: bool;
@@ -51,8 +50,10 @@ type metadata = {
   ignore_non_literal_requires: bool;
   max_trace_depth: int;
   react_runtime: Options.react_runtime;
+  react_server_component_exts: SSet.t;
   recursion_limit: int;
   root: Path.t;
+  run_post_inference_implicit_instantiation: bool;
   strict_es6_import_export: bool;
   strict_es6_import_export_excludes: string list;
   strip_root: bool;
@@ -65,7 +66,7 @@ type metadata = {
 
 type test_prop_hit_or_miss =
   | Hit
-  | Miss of string option * (Reason.t * Reason.t) * Type.use_op
+  | Miss of Reason.name option * (Reason.t * Reason.t) * Type.use_op
 
 type type_assert_kind =
   | Is
@@ -78,6 +79,11 @@ type voidable_check = {
   errors: ALoc.t Property_assignment.errors;
 }
 
+type implicit_instantiation_check = {
+  fun_or_class: Type.t;
+  call_or_constructor: Type.use_t;
+}
+
 (* Equivalently, we could use a Reason.t option, but this is more self-documenting. *)
 type computed_property_state =
   | ResolvedOnce of Reason.t
@@ -87,35 +93,20 @@ type subst_cache_err =
   | ETooFewTypeArgs of ALoc.t Reason.virtual_reason * int
   | ETooManyTypeArgs of ALoc.t Reason.virtual_reason * int
 
-type sig_t = {
-  (* map from tvar ids to nodes (type info structures) *)
-  mutable graph: Constraint.node IMap.t;
-  (* map from tvar ids to trust nodes *)
-  mutable trust_graph: Trust_constraint.node IMap.t;
-  (* obj types point to mutable property maps *)
-  mutable property_maps: Type.Properties.map;
-  (* indirection to support context opt *)
-  mutable call_props: Type.t IMap.t;
-  (* modules point to mutable export maps *)
-  mutable export_maps: Type.Exports.map;
-  (* map from evaluation ids to types *)
-  mutable evaluated: Type.t Type.Eval.Map.t;
-  (* map from module names to their types *)
-  mutable module_map: Type.t SMap.t;
-}
+type 'phase sig_t_ = 'phase Type.TypeContext.t
 
-type component_t = {
-  sig_cx: sig_t;
+type sig_t = Type.Constraint.infer_phase Type.TypeContext.t
+
+type 'phase component_t_ = {
+  mutable sig_cx: 'phase sig_t_;
   (* mapping from keyed alocs to concrete locations *)
-  aloc_tables: ALoc.table Lazy.t Utils_js.FilenameMap.t;
+  mutable aloc_tables: ALoc.table Lazy.t Utils_js.FilenameMap.t;
   (* map from goal ids to types *)
   mutable goal_map: Type.t IMap.t;
   (* graph tracking full resolution of types *)
   mutable type_graph: Graph_explorer.graph;
   (* map of speculation ids to sets of unresolved tvars *)
   mutable all_unresolved: ISet.t IMap.t;
-  (* map from frame ids to env snapshots *)
-  mutable envs: env IMap.t;
   (* We track nominal ids in the context to help decide when the types exported by a module have
      meaningfully changed: see Merge_js.ContextOptimizer. We care about two different types of
      nominal ids, one for object properties and one for polymorphic types. **)
@@ -171,15 +162,23 @@ type component_t = {
   (* Post-inference checks *)
   mutable literal_subtypes: (Type.t * Type.use_t) list;
   mutable matching_props: (Reason.reason * string * Type.t * Type.t) list;
+  mutable implicit_instantiation_checks: implicit_instantiation_check list;
 }
 
+type component_t = Type.Constraint.infer_phase component_t_
+
 type phase =
+  | InitLib
   | Checking
   | Merging
-  | Normalizing
 
-type t = {
-  ccx: component_t;
+let string_of_phase = function
+  | InitLib -> "InitLib"
+  | Checking -> "Checking"
+  | Merging -> "Merging"
+
+type 'phase t_ = {
+  ccx: 'phase component_t_;
   file: File_key.t;
   phase: phase;
   rev_aloc_table: ALoc.reverse_table Lazy.t;
@@ -191,6 +190,8 @@ type t = {
   mutable use_def: Scope_api.info * Ssa_api.With_ALoc.values;
   mutable exported_locals: Loc_collections.ALocSet.t SMap.t option;
 }
+
+type t = Type.Constraint.infer_phase t_
 
 let metadata_of_options options =
   {
@@ -210,11 +211,11 @@ let metadata_of_options options =
     enable_const_params = Options.enable_const_params options;
     enable_enums = Options.enums options;
     enable_enums_with_unknown_members = Options.enums_with_unknown_members options;
+    enable_indexed_access = Options.enable_indexed_access options;
     enable_this_annot = Options.this_annot options;
     enforce_strict_call_arity = Options.enforce_strict_call_arity options;
     enforce_local_inference_annotations = Options.enforce_local_inference_annotations options;
     exact_by_default = Options.exact_by_default options;
-    generate_tests = Options.generate_tests options;
     facebook_fbs = Options.facebook_fbs options;
     facebook_fbt = Options.facebook_fbt options;
     facebook_module_interop = Options.facebook_module_interop options;
@@ -223,8 +224,11 @@ let metadata_of_options options =
     max_trace_depth = Options.max_trace_depth options;
     max_workers = Options.max_workers options;
     react_runtime = Options.react_runtime options;
+    react_server_component_exts = Options.react_server_component_exts options;
     recursion_limit = Options.recursion_limit options;
     root = Options.root options;
+    run_post_inference_implicit_instantiation =
+      Options.run_post_inference_implicit_instantiation options;
     strict_es6_import_export = Options.strict_es6_import_export options;
     strict_es6_import_export_excludes = Options.strict_es6_import_export_excludes options;
     strip_root = Options.should_strip_root options;
@@ -253,10 +257,10 @@ let docblock_overrides docblock_info metadata =
     | Some Docblock.OptInStrictLocal -> { metadata with checked = true; strict_local = true }
     | Some Docblock.OptInWeak -> { metadata with checked = true; weak = true }
     (* --all (which sets metadata.checked = true) overrides @noflow, so there are
-   currently no scenarios where we'd change checked = true to false. in the
-   future, there may be a case where checked defaults to true (but is not
-   forced to be true ala --all), but for now we do *not* want to force
-   checked = false here. *)
+       currently no scenarios where we'd change checked = true to false. in the
+       future, there may be a case where checked defaults to true (but is not
+       forced to be true ala --all), but for now we do *not* want to force
+       checked = false here. *)
     | Some Docblock.OptOut -> metadata
   in
   let metadata =
@@ -269,7 +273,7 @@ let docblock_overrides docblock_info metadata =
 
 let empty_use_def = (Scope_api.{ max_distinct = 0; scopes = IMap.empty }, ALocMap.empty)
 
-let make_sig () =
+let empty_sig_cx =
   {
     graph = IMap.empty;
     trust_graph = IMap.empty;
@@ -277,17 +281,16 @@ let make_sig () =
     call_props = IMap.empty;
     export_maps = Type.Exports.Map.empty;
     evaluated = Type.Eval.Map.empty;
-    module_map = SMap.empty;
+    module_map = NameUtils.Map.empty;
   }
 
-let make_ccx sig_cx aloc_tables =
+let make_ccx () =
   {
-    sig_cx;
-    aloc_tables;
+    sig_cx = empty_sig_cx;
+    aloc_tables = Utils_js.FilenameMap.empty;
     goal_map = IMap.empty;
     type_graph = Graph_explorer.new_graph ();
     all_unresolved = IMap.empty;
-    envs = IMap.empty;
     nominal_poly_ids = Type.Poly.Set.empty;
     nominal_prop_ids = ISet.empty;
     type_asserts_map = ALocMap.empty;
@@ -299,6 +302,7 @@ let make_ccx sig_cx aloc_tables =
     exists_checks = ALocMap.empty;
     exists_excuses = ALocMap.empty;
     voidable_checks = [];
+    implicit_instantiation_checks = [];
     test_prop_hits_and_misses = IMap.empty;
     computed_property_states = IMap.empty;
     spread_widened_types = IMap.empty;
@@ -317,8 +321,21 @@ let make_ccx sig_cx aloc_tables =
 
 (* create a new context structure.
    Flow_js.fresh_context prepares for actual use.
- *)
-let make ccx metadata file rev_aloc_table module_ref phase =
+*)
+let make ccx metadata file aloc_table module_ref phase =
+  ccx.aloc_tables <- Utils_js.FilenameMap.add file aloc_table ccx.aloc_tables;
+  let rev_aloc_table =
+    lazy
+      (try Lazy.force aloc_table |> ALoc.reverse_table
+       with
+       (* If we aren't in abstract locations mode, or are in a libdef, we
+          won't have an aloc table, so we just create an empty reverse
+          table. We handle this exception here rather than explicitly
+          making an optional version of the get_aloc_table function for
+          simplicity. *)
+       | Parsing_heaps_exceptions.Sig_ast_ALoc_table_not_found _ ->
+         ALoc.make_empty_reverse_table ())
+  in
   {
     ccx;
     file;
@@ -340,7 +357,8 @@ let graph_sig sig_cx = sig_cx.graph
 let trust_graph_sig sig_cx = sig_cx.trust_graph
 
 let find_module_sig sig_cx m =
-  (try SMap.find m sig_cx.module_map with Not_found -> raise (Module_not_found m))
+  try NameUtils.Map.find (Reason.OrdinaryName m) sig_cx.module_map
+  with Not_found -> raise (Module_not_found m)
 
 (* modules *)
 
@@ -372,8 +390,6 @@ let current_phase cx = cx.phase
 
 let all_unresolved cx = cx.ccx.all_unresolved
 
-let envs cx = cx.ccx.envs
-
 let trust_constructor cx = cx.trust_constructor
 
 let cx_with_trust cx trust = { cx with trust_constructor = trust }
@@ -391,6 +407,8 @@ let enable_enums cx = cx.metadata.enable_enums
 
 let enable_enums_with_unknown_members cx = cx.metadata.enable_enums_with_unknown_members
 
+let enable_indexed_access cx = cx.metadata.enable_indexed_access
+
 let enable_this_annot cx = cx.metadata.enable_this_annot
 
 let enforce_strict_call_arity cx = cx.metadata.enforce_strict_call_arity
@@ -407,7 +425,8 @@ let exact_by_default cx = cx.metadata.exact_by_default
 
 let enforce_local_inference_annotations cx = cx.metadata.enforce_local_inference_annotations
 
-let generate_tests cx = cx.metadata.generate_tests
+let run_post_inference_implicit_instantiation cx =
+  cx.metadata.run_post_inference_implicit_instantiation
 
 let file cx = cx.file
 
@@ -469,6 +488,11 @@ let export_maps cx = cx.ccx.sig_cx.export_maps
 
 let react_runtime cx = cx.metadata.react_runtime
 
+let in_react_server_component_file cx =
+  let file = file cx in
+  let exts = cx.metadata.react_server_component_exts in
+  SSet.exists (File_key.check_suffix file) exts
+
 let recursion_limit cx = cx.metadata.recursion_limit
 
 let root cx = cx.metadata.root
@@ -515,6 +539,8 @@ let exists_excuses cx = cx.ccx.exists_excuses
 
 let voidable_checks cx = cx.ccx.voidable_checks
 
+let implicit_instantiation_checks cx = cx.ccx.implicit_instantiation_checks
+
 let use_def cx = cx.use_def
 
 let exported_locals cx = cx.exported_locals
@@ -535,7 +561,7 @@ let trust_errors cx =
   | Options.NoTrust ->
     false
 
-let pid_prefix (cx : t) =
+let pid_prefix (cx : 'phase t_) =
   if max_workers cx > 0 then
     Printf.sprintf "[%d] " (Unix.getpid ())
   else
@@ -543,23 +569,9 @@ let pid_prefix (cx : t) =
 
 (* Create a shallow copy of this context, so that mutations to the sig_cx's
  * fields will not affect the copy. *)
-let copy_of_context cx =
-  {
-    cx with
-    ccx =
-      {
-        cx.ccx with
-        sig_cx =
-          {
-            cx.ccx.sig_cx with
-            graph = cx.ccx.sig_cx.graph;
-            trust_graph = cx.ccx.sig_cx.trust_graph;
-          };
-      };
-  }
+let copy_of_context cx = { cx with ccx = { cx.ccx with sig_cx = cx.ccx.sig_cx } }
 
 (* mutators *)
-let add_env cx frame env = cx.ccx.envs <- IMap.add frame env cx.ccx.envs
 
 let add_error cx error = cx.ccx.errors <- Flow_error.ErrorSet.add error cx.ccx.errors
 
@@ -576,20 +588,28 @@ let add_lint_suppressions cx suppressions =
 let add_require cx loc tvar = cx.require_map <- ALocMap.add loc tvar cx.require_map
 
 let add_module cx name tvar =
-  cx.ccx.sig_cx.module_map <- SMap.add name tvar cx.ccx.sig_cx.module_map
+  let module_map = NameUtils.Map.add name tvar cx.ccx.sig_cx.module_map in
+  cx.ccx.sig_cx <- { cx.ccx.sig_cx with module_map }
 
 let add_property_map cx id pmap =
-  cx.ccx.sig_cx.property_maps <- Type.Properties.Map.add id pmap cx.ccx.sig_cx.property_maps
+  let property_maps = Type.Properties.Map.add id pmap cx.ccx.sig_cx.property_maps in
+  cx.ccx.sig_cx <- { cx.ccx.sig_cx with property_maps }
 
-let add_call_prop cx id t = cx.ccx.sig_cx.call_props <- IMap.add id t cx.ccx.sig_cx.call_props
+let add_call_prop cx id t =
+  let call_props = IMap.add id t cx.ccx.sig_cx.call_props in
+  cx.ccx.sig_cx <- { cx.ccx.sig_cx with call_props }
 
 let add_export_map cx id tmap =
-  cx.ccx.sig_cx.export_maps <- Type.Exports.Map.add id tmap cx.ccx.sig_cx.export_maps
+  let export_maps = Type.Exports.Map.add id tmap cx.ccx.sig_cx.export_maps in
+  cx.ccx.sig_cx <- { cx.ccx.sig_cx with export_maps }
 
-let add_tvar cx id bounds = cx.ccx.sig_cx.graph <- IMap.add id bounds cx.ccx.sig_cx.graph
+let add_tvar cx id bounds =
+  let graph = IMap.add id bounds cx.ccx.sig_cx.graph in
+  cx.ccx.sig_cx <- { cx.ccx.sig_cx with graph }
 
 let add_trust_var cx id bounds =
-  cx.ccx.sig_cx.trust_graph <- IMap.add id bounds cx.ccx.sig_cx.trust_graph
+  let trust_graph = IMap.add id bounds cx.ccx.sig_cx.trust_graph in
+  cx.ccx.sig_cx <- { cx.ccx.sig_cx with trust_graph }
 
 let add_nominal_prop_id cx id = cx.ccx.nominal_prop_ids <- ISet.add id cx.ccx.nominal_prop_ids
 
@@ -605,25 +625,31 @@ let add_literal_subtypes cx c = cx.ccx.literal_subtypes <- c :: cx.ccx.literal_s
 let add_voidable_check cx voidable_check =
   cx.ccx.voidable_checks <- voidable_check :: cx.ccx.voidable_checks
 
-let remove_tvar cx id = cx.ccx.sig_cx.graph <- IMap.remove id cx.ccx.sig_cx.graph
+let add_implicit_instantiation_check cx fun_or_class call_or_constructor =
+  let implicit_instantiation_check = { fun_or_class; call_or_constructor } in
+  if cx.metadata.run_post_inference_implicit_instantiation then
+    cx.ccx.implicit_instantiation_checks <-
+      implicit_instantiation_check :: cx.ccx.implicit_instantiation_checks
+
+let remove_tvar cx id =
+  let graph = IMap.remove id cx.ccx.sig_cx.graph in
+  cx.ccx.sig_cx <- { cx.ccx.sig_cx with graph }
 
 let set_all_unresolved cx all_unresolved = cx.ccx.all_unresolved <- all_unresolved
 
-let set_envs cx envs = cx.ccx.envs <- envs
-
-let set_evaluated cx evaluated = cx.ccx.sig_cx.evaluated <- evaluated
+let set_evaluated cx evaluated = cx.ccx.sig_cx <- { cx.ccx.sig_cx with evaluated }
 
 let set_goals cx goals = cx.ccx.goal_map <- goals
 
-let set_graph cx graph = cx.ccx.sig_cx.graph <- graph
+let set_graph cx graph = cx.ccx.sig_cx <- { cx.ccx.sig_cx with graph }
 
-let set_trust_graph cx trust_graph = cx.ccx.sig_cx.trust_graph <- trust_graph
+let set_trust_graph cx trust_graph = cx.ccx.sig_cx <- { cx.ccx.sig_cx with trust_graph }
 
-let set_property_maps cx property_maps = cx.ccx.sig_cx.property_maps <- property_maps
+let set_property_maps cx property_maps = cx.ccx.sig_cx <- { cx.ccx.sig_cx with property_maps }
 
-let set_call_props cx call_props = cx.ccx.sig_cx.call_props <- call_props
+let set_call_props cx call_props = cx.ccx.sig_cx <- { cx.ccx.sig_cx with call_props }
 
-let set_export_maps cx export_maps = cx.ccx.sig_cx.export_maps <- export_maps
+let set_export_maps cx export_maps = cx.ccx.sig_cx <- { cx.ccx.sig_cx with export_maps }
 
 let set_type_graph cx type_graph = cx.ccx.type_graph <- type_graph
 
@@ -635,7 +661,7 @@ let set_use_def cx use_def = cx.use_def <- use_def
 
 let set_local_env cx exported_locals = cx.exported_locals <- exported_locals
 
-let set_module_map cx module_map = cx.ccx.sig_cx.module_map <- module_map
+let set_module_map cx module_map = cx.ccx.sig_cx <- { cx.ccx.sig_cx with module_map }
 
 (* Given a sig context, it makes sense to clear the parts that are shared with
    the master sig context. Why? The master sig context, which contains global
@@ -647,20 +673,23 @@ let clear_master_shared cx master_cx =
   let module PMap = Type.Properties.Map in
   let module EMap = Type.Exports.Map in
   let sig_cx = cx.ccx.sig_cx in
-  sig_cx.graph <- IMap.filter (fun id _ -> not (IMap.mem id master_cx.graph)) sig_cx.graph;
-  sig_cx.trust_graph <-
-    IMap.filter (fun id _ -> not (IMap.mem id master_cx.trust_graph)) sig_cx.trust_graph;
-  sig_cx.property_maps <-
-    PMap.filter (fun id _ -> not (PMap.mem id master_cx.property_maps)) sig_cx.property_maps;
-  sig_cx.call_props <-
-    IMap.filter (fun id _ -> not (IMap.mem id master_cx.call_props)) sig_cx.call_props;
-  sig_cx.evaluated <-
-    Type.Eval.Map.filter
-      (fun id _ -> not (Type.Eval.Map.mem id master_cx.evaluated))
-      sig_cx.evaluated;
-  sig_cx.export_maps <-
-    EMap.filter (fun id _ -> not (EMap.mem id master_cx.export_maps)) sig_cx.export_maps;
-  ()
+  cx.ccx.sig_cx <-
+    {
+      graph = IMap.filter (fun id _ -> not (IMap.mem id master_cx.graph)) sig_cx.graph;
+      trust_graph =
+        IMap.filter (fun id _ -> not (IMap.mem id master_cx.trust_graph)) sig_cx.trust_graph;
+      property_maps =
+        PMap.filter (fun id _ -> not (PMap.mem id master_cx.property_maps)) sig_cx.property_maps;
+      call_props =
+        IMap.filter (fun id _ -> not (IMap.mem id master_cx.call_props)) sig_cx.call_props;
+      evaluated =
+        Type.Eval.Map.filter
+          (fun id _ -> not (Type.Eval.Map.mem id master_cx.evaluated))
+          sig_cx.evaluated;
+      export_maps =
+        EMap.filter (fun id _ -> not (EMap.mem id master_cx.export_maps)) sig_cx.export_maps;
+      module_map = cx.ccx.sig_cx.module_map;
+    }
 
 let test_prop_hit cx id =
   cx.ccx.test_prop_hits_and_misses <- IMap.add id Hit cx.ccx.test_prop_hits_and_misses
@@ -731,23 +760,23 @@ let unnecessary_invariants cx =
 
 (* utils *)
 let find_real_props cx id =
-  find_props cx id |> SMap.filter (fun x _ -> not (Reason.is_internal_name x))
+  find_props cx id |> NameUtils.Map.filter (fun x _ -> not (Reason.is_internal_name x))
 
-let iter_props cx id f = find_props cx id |> SMap.iter f
+let iter_props cx id f = find_props cx id |> NameUtils.Map.iter f
 
-let iter_real_props cx id f = find_real_props cx id |> SMap.iter f
+let iter_real_props cx id f = find_real_props cx id |> NameUtils.Map.iter f
 
-let fold_real_props cx id f = find_real_props cx id |> SMap.fold f
+let fold_real_props cx id f = find_real_props cx id |> NameUtils.Map.fold f
 
-let has_prop cx id x = find_props cx id |> SMap.mem x
+let has_prop cx id x = find_props cx id |> NameUtils.Map.mem x
 
-let get_prop cx id x = find_props cx id |> SMap.find_opt x
+let get_prop cx id x = find_props cx id |> NameUtils.Map.find_opt x
 
-let set_prop cx id x p = find_props cx id |> SMap.add x p |> add_property_map cx id
+let set_prop cx id x p = find_props cx id |> NameUtils.Map.add x p |> add_property_map cx id
 
-let has_export cx id name = find_exports cx id |> SMap.mem name
+let has_export cx id name = find_exports cx id |> NameUtils.Map.mem name
 
-let set_export cx id name t = find_exports cx id |> SMap.add name t |> add_export_map cx id
+let set_export cx id name t = find_exports cx id |> NameUtils.Map.add name t |> add_export_map cx id
 
 (* constructors *)
 let make_aloc_id cx aloc = ALoc.id_of_aloc cx.rev_aloc_table aloc
@@ -788,14 +817,18 @@ let generate_poly_id cx =
 let make_source_poly_id cx aloc = make_aloc_id cx aloc |> Type.Poly.id_of_aloc_id
 
 (* Copy context from cx_other to cx *)
-let merge_into sig_cx sig_cx_other =
-  sig_cx.property_maps <- Type.Properties.Map.union sig_cx_other.property_maps sig_cx.property_maps;
-  sig_cx.call_props <- IMap.union sig_cx_other.call_props sig_cx.call_props;
-  sig_cx.export_maps <- Type.Exports.Map.union sig_cx_other.export_maps sig_cx.export_maps;
-  sig_cx.evaluated <- Type.Eval.Map.union sig_cx_other.evaluated sig_cx.evaluated;
-  sig_cx.graph <- IMap.union sig_cx_other.graph sig_cx.graph;
-  sig_cx.trust_graph <- IMap.union sig_cx_other.trust_graph sig_cx.trust_graph;
-  ()
+let merge_into ccx sig_cx_other =
+  let sig_cx = ccx.sig_cx in
+  ccx.sig_cx <-
+    {
+      sig_cx with
+      property_maps = Type.Properties.Map.union sig_cx_other.property_maps sig_cx.property_maps;
+      call_props = IMap.union sig_cx_other.call_props sig_cx.call_props;
+      export_maps = Type.Exports.Map.union sig_cx_other.export_maps sig_cx.export_maps;
+      evaluated = Type.Eval.Map.union sig_cx_other.evaluated sig_cx.evaluated;
+      graph = IMap.union sig_cx_other.graph sig_cx.graph;
+      trust_graph = IMap.union sig_cx_other.trust_graph sig_cx.trust_graph;
+    }
 
 (* Find the constraints of a type variable in the graph.
 
@@ -810,13 +843,13 @@ let rec find_graph cx id =
 
 and find_constraints cx id =
   let (root_id, root) = find_root cx id in
-  (root_id, root.Constraint.constraints)
+  (root_id, root.Type.Constraint.constraints)
 
 (* Find the root of a type variable, potentially traversing a chain of type
    variables, while short-circuiting all the type variables in the chain to the
    root during traversal to speed up future traversals. *)
 and find_root cx id =
-  Constraint.(
+  Type.Constraint.(
     match IMap.find_opt id (graph cx) with
     | Some (Goto next_id) ->
       let (root_id, root) = find_root cx next_id in
@@ -832,9 +865,11 @@ and find_root cx id =
       in
       Utils_js.assert_false msg)
 
-let rec find_resolved cx = function
+let rec find_resolved : type phase. phase t_ -> Type.t -> Type.t option =
+ fun cx t_in ->
+  match t_in with
   | Type.OpenT (_, id) ->
-    Constraint.(
+    Type.Constraint.(
       begin
         match find_graph cx id with
         | Resolved (_, t)
@@ -870,10 +905,6 @@ let find_trust_graph cx id =
   let (_, constraints) = find_trust_constraints cx id in
   constraints
 
-let with_normalizer_mode cx f = f { cx with phase = Normalizing }
-
-let in_normalizer_mode cx = cx.phase = Normalizing
-
 let constraint_cache cx = cx.ccx.constraint_cache
 
 let subst_cache cx = cx.ccx.subst_cache
@@ -891,3 +922,9 @@ let fix_cache cx = cx.ccx.fix_cache
 let spread_cache cx = cx.ccx.spread_cache
 
 let speculation_state cx = cx.ccx.speculation_state
+
+let speculation_id cx =
+  let open Speculation_state in
+  match !(speculation_state cx) with
+  | [] -> None
+  | { speculation_id; case = { case_id; _ }; _ } :: _ -> Some (speculation_id, case_id)

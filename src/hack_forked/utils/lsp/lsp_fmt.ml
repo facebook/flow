@@ -786,6 +786,50 @@ let print_completion ~key (r : Completion.result) : json =
         ("items", JSON_Array (List.map r.items ~f:(print_completionItem ~key)));
       ])
 
+(** workspace/configuration request *)
+module ConfigurationFmt = struct
+  open Lsp.Configuration
+
+  let item_of_json json =
+    {
+      scope_uri = Base.Option.map ~f:DocumentUri.of_string (Jget.string_opt json "scopeUri");
+      section = Jget.string_opt json "section";
+    }
+
+  let json_of_item { scope_uri; section } =
+    let scope_uri =
+      Base.Option.map ~f:(fun uri -> JSON_String (DocumentUri.to_string uri)) scope_uri
+    in
+    let section = Base.Option.map ~f:(fun section -> JSON_String section) section in
+    Jprint.object_opt [("scopeUri", scope_uri); ("section", section)]
+
+  let params_of_json json =
+    let items =
+      Jget.array_opt json "items"
+      |> Base.Option.value_map ~default:[] ~f:(Base.List.map ~f:item_of_json)
+    in
+    { items }
+
+  let json_of_params { items } =
+    JSON_Object [("items", JSON_Array (Base.List.map ~f:json_of_item items))]
+
+  let result_of_json json =
+    match json with
+    | Some (JSON_Array items) -> items
+    | _ -> []
+
+  let json_of_result items = JSON_Array items
+end
+
+(** workspace/didChangeConfiguration notification *)
+module DidChangeConfigurationFmt = struct
+  open Lsp.DidChangeConfiguration
+
+  let params_of_json json =
+    let settings = Jget.val_opt json "settings" |> Base.Option.value ~default:(JSON_Object []) in
+    { settings }
+end
+
 (************************************************************************)
 (* workspace/symbol request                                             *)
 (************************************************************************)
@@ -1007,7 +1051,10 @@ let parse_initialize (params : json option) : Initialize.params =
     and parse_workspace json =
       {
         applyEdit = Jget.bool_d json "applyEdit" ~default:false;
+        configuration = Jget.bool_d json "configuration" ~default:false;
         workspaceEdit = Jget.obj_opt json "workspaceEdit" |> parse_workspaceEdit;
+        didChangeConfiguration =
+          Jget.obj_opt json "didChangeConfiguration" |> parse_dynamicRegistration;
         didChangeWatchedFiles =
           Jget.obj_opt json "didChangeWatchedFiles" |> parse_dynamicRegistration;
       }
@@ -1123,56 +1170,65 @@ let print_initialize ~key (r : Initialize.result) : json =
             ] );
       ])
 
-(************************************************************************)
-(* capabilities                                                         *)
-(************************************************************************)
+module DidChangeWatchedFilesFmt = struct
+  open Lsp.DidChangeWatchedFiles
 
-let print_registrationOptions (registerOptions : Lsp.lsp_registration_options) : Hh_json.json =
-  match registerOptions with
-  | Lsp.DidChangeWatchedFilesRegistrationOptions registerOptions ->
-    Lsp.DidChangeWatchedFiles.(
-      JSON_Object
-        [
-          ( "watchers",
-            JSON_Array
-              (List.map registerOptions.watchers ~f:(fun watcher ->
-                   JSON_Object
-                     [
-                       ("globPattern", JSON_String watcher.globPattern);
-                       ("kind", int_ 7);
-                       (* all events: create, change, and delete *)
-                     ])) );
-        ])
+  let params_of_json (json : Hh_json.json option) : params =
+    let changes =
+      Jget.array_exn json "changes"
+      |> List.map ~f:(fun change ->
+             let uri = Jget.string_exn change "uri" |> DocumentUri.of_string in
+             let type_ = Jget.int_exn change "type" in
+             let type_ =
+               match fileChangeType_of_enum type_ with
+               | Some type_ -> type_
+               | None -> failwith (Printf.sprintf "Invalid file change type %d" type_)
+             in
+             { uri; type_ })
+    in
+    { changes }
 
-let print_registerCapability (params : Lsp.RegisterCapability.params) : Hh_json.json =
-  Lsp.RegisterCapability.(
+  let json_of_register_options registerOptions =
+    let open Hh_json in
+    JSON_Object
+      [
+        ( "watchers",
+          JSON_Array
+            (List.map registerOptions.watchers ~f:(fun watcher ->
+                 JSON_Object
+                   [
+                     ("globPattern", JSON_String watcher.globPattern);
+                     ("kind", int_ 7);
+                     (* all events: create, change, and delete *)
+                   ])) );
+      ]
+end
+
+(** capabilities *)
+module RegisterCapabilityFmt = struct
+  open Lsp.RegisterCapability
+
+  let json_of_options (registerOptions : options) : Hh_json.json option =
+    match registerOptions with
+    | DidChangeConfiguration -> None
+    | DidChangeWatchedFiles registerOptions ->
+      Some (DidChangeWatchedFilesFmt.json_of_register_options registerOptions)
+
+  let json_of_params (params : params) : Hh_json.json =
+    let open Hh_json in
     JSON_Object
       [
         ( "registrations",
           JSON_Array
             (List.map params.registrations ~f:(fun registration ->
-                 JSON_Object
+                 Jprint.object_opt
                    [
-                     ("id", string_ registration.id);
-                     ("method", string_ registration.method_);
-                     ("registerOptions", print_registrationOptions registration.registerOptions);
+                     ("id", Some (string_ registration.id));
+                     ("method", Some (string_ registration.method_));
+                     ("registerOptions", json_of_options registration.registerOptions);
                    ])) );
-      ])
-
-let parse_didChangeWatchedFiles (json : Hh_json.json option) : DidChangeWatchedFiles.params =
-  let changes =
-    Jget.array_exn json "changes"
-    |> List.map ~f:(fun change ->
-           let uri = Jget.string_exn change "uri" |> DocumentUri.of_string in
-           let type_ = Jget.int_exn change "type" in
-           let type_ =
-             match DidChangeWatchedFiles.fileChangeType_of_enum type_ with
-             | Some type_ -> type_
-             | None -> failwith (Printf.sprintf "Invalid file change type %d" type_)
-           in
-           { DidChangeWatchedFiles.uri; type_ })
-  in
-  { DidChangeWatchedFiles.changes }
+      ]
+end
 
 (************************************************************************)
 (* error response                                                       *)
@@ -1238,6 +1294,7 @@ let request_name_to_string (request : lsp_request) : string =
   | CodeActionRequest _ -> "textDocument/codeAction"
   | CompletionRequest _ -> "textDocument/completion"
   | CompletionItemResolveRequest _ -> "completionItem/resolve"
+  | ConfigurationRequest _ -> "workspace/configuration"
   | SignatureHelpRequest _ -> "textDocument/signatureHelp"
   | DefinitionRequest _ -> "textDocument/definition"
   | TypeDefinitionRequest _ -> "textDocument/typeDefinition"
@@ -1266,6 +1323,7 @@ let result_name_to_string (result : lsp_result) : string =
   | CodeActionResult _ -> "textDocument/codeAction"
   | CompletionResult _ -> "textDocument/completion"
   | CompletionItemResolveResult _ -> "completionItem/resolve"
+  | ConfigurationResult _ -> "workspace/configuration"
   | SignatureHelpResult _ -> "textDocument/signatureHelp"
   | DefinitionResult _ -> "textDocument/definition"
   | TypeDefinitionResult _ -> "textDocument/typeDefinition"
@@ -1293,6 +1351,7 @@ let notification_name_to_string (notification : lsp_notification) : string =
   | DidCloseNotification _ -> "textDocument/didClose"
   | DidSaveNotification _ -> "textDocument/didSave"
   | DidChangeNotification _ -> "textDocument/didChange"
+  | DidChangeConfigurationNotification _ -> "workspace/didChangeConfiguration"
   | DidChangeWatchedFilesNotification _ -> "workspace/didChangeWatchedFiles"
   | TelemetryNotification _ -> "telemetry/event"
   | LogMessageNotification _ -> "window/logMessage"
@@ -1343,6 +1402,7 @@ let parse_lsp_request (method_ : string) (params : json option) : lsp_request =
   | "textDocument/signatureHelp" -> SignatureHelpRequest (SignatureHelpFmt.of_json params)
   | "telemetry/rage" -> RageRequest
   | "workspace/executeCommand" -> ExecuteCommandRequest (parse_executeCommand params)
+  | "workspace/configuration" -> ConfigurationRequest (ConfigurationFmt.params_of_json params)
   | "completionItem/resolve"
   | "window/showMessageRequest"
   | "window/showStatus"
@@ -1360,8 +1420,10 @@ let parse_lsp_notification (method_ : string) (params : json option) : lsp_notif
   | "textDocument/didClose" -> DidCloseNotification (parse_didClose params)
   | "textDocument/didSave" -> DidSaveNotification (parse_didSave params)
   | "textDocument/didChange" -> DidChangeNotification (parse_didChange params)
+  | "workspace/didChangeConfiguration" ->
+    DidChangeConfigurationNotification (DidChangeConfigurationFmt.params_of_json params)
   | "workspace/didChangeWatchedFiles" ->
-    DidChangeWatchedFilesNotification (parse_didChangeWatchedFiles params)
+    DidChangeWatchedFilesNotification (DidChangeWatchedFilesFmt.params_of_json params)
   | "textDocument/publishDiagnostics"
   | "window/logMessage"
   | "window/showMessage"
@@ -1375,7 +1437,7 @@ let parse_lsp_result (request : lsp_request) (result : json) : lsp_result =
   | ShowMessageRequestRequest _ ->
     ShowMessageRequestResult (parse_result_showMessageRequest (Some result))
   | ShowStatusRequest _ -> ShowStatusResult (parse_result_showMessageRequest (Some result))
-  (* shares result type *)
+  | ConfigurationRequest _ -> ConfigurationResult (ConfigurationFmt.result_of_json (Some result))
   | InitializeRequest _
   | RegisterCapabilityRequest _
   | ShutdownRequest
@@ -1437,7 +1499,8 @@ let print_lsp_request (id : lsp_id) (request : lsp_request) : json =
     match request with
     | ShowMessageRequestRequest r -> print_showMessageRequest r
     | ShowStatusRequest r -> print_showStatus r
-    | RegisterCapabilityRequest r -> print_registerCapability r
+    | RegisterCapabilityRequest r -> RegisterCapabilityFmt.json_of_params r
+    | ConfigurationRequest r -> ConfigurationFmt.json_of_params r
     | InitializeRequest _
     | ShutdownRequest
     | HoverRequest _
@@ -1481,6 +1544,7 @@ let print_lsp_response ?include_error_stack_trace ~key (id : lsp_id) (result : l
     | HoverResult r -> print_hover r
     | CodeActionResult r -> print_codeActionResult ~key r
     | CompletionResult r -> print_completion ~key r
+    | ConfigurationResult r -> ConfigurationFmt.json_of_result r
     | DefinitionResult r -> print_definition r
     | TypeDefinitionResult r -> print_definition r
     | WorkspaceSymbolResult r -> print_workspaceSymbol r
@@ -1526,6 +1590,7 @@ let print_lsp_notification (notification : lsp_notification) : json =
     | DidCloseNotification _
     | DidSaveNotification _
     | DidChangeNotification _
+    | DidChangeConfigurationNotification _
     | DidChangeWatchedFilesNotification _
     | UnknownNotification _ ->
       failwith ("Don't know how to print notification " ^ method_)

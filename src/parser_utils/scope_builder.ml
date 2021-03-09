@@ -109,7 +109,7 @@ module Make (L : Loc_sig.S) (Api : Scope_api_sig.S with module L = L) :
       env :: parent_env
   end
 
-  class scope_builder =
+  class scope_builder ~with_types =
     object (this)
       inherit [Acc.t, L.t] visitor ~init:Acc.init as super
 
@@ -183,6 +183,24 @@ module Make (L : Loc_sig.S) (Api : Scope_api_sig.S with module L = L) :
         uses <- Flow_ast_utils.ident_of_source (loc, name) :: uses;
         id
 
+      method! type_alias loc alias =
+        if not with_types then
+          alias
+        else
+          super#type_alias loc alias
+
+      method! opaque_type loc alias =
+        if not with_types then
+          alias
+        else
+          super#opaque_type loc alias
+
+      method! interface loc interface =
+        if not with_types then
+          interface
+        else
+          super#interface loc interface
+
       (* don't rename the `foo` in `x.foo` *)
       method! member_property_identifier (id : (L.t, L.t) Ast.Identifier.t) = id
 
@@ -194,13 +212,37 @@ module Make (L : Loc_sig.S) (Api : Scope_api_sig.S with module L = L) :
       (* don't rename the `foo` in `{ foo: ... }` *)
       method! object_key_identifier (id : (L.t, L.t) Ast.Identifier.t) = id
 
+      method! import_declaration loc decl =
+        let open Ast.Statement.ImportDeclaration in
+        let { import_kind; _ } = decl in
+        (* when `with_types` is false, don't visit `import type ...` or `import typeof ...` *)
+        match (with_types, import_kind) with
+        | (false, ImportType)
+        | (false, ImportTypeof) ->
+          decl
+        | _ -> super#import_declaration loc decl
+
       (* don't rename the `foo` in `import {foo as bar} from ...;` *)
       method! import_named_specifier
-          (specifier : (L.t, L.t) Ast.Statement.ImportDeclaration.named_specifier) =
+          ~import_kind:_ (specifier : (L.t, L.t) Ast.Statement.ImportDeclaration.named_specifier) =
         let open Ast.Statement.ImportDeclaration in
+        (* when `with_types` is false, only visit values, not types. `import_declaration`
+           avoids visiting specifiers for `import type` and `import typeof`, so
+           `kind = None` must mean a value here. *)
+        let allowed_kind = function
+          | None
+          | Some ImportValue ->
+            true
+          | Some ImportType
+          | Some ImportTypeof ->
+            with_types
+        in
         (match specifier with
-        | { local = Some ident; _ } -> ignore (this#identifier ident)
-        | { local = None; remote = ident; _ } -> ignore (this#identifier ident));
+        | { local = Some ident; remote = _; kind }
+        | { local = None; remote = ident; kind }
+          when allowed_kind kind ->
+          ignore (this#identifier ident)
+        | _ -> ());
         specifier
 
       (* don't rename the `bar` in `export {foo as bar}` *)
@@ -212,14 +254,14 @@ module Make (L : Loc_sig.S) (Api : Scope_api_sig.S with module L = L) :
         spec
 
       method! block loc (stmt : (L.t, L.t) Ast.Statement.Block.t) =
-        let lexical_hoist = new lexical_hoister in
+        let lexical_hoist = new lexical_hoister ~with_types in
         let lexical_bindings = lexical_hoist#eval (lexical_hoist#block loc) stmt in
         this#with_bindings ~lexical:true loc lexical_bindings (super#block loc) stmt
 
       (* like block *)
       method! program (program : (L.t, L.t) Ast.Program.t) =
         let (loc, _) = program in
-        let lexical_hoist = new lexical_hoister in
+        let lexical_hoist = new lexical_hoister ~with_types in
         let lexical_bindings = lexical_hoist#eval lexical_hoist#program program in
         this#with_bindings ~lexical:true loc lexical_bindings super#program program
 
@@ -229,7 +271,7 @@ module Make (L : Loc_sig.S) (Api : Scope_api_sig.S with module L = L) :
       method! for_in_statement loc (stmt : (L.t, L.t) Ast.Statement.ForIn.t) =
         let open Ast.Statement.ForIn in
         let { left; right = _; body = _; each = _; comments = _ } = stmt in
-        let lexical_hoist = new lexical_hoister in
+        let lexical_hoist = new lexical_hoister ~with_types in
         let lexical_bindings =
           match left with
           | LeftDeclaration (loc, decl) ->
@@ -249,7 +291,7 @@ module Make (L : Loc_sig.S) (Api : Scope_api_sig.S with module L = L) :
       method! for_of_statement loc (stmt : (L.t, L.t) Ast.Statement.ForOf.t) =
         let open Ast.Statement.ForOf in
         let { left; right = _; body = _; await = _; comments = _ } = stmt in
-        let lexical_hoist = new lexical_hoister in
+        let lexical_hoist = new lexical_hoister ~with_types in
         let lexical_bindings =
           match left with
           | LeftDeclaration (loc, decl) ->
@@ -269,7 +311,7 @@ module Make (L : Loc_sig.S) (Api : Scope_api_sig.S with module L = L) :
       method! for_statement loc (stmt : (L.t, L.t) Ast.Statement.For.t) =
         let open Ast.Statement.For in
         let { init; test = _; update = _; body = _; comments = _ } = stmt in
-        let lexical_hoist = new lexical_hoister in
+        let lexical_hoist = new lexical_hoister ~with_types in
         let lexical_bindings =
           match init with
           | Some (InitDeclaration (loc, decl)) ->
@@ -285,7 +327,7 @@ module Make (L : Loc_sig.S) (Api : Scope_api_sig.S with module L = L) :
         let lexical_bindings =
           match param with
           | Some p ->
-            let lexical_hoist = new lexical_hoister in
+            let lexical_hoist = new lexical_hoister ~with_types in
             lexical_hoist#eval lexical_hoist#catch_clause_pattern p
           | None -> Bindings.empty
         in
@@ -295,7 +337,7 @@ module Make (L : Loc_sig.S) (Api : Scope_api_sig.S with module L = L) :
       method private lambda loc params body =
         (* function params and bindings within the function body share the same scope *)
         let bindings =
-          let hoist = new hoister in
+          let hoist = new hoister ~with_types in
           run hoist#function_params params;
           run hoist#function_body_any body;
           hoist#acc
@@ -337,7 +379,7 @@ module Make (L : Loc_sig.S) (Api : Scope_api_sig.S with module L = L) :
         expr
 
       (* Almost the same as function_declaration, except that the name of the
-       function expression is locally in scope. *)
+         function expression is locally in scope. *)
       method! function_ loc (expr : (L.t, L.t) Ast.Function.t) =
         let contains_with_or_eval =
           let visit = new with_or_eval_visitor in
@@ -376,14 +418,14 @@ module Make (L : Loc_sig.S) (Api : Scope_api_sig.S with module L = L) :
         expr
     end
 
-  let program ?(ignore_toplevel = false) program =
+  let program ?(ignore_toplevel = false) ~with_types program =
     let (loc, _) = program in
-    let walk = new scope_builder in
+    let walk = new scope_builder ~with_types in
     let bindings =
       if ignore_toplevel then
         Bindings.empty
       else
-        let hoist = new hoister in
+        let hoist = new hoister ~with_types in
         hoist#eval hoist#program program
     in
     walk#eval (walk#with_bindings loc bindings walk#program) program

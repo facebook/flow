@@ -4,16 +4,20 @@
 type myFoo = number;
 /** this is myBar */
 type myBar<T> = ?T;
+/** this is myOpaque */
+opaque type myOpaque<T> = [T,T];
 /** this is myClass */
 class myClass {};
 /** this is myInterface */
 interface myInterface {};
-import type {ExportFoo, ExportBar, ExportClass, ExportInterface, ExportEnum} from './type-exports';
+import type {ExportFoo, ExportBar, ExportOpaque, ExportClass, ExportInterface, ExportEnum} from './type-exports';
 import { typeof exportValue } from './type-exports';
 
 (x : myFoo) => {};
 //    ^
 (x : myBar<string>) => {};
+//    ^
+(x : myOpaque<string>) => {};
 //    ^
 (x : myClass) => {};
 //    ^
@@ -22,6 +26,8 @@ import { typeof exportValue } from './type-exports';
 (x : ExportFoo) => {};
 //    ^
 (x : ExportBar<string>) => {};
+//    ^
+(x : ExportOpaque<string>) => {};
 //    ^
 (x : ExportClass) => {};
 //    ^

@@ -5,12 +5,14 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
+(* line numbers are 1-indexed; column numbers are 0-indexed *)
 type position = {
   line: int;
   column: int;
 }
 [@@deriving show]
 
+(* start is inclusive; end is exclusive *)
 (* If you are modifying this record, go look at ALoc.ml and make sure you understand the
  * representation there. *)
 type t = {
@@ -78,7 +80,16 @@ let span_compare a b =
 (** [contains loc1 loc2] returns true if [loc1] entirely overlaps [loc2] *)
 let contains loc1 loc2 = span_compare loc1 loc2 = 0
 
-(** [lines_intersect loc1 loc2] returns true if [loc1] intersects [loc2] at all *)
+(** [intersects loc1 loc2] returns true if [loc1] intersects [loc2] at all *)
+let intersects loc1 loc2 =
+  File_key.compare_opt loc1.source loc2.source = 0
+  && not (pos_cmp loc1._end loc2.start < 0 || pos_cmp loc1.start loc2._end > 0)
+
+(** [lines_intersect loc1 loc2] returns true if [loc1] and [loc2] cover any part of
+    the same line, even if they don't actually intersect.
+
+    For example, if [loc1] ends and then [loc2] begins later on the same line,
+    [intersects loc1 loc2] is false, but [lines_intersect loc1 loc2] is true. *)
 let lines_intersect loc1 loc2 =
   File_key.compare_opt loc1.source loc2.source = 0
   && not (loc1._end.line < loc2.start.line || loc1.start.line > loc2._end.line)
@@ -136,8 +147,8 @@ let to_string_no_source loc =
 
 let source loc = loc.source
 
-let make file line col =
-  { source = Some file; start = { line; column = col }; _end = { line; column = col + 1 } }
+(** Produces a zero-width Loc.t, where start = end *)
+let cursor source line column = { source; start = { line; column }; _end = { line; column } }
 
 let start_loc loc = { loc with _end = loc.start }
 

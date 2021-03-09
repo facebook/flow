@@ -6,12 +6,13 @@
  *)
 
 val scan_for_suppressions :
-  Context.t -> Severity.severity LintSettings.t -> Loc.t Flow_ast.Comment.t list -> unit
+  'phase Context.t_ -> Severity.severity LintSettings.t -> Loc.t Flow_ast.Comment.t list -> unit
+
+val add_require_tvars : Context.t -> File_sig.With_ALoc.t -> unit
 
 (* Lint suppressions are handled iff lint_severities is Some. *)
 val infer_ast :
   lint_severities:Severity.severity LintSettings.t ->
-  file_sig:File_sig.With_ALoc.t ->
   Context.t ->
   File_key.t ->
   Loc.t Flow_ast.Comment.t list ->
@@ -20,9 +21,9 @@ val infer_ast :
 
 (* Lint suppressions are handled iff lint_severities is Some. *)
 val infer_lib_file :
-  exclude_syms:SSet.t ->
+  exclude_syms:NameUtils.Set.t ->
   lint_severities:Severity.severity LintSettings.t ->
   file_sig:File_sig.With_ALoc.t ->
   Context.t ->
   (Loc.t, Loc.t) Flow_ast.Program.t ->
-  string list
+  Reason.name list

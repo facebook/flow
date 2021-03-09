@@ -33,7 +33,7 @@ assert_errors "$FLOW" check \
     --strip-root --no-flowlib --flowconfig-name ".flowconfig.100_pct_well_formed_exports" .
 
 printf "\n0%% on should always be off:\n";
-assert_ok "$FLOW" check \
+assert_errors "$FLOW" check \
     --strip-root --no-flowlib --flowconfig-name ".flowconfig.0_pct_well_formed_exports" .
 
 printf "\nUnknown rollout:\n"

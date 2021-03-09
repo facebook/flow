@@ -6,10 +6,10 @@
  *)
 
 (* This `.mli` file was generated automatically. It may include extra
-definitions that should not actually be exposed to the caller. If you notice
-that this interface file is a poor interface, please take a few minutes to
-clean it up manually, and then delete this comment once the interface is in
-shape. *)
+   definitions that should not actually be exposed to the caller. If you notice
+   that this interface file is a poor interface, please take a few minutes to
+   clean it up manually, and then delete this comment once the interface is in
+   shape. *)
 
 module Ocaml_unix = Unix
 module Ocaml_Sys = Sys
@@ -225,7 +225,7 @@ module Unix : sig
 
   val unlink : string -> unit
 
-  val link : string -> string -> unit
+  val link : ?follow:bool -> string -> string -> unit
 
   type access_permission = Unix.access_permission =
     | R_OK

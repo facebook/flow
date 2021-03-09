@@ -5,6 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
+open Flow_js_utils
 open Reason
 open Type
 open TypeUtil
@@ -13,7 +14,7 @@ module FlowError = Flow_error
 module type CUSTOM_FUN = sig
   val run :
     Context.t ->
-    Trace.t ->
+    Type.trace ->
     use_op:Type.use_op ->
     Reason.t ->
     Type.custom_fun_kind ->
@@ -171,7 +172,12 @@ module Kit (Flow : Flow_common.S) = struct
         (* Create the expected type for our element with a fresh tvar in the
          * component position. *)
         let expected_element =
-          get_builtin_typeapp cx ~trace (reason_of_t element) "React$Element" [Tvar.mk cx reason_op]
+          get_builtin_typeapp
+            cx
+            ~trace
+            (reason_of_t element)
+            (OrdinaryName "React$Element")
+            [Tvar.mk cx reason_op]
         in
         (* Flow the element arg to our expected element. *)
         rec_flow_t ~use_op:unknown_use cx trace (element, expected_element);
@@ -187,7 +193,8 @@ module Kit (Flow : Flow_common.S) = struct
           ~use_op:unknown_use
           cx
           trace
-          (element, get_builtin_typeapp cx ~trace reason_op "React$Element" [component]);
+          ( element,
+            get_builtin_typeapp cx ~trace reason_op (OrdinaryName "React$Element") [component] );
 
         (* Create a React element using the config and children. *)
         rec_flow

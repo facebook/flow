@@ -9,6 +9,14 @@ open Base.Result
 
 let ( >|= ) = Lwt.( >|= )
 
+let json_data_of_result str acc = ("result", Hh_json.JSON_String str) :: acc
+
+let json_data_of_error str acc = ("error", Hh_json.JSON_String str) :: acc
+
+let json_data_of_loc loc acc = ("loc", Reason.json_of_loc ~offset_table:None loc) :: acc
+
+let json_data_of_type str acc = ("type", Hh_json.JSON_String str) :: acc
+
 let type_at_pos
     ~cx
     ~file_sig
@@ -21,15 +29,8 @@ let type_at_pos
     file
     line
     col =
-  let loc = Loc.make file line col in
+  let loc = Loc.cursor (Some file) line col in
   let (json_data, loc, ty) =
-    let mk_data result_str loc ty_json =
-      [
-        ("result", Hh_json.JSON_String result_str);
-        ("loc", Reason.json_of_loc ~offset_table:None loc);
-        ("type", ty_json);
-      ]
-    in
     Query_types.(
       let file = Context.file cx in
       let result =
@@ -46,16 +47,27 @@ let type_at_pos
           loc
       in
       match result with
-      | FailureNoMatch -> ([("result", Hh_json.JSON_String "FAILURE_NO_MATCH")], Loc.none, None)
-      | FailureUnparseable (loc, gt, _) ->
-        let json = Hh_json.JSON_String (Type.string_of_ctor gt) in
-        (mk_data "FAILURE_UNPARSEABLE" loc json, loc, None)
+      | FailureNoMatch -> (json_data_of_result "FAILURE_NO_MATCH" [], Loc.none, None)
+      | FailureUnparseable (loc, gt, msg) ->
+        let json_data =
+          []
+          |> json_data_of_result "FAILURE_UNPARSEABLE"
+          |> json_data_of_error msg
+          |> json_data_of_loc loc
+          |> json_data_of_type (Type.string_of_ctor gt)
+        in
+        (json_data, loc, None)
       | Success (loc, ty) ->
-        (* TODO use Ty_debug.json_of_t after making it faster using
-             count_calls *)
-        let exact_by_default = Context.exact_by_default cx in
-        let json = Hh_json.JSON_String (Ty_printer.string_of_elt ~exact_by_default ty) in
-        (mk_data "SUCCESS" loc json, loc, Some ty))
+        let json_data =
+          []
+          |> json_data_of_result "SUCCESS"
+          |> json_data_of_loc loc
+          |> json_data_of_type
+               ((* TODO use Ty_debug.json_of_t after making it faster using count_calls *)
+                let exact_by_default = Context.exact_by_default cx in
+                Ty_printer.string_of_elt ~exact_by_default ty)
+        in
+        (json_data, loc, Some ty))
   in
   ((loc, ty), json_data)
 
@@ -78,8 +90,8 @@ let coverage ~cx ~typed_ast ~force ~trust file content =
       true
     else
       (* We can't just use the docblock that type_contents returns because type_contents modifies
-      * it and we want the original docblock. Fortunately this is a pure function, and pretty fast,
-      * so recomputing it isn't a problem. *)
+       * it and we want the original docblock. Fortunately this is a pure function, and pretty fast,
+       * so recomputing it isn't a problem. *)
       let (_, docblock) = Parsing_service_js.(parse_docblock docblock_max_tokens file content) in
       Docblock.is_flow docblock
   in

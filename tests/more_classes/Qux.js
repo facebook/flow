@@ -4,7 +4,7 @@
 class Qux {
   w:number;
 
-  qux() { return this.w; }
+  qux(): number { return this.w; }
 
   fooqux(x:number) { }
 }

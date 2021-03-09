@@ -90,7 +90,7 @@ module Pattern (Parse : Parser_common.PARSER) (Type : Type_parser.TYPE) = struct
       | [] -> List.rev acc
       | [Array.Spread (loc, { SpreadElement.argument; comments })] ->
         (* AssignmentRestElement is a DestructuringAssignmentTarget, see
-             #prod-AssignmentRestElement *)
+           #prod-AssignmentRestElement *)
         let acc =
           match assignment_target env argument with
           | Some argument ->
@@ -104,7 +104,7 @@ module Pattern (Parse : Parser_common.PARSER) (Type : Type_parser.TYPE) = struct
       | Array.Expression (loc, Assignment { Assignment.operator = None; left; right; comments = _ })
         :: remaining ->
         (* AssignmentElement is a `DestructuringAssignmentTarget Initializer`, see
-             #prod-AssignmentElement *)
+           #prod-AssignmentElement *)
         let acc =
           Pattern.Array.Element
             (loc, { Pattern.Array.Element.argument = left; default = Some right })
@@ -113,7 +113,7 @@ module Pattern (Parse : Parser_common.PARSER) (Type : Type_parser.TYPE) = struct
         elements env acc remaining
       | Array.Expression expr :: remaining ->
         (* AssignmentElement is a DestructuringAssignmentTarget, see
-             #prod-AssignmentElement *)
+           #prod-AssignmentElement *)
         let acc =
           match assignment_target env expr with
           | Some ((loc, _) as expr) ->
@@ -138,17 +138,17 @@ module Pattern (Parse : Parser_common.PARSER) (Type : Type_parser.TYPE) = struct
     | Array arr -> array_from_expr env (loc, arr)
     | Identifier ((id_loc, { Identifier.name = string_val; comments = _ }) as name) ->
       (* per #sec-destructuring-assignment-static-semantics-early-errors,
-           it is a syntax error if IsValidSimpleAssignmentTarget of this
-           IdentifierReference is false. That happens when `string_val` is
-           "eval" or "arguments" in strict mode. *)
+         it is a syntax error if IsValidSimpleAssignmentTarget of this
+         IdentifierReference is false. That happens when `string_val` is
+         "eval" or "arguments" in strict mode. *)
       if in_strict_mode env && is_restricted string_val then
         error_at env (id_loc, Parse_error.StrictLHSAssignment)
       (* per #prod-IdentifierReference, yield is only a valid
-           IdentifierReference when [~Yield], and await is only valid
-           when [~Await]. but per #sec-identifiers-static-semantics-early-errors,
-           they are already invalid in strict mode, which we should have
-           already errored about when parsing the expression that we're now
-           converting into a pattern. *)
+         IdentifierReference when [~Yield], and await is only valid
+         when [~Await]. but per #sec-identifiers-static-semantics-early-errors,
+         they are already invalid in strict mode, which we should have
+         already errored about when parsing the expression that we're now
+         converting into a pattern. *)
       else if not (in_strict_mode env) then
         if allow_yield env && string_val = "yield" then
           error_at env (id_loc, Parse_error.YieldAsIdentifierReference)

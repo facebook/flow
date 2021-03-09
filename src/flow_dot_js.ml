@@ -8,13 +8,13 @@
 module Js = Js_of_ocaml.Js
 module Sys_js = Js_of_ocaml.Sys_js
 
-let lazy_table_of_aloc _ =
-  lazy (failwith "Did not expect to encounter an abstract location in flow_dot_js")
+(* We do not expect to encounter a keyed location in flow_dot_js *)
+let loc_of_aloc = ALoc.to_loc_exn
 
 let error_of_parse_error source_file (loc, err) =
   Error_message.EParseError (ALoc.of_loc loc, err)
   |> Flow_error.error_of_msg ~trace_reasons:[] ~source_file
-  |> Flow_error.concretize_error lazy_table_of_aloc
+  |> Flow_error.concretize_error loc_of_aloc
   |> Flow_error.make_error_printable
 
 let error_of_file_sig_error source_file e =
@@ -22,7 +22,7 @@ let error_of_file_sig_error source_file e =
     match e with
     | IndeterminateModuleType loc -> Error_message.EIndeterminateModuleType (ALoc.of_loc loc))
   |> Flow_error.error_of_msg ~trace_reasons:[] ~source_file
-  |> Flow_error.concretize_error lazy_table_of_aloc
+  |> Flow_error.concretize_error loc_of_aloc
   |> Flow_error.make_error_printable
 
 let parse_content file content =
@@ -95,9 +95,16 @@ let load_lib_files
            let lib_file = File_key.LibFile file in
            match parse_content lib_file lib_content with
            | Ok (ast, file_sig) ->
-             let rev_table = lazy (ALoc.make_empty_reverse_table ()) in
+             (* Lib files use only concrete locations, so this is not used. *)
+             let aloc_table = lazy (ALoc.make_table lib_file) in
              let cx =
-               Context.make ccx metadata lib_file rev_table Files.lib_module_ref Context.Checking
+               Context.make
+                 ccx
+                 metadata
+                 lib_file
+                 aloc_table
+                 (Reason.OrdinaryName Files.lib_module_ref)
+                 Context.Checking
              in
              let syms =
                Type_inference_js.infer_lib_file
@@ -117,11 +124,11 @@ let load_lib_files
              save_lint_suppressions lib_file severity_cover;
 
              (* symbols loaded from this file are suppressed if found in later ones *)
-             SSet.union exclude_syms (SSet.of_list syms)
+             NameUtils.Set.union exclude_syms (NameUtils.Set.of_list syms)
            | Error parse_errors ->
              save_parse_errors lib_file parse_errors;
              exclude_syms)
-         SSet.empty
+         NameUtils.Set.empty
   in
   ()
 
@@ -150,12 +157,12 @@ let stub_metadata ~root ~checked =
     max_literal_length = 100;
     enable_const_params = false;
     enable_enums = true;
-    enable_this_annot = true;
     enable_enums_with_unknown_members = true;
+    enable_indexed_access = true;
+    enable_this_annot = true;
     enforce_local_inference_annotations = false;
     enforce_strict_call_arity = true;
     exact_by_default = false;
-    generate_tests = true;
     facebook_fbs = None;
     facebook_fbt = None;
     facebook_module_interop = false;
@@ -164,8 +171,10 @@ let stub_metadata ~root ~checked =
     max_trace_depth = 0;
     max_workers = 0;
     react_runtime = Options.ReactRuntimeClassic;
+    react_server_component_exts = SSet.empty;
     recursion_limit = 10000;
     root;
+    run_post_inference_implicit_instantiation = false;
     strict_es6_import_export = false;
     strict_es6_import_export_excludes = [];
     strip_root = true;
@@ -185,21 +194,20 @@ let get_master_cx root =
     sig_cx
 
 let init_builtins filenames =
-  let aloc_tables = Utils_js.FilenameMap.empty in
   let root = Path.dummy_path in
-  let sig_cx = Context.make_sig () in
-  let ccx = Context.make_ccx sig_cx aloc_tables in
+  let ccx = Context.make_ccx () in
   let master_cx =
-    let rev_table = lazy (ALoc.make_empty_reverse_table ()) in
+    (* Lib files use only concrete locations, so this is not used. *)
+    let aloc_table = lazy (ALoc.make_table File_key.Builtins) in
     Context.make
       ccx
       (stub_metadata ~root ~checked:false)
       File_key.Builtins
-      rev_table
-      Files.lib_module_ref
+      aloc_table
+      (Reason.OrdinaryName Files.lib_module_ref)
       Context.Checking
   in
-  Flow_js.mk_builtins master_cx;
+  Flow_js_utils.mk_builtins master_cx;
   let () =
     let metadata = stub_metadata ~root ~checked:true in
     load_lib_files
@@ -213,9 +221,9 @@ let init_builtins filenames =
   in
   let reason = Reason.builtin_reason (Reason.RCustom "module") in
   let builtin_module = Obj_type.mk_unsealed master_cx reason in
-  Flow_js.flow_t master_cx (builtin_module, Flow_js.builtins master_cx);
+  Flow_js.flow_t master_cx (builtin_module, Flow_js_utils.builtins master_cx);
   ignore (Merge_js.ContextOptimizer.sig_context master_cx [Files.lib_module_ref]);
-  master_cx_ref := Some (root, sig_cx)
+  master_cx_ref := Some (root, Context.sig_cx master_cx)
 
 let infer_and_merge ~root filename ast file_sig =
   (* this is a VERY pared-down version of Merge_service.merge_strict_context.
@@ -239,26 +247,20 @@ let infer_and_merge ~root filename ast file_sig =
   let file_sigs = Utils_js.FilenameMap.singleton filename file_sig in
   let (_, { Flow_ast.Program.all_comments; _ }) = ast in
   let aloc_ast = Ast_loc_utils.loc_to_aloc_mapper#program ast in
-  let ((cx, _, tast), _other_cxs) =
-    Merge_js.merge_component
-      ~arch:(Options.TypesFirst { new_signatures = false })
-      ~metadata
-      ~lint_severities
-      ~strict_mode
-      ~file_sigs
-      ~get_ast_unsafe:(fun _ -> (all_comments, aloc_ast))
-        (* TODO (nmote, sainati) - Exceptions should mainly be used for exceptional code flows. We
-         * shouldn't use them to decide whether or not to use abstract locations. We should pass through
-         * whatever options we need instead *)
-      ~get_aloc_table_unsafe:(fun _ ->
-        raise (Parsing_heaps_exceptions.Sig_ast_ALoc_table_not_found ""))
-      ~get_docblock_unsafe:(fun _ -> stub_docblock)
-      ~phase:Context.Checking
-      (Nel.one filename)
-      reqs
-      []
-      master_cx
+  let new_signatures = false in
+  let opts = Merge_js.Merge_options { new_signatures; metadata; lint_severities; strict_mode } in
+  let getters =
+    {
+      Merge_js.get_ast_unsafe = (fun _ -> (all_comments, aloc_ast));
+      (* TODO (nmote, sainati) - Exceptions should mainly be used for exceptional code flows. We
+       * shouldn't use them to decide whether or not to use abstract locations. We should pass through
+       * whatever options we need instead *)
+      get_aloc_table_unsafe =
+        (fun _ -> raise (Parsing_heaps_exceptions.Sig_ast_ALoc_table_not_found ""));
+      get_docblock_unsafe = (fun _ -> stub_docblock);
+    }
   in
+  let (cx, _, tast) = Merge_js.check_file ~opts ~getters ~file_sigs filename reqs [] master_cx in
   (cx, tast)
 
 let check_content ~filename ~content =
@@ -285,14 +287,10 @@ let check_content ~filename ~content =
           severity_cover
       in
       let errors =
-        errors
-        |> Flow_error.concretize_errors lazy_table_of_aloc
-        |> Flow_error.make_errors_printable
+        errors |> Flow_error.concretize_errors loc_of_aloc |> Flow_error.make_errors_printable
       in
       let warnings =
-        warnings
-        |> Flow_error.concretize_errors lazy_table_of_aloc
-        |> Flow_error.make_errors_printable
+        warnings |> Flow_error.concretize_errors loc_of_aloc |> Flow_error.make_errors_printable
       in
       let (errors, _, suppressions) =
         Error_suppressions.filter_suppressed_errors

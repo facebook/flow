@@ -111,6 +111,7 @@ type t =
   | DeclareAsync
   | DeclareClassElement
   | DeclareClassFieldInitializer
+  | DeclareOpaqueTypeInitializer
   | DeclareExportLet
   | DeclareExportConst
   | DeclareExportType
@@ -348,7 +349,10 @@ module PP = struct
     | DeclareAsync ->
       "async is an implementation detail and isn't necessary for your declare function statement. It is sufficient for your declare function to just have a Promise return type."
     | DeclareClassElement -> "`declare` modifier can only appear on class fields."
-    | DeclareClassFieldInitializer -> "Initializers are not allowed in a `declare`."
+    | DeclareClassFieldInitializer ->
+      "Unexpected token `=`. Initializers are not allowed in a `declare`."
+    | DeclareOpaqueTypeInitializer ->
+      "Unexpected token `=`. Initializers are not allowed in a `declare opaque type`."
     | DeclareExportLet -> "`declare export let` is not supported. Use `declare export var` instead."
     | DeclareExportConst ->
       "`declare export const` is not supported. Use `declare export var` instead."

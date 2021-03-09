@@ -502,6 +502,76 @@ References:
                           ^^^^^ [2]
 
 
+Error --------------------------------------------------------------------------------- detect_literal_subtypes.js:17:13
+
+string literal `b` [1] is incompatible with string literal `a` [2]. [incompatible-type]
+
+   detect_literal_subtypes.js:17:13
+   17|   if (a === 'b'){ } // error 'b' not compatible with 'a'
+                   ^^^ [1]
+
+References:
+   detect_literal_subtypes.js:16:16
+   16| function a1<A: 'a'>(a: A): void {
+                      ^^^ [2]
+
+
+Error --------------------------------------------------------------------------------- detect_literal_subtypes.js:17:13
+
+string literal `b` [1] is incompatible with string literal `a` [2]. [incompatible-type]
+
+   detect_literal_subtypes.js:17:13
+   17|   if (a === 'b'){ } // error 'b' not compatible with 'a'
+                   ^^^ [1]
+
+References:
+   detect_literal_subtypes.js:16:24
+   16| function a1<A: 'a'>(a: A): void {
+                              ^ [2]
+
+
+Error --------------------------------------------------------------------------------- detect_literal_subtypes.js:21:13
+
+string literal `b` [1] is incompatible with string literal `a` [2]. [incompatible-type]
+
+   detect_literal_subtypes.js:21:13
+   21|   if (b === 'b'){ } // error 'b' not compatible with 'a'
+                   ^^^ [1]
+
+References:
+   detect_literal_subtypes.js:20:16
+   20| function b1<A: 'a', B: A>(b: B): void {
+                      ^^^ [2]
+
+
+Error --------------------------------------------------------------------------------- detect_literal_subtypes.js:21:13
+
+string literal `b` [1] is incompatible with string literal `a` [2]. [incompatible-type]
+
+   detect_literal_subtypes.js:21:13
+   21|   if (b === 'b'){ } // error 'b' not compatible with 'a'
+                   ^^^ [1]
+
+References:
+   detect_literal_subtypes.js:20:30
+   20| function b1<A: 'a', B: A>(b: B): void {
+                                    ^ [2]
+
+
+Error --------------------------------------------------------------------------------- detect_literal_subtypes.js:39:10
+
+Property `r` is missing in `T` [1]. [prop-missing]
+
+   detect_literal_subtypes.js:39:10
+   39|     case 'r': // error
+                ^^^
+
+References:
+   detect_literal_subtypes.js:33:15
+   33| function c<X: T>(x: $Keys<X>) {
+                     ^ [1]
+
+
 Error ----------------------------------------------------------------------------------------------------- exact.js:6:4
 
 Cannot cast `x` to `X` because inexact object type [1] is incompatible with exact `X` [2]. [incompatible-exact]
@@ -954,6 +1024,23 @@ References:
                                                  ^ [2]
 
 
+Error ---------------------------------------------------------------------------------------------------- misc.js:141:3
+
+Cannot return `otherData` because object type [1] is incompatible with `{ ...T }` [2]. [incompatible-return]
+
+   misc.js:141:3
+   141|   otherData;
+          ^^^^^^^^^
+
+References:
+   misc.js:140:54
+   140| const directAccount = <T: LLETR>(data: T, otherData: LLETR): $ReadOnly<T> =>
+                                                             ^^^^^ [1]
+   misc.js:140:27
+   140| const directAccount = <T: LLETR>(data: T, otherData: LLETR): $ReadOnly<T> =>
+                                  ^^^^^ [2]
+
+
 Error --------------------------------------------------------------------------------------------------- nested.js:8:10
 
 Cannot return `w` because `W` [1] is incompatible with `X` [2]. [incompatible-return]
@@ -969,6 +1056,63 @@ References:
    nested.js:5:49
    5| function f<X, Y: X, Z: Y, W>(y: Y, z: X, w: W): X {
                                                       ^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- react.js:13:4
+
+Cannot cast `a` to `React.ComponentType` because `Props` [1] is incompatible with object type [2] in type argument
+`P` [3]. [incompatible-cast]
+
+   react.js:13:4
+    13|   (a: React.ComponentType<{a: number}>); // nope, contravariance
+           ^
+
+References:
+   react.js:11:38
+    11|   declare var a: React.ComponentType<Props>;
+                                             ^^^^^ [1]
+   react.js:13:27
+    13|   (a: React.ComponentType<{a: number}>); // nope, contravariance
+                                  ^^^^^^^^^^^ [2]
+   <BUILTINS>/react.js:272:38
+   272|   declare export type ComponentType<-P> = React$ComponentType<P>;
+                                             ^ [3]
+
+
+Error ---------------------------------------------------------------------------------------------------- react.js:14:4
+
+Cannot cast `b` to `React.Component` because object type [1] is incompatible with `Props` [2] in type argument
+`Props` [3]. [incompatible-cast]
+
+   react.js:14:4
+   14|   (b: React.Component<Props>); // nope
+          ^
+
+References:
+   react.js:12:34
+   12|   declare var b: React.Component<{+a: number}>;
+                                        ^^^^^^^^^^^^ [1]
+   react.js:14:23
+   14|   (b: React.Component<Props>); // nope
+                             ^^^^^ [2]
+   <BUILTINS>/react.js:41:31
+   41| declare class React$Component<Props, State = void> {
+                                     ^^^^^ [3]
+
+
+Error --------------------------------------------------------------------------------------------------- react.js:62:26
+
+Cannot get `X.defaultProps` because property `defaultProps` is missing in `React.AbstractComponentStatics` [1].
+[prop-missing]
+
+   react.js:62:26
+   62|   C.defaultProps = {...X.defaultProps}; // nope
+                                ^^^^^^^^^^^^
+
+References:
+   react.js:54:6
+   54|   X: React.AbstractComponent<{|...Props|}, Instance>,
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
 Error ---------------------------------------------------------------------------------------------- refinements.js:11:6
@@ -1359,7 +1503,7 @@ References:
 
 
 
-Found 81 errors
+Found 90 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches

@@ -8,12 +8,12 @@ Sketchy null check on number [1] which is potentially 0. Perhaps you meant to ch
             ^
 
 References:
-   cycle_B.js:3:19
-   3| var b = {a: a, b: 0};
-                        ^ [1]
-   cycle_C.js:7:17
-   7| var resNull = f(null);
-                      ^^^^ [2]
+   cycle_B.js:3:21
+   3| const b = {a: a, b: 0};
+                          ^ [1]
+   cycle_C.js:7:25
+   7| const resNull: void = f(null);
+                              ^^^^ [2]
 
 
 Error -------------------------------------------------------------------------------------------- fully_across_B.js:4:6
@@ -264,6 +264,21 @@ References:
 
 Error ----------------------------------------------------------------------------------------- simple_sketchies.js:83:5
 
+Avoid using `&&` to check the value of number [1]. Consider handling falsy values (0 and NaN) by using a conditional to
+choose an explicit default instead. [sketchy-number-and]
+
+   simple_sketchies.js:83:5
+   83| if (is && is.a) { }
+           ^^
+
+References:
+   simple_sketchies.js:81:39
+   81| declare var ww: {is?: ?({a: number} | number)};
+                                             ^^^^^^ [1]
+
+
+Error ----------------------------------------------------------------------------------------- simple_sketchies.js:83:5
+
 Sketchy null check on number [1] which is potentially 0. Perhaps you meant to check for null or undefined [2]?
 [sketchy-null-number]
 
@@ -335,4 +350,4 @@ References:
 
 
 
-Found 20 errors
+Found 21 errors

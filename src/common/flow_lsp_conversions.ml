@@ -12,6 +12,7 @@ let flow_position_to_lsp (line : int) (char : int) : Lsp.position =
 
 let lsp_position_to_flow (position : Lsp.position) : int * int =
   Lsp.(
+    (* Flow's line numbers are 1-indexed; LSP's are 0-indexed *)
     let line = position.line + 1 in
     let char = position.character in
     (line, char))
@@ -33,8 +34,6 @@ let loc_to_lsp_range (loc : Loc.t) : Lsp.range =
     let loc_start = loc.start in
     let loc_end = loc._end in
     let start = flow_position_to_lsp loc_start.line loc_start.column in
-    (* Flow's end range is inclusive, LSP's is exclusive.
-     * +1 for that, but -1 to make it 0-based *)
     let end_ = flow_position_to_lsp loc_end.line loc_end.column in
     { Lsp.start; end_ })
 
@@ -78,7 +77,8 @@ let flow_signature_help_to_lsp
     in
     Some { signatures; activeSignature = 0; activeParameter = active_parameter }
 
-let flow_completion_to_lsp
+let flow_completion_item_to_lsp
+    ?token
     ~is_snippet_supported:(_ : bool)
     ~(is_preselect_supported : bool)
     (item : ServerProt.Response.Completion.completion_item) : Lsp.Completion.completionItem =
@@ -100,6 +100,28 @@ let flow_completion_to_lsp
       item.text_edits
   in
   let documentation = Base.Option.map item.documentation ~f:(fun doc -> [Lsp.MarkedString doc]) in
+  let command =
+    Some
+      Lsp.Command.
+        {
+          title = "";
+          command = Command "log";
+          arguments =
+            Hh_json.
+              [
+                JSON_String "textDocument/completion";
+                JSON_String item.log_info;
+                JSON_Object
+                  [
+                    ( "token",
+                      match token with
+                      | None -> JSON_Null
+                      | Some token -> JSON_String token );
+                    ("completion", JSON_String item.name);
+                  ];
+              ];
+        }
+  in
   {
     Lsp.Completion.label = item.name;
     kind = item.kind;
@@ -111,9 +133,22 @@ let flow_completion_to_lsp
     insertText = None (* deprecated and should not be used *);
     insertTextFormat;
     textEdits;
-    command = None;
+    command;
     data = None;
   }
+
+let flow_completions_to_lsp
+    ?token
+    ~(is_snippet_supported : bool)
+    ~(is_preselect_supported : bool)
+    (completions : ServerProt.Response.Completion.t) : Lsp.Completion.result =
+  let { ServerProt.Response.Completion.items; is_incomplete } = completions in
+  let items =
+    Base.List.map
+      ~f:(flow_completion_item_to_lsp ?token ~is_snippet_supported ~is_preselect_supported)
+      items
+  in
+  { Lsp.Completion.isIncomplete = is_incomplete; items }
 
 let file_key_to_uri (file_key_opt : File_key.t option) : (Lsp.DocumentUri.t, string) result =
   let ( >>| ) = Base.Result.( >>| ) in
@@ -157,10 +192,10 @@ let lsp_DocumentIdentifier_to_flow
 let lsp_DocumentPosition_to_flow
     (params : Lsp.TextDocumentPositionParams.t) ~(client : Persistent_connection.single_client) :
     File_input.t * int * int =
-  Lsp.TextDocumentPositionParams.(
-    let file = lsp_DocumentIdentifier_to_flow params.textDocument client in
-    let (line, char) = lsp_position_to_flow params.position in
-    (file, line, char))
+  let { Lsp.TextDocumentPositionParams.textDocument; position } = params in
+  let file = lsp_DocumentIdentifier_to_flow textDocument client in
+  let (line, char) = lsp_position_to_flow position in
+  (file, line, char)
 
 let lsp_textDocument_and_range_to_flow
     ?(file_key_of_path = (fun p -> File_key.SourceFile p)) td range client =
@@ -196,13 +231,19 @@ module DocumentSymbols = struct
       ~(containerName : string option)
       ~(name : string)
       ~(kind : Lsp.SymbolInformation.symbolKind) : Lsp.SymbolInformation.t list =
-    {
-      Lsp.SymbolInformation.name;
-      kind;
-      location = { Lsp.Location.uri; range = loc_to_lsp_range loc };
-      containerName;
-    }
-    :: acc
+    if name = "" then
+      (* sometimes due to parse errors, we end up with empty names. hide them!
+         in fact, VS Code throws out the entire response if any symbol name is falsy!
+         https://github.com/microsoft/vscode/blob/afd102cbd2e17305a510701d7fd963ec2528e4ea/src/vs/workbench/api/common/extHostTypes.ts#L1068-L1072 *)
+      acc
+    else
+      {
+        Lsp.SymbolInformation.name;
+        kind;
+        location = { Lsp.Location.uri; range = loc_to_lsp_range loc };
+        containerName;
+      }
+      :: acc
 
   let ast_name_opt ~uri ~containerName ~acc ~loc ~(name_opt : string option) ~kind =
     Base.Option.value_map name_opt ~default:acc ~f:(fun name ->

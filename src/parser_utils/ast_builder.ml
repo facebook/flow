@@ -63,6 +63,16 @@ module Types = struct
 
   let object_ ?(loc = Loc.none) ?exact ?inexact properties =
     (loc, Ast.Type.Object (Objects.make ?exact ?inexact properties))
+
+  let unqualified_generic ?comments ?(loc = Loc.none) ?targs name =
+    ( loc,
+      Ast.Type.Generic
+        {
+          Ast.Type.Generic.id =
+            Ast.Type.Generic.Identifier.Unqualified (Identifiers.identifier name);
+          targs;
+          comments;
+        } )
 end
 
 let string_literal ?comments value =
@@ -142,6 +152,9 @@ module Functions = struct
     (loc, { Ast.Function.Params.params = ps; rest; comments; this_ })
 
   let param ?(loc = Loc.none) ?default argument = (loc, { Ast.Function.Param.argument; default })
+
+  let rest_param ?(loc = Loc.none) ?comments argument =
+    (loc, { Ast.Function.RestParam.argument; comments })
 
   let body ?(loc = Loc.none) ?comments stmts =
     BodyBlock (loc, { Ast.Statement.Block.body = stmts; comments })
@@ -241,6 +254,9 @@ module Statements = struct
 
   let do_while body ?comments test = (Loc.none, DoWhile { DoWhile.body; test; comments })
 
+  let for_raw ?comments init test update body =
+    (Loc.none, For { For.init; test; update; body; comments })
+
   let for_ ?comments init test update body =
     (Loc.none, For { For.init = Some (For.InitExpression init); test; update; body; comments })
 
@@ -312,6 +328,14 @@ module Statements = struct
     (loc, { Switch.Case.test; consequent; comments })
 
   let break ?(loc = Loc.none) ?comments ?label () = (loc, Break { Break.label; comments })
+
+  let try_ ?(loc = Loc.none) ?comments ?handler ?finalizer stmts =
+    let block = (loc, { Block.body = stmts; comments = None }) in
+    (loc, Try { Try.block; handler; finalizer; comments })
+
+  let catch ?(loc = Loc.none) ?comments ?param stmts =
+    let body = (loc, { Block.body = stmts; comments = None }) in
+    (loc, { Try.CatchClause.param; body; comments })
 
   let with_ ?(loc = Loc.none) ?comments _object body = (loc, With { With._object; body; comments })
 

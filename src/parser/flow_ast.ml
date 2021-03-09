@@ -163,7 +163,7 @@ and Type : sig
       type ('M, 'T) t = 'M * ('M, 'T) t'
 
       and ('M, 'T) t' = {
-        annot: ('M, 'T) Type.t;
+        annot: ('M, 'T) Type.annotation;
         comments: ('M, unit) Syntax.t option;
       }
       [@@deriving show]
@@ -208,6 +208,15 @@ and Type : sig
     type ('M, 'T) t = {
       id: ('M, 'T) Identifier.t;
       targs: ('M, 'T) Type.TypeArgs.t option;
+      comments: ('M, unit) Syntax.t option;
+    }
+    [@@deriving show]
+  end
+
+  module IndexedAccess : sig
+    type ('M, 'T) t = {
+      _object: ('M, 'T) Type.t;
+      index: ('M, 'T) Type.t;
       comments: ('M, unit) Syntax.t option;
     }
     [@@deriving show]
@@ -387,6 +396,7 @@ and Type : sig
     | Interface of ('M, 'T) Interface.t
     | Array of ('M, 'T) Array.t
     | Generic of ('M, 'T) Generic.t
+    | IndexedAccess of ('M, 'T) IndexedAccess.t
     | Union of ('M, 'T) Union.t
     | Intersection of ('M, 'T) Intersection.t
     | Typeof of ('M, 'T) Typeof.t
@@ -1807,11 +1817,21 @@ and Function : sig
     [@@deriving show]
   end
 
+  module ThisParam : sig
+    type ('M, 'T) t = 'M * ('M, 'T) t'
+
+    and ('M, 'T) t' = {
+      annot: ('M, 'T) Type.annotation;
+      comments: ('M, unit) Syntax.t option;
+    }
+    [@@deriving show]
+  end
+
   module Params : sig
     type ('M, 'T) t = 'M * ('M, 'T) t'
 
     and ('M, 'T) t' = {
-      this_: ('M * ('M, 'T) Type.annotation) option;
+      this_: ('M, 'T) ThisParam.t option;
       params: ('M, 'T) Param.t list;
       rest: ('M, 'T) RestParam.t option;
       comments: ('M, 'M Comment.t list) Syntax.t option;

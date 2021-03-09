@@ -7,9 +7,9 @@ Cannot assign `o.w.z.y` to `a` because string [1] is incompatible with number [2
                      ^^^^^^^
 
 References:
-   object.js:1:21
-   1| var o1 = { x: 0, y: "" };
-                          ^^ [1]
+   object.js:1:23
+   1| const o1 = { x: 0, y: "" };
+                            ^^ [1]
    client_object.js:3:7
    3| var a:number = o.w.z.y;
             ^^^^^^ [2]

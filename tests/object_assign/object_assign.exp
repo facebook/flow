@@ -32,54 +32,54 @@ References:
                  ^^^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------------------------- B.js:7:20
+Error ------------------------------------------------------------------------------------------------------- A.js:28:20
 
 Cannot assign `A.Good.foo()` to `good` because string [1] is incompatible with number [2]. [incompatible-type]
 
-   B.js:7:20
-    7| var good: number = A.Good.foo(); // string ~> number
+   A.js:28:20
+   28| var good: number = A.Good.foo(); // string ~> number
                           ^^^^^^^^^^^^
 
 References:
    A.js:18:20
    18|   foo: function(): string { return 'hi'; }
                           ^^^^^^ [1]
-   B.js:7:11
-    7| var good: number = A.Good.foo(); // string ~> number
+   A.js:21:11
+   21| var good: number = Good.foo();
                  ^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------------- B.js:10:20
+Error ------------------------------------------------------------------------------------------------------- A.js:31:20
 
 Cannot assign `f()` to `bad_` because string [1] is incompatible with number [2]. [incompatible-type]
 
-   B.js:10:20
-   10| var bad_: number = f(); // error: string ~> number
+   A.js:31:20
+   31| var bad_: number = f(); // error: string ~> number
                           ^^^
 
 References:
    A.js:9:20
     9|   foo: function(): string { return 'hi'; }
                           ^^^^^^ [1]
-   B.js:10:11
-   10| var bad_: number = f(); // error: string ~> number
+   A.js:31:11
+   31| var bad_: number = f(); // error: string ~> number
                  ^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------------- B.js:12:19
+Error ------------------------------------------------------------------------------------------------------- A.js:33:19
 
 Cannot assign `A.Bad.foo()` to `bad` because string [1] is incompatible with number [2]. [incompatible-type]
 
-   B.js:12:19
-   12| var bad: number = A.Bad.foo(); // error: string, number (but `this` types are compatible)
+   A.js:33:19
+   33| var bad: number = A.Bad.foo(); // error: string, number (but `this` types are compatible)
                          ^^^^^^^^^^^
 
 References:
    A.js:9:20
     9|   foo: function(): string { return 'hi'; }
                           ^^^^^^ [1]
-   B.js:12:10
-   12| var bad: number = A.Bad.foo(); // error: string, number (but `this` types are compatible)
+   A.js:13:10
+   13| var bad: number = Bad.foo();
                 ^^^^^^ [2]
 
 

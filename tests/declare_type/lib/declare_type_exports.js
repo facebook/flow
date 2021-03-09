@@ -12,6 +12,7 @@ declare module 'foo' {
     declare type Id<T> = T;
 
     declare module.exports : {
-        (a : number, b : number) : number
+        (a : number, b : number) : number,
+        ...
     };
 }

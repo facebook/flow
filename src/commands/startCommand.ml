@@ -61,13 +61,14 @@ let main
     () =
   let flowconfig_name = base_flags.Base_flags.flowconfig_name in
   let root = CommandUtils.guess_root flowconfig_name path_opt in
-  let flowconfig =
+  let (flowconfig, flowconfig_hash) =
     let flowconfig_path = Server_files_js.config_file flowconfig_name root in
-    read_config_or_exit ~enforce_warnings:(not ignore_version) flowconfig_path
+    read_config_and_hash_or_exit ~enforce_warnings:(not ignore_version) flowconfig_path
   in
   let options =
     make_options
       ~flowconfig_name
+      ~flowconfig_hash
       ~flowconfig
       ~lazy_mode
       ~root

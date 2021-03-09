@@ -181,6 +181,22 @@ var removeFlowVisitor = {
     }
   },
 
+  FunctionDeclaration: function(context, node) {
+    if (node.params && node.params.length) {
+      if (node.params[0].name === 'this') {
+        return removeNode(context, node.params[0], undefined, node.params[1]);
+      }
+    }
+  },
+
+  FunctionExpression: function(context, node) {
+    if (node.params && node.params.length) {
+      if (node.params[0].name === 'this') {
+        return removeNode(context, node.params[0], undefined, node.params[1]);
+      }
+    }
+  },
+
   ClassProperty: function(context, node) {
     if (node.declare || (context.ignoreUninitializedFields && !node.value)) {
       return removeNode(context, node);
@@ -300,7 +316,7 @@ function removeImplementedInterfaces(context, node, ast) {
 
 // Append node to the list of removed nodes, ensuring the order of the nodes
 // in the list.
-function removeNode(context, node) {
+function removeNode(context, node, _ast, nextInList) {
   var removedNodes = context.removedNodes;
   var length = removedNodes.length;
   var index = length;
@@ -308,6 +324,16 @@ function removeNode(context, node) {
   // Check for line's leading and trailing space to be removed.
   var spaceNode = context.pretty ? getLeadingSpaceNode(context, node) : null;
   var lineNode = context.pretty ? getTrailingLineNode(context, node) : null;
+  var commaNode = nextInList
+    ? createNode({
+        start: endOf(node),
+        end: startOf(nextInList),
+        loc: {
+          start: endOf(node),
+          end: startOf(nextInList),
+        },
+      })
+    : null;
 
   while (index > 0 && endOf(removedNodes[index - 1]) > startOf(node)) {
     index--;
@@ -320,6 +346,9 @@ function removeNode(context, node) {
     removedNodes.push(node);
     if (lineNode) {
       removedNodes.push(lineNode);
+    }
+    if (commaNode) {
+      removedNodes.push(commaNode);
     }
   } else {
     if (lineNode) {

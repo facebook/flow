@@ -13,7 +13,7 @@ var HelloLocal = React.createClass({
   }
 });
 
-var Callsite = React.createClass({
+const Callsite: Class<React$Component<{}, {}>> = React.createClass({
   render: function(): Node {
     return (
       <div>

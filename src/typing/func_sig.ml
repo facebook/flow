@@ -12,6 +12,10 @@ open Type
 open TypeUtil
 include Func_sig_intf
 
+(* We use this value to indicate places where values stored in the environment can have
+ * an annotation with some more work *)
+let annotated_todo t = Inferred t
+
 module Make (F : Func_params.S) = struct
   type func_params = F.t
 
@@ -24,10 +28,12 @@ module Make (F : Func_params.S) = struct
     tparams_map: Type.t SMap.t;
     fparams: func_params;
     body: (ALoc.t, ALoc.t) Ast.Function.body option;
-    return_t: Type.t;
+    return_t: Type.annotated_or_inferred;
     (* To be unified with the type of the function. *)
     knot: Type.t;
   }
+
+  let this_param = F.this
 
   let default_constructor reason =
     {
@@ -35,23 +41,23 @@ module Make (F : Func_params.S) = struct
       kind = Ctor;
       tparams = None;
       tparams_map = SMap.empty;
-      fparams = F.empty (fun _ _ -> None);
+      fparams = F.empty (fun _ _ _ -> None);
       body = None;
-      return_t = VoidT.why reason |> with_trust bogus_trust;
+      return_t = Annotated (VoidT.why reason |> with_trust bogus_trust);
       (* This can't be directly recursively called. In case this type is accidentally used downstream,
        * stub it out with mixed. *)
       knot = MixedT.why reason |> with_trust bogus_trust;
     }
 
-  let field_initializer tparams_map reason expr return_t =
+  let field_initializer tparams_map reason expr return_annot_or_inferred =
     {
       reason;
       kind = FieldInit expr;
       tparams = None;
       tparams_map;
-      fparams = F.empty (fun _ _ -> None);
+      fparams = F.empty (fun _ _ _ -> None);
       body = None;
-      return_t;
+      return_t = return_annot_or_inferred;
       (* This can't be recursively called. In case this type is accidentally used downstream, stub it
        * out with mixed. *)
       knot = MixedT.why reason |> with_trust bogus_trust;
@@ -60,7 +66,7 @@ module Make (F : Func_params.S) = struct
   let subst cx map x =
     let { tparams; tparams_map; fparams; return_t; _ } = x in
     (* Remove shadowed type params from `map`, but allow bounds/defaults to be
-     substituted if they refer to a type param before it is shadowed. *)
+       substituted if they refer to a type param before it is shadowed. *)
     let tparams =
       tparams
       |> TypeParams.map (fun tp ->
@@ -73,21 +79,21 @@ module Make (F : Func_params.S) = struct
     in
     let tparams_map = SMap.map (Flow.subst cx map) tparams_map in
     let fparams = F.subst cx map fparams in
-    let return_t = Flow.subst cx map return_t in
+    let return_t = TypeUtil.map_annotated_or_inferred (Flow.subst cx map) return_t in
     { x with tparams; tparams_map; fparams; return_t }
 
   let check_with_generics cx f x =
     let { tparams; tparams_map; fparams; return_t; _ } = x in
-    Flow.check_with_generics cx (tparams |> TypeParams.to_list) (fun map ->
+    Flow_js_utils.check_with_generics cx (tparams |> TypeParams.to_list) (fun map ->
         f
           {
             x with
             tparams_map = SMap.map (Flow.subst cx map) tparams_map;
             fparams = F.subst cx map fparams;
-            return_t = Flow.subst cx map return_t;
+            return_t = TypeUtil.map_annotated_or_inferred (Flow.subst cx map) return_t;
           })
 
-  let functiontype cx this_t { reason; kind; tparams; fparams; return_t; knot; _ } =
+  let functiontype cx this_default { reason; kind; tparams; fparams; return_t; knot; _ } =
     let make_trust = Context.trust_constructor cx in
     let static =
       let proto = FunProtoT reason in
@@ -99,13 +105,11 @@ module Make (F : Func_params.S) = struct
     in
     let funtype =
       {
-        Type.this_t;
+        Type.this_t = F.this fparams |> Base.Option.value ~default:this_default;
         params = F.value fparams;
         rest_param = F.rest fparams;
-        return_t;
+        return_t = TypeUtil.type_t_of_annotated_or_inferred return_t;
         is_predicate = kind = Predicate;
-        closure_t = Env.peek_frame ();
-        changeset = Env.retrieve_closure_changeset ();
         def_reason = reason;
       }
     in
@@ -114,11 +118,17 @@ module Make (F : Func_params.S) = struct
     Flow.unify cx t knot;
     t
 
-  let methodtype cx { reason; tparams; fparams; return_t; _ } =
+  let methodtype cx ?(ignore_this = false) { reason; tparams; fparams; return_t; _ } =
     let params = F.value fparams in
     let (params_names, params_tlist) = List.split params in
     let rest_param = F.rest fparams in
     let def_reason = reason in
+    let this =
+      if ignore_this then
+        Some Type.(MixedT.why reason (bogus_trust ()))
+      else
+        F.this fparams
+    in
     let t =
       DefT
         ( reason,
@@ -126,11 +136,17 @@ module Make (F : Func_params.S) = struct
           FunT
             ( dummy_static reason,
               dummy_prototype,
-              mk_boundfunctiontype params_tlist ~rest_param ~def_reason ~params_names return_t ) )
+              mk_boundfunctiontype
+                ?this
+                params_tlist
+                ~rest_param
+                ~def_reason
+                ~params_names
+                (TypeUtil.type_t_of_annotated_or_inferred return_t) ) )
     in
     poly_type_of_tparams (Context.generate_poly_id cx) tparams t
 
-  let gettertype ({ return_t; _ } : t) = return_t
+  let gettertype ({ return_t; _ } : t) = TypeUtil.type_t_of_annotated_or_inferred return_t
 
   let settertype { fparams; _ } =
     match F.value fparams with
@@ -140,7 +156,7 @@ module Make (F : Func_params.S) = struct
   let toplevels
       id
       cx
-      this
+      this_recipe
       super
       ~decls
       ~stmts
@@ -156,7 +172,7 @@ module Make (F : Func_params.S) = struct
     let reason = mk_reason RFunctionBody loc in
     let env = Env.peek_env () in
     let new_env = Env.clone_env env in
-    Env.update_env cx loc new_env;
+    Env.update_env loc new_env;
     Env.havoc_all ();
 
     (* create and prepopulate function scope *)
@@ -175,7 +191,9 @@ module Make (F : Func_params.S) = struct
       Scope.fresh ~var_scope_kind ()
     in
     (* push the scope early so default exprs can reference earlier params *)
-    Env.push_var_scope cx function_scope;
+    Env.push_var_scope function_scope;
+
+    let (this_t, this) = this_recipe fparams in
 
     (* add `this` and `super` before looking at parameter bindings as when using
      * `this` in default parameter values it refers to the function scope and
@@ -201,8 +219,8 @@ module Make (F : Func_params.S) = struct
     let params_ast = F.eval cx fparams in
     (* early-add our own name binding for recursive calls. *)
     Base.Option.iter id ~f:(fun (loc, { Ast.Identifier.name; comments = _ }) ->
-        let entry = knot |> Scope.Entry.new_var ~loc in
-        Scope.add_entry name entry function_scope);
+        let entry = annotated_todo knot |> Scope.Entry.new_var ~loc in
+        Scope.add_entry (OrdinaryName name) entry function_scope);
 
     let (yield_t, next_t) =
       if kind = Generator || kind = AsyncGenerator then
@@ -221,11 +239,11 @@ module Make (F : Func_params.S) = struct
       Scope.(
         let new_entry t =
           Entry.(
-            let loc = loc_of_t t in
+            let loc = loc_of_t (TypeUtil.type_t_of_annotated_or_inferred t) in
             let state = State.Initialized in
             new_const ~loc ~state t)
         in
-        (new_entry yield_t, new_entry next_t, new_entry return_t))
+        (new_entry (Inferred yield_t), new_entry (Inferred next_t), new_entry return_t))
     in
     Scope.add_entry (internal_name "yield") yield function_scope;
     Scope.add_entry (internal_name "next") next function_scope;
@@ -238,7 +256,7 @@ module Make (F : Func_params.S) = struct
       Scope.Entry.new_let
         ~loc:(loc_of_t maybe_exhaustively_checked_t)
         ~state:Scope.State.Declared
-        maybe_exhaustively_checked_t
+        (Inferred maybe_exhaustively_checked_t)
     in
     Scope.add_entry
       (internal_name "maybe_exhaustively_checked")
@@ -261,7 +279,7 @@ module Make (F : Func_params.S) = struct
     in
     (* NOTE: Predicate functions can currently only be of the form:
        function f(...) { return <exp>; }
-  *)
+    *)
     Ast.Statement.(
       match kind with
       | Predicate ->
@@ -294,6 +312,11 @@ module Make (F : Func_params.S) = struct
     let body_ast = reconstruct_body statements_ast in
     (* build return type for void funcs *)
     let init_ast =
+      let (return_t, return_annot) =
+        match return_t with
+        | Inferred t -> (t, None)
+        | Annotated t -> (t, Some ())
+      in
       if maybe_void then (
         let loc = loc_of_t return_t in
         (* Some branches add an ImplicitTypeParam frame to force our flow_use_op
@@ -306,28 +329,40 @@ module Make (F : Func_params.S) = struct
             let use_op = Op (FunImplicitReturn { fn = reason_fn; upper = reason_of_t return_t }) in
             (use_op, t, None)
           | Async ->
-            let reason = mk_annot_reason (RType "Promise") loc in
+            let reason = mk_annot_reason (RType (OrdinaryName "Promise")) loc in
             let void_t = VoidT.at loc |> with_trust bogus_trust in
-            let t = Flow.get_builtin_typeapp cx reason "Promise" [void_t] in
+            let t = Flow.get_builtin_typeapp cx reason (OrdinaryName "Promise") [void_t] in
             let use_op = Op (FunImplicitReturn { fn = reason_fn; upper = reason_of_t return_t }) in
             let use_op = Frame (ImplicitTypeParam, use_op) in
             (use_op, t, None)
           | Generator ->
-            let reason = mk_annot_reason (RType "Generator") loc in
+            let reason = mk_annot_reason (RType (OrdinaryName "Generator")) loc in
             let void_t = VoidT.at loc |> with_trust bogus_trust in
-            let t = Flow.get_builtin_typeapp cx reason "Generator" [yield_t; void_t; next_t] in
+            let t =
+              Flow.get_builtin_typeapp
+                cx
+                reason
+                (OrdinaryName "Generator")
+                [yield_t; void_t; next_t]
+            in
             let use_op = Op (FunImplicitReturn { fn = reason_fn; upper = reason_of_t return_t }) in
             let use_op = Frame (ImplicitTypeParam, use_op) in
             (use_op, t, None)
           | AsyncGenerator ->
-            let reason = mk_annot_reason (RType "AsyncGenerator") loc in
+            let reason = mk_annot_reason (RType (OrdinaryName "AsyncGenerator")) loc in
             let void_t = VoidT.at loc |> with_trust bogus_trust in
-            let t = Flow.get_builtin_typeapp cx reason "AsyncGenerator" [yield_t; void_t; next_t] in
+            let t =
+              Flow.get_builtin_typeapp
+                cx
+                reason
+                (OrdinaryName "AsyncGenerator")
+                [yield_t; void_t; next_t]
+            in
             let use_op = Op (FunImplicitReturn { fn = reason_fn; upper = reason_of_t return_t }) in
             let use_op = Frame (ImplicitTypeParam, use_op) in
             (use_op, t, None)
           | FieldInit e ->
-            let (((_, t), _) as ast) = expr cx e in
+            let (((_, t), _) as ast) = expr ?cond:None cx ~annot:return_annot e in
             let body = mk_expression_reason e in
             let use_op = Op (InitField { op = reason_fn; body }) in
             (use_op, t, Some ast)
@@ -349,15 +384,15 @@ module Make (F : Func_params.S) = struct
     in
     Env.pop_var_scope ();
 
-    Env.update_env cx loc env;
+    Env.update_env loc env;
 
     (*  return a tuple of (function body AST option, field initializer AST option).
-      - the function body option is Some _ if the func sig's body was Some, and
-        None if the func sig's body was None.
-      - the field initializer is Some expr' if the func sig's kind was FieldInit expr,
-        where expr' is the typed AST translation of expr.
-  *)
-    (params_ast, body_ast, init_ast)
+       - the function body option is Some _ if the func sig's body was Some, and
+         None if the func sig's body was None.
+       - the field initializer is Some expr' if the func sig's kind was FieldInit expr,
+         where expr' is the typed AST translation of expr.
+    *)
+    (this_t, params_ast, body_ast, init_ast)
 
   let to_ctor_sig f = { f with kind = Ctor }
 end

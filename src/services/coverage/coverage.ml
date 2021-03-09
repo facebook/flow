@@ -121,26 +121,26 @@ class visitor =
   object (self)
     val mutable tvar_cache : tvar_status IMap.t = IMap.empty
     (**
-   * Type variables may appear in a cycle in the dependency graph, which requires
-   * us to track the ones we've visited to avoid infinite recursion. There are three
-   * stages of tvar resolution w.r.t coverage:
-   *
-   * - The tvar has not been seen before (there is no entry in tvar_cache). In this
-   *   case we descend into the lower bounds of the tvar, marking its binding as
-   *   Started in the tvar_cache.
-   *
-   * - The tvar has been seen and has been resolved (status = Done _). In this case
-   *   we reuse the cached result.
-   *
-   * - The tvar is in the process of resolution (status = Started).
-   *   These are types of the form:
-   *
-   *     type X = X | number
-   *              ^
-   *   we consider the recursive occurence as uncovered (Any). This case should
-   *   be rare and it's arguable if we should be allowing it in the first place,
-   *   so we assign the value that corresponds to the fewest guarantees.
-   *)
+     * Type variables may appear in a cycle in the dependency graph, which requires
+     * us to track the ones we've visited to avoid infinite recursion. There are three
+     * stages of tvar resolution w.r.t coverage:
+     *
+     * - The tvar has not been seen before (there is no entry in tvar_cache). In this
+     *   case we descend into the lower bounds of the tvar, marking its binding as
+     *   Started in the tvar_cache.
+     *
+     * - The tvar has been seen and has been resolved (status = Done _). In this case
+     *   we reuse the cached result.
+     *
+     * - The tvar is in the process of resolution (status = Started).
+     *   These are types of the form:
+     *
+     *     type X = X | number
+     *              ^
+     *   we consider the recursive occurence as uncovered (Any). This case should
+     *   be rare and it's arguable if we should be allowing it in the first place,
+     *   so we assign the value that corresponds to the fewest guarantees.
+     *)
 
     method private tvar cx id =
       let (root_id, constraints) = Context.find_constraints cx id in
@@ -168,7 +168,6 @@ class visitor =
     method type_ cx =
       function
       | OpenT (_, id) -> self#tvar cx id
-      | MergedT (_, uses) -> self#merged_t cx uses
       | EvalT (t, _, id) -> self#eval_t cx t id
       (* Non-concrete (fallthrough) constructors *)
       | AnnotT (_, t, _)
@@ -232,7 +231,7 @@ class visitor =
       | MatchingPropT _
       | TypeDestructorTriggerT _ ->
         (Kind.Empty, Taint.Untainted)
-      | DefT (_, t, EmptyT _) -> (Kind.Empty, Taint.of_trust cx t)
+      | DefT (_, t, EmptyT) -> (Kind.Empty, Taint.of_trust cx t)
       | AnyT _ -> (Kind.Any, Taint.Tainted)
 
     method private types_of_use acc =

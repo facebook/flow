@@ -3,8 +3,8 @@ import React from 'react';
 import type {Node} from 'react';
 
 class Hello extends React.Component<{name: string}> {
-  defaultProps = {};
-  propTypes = {
+  defaultProps: {...} = {};
+  propTypes: { name: React$PropType$Primitive$Required<string> } = {
     name: React.PropTypes.string.isRequired,
   };
 

@@ -14,12 +14,10 @@ type patch = (int * int * string) list
 type key = File_key.t
 
 module DiffPatchHeap =
-  SharedMem_js.NoCache
+  SharedMem.NoCache
     (File_key)
     (struct
       type t = patch
-
-      let prefix = Prefix.make ()
 
       let description = "DiffPatch"
     end)

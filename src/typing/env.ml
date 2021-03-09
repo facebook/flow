@@ -49,7 +49,7 @@ module Scope_api = Scope_api.With_ALoc
    4. ForTypeof lookups are in fact ForValue lookups, but due to the order in
       which AST traversal takes place, these lookups may legitimately violate
       rule #2, hence the need for a special mode.
- *)
+*)
 module LookupMode = struct
   type t =
     | ForValue
@@ -68,7 +68,7 @@ type t = Scope.t list
 (* the environment is a scope stack, which mutates as an AST is
    traversed. changesets are also managed here, but live in
    a separate Changeset module for dependency reasons.
- *)
+*)
 let scopes : t ref = ref []
 
 (* symbols whose bindings are forcibly prevented from being created,
@@ -77,12 +77,12 @@ let scopes : t ref = ref []
    binding to definition D means that any local reference to D will
    register it as a deferred global lookup, which will then be linked
    to the override. See Init_js.load_lib_files.
- *)
-let exclude_symbols : SSet.t ref = ref SSet.empty
+*)
+let exclude_symbols : NameUtils.Set.t ref = ref NameUtils.Set.empty
 
 let set_exclude_symbols syms = exclude_symbols := syms
 
-let is_excluded name = SSet.mem name !exclude_symbols
+let is_excluded name = NameUtils.Set.mem name !exclude_symbols
 
 (* scopes *)
 
@@ -105,9 +105,6 @@ let rec top_var_scope = function
 
 (* get top var scope of current env *)
 let peek_var_scope () = top_var_scope (peek_env ())
-
-(* each varscope carries a frame id *)
-let peek_frame () = (peek_scope ()).id
 
 (* use the passed f to iterate over all scopes *)
 let iter_scopes f = List.iter f !scopes
@@ -157,16 +154,6 @@ let in_generator_scope () =
 
 let in_predicate_scope () = is_func_kind Predicate (peek_var_scope ())
 
-(* build a map of all var entries - no refis - in the current
-   scope stack.
-   Note that we accumulate entries bottom-up, so that
-   shadowing is properly maintained *)
-let all_entries () =
-  List.fold_left
-    (fun entries scope -> SMap.union scope.entries entries)
-    SMap.empty
-    (List.rev !scopes)
-
 (* whole env *)
 
 (* clear environment *)
@@ -174,48 +161,15 @@ let havoc_current_activation () =
   scopes := [];
   Changeset.Global.init ()
 
-(* save environment to context *)
-let snapshot_env cx =
-  let scopes = peek_env () in
-  let id = (List.hd scopes).id in
-  Context.add_env cx id scopes
-
 (* push a new var scope into the environment.
    current env state is stored to cx under scope id *)
 (* TODO maintain changelist here too *)
-let push_var_scope cx scope =
+let push_var_scope scope =
   (match scope.kind with
   | VarScope _ -> ()
   | _ -> assert_false "push_var_scope on non-var scope");
   scopes := scope :: !scopes;
-  Changeset.Global.push ();
-  snapshot_env cx
-
-(***
- * when we pop a var scope, we save the accumulated changeset over the
- * surrounding environment. for var scopes that correspond to function
- * activations, this saved changeset contains the read write and
- * refinement operations on closed-over variables.
- *
- * We make this available out of band rather than simply returning it
- * from pop_var_scope only to avoid the current logistics of getting it
- * to where the function's type is actually built, but this may change.
- * It would certainly be better to avoid the extra state.
- *)
-
-let saved_closure_changeset = ref (Some Changeset.empty)
-
-let save_closure_changeset scopes =
-  let ids = Base.List.map ~f:(fun { id; _ } -> id) scopes in
-  let changeset = Changeset.(include_scopes ids (Global.peek ())) in
-  saved_closure_changeset := Some changeset
-
-let retrieve_closure_changeset () =
-  match !saved_closure_changeset with
-  | None -> assert_false "no saved closure changeset"
-  | Some changeset ->
-    saved_closure_changeset := None;
-    changeset
+  Changeset.Global.push ()
 
 (* --- *)
 
@@ -224,7 +178,6 @@ let retrieve_closure_changeset () =
 let pop_var_scope () =
   match !scopes with
   | { kind = VarScope _; _ } :: tail_scopes ->
-    save_closure_changeset tail_scopes;
     scopes := tail_scopes;
     Changeset.Global.pop ()
   | [] -> assert_false "empty scope list"
@@ -232,10 +185,9 @@ let pop_var_scope () =
 
 (* push a lex scope but NOT a changeset
    (which is 1-1 with var scopes). *)
-let push_lex_scope cx =
+let push_lex_scope () =
   let scope = Scope.fresh_lex () in
-  scopes := scope :: !scopes;
-  snapshot_env cx
+  scopes := scope :: !scopes
 
 let pop_lex_scope () =
   match !scopes with
@@ -248,8 +200,8 @@ let pop_lex_scope () =
   | [] -> assert_false "empty scope list"
   | _ -> assert_false "top scope is non-lex"
 
-let in_lex_scope cx f =
-  push_lex_scope cx;
+let in_lex_scope f =
+  push_lex_scope ();
   let result = f () in
   pop_lex_scope ();
   result
@@ -271,17 +223,17 @@ let trunc_env =
     scopes := trunc (List.length cur - depth, cur)
 
 (* initialize a new environment (once per module) *)
-let init_env ?(exclude_syms = SSet.empty) cx module_scope =
+let init_env ?(exclude_syms = NameUtils.Set.empty) module_scope =
   set_exclude_symbols exclude_syms;
   havoc_current_activation ();
   let global_scope = Scope.fresh ~var_scope_kind:Global () in
-  push_var_scope cx global_scope;
-  push_var_scope cx module_scope
+  push_var_scope global_scope;
+  push_var_scope module_scope
 
 (* replace the current env with the passed one.
    envs must be congruent - we measure length as a quick check,
    with a more thorough check on env merge/copy *)
-let update_env cx loc new_scopes =
+let update_env loc new_scopes =
   if List.length new_scopes != List.length (peek_env ()) then
     assert_false
       (spf
@@ -290,15 +242,14 @@ let update_env cx loc new_scopes =
          (List.length new_scopes)
          (List.length (peek_env ())));
 
-  scopes := new_scopes;
-  snapshot_env cx
+  scopes := new_scopes
 
 (* end of basic env API *)
 
 let global_any =
   [
-    "eval";
-    "arguments";
+    OrdinaryName "eval";
+    OrdinaryName "arguments";
     (* For `switch` statements not in a function body, so we don't get an error. *)
     internal_name "maybe_exhaustively_checked";
   ]
@@ -331,11 +282,11 @@ let global_lexicals = [internal_name "super"; internal_name "this"]
    information about what uses were made of the reference to
    flag such errors on the current deferred basis.
    tests/global_ref tracks this issue.
- *)
+*)
 let cache_global cx name ?desc loc global_scope =
   let t =
     if List.mem name global_any then
-      AnyT.at Annotated loc
+      AnyT.at AnnotatedAny loc
     else if List.mem name global_lexicals then
       ObjProtoT (mk_reason (RCustom "global object") loc)
     else
@@ -347,11 +298,12 @@ let cache_global cx name ?desc loc global_scope =
       let reason = mk_reason desc loc in
       Flow.get_builtin cx name reason
   in
-  let entry = Entry.new_var t ~loc ~state:State.Initialized in
+  let entry = Entry.new_var (Inferred t) ~loc ~state:State.Initialized in
   Scope.add_entry name entry global_scope;
   (global_scope, entry)
 
 let local_scope_entry_exists name =
+  let name = OrdinaryName name in
   let rec loop = function
     | [] -> assert_false "empty scope list"
     | scope :: scopes ->
@@ -445,7 +397,7 @@ let already_bound_error = binding_error Error_message.ENameAlreadyBound
    dealing with various situations involving a preexisting entry
    (since multiple declarations - sometimes but not always erroneous -
    may appear in an AST)
- *)
+*)
 
 let bind_entry cx name entry loc =
   (* iterate top-down through scopes until the appropriate scope for this
@@ -475,11 +427,9 @@ let bind_entry cx name entry loc =
           Entry.(
             let can_shadow = function
               (* funcs/vars can shadow other funcs/vars -- only in var scope *)
-              | ((Var _ | Let FunctionBinding), (Var _ | Let FunctionBinding)) -> true
+              | ((Var _ | Let (FunctionBinding, _)), (Var _ | Let (FunctionBinding, _))) -> true
               (* vars can shadow function params *)
-              | (Var _, Let ParamBinding) -> true
-              | (Var _, Let ConstlikeParamBinding) -> true
-              | (Var _, Const ConstParamBinding) -> true
+              | (Var _, (Let (ParamBinding, _) | Const ConstParamBinding)) -> true
               | _ -> false
             in
             (match (entry, prev) with
@@ -503,37 +453,41 @@ let bind_class cx class_id class_private_fields class_private_static_fields =
     ALoc.none
 
 (* bind var entry *)
-let bind_var ?(state = State.Declared) cx name t loc =
+let bind_var_to_name ?(state = State.Declared) cx name t loc =
   bind_entry cx name (Entry.new_var t ~loc ~state) loc
+
+let bind_var ?state cx name t loc = bind_var_to_name ?state cx (OrdinaryName name) t loc
 
 (* bind let entry *)
 let bind_let ?(state = State.Undeclared) cx name t loc =
-  bind_entry cx name (Entry.new_let t ~loc ~state) loc
+  bind_entry cx (OrdinaryName name) (Entry.new_let t ~loc ~state) loc
 
 (* bind implicit let entry *)
 let bind_implicit_let ?(state = State.Undeclared) kind cx name t loc =
-  bind_entry cx name (Entry.new_let t ~kind ~loc ~state) loc
+  bind_entry cx name (Entry.new_let (Inferred t) ~kind ~loc ~state) loc
 
-let bind_fun ?(state = State.Declared) = bind_implicit_let ~state Entry.FunctionBinding
+let bind_fun ?(state = State.Declared) =
+  bind_implicit_let ~state (Entry.FunctionBinding, Entry.Havocable)
 
 (* bind const entry *)
 let bind_const ?(state = State.Undeclared) cx name t loc =
-  bind_entry cx name (Entry.new_const t ~loc ~state) loc
+  bind_entry cx (OrdinaryName name) (Entry.new_const t ~loc ~state) loc
 
-let bind_import cx name t loc = bind_entry cx name (Entry.new_import t ~loc) loc
+let bind_import cx name t loc = bind_entry cx (OrdinaryName name) (Entry.new_import t ~loc) loc
 
 (* bind implicit const entry *)
 let bind_implicit_const ?(state = State.Undeclared) kind cx name t loc =
-  bind_entry cx name (Entry.new_const t ~kind ~loc ~state) loc
+  bind_entry cx (OrdinaryName name) (Entry.new_const (Inferred t) ~kind ~loc ~state) loc
 
 (* bind type entry *)
 let bind_type ?(state = State.Declared) cx name t loc =
-  bind_entry cx name (Entry.new_type t ~loc ~state) loc
+  bind_entry cx (OrdinaryName name) (Entry.new_type t ~loc ~state) loc
 
-let bind_import_type cx name t loc = bind_entry cx name (Entry.new_import_type t ~loc) loc
+let bind_import_type cx name t loc =
+  bind_entry cx (OrdinaryName name) (Entry.new_import_type t ~loc) loc
 
 (* vars coming from 'declare' statements are preinitialized *)
-let bind_declare_var = bind_var ~state:State.Initialized
+let bind_declare_var cx name t = bind_var_to_name ~state:State.Initialized cx name (Annotated t)
 
 (* bind entry for declare function *)
 let bind_declare_fun =
@@ -544,13 +498,18 @@ let bind_declare_fun =
       let reason = replace_desc_reason RIntersectionType (reason_of_t seen_t) in
       IntersectionT (reason, InterRep.make seen_t new_t [])
   in
+  let update_general_type general_t new_t =
+    match general_t with
+    | Inferred t -> Inferred (update_type t new_t)
+    | Annotated t -> Annotated (update_type t new_t)
+  in
   fun cx name t loc ->
-    if not (is_excluded name) then
+    if not (is_excluded (OrdinaryName name)) then
       let scope = peek_scope () in
-      match Scope.get_entry name scope with
+      match Scope.get_entry (OrdinaryName name) scope with
       | None ->
-        let entry = Entry.new_var t ~loc ~state:State.Initialized in
-        Scope.add_entry name entry scope
+        let entry = Entry.new_var (Inferred t) ~loc ~state:State.Initialized in
+        Scope.add_entry (OrdinaryName name) entry scope
       | Some prev ->
         Entry.(
           (match prev with
@@ -564,19 +523,19 @@ let bind_declare_fun =
                   v with
                   value_state = State.Initialized;
                   specific = update_type v.specific t;
-                  general = update_type v.general t;
+                  general = update_general_type v.general t;
                 }
             in
-            Scope.add_entry name entry scope
+            Scope.add_entry (OrdinaryName name) entry scope
           | _ ->
             (* declare function shadows some other kind of binding *)
-            already_bound_error cx name prev loc))
+            already_bound_error cx (OrdinaryName name) prev loc))
 
 (* helper: move a Let/Const's entry's state from Undeclared to Declared.
    Only needed for let and const to push things into scope for potentially
    recursive internal refs: hoisted things (vars and types) become declared
    immediately on binding.
- *)
+*)
 let declare_value_entry kind cx name loc =
   if not (is_excluded name) then
     Entry.(
@@ -587,61 +546,148 @@ let declare_value_entry kind cx name loc =
         Scope.add_entry name new_entry scope
       | _ -> already_bound_error cx name entry loc)
 
-let declare_let = declare_value_entry Entry.(Let LetVarBinding)
+let declare_let = declare_value_entry Entry.(Let (LetVarBinding, Havocable))
 
-let declare_implicit_let kind = declare_value_entry (Entry.Let kind)
+let declare_implicit_let kind = declare_value_entry Entry.(Let (kind, Havocable))
 
 let declare_const = declare_value_entry Entry.(Const ConstVarBinding)
 
 let declare_implicit_const kind = declare_value_entry (Entry.Const kind)
 
-let promote_to_const_like cx loc =
-  try
-    let (info, values) = Context.use_def cx in
-    let uses = Scope_api.uses_of_use info loc in
-    (* We consider a binding to be const-like if all reads point to the same
-       write, modulo initialization. *)
-    let writes =
-      ALocSet.fold
-        (fun use acc ->
-          match ALocMap.find_opt use values with
-          | None -> (* use is a write *) acc
-          | Some write_locs ->
-            (* use is a read *)
-            (* collect writes pointed to by the read, modulo initialization *)
-            List.fold_left
-              (fun acc -> function
-                | Ssa_api.With_ALoc.Uninitialized -> acc
-                | Ssa_api.With_ALoc.Write loc -> ALocSet.add loc acc)
-              acc
-              write_locs)
-        uses
-        ALocSet.empty
-    in
-    ALocSet.cardinal writes <= 1
-  with _ -> false
+let is_const_like cx loc =
+  let (info, values) = Context.use_def cx in
+  let uses = Scope_api.uses_of_use info loc in
+  (* We consider a binding to be const-like if all reads point to the same
+     write, modulo initialization. *)
+  let writes =
+    ALocSet.fold
+      (fun use acc ->
+        match ALocMap.find_opt use values with
+        | None -> (* use is a write *) acc
+        | Some write_locs ->
+          (* use is a read *)
+          (* collect writes pointed to by the read, modulo initialization *)
+          List.fold_left
+            (fun acc -> function
+              | Ssa_api.With_ALoc.Uninitialized -> acc
+              | Ssa_api.With_ALoc.Write loc -> ALocSet.add loc acc)
+            acc
+            write_locs)
+      uses
+      ALocSet.empty
+  in
+  ALocSet.cardinal writes <= 1
 
-let initialized_value_entry cx kind specific loc v =
+let is_not_captured_by_closure =
+  let rec lookup in_current_var_scope info scope def =
+    if SMap.exists (fun _ def' -> def = def') scope.Scope_api.Scope.defs then
+      in_current_var_scope
+    else
+      match scope.Scope_api.Scope.parent with
+      | None -> true
+      | Some scope_id' ->
+        let scope' = Scope_api.scope info scope_id' in
+        lookup (in_current_var_scope && scope.Scope_api.Scope.lexical) info scope' def
+  in
+  fun info use ->
+    let scopes = info.Scope_api.scopes in
+    IMap.fold
+      (fun _scope_id scope acc ->
+        match ALocMap.find_opt use scope.Scope_api.Scope.locals with
+        | Some def -> acc && lookup true info scope def
+        | None -> acc)
+      scopes
+      true
+
+let written_by_closure cx loc =
+  let (info, values) = Context.use_def cx in
+  let uses = Scope_api.uses_of_use info loc in
+  (* We consider a binding to be const-like if all reads point to the same
+     write, modulo initialization. *)
+  let writes_by_closure =
+    ALocSet.fold
+      (fun use acc ->
+        match ALocMap.find_opt use values with
+        | None ->
+          (* use is a write *)
+          if is_not_captured_by_closure info use then
+            acc
+          else
+            ALocSet.add use acc
+        | Some _write_locs ->
+          (* use is a read *)
+          (* collect writes pointed to by the read, modulo initialization *)
+          acc)
+      uses
+      ALocSet.empty
+  in
+  writes_by_closure
+
+let promote_non_const cx name loc spec =
+  if Reason.is_internal_name name then
+    (None, spec)
+  else if spec <> Entry.ConstLike && is_const_like cx loc then
+    (None, Entry.ConstLike)
+  else if spec <> Entry.NotWrittenByClosure then
+    let writes_by_closure = written_by_closure cx loc in
+    if ALocSet.is_empty writes_by_closure then
+      (None, Entry.NotWrittenByClosure)
+    else
+      (Some writes_by_closure, spec)
+  else
+    (None, spec)
+
+let initialized_value_entry cx name kind specific loc v =
   Entry.(
-    (* Maybe promote to const-like *)
-    let new_kind =
-      match kind with
-      | Var VarBinding ->
-        if promote_to_const_like cx loc then
-          Var ConstlikeVarBinding
-        else
-          kind
-      | Let LetVarBinding ->
-        if promote_to_const_like cx loc then
-          Let ConstlikeLetVarBinding
-        else
-          kind
-      | _ -> kind
+    let mk_closure_writes cx name loc general default_closure_writes writes_by_closure_opt =
+      match (default_closure_writes, writes_by_closure_opt) with
+      | (None, Some writes_by_closure) ->
+        let writes_by_closure_t =
+          Tvar.mk_where cx (mk_reason (RIdentifier name) loc) (fun tvar ->
+              Flow.flow_t cx (tvar, general))
+        in
+        Some (writes_by_closure, writes_by_closure_t)
+      | _ -> default_closure_writes
     in
-    Value { v with Entry.kind = new_kind; value_state = State.Initialized; specific })
+    (* Maybe promote to const-like *)
+    let (closure_writes, new_kind) =
+      match kind with
+      | Var spec ->
+        let (writes_by_closure_opt, spec') = promote_non_const cx name loc spec in
+        ( mk_closure_writes
+            cx
+            name
+            loc
+            (TypeUtil.type_t_of_annotated_or_inferred v.general)
+            v.closure_writes
+            writes_by_closure_opt,
+          if spec' != spec then
+            Entry.(Var spec')
+          else
+            kind )
+      | Let (let_binding, spec) ->
+        let (writes_by_closure_opt, spec') = promote_non_const cx name loc spec in
+        ( mk_closure_writes
+            cx
+            name
+            loc
+            (TypeUtil.type_t_of_annotated_or_inferred v.general)
+            v.closure_writes
+            writes_by_closure_opt,
+          if spec' != spec then
+            Entry.(Let (let_binding, spec'))
+          else
+            kind )
+      | _ -> (None, kind)
+    in
+    Value
+      { v with Entry.kind = new_kind; value_state = State.Initialized; specific; closure_writes })
 
 (* helper - update var entry to reflect assignment/initialization *)
-(* note: here is where we understand that a name can be multiply var-bound *)
+(* note: here is where we understand that a name can be multiply var-bound
+ * TODO: we started tracking annotations when variables are bound. Once we do
+ * that at all binding sites this ~has_anno param can go away in favor of
+ * looking up the annot in the environment *)
 let init_value_entry kind cx ~use_op name ~has_anno specific loc =
   if not (is_excluded name) then
     Entry.(
@@ -654,28 +700,29 @@ let init_value_entry kind cx ~use_op name ~has_anno specific loc =
           Value ({ Entry.kind = Const _; value_state = State.Undeclared | State.Declared; _ } as v)
         ) ->
         Changeset.Global.change_var (scope.id, name, Changeset.Write);
-        if specific != v.general then Flow_js.flow cx (specific, UseT (use_op, v.general));
+        let general = TypeUtil.type_t_of_annotated_or_inferred v.general in
+        if specific != general then Flow.flow cx (specific, UseT (use_op, general));
 
         (* note that annotation supercedes specific initializer type *)
         let specific =
           if has_anno then
-            v.general
+            general
           else
             specific
         in
-        let new_entry = initialized_value_entry cx kind specific loc v in
+        let new_entry = initialized_value_entry cx name kind specific loc v in
         Scope.add_entry name new_entry scope
       | _ ->
         (* Incompatible or non-redeclarable new and previous entries.
-         We will have already issued an error in `bind_value_entry`,
-         so we can prune this case here. *)
+           We will have already issued an error in `bind_value_entry`,
+           so we can prune this case here. *)
         ())
 
-let init_var = init_value_entry Entry.(Var VarBinding)
+let init_var = init_value_entry Entry.(Var Havocable)
 
-let init_let = init_value_entry Entry.(Let LetVarBinding)
+let init_let = init_value_entry Entry.(Let (LetVarBinding, Havocable))
 
-let init_implicit_let kind = init_value_entry (Entry.Let kind)
+let init_implicit_let kind = init_value_entry Entry.(Let (kind, Havocable))
 
 let init_fun = init_implicit_let ~has_anno:false Entry.FunctionBinding
 
@@ -685,6 +732,7 @@ let init_implicit_const kind = init_value_entry Entry.(Const kind)
 
 (* update type alias to reflect initialization in code *)
 let init_type cx name type_ loc =
+  let name = OrdinaryName name in
   if not (is_excluded name) then
     Entry.(
       let (scope, entry) = find_entry cx name loc in
@@ -695,12 +743,13 @@ let init_type cx name type_ loc =
         Scope.add_entry name new_entry scope
       | _ ->
         (* Incompatible or non-redeclarable new and previous entries.
-         We will have already issued an error in `bind_value_entry`,
-         so we can prune this case here. *)
+           We will have already issued an error in `bind_value_entry`,
+           so we can prune this case here. *)
         ())
 
 (* treat a var's declared (annotated) type as an initializer *)
 let pseudo_init_declared_type cx name loc =
+  let name = OrdinaryName name in
   if not (is_excluded name) then
     Entry.(
       let (scope, entry) = find_entry cx name loc in
@@ -710,19 +759,27 @@ let pseudo_init_declared_type cx name loc =
         ->
         Changeset.Global.change_var (scope.id, name, Changeset.Write);
         let kind = v.Entry.kind in
-        let entry = initialized_value_entry cx kind v.general loc v in
+        let entry =
+          initialized_value_entry
+            cx
+            name
+            kind
+            (TypeUtil.type_t_of_annotated_or_inferred v.general)
+            loc
+            v
+        in
         Scope.add_entry name entry scope
       | _ ->
         (* Incompatible or non-redeclarable new and previous entries.
-         We will have already issued an error in `bind_value_entry`,
-         so we can prune this case here. *)
+           We will have already issued an error in `bind_value_entry`,
+           so we can prune this case here. *)
         ())
 
 (* helper for read/write tdz checks *)
 (* for now, we only enforce TDZ within the same activation.
    return true if the given target scope is in the same
    activation as the current scope.
- *)
+*)
 let same_activation target =
   let rec loop target = function
     | [] -> assert_false "target scope not found"
@@ -746,9 +803,9 @@ let value_entry_types ?(lookup_mode = ForValue) scope =
   Entry.(
     function
     (* from value positions, a same-activation ref to var or an explicit let
-     before initialization yields undefined. *)
+       before initialization yields undefined. *)
     | {
-        Entry.kind = Var _ | Let LetVarBinding;
+        Entry.kind = Var _ | Let (LetVarBinding, _);
         value_state = (State.Declared | State.MaybeInitialized) as state;
         value_declare_loc;
         specific;
@@ -782,7 +839,7 @@ let allow_forward_ref =
   Scope.Entry.(
     function
     | Var _
-    | Let FunctionBinding ->
+    | Let (FunctionBinding, _) ->
       true
     | _ -> false)
 
@@ -809,7 +866,7 @@ let read_entry ~lookup_mode ~specific cx name ?desc loc =
         if specific then
           s
         else
-          g))
+          TypeUtil.type_t_of_annotated_or_inferred g))
 
 let rec seek_env f = function
   | [] -> None
@@ -831,7 +888,8 @@ let get_env_refi key = seek_env (Scope.get_refi key)
 let get_current_env_refi key = get_env_refi key !scopes
 
 (* get var's specific type (and track the reference) *)
-let get_var ?(lookup_mode = ForValue) = read_entry ~lookup_mode ~specific:true ?desc:None
+let get_var ?(lookup_mode = ForValue) cx name loc =
+  read_entry ~lookup_mode ~specific:true ?desc:None cx (OrdinaryName name) loc
 
 (* query var's specific type *)
 let query_var ?(lookup_mode = ForValue) = read_entry ~lookup_mode ~specific:true
@@ -840,12 +898,20 @@ let query_var_non_specific ?(lookup_mode = ForValue) = read_entry ~lookup_mode ~
 
 let get_internal_var cx name loc = query_var cx (internal_name name) loc
 
+let get_var_annotation cx name loc =
+  let (_, entry) = find_entry cx name loc in
+  match entry with
+  (* When we start actually passing annotation targets through statement.ml
+   * we should return the type here instead of unit *)
+  | Entry.Value { Entry.general = Annotated _; _ } -> Some ()
+  | _ -> None
+
 (* get var's general type - for annotated vars, this is the
    annotated type, and for others it's the union of all
    types assigned to the var throughout its lifetime.
- *)
-let get_var_declared_type ?(lookup_mode = ForValue) =
-  read_entry ~lookup_mode ~specific:false ?desc:None
+*)
+let get_var_declared_type ?(lookup_mode = ForValue) cx name loc =
+  read_entry ~lookup_mode ~specific:false ?desc:None cx name loc
 
 (* Unify declared type with another type. This is useful for allowing forward
    references in declared types to other types declared later in scope. *)
@@ -879,7 +945,7 @@ let is_global_var _cx name =
   let rec loop = function
     | [] -> true
     | scope :: scopes ->
-      (match Scope.get_entry name scope with
+      (match Scope.get_entry (OrdinaryName name) scope with
       | Some _ -> Scope.is_global scope
       | None -> loop scopes)
   in
@@ -911,12 +977,12 @@ let check_exported_let_bound_reassignment op cx name entry loc =
   | ( Changeset.Write,
       Value
         {
-          Entry.kind = Let Entry.((ClassNameBinding | FunctionBinding) as binding_kind);
+          Entry.kind = Let Entry.(((ClassNameBinding | FunctionBinding) as binding_kind), _);
           value_declare_loc;
           _;
         },
       Some exported_locals ) ->
-    (match SMap.find_opt name exported_locals with
+    (match NameUtils.smap_find_opt name exported_locals with
     | Some loc_set when ALocSet.mem value_declare_loc loc_set ->
       let reason = mk_reason (RType name) value_declare_loc in
       Flow.add_output
@@ -935,7 +1001,7 @@ let update_var op cx ~use_op name specific loc =
       when (not (allow_forward_ref kind)) && same_activation scope ->
       tdz_error cx name loc v;
       None
-    | Value ({ Entry.kind = Let _ | Var _; _ } as v) ->
+    | Value ({ Entry.kind = Let _ | Var _; closure_writes; _ } as v) ->
       let change = (scope.id, name, op) in
       Changeset.Global.change_var change;
       let use_op =
@@ -945,7 +1011,12 @@ let update_var op cx ~use_op name specific loc =
         | Changeset.Read -> unknown_use
         (* this is impossible *)
       in
-      Flow.flow cx (specific, UseT (use_op, Entry.general_of_value v));
+      begin
+        match closure_writes with
+        | Some (writes_by_closure, t) when ALocSet.mem loc writes_by_closure ->
+          Flow.flow cx (specific, UseT (use_op, t))
+        | _ -> Flow.flow cx (specific, UseT (use_op, Entry.general_of_value v))
+      end;
 
       (* add updated entry *)
       let update =
@@ -978,7 +1049,7 @@ let update_var op cx ~use_op name specific loc =
     | Class _ -> assert_false "Internal error: update_var called on Class")
 
 (* update var by direct assignment *)
-let set_var = update_var Changeset.Write
+let set_var cx ~use_op name t loc = update_var Changeset.Write cx ~use_op (OrdinaryName name) t loc
 
 let set_internal_var cx name t loc =
   update_var Changeset.Write cx ~use_op:unknown_use (internal_name name) t loc
@@ -1003,7 +1074,12 @@ let refine_const cx name specific loc =
       let update = Value { v with value_state = State.Initialized; specific } in
       Scope.add_entry name update scope;
       Some change
-    | _ -> assert_false (spf "refine_const called on %s %s" (Entry.string_of_kind entry) name))
+    | _ ->
+      assert_false
+        (spf
+           "refine_const called on %s %s"
+           (Entry.string_of_kind entry)
+           (display_string_of_name name)))
 
 (* given a list of envs (scope lists), return true iff all envs are
    the same length and all scope ids and kinds match *)
@@ -1060,7 +1136,7 @@ let merge_env =
   (* merge_entry helper - calculate new specific type *)
   let merge_specific cx loc name (specific0, general0) specific1 specific2 =
     (* if both children are unchanged, or 1 child is unchanged and the other
-        is bottom (EmptyT), then we can avoid creating a merged specific *)
+       is bottom (EmptyT), then we can avoid creating a merged specific *)
     if
       (specific0 = specific1 && (specific0 = specific2 || is_bot specific2))
       || (specific0 = specific2 && is_bot specific1)
@@ -1104,7 +1180,15 @@ let merge_env =
         let { specific = s0; general = g0; _ } = orig in
         let { specific = s1; _ } = child1 in
         let { specific = s2; _ } = child2 in
-        let specific = merge_specific cx loc (RIdentifier name) (s0, g0) s1 s2 in
+        let specific =
+          merge_specific
+            cx
+            loc
+            (RIdentifier name)
+            (s0, TypeUtil.type_t_of_annotated_or_inferred g0)
+            s1
+            s2
+        in
         let value_state = merge_states orig child1 child2 in
         (* replace entry if anything changed *)
         if specific == s0 && value_state = orig.value_state then
@@ -1115,7 +1199,10 @@ let merge_env =
       (* type aliases can't be refined or reassigned, shouldn't be here *)
       | (Some (Type _), Some (Type _), Some (Type _)) ->
         assert_false
-          (spf "merge_env %s: type alias %s found in changelist" (string_of_aloc loc) name)
+          (spf
+             "merge_env %s: type alias %s found in changelist"
+             (string_of_aloc loc)
+             (display_string_of_name name))
       (* global lookups may leave uneven new entries, which we can forget *)
       | (_, _, _) when is_global scope0 -> ()
       (* missing completely from non-global scope *)
@@ -1130,7 +1217,7 @@ let merge_env =
              (Debug_js.string_of_scope cx scope1)
              (Debug_js.string_of_scope cx scope2))
       (* a newly created entry may exist in one lex child -
-       this pattern is due to our current switch handling *)
+         this pattern is due to our current switch handling *)
       | (None, Some (Value _ as entry), None) when Scope.is_lex scope1 ->
         add_entry name entry scope0
       | (None, None, Some (Value _ as entry)) when Scope.is_lex scope2 ->
@@ -1145,7 +1232,7 @@ let merge_env =
           (spf
              "merge_env %s: non-uniform distribution of entry %s: %s, %s, %s"
              (string_of_aloc loc)
-             name
+             (display_string_of_name name)
              (print_entry_kind_opt orig)
              (print_entry_kind_opt child1)
              (print_entry_kind_opt child2)))
@@ -1174,7 +1261,7 @@ let merge_env =
     (* refi was cleared in a child env. clear from original *)
     | (Some _, _, _) -> remove_refi key scope0
     (* refi was introduced - and possibly also removed by havoc -
-      after envs diverged *)
+       after envs diverged *)
     | (None, _, _) -> ()
   in
   (* merge entries and refis found in changeset *)
@@ -1217,7 +1304,10 @@ let copy_env =
       (* type aliases shouldn't be here *)
       | (Some (Type _), Some (Type _)) ->
         assert_false
-          (spf "copy_env %s: type alias %s found in changelist" (string_of_aloc loc) name)
+          (spf
+             "copy_env %s: type alias %s found in changelist"
+             (string_of_aloc loc)
+             (display_string_of_name name))
       (* global lookups may leave new entries in env2, or orphan changes *)
       (* ...which we can forget *)
       | (None, _) when is_global scope1 -> ()
@@ -1234,7 +1324,7 @@ let copy_env =
           (spf
              "copy_env %s: non-uniform distribution of entry %s: %s, %s"
              (string_of_aloc loc)
-             name
+             (display_string_of_name name)
              (print_entry_kind_opt entry1)
              (print_entry_kind_opt entry2)))
   in
@@ -1262,7 +1352,7 @@ let copy_env =
    specific type as incoming lower bound, and general type as
    upper bound. This prepares the specific type for later merging
    during path-dependent analysis.
- *)
+*)
 let widen_env =
   let widened cx loc name specific general =
     if specific = general then
@@ -1274,7 +1364,8 @@ let widen_env =
       Flow.flow cx (tvar, UseT (Op (Internal WidenEnv), general));
       Some tvar
   in
-  let widen_var cx loc name ({ Entry.specific; general; _ } as var) =
+  let widen_var
+      cx loc name ({ Entry.specific; general = Annotated general | Inferred general; _ } as var) =
     match widened cx loc name specific general with
     | None -> var
     | Some specific -> { var with Entry.specific }
@@ -1309,7 +1400,7 @@ let havoc_all () = iter_scopes Scope.havoc
    all entries including consts must have their specific entries set to EmptyT.
    TODO rework the early-exit stuff to not break invariants. Until then it'll
    remain a source of bugs.
- *)
+*)
 let reset_current_activation loc = iter_local_scopes (Scope.reset loc)
 
 (* clear refinement info for (topmost bindings of) given names in env *)
@@ -1344,8 +1435,47 @@ let havoc_vars =
 (* Clear entries for heap refinement pseudovars in env.
    If name is passed, clear only those refis that depend on it.
    Real variables are left untouched.
- *)
+*)
 let havoc_heap_refinements () = iter_scopes Scope.havoc_all_refis
+
+let havoc_local_refinements ?(all = false) cx =
+  iter_scopes (fun scope ->
+      Scope.update_entries
+        (fun name entry ->
+          let entry' =
+            if all then
+              Entry.havoc name entry
+            else
+              Entry.havoc
+                ~on_call:(fun specific t general ->
+                  if
+                    specific == general
+                    (* We already know t ~> general, so specific | t = general *)
+                  then
+                    general
+                  else
+                    let (_, tvar_t) = open_tvar t in
+                    let (_, constraints_t) = Context.find_constraints cx tvar_t in
+                    match (specific, constraints_t) with
+                    | (OpenT (_, tvar_specific), Constraint.Unresolved bounds_t)
+                      when IMap.mem tvar_specific bounds_t.Constraint.uppertvars ->
+                      (* If t ~> specific, then specific | t = specific *)
+                      specific
+                    | _ ->
+                      (* Compute specific | t = tvar where specific, t ~> tvar ~> general *)
+                      let tvar = Tvar.mk cx (reason_of_t t) in
+                      Flow.flow cx (specific, UseT (Op (Internal WidenEnv), tvar));
+                      Flow.flow cx (t, UseT (Op (Internal WidenEnv), tvar));
+                      Flow.flow cx (tvar, UseT (Op (Internal WidenEnv), general));
+                      tvar)
+                name
+                entry
+          in
+          ( if entry' != entry then
+            let entry_ref = (scope.id, name, Changeset.Write) in
+            Changeset.(if Global.is_active () then Global.change_var entry_ref) );
+          entry')
+        scope)
 
 let havoc_heap_refinements_with_propname ~private_ name =
   iter_scopes (Scope.havoc_refis ~private_ ~name)
@@ -1364,7 +1494,7 @@ let havoc_heap_refinements_with_propname ~private_ name =
    variable assignment in user code, and this in certain cases
    (broadly, assignment of function values) may provoke havoc_ctx
    into clearing the refinement we're in the process of installing.
- *)
+*)
 let add_heap_refinement op key refi_loc refined original =
   let refi = { refi_loc; refined; original } in
   let (base, _) = key in
@@ -1383,7 +1513,7 @@ let refine_expr = add_heap_refinement Changeset.Refine
    note: orig_types maps names to unrefined types. this param is
    only necessary for fresh pseudovars like heap refinements -
    others can be obtained via query_var.
- *)
+*)
 let refine_with_preds cx loc preds orig_types =
   let rec check_literal_subtypes ~general_type pred =
     (* When refining a type against a literal, we want to be sure that that literal can actually
@@ -1395,8 +1525,8 @@ let refine_with_preds cx loc preds orig_types =
       let u = UseT (Op (Internal Refinement), general_type) in
       Context.add_literal_subtypes cx (l, u)
     | SingletonStrP (loc, b, str) ->
-      let reason = loc |> mk_reason (RStringLit str) in
-      let l = DefT (reason, bogus_trust (), StrT (Literal (Some b, str))) in
+      let reason = loc |> mk_reason (RStringLit (OrdinaryName str)) in
+      let l = DefT (reason, bogus_trust (), StrT (Literal (Some b, OrdinaryName str))) in
       let u = UseT (Op (Internal Refinement), general_type) in
       Context.add_literal_subtypes cx (l, u)
     | SingletonNumP (loc, b, ((_, str) as num)) ->
@@ -1426,7 +1556,7 @@ let refine_with_preds cx loc preds orig_types =
     let refi_reason = mk_reason (RRefined (Key.reason_desc key)) loc in
     match key with
     (* for real consts/lets/vars, we model assignment/initialization *)
-    | (name, []) when not (is_internal_name name) ->
+    | ((OrdinaryName _ as name), []) ->
       Entry.(
         (match find_entry cx name loc with
         | (_, Value v) ->
@@ -1464,11 +1594,11 @@ let in_refined_env cx loc preds orig_types f =
   let oldset = Changeset.Global.clear () in
   let orig_env = peek_env () in
   let new_env = clone_env orig_env in
-  update_env cx loc new_env;
+  update_env loc new_env;
   let _ = refine_with_preds cx loc preds orig_types in
   let result = f () in
   let newset = Changeset.Global.merge oldset in
   merge_env cx loc (orig_env, orig_env, new_env) newset;
-  update_env cx loc orig_env;
+  update_env loc orig_env;
 
   result

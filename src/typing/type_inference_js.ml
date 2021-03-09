@@ -28,7 +28,7 @@ let infer_core cx statements =
   | Abnormal.Exn (Abnormal.Stmts stmts, _) ->
     (* should never happen *)
     let loc = Loc.{ none with source = Some (Context.file cx) } |> ALoc.of_loc in
-    Flow_js.add_output cx Error_message.(EInternal (loc, AbnormalControlFlow));
+    Flow_js_utils.add_output cx Error_message.(EInternal (loc, AbnormalControlFlow));
     stmts
   | Abnormal.Exn _ -> failwith "Flow bug: Statement.toplevels threw with non-stmts payload"
   | exc -> raise exc
@@ -60,7 +60,7 @@ let scan_for_error_suppressions cx =
             Base.Option.iter ~f:(Context.add_error_suppression cx |> uncurry) acc;
             Base.Option.map codes ~f:(mk_tuple loc)
           | (Error (), _) ->
-            Flow_js.add_output cx Error_message.(EMalformedCode (ALoc.of_loc loc));
+            Flow_js_utils.add_output cx Error_message.(EMalformedCode (ALoc.of_loc loc));
             Base.Option.iter ~f:(Context.add_error_suppression cx |> uncurry) acc;
             None
         end)
@@ -185,7 +185,7 @@ let scan_for_lint_suppressions =
     List.rev parts
   in
   let add_error cx (loc, kind) =
-    Error_message.ELintSetting (ALoc.of_loc loc, kind) |> Flow_js.add_output cx
+    Error_message.ELintSetting (ALoc.of_loc loc, kind) |> Flow_js_utils.add_output cx
   in
   let parse_kind loc_str =
     match Lints.kinds_of_string loc_str.value with
@@ -388,7 +388,7 @@ let add_require_tvars =
 
 (* build module graph *)
 (* Lint suppressions are handled iff lint_severities is Some. *)
-let infer_ast ~lint_severities ~file_sig cx filename comments aloc_ast =
+let infer_ast ~lint_severities cx filename comments aloc_ast =
   assert (Context.is_checked cx);
 
   let ( prog_aloc,
@@ -399,8 +399,6 @@ let infer_ast ~lint_severities ~file_sig cx filename comments aloc_ast =
         } ) =
     aloc_ast
   in
-  add_require_tvars cx file_sig;
-  Context.set_local_env cx file_sig.File_sig.With_ALoc.exported_locals;
 
   let module_ref = Context.module_ref cx in
   begin
@@ -416,22 +414,21 @@ let infer_ast ~lint_severities ~file_sig cx filename comments aloc_ast =
     Scope.(
       let scope = fresh ~var_scope_kind:Module () in
       add_entry
-        "exports"
-        (Entry.new_var ~loc:(TypeUtil.loc_of_t local_exports_var) local_exports_var)
+        (Reason.OrdinaryName "exports")
+        (Entry.new_var ~loc:(TypeUtil.loc_of_t local_exports_var) (Type.Inferred local_exports_var))
         scope;
 
       add_entry
         (Reason.internal_name "exports")
         (Entry.new_var
            ~loc:(Reason.aloc_of_reason reason_exports_module)
-           ~specific:
-             (Type.DefT (reason_exports_module, Type.bogus_trust (), Type.EmptyT Type.Bottom))
-           (Type.Unsoundness.exports_any reason_exports_module))
+           ~specific:(Type.DefT (reason_exports_module, Type.bogus_trust (), Type.EmptyT))
+           (Type.Inferred (Type.Unsoundness.exports_any reason_exports_module)))
         scope;
 
       scope)
   in
-  Env.init_env cx module_scope;
+  Env.init_env module_scope;
 
   let file_loc = Loc.{ none with source = Some filename } |> ALoc.of_loc in
   let reason = Reason.mk_reason Reason.RExports file_loc in
@@ -466,8 +463,8 @@ let infer_ast ~lint_severities ~file_sig cx filename comments aloc_ast =
 *)
 let with_libdef_builtins cx f =
   (* Store the original builtins and replace with a fresh tvar. *)
-  let orig_builtins = Flow_js.builtins cx in
-  Flow_js.mk_builtins cx;
+  let orig_builtins = Flow_js_utils.builtins cx in
+  Flow_js_utils.mk_builtins cx;
 
   (* This function call might replace the builtins we just installed. *)
   f ();
@@ -478,13 +475,13 @@ let with_libdef_builtins cx f =
     Flow_js.flow_t cx (orig_builtins, builtins)
   in
   (* Restore the original builtins tvar for the next file. *)
-  Context.add_module cx Files.lib_module_ref orig_builtins
+  Context.add_module cx (Reason.OrdinaryName Files.lib_module_ref) orig_builtins
 
 (* infer a parsed library file.
    processing is similar to an ordinary module, except that
    a) symbols from prior library loads are suppressed if found,
    b) bindings are added as properties to the builtin object
- *)
+*)
 let infer_lib_file ~exclude_syms ~lint_severities ~file_sig cx ast =
   let aloc_ast = Ast_loc_utils.loc_to_aloc_mapper#program ast in
   let (_, { Ast.Program.all_comments; _ }) = ast in
@@ -495,8 +492,8 @@ let infer_lib_file ~exclude_syms ~lint_severities ~file_sig cx ast =
        confident that we don't support them in any sensible way. *)
     add_require_tvars cx file_sig
   in
-  let module_scope = Scope.fresh () in
-  Env.init_env ~exclude_syms cx module_scope;
+  let module_scope = Scope.fresh ~var_scope_kind:Scope.Global () in
+  Env.init_env ~exclude_syms module_scope;
 
   with_libdef_builtins cx (fun () ->
       ignore (infer_core cx aloc_statements : (ALoc.t, ALoc.t * Type.t) Ast.Statement.t list);
@@ -506,4 +503,4 @@ let infer_lib_file ~exclude_syms ~lint_severities ~file_sig cx ast =
   |> Scope.(
        iter_entries Entry.((fun name entry -> Flow_js.set_builtin cx name (actual_type entry)))) );
 
-  SMap.keys Scope.(module_scope.entries)
+  NameUtils.Map.keys Scope.(module_scope.entries)

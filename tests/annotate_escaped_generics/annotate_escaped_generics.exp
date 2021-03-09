@@ -1,0 +1,324 @@
+>>> alias.js (#changes: 2)
+//@flow
+
+declare class Pr<+T> {}
+
+type Tr = <Return>(() => Pr<Return>) => Return;
+
+declare function aw<T>(p: Pr<T> | T): T;
+
+((f: () => Pr<mixed>): (() => Pr<mixed>) => {
+  return aw(f());
+}: Tr);
+
+>>> class.js (#changes: 8)
+//@flow
+
+var x: mixed = 42;
+
+class A<X> {
+  s: X;
+  f() {
+    var y = 42;
+    x = this.s;
+    y = this.s;
+  }
+}
+
+var y: mixed = 22;
+
+class B<X> {
+  s: X;
+  f() {
+    if (this.s) {
+      y = this.s;
+    }
+    this.s = y;
+  }
+}
+
+var z: mixed = 42;
+
+class C<X> {
+  s: mixed;
+  f<Y>(y: Y, x: X) {
+    this.s = y;
+    if (y) {
+      this.s = x;
+    }
+    var a: mixed = 42;
+    var captured_this = this;
+    function h<Z>(z: Z) {
+      captured_this.s = z;
+      a = z;
+    }
+    <W>(w: W) => {
+      this.s = w;
+      a = w;
+    };
+    z = this.s;
+  }
+}
+
+class ObjectUtils {
+  static stableCopy<T: mixed>(value: T): T {
+    return ObjectUtils.stableFilteredCopy(value);
+  }
+
+  static stableFilteredCopy<T: mixed>(value: T): T {
+    const stable = {};
+    return (stable: any);
+  }
+}
+
+type D1 = {p: *};
+
+class C1<Y> {
+  x: {p: Y};
+  foo(): D1 {
+    return this.x;
+  }
+}
+
+
+class O<T> {
+  a: this = this;
+  b: T;
+  f(t: T): T {
+    const x = this;
+    this.b = t;
+    return t;
+  }
+}
+
+>>> func.js (#changes: 5)
+//@flow
+
+var x: mixed = 42;
+
+function f<X>(a: X): X {
+  x = a; // error, X ~> escape
+  return a;
+}
+
+function tostring(x: mixed): string {
+  if (typeof x === 'string') return x;
+  return 'a';
+}
+
+function h<X>(x: X, a: X => string = (name: X) => tostring(name)): string {
+  // errors, X ~> x and X ~> refinement
+  return a(x);
+}
+
+declare function ng(value: mixed): mixed;
+class ObjectUtils {
+  static stableCopy<T: mixed>(value: T): T {
+    return ng(value); // no escape errors
+  }
+}
+
+function makeEqualFn<T>(customEqual?: (T, T) => boolean): (T, T) => boolean {
+  return customEqual
+    ? function(a, b) {
+        return a === b || customEqual(a, b);
+      }
+    : (42: any);
+}
+
+function o<X>(x: X): X {
+  // error, X ~> return
+  return x;
+}
+
+var a: number | ((x: mixed) => mixed) = 42;
+
+function f<X>(b: boolean): X => X {
+  if (b) {
+    a = (x: X) => x;
+  }
+  if (typeof a === 'number') {
+    return (x: X) => x;
+  } else {
+    return a;
+  }
+}
+
+var xa: Array<mixed> = [];
+function fa<T>(a: T, b: boolean): T {
+  if (b) {
+    xa[0] = a;
+  }
+  return xa[0];
+}
+
+>>> misc.js (#changes: 9)
+//@flow
+
+var e: Array<mixed> = new Array(10);
+
+function f1<X>(x: X, escape: boolean, n: number): X | number {
+  if (escape) {
+    e[n] = x;
+  }
+  return e[n];
+}
+
+var c = class e {
+  f<X>(x: X, escape: boolean): X | Class<this> {
+    if (escape) {
+      e = x;
+    }
+    return e;
+  }
+};
+
+var a: {|x: mixed|} = Object.create(null, {x: {value: 42}});
+
+function f2<X>(x: X, escape: boolean): X | number {
+  if (escape) {
+    a.x = x;
+  }
+  return a.x;
+}
+
+var a2: Array<mixed> = Object.keys({x: 42});
+
+function f3<X>(x: X, escape: boolean, n: number): X | string {
+  if (escape) {
+    a2[n] = x;
+  }
+  return a2[n];
+}
+
+function f4(escape: boolean, n: number): void {
+  function g<X>(x: X): X | ((boolean, number) => void) {
+    if (escape) {
+      g = x;
+    }
+    return g;
+  }
+}
+
+class C {}
+
+function f5<X>(x: X, escape: boolean): X | Class<C> {
+  if (escape) {
+    C = x;
+  }
+  return C;
+}
+
+class D {
+  f<X>(x: X, escape: boolean): X {
+    if (escape) {
+      D = x;
+    }
+    return D;
+  }
+}
+
+var u: mixed = (<X>(x: X, escape: boolean): X => {
+  if (escape) {
+    u = x;
+  }
+  return u;
+})(42, true);
+
+var a3: {|x: mixed|} = {};
+
+function f6<X>(x: X, escape: boolean): X | void {
+  if (escape) {
+    a3.x = x;
+  }
+  return a3.x;
+}
+
+var a4: (() => number) = () => 42;
+
+function f7<X>(x: X, escape: boolean): X | void {
+  if (escape) {
+    a4.x = x;
+  }
+  return a4.x;
+}
+
+var a5: {|x: mixed|} = Object.create(null);
+
+function f8<X>(x: X, escape: boolean): X | void {
+  if (escape) {
+    a5.x = x;
+  }
+  return a5.x;
+}
+
+var a6 = {};
+a6.a7 = 42;
+function f9<Y>(y: Y, escape): ?Y {
+  var {a7, ...a8} = a6;
+  a8.c = y; // this should be ok
+  function g<X>(x: X): ?X {
+    if (escape) {
+      a8.b = x;
+    }
+    return a8.b;
+  }
+  return a8.c;
+}
+
+var wwo: A<mixed>;
+
+class A<X> {}
+
+function f<X>() {
+  wwo = new A<X>();
+}
+
+var ooo: mixed;
+
+class B<X> {
+  s: X;
+  f() {
+    ooo = this.s;
+  }
+}
+
+>>> nonprivate.js (#changes: 2)
+//@flow
+//@preventMunge
+
+class I<X> {
+  _f: X;
+  _h(x: X): X {
+    return x;
+  }
+  g(x: X) {
+    this._f = x;
+  }
+}
+
+>>> Launching report...
+
+Stats:
+  Files changed:                            5
+  Number of annotations added:             25
+  Total size of annotations:               43
+
+Errors:
+  Missing annot./normalizer error:          0
+  Validation Error:                         0
+  Import Error:
+    Loc source none:                        0
+    Parsing heaps get ast error:            0
+    Indeterminate module type:              0
+    No matching export:                     0
+  Serializer error:                         0
+  Unsupported error kind:                   0
+
+Warnings:
+  Skipping arrow function:                  0
+  Large type added:                         0
+  Location unhandled:                       0
+  Empty NoUpper:                            0
+  Empty SomeKnownUpper:                     0
+

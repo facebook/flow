@@ -38,6 +38,9 @@ assert_errors "$FLOW" status
 
 assert_ok "$FLOW" stop
 
+# change flowconfig in some meaningful way
+printf "\\n# changed" >> "$(pwd)/.flowconfig"
+
 echo -e "$(pwd)/bar.js\\n$(pwd)/.flowconfig" \
   > ".flow.saved_state_file_changes"
 

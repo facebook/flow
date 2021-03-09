@@ -20,30 +20,36 @@ module type S = sig
 
   type set_type = Type.t -> unit
 
-  and field =
+  type field =
     | Annot of Type.t
     | Infer of func_sig * set_asts
 
   type field' = ALoc.t option * Polarity.t * field
 
-  type super =
-    | Interface of {
-        inline: bool;
-        extends: typeapp list;
-        callable: bool;
-      }
-    | Class of {
-        extends: extends;
-        mixins: typeapp list;
-        (* declare class only *)
-        implements: typeapp list;
-      }
+  type typeapp = ALoc.t * Type.t * Type.t list option
 
-  and extends =
+  type extends =
     | Explicit of typeapp
     | Implicit of { null: bool }
 
-  and typeapp = ALoc.t * Type.t * Type.t list option
+  type class_super = {
+    extends: extends;
+    mixins: typeapp list;
+    (* declare class only *)
+    implements: typeapp list;
+    this_tparam: Type.typeparam;
+    this_t: Type.t;
+  }
+
+  type interface_super = {
+    inline: bool;
+    extends: typeapp list;
+    callable: bool;
+  }
+
+  type super =
+    | Interface of interface_super
+    | Class of class_super
 
   (** 1. Constructors **)
 
@@ -54,9 +60,9 @@ module type S = sig
     ALoc.t option -> func_sig -> ?set_asts:set_asts -> ?set_type:set_type -> t -> t
   (** Add constructor to signature.
 
-    Overwrites any existing constructor. This implements the behavior of
-    classes, which permit duplicate definitions where latter definitions
-    overwrite former ones. *)
+      Overwrites any existing constructor. This implements the behavior of
+      classes, which permit duplicate definitions where latter definitions
+      overwrite former ones. *)
 
   val add_default_constructor : Reason.t -> t -> t
 
@@ -64,9 +70,9 @@ module type S = sig
     ALoc.t option -> func_sig -> ?set_asts:set_asts -> ?set_type:set_type -> t -> t
   (** Add constructor override to signature.
 
-    Does not overwrite existing constructors. This implements the behavior of
-    interfaces, which interpret duplicate definitions as branches of a single
-    overloaded constructor. *)
+      Does not overwrite existing constructors. This implements the behavior of
+      interfaces, which interpret duplicate definitions as branches of a single
+      overloaded constructor. *)
 
   val add_field : static:bool -> string -> ALoc.t -> Polarity.t -> field -> t -> t
   (** Add field to signature. *)
@@ -100,9 +106,9 @@ module type S = sig
     t
   (** Add method to signature.
 
-    Overwrites any existing synonymous method. This implements the behavior of
-    classes, which permit duplicate definitions where latter definitions
-    overwrite former ones. *)
+      Overwrites any existing synonymous method. This implements the behavior of
+      classes, which permit duplicate definitions where latter definitions
+      overwrite former ones. *)
 
   val append_method :
     static:bool ->
@@ -115,9 +121,9 @@ module type S = sig
     t
   (** Add method override to signature.
 
-    Does not overwrite existing synonymous methods. This implements the
-    behavior of interfaces, which interpret duplicate definitions as branches
-    of a single overloaded method. *)
+      Does not overwrite existing synonymous methods. This implements the
+      behavior of interfaces, which interpret duplicate definitions as branches
+      of a single overloaded method. *)
 
   val append_call : static:bool -> Type.t -> t -> t
 
@@ -149,15 +155,9 @@ module type S = sig
   val mem_constructor : t -> bool
   (** Check if this signature defines a constructor *)
 
-  val add_this :
-    Type.t ->
-    (* self *)
-    Context.t ->
-    Reason.t ->
-    Type.typeparams ->
-    Type.t SMap.t ->
-    (* tparams_map *)
-    Type.typeparams * Type.t SMap.t
+  val mk_this :
+    Type.t -> (* self *)
+              Context.t -> Reason.t -> Type.typeparams -> Type.typeparam * Type.t
 
   val to_prop_map : Context.t -> field' SMap.t -> Type.Properties.id
 
@@ -165,11 +165,15 @@ module type S = sig
 
   val check_implements : Context.t -> Reason.reason -> t -> unit
   (** Emits constraints to ensure the signature is compatible with its declared
-    interface implementations (classes) *)
+      interface implementations (classes) *)
 
   val check_super : Context.t -> Reason.reason -> t -> unit
   (** Emits constraints to ensure the signature is compatible with its declared
-    superclass (classes) or extends/mixins (interfaces) *)
+      superclass (classes) or extends/mixins (interfaces) *)
+
+  val check_methods : Context.t -> Reason.reason -> t -> unit
+  (** Emits constraints to ensure that the signature's methods are compatible
+      with its type **)
 
   val check_with_generics : Context.t -> (t -> 'a) -> t -> 'a
   (** Invoke callback with type parameters substituted by upper/lower bounds. *)
@@ -182,7 +186,9 @@ module type S = sig
       (ALoc.t, ALoc.t) Flow_ast.Statement.t list ->
       (ALoc.t, ALoc.t * Type.t) Flow_ast.Statement.t list) ->
     expr:
-      (Context.t ->
+      (?cond:Type.cond_context ->
+      Context.t ->
+      annot:unit option ->
       (ALoc.t, ALoc.t) Flow_ast.Expression.t ->
       (ALoc.t, ALoc.t * Type.t) Flow_ast.Expression.t) ->
     private_property_map:Type.Properties.id ->

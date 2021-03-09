@@ -59,3 +59,101 @@ function f<X>(x: Array<X>) {
 function h<X: [number]>(x: X): $TupleMap<X, (number) => string> {
   return ['a']; // existing unsoundness
 }
+
+// ToStringT
+function gn<TType>(jsEnum: {[TType]: string, ...}) {
+  (Object.keys(jsEnum): Array<TType>);
+}
+
+// KeysT
+function gv<
+  TFormData: {},
+  TValidators: $ObjMap<TFormData, (_: mixed) => number>,
+>(
+  data: TFormData,
+  validators: TValidators,
+): $ObjMap<TFormData, (_: mixed) => ?string> {
+  return Object.keys(data).reduce(
+    <K: $Keys<TFormData>>(acc, k: K) =>
+      Object.assign(acc, {[k]: validators[k](k, data)}),
+    {},
+  );
+}
+
+// More KeysT
+function kt<TKey: $Keys<{a: 42}>>(fieldName: TKey): void {
+  if (fieldName) {
+    return;
+  }
+}
+
+// OptionalChainT
+function oc<
+  T: $ReadOnly<{id: ?string, ...}>,
+  L: ?$ReadOnly<{
+    id: ?string,
+    nextOneOne: ?{...},
+    ...
+  }>,
+>(
+  conversations: $ReadOnlyArray<T>,
+  lookup: {[string]: L, ...},
+): $ReadOnlyArray<T> {
+  return conversations.filter(conversation => {
+    const {id} = conversation;
+    if (id == null) {
+      return false;
+    }
+    return lookup[id]?.nextOneOne == null;
+  });
+}
+
+// generic of key of generic
+const cc = () => <D: {...}, K: $Keys<D>>(key: K, data: D) => {
+  const [click, view] = data[key];
+};
+
+// generic refined to empty
+type ObjectKey = string | number;
+type ObjectType<TK, TV> = {[key: TK]: TV, ...};
+function ObjectFlip<TK: ObjectKey, TV: ?ObjectKey>(
+  obj: ObjectType<TK, TV>,
+  key: TK,
+) {
+  var flipped = {};
+  const value: ?TV = obj[key];
+  if (value !== null && value !== undefined) {
+    flipped[value] = key;
+  }
+  return flipped;
+}
+
+// Type Destructor
+type LLETT =
+  | {response: {account: {activities: number}}}
+  | {response: {account: {}}};
+
+type LLETR = $ElementType<LLETT, 'response'>;
+const elementType = <T: LLETR>(data: T): $ElementType<T, 'account'> =>
+  data.account;
+
+const directAccount = <T: LLETR>(data: T, otherData: LLETR): $ReadOnly<T> =>
+  otherData;
+
+type t = {a: number} | {v: string};
+
+class C<TConfig: t> {
+  _config: TConfig;
+  __updateConfig(updater: (config: $ReadOnly<TConfig>) => TConfig) {
+    const config = updater(this._config);
+  }
+}
+
+// Keys
+function gejses<TMapKey: string>(
+  key: $Keys<{[TMapKey]: $FlowFixMe, ...}>,
+): null {
+  if (key) {
+  }
+  return null;
+}

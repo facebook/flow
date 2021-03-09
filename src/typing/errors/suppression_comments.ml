@@ -6,11 +6,11 @@
  *)
 
 (*
-    Suppression comments have the following syntax:
+   Suppression comments have the following syntax:
 
-    <SUPPRESSOR> := $FlowIssue | $FlowFixMe | $FlowExpectedError | $FlowIgnore
+   <SUPPRESSOR> := $FlowIssue | $FlowFixMe | $FlowExpectedError | $FlowIgnore
 
-    //<SUPPRESSOR>[CODE]...
+   //<SUPPRESSOR>[CODE]...
 *)
 open Utils_js
 

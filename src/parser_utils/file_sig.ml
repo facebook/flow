@@ -418,7 +418,7 @@ struct
         [(exports_info t' * tolerable_error list, error) result, L.t] visitor
           ~init:(Ok (mk_file_sig init_exports_info, [])) as super
 
-      val scope_info = Scope_builder.program ast
+      val scope_info : Scope_api.info = Scope_builder.program ~with_types:true ast
 
       val mutable curr_declare_module : exports_info module_sig' option = None
 
@@ -626,7 +626,7 @@ struct
               default;
             Base.Option.iter
               ~f:(function
-                | ImportNamespaceSpecifier (loc, (_, { Ast.Identifier.name = local; comments = _ }))
+                | ImportNamespaceSpecifier (_, (loc, { Ast.Identifier.name = local; comments = _ }))
                   ->
                   (match import_kind with
                   | ImportType -> failwith "import type * is a parse error"
@@ -719,7 +719,7 @@ struct
             | VariableDeclaration { VariableDeclaration.declarations = decls; _ } ->
               let (rev_named, rev_info) =
                 Ast_utils.fold_bindings_of_variable_declarations
-                  (fun (named, infos) (loc, { Ast.Identifier.name; comments = _ }) ->
+                  (fun (named, infos) (loc, { Ast.Identifier.name; comments = _ }) _ ->
                     let export = (stmt_loc, ExportNamed { loc; kind }) in
                     ((name, export) :: named, export_info :: infos))
                   ([], [])
@@ -994,22 +994,6 @@ struct
             if not (Scope_api.is_local_use scope_info loc) then
               this#add_require
                 (Require { source = (source_loc, name); require_loc = call_loc; bindings })
-          | ( (_, Identifier (loc, { Ast.Identifier.name = "requireLazy"; comments = _ })),
-              ( _,
-                {
-                  Ast.Expression.ArgList.arguments =
-                    [Expression (_, Array { Array.elements; comments = _ }); Expression _];
-                  comments = _;
-                } ) ) ->
-            let element = function
-              | Array.Expression
-                  (source_loc, Literal { Ast.Literal.value = Ast.Literal.String name; _ }) ->
-                if not (Scope_api.is_local_use scope_info loc) then
-                  this#add_require
-                    (Require { source = (source_loc, name); require_loc = call_loc; bindings })
-              | _ -> ()
-            in
-            List.iter element elements
           | _ -> ()
         )
 

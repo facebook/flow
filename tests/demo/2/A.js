@@ -15,5 +15,3 @@ function callback(x: string) { return x.length; }
 
 var a = new A(42);
 a.onLoad(callback);
-
-module.exports = A;

@@ -2,15 +2,7 @@
   "errors":[
     {
       "loc":{"source":null,"start":{"line":1,"column":24},"end":{"line":1,"column":25}},
-      "message":"Unexpected token `=`, expected the token `;`"
-    },
-    {
-      "loc":{"source":null,"start":{"line":1,"column":24},"end":{"line":1,"column":25}},
-      "message":"Unexpected token `=`"
-    },
-    {
-      "loc":{"source":null,"start":{"line":1,"column":24},"end":{"line":1,"column":25}},
-      "message":"Invalid left-hand side in assignment"
+      "message":"Unexpected token `=`. Initializers are not allowed in a `declare opaque type`."
     }
   ],
   "type":"Program",
@@ -19,8 +11,8 @@
   "body":[
     {
       "type":"DeclareOpaqueType",
-      "loc":{"source":null,"start":{"line":1,"column":0},"end":{"line":1,"column":23}},
-      "range":[0,23],
+      "loc":{"source":null,"start":{"line":1,"column":0},"end":{"line":1,"column":29}},
+      "range":[0,29],
       "id":{
         "type":"Identifier",
         "loc":{"source":null,"start":{"line":1,"column":20},"end":{"line":1,"column":23}},
@@ -30,35 +22,21 @@
         "optional":false
       },
       "typeParameters":null,
-      "impltype":null,
-      "supertype":null
-    },
-    {
-      "type":"ExpressionStatement",
-      "loc":{"source":null,"start":{"line":1,"column":24},"end":{"line":1,"column":29}},
-      "range":[24,29],
-      "expression":{
-        "type":"AssignmentExpression",
-        "loc":{"source":null,"start":{"line":1,"column":24},"end":{"line":1,"column":29}},
-        "range":[24,29],
-        "operator":"=",
-        "left":{
-          "type":"Literal",
-          "loc":{"source":null,"start":{"line":1,"column":24},"end":{"line":1,"column":25}},
-          "range":[24,25],
-          "value":null,
-          "raw":"null"
-        },
-        "right":{
+      "impltype":{
+        "type":"GenericTypeAnnotation",
+        "loc":{"source":null,"start":{"line":1,"column":26},"end":{"line":1,"column":29}},
+        "range":[26,29],
+        "id":{
           "type":"Identifier",
           "loc":{"source":null,"start":{"line":1,"column":26},"end":{"line":1,"column":29}},
           "range":[26,29],
           "name":"Bar",
           "typeAnnotation":null,
           "optional":false
-        }
+        },
+        "typeParameters":null
       },
-      "directive":null
+      "supertype":null
     }
   ],
   "comments":[]

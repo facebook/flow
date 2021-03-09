@@ -46,7 +46,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- Foo.js:13:16
 
-Missing type annotation for `z`. [missing-annot]
+Cannot build a typed interface for this module. You should annotate the exports of this module with types. Missing type
+annotation at array pattern: [signature-verification-failure]
 
    13|   foo(y:string,z):number {
                       ^
@@ -95,9 +96,9 @@ Cannot call `v.bar` with `u` bound to `u` because number [1] is incompatible wit
                           ^
 
 References:
-   Qux.js:5:5
-    5|   w:number;
-           ^^^^^^ [1]
+   Qux.js:7:10
+    7|   qux(): number { return this.w; }
+                ^^^^^^ [1]
    Bar.js:14:18
    14|   bar(z:string,u:string):string {
                         ^^^^^^ [2]

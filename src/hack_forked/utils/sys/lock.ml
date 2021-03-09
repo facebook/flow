@@ -61,12 +61,12 @@ let _operations lock_file op : bool =
         ignore (Unix.lseek fd 0 Unix.SEEK_SET : int);
 
         (* If we don't have the lock, the following 'write' will
-             throw an exception. *)
+           throw an exception. *)
         let wb = Unix.write fd (Bytes.make 1 ' ') 0 1 in
         (* When not throwing an exception, the current
-             implementation of `Unix.write` always return `1`. But let's
-             be protective against semantic changes, and better fails
-             than wrongly assume that we own a lock. *)
+           implementation of `Unix.write` always return `1`. But let's
+           be protective against semantic changes, and better fails
+           than wrongly assume that we own a lock. *)
         assert (wb = 1)
     in
     true

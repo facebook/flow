@@ -8,8 +8,8 @@ Cannot call `FormData` with empty string bound to `form` because string [1] is i
                      ^^ [1]
 
 References:
-   <BUILTINS>/bom.js:528:24
-   528|     constructor(form?: HTMLFormElement): void;
+   <BUILTINS>/bom.js:533:24
+   533|     constructor(form?: HTMLFormElement): void;
                                ^^^^^^^^^^^^^^^ [2]
 
 
@@ -23,11 +23,11 @@ with `HTMLFormElement` [2]. [incompatible-call]
                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/dom.js:782:70
-   782|   createElement(tagName: 'input', options?: ElementCreationOptions): HTMLInputElement;
+   <BUILTINS>/dom.js:895:70
+   895|   createElement(tagName: 'input', options?: ElementCreationOptions): HTMLInputElement;
                                                                              ^^^^^^^^^^^^^^^^ [1]
-   <BUILTINS>/bom.js:528:24
-   528|     constructor(form?: HTMLFormElement): void;
+   <BUILTINS>/bom.js:533:24
+   533|     constructor(form?: HTMLFormElement): void;
                                ^^^^^^^^^^^^^^^ [2]
 
 
@@ -40,8 +40,8 @@ Cannot assign `a.get(...)` to `d` because null or undefined [1] is incompatible 
                           ^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/bom.js:531:24
-   531|     get(name: string): ?FormDataEntryValue;
+   <BUILTINS>/bom.js:536:24
+   536|     get(name: string): ?FormDataEntryValue;
                                ^^^^^^^^^^^^^^^^^^^ [1]
    FormData.js:14:10
     14| const d: string = a.get('foo'); // incorrect
@@ -57,8 +57,8 @@ Cannot assign `a.get(...)` to `d` because `File` [1] is incompatible with string
                           ^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/bom.js:531:25
-   531|     get(name: string): ?FormDataEntryValue;
+   <BUILTINS>/bom.js:536:25
+   536|     get(name: string): ?FormDataEntryValue;
                                 ^^^^^^^^^^^^^^^^^^ [1]
    FormData.js:14:10
     14| const d: string = a.get('foo'); // incorrect
@@ -74,8 +74,8 @@ Cannot assign `a.get(...)` to `e` because null or undefined [1] is incompatible 
                         ^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/bom.js:531:24
-   531|     get(name: string): ?FormDataEntryValue;
+   <BUILTINS>/bom.js:536:24
+   536|     get(name: string): ?FormDataEntryValue;
                                ^^^^^^^^^^^^^^^^^^^ [1]
    FormData.js:15:10
     15| const e: Blob = a.get('foo'); // incorrect
@@ -91,8 +91,8 @@ Cannot assign `a.get(...)` to `e` because string [1] is incompatible with `Blob`
                         ^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/bom.js:531:25
-   531|     get(name: string): ?FormDataEntryValue;
+   <BUILTINS>/bom.js:536:25
+   536|     get(name: string): ?FormDataEntryValue;
                                 ^^^^^^^^^^^^^^^^^^ [1]
    FormData.js:15:10
     15| const e: Blob = a.get('foo'); // incorrect
@@ -108,8 +108,8 @@ Cannot call `a.get` with `2` bound to `name` because number [1] is incompatible 
               ^ [1]
 
 References:
-   <BUILTINS>/bom.js:531:15
-   531|     get(name: string): ?FormDataEntryValue;
+   <BUILTINS>/bom.js:536:15
+   536|     get(name: string): ?FormDataEntryValue;
                       ^^^^^^ [2]
 
 
@@ -126,8 +126,8 @@ References:
    FormData.js:21:33
     21| const a2: Array<string | File | number> = a.getAll('foo'); // incorrect
                                         ^^^^^^ [1]
-   <BUILTINS>/bom.js:525:27
-   525| type FormDataEntryValue = string | File
+   <BUILTINS>/bom.js:530:27
+   530| type FormDataEntryValue = string | File
                                   ^^^^^^ [2]
 
 
@@ -144,8 +144,8 @@ References:
    FormData.js:22:26
     22| const a3: Array<string | Blob | File> = a.getAll('foo'); // incorrect
                                  ^^^^ [1]
-   <BUILTINS>/bom.js:525:36
-   525| type FormDataEntryValue = string | File
+   <BUILTINS>/bom.js:530:36
+   530| type FormDataEntryValue = string | File
                                            ^^^^ [2]
 
 
@@ -158,8 +158,8 @@ Cannot call `a.getAll` with `23` bound to `name` because number [1] is incompati
                  ^^ [1]
 
 References:
-   <BUILTINS>/bom.js:532:18
-   532|     getAll(name: string): Array<FormDataEntryValue>;
+   <BUILTINS>/bom.js:537:18
+   537|     getAll(name: string): Array<FormDataEntryValue>;
                          ^^^^^^ [2]
 
 
@@ -177,11 +177,11 @@ References:
    FormData.js:27:14
     27| a.set('foo', {}); // incorrect
                      ^^ [1]
-   <BUILTINS>/bom.js:535:30
-   535|     set(name: string, value: Blob, filename?: string): void;
+   <BUILTINS>/bom.js:540:30
+   540|     set(name: string, value: Blob, filename?: string): void;
                                      ^^^^ [2]
-   <BUILTINS>/bom.js:536:30
-   536|     set(name: string, value: File, filename?: string): void;
+   <BUILTINS>/bom.js:541:30
+   541|     set(name: string, value: File, filename?: string): void;
                                      ^^^^ [3]
 
 
@@ -200,14 +200,14 @@ References:
    FormData.js:28:7
     28| a.set(2, 'bar'); // incorrect
               ^ [1]
-   <BUILTINS>/bom.js:534:15
-   534|     set(name: string, value: string): void;
+   <BUILTINS>/bom.js:539:15
+   539|     set(name: string, value: string): void;
                       ^^^^^^ [2]
-   <BUILTINS>/bom.js:535:15
-   535|     set(name: string, value: Blob, filename?: string): void;
+   <BUILTINS>/bom.js:540:15
+   540|     set(name: string, value: Blob, filename?: string): void;
                       ^^^^^^ [3]
-   <BUILTINS>/bom.js:536:15
-   536|     set(name: string, value: File, filename?: string): void;
+   <BUILTINS>/bom.js:541:15
+   541|     set(name: string, value: File, filename?: string): void;
                       ^^^^^^ [4]
 
 
@@ -225,11 +225,11 @@ References:
    FormData.js:29:14
     29| a.set('foo', 'bar', 'baz'); // incorrect
                      ^^^^^ [1]
-   <BUILTINS>/bom.js:535:30
-   535|     set(name: string, value: Blob, filename?: string): void;
+   <BUILTINS>/bom.js:540:30
+   540|     set(name: string, value: Blob, filename?: string): void;
                                      ^^^^ [2]
-   <BUILTINS>/bom.js:536:30
-   536|     set(name: string, value: File, filename?: string): void;
+   <BUILTINS>/bom.js:541:30
+   541|     set(name: string, value: File, filename?: string): void;
                                      ^^^^ [3]
 
 
@@ -247,11 +247,11 @@ References:
    FormData.js:32:33
     32| a.set('bar', new File([], 'q'), 2) // incorrect
                                         ^ [1]
-   <BUILTINS>/bom.js:535:47
-   535|     set(name: string, value: Blob, filename?: string): void;
+   <BUILTINS>/bom.js:540:47
+   540|     set(name: string, value: Blob, filename?: string): void;
                                                       ^^^^^^ [2]
-   <BUILTINS>/bom.js:536:47
-   536|     set(name: string, value: File, filename?: string): void;
+   <BUILTINS>/bom.js:541:47
+   541|     set(name: string, value: File, filename?: string): void;
                                                       ^^^^^^ [3]
 
 
@@ -267,8 +267,8 @@ References:
    FormData.js:35:24
     35| a.set('bar', new Blob, 2) // incorrect
                                ^ [1]
-   <BUILTINS>/bom.js:535:47
-   535|     set(name: string, value: Blob, filename?: string): void;
+   <BUILTINS>/bom.js:540:47
+   540|     set(name: string, value: Blob, filename?: string): void;
                                                       ^^^^^^ [2]
 
 
@@ -286,11 +286,11 @@ References:
    FormData.js:39:17
     39| a.append('foo', {}); // incorrect
                         ^^ [1]
-   <BUILTINS>/bom.js:539:33
-   539|     append(name: string, value: Blob, filename?: string): void;
+   <BUILTINS>/bom.js:544:33
+   544|     append(name: string, value: Blob, filename?: string): void;
                                         ^^^^ [2]
-   <BUILTINS>/bom.js:540:33
-   540|     append(name: string, value: File, filename?: string): void;
+   <BUILTINS>/bom.js:545:33
+   545|     append(name: string, value: File, filename?: string): void;
                                         ^^^^ [3]
 
 
@@ -309,14 +309,14 @@ References:
    FormData.js:40:10
     40| a.append(2, 'bar'); // incorrect
                  ^ [1]
-   <BUILTINS>/bom.js:538:18
-   538|     append(name: string, value: string): void;
+   <BUILTINS>/bom.js:543:18
+   543|     append(name: string, value: string): void;
                          ^^^^^^ [2]
-   <BUILTINS>/bom.js:539:18
-   539|     append(name: string, value: Blob, filename?: string): void;
+   <BUILTINS>/bom.js:544:18
+   544|     append(name: string, value: Blob, filename?: string): void;
                          ^^^^^^ [3]
-   <BUILTINS>/bom.js:540:18
-   540|     append(name: string, value: File, filename?: string): void;
+   <BUILTINS>/bom.js:545:18
+   545|     append(name: string, value: File, filename?: string): void;
                          ^^^^^^ [4]
 
 
@@ -334,11 +334,11 @@ References:
    FormData.js:41:17
     41| a.append('foo', 'bar', 'baz'); // incorrect
                         ^^^^^ [1]
-   <BUILTINS>/bom.js:539:33
-   539|     append(name: string, value: Blob, filename?: string): void;
+   <BUILTINS>/bom.js:544:33
+   544|     append(name: string, value: Blob, filename?: string): void;
                                         ^^^^ [2]
-   <BUILTINS>/bom.js:540:33
-   540|     append(name: string, value: File, filename?: string): void;
+   <BUILTINS>/bom.js:545:33
+   545|     append(name: string, value: File, filename?: string): void;
                                         ^^^^ [3]
 
 
@@ -356,11 +356,11 @@ References:
    FormData.js:45:36
     45| a.append('bar', new File([], 'q'), 2) // incorrect
                                            ^ [1]
-   <BUILTINS>/bom.js:539:50
-   539|     append(name: string, value: Blob, filename?: string): void;
+   <BUILTINS>/bom.js:544:50
+   544|     append(name: string, value: Blob, filename?: string): void;
                                                          ^^^^^^ [2]
-   <BUILTINS>/bom.js:540:50
-   540|     append(name: string, value: File, filename?: string): void;
+   <BUILTINS>/bom.js:545:50
+   545|     append(name: string, value: File, filename?: string): void;
                                                          ^^^^^^ [3]
 
 
@@ -376,8 +376,8 @@ References:
    FormData.js:48:27
     48| a.append('bar', new Blob, 2) // incorrect
                                   ^ [1]
-   <BUILTINS>/bom.js:539:50
-   539|     append(name: string, value: Blob, filename?: string): void;
+   <BUILTINS>/bom.js:544:50
+   544|     append(name: string, value: Blob, filename?: string): void;
                                                          ^^^^^^ [2]
 
 
@@ -390,8 +390,8 @@ Cannot call `a.delete` with `3` bound to `name` because number [1] is incompatib
                  ^ [1]
 
 References:
-   <BUILTINS>/bom.js:542:18
-   542|     delete(name: string): void;
+   <BUILTINS>/bom.js:547:18
+   547|     delete(name: string): void;
                          ^^^^^^ [2]
 
 
@@ -404,8 +404,8 @@ Cannot assign `x` to `x` because string [1] is incompatible with number [2]. [in
                               ^^^^^^^^
 
 References:
-   <BUILTINS>/bom.js:544:22
-   544|     keys(): Iterator<string>;
+   <BUILTINS>/bom.js:549:22
+   549|     keys(): Iterator<string>;
                              ^^^^^^ [1]
    FormData.js:56:13
     56| for (let x: number of a.keys()) {} // incorrect
@@ -425,8 +425,8 @@ References:
    FormData.js:64:43
     64| for (let [x, y]: [string, string | File | Blob] of a.entries()) {} // incorrect
                                                   ^^^^ [1]
-   <BUILTINS>/bom.js:525:36
-   525| type FormDataEntryValue = string | File
+   <BUILTINS>/bom.js:530:36
+   530| type FormDataEntryValue = string | File
                                            ^^^^ [2]
 
 
@@ -440,8 +440,8 @@ Cannot assign for-of element to destructuring because string [1] is incompatible
                                              ^^^^^^^^^^^
 
 References:
-   <BUILTINS>/bom.js:546:26
-   546|     entries(): Iterator<[string, FormDataEntryValue]>;
+   <BUILTINS>/bom.js:551:26
+   551|     entries(): Iterator<[string, FormDataEntryValue]>;
                                  ^^^^^^ [1]
    FormData.js:65:19
     65| for (let [x, y]: [number, string] of a.entries()) {} // incorrect
@@ -458,8 +458,8 @@ Cannot assign for-of element to destructuring because `File` [1] is incompatible
                                              ^^^^^^^^^^^
 
 References:
-   <BUILTINS>/bom.js:546:34
-   546|     entries(): Iterator<[string, FormDataEntryValue]>;
+   <BUILTINS>/bom.js:551:34
+   551|     entries(): Iterator<[string, FormDataEntryValue]>;
                                          ^^^^^^^^^^^^^^^^^^ [1]
    FormData.js:65:27
     65| for (let [x, y]: [number, string] of a.entries()) {} // incorrect
@@ -476,8 +476,8 @@ Cannot assign for-of element to destructuring because `File` [1] is incompatible
                                              ^^^^^^^^^^^
 
 References:
-   <BUILTINS>/bom.js:546:34
-   546|     entries(): Iterator<[string, FormDataEntryValue]>;
+   <BUILTINS>/bom.js:551:34
+   551|     entries(): Iterator<[string, FormDataEntryValue]>;
                                          ^^^^^^^^^^^^^^^^^^ [1]
    FormData.js:66:27
     66| for (let [x, y]: [string, number] of a.entries()) {} // incorrect
@@ -494,8 +494,8 @@ Cannot assign for-of element to destructuring because string [1] is incompatible
                                              ^^^^^^^^^^^
 
 References:
-   <BUILTINS>/bom.js:546:34
-   546|     entries(): Iterator<[string, FormDataEntryValue]>;
+   <BUILTINS>/bom.js:551:34
+   551|     entries(): Iterator<[string, FormDataEntryValue]>;
                                          ^^^^^^^^^^^^^^^^^^ [1]
    FormData.js:66:27
     66| for (let [x, y]: [string, number] of a.entries()) {} // incorrect
@@ -515,8 +515,8 @@ References:
    FormData.js:66:27
     66| for (let [x, y]: [string, number] of a.entries()) {} // incorrect
                                   ^^^^^^ [1]
-   <BUILTINS>/bom.js:525:27
-   525| type FormDataEntryValue = string | File
+   <BUILTINS>/bom.js:530:27
+   530| type FormDataEntryValue = string | File
                                   ^^^^^^ [2]
 
 
@@ -530,8 +530,8 @@ Cannot assign for-of element to destructuring because string [1] is incompatible
                                              ^^^^^^^^^^^
 
 References:
-   <BUILTINS>/bom.js:546:26
-   546|     entries(): Iterator<[string, FormDataEntryValue]>;
+   <BUILTINS>/bom.js:551:26
+   551|     entries(): Iterator<[string, FormDataEntryValue]>;
                                  ^^^^^^ [1]
    FormData.js:67:19
     67| for (let [x, y]: [number, number] of a.entries()) {} // incorrect
@@ -548,8 +548,8 @@ Cannot assign for-of element to destructuring because `File` [1] is incompatible
                                              ^^^^^^^^^^^
 
 References:
-   <BUILTINS>/bom.js:546:34
-   546|     entries(): Iterator<[string, FormDataEntryValue]>;
+   <BUILTINS>/bom.js:551:34
+   551|     entries(): Iterator<[string, FormDataEntryValue]>;
                                          ^^^^^^^^^^^^^^^^^^ [1]
    FormData.js:67:27
     67| for (let [x, y]: [number, number] of a.entries()) {} // incorrect
@@ -566,8 +566,8 @@ Cannot assign for-of element to destructuring because string [1] is incompatible
                                              ^^^^^^^^^^^
 
 References:
-   <BUILTINS>/bom.js:546:34
-   546|     entries(): Iterator<[string, FormDataEntryValue]>;
+   <BUILTINS>/bom.js:551:34
+   551|     entries(): Iterator<[string, FormDataEntryValue]>;
                                          ^^^^^^^^^^^^^^^^^^ [1]
    FormData.js:67:27
     67| for (let [x, y]: [number, number] of a.entries()) {} // incorrect
@@ -587,8 +587,8 @@ References:
    FormData.js:67:27
     67| for (let [x, y]: [number, number] of a.entries()) {} // incorrect
                                   ^^^^^^ [1]
-   <BUILTINS>/bom.js:525:27
-   525| type FormDataEntryValue = string | File
+   <BUILTINS>/bom.js:530:27
+   530| type FormDataEntryValue = string | File
                                   ^^^^^^ [2]
 
 
@@ -601,8 +601,8 @@ Cannot assign `headers.get(...)` to `b` because null [1] is incompatible with st
                            ^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/bom.js:1413:24
-   1413|     get(name: string): null | string;
+   <BUILTINS>/bom.js:1418:24
+   1418|     get(name: string): null | string;
                                 ^^^^ [1]
    Headers.js:8:10
       8| const b: string = headers.get('foo'); // incorrect
@@ -633,8 +633,8 @@ Cannot call `MutationObserver` because function [1] requires another argument. [
             ^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/bom.js:575:5
-   575|     constructor(callback: (arr: Array<MutationRecord>, observer: MutationObserver) => mixed): void;
+   <BUILTINS>/bom.js:580:5
+   580|     constructor(callback: (arr: Array<MutationRecord>, observer: MutationObserver) => mixed): void;
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
@@ -648,8 +648,8 @@ Cannot call `MutationObserver` with `42` bound to `callback` because number [1] 
                              ^^ [1]
 
 References:
-   <BUILTINS>/bom.js:575:27
-   575|     constructor(callback: (arr: Array<MutationRecord>, observer: MutationObserver) => mixed): void;
+   <BUILTINS>/bom.js:580:27
+   580|     constructor(callback: (arr: Array<MutationRecord>, observer: MutationObserver) => mixed): void;
                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
@@ -663,8 +663,8 @@ in the first argument. [incompatible-call]
                                  ^^^^^^ [1]
 
 References:
-   <BUILTINS>/bom.js:575:33
-   575|     constructor(callback: (arr: Array<MutationRecord>, observer: MutationObserver) => mixed): void;
+   <BUILTINS>/bom.js:580:33
+   580|     constructor(callback: (arr: Array<MutationRecord>, observer: MutationObserver) => mixed): void;
                                         ^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
@@ -677,8 +677,8 @@ Cannot call `o.observe` because function [1] requires another argument. [incompa
           ^^^^^^^
 
 References:
-   <BUILTINS>/bom.js:576:5
-   576|     observe(target: Node, options: MutationObserverInit): void;
+   <BUILTINS>/bom.js:581:5
+   581|     observe(target: Node, options: MutationObserverInit): void;
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
@@ -697,14 +697,14 @@ References:
    MutationObserver.js:18:1
     18| o.observe(); // incorrect
         ^^^^^^^^^^^ [1]
-   <BUILTINS>/bom.js:562:7
-   562|     | { childList: true, ... }
+   <BUILTINS>/bom.js:567:7
+   567|     | { childList: true, ... }
               ^^^^^^^^^^^^^^^^^^^^^^^^ [2]
-   <BUILTINS>/bom.js:563:7
-   563|     | { attributes: true, ... }
+   <BUILTINS>/bom.js:568:7
+   568|     | { attributes: true, ... }
               ^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
-   <BUILTINS>/bom.js:564:7
-   564|     | { characterData: true, ... }
+   <BUILTINS>/bom.js:569:7
+   569|     | { characterData: true, ... }
               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
 
 
@@ -717,8 +717,8 @@ Cannot call `o.observe` because function [1] requires another argument. [incompa
           ^^^^^^^
 
 References:
-   <BUILTINS>/bom.js:576:5
-   576|     observe(target: Node, options: MutationObserverInit): void;
+   <BUILTINS>/bom.js:581:5
+   581|     observe(target: Node, options: MutationObserverInit): void;
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
@@ -737,14 +737,14 @@ References:
    MutationObserver.js:19:1
     19| o.observe('invalid'); // incorrect
         ^^^^^^^^^^^^^^^^^^^^ [1]
-   <BUILTINS>/bom.js:562:7
-   562|     | { childList: true, ... }
+   <BUILTINS>/bom.js:567:7
+   567|     | { childList: true, ... }
               ^^^^^^^^^^^^^^^^^^^^^^^^ [2]
-   <BUILTINS>/bom.js:563:7
-   563|     | { attributes: true, ... }
+   <BUILTINS>/bom.js:568:7
+   568|     | { attributes: true, ... }
               ^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
-   <BUILTINS>/bom.js:564:7
-   564|     | { characterData: true, ... }
+   <BUILTINS>/bom.js:569:7
+   569|     | { characterData: true, ... }
               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
 
 
@@ -758,8 +758,8 @@ Cannot call `o.observe` with `'invalid'` bound to `target` because string [1] is
                   ^^^^^^^^^ [1]
 
 References:
-   <BUILTINS>/bom.js:576:21
-   576|     observe(target: Node, options: MutationObserverInit): void;
+   <BUILTINS>/bom.js:581:21
+   581|     observe(target: Node, options: MutationObserverInit): void;
                             ^^^^ [2]
 
 
@@ -772,8 +772,8 @@ Cannot call `o.observe` because function [1] requires another argument. [incompa
           ^^^^^^^
 
 References:
-   <BUILTINS>/bom.js:576:5
-   576|     observe(target: Node, options: MutationObserverInit): void;
+   <BUILTINS>/bom.js:581:5
+   581|     observe(target: Node, options: MutationObserverInit): void;
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
@@ -792,14 +792,14 @@ References:
    MutationObserver.js:20:1
     20| o.observe(div); // incorrect
         ^^^^^^^^^^^^^^ [1]
-   <BUILTINS>/bom.js:562:7
-   562|     | { childList: true, ... }
+   <BUILTINS>/bom.js:567:7
+   567|     | { childList: true, ... }
               ^^^^^^^^^^^^^^^^^^^^^^^^ [2]
-   <BUILTINS>/bom.js:563:7
-   563|     | { attributes: true, ... }
+   <BUILTINS>/bom.js:568:7
+   568|     | { attributes: true, ... }
               ^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
-   <BUILTINS>/bom.js:564:7
-   564|     | { characterData: true, ... }
+   <BUILTINS>/bom.js:569:7
+   569|     | { characterData: true, ... }
               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
 
 
@@ -815,14 +815,14 @@ Cannot call `o.observe` with object literal bound to `options` because: [incompa
                        ^^ [1]
 
 References:
-   <BUILTINS>/bom.js:562:7
-   562|     | { childList: true, ... }
+   <BUILTINS>/bom.js:567:7
+   567|     | { childList: true, ... }
               ^^^^^^^^^^^^^^^^^^^^^^^^ [2]
-   <BUILTINS>/bom.js:563:7
-   563|     | { attributes: true, ... }
+   <BUILTINS>/bom.js:568:7
+   568|     | { attributes: true, ... }
               ^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
-   <BUILTINS>/bom.js:564:7
-   564|     | { characterData: true, ... }
+   <BUILTINS>/bom.js:569:7
+   569|     | { characterData: true, ... }
               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
 
 
@@ -838,14 +838,14 @@ Cannot call `o.observe` with object literal bound to `options` because: [incompa
                        ^^^^^^^^^^^^^^^^^ [1]
 
 References:
-   <BUILTINS>/bom.js:562:7
-   562|     | { childList: true, ... }
+   <BUILTINS>/bom.js:567:7
+   567|     | { childList: true, ... }
               ^^^^^^^^^^^^^^^^^^^^^^^^ [2]
-   <BUILTINS>/bom.js:563:7
-   563|     | { attributes: true, ... }
+   <BUILTINS>/bom.js:568:7
+   568|     | { attributes: true, ... }
               ^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
-   <BUILTINS>/bom.js:564:7
-   564|     | { characterData: true, ... }
+   <BUILTINS>/bom.js:569:7
+   569|     | { characterData: true, ... }
               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
 
 
@@ -859,8 +859,8 @@ in property `attributeFilter`. [incompatible-call]
                                                             ^^^^ [1]
 
 References:
-   <BUILTINS>/bom.js:570:21
-   570|   attributeFilter?: Array<string>,
+   <BUILTINS>/bom.js:575:21
+   575|   attributeFilter?: Array<string>,
                             ^^^^^^^^^^^^^ [2]
 
 
@@ -873,8 +873,8 @@ Cannot assign `params.get(...)` to `b` because null [1] is incompatible with str
                            ^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/bom.js:1427:24
-   1427|     get(name: string): null | string;
+   <BUILTINS>/bom.js:1432:24
+   1432|     get(name: string): null | string;
                                 ^^^^ [1]
    URLSearchParams.js:8:10
       8| const b: string = params.get('foo'); // incorrect

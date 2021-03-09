@@ -15,7 +15,7 @@ module Ast = Flow_ast
    return Some (access key), otherwise None.
    Eligible expressions are simple ids and chains of property|index
    lookups from an id base
- *)
+*)
 let rec key ~allow_optional =
   let open Ast.Expression in
   function
@@ -37,7 +37,7 @@ and key_of_identifier (_, { Ast.Identifier.name; comments = _ }) =
   if name = "undefined" then
     None
   else
-    Some (name, [])
+    Some (Reason.OrdinaryName name, [])
 
 and key_of_member ~allow_optional { Ast.Expression.Member._object; property; _ } =
   let open Ast.Expression.Member in

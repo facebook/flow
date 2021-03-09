@@ -211,7 +211,7 @@ type B = $Diff<{}, {nope: number | void}>; // OK
 
 ## `$Rest<A, B>` <a class="toc" id="toc-rest" href="#toc-rest"></a>
 
-`$Rest<A, B>` is the type that represents the runtime object rest operation, e.g.: `const {foo, ...rest} = obj`, where `A` and `B` are both [object types](../objects/). The resulting type from this operation will be an object type containing `A`'s *own* properties that are not *own* properties in `B`. In flow, we treat all properties on [exact object types]((../objects/#toc-exact-object-types)) as [own](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/hasOwnProperty). In in-exact objects, a property may or may not be own.
+`$Rest<A, B>` is the type that represents the runtime object rest operation, e.g.: `const {foo, ...rest} = obj`, where `A` and `B` are both [object types](../objects/). The resulting type from this operation will be an object type containing `A`'s *own* properties that are not *own* properties in `B`. In flow, we treat all properties on [exact object types](../objects/#toc-exact-object-types) as [own](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/hasOwnProperty). In in-exact objects, a property may or may not be own.
 
 For example:
 

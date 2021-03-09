@@ -1,1 +1,1 @@
-cmd: status
+shell: test.sh

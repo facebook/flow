@@ -267,6 +267,8 @@ function concat(a: ?string, b: ?string): string {
 }
 ```
 
+#### Limitations of predicate functions <a class="toc" id="toc-limitations-of-predicate-functions" href="#toc-limitations-of-predicate-functions"></a>
+
 The body of these predicate functions need to be expressions (i.e. local variable declarations are not supported).
 But it's possible to call other predicate functions inside a predicate function.
 For example:
@@ -296,6 +298,38 @@ foo('a');
 foo(5);
 foo([]);
 ```
+
+Another limitation is on the range of predicates that can be encoded. The refinements
+that are supported in a predicate function must refer directly to the value that
+is passed in as an argument to the respective call.
+
+For example, consider the *inlined* refinement
+
+```js
+declare var obj: { n?: number };
+
+if (obj.n) {
+  const n: number = obj.n;
+}
+```
+Here, Flow will let you refine `obj.n` from `?number` to `number`. Note that the
+refinement here is on the property `n` of `obj`, rather than `obj` itself.
+
+If you tried to create a *predicate* function
+```js
+function bar(a): %checks {
+  return a.n;
+}
+```
+to encode the same condition, then the following refinement would fail
+```js
+if (bar(obj)) {
+  // $ExpectError
+  const n: number = obj.n;
+}
+```
+This is because the only refinements supported through `bar` would be on `obj` itself.
+
 
 ### Callable Objects <a class="toc" id="toc-callable-objects" href="#toc-callable-objects"></a>
 

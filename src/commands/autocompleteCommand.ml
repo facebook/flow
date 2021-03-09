@@ -38,6 +38,7 @@ let spec =
         |> from_flag
         |> wait_for_recheck_flag
         |> lsp_flag
+        |> flag "--imports" no_arg ~doc:"Include suggestions that can be imported from other files"
         |> anon "args" (optional (list_of string)));
   }
 
@@ -107,11 +108,11 @@ let autocomplete_response_to_json ~strip_root response =
           ("result", JSON_Array []);
           (* TODO: remove this? kept for BC *)
         ]
-    | Ok completions ->
-      let results = Base.List.map ~f:(autocomplete_result_to_json ~strip_root) completions in
+    | Ok { ServerProt.Response.Completion.items; is_incomplete = _ } ->
+      let results = Base.List.map ~f:(autocomplete_result_to_json ~strip_root) items in
       JSON_Object [("result", JSON_Array results)])
 
-let main base_flags option_values json pretty root strip_root wait_for_recheck lsp args () =
+let main base_flags option_values json pretty root strip_root wait_for_recheck lsp imports args () =
   let (filename, contents, cursor_opt) = parse_args args in
   let flowconfig_name = base_flags.Base_flags.flowconfig_name in
   let root =
@@ -137,7 +138,7 @@ let main base_flags option_values json pretty root strip_root wait_for_recheck l
   | Some cursor ->
     let request =
       ServerProt.Request.AUTOCOMPLETE
-        { filename; contents; cursor; wait_for_recheck; trigger_character = None }
+        { filename; contents; cursor; wait_for_recheck; trigger_character = None; imports }
     in
     let results =
       match connect_and_make_request flowconfig_name option_values root request with
@@ -147,25 +148,26 @@ let main base_flags option_values json pretty root strip_root wait_for_recheck l
     if lsp then
       Base.Result.iter
         results
-        ~f:
-          (List.iter
-             ( Flow_lsp_conversions.flow_completion_to_lsp
-                 ~is_snippet_supported:true
-                 ~is_preselect_supported:true
-             %> Lsp_fmt.print_completionItem ~key:(Path.to_string root)
-             %> Hh_json.print_json_endline ~pretty:true ))
+        ~f:(fun { ServerProt.Response.Completion.items; is_incomplete = _ } ->
+          List.iter
+            ( Flow_lsp_conversions.flow_completion_item_to_lsp
+                ~is_snippet_supported:true
+                ~is_preselect_supported:true
+            %> Lsp_fmt.print_completionItem ~key:"<PLACEHOLDER_PROJECT_URL>"
+            %> Hh_json.print_json_endline ~pretty:true )
+            items)
     else if json || pretty then
       results |> autocomplete_response_to_json ~strip_root |> Hh_json.print_json_endline ~pretty
     else (
       match results with
       | Error error -> prerr_endlinef "Error: %s" error
-      | Ok completions ->
+      | Ok { ServerProt.Response.Completion.items; is_incomplete = _ } ->
         List.iter
           (fun res ->
             let name = res.ServerProt.Response.Completion.name in
             let detail = res.ServerProt.Response.Completion.detail in
             print_endline (Printf.sprintf "%s %s" name detail))
-          completions
+          items
     )
 
 let command = CommandSpec.command spec main

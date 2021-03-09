@@ -56,7 +56,6 @@ let start_flow_server env =
   } =
     env
   in
-  if not quiet then Utils_js.prerr_endlinef "Launching Flow server for %s" (Path.to_string root);
   let exe = Sys.executable_name in
   let args =
     [Path.to_string root]
@@ -214,7 +213,9 @@ let rec connect ~flowconfig_name ~client_handshake env retries start_time =
     end
 
 and handle_missing_server ~flowconfig_name ~client_handshake env retries start_time =
-  if env.autostart then
+  if env.autostart then (
+    if not env.quiet then
+      Utils_js.prerr_endlinef "Launching Flow server for %s" (Path.to_string env.root);
     let retries =
       match start_flow_server env with
       | Ok () ->
@@ -234,7 +235,7 @@ and handle_missing_server ~flowconfig_name ~client_handshake env retries start_t
       | Error (msg, code) -> FlowExitStatus.exit ~msg code
     in
     connect ~flowconfig_name ~client_handshake env retries start_time
-  else
+  ) else
     let msg =
       Utils_js.spf "\nError: There is no Flow server running in '%s'." (Path.to_string env.root)
     in

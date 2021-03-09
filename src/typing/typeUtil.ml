@@ -17,7 +17,6 @@ open Type
 let rec reason_of_t = function
   | OpenT (reason, _) -> reason
   | AnnotT (reason, _, _) -> reason
-  | MergedT (reason, _) -> reason
   | BoundT (reason, _) -> reason
   | InternalT (ChoiceKitT (reason, _)) -> reason
   | TypeDestructorTriggerT (_, reason, _, _, _) -> reason
@@ -67,7 +66,7 @@ and reason_of_use_t = function
   | AssertForInRHST reason -> reason
   | AssertIterableT { reason; _ } -> reason
   | AssertImportIsValueT (reason, _) -> reason
-  | BecomeT (reason, _) -> reason
+  | BecomeT { reason; _ } -> reason
   | BindT (_, reason, _, _) -> reason
   | CallElemT (reason, _, _, _) -> reason
   | CallLatentPredT (reason, _, _, _, _) -> reason
@@ -123,7 +122,7 @@ and reason_of_use_t = function
   | ObjSealT (reason, _) -> reason
   | ObjTestProtoT (reason, _) -> reason
   | ObjTestT (reason, _, _) -> reason
-  | OptionalChainT (reason, _, _, _, _) -> reason
+  | OptionalChainT { reason; _ } -> reason
   | OrT (reason, _, _) -> reason
   | PredicateT (_, (reason, _)) -> reason
   | ReactKitT (_, reason, _) -> reason
@@ -170,8 +169,8 @@ and reason_of_use_t = function
 let reason_of_t_add_id = reason_of_t
 
 (* function
-| OpenT (r, id) -> prefix_reason (spf "%d: " id) r
-| t -> reason_of_t t *)
+   | OpenT (r, id) -> prefix_reason (spf "%d: " id) r
+   | t -> reason_of_t t *)
 let reason_of_use_t_add_id = reason_of_use_t
 
 let desc_of_t = reason_of_t %> desc_of_reason
@@ -184,7 +183,6 @@ let def_loc_of_t = reason_of_t %> def_aloc_of_reason
 let rec mod_reason_of_t f = function
   | OpenT (reason, id) -> OpenT (f reason, id)
   | AnnotT (reason, t, use_desc) -> AnnotT (f reason, t, use_desc)
-  | MergedT (reason, uses) -> MergedT (f reason, uses)
   | BoundT (reason, name) -> BoundT (f reason, name)
   | InternalT (ChoiceKitT (reason, tool)) -> InternalT (ChoiceKitT (f reason, tool))
   | TypeDestructorTriggerT (use_op, reason, repos, d, t) ->
@@ -236,7 +234,7 @@ and mod_reason_of_use_t f = function
   | AssertIterableT ({ reason; _ } as contents) ->
     AssertIterableT { contents with reason = f reason }
   | AssertImportIsValueT (reason, name) -> AssertImportIsValueT (f reason, name)
-  | BecomeT (reason, t) -> BecomeT (f reason, t)
+  | BecomeT { reason; t; empty_success } -> BecomeT { reason = f reason; t; empty_success }
   | BindT (use_op, reason, ft, pass) -> BindT (use_op, f reason, ft, pass)
   | CallElemT (reason_call, reason_lookup, t, ft) -> CallElemT (f reason_call, reason_lookup, t, ft)
   | CallLatentPredT (reason, b, k, l, t) -> CallLatentPredT (f reason, b, k, l, t)
@@ -277,7 +275,7 @@ and mod_reason_of_use_t f = function
   | GetProtoT (reason, t) -> GetProtoT (f reason, t)
   | GetStaticsT (reason, t) -> GetStaticsT (f reason, t)
   | GuardT (pred, result, (reason, tvar)) -> GuardT (pred, result, (f reason, tvar))
-  | HasOwnPropT (use_op, reason, prop) -> HasOwnPropT (use_op, f reason, prop)
+  | HasOwnPropT (use_op, reason, t) -> HasOwnPropT (use_op, f reason, t)
   | IdxUnMaybeifyT (reason, t_out) -> IdxUnMaybeifyT (f reason, t_out)
   | IdxUnwrap (reason, t_out) -> IdxUnwrap (f reason, t_out)
   | ImplementsT (use_op, t) -> ImplementsT (use_op, mod_reason_of_t f t)
@@ -305,8 +303,8 @@ and mod_reason_of_use_t f = function
   | ObjSealT (reason, t) -> ObjSealT (f reason, t)
   | ObjTestProtoT (reason, t) -> ObjTestProtoT (f reason, t)
   | ObjTestT (reason, t1, t2) -> ObjTestT (f reason, t1, t2)
-  | OptionalChainT (reason, lhs_reason, this, us, vs) ->
-    OptionalChainT (f reason, lhs_reason, this, us, vs)
+  | OptionalChainT ({ reason; _ } as opt_chain) ->
+    OptionalChainT { opt_chain with reason = f reason }
   | OrT (reason, t1, t2) -> OrT (f reason, t1, t2)
   | PredicateT (pred, (reason, t)) -> PredicateT (pred, (f reason, t))
   | ReactKitT (use_op, reason, tool) -> ReactKitT (use_op, f reason, tool)
@@ -408,7 +406,7 @@ let rec util_use_op_of_use_t :
   | ConcretizeTypeAppsT (u, (ts1, op, r1), x2, b) ->
     util op (fun op -> ConcretizeTypeAppsT (u, (ts1, op, r1), x2, b))
   | ArrRestT (op, r, i, t) -> util op (fun op -> ArrRestT (op, r, i, t))
-  | HasOwnPropT (op, r, p) -> util op (fun op -> HasOwnPropT (op, r, p))
+  | HasOwnPropT (op, r, t) -> util op (fun op -> HasOwnPropT (op, r, t))
   | GetKeysT (r, u2) -> nested_util u2 (fun u2 -> GetKeysT (r, u2))
   | ElemT (op, r, t, a) -> util op (fun op -> ElemT (op, r, t, a))
   | ObjKitT (op, r, x, y, t) -> util op (fun op -> ObjKitT (op, r, x, y, t))
@@ -450,7 +448,7 @@ let rec util_use_op_of_use_t :
   | ObjTestProtoT (_, _)
   | ObjTestT (_, _, _)
   | UnifyT (_, _)
-  | BecomeT (_, _)
+  | BecomeT { reason = _; t = _; empty_success = _ }
   | GetValuesT (_, _)
   | CJSRequireT (_, _, _)
   | ImportModuleNsT (_, _, _)
@@ -472,7 +470,7 @@ let rec util_use_op_of_use_t :
   | SentinelPropTestT (_, _, _, _, _, _)
   | IdxUnwrap (_, _)
   | IdxUnMaybeifyT (_, _)
-  | OptionalChainT (_, _, _, _, _)
+  | OptionalChainT _
   | InvariantT _
   | CallLatentPredT (_, _, _, _, _)
   | CallOpenPredT (_, _, _, _, _)
@@ -519,6 +517,8 @@ let rec mod_loc_of_virtual_use_op f =
     | ClassExtendsCheck { def; name; extends } ->
       ClassExtendsCheck
         { def = mod_reason def; name = mod_reason name; extends = mod_reason extends }
+    | ClassMethodDefinition { def; name } ->
+      ClassMethodDefinition { def = mod_reason def; name = mod_reason name }
     | ClassImplementsCheck { def; name; implements } ->
       ClassImplementsCheck
         { def = mod_reason def; name = mod_reason name; implements = mod_reason implements }
@@ -546,6 +546,8 @@ let rec mod_loc_of_virtual_use_op f =
       FunImplicitReturn { fn = mod_reason fn; upper = mod_reason upper }
     | GeneratorYield { value } -> GeneratorYield { value = mod_reason value }
     | GetProperty reason -> GetProperty (mod_reason reason)
+    | IndexedTypeAccess { _object; index } ->
+      IndexedTypeAccess { _object = mod_reason _object; index = mod_reason index }
     | Internal o -> Internal o
     | JSXCreateElement { op; component } ->
       JSXCreateElement { op = mod_reason op; component = mod_reason component }
@@ -651,7 +653,7 @@ let boolean_literal_eq x = function
 
 let trust_subtype_fixed tr1 tr2 =
   match (Trust.expand tr1, Trust.expand tr2) with
-  | (Trust.Qualifier trust1, Trust.Qualifier trust2) -> Trust.subtype_trust trust1 trust2
+  | (Trust.QualifiedTrust trust1, Trust.QualifiedTrust trust2) -> Trust.subtype_trust trust1 trust2
   | _ -> false
 
 let quick_subtype trust_checked t1 t2 =
@@ -666,10 +668,10 @@ let quick_subtype trust_checked t1 t2 =
     | (DefT (_, ltrust, NullT), DefT (_, rtrust, NullT))
     | (DefT (_, ltrust, VoidT), DefT (_, rtrust, VoidT))
     | (DefT (_, ltrust, SymbolT), DefT (_, rtrust, SymbolT))
-    | (DefT (_, ltrust, EmptyT _), DefT (_, rtrust, _))
+    | (DefT (_, ltrust, EmptyT), DefT (_, rtrust, _))
     | (DefT (_, ltrust, _), DefT (_, rtrust, MixedT _)) ->
       (not trust_checked) || trust_subtype_fixed ltrust rtrust
-    | (DefT (_, ltrust, EmptyT _), _) ->
+    | (DefT (_, ltrust, EmptyT), _) ->
       (not trust_checked) || trust_value_map ~f:is_public ~default:false ltrust
     | (_, DefT (_, rtrust, MixedT _)) ->
       (not trust_checked) || trust_value_map ~f:is_tainted ~default:false rtrust
@@ -681,6 +683,8 @@ let quick_subtype trust_checked t1 t2 =
     | (DefT (_, ltrust, BoolT actual), DefT (_, rtrust, SingletonBoolT expected)) ->
       ((not trust_checked) || trust_subtype_fixed ltrust rtrust)
       && boolean_literal_eq expected actual
+    | (DefT (_, _, ObjT { flags = { obj_kind = Exact; _ }; _ }), ExactT (_, t2')) ->
+      reasonless_eq t1 t2'
     | _ -> reasonless_eq t1 t2)
 
 let reason_of_propref = function
@@ -839,3 +843,29 @@ let pred_map_implies p1 p2 =
       | None -> false
       | Some v1 -> eq_predicate (v1, v2))
     p2
+
+let type_t_of_annotated_or_inferred (x : Type.annotated_or_inferred) =
+  match x with
+  | Inferred t
+  | Annotated t ->
+    t
+
+let map_annotated_or_inferred f = function
+  | Inferred t -> Inferred (f t)
+  | Annotated t -> Annotated (f t)
+
+(* Creates a union from a list of types. Since unions require a minimum of two
+   types this function will return an empty type when there are no types in the
+   list, or the list head when there is one type in the list. *)
+let union_of_ts reason ts =
+  match ts with
+  (* If we have no types then this is an error. *)
+  | [] -> DefT (reason, bogus_trust (), EmptyT)
+  (* If we only have one type then only that should be used. *)
+  | [t0] -> t0
+  (* If we have more than one type then we make a union type. *)
+  | t0 :: t1 :: ts -> UnionT (reason, UnionRep.make t0 t1 ts)
+
+let annotated_or_inferred_of_option ~default = function
+  | Some t -> Annotated t
+  | None -> Inferred default

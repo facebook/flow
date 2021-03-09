@@ -1,7 +1,7 @@
 Error ------------------------------------------------------------------------------------ createclass-callsite.js:20:10
 
-Cannot create `Hello` element because property `name` is missing in props [1] but exists in propTypes of React
-component [2]. [prop-missing]
+Cannot create `Hello` element because property `name` is missing in props [1] but exists in object type [2].
+[prop-missing]
 
    createclass-callsite.js:20:10
    20|         <Hello />
@@ -11,12 +11,9 @@ References:
    createclass-callsite.js:20:9
    20|         <Hello />
                ^^^^^^^^^ [1]
-   createclass-module.js:6:14
-                    v
-    6|   propTypes: {
-    7|     name: React.PropTypes.string.isRequired,
-    8|   },
-         ^ [2]
+   createclass-module.js:5:36
+    5| const Hello: Class<React$Component<{ name: string }, {}>> = React.createClass({
+                                          ^^^^^^^^^^^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------ createclass-callsite.js:21:10

@@ -82,32 +82,32 @@ end
    are known to introduce bindings. The logic here is sufficiently tricky that
    we probably should not change it without extensive testing. *)
 
-class ['loc] hoister =
+class ['loc] hoister ~with_types =
   object (this)
     inherit ['loc Bindings.t, 'loc] visitor ~init:Bindings.empty as super
 
     method private add_binding entry = this#update_acc (Bindings.add entry)
 
     (* Ignore expressions. This includes, importantly, function expressions (whose
-     ids should not be hoisted). *)
+       ids should not be hoisted). *)
     method! expression (expr : ('loc, 'loc) Ast.Expression.t) = expr
 
     (* Ignore assignment patterns, whose targets should not be hoisted. *)
     method! assignment_pattern (patt : ('loc, 'loc) Ast.Pattern.t) = patt
 
     (* Ignore class declarations, since they are lexical bindings (thus not
-     hoisted). *)
+       hoisted). *)
     method! class_ _loc (cls : ('loc, 'loc) Ast.Class.t) = cls
 
     (* Ignore enum declarations, since they are lexical bindings. *)
     method! enum_declaration _loc (enum : ('loc, 'loc) Ast.Statement.EnumDeclaration.t) = enum
 
     (* Ignore import declarations, since they are lexical bindings (thus not
-     hoisted). *)
+       hoisted). *)
     method! import_declaration _loc (decl : ('loc, 'loc) Ast.Statement.ImportDeclaration.t) = decl
 
     (* This is visited by function parameters, variable declarations, and catch patterns (but not
-     assignment expressions). *)
+       assignment expressions). *)
     method! pattern ?kind (expr : ('loc, 'loc) Ast.Pattern.t) =
       match Utils.unsafe_opt kind with
       | Ast.Statement.VariableDeclaration.Var ->
@@ -154,29 +154,29 @@ class ['loc] hoister =
 
     method! type_alias loc (alias : ('loc, 'loc) Ast.Statement.TypeAlias.t) =
       let open Ast.Statement.TypeAlias in
-      this#add_binding alias.id;
+      if with_types then this#add_binding alias.id;
       super#type_alias loc alias
 
     method! opaque_type loc (alias : ('loc, 'loc) Ast.Statement.OpaqueType.t) =
       let open Ast.Statement.OpaqueType in
-      this#add_binding alias.id;
+      if with_types then this#add_binding alias.id;
       super#opaque_type loc alias
 
     method! interface loc (interface : ('loc, 'loc) Ast.Statement.Interface.t) =
       let open Ast.Statement.Interface in
-      this#add_binding interface.id;
+      if with_types then this#add_binding interface.id;
       super#interface loc interface
   end
 
-class ['loc] lexical_hoister =
+class ['loc] lexical_hoister ~with_types =
   object (this)
     inherit ['loc Bindings.t, 'loc] visitor ~init:Bindings.empty as super
 
     method private add_binding entry = this#update_acc (Bindings.add entry)
 
     (* Ignore all statements except variable declarations, class declarations, and
-     import declarations. The ignored statements cannot contain lexical
-     bindings in the current scope. *)
+       import declarations. The ignored statements cannot contain lexical
+       bindings in the current scope. *)
     method! statement (stmt : ('loc, 'loc) Ast.Statement.t) =
       let open Ast.Statement in
       match stmt with
@@ -190,11 +190,11 @@ class ['loc] lexical_hoister =
       | _ -> stmt
 
     (* Ignore expressions. This includes, importantly, initializers of variable
-     declarations. *)
+       declarations. *)
     method! expression (expr : ('loc, 'loc) Ast.Expression.t) = expr
 
     (* This is visited by variable declarations, as well as other kinds of
-     patterns that we ignore. *)
+       patterns that we ignore. *)
     method! pattern ?kind (expr : ('loc, 'loc) Ast.Pattern.t) =
       match kind with
       | None -> expr
@@ -238,16 +238,36 @@ class ['loc] lexical_hoister =
       this#add_binding id;
       enum
 
-    method! import_named_specifier
-        (specifier : ('loc, 'loc) Ast.Statement.ImportDeclaration.named_specifier) =
+    method! import_declaration loc decl =
       let open Ast.Statement.ImportDeclaration in
-      let binding =
-        match specifier with
-        | { local = Some binding; remote = _; kind = _ }
-        | { local = None; remote = binding; kind = _ } ->
-          binding
+      let { import_kind; _ } = decl in
+      (* when `with_types` is false, don't visit `import type ...` or `import typeof ...` *)
+      match (with_types, import_kind) with
+      | (false, ImportType)
+      | (false, ImportTypeof) ->
+        decl
+      | _ -> super#import_declaration loc decl
+
+    method! import_named_specifier
+        ~import_kind:_ (specifier : ('loc, 'loc) Ast.Statement.ImportDeclaration.named_specifier) =
+      let open Ast.Statement.ImportDeclaration in
+      (* when `with_types` is false, only add bindings for values, not types.
+         `import_declaration` avoids visiting specifiers for `import type` and
+         `import typeof`, so `kind = None` must mean a value here. *)
+      let allowed_kind = function
+        | None
+        | Some ImportValue ->
+          true
+        | Some ImportType
+        | Some ImportTypeof ->
+          with_types
       in
-      this#add_binding binding;
+      (match specifier with
+      | { local = Some binding; remote = _; kind }
+      | { local = None; remote = binding; kind }
+        when allowed_kind kind ->
+        this#add_binding binding
+      | _ -> ());
       specifier
 
     method! import_default_specifier (id : ('loc, 'loc) Ast.Identifier.t) =

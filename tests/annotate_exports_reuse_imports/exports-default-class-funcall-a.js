@@ -3,6 +3,6 @@
 declare class Base {}
 class B extends Base {}
 
-function foo() { return B };
+function foo(): typeof B { return B };
 
-module.exports = foo();
+module.exports = (foo(): typeof B);

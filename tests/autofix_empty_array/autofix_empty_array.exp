@@ -2,7 +2,7 @@
 
 const a0: Array<empty> = [];
 
-const a1: Array<any | number> = [];
+const a1: Array<number> = [];
 a1.push(1);
 
 const a2: Array<number> = [];

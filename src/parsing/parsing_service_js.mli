@@ -19,6 +19,7 @@ type result =
       sig_extra: Parsing_heaps.sig_extra;
       tolerable_errors: File_sig.With_Loc.tolerable_error list;
       parse_errors: parse_error list;
+      exports: Exports.t;
     }
   | Parse_fail of parse_failure
   | Parse_skip of parse_skip_reason
@@ -70,7 +71,7 @@ type parse_options = {
   parse_prevent_munge: bool;
   parse_module_ref_prefix: string option;
   parse_facebook_fbt: string option;
-  parse_arch: Options.arch;
+  parse_new_signatures: bool;
   parse_abstract_locations: bool;
   parse_type_asserts: bool;
   parse_suppress_types: SSet.t;
@@ -92,7 +93,7 @@ val make_parse_options :
 val docblock_max_tokens : int
 
 (* Use default values for the various settings that parse takes. Each one can be overridden
-individually *)
+   individually *)
 val parse_with_defaults :
   ?types_mode:types_mode ->
   ?use_strict:bool ->

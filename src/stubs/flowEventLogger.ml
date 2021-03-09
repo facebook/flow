@@ -52,7 +52,7 @@ let set_saved_state_filename _ = ()
 let set_monitor_options ~file_watcher:_ = ()
 
 let set_server_options
-    ~lazy_mode:_ ~arch:_ ~abstract_locations:_ ~max_workers:_ ~enabled_rollouts:_ ~debug:_ =
+    ~lazy_mode:_ ~abstract_locations:_ ~max_workers:_ ~enabled_rollouts:_ ~debug:_ =
   ()
 
 let status_response ~num_errors:_ = ()
@@ -109,6 +109,8 @@ let recheck
     ~scm_update_distance:_
     ~scm_changed_mergebase:_ =
   ()
+
+let recheck_series ~recheck_count:_ ~profiling:_ = ()
 
 let murdered_by_oom_killer _ = ()
 

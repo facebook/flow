@@ -6,8 +6,7 @@
  *)
 
 val detect_errors :
-  metadata:Context.metadata ->
-  phase:Context.phase ->
-  Context.t ->
-  (Context.t * (ALoc.t, ALoc.t) Flow_ast.Program.t * 'a) Base.List.t ->
+  'phase Context.t_ ->
+  Context.metadata ->
+  ('phase Context.t_ * (ALoc.t, ALoc.t) Flow_ast.Program.t * 'a) Base.List.t ->
   unit

@@ -269,7 +269,7 @@ let tests =
          "module_exports_import"
          >:: mk_signature_generator_test
                ["module.exports = import('./foo')"]
-               ["import * as $1 from \"./foo\";"; "declare module.exports: typeof $1;"];
+               ["import * as $1 from \"./foo\";"; "declare module.exports: Promise<typeof $1>;"];
          (* outlining *)
          "module_exports_bindings"
          >:: mk_signature_generator_test
@@ -601,8 +601,8 @@ let tests =
                  "export opaque type T7 = number;";
                ]
                [
-                 "opaque type T1;";
-                 "opaque type T2: number;";
+                 "declare opaque type T1;";
+                 "declare opaque type T2: number;";
                  "opaque type T3 = number;";
                  "opaque type T4: number = T3;";
                  "opaque type T5 = number;";

@@ -18,5 +18,5 @@ let focus_and_check genv env filenames =
   in
   let files_to_force = CheckedSet.add ~focused:files_to_focus CheckedSet.empty in
   match%lwt Rechecker.recheck_single ~files_to_force genv env with
-  | Error env -> Lwt.return (env, false)
-  | Ok (_summary, env) -> Lwt.return (env, true)
+  | Rechecker.Nothing_to_do env -> Lwt.return (env, false)
+  | Rechecker.Completed_recheck { env; _ } -> Lwt.return (env, true)

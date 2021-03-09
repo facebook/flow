@@ -134,7 +134,11 @@ export default (suite(
                 command: {
                   title: '',
                   command: 'log:<PLACEHOLDER_PROJECT_URL>',
-                  arguments: ['Replace `faceboy` with `facebook`'],
+                  arguments: [
+                    'textDocument/codeAction',
+                    'typo',
+                    'Replace `faceboy` with `facebook`',
+                  ],
                 },
               },
             ]),
@@ -235,7 +239,11 @@ export default (suite(
                 command: {
                   title: '',
                   command: 'log:<PLACEHOLDER_PROJECT_URL>',
-                  arguments: ['Replace `Foobat` with `Foobar`'],
+                  arguments: [
+                    'textDocument/codeAction',
+                    'typo',
+                    'Replace `Foobat` with `Foobar`',
+                  ],
                 },
               },
             ]),
@@ -299,6 +307,105 @@ export default (suite(
         },
       }).verifyAllLSPMessagesInStep(
         [['textDocument/codeAction', '[]']],
+        ['textDocument/publishDiagnostics', ...lspIgnoreStatusAndCancellation],
+      ),
+    ]),
+    test('provide codeAction for parse error', [
+      addFile('parse-error.js.ignored', 'parse-error.js'),
+      lspStartAndConnect(),
+      lspRequestAndWaitUntilResponse('textDocument/codeAction', {
+        textDocument: {uri: '<PLACEHOLDER_PROJECT_URL>/parse-error.js'},
+        range: {
+          start: {
+            line: 2,
+            character: 6,
+          },
+          end: {
+            line: 2,
+            character: 6,
+          },
+        },
+        context: {
+          diagnostics: [
+            {
+              range: {
+                start: {
+                  line: 2,
+                  character: 6,
+                },
+                end: {
+                  line: 2,
+                  character: 7,
+                },
+              },
+              message: "Unexpected token `>`. Did you mean `{'>'}`?",
+              severity: 1,
+              code: 'ParseError',
+              relatedInformation: [],
+              source: 'Flow',
+            },
+          ],
+        },
+      }).verifyAllLSPMessagesInStep(
+        [
+          [
+            'textDocument/codeAction',
+            JSON.stringify([
+              {
+                title: "Replace `>` with `{'>'}`",
+                kind: 'quickfix',
+                diagnostics: [
+                  {
+                    range: {
+                      start: {
+                        line: 2,
+                        character: 6,
+                      },
+                      end: {
+                        line: 2,
+                        character: 7,
+                      },
+                    },
+                    severity: 1,
+                    code: 'ParseError',
+                    source: 'Flow',
+                    message: "Unexpected token `>`. Did you mean `{'>'}`?",
+                    relatedInformation: [],
+                    relatedLocations: [],
+                  },
+                ],
+                edit: {
+                  changes: {
+                    '<PLACEHOLDER_PROJECT_URL>/parse-error.js': [
+                      {
+                        range: {
+                          start: {
+                            line: 2,
+                            character: 6,
+                          },
+                          end: {
+                            line: 2,
+                            character: 7,
+                          },
+                        },
+                        newText: "{'>'}",
+                      },
+                    ],
+                  },
+                },
+                command: {
+                  title: '',
+                  command: 'log:<PLACEHOLDER_PROJECT_URL>',
+                  arguments: [
+                    'textDocument/codeAction',
+                    'typo',
+                    "Replace `>` with `{'>'}`",
+                  ],
+                },
+              },
+            ]),
+          ],
+        ],
         ['textDocument/publishDiagnostics', ...lspIgnoreStatusAndCancellation],
       ),
     ]),

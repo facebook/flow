@@ -1,0 +1,3 @@
+saved_state_only: true
+auto_start: false
+shell: test.sh

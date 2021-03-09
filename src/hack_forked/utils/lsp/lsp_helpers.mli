@@ -6,10 +6,10 @@
  *)
 
 (* This `.mli` file was generated automatically. It may include extra
-definitions that should not actually be exposed to the caller. If you notice
-that this interface file is a poor interface, please take a few minutes to
-clean it up manually, and then delete this comment once the interface is in
-shape. *)
+   definitions that should not actually be exposed to the caller. If you notice
+   that this interface file is a poor interface, please take a few minutes to
+   clean it up manually, and then delete this comment once the interface is in
+   shape. *)
 
 type range_replace = {
   remove_range: Lsp.range;
@@ -42,6 +42,8 @@ val apply_changes_unsafe : string -> Lsp.DidChange.textDocumentContentChangeEven
 
 val pos_compare : Lsp.position -> Lsp.position -> int
 
+val ranges_overlap : Lsp.range -> Lsp.range -> bool
+
 type range_overlap =
   | Selection_before_start_of_squiggle
   | Selection_overlaps_start_of_squiggle
@@ -64,6 +66,8 @@ val update_diagnostics_due_to_change :
 val get_root : Lsp.Initialize.params -> string
 
 val supports_codeActionKinds : Lsp.Initialize.params -> Lsp.CodeActionKind.t list
+
+val supports_configuration : Lsp.Initialize.params -> bool
 
 val supports_status : Lsp.Initialize.params -> bool
 

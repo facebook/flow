@@ -18,9 +18,9 @@ let in_scope gcx id loc =
   let scope = ScopeMap.find id gcx.scope_map in
   ALocIDSet.mem loc scope
 
-class tvar_finder =
+class ['phase] tvar_finder =
   object (self)
-    inherit [Reason.t option IMap.t * Reason.t IMap.t * Reason.t option] Type_visitor.t
+    inherit [Reason.t option IMap.t * Reason.t IMap.t * Reason.t option, 'phase] Type_visitor.t
 
     method! tvar cx pole (marked, blame, reason) r id =
       let (root_id, _) = Context.find_constraints cx id in

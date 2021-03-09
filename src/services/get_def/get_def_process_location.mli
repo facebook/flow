@@ -13,5 +13,6 @@ type result =
 val process_location :
   typed_ast:(ALoc.t, ALoc.t * Type.t) Flow_ast.Program.t ->
   is_legit_require:(ALoc.t -> bool) ->
+  module_ref_prefix:string option ->
   Loc.t ->
   result

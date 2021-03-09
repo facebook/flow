@@ -12,10 +12,13 @@ type 'loc ident = 'loc * string [@@deriving show]
 type 'loc source = 'loc * string [@@deriving show]
 
 val fold_bindings_of_pattern :
-  ('a -> ('loc, 'loc) Flow_ast.Identifier.t -> 'a) -> 'a -> ('loc, 'loc) Flow_ast.Pattern.t -> 'a
+  ('a -> ('loc, 'loc) Flow_ast.Identifier.t -> ('loc, 'loc) Flow_ast.Type.annotation_or_hint -> 'a) ->
+  'a ->
+  ('loc, 'loc) Flow_ast.Pattern.t ->
+  'a
 
 val fold_bindings_of_variable_declarations :
-  ('a -> ('loc, 'loc) Flow_ast.Identifier.t -> 'a) ->
+  ('a -> ('loc, 'loc) Flow_ast.Identifier.t -> ('loc, 'loc) Flow_ast.Type.annotation_or_hint -> 'a) ->
   'a ->
   ('loc, 'loc) Flow_ast.Statement.VariableDeclaration.Declarator.t list ->
   'a

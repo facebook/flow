@@ -338,18 +338,18 @@ end = struct
 
   (** `close_if_open fd` closes the `fd` file descriptor, ignoring errors if it's already closed.
 
-    So it's actually important that we close the Lwt_unix.file_descr and not just the
-    underlying Unix.file_descr. Why?
+      So it's actually important that we close the Lwt_unix.file_descr and not just the
+      underlying Unix.file_descr. Why?
 
-    1. Unix.file_descr is just an int
-    2. File descriptors can be reused after they are closed
-    3. You might get a reaaaally weird bug where your seemly closed Lwt_unix.file_descr
-       suddenly starts getting data again. This totally happened to Gabe on halloween and it
-       totally freaked him out.
+      1. Unix.file_descr is just an int
+      2. File descriptors can be reused after they are closed
+      3. You might get a reaaaally weird bug where your seemly closed Lwt_unix.file_descr
+         suddenly starts getting data again. This totally happened to Gabe on halloween and it
+         totally freaked him out.
 
-    Lwt_unix.file_descr, on the otherhand, carries around some state, like whether it is open
-    or closed. So a closed Lwt_unix.file_descr won't resurrect.
-  *)
+      Lwt_unix.file_descr, on the otherhand, carries around some state, like whether it is open
+      or closed. So a closed Lwt_unix.file_descr won't resurrect.
+   *)
   let close_if_open (fd : Lwt_unix.file_descr) =
     try Lwt_unix.close fd (* If it's already closed, we'll get EBADF *)
     with Unix.Unix_error (Unix.EBADF, _, _) -> Lwt.return_unit
@@ -520,6 +520,7 @@ module KeepAliveLoop = LwtLoop.Make (struct
         (* The heap is full. Restarting might help clear out cruft, but it could also just
            be too small, leading to a crash loop. We should limit how often we try restarting
            before recovering from this. *)
+        | Could_not_extract_flowlibs
         (**** Things that the server shouldn't use, but would imply that the monitor should exit ****)
         | Interrupted
         | Build_id_mismatch

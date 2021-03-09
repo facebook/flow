@@ -84,8 +84,8 @@ let make =
     | [] -> Array.of_list (List.rev acc)
     | Cr :: Nl :: rest ->
       (* https://www.ecma-international.org/ecma-262/5.1/#sec-7.3 says that "\r\n" should be treated
-       like a single line terminator, even though both '\r' and '\n' are line terminators in their
-       own right. *)
+         like a single line terminator, even though both '\r' and '\n' are line terminators in their
+         own right. *)
       let line = Array.of_list (List.rev (offset :: rev_line)) in
       build_table size_of_kind (offset + 2, [], line :: acc) rest
     | ((Cr | Nl | Ls) as kind) :: rest ->
@@ -143,3 +143,28 @@ let debug_string table =
       Buffer.add_char buf '\n')
     table;
   Buffer.contents buf
+
+let line_lengths table =
+  Array.fold_left
+    (fun (prev_line_end, lengths_rev) line ->
+      let line_end = line.(Array.length line - 1) in
+      (line_end, (line_end - prev_line_end) :: lengths_rev))
+    (0, [])
+    table
+  |> snd
+  |> List.rev
+
+let contains_multibyte_character table =
+  let exception FoundMultibyte in
+  try
+    Array.iter
+      (fun line ->
+        Array.iteri
+          (fun i offset ->
+            if i > 0 then
+              let offset_before = line.(i - 1) in
+              if offset - offset_before > 1 then raise FoundMultibyte)
+          line)
+      table;
+    false
+  with FoundMultibyte -> true

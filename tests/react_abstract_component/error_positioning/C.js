@@ -3,7 +3,7 @@ const React = require('react');
 const View = require('./View');
 
 type Props = {|
-  component: React$ComponentType<*>,
+  component: React$ComponentType<any>,
 |};
 
 class C extends React.PureComponent<Props> {

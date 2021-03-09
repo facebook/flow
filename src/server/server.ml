@@ -6,7 +6,7 @@
  *)
 
 let sample_init_memory profiling =
-  SharedMem_js.(
+  SharedMem.(
     let hash_stats = hash_stats () in
     let heap_size = heap_size () in
     let memory_metrics =
@@ -54,7 +54,7 @@ let init ~profiling ?focus_targets genv =
   in
   sample_init_memory profiling;
 
-  SharedMem_js.init_done ();
+  SharedMem.init_done ();
 
   (* Return an env that initializes invariants required and maintained by
      recheck, namely that `files` contains files that parsed successfully, and
@@ -63,10 +63,10 @@ let init ~profiling ?focus_targets genv =
 
 (* A thread that samples memory stats every second and then logs an idle heartbeat event even
  * `idle_period_in_seconds` seconds. *)
-let rec log_on_idle =
+let rec idle_logging_loop =
   (* The time in seconds to gather data before logging. Shouldn't be too small or we'll flood the
    * logs. *)
-  let idle_period_in_seconds = 300 in
+  let idle_period_in_seconds = 300. in
   (* Grab memory stats. Since we're idle, we don't really care much about sharedmemory stats. But
    * our cgroup stats may change depending on the memory pressure *)
   let sample profiling =
@@ -83,43 +83,59 @@ let rec log_on_idle =
     end;
     Lwt.return_unit
   in
-  (* Sample every second for `seconds_remaining` seconds *)
-  let rec sample_and_sleep profiling seconds_remaining =
-    if seconds_remaining > 0 then
-      let%lwt () = sample profiling in
-      let%lwt () = Lwt_unix.sleep 1.0 in
-      sample_and_sleep profiling (seconds_remaining - 1)
-    else
-      Lwt.return_unit
+  (* Sample every second *)
+  let rec sample_loop profiling =
+    let%lwt () = Lwt.join [sample profiling; Lwt_unix.sleep 1.0] in
+    sample_loop profiling
   in
   fun ~options start_time ->
     let should_print_summary = Options.should_profile options in
     let%lwt (profiling, ()) =
       Profiling_js.with_profiling_lwt ~label:"Idle" ~should_print_summary (fun profiling ->
-          let%lwt () = sample_and_sleep profiling idle_period_in_seconds in
-          sample profiling)
+          let sampler_thread = sample_loop profiling in
+          let timeout = Lwt_unix.sleep idle_period_in_seconds in
+          Lwt.pick [sampler_thread; timeout])
     in
     FlowEventLogger.idle_heartbeat ~idle_time:(Unix.gettimeofday () -. start_time) ~profiling;
-    log_on_idle ~options start_time
+    Lwt.async EventLoggerLwt.flush;
+    idle_logging_loop ~options start_time
+
+(* A thread which performs tiny incremental GC slices until it is canceled or
+ * finishes a full collection cycle. Each call to collect_slice should only
+ * block for a few milliseconds. *)
+let rec gc_loop () =
+  let%lwt () = Lwt.pause () in
+  if SharedMem.collect_slice 10000 then
+    Lwt.return_unit
+  else
+    gc_loop ()
 
 let rec serve ~genv ~env =
-  Hh_logger.debug "Starting aggressive shared mem GC";
-  SharedMem_js.collect `aggressive;
-  Hh_logger.debug "Finished aggressive shared mem GC";
-
   MonitorRPC.status_update ~event:ServerStatus.Ready;
 
   let options = genv.ServerEnv.options in
-  let idle_logging_thread = log_on_idle ~options (Unix.gettimeofday ()) in
-  (* Ok, server is settled. Let's go to sleep until we get a message from the monitor *)
-  let%lwt () =
+
+  (* Kick off the idle thread. This will loop forever, because the idle logging
+   * thread loops forever. *)
+  let idle_thread =
+    let start_time = Unix.gettimeofday () in
+    let logging_thread = idle_logging_loop ~options start_time in
+    let gc_thread = gc_loop () in
+    LwtUtils.iter_all [logging_thread; gc_thread]
+  in
+
+  (* Kick off a thread to wait for a message from the monitor. *)
+  let wait_thread =
     ServerMonitorListenerState.wait_for_anything
       ~process_updates:(fun ?skip_incompatible ->
         Rechecker.process_updates ?skip_incompatible ~options env)
       ~get_forced:(fun () -> env.ServerEnv.checked_files)
-    (* We're not in the middle of a recheck *)
   in
-  Lwt.cancel idle_logging_thread;
+
+  (* Run the idle and wait threads together until we get a message from the
+   * monitor. This will complete the wait thread and cause the idle thread to be
+   * canceled. *)
+  let%lwt () = Lwt.pick [idle_thread; wait_thread] in
 
   (* If there's anything to recheck or updates to the env from the monitor, let's consume them *)
   let%lwt (_profiling, env) = Rechecker.recheck_loop genv env in
@@ -137,19 +153,36 @@ let rec serve ~genv ~env =
 
   serve ~genv ~env
 
+let on_compact () =
+  MonitorRPC.status_update ~event:ServerStatus.GC_start;
+  let old_size = SharedMem.heap_size () in
+  let start_t = Unix.gettimeofday () in
+  fun () ->
+    let new_size = SharedMem.heap_size () in
+    let time_taken = Unix.gettimeofday () -. start_t in
+    if old_size <> new_size then (
+      Hh_logger.log
+        "Sharedmem GC: %d bytes before; %d bytes after; in %f seconds"
+        old_size
+        new_size
+        time_taken;
+      EventLogger.sharedmem_gc_ran `aggressive old_size new_size time_taken
+    )
+
 (* The main entry point of the daemon
-* the only trick to understand here, is that env.modified is the set
-* of files that changed, it is only set back to SSet.empty when the
-* type-checker succeeded. So to know if there is some work to be done,
-* we look if env.modified changed.
-*)
+ * the only trick to understand here, is that env.modified is the set
+ * of files that changed, it is only set back to SSet.empty when the
+ * type-checker succeeded. So to know if there is some work to be done,
+ * we look if env.modified changed.
+ *)
 let create_program_init ~shared_mem_config ~init_id ?focus_targets options =
+  SharedMem.on_compact := on_compact;
   let num_workers = Options.max_workers options in
-  let handle = SharedMem_js.init ~num_workers shared_mem_config in
+  let handle = SharedMem.init ~num_workers shared_mem_config in
   let genv = ServerEnvBuild.make_genv ~options ~init_id handle in
   let program_init profiling =
     let%lwt ret = init ~profiling ?focus_targets genv in
-    if shared_mem_config.SharedMem_js.log_level > 0 then Measure.print_stats ();
+    if shared_mem_config.SharedMem.log_level > 0 then Measure.print_stats ();
     Lwt.return ret
   in
   (genv, program_init)
@@ -223,15 +256,15 @@ let exit_msg_of_exception exn msg =
 
 let run_from_daemonize ~init_id ~monitor_channels ~shared_mem_config options =
   try run ~monitor_channels ~shared_mem_config ~init_id options with
-  | SharedMem_js.Out_of_shared_memory as exn ->
+  | SharedMem.Out_of_shared_memory as exn ->
     let exn = Exception.wrap exn in
     let msg = exit_msg_of_exception exn "Out of shared memory" in
     FlowExitStatus.(exit ~msg Out_of_shared_memory)
-  | SharedMem_js.Hash_table_full as exn ->
+  | SharedMem.Hash_table_full as exn ->
     let exn = Exception.wrap exn in
     let msg = exit_msg_of_exception exn "Hash table is full" in
     FlowExitStatus.(exit ~msg Hash_table_full)
-  | SharedMem_js.Heap_full as exn ->
+  | SharedMem.Heap_full as exn ->
     let exn = Exception.wrap exn in
     let msg = exit_msg_of_exception exn "Heap is full" in
     FlowExitStatus.(exit ~msg Heap_full)

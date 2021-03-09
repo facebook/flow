@@ -28,24 +28,6 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- loop.js:5:33
 
-Cannot assign `y` to `x` because optional existential [1] contains type variable `T` [1] which cannot escape from the
-scope in which it was defined [2]. [escaped-generic]
-
-   loop.js:5:33
-   5| function f<T:*>(x:T,y?:T) { x = y }
-                                      ^
-
-References:
-   loop.js:5:24
-   5| function f<T:*>(x:T,y?:T) { x = y }
-                             ^ [1]
-   loop.js:5:12
-   5| function f<T:*>(x:T,y?:T) { x = y }
-                 ^ [2]
-
-
-Error ----------------------------------------------------------------------------------------------------- loop.js:5:33
-
 Cannot assign `y` to `x` because undefined [1] is incompatible with `T` [2]. [incompatible-type]
 
    loop.js:5:33
@@ -59,6 +41,20 @@ References:
    loop.js:5:19
    5| function f<T:*>(x:T,y?:T) { x = y }
                         ^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- maybe.js:6:5
+
+Cannot get `x['bar']` because null or undefined [1] does not have properties. [incompatible-use]
+
+   maybe.js:6:5
+   6|   x['bar']; // Error
+          ^^^^^
+
+References:
+   maybe.js:5:17
+   5| function bar(x: ?{bar: number}) {
+                      ^^^^^^^^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------------- nullable.js:17:5
@@ -189,7 +185,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- optional.js:7:14
 
-Missing type annotation for `x`. [missing-annot]
+Cannot build a typed interface for this module. You should annotate the exports of this module with types. Missing type
+annotation at array pattern: [signature-verification-failure]
 
    7| function qux(x="hello",...y):string { foo(x); return y[0]; }
                    ^
@@ -197,7 +194,8 @@ Missing type annotation for `x`. [missing-annot]
 
 Error ------------------------------------------------------------------------------------------------- optional.js:7:27
 
-Missing type annotation for rest parameter `y`. [missing-annot]
+Cannot build a typed interface for this module. You should annotate the exports of this module with types. Missing type
+annotation at array pattern: [signature-verification-failure]
 
    7| function qux(x="hello",...y):string { foo(x); return y[0]; }
                                 ^

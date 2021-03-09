@@ -59,6 +59,8 @@ val abstract_locations : config -> bool
 
 val all : config -> bool
 
+val autoimports : config -> bool option
+
 val automatic_require_default : config -> bool
 
 val babel_loose_array_spread : config -> bool
@@ -73,10 +75,6 @@ val enforce_local_inference_annotations : config -> bool
 
 val enforce_strict_call_arity : config -> bool
 
-val enforce_well_formed_exports : config -> bool
-
-val enforce_well_formed_exports_includes : config -> string list
-
 val enums : config -> bool
 
 val enums_with_unknown_members : config -> bool
@@ -84,8 +82,6 @@ val enums_with_unknown_members : config -> bool
 val this_annot : config -> bool
 
 val exact_by_default : config -> bool
-
-val generate_tests : config -> bool
 
 val facebook_fbs : config -> string option
 
@@ -96,6 +92,22 @@ val facebook_module_interop : config -> bool
 val file_watcher : config -> file_watcher option
 
 val file_watcher_timeout : config -> int option
+
+val format_single_quotes : config -> bool option
+
+val gc_worker_custom_major_ratio : config -> int option
+
+val gc_worker_custom_minor_max_size : config -> int option
+
+val gc_worker_custom_minor_ratio : config -> int option
+
+val gc_worker_major_heap_increment : config -> int option
+
+val gc_worker_minor_heap_size : config -> int option
+
+val gc_worker_space_overhead : config -> int option
+
+val gc_worker_window_size : config -> int option
 
 val haste_module_ref_prefix : config -> string option
 
@@ -110,6 +122,8 @@ val haste_use_name_reducers : config -> bool
 val ignore_non_literal_requires : config -> bool
 
 val include_warnings : config -> bool
+
+val indexed_access : config -> bool
 
 val lazy_mode : config -> Options.lazy_mode option
 
@@ -155,11 +169,17 @@ val required_version : config -> string option
 
 val react_runtime : config -> Options.react_runtime
 
+val react_server_component_exts : config -> SSet.t
+
 val recursion_limit : config -> int
 
 val root_name : config -> string option
 
+val run_post_inference_implicit_instantiation : config -> bool
+
 val saved_state_fetcher : config -> Options.saved_state_fetcher
+
+val saved_state_load_sighashes : config -> bool
 
 val shm_hash_table_pow : config -> int
 
@@ -180,8 +200,6 @@ val traces : config -> int
 val trust_mode : config -> Options.trust_mode
 
 val type_asserts : config -> bool
-
-val types_first : config -> bool
 
 val new_signatures : config -> bool
 

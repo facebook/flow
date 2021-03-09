@@ -20,3 +20,8 @@ class B3<X> extends A3<X> {
 (new B3().bar(): A2<*>); // OK
 ((new B3().bar(): B3<string>): A2<number>); // error
 ((new B3(): A2<number>).qux(0): string); // error
+
+import Export from './export';
+
+declare var a4: Export.A4;
+let _ = a4.foo();

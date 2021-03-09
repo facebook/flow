@@ -31,6 +31,7 @@ let tests =
          "pattern" >::: Pattern_test.tests;
          "program" >::: Program_test.tests;
          "jsx" >::: Jsx_test.tests;
+         "trailing_commas" >::: Trailing_commas_test.tests;
          ( "unary_plus_binary" >:: fun ctxt ->
            let x = E.identifier "x" in
            let y = E.identifier "y" in
@@ -58,12 +59,12 @@ let tests =
            assert_expression ~ctxt "x+(+y+y)" ast;
 
            (* `*` is higher precedence than `+`, so would not normally need parens if
-         not for the `+y` *)
+              not for the `+y` *)
            let ast = E.plus x (E.mult plus_y y) in
            assert_expression ~ctxt "x+(+y)*y" ast;
 
            (* parens are necessary around the inner `+y+y`, but would be reundant
-         around the multiplication. that is, we don't need `x+((+y+y)*y)`. *)
+              around the multiplication. that is, we don't need `x+((+y+y)*y)`. *)
            let ast = E.plus x (E.mult (E.plus plus_y y) y) in
            assert_expression ~ctxt "x+(+y+y)*y" ast );
          ( "update_plus_binary" >:: fun ctxt ->
@@ -1135,41 +1136,6 @@ let tests =
              ~ctxt
              ~pretty:true
              ("[\n  a,\n  " ^ String.make 80 'b' ^ ",\n  ,\n]") );
-         ( "array_with_trailing_comma" >:: fun ctxt ->
-           let a80 = String.make 80 'a' in
-           let layout =
-             Js_layout_generator.expression
-               ~opts
-               (E.array
-                  [E.array_expression (E.identifier a80); E.array_expression (E.identifier a80)])
-           in
-           assert_layout
-             ~ctxt
-             L.(
-               loc
-                 (group
-                    [
-                      atom "[";
-                      indent
-                        (fused
-                           [
-                             softline;
-                             loc (id a80);
-                             atom ",";
-                             pretty_line;
-                             loc (id a80);
-                             Layout.IfBreak (atom ",", empty);
-                           ]);
-                      softline;
-                      atom "]";
-                    ]))
-             layout;
-           assert_output ~ctxt ("[" ^ a80 ^ "," ^ a80 ^ "]") layout;
-           assert_output
-             ~ctxt
-             ~pretty:true
-             ("[\n" ^ "  " ^ a80 ^ ",\n" ^ "  " ^ a80 ^ ",\n" ^ "]")
-             layout );
          ( "array_with_trailing_hole" >:: fun ctxt ->
            let layout =
              Js_layout_generator.expression
@@ -1756,8 +1722,8 @@ let tests =
              ("export * as " ^ String.make 80 'a' ^ " from \"a\";");
            assert_statement_string ~ctxt ~pretty:true "export opaque type a = b;" )
          (* TODO: Flow does not parse this but should
-      assert_statement_string ~ctxt "export a,{b}from'a';";
-      assert_statement_string ~ctxt "export*as foo,{bar}from'a';"; *);
+            assert_statement_string ~ctxt "export a,{b}from'a';";
+            assert_statement_string ~ctxt "export*as foo,{bar}from'a';"; *);
          ( "default_export_declaration_statement" >:: fun ctxt ->
            assert_statement_string ~ctxt "export default a;";
            assert_statement_string ~ctxt "export default a=b;";
@@ -2202,6 +2168,20 @@ let tests =
            in
            assert_output ~ctxt "with(x);" layout;
            assert_output ~ctxt ~pretty:true "with (x);" layout );
+         ( "indexed_access" >:: fun ctxt ->
+           let open Flow_ast.Type in
+           let layout =
+             Js_layout_generator.type_
+               ~opts
+               ( Loc.none,
+                 IndexedAccess
+                   {
+                     IndexedAccess._object = Ast_builder.Types.unqualified_generic "T";
+                     index = Ast_builder.Types.unqualified_generic "K";
+                     comments = None;
+                   } )
+           in
+           assert_output ~ctxt "T[K]" layout );
          ( "enum_of_boolean" >:: fun ctxt ->
            S.EnumDeclarations.(
              let layout ~explicit_type =

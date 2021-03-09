@@ -223,10 +223,11 @@ struct
 
   class ssa_builder =
     object (this)
-      inherit scope_builder as super
+      (* TODO: with_types should probably be false, but this maintains previous behavior *)
+      inherit scope_builder ~with_types:true as super
 
       (* We maintain a map of read locations to raw Val.t terms, which are
-       simplified to lists of write locations once the analysis is done. *)
+         simplified to lists of write locations once the analysis is done. *)
       val mutable values : Val.t L.LMap.t = L.LMap.empty
 
       method values : Ssa_api.values = L.LMap.map Val.simplify values
@@ -239,16 +240,16 @@ struct
 
       (* Utils to manipulate single-static-assignment (SSA) environments.
 
-       TODO: These low-level operations should probably be replaced by
-       higher-level "control-flow-graph" operations that can be implemented using
-       them, e.g., those that deal with branches and loops. *)
+         TODO: These low-level operations should probably be replaced by
+         higher-level "control-flow-graph" operations that can be implemented using
+         them, e.g., those that deal with branches and loops. *)
       val mutable ssa_env : ssa SMap.t = SMap.empty
 
       method ssa_env : Env.t = SMap.map (fun { val_ref; _ } -> !val_ref) ssa_env
 
       method merge_remote_ssa_env (env : Env.t) : unit =
         (* NOTE: env might have more keys than ssa_env, since the environment it
-         describes might be nested inside the current environment *)
+           describes might be nested inside the current environment *)
         SMap.iter (fun x { val_ref; _ } -> val_ref := Val.merge !val_ref (SMap.find x env)) ssa_env
 
       method merge_ssa_env (env1 : Env.t) (env2 : Env.t) : unit =
@@ -284,10 +285,10 @@ struct
         SMap.iter
           (fun _x { val_ref; havoc } ->
             (* NOTE: havoc_env should already have all writes to x, so the only
-           additional thing that could come from ssa_env is "uninitialized." On
-           the other hand, we *dont* want to include "uninitialized" if it's no
-           longer in ssa_env, since that means that x has been initialized (and
-           there's no going back). *)
+               additional thing that could come from ssa_env is "uninitialized." On
+               the other hand, we *dont* want to include "uninitialized" if it's no
+               longer in ssa_env, since that means that x has been initialized (and
+               there's no going back). *)
             val_ref := Val.merge !val_ref havoc.Havoc.unresolved)
           ssa_env
 
@@ -328,7 +329,7 @@ struct
           node
 
       (* Run some computation, catching any abrupt completions; do some final work,
-       and then re-raise any abrupt completions that were caught. *)
+         and then re-raise any abrupt completions that were caught. *)
       method run f ~finally =
         let completion_state = this#run_to_completion f in
         finally ();
@@ -346,20 +347,20 @@ struct
         | Some abrupt_completion -> raise (AbruptCompletion.Exn abrupt_completion)
 
       (* When an abrupt completion is raised, it falls through any subsequent
-       straight-line code, until it reaches a merge point in the control-flow
-       graph. At that point, it can be re-raised if and only if all other reaching
-       control-flow paths also raise the same abrupt completion.
+         straight-line code, until it reaches a merge point in the control-flow
+         graph. At that point, it can be re-raised if and only if all other reaching
+         control-flow paths also raise the same abrupt completion.
 
-       When re-raising is not possible, we have to save the abrupt completion and
-       the current environment in a list, so that we can merge such environments
-       later (when that abrupt completion and others like it are handled).
+         When re-raising is not possible, we have to save the abrupt completion and
+         the current environment in a list, so that we can merge such environments
+         later (when that abrupt completion and others like it are handled).
 
-       Even when raising is possible, we still have to save the current
-       environment, since the current environment will have to be cleared to model
-       that the current values of all variables are unreachable.
+         Even when raising is possible, we still have to save the current
+         environment, since the current environment will have to be cleared to model
+         that the current values of all variables are unreachable.
 
-       NOTE that raising is purely an optimization: we can have more precise
-       results with raising, but even if we never raised we'd still be sound. *)
+         NOTE that raising is purely an optimization: we can have more precise
+         results with raising, but even if we never raised we'd still be sound. *)
       val mutable abrupt_completion_envs : AbruptCompletion.env list = []
 
       method raise_abrupt_completion : 'a. AbruptCompletion.t -> 'a =
@@ -376,7 +377,7 @@ struct
             abrupt_completion_envs <- List.rev_append saved abrupt_completion_envs)
 
       (* Given multiple completion states, (re)raise if all of them are the same
-       abrupt completion. This function is called at merge points. *)
+         abrupt completion. This function is called at merge points. *)
       method merge_completion_states (hd_completion_state, tl_completion_states) =
         match hd_completion_state with
         | None -> ()
@@ -391,9 +392,9 @@ struct
             raise (AbruptCompletion.Exn abrupt_completion)
 
       (* Given a filter for particular abrupt completions to expect, find the saved
-       environments corresponding to them, and merge those environments with the
-       current environment. This function is called when exiting ASTs that
-       introduce (and therefore expect) particular abrupt completions. *)
+         environments corresponding to them, and merge those environments with the
+         current environment. This function is called when exiting ASTs that
+         introduce (and therefore expect) particular abrupt completions. *)
       method commit_abrupt_completion_matching filter completion_state =
         let (matching, non_matching) =
           List.partition
@@ -410,12 +411,12 @@ struct
           | _ -> ()
 
       (* Track the list of labels that might describe a loop. Used to detect which
-       labeled continues need to be handled by the loop.
+         labeled continues need to be handled by the loop.
 
-       The idea is that a labeled statement adds its label to the list before
-       entering its child, and if the child is not a loop or another labeled
-       statement, the list will be cleared. A loop will consume the list, so we
-       also clear the list on our way out of any labeled statement. *)
+         The idea is that a labeled statement adds its label to the list before
+         entering its child, and if the child is not a loop or another labeled
+         statement, the list will be cleared. A loop will consume the list, so we
+         also clear the list on our way out of any labeled statement. *)
       val mutable possible_labeled_continues = []
 
       (* write *)
@@ -549,10 +550,10 @@ struct
       (** Control flow **)
 
       (** We describe the effect on the environment of evaluating node n using Hoare
-        triples of the form [PRE] n [POST], where PRE is the environment before
-        and POST is the environment after the evaluation of node n. Environments
-        must be joined whenever a node is reachable from multiple nodes, as can
-        happen after a branch or before a loop. **)
+          triples of the form [PRE] n [POST], where PRE is the environment before
+          and POST is the environment after the evaluation of node n. Environments
+          must be joined whenever a node is reachable from multiple nodes, as can
+          happen after a branch or before a loop. **)
 
       (******************************************)
       (* [PRE] if (e) { s1 } else { s2 } [POST] *)
@@ -968,9 +969,9 @@ struct
               match handler with
               | Some (loc, clause) ->
                 (* NOTE: Havoc-ing the state when entering the handler is probably
-               overkill. We can be more precise but still correct by collecting all
-               possible writes in the try-block and merging them with the state when
-               entering the try-block. *)
+                   overkill. We can be more precise but still correct by collecting all
+                   possible writes in the try-block and merging them with the state when
+                   entering the try-block. *)
                 this#havoc_current_ssa_env;
                 let catch_completion_state =
                   this#run_to_completion (fun () -> ignore @@ this#catch_clause loc clause)
@@ -989,10 +990,10 @@ struct
               match finalizer with
               | Some (_loc, block) ->
                 (* NOTE: Havoc-ing the state when entering the finalizer is probably
-               overkill. We can be more precise but still correct by collecting
-               all possible writes in the handler and merging them with the state
-               when entering the handler (which in turn should already account for
-               any contributions by the try-block). *)
+                   overkill. We can be more precise but still correct by collecting
+                   all possible writes in the handler and merging them with the state
+                   when entering the handler (which in turn should already account for
+                   any contributions by the try-block). *)
                 this#havoc_current_ssa_env;
                 ignore @@ this#block loc block
               | None -> ()
@@ -1037,11 +1038,8 @@ struct
                   completion_state)
               ~finally:(fun () -> this#reset_ssa_env env))
 
-      method! call _loc (expr : (L.t, L.t) Ast.Expression.Call.t) =
-        let open Ast.Expression.Call in
-        let { callee; targs = _; arguments; comments = _ } = expr in
-        ignore @@ this#expression callee;
-        ignore @@ this#call_arguments arguments;
+      method! call loc (expr : (L.t, L.t) Ast.Expression.Call.t) =
+        ignore @@ super#call loc expr;
         this#havoc_current_ssa_env;
         expr
 
@@ -1053,8 +1051,24 @@ struct
         this#havoc_current_ssa_env;
         expr
 
+      method! unary_expression _loc (expr : (L.t, L.t) Ast.Expression.Unary.t) =
+        Ast.Expression.Unary.(
+          let { argument; operator; comments = _ } = expr in
+          ignore @@ this#expression argument;
+          begin
+            match operator with
+            | Await -> this#havoc_current_ssa_env
+            | _ -> ()
+          end;
+          expr)
+
+      method! yield loc (expr : ('loc, 'loc) Ast.Expression.Yield.t) =
+        ignore @@ super#yield loc expr;
+        this#havoc_current_ssa_env;
+        expr
+
       (* Labeled statements handle labeled breaks, but also push labeled continues
-       that are expected to be handled by immediately nested loops. *)
+         that are expected to be handled by immediately nested loops. *)
       method! labeled_statement _loc (stmt : (L.t, L.t) Ast.Statement.Labeled.t) =
         this#expecting_abrupt_completions (fun () ->
             let open Ast.Statement.Labeled in
@@ -1086,7 +1100,7 @@ struct
         super#statement stmt
 
       (* Function declarations are hoisted to the top of a block, so that they may be considered
-       initialized before they are read. *)
+         initialized before they are read. *)
       method! statement_list (stmts : (L.t, L.t) Ast.Statement.t list) =
         let open Ast.Statement in
         let (function_decls, other_stmts) =
@@ -1107,7 +1121,8 @@ struct
       if ignore_toplevel then
         Bindings.empty
       else
-        let hoist = new hoister in
+        (* TODO: with_types should probably be false, but this maintains previous behavior *)
+        let hoist = new hoister ~with_types:true in
         hoist#eval hoist#program program
     in
     ignore @@ ssa_walk#with_bindings loc bindings ssa_walk#program program;

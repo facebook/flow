@@ -91,6 +91,9 @@ let pos_compare (p1 : position) (p2 : position) : int =
   else
     p1.character - p2.character
 
+let ranges_overlap (a : range) (b : range) =
+  not (pos_compare a.end_ b.start < 0 || pos_compare a.start b.end_ > 0)
+
 (* Given a "selection" range A..B and a "squiggle" range a..b, how do they overlap?
  * There are 12 ways to order the four letters ABab, of which six
  * satisfy both A<=B and a<=b. Here they are. *)
@@ -263,6 +266,9 @@ let supports_codeActionKinds (p : Lsp.Initialize.params) : CodeActionKind.t list
   match p.client_capabilities.textDocument.codeAction.codeActionLiteralSupport with
   | Some { CodeActionLiteralSupport.valueSet } -> valueSet
   | None -> []
+
+let supports_configuration (p : Lsp.Initialize.params) : bool =
+  Lsp.Initialize.(p.client_capabilities.workspace.configuration)
 
 let supports_status (p : Lsp.Initialize.params) : bool =
   Lsp.Initialize.(p.client_capabilities.window.status)

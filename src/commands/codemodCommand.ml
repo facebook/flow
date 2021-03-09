@@ -55,13 +55,14 @@ let main (module Runnable : Codemod_runner.RUNNABLE) codemod_flags () =
         let msg = Utils_js.spf "Invalid root directory %s" provided_root in
         FlowExitStatus.(exit ~msg Could_not_find_flowconfig)
   in
-  let flowconfig =
-    CommandUtils.read_config_or_exit (Server_files_js.config_file flowconfig_name root)
+  let (flowconfig, flowconfig_hash) =
+    CommandUtils.read_config_and_hash_or_exit (Server_files_js.config_file flowconfig_name root)
   in
   let shared_mem_config = CommandUtils.shm_config shm_flags flowconfig in
   let options =
     CommandUtils.make_options
       ~flowconfig_name
+      ~flowconfig_hash
       ~flowconfig
       ~lazy_mode:(Some Options.LAZY_MODE_FILESYSTEM)
       ~root
@@ -149,12 +150,60 @@ module Annotate_exports_command = struct
   let command = CommandSpec.command spec main
 end
 
+module Annotate_escaped_generics = struct
+  let doc = "Annotates parts of input that receive out-of-scope generics as inferred types."
+
+  let spec =
+    let module Literals = Codemod_hardcoded_ty_fixes.PreserveLiterals in
+    let preserve_string_literals_level =
+      Literals.[("always", Always); ("never", Never); ("auto", Auto)]
+    in
+    {
+      CommandSpec.name = "annotate-escaped-generics";
+      doc;
+      usage =
+        Printf.sprintf
+          "Usage: %s codemod annotate-escaped-generics [OPTION]... [FILE]\n\n%s\n"
+          Utils_js.exe_name
+          doc;
+      args =
+        CommandSpec.ArgSpec.(
+          empty
+          |> CommandUtils.codemod_flags
+          |> flag
+               "--preserve-literals"
+               (required ~default:Literals.Auto (enum preserve_string_literals_level))
+               ~doc:""
+          |> flag
+               "--max-type-size"
+               (required ~default:100 int)
+               ~doc:"The maximum number of nodes allows in a single type annotation (default: 100)"
+          |> flag
+               "--default-any"
+               no_arg
+               ~doc:"Adds 'any' to all locations where normalization or validation fails");
+    }
+
+  let main codemod_flags preserve_literals max_type_size default_any () =
+    let module Runner = Codemod_runner.MakeSimpleTypedRunner (struct
+      include Annotate_escaped_generics
+
+      let visit = visit ~default_any ~preserve_literals ~max_type_size
+    end) in
+    main (module Runner) codemod_flags ()
+
+  let command = CommandSpec.command spec main
+end
+
 let command =
   let main (cmd, argv) () = CommandUtils.run_command cmd argv in
   let spec =
     CommandUtils.subcommand_spec
       ~name:"codemod"
       ~doc:"Runs large-scale codebase refactors"
-      [(Annotate_exports_command.spec.CommandSpec.name, Annotate_exports_command.command)]
+      [
+        (Annotate_exports_command.spec.CommandSpec.name, Annotate_exports_command.command);
+        (Annotate_escaped_generics.spec.CommandSpec.name, Annotate_escaped_generics.command);
+      ]
   in
   CommandSpec.command spec main

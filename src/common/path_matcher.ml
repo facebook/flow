@@ -25,7 +25,7 @@ let stems matcher = matcher.stems
 
 (* given a path, return the max prefix not containing a wildcard
    or a terminal filename.
- *)
+*)
 let path_stem =
   let wc = Str.regexp "^[^*?]*[*?]" in
   fun path ->

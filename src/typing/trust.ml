@@ -40,7 +40,7 @@
 
    ** trust_rep **
    In principle, we'd love to define the `trust_rep` type as such:
-     type trust_rep = Qualifier of trust_qualifier | Inferred of ident
+     type trust_rep = QualifiedTrust of trust_qualifier | InferredTrust of ident
    but such a representation in every DefT would cause a pretty huge memory
    overhead. Instead, we use a bitwise representation: a trust_rep value is a
    63bit int with the layout
@@ -65,7 +65,7 @@
      from_qualifier,
      from_ident: convert from trust_qualifier or ident to trust_rep
      expand: convert from a trust_rep into the expanded trust_qualifier representation as
-              above (qualifier of trust_qualifier | Inferred of ident)
+              above (qualifier of trust_qualifier | InferredTrust of ident)
      compress: convert from the expanded representation into the compact one.
 
    ** trust_qualifier **
@@ -112,11 +112,11 @@
     * Static = (Top, Top) = T </ any, any </ T
         Static things are entirely unrelated to any--as far as they're concerned,
         they exist in a wholly statically typed language, without any.
-    * Inferred = (Unk, Unk)
+    * InferredTrust = (Unk, Unk)
         For when trust_qualifier is unknown and we're trying to infer, or if we just don't care.
    For a formal treatment of these ideas, see Avik Chaudhuri's manuscript
    "Safe Types in Untyped Contexts" (to appear)
- *)
+*)
 let mask b = (1 lsl b) - 1
 
 type ident = int
@@ -257,8 +257,8 @@ end
 include TrustRepresentation
 
 type expanded_trust =
-  | Qualifier of trust_qualifier
-  | Inferred of ident
+  | QualifiedTrust of trust_qualifier
+  | InferredTrust of ident
 
 let dynamic = make_trust bot bot
 
@@ -284,14 +284,14 @@ let bad_trust_rep n = fail_trust "invalid trust_qualifier representation: %d" n
 
 let expand n =
   if is_ident n then
-    Inferred (untag_ident n)
+    InferredTrust (untag_ident n)
   else
-    Qualifier (untag_qualifier n)
+    QualifiedTrust (untag_qualifier n)
 
 let compress x =
   match x with
-  | Inferred n -> tag_ident n
-  | Qualifier trust_qualifier -> tag_qualifier trust_qualifier
+  | InferredTrust n -> tag_ident n
+  | QualifiedTrust trust_qualifier -> tag_qualifier trust_qualifier
 
 let as_qualifier n =
   if is_qualifier n then

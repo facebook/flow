@@ -14,11 +14,13 @@ let hint_missing_annotation cx reason = function
   | Ast.Type.Missing _ -> add_missing_annotation_error cx reason
   | Ast.Type.Available _ -> ()
 
-let require_annot_on_pattern cx pattern_reason pattern =
-  if Context.enforce_local_inference_annotations cx then
+let require_annot_on_pattern cx ~annot pattern_reason pattern =
+  match annot with
+  | None when Context.enforce_local_inference_annotations cx ->
     let open Ast.Pattern in
-    match pattern with
+    (match pattern with
     | Object { Object.annot; _ } -> hint_missing_annotation cx pattern_reason annot
     | Array { Array.annot; _ } -> hint_missing_annotation cx pattern_reason annot
     | Identifier { Identifier.annot; _ } -> hint_missing_annotation cx pattern_reason annot
-    | Expression _ -> add_missing_annotation_error cx pattern_reason
+    | Expression _ -> add_missing_annotation_error cx pattern_reason)
+  | _ -> ()

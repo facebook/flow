@@ -164,8 +164,8 @@ let tests =
                  [Concat [Atom a40; IfBreak (Empty, Atom " "); Atom a40]; Atom a40] )
            in
            (* same as above. the Concat would be 81 chars if it doesn't break, which causes the parent
-         Sequence to break, so the IfBreak takes the "break" case instead, and there's a NL between
-         the Concat and last Atom. *)
+              Sequence to break, so the IfBreak takes the "break" case instead, and there's a NL between
+              the Concat and last Atom. *)
            assert_pretty_print ~ctxt (a40 ^ a40 ^ "\n" ^ a40) layout );
          ( "break_if_needed_sequence_inside_concat" >:: fun ctxt ->
            let a80 = String.make 80 'A' in

@@ -1,0 +1,37 @@
+Error ------------------------------------------------------------------------------------------------ recursive.js:15:2
+
+Cannot cast function to `Value` because function [1] is incompatible with indexed `Aggregate` [2]. [incompatible-cast]
+
+   recursive.js:15:2
+   15| (() => {}: Value);
+        ^^^^^^^^ [1]
+
+References:
+   recursive.js:8:5
+    8|   | Aggregate 
+           ^^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------------ test.js:4:2
+
+Cannot cast `f` to object type because function [1] is incompatible with indexed object type [2].
+[incompatible-function-indexer]
+
+   test.js:4:2
+   4| (f: {[string]: string});
+       ^
+
+References:
+   test.js:3:1
+   3| function f() {}
+      ^^^^^^^^^^^^ [1]
+   test.js:4:5
+   4| (f: {[string]: string});
+          ^^^^^^^^^^^^^^^^^^ [2]
+
+
+
+Found 2 errors
+
+Only showing the most relevant union/intersection branches.
+To see all branches, re-run Flow with --show-all-branches

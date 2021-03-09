@@ -195,7 +195,7 @@ obj['n'](0)
 object-2.js
 // @flow
 
-function foo(x: {|l: () => void, m: () => number, n: () => number|}): void {}
+function foo(x: {|l: () => void, m(): number, n: () => number|}): void {}
 
 foo({
   m(): number { return 1; },
@@ -234,8 +234,8 @@ type D = { g: O; }
 (): {|w: O, x: O, y: O, z: O|} => { declare var x: {|w: O, ...{| x: O, y: O |}, z: O|}; return x; };
 (): {f: O, o: O,...} => { declare var x: {...C, o: O}; return x; };
 (): {...C,...} & {...D,...} => { declare var x: {...C} & {...D}; return x; };
-<T: {}, S: { f: O}>(): T | S | {f: O, o: O,...} => { declare var x: {...T, ...S, o: O}; return x; };
-<T: {}>(): T | {o: O,...} => { declare var x: {...T, o: O}; return x; };
+<T: {}, S: { f: O}>(): {f: O, o: O,...} => { declare var x: {...T, ...S, o: O}; return x; };
+<T: {}>(): {o: O,...} => { declare var x: {...T, o: O}; return x; };
 string-literal.js
 // @flow
 

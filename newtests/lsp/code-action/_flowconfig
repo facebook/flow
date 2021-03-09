@@ -1,5 +1,3 @@
 [options]
-types_first=true
-well_formed_exports=true
 experimental.enums=true
 all=true

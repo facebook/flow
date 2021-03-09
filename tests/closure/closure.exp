@@ -1,15 +1,15 @@
-Error ------------------------------------------------------------------------------------------------- Closure.js:20:14
+Error ------------------------------------------------------------------------------------------------- Closure.js:17:14
 
 Cannot call `takes_string` with `global_x` bound to `_` because number [1] is incompatible with string [2].
 [incompatible-call]
 
-   Closure.js:20:14
-   20| takes_string(global_x); // error
+   Closure.js:17:14
+   17| takes_string(global_x); // error (can't distinguish between calls to global_f and global_g)
                     ^^^^^^^^
 
 References:
    Closure.js:14:34
-   14| function global_g() { global_x = 42; }
+   14| function global_g() { global_x = 42; } // blame
                                         ^^ [1]
    Closure.js:6:25
     6| function takes_string(_:string) { }
@@ -22,13 +22,31 @@ Cannot call `takes_string` with `global_x` bound to `_` because number [1] is in
 [incompatible-call]
 
    Closure.js:20:14
-   20| takes_string(global_x); // error
+   20| takes_string(global_x);
                     ^^^^^^^^
 
 References:
-   Closure.js:22:12
-   22| global_x = 42;  // shouldn't pollute linear refinement
-                  ^^ [1]
+   Closure.js:14:34
+   14| function global_g() { global_x = 42; } // blame
+                                        ^^ [1]
+   Closure.js:6:25
+    6| function takes_string(_:string) { }
+                               ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- Closure.js:35:16
+
+Cannot call `takes_string` with `local_x` bound to `_` because number [1] is incompatible with string [2].
+[incompatible-call]
+
+   Closure.js:35:16
+   35|   takes_string(local_x); // error (can't distinguish between calls to local_f and local_g)
+                      ^^^^^^^
+
+References:
+   Closure.js:32:34
+   32|   function local_g() { local_x = 42; } // blame
+                                        ^^ [1]
    Closure.js:6:25
     6| function takes_string(_:string) { }
                                ^^^^^^ [2]
@@ -45,43 +63,25 @@ Cannot call `takes_string` with `local_x` bound to `_` because number [1] is inc
 
 References:
    Closure.js:32:34
-   32|   function local_g() { local_x = 42; }
+   32|   function local_g() { local_x = 42; } // blame
                                         ^^ [1]
    Closure.js:6:25
     6| function takes_string(_:string) { }
                                ^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------- Closure.js:38:16
-
-Cannot call `takes_string` with `local_x` bound to `_` because number [1] is incompatible with string [2].
-[incompatible-call]
-
-   Closure.js:38:16
-   38|   takes_string(local_x); // error
-                      ^^^^^^^
-
-References:
-   Closure.js:40:13
-   40|   local_x = 42;  // shouldn't pollute linear refinement
-                   ^^ [1]
-   Closure.js:6:25
-    6| function takes_string(_:string) { }
-                               ^^^^^^ [2]
-
-
-Error ------------------------------------------------------------------------------------------------- Closure.js:57:14
+Error ------------------------------------------------------------------------------------------------- Closure.js:54:14
 
 Cannot call `takes_string` with `global_y` bound to `_` because number [1] is incompatible with string [2].
 [incompatible-call]
 
-   Closure.js:57:14
-   57| takes_string(global_y); // error
+   Closure.js:54:14
+   54| takes_string(global_y); // error (can't distinguish between calls to global_o.f and global_o.g)
                     ^^^^^^^^
 
 References:
    Closure.js:50:30
-   50|   g: function() { global_y = 42; }
+   50|   g: function() { global_y = 42; } // blame
                                     ^^ [1]
    Closure.js:6:25
     6| function takes_string(_:string) { }
@@ -98,26 +98,26 @@ Cannot call `takes_string` with `global_y` bound to `_` because number [1] is in
                     ^^^^^^^^
 
 References:
-   Closure.js:59:12
-   59| global_y = 42;  // shouldn't pollute linear refinement
-                  ^^ [1]
+   Closure.js:50:30
+   50|   g: function() { global_y = 42; } // blame
+                                    ^^ [1]
    Closure.js:6:25
     6| function takes_string(_:string) { }
                                ^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------- Closure.js:77:16
+Error ------------------------------------------------------------------------------------------------- Closure.js:74:16
 
 Cannot call `takes_string` with `local_y` bound to `_` because number [1] is incompatible with string [2].
 [incompatible-call]
 
-   Closure.js:77:16
-   77|   takes_string(local_y); // error
+   Closure.js:74:16
+   74|   takes_string(local_y); // error (can't distinguish between calls to local_o.f and local_o.g)
                       ^^^^^^^
 
 References:
    Closure.js:70:31
-   70|     g: function() { local_y = 42; }
+   70|     g: function() { local_y = 42; } // blame
                                      ^^ [1]
    Closure.js:6:25
     6| function takes_string(_:string) { }
@@ -134,9 +134,9 @@ Cannot call `takes_string` with `local_y` bound to `_` because number [1] is inc
                       ^^^^^^^
 
 References:
-   Closure.js:79:13
-   79|   local_y = 42;  // shouldn't pollute linear refinement
-                   ^^ [1]
+   Closure.js:70:31
+   70|     g: function() { local_y = 42; } // blame
+                                     ^^ [1]
    Closure.js:6:25
     6| function takes_string(_:string) { }
                                ^^^^^^ [2]

@@ -6,6 +6,7 @@
  *)
 
 open Utils_js
+open Loc_collections
 
 let mk_id = Reason.mk_id
 
@@ -15,7 +16,7 @@ let mk_id = Reason.mk_id
 
 (* these are basically owned by Env, but are here
    to break circularity between Env and Flow_js
- *)
+*)
 
 (* entry state *)
 module State = struct
@@ -48,8 +49,8 @@ module Entry = struct
     (* Some let bindings are explicit (like you wrote let x = 123) and some
      * are implicit (like class declarations). For implicit lets, we should
      * track why this is a let binding for better error messages *)
-    | Let of let_binding_kind
-    | Var of var_binding_kind
+    | Let of (let_binding_kind * non_const_specialization)
+    | Var of non_const_specialization
 
   and const_binding_kind =
     | ConstImportBinding
@@ -59,34 +60,30 @@ module Entry = struct
 
   and let_binding_kind =
     | LetVarBinding
-    | ConstlikeLetVarBinding
     | ClassNameBinding
     | CatchParamBinding
     | FunctionBinding
     | ParamBinding
-    | ConstlikeParamBinding
 
-  and var_binding_kind =
-    | VarBinding
-    | ConstlikeVarBinding
+  and non_const_specialization =
+    | Havocable
+    | NotWrittenByClosure
+    | ConstLike
 
   let string_of_let_binding_kind = function
     | LetVarBinding -> "let"
-    | ConstlikeLetVarBinding -> "let"
     | ClassNameBinding -> "class"
     | CatchParamBinding -> "catch"
     | FunctionBinding -> "function"
     | ParamBinding -> "param"
-    | ConstlikeParamBinding -> "param"
 
   let string_of_value_kind = function
     | Const ConstImportBinding -> "import"
     | Const ConstParamBinding -> "const param"
     | Const ConstVarBinding -> "const"
     | Const EnumNameBinding -> "enum"
-    | Let kind -> string_of_let_binding_kind kind
-    | Var VarBinding -> "var"
-    | Var ConstlikeVarBinding -> "var"
+    | Let (kind, _) -> string_of_let_binding_kind kind
+    | Var _ -> "var"
 
   type value_binding = {
     kind: value_kind;
@@ -96,7 +93,8 @@ module Entry = struct
     (* The last location (in this scope) where the entry value was assigned *)
     value_assign_loc: ALoc.t;
     specific: Type.t;
-    general: Type.t;
+    general: Type.annotated_or_inferred;
+    closure_writes: (ALocSet.t * Type.t) option;
   }
 
   type type_binding_kind =
@@ -119,7 +117,7 @@ module Entry = struct
   let new_class class_binding_id class_private_fields class_private_static_fields =
     Class { Type.class_binding_id; Type.class_private_fields; Type.class_private_static_fields }
 
-  let new_value kind state specific general value_declare_loc =
+  let new_value kind state specific ?closure_writes general value_declare_loc =
     Value
       {
         kind;
@@ -128,23 +126,29 @@ module Entry = struct
         value_assign_loc = value_declare_loc;
         specific;
         general;
+        closure_writes;
       }
 
-  let new_const ~loc ?(state = State.Undeclared) ?(kind = ConstVarBinding) t =
-    new_value (Const kind) state t t loc
+  let new_const ~loc ?(state = State.Undeclared) ?(kind = ConstVarBinding) general =
+    let specific = TypeUtil.type_t_of_annotated_or_inferred general in
+    new_value (Const kind) state specific general loc
 
-  let new_import ~loc t = new_value (Const ConstImportBinding) State.Initialized t t loc
+  let new_import ~loc t =
+    new_value (Const ConstImportBinding) State.Initialized t (Type.Inferred t) loc
 
-  let new_let ~loc ?(state = State.Undeclared) ?(kind = LetVarBinding) t =
-    new_value (Let kind) state t t loc
+  let new_let
+      ~loc ?(state = State.Undeclared) ?(kind = (LetVarBinding, Havocable)) ?closure_writes general
+      =
+    let specific = TypeUtil.type_t_of_annotated_or_inferred general in
+    new_value (Let kind) state specific ?closure_writes general loc
 
-  let new_var ~loc ?(state = State.Undeclared) ?(kind = VarBinding) ?specific general =
+  let new_var ~loc ?(state = State.Undeclared) ?specific ?closure_writes general =
     let specific =
       match specific with
       | Some t -> t
-      | None -> general
+      | None -> TypeUtil.type_t_of_annotated_or_inferred general
     in
-    new_value (Var kind) state specific general loc
+    new_value (Var Havocable) state specific ?closure_writes general loc
 
   let new_type_ type_binding_kind state loc type_ =
     Type { type_binding_kind; type_state = state; type_loc = loc; type_ }
@@ -165,7 +169,7 @@ module Entry = struct
     | Class _ -> ALoc.none
 
   let declared_type = function
-    | Value v -> v.general
+    | Value v -> TypeUtil.type_t_of_annotated_or_inferred v.general
     | Type t -> t.type_
     | Class _ -> assert_false "Internal Error: Class bindings have no type"
 
@@ -181,7 +185,8 @@ module Entry = struct
 
   let kind_of_value (value : value_binding) = value.kind
 
-  let general_of_value (value : value_binding) = value.general
+  let general_of_value (value : value_binding) =
+    TypeUtil.type_t_of_annotated_or_inferred value.general
 
   let state_of_value (value : value_binding) = value.value_state
 
@@ -189,25 +194,34 @@ module Entry = struct
       with general type for non-internal, non-Const value entries. Types, consts
       and internal vars are read-only, so specific types can be preserved.
       TODO: value_state should go from Declared to MaybeInitialized?
-    *)
-  let havoc name entry =
+   *)
+  let havoc ?on_call name entry =
     match entry with
     | Type _ -> entry
-    | Value ({ kind = Const _; specific = Type.DefT (_, _, Type.EmptyT _); _ } as v) ->
+    | Value ({ kind = Const _; specific = Type.DefT (_, _, Type.EmptyT); _ } as v) ->
       (* cleared consts: see note on Env.reset_current_activation *)
       if Reason.is_internal_name name then
         entry
       else
-        Value { v with specific = v.general }
-    | Value { kind = Const _; _ } -> entry
-    | Value { kind = Var ConstlikeVarBinding; _ } -> entry
-    | Value { kind = Let ConstlikeLetVarBinding; _ } -> entry
-    | Value { kind = Let ConstlikeParamBinding; _ } -> entry
+        Value { v with specific = TypeUtil.type_t_of_annotated_or_inferred v.general }
+    | Value { kind = Const _; _ }
+    | Value { kind = Let (_, ConstLike); _ }
+    | Value { kind = Var ConstLike; _ } ->
+      entry
+    | Value { kind = Let (_, NotWrittenByClosure); _ }
+    | Value { kind = Var NotWrittenByClosure; _ }
+      when on_call <> None ->
+      entry
     | Value v ->
       if Reason.is_internal_name name then
         entry
-      else
-        Value { v with specific = v.general }
+      else (
+        match (on_call, v.closure_writes) with
+        | (Some widen_on_call, Some (_, t)) ->
+          let t = widen_on_call v.specific t (TypeUtil.type_t_of_annotated_or_inferred v.general) in
+          Value { v with specific = t }
+        | _ -> Value { v with specific = TypeUtil.type_t_of_annotated_or_inferred v.general }
+      )
     | Class _ -> entry
 
   let reset loc name entry =
@@ -285,7 +299,7 @@ type refi_binding = {
 type t = {
   id: int;
   kind: kind;
-  mutable entries: Entry.t SMap.t;
+  mutable entries: Entry.t NameUtils.Map.t;
   mutable refis: refi_binding Key_map.t;
   mutable declare_func_annots: (ALoc.t, ALoc.t * Type.t) Flow_ast.Type.annotation SMap.t;
 }
@@ -295,7 +309,7 @@ let fresh_impl kind =
   {
     id = mk_id ();
     kind;
-    entries = SMap.empty;
+    entries = NameUtils.Map.empty;
     refis = Key_map.empty;
     declare_func_annots = SMap.empty;
   }
@@ -308,38 +322,43 @@ let fresh_lex () = fresh_impl LexScope
 
 (* clone a scope: snapshot mutable entries.
    NOTE: tvars (OpenT) are essentially refs, and are shared by clones.
- *)
+*)
 let clone { id; kind; entries; refis; declare_func_annots } =
   { id; kind; entries; refis; declare_func_annots }
 
 (* use passed f to iterate over all scope entries *)
-let iter_entries f scope = SMap.iter f scope.entries
+let iter_entries f scope = NameUtils.Map.iter f scope.entries
 
 (* use passed f to update all scope entries *)
-let update_entries f scope = scope.entries <- SMap.mapi f scope.entries
+let update_entries f scope = scope.entries <- NameUtils.Map.mapi f scope.entries
 
 (* add entry to scope *)
-let add_entry name entry scope = scope.entries <- SMap.add name entry scope.entries
+let add_entry name entry scope = scope.entries <- NameUtils.Map.add name entry scope.entries
 
 (* remove entry from scope *)
-let remove_entry name scope = scope.entries <- SMap.remove name scope.entries
+let remove_entry name scope = scope.entries <- NameUtils.Map.remove name scope.entries
 
 (* get entry from scope, or None *)
-let get_entry name scope = SMap.find_opt name scope.entries
+let get_entry name scope = NameUtils.Map.find_opt name scope.entries
 
 (* havoc entry *)
 let havoc_entry name scope =
   match get_entry name scope with
   | Some entry ->
     let entry = Entry.havoc name entry in
-    scope.entries <- SMap.add name entry scope.entries
+    scope.entries <- NameUtils.Map.add name entry scope.entries
   | None ->
     assert_false
       (spf
          "entry %S not found in scope %d: { %s }"
-         name
+         (Reason.display_string_of_name name)
          scope.id
-         (String.concat ", " (SMap.fold (fun n _ acc -> n :: acc) scope.entries [])))
+         (String.concat
+            ", "
+            (NameUtils.Map.fold
+               (fun n _ acc -> Reason.display_string_of_name n :: acc)
+               scope.entries
+               [])))
 
 (* use passed f to update all scope refis *)
 let update_refis f scope = scope.refis <- Key_map.mapi f scope.refis
@@ -364,7 +383,7 @@ let filter_refis_using_propname ~private_ propname refis =
 (* havoc a scope's refinements:
    if name is passed, clear refis whose expressions involve it.
    otherwise, clear them all
- *)
+*)
 let havoc_refis ?name ~private_ scope =
   scope.refis <-
     (match name with
@@ -378,7 +397,7 @@ let havoc_all_refis ?name scope =
 (* havoc a scope:
    - clear all refinements
    - reset specific types of entries to their general types
- *)
+*)
 let havoc scope =
   havoc_all_refis scope;
   update_entries Entry.havoc scope

@@ -16,7 +16,16 @@ let prerr_endlinef fmt = Printf.ksprintf prerr_endline fmt
 let exe_name = Filename.basename Sys.executable_name
 
 module FilenameSet = Set.Make (File_key)
-module FilenameMap = WrappedMap.Make (File_key)
+
+module FilenameMap = struct
+  include WrappedMap.Make (File_key)
+
+  let pp : (Format.formatter -> 'a -> unit) -> Format.formatter -> 'a t -> unit =
+   (fun pp_data -> make_pp File_key.pp pp_data)
+
+  let show pp_data x = Format.asprintf "%a" (pp pp_data) x
+end
+
 module FilenameGraph = Graph.Make (FilenameSet) (FilenameMap)
 
 let debug_string_of_filename_set set =
@@ -202,7 +211,7 @@ let typo_suggestion possible_names name =
 (* util to limit the number of calls to a (usually recursive) function *)
 let count_calls ~counter ~default f =
   (* Count number of calls to a function f, decrementing at each call and
-      returning default when count reaches 0. **)
+     returning default when count reaches 0. **)
   if !counter = 0 then
     default
   else (

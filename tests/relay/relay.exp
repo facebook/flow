@@ -1,78 +1,78 @@
-Error -------------------------------------------------------------------------------------------------- Profile.js:19:6
+Error -------------------------------------------------------------------------------------------------- Profile.js:23:6
 
 Cannot cast `this.props.foo` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
 
-   Profile.js:19:6
-   19|     (this.props.foo: empty); // Error: number ~> empty
+   Profile.js:23:6
+   23|     (this.props.foo: empty); // Error: number ~> empty
             ^^^^^^^^^^^^^^
 
 References:
-   Profile.js:14:8
-   14|   foo: number,
+   Profile.js:18:8
+   18|   foo: number,
               ^^^^^^ [1]
-   Profile.js:19:22
-   19|     (this.props.foo: empty); // Error: number ~> empty
+   Profile.js:23:22
+   23|     (this.props.foo: empty); // Error: number ~> empty
                             ^^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------------------- Profile.js:20:6
+Error -------------------------------------------------------------------------------------------------- Profile.js:24:6
 
 Cannot cast `this.props.user.id` to empty because string [1] is incompatible with empty [2]. [incompatible-cast]
 
-   Profile.js:20:6
-   20|     (this.props.user.id: empty); // Error: string ~> empty
+   Profile.js:24:6
+   24|     (this.props.user.id: empty); // Error: string ~> empty
             ^^^^^^^^^^^^^^^^^^
 
 References:
    Profile.graphql.js:15:10
    15|     +id: string,
                 ^^^^^^ [1]
-   Profile.js:20:26
-   20|     (this.props.user.id: empty); // Error: string ~> empty
+   Profile.js:24:26
+   24|     (this.props.user.id: empty); // Error: string ~> empty
                                 ^^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------------------- Profile.js:21:6
+Error -------------------------------------------------------------------------------------------------- Profile.js:25:6
 
 Cannot cast `this.props.user.name` to empty because string [1] is incompatible with empty [2]. [incompatible-cast]
 
-   Profile.js:21:6
-   21|     (this.props.user.name: empty); // Error: string ~> empty
+   Profile.js:25:6
+   25|     (this.props.user.name: empty); // Error: string ~> empty
             ^^^^^^^^^^^^^^^^^^^^
 
 References:
    Profile.graphql.js:16:12
    16|     +name: string,
                   ^^^^^^ [1]
-   Profile.js:21:28
-   21|     (this.props.user.name: empty); // Error: string ~> empty
+   Profile.js:25:28
+   25|     (this.props.user.name: empty); // Error: string ~> empty
                                   ^^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------------------- Profile.js:22:6
+Error -------------------------------------------------------------------------------------------------- Profile.js:26:6
 
 Cannot cast `this.props.user.pic.id` to empty because string [1] is incompatible with empty [2]. [incompatible-cast]
 
-   Profile.js:22:6
-   22|     (this.props.user.pic.id: empty); // Error: string ~> empty
+   Profile.js:26:6
+   26|     (this.props.user.pic.id: empty); // Error: string ~> empty
             ^^^^^^^^^^^^^^^^^^^^^^
 
 References:
    Profile.graphql.js:18:12
    18|       +id: string,
                   ^^^^^^ [1]
-   Profile.js:22:30
-   22|     (this.props.user.pic.id: empty); // Error: string ~> empty
+   Profile.js:26:30
+   26|     (this.props.user.pic.id: empty); // Error: string ~> empty
                                     ^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------- Profile.js:23:24
+Error ------------------------------------------------------------------------------------------------- Profile.js:27:24
 
 Cannot create `ProfilePic` element because object literal [1] is incompatible with `ProfilePic_imageRef` [2] in property
 `image`. [incompatible-type]
 
-   Profile.js:23:24
-   23|     <ProfilePic image={{url: 'https://facebook.com'}} />; // Error: object ~> opaque type
+   Profile.js:27:24
+   27|     <ProfilePic image={{url: 'https://facebook.com'}} />; // Error: object ~> opaque type
                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 References:
@@ -111,9 +111,9 @@ References:
    main.js:15:1
    15| <Profile user={userRef} />; // Error: Missing foo
        ^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   Relay.js:46:24
-   46| ): React.ComponentType<$ObjMap<Props, GetPropFragmentRef>> {
-                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+   Profile.js:40:3
+   40|   $ObjMap<Props, GetPropFragmentRef>,
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------------- main.js:16:2
@@ -129,9 +129,9 @@ References:
    main.js:16:1
    16| <Profile foo={42} />; // Error: Missing user
        ^^^^^^^^^^^^^^^^^^^^ [1]
-   Relay.js:46:24
-   46| ): React.ComponentType<$ObjMap<Props, GetPropFragmentRef>> {
-                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+   Profile.js:40:3
+   40|   $ObjMap<Props, GetPropFragmentRef>,
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- main.js:17:29
@@ -144,8 +144,8 @@ Cannot create `Profile` element because string [1] is incompatible with number [
                                    ^^^^^ [1]
 
 References:
-   Profile.js:14:8
-   14|   foo: number,
+   Profile.js:18:8
+   18|   foo: number,
               ^^^^^^ [2]
 
 
@@ -162,9 +162,9 @@ References:
    main.js:18:1
    18| <Profile />; // Error: Missing user and foo
        ^^^^^^^^^^^ [1]
-   Relay.js:46:24
-   46| ): React.ComponentType<$ObjMap<Props, GetPropFragmentRef>> {
-                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+   Profile.js:40:3
+   40|   $ObjMap<Props, GetPropFragmentRef>,
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------------- main.js:18:2
@@ -180,9 +180,9 @@ References:
    main.js:18:1
    18| <Profile />; // Error: Missing user and foo
        ^^^^^^^^^^^ [1]
-   Relay.js:46:24
-   46| ): React.ComponentType<$ObjMap<Props, GetPropFragmentRef>> {
-                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+   Profile.js:40:3
+   40|   $ObjMap<Props, GetPropFragmentRef>,
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- main.js:19:16
@@ -231,8 +231,8 @@ Cannot create `Profile` element because string [1] is incompatible with number [
                                 ^^^^^ [1]
 
 References:
-   Profile.js:14:8
-   14|   foo: number,
+   Profile.js:18:8
+   18|   foo: number,
               ^^^^^^ [2]
 
 
@@ -260,8 +260,8 @@ Cannot create `Profile` element because mixed [1] is incompatible with number [2
                                                  ^^^^^ [1]
 
 References:
-   Profile.js:14:8
-   14|   foo: number,
+   Profile.js:18:8
+   18|   foo: number,
               ^^^^^^ [2]
 
 

@@ -152,6 +152,8 @@ module Eval (Env : EvalEnv) = struct
     | (_, Function ft) -> function_type tps ft
     | (_, Object ot) -> object_type tps ot
     | (loc, Generic tr) -> type_ref tps (loc, tr)
+    | (_, IndexedAccess { IndexedAccess._object; index; _ }) ->
+      Deps.join (type_ tps _object, type_ tps index)
     | (_, Typeof { Typeof.argument = v; internal = _; comments = _ }) ->
       begin
         match v with
@@ -193,7 +195,8 @@ module Eval (Env : EvalEnv) = struct
       let deps =
         match this_ with
         | None -> deps
-        | Some (_, { ThisParam.annot; comments = _ }) -> Deps.join (deps, type_ tps annot)
+        | Some (_, { ThisParam.annot = (_, annot); comments = _ }) ->
+          Deps.join (deps, type_ tps annot)
       in
       Deps.join (deps, type_ tps return)
 
@@ -563,8 +566,8 @@ module Eval (Env : EvalEnv) = struct
     | Minus
     | Not ->
       (* TODO: These operations are evaluated by Flow; they may or may not have simple result
-           types. Ideally we'd be verifying the argument. Unfortunately, we don't (see below). The
-           generator does some basic constant evaluation to compensate, but it's not enough. *)
+         types. Ideally we'd be verifying the argument. Unfortunately, we don't (see below). The
+         generator does some basic constant evaluation to compensate, but it's not enough. *)
       ignore tps;
       ignore argument;
       Deps.bot
@@ -610,7 +613,8 @@ module Eval (Env : EvalEnv) = struct
   and function_rest_param tps (_, { Ast.Function.RestParam.argument; comments = _ }) =
     pattern tps argument
 
-  and function_this_param tps (_, (_, t)) = type_ tps t
+  and function_this_param tps (_, { Ast.Function.ThisParam.annot = (_, annot); comments = _ }) =
+    type_ tps annot
 
   and function_params tps params =
     let open Ast.Function in
@@ -720,7 +724,7 @@ module Eval (Env : EvalEnv) = struct
                 Ast.Expression.Object.Property.Identifier (_, { Ast.Identifier.name; comments = _ });
               _;
             } )
-        when (not Env.prevent_munge) && Signature_utils.is_munged_property_name name ->
+        when (not Env.prevent_munge) && Signature_utils.is_munged_property_string name ->
         Deps.bot
       | Body.Property
           ( _,

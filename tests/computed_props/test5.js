@@ -1,7 +1,8 @@
-var hello = require('./test4');
-var dummy = require('./test');
+const hello = require('./test4');
+const dummy = require('./test');
 module.exports = {
   ...dummy,
+  // TODO allow computed prop (T64194787)
   [hello]: 'world',
   ...dummy,
 };

@@ -20,7 +20,7 @@ let action_tvars cx =
       | _ -> acc
     in
     function
-    | FlowAction ((AnyT _ | DefT (_, _, EmptyT _)), _)
+    | FlowAction ((AnyT _ | DefT (_, _, EmptyT)), _)
     | FlowAction (_, UseT (_, (AnyT _ | DefT (_, _, MixedT _)))) ->
       IMap.empty
     | FlowAction (t1, UseT (_, t2)) -> f cx t1 (f cx t2 IMap.empty)

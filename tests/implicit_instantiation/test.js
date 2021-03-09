@@ -18,7 +18,7 @@ const z = identity<_>(3); // Give z a lower bound.
 
 declare function readOnly<T>(): {+x :T};
 
-module.exports = {
-  x: unimplementable<_>(), // Error, requires concrete annot
+const result = {
+  x: unimplementable<_>(), // TODO: Error, requires concrete annot
   y: readOnly<_>(), // Ok, type var is an a positive position
 };

@@ -11,7 +11,7 @@ module Utils = Utils_js
     First part of this module defines the structure and an API
     over it, second part hosts global changeset state and a
     separate API. Second part is embedded here due to dependencies.
-  *)
+ *)
 
 (* operations on vars and refis.
    refine is a read that results in a type update *)
@@ -27,7 +27,7 @@ let string_of_op = function
 
 (* ref to scope entry *)
 module EntryRef = struct
-  type t = int * string * op
+  type t = int * Reason.name * op
 
   let compare = Stdlib.compare
 end
@@ -106,7 +106,7 @@ let diff (vars1, refis1) (vars2, refis2) =
 let comp x y = union (diff x y) (diff y x)
 
 let string_of_entry_ref (scope_id, name, op) =
-  Utils.spf "(%d, %s, %s)" scope_id name (string_of_op op)
+  Utils.spf "(%d, %s, %s)" scope_id (Reason.display_string_of_name name) (string_of_op op)
 
 let string_of_refi_ref (scope_id, key, op) =
   Utils.spf "(%d, %s, %s)" scope_id (Key.string_of_key key) (string_of_op op)
@@ -142,7 +142,7 @@ let to_string =
     read/write ops and refinements as AST traversal duing infer
     drives calls into Env module.
     (Kill globals TODO: move to context.)
-  *)
+ *)
 
 (* due to the current dependency situation, we locate the
    global changeset stack here for now, so it can be accessed

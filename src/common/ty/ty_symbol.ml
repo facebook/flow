@@ -25,7 +25,7 @@ and provenance =
 and symbol = {
   sym_provenance: provenance;
   sym_def_loc: ALoc.t; [@printer (fun fmt loc -> fprintf fmt "%s" (ALoc.to_string_no_source loc))]
-  sym_name: string;
+  sym_name: Reason.name;
   sym_anonymous: bool;
 }
 [@@deriving show]

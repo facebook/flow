@@ -62,7 +62,7 @@ end
 module TypeAppExpansion : sig
   type entry
 
-  val push_unless_loop : Context.t -> Type.t * Type.t list -> bool
+  val push_unless_loop : 'phase Context.t_ -> Type.t * Type.t list -> bool
 
   val pop : unit -> unit
 
@@ -70,8 +70,8 @@ module TypeAppExpansion : sig
 
   val set : entry list -> unit
 end = struct
-  (* Array types function like type applications but are not implemented as such. Unless 
-     we decide to unify their implementation with regular typeapps, they need special 
+  (* Array types function like type applications but are not implemented as such. Unless
+     we decide to unify their implementation with regular typeapps, they need special
      handling here *)
   type root =
     | Type of Type.t
@@ -93,29 +93,30 @@ end = struct
 
   let stack = ref ([] : entry list)
 
-  (* visitor to collect roots of type applications nested in a type *)
-  let roots_collector =
-    object (self)
-      inherit [RootSet.t] Type_visitor.t as super
+  let collect_roots (type phase) (cx : phase Context.t_) =
+    (* visitor to collect roots of type applications nested in a type *)
+    let roots_collector =
+      object (self)
+        inherit [RootSet.t, phase] Type_visitor.t as super
 
-      method arrtype r =
-        function
-        | ArrayAT _ -> Array r
-        | ROArrayAT _ -> ROArray r
-        | TupleAT (_, ts) -> Tuple (r, List.length ts)
+        method arrtype r =
+          function
+          | ArrayAT _ -> Array r
+          | ROArrayAT _ -> ROArray r
+          | TupleAT (_, ts) -> Tuple (r, List.length ts)
 
-      method! type_ cx pole acc t =
-        match t with
-        | TypeAppT (_, _, c, _) -> super#type_ cx pole (RootSet.add (Type c) acc) t
-        | DefT (r, _, ArrT a) -> super#type_ cx pole (RootSet.add (self#arrtype r a) acc) t
-        | OpenT _ ->
-          (match ImplicitTypeArgument.abstract_targ t with
-          | None -> acc
-          | Some t -> RootSet.add (Type t) acc)
-        | _ -> super#type_ cx pole acc t
-    end
-
-  let collect_roots cx = roots_collector#type_ cx Polarity.Neutral RootSet.empty
+        method! type_ cx pole acc t =
+          match t with
+          | TypeAppT (_, _, c, _) -> super#type_ cx pole (RootSet.add (Type c) acc) t
+          | DefT (r, _, ArrT a) -> super#type_ cx pole (RootSet.add (self#arrtype r a) acc) t
+          | OpenT _ ->
+            (match ImplicitTypeArgument.abstract_targ t with
+            | None -> acc
+            | Some t -> RootSet.add (Type t) acc)
+          | _ -> super#type_ cx pole acc t
+      end
+    in
+    roots_collector#type_ cx Polarity.Neutral RootSet.empty
 
   (* Util to stringify a list, given a separator string and a function that maps
      elements of the list to strings. Should probably be moved somewhere else
@@ -145,7 +146,7 @@ end = struct
   (* Detect whether pushing would cause a loop. Push only if no loop is
      detected, and return whether push happened. *)
 
-  let push_unless_loop =
+  let push_unless_loop (type phase) =
     (* Say that targs are possibly expanding when, given previous targs and
        current targs, each previously non-empty targ is contained in the
        corresponding current targ. *)
@@ -171,7 +172,7 @@ end = struct
       in
       loop false (prev_tss, tss)
     in
-    fun cx (c, ts) ->
+    fun (cx : phase Context.t_) (c, ts) ->
       let tss = Base.List.map ~f:(collect_roots cx) ts in
       let loop =
         !stack
