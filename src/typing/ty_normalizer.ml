@@ -1741,9 +1741,12 @@ end = struct
       | T.NonMaybeType -> return (Ty.Utility (Ty.NonMaybeType ty))
       | T.ReadOnlyType -> return (Ty.Utility (Ty.ReadOnly ty))
       | T.ValuesType -> return (Ty.Utility (Ty.Values ty))
-      | T.ElementType t' ->
-        let%map ty' = type__ ~env t' in
-        Ty.Utility (Ty.ElementType (ty, ty'))
+      | T.ElementType { index_type; is_indexed_access } ->
+        let%map index_type' = type__ ~env index_type in
+        if is_indexed_access then
+          Ty.IndexedAccess { _object = ty; index = index_type' }
+        else
+          Ty.Utility (Ty.ElementType (ty, index_type'))
       | T.CallType ts ->
         let%map tys = mapM (type__ ~env) ts in
         Ty.Utility (Ty.Call (ty, tys))

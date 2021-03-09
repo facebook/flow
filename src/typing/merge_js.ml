@@ -900,12 +900,12 @@ module ContextOptimizer = struct
         | PropertyType s ->
           SigHash.add_name sig_hash s;
           t
-        | ElementType t' ->
-          let t'' = self#type_ cx map_cx t' in
-          if t'' == t' then
+        | ElementType { index_type; is_indexed_access } ->
+          let index_type' = self#type_ cx map_cx index_type in
+          if index_type' == index_type then
             t
           else
-            ElementType t''
+            ElementType { index_type = index_type'; is_indexed_access }
         | Bind t' ->
           let t'' = self#type_ cx map_cx t' in
           if t'' == t' then

@@ -98,6 +98,8 @@ let layout_of_elt ?(size = 5000) ?(with_comments = true) ~exact_by_default elt =
     | Union (t1, t2, ts) -> type_union ~depth (t1 :: t2 :: ts)
     | Inter (t1, t2, ts) -> type_intersection ~depth (t1 :: t2 :: ts)
     | Utility s -> utility ~depth s
+    | IndexedAccess { _object; index } ->
+      fuse [type_ ~depth _object; Atom "["; type_ ~depth index; Atom "]"]
     | Tup ts ->
       list
         ~wrap:(Atom "[", Atom "]")

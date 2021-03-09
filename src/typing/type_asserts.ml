@@ -50,6 +50,7 @@ let check_type_visitor wrap =
       | TypeOf _
       | Generic _
       | Utility _
+      | IndexedAccess _
       | CharSet _
       | InlineInterface _ ->
         ()

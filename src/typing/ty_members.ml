@@ -191,6 +191,7 @@ let rec members_of_ty : Ty.t -> Ty.t member_info NameUtils.Map.t * string list =
   | InlineInterface _
   | TypeOf _
   | Utility _
+  | IndexedAccess _
   | Mu _
   | CharSet _ ->
     (NameUtils.Map.empty, [])

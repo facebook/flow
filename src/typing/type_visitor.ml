@@ -206,7 +206,7 @@ class ['a, 'phase] t =
       | ReactElementRefType ->
         acc
       | ReactConfigType default_props -> self#type_ cx pole_TODO acc default_props
-      | ElementType t -> self#type_ cx pole_TODO acc t
+      | ElementType { index_type; _ } -> self#type_ cx pole_TODO acc index_type
       | Bind t -> self#type_ cx pole_TODO acc t
       | SpreadType (_, ts, head_slice) ->
         let acc = self#list (self#object_kit_spread_operand cx) acc ts in

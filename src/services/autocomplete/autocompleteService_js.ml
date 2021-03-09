@@ -85,6 +85,7 @@ let lsp_completion_of_type =
   | Arr _
   | TypeOf _
   | Utility _
+  | IndexedAccess _
   | Mu _
   | CharSet _ ->
     Some Lsp.Completion.Variable

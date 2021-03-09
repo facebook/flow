@@ -6865,7 +6865,7 @@ struct
           | PropertyType x ->
             let reason_op = replace_desc_reason (RProperty (Some x)) reason in
             GetPropT (use_op, reason, Named (reason_op, x), tout)
-          | ElementType t -> GetElemT (use_op, reason, t, tout)
+          | ElementType { index_type; _ } -> GetElemT (use_op, reason, index_type, tout)
           | Bind t -> BindT (use_op, reason, mk_boundfunctioncalltype t None [] tout, true)
           | SpreadType (options, todo_rev, head_slice) ->
             Object.(

@@ -1290,7 +1290,11 @@ module rec TypeTerm : sig
   and destructor =
     | NonMaybeType
     | PropertyType of name
-    | ElementType of t
+    | ElementType of {
+        index_type: t;
+        (* For type normalizer purposes - in the future ElementType will be removed. *)
+        is_indexed_access: bool;
+      }
     | Bind of t
     | ReadOnlyType
     | SpreadType of

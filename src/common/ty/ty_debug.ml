@@ -244,6 +244,8 @@ and dump_t ?(depth = 10) t =
         (spf "{ %s %s }" (dump_list (dump_prop ~depth) if_props) dict)
     | TypeOf v -> spf "Typeof (%s)" (builtin_value v)
     | Utility u -> dump_utility ~depth u
+    | IndexedAccess { _object; index } ->
+      spf "IndexedAccess (%s) (%s)" (dump_t ~depth _object) (dump_t ~depth index)
     | Mu (i, t) -> spf "Mu (%d, %s)" i (dump_t ~depth t)
     | CharSet s -> spf "CharSet (%s)" s
 
@@ -317,6 +319,7 @@ let string_of_ctor_t = function
   | InlineInterface _ -> "InlineInterface"
   | TypeOf _ -> "Typeof"
   | Utility _ -> "Utility"
+  | IndexedAccess _ -> "IndexedAccess"
   | Mu _ -> "Mu"
   | CharSet _ -> "CharSet"
 
@@ -398,6 +401,8 @@ let json_of_elt ~strip_root =
           ])
       | TypeOf b -> [("name", json_of_builtin_value b)]
       | Utility u -> json_of_utility u
+      | IndexedAccess { _object; index } ->
+        [("object", json_of_t _object); ("index", json_of_t index)]
       | Mu (i, t) -> [("mu_var", int_ i); ("type", json_of_t t)]
       | CharSet s -> [("literal", JSON_String s)])
   and json_of_tvar (RVar i) = Hh_json.[("id", int_ i)]

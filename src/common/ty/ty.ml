@@ -53,6 +53,10 @@ type t =
   | Utility of utility
   | Mu of int * t
   | CharSet of string
+  | IndexedAccess of {
+      _object: t;
+      index: t;
+    }
 
 and tvar = RVar of int [@@unboxed]
 
@@ -437,15 +441,16 @@ class ['A] comparator_ty =
       | Generic _ -> 14
       | TypeOf _ -> 15
       | Utility _ -> 16
-      | Tup _ -> 17
-      | Arr _ -> 18
-      | Fun _ -> 19
-      | Obj _ -> 20
-      | Inter _ -> 21
-      | Union _ -> 22
-      | Mu _ -> 23
-      | InlineInterface _ -> 24
-      | CharSet _ -> 25
+      | IndexedAccess _ -> 17
+      | Tup _ -> 18
+      | Arr _ -> 19
+      | Fun _ -> 20
+      | Obj _ -> 21
+      | Inter _ -> 22
+      | Union _ -> 23
+      | Mu _ -> 24
+      | InlineInterface _ -> 25
+      | CharSet _ -> 26
 
     method tag_of_decl _ =
       function
@@ -657,7 +662,8 @@ let rec mk_exact ty =
   | Union _
   | Inter _
   | TypeOf _
-  | Utility _ ->
+  | Utility _
+  | IndexedAccess _ ->
     Utility (Exact ty)
 
 let mk_array ~readonly ~literal t =

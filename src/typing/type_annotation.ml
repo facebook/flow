@@ -265,7 +265,9 @@ let rec convert cx tparams_map =
             (IndexedTypeAccess { _object = reason_of_t object_type; index = reason_of_t index_type })
         in
         EvalT
-          (object_type, TypeDestructorT (use_op, reason, ElementType index_type), mk_eval_id cx loc)
+          ( object_type,
+            TypeDestructorT (use_op, reason, ElementType { index_type; is_indexed_access = true }),
+            mk_eval_id cx loc )
     in
     ((loc, t), IndexedAccess { IndexedAccess._object; index; comments })
   (* TODO *)
@@ -496,7 +498,13 @@ let rec convert cx tparams_map =
             | ([t; e], targs) ->
               let reason = mk_reason (RType (OrdinaryName "$ElementType")) loc in
               reconstruct_ast
-                (EvalT (t, TypeDestructorT (use_op reason, reason, ElementType e), mk_eval_id cx loc))
+                (EvalT
+                   ( t,
+                     TypeDestructorT
+                       ( use_op reason,
+                         reason,
+                         ElementType { index_type = e; is_indexed_access = false } ),
+                     mk_eval_id cx loc ))
                 targs
             | _ -> assert false)
       (* $NonMaybeType<T> acts as the type T without null and void *)

@@ -235,7 +235,7 @@ and collect_of_type ?log_unresolved cx acc = function
 and collect_of_destructor ?log_unresolved cx acc = function
   | NonMaybeType -> acc
   | PropertyType _ -> acc
-  | ElementType t -> collect_of_type ?log_unresolved cx acc t
+  | ElementType { index_type; _ } -> collect_of_type ?log_unresolved cx acc index_type
   | Bind t -> collect_of_type ?log_unresolved cx acc t
   | ReadOnlyType -> acc
   | SpreadType (_, ts, head_slice) ->

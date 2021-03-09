@@ -638,7 +638,12 @@ and merge_annot file = function
     let obj = merge file obj in
     let elem = merge file elem in
     let id = Type.Eval.id_of_aloc_id (Context.make_aloc_id file.cx loc) in
-    Type.(EvalT (obj, TypeDestructorT (use_op, reason, Type.ElementType elem), id))
+    Type.(
+      EvalT
+        ( obj,
+          TypeDestructorT
+            (use_op, reason, Type.ElementType { index_type = elem; is_indexed_access = false }),
+          id ))
   | NonMaybeType (loc, t) ->
     let reason = Reason.(mk_reason (RType (OrdinaryName "$NonMaybeType")) loc) in
     let use_op = Type.Op (Type.TypeApplication { type' = reason }) in
