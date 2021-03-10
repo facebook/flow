@@ -23,7 +23,7 @@ import type {talias4} from "./cjs_with_types";
 var i: talias4 = 42;
 var j: talias4 = 'asdf'; // Error: string ~> number
 
-import {IFoo, IFoo2} from "./types_only";
+import {IFoo, type IFoo2} from "./types_only";
 
 var k: IFoo = {prop: 42};
 var l: IFoo = {prop: 'asdf'}; // Error: {prop:string} ~> {prop:number}

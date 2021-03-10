@@ -41,12 +41,12 @@ export FLOW_NODE_BINARY=${FLOW_NODE_BINARY:-${NODE_BINARY:-$(which node)}}
 OPTIND=1
 record=0
 saved_state=0
-new_signatures=0
+old_signatures=0
 verbose=0
 quiet=0
 relative="$THIS_DIR"
 list_tests=0
-export saved_state filter new_signatures
+export saved_state filter old_signatures
 while getopts "b:d:f:lqrszt:vh?" opt; do
   case "$opt" in
   b)
@@ -75,7 +75,7 @@ while getopts "b:d:f:lqrszt:vh?" opt; do
     printf "Testing saved state by running all tests using saved state\\n"
     ;;
   z)
-    new_signatures=1
+    old_signatures=1
     ;;
   v)
     verbose=1
@@ -94,8 +94,8 @@ shift $((OPTIND-1))
 if [ -n "$specific_test" ]; then
   if [[ "$saved_state" -eq 1 ]]; then
     specific_test=$(echo $specific_test | sed 's/\(.*\)-saved-state$/\1/')
-  elif [[ "$new_signatures" -eq 1 ]]; then
-    specific_test=$(echo $specific_test | sed 's/\(.*\)-new-signatures$/\1/')
+  elif [[ "$old_signatures" -eq 1 ]]; then
+    specific_test=$(echo $specific_test | sed 's/\(.*\)-old-signatures$/\1/')
   fi
 
   filter="^$specific_test$"
@@ -255,8 +255,8 @@ if [[ "$list_tests" -eq 1 ]]; then
 
       if [[ "$saved_state" -eq 1 ]]; then
         echo "$name-saved-state"
-      elif [[ "$new_signatures" -eq 1 ]]; then
-        echo "$name-new-signatures"
+      elif [[ "$old_signatures" -eq 1 ]]; then
+        echo "$name-old-signatures"
       else
         echo "$name"
       fi

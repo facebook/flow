@@ -821,7 +821,7 @@ module Options_flags = struct
     temp_dir: string option;
     traces: int option;
     trust_mode: Options.trust_mode option;
-    new_signatures: bool;
+    old_signatures: bool;
     abstract_locations: bool;
     verbose: Verbose.t option;
     wait_for_recheck: bool option;
@@ -878,7 +878,7 @@ let options_flags =
       temp_dir
       quiet
       merge_timeout
-      new_signatures
+      old_signatures
       abstract_locations
       include_suppressions
       trust_mode =
@@ -907,7 +907,7 @@ let options_flags =
         quiet;
         merge_timeout;
         trust_mode;
-        new_signatures;
+        old_signatures;
         abstract_locations;
         include_suppressions;
       }
@@ -952,7 +952,7 @@ let options_flags =
              ( "The maximum time in seconds to attempt to typecheck a file or cycle of files. "
              ^ "0 means no timeout (default: 100)" )
            ~env:"FLOW_MERGE_TIMEOUT"
-      |> flag "--new-signatures" no_arg ~doc:""
+      |> flag "--old-signatures" no_arg ~doc:""
       |> flag
            "--abstract-locations"
            no_arg
@@ -1204,7 +1204,9 @@ let make_options
     in
     Base.Option.value lazy_mode ~default
   in
-  let opt_new_signatures = options_flags.new_signatures || FlowConfig.new_signatures flowconfig in
+  let opt_new_signatures =
+    (not options_flags.old_signatures) && FlowConfig.new_signatures flowconfig
+  in
   let opt_abstract_locations =
     options_flags.abstract_locations || FlowConfig.abstract_locations flowconfig
   in

@@ -150,7 +150,7 @@ start_flow_unsafe () {
       PATH="$THIS_DIR/scripts/tests_bin:$PATH" \
       "$FLOW" start "$root" \
         $flowlib --wait \
-        $new_signatures_flag \
+        $old_signatures_flag \
         --wait-for-recheck "$wait_for_recheck" \
         --saved-state-fetcher "local" \
         --saved-state-no-fallback \
@@ -168,7 +168,7 @@ start_flow_unsafe () {
     PATH="$THIS_DIR/scripts/tests_bin:$PATH" \
     "$FLOW" start "$root" \
       $flowlib --wait --wait-for-recheck "$wait_for_recheck" \
-      $new_signatures_flag \
+      $old_signatures_flag \
       --file-watcher "$file_watcher" \
       --log-file "$abs_log_file" \
       --monitor-log-file "$abs_monitor_log_file" \
@@ -284,10 +284,10 @@ runtest() {
         start_args=""
         file_watcher="none"
         wait_for_recheck="true"
-        if [[ "$new_signatures" -eq 1 ]]; then
-          new_signatures_flag="--new-signatures"
+        if [[ "$old_signatures" -eq 1 ]]; then
+          old_signatures_flag="--old-signatures"
         else
-          new_signatures_flag=""
+          old_signatures_flag=""
         fi
         if [ -e ".testconfig" ]
         then
@@ -345,8 +345,8 @@ runtest() {
                 return $RUNTEST_SKIP
             fi
 
-            if [[ "$new_signatures" -eq 1 ]] && \
-              [ "$(awk '$1=="TODO_new_signatures:"{print $2}' .testconfig)" == "true" ]
+            if [[ "$old_signatures" -eq 1 ]] && \
+              [ "$(awk '$1=="SKIP_old_signatures:"{print $2}' .testconfig)" == "true" ]
             then
                 return $RUNTEST_SKIP
             fi
@@ -367,11 +367,6 @@ runtest() {
             flowlib=""
         fi
 
-        # Only run new-signatures with types-first
-        if [[ "$new_signatures" -eq 1 ]] && [ -f .flowconfig ] && grep -q "types_first=false" .flowconfig; then
-            return $RUNTEST_SKIP
-        fi
-
         # Helper function to generate saved state. If anything goes wrong, it
         # will fail
         create_saved_state () {
@@ -382,7 +377,7 @@ runtest() {
             # start server and wait
             "$FLOW" start "$root" \
               $flowlib --wait \
-              $new_signatures_flag \
+              $old_signatures_flag \
               --wait-for-recheck "$wait_for_recheck" \
               --lazy-mode none \
               --file-watcher "$file_watcher" \
@@ -412,7 +407,7 @@ runtest() {
               # default command is check with configurable --no-flowlib
               "$FLOW" check . \
                 $flowlib --strip-root --show-all-errors \
-                $new_signatures_flag \
+                $old_signatures_flag \
                  1>> "$abs_out_file" 2>> "$stderr_dest"
               st=$?
             fi
@@ -441,7 +436,7 @@ runtest() {
             "$FLOW" "codemod" "annotate-exports" \
                 $flowlib \
                 ${cmd_args[*]} \
-                $new_signatures_flag \
+                $old_signatures_flag \
                 --strip-root \
                 --quiet \
                 --input-file "$input_file" \

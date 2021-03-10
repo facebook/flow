@@ -5,6 +5,5 @@
 [libs]
 
 [options]
-experimental.new_signatures=true
 module.system=haste
 no_flowlib=false

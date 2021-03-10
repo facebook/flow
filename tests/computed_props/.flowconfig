@@ -1,4 +1,3 @@
 [options]
-experimental.new_signatures=true
 no_flowlib=false
 all=true
