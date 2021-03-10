@@ -40,13 +40,14 @@ let set_builtin ~flow_t builtins name t =
 
 let empty () : t = Hashtbl.create 0
 
-let map_entries builtins ~f =
+let optimize_entries builtins ~on_missing ~optimize =
   Hashtbl.iter
     (fun name entry ->
-      let entry' =
-        match entry with
-        | NotYetWritten t -> NotYetWritten (f t)
-        | Entry t -> Entry (f t)
-      in
-      Hashtbl.replace builtins name entry')
+      match entry with
+      | NotYetWritten t ->
+        on_missing name t;
+        Hashtbl.remove builtins name
+      | Entry t ->
+        let entry' = Entry (optimize t) in
+        Hashtbl.replace builtins name entry')
     builtins

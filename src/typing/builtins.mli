@@ -15,4 +15,5 @@ val set_builtin : flow_t:(Type.t * Type.t -> unit) -> t -> Reason.name -> Type.t
 
 val empty : unit -> t
 
-val map_entries : t -> f:(Type.t -> Type.t) -> unit
+val optimize_entries :
+  t -> on_missing:(Reason.name -> Type.t -> unit) -> optimize:(Type.t -> Type.t) -> unit

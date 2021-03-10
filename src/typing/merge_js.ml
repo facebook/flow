@@ -683,11 +683,7 @@ module ContextOptimizer = struct
   open TypeUtil
   open Constraint
 
-  class context_optimizer =
-    let no_lowers cx r =
-      Flow_js_utils.add_output cx (Error_message.EMissingAnnotation (r, []));
-      Type.Unsoundness.merged_any r
-    in
+  class context_optimizer ~no_lowers =
     object (self)
       inherit [Polarity.t, Type.Constraint.infer_phase] Type_mapper.t_with_uses as super
 
@@ -739,7 +735,12 @@ module ContextOptimizer = struct
 
       method reduce_builtins cx =
         let builtins = Context.builtins cx in
-        Builtins.map_entries builtins ~f:(self#type_ cx Polarity.Neutral)
+        let on_missing name t =
+          let reason = TypeUtil.reason_of_t t in
+          Flow_js.flow_t cx (Type.AnyT (reason, Type.AnyError (Some Type.UnresolvedName)), t);
+          Flow_js.add_output cx (Error_message.EBuiltinLookupFailed { reason; name = Some name })
+        in
+        Builtins.optimize_entries builtins ~on_missing ~optimize:(self#type_ cx Polarity.Neutral)
 
       method tvar cx pole r id =
         let (root_id, _) = Context.find_constraints cx id in
@@ -1075,12 +1076,17 @@ module ContextOptimizer = struct
 
   (* walk a context from a list of exports *)
   let reduce_context cx module_refs =
-    let reducer = new context_optimizer in
+    let no_lowers cx r =
+      Flow_js_utils.add_output cx (Error_message.EMissingAnnotation (r, []));
+      Type.Unsoundness.merged_any r
+    in
+    let reducer = new context_optimizer ~no_lowers in
     Base.List.iter ~f:(reducer#reduce cx) module_refs;
     (reducer#sig_hash (), reducer)
 
   let reduce_builtins cx =
-    let reducer = new context_optimizer in
+    let no_lowers _ r = Type.AnyT (r, Type.AnyError (Some Type.UnresolvedName)) in
+    let reducer = new context_optimizer ~no_lowers in
     reducer#reduce_builtins cx;
     reducer
 
