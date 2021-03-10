@@ -102,6 +102,7 @@ type initialized_env = {
   i_status: show_status_t;  (** what we've told the client about our connection status *)
   i_open_files: open_file_info Lsp.UriMap.t;
   i_errors: LspErrors.t;
+  i_config: Hh_json.json;
 }
 
 and disconnected_env = {
@@ -468,6 +469,60 @@ let send_to_server (env : connected_env) (request : LspProt.request) (metadata :
 let send_lsp_to_server (cenv : connected_env) (metadata : LspProt.metadata) (message : lsp_message)
     : unit =
   send_to_server cenv (LspProt.LspToServer message) metadata
+
+let send_configuration_to_server method_name settings cenv =
+  let metadata =
+    {
+      LspProt.empty_metadata with
+      LspProt.start_wall_time = Unix.gettimeofday ();
+      start_json_truncated = Hh_json.(JSON_Object [("method", JSON_String method_name)]);
+      lsp_method_name = method_name;
+    }
+  in
+  let msg =
+    NotificationMessage (DidChangeConfigurationNotification { Lsp.DidChangeConfiguration.settings })
+  in
+  send_lsp_to_server cenv metadata msg
+
+let request_configuration (ienv : initialized_env) : initialized_env =
+  let id = NumberId (Jsonrpc.get_next_request_id ()) in
+  let request =
+    ConfigurationRequest
+      (* request all flow settings. we could request the individual keys we care about,
+         but that hits a bug in vscode-languageclient < 7.0.0, where falsy individual
+         values are converted to `null`, which also means "i don't understand this config".
+         since we want to use the default for unknown configs, this bug would prevent us
+         from having configs that default to `true` because we couldn't distinguish `false`
+         from `null` (== `true`) *)
+      { Lsp.Configuration.items = [{ Lsp.Configuration.section = Some "flow"; scope_uri = None }] }
+  in
+  let on_response =
+    ConfigurationHandler
+      (fun result state ->
+        match result with
+        | [i_config] ->
+          (* update the lsp process's cache *)
+          let state = update_ienv (fun ienv -> { ienv with i_config }) state in
+          (* forward the notification to the server process *)
+          (match state with
+          | Connected cenv ->
+            send_configuration_to_server "synthetic/didChangeConfiguration" i_config cenv
+          | _ -> ());
+          state
+        | _ -> state)
+  in
+  let on_error _e state = state in
+  send_request_to_client id request ~on_response ~on_error ienv
+
+let subscribe_to_config_changes (ienv : initialized_env) : initialized_env =
+  let id = NumberId (Jsonrpc.get_next_request_id ()) in
+  let request =
+    RegisterCapabilityRequest
+      RegisterCapability.{ registrations = [make_registration DidChangeConfiguration] }
+  in
+  let on_response = VoidHandler in
+  let on_error _e state = state in
+  send_request_to_client id request ~on_response ~on_error ienv
 
 (************************************************************************)
 (** Protocol                                                           **)
@@ -1443,6 +1498,10 @@ let try_connect flowconfig_name (env : disconnected_env) : state =
       let metadata = make_metadata "synthetic/subscribe" in
       send_to_server new_env LspProt.Subscribe metadata
     in
+    let () =
+      let settings = new_env.c_ienv.i_config in
+      send_configuration_to_server "synthetic/configuration" settings new_env
+    in
     let metadata = make_metadata "synthetic/open" in
     let () =
       Lsp.UriMap.iter
@@ -1626,6 +1685,7 @@ and main_handle_unsafe flowconfig_name (state : state) (event : event) :
         i_status = Never_shown;
         i_open_files = Lsp.UriMap.empty;
         i_errors = LspErrors.empty;
+        i_config = Hh_json.JSON_Null;
       }
     in
     FlowInteractionLogger.set_server_config
@@ -1659,6 +1719,14 @@ and main_handle_unsafe flowconfig_name (state : state) (event : event) :
       Lsp_fmt.print_lsp ~key response
     in
     to_stdout json;
+
+    let d_ienv =
+      if Lsp_helpers.supports_configuration i_initialize_params then
+        d_ienv |> request_configuration |> subscribe_to_config_changes
+      else
+        d_ienv
+    in
+
     let env = { d_ienv; d_autostart = true; d_server_status = None } in
     Ok (try_connect flowconfig_name env, LogNeeded metadata)
   | (_, Client_message (NotificationMessage InitializedNotification, _metadata)) ->
@@ -1666,6 +1734,27 @@ and main_handle_unsafe flowconfig_name (state : state) (event : event) :
   | (_, Client_message (NotificationMessage SetTraceNotification, _metadata))
   | (_, Client_message (NotificationMessage LogTraceNotification, _metadata)) ->
     (* specific to VSCode logging *)
+    Ok (state, LogNotNeeded)
+  | ( _,
+      Client_message
+        ((NotificationMessage (DidChangeConfigurationNotification params) as msg), metadata) ) ->
+    let { DidChangeConfiguration.settings } = params in
+    let state =
+      match settings with
+      | Hh_json.JSON_Null ->
+        (* a null notification means we should pull the configs we care about. the "push" model
+           is discouraged, so a null notification is normal in VS Code. See
+           https://github.com/microsoft/language-server-protocol/issues/567#issuecomment-420589320 *)
+        update_ienv (fun ienv -> request_configuration ienv) state
+      | i_config ->
+        (* update the lsp process's cache *)
+        let state = update_ienv (fun ienv -> { ienv with i_config }) state in
+        (* forward the notification to the server process *)
+        (match state with
+        | Connected cenv -> send_lsp_to_server cenv metadata msg
+        | _ -> ());
+        state
+    in
     Ok (state, LogNotNeeded)
   | (_, Client_message (RequestMessage (id, ShutdownRequest), _metadata)) ->
     begin
@@ -1710,6 +1799,9 @@ and main_handle_unsafe flowconfig_name (state : state) (event : event) :
           Ok (handle result state, LogNotNeeded)
         | (ShowStatusResult result, ShowStatusHandler handle) ->
           Ok (handle result state, LogNotNeeded)
+        | (ConfigurationResult result, ConfigurationHandler handle) ->
+          Ok (handle result state, LogNotNeeded)
+        | (RegisterCapabilityResult, VoidHandler) -> Ok (state, LogNotNeeded)
         | (ErrorResult (e, msg), _) -> Ok (handle_error (e, msg) state, LogNotNeeded)
         | _ ->
           failwith (Printf.sprintf "Response %s has mistyped handler" (message_name_to_string c))

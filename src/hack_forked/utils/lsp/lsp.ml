@@ -1212,6 +1212,7 @@ type lsp_result =
   | RenameResult of Rename.result
   | DocumentCodeLensResult of DocumentCodeLens.result
   | ExecuteCommandResult of ExecuteCommand.result
+  | RegisterCapabilityResult
   (* the string is a stacktrace *)
   | ErrorResult of Error.t * string
 
@@ -1246,6 +1247,8 @@ and 'a lsp_error_handler = Error.t * string -> 'a -> 'a
 and 'a lsp_result_handler =
   | ShowMessageHandler of (ShowMessageRequest.result -> 'a -> 'a)
   | ShowStatusHandler of (ShowStatus.result -> 'a -> 'a)
+  | ConfigurationHandler of (Configuration.result -> 'a -> 'a)
+  | VoidHandler
 
 module IdKey = struct
   type t = lsp_id

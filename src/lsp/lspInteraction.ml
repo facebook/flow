@@ -318,6 +318,7 @@ let trigger_of_lsp_msg =
   | ResponseMessage (_, DocumentCodeLensResult _)
   | ResponseMessage (_, TypeCoverageResult _)
   | ResponseMessage (_, ExecuteCommandResult _)
+  | ResponseMessage (_, RegisterCapabilityResult)
   (* TODO not sure if this is right, just need to unbreak the build. *)
   | ResponseMessage (_, TypeDefinitionResult _)
   | ResponseMessage (_, DocumentFormattingResult _)

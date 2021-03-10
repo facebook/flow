@@ -1489,6 +1489,11 @@ let handle_persistent_cancel_notification ~params ~metadata ~client:_ ~profiling
   ServerMonitorListenerState.(cancellation_requests := IdSet.remove id !cancellation_requests);
   Lwt.return (env, LspProt.LspFromServer None, metadata)
 
+let handle_persistent_did_change_configuration_notification
+    ~params:_ ~metadata ~client:_ ~profiling:_ =
+  (* no-op for now *)
+  Lwt.return ((), LspProt.LspFromServer None, metadata)
+
 let handle_persistent_get_def ~reader ~options ~id ~params ~loc ~metadata ~client ~profiling ~env =
   let (file, line, char) =
     match loc with
@@ -2266,6 +2271,9 @@ let get_persistent_handler ~genv ~client_id ~request:(request, metadata) :
     let id = params.CancelRequest.id in
     ServerMonitorListenerState.(cancellation_requests := IdSet.add id !cancellation_requests);
     Handle_nonparallelizable_persistent (handle_persistent_cancel_notification ~params ~metadata)
+  | LspToServer (NotificationMessage (DidChangeConfigurationNotification params)) ->
+    Handle_persistent_immediately
+      (handle_persistent_did_change_configuration_notification ~params ~metadata)
   | LspToServer (RequestMessage (id, DefinitionRequest params)) ->
     (* Grab the file contents immediately in case of any future didChanges *)
     let loc =

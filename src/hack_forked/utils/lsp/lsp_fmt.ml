@@ -1340,6 +1340,7 @@ let result_name_to_string (result : lsp_result) : string =
   | RenameResult _ -> "textDocument/rename"
   | DocumentCodeLensResult _ -> "textDocument/codeLens"
   | ExecuteCommandResult _ -> "workspace/executeCommand"
+  | RegisterCapabilityResult -> "client/registerCapability"
   | ErrorResult (e, _stack) -> "ERROR/" ^ e.Error.message
 
 let notification_name_to_string (notification : lsp_notification) : string =
@@ -1438,8 +1439,8 @@ let parse_lsp_result (request : lsp_request) (result : json) : lsp_result =
     ShowMessageRequestResult (parse_result_showMessageRequest (Some result))
   | ShowStatusRequest _ -> ShowStatusResult (parse_result_showMessageRequest (Some result))
   | ConfigurationRequest _ -> ConfigurationResult (ConfigurationFmt.result_of_json (Some result))
+  | RegisterCapabilityRequest _ -> RegisterCapabilityResult
   | InitializeRequest _
-  | RegisterCapabilityRequest _
   | ShutdownRequest
   | CodeLensResolveRequest _
   | HoverRequest _
@@ -1563,7 +1564,8 @@ let print_lsp_response ?include_error_stack_trace ~key (id : lsp_id) (result : l
     | SignatureHelpResult r -> SignatureHelpFmt.to_json r
     | ShowMessageRequestResult _
     | ShowStatusResult _
-    | CompletionItemResolveResult _ ->
+    | CompletionItemResolveResult _
+    | RegisterCapabilityResult ->
       failwith ("Don't know how to print result " ^ method_)
     | ErrorResult (e, stack) -> print_error ?include_error_stack_trace e stack
   in
