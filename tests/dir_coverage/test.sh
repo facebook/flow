@@ -62,13 +62,6 @@ coverage() {
   assert_ok rm a.js
   assert_ok "$FLOW" force-recheck a.js
   assert_ok "$FLOW" batch-coverage --strip-root --wait-for-recheck true .
-  echo "-----------------------------"
-  echo "trust"
-  echo "-----------------------------"
-  assert_ok "$FLOW" stop
-  assert_ok "$FLOW" start --trust-mode=check
-  assert_ok "$FLOW" batch-coverage --strip-root --show-trust .
-  assert_ok "$FLOW" batch-coverage --strip-root --json --pretty --show-trust .
 }
 
 coverage > coverage.log
