@@ -1665,3 +1665,6 @@ tparam_defaults.js:24:7,24:12
 tparam_defaults.js:25:8:
 Three<>
 tparam_defaults.js:25:7,25:12
+tparam_defaults.js:29:5:
+C<C<any>>
+tparam_defaults.js:29:5,29:5

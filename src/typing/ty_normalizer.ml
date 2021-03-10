@@ -1301,6 +1301,9 @@ end = struct
         let%bind targs = optMapM (type__ ~env) targs in
         let%map targs =
           if Env.omit_targ_defaults env then
+            (* Disable the option for recursive calls to type_params_t to avoid
+             * infinite recursion in cases like `class C<T: C<any>> {}` *)
+            let env = Env.{ env with options = { env.options with omit_targ_defaults = false } } in
             let%map (_, tparams) = type_params_t ~env tparams in
             remove_targs_matching_defaults targs tparams
           else

@@ -23,3 +23,7 @@ const three5: Three<> = {};
 // $FlowFixMe: too many type params
 const three6: Three<Bar, number, Bar, Bar> = {};
 const three7: Three<Bar, number> = {};
+
+// Test for the recursive case: we should stop expanding the type params to avoid infinite recursion
+class C<T: C<any>> {}
+var x = new C<C<any>>;
