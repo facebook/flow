@@ -31,7 +31,7 @@ end
 module type KIT = sig
   type output
 
-  val run : Context.t -> Context.implicit_instantiation_check -> output SMap.t
+  val run : Context.t -> Context.Implicit_instantiation_check.t -> output SMap.t
 end
 
 module Make (Observer : OBSERVER) : KIT with type output = Observer.output

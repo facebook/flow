@@ -108,10 +108,19 @@ type voidable_check = {
   errors: ALoc.t Property_assignment.errors;
 }
 
-type implicit_instantiation_check = {
-  fun_or_class: Type.t;
-  call_or_constructor: Type.use_t;
-}
+module Implicit_instantiation_check : sig
+  type poly_t = ALoc.t * Type.typeparam Nel.t * Type.t
+
+  type operation =
+    | Call of Type.funcalltype
+    | Constructor of Type.call_arg list
+
+  type t = {
+    lhs: Type.t;
+    poly_t: poly_t;
+    operation: Type.use_op * Reason.t * operation;
+  }
+end
 
 type computed_property_state =
   | ResolvedOnce of Reason.t
@@ -295,7 +304,7 @@ val exists_excuses : 'phase t_ -> ExistsCheck.t ALocMap.t
 
 val voidable_checks : 'phase t_ -> voidable_check list
 
-val implicit_instantiation_checks : 'phase t_ -> implicit_instantiation_check list
+val implicit_instantiation_checks : 'phase t_ -> Implicit_instantiation_check.t list
 
 val use_def : 'phase t_ -> Scope_api.With_ALoc.info * Ssa_api.With_ALoc.values
 
@@ -345,7 +354,23 @@ val add_literal_subtypes : 'phase t_ -> Type.t * Type.use_t -> unit
 
 val add_voidable_check : 'phase t_ -> voidable_check -> unit
 
-val add_implicit_instantiation_check : 'phase t_ -> Type.t -> Type.use_t -> unit
+val add_implicit_instantiation_call :
+  'phase t_ ->
+  Type.t ->
+  Implicit_instantiation_check.poly_t ->
+  Type.use_op ->
+  Reason.t ->
+  Type.funcalltype ->
+  unit
+
+val add_implicit_instantiation_ctor :
+  'phase t_ ->
+  Type.t ->
+  Implicit_instantiation_check.poly_t ->
+  Type.use_op ->
+  Reason.t ->
+  Type.call_arg list ->
+  unit
 
 val set_evaluated : 'phase t_ -> Type.t Type.Eval.Map.t -> unit
 

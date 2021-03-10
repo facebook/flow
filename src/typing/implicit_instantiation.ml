@@ -9,6 +9,7 @@ open Type
 open Polarity
 module TypeParamMarked = Marked.Make (StringKey)
 module Marked = TypeParamMarked
+module Check = Context.Implicit_instantiation_check
 
 module type OBSERVER = sig
   type output
@@ -36,7 +37,7 @@ end
 module type KIT = sig
   type output
 
-  val run : Context.t -> Context.implicit_instantiation_check -> output SMap.t
+  val run : Context.t -> Check.t -> output SMap.t
 end
 
 module Make (Observer : OBSERVER) : KIT with type output = Observer.output = struct
@@ -181,39 +182,40 @@ module Make (Observer : OBSERVER) : KIT with type output = Observer.output = str
     | _ -> failwith "Implicit instantiation is not an OpenT"
 
   let check_instantiation cx ~tparams ~marked_tparams ~implicit_instantiation =
+    let { Check.lhs; operation = (use_op, reason_op, op); _ } = implicit_instantiation in
     let (call_targs, tparam_map) =
       List.fold_right
         (fun tparam (targs, map) ->
-          let reason_tapp = TypeUtil.reason_of_t implicit_instantiation.Context.fun_or_class in
+          let reason_tapp = TypeUtil.reason_of_t lhs in
           let targ =
-            Instantiation_utils.ImplicitTypeArgument.mk_targ
-              cx
-              tparam
-              (TypeUtil.reason_of_use_t implicit_instantiation.Context.call_or_constructor)
-              reason_tapp
+            Instantiation_utils.ImplicitTypeArgument.mk_targ cx tparam reason_op reason_tapp
           in
           (ExplicitArg targ :: targs, SMap.add tparam.name targ map))
         tparams
         ([], SMap.empty)
     in
-    (match implicit_instantiation.Context.call_or_constructor with
-    | CallT (use_op, reason_op, calltype) ->
-      let new_tout = Tvar.mk_no_wrap cx reason_op in
-      let call_t =
-        CallT
-          ( use_op,
-            reason_op,
-            { calltype with call_targs = Some call_targs; call_tout = (reason_op, new_tout) } )
-      in
-      Flow_js.flow cx (implicit_instantiation.Context.fun_or_class, call_t)
-    | ConstructorT (use_op, reason_op, _, call_args, _) ->
-      let new_tout = Tvar.mk cx reason_op in
-      let constructor_t = ConstructorT (use_op, reason_op, Some call_targs, call_args, new_tout) in
-      Flow_js.flow cx (implicit_instantiation.Context.fun_or_class, constructor_t)
-    | u -> failwith ("FunT ~> " ^ string_of_use_ctor u));
+    let () =
+      match op with
+      | Check.Call calltype ->
+        let new_tout = Tvar.mk_no_wrap cx reason_op in
+        let call_t =
+          CallT
+            ( use_op,
+              reason_op,
+              { calltype with call_targs = Some call_targs; call_tout = (reason_op, new_tout) } )
+        in
+        Flow_js.flow cx (lhs, call_t)
+      | Check.Constructor call_args ->
+        let new_tout = Tvar.mk cx reason_op in
+        let constructor_t =
+          ConstructorT (use_op, reason_op, Some call_targs, call_args, new_tout)
+        in
+        Flow_js.flow cx (lhs, constructor_t)
+    in
     (tparam_map, marked_tparams)
 
   let pin_types cx tparam_map marked_tparams bounds_map implicit_instantiation =
+    let { Check.operation = (_, instantiation_reason, _); _ } = implicit_instantiation in
     let use_upper_bounds cx name tvar tparam_binder_reason instantiation_reason =
       let upper_t = merge_upper_bounds tparam_binder_reason (SMap.find name bounds_map) cx tvar in
       match upper_t with
@@ -224,9 +226,6 @@ module Make (Observer : OBSERVER) : KIT with type output = Observer.output = str
     tparam_map
     |> SMap.mapi (fun name t ->
            let tparam_binder_reason = TypeUtil.reason_of_t t in
-           let instantiation_reason =
-             TypeUtil.reason_of_use_t implicit_instantiation.Context.call_or_constructor
-           in
            match Marked.get name marked_tparams with
            | None -> Observer.on_constant_tparam cx name
            | Some Neutral ->
@@ -268,32 +267,25 @@ module Make (Observer : OBSERVER) : KIT with type output = Observer.output = str
     check_instantiation cx ~tparams ~marked_tparams ~implicit_instantiation
 
   let implicitly_instantiate cx implicit_instantiation =
-    let t = implicit_instantiation.Context.fun_or_class in
-    match t with
-    | DefT (_, _, PolyT { t_out = t; tparams; _ }) ->
-      let tparams = Nel.to_list tparams in
-      let bounds_map =
-        List.fold_left (fun map x -> SMap.add x.name x.bound map) SMap.empty tparams
-      in
-      let (tparams_map, marked_tparams) =
-        match get_t cx t with
-        | DefT (_, _, FunT (_, _, funtype)) ->
-          check_fun cx ~tparams ~bounds_map ~return_t:funtype.return_t ~implicit_instantiation
-        | ThisClassT (_, DefT (_, _, InstanceT (_, _, _, _insttype)), _) ->
-          (match implicit_instantiation.Context.call_or_constructor with
-          | CallT _ ->
-            (* This case is hit when calling a static function. We will implicitly
-             * instantiate the type variables on the class, but using an instance's
-             * type params in a static method does not make sense. We ignore this case
-             * intentionally *)
-            (SMap.empty, Marked.empty)
-          | ConstructorT _ -> check_instance cx ~tparams ~implicit_instantiation
-          | _ -> failwith "Not possible")
-        | _ -> failwith "No other possible lower bounds"
-      in
-      (tparams_map, marked_tparams, bounds_map)
-    | _t ->
-      failwith "Implicit instantiation checks should always have a polymorphic class or function"
+    let { Check.poly_t = (_, tparams, t); operation; _ } = implicit_instantiation in
+    let tparams = Nel.to_list tparams in
+    let bounds_map = List.fold_left (fun map x -> SMap.add x.name x.bound map) SMap.empty tparams in
+    let (tparams_map, marked_tparams) =
+      match get_t cx t with
+      | DefT (_, _, FunT (_, _, funtype)) ->
+        check_fun cx ~tparams ~bounds_map ~return_t:funtype.return_t ~implicit_instantiation
+      | ThisClassT (_, DefT (_, _, InstanceT (_, _, _, _insttype)), _) ->
+        (match operation with
+        | (_, _, Check.Call _) ->
+          (* This case is hit when calling a static function. We will implicitly
+           * instantiate the type variables on the class, but using an instance's
+           * type params in a static method does not make sense. We ignore this case
+           * intentionally *)
+          (SMap.empty, Marked.empty)
+        | (_, _, Check.Constructor _) -> check_instance cx ~tparams ~implicit_instantiation)
+      | _ -> failwith "No other possible lower bounds"
+    in
+    (tparams_map, marked_tparams, bounds_map)
 
   let run cx implicit_instantiation =
     let (tparams_map, marked_tparams, bounds_map) =

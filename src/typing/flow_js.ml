@@ -2960,8 +2960,9 @@ struct
               begin
                 match calltype.call_targs with
                 | None ->
-                  if not (Speculation.speculating cx) then
-                    Context.add_implicit_instantiation_check cx l u;
+                  ( if not (Speculation.speculating cx) then
+                    let poly_t = (tparams_loc, ids, t) in
+                    Context.add_implicit_instantiation_call cx l poly_t use_op reason_op calltype );
                   let t_ =
                     instantiate_poly
                       cx
@@ -3002,9 +3003,10 @@ struct
                   ~reason_tapp
               in
               rec_flow cx trace (t_, ConstructorT (use_op, reason_op, None, args, tout))
-            | ConstructorT (_, _, None, _, _) ->
-              if not (Speculation.speculating cx) then
-                Context.add_implicit_instantiation_check cx l u;
+            | ConstructorT (use_op, reason_op, None, args, _) ->
+              ( if not (Speculation.speculating cx) then
+                let poly_t = (tparams_loc, ids, t) in
+                Context.add_implicit_instantiation_ctor cx l poly_t use_op reason_op args );
               let use_op =
                 match use_op_of_use_t u with
                 | Some use_op -> use_op

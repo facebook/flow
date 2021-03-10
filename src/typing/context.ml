@@ -79,10 +79,19 @@ type voidable_check = {
   errors: ALoc.t Property_assignment.errors;
 }
 
-type implicit_instantiation_check = {
-  fun_or_class: Type.t;
-  call_or_constructor: Type.use_t;
-}
+module Implicit_instantiation_check = struct
+  type poly_t = ALoc.t * Type.typeparam Nel.t * Type.t
+
+  type operation =
+    | Call of Type.funcalltype
+    | Constructor of Type.call_arg list
+
+  type t = {
+    lhs: Type.t;
+    poly_t: poly_t;
+    operation: Type.use_op * Reason.t * operation;
+  }
+end
 
 (* Equivalently, we could use a Reason.t option, but this is more self-documenting. *)
 type computed_property_state =
@@ -167,7 +176,7 @@ type 'phase component_t_ = {
   (* Post-inference checks *)
   mutable literal_subtypes: (Type.t * Type.use_t) list;
   mutable matching_props: (Reason.reason * string * Type.t * Type.t) list;
-  mutable implicit_instantiation_checks: implicit_instantiation_check list;
+  mutable implicit_instantiation_checks: Implicit_instantiation_check.t list;
   mutable builtins: Builtins.t;
 }
 
@@ -632,11 +641,20 @@ let add_literal_subtypes cx c = cx.ccx.literal_subtypes <- c :: cx.ccx.literal_s
 let add_voidable_check cx voidable_check =
   cx.ccx.voidable_checks <- voidable_check :: cx.ccx.voidable_checks
 
-let add_implicit_instantiation_check cx fun_or_class call_or_constructor =
-  let implicit_instantiation_check = { fun_or_class; call_or_constructor } in
+let add_implicit_instantiation_call cx lhs poly_t use_op reason funcalltype =
   if cx.metadata.run_post_inference_implicit_instantiation then
-    cx.ccx.implicit_instantiation_checks <-
-      implicit_instantiation_check :: cx.ccx.implicit_instantiation_checks
+    let check =
+      Implicit_instantiation_check.{ lhs; poly_t; operation = (use_op, reason, Call funcalltype) }
+    in
+    cx.ccx.implicit_instantiation_checks <- check :: cx.ccx.implicit_instantiation_checks
+
+let add_implicit_instantiation_ctor cx lhs poly_t use_op reason_op args =
+  if cx.metadata.run_post_inference_implicit_instantiation then
+    let check =
+      Implicit_instantiation_check.
+        { lhs; poly_t; operation = (use_op, reason_op, Constructor args) }
+    in
+    cx.ccx.implicit_instantiation_checks <- check :: cx.ccx.implicit_instantiation_checks
 
 let set_all_unresolved cx all_unresolved = cx.ccx.all_unresolved <- all_unresolved
 
