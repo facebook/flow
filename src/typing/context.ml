@@ -163,6 +163,7 @@ type 'phase component_t_ = {
   mutable literal_subtypes: (Type.t * Type.use_t) list;
   mutable matching_props: (Reason.reason * string * Type.t * Type.t) list;
   mutable implicit_instantiation_checks: implicit_instantiation_check list;
+  mutable builtins: Builtins.t;
 }
 
 type component_t = Type.Constraint.infer_phase component_t_
@@ -317,6 +318,7 @@ let make_ccx () =
     fix_cache = Hashtbl.create 0;
     spread_cache = Hashtbl.create 0;
     speculation_state = ref [];
+    builtins = Builtins.empty ();
   }
 
 (* create a new context structure.
@@ -399,6 +401,8 @@ let metadata cx = cx.metadata
 let max_literal_length cx = cx.metadata.max_literal_length
 
 let babel_loose_array_spread cx = cx.metadata.babel_loose_array_spread
+
+let builtins cx = cx.ccx.builtins
 
 let enable_const_params cx =
   cx.metadata.enable_const_params || cx.metadata.strict || cx.metadata.strict_local
@@ -662,6 +666,8 @@ let set_use_def cx use_def = cx.use_def <- use_def
 let set_local_env cx exported_locals = cx.exported_locals <- exported_locals
 
 let set_module_map cx module_map = cx.ccx.sig_cx <- { cx.ccx.sig_cx with module_map }
+
+let set_builtins cx builtins = cx.ccx.builtins <- builtins
 
 (* Given a sig context, it makes sense to clear the parts that are shared with
    the master sig context. Why? The master sig context, which contains global

@@ -152,6 +152,8 @@ val max_literal_length : 'phase t_ -> int
 
 val babel_loose_array_spread : 'phase t_ -> bool
 
+val builtins : 'phase t_ -> Builtins.t
+
 val enable_const_params : 'phase t_ -> bool
 
 val enable_enums : 'phase t_ -> bool
@@ -371,6 +373,8 @@ val set_use_def : 'phase t_ -> Scope_api.With_ALoc.info * Ssa_api.With_ALoc.valu
 val set_module_map : 'phase t_ -> Type.t NameUtils.Map.t -> unit
 
 val set_local_env : 'phase t_ -> ALocSet.t SMap.t option -> unit
+
+val set_builtins : 'phase t_ -> Builtins.t -> unit
 
 val clear_master_shared : 'phase t_ -> 'phase sig_t_ -> unit
 
