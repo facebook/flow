@@ -359,8 +359,6 @@ let make ccx metadata file aloc_table module_ref phase =
 
 let sig_cx cx = cx.ccx.sig_cx
 
-let graph_sig sig_cx = sig_cx.graph
-
 let trust_graph_sig sig_cx = sig_cx.trust_graph
 
 let find_module_sig sig_cx m =
@@ -465,7 +463,7 @@ let mem_nominal_poly_id cx id = Type.Poly.Set.mem id cx.ccx.nominal_poly_ids
 
 let mem_nominal_prop_id cx id = ISet.mem id cx.ccx.nominal_prop_ids
 
-let graph cx = graph_sig cx.ccx.sig_cx
+let graph cx = cx.ccx.sig_cx.graph
 
 let trust_graph cx = trust_graph_sig cx.ccx.sig_cx
 
@@ -639,10 +637,6 @@ let add_implicit_instantiation_check cx fun_or_class call_or_constructor =
   if cx.metadata.run_post_inference_implicit_instantiation then
     cx.ccx.implicit_instantiation_checks <-
       implicit_instantiation_check :: cx.ccx.implicit_instantiation_checks
-
-let remove_tvar cx id =
-  let graph = IMap.remove id cx.ccx.sig_cx.graph in
-  cx.ccx.sig_cx <- { cx.ccx.sig_cx with graph }
 
 let set_all_unresolved cx all_unresolved = cx.ccx.all_unresolved <- all_unresolved
 

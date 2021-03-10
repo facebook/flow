@@ -142,8 +142,6 @@ val cx_with_trust : 'phase t_ -> (unit -> Trust.trust_rep) -> 'phase t_
 
 val sig_cx : 'phase t_ -> 'phase sig_t_
 
-val graph_sig : 'phase sig_t_ -> 'phase Type.Constraint.node IMap.t
-
 val find_module_sig : 'phase sig_t_ -> string -> Type.t
 
 (* accessors *)
@@ -348,8 +346,6 @@ val add_literal_subtypes : 'phase t_ -> Type.t * Type.use_t -> unit
 val add_voidable_check : 'phase t_ -> voidable_check -> unit
 
 val add_implicit_instantiation_check : 'phase t_ -> Type.t -> Type.use_t -> unit
-
-val remove_tvar : 'phase t_ -> Type.ident -> unit
 
 val set_evaluated : 'phase t_ -> Type.t Type.Eval.Map.t -> unit
 
