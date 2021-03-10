@@ -737,6 +737,10 @@ module ContextOptimizer = struct
         reduced_module_map <-
           NameUtils.Map.add (Reason.OrdinaryName module_ref) export' reduced_module_map
 
+      method reduce_builtins cx =
+        let builtins = Context.builtins cx in
+        Builtins.map_entries builtins ~f:(self#type_ cx Polarity.Neutral)
+
       method tvar cx pole r id =
         let (root_id, _) = Context.find_constraints cx id in
         if id == root_id then (
@@ -1075,6 +1079,11 @@ module ContextOptimizer = struct
     Base.List.iter ~f:(reducer#reduce cx) module_refs;
     (reducer#sig_hash (), reducer)
 
+  let reduce_builtins cx =
+    let reducer = new context_optimizer in
+    reducer#reduce_builtins cx;
+    reducer
+
   (* reduce a context to a "signature context" *)
   let sig_context cx module_refs =
     let (sig_hash, reducer) = reduce_context cx module_refs in
@@ -1086,4 +1095,14 @@ module ContextOptimizer = struct
     Context.set_export_maps cx reducer#get_reduced_export_maps;
     Context.set_evaluated cx reducer#get_reduced_evaluated;
     sig_hash
+
+  let optimize_builtins cx =
+    let reducer = reduce_builtins cx in
+    Context.set_module_map cx reducer#get_reduced_module_map;
+    Context.set_graph cx reducer#get_reduced_graph;
+    Context.set_trust_graph cx reducer#get_reduced_trust_graph;
+    Context.set_property_maps cx reducer#get_reduced_property_maps;
+    Context.set_call_props cx reducer#get_reduced_call_props;
+    Context.set_export_maps cx reducer#get_reduced_export_maps;
+    Context.set_evaluated cx reducer#get_reduced_evaluated
 end
