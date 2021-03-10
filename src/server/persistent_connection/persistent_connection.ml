@@ -16,6 +16,12 @@ type type_contents_artifacts =
   * (ALoc.t, ALoc.t * Type.t) Flow_ast.Program.t
   * (Loc.t * Parse_error.t) list
 
+module Client_config = struct
+  type t = { suggest_autoimports: bool }
+
+  let suggest_autoimports { suggest_autoimports } = suggest_autoimports
+end
+
 type single_client = {
   client_id: Prot.client_id;
   lsp_initialize_params: Lsp.Initialize.params;
@@ -23,6 +29,7 @@ type single_client = {
   (* map from filename to content *)
   mutable opened_files: string SMap.t;
   type_contents_cache: (type_contents_artifacts, string) result FilenameCache.t;
+  mutable client_config: Client_config.t;
 }
 
 type t = Prot.client_id list
@@ -102,6 +109,7 @@ let add_client client_id lsp_initialize_params =
       client_id;
       lsp_initialize_params;
       type_contents_cache = FilenameCache.make ~max_size:cache_max_size;
+      client_config = { Client_config.suggest_autoimports = true };
     }
   in
   active_clients := IMap.add client_id new_client !active_clients;
@@ -220,6 +228,15 @@ let client_did_close (client : single_client) ~(filenames : string Nel.t) : bool
     true
   )
 
+let client_did_change_configuration (client : single_client) (new_config : Client_config.t) : unit =
+  Hh_logger.info "Client #%d changed configuration" client.client_id;
+  let old_config = client.client_config in
+  let old_suggest_autoimports = Client_config.suggest_autoimports old_config in
+  let new_suggest_autoimports = Client_config.suggest_autoimports new_config in
+  if new_suggest_autoimports <> old_suggest_autoimports then
+    Hh_logger.info "  suggest_autoimports: %b -> %b" old_suggest_autoimports new_suggest_autoimports;
+  client.client_config <- new_config
+
 let get_file (client : single_client) (fn : string) : File_input.t =
   let content_opt = SMap.find_opt fn client.opened_files in
   match content_opt with
@@ -238,6 +255,8 @@ let get_opened_files (clients : t) : SSet.t =
 let get_id client = client.client_id
 
 let lsp_initialize_params (client : single_client) = client.lsp_initialize_params
+
+let client_config client = client.client_config
 
 let type_contents_cache client = client.type_contents_cache
 

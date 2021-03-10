@@ -10,6 +10,12 @@ type t
 
 type single_client
 
+module Client_config : sig
+  type t = { suggest_autoimports: bool }
+
+  val suggest_autoimports : t -> bool
+end
+
 val empty : t
 
 val add_client : LspProt.client_id -> Lsp.Initialize.params -> unit
@@ -63,6 +69,8 @@ val client_did_change :
 
 val client_did_close : single_client -> filenames:string Nel.t -> bool
 
+val client_did_change_configuration : single_client -> Client_config.t -> unit
+
 (** Returns the set of all opened files across all clients.
     It's not meaningful to talk about the *content* of those opened files in
     cases where clients differ. *)
@@ -77,6 +85,8 @@ val get_client : LspProt.client_id -> single_client option
 val get_id : single_client -> LspProt.client_id
 
 val lsp_initialize_params : single_client -> Lsp.Initialize.params
+
+val client_config : single_client -> Client_config.t
 
 type type_contents_artifacts =
   Context.t

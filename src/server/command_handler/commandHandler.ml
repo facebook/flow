@@ -1489,9 +1489,19 @@ let handle_persistent_cancel_notification ~params ~metadata ~client:_ ~profiling
   ServerMonitorListenerState.(cancellation_requests := IdSet.remove id !cancellation_requests);
   Lwt.return (env, LspProt.LspFromServer None, metadata)
 
-let handle_persistent_did_change_configuration_notification
-    ~params:_ ~metadata ~client:_ ~profiling:_ =
-  (* no-op for now *)
+let handle_persistent_did_change_configuration_notification ~params ~metadata ~client ~profiling:_ =
+  let open Hh_json_helpers in
+  let open Persistent_connection in
+  let { Lsp.DidChangeConfiguration.settings } = params in
+  let client_config = client_config client in
+  let json = Some settings in
+  let client_config =
+    let suggest = Jget.obj_opt json "suggest" in
+    match Jget.bool_opt suggest "autoImports" with
+    | Some suggest_autoimports -> { Client_config.suggest_autoimports }
+    | None -> client_config
+  in
+  client_did_change_configuration client client_config;
   Lwt.return ((), LspProt.LspFromServer None, metadata)
 
 let handle_persistent_get_def ~reader ~options ~id ~params ~loc ~metadata ~client ~profiling ~env =
@@ -1605,6 +1615,7 @@ let handle_persistent_code_action_request
 
 let handle_persistent_autocomplete_lsp
     ~reader ~options ~id ~params ~loc ~metadata ~client ~profiling ~env =
+  let client_config = Persistent_connection.client_config client in
   let lsp_init_params = Persistent_connection.lsp_initialize_params client in
   let is_snippet_supported = Lsp_helpers.supports_snippets lsp_init_params in
   let is_preselect_supported = Lsp_helpers.supports_preselect lsp_init_params in
@@ -1632,7 +1643,10 @@ let handle_persistent_autocomplete_lsp
          let e = Exception.wrap e in
          Error (Exception.get_ctor_string e, Utils.Callstack (Exception.get_backtrace_string e)))
   in
-  let imports = Options.autoimports options in
+  let imports =
+    Persistent_connection.Client_config.suggest_autoimports client_config
+    && Options.autoimports options
+  in
   match fn_content with
   | Error (reason, stack) -> mk_lsp_error_response ~ret:() ~id:(Some id) ~reason ~stack metadata
   | Ok (filename, contents) ->
