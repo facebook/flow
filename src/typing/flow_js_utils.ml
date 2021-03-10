@@ -66,8 +66,7 @@ let merge_tvar =
     | [t] -> t
     | t0 :: t1 :: ts -> UnionT (r, UnionRep.make t0 t1 ts)
     | [] ->
-      let uses = possible_uses cx id in
-      if uses = [] || existential then
+      if existential then
         AnyT.locationless Unsoundness.existential
       else
         no_lowers cx r
