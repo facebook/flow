@@ -54,7 +54,7 @@ type file = {
   cx: Context.t;
   dependencies: (string * (ALoc.t -> Type.t)) Module_refs.t;
   exports: unit -> Type.t;
-  export_def: Type.t Lazy.t option;
+  export_def: Type.t option Lazy.t;
   local_defs: (unit -> ALoc.t * string * Type.t) Local_defs.t;
   remote_refs: (unit -> ALoc.t * string * Type.t) Remote_refs.t;
   patterns: Type.t Lazy.t Patterns.t;
@@ -366,7 +366,7 @@ let merge_export file = function
     let (loc, _name, t) = visit (Local_defs.get file.local_defs index) in
     (Some loc, t)
   | Pack.ExportDefault { default_loc } ->
-    let (lazy t) = Option.value_exn file.export_def in
+    let t = Option.value_exn (Lazy.force file.export_def) in
     (Some default_loc, t)
   | Pack.ExportDefaultBinding { default_loc; index } ->
     let (_loc, _name, t) = visit (Local_defs.get file.local_defs index) in
@@ -444,8 +444,8 @@ let merge_exports =
   fun file reason -> function
     | Pack.CJSExports { types; type_stars; strict } ->
       let value =
-        match file.export_def with
-        | Some (lazy t) -> t
+        match Lazy.force file.export_def with
+        | Some t -> t
         | None -> Obj_type.mk_unsealed file.cx reason
       in
       let types = SMap.map (merge_export_type file) types |> NameUtils.namemap_of_smap in

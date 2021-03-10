@@ -350,6 +350,12 @@ let merge_context_new_signatures ~options ~reader component =
               let t = Merge.merge_exports (Lazy.force file_rec) reason exports in
               Flow_js.unify cx tvar t)
     in
+    let visit_export_def file_rec export_def =
+      lazy
+        (match export_def with
+        | None -> None
+        | Some def -> Some (Merge.merge (Lazy.force file_rec) (Pack.map_packed aloc def)))
+    in
     let visit_def file_rec def =
       let merged = ref None in
       let def = Pack.map_packed_def aloc def in
@@ -398,7 +404,7 @@ let merge_context_new_signatures ~options ~reader component =
           cx;
           dependencies;
           exports = visit_exports file_rec;
-          export_def = Base.Option.map ~f:(visit_packed file_rec) export_def;
+          export_def = visit_export_def file_rec export_def;
           local_defs = Local_defs.map (visit_def file_rec) local_defs;
           remote_refs = Remote_refs.map (visit_remote_ref file_rec) remote_refs;
           pattern_defs = Pattern_defs.map (visit_packed file_rec) pattern_defs;
