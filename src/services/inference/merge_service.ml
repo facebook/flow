@@ -71,7 +71,7 @@ module type PHASE_CONFIG = sig
     input ->
     Reqs.t ->
     Context.sig_t list ->
-    Context.sig_t ->
+    Context.master_context ->
     output
 end
 
@@ -86,7 +86,7 @@ module type PROCESS_UNIT = sig
     reader:reader ->
     input ->
     (string * ALoc.t Nel.t * Modulename.t * File_key.t) list ->
-    Context.sig_t * Context.sig_t list * Reqs.t
+    Context.master_context * Context.sig_t list * Reqs.t
 end
 
 module Process_unit (C : PHASE_CONFIG) = struct
@@ -126,10 +126,8 @@ module Process_unit (C : PHASE_CONFIG) = struct
         ([], Reqs.empty)
         required
     in
-    let { Context.master_sig_cx; builtins = _ } =
-      Context_heaps.Reader_dispatcher.find_master ~reader
-    in
-    (master_sig_cx, dep_cxs, reqs)
+    let master_cx = Context_heaps.Reader_dispatcher.find_master ~reader in
+    (master_cx, dep_cxs, reqs)
 
   let process ~options ~reader input =
     let (required, file_sigs) =
@@ -195,7 +193,7 @@ module Merge_config = struct
     let ((cx, _, _), _) =
       Merge_js.merge_component ~opts ~getters ~file_sigs component reqs dep_cxs master_cx
     in
-    (cx, master_cx)
+    (cx, master_cx.Context.master_sig_cx)
 end
 
 module Merge_component :
@@ -265,9 +263,7 @@ let merge_context_new_signatures ~options ~reader component =
     let builtin_name = Reason.internal_module_name (Modulename.to_string mname) in
     fun loc ->
       let reason = Reason.mk_reason desc loc in
-      let strict = Type.Strict reason in
-      Tvar.mk_no_wrap_where cx reason (fun tout ->
-          Flow_js.lookup_builtin cx builtin_name reason strict tout)
+      Flow_js.lookup_builtin_strict cx builtin_name reason
   in
   let mk_resource_module_t cx filename loc = Import_export.mk_resource_module_t cx loc filename in
   let mk_cyclic_module_t component_rec i _loc =
@@ -285,11 +281,8 @@ let merge_context_new_signatures ~options ~reader component =
     let builtin_name = Reason.internal_module_name mref in
     fun loc ->
       let reason = Reason.(mk_reason desc loc) in
-      Tvar.mk_no_wrap_where cx reason (fun tout ->
-          let strict =
-            Type.(NonstrictReturning (Some (AnyT (reason, Untyped), OpenT tout), None))
-          in
-          Flow_js.lookup_builtin cx builtin_name reason strict tout)
+      let default = Type.(AnyT (reason, Untyped)) in
+      Flow_js.lookup_builtin_with_default cx builtin_name default
   in
   let file_dependency component_rec cx file_key mref =
     let open Module_heaps in
@@ -425,15 +418,10 @@ let merge_context_new_signatures ~options ~reader component =
   let { Merge.cx; _ } = component.(0) in
 
   (* create builtins, merge master cx *)
-  let { Context.master_sig_cx; builtins = _ } =
-    Context_heaps.Reader_dispatcher.find_master ~reader
-  in
-  Flow_js_utils.mk_builtins cx;
-  Context.merge_into ccx master_sig_cx;
-  Flow_js.flow_t
-    cx
-    ( Context.find_module_sig master_sig_cx Files.lib_module_ref,
-      Context.find_module cx Files.lib_module_ref );
+  let master_cx = Context_heaps.Reader_dispatcher.find_master ~reader in
+  Context.merge_into ccx master_cx.Context.master_sig_cx;
+  let builtins = master_cx.Context.builtins in
+  Context.set_builtins cx builtins;
 
   (* scan for suppressions *)
   scan_for_component_suppressions
@@ -444,7 +432,7 @@ let merge_context_new_signatures ~options ~reader component =
   (* merge *)
   Array.iter Merge.merge_file component;
 
-  (cx, master_sig_cx)
+  (cx, master_cx.Context.master_sig_cx)
 
 let merge_context ~options ~reader component =
   if Options.new_signatures options then
@@ -523,7 +511,7 @@ module Check_config = struct
     in
     let file_sig = get_file_sig_unsafe ~reader file in
     let coverage = Coverage.file_coverage ~full_cx:cx typed_ast in
-    { cx; master_cx; file_sig; typed_ast; coverage }
+    { cx; master_cx = master_cx.Context.master_sig_cx; file_sig; typed_ast; coverage }
 end
 
 module Check_file :

@@ -51,7 +51,7 @@ val merge_component :
   (* dependency cxs *)
   Context.sig_t list ->
   (* master cx *)
-  Context.sig_t ->
+  Context.master_context ->
   (* output in component order, hd is merged leader, along with a coverage summary for each file *)
   output Nel.t
 
@@ -64,7 +64,7 @@ val check_file :
   (* dependency cxs *)
   Context.sig_t list ->
   (* master cx *)
-  Context.sig_t ->
+  Context.master_context ->
   output
 
 module ContextOptimizer : sig

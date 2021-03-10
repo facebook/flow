@@ -129,7 +129,21 @@ let before_and_after_stmts file_name =
         (Reason.OrdinaryName Files.lib_module_ref)
         Context.Checking
     in
-    Flow_js_utils.mk_builtins cx;
+    (* Loading the entire libdefs here would be overkill, but the typed_ast tests do use Object
+     * in a few tests. In order to avoid EBuiltinLookupFailed errors with an empty source location,
+     * we manually add "Object" -> Any into the builtins map. We use the UnresolvedName any type
+     * to avoid any "Any value used as type" errors that may otherwise appear *)
+    let builtins = Context.builtins cx in
+    let reason =
+      let loc = ALoc.none in
+      let desc = Reason.RCustom "Explicit any used in type_ast tests" in
+      Reason.mk_reason desc loc
+    in
+    Builtins.set_builtin
+      ~flow_t:(fun _ -> ())
+      builtins
+      (Reason.OrdinaryName "Object")
+      (Type.AnyT (reason, Type.AnyError (Some Type.UnresolvedName)));
     add_require_tvars cx file_sig;
     let module_scope = Scope.fresh () in
     Env.init_env module_scope;

@@ -9517,27 +9517,44 @@ struct
       rec_flow cx trace (value, apply_method_action use_op reason_call l action)
 
   (* builtins, contd. *)
-  and get_builtin cx ?trace x reason =
-    Tvar.mk_no_wrap_where cx reason (fun builtin ->
-        let propref = Named (reason, x) in
-        flow_opt cx ?trace (builtins cx, GetPropT (unknown_use, reason, propref, builtin)))
+  (* get_builtin has different behavior depending on which file you're using it from. If we are
+   * in a lib file, then the builtin lookup will make a fresh entry into the builtins map if
+   * the entry you are searching for does not exist. After the builtins are done being made,
+   * we ensure that every entry receives a write.
+   *
+   * If you are not in a lib file, then this behaves as a strict lookup. We error and return Any
+   * in the case where the builtin is not already in the map *)
+  and get_builtin cx ?trace:_ x reason =
+    if Context.current_phase cx <> Context.InitLib then
+      lookup_builtin_strict cx x reason
+    else
+      let builtins = Context.builtins cx in
+      let builtin =
+        Builtins.get_builtin builtins x ~on_missing:(fun () ->
+            let tvar = Tvar.mk cx reason in
+            Builtins.add_not_yet_seen_builtin builtins x tvar;
+            tvar)
+      in
+      Tvar.mk_where cx reason (fun t -> flow_t cx (builtin, t))
 
-  and lookup_builtin cx ?trace x reason strict builtin =
-    let propref = Named (reason, x) in
-    let l = builtins cx in
-    flow_opt
-      cx
-      ?trace
-      ( l,
-        LookupT
-          {
-            reason;
-            lookup_kind = strict;
-            ts = [];
-            propref;
-            lookup_action = ReadProp { use_op = unknown_use; obj_t = l; tout = builtin };
-            ids = Some Properties.Set.empty;
-          } )
+  (* Looks up a builtin and errors if it is not found. Does not add an entry that requires a
+   * write later. *)
+  and lookup_builtin_strict cx x reason =
+    let builtins = Context.builtins cx in
+    let builtin =
+      Builtins.get_builtin builtins x ~on_missing:(fun () ->
+          add_output cx (Error_message.EBuiltinLookupFailed { reason; name = Some x });
+          AnyT.error_of_kind UnresolvedName reason)
+    in
+    Tvar.mk_where cx reason (fun t -> flow_t cx (builtin, t))
+
+  (* Looks up a builtin and returns the default if it is not found.
+   * Does not add an entry that requires a
+   * write later. *)
+  and lookup_builtin_with_default cx x default =
+    let builtins = Context.builtins cx in
+    let builtin = Builtins.get_builtin builtins x ~on_missing:(fun () -> default) in
+    Tvar.mk_where cx (reason_of_t default) (fun t -> flow_t cx (builtin, t))
 
   and get_builtin_typeapp cx ?trace reason x targs =
     let t = get_builtin cx ?trace x reason in
@@ -9818,12 +9835,9 @@ struct
       AnyT.error reason
 
   and set_builtin cx ?trace x t =
-    let reason = builtin_reason (RCustom (display_string_of_name x)) in
-    let propref = Named (reason, x) in
-    flow_opt
-      cx
-      ?trace
-      (builtins cx, SetPropT (unknown_use, reason, propref, Assign, Normal, t, None))
+    let builtins = Context.builtins cx in
+    let flow_t = flow_opt_t cx ~use_op:unknown_use ?trace in
+    Builtins.set_builtin ~flow_t builtins x t
 
   (* Wrapper functions around __flow that manage traces. Use these functions for
      all recursive calls in the implementation of __flow. *)

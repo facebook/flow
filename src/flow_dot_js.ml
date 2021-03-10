@@ -184,14 +184,14 @@ let stub_metadata ~root ~checked =
     type_asserts = false;
   }
 
-let master_cx_ref : (Path.t * Context.sig_t) option ref = ref None
+let master_cx_ref : (Path.t * Context.master_context) option ref = ref None
 
 let get_master_cx root =
   match !master_cx_ref with
   | None -> failwith "builtins not initialized"
-  | Some (prev_root, sig_cx) ->
+  | Some (prev_root, master_cx) ->
     assert (prev_root = root);
-    sig_cx
+    master_cx
 
 let init_builtins filenames =
   let root = Path.dummy_path in
@@ -207,7 +207,6 @@ let init_builtins filenames =
       (Reason.OrdinaryName Files.lib_module_ref)
       Context.Checking
   in
-  Flow_js_utils.mk_builtins master_cx;
   let () =
     let metadata = stub_metadata ~root ~checked:true in
     load_lib_files
@@ -219,11 +218,12 @@ let init_builtins filenames =
       (fun _file _sups -> ())
       (fun _file _lint -> ())
   in
-  let reason = Reason.builtin_reason (Reason.RCustom "module") in
-  let builtin_module = Obj_type.mk_unsealed master_cx reason in
-  Flow_js.flow_t master_cx (builtin_module, Flow_js_utils.builtins master_cx);
-  ignore (Merge_js.ContextOptimizer.sig_context master_cx [Files.lib_module_ref]);
-  master_cx_ref := Some (root, Context.sig_cx master_cx)
+  Merge_js.ContextOptimizer.optimize_builtins master_cx;
+  master_cx_ref :=
+    Some
+      ( root,
+        { Context.master_sig_cx = Context.sig_cx master_cx; builtins = Context.builtins master_cx }
+      )
 
 let infer_and_merge ~root filename ast file_sig =
   (* this is a VERY pared-down version of Merge_service.merge_strict_context.

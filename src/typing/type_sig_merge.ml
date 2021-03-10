@@ -695,10 +695,7 @@ and merge_annot file = function
   | ExportsT (loc, ref) ->
     let reason = Reason.(mk_annot_reason (RModule (OrdinaryName ref)) loc) in
     let m_name = Reason.internal_module_name ref in
-    let module_t =
-      Tvar.mk_no_wrap_where file.cx reason (fun tout ->
-          Flow_js.lookup_builtin file.cx m_name reason (Type.Strict reason) tout)
-    in
+    let module_t = Flow_js.lookup_builtin_strict file.cx m_name reason in
     Tvar.mk_where file.cx reason (fun tout ->
         Flow_js.flow file.cx (module_t, Type.CJSRequireT (reason, tout, false)))
   | Call { loc; fn; args } ->

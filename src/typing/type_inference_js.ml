@@ -450,33 +450,6 @@ let infer_ast ~lint_severities cx filename comments aloc_ast =
       all_comments = aloc_all_comments;
     } )
 
-(* Because libdef parsing is overly permissive, a libdef file might include an
-   unexpected top-level statement like `export type` which mutates the module
-   map and overwrites the builtins object.
-
-   Since all libdefs share a sig_cx, this mutation will cause problems in later
-   lib files if not unwound.
-
-   Until we can restrict libdef parsing to forbid unexpected behaviors like
-   this, we need this wrapper to preserve the existing behavior. However, none
-   of this should be necessary.
-*)
-let with_libdef_builtins cx f =
-  (* Store the original builtins and replace with a fresh tvar. *)
-  let orig_builtins = Flow_js_utils.builtins cx in
-  Flow_js_utils.mk_builtins cx;
-
-  (* This function call might replace the builtins we just installed. *)
-  f ();
-
-  (* Connect the original builtins to the one we just calculated. *)
-  let () =
-    let builtins = Context.find_module cx Files.lib_module_ref in
-    Flow_js.flow_t cx (orig_builtins, builtins)
-  in
-  (* Restore the original builtins tvar for the next file. *)
-  Context.add_module cx (Reason.OrdinaryName Files.lib_module_ref) orig_builtins
-
 (* infer a parsed library file.
    processing is similar to an ordinary module, except that
    a) symbols from prior library loads are suppressed if found,
@@ -495,9 +468,8 @@ let infer_lib_file ~exclude_syms ~lint_severities ~file_sig cx ast =
   let module_scope = Scope.fresh ~var_scope_kind:Scope.Global () in
   Env.init_env ~exclude_syms module_scope;
 
-  with_libdef_builtins cx (fun () ->
-      ignore (infer_core cx aloc_statements : (ALoc.t, ALoc.t * Type.t) Ast.Statement.t list);
-      scan_for_suppressions cx lint_severities all_comments);
+  ignore (infer_core cx aloc_statements : (ALoc.t, ALoc.t * Type.t) Ast.Statement.t list);
+  scan_for_suppressions cx lint_severities all_comments;
 
   ( module_scope
   |> Scope.(

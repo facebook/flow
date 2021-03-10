@@ -15,7 +15,6 @@
 
 open Utils_js
 module Files = Files
-module Flow = Flow_js
 module Parsing = Parsing_service_js
 module Infer = Type_inference_js
 
@@ -211,13 +210,9 @@ let init ~options ~reader lib_files =
       (Reason.OrdinaryName Files.lib_module_ref)
       Context.InitLib
   in
-  Flow_js_utils.mk_builtins master_cx;
 
   let%lwt (ok, parse_and_sig_errors, exports) = load_lib_files ~ccx ~options ~reader lib_files in
-  let reason = Reason.builtin_reason (Reason.RCustom "module") in
-  let builtin_module = Obj_type.mk_unsealed master_cx reason in
-  Flow.flow_t master_cx (builtin_module, Flow_js_utils.builtins master_cx);
-  Merge_js.ContextOptimizer.sig_context master_cx [Files.lib_module_ref] |> ignore;
+  Merge_js.ContextOptimizer.optimize_builtins master_cx;
 
   let (errors, warnings, suppressions) =
     let suppressions = Context.error_suppressions master_cx in

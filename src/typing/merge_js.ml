@@ -112,10 +112,9 @@ end)
 
 (* Connect the builtins object in master_cx to the builtins reference in some
    arbitrary cx. *)
-let implicit_require cx master_cx cx_to =
-  let from_t = Context.find_module_sig master_cx Files.lib_module_ref in
-  let to_t = Context.find_module cx_to Files.lib_module_ref in
-  Flow_js.flow_t cx (from_t, to_t)
+let implicit_require cx master_cx =
+  let builtins = master_cx.Context.builtins in
+  Context.set_builtins cx builtins
 
 (* Connect the export of cx_from to its import in cx_to. This happens in some
    arbitrary cx, so cx_from and cx_to should have already been copied to cx. *)
@@ -158,10 +157,7 @@ let explicit_decl_require cx (m, loc, resolved_m, cx_to) =
       resolved_m_name
   in
   let m_name_internal = m_name |> Reason.internal_module_name in
-  let from_t =
-    Tvar.mk_no_wrap_where cx reason (fun from_t ->
-        Flow_js.lookup_builtin cx m_name_internal reason (Type.Strict reason) from_t)
-  in
+  let from_t = Flow_js.lookup_builtin_strict cx m_name_internal reason in
 
   (* flow the declared module type to importing context *)
   let to_t = Context.find_require cx_to loc in
@@ -176,15 +172,8 @@ let explicit_unchecked_require cx (m, loc, cx_to) =
    * from an untyped module and an any-typed type import from a nonexistent module. *)
   let reason = Reason.(mk_reason (RUntypedModule m) loc) in
   let m_name = Reason.internal_module_name m in
-  let from_t =
-    Tvar.mk_no_wrap_where cx reason (fun from_t ->
-        Flow_js.lookup_builtin
-          cx
-          m_name
-          reason
-          (Type.NonstrictReturning (Some (Type.AnyT (reason, Type.Untyped), Type.OpenT from_t), None))
-          from_t)
-  in
+  let default_t = Type.AnyT (reason, Type.Untyped) in
+  let from_t = Flow_js.lookup_builtin_with_default cx m_name default_t in
 
   (* flow the declared module type to importing context *)
   let to_t = Context.find_require cx_to loc in
@@ -434,10 +423,9 @@ let detect_literal_subtypes =
         Flow_js.flow cx (t, u))
       checks
 
-let merge_builtins cx ccx master_cx =
-  Flow_js_utils.mk_builtins cx;
-  Context.merge_into ccx master_cx;
-  implicit_require cx master_cx cx
+let merge_builtins cx sig_cx master_cx =
+  Context.merge_into sig_cx master_cx.Context.master_sig_cx;
+  implicit_require cx master_cx
 
 let get_lint_severities metadata strict_mode lint_severities =
   if metadata.Context.strict || metadata.Context.strict_local then
@@ -547,7 +535,8 @@ type output =
 
    5. Link the local references to libraries in master_cx and component_cxs.
 *)
-let merge_component ~opts ~getters ~file_sigs component reqs dep_cxs master_cx =
+let merge_component
+    ~opts ~getters ~file_sigs component reqs dep_cxs (master_cx : Context.master_context) =
   let (Merge_options { metadata; lint_severities; strict_mode; _ }) = opts in
   let { get_ast_unsafe; get_aloc_table_unsafe; get_docblock_unsafe } = getters in
   let ccx = Context.make_ccx () in

@@ -676,18 +676,8 @@ let instantiate_poly_param_upper_bounds cx typeparams =
 
 (** Builtins *)
 
-(* Every context has a local reference to builtins (along with local references
-   to other modules that are discovered during type checking, such as modules
-   required by it, the module it provides, and so on). *)
-let mk_builtins cx =
-  let builtins = Tvar.mk cx (builtin_reason (RCustom "module")) in
-  Context.add_module cx (OrdinaryName Files.lib_module_ref) builtins
-
 (* Local references to modules can be looked up. *)
 let lookup_module cx m = Context.find_module cx m
-
-(* The builtins reference is accessed just like references to other modules. *)
-let builtins cx = lookup_module cx Files.lib_module_ref
 
 let match_this_binding map f =
   match SMap.find "this" map with
