@@ -126,8 +126,10 @@ module Process_unit (C : PHASE_CONFIG) = struct
         ([], Reqs.empty)
         required
     in
-    let master_cx = Context_heaps.Reader_dispatcher.find_sig ~reader File_key.Builtins in
-    (master_cx, dep_cxs, reqs)
+    let { Context.master_sig_cx; builtins = _ } =
+      Context_heaps.Reader_dispatcher.find_master ~reader
+    in
+    (master_sig_cx, dep_cxs, reqs)
 
   let process ~options ~reader input =
     let (required, file_sigs) =
@@ -423,12 +425,14 @@ let merge_context_new_signatures ~options ~reader component =
   let { Merge.cx; _ } = component.(0) in
 
   (* create builtins, merge master cx *)
-  let master_cx = Context_heaps.Reader_dispatcher.find_sig ~reader File_key.Builtins in
+  let { Context.master_sig_cx; builtins = _ } =
+    Context_heaps.Reader_dispatcher.find_master ~reader
+  in
   Flow_js_utils.mk_builtins cx;
-  Context.merge_into ccx master_cx;
+  Context.merge_into ccx master_sig_cx;
   Flow_js.flow_t
     cx
-    ( Context.find_module_sig master_cx Files.lib_module_ref,
+    ( Context.find_module_sig master_sig_cx Files.lib_module_ref,
       Context.find_module cx Files.lib_module_ref );
 
   (* scan for suppressions *)
@@ -440,7 +444,7 @@ let merge_context_new_signatures ~options ~reader component =
   (* merge *)
   Array.iter Merge.merge_file component;
 
-  (cx, master_cx)
+  (cx, master_sig_cx)
 
 let merge_context ~options ~reader component =
   if Options.new_signatures options then

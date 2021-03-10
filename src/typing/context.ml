@@ -97,6 +97,11 @@ type 'phase sig_t_ = 'phase Type.TypeContext.t
 
 type sig_t = Type.Constraint.infer_phase Type.TypeContext.t
 
+type master_context = {
+  master_sig_cx: sig_t;
+  builtins: Builtins.t;
+}
+
 type 'phase component_t_ = {
   mutable sig_cx: 'phase sig_t_;
   (* mapping from keyed alocs to concrete locations *)

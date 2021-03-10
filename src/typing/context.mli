@@ -42,6 +42,11 @@ type 'phase sig_t_ = 'phase Type.TypeContext.t
 
 type sig_t = Type.Constraint.infer_phase sig_t_
 
+type master_context = {
+  master_sig_cx: sig_t;
+  builtins: Builtins.t;
+}
+
 type metadata = {
   (* local *)
   checked: bool;

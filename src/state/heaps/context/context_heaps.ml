@@ -9,6 +9,15 @@ open Utils_js
 
 (****************** shared context heap *********************)
 
+module MasterContextHeap =
+  SharedMem.WithCache
+    (File_key)
+    (struct
+      type t = Context.master_context
+
+      let description = "MasterContext"
+    end)
+
 module SigContextHeap =
   SharedMem.WithCache
     (File_key)
@@ -18,15 +27,17 @@ module SigContextHeap =
       let description = "SigContext"
     end)
 
-let master_sig : Context.sig_t option option ref = ref None
+let master_cx_ref : Context.master_context option ref = ref None
 
 let add_sig_context = Expensive.wrap SigContextHeap.add
 
-let add_sig ~audit cx =
+let add_master ~audit master_cx =
   WorkerCancel.with_no_cancellations (fun () ->
-      let cx_file = Context.file cx in
-      if cx_file = File_key.Builtins then master_sig := None;
-      add_sig_context ~audit cx_file (Context.sig_cx cx))
+      master_cx_ref := None;
+      let master_context =
+        { Context.master_sig_cx = Context.sig_cx master_cx; builtins = Context.builtins master_cx }
+      in
+      (Expensive.wrap MasterContextHeap.add) ~audit File_key.Builtins master_context)
 
 module SigHashHeap =
   SharedMem.NoCache
@@ -65,9 +76,9 @@ let revive_merge_batch files =
       SigHashHeap.revive_batch files)
 
 module Init_master_context_mutator : sig
-  val add_master_sig : (Context.t -> unit) Expensive.t
+  val add_master : (Context.t -> unit) Expensive.t
 end = struct
-  let add_master_sig ~audit cx = add_sig ~audit cx
+  let add_master ~audit cx = add_master ~audit cx
 end
 
 let currently_oldified_files : FilenameSet.t ref option ref = ref None
@@ -191,23 +202,27 @@ module type READER = sig
   val find_leader : reader:reader -> File_key.t -> File_key.t
 
   val sig_hash_opt : reader:reader -> File_key.t -> Xx.hash option
+
+  val find_master : reader:reader -> Context.master_context
 end
 
 let find_sig ~get_sig ~reader:_ file =
-  let cx_opt =
-    if file = File_key.Builtins then (
-      match !master_sig with
-      | Some cx_opt -> cx_opt
-      | None ->
-        let cx_opt = get_sig file in
-        master_sig := Some cx_opt;
-        cx_opt
-    ) else
-      get_sig file
-  in
-  match cx_opt with
+  assert (file <> File_key.Builtins);
+  match get_sig file with
   | Some cx -> cx
   | None -> raise (Key_not_found ("SigContextHeap", File_key.to_string file))
+
+let find_master ~reader:_ =
+  match !master_cx_ref with
+  | Some master_cx -> master_cx
+  | None ->
+    begin
+      match MasterContextHeap.get File_key.Builtins with
+      | Some master_cx ->
+        master_cx_ref := Some master_cx;
+        master_cx
+      | None -> raise (Key_not_found ("MasterContextHeap", "master context"))
+    end
 
 module Mutator_reader : sig
   include READER with type reader = Mutator_state_reader.t
@@ -224,6 +239,8 @@ end = struct
     match LeaderHeap.get file with
     | Some leader -> leader
     | None -> raise (Key_not_found ("LeaderHeap", File_key.to_string file))
+
+  let find_master ~reader = find_master ~reader
 
   let sig_hash_opt ~reader:_ = SigHashHeap.get
 
@@ -268,6 +285,8 @@ module Reader : READER with type reader = State_reader.t = struct
       SigHashHeap.get_old file
     else
       SigHashHeap.get file
+
+  let find_master ~reader = find_master ~reader
 end
 
 module Reader_dispatcher : READER with type reader = Abstract_state_reader.t = struct
@@ -289,6 +308,11 @@ module Reader_dispatcher : READER with type reader = Abstract_state_reader.t = s
     match reader with
     | Mutator_state_reader reader -> Mutator_reader.sig_hash_opt ~reader
     | State_reader reader -> Reader.sig_hash_opt ~reader
+
+  let find_master ~reader =
+    match reader with
+    | Mutator_state_reader reader -> Mutator_reader.find_master ~reader
+    | State_reader reader -> Reader.find_master ~reader
 end
 
 module From_saved_state = struct

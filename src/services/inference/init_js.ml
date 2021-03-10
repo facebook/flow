@@ -236,6 +236,6 @@ let init ~options ~reader lib_files =
       suppressions )
   in
   (* store master signature context to heap *)
-  Context_heaps.Init_master_context_mutator.add_master_sig ~audit:Expensive.ok master_cx;
+  Context_heaps.Init_master_context_mutator.add_master ~audit:Expensive.ok master_cx;
 
   Lwt.return { ok; errors; warnings; suppressions; exports }

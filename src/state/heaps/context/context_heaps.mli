@@ -13,6 +13,8 @@ module type READER = sig
   val find_leader : reader:reader -> File_key.t -> File_key.t
 
   val sig_hash_opt : reader:reader -> File_key.t -> Xx.hash option
+
+  val find_master : reader:reader -> Context.master_context
 end
 
 module Mutator_reader : sig
@@ -28,7 +30,7 @@ module Reader : READER with type reader = State_reader.t
 module Reader_dispatcher : READER with type reader = Abstract_state_reader.t
 
 module Init_master_context_mutator : sig
-  val add_master_sig : (Context.t -> unit) Expensive.t
+  val add_master : (Context.t -> unit) Expensive.t
 end
 
 module Merge_context_mutator : sig
