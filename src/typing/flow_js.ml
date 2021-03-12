@@ -8522,7 +8522,15 @@ struct
       edges_and_flows_from_t cx trace ~new_use_op:use_op ~opt:true t1 (id2, bounds2);
       Context.add_tvar cx id2 (Root { root2 with constraints = constraints1 });
       Context.add_tvar cx id1 (Goto id2)
-    | ((Resolved (_, t1) | FullyResolved (_, t1)), (Resolved (_, t2) | FullyResolved (_, t2))) ->
+    | (Resolved (_, t1), Resolved (_, t2))
+    | (FullyResolved (_, t1), FullyResolved (_, t2))
+    | (Resolved (_, t1), FullyResolved (_, t2)) ->
+      (* replace node first, in case rec_unify recurses back to these tvars *)
+      Context.add_tvar cx id1 (Goto id2);
+      rec_unify cx trace ~use_op t1 t2
+    | ((FullyResolved (_, t1) as constraints1), Resolved (_, t2)) ->
+      (* prefer fully resolved roots to resolved roots *)
+      Context.add_tvar cx id2 (Root { root2 with constraints = constraints1 });
       (* replace node first, in case rec_unify recurses back to these tvars *)
       Context.add_tvar cx id1 (Goto id2);
       rec_unify cx trace ~use_op t1 t2
