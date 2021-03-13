@@ -352,11 +352,9 @@ export default (suite(
         [''],
         [...lspIgnoreStatusAndCancellation],
       ),
-      lspRequestAndWaitUntilResponse('textDocument/typeCoverage', {
-        textDocument: {uri: '<PLACEHOLDER_PROJECT_DIR>/coverage2.js'},
-      })
+      lspRequestAndWaitUntilResponse('telemetry/rage', {})
         .verifyAllLSPMessagesInStep([], [...lspIgnoreStatusAndCancellation])
-        .timeout(2000),
+        .timeout(10000),
     ]).waitForRecheck(true),
 
     test('telemetry/rage will return with wait_for_recheck=false', [
@@ -365,14 +363,12 @@ export default (suite(
         [''],
         [...lspIgnoreStatusAndCancellation],
       ),
-      lspRequestAndWaitUntilResponse('textDocument/typeCoverage', {
-        textDocument: {uri: '<PLACEHOLDER_PROJECT_DIR>/coverage2.js'},
-      })
+      lspRequestAndWaitUntilResponse('telemetry/rage', {})
         .verifyAllLSPMessagesInStep(
-          [['textDocument/typeCoverage', '{Use @flow}']],
+          ['telemetry/rage'],
           [...lspIgnoreStatusAndCancellation],
         )
-        .timeout(2000),
+        .timeout(10000),
     ]).waitForRecheck(false),
   ],
 ): Suite);
