@@ -60,7 +60,7 @@ export default suite(({addFile, addFiles, addCode}) => [
 `,
   );
 
-  await exec(format('%s init --options "all=true" %s', bin, dest));
+  await exec(format('%s init %s', bin, dest));
 
   // Rename .flowconfig to _flowconfig
   const config = await readFile(join(dest, '.flowconfig'));
