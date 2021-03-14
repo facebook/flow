@@ -1,24 +1,24 @@
 /* @flow */
 
-var child_process = require('child_process');
-var fs = require('fs');
-var stream = require('stream');
-var ls = child_process.spawn('ls');
+const child_process = require('child_process');
+const fs = require('fs');
+const stream = require('stream');
+const ls = child_process.spawn('ls');
 
-var data = "foo";
+const data = 'foo';
 
 ls.stdin.write(data);
-ls.stdin.write(data, "utf-8");
+ls.stdin.write(data, 'utf-8');
 ls.stdin.write(data, () => {});
-ls.stdin.write(data, "utf-8", () => {});
+ls.stdin.write(data, 'utf-8', () => {});
 
 ls.stdin.end();
 ls.stdin.end(data);
-ls.stdin.end(data, "utf-8");
+ls.stdin.end(data, 'utf-8');
 ls.stdin.end(data, () => {});
-ls.stdin.end(data, "utf-8", () => {});
+ls.stdin.end(data, 'utf-8', () => {});
 
-var ws = fs.createWriteStream('/dev/null');
+const ws = fs.createWriteStream('/dev/null');
 ls.stdout.pipe(ws).end();
 
 class MyReadStream extends stream.Readable {}
@@ -26,7 +26,7 @@ class MyWriteStream extends stream.Writable {}
 class MyDuplex extends stream.Duplex {}
 class MyTransform extends stream.Duplex {}
 
-var pipe = new MyReadStream()
+const pipe = new MyReadStream()
   .pipe(new MyDuplex())
   .pipe(new MyTransform())
   .pipe(new MyWriteStream());
@@ -35,7 +35,7 @@ var pipe = new MyReadStream()
 (pipe: MyWriteStream);
 (pipe: MyDuplex); // error
 
-var pipeline = stream.pipeline(
+const pipeline = stream.pipeline(
   new MyReadStream(),
   new MyDuplex(),
   new MyTransform(),
@@ -73,3 +73,15 @@ new MyReadStream()
   .on('error', () => {})
   .pipe(new MyDuplex())
   .once('close', () => {});
+
+
+async function * generate() {
+  yield 'hello';
+  yield 'streams';
+}
+
+stream.Readable.from(generate());
+
+stream.Readable.from('banana');
+stream.Readable.from(101); // error - TypeError [ERR_INVALID_ARG_TYPE]: The "iterable" argument must be an instance of Iterable. Received type number (101)
+stream.Readable.from(null); // error - TypeError [ERR_INVALID_ARG_TYPE]: The "iterable" argument must be an instance of Iterable. Received null
