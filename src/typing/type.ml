@@ -1510,8 +1510,6 @@ and Constraint : sig
 
   val new_unresolved_root : unit -> infer_phase node
 
-  val new_resolved_root : TypeTerm.t -> TypeTerm.use_op -> 'phase node
-
   val types_of : 'phase constraints -> TypeTerm.t list
 
   val uses_of : 'phase constraints -> TypeTerm.use_t list
@@ -1617,8 +1615,6 @@ end = struct
     }
 
   let new_unresolved_root () = Root { rank = 0; constraints = Unresolved (new_bounds ()) }
-
-  let new_resolved_root t op : 'phase node = Root { rank = 0; constraints = FullyResolved (op, t) }
 
   (* For any constraints, return a list of def types that form either the lower
      bounds of the solution, or a singleton containing the solution itself. *)
