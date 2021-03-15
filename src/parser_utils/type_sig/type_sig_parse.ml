@@ -3183,6 +3183,7 @@ let rec member_expr_of_generic_id scope locs chain =
       (val_ref scope ref_loc name)
       chain
 
+[@@@ocaml.warning "-60"]
 let declare_class_def =
   let module O = Ast.Type.Object in
   let module Acc = DeclareClassAcc in

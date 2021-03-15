@@ -5,6 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
+[@@@ocaml.warning "-60"]
 module Ast = Flow_ast
 open Layout
 

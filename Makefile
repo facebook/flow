@@ -326,7 +326,7 @@ all-homebrew:
 	export FLOW_RELEASE="1"; \
 	opam init --bare --no-setup --disable-sandboxing && \
 	rm -rf _opam && \
-	opam switch create . --deps-only ocaml-base-compiler.4.09.1 && \
+	opam switch create . --deps-only ocaml-base-compiler.4.10.2 && \
 	opam exec -- make
 
 clean:

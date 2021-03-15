@@ -55,7 +55,7 @@ orbs:
                 PATH: /usr/local/bin:/usr/bin:/cygdrive/c/Windows/system32:/cygdrive/c/Windows:/cygdrive/c/Windows/System32/Wbem:/cygdrive/c/Windows/System32/WindowsPowerShell/v1.0
               command: |
                 cd /cygdrive/c/Users/circleci/project
-                [ -d _opam ] || opam switch create . ocaml-variants.4.09.1+mingw64c --deps-only --yes -vvv
+                [ -d _opam ] || opam switch create . ocaml-variants.4.10.2+mingw64c --deps-only --yes -vvv
 
 executors:
   linux-opam:
@@ -95,7 +95,7 @@ commands:
       - run:
           name: Create cache breaker
           command: |
-            echo "ocaml-4.09.1" > .circleci/opamcachebreaker
+            echo "ocaml-4.10.2" > .circleci/opamcachebreaker
             opam --version >> .circleci/opamcachebreaker
             cat flowtype.opam >> .circleci/opamcachebreaker
             cat flow_parser.opam >> .circleci/opamcachebreaker
@@ -119,7 +119,7 @@ commands:
           command: |
             eval $(opam env)
             if [ ! -d _opam ]; then
-              opam switch create . 4.09.1 --deps-only | cat
+              opam switch create . 4.10.2 --deps-only | cat
             fi
 
 jobs:
@@ -263,7 +263,7 @@ jobs:
           command: |
             cd /cygdrive/c/Users/circleci/project
             /usr/local/bin/opam --version > /cygdrive/c/tmp/flow/opamcachebreaker
-            echo "ocaml-4.09.1" >> /cygdrive/c/tmp/flow/opamcachebreaker
+            echo "ocaml-4.10.2" >> /cygdrive/c/tmp/flow/opamcachebreaker
             /usr/bin/cat flowtype.opam >> /cygdrive/c/tmp/flow/opamcachebreaker
             /usr/bin/cat flow_parser.opam >> /cygdrive/c/tmp/flow/opamcachebreaker
             /usr/bin/cat .circleci/config.yml >> /cygdrive/c/tmp/flow/opamcachebreaker
