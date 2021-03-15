@@ -244,7 +244,6 @@ let infer_and_merge ~root filename ast file_sig =
   in
   let lint_severities = LintSettings.empty_severities in
   let strict_mode = StrictModeSettings.empty in
-  let file_sigs = Utils_js.FilenameMap.singleton filename file_sig in
   let (_, { Flow_ast.Program.all_comments; _ }) = ast in
   let aloc_ast = Ast_loc_utils.loc_to_aloc_mapper#program ast in
   let new_signatures = false in
@@ -258,9 +257,10 @@ let infer_and_merge ~root filename ast file_sig =
       get_aloc_table_unsafe =
         (fun _ -> raise (Parsing_heaps_exceptions.Sig_ast_ALoc_table_not_found ""));
       get_docblock_unsafe = (fun _ -> stub_docblock);
+      get_file_sig_unsafe = (fun _ -> file_sig);
     }
   in
-  let (cx, _, tast) = Merge_js.check_file ~opts ~getters ~file_sigs filename reqs [] master_cx in
+  let (cx, _, tast) = Merge_js.check_file ~opts ~getters filename reqs [] master_cx in
   (cx, tast)
 
 let check_content ~filename ~content =

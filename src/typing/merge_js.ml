@@ -498,6 +498,7 @@ type merge_getters = {
   get_ast_unsafe: File_key.t -> get_ast_return;
   get_aloc_table_unsafe: File_key.t -> ALoc.table;
   get_docblock_unsafe: File_key.t -> Docblock.t;
+  get_file_sig_unsafe: File_key.t -> File_sig.With_ALoc.t;
 }
 
 type output =
@@ -535,10 +536,11 @@ type output =
 
    5. Link the local references to libraries in master_cx and component_cxs.
 *)
-let merge_component
-    ~opts ~getters ~file_sigs component reqs dep_cxs (master_cx : Context.master_context) =
+let merge_component ~opts ~getters component reqs dep_cxs master_cx =
   let (Merge_options { metadata; lint_severities; strict_mode; _ }) = opts in
-  let { get_ast_unsafe; get_aloc_table_unsafe; get_docblock_unsafe } = getters in
+  let { get_ast_unsafe; get_aloc_table_unsafe; get_docblock_unsafe; get_file_sig_unsafe } =
+    getters
+  in
   let ccx = Context.make_ccx () in
   let need_merge_master_cx = ref true in
   (* Iterate over component *)
@@ -568,7 +570,7 @@ let merge_component
         (* AST inference *)
         let (comments, ast) = get_ast_unsafe filename in
         let lint_severities = get_lint_severities metadata strict_mode lint_severities in
-        let file_sig = FilenameMap.find filename file_sigs in
+        let file_sig = get_file_sig_unsafe filename in
         Type_inference_js.add_require_tvars cx file_sig;
         Context.set_local_env cx file_sig.File_sig.With_ALoc.exported_locals;
         let tast = Type_inference_js.infer_ast cx filename comments ast ~lint_severities in
@@ -594,9 +596,11 @@ let merge_component
    that the input component is of size 1 and all imports have already been resolved
    and optimized.
 *)
-let check_file ~opts ~getters ~file_sigs filename reqs dep_cxs master_cx =
+let check_file ~opts ~getters filename reqs dep_cxs master_cx =
   let (Merge_options { metadata; lint_severities; strict_mode; _ }) = opts in
-  let { get_ast_unsafe; get_aloc_table_unsafe; get_docblock_unsafe } = getters in
+  let { get_ast_unsafe; get_aloc_table_unsafe; get_docblock_unsafe; get_file_sig_unsafe } =
+    getters
+  in
   let ccx = Context.make_ccx () in
   let info = get_docblock_unsafe filename in
   let metadata = Context.docblock_overrides info metadata in
@@ -607,7 +611,7 @@ let check_file ~opts ~getters ~file_sigs filename reqs dep_cxs master_cx =
   in
   let (comments, ast) = get_ast_unsafe filename in
   let lint_severities = get_lint_severities metadata strict_mode lint_severities in
-  let file_sig = FilenameMap.find filename file_sigs in
+  let file_sig = get_file_sig_unsafe filename in
 
   (* Builtins *)
   merge_builtins cx ccx master_cx;

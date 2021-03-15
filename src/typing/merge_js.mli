@@ -19,6 +19,7 @@ type merge_getters = {
   get_ast_unsafe: File_key.t -> get_ast_return;
   get_aloc_table_unsafe: File_key.t -> ALoc.table;
   get_docblock_unsafe: File_key.t -> Docblock.t;
+  get_file_sig_unsafe: File_key.t -> File_sig.With_ALoc.t;
 }
 
 module Reqs : sig
@@ -43,7 +44,6 @@ type output =
 val merge_component :
   opts:merge_options ->
   getters:merge_getters ->
-  file_sigs:File_sig.With_ALoc.t Utils_js.FilenameMap.t ->
   (* component *)
   File_key.t Nel.t ->
   (* requires *)
@@ -58,7 +58,6 @@ val merge_component :
 val check_file :
   opts:merge_options ->
   getters:merge_getters ->
-  file_sigs:File_sig.With_ALoc.t Utils_js.FilenameMap.t ->
   File_key.t ->
   Reqs.t ->
   (* dependency cxs *)

@@ -67,7 +67,6 @@ module type PHASE_CONFIG = sig
     opts:Merge_js.merge_options ->
     getters:Merge_js.merge_getters ->
     reader:reader ->
-    file_sigs:File_sig.With_ALoc.t FilenameMap.t ->
     input ->
     Reqs.t ->
     Context.sig_t list ->
@@ -164,9 +163,10 @@ module Process_unit (C : PHASE_CONFIG) = struct
         Merge_js.get_ast_unsafe = C.get_ast_unsafe ~reader;
         get_aloc_table_unsafe;
         get_docblock_unsafe = Parsing_heaps.Reader_dispatcher.get_docblock_unsafe ~reader;
+        get_file_sig_unsafe = (fun f -> FilenameMap.find f file_sigs);
       }
     in
-    C.process_with_deps ~opts ~getters ~reader ~file_sigs input file_reqs dep_cxs master_cx
+    C.process_with_deps ~opts ~getters ~reader input file_reqs dep_cxs master_cx
 end
 
 module Merge_config = struct
@@ -189,9 +189,9 @@ module Merge_config = struct
 
   let fold_input = Nel.fold_left
 
-  let process_with_deps ~opts ~getters ~reader:_ ~file_sigs component reqs dep_cxs master_cx =
+  let process_with_deps ~opts ~getters ~reader:_ component reqs dep_cxs master_cx =
     let ((cx, _, _), _) =
-      Merge_js.merge_component ~opts ~getters ~file_sigs component reqs dep_cxs master_cx
+      Merge_js.merge_component ~opts ~getters component reqs dep_cxs master_cx
     in
     (cx, master_cx.Context.master_sig_cx)
 end
@@ -511,10 +511,8 @@ module Check_config = struct
 
   let is_recursive_dep _ _ = false
 
-  let process_with_deps ~opts ~getters ~reader ~file_sigs file reqs dep_cxs master_cx =
-    let (cx, _, typed_ast) =
-      Merge_js.check_file ~opts ~getters ~file_sigs file reqs dep_cxs master_cx
-    in
+  let process_with_deps ~opts ~getters ~reader file reqs dep_cxs master_cx =
+    let (cx, _, typed_ast) = Merge_js.check_file ~opts ~getters file reqs dep_cxs master_cx in
     let file_sig = get_file_sig_unsafe ~reader file in
     let coverage = Coverage.file_coverage ~full_cx:cx typed_ast in
     { cx; master_cx = master_cx.Context.master_sig_cx; file_sig; typed_ast; coverage }
@@ -574,7 +572,6 @@ let check_contents_context ~reader options file ast info file_sig =
       require_loc_map
       []
   in
-  let file_sigs = FilenameMap.singleton file file_sig in
   let (master_cx, dep_cxs, file_reqs) =
     try Check_file.reqs_of_input ~reader file required with
     | Key_not_found _ -> failwith "not all dependencies are ready yet, aborting..."
@@ -593,11 +590,10 @@ let check_contents_context ~reader options file ast info file_sig =
       Merge_js.get_ast_unsafe = (fun _ -> (all_comments, aloc_ast));
       get_aloc_table_unsafe;
       get_docblock_unsafe = (fun _ -> info);
+      get_file_sig_unsafe = (fun _ -> file_sig);
     }
   in
-  let (cx, _, tast) =
-    Merge_js.check_file ~opts ~getters ~file_sigs file file_reqs dep_cxs master_cx
-  in
+  let (cx, _, tast) = Merge_js.check_file ~opts ~getters file file_reqs dep_cxs master_cx in
   (cx, tast)
 
 (* Wrap a potentially slow operation with a timer that fires every interval seconds. When it fires,
