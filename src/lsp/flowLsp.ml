@@ -135,6 +135,8 @@ exception Client_recoverable_connection_exception of Marshal_tools.remote_except
 
 exception Server_fatal_connection_exception of Marshal_tools.remote_exception_data
 
+exception Changed_file_not_open of Lsp.DocumentUri.t
+
 type event =
   | Server_message of LspProt.message_from_server
   | Client_message of Lsp.lsp_message * LspProt.metadata
@@ -761,7 +763,9 @@ let track_to_server (state : state) (c : Lsp.lsp_message) : state * track_effect
       (state, None)
     | (Some open_files, NotificationMessage (DidChangeNotification params)) ->
       let uri = params.DidChange.textDocument.VersionedTextDocumentIdentifier.uri in
-      let { o_open_doc; _ } = Lsp.UriMap.find uri open_files in
+      let { o_open_doc; _ } =
+        (try Lsp.UriMap.find uri open_files with Not_found -> raise (Changed_file_not_open uri))
+      in
       let text = o_open_doc.TextDocumentItem.text in
       let text = Lsp_helpers.apply_changes_unsafe text params.DidChange.contentChanges in
       let o_open_doc =
