@@ -41,7 +41,7 @@ module Opts = struct
   type opt_error = int * error_kind
 
   type t = {
-    abstract_locations: bool;
+    abstract_locations: bool option;
     all: bool;
     autoimports: bool option;
     automatic_require_default: bool;
@@ -161,7 +161,7 @@ module Opts = struct
 
   let default_options =
     {
-      abstract_locations = true;
+      abstract_locations = None;
       all = false;
       autoimports = None;
       automatic_require_default = false;
@@ -430,7 +430,8 @@ module Opts = struct
     in
     enum [("enable", Enable); ("ignore", Ignore); ("warn", Warn)] f
 
-  let abstract_locations_parser = boolean (fun opts v -> Ok { opts with abstract_locations = v })
+  let abstract_locations_parser =
+    boolean (fun opts v -> Ok { opts with abstract_locations = Some v })
 
   let automatic_require_default_parser =
     boolean (fun opts v -> Ok { opts with automatic_require_default = v })
