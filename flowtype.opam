@@ -8,8 +8,8 @@ homepage: "https://flow.org"
 doc: "https://flow.org/en/docs/getting-started/"
 bug-reports: "https://github.com/facebook/flow/issues"
 depends: [
-  "ocaml" {>= "4.09.1"}
-  "base" {= "v0.12.2"}
+  "ocaml" {>= "4.10.2"}
+  "base" {= "v0.14.0"}
   "base-unix"
   "base-bytes"
   "dtoa" {>= "0.3.1"}
