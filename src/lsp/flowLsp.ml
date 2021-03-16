@@ -912,31 +912,6 @@ let diagnostic_of_parse_error (loc, parse_error) : PublishDiagnostics.diagnostic
     relatedLocations = [] (* legacy fb extension *);
   }
 
-let error_to_lsp
-    ~(severity : PublishDiagnostics.diagnosticSeverity option)
-    ~(default_uri : Lsp.DocumentUri.t)
-    (error : Loc.t Errors.printable_error) : Lsp.DocumentUri.t * PublishDiagnostics.diagnostic =
-  let error = Errors.Lsp_output.lsp_of_error error in
-  let location =
-    Flow_lsp_conversions.loc_to_lsp_with_default error.Errors.Lsp_output.loc ~default_uri
-  in
-  let uri = location.Lsp.Location.uri in
-  let related_to_lsp (loc, relatedMessage) =
-    let relatedLocation = Flow_lsp_conversions.loc_to_lsp_with_default loc ~default_uri in
-    { Lsp.PublishDiagnostics.relatedLocation; relatedMessage }
-  in
-  let relatedInformation = List.map error.Errors.Lsp_output.relatedLocations ~f:related_to_lsp in
-  ( uri,
-    {
-      Lsp.PublishDiagnostics.range = location.Lsp.Location.range;
-      severity;
-      code = Lsp.PublishDiagnostics.StringCode error.Errors.Lsp_output.code;
-      source = Some "Flow";
-      message = error.Errors.Lsp_output.message;
-      relatedInformation;
-      relatedLocations = relatedInformation (* legacy fb extension *);
-    } )
-
 let live_syntax_errors_enabled (state : state) =
   let open Initialize in
   match state with
@@ -1365,15 +1340,6 @@ let start_interaction ~trigger state =
 let log_interaction ~ux state id =
   let end_state = collect_interaction_state state in
   LspInteraction.log ~end_state ~ux ~id
-
-let group_errors_by_uri ~default_uri ~errors ~warnings =
-  let add severity error acc =
-    let (uri, diagnostic) = error_to_lsp ~severity:(Some severity) ~default_uri error in
-    Lsp.UriMap.add ~combine:List.append uri [diagnostic] acc
-  in
-  Lsp.UriMap.empty
-  |> Errors.ConcreteLocPrintableErrorSet.fold (add PublishDiagnostics.Error) errors
-  |> Errors.ConcreteLocPrintableErrorSet.fold (add PublishDiagnostics.Warning) warnings
 
 let do_live_diagnostics
     flowconfig_name
@@ -2018,8 +1984,7 @@ and main_handle_unsafe flowconfig_name (state : state) (event : event) :
       ~f:(log_interaction ~ux:LspInteraction.Errored state);
     Ok (state, LogNeeded metadata)
   | ( Connected cenv,
-      Server_message LspProt.(NotificationFromServer (Errors { errors; warnings; errors_reason }))
-    ) ->
+      Server_message LspProt.(NotificationFromServer (Errors { diagnostics; errors_reason })) ) ->
     (* A note about the errors reported by this server message:
        While a recheck is in progress, between StartRecheck and EndRecheck,
        the server will periodically send errors+warnings. These are additive
@@ -2028,16 +1993,7 @@ and main_handle_unsafe flowconfig_name (state : state) (event : event) :
        At this opportunity we should erase all errors not in this set.
        This differs considerably from the semantics of LSP publishDiagnostics
        which says "whenever you send publishDiagnostics for a file, that
-       now contains the complete truth for that file."
-
-       I hope that flow won't produce errors with an empty path. But such errors are
-       fatal to Nuclide, so if it does, then we'll at least use a fall-back path. *)
-    let default_uri =
-      cenv.c_ienv.i_root |> Path.to_string |> File_url.create |> Lsp.DocumentUri.of_string
-    in
-    (* First construct a map from uri to diagnostic list, which gathers together
-       all the errors and warnings per uri *)
-    let all = group_errors_by_uri ~default_uri ~errors ~warnings in
+       now contains the complete truth for that file." *)
     let () =
       let end_state = collect_interaction_state state in
       LspInteraction.log_pushed_errors ~end_state ~errors_reason
@@ -2046,18 +2002,16 @@ and main_handle_unsafe flowconfig_name (state : state) (event : event) :
       Connected cenv
       |> update_errors
            ( if cenv.c_is_rechecking then
-             LspErrors.add_streamed_server_errors_and_send to_stdout all
+             LspErrors.add_streamed_server_errors_and_send to_stdout diagnostics
            else
-             LspErrors.set_finalized_server_errors_and_send to_stdout all )
+             LspErrors.set_finalized_server_errors_and_send to_stdout diagnostics )
     in
     Ok (state, LogNotNeeded)
   | ( Connected _,
       Server_message
         LspProt.(
           RequestResponse
-            ( LiveErrorsResponse
-                (Ok { live_errors = errors; live_warnings = warnings; live_errors_uri = uri }),
-              metadata )) ) ->
+            (LiveErrorsResponse (Ok { live_diagnostics; live_errors_uri = uri }), metadata)) ) ->
     let file_is_still_open =
       get_open_files state |> Base.Option.value_map ~default:false ~f:(Lsp.UriMap.mem uri)
     in
@@ -2065,8 +2019,6 @@ and main_handle_unsafe flowconfig_name (state : state) (event : event) :
       if file_is_still_open then (
         (* Only set the live non-parse errors if the file is still open. If it's been closed since
            the request was sent, then we will just ignore the response *)
-        let all = group_errors_by_uri ~default_uri:uri ~errors ~warnings in
-        let errors_for_uri = Lsp.UriMap.find_opt uri all |> Base.Option.value ~default:[] in
         Base.Option.iter
           metadata.LspProt.interaction_tracking_id
           ~f:(log_interaction ~ux:LspInteraction.PushedLiveNonParseErrors state);
@@ -2077,13 +2029,13 @@ and main_handle_unsafe flowconfig_name (state : state) (event : event) :
               JSON_Object
                 [
                   ("uri", JSON_String (Lsp.DocumentUri.to_string uri));
-                  ("error_count", JSON_Number (List.length errors_for_uri |> string_of_int));
+                  ("error_count", JSON_Number (List.length live_diagnostics |> string_of_int));
                 ]
               |> json_to_string)
           ~wall_start:metadata.LspProt.start_wall_time;
 
         update_errors
-          (LspErrors.set_live_non_parse_errors_and_send to_stdout uri errors_for_uri)
+          (LspErrors.set_live_non_parse_errors_and_send to_stdout uri live_diagnostics)
           state
       ) else (
         Base.Option.iter

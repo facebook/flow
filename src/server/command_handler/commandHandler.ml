@@ -2179,15 +2179,17 @@ let handle_live_errors_request =
                   ( Errors.ConcreteLocPrintableErrorSet.empty,
                     Errors.ConcreteLocPrintableErrorSet.empty )
             in
+            let live_errors_uri = Lsp.DocumentUri.of_string uri in
+            let live_diagnostics =
+              Flow_lsp_conversions.diagnostics_of_flow_errors
+                ~errors:live_errors
+                ~warnings:live_warnings
+              |> Lsp.UriMap.find_opt live_errors_uri
+              |> Base.Option.value ~default:[]
+            in
             Lwt.return
               ( (),
-                LspProt.LiveErrorsResponse
-                  (Ok
-                     {
-                       LspProt.live_errors;
-                       live_warnings;
-                       live_errors_uri = uri |> Lsp.DocumentUri.of_string;
-                     }),
+                LspProt.LiveErrorsResponse (Ok { LspProt.live_diagnostics; live_errors_uri }),
                 metadata )
         in
         (* If we've successfully run and there isn't a more recent request for this URI,
