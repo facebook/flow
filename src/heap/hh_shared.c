@@ -1569,14 +1569,25 @@ CAMLprim value hh_add(value key, value addr) {
     }
 
     if (slot_hash == 0) {
+      helt_t old;
+
       // This slot is free, but two threads may be racing to write to this slot,
       // so try to grab the slot atomically. Note that this is a 16-byte CAS
-      // writing both the hash and the address at the same time. Whatever data
-      // was in the slot at the time of the CAS will be stored in `old`.
-      helt_t old;
-      old.value = __sync_val_compare_and_swap(&hashtbl[slot].value, 0, elt.value);
+      // writing both the hash and the address at the same time. We expect the
+      // slot to contain `0`. If that's the case, `success == true`; otherwise,
+      // whatever data was in the slot at the time of the CAS will be stored in
+      // `old`.
+      old.value = 0;
+      _Bool success = __atomic_compare_exchange(
+        /* ptr */ &hashtbl[slot].value,
+        /* expected */ &old.value,
+        /* desired */ &elt.value,
+        /* weak */ 0,
+        /* success_memorder */ __ATOMIC_SEQ_CST,
+        /* failure_memorder */ __ATOMIC_SEQ_CST
+      );
 
-      if (old.hash == 0) {
+      if (success) {
         // The slot was still empty when we tried to CAS, meaning we
         // successfully grabbed the slot.
         uint64_t size = __sync_fetch_and_add(&info->hcounter, 1);
