@@ -184,26 +184,8 @@ let lsp_DocumentIdentifier_to_flow_path textDocument =
   let fn = Lsp_helpers.lsp_textDocumentIdentifier_to_filename textDocument in
   Sys_utils.realpath fn |> Base.Option.value ~default:fn
 
-let lsp_DocumentIdentifier_to_flow
-    (textDocument : Lsp.TextDocumentIdentifier.t) ~(client : Persistent_connection.single_client) :
-    File_input.t =
-  lsp_DocumentIdentifier_to_flow_path textDocument |> Persistent_connection.get_file client
-
-let lsp_DocumentPosition_to_flow
-    (params : Lsp.TextDocumentPositionParams.t) ~(client : Persistent_connection.single_client) :
-    File_input.t * int * int =
-  let { Lsp.TextDocumentPositionParams.textDocument; position } = params in
-  let file = lsp_DocumentIdentifier_to_flow textDocument client in
-  let (line, char) = lsp_position_to_flow position in
-  (file, line, char)
-
-let lsp_textDocument_and_range_to_flow
-    ?(file_key_of_path = (fun p -> File_key.SourceFile p)) td range client =
-  let path = lsp_DocumentIdentifier_to_flow_path td in
-  let file_key = file_key_of_path path in
-  let file = Persistent_connection.get_file client path in
-  let loc = lsp_range_to_flow_loc ~source:file_key range in
-  (file_key, file, loc)
+let position_of_document_position { Lsp.TextDocumentPositionParams.position; _ } =
+  lsp_position_to_flow position
 
 module DocumentSymbols = struct
   let name_of_key (key : (Loc.t, Loc.t) Ast.Expression.Object.Property.key) : string option =
