@@ -53,8 +53,7 @@ module ListenLoop = LwtLoop.Make (struct
       ) else
         let reason =
           match metadata with
-          | Some { MonitorProt.changed_mergebase = true; total_update_distance } ->
-            Rebased { distance = total_update_distance; file_count }
+          | Some { MonitorProt.changed_mergebase = true } -> Rebased { file_count }
           | _ when file_count = 1 ->
             Single_file_changed { filename = SSet.elements changed_files |> List.hd }
           | _ -> Many_files_changed { file_count }

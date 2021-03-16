@@ -181,12 +181,9 @@ let recheck_fetch ~process_updates ~get_forced =
            MonitorProt.(
              match file_watcher_metadata with
              | None -> workload
-             | Some { total_update_distance; changed_mergebase } ->
-               let total_update_distance =
-                 total_update_distance + workload.metadata.total_update_distance
-               in
+             | Some { changed_mergebase } ->
                let changed_mergebase = changed_mergebase || workload.metadata.changed_mergebase in
-               { workload with metadata = { total_update_distance; changed_mergebase } }))
+               { workload with metadata = { changed_mergebase } }))
 
 let get_and_clear_recheck_workload ~process_updates ~get_forced =
   recheck_fetch ~process_updates ~get_forced;
