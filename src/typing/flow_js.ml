@@ -6775,26 +6775,20 @@ struct
     (slingshot, result)
 
   and eval_destructor cx ~trace use_op reason t d tout =
-    let destruct_union ?(f = (fun t -> t)) r rep upper =
+    let destruct_union ?(f = (fun t -> t)) r members upper =
       let destructor = TypeDestructorT (use_op, reason, d) in
-      let unresolved =
-        UnionRep.members rep |> Base.List.map ~f:(fun t -> Cache.Eval.id cx (f t) destructor)
-      in
+      let unresolved = members |> Base.List.map ~f:(fun t -> Cache.Eval.id cx (f t) destructor) in
       let (first, unresolved) = (List.hd unresolved, List.tl unresolved) in
       let u =
         ResolveUnionT { reason = r; unresolved; resolved = []; upper; id = Reason.mk_id () }
       in
       rec_flow cx trace (first, u)
     in
-    let destruct_maybe ?(f = (fun t -> t)) r t upper =
-      let destructor = TypeDestructorT (use_op, reason, d) in
+    let destruct_maybe ?f r t upper =
       let reason = replace_desc_new_reason RNullOrVoid r in
-      let null = NullT.make reason |> with_trust bogus_trust |> f in
-      let void = VoidT.make reason |> with_trust bogus_trust |> f in
-      let first = Cache.Eval.id cx (f t) destructor in
-      let unresolved = [Cache.Eval.id cx null destructor; Cache.Eval.id cx void destructor] in
-      let u = ResolveUnionT { reason; unresolved; resolved = []; upper; id = Reason.mk_id () } in
-      rec_flow cx trace (first, u)
+      let null = NullT.make reason |> with_trust bogus_trust in
+      let void = VoidT.make reason |> with_trust bogus_trust in
+      destruct_union ?f reason [t; null; void] upper
     in
     match t with
     | GenericT { bound = OpaqueT (_, { underlying_t = Some t; _ }); reason = r; id; name }
@@ -6827,12 +6821,12 @@ struct
        bounds, which prevents the speculative match process from working.
        Instead, we preserve the union by pushing down the destructor onto the
        branches of the unions. *)
-    | UnionT (r, rep) -> destruct_union r rep (UseT (unknown_use, OpenT tout))
+    | UnionT (r, rep) -> destruct_union r (UnionRep.members rep) (UseT (unknown_use, OpenT tout))
     | GenericT { reason; bound = UnionT (_, rep); id; name } ->
       destruct_union
         ~f:(fun bound -> GenericT { reason = reason_of_t bound; bound; id; name })
         reason
-        rep
+        (UnionRep.members rep)
         (UseT (use_op, OpenT tout))
     | MaybeT (r, t) -> destruct_maybe r t (UseT (unknown_use, OpenT tout))
     | GenericT { reason; bound = MaybeT (_, t); id; name } ->
