@@ -240,3 +240,69 @@ let string_of_message_from_server = function
           (FileWatcherStatus.string_of_status watcher_status)
       | EOF -> "EOF"
     end
+
+type message_from_server_mapper = {
+  of_live_errors_failure: message_from_server_mapper -> live_errors_failure -> live_errors_failure;
+  of_live_errors_response:
+    message_from_server_mapper -> live_errors_response -> live_errors_response;
+  of_message_from_server: message_from_server_mapper -> message_from_server -> message_from_server;
+  of_notification:
+    message_from_server_mapper -> notification_from_server -> notification_from_server;
+  of_response: message_from_server_mapper -> response -> response;
+}
+
+let default_message_from_server_mapper ~(lsp_mapper : Lsp_mapper.t) =
+  let open Lsp_mapper in
+  {
+    of_live_errors_failure =
+      (fun _mapper { live_errors_failure_kind; live_errors_failure_reason; live_errors_failure_uri } ->
+        let live_errors_failure_uri =
+          lsp_mapper.of_document_uri lsp_mapper live_errors_failure_uri
+        in
+        { live_errors_failure_kind; live_errors_failure_reason; live_errors_failure_uri });
+    of_live_errors_response =
+      (fun _mapper { live_diagnostics; live_errors_uri } ->
+        let live_diagnostics =
+          Base.List.map ~f:(lsp_mapper.of_diagnostic lsp_mapper) live_diagnostics
+        in
+        let live_errors_uri = lsp_mapper.of_document_uri lsp_mapper live_errors_uri in
+        { live_diagnostics; live_errors_uri });
+    of_message_from_server =
+      (fun mapper message ->
+        match message with
+        | RequestResponse (response, metadata) ->
+          RequestResponse (mapper.of_response mapper response, metadata)
+        | NotificationFromServer notification ->
+          NotificationFromServer (mapper.of_notification mapper notification));
+    of_notification =
+      (fun _mapper notif ->
+        match notif with
+        | Errors { diagnostics; errors_reason } ->
+          let diagnostics =
+            Lsp.UriMap.fold
+              (fun uri diags acc ->
+                let uri = lsp_mapper.of_document_uri lsp_mapper uri in
+                let diags = Base.List.map ~f:(lsp_mapper.of_diagnostic lsp_mapper) diags in
+                Lsp.UriMap.add uri diags acc)
+              diagnostics
+              Lsp.UriMap.empty
+          in
+          Errors { diagnostics; errors_reason }
+        | StartRecheck -> StartRecheck
+        | EndRecheck stats -> EndRecheck stats
+        | ServerExit exit_status -> ServerExit exit_status
+        | Please_hold (server_status, file_watcher_status) ->
+          Please_hold (server_status, file_watcher_status)
+        | EOF -> EOF);
+    of_response =
+      (fun mapper response ->
+        match response with
+        | LspFromServer lsp ->
+          LspFromServer (Base.Option.map ~f:(lsp_mapper.of_lsp_message lsp_mapper) lsp)
+        | LiveErrorsResponse (Ok live_errors_response) ->
+          LiveErrorsResponse (Ok (mapper.of_live_errors_response mapper live_errors_response))
+        | LiveErrorsResponse (Error live_errors_failure) ->
+          LiveErrorsResponse (Error (mapper.of_live_errors_failure mapper live_errors_failure))
+        | UncaughtException { request; exception_constructor; stack } ->
+          UncaughtException { request; exception_constructor; stack });
+  }

@@ -363,6 +363,77 @@ let get_next_event
         let%lwt event = get_next_event_from_client state client parser in
         Lwt.return event
 
+(** Un-realpath's all of the [Lsp.DocumentUri.t] in [event].
+
+    All of the URIs received from the server represent realpaths (symlinks have been resolved away).
+    However, the client (e.g. VS Code) is expecting URIs within the project (children of [rootUri]).
+    So this function converts any [DocumentUri] that points to the realpath'd root back to the
+    client's [rootUri]. *)
+let convert_to_client_uris =
+  let server_message_mapper ~client_root ~server_root =
+    let replace_prefix str =
+      if String_utils.string_starts_with str server_root then
+        let prefix_len = String.length server_root in
+        let relative = String.sub str prefix_len (String.length str - prefix_len) in
+        client_root ^ relative
+      else
+        str
+    in
+    let replace_uri uri =
+      uri |> Lsp.DocumentUri.to_string |> replace_prefix |> Lsp.DocumentUri.of_string
+    in
+    let lsp_mapper =
+      { Lsp_mapper.default_mapper with Lsp_mapper.of_document_uri = (fun _mapper -> replace_uri) }
+    in
+    LspProt.default_message_from_server_mapper ~lsp_mapper
+  in
+  fun (state : state) (event : event) ->
+    match state with
+    | Pre_init _
+    | Post_shutdown ->
+      (* nothing to do *)
+      event
+    | Disconnected { d_ienv = { i_initialize_params; i_root; _ }; _ }
+    | Connected { c_ienv = { i_initialize_params; i_root; _ }; _ } ->
+      (match event with
+      | Server_message msg ->
+        let client_root =
+          let path = Lsp_helpers.get_root i_initialize_params in
+          File_url.create path ^ "/"
+        in
+        let server_root =
+          let path = Path.to_string i_root in
+          File_url.create path ^ "/"
+        in
+        let mapper = server_message_mapper ~client_root ~server_root in
+        Server_message (mapper.LspProt.of_message_from_server mapper msg)
+      | Client_message (msg, metadata) -> Client_message (msg, metadata)
+      | Tick -> Tick)
+
+let convert_to_server_uris =
+  let server_uri_of_client_uri uri =
+    uri
+    |> Lsp.DocumentUri.to_string
+    |> File_url.parse
+    |> Path.make
+    |> Path.to_string
+    |> File_url.create
+    |> Lsp.DocumentUri.of_string
+  in
+  let client_to_server_mapper =
+    {
+      Lsp_mapper.default_mapper with
+      Lsp_mapper.of_document_uri = (fun _mapper -> server_uri_of_client_uri);
+    }
+  in
+  let of_client_message msg =
+    client_to_server_mapper.Lsp_mapper.of_lsp_message client_to_server_mapper msg
+  in
+  function
+  | LspProt.Subscribe -> LspProt.Subscribe
+  | LspProt.LspToServer msg -> LspProt.LspToServer (of_client_message msg)
+  | LspProt.LiveErrorsRequest uri -> LspProt.LiveErrorsRequest (server_uri_of_client_uri uri)
+
 let send_request_to_client id request ~on_response ~on_error (ienv : initialized_env) =
   let json =
     let key = command_key_of_ienv ienv in
@@ -478,6 +549,9 @@ let show_status
 
 let send_to_server (env : connected_env) (request : LspProt.request) (metadata : LspProt.metadata) :
     unit =
+  (* calls realpath on every DocumentUri, because we want the server to only run once, on
+     the canonical files, even if there are multiple clients operating on various symlinks. *)
+  let request = convert_to_server_uris request in
   let _bytesWritten =
     Marshal_tools.to_fd_with_preamble (Unix.descr_of_out_channel env.c_conn.oc) (request, metadata)
   in
@@ -1647,6 +1721,7 @@ and main_handle flowconfig_name (state : state) (event : event) : state =
 
 and main_handle_unsafe flowconfig_name (state : state) (event : event) :
     (state * log_needed, state * Exception.t) result =
+  let event = convert_to_client_uris state event in
   match (state, event) with
   | ( Pre_init i_connect_params,
       Client_message (RequestMessage (id, InitializeRequest i_initialize_params), metadata) ) ->
