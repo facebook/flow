@@ -47,7 +47,7 @@ export default (suite(
                   },
                   command: {
                     title: '',
-                    command: 'log:<PLACEHOLDER_PROJECT_URL>',
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
                     arguments: [
                       'textDocument/completion',
                       'global',
@@ -70,7 +70,7 @@ export default (suite(
                   },
                   command: {
                     title: '',
-                    command: 'log:<PLACEHOLDER_PROJECT_URL>',
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
                     arguments: [
                       'textDocument/completion',
                       'global',
@@ -106,7 +106,7 @@ export default (suite(
                   ],
                   command: {
                     title: '',
-                    command: 'log:<PLACEHOLDER_PROJECT_URL>',
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
                     arguments: [
                       'textDocument/completion',
                       'autoimport',
@@ -139,7 +139,7 @@ export default (suite(
                   ],
                   command: {
                     title: '',
-                    command: 'log:<PLACEHOLDER_PROJECT_URL>',
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
                     arguments: [
                       'textDocument/completion',
                       'autoimport',
@@ -175,7 +175,7 @@ export default (suite(
                   ],
                   command: {
                     title: '',
-                    command: 'log:<PLACEHOLDER_PROJECT_URL>',
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
                     arguments: [
                       'textDocument/completion',
                       'autoimport',
@@ -211,7 +211,7 @@ export default (suite(
                   ],
                   command: {
                     title: '',
-                    command: 'log:<PLACEHOLDER_PROJECT_URL>',
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
                     arguments: [
                       'textDocument/completion',
                       'autoimport',
@@ -244,7 +244,7 @@ export default (suite(
                   ],
                   command: {
                     title: '',
-                    command: 'log:<PLACEHOLDER_PROJECT_URL>',
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
                     arguments: [
                       'textDocument/completion',
                       'autoimport',
@@ -299,7 +299,7 @@ export default (suite(
                   ],
                   command: {
                     title: '',
-                    command: 'log:<PLACEHOLDER_PROJECT_URL>',
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
                     arguments: [
                       'textDocument/completion',
                       'global',
@@ -331,7 +331,7 @@ export default (suite(
                   ],
                   command: {
                     title: '',
-                    command: 'log:<PLACEHOLDER_PROJECT_URL>',
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
                     arguments: [
                       'textDocument/completion',
                       'global',
@@ -363,7 +363,7 @@ export default (suite(
                   ],
                   command: {
                     title: '',
-                    command: 'log:<PLACEHOLDER_PROJECT_URL>',
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
                     arguments: [
                       'textDocument/completion',
                       'local value identifier',
@@ -422,7 +422,7 @@ export default (suite(
                   ],
                   command: {
                     title: '',
-                    command: 'log:<PLACEHOLDER_PROJECT_URL>',
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
                     arguments: [
                       'textDocument/completion',
                       'autoimport',
