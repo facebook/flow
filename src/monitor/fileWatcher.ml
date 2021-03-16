@@ -203,6 +203,16 @@ end = struct
         let rev = J.get_string_val "rev" ~default:"<UNKNOWN REV>" metadata in
         (distance, rev)
 
+    let log_state_enter name metadata =
+      FlowEventLogger.file_watcher_event_started
+        ~name
+        ~data:(Base.Option.value_map ~f:Hh_json.json_to_string ~default:"" metadata)
+
+    let log_state_leave name metadata =
+      FlowEventLogger.file_watcher_event_finished
+        ~name
+        ~data:(Base.Option.value_map ~f:Hh_json.json_to_string ~default:"" metadata)
+
     let broadcast env =
       if not (SSet.is_empty env.files) then Lwt_condition.broadcast env.changes_condition ()
 
@@ -263,7 +273,7 @@ end = struct
                     old_mergebase
                     new_mergebase;
                   env.mergebase <- Some new_mergebase;
-                  env.metadata <- { env.metadata with MonitorProt.changed_mergebase = true };
+                  env.metadata <- { MonitorProt.changed_mergebase = true };
                   env.finished_an_hg_update <- false;
                   Lwt.return_unit
                 | _ -> Lwt.return_unit
@@ -276,11 +286,13 @@ end = struct
             (match name with
             | "hg.update" ->
               let (distance, rev) = extract_hg_update_metadata metadata in
+              log_state_enter name metadata;
               Logger.info
                 "Watchman reports an hg.update just started. Moving %s revs from %s"
                 distance
                 rev
             | _ when List.mem name env.init_settings.Watchman.defer_states ->
+              log_state_enter name metadata;
               Logger.info
                 "Watchman reports %s just started. Filesystem notifications are paused."
                 name;
@@ -292,20 +304,15 @@ end = struct
             (match name with
             | "hg.update" ->
               let (distance, rev) = extract_hg_update_metadata metadata in
-              env.metadata <-
-                MonitorProt.
-                  {
-                    env.metadata with
-                    total_update_distance =
-                      env.metadata.total_update_distance + int_of_string distance;
-                  };
               env.finished_an_hg_update <- true;
+              log_state_leave name metadata;
               Logger.info
                 "Watchman reports an hg.update just finished. Moved %s revs to %s"
                 distance
                 rev;
               Lwt.return env
             | _ when List.mem name env.init_settings.Watchman.defer_states ->
+              log_state_leave name metadata;
               Logger.info "Watchman reports %s ended. Filesystem notifications resumed." name;
               StatusStream.file_watcher_ready ();
               Lwt.return env

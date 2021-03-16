@@ -1362,10 +1362,9 @@ let restart_if_faster_than_recheck ~options ~env ~to_merge_or_check ~file_watche
     (* Only watchman mode might restart *)
     Lwt.return_none
   | Options.LAZY_MODE_WATCHMAN ->
-    let { MonitorProt.total_update_distance; changed_mergebase } = file_watcher_metadata in
+    let { MonitorProt.changed_mergebase } = file_watcher_metadata in
     Hh_logger.info
-      "File watcher moved %d revisions and %s mergebase"
-      total_update_distance
+      "File watcher %s mergebase"
       ( if changed_mergebase then
         "changed"
       else
@@ -2369,7 +2368,6 @@ let recheck
       ~slowest_file
       ~num_slow_files
       ~first_internal_error
-      ~scm_update_distance:file_watcher_metadata.MonitorProt.total_update_distance
       ~scm_changed_mergebase:file_watcher_metadata.MonitorProt.changed_mergebase
   in
 

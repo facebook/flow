@@ -71,10 +71,7 @@ type recheck_reason =
   | Many_files_changed of { file_count: int }
   (* If we're using Watchman as the filewatcher, we can tell when the mergebase changed.
    * We can differentiate that from Many_files_changed *)
-  | Rebased of {
-      distance: int;
-      file_count: int;
-    }
+  | Rebased of { file_count: int }
   (* If try to autocomplete in foo.js and it's dependencies are unchecked, then we start a recheck
    * with a reason of Unchecked_dependencies { filename = "/path/to/foo.js"; } *)
   | Unchecked_dependencies of { filename: string }
@@ -89,8 +86,7 @@ type recheck_reason =
 let verbose_string_of_recheck_reason = function
   | Single_file_changed { filename } -> Printf.sprintf "1 file changed (%s)" filename
   | Many_files_changed { file_count } -> Printf.sprintf "%d files changed" file_count
-  | Rebased { distance; file_count } ->
-    Printf.sprintf "Rebased %d commits & %d files changed" distance file_count
+  | Rebased { file_count } -> Printf.sprintf "Rebased (%d files changed)" file_count
   | Unchecked_dependencies { filename } -> Printf.sprintf "Unchecked dependencies of %s" filename
   | Lazy_init_update_deps -> "Lazy init update deps"
   | Lazy_init_typecheck -> "Lazy init typecheck"
@@ -99,7 +95,7 @@ let verbose_string_of_recheck_reason = function
 let normalized_string_of_recheck_reason = function
   | Single_file_changed { filename = _ } -> "singleFileChanged"
   | Many_files_changed { file_count = _ } -> "manyFilesChanged"
-  | Rebased { distance = _; file_count = _ } -> "rebased"
+  | Rebased { file_count = _ } -> "rebased"
   | Unchecked_dependencies { filename = _ } -> "uncheckedDependencies"
   | Lazy_init_update_deps -> "lazyInitUpdateDeps"
   | Lazy_init_typecheck -> "lazyInitTypecheck"
