@@ -402,7 +402,7 @@ val set_local_env : 'phase t_ -> ALocSet.t SMap.t option -> unit
 
 val set_builtins : 'phase t_ -> Builtins.t -> unit
 
-val clear_master_shared : 'phase t_ -> 'phase sig_t_ -> unit
+val clear_master_shared : 'phase t_ -> master_context -> unit
 
 (* Flow allows you test test if a property exists inside a conditional. However, we only wan to
  * allow this test if there's a chance that the property might exist. So `if (foo.bar)` should be

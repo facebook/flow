@@ -79,13 +79,13 @@ module type PROCESS_UNIT = sig
 
   type output
 
-  val process : options:Options.t -> reader:reader -> input -> output
+  val process : options:Options.t -> reader:reader -> Context.master_context -> input -> output
 
   val reqs_of_input :
     reader:reader ->
     input ->
     (string * ALoc.t Nel.t * Modulename.t * File_key.t) list ->
-    Context.master_context * Context.sig_t list * Reqs.t
+    Context.sig_t list * Reqs.t
 end
 
 module Process_unit (C : PHASE_CONFIG) = struct
@@ -125,10 +125,9 @@ module Process_unit (C : PHASE_CONFIG) = struct
         ([], Reqs.empty)
         required
     in
-    let master_cx = Context_heaps.Reader_dispatcher.find_master ~reader in
-    (master_cx, dep_cxs, reqs)
+    (dep_cxs, reqs)
 
-  let process ~options ~reader input =
+  let process ~options ~reader master_cx input =
     let (required, file_sigs) =
       C.fold_input
         (fun (required, file_sigs) file ->
@@ -149,7 +148,7 @@ module Process_unit (C : PHASE_CONFIG) = struct
         ([], FilenameMap.empty)
         input
     in
-    let (master_cx, dep_cxs, file_reqs) = reqs_of_input ~reader input required in
+    let (dep_cxs, file_reqs) = reqs_of_input ~reader input required in
     let metadata = Context.metadata_of_options options in
     let lint_severities = Options.lint_severities options in
     let strict_mode = Options.strict_mode options in
@@ -171,7 +170,7 @@ module Merge_config = struct
    * at once, to handle possible recursive definitions. *)
   type input = File_key.t Nel.t
 
-  type output = Context.t * Context.sig_t
+  type output = Context.t
 
   let get_ast_unsafe ~reader file =
     let (_, { Flow_ast.Program.all_comments; _ }) =
@@ -190,7 +189,7 @@ module Merge_config = struct
     let ((cx, _, _), _) =
       Merge_js.merge_component ~opts ~getters component reqs dep_cxs master_cx
     in
-    (cx, master_cx.Context.master_sig_cx)
+    cx
 end
 
 module Merge_component :
@@ -209,7 +208,7 @@ let scan_for_component_suppressions ~options ~get_ast_unsafe component =
       Type_inference_js.scan_for_suppressions cx lint_severities all_comments)
     component
 
-let merge_context_new_signatures ~options ~reader component =
+let merge_context_new_signatures ~options ~reader master_cx component =
   let module Pack = Type_sig_pack in
   let module Merge = Type_sig_merge in
   (* make sig context, shared by all file contexts in component *)
@@ -421,7 +420,6 @@ let merge_context_new_signatures ~options ~reader component =
   let { Merge.cx; _ } = component.(0) in
 
   (* create builtins, merge master cx *)
-  let master_cx = Context_heaps.Reader_dispatcher.find_master ~reader in
   Context.merge_into ccx master_cx.Context.master_sig_cx;
   let builtins = master_cx.Context.builtins in
   Context.set_builtins cx builtins;
@@ -435,13 +433,13 @@ let merge_context_new_signatures ~options ~reader component =
   (* merge *)
   Array.iter Merge.merge_file component;
 
-  (cx, master_cx.Context.master_sig_cx)
+  cx
 
-let merge_context ~options ~reader component =
+let merge_context ~options ~reader master_cx component =
   if Options.new_signatures options then
-    merge_context_new_signatures ~options ~reader component
+    merge_context_new_signatures ~options ~reader master_cx component
   else
-    Merge_component.process ~options ~reader component
+    Merge_component.process ~options ~reader master_cx component
 
 (* Entry point for merging a component *)
 let merge_component ~worker_mutator ~options ~reader component =
@@ -463,7 +461,8 @@ let merge_component ~worker_mutator ~options ~reader component =
   let info = Module_heaps.Mutator_reader.get_info_unsafe ~reader ~audit:Expensive.ok file in
   if info.Module_heaps.checked then (
     let reader = Abstract_state_reader.Mutator_state_reader reader in
-    let (cx, master_cx) = merge_context ~options ~reader component in
+    let master_cx = Context_heaps.Reader_dispatcher.find_master ~reader in
+    let cx = merge_context ~options ~reader master_cx component in
     let suppressions = Context.error_suppressions cx in
     let module_refs = List.rev_map Files.module_ref (Nel.to_list component) in
     let md5 = Merge_js.sig_context cx module_refs in
@@ -488,7 +487,6 @@ module Check_config = struct
 
   type output = {
     cx: Context.t;
-    master_cx: Context.sig_t;
     file_sig: File_sig.With_ALoc.t;
     typed_ast: (ALoc.t, ALoc.t * Type.t) Flow_ast.Program.t;
     coverage: Coverage_response.file_coverage;
@@ -512,7 +510,7 @@ module Check_config = struct
     let (cx, _, typed_ast) = Merge_js.check_file ~opts ~getters file reqs dep_cxs master_cx in
     let file_sig = get_file_sig_unsafe ~reader file in
     let coverage = Coverage.file_coverage ~full_cx:cx typed_ast in
-    { cx; master_cx = master_cx.Context.master_sig_cx; file_sig; typed_ast; coverage }
+    { cx; file_sig; typed_ast; coverage }
 end
 
 module Check_file :
@@ -524,8 +522,9 @@ let check_file options ~reader file =
   let info = Module_heaps.Mutator_reader.get_info_unsafe ~reader ~audit:Expensive.ok file in
   if info.Module_heaps.checked then
     let reader = Abstract_state_reader.Mutator_state_reader reader in
+    let master_cx = Context_heaps.Reader_dispatcher.find_master ~reader in
     let { Check_config.cx; coverage; typed_ast; file_sig; _ } =
-      Check_file.process ~options ~reader file
+      Check_file.process ~options ~reader master_cx file
     in
     let errors = Context.errors cx in
     let suppressions = Context.error_suppressions cx in
@@ -569,7 +568,7 @@ let check_contents_context ~reader options file ast info file_sig =
       require_loc_map
       []
   in
-  let (master_cx, dep_cxs, file_reqs) =
+  let (dep_cxs, file_reqs) =
     try Check_file.reqs_of_input ~reader file required with
     | Key_not_found _ -> failwith "not all dependencies are ready yet, aborting..."
     | e -> raise e
@@ -587,6 +586,7 @@ let check_contents_context ~reader options file ast info file_sig =
       get_file_sig_unsafe = (fun _ -> file_sig);
     }
   in
+  let master_cx = Context_heaps.Reader_dispatcher.find_master ~reader in
   let (cx, _, tast) = Merge_js.check_file ~opts ~getters file file_reqs dep_cxs master_cx in
   (cx, tast)
 

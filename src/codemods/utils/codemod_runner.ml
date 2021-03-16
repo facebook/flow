@@ -164,7 +164,8 @@ let merge_job ~worker_mutator ~options ~reader component =
   let reader = Abstract_state_reader.Mutator_state_reader reader in
   let diff =
     if Module_js.checked_file ~reader ~audit:Expensive.ok leader then (
-      let (cx, master_cx) = Merge_service.merge_context ~options ~reader component in
+      let master_cx = Context_heaps.Reader_dispatcher.find_master ~reader in
+      let cx = Merge_service.merge_context ~options ~reader master_cx component in
       let module_refs = List.rev_map Files.module_ref (Nel.to_list component) in
       let md5 = Merge_js.sig_context cx module_refs in
       Context.clear_master_shared cx master_cx;
@@ -190,6 +191,7 @@ let check_job ~visit ~iteration ~reader ~options acc roots =
       | Ok None -> acc
       | Ok (Some ((full_cx, file_sig, typed_ast), _)) ->
         let reader = Abstract_state_reader.Mutator_state_reader reader in
+        let master_cx = Context_heaps.Reader_dispatcher.find_master ~reader in
         let ast = Parsing_heaps.Reader_dispatcher.get_ast_unsafe ~reader file in
         let docblock = Parsing_heaps.Reader_dispatcher.get_docblock_unsafe ~reader file in
         let ccx =
@@ -199,6 +201,7 @@ let check_job ~visit ~iteration ~reader ~options acc roots =
             metadata;
             options;
             full_cx;
+            master_cx;
             typed_ast;
             docblock;
             iteration;

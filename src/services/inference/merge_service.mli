@@ -42,8 +42,9 @@ type 'a merge_job =
 val merge_context :
   options:Options.t ->
   reader:Abstract_state_reader.t ->
+  Context.master_context ->
   File_key.t Nel.t ->
-  Context.t * Context.sig_t
+  Context.t
 
 val check_contents_context :
   reader:State_reader.t ->

@@ -693,6 +693,7 @@ let set_builtins cx builtins = cx.ccx.builtins <- builtins
    in other sig contexts. This saves a lot of shared memory as well as
    deserialization time. *)
 let clear_master_shared cx master_cx =
+  let { master_sig_cx = master_cx; _ } = master_cx in
   let module PMap = Type.Properties.Map in
   let module EMap = Type.Exports.Map in
   let sig_cx = cx.ccx.sig_cx in
