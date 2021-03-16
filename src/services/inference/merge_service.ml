@@ -153,9 +153,7 @@ module Process_unit (C : PHASE_CONFIG) = struct
     let metadata = Context.metadata_of_options options in
     let lint_severities = Options.lint_severities options in
     let strict_mode = Options.strict_mode options in
-    let get_aloc_table_unsafe =
-      Parsing_heaps.Reader_dispatcher.get_sig_ast_aloc_table_unsafe ~reader
-    in
+    let get_aloc_table_unsafe = Parsing_heaps.Reader_dispatcher.get_aloc_table_unsafe ~reader in
     let new_signatures = Options.new_signatures options in
     let opts = Merge_js.Merge_options { new_signatures; metadata; lint_severities; strict_mode } in
     let getters =
@@ -309,7 +307,7 @@ let merge_context_new_signatures ~options ~reader component =
   let component_file component_rec file_key =
     let open Type_sig_collections in
     let aloc_table =
-      lazy (Parsing_heaps.Reader_dispatcher.get_sig_ast_aloc_table_unsafe ~reader file_key)
+      lazy (Parsing_heaps.Reader_dispatcher.get_aloc_table_unsafe ~reader file_key)
     in
     let aloc =
       let source = Some file_key in
@@ -580,9 +578,7 @@ let check_contents_context ~reader options file ast info file_sig =
   let metadata = Context.metadata_of_options options in
   let lint_severities = Options.lint_severities options in
   let strict_mode = Options.strict_mode options in
-  let get_aloc_table_unsafe =
-    Parsing_heaps.Reader_dispatcher.get_sig_ast_aloc_table_unsafe ~reader
-  in
+  let get_aloc_table_unsafe = Parsing_heaps.Reader_dispatcher.get_aloc_table_unsafe ~reader in
   let new_signatures = Options.new_signatures options in
   let opts = Merge_js.Merge_options { new_signatures; metadata; lint_severities; strict_mode } in
   let getters =

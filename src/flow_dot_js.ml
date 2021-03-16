@@ -254,8 +254,7 @@ let infer_and_merge ~root filename ast file_sig =
       (* TODO (nmote, sainati) - Exceptions should mainly be used for exceptional code flows. We
        * shouldn't use them to decide whether or not to use abstract locations. We should pass through
        * whatever options we need instead *)
-      get_aloc_table_unsafe =
-        (fun _ -> raise (Parsing_heaps_exceptions.Sig_ast_ALoc_table_not_found ""));
+      get_aloc_table_unsafe = (fun _ -> raise (Parsing_heaps_exceptions.ALoc_table_not_found ""));
       get_docblock_unsafe = (fun _ -> stub_docblock);
       get_file_sig_unsafe = (fun _ -> file_sig);
     }

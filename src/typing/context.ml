@@ -349,7 +349,7 @@ let make ccx metadata file aloc_table module_ref phase =
           table. We handle this exception here rather than explicitly
           making an optional version of the get_aloc_table function for
           simplicity. *)
-       | Parsing_heaps_exceptions.Sig_ast_ALoc_table_not_found _ ->
+       | Parsing_heaps_exceptions.ALoc_table_not_found _ ->
          ALoc.make_empty_reverse_table ())
   in
   {

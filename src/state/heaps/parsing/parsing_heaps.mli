@@ -26,7 +26,7 @@ module type READER = sig
 
   val get_sig_ast_unsafe : reader:reader -> File_key.t -> (ALoc.t, ALoc.t) Flow_ast.Program.t
 
-  val get_sig_ast_aloc_table_unsafe : reader:reader -> File_key.t -> ALoc.table
+  val get_aloc_table_unsafe : reader:reader -> File_key.t -> ALoc.table
 
   val get_docblock_unsafe : reader:reader -> File_key.t -> Docblock.t
 

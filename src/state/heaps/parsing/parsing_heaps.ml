@@ -27,7 +27,7 @@ module SigASTHeap =
       let description = "SigAST"
     end)
 
-module SigASTALocTableHeap =
+module ALocTableHeap =
   SharedMem.WithCache
     (File_key)
     (struct
@@ -183,18 +183,18 @@ module ParsingHeaps = struct
         match extra with
         | TypesFirst { sig_ast; sig_file_sig; aloc_table } ->
           SigASTHeap.add file (remove_source_aloc sig_ast);
-          Base.Option.iter aloc_table ~f:(SigASTALocTableHeap.add file);
+          Base.Option.iter aloc_table ~f:(ALocTableHeap.add file);
           SigFileSigHeap.add file sig_file_sig
         | TypeSig (type_sig, aloc_table) ->
           TypeSigHeap.add file type_sig;
-          SigASTALocTableHeap.add file aloc_table)
+          ALocTableHeap.add file aloc_table)
 
   let oldify_batch files =
     WorkerCancel.with_no_cancellations (fun () ->
         ASTHeap.oldify_batch files;
         SigASTHeap.oldify_batch files;
         TypeSigHeap.oldify_batch files;
-        SigASTALocTableHeap.oldify_batch files;
+        ALocTableHeap.oldify_batch files;
         DocblockHeap.oldify_batch files;
         ExportsHeap.oldify_batch files;
         FileSigHeap.oldify_batch files;
@@ -206,7 +206,7 @@ module ParsingHeaps = struct
         ASTHeap.remove_old_batch files;
         SigASTHeap.remove_old_batch files;
         TypeSigHeap.remove_old_batch files;
-        SigASTALocTableHeap.remove_old_batch files;
+        ALocTableHeap.remove_old_batch files;
         DocblockHeap.remove_old_batch files;
         ExportsHeap.remove_old_batch files;
         FileSigHeap.remove_old_batch files;
@@ -218,7 +218,7 @@ module ParsingHeaps = struct
         ASTHeap.revive_batch files;
         SigASTHeap.revive_batch files;
         TypeSigHeap.revive_batch files;
-        SigASTALocTableHeap.revive_batch files;
+        ALocTableHeap.revive_batch files;
         DocblockHeap.revive_batch files;
         ExportsHeap.revive_batch files;
         FileSigHeap.revive_batch files;
@@ -245,7 +245,7 @@ module type READER = sig
 
   val get_sig_ast_unsafe : reader:reader -> File_key.t -> (ALoc.t, ALoc.t) Flow_ast.Program.t
 
-  val get_sig_ast_aloc_table_unsafe : reader:reader -> File_key.t -> ALoc.table
+  val get_aloc_table_unsafe : reader:reader -> File_key.t -> ALoc.table
 
   val get_docblock_unsafe : reader:reader -> File_key.t -> Docblock.t
 
@@ -262,7 +262,7 @@ module type READER = sig
   val loc_of_aloc : reader:reader -> ALoc.t -> Loc.t
 end
 
-let loc_of_aloc ~get_sig_ast_aloc_table_unsafe ~reader aloc =
+let loc_of_aloc ~get_aloc_table_unsafe ~reader aloc =
   let table =
     lazy
       (let source =
@@ -270,7 +270,7 @@ let loc_of_aloc ~get_sig_ast_aloc_table_unsafe ~reader aloc =
          | None -> failwith "Expected `aloc` to have a `source`"
          | Some x -> x
        in
-       get_sig_ast_aloc_table_unsafe ~reader source)
+       get_aloc_table_unsafe ~reader source)
   in
   ALoc.to_loc table aloc
 
@@ -312,10 +312,10 @@ end = struct
     | Some sig_ast -> add_source_aloc file sig_ast
     | None -> raise (Sig_ast_not_found (File_key.to_string file))
 
-  let get_sig_ast_aloc_table_unsafe ~reader:_ file =
-    match SigASTALocTableHeap.get file with
+  let get_aloc_table_unsafe ~reader:_ file =
+    match ALocTableHeap.get file with
     | Some aloc_table -> aloc_table
-    | None -> raise (Sig_ast_ALoc_table_not_found (File_key.to_string file))
+    | None -> raise (ALoc_table_not_found (File_key.to_string file))
 
   let get_docblock_unsafe ~reader file =
     match get_docblock ~reader file with
@@ -347,7 +347,7 @@ end = struct
     | Some hash -> hash
     | None -> raise (Hash_not_found (File_key.to_string file))
 
-  let loc_of_aloc = loc_of_aloc ~get_sig_ast_aloc_table_unsafe
+  let loc_of_aloc = loc_of_aloc ~get_aloc_table_unsafe
 end
 
 (* For use by a worker process *)
@@ -467,11 +467,11 @@ module Reader : READER with type reader = State_reader.t = struct
     in
     Base.Option.map ~f:(add_source_aloc key) ast
 
-  let get_sig_ast_aloc_table ~reader:_ key =
+  let get_aloc_table ~reader:_ key =
     if should_use_oldified key then
-      SigASTALocTableHeap.get_old key
+      ALocTableHeap.get_old key
     else
-      SigASTALocTableHeap.get key
+      ALocTableHeap.get key
 
   let get_docblock ~reader:_ key =
     if should_use_oldified key then
@@ -519,10 +519,10 @@ module Reader : READER with type reader = State_reader.t = struct
     | Some ast -> ast
     | None -> raise (Sig_ast_not_found (File_key.to_string file))
 
-  let get_sig_ast_aloc_table_unsafe ~reader file =
-    match get_sig_ast_aloc_table ~reader file with
+  let get_aloc_table_unsafe ~reader file =
+    match get_aloc_table ~reader file with
     | Some table -> table
-    | None -> raise (Sig_ast_ALoc_table_not_found (File_key.to_string file))
+    | None -> raise (ALoc_table_not_found (File_key.to_string file))
 
   let get_docblock_unsafe ~reader file =
     match get_docblock ~reader file with
@@ -554,7 +554,7 @@ module Reader : READER with type reader = State_reader.t = struct
     | Some file_hash -> file_hash
     | None -> raise (Hash_not_found (File_key.to_string file))
 
-  let loc_of_aloc = loc_of_aloc ~get_sig_ast_aloc_table_unsafe
+  let loc_of_aloc = loc_of_aloc ~get_aloc_table_unsafe
 end
 
 (* Reader_dispatcher is used by code which may or may not be running inside an init/recheck *)
@@ -603,10 +603,10 @@ module Reader_dispatcher : READER with type reader = Abstract_state_reader.t = s
     | Mutator_state_reader reader -> Mutator_reader.get_sig_ast_unsafe ~reader
     | State_reader reader -> Reader.get_sig_ast_unsafe ~reader
 
-  let get_sig_ast_aloc_table_unsafe ~reader =
+  let get_aloc_table_unsafe ~reader =
     match reader with
-    | Mutator_state_reader reader -> Mutator_reader.get_sig_ast_aloc_table_unsafe ~reader
-    | State_reader reader -> Reader.get_sig_ast_aloc_table_unsafe ~reader
+    | Mutator_state_reader reader -> Mutator_reader.get_aloc_table_unsafe ~reader
+    | State_reader reader -> Reader.get_aloc_table_unsafe ~reader
 
   let get_docblock_unsafe ~reader =
     match reader with
@@ -638,7 +638,7 @@ module Reader_dispatcher : READER with type reader = Abstract_state_reader.t = s
     | Mutator_state_reader reader -> Mutator_reader.get_file_hash_unsafe ~reader
     | State_reader reader -> Reader.get_file_hash_unsafe ~reader
 
-  let loc_of_aloc = loc_of_aloc ~get_sig_ast_aloc_table_unsafe
+  let loc_of_aloc = loc_of_aloc ~get_aloc_table_unsafe
 end
 
 module From_saved_state : sig
@@ -655,4 +655,4 @@ end = struct
   let add_exports = ExportsHeap.add
 end
 
-let add_aloc_table = SigASTALocTableHeap.add
+let add_aloc_table = ALocTableHeap.add
