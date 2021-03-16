@@ -65,11 +65,9 @@ val check_file :
   Context.master_context ->
   output
 
-module ContextOptimizer : sig
-  val sig_context : Context.t -> string list -> Xx.hash
+val sig_context : Context.t -> string Base.List.t -> Xx.hash
 
-  val optimize_builtins : Context.t -> unit
-end
+val optimize_builtins : Context.t -> unit
 
 val get_lint_severities :
   Context.metadata ->

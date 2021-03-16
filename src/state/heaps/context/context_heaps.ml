@@ -183,7 +183,10 @@ end = struct
           module_ref)
         component
     in
-    let xx = Merge_js.ContextOptimizer.sig_context cx (Nel.to_list module_refs) in
+    let (xx, _) =
+      let no_lowers _ r = Type.Unsoundness.merged_any r in
+      Context_optimizer.reduce_context cx ~no_lowers (Nel.to_list module_refs)
+    in
     add_merge_on_diff ~audit () cx component xx
 
   let revive_files oldified_files files =

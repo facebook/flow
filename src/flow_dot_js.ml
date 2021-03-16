@@ -218,7 +218,7 @@ let init_builtins filenames =
       (fun _file _sups -> ())
       (fun _file _lint -> ())
   in
-  Merge_js.ContextOptimizer.optimize_builtins master_cx;
+  Merge_js.optimize_builtins master_cx;
   master_cx_ref :=
     Some
       ( root,

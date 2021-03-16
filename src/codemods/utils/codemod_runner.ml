@@ -166,7 +166,7 @@ let merge_job ~worker_mutator ~options ~reader component =
     if Module_js.checked_file ~reader ~audit:Expensive.ok leader then (
       let (cx, master_cx) = Merge_service.merge_context ~options ~reader component in
       let module_refs = List.rev_map Files.module_ref (Nel.to_list component) in
-      let md5 = Merge_js.ContextOptimizer.sig_context cx module_refs in
+      let md5 = Merge_js.sig_context cx module_refs in
       Context.clear_master_shared cx master_cx;
       Context_heaps.Merge_context_mutator.add_merge_on_diff
         ~audit:Expensive.ok

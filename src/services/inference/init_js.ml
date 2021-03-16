@@ -212,7 +212,7 @@ let init ~options ~reader lib_files =
   in
 
   let%lwt (ok, parse_and_sig_errors, exports) = load_lib_files ~ccx ~options ~reader lib_files in
-  Merge_js.ContextOptimizer.optimize_builtins master_cx;
+  Merge_js.optimize_builtins master_cx;
 
   let (errors, warnings, suppressions) =
     let suppressions = Context.error_suppressions master_cx in

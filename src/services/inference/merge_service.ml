@@ -466,7 +466,7 @@ let merge_component ~worker_mutator ~options ~reader component =
     let (cx, master_cx) = merge_context ~options ~reader component in
     let suppressions = Context.error_suppressions cx in
     let module_refs = List.rev_map Files.module_ref (Nel.to_list component) in
-    let md5 = Merge_js.ContextOptimizer.sig_context cx module_refs in
+    let md5 = Merge_js.sig_context cx module_refs in
     Context.clear_master_shared cx master_cx;
     let diff =
       Context_heaps.Merge_context_mutator.add_merge_on_diff
