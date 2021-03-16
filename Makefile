@@ -77,6 +77,7 @@ MODULES=\
   src/codemods/utils\
   src/commands\
   src/commands/config\
+  src/commands/glean\
   src/commands/options\
   src/common\
   src/common/audit\
