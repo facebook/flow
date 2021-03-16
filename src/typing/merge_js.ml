@@ -488,7 +488,6 @@ let post_merge_checks cx ast tast metadata file_sig =
 
 type merge_options =
   | Merge_options of {
-      new_signatures: bool;
       metadata: Context.metadata;
       lint_severities: Severity.severity LintSettings.t;
       strict_mode: StrictModeSettings.t;

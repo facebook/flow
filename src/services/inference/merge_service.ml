@@ -154,8 +154,7 @@ module Process_unit (C : PHASE_CONFIG) = struct
     let lint_severities = Options.lint_severities options in
     let strict_mode = Options.strict_mode options in
     let get_aloc_table_unsafe = Parsing_heaps.Reader_dispatcher.get_aloc_table_unsafe ~reader in
-    let new_signatures = Options.new_signatures options in
-    let opts = Merge_js.Merge_options { new_signatures; metadata; lint_severities; strict_mode } in
+    let opts = Merge_js.Merge_options { metadata; lint_severities; strict_mode } in
     let getters =
       {
         Merge_js.get_ast_unsafe = C.get_ast_unsafe ~reader;
@@ -579,8 +578,7 @@ let check_contents_context ~reader options file ast info file_sig =
   let lint_severities = Options.lint_severities options in
   let strict_mode = Options.strict_mode options in
   let get_aloc_table_unsafe = Parsing_heaps.Reader_dispatcher.get_aloc_table_unsafe ~reader in
-  let new_signatures = Options.new_signatures options in
-  let opts = Merge_js.Merge_options { new_signatures; metadata; lint_severities; strict_mode } in
+  let opts = Merge_js.Merge_options { metadata; lint_severities; strict_mode } in
   let getters =
     {
       Merge_js.get_ast_unsafe = (fun _ -> (all_comments, aloc_ast));
