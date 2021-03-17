@@ -73,3 +73,15 @@ new MyReadStream()
   .on('error', () => {})
   .pipe(new MyDuplex())
   .once('close', () => {});
+
+
+async function * generator() {
+  yield 'hello';
+  yield 'streams';
+}
+
+stream.Readable.from(generator());
+
+stream.Readable.from('banana');
+stream.Readable.from(101); // error - TypeError [ERR_INVALID_ARG_TYPE]: The "iterable" argument must be an instance of Iterable. Received type number (101)
+stream.Readable.from(null); // error - TypeError [ERR_INVALID_ARG_TYPE]: The "iterable" argument must be an instance of Iterable. Received null
