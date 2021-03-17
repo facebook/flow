@@ -91,7 +91,7 @@ let func_details ~jsdoc ~exact_by_default params rest_param return =
 (* given a Loc.t within a function call, returns the type of the function being called *)
 module Callee_finder = struct
   type t = {
-    tparams: Type.typeparam list;
+    tparams_rev: Type.typeparam list;
     type_: Type.t;
     active_parameter: int;
     loc: Loc.t;
@@ -155,8 +155,8 @@ module Callee_finder = struct
 
           let active_parameter = find_argument ~reader cursor arguments 0 in
           let loc = loc_of_aloc ~reader callee_loc in
-          this#annot_with_tparams (fun tparams ->
-              raise (Found (Some { tparams; type_ = t; active_parameter; loc })))
+          this#annot_with_tparams (fun ~tparams_rev ->
+              raise (Found (Some { tparams_rev; type_ = t; active_parameter; loc })))
         else
           super#call annot expr
 
@@ -181,8 +181,8 @@ module Callee_finder = struct
       let _ = finder#program typed_ast in
       None
     with
-    | Found (Some { tparams; type_; active_parameter; loc }) ->
-      Some ({ Type.TypeScheme.tparams; type_ }, active_parameter, loc)
+    | Found (Some { tparams_rev; type_; active_parameter; loc }) ->
+      Some ({ Type.TypeScheme.tparams_rev; type_ }, active_parameter, loc)
     | Found None -> None
 end
 

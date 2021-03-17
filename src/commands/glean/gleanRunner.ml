@@ -43,7 +43,7 @@ class member_searcher add_member =
       let { _object = ((_, type_), _); property; _ } = member in
       (match property with
       | PropertyIdentifier ((aloc, _), Flow_ast.Identifier.{ name; _ }) ->
-        this#annot_with_tparams add_member ~type_ ~aloc ~name
+        this#annot_with_tparams (add_member ~type_ ~aloc ~name)
       | _ -> ());
       member
   end
@@ -239,8 +239,8 @@ let extract_member_def ~cx ~typed_ast ~file_sig scheme name : ALoc.t option =
 
 let member_declaration_references ~root ~write_root ~reader ~full_cx ~typed_ast ~file_sig =
   let results = ref [] in
-  let add_member tparams ~type_ ~aloc ~name =
-    let scheme = TypeScheme.{ tparams; type_ } in
+  let add_member ~type_ ~aloc ~name ~tparams_rev =
+    let scheme = TypeScheme.{ tparams_rev; type_ } in
     Base.Option.iter
       (extract_member_def ~cx:full_cx ~typed_ast ~file_sig scheme name)
       ~f:(fun def_aloc ->
@@ -357,7 +357,7 @@ let source_of_exports
           ~cx:full_cx
           ~typed_ast
           ~file_sig
-          TypeScheme.{ tparams = []; type_ = module_exports_t }
+          TypeScheme.{ tparams_rev = []; type_ = module_exports_t }
         |> Base.Result.ok
         |> Base.Option.to_list
       in
@@ -610,15 +610,15 @@ let declaration_infos ~root ~write_root ~scope_info ~file ~file_sig ~full_cx ~re
     =
   let infos = ref [] in
   let type_declaration_map = ref SMap.empty in
-  let add_info kind tparams name loc type_ =
-    let scheme = TypeScheme.{ tparams; type_ } in
+  let add_info kind ~tparams_rev name loc type_ =
+    let scheme = TypeScheme.{ tparams_rev; type_ } in
     infos := ((kind, name, loc), scheme) :: !infos
   in
   let add_var_info = add_info `Declaration in
   let add_member_info = add_info `MemberDeclaration in
-  let add_type_info tparams name loc type_ =
+  let add_type_info ~tparams_rev name loc type_ =
     type_declaration_map := SMap.add name loc !type_declaration_map;
-    add_info `TypeDeclaration tparams name loc type_
+    add_info `TypeDeclaration ~tparams_rev name loc type_
   in
   ignore
     ((new declaration_info_collector

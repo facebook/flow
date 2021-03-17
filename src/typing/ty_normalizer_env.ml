@@ -134,7 +134,7 @@ type t = {
      to `T` even though it's now out of scope. In this case we need to fall back to
      the actual bounds and return those instead. So the normalized type here would
      be: Empty | Mixed, which simplifies to Mixed. *)
-  tparams: Type.typeparam list;
+  tparams_rev: Type.typeparam list;
   (* In determining whether a symbol is Local, Imported, Remote, etc, it is
      useful to keep a map of imported names and the corresponding
      location available. We can then make this decision by comparing the
@@ -162,8 +162,8 @@ type t = {
   under_type_alias: SymbolSet.t;
 }
 
-let init ~options ~genv ~tparams ~imported_names =
-  { options; genv; depth = 0; tparams; imported_names; under_type_alias = SymbolSet.empty }
+let init ~options ~genv ~tparams_rev ~imported_names =
+  { options; genv; depth = 0; tparams_rev; imported_names; under_type_alias = SymbolSet.empty }
 
 let descend e = { e with depth = e.depth + 1 }
 
@@ -187,7 +187,7 @@ let merge_bot_and_any_kinds e = e.options.merge_bot_and_any_kinds
 
 let current_file e = e.genv.file
 
-let add_typeparam env typeparam = { env with tparams = typeparam :: env.tparams }
+let add_typeparam env typeparam = { env with tparams_rev = typeparam :: env.tparams_rev }
 
 let set_type_alias name e = { e with under_type_alias = SymbolSet.add name e.under_type_alias }
 

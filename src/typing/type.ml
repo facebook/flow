@@ -2817,7 +2817,7 @@ end
  * See normalizer for use. *)
 module TypeScheme = struct
   type t = {
-    tparams: TypeTerm.typeparam list;
+    tparams_rev: TypeTerm.typeparam list;
     type_: TypeTerm.t;
   }
 end

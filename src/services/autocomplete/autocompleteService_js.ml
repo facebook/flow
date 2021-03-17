@@ -212,15 +212,21 @@ let documentation_of_member ~reader ~cx ~typed_ast this name =
   | Error _ -> None
 
 let members_of_type
-    ~reader ~exclude_proto_members ?(exclude_keys = SSet.empty) ~tparams cx file_sig typed_ast type_
-    =
+    ~reader
+    ~exclude_proto_members
+    ?(exclude_keys = SSet.empty)
+    ~tparams_rev
+    cx
+    file_sig
+    typed_ast
+    type_ =
   let ty_members =
     Ty_members.extract
       ~include_proto_members:(not exclude_proto_members)
       ~cx
       ~typed_ast
       ~file_sig
-      Type.TypeScheme.{ tparams; type_ }
+      Type.TypeScheme.{ tparams_rev; type_ }
   in
   let include_valid_member (s, info) =
     let open Reason in
@@ -259,11 +265,19 @@ let autocomplete_member
     this
     in_optional_chain
     ac_loc
-    ~tparams =
+    ~tparams_rev =
   let ac_loc = loc_of_aloc ~reader ac_loc |> remove_autocomplete_token_from_loc in
   let exact_by_default = Context.exact_by_default cx in
   match
-    members_of_type ~reader ~exclude_proto_members ?exclude_keys cx file_sig typed_ast this ~tparams
+    members_of_type
+      ~reader
+      ~exclude_proto_members
+      ?exclude_keys
+      cx
+      file_sig
+      typed_ast
+      this
+      ~tparams_rev
   with
   | Error err -> AcFatalError err
   | Ok (mems, errors_to_log, in_idx) ->
@@ -353,7 +367,7 @@ let documentation_of_loc ~options ~reader ~cx ~file_sig ~typed_ast loc =
   | Def_error _ ->
     None
 
-let local_value_identifiers ~options ~reader ~cx ~ac_loc ~file_sig ~ast ~typed_ast ~tparams =
+let local_value_identifiers ~options ~reader ~cx ~ac_loc ~file_sig ~ast ~typed_ast ~tparams_rev =
   let scope_info = Scope_builder.program ~with_types:false ast in
   let open Scope_api.With_Loc in
   (* get the innermost scope enclosing the requested location *)
@@ -403,7 +417,7 @@ let local_value_identifiers ~options ~reader ~cx ~ac_loc ~file_sig ~ast ~typed_a
          (* TODO(vijayramamurthy) do something about sometimes failing to collect types *)
          Base.Option.map (LocMap.find_opt loc types) ~f:(fun type_ ->
              ( (name, documentation_of_loc ~options ~reader ~cx ~file_sig ~typed_ast loc),
-               Type.TypeScheme.{ tparams; type_ } )))
+               Type.TypeScheme.{ tparams_rev; type_ } )))
   |> Ty_normalizer.from_schemes
        ~options:ty_normalizer_options
        ~genv:(Ty_normalizer_env.mk_genv ~full_cx:cx ~file:(Context.file cx) ~typed_ast ~file_sig)
@@ -493,14 +507,14 @@ let autocomplete_id
     ~include_super
     ~include_this
     ~imports
-    ~tparams
+    ~tparams_rev
     ~token =
   (* TODO: filter to results that match `token` *)
   let open ServerProt.Response.Completion in
   let ac_loc = loc_of_aloc ~reader ac_loc |> remove_autocomplete_token_from_loc in
   let exact_by_default = Context.exact_by_default cx in
   let (items, errors_to_log) =
-    local_value_identifiers ~options ~reader ~cx ~ac_loc ~file_sig ~typed_ast ~ast ~tparams
+    local_value_identifiers ~options ~reader ~cx ~ac_loc ~file_sig ~typed_ast ~ast ~tparams_rev
     |> List.fold_left
          (fun (items, errors_to_log) ((name, documentation), elt_result) ->
            match elt_result with
@@ -620,7 +634,7 @@ let should_autoimport_react ~options ~imports ~file_sig =
     false
 
 let autocomplete_jsx_element
-    ~env ~options ~reader ~cx ~ac_loc ~file_sig ~ast ~typed_ast ~imports ~tparams ~token =
+    ~env ~options ~reader ~cx ~ac_loc ~file_sig ~ast ~typed_ast ~imports ~tparams_rev ~token =
   let results =
     autocomplete_id
       ~env
@@ -634,7 +648,7 @@ let autocomplete_jsx_element
       ~include_super:false
       ~include_this:false
       ~imports
-      ~tparams
+      ~tparams_rev
       ~token
   in
   match results with
@@ -684,7 +698,7 @@ let autocomplete_jsx_element
    component class and we want to enumerate the members of its declared props
    type, so we need to extract that and then route to autocomplete_member. *)
 let autocomplete_jsx_attribute
-    ~reader cx file_sig typed_ast cls ac_name ~used_attr_names ~has_value ac_loc ~tparams =
+    ~reader cx file_sig typed_ast cls ac_name ~used_attr_names ~has_value ac_loc ~tparams_rev =
   let open Flow_js in
   let reason = Reason.mk_reason (Reason.RCustom ac_name) ac_loc in
   let props_object =
@@ -707,7 +721,7 @@ let autocomplete_jsx_attribute
       file_sig
       typed_ast
       props_object
-      ~tparams
+      ~tparams_rev
   in
   let ac_loc = loc_of_aloc ~reader ac_loc |> remove_autocomplete_token_from_loc in
   match mems_result with
@@ -863,14 +877,14 @@ let type_exports_of_module_ty ~ac_loc ~exact_by_default ~documentation_of_module
   | _ -> []
 
 let autocomplete_unqualified_type
-    ~env ~options ~reader ~cx ~imports ~tparams ~file_sig ~ac_loc ~ast ~typed_ast ~token =
+    ~env ~options ~reader ~cx ~imports ~tparams_rev ~file_sig ~ac_loc ~ast ~typed_ast ~token =
   (* TODO: filter to results that match `token` *)
   let open ServerProt.Response.Completion in
   let ac_loc = loc_of_aloc ~reader ac_loc |> remove_autocomplete_token_from_loc in
   let exact_by_default = Context.exact_by_default cx in
   let tparam_results =
-    Base.List.map
-      ~f:(fun { Type.name; _ } ->
+    Base.List.fold_left
+      ~f:(fun acc { Type.name; _ } ->
         {
           kind = Some Lsp.Completion.TypeParameter;
           name;
@@ -880,8 +894,10 @@ let autocomplete_unqualified_type
           preselect = false;
           documentation = None;
           log_info = "unqualified type parameter";
-        })
-      tparams
+        }
+        :: acc)
+      ~init:[]
+      tparams_rev
   in
   let (tparam_and_tident_results, tparam_and_tident_errors_to_log) =
     local_type_identifiers ~typed_ast ~cx ~file_sig
@@ -912,7 +928,7 @@ let autocomplete_unqualified_type
      - enums
      - modules (followed by a dot) *)
   let (items, errors_to_log) =
-    local_value_identifiers ~options ~ast ~typed_ast ~reader ~ac_loc ~tparams ~cx ~file_sig
+    local_value_identifiers ~options ~ast ~typed_ast ~reader ~ac_loc ~tparams_rev ~cx ~file_sig
     |> List.fold_left
          (fun (items, errors_to_log) ((name, documentation), ty_res) ->
            match ty_res with
@@ -964,9 +980,9 @@ let autocomplete_unqualified_type
   in
   AcResult { result; errors_to_log }
 
-let autocomplete_qualified_type ~reader ~cx ~ac_loc ~file_sig ~typed_ast ~tparams ~qtype =
+let autocomplete_qualified_type ~reader ~cx ~ac_loc ~file_sig ~typed_ast ~tparams_rev ~qtype =
   let ac_loc = loc_of_aloc ~reader ac_loc |> remove_autocomplete_token_from_loc in
-  let qtype_scheme = Type.TypeScheme.{ tparams; type_ = qtype } in
+  let qtype_scheme = Type.TypeScheme.{ tparams_rev; type_ = qtype } in
   let exact_by_default = Context.exact_by_default cx in
   let module_ty_res =
     Ty_normalizer.from_scheme
@@ -993,7 +1009,7 @@ let autocomplete_get_results
   | None ->
     let result = { ServerProt.Response.Completion.items = []; is_incomplete = false } in
     (None, ("None", AcResult { result; errors_to_log = ["Autocomplete token not found in AST"] }))
-  | Some { tparams; ac_loc; token; autocomplete_type } ->
+  | Some { tparams_rev; ac_loc; token; autocomplete_type } ->
     ( Some token,
       (match autocomplete_type with
       | Ac_binding -> ("Empty", AcEmpty "Binding")
@@ -1022,7 +1038,7 @@ let autocomplete_get_results
             ~include_super
             ~include_this
             ~imports
-            ~tparams
+            ~tparams_rev
             ~token )
       | Ac_member { obj_type; in_optional_chain } ->
         ( "Acmem",
@@ -1035,7 +1051,7 @@ let autocomplete_get_results
             obj_type
             in_optional_chain
             ac_loc
-            ~tparams )
+            ~tparams_rev )
       | Ac_jsx_element ->
         ( "Ac_jsx_element",
           autocomplete_jsx_element
@@ -1048,7 +1064,7 @@ let autocomplete_get_results
             ~ast
             ~typed_ast
             ~imports
-            ~tparams
+            ~tparams_rev
             ~token )
       | Ac_jsx_attribute { attribute_name; used_attr_names; component_t; has_value } ->
         ( "Acjsx",
@@ -1062,7 +1078,7 @@ let autocomplete_get_results
             ~used_attr_names
             ~has_value
             ac_loc
-            ~tparams )
+            ~tparams_rev )
       | Ac_type ->
         ( "Actype",
           autocomplete_unqualified_type
@@ -1071,7 +1087,7 @@ let autocomplete_get_results
             ~reader
             ~cx
             ~imports
-            ~tparams
+            ~tparams_rev
             ~ac_loc
             ~ast
             ~typed_ast
@@ -1079,4 +1095,5 @@ let autocomplete_get_results
             ~token )
       | Ac_qualified_type qtype ->
         ( "Acqualifiedtype",
-          autocomplete_qualified_type ~reader ~cx ~ac_loc ~file_sig ~typed_ast ~tparams ~qtype )) )
+          autocomplete_qualified_type ~reader ~cx ~ac_loc ~file_sig ~typed_ast ~tparams_rev ~qtype
+        )) )

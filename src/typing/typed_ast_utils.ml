@@ -30,9 +30,10 @@ class type_parameter_mapper =
 
     (* Since the mapper wasn't originally written to pass an accumulator value
        through the calls, we're maintaining this accumulator imperatively. *)
-    val mutable bound_tparams : Type.typeparam list = []
+    val mutable rev_bound_tparams : Type.typeparam list = []
 
-    method annot_with_tparams : 'a. (Type.typeparam list -> 'a) -> 'a = (fun f -> f bound_tparams)
+    method annot_with_tparams : 'a. (tparams_rev:Type.typeparam list -> 'a) -> 'a =
+      (fun f -> f ~tparams_rev:rev_bound_tparams)
 
     (* Imperatively adds type parameter to bound_tparams environment. *)
     method! type_param tparam =
@@ -54,15 +55,15 @@ class type_parameter_mapper =
       in
       let polarity = polarity variance in
       let tparam = { Type.reason; name; bound; polarity; default; is_this = false } in
-      bound_tparams <- tparam :: bound_tparams;
+      rev_bound_tparams <- tparam :: rev_bound_tparams;
       res
 
     (* Record and restore the parameter environment around nodes that might
        update it. *)
     method! type_params_opt pd f =
-      let originally_bound_tparams = bound_tparams in
+      let originally_bound_tparams = rev_bound_tparams in
       let res = super#type_params_opt pd f in
-      bound_tparams <- originally_bound_tparams;
+      rev_bound_tparams <- originally_bound_tparams;
       res
 
     (* Classes assume an additional "this" type parameter, which needs to be
@@ -87,10 +88,10 @@ class type_parameter_mapper =
           is_this = true;
         }
       in
-      let originally_bound_tparams = bound_tparams in
-      bound_tparams <- this_tparam :: bound_tparams;
+      let originally_bound_tparams = rev_bound_tparams in
+      rev_bound_tparams <- this_tparam :: rev_bound_tparams;
       let cls = super#class_ cls in
-      bound_tparams <- originally_bound_tparams;
+      rev_bound_tparams <- originally_bound_tparams;
       cls
   end
 
@@ -98,7 +99,7 @@ class type_parameter_mapper =
 module ExactMatchQuery = struct
   exception Found of Type.TypeScheme.t
 
-  let found t tparams = raise (Found { Type.TypeScheme.tparams; type_ = t })
+  let found ~tparams_rev t = raise (Found { Type.TypeScheme.tparams_rev; type_ = t })
 
   class exact_match_searcher (target_loc : ALoc.t) =
     object (self)
@@ -146,8 +147,8 @@ module Type_at_pos = struct
 
       method covers_target loc = Reason.in_range target_loc (ALoc.to_loc_exn loc)
 
-      method find_loc : 'a. ALoc.t -> Type.t -> Type.typeparam list -> 'a =
-        (fun loc t tparams -> raise (Found (loc, { Type.TypeScheme.tparams; type_ = t })))
+      method find_loc : 'a. ALoc.t -> Type.t -> tparams_rev:Type.typeparam list -> 'a =
+        (fun loc t ~tparams_rev -> raise (Found (loc, { Type.TypeScheme.tparams_rev; type_ = t })))
 
       method! t_identifier (((loc, t), _) as id) =
         if self#covers_target loc then
@@ -187,7 +188,7 @@ module Type_at_pos = struct
                 _;
               } )
           when self#covers_target loc ->
-          self#annot_with_tparams (fun tparams -> self#find_loc loc t tparams)
+          self#annot_with_tparams (self#find_loc loc t)
         | _ -> super#expression expr
 
       method! implicit (((loc, t), _) as impl) =
@@ -215,7 +216,7 @@ class type_at_aloc_map_folder =
 
     method! on_type_annot x =
       let (loc, type_) = x in
-      let scheme = Type.TypeScheme.{ type_; tparams = bound_tparams } in
+      let scheme = Type.TypeScheme.{ type_; tparams_rev = rev_bound_tparams } in
       map <- ALocMap.add loc scheme map;
       x
 
@@ -230,7 +231,7 @@ class type_at_aloc_list_folder =
 
     method! on_type_annot x =
       let (loc, type_) = x in
-      l <- (loc, Type.TypeScheme.{ type_; tparams = bound_tparams }) :: l;
+      l <- (loc, Type.TypeScheme.{ type_; tparams_rev = rev_bound_tparams }) :: l;
       x
 
     method to_list = l

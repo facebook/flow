@@ -32,7 +32,7 @@ type autocomplete_type =
   | Ac_jsx_text  (** JSX text child *)
 
 type process_location_result = {
-  tparams: Type.typeparam list;
+  tparams_rev: Type.typeparam list;
   ac_loc: ALoc.t;
   token: string;
   autocomplete_type: autocomplete_type;
@@ -73,8 +73,8 @@ class process_request_searcher (from_trigger_character : bool) (cursor : Loc.t) 
             Ac_ignored
           | _ -> autocomplete_type
         in
-        this#annot_with_tparams (fun tparams ->
-            raise (Found { tparams; ac_loc; token; autocomplete_type }))
+        this#annot_with_tparams (fun ~tparams_rev ->
+            raise (Found { tparams_rev; ac_loc; token; autocomplete_type }))
 
     method! comment ((loc, Flow_ast.Comment.{ text; _ }) as c) =
       if this#covers_target loc then

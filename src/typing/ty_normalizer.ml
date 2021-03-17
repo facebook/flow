@@ -82,7 +82,7 @@ module NormalizerMonad : sig
     options:Env.options ->
     genv:Env.genv ->
     imported_names:Ty.imported_ident ALocMap.t ->
-    tparams:Type.typeparam list ->
+    tparams_rev:Type.typeparam list ->
     State.t ->
     Type.t ->
     (Ty.elt, error) result * State.t
@@ -95,7 +95,7 @@ module NormalizerMonad : sig
     options:Env.options ->
     genv:Env.genv ->
     imported_names:Ty.imported_ident Loc_collections.ALocMap.t ->
-    tparams:Type.typeparam list ->
+    tparams_rev:Type.typeparam list ->
     State.t ->
     Type.t ->
     (Ty.t, error) result * State.t
@@ -208,12 +208,12 @@ end = struct
   *)
   let lookup_tparam ~default env t tp_name tp_loc =
     let pred { T.name; reason; _ } = name = tp_name && tp_loc = Reason.def_aloc_of_reason reason in
-    match List.find_opt pred env.Env.tparams with
+    match List.find_opt pred env.Env.tparams_rev with
     | Some _ ->
       (* If we care about shadowing of type params, then flag an error *)
       if Env.flag_shadowed_type_params env then
         let shadow_pred { T.name; _ } = name = tp_name in
-        match List.find_opt shadow_pred env.Env.tparams with
+        match List.find_opt shadow_pred env.Env.tparams_rev with
         | Some { T.reason; _ } when Reason.def_aloc_of_reason reason <> tp_loc ->
           terr ~kind:ShadowTypeParam (Some t)
         | Some _ -> return (Ty.Bound (tp_loc, tp_name))
@@ -612,7 +612,7 @@ end = struct
     if Env.evaluate_type_destructors env then
       let cx = Env.get_cx env in
       Recursive.with_cache (EvalKey id) ~f:(fun () ->
-          Flow_js_utils.check_with_generics cx (List.rev env.Env.tparams) (fun map_ ->
+          Flow_js_utils.check_with_generics cx (List.rev env.Env.tparams_rev) (fun map_ ->
               let trace = Trace.dummy_trace in
               let t' = Subst.subst cx map_ t in
               let d' = Subst.subst_destructor cx map_ d in
@@ -2090,10 +2090,10 @@ end = struct
       ~options
       ~genv
       ~imported_names
-      ~tparams
+      ~tparams_rev
       state
       t : ('a, error) result * State.t =
-    let env = Env.init ~options ~genv ~tparams ~imported_names in
+    let env = Env.init ~options ~genv ~tparams_rev ~imported_names in
     let (result, state) = run state (f ~env t) in
     let result =
       match result with
@@ -2195,9 +2195,9 @@ end = struct
         | Decl d -> def_loc_of_decl d
       in
       fun ~options ~genv scheme ->
-        let { Type.TypeScheme.tparams; type_ = t } = scheme in
+        let { Type.TypeScheme.tparams_rev; type_ = t } = scheme in
         let imported_names = ALocMap.empty in
-        let env = Env.init ~options ~genv ~tparams ~imported_names in
+        let env = Env.init ~options ~genv ~tparams_rev ~imported_names in
         let%map ty = ElementConverter.convert_toplevel ~env t in
         def_loc_of_elt ty
 
@@ -2437,7 +2437,8 @@ end = struct
         instance_t ~env ~imode r static super inst
       | ThisClassT (_, t, _) -> this_class_t ~env ~proto ~imode t
       | DefT (_, _, PolyT { tparams; t_out; _ }) ->
-        let env = Env.{ env with tparams = Nel.to_list tparams @ env.tparams } in
+        let tparams_rev = List.rev (Nel.to_list tparams) @ env.Env.tparams_rev in
+        let env = Env.{ env with tparams_rev } in
         type__ ~env ~proto ~imode t_out
       | MaybeT (_, t) ->
         let%map t = type__ ~env ~proto ~imode t in
@@ -2492,8 +2493,8 @@ let from_schemes ~options ~genv schemes =
   let (_, result) =
     ListUtils.fold_map
       (fun state (a, scheme) ->
-        let { Type.TypeScheme.tparams; type_ = t } = scheme in
-        match run_type ~options ~genv ~imported_names ~tparams state t with
+        let { Type.TypeScheme.tparams_rev; type_ = t } = scheme in
+        match run_type ~options ~genv ~imported_names ~tparams_rev state t with
         | (Ok t, state) -> (state, (a, Ok t))
         | (Error s, state) -> (state, (a, Error s)))
       State.empty
@@ -2507,7 +2508,7 @@ let from_types ~options ~genv ts =
   let (_, result) =
     ListUtils.fold_map
       (fun state (a, t) ->
-        match run_type ~options ~genv ~imported_names ~tparams:[] state t with
+        match run_type ~options ~genv ~imported_names ~tparams_rev:[] state t with
         | (Ok t, state) -> (state, (a, Ok t))
         | (Error s, state) -> (state, (a, Error s)))
       State.empty
@@ -2518,14 +2519,14 @@ let from_types ~options ~genv ts =
 let from_scheme ~options ~genv scheme =
   print_normalizer_banner options;
   let imported_names = run_imports ~options ~genv in
-  let { Type.TypeScheme.tparams; type_ = t } = scheme in
-  let (result, _) = run_type ~options ~genv ~imported_names ~tparams State.empty t in
+  let { Type.TypeScheme.tparams_rev; type_ = t } = scheme in
+  let (result, _) = run_type ~options ~genv ~imported_names ~tparams_rev State.empty t in
   result
 
 let from_type ~options ~genv t =
   print_normalizer_banner options;
   let imported_names = run_imports ~options ~genv in
-  let (result, _) = run_type ~options ~genv ~imported_names ~tparams:[] State.empty t in
+  let (result, _) = run_type ~options ~genv ~imported_names ~tparams_rev:[] State.empty t in
   result
 
 let fold_hashtbl ~options ~genv ~f ~g ~htbl init =
@@ -2534,8 +2535,8 @@ let fold_hashtbl ~options ~genv ~f ~g ~htbl init =
   let (result, _) =
     Hashtbl.fold
       (fun loc x (acc, state) ->
-        let { Type.TypeScheme.tparams; type_ = t } = g x in
-        let (result, state) = run_type ~options ~genv ~imported_names ~tparams state t in
+        let { Type.TypeScheme.tparams_rev; type_ = t } = g x in
+        let (result, state) = run_type ~options ~genv ~imported_names ~tparams_rev state t in
         (f acc (loc, result), state))
       htbl
       (init, State.empty)
@@ -2545,7 +2546,7 @@ let fold_hashtbl ~options ~genv ~f ~g ~htbl init =
 let expand_members ~include_proto_members ~idx_hook ~options ~genv scheme =
   print_normalizer_banner options;
   let imported_names = run_imports ~options ~genv in
-  let { Type.TypeScheme.tparams; type_ = t } = scheme in
+  let { Type.TypeScheme.tparams_rev; type_ = t } = scheme in
   let (result, _) =
     run_expand_members
       ~options
@@ -2553,7 +2554,7 @@ let expand_members ~include_proto_members ~idx_hook ~options ~genv scheme =
       ~include_proto_members
       ~idx_hook
       ~imported_names
-      ~tparams
+      ~tparams_rev
       State.empty
       t
   in
