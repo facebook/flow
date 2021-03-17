@@ -217,7 +217,7 @@ export default (suite(
       addFiles('coverage2.js'),
       lspStartAndConnect(),
       lspRequestAndWaitUntilResponse('textDocument/typeCoverage', {
-        textDocument: {uri: '<PLACEHOLDER_PROJECT_DIR>/coverage2.js'},
+        textDocument: {uri: '<PLACEHOLDER_PROJECT_URL>/coverage2.js'},
       }).verifyAllLSPMessagesInStep(
         [['textDocument/typeCoverage', '{Use @flow}']],
         [...lspIgnoreStatusAndCancellation],
