@@ -423,3 +423,42 @@ let flow_ast_to_lsp_symbols ~(uri : Lsp.DocumentUri.t) (program : (Loc.t, Loc.t)
     Lsp.SymbolInformation.t list =
   let (_loc, { Ast.Program.statements; _ }) = program in
   Base.List.fold statements ~init:[] ~f:(DocumentSymbols.ast_statement ~uri ~containerName:None)
+
+let diagnostics_of_flow_errors =
+  let error_to_lsp
+      ~(severity : Lsp.PublishDiagnostics.diagnosticSeverity) (error : Loc.t Errors.printable_error)
+      : (Lsp.DocumentUri.t * Lsp.PublishDiagnostics.diagnostic) option =
+    let error = Errors.Lsp_output.lsp_of_error error in
+    match loc_to_lsp error.Errors.Lsp_output.loc with
+    | Ok location ->
+      let uri = location.Lsp.Location.uri in
+      let related_to_lsp (loc, relatedMessage) =
+        match loc_to_lsp loc with
+        | Ok relatedLocation -> Some { Lsp.PublishDiagnostics.relatedLocation; relatedMessage }
+        | Error _ -> None
+      in
+      let relatedInformation =
+        Base.List.filter_map error.Errors.Lsp_output.relatedLocations ~f:related_to_lsp
+      in
+      Some
+        ( uri,
+          {
+            Lsp.PublishDiagnostics.range = location.Lsp.Location.range;
+            severity = Some severity;
+            code = Lsp.PublishDiagnostics.StringCode error.Errors.Lsp_output.code;
+            source = Some "Flow";
+            message = error.Errors.Lsp_output.message;
+            relatedInformation;
+            relatedLocations = relatedInformation (* legacy fb extension *);
+          } )
+    | Error _ -> None
+  in
+  fun ~errors ~warnings ->
+    let add severity error acc =
+      match error_to_lsp ~severity error with
+      | Some (uri, diagnostic) -> Lsp.UriMap.add ~combine:List.append uri [diagnostic] acc
+      | None -> acc
+    in
+    Lsp.UriMap.empty
+    |> Errors.ConcreteLocPrintableErrorSet.fold (add Lsp.PublishDiagnostics.Error) errors
+    |> Errors.ConcreteLocPrintableErrorSet.fold (add Lsp.PublishDiagnostics.Warning) warnings

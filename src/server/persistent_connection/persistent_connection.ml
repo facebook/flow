@@ -88,7 +88,8 @@ let send_errors =
         opened_filenames
         Errors.ConcreteLocPrintableErrorSet.empty
     in
-    send_notification (Prot.Errors { errors; warnings; errors_reason }) client
+    let diagnostics = Flow_lsp_conversions.diagnostics_of_flow_errors ~errors ~warnings in
+    send_notification (Prot.Errors { diagnostics; errors_reason }) client
 
 let send_errors_if_subscribed ~client ~errors_reason ~errors ~warnings =
   if client.subscribed then send_errors ~errors_reason ~errors ~warnings client

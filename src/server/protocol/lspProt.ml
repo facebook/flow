@@ -154,8 +154,7 @@ type live_errors_failure = {
 }
 
 type live_errors_response = {
-  live_errors: Errors.ConcreteLocPrintableErrorSet.t;
-  live_warnings: Errors.ConcreteLocPrintableErrorSet.t;
+  live_diagnostics: Lsp.PublishDiagnostics.diagnostic list;
   live_errors_uri: Lsp.DocumentUri.t;
 }
 
@@ -172,8 +171,7 @@ type response_with_metadata = response * metadata
 
 type notification_from_server =
   | Errors of {
-      errors: Errors.ConcreteLocPrintableErrorSet.t;
-      warnings: Errors.ConcreteLocPrintableErrorSet.t;
+      diagnostics: Lsp.PublishDiagnostics.diagnostic list Lsp.UriMap.t;
       errors_reason: errors_reason;
     }
   | StartRecheck
@@ -190,11 +188,25 @@ let string_of_response = function
   | LspFromServer None -> "lspFromServer None"
   | LspFromServer (Some msg) ->
     Printf.sprintf "lspFromServer %s" (Lsp_fmt.message_name_to_string msg)
-  | LiveErrorsResponse (Ok { live_errors; live_warnings; live_errors_uri; _ }) ->
+  | LiveErrorsResponse (Ok { live_diagnostics; live_errors_uri; _ }) ->
+    let (errors, warnings, others) =
+      Base.List.fold_left
+        ~f:(fun (errors, warnings, others) { Lsp.PublishDiagnostics.severity; _ } ->
+          match severity with
+          | Some Lsp.PublishDiagnostics.Error -> (errors + 1, warnings, others)
+          | Some Lsp.PublishDiagnostics.Warning -> (errors, warnings + 1, others)
+          | Some Lsp.PublishDiagnostics.Information
+          | Some Lsp.PublishDiagnostics.Hint
+          | None ->
+            (errors, warnings, others + 1))
+        ~init:(0, 0, 0)
+        live_diagnostics
+    in
     Printf.sprintf
-      "liveErrorsResponse OK (%d errors, %d warnings) %s"
-      (Errors.ConcreteLocPrintableErrorSet.cardinal live_errors)
-      (Errors.ConcreteLocPrintableErrorSet.cardinal live_warnings)
+      "liveErrorsResponse OK (%d errors, %d warnings, %d other) %s"
+      errors
+      warnings
+      others
       (Lsp.DocumentUri.to_string live_errors_uri)
   | LiveErrorsResponse
       (Error { live_errors_failure_kind; live_errors_failure_reason; live_errors_failure_uri }) ->

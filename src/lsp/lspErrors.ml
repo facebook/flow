@@ -118,8 +118,8 @@ let limit_errors errors =
       diagnostic :: retain
 
 let is_parse_error =
-  let parse_code = Errors.string_of_kind Errors.ParseError in
-  (fun d -> d.PublishDiagnostics.code = PublishDiagnostics.StringCode parse_code)
+  let parse_code = PublishDiagnostics.StringCode "ParseError" in
+  (fun d -> d.PublishDiagnostics.code = parse_code)
 
 let is_not_parse_error d = not (is_parse_error d)
 
