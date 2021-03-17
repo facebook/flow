@@ -133,7 +133,7 @@ export default (suite(
                 },
                 command: {
                   title: '',
-                  command: 'log:<PLACEHOLDER_PROJECT_URL>',
+                  command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
                   arguments: [
                     'textDocument/codeAction',
                     'typo',
@@ -238,7 +238,7 @@ export default (suite(
                 },
                 command: {
                   title: '',
-                  command: 'log:<PLACEHOLDER_PROJECT_URL>',
+                  command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
                   arguments: [
                     'textDocument/codeAction',
                     'typo',
@@ -395,7 +395,7 @@ export default (suite(
                 },
                 command: {
                   title: '',
-                  command: 'log:<PLACEHOLDER_PROJECT_URL>',
+                  command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
                   arguments: [
                     'textDocument/codeAction',
                     'typo',

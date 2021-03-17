@@ -44,7 +44,7 @@ export default (suite(
                   },
                   command: {
                     title: '',
-                    command: 'log:<PLACEHOLDER_PROJECT_URL>',
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
                     arguments: [
                       'textDocument/completion',
                       'this',
@@ -67,7 +67,7 @@ export default (suite(
                   },
                   command: {
                     title: '',
-                    command: 'log:<PLACEHOLDER_PROJECT_URL>',
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
                     arguments: [
                       'textDocument/completion',
                       'local value identifier',
@@ -95,7 +95,7 @@ export default (suite(
                   },
                   command: {
                     title: '',
-                    command: 'log:<PLACEHOLDER_PROJECT_URL>',
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
                     arguments: [
                       'textDocument/completion',
                       'local value identifier',
@@ -118,7 +118,7 @@ export default (suite(
                   },
                   command: {
                     title: '',
-                    command: 'log:<PLACEHOLDER_PROJECT_URL>',
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
                     arguments: [
                       'textDocument/completion',
                       'local value identifier',
@@ -141,7 +141,7 @@ export default (suite(
                   },
                   command: {
                     title: '',
-                    command: 'log:<PLACEHOLDER_PROJECT_URL>',
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
                     arguments: [
                       'textDocument/completion',
                       'local value identifier',
@@ -185,7 +185,7 @@ export default (suite(
                   },
                   command: {
                     title: '',
-                    command: 'log:<PLACEHOLDER_PROJECT_URL>',
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
                     arguments: [
                       'textDocument/completion',
                       'this',
@@ -208,7 +208,7 @@ export default (suite(
                   },
                   command: {
                     title: '',
-                    command: 'log:<PLACEHOLDER_PROJECT_URL>',
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
                     arguments: [
                       'textDocument/completion',
                       'local value identifier',
@@ -231,7 +231,7 @@ export default (suite(
                   },
                   command: {
                     title: '',
-                    command: 'log:<PLACEHOLDER_PROJECT_URL>',
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
                     arguments: [
                       'textDocument/completion',
                       'local value identifier',
@@ -254,7 +254,7 @@ export default (suite(
                   },
                   command: {
                     title: '',
-                    command: 'log:<PLACEHOLDER_PROJECT_URL>',
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
                     arguments: [
                       'textDocument/completion',
                       'local value identifier',
@@ -277,7 +277,7 @@ export default (suite(
                   },
                   command: {
                     title: '',
-                    command: 'log:<PLACEHOLDER_PROJECT_URL>',
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
                     arguments: [
                       'textDocument/completion',
                       'local value identifier',
@@ -300,7 +300,7 @@ export default (suite(
                   },
                   command: {
                     title: '',
-                    command: 'log:<PLACEHOLDER_PROJECT_URL>',
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
                     arguments: [
                       'textDocument/completion',
                       'local value identifier',
@@ -358,7 +358,7 @@ export default (suite(
                   },
                   command: {
                     title: '',
-                    command: 'log:<PLACEHOLDER_PROJECT_URL>',
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
                     arguments: [
                       'textDocument/completion',
                       'this',
@@ -381,7 +381,7 @@ export default (suite(
                   },
                   command: {
                     title: '',
-                    command: 'log:<PLACEHOLDER_PROJECT_URL>',
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
                     arguments: [
                       'textDocument/completion',
                       'local value identifier',
@@ -404,7 +404,7 @@ export default (suite(
                   },
                   command: {
                     title: '',
-                    command: 'log:<PLACEHOLDER_PROJECT_URL>',
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
                     arguments: [
                       'textDocument/completion',
                       'local value identifier',
@@ -427,7 +427,7 @@ export default (suite(
                   },
                   command: {
                     title: '',
-                    command: 'log:<PLACEHOLDER_PROJECT_URL>',
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
                     arguments: [
                       'textDocument/completion',
                       'local value identifier',
@@ -471,7 +471,7 @@ export default (suite(
                   },
                   command: {
                     title: '',
-                    command: 'log:<PLACEHOLDER_PROJECT_URL>',
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
                     arguments: [
                       'textDocument/completion',
                       'jsx attribute',
@@ -535,7 +535,7 @@ export default (suite(
                   },
                   command: {
                     title: '',
-                    command: 'log:<PLACEHOLDER_PROJECT_URL>',
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
                     arguments: [
                       'textDocument/completion',
                       'local value identifier',
@@ -558,7 +558,7 @@ export default (suite(
                   },
                   command: {
                     title: '',
-                    command: 'log:<PLACEHOLDER_PROJECT_URL>',
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
                     arguments: [
                       'textDocument/completion',
                       'local value identifier',
@@ -581,7 +581,7 @@ export default (suite(
                   },
                   command: {
                     title: '',
-                    command: 'log:<PLACEHOLDER_PROJECT_URL>',
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
                     arguments: [
                       'textDocument/completion',
                       'local value identifier',
@@ -625,7 +625,7 @@ export default (suite(
                   },
                   command: {
                     title: '',
-                    command: 'log:<PLACEHOLDER_PROJECT_URL>',
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
                     arguments: [
                       'textDocument/completion',
                       'jsx attribute',
@@ -671,7 +671,7 @@ export default (suite(
                     },
                     command: {
                       title: '',
-                      command: 'log:<PLACEHOLDER_PROJECT_URL>',
+                      command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
                       arguments: [
                         'textDocument/completion',
                         'jsx attribute',
@@ -719,7 +719,7 @@ export default (suite(
                   },
                   command: {
                     title: '',
-                    command: 'log:<PLACEHOLDER_PROJECT_URL>',
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
                     arguments: [
                       'textDocument/completion',
                       'jsx attribute',
@@ -763,7 +763,7 @@ export default (suite(
                   },
                   command: {
                     title: '',
-                    command: 'log:<PLACEHOLDER_PROJECT_URL>',
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
                     arguments: [
                       'textDocument/completion',
                       'member',
@@ -786,7 +786,7 @@ export default (suite(
                   },
                   command: {
                     title: '',
-                    command: 'log:<PLACEHOLDER_PROJECT_URL>',
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
                     arguments: [
                       'textDocument/completion',
                       'member',
@@ -809,7 +809,7 @@ export default (suite(
                   },
                   command: {
                     title: '',
-                    command: 'log:<PLACEHOLDER_PROJECT_URL>',
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
                     arguments: [
                       'textDocument/completion',
                       'member',
@@ -832,7 +832,7 @@ export default (suite(
                   },
                   command: {
                     title: '',
-                    command: 'log:<PLACEHOLDER_PROJECT_URL>',
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
                     arguments: [
                       'textDocument/completion',
                       'member',
@@ -855,7 +855,7 @@ export default (suite(
                   },
                   command: {
                     title: '',
-                    command: 'log:<PLACEHOLDER_PROJECT_URL>',
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
                     arguments: [
                       'textDocument/completion',
                       'member',
@@ -878,7 +878,7 @@ export default (suite(
                   },
                   command: {
                     title: '',
-                    command: 'log:<PLACEHOLDER_PROJECT_URL>',
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
                     arguments: [
                       'textDocument/completion',
                       'member',
@@ -901,7 +901,7 @@ export default (suite(
                   },
                   command: {
                     title: '',
-                    command: 'log:<PLACEHOLDER_PROJECT_URL>',
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
                     arguments: [
                       'textDocument/completion',
                       'member',
@@ -924,7 +924,7 @@ export default (suite(
                   },
                   command: {
                     title: '',
-                    command: 'log:<PLACEHOLDER_PROJECT_URL>',
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
                     arguments: [
                       'textDocument/completion',
                       'member',
@@ -952,7 +952,7 @@ export default (suite(
                   },
                   command: {
                     title: '',
-                    command: 'log:<PLACEHOLDER_PROJECT_URL>',
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
                     arguments: [
                       'textDocument/completion',
                       'member',
@@ -980,7 +980,7 @@ export default (suite(
                   },
                   command: {
                     title: '',
-                    command: 'log:<PLACEHOLDER_PROJECT_URL>',
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
                     arguments: [
                       'textDocument/completion',
                       'member',
@@ -1003,7 +1003,7 @@ export default (suite(
                   },
                   command: {
                     title: '',
-                    command: 'log:<PLACEHOLDER_PROJECT_URL>',
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
                     arguments: [
                       'textDocument/completion',
                       'member',
@@ -1026,7 +1026,7 @@ export default (suite(
                   },
                   command: {
                     title: '',
-                    command: 'log:<PLACEHOLDER_PROJECT_URL>',
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
                     arguments: [
                       'textDocument/completion',
                       'member',
@@ -1049,7 +1049,7 @@ export default (suite(
                   },
                   command: {
                     title: '',
-                    command: 'log:<PLACEHOLDER_PROJECT_URL>',
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
                     arguments: [
                       'textDocument/completion',
                       'member',
@@ -1077,7 +1077,7 @@ export default (suite(
                   },
                   command: {
                     title: '',
-                    command: 'log:<PLACEHOLDER_PROJECT_URL>',
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
                     arguments: [
                       'textDocument/completion',
                       'member',
@@ -1105,7 +1105,7 @@ export default (suite(
                   },
                   command: {
                     title: '',
-                    command: 'log:<PLACEHOLDER_PROJECT_URL>',
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
                     arguments: [
                       'textDocument/completion',
                       'member',
@@ -1132,7 +1132,7 @@ export default (suite(
                   },
                   command: {
                     title: '',
-                    command: 'log:<PLACEHOLDER_PROJECT_URL>',
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
                     arguments: [
                       'textDocument/completion',
                       'member',
@@ -1160,7 +1160,7 @@ export default (suite(
                   },
                   command: {
                     title: '',
-                    command: 'log:<PLACEHOLDER_PROJECT_URL>',
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
                     arguments: [
                       'textDocument/completion',
                       'member',
@@ -1204,7 +1204,7 @@ export default (suite(
                   },
                   command: {
                     title: '',
-                    command: 'log:<PLACEHOLDER_PROJECT_URL>',
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
                     arguments: [
                       'textDocument/completion',
                       'member',
@@ -1227,7 +1227,7 @@ export default (suite(
                   },
                   command: {
                     title: '',
-                    command: 'log:<PLACEHOLDER_PROJECT_URL>',
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
                     arguments: [
                       'textDocument/completion',
                       'member',
@@ -1250,7 +1250,7 @@ export default (suite(
                   },
                   command: {
                     title: '',
-                    command: 'log:<PLACEHOLDER_PROJECT_URL>',
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
                     arguments: [
                       'textDocument/completion',
                       'member',
@@ -1273,7 +1273,7 @@ export default (suite(
                   },
                   command: {
                     title: '',
-                    command: 'log:<PLACEHOLDER_PROJECT_URL>',
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
                     arguments: [
                       'textDocument/completion',
                       'member',
@@ -1296,7 +1296,7 @@ export default (suite(
                   },
                   command: {
                     title: '',
-                    command: 'log:<PLACEHOLDER_PROJECT_URL>',
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
                     arguments: [
                       'textDocument/completion',
                       'member',
@@ -1319,7 +1319,7 @@ export default (suite(
                   },
                   command: {
                     title: '',
-                    command: 'log:<PLACEHOLDER_PROJECT_URL>',
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
                     arguments: [
                       'textDocument/completion',
                       'member',
@@ -1342,7 +1342,7 @@ export default (suite(
                   },
                   command: {
                     title: '',
-                    command: 'log:<PLACEHOLDER_PROJECT_URL>',
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
                     arguments: [
                       'textDocument/completion',
                       'member',
@@ -1365,7 +1365,7 @@ export default (suite(
                   },
                   command: {
                     title: '',
-                    command: 'log:<PLACEHOLDER_PROJECT_URL>',
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
                     arguments: [
                       'textDocument/completion',
                       'member',
@@ -1393,7 +1393,7 @@ export default (suite(
                   },
                   command: {
                     title: '',
-                    command: 'log:<PLACEHOLDER_PROJECT_URL>',
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
                     arguments: [
                       'textDocument/completion',
                       'member',
@@ -1421,7 +1421,7 @@ export default (suite(
                   },
                   command: {
                     title: '',
-                    command: 'log:<PLACEHOLDER_PROJECT_URL>',
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
                     arguments: [
                       'textDocument/completion',
                       'member',
@@ -1444,7 +1444,7 @@ export default (suite(
                   },
                   command: {
                     title: '',
-                    command: 'log:<PLACEHOLDER_PROJECT_URL>',
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
                     arguments: [
                       'textDocument/completion',
                       'member',
@@ -1467,7 +1467,7 @@ export default (suite(
                   },
                   command: {
                     title: '',
-                    command: 'log:<PLACEHOLDER_PROJECT_URL>',
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
                     arguments: [
                       'textDocument/completion',
                       'member',
@@ -1490,7 +1490,7 @@ export default (suite(
                   },
                   command: {
                     title: '',
-                    command: 'log:<PLACEHOLDER_PROJECT_URL>',
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
                     arguments: [
                       'textDocument/completion',
                       'member',
@@ -1518,7 +1518,7 @@ export default (suite(
                   },
                   command: {
                     title: '',
-                    command: 'log:<PLACEHOLDER_PROJECT_URL>',
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
                     arguments: [
                       'textDocument/completion',
                       'member',
@@ -1546,7 +1546,7 @@ export default (suite(
                   },
                   command: {
                     title: '',
-                    command: 'log:<PLACEHOLDER_PROJECT_URL>',
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
                     arguments: [
                       'textDocument/completion',
                       'member',
@@ -1573,7 +1573,7 @@ export default (suite(
                   },
                   command: {
                     title: '',
-                    command: 'log:<PLACEHOLDER_PROJECT_URL>',
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
                     arguments: [
                       'textDocument/completion',
                       'member',
@@ -1601,7 +1601,7 @@ export default (suite(
                   },
                   command: {
                     title: '',
-                    command: 'log:<PLACEHOLDER_PROJECT_URL>',
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
                     arguments: [
                       'textDocument/completion',
                       'member',
@@ -1648,7 +1648,7 @@ export default (suite(
                   },
                   command: {
                     title: '',
-                    command: 'log:<PLACEHOLDER_PROJECT_URL>',
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
                     arguments: [
                       'textDocument/completion',
                       'unqualified type -> qualified type',
@@ -1671,7 +1671,7 @@ export default (suite(
                   },
                   command: {
                     title: '',
-                    command: 'log:<PLACEHOLDER_PROJECT_URL>',
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
                     arguments: [
                       'textDocument/completion',
                       'unqualified type: class or enum',
@@ -1694,7 +1694,7 @@ export default (suite(
                   },
                   command: {
                     title: '',
-                    command: 'log:<PLACEHOLDER_PROJECT_URL>',
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
                     arguments: [
                       'textDocument/completion',
                       'unqualified type: class or enum',
@@ -1717,7 +1717,7 @@ export default (suite(
                   },
                   command: {
                     title: '',
-                    command: 'log:<PLACEHOLDER_PROJECT_URL>',
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
                     arguments: [
                       'textDocument/completion',
                       'unqualified type -> qualified type',
@@ -1740,7 +1740,7 @@ export default (suite(
                   },
                   command: {
                     title: '',
-                    command: 'log:<PLACEHOLDER_PROJECT_URL>',
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
                     arguments: [
                       'textDocument/completion',
                       'unqualified type: local type identifier',
@@ -1763,7 +1763,7 @@ export default (suite(
                   },
                   command: {
                     title: '',
-                    command: 'log:<PLACEHOLDER_PROJECT_URL>',
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
                     arguments: [
                       'textDocument/completion',
                       'unqualified type: local type identifier',
@@ -1786,7 +1786,7 @@ export default (suite(
                   },
                   command: {
                     title: '',
-                    command: 'log:<PLACEHOLDER_PROJECT_URL>',
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
                     arguments: [
                       'textDocument/completion',
                       'unqualified type: local type identifier',
@@ -1809,7 +1809,7 @@ export default (suite(
                   },
                   command: {
                     title: '',
-                    command: 'log:<PLACEHOLDER_PROJECT_URL>',
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
                     arguments: [
                       'textDocument/completion',
                       'unqualified type: local type identifier',
@@ -1832,7 +1832,7 @@ export default (suite(
                   },
                   command: {
                     title: '',
-                    command: 'log:<PLACEHOLDER_PROJECT_URL>',
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
                     arguments: [
                       'textDocument/completion',
                       'unqualified type: local type identifier',
@@ -1855,7 +1855,7 @@ export default (suite(
                   },
                   command: {
                     title: '',
-                    command: 'log:<PLACEHOLDER_PROJECT_URL>',
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
                     arguments: [
                       'textDocument/completion',
                       'unqualified type: local type identifier',
@@ -1878,7 +1878,7 @@ export default (suite(
                   },
                   command: {
                     title: '',
-                    command: 'log:<PLACEHOLDER_PROJECT_URL>',
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
                     arguments: [
                       'textDocument/completion',
                       'unqualified type parameter',
@@ -1922,7 +1922,7 @@ export default (suite(
                   },
                   command: {
                     title: '',
-                    command: 'log:<PLACEHOLDER_PROJECT_URL>',
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
                     arguments: [
                       'textDocument/completion',
                       'jsx attribute',
@@ -1945,7 +1945,7 @@ export default (suite(
                   },
                   command: {
                     title: '',
-                    command: 'log:<PLACEHOLDER_PROJECT_URL>',
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
                     arguments: [
                       'textDocument/completion',
                       'jsx attribute',

@@ -193,10 +193,25 @@ let update_ienv f state =
 let get_root (state : state) : Path.t option =
   get_ienv state |> Base.Option.map ~f:(fun ienv -> ienv.i_root)
 
-let command_key_of_path (path : Path.t) : string = File_url.create (Path.to_string path)
+(** Returns a key that is appended to command names to make them "unique".
+
+    Why? If we register a command named just "foo", and VS Code starts two
+    clients (perhaps two Flows for different workspace folders, or even
+    different languages that both have "foo" commands), it would be
+    ambiguous to which server to send the command and so VS Code errors.
+
+    For now, we use the root URI, under the assumption that one editor will
+    never start two LSPs for the same workspace. This is slightly
+    complicated by symlinks; if we used `ienv.i_root` for this, which has
+    resolved symlinks, then this invariant is violated. So we use the
+    raw `rootUri`/`rootPath` sent by the client. It would probably
+    be safer to use a UUID. *)
+let command_key_of_ienv (ienv : initialized_env) : string =
+  let path = Lsp_helpers.get_root ienv.i_initialize_params in
+  "org.flow:" ^ File_url.create path
 
 let command_key_of_state (state : state) : string =
-  Base.Option.value_map ~f:command_key_of_path ~default:"" (get_root state)
+  Base.Option.value_map ~f:command_key_of_ienv ~default:"" (get_ienv state)
 
 let get_open_files (state : state) : open_file_info Lsp.UriMap.t option =
   get_ienv state |> Base.Option.map ~f:(fun ienv -> ienv.i_open_files)
@@ -350,7 +365,7 @@ let get_next_event
 
 let send_request_to_client id request ~on_response ~on_error (ienv : initialized_env) =
   let json =
-    let key = command_key_of_path ienv.i_root in
+    let key = command_key_of_ienv ienv in
     Lsp_fmt.print_lsp ~key (RequestMessage (id, request))
   in
   to_stdout json;
@@ -418,7 +433,7 @@ let show_status
       let id = Base.Option.value_exn id in
       let notification = CancelRequestNotification { CancelRequest.id } in
       let json =
-        let key = command_key_of_path ienv.i_root in
+        let key = command_key_of_ienv ienv in
         Lsp_fmt.print_lsp ~key (NotificationMessage notification)
       in
       to_stdout json;
@@ -1688,7 +1703,7 @@ and main_handle_unsafe flowconfig_name (state : state) (event : event) :
     end;
     let response = ResponseMessage (id, InitializeResult (do_initialize i_initialize_params)) in
     let json =
-      let key = command_key_of_path i_root in
+      let key = command_key_of_ienv d_ienv in
       Lsp_fmt.print_lsp ~key response
     in
     to_stdout json;
