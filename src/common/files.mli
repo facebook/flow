@@ -8,7 +8,7 @@
 (* utilities for supported filenames *)
 
 type options = {
-  default_lib_dir: Path.t option;
+  default_lib_dir: Flowlib.libdir option;
   ignores: (string * Str.regexp) list;
   untyped: (string * Str.regexp) list;
   declarations: (string * Str.regexp) list;
@@ -19,7 +19,7 @@ type options = {
   node_resolver_dirnames: string list;
 }
 
-val default_lib_dir : options -> Path.t option
+val default_lib_dir : options -> Flowlib.libdir option
 
 val ignores : options -> (string * Str.regexp) list
 

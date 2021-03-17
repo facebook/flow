@@ -8,7 +8,7 @@
 (************** file filter utils ***************)
 
 type options = {
-  default_lib_dir: Path.t option;
+  default_lib_dir: Flowlib.libdir option;
   ignores: (string * Str.regexp) list;
   untyped: (string * Str.regexp) list;
   declarations: (string * Str.regexp) list;
@@ -368,7 +368,9 @@ let init ?(flowlibs_only = false) (options : options) =
   let (libs, filter) =
     match options.default_lib_dir with
     | None -> (libs, is_valid_path ~options)
-    | Some root ->
+    | Some libdir ->
+      Flowlib.extract libdir;
+      let root = Flowlib.path_of_libdir libdir in
       let is_in_flowlib = is_prefix (Path.to_string root) in
       let is_valid_path = is_valid_path ~options in
       let filter path = is_in_flowlib path || is_valid_path path in

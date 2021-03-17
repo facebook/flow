@@ -264,8 +264,8 @@ end = struct
   let is_not_in_flowlib ~options =
     match (Options.file_options options).Files.default_lib_dir with
     | None -> (fun _ -> true) (* There are no flowlibs *)
-    | Some root ->
-      let root_str = Path.to_string root in
+    | Some libdir ->
+      let root_str = libdir |> Flowlib.path_of_libdir |> Path.to_string in
       (fun f -> not (Files.is_prefix root_str f))
 
   let normalize_error_set ~normalizer = Flow_error.ErrorSet.map (normalize_error ~normalizer)

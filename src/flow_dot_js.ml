@@ -179,7 +179,6 @@ let stub_metadata ~root ~checked =
     strict_es6_import_export_excludes = [];
     strip_root = true;
     suppress_types = SSet.empty;
-    default_lib_dir = None;
     trust_mode = Options.NoTrust;
     type_asserts = false;
   }
