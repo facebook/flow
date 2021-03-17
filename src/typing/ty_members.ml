@@ -221,15 +221,15 @@ let extract ~include_proto_members ~cx ~typed_ast ~file_sig scheme =
   let genv = Ty_normalizer_env.mk_genv ~full_cx:cx ~file:(Context.file cx) ~typed_ast ~file_sig in
   let in_idx_ref = ref false in
   let idx_hook () = in_idx_ref := true in
-  let this_ty_res =
+  match
     Ty_normalizer.expand_members
       ~include_proto_members
       ~idx_hook
       ~options:ty_normalizer_options
       ~genv
       scheme
-  in
-  match this_ty_res with
+  with
+  | exception Flow_js.Not_expect_bound x -> Error x
   | Error error -> Error (Ty_normalizer.error_to_string error)
   | Ok (Ty.Any _) -> Error "not enough type information to extract members"
   | Ok this_ty ->

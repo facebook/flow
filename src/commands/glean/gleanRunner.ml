@@ -229,9 +229,7 @@ let type_declaration_references ~root ~write_root ~reader ~full_cx ~typed_ast =
 let extract_member_def ~cx ~typed_ast ~file_sig scheme name : ALoc.t option =
   let open Ty_members in
   match extract ~include_proto_members:true ~cx ~typed_ast ~file_sig scheme with
-  | Error _
-  | (exception _) ->
-    None
+  | Error _ -> None
   | Ok { members; _ } ->
     Base.Option.bind
       (NameUtils.Map.find_opt (Reason.OrdinaryName name) members)
