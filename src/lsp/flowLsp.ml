@@ -901,6 +901,17 @@ let lsp_DocumentItem_to_flow (open_doc : Lsp.TextDocumentItem.t) : File_input.t 
 (* handling them here for now.                                                *)
 (******************************************************************************)
 
+let diagnostic_of_parse_error (loc, parse_error) : PublishDiagnostics.diagnostic =
+  {
+    Lsp.PublishDiagnostics.range = Flow_lsp_conversions.loc_to_lsp_range loc;
+    severity = Some PublishDiagnostics.Error;
+    code = Lsp.PublishDiagnostics.StringCode "ParseError";
+    source = Some "Flow";
+    message = Parse_error.PP.error parse_error;
+    relatedInformation = [];
+    relatedLocations = [] (* legacy fb extension *);
+  }
+
 let error_to_lsp
     ~(severity : PublishDiagnostics.diagnosticSeverity option)
     ~(default_uri : Lsp.DocumentUri.t)
@@ -941,14 +952,6 @@ let live_syntax_errors_enabled (state : state) =
     won't store them. *)
 let parse_and_cache flowconfig_name (state : state) (uri : Lsp.DocumentUri.t) :
     state * ((Loc.t, Loc.t) Flow_ast.Program.t * Lsp.PublishDiagnostics.diagnostic list option) =
-  let error_to_diagnostic (loc, parse_error) =
-    let message = Errors.Friendly.message_of_string (Parse_error.PP.error parse_error) in
-    let error = Errors.mk_error ~kind:Errors.ParseError loc None message in
-    let (_, diagnostic) =
-      error_to_lsp ~default_uri:uri ~severity:(Some PublishDiagnostics.Error) error
-    in
-    diagnostic
-  in
   (* The way flow compilation works in the flow server is that parser options
      are permissive to allow all constructs, so that parsing works well; if
      the user choses not to enable features through the user's .flowconfig
@@ -989,7 +992,7 @@ let parse_and_cache flowconfig_name (state : state) (uri : Lsp.DocumentUri.t) :
     in
     ( program,
       if live_syntax_errors_enabled state then
-        Some (List.map errors ~f:error_to_diagnostic)
+        Some (List.map errors ~f:diagnostic_of_parse_error)
       else
         None )
   in
