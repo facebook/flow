@@ -17,8 +17,10 @@ INTERNAL_FLAGS=
 
 ifeq ($(OS), Windows_NT)
   UNAME_S=Windows
+  UNAME_M=
 else
   UNAME_S=$(shell uname -s)
+  UNAME_M=$(shell uname -m)
 endif
 
 # Default to `ocamlbuild -j 0` (unlimited parallelism), but you can limit it
@@ -32,7 +34,7 @@ OCAMLBUILD_JOBS := 0
 ################################################################################
 
 ifeq ($(UNAME_S), Linux)
-  EXTRA_LIBS += rt
+  EXTRA_LIBS += rt atomic
   INOTIFY=src/hack_forked/third-party/inotify
   INOTIFY_STUBS=$(INOTIFY)/inotify_stubs.c
   FSNOTIFY=src/hack_forked/fsnotify_linux
@@ -60,6 +62,7 @@ ifeq ($(UNAME_S), Darwin)
   EXE=
 endif
 ifeq ($(UNAME_S), Windows)
+  EXTRA_LIBS += atomic
   INOTIFY=
   INOTIFY_STUBS=
   FSNOTIFY=src/hack_forked/fsnotify_win
@@ -297,7 +300,11 @@ BUILT_FUZZY_PATH_DEPS=$(addprefix _build/,$(FUZZY_PATH_DEPS))
 FUZZY_PATH_LINKER_FLAGS=$(FUZZY_PATH_DEPS)
 
 # Any additional C flags can be added here
-CC_FLAGS=-mcx16
+ifeq ($(UNAME_M), aarch64)
+  CC_FLAGS=
+else
+  CC_FLAGS=-mcx16
+endif
 CC_FLAGS += $(EXTRA_CC_FLAGS)
 CC_OPTS=$(foreach flag, $(CC_FLAGS), -ccopt $(flag))
 INCLUDE_OPTS=$(foreach dir,$(MODULES),-I $(dir))
@@ -329,6 +336,10 @@ all-homebrew:
 	rm -rf _opam && \
 	opam switch create . --deps-only ocaml-base-compiler.4.09.1 && \
 	opam exec -- make
+
+.PHONY: deps
+deps:
+	[ -d _opam ] || opam switch create . 4.09.1 --deps-only --yes
 
 clean:
 	ocamlbuild -clean

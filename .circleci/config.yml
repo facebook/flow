@@ -24,7 +24,7 @@ orbs:
               command: |
                 choco install --no-progress cygwin
                 if (-not $?) { throw "Failed to install cygwin" }
-                choco install --no-progress rsync patch diffutils curl make zip unzip git m4 perl mingw64-x86_64-gcc-core mingw64-x86_64-gcc-g++ --source=cygwin
+                choco install --no-progress rsync patch diffutils curl make zip unzip git m4 perl mingw64-x86_64-gcc-core mingw64-x86_64-gcc-g++ mingw-w64-x86_64-gcc-libs --source=cygwin
                 if (-not $?) { throw "Failed to install deps from cygwin" }
           - run:
               name: Install opam
@@ -60,9 +60,16 @@ orbs:
 executors:
   linux-opam:
     docker:
-      - image: ocaml/opam2:centos-7-opam
+      - image: flowtype/flow-ci:linux-x86_64
         environment:
           <<: *opam_env
+    working_directory: ~/flow
+  linux-arm64:
+    machine:
+      image: ubuntu-2004:202101-01
+    environment:
+      <<: *opam_env
+    resource_class: arm.medium
     working_directory: ~/flow
   linux-node:
     docker:
@@ -90,22 +97,24 @@ executors:
     working_directory: ~/flow
 
 commands:
-  restore-opam-cache:
+  make-opam-cachebreaker:
     steps:
       - run:
           name: Create cache breaker
           command: |
-            echo "ocaml-4.09.1" > .circleci/opamcachebreaker
-            opam --version >> .circleci/opamcachebreaker
-            cat flowtype.opam >> .circleci/opamcachebreaker
-            cat flow_parser.opam >> .circleci/opamcachebreaker
-            cat .circleci/config.yml >> .circleci/opamcachebreaker
+            .circleci/make_opam_cachebreaker.sh 4.09.1 > .circleci/opamcachebreaker
+
+  restore-opam-cache:
+    steps:
       - restore_cache:
           keys:
           - v1-opam-cache-{{ arch }}-{{ checksum ".circleci/opamcachebreaker" }}
 
   save-opam-cache:
     steps:
+      - run:
+          name: Preparing opam cache
+          command: touch ~/.opam/from_cache
       - save_cache:
           key: v1-opam-cache-{{ arch }}-{{ checksum ".circleci/opamcachebreaker" }}
           paths:
@@ -116,11 +125,7 @@ commands:
     steps:
       - run:
           name: Install deps from opam
-          command: |
-            eval $(opam env)
-            if [ ! -d _opam ]; then
-              opam switch create . 4.09.1 --deps-only | cat
-            fi
+          command: make deps
 
 jobs:
   checkout:
@@ -142,15 +147,11 @@ jobs:
     steps:
       - attach_workspace:
           at: ~/flow
-      - run:
-          name: Install deps
-          command: |
-            sudo yum -y update && sudo yum -y install zip m4
+      - make-opam-cachebreaker
       - restore-opam-cache
       - run:
           name: Init opam
-          command: |
-            [ -d ~/.opam ] || opam init --bare --disable-sandboxing
+          command: .circleci/opam_init.sh
       - create-opam-switch
       - run:
           name: Install extra deps from opam
@@ -197,6 +198,67 @@ jobs:
           path: dist/flow_parser.js
           destination: flow_parser.js
 
+  build_linux_arm64:
+    executor: linux-arm64
+    steps:
+      - attach_workspace:
+          at: ~/flow
+      - run:
+          name: Start Docker image
+          command: |
+            rm -rf /home/circleci/.opam && mkdir /home/circleci/.opam
+            container_id=$(\
+              docker run -it -d \
+                --mount type=bind,source=/home/circleci/.opam,target=/home/opam/.opam \
+                --mount type=bind,source=/home/circleci/flow,target=/home/opam/flow \
+                flowtype/flow-ci:linux-arm64 \
+                /bin/bash \
+            )
+            echo "export CONTAINER_ID=$container_id" >> $BASH_ENV
+      - run:
+          name: Create cache breaker
+          command: |
+            docker exec -it $CONTAINER_ID /bin/bash -c 'cd flow && .circleci/make_opam_cachebreaker.sh 4.09.1 > .circleci/opamcachebreaker'
+      - restore-opam-cache
+      - run:
+          name: Init opam
+          command: |
+            docker exec -it $CONTAINER_ID /bin/bash -c 'flow/.circleci/opam_init.sh'
+      - run:
+          name: Install opam deps
+          command: |
+            docker exec -it $CONTAINER_ID /bin/bash -c 'cd flow && make deps'
+      - save-opam-cache
+      - run:
+          name: Build flow
+          command: |
+            docker exec -it $CONTAINER_ID /bin/bash -c 'cd flow && opam exec -- make bin/flow dist/flow.zip'
+            mkdir -p bin/linux-arm64 && cp bin/flow bin/linux-arm64/flow
+      - run:
+          name: Build libflowparser
+          command: |
+            docker exec -it $CONTAINER_ID /bin/bash -c 'cd flow && opam exec -- make -C src/parser dist/libflowparser.zip'
+      - run:
+          name: Stop Docker container
+          command: docker stop $CONTAINER_ID
+      - run:
+          name: Create artifacts
+          command: |
+            cp dist/flow.zip dist/flow-linux-arm64.zip
+            cp src/parser/dist/libflowparser.zip dist/libflowparser-linux-arm64.zip
+      - persist_to_workspace:
+          root: .
+          paths:
+            - bin/linux-arm64/flow
+            - dist/flow-linux-arm64.zip
+            - dist/libflowparser-linux-arm64.zip
+      - store_artifacts:
+          path: dist/flow-linux-arm64.zip
+          destination: flow-linux-arm64.zip
+      - store_artifacts:
+          path: dist/libflowparser-linux-arm64.zip
+          destination: libflowparser-linux-arm64.zip
+
   build_macos:
     executor: mac
     steps:
@@ -211,11 +273,11 @@ jobs:
               install -m 755 "$TMP/opam" "/usr/local/bin/opam"
               rm -f "$TMP/opam"
             fi
+      - make-opam-cachebreaker
       - restore-opam-cache
       - run:
           name: Init opam
-          command: |
-            [ -d ~/.opam ] || opam init --bare --disable-sandboxing
+          command: .circleci/opam_init.sh
       - create-opam-switch
       - save-opam-cache
       - run:
@@ -322,6 +384,17 @@ jobs:
           name: Run tests
           command: ./runtests.sh bin/linux/flow | cat
 
+  runtests_linux_arm64:
+    executor: linux-arm64
+    environment:
+      FLOW_RUNTESTS_PARALLELISM: 8
+    steps:
+      - attach_workspace:
+          at: ~/flow
+      - run:
+          name: Run tests
+          command: ./runtests.sh bin/linux-arm64/flow | cat
+
   runtests_macos:
     executor: mac
     steps:
@@ -402,6 +475,7 @@ jobs:
           command: |
             mkdir -p packages/flow-parser-bin/dist/release/
             cp dist/libflowparser-linux64.zip packages/flow-parser-bin/dist/release/libflowparser-linux64.zip
+            cp dist/libflowparser-linux-arm64.zip packages/flow-parser-bin/dist/release/libflowparser-linux-arm64.zip
             cp dist/libflowparser-osx.zip packages/flow-parser-bin/dist/release/libflowparser-osx.zip
             make dist/npm-flow-parser-bin.tgz
       - run:
@@ -452,6 +526,18 @@ jobs:
     - run:
         name: Upload Linux libflowparser
         command: .circleci/github_upload.sh dist/libflowparser-linux64.zip "libflowparser-linux64-$CIRCLE_TAG.zip"
+
+  github_linux_arm64:
+    executor: curl
+    steps:
+    - attach_workspace:
+        at: /flow
+    - run:
+        name: Upload Linux binary
+        command: .circleci/github_upload.sh dist/flow-linux-arm64.zip "flow-linux-arm64-$CIRCLE_TAG.zip"
+    - run:
+        name: Upload Linux libflowparser
+        command: .circleci/github_upload.sh dist/libflowparser-linux-arm64.zip "libflowparser-linux-arm64-$CIRCLE_TAG.zip"
 
   github_macos:
     executor: curl
@@ -545,6 +631,9 @@ workflows:
       - build_linux:
           requires:
             - checkout
+      - build_linux_arm64:
+          requires:
+            - checkout
       - build_macos:
           requires:
             - checkout
@@ -554,6 +643,9 @@ workflows:
       - runtests_linux:
           requires:
             - build_linux
+      - runtests_linux_arm64:
+          requires:
+            - build_linux_arm64
       - runtests_macos:
           requires:
             - build_macos
@@ -572,6 +664,7 @@ workflows:
       - npm_pack:
           requires:
             - build_linux
+            - build_linux_arm64
             - build_macos
 
       # only deploy the website from master, so that it can include docs/blog
@@ -592,6 +685,10 @@ workflows:
           <<: *run_on_release_tags
           requires:
             - checkout
+      - build_linux_arm64:
+          <<: *run_on_release_tags
+          requires:
+            - checkout
       - build_macos:
           <<: *run_on_release_tags
           requires:
@@ -604,6 +701,7 @@ workflows:
           <<: *run_on_release_tags
           requires:
             - build_linux
+            - build_linux_arm64
             - build_macos
       - npm_deploy:
           <<: *run_on_release_tags
@@ -613,6 +711,10 @@ workflows:
           <<: *run_on_release_tags
           requires:
             - build_linux
+      - github_linux_arm64:
+          <<: *run_on_release_tags
+          requires:
+            - build_linux_arm64
       - github_macos:
           <<: *run_on_release_tags
           requires:
@@ -625,6 +727,7 @@ workflows:
           <<: *run_on_release_tags
           requires:
             - github_linux
+            - github_linux_arm64
             - github_macos
             - github_win
       - try_flow_deploy:
