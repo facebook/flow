@@ -5,6 +5,12 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
-val mkdir : no_flowlib:bool -> Path.t -> Path.t
+type libdir =
+  | Flowlib of Path.t
+  | Prelude of Path.t
 
-val extract : no_flowlib:bool -> Path.t -> unit
+val libdir : no_flowlib:bool -> Path.t -> libdir
+
+val path_of_libdir : libdir -> Path.t
+
+val extract : libdir -> unit

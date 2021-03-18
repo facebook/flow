@@ -467,7 +467,7 @@ test-tool: bin/flow$(EXE)
 test: bin/flow$(EXE)
 	${MAKE} do-test
 
-js: _build/scripts/ppx_gen_flowlibs.exe $(BUILT_FUZZY_PATH_DEPS) $(BUILT_OBJECT_FILES) $(COPIED_FLOWLIB)
+js: _build/scripts/ppx_gen_flowlibs.exe $(BUILT_FUZZY_PATH_DEPS) $(BUILT_OBJECT_FILES) $(COPIED_FLOWLIB) $(COPIED_PRELUDE)
 	mkdir -p bin
 	# NOTE: temporarily disabling warning 31 because
 	# src/hack_forked/third-party/core/result.ml and the opam `result` module both define

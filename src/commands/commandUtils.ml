@@ -554,17 +554,6 @@ let remove_exclusion pattern =
     pattern
 
 let file_options =
-  let default_lib_dir ~no_flowlib tmp_dir =
-    try
-      let lib_dir = Flowlib.mkdir ~no_flowlib tmp_dir in
-      Flowlib.extract ~no_flowlib lib_dir;
-      lib_dir
-    with e ->
-      let e = Exception.wrap e in
-      let err = Exception.get_ctor_string e in
-      let msg = Printf.sprintf "Could not locate flowlib files: %s" err in
-      FlowExitStatus.(exit ~msg Could_not_extract_flowlibs)
-  in
   let ignores_of_arg root patterns extras =
     let expand_project_root_token = Files.expand_project_root_token ~root in
     let patterns = Base.List.rev_append extras patterns in
@@ -628,7 +617,12 @@ let file_options =
   fun ~root ~no_flowlib ~temp_dir ~includes ~ignores ~libs ~untyped ~declarations flowconfig ->
     let default_lib_dir =
       let no_flowlib = no_flowlib || FlowConfig.no_flowlib flowconfig in
-      Some (default_lib_dir ~no_flowlib temp_dir)
+      let libdir =
+        match Flowlib.libdir ~no_flowlib temp_dir with
+        | Flowlib.Prelude path -> Files.Prelude path
+        | Flowlib.Flowlib path -> Files.Flowlib path
+      in
+      Some libdir
     in
     let ignores = ignores_of_arg root (FlowConfig.ignores flowconfig) ignores in
     let untyped = ignores_of_arg root (FlowConfig.untyped flowconfig) untyped in
