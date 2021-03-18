@@ -347,10 +347,10 @@ let read (type result) worker_pid infd : (result * Measure.record_data) Lwt.t =
        * the response, so just raise that exception *)
       Exception.reraise exn
     | (_, Unix.WEXITED i) ->
-      (match FlowExitStatus.error_type_opt i with
-      | Some FlowExitStatus.Out_of_shared_memory -> raise SharedMem.Out_of_shared_memory
-      | Some FlowExitStatus.Hash_table_full -> raise SharedMem.Hash_table_full
-      | Some FlowExitStatus.Heap_full -> raise SharedMem.Heap_full
+      (match Exit.error_type_opt i with
+      | Some Exit.Out_of_shared_memory -> raise SharedMem.Out_of_shared_memory
+      | Some Exit.Hash_table_full -> raise SharedMem.Hash_table_full
+      | Some Exit.Heap_full -> raise SharedMem.Heap_full
       | _ ->
         let () = Caml.Printf.eprintf "Subprocess(%d): fail %d" worker_pid i in
         raise (Worker_failed (worker_pid, Worker_quit (Some (Unix.WEXITED i)))))

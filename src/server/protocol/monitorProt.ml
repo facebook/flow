@@ -16,7 +16,7 @@ let empty_file_watcher_metadata = { changed_mergebase = false }
 let merge_file_watcher_metadata a b =
   { changed_mergebase = a.changed_mergebase || b.changed_mergebase }
 
-type please_die_reason = MonitorExiting of (FlowExitStatus.t * string)
+type please_die_reason = MonitorExiting of (Exit.t * string)
 
 (* These are the messages that the monitor sends to the server *)
 type monitor_to_server_message =

@@ -46,7 +46,7 @@ let depgraph_subcommand =
         { root = Path.to_string root; strip_root; outfile = outpath; types_only }
     in
     match connect_and_make_request flowconfig_name option_values root request with
-    | ServerProt.Response.GRAPH_DEP_GRAPH (Error msg) -> FlowExitStatus.(exit ~msg Unknown_error)
+    | ServerProt.Response.GRAPH_DEP_GRAPH (Error msg) -> Exit.(exit ~msg Unknown_error)
     | ServerProt.Response.GRAPH_DEP_GRAPH (Ok _) -> ()
     | response -> failwith_bad_response ~request ~response
   in

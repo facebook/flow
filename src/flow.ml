@@ -99,7 +99,7 @@ let _ =
 
      We don't like being killed uncleanly like that. By ignoring SIGPIPE, the write() syscall that
      normally would cause a SIGPIPE instead throws an EPIPE exception. We handle exceptions and
-     exit via FlowExitStatus.exit instead. *)
+     exit via Exit.exit instead. *)
   let () = Sys_utils.set_signal Sys.sigpipe Sys.Signal_ignore in
   let () = Exception.record_backtrace true in
   let () = if Sys_utils.get_env "IN_FLOW_TEST" <> None then LoggingUtils.disable_logging () in
@@ -120,11 +120,11 @@ let _ =
         else
           ":\n" ^ bt )
     in
-    FlowExitStatus.(exit ~msg Out_of_shared_memory)
+    Exit.(exit ~msg Out_of_shared_memory)
   | e ->
     let e = Exception.wrap e in
     let msg = Utils.spf "Unhandled exception: %s" (Exception.to_string e) in
-    FlowExitStatus.(exit ~msg Unknown_error)
+    Exit.(exit ~msg Unknown_error)
 
 (* If we haven't exited yet, let's exit now for logging's sake *)
-let _ = FlowExitStatus.(exit No_error)
+let _ = Exit.(exit No_error)

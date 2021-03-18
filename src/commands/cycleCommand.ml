@@ -44,7 +44,7 @@ let main base_flags option_values root strip_root types_only file () =
   (* connect to server *)
   let request = ServerProt.Request.CYCLE { filename = file; types_only } in
   match connect_and_make_request flowconfig_name option_values root request with
-  | ServerProt.Response.CYCLE (Error msg) -> FlowExitStatus.(exit ~msg Unknown_error)
+  | ServerProt.Response.CYCLE (Error msg) -> Exit.(exit ~msg Unknown_error)
   | ServerProt.Response.CYCLE (Ok dep_graph) ->
     (* print .dot file to stdout *)
     LwtUtils.output_graph Lwt_io.stdout strip_root dep_graph |> Lwt_main.run

@@ -176,7 +176,7 @@ type notification_from_server =
     }
   | StartRecheck
   | EndRecheck of ServerProt.Response.lazy_stats
-  | ServerExit of FlowExitStatus.t  (** only used for the subset of exits which client handles *)
+  | ServerExit of Exit.t  (** only used for the subset of exits which client handles *)
   | Please_hold of (ServerStatus.status * FileWatcherStatus.status)
   | EOF  (** monitor is about to close the connection *)
 
@@ -232,7 +232,7 @@ let string_of_message_from_server = function
       | Errors _ -> "errors"
       | StartRecheck -> "startRecheck"
       | EndRecheck _ -> "endRecheck"
-      | ServerExit code -> "serverExit_" ^ FlowExitStatus.to_string code
+      | ServerExit code -> "serverExit_" ^ Exit.to_string code
       | Please_hold (server_status, watcher_status) ->
         Printf.sprintf
           "pleaseHold_server=%s_watcher=%s"

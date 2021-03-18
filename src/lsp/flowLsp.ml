@@ -5,6 +5,8 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
+(* This gets shadowed by Lsp.Exit *)
+module FlowExit = Exit
 open CommandUtils
 open Lsp
 open Lsp_fmt
@@ -116,7 +118,7 @@ and connected_env = {
   c_conn: server_conn;
   c_server_status: ServerStatus.status * FileWatcherStatus.status option;
   c_recent_summaries: (float * ServerStatus.summary) list;  (** newest at head of list *)
-  c_about_to_exit_code: FlowExitStatus.t option;
+  c_about_to_exit_code: FlowExit.t option;
   c_is_rechecking: bool;  (** stateful handling of Errors+status from server... *)
   c_lazy_stats: ServerProt.Response.lazy_stats option;
   c_outstanding_requests_to_server: Lsp.IdSet.t;
@@ -749,8 +751,8 @@ let show_connecting (reason : CommandConnectSimple.error) (env : disconnected_en
   in
   Disconnected { env with d_ienv }
 
-let show_disconnected
-    (code : FlowExitStatus.t option) (message : string option) (env : disconnected_env) : state =
+let show_disconnected (code : FlowExit.t option) (message : string option) (env : disconnected_env)
+    : state =
   (* report that we're disconnected to telemetry/connectionStatus *)
   let i_isConnected =
     Lsp_helpers.notify_connectionStatus
@@ -764,7 +766,7 @@ let show_disconnected
   let message = Base.Option.value message ~default:"Flow: server is stopped" in
   let message =
     match code with
-    | Some code -> Printf.sprintf "%s [%s]" message (FlowExitStatus.to_string code)
+    | Some code -> Printf.sprintf "%s [%s]" message (FlowExit.to_string code)
     | None -> message
   in
   let handler r state =
@@ -1216,8 +1218,7 @@ module RagePrint = struct
     addline
       b
       "c_about_to_exit_code="
-      ( cenv.c_about_to_exit_code
-      |> Base.Option.value_map ~default:"None" ~f:FlowExitStatus.to_string );
+      (cenv.c_about_to_exit_code |> Base.Option.value_map ~default:"None" ~f:FlowExit.to_string);
     addline b "c_is_rechecking=" (cenv.c_is_rechecking |> string_of_bool);
     addline
       b
@@ -1678,7 +1679,7 @@ and initial_lwt_thread flowconfig_name client state () =
      fun exn ->
        let exn = Exception.wrap exn in
        let msg = Utils.spf "Uncaught async exception: %s" (Exception.to_string exn) in
-       FlowExitStatus.(exit ~msg Unknown_error));
+       FlowExit.(exit ~msg Unknown_error));
 
   LspInteraction.init ();
   Lwt.async LogFlusher.run;
@@ -2370,14 +2371,14 @@ and main_handle_error (exn : Exception.t) (state : state) (event : event option)
         | Connected cenv -> cenv.c_about_to_exit_code
         | _ -> None
       in
-      let code = Base.Option.value_map code ~f:FlowExitStatus.to_string ~default:"" in
+      let code = Base.Option.value_map code ~f:FlowExit.to_string ~default:"" in
       let report = Printf.sprintf "Server fatal exception: [%s] %s\n%s" code edata.message stack in
       Lsp_helpers.telemetry_error to_stdout report;
       let (d_autostart, d_ienv) =
         match state with
         | Connected { c_ienv; c_about_to_exit_code; _ }
-          when c_about_to_exit_code = Some FlowExitStatus.Flowconfig_changed
-               || c_about_to_exit_code = Some FlowExitStatus.Server_out_of_date ->
+          when c_about_to_exit_code = Some FlowExit.Flowconfig_changed
+               || c_about_to_exit_code = Some FlowExit.Server_out_of_date ->
           (* we allow at most one autostart_after_version_mismatch per
              instance so as to avoid getting into version battles. *)
           let previous = c_ienv.i_can_autostart_after_version_mismatch in

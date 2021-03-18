@@ -1422,7 +1422,7 @@ let restart_if_faster_than_recheck ~options ~env ~to_merge_or_check ~file_watche
       let%lwt () =
         if time_to_restart < time_to_recheck then
           let%lwt () = Recheck_stats.record_last_estimates ~options ~estimates in
-          FlowExitStatus.(exit ~msg:"Restarting after a rebase to save time" Restart)
+          Exit.(exit ~msg:"Restarting after a rebase to save time" Restart)
         else
           Lwt.return_unit
       in
@@ -2710,8 +2710,7 @@ let init_from_scratch ~profiling ~workers options =
   Lwt.return (FilenameSet.empty, env, libs_ok)
 
 let exit_if_no_fallback ?msg options =
-  if Options.saved_state_no_fallback options then
-    FlowExitStatus.exit ?msg FlowExitStatus.Invalid_saved_state
+  if Options.saved_state_no_fallback options then Exit.(exit ?msg Invalid_saved_state)
 
 (* Does a best-effort job to load a saved state. If it fails, returns None *)
 let load_saved_state ~profiling ~workers options =

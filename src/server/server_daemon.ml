@@ -99,7 +99,7 @@ let daemonize ~init_id ~log_file ~shared_mem_config ~argv ~options ~file_watcher
   let lock = Server_files.lock_file ~flowconfig_name ~tmp_dir root in
   ( if not (Lock.check lock) then
     let msg = spf "Error: There is already a server running for %s" (Path.to_string root) in
-    FlowExitStatus.(exit ~msg Lock_stolen) );
+    Exit.(exit ~msg Lock_stolen) );
 
   let null_fd = Daemon.null_fd () in
   let log_fd = open_log_file log_file in

@@ -59,7 +59,7 @@ module InsertType = struct
             |> anon "args" (required (list_of string)));
       })
 
-  let handle_error ?(code = FlowExitStatus.Unknown_error) msg = FlowExitStatus.(exit ~msg code)
+  let handle_error ?(code = Exit.Unknown_error) msg = Exit.(exit ~msg code)
 
   let rec parse_args args : Loc.t =
     let parse_pos line col : Loc.position =
@@ -91,7 +91,7 @@ module InsertType = struct
       begin
         try open_out p
         with _ ->
-          handle_error ~code:FlowExitStatus.Path_is_not_a_file
+          handle_error ~code:Exit.Path_is_not_a_file
           @@ Printf.sprintf "failed to open output file: %s" p
       end
     | (true, None, None) ->
@@ -184,7 +184,7 @@ module Exports = struct
           |> anon "file" (required string));
     }
 
-  let handle_error ?(code = FlowExitStatus.Unknown_error) msg = FlowExitStatus.(exit ~msg code)
+  let handle_error ?(code = Exit.Unknown_error) msg = Exit.(exit ~msg code)
 
   let select_output_channel in_place path source_path =
     match (in_place, path, source_path) with
@@ -194,7 +194,7 @@ module Exports = struct
       begin
         try open_out p
         with _ ->
-          handle_error ~code:FlowExitStatus.Path_is_not_a_file
+          handle_error ~code:Exit.Path_is_not_a_file
           @@ Printf.sprintf "failed to open output file: %s" p
       end
 

@@ -50,7 +50,7 @@ let extract_flowlibs_or_exit options =
        let err = Exception.get_ctor_string e in
        let libdir_str = libdir |> Flowlib.path_of_libdir |> Path.to_string in
        let msg = Printf.sprintf "Could not extract flowlib files into %s: %s" libdir_str err in
-       FlowExitStatus.(exit ~msg Could_not_extract_flowlibs))
+       Exit.(exit ~msg Could_not_extract_flowlibs))
   | None -> ()
 
 type 'a unit_result = ('a, ALoc.t * Error_message.internal_error) result

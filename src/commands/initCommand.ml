@@ -37,7 +37,7 @@ let error (errs : (int * string) list) =
     |> Base.List.map ~f:(fun (ln, msg) -> Utils_js.spf ".flowconfig:%d %s" ln msg)
     |> String.concat "\n"
   in
-  FlowExitStatus.(exit ~msg Invalid_flowconfig)
+  Exit.(exit ~msg Invalid_flowconfig)
 
 let main base_flags flowconfig_flags options root () =
   let root =
@@ -60,7 +60,7 @@ let main base_flags flowconfig_flags options root () =
   let file = Server_files_js.config_file base_flags.CommandUtils.Base_flags.flowconfig_name root in
   ( if Sys.file_exists file then
     let msg = Utils_js.spf "Error: \"%s\" already exists!\n%!" file in
-    FlowExitStatus.(exit ~msg Invalid_flowconfig) );
+    Exit.(exit ~msg Invalid_flowconfig) );
 
   let config = FlowConfig.init ~ignores ~untyped ~declarations ~includes ~libs ~options ~lints in
   let config =

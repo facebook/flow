@@ -147,9 +147,9 @@ let worker_main ic oc =
       exit 0
     with
     | Connection_closed -> exit 1
-    | SharedMem.Out_of_shared_memory -> FlowExitStatus.(exit Out_of_shared_memory)
-    | SharedMem.Hash_table_full -> FlowExitStatus.(exit Hash_table_full)
-    | SharedMem.Heap_full -> FlowExitStatus.(exit Heap_full)
+    | SharedMem.Out_of_shared_memory -> Exit.(exit Out_of_shared_memory)
+    | SharedMem.Hash_table_full -> Exit.(exit Hash_table_full)
+    | SharedMem.Heap_full -> Exit.(exit Heap_full)
   with e ->
     let exn = Exception.wrap e in
     let e_str =

@@ -7,7 +7,7 @@
 
 type error = {
   msg: string;
-  exit_status: FlowExitStatus.t;
+  exit_status: Exit.t;
 }
 
 val process_updates :

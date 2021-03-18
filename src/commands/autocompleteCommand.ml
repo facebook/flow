@@ -89,7 +89,7 @@ let parse_args = function
     (Some filename, contents, Some cursor)
   | _ ->
     CommandSpec.usage spec;
-    FlowExitStatus.(exit Commandline_usage_error)
+    Exit.(exit Commandline_usage_error)
 
 let autocomplete_result_to_json ~strip_root result =
   let open ServerProt.Response.Completion in

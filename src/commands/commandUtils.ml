@@ -14,7 +14,7 @@ let run_command command argv =
   with
   | CommandSpec.Show_help ->
     print_endline (CommandSpec.string_of_usage command);
-    FlowExitStatus.(exit No_error)
+    Exit.(exit No_error)
   | CommandSpec.Failed_to_parse (arg_name, msg) ->
     begin
       try
@@ -26,7 +26,7 @@ let run_command command argv =
             argv
         in
         let pretty = String_utils.string_starts_with json_arg "--pretty" in
-        FlowExitStatus.set_json_mode ~pretty
+        Exit.set_json_mode ~pretty
       with Not_found -> ()
     end;
     let msg =
@@ -37,7 +37,7 @@ let run_command command argv =
         msg
         (CommandSpec.string_of_usage command)
     in
-    FlowExitStatus.(exit ~msg Commandline_usage_error)
+    Exit.(exit ~msg Commandline_usage_error)
 
 let expand_file_list ?options filenames =
   let paths = Base.List.map ~f:Path.make filenames in
@@ -61,7 +61,7 @@ let get_filenames_from_input ?(allow_imaginary = false) input_file filenames =
       Files.imaginary_realpath
     else
       fun fn ->
-    FlowExitStatus.(exit ~msg:(Printf.sprintf "File not found: %S" fn) No_input)
+    Exit.(exit ~msg:(Printf.sprintf "File not found: %S" fn) No_input)
   in
   let input_file_filenames =
     match input_file with
@@ -93,7 +93,7 @@ let expand_path file =
       Path.to_string path
     else
       let msg = Printf.sprintf "File not found: %s" (Path.to_string path) in
-      FlowExitStatus.(exit ~msg Input_error)
+      Exit.(exit ~msg Input_error)
 
 let collect_error_flags
     main
@@ -182,7 +182,7 @@ let error_flags prev =
            "Sets the width of messages but not code snippets (defaults to the smaller of 120 or the terminal width)")
 
 let collect_json_flags main json pretty =
-  if json || pretty then FlowExitStatus.set_json_mode ~pretty;
+  if json || pretty then Exit.set_json_mode ~pretty;
   main json pretty
 
 let json_flags prev =
@@ -460,7 +460,7 @@ let flowconfig_multi_error rev_errs =
     |> Base.List.map ~f:(fun (ln, msg) -> spf ".flowconfig:%d %s" ln msg)
     |> String.concat "\n"
   in
-  FlowExitStatus.(exit ~msg Invalid_flowconfig)
+  Exit.(exit ~msg Invalid_flowconfig)
 
 let flowconfig_multi_warn rev_errs =
   let msg =
@@ -519,7 +519,7 @@ let assert_version flowconfig =
   let required_version = FlowConfig.required_version flowconfig in
   match check_version required_version with
   | Ok () -> ()
-  | Error msg -> FlowExitStatus.(exit ~msg Invalid_flowconfig)
+  | Error msg -> Exit.(exit ~msg Invalid_flowconfig)
 
 type flowconfig_params = {
   ignores: string list;
@@ -738,7 +738,7 @@ let collect_connect_flags
   (match timeout with
   | Some n when n <= 0 ->
     let msg = spf "Timeout must be a positive integer. Got %d" n in
-    FlowExitStatus.(exit ~msg Commandline_usage_error)
+    Exit.(exit ~msg Commandline_usage_error)
   | _ -> ());
   main
     {
@@ -850,7 +850,7 @@ let parse_lints_flag =
     | Ok settings -> settings
     | Error (line, msg) ->
       let msg = spf "Error parsing --lints (rule %d): %s" line msg in
-      FlowExitStatus.(exit ~msg Commandline_usage_error)
+      Exit.(exit ~msg Commandline_usage_error)
 
 let options_flags =
   let collect_options_flags
@@ -878,7 +878,7 @@ let options_flags =
       trust_mode =
     (match merge_timeout with
     | Some timeout when timeout < 0 ->
-      FlowExitStatus.(exit ~msg:"--merge-timeout must be non-negative" Commandline_usage_error)
+      Exit.(exit ~msg:"--merge-timeout must be non-negative" Commandline_usage_error)
     | _ -> ());
 
     main
@@ -1398,7 +1398,7 @@ let guess_root flowconfig_name dir_or_file =
         dir_or_file
         flowconfig_name
     in
-    FlowExitStatus.(exit ~msg Could_not_find_flowconfig)
+    Exit.(exit ~msg Could_not_find_flowconfig)
   else
     let dir =
       if Sys.is_directory dir_or_file then
@@ -1417,7 +1417,7 @@ let guess_root flowconfig_name dir_or_file =
           flowconfig_name
           dir
       in
-      FlowExitStatus.(exit ~msg Could_not_find_flowconfig)
+      Exit.(exit ~msg Could_not_find_flowconfig)
 
 (* Favor the root argument, over the input file, over the current directory
    as the place to begin searching for the root. *)
@@ -1443,10 +1443,10 @@ let get_the_root ?input ~base_flags root_arg =
         root_dir
       else
         let msg = spf "Failed to open %s" @@ Path.to_string root_config in
-        FlowExitStatus.(exit ~msg Could_not_find_flowconfig)
+        Exit.(exit ~msg Could_not_find_flowconfig)
     else
       let msg = spf "Invalid root directory %s" provided_root in
-      FlowExitStatus.(exit ~msg Could_not_find_flowconfig)
+      Exit.(exit ~msg Could_not_find_flowconfig)
   | None -> find_a_root ?input ~base_flags None
 
 (* convert 1,1 based line/column to 1,0 for internal use *)
@@ -1477,7 +1477,7 @@ let get_file_from_filename_or_stdin ~cmd path = function
       let msg =
         spf "Could not find file %s; canceling.\nSee \"flow %s --help\" for more info" filename cmd
       in
-      FlowExitStatus.(exit ~msg No_input)
+      Exit.(exit ~msg No_input)
     else if Sys.is_directory filename then
       let msg =
         spf
@@ -1485,7 +1485,7 @@ let get_file_from_filename_or_stdin ~cmd path = function
           filename
           cmd
       in
-      FlowExitStatus.(exit ~msg Path_is_not_a_file)
+      Exit.(exit ~msg Path_is_not_a_file)
     else
       File_input.FileName (expand_path filename)
   | None ->
@@ -1505,7 +1505,7 @@ let get_file_from_filename_or_stdin ~cmd path = function
 let parse_location_with_optional_filename spec path args =
   let exit () =
     CommandSpec.usage spec;
-    FlowExitStatus.(exit Commandline_usage_error)
+    Exit.(exit Commandline_usage_error)
   in
   let (file, line, column) =
     match args with
@@ -1593,7 +1593,7 @@ let rec connect_and_make_request flowconfig_name =
     | MonitorProt.ServerException exn_str ->
       if Tty.spinner_used () then Tty.print_clear_line stderr;
       let msg = Utils_js.spf "Server threw an exception: %s" exn_str in
-      FlowExitStatus.(exit ~msg Unknown_error)
+      Exit.(exit ~msg Unknown_error)
   in
   fun ?timeout ?retries connect_flags root request ->
     let retries =
@@ -1601,7 +1601,7 @@ let rec connect_and_make_request flowconfig_name =
       | None -> connect_flags.retries
       | Some retries -> retries
     in
-    (if retries < 0 then FlowExitStatus.(exit ~msg:"Out of retries, exiting!" Out_of_retries));
+    (if retries < 0 then Exit.(exit ~msg:"Out of retries, exiting!" Out_of_retries));
 
     let version_mismatch_strategy =
       match connect_flags.on_mismatch with
@@ -1649,7 +1649,7 @@ let connect_and_make_request ?retries flowconfig_name connect_flags root request
   | Some timeout ->
     Timeout.with_timeout
       ~timeout
-      ~on_timeout:(fun () -> FlowExitStatus.(exit ~msg:"Timeout exceeded, exiting" Out_of_time))
+      ~on_timeout:(fun () -> Exit.(exit ~msg:"Timeout exceeded, exiting" Out_of_time))
       ~do_:(fun timeout ->
         connect_and_make_request ~timeout ?retries flowconfig_name connect_flags root request)
 
@@ -1663,7 +1663,7 @@ let failwith_bad_response ~request ~response =
   failwith msg
 
 let get_check_or_status_exit_code errors warnings max_warnings =
-  FlowExitStatus.(
+  Exit.(
     Errors.(
       if ConcreteLocPrintableErrorSet.is_empty errors then
         match max_warnings with
@@ -1788,7 +1788,7 @@ let collect_codemod_flags
     anon =
   ( if (not write) && repeat then
     let msg = "Error: cannot run codemod with --repeat flag unless --write is also passed" in
-    FlowExitStatus.(exit ~msg Commandline_usage_error) );
+    Exit.(exit ~msg Commandline_usage_error) );
   let codemod_flags =
     Codemod_params
       {

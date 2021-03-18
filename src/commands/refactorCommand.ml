@@ -37,7 +37,7 @@ let usage error =
   print_endline error;
   print_newline ();
   CommandSpec.usage spec;
-  FlowExitStatus.(exit Commandline_usage_error)
+  Exit.(exit Commandline_usage_error)
 
 let parse_args path args =
   let (file, line, column) =
@@ -51,7 +51,7 @@ let parse_args path args =
         int_of_string column )
     | _ ->
       CommandSpec.usage spec;
-      FlowExitStatus.(exit Commandline_usage_error)
+      Exit.(exit Commandline_usage_error)
   in
   let (line, column) = convert_input_pos (line, column) in
   (file, line, column)
