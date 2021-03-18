@@ -19,9 +19,8 @@ type process_id = int
 type worker_id = int
 
 type worker_failure =
-  (* Worker killed by Out Of Memory. *)
-  | Worker_oomed
-  | Worker_quit of Unix.process_status
+  | Worker_oomed  (** Worker killed by Out Of Memory. *)
+  | Worker_quit of Unix.process_status option
 
 exception Worker_failed of (process_id * worker_failure)
 
@@ -32,7 +31,7 @@ exception Worker_busy
 val failure_to_string : worker_failure -> string
 
 type send_job_failure =
-  | Worker_already_exited of Unix.process_status
+  | Worker_already_exited of Unix.process_status option
   | Other_send_job_failure of Exception.t
 
 exception Worker_failed_to_send_job of send_job_failure
