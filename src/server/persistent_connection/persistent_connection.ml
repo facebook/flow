@@ -79,13 +79,12 @@ let send_errors =
         ]
   in
   fun ~errors_reason ~errors ~warnings client ->
-    let opened_filenames = SMap.bindings client.opened_files |> Base.List.map ~f:fst in
     let warnings =
-      List.fold_right
-        (fun filename warn_acc ->
+      SMap.fold
+        (fun filename _ warn_acc ->
           let file_warns = get_warnings_for_file filename warnings in
           Errors.ConcreteLocPrintableErrorSet.union file_warns warn_acc)
-        opened_filenames
+        client.opened_files
         Errors.ConcreteLocPrintableErrorSet.empty
     in
     let diagnostics = Flow_lsp_conversions.diagnostics_of_flow_errors ~errors ~warnings in
