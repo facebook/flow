@@ -54,6 +54,6 @@ let main json pretty semver _root () =
       print_json_endline ~pretty json)
   else
     CommandUtils.print_version ();
-  FlowExitStatus.(exit No_error)
+  Exit.(exit No_error)
 
 let command = CommandSpec.command spec main

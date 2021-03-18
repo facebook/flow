@@ -45,7 +45,7 @@ let spec =
 
 let handle_error err =
   prerr_endline err;
-  FlowExitStatus.(exit Unknown_error)
+  Exit.(exit Unknown_error)
 
 let handle_response strip_root error_flags fail_on_tc_errors fail_on_suggest_warnings content =
   let with_errors_and_warnings do_step errors warnings max_warnings next =
@@ -58,7 +58,7 @@ let handle_response strip_root error_flags fail_on_tc_errors fail_on_suggest_war
         ~warnings
         ~lazy_msg:None
         ();
-      FlowExitStatus.exit (get_check_or_status_exit_code errors warnings max_warnings)
+      Exit.exit (get_check_or_status_exit_code errors warnings max_warnings)
     in
     if not do_step then
       next ()
@@ -127,7 +127,7 @@ let main
          If the File_input is from a file then expand_path verified the file exists. *)
       | _ ->
         let msg = Printf.sprintf "Failed to open file: %s" @@ filename_of_file_input file in
-        FlowExitStatus.(exit ~msg Input_error)
+        Exit.(exit ~msg Input_error)
     in
     let file = FileContent (path_of_file_input file, content) in
     let root = find_a_root ~base_flags ~input:file root in

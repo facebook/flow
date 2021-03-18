@@ -173,7 +173,7 @@ module CheckCommand = struct
     in
     let (errors, warnings) = Server.check_once options ~init_id ~shared_mem_config ~format_errors in
     Flow_server_profile.print_url ();
-    FlowExitStatus.exit
+    Exit.exit
       (get_check_or_status_exit_code errors warnings error_flags.Errors.Cli_output.max_warnings)
 
   let command = CommandSpec.command spec main
@@ -283,7 +283,7 @@ module FocusCheckCommand = struct
     let (errors, warnings) =
       Server.check_once options ~init_id ~shared_mem_config ~focus_targets ~format_errors
     in
-    FlowExitStatus.exit
+    Exit.exit
       (get_check_or_status_exit_code errors warnings error_flags.Errors.Cli_output.max_warnings)
 
   let command = CommandSpec.command spec main

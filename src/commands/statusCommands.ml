@@ -131,7 +131,7 @@ module Impl (CommandList : COMMAND_LIST) (Config : CONFIG) = struct
           (Path.to_string d.ServerProt.Response.server)
           (Path.to_string d.ServerProt.Response.client)
       in
-      FlowExitStatus.(exit ~msg Server_client_directory_mismatch)
+      Exit.(exit ~msg Server_client_directory_mismatch)
     | ServerProt.Response.ERRORS { errors; warnings; suppressed_errors } ->
       let error_flags = args.error_flags in
       let from = FlowEventLogger.get_from_I_AM_A_CLOWN () in
@@ -156,7 +156,7 @@ module Impl (CommandList : COMMAND_LIST) (Config : CONFIG) = struct
             ~lazy_msg
             ()
       end;
-      FlowExitStatus.exit
+      Exit.exit
         (get_check_or_status_exit_code errors warnings error_flags.Errors.Cli_output.max_warnings)
     | ServerProt.Response.NO_ERRORS ->
       if args.output_json then
@@ -169,10 +169,10 @@ module Impl (CommandList : COMMAND_LIST) (Config : CONFIG) = struct
         Printf.printf "No errors!\n%!";
         Base.Option.iter lazy_msg ~f:(Printf.printf "\n%s\n%!")
       );
-      FlowExitStatus.(exit No_error)
+      Exit.(exit No_error)
     | ServerProt.Response.NOT_COVERED ->
       let msg = "Why on earth did the server respond with NOT_COVERED?" in
-      FlowExitStatus.(exit ~msg Unknown_error)
+      Exit.(exit ~msg Unknown_error)
 
   let main
       base_flags
@@ -188,7 +188,7 @@ module Impl (CommandList : COMMAND_LIST) (Config : CONFIG) = struct
       () =
     if version then (
       print_version ();
-      FlowExitStatus.(exit No_error)
+      Exit.(exit No_error)
     );
 
     let flowconfig_name = base_flags.Base_flags.flowconfig_name in

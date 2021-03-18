@@ -57,8 +57,8 @@ let exit ?error ~msg exit_status =
     (* Protect this thread from getting canceled *)
     Lwt.protected
       (let%lwt () = Lwt_unix.sleep 1.0 in
-       FlowEventLogger.exit ?error (Some msg) (FlowExitStatus.to_string exit_status);
-       Stdlib.exit (FlowExitStatus.error_code exit_status))
+       FlowEventLogger.exit ?error (Some msg) (Exit.to_string exit_status);
+       Stdlib.exit (Exit.error_code exit_status))
   )
 
 type stop_reason =
@@ -69,9 +69,9 @@ type stop_reason =
 let stop reason =
   let (msg, status) =
     match reason with
-    | Stopped -> ("Killed by `flow stop`. Exiting.", FlowExitStatus.No_error)
-    | Autostopped -> ("Autostop", FlowExitStatus.Autostop)
-    | Legacy_client -> ("Killed by legacy client. Exiting.", FlowExitStatus.Build_id_mismatch)
+    | Stopped -> ("Killed by `flow stop`. Exiting.", Exit.No_error)
+    | Autostopped -> ("Autostop", Exit.Autostop)
+    | Legacy_client -> ("Killed by legacy client. Exiting.", Exit.Build_id_mismatch)
   in
   exit ~msg status
 
@@ -92,7 +92,7 @@ end = struct
   let rec start_clock () =
     let time_til_doomsday = !doomsday_time -. Unix.time () in
     if time_til_doomsday <= 0. then
-      exit ~msg:"Exiting server. Last used >7 days ago" FlowExitStatus.Unused_server
+      exit ~msg:"Exiting server. Last used >7 days ago" Exit.Unused_server
     else
       let%lwt () = Lwt_unix.sleep time_til_doomsday in
       start_clock ()
@@ -245,7 +245,7 @@ end = struct
         let error =
           (Exception.get_ctor_string exn, Utils.Callstack (Exception.get_backtrace_string exn))
         in
-        exit ~error ~msg FlowExitStatus.Dfind_died
+        exit ~error ~msg Exit.Dfind_died
       | _ ->
         Logger.fatal ~exn:(Exception.to_exn exn) "Uncaught exception in Server file watcher loop";
         Exception.reraise exn
@@ -277,18 +277,13 @@ end = struct
       let still_alive =
         match server_status with
         | Some (Unix.WEXITED exit_status) ->
-          let exit_type =
-            (try Some (FlowExitStatus.error_type exit_status) with Not_found -> None)
-          in
+          let exit_type = (try Some (Exit.error_type exit_status) with Not_found -> None) in
           begin
-            if exit_type = Some FlowExitStatus.Killed_by_monitor then
+            if exit_type = Some Exit.Killed_by_monitor then
               Logger.info "Successfully killed the server process"
             else
               let exit_status_string =
-                Base.Option.value_map
-                  ~default:"Invalid_exit_code"
-                  ~f:FlowExitStatus.to_string
-                  exit_type
+                Base.Option.value_map ~default:"Invalid_exit_code" ~f:Exit.to_string exit_type
               in
               Logger.error
                 "Tried to kill the server process (%d), which exited with the wrong exit code: %s"
@@ -334,7 +329,7 @@ end = struct
      * We could probably just restart it. For dfind, we'd also need to start a new server, but for
      * watchman we probably could just start a new watchman daemon and use the clockspec *)
     let msg = Base.Option.value ~default:(spf "File watcher (%s) died" watcher#name) msg in
-    exit ?error ~msg FlowExitStatus.Dfind_died
+    exit ?error ~msg Exit.Dfind_died
 
   (** `close_if_open fd` closes the `fd` file descriptor, ignoring errors if it's already closed.
 
@@ -489,7 +484,7 @@ module KeepAliveLoop = LwtLoop.Make (struct
     if monitor_options.FlowServerMonitorOptions.no_restart then
       (true, None)
     else
-      FlowExitStatus.(
+      Exit.(
         match exit_status with
         (**** Things the server might exit with that implies that the monitor should exit too ****)
         | No_error
@@ -512,6 +507,10 @@ module KeepAliveLoop = LwtLoop.Make (struct
         (* Uncaught exn. We probably could survive this, but it's a little risky *)
         | Watchman_error
         (* We ran into an issue with Watchman *)
+        | Watchman_failed
+        (* We ran into an issue with Watchman *)
+        | Watchman_fresh_instance
+        (* Watchman restarted. We probably could survive this by recrawling *)
         | Hash_table_full
         (* The hash table is full. It accumulates cruft, so restarting _might_ help, but
            if it's just too small, we could get stuck in a crash loop. Ideally we'd delete
@@ -546,6 +545,7 @@ module KeepAliveLoop = LwtLoop.Make (struct
         | Kill_error
         | No_server_running
         | Out_of_retries
+        | EventLogger_restart_out_of_retries
         | Input_error
         | Could_not_find_flowconfig
         | Commandline_usage_error
@@ -576,9 +576,9 @@ module KeepAliveLoop = LwtLoop.Make (struct
 
     match status with
     | Unix.WEXITED exit_status ->
-      let exit_type = (try Some (FlowExitStatus.error_type exit_status) with Not_found -> None) in
+      let exit_type = (try Some (Exit.error_type exit_status) with Not_found -> None) in
       let exit_status_string =
-        Base.Option.value_map ~default:"Invalid_exit_code" ~f:FlowExitStatus.to_string exit_type
+        Base.Option.value_map ~default:"Invalid_exit_code" ~f:Exit.to_string exit_type
       in
       Logger.error
         "Flow server (pid %d) exited with code %s (%d)"
@@ -590,7 +590,7 @@ module KeepAliveLoop = LwtLoop.Make (struct
         | None ->
           exit
             ~msg:(spf "Flow server exited with invalid exit code (%d)" exit_status)
-            FlowExitStatus.Unknown_error
+            Exit.Unknown_error
         | Some exit_type ->
           (* There are a few specific reasons where the persistent client wants *)
           (* to know why the flow server is about to fatally close the persistent  *)
@@ -620,7 +620,7 @@ module KeepAliveLoop = LwtLoop.Make (struct
         (PrintSignal.string_of_signal signal);
       FlowEventLogger.report_from_monitor_server_exit_due_to_signal signal;
       if should_monitor_exit_with_signaled_server signal then
-        exit ~msg:"Dying along with signaled server" FlowExitStatus.Interrupted
+        exit ~msg:"Dying along with signaled server" Exit.Interrupted
       else
         Lwt.return_none
     | Unix.WSTOPPED signal ->
@@ -665,7 +665,7 @@ module KeepAliveLoop = LwtLoop.Make (struct
     match Exception.unwrap exn with
     | Watchman.Timeout ->
       let msg = Printf.sprintf "Watchman timed out.\n%s" (Exception.to_string exn) in
-      FlowExitStatus.(exit ~msg Watchman_error)
+      Exit.(exit ~msg Watchman_error)
     | _ ->
       Logger.error ~exn:(Exception.to_exn exn) "Exception in KeepAliveLoop";
       Exception.reraise exn
@@ -682,9 +682,7 @@ let setup_signal_handlers =
   in
   let handle_signal signal =
     Lwt.async (fun () ->
-        exit
-          ~msg:(spf "Received %s signal" (PrintSignal.string_of_signal signal))
-          FlowExitStatus.Interrupted)
+        exit ~msg:(spf "Received %s signal" (PrintSignal.string_of_signal signal)) Exit.Interrupted)
   in
   let set_signal s =
     try Sys_utils.set_signal s (Sys.Signal_handle handle_signal)

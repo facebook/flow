@@ -67,7 +67,7 @@ let rec wait_loop ~should_wait child_pid ic =
           Unix.(waitpid [WNOHANG; WUNTRACED] child_pid)
         | (pid, status) -> (pid, status)
       in
-      let exit_code = FlowExitStatus.Server_start_failed status in
+      let exit_code = Exit.Server_start_failed status in
       let (msg, exit_code) =
         if pid = 0 (* The monitor is still alive...not sure what happened *) then
           ("Error: Failed to start server for some unknown reason.", exit_code)
@@ -76,14 +76,13 @@ let rec wait_loop ~should_wait child_pid ic =
           let (reason, exit_code) =
             match status with
             | Unix.WEXITED code ->
-              if code = FlowExitStatus.(error_code Lock_stolen) then
+              if code = Exit.(error_code Lock_stolen) then
                 (* Sometimes when we actually go to start the monitor we find a
                  * monitor already running (race condition). If so, we can just
                  * forward that error code *)
-                ("There is already a server running.", FlowExitStatus.Lock_stolen)
-              else if code = FlowExitStatus.(error_code Out_of_shared_memory) then
-                ( "The server is failed to allocate shared memory.",
-                  FlowExitStatus.Out_of_shared_memory )
+                ("There is already a server running.", Exit.Lock_stolen)
+              else if code = Exit.(error_code Out_of_shared_memory) then
+                ("The server is failed to allocate shared memory.", Exit.Out_of_shared_memory)
               else
                 (spf "exited prematurely with code %d." code, exit_code)
             | Unix.WSIGNALED signal ->
@@ -94,7 +93,7 @@ let rec wait_loop ~should_wait child_pid ic =
           in
           (spf "Error: Failed to start server. %s" reason, exit_code)
       in
-      FlowExitStatus.(exit ~msg exit_code)
+      Exit.(exit ~msg exit_code)
   in
   if should_wait && msg <> Ready then
     wait_loop ~should_wait child_pid ic

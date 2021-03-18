@@ -5,4 +5,10 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
-val signal : (Exit.t * string) Lwt_condition.t
+include module type of FlowExitStatus
+
+val exit : ?msg:string -> t -> 'a
+
+val set_json_mode : pretty:bool -> unit
+
+val unset_json_mode : unit -> unit

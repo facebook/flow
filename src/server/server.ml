@@ -39,7 +39,7 @@ let extract_flowlibs_or_exit options =
        let err = Exception.get_ctor_string e in
        let libdir_str = libdir |> Flowlib.path_of_libdir |> Path.to_string in
        let msg = Printf.sprintf "Could not extract flowlib files into %s: %s" libdir_str err in
-       FlowExitStatus.(exit ~msg Could_not_extract_flowlibs))
+       Exit.(exit ~msg Could_not_extract_flowlibs))
   | None -> ()
 
 let init ~profiling ?focus_targets genv =
@@ -278,21 +278,20 @@ let run_from_daemonize ~init_id ~monitor_channels ~shared_mem_config options =
   | SharedMem.Out_of_shared_memory as exn ->
     let exn = Exception.wrap exn in
     let msg = exit_msg_of_exception exn "Out of shared memory" in
-    FlowExitStatus.(exit ~msg Out_of_shared_memory)
+    Exit.(exit ~msg Out_of_shared_memory)
   | SharedMem.Hash_table_full as exn ->
     let exn = Exception.wrap exn in
     let msg = exit_msg_of_exception exn "Hash table is full" in
-    FlowExitStatus.(exit ~msg Hash_table_full)
+    Exit.(exit ~msg Hash_table_full)
   | SharedMem.Heap_full as exn ->
     let exn = Exception.wrap exn in
     let msg = exit_msg_of_exception exn "Heap is full" in
-    FlowExitStatus.(exit ~msg Heap_full)
-  | MonitorRPC.Monitor_died ->
-    FlowExitStatus.(exit ~msg:"Monitor died unexpectedly" Killed_by_monitor)
+    Exit.(exit ~msg Heap_full)
+  | MonitorRPC.Monitor_died -> Exit.(exit ~msg:"Monitor died unexpectedly" Killed_by_monitor)
   | e ->
     let e = Exception.wrap e in
     let msg = Utils.spf "Unhandled exception: %s" (Exception.to_string e) in
-    FlowExitStatus.(exit ~msg Unknown_error)
+    Exit.(exit ~msg Unknown_error)
 
 let check_once ~init_id ~shared_mem_config ~format_errors ?focus_targets options =
   PidLog.disable ();

@@ -425,7 +425,7 @@ let with_crash_record_opt source f =
     ~catch:(fun exn ->
       match Exception.unwrap exn with
       (* Avoid swallowing these *)
-      | Exit_status.Exit_with _
+      | Exit.Exit_with _
       | Watchman_restarted ->
         Exception.reraise exn
       | _ -> Lwt.return None)
@@ -570,7 +570,7 @@ let re_init
       | Ok false -> Lwt.return clockspec
       | Error err ->
         Hh_logger.error "%s" err;
-        raise Exit_status.(Exit_with Watchman_failed))
+        raise Exit.(Exit_with Watchman_failed))
     | None ->
       let%map response =
         request
@@ -640,7 +640,7 @@ let maybe_restart_instance instance =
   | Watchman_dead dead_env ->
     if dead_env.reinit_attempts >= max_reinit_attempts then
       let () = Hh_logger.log "Ran out of watchman reinit attempts. Exiting." in
-      raise Exit_status.(Exit_with Watchman_failed)
+      raise Exit.(Exit_with Watchman_failed)
     else if within_backoff_time dead_env.reinit_attempts dead_env.dead_since then (
       let () = Hh_logger.log "Attemping to reestablish watchman subscription" in
       (* TODO: don't hardcode this timeout *)
@@ -743,7 +743,7 @@ let call_on_instance :
         | _ ->
           let msg = Exception.to_string exn in
           EventLogger.watchman_uncaught_failure msg;
-          raise Exit_status.(Exit_with Watchman_failed))
+          raise Exit.(Exit_with Watchman_failed))
   in
   fun instance source ~on_dead ~on_alive ->
     with_instance
@@ -788,7 +788,7 @@ let transform_asynchronous_get_changes_response env data =
         env.clockspec <- Jget.string_exn (Some data) "clock";
         if is_fresh_instance data then (
           Hh_logger.log "Watchman server is fresh instance. Exiting.";
-          raise Exit_status.(Exit_with Watchman_fresh_instance)
+          raise Exit.(Exit_with Watchman_fresh_instance)
         ) else (
           match Jget.string_opt (Some data) "state-enter" with
           | Some state -> (env, make_state_change_response `Enter state data)

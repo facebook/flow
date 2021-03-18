@@ -5,6 +5,8 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
+(* this gets shadowed by Lsp.Exit *)
+module FlowExit = Exit
 open Base.Result
 open ServerEnv
 open Utils_js
@@ -1262,7 +1264,7 @@ let rec handle_parallelizable_ephemeral_unsafe
             (Path.to_string server)
             (Path.to_string client);
           Hh_logger.fatal "flow server is not listening to the same directory. Exiting.";
-          FlowExitStatus.(exit Server_client_directory_mismatch)
+          FlowExit.(exit Server_client_directory_mismatch)
         | _ -> ());
         Lwt.return json_data)
   in

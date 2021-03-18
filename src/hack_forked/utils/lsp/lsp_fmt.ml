@@ -1238,8 +1238,8 @@ let error_of_exn (e : exn) : Lsp.Error.t =
   Lsp.Error.(
     match e with
     | Error.LspException x -> x
-    | Exit_status.Exit_with code ->
-      { code = Error.UnknownErrorCode; message = Exit_status.to_string code; data = None }
+    | FlowExitStatus.Exit_with code ->
+      { code = Error.UnknownErrorCode; message = FlowExitStatus.to_string code; data = None }
     | _ -> { code = Error.UnknownErrorCode; message = Printexc.to_string e; data = None })
 
 let print_error ?(include_error_stack_trace = true) (e : Error.t) (stack : string) : json =

@@ -72,10 +72,16 @@ type t =
   | Dfind_unresponsive
   (* A fatal error with Watchman *)
   | Watchman_error
+  (* A fatal error with Watchman (TODO: dedupe with Watchman_error) *)
+  | Watchman_failed
+  (* Watchman restarted *)
+  | Watchman_fresh_instance
   (* Shared memory hash table is full *)
   | Hash_table_full
   (* Shared memory heap is full *)
   | Heap_full
+  (* EventLogger daemon ran out of restarts *)
+  | EventLogger_restart_out_of_retries
   (* A generic something-else-went-wrong *)
   | Unknown_error
 
@@ -126,6 +132,9 @@ let error_code = function
   | Watchman_error -> 101
   | Hash_table_full -> 102
   | Heap_full -> 103
+  | Watchman_failed -> 104
+  | Watchman_fresh_instance -> 105
+  | EventLogger_restart_out_of_retries -> 108
   | Unknown_error -> 110
 
 (* Return an error type given an error code *)
@@ -165,6 +174,9 @@ let error_type = function
   | 101 -> Watchman_error
   | 102 -> Hash_table_full
   | 103 -> Heap_full
+  | 104 -> Watchman_failed
+  | 105 -> Watchman_fresh_instance
+  | 108 -> EventLogger_restart_out_of_retries
   | 110 -> Unknown_error
   | _ -> raise Not_found
 
@@ -194,7 +206,7 @@ let to_string = function
   | Windows_killed_by_task_manager -> "Windows_killed_by_task_manager"
   | Server_start_failed status ->
     let (reason, code) = unpack_process_status status in
-    Utils_js.spf "Server_start_failed (%s, %d)" reason code
+    Printf.sprintf "Server_start_failed (%s, %d)" reason code
   | Type_error -> "Type_error"
   | Build_id_mismatch -> "Build_id_mismatch"
   | Lock_stolen -> "Lock_stolen"
@@ -203,6 +215,8 @@ let to_string = function
   | Dfind_died -> "Dfind_died"
   | Dfind_unresponsive -> "Dfind_unresponsive"
   | Watchman_error -> "Watchman_error"
+  | Watchman_failed -> "Watchman_failed"
+  | Watchman_fresh_instance -> "Watchman_fresh_instance"
   | Unknown_error -> "Unknown_error"
   | Commandline_usage_error -> "Commandline_usage_error"
   | No_input -> "No_input"
@@ -213,16 +227,9 @@ let to_string = function
   | Restart -> "Restart"
   | Hash_table_full -> "Hash_table_full"
   | Heap_full -> "Heap_full"
+  | EventLogger_restart_out_of_retries -> "EventLogger_restart_out_of_retries"
 
 exception Exit_with of t
-
-type json_mode = { pretty: bool }
-
-let json_mode = ref None
-
-let set_json_mode ~pretty = json_mode := Some { pretty }
-
-let unset_json_mode () = json_mode := None
 
 let json_props_of_t ?msg t =
   Hh_json.(
@@ -231,26 +238,3 @@ let json_props_of_t ?msg t =
       @ Base.Option.value_map msg ~default:[] ~f:(fun msg -> [("msg", JSON_String msg)])
     in
     [("flowVersion", JSON_String Flow_version.version); ("exit", JSON_Object exit_props)])
-
-let print_json ?msg t =
-  match t with
-  (* Commands that exit with these exit codes handle json output themselves *)
-  | No_error
-  | Type_error ->
-    ()
-  | _ ->
-    begin
-      match !json_mode with
-      | None -> ()
-      | Some { pretty } ->
-        let json = Hh_json.JSON_Object (json_props_of_t ?msg t) in
-        Hh_json.print_json_endline ~pretty json
-    end
-
-let exit ?msg t =
-  (match msg with
-  | Some msg -> prerr_endline msg
-  | None -> ());
-  print_json ?msg t;
-  if FlowEventLogger.should_log () then FlowEventLogger.exit msg (to_string t);
-  Stdlib.exit (error_code t)

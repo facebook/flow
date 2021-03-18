@@ -67,10 +67,10 @@ module ListenLoop = LwtLoop.Make (struct
         | MonitorProt.MonitorExiting (monitor_exit_status, monitor_msg) ->
           Utils.spf
             "Monitor is exiting with status %s (%s)"
-            (FlowExitStatus.to_string monitor_exit_status)
+            (Exit.to_string monitor_exit_status)
             monitor_msg
       in
-      FlowExitStatus.(exit ~msg Killed_by_monitor)
+      Exit.(exit ~msg Killed_by_monitor)
 
   let main genv =
     (* read a message from the monitor *)
@@ -79,7 +79,7 @@ module ListenLoop = LwtLoop.Make (struct
       with End_of_file ->
         let () = kill_workers () in
         let msg = "Connection to monitor closed unexpectedly" in
-        FlowExitStatus.(exit ~msg Killed_by_monitor)
+        Exit.(exit ~msg Killed_by_monitor)
     in
     let%lwt () = handle_message genv message in
     Lwt.return genv

@@ -133,11 +133,9 @@ class dfind (monitor_options : FlowServerMonitorOptions.t) : watcher =
       begin
         match status with
         | Unix.WEXITED exit_status ->
-          let exit_type =
-            (try Some (FlowExitStatus.error_type exit_status) with Not_found -> None)
-          in
+          let exit_type = (try Some (Exit.error_type exit_status) with Not_found -> None) in
           let exit_status_string =
-            Base.Option.value_map ~default:"Invalid_exit_code" ~f:FlowExitStatus.to_string exit_type
+            Base.Option.value_map ~default:"Invalid_exit_code" ~f:Exit.to_string exit_type
           in
           Logger.error
             "File watcher (%s) exited with code %s (%d)"

@@ -11,7 +11,7 @@ let spf = Printf.sprintf
 
 type error = {
   msg: string;
-  exit_status: FlowExitStatus.t;
+  exit_status: Exit.t;
 }
 
 let is_incompatible_package_json ~options ~reader =
@@ -90,7 +90,7 @@ let process_updates ?(skip_incompatible = false) ~options ~libs updates =
       Error
         {
           msg = spf "%s changed in an incompatible way. Exiting." config_path;
-          exit_status = FlowExitStatus.Flowconfig_changed;
+          exit_status = Exit.Flowconfig_changed;
         }
     else
       Ok () >>= fun () ->
@@ -119,7 +119,7 @@ let process_updates ?(skip_incompatible = false) ~options ~libs updates =
         Error
           {
             msg = spf "%s\nPackages changed in an incompatible way. Exiting." messages;
-            exit_status = FlowExitStatus.Server_out_of_date;
+            exit_status = Exit.Server_out_of_date;
           }
       else
         Ok () >>= fun () ->
@@ -144,7 +144,7 @@ let process_updates ?(skip_incompatible = false) ~options ~libs updates =
           Error
             {
               msg = spf "%s\nLib files changed in an incompatible way. Exiting" messages;
-              exit_status = FlowExitStatus.Server_out_of_date;
+              exit_status = Exit.Server_out_of_date;
             }
         else
           Ok () >>= fun () ->

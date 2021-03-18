@@ -80,7 +80,7 @@ let process_updates ?skip_incompatible ~options env updates =
   | Base.Result.Error { Recheck_updates.msg; exit_status } ->
     Hh_logger.fatal "Status: Error";
     Hh_logger.fatal "%s" msg;
-    FlowExitStatus.exit ~msg exit_status
+    Exit.exit ~msg exit_status
 
 (* on notification, execute client commands or recheck files *)
 let recheck
