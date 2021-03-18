@@ -25,6 +25,23 @@ let sample_init_memory profiling =
           profiling)
       memory_metrics)
 
+let extract_flowlibs_or_exit options =
+  match Files.default_lib_dir (Options.file_options options) with
+  | Some libdir ->
+    let libdir =
+      match libdir with
+      | Files.Prelude path -> Flowlib.Prelude path
+      | Files.Flowlib path -> Flowlib.Flowlib path
+    in
+    (try Flowlib.extract libdir
+     with e ->
+       let e = Exception.wrap e in
+       let err = Exception.get_ctor_string e in
+       let libdir_str = libdir |> Flowlib.path_of_libdir |> Path.to_string in
+       let msg = Printf.sprintf "Could not extract flowlib files into %s: %s" libdir_str err in
+       FlowExitStatus.(exit ~msg Could_not_extract_flowlibs))
+  | None -> ()
+
 let init ~profiling ?focus_targets genv =
   (* write binary path and version to server log *)
   Hh_logger.info "executable=%s" (Sys_utils.executable_path ());
@@ -38,6 +55,8 @@ let init ~profiling ?focus_targets genv =
         ~event:ServerStatus.(Canceling_progress { total = Some total; finished }));
 
   MonitorRPC.status_update ~event:ServerStatus.Init_start;
+
+  extract_flowlibs_or_exit options;
 
   let%lwt (libs_ok, env, last_estimates) = Types_js.init ~profiling ~workers options in
   (* If any libs errored, skip typechecking and just show lib errors. Note

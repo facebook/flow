@@ -7,8 +7,12 @@
 
 (* utilities for supported filenames *)
 
+type lib_dir =
+  | Prelude of Path.t
+  | Flowlib of Path.t
+
 type options = {
-  default_lib_dir: Path.t option;
+  default_lib_dir: lib_dir option;
   ignores: (string * Str.regexp) list;
   untyped: (string * Str.regexp) list;
   declarations: (string * Str.regexp) list;
@@ -19,7 +23,7 @@ type options = {
   node_resolver_dirnames: string list;
 }
 
-val default_lib_dir : options -> Path.t option
+val default_lib_dir : options -> lib_dir option
 
 val ignores : options -> (string * Str.regexp) list
 
@@ -64,6 +68,8 @@ val is_declaration : options -> string -> bool
 val is_included : options -> string -> bool
 
 val is_valid_path : options:options -> string -> bool
+
+val is_in_flowlib : options -> string -> bool
 
 val get_all_watched_extensions : options -> SSet.t
 

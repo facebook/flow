@@ -59,7 +59,6 @@ type metadata = {
   strip_root: bool;
   suppress_types: SSet.t;
   max_workers: int;
-  default_lib_dir: Path.t option;
   trust_mode: Options.trust_mode;
   type_asserts: bool;
 }
@@ -248,7 +247,6 @@ let metadata_of_options options =
     strict_es6_import_export_excludes = Options.strict_es6_import_export_excludes options;
     strip_root = Options.should_strip_root options;
     suppress_types = Options.suppress_types options;
-    default_lib_dir = (Options.file_options options).Files.default_lib_dir;
     trust_mode = Options.trust_mode options;
     type_asserts = Options.type_asserts options;
   }
@@ -528,8 +526,6 @@ let should_munge_underscores cx = cx.metadata.munge_underscores
 let should_strip_root cx = cx.metadata.strip_root
 
 let suppress_types cx = cx.metadata.suppress_types
-
-let default_lib_dir cx = cx.metadata.default_lib_dir
 
 let type_asserts_map cx = cx.ccx.type_asserts_map
 

@@ -85,7 +85,6 @@ type metadata = {
   strip_root: bool;
   suppress_types: SSet.t;
   max_workers: int;
-  default_lib_dir: Path.t option;
   trust_mode: Options.trust_mode;
   type_asserts: bool;
 }
@@ -273,8 +272,6 @@ val should_munge_underscores : 'phase t_ -> bool
 val should_strip_root : 'phase t_ -> bool
 
 val suppress_types : 'phase t_ -> SSet.t
-
-val default_lib_dir : 'phase t_ -> Path.t option
 
 val trust_mode : 'phase t_ -> Options.trust_mode
 

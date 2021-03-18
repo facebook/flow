@@ -36,6 +36,23 @@ let get_target_filename_set ~options ~libs ~all filename_set =
       && not (SSet.mem s libs))
     filename_set
 
+let extract_flowlibs_or_exit options =
+  match Files.default_lib_dir (Options.file_options options) with
+  | Some libdir ->
+    let libdir =
+      match libdir with
+      | Files.Prelude path -> Flowlib.Prelude path
+      | Files.Flowlib path -> Flowlib.Flowlib path
+    in
+    (try Flowlib.extract libdir
+     with e ->
+       let e = Exception.wrap e in
+       let err = Exception.get_ctor_string e in
+       let libdir_str = libdir |> Flowlib.path_of_libdir |> Path.to_string in
+       let msg = Printf.sprintf "Could not extract flowlib files into %s: %s" libdir_str err in
+       FlowExitStatus.(exit ~msg Could_not_extract_flowlibs))
+  | None -> ()
+
 type 'a unit_result = ('a, ALoc.t * Error_message.internal_error) result
 
 type ('a, 'ctx) abstract_visitor = (Loc.t, Loc.t) Flow_ast.Program.t -> 'ctx -> 'a
@@ -396,6 +413,7 @@ module TypedRunner (TypedRunnerConfig : TYPED_RUNNER_CONFIG) : STEP_RUNNER = str
     let options = { options with Options.opt_saved_state_fetcher = Options.Dummy_fetcher } in
     let should_print_summary = Options.should_profile options in
     Profiling_js.with_profiling_lwt ~label:"Codemod" ~should_print_summary (fun profiling ->
+        extract_flowlibs_or_exit options;
         let%lwt (_libs_ok, env, _recheck_stats) = Types_js.init ~profiling ~workers options in
         (* Create roots set based on file list *)
         let roots =
@@ -564,6 +582,7 @@ module UntypedFlowInitRunner (C : UNTYPED_FLOW_INIT_RUNNER_CONFIG) : STEP_RUNNER
             opt_all = true;
           }
         in
+        extract_flowlibs_or_exit options;
         let%lwt (_libs_ok, env, _recheck_stats) = Types_js.init ~profiling ~workers options in
 
         let file_options = Options.file_options options in

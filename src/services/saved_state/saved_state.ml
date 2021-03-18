@@ -262,11 +262,9 @@ end = struct
   (* The builtin flowlibs are excluded from the saved state. The server which loads the saved state
    * will extract and typecheck its own builtin flowlibs *)
   let is_not_in_flowlib ~options =
-    match (Options.file_options options).Files.default_lib_dir with
-    | None -> (fun _ -> true) (* There are no flowlibs *)
-    | Some root ->
-      let root_str = Path.to_string root in
-      (fun f -> not (Files.is_prefix root_str f))
+    let file_options = Options.file_options options in
+    let is_in_flowlib = Files.is_in_flowlib file_options in
+    (fun f -> not (is_in_flowlib f))
 
   let normalize_error_set ~normalizer = Flow_error.ErrorSet.map (normalize_error ~normalizer)
 

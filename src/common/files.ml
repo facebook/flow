@@ -7,8 +7,12 @@
 
 (************** file filter utils ***************)
 
+type lib_dir =
+  | Prelude of Path.t
+  | Flowlib of Path.t
+
 type options = {
-  default_lib_dir: Path.t option;
+  default_lib_dir: lib_dir option;
   ignores: (string * Str.regexp) list;
   untyped: (string * Str.regexp) list;
   declarations: (string * Str.regexp) list;
@@ -357,6 +361,18 @@ let dir_filter_of_options (options : options) f =
     fun _path ->
   true
 
+let is_in_flowlib (options : options) : string -> bool =
+  match options.default_lib_dir with
+  | None -> (fun _ -> false)
+  | Some libdir ->
+    let root =
+      match libdir with
+      | Prelude path
+      | Flowlib path ->
+        path
+    in
+    is_prefix (Path.to_string root)
+
 let init ?(flowlibs_only = false) (options : options) =
   let node_module_filter = is_node_module options in
   let libs =
@@ -368,7 +384,13 @@ let init ?(flowlibs_only = false) (options : options) =
   let (libs, filter) =
     match options.default_lib_dir with
     | None -> (libs, is_valid_path ~options)
-    | Some root ->
+    | Some libdir ->
+      let root =
+        match libdir with
+        | Prelude path
+        | Flowlib path ->
+          path
+      in
       let is_in_flowlib = is_prefix (Path.to_string root) in
       let is_valid_path = is_valid_path ~options in
       let filter path = is_in_flowlib path || is_valid_path path in
