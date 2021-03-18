@@ -35,24 +35,24 @@ type process_id = int
 type worker_id = int
 
 type worker_failure =
-  (* Worker killed by Out Of Memory. *)
-  | Worker_oomed
-  | Worker_quit of Unix.process_status
+  | Worker_oomed  (** Worker killed by Out Of Memory. *)
+  | Worker_quit of Unix.process_status option
 
 exception Worker_failed of (process_id * worker_failure)
 
 exception Worker_busy
 
 type send_job_failure =
-  | Worker_already_exited of Unix.process_status
+  | Worker_already_exited of Unix.process_status option
   | Other_send_job_failure of Exception.t
 
 exception Worker_failed_to_send_job of send_job_failure
 
 let status_string = function
-  | Unix.WEXITED i -> Printf.sprintf "WEXITED %d" i
-  | Unix.WSIGNALED i -> Printf.sprintf "WSIGNALED %d" i
-  | Unix.WSTOPPED i -> Printf.sprintf "WSTOPPED %d" i
+  | Some (Unix.WEXITED i) -> Printf.sprintf "WEXITED %d" i
+  | Some (Unix.WSIGNALED i) -> Printf.sprintf "WSIGNALED %d" i
+  | Some (Unix.WSTOPPED i) -> Printf.sprintf "WSTOPPED %d" i
+  | None -> "GONE"
 
 let failure_to_string f =
   match f with
@@ -303,10 +303,11 @@ let send worker worker_pid outfd (f : 'a -> 'b) (x : 'a) : unit Lwt.t =
 
     (* Failed to send the job to the worker. Is it because the worker is dead or is it
      * something else? *)
-    let%lwt (pid, status) = Lwt_unix.waitpid [Unix.WNOHANG] worker_pid in
-    (match pid with
-    | 0 -> raise (Worker_failed_to_send_job (Other_send_job_failure exn))
-    | _ -> raise (Worker_failed_to_send_job (Worker_already_exited status)))
+    (match%lwt Lwt_unix.waitpid [Unix.WNOHANG] worker_pid with
+    | (0, _) -> raise (Worker_failed_to_send_job (Other_send_job_failure exn))
+    | (_, status) -> raise (Worker_failed_to_send_job (Worker_already_exited (Some status)))
+    | exception Unix.Unix_error (Unix.ECHILD, _, _) ->
+      raise (Worker_failed_to_send_job (Worker_already_exited None)))
 
 let read (type result) worker_pid infd : (result * Measure.record_data) Lwt.t =
   let infd_lwt = Lwt_unix.of_unix_file_descr ~blocking:false ~set_flags:true infd in
@@ -339,29 +340,29 @@ let read (type result) worker_pid infd : (result * Measure.record_data) Lwt.t =
     Exception.reraise exn
   | exn ->
     let exn = Exception.wrap exn in
-    let%lwt (pid, status) = Lwt_unix.waitpid [Unix.WNOHANG] worker_pid in
-    begin
-      match (pid, status) with
-      | (0, _)
-      | (_, Unix.WEXITED 0) ->
-        (* The worker is still running or exited normally. It's odd that we failed to read
-         * the response, so just raise that exception *)
-        Exception.reraise exn
-      | (_, Unix.WEXITED i) ->
-        (match FlowExitStatus.error_type_opt i with
-        | Some FlowExitStatus.Out_of_shared_memory -> raise SharedMem.Out_of_shared_memory
-        | Some FlowExitStatus.Hash_table_full -> raise SharedMem.Hash_table_full
-        | Some FlowExitStatus.Heap_full -> raise SharedMem.Heap_full
-        | _ ->
-          let () = Caml.Printf.eprintf "Subprocess(%d): fail %d" worker_pid i in
-          raise (Worker_failed (worker_pid, Worker_quit (Unix.WEXITED i))))
-      | (_, Unix.WSTOPPED i) ->
-        let () = Caml.Printf.eprintf "Subprocess(%d): stopped %d" worker_pid i in
-        raise (Worker_failed (worker_pid, Worker_quit (Unix.WSTOPPED i)))
-      | (_, Unix.WSIGNALED i) ->
-        let () = Caml.Printf.eprintf "Subprocess(%d): signaled %d" worker_pid i in
-        raise (Worker_failed (worker_pid, Worker_quit (Unix.WSIGNALED i)))
-    end
+    (match%lwt Lwt_unix.waitpid [Unix.WNOHANG] worker_pid with
+    | (0, _)
+    | (_, Unix.WEXITED 0) ->
+      (* The worker is still running or exited normally. It's odd that we failed to read
+       * the response, so just raise that exception *)
+      Exception.reraise exn
+    | (_, Unix.WEXITED i) ->
+      (match FlowExitStatus.error_type_opt i with
+      | Some FlowExitStatus.Out_of_shared_memory -> raise SharedMem.Out_of_shared_memory
+      | Some FlowExitStatus.Hash_table_full -> raise SharedMem.Hash_table_full
+      | Some FlowExitStatus.Heap_full -> raise SharedMem.Heap_full
+      | _ ->
+        let () = Caml.Printf.eprintf "Subprocess(%d): fail %d" worker_pid i in
+        raise (Worker_failed (worker_pid, Worker_quit (Some (Unix.WEXITED i)))))
+    | (_, Unix.WSTOPPED i) ->
+      let () = Caml.Printf.eprintf "Subprocess(%d): stopped %d" worker_pid i in
+      raise (Worker_failed (worker_pid, Worker_quit (Some (Unix.WSTOPPED i))))
+    | (_, Unix.WSIGNALED i) ->
+      let () = Caml.Printf.eprintf "Subprocess(%d): signaled %d" worker_pid i in
+      raise (Worker_failed (worker_pid, Worker_quit (Some (Unix.WSIGNALED i))))
+    | exception Unix.Unix_error (Unix.ECHILD, _, _) ->
+      let () = Caml.Printf.eprintf "Subprocess(%d): gone" worker_pid in
+      raise (Worker_failed (worker_pid, Worker_quit None)))
 
 (** Send a job to a worker
 
