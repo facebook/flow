@@ -1,3 +1,33 @@
+### 0.147.0
+
+Likely to cause new Flow errors:
+* This release includes some significant architectural changes that fix bugs, improves performance, and may cause Flow to find more errors.
+* Fixed a bug where "[maybe types](https://flow.org/en/docs/types/maybe/)" like `?{c: number}` did not properly error when used with utility types [`$PropertyType`](https://flow.org/en/docs/types/utilities/#toc-propertytype) and [`$ElementType`](https://flow.org/en/docs/types/utilities/#toc-elementtype). `null` and `undefined` do not have properties nor elements.
+* `Object.prototype` properties like `toString` and `hasOwnProperty` are no longer allowed to be accessed as global variables, which was previously allowed because `window` is an object.
+
+New Features:
+* Added Linux ARM64 support. A precompiled binary is provided, including through `flow-bin`.
+
+Notable bug fixes:
+* Improved the error message when getting properties on `null` and `undefined`
+* Fixed running `flow lsp` on symlinked root directories
+
+Misc:
+* Removed support for `@flow weak`, which was a rarely-used mode in which missing annotations were treated as `any`. It is equivalent to suppressing any type errors that result from just using `@flow`. So to migrate, suppress the new errors and remove `weak`.
+* Fixed a bug in which the built-in library definitions could be missing
+* Fixed an obscure crash when using Watchman and Mercurial
+* Added support for a `flow.suggest.autoImports` LSP setting to disable autoimport suggestions in autocomplete (currently requires `autoimports=true` to be enabled in `.flowconfig`)
+
+Library definitions:
+* Added support for node's `assert` [strict mode](https://nodejs.org/api/assert.html#assert_strict_assertion_mode) (thanks @goodmind)
+* Added support for `.webp` resources (thanks @TomasBarry)
+* Added missing Brotli APIs to the zlib module (thanks @isker)
+* Added missing methods to `tty.WriteStream` (thanks @reyronald)
+* Changed `process.exit` to return `empty`
+
+Parser:
+* Fixed a regression in 0.146 where flow_parser.js defined some global variables
+
 ### 0.146.0
 
 Likely to cause new Flow errors:
