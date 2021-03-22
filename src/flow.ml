@@ -37,7 +37,6 @@ end = struct
       InitCommand.command;
       LspCommand.command;
       LsCommand.command;
-      RefactorCommand.command;
       SaveStateCommand.command;
       ServerCommand.command;
       StartCommand.command;

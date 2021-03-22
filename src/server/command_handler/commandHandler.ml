@@ -916,24 +916,6 @@ let handle_rage ~reader ~options ~files ~profiling ~env =
   let items = collect_rage ~profiling ~options ~reader ~env ~files:(Some files) in
   Lwt.return (ServerProt.Response.RAGE items, None)
 
-let handle_refactor
-    ~reader ~genv ~input:file_input ~line ~char:col ~refactor_variant ~profiling ~env =
-  (* Refactor is another weird command that may mutate the env by doing a bunch of rechecking,
-   * since that's what find-refs does and refactor delegates to find-refs *)
-  let env = ref env in
-  let%lwt result =
-    match refactor_variant with
-    | ServerProt.Request.RENAME new_name ->
-      Refactor_service.rename ~reader ~genv ~env ~profiling ~file_input ~line ~col ~new_name
-  in
-  let env = !env in
-  let result =
-    Base.Result.map
-      ~f:(Base.Option.map ~f:(fun refactor_edits -> { ServerProt.Response.refactor_edits }))
-      result
-  in
-  Lwt.return (env, ServerProt.Response.REFACTOR result, None)
-
 let handle_status ~reader ~genv ~client_root ~profiling ~env =
   let (status_response, lazy_stats) = get_status ~profiling ~reader genv env client_root in
   Lwt.return (env, ServerProt.Response.STATUS { status_response; lazy_stats }, None)
@@ -1140,10 +1122,6 @@ let get_ephemeral_handler genv command =
          ~omit_targ_defaults
          ~location_is_strict
          ~ambiguity_strategy)
-  | ServerProt.Request.REFACTOR { input; line; char; refactor_variant } ->
-    (* refactor delegates to find-refs, which is not parallelizable. Therefore refactor is also not
-     * parallelizable *)
-    Handle_nonparallelizable (handle_refactor ~reader ~genv ~input ~line ~char ~refactor_variant)
   | ServerProt.Request.STATUS { client_root; include_warnings } ->
     let genv =
       {
