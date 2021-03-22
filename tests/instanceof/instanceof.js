@@ -85,3 +85,10 @@ function foo1(x: Array<number> | number) {
     x[0] = 123; // error
   }
 }
+
+function nonObjectRHS(x: Object) {
+  const y = x instanceof 'bad'; // error
+  if (x instanceof 'bad') {} // error
+  if (x instanceof ('bad': any)) {} // ok
+  if (x instanceof ('bad': mixed)) {} // error
+}

@@ -1012,7 +1012,8 @@ class virtual ['a, 'phase] t_with_uses =
       | AssertArithmeticOperandT _
       | AssertBinaryInLHST _
       | AssertBinaryInRHST _
-      | AssertForInRHST _ ->
+      | AssertForInRHST _
+      | AssertInstanceofRHST _ ->
         t
       | AssertIterableT { use_op; reason; async; targs } ->
         let targs' = ListUtils.ident_map (self#type_ cx map_cx) targs in

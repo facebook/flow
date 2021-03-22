@@ -5466,7 +5466,9 @@ and binary cx loc { Ast.Expression.Binary.operator; left; right; comments } =
     (BoolT.at loc |> with_trust literal_trust, { operator; left; right; comments })
   | Instanceof ->
     let left = expression cx ~annot:None left in
-    let right = expression cx ~annot:None right in
+    let (((right_loc, right_t), _) as right) = expression cx ~annot:None right in
+    let reason_rhs = mk_reason (RCustom "RHS of `instanceof` operator") right_loc in
+    Flow.flow cx (right_t, AssertInstanceofRHST reason_rhs);
     (BoolT.at loc |> with_trust literal_trust, { operator; left; right; comments })
   | LessThan
   | LessThanEqual
@@ -7145,7 +7147,9 @@ and predicates_of_condition cx ~cond e =
   (* expr instanceof t *)
   | (loc, Binary { Binary.operator = Binary.Instanceof; left; right; comments }) ->
     let make_ast_and_pred left_ast bool =
-      let (((_, right_t), _) as right_ast) = expression cx ~annot:None right in
+      let (((rloc, right_t), _) as right_ast) = expression cx ~annot:None right in
+      let reason_rhs = mk_reason (RCustom "RHS of `instanceof` operator") rloc in
+      Flow.flow cx (right_t, AssertInstanceofRHST reason_rhs);
       ( ( (loc, bool),
           Binary
             { Binary.operator = Binary.Instanceof; left = left_ast; right = right_ast; comments } ),

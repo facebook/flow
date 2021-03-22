@@ -668,8 +668,9 @@ and dump_use_t_ : type phase. int * ISet.t -> phase Context.t_ -> Type.use_t -> 
     | AssertBinaryInLHST _ -> p t
     | AssertBinaryInRHST _ -> p t
     | AssertForInRHST _ -> p t
-    | AssertIterableT _ -> p t
     | AssertImportIsValueT _ -> p t
+    | AssertInstanceofRHST _ -> p t
+    | AssertIterableT _ -> p t
     | BecomeT { reason = _; t = arg; empty_success = _ } -> p ~extra:(kid arg) t
     | BindT (use_op, _, _, _) -> p t ~extra:(string_of_use_op use_op)
     | CallElemT (_, _, _, _) -> p t
@@ -1503,6 +1504,7 @@ let dump_error_message =
     | EBinaryInRHS reason -> spf "EBinaryInRHS (%s)" (dump_reason cx reason)
     | EArithmeticOperand reason -> spf "EArithmeticOperand (%s)" (dump_reason cx reason)
     | EForInRHS reason -> spf "EForInRHS (%s)" (dump_reason cx reason)
+    | EInstanceofRHS reason -> spf "EInstanceofRHS (%s)" (dump_reason cx reason)
     | EObjectComputedPropertyAccess (reason1, reason2) ->
       spf "EObjectComputedPropertyAccess (%s, %s)" (dump_reason cx reason1) (dump_reason cx reason2)
     | EObjectComputedPropertyAssign (reason1, reason2) ->

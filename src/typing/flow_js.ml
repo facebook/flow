@@ -4858,6 +4858,17 @@ struct
             ~trace
             (Error_message.EEnumNotIterable { reason = enum_reason; enum_name; for_in = true })
         | (_, AssertForInRHST _) -> add_output cx ~trace (Error_message.EForInRHS (reason_of_t l))
+        (********************)
+        (* `instanceof` RHS *)
+        (* right side of an `instanceof` binary expression must be an object *)
+        (********************)
+        | (_, AssertInstanceofRHST _) when object_like l -> ()
+        | (DefT (_, _, ArrT _), AssertInstanceofRHST _) ->
+          (* arrays are objects too, but not in `object_like` *)
+          ()
+        | (AnyT _, AssertInstanceofRHST _) -> ()
+        | (_, AssertInstanceofRHST _) ->
+          add_output cx ~trace (Error_message.EInstanceofRHS (reason_of_t l))
         (***********************************)
         (* iterable (e.g. RHS of `for..of` *)
         (***********************************)
@@ -5943,6 +5954,7 @@ struct
       | UnaryMinusT _
       | AssertArithmeticOperandT _
       | AssertForInRHST _
+      | AssertInstanceofRHST _
       | AssertBinaryInLHST _
       | AssertBinaryInRHST _
       | TestPropT _
@@ -6236,8 +6248,9 @@ struct
     | AssertBinaryInLHST _
     | AssertBinaryInRHST _
     | AssertForInRHST _
-    | AssertIterableT _
     | AssertImportIsValueT _
+    | AssertInstanceofRHST _
+    | AssertIterableT _
     | ComparatorT _
     | DebugPrintT _
     | DebugSleepT _

@@ -148,6 +148,7 @@ type hash =
   | AssertBinaryInLHSH
   | AssertBinaryInRHSH
   | AssertForInRHSH
+  | AssertInstanceofRHSH
   | AssertIterableH
   | PredicateH
   | GuardH
@@ -391,6 +392,7 @@ let hash_of_use_ctor =
     | AssertBinaryInLHST _ -> AssertBinaryInLHSH
     | AssertBinaryInRHST _ -> AssertBinaryInRHSH
     | AssertForInRHST _ -> AssertForInRHSH
+    | AssertInstanceofRHST _ -> AssertInstanceofRHSH
     | AssertIterableT _ -> AssertIterableH
     | PredicateT _ -> PredicateH
     | GuardT _ -> GuardH

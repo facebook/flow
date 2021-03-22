@@ -240,6 +240,7 @@ and 'loc t' =
   | EBinaryInRHS of 'loc virtual_reason
   | EArithmeticOperand of 'loc virtual_reason
   | EForInRHS of 'loc virtual_reason
+  | EInstanceofRHS of 'loc virtual_reason
   | EObjectComputedPropertyAccess of ('loc virtual_reason * 'loc virtual_reason)
   | EObjectComputedPropertyAssign of ('loc virtual_reason * 'loc virtual_reason)
   | EInvalidLHSInAssignment of 'loc
@@ -824,6 +825,7 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
   | EBinaryInRHS r -> EBinaryInRHS (map_reason r)
   | EArithmeticOperand r -> EArithmeticOperand (map_reason r)
   | EForInRHS r -> EForInRHS (map_reason r)
+  | EInstanceofRHS r -> EInstanceofRHS (map_reason r)
   | EObjectComputedPropertyAccess (r1, r2) ->
     EObjectComputedPropertyAccess (map_reason r1, map_reason r2)
   | EObjectComputedPropertyAssign (r1, r2) ->
@@ -1139,6 +1141,7 @@ let util_use_op_of_msg nope util = function
   | EBinaryInRHS _
   | EArithmeticOperand _
   | EForInRHS _
+  | EInstanceofRHS _
   | EObjectComputedPropertyAccess (_, _)
   | EObjectComputedPropertyAssign (_, _)
   | EInvalidLHSInAssignment _
@@ -1212,6 +1215,7 @@ let loc_of_msg : 'loc t' -> 'loc option = function
   | EForInRHS reason
   | EBinaryInRHS reason
   | EBinaryInLHS reason
+  | EInstanceofRHS reason
   | EArithmeticOperand reason
   | ERecursionLimit (reason, _)
   | EMissingAnnotation (reason, _)
@@ -2735,6 +2739,17 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
       ]
     in
     Normal { features }
+  | EInstanceofRHS reason ->
+    let features =
+      [
+        text "The right-hand side of an ";
+        code "instanceof";
+        text " expression must be an object, but got ";
+        ref reason;
+        text ".";
+      ]
+    in
+    Normal { features }
   | EObjectComputedPropertyAccess (_, reason_prop) ->
     Normal { features = [text "Cannot access computed property using "; ref reason_prop; text "."] }
   | EObjectComputedPropertyAssign (_, reason_prop) ->
@@ -3670,6 +3685,7 @@ let error_code_of_message err : error_code option =
   | EExportsAnnot _ -> Some InvalidExportsTypeArg
   | EExportValueAsType (_, _) -> Some ExportValueAsType
   | EForInRHS _ -> Some InvalidInRhs
+  | EInstanceofRHS _ -> Some InvalidInRhs
   | EFunctionCallExtraArg _ -> Some ExtraArg
   | EFunPredCustom (_, _) -> Some FunctionPredicate
   | EIdxArity _ -> Some InvalidIdx

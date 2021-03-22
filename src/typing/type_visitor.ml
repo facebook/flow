@@ -309,7 +309,8 @@ class ['a, 'phase] t =
       | AssertArithmeticOperandT _
       | AssertBinaryInLHST _
       | AssertBinaryInRHST _
-      | AssertForInRHST _ ->
+      | AssertForInRHST _
+      | AssertInstanceofRHST _ ->
         acc
       | AssertIterableT { targs; _ } -> List.fold_left (self#type_ cx pole_TODO) acc targs
       | PredicateT (predicate, t) ->
