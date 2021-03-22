@@ -307,13 +307,17 @@ let detect_non_voidable_properties cx =
       check_properties private_property_map private_property_errors)
     (Context.voidable_checks cx)
 
-let check_implicit_instantiations cx =
+let check_implicit_instantiations cx master_cx =
   if Context.run_post_inference_implicit_instantiation cx then
     let implicit_instantiation_checks = Context.implicit_instantiation_checks cx in
-    List.iter
-      (fun instantiation ->
-        let _ = ImplicitInstantiationKit.run cx instantiation in
-        ())
+    ImplicitInstantiationKit.fold
+      cx
+      master_cx
+      ~init:()
+      ~f:(fun _ _ _ _ -> ())
+      ~post:(fun ~init_cx ~cx ->
+        let new_errors = Context.errors cx in
+        Flow_error.ErrorSet.iter (fun error -> Context.add_error init_cx error) new_errors)
       implicit_instantiation_checks
 
 class resolver_visitor =
@@ -466,11 +470,11 @@ let merge_imports cx reqs impl_cxs =
  * means we can complain about things that either haven't happened yet, or
  * which require complete knowledge of tvar bounds.
  *)
-let post_merge_checks cx ast tast metadata file_sig =
+let post_merge_checks cx master_cx ast tast metadata file_sig =
   let results = [(cx, ast, tast)] in
   detect_sketchy_null_checks cx;
   detect_non_voidable_properties cx;
-  check_implicit_instantiations cx;
+  check_implicit_instantiations cx master_cx;
   detect_test_prop_misses cx;
   detect_unnecessary_optional_chains cx;
   detect_unnecessary_invariants cx;
@@ -619,7 +623,7 @@ let check_file ~opts ~getters filename reqs dep_cxs master_cx =
   let tast = Type_inference_js.infer_ast cx filename comments ast ~lint_severities in
 
   (* Post-inference checks *)
-  post_merge_checks cx ast tast metadata file_sig;
+  post_merge_checks cx master_cx ast tast metadata file_sig;
   (cx, ast, tast)
 
 (* reduce a context to a "signature context" *)

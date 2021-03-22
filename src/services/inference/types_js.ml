@@ -471,7 +471,8 @@ let remove_old_results phase acc file =
   let coverage =
     match phase with
     | Context.Merging
-    | Context.InitLib ->
+    | Context.InitLib
+    | Context.ImplicitInstantiation ->
       coverage
     | Context.Checking -> FilenameMap.remove file coverage
   in

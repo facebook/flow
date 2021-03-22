@@ -11,6 +11,19 @@ module TypeParamMarked = Marked.Make (StringKey)
 module Marked = TypeParamMarked
 module Check = Context.Implicit_instantiation_check
 
+let reduce_implicit_instantiation_check reducer cx pole check =
+  let { Check.lhs; poly_t = (loc, tparams, t); operation = (use_op, reason_op, op) } = check in
+  let lhs' = reducer#type_ cx pole lhs in
+  let tparams' = Nel.ident_map (reducer#type_param cx pole) tparams in
+  let t' = reducer#type_ cx pole t in
+  let op' =
+    match op with
+    | Check.Call calltype -> Check.Call (reducer#fun_call_type cx pole calltype)
+    | Check.Constructor args ->
+      Check.Constructor (ListUtils.ident_map (reducer#call_arg cx pole) args)
+  in
+  { Check.lhs = lhs'; poly_t = (loc, tparams', t'); operation = (use_op, reason_op, op') }
+
 module type OBSERVER = sig
   type output
 
@@ -37,7 +50,14 @@ end
 module type KIT = sig
   type output
 
-  val run : Context.t -> Check.t -> output SMap.t
+  val fold :
+    Context.t ->
+    Context.master_context ->
+    f:(Context.t -> 'acc -> Check.t -> output SMap.t -> 'acc) ->
+    init:'acc ->
+    post:(init_cx:Context.t -> cx:Context.t -> unit) ->
+    Check.t list ->
+    'acc
 end
 
 module Make (Observer : OBSERVER) : KIT with type output = Observer.output = struct
@@ -287,9 +307,53 @@ module Make (Observer : OBSERVER) : KIT with type output = Observer.output = str
     in
     (tparams_map, marked_tparams, bounds_map)
 
-  let run cx implicit_instantiation =
-    let (tparams_map, marked_tparams, bounds_map) =
-      implicitly_instantiate cx implicit_instantiation
+  let merge_builtins cx sig_cx master_cx =
+    let { Context.master_sig_cx; builtins } = master_cx in
+    Context.merge_into sig_cx master_sig_cx;
+    Context.set_builtins cx builtins
+
+  let fold init_cx master_cx ~f ~init ~post implicit_instantiation_checks =
+    let file = Context.file init_cx in
+    let metadata = Context.metadata init_cx in
+    let aloc_table = Utils_js.FilenameMap.find file (Context.aloc_tables init_cx) in
+    let module_ref = Files.module_ref file in
+    let ccx = Context.make_ccx () in
+    let cx =
+      Context.make
+        ccx
+        metadata
+        file
+        aloc_table
+        (Reason.OrdinaryName module_ref)
+        Context.ImplicitInstantiation
     in
-    pin_types cx tparams_map marked_tparams bounds_map implicit_instantiation
+    let reducer =
+      new Context_optimizer.context_optimizer ~no_lowers:(fun _ -> Unsoundness.merged_any)
+    in
+    let implicit_instantiation_checks =
+      Base.List.map
+        ~f:(reduce_implicit_instantiation_check reducer init_cx Polarity.Neutral)
+        implicit_instantiation_checks
+    in
+    Context.set_module_map cx reducer#get_reduced_module_map;
+    Context.set_graph cx reducer#get_reduced_graph;
+    Context.set_trust_graph cx reducer#get_reduced_trust_graph;
+    Context.set_property_maps cx reducer#get_reduced_property_maps;
+    Context.set_call_props cx reducer#get_reduced_call_props;
+    Context.set_export_maps cx reducer#get_reduced_export_maps;
+    Context.set_evaluated cx reducer#get_reduced_evaluated;
+
+    merge_builtins cx ccx master_cx;
+
+    let r =
+      Base.List.fold_left
+        ~f:(fun acc check ->
+          let (tparams_map, marked_tparams, bounds_map) = implicitly_instantiate cx check in
+          let pinned = pin_types cx tparams_map marked_tparams bounds_map check in
+          f cx acc check pinned)
+        ~init
+        implicit_instantiation_checks
+    in
+    post ~init_cx ~cx;
+    r
 end

@@ -185,11 +185,13 @@ type phase =
   | InitLib
   | Checking
   | Merging
+  | ImplicitInstantiation
 
 let string_of_phase = function
   | InitLib -> "InitLib"
   | Checking -> "Checking"
   | Merging -> "Merging"
+  | ImplicitInstantiation -> "ImplicitInstantiation"
 
 type 'phase t_ = {
   ccx: 'phase component_t_;

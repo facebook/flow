@@ -93,6 +93,7 @@ type phase =
   | InitLib
   | Checking
   | Merging
+  | ImplicitInstantiation
 
 val string_of_phase : phase -> string
 

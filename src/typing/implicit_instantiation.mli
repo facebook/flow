@@ -5,6 +5,8 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
+module Check = Context.Implicit_instantiation_check
+
 module type OBSERVER = sig
   type output
 
@@ -31,7 +33,14 @@ end
 module type KIT = sig
   type output
 
-  val run : Context.t -> Context.Implicit_instantiation_check.t -> output SMap.t
+  val fold :
+    Context.t ->
+    Context.master_context ->
+    f:(Context.t -> 'acc -> Check.t -> output SMap.t -> 'acc) ->
+    init:'acc ->
+    post:(init_cx:Context.t -> cx:Context.t -> unit) ->
+    Check.t list ->
+    'acc
 end
 
 module Make (Observer : OBSERVER) : KIT with type output = Observer.output
