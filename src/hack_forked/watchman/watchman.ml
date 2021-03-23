@@ -409,26 +409,8 @@ let blocking_read ~debug_logging ~timeout ~conn:(reader, _) =
     Lwt.return @@ Some (sanitize_watchman_response ~debug_logging output)
 
 (****************************************************************************)
-(* Initialization, reinitialization, and crash-tracking. *)
+(* Initialization, reinitialization *)
 (****************************************************************************)
-
-let with_crash_record_exn source f =
-  catch ~f ~catch:(fun exn ->
-      Hh_logger.exception_ ~prefix:("Watchman " ^ source ^ ": ") exn;
-      Exception.reraise exn)
-
-let with_crash_record_opt source f =
-  catch
-    ~f:(fun () ->
-      let%map v = with_crash_record_exn source f in
-      Some v)
-    ~catch:(fun exn ->
-      match Exception.unwrap exn with
-      (* Avoid swallowing these *)
-      | Exit.Exit_with _
-      | Watchman_restarted ->
-        Exception.reraise exn
-      | _ -> Lwt.return None)
 
 (* When we re-init our connection to Watchman, we use the old clockspec to get all the changes
  * since our last response. However, if Watchman has restarted and the old clockspec pre-dates
@@ -494,7 +476,6 @@ let re_init
       subscription_prefix;
       sync_timeout;
     } =
-  with_crash_record_opt "init" @@ fun () ->
   let%bind conn = open_connection () in
   let%bind (watched_path_expression_terms, watch_roots, failed_paths) =
     Lwt_list.fold_left_s
@@ -614,7 +595,19 @@ let re_init
   ignore response;
   env
 
-let init settings = re_init settings
+let init settings =
+  catch
+    ~f:(fun () ->
+      let%map v = re_init settings in
+      Some v)
+    ~catch:(fun exn ->
+      Hh_logger.exception_ ~prefix:"Watchman init: " exn;
+      match Exception.unwrap exn with
+      (* Avoid swallowing these *)
+      | Exit.Exit_with _
+      | Watchman_restarted ->
+        Exception.reraise exn
+      | _ -> Lwt.return None)
 
 let extract_file_names env json =
   let open Hh_json.Access in
@@ -649,18 +642,23 @@ let maybe_restart_instance instance =
         with_timeout timeout @@ fun () ->
         re_init ~prior_clockspec:dead_env.prior_clockspec dead_env.prior_settings
       with
+      | env ->
+        Hh_logger.log "Watchman connection reestablished.";
+        EventLogger.watchman_connection_reestablished ();
+        Lwt.return (Watchman_alive env)
       | exception Timeout ->
         Hh_logger.log "Reestablishing watchman subscription timed out.";
         EventLogger.watchman_connection_reestablishment_failed ();
         Lwt.return (Watchman_dead { dead_env with reinit_attempts = dead_env.reinit_attempts + 1 })
-      | None ->
+      | exception ((Exit.Exit_with _ | Watchman_restarted) as exn) ->
+        (* Avoid swallowing these *)
+        Exception.reraise (Exception.wrap exn)
+      | exception e ->
+        let exn = Exception.wrap e in
+        Hh_logger.exception_ ~prefix:"Watchman re_init: " exn;
         Hh_logger.log "Reestablishing watchman subscription failed.";
         EventLogger.watchman_connection_reestablishment_failed ();
         Lwt.return (Watchman_dead { dead_env with reinit_attempts = dead_env.reinit_attempts + 1 })
-      | Some env ->
-        Hh_logger.log "Watchman connection reestablished.";
-        EventLogger.watchman_connection_reestablished ();
-        Lwt.return (Watchman_alive env)
     ) else
       Lwt.return instance
 
@@ -698,9 +696,10 @@ let call_on_instance :
   let on_alive' ~on_dead source f env =
     catch
       ~f:(fun () ->
-        let%map (env, result) = with_crash_record_exn source (fun () -> f env) in
+        let%map (env, result) = f env in
         (Watchman_alive env, result))
       ~catch:(fun exn ->
+        Hh_logger.exception_ ~prefix:("Watchman " ^ source ^ ": ") exn;
         let close_channel_on_instance' env =
           let%bind env = close_channel_on_instance env in
           on_dead' on_dead env
