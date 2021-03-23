@@ -47,10 +47,10 @@ val type_contents :
   options:Options.t ->
   env:ServerEnv.env ->
   profiling:Profiling_js.running ->
-  string ->
   (* contents *)
-  File_key.t ->
+  string ->
   (* fake file-/module name *)
+  File_key.t ->
   ( Context.t
     * Docblock.t
     * File_sig.With_Loc.t
@@ -66,22 +66,21 @@ val typecheck_contents :
   options:Options.t ->
   env:ServerEnv.env ->
   profiling:Profiling_js.running ->
-  string ->
   (* contents *)
-  File_key.t ->
+  string ->
   (* fake file-/module name *)
+  File_key.t ->
   ( ( Context.t
     * (Loc.t, Loc.t) Flow_ast.Program.t
     * File_sig.With_Loc.t
     * File_sig.With_Loc.tolerable_error list
     * (ALoc.t, ALoc.t * Type.t) Flow_ast.Program.t )
     option
-  * Errors.ConcreteLocPrintableErrorSet.t
   * (* errors *)
+    Errors.ConcreteLocPrintableErrorSet.t
+  * (* warnings *)
     Errors.ConcreteLocPrintableErrorSet.t )
   Lwt.t
-
-(* warnings *)
 
 val ensure_checked_dependencies :
   options:Options.t ->
