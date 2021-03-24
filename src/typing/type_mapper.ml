@@ -29,7 +29,7 @@ let unwrap_type : type phase. phase Context.t_ -> Type.t -> Type.t =
         Type.Constraint.(
           match Context.find_graph cx id with
           | Resolved (_, t')
-          | FullyResolved (_, t') ->
+          | FullyResolved (_, (lazy t')) ->
             unwrap seen cx t'
           | Unresolved _ -> t)
       )
@@ -54,7 +54,7 @@ let union_flatten : type phase. phase Context.t_ -> Type.t list -> Type.t list =
         Type.Constraint.(
           match Context.find_graph cx id with
           | Resolved (_, t')
-          | FullyResolved (_, t') ->
+          | FullyResolved (_, (lazy t')) ->
             flatten cx seen t'
           | Unresolved _ -> [t])
       )

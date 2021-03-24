@@ -1500,7 +1500,7 @@ and Constraint : sig
   and _ constraints =
     | Resolved : TypeTerm.use_op * TypeTerm.t -> infer_phase constraints
     | Unresolved : bounds -> infer_phase constraints
-    | FullyResolved : TypeTerm.use_op * TypeTerm.t -> 'phase constraints
+    | FullyResolved : TypeTerm.use_op * TypeTerm.t Lazy.t -> 'phase constraints
 
   and bounds = {
     mutable lower: (TypeTerm.trace * TypeTerm.use_op) TypeMap.t;
@@ -1581,7 +1581,7 @@ end = struct
   and _ constraints =
     | Resolved : TypeTerm.use_op * TypeTerm.t -> infer_phase constraints
     | Unresolved : bounds -> infer_phase constraints
-    | FullyResolved : TypeTerm.use_op * TypeTerm.t -> 'phase constraints
+    | FullyResolved : TypeTerm.use_op * TypeTerm.t Lazy.t -> 'phase constraints
 
   (** The bounds structure carries the evolving constraints on the solution of an
       unresolved tvar.
@@ -1622,13 +1622,13 @@ end = struct
   let types_of : type phase. phase constraints -> TypeTerm.t list = function
     | Unresolved { lower; _ } -> TypeMap.keys lower
     | Resolved (_, t)
-    | FullyResolved (_, t) ->
+    | FullyResolved (_, (lazy t)) ->
       [t]
 
   let uses_of : type phase. phase constraints -> TypeTerm.use_t list = function
     | Unresolved { upper; _ } -> Base.List.map ~f:fst (UseTypeMap.keys upper)
     | Resolved (use_op, t)
-    | FullyResolved (use_op, t) ->
+    | FullyResolved (use_op, (lazy t)) ->
       [TypeTerm.UseT (use_op, t)]
 end
 

@@ -587,7 +587,7 @@ end = struct
             let seen = ISet.add root_id seen in
             (match constraints with
             | T.Constraint.Resolved (_, t)
-            | T.Constraint.FullyResolved (_, t) ->
+            | T.Constraint.FullyResolved (_, (lazy t)) ->
               loop cx acc seen t
             | T.Constraint.Unresolved bounds ->
               let ts = T.TypeMap.keys bounds.T.Constraint.lower in
@@ -923,7 +923,7 @@ end = struct
     *)
     and resolve_bounds ~env = function
       | T.Constraint.Resolved (_, t)
-      | T.Constraint.FullyResolved (_, t) ->
+      | T.Constraint.FullyResolved (_, (lazy t)) ->
         type__ ~env t
       | T.Constraint.Unresolved bounds ->
         (match%bind resolve_from_lower_bounds ~env bounds with
@@ -2397,7 +2397,7 @@ end = struct
       Recursive.with_cache (TVarKey root_id) ~f:(fun () ->
           match constraints with
           | T.Constraint.Resolved (_, t)
-          | T.Constraint.FullyResolved (_, t) ->
+          | T.Constraint.FullyResolved (_, (lazy t)) ->
             type__ ~env ~proto ~imode t
           | T.Constraint.Unresolved bounds ->
             let%map lowers =

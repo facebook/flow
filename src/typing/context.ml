@@ -895,7 +895,7 @@ let rec find_resolved : type phase. phase t_ -> Type.t -> Type.t option =
       begin
         match find_graph cx id with
         | Resolved (_, t)
-        | FullyResolved (_, t) ->
+        | FullyResolved (_, (lazy t)) ->
           Some t
         | Unresolved _ -> None
       end)

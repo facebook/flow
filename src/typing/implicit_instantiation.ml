@@ -155,7 +155,7 @@ module Make (Observer : OBSERVER) : KIT with type output = Observer.output = str
     | OpenT (_, id) ->
       let (_, constraints) = Context.find_constraints cx id in
       (match constraints with
-      | Constraint.FullyResolved (_, t)
+      | Constraint.FullyResolved (_, (lazy t))
       | Constraint.Resolved (_, t) ->
         t_not_bound t bound
       | Constraint.Unresolved bounds ->
@@ -190,7 +190,7 @@ module Make (Observer : OBSERVER) : KIT with type output = Observer.output = str
     | OpenT (_, id) ->
       let (_, constraints) = Context.find_constraints cx id in
       (match constraints with
-      | Constraint.FullyResolved (_, t)
+      | Constraint.FullyResolved (_, (lazy t))
       | Constraint.Resolved (_, t) ->
         Some t
       | Constraint.Unresolved bounds ->

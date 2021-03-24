@@ -156,7 +156,7 @@ class visitor =
             let cov =
               match constraints with
               | Resolved (_, t)
-              | FullyResolved (_, t) ->
+              | FullyResolved (_, (lazy t)) ->
                 self#type_ cx t
               | Unresolved bounds ->
                 let bounds = TypeMap.keys bounds.lower in
