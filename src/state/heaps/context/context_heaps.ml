@@ -154,7 +154,7 @@ end = struct
          * unchanged, we skip writing the sig cx and instead just revive the old one, but in this
          * case there is no old one so we have to write it. *)
         if diff || not (Lazy.force has_old_sig_cx) then (
-          (* Ideally we'd assert that f is a member of the oldified files too *)
+          (* Ideally we'd assert that each file is a member of the oldified files too *)
           Nel.iter (add_leader () leader_f) component_files;
           add_sig_context ~audit leader_f (Context.sig_cx leader_cx);
           SigHashHeap.add leader_f xx

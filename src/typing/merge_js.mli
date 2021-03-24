@@ -69,6 +69,15 @@ val sig_context : Context.t -> string Base.List.t -> Xx.hash
 
 val optimize_builtins : Context.t -> unit
 
+val post_merge_checks :
+  Context.t ->
+  Context.master_context ->
+  (ALoc.t, ALoc.t) Flow_ast.Program.t ->
+  (ALoc.t, ALoc.t * Type.t) Flow_ast.Program.t ->
+  Context.metadata ->
+  File_sig.With_ALoc.t ->
+  unit
+
 val get_lint_severities :
   Context.metadata ->
   StrictModeSettings.t ->

@@ -33,7 +33,7 @@ type t = Type.Constraint.infer_phase t_
  * with constraints between files in a cycle. *)
 type 'phase component_t_
 
-type component_t
+type component_t = Type.Constraint.infer_phase component_t_
 
 (* 3. Inter-component information, i.e., stuff that we might want to know about
  * dependencies, like what modules they export and what types correspond to what

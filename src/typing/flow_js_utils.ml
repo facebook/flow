@@ -27,7 +27,6 @@ let possible_types_of_type cx = function
 let possible_uses cx id = uses_of (Context.find_graph cx id) |> List.filter is_proper_use
 
 let merge_tvar =
-  let possible_types = possible_types in
   let rec collect_lowers ~filter_empty cx seen acc = function
     | [] -> Base.List.rev acc
     | t :: ts ->
