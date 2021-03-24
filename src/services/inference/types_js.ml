@@ -2795,7 +2795,7 @@ let init ~profiling ~workers options =
   else
     let files_to_force = CheckedSet.empty in
     let recheck_reasons = [LspProt.Lazy_init_typecheck] in
-    let%lwt (recheck_profiling, (log_recheck_event, _summary_info, env)) =
+    let%lwt (recheck_profiling, (_log_recheck_event, _summary_info, env)) =
       let should_print_summary = Options.should_profile options in
       Profiling_js.with_profiling_lwt ~label:"Recheck" ~should_print_summary (fun profiling ->
           recheck
@@ -2809,7 +2809,6 @@ let init ~profiling ~workers options =
             ~recheck_reasons
             ~will_be_checked_files:(ref files_to_force))
     in
-    let%lwt () = log_recheck_event ~profiling:recheck_profiling in
     Profiling_js.merge ~from:recheck_profiling ~into:profiling;
     Lwt.return (true, env, last_estimates)
 
