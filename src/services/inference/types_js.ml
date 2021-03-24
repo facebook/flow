@@ -835,7 +835,7 @@ end = struct
   (* Check as many files as it can before it hits the timeout. The timeout is soft,
    * so the file which exceeds the timeout won't be canceled. We expect most buckets
    * to not hit the timeout *)
-  let rec job_helper ~reader ~options ~start_time ~start_rss acc = function
+  let rec job_helper ~check ~options ~start_time ~start_rss acc = function
     | [] -> (acc, [])
     | unfinished_files when out_of_time ~options ~start_time ->
       Hh_logger.debug
@@ -851,11 +851,11 @@ end = struct
       (acc, unfinished_files)
     | file :: rest ->
       let result =
-        match Merge_service.check options ~reader file with
+        match check file with
         | Ok (Some (_, acc)) -> Ok (Some acc)
         | (Ok None | Error _) as result -> result
       in
-      job_helper ~reader ~options ~start_time ~start_rss ((file, result) :: acc) rest
+      job_helper ~check ~options ~start_time ~start_rss ((file, result) :: acc) rest
 
   let job ~reader ~options acc files =
     let start_time = Unix.gettimeofday () in
@@ -864,7 +864,8 @@ end = struct
       | Ok { ProcFS.rss_total; _ } -> Some rss_total
       | Error _ -> None
     in
-    job_helper ~reader ~options ~start_time ~start_rss acc files
+    let check = Merge_service.mk_check options ~reader () in
+    job_helper ~check ~options ~start_time ~start_rss acc files
 
   (* A stateful (next, merge) pair. This lets us re-queue unfinished files which are returned
    * when a bucket times out *)

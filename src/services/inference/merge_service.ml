@@ -517,32 +517,34 @@ module Check_file :
   PROCESS_UNIT with type input = File_key.t and type output = Check_config.output =
   Process_unit (Check_config)
 
-let check_file options ~reader file =
-  let start_time = Unix.gettimeofday () in
-  let info = Module_heaps.Mutator_reader.get_info_unsafe ~reader ~audit:Expensive.ok file in
-  if info.Module_heaps.checked then
+let mk_check_file options ~reader () =
+  let master_cx = Context_heaps.Mutator_reader.find_master ~reader in
+  let process =
     let reader = Abstract_state_reader.Mutator_state_reader reader in
-    let master_cx = Context_heaps.Reader_dispatcher.find_master ~reader in
-    let { Check_config.cx; coverage; typed_ast; file_sig; _ } =
-      Check_file.process ~options ~reader master_cx file
-    in
-    let errors = Context.errors cx in
-    let suppressions = Context.error_suppressions cx in
-    let severity_cover = Context.severity_cover cx in
-    let include_suppressions = Context.include_suppressions cx in
-    let aloc_tables = Context.aloc_tables cx in
-    let (errors, warnings, suppressions) =
-      Error_suppressions.filter_lints
-        ~include_suppressions
-        suppressions
-        errors
-        aloc_tables
-        severity_cover
-    in
-    let duration = Unix.gettimeofday () -. start_time in
-    Some ((cx, file_sig, typed_ast), (errors, warnings, suppressions, coverage, duration))
-  else
-    None
+    Check_file.process ~options ~reader master_cx
+  in
+  fun file ->
+    let start_time = Unix.gettimeofday () in
+    let info = Module_heaps.Mutator_reader.get_info_unsafe ~reader ~audit:Expensive.ok file in
+    if info.Module_heaps.checked then
+      let { Check_config.cx; coverage; typed_ast; file_sig; _ } = process file in
+      let errors = Context.errors cx in
+      let suppressions = Context.error_suppressions cx in
+      let severity_cover = Context.severity_cover cx in
+      let include_suppressions = Context.include_suppressions cx in
+      let aloc_tables = Context.aloc_tables cx in
+      let (errors, warnings, suppressions) =
+        Error_suppressions.filter_lints
+          ~include_suppressions
+          suppressions
+          errors
+          aloc_tables
+          severity_cover
+      in
+      let duration = Unix.gettimeofday () -. start_time in
+      Some ((cx, file_sig, typed_ast), (errors, warnings, suppressions, coverage, duration))
+    else
+      None
 
 (* Variation of merge_context where requires may not have already been
    resolved. This is used by commands that make up a context on the fly. *)
@@ -758,39 +760,45 @@ let merge_runner
 
 let merge = merge_runner ~job:merge_component
 
-let check options ~reader file =
+let mk_check options ~reader () =
   let check_timeout = Options.merge_timeout options in
   (* TODO: add new option *)
   let interval = Base.Option.value_map ~f:(min 5.0) ~default:5.0 check_timeout in
-  let file_str = File_key.to_string file in
-  try
-    with_async_logging_timer
-      ~interval
-      ~on_timer:(fun run_time ->
-        Hh_logger.info "[%d] Slow CHECK (%f seconds so far): %s" (Unix.getpid ()) run_time file_str;
-        Base.Option.iter check_timeout ~f:(fun check_timeout ->
-            if run_time >= check_timeout then
-              raise (Error_message.ECheckTimeout (run_time, file_str))))
-      ~f:(fun () -> Ok (check_file options ~reader file))
-  with
-  | (SharedMem.Out_of_shared_memory | SharedMem.Heap_full | SharedMem.Hash_table_full) as exc ->
-    raise exc
-  (* A catch all suppression is probably a bad idea... *)
-  | unwrapped_exc ->
-    let exc = Exception.wrap unwrapped_exc in
-    let exn_str = Printf.sprintf "%s: %s" (File_key.to_string file) (Exception.to_string exc) in
-    (* In dev mode, fail hard, but log and continue in prod. *)
-    if Build_mode.dev then
-      Exception.reraise exc
-    else
-      prerr_endlinef "(%d) check_job THROWS: %s\n" (Unix.getpid ()) exn_str;
-    let file_loc = Loc.{ none with source = Some file } |> ALoc.of_loc in
-    (* We can't pattern match on the exception type once it's marshalled
-       back to the master process, so we pattern match on it here to create
-       an error result. *)
-    Error
-      Error_message.(
-        match unwrapped_exc with
-        | EDebugThrow loc -> (loc, DebugThrow)
-        | ECheckTimeout (s, _) -> (file_loc, CheckTimeout s)
-        | _ -> (file_loc, CheckJobException exc))
+  let check_file = mk_check_file options ~reader () in
+  fun file ->
+    let file_str = File_key.to_string file in
+    try
+      with_async_logging_timer
+        ~interval
+        ~on_timer:(fun run_time ->
+          Hh_logger.info
+            "[%d] Slow CHECK (%f seconds so far): %s"
+            (Unix.getpid ())
+            run_time
+            file_str;
+          Base.Option.iter check_timeout ~f:(fun check_timeout ->
+              if run_time >= check_timeout then
+                raise (Error_message.ECheckTimeout (run_time, file_str))))
+        ~f:(fun () -> Ok (check_file file))
+    with
+    | (SharedMem.Out_of_shared_memory | SharedMem.Heap_full | SharedMem.Hash_table_full) as exc ->
+      raise exc
+    (* A catch all suppression is probably a bad idea... *)
+    | unwrapped_exc ->
+      let exc = Exception.wrap unwrapped_exc in
+      let exn_str = Printf.sprintf "%s: %s" (File_key.to_string file) (Exception.to_string exc) in
+      (* In dev mode, fail hard, but log and continue in prod. *)
+      if Build_mode.dev then
+        Exception.reraise exc
+      else
+        prerr_endlinef "(%d) check_job THROWS: %s\n" (Unix.getpid ()) exn_str;
+      let file_loc = Loc.{ none with source = Some file } |> ALoc.of_loc in
+      (* We can't pattern match on the exception type once it's marshalled
+         back to the master process, so we pattern match on it here to create
+         an error result. *)
+      Error
+        Error_message.(
+          match unwrapped_exc with
+          | EDebugThrow loc -> (loc, DebugThrow)
+          | ECheckTimeout (s, _) -> (file_loc, CheckTimeout s)
+          | _ -> (file_loc, CheckJobException exc))

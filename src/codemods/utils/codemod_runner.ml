@@ -202,9 +202,10 @@ let merge_job ~worker_mutator ~options ~reader component =
    target files for processing. *)
 let check_job ~visit ~iteration ~reader ~options acc roots =
   let metadata = Context.metadata_of_options options in
+  let check = Merge_service.mk_check options ~reader () in
   List.fold_left
     (fun acc file ->
-      match Merge_service.check options ~reader file with
+      match check file with
       | Ok None -> acc
       | Ok (Some ((full_cx, file_sig, typed_ast), _)) ->
         let reader = Abstract_state_reader.Mutator_state_reader reader in
@@ -332,9 +333,10 @@ module TypedRunnerWithPrepass (C : TYPED_RUNNER_WITH_PREPASS_CONFIG) : TYPED_RUN
 
   let pre_check_job ~reader ~options acc roots =
     let state = C.prepass_init () in
+    let check = Merge_service.mk_check options ~reader () in
     List.fold_left
       (fun acc file ->
-        match Merge_service.check options ~reader file with
+        match check file with
         | Ok None -> acc
         | Ok (Some ((cx, file_sig, typed_ast), _)) ->
           let result = C.prepass_run cx state file reader file_sig typed_ast in

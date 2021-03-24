@@ -78,8 +78,9 @@ val merge :
   recheck_set:FilenameSet.t ->
   merge_result option merge_results Lwt.t
 
-val check :
+val mk_check :
   Options.t ->
   reader:Module_heaps.Mutator_reader.reader ->
+  unit ->
   File_key.t ->
   check_result option unit_result
