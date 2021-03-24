@@ -203,6 +203,8 @@ val type_asserts : config -> bool
 
 val new_signatures : config -> bool
 
+val new_check : config -> bool
+
 val watchman_sync_timeout : config -> int option
 
 val watchman_defer_states : config -> string list

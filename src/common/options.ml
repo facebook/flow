@@ -95,6 +95,7 @@ type t = {
   opt_module: module_system;
   opt_modules_are_use_strict: bool;
   opt_munge_underscores: bool;
+  opt_new_check: bool;
   opt_new_signatures: bool;
   opt_node_main_fields: string list;
   opt_node_resolver_allow_root_relative: bool;
@@ -135,6 +136,8 @@ let autoimports opts = opts.opt_autoimports
 let automatic_require_default opts = opts.opt_automatic_require_default
 
 let babel_loose_array_spread opts = opts.opt_babel_loose_array_spread
+
+let new_check opts = opts.opt_new_check
 
 let new_signatures opts = opts.opt_new_signatures
 
