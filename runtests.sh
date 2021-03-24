@@ -26,8 +26,10 @@ show_help() {
   echo "        quiet output (hides status, just prints results)"
   echo "    -s"
   echo "        test saved state"
+  echo "    -x"
+  echo "        test new check"
   echo "    -z"
-  echo "        test new signatures"
+  echo "        test old signatures"
   echo "    -v"
   echo "        verbose output (shows skipped tests)"
   echo "    -h"
@@ -41,13 +43,14 @@ export FLOW_NODE_BINARY=${FLOW_NODE_BINARY:-${NODE_BINARY:-$(which node)}}
 OPTIND=1
 record=0
 saved_state=0
+new_check=0
 old_signatures=0
 verbose=0
 quiet=0
 relative="$THIS_DIR"
 list_tests=0
-export saved_state filter old_signatures
-while getopts "b:d:f:lqrszt:vh?" opt; do
+export saved_state filter new_check old_signatures
+while getopts "b:d:f:lqrsxzt:vh?" opt; do
   case "$opt" in
   b)
     FLOW="$OPTARG"
@@ -74,8 +77,13 @@ while getopts "b:d:f:lqrszt:vh?" opt; do
     saved_state=1
     printf "Testing saved state by running all tests using saved state\\n"
     ;;
+  x)
+    new_check=1
+    old_signatures=0
+    ;;
   z)
     old_signatures=1
+    new_check=0
     ;;
   v)
     verbose=1
@@ -96,6 +104,8 @@ if [ -n "$specific_test" ]; then
     specific_test=$(echo $specific_test | sed 's/\(.*\)-saved-state$/\1/')
   elif [[ "$old_signatures" -eq 1 ]]; then
     specific_test=$(echo $specific_test | sed 's/\(.*\)-old-signatures$/\1/')
+  elif [[ "$new_check" -eq 1 ]]; then
+    specific_test=$(echo $specific_test | sed 's/\(.*\)-new-check$/\1/')
   fi
 
   filter="^$specific_test$"
@@ -257,6 +267,8 @@ if [[ "$list_tests" -eq 1 ]]; then
         echo "$name-saved-state"
       elif [[ "$old_signatures" -eq 1 ]]; then
         echo "$name-old-signatures"
+      elif [[ "$new_check" -eq 1 ]]; then
+        echo "$name-new-check"
       else
         echo "$name"
       fi
