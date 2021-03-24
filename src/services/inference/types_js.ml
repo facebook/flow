@@ -2785,32 +2785,35 @@ let init ~profiling ~workers options =
       (* We loaded a saved state successfully! We are awesome! *)
       init_from_saved_state ~profiling ~workers ~saved_state ~updates options
   in
+  let%lwt env =
+    (* Don't recheck if the libs are not ok *)
+    if FilenameSet.is_empty updates || not libs_ok then
+      Lwt.return env
+    else
+      let files_to_force = CheckedSet.empty in
+      let recheck_reasons = [LspProt.Lazy_init_typecheck] in
+      let%lwt (recheck_profiling, (_log_recheck_event, _summary_info, env)) =
+        let should_print_summary = Options.should_profile options in
+        Profiling_js.with_profiling_lwt ~label:"Recheck" ~should_print_summary (fun profiling ->
+            recheck
+              ~profiling
+              ~options
+              ~workers
+              ~updates
+              env
+              ~files_to_force
+              ~file_watcher_metadata:MonitorProt.empty_file_watcher_metadata
+              ~recheck_reasons
+              ~will_be_checked_files:(ref files_to_force))
+      in
+      Profiling_js.merge ~from:recheck_profiling ~into:profiling;
+      Lwt.return env
+  in
   let init_time = Unix.gettimeofday () -. start_time in
   let%lwt last_estimates =
     Recheck_stats.init ~options ~init_time ~parsed_count:(FilenameSet.cardinal env.ServerEnv.files)
   in
-  (* Don't recheck if the libs are not ok *)
-  if FilenameSet.is_empty updates || not libs_ok then
-    Lwt.return (libs_ok, env, last_estimates)
-  else
-    let files_to_force = CheckedSet.empty in
-    let recheck_reasons = [LspProt.Lazy_init_typecheck] in
-    let%lwt (recheck_profiling, (_log_recheck_event, _summary_info, env)) =
-      let should_print_summary = Options.should_profile options in
-      Profiling_js.with_profiling_lwt ~label:"Recheck" ~should_print_summary (fun profiling ->
-          recheck
-            ~profiling
-            ~options
-            ~workers
-            ~updates
-            env
-            ~files_to_force
-            ~file_watcher_metadata:MonitorProt.empty_file_watcher_metadata
-            ~recheck_reasons
-            ~will_be_checked_files:(ref files_to_force))
-    in
-    Profiling_js.merge ~from:recheck_profiling ~into:profiling;
-    Lwt.return (true, env, last_estimates)
+  Lwt.return (libs_ok, env, last_estimates)
 
 let full_check ~profiling ~options ~workers ?focus_targets env =
   let { ServerEnv.files = parsed; dependency_info; errors; _ } = env in
