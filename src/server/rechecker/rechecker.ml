@@ -132,7 +132,7 @@ let recheck
           ~calc_errors_and_warnings;
         Lwt.return (log_recheck_event, summary_info, env))
   in
-  log_recheck_event ~profiling;
+  let%lwt () = log_recheck_event ~profiling in
 
   let duration = Profiling_js.get_profiling_duration profiling in
   let summary = ServerStatus.{ duration; info = summary_info } in

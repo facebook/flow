@@ -2350,7 +2350,8 @@ let recheck
           Some estimated_files_to_init ))
   in
   (* TODO: update log to reflect current terminology **)
-  let log_recheck_event : profiling:Profiling_js.finished -> unit =
+  let log_recheck_event : profiling:Profiling_js.finished -> unit Lwt.t =
+   fun ~profiling ->
     FlowEventLogger.recheck
       ~recheck_reasons:(List.map LspProt.verbose_string_of_recheck_reason recheck_reasons)
       ~modified
@@ -2371,6 +2372,8 @@ let recheck
       ~num_slow_files
       ~first_internal_error
       ~scm_changed_mergebase:file_watcher_metadata.MonitorProt.changed_mergebase
+      ~profiling;
+    Lwt.return_unit
   in
 
   let all_dependent_file_count = Utils_js.FilenameSet.cardinal all_dependent_files in
@@ -2804,7 +2807,7 @@ let init ~profiling ~workers options =
             ~recheck_reasons
             ~will_be_checked_files:(ref files_to_force))
     in
-    log_recheck_event ~profiling:recheck_profiling;
+    let%lwt () = log_recheck_event ~profiling:recheck_profiling in
     Profiling_js.merge ~from:recheck_profiling ~into:profiling;
     Lwt.return (true, env, last_estimates)
 
