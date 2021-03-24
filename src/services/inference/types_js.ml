@@ -1472,7 +1472,8 @@ module Recheck : sig
     recheck_reasons:LspProt.recheck_reason list ->
     will_be_checked_files:CheckedSet.t ref ->
     env:ServerEnv.env ->
-    (ServerEnv.env * recheck_result * string option) Lwt.t
+    (ServerEnv.env * recheck_result * ((* record_recheck_time *) unit -> unit Lwt.t) * string option)
+    Lwt.t
 
   (* Raises `Unexpected_file_changes` if it finds files unexpectedly changed when parsing. *)
   val parse_and_update_dependency_info :
@@ -2167,7 +2168,7 @@ end = struct
     in
     Base.Option.iter check_internal_error ~f:(Hh_logger.error "%s");
 
-    let%lwt () =
+    let record_recheck_time () =
       Recheck_stats.record_recheck_time
         ~options
         ~total_time:(time_to_merge +. time_to_check_merged)
@@ -2194,6 +2195,7 @@ end = struct
           num_slow_files;
           estimates;
         },
+        record_recheck_time,
         Base.Option.first_some merge_internal_error check_internal_error )
 
   (* We maintain the following invariant across rechecks: The set of `files` contains files that
@@ -2292,7 +2294,7 @@ let recheck
     ~file_watcher_metadata
     ~recheck_reasons
     ~will_be_checked_files =
-  let%lwt (env, stats, first_internal_error) =
+  let%lwt (env, stats, record_recheck_time, first_internal_error) =
     Memory_utils.with_memory_profiling_lwt ~profiling (fun () ->
         with_transaction (fun transaction reader ->
             Recheck.full
@@ -2373,7 +2375,7 @@ let recheck
       ~first_internal_error
       ~scm_changed_mergebase:file_watcher_metadata.MonitorProt.changed_mergebase
       ~profiling;
-    Lwt.return_unit
+    record_recheck_time ()
   in
 
   let all_dependent_file_count = Utils_js.FilenameSet.cardinal all_dependent_files in
