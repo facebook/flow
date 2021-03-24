@@ -2582,15 +2582,36 @@ let init_from_saved_state ~profiling ~workers ~saved_state ~updates options =
   let should_force_recheck = Options.saved_state_force_recheck options in
   (* We know that all the files in updates have changed since the saved state was generated. We
     * have two ways to deal with them: *)
-  if Options.lazy_mode options = Options.NON_LAZY_MODE || should_force_recheck then
-    (* In non-lazy mode, we return updates here. They will immediately be rechecked. Due to
-      * fanout, this can be a huge recheck, but it's sound.
-      *
-      * We'll also hit this code path in lazy modes if the user has passed
-      * --saved-state-force-recheck. These users want to force Flow to recheck all the files that
-      * have changed since the saved state was generated*)
-    Lwt.return (updates, env, libs_ok)
-  else
+  if Options.lazy_mode options = Options.NON_LAZY_MODE || should_force_recheck then begin
+    if FilenameSet.is_empty updates || not libs_ok then
+      (* Don't recheck if the libs are not ok *)
+      Lwt.return (env, libs_ok)
+    else
+      (* In non-lazy mode, we return updates here. They will immediately be rechecked. Due to
+       * fanout, this can be a huge recheck, but it's sound.
+       *
+       * We'll also hit this code path in lazy modes if the user has passed
+       * --saved-state-force-recheck. These users want to force Flow to recheck all the files that
+       * have changed since the saved state was generated *)
+      let files_to_force = CheckedSet.empty in
+      let recheck_reasons = [LspProt.Lazy_init_typecheck] in
+      let%lwt (recheck_profiling, (_log_recheck_event, _summary_info, env)) =
+        let should_print_summary = Options.should_profile options in
+        Profiling_js.with_profiling_lwt ~label:"Recheck" ~should_print_summary (fun profiling ->
+            recheck
+              ~profiling
+              ~options
+              ~workers
+              ~updates
+              env
+              ~files_to_force
+              ~file_watcher_metadata:MonitorProt.empty_file_watcher_metadata
+              ~recheck_reasons
+              ~will_be_checked_files:(ref files_to_force))
+      in
+      Profiling_js.merge ~from:recheck_profiling ~into:profiling;
+      Lwt.return (env, libs_ok)
+  end else
     (* In lazy mode, we try to avoid the fanout problem. All we really want to do in lazy mode
       * is to update the dependency graph and stuff like that. We don't actually want to merge
       * anything yet. *)
@@ -2617,7 +2638,7 @@ let init_from_saved_state ~profiling ~workers ~saved_state ~updates options =
       in
       try_update updates
     in
-    Lwt.return (FilenameSet.empty, env, libs_ok)
+    Lwt.return (env, libs_ok)
 
 let init_from_scratch ~profiling ~workers options =
   let file_options = Options.file_options options in
@@ -2714,7 +2735,7 @@ let init_from_scratch ~profiling ~workers options =
       ~errors
       ~exports
   in
-  Lwt.return (FilenameSet.empty, env, libs_ok)
+  Lwt.return (env, libs_ok)
 
 let exit_if_no_fallback ?msg options =
   if Options.saved_state_no_fallback options then Exit.(exit ?msg Invalid_saved_state)
@@ -2776,7 +2797,7 @@ let load_saved_state ~profiling ~workers options =
 
 let init ~profiling ~workers options =
   let start_time = Unix.gettimeofday () in
-  let%lwt (updates, env, libs_ok) =
+  let%lwt (env, libs_ok) =
     match%lwt load_saved_state ~profiling ~workers options with
     | None ->
       (* Either there is no saved state or we failed to load it for some reason *)
@@ -2784,30 +2805,6 @@ let init ~profiling ~workers options =
     | Some (saved_state, updates) ->
       (* We loaded a saved state successfully! We are awesome! *)
       init_from_saved_state ~profiling ~workers ~saved_state ~updates options
-  in
-  let%lwt env =
-    (* Don't recheck if the libs are not ok *)
-    if FilenameSet.is_empty updates || not libs_ok then
-      Lwt.return env
-    else
-      let files_to_force = CheckedSet.empty in
-      let recheck_reasons = [LspProt.Lazy_init_typecheck] in
-      let%lwt (recheck_profiling, (_log_recheck_event, _summary_info, env)) =
-        let should_print_summary = Options.should_profile options in
-        Profiling_js.with_profiling_lwt ~label:"Recheck" ~should_print_summary (fun profiling ->
-            recheck
-              ~profiling
-              ~options
-              ~workers
-              ~updates
-              env
-              ~files_to_force
-              ~file_watcher_metadata:MonitorProt.empty_file_watcher_metadata
-              ~recheck_reasons
-              ~will_be_checked_files:(ref files_to_force))
-      in
-      Profiling_js.merge ~from:recheck_profiling ~into:profiling;
-      Lwt.return env
   in
   let init_time = Unix.gettimeofday () -. start_time in
   let%lwt last_estimates =
