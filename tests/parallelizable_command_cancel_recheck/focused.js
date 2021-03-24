@@ -2,4 +2,4 @@
 
 import {x} from './dependency';
 
-x.toString();
+x.propA;
