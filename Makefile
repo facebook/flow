@@ -343,7 +343,8 @@ deps:
 	[ -d _opam ] || opam switch create . 4.09.1 --deps-only --yes
 
 clean:
-	ocamlbuild -clean
+	if command -v ocamlbuild >/dev/null; then ocamlbuild -clean; fi
+	rm -rf _build
 	rm -rf bin
 	rm -f src/hack_forked/utils/core/get_build_id.gen.c
 	rm -f flow.odocl
