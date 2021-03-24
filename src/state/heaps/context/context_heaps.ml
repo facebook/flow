@@ -90,6 +90,8 @@ module Merge_context_mutator : sig
 
   val create : Transaction.t -> Utils_js.FilenameSet.t -> master_mutator * worker_mutator
 
+  val add_leader : worker_mutator -> File_key.t -> File_key.t -> unit
+
   val add_merge_on_diff :
     (worker_mutator -> Context.t -> File_key.t Nel.t -> Xx.hash -> bool) Expensive.t
 
@@ -132,6 +134,8 @@ end = struct
   (* While merging, we must keep LeaderHeap, SigContextHeap, and SigHashHeap in
      sync, sometimes creating new entries and sometimes reusing old entries. *)
 
+  let add_leader () leader_f f = LeaderHeap.add f leader_f
+
   (* Add a sig only if it has not changed meaningfully, and return the result of
      that check. *)
   let add_merge_on_diff ~audit () leader_cx component_files xx =
@@ -150,11 +154,8 @@ end = struct
          * unchanged, we skip writing the sig cx and instead just revive the old one, but in this
          * case there is no old one so we have to write it. *)
         if diff || not (Lazy.force has_old_sig_cx) then (
-          Nel.iter
-            (fun f ->
-              (* Ideally we'd assert that f is a member of the oldified files too *)
-              LeaderHeap.add f leader_f)
-            component_files;
+          (* Ideally we'd assert that f is a member of the oldified files too *)
+          Nel.iter (add_leader () leader_f) component_files;
           add_sig_context ~audit leader_f (Context.sig_cx leader_cx);
           SigHashHeap.add leader_f xx
         ));

@@ -442,24 +442,51 @@ let merge_context ~options ~reader master_cx component =
     Merge_component.process ~options ~reader master_cx component
 
 (* Entry point for merging a component *)
-let merge_component ~worker_mutator ~options ~reader component =
+let merge_component ~worker_mutator ~options ~reader ((leader_f, _) as component) =
   let start_time = Unix.gettimeofday () in
-  let file = Nel.hd component in
 
-  (* We choose file as the leader, and other_files are followers. It is always
-     OK to choose file as leader, as explained below.
-
-     Note that cycles cannot happen between unchecked files. Why? Because files
-     in cycles must have their dependencies recorded, yet dependencies are never
-     recorded for unchecked files.
-
-     It follows that when file is unchecked, there are no other_files! We don't
-     have to worry that some other_file may be checked when file is unchecked.
-
-     It also follows when file is checked, other_files must be checked too!
-  *)
-  let info = Module_heaps.Mutator_reader.get_info_unsafe ~reader ~audit:Expensive.ok file in
-  if info.Module_heaps.checked then (
+  (* We choose the head file as the leader, and the tail as followers. It is
+   * always OK to choose the head as leader, as explained below.
+   *
+   * Note that cycles cannot happen between unchecked files. Why? Because files
+   * in cycles must have their dependencies recorded, yet dependencies are never
+   * recorded for unchecked files.
+   *
+   * It follows that when the head is unchecked, there are no other files! We
+   * don't have to worry that some other file may be checked when the head is
+   * unchecked.
+   *
+   * It also follows when the head is checked, the tail must be checked too! *)
+  let info = Module_heaps.Mutator_reader.get_info_unsafe ~reader ~audit:Expensive.ok leader_f in
+  if not info.Module_heaps.checked then
+    let diff = false in
+    (diff, Ok None)
+  else if Options.new_check options then
+    let metadata = Context.metadata_of_options options in
+    let lint_severities = Options.lint_severities options in
+    let strict_mode = Options.strict_mode options in
+    let ccx = Context.make_ccx () in
+    let (cx, _) =
+      Nel.map
+        (fun file ->
+          let docblock = Parsing_heaps.Mutator_reader.get_docblock_unsafe ~reader file in
+          let metadata = Context.docblock_overrides docblock metadata in
+          let lint_severities = Merge_js.get_lint_severities metadata strict_mode lint_severities in
+          let aloc_table = lazy (Parsing_heaps.Mutator_reader.get_aloc_table_unsafe ~reader file) in
+          let module_ref = Reason.OrdinaryName (Files.module_ref file) in
+          let cx = Context.make ccx metadata file aloc_table module_ref Context.Merging in
+          let (_, { Flow_ast.Program.all_comments = comments; _ }) =
+            Parsing_heaps.Mutator_reader.get_ast_unsafe ~reader file
+          in
+          Type_inference_js.scan_for_suppressions cx lint_severities comments;
+          Context_heaps.Merge_context_mutator.add_leader worker_mutator leader_f file;
+          cx)
+        component
+    in
+    let suppressions = Context.error_suppressions cx in
+    let duration = Unix.gettimeofday () -. start_time in
+    (true, Ok (Some (suppressions, duration)))
+  else
     let reader = Abstract_state_reader.Mutator_state_reader reader in
     let master_cx = Context_heaps.Reader_dispatcher.find_master ~reader in
     let cx = merge_context ~options ~reader master_cx component in
@@ -477,9 +504,6 @@ let merge_component ~worker_mutator ~options ~reader component =
     in
     let duration = Unix.gettimeofday () -. start_time in
     (diff, Ok (Some (suppressions, duration)))
-  ) else
-    let diff = false in
-    (diff, Ok None)
 
 module Check_config = struct
   (* The "check" phase only needs to consider _one file_ at a time. *)

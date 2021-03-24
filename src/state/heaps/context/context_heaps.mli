@@ -40,6 +40,8 @@ module Merge_context_mutator : sig
 
   val create : Transaction.t -> Utils_js.FilenameSet.t -> master_mutator * worker_mutator
 
+  val add_leader : worker_mutator -> File_key.t -> File_key.t -> unit
+
   val add_merge_on_diff :
     (worker_mutator -> Context.t -> File_key.t Nel.t -> Xx.hash -> bool) Expensive.t
 
