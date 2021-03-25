@@ -10,8 +10,6 @@ module Reqs : sig
 
   val empty : t
 
-  val add_impl : string -> File_key.t -> Loc_collections.ALocSet.t -> t -> t
-
   val add_dep_impl : string -> File_key.t -> Context.sig_t * Loc_collections.ALocSet.t -> t -> t
 
   val add_unchecked : string -> File_key.t -> Loc_collections.ALocSet.t -> t -> t

@@ -25,8 +25,6 @@ module FilenameMap = Utils_js.FilenameMap
 module ALocSet = Loc_collections.ALocSet
 
 module Reqs = struct
-  type impl = ALocSet.t
-
   type dep_impl = Context.sig_t * ALocSet.t
 
   type unchecked = ALocSet.t
@@ -36,8 +34,6 @@ module Reqs = struct
   type decl = ALocSet.t * Modulename.t
 
   type t = {
-    (* impls: edges between files within the component *)
-    impls: impl RequireMap.t;
     (* dep_impls: edges from files in the component to cxs of direct dependencies,
      * when implementations are found *)
     dep_impls: dep_impl RequireMap.t;
@@ -55,16 +51,11 @@ module Reqs = struct
 
   let empty =
     {
-      impls = RequireMap.empty;
       dep_impls = RequireMap.empty;
       unchecked = RequireMap.empty;
       res = RequireMap.empty;
       decls = RequireMap.empty;
     }
-
-  let add_impl require requirer require_locs reqs =
-    let impls = RequireMap.add ~combine:ALocSet.union (require, requirer) require_locs reqs.impls in
-    { reqs with impls }
 
   let add_dep_impl =
     let combine (from_cx, locs1) (_, locs2) = (from_cx, ALocSet.union locs1 locs2) in
@@ -441,12 +432,6 @@ let get_lint_severities metadata strict_mode lint_severities =
 
 let merge_imports cx reqs impl_cxs =
   let open Reqs in
-  reqs.impls
-  |> RequireMap.iter (fun (m, fn_to) locs ->
-         let cx_from = Context.sig_cx cx in
-         let cx_to = FilenameMap.find fn_to impl_cxs in
-         ALocSet.iter (fun loc -> explicit_impl_require cx (cx_from, m, loc, cx_to)) locs);
-
   reqs.dep_impls
   |> RequireMap.iter (fun (m, fn_to) (cx_from, locs) ->
          let cx_to = FilenameMap.find fn_to impl_cxs in
