@@ -2020,8 +2020,8 @@ References:
 Error ------------------------------------------------------------------------------------------- stream/stream.js:87:22
 
 Cannot call `stream.Readable.from` with `null` bound to `iterable` because: [incompatible-call]
- - Either property `@@iterator` is missing in null [1] but exists in `$Iterable` [2].
- - Or property `@@asyncIterator` is missing in null [1] but exists in `$AsyncIterable` [3].
+ - Either null [1] is incompatible with `$Iterable` [2].
+ - Or null [1] is incompatible with `$AsyncIterable` [3].
 
    stream/stream.js:87:22
      87| stream.Readable.from(null); // error - TypeError [ERR_INVALID_ARG_TYPE]: The "iterable" argument must be an instance of Iterable. Received null
