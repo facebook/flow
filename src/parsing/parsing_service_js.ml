@@ -433,66 +433,56 @@ let do_parse ~parse_options ~info content file =
         (match exports_info with
         | Error e -> Parse_fail (File_sig_error e)
         | Ok (exports_info, tolerable_errors) ->
-          let (env, errors, type_sig, aloc_table, exports) =
-            let sig_opts =
-              {
-                Type_sig_parse.type_asserts;
-                suppress_types;
-                munge = not prevent_munge;
-                ignore_static_propTypes;
-                facebook_keyMirror;
-                facebook_fbt;
-                max_literal_len;
-                exact_by_default;
-                module_ref_prefix;
-                enable_enums;
-                enable_this_annot;
-              }
-            in
-            let (errors, locs, type_sig) =
-              let strict = Docblock.is_strict info in
-              Type_sig_utils.parse_and_pack_module ~strict sig_opts (Some file) ast
-            in
-            let env = ref SMap.empty in
-            let () =
-              let open Type_sig in
-              let { Packed_type_sig.Module.local_defs; _ } = type_sig in
-              let f def =
-                let name = def_name def in
-                let loc = def_id_loc def in
-                let loc = Type_sig_collections.Locs.get locs loc in
-                let locs = Loc_collections.LocSet.singleton loc in
-                let combine = Loc_collections.LocSet.union in
-                env := SMap.add name locs ~combine !env
-              in
-              Type_sig_collections.Local_defs.iter f local_defs
-            in
-            (* TODO: make type sig errors match signature builder errors *)
-            let errors =
-              List.fold_left
-                (fun acc (_, err) ->
-                  match err with
-                  | Type_sig.SigError err ->
-                    let err = Signature_error.map (Type_sig_collections.Locs.get locs) err in
-                    Signature_builder_deps.PrintableErrorSet.add err acc
-                  | Type_sig.CheckError -> acc)
-                Signature_builder_deps.PrintableErrorSet.empty
-                errors
-            in
-            let aloc_table =
-              Type_sig_collections.Locs.to_array locs
-              |> ALoc.ALocRepresentationDoNotUse.make_table file
-            in
-            let exports = Exports.of_module type_sig in
-            (Some !env, errors, type_sig, aloc_table, exports)
+          let sig_opts =
+            {
+              Type_sig_parse.type_asserts;
+              suppress_types;
+              munge = not prevent_munge;
+              ignore_static_propTypes;
+              facebook_keyMirror;
+              facebook_fbt;
+              max_literal_len;
+              exact_by_default;
+              module_ref_prefix;
+              enable_enums;
+              enable_this_annot;
+            }
           in
+          let (sig_errors, locs, type_sig) =
+            let strict = Docblock.is_strict info in
+            Type_sig_utils.parse_and_pack_module ~strict sig_opts (Some file) ast
+          in
+          let env = ref SMap.empty in
+          let () =
+            let open Type_sig in
+            let { Packed_type_sig.Module.local_defs; _ } = type_sig in
+            let f def =
+              let name = def_name def in
+              let loc = def_id_loc def in
+              let loc = Type_sig_collections.Locs.get locs loc in
+              let locs = Loc_collections.LocSet.singleton loc in
+              let combine = Loc_collections.LocSet.union in
+              env := SMap.add name locs ~combine !env
+            in
+            Type_sig_collections.Local_defs.iter f local_defs
+          in
+          let aloc_table =
+            Type_sig_collections.Locs.to_array locs
+            |> ALoc.ALocRepresentationDoNotUse.make_table file
+          in
+          let exports = Exports.of_module type_sig in
           let tolerable_errors =
-            Signature_builder_deps.PrintableErrorSet.fold
-              (fun error acc -> File_sig.With_Loc.SignatureVerificationError error :: acc)
-              errors
+            List.fold_left
+              (fun acc (_, err) ->
+                match err with
+                | Type_sig.SigError err ->
+                  let err = Signature_error.map (Type_sig_collections.Locs.get locs) err in
+                  File_sig.With_Loc.SignatureVerificationError err :: acc
+                | Type_sig.CheckError -> acc)
               tolerable_errors
+              sig_errors
           in
-          let file_sig = File_sig.With_Loc.verified env exports_info in
+          let file_sig = File_sig.With_Loc.verified (Some !env) exports_info in
           Parse_ok { ast; file_sig; type_sig; aloc_table; tolerable_errors; parse_errors; exports })
   with
   | Parse_error.Error (first_parse_error :: _) -> Parse_fail (Parse_error first_parse_error)
