@@ -985,7 +985,7 @@ export default class Builder {
   static doesMessageMatch(
     actual: LSPMessage,
     expectedMethod: string,
-    expectedContents?: string,
+    expectedContents?: string | {},
   ): boolean {
     if (actual.method !== expectedMethod) {
       return false;
@@ -996,18 +996,22 @@ export default class Builder {
     if (expectedContents === 'null') {
       return actual.result !== undefined && actual.result === 'null';
     }
-    const iOpenBrace = expectedContents.indexOf('{');
-    const iCloseBrace = expectedContents.lastIndexOf('}');
-    const parts = expectedContents
-      .substring(iOpenBrace + 1, iCloseBrace)
-      .split(',');
-    const json = JSON.stringify(actual);
-    for (const part of parts) {
-      if (!json.includes(part)) {
-        return false;
+    if (typeof expectedContents === 'string') {
+      const iOpenBrace = expectedContents.indexOf('{');
+      const iCloseBrace = expectedContents.lastIndexOf('}');
+      const parts = expectedContents
+        .substring(iOpenBrace + 1, iCloseBrace)
+        .split(',');
+      const json = JSON.stringify(actual);
+      for (const part of parts) {
+        if (!json.includes(part)) {
+          return false;
+        }
       }
+      return true;
+    } else {
+      return JSON.stringify(actual) == JSON.stringify(expectedContents);
     }
-    return true;
   }
 
   constructor(errorCheckCommand: CheckCommand) {
