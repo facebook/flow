@@ -344,10 +344,9 @@ let merge_component ~worker_mutator ~options ~reader ((leader_f, _) as component
     let duration = Unix.gettimeofday () -. start_time in
     (diff, Ok (Some (suppressions, duration)))
 
-let reqs_of_file ~reader required =
+let reqs_of_file ~reader file required =
   List.fold_left
-    (fun (dep_cxs, reqs) req ->
-      let (r, locs, resolved_r, file) = req in
+    (fun (dep_cxs, reqs) (r, locs, resolved_r) ->
       let locs = locs |> Nel.to_list |> ALocSet.of_list in
       let open Module_heaps in
       match Reader_dispatcher.get_file ~reader ~audit:Expensive.ok resolved_r with
@@ -398,7 +397,7 @@ let mk_check_file options ~reader () =
       fun file required ->
         let master_cx = Context_heaps.Mutator_reader.find_master ~reader in
         let reader = Abstract_state_reader.Mutator_state_reader reader in
-        let (dep_cxs, reqs) = reqs_of_file ~reader required in
+        let (dep_cxs, reqs) = reqs_of_file ~reader file required in
         Merge_js.check_file ~options file reqs dep_cxs master_cx
   in
   fun file ->
@@ -414,7 +413,7 @@ let mk_check_file options ~reader () =
         let reader = Abstract_state_reader.Mutator_state_reader reader in
         let f mref locs acc =
           let provider = Module_js.find_resolved_module ~reader ~audit:Expensive.ok file mref in
-          (mref, locs, provider, file) :: acc
+          (mref, locs, provider) :: acc
         in
         SMap.fold f require_loc_map []
       in
@@ -453,7 +452,7 @@ let check_contents_context ~reader options file ast docblock file_sig =
       let provider =
         Module_js.imported_module ~options ~reader ~node_modules_containers file loc mref
       in
-      (mref, locs, provider, file) :: acc
+      (mref, locs, provider) :: acc
     in
     SMap.fold f require_loc_map []
   in
@@ -469,7 +468,7 @@ let check_contents_context ~reader options file ast docblock file_sig =
       }
     in
     let (dep_cxs, reqs) =
-      try reqs_of_file ~reader required with
+      try reqs_of_file ~reader file required with
       | Key_not_found _ -> failwith "not all dependencies are ready yet, aborting..."
       | e -> raise e
     in

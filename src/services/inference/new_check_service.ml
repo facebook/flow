@@ -7,7 +7,7 @@
 
 type module_ref = string
 
-type require = module_ref * ALoc.t Nel.t * Modulename.t * File_key.t
+type require = module_ref * ALoc.t Nel.t * Modulename.t
 
 type check_file =
   File_key.t ->
@@ -373,7 +373,7 @@ let mk_check_file ~options ~reader () =
     Lazy.force file_rec
   in
 
-  let connect_require cx (mref, locs, provider, _) =
+  let connect_require cx (mref, locs, provider) =
     let module_t = dep_module_t cx mref provider in
     let connect loc =
       let module_t = module_t loc in

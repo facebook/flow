@@ -7,7 +7,7 @@
 
 type module_ref = string
 
-type require = module_ref * ALoc.t Nel.t * Modulename.t * File_key.t
+type require = module_ref * ALoc.t Nel.t * Modulename.t
 
 type check_file =
   File_key.t ->
