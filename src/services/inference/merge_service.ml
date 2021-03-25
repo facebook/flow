@@ -165,37 +165,6 @@ module Process_unit (C : PHASE_CONFIG) = struct
     C.process_with_deps ~opts ~getters ~reader input file_reqs dep_cxs master_cx
 end
 
-module Merge_config = struct
-  (* The "merge" phase needs to consider _all_ files in a strongly connected component
-   * at once, to handle possible recursive definitions. *)
-  type input = File_key.t Nel.t
-
-  type output = Context.t
-
-  let get_ast_unsafe ~reader file =
-    let (_, { Flow_ast.Program.all_comments; _ }) =
-      Parsing_heaps.Reader_dispatcher.get_ast_unsafe ~reader file
-    in
-    let aloc_ast = Parsing_heaps.Reader_dispatcher.get_sig_ast_unsafe ~reader file in
-    (all_comments, aloc_ast)
-
-  let get_file_sig_unsafe = Parsing_heaps.Reader_dispatcher.get_sig_file_sig_unsafe
-
-  let is_recursive_dep dep component = Nel.mem ~equal:File_key.equal dep component
-
-  let fold_input = Nel.fold_left
-
-  let process_with_deps ~opts ~getters ~reader:_ component reqs dep_cxs master_cx =
-    let ((cx, _, _), _) =
-      Merge_js.merge_component ~opts ~getters component reqs dep_cxs master_cx
-    in
-    cx
-end
-
-module Merge_component :
-  PROCESS_UNIT with type input = File_key.t Nel.t and type output = Merge_config.output =
-  Process_unit (Merge_config)
-
 let scan_for_component_suppressions ~options ~get_ast_unsafe component =
   let lint_severities = Options.lint_severities options in
   let strict_mode = Options.strict_mode options in
@@ -208,7 +177,7 @@ let scan_for_component_suppressions ~options ~get_ast_unsafe component =
       Type_inference_js.scan_for_suppressions cx lint_severities all_comments)
     component
 
-let merge_context_new_signatures ~options ~reader master_cx component =
+let merge_context ~options ~reader master_cx component =
   let module Pack = Type_sig_pack in
   let module Merge = Type_sig_merge in
   (* make sig context, shared by all file contexts in component *)
@@ -434,12 +403,6 @@ let merge_context_new_signatures ~options ~reader master_cx component =
   Array.iter Merge.merge_file component;
 
   cx
-
-let merge_context ~options ~reader master_cx component =
-  if Options.new_signatures options then
-    merge_context_new_signatures ~options ~reader master_cx component
-  else
-    Merge_component.process ~options ~reader master_cx component
 
 (* Entry point for merging a component *)
 let merge_component ~worker_mutator ~options ~reader ((leader_f, _) as component) =
