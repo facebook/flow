@@ -1286,7 +1286,6 @@ let make_options
     opt_node_resolver_root_relative_dirnames =
       FlowConfig.node_resolver_root_relative_dirnames flowconfig;
     opt_new_check;
-    opt_new_signatures = true;
     opt_abstract_locations;
     opt_include_suppressions = options_flags.include_suppressions;
     opt_trust_mode =
