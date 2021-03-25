@@ -16,7 +16,8 @@ type result =
   | Parse_ok of {
       ast: (Loc.t, Loc.t) Flow_ast.Program.t;
       file_sig: File_sig.With_Loc.t;
-      sig_extra: Parsing_heaps.sig_extra;
+      type_sig: Parsing_heaps.type_sig;
+      aloc_table: ALoc.table;
       tolerable_errors: File_sig.With_Loc.tolerable_error list;
       parse_errors: parse_error list;
       exports: Exports.t;

@@ -24,8 +24,6 @@ module type READER = sig
 
   val get_ast_unsafe : reader:reader -> File_key.t -> (Loc.t, Loc.t) Flow_ast.Program.t
 
-  val get_sig_ast_unsafe : reader:reader -> File_key.t -> (ALoc.t, ALoc.t) Flow_ast.Program.t
-
   val get_aloc_table_unsafe : reader:reader -> File_key.t -> ALoc.table
 
   val get_docblock_unsafe : reader:reader -> File_key.t -> Docblock.t
@@ -33,8 +31,6 @@ module type READER = sig
   val get_exports_unsafe : reader:reader -> File_key.t -> Exports.t
 
   val get_file_sig_unsafe : reader:reader -> File_key.t -> File_sig.With_Loc.t
-
-  val get_sig_file_sig_unsafe : reader:reader -> File_key.t -> File_sig.With_ALoc.t
 
   val get_type_sig_unsafe : reader:reader -> File_key.t -> type_sig
 
@@ -55,22 +51,16 @@ module Reader : READER with type reader = State_reader.t
 
 module Reader_dispatcher : READER with type reader = Abstract_state_reader.t
 
-type sig_extra =
-  | TypesFirst of {
-      sig_ast: (ALoc.t, ALoc.t) Flow_ast.Program.t;
-      sig_file_sig: File_sig.With_ALoc.t;
-      aloc_table: ALoc.table option;
-    }
-  | TypeSig of type_sig * ALoc.table
-
 (* For use by a worker process *)
 type worker_mutator = {
   add_file:
     File_key.t ->
     exports:Exports.t ->
     Docblock.t ->
-    (Loc.t, Loc.t) Flow_ast.Program.t * File_sig.With_Loc.t ->
-    sig_extra ->
+    (Loc.t, Loc.t) Flow_ast.Program.t ->
+    File_sig.With_Loc.t ->
+    type_sig ->
+    ALoc.table ->
     unit;
   add_hash: File_key.t -> Xx.hash -> unit;
 }

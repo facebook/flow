@@ -13,7 +13,8 @@ type result =
   | Parse_ok of {
       ast: (Loc.t, Loc.t) Flow_ast.Program.t;
       file_sig: File_sig.With_Loc.t;
-      sig_extra: Parsing_heaps.sig_extra;
+      type_sig: Parsing_heaps.type_sig;
+      aloc_table: ALoc.table;
       tolerable_errors: File_sig.With_Loc.tolerable_error list;
       parse_errors: parse_error list;
       exports: Exports.t;
@@ -432,7 +433,7 @@ let do_parse ~parse_options ~info content file =
         (match exports_info with
         | Error e -> Parse_fail (File_sig_error e)
         | Ok (exports_info, tolerable_errors) ->
-          let (env, errors, sig_extra, exports) =
+          let (env, errors, type_sig, aloc_table, exports) =
             let sig_opts =
               {
                 Type_sig_parse.type_asserts;
@@ -483,7 +484,7 @@ let do_parse ~parse_options ~info content file =
               |> ALoc.ALocRepresentationDoNotUse.make_table file
             in
             let exports = Exports.of_module type_sig in
-            (Some !env, errors, Parsing_heaps.TypeSig (type_sig, aloc_table), exports)
+            (Some !env, errors, type_sig, aloc_table, exports)
           in
           let tolerable_errors =
             Signature_builder_deps.PrintableErrorSet.fold
@@ -492,7 +493,7 @@ let do_parse ~parse_options ~info content file =
               tolerable_errors
           in
           let file_sig = File_sig.With_Loc.verified env exports_info in
-          Parse_ok { ast; file_sig; sig_extra; tolerable_errors; parse_errors; exports })
+          Parse_ok { ast; file_sig; type_sig; aloc_table; tolerable_errors; parse_errors; exports })
   with
   | Parse_error.Error (first_parse_error :: _) -> Parse_fail (Parse_error first_parse_error)
   | e ->
@@ -580,10 +581,19 @@ let reducer
           in
           begin
             match do_parse ~parse_options ~info content file with
-            | Parse_ok { ast; file_sig; exports; sig_extra; tolerable_errors; parse_errors = _ } ->
+            | Parse_ok
+                { ast; file_sig; exports; type_sig; aloc_table; tolerable_errors; parse_errors = _ }
+              ->
               (* if parse_options.fail == true, then parse errors will hit Parse_fail below. otherwise,
                  ignore any parse errors we get here. *)
-              worker_mutator.Parsing_heaps.add_file file ~exports info (ast, file_sig) sig_extra;
+              worker_mutator.Parsing_heaps.add_file
+                file
+                ~exports
+                info
+                ast
+                file_sig
+                type_sig
+                aloc_table;
               let parse_ok = FilenameMap.add file tolerable_errors parse_results.parse_ok in
               { parse_results with parse_ok }
             | Parse_fail converted ->

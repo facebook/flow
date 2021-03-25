@@ -7,8 +7,6 @@
 
 exception Ast_not_found of string
 
-exception Sig_ast_not_found of string
-
 exception ALoc_table_not_found of string
 
 exception Docblock_not_found of string
@@ -16,8 +14,6 @@ exception Docblock_not_found of string
 exception Exports_not_found of string
 
 exception Requires_not_found of string
-
-exception Sig_requires_not_found of string
 
 exception Type_sig_not_found of string
 
