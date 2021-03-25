@@ -6,10 +6,12 @@
  *)
 
 type type_contents_artifacts =
-  Context.t
-  * Docblock.t
-  * File_sig.With_Loc.t
-  * File_sig.With_Loc.tolerable_error list
-  * (Loc.t, Loc.t) Flow_ast.Program.t
-  * (ALoc.t, ALoc.t * Type.t) Flow_ast.Program.t
-  * (Loc.t * Parse_error.t) list
+  | Type_contents_artifacts of {
+      cx: Context.t;
+      docblock: Docblock.t;
+      file_sig: File_sig.With_Loc.t;
+      tolerable_errors: File_sig.With_Loc.tolerable_error list;
+      ast: (Loc.t, Loc.t) Flow_ast.Program.t;
+      typed_ast: (ALoc.t, ALoc.t * Type.t) Flow_ast.Program.t;
+      parse_errors: (Loc.t * Parse_error.t) list;
+    }

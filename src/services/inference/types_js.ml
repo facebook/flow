@@ -8,6 +8,7 @@
 (* This module drives the type checker *)
 
 open Utils_js
+open Types_js_types
 
 (****************** typecheck job helpers *********************)
 
@@ -1197,7 +1198,11 @@ let type_contents ~options ~env ~profiling contents filename =
         Memory_utils.with_memory_timer_lwt ~options "MergeContents" profiling (fun () ->
             merge_contents ~options ~env ~reader filename info (ast, file_sig))
       in
-      Lwt.return (Ok (cx, info, file_sig, tolerable_errors, ast, typed_ast, parse_errors))
+      let artifacts =
+        Type_contents_artifacts
+          { cx; docblock = info; file_sig; tolerable_errors; ast; typed_ast; parse_errors }
+      in
+      Lwt.return (Ok artifacts)
     | Error _ -> failwith "Couldn't parse file"
   with
   | Lwt.Canceled as exn -> raise exn
