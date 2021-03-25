@@ -1168,7 +1168,7 @@ let typecheck_contents ~options ~env ~profiling contents filename =
   (* override docblock info *)
   let info = Docblock.set_flow_mode_for_ide_command info in
   match parse_result with
-  | Ok (ast, file_sig, tolerable_errors, _parse_errors) ->
+  | Ok (ast, file_sig, tolerable_errors, parse_errors) ->
     let%lwt (cx, typed_ast) =
       Memory_utils.with_memory_timer_lwt ~options "MergeContents" profiling (fun () ->
           merge_contents ~options ~env ~reader filename info (ast, file_sig))
@@ -1176,7 +1176,11 @@ let typecheck_contents ~options ~env ~profiling contents filename =
     let (errors, warnings) =
       errors_of_context ~options ~env ~loc_of_aloc filename tolerable_errors cx
     in
-    Lwt.return (Some (cx, ast, file_sig, tolerable_errors, typed_ast), errors, warnings)
+    let artifacts =
+      Type_contents_artifacts
+        { cx; docblock = info; file_sig; tolerable_errors; ast; typed_ast; parse_errors }
+    in
+    Lwt.return (Some artifacts, errors, warnings)
   | Error errors ->
     let errors =
       errors |> Flow_error.concretize_errors loc_of_aloc |> Flow_error.make_errors_printable

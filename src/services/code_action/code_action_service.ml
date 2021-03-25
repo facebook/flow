@@ -5,6 +5,8 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
+open Types_js_types
+
 let autofix_exports_code_actions
     ~full_cx ~ast ~file_sig ~tolerable_errors ~typed_ast ~diagnostics uri loc =
   let open Lsp in
@@ -345,7 +347,9 @@ let code_actions_at_loc
 let autofix_exports ~options ~env ~profiling ~file_key ~file_content =
   let open Autofix_exports in
   match%lwt Types_js.typecheck_contents ~options ~env ~profiling file_content file_key with
-  | (Some (full_cx, ast, file_sig, tolerable_errors, typed_ast), _, _) ->
+  | ( Some (Type_contents_artifacts { cx = full_cx; ast; file_sig; tolerable_errors; typed_ast; _ }),
+      _,
+      _ ) ->
     let sv_errors = set_of_fixable_signature_verification_locations tolerable_errors in
     let (new_ast, it_errs) =
       fix_signature_verification_errors ~file_key ~full_cx ~file_sig ~typed_ast ast sv_errors
@@ -366,7 +370,7 @@ let insert_type
     ~ambiguity_strategy =
   let open Insert_type in
   match%lwt Types_js.typecheck_contents ~options ~env ~profiling file_content file_key with
-  | (Some (full_cx, ast, file_sig, _, typed_ast), _, _) ->
+  | (Some (Type_contents_artifacts { cx = full_cx; ast; file_sig; typed_ast; _ }), _, _) ->
     let result =
       try
         let new_ast =

@@ -62,12 +62,7 @@ val typecheck_contents :
   string ->
   (* fake file-/module name *)
   File_key.t ->
-  ( ( Context.t
-    * (Loc.t, Loc.t) Flow_ast.Program.t
-    * File_sig.With_Loc.t
-    * File_sig.With_Loc.tolerable_error list
-    * (ALoc.t, ALoc.t * Type.t) Flow_ast.Program.t )
-    option
+  ( Types_js_types.type_contents_artifacts option
   * (* errors *)
     Errors.ConcreteLocPrintableErrorSet.t
   * (* warnings *)

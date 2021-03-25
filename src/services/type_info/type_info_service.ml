@@ -6,6 +6,7 @@
  *)
 
 open Base.Result
+open Types_js_types
 
 let ( >|= ) = Lwt.( >|= )
 
@@ -99,7 +100,9 @@ let coverage ~cx ~typed_ast ~force ~trust file content =
 
 let suggest ~options ~env ~profiling file_key file_content =
   Types_js.typecheck_contents ~options ~env ~profiling file_content file_key >|= function
-  | (Some (cx, ast, file_sig, _, tast), tc_errors, tc_warnings) ->
+  | ( Some (Type_contents_artifacts { cx; ast; file_sig; typed_ast = tast; _ }),
+      tc_errors,
+      tc_warnings ) ->
     let file_sig = File_sig.abstractify_locs file_sig in
     let ty_query = Query_types.suggest_types cx file_sig tast in
     let exact_by_default = Options.exact_by_default options in
