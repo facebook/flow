@@ -1,2 +1,1 @@
 shell: test.sh
-SKIP_old_signatures: true

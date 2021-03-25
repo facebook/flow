@@ -151,7 +151,6 @@ start_flow_unsafe () {
       "$FLOW" start "$root" \
         $flowlib --wait \
         $new_check_flag \
-        $old_signatures_flag \
         --wait-for-recheck "$wait_for_recheck" \
         --saved-state-fetcher "local" \
         --saved-state-no-fallback \
@@ -170,7 +169,6 @@ start_flow_unsafe () {
     "$FLOW" start "$root" \
       $flowlib --wait --wait-for-recheck "$wait_for_recheck" \
       $new_check_flag \
-      $old_signatures_flag \
       --file-watcher "$file_watcher" \
       --log-file "$abs_log_file" \
       --monitor-log-file "$abs_monitor_log_file" \
@@ -291,11 +289,6 @@ runtest() {
         else
           new_check_flag=""
         fi
-        if [[ "$old_signatures" -eq 1 ]]; then
-          old_signatures_flag="--old-signatures"
-        else
-          old_signatures_flag=""
-        fi
         if [ -e ".testconfig" ]
         then
             # auto_start
@@ -358,12 +351,6 @@ runtest() {
                 return $RUNTEST_SKIP
             fi
 
-            if [[ "$old_signatures" -eq 1 ]] && \
-              [ "$(awk '$1=="SKIP_old_signatures:"{print $2}' .testconfig)" == "true" ]
-            then
-                return $RUNTEST_SKIP
-            fi
-
             # wait_for_recheck
             if [ "$(awk '$1=="wait_for_recheck:"{print $2}' .testconfig)" == "false" ]
             then
@@ -391,7 +378,6 @@ runtest() {
             "$FLOW" start "$root" \
               $flowlib --wait \
               $new_check_flag \
-              $old_signatures_flag \
               --wait-for-recheck "$wait_for_recheck" \
               --lazy-mode none \
               --file-watcher "$file_watcher" \
@@ -422,7 +408,6 @@ runtest() {
               "$FLOW" check . \
                 $flowlib --strip-root --show-all-errors \
                 $new_check_flag \
-                $old_signatures_flag \
                  1>> "$abs_out_file" 2>> "$stderr_dest"
               st=$?
             fi
@@ -452,7 +437,6 @@ runtest() {
                 $flowlib \
                 ${cmd_args[*]} \
                 $new_check_flag \
-                $old_signatures_flag \
                 --strip-root \
                 --quiet \
                 --input-file "$input_file" \

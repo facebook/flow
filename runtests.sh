@@ -28,8 +28,6 @@ show_help() {
   echo "        test saved state"
   echo "    -x"
   echo "        test new check"
-  echo "    -z"
-  echo "        test old signatures"
   echo "    -v"
   echo "        verbose output (shows skipped tests)"
   echo "    -h"
@@ -44,13 +42,12 @@ OPTIND=1
 record=0
 saved_state=0
 new_check=0
-old_signatures=0
 verbose=0
 quiet=0
 relative="$THIS_DIR"
 list_tests=0
-export saved_state filter new_check old_signatures
-while getopts "b:d:f:lqrsxzt:vh?" opt; do
+export saved_state filter new_check
+while getopts "b:d:f:lqrsxt:vh?" opt; do
   case "$opt" in
   b)
     FLOW="$OPTARG"
@@ -79,11 +76,6 @@ while getopts "b:d:f:lqrsxzt:vh?" opt; do
     ;;
   x)
     new_check=1
-    old_signatures=0
-    ;;
-  z)
-    old_signatures=1
-    new_check=0
     ;;
   v)
     verbose=1
@@ -102,8 +94,6 @@ shift $((OPTIND-1))
 if [ -n "$specific_test" ]; then
   if [[ "$saved_state" -eq 1 ]]; then
     specific_test=$(echo $specific_test | sed 's/\(.*\)-saved-state$/\1/')
-  elif [[ "$old_signatures" -eq 1 ]]; then
-    specific_test=$(echo $specific_test | sed 's/\(.*\)-old-signatures$/\1/')
   elif [[ "$new_check" -eq 1 ]]; then
     specific_test=$(echo $specific_test | sed 's/\(.*\)-new-check$/\1/')
   fi
@@ -265,8 +255,6 @@ if [[ "$list_tests" -eq 1 ]]; then
 
       if [[ "$saved_state" -eq 1 ]]; then
         echo "$name-saved-state"
-      elif [[ "$old_signatures" -eq 1 ]]; then
-        echo "$name-old-signatures"
       elif [[ "$new_check" -eq 1 ]]; then
         echo "$name-new-check"
       else
