@@ -229,10 +229,9 @@ let infer_and_merge ~root filename ast file_sig =
      it relies on the JS version only supporting libs + 1 file, so every
      module you can require() must come from a lib; this skips resolving
      module names and just adds them all to the `decls` list. *)
-  let metadata = stub_metadata ~root ~checked:true in
   let master_cx = get_master_cx root in
-  let require_loc_map = File_sig.With_ALoc.(require_loc_map file_sig.module_sig) in
   let reqs =
+    let require_loc_map = File_sig.With_ALoc.(require_loc_map file_sig.module_sig) in
     SMap.fold
       (fun module_name locs reqs ->
         let m = Modulename.String module_name in
@@ -241,24 +240,30 @@ let infer_and_merge ~root filename ast file_sig =
       require_loc_map
       Merge_js.Reqs.empty
   in
-  let lint_severities = LintSettings.empty_severities in
-  let strict_mode = StrictModeSettings.empty in
-  let (_, { Flow_ast.Program.all_comments; _ }) = ast in
-  let aloc_ast = Ast_loc_utils.loc_to_aloc_mapper#program ast in
-  let opts = Merge_js.Merge_options { metadata; lint_severities; strict_mode } in
-  let getters =
+  let (_, { Flow_ast.Program.all_comments = comments; _ }) = ast in
+  let ast = Ast_loc_utils.loc_to_aloc_mapper#program ast in
+  (* TODO (nmote, sainati) - Exceptions should mainly be used for exceptional code flows. We
+   * shouldn't use them to decide whether or not to use abstract locations. We should pass through
+   * whatever options we need instead *)
+  let aloc_table = lazy (raise (Parsing_heaps_exceptions.ALoc_table_not_found "")) in
+  let options =
     {
-      Merge_js.get_ast_unsafe = (fun _ -> (all_comments, aloc_ast));
-      (* TODO (nmote, sainati) - Exceptions should mainly be used for exceptional code flows. We
-       * shouldn't use them to decide whether or not to use abstract locations. We should pass through
-       * whatever options we need instead *)
-      get_aloc_table_unsafe = (fun _ -> raise (Parsing_heaps_exceptions.ALoc_table_not_found ""));
-      get_docblock_unsafe = (fun _ -> stub_docblock);
-      get_file_sig_unsafe = (fun _ -> file_sig);
+      Merge_js.metadata = stub_metadata ~root ~checked:true;
+      lint_severities = LintSettings.empty_severities;
+      strict_mode = StrictModeSettings.empty;
     }
   in
-  let (cx, _, tast) = Merge_js.check_file ~opts ~getters filename reqs [] master_cx in
-  (cx, tast)
+  Merge_js.check_file
+    ~options
+    filename
+    reqs
+    []
+    master_cx
+    ast
+    comments
+    file_sig
+    stub_docblock
+    aloc_table
 
 let check_content ~filename ~content =
   let stdin_file = Some (Path.make_unsafe filename, content) in

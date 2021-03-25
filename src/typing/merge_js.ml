@@ -5,7 +5,11 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
-type get_ast_return = Loc.t Flow_ast.Comment.t list * (ALoc.t, ALoc.t) Flow_ast.Program.t
+type options = {
+  metadata: Context.metadata;
+  lint_severities: Severity.severity LintSettings.t;
+  strict_mode: StrictModeSettings.t;
+}
 
 module RequireMap = WrappedMap.Make (struct
   (* If file A.js imports module 'Foo', this will be ('Foo' * A.js) *)
@@ -484,108 +488,6 @@ let post_merge_checks cx master_cx ast tast metadata file_sig =
   detect_matching_props_violations cx;
   detect_literal_subtypes cx
 
-type merge_options =
-  | Merge_options of {
-      metadata: Context.metadata;
-      lint_severities: Severity.severity LintSettings.t;
-      strict_mode: StrictModeSettings.t;
-    }
-
-type merge_getters = {
-  get_ast_unsafe: File_key.t -> get_ast_return;
-  get_aloc_table_unsafe: File_key.t -> ALoc.table;
-  get_docblock_unsafe: File_key.t -> Docblock.t;
-  get_file_sig_unsafe: File_key.t -> File_sig.With_ALoc.t;
-}
-
-type output =
-  Context.t * (ALoc.t, ALoc.t) Flow_ast.Program.t * (ALoc.t, ALoc.t * Type.t) Flow_ast.Program.t
-
-(* Merge a component with its "implicit requires" and "explicit requires." The
-   implicit requires are those defined in libraries. For the explicit
-   requires, we need to merge only those parts of the dependency graph that the
-   component immediately depends on. (We assume that this merging is part of a
-   recursive process that has already handled recursive dependencies.)
-
-   Now, by definition, files in a component can bidirectionally depend only on
-   other files in the component. All other dependencies are unidirectional.
-
-   Let dep_cxs contain the (optimized) contexts of all dependencies that are
-   unidirectional, and let component_cxs contain the contexts of the files in
-   the component. Let master_cx be the (optimized) context of libraries.
-
-   Let implementations contain the dependency edges between contexts in
-   component_cxs and dep_cxs, resources contain the dependency edges between
-   contexts in component_cxs and resource files, and declarations contain the
-   dependency edges from component_cxs to master_cx.
-
-   We assume that the first context in component_cxs is that of the leader (cx):
-   this serves as the "host" for the merging. Let the remaining contexts in
-   component_cxs be other_cxs.
-
-   1. Copy dep_cxs, other_cxs, and master_cx to the host cx.
-
-   2. Link the edges in implementations.
-
-   3. Link the edges in resources.
-
-   4. Link the edges in declarations.
-
-   5. Link the local references to libraries in master_cx and component_cxs.
-*)
-let merge_component ~opts ~getters component reqs dep_cxs master_cx =
-  let (Merge_options { metadata; lint_severities; strict_mode; _ }) = opts in
-  let { get_ast_unsafe; get_aloc_table_unsafe; get_docblock_unsafe; get_file_sig_unsafe } =
-    getters
-  in
-  let ccx = Context.make_ccx () in
-  let need_merge_master_cx = ref true in
-  (* Iterate over component *)
-  let (rev_results, impl_cxs) =
-    Nel.fold_left
-      (fun (results, impl_cxs) filename ->
-        let info = get_docblock_unsafe filename in
-        let metadata = Context.docblock_overrides info metadata in
-        let module_ref = Files.module_ref filename in
-        let aloc_table = lazy (get_aloc_table_unsafe filename) in
-        let cx =
-          Context.make
-            ccx
-            metadata
-            filename
-            aloc_table
-            (Reason.OrdinaryName module_ref)
-            Context.Merging
-        in
-
-        (* Builtins *)
-        if !need_merge_master_cx then (
-          need_merge_master_cx := false;
-          merge_builtins cx ccx master_cx
-        );
-
-        (* AST inference *)
-        let (comments, ast) = get_ast_unsafe filename in
-        let lint_severities = get_lint_severities metadata strict_mode lint_severities in
-        let file_sig = get_file_sig_unsafe filename in
-        Type_inference_js.add_require_tvars cx file_sig;
-        Context.set_local_env cx file_sig.File_sig.With_ALoc.exported_locals;
-        let tast = Type_inference_js.infer_ast cx filename comments ast ~lint_severities in
-        ((cx, ast, tast) :: results, FilenameMap.add filename cx impl_cxs))
-      ([], FilenameMap.empty)
-      component
-  in
-  let results = List.rev rev_results in
-  let (cx, _, _) = Base.List.hd_exn results in
-
-  (* Imports *)
-  dep_cxs |> Base.List.iter ~f:(Context.merge_into ccx);
-  merge_imports cx reqs impl_cxs;
-
-  match results with
-  | [] -> failwith "there is at least one cx"
-  | x :: xs -> (x, xs)
-
 (* This function is similar to merge_component in that it merges a component with
    its requires. The difference is that, here, requires are merged _before_ running
    inference on the component. This will be useful in making imported types available
@@ -593,22 +495,12 @@ let merge_component ~opts ~getters component reqs dep_cxs master_cx =
    that the input component is of size 1 and all imports have already been resolved
    and optimized.
 *)
-let check_file ~opts ~getters filename reqs dep_cxs master_cx =
-  let (Merge_options { metadata; lint_severities; strict_mode; _ }) = opts in
-  let { get_ast_unsafe; get_aloc_table_unsafe; get_docblock_unsafe; get_file_sig_unsafe } =
-    getters
-  in
+let check_file ~options filename reqs dep_cxs master_cx ast comments file_sig docblock aloc_table =
   let ccx = Context.make_ccx () in
-  let info = get_docblock_unsafe filename in
-  let metadata = Context.docblock_overrides info metadata in
-  let module_ref = Files.module_ref filename in
-  let aloc_table = lazy (get_aloc_table_unsafe filename) in
-  let cx =
-    Context.make ccx metadata filename aloc_table (Reason.OrdinaryName module_ref) Context.Checking
-  in
-  let (comments, ast) = get_ast_unsafe filename in
-  let lint_severities = get_lint_severities metadata strict_mode lint_severities in
-  let file_sig = get_file_sig_unsafe filename in
+  let metadata = Context.docblock_overrides docblock options.metadata in
+  let module_ref = Reason.OrdinaryName (Files.module_ref filename) in
+  let cx = Context.make ccx metadata filename aloc_table module_ref Context.Checking in
+  let lint_severities = get_lint_severities metadata options.strict_mode options.lint_severities in
 
   (* Builtins *)
   merge_builtins cx ccx master_cx;
@@ -624,7 +516,7 @@ let check_file ~opts ~getters filename reqs dep_cxs master_cx =
 
   (* Post-inference checks *)
   post_merge_checks cx master_cx ast tast metadata file_sig;
-  (cx, ast, tast)
+  (cx, tast)
 
 (* reduce a context to a "signature context" *)
 let sig_context cx module_refs =

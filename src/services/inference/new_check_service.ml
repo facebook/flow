@@ -11,12 +11,12 @@ type require = module_ref * ALoc.t Nel.t * Modulename.t * File_key.t
 
 type check_file =
   File_key.t ->
+  require list ->
   (ALoc.t, ALoc.t) Flow_ast.Program.t ->
   Loc.t Flow_ast.Comment.t list ->
   File_sig.With_ALoc.t ->
   Docblock.t ->
   ALoc.table Lazy.t ->
-  require list ->
   Context.t * (ALoc.t, ALoc.t * Type.t) Flow_ast.Program.t
 
 (* Check will lazily create types for the checked file's dependencies. These
@@ -383,7 +383,7 @@ let mk_check_file ~options ~reader () =
     Nel.iter connect locs
   in
 
-  fun file_key ast comments file_sig docblock aloc_table requires ->
+  fun file_key requires ast comments file_sig docblock aloc_table ->
     let ccx = Context.make_ccx () in
     let metadata = Context.docblock_overrides docblock base_metadata in
     let module_ref = Reason.OrdinaryName (Files.module_ref file_key) in

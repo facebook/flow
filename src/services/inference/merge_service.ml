@@ -41,130 +41,6 @@ type 'a merge_job =
   File_key.t Nel.t ->
   bool * 'a unit_result
 
-type reader = Module_heaps.Reader_dispatcher.reader
-
-(* In types-first inference is split into two phases: a "merge" and a "check" phase.
- * While these two phases differ in several aspects there are parts that are common
- * and can be abstracted into a single module (Process_unit).
- *
- * The PHASE_CONFIG interface describes the parts that are unique to each phase
- * and, as such, need to be implemented separately by "merge" and "check".
- *)
-module type PHASE_CONFIG = sig
-  type input
-
-  type output
-
-  val get_ast_unsafe : reader:reader -> File_key.t -> Merge_js.get_ast_return
-
-  val get_file_sig_unsafe : reader:reader -> Utils_js.FilenameMap.key -> File_sig.With_ALoc.t
-
-  val is_recursive_dep : File_key.t -> input -> bool
-
-  val fold_input : ('acc -> File_key.t -> 'acc) -> 'acc -> input -> 'acc
-
-  val process_with_deps :
-    opts:Merge_js.merge_options ->
-    getters:Merge_js.merge_getters ->
-    reader:reader ->
-    input ->
-    Reqs.t ->
-    Context.sig_t list ->
-    Context.master_context ->
-    output
-end
-
-module type PROCESS_UNIT = sig
-  type input
-
-  type output
-
-  val process : options:Options.t -> reader:reader -> Context.master_context -> input -> output
-
-  val reqs_of_input :
-    reader:reader ->
-    input ->
-    (string * ALoc.t Nel.t * Modulename.t * File_key.t) list ->
-    Context.sig_t list * Reqs.t
-end
-
-module Process_unit (C : PHASE_CONFIG) = struct
-  type input = C.input
-
-  type output = C.output
-
-  let reqs_of_input ~reader input required =
-    (* dep_cxs: the copied signature contexts of such dependencies. *)
-    let (dep_cxs, reqs) =
-      List.fold_left
-        (fun (dep_cxs, reqs) req ->
-          let (r, locs, resolved_r, file) = req in
-          let locs = locs |> Nel.to_list |> ALocSet.of_list in
-          Module_heaps.(
-            match Reader_dispatcher.get_file ~reader ~audit:Expensive.ok resolved_r with
-            | Some (File_key.ResourceFile f) -> (dep_cxs, Reqs.add_res f file locs reqs)
-            | Some dep ->
-              let info = Reader_dispatcher.get_info_unsafe ~reader ~audit:Expensive.ok dep in
-              if info.checked && info.parsed then
-                (* checked implementation exists *)
-                let m = Files.module_ref dep in
-                if C.is_recursive_dep dep input then
-                  (* impl is part of the input *)
-                  (dep_cxs, Reqs.add_impl m file locs reqs)
-                else
-                  (* look up impl sig_context *)
-                  let leader = Context_heaps.Reader_dispatcher.find_leader ~reader dep in
-                  let dep_cx = Context_heaps.Reader_dispatcher.find_sig ~reader leader in
-                  (dep_cx :: dep_cxs, Reqs.add_dep_impl m file (dep_cx, locs) reqs)
-              else
-                (* unchecked implementation exists *)
-                (dep_cxs, Reqs.add_unchecked r file locs reqs)
-            | None ->
-              (* implementation doesn't exist *)
-              (dep_cxs, Reqs.add_decl r file (locs, resolved_r) reqs)))
-        ([], Reqs.empty)
-        required
-    in
-    (dep_cxs, reqs)
-
-  let process ~options ~reader master_cx input =
-    let (required, file_sigs) =
-      C.fold_input
-        (fun (required, file_sigs) file ->
-          let file_sig = C.get_file_sig_unsafe ~reader file in
-          let file_sigs = FilenameMap.add file file_sig file_sigs in
-          let require_loc_map = File_sig.With_ALoc.(require_loc_map file_sig.module_sig) in
-          let required =
-            SMap.fold
-              (fun r locs acc ->
-                let resolved_r =
-                  Module_js.find_resolved_module ~reader ~audit:Expensive.ok file r
-                in
-                (r, locs, resolved_r, file) :: acc)
-              require_loc_map
-              required
-          in
-          (required, file_sigs))
-        ([], FilenameMap.empty)
-        input
-    in
-    let (dep_cxs, file_reqs) = reqs_of_input ~reader input required in
-    let metadata = Context.metadata_of_options options in
-    let lint_severities = Options.lint_severities options in
-    let strict_mode = Options.strict_mode options in
-    let get_aloc_table_unsafe = Parsing_heaps.Reader_dispatcher.get_aloc_table_unsafe ~reader in
-    let opts = Merge_js.Merge_options { metadata; lint_severities; strict_mode } in
-    let getters =
-      {
-        Merge_js.get_ast_unsafe = C.get_ast_unsafe ~reader;
-        get_aloc_table_unsafe;
-        get_docblock_unsafe = Parsing_heaps.Reader_dispatcher.get_docblock_unsafe ~reader;
-        get_file_sig_unsafe = (fun f -> FilenameMap.find f file_sigs);
-      }
-    in
-    C.process_with_deps ~opts ~getters ~reader input file_reqs dep_cxs master_cx
-end
-
 let scan_for_component_suppressions ~options ~get_ast_unsafe component =
   let lint_severities = Options.lint_severities options in
   let strict_mode = Options.strict_mode options in
@@ -468,78 +344,82 @@ let merge_component ~worker_mutator ~options ~reader ((leader_f, _) as component
     let duration = Unix.gettimeofday () -. start_time in
     (diff, Ok (Some (suppressions, duration)))
 
-module Check_config = struct
-  (* The "check" phase only needs to consider _one file_ at a time. *)
-  type input = File_key.t
+let reqs_of_file ~reader required =
+  List.fold_left
+    (fun (dep_cxs, reqs) req ->
+      let (r, locs, resolved_r, file) = req in
+      let locs = locs |> Nel.to_list |> ALocSet.of_list in
+      let open Module_heaps in
+      match Reader_dispatcher.get_file ~reader ~audit:Expensive.ok resolved_r with
+      | Some (File_key.ResourceFile f) -> (dep_cxs, Reqs.add_res f file locs reqs)
+      | Some dep ->
+        let info = Reader_dispatcher.get_info_unsafe ~reader ~audit:Expensive.ok dep in
+        if info.checked && info.parsed then
+          (* checked implementation exists *)
+          let m = Files.module_ref dep in
+          (* look up impl sig_context *)
+          let leader = Context_heaps.Reader_dispatcher.find_leader ~reader dep in
+          let dep_cx = Context_heaps.Reader_dispatcher.find_sig ~reader leader in
+          (dep_cx :: dep_cxs, Reqs.add_dep_impl m file (dep_cx, locs) reqs)
+        else
+          (* unchecked implementation exists *)
+          (dep_cxs, Reqs.add_unchecked r file locs reqs)
+      | None ->
+        (* implementation doesn't exist *)
+        (dep_cxs, Reqs.add_decl r file (locs, resolved_r) reqs))
+    ([], Reqs.empty)
+    required
 
-  type output = {
-    cx: Context.t;
-    file_sig: File_sig.With_ALoc.t;
-    typed_ast: (ALoc.t, ALoc.t * Type.t) Flow_ast.Program.t;
-    coverage: Coverage_response.file_coverage;
-  }
-
-  let get_ast_unsafe ~reader file =
+let mk_check_file options ~reader () =
+  let get_ast_unsafe file =
     let ((_, { Flow_ast.Program.all_comments; _ }) as ast) =
-      Parsing_heaps.Reader_dispatcher.get_ast_unsafe ~reader file
+      Parsing_heaps.Mutator_reader.get_ast_unsafe ~reader file
     in
     let aloc_ast = Ast_loc_utils.loc_to_aloc_mapper#program ast in
     (all_comments, aloc_ast)
-
-  let get_file_sig_unsafe ~reader file =
-    Parsing_heaps.Reader_dispatcher.get_file_sig_unsafe ~reader file |> File_sig.abstractify_locs
-
-  let fold_input f = f
-
-  let is_recursive_dep _ _ = false
-
-  let process_with_deps ~opts ~getters ~reader file reqs dep_cxs master_cx =
-    let (cx, _, typed_ast) = Merge_js.check_file ~opts ~getters file reqs dep_cxs master_cx in
-    let file_sig = get_file_sig_unsafe ~reader file in
-    let coverage = Coverage.file_coverage ~full_cx:cx typed_ast in
-    { cx; file_sig; typed_ast; coverage }
-end
-
-module Check_file :
-  PROCESS_UNIT with type input = File_key.t and type output = Check_config.output =
-  Process_unit (Check_config)
-
-let mk_check_file options ~reader () =
+  in
+  let get_file_sig_unsafe file =
+    Parsing_heaps.Mutator_reader.get_file_sig_unsafe ~reader file |> File_sig.abstractify_locs
+  in
+  let get_aloc_table_unsafe = Parsing_heaps.Mutator_reader.get_aloc_table_unsafe ~reader in
+  let get_docblock_unsafe = Parsing_heaps.Mutator_reader.get_docblock_unsafe ~reader in
   let process =
-    let reader = Abstract_state_reader.Mutator_state_reader reader in
     if Options.new_check options then
-      let check_file = New_check_service.mk_check_file ~options ~reader () in
-      fun file ->
-        let (comments, ast) = Check_config.get_ast_unsafe ~reader file in
-        let file_sig = Check_config.get_file_sig_unsafe ~reader file in
-        let docblock = Parsing_heaps.Reader_dispatcher.get_docblock_unsafe ~reader file in
-        let aloc_table =
-          lazy (Parsing_heaps.Reader_dispatcher.get_aloc_table_unsafe ~reader file)
-        in
-        let requires =
-          let require_loc_map = File_sig.With_ALoc.(require_loc_map file_sig.module_sig) in
-          let f mref locs acc =
-            let provider = Module_js.find_resolved_module ~reader ~audit:Expensive.ok file mref in
-            (mref, locs, provider, file) :: acc
-          in
-          SMap.fold f require_loc_map []
-        in
-        let (cx, typed_ast) = check_file file ast comments file_sig docblock aloc_table requires in
-        let coverage = Coverage.file_coverage ~full_cx:cx typed_ast in
-        (cx, file_sig, typed_ast, coverage)
+      let reader = Abstract_state_reader.Mutator_state_reader reader in
+      New_check_service.mk_check_file ~options ~reader ()
     else
-      fun file ->
-    let master_cx = Context_heaps.Reader_dispatcher.find_master ~reader in
-    let { Check_config.cx; file_sig; typed_ast; coverage; _ } =
-      Check_file.process ~options ~reader master_cx file
-    in
-    (cx, file_sig, typed_ast, coverage)
+      let options =
+        {
+          Merge_js.metadata = Context.metadata_of_options options;
+          lint_severities = Options.lint_severities options;
+          strict_mode = Options.strict_mode options;
+        }
+      in
+      fun file required ->
+        let master_cx = Context_heaps.Mutator_reader.find_master ~reader in
+        let reader = Abstract_state_reader.Mutator_state_reader reader in
+        let (dep_cxs, reqs) = reqs_of_file ~reader required in
+        Merge_js.check_file ~options file reqs dep_cxs master_cx
   in
   fun file ->
     let start_time = Unix.gettimeofday () in
     let info = Module_heaps.Mutator_reader.get_info_unsafe ~reader ~audit:Expensive.ok file in
     if info.Module_heaps.checked then
-      let (cx, file_sig, typed_ast, coverage) = process file in
+      let (comments, ast) = get_ast_unsafe file in
+      let file_sig = get_file_sig_unsafe file in
+      let docblock = get_docblock_unsafe file in
+      let aloc_table = lazy (get_aloc_table_unsafe file) in
+      let requires =
+        let require_loc_map = File_sig.With_ALoc.(require_loc_map file_sig.module_sig) in
+        let reader = Abstract_state_reader.Mutator_state_reader reader in
+        let f mref locs acc =
+          let provider = Module_js.find_resolved_module ~reader ~audit:Expensive.ok file mref in
+          (mref, locs, provider, file) :: acc
+        in
+        SMap.fold f require_loc_map []
+      in
+      let (cx, typed_ast) = process file requires ast comments file_sig docblock aloc_table in
+      let coverage = Coverage.file_coverage ~full_cx:cx typed_ast in
       let errors = Context.errors cx in
       let suppressions = Context.error_suppressions cx in
       let severity_cover = Context.severity_cover cx in
@@ -560,11 +440,11 @@ let mk_check_file options ~reader () =
 
 (* Variation of merge_context where requires may not have already been
    resolved. This is used by commands that make up a context on the fly. *)
-let check_contents_context ~reader options file ast info file_sig =
+let check_contents_context ~reader options file ast docblock file_sig =
   let (_, { Flow_ast.Program.all_comments = comments; _ }) = ast in
   let ast = Ast_loc_utils.loc_to_aloc_mapper#program ast in
   let file_sig = File_sig.abstractify_locs file_sig in
-  let get_aloc_table_unsafe = Parsing_heaps.Reader.get_aloc_table_unsafe ~reader in
+  let aloc_table = lazy (Parsing_heaps.Reader.get_aloc_table_unsafe ~reader file) in
   let reader = Abstract_state_reader.State_reader reader in
   let required =
     let require_loc_map = File_sig.With_ALoc.(require_loc_map file_sig.module_sig) in
@@ -578,30 +458,33 @@ let check_contents_context ~reader options file ast info file_sig =
     SMap.fold f require_loc_map []
   in
   if Options.new_check options then
-    let aloc_table = lazy (get_aloc_table_unsafe file) in
     let check_file = New_check_service.mk_check_file ~options ~reader () in
-    check_file file ast comments file_sig info aloc_table required
+    check_file file required ast comments file_sig docblock aloc_table
   else
-    let (dep_cxs, file_reqs) =
-      try Check_file.reqs_of_input ~reader file required with
+    let options =
+      {
+        Merge_js.metadata = Context.metadata_of_options options;
+        lint_severities = Options.lint_severities options;
+        strict_mode = Options.strict_mode options;
+      }
+    in
+    let (dep_cxs, reqs) =
+      try reqs_of_file ~reader required with
       | Key_not_found _ -> failwith "not all dependencies are ready yet, aborting..."
       | e -> raise e
     in
-    let metadata = Context.metadata_of_options options in
-    let lint_severities = Options.lint_severities options in
-    let strict_mode = Options.strict_mode options in
-    let opts = Merge_js.Merge_options { metadata; lint_severities; strict_mode } in
-    let getters =
-      {
-        Merge_js.get_ast_unsafe = (fun _ -> (comments, ast));
-        get_aloc_table_unsafe;
-        get_docblock_unsafe = (fun _ -> info);
-        get_file_sig_unsafe = (fun _ -> file_sig);
-      }
-    in
     let master_cx = Context_heaps.Reader_dispatcher.find_master ~reader in
-    let (cx, _, tast) = Merge_js.check_file ~opts ~getters file file_reqs dep_cxs master_cx in
-    (cx, tast)
+    Merge_js.check_file
+      ~options
+      file
+      reqs
+      dep_cxs
+      master_cx
+      ast
+      comments
+      file_sig
+      docblock
+      aloc_table
 
 (* Wrap a potentially slow operation with a timer that fires every interval seconds. When it fires,
  * it calls ~on_timer. When the operation finishes, the timer is cancelled *)
