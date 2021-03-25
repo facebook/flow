@@ -1483,6 +1483,7 @@ let dump_error_message =
         (string_of_aloc loc)
         (Base.Option.value_map ~f:(dump_reason cx) ~default:"None" reason)
     | EThisInExportedFunction loc -> spf "EThisInExportedFunction (%s)" (string_of_aloc loc)
+    | ESuperOutsideMethod loc -> spf "ESuperOutsideMethod (%s)" (string_of_aloc loc)
     | EMixedImportAndRequire (loc, reason) ->
       spf "EMixedImportAndRequire (%s, %s)" (string_of_aloc loc) (dump_reason cx reason)
     | EToplevelLibraryImport loc -> spf "EToplevelLibraryImport (%s)" (string_of_aloc loc)
