@@ -146,11 +146,7 @@ module SignatureVerification = struct
           | UnexpectedArraySpread (loc, _) ->
             let loc = Type_sig_collections.Locs.get locs loc in
             (tot_errors + 1, supported_error_kind cctx norm_opts ~max_type_size acc loc)
-          | ExpectedSort (_, _, loc)
-          | SketchyToplevelDef loc
-          | UnexpectedArrayHole loc
-          | UnsupportedPredicateExpression loc
-          | TODO (_, loc) ->
+          | UnexpectedArrayHole loc ->
             let loc = Type_sig_collections.Locs.get locs loc in
             (tot_errors + 1, unsupported_error_kind ~default_any acc loc)))
       (0, LMap.empty)

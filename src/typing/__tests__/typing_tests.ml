@@ -7,9 +7,7 @@
 
 open OUnit2
 
-let tests =
-  "typing"
-  >::: [Typed_ast_test.tests; Signature_verifier_test.tests; Signature_generator_test.tests]
+let tests = "typing" >::: [Typed_ast_test.tests]
 
 let _handle =
   let one_gig = 1024 * 1024 * 1024 in

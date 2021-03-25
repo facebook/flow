@@ -1405,12 +1405,6 @@ struct
           Signature_error.(
             begin
               match sve with
-              | ExpectedSort (sort, x, loc) ->
-                let loc' = this#loc loc in
-                if loc == loc' then
-                  tolerable_error
-                else
-                  SignatureVerificationError (ExpectedSort (sort, x, loc'))
               | ExpectedAnnotation (loc, sort) ->
                 let loc' = this#loc loc in
                 if loc == loc' then
@@ -1455,24 +1449,6 @@ struct
                   tolerable_error
                 else
                   SignatureVerificationError (UnexpectedExpression (loc', esort))
-              | SketchyToplevelDef loc ->
-                let loc' = this#loc loc in
-                if loc == loc' then
-                  tolerable_error
-                else
-                  SignatureVerificationError (SketchyToplevelDef loc')
-              | UnsupportedPredicateExpression loc ->
-                let loc' = this#loc loc in
-                if loc == loc' then
-                  tolerable_error
-                else
-                  SignatureVerificationError (UnsupportedPredicateExpression loc')
-              | TODO (msg, loc) ->
-                let loc' = this#loc loc in
-                if loc == loc' then
-                  tolerable_error
-                else
-                  SignatureVerificationError (TODO (msg, loc'))
             end)
 
       method error (error : error) =

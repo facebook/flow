@@ -1085,9 +1085,7 @@ let string_of_default =
 
 let string_of_signature_error pp_loc err =
   let open Signature_error in
-  let module Sort = Signature_builder_kind.Sort in
   match err with
-  | ExpectedSort (sort, x, loc) -> spf "%s @ %s is not a %s" x (pp_loc loc) (Sort.to_string sort)
   | ExpectedAnnotation (loc, sort) ->
     spf "Expected annotation at %s @ %s" (Expected_annotation_sort.to_string sort) (pp_loc loc)
   | UnexpectedObjectKey (_loc, key_loc) -> spf "Expected simple object key @ %s" (pp_loc key_loc)
@@ -1102,10 +1100,6 @@ let string_of_signature_error pp_loc err =
       "Cannot determine the type of this %s @ %s"
       (Flow_ast_utils.ExpressionSort.to_string esort)
       (pp_loc loc)
-  | SketchyToplevelDef loc ->
-    spf "Unexpected toplevel definition that needs hoisting @ %s" (pp_loc loc)
-  | UnsupportedPredicateExpression loc -> spf "Unsupported predicate expression @ %s" (pp_loc loc)
-  | TODO (msg, loc) -> spf "TODO: %s @ %s" msg (pp_loc loc)
 
 let dump_error_message =
   let open Error_message in

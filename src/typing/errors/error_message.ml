@@ -1351,17 +1351,13 @@ let loc_of_msg : 'loc t' -> 'loc option = function
   | ESignatureVerification sve ->
     Signature_error.(
       (match sve with
-      | ExpectedSort (_, _, loc)
       | ExpectedAnnotation (loc, _)
       | UnexpectedObjectKey (loc, _)
       | UnexpectedArraySpread (loc, _)
       | UnexpectedArrayHole loc
       | EmptyArray loc
       | EmptyObject loc
-      | UnexpectedExpression (loc, _)
-      | SketchyToplevelDef loc
-      | UnsupportedPredicateExpression loc
-      | TODO (_, loc) ->
+      | UnexpectedExpression (loc, _) ->
         Some loc))
   | EDuplicateModuleProvider { conflict; _ } -> Some conflict
   | EBindingError (_, loc, _, _) -> Some loc
@@ -2647,8 +2643,6 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
     Signature_error.(
       let features =
         match sve with
-        | ExpectedSort (sort, x, _) ->
-          [code x; text (spf " is not a %s." (Signature_builder_kind.Sort.to_string sort))]
         | ExpectedAnnotation (_, sort) ->
           [text (spf "Missing type annotation at %s:" (Expected_annotation_sort.to_string sort))]
         | UnexpectedObjectKey _ -> [text "Expected simple key in object:"]
@@ -2672,10 +2666,6 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
                  (Flow_ast_utils.ExpressionSort.to_string esort));
             text "Please provide an annotation, e.g., by adding a type cast around this expression.";
           ]
-        | SketchyToplevelDef _ -> [text "Unexpected toplevel definition that needs hoisting:"]
-        | UnsupportedPredicateExpression _ ->
-          [text "Unsupported kind of expression in predicate function:"]
-        | TODO (msg, _) -> [text (spf "TODO: %s is not supported yet, try using a type cast." msg)]
       in
       let features =
         text "Cannot build a typed interface for this module. "
