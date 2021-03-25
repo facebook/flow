@@ -13,11 +13,9 @@ open Flow_ast_visitor
 module Make
     (L : Loc_sig.S)
     (Scope_api : Scope_api_sig.S with module L = L)
-    (Scope_builder : Scope_builder_sig.S with module L = L and module Api = Scope_api)
-    (Signature_builder_deps : Signature_builder_deps_sig.S with module L = L) =
+    (Scope_builder : Scope_builder_sig.S with module L = L and module Api = Scope_api) =
 struct
   module L = L
-  module Signature_builder_deps = Signature_builder_deps
 
   type 'info t' = {
     module_sig: 'info module_sig';
@@ -111,7 +109,7 @@ struct
     | BadExportPosition of L.t
     (* e.g. `foo(module)`, dangerous because `module` is aliased *)
     | BadExportContext of string (* offending identifier *) * L.t
-    | SignatureVerificationError of Signature_builder_deps.Error.t
+    | SignatureVerificationError of L.t Signature_error.t
   [@@deriving show]
 
   type exports_info = {
@@ -1490,12 +1488,8 @@ struct
     end
 end
 
-module With_Loc =
-  Make (Loc_sig.LocS) (Scope_api.With_Loc) (Scope_builder.With_Loc)
-    (Signature_builder_deps.With_Loc)
-module With_ALoc =
-  Make (Loc_sig.ALocS) (Scope_api.With_ALoc) (Scope_builder.With_ALoc)
-    (Signature_builder_deps.With_ALoc)
+module With_Loc = Make (Loc_sig.LocS) (Scope_api.With_Loc) (Scope_builder.With_Loc)
+module With_ALoc = Make (Loc_sig.ALocS) (Scope_api.With_ALoc) (Scope_builder.With_ALoc)
 
 let abstractify_tolerable_errors =
   let module WL = With_Loc in

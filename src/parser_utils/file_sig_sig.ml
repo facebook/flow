@@ -8,8 +8,6 @@
 module type S = sig
   module L : Loc_sig.S
 
-  module Signature_builder_deps : Signature_builder_deps_sig.S
-
   (* In Flow, every file creates a single module, but may also include declared
    * modules. This data structure describes all such modules.
    *
@@ -173,7 +171,7 @@ module type S = sig
     | BadExportPosition of L.t
     (* e.g. `foo(module)`, dangerous because `module` is aliased *)
     | BadExportContext of string (* offending identifier *) * L.t
-    | SignatureVerificationError of Signature_builder_deps.Error.t
+    | SignatureVerificationError of L.t Signature_error.t
   [@@deriving show]
 
   type exports_info = {
