@@ -88,15 +88,7 @@ val lsp_initialize_params : single_client -> Lsp.Initialize.params
 
 val client_config : single_client -> Client_config.t
 
-type type_contents_artifacts =
-  Context.t
-  * Docblock.t
-  * File_sig.With_Loc.t
-  * File_sig.With_Loc.tolerable_error list
-  * (Loc.t, Loc.t) Flow_ast.Program.t
-  * (ALoc.t, ALoc.t * Type.t) Flow_ast.Program.t
-  * (Loc.t * Parse_error.t) list
-
-val type_contents_cache : single_client -> (type_contents_artifacts, string) result FilenameCache.t
+val type_contents_cache :
+  single_client -> (Types_js_types.type_contents_artifacts, string) result FilenameCache.t
 
 val clear_type_contents_caches : unit -> unit

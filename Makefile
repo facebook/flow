@@ -144,6 +144,7 @@ MODULES=\
   src/services/export/search\
   src/services/get_def\
   src/services/inference\
+  src/services/inference/types\
   src/services/jsdoc\
   src/services/module\
   src/services/refactor\

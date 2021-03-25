@@ -7,15 +7,6 @@
 
 module Prot = LspProt
 
-type type_contents_artifacts =
-  Context.t
-  * Docblock.t
-  * File_sig.With_Loc.t
-  * File_sig.With_Loc.tolerable_error list
-  * (Loc.t, Loc.t) Flow_ast.Program.t
-  * (ALoc.t, ALoc.t * Type.t) Flow_ast.Program.t
-  * (Loc.t * Parse_error.t) list
-
 module Client_config = struct
   type t = { suggest_autoimports: bool }
 
@@ -28,7 +19,7 @@ type single_client = {
   mutable subscribed: bool;
   (* map from filename to content *)
   mutable opened_files: string SMap.t;
-  type_contents_cache: (type_contents_artifacts, string) result FilenameCache.t;
+  type_contents_cache: (Types_js_types.type_contents_artifacts, string) result FilenameCache.t;
   mutable client_config: Client_config.t;
 }
 
