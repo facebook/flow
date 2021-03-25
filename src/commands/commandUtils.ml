@@ -816,7 +816,6 @@ module Options_flags = struct
     traces: int option;
     trust_mode: Options.trust_mode option;
     new_check: bool;
-    old_signatures: bool;
     abstract_locations: bool;
     verbose: Verbose.t option;
     wait_for_recheck: bool option;
@@ -874,7 +873,6 @@ let options_flags =
       quiet
       merge_timeout
       new_check
-      old_signatures
       abstract_locations
       include_suppressions
       trust_mode =
@@ -904,7 +902,6 @@ let options_flags =
         merge_timeout;
         trust_mode;
         new_check;
-        old_signatures;
         abstract_locations;
         include_suppressions;
       }
@@ -950,7 +947,6 @@ let options_flags =
              ^ "0 means no timeout (default: 100)" )
            ~env:"FLOW_MERGE_TIMEOUT"
       |> flag "--new-check" no_arg ~doc:""
-      |> flag "--old-signatures" no_arg ~doc:""
       |> flag
            "--abstract-locations"
            no_arg
@@ -1202,13 +1198,7 @@ let make_options
     in
     Base.Option.value lazy_mode ~default
   in
-  let opt_new_signatures =
-    options_flags.new_check
-    || ((not options_flags.old_signatures) && FlowConfig.new_signatures flowconfig)
-  in
-  let opt_new_check =
-    options_flags.new_check || (opt_new_signatures && FlowConfig.new_check flowconfig)
-  in
+  let opt_new_check = options_flags.new_check || FlowConfig.new_check flowconfig in
   let opt_abstract_locations =
     options_flags.abstract_locations
     || Base.Option.value (FlowConfig.abstract_locations flowconfig) ~default:true
@@ -1296,7 +1286,7 @@ let make_options
     opt_node_resolver_root_relative_dirnames =
       FlowConfig.node_resolver_root_relative_dirnames flowconfig;
     opt_new_check;
-    opt_new_signatures;
+    opt_new_signatures = true;
     opt_abstract_locations;
     opt_include_suppressions = options_flags.include_suppressions;
     opt_trust_mode =

@@ -68,7 +68,6 @@ let dummy_options_flags =
     temp_dir = None;
     traces = None;
     trust_mode = None;
-    old_signatures = false;
     new_check = false;
     abstract_locations = true;
     verbose = None;

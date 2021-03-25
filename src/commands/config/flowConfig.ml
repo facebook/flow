@@ -91,7 +91,6 @@ module Opts = struct
     module_system: Options.module_system;
     modules_are_use_strict: bool;
     munge_underscores: bool;
-    new_signatures: bool;
     new_check: bool;
     no_flowlib: bool;
     node_main_fields: string list;
@@ -213,7 +212,6 @@ module Opts = struct
       module_system = Options.Node;
       modules_are_use_strict = false;
       munge_underscores = false;
-      new_signatures = true;
       new_check = false;
       no_flowlib = false;
       node_main_fields = ["main"];
@@ -358,14 +356,7 @@ module Opts = struct
 
   let mapping fn = opt (fun str -> optparse_mapping str >>= fn)
 
-  let new_signatures_parser = boolean (fun opts v -> Ok { opts with new_signatures = v })
-
-  let new_check_parser =
-    boolean (fun opts v ->
-        if v && opts.new_signatures = false then
-          Error "Cannot set it to \"true\" when \"new_signatures\" is set to \"false\"."
-        else
-          Ok { opts with new_check = true })
+  let new_check_parser = boolean (fun opts v -> Ok { opts with new_check = v })
 
   let max_files_checked_per_worker_parser =
     uint (fun opts v -> Ok { opts with max_files_checked_per_worker = v })
@@ -657,7 +648,6 @@ module Opts = struct
       ("experimental.enums", boolean (fun opts v -> Ok { opts with enums = v }));
       ("experimental.facebook_module_interop", facebook_module_interop_parser);
       ("experimental.module.automatic_require_default", automatic_require_default_parser);
-      ("experimental.new_signatures", new_signatures_parser);
       ("experimental.new_check", new_check_parser);
       ("experimental.react.server_component_ext", react_server_component_exts_parser);
       ( "experimental.run_post_inference_implicit_instantiation",
@@ -1370,8 +1360,6 @@ let traces c = c.options.Opts.traces
 let trust_mode c = c.options.Opts.trust_mode
 
 let type_asserts c = c.options.Opts.type_asserts
-
-let new_signatures c = c.options.Opts.new_signatures
 
 let new_check c = c.options.Opts.new_check
 
