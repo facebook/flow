@@ -209,20 +209,16 @@ let implementation_file ~reader ~audit r =
   else
     None
 
-let file_dependencies ~options ~audit ~reader file =
+let file_dependencies ~audit ~reader file =
   let file_sig = Parsing_heaps.Mutator_reader.get_file_sig_unsafe reader file in
   let require_set = File_sig.With_Loc.(require_set file_sig.module_sig) in
   let sig_require_set =
-    if not (Options.new_signatures options) then
-      let sig_file_sig = Parsing_heaps.Mutator_reader.get_sig_file_sig_unsafe reader file in
-      File_sig.With_ALoc.(require_set sig_file_sig.module_sig)
-    else
-      let { Packed_type_sig.Module.module_refs = mrefs; _ } =
-        Parsing_heaps.Mutator_reader.get_type_sig_unsafe reader file
-      in
-      let acc = ref SSet.empty in
-      Type_sig_collections.Module_refs.iter (fun x -> acc := SSet.add x !acc) mrefs;
-      !acc
+    let { Packed_type_sig.Module.module_refs = mrefs; _ } =
+      Parsing_heaps.Mutator_reader.get_type_sig_unsafe reader file
+    in
+    let acc = ref SSet.empty in
+    Type_sig_collections.Module_refs.iter (fun x -> acc := SSet.add x !acc) mrefs;
+    !acc
   in
   let { Module_heaps.resolved_modules; _ } =
     Module_heaps.Mutator_reader.get_resolved_requires_unsafe ~reader ~audit file
@@ -242,13 +238,13 @@ let file_dependencies ~options ~audit ~reader file =
 
 (* Calculates the dependency graph as a map from files to their dependencies.
  * Dependencies not in parsed are ignored. *)
-let calc_partial_dependency_graph ~options ~reader workers files ~parsed =
+let calc_partial_dependency_graph ~reader workers files ~parsed =
   let%lwt dependency_graph =
     MultiWorkerLwt.call
       workers
       ~job:
         (List.fold_left (fun dependency_info file ->
-             let dependencies = file_dependencies ~options ~audit:Expensive.ok ~reader file in
+             let dependencies = file_dependencies ~audit:Expensive.ok ~reader file in
              FilenameMap.add file dependencies dependency_info))
       ~neutral:FilenameMap.empty
       ~merge:FilenameMap.union
@@ -262,8 +258,6 @@ let calc_partial_dependency_graph ~options ~reader workers files ~parsed =
   in
   Lwt.return dependency_graph
 
-let calc_dependency_info ~options ~reader workers ~parsed =
-  let%lwt dependency_graph =
-    calc_partial_dependency_graph ~options ~reader workers parsed ~parsed
-  in
+let calc_dependency_info ~reader workers ~parsed =
+  let%lwt dependency_graph = calc_partial_dependency_graph ~reader workers parsed ~parsed in
   Lwt.return (Dependency_info.of_map dependency_graph)

@@ -1872,7 +1872,6 @@ end = struct
           in
           let%lwt partial_dependency_graph =
             Dep_service.calc_partial_dependency_graph
-              ~options
               ~reader
               workers
               files_to_update_dependency_info
@@ -2719,7 +2718,7 @@ let init_from_scratch ~profiling ~workers options =
   in
   let%lwt dependency_info =
     Memory_utils.with_memory_timer_lwt ~options "CalcDepsTypecheck" profiling (fun () ->
-        Dep_service.calc_dependency_info ~options ~reader workers ~parsed)
+        Dep_service.calc_dependency_info ~reader workers ~parsed)
   in
 
   Hh_logger.info "Indexing files";
