@@ -2,4 +2,4 @@
 short_literals=0% on, 100% off
 
 [options]
-(short_literals=potato) max_literal_length=10
+(short_literals=on) max_literal_length=10
