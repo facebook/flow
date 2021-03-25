@@ -3136,6 +3136,9 @@ and object_literal =
         loop opts scope locs loc ~frozen acc ps
       | O.Property (prop_loc, P.Init {key = P.Computed _; _})
       | O.Property (prop_loc, P.Method {key = P.Computed _; _}) ->
+        (* TODO: Instead of stopping at the first unexpected key, we should
+         * accumulate a list of all signature errors in the object literal, so
+         * the user can fix all of the errors at once instead of one-by-one. *)
         let prop_loc = Locs.push locs prop_loc in
         Err (loc, SigError (Signature_error.UnexpectedObjectKey (loc, prop_loc)))
       | O.Property (prop_loc, p) ->

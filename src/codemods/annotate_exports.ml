@@ -107,45 +107,54 @@ module SignatureVerification = struct
       }
     in
     let { Codemod_context.Typed.options; docblock; _ } = cctx in
-    let module_ref_prefix = Options.haste_module_ref_prefix options in
-    match File_sig.With_Loc.program_with_exports_info ~ast ~module_ref_prefix with
-    | Error _ -> (0, LMap.empty)
-    | Ok (exports_info, _) ->
-      let signature = Signature_builder.program ast ~exports_info in
-      let (sig_errors, _, _) =
-        let prevent_munge =
-          let should_munge = Options.should_munge_underscores options in
-          Docblock.preventMunge docblock || not should_munge
-        in
-        let facebook_fbt = Options.facebook_fbt options in
-        let ignore_static_propTypes = true in
-        let facebook_keyMirror = true in
-        Signature_builder.Signature.verify
-          ~prevent_munge
-          ~facebook_fbt
-          ~ignore_static_propTypes
-          ~facebook_keyMirror
-          signature
-      in
-      Signature_builder_deps.With_Loc.PrintableErrorSet.fold
-        (fun err (tot_errors, acc) ->
+    let prevent_munge =
+      let should_munge = Options.should_munge_underscores options in
+      Docblock.preventMunge docblock || not should_munge
+    in
+    let sig_opts =
+      {
+        Type_sig_parse.type_asserts = Options.type_asserts options;
+        suppress_types = Options.suppress_types options;
+        munge = not prevent_munge;
+        ignore_static_propTypes = true;
+        facebook_keyMirror = true;
+        facebook_fbt = Options.facebook_fbt options;
+        max_literal_len = Options.max_literal_length options;
+        exact_by_default = Options.exact_by_default options;
+        module_ref_prefix = Options.haste_module_ref_prefix options;
+        enable_enums = Options.enums options;
+        enable_this_annot = Options.this_annot options;
+      }
+    in
+    let (sig_errors, locs, _) =
+      let strict = Docblock.is_strict docblock in
+      Type_sig_utils.parse_and_pack_module ~strict sig_opts None ast
+    in
+    List.fold_left
+      (fun acc (_, err) ->
+        match err with
+        | Type_sig.CheckError -> acc
+        | Type_sig.SigError err ->
           let open Signature_error in
-          match err with
+          let (tot_errors, acc) = acc in
+          (match err with
           | ExpectedAnnotation (loc, _)
           | UnexpectedExpression (loc, _)
           | UnexpectedObjectKey (loc, _)
           | EmptyArray loc
           | EmptyObject loc
           | UnexpectedArraySpread (loc, _) ->
+            let loc = Type_sig_collections.Locs.get locs loc in
             (tot_errors + 1, supported_error_kind cctx norm_opts ~max_type_size acc loc)
           | ExpectedSort (_, _, loc)
           | SketchyToplevelDef loc
           | UnexpectedArrayHole loc
           | UnsupportedPredicateExpression loc
           | TODO (_, loc) ->
-            (tot_errors + 1, unsupported_error_kind ~default_any acc loc))
-        sig_errors
-        (0, LMap.empty)
+            let loc = Type_sig_collections.Locs.get locs loc in
+            (tot_errors + 1, unsupported_error_kind ~default_any acc loc)))
+      (0, LMap.empty)
+      sig_errors
 end
 
 module SignatureVerificationErrorStats = struct
