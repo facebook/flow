@@ -52,16 +52,7 @@ val type_contents :
   string ->
   (* fake file-/module name *)
   File_key.t ->
-  ( Context.t
-    * Docblock.t
-    * File_sig.With_Loc.t
-    * File_sig.With_Loc.tolerable_error list
-    * (Loc.t, Loc.t) Flow_ast.Program.t
-    * (ALoc.t, ALoc.t * Type.t) Flow_ast.Program.t
-    * (Loc.t * Parse_error.t) list,
-    string )
-  result
-  Lwt.t
+  (Types_js_types.type_contents_artifacts, string) result Lwt.t
 
 val typecheck_contents :
   options:Options.t ->
