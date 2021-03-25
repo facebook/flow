@@ -10,13 +10,13 @@ module Reqs : sig
 
   val empty : t
 
-  val add_dep_impl : string -> File_key.t -> Context.sig_t * Loc_collections.ALocSet.t -> t -> t
+  val add_dep_impl : string -> Context.sig_t * Loc_collections.ALocSet.t -> t -> t
 
-  val add_unchecked : string -> File_key.t -> Loc_collections.ALocSet.t -> t -> t
+  val add_unchecked : string -> Loc_collections.ALocSet.t -> t -> t
 
-  val add_res : string -> File_key.t -> Loc_collections.ALocSet.t -> t -> t
+  val add_res : string -> Loc_collections.ALocSet.t -> t -> t
 
-  val add_decl : string -> File_key.t -> Loc_collections.ALocSet.t * Modulename.t -> t -> t
+  val add_decl : string -> Loc_collections.ALocSet.t * Modulename.t -> t -> t
 end
 
 type options = {

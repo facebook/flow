@@ -344,13 +344,13 @@ let merge_component ~worker_mutator ~options ~reader ((leader_f, _) as component
     let duration = Unix.gettimeofday () -. start_time in
     (diff, Ok (Some (suppressions, duration)))
 
-let reqs_of_file ~reader file required =
+let reqs_of_file ~reader required =
   List.fold_left
     (fun (dep_cxs, reqs) (r, locs, resolved_r) ->
       let locs = locs |> Nel.to_list |> ALocSet.of_list in
       let open Module_heaps in
       match Reader_dispatcher.get_file ~reader ~audit:Expensive.ok resolved_r with
-      | Some (File_key.ResourceFile f) -> (dep_cxs, Reqs.add_res f file locs reqs)
+      | Some (File_key.ResourceFile f) -> (dep_cxs, Reqs.add_res f locs reqs)
       | Some dep ->
         let info = Reader_dispatcher.get_info_unsafe ~reader ~audit:Expensive.ok dep in
         if info.checked && info.parsed then
@@ -359,13 +359,13 @@ let reqs_of_file ~reader file required =
           (* look up impl sig_context *)
           let leader = Context_heaps.Reader_dispatcher.find_leader ~reader dep in
           let dep_cx = Context_heaps.Reader_dispatcher.find_sig ~reader leader in
-          (dep_cx :: dep_cxs, Reqs.add_dep_impl m file (dep_cx, locs) reqs)
+          (dep_cx :: dep_cxs, Reqs.add_dep_impl m (dep_cx, locs) reqs)
         else
           (* unchecked implementation exists *)
-          (dep_cxs, Reqs.add_unchecked r file locs reqs)
+          (dep_cxs, Reqs.add_unchecked r locs reqs)
       | None ->
         (* implementation doesn't exist *)
-        (dep_cxs, Reqs.add_decl r file (locs, resolved_r) reqs))
+        (dep_cxs, Reqs.add_decl r (locs, resolved_r) reqs))
     ([], Reqs.empty)
     required
 
@@ -397,7 +397,7 @@ let mk_check_file options ~reader () =
       fun file required ->
         let master_cx = Context_heaps.Mutator_reader.find_master ~reader in
         let reader = Abstract_state_reader.Mutator_state_reader reader in
-        let (dep_cxs, reqs) = reqs_of_file ~reader file required in
+        let (dep_cxs, reqs) = reqs_of_file ~reader required in
         Merge_js.check_file ~options file reqs dep_cxs master_cx
   in
   fun file ->
@@ -468,7 +468,7 @@ let check_contents_context ~reader options file ast docblock file_sig =
       }
     in
     let (dep_cxs, reqs) =
-      try reqs_of_file ~reader file required with
+      try reqs_of_file ~reader required with
       | Key_not_found _ -> failwith "not all dependencies are ready yet, aborting..."
       | e -> raise e
     in

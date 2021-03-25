@@ -236,7 +236,7 @@ let infer_and_merge ~root filename ast file_sig =
       (fun module_name locs reqs ->
         let m = Modulename.String module_name in
         let locs = locs |> Nel.to_list |> Loc_collections.ALocSet.of_list in
-        Merge_js.Reqs.add_decl module_name filename (locs, m) reqs)
+        Merge_js.Reqs.add_decl module_name (locs, m) reqs)
       require_loc_map
       Merge_js.Reqs.empty
   in

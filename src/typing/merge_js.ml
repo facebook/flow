@@ -11,17 +11,6 @@ type options = {
   strict_mode: StrictModeSettings.t;
 }
 
-module RequireMap = WrappedMap.Make (struct
-  (* If file A.js imports module 'Foo', this will be ('Foo' * A.js) *)
-  type t = string * File_key.t
-
-  let compare (r1, f1) (r2, f2) =
-    match String.compare r1 r2 with
-    | 0 -> File_key.compare f1 f2
-    | n -> n
-end)
-
-module FilenameMap = Utils_js.FilenameMap
 module ALocSet = Loc_collections.ALocSet
 
 module Reqs = struct
@@ -36,51 +25,40 @@ module Reqs = struct
   type t = {
     (* dep_impls: edges from files in the component to cxs of direct dependencies,
      * when implementations are found *)
-    dep_impls: dep_impl RequireMap.t;
+    dep_impls: dep_impl SMap.t;
     (* unchecked: edges from files in the component to files which are known to
      * exist are not checked (no @flow, @noflow, unparsed). Note that these
      * dependencies might be provided by a (typed) libdef, but we don't know yet. *)
-    unchecked: unchecked RequireMap.t;
+    unchecked: unchecked SMap.t;
     (* res: edges between files in the component and resource files, labeled
      * with the requires they denote. *)
-    res: res RequireMap.t;
+    res: res SMap.t;
     (* decls: edges between files in the component and libraries, classified
      * by requires (when implementations of such requires are not found). *)
-    decls: decl RequireMap.t;
+    decls: decl SMap.t;
   }
 
   let empty =
-    {
-      dep_impls = RequireMap.empty;
-      unchecked = RequireMap.empty;
-      res = RequireMap.empty;
-      decls = RequireMap.empty;
-    }
+    { dep_impls = SMap.empty; unchecked = SMap.empty; res = SMap.empty; decls = SMap.empty }
 
   let add_dep_impl =
     let combine (from_cx, locs1) (_, locs2) = (from_cx, ALocSet.union locs1 locs2) in
-    fun require requirer (from_cx, require_locs) reqs ->
-      let dep_impls =
-        RequireMap.add ~combine (require, requirer) (from_cx, require_locs) reqs.dep_impls
-      in
+    fun require (from_cx, require_locs) reqs ->
+      let dep_impls = SMap.add ~combine require (from_cx, require_locs) reqs.dep_impls in
       { reqs with dep_impls }
 
-  let add_unchecked require requirer require_locs reqs =
-    let unchecked =
-      RequireMap.add ~combine:ALocSet.union (require, requirer) require_locs reqs.unchecked
-    in
+  let add_unchecked require require_locs reqs =
+    let unchecked = SMap.add ~combine:ALocSet.union require require_locs reqs.unchecked in
     { reqs with unchecked }
 
-  let add_res require requirer require_locs reqs =
-    let res = RequireMap.add ~combine:ALocSet.union (require, requirer) require_locs reqs.res in
+  let add_res require require_locs reqs =
+    let res = SMap.add ~combine:ALocSet.union require require_locs reqs.res in
     { reqs with res }
 
   let add_decl =
     let combine (locs1, modulename) (locs2, _) = (ALocSet.union locs1 locs2, modulename) in
-    fun require requirer (require_locs, modulename) reqs ->
-      let decls =
-        RequireMap.add ~combine (require, requirer) (require_locs, modulename) reqs.decls
-      in
+    fun require (require_locs, modulename) reqs ->
+      let decls = SMap.add ~combine require (require_locs, modulename) reqs.decls in
       { reqs with decls }
 end
 
@@ -111,17 +89,14 @@ let implicit_require cx master_cx =
   let builtins = master_cx.Context.builtins in
   Context.set_builtins cx builtins
 
-(* Connect the export of cx_from to its import in cx_to. This happens in some
-   arbitrary cx, so cx_from and cx_to should have already been copied to cx. *)
-let explicit_impl_require cx (cx_from, m, loc, cx_to) =
+(* Connect the export of cx_from to its import in cx. *)
+let explicit_impl_require cx (cx_from, m, loc) =
   let from_t = Context.find_module_sig cx_from m in
-  let to_t = Context.find_require cx_to loc in
+  let to_t = Context.find_require cx loc in
   Flow_js.flow_t cx (from_t, to_t)
 
-(* Create the export of a resource file on the fly and connect it to its import
-   in cxs_to. This happens in some arbitrary cx, so cx_to should have already
-   been copied to cx. *)
-let explicit_res_require cx (loc, f, cx_to) =
+(* Create the export of a resource file on the fly and connect it to its import in cx. *)
+let explicit_res_require cx (loc, f) =
   (* Recall that a resource file is not parsed, so its export doesn't depend on
      its contents, just its extension. So, we create the export of a resource
      file on the fly by looking at its extension. The general alternative of
@@ -131,12 +106,11 @@ let explicit_res_require cx (loc, f, cx_to) =
      unchecked files: we create the export (`any`) on the fly instead of writing
      / reading it to / from the context of each unchecked file. *)
   let from_t = Import_export.mk_resource_module_t cx loc f in
-  let to_t = Context.find_require cx_to loc in
+  let to_t = Context.find_require cx loc in
   Flow_js.flow_t cx (from_t, to_t)
 
-(* Connect a export of a declared module to its import in cxs_to. This happens
-   in some arbitrary cx, so cx_to should have already been copied to cx. *)
-let explicit_decl_require cx (m, loc, resolved_m, cx_to) =
+(* Connect a export of a declared module to its import in cx. *)
+let explicit_decl_require cx (m, loc, resolved_m) =
   let reason = Reason.(mk_reason (RCustom m) loc) in
   (* lookup module declaration from builtin context *)
   let resolved_m_name = resolved_m |> Modulename.to_string in
@@ -155,14 +129,14 @@ let explicit_decl_require cx (m, loc, resolved_m, cx_to) =
   let from_t = Flow_js.lookup_builtin_strict cx m_name_internal reason in
 
   (* flow the declared module type to importing context *)
-  let to_t = Context.find_require cx_to loc in
+  let to_t = Context.find_require cx loc in
   Flow_js.flow_t cx (from_t, to_t)
 
-(* Connect exports of an unchecked module to its import in cx_to. Note that we
+(* Connect exports of an unchecked module to its import in cx. Note that we
    still lookup the module instead of returning `any` directly. This is because
    a resolved-unchecked dependency is superceded by a possibly-checked libdef.
    See unchecked_*_module_vs_lib tests for examples. *)
-let explicit_unchecked_require cx (m, loc, cx_to) =
+let explicit_unchecked_require cx (m, loc) =
   (* Use a special reason so we can tell the difference between an any-typed type import
    * from an untyped module and an any-typed type import from a nonexistent module. *)
   let reason = Reason.(mk_reason (RUntypedModule m) loc) in
@@ -171,7 +145,7 @@ let explicit_unchecked_require cx (m, loc, cx_to) =
   let from_t = Flow_js.lookup_builtin_with_default cx m_name default_t in
 
   (* flow the declared module type to importing context *)
-  let to_t = Context.find_require cx_to loc in
+  let to_t = Context.find_require cx loc in
   Flow_js.flow_t cx (from_t, to_t)
 
 let detect_sketchy_null_checks cx =
@@ -430,27 +404,21 @@ let get_lint_severities metadata strict_mode lint_severities =
   else
     lint_severities
 
-let merge_imports cx reqs impl_cxs =
+let merge_imports cx reqs =
   let open Reqs in
   reqs.dep_impls
-  |> RequireMap.iter (fun (m, fn_to) (cx_from, locs) ->
-         let cx_to = FilenameMap.find fn_to impl_cxs in
-         ALocSet.iter (fun loc -> explicit_impl_require cx (cx_from, m, loc, cx_to)) locs);
+  |> SMap.iter (fun m (cx_from, locs) ->
+         ALocSet.iter (fun loc -> explicit_impl_require cx (cx_from, m, loc)) locs);
 
   reqs.res
-  |> RequireMap.iter (fun (f, fn_to) locs ->
-         let cx_to = FilenameMap.find fn_to impl_cxs in
-         ALocSet.iter (fun loc -> explicit_res_require cx (loc, f, cx_to)) locs);
+  |> SMap.iter (fun f locs -> ALocSet.iter (fun loc -> explicit_res_require cx (loc, f)) locs);
 
   reqs.decls
-  |> RequireMap.iter (fun (m, fn_to) (locs, resolved_m) ->
-         let cx_to = FilenameMap.find fn_to impl_cxs in
-         ALocSet.iter (fun loc -> explicit_decl_require cx (m, loc, resolved_m, cx_to)) locs);
+  |> SMap.iter (fun m (locs, resolved_m) ->
+         ALocSet.iter (fun loc -> explicit_decl_require cx (m, loc, resolved_m)) locs);
 
   reqs.unchecked
-  |> RequireMap.iter (fun (m, fn_to) locs ->
-         let cx_to = FilenameMap.find fn_to impl_cxs in
-         ALocSet.iter (fun loc -> explicit_unchecked_require cx (m, loc, cx_to)) locs)
+  |> SMap.iter (fun m locs -> ALocSet.iter (fun loc -> explicit_unchecked_require cx (m, loc)) locs)
 
 (* Post-merge errors.
  *
@@ -494,7 +462,7 @@ let check_file ~options filename reqs dep_cxs master_cx ast comments file_sig do
   Type_inference_js.add_require_tvars cx file_sig;
   Context.set_local_env cx file_sig.File_sig.With_ALoc.exported_locals;
   dep_cxs |> Base.List.iter ~f:(Context.merge_into ccx);
-  merge_imports cx reqs (FilenameMap.singleton filename cx);
+  merge_imports cx reqs;
 
   (* AST inference  *)
   let tast = Type_inference_js.infer_ast cx filename comments ast ~lint_severities in
