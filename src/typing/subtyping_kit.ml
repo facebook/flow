@@ -1650,7 +1650,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
     (***************************************************************)
     (* Enable structural subtyping for upperbounds like interfaces *)
     (***************************************************************)
-    | (DefT (reason_lower, _, (MixedT _ | VoidT)), DefT (reason_upper, _, InstanceT _)) ->
+    | (DefT (reason_lower, _, (NullT | MixedT _ | VoidT)), DefT (reason_upper, _, InstanceT _)) ->
       add_output
         cx
         ~trace
