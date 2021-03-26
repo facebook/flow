@@ -1094,7 +1094,9 @@ let merge_contents ~options ~env ~reader filename info (ast, file_sig) =
   let%lwt () = ensure_checked_dependencies ~options ~reader ~env filename file_sig in
   Lwt.return (Merge_service.check_contents_context ~reader options filename ast info file_sig)
 
-let errors_of_context ~options ~env ~loc_of_aloc filename tolerable_errors cx =
+let errors_of_type_contents_artifacts ~options ~env ~loc_of_aloc ~filename ~type_contents_artifacts
+    =
+  let (Type_contents_artifacts { tolerable_errors; cx; _ }) = type_contents_artifacts in
   let errors = Context.errors cx in
   let local_errors =
     tolerable_errors
@@ -1203,9 +1205,13 @@ let typecheck_contents ~options ~env ~profiling contents filename =
         ~filename
         ~parse_artifacts
     in
-    let (Type_contents_artifacts { cx; _ }) = type_contents_artifacts in
     let (errors, warnings) =
-      errors_of_context ~options ~env ~loc_of_aloc filename tolerable_errors cx
+      errors_of_type_contents_artifacts
+        ~options
+        ~env
+        ~loc_of_aloc
+        ~filename
+        ~type_contents_artifacts
     in
     Lwt.return (Some type_contents_artifacts, errors, warnings)
   | Error errors ->
