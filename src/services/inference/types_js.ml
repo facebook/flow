@@ -134,16 +134,18 @@ let parse_contents ~options ~check_syntax filename contents =
   (* always enable types when checking an individual file *)
   let types_mode = Parsing_service_js.TypesAllowed in
   let max_tokens = Options.max_header_tokens options in
-  let (docblock_errors, info) = Parsing_service_js.parse_docblock ~max_tokens filename contents in
+  let (docblock_errors, docblock) =
+    Parsing_service_js.parse_docblock ~max_tokens filename contents
+  in
   let errors = Inference_utils.set_of_docblock_errors ~source_file:filename docblock_errors in
   let parse_options =
-    Parsing_service_js.make_parse_options ~fail:check_syntax ~types_mode info options
+    Parsing_service_js.make_parse_options ~fail:check_syntax ~types_mode docblock options
   in
-  let parse_result = Parsing_service_js.do_parse ~info ~parse_options contents filename in
+  let parse_result = Parsing_service_js.do_parse ~info:docblock ~parse_options contents filename in
   match parse_result with
   | Parsing_service_js.Parse_ok { ast; file_sig; tolerable_errors; parse_errors; _ } ->
     (* TODO: docblock errors get dropped *)
-    (Ok (ast, file_sig, tolerable_errors, parse_errors), info)
+    (Ok (ast, file_sig, tolerable_errors, parse_errors), docblock)
   | Parsing_service_js.Parse_fail fails ->
     let errors =
       match fails with
@@ -161,11 +163,11 @@ let parse_contents ~options ~check_syntax filename contents =
         let err = Inference_utils.error_of_file_sig_error ~source_file:filename err in
         Flow_error.ErrorSet.add err errors
     in
-    (Error errors, info)
+    (Error errors, docblock)
   | Parsing_service_js.(Parse_skip (Skip_non_flow_file | Skip_resource_file | Skip_package_json _))
     ->
     (* should never happen *)
-    (Error errors, info)
+    (Error errors, docblock)
 
 let flow_error_of_module_error file err =
   match err with
