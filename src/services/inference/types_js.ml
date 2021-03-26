@@ -142,8 +142,6 @@ let parse_contents ~options ~check_syntax filename contents =
   let parse_result = Parsing_service_js.do_parse ~info ~parse_options contents filename in
   match parse_result with
   | Parsing_service_js.Parse_ok { ast; file_sig; tolerable_errors; parse_errors; _ } ->
-    (* NOTE: parse errors are ignored because we don't surface them when ~check_syntax:false,
-       and they'll hit the Parse_fail case instead when ~check_syntax:true *)
     (* TODO: docblock errors get dropped *)
     (Ok (ast, file_sig, tolerable_errors, parse_errors), info)
   | Parsing_service_js.Parse_fail fails ->
