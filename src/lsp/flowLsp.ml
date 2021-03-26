@@ -2342,7 +2342,7 @@ and main_log_error ~(expected : bool) (msg : string) (stack : string) (event : e
 
 and main_handle_error (exn : Exception.t) (state : state) (event : event option) : state =
   Marshal_tools.(
-    let stack = Exception.get_backtrace_string exn in
+    let stack = Exception.get_full_backtrace_string 500 exn in
     match Exception.unwrap exn with
     | Server_fatal_connection_exception _edata when state = Post_shutdown -> state
     | Server_fatal_connection_exception edata ->
@@ -2404,8 +2404,7 @@ and main_handle_error (exn : Exception.t) (state : state) (event : event option)
     | Client_fatal_connection_exception edata ->
       let stack = edata.stack ^ "---\n" ^ stack in
       main_log_error ~expected:true ("[Client fatal] " ^ edata.message) stack event;
-      let report = Printf.sprintf "Client fatal exception: %s\n%s" edata.message stack in
-      Printf.eprintf "%s" report;
+      Printf.eprintf "Client fatal exception: %s\n%s\n%!" edata.message stack;
       lsp_exit_bad ()
     | e ->
       let e = Lsp_fmt.error_of_exn e in

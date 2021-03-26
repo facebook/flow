@@ -159,12 +159,13 @@ let internal_run_daemon' (oc : queue_message Daemon.out_channel) : unit =
             let timestamped_json = internal_read_message reader in
             Queue.push timestamped_json messages_to_send;
             true
-          with e ->
-            let message = Printexc.to_string e in
-            let stack = Printexc.get_backtrace () in
+          with exn ->
+            let e = Exception.wrap exn in
+            let message = Exception.get_ctor_string e in
+            let stack = Exception.get_full_backtrace_string 500 e in
             let edata = { Marshal_tools.message; stack } in
             let (should_continue, marshal) =
-              match e with
+              match exn with
               | Hh_json.Syntax_error _ -> (true, Recoverable_exception edata)
               | _ -> (false, Fatal_exception edata)
             in
@@ -185,13 +186,14 @@ let internal_run_daemon' (oc : queue_message Daemon.out_channel) : unit =
 
 (*  Main function for the daemon process. *)
 let internal_run_daemon (_dummy_param : unit) (_ic, (oc : queue_message Daemon.out_channel)) =
-  Printexc.record_backtrace true;
+  Exception.record_backtrace true;
   try internal_run_daemon' oc
-  with e ->
+  with exn ->
     (* An exception that's gotten here is not simply a parse error, but
        something else, so we should terminate the daemon at this point. *)
-    let message = Printexc.to_string e in
-    let stack = Printexc.get_backtrace () in
+    let e = Exception.wrap exn in
+    let message = Exception.get_ctor_string e in
+    let stack = Exception.get_full_backtrace_string 500 e in
     (try
        let out_fd = Daemon.descr_of_out_channel oc in
        Marshal_tools.to_fd_with_preamble out_fd (Fatal_exception { Marshal_tools.message; stack })
