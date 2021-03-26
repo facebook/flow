@@ -442,47 +442,55 @@ export class TestBuilder {
       {|resolve: any => void, reject: Error => void|},
     > = new Map();
 
-    connection.onRequest((method: string, ...rawParams: Array<mixed>) => {
-      const id = outstandingRequestsInfo.nextId;
-      outstandingRequestsInfo.mostRecent = id;
-      outstandingRequestsInfo.nextId++;
-      // the way vscode-jsonrpc works is the last element of the array is always
-      // the cancellation token, and the actual params are the ones before it.
-      const cancellationToken = ((rawParams.pop(): any): CancellationToken);
-      // We'll add our own {id: ...} to the array of params, so it's present
-      // in our messages[] array, so that people can match on it.
-      const params = [{id}, ...this.sanitizeIncomingLSPMessage(rawParams)];
-      messages.push({method, params});
-      this.log('LSP <<request %s\n%s', method, JSON.stringify(params));
-      messageEmitter.emit('message');
-
-      cancellationToken.onCancellationRequested(() => {
-        // The underlying Jsonrpc cancellation-request-notification has been
-        // wrapped up by vscode-jsonrpc into a CancellationToken. We'll unwrap
-        // it, for our messages[] array, so that tests can match on it.
-        const synthesizedParams = [{id}];
-        messages.push({method: '$/cancelRequest', params: synthesizedParams});
+    connection.onRequest(
+      (
+        method: string,
+        rawParams: Array<mixed> | {} | void,
+        cancellationToken: CancellationToken,
+      ) => {
+        const id = outstandingRequestsInfo.nextId;
+        outstandingRequestsInfo.mostRecent = id;
+        outstandingRequestsInfo.nextId++;
+        const params = this.sanitizeIncomingLSPMessage(rawParams);
+        messages.push({method, id, params});
         this.log(
-          'LSP <<notification $/cancelRequest\n%s',
-          JSON.stringify(synthesizedParams),
+          'LSP <<request %d: %s\n%s',
+          id,
+          method,
+          JSON.stringify(params),
         );
         messageEmitter.emit('message');
-      });
 
-      const promise = new Promise(
-        (resolve: any => void, reject: Error => void) => {
-          outstandingRequestsFromServer.set(id, {resolve, reject});
-        },
-      );
-      return promise;
-    });
+        cancellationToken.onCancellationRequested(() => {
+          // The underlying Jsonrpc cancellation-request-notification has been
+          // wrapped up by vscode-jsonrpc into a CancellationToken. We'll unwrap
+          // it, for our messages[] array, so that tests can match on it.
+          const synthesizedParams = {id};
+          messages.push({method: '$/cancelRequest', params: synthesizedParams});
+          this.log(
+            'LSP <<notification $/cancelRequest\n%s',
+            JSON.stringify(synthesizedParams),
+          );
+          messageEmitter.emit('message');
+        });
 
-    connection.onNotification((method: string, ...rawParams: Array<mixed>) => {
-      const params = this.sanitizeIncomingLSPMessage(rawParams);
-      messages.push({method, params});
-      this.log('LSP <<notification %s\n%s', method, JSON.stringify(params));
-      messageEmitter.emit('message');
-    });
+        const promise = new Promise(
+          (resolve: any => void, reject: Error => void) => {
+            outstandingRequestsFromServer.set(id, {resolve, reject});
+          },
+        );
+        return promise;
+      },
+    );
+
+    connection.onNotification(
+      (method: string, rawParams: Array<mixed> | {} | void) => {
+        const params = this.sanitizeIncomingLSPMessage(rawParams);
+        messages.push({method, params});
+        this.log('LSP <<notification %s\n%s', method, JSON.stringify(params));
+        messageEmitter.emit('message');
+      },
+    );
 
     const stderr = [];
     lspProcess.stderr.on('data', data => {
