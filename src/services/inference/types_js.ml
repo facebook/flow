@@ -1158,6 +1158,28 @@ let errors_of_context ~options ~env ~loc_of_aloc filename tolerable_errors cx =
   in
   (errors, warnings)
 
+type parse_artifacts =
+  | Parse_artifacts of {
+      docblock: Docblock.t;
+      ast: (Loc.t, Loc.t) Flow_ast.Program.t;
+      file_sig: File_sig.With_Loc.t;
+      tolerable_errors: File_sig.With_Loc.tolerable_error list;
+      parse_errors: (Loc.t * Parse_error.t) list;
+    }
+
+let type_contents_artifacts_of_parse_artifacts
+    ~options ~env ~reader ~profiling ~filename ~parse_artifacts =
+  let (Parse_artifacts { docblock; ast; file_sig; tolerable_errors; parse_errors }) =
+    parse_artifacts
+  in
+  let%lwt (cx, typed_ast) =
+    Memory_utils.with_memory_timer_lwt ~options "MergeContents" profiling (fun () ->
+        merge_contents ~options ~env ~reader filename docblock (ast, file_sig))
+  in
+  Lwt.return
+    (Type_contents_artifacts
+       { cx; docblock; file_sig; tolerable_errors; ast; typed_ast; parse_errors })
+
 let typecheck_contents ~options ~env ~profiling contents filename =
   let reader = State_reader.create () in
   let loc_of_aloc = Parsing_heaps.Reader.loc_of_aloc ~reader in
@@ -1169,18 +1191,23 @@ let typecheck_contents ~options ~env ~profiling contents filename =
   let docblock = Docblock.set_flow_mode_for_ide_command docblock in
   match parse_result with
   | Ok (ast, file_sig, tolerable_errors, parse_errors) ->
-    let%lwt (cx, typed_ast) =
-      Memory_utils.with_memory_timer_lwt ~options "MergeContents" profiling (fun () ->
-          merge_contents ~options ~env ~reader filename docblock (ast, file_sig))
+    let parse_artifacts =
+      Parse_artifacts { docblock; ast; file_sig; tolerable_errors; parse_errors }
     in
+    let%lwt type_contents_artifacts =
+      type_contents_artifacts_of_parse_artifacts
+        ~options
+        ~env
+        ~reader
+        ~profiling
+        ~filename
+        ~parse_artifacts
+    in
+    let (Type_contents_artifacts { cx; _ }) = type_contents_artifacts in
     let (errors, warnings) =
       errors_of_context ~options ~env ~loc_of_aloc filename tolerable_errors cx
     in
-    let artifacts =
-      Type_contents_artifacts
-        { cx; docblock; file_sig; tolerable_errors; ast; typed_ast; parse_errors }
-    in
-    Lwt.return (Some artifacts, errors, warnings)
+    Lwt.return (Some type_contents_artifacts, errors, warnings)
   | Error errors ->
     let errors =
       errors |> Flow_error.concretize_errors loc_of_aloc |> Flow_error.make_errors_printable
@@ -1198,15 +1225,19 @@ let type_contents ~options ~env ~profiling contents filename =
     let docblock = Docblock.set_flow_mode_for_ide_command docblock in
     match parse_result with
     | Ok (ast, file_sig, tolerable_errors, parse_errors) ->
-      let%lwt (cx, typed_ast) =
-        Memory_utils.with_memory_timer_lwt ~options "MergeContents" profiling (fun () ->
-            merge_contents ~options ~env ~reader filename docblock (ast, file_sig))
+      let parse_artifacts =
+        Parse_artifacts { docblock; ast; file_sig; tolerable_errors; parse_errors }
       in
-      let artifacts =
-        Type_contents_artifacts
-          { cx; docblock; file_sig; tolerable_errors; ast; typed_ast; parse_errors }
+      let%lwt type_contents_artifacts =
+        type_contents_artifacts_of_parse_artifacts
+          ~options
+          ~env
+          ~reader
+          ~profiling
+          ~filename
+          ~parse_artifacts
       in
-      Lwt.return (Ok artifacts)
+      Lwt.return (Ok type_contents_artifacts)
     | Error _ -> failwith "Couldn't parse file"
   with
   | Lwt.Canceled as exn -> raise exn
