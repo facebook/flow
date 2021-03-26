@@ -129,6 +129,15 @@ let reparse ~options ~profiling ~transaction ~reader ~workers ~modified ~deleted
       let (parse_ok, unparsed, unchanged, local_errors, _) = collate_parse_results results in
       Lwt.return (new_or_changed, parse_ok, unparsed, unchanged, local_errors))
 
+type parse_artifacts =
+  | Parse_artifacts of {
+      docblock: Docblock.t;
+      ast: (Loc.t, Loc.t) Flow_ast.Program.t;
+      file_sig: File_sig.With_Loc.t;
+      tolerable_errors: File_sig.With_Loc.tolerable_error list;
+      parse_errors: (Loc.t * Parse_error.t) list;
+    }
+
 (* TODO: make this always return errors and deal with check_syntax at the caller *)
 let parse_contents ~options ~check_syntax filename contents =
   (* always enable types when checking an individual file *)
@@ -147,7 +156,7 @@ let parse_contents ~options ~check_syntax filename contents =
   match parse_result with
   | Parsing_service_js.Parse_ok { ast; file_sig; tolerable_errors; parse_errors; _ } ->
     (* TODO: docblock errors get dropped *)
-    (Ok (ast, file_sig, tolerable_errors, parse_errors), docblock)
+    Ok (Parse_artifacts { docblock; ast; file_sig; tolerable_errors; parse_errors })
   | Parsing_service_js.Parse_fail fails ->
     let errors =
       match fails with
@@ -165,11 +174,11 @@ let parse_contents ~options ~check_syntax filename contents =
         let err = Inference_utils.error_of_file_sig_error ~source_file:filename err in
         Flow_error.ErrorSet.add err errors
     in
-    (Error errors, docblock)
+    Error errors
   | Parsing_service_js.(Parse_skip (Skip_non_flow_file | Skip_resource_file | Skip_package_json _))
     ->
     (* should never happen *)
-    (Error errors, docblock)
+    Error errors
 
 let flow_error_of_module_error file err =
   match err with
@@ -1162,15 +1171,6 @@ let errors_of_type_contents_artifacts ~options ~env ~loc_of_aloc ~filename ~type
   in
   (errors, warnings)
 
-type parse_artifacts =
-  | Parse_artifacts of {
-      docblock: Docblock.t;
-      ast: (Loc.t, Loc.t) Flow_ast.Program.t;
-      file_sig: File_sig.With_Loc.t;
-      tolerable_errors: File_sig.With_Loc.tolerable_error list;
-      parse_errors: (Loc.t * Parse_error.t) list;
-    }
-
 let type_contents_artifacts_of_parse_artifacts
     ~options ~env ~reader ~profiling ~filename ~parse_artifacts =
   let (Parse_artifacts { docblock; ast; file_sig; tolerable_errors; parse_errors }) =
@@ -1187,15 +1187,12 @@ let type_contents_artifacts_of_parse_artifacts
 let typecheck_contents ~options ~env ~profiling contents filename =
   let reader = State_reader.create () in
   let loc_of_aloc = Parsing_heaps.Reader.loc_of_aloc ~reader in
-  let%lwt (parse_result, docblock) =
+  let%lwt parse_result =
     Memory_utils.with_memory_timer_lwt ~options "Parsing" profiling (fun () ->
         Lwt.return (parse_contents ~options ~check_syntax:true filename contents))
   in
   match parse_result with
-  | Ok (ast, file_sig, tolerable_errors, parse_errors) ->
-    let parse_artifacts =
-      Parse_artifacts { docblock; ast; file_sig; tolerable_errors; parse_errors }
-    in
+  | Ok parse_artifacts ->
     let%lwt type_contents_artifacts =
       type_contents_artifacts_of_parse_artifacts
         ~options
@@ -1223,15 +1220,12 @@ let typecheck_contents ~options ~env ~profiling contents filename =
 let type_contents ~options ~env ~profiling contents filename =
   try%lwt
     let reader = State_reader.create () in
-    let%lwt (parse_result, docblock) =
+    let%lwt parse_result =
       Memory_utils.with_memory_timer_lwt ~options "Parsing" profiling (fun () ->
           Lwt.return (parse_contents ~options ~check_syntax:false filename contents))
     in
     match parse_result with
-    | Ok (ast, file_sig, tolerable_errors, parse_errors) ->
-      let parse_artifacts =
-        Parse_artifacts { docblock; ast; file_sig; tolerable_errors; parse_errors }
-      in
+    | Ok parse_artifacts ->
       let%lwt type_contents_artifacts =
         type_contents_artifacts_of_parse_artifacts
           ~options
