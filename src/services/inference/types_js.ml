@@ -142,6 +142,8 @@ let parse_contents ~options ~check_syntax filename contents =
     Parsing_service_js.make_parse_options ~fail:check_syntax ~types_mode docblock options
   in
   let parse_result = Parsing_service_js.do_parse ~info:docblock ~parse_options contents filename in
+  (* override docblock info *)
+  let docblock = Docblock.set_flow_mode_for_ide_command docblock in
   match parse_result with
   | Parsing_service_js.Parse_ok { ast; file_sig; tolerable_errors; parse_errors; _ } ->
     (* TODO: docblock errors get dropped *)
@@ -1189,8 +1191,6 @@ let typecheck_contents ~options ~env ~profiling contents filename =
     Memory_utils.with_memory_timer_lwt ~options "Parsing" profiling (fun () ->
         Lwt.return (parse_contents ~options ~check_syntax:true filename contents))
   in
-  (* override docblock info *)
-  let docblock = Docblock.set_flow_mode_for_ide_command docblock in
   match parse_result with
   | Ok (ast, file_sig, tolerable_errors, parse_errors) ->
     let parse_artifacts =
@@ -1227,8 +1227,6 @@ let type_contents ~options ~env ~profiling contents filename =
       Memory_utils.with_memory_timer_lwt ~options "Parsing" profiling (fun () ->
           Lwt.return (parse_contents ~options ~check_syntax:false filename contents))
     in
-    (* override docblock info *)
-    let docblock = Docblock.set_flow_mode_for_ide_command docblock in
     match parse_result with
     | Ok (ast, file_sig, tolerable_errors, parse_errors) ->
       let parse_artifacts =
