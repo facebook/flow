@@ -70,6 +70,7 @@ type t =
   | InvalidLHSInExponentiation
   | InvalidLHSInForIn
   | InvalidLHSInForOf
+  | InvalidImportMetaProperty
   | ExpectedPatternFoundExpression
   | MultipleDefaultsInSwitch
   | NoCatchOrFinally
@@ -290,6 +291,7 @@ module PP = struct
     | InvalidLHSInExponentiation -> "Invalid left-hand side in exponentiation expression"
     | InvalidLHSInForIn -> "Invalid left-hand side in for-in"
     | InvalidLHSInForOf -> "Invalid left-hand side in for-of"
+    | InvalidImportMetaProperty ->  "The only valid meta property for import is import.meta"
     | ExpectedPatternFoundExpression ->
       "Expected an object pattern, array pattern, or an identifier but "
       ^ "found an expression instead"

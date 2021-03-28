@@ -70,6 +70,16 @@ module Expression
           } ) ->
       false
     (* #sec-static-semantics-static-semantics-isvalidsimpleassignmenttarget *)
+    | ( _,
+        MetaProperty
+          {
+            MetaProperty.meta = (_, { Identifier.name = "import"; comments = _ });
+            property = (_, { Identifier.name = "meta"; comments = _ });
+            comments = _;
+          } ) ->
+      false
+    (* #sec-static-semantics-static-semantics-isvalidsimpleassignmenttarget *)
+    (* draft spec: https://tc39.github.io/proposal-import-meta/ *)
     | (_, Array _)
     | (_, Identifier _)
     | (_, Member _)
@@ -256,6 +266,16 @@ module Expression
           } ) ->
       false
     (* #sec-static-semantics-static-semantics-isvalidsimpleassignmenttarget *)
+    | ( _,
+        MetaProperty
+          {
+            MetaProperty.meta = (_, { Identifier.name = "import"; comments = _ });
+            property = (_, { Identifier.name = "meta"; comments = _ });
+            comments = _;
+          } ) ->
+      false
+    (* #sec-static-semantics-static-semantics-isvalidsimpleassignmenttarget *)
+    (* draft spec: https://tc39.github.io/proposal-import-meta/ *)
     | (_, Identifier _)
     | (_, Member _)
     | (_, MetaProperty _) ->
@@ -671,21 +691,49 @@ module Expression
       super
 
   and import env =
-    with_loc
-      (fun env ->
-        let leading = Peek.comments env in
-        Expect.token env T_IMPORT;
-        let leading_arg = Peek.comments env in
-        Expect.token env T_LPAREN;
-        let argument = add_comments (assignment (with_no_in false env)) ~leading:leading_arg in
-        Expect.token env T_RPAREN;
+    let start_loc = Peek.loc env in
+    let leading = Peek.comments env in
+    Expect.token env T_IMPORT;
+
+    if Peek.token env = T_PERIOD then (
+      (* "import.meta" syntax (no other metaproperties are permitted) *)
+      Expect.token env T_PERIOD;
+      let meta = Flow_ast_utils.ident_of_source (start_loc, "import") in
+      match Peek.token env with
+      | T_IDENTIFIER { raw = "meta"; _ } ->
+        let property = Parse.identifier env in
         let trailing = Eat.trailing_comments env in
-        Expression.Import
+        let end_loc = fst property in
+        let meta_property = let open Expression.MetaProperty in Expression.MetaProperty
           {
-            Expression.Import.argument;
+            meta;
+            property;
             comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing ();
-          })
-      env
+          } in
+        (Loc.btwn start_loc end_loc, meta_property)
+      | T_IDENTIFIER _ ->
+        error_at env (start_loc, Parse_error.InvalidImportMetaProperty);
+        Eat.token env;
+        (start_loc, Expression.Identifier meta)
+      | _ ->
+        error_unexpected ~expected:"identifier for `import` metaproperty" env;
+        Eat.token env;
+        (start_loc, Expression.Identifier meta)
+    ) else (
+      (* "import(...)" syntax *)
+      let leading_arg = Peek.comments env in
+      Expect.token env T_LPAREN;
+      let argument = add_comments (assignment (with_no_in false env)) ~leading:leading_arg in
+      let end_loc = Peek.loc env in
+      Expect.token env T_RPAREN;
+      let trailing = Eat.trailing_comments env in
+      let import = Expression.Import
+        {
+          Expression.Import.argument;
+          comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing ();
+        } in
+      (Loc.btwn start_loc end_loc, import)
+    )
 
   and call_cover ?(allow_optional_chain = true) ?(in_optional_chain = false) env start_loc left =
     let left = member_cover ~allow_optional_chain ~in_optional_chain env start_loc left in
