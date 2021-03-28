@@ -545,7 +545,7 @@ end = struct
              * use `import type { ... } from 'react'` and hard-code the module string
              * here. *)
             if is_react_file_key remote_source then
-              Modulename.String "React"
+              Modulename.String "react"
             else if is_react_redux_file_key remote_source then
               Modulename.String "react-redux"
             else
