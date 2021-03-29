@@ -29,13 +29,18 @@ export default (suite(
         [...lspIgnoreStatusAndCancellation],
       ),
       lspRequestAndWaitUntilResponse('foobar', {}).verifyAllLSPMessagesInStep(
-        [['foobar', '{unexpected error}']],
+        ['foobar'],
         [...lspIgnoreStatusAndCancellation],
       ),
       lspNotification('barfoo', {})
-        .waitUntilLSPMessage(2000, 'barfoo')
+        .waitUntilLSPMessage(2000, 'telemetry/event')
         .verifyAllLSPMessagesInStep(
-          [['telemetry/event', '{not implemented}']],
+          [
+            {
+              method: 'telemetry/event',
+              params: {type: 1, message: 'Unhandled method barfoo'},
+            },
+          ],
           [...lspIgnoreStatusAndCancellation],
         ),
     ]).waitForRecheck(true),
@@ -47,13 +52,18 @@ export default (suite(
         [...lspIgnoreStatusAndCancellation],
       ),
       lspRequestAndWaitUntilResponse('foobar', {}).verifyAllLSPMessagesInStep(
-        [['foobar', '{unexpected error}']],
+        ['foobar'],
         [...lspIgnoreStatusAndCancellation],
       ),
       lspNotification('barfoo', {})
-        .waitUntilLSPMessage(2000, 'barfoo')
+        .waitUntilLSPMessage(2000, 'telemetry/event')
         .verifyAllLSPMessagesInStep(
-          [['telemetry/event', '{not implemented}']],
+          [
+            {
+              method: 'telemetry/event',
+              params: {type: 1, message: 'Unhandled method barfoo'},
+            },
+          ],
           [...lspIgnoreStatusAndCancellation],
         ),
     ]).waitForRecheck(false),

@@ -2085,8 +2085,17 @@ let handle_persistent_execute_command ~id ~params ~metadata ~client:_ ~profiling
       (with_data ~extra_data metadata)
 
 let handle_persistent_unsupported ?id ~unhandled ~metadata ~client:_ ~profiling:_ =
-  let reason = Printf.sprintf "not implemented: %s" (Lsp_fmt.message_name_to_string unhandled) in
-  mk_lsp_error_response ~ret:() ~id ~reason metadata
+  let message = Printf.sprintf "Unhandled method %s" (Lsp_fmt.message_name_to_string unhandled) in
+  let response =
+    match id with
+    | Some id ->
+      let e = { Error.code = Error.MethodNotFound; message; data = None } in
+      ResponseMessage (id, ErrorResult (e, ""))
+    | None ->
+      NotificationMessage
+        (TelemetryNotification { LogMessage.type_ = MessageType.ErrorMessage; message })
+  in
+  Lwt.return ((), LspProt.LspFromServer (Some response), metadata)
 
 (* What should we do if we get multiple requests for the same URI? Each request wants the most
  * up-to-date live errors, so if we have 10 pending requests then we would want to send the same
