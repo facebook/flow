@@ -491,10 +491,12 @@ export class TestStepFirstStage extends TestStepFirstOrSecondStage {
       // we test that messages are equal using a diff of strings, so we have
       // to convert the expected value into a string.
       let diffable = expected => {
-        if (typeof expected === 'string' || Array.isArray(expected)) {
+        if (typeof expected === 'string') {
           return expected;
+        } else if (Array.isArray(expected)) {
+          return expected.join(',');
         } else {
-          return JSON.stringify(expected);
+          return JSON.stringify(expected, null, 2);
         }
       };
       let doesMatch = (
@@ -535,8 +537,8 @@ export class TestStepFirstStage extends TestStepFirstOrSecondStage {
       };
 
       return simpleDiffAssertion(
-        expects.map(diffable).join(','),
-        actuals.map(diffable).join(','),
+        expects.map(diffable).join('\n'),
+        actuals.map(diffable).join('\n'),
         assertLoc,
         reason,
         'messages',
