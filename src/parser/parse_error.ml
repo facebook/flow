@@ -70,6 +70,7 @@ type t =
   | InvalidLHSInExponentiation
   | InvalidLHSInForIn
   | InvalidLHSInForOf
+  | InvalidIndexedAccess
   | ExpectedPatternFoundExpression
   | MultipleDefaultsInSwitch
   | NoCatchOrFinally
@@ -290,6 +291,8 @@ module PP = struct
     | InvalidLHSInExponentiation -> "Invalid left-hand side in exponentiation expression"
     | InvalidLHSInForIn -> "Invalid left-hand side in for-in"
     | InvalidLHSInForOf -> "Invalid left-hand side in for-of"
+    | InvalidIndexedAccess ->
+      "Invalid indexed access. Remove the period. The correct format is `T[K]`."
     | ExpectedPatternFoundExpression ->
       "Expected an object pattern, array pattern, or an identifier but "
       ^ "found an expression instead"

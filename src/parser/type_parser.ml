@@ -185,31 +185,48 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
     postfix_with env t
 
   and postfix_with env t =
-    if (not (Peek.is_line_terminator env)) && Eat.maybe env T_LBRACKET then
-      let t =
-        with_loc
-          ~start_loc:(fst t)
-          (fun env ->
-            if Eat.maybe env T_RBRACKET then
-              (* Legacy Array syntax `T[]` <-> `Array<T>` *)
-              let trailing = Eat.trailing_comments env in
-              Type.Array
-                { Type.Array.argument = t; comments = Flow_ast_utils.mk_comments_opt ~trailing () }
-            else
-              let index = _type env in
-              Expect.token env T_RBRACKET;
-              let trailing = Eat.trailing_comments env in
-              Type.IndexedAccess
-                {
-                  Type.IndexedAccess._object = t;
-                  index;
-                  comments = Flow_ast_utils.mk_comments_opt ~trailing ();
-                })
-          env
-      in
-      postfix_with env t
-    else
+    if Peek.is_line_terminator env then
       t
+    else
+      match Peek.token env with
+      | T_LBRACKET ->
+        Eat.token env;
+        postfix_brackets env t
+      | T_PERIOD ->
+        (match Peek.ith_token ~i:1 env with
+        | T_LBRACKET ->
+          error env Parse_error.InvalidIndexedAccess;
+          Expect.token env T_PERIOD;
+          Expect.token env T_LBRACKET;
+          postfix_brackets env t
+        | _ ->
+          (* TODO: error in upcoming diff *)
+          t)
+      | _ -> t
+
+  and postfix_brackets env t =
+    let t =
+      with_loc
+        ~start_loc:(fst t)
+        (fun env ->
+          (* Legacy Array syntax `Foo[]` *)
+          if Eat.maybe env T_RBRACKET then
+            let trailing = Eat.trailing_comments env in
+            Type.Array
+              { Type.Array.argument = t; comments = Flow_ast_utils.mk_comments_opt ~trailing () }
+          else
+            let index = _type env in
+            Expect.token env T_RBRACKET;
+            let trailing = Eat.trailing_comments env in
+            Type.IndexedAccess
+              {
+                Type.IndexedAccess._object = t;
+                index;
+                comments = Flow_ast_utils.mk_comments_opt ~trailing ();
+              })
+        env
+    in
+    postfix_with env t
 
   and primary env =
     let loc = Peek.loc env in
@@ -1207,7 +1224,7 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
 
   and raw_generic_with_identifier =
     let rec identifier env (q_loc, qualification) =
-      if Peek.token env = T_PERIOD then
+      if Peek.token env = T_PERIOD && Peek.ith_is_type_identifier ~i:1 env then
         let (loc, q) =
           with_loc
             ~start_loc:q_loc
