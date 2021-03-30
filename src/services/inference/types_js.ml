@@ -1218,32 +1218,24 @@ let typecheck_contents ~options ~env ~profiling contents filename =
     Lwt.return (None, errors, Errors.ConcreteLocPrintableErrorSet.empty)
 
 let type_contents ~options ~env ~profiling contents filename =
-  try%lwt
-    let reader = State_reader.create () in
-    let%lwt parse_result =
-      Memory_utils.with_memory_timer_lwt ~options "Parsing" profiling (fun () ->
-          Lwt.return (parse_contents ~options ~check_syntax:false filename contents))
+  let reader = State_reader.create () in
+  let%lwt parse_result =
+    Memory_utils.with_memory_timer_lwt ~options "Parsing" profiling (fun () ->
+        Lwt.return (parse_contents ~options ~check_syntax:false filename contents))
+  in
+  match parse_result with
+  | Ok parse_artifacts ->
+    let%lwt type_contents_artifacts =
+      type_contents_artifacts_of_parse_artifacts
+        ~options
+        ~env
+        ~reader
+        ~profiling
+        ~filename
+        ~parse_artifacts
     in
-    match parse_result with
-    | Ok parse_artifacts ->
-      let%lwt type_contents_artifacts =
-        type_contents_artifacts_of_parse_artifacts
-          ~options
-          ~env
-          ~reader
-          ~profiling
-          ~filename
-          ~parse_artifacts
-      in
-      Lwt.return (Ok type_contents_artifacts)
-    | Error _ -> Lwt.return (Error "Couldn't parse file in type_contents")
-  with
-  | Lwt.Canceled as exn -> raise exn
-  | exn ->
-    let exn = Exception.wrap exn in
-    let e = Exception.to_string exn in
-    Hh_logger.error "Uncaught exception in type_contents\n%s" e;
-    Lwt.return (Error e)
+    Lwt.return (Ok type_contents_artifacts)
+  | Error _ -> Lwt.return (Error "Couldn't parse file in type_contents")
 
 let init_libs ~options ~profiling ~local_errors ~warnings ~suppressions ~reader ordered_libs =
   Memory_utils.with_memory_timer_lwt ~options "InitLibs" profiling (fun () ->
