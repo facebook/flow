@@ -1236,7 +1236,7 @@ let type_contents ~options ~env ~profiling contents filename =
           ~parse_artifacts
       in
       Lwt.return (Ok type_contents_artifacts)
-    | Error _ -> failwith "Couldn't parse file"
+    | Error _ -> Lwt.return (Error "Couldn't parse file in type_contents")
   with
   | Lwt.Canceled as exn -> raise exn
   | exn ->
