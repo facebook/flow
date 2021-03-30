@@ -255,29 +255,11 @@ let members_of_type
         | _ :: _ -> Printf.sprintf "members_of_type %s" (Debug_js.dump_t cx type_) :: errors),
         in_idx )
 
-let autocomplete_member
-    ~reader
-    ~exclude_proto_members
-    ?exclude_keys
-    cx
-    file_sig
-    typed_ast
-    this
-    in_optional_chain
-    ac_loc
-    ~tparams_rev =
+let autocomplete_member ~reader cx file_sig typed_ast this in_optional_chain ac_loc ~tparams_rev =
   let ac_loc = loc_of_aloc ~reader ac_loc |> remove_autocomplete_token_from_loc in
   let exact_by_default = Context.exact_by_default cx in
   match
-    members_of_type
-      ~reader
-      ~exclude_proto_members
-      ?exclude_keys
-      cx
-      file_sig
-      typed_ast
-      this
-      ~tparams_rev
+    members_of_type ~reader ~exclude_proto_members:false cx file_sig typed_ast this ~tparams_rev
   with
   | Error err -> AcFatalError err
   | Ok (mems, errors_to_log, in_idx) ->
@@ -1044,7 +1026,6 @@ let autocomplete_get_results
         ( "Acmem",
           autocomplete_member
             ~reader
-            ~exclude_proto_members:false
             cx
             file_sig
             typed_ast
