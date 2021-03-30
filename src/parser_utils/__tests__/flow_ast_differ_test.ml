@@ -334,7 +334,6 @@ class insert_import_mapper =
     method! statement_list stmts =
       if List.length stmts > 0 then
         let open Ast.Statement.ImportDeclaration in
-        let open Ast.StringLiteral in
         let stmts = super#statement_list stmts in
         let (loc, _) = List.hd stmts in
         let imp =
@@ -342,7 +341,7 @@ class insert_import_mapper =
             Ast.Statement.ImportDeclaration
               {
                 import_kind = Ast.Statement.ImportDeclaration.ImportValue;
-                source = (loc, { value = "baz"; raw = "\"baz\""; comments = None });
+                source = (loc, { Ast.StringLiteral.value = "baz"; raw = "\"baz\""; comments = None });
                 default = None;
                 specifiers =
                   Some
@@ -369,7 +368,6 @@ class insert_second_import_mapper =
     method! statement_list stmts =
       if List.length stmts > 0 then
         let open Ast.Statement.ImportDeclaration in
-        let open Ast.StringLiteral in
         let stmts = super#statement_list stmts in
         let (loc, _) = List.hd stmts in
         let imp =
@@ -377,7 +375,7 @@ class insert_second_import_mapper =
             Ast.Statement.ImportDeclaration
               {
                 import_kind = Ast.Statement.ImportDeclaration.ImportValue;
-                source = (loc, { value = "baz"; raw = "\"baz\""; comments = None });
+                source = (loc, { Ast.StringLiteral.value = "baz"; raw = "\"baz\""; comments = None });
                 default = None;
                 specifiers =
                   Some
@@ -404,8 +402,6 @@ class insert_second_cjsimport_mapper =
     method! statement_list stmts =
       if List.length stmts > 0 then
         let open Ast.Statement.Expression in
-        let open Ast.Expression.Call in
-        let open Ast.Literal in
         let stmts = super#statement_list stmts in
         let (loc, _) = List.hd stmts in
         let imp =
@@ -416,7 +412,7 @@ class insert_second_cjsimport_mapper =
                   ( loc,
                     Ast.Expression.Call
                       {
-                        callee =
+                        Ast.Expression.Call.callee =
                           ( loc,
                             Ast.Expression.Identifier
                               (Flow_ast_utils.ident_of_source (loc, "require")) );
@@ -430,7 +426,7 @@ class insert_second_cjsimport_mapper =
                                     ( loc,
                                       Ast.Expression.Literal
                                         {
-                                          value = Ast.Literal.String "baz";
+                                          Ast.Literal.value = Ast.Literal.String "baz";
                                           raw = "\"baz\"";
                                           comments = None;
                                         } );
@@ -455,8 +451,6 @@ class add_body_mapper =
     method! statement_list stmts =
       if List.length stmts > 0 then
         let open Ast.Statement.Expression in
-        let open Ast.Expression.Call in
-        let open Ast.Literal in
         let stmts = super#statement_list stmts in
         let (loc, _) = List.rev stmts |> List.hd in
         let imp =
@@ -467,7 +461,7 @@ class add_body_mapper =
                   ( loc,
                     Ast.Expression.Call
                       {
-                        callee =
+                        Ast.Expression.Call.callee =
                           ( loc,
                             Ast.Expression.Identifier (Flow_ast_utils.ident_of_source (loc, "foo"))
                           );
@@ -481,7 +475,7 @@ class add_body_mapper =
                                     ( loc,
                                       Ast.Expression.Literal
                                         {
-                                          value = Ast.Literal.String "baz";
+                                          Ast.Literal.value = Ast.Literal.String "baz";
                                           raw = "\"baz\"";
                                           comments = None;
                                         } );
@@ -712,12 +706,11 @@ class true_to_false_mapper =
       | _ -> expr
 
     method! type_annotation (annot : (Loc.t, Loc.t) Ast.Type.annotation) =
-      let open Ast.Type in
       let (t1, a) = annot in
       let (t2, right_var) = a in
       match right_var with
-      | BooleanLiteral { Ast.BooleanLiteral.value = true; comments } ->
-        (t1, (t2, BooleanLiteral { Ast.BooleanLiteral.value = false; comments }))
+      | Ast.Type.BooleanLiteral { Ast.BooleanLiteral.value = true; comments } ->
+        (t1, (t2, Ast.Type.BooleanLiteral { Ast.BooleanLiteral.value = false; comments }))
       | _ -> annot
   end
 
