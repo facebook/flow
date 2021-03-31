@@ -24,36 +24,13 @@ export default (suite(
         position: {line: 10, character: 15}, // statement position
       }).verifyAllLSPMessagesInStep(
         [
-          [
-            'textDocument/completion',
-            JSON.stringify({
+          {
+            method: 'textDocument/completion',
+            result: {
               isIncomplete: false,
               items: [
                 {
-                  label: 'this',
-                  kind: 6,
-                  detail: 'this',
-                  sortText: '00000000000000000000',
-                  insertTextFormat: 1,
-                  textEdit: {
-                    range: {
-                      start: {line: 10, character: 15},
-                      end: {line: 10, character: 15},
-                    },
-                    newText: 'this',
-                  },
-                  command: {
-                    title: '',
-                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
-                    arguments: [
-                      'textDocument/completion',
-                      'this',
-                      {token: 'AUTO332', completion: 'this'},
-                    ],
-                  },
-                },
-                {
-                  label: 'x',
+                  label: 'a',
                   kind: 6,
                   detail: 'number',
                   sortText: '00000000000000000000',
@@ -63,7 +40,7 @@ export default (suite(
                       start: {line: 10, character: 15},
                       end: {line: 10, character: 15},
                     },
-                    newText: 'x',
+                    newText: 'a',
                   },
                   command: {
                     title: '',
@@ -71,7 +48,30 @@ export default (suite(
                     arguments: [
                       'textDocument/completion',
                       'local value identifier',
-                      {token: 'AUTO332', completion: 'x'},
+                      {token: 'AUTO332', completion: 'a'},
+                    ],
+                  },
+                },
+                {
+                  label: 'b',
+                  kind: 6,
+                  detail: 'string',
+                  sortText: '00000000000000000000',
+                  insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {line: 10, character: 15},
+                      end: {line: 10, character: 15},
+                    },
+                    newText: 'b',
+                  },
+                  command: {
+                    title: '',
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                    arguments: [
+                      'textDocument/completion',
+                      'local value identifier',
+                      {token: 'AUTO332', completion: 'b'},
                     ],
                   },
                 },
@@ -104,96 +104,6 @@ export default (suite(
                   },
                 },
                 {
-                  label: 'b',
-                  kind: 6,
-                  detail: 'string',
-                  sortText: '00000000000000000000',
-                  insertTextFormat: 1,
-                  textEdit: {
-                    range: {
-                      start: {line: 10, character: 15},
-                      end: {line: 10, character: 15},
-                    },
-                    newText: 'b',
-                  },
-                  command: {
-                    title: '',
-                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
-                    arguments: [
-                      'textDocument/completion',
-                      'local value identifier',
-                      {token: 'AUTO332', completion: 'b'},
-                    ],
-                  },
-                },
-                {
-                  label: 'a',
-                  kind: 6,
-                  detail: 'number',
-                  sortText: '00000000000000000000',
-                  insertTextFormat: 1,
-                  textEdit: {
-                    range: {
-                      start: {line: 10, character: 15},
-                      end: {line: 10, character: 15},
-                    },
-                    newText: 'a',
-                  },
-                  command: {
-                    title: '',
-                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
-                    arguments: [
-                      'textDocument/completion',
-                      'local value identifier',
-                      {token: 'AUTO332', completion: 'a'},
-                    ],
-                  },
-                },
-              ],
-            }),
-          ],
-        ],
-        ['textDocument/publishDiagnostics', ...lspIgnoreStatusAndCancellation],
-      ),
-    ]),
-    test('textDocument/completion', [
-      addFile('kind.js'),
-      lspStartAndConnect(),
-      lspRequestAndWaitUntilResponse('textDocument/completion', {
-        textDocument: {uri: '<PLACEHOLDER_PROJECT_URL>/kind.js'},
-        position: {line: 13, character: 15},
-        context: {triggerKind: 1},
-      }).verifyAllLSPMessagesInStep(
-        [
-          [
-            'textDocument/completion',
-            JSON.stringify({
-              isIncomplete: false,
-              items: [
-                {
-                  label: 'this',
-                  kind: 6,
-                  detail: 'this',
-                  sortText: '00000000000000000000',
-                  insertTextFormat: 1,
-                  textEdit: {
-                    range: {
-                      start: {line: 13, character: 15},
-                      end: {line: 13, character: 15},
-                    },
-                    newText: 'this',
-                  },
-                  command: {
-                    title: '',
-                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
-                    arguments: [
-                      'textDocument/completion',
-                      'this',
-                      {token: 'AUTO332', completion: 'this'},
-                    ],
-                  },
-                },
-                {
                   label: 'x',
                   kind: 6,
                   detail: 'number',
@@ -201,8 +111,8 @@ export default (suite(
                   insertTextFormat: 1,
                   textEdit: {
                     range: {
-                      start: {line: 13, character: 15},
-                      end: {line: 13, character: 15},
+                      start: {line: 10, character: 15},
+                      end: {line: 10, character: 15},
                     },
                     newText: 'x',
                   },
@@ -217,32 +127,53 @@ export default (suite(
                   },
                 },
                 {
-                  label: 'foo',
-                  kind: 3,
-                  detail: '() => void',
+                  label: 'this',
+                  kind: 6,
+                  detail: 'this',
                   sortText: '00000000000000000000',
                   insertTextFormat: 1,
                   textEdit: {
                     range: {
-                      start: {line: 13, character: 15},
-                      end: {line: 13, character: 15},
+                      start: {line: 10, character: 15},
+                      end: {line: 10, character: 15},
                     },
-                    newText: 'foo',
+                    newText: 'this',
                   },
                   command: {
                     title: '',
                     command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
                     arguments: [
                       'textDocument/completion',
-                      'local value identifier',
-                      {token: 'AUTO332', completion: 'foo'},
+                      'this',
+                      {token: 'AUTO332', completion: 'this'},
                     ],
                   },
                 },
+              ],
+            },
+          },
+        ],
+        ['textDocument/publishDiagnostics', ...lspIgnoreStatusAndCancellation],
+      ),
+    ]),
+    test('textDocument/completion', [
+      addFile('kind.js'),
+      lspStartAndConnect(),
+      lspRequestAndWaitUntilResponse('textDocument/completion', {
+        textDocument: {uri: '<PLACEHOLDER_PROJECT_URL>/kind.js'},
+        position: {line: 13, character: 15},
+        context: {triggerKind: 1},
+      }).verifyAllLSPMessagesInStep(
+        [
+          {
+            method: 'textDocument/completion',
+            result: {
+              isIncomplete: false,
+              items: [
                 {
-                  label: 'aNumber',
-                  kind: 6,
-                  detail: 'number',
+                  label: 'aClass',
+                  kind: 7,
+                  detail: 'class aClass',
                   sortText: '00000000000000000000',
                   insertTextFormat: 1,
                   textEdit: {
@@ -250,7 +181,7 @@ export default (suite(
                       start: {line: 13, character: 15},
                       end: {line: 13, character: 15},
                     },
-                    newText: 'aNumber',
+                    newText: 'aClass',
                   },
                   command: {
                     title: '',
@@ -258,7 +189,7 @@ export default (suite(
                     arguments: [
                       'textDocument/completion',
                       'local value identifier',
-                      {token: 'AUTO332', completion: 'aNumber'},
+                      {token: 'AUTO332', completion: 'aClass'},
                     ],
                   },
                 },
@@ -286,9 +217,9 @@ export default (suite(
                   },
                 },
                 {
-                  label: 'aClass',
-                  kind: 7,
-                  detail: 'class aClass',
+                  label: 'aNumber',
+                  kind: 6,
+                  detail: 'number',
                   sortText: '00000000000000000000',
                   insertTextFormat: 1,
                   textEdit: {
@@ -296,7 +227,7 @@ export default (suite(
                       start: {line: 13, character: 15},
                       end: {line: 13, character: 15},
                     },
-                    newText: 'aClass',
+                    newText: 'aNumber',
                   },
                   command: {
                     title: '',
@@ -304,13 +235,82 @@ export default (suite(
                     arguments: [
                       'textDocument/completion',
                       'local value identifier',
-                      {token: 'AUTO332', completion: 'aClass'},
+                      {token: 'AUTO332', completion: 'aNumber'},
+                    ],
+                  },
+                },
+                {
+                  label: 'foo',
+                  kind: 3,
+                  detail: '() => void',
+                  sortText: '00000000000000000000',
+                  insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {line: 13, character: 15},
+                      end: {line: 13, character: 15},
+                    },
+                    newText: 'foo',
+                  },
+                  command: {
+                    title: '',
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                    arguments: [
+                      'textDocument/completion',
+                      'local value identifier',
+                      {token: 'AUTO332', completion: 'foo'},
+                    ],
+                  },
+                },
+                {
+                  label: 'x',
+                  kind: 6,
+                  detail: 'number',
+                  sortText: '00000000000000000000',
+                  insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {line: 13, character: 15},
+                      end: {line: 13, character: 15},
+                    },
+                    newText: 'x',
+                  },
+                  command: {
+                    title: '',
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                    arguments: [
+                      'textDocument/completion',
+                      'local value identifier',
+                      {token: 'AUTO332', completion: 'x'},
+                    ],
+                  },
+                },
+                {
+                  label: 'this',
+                  kind: 6,
+                  detail: 'this',
+                  sortText: '00000000000000000000',
+                  insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {line: 13, character: 15},
+                      end: {line: 13, character: 15},
+                    },
+                    newText: 'this',
+                  },
+                  command: {
+                    title: '',
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                    arguments: [
+                      'textDocument/completion',
+                      'this',
+                      {token: 'AUTO332', completion: 'this'},
                     ],
                   },
                 },
               ],
-            }),
-          ],
+            },
+          },
         ],
         ['textDocument/publishDiagnostics', ...lspIgnoreStatusAndCancellation],
       ),
@@ -338,15 +338,15 @@ export default (suite(
         context: {triggerKind: 1},
       }).verifyAllLSPMessagesInStep(
         [
-          [
-            'textDocument/completion',
-            JSON.stringify({
+          {
+            method: 'textDocument/completion',
+            result: {
               isIncomplete: false,
               items: [
                 {
-                  label: 'this',
-                  kind: 6,
-                  detail: 'this',
+                  label: 'aFunction',
+                  kind: 3,
+                  detail: '(arg1: number, arg2: string) => null',
                   sortText: '00000000000000000000',
                   insertTextFormat: 1,
                   textEdit: {
@@ -354,30 +354,7 @@ export default (suite(
                       start: {line: 9, character: 15},
                       end: {line: 9, character: 15},
                     },
-                    newText: 'this',
-                  },
-                  command: {
-                    title: '',
-                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
-                    arguments: [
-                      'textDocument/completion',
-                      'this',
-                      {token: 'AUTO332', completion: 'this'},
-                    ],
-                  },
-                },
-                {
-                  label: 'x',
-                  kind: 6,
-                  detail: 'number',
-                  sortText: '00000000000000000000',
-                  insertTextFormat: 1,
-                  textEdit: {
-                    range: {
-                      start: {line: 9, character: 15},
-                      end: {line: 9, character: 15},
-                    },
-                    newText: 'x',
+                    newText: 'aFunction',
                   },
                   command: {
                     title: '',
@@ -385,7 +362,7 @@ export default (suite(
                     arguments: [
                       'textDocument/completion',
                       'local value identifier',
-                      {token: 'AUTO332', completion: 'x'},
+                      {token: 'AUTO332', completion: 'aFunction'},
                     ],
                   },
                 },
@@ -413,9 +390,9 @@ export default (suite(
                   },
                 },
                 {
-                  label: 'aFunction',
-                  kind: 3,
-                  detail: '(arg1: number, arg2: string) => null',
+                  label: 'x',
+                  kind: 6,
+                  detail: 'number',
                   sortText: '00000000000000000000',
                   insertTextFormat: 1,
                   textEdit: {
@@ -423,7 +400,7 @@ export default (suite(
                       start: {line: 9, character: 15},
                       end: {line: 9, character: 15},
                     },
-                    newText: 'aFunction',
+                    newText: 'x',
                   },
                   command: {
                     title: '',
@@ -431,13 +408,36 @@ export default (suite(
                     arguments: [
                       'textDocument/completion',
                       'local value identifier',
-                      {token: 'AUTO332', completion: 'aFunction'},
+                      {token: 'AUTO332', completion: 'x'},
+                    ],
+                  },
+                },
+                {
+                  label: 'this',
+                  kind: 6,
+                  detail: 'this',
+                  sortText: '00000000000000000000',
+                  insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {line: 9, character: 15},
+                      end: {line: 9, character: 15},
+                    },
+                    newText: 'this',
+                  },
+                  command: {
+                    title: '',
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                    arguments: [
+                      'textDocument/completion',
+                      'this',
+                      {token: 'AUTO332', completion: 'this'},
                     ],
                   },
                 },
               ],
-            }),
-          ],
+            },
+          },
         ],
         ['textDocument/publishDiagnostics', ...lspIgnoreStatusAndCancellation],
       ),
@@ -451,9 +451,9 @@ export default (suite(
         context: {triggerKind: 2, triggerCharacter: ' '},
       }).verifyAllLSPMessagesInStep(
         [
-          [
-            'textDocument/completion',
-            JSON.stringify({
+          {
+            method: 'textDocument/completion',
+            result: {
               isIncomplete: false,
               items: [
                 {
@@ -480,8 +480,8 @@ export default (suite(
                   },
                 },
               ],
-            }),
-          ],
+            },
+          },
         ],
         ['textDocument/publishDiagnostics', ...lspIgnoreStatusAndCancellation],
       ),
@@ -495,13 +495,13 @@ export default (suite(
         context: {triggerKind: 2, triggerCharacter: ' '},
       }).verifyAllLSPMessagesInStep(
         [
-          [
-            'textDocument/completion',
-            JSON.stringify({
+          {
+            method: 'textDocument/completion',
+            result: {
               isIncomplete: false,
               items: [],
-            }),
-          ],
+            },
+          },
         ],
         ['textDocument/publishDiagnostics', ...lspIgnoreStatusAndCancellation],
       ),
@@ -515,15 +515,15 @@ export default (suite(
         context: {triggerKind: 1},
       }).verifyAllLSPMessagesInStep(
         [
-          [
-            'textDocument/completion',
-            JSON.stringify({
+          {
+            method: 'textDocument/completion',
+            result: {
               isIncomplete: false,
               items: [
                 {
-                  label: 'React',
-                  kind: 9,
-                  detail: 'module React',
+                  label: 'C',
+                  kind: 7,
+                  detail: 'class C',
                   sortText: '00000000000000000000',
                   insertTextFormat: 1,
                   textEdit: {
@@ -531,7 +531,7 @@ export default (suite(
                       start: {line: 11, character: 1},
                       end: {line: 11, character: 1},
                     },
-                    newText: 'React',
+                    newText: 'C',
                   },
                   command: {
                     title: '',
@@ -539,7 +539,7 @@ export default (suite(
                     arguments: [
                       'textDocument/completion',
                       'local value identifier',
-                      {token: 'AUTO332', completion: 'React'},
+                      {token: 'AUTO332', completion: 'C'},
                     ],
                   },
                 },
@@ -567,9 +567,9 @@ export default (suite(
                   },
                 },
                 {
-                  label: 'C',
-                  kind: 7,
-                  detail: 'class C',
+                  label: 'React',
+                  kind: 9,
+                  detail: 'module React',
                   sortText: '00000000000000000000',
                   insertTextFormat: 1,
                   textEdit: {
@@ -577,7 +577,7 @@ export default (suite(
                       start: {line: 11, character: 1},
                       end: {line: 11, character: 1},
                     },
-                    newText: 'C',
+                    newText: 'React',
                   },
                   command: {
                     title: '',
@@ -585,13 +585,13 @@ export default (suite(
                     arguments: [
                       'textDocument/completion',
                       'local value identifier',
-                      {token: 'AUTO332', completion: 'C'},
+                      {token: 'AUTO332', completion: 'React'},
                     ],
                   },
                 },
               ],
-            }),
-          ],
+            },
+          },
         ],
         ['textDocument/publishDiagnostics', ...lspIgnoreStatusAndCancellation],
       ),
@@ -605,9 +605,9 @@ export default (suite(
         context: {triggerKind: 1},
       }).verifyAllLSPMessagesInStep(
         [
-          [
-            'textDocument/completion',
-            JSON.stringify({
+          {
+            method: 'textDocument/completion',
+            result: {
               isIncomplete: false,
               items: [
                 {
@@ -634,8 +634,8 @@ export default (suite(
                   },
                 },
               ],
-            }),
-          ],
+            },
+          },
         ],
         ['textDocument/publishDiagnostics', ...lspIgnoreStatusAndCancellation],
       ),
@@ -651,9 +651,9 @@ export default (suite(
           context: {triggerKind: 2, triggerCharacter: ' '},
         }).verifyAllLSPMessagesInStep(
           [
-            [
-              'textDocument/completion',
-              JSON.stringify({
+            {
+              method: 'textDocument/completion',
+              result: {
                 isIncomplete: false,
                 items: [
                   {
@@ -680,8 +680,8 @@ export default (suite(
                     },
                   },
                 ],
-              }),
-            ],
+              },
+            },
           ],
           [
             'textDocument/publishDiagnostics',
@@ -699,9 +699,9 @@ export default (suite(
         context: {triggerKind: 1},
       }).verifyAllLSPMessagesInStep(
         [
-          [
-            'textDocument/completion',
-            JSON.stringify({
+          {
+            method: 'textDocument/completion',
+            result: {
               isIncomplete: false,
               items: [
                 {
@@ -728,8 +728,8 @@ export default (suite(
                   },
                 },
               ],
-            }),
-          ],
+            },
+          },
         ],
         ['textDocument/publishDiagnostics', ...lspIgnoreStatusAndCancellation],
       ),
@@ -743,9 +743,9 @@ export default (suite(
         context: {triggerKind: 2, triggerCharacter: '.'},
       }).verifyAllLSPMessagesInStep(
         [
-          [
-            'textDocument/completion',
-            JSON.stringify({
+          {
+            method: 'textDocument/completion',
+            result: {
               isIncomplete: false,
               items: [
                 {
@@ -1169,8 +1169,8 @@ export default (suite(
                   },
                 },
               ],
-            }),
-          ],
+            },
+          },
         ],
         ['textDocument/publishDiagnostics', ...lspIgnoreStatusAndCancellation],
       ),
@@ -1184,9 +1184,9 @@ export default (suite(
         context: {triggerKind: 2, triggerCharacter: '.'},
       }).verifyAllLSPMessagesInStep(
         [
-          [
-            'textDocument/completion',
-            JSON.stringify({
+          {
+            method: 'textDocument/completion',
+            result: {
               isIncomplete: false,
               items: [
                 {
@@ -1610,8 +1610,8 @@ export default (suite(
                   },
                 },
               ],
-            }),
-          ],
+            },
+          },
         ],
         ['textDocument/publishDiagnostics', ...lspIgnoreStatusAndCancellation],
       ),
@@ -1628,9 +1628,9 @@ export default (suite(
         context: {triggerKind: 1},
       }).verifyAllLSPMessagesInStep(
         [
-          [
-            'textDocument/completion',
-            JSON.stringify({
+          {
+            method: 'textDocument/completion',
+            result: {
               isIncomplete: false,
               items: [
                 {
@@ -1887,8 +1887,8 @@ export default (suite(
                   },
                 },
               ],
-            }),
-          ],
+            },
+          },
         ],
         ['textDocument/publishDiagnostics', ...lspIgnoreStatusAndCancellation],
       ),
@@ -1902,9 +1902,9 @@ export default (suite(
         context: {triggerKind: 1},
       }).verifyAllLSPMessagesInStep(
         [
-          [
-            'textDocument/completion',
-            JSON.stringify({
+          {
+            method: 'textDocument/completion',
+            result: {
               isIncomplete: false,
               items: [
                 {
@@ -1954,8 +1954,8 @@ export default (suite(
                   },
                 },
               ],
-            }),
-          ],
+            },
+          },
         ],
         ['textDocument/publishDiagnostics', ...lspIgnoreStatusAndCancellation],
       ),

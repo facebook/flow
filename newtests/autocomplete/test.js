@@ -767,16 +767,16 @@ export default (suite(({addFile, flowCmd}) => [
          {
            "result": [
              {
-               "name": "objectGetPrototypeOf",
-               "type": "(o: any) => any"
+               "name": "idx",
+               "type": "<IdxObject: any, IdxResult>(obj: IdxObject, pathCallback: (demaybefiedObj: IdxObject) => IdxResult) => ?IdxResult"
              },
              {
                "name": "objectAssign",
                "type": "(target: any, ...sources: Array<any>) => any"
              },
              {
-               "name": "idx",
-               "type": "<IdxObject: any, IdxResult>(obj: IdxObject, pathCallback: (demaybefiedObj: IdxObject) => IdxResult) => ?IdxResult"
+               "name": "objectGetPrototypeOf",
+               "type": "(o: any) => any"
              }
            ]
          }
