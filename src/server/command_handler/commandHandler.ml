@@ -172,7 +172,6 @@ let autocomplete
                 trigger_character
                 cursor_loc
             in
-            Hh_logger.info "token_opt: %s" (Base.Option.value ~default:"NONE" token_opt);
             let json_props_to_log =
               ("ac_type", Hh_json.JSON_String ac_type_string)
               :: ("docblock", Docblock.json_of_docblock info)
