@@ -401,6 +401,23 @@ let add_import_tests =
       |} in
       assert_patch ~ctxt expected binding from contents );
 
+    ( "import_multiple_named_after_namespace" >:: fun ctxt ->
+      let binding = (Export_index.Named, "useContext") in
+      let from = "react" in
+      let contents = {|
+        import * as React from "react";
+        import {useState} from "react";
+
+        foo
+      |} in
+      let expected = {|
+        import * as React from "react";
+        import {useContext, useState} from "react";
+
+        foo
+      |} in
+      assert_patch ~ctxt expected binding from contents );
+
     ( "insert_after_flow_comment" >:: fun ctxt ->
       let binding = (Export_index.Named, "foo") in
       let from = "./foo" in

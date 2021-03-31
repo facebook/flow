@@ -349,7 +349,7 @@ let existing_import ~binding ~from imports =
   let binding_type_matches ~default ~specifiers =
     match (export_kind, default, specifiers) with
     | (Export_index.Default, Some _, _) -> true
-    | (Export_index.Named, _, Some _) -> true
+    | (Export_index.Named, _, Some (ImportDeclaration.ImportNamedSpecifiers _)) -> true
     | _ -> false
   in
   let rec closest potentials =
