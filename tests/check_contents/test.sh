@@ -17,6 +17,10 @@ printf "docblock_error_with_syntax_error.js\n"
 assert_errors \
   $FLOW check-contents --strip-root docblock_error_with_syntax_error.js < docblock_error_with_syntax_error.js
 
+printf "module_type_conflict.js\n"
+assert_errors \
+  $FLOW check-contents --strip-root module_type_conflict.js < module_type_conflict.js
+
 printf "syntax_error.js (no filename)\n"
 assert_errors \
   $FLOW check-contents --strip-root < syntax_error.js
