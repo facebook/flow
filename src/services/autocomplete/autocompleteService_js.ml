@@ -495,10 +495,10 @@ let autocomplete_id
   let open ServerProt.Response.Completion in
   let ac_loc = loc_of_aloc ~reader ac_loc |> remove_autocomplete_token_from_loc in
   let exact_by_default = Context.exact_by_default cx in
-  let (items, errors_to_log) =
+  let (items_rev, errors_to_log) =
     local_value_identifiers ~options ~reader ~cx ~ac_loc ~file_sig ~typed_ast ~ast ~tparams_rev
     |> List.fold_left
-         (fun (items, errors_to_log) ((name, documentation), elt_result) ->
+         (fun (items_rev, errors_to_log) ((name, documentation), elt_result) ->
            match elt_result with
            | Ok elt ->
              let result =
@@ -510,14 +510,14 @@ let autocomplete_id
                  (name, ac_loc)
                  elt
              in
-             (result :: items, errors_to_log)
+             (result :: items_rev, errors_to_log)
            | Error err ->
              let error_to_log = Ty_normalizer.error_to_string err in
-             (items, error_to_log :: errors_to_log))
+             (items_rev, error_to_log :: errors_to_log))
          ([], [])
   in
   (* "this" is legal inside classes and (non-arrow) functions *)
-  let items =
+  let items_rev =
     if include_this then
       {
         kind = Some Lsp.Completion.Variable;
@@ -529,12 +529,12 @@ let autocomplete_id
         documentation = None;
         log_info = "this";
       }
-      :: items
+      :: items_rev
     else
-      items
+      items_rev
   in
   (* "super" is legal inside classes *)
-  let items =
+  let items_rev =
     if include_super then
       {
         kind = Some Lsp.Completion.Variable;
@@ -546,18 +546,18 @@ let autocomplete_id
         documentation = None;
         log_info = "super";
       }
-      :: items
+      :: items_rev
     else
-      items
+      items_rev
   in
-  let result =
+  let (items_rev, is_incomplete) =
     if imports then
       let (before, _after) = remove_autocomplete_token token in
       if before = "" then
         (* for empty autocomplete requests (hitting ctrl-space without typing anything),
            don't include any autoimport results, but do set `is_incomplete` so that
            it queries again when you type something. *)
-        { ServerProt.Response.Completion.items; is_incomplete = true }
+        (items_rev, true)
       else
         let { Export_search.results = auto_imports; is_incomplete } =
           Export_search.search_values
@@ -565,14 +565,21 @@ let autocomplete_id
             before
             env.ServerEnv.exports
         in
-        let items =
-          append_completion_items_of_autoimports ~options ~reader ~ast ~ac_loc auto_imports items
+        let items_rev =
+          append_completion_items_of_autoimports
+            ~options
+            ~reader
+            ~ast
+            ~ac_loc
+            auto_imports
+            items_rev
         in
-        { ServerProt.Response.Completion.items; is_incomplete }
+        (items_rev, is_incomplete)
     else
       (* if autoimports are not enabled, then we have all the results *)
-      { ServerProt.Response.Completion.items; is_incomplete = false }
+      (items_rev, false)
   in
+  let result = { ServerProt.Response.Completion.items = List.rev items_rev; is_incomplete } in
   AcResult { result; errors_to_log }
 
 let rec binds_react = function

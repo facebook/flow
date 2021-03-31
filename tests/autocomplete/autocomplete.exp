@@ -210,9 +210,9 @@ this2.js:5:6
 Flags: --pretty
 {
   "result":[
-    {"name":"super","type":"super"},
+    {"name":"A","type":"class A"},
     {"name":"this","type":"this"},
-    {"name":"A","type":"class A"}
+    {"name":"super","type":"super"}
   ]
 }
 
@@ -238,7 +238,7 @@ Flags: --pretty
 typeparams_function.js:3:4
 Flags: --pretty
 {
-  "result":[{"name":"this","type":"this"},{"name":"test","type":"<T>() => void"}]
+  "result":[{"name":"test","type":"<T>() => void"},{"name":"this","type":"this"}]
 }
 
 generics.js:6:5
@@ -287,9 +287,9 @@ jsx4.js:7:3
 Flags: --pretty
 {
   "result":[
-    {"name":"Computerization","type":"(props: empty) => void"},
+    {"name":"Complementarity","type":"class Complementarity"},
     {"name":"Compressibility","type":"(props: empty) => void"},
-    {"name":"Complementarity","type":"class Complementarity"}
+    {"name":"Computerization","type":"(props: empty) => void"}
   ]
 }
 
@@ -311,9 +311,9 @@ jsx-closing-tag.js:10:14
 Flags: --pretty
 {
   "result":[
-    {"name":"React","type":"module React"},
+    {"name":"Bar","type":"(props: {+x: number, +y: string, ...}) => void"},
     {"name":"Foo","type":"(props: {+x: number, +y: string, ...}) => void"},
-    {"name":"Bar","type":"(props: {+x: number, +y: string, ...}) => void"}
+    {"name":"React","type":"module React"}
   ]
 }
 
@@ -321,9 +321,9 @@ jsx-closing-tag-unclosed.js:10:14
 Flags: --pretty
 {
   "result":[
-    {"name":"React","type":"module React"},
+    {"name":"Bar","type":"(props: {+x: number, +y: string, ...}) => void"},
     {"name":"Foo","type":"(props: {+x: number, +y: string, ...}) => void"},
-    {"name":"Bar","type":"(props: {+x: number, +y: string, ...}) => void"}
+    {"name":"React","type":"module React"}
   ]
 }
 
@@ -355,12 +355,12 @@ customfun.js:6:3
 Flags: --pretty
 {
   "result":[
-    {"name":"objectGetPrototypeOf","type":"(o: any) => any"},
-    {"name":"objectAssign","type":"(target: any, ...sources: Array<any>) => any"},
     {
       "name":"idx",
       "type":"<IdxObject: any, IdxResult>(obj: IdxObject, pathCallback: (demaybefiedObj: IdxObject) => IdxResult) => ?IdxResult"
-    }
+    },
+    {"name":"objectAssign","type":"(target: any, ...sources: Array<any>) => any"},
+    {"name":"objectGetPrototypeOf","type":"(o: any) => any"}
   ]
 }
 
@@ -1198,21 +1198,21 @@ identifier.js:10:18
 Flags: --pretty
 {
   "result":[
-    {"name":"this","type":"this"},
-    {"name":"flowery","type":"number"},
-    {"name":"flounder","type":"any"},
-    {"name":"flotsam","type":"number"},
-    {"name":"florist","type":"number"},
-    {"name":"florescent","type":"() => void"},
+    {"name":"bartender","type":"number"},
     {"name":"floater","type":"number"},
-    {"name":"bartender","type":"number"}
+    {"name":"florescent","type":"() => void"},
+    {"name":"florist","type":"number"},
+    {"name":"flotsam","type":"number"},
+    {"name":"flounder","type":"any"},
+    {"name":"flowery","type":"number"},
+    {"name":"this","type":"this"}
   ]
 }
 
 identifier_middle.js:6:4
 Flags: --pretty
 {
-  "result":[{"name":"foobaz","type":"number"},{"name":"foobarbaz","type":"number"}]
+  "result":[{"name":"foobarbaz","type":"number"},{"name":"foobaz","type":"number"}]
 }
 
 identifier_import_type.js:14:4
@@ -1227,9 +1227,9 @@ super.js:4:8
 Flags: --pretty
 {
   "result":[
-    {"name":"super","type":"super"},
+    {"name":"Foo","type":"class Foo"},
     {"name":"this","type":"this"},
-    {"name":"Foo","type":"class Foo"}
+    {"name":"super","type":"super"}
   ]
 }
 
@@ -1237,9 +1237,9 @@ this-2.js:5:10
 Flags: --pretty
 {
   "result":[
-    {"name":"y","type":"(z: empty) => empty"},
+    {"name":"foo","type":"() => void"},
     {"name":"x","type":"any"},
-    {"name":"foo","type":"() => void"}
+    {"name":"y","type":"(z: empty) => empty"}
   ]
 }
 
@@ -1247,10 +1247,10 @@ this-2.js:9:4
 Flags: --pretty
 {
   "result":[
-    {"name":"this","type":"this"},
-    {"name":"y","type":"(z: empty) => empty"},
+    {"name":"foo","type":"() => void"},
     {"name":"x","type":"void"},
-    {"name":"foo","type":"() => void"}
+    {"name":"y","type":"(z: empty) => empty"},
+    {"name":"this","type":"this"}
   ]
 }
 
@@ -1258,10 +1258,10 @@ this-2.js:13:15
 Flags: --pretty
 {
   "result":[
-    {"name":"z","type":"empty"},
-    {"name":"y","type":"(z: empty) => any"},
+    {"name":"foo","type":"() => void"},
     {"name":"x","type":"void"},
-    {"name":"foo","type":"() => void"}
+    {"name":"y","type":"(z: empty) => any"},
+    {"name":"z","type":"empty"}
   ]
 }
 
@@ -1269,12 +1269,12 @@ this-2.js:17:9
 Flags: --pretty
 {
   "result":[
-    {"name":"super","type":"super"},
-    {"name":"this","type":"this"},
-    {"name":"y","type":"(z: empty) => empty"},
-    {"name":"x","type":"void"},
+    {"name":"Bar","type":"class Bar"},
     {"name":"foo","type":"() => void"},
-    {"name":"Bar","type":"class Bar"}
+    {"name":"x","type":"void"},
+    {"name":"y","type":"(z: empty) => empty"},
+    {"name":"this","type":"this"},
+    {"name":"super","type":"super"}
   ]
 }
 
@@ -1284,7 +1284,7 @@ Flags: --pretty
 
 pattern.js:8:4
 Flags: --pretty
-{"result":[{"name":"foo","type":"number"},{"name":"bar","type":"() => void"}]}
+{"result":[{"name":"bar","type":"() => void"},{"name":"foo","type":"number"}]}
 
 pattern.js:12:14
 Flags: --pretty
@@ -1308,10 +1308,10 @@ normalize-2.js:5:10
 Flags: --pretty
 {
   "result":[
-    {"name":"this","type":"this"},
-    {"name":"foo","type":"<T>(a: {b: T, ...}) => any"},
+    {"name":"a","type":"{b: T, ...}"},
     {"name":"c","type":"T"},
-    {"name":"a","type":"{b: T, ...}"}
+    {"name":"foo","type":"<T>(a: {b: T, ...}) => any"},
+    {"name":"this","type":"this"}
   ]
 }
 
@@ -2656,7 +2656,7 @@ Flags: --lsp
 
 enum-id.js:9:4
 Flags: --pretty
-{"result":[{"name":"Foo","type":"enum Foo"},{"name":"Fab","type":"enum Fab"}]}
+{"result":[{"name":"Fab","type":"enum Fab"},{"name":"Foo","type":"enum Foo"}]}
 
 class_declaration_name.js:5:8
 Flags: --pretty
@@ -2679,15 +2679,15 @@ Flags: --pretty
 jsdoc.js:15:4
 Flags: --lsp
 {
-  "label":"x",
-  "kind":3,
-  "detail":"() => void",
-  "documentation":{"kind":"markdown","value":"a JSDoc in the same file"},
+  "label":"Bar",
+  "kind":7,
+  "detail":"class Bar",
+  "documentation":{"kind":"markdown","value":"the class Bar"},
   "sortText":"00000000000000000000",
   "insertTextFormat":1,
   "textEdit":{
     "range":{"start":{"line":14,"character":3},"end":{"line":14,"character":3}},
-    "newText":"x"
+    "newText":"Bar"
   },
   "command":{
     "title":"",
@@ -2695,7 +2695,154 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "local value identifier",
-      {"token":null,"completion":"x"}
+      {"token":null,"completion":"Bar"}
+    ]
+  }
+}
+{
+  "label":"BooleanEnum",
+  "kind":13,
+  "detail":"enum BooleanEnum",
+  "documentation":{"kind":"markdown","value":"a boolean enum"},
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":14,"character":3},"end":{"line":14,"character":3}},
+    "newText":"BooleanEnum"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "local value identifier",
+      {"token":null,"completion":"BooleanEnum"}
+    ]
+  }
+}
+{
+  "label":"DefaultedStringEnum",
+  "kind":13,
+  "detail":"enum DefaultedStringEnum",
+  "documentation":{"kind":"markdown","value":"a defaulted string enum"},
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":14,"character":3},"end":{"line":14,"character":3}},
+    "newText":"DefaultedStringEnum"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "local value identifier",
+      {"token":null,"completion":"DefaultedStringEnum"}
+    ]
+  }
+}
+{
+  "label":"InitializedStringEnum",
+  "kind":13,
+  "detail":"enum InitializedStringEnum",
+  "documentation":{"kind":"markdown","value":"an initialized string enum"},
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":14,"character":3},"end":{"line":14,"character":3}},
+    "newText":"InitializedStringEnum"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "local value identifier",
+      {"token":null,"completion":"InitializedStringEnum"}
+    ]
+  }
+}
+{
+  "label":"NumberEnum",
+  "kind":13,
+  "detail":"enum NumberEnum",
+  "documentation":{"kind":"markdown","value":"a number enum"},
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":14,"character":3},"end":{"line":14,"character":3}},
+    "newText":"NumberEnum"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "local value identifier",
+      {"token":null,"completion":"NumberEnum"}
+    ]
+  }
+}
+{
+  "label":"SymbolEnum",
+  "kind":13,
+  "detail":"enum SymbolEnum",
+  "documentation":{"kind":"markdown","value":"a symbol enum"},
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":14,"character":3},"end":{"line":14,"character":3}},
+    "newText":"SymbolEnum"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "local value identifier",
+      {"token":null,"completion":"SymbolEnum"}
+    ]
+  }
+}
+{
+  "label":"baz",
+  "kind":6,
+  "detail":"number",
+  "documentation":{"kind":"markdown","value":"the variable baz"},
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":14,"character":3},"end":{"line":14,"character":3}},
+    "newText":"baz"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "local value identifier",
+      {"token":null,"completion":"baz"}
+    ]
+  }
+}
+{
+  "label":"foo",
+  "kind":3,
+  "detail":"() => void",
+  "documentation":{"kind":"markdown","value":"the function foo"},
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":14,"character":3},"end":{"line":14,"character":3}},
+    "newText":"foo"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "local value identifier",
+      {"token":null,"completion":"foo"}
     ]
   }
 }
@@ -2724,15 +2871,15 @@ Flags: --lsp
   }
 }
 {
-  "label":"foo",
+  "label":"x",
   "kind":3,
   "detail":"() => void",
-  "documentation":{"kind":"markdown","value":"the function foo"},
+  "documentation":{"kind":"markdown","value":"a JSDoc in the same file"},
   "sortText":"00000000000000000000",
   "insertTextFormat":1,
   "textEdit":{
     "range":{"start":{"line":14,"character":3},"end":{"line":14,"character":3}},
-    "newText":"foo"
+    "newText":"x"
   },
   "command":{
     "title":"",
@@ -2740,154 +2887,7 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "local value identifier",
-      {"token":null,"completion":"foo"}
-    ]
-  }
-}
-{
-  "label":"baz",
-  "kind":6,
-  "detail":"number",
-  "documentation":{"kind":"markdown","value":"the variable baz"},
-  "sortText":"00000000000000000000",
-  "insertTextFormat":1,
-  "textEdit":{
-    "range":{"start":{"line":14,"character":3},"end":{"line":14,"character":3}},
-    "newText":"baz"
-  },
-  "command":{
-    "title":"",
-    "command":"log:<PLACEHOLDER_PROJECT_URL>",
-    "arguments":[
-      "textDocument/completion",
-      "local value identifier",
-      {"token":null,"completion":"baz"}
-    ]
-  }
-}
-{
-  "label":"SymbolEnum",
-  "kind":13,
-  "detail":"enum SymbolEnum",
-  "documentation":{"kind":"markdown","value":"a symbol enum"},
-  "sortText":"00000000000000000000",
-  "insertTextFormat":1,
-  "textEdit":{
-    "range":{"start":{"line":14,"character":3},"end":{"line":14,"character":3}},
-    "newText":"SymbolEnum"
-  },
-  "command":{
-    "title":"",
-    "command":"log:<PLACEHOLDER_PROJECT_URL>",
-    "arguments":[
-      "textDocument/completion",
-      "local value identifier",
-      {"token":null,"completion":"SymbolEnum"}
-    ]
-  }
-}
-{
-  "label":"NumberEnum",
-  "kind":13,
-  "detail":"enum NumberEnum",
-  "documentation":{"kind":"markdown","value":"a number enum"},
-  "sortText":"00000000000000000000",
-  "insertTextFormat":1,
-  "textEdit":{
-    "range":{"start":{"line":14,"character":3},"end":{"line":14,"character":3}},
-    "newText":"NumberEnum"
-  },
-  "command":{
-    "title":"",
-    "command":"log:<PLACEHOLDER_PROJECT_URL>",
-    "arguments":[
-      "textDocument/completion",
-      "local value identifier",
-      {"token":null,"completion":"NumberEnum"}
-    ]
-  }
-}
-{
-  "label":"InitializedStringEnum",
-  "kind":13,
-  "detail":"enum InitializedStringEnum",
-  "documentation":{"kind":"markdown","value":"an initialized string enum"},
-  "sortText":"00000000000000000000",
-  "insertTextFormat":1,
-  "textEdit":{
-    "range":{"start":{"line":14,"character":3},"end":{"line":14,"character":3}},
-    "newText":"InitializedStringEnum"
-  },
-  "command":{
-    "title":"",
-    "command":"log:<PLACEHOLDER_PROJECT_URL>",
-    "arguments":[
-      "textDocument/completion",
-      "local value identifier",
-      {"token":null,"completion":"InitializedStringEnum"}
-    ]
-  }
-}
-{
-  "label":"DefaultedStringEnum",
-  "kind":13,
-  "detail":"enum DefaultedStringEnum",
-  "documentation":{"kind":"markdown","value":"a defaulted string enum"},
-  "sortText":"00000000000000000000",
-  "insertTextFormat":1,
-  "textEdit":{
-    "range":{"start":{"line":14,"character":3},"end":{"line":14,"character":3}},
-    "newText":"DefaultedStringEnum"
-  },
-  "command":{
-    "title":"",
-    "command":"log:<PLACEHOLDER_PROJECT_URL>",
-    "arguments":[
-      "textDocument/completion",
-      "local value identifier",
-      {"token":null,"completion":"DefaultedStringEnum"}
-    ]
-  }
-}
-{
-  "label":"BooleanEnum",
-  "kind":13,
-  "detail":"enum BooleanEnum",
-  "documentation":{"kind":"markdown","value":"a boolean enum"},
-  "sortText":"00000000000000000000",
-  "insertTextFormat":1,
-  "textEdit":{
-    "range":{"start":{"line":14,"character":3},"end":{"line":14,"character":3}},
-    "newText":"BooleanEnum"
-  },
-  "command":{
-    "title":"",
-    "command":"log:<PLACEHOLDER_PROJECT_URL>",
-    "arguments":[
-      "textDocument/completion",
-      "local value identifier",
-      {"token":null,"completion":"BooleanEnum"}
-    ]
-  }
-}
-{
-  "label":"Bar",
-  "kind":7,
-  "detail":"class Bar",
-  "documentation":{"kind":"markdown","value":"the class Bar"},
-  "sortText":"00000000000000000000",
-  "insertTextFormat":1,
-  "textEdit":{
-    "range":{"start":{"line":14,"character":3},"end":{"line":14,"character":3}},
-    "newText":"Bar"
-  },
-  "command":{
-    "title":"",
-    "command":"log:<PLACEHOLDER_PROJECT_URL>",
-    "arguments":[
-      "textDocument/completion",
-      "local value identifier",
-      {"token":null,"completion":"Bar"}
+      {"token":null,"completion":"x"}
     ]
   }
 }

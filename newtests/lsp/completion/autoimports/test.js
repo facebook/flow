@@ -33,59 +33,10 @@ export default (suite(
               isIncomplete: false,
               items: [
                 {
-                  label: 'undefined',
+                  label: 'Foo',
                   kind: 6,
-                  detail: 'undefined',
-                  sortText: '00000000000000000101',
-                  insertTextFormat: 1,
-                  textEdit: {
-                    range: {
-                      start: {line: 2, character: 0},
-                      end: {line: 2, character: 1},
-                    },
-                    newText: 'undefined',
-                  },
-                  command: {
-                    title: '',
-                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
-                    arguments: [
-                      'textDocument/completion',
-                      'global',
-                      {token: 'fAUTO332', completion: 'undefined'},
-                    ],
-                  },
-                },
-                {
-                  label: 'Function',
-                  kind: 6,
-                  detail: 'Function',
-                  sortText: '00000000000000000101',
-                  insertTextFormat: 1,
-                  textEdit: {
-                    range: {
-                      start: {line: 2, character: 0},
-                      end: {line: 2, character: 1},
-                    },
-                    newText: 'Function',
-                  },
-                  command: {
-                    title: '',
-                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
-                    arguments: [
-                      'textDocument/completion',
-                      'global',
-                      {token: 'fAUTO332', completion: 'Function'},
-                    ],
-                  },
-                },
-                {
-                  label: 'foobar',
-                  kind: 6,
-                  detail: 'foobar',
-                  documentation: {
-                    kind: 'markdown',
-                    value: 'Import default from ./foobar',
-                  },
+                  detail: 'Foo',
+                  documentation: {kind: 'markdown', value: 'Import from ./foo'},
                   sortText: '00000000000000000100',
                   insertTextFormat: 1,
                   textEdit: {
@@ -93,7 +44,7 @@ export default (suite(
                       start: {line: 2, character: 0},
                       end: {line: 2, character: 1},
                     },
-                    newText: 'foobar',
+                    newText: 'Foo',
                   },
                   additionalTextEdits: [
                     {
@@ -101,7 +52,7 @@ export default (suite(
                         start: {line: 2, character: 0},
                         end: {line: 2, character: 0},
                       },
-                      newText: 'import foobar from "./foobar";\n\n',
+                      newText: 'import {Foo} from "./foo";\n\n',
                     },
                   ],
                   command: {
@@ -110,7 +61,30 @@ export default (suite(
                     arguments: [
                       'textDocument/completion',
                       'autoimport',
-                      {token: 'fAUTO332', completion: 'foobar'},
+                      {token: 'fAUTO332', completion: 'Foo'},
+                    ],
+                  },
+                },
+                {
+                  label: 'far',
+                  kind: 6,
+                  detail: 'far',
+                  sortText: '00000000000000000101',
+                  insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {line: 2, character: 0},
+                      end: {line: 2, character: 1},
+                    },
+                    newText: 'far',
+                  },
+                  command: {
+                    title: '',
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                    arguments: [
+                      'textDocument/completion',
+                      'global',
+                      {token: 'fAUTO332', completion: 'far'},
                     ],
                   },
                 },
@@ -118,10 +92,7 @@ export default (suite(
                   label: 'foo',
                   kind: 6,
                   detail: 'foo',
-                  documentation: {
-                    kind: 'markdown',
-                    value: 'Import * from ./foo',
-                  },
+                  documentation: {kind: 'markdown', value: 'Import from LibA'},
                   sortText: '00000000000000000100',
                   insertTextFormat: 1,
                   textEdit: {
@@ -137,7 +108,7 @@ export default (suite(
                         start: {line: 2, character: 0},
                         end: {line: 2, character: 0},
                       },
-                      newText: 'import * as foo from "./foo";\n\n',
+                      newText: 'import {foo} from "LibA";\n\n',
                     },
                   ],
                   command: {
@@ -190,7 +161,10 @@ export default (suite(
                   label: 'foo',
                   kind: 6,
                   detail: 'foo',
-                  documentation: {kind: 'markdown', value: 'Import from LibA'},
+                  documentation: {
+                    kind: 'markdown',
+                    value: 'Import * from ./foo',
+                  },
                   sortText: '00000000000000000100',
                   insertTextFormat: 1,
                   textEdit: {
@@ -206,7 +180,7 @@ export default (suite(
                         start: {line: 2, character: 0},
                         end: {line: 2, character: 0},
                       },
-                      newText: 'import {foo} from "LibA";\n\n',
+                      newText: 'import * as foo from "./foo";\n\n',
                     },
                   ],
                   command: {
@@ -220,33 +194,13 @@ export default (suite(
                   },
                 },
                 {
-                  label: 'far',
+                  label: 'foobar',
                   kind: 6,
-                  detail: 'far',
-                  sortText: '00000000000000000101',
-                  insertTextFormat: 1,
-                  textEdit: {
-                    range: {
-                      start: {line: 2, character: 0},
-                      end: {line: 2, character: 1},
-                    },
-                    newText: 'far',
+                  detail: 'foobar',
+                  documentation: {
+                    kind: 'markdown',
+                    value: 'Import default from ./foobar',
                   },
-                  command: {
-                    title: '',
-                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
-                    arguments: [
-                      'textDocument/completion',
-                      'global',
-                      {token: 'fAUTO332', completion: 'far'},
-                    ],
-                  },
-                },
-                {
-                  label: 'Foo',
-                  kind: 6,
-                  detail: 'Foo',
-                  documentation: {kind: 'markdown', value: 'Import from ./foo'},
                   sortText: '00000000000000000100',
                   insertTextFormat: 1,
                   textEdit: {
@@ -254,7 +208,7 @@ export default (suite(
                       start: {line: 2, character: 0},
                       end: {line: 2, character: 1},
                     },
-                    newText: 'Foo',
+                    newText: 'foobar',
                   },
                   additionalTextEdits: [
                     {
@@ -262,7 +216,7 @@ export default (suite(
                         start: {line: 2, character: 0},
                         end: {line: 2, character: 0},
                       },
-                      newText: 'import {Foo} from "./foo";\n\n',
+                      newText: 'import foobar from "./foobar";\n\n',
                     },
                   ],
                   command: {
@@ -271,7 +225,53 @@ export default (suite(
                     arguments: [
                       'textDocument/completion',
                       'autoimport',
-                      {token: 'fAUTO332', completion: 'Foo'},
+                      {token: 'fAUTO332', completion: 'foobar'},
+                    ],
+                  },
+                },
+                {
+                  label: 'Function',
+                  kind: 6,
+                  detail: 'Function',
+                  sortText: '00000000000000000101',
+                  insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {line: 2, character: 0},
+                      end: {line: 2, character: 1},
+                    },
+                    newText: 'Function',
+                  },
+                  command: {
+                    title: '',
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                    arguments: [
+                      'textDocument/completion',
+                      'global',
+                      {token: 'fAUTO332', completion: 'Function'},
+                    ],
+                  },
+                },
+                {
+                  label: 'undefined',
+                  kind: 6,
+                  detail: 'undefined',
+                  sortText: '00000000000000000101',
+                  insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {line: 2, character: 0},
+                      end: {line: 2, character: 1},
+                    },
+                    newText: 'undefined',
+                  },
+                  command: {
+                    title: '',
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                    arguments: [
+                      'textDocument/completion',
+                      'global',
+                      {token: 'fAUTO332', completion: 'undefined'},
                     ],
                   },
                 },
@@ -299,17 +299,17 @@ export default (suite(
               isIncomplete: false,
               items: [
                 {
-                  label: 'undefined',
-                  kind: 6,
-                  detail: 'undefined',
-                  sortText: '00000000000000000101',
+                  label: 'Foo',
+                  kind: 3,
+                  detail: '(props: {...}) => null',
+                  sortText: '00000000000000000000',
                   insertTextFormat: 1,
                   textEdit: {
                     range: {
                       start: {line: 4, character: 2},
                       end: {line: 4, character: 3},
                     },
-                    newText: 'undefined',
+                    newText: 'Foo',
                   },
                   additionalTextEdits: [
                     {
@@ -325,8 +325,8 @@ export default (suite(
                     command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
                     arguments: [
                       'textDocument/completion',
-                      'global',
-                      {token: 'FAUTO332', completion: 'undefined'},
+                      'local value identifier',
+                      {token: 'FAUTO332', completion: 'Foo'},
                     ],
                   },
                 },
@@ -363,17 +363,17 @@ export default (suite(
                   },
                 },
                 {
-                  label: 'Foo',
-                  kind: 3,
-                  detail: '(props: {...}) => null',
-                  sortText: '00000000000000000000',
+                  label: 'undefined',
+                  kind: 6,
+                  detail: 'undefined',
+                  sortText: '00000000000000000101',
                   insertTextFormat: 1,
                   textEdit: {
                     range: {
                       start: {line: 4, character: 2},
                       end: {line: 4, character: 3},
                     },
-                    newText: 'Foo',
+                    newText: 'undefined',
                   },
                   additionalTextEdits: [
                     {
@@ -389,8 +389,8 @@ export default (suite(
                     command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
                     arguments: [
                       'textDocument/completion',
-                      'local value identifier',
-                      {token: 'FAUTO332', completion: 'Foo'},
+                      'global',
+                      {token: 'FAUTO332', completion: 'undefined'},
                     ],
                   },
                 },
@@ -482,7 +482,7 @@ export default (suite(
                   detail: 'AllTheThings',
                   documentation: {
                     kind: 'markdown',
-                    value: 'Import * from ./AllTheThings',
+                    value: 'Import default from ./AllTheThings',
                   },
                   sortText: '00000000000000000100',
                   insertTextFormat: 1,
@@ -499,8 +499,7 @@ export default (suite(
                         start: {line: 2, character: 0},
                         end: {line: 2, character: 0},
                       },
-                      newText:
-                        'import * as AllTheThings from "./AllTheThings";\n\n',
+                      newText: 'import AllTheThings from "./AllTheThings";\n\n',
                     },
                   ],
                   command: {
@@ -556,7 +555,7 @@ export default (suite(
                   detail: 'AllTheThings',
                   documentation: {
                     kind: 'markdown',
-                    value: 'Import default from ./AllTheThings',
+                    value: 'Import * from ./AllTheThings',
                   },
                   sortText: '00000000000000000100',
                   insertTextFormat: 1,
@@ -573,7 +572,8 @@ export default (suite(
                         start: {line: 2, character: 0},
                         end: {line: 2, character: 0},
                       },
-                      newText: 'import AllTheThings from "./AllTheThings";\n\n',
+                      newText:
+                        'import * as AllTheThings from "./AllTheThings";\n\n',
                     },
                   ],
                   command: {
