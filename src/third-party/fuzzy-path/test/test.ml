@@ -97,6 +97,12 @@ let tests = "fuzzy-path" >::: [
     let result = Fuzzy_path.search "abcc" matcher in
     assert_values ~ctxt [] result;
   );
+
+  "stable_ordering" >:: (fun ctxt ->
+    let matcher = Fuzzy_path.init ["Foo"; "foo"; "far"; "foobar"] in
+    let result = Fuzzy_path.search "f" matcher in
+    assert_values ~ctxt ["far"; "foo"; "Foo"; "foobar"] result;
+  );
 ]
 
 let () = run_test_tt_main tests

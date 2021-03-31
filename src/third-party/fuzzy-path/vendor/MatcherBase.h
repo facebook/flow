@@ -35,7 +35,12 @@ struct MatchResult {
     if (score == other.score) {
       // In case of a tie, favour shorter strings.
       if (score_based_root_path == other.score_based_root_path) {
-        return value->length() < other.value->length();
+        int length = value->length() - other.value->length();
+        // In the case of a tie, favor lexicographically-earlier
+        if (length == 0) {
+          return value > other.value;
+        }
+        return length < 0;
       }
       return score_based_root_path > other.score_based_root_path;
     }

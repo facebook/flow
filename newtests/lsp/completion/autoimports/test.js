@@ -115,39 +115,6 @@ export default (suite(
                   },
                 },
                 {
-                  label: 'Foo',
-                  kind: 6,
-                  detail: 'Foo',
-                  documentation: {kind: 'markdown', value: 'Import from ./foo'},
-                  sortText: '00000000000000000100',
-                  insertTextFormat: 1,
-                  textEdit: {
-                    range: {
-                      start: {line: 2, character: 0},
-                      end: {line: 2, character: 1},
-                    },
-                    newText: 'Foo',
-                  },
-                  additionalTextEdits: [
-                    {
-                      range: {
-                        start: {line: 2, character: 0},
-                        end: {line: 2, character: 0},
-                      },
-                      newText: 'import {Foo} from "./foo";\n\n',
-                    },
-                  ],
-                  command: {
-                    title: '',
-                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
-                    arguments: [
-                      'textDocument/completion',
-                      'autoimport',
-                      {token: 'fAUTO332', completion: 'Foo'},
-                    ],
-                  },
-                },
-                {
                   label: 'foo',
                   kind: 6,
                   detail: 'foo',
@@ -249,6 +216,39 @@ export default (suite(
                       'textDocument/completion',
                       'autoimport',
                       {token: 'fAUTO332', completion: 'foo'},
+                    ],
+                  },
+                },
+                {
+                  label: 'Foo',
+                  kind: 6,
+                  detail: 'Foo',
+                  documentation: {kind: 'markdown', value: 'Import from ./foo'},
+                  sortText: '00000000000000000100',
+                  insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {line: 2, character: 0},
+                      end: {line: 2, character: 1},
+                    },
+                    newText: 'Foo',
+                  },
+                  additionalTextEdits: [
+                    {
+                      range: {
+                        start: {line: 2, character: 0},
+                        end: {line: 2, character: 0},
+                      },
+                      newText: 'import {Foo} from "./foo";\n\n',
+                    },
+                  ],
+                  command: {
+                    title: '',
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                    arguments: [
+                      'textDocument/completion',
+                      'autoimport',
+                      {token: 'fAUTO332', completion: 'Foo'},
                     ],
                   },
                 },
