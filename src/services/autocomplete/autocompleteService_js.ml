@@ -432,7 +432,7 @@ let completion_item_of_autoimport
     {
       ServerProt.Response.Completion.kind = Some Lsp.Completion.Variable;
       name;
-      detail = name;
+      detail = "(global)" (* TODO: include the type *);
       text_edits = [text_edit (name, ac_loc)];
       sort_text = sort_text_of_rank 101 (* TODO: use a constant *);
       preselect = false;
@@ -444,11 +444,11 @@ let completion_item_of_autoimport
     {
       ServerProt.Response.Completion.kind = Some Lsp.Completion.Variable;
       name;
-      detail = name;
+      detail = title (* TODO: include the type *);
       text_edits = text_edit (name, ac_loc) :: edits;
       sort_text = sort_text_of_rank 100 (* TODO: use a constant *);
       preselect = false;
-      documentation = Some title;
+      documentation = None;
       log_info = "autoimport";
     }
 

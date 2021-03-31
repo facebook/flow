@@ -35,8 +35,7 @@ export default (suite(
                 {
                   label: 'Foo',
                   kind: 6,
-                  detail: 'Foo',
-                  documentation: {kind: 'markdown', value: 'Import from ./foo'},
+                  detail: 'Import from ./foo',
                   sortText: '00000000000000000100',
                   insertTextFormat: 1,
                   textEdit: {
@@ -68,7 +67,7 @@ export default (suite(
                 {
                   label: 'far',
                   kind: 6,
-                  detail: 'far',
+                  detail: '(global)',
                   sortText: '00000000000000000101',
                   insertTextFormat: 1,
                   textEdit: {
@@ -91,8 +90,7 @@ export default (suite(
                 {
                   label: 'foo',
                   kind: 6,
-                  detail: 'foo',
-                  documentation: {kind: 'markdown', value: 'Import from LibA'},
+                  detail: 'Import from LibA',
                   sortText: '00000000000000000100',
                   insertTextFormat: 1,
                   textEdit: {
@@ -124,11 +122,7 @@ export default (suite(
                 {
                   label: 'foo',
                   kind: 6,
-                  detail: 'foo',
-                  documentation: {
-                    kind: 'markdown',
-                    value: 'Import default from ./foo',
-                  },
+                  detail: 'Import default from ./foo',
                   sortText: '00000000000000000100',
                   insertTextFormat: 1,
                   textEdit: {
@@ -160,11 +154,7 @@ export default (suite(
                 {
                   label: 'foo',
                   kind: 6,
-                  detail: 'foo',
-                  documentation: {
-                    kind: 'markdown',
-                    value: 'Import * from ./foo',
-                  },
+                  detail: 'Import * from ./foo',
                   sortText: '00000000000000000100',
                   insertTextFormat: 1,
                   textEdit: {
@@ -196,11 +186,7 @@ export default (suite(
                 {
                   label: 'foobar',
                   kind: 6,
-                  detail: 'foobar',
-                  documentation: {
-                    kind: 'markdown',
-                    value: 'Import default from ./foobar',
-                  },
+                  detail: 'Import default from ./foobar',
                   sortText: '00000000000000000100',
                   insertTextFormat: 1,
                   textEdit: {
@@ -232,7 +218,7 @@ export default (suite(
                 {
                   label: 'Function',
                   kind: 6,
-                  detail: 'Function',
+                  detail: '(global)',
                   sortText: '00000000000000000101',
                   insertTextFormat: 1,
                   textEdit: {
@@ -255,7 +241,7 @@ export default (suite(
                 {
                   label: 'undefined',
                   kind: 6,
-                  detail: 'undefined',
+                  detail: '(global)',
                   sortText: '00000000000000000101',
                   insertTextFormat: 1,
                   textEdit: {
@@ -333,7 +319,7 @@ export default (suite(
                 {
                   label: 'Function',
                   kind: 6,
-                  detail: 'Function',
+                  detail: '(global)',
                   sortText: '00000000000000000101',
                   insertTextFormat: 1,
                   textEdit: {
@@ -365,7 +351,7 @@ export default (suite(
                 {
                   label: 'undefined',
                   kind: 6,
-                  detail: 'undefined',
+                  detail: '(global)',
                   sortText: '00000000000000000101',
                   insertTextFormat: 1,
                   textEdit: {
@@ -420,11 +406,7 @@ export default (suite(
                 {
                   label: 'not_null',
                   kind: 6,
-                  detail: 'not_null',
-                  documentation: {
-                    kind: 'markdown',
-                    value: 'Import from ./reserved',
-                  },
+                  detail: 'Import from ./reserved',
                   sortText: '00000000000000000100',
                   insertTextFormat: 1,
                   textEdit: {
@@ -526,11 +508,7 @@ export default (suite(
                 {
                   label: 'AllTheThings',
                   kind: 6,
-                  detail: 'AllTheThings',
-                  documentation: {
-                    kind: 'markdown',
-                    value: 'Import default from ./AllTheThings',
-                  },
+                  detail: 'Import default from ./AllTheThings',
                   sortText: '00000000000000000100',
                   insertTextFormat: 1,
                   textEdit: {
@@ -562,11 +540,7 @@ export default (suite(
                 {
                   label: 'AllTheThings',
                   kind: 6,
-                  detail: 'AllTheThings',
-                  documentation: {
-                    kind: 'markdown',
-                    value: 'Import from ./AllTheThings',
-                  },
+                  detail: 'Import from ./AllTheThings',
                   sortText: '00000000000000000100',
                   insertTextFormat: 1,
                   textEdit: {
@@ -599,11 +573,7 @@ export default (suite(
                 {
                   label: 'AllTheThings',
                   kind: 6,
-                  detail: 'AllTheThings',
-                  documentation: {
-                    kind: 'markdown',
-                    value: 'Import * from ./AllTheThings',
-                  },
+                  detail: 'Import * from ./AllTheThings',
                   sortText: '00000000000000000100',
                   insertTextFormat: 1,
                   textEdit: {
