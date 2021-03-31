@@ -18,6 +18,7 @@ printf "\nRestore non-@flow file foo.js:\n"
 mv tmp/foo.js .
 # NOTE: force-rechecking foo.js defeats the purpose of this particular test
 # "$FLOW" force-recheck --no-auto-start foo.js
+sleep 1
 assert_ok "$FLOW" status --no-auto-start .
 
 rmdir tmp
