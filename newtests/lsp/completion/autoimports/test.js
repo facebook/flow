@@ -27,9 +27,9 @@ export default (suite(
         context: {triggerKind: 1},
       }).verifyAllLSPMessagesInStep(
         [
-          [
-            'textDocument/completion',
-            {
+          {
+            method: 'textDocument/completion',
+            result: {
               isIncomplete: false,
               items: [
                 {
@@ -277,7 +277,7 @@ export default (suite(
                 },
               ],
             },
-          ],
+          },
         ],
         ['textDocument/publishDiagnostics', ...lspIgnoreStatusAndCancellation],
       ),
@@ -293,9 +293,9 @@ export default (suite(
         context: {triggerKind: 1},
       }).verifyAllLSPMessagesInStep(
         [
-          [
-            'textDocument/completion',
-            {
+          {
+            method: 'textDocument/completion',
+            result: {
               isIncomplete: false,
               items: [
                 {
@@ -396,7 +396,7 @@ export default (suite(
                 },
               ],
             },
-          ],
+          },
         ],
         ['textDocument/publishDiagnostics', ...lspIgnoreStatusAndCancellation],
       ),
@@ -412,9 +412,9 @@ export default (suite(
         context: {triggerKind: 1},
       }).verifyAllLSPMessagesInStep(
         [
-          [
-            'textDocument/completion',
-            {
+          {
+            method: 'textDocument/completion',
+            result: {
               isIncomplete: false,
               items: [
                 {
@@ -455,7 +455,7 @@ export default (suite(
                 },
               ],
             },
-          ],
+          },
         ],
         ['textDocument/publishDiagnostics', ...lspIgnoreStatusAndCancellation],
       ),

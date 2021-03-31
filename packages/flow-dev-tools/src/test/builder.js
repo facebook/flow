@@ -716,7 +716,11 @@ export class TestBuilder {
         for (; nextMessageIndex < lspMessages.length; nextMessageIndex++) {
           const message = lspMessages[nextMessageIndex];
           if (
-            Builder.doesMessageMatch(message, expectedMethod, expectedContents)
+            Builder.doesMessageFuzzyMatch(
+              message,
+              expectedMethod,
+              expectedContents,
+            )
           ) {
             doneWithVerb('Got');
           }
@@ -986,14 +990,25 @@ export default class Builder {
     return uriToFsPath(uri, /* keepDriveLetterCasing */ true);
   }
 
-  // doesMethodMatch(actual, 'M') judges whether the method name of the actual
-  // message was M. And doesMethodMatch(actual, 'M', '{C1,C2,...}') judges also
-  // whether the strings C1, C2, ... were all found in the JSON representation
-  // of the actual message.
-  static doesMessageMatch(
+  /**
+   * Tests whether two LSP messages are the same. Currently enforces that
+   * the order of properties match as well, but could be loosened in the
+   * future since that's not required by the LSP.
+   */
+  static doesMessageMatch(actual: LSPMessage, expected: LSPMessage): boolean {
+    return JSON.stringify(actual) === JSON.stringify(expected);
+  }
+
+  /**
+   * doesMessageFuzzyMatch(actual, 'M') judges whether the method name of the
+   * actual message was M. And doesMethodMatch(actual, 'M', '{C1,C2,...}')
+   * judges also whether the strings C1, C2, ... were all found in the JSON
+   * representation of the actual message.
+   */
+  static doesMessageFuzzyMatch(
     actual: LSPMessage,
     expectedMethod: string,
-    expectedContents?: string | {},
+    expectedContents?: string,
   ): boolean {
     if (actual.method !== expectedMethod) {
       return false;
@@ -1004,22 +1019,18 @@ export default class Builder {
     if (expectedContents === 'null') {
       return actual.result !== undefined && actual.result === 'null';
     }
-    if (typeof expectedContents === 'string') {
-      const iOpenBrace = expectedContents.indexOf('{');
-      const iCloseBrace = expectedContents.lastIndexOf('}');
-      const parts = expectedContents
-        .substring(iOpenBrace + 1, iCloseBrace)
-        .split(',');
-      const json = JSON.stringify(actual);
-      for (const part of parts) {
-        if (!json.includes(part)) {
-          return false;
-        }
+    const iOpenBrace = expectedContents.indexOf('{');
+    const iCloseBrace = expectedContents.lastIndexOf('}');
+    const parts = expectedContents
+      .substring(iOpenBrace + 1, iCloseBrace)
+      .split(',');
+    const json = JSON.stringify(actual);
+    for (const part of parts) {
+      if (!json.includes(part)) {
+        return false;
       }
-      return true;
-    } else {
-      return JSON.stringify(actual) == JSON.stringify(expectedContents);
     }
+    return true;
   }
 
   constructor(errorCheckCommand: CheckCommand) {
