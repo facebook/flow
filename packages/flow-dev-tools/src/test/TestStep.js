@@ -461,28 +461,48 @@ export class TestStepFirstStage extends TestStepFirstOrSecondStage {
     return ret;
   };
 
-  // verifyAllLSPMessagesInStep(expects=['A',['B','{C,D}']], ignores=['B','E'])
-  // will look at all the actual messages that arrived in this step.
+  // verifyAllLSPMessagesInStep(expects, ignores) will look at all the actual
+  // messages that arrived in this step.
   //
-  // In this case there must be an "A", with any contents, followed by a "B"
-  // which has the strings C and D in its JSON representation (up to whitespace).
+  // For example, if expects = ['A',['B',{a:'b',c:false}]] and
+  // ignores = ['B','E'], there must be an "A", with any contents, followed by
+  // a "B" which exactly matches the given JSON object.
+  //
+  // Instead of an object, legacy callers also pass a string containing chunks
+  // of JSON which is very loosely compared. the string '{"a":"b","c":false}'
+  // tests whether response "B" contains the substrings `"a":"b"` and
+  // `"c":false` anywhere in its JSON representation. This doesn't enforce
+  // ordering or any structure, so should probably be avoided.
   //
   // It's okay if there are unexpected messages so long as they're in
   // ignores list - in this case we'd ignore any "B" (either because it came
-  // in the wrong order or because it didn't have C and D), and ignore any "E".
-  // But if there are unexpected messages not in the ignore list, then we fail.
+  // in the wrong order or because it didn't have the right contents), and
+  // ignore any "E". But if there are unexpected messages not in the ignore
+  // list, then we fail.
   verifyAllLSPMessagesInStep: (
-    $ReadOnlyArray<string | [string, string]>,
-    $ReadOnlyArray<string | [string, string]>,
+    $ReadOnlyArray<string | [string, string | {}]>,
+    $ReadOnlyArray<string | [string, string | {}]>,
   ) => TestStepSecondStage = (expects, ignores) => {
     const assertLoc = searchStackForTestAssertion();
     const ret = this._cloneWithAssertion((reason, env) => {
       const actualMessages = env.getLSPMessagesSinceStartOfStep();
       let actuals: Array<?string> = [];
       let iExpect = 0;
+      let diffable = expected => {
+        if (typeof expected === 'string') {
+          return [expected];
+        } else {
+          return [
+            expected[0],
+            typeof expected[1] === 'string'
+              ? expected[1]
+              : JSON.stringify(expected[1]),
+          ];
+        }
+      };
       let doesMatch = (
         actual: LSPMessage,
-        expected: string | [string, string],
+        expected: string | [string, string | {}],
       ) => {
         if (typeof expected === 'string') {
           return Builder.doesMessageMatch(actual, expected);
@@ -493,7 +513,7 @@ export class TestStepFirstStage extends TestStepFirstOrSecondStage {
       for (let iActual = 0; iActual < actualMessages.length; iActual++) {
         let actual = actualMessages[iActual];
         if (iExpect < expects.length && doesMatch(actual, expects[iExpect])) {
-          actuals.push(expects[iExpect].toString());
+          actuals.push(...diffable(expects[iExpect]));
           iExpect++;
         } else if (ignores.some(ignore => doesMatch(actual, ignore))) {
           // ignore it
@@ -511,8 +531,10 @@ export class TestStepFirstStage extends TestStepFirstOrSecondStage {
         args: [actuals, ignores],
       };
 
+      const expectsStr = expects.map(diffable).join(',');
+
       return simpleDiffAssertion(
-        expects.join(','),
+        expectsStr,
         actuals.join(','),
         assertLoc,
         reason,

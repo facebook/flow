@@ -29,7 +29,7 @@ export default (suite(
         [
           [
             'textDocument/completion',
-            JSON.stringify({
+            {
               isIncomplete: false,
               items: [
                 {
@@ -276,7 +276,7 @@ export default (suite(
                   },
                 },
               ],
-            }),
+            },
           ],
         ],
         ['textDocument/publishDiagnostics', ...lspIgnoreStatusAndCancellation],
@@ -295,7 +295,7 @@ export default (suite(
         [
           [
             'textDocument/completion',
-            JSON.stringify({
+            {
               isIncomplete: false,
               items: [
                 {
@@ -395,7 +395,7 @@ export default (suite(
                   },
                 },
               ],
-            }),
+            },
           ],
         ],
         ['textDocument/publishDiagnostics', ...lspIgnoreStatusAndCancellation],
@@ -414,7 +414,7 @@ export default (suite(
         [
           [
             'textDocument/completion',
-            JSON.stringify({
+            {
               isIncomplete: false,
               items: [
                 {
@@ -454,7 +454,7 @@ export default (suite(
                   },
                 },
               ],
-            }),
+            },
           ],
         ],
         ['textDocument/publishDiagnostics', ...lspIgnoreStatusAndCancellation],
