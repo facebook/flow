@@ -461,6 +461,53 @@ export default (suite(
       ),
     ]).flowConfig('_flowconfig_autoimports'),
 
+    // should not suggest importing `foobar` from foobar.js
+    test('textDocument/completion should exclude variables already in scope', [
+      addFiles('foobar.js'),
+      addCode(`const foobar = ''; foobar`),
+      lspStartAndConnect(),
+      lspRequestAndWaitUntilResponse('textDocument/completion', {
+        textDocument: {uri: '<PLACEHOLDER_PROJECT_URL>/test.js'},
+        position: {line: 2, character: 25},
+        context: {triggerKind: 1},
+      }).verifyAllLSPMessagesInStep(
+        [
+          {
+            method: 'textDocument/completion',
+            result: {
+              isIncomplete: false,
+              items: [
+                {
+                  label: 'foobar',
+                  kind: 6,
+                  detail: 'string',
+                  sortText: '00000000000000000000',
+                  insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {line: 2, character: 19},
+                      end: {line: 2, character: 25},
+                    },
+                    newText: 'foobar',
+                  },
+                  command: {
+                    title: '',
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                    arguments: [
+                      'textDocument/completion',
+                      'local value identifier',
+                      {token: 'foobarAUTO332', completion: 'foobar'},
+                    ],
+                  },
+                },
+              ],
+            },
+          },
+        ],
+        ['textDocument/publishDiagnostics', ...lspIgnoreStatusAndCancellation],
+      ),
+    ]).flowConfig('_flowconfig_autoimports'),
+
     test('should sort properly', [
       addFiles('AllTheThings.js'),
       addCode(`All`),
