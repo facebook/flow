@@ -220,6 +220,29 @@ export default (suite(
                   },
                 },
                 {
+                  label: 'far',
+                  kind: 6,
+                  detail: 'far',
+                  sortText: '00000000000000000101',
+                  insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {line: 2, character: 0},
+                      end: {line: 2, character: 1},
+                    },
+                    newText: 'far',
+                  },
+                  command: {
+                    title: '',
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                    arguments: [
+                      'textDocument/completion',
+                      'global',
+                      {token: 'fAUTO332', completion: 'far'},
+                    ],
+                  },
+                },
+                {
                   label: 'Foo',
                   kind: 6,
                   detail: 'Foo',
@@ -427,6 +450,139 @@ export default (suite(
                       'textDocument/completion',
                       'autoimport',
                       {token: 'nulAUTO332l', completion: 'not_null'},
+                    ],
+                  },
+                },
+              ],
+            },
+          },
+        ],
+        ['textDocument/publishDiagnostics', ...lspIgnoreStatusAndCancellation],
+      ),
+    ]).flowConfig('_flowconfig_autoimports'),
+
+    test('should sort properly', [
+      addFiles('AllTheThings.js'),
+      addCode(`All`),
+      lspStartAndConnect(),
+      lspRequestAndWaitUntilResponse('textDocument/completion', {
+        textDocument: {uri: '<PLACEHOLDER_PROJECT_URL>/test.js'},
+        position: {line: 2, character: 3},
+        context: {triggerKind: 1},
+      }).verifyAllLSPMessagesInStep(
+        [
+          {
+            method: 'textDocument/completion',
+            result: {
+              isIncomplete: false,
+              items: [
+                {
+                  label: 'AllTheThings',
+                  kind: 6,
+                  detail: 'AllTheThings',
+                  documentation: {
+                    kind: 'markdown',
+                    value: 'Import * from ./AllTheThings',
+                  },
+                  sortText: '00000000000000000100',
+                  insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {line: 2, character: 0},
+                      end: {line: 2, character: 3},
+                    },
+                    newText: 'AllTheThings',
+                  },
+                  additionalTextEdits: [
+                    {
+                      range: {
+                        start: {line: 2, character: 0},
+                        end: {line: 2, character: 0},
+                      },
+                      newText:
+                        'import * as AllTheThings from "./AllTheThings";\n\n',
+                    },
+                  ],
+                  command: {
+                    title: '',
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                    arguments: [
+                      'textDocument/completion',
+                      'autoimport',
+                      {token: 'AllAUTO332', completion: 'AllTheThings'},
+                    ],
+                  },
+                },
+                {
+                  label: 'AllTheThings',
+                  kind: 6,
+                  detail: 'AllTheThings',
+                  documentation: {
+                    kind: 'markdown',
+                    value: 'Import from ./AllTheThings',
+                  },
+                  sortText: '00000000000000000100',
+                  insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {line: 2, character: 0},
+                      end: {line: 2, character: 3},
+                    },
+                    newText: 'AllTheThings',
+                  },
+                  additionalTextEdits: [
+                    {
+                      range: {
+                        start: {line: 2, character: 0},
+                        end: {line: 2, character: 0},
+                      },
+                      newText:
+                        'import {AllTheThings} from "./AllTheThings";\n\n',
+                    },
+                  ],
+                  command: {
+                    title: '',
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                    arguments: [
+                      'textDocument/completion',
+                      'autoimport',
+                      {token: 'AllAUTO332', completion: 'AllTheThings'},
+                    ],
+                  },
+                },
+                {
+                  label: 'AllTheThings',
+                  kind: 6,
+                  detail: 'AllTheThings',
+                  documentation: {
+                    kind: 'markdown',
+                    value: 'Import default from ./AllTheThings',
+                  },
+                  sortText: '00000000000000000100',
+                  insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {line: 2, character: 0},
+                      end: {line: 2, character: 3},
+                    },
+                    newText: 'AllTheThings',
+                  },
+                  additionalTextEdits: [
+                    {
+                      range: {
+                        start: {line: 2, character: 0},
+                        end: {line: 2, character: 0},
+                      },
+                      newText: 'import AllTheThings from "./AllTheThings";\n\n',
+                    },
+                  ],
+                  command: {
+                    title: '',
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                    arguments: [
+                      'textDocument/completion',
+                      'autoimport',
+                      {token: 'AllAUTO332', completion: 'AllTheThings'},
                     ],
                   },
                 },

@@ -8,9 +8,13 @@
 open OUnit2
 open Export_search
 
+let default = Export_index.Default
+
 let named = Export_index.Named
 
 let named_type = Export_index.NamedType
+
+let namespace = Export_index.Namespace
 
 let sf name = Export_index.File_key (File_key.SourceFile name)
 
@@ -105,6 +109,26 @@ let tests =
         mk_results
           ~is_incomplete:true
           [("FooBar", sf "/a/foobar_b.js", named_type); ("FooBar", sf "/a/foobar_c.js", named_type)]
+      in
+      assert_equal ~ctxt ~printer:show_search_results expected results );
+    ( "default_before_named_before_namespace" >:: fun ctxt ->
+      let index =
+        Export_index.empty
+        |> Export_index.add "FooBar" (sf "/a/FooBar.js") namespace
+        |> Export_index.add "FooBar" (sf "/a/FooBar.js") default
+        |> Export_index.add "FooBar" (sf "/a/FooBar.js") named
+      in
+      let t = init index in
+      let results = search_values ~options:default_options "FooBar" t in
+
+      let expected =
+        mk_results
+          ~is_incomplete:false
+          [
+            ("FooBar", sf "/a/FooBar.js", default);
+            ("FooBar", sf "/a/FooBar.js", named);
+            ("FooBar", sf "/a/FooBar.js", namespace);
+          ]
       in
       assert_equal ~ctxt ~printer:show_search_results expected results );
   ]
