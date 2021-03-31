@@ -470,22 +470,31 @@ let completion_item_of_autoimport
       log_info = "autoimport";
     }
 
+let add_locals ~f locals set =
+  Base.List.iter ~f:(fun local -> Base.Hash_set.add set (f local)) locals
+
+let set_of_locals ~f locals =
+  let set = Base.Hash_set.create ~size:(Base.List.length locals) (module Base.String) in
+  add_locals ~f locals set;
+  set
+
 let is_reserved name kind =
   if Export_index.kind_is_value kind then
     Parser_env.is_reserved name || Parser_env.is_strict_reserved name
   else
     Parser_env.is_reserved_type name
 
-let append_completion_items_of_autoimports ~options ~reader ~ast ~ac_loc auto_imports acc =
+let append_completion_items_of_autoimports ~options ~reader ~ast ~ac_loc ~locals auto_imports acc =
   let src_dir = src_dir_of_loc ac_loc in
   Base.List.fold_left
     ~init:acc
     ~f:(fun acc auto_import ->
       let { Export_search.name; kind; source = _ } = auto_import in
-      if is_reserved name kind then
-        (* exclude reserved words because they can't be imported without aliasing them, which we
-           can't do automatically in autocomplete. for example, `import {null} from ...` is
-           invalid. *)
+      if is_reserved name kind || Base.Hash_set.mem locals name then
+        (* exclude reserved words and already-defined locals, because they can't be imported
+           without aliasing them, which we can't do automatically in autocomplete. for example,
+           `import {null} from ...` is invalid; and if we already have `const foo = ...` then
+           we can't auto-import another value named `foo`. *)
         acc
       else
         let item =
@@ -513,8 +522,11 @@ let autocomplete_id
   let open ServerProt.Response.Completion in
   let ac_loc = loc_of_aloc ~reader ac_loc |> remove_autocomplete_token_from_loc in
   let exact_by_default = Context.exact_by_default cx in
-  let (items_rev, errors_to_log) =
+  let identifiers =
     local_value_identifiers ~options ~reader ~cx ~ac_loc ~file_sig ~typed_ast ~ast ~tparams_rev
+  in
+  let (items_rev, errors_to_log) =
+    identifiers
     |> List.fold_left
          (fun (items_rev, errors_to_log) ((name, documentation), elt_result) ->
            match elt_result with
@@ -577,6 +589,7 @@ let autocomplete_id
            it queries again when you type something. *)
         (items_rev, true)
       else
+        let locals = set_of_locals ~f:(fun ((name, _docs), _ty) -> name) identifiers in
         let { Export_search.results = auto_imports; is_incomplete } =
           Export_search.search_values
             ~options:default_autoimport_options
@@ -589,6 +602,7 @@ let autocomplete_id
             ~reader
             ~ast
             ~ac_loc
+            ~locals
             auto_imports
             items_rev
         in
@@ -906,8 +920,9 @@ let autocomplete_unqualified_type
       ~init:[]
       tparams_rev
   in
+  let type_identifiers = local_type_identifiers ~typed_ast ~cx ~file_sig in
   let (tparam_and_tident_results, tparam_and_tident_errors_to_log) =
-    local_type_identifiers ~typed_ast ~cx ~file_sig
+    type_identifiers
     |> List.fold_left
          (fun (results, errors_to_log) ((name, aloc), ty_result) ->
            let documentation =
@@ -930,12 +945,16 @@ let autocomplete_unqualified_type
              (results, error_to_log :: errors_to_log))
          (tparam_results, [])
   in
+  let value_identifiers =
+    local_value_identifiers ~options ~ast ~typed_ast ~reader ~ac_loc ~tparams_rev ~cx ~file_sig
+  in
+
   (* The value-level identifiers we suggest in type autocompletion:
      - classes
      - enums
      - modules (followed by a dot) *)
   let (items, errors_to_log) =
-    local_value_identifiers ~options ~ast ~typed_ast ~reader ~ac_loc ~tparams_rev ~cx ~file_sig
+    value_identifiers
     |> List.fold_left
          (fun (items, errors_to_log) ((name, documentation), ty_res) ->
            match ty_res with
@@ -974,12 +993,24 @@ let autocomplete_unqualified_type
   in
   let result =
     if imports then
+      let locals =
+        let set = set_of_locals ~f:(fun ((name, _aloc), _ty) -> name) type_identifiers in
+        add_locals ~f:(fun ((name, _docs), _ty) -> name) value_identifiers set;
+        set
+      in
       let { Export_search.results = auto_imports; is_incomplete } =
         let (before, _after) = remove_autocomplete_token token in
         Export_search.search_types ~options:default_autoimport_options before env.ServerEnv.exports
       in
       let items =
-        append_completion_items_of_autoimports ~options ~reader ~ast ~ac_loc auto_imports items
+        append_completion_items_of_autoimports
+          ~options
+          ~reader
+          ~ast
+          ~ac_loc
+          ~locals
+          auto_imports
+          items
       in
       { ServerProt.Response.Completion.items; is_incomplete }
     else
