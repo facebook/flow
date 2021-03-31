@@ -269,7 +269,6 @@ JS_STUBS=\
 	$(wildcard js/*.js)
 
 OUNIT_TESTS=\
-	src/commands/config/__tests__/command_config_tests.native\
 	src/common/lwt/__tests__/lwt_tests.native\
 	src/common/ty/__tests__/ty_tests.native\
 	src/common/utils/__tests__/common_utils_tests.native\
@@ -278,7 +277,8 @@ OUNIT_TESTS=\
 	src/parser_utils/__tests__/parser_utils_tests.native\
 	src/parser_utils/output/__tests__/parser_utils_output_tests.native\
 	src/parser_utils/output/printers/__tests__/parser_utils_output_printers_tests.native\
-	src/services/references/__tests__/find_refs_tests.native
+	src/services/references/__tests__/find_refs_tests.native\
+	src/third-party/fuzzy-path/test/test.native
 	# src/typing/__tests__/typing_tests.native
 
 ################################################################################
@@ -298,8 +298,8 @@ BUILT_OUNIT_TESTS=$(addprefix _build/,$(OUNIT_TESTS))
 BUILT_LZ4_OBJECT_FILES=$(addprefix _build/,$(LZ4_OBJECT_FILES))
 
 FUZZY_PATH_DEPS=src/third-party/fuzzy-path/libfuzzy-path.a
-BUILT_FUZZY_PATH_DEPS=$(addprefix _build/,$(FUZZY_PATH_DEPS))
 FUZZY_PATH_LINKER_FLAGS=$(FUZZY_PATH_DEPS)
+LIBFUZZY_PATH_DEP=_build/src/third-party/fuzzy-path/.depends-on-libfuzzy-path
 
 # Any additional C flags can be added here
 ifeq ($(UNAME_M), aarch64)
@@ -350,7 +350,7 @@ clean:
 	rm -f src/hack_forked/utils/core/get_build_id.gen.c
 	rm -f flow.odocl
 
-build-flow: _build/scripts/ppx_gen_flowlibs.exe $(BUILT_FUZZY_PATH_DEPS) $(BUILT_OBJECT_FILES) $(COPIED_FLOWLIB) $(COPIED_PRELUDE) $(INTERNAL_BUILD_FLAGS)
+build-flow: _build/scripts/ppx_gen_flowlibs.exe $(LIBFUZZY_PATH_DEP) $(BUILT_OBJECT_FILES) $(COPIED_FLOWLIB) $(COPIED_PRELUDE) $(INTERNAL_BUILD_FLAGS)
 	# Both lwt and lwt_ppx provide ppx stuff. Fixed in lwt 4.0.0
 	# https://github.com/ocsigen/lwt/issues/453
 	export OCAMLFIND_IGNORE_DUPS_IN="$(shell ocamlfind query lwt)"; \
@@ -359,7 +359,7 @@ build-flow: _build/scripts/ppx_gen_flowlibs.exe $(BUILT_FUZZY_PATH_DEPS) $(BUILT
 		$(RELEASE_TAGS) \
 		src/flow.native
 
-build-flow-debug: _build/scripts/ppx_gen_flowlibs.exe $(BUILT_FUZZY_PATH_DEPS) $(BUILT_OBJECT_FILES) $(COPIED_FLOWLIB) $(COPIED_PRELUDE) $(INTERNAL_BUILD_FLAGS)
+build-flow-debug: _build/scripts/ppx_gen_flowlibs.exe $(LIBFUZZY_PATH_DEP) $(BUILT_OBJECT_FILES) $(COPIED_FLOWLIB) $(COPIED_PRELUDE) $(INTERNAL_BUILD_FLAGS)
 	$(OCB) $(INTERNAL_FLAGS) $(INCLUDE_OPTS) -tag thread $(NATIVE_FINDLIB_OPTS) \
 		-lflags -custom -lflags "$(LINKER_FLAGS)" \
 		src/flow.d.byte
@@ -429,10 +429,26 @@ _build/src/third-party/fuzzy-path/vendor/%.o: src/third-party/fuzzy-path/vendor/
 _build/src/third-party/fuzzy-path/libfuzzy-path.a: _build/src/third-party/fuzzy-path/src/fuzzy_path_wrapper.o _build/src/third-party/fuzzy-path/vendor/MatcherBase.o _build/src/third-party/fuzzy-path/vendor/score_match.o | _build/src/third-party/fuzzy-path
 	$(AR) $(ARFLAGS) $@ $^
 
+# ocamlbuild doesn't invalidate its caches when prebuilt libraries change, so we have to
+# delete artifacts to force it to recompile when libfuzzy-path.a changes
+# https://github.com/ocaml/ocamlbuild/issues/221
+$(LIBFUZZY_PATH_DEP): _build/src/third-party/fuzzy-path/libfuzzy-path.a
+	rm -f _build/src/third-party/fuzzy-path/src/fuzzy_path_stubs.o
+	rm -f _build/src/flow.native
+	rm -f _build/src/flow.d.byte
+	rm -f _build/src/flow_dot_js.byte
+	rm -f _build/src/third-party/fuzzy-path/test/test.native
+	touch "$@"
+
+_build/src/third-party/fuzzy-path/src/fuzzy_path_stubs.o: $(LIBFUZZY_PATH_DEP)
+
+_build/src/third-party/fuzzy-path/test/test.native: $(LIBFUZZY_PATH_DEP)
+
 bin/flow$(EXE): build-flow
 	mkdir -p $(@D)
 	cp _build/src/flow.native $@
 
+# builds each ounit test individually
 $(BUILT_OUNIT_TESTS): $(BUILT_OBJECT_FILES) FORCE
 	export OCAMLFIND_IGNORE_DUPS_IN="$(shell ocamlfind query lwt)"; \
 	$(OCB) $(INTERNAL_FLAGS) $(INCLUDE_OPTS) -tag thread $(NATIVE_FINDLIB_OPTS) \
@@ -440,6 +456,7 @@ $(BUILT_OUNIT_TESTS): $(BUILT_OBJECT_FILES) FORCE
 		-lflags "$(LINKER_FLAGS)" \
 		$(patsubst _build/%,%,$@)
 
+# builds all ounit tests at once
 .PHONY: build-ounit-tests
 build-ounit-tests: $(BUILT_OBJECT_FILES) FORCE
 	export OCAMLFIND_IGNORE_DUPS_IN="$(shell ocamlfind query lwt)"; \
@@ -453,6 +470,13 @@ ounit-tests: build-ounit-tests
 	@for cmd in $(BUILT_OUNIT_TESTS); do \
 		echo "Running $$cmd:"; \
 		"$$cmd"; \
+	done
+
+.PHONY: ounit-tests-ci
+ounit-tests-ci: build-ounit-tests
+	mkdir -p test-results/ounit
+	for cmd in $(OUNIT_TESTS); do \
+		"_build/$$cmd" -output-junit-file "test-results/ounit/$${cmd//\//zS}.xml"; \
 	done
 
 do-test:
@@ -470,7 +494,7 @@ test-tool: bin/flow$(EXE)
 test: bin/flow$(EXE)
 	${MAKE} do-test
 
-js: _build/scripts/ppx_gen_flowlibs.exe $(BUILT_FUZZY_PATH_DEPS) $(BUILT_OBJECT_FILES) $(COPIED_FLOWLIB) $(COPIED_PRELUDE)
+js: _build/scripts/ppx_gen_flowlibs.exe $(LIBFUZZY_PATH_DEP) $(BUILT_OBJECT_FILES) $(COPIED_FLOWLIB) $(COPIED_PRELUDE)
 	mkdir -p bin
 	# NOTE: temporarily disabling warning 31 because
 	# src/hack_forked/third-party/core/result.ml and the opam `result` module both define

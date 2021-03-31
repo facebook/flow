@@ -97,6 +97,18 @@ executors:
     working_directory: ~/flow
 
 commands:
+  install-opam-mac:
+    steps:
+      - run:
+          name: Install opam
+          command: |
+            if ! [ -x "$(command -v opam)" ]; then
+              TMP=${TMPDIR:-/tmp}
+              curl -sL -o "$TMP/opam" "https://github.com/ocaml/opam/releases/download/$OPAM_VERSION/opam-$OPAM_VERSION-x86_64-macos"
+              install -m 755 "$TMP/opam" "/usr/local/bin/opam"
+              rm -f "$TMP/opam"
+            fi
+
   make-opam-cachebreaker:
     steps:
       - run:
@@ -264,15 +276,7 @@ jobs:
     steps:
       - attach_workspace:
           at: ~/flow
-      - run:
-          name: Install opam
-          command: |
-            if ! [ -x "$(command -v opam)" ]; then
-              TMP=${TMPDIR:-/tmp}
-              curl -sL -o "$TMP/opam" "https://github.com/ocaml/opam/releases/download/$OPAM_VERSION/opam-$OPAM_VERSION-x86_64-macos"
-              install -m 755 "$TMP/opam" "/usr/local/bin/opam"
-              rm -f "$TMP/opam"
-            fi
+      - install-opam-mac
       - make-opam-cachebreaker
       - restore-opam-cache
       - run:
@@ -445,6 +449,51 @@ jobs:
           name: Run tool tests
           shell: bash
           command: ./tool test --bin bin/win64/flow.exe --parallelism 1
+
+  ounit_test_linux:
+    executor: linux-opam
+    steps:
+      - attach_workspace:
+          at: ~/flow
+      - make-opam-cachebreaker
+      - restore-opam-cache
+      - run:
+          name: Init opam
+          command: .circleci/opam_init.sh
+      - create-opam-switch
+      - run:
+          name: Install extra deps from opam
+          command: opam install ounit | cat
+      # let build-linux save the cache
+      # - save-opam-cache
+      - run:
+          name: Run ounit tests
+          command: opam exec -- make ounit-tests-ci
+      - store_test_results:
+          path: test-results/ounit/
+
+  ounit_test_macos:
+    executor: mac
+    steps:
+      - attach_workspace:
+          at: ~/flow
+      - install-opam-mac
+      - make-opam-cachebreaker
+      - restore-opam-cache
+      - run:
+          name: Init opam
+          command: .circleci/opam_init.sh
+      - create-opam-switch
+      - run:
+          name: Install extra deps from opam
+          command: opam install ounit | cat
+      # let build-mac save the cache
+      # - save-opam-cache
+      - run:
+          name: Run ounit tests
+          command: opam exec -- make ounit-tests-ci
+      - store_test_results:
+          path: test-results/ounit/
 
   parser_test_win:
     executor: win/default
@@ -658,6 +707,12 @@ workflows:
       - tool_test_win:
           requires:
             - build_win
+      - ounit_test_linux:
+          requires:
+            - checkout
+      - ounit_test_macos:
+          requires:
+            - checkout
       - parser_test_win:
           requires:
             - build_win
