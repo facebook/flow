@@ -9,8 +9,7 @@ assert_errors \
   $FLOW check-contents --strip-root syntax_error.js < syntax_error.js
 
 printf "docblock_error.js\n"
-# TODO This should error
-assert_ok \
+assert_errors \
   $FLOW check-contents --strip-root docblock_error.js < docblock_error.js
 
 printf "docblock_error_with_syntax_error.js\n"

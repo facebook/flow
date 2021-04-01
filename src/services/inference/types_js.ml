@@ -132,6 +132,7 @@ let reparse ~options ~profiling ~transaction ~reader ~workers ~modified ~deleted
 type parse_artifacts =
   | Parse_artifacts of {
       docblock: Docblock.t;
+      docblock_errors: Parsing_service_js.docblock_error list;
       ast: (Loc.t, Loc.t) Flow_ast.Program.t;
       file_sig: File_sig.With_Loc.t;
       tolerable_errors: File_sig.With_Loc.tolerable_error list;
@@ -155,8 +156,8 @@ let parse_contents ~options ~check_syntax filename contents =
   let docblock = Docblock.set_flow_mode_for_ide_command docblock in
   match parse_result with
   | Parsing_service_js.Parse_ok { ast; file_sig; tolerable_errors; parse_errors; _ } ->
-    (* TODO: docblock errors get dropped *)
-    Ok (Parse_artifacts { docblock; ast; file_sig; tolerable_errors; parse_errors })
+    Ok
+      (Parse_artifacts { docblock; docblock_errors; ast; file_sig; tolerable_errors; parse_errors })
   | Parsing_service_js.Parse_fail fails ->
     let errors =
       match fails with
@@ -1104,12 +1105,17 @@ let merge_contents ~options ~env ~reader filename info (ast, file_sig) =
 
 let errors_of_type_contents_artifacts ~options ~env ~loc_of_aloc ~filename ~type_contents_artifacts
     =
-  let (Type_contents_artifacts { tolerable_errors; cx; _ }) = type_contents_artifacts in
+  let (Type_contents_artifacts { docblock_errors; tolerable_errors; cx; _ }) =
+    type_contents_artifacts
+  in
   let errors = Context.errors cx in
   let local_errors =
     tolerable_errors
     |> File_sig.abstractify_tolerable_errors
     |> Inference_utils.set_of_file_sig_tolerable_errors ~source_file:filename
+  in
+  let docblock_errors =
+    Inference_utils.set_of_docblock_errors ~source_file:filename docblock_errors
   in
   (* Suppressions for errors in this file can come from dependencies *)
   let suppressions =
@@ -1132,6 +1138,7 @@ let errors_of_type_contents_artifacts ~options ~env ~loc_of_aloc ~filename ~type
   let errors =
     errors
     |> Flow_error.ErrorSet.union local_errors
+    |> Flow_error.ErrorSet.union docblock_errors
     |> Flow_error.concretize_errors loc_of_aloc
     |> Flow_error.make_errors_printable
   in
@@ -1170,7 +1177,8 @@ let errors_of_type_contents_artifacts ~options ~env ~loc_of_aloc ~filename ~type
 
 let type_contents_artifacts_of_parse_artifacts
     ~options ~env ~reader ~profiling ~filename ~parse_artifacts =
-  let (Parse_artifacts { docblock; ast; file_sig; tolerable_errors; parse_errors }) =
+  let (Parse_artifacts { docblock; docblock_errors; ast; file_sig; tolerable_errors; parse_errors })
+      =
     parse_artifacts
   in
   let%lwt (cx, typed_ast) =
@@ -1179,7 +1187,7 @@ let type_contents_artifacts_of_parse_artifacts
   in
   Lwt.return
     (Type_contents_artifacts
-       { cx; docblock; file_sig; tolerable_errors; ast; typed_ast; parse_errors })
+       { cx; docblock; docblock_errors; file_sig; tolerable_errors; ast; typed_ast; parse_errors })
 
 let typecheck_contents ~options ~env ~profiling contents filename =
   let reader = State_reader.create () in

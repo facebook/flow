@@ -10,7 +10,16 @@ Unexpected end of input
 
 Found 1 error
 docblock_error.js
-No errors!
+Error ------------------------------------------------------------------------------------------- docblock_error.js:1:10
+
+Unexpected `@flow` declaration. Only one per file is allowed. [duplicate-flow-decl]
+
+   1| // @flow @flow
+               ^^^^^
+
+
+
+Found 1 error
 docblock_error_with_syntax_error.js
 Error ------------------------------------------------------------------------- docblock_error_with_syntax_error.js:1:10
 
