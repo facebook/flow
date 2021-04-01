@@ -163,13 +163,10 @@ let parse_contents ~options ~check_syntax filename contents =
       | Parsing_service_js.Parse_error err ->
         let err = Inference_utils.error_of_parse_error ~source_file:filename err in
         Flow_error.ErrorSet.add err errors
-      | Parsing_service_js.Docblock_errors errs ->
-        List.fold_left
-          (fun errors err ->
-            let err = Inference_utils.error_of_docblock_error ~source_file:filename err in
-            Flow_error.ErrorSet.add err errors)
-          errors
-          errs
+      | Parsing_service_js.Docblock_errors _ ->
+        (* Parsing_service_js.do_parse cannot create these. They are only created by another
+         * caller of do_parse. It would be nice to prove this fact via the type system. *)
+        failwith "Unexpectedly encountered docblock errors"
       | Parsing_service_js.File_sig_error err ->
         let err = Inference_utils.error_of_file_sig_error ~source_file:filename err in
         Flow_error.ErrorSet.add err errors
