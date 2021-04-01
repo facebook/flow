@@ -16,7 +16,7 @@ depends: [
   "ocamlbuild" {build}
   "ocamlfind" {build}
   "ocaml-migrate-parsetree" {build}
-  "ounit" {with-test}
+  "ounit2" {with-test}
   "sedlex" {= "2.1"}
   "lwt" {>= "4.5.0" & < "5.0.0"}
   "lwt_log" {>= "1.1.0"}
