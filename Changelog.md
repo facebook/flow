@@ -1,3 +1,22 @@
+### 0.148.0
+
+Likely to cause new Flow errors:
+* We now error if the RHS of instanceof is not an object, e.g. `x instanceof null`. This catches `'instanceof' is not an object` runtime errors.
+* Using `super` outside of class methods, e.g. in arrow and function properties, is now an error.
+
+Library Definitions:
+* Add `static from` to `stream$Readable` (thanks @agalatan).
+
+Notable bug fixes:
+* Fixed autoimports to not suggest vars already in scope.
+* Fixed autoimports to reuse existing imports if they exist.
+* Fixed autoimports to correctly sort imports of the same name.
+* Fixed `null` from being a subtype of an empty interface e.g. `(null: interface {}) // Error` (thanks @mrtnzlml for the report).
+
+Misc:
+* `flow refactor` experimental command removed. Instead, use the LSP `textDocument/rename` request.
+* Removed the `experimental.new_signatures` flowconfig option as well as the `--old-signatures` opt-out command line flag.
+
 ### 0.147.0
 
 Likely to cause new Flow errors:
