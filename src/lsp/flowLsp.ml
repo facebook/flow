@@ -1819,6 +1819,12 @@ and main_handle_unsafe flowconfig_name (state : state) (event : event) :
     in
     Ok (state, LogNotNeeded)
   | (_, Client_message (RequestMessage (id, ShutdownRequest), _metadata)) ->
+    (* the shutdown request gives us a chance to shut down in an orderly way, like if
+       we need to persist state. we have to respond to the client once we're done with
+       that, and then the client will then send an exit notification to actually
+       shut down the connection.
+
+       we just disconnect from the server and reply right away. *)
     begin
       match state with
       | Connected env -> close_conn env
