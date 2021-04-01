@@ -252,6 +252,13 @@ module SignatureHelpClientCapabilities : sig
   and parameterInformation = { labelOffsetSupport: bool }
 end
 
+module CompletionOptions : sig
+  type t = {
+    resolveProvider: bool;  (** server resolves extra info on demand *)
+    triggerCharacters: string list;
+  }
+end
+
 module Initialize : sig
   type textDocumentSyncKind =
     | NoSync [@value 0]
@@ -325,7 +332,7 @@ module Initialize : sig
   and server_capabilities = {
     textDocumentSync: textDocumentSyncOptions;
     hoverProvider: bool;
-    completionProvider: completionOptions option;
+    completionProvider: CompletionOptions.t option;
     signatureHelpProvider: signatureHelpOptions option;
     definitionProvider: bool;
     typeDefinitionProvider: bool;
@@ -344,11 +351,6 @@ module Initialize : sig
     implementationProvider: bool;
     typeCoverageProvider: bool;
     rageProvider: bool;
-  }
-
-  and completionOptions = {
-    resolveProvider: bool;
-    completion_triggerCharacters: string list;
   }
 
   and signatureHelpOptions = { sighelp_triggerCharacters: string list }

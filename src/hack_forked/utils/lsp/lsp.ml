@@ -355,6 +355,13 @@ module SignatureHelpClientCapabilities = struct
   and parameterInformation = { labelOffsetSupport: bool }
 end
 
+module CompletionOptions = struct
+  type t = {
+    resolveProvider: bool;  (** server resolves extra info on demand *)
+    triggerCharacters: string list;
+  }
+end
+
 (** Initialize request, method="initialize" *)
 module Initialize = struct
   type textDocumentSyncKind =
@@ -441,7 +448,7 @@ module Initialize = struct
   and server_capabilities = {
     textDocumentSync: textDocumentSyncOptions;  (** how to sync *)
     hoverProvider: bool;
-    completionProvider: completionOptions option;
+    completionProvider: CompletionOptions.t option;
     signatureHelpProvider: signatureHelpOptions option;
     definitionProvider: bool;
     typeDefinitionProvider: bool;
@@ -460,11 +467,6 @@ module Initialize = struct
     implementationProvider: bool;
     typeCoverageProvider: bool;  (** nuclide-specific *)
     rageProvider: bool;  (** nuclide-specific *)
-  }
-
-  and completionOptions = {
-    resolveProvider: bool;  (** server resolves extra info on demand *)
-    completion_triggerCharacters: string list;  (** wire "triggerCharacters" *)
   }
 
   and signatureHelpOptions = {

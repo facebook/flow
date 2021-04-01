@@ -1022,6 +1022,17 @@ module SignatureHelpClientCapabilitiesFmt = struct
     }
 end
 
+module CompletionOptionsFmt = struct
+  open CompletionOptions
+
+  let to_json { resolveProvider; triggerCharacters } =
+    JSON_Object
+      [
+        ("resolveProvider", JSON_Bool resolveProvider);
+        ("triggerCharacters", Jprint.string_array triggerCharacters);
+      ]
+end
+
 let parse_initialize (params : json option) : Initialize.params =
   Initialize.(
     let rec parse_initialize json =
@@ -1113,12 +1124,7 @@ let print_initialize ~key (r : Initialize.result) : json =
                      ]) );
               ("hoverProvider", Some (JSON_Bool cap.hoverProvider));
               ( "completionProvider",
-                Base.Option.map cap.completionProvider ~f:(fun comp ->
-                    JSON_Object
-                      [
-                        ("resolveProvider", JSON_Bool comp.resolveProvider);
-                        ("triggerCharacters", Jprint.string_array comp.completion_triggerCharacters);
-                      ]) );
+                Base.Option.map cap.completionProvider ~f:CompletionOptionsFmt.to_json );
               ( "signatureHelpProvider",
                 Base.Option.map cap.signatureHelpProvider ~f:(fun shp ->
                     JSON_Object
