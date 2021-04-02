@@ -327,7 +327,7 @@ let autocomplete_object_key from_trigger_character ~cursor _cx _ac_name ac_loc =
 
 let autocomplete_member ~cursor _cx _ac_name ac_loc _this_t = covers_target cursor ac_loc
 
-let autocomplete_jsx ~cursor _cx _ac_name ac_loc _class_t = covers_target cursor ac_loc
+let autocomplete_jsx ~cursor _cx _ac_name ac_loc = covers_target cursor ac_loc
 
 let process_location ~trigger_character ~cursor ~typed_ast =
   try

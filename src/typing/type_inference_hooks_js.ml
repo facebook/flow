@@ -13,7 +13,7 @@ let member_nop _ _ _ _ = false
 
 let call_nop _ _ _ _ = ()
 
-let jsx_nop _ _ _ _ = false
+let jsx_nop _ _ _ = false
 
 let ref_nop _ _ _ = ()
 
@@ -68,7 +68,7 @@ type 'phase hook_state_t = {
      currently don't need a way to override call types, so it simplifies
      things a bit *)
   call_hook: 'phase Context.t_ -> string -> ALoc.t -> Type.t -> unit;
-  jsx_hook: 'phase Context.t_ -> string -> ALoc.t -> Type.t -> bool;
+  jsx_hook: 'phase Context.t_ -> string -> ALoc.t -> bool;
   class_member_decl_hook:
     'phase Context.t_ -> Type.t (* self *) -> bool (* static *) -> string -> ALoc.t -> unit;
   obj_prop_decl_hook: 'phase Context.t_ -> string -> ALoc.t -> bool;
@@ -132,7 +132,7 @@ let dispatch_member_hook cx name loc this_t = !hook_state.member_hook cx name lo
 
 let dispatch_call_hook cx name loc this_t = !hook_state.call_hook cx name loc this_t
 
-let dispatch_jsx_hook cx name loc this_t = !hook_state.jsx_hook cx name loc this_t
+let dispatch_jsx_hook cx name loc = !hook_state.jsx_hook cx name loc
 
 let dispatch_class_member_decl_hook cx self static name loc =
   !hook_state.class_member_decl_hook cx self static name loc

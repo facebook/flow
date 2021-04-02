@@ -6117,7 +6117,7 @@ and jsx_title cx opening_element children closing_element locs =
             DefT (mk_reason (RIdentifier (OrdinaryName name)) loc, make_trust (), strt)
         in
         let (o, attributes', unresolved_params, children) =
-          jsx_mk_props cx reason c name attributes children
+          jsx_mk_props cx reason name attributes children
         in
         let t = jsx_desugar cx name c o attributes unresolved_params locs in
         let name = Identifier ((loc, c), { Identifier.name; comments }) in
@@ -6130,7 +6130,7 @@ and jsx_title cx opening_element children closing_element locs =
       let ((m_loc, t), m_expr') = expression cx ~annot:None m_expr in
       let c = mod_reason_of_t (replace_desc_reason (RIdentifier (OrdinaryName name))) t in
       let (o, attributes', unresolved_params, children) =
-        jsx_mk_props cx reason c name attributes children
+        jsx_mk_props cx reason name attributes children
       in
       let t = jsx_desugar cx name c o attributes unresolved_params locs in
       let member' =
@@ -6144,8 +6144,7 @@ and jsx_title cx opening_element children closing_element locs =
       let name' = Tast_utils.error_mapper#jsx_name name in
       let el_name = jsx_title_member_to_string member in
       let reason = mk_reason (RJSXElement (Some el_name)) loc_element in
-      let c = mod_reason_of_t (replace_desc_reason (RIdentifier (OrdinaryName el_name))) t in
-      let (_o, attributes', _, children) = jsx_mk_props cx reason c el_name attributes children in
+      let (_o, attributes', _, children) = jsx_mk_props cx reason el_name attributes children in
       (t, name', attributes', children)
     | (NamespacedName namespace, _, _) ->
       (* TODO? covers namespaced names as element names *)
@@ -6153,8 +6152,7 @@ and jsx_title cx opening_element children closing_element locs =
       let name' = Tast_utils.error_mapper#jsx_name name in
       let el_name = jsx_title_namespaced_name_to_string namespace in
       let reason = mk_reason (RJSXElement (Some el_name)) loc_element in
-      let c = mod_reason_of_t (replace_desc_reason (RIdentifier (OrdinaryName el_name))) t in
-      let (_o, attributes', _, children) = jsx_mk_props cx reason c el_name attributes children in
+      let (_o, attributes', _, children) = jsx_mk_props cx reason el_name attributes children in
       (t, name', attributes', children)
   in
   let closing_element =
@@ -6205,7 +6203,7 @@ and jsx_match_closing_element =
       MemberExpression (match_member_expressions o_mexp c_mexp)
     | (_, _) -> Tast_utils.error_mapper#jsx_name c_name
 
-and jsx_mk_props cx reason c name attributes children =
+and jsx_mk_props cx reason name attributes children =
   let open Ast.JSX in
   let is_react = Context.jsx cx = Options.Jsx_react in
   let reason_props =
@@ -6264,7 +6262,7 @@ and jsx_mk_props cx reason c name attributes children =
             | None -> (DefT (mk_reason RBoolean attr_loc, bogus_trust (), BoolT (Some true)), None)
           in
           let acc =
-            if Type_inference_hooks_js.dispatch_jsx_hook cx aname id_loc c then
+            if Type_inference_hooks_js.dispatch_jsx_hook cx aname id_loc then
               (* don't add `aname` to the prop map because it is the autocomplete token *)
               acc
             else
