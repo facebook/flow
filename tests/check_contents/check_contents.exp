@@ -39,6 +39,26 @@ Unexpected end of input
 
 
 Found 2 errors
+docblock_error_with_module_type_conflict.js
+Error ----------------------------------------------------------------- docblock_error_with_module_type_conflict.js:1:10
+
+Unexpected `@flow` declaration. Only one per file is allowed. [duplicate-flow-decl]
+
+   1| // @flow @flow
+               ^^^^^
+
+
+Error ------------------------------------------------------------------ docblock_error_with_module_type_conflict.js:5:1
+
+Unable to determine module type (CommonJS vs ES) if both an export statement and `module.exports` are used in the same
+module! [module-type-conflict]
+
+   5| module.exports.bar = function (): void {}
+      ^^^^^^^^^^^^^^
+
+
+
+Found 2 errors
 module_type_conflict.js
 Error -------------------------------------------------------------------------------------- module_type_conflict.js:5:1
 
