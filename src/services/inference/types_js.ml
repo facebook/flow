@@ -149,26 +149,36 @@ let parse_contents ~options ~check_syntax filename contents =
   in
   let errors = Inference_utils.set_of_docblock_errors ~source_file:filename docblock_errors in
   let parse_options =
-    Parsing_service_js.make_parse_options ~fail:check_syntax ~types_mode docblock options
+    Parsing_service_js.make_parse_options ~fail:false ~types_mode docblock options
   in
   let parse_result = Parsing_service_js.do_parse ~info:docblock ~parse_options contents filename in
   (* override docblock info *)
   let docblock = Docblock.set_flow_mode_for_ide_command docblock in
   match parse_result with
   | Parsing_service_js.Parse_ok { ast; file_sig; tolerable_errors; parse_errors; _ } ->
-    Ok
-      (Parse_artifacts { docblock; docblock_errors; ast; file_sig; tolerable_errors; parse_errors })
+    begin
+      match parse_errors with
+      | first_parse_error :: _ when check_syntax ->
+        let err = Inference_utils.error_of_parse_error ~source_file:filename first_parse_error in
+        Error (Flow_error.ErrorSet.add err errors)
+      | _ ->
+        Ok
+          (Parse_artifacts
+             { docblock; docblock_errors; ast; file_sig; tolerable_errors; parse_errors })
+    end
   | Parsing_service_js.Parse_fail fails ->
     let errors =
       match fails with
-      | Parsing_service_js.Parse_error err ->
-        let err = Inference_utils.error_of_parse_error ~source_file:filename err in
-        Flow_error.ErrorSet.add err errors
+      | Parsing_service_js.Parse_error _ ->
+        (* We pass `~fail:false` to `do_parse` above, so we should never reach this case. *)
+        failwith "Unexpectedly encountered Parse_fail with parse errors"
       | Parsing_service_js.Docblock_errors _ ->
         (* Parsing_service_js.do_parse cannot create these. They are only created by another
          * caller of do_parse. It would be nice to prove this fact via the type system. *)
         failwith "Unexpectedly encountered docblock errors"
       | Parsing_service_js.File_sig_error err ->
+        (* Even with `~fail:false`, `do_parse` cannot currently recover from file sig errors, so
+         * we must handle them here. *)
         let err = Inference_utils.error_of_file_sig_error ~source_file:filename err in
         Flow_error.ErrorSet.add err errors
     in
