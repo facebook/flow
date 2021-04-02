@@ -113,6 +113,14 @@ let export_type cx name = Module_info.export_type (Context.module_info cx) name
 
 let export_type_star cx = Module_info.export_type_star (Context.module_info cx)
 
+let export_binding cx name loc = function
+  | Flow_ast.Statement.ExportValue ->
+    let t = Env.var_ref ~lookup_mode:Env.LookupMode.ForValue cx name loc in
+    export cx name loc t
+  | Flow_ast.Statement.ExportType ->
+    let t = Env.var_ref ~lookup_mode:Env.LookupMode.ForType cx name loc in
+    export_type cx name (Some loc) t
+
 (* After we have seen all the export statements in a module, this function will
  * calculate a ModuleT type (or a tvar that resolves to one) describing the
  * exports of a file.

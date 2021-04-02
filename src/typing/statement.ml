@@ -617,16 +617,13 @@ and statement_decl cx =
       Env.bind_declare_fun cx name t id_loc
     | Some (func_decl, _) -> statement_decl cx (loc, func_decl))
   | (_, VariableDeclaration decl) -> variable_decl cx decl
-  | (class_loc, ClassDeclaration { Ast.Class.id; _ }) ->
-    let handle_named_class name_loc name =
-      let r = mk_reason (RType name) name_loc in
-      let tvar = Tvar.mk cx r in
-      Env.bind_implicit_let Scope.Entry.(ClassNameBinding, Havocable) cx name tvar name_loc
-    in
-    (match id with
-    | Some (name_loc, { Ast.Identifier.name; comments = _ }) ->
-      handle_named_class name_loc (OrdinaryName name)
-    | None -> handle_named_class class_loc (internal_name "*default*"))
+  | (_, ClassDeclaration { Ast.Class.id = None; _ }) -> ()
+  | (_, ClassDeclaration { Ast.Class.id = Some id; _ }) ->
+    let (name_loc, { Ast.Identifier.name; comments = _ }) = id in
+    let name = OrdinaryName name in
+    let reason = mk_reason (RType name) name_loc in
+    let tvar = Tvar.mk cx reason in
+    Env.bind_implicit_let Scope.Entry.(ClassNameBinding, Havocable) cx name tvar name_loc
   | ( (_, DeclareClass { DeclareClass.id = (name_loc, { Ast.Identifier.name; comments = _ }); _ })
     | (_, DeclareInterface { Interface.id = (name_loc, { Ast.Identifier.name; comments = _ }); _ })
     | ( _,
@@ -2090,25 +2087,19 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t =
 
         (loc, ForOf { ForOf.left = left_ast; right = right_ast; body = body_ast; await; comments }))
   | (_, Debugger _) as stmt -> stmt
-  | (loc, FunctionDeclaration func) ->
-    let { Ast.Function.id; sig_loc; async; generator; _ } = func in
+  | (_, FunctionDeclaration { Ast.Function.id = None; _ }) ->
+    failwith "unexpected anonymous function statement"
+  | (loc, FunctionDeclaration ({ Ast.Function.id = Some id; _ } as func)) ->
+    let { Ast.Function.sig_loc; async; generator; _ } = func in
+    let (name_loc, { Ast.Identifier.name; comments = _ }) = id in
+    let name = OrdinaryName name in
     let reason = func_reason ~async ~generator sig_loc in
-    let func_ast =
-      let handle_named_function name name_loc =
-        let general = Tvar.mk_where cx reason (Env.unify_declared_type cx name) in
-        let (fn_type, func_ast) = mk_function_declaration None cx ~general reason func in
-        let use_op =
-          Op
-            (AssignVar { var = Some (mk_reason (RIdentifier name) loc); init = reason_of_t fn_type })
-        in
-        Env.init_fun cx ~use_op name fn_type name_loc;
-        func_ast
-      in
-      match id with
-      | Some (name_loc, { Ast.Identifier.name; comments = _ }) ->
-        handle_named_function (OrdinaryName name) name_loc
-      | None -> handle_named_function (internal_name "*default*") loc
+    let general = Tvar.mk_where cx reason (Env.unify_declared_type cx name) in
+    let (fn_type, func_ast) = mk_function_declaration None cx ~general reason func in
+    let use_op =
+      Op (AssignVar { var = Some (mk_reason (RIdentifier name) loc); init = reason_of_t fn_type })
     in
+    Env.init_fun cx ~use_op name fn_type name_loc;
     (loc, FunctionDeclaration func_ast)
   | (loc, EnumDeclaration enum) ->
     let open EnumDeclaration in
@@ -2177,29 +2168,23 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t =
         DeclareFunction
           { DeclareFunction.id = ((id_loc, t), id_name); annot = annot_ast; predicate; comments } ))
   | (loc, VariableDeclaration decl) -> (loc, VariableDeclaration (variables cx decl))
-  | (class_loc, ClassDeclaration c) ->
-    let (name_loc, name) =
-      match Ast.Class.(c.id) with
-      | Some (name_loc, { Ast.Identifier.name; comments = _ }) -> (name_loc, OrdinaryName name)
-      | None -> (class_loc, internal_name "*default*")
-    in
+  | (_, ClassDeclaration { Ast.Class.id = None; _ }) ->
+    failwith "unexpected anonymous class declaration"
+  | (class_loc, ClassDeclaration ({ Ast.Class.id = Some id; _ } as c)) ->
+    let (name_loc, { Ast.Identifier.name; comments = _ }) = id in
+    let name = OrdinaryName name in
     let kind = Scope.Entry.ClassNameBinding in
     let reason = DescFormat.instance_reason name name_loc in
     Env.declare_implicit_let kind cx name name_loc;
     let general = Tvar.mk_where cx reason (Env.unify_declared_type cx name) in
     (* ClassDeclarations are statements, so we will never have an annotation to push down here *)
     let (class_t, c_ast) = mk_class cx ~class_annot:None class_loc ~name_loc ~general reason c in
-    Env.init_implicit_let
-      kind
-      cx
-      ~use_op:
-        (Op
-           (AssignVar
-              { var = Some (mk_reason (RIdentifier name) name_loc); init = reason_of_t class_t }))
-      name
-      ~has_anno:false
-      class_t
-      name_loc;
+    let use_op =
+      Op
+        (AssignVar
+           { var = Some (mk_reason (RIdentifier name) name_loc); init = reason_of_t class_t })
+    in
+    Env.init_implicit_let kind cx ~use_op name ~has_anno:false class_t name_loc;
     (class_loc, ClassDeclaration c_ast)
   | (loc, DeclareClass decl) -> (loc, DeclareClass (declare_class cx loc decl))
   | (loc, DeclareInterface decl) -> (loc, DeclareInterface (interface cx loc decl))
@@ -2299,94 +2284,88 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t =
     Env.pop_var_scope ();
 
     ast
-  | ( loc,
-      DeclareExportDeclaration
-        ({ DeclareExportDeclaration.default; declaration; specifiers; source; comments = _ } as decl)
-    ) ->
-    DeclareExportDeclaration.(
-      let (export_info, export_kind, declaration) =
-        (*  error-handling around calls to `statement` is omitted here because we
-           don't expect declarations to have abnormal control flow *)
-        match declaration with
-        | Some (Variable (loc, v)) ->
-          let { DeclareVariable.id = (_, { Ast.Identifier.name; comments = _ }); _ } = v in
-          let dec_var = statement cx (loc, DeclareVariable v) in
-          let ast =
-            match dec_var with
-            | (_, DeclareVariable v_ast) -> Some (Variable (loc, v_ast))
-            | _ -> assert_false "DeclareVariable typed AST doesn't preserve structure"
-          in
-          ([(spf "var %s" name, loc, OrdinaryName name, None)], Ast.Statement.ExportValue, ast)
-        | Some (Function (loc, f)) ->
-          let { DeclareFunction.id = (_, { Ast.Identifier.name; comments = _ }); _ } = f in
-          let dec_fun = statement cx (loc, DeclareFunction f) in
-          let ast =
-            match dec_fun with
-            | (_, DeclareFunction f_ast) -> Some (Function (loc, f_ast))
-            | _ -> assert_false "DeclareFunction typed AST doesn't preserve structure"
-          in
-          ( [(spf "function %s() {}" name, loc, OrdinaryName name, None)],
-            Ast.Statement.ExportValue,
-            ast )
-        | Some (Class (loc, c)) ->
-          let { DeclareClass.id = (name_loc, { Ast.Identifier.name; comments = _ }); _ } = c in
-          let dec_class = statement cx (loc, DeclareClass c) in
-          let ast =
-            match dec_class with
-            | (_, DeclareClass c_ast) -> Some (Class (loc, c_ast))
-            | _ -> assert_false "DeclareClass typed AST doesn't preserve structure"
-          in
-          ( [(spf "class %s {}" name, name_loc, OrdinaryName name, None)],
-            Ast.Statement.ExportValue,
-            ast )
-        | Some (DefaultType (loc, t)) ->
-          let (((_, _type), _) as t_ast) = Anno.convert cx SMap.empty (loc, t) in
-          let ast = Some (DefaultType t_ast) in
-          ([("<<type>>", loc, OrdinaryName "default", Some _type)], Ast.Statement.ExportValue, ast)
-        | Some
-            (NamedType
-              ( talias_loc,
-                ({ TypeAlias.id = (name_loc, { Ast.Identifier.name; comments = _ }); _ } as talias)
-              )) ->
-          let type_alias = statement cx (talias_loc, TypeAlias talias) in
-          let ast =
-            match type_alias with
-            | (_, TypeAlias talias) -> Some (NamedType (talias_loc, talias))
-            | _ -> assert_false "TypeAlias typed AST doesn't preserve structure"
-          in
-          ( [(spf "type %s = ..." name, name_loc, OrdinaryName name, None)],
-            Ast.Statement.ExportType,
-            ast )
-        | Some
-            (NamedOpaqueType
-              ( opaque_loc,
-                ( { OpaqueType.id = (name_loc, { Ast.Identifier.name; comments = _ }); _ } as
-                opaque_t ) )) ->
-          let opaque_type = statement cx (opaque_loc, OpaqueType opaque_t) in
-          let ast =
-            match opaque_type with
-            | (_, OpaqueType opaque_t) -> Some (NamedOpaqueType (opaque_loc, opaque_t))
-            | _ -> assert_false "OpaqueType typed AST doesn't preserve structure"
-          in
-          ( [(spf "opaque type %s = ..." name, name_loc, OrdinaryName name, None)],
-            Ast.Statement.ExportType,
-            ast )
-        | Some (Interface (loc, i)) ->
-          let { Interface.id = (name_loc, { Ast.Identifier.name; comments = _ }); _ } = i in
-          let int_dec = statement cx (loc, InterfaceDeclaration i) in
-          let ast =
-            match int_dec with
-            | (_, InterfaceDeclaration i_ast) -> Some (Interface (loc, i_ast))
-            | _ -> assert_false "InterfaceDeclaration typed AST doesn't preserve structure"
-          in
-          ( [(spf "interface %s {}" name, name_loc, OrdinaryName name, None)],
-            Ast.Statement.ExportType,
-            ast )
-        | None -> ([], Ast.Statement.ExportValue, None)
+  | (loc, DeclareExportDeclaration decl) ->
+    let module D = DeclareExportDeclaration in
+    let { D.default; declaration; specifiers; source; comments = _ } = decl in
+    let declaration =
+      let export_maybe_default_binding id =
+        let (id_loc, { Ast.Identifier.name; comments = _ }) = id in
+        let name = OrdinaryName name in
+        match default with
+        | None -> Import_export.export_binding cx name id_loc Ast.Statement.ExportValue
+        | Some default_loc ->
+          let t = Env.var_ref ~lookup_mode:Env.LookupMode.ForType cx name loc in
+          Import_export.export cx (OrdinaryName "default") default_loc t
       in
-      export_statement cx loc ~default export_info specifiers source export_kind;
-
-      (loc, DeclareExportDeclaration { decl with DeclareExportDeclaration.declaration }))
+      (* error-handling around calls to `statement` is omitted here because we
+         don't expect declarations to have abnormal control flow *)
+      let f = function
+        | D.Variable (loc, ({ DeclareVariable.id; _ } as v)) ->
+          let (id_loc, { Ast.Identifier.name; comments = _ }) = id in
+          let dec_var = statement cx (loc, DeclareVariable v) in
+          Import_export.export_binding cx (OrdinaryName name) id_loc Ast.Statement.ExportValue;
+          begin
+            match dec_var with
+            | (_, DeclareVariable v_ast) -> D.Variable (loc, v_ast)
+            | _ -> assert_false "DeclareVariable typed AST doesn't preserve structure"
+          end
+        | D.Function (loc, f) ->
+          let dec_fun = statement cx (loc, DeclareFunction f) in
+          export_maybe_default_binding f.DeclareFunction.id;
+          begin
+            match dec_fun with
+            | (_, DeclareFunction f_ast) -> D.Function (loc, f_ast)
+            | _ -> assert_false "DeclareFunction typed AST doesn't preserve structure"
+          end
+        | D.Class (loc, c) ->
+          let dec_class = statement cx (loc, DeclareClass c) in
+          export_maybe_default_binding c.DeclareClass.id;
+          begin
+            match dec_class with
+            | (_, DeclareClass c_ast) -> D.Class (loc, c_ast)
+            | _ -> assert_false "DeclareClass typed AST doesn't preserve structure"
+          end
+        | D.DefaultType (loc, t) ->
+          let default_loc = Base.Option.value_exn default in
+          let (((_, t), _) as t_ast) = Anno.convert cx SMap.empty (loc, t) in
+          Import_export.export cx (OrdinaryName "default") default_loc t;
+          D.DefaultType t_ast
+        | D.NamedType (loc, ({ TypeAlias.id; _ } as t)) ->
+          let (id_loc, { Ast.Identifier.name; comments = _ }) = id in
+          let type_alias = statement cx (loc, TypeAlias t) in
+          Import_export.export_binding cx (OrdinaryName name) id_loc Ast.Statement.ExportType;
+          begin
+            match type_alias with
+            | (_, TypeAlias talias) -> D.NamedType (loc, talias)
+            | _ -> assert_false "TypeAlias typed AST doesn't preserve structure"
+          end
+        | D.NamedOpaqueType (loc, ({ OpaqueType.id; _ } as t)) ->
+          let (id_loc, { Ast.Identifier.name; comments = _ }) = id in
+          let opaque_type = statement cx (loc, OpaqueType t) in
+          Import_export.export_binding cx (OrdinaryName name) id_loc Ast.Statement.ExportType;
+          begin
+            match opaque_type with
+            | (_, OpaqueType opaque_t) -> D.NamedOpaqueType (loc, opaque_t)
+            | _ -> assert_false "OpaqueType typed AST doesn't preserve structure"
+          end
+        | D.Interface (loc, ({ Interface.id; _ } as i)) ->
+          let (id_loc, { Ast.Identifier.name; comments = _ }) = id in
+          let int_dec = statement cx (loc, InterfaceDeclaration i) in
+          Import_export.export_binding cx (OrdinaryName name) id_loc Ast.Statement.ExportType;
+          begin
+            match int_dec with
+            | (_, InterfaceDeclaration i_ast) -> D.Interface (loc, i_ast)
+            | _ -> assert_false "InterfaceDeclaration typed AST doesn't preserve structure"
+          end
+      in
+      Option.map f declaration
+    in
+    begin
+      match specifiers with
+      | None -> ()
+      | Some specifiers -> export_specifiers cx loc specifiers source Ast.Statement.ExportValue
+    end;
+    (loc, DeclareExportDeclaration { decl with D.declaration })
   | (loc, DeclareModuleExports { Ast.Statement.DeclareModuleExports.annot = (t_loc, t); comments })
     ->
     let (((_, t), _) as t_ast) = Anno.convert cx SMap.empty t in
@@ -2398,103 +2377,76 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t =
       ExportNamedDeclaration
         ( { ExportNamedDeclaration.declaration; specifiers; source; export_kind; comments = _ } as
         export_decl ) ) ->
-    let (declaration, export_info) =
+    let declaration =
       match declaration with
-      | Some decl ->
-        ( Some (statement cx decl),
-          (match decl with
-          | (_, FunctionDeclaration { Ast.Function.id = None; _ }) ->
-            failwith
-              ( "Parser Error: Immediate exports of nameless functions can "
-              ^ "only exist for default exports!" )
-          | ( _,
-              FunctionDeclaration
-                { Ast.Function.id = Some (id_loc, { Ast.Identifier.name; comments = _ }); _ } ) ->
+      | None -> None
+      | Some (loc, stmt) ->
+        let stmt' = statement cx (loc, stmt) in
+        begin
+          match stmt with
+          | FunctionDeclaration { Ast.Function.id = Some id; _ }
+          | ClassDeclaration { Ast.Class.id = Some id; _ }
+          | TypeAlias { TypeAlias.id; _ }
+          | OpaqueType { OpaqueType.id; _ }
+          | InterfaceDeclaration { Interface.id; _ }
+          | EnumDeclaration { EnumDeclaration.id; _ } ->
+            let (id_loc, { Ast.Identifier.name; comments = _ }) = id in
             Type_inference_hooks_js.dispatch_export_named_hook name id_loc;
-            [(spf "function %s() {}" name, id_loc, OrdinaryName name, None)]
-          | (_, ClassDeclaration { Ast.Class.id = None; _ }) ->
-            failwith
-              ( "Parser Error: Immediate exports of nameless classes can "
-              ^ "only exist for default exports" )
-          | ( _,
-              ClassDeclaration
-                { Ast.Class.id = Some (id_loc, { Ast.Identifier.name; comments = _ }); _ } ) ->
-            Type_inference_hooks_js.dispatch_export_named_hook name id_loc;
-            [(spf "class %s {}" name, id_loc, OrdinaryName name, None)]
-          | ( _,
-              EnumDeclaration
-                { Ast.Statement.EnumDeclaration.id = (id_loc, { Ast.Identifier.name; _ }); _ } ) ->
-            Type_inference_hooks_js.dispatch_export_named_hook name id_loc;
-            [(spf "enum %s {}" name, id_loc, OrdinaryName name, None)]
-          | (_, VariableDeclaration { VariableDeclaration.declarations; _ }) ->
+            Import_export.export_binding cx (OrdinaryName name) id_loc export_kind
+          | VariableDeclaration { VariableDeclaration.declarations; _ } ->
             Flow_ast_utils.fold_bindings_of_variable_declarations
-              (fun acc (loc, { Ast.Identifier.name; comments = _ }) _ ->
-                Type_inference_hooks_js.dispatch_export_named_hook name loc;
-                (spf "var %s" name, loc, OrdinaryName name, None) :: acc)
-              []
+              (fun () id _ ->
+                let (id_loc, { Ast.Identifier.name; comments = _ }) = id in
+                Type_inference_hooks_js.dispatch_export_named_hook name id_loc;
+                Import_export.export_binding cx (OrdinaryName name) id_loc export_kind)
+              ()
               declarations
-            |> List.rev
-          | (_, TypeAlias { TypeAlias.id; _ }) ->
-            let name = ident_name id in
-            [(spf "type %s = ..." name, loc, OrdinaryName name, None)]
-          | (_, OpaqueType { OpaqueType.id; _ }) ->
-            let name = ident_name id in
-            [(spf "opaque type %s = ..." name, loc, OrdinaryName name, None)]
-          | (_, InterfaceDeclaration { Interface.id; _ }) ->
-            let name = ident_name id in
-            [(spf "interface %s = ..." name, loc, OrdinaryName name, None)]
-          | _ -> failwith "Parser Error: Invalid export-declaration type!") )
-      | None -> (None, [])
+          | _ -> failwith "Parser Error: Invalid export-declaration type!"
+        end;
+        Some stmt'
     in
-    export_statement cx loc ~default:None export_info specifiers source export_kind;
-
+    begin
+      match specifiers with
+      | None -> ()
+      | Some specifiers -> export_specifiers cx loc specifiers source export_kind
+    end;
     (loc, ExportNamedDeclaration { export_decl with ExportNamedDeclaration.declaration })
   | (loc, ExportDefaultDeclaration { ExportDefaultDeclaration.default; declaration; comments }) ->
+    let module D = ExportDefaultDeclaration in
     Type_inference_hooks_js.dispatch_export_named_hook "default" default;
-    let (declaration, export_info) =
+    let (export_loc, t, declaration) =
       match declaration with
-      | ExportDefaultDeclaration.Declaration decl ->
-        ( ExportDefaultDeclaration.Declaration (statement cx decl),
-          (match decl with
-          | (loc, FunctionDeclaration { Ast.Function.id = None; _ }) ->
-            [("function() {}", loc, internal_name "*default*", None)]
-          | (loc, FunctionDeclaration { Ast.Function.id = Some ident; _ }) ->
-            let name = ident_name ident in
-            [(spf "function %s() {}" name, loc, OrdinaryName name, None)]
-          | (loc, ClassDeclaration { Ast.Class.id = None; _ }) ->
-            [("class {}", loc, internal_name "*default*", None)]
-          | (_, ClassDeclaration { Ast.Class.id = Some ident; _ }) ->
-            let name = ident_name ident in
-            [(spf "class %s {}" name, fst ident, OrdinaryName name, None)]
-          | (_, EnumDeclaration { Ast.Statement.EnumDeclaration.id = ident; _ }) ->
-            let name = ident_name ident in
-            [(spf "enum %s {}" name, fst ident, OrdinaryName name, None)]
-          | (_, VariableDeclaration { VariableDeclaration.declarations; _ }) ->
-            Flow_ast_utils.fold_bindings_of_variable_declarations
-              (fun acc (loc, { Ast.Identifier.name; comments = _ }) _ ->
-                (spf "var %s" name, loc, OrdinaryName name, None) :: acc)
-              []
-              declarations
-            |> List.rev
-          | (_, TypeAlias { TypeAlias.id; _ }) ->
-            let name = ident_name id in
-            [(spf "type %s = ..." name, loc, OrdinaryName name, None)]
-          | (_, OpaqueType { OpaqueType.id; _ }) ->
-            let name = ident_name id in
-            [(spf "opaque type %s = ..." name, loc, OrdinaryName name, None)]
-          | (_, InterfaceDeclaration { Interface.id; _ }) ->
-            let name = ident_name id in
-            [(spf "interface %s = ..." name, loc, OrdinaryName name, None)]
-          | _ -> failwith "Parser Error: Invalid export-declaration type!") )
-      | ExportDefaultDeclaration.Expression expr ->
-        let (((_, expr_t), _) as expr_ast) = expression cx ~annot:None expr in
-        ( ExportDefaultDeclaration.Expression expr_ast,
-          [("<<expression>>", fst expr, OrdinaryName "default", Some expr_t)] )
+      | D.Declaration (loc, stmt) ->
+        let (export_loc, t, stmt) =
+          match stmt with
+          | FunctionDeclaration ({ Ast.Function.id = None; _ } as fn) ->
+            let { Ast.Function.sig_loc; async; generator; _ } = fn in
+            let reason = func_reason ~async ~generator sig_loc in
+            let general = Tvar.mk cx reason in
+            let (t, fn) = mk_function_declaration None cx ~general reason fn in
+            Flow_js.flow_t cx (t, general);
+            (loc, general, (loc, FunctionDeclaration fn))
+          | ClassDeclaration ({ Ast.Class.id = None; _ } as c) ->
+            let reason = DescFormat.instance_reason (internal_name "*default*") loc in
+            let general = Tvar.mk cx reason in
+            let (t, c) = mk_class cx ~class_annot:None loc ~name_loc:loc ~general reason c in
+            Flow_js.flow_t cx (t, general);
+            (loc, general, (loc, ClassDeclaration c))
+          | FunctionDeclaration { Ast.Function.id = Some id; _ }
+          | ClassDeclaration { Ast.Class.id = Some id; _ }
+          | EnumDeclaration { EnumDeclaration.id; _ } ->
+            let stmt = statement cx (loc, stmt) in
+            let (id_loc, { Ast.Identifier.name; comments = _ }) = id in
+            let t = Env.var_ref ~lookup_mode:ForValue cx (OrdinaryName name) id_loc in
+            (id_loc, t, stmt)
+          | _ -> failwith "unexpected default export declaration"
+        in
+        (export_loc, t, D.Declaration stmt)
+      | D.Expression expr ->
+        let (((loc, t), _) as expr) = expression cx ~annot:None expr in
+        (loc, t, D.Expression expr)
     in
-    (* export default is always a value *)
-    let export_kind = Ast.Statement.ExportValue in
-    export_statement cx loc ~default:(Some default) export_info None None export_kind;
-
+    Import_export.export cx (OrdinaryName "default") export_loc t;
     (loc, ExportDefaultDeclaration { ExportDefaultDeclaration.default; declaration; comments })
   | (import_loc, ImportDeclaration import_decl) ->
     let { ImportDeclaration.source; specifiers; default; import_kind; comments } = import_decl in
@@ -2633,35 +2585,16 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t =
           comments;
         } )
 
-and export_statement cx loc ~default declaration_export_info specifiers source export_kind =
+and export_specifiers cx loc specifiers source export_kind =
   let open Ast.Statement in
   let lookup_mode =
     match export_kind with
     | Ast.Statement.ExportValue -> ForValue
     | Ast.Statement.ExportType -> ForType
   in
-  let export_from_local (_, loc, local_name, local_tvar) =
-    let local_tvar =
-      match local_tvar with
-      | None -> Env.var_ref ~lookup_mode cx local_name loc
-      | Some t -> t
-    in
-    let local_name =
-      if Base.Option.is_some default then
-        OrdinaryName "default"
-      else
-        local_name
-    in
-    (* Use the location of the "default" keyword if this is a default export. For named exports,
-     * use the location of the identifier. *)
-    let loc = Base.Option.value ~default:loc default in
-    match export_kind with
-    | Ast.Statement.ExportType -> Import_export.export_type cx local_name (Some loc) local_tvar
-    | Ast.Statement.ExportValue -> Import_export.export cx local_name loc local_tvar
-  in
-  match (declaration_export_info, specifiers) with
+  match specifiers with
   (* [declare] export [type] {foo, bar} [from ...]; *)
-  | ([], Some (ExportNamedDeclaration.ExportSpecifiers specifiers)) ->
+  | ExportNamedDeclaration.ExportSpecifiers specifiers ->
     let export_specifier specifier =
       let (loc, reason, local_name, remote_name) =
         match specifier with
@@ -2711,7 +2644,7 @@ and export_statement cx loc ~default declaration_export_info specifiers source e
     in
     List.iter export_specifier specifiers
   (* [declare] export [type] * from "source"; *)
-  | ([], Some (ExportNamedDeclaration.ExportBatchSpecifier (_, star_as_name))) ->
+  | ExportNamedDeclaration.ExportBatchSpecifier (_, star_as_name) ->
     let (source_loc, source_module_name) =
       match source with
       | Some (loc, { Ast.StringLiteral.value; _ }) -> (loc, value)
@@ -2732,21 +2665,6 @@ and export_statement cx loc ~default declaration_export_info specifiers source e
       (match export_kind with
       | Ast.Statement.ExportValue -> Import_export.export_star cx loc source_module_t
       | Ast.Statement.ExportType -> Import_export.export_type_star cx loc source_module_t))
-  | ([], None) ->
-    failwith
-      ( "Parser Error: Export statement missing one of: Declaration, "
-      ^ "Expression, or Specifier list!" )
-  | (_, Some _) ->
-    failwith
-      ( "Parser Error: Export statement with a declaration/expression "
-      ^ "cannot also include a list of specifiers!" )
-  (* [declare] export [type] [default] <<declaration>>; *)
-  | (export_info, None) ->
-    (*
-     * Export each declared binding. Some declarations export multiple
-     * bindings, like a multi-declarator variable declaration.
-     *)
-    List.iter export_from_local export_info
 
 and object_prop cx ~object_annot acc prop =
   let open Ast.Expression.Object in
