@@ -60,6 +60,7 @@ type file = {
   patterns: Type.t Lazy.t Patterns.t;
   pattern_defs: Type.t Lazy.t Pattern_defs.t;
   reposition: ALoc.t -> Type.t -> Type.t;
+  mk_instance: Reason.t -> Type.t -> Type.t;
 }
 
 let visit f = f ()
@@ -471,7 +472,7 @@ let rec merge file = function
   | Pack.TyRef name ->
     let f t ref_loc (name, _) =
       let reason = Reason.(mk_annot_reason (RType (Reason.OrdinaryName name)) ref_loc) in
-      Flow_js.mk_instance file.cx reason t
+      file.mk_instance reason t
     in
     merge_tyref file f name
   | Pack.TyRefApp { loc; name; targs } ->

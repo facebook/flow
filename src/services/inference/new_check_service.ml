@@ -360,6 +360,16 @@ let mk_check_file ~options ~reader () =
       mk_sig_tvar cx reason resolved
     in
 
+    let mk_instance reason c =
+      let open Type in
+      let f tvar =
+        let type_t = DefT (reason, bogus_trust (), TypeT (InstanceKind, tvar)) in
+        Flow_js.flow cx (c, UseT (unknown_use, type_t))
+      in
+      let tvar = mk_lazy_tvar cx reason f in
+      AnnotT (reason, tvar, false)
+    in
+
     let rec file_rec =
       lazy
         {
@@ -373,6 +383,7 @@ let mk_check_file ~options ~reader () =
           pattern_defs = Pattern_defs.map (pattern_def file_rec) pattern_defs;
           patterns = Patterns.map (pattern file_rec) patterns;
           reposition;
+          mk_instance;
         }
     in
     Lazy.force file_rec

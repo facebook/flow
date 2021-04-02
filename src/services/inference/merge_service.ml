@@ -251,6 +251,7 @@ let merge_context ~options ~reader master_cx component =
           pattern_defs = Pattern_defs.map (visit_packed file_rec) pattern_defs;
           patterns = Patterns.map (visit_pattern file_rec) patterns;
           reposition = (fun loc t -> Flow_js.reposition cx loc t);
+          mk_instance = (fun reason t -> Flow_js.mk_instance cx reason t);
         }
     in
     Lazy.force file_rec
