@@ -257,6 +257,11 @@ let merge_context ~options ~reader master_cx component =
               let use_op = Type.(Op (GetProperty reason)) in
               Tvar.mk_no_wrap_where cx reason (fun tvar ->
                   Flow_js.flow cx (t, Type.GetPropT (use_op, reason, propname, tvar))));
+          export_type =
+            (fun reason name t ->
+              Tvar.mk_where cx reason (fun tvar ->
+                  let name = Reason.OrdinaryName name in
+                  Flow_js.flow cx (t, Type.AssertExportIsTypeT (reason, name, tvar))));
         }
     in
     Lazy.force file_rec

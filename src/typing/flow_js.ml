@@ -748,8 +748,7 @@ struct
               match export_kind with
               | ExportValue -> export
               | ReExport ->
-                (* Re-exports do not overwrite named exports from the local module. Further, they do
-                 * not need to be checked, as the original module has already performed the check. *)
+                (* Re-exports do not overwrite named exports from the local module. *)
                 NameUtils.Map.find_opt name acc |> Base.Option.value ~default:export
               | ExportType -> export
             in

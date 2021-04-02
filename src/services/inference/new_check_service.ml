@@ -379,6 +379,15 @@ let mk_check_file ~options ~reader () =
       mk_lazy_tvar cx reason f
     in
 
+    let export_type reason name t =
+      let open Type in
+      let f tvar =
+        let name = Reason.OrdinaryName name in
+        Flow_js.flow cx (t, AssertExportIsTypeT (reason, name, tvar))
+      in
+      mk_lazy_tvar cx reason f
+    in
+
     let rec file_rec =
       lazy
         {
@@ -394,6 +403,7 @@ let mk_check_file ~options ~reader () =
           reposition;
           mk_instance;
           qualify_type;
+          export_type;
         }
     in
     Lazy.force file_rec

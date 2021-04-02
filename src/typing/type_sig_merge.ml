@@ -62,6 +62,7 @@ type file = {
   reposition: ALoc.t -> Type.t -> Type.t;
   mk_instance: Reason.t -> Type.t -> Type.t;
   qualify_type: Reason.t -> Type.propref -> Type.t -> Type.t;
+  export_type: Reason.t -> string -> Type.t -> Type.t;
 }
 
 let visit f = f ()
@@ -107,12 +108,6 @@ let obj_lit_reason ~frozen loc =
   mk_reason desc loc
 
 let trust = Trust.bogus_trust ()
-
-let export_type file reason name t =
-  let open Type in
-  Tvar.mk_where file.cx reason (fun tvar ->
-      let name = Reason.OrdinaryName name in
-      Flow_js.flow file.cx (t, AssertExportIsTypeT (reason, name, tvar)))
 
 let specialize file t =
   let open Type in
@@ -379,13 +374,13 @@ let merge_export file = function
 let merge_export_type file reason = function
   | Pack.ExportTypeRef ref ->
     let f t ref_loc name =
-      let t = export_type file reason name t in
+      let t = file.export_type reason name t in
       (Some ref_loc, t)
     in
     merge_ref file f ref
   | Pack.ExportTypeBinding index ->
     let (loc, name, t) = visit (Local_defs.get file.local_defs index) in
-    let t = export_type file reason name t in
+    let t = file.export_type reason name t in
     (Some loc, t)
   | Pack.ExportTypeFrom index ->
     let (loc, _name, t) = visit (Remote_refs.get file.remote_refs index) in
