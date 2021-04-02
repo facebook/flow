@@ -654,7 +654,7 @@ let maybe_restart_instance instance =
         EventLogger.watchman_connection_reestablishment_failed
           (spf "Timed out after %f seconds" timeout);
         Lwt.return (Watchman_dead { dead_env with reinit_attempts = dead_env.reinit_attempts + 1 })
-      | exception ((Exit.Exit_with _ | Watchman_restarted) as exn) ->
+      | exception ((Lwt.Canceled | Exit.Exit_with _ | Watchman_restarted) as exn) ->
         (* Avoid swallowing these *)
         Exception.reraise (Exception.wrap exn)
       | exception e ->
