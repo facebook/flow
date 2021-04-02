@@ -108,6 +108,12 @@ let obj_lit_reason ~frozen loc =
 
 let trust = Trust.bogus_trust ()
 
+let export_type file reason name t =
+  let open Type in
+  Tvar.mk_where file.cx reason (fun tvar ->
+      let name = Reason.OrdinaryName name in
+      Flow_js.flow file.cx (t, AssertExportIsTypeT (reason, name, tvar)))
+
 let specialize file t =
   let open Type in
   let open TypeUtil in
@@ -370,10 +376,16 @@ let merge_export file = function
     let (loc, _name, t) = visit (Remote_refs.get file.remote_refs index) in
     (Some loc, t)
 
-let merge_export_type file = function
-  | Pack.ExportTypeRef ref -> merge_ref file (fun t ref_loc _ -> (Some ref_loc, t)) ref
+let merge_export_type file reason = function
+  | Pack.ExportTypeRef ref ->
+    let f t ref_loc name =
+      let t = export_type file reason name t in
+      (Some ref_loc, t)
+    in
+    merge_ref file f ref
   | Pack.ExportTypeBinding index ->
-    let (loc, _name, t) = visit (Local_defs.get file.local_defs index) in
+    let (loc, name, t) = visit (Local_defs.get file.local_defs index) in
+    let t = export_type file reason name t in
     (Some loc, t)
   | Pack.ExportTypeFrom index ->
     let (loc, _name, t) = visit (Remote_refs.get file.remote_refs index) in
@@ -443,14 +455,14 @@ let merge_exports =
         | Some t -> t
         | None -> Obj_type.mk_unsealed file.cx reason
       in
-      let types = SMap.map (merge_export_type file) types |> NameUtils.namemap_of_smap in
+      let types = SMap.map (merge_export_type file reason) types |> NameUtils.namemap_of_smap in
       let type_stars = List.map (merge_star file) type_stars in
       mk_commonjs_module_t file reason strict value
       |> export_named file reason Type.ExportType types
       |> copy_star_exports file reason ([], type_stars)
     | Pack.ESExports { names; types; stars; type_stars; strict } ->
       let names = SMap.map (merge_export file) names |> NameUtils.namemap_of_smap in
-      let types = SMap.map (merge_export_type file) types |> NameUtils.namemap_of_smap in
+      let types = SMap.map (merge_export_type file reason) types |> NameUtils.namemap_of_smap in
       let stars = List.map (merge_star file) stars in
       let type_stars = List.map (merge_star file) type_stars in
       mk_es_module_t file reason strict

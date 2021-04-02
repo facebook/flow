@@ -2594,7 +2594,13 @@ and export_specifiers cx loc source export_kind =
   let export_ref loc local_name remote_name =
     let t = Env.var_ref ~lookup_mode cx local_name loc in
     match export_kind with
-    | Ast.Statement.ExportType -> Import_export.export_type cx remote_name (Some loc) t
+    | Ast.Statement.ExportType ->
+      let reason = mk_reason (RType local_name) loc in
+      let t =
+        Tvar.mk_where cx reason (fun tout ->
+            Flow.flow cx (t, AssertExportIsTypeT (reason, local_name, tout)))
+      in
+      Import_export.export_type cx remote_name (Some loc) t
     | Ast.Statement.ExportValue -> Import_export.export cx remote_name loc t
   in
   (* [declare] export [type] {foo [as bar]} from 'module' *)

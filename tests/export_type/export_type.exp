@@ -170,5 +170,14 @@ Cannot export the value `fun` as a type. [export-value-as-type]
                    ^^^
 
 
+Error ------------------------------------------------------------------------------- values_as_type_exports_dep.js:4:16
 
-Found 13 errors
+Cannot use `num` as a type because it is an `any`-typed value. Type `num` properly, so it is no longer `any`-typed, to
+use it as an annotation. [value-as-type]
+
+   4| declare var x: num; // x is converted to any when exported, due to error
+                     ^^^
+
+
+
+Found 14 errors

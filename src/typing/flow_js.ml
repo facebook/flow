@@ -742,7 +742,7 @@ struct
            that are not @flow, so the rules have to deal with `any`. *)
 
         (* util that grows a module by adding named exports from a given map *)
-        | (ModuleT (_, { exports_tmap; _ }, _), ExportNamedT (reason, tmap, export_kind, tout)) ->
+        | (ModuleT (_, { exports_tmap; _ }, _), ExportNamedT (_, tmap, export_kind, tout)) ->
           let add_export name export acc =
             let export' =
               match export_kind with
@@ -751,12 +751,7 @@ struct
                 (* Re-exports do not overwrite named exports from the local module. Further, they do
                  * not need to be checked, as the original module has already performed the check. *)
                 NameUtils.Map.find_opt name acc |> Base.Option.value ~default:export
-              | ExportType ->
-                (* If it's of the form `export type` then check to make sure it's actually a type. *)
-                let (loc, t) = export in
-                let t' = Tvar.mk cx (reason_of_t t) in
-                rec_flow cx trace (t, AssertExportIsTypeT (reason, name, t'));
-                (loc, t')
+              | ExportType -> export
             in
             NameUtils.Map.add name export' acc
           in
