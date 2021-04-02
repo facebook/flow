@@ -250,6 +250,7 @@ let merge_context ~options ~reader master_cx component =
           remote_refs = Remote_refs.map (visit_remote_ref file_rec) remote_refs;
           pattern_defs = Pattern_defs.map (visit_packed file_rec) pattern_defs;
           patterns = Patterns.map (visit_pattern file_rec) patterns;
+          reposition = (fun loc t -> Flow_js.reposition cx loc t);
         }
     in
     Lazy.force file_rec

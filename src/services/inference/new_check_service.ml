@@ -354,6 +354,12 @@ let mk_check_file ~options ~reader () =
       lazy (Pack.map_pattern aloc p |> Merge.merge_pattern (Lazy.force file_rec))
     in
 
+    let reposition loc t =
+      let reason = Reason.repos_reason loc (TypeUtil.reason_of_t t) in
+      let resolved = lazy (Flow_js.reposition cx loc t) in
+      mk_sig_tvar cx reason resolved
+    in
+
     let rec file_rec =
       lazy
         {
@@ -366,6 +372,7 @@ let mk_check_file ~options ~reader () =
           remote_refs = Remote_refs.map (remote_ref file_rec) remote_refs;
           pattern_defs = Pattern_defs.map (pattern_def file_rec) pattern_defs;
           patterns = Patterns.map (pattern file_rec) patterns;
+          reposition;
         }
     in
     Lazy.force file_rec

@@ -59,6 +59,7 @@ type file = {
   remote_refs: (unit -> ALoc.t * string * Type.t) Remote_refs.t;
   patterns: Type.t Lazy.t Patterns.t;
   pattern_defs: Type.t Lazy.t Pattern_defs.t;
+  reposition: ALoc.t -> Type.t -> Type.t;
 }
 
 let visit f = f ()
@@ -325,11 +326,11 @@ let merge_ref : 'a. _ -> (_ -> _ -> _ -> 'a) -> _ -> 'a =
   match ref with
   | Pack.LocalRef { ref_loc; index } ->
     let (_loc, name, t) = visit (Local_defs.get file.local_defs index) in
-    let t = Flow_js.reposition file.cx ref_loc t in
+    let t = file.reposition ref_loc t in
     f t ref_loc name
   | Pack.RemoteRef { ref_loc; index } ->
     let (_loc, name, t) = visit (Remote_refs.get file.remote_refs index) in
-    let t = Flow_js.reposition file.cx ref_loc t in
+    let t = file.reposition ref_loc t in
     f t ref_loc name
   | Pack.BuiltinRef { ref_loc; name } ->
     let reason = Reason.(mk_reason (RIdentifier (Reason.OrdinaryName name)) ref_loc) in
