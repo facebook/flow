@@ -2360,11 +2360,7 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t =
       in
       Option.map f declaration
     in
-    begin
-      match specifiers with
-      | None -> ()
-      | Some specifiers -> export_specifiers cx loc specifiers source Ast.Statement.ExportValue
-    end;
+    Option.iter (export_specifiers cx loc source Ast.Statement.ExportValue) specifiers;
     (loc, DeclareExportDeclaration { decl with D.declaration })
   | (loc, DeclareModuleExports { Ast.Statement.DeclareModuleExports.annot = (t_loc, t); comments })
     ->
@@ -2405,11 +2401,7 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t =
         end;
         Some stmt'
     in
-    begin
-      match specifiers with
-      | None -> ()
-      | Some specifiers -> export_specifiers cx loc specifiers source export_kind
-    end;
+    Option.iter (export_specifiers cx loc source export_kind) specifiers;
     (loc, ExportNamedDeclaration { export_decl with ExportNamedDeclaration.declaration })
   | (loc, ExportDefaultDeclaration { ExportDefaultDeclaration.default; declaration; comments }) ->
     let module D = ExportDefaultDeclaration in
@@ -2585,86 +2577,70 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t =
           comments;
         } )
 
-and export_specifiers cx loc specifiers source export_kind =
+and export_specifiers cx loc source export_kind =
   let open Ast.Statement in
+  let module E = ExportNamedDeclaration in
   let lookup_mode =
     match export_kind with
     | Ast.Statement.ExportValue -> ForValue
     | Ast.Statement.ExportType -> ForType
   in
-  match specifiers with
-  (* [declare] export [type] {foo, bar} [from ...]; *)
-  | ExportNamedDeclaration.ExportSpecifiers specifiers ->
-    let export_specifier specifier =
-      let (loc, reason, local_name, remote_name) =
-        match specifier with
-        | ( loc,
-            {
-              ExportNamedDeclaration.ExportSpecifier.local =
-                (_, { Ast.Identifier.name = id; comments = _ });
-              exported = None;
-            } ) ->
-          let reason = mk_reason (RCustom (spf "export {%s}" id)) loc in
-          (loc, reason, id, id)
-        | ( loc,
-            {
-              ExportNamedDeclaration.ExportSpecifier.local =
-                (_, { Ast.Identifier.name = local; comments = _ });
-              exported = Some (_, { Ast.Identifier.name = exported; comments = _ });
-            } ) ->
-          let reason = mk_reason (RCustom (spf "export {%s as %s}" local exported)) loc in
-          (loc, reason, local, exported)
-      in
-      (*
-       * Determine if we're dealing with the `export {} from` form
-       * (and if so, retrieve the ModuleNamespaceObject tvar for the
-       *  source module)
-       *)
-      let source_module_tvar =
-        match source with
-        | Some (src_loc, { Ast.StringLiteral.value = module_name; _ }) ->
-          let reason = mk_reason (RCustom "ModuleNamespace for export {} from") src_loc in
-          Some (Import_export.import_ns cx reason (src_loc, module_name))
-        | None -> None
-      in
-      let local_tvar =
-        match source_module_tvar with
-        | Some tvar ->
-          Tvar.mk_no_wrap_where cx reason (fun t ->
-              Flow.flow
-                cx
-                (tvar, GetPropT (unknown_use, reason, Named (reason, OrdinaryName local_name), t)))
-        | None -> Env.var_ref ~lookup_mode cx (OrdinaryName local_name) loc
-      in
-      match export_kind with
-      | Ast.Statement.ExportType ->
-        Import_export.export_type cx (OrdinaryName remote_name) (Some loc) local_tvar
-      | Ast.Statement.ExportValue ->
-        Import_export.export cx (OrdinaryName remote_name) loc local_tvar
+  let source =
+    match source with
+    | Some (loc, { Ast.StringLiteral.value; raw = _; comments = _ }) -> Some (loc, value)
+    | None -> None
+  in
+  (* [declare] export [type] {foo [as bar]}; *)
+  let export_ref loc local_name remote_name =
+    let t = Env.var_ref ~lookup_mode cx local_name loc in
+    match export_kind with
+    | Ast.Statement.ExportType -> Import_export.export_type cx remote_name (Some loc) t
+    | Ast.Statement.ExportValue -> Import_export.export cx remote_name loc t
+  in
+  (* [declare] export [type] {foo [as bar]} from 'module' *)
+  let export_from loc (source_loc, source) local_name remote_name =
+    let source_ns_t =
+      let reason = mk_reason (RModule (OrdinaryName source)) source_loc in
+      Import_export.import_ns cx reason (source_loc, source)
     in
-    List.iter export_specifier specifiers
+    let t =
+      let reason = mk_reason (RIdentifier local_name) loc in
+      Tvar.mk_no_wrap_where cx reason (fun tout ->
+          let use_t = GetPropT (unknown_use, reason, Named (reason, local_name), tout) in
+          Flow.flow cx (source_ns_t, use_t))
+    in
+    match export_kind with
+    | Ast.Statement.ExportType -> Import_export.export_type cx remote_name (Some loc) t
+    | Ast.Statement.ExportValue -> Import_export.export cx remote_name loc t
+  in
+  let export_specifier (loc, { E.ExportSpecifier.local; exported }) =
+    let (local_name, remote_name) =
+      let (_, { Ast.Identifier.name = local_name; comments = _ }) = local in
+      let local_name = OrdinaryName local_name in
+      match exported with
+      | None -> (local_name, local_name)
+      | Some (_, { Ast.Identifier.name = remote_name; comments = _ }) ->
+        (local_name, OrdinaryName remote_name)
+    in
+    match source with
+    | Some source -> export_from loc source local_name remote_name
+    | None -> export_ref loc local_name remote_name
+  in
+  function
+  (* [declare] export [type] {foo [as bar]} [from ...]; *)
+  | E.ExportSpecifiers specifiers -> List.iter export_specifier specifiers
+  (* [declare] export [type] * as id from "source"; *)
+  | E.ExportBatchSpecifier (_, Some id) ->
+    let (id_loc, { Ast.Identifier.name; comments = _ }) = id in
+    let reason = mk_reason (RIdentifier (OrdinaryName name)) id_loc in
+    let remote_namespace_t = Import_export.import_ns cx reason (Base.Option.value_exn source) in
+    Import_export.export cx (OrdinaryName name) loc remote_namespace_t
   (* [declare] export [type] * from "source"; *)
-  | ExportNamedDeclaration.ExportBatchSpecifier (_, star_as_name) ->
-    let (source_loc, source_module_name) =
-      match source with
-      | Some (loc, { Ast.StringLiteral.value; _ }) -> (loc, value)
-      | None ->
-        failwith
-          ( "Parser Error: `export * from` must specify a string "
-          ^ "literal for the source module name!" )
-    in
-
-    (match star_as_name with
-    | Some ident ->
-      let (_, { Ast.Identifier.name; comments = _ }) = ident in
-      let reason = mk_reason (RCustom (spf "export * as %s from %S" name source_module_name)) loc in
-      let remote_namespace_t = Import_export.import_ns cx reason (source_loc, source_module_name) in
-      Import_export.export cx (OrdinaryName name) loc remote_namespace_t
-    | None ->
-      let source_module_t = Import_export.import cx (source_loc, source_module_name) in
-      (match export_kind with
-      | Ast.Statement.ExportValue -> Import_export.export_star cx loc source_module_t
-      | Ast.Statement.ExportType -> Import_export.export_type_star cx loc source_module_t))
+  | E.ExportBatchSpecifier (_, None) ->
+    let source_module_t = Import_export.import cx (Base.Option.value_exn source) in
+    (match export_kind with
+    | Ast.Statement.ExportValue -> Import_export.export_star cx loc source_module_t
+    | Ast.Statement.ExportType -> Import_export.export_type_star cx loc source_module_t)
 
 and object_prop cx ~object_annot acc prop =
   let open Ast.Expression.Object in
