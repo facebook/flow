@@ -370,6 +370,15 @@ let mk_check_file ~options ~reader () =
       AnnotT (reason, tvar, false)
     in
 
+    let qualify_type reason propname t =
+      let open Type in
+      let f tvar =
+        let use_op = Type.(Op (GetProperty reason)) in
+        Flow_js.flow cx (t, GetPropT (use_op, reason, propname, open_tvar tvar))
+      in
+      mk_lazy_tvar cx reason f
+    in
+
     let rec file_rec =
       lazy
         {
@@ -384,6 +393,7 @@ let mk_check_file ~options ~reader () =
           patterns = Patterns.map (pattern file_rec) patterns;
           reposition;
           mk_instance;
+          qualify_type;
         }
     in
     Lazy.force file_rec

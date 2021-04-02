@@ -252,6 +252,11 @@ let merge_context ~options ~reader master_cx component =
           patterns = Patterns.map (visit_pattern file_rec) patterns;
           reposition = (fun loc t -> Flow_js.reposition cx loc t);
           mk_instance = (fun reason t -> Flow_js.mk_instance cx reason t);
+          qualify_type =
+            (fun reason propname t ->
+              let use_op = Type.(Op (GetProperty reason)) in
+              Tvar.mk_no_wrap_where cx reason (fun tvar ->
+                  Flow_js.flow cx (t, Type.GetPropT (use_op, reason, propname, tvar))));
         }
     in
     Lazy.force file_rec

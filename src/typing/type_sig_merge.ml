@@ -61,6 +61,7 @@ type file = {
   pattern_defs: Type.t Lazy.t Pattern_defs.t;
   reposition: ALoc.t -> Type.t -> Type.t;
   mk_instance: Reason.t -> Type.t -> Type.t;
+  qualify_type: Reason.t -> Type.propref -> Type.t -> Type.t;
 }
 
 let visit f = f ()
@@ -348,16 +349,8 @@ let rec merge_tyref file f = function
       let qname = String.concat "." (List.rev (Nel.to_list names)) in
       let id_reason = Reason.(mk_reason (RType (OrdinaryName name)) id_loc) in
       let reason_op = Reason.(mk_reason (RType (OrdinaryName qname)) loc) in
-      let use_op = Type.(Op (GetProperty reason_op)) in
-      let t =
-        Tvar.mk_no_wrap_where file.cx reason_op (fun tout ->
-            Flow_js.flow
-              file.cx
-              ( t,
-                Type.(
-                  GetPropT (use_op, reason_op, Named (id_reason, Reason.OrdinaryName name), tout))
-              ))
-      in
+      let propname = Type.Named (id_reason, Reason.OrdinaryName name) in
+      let t = file.qualify_type reason_op propname t in
       f t loc names
     in
     merge_tyref file f qualification
