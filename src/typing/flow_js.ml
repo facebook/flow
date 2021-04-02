@@ -328,8 +328,8 @@ struct
         (* process X ~> Y *)
         (******************)
         | (OpenT (_, tvar1), UseT (use_op, OpenT (_, tvar2))) ->
-          let (id1, constraints1) = Context.find_constraints cx tvar1 in
-          let (id2, constraints2) = Context.find_constraints cx tvar2 in
+          let (id1, (lazy constraints1)) = Context.find_constraints cx tvar1 in
+          let (id2, (lazy constraints2)) = Context.find_constraints cx tvar2 in
           (match (constraints1, constraints2) with
           | (Unresolved bounds1, Unresolved bounds2) ->
             if not_linked (id1, bounds1) (id2, bounds2) then (
@@ -355,7 +355,7 @@ struct
             | RTypeParam _ -> mod_use_op_of_use_t (fun op -> Frame (ImplicitTypeParam, op)) t2
             | _ -> t2
           in
-          let (id1, constraints1) = Context.find_constraints cx tvar in
+          let (id1, (lazy constraints1)) = Context.find_constraints cx tvar in
           (match constraints1 with
           | Unresolved bounds1 -> edges_and_flows_to_t cx trace (id1, bounds1) t2
           | Resolved (_, t1)
@@ -365,7 +365,7 @@ struct
         (* process L ~> X *)
         (******************)
         | (t1, UseT (use_op, OpenT (_, tvar))) ->
-          let (id2, constraints2) = Context.find_constraints cx tvar in
+          let (id2, (lazy constraints2)) = Context.find_constraints cx tvar in
           (match constraints2 with
           | Unresolved bounds2 ->
             edges_and_flows_from_t cx trace ~new_use_op:use_op t1 (id2, bounds2)
@@ -6732,14 +6732,14 @@ struct
     let t =
       match t with
       | GenericT { reason; name; id = g_id; bound = OpenT (_, id) } ->
-        let (_, constraints) = Context.find_constraints cx id in
+        let (lazy constraints) = Context.find_graph cx id in
         (match constraints with
         | Resolved (_, t)
         | FullyResolved (_, (lazy t)) ->
           GenericT { reason; name; id = g_id; bound = t }
         | Unresolved _ -> t)
       | OpenT (_, id) ->
-        let (_, constraints) = Context.find_constraints cx id in
+        let (lazy constraints) = Context.find_graph cx id in
         (match constraints with
         | Resolved (_, t)
         | FullyResolved (_, (lazy t)) ->
@@ -8342,7 +8342,8 @@ struct
     bindings
     |> IMap.iter (fun id trace ->
            match Context.find_constraints cx id with
-           | (root_id, Unresolved bounds) when root_id <> skip_id -> each (root_id, bounds) trace
+           | (root_id, (lazy (Unresolved bounds))) when root_id <> skip_id ->
+             each (root_id, bounds) trace
            | _ -> ())
     (* for each id in id1 + bounds1.lowertvars:
        id.bounds.upper += t2
@@ -8497,7 +8498,7 @@ struct
      both of the roots are resolved, they effectively act like the corresponding
      concrete types. *)
   and goto cx trace ~use_op (id1, root1) (id2, root2) =
-    match (root1.constraints, root2.constraints) with
+    match (Lazy.force root1.constraints, Lazy.force root2.constraints) with
     | (Unresolved bounds1, Unresolved bounds2) ->
       let cond1 = not_linked (id1, bounds1) (id2, bounds2) in
       let cond2 = not_linked (id2, bounds2) (id1, bounds1) in
@@ -8523,20 +8524,20 @@ struct
       edges_and_flows_to_t cx trace ~opt:true (id1, bounds1) t2_use;
       edges_and_flows_from_t cx trace ~new_use_op:(unify_flip use_op) ~opt:true t2 (id1, bounds1);
       Context.add_tvar cx id1 (Goto id2)
-    | (((Resolved (_, t1) | FullyResolved (_, (lazy t1))) as constraints1), Unresolved bounds2) ->
+    | ((Resolved (_, t1) | FullyResolved (_, (lazy t1))), Unresolved bounds2) ->
       let t1_use = UseT (unify_flip use_op, t1) in
       edges_and_flows_to_t cx trace ~opt:true (id2, bounds2) t1_use;
       edges_and_flows_from_t cx trace ~new_use_op:use_op ~opt:true t1 (id2, bounds2);
-      Context.add_tvar cx id2 (Root { root2 with constraints = constraints1 });
+      Context.add_tvar cx id2 (Root { root2 with constraints = root1.constraints });
       Context.add_tvar cx id1 (Goto id2)
     | (Resolved (_, t1), (Resolved (_, t2) | FullyResolved (_, (lazy t2))))
     | (FullyResolved (_, (lazy t1)), FullyResolved (_, (lazy t2))) ->
       (* replace node first, in case rec_unify recurses back to these tvars *)
       Context.add_tvar cx id1 (Goto id2);
       rec_unify cx trace ~use_op t1 t2
-    | ((FullyResolved (_, (lazy t1)) as constraints1), Resolved (_, t2)) ->
+    | (FullyResolved (_, (lazy t1)), Resolved (_, t2)) ->
       (* prefer fully resolved roots to resolved roots *)
-      Context.add_tvar cx id2 (Root { root2 with constraints = constraints1 });
+      Context.add_tvar cx id2 (Root { root2 with constraints = root1.constraints });
       (* replace node first, in case rec_unify recurses back to these tvars *)
       Context.add_tvar cx id1 (Goto id2);
       rec_unify cx trace ~use_op t1 t2
@@ -8560,13 +8561,14 @@ struct
      resolving to that type. *)
   and resolve_id cx trace ~use_op ?(fully_resolved = false) id t =
     let (id, root) = Context.find_root cx id in
-    match root.constraints with
+    match Lazy.force root.constraints with
     | Unresolved bounds ->
       let constraints =
-        if fully_resolved then
-          FullyResolved (use_op, lazy t)
-        else
-          Resolved (use_op, t)
+        Lazy.from_val
+          ( if fully_resolved then
+            FullyResolved (use_op, lazy t)
+          else
+            Resolved (use_op, t) )
       in
       Context.add_tvar cx id (Root { root with constraints });
       edges_and_flows_to_t cx trace ~opt:true (id, bounds) (UseT (use_op, t));
@@ -8805,7 +8807,9 @@ struct
              On the other hand, if the tvars are already resolved, then we can do something
              interesting... *)
           begin
-            match (Context.find_graph cx id1, Context.find_graph cx id2) with
+            match
+              (Lazy.force (Context.find_graph cx id1), Lazy.force (Context.find_graph cx id2))
+            with
             | ( (Resolved (_, t1) | FullyResolved (_, (lazy t1))),
                 (Resolved (_, t2) | FullyResolved (_, (lazy t2))) )
             (* Can we unify these types? Tempting, again, but annotations can refer to recursive type
@@ -9689,7 +9693,7 @@ struct
       | OpenT (r, id) as t_open ->
         let reason = mod_reason r in
         let use_desc = Base.Option.is_some desc in
-        let constraints = Context.find_graph cx id in
+        let (lazy constraints) = Context.find_graph cx id in
         begin
           match constraints with
           (* TODO: In the FullyResolved case, repositioning will cause us to "lose"

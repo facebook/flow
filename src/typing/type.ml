@@ -1494,7 +1494,7 @@ and Constraint : sig
 
   and 'phase root = {
     rank: int;
-    constraints: 'phase constraints;
+    constraints: 'phase constraints Lazy.t;
   }
 
   and _ constraints =
@@ -1564,7 +1564,7 @@ end = struct
 
   and 'phase root = {
     rank: int;
-    constraints: 'phase constraints;
+    constraints: 'phase constraints Lazy.t;
   }
 
   (** Constraints carry type information that narrows down the possible solutions
@@ -1615,7 +1615,9 @@ end = struct
       uppertvars = IMap.empty;
     }
 
-  let new_unresolved_root () = Root { rank = 0; constraints = Unresolved (new_bounds ()) }
+  let new_unresolved_root () =
+    let constraints = Lazy.from_val (Unresolved (new_bounds ())) in
+    Root { rank = 0; constraints }
 
   (* For any constraints, return a list of def types that form either the lower
      bounds of the solution, or a singleton containing the solution itself. *)

@@ -476,9 +476,10 @@ val generate_poly_id : 'phase t_ -> Type.Poly.id
 
 val make_source_poly_id : 'phase t_ -> ALoc.t -> Type.Poly.id
 
-val find_constraints : 'phase t_ -> Type.ident -> Type.ident * 'phase Type.Constraint.constraints
+val find_constraints :
+  'phase t_ -> Type.ident -> Type.ident * 'phase Type.Constraint.constraints Lazy.t
 
-val find_graph : 'phase t_ -> Type.ident -> 'phase Type.Constraint.constraints
+val find_graph : 'phase t_ -> Type.ident -> 'phase Type.Constraint.constraints Lazy.t
 
 val find_root : 'phase t_ -> Type.ident -> Type.ident * 'phase Type.Constraint.root
 

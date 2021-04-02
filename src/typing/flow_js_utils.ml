@@ -18,13 +18,15 @@ module FlowError = Flow_error
  * to a separate module in order to avoid a circular dependency *)
 
 (* Def types that describe the solution of a type variable. *)
-let possible_types cx id = types_of (Context.find_graph cx id) |> List.filter is_proper_def
+let possible_types cx id =
+  types_of (Lazy.force (Context.find_graph cx id)) |> List.filter is_proper_def
 
 let possible_types_of_type cx = function
   | OpenT (_, id) -> possible_types cx id
   | _ -> []
 
-let possible_uses cx id = uses_of (Context.find_graph cx id) |> List.filter is_proper_use
+let possible_uses cx id =
+  uses_of (Lazy.force (Context.find_graph cx id)) |> List.filter is_proper_use
 
 let merge_tvar =
   let rec collect_lowers ~filter_empty cx seen acc = function

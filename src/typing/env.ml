@@ -1455,7 +1455,7 @@ let havoc_local_refinements ?(all = false) cx =
                     general
                   else
                     let (_, tvar_t) = open_tvar t in
-                    let (_, constraints_t) = Context.find_constraints cx tvar_t in
+                    let (lazy constraints_t) = Context.find_graph cx tvar_t in
                     match (specific, constraints_t) with
                     | (OpenT (_, tvar_specific), Constraint.Unresolved bounds_t)
                       when IMap.mem tvar_specific bounds_t.Constraint.uppertvars ->

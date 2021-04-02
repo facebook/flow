@@ -48,11 +48,7 @@ let copier =
     (* Copying a tvar produces a FullyResolved tvar in the dst cx, which
      * contains an unevaluated thunk. The laziness here makes the copying
      * shallow. Note that the visitor stops at root tvars here and only resumes
-     * if the thunk is forced.
-     *
-     * Copying a tvar also has the effect of optimizing the tvar in the src cx
-     * if necessary. That is, Unresolved and Resolved tvars become FullyResolved.
-     * *)
+     * if the thunk is forced. *)
     method! tvar src_cx pole dst_cx r id =
       let dst_graph = Context.graph dst_cx in
       if IMap.mem id dst_graph then
@@ -60,34 +56,29 @@ let copier =
       else
         let (root_id, constraints) = Context.find_constraints src_cx id in
         if id == root_id then (
-          let thunk =
-            match constraints with
-            | Unresolved { lower; _ } ->
-              let ts = TypeMap.keys lower |> List.filter Type.is_proper_def in
-              let t =
-                match ts with
-                | [t] -> t
-                | t0 :: t1 :: ts -> UnionT (r, UnionRep.make t0 t1 ts)
-                | [] -> Unsoundness.merged_any r
-              in
-              let node = Root { rank = 0; constraints = FullyResolved (unknown_use, lazy t) } in
-              Context.add_tvar src_cx id node;
-              lazy
-                (let (_ : Context.t) = self#type_ src_cx pole dst_cx t in
-                 t)
-            | Resolved (_, t) ->
-              let node = Root { rank = 0; constraints = FullyResolved (unknown_use, lazy t) } in
-              Context.add_tvar src_cx id node;
-              lazy
-                (let (_ : Context.t) = self#type_ src_cx pole dst_cx t in
-                 t)
-            | FullyResolved (_, t) ->
-              lazy
-                (let t = Lazy.force t in
-                 let (_ : Context.t) = self#type_ src_cx pole dst_cx t in
-                 t)
+          let constraints =
+            lazy
+              (let t =
+                 match Lazy.force constraints with
+                 | Unresolved { lower; _ } ->
+                   lazy
+                     (let ts = TypeMap.keys lower |> List.filter Type.is_proper_def in
+                      match ts with
+                      | [t] -> t
+                      | t0 :: t1 :: ts -> UnionT (r, UnionRep.make t0 t1 ts)
+                      | [] -> Unsoundness.merged_any r)
+                 | Resolved (_, t) -> lazy t
+                 | FullyResolved (_, t) -> t
+               in
+               let t =
+                 lazy
+                   (let t = Lazy.force t in
+                    let (_ : Context.t) = self#type_ src_cx pole dst_cx t in
+                    t)
+               in
+               FullyResolved (unknown_use, t))
           in
-          let node = Root { rank = 0; constraints = FullyResolved (unknown_use, thunk) } in
+          let node = Root { rank = 0; constraints } in
           Context.set_graph dst_cx (IMap.add id node dst_graph);
           dst_cx
         ) else (
@@ -139,25 +130,32 @@ let copy_into dst_cx src_cx t =
   let (_ : Context.t) = copier#type_ src_cx Polarity.Positive dst_cx t in
   ()
 
-(* Helper to create a lazy type converted from a signature. The returned tvar
- * contains a lazy thunk which evaluates to a type. While the lazy thunk is
- * under evaluation, we swap out the tvar's constraint with a fresh unresolved
- * root. This deals with the recursive case where forcing `resolved` loops back
- * to the tvar being defined. *)
-let mk_sig_tvar cx reason resolved =
+(* Helper to create a lazy type. The returned tvar contains a lazy thunk which
+ * evaluates to a type. While the lazy thunk is under evaluation, we swap out
+ * the tvar's constraint with a fresh unresolved root. This deals with the
+ * recursive case where forcing `resolved` loops back to the tvar being defined.
+ * *)
+let mk_lazy_tvar cx reason f =
   let open Type in
   let open Constraint in
   let id = Reason.mk_id () in
   let tvar = OpenT (reason, id) in
-  let t =
+  let constraints =
     lazy
-      ( Context.add_tvar cx id (new_unresolved_root ());
-        let t = Lazy.force resolved in
-        Flow_js.unify cx tvar t;
-        t )
+      (let node = new_unresolved_root () in
+       Context.add_tvar cx id node;
+       f tvar;
+       Lazy.force (Context.find_graph cx id))
   in
-  Context.add_tvar cx id (Root { rank = 0; constraints = FullyResolved (unknown_use, t) });
+  Context.add_tvar cx id (Root { rank = 0; constraints });
   tvar
+
+let mk_sig_tvar cx reason resolved =
+  let f tvar =
+    let t = Lazy.force resolved in
+    Flow_js.unify cx tvar t
+  in
+  mk_lazy_tvar cx reason f
 
 let unknown_module_t cx mref provider =
   let react_server_module_err = provider = Modulename.String Type.react_server_module_ref in

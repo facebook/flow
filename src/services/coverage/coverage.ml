@@ -143,7 +143,7 @@ class visitor =
     val mutable tvar_cache : tvar_status IMap.t = IMap.empty
 
     method private tvar cx id =
-      let (root_id, constraints) = Context.find_constraints cx id in
+      let (root_id, (lazy constraints)) = Context.find_constraints cx id in
       if id != root_id then
         self#tvar cx root_id
       else

@@ -153,7 +153,7 @@ module Make (Observer : OBSERVER) : KIT with type output = Observer.output = str
 
   let merge_upper_bounds upper_r bound cx = function
     | OpenT (_, id) ->
-      let (_, constraints) = Context.find_constraints cx id in
+      let (lazy constraints) = Context.find_graph cx id in
       (match constraints with
       | Constraint.FullyResolved (_, (lazy t))
       | Constraint.Resolved (_, t) ->
@@ -188,7 +188,7 @@ module Make (Observer : OBSERVER) : KIT with type output = Observer.output = str
   let merge_lower_bounds cx t =
     match t with
     | OpenT (_, id) ->
-      let (_, constraints) = Context.find_constraints cx id in
+      let (lazy constraints) = Context.find_graph cx id in
       (match constraints with
       | Constraint.FullyResolved (_, (lazy t))
       | Constraint.Resolved (_, t) ->

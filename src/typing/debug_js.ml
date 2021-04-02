@@ -923,9 +923,9 @@ and dump_tvar_ : type phase. int * ISet.t -> phase Context.t_ -> Type.ident -> s
       try
         match Context.find_tvar cx id with
         | Goto g -> spf "%d, Goto %d" id g
-        | Root { constraints = Resolved (_, t) | FullyResolved (_, (lazy t)); _ } ->
+        | Root { constraints = (lazy (Resolved (_, t) | FullyResolved (_, (lazy t)))); _ } ->
           spf "%d, Resolved %s" id (dump_t_ (depth - 1, stack) cx t)
-        | Root { constraints = Unresolved { lower; upper; _ }; _ } ->
+        | Root { constraints = (lazy (Unresolved { lower; upper; _ })); _ } ->
           if lower = TypeMap.empty && upper = UseTypeMap.empty then
             spf "%d" id
           else

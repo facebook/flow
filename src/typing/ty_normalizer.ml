@@ -580,7 +580,7 @@ end = struct
       let rec loop cx acc seen t =
         match t with
         | T.OpenT (_, id) ->
-          let (root_id, constraints) = Context.find_constraints cx id in
+          let (root_id, (lazy constraints)) = Context.find_constraints cx id in
           if ISet.mem root_id seen then
             raise RecursiveExn
           else
@@ -912,7 +912,7 @@ end = struct
         terr ~kind:(UnexpectedTypeCtor (string_of_ctor t)) (Some t)
 
     and type_variable ~env id =
-      let (root_id, constraints) =
+      let (root_id, (lazy constraints)) =
         (* Use `root_id` as a proxy for `id` *)
         Context.find_constraints Env.(env.genv.cx) id
       in
@@ -2393,7 +2393,7 @@ end = struct
         type__ ~env ~proto ~imode t
 
     and type_variable ~env ~proto ~imode id =
-      let (root_id, constraints) = Context.find_constraints Env.(env.genv.cx) id in
+      let (root_id, (lazy constraints)) = Context.find_constraints Env.(env.genv.cx) id in
       Recursive.with_cache (TVarKey root_id) ~f:(fun () ->
           match constraints with
           | T.Constraint.Resolved (_, t)

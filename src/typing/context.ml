@@ -893,7 +893,7 @@ let rec find_resolved : type phase. phase t_ -> Type.t -> Type.t option =
   | Type.OpenT (_, id) ->
     Type.Constraint.(
       begin
-        match find_graph cx id with
+        match Lazy.force (find_graph cx id) with
         | Resolved (_, t)
         | FullyResolved (_, (lazy t)) ->
           Some t
