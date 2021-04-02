@@ -6077,17 +6077,17 @@ and jsx_title cx opening_element children closing_element locs =
   let jsx_mode = Context.jsx cx in
   let (t, name, attributes, children) =
     match (name, jsx_mode, (facebook_fbs, facebook_fbt)) with
-    | ( Identifier (loc_id, ({ Identifier.name = "fbs"; comments = _ } as id)),
+    | ( Identifier (loc_id, ({ Identifier.name = "fbs" as name; comments = _ } as id)),
         _,
         (Some custom_jsx_type, _) )
-    | ( Identifier (loc_id, ({ Identifier.name = "fbt"; comments = _ } as id)),
+    | ( Identifier (loc_id, ({ Identifier.name = "fbt" as name; comments = _ } as id)),
         _,
         (_, Some custom_jsx_type) ) ->
       let fbt_reason = mk_reason RFbt loc_element in
       let t = Flow.get_builtin_type cx fbt_reason (OrdinaryName custom_jsx_type) in
+      (* TODO check attribute types against an fbt API *)
+      let (_, attributes, _, children) = jsx_mk_props cx fbt_reason name attributes children in
       let name = Identifier ((loc_id, t), id) in
-      let attributes = Base.List.map ~f:Tast_utils.error_mapper#jsx_opening_attribute attributes in
-      let (_, children) = collapse_children cx children in
       (t, name, attributes, children)
     | (Identifier (loc, { Identifier.name; comments }), _, _) ->
       if Type_inference_hooks_js.dispatch_id_hook cx name loc then

@@ -146,7 +146,7 @@ coverage.js
 
 {
   "expressions":{
-    "covered_count":10,
+    "covered_count":16,
     "covered_locs":[
       {
         "source":"coverage.js",
@@ -207,6 +207,42 @@ coverage.js
         "type":"SourceFile",
         "start":{"line":23,"column":1,"offset":406},
         "end":{"line":23,"column":26,"offset":432}
+      },
+      {
+        "source":"coverage.js",
+        "type":"SourceFile",
+        "start":{"line":47,"column":7,"offset":808},
+        "end":{"line":47,"column":11,"offset":813}
+      },
+      {
+        "source":"coverage.js",
+        "type":"SourceFile",
+        "start":{"line":47,"column":15,"offset":816},
+        "end":{"line":47,"column":21,"offset":823}
+      },
+      {
+        "source":"coverage.js",
+        "type":"SourceFile",
+        "start":{"line":47,"column":15,"offset":816},
+        "end":{"line":47,"column":30,"offset":832}
+      },
+      {
+        "source":"coverage.js",
+        "type":"SourceFile",
+        "start":{"line":47,"column":23,"offset":824},
+        "end":{"line":47,"column":29,"offset":831}
+      },
+      {
+        "source":"coverage.js",
+        "type":"SourceFile",
+        "start":{"line":49,"column":1,"offset":835},
+        "end":{"line":49,"column":16,"offset":851}
+      },
+      {
+        "source":"coverage.js",
+        "type":"SourceFile",
+        "start":{"line":49,"column":12,"offset":846},
+        "end":{"line":49,"column":13,"offset":848}
       }
     ],
     "uncovered_count":31,
