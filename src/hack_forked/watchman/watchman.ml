@@ -464,6 +464,38 @@ let prepend_relative_path_term ~relative_path ~terms =
      * is a file now, might it become a directory later? I'm not aware of aterm which will watch for either a file or a directory, so let's add two terms *)
     Some (J.strlist ["dirname"; relative_path] :: J.strlist ["name"; relative_path] :: terms)
 
+(** Gets the current clockspec. If we have a prior clockspec, we make sure it's still valid by
+    checking whether watchman has restarted and may have missed updates; if we don't have a
+    prior clockspec, grab the current clock. *)
+let get_clockspec ~debug_logging ~conn ~watch_root prior_clockspec =
+  match prior_clockspec with
+  | Some clockspec ->
+    let%bind has_restarted =
+      has_watchman_restarted_since
+        ~debug_logging
+        ~conn
+        ~timeout:None (* the whole init process should be wrapped in a timeout *)
+        ~watch_root
+        ~clockspec
+    in
+    (match has_restarted with
+    | Ok true ->
+      Hh_logger.error "Watchman server restarted so we may have missed some updates";
+      raise Watchman_restarted
+    | Ok false -> Lwt.return clockspec
+    | Error err ->
+      Hh_logger.error "%s" err;
+      raise Exit.(Exit_with Watchman_failed))
+  | None ->
+    let%map response =
+      request
+        ~debug_logging
+        ~conn
+        ~timeout:None (* the whole init process should be wrapped in a timeout *)
+        (clock watch_root)
+    in
+    J.get_string_val "clock" response
+
 let re_init
     ?prior_clockspec
     {
@@ -532,36 +564,7 @@ let re_init
            "Can't watch paths across multiple Watchman watch_roots. Found %d watch_roots"
            (SSet.cardinal watch_roots))
   in
-  (* If we don't have a prior clockspec, grab the current clock *)
-  let%bind clockspec =
-    match prior_clockspec with
-    | Some clockspec ->
-      let%bind has_restarted =
-        has_watchman_restarted_since
-          ~debug_logging
-          ~conn
-          ~timeout:None (* the whole init process should be wrapped in a timeout *)
-          ~watch_root
-          ~clockspec
-      in
-      (match has_restarted with
-      | Ok true ->
-        Hh_logger.error "Watchman server restarted so we may have missed some updates";
-        raise Watchman_restarted
-      | Ok false -> Lwt.return clockspec
-      | Error err ->
-        Hh_logger.error "%s" err;
-        raise Exit.(Exit_with Watchman_failed))
-    | None ->
-      let%map response =
-        request
-          ~debug_logging
-          ~conn
-          ~timeout:None (* the whole init process should be wrapped in a timeout *)
-          (clock watch_root)
-      in
-      J.get_string_val "clock" response
-  in
+  let%bind clockspec = get_clockspec ~debug_logging ~conn ~watch_root prior_clockspec in
   let watched_path_expression_terms =
     Option.map watched_path_expression_terms ~f:(J.pred "anyof")
   in
