@@ -5,14 +5,16 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
+type ac_id = {
+  include_super: bool;
+  include_this: bool;
+}
+
 type autocomplete_type =
   | Ac_ignored  (** ignore extraneous requests the IDE sends *)
   | Ac_binding  (** binding identifiers introduce new names *)
   | Ac_comment  (** inside a comment *)
-  | Ac_id of {
-      include_super: bool;
-      include_this: bool;
-    }  (** identifier references *)
+  | Ac_id of ac_id  (** identifier references *)
   | Ac_key  (** object key, not supported yet *)
   | Ac_literal  (** inside a literal like a string or regex *)
   | Ac_module  (** a module name *)
@@ -21,6 +23,8 @@ type autocomplete_type =
   | Ac_member of {
       obj_type: Type.t;
       in_optional_chain: bool;
+      bracket_syntax: ac_id option;
+      member_loc: Loc.t option; (* loc of `.foo` or `[foo]` *)
     }  (** member expressions *)
   | Ac_jsx_element  (** JSX element name *)
   | Ac_jsx_attribute of {
@@ -38,6 +42,8 @@ type process_location_result = {
   autocomplete_type: autocomplete_type;
 }
 
+let default_ac_id = { include_super = false; include_this = false }
+
 let type_of_jsx_name =
   let open Flow_ast.JSX in
   function
@@ -52,6 +58,11 @@ let type_of_qualification =
   | Unqualified ((_, t), _)
   | Qualified (_, { id = ((_, t), _); _ }) ->
     t
+
+let compute_member_loc ~expr_loc ~obj_loc =
+  let expr_loc = ALoc.to_loc_exn expr_loc in
+  let obj_loc = ALoc.to_loc_exn obj_loc in
+  Loc.btwn (Loc.end_loc obj_loc) expr_loc
 
 let covers_target cursor loc = Reason.in_range cursor (ALoc.to_loc_exn loc)
 
@@ -85,38 +96,77 @@ class process_request_searcher (from_trigger_character : bool) (cursor : Loc.t) 
 
     method! t_identifier (((loc, _), { Flow_ast.Identifier.name; _ }) as ident) =
       if this#covers_target loc then
-        this#find loc name (Ac_id { include_super = false; include_this = false })
+        this#find loc name (Ac_id default_ac_id)
       else
         super#t_identifier ident
 
     method! jsx_identifier (((ac_loc, _), { Flow_ast.JSX.Identifier.name; _ }) as ident) =
-      if this#covers_target ac_loc then
-        this#find ac_loc name (Ac_id { include_super = false; include_this = false });
+      if this#covers_target ac_loc then this#find ac_loc name (Ac_id default_ac_id);
       ident
 
-    method! member expr =
+    method member_with_loc expr_loc expr =
       let open Flow_ast.Expression.Member in
-      let { _object = ((_, obj_type), _); property; comments = _ } = expr in
+      let { _object = ((obj_loc, obj_type), _); property; comments = _ } = expr in
+      let member_loc = Some (compute_member_loc ~expr_loc ~obj_loc) in
       begin
         match property with
-        | PropertyIdentifier ((prop_loc, _), Flow_ast.Identifier.{ name; _ })
+        | PropertyIdentifier ((prop_loc, _), { Flow_ast.Identifier.name; _ })
           when this#covers_target prop_loc ->
-          this#find prop_loc name (Ac_member { obj_type; in_optional_chain = false })
+          this#find
+            prop_loc
+            name
+            (Ac_member { obj_type; in_optional_chain = false; bracket_syntax = None; member_loc })
+        | PropertyExpression
+            ( (prop_loc, _),
+              Flow_ast.Expression.(
+                ( Literal { Flow_ast.Literal.raw = token; _ }
+                | Identifier (_, { Flow_ast.Identifier.name = token; _ }) )) )
+          when this#covers_target prop_loc ->
+          this#find
+            prop_loc
+            token
+            (Ac_member
+               {
+                 obj_type;
+                 in_optional_chain = false;
+                 bracket_syntax = Some default_ac_id;
+                 member_loc;
+               })
         | _ -> ()
       end;
       super#member expr
 
-    method! optional_member expr =
+    method optional_member_with_loc expr_loc expr =
       let open Flow_ast.Expression.OptionalMember in
       let open Flow_ast.Expression.Member in
-      let { member = { _object = ((_, obj_type), _) as obj; property; comments }; optional } =
+      let { member = { _object = ((obj_loc, obj_type), _) as obj; property; comments }; optional } =
         expr
       in
+      let member_loc = Some (compute_member_loc ~expr_loc ~obj_loc) in
       begin
         match property with
-        | PropertyIdentifier ((prop_loc, _), Flow_ast.Identifier.{ name; _ })
+        | PropertyIdentifier ((prop_loc, _), { Flow_ast.Identifier.name; _ })
           when this#covers_target prop_loc ->
-          this#find prop_loc name (Ac_member { obj_type; in_optional_chain = true })
+          this#find
+            prop_loc
+            name
+            (Ac_member { obj_type; in_optional_chain = true; bracket_syntax = None; member_loc })
+        | PropertyExpression
+            ( (prop_loc, _),
+              Flow_ast.Expression.(
+                ( Literal { Flow_ast.Literal.raw = token; _ }
+                | Identifier (_, { Flow_ast.Identifier.name = token; _ }) )) )
+          when this#covers_target prop_loc ->
+          this#find
+            prop_loc
+            token
+            (Ac_member
+               {
+                 obj_type;
+                 in_optional_chain = true;
+                 bracket_syntax = Some default_ac_id;
+                 member_loc;
+               })
         | _ -> ()
       end;
       (* the reason we don't simply call `super#optional_member` is because that would
@@ -139,7 +189,16 @@ class process_request_searcher (from_trigger_character : bool) (cursor : Loc.t) 
                         _;
                       } ))
                 when this#covers_target prop_loc ->
-                this#find prop_loc name (Ac_member { obj_type; in_optional_chain = false })
+                this#find
+                  prop_loc
+                  name
+                  (Ac_member
+                     {
+                       obj_type;
+                       in_optional_chain = false;
+                       bracket_syntax = None;
+                       member_loc = None;
+                     })
               | _ -> ())
             properties
         | _ -> ()
@@ -257,20 +316,51 @@ class process_request_searcher (from_trigger_character : bool) (cursor : Loc.t) 
         ident
 
     method! class_body x =
-      try super#class_body x
-      with Found ({ autocomplete_type = Ac_id _; _ } as f) ->
+      try super#class_body x with
+      | Found ({ autocomplete_type = Ac_id _; _ } as f) ->
         raise
           (Found { f with autocomplete_type = Ac_id { include_super = true; include_this = true } })
+      | Found ({ autocomplete_type = Ac_member ({ bracket_syntax = Some _; _ } as member); _ } as f)
+        ->
+        raise
+          (Found
+             {
+               f with
+               autocomplete_type =
+                 Ac_member
+                   {
+                     member with
+                     bracket_syntax = Some { include_super = true; include_this = true };
+                   };
+             })
 
     method! function_expression x =
-      try super#function_expression x
-      with Found ({ autocomplete_type = Ac_id id; _ } as f) ->
+      try super#function_expression x with
+      | Found ({ autocomplete_type = Ac_id id; _ } as f) ->
         raise (Found { f with autocomplete_type = Ac_id { id with include_this = true } })
+      | Found ({ autocomplete_type = Ac_member ({ bracket_syntax = Some id; _ } as member); _ } as f)
+        ->
+        raise
+          (Found
+             {
+               f with
+               autocomplete_type =
+                 Ac_member { member with bracket_syntax = Some { id with include_this = true } };
+             })
 
     method! function_declaration x =
-      try super#function_declaration x
-      with Found ({ autocomplete_type = Ac_id id; _ } as f) ->
+      try super#function_declaration x with
+      | Found ({ autocomplete_type = Ac_id id; _ } as f) ->
         raise (Found { f with autocomplete_type = Ac_id { id with include_this = true } })
+      | Found ({ autocomplete_type = Ac_member ({ bracket_syntax = Some id; _ } as member); _ } as f)
+        ->
+        raise
+          (Found
+             {
+               f with
+               autocomplete_type =
+                 Ac_member { member with bracket_syntax = Some { id with include_this = true } };
+             })
 
     method! generic_identifier_type id =
       let open Flow_ast.Type.Generic.Identifier in
@@ -291,6 +381,10 @@ class process_request_searcher (from_trigger_character : bool) (cursor : Loc.t) 
       match expr with
       | ((loc, _), Literal Flow_ast.Literal.{ raw; _ }) when this#covers_target loc ->
         this#find loc raw Ac_literal
+      | (((loc, _) as annot), Member member) ->
+        (this#on_type_annot annot, Member (this#member_with_loc loc member))
+      | (((loc, _) as annot), OptionalMember opt_member) ->
+        (this#on_type_annot annot, OptionalMember (this#optional_member_with_loc loc opt_member))
       | _ -> super#expression expr
 
     method! template_literal_element elem =

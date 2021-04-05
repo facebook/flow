@@ -43,11 +43,34 @@ let add_autocomplete_token contents line column =
     ^ Base.Option.value_map ~f ~default (Line.split_nth contents_with_token line)
     ^ Base.Option.value_map ~f ~default (Line.split_nth contents_with_token (line + 1)) )
 
-(* the autocomplete token inserts `suffix_len` characters, which are included
+(**
+ * the autocomplete token inserts `suffix_len` characters, which are included
  * in `ac_loc` returned by `Autocomplete_js`. They need to be removed before
- * showing `ac_loc` to the client. *)
+ * showing `ac_loc` to the client.
+ * Sometimes `ac_loc` ends on a different line than it starts.
+ * This happens mostly in two situations:
+ * with unclosed string literals: {|
+ *   foo["
+ *        ^
+ * |}
+ * and with unclosed bracket-syntax members:
+ *   foo[
+ *       ^
+ * In these situations, the code is malformed so the parser usually doesn't
+ * realize to close the AST node until a future line, so the `ac_loc` we get
+ * can end on a later line than it started.
+ * In these situations, moving the end position backwards by suffix_len can
+ * result in an end position with an invalid (negative) column number.
+ * It's also invalid for a completionItem's textEdit to have a target range
+ * that spans multiple lines.
+ * So when `ac_loc` ends on a different line than it starts, we just replace
+ * the end position with the start position. *)
 let remove_autocomplete_token_from_loc loc =
-  Loc.{ loc with _end = { loc._end with column = loc._end.column - suffix_len } }
+  let open Loc in
+  if loc.start.line = loc._end.line then
+    { loc with _end = { loc._end with column = loc._end.column - suffix_len } }
+  else
+    { loc with _end = loc.start }
 
 let remove_autocomplete_token =
   let regexp = Str.regexp_string autocomplete_suffix in
@@ -541,8 +564,32 @@ let autocomplete_id
   let result = { ServerProt.Response.Completion.items = List.rev items_rev; is_incomplete } in
   AcResult { result; errors_to_log }
 
-let autocomplete_member ~reader cx file_sig typed_ast this in_optional_chain ac_loc ~tparams_rev =
-  let ac_loc = loc_of_aloc ~reader ac_loc |> remove_autocomplete_token_from_loc in
+let autocomplete_member
+    ~env
+    ~reader
+    ~options
+    ~cx
+    ~file_sig
+    ~ast
+    ~typed_ast
+    ~imports
+    ~token
+    this
+    in_optional_chain
+    ac_aloc
+    ~tparams_rev
+    ~bracket_syntax
+    ~member_loc =
+  let ac_loc =
+    let ac_loc = loc_of_aloc ~reader ac_aloc |> remove_autocomplete_token_from_loc in
+    (* If the token is a string literal, then the end of the token may be inaccurate
+     * due to parse errors. See tests/autocomplete/bracket_syntax_3.js for example. *)
+    match token.[0] with
+    | '\''
+    | '"' ->
+      Loc.{ ac_loc with _end = ac_loc.start }
+    | _ -> ac_loc
+  in
   let exact_by_default = Context.exact_by_default cx in
   match
     members_of_type ~reader ~exclude_proto_members:false cx file_sig typed_ast this ~tparams_rev
@@ -563,9 +610,24 @@ let autocomplete_member ~reader cx file_sig typed_ast this in_optional_chain ac_
              let opt_chain_ty =
                Ty_utils.simplify_type ~merge_kinds:true (Ty.Union (Ty.Void, ty, []))
              in
-             match (from_nullable, in_optional_chain, in_idx) with
-             | (false, _, _)
-             | (_, _, true) ->
+             let name_as_string_literal =
+               lazy
+                 ( Ast_builder.Literals.string name
+                 |> Js_layout_generator.literal ~opts:(text_edit_options options) Loc.none
+                 |> Pretty_printer.print ~source_maps:None ~skip_endline:true
+                 |> Source.contents )
+             in
+             match (from_nullable, in_optional_chain, in_idx, bracket_syntax, member_loc) with
+             | (_, _, _, _, None)
+             | (false, _, _, None, _)
+             | (_, true, _, None, _)
+             | (_, _, true, None, _) ->
+               let ty =
+                 if from_nullable && in_optional_chain then
+                   opt_chain_ty
+                 else
+                   ty
+               in
                autocomplete_create_result
                  ~rank
                  ?documentation
@@ -573,28 +635,66 @@ let autocomplete_member ~reader cx file_sig typed_ast this in_optional_chain ac_
                  ~log_info:"member"
                  (name, ac_loc)
                  ty
-             | (true, false, false) ->
-               let opt_chain_name = "?." ^ name in
-               let opt_chain_ac_loc = Loc.btwn (Loc.char_before ac_loc) ac_loc in
+             | (false, _, _, Some _, _)
+             | (_, true, _, Some _, _)
+             | (_, _, true, Some _, _) ->
+               let insert_text = Lazy.force name_as_string_literal in
+               autocomplete_create_result
+                 ~insert_text
+                 ~rank
+                 ?documentation
+                 ~exact_by_default
+                 ~log_info:"bracket syntax member"
+                 (insert_text, ac_loc)
+                 ty
+             | (true, false, false, _, Some member_loc) ->
+               let opt_chain_name =
+                 match bracket_syntax with
+                 | None -> Printf.sprintf "?.%s" name
+                 | Some _ -> Printf.sprintf "?.[%s]" (Lazy.force name_as_string_literal)
+               in
                autocomplete_create_result
                  ~insert_text:opt_chain_name
                  ~rank
                  ?documentation
                  ~exact_by_default
                  ~log_info:"start optional chain"
-                 (opt_chain_name, opt_chain_ac_loc)
-                 opt_chain_ty
-             | (true, true, false) ->
-               autocomplete_create_result
-                 ~rank
-                 ?documentation
-                 ~exact_by_default
-                 ~log_info:"continue optional chain"
-                 (name, ac_loc)
+                 (opt_chain_name, remove_autocomplete_token_from_loc member_loc)
                  opt_chain_ty)
     in
-    let result = { ServerProt.Response.Completion.items; is_incomplete = false } in
-    AcResult { result; errors_to_log }
+    (match bracket_syntax with
+    | None ->
+      let result = { ServerProt.Response.Completion.items; is_incomplete = false } in
+      AcResult { result; errors_to_log }
+    | Some Autocomplete_js.{ include_this; include_super } ->
+      (match
+         autocomplete_id
+           ~env
+           ~options
+           ~reader
+           ~cx
+           ~ac_loc:ac_aloc
+           ~file_sig
+           ~ast
+           ~typed_ast
+           ~include_super
+           ~include_this
+           ~imports
+           ~tparams_rev
+           ~token
+       with
+      | AcResult
+          {
+            result = { ServerProt.Response.Completion.items = id_items; is_incomplete };
+            errors_to_log = id_errors_to_log;
+          } ->
+        let result = { ServerProt.Response.Completion.items = items @ id_items; is_incomplete } in
+        let errors_to_log = errors_to_log @ id_errors_to_log in
+        AcResult { result; errors_to_log }
+      | error ->
+        (* autocomplete_id is not expected to return AcEmpty or AcFatalError.
+         * If it does, we just forward the error along. *)
+        error))
 
 let rec binds_react = function
   | File_sig.With_ALoc.BindIdent (_, name) -> name = "React"
@@ -1060,17 +1160,24 @@ let autocomplete_get_results
             ~imports
             ~tparams_rev
             ~token )
-      | Ac_member { obj_type; in_optional_chain } ->
+      | Ac_member { obj_type; in_optional_chain; bracket_syntax; member_loc } ->
         ( "Acmem",
           autocomplete_member
+            ~env
             ~reader
-            cx
-            file_sig
-            typed_ast
+            ~options
+            ~cx
+            ~file_sig
+            ~ast
+            ~typed_ast
+            ~imports
+            ~token
             obj_type
             in_optional_chain
             ac_loc
-            ~tparams_rev )
+            ~tparams_rev
+            ~bracket_syntax
+            ~member_loc )
       | Ac_jsx_element ->
         ( "Ac_jsx_element",
           autocomplete_jsx_element

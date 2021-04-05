@@ -5,14 +5,16 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
+type ac_id = {
+  include_super: bool;
+  include_this: bool;
+}
+
 type autocomplete_type =
   | Ac_ignored  (** ignore extraneous requests the IDE sends *)
   | Ac_binding  (** binding identifiers introduce new names *)
   | Ac_comment  (** inside a comment *)
-  | Ac_id of {
-      include_super: bool;
-      include_this: bool;
-    }  (** identifier references *)
+  | Ac_id of ac_id  (** identifier references *)
   | Ac_key  (** object key, not supported yet *)
   | Ac_literal  (** inside a literal like a string or regex *)
   | Ac_module  (** a module name *)
@@ -21,6 +23,8 @@ type autocomplete_type =
   | Ac_member of {
       obj_type: Type.t;
       in_optional_chain: bool;
+      bracket_syntax: ac_id option;
+      member_loc: Loc.t option; (* loc of `.foo` or `[foo]` *)
     }  (** member expressions *)
   | Ac_jsx_element  (** JSX element name *)
   | Ac_jsx_attribute of {

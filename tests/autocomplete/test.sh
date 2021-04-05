@@ -102,3 +102,9 @@ queries_in_file autocomplete "jsdoc-members-7.js" --lsp
 queries_in_file autocomplete "jsdoc-members-8.js" --lsp
 queries_in_file autocomplete "types-jsdoc.js" --lsp
 queries_in_file autocomplete "qualified-types-jsdoc.js" --lsp
+queries_in_file autocomplete "bracket_syntax_1.js" --lsp
+queries_in_file autocomplete "bracket_syntax_2.js" --lsp
+queries_in_file autocomplete "bracket_syntax_3.js" --lsp
+queries_in_file autocomplete "bracket_syntax_4.js" --lsp
+queries_in_file autocomplete "bracket_syntax_5.js" --lsp
+queries_in_file autocomplete "bracket_syntax_6.js" --lsp
