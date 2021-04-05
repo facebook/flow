@@ -255,61 +255,6 @@ let members_of_type
         | _ :: _ -> Printf.sprintf "members_of_type %s" (Debug_js.dump_t cx type_) :: errors),
         in_idx )
 
-let autocomplete_member ~reader cx file_sig typed_ast this in_optional_chain ac_loc ~tparams_rev =
-  let ac_loc = loc_of_aloc ~reader ac_loc |> remove_autocomplete_token_from_loc in
-  let exact_by_default = Context.exact_by_default cx in
-  match
-    members_of_type ~reader ~exclude_proto_members:false cx file_sig typed_ast this ~tparams_rev
-  with
-  | Error err -> AcFatalError err
-  | Ok (mems, errors_to_log, in_idx) ->
-    let items =
-      mems
-      |> Base.List.map
-           ~f:(fun (name, documentation, Ty_members.{ ty; from_proto; from_nullable; def_loc = _ })
-                   ->
-             let rank =
-               if from_proto then
-                 1
-               else
-                 0
-             in
-             let opt_chain_ty =
-               Ty_utils.simplify_type ~merge_kinds:true (Ty.Union (Ty.Void, ty, []))
-             in
-             match (from_nullable, in_optional_chain, in_idx) with
-             | (false, _, _)
-             | (_, _, true) ->
-               autocomplete_create_result
-                 ~rank
-                 ?documentation
-                 ~exact_by_default
-                 ~log_info:"member"
-                 (name, ac_loc)
-                 ty
-             | (true, false, false) ->
-               let opt_chain_name = "?." ^ name in
-               let opt_chain_ac_loc = Loc.btwn (Loc.char_before ac_loc) ac_loc in
-               autocomplete_create_result
-                 ~insert_text:opt_chain_name
-                 ~rank
-                 ?documentation
-                 ~exact_by_default
-                 ~log_info:"start optional chain"
-                 (opt_chain_name, opt_chain_ac_loc)
-                 opt_chain_ty
-             | (true, true, false) ->
-               autocomplete_create_result
-                 ~rank
-                 ?documentation
-                 ~exact_by_default
-                 ~log_info:"continue optional chain"
-                 (name, ac_loc)
-                 opt_chain_ty)
-    in
-    let result = { ServerProt.Response.Completion.items; is_incomplete = false } in
-    AcResult { result; errors_to_log }
-
 (* The fact that we need this feels convoluted.
    We run Scope_builder on the untyped AST and now we go back to the typed AST to get the types
    of the locations we got from Scope_api. We wouldn't need to do this separate pass if
@@ -595,6 +540,61 @@ let autocomplete_id
   in
   let result = { ServerProt.Response.Completion.items = List.rev items_rev; is_incomplete } in
   AcResult { result; errors_to_log }
+
+let autocomplete_member ~reader cx file_sig typed_ast this in_optional_chain ac_loc ~tparams_rev =
+  let ac_loc = loc_of_aloc ~reader ac_loc |> remove_autocomplete_token_from_loc in
+  let exact_by_default = Context.exact_by_default cx in
+  match
+    members_of_type ~reader ~exclude_proto_members:false cx file_sig typed_ast this ~tparams_rev
+  with
+  | Error err -> AcFatalError err
+  | Ok (mems, errors_to_log, in_idx) ->
+    let items =
+      mems
+      |> Base.List.map
+           ~f:(fun (name, documentation, Ty_members.{ ty; from_proto; from_nullable; def_loc = _ })
+                   ->
+             let rank =
+               if from_proto then
+                 1
+               else
+                 0
+             in
+             let opt_chain_ty =
+               Ty_utils.simplify_type ~merge_kinds:true (Ty.Union (Ty.Void, ty, []))
+             in
+             match (from_nullable, in_optional_chain, in_idx) with
+             | (false, _, _)
+             | (_, _, true) ->
+               autocomplete_create_result
+                 ~rank
+                 ?documentation
+                 ~exact_by_default
+                 ~log_info:"member"
+                 (name, ac_loc)
+                 ty
+             | (true, false, false) ->
+               let opt_chain_name = "?." ^ name in
+               let opt_chain_ac_loc = Loc.btwn (Loc.char_before ac_loc) ac_loc in
+               autocomplete_create_result
+                 ~insert_text:opt_chain_name
+                 ~rank
+                 ?documentation
+                 ~exact_by_default
+                 ~log_info:"start optional chain"
+                 (opt_chain_name, opt_chain_ac_loc)
+                 opt_chain_ty
+             | (true, true, false) ->
+               autocomplete_create_result
+                 ~rank
+                 ?documentation
+                 ~exact_by_default
+                 ~log_info:"continue optional chain"
+                 (name, ac_loc)
+                 opt_chain_ty)
+    in
+    let result = { ServerProt.Response.Completion.items; is_incomplete = false } in
+    AcResult { result; errors_to_log }
 
 let rec binds_react = function
   | File_sig.With_ALoc.BindIdent (_, name) -> name = "React"
