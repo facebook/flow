@@ -321,21 +321,19 @@ let get_sockname () =
     let () = EventLogger.watchman_error msg in
     raise (Watchman_error msg)
 
-(* Opens a connection to the watchman process through the socket *)
+(** Opens a connection to the watchman process through the socket *)
 let open_connection () =
   let%lwt sockname = get_sockname () in
   let (ic, oc) =
-    if
-      String.equal Sys.os_type "Unix"
+    if Sys.unix then
       (* Yes, I know that Unix.open_connection uses the same fd for input and output. But I don't
        * want to hardcode that assumption here. So let's pretend like ic and oc might be back by
        * different fds *)
-    then
       Unix.open_connection (Unix.ADDR_UNIX sockname)
-    (* On Windows, however, named pipes behave like regular files from the client's perspective.
-     * We just open the file and create in/out channels for it. The file permissions attribute
-     * is not needed because the file should exist already but we have to pass something. *)
     else
+      (* On Windows, however, named pipes behave like regular files from the client's perspective.
+       * We just open the file and create in/out channels for it. The file permissions attribute
+       * is not needed because the file should exist already but we have to pass something. *)
       let fd = Unix.openfile sockname [Unix.O_RDWR] 0o640 in
       (Unix.in_channel_of_descr fd, Unix.out_channel_of_descr fd)
   in
