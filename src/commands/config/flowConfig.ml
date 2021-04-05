@@ -408,28 +408,6 @@ module Opts = struct
   let post_inference_implicit_instantiation_parser =
     boolean (fun opts v -> Ok { opts with run_post_inference_implicit_instantiation = v })
 
-  type deprecated_esproposal_setting =
-    | Enable
-    | Ignore
-    | Warn
-
-  let deprecated_esproposal_unparse = function
-    | Enable -> "enable"
-    | Ignore -> "ignore"
-    | Warn -> "warn"
-
-  let deprecated_esproposal_flag default =
-    let f opts v =
-      if v = default then
-        Ok opts
-      else
-        Error
-          (spf
-             "Flow no longer supports esproposal configuration. The only supported value for this option is `%s`, which is also the default."
-             (deprecated_esproposal_unparse default))
-    in
-    enum [("enable", Enable); ("ignore", Ignore); ("warn", Warn)] f
-
   let abstract_locations_parser =
     boolean (fun opts v -> Ok { opts with abstract_locations = Some v })
 
@@ -633,12 +611,6 @@ module Opts = struct
       ("autoimports", boolean (fun opts v -> Ok { opts with autoimports = Some v }));
       ("babel_loose_array_spread", babel_loose_array_spread_parser);
       ("emoji", boolean (fun opts v -> Ok { opts with emoji = v }));
-      ("esproposal.class_instance_fields", deprecated_esproposal_flag Enable);
-      ("esproposal.class_static_fields", deprecated_esproposal_flag Enable);
-      ("esproposal.decorators", deprecated_esproposal_flag Ignore);
-      ("esproposal.export_star_as", deprecated_esproposal_flag Enable);
-      ("esproposal.nullish_coalescing", deprecated_esproposal_flag Enable);
-      ("esproposal.optional_chaining", deprecated_esproposal_flag Enable);
       ("exact_by_default", boolean (fun opts v -> Ok { opts with exact_by_default = v }));
       ("experimental.abstract_locations", abstract_locations_parser);
       ("experimental.const_params", boolean (fun opts v -> Ok { opts with enable_const_params = v }));

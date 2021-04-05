@@ -19,12 +19,6 @@ can be overridden with command line flags.
 * [`all`](#toc-all-boolean)
 * [`babel_loose_array_spread`](#toc-babel-loose-array-spread-boolean)
 * [`emoji`](#toc-emoji-boolean)
-* [`esproposal.class_instance_fields`](#toc-esproposal-class-instance-fields-enable-ignore-warn)
-* [`esproposal.class_static_fields`](#toc-esproposal-class-static-fields-enable-ignore-warn)
-* [`esproposal.decorators`](#toc-esproposal-decorators-ignore-warn)
-* [`esproposal.export_star_as`](#toc-esproposal-export-star-as-enable-ignore-warn)
-* [`esproposal.optional_chaining`](#toc-esproposal-optional-chaining-enable-ignore-warn)
-* [`esproposal.nullish_coalescing`](#toc-esproposal-nullish-coalescing-enable-ignore-warn)
 * [`exact_by_default`](#toc-exact-by-default-boolean)
 * [`experimental.const_params`](#toc-experimental-const-params-boolean)
 * [`include_warnings`](#toc-include-warnings-boolean)
@@ -55,6 +49,12 @@ can be overridden with command line flags.
 * [`traces`](#toc-traces-integer)
 * [`types_first`](#toc-types-first-boolean)
 * [`well_formed_exports`](#toc-well-formed-exports-boolean)
+* [`esproposal.class_instance_fields`](#toc-esproposal-class-instance-fields-enable-ignore-warn)
+* [`esproposal.class_static_fields`](#toc-esproposal-class-static-fields-enable-ignore-warn)
+* [`esproposal.decorators`](#toc-esproposal-decorators-ignore-warn)
+* [`esproposal.export_star_as`](#toc-esproposal-export-star-as-enable-ignore-warn)
+* [`esproposal.optional_chaining`](#toc-esproposal-optional-chaining-enable-ignore-warn)
+* [`esproposal.nullish_coalescing`](#toc-esproposal-nullish-coalescing-enable-ignore-warn)
 
 #### `all` _`(boolean)`_ <a class="toc" id="toc-all-boolean" href="#toc-all-boolean"></a>
 
@@ -81,72 +81,6 @@ Set this to `true` to add emoji to the status messages that Flow
 outputs when it's busy checking your project.
 
 The default value for `emoji` is `false`.
-
-#### `esproposal.class_instance_fields` _`(enable|ignore|warn)`_ <a class="toc" id="toc-esproposal-class-instance-fields-enable-ignore-warn" href="#toc-esproposal-class-instance-fields-enable-ignore-warn"></a>
-
-Set this to `warn` to indicate that Flow should give a warning on use of
-instance [class fields](https://github.com/tc39/proposal-class-public-fields)
-per the pending spec.
-
-You may also set this to `ignore` to indicate that Flow should simply ignore
-the syntax (i.e. Flow will not use this syntax to indicate the presence of a
-property on instances of the class).
-
-The default value of this option is `enable`, which allows use of this proposed
-syntax.
-
-#### `esproposal.class_static_fields` _`(enable|ignore|warn)`_ <a class="toc" id="toc-esproposal-class-static-fields-enable-ignore-warn" href="#toc-esproposal-class-static-fields-enable-ignore-warn"></a>
-
-Set this to `warn` to indicate that Flow should give a warning on use of static
-[class fields](https://github.com/tc39/proposal-class-public-fields)
-per the pending spec.
-
-You may also set this to `ignore` to indicate that Flow should simply ignore
-the syntax (i.e. Flow will not use this syntax to indicate the presence of a
-static property on the class).
-
-The default value of this option is `enable`, which allows use of this proposed
-syntax.
-
-#### `esproposal.decorators` _`(ignore|warn)`_ <a class="toc" id="toc-esproposal-decorators-ignore-warn" href="#toc-esproposal-decorators-ignore-warn"></a>
-
-Set this to `ignore` to indicate that Flow should ignore decorators.
-
-The default value of this option is `warn`, which gives a warning on use since
-this proposal is still very early-stage.
-
-#### `esproposal.export_star_as` _`(enable|ignore|warn)`_ <a class="toc" id="toc-esproposal-export-star-as-enable-ignore-warn" href="#toc-esproposal-export-star-as-enable-ignore-warn"></a>
-
-Set this to `enable` to indicate that Flow should support the `export * as`
-syntax from [leebyron's proposal](https://github.com/leebyron/ecmascript-more-export-from).
-
-You may also set this to `ignore` to indicate that Flow should simply ignore
-the syntax. The default value of this option is `warn`, which gives a warning
-on use since this proposal is still very early-stage.
-
-#### `esproposal.optional_chaining` _`(enable|ignore|warn)`_ <a class="toc" id="toc-esproposal-optional-chaining-enable-ignore-warn" href="#toc-esproposal-optional-chaining-enable-ignore-warn"></a>
-
-Set this to `enable` to indicate that Flow should support the use of
-[optional chaining](https://github.com/tc39/proposal-optional-chaining)
-per the pending spec.
-
-You may also set this to `ignore` to indicate that Flow should simply ignore
-the syntax.
-
-The default value of this option is `warn`, which gives a warning on
-use since this proposal is still very early-stage.
-
-#### `esproposal.nullish_coalescing` _`(enable|ignore|warn)`_ <a class="toc" id="toc-esproposal-nullish-coalescing-enable-ignore-warn" href="#toc-esproposal-nullish-coalescing-enable-ignore-warn"></a>
-
-Set this to `enable` to indicate that Flow should support the use of
-[nullish coalescing](https://github.com/tc39/proposal-nullish-coalescing)
-per the pending spec.
-
-You may also set this to `ignore` to indicate that Flow should simply ignore
-the syntax.
-
-The default value of this option is `warn`, which gives a warning on
-use since this proposal is still very early-stage.
 
 #### `exact_by_default` _`(boolean)`_ <a class="toc" id="toc-exact-by-default-boolean" href="#toc-exact-by-default-boolean"></a>
 
@@ -552,3 +486,69 @@ The purpose of this option is to help prepare a codebase for Flow types-first mo
 See [this section](#toc-seal-your-intermediate-results) for more.
 
 Between versions v0.125.0 and v0.127.0, this option was named `well_formed_exports.whitelist`.
+
+#### `esproposal.class_instance_fields` _`(enable|ignore|warn)`_ {% until 0.148 %} <a class="toc" id="toc-esproposal-class-instance-fields-enable-ignore-warn" href="#toc-esproposal-class-instance-fields-enable-ignore-warn"></a>
+
+Set this to `warn` to indicate that Flow should give a warning on use of
+instance [class fields](https://github.com/tc39/proposal-class-public-fields)
+per the pending spec.
+
+You may also set this to `ignore` to indicate that Flow should simply ignore
+the syntax (i.e. Flow will not use this syntax to indicate the presence of a
+property on instances of the class).
+
+The default value of this option is `enable`, which allows use of this proposed
+syntax.
+
+#### `esproposal.class_static_fields` _`(enable|ignore|warn)`_ {% until 0.148 %} <a class="toc" id="toc-esproposal-class-static-fields-enable-ignore-warn" href="#toc-esproposal-class-static-fields-enable-ignore-warn"></a>
+
+Set this to `warn` to indicate that Flow should give a warning on use of static
+[class fields](https://github.com/tc39/proposal-class-public-fields)
+per the pending spec.
+
+You may also set this to `ignore` to indicate that Flow should simply ignore
+the syntax (i.e. Flow will not use this syntax to indicate the presence of a
+static property on the class).
+
+The default value of this option is `enable`, which allows use of this proposed
+syntax.
+
+#### `esproposal.decorators` _`(ignore|warn)`_ {% until 0.148 %} <a class="toc" id="toc-esproposal-decorators-ignore-warn" href="#toc-esproposal-decorators-ignore-warn"></a>
+
+Set this to `ignore` to indicate that Flow should ignore decorators.
+
+The default value of this option is `warn`, which gives a warning on use since
+this proposal is still very early-stage.
+
+#### `esproposal.export_star_as` _`(enable|ignore|warn)`_ {% until 0.148 %} <a class="toc" id="toc-esproposal-export-star-as-enable-ignore-warn" href="#toc-esproposal-export-star-as-enable-ignore-warn"></a>
+
+Set this to `enable` to indicate that Flow should support the `export * as`
+syntax from [leebyron's proposal](https://github.com/leebyron/ecmascript-more-export-from).
+
+You may also set this to `ignore` to indicate that Flow should simply ignore
+the syntax. The default value of this option is `warn`, which gives a warning
+on use since this proposal is still very early-stage.
+
+#### `esproposal.optional_chaining` _`(enable|ignore|warn)`_ {% until 0.148 %} <a class="toc" id="toc-esproposal-optional-chaining-enable-ignore-warn" href="#toc-esproposal-optional-chaining-enable-ignore-warn"></a>
+
+Set this to `enable` to indicate that Flow should support the use of
+[optional chaining](https://github.com/tc39/proposal-optional-chaining)
+per the pending spec.
+
+You may also set this to `ignore` to indicate that Flow should simply ignore
+the syntax.
+
+The default value of this option is `warn`, which gives a warning on
+use since this proposal is still very early-stage.
+
+#### `esproposal.nullish_coalescing` _`(enable|ignore|warn)`_ {% until 0.148 %} <a class="toc" id="toc-esproposal-nullish-coalescing-enable-ignore-warn" href="#toc-esproposal-nullish-coalescing-enable-ignore-warn"></a>
+
+Set this to `enable` to indicate that Flow should support the use of
+[nullish coalescing](https://github.com/tc39/proposal-nullish-coalescing)
+per the pending spec.
+
+You may also set this to `ignore` to indicate that Flow should simply ignore
+the syntax.
+
+The default value of this option is `warn`, which gives a warning on
+use since this proposal is still very early-stage.
