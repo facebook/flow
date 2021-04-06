@@ -139,6 +139,19 @@ type parse_artifacts =
       parse_errors: (Loc.t * Parse_error.t) list;
     }
 
+type parse_contents_return =
+  | Parsed of parse_artifacts  (** Note that there may be parse errors *)
+  | Skipped
+  | File_sig_error of File_sig.With_Loc.error
+      (** These errors are currently fatal to the parse. It would be nice to make them not fatal, at
+       * which point this whole type could be replaced by just `parse_artifacts option` *)
+  | Docblock_errors of Parsing_service_js.docblock_error list
+      (** Normally these are included in `Parse_artifacts` since they do not prevent us from
+       * parsing. However, for consistency with `flow status` and `flow check`, we return docblock
+       * errors instead of the file sig error if we encounter a file sig error but have previously
+       * encountered docblock errors. We could eliminate this case by changing the behavior of the
+       * main error-checking code, or by making file sig errors non-fatal to the parse. *)
+
 let parse_contents ~options filename contents =
   (* always enable types when checking an individual file *)
   let types_mode = Parsing_service_js.TypesAllowed in
@@ -146,7 +159,6 @@ let parse_contents ~options filename contents =
   let (docblock_errors, docblock) =
     Parsing_service_js.parse_docblock ~max_tokens filename contents
   in
-  let errors = Inference_utils.set_of_docblock_errors ~source_file:filename docblock_errors in
   let parse_options =
     Parsing_service_js.make_parse_options ~fail:false ~types_mode docblock options
   in
@@ -155,7 +167,7 @@ let parse_contents ~options filename contents =
   let docblock = Docblock.set_flow_mode_for_ide_command docblock in
   match parse_result with
   | Parsing_service_js.Parse_ok { ast; file_sig; tolerable_errors; parse_errors; _ } ->
-    Ok
+    Parsed
       (Parse_artifacts { docblock; docblock_errors; ast; file_sig; tolerable_errors; parse_errors })
   | Parsing_service_js.Parse_fail fails ->
     let errors =
@@ -168,21 +180,22 @@ let parse_contents ~options filename contents =
          * caller of do_parse. It would be nice to prove this fact via the type system. *)
         failwith "Unexpectedly encountered docblock errors"
       | Parsing_service_js.File_sig_error err ->
-        if Flow_error.ErrorSet.is_empty errors then
-          (* Even with `~fail:false`, `do_parse` cannot currently recover from file sig errors, so
+        begin
+          match docblock_errors with
+          | [] ->
+            (* Even with `~fail:false`, `do_parse` cannot currently recover from file sig errors, so
           * we must handle them here. *)
-          let err = Inference_utils.error_of_file_sig_error ~source_file:filename err in
-          Flow_error.ErrorSet.singleton err
-        else
-          (* For consistency with `flow status` and `flow check`, we must return only the
-           * docblock error here, if there is one. *)
-          errors
+            File_sig_error err
+          | _ ->
+            (* See comments on parse_contents_return type for an explanation of this behavior *)
+            Docblock_errors docblock_errors
+        end
     in
-    Error errors
+    errors
   | Parsing_service_js.(Parse_skip (Skip_non_flow_file | Skip_resource_file | Skip_package_json _))
     ->
-    (* should never happen *)
-    Error errors
+    (* This happens when a non-source file is queried, such as a json file *)
+    Skipped
 
 let flow_error_of_module_error file err =
   match err with
@@ -1198,40 +1211,49 @@ let type_contents_artifacts_of_parse_artifacts
 let typecheck_contents ~options ~env ~profiling contents filename =
   let reader = State_reader.create () in
   let loc_of_aloc = Parsing_heaps.Reader.loc_of_aloc ~reader in
-  let parse_result =
+  let%lwt parse_result =
     Memory_utils.with_memory_timer_lwt ~options "Parsing" profiling (fun () ->
         Lwt.return (parse_contents ~options filename contents))
   in
   let%lwt result =
-    Lwt_result.bind parse_result (fun parse_artifacts ->
-        let (Parse_artifacts { parse_errors; docblock_errors; _ }) = parse_artifacts in
-        match parse_errors with
-        | first_parse_error :: _ ->
-          let errors =
-            Inference_utils.set_of_docblock_errors ~source_file:filename docblock_errors
-          in
-          let err = Inference_utils.error_of_parse_error ~source_file:filename first_parse_error in
-          let errors = Flow_error.ErrorSet.add err errors in
-          Lwt.return (Error errors)
-        | _ ->
-          let%lwt type_contents_artifacts =
-            type_contents_artifacts_of_parse_artifacts
-              ~options
-              ~env
-              ~reader
-              ~profiling
-              ~filename
-              ~parse_artifacts
-          in
-          let (errors, warnings) =
-            errors_of_type_contents_artifacts
-              ~options
-              ~env
-              ~loc_of_aloc
-              ~filename
-              ~type_contents_artifacts
-          in
-          Lwt.return (Ok (Some type_contents_artifacts, errors, warnings)))
+    match parse_result with
+    | Parsed (Parse_artifacts { parse_errors = first_parse_error :: _; docblock_errors; _ }) ->
+      let errors = Inference_utils.set_of_docblock_errors ~source_file:filename docblock_errors in
+      let err = Inference_utils.error_of_parse_error ~source_file:filename first_parse_error in
+      let errors = Flow_error.ErrorSet.add err errors in
+      Lwt.return (Error errors)
+    | Skipped ->
+      Lwt.return
+        (Ok
+           ( None,
+             Errors.ConcreteLocPrintableErrorSet.empty,
+             Errors.ConcreteLocPrintableErrorSet.empty ))
+    | Docblock_errors errs ->
+      let errs = Inference_utils.set_of_docblock_errors ~source_file:filename errs in
+      Lwt.return (Error errs)
+    | File_sig_error err ->
+      let err = Inference_utils.error_of_file_sig_error ~source_file:filename err in
+      let errs = Flow_error.ErrorSet.singleton err in
+      Lwt.return (Error errs)
+    | Parsed parse_artifacts ->
+      let%lwt type_contents_artifacts =
+        type_contents_artifacts_of_parse_artifacts
+          ~options
+          ~env
+          ~reader
+          ~profiling
+          ~filename
+          ~parse_artifacts
+      in
+      let (errors, warnings) =
+        errors_of_type_contents_artifacts
+          ~options
+          ~env
+          ~loc_of_aloc
+          ~filename
+          ~type_contents_artifacts
+      in
+      Lwt.return (Ok (Some type_contents_artifacts, errors, warnings))
   in
   match result with
   | Ok artifacts -> Lwt.return artifacts
@@ -1248,7 +1270,7 @@ let type_contents ~options ~env ~profiling contents filename =
         Lwt.return (parse_contents ~options filename contents))
   in
   match parse_result with
-  | Ok parse_artifacts ->
+  | Parsed parse_artifacts ->
     let%lwt type_contents_artifacts =
       type_contents_artifacts_of_parse_artifacts
         ~options
@@ -1259,7 +1281,10 @@ let type_contents ~options ~env ~profiling contents filename =
         ~parse_artifacts
     in
     Lwt.return (Ok type_contents_artifacts)
-  | Error _ -> Lwt.return (Error "Couldn't parse file in type_contents")
+  | Skipped
+  | File_sig_error _
+  | Docblock_errors _ ->
+    Lwt.return (Error "Couldn't parse file in type_contents")
 
 let init_libs ~options ~profiling ~local_errors ~warnings ~suppressions ~reader ordered_libs =
   Memory_utils.with_memory_timer_lwt ~options "InitLibs" profiling (fun () ->
