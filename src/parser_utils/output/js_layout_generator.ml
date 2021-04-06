@@ -1029,7 +1029,6 @@ and expression ?(ctxt = normal_context) ~opts (root_expr : (Loc.t, Loc.t) Ast.Ex
                end;
              ]
       | E.Binary { E.Binary.operator; left; right; comments } ->
-        let module B = E.Binary in
         layout_node_with_comments_opt loc comments
         @@ fuse_with_space
              [

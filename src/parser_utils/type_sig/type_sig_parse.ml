@@ -3187,7 +3187,6 @@ let rec member_expr_of_generic_id scope locs chain =
       chain
 
 let declare_class_def =
-  let module O = Ast.Type.Object in
   let module Acc = DeclareClassAcc in
   let is_object_builtin_libdef id =
     let (id_loc, {Ast.Identifier.name; comments = _}) = id in
@@ -3568,7 +3567,6 @@ let import_decl _opts scope locs decl =
   end
 
 let interface_decl opts scope locs decl =
-  let module Acc = ClassAcc in
   let {Ast.Statement.Interface.
     id = (id_loc, {Ast.Identifier.name; comments = _});
     tparams = tps;
