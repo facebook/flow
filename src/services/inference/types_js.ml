@@ -168,10 +168,15 @@ let parse_contents ~options filename contents =
          * caller of do_parse. It would be nice to prove this fact via the type system. *)
         failwith "Unexpectedly encountered docblock errors"
       | Parsing_service_js.File_sig_error err ->
-        (* Even with `~fail:false`, `do_parse` cannot currently recover from file sig errors, so
-         * we must handle them here. *)
-        let err = Inference_utils.error_of_file_sig_error ~source_file:filename err in
-        Flow_error.ErrorSet.add err errors
+        if Flow_error.ErrorSet.is_empty errors then
+          (* Even with `~fail:false`, `do_parse` cannot currently recover from file sig errors, so
+          * we must handle them here. *)
+          let err = Inference_utils.error_of_file_sig_error ~source_file:filename err in
+          Flow_error.ErrorSet.singleton err
+        else
+          (* For consistency with `flow status` and `flow check`, we must return only the
+           * docblock error here, if there is one. *)
+          errors
     in
     Error errors
   | Parsing_service_js.(Parse_skip (Skip_non_flow_file | Skip_resource_file | Skip_package_json _))
