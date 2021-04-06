@@ -746,6 +746,9 @@ let call_on_instance :
         | Watchman_error msg ->
           log_died (Printf.sprintf "Watchman error: %s. Closing channel" msg);
           close_channel_on_instance' env
+        | Subscription_canceled_by_watchman ->
+          log_died "Watchman cancelled our subscription. Closing channel";
+          close_channel_on_instance' env
         | _ ->
           let msg = Exception.to_string exn in
           EventLogger.watchman_uncaught_failure msg;
