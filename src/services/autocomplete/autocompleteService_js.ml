@@ -219,11 +219,13 @@ let ty_normalizer_options =
       max_depth = Some 50;
     }
 
+type ac_result = {
+  result: ServerProt.Response.Completion.t;
+  errors_to_log: string list;
+}
+
 type autocomplete_service_result =
-  | AcResult of {
-      result: ServerProt.Response.Completion.t;
-      errors_to_log: string list;
-    }
+  | AcResult of ac_result
   | AcEmpty of string
   | AcFatalError of string
 
@@ -562,7 +564,7 @@ let autocomplete_id
       (items_rev, false)
   in
   let result = { ServerProt.Response.Completion.items = List.rev items_rev; is_incomplete } in
-  AcResult { result; errors_to_log }
+  { result; errors_to_log }
 
 let autocomplete_member
     ~env
@@ -667,34 +669,28 @@ let autocomplete_member
       let result = { ServerProt.Response.Completion.items; is_incomplete = false } in
       AcResult { result; errors_to_log }
     | Some Autocomplete_js.{ include_this; include_super } ->
-      (match
-         autocomplete_id
-           ~env
-           ~options
-           ~reader
-           ~cx
-           ~ac_loc:ac_aloc
-           ~file_sig
-           ~ast
-           ~typed_ast
-           ~include_super
-           ~include_this
-           ~imports
-           ~tparams_rev
-           ~token
-       with
-      | AcResult
-          {
-            result = { ServerProt.Response.Completion.items = id_items; is_incomplete };
-            errors_to_log = id_errors_to_log;
-          } ->
-        let result = { ServerProt.Response.Completion.items = items @ id_items; is_incomplete } in
-        let errors_to_log = errors_to_log @ id_errors_to_log in
-        AcResult { result; errors_to_log }
-      | error ->
-        (* autocomplete_id is not expected to return AcEmpty or AcFatalError.
-         * If it does, we just forward the error along. *)
-        error))
+      let {
+        result = { ServerProt.Response.Completion.items = id_items; is_incomplete };
+        errors_to_log = id_errors_to_log;
+      } =
+        autocomplete_id
+          ~env
+          ~options
+          ~reader
+          ~cx
+          ~ac_loc:ac_aloc
+          ~file_sig
+          ~ast
+          ~typed_ast
+          ~include_super
+          ~include_this
+          ~imports
+          ~tparams_rev
+          ~token
+      in
+      let result = { ServerProt.Response.Completion.items = items @ id_items; is_incomplete } in
+      let errors_to_log = errors_to_log @ id_errors_to_log in
+      AcResult { result; errors_to_log })
 
 let rec binds_react = function
   | File_sig.With_ALoc.BindIdent (_, name) -> name = "React"
@@ -738,7 +734,7 @@ let should_autoimport_react ~options ~imports ~file_sig =
 
 let autocomplete_jsx_element
     ~env ~options ~reader ~cx ~ac_loc ~file_sig ~ast ~typed_ast ~imports ~tparams_rev ~token =
-  let results =
+  let ({ result; errors_to_log } as results) =
     autocomplete_id
       ~env
       ~options
@@ -754,47 +750,42 @@ let autocomplete_jsx_element
       ~tparams_rev
       ~token
   in
-  match results with
-  | AcResult { result; errors_to_log } ->
-    if should_autoimport_react ~options ~imports ~file_sig then
-      let open ServerProt.Response.Completion in
-      let layout_options = text_edit_options options in
-      let import_edit =
-        let src_dir = src_dir_of_loc (loc_of_aloc ~reader ac_loc) in
-        let kind = Export_index.Namespace in
-        let name = "React" in
-        (* TODO: make this configurable between React and react *)
-        let source = Export_index.Builtin "react" in
-        Code_action_service.text_edits_of_import
-          ~options
-          ~layout_options
-          ~reader
-          ~src_dir
-          ~ast
-          kind
-          name
-          source
+  if should_autoimport_react ~options ~imports ~file_sig then
+    let open ServerProt.Response.Completion in
+    let layout_options = text_edit_options options in
+    let import_edit =
+      let src_dir = src_dir_of_loc (loc_of_aloc ~reader ac_loc) in
+      let kind = Export_index.Namespace in
+      let name = "React" in
+      (* TODO: make this configurable between React and react *)
+      let source = Export_index.Builtin "react" in
+      Code_action_service.text_edits_of_import
+        ~options
+        ~layout_options
+        ~reader
+        ~src_dir
+        ~ast
+        kind
+        name
+        source
+    in
+    match import_edit with
+    | None -> AcResult results
+    | Some { Code_action_service.title = _; edits } ->
+      let edits = Base.List.map ~f:flow_text_edit_of_lsp_text_edit edits in
+      let { items; _ } = result in
+      let items =
+        Base.List.map
+          ~f:(fun item ->
+            let { text_edits; _ } = item in
+            let text_edits = text_edits @ edits in
+            { item with text_edits })
+          items
       in
-      match import_edit with
-      | None -> results
-      | Some { Code_action_service.title = _; edits } ->
-        let edits = Base.List.map ~f:flow_text_edit_of_lsp_text_edit edits in
-        let { items; _ } = result in
-        let items =
-          Base.List.map
-            ~f:(fun item ->
-              let { text_edits; _ } = item in
-              let text_edits = text_edits @ edits in
-              { item with text_edits })
-            items
-        in
-        let result = { result with items } in
-        AcResult { result; errors_to_log }
-    else
-      results
-  | AcEmpty _
-  | AcFatalError _ ->
-    results
+      let result = { result with items } in
+      AcResult { result; errors_to_log }
+  else
+    AcResult results
 
 (* Similar to autocomplete_member, except that we're not directly given an
    object type whose members we want to enumerate: instead, we are given a
@@ -1146,20 +1137,21 @@ let autocomplete_get_results
         ("Ackey", AcResult { result; errors_to_log = [] })
       | Ac_id { include_super; include_this } ->
         ( "Acid",
-          autocomplete_id
-            ~env
-            ~options
-            ~reader
-            ~cx
-            ~ac_loc
-            ~file_sig
-            ~ast
-            ~typed_ast
-            ~include_super
-            ~include_this
-            ~imports
-            ~tparams_rev
-            ~token )
+          AcResult
+            (autocomplete_id
+               ~env
+               ~options
+               ~reader
+               ~cx
+               ~ac_loc
+               ~file_sig
+               ~ast
+               ~typed_ast
+               ~include_super
+               ~include_this
+               ~imports
+               ~tparams_rev
+               ~token) )
       | Ac_member { obj_type; in_optional_chain; bracket_syntax; member_loc } ->
         ( "Acmem",
           autocomplete_member
