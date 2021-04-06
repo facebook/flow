@@ -34,7 +34,7 @@ let open_log_file file =
       Sys.rename file old_file
     with e ->
       let e = Exception.wrap e in
-      Utils.prerr_endlinef
+      prerr_endlinef
         "Log rotate: failed to move '%s' to '%s'\n%s"
         file
         old_file
