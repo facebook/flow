@@ -124,10 +124,6 @@ let iter_n_acc n f acc =
   done;
   f !acc
 
-let map_of_list list = List.fold_left ~f:(fun m (k, v) -> SMap.add k v m) ~init:SMap.empty list
-
-let set_of_list l = List.fold_right l ~f:SSet.add ~init:SSet.empty
-
 (* \A\B\C -> A\B\C *)
 let strip_ns s =
   if String.length s == 0 || s.[0] <> '\\' then
