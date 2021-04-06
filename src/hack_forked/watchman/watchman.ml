@@ -722,10 +722,11 @@ let call_on_instance :
         in
         match Exception.unwrap exn with
         | Sys_error msg when String.equal msg "Broken pipe" ->
-          log_died "Watchman Pipe broken.";
+          log_died ("Watchman Pipe broken.\n" ^ Exception.get_full_backtrace_string 500 exn);
           close_channel_on_instance' env
         | Sys_error msg when String.equal msg "Connection reset by peer" ->
-          log_died "Watchman connection reset by peer.";
+          log_died
+            ("Watchman connection reset by peer.\n" ^ Exception.get_full_backtrace_string 500 exn);
           close_channel_on_instance' env
         | Sys_error msg when String.equal msg "Bad file descriptor" ->
           (* This happens when watchman is tearing itself down after we
@@ -737,10 +738,11 @@ let call_on_instance :
            * file descriptor of it). I'm pretty sure we don't need to close the
            * channel when that happens since we never had a useable channel
            * to start with. *)
-          log_died "Watchman bad file descriptor.";
+          log_died ("Watchman bad file descriptor.\n" ^ Exception.get_full_backtrace_string 500 exn);
           on_dead' on_dead (dead_env_from_alive env)
         | End_of_file ->
-          log_died "Watchman connection End_of_file. Closing channel";
+          log_died
+            ("Watchman connection End_of_file.\n" ^ Exception.get_full_backtrace_string 500 exn);
           close_channel_on_instance' env
         | Read_payload_too_long ->
           log_died "Watchman reading payload too long. Closing channel";
