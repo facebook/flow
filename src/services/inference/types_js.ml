@@ -139,8 +139,7 @@ type parse_artifacts =
       parse_errors: (Loc.t * Parse_error.t) list;
     }
 
-(* TODO: make this always return errors and deal with check_syntax at the caller *)
-let parse_contents ~options ~check_syntax filename contents =
+let parse_contents ~options filename contents =
   (* always enable types when checking an individual file *)
   let types_mode = Parsing_service_js.TypesAllowed in
   let max_tokens = Options.max_header_tokens options in
@@ -156,16 +155,8 @@ let parse_contents ~options ~check_syntax filename contents =
   let docblock = Docblock.set_flow_mode_for_ide_command docblock in
   match parse_result with
   | Parsing_service_js.Parse_ok { ast; file_sig; tolerable_errors; parse_errors; _ } ->
-    begin
-      match parse_errors with
-      | first_parse_error :: _ when check_syntax ->
-        let err = Inference_utils.error_of_parse_error ~source_file:filename first_parse_error in
-        Error (Flow_error.ErrorSet.add err errors)
-      | _ ->
-        Ok
-          (Parse_artifacts
-             { docblock; docblock_errors; ast; file_sig; tolerable_errors; parse_errors })
-    end
+    Ok
+      (Parse_artifacts { docblock; docblock_errors; ast; file_sig; tolerable_errors; parse_errors })
   | Parsing_service_js.Parse_fail fails ->
     let errors =
       match fails with
@@ -1204,28 +1195,41 @@ let typecheck_contents ~options ~env ~profiling contents filename =
   let loc_of_aloc = Parsing_heaps.Reader.loc_of_aloc ~reader in
   let%lwt parse_result =
     Memory_utils.with_memory_timer_lwt ~options "Parsing" profiling (fun () ->
-        Lwt.return (parse_contents ~options ~check_syntax:true filename contents))
+        Lwt.return (parse_contents ~options filename contents))
   in
   match parse_result with
   | Ok parse_artifacts ->
-    let%lwt type_contents_artifacts =
-      type_contents_artifacts_of_parse_artifacts
-        ~options
-        ~env
-        ~reader
-        ~profiling
-        ~filename
-        ~parse_artifacts
-    in
-    let (errors, warnings) =
-      errors_of_type_contents_artifacts
-        ~options
-        ~env
-        ~loc_of_aloc
-        ~filename
-        ~type_contents_artifacts
-    in
-    Lwt.return (Some type_contents_artifacts, errors, warnings)
+    let (Parse_artifacts { parse_errors; docblock_errors; _ }) = parse_artifacts in
+    begin
+      match parse_errors with
+      | first_parse_error :: _ ->
+        let errors = Inference_utils.set_of_docblock_errors ~source_file:filename docblock_errors in
+        let err = Inference_utils.error_of_parse_error ~source_file:filename first_parse_error in
+        let errors = Flow_error.ErrorSet.add err errors in
+        let errors =
+          errors |> Flow_error.concretize_errors loc_of_aloc |> Flow_error.make_errors_printable
+        in
+        Lwt.return (None, errors, Errors.ConcreteLocPrintableErrorSet.empty)
+      | _ ->
+        let%lwt type_contents_artifacts =
+          type_contents_artifacts_of_parse_artifacts
+            ~options
+            ~env
+            ~reader
+            ~profiling
+            ~filename
+            ~parse_artifacts
+        in
+        let (errors, warnings) =
+          errors_of_type_contents_artifacts
+            ~options
+            ~env
+            ~loc_of_aloc
+            ~filename
+            ~type_contents_artifacts
+        in
+        Lwt.return (Some type_contents_artifacts, errors, warnings)
+    end
   | Error errors ->
     let errors =
       errors |> Flow_error.concretize_errors loc_of_aloc |> Flow_error.make_errors_printable
@@ -1236,7 +1240,7 @@ let type_contents ~options ~env ~profiling contents filename =
   let reader = State_reader.create () in
   let%lwt parse_result =
     Memory_utils.with_memory_timer_lwt ~options "Parsing" profiling (fun () ->
-        Lwt.return (parse_contents ~options ~check_syntax:false filename contents))
+        Lwt.return (parse_contents ~options filename contents))
   in
   match parse_result with
   | Ok parse_artifacts ->
