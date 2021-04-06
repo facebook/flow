@@ -612,12 +612,20 @@ let autocomplete_member
              let opt_chain_ty =
                Ty_utils.simplify_type ~merge_kinds:true (Ty.Union (Ty.Void, ty, []))
              in
-             let name_as_string_literal =
+             let name_as_indexer =
                lazy
-                 ( Ast_builder.Literals.string name
-                 |> Js_layout_generator.literal ~opts:(text_edit_options options) Loc.none
-                 |> Pretty_printer.print ~source_maps:None ~skip_endline:true
-                 |> Source.contents )
+                 (let expression =
+                    match Base.String.chop_prefix ~prefix:"@@" name with
+                    | None -> Ast_builder.Expressions.literal (Ast_builder.Literals.string name)
+                    | Some symbol ->
+                      Ast_builder.Expressions.member_expression_ident_by_name
+                        (Ast_builder.Expressions.identifier "Symbol")
+                        symbol
+                  in
+                  expression
+                  |> Js_layout_generator.expression ~opts:(text_edit_options options)
+                  |> Pretty_printer.print ~source_maps:None ~skip_endline:true
+                  |> Source.contents)
              in
              match (from_nullable, in_optional_chain, in_idx, bracket_syntax, member_loc) with
              | (_, _, _, _, None)
@@ -640,7 +648,7 @@ let autocomplete_member
              | (false, _, _, Some _, _)
              | (_, true, _, Some _, _)
              | (_, _, true, Some _, _) ->
-               let insert_text = Lazy.force name_as_string_literal in
+               let insert_text = Lazy.force name_as_indexer in
                autocomplete_create_result
                  ~insert_text
                  ~rank
@@ -653,7 +661,7 @@ let autocomplete_member
                let opt_chain_name =
                  match bracket_syntax with
                  | None -> Printf.sprintf "?.%s" name
-                 | Some _ -> Printf.sprintf "?.[%s]" (Lazy.force name_as_string_literal)
+                 | Some _ -> Printf.sprintf "?.[%s]" (Lazy.force name_as_indexer)
                in
                autocomplete_create_result
                  ~insert_text:opt_chain_name

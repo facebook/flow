@@ -6102,3 +6102,411 @@ Flags: --lsp
   }
 }
 
+iterator.js:4:5
+Flags: --lsp
+{
+  "label":"Symbol.iterator",
+  "kind":6,
+  "detail":"Iterator<number>",
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":3,"character":4},"end":{"line":3,"character":4}},
+    "newText":"Symbol.iterator"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "bracket syntax member",
+      {"token":null,"completion":"Symbol.iterator"}
+    ]
+  }
+}
+{
+  "label":"\"hasOwnProperty\"",
+  "kind":3,
+  "detail":"(prop: mixed) => boolean",
+  "documentation":{
+    "kind":"markdown",
+    "value":"Determines whether an object has a property with the specified name."
+  },
+  "sortText":"00000000000000000001",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":3,"character":4},"end":{"line":3,"character":4}},
+    "newText":"\"hasOwnProperty\""
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "bracket syntax member",
+      {"token":null,"completion":"\"hasOwnProperty\""}
+    ]
+  }
+}
+{
+  "label":"\"isPrototypeOf\"",
+  "kind":3,
+  "detail":"(o: mixed) => boolean",
+  "documentation":{
+    "kind":"markdown",
+    "value":"Determines whether an object exists in another object's prototype chain."
+  },
+  "sortText":"00000000000000000001",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":3,"character":4},"end":{"line":3,"character":4}},
+    "newText":"\"isPrototypeOf\""
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "bracket syntax member",
+      {"token":null,"completion":"\"isPrototypeOf\""}
+    ]
+  }
+}
+{
+  "label":"\"propertyIsEnumerable\"",
+  "kind":3,
+  "detail":"(prop: mixed) => boolean",
+  "documentation":{
+    "kind":"markdown",
+    "value":"Determines whether a specified property is enumerable."
+  },
+  "sortText":"00000000000000000001",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":3,"character":4},"end":{"line":3,"character":4}},
+    "newText":"\"propertyIsEnumerable\""
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "bracket syntax member",
+      {"token":null,"completion":"\"propertyIsEnumerable\""}
+    ]
+  }
+}
+{
+  "label":"\"toLocaleString\"",
+  "kind":3,
+  "detail":"() => string",
+  "documentation":{
+    "kind":"markdown",
+    "value":"Returns a date converted to a string using the current locale."
+  },
+  "sortText":"00000000000000000001",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":3,"character":4},"end":{"line":3,"character":4}},
+    "newText":"\"toLocaleString\""
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "bracket syntax member",
+      {"token":null,"completion":"\"toLocaleString\""}
+    ]
+  }
+}
+{
+  "label":"\"toString\"",
+  "kind":3,
+  "detail":"() => string",
+  "documentation":{"kind":"markdown","value":"Returns a string representation of an object."},
+  "sortText":"00000000000000000001",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":3,"character":4},"end":{"line":3,"character":4}},
+    "newText":"\"toString\""
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "bracket syntax member",
+      {"token":null,"completion":"\"toString\""}
+    ]
+  }
+}
+{
+  "label":"\"valueOf\"",
+  "kind":3,
+  "detail":"() => mixed",
+  "documentation":{
+    "kind":"markdown",
+    "value":"Returns the primitive value of the specified object."
+  },
+  "sortText":"00000000000000000001",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":3,"character":4},"end":{"line":3,"character":4}},
+    "newText":"\"valueOf\""
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "bracket syntax member",
+      {"token":null,"completion":"\"valueOf\""}
+    ]
+  }
+}
+{
+  "label":"bar",
+  "kind":6,
+  "detail":"{\"@@asyncIterator\": AsyncIterator<number>, ...}",
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":3,"character":4},"end":{"line":3,"character":4}},
+    "newText":"bar"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "local value identifier",
+      {"token":null,"completion":"bar"}
+    ]
+  }
+}
+{
+  "label":"foo",
+  "kind":6,
+  "detail":"{\"@@iterator\": Iterator<number>, ...}",
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":3,"character":4},"end":{"line":3,"character":4}},
+    "newText":"foo"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "local value identifier",
+      {"token":null,"completion":"foo"}
+    ]
+  }
+}
+
+iterator.js:8:5
+Flags: --lsp
+{
+  "label":"Symbol.asyncIterator",
+  "kind":6,
+  "detail":"AsyncIterator<number>",
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":7,"character":4},"end":{"line":7,"character":4}},
+    "newText":"Symbol.asyncIterator"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "bracket syntax member",
+      {"token":null,"completion":"Symbol.asyncIterator"}
+    ]
+  }
+}
+{
+  "label":"\"hasOwnProperty\"",
+  "kind":3,
+  "detail":"(prop: mixed) => boolean",
+  "documentation":{
+    "kind":"markdown",
+    "value":"Determines whether an object has a property with the specified name."
+  },
+  "sortText":"00000000000000000001",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":7,"character":4},"end":{"line":7,"character":4}},
+    "newText":"\"hasOwnProperty\""
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "bracket syntax member",
+      {"token":null,"completion":"\"hasOwnProperty\""}
+    ]
+  }
+}
+{
+  "label":"\"isPrototypeOf\"",
+  "kind":3,
+  "detail":"(o: mixed) => boolean",
+  "documentation":{
+    "kind":"markdown",
+    "value":"Determines whether an object exists in another object's prototype chain."
+  },
+  "sortText":"00000000000000000001",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":7,"character":4},"end":{"line":7,"character":4}},
+    "newText":"\"isPrototypeOf\""
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "bracket syntax member",
+      {"token":null,"completion":"\"isPrototypeOf\""}
+    ]
+  }
+}
+{
+  "label":"\"propertyIsEnumerable\"",
+  "kind":3,
+  "detail":"(prop: mixed) => boolean",
+  "documentation":{
+    "kind":"markdown",
+    "value":"Determines whether a specified property is enumerable."
+  },
+  "sortText":"00000000000000000001",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":7,"character":4},"end":{"line":7,"character":4}},
+    "newText":"\"propertyIsEnumerable\""
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "bracket syntax member",
+      {"token":null,"completion":"\"propertyIsEnumerable\""}
+    ]
+  }
+}
+{
+  "label":"\"toLocaleString\"",
+  "kind":3,
+  "detail":"() => string",
+  "documentation":{
+    "kind":"markdown",
+    "value":"Returns a date converted to a string using the current locale."
+  },
+  "sortText":"00000000000000000001",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":7,"character":4},"end":{"line":7,"character":4}},
+    "newText":"\"toLocaleString\""
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "bracket syntax member",
+      {"token":null,"completion":"\"toLocaleString\""}
+    ]
+  }
+}
+{
+  "label":"\"toString\"",
+  "kind":3,
+  "detail":"() => string",
+  "documentation":{"kind":"markdown","value":"Returns a string representation of an object."},
+  "sortText":"00000000000000000001",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":7,"character":4},"end":{"line":7,"character":4}},
+    "newText":"\"toString\""
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "bracket syntax member",
+      {"token":null,"completion":"\"toString\""}
+    ]
+  }
+}
+{
+  "label":"\"valueOf\"",
+  "kind":3,
+  "detail":"() => mixed",
+  "documentation":{
+    "kind":"markdown",
+    "value":"Returns the primitive value of the specified object."
+  },
+  "sortText":"00000000000000000001",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":7,"character":4},"end":{"line":7,"character":4}},
+    "newText":"\"valueOf\""
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "bracket syntax member",
+      {"token":null,"completion":"\"valueOf\""}
+    ]
+  }
+}
+{
+  "label":"bar",
+  "kind":6,
+  "detail":"{\"@@asyncIterator\": AsyncIterator<number>, ...}",
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":7,"character":4},"end":{"line":7,"character":4}},
+    "newText":"bar"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "local value identifier",
+      {"token":null,"completion":"bar"}
+    ]
+  }
+}
+{
+  "label":"foo",
+  "kind":6,
+  "detail":"{\"@@iterator\": Iterator<number>, ...}",
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":7,"character":4},"end":{"line":7,"character":4}},
+    "newText":"foo"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "local value identifier",
+      {"token":null,"completion":"foo"}
+    ]
+  }
+}
+
