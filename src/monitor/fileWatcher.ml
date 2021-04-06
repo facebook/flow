@@ -329,8 +329,9 @@ end = struct
         Lwt.return env
 
     let catch _ exn =
-      let exn = Exception.to_exn exn in
-      Logger.error ~exn "Uncaught exception in Watchman listening loop";
+      let msg = Exception.to_string exn in
+      EventLogger.watchman_uncaught_failure ("Uncaught exception in Watchman listening loop: " ^ msg);
+      Logger.error ~exn:(Exception.to_exn exn) "Uncaught exception in Watchman listening loop";
 
       (* By exiting this loop we'll let the server know that something went wrong with Watchman *)
       Lwt.return_unit
@@ -377,7 +378,7 @@ end = struct
         init_thread <- Some (Watchman.init settings)
 
       method wait_for_init ~timeout =
-        let go () =
+        let go_exn () =
           let%lwt watchman = Base.Option.value_exn init_thread in
           init_thread <- None;
 
@@ -422,6 +423,17 @@ end = struct
             | Error msg ->
               Lwt.return (Error (Printf.sprintf "Failed to initialize watchman: %s" msg)))
           | None -> Lwt.return (Error "Failed to initialize watchman")
+        in
+        let go () =
+          try%lwt go_exn () with
+          | Lwt.Canceled as exn -> Exception.(reraise (wrap exn))
+          | exn ->
+            let e = Exception.wrap exn in
+            let str = Exception.get_ctor_string e in
+            let stack = Exception.get_full_backtrace_string 500 e in
+            let msg = Printf.sprintf "Failed to initialize watchman: %s\n%s" str stack in
+            EventLogger.watchman_uncaught_failure msg;
+            Lwt.return (Error msg)
         in
         match timeout with
         | Some timeout ->

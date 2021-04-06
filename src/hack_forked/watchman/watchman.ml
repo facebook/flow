@@ -757,10 +757,7 @@ let call_on_instance :
         | Subscription_canceled_by_watchman ->
           log_died "Watchman cancelled our subscription. Closing channel";
           close_channel_on_instance' env
-        | _ ->
-          let msg = Exception.to_string exn in
-          EventLogger.watchman_uncaught_failure msg;
-          raise Exit.(Exit_with Watchman_failed))
+        | _ -> Exception.reraise exn)
   in
   fun instance source ~on_dead ~on_alive ->
     with_instance
