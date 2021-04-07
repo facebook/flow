@@ -1207,12 +1207,7 @@ let typecheck_contents ~options ~env ~profiling contents filename =
       let err = Inference_utils.error_of_parse_error ~source_file:filename first_parse_error in
       let errors = Flow_error.ErrorSet.add err errors in
       Lwt.return (Error errors)
-    | Skipped ->
-      Lwt.return
-        (Ok
-           ( None,
-             Errors.ConcreteLocPrintableErrorSet.empty,
-             Errors.ConcreteLocPrintableErrorSet.empty ))
+    | Skipped -> Lwt.return (Error Flow_error.ErrorSet.empty)
     | Docblock_errors errs ->
       let errs = Inference_utils.set_of_docblock_errors ~source_file:filename errs in
       Lwt.return (Error errs)
