@@ -221,7 +221,10 @@ let autocomplete
             Lwt.return (response, Some (Hh_json.JSON_Object json_props_to_log))))
 
 let check_file ~options ~env ~profiling ~force file_input =
-  let file = File_input.filename_of_file_input file_input in
+  let file =
+    let file_options = Options.file_options options in
+    File_input.filename_of_file_input file_input |> Files.filename_from_string ~options:file_options
+  in
   match file_input with
   | File_input.FileName _ -> failwith "Not implemented"
   | File_input.FileContent (_, content) ->
@@ -229,13 +232,10 @@ let check_file ~options ~env ~profiling ~force file_input =
       if force then
         true
       else
-        let (_, docblock) =
-          Parsing_service_js.(parse_docblock docblock_max_tokens (File_key.SourceFile file) content)
-        in
+        let (_, docblock) = Parsing_service_js.(parse_docblock docblock_max_tokens file content) in
         Docblock.is_flow docblock
     in
     if should_check then
-      let file = File_key.SourceFile file in
       let%lwt (_, errors, warnings) =
         Types_js.typecheck_contents ~options ~env ~profiling content file
       in
