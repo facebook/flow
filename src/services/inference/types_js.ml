@@ -1195,7 +1195,6 @@ let type_contents_artifacts_of_parse_artifacts
 
 let typecheck_contents ~options ~env ~profiling contents filename =
   let reader = State_reader.create () in
-  let loc_of_aloc = Parsing_heaps.Reader.loc_of_aloc ~reader in
   let%lwt parse_result =
     Memory_utils.with_memory_timer_lwt ~options "Parsing" profiling (fun () ->
         Lwt.return (parse_contents ~options filename contents))
@@ -1225,18 +1224,20 @@ let typecheck_contents ~options ~env ~profiling contents filename =
           ~filename
           ~parse_artifacts
       in
-      let (errors, warnings) =
-        errors_of_type_contents_artifacts
-          ~options
-          ~env
-          ~loc_of_aloc
-          ~filename
-          ~type_contents_artifacts
-      in
-      Lwt.return (Ok (Some type_contents_artifacts, errors, warnings))
+      Lwt.return (Ok type_contents_artifacts)
   in
+  let loc_of_aloc = Parsing_heaps.Reader.loc_of_aloc ~reader in
   match result with
-  | Ok artifacts -> Lwt.return artifacts
+  | Ok type_contents_artifacts ->
+    let (errors, warnings) =
+      errors_of_type_contents_artifacts
+        ~options
+        ~env
+        ~loc_of_aloc
+        ~filename
+        ~type_contents_artifacts
+    in
+    Lwt.return (Some type_contents_artifacts, errors, warnings)
   | Error errors ->
     let errors =
       errors |> Flow_error.concretize_errors loc_of_aloc |> Flow_error.make_errors_printable
