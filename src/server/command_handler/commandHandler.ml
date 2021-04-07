@@ -237,8 +237,9 @@ let check_file ~options ~env ~profiling ~force file_input =
         Docblock.is_flow docblock
     in
     if should_check then
-      let%lwt (_, errors, warnings) =
-        Types_js.typecheck_contents ~options ~env ~profiling content file
+      let%lwt result = Types_js.typecheck_contents ~options ~env ~profiling content file in
+      let (errors, warnings) =
+        Types_js.printable_errors_of_typecheck_contents_result ~options ~env file result
       in
       Lwt.return (convert_errors ~errors ~warnings ~suppressed_errors:[])
     else
@@ -2158,13 +2159,16 @@ let handle_live_errors_request =
             let%lwt (live_errors, live_warnings) =
               match check_that_we_care_about_this_file ~options ~env ~file_path ~content with
               | Ok () ->
-                let%lwt (_, live_errors, live_warnings) =
-                  Types_js.typecheck_contents
+                let file_key = File_key.SourceFile file_path in
+                let%lwt result =
+                  Types_js.typecheck_contents ~options ~env ~profiling content file_key
+                in
+                let (live_errors, live_warnings) =
+                  Types_js.printable_errors_of_typecheck_contents_result
                     ~options
                     ~env
-                    ~profiling
-                    content
-                    (File_key.SourceFile file_path)
+                    file_key
+                    result
                 in
                 Lwt.return (live_errors, live_warnings)
               | Error reason ->

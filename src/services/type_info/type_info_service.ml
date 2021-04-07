@@ -100,10 +100,15 @@ let suggest ~options ~env ~profiling file_key file_content =
   let%lwt typecheck_contents_result =
     Types_js.typecheck_contents ~options ~env ~profiling file_content file_key
   in
+  let (tc_errors, tc_warnings) =
+    Types_js.printable_errors_of_typecheck_contents_result
+      ~options
+      ~env
+      file_key
+      typecheck_contents_result
+  in
   match typecheck_contents_result with
-  | ( Some (Parse_artifacts { ast; file_sig; _ }, Typecheck_artifacts { cx; typed_ast = tast }),
-      tc_errors,
-      tc_warnings ) ->
+  | Ok (Parse_artifacts { ast; file_sig; _ }, Typecheck_artifacts { cx; typed_ast = tast }) ->
     let file_sig = File_sig.abstractify_locs file_sig in
     let ty_query = Query_types.suggest_types cx file_sig tast in
     let exact_by_default = Options.exact_by_default options in
@@ -113,4 +118,4 @@ let suggest ~options ~env ~profiling file_key file_content =
     let ast_diff = Flow_ast_differ.(program Standard ast ast_with_suggestions) in
     let file_patch = Replacement_printer.mk_patch_ast_differ ast_diff file_content in
     Lwt.return (Ok (tc_errors, tc_warnings, suggest_warnings, file_patch))
-  | (None, errors, _) -> Lwt.return (Error errors)
+  | Error _ -> Lwt.return (Error tc_errors)

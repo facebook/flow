@@ -62,12 +62,17 @@ val typecheck_contents :
   string ->
   (* fake file-/module name *)
   File_key.t ->
-  ( Types_js_types.type_contents_artifacts option
-  * (* errors *)
-    Errors.ConcreteLocPrintableErrorSet.t
-  * (* warnings *)
-    Errors.ConcreteLocPrintableErrorSet.t )
-  Lwt.t
+  (Types_js_types.type_contents_artifacts, Flow_error.ErrorSet.t) result Lwt.t
+
+val printable_errors_of_typecheck_contents_result :
+  options:Options.t ->
+  env:ServerEnv.env ->
+  (* fake file-/module name *)
+  File_key.t ->
+  (Types_js_types.type_contents_artifacts, Flow_error.ErrorSet.t) result ->
+  (* errors *)
+  Errors.ConcreteLocPrintableErrorSet.t * (* warnings *)
+                                          Errors.ConcreteLocPrintableErrorSet.t
 
 val ensure_checked_dependencies :
   options:Options.t ->

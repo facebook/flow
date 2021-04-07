@@ -347,17 +347,15 @@ let code_actions_at_loc
 let autofix_exports ~options ~env ~profiling ~file_key ~file_content =
   let open Autofix_exports in
   match%lwt Types_js.typecheck_contents ~options ~env ~profiling file_content file_key with
-  | ( Some
-        ( Parse_artifacts { ast; file_sig; tolerable_errors; _ },
-          Typecheck_artifacts { cx = full_cx; typed_ast } ),
-      _,
-      _ ) ->
+  | Ok
+      ( Parse_artifacts { ast; file_sig; tolerable_errors; _ },
+        Typecheck_artifacts { cx = full_cx; typed_ast } ) ->
     let sv_errors = set_of_fixable_signature_verification_locations tolerable_errors in
     let (new_ast, it_errs) =
       fix_signature_verification_errors ~file_key ~full_cx ~file_sig ~typed_ast ast sv_errors
     in
     Lwt.return (Ok (Insert_type.mk_patch ast new_ast file_content, it_errs))
-  | (None, _errs, _) -> Lwt.return (Error "Failed to type-check file")
+  | Error _ -> Lwt.return (Error "Failed to type-check file")
 
 let insert_type
     ~options
@@ -372,9 +370,7 @@ let insert_type
     ~ambiguity_strategy =
   let open Insert_type in
   match%lwt Types_js.typecheck_contents ~options ~env ~profiling file_content file_key with
-  | ( Some (Parse_artifacts { ast; file_sig; _ }, Typecheck_artifacts { cx = full_cx; typed_ast }),
-      _,
-      _ ) ->
+  | Ok (Parse_artifacts { ast; file_sig; _ }, Typecheck_artifacts { cx = full_cx; typed_ast }) ->
     let result =
       try
         let new_ast =
@@ -393,7 +389,11 @@ let insert_type
       with FailedToInsertType err -> Error (error_to_string err)
     in
     Lwt.return result
-  | (None, errs, _) -> Lwt.return (Error (error_to_string (Expected (FailedToTypeCheck errs))))
+  | Error _ as result ->
+    let (errs, _) =
+      Types_js.printable_errors_of_typecheck_contents_result ~options ~env file_key result
+    in
+    Lwt.return (Error (error_to_string (Expected (FailedToTypeCheck errs))))
 
 module For_tests = struct
   let path_of_modulename = path_of_modulename
