@@ -51,3 +51,8 @@ assert_ok \
 printf "\n\nbad_exports.js\n\n"
 assert_errors \
   $FLOW check-contents --strip-root bad_exports.js < bad_exports.js
+
+printf "\n\njson.json\n\n"
+# TODO for consistency with `flow status`, there should be no errors here
+assert_errors \
+  $FLOW check-contents --strip-root json.json < json.json

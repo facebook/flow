@@ -140,3 +140,17 @@ annotation at function return: [signature-verification-failure]
 
 
 Found 1 error
+
+
+json.json
+
+Error ---------------------------------------------------------------------------------------------------- json.json:2:8
+
+Unexpected token `:`, expected the end of an expression statement (`;`)
+
+   2|   "foo": "bar"
+             ^
+
+
+
+Found 1 error
