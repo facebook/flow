@@ -100,7 +100,7 @@ let coverage ~cx ~typed_ast ~force ~trust file content =
 
 let suggest ~options ~env ~profiling file_key file_content =
   Types_js.typecheck_contents ~options ~env ~profiling file_content file_key >|= function
-  | ( Some (Type_contents_artifacts { cx; ast; file_sig; typed_ast = tast; _ }),
+  | ( Some (Parse_artifacts { ast; file_sig; _ }, Typecheck_artifacts { cx; typed_ast = tast }),
       tc_errors,
       tc_warnings ) ->
     let file_sig = File_sig.abstractify_locs file_sig in

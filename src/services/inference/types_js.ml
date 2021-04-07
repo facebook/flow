@@ -1114,7 +1114,7 @@ let merge_contents ~options ~env ~reader filename info (ast, file_sig) =
 
 let errors_of_type_contents_artifacts ~options ~env ~loc_of_aloc ~filename ~type_contents_artifacts
     =
-  let (Type_contents_artifacts { docblock_errors; tolerable_errors; cx; _ }) =
+  let (Parse_artifacts { docblock_errors; tolerable_errors; _ }, Typecheck_artifacts { cx; _ }) =
     type_contents_artifacts
   in
   let errors = Context.errors cx in
@@ -1186,17 +1186,12 @@ let errors_of_type_contents_artifacts ~options ~env ~loc_of_aloc ~filename ~type
 
 let type_contents_artifacts_of_parse_artifacts
     ~options ~env ~reader ~profiling ~filename ~parse_artifacts =
-  let (Parse_artifacts { docblock; docblock_errors; ast; file_sig; tolerable_errors; parse_errors })
-      =
-    parse_artifacts
-  in
+  let (Parse_artifacts { docblock; ast; file_sig; _ }) = parse_artifacts in
   let%lwt (cx, typed_ast) =
     Memory_utils.with_memory_timer_lwt ~options "MergeContents" profiling (fun () ->
         merge_contents ~options ~env ~reader filename docblock (ast, file_sig))
   in
-  Lwt.return
-    (Type_contents_artifacts
-       { cx; docblock; docblock_errors; file_sig; tolerable_errors; ast; typed_ast; parse_errors })
+  Lwt.return (parse_artifacts, Typecheck_artifacts { cx; typed_ast })
 
 let typecheck_contents ~options ~env ~profiling contents filename =
   let reader = State_reader.create () in

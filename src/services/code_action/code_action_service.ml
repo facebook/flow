@@ -347,7 +347,9 @@ let code_actions_at_loc
 let autofix_exports ~options ~env ~profiling ~file_key ~file_content =
   let open Autofix_exports in
   match%lwt Types_js.typecheck_contents ~options ~env ~profiling file_content file_key with
-  | ( Some (Type_contents_artifacts { cx = full_cx; ast; file_sig; tolerable_errors; typed_ast; _ }),
+  | ( Some
+        ( Parse_artifacts { ast; file_sig; tolerable_errors; _ },
+          Typecheck_artifacts { cx = full_cx; typed_ast } ),
       _,
       _ ) ->
     let sv_errors = set_of_fixable_signature_verification_locations tolerable_errors in
@@ -370,7 +372,9 @@ let insert_type
     ~ambiguity_strategy =
   let open Insert_type in
   match%lwt Types_js.typecheck_contents ~options ~env ~profiling file_content file_key with
-  | (Some (Type_contents_artifacts { cx = full_cx; ast; file_sig; typed_ast; _ }), _, _) ->
+  | ( Some (Parse_artifacts { ast; file_sig; _ }, Typecheck_artifacts { cx = full_cx; typed_ast }),
+      _,
+      _ ) ->
     let result =
       try
         let new_ast =
