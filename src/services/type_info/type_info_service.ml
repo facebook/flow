@@ -8,8 +8,6 @@
 open Base.Result
 open Types_js_types
 
-let ( >|= ) = Lwt.( >|= )
-
 let json_data_of_result str acc = ("result", Hh_json.JSON_String str) :: acc
 
 let json_data_of_error str acc = ("error", Hh_json.JSON_String str) :: acc
@@ -99,7 +97,10 @@ let coverage ~cx ~typed_ast ~force ~trust file content =
   Coverage.covered_types cx ~should_check ~check_trust:trust typed_ast
 
 let suggest ~options ~env ~profiling file_key file_content =
-  Types_js.typecheck_contents ~options ~env ~profiling file_content file_key >|= function
+  let%lwt typecheck_contents_result =
+    Types_js.typecheck_contents ~options ~env ~profiling file_content file_key
+  in
+  match typecheck_contents_result with
   | ( Some (Parse_artifacts { ast; file_sig; _ }, Typecheck_artifacts { cx; typed_ast = tast }),
       tc_errors,
       tc_warnings ) ->
@@ -111,5 +112,5 @@ let suggest ~options ~env ~profiling file_key file_content =
     let suggest_warnings = visitor#warnings () in
     let ast_diff = Flow_ast_differ.(program Standard ast ast_with_suggestions) in
     let file_patch = Replacement_printer.mk_patch_ast_differ ast_diff file_content in
-    Ok (tc_errors, tc_warnings, suggest_warnings, file_patch)
-  | (None, errors, _) -> Error errors
+    Lwt.return (Ok (tc_errors, tc_warnings, suggest_warnings, file_patch))
+  | (None, errors, _) -> Lwt.return (Error errors)
