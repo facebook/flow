@@ -5,6 +5,16 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
+type parse_artifacts =
+  | Parse_artifacts of {
+      docblock: Docblock.t;
+      docblock_errors: Parsing_service_js.docblock_error list;
+      ast: (Loc.t, Loc.t) Flow_ast.Program.t;
+      file_sig: File_sig.With_Loc.t;
+      tolerable_errors: File_sig.With_Loc.tolerable_error list;
+      parse_errors: (Loc.t * Parse_error.t) list;
+    }
+
 type type_contents_artifacts =
   | Type_contents_artifacts of {
       cx: Context.t;

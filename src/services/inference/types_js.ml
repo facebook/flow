@@ -129,16 +129,6 @@ let reparse ~options ~profiling ~transaction ~reader ~workers ~modified ~deleted
       let (parse_ok, unparsed, unchanged, local_errors, _) = collate_parse_results results in
       Lwt.return (new_or_changed, parse_ok, unparsed, unchanged, local_errors))
 
-type parse_artifacts =
-  | Parse_artifacts of {
-      docblock: Docblock.t;
-      docblock_errors: Parsing_service_js.docblock_error list;
-      ast: (Loc.t, Loc.t) Flow_ast.Program.t;
-      file_sig: File_sig.With_Loc.t;
-      tolerable_errors: File_sig.With_Loc.tolerable_error list;
-      parse_errors: (Loc.t * Parse_error.t) list;
-    }
-
 type parse_contents_return =
   | Parsed of parse_artifacts  (** Note that there may be parse errors *)
   | Skipped
