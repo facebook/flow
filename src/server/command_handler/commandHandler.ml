@@ -2159,7 +2159,10 @@ let handle_live_errors_request =
             let%lwt (live_errors, live_warnings) =
               match check_that_we_care_about_this_file ~options ~env ~file_path ~content with
               | Ok () ->
-                let file_key = File_key.SourceFile file_path in
+                let file_key =
+                  let file_options = Options.file_options options in
+                  Files.filename_from_string ~options:file_options file_path
+                in
                 let%lwt result =
                   Types_js.typecheck_contents ~options ~env ~profiling content file_key
                 in
