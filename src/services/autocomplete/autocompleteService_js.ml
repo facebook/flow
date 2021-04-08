@@ -627,11 +627,26 @@ let autocomplete_member
                   |> Pretty_printer.print ~source_maps:None ~skip_endline:true
                   |> Source.contents)
              in
-             match (from_nullable, in_optional_chain, in_idx, bracket_syntax, member_loc) with
-             | (_, _, _, _, None)
-             | (false, _, _, None, _)
-             | (_, true, _, None, _)
-             | (_, _, true, None, _) ->
+             let name_is_valid_identifier = Parser_flow.string_is_valid_identifier_name name in
+             let edit_loc_of_member_loc member_loc =
+               if Loc.(member_loc.start.line = member_loc._end.line) then
+                 remove_autocomplete_token_from_loc member_loc
+               else
+                 Loc.{ member_loc with _end = member_loc.start }
+             in
+             match
+               ( from_nullable,
+                 in_optional_chain,
+                 in_idx,
+                 bracket_syntax,
+                 member_loc,
+                 name_is_valid_identifier )
+             with
+             (* TODO: only complete obj destructuring pattern when name is valid identifier *)
+             | (_, _, _, _, None, _)
+             | (false, _, _, None, _, true)
+             | (_, true, _, None, _, true)
+             | (_, _, true, None, _, true) ->
                let ty =
                  if from_nullable && in_optional_chain then
                    opt_chain_ty
@@ -645,9 +660,9 @@ let autocomplete_member
                  ~log_info:"member"
                  (name, ac_loc)
                  ty
-             | (false, _, _, Some _, _)
-             | (_, true, _, Some _, _)
-             | (_, _, true, Some _, _) ->
+             | (false, _, _, Some _, _, _)
+             | (_, true, _, Some _, _, _)
+             | (_, _, true, Some _, _, _) ->
                let insert_text = Lazy.force name_as_indexer in
                autocomplete_create_result
                  ~insert_text
@@ -657,11 +672,25 @@ let autocomplete_member
                  ~log_info:"bracket syntax member"
                  (insert_text, ac_loc)
                  ty
-             | (true, false, false, _, Some member_loc) ->
+             | (false, _, _, None, Some member_loc, false)
+             | (_, true, _, None, Some member_loc, false)
+             | (_, _, true, None, Some member_loc, false) ->
+               let insert_text = Printf.sprintf "[%s]" (Lazy.force name_as_indexer) in
+               autocomplete_create_result
+                 ~insert_text
+                 ~rank
+                 ?documentation
+                 ~exact_by_default
+                 ~log_info:"dot-member switched to bracket-syntax member"
+                 (insert_text, edit_loc_of_member_loc member_loc)
+                 ty
+             | (true, false, false, _, Some member_loc, _) ->
                let opt_chain_name =
-                 match bracket_syntax with
-                 | None -> Printf.sprintf "?.%s" name
-                 | Some _ -> Printf.sprintf "?.[%s]" (Lazy.force name_as_indexer)
+                 match (bracket_syntax, name_is_valid_identifier) with
+                 | (None, true) -> Printf.sprintf "?.%s" name
+                 | (Some _, _)
+                 | (_, false) ->
+                   Printf.sprintf "?.[%s]" (Lazy.force name_as_indexer)
                in
                autocomplete_create_result
                  ~insert_text:opt_chain_name

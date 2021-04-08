@@ -36,7 +36,7 @@ str.js:3:9
 Flags: --pretty
 {
   "result":[
-    {"name":"@@iterator","type":"() => Iterator<string>"},
+    {"name":"[Symbol.iterator]","type":"() => Iterator<string>"},
     {"name":"anchor","type":"(name: string) => string"},
     {"name":"charAt","type":"(pos: number) => string"},
     {"name":"charCodeAt","type":"(index: number) => number"},
@@ -384,7 +384,7 @@ if.js:3:7
 Flags: --pretty
 {
   "result":[
-    {"name":"@@iterator","type":"() => Iterator<string>"},
+    {"name":"[Symbol.iterator]","type":"() => Iterator<string>"},
     {"name":"anchor","type":"(name: string) => string"},
     {"name":"charAt","type":"(pos: number) => string"},
     {"name":"charCodeAt","type":"(index: number) => number"},
@@ -937,7 +937,7 @@ indirect_array.js:5:3
 Flags: --pretty
 {
   "result":[
-    {"name":"?.@@iterator","type":"void | (() => Iterator<T>)"},
+    {"name":"?.[Symbol.iterator]","type":"void | (() => Iterator<T>)"},
     {
       "name":"?.concat",
       "type":"void | (<S, Item: ($ReadOnlyArray<S> | S)>(...items: Array<Item>) => Array<(T | S)>)"
@@ -1035,7 +1035,7 @@ indirect_array.js:11:3
 Flags: --pretty
 {
   "result":[
-    {"name":"@@iterator","type":"() => Iterator<T>"},
+    {"name":"[Symbol.iterator]","type":"() => Iterator<T>"},
     {
       "name":"concat",
       "type":"<S, Item: ($ReadOnlyArray<S> | S)>(...items: Array<Item>) => Array<(T | S)>"
@@ -6506,6 +6506,362 @@ Flags: --lsp
       "textDocument/completion",
       "local value identifier",
       {"token":null,"completion":"foo"}
+    ]
+  }
+}
+
+bracket_syntax_needed.js:8:5
+Flags: --lsp
+{
+  "label":"foo",
+  "kind":6,
+  "detail":"number",
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":7,"character":4},"end":{"line":7,"character":4}},
+    "newText":"foo"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":["textDocument/completion","member",{"token":null,"completion":"foo"}]
+  }
+}
+{
+  "label":"[\"foo.bar.baz\"]",
+  "kind":6,
+  "detail":"number",
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":7,"character":3},"end":{"line":7,"character":4}},
+    "newText":"[\"foo.bar.baz\"]"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "dot-member switched to bracket-syntax member",
+      {"token":null,"completion":"[\"foo.bar.baz\"]"}
+    ]
+  }
+}
+{
+  "label":"hasOwnProperty",
+  "kind":3,
+  "detail":"(prop: mixed) => boolean",
+  "documentation":{
+    "kind":"markdown",
+    "value":"Determines whether an object has a property with the specified name."
+  },
+  "sortText":"00000000000000000001",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":7,"character":4},"end":{"line":7,"character":4}},
+    "newText":"hasOwnProperty"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "member",
+      {"token":null,"completion":"hasOwnProperty"}
+    ]
+  }
+}
+{
+  "label":"isPrototypeOf",
+  "kind":3,
+  "detail":"(o: mixed) => boolean",
+  "documentation":{
+    "kind":"markdown",
+    "value":"Determines whether an object exists in another object's prototype chain."
+  },
+  "sortText":"00000000000000000001",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":7,"character":4},"end":{"line":7,"character":4}},
+    "newText":"isPrototypeOf"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "member",
+      {"token":null,"completion":"isPrototypeOf"}
+    ]
+  }
+}
+{
+  "label":"propertyIsEnumerable",
+  "kind":3,
+  "detail":"(prop: mixed) => boolean",
+  "documentation":{
+    "kind":"markdown",
+    "value":"Determines whether a specified property is enumerable."
+  },
+  "sortText":"00000000000000000001",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":7,"character":4},"end":{"line":7,"character":4}},
+    "newText":"propertyIsEnumerable"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "member",
+      {"token":null,"completion":"propertyIsEnumerable"}
+    ]
+  }
+}
+{
+  "label":"toLocaleString",
+  "kind":3,
+  "detail":"() => string",
+  "documentation":{
+    "kind":"markdown",
+    "value":"Returns a date converted to a string using the current locale."
+  },
+  "sortText":"00000000000000000001",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":7,"character":4},"end":{"line":7,"character":4}},
+    "newText":"toLocaleString"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "member",
+      {"token":null,"completion":"toLocaleString"}
+    ]
+  }
+}
+{
+  "label":"toString",
+  "kind":3,
+  "detail":"() => string",
+  "documentation":{"kind":"markdown","value":"Returns a string representation of an object."},
+  "sortText":"00000000000000000001",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":7,"character":4},"end":{"line":7,"character":4}},
+    "newText":"toString"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":["textDocument/completion","member",{"token":null,"completion":"toString"}]
+  }
+}
+{
+  "label":"valueOf",
+  "kind":3,
+  "detail":"() => mixed",
+  "documentation":{
+    "kind":"markdown",
+    "value":"Returns the primitive value of the specified object."
+  },
+  "sortText":"00000000000000000001",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":7,"character":4},"end":{"line":7,"character":4}},
+    "newText":"valueOf"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":["textDocument/completion","member",{"token":null,"completion":"valueOf"}]
+  }
+}
+
+bracket_syntax_needed_2.js:8:5
+Flags: --lsp
+{
+  "label":"?.foo",
+  "kind":13,
+  "detail":"void | number",
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":7,"character":3},"end":{"line":7,"character":4}},
+    "newText":"?.foo"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "start optional chain",
+      {"token":null,"completion":"?.foo"}
+    ]
+  }
+}
+{
+  "label":"?.[\"foo.bar.baz\"]",
+  "kind":13,
+  "detail":"void | number",
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":7,"character":3},"end":{"line":7,"character":4}},
+    "newText":"?.[\"foo.bar.baz\"]"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "start optional chain",
+      {"token":null,"completion":"?.[\"foo.bar.baz\"]"}
+    ]
+  }
+}
+{
+  "label":"?.hasOwnProperty",
+  "kind":13,
+  "detail":"void | ((prop: mixed) => boolean)",
+  "documentation":{
+    "kind":"markdown",
+    "value":"Determines whether an object has a property with the specified name."
+  },
+  "sortText":"00000000000000000001",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":7,"character":3},"end":{"line":7,"character":4}},
+    "newText":"?.hasOwnProperty"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "start optional chain",
+      {"token":null,"completion":"?.hasOwnProperty"}
+    ]
+  }
+}
+{
+  "label":"?.isPrototypeOf",
+  "kind":13,
+  "detail":"void | ((o: mixed) => boolean)",
+  "documentation":{
+    "kind":"markdown",
+    "value":"Determines whether an object exists in another object's prototype chain."
+  },
+  "sortText":"00000000000000000001",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":7,"character":3},"end":{"line":7,"character":4}},
+    "newText":"?.isPrototypeOf"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "start optional chain",
+      {"token":null,"completion":"?.isPrototypeOf"}
+    ]
+  }
+}
+{
+  "label":"?.propertyIsEnumerable",
+  "kind":13,
+  "detail":"void | ((prop: mixed) => boolean)",
+  "documentation":{
+    "kind":"markdown",
+    "value":"Determines whether a specified property is enumerable."
+  },
+  "sortText":"00000000000000000001",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":7,"character":3},"end":{"line":7,"character":4}},
+    "newText":"?.propertyIsEnumerable"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "start optional chain",
+      {"token":null,"completion":"?.propertyIsEnumerable"}
+    ]
+  }
+}
+{
+  "label":"?.toLocaleString",
+  "kind":13,
+  "detail":"void | (() => string)",
+  "documentation":{
+    "kind":"markdown",
+    "value":"Returns a date converted to a string using the current locale."
+  },
+  "sortText":"00000000000000000001",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":7,"character":3},"end":{"line":7,"character":4}},
+    "newText":"?.toLocaleString"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "start optional chain",
+      {"token":null,"completion":"?.toLocaleString"}
+    ]
+  }
+}
+{
+  "label":"?.toString",
+  "kind":13,
+  "detail":"void | (() => string)",
+  "documentation":{"kind":"markdown","value":"Returns a string representation of an object."},
+  "sortText":"00000000000000000001",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":7,"character":3},"end":{"line":7,"character":4}},
+    "newText":"?.toString"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "start optional chain",
+      {"token":null,"completion":"?.toString"}
+    ]
+  }
+}
+{
+  "label":"?.valueOf",
+  "kind":13,
+  "detail":"void | (() => mixed)",
+  "documentation":{
+    "kind":"markdown",
+    "value":"Returns the primitive value of the specified object."
+  },
+  "sortText":"00000000000000000001",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":7,"character":3},"end":{"line":7,"character":4}},
+    "newText":"?.valueOf"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "start optional chain",
+      {"token":null,"completion":"?.valueOf"}
     ]
   }
 }

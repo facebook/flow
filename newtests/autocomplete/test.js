@@ -137,7 +137,7 @@ export default (suite(({addFile, flowCmd}) => [
          {
            "result": [
              {
-               "name": "@@iterator",
+               "name": "[Symbol.iterator]",
                "type": "() => Iterator<string>"
              },
              {

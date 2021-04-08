@@ -109,3 +109,5 @@ queries_in_file autocomplete "bracket_syntax_4.js" --lsp
 queries_in_file autocomplete "bracket_syntax_5.js" --lsp
 queries_in_file autocomplete "bracket_syntax_6.js" --lsp
 queries_in_file autocomplete "iterator.js" --lsp
+queries_in_file autocomplete "bracket_syntax_needed.js" --lsp
+queries_in_file autocomplete "bracket_syntax_needed_2.js" --lsp
