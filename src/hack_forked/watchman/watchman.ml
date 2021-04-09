@@ -605,7 +605,7 @@ let init settings =
   catch
     ~f:(fun () ->
       let%map v = re_init settings in
-      Some v)
+      Some (Watchman_alive v))
     ~catch:(fun exn ->
       Hh_logger.exception_ ~prefix:"Watchman init: " exn;
       match Exception.unwrap exn with
@@ -675,10 +675,8 @@ let maybe_restart_instance instance =
     ) else
       Lwt.return instance
 
-let close env = close_connection env.conn
-
 let close_channel_on_instance env =
-  let%map () = close env in
+  let%map () = close_connection env.conn in
   dead_env_from_alive env
 
 let with_instance instance ~try_to_restart ~on_alive ~on_dead =
@@ -691,6 +689,13 @@ let with_instance instance ~try_to_restart ~on_alive ~on_dead =
   match instance with
   | Watchman_dead dead_env -> on_dead dead_env
   | Watchman_alive env -> on_alive env
+
+let close instance =
+  with_instance
+    instance
+    ~try_to_restart:false
+    ~on_alive:(fun env -> close_connection env.conn)
+    ~on_dead:(fun _ -> Lwt.return_unit)
 
 (** Calls f on the instance, maybe restarting it if its dead and maybe
    * reverting it to a dead state if things go south. For example, if watchman
@@ -844,11 +849,9 @@ let get_mergebase_and_changes ~timeout instance =
         (env, Ok (mergebase, changes))
       | None -> (env, Error "Failed to extract mergebase from response"))
 
-let conn_of_instance = function
-  | Watchman_dead _ -> None
-  | Watchman_alive { conn; _ } -> Some conn
-
 module Testing = struct
+  type nonrec env = env
+
   let test_settings =
     {
       debug_logging = false;

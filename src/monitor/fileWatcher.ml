@@ -397,7 +397,7 @@ end = struct
             let (waiter, wakener) = Lwt.task () in
             let new_env =
               {
-                instance = Watchman.Watchman_alive watchman;
+                instance = watchman;
                 files = SSet.empty;
                 listening_thread =
                   (let%lwt env = waiter in
@@ -469,11 +469,7 @@ end = struct
         let env = self#get_env in
         Logger.info "Canceling Watchman listening thread & closing connection";
         Lwt.cancel env.listening_thread;
-        Watchman.with_instance
-          env.instance
-          ~try_to_restart:false
-          ~on_alive:Watchman.close
-          ~on_dead:(fun _ -> Lwt.return_unit)
+        Watchman.close env.instance
 
       method waitpid =
         (* If watchman dies, we can start it back up again and use clockspec to make sure we didn't

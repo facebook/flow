@@ -64,18 +64,9 @@ type changes =
   | Watchman_unavailable
   | Watchman_pushed of pushed_changes
 
-type env
+type watchman_instance
 
-type dead_env
-
-(* This has to be repeated because they depend on the abstract types. *)
-type watchman_instance =
-  | Watchman_dead of dead_env
-  | Watchman_alive of env
-
-type conn
-
-val init : init_settings -> env option Lwt.t
+val init : init_settings -> watchman_instance option Lwt.t
 
 val get_mergebase_and_changes :
   timeout:timeout ->
@@ -84,19 +75,12 @@ val get_mergebase_and_changes :
 
 val get_changes : ?deadline:float -> watchman_instance -> (watchman_instance * changes) Lwt.t
 
-val conn_of_instance : watchman_instance -> conn option
-
-val close : env -> unit Lwt.t
-
-val with_instance :
-  watchman_instance ->
-  try_to_restart:bool ->
-  on_alive:(env -> 'a Lwt.t) ->
-  on_dead:(dead_env -> 'a Lwt.t) ->
-  'a Lwt.t
+val close : watchman_instance -> unit Lwt.t
 
 (* Expose some things for testing. *)
 module Testing : sig
+  type env
+
   val get_test_env : unit -> env Lwt.t
 
   val test_settings : init_settings
