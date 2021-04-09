@@ -54,6 +54,24 @@ val type_contents :
   File_key.t ->
   (Types_js_types.type_contents_artifacts, Flow_error.ErrorSet.t) result Lwt.t
 
+val make_parse_artifacts_and_errors :
+  options:Options.t ->
+  profiling:Profiling_js.running ->
+  (* contents *)
+  string ->
+  (* fake file-/module name *)
+  File_key.t ->
+  (Types_js_types.parse_artifacts option * Flow_error.ErrorSet.t) Lwt.t
+
+val type_parse_artifacts :
+  options:Options.t ->
+  env:ServerEnv.env ->
+  profiling:Profiling_js.running ->
+  (* fake file-/module name *)
+  File_key.t ->
+  Types_js_types.parse_artifacts option * Flow_error.ErrorSet.t ->
+  (Types_js_types.type_contents_artifacts, Flow_error.ErrorSet.t) result Lwt.t
+
 val typecheck_contents :
   options:Options.t ->
   env:ServerEnv.env ->
