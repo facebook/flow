@@ -44,16 +44,6 @@ val full_check :
   ServerEnv.env ->
   (ServerEnv.env * string option) Lwt.t
 
-val type_contents :
-  options:Options.t ->
-  env:ServerEnv.env ->
-  profiling:Profiling_js.running ->
-  (* contents *)
-  string ->
-  (* fake file-/module name *)
-  File_key.t ->
-  (Types_js_types.type_contents_artifacts, Flow_error.ErrorSet.t) result Lwt.t
-
 val make_parse_artifacts_and_errors :
   options:Options.t ->
   profiling:Profiling_js.running ->

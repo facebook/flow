@@ -1259,10 +1259,6 @@ let printable_errors_of_typecheck_contents_result ~options ~env filename result 
     in
     (errors, Errors.ConcreteLocPrintableErrorSet.empty)
 
-let type_contents ~options ~env ~profiling contents filename =
-  let%lwt parse_result = make_parse_artifacts_and_errors ~options ~profiling contents filename in
-  type_parse_artifacts ~options ~env ~profiling filename parse_result
-
 let init_libs ~options ~profiling ~local_errors ~warnings ~suppressions ~reader ordered_libs =
   Memory_utils.with_memory_timer_lwt ~options "InitLibs" profiling (fun () ->
       let options =

@@ -137,7 +137,12 @@ let autocomplete
     AutocompleteService_js.add_autocomplete_token contents line column
   in
   Autocomplete_js.autocomplete_set_hooks ~trigger_character ~cursor:cursor_loc;
-  let%lwt check_contents_result = Types_js.type_contents ~options ~env ~profiling contents path in
+  let%lwt check_contents_result =
+    let%lwt parse_result =
+      Types_js.make_parse_artifacts_and_errors ~options ~profiling contents path
+    in
+    Types_js.type_parse_artifacts ~options ~env ~profiling path parse_result
+  in
   Autocomplete_js.autocomplete_unset_hooks ();
   let initial_json_props =
     let open Hh_json in
@@ -523,7 +528,12 @@ let dump_types ~options ~env ~profiling ~expand_aliases ~evaluate_type_destructo
       let file = File_input.filename_of_file_input file_input in
       let file = File_key.SourceFile file in
       Lwt.return (File_input.content_of_file_input file_input) >>= fun content ->
-      let%lwt type_contents_result = Types_js.type_contents ~options ~env ~profiling content file in
+      let%lwt type_contents_result =
+        let%lwt parse_result =
+          Types_js.make_parse_artifacts_and_errors ~options ~profiling content file
+        in
+        Types_js.type_parse_artifacts ~options ~env ~profiling file parse_result
+      in
       match type_contents_result with
       | Error _parse_errors -> Lwt.return (Error "Couldn't parse file in type_contents")
       | Ok (Parse_artifacts { file_sig; _ }, Typecheck_artifacts { cx; typed_ast }) ->
@@ -1767,7 +1777,12 @@ let handle_persistent_signaturehelp_lsp
       | None -> "-"
     in
     let path = File_key.SourceFile path in
-    let%lwt check_contents_result = Types_js.type_contents ~options ~env ~profiling contents path in
+    let%lwt check_contents_result =
+      let%lwt parse_result =
+        Types_js.make_parse_artifacts_and_errors ~options ~profiling contents path
+      in
+      Types_js.type_parse_artifacts ~options ~env ~profiling path parse_result
+    in
     (match check_contents_result with
     | Error _parse_errors ->
       mk_lsp_error_response
