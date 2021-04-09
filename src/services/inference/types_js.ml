@@ -1269,27 +1269,11 @@ let printable_errors_of_typecheck_contents_result ~options ~env filename result 
     (errors, Errors.ConcreteLocPrintableErrorSet.empty)
 
 let type_contents ~options ~env ~profiling contents filename =
-  let reader = State_reader.create () in
-  let%lwt parse_result =
-    Memory_utils.with_memory_timer_lwt ~options "Parsing" profiling (fun () ->
-        Lwt.return (parse_contents ~options filename contents))
-  in
-  match parse_result with
-  | Parsed parse_artifacts ->
-    let%lwt type_contents_artifacts =
-      type_contents_artifacts_of_parse_artifacts
-        ~options
-        ~env
-        ~reader
-        ~profiling
-        ~filename
-        ~parse_artifacts
-    in
-    Lwt.return (Ok type_contents_artifacts)
-  | Skipped
-  | File_sig_error _
-  | Docblock_errors _ ->
-    Lwt.return (Error "Couldn't parse file in type_contents")
+  let%lwt parse_result = make_parse_artifacts_and_errors ~options ~profiling contents filename in
+  let%lwt result = type_parse_artifacts ~options ~env ~profiling filename parse_result in
+  match result with
+  | Ok x -> Lwt.return (Ok x)
+  | Error _ -> Lwt.return (Error "Couldn't parse file in type_contents")
 
 let init_libs ~options ~profiling ~local_errors ~warnings ~suppressions ~reader ordered_libs =
   Memory_utils.with_memory_timer_lwt ~options "InitLibs" profiling (fun () ->
