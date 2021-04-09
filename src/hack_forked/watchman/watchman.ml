@@ -23,10 +23,6 @@ exception Timeout
 
 exception Watchman_error of string
 
-(** Throw this exception when we know there is something to read from
-    the watchman channel, but reading took too long. *)
-exception Read_payload_too_long
-
 exception Subscription_canceled_by_watchman
 
 exception Watchman_restarted
@@ -404,12 +400,13 @@ let blocking_read ~debug_logging ~timeout ~conn:(reader, _) =
     | _ -> raise Timeout
   else
     let%lwt output =
+      let read_timeout = 40.0 in
       try%lwt
-        Lwt_unix.with_timeout 40.0 @@ fun () -> Buffered_line_reader_lwt.get_next_line reader
+        Lwt_unix.with_timeout read_timeout @@ fun () ->
+        Buffered_line_reader_lwt.get_next_line reader
       with
       | Lwt_unix.Timeout ->
-        let () = Hh_logger.log "blocking_read timed out" in
-        raise Read_payload_too_long
+        raise (Watchman_error (spf "Timed out reading payload after %f seconds" read_timeout))
       | End_of_file -> raise (Watchman_error "Connection closed")
     in
     Lwt.return @@ Some (sanitize_watchman_response ~debug_logging output)
@@ -747,9 +744,6 @@ let call_on_instance :
         | End_of_file ->
           log_died
             ("Watchman connection End_of_file.\n" ^ Exception.get_full_backtrace_string 500 exn);
-          close_channel_on_instance' env
-        | Read_payload_too_long ->
-          log_died "Watchman reading payload too long. Closing channel";
           close_channel_on_instance' env
         | Timeout ->
           log_died "Watchman reading Timeout. Closing channel";
