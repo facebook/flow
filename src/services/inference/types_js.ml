@@ -1114,6 +1114,10 @@ let merge_contents ~options ~env ~reader filename info (ast, file_sig) =
 
 let errors_of_type_contents_artifacts ~options ~env ~loc_of_aloc ~filename ~type_contents_artifacts
     =
+  (* Callers have already had a chance to inspect parse errors, so they are not included here.
+   * Typically, type errors in the face of parse errors are meaningless, so callers should probably
+   * not call this function if parse errors have been found. *)
+  (* TODO consider asserting that there are no parse errors. *)
   let (Parse_artifacts { docblock_errors; tolerable_errors; _ }, Typecheck_artifacts { cx; _ }) =
     type_contents_artifacts
   in
@@ -1193,26 +1197,35 @@ let type_contents_artifacts_of_parse_artifacts
   in
   Lwt.return (parse_artifacts, Typecheck_artifacts { cx; typed_ast })
 
-let typecheck_contents ~options ~env ~profiling contents filename =
+let make_parse_artifacts_and_errors ~options ~profiling contents filename =
   let%lwt parse_result =
     Memory_utils.with_memory_timer_lwt ~options "Parsing" profiling (fun () ->
         Lwt.return (parse_contents ~options filename contents))
   in
   match parse_result with
-  | Parsed (Parse_artifacts { parse_errors = first_parse_error :: _; docblock_errors; _ }) ->
-    let errors = Inference_utils.set_of_docblock_errors ~source_file:filename docblock_errors in
-    let err = Inference_utils.error_of_parse_error ~source_file:filename first_parse_error in
-    let errors = Flow_error.ErrorSet.add err errors in
-    Lwt.return (Error errors)
-  | Skipped -> Lwt.return (Error Flow_error.ErrorSet.empty)
+  | Parsed (Parse_artifacts { parse_errors; docblock_errors; _ } as parse_artifacts) ->
+    let errors =
+      match parse_errors with
+      | first_parse_error :: _ ->
+        let errors = Inference_utils.set_of_docblock_errors ~source_file:filename docblock_errors in
+        let err = Inference_utils.error_of_parse_error ~source_file:filename first_parse_error in
+        Flow_error.ErrorSet.add err errors
+      | _ -> Flow_error.ErrorSet.empty
+    in
+    Lwt.return (Some parse_artifacts, errors)
+  | Skipped -> Lwt.return (None, Flow_error.ErrorSet.empty)
   | Docblock_errors errs ->
     let errs = Inference_utils.set_of_docblock_errors ~source_file:filename errs in
-    Lwt.return (Error errs)
+    Lwt.return (None, errs)
   | File_sig_error err ->
     let err = Inference_utils.error_of_file_sig_error ~source_file:filename err in
     let errs = Flow_error.ErrorSet.singleton err in
-    Lwt.return (Error errs)
-  | Parsed parse_artifacts ->
+    Lwt.return (None, errs)
+
+let type_parse_artifacts ~options ~env ~profiling filename intermediate_result =
+  match intermediate_result with
+  | (Some parse_artifacts, _errs) ->
+    (* We assume that callers have already inspected the parse errors, so we discard them here. *)
     let reader = State_reader.create () in
     let%lwt type_contents_artifacts =
       type_contents_artifacts_of_parse_artifacts
@@ -1224,6 +1237,16 @@ let typecheck_contents ~options ~env ~profiling contents filename =
         ~parse_artifacts
     in
     Lwt.return (Ok type_contents_artifacts)
+  | (None, errs) -> Lwt.return (Error errs)
+
+let typecheck_contents ~options ~env ~profiling content filename =
+  let%lwt ((_, parse_errs) as intermediate_result) =
+    make_parse_artifacts_and_errors ~options ~profiling content filename
+  in
+  if not (Flow_error.ErrorSet.is_empty parse_errs) then
+    Lwt.return (Error parse_errs)
+  else
+    type_parse_artifacts ~options ~env ~profiling filename intermediate_result
 
 let printable_errors_of_typecheck_contents_result ~options ~env filename result =
   let reader = State_reader.create () in
