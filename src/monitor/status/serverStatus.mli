@@ -34,7 +34,6 @@ type event =
   | Resolving_dependencies_progress
   | Calculating_dependencies_progress
   | Merging_progress of progress
-  | Merging_types_progress of progress
   | Checking_progress of progress
   | Canceling_progress of progress
   | Finishing_up of summary

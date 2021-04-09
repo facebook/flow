@@ -41,7 +41,6 @@ type event =
   | Resolving_dependencies_progress
   | Calculating_dependencies_progress
   | Merging_progress of progress
-  | Merging_types_progress of progress
   | Checking_progress of progress
   | Canceling_progress of progress
   | Finishing_up of summary (* Server's finishing up typechecking or other work *)
@@ -62,7 +61,6 @@ type typecheck_status =
   | Resolving_dependencies
   | Calculating_dependencies
   | Merging of progress
-  | Merging_types of progress
   | Checking of progress
   | Canceling of progress
   | Collating_errors (* We sometimes collate errors during typecheck *)
@@ -98,7 +96,6 @@ let string_of_progress { finished; total } =
     spf "%d/%d (%02.1f%%)" finished total (100.0 *. float finished /. float (max 1 total))
 
 type emoji =
-  | Bicyclist
   | Closed_book
   | Cookie
   | Eyes
@@ -116,7 +113,6 @@ type emoji =
   | Card_index_dividers
 
 let string_of_emoji = function
-  | Bicyclist -> "\xF0\x9F\x9A\xB4"
   | Closed_book -> "\xF0\x9F\x93\x95"
   | Cookie -> "\xF0\x9F\x8D\xAA"
   | Eyes -> "\xF0\x9F\x91\x80"
@@ -164,7 +160,6 @@ let string_of_event = function
   | Calculating_dependencies_progress -> "Calculating_dependencies_progress"
   | Resolving_dependencies_progress -> "Resolving_dependencies_progress"
   | Merging_progress progress -> spf "Merging_progress %s" (string_of_progress progress)
-  | Merging_types_progress progress -> spf "Merging_types_progress %s" (string_of_progress progress)
   | Checking_progress progress -> spf "Checking_progress files %s" (string_of_progress progress)
   | Canceling_progress progress -> spf "Canceling_progress %s" (string_of_progress progress)
   | Finishing_up _ -> "Finishing_up"
@@ -191,8 +186,6 @@ let string_of_typecheck_status ~use_emoji = function
   | Resolving_dependencies -> spf "%sresolving dependencies" (render_emoji ~use_emoji Taco)
   | Calculating_dependencies -> spf "%scalculating dependencies" (render_emoji ~use_emoji Taco)
   | Merging progress ->
-    spf "%smerged files %s" (render_emoji ~use_emoji Bicyclist) (string_of_progress progress)
-  | Merging_types progress ->
     spf
       "%smerged module interfaces %s"
       (render_emoji ~use_emoji Motorcycle)
@@ -265,8 +258,6 @@ let update ~event ~status =
   | (Calculating_dependencies_progress, Typechecking (mode, _)) ->
     Typechecking (mode, Calculating_dependencies)
   | (Merging_progress progress, Typechecking (mode, _)) -> Typechecking (mode, Merging progress)
-  | (Merging_types_progress progress, Typechecking (mode, _)) ->
-    Typechecking (mode, Merging_types progress)
   | (Checking_progress progress, Typechecking (mode, _)) -> Typechecking (mode, Checking progress)
   | (Canceling_progress progress, Typechecking (mode, _)) -> Typechecking (mode, Canceling progress)
   | (Collating_errors_start, Typechecking (mode, _)) -> Typechecking (mode, Collating_errors)
@@ -312,7 +303,6 @@ let is_significant_transition old_status new_status =
       | (Parsing _, Parsing _)
       | (Indexing _, Indexing _)
       | (Merging _, Merging _)
-      | (Merging_types _, Merging_types _)
       | (Checking _, Checking _)
       | (Canceling _, Canceling _) ->
         false
@@ -325,7 +315,6 @@ let is_significant_transition old_status new_status =
       | (_, Resolving_dependencies)
       | (_, Calculating_dependencies)
       | (_, Merging _)
-      | (_, Merging_types _)
       | (_, Checking _)
       | (_, Canceling _)
       | (_, Waiting_for_watchman _)
@@ -351,7 +340,6 @@ let get_progress status =
   match status with
   | Typechecking (_, Parsing progress)
   | Typechecking (_, Merging progress)
-  | Typechecking (_, Merging_types progress)
   | Typechecking (_, Checking progress)
   | Typechecking (_, Canceling progress) ->
     print progress
