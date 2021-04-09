@@ -2277,7 +2277,7 @@ end = struct
       ~commit:(fun () ->
         (* We have to clear this at the end of the recheck, because it could have been populated with
          * now-out-of-date data in the middle of the recheck by parallelizable requests. *)
-        Persistent_connection.clear_type_contents_caches ();
+        Persistent_connection.clear_type_parse_artifacts_caches ();
         Lwt.return_unit)
       ~rollback:(fun () -> Lwt.return_unit)
       transaction;

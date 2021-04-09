@@ -88,8 +88,8 @@ val lsp_initialize_params : single_client -> Lsp.Initialize.params
 
 val client_config : single_client -> Client_config.t
 
-val type_contents_cache :
+val type_parse_artifacts_cache :
   single_client ->
   (Types_js_types.type_contents_artifacts, Flow_error.ErrorSet.t) result FilenameCache.t
 
-val clear_type_contents_caches : unit -> unit
+val clear_type_parse_artifacts_caches : unit -> unit

@@ -19,7 +19,7 @@ type single_client = {
   mutable subscribed: bool;
   (* map from filename to content *)
   mutable opened_files: string SMap.t;
-  type_contents_cache:
+  type_parse_artifacts_cache:
     (Types_js_types.type_contents_artifacts, Flow_error.ErrorSet.t) result FilenameCache.t;
   mutable client_config: Client_config.t;
 }
@@ -32,7 +32,7 @@ let remove_cache_entry client filename =
   (* get_def, coverage, etc. all construct a File_key.SourceFile, which is then used as a key
     * here. *)
   let file_key = File_key.SourceFile filename in
-  FilenameCache.remove_entry file_key client.type_contents_cache
+  FilenameCache.remove_entry file_key client.type_parse_artifacts_cache
 
 let active_clients : single_client IMap.t ref = ref IMap.empty
 
@@ -100,7 +100,7 @@ let add_client client_id lsp_initialize_params =
       opened_files = SMap.empty;
       client_id;
       lsp_initialize_params;
-      type_contents_cache = FilenameCache.make ~max_size:cache_max_size;
+      type_parse_artifacts_cache = FilenameCache.make ~max_size:cache_max_size;
       client_config = { Client_config.suggest_autoimports = true };
     }
   in
@@ -250,7 +250,9 @@ let lsp_initialize_params (client : single_client) = client.lsp_initialize_param
 
 let client_config client = client.client_config
 
-let type_contents_cache client = client.type_contents_cache
+let type_parse_artifacts_cache client = client.type_parse_artifacts_cache
 
-let clear_type_contents_caches () =
-  IMap.iter (fun _key client -> FilenameCache.clear client.type_contents_cache) !active_clients
+let clear_type_parse_artifacts_caches () =
+  IMap.iter
+    (fun _key client -> FilenameCache.clear client.type_parse_artifacts_cache)
+    !active_clients

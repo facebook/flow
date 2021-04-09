@@ -16,13 +16,16 @@ open Types_js_types
 (* Returns the result of calling `type_contents`, along with a bool option indicating whether the
  * cache was hit -- None if no cache was available, Some true if it was hit, and Some false if it
  * was missed. *)
-let type_contents_with_cache ~options ~env ~profiling ~type_contents_cache content file =
-  match type_contents_cache with
+let type_parse_artifacts_with_cache
+    ~options ~env ~profiling ~type_parse_artifacts_cache file artifacts =
+  match type_parse_artifacts_cache with
   | None ->
-    let%lwt result = Types_js.type_contents ~options ~env ~profiling content file in
+    let%lwt result = Types_js.type_parse_artifacts ~options ~env ~profiling file artifacts in
     Lwt.return (result, None)
   | Some cache ->
-    let lazy_result = lazy (Types_js.type_contents ~options ~env ~profiling content file) in
+    let lazy_result =
+      lazy (Types_js.type_parse_artifacts ~options ~env ~profiling file artifacts)
+    in
     let%lwt (result, did_hit) = FilenameCache.with_cache file lazy_result cache in
     Lwt.return (result, Some did_hit)
 
@@ -301,7 +304,7 @@ let infer_type
     ~(reader : Parsing_heaps.Reader.reader)
     ~(env : ServerEnv.env)
     ~(profiling : Profiling_js.running)
-    ~type_contents_cache
+    ~type_parse_artifacts_cache
     input : (ServerProt.Response.infer_type_response * Hh_json.json option) Lwt.t =
   let {
     file_input;
@@ -324,7 +327,16 @@ let infer_type
     let%lwt result =
       try_with_json (fun () ->
           let%lwt (type_contents_result, did_hit_cache) =
-            type_contents_with_cache ~options ~env ~profiling ~type_contents_cache content file
+            let%lwt parse_result =
+              Types_js.make_parse_artifacts_and_errors ~options ~profiling content file
+            in
+            type_parse_artifacts_with_cache
+              ~options
+              ~env
+              ~profiling
+              ~type_parse_artifacts_cache
+              file
+              parse_result
           in
           let%lwt result =
             match type_contents_result with
@@ -524,7 +536,7 @@ let dump_types ~options ~env ~profiling ~expand_aliases ~evaluate_type_destructo
                 file_sig
                 typed_ast)))
 
-let coverage ~options ~env ~profiling ~type_contents_cache ~force ~trust file_input =
+let coverage ~options ~env ~profiling ~type_parse_artifacts_cache ~force ~trust file_input =
   if Options.trust_mode options = Options.NoTrust && trust then
     Error
       "Coverage cannot be run in trust mode if the server is not in trust mode. \n\nRestart the Flow server with --trust-mode=check' to enable this command."
@@ -535,7 +547,16 @@ let coverage ~options ~env ~profiling ~type_contents_cache ~force ~trust file_in
     File_input.content_of_file_input file_input %>>= fun content ->
     try_with (fun () ->
         let%lwt (type_contents_result, _did_hit_cache) =
-          type_contents_with_cache ~options ~env ~profiling ~type_contents_cache content file
+          let%lwt parse_result =
+            Types_js.make_parse_artifacts_and_errors ~options ~profiling content file
+          in
+          type_parse_artifacts_with_cache
+            ~options
+            ~env
+            ~profiling
+            ~type_parse_artifacts_cache
+            file
+            parse_result
         in
         match type_contents_result with
         | Ok (_, Typecheck_artifacts { cx; typed_ast }) ->
@@ -678,7 +699,7 @@ let find_local_refs ~reader ~options ~env ~profiling (file_input, line, col) =
   FindRefs_js.find_local_refs ~reader ~options ~env ~profiling ~file_input ~line ~col
   |> Lwt_result.map convert_find_refs_result
 
-let get_def ~options ~reader ~env ~profiling ~type_contents_cache (file_input, line, col) =
+let get_def ~options ~reader ~env ~profiling ~type_parse_artifacts_cache (file_input, line, col) =
   let filename = File_input.filename_of_file_input file_input in
   let file = File_key.SourceFile filename in
   let%lwt (check_result, did_hit_cache) =
@@ -686,7 +707,16 @@ let get_def ~options ~reader ~env ~profiling ~type_contents_cache (file_input, l
     | Error _ as err -> Lwt.return (err, None)
     | Ok content ->
       (match%lwt
-         type_contents_with_cache ~options ~env ~profiling ~type_contents_cache content file
+         let%lwt parse_result =
+           Types_js.make_parse_artifacts_and_errors ~options ~profiling content file
+         in
+         type_parse_artifacts_with_cache
+           ~options
+           ~env
+           ~profiling
+           ~type_parse_artifacts_cache
+           file
+           parse_result
        with
       | (Ok result, did_hit_cache) -> Lwt.return (Ok result, did_hit_cache)
       | (Error _parse_errors, did_hit_cache) ->
@@ -788,7 +818,7 @@ let handle_check_file ~options ~force ~input ~profiling ~env =
 
 let handle_coverage ~options ~force ~input ~trust ~profiling ~env =
   let%lwt response =
-    coverage ~options ~env ~profiling ~type_contents_cache:None ~force ~trust input
+    coverage ~options ~env ~profiling ~type_parse_artifacts_cache:None ~force ~trust input
   in
   Lwt.return (ServerProt.Response.COVERAGE response, None)
 
@@ -866,7 +896,7 @@ let handle_force_recheck ~files ~focus ~profile ~profiling =
 
 let handle_get_def ~reader ~options ~filename ~line ~char ~profiling ~env =
   let%lwt (result, json_data) =
-    get_def ~reader ~options ~env ~profiling ~type_contents_cache:None (filename, line, char)
+    get_def ~reader ~options ~env ~profiling ~type_parse_artifacts_cache:None (filename, line, char)
   in
   Lwt.return (ServerProt.Response.GET_DEF result, json_data)
 
@@ -905,7 +935,7 @@ let handle_infer_type
     }
   in
   let%lwt (result, json_data) =
-    infer_type ~options ~reader ~env ~profiling ~type_contents_cache:None input
+    infer_type ~options ~reader ~env ~profiling ~type_parse_artifacts_cache:None input
   in
   Lwt.return (ServerProt.Response.INFER_TYPE result, json_data)
 
@@ -962,16 +992,21 @@ let find_code_actions ~reader ~options ~env ~profiling ~params ~client =
     if not (Code_action_service.client_supports_quickfixes params) then
       Lwt.return (Ok [])
     else
-      let type_contents_cache = Some (Persistent_connection.type_contents_cache client) in
+      let type_parse_artifacts_cache =
+        Some (Persistent_connection.type_parse_artifacts_cache client)
+      in
       let uri = TextDocumentIdentifier.(textDocument.uri) in
       let%lwt (type_contents_result, _did_hit_cache) =
-        type_contents_with_cache
+        let%lwt parse_result =
+          Types_js.make_parse_artifacts_and_errors ~options ~profiling file_contents file_key
+        in
+        type_parse_artifacts_with_cache
           ~options
           ~env
           ~profiling
-          ~type_contents_cache
-          file_contents
+          ~type_parse_artifacts_cache
           file_key
+          parse_result
       in
       (match type_contents_result with
       | Error _ -> Lwt.return (Ok [])
@@ -1536,9 +1571,9 @@ let handle_persistent_get_def
       file_input_of_text_document_position ~client params
   in
   let (line, char) = Flow_lsp_conversions.position_of_document_position params in
-  let type_contents_cache = Some (Persistent_connection.type_contents_cache client) in
+  let type_parse_artifacts_cache = Some (Persistent_connection.type_parse_artifacts_cache client) in
   let%lwt (result, extra_data) =
-    get_def ~options ~reader ~env ~profiling ~type_contents_cache (file_input, line, char)
+    get_def ~options ~reader ~env ~profiling ~type_parse_artifacts_cache (file_input, line, char)
   in
   let metadata = with_data ~extra_data metadata in
   match result with
@@ -1567,7 +1602,7 @@ let handle_persistent_infer_type
   in
   let (line, column) = Flow_lsp_conversions.position_of_document_position params in
   (* if Some, would write to server logs *)
-  let type_contents_cache = Some (Persistent_connection.type_contents_cache client) in
+  let type_parse_artifacts_cache = Some (Persistent_connection.type_parse_artifacts_cache client) in
   let input =
     {
       file_input;
@@ -1581,7 +1616,7 @@ let handle_persistent_infer_type
     }
   in
   let%lwt (result, extra_data) =
-    infer_type ~options ~reader ~env ~profiling ~type_contents_cache input
+    infer_type ~options ~reader ~env ~profiling ~type_parse_artifacts_cache input
   in
   let metadata = with_data ~extra_data metadata in
   match result with
@@ -1887,8 +1922,10 @@ let handle_persistent_coverage ~options ~id ~params ~file_input ~metadata ~clien
     if is_flow then
       (* 'true' makes it report "unknown" for all exprs in non-flow files *)
       let force = Options.all options in
-      let type_contents_cache = Some (Persistent_connection.type_contents_cache client) in
-      coverage ~options ~env ~profiling ~type_contents_cache ~force ~trust:false file_input
+      let type_parse_artifacts_cache =
+        Some (Persistent_connection.type_parse_artifacts_cache client)
+      in
+      coverage ~options ~env ~profiling ~type_parse_artifacts_cache ~force ~trust:false file_input
     else
       Lwt.return (Ok [])
   in
