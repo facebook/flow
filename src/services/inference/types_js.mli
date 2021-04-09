@@ -52,7 +52,7 @@ val type_contents :
   string ->
   (* fake file-/module name *)
   File_key.t ->
-  (Types_js_types.type_contents_artifacts, string) result Lwt.t
+  (Types_js_types.type_contents_artifacts, Flow_error.ErrorSet.t) result Lwt.t
 
 val typecheck_contents :
   options:Options.t ->

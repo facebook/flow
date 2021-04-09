@@ -1270,10 +1270,7 @@ let printable_errors_of_typecheck_contents_result ~options ~env filename result 
 
 let type_contents ~options ~env ~profiling contents filename =
   let%lwt parse_result = make_parse_artifacts_and_errors ~options ~profiling contents filename in
-  let%lwt result = type_parse_artifacts ~options ~env ~profiling filename parse_result in
-  match result with
-  | Ok x -> Lwt.return (Ok x)
-  | Error _ -> Lwt.return (Error "Couldn't parse file in type_contents")
+  type_parse_artifacts ~options ~env ~profiling filename parse_result
 
 let init_libs ~options ~profiling ~local_errors ~warnings ~suppressions ~reader ordered_libs =
   Memory_utils.with_memory_timer_lwt ~options "InitLibs" profiling (fun () ->
