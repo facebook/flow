@@ -72,16 +72,6 @@ val type_parse_artifacts :
   Types_js_types.parse_artifacts option * Flow_error.ErrorSet.t ->
   (Types_js_types.type_contents_artifacts, Flow_error.ErrorSet.t) result Lwt.t
 
-val typecheck_contents :
-  options:Options.t ->
-  env:ServerEnv.env ->
-  profiling:Profiling_js.running ->
-  (* contents *)
-  string ->
-  (* fake file-/module name *)
-  File_key.t ->
-  (Types_js_types.type_contents_artifacts, Flow_error.ErrorSet.t) result Lwt.t
-
 val printable_errors_of_typecheck_contents_result :
   options:Options.t ->
   env:ServerEnv.env ->

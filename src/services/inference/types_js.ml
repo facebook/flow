@@ -1239,15 +1239,6 @@ let type_parse_artifacts ~options ~env ~profiling filename intermediate_result =
     Lwt.return (Ok type_contents_artifacts)
   | (None, errs) -> Lwt.return (Error errs)
 
-let typecheck_contents ~options ~env ~profiling content filename =
-  let%lwt ((_, parse_errs) as intermediate_result) =
-    make_parse_artifacts_and_errors ~options ~profiling content filename
-  in
-  if not (Flow_error.ErrorSet.is_empty parse_errs) then
-    Lwt.return (Error parse_errs)
-  else
-    type_parse_artifacts ~options ~env ~profiling filename intermediate_result
-
 let printable_errors_of_typecheck_contents_result ~options ~env filename result =
   let reader = State_reader.create () in
   let loc_of_aloc = Parsing_heaps.Reader.loc_of_aloc ~reader in

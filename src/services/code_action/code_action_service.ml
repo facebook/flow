@@ -346,7 +346,16 @@ let code_actions_at_loc
 
 let autofix_exports ~options ~env ~profiling ~file_key ~file_content =
   let open Autofix_exports in
-  match%lwt Types_js.typecheck_contents ~options ~env ~profiling file_content file_key with
+  let%lwt type_contents_artifacts =
+    let%lwt ((_, parse_errs) as intermediate_result) =
+      Types_js.make_parse_artifacts_and_errors ~options ~profiling file_content file_key
+    in
+    if not (Flow_error.ErrorSet.is_empty parse_errs) then
+      Lwt.return (Error parse_errs)
+    else
+      Types_js.type_parse_artifacts ~options ~env ~profiling file_key intermediate_result
+  in
+  match type_contents_artifacts with
   | Ok
       ( Parse_artifacts { ast; file_sig; tolerable_errors; _ },
         Typecheck_artifacts { cx = full_cx; typed_ast } ) ->
@@ -369,7 +378,19 @@ let insert_type
     ~location_is_strict:strict
     ~ambiguity_strategy =
   let open Insert_type in
-  match%lwt Types_js.typecheck_contents ~options ~env ~profiling file_content file_key with
+  let%lwt type_contents_artifacts =
+    let%lwt ((_, parse_errs) as intermediate_result) =
+      Types_js.make_parse_artifacts_and_errors ~options ~profiling file_content file_key
+    in
+    (* It's not clear to me (nmote) that we actually should abort when we see parse errors. Maybe
+     * we should continue on here. I'm inserting this logic during the migration away from
+     * typecheck_contents because it's behavior-preserving, but this may be worth revisiting. *)
+    if not (Flow_error.ErrorSet.is_empty parse_errs) then
+      Lwt.return (Error parse_errs)
+    else
+      Types_js.type_parse_artifacts ~options ~env ~profiling file_key intermediate_result
+  in
+  match type_contents_artifacts with
   | Ok (Parse_artifacts { ast; file_sig; _ }, Typecheck_artifacts { cx = full_cx; typed_ast }) ->
     let result =
       try

@@ -238,7 +238,15 @@ let check_file ~options ~env ~profiling ~force file_input =
         Docblock.is_flow docblock
     in
     if should_check then
-      let%lwt result = Types_js.typecheck_contents ~options ~env ~profiling content file in
+      let%lwt result =
+        let%lwt ((_, parse_errs) as intermediate_result) =
+          Types_js.make_parse_artifacts_and_errors ~options ~profiling content file
+        in
+        if not (Flow_error.ErrorSet.is_empty parse_errs) then
+          Lwt.return (Error parse_errs)
+        else
+          Types_js.type_parse_artifacts ~options ~env ~profiling file intermediate_result
+      in
       let (errors, warnings) =
         Types_js.printable_errors_of_typecheck_contents_result ~options ~env file result
       in
@@ -2177,7 +2185,18 @@ let handle_live_errors_request =
                   Files.filename_from_string ~options:file_options file_path
                 in
                 let%lwt result =
-                  Types_js.typecheck_contents ~options ~env ~profiling content file_key
+                  let%lwt ((_, parse_errs) as intermediate_result) =
+                    Types_js.make_parse_artifacts_and_errors ~options ~profiling content file_key
+                  in
+                  if not (Flow_error.ErrorSet.is_empty parse_errs) then
+                    Lwt.return (Error parse_errs)
+                  else
+                    Types_js.type_parse_artifacts
+                      ~options
+                      ~env
+                      ~profiling
+                      file_key
+                      intermediate_result
                 in
                 let (live_errors, live_warnings) =
                   Types_js.printable_errors_of_typecheck_contents_result
