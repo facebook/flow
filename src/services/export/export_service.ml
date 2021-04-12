@@ -17,16 +17,17 @@ let camelize str =
     String.concat "" parts
 
 let string_of_modulename modulename =
-  let str =
-    match modulename with
-    | Modulename.String str -> str
-    | Modulename.Filename f -> Filename.basename (File_key.to_string f)
-  in
+  let str = Modulename.to_string modulename in
+  (* for filenames: /foo/bar/baz.bliffl.js -> baz.bliff.js
+     for strings: @example/foo -> foo *)
+  let str = Filename.basename str in
+  (* remove suffixes, e.g. baz.bliffl.js -> baz *)
   let stripped =
     match String.index_opt str '.' with
     | Some index -> String.sub str 0 index
     | None -> str
   in
+  (* convert hyphens to camel case *)
   camelize stripped
 
 let entries_of_exports =
