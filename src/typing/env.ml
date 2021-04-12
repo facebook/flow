@@ -17,7 +17,6 @@ open TypeUtil
 open Reason
 open Scope
 module Flow = Flow_js
-module Scope_api = Scope_api.With_ALoc
 
 (* lookup modes:
 
@@ -554,82 +553,14 @@ let declare_const = declare_value_entry Entry.(Const ConstVarBinding)
 
 let declare_implicit_const kind = declare_value_entry (Entry.Const kind)
 
-let is_const_like cx loc =
-  let (info, values) = Context.use_def cx in
-  let uses = Scope_api.uses_of_use info loc in
-  (* We consider a binding to be const-like if all reads point to the same
-     write, modulo initialization. *)
-  let writes =
-    ALocSet.fold
-      (fun use acc ->
-        match ALocMap.find_opt use values with
-        | None -> (* use is a write *) acc
-        | Some write_locs ->
-          (* use is a read *)
-          (* collect writes pointed to by the read, modulo initialization *)
-          List.fold_left
-            (fun acc -> function
-              | Ssa_api.With_ALoc.Uninitialized -> acc
-              | Ssa_api.With_ALoc.Write loc -> ALocSet.add loc acc)
-            acc
-            write_locs)
-      uses
-      ALocSet.empty
-  in
-  ALocSet.cardinal writes <= 1
-
-let is_not_captured_by_closure =
-  let rec lookup in_current_var_scope info scope def =
-    if SMap.exists (fun _ def' -> def = def') scope.Scope_api.Scope.defs then
-      in_current_var_scope
-    else
-      match scope.Scope_api.Scope.parent with
-      | None -> true
-      | Some scope_id' ->
-        let scope' = Scope_api.scope info scope_id' in
-        lookup (in_current_var_scope && scope.Scope_api.Scope.lexical) info scope' def
-  in
-  fun info use ->
-    let scopes = info.Scope_api.scopes in
-    IMap.fold
-      (fun _scope_id scope acc ->
-        match ALocMap.find_opt use scope.Scope_api.Scope.locals with
-        | Some def -> acc && lookup true info scope def
-        | None -> acc)
-      scopes
-      true
-
-let written_by_closure cx loc =
-  let (info, values) = Context.use_def cx in
-  let uses = Scope_api.uses_of_use info loc in
-  (* We consider a binding to be const-like if all reads point to the same
-     write, modulo initialization. *)
-  let writes_by_closure =
-    ALocSet.fold
-      (fun use acc ->
-        match ALocMap.find_opt use values with
-        | None ->
-          (* use is a write *)
-          if is_not_captured_by_closure info use then
-            acc
-          else
-            ALocSet.add use acc
-        | Some _write_locs ->
-          (* use is a read *)
-          (* collect writes pointed to by the read, modulo initialization *)
-          acc)
-      uses
-      ALocSet.empty
-  in
-  writes_by_closure
-
 let promote_non_const cx name loc spec =
+  let (info, values) = Context.use_def cx in
   if Reason.is_internal_name name then
     (None, spec)
-  else if spec <> Entry.ConstLike && is_const_like cx loc then
+  else if spec <> Entry.ConstLike && Invalidation_api.is_const_like info values loc then
     (None, Entry.ConstLike)
   else if spec <> Entry.NotWrittenByClosure then
-    let writes_by_closure = written_by_closure cx loc in
+    let writes_by_closure = Invalidation_api.written_by_closure info values loc in
     if ALocSet.is_empty writes_by_closure then
       (None, Entry.NotWrittenByClosure)
     else
