@@ -266,7 +266,10 @@ module Node = struct
     fun ~file_options resolution_acc path ->
       let path = resolve_symlinks path in
       let declaration_path = path ^ Files.flow_ext in
-      if path_exists ~file_options declaration_path || path_exists ~file_options path then
+      if
+        Files.is_flow_file ~options:file_options path
+        && (path_exists ~file_options declaration_path || path_exists ~file_options path)
+      then
         Some path
       else (
         record_path path resolution_acc;
@@ -331,29 +334,30 @@ module Node = struct
   let resolve_relative ~options ~reader (loc : ALoc.t) ?resolution_acc root_path rel_path =
     let file_options = Options.file_options options in
     let path = Files.normalize_path root_path rel_path in
-    if Files.is_flow_file ~options:file_options path then
-      path_if_exists ~file_options resolution_acc path
-    else
-      let path_w_index = Filename.concat path "index" in
-      (* We do not try resource file extensions here. So while you can write
-       * require('foo') to require foo.js, it should never resolve to foo.css
-       *)
-      let file_exts = SSet.elements (Files.module_file_exts file_options) in
-      let root = Options.root options in
-      lazy_seq
-        [
-          lazy (path_if_exists_with_file_exts ~file_options resolution_acc path file_exts);
-          lazy
-            (parse_main
-               ~reader
-               ~root
-               ~file_options
-               loc
-               resolution_acc
-               (Filename.concat path "package.json")
-               file_exts);
-          lazy (path_if_exists_with_file_exts ~file_options resolution_acc path_w_index file_exts);
-        ]
+    (* We do not try resource file extensions here. So while you can write
+     * require('foo') to require foo.js, it should never resolve to foo.css
+     *)
+    let file_exts = SSet.elements (Files.module_file_exts file_options) in
+    lazy_seq
+      [
+        lazy (path_if_exists ~file_options resolution_acc path);
+        lazy (path_if_exists_with_file_exts ~file_options resolution_acc path file_exts);
+        lazy
+          (parse_main
+             ~reader
+             ~root:(Options.root options)
+             ~file_options
+             loc
+             resolution_acc
+             (Filename.concat path "package.json")
+             file_exts);
+        lazy
+          (path_if_exists_with_file_exts
+             ~file_options
+             resolution_acc
+             (Filename.concat path "index")
+             file_exts);
+      ]
 
   let rec node_module ~options ~reader node_modules_containers file loc resolution_acc dir r =
     let file_options = Options.file_options options in
