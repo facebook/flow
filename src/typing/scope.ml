@@ -341,25 +341,6 @@ let remove_entry name scope = scope.entries <- NameUtils.Map.remove name scope.e
 (* get entry from scope, or None *)
 let get_entry name scope = NameUtils.Map.find_opt name scope.entries
 
-(* havoc entry *)
-let havoc_entry name scope =
-  match get_entry name scope with
-  | Some entry ->
-    let entry = Entry.havoc name entry in
-    scope.entries <- NameUtils.Map.add name entry scope.entries
-  | None ->
-    assert_false
-      (spf
-         "entry %S not found in scope %d: { %s }"
-         (Reason.display_string_of_name name)
-         scope.id
-         (String.concat
-            ", "
-            (NameUtils.Map.fold
-               (fun n _ acc -> Reason.display_string_of_name n :: acc)
-               scope.entries
-               [])))
-
 (* use passed f to update all scope refis *)
 let update_refis f scope = scope.refis <- Key_map.mapi f scope.refis
 

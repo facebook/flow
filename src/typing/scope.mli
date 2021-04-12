@@ -171,8 +171,6 @@ val remove_entry : Reason.name -> t -> unit
 
 val get_entry : Reason.name -> t -> Entry.t option
 
-val havoc_entry : Reason.name -> t -> unit
-
 val update_refis : (Key_map.key -> refi_binding -> refi_binding) -> t -> unit
 
 val add_refi : Key_map.key -> refi_binding -> t -> unit
