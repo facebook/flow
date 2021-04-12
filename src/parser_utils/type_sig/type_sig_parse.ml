@@ -2418,7 +2418,7 @@ let rec expression opts scope locs (loc, expr) =
     let id_loc = Locs.push locs id_loc in
     val_ref scope id_loc name
   | E.Member {E.Member._object; property; comments = _} ->
-    member ~toplevel_loc:loc opts scope locs _object loc property
+    member opts scope locs _object loc property
   | E.Class c ->
     begin match c.Ast.Class.id with
     | Some (id_loc, {Ast.Identifier.name; comments = _}) ->
@@ -2574,35 +2574,35 @@ let rec expression opts scope locs (loc, expr) =
 and member =
   let module E = Ast.Expression in
   let module M = E.Member in
-  let rec finish t = function
-    | [] -> t
-    | (loc, op)::chain -> finish (Eval (loc, t, op)) chain
-  in
-  let prop_op opts scope locs loc = function
+  let prop_op opts scope locs = function
     | M.PropertyIdentifier id ->
-      loc, GetProp (id_name id)
+      GetProp (id_name id)
     | M.PropertyExpression expr ->
       let t = expression opts scope locs expr in
-      loc, GetElem t
+      GetElem t
     | M.PropertyPrivateName _ ->
       failwith "unexpected private name outside class"
   in
-  let rec loop toplevel_loc opts scope locs chain (loc, expr) =
-    let loc = Locs.push locs loc in
+  let rec finish opts scope locs t = function
+    | [] -> t
+    | (loc, property)::chain ->
+      let op = prop_op opts scope locs property in
+      finish opts scope locs (Eval (loc, t, op)) chain
+  in
+  let rec loop ~toplevel_loc opts scope locs chain (loc, expr) =
     match expr with
     | E.Identifier (id_loc, {Ast.Identifier.name; comments = _}) ->
       let id_loc = Locs.push locs id_loc in
       let t = val_ref scope id_loc name in
-      finish t chain
+      finish opts scope locs t chain
     | E.Member {E.Member._object; property; comments = _} ->
-      let op = prop_op opts scope locs loc property in
-      loop toplevel_loc opts scope locs (op::chain) _object
+      let loc = Locs.push locs loc in
+      loop ~toplevel_loc opts scope locs ((loc, property)::chain) _object
     | _ ->
       Err (toplevel_loc, SigError (Signature_error.UnexpectedExpression (toplevel_loc, Flow_ast_utils.ExpressionSort.Member)))
   in
-  fun ~toplevel_loc opts scope locs obj loc prop ->
-    let op = prop_op opts scope locs loc prop in
-    loop toplevel_loc opts scope locs [op] obj
+  fun opts scope locs obj loc prop ->
+    loop ~toplevel_loc:loc opts scope locs [(loc, prop)] obj
 
 and function_def =
   let module F = Ast.Function in
