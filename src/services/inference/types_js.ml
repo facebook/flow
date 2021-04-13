@@ -1112,14 +1112,13 @@ let merge_contents ~options ~env ~reader filename info (ast, file_sig) =
   let%lwt () = ensure_checked_dependencies ~options ~reader ~env filename file_sig in
   Lwt.return (Merge_service.check_contents_context ~reader options filename ast info file_sig)
 
-let errors_of_type_contents_artifacts ~options ~env ~loc_of_aloc ~filename ~type_contents_artifacts
-    =
+let errors_of_file_artifacts ~options ~env ~loc_of_aloc ~filename ~file_artifacts =
   (* Callers have already had a chance to inspect parse errors, so they are not included here.
    * Typically, type errors in the face of parse errors are meaningless, so callers should probably
    * not call this function if parse errors have been found. *)
   (* TODO consider asserting that there are no parse errors. *)
   let (Parse_artifacts { docblock_errors; tolerable_errors; _ }, Typecheck_artifacts { cx; _ }) =
-    type_contents_artifacts
+    file_artifacts
   in
   let errors = Context.errors cx in
   let local_errors =
@@ -1188,8 +1187,7 @@ let errors_of_type_contents_artifacts ~options ~env ~loc_of_aloc ~filename ~type
   in
   (errors, warnings)
 
-let type_contents_artifacts_of_parse_artifacts
-    ~options ~env ~reader ~profiling ~filename ~parse_artifacts =
+let file_artifacts_of_parse_artifacts ~options ~env ~reader ~profiling ~filename ~parse_artifacts =
   let (Parse_artifacts { docblock; ast; file_sig; _ }) = parse_artifacts in
   let%lwt (cx, typed_ast) =
     Memory_utils.with_memory_timer_lwt ~options "MergeContents" profiling (fun () ->
@@ -1227,30 +1225,19 @@ let type_parse_artifacts ~options ~env ~profiling filename intermediate_result =
   | (Some parse_artifacts, _errs) ->
     (* We assume that callers have already inspected the parse errors, so we discard them here. *)
     let reader = State_reader.create () in
-    let%lwt type_contents_artifacts =
-      type_contents_artifacts_of_parse_artifacts
-        ~options
-        ~env
-        ~reader
-        ~profiling
-        ~filename
-        ~parse_artifacts
+    let%lwt file_artifacts =
+      file_artifacts_of_parse_artifacts ~options ~env ~reader ~profiling ~filename ~parse_artifacts
     in
-    Lwt.return (Ok type_contents_artifacts)
+    Lwt.return (Ok file_artifacts)
   | (None, errs) -> Lwt.return (Error errs)
 
 let printable_errors_of_typecheck_contents_result ~options ~env filename result =
   let reader = State_reader.create () in
   let loc_of_aloc = Parsing_heaps.Reader.loc_of_aloc ~reader in
   match result with
-  | Ok type_contents_artifacts ->
+  | Ok file_artifacts ->
     let (errors, warnings) =
-      errors_of_type_contents_artifacts
-        ~options
-        ~env
-        ~loc_of_aloc
-        ~filename
-        ~type_contents_artifacts
+      errors_of_file_artifacts ~options ~env ~loc_of_aloc ~filename ~file_artifacts
     in
     (errors, warnings)
   | Error errors ->

@@ -60,14 +60,14 @@ val type_parse_artifacts :
   (* fake file-/module name *)
   File_key.t ->
   Types_js_types.parse_artifacts option * Flow_error.ErrorSet.t ->
-  (Types_js_types.type_contents_artifacts, Flow_error.ErrorSet.t) result Lwt.t
+  (Types_js_types.file_artifacts, Flow_error.ErrorSet.t) result Lwt.t
 
 val printable_errors_of_typecheck_contents_result :
   options:Options.t ->
   env:ServerEnv.env ->
   (* fake file-/module name *)
   File_key.t ->
-  (Types_js_types.type_contents_artifacts, Flow_error.ErrorSet.t) result ->
+  (Types_js_types.file_artifacts, Flow_error.ErrorSet.t) result ->
   (* errors *)
   Errors.ConcreteLocPrintableErrorSet.t * (* warnings *)
                                           Errors.ConcreteLocPrintableErrorSet.t

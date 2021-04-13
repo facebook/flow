@@ -20,7 +20,7 @@ type single_client = {
   (* map from filename to content *)
   mutable opened_files: string SMap.t;
   type_parse_artifacts_cache:
-    (Types_js_types.type_contents_artifacts, Flow_error.ErrorSet.t) result FilenameCache.t;
+    (Types_js_types.file_artifacts, Flow_error.ErrorSet.t) result FilenameCache.t;
   mutable client_config: Client_config.t;
 }
 

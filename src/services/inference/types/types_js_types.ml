@@ -21,4 +21,4 @@ type typecheck_artifacts =
       typed_ast: (ALoc.t, ALoc.t * Type.t) Flow_ast.Program.t;
     }
 
-type type_contents_artifacts = parse_artifacts * typecheck_artifacts
+type file_artifacts = parse_artifacts * typecheck_artifacts
