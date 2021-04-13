@@ -54,8 +54,8 @@ let print_providers prov =
 
 let mk_provider_test var contents expected_msg ctxt =
   let ast = parse contents in
-  let env = Find_providers.LocFindProviders.find_providers ast in
-  let msg = Find_providers.LocFindProviders.get_providers_for_toplevel_var var env in
+  let env = Provider_api.LocProviders.find_providers ast in
+  let msg = Provider_api.LocProviders.get_providers_for_toplevel_var var env in
   assert_equal
     ~ctxt
     ~printer:(fun x -> x)

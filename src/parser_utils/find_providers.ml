@@ -5,7 +5,6 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
-open Utils_js
 open Flow_ast_mapper
 module Ast = Flow_ast
 
@@ -605,61 +604,4 @@ module FindProviders (L : Loc_sig.S) = struct
         let (env, _) = prov_find#eval prov_find#statement stmt in
         env)
       statements
-
-  let print_full_env env =
-    let rec ptabs count =
-      if count = 0 then
-        ""
-      else
-        spf " %s" (ptabs (count - 1))
-    in
-    let rec print_rec label tabs { providers; entries = _; children; _ } =
-      let msg = spf "%s%s:\n" (ptabs tabs) label in
-      let tabs = tabs + 1 in
-      let t = ptabs tabs in
-      let msg =
-        spf
-          "%s%sproviders: \n%s\n"
-          msg
-          t
-          ( SMap.bindings providers
-          |> Base.List.map ~f:(fun (k, { relative_locs; exact_locs }) ->
-                 spf
-                   "%s %s:\n%s  relative: (%s)\n%s  exact: (%s)"
-                   t
-                   k
-                   t
-                   ( L.LSet.elements relative_locs
-                   |> Base.List.map ~f:(L.debug_to_string ~include_source:false)
-                   |> String.concat "), (" )
-                   t
-                   ( L.LSet.elements exact_locs
-                   |> Base.List.map ~f:(L.debug_to_string ~include_source:false)
-                   |> String.concat "), (" ))
-          |> String.concat "\n" )
-      in
-      spf
-        "%s%schildren:\n%s"
-        msg
-        t
-        ( L.LMap.bindings children
-        |> Base.List.map ~f:(fun (loc, scope) ->
-               print_rec (L.debug_to_string ~include_source:false loc) (tabs + 1) scope)
-        |> String.concat "\n" )
-    in
-    match env with
-    | (top, []) -> print_rec "toplevel" 0 top
-    | _ -> env_invariant_violated "Final environment has depth =/= 1"
-
-  let find_providers (_, program) =
-    let env = find_declaration_statements program in
-    find_provider_statements env program
-
-  (* For testing *)
-  let get_providers_for_toplevel_var var ({ entries; _ }, _) =
-    let entry = SMap.find_opt var entries in
-    Base.Option.map ~f:(fun { provider_locs; _ } -> provider_locs) entry
 end
-
-module LocFindProviders = FindProviders (Loc_sig.LocS)
-module ALocFindProviders = FindProviders (Loc_sig.ALocS)
