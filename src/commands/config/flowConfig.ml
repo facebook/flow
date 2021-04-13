@@ -46,6 +46,7 @@ module Opts = struct
     autoimports: bool option;
     automatic_require_default: bool;
     babel_loose_array_spread: bool;
+    check_updates_against_providers: bool;
     disable_live_non_parse_errors: bool;
     emoji: bool;
     enable_const_params: bool;
@@ -166,6 +167,7 @@ module Opts = struct
       autoimports = None;
       automatic_require_default = false;
       babel_loose_array_spread = false;
+      check_updates_against_providers = false;
       disable_live_non_parse_errors = false;
       emoji = false;
       enable_const_params = false;
@@ -405,6 +407,9 @@ module Opts = struct
   let local_inference_annotations =
     boolean (fun opts v -> Ok { opts with enforce_local_inference_annotations = v })
 
+  let check_updates_against_providers =
+    boolean (fun opts v -> Ok { opts with check_updates_against_providers = v })
+
   let post_inference_implicit_instantiation_parser =
     boolean (fun opts v -> Ok { opts with run_post_inference_implicit_instantiation = v })
 
@@ -616,6 +621,7 @@ module Opts = struct
       ("experimental.const_params", boolean (fun opts v -> Ok { opts with enable_const_params = v }));
       ("experimental.disable_live_non_parse_errors", disable_live_non_parse_errors_parser);
       ("experimental.enforce_local_inference_annotations", local_inference_annotations);
+      ("experimental.check_updates_against_providers", check_updates_against_providers);
       ("experimental.enums_with_unknown_members", enums_with_unknown_members_parser);
       ("experimental.enums", boolean (fun opts v -> Ok { opts with enums = v }));
       ("experimental.facebook_module_interop", facebook_module_interop_parser);
@@ -1210,6 +1216,8 @@ let automatic_require_default c = c.options.Opts.automatic_require_default
 let babel_loose_array_spread c = c.options.Opts.babel_loose_array_spread
 
 let disable_live_non_parse_errors c = c.options.Opts.disable_live_non_parse_errors
+
+let check_updates_against_providers c = c.options.Opts.check_updates_against_providers
 
 let emoji c = c.options.Opts.emoji
 

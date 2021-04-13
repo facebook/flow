@@ -57,6 +57,7 @@ type t = {
   opt_autoimports: bool;
   opt_automatic_require_default: bool;
   opt_babel_loose_array_spread: bool;
+  opt_check_updates_against_providers: bool;
   opt_debug: bool;
   opt_enable_const_params: bool;
   opt_enable_indexed_access: bool;
@@ -149,6 +150,8 @@ let enabled_rollouts opts = opts.opt_enabled_rollouts
 let enforce_strict_call_arity opts = opts.opt_enforce_strict_call_arity
 
 let enforce_local_inference_annotations opts = opts.opt_enforce_local_inference_annotations
+
+let check_updates_against_providers opts = opts.opt_check_updates_against_providers
 
 let enums opts = opts.opt_enums
 

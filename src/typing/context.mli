@@ -61,6 +61,7 @@ type metadata = {
   automatic_require_default: bool;
   babel_loose_array_spread: bool;
   max_literal_length: int;
+  check_updates_against_providers: bool;
   enable_const_params: bool;
   enable_enums: bool;
   enable_enums_with_unknown_members: bool;
@@ -189,6 +190,8 @@ val goals : 'phase t_ -> Type.t IMap.t
 val exact_by_default : 'phase t_ -> bool
 
 val enforce_local_inference_annotations : 'phase t_ -> bool
+
+val check_updates_against_providers : 'phase t_ -> bool
 
 val run_post_inference_implicit_instantiation : 'phase t_ -> bool
 

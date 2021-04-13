@@ -1247,6 +1247,7 @@ let make_options
     opt_enabled_rollouts = FlowConfig.enabled_rollouts flowconfig;
     opt_enforce_local_inference_annotations =
       FlowConfig.enforce_local_inference_annotations flowconfig;
+    opt_check_updates_against_providers = FlowConfig.check_updates_against_providers flowconfig;
     opt_run_post_inference_implicit_instantiation =
       FlowConfig.run_post_inference_implicit_instantiation flowconfig;
     opt_enforce_strict_call_arity = FlowConfig.enforce_strict_call_arity flowconfig;

@@ -35,6 +35,7 @@ type metadata = {
   automatic_require_default: bool;
   babel_loose_array_spread: bool;
   max_literal_length: int;
+  check_updates_against_providers: bool;
   enable_const_params: bool;
   enable_enums: bool;
   enable_enums_with_unknown_members: bool;
@@ -230,6 +231,7 @@ let metadata_of_options options =
     enable_indexed_access = Options.enable_indexed_access options;
     enable_this_annot = Options.this_annot options;
     enforce_strict_call_arity = Options.enforce_strict_call_arity options;
+    check_updates_against_providers = Options.check_updates_against_providers options;
     enforce_local_inference_annotations = Options.enforce_local_inference_annotations options;
     exact_by_default = Options.exact_by_default options;
     facebook_fbs = Options.facebook_fbs options;
@@ -440,6 +442,8 @@ let goals cx = cx.ccx.goal_map
 let exact_by_default cx = cx.metadata.exact_by_default
 
 let enforce_local_inference_annotations cx = cx.metadata.enforce_local_inference_annotations
+
+let check_updates_against_providers cx = cx.metadata.check_updates_against_providers
 
 let run_post_inference_implicit_instantiation cx =
   cx.metadata.run_post_inference_implicit_instantiation

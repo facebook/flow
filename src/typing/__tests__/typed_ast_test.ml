@@ -22,6 +22,7 @@ let metadata =
     (* global *)
     automatic_require_default = false;
     babel_loose_array_spread = false;
+    check_updates_against_providers = false;
     max_literal_length = 100;
     enable_const_params = false;
     enable_enums = true;
