@@ -610,5 +610,60 @@ export default (suite(
         ['textDocument/publishDiagnostics', ...lspIgnoreStatusAndCancellation],
       ),
     ]).flowConfig('_flowconfig_autoimports'),
+
+    test('should handle scoped module names', [
+      addFiles('lib/scoped.js'),
+      addCode(`xy`),
+      lspStartAndConnect(),
+      lspRequestAndWaitUntilResponse('textDocument/completion', {
+        textDocument: {uri: '<PLACEHOLDER_PROJECT_URL>/test.js'},
+        position: {line: 2, character: 2},
+        context: {triggerKind: 1},
+      }).verifyAllLSPMessagesInStep(
+        [
+          {
+            method: 'textDocument/completion',
+            result: {
+              isIncomplete: false,
+              items: [
+                {
+                  label: 'xyz',
+                  kind: 6,
+                  detail: 'Import default from @example/xyz',
+                  sortText: '00000000000000000100',
+                  insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {line: 2, character: 0},
+                      end: {line: 2, character: 2},
+                    },
+                    newText: 'xyz',
+                  },
+                  additionalTextEdits: [
+                    {
+                      range: {
+                        start: {line: 2, character: 0},
+                        end: {line: 2, character: 0},
+                      },
+                      newText: 'import xyz from "@example/xyz";\n\n',
+                    },
+                  ],
+                  command: {
+                    title: '',
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                    arguments: [
+                      'textDocument/completion',
+                      'autoimport',
+                      {token: 'xyAUTO332', completion: 'xyz'},
+                    ],
+                  },
+                },
+              ],
+            },
+          },
+        ],
+        ['textDocument/publishDiagnostics', ...lspIgnoreStatusAndCancellation],
+      ),
+    ]).flowConfig('_flowconfig_autoimports'),
   ],
 ): Suite);

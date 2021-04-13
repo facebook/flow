@@ -40,6 +40,10 @@ let string_of_modulename_tests =
       let actual = string_of_modulename (module_file (sf "/foo/bar/foo-bar-baz.js")) in
       let expected = "fooBarBaz" in
       assert_equal ~ctxt ~printer:(fun x -> x) expected actual );
+    ( "scoped_package" >:: fun ctxt ->
+      let actual = string_of_modulename (module_name "@example/xyz") in
+      let expected = "xyz" in
+      assert_equal ~ctxt ~printer:(fun x -> x) expected actual );
   ]
 
 let suite = "export_service" >::: ["string_of_modulename" >::: string_of_modulename_tests]
