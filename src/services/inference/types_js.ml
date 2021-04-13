@@ -2710,13 +2710,14 @@ let init_from_scratch ~profiling ~workers options =
   let next_files = make_next_files ~libs ~file_options (Options.root options) in
   Hh_logger.info "Parsing";
   MonitorRPC.status_update ServerStatus.(Parsing_progress { finished = 0; total = None });
-  let%lwt (parsed, unparsed, unchanged, local_errors, (package_json_files, package_json_errors)) =
+  let%lwt (parsed_set, unparsed, unchanged, local_errors, (package_json_files, package_json_errors))
+      =
     parse ~options ~profiling ~workers ~reader next_files
   in
-  (* Parsing won't raise warnings *)
-  let warnings = FilenameMap.empty in
   assert (FilenameSet.is_empty unchanged);
 
+  (* Parsing won't raise warnings *)
+  let warnings = FilenameMap.empty in
   let package_errors =
     List.fold_left
       (fun errors parse_err ->
@@ -2727,21 +2728,22 @@ let init_from_scratch ~profiling ~workers options =
       package_json_errors
   in
   let local_errors = merge_error_maps package_errors local_errors in
+
   Hh_logger.info "Loading libraries";
   let%lwt (libs_ok, local_errors, warnings, suppressions, lib_exports) =
     let suppressions = Error_suppressions.empty in
     init_libs ~options ~profiling ~local_errors ~warnings ~suppressions ~reader ordered_libs
   in
+
   Hh_logger.info "Resolving dependencies";
   MonitorRPC.status_update ServerStatus.Resolving_dependencies_progress;
-
-  let (all_files, unparsed_set) =
-    List.fold_left
-      (fun (all_files, unparsed_set) (filename, _) ->
-        (FilenameSet.add filename all_files, FilenameSet.add filename unparsed_set))
-      (parsed, FilenameSet.empty)
+  let unparsed_set =
+    Base.List.fold
+      ~f:(fun unparsed_set (filename, _docblock) -> FilenameSet.add filename unparsed_set)
+      ~init:FilenameSet.empty
       unparsed
   in
+  let all_files = FilenameSet.union parsed_set unparsed_set in
   let all_providers_mutator = Module_hashtables.All_providers_mutator.create transaction in
   let%lwt (_, _, errors) =
     let errors =
@@ -2755,7 +2757,7 @@ let init_from_scratch ~profiling ~workers options =
       ~profiling
       ~workers
       ~old_modules:[]
-      ~parsed_set:parsed
+      ~parsed_set
       ~unparsed
       ~unparsed_set
       ~new_or_changed:all_files
@@ -2765,19 +2767,19 @@ let init_from_scratch ~profiling ~workers options =
   in
   let%lwt dependency_info =
     Memory_utils.with_memory_timer_lwt ~options "CalcDepsTypecheck" profiling (fun () ->
-        Dep_service.calc_dependency_info ~reader workers ~parsed)
+        Dep_service.calc_dependency_info ~reader workers ~parsed:parsed_set)
   in
 
   Hh_logger.info "Indexing files";
   let%lwt exports =
     Memory_utils.with_memory_timer_lwt ~options "Indexing" profiling (fun () ->
-        Export_service.init ~workers ~reader ~libs:lib_exports parsed)
+        Export_service.init ~workers ~reader ~libs:lib_exports parsed_set)
   in
   Hh_logger.info "Done";
 
   let env =
     mk_init_env
-      ~files:parsed
+      ~files:parsed_set
       ~unparsed:unparsed_set
       ~package_json_files
       ~dependency_info
