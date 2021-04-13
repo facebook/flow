@@ -224,6 +224,8 @@ module Response = struct
       preselect: bool;
       documentation: string option;
       log_info: string;
+      source: string option;  (** autoimport source *)
+      type_: string option;
     }
 
     type t = {

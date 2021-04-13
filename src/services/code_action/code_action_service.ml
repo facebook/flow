@@ -148,6 +148,7 @@ let path_of_modulename ~node_resolver_dirnames ~reader src_dir = function
 type text_edits = {
   title: string;
   edits: Lsp.TextEdit.t list;
+  from: string;
 }
 
 let text_edits_of_import ~options ~layout_options ~reader ~src_dir ~ast kind name source =
@@ -181,7 +182,7 @@ let text_edits_of_import ~options ~layout_options ~reader ~src_dir ~ast kind nam
       Autofix_imports.add_import ~options:layout_options ~binding ~from ast
       |> Flow_lsp_conversions.flow_loc_patch_to_lsp_edits
     in
-    Some { title; edits }
+    Some { title; edits; from }
 
 let suggest_imports ~options ~reader ~ast ~diagnostics ~exports ~name uri loc =
   let open Lsp in
@@ -219,7 +220,7 @@ let suggest_imports ~options ~reader ~ast ~diagnostics ~exports ~name uri loc =
             source
         with
         | None -> acc
-        | Some { edits; title } ->
+        | Some { edits; title; from = _ } ->
           let command =
             CodeAction.Action
               {

@@ -149,6 +149,7 @@ let default_mapper =
       (fun mapper
            {
              Completion.label;
+             labelDetails;
              kind;
              detail;
              documentation;
@@ -165,6 +166,7 @@ let default_mapper =
         let command = Base.Option.map ~f:(mapper.of_command mapper) command in
         {
           Completion.label;
+          labelDetails;
           kind;
           detail;
           documentation;

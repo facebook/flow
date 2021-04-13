@@ -253,9 +253,19 @@ module SignatureHelpClientCapabilities : sig
 end
 
 module CompletionOptions : sig
+  type completionItem = {
+    labelDetailsSupport: bool;
+        (** The server has support for completion item label details (see also
+            `CompletionItemLabelDetails`) when receiving a completion item in
+            a resolve call.
+
+            @since 3.17.0 - proposed state *)
+  }
+
   type t = {
     resolveProvider: bool;  (** server resolves extra info on demand *)
     triggerCharacters: string list;
+    completionItem: completionItem;
   }
 end
 
@@ -323,6 +333,7 @@ module Initialize : sig
   and completionItem = {
     snippetSupport: bool;
     preselectSupport: bool;
+    labelDetailsSupport: bool;
   }
 
   and windowClientCapabilities = { status: bool }
@@ -560,6 +571,15 @@ module CodeActionRequest : sig
   }
 end
 
+(** proposed for 3.17: https://github.com/microsoft/vscode/issues/39441 *)
+module CompletionItemLabelDetails : sig
+  type t = {
+    parameters: string option;
+    qualifier: string option;
+    type_: string option;
+  }
+end
+
 module Completion : sig
   type completionItemKind =
     | Text  (** 1 *)
@@ -623,6 +643,7 @@ module Completion : sig
 
   and completionItem = {
     label: string;  (** the label in the UI *)
+    labelDetails: CompletionItemLabelDetails.t option;  (** proposed for 3.17 *)
     kind: completionItemKind option;  (** tells editor which icon to use *)
     detail: string option;  (** human-readable string like type/symbol info *)
     documentation: markedString list option;  (** human-readable doc-comment *)
