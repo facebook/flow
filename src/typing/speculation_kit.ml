@@ -421,8 +421,9 @@ module Make (Flow : INPUT) : OUTPUT = struct
       restore ();
       Some err
     | exn ->
+      let exn = Exception.wrap exn in
       restore ();
-      raise exn
+      Exception.reraise exn
 
   (* Speculatively match several alternatives in turn, as presented when checking
      a union or intersection type. This process maintains a so-called "match
