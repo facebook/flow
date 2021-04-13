@@ -81,10 +81,7 @@ react_component.js:3:9 = module "react" {
   ) => void;
   declare var useDeferredValue: <T>(value: T, config: ?TimeoutConfig) => T;
   declare var useDebugValue: (value: any) => void;
-  declare var useContext: <T>(
-    context: React$Context<T>,
-    observedBits: (void | number | boolean)
-  ) => T;
+  declare var useContext: <T>(context: React$Context<T>) => T;
   declare var useCallback: <T: (...args: $ReadOnlyArray<empty>) => mixed>(
     callback: T,
     inputs: ?$ReadOnlyArray<mixed>

@@ -908,13 +908,13 @@ Cannot get `React.PropTypes.string.inRequired` because property `inRequired` (di
                                               ^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:481:39
+   <BUILTINS>/react.js:478:39
                                               v
-   481| type ReactPropsChainableTypeChecker = {
-   482|   (props: any, propName: string, componentName: string, href?: string): ?Error,
-   483|   isRequired: ReactPropsCheckType,
-   484|   ...
-   485| };
+   478| type ReactPropsChainableTypeChecker = {
+   479|   (props: any, propName: string, componentName: string, href?: string): ?Error,
+   480|   isRequired: ReactPropsCheckType,
+   481|   ...
+   482| };
         ^ [1]
 
 
