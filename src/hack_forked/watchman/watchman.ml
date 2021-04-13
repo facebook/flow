@@ -404,10 +404,13 @@ let blocking_read ~debug_logging ~timeout ~conn:(reader, _) =
     | _ -> raise Timeout
   else
     let%lwt output =
-      try%lwt Lwt_unix.with_timeout 40.0 @@ fun () -> Buffered_line_reader_lwt.get_next_line reader
-      with Lwt_unix.Timeout ->
+      try%lwt
+        Lwt_unix.with_timeout 40.0 @@ fun () -> Buffered_line_reader_lwt.get_next_line reader
+      with
+      | Lwt_unix.Timeout ->
         let () = Hh_logger.log "blocking_read timed out" in
         raise Read_payload_too_long
+      | End_of_file -> raise (Watchman_error "Connection closed")
     in
     Lwt.return @@ Some (sanitize_watchman_response ~debug_logging output)
 
