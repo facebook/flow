@@ -2127,10 +2127,9 @@ and main_handle_unsafe flowconfig_name (state : state) (event : event) :
           ~data:
             Hh_json.(
               JSON_Object
-                [
-                  ("uri", JSON_String (Lsp.DocumentUri.to_string uri));
-                  ("error_count", JSON_Number (List.length live_diagnostics |> string_of_int));
-                ]
+                ( ("uri", JSON_String (Lsp.DocumentUri.to_string uri))
+                :: ("error_count", JSON_Number (List.length live_diagnostics |> string_of_int))
+                :: metadata.LspProt.extra_data )
               |> json_to_string)
           ~wall_start:metadata.LspProt.start_wall_time;
 
