@@ -47,6 +47,7 @@ module Opts = struct
     automatic_require_default: bool;
     babel_loose_array_spread: bool;
     check_updates_against_providers: bool;
+    cache_live_errors_artifacts: bool;
     disable_live_non_parse_errors: bool;
     emoji: bool;
     enable_const_params: bool;
@@ -168,6 +169,7 @@ module Opts = struct
       automatic_require_default = false;
       babel_loose_array_spread = false;
       check_updates_against_providers = false;
+      cache_live_errors_artifacts = false;
       disable_live_non_parse_errors = false;
       emoji = false;
       enable_const_params = false;
@@ -422,6 +424,9 @@ module Opts = struct
   let babel_loose_array_spread_parser =
     boolean (fun opts v -> Ok { opts with babel_loose_array_spread = v })
 
+  let cache_live_errors_artifacts_parser =
+    boolean (fun opts v -> Ok { opts with cache_live_errors_artifacts = v })
+
   let disable_live_non_parse_errors_parser =
     boolean (fun opts v -> Ok { opts with disable_live_non_parse_errors = v })
 
@@ -615,6 +620,7 @@ module Opts = struct
       ("all", boolean (fun opts v -> Ok { opts with all = v }));
       ("autoimports", boolean (fun opts v -> Ok { opts with autoimports = Some v }));
       ("babel_loose_array_spread", babel_loose_array_spread_parser);
+      ("cache_live_errors_artifacts", cache_live_errors_artifacts_parser);
       ("emoji", boolean (fun opts v -> Ok { opts with emoji = v }));
       ("exact_by_default", boolean (fun opts v -> Ok { opts with exact_by_default = v }));
       ("experimental.abstract_locations", abstract_locations_parser);
@@ -1214,6 +1220,8 @@ let autoimports c = c.options.Opts.autoimports
 let automatic_require_default c = c.options.Opts.automatic_require_default
 
 let babel_loose_array_spread c = c.options.Opts.babel_loose_array_spread
+
+let cache_live_errors_artifacts c = c.options.Opts.cache_live_errors_artifacts
 
 let disable_live_non_parse_errors c = c.options.Opts.disable_live_non_parse_errors
 
