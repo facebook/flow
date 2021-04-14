@@ -1954,6 +1954,17 @@ let%expect_test "reference_expression2" =
         (Signature_error.UnexpectedExpression ([1:17-27], Flow_ast_utils.ExpressionSort.Member))))
   |}]
 
+let%expect_test "member_expression" =
+  print_sig {|
+    module.exports = a[0];
+  |};
+  [%expect {|
+    CJSExports {types = {}; type_stars = []; strict = true}
+
+    Export_def:
+    (Eval ([1:17-21], (Ref BuiltinRef {ref_loc = [1:17-18]; name = "a"}),
+       (GetElem (Value (NumberLit ([1:19-20], 0., "0")))))) |}]
+
 let%expect_test "arith_expression1" =
   print_sig {|
     module.exports = 6*7;
