@@ -686,6 +686,25 @@ let print_definition (r : Definition.result) : json =
 (* completionItem/resolve request                                       *)
 (************************************************************************)
 
+module CompletionItemLabelDetailsFmt = struct
+  open CompletionItemLabelDetails
+
+  let of_json json : CompletionItemLabelDetails.t =
+    let json = Some json in
+    let parameters = Jget.string_opt json "parameters" in
+    let qualifier = Jget.string_opt json "qualifier" in
+    let type_ = Jget.string_opt json "type" in
+    { parameters; qualifier; type_ }
+
+  let to_json { parameters; qualifier; type_ } =
+    Jprint.object_opt
+      [
+        ("parameters", Base.Option.map ~f:(fun x -> JSON_String x) parameters);
+        ("qualifier", Base.Option.map ~f:(fun x -> JSON_String x) qualifier);
+        ("type", Base.Option.map ~f:(fun x -> JSON_String x) type_);
+      ]
+end
+
 let parse_completionItem (params : json option) : CompletionItemResolve.params =
   Completion.(
     let textEdits =
@@ -699,6 +718,8 @@ let parse_completionItem (params : json option) : CompletionItemResolve.params =
     in
     {
       label = Jget.string_exn params "label";
+      labelDetails =
+        Base.Option.map (Jget.obj_opt params "labelDetails") CompletionItemLabelDetailsFmt.of_json;
       kind = Base.Option.bind (Jget.int_opt params "kind") completionItemKind_of_enum;
       detail = Jget.string_opt params "detail";
       documentation = None;
@@ -723,6 +744,7 @@ let print_completionItem ~key (item : Completion.completionItem) : json =
     Jprint.object_opt
       [
         ("label", Some (JSON_String item.label));
+        ("labelDetails", Base.Option.map item.labelDetails ~f:CompletionItemLabelDetailsFmt.to_json);
         ("kind", Base.Option.map item.kind (fun x -> int_ @@ completionItemKind_to_enum x));
         ("detail", Base.Option.map item.detail string_);
         ( "documentation",
@@ -1025,11 +1047,15 @@ end
 module CompletionOptionsFmt = struct
   open CompletionOptions
 
-  let to_json { resolveProvider; triggerCharacters } =
+  let completionItem_to_json { labelDetailsSupport } =
+    JSON_Object [("labelDetailsSupport", JSON_Bool labelDetailsSupport)]
+
+  let to_json { resolveProvider; triggerCharacters; completionItem } =
     JSON_Object
       [
         ("resolveProvider", JSON_Bool resolveProvider);
         ("triggerCharacters", Jprint.string_array triggerCharacters);
+        ("completionItem", completionItem_to_json completionItem);
       ]
 end
 
@@ -1093,6 +1119,7 @@ let parse_initialize (params : json option) : Initialize.params =
       {
         snippetSupport = Jget.bool_d json "snippetSupport" ~default:false;
         preselectSupport = Jget.bool_d json "preselectSupport" ~default:false;
+        labelDetailsSupport = Jget.bool_d json "labelDetailsSupport" ~default:false;
       }
     and parse_window json = { status = Jget.obj_opt json "status" |> Base.Option.is_some }
     and parse_telemetry json =

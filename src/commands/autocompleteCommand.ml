@@ -153,6 +153,7 @@ let main base_flags option_values json pretty root strip_root wait_for_recheck l
             ( Flow_lsp_conversions.flow_completion_item_to_lsp
                 ~is_snippet_supported:true
                 ~is_preselect_supported:true
+                ~is_label_detail_supported:true
             %> Lsp_fmt.print_completionItem ~key:"<PLACEHOLDER_PROJECT_URL>"
             %> Hh_json.print_json_endline ~pretty:true )
             items)

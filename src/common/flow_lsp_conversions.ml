@@ -81,6 +81,7 @@ let flow_completion_item_to_lsp
     ?token
     ~is_snippet_supported:(_ : bool)
     ~(is_preselect_supported : bool)
+    ~(is_label_detail_supported : bool)
     (item : ServerProt.Response.Completion.completion_item) : Lsp.Completion.completionItem =
   let open ServerProt.Response.Completion in
   let detail =
@@ -122,8 +123,23 @@ let flow_completion_item_to_lsp
               ];
         }
   in
+  let labelDetails =
+    if
+      is_label_detail_supported
+      && (Base.Option.is_some item.source || Base.Option.is_some item.type_)
+    then
+      Some
+        {
+          Lsp.CompletionItemLabelDetails.qualifier = item.source;
+          parameters = None;
+          type_ = item.type_;
+        }
+    else
+      None
+  in
   {
     Lsp.Completion.label = item.name;
+    labelDetails;
     kind = item.kind;
     detail;
     documentation;
@@ -141,11 +157,17 @@ let flow_completions_to_lsp
     ?token
     ~(is_snippet_supported : bool)
     ~(is_preselect_supported : bool)
+    ~(is_label_detail_supported : bool)
     (completions : ServerProt.Response.Completion.t) : Lsp.Completion.result =
   let { ServerProt.Response.Completion.items; is_incomplete } = completions in
   let items =
     Base.List.map
-      ~f:(flow_completion_item_to_lsp ?token ~is_snippet_supported ~is_preselect_supported)
+      ~f:
+        (flow_completion_item_to_lsp
+           ?token
+           ~is_snippet_supported
+           ~is_preselect_supported
+           ~is_label_detail_supported)
       items
   in
   { Lsp.Completion.isIncomplete = is_incomplete; items }

@@ -356,9 +356,19 @@ module SignatureHelpClientCapabilities = struct
 end
 
 module CompletionOptions = struct
+  type completionItem = {
+    labelDetailsSupport: bool;
+        (** The server has support for completion item label details (see also
+            `CompletionItemLabelDetails`) when receiving a completion item in
+            a resolve call.
+
+            @since 3.17.0 - proposed state *)
+  }
+
   type t = {
     resolveProvider: bool;  (** server resolves extra info on demand *)
     triggerCharacters: string list;
+    completionItem: completionItem;
   }
 end
 
@@ -434,6 +444,7 @@ module Initialize = struct
   and completionItem = {
     snippetSupport: bool;  (** client can do snippets as insert text *)
     preselectSupport: bool;  (** client supports the preselect property *)
+    labelDetailsSupport: bool;  (** proposed for 3.17 *)
   }
 
   and windowClientCapabilities = {
@@ -710,6 +721,15 @@ module CodeActionRequest = struct
   }
 end
 
+(** proposed for 3.17: https://github.com/microsoft/vscode/issues/39441 *)
+module CompletionItemLabelDetails = struct
+  type t = {
+    parameters: string option;
+    qualifier: string option;
+    type_: string option;
+  }
+end
+
 (* Completion request, method="textDocument/completion" *)
 module Completion = struct
   (* These numbers should match
@@ -780,6 +800,7 @@ module Completion = struct
 
   and completionItem = {
     label: string;  (** the label in the UI *)
+    labelDetails: CompletionItemLabelDetails.t option;  (** proposed for 3.17 *)
     kind: completionItemKind option;  (** tells editor which icon to use *)
     detail: string option;  (** human-readable string like type/symbol info *)
     documentation: markedString list option;  (** human-readable doc-comment *)

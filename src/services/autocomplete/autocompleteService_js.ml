@@ -138,7 +138,7 @@ let autocomplete_create_result
     ~log_info
     (name, loc)
     ty =
-  let detail = Ty_printer.string_of_t_single_line ~with_comments:false ~exact_by_default ty in
+  let type_ = Ty_printer.string_of_t_single_line ~with_comments:false ~exact_by_default ty in
   let kind = lsp_completion_of_type ty in
   let text_edits = [text_edit ?insert_text (name, loc)] in
   let sort_text = sort_text_of_rank rank in
@@ -146,26 +146,28 @@ let autocomplete_create_result
     ServerProt.Response.Completion.kind;
     name;
     text_edits;
-    detail;
+    detail = type_;
     sort_text;
     preselect;
     documentation;
     log_info;
+    source = None;
+    type_ = Some type_;
   }
 
 let autocomplete_create_result_decl
     ?insert_text ~rank ?(preselect = false) ?documentation ~exact_by_default ~log_info (name, loc) d
     =
   let open Ty in
-  let (kind, detail) =
+  let (kind, detail, type_) =
     match d with
-    | ModuleDecl _ -> (Some Lsp.Completion.Module, "module " ^ name)
+    | ModuleDecl _ -> (Some Lsp.Completion.Module, "module " ^ name, None)
     | Ty.VariableDecl (_, ty) ->
-      ( Some Lsp.Completion.Variable,
-        Ty_printer.string_of_t_single_line ~with_comments:false ~exact_by_default ty )
+      let type_ = Ty_printer.string_of_t_single_line ~with_comments:false ~exact_by_default ty in
+      (Some Lsp.Completion.Variable, type_, Some type_)
     | d ->
-      ( Some (lsp_completion_of_decl d),
-        Ty_printer.string_of_decl_single_line ~with_comments:false ~exact_by_default d )
+      let type_ = Ty_printer.string_of_decl_single_line ~with_comments:false ~exact_by_default d in
+      (Some (lsp_completion_of_decl d), type_, Some type_)
   in
   let text_edits = [text_edit ?insert_text (name, loc)] in
   let sort_text = sort_text_of_rank rank in
@@ -178,6 +180,8 @@ let autocomplete_create_result_decl
     preselect;
     documentation;
     log_info;
+    source = None;
+    type_;
   }
 
 let autocomplete_create_result_elt
@@ -408,8 +412,10 @@ let completion_item_of_autoimport
       preselect = false;
       documentation = None;
       log_info = "global";
+      source = None;
+      type_ = None;
     }
-  | Some { Code_action_service.title; edits } ->
+  | Some { Code_action_service.title; edits; from } ->
     let edits = Base.List.map ~f:flow_text_edit_of_lsp_text_edit edits in
     {
       ServerProt.Response.Completion.kind = Some Lsp.Completion.Variable;
@@ -420,6 +426,8 @@ let completion_item_of_autoimport
       preselect = false;
       documentation = None;
       log_info = "autoimport";
+      source = Some from;
+      type_ = None (* TODO: include the type *);
     }
 
 let add_locals ~f locals set =
@@ -510,6 +518,8 @@ let autocomplete_id
         preselect = false;
         documentation = None;
         log_info = "this";
+        source = None;
+        type_ = None (* TODO: include the class type *);
       }
       :: items_rev
     else
@@ -527,6 +537,8 @@ let autocomplete_id
         preselect = false;
         documentation = None;
         log_info = "super";
+        source = None;
+        type_ = None (* TODO: include the parent class type *);
       }
       :: items_rev
     else
@@ -779,7 +791,7 @@ let autocomplete_jsx_element
     in
     match import_edit with
     | None -> AcResult results
-    | Some { Code_action_service.title = _; edits } ->
+    | Some { Code_action_service.title = _; edits; from = _ } ->
       let edits = Base.List.map ~f:flow_text_edit_of_lsp_text_edit edits in
       let { items; _ } = result in
       let items =
@@ -922,55 +934,67 @@ let type_exports_of_module_ty ~ac_loc ~exact_by_default ~documentation_of_module
         | TypeAliasDecl { name = { Ty.sym_name; _ }; type_ = Some t; _ } as d ->
           (* TODO consider omitting items with internal names throughout *)
           let sym_name = Reason.display_string_of_name sym_name in
+          let type_ = Ty_printer.string_of_decl_single_line ~exact_by_default d in
           Some
             {
               kind = lsp_completion_of_type t;
               name = sym_name;
               text_edits = [text_edit (sym_name, ac_loc)];
-              detail = Ty_printer.string_of_decl_single_line ~exact_by_default d;
+              detail = type_;
               sort_text = None;
               preselect = false;
               documentation = documentation_of_module_member sym_name;
               log_info = "qualified type alias";
+              source = None;
+              type_ = Some type_;
             }
         | InterfaceDecl ({ Ty.sym_name; _ }, _) as d ->
           let sym_name = Reason.display_string_of_name sym_name in
+          let type_ = Ty_printer.string_of_decl_single_line ~exact_by_default d in
           Some
             {
               kind = Some Lsp.Completion.Interface;
               name = sym_name;
               text_edits = [text_edit (sym_name, ac_loc)];
-              detail = Ty_printer.string_of_decl_single_line ~exact_by_default d;
+              detail = type_;
               sort_text = None;
               preselect = false;
               documentation = documentation_of_module_member sym_name;
               log_info = "qualified interface";
+              source = None;
+              type_ = Some type_;
             }
         | ClassDecl ({ Ty.sym_name; _ }, _) as d ->
           let sym_name = Reason.display_string_of_name sym_name in
+          let type_ = Ty_printer.string_of_decl_single_line ~exact_by_default d in
           Some
             {
               kind = Some Lsp.Completion.Class;
               name = sym_name;
               text_edits = [text_edit (sym_name, ac_loc)];
-              detail = Ty_printer.string_of_decl_single_line ~exact_by_default d;
+              detail = type_;
               sort_text = None;
               preselect = false;
               documentation = documentation_of_module_member sym_name;
               log_info = "qualified class";
+              source = None;
+              type_ = Some type_;
             }
         | EnumDecl { Ty.sym_name; _ } as d ->
           let sym_name = Reason.display_string_of_name sym_name in
+          let type_ = Ty_printer.string_of_decl_single_line ~exact_by_default d in
           Some
             {
               kind = Some Lsp.Completion.Enum;
               name = sym_name;
               text_edits = [text_edit (sym_name, ac_loc)];
-              detail = Ty_printer.string_of_decl_single_line ~exact_by_default d;
+              detail = type_;
               sort_text = None;
               preselect = false;
               documentation = documentation_of_module_member sym_name;
               log_info = "qualified enum";
+              source = None;
+              type_ = Some type_;
             }
         | _ -> None)
       exports
@@ -996,6 +1020,8 @@ let autocomplete_unqualified_type
           preselect = false;
           documentation = None;
           log_info = "unqualified type parameter";
+          source = None;
+          type_ = None;
         }
         :: acc)
       ~init:[]

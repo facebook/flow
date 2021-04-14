@@ -10,6 +10,7 @@ val client_supports_quickfixes : Lsp.CodeActionRequest.params -> bool
 type text_edits = {
   title: string;
   edits: Lsp.TextEdit.t list;
+  from: string;
 }
 
 val text_edits_of_import :
