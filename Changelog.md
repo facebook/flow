@@ -1,3 +1,14 @@
+### 0.149.0
+
+New Features:
+* Added autocomplete for member expressions that use bracket notation
+
+Notable bug fixes:
+* Improved typechecking for expressions like `obj[Symbol.iterator]`. This is now correctly typed as the object type's `@@iterator` property.
+
+Misc:
+* Removed `esproposal.class_instance_fields`, `esproposal.class_static_fields`, `esproposal.decorators`, `esproposal.export_star_as`, `esproposal.nullish_coalescing` and `esproposal.optional_chaining` flowconfig options which have been deprecated since v0.135.
+
 ### 0.148.0
 
 Likely to cause new Flow errors:
