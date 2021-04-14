@@ -105,6 +105,11 @@ describe('Enum', () => {
     test('members', () => {
       expect(Array.from(E.members())).toEqual([1, 2]);
     });
+
+    test('getName', () => {
+      expect(E.getName(E.A)).toBe('A');
+      expect(E.getName(E.B)).toBe('B');
+    });
   });
 });
 
@@ -208,6 +213,11 @@ describe('Enum.Mirrored', () => {
 
     test('members', () => {
       expect(Array.from(E.members())).toEqual(['A', 'B']);
+    });
+
+    test('getName', () => {
+      expect(E.getName(E.A)).toBe('A');
+      expect(E.getName(E.B)).toBe('B');
     });
   });
 });

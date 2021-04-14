@@ -12,26 +12,31 @@
 var hasOwnProperty = Object.prototype.hasOwnProperty;
 
 // Map from an enum object to a set of its values.
-var enumValuesCache = typeof WeakMap === 'function' ? new WeakMap() : new Map();
+var reverseMapCache = typeof WeakMap === 'function' ? new WeakMap() : new Map();
 
-function valuesSet(enumObject) {
-  var enumValues = enumValuesCache.get(enumObject);
-  if (enumValues !== undefined) {
-    return enumValues;
+// Computes the reverse mapping of the enum object: from value to name.
+// Flow Enum values are unique (enforced by the parser), so this is a
+// one to one mapping.
+function getReverseMap(enumObject) {
+  var reverseMap = reverseMapCache.get(enumObject);
+  if (reverseMap !== undefined) {
+    return reverseMap;
   }
   // We aren't using `Object.values` because that gets enumerable
   // properties, and our properties aren't enumerable.
-  var names = Object.getOwnPropertyNames(enumObject);
-  var newEnumValues = new Set(names.map(name => enumObject[name]));
-  enumValuesCache.set(enumObject, newEnumValues);
-  return newEnumValues;
+  var newReverseMap = new Map();
+  Object.getOwnPropertyNames(enumObject).forEach(function (name) {
+    newReverseMap.set(enumObject[name], name);
+  });
+  reverseMapCache.set(enumObject, newReverseMap);
+  return newReverseMap;
 }
 
 var EnumPrototype = Object.freeze(
   Object.defineProperties(Object.create(null), {
     isValid: {
       value: function (x) {
-        return valuesSet(this).has(x);
+        return getReverseMap(this).has(x);
       },
     },
     cast: {
@@ -41,9 +46,14 @@ var EnumPrototype = Object.freeze(
     },
     members: {
       value: function () {
-        return valuesSet(this).values();
+        return getReverseMap(this).keys();
       },
     },
+    getName: {
+      value: function (value) {
+        return getReverseMap(this).get(value);
+      }
+    }
   })
 );
 
@@ -82,6 +92,11 @@ var EnumMirroredPrototype = Object.freeze(
         return Object.getOwnPropertyNames(this);
       },
     },
+    getName: {
+      value: function (value) {
+        return value;
+      }
+    }
   })
 );
 
