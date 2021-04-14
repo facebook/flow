@@ -2233,24 +2233,31 @@ let handle_live_errors_request =
                        })),
                 metadata )
           | File_input.FileContent (_, content) ->
-            let%lwt (live_errors, live_warnings) =
+            let%lwt (live_errors, live_warnings, metadata) =
               match check_that_we_care_about_this_file ~options ~env ~file_path ~content with
               | Ok () ->
                 let file_key =
                   let file_options = Options.file_options options in
                   Files.filename_from_string ~options:file_options file_path
                 in
-                let%lwt result =
+                let%lwt (result, did_hit_cache) =
                   let%lwt ((_, parse_errs) as intermediate_result) =
                     Types_js.make_parse_artifacts_and_errors ~options ~profiling content file_key
                   in
                   if not (Flow_error.ErrorSet.is_empty parse_errs) then
-                    Lwt.return (Error parse_errs)
+                    Lwt.return (Error parse_errs, None)
                   else
-                    Types_js.type_parse_artifacts
+                    let type_parse_artifacts_cache =
+                      if Options.cache_live_errors_artifacts options then
+                        Some (Persistent_connection.type_parse_artifacts_cache client)
+                      else
+                        None
+                    in
+                    type_parse_artifacts_with_cache
                       ~options
                       ~env
                       ~profiling
+                      ~type_parse_artifacts_cache
                       file_key
                       intermediate_result
                 in
@@ -2261,7 +2268,12 @@ let handle_live_errors_request =
                     file_key
                     result
                 in
-                Lwt.return (live_errors, live_warnings)
+                let metadata =
+                  let json_props = add_cache_hit_data_to_json [] did_hit_cache in
+                  let json = Hh_json.JSON_Object json_props in
+                  with_data ~extra_data:(Some json) metadata
+                in
+                Lwt.return (live_errors, live_warnings, metadata)
               | Error reason ->
                 Hh_logger.info "Not reporting live errors for file %S: %s" file_path reason;
 
@@ -2269,7 +2281,8 @@ let handle_live_errors_request =
                  * then just return empty sets *)
                 Lwt.return
                   ( Errors.ConcreteLocPrintableErrorSet.empty,
-                    Errors.ConcreteLocPrintableErrorSet.empty )
+                    Errors.ConcreteLocPrintableErrorSet.empty,
+                    metadata )
             in
             let live_errors_uri = Lsp.DocumentUri.of_string uri in
             let live_diagnostics =
