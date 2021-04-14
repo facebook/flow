@@ -137,7 +137,7 @@ let autocomplete
     AutocompleteService_js.add_autocomplete_token contents line column
   in
   Autocomplete_js.autocomplete_set_hooks ~trigger_character ~cursor:cursor_loc;
-  let%lwt check_contents_result =
+  let%lwt file_artifacts_result =
     let%lwt parse_result = Types_js.parse_contents ~options ~profiling contents path in
     Types_js.type_parse_artifacts ~options ~env ~profiling path parse_result
   in
@@ -149,7 +149,7 @@ let autocomplete
       ("broader_context", JSON_String broader_context);
     ]
   in
-  match check_contents_result with
+  match file_artifacts_result with
   | Error _parse_errors ->
     let err_str = "Couldn't parse file in parse_contents" in
     let json_data_to_log =
@@ -1769,7 +1769,7 @@ let handle_persistent_signaturehelp_lsp
       | None -> "-"
     in
     let path = File_key.SourceFile path in
-    let%lwt (check_contents_result, did_hit_cache) =
+    let%lwt (file_artifacts_result, did_hit_cache) =
       let%lwt parse_result = Types_js.parse_contents ~options ~profiling contents path in
       let type_parse_artifacts_cache =
         if Options.cache_signature_help_artifacts options then
@@ -1790,7 +1790,7 @@ let handle_persistent_signaturehelp_lsp
       let json = Hh_json.JSON_Object json_props in
       with_data ~extra_data:(Some json) metadata
     in
-    (match check_contents_result with
+    (match file_artifacts_result with
     | Error _parse_errors ->
       mk_lsp_error_response
         ~ret:()
