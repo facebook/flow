@@ -110,11 +110,14 @@ let sanitize_watchman_response ~debug_logging output =
     try Hh_json.json_of_string output
     with e ->
       let exn = Exception.wrap e in
-      Hh_logger.error
-        "Failed to parse string as JSON: %s\nEXCEPTION:%s\nSTACK:%s\n"
-        output
-        (Exception.get_ctor_string exn)
-        (Exception.get_backtrace_string exn);
+      let msg = spf "Failed to parse string as JSON: %s" output in
+      EventLogger.watchman_error
+        (spf
+           "%s\nEXCEPTION:%s\nSTACK:%s\n"
+           msg
+           (Exception.get_ctor_string exn)
+           (Exception.get_backtrace_string exn));
+      Hh_logger.error ~exn "%s" msg;
       Exception.reraise exn
   in
   assert_no_error response;
