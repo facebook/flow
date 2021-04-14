@@ -107,7 +107,7 @@ let suggest ~options ~env ~profiling file_key file_content =
       Types_js.type_parse_artifacts ~options ~env ~profiling file_key intermediate_result
   in
   let (tc_errors, tc_warnings) =
-    Types_js.printable_errors_of_typecheck_contents_result
+    Types_js.printable_errors_of_file_artifacts_result
       ~options
       ~env
       file_key

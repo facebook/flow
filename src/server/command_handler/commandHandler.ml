@@ -254,7 +254,7 @@ let check_file ~options ~env ~profiling ~force file_input =
           Types_js.type_parse_artifacts ~options ~env ~profiling file intermediate_result
       in
       let (errors, warnings) =
-        Types_js.printable_errors_of_typecheck_contents_result ~options ~env file result
+        Types_js.printable_errors_of_file_artifacts_result ~options ~env file result
       in
       Lwt.return (convert_errors ~errors ~warnings ~suppressed_errors:[])
     else
@@ -2265,11 +2265,7 @@ let handle_live_errors_request =
                       intermediate_result
                 in
                 let (live_errors, live_warnings) =
-                  Types_js.printable_errors_of_typecheck_contents_result
-                    ~options
-                    ~env
-                    file_key
-                    result
+                  Types_js.printable_errors_of_file_artifacts_result ~options ~env file_key result
                 in
                 let metadata =
                   let json_props = add_cache_hit_data_to_json [] did_hit_cache in

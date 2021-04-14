@@ -413,7 +413,7 @@ let insert_type
     Lwt.return result
   | Error _ as result ->
     let (errs, _) =
-      Types_js.printable_errors_of_typecheck_contents_result ~options ~env file_key result
+      Types_js.printable_errors_of_file_artifacts_result ~options ~env file_key result
     in
     Lwt.return (Error (error_to_string (Expected (FailedToTypeCheck errs))))
 

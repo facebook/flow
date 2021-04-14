@@ -1235,7 +1235,7 @@ let type_parse_artifacts ~options ~env ~profiling filename intermediate_result =
     Lwt.return (Ok file_artifacts)
   | (None, errs) -> Lwt.return (Error errs)
 
-let printable_errors_of_typecheck_contents_result ~options ~env filename result =
+let printable_errors_of_file_artifacts_result ~options ~env filename result =
   let reader = State_reader.create () in
   let loc_of_aloc = Parsing_heaps.Reader.loc_of_aloc ~reader in
   match result with
