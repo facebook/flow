@@ -51,3 +51,5 @@ function f() {
   let y = x.concat(mkA(bar()));
   let z : A<Node> = y.filter(Boolean); // should not be an error, but unions + generics are broken
 }
+
+('hi': $NonMaybeType<empty>); // Error

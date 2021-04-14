@@ -1484,6 +1484,7 @@ struct
         | (OptionalT { reason = _; type_ = tout; use_desc = _ }, FilterMaybeT _)
         | (MaybeT (_, tout), FilterMaybeT _) ->
           rec_flow cx trace (tout, u)
+        | (DefT (_, _, EmptyT), FilterMaybeT (use_op, tout)) -> rec_flow_t cx trace ~use_op (l, tout)
         | (MaybeT _, ReposLowerT (reason_op, use_desc, u)) ->
           (* Don't split the maybe type into its constituent members. Instead,
              reposition the entire maybe type. *)
@@ -5871,6 +5872,7 @@ struct
     | DestructuringT _
     | EnumExhaustiveCheckT _
     | MakeExactT _
+    | FilterMaybeT _
     | ObjKitT _
     | ReposLowerT _
     | ReposUseT _

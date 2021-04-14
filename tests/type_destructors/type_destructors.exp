@@ -384,6 +384,20 @@ References:
                        ^ [3]
 
 
+Error ------------------------------------------------------------------------------------------- non_maybe_type.js:55:2
+
+Cannot cast `'hi'` to `$NonMaybeType` because string [1] is incompatible with empty [2]. [incompatible-cast]
+
+   non_maybe_type.js:55:2
+   55| ('hi': $NonMaybeType<empty>); // Error
+        ^^^^ [1]
+
+References:
+   non_maybe_type.js:55:22
+   55| ('hi': $NonMaybeType<empty>); // Error
+                            ^^^^^ [2]
+
+
 Error -------------------------------------------------------------------------------------------- property_type.js:1:18
 
 Cannot use `$PropertyType` because the second type argument must be a string literal. [invalid-property-type-arg]
@@ -811,4 +825,4 @@ References:
 
 
 
-Found 54 errors
+Found 55 errors
