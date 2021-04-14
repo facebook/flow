@@ -23,3 +23,8 @@ let s = new A<string>("");
 
 n.method.bind(s); // TODO: error (number incompatible with string)
 s.method.bind(n); //  TODO: error (number incompatible with string)
+
+
+declare class B<T> {
+    foo<X>(this: B<X>) : void
+}

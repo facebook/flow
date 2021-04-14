@@ -694,38 +694,35 @@ module Make (F : Func_sig.S) = struct
     let check_method msig ~static name id_loc =
       (* The this parameter of the method, if annotated, must be a supertype
         of the instance *)
-      Base.Option.iter
-        ~f:(fun this_param ->
-          let self =
-            if static then
-              TypeUtil.class_type self
-            else
-              self
-          in
-          let reason = mk_reason (RMethod (Some name)) id_loc in
-          let use_op = Op (ClassMethodDefinition { def = reason; name = def_reason }) in
-          Flow.flow cx (self, UseT (use_op, this_param)))
-        (F.this_param msig.F.fparams)
+      F.check_with_generics
+        cx
+        (fun msig ->
+          Base.Option.iter
+            ~f:(fun this_param ->
+              let self =
+                if static then
+                  TypeUtil.class_type self
+                else
+                  self
+              in
+              let reason = mk_reason (RMethod (Some name)) id_loc in
+              let use_op = Op (ClassMethodDefinition { def = reason; name = def_reason }) in
+              Flow.flow cx (self, UseT (use_op, this_param)))
+            (F.this_param msig.F.fparams))
+        msig
     in
 
     with_sig
       ~static:true
-      (fun s ->
-        iter_methods_with_name
-          (fun name (loc, msig, _, _) ->
-            (* Constructors don't bind this *)
-            Base.Option.iter ~f:(check_method msig ~static:true name) loc)
-          s)
+      (iter_methods_with_name (fun name (loc, msig, _, _) ->
+           (* Constructors don't bind this *)
+           Base.Option.iter ~f:(check_method msig ~static:true name) loc))
       x;
 
     with_sig
       ~static:false
-      (fun s ->
-        iter_methods_with_name
-          (* Constructors don't bind this *)
-            (fun name (loc, msig, _, _) ->
-            Base.Option.iter ~f:(check_method msig ~static:false name) loc)
-          s)
+      (iter_methods_with_name (* Constructors don't bind this *) (fun name (loc, msig, _, _) ->
+           Base.Option.iter ~f:(check_method msig ~static:false name) loc))
       x
 
   let check_implements cx def_reason x =
