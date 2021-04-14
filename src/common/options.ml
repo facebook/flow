@@ -59,6 +59,7 @@ type t = {
   opt_babel_loose_array_spread: bool;
   opt_check_updates_against_providers: bool;
   opt_cache_live_errors_artifacts: bool;
+  opt_cache_signature_help_artifacts: bool;
   opt_debug: bool;
   opt_enable_const_params: bool;
   opt_enable_indexed_access: bool;
@@ -139,6 +140,8 @@ let automatic_require_default opts = opts.opt_automatic_require_default
 let babel_loose_array_spread opts = opts.opt_babel_loose_array_spread
 
 let cache_live_errors_artifacts opts = opts.opt_cache_live_errors_artifacts
+
+let cache_signature_help_artifacts opts = opts.opt_cache_signature_help_artifacts
 
 let new_check opts = opts.opt_new_check
 

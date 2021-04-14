@@ -1225,6 +1225,7 @@ let make_options
     opt_all = options_flags.all || FlowConfig.all flowconfig;
     opt_babel_loose_array_spread = FlowConfig.babel_loose_array_spread flowconfig;
     opt_cache_live_errors_artifacts = FlowConfig.cache_live_errors_artifacts flowconfig;
+    opt_cache_signature_help_artifacts = FlowConfig.cache_signature_help_artifacts flowconfig;
     opt_wait_for_recheck;
     opt_weak = options_flags.weak || FlowConfig.weak flowconfig;
     opt_traces = Base.Option.value options_flags.traces ~default:(FlowConfig.traces flowconfig);
