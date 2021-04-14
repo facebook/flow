@@ -18,8 +18,8 @@ open Utils_js
  * 2. Eagerly calculate `collate_errors` after init or a recheck, so that the server still has
  *    the init or recheck lock. If we improve how clients can tell if a server is busy or stuck
  *    then we can probably relax this.
- * 3. Throw away the collated errors when lazy mode's typecheck_contents adds more dependents or
- *    dependencies to the checked set
+ * 3. Throw away the collated errors when lazy mode adds more dependents or dependencies to the
+ *    checked set
  * *)
 let regenerate ~reader =
   Errors.(
