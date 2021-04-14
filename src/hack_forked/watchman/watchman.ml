@@ -263,8 +263,6 @@ let subscribe ~mode ~states env =
     Subscribe
     env
 
-let watch_project root = J.strlist ["watch-project"; root]
-
 (** We filter all responses from get_changes through this. This is to detect
    * Watchman server crashes.
    *
@@ -512,6 +510,29 @@ let get_clockspec ~debug_logging ~conn ~watch_root prior_clockspec =
     in
     J.get_string_val "clock" response
 
+(** Watch this root
+
+    If the path doesn't exist or the request errors for any other reason, this will
+    return [None]. Otherwise, returns the watch root and relative path to that root.
+
+    TODO: should return the error when it fails for reasons other than the path
+    not existing. *)
+let watch_project ~debug_logging ~conn ~timeout root =
+  let query = J.strlist ["watch-project"; Path.to_string root] in
+  let%map response =
+    catch
+      ~f:(fun () ->
+        let%map response = request ~debug_logging ~conn ~timeout query in
+        Some response)
+      ~catch:(fun _ -> Lwt.return None)
+  in
+  match response with
+  | None -> None
+  | Some response ->
+    let watch_root = J.get_string_val "watch" response in
+    let relative_path = J.get_string_val "relative_path" ~default:"" response in
+    Some (watch_root, relative_path)
+
 let re_init
     ?prior_clockspec
     {
@@ -528,26 +549,10 @@ let re_init
   let%bind (watched_path_expression_terms, watch_roots, failed_paths) =
     Lwt_list.fold_left_s
       (fun (terms, watch_roots, failed_paths) path ->
-        (* Watch this root. If the path doesn't exist, watch_project will throw. In that case catch
-         * the error and continue for now. *)
-        let%map response =
-          catch
-            ~f:(fun () ->
-              let%map response =
-                request
-                  ~debug_logging
-                  ~conn
-                  ~timeout:None (* the whole init process should be wrapped in a timeout *)
-                  (watch_project (Path.to_string path))
-              in
-              Some response)
-            ~catch:(fun _ -> Lwt.return None)
-        in
-        match response with
+        let timeout = None (* the whole init process should be wrapped in a timeout *) in
+        match%map watch_project ~debug_logging ~conn ~timeout path with
         | None -> (terms, watch_roots, SSet.add (Path.to_string path) failed_paths)
-        | Some response ->
-          let watch_root = J.get_string_val "watch" response in
-          let relative_path = J.get_string_val "relative_path" ~default:"" response in
+        | Some (watch_root, relative_path) ->
           let terms = prepend_relative_path_term ~relative_path ~terms in
           let watch_roots = SSet.add watch_root watch_roots in
           (terms, watch_roots, failed_paths))
