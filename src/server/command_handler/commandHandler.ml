@@ -1781,11 +1781,28 @@ let handle_persistent_signaturehelp_lsp
       | None -> "-"
     in
     let path = File_key.SourceFile path in
-    let%lwt check_contents_result =
+    let%lwt (check_contents_result, did_hit_cache) =
       let%lwt parse_result =
         Types_js.make_parse_artifacts_and_errors ~options ~profiling contents path
       in
-      Types_js.type_parse_artifacts ~options ~env ~profiling path parse_result
+      let type_parse_artifacts_cache =
+        if Options.cache_signature_help_artifacts options then
+          Some (Persistent_connection.type_parse_artifacts_cache client)
+        else
+          None
+      in
+      type_parse_artifacts_with_cache
+        ~options
+        ~env
+        ~profiling
+        ~type_parse_artifacts_cache
+        path
+        parse_result
+    in
+    let metadata =
+      let json_props = add_cache_hit_data_to_json [] did_hit_cache in
+      let json = Hh_json.JSON_Object json_props in
+      with_data ~extra_data:(Some json) metadata
     in
     (match check_contents_result with
     | Error _parse_errors ->
