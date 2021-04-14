@@ -2,7 +2,7 @@
   "errors":[
     {
       "loc":{"source":null,"start":{"line":1,"column":12},"end":{"line":1,"column":13}},
-      "message":"Invalid indexed access. Remove the period. The correct format is `T[K]`."
+      "message":"Invalid indexed access. Remove the period. Use the format `T[K]`."
     }
   ],
   "type":"Program",

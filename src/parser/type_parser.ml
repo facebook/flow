@@ -195,12 +195,12 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
       | T_PERIOD ->
         (match Peek.ith_token ~i:1 env with
         | T_LBRACKET ->
-          error env Parse_error.InvalidIndexedAccess;
+          error env (Parse_error.InvalidIndexedAccess { has_bracket = true });
           Expect.token env T_PERIOD;
           Expect.token env T_LBRACKET;
           postfix_brackets env t
         | _ ->
-          (* TODO: error in upcoming diff *)
+          error env (Parse_error.InvalidIndexedAccess { has_bracket = false });
           t)
       | _ -> t
 
