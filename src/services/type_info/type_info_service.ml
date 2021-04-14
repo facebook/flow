@@ -97,7 +97,7 @@ let coverage ~cx ~typed_ast ~force ~trust file content =
   Coverage.covered_types cx ~should_check ~check_trust:trust typed_ast
 
 let suggest ~options ~env ~profiling file_key file_content =
-  let%lwt typecheck_contents_result =
+  let%lwt file_artifacts_result =
     let%lwt ((_, parse_errs) as intermediate_result) =
       Types_js.parse_contents ~options ~profiling file_content file_key
     in
@@ -107,13 +107,9 @@ let suggest ~options ~env ~profiling file_key file_content =
       Types_js.type_parse_artifacts ~options ~env ~profiling file_key intermediate_result
   in
   let (tc_errors, tc_warnings) =
-    Types_js.printable_errors_of_file_artifacts_result
-      ~options
-      ~env
-      file_key
-      typecheck_contents_result
+    Types_js.printable_errors_of_file_artifacts_result ~options ~env file_key file_artifacts_result
   in
-  match typecheck_contents_result with
+  match file_artifacts_result with
   | Ok (Parse_artifacts { ast; file_sig; _ }, Typecheck_artifacts { cx; typed_ast = tast }) ->
     let file_sig = File_sig.abstractify_locs file_sig in
     let ty_query = Query_types.suggest_types cx file_sig tast in
