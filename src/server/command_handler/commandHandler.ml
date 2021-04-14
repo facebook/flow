@@ -13,9 +13,9 @@ open Utils_js
 open Lsp
 open Types_js_types
 
-(* Returns the result of calling `type_contents`, along with a bool option indicating whether the
- * cache was hit -- None if no cache was available, Some true if it was hit, and Some false if it
- * was missed. *)
+(* Returns the result of calling `type_parse_artifacts`, along with a bool option indicating
+ * whether the cache was hit -- None if no cache was available, Some true if it was hit, and Some
+ * false if it was missed. *)
 let type_parse_artifacts_with_cache
     ~options ~env ~profiling ~type_parse_artifacts_cache file artifacts =
   match type_parse_artifacts_cache with
@@ -151,7 +151,7 @@ let autocomplete
   in
   match check_contents_result with
   | Error _parse_errors ->
-    let err_str = "Couldn't parse file in type_contents" in
+    let err_str = "Couldn't parse file in parse_contents" in
     let json_data_to_log =
       let open Hh_json in
       JSON_Object
@@ -329,7 +329,7 @@ let infer_type
   | Ok content ->
     let%lwt result =
       try_with_json (fun () ->
-          let%lwt (type_contents_result, did_hit_cache) =
+          let%lwt (file_artifacts_result, did_hit_cache) =
             let%lwt parse_result = Types_js.parse_contents ~options ~profiling content file in
             type_parse_artifacts_with_cache
               ~options
@@ -340,9 +340,9 @@ let infer_type
               parse_result
           in
           let%lwt result =
-            match type_contents_result with
+            match file_artifacts_result with
             | Error _parse_errors ->
-              let err_str = "Couldn't parse file in type_contents" in
+              let err_str = "Couldn't parse file in parse_artifacts" in
               let json_props = add_cache_hit_data_to_json [] did_hit_cache in
               Lwt.return (Error (err_str, Some (Hh_json.JSON_Object json_props)))
             | Ok
@@ -524,12 +524,12 @@ let dump_types ~options ~env ~profiling ~expand_aliases ~evaluate_type_destructo
       let file = File_input.filename_of_file_input file_input in
       let file = File_key.SourceFile file in
       Lwt.return (File_input.content_of_file_input file_input) >>= fun content ->
-      let%lwt type_contents_result =
+      let%lwt file_artifacts_result =
         let%lwt parse_result = Types_js.parse_contents ~options ~profiling content file in
         Types_js.type_parse_artifacts ~options ~env ~profiling file parse_result
       in
-      match type_contents_result with
-      | Error _parse_errors -> Lwt.return (Error "Couldn't parse file in type_contents")
+      match file_artifacts_result with
+      | Error _parse_errors -> Lwt.return (Error "Couldn't parse file in parse_contents")
       | Ok (Parse_artifacts { file_sig; _ }, Typecheck_artifacts { cx; typed_ast }) ->
         Lwt.return
           (Ok
@@ -550,7 +550,7 @@ let coverage ~options ~env ~profiling ~type_parse_artifacts_cache ~force ~trust 
     let file = File_key.SourceFile file in
     File_input.content_of_file_input file_input %>>= fun content ->
     try_with (fun () ->
-        let%lwt (type_contents_result, _did_hit_cache) =
+        let%lwt (file_artifacts_result, _did_hit_cache) =
           let%lwt parse_result = Types_js.parse_contents ~options ~profiling content file in
           type_parse_artifacts_with_cache
             ~options
@@ -560,10 +560,10 @@ let coverage ~options ~env ~profiling ~type_parse_artifacts_cache ~force ~trust 
             file
             parse_result
         in
-        match type_contents_result with
+        match file_artifacts_result with
         | Ok (_, Typecheck_artifacts { cx; typed_ast }) ->
           Lwt.return (Ok (Type_info_service.coverage ~cx ~typed_ast ~force ~trust file content))
-        | Error _parse_errors -> Lwt.return (Error "Couldn't parse file in type_contents"))
+        | Error _parse_errors -> Lwt.return (Error "Couldn't parse file in parse_contents"))
 
 let batch_coverage ~options ~env ~trust ~batch =
   if Options.trust_mode options = Options.NoTrust && trust then
@@ -720,7 +720,7 @@ let get_def ~options ~reader ~env ~profiling ~type_parse_artifacts_cache (file_i
        with
       | (Ok result, did_hit_cache) -> Lwt.return (Ok result, did_hit_cache)
       | (Error _parse_errors, did_hit_cache) ->
-        Lwt.return (Error "Couldn't parse file in type_contents", did_hit_cache))
+        Lwt.return (Error "Couldn't parse file in parse_contents", did_hit_cache))
   in
   match check_result with
   | Error msg ->
@@ -996,7 +996,7 @@ let find_code_actions ~reader ~options ~env ~profiling ~params ~client =
         Some (Persistent_connection.type_parse_artifacts_cache client)
       in
       let uri = TextDocumentIdentifier.(textDocument.uri) in
-      let%lwt (type_contents_result, _did_hit_cache) =
+      let%lwt (file_artifacts_result, _did_hit_cache) =
         let%lwt parse_result = Types_js.parse_contents ~options ~profiling file_contents file_key in
         type_parse_artifacts_with_cache
           ~options
@@ -1006,7 +1006,7 @@ let find_code_actions ~reader ~options ~env ~profiling ~params ~client =
           file_key
           parse_result
       in
-      (match type_contents_result with
+      (match file_artifacts_result with
       | Error _ -> Lwt.return (Ok [])
       | Ok
           ( Parse_artifacts { file_sig; tolerable_errors; ast; parse_errors; _ },
@@ -1795,7 +1795,7 @@ let handle_persistent_signaturehelp_lsp
       mk_lsp_error_response
         ~ret:()
         ~id:(Some id)
-        ~reason:"Couldn't parse file in type_contents"
+        ~reason:"Couldn't parse file in parse_artifacts"
         metadata
     | Ok (Parse_artifacts { file_sig; _ }, Typecheck_artifacts { cx; typed_ast }) ->
       let func_details =
