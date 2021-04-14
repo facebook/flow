@@ -524,7 +524,20 @@ let watch_project ~debug_logging ~conn ~timeout root =
       ~f:(fun () ->
         let%map response = request ~debug_logging ~conn ~timeout query in
         Some response)
-      ~catch:(fun _ -> Lwt.return None)
+      ~catch:(fun exn ->
+        (match Exception.to_exn exn with
+        | Watchman_error _
+        | Subscription_canceled_by_watchman
+        | Hh_json.Syntax_error _ ->
+          (* These exceptions are logged already in `request` *)
+          ()
+        | _ ->
+          EventLogger.watchman_error
+            (spf
+               "Unexpected error in watch_project: %s\n%s"
+               (Exception.get_ctor_string exn)
+               (Exception.get_full_backtrace_string 500 exn)));
+        Lwt.return None)
   in
   match response with
   | None -> None
