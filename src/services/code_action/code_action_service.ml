@@ -349,7 +349,7 @@ let autofix_exports ~options ~env ~profiling ~file_key ~file_content =
   let open Autofix_exports in
   let%lwt file_artifacts =
     let%lwt ((_, parse_errs) as intermediate_result) =
-      Types_js.make_parse_artifacts_and_errors ~options ~profiling file_content file_key
+      Types_js.parse_contents ~options ~profiling file_content file_key
     in
     if not (Flow_error.ErrorSet.is_empty parse_errs) then
       Lwt.return (Error parse_errs)
@@ -381,7 +381,7 @@ let insert_type
   let open Insert_type in
   let%lwt file_artifacts =
     let%lwt ((_, parse_errs) as intermediate_result) =
-      Types_js.make_parse_artifacts_and_errors ~options ~profiling file_content file_key
+      Types_js.parse_contents ~options ~profiling file_content file_key
     in
     (* It's not clear to me (nmote) that we actually should abort when we see parse errors. Maybe
      * we should continue on here. I'm inserting this logic during the migration away from

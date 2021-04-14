@@ -44,7 +44,7 @@ val full_check :
   ServerEnv.env ->
   (ServerEnv.env * string option) Lwt.t
 
-val make_parse_artifacts_and_errors :
+val parse_contents :
   options:Options.t ->
   profiling:Profiling_js.running ->
   (* contents *)

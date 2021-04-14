@@ -138,9 +138,7 @@ let autocomplete
   in
   Autocomplete_js.autocomplete_set_hooks ~trigger_character ~cursor:cursor_loc;
   let%lwt check_contents_result =
-    let%lwt parse_result =
-      Types_js.make_parse_artifacts_and_errors ~options ~profiling contents path
-    in
+    let%lwt parse_result = Types_js.parse_contents ~options ~profiling contents path in
     Types_js.type_parse_artifacts ~options ~env ~profiling path parse_result
   in
   Autocomplete_js.autocomplete_unset_hooks ();
@@ -248,7 +246,7 @@ let check_file ~options ~env ~profiling ~force file_input =
     if should_check then
       let%lwt result =
         let%lwt ((_, parse_errs) as intermediate_result) =
-          Types_js.make_parse_artifacts_and_errors ~options ~profiling content file
+          Types_js.parse_contents ~options ~profiling content file
         in
         if not (Flow_error.ErrorSet.is_empty parse_errs) then
           Lwt.return (Error parse_errs)
@@ -332,9 +330,7 @@ let infer_type
     let%lwt result =
       try_with_json (fun () ->
           let%lwt (type_contents_result, did_hit_cache) =
-            let%lwt parse_result =
-              Types_js.make_parse_artifacts_and_errors ~options ~profiling content file
-            in
+            let%lwt parse_result = Types_js.parse_contents ~options ~profiling content file in
             type_parse_artifacts_with_cache
               ~options
               ~env
@@ -529,9 +525,7 @@ let dump_types ~options ~env ~profiling ~expand_aliases ~evaluate_type_destructo
       let file = File_key.SourceFile file in
       Lwt.return (File_input.content_of_file_input file_input) >>= fun content ->
       let%lwt type_contents_result =
-        let%lwt parse_result =
-          Types_js.make_parse_artifacts_and_errors ~options ~profiling content file
-        in
+        let%lwt parse_result = Types_js.parse_contents ~options ~profiling content file in
         Types_js.type_parse_artifacts ~options ~env ~profiling file parse_result
       in
       match type_contents_result with
@@ -557,9 +551,7 @@ let coverage ~options ~env ~profiling ~type_parse_artifacts_cache ~force ~trust 
     File_input.content_of_file_input file_input %>>= fun content ->
     try_with (fun () ->
         let%lwt (type_contents_result, _did_hit_cache) =
-          let%lwt parse_result =
-            Types_js.make_parse_artifacts_and_errors ~options ~profiling content file
-          in
+          let%lwt parse_result = Types_js.parse_contents ~options ~profiling content file in
           type_parse_artifacts_with_cache
             ~options
             ~env
@@ -717,9 +709,7 @@ let get_def ~options ~reader ~env ~profiling ~type_parse_artifacts_cache (file_i
     | Error _ as err -> Lwt.return (err, None)
     | Ok content ->
       (match%lwt
-         let%lwt parse_result =
-           Types_js.make_parse_artifacts_and_errors ~options ~profiling content file
-         in
+         let%lwt parse_result = Types_js.parse_contents ~options ~profiling content file in
          type_parse_artifacts_with_cache
            ~options
            ~env
@@ -1007,9 +997,7 @@ let find_code_actions ~reader ~options ~env ~profiling ~params ~client =
       in
       let uri = TextDocumentIdentifier.(textDocument.uri) in
       let%lwt (type_contents_result, _did_hit_cache) =
-        let%lwt parse_result =
-          Types_js.make_parse_artifacts_and_errors ~options ~profiling file_contents file_key
-        in
+        let%lwt parse_result = Types_js.parse_contents ~options ~profiling file_contents file_key in
         type_parse_artifacts_with_cache
           ~options
           ~env
@@ -1782,9 +1770,7 @@ let handle_persistent_signaturehelp_lsp
     in
     let path = File_key.SourceFile path in
     let%lwt (check_contents_result, did_hit_cache) =
-      let%lwt parse_result =
-        Types_js.make_parse_artifacts_and_errors ~options ~profiling contents path
-      in
+      let%lwt parse_result = Types_js.parse_contents ~options ~profiling contents path in
       let type_parse_artifacts_cache =
         if Options.cache_signature_help_artifacts options then
           Some (Persistent_connection.type_parse_artifacts_cache client)
@@ -2259,7 +2245,7 @@ let handle_live_errors_request =
                 in
                 let%lwt (result, did_hit_cache) =
                   let%lwt ((_, parse_errs) as intermediate_result) =
-                    Types_js.make_parse_artifacts_and_errors ~options ~profiling content file_key
+                    Types_js.parse_contents ~options ~profiling content file_key
                   in
                   if not (Flow_error.ErrorSet.is_empty parse_errs) then
                     Lwt.return (Error parse_errs, None)

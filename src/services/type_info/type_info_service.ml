@@ -99,7 +99,7 @@ let coverage ~cx ~typed_ast ~force ~trust file content =
 let suggest ~options ~env ~profiling file_key file_content =
   let%lwt typecheck_contents_result =
     let%lwt ((_, parse_errs) as intermediate_result) =
-      Types_js.make_parse_artifacts_and_errors ~options ~profiling file_content file_key
+      Types_js.parse_contents ~options ~profiling file_content file_key
     in
     if not (Flow_error.ErrorSet.is_empty parse_errs) then
       Lwt.return (Error parse_errs)

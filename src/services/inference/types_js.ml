@@ -142,7 +142,11 @@ type parse_contents_return =
        * encountered docblock errors. We could eliminate this case by changing the behavior of the
        * main error-checking code, or by making file sig errors non-fatal to the parse. *)
 
-let parse_contents ~options filename contents =
+(* This puts a nicer interface for do_parse. At some point, `do_parse` itself should be
+ * rethought, at which point `parse_contents` could call it directly without confusion. This would
+ * also benefit the other callers of `do_parse`. In the meantime, this function provides the
+ * interface we would like here. *)
+let do_parse_wrapper ~options filename contents =
   (* always enable types when checking an individual file *)
   let types_mode = Parsing_service_js.TypesAllowed in
   let max_tokens = Options.max_header_tokens options in
@@ -1195,10 +1199,10 @@ let file_artifacts_of_parse_artifacts ~options ~env ~reader ~profiling ~filename
   in
   Lwt.return (parse_artifacts, Typecheck_artifacts { cx; typed_ast })
 
-let make_parse_artifacts_and_errors ~options ~profiling contents filename =
+let parse_contents ~options ~profiling contents filename =
   let%lwt parse_result =
     Memory_utils.with_memory_timer_lwt ~options "Parsing" profiling (fun () ->
-        Lwt.return (parse_contents ~options filename contents))
+        Lwt.return (do_parse_wrapper ~options filename contents))
   in
   match parse_result with
   | Parsed (Parse_artifacts { parse_errors; docblock_errors; _ } as parse_artifacts) ->
