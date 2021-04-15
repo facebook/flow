@@ -333,9 +333,11 @@ jobs:
             /usr/bin/cat flowtype.opam >> /cygdrive/c/tmp/flow/opamcachebreaker
             /usr/bin/cat flow_parser.opam >> /cygdrive/c/tmp/flow/opamcachebreaker
             /usr/bin/cat .circleci/config.yml >> /cygdrive/c/tmp/flow/opamcachebreaker
+            # bump this to invalidate the cache
+            echo 1 >> /cygdrive/c/tmp/flow/opamcachebreaker
       - restore_cache:
           keys:
-          - opam-cache-{{ arch }}-{{ checksum "C:/tmp/flow/opamcachebreaker" }}
+          - opam-cache-{{ arch }}-ZJeMpmfbd32tlkDeouqoqUG0CphuCWzE+KprP2XH5Jg=
       - opam_windows/init
       - opam_windows/create_switch
       - save_cache:
