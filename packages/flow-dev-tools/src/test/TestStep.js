@@ -536,6 +536,11 @@ export class TestStepFirstStage extends TestStepFirstOrSecondStage {
         args: [actuals, ignores],
       };
 
+      // don't ignore whitespace, since we used JSON.stringify to format
+      // both `expects` and `actuals`, whitespace is already normalized
+      // and differences are relevant (like within strings).
+      const ignoreWhitespace = false;
+
       return simpleDiffAssertion(
         expects.map(diffable).join('\n'),
         actuals.map(diffable).join('\n'),
@@ -543,6 +548,7 @@ export class TestStepFirstStage extends TestStepFirstOrSecondStage {
         reason,
         'messages',
         suggestion,
+        ignoreWhitespace,
       );
     });
     ret._readsIdeMessages = true;

@@ -19,7 +19,11 @@ function trim(str: string) {
   return str.replace(/^\s*\n/, '').replace(/\n\s*$/, '');
 }
 
-function getDiff(expected: string, actual: string): ?Array<string> {
+function getDiff(
+  expected: string,
+  actual: string,
+  ignoreWhitespace: boolean = true,
+): ?Array<string> {
   let isSame = true;
   let actualLine = '';
   let expectedLine = '';
@@ -41,7 +45,7 @@ function getDiff(expected: string, actual: string): ?Array<string> {
     const actualLines = actual.split('\n');
     let aidx = 0,
       eidx = 0;
-    for (const part of diffLines(actual, expected, {ignoreWhitespace: true})) {
+    for (const part of diffLines(actual, expected, {ignoreWhitespace})) {
       for (let value of part.value.split(/(\n)/)) {
         if (value != '') {
           if (value !== '\n') {
@@ -74,7 +78,7 @@ function getDiff(expected: string, actual: string): ?Array<string> {
     for (const part of diffWords(actual, expected)) {
       for (const value of part.value.split(/(\n)/)) {
         if (value != '') {
-          const notWhitespace = !value.match(/^\s+$/);
+          const notWhitespace = !ignoreWhitespace || !value.match(/^\s+$/);
           parts.push({
             added: part.added && notWhitespace,
             removed: part.removed && notWhitespace,
@@ -125,8 +129,9 @@ export default function(
   reason: ?string,
   diffSubject: string,
   suggestion: Suggestion,
+  ignoreWhitespace: boolean = true,
 ): ErrorAssertionResult {
-  const diffMessages = getDiff(expected, actual);
+  const diffMessages = getDiff(expected, actual, ignoreWhitespace);
   if (diffMessages != null) {
     const locMessage =
       assertLoc == null
