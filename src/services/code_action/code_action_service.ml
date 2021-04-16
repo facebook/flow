@@ -7,6 +7,9 @@
 
 open Types_js_types
 
+let layout_options options =
+  Js_layout_generator.{ default_opts with single_quotes = Options.format_single_quotes options }
+
 let autofix_exports_code_actions
     ~full_cx ~ast ~file_sig ~tolerable_errors ~typed_ast ~diagnostics uri loc =
   let open Lsp in
@@ -151,7 +154,7 @@ type text_edits = {
   from: string;
 }
 
-let text_edits_of_import ~options ~layout_options ~reader ~src_dir ~ast kind name source =
+let text_edits_of_import ~options ~reader ~src_dir ~ast kind name source =
   let from =
     match source with
     | Export_index.Global -> None
@@ -179,7 +182,8 @@ let text_edits_of_import ~options ~layout_options ~reader ~src_dir ~ast kind nam
     in
     let binding = (kind, name) in
     let edits =
-      Autofix_imports.add_import ~options:layout_options ~binding ~from ast
+      let options = layout_options options in
+      Autofix_imports.add_import ~options ~binding ~from ast
       |> Flow_lsp_conversions.flow_loc_patch_to_lsp_edits
     in
     Some { title; edits; from }
@@ -203,22 +207,9 @@ let suggest_imports ~options ~reader ~ast ~diagnostics ~exports ~name uri loc =
       Base.List.filter diagnostics ~f:(fun { source; code; range; _ } ->
           source = Some "Flow" && code = lsp_code && Lsp_helpers.ranges_overlap range error_range)
     in
-    let layout_options =
-      Js_layout_generator.{ default_opts with single_quotes = Options.format_single_quotes options }
-    in
     Export_index.ExportSet.fold
       (fun (source, export_kind) acc ->
-        match
-          text_edits_of_import
-            ~options
-            ~layout_options
-            ~reader
-            ~src_dir
-            ~ast
-            export_kind
-            name
-            source
-        with
+        match text_edits_of_import ~options ~reader ~src_dir ~ast export_kind name source with
         | None -> acc
         | Some { edits; title; from = _ } ->
           let command =

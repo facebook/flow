@@ -13,9 +13,10 @@ type text_edits = {
   from: string;
 }
 
+val layout_options : Options.t -> Js_layout_generator.opts
+
 val text_edits_of_import :
   options:Options.t ->
-  layout_options:Js_layout_generator.opts ->
   reader:State_reader.t ->
   src_dir:string option ->
   ast:(Loc.t, Loc.t) Flow_ast.Program.t ->

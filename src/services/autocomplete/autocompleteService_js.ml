@@ -381,26 +381,14 @@ let local_value_identifiers ~options ~reader ~cx ~ac_loc ~file_sig ~ast ~typed_a
 let src_dir_of_loc ac_loc =
   Loc.source ac_loc |> Base.Option.map ~f:(fun key -> File_key.to_string key |> Filename.dirname)
 
-let text_edit_options options =
-  Js_layout_generator.{ default_opts with single_quotes = Options.format_single_quotes options }
-
 let flow_text_edit_of_lsp_text_edit { Lsp.TextEdit.range; newText } =
   let loc = Flow_lsp_conversions.lsp_range_to_flow_loc range in
   (loc, newText)
 
 let completion_item_of_autoimport
     ~options ~reader ~src_dir ~ast ~ac_loc { Export_search.name; source; kind } =
-  let layout_options = text_edit_options options in
   match
-    Code_action_service.text_edits_of_import
-      ~options
-      ~layout_options
-      ~reader
-      ~src_dir
-      ~ast
-      kind
-      name
-      source
+    Code_action_service.text_edits_of_import ~options ~reader ~src_dir ~ast kind name source
   with
   | None ->
     {
@@ -635,7 +623,8 @@ let autocomplete_member
                         symbol
                   in
                   expression
-                  |> Js_layout_generator.expression ~opts:(text_edit_options options)
+                  |> Js_layout_generator.expression
+                       ~opts:(Code_action_service.layout_options options)
                   |> Pretty_printer.print ~source_maps:None ~skip_endline:true
                   |> Source.contents)
              in
@@ -801,22 +790,13 @@ let autocomplete_jsx_element
   in
   if should_autoimport_react ~options ~imports ~file_sig then
     let open ServerProt.Response.Completion in
-    let layout_options = text_edit_options options in
     let import_edit =
       let src_dir = src_dir_of_loc (loc_of_aloc ~reader ac_loc) in
       let kind = Export_index.Namespace in
       let name = "React" in
       (* TODO: make this configurable between React and react *)
       let source = Export_index.Builtin "react" in
-      Code_action_service.text_edits_of_import
-        ~options
-        ~layout_options
-        ~reader
-        ~src_dir
-        ~ast
-        kind
-        name
-        source
+      Code_action_service.text_edits_of_import ~options ~reader ~src_dir ~ast kind name source
     in
     match import_edit with
     | None -> AcResult results
