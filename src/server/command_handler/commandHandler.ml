@@ -656,7 +656,7 @@ let suggest ~options ~env ~profiling file =
   let file_key = File_key.SourceFile file_name in
   File_input.content_of_file_input file %>>= fun file_content ->
   try_with (fun _ ->
-      let%lwt result = Type_info_service.suggest ~options ~env ~profiling file_key file_content in
+      let%lwt result = Code_action_service.suggest ~options ~env ~profiling file_key file_content in
       match result with
       | Ok (tc_errors, tc_warnings, suggest_warnings, file_patch) ->
         Lwt.return

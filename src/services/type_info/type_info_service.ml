@@ -5,9 +5,6 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
-open Base.Result
-open Types_js_types
-
 let json_data_of_result str acc = ("result", Hh_json.JSON_String str) :: acc
 
 let json_data_of_error str acc = ("error", Hh_json.JSON_String str) :: acc
@@ -95,29 +92,3 @@ let coverage ~cx ~typed_ast ~force ~trust file content =
       Docblock.is_flow docblock
   in
   Coverage.covered_types cx ~should_check ~check_trust:trust typed_ast
-
-let suggest ~options ~env ~profiling file_key file_content =
-  let%lwt file_artifacts_result =
-    let%lwt ((_, parse_errs) as intermediate_result) =
-      Types_js.parse_contents ~options ~profiling file_content file_key
-    in
-    if not (Flow_error.ErrorSet.is_empty parse_errs) then
-      Lwt.return (Error parse_errs)
-    else
-      Types_js.type_parse_artifacts ~options ~env ~profiling file_key intermediate_result
-  in
-  let (tc_errors, tc_warnings) =
-    Types_js.printable_errors_of_file_artifacts_result ~options ~env file_key file_artifacts_result
-  in
-  match file_artifacts_result with
-  | Ok (Parse_artifacts { ast; file_sig; _ }, Typecheck_artifacts { cx; typed_ast = tast }) ->
-    let file_sig = File_sig.abstractify_locs file_sig in
-    let ty_query = Query_types.suggest_types cx file_sig tast in
-    let exact_by_default = Options.exact_by_default options in
-    let visitor = new Suggest.visitor ~exact_by_default ~ty_query in
-    let ast_with_suggestions = visitor#program ast in
-    let suggest_warnings = visitor#warnings () in
-    let ast_diff = Flow_ast_differ.(program Standard ast ast_with_suggestions) in
-    let file_patch = Replacement_printer.mk_patch_ast_differ ast_diff file_content in
-    Lwt.return (Ok (tc_errors, tc_warnings, suggest_warnings, file_patch))
-  | Error _ -> Lwt.return (Error tc_errors)

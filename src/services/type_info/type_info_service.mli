@@ -35,21 +35,3 @@ val coverage :
   File_key.t ->
   string ->
   (Loc.t * Coverage_response.expression_coverage) list
-
-val suggest :
-  options:Options.t ->
-  env:ServerEnv.env ->
-  profiling:Profiling_js.running ->
-  File_key.t ->
-  string ->
-  ( Errors.ConcreteLocPrintableErrorSet.t
-    * (* Typechecking errors *)
-      Errors.ConcreteLocPrintableErrorSet.t
-    * (* Typechecking warnings *)
-      Errors.ConcreteLocPrintableErrorSet.t
-    * (* Suggest-related warnings (normalization etc.) *)
-      Replacement_printer.patch,
-    (* Annotated program *)
-    Errors.ConcreteLocPrintableErrorSet.t (* Parsing errors *) )
-  result
-  Lwt.t
