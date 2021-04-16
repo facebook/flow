@@ -3313,7 +3313,7 @@ References:
                                            v
    367|   declare export function useEffect(
    368|     create: () => MaybeCleanUpFn,
-   369|     inputs: ?$ReadOnlyArray<mixed>,
+   369|     inputs?: ?$ReadOnlyArray<mixed>,
    370|   ): void;
           ------^ [1]
 
@@ -3343,9 +3343,9 @@ type [2]. [incompatible-call]
                                     ^ [1]
 
 References:
-   <BUILTINS>/react.js:369:14
-   369|     inputs: ?$ReadOnlyArray<mixed>,
-                     ^^^^^^^^^^^^^^^^^^^^^ [2]
+   <BUILTINS>/react.js:369:15
+   369|     inputs?: ?$ReadOnlyArray<mixed>,
+                      ^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------ useEffect_hook.js:24:30
@@ -3441,7 +3441,7 @@ References:
                                                  v
    372|   declare export function useLayoutEffect(
    373|     create: () => MaybeCleanUpFn,
-   374|     inputs: ?$ReadOnlyArray<mixed>,
+   374|     inputs?: ?$ReadOnlyArray<mixed>,
    375|   ): void;
           ------^ [1]
 
@@ -3471,9 +3471,9 @@ type [2]. [incompatible-call]
                                           ^ [1]
 
 References:
-   <BUILTINS>/react.js:374:14
-   374|     inputs: ?$ReadOnlyArray<mixed>,
-                     ^^^^^^^^^^^^^^^^^^^^^ [2]
+   <BUILTINS>/react.js:374:15
+   374|     inputs?: ?$ReadOnlyArray<mixed>,
+                      ^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------ useLayoutEffect_hook.js:24:36

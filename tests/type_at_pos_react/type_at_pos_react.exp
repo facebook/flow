@@ -68,7 +68,7 @@ react_component.js:3:9 = module "react" {
   declare var useMemo: <T>(create: () => T, inputs: ?$ReadOnlyArray<mixed>) => T;
   declare var useLayoutEffect: (
     create: () => MaybeCleanUpFn,
-    inputs: ?$ReadOnlyArray<mixed>
+    inputs?: ?$ReadOnlyArray<mixed>
   ) => void;
   declare var useImperativeHandle: <T>(
     ref: ?({current: (T | null), ...} | ((inst: (T | null)) => mixed)),
@@ -77,7 +77,7 @@ react_component.js:3:9 = module "react" {
   ) => void;
   declare var useEffect: (
     create: () => MaybeCleanUpFn,
-    inputs: ?$ReadOnlyArray<mixed>
+    inputs?: ?$ReadOnlyArray<mixed>
   ) => void;
   declare var useDeferredValue: <T>(value: T, config: ?TimeoutConfig) => T;
   declare var useDebugValue: (value: any) => void;
