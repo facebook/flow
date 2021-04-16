@@ -37,7 +37,7 @@ export default (suite(
           diagnostics: [],
         },
       }).verifyAllLSPMessagesInStep(
-        [['textDocument/codeAction', '{[]}']],
+        [{method: 'textDocument/codeAction', result: []}],
         ['textDocument/publishDiagnostics', ...lspIgnoreStatusAndCancellation],
       ),
     ]),
@@ -80,9 +80,9 @@ export default (suite(
         },
       }).verifyAllLSPMessagesInStep(
         [
-          [
-            'textDocument/codeAction',
-            `{${JSON.stringify([
+          {
+            method: 'textDocument/codeAction',
+            result: [
               {
                 title: 'insert type annotation',
                 kind: 'quickfix',
@@ -114,8 +114,8 @@ export default (suite(
                   },
                 },
               },
-            ])}}`,
-          ],
+            ],
+          },
         ],
         ['textDocument/publishDiagnostics', ...lspIgnoreStatusAndCancellation],
       ),
@@ -142,9 +142,9 @@ export default (suite(
         },
       }).verifyAllLSPMessagesInStep(
         [
-          [
-            'textDocument/codeAction',
-            `{${JSON.stringify([
+          {
+            method: 'textDocument/codeAction',
+            result: [
               {
                 title: 'insert type annotation',
                 kind: 'quickfix',
@@ -170,8 +170,8 @@ export default (suite(
                   },
                 },
               },
-            ])}}`,
-          ],
+            ],
+          },
         ],
         ['textDocument/publishDiagnostics', ...lspIgnoreStatusAndCancellation],
       ),
@@ -199,9 +199,9 @@ export default (suite(
         },
       }).verifyAllLSPMessagesInStep(
         [
-          [
-            'textDocument/codeAction',
-            `{${JSON.stringify([
+          {
+            method: 'textDocument/codeAction',
+            result: [
               {
                 title: 'insert type annotation',
                 kind: 'quickfix',
@@ -239,8 +239,8 @@ export default (suite(
                   },
                 },
               },
-            ])}}`,
-          ],
+            ],
+          },
         ],
         ['textDocument/publishDiagnostics', ...lspIgnoreStatusAndCancellation],
       ),

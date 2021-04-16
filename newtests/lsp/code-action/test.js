@@ -85,9 +85,9 @@ export default (suite(
         },
       }).verifyAllLSPMessagesInStep(
         [
-          [
-            'textDocument/codeAction',
-            JSON.stringify([
+          {
+            method: 'textDocument/codeAction',
+            result: [
               {
                 title: 'Replace `faceboy` with `facebook`',
                 kind: 'quickfix',
@@ -141,8 +141,8 @@ export default (suite(
                   ],
                 },
               },
-            ]),
-          ],
+            ],
+          },
         ],
         ['textDocument/publishDiagnostics', ...lspIgnoreStatusAndCancellation],
       ),
@@ -190,9 +190,9 @@ export default (suite(
         },
       }).verifyAllLSPMessagesInStep(
         [
-          [
-            'textDocument/codeAction',
-            JSON.stringify([
+          {
+            method: 'textDocument/codeAction',
+            result: [
               {
                 title: 'Replace `Foobat` with `Foobar`',
                 kind: 'quickfix',
@@ -246,8 +246,8 @@ export default (suite(
                   ],
                 },
               },
-            ]),
-          ],
+            ],
+          },
         ],
         ['textDocument/publishDiagnostics', ...lspIgnoreStatusAndCancellation],
       ),
@@ -306,7 +306,7 @@ export default (suite(
           ],
         },
       }).verifyAllLSPMessagesInStep(
-        [['textDocument/codeAction', '[]']],
+        [{method: 'textDocument/codeAction', result: []}],
         ['textDocument/publishDiagnostics', ...lspIgnoreStatusAndCancellation],
       ),
     ]),
@@ -348,9 +348,9 @@ export default (suite(
         },
       }).verifyAllLSPMessagesInStep(
         [
-          [
-            'textDocument/codeAction',
-            JSON.stringify([
+          {
+            method: 'textDocument/codeAction',
+            result: [
               {
                 title: "Replace `>` with `{'>'}`",
                 kind: 'quickfix',
@@ -403,8 +403,8 @@ export default (suite(
                   ],
                 },
               },
-            ]),
-          ],
+            ],
+          },
         ],
         ['textDocument/publishDiagnostics', ...lspIgnoreStatusAndCancellation],
       ),
