@@ -11,7 +11,7 @@ let layout_options options =
   Js_layout_generator.{ default_opts with single_quotes = Options.format_single_quotes options }
 
 let autofix_exports_code_actions
-    ~full_cx ~ast ~file_sig ~tolerable_errors ~typed_ast ~diagnostics uri loc =
+    ~options ~full_cx ~ast ~file_sig ~tolerable_errors ~typed_ast ~diagnostics uri loc =
   let open Lsp in
   let open Autofix_exports in
   let fixable_locs = set_of_fixable_signature_verification_locations tolerable_errors in
@@ -19,8 +19,9 @@ let autofix_exports_code_actions
     match fix_signature_verification_error_at_loc ~full_cx ~file_sig ~typed_ast ast loc with
     | new_ast ->
       let diff = Insert_type.mk_diff ast new_ast in
+      let opts = layout_options options in
       let edits =
-        Replacement_printer.mk_loc_patch_ast_differ diff
+        Replacement_printer.mk_loc_patch_ast_differ ~opts diff
         |> Flow_lsp_conversions.flow_loc_patch_to_lsp_edits
       in
       [
@@ -313,6 +314,7 @@ let code_actions_at_loc
     ~loc =
   let experimental_code_actions =
     autofix_exports_code_actions
+      ~options
       ~full_cx:cx
       ~ast
       ~file_sig
@@ -355,7 +357,8 @@ let autofix_exports ~options ~env ~profiling ~file_key ~file_content =
     let (new_ast, it_errs) =
       fix_signature_verification_errors ~file_key ~full_cx ~file_sig ~typed_ast ast sv_errors
     in
-    Lwt.return (Ok (Insert_type.mk_patch ast new_ast file_content, it_errs))
+    let opts = layout_options options in
+    Lwt.return (Ok (Insert_type.mk_patch ~opts ast new_ast file_content, it_errs))
   | Error _ -> Lwt.return (Error "Failed to type-check file")
 
 let insert_type
@@ -398,7 +401,8 @@ let insert_type
             ast
             target
         in
-        Ok (mk_patch ast new_ast file_content)
+        let opts = layout_options options in
+        Ok (mk_patch ~opts ast new_ast file_content)
       with FailedToInsertType err -> Error (error_to_string err)
     in
     Lwt.return result
@@ -430,7 +434,8 @@ let suggest ~options ~env ~profiling file_key file_content =
     let ast_with_suggestions = visitor#program ast in
     let suggest_warnings = visitor#warnings () in
     let ast_diff = Flow_ast_differ.(program Standard ast ast_with_suggestions) in
-    let file_patch = Replacement_printer.mk_patch_ast_differ ast_diff file_content in
+    let opts = layout_options options in
+    let file_patch = Replacement_printer.mk_patch_ast_differ ~opts ast_diff file_content in
     Lwt.return (Ok (tc_errors, tc_warnings, suggest_warnings, file_patch))
   | Error _ -> Lwt.return (Error tc_errors)
 
