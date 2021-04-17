@@ -220,7 +220,7 @@ export default (suite(
                             character: 0,
                           },
                         },
-                        newText: 'import type {Node} from "./exports-func";',
+                        newText: 'import type { Node } from "./exports-func";',
                       },
                       {
                         range: {

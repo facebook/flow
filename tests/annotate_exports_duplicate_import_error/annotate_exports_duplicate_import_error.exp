@@ -4,8 +4,8 @@
 >>> ./b.js
 // @flow
 
-import type {A as $IMPORTED_TYPE$_A_1} from "./a2";
-import type {A} from "./a1";import { foo as foo1 } from "./a1";
+import type { A as $IMPORTED_TYPE$_A_1 } from "./a2";
+import type { A } from "./a1";import { foo as foo1 } from "./a1";
 import { foo as foo2 } from "./a2";
 
 module.exports = [(foo1(): A), (foo2(): $IMPORTED_TYPE$_A_1)]; // duplicate import in different types
@@ -13,8 +13,8 @@ module.exports = [(foo1(): A), (foo2(): $IMPORTED_TYPE$_A_1)]; // duplicate impo
 >>> ./c.js
 // @flow
 
-import type {A as $IMPORTED_TYPE$_A_1} from "./a2";
-import type {A} from "./a1";import { foo as foo1 } from "./a1";
+import type { A as $IMPORTED_TYPE$_A_1 } from "./a2";
+import type { A } from "./a1";import { foo as foo1 } from "./a1";
 import { foo as foo2 } from "./a2";
 
 module.exports = (): Array<A | $IMPORTED_TYPE$_A_1> => [foo1(), foo2()]; // duplicate import in same type
@@ -53,8 +53,8 @@ Warnings:
 >>> ./b.js
 // @flow
 
-import type {A as $IMPORTED_TYPE$_A_1} from "./a2";
-import type {A} from "./a1";import { foo as foo1 } from "./a1";
+import type { A as $IMPORTED_TYPE$_A_1 } from "./a2";
+import type { A } from "./a1";import { foo as foo1 } from "./a1";
 import { foo as foo2 } from "./a2";
 
 module.exports = [(foo1(): A), (foo2(): $IMPORTED_TYPE$_A_1)]; // duplicate import in different types
@@ -62,8 +62,8 @@ module.exports = [(foo1(): A), (foo2(): $IMPORTED_TYPE$_A_1)]; // duplicate impo
 >>> ./c.js
 // @flow
 
-import type {A as $IMPORTED_TYPE$_A_1} from "./a2";
-import type {A} from "./a1";import { foo as foo1 } from "./a1";
+import type { A as $IMPORTED_TYPE$_A_1 } from "./a2";
+import type { A } from "./a1";import { foo as foo1 } from "./a1";
 import { foo as foo2 } from "./a2";
 
 module.exports = (): Array<$IMPORTED_TYPE$_A_1 | A> => [foo1(), foo2()]; // duplicate import in same type

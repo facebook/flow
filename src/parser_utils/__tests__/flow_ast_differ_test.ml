@@ -2004,33 +2004,33 @@ let tests =
            let source = "5 - (2 + 2)" in
            assert_edits_equal_standard_only
              ctxt
-             ~edits:[((0, 0), "import {baz} from \"baz\";"); ((5, 10), "(2 - 2)")]
+             ~edits:[((0, 0), "import { baz } from \"baz\";"); ((5, 10), "(2 - 2)")]
              ~source
-             ~expected:"import {baz} from \"baz\";5 - ((2 - 2))"
+             ~expected:"import { baz } from \"baz\";5 - ((2 - 2))"
              ~mapper:(new insert_import_mapper) );
          ( "insert_import_existing_split" >:: fun ctxt ->
            let source = "foo; 5 - (2 + 2)" in
            assert_edits_equal_standard_only
              ctxt
-             ~edits:[((0, 0), "import {baz} from \"baz\";"); ((10, 15), "(2 - 2)")]
+             ~edits:[((0, 0), "import { baz } from \"baz\";"); ((10, 15), "(2 - 2)")]
              ~source
-             ~expected:"import {baz} from \"baz\";foo; 5 - ((2 - 2))"
+             ~expected:"import { baz } from \"baz\";foo; 5 - ((2 - 2))"
              ~mapper:(new insert_import_mapper) );
          ( "insert_import_second_split" >:: fun ctxt ->
            let source = "import bing from 'bing'; 5 - (2 + 2)" in
            assert_edits_equal_standard_only
              ctxt
-             ~edits:[((24, 24), "import {baz} from \"baz\";"); ((30, 35), "(2 - 2)")]
+             ~edits:[((24, 24), "import { baz } from \"baz\";"); ((30, 35), "(2 - 2)")]
              ~source
-             ~expected:"import bing from 'bing';import {baz} from \"baz\"; 5 - ((2 - 2))"
+             ~expected:"import bing from 'bing';import { baz } from \"baz\"; 5 - ((2 - 2))"
              ~mapper:(new insert_second_import_mapper) );
          ( "existing_cjs_import_split" >:: fun ctxt ->
            let source = "const x = require('bing'); 5 - (2 + 2)" in
            assert_edits_equal_standard_only
              ctxt
-             ~edits:[((26, 26), "import {baz} from \"baz\";"); ((32, 37), "(2 - 2)")]
+             ~edits:[((26, 26), "import { baz } from \"baz\";"); ((32, 37), "(2 - 2)")]
              ~source
-             ~expected:"const x = require('bing');import {baz} from \"baz\"; 5 - ((2 - 2))"
+             ~expected:"const x = require('bing');import { baz } from \"baz\"; 5 - ((2 - 2))"
              ~mapper:(new insert_second_import_mapper) );
          ( "insert_cjs_import_split" >:: fun ctxt ->
            let source = "import 'bing'; 5 - (2 + 2)" in
@@ -2686,8 +2686,8 @@ let tests =
              ~edits:
                [
                  ( (13, 13),
-                   "import type {there as here} from \"new_import1\";
-import type {there as here} from \"new_import2\";"
+                   "import type { there as here } from \"new_import1\";
+import type { there as here } from \"new_import2\";"
                  );
                  ((20, 20), ": (() => number)");
                  ((23, 26), "(bla: () => number)");
@@ -2695,8 +2695,8 @@ import type {there as here} from \"new_import2\";"
                ]
              ~source
              ~expected:
-               "'use strict';import type {there as here} from \"new_import1\";
-import type {there as here} from \"new_import2\";const x: (() => number) = (bla: () => number): (() => number) => { return 0; };"
+               "'use strict';import type { there as here } from \"new_import1\";
+import type { there as here } from \"new_import2\";const x: (() => number) = (bla: () => number): (() => number) => { return 0; };"
              ~mapper:(new insert_import_and_annot_mapper) );
          ( "import_renamed_simple" >:: fun ctxt ->
            let source = "import rename from \"foo\";" in

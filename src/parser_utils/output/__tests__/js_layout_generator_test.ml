@@ -20,6 +20,8 @@ let opts = Js_layout_generator.default_opts
 
 let preserve_formatting_opts = Js_layout_generator.{ default_opts with preserve_formatting = true }
 
+let no_bracket_spacing opts = Js_layout_generator.{ opts with bracket_spacing = false }
+
 let tests =
   "js_layout_generator"
   >::: [
@@ -1678,8 +1680,18 @@ let tests =
            assert_statement_string ~ctxt {|import{a,b}from"a";|};
            assert_statement_string ~ctxt {|import type{}from"a";|};
            assert_statement_string ~ctxt {|import typeof{}from"a";|};
-           assert_statement_string ~ctxt ~pretty:true {|import {a, b} from "a";|};
-           assert_statement_string ~ctxt ~pretty:true {|import type {a, b} from "a";|};
+           assert_statement_string ~ctxt ~pretty:true {|import { a, b } from "a";|};
+           assert_statement_string
+             ~ctxt
+             ~pretty:true
+             ~opts:(no_bracket_spacing opts)
+             {|import {a, b} from "a";|};
+           assert_statement_string ~ctxt ~pretty:true {|import type { a, b } from "a";|};
+           assert_statement_string
+             ~ctxt
+             ~pretty:true
+             ~opts:(no_bracket_spacing opts)
+             {|import type {a, b} from "a";|};
            assert_statement_string
              ~ctxt
              ~pretty:true
@@ -1689,7 +1701,12 @@ let tests =
              ~ctxt
              ~pretty:true
              ("import a, * as " ^ String.make 80 'b' ^ " from \"a\";");
-           assert_statement_string ~ctxt ~pretty:true {|import a, {b} from "a";|};
+           assert_statement_string ~ctxt ~pretty:true {|import a, { b } from "a";|};
+           assert_statement_string
+             ~ctxt
+             ~pretty:true
+             ~opts:(no_bracket_spacing opts)
+             {|import a, {b} from "a";|};
            assert_statement_string
              ~ctxt
              ~pretty:true
@@ -1865,13 +1882,13 @@ let tests =
            assert_statement_string
              ~ctxt
              ~pretty:true
-             ~opts:Js_layout_generator.{ default_opts with bracket_spacing = false }
+             ~opts:(no_bracket_spacing opts)
              "type a = {a: b};";
            assert_statement_string ~ctxt ~pretty:true "type a = { a: b, c: d };";
            assert_statement_string
              ~ctxt
              ~pretty:true
-             ~opts:Js_layout_generator.{ default_opts with bracket_spacing = false }
+             ~opts:(no_bracket_spacing opts)
              "type a = {a: b, c: d};";
            assert_statement_string
              ~ctxt

@@ -51,7 +51,7 @@ export default (suite(
                         start: {line: 2, character: 0},
                         end: {line: 2, character: 0},
                       },
-                      newText: 'import {Foo} from "./foo";\n\n',
+                      newText: 'import { Foo } from "./foo";\n\n',
                     },
                   ],
                   command: {
@@ -106,7 +106,7 @@ export default (suite(
                         start: {line: 2, character: 0},
                         end: {line: 2, character: 0},
                       },
-                      newText: 'import {foo} from "LibA";\n\n',
+                      newText: 'import { foo } from "LibA";\n\n',
                     },
                   ],
                   command: {
@@ -422,7 +422,7 @@ export default (suite(
                         start: {line: 2, character: 0},
                         end: {line: 2, character: 0},
                       },
-                      newText: 'import {not_null} from "./reserved";\n\n',
+                      newText: 'import { not_null } from "./reserved";\n\n',
                     },
                   ],
                   command: {
@@ -557,7 +557,7 @@ export default (suite(
                         end: {line: 2, character: 0},
                       },
                       newText:
-                        'import {AllTheThings} from "./AllTheThings";\n\n',
+                        'import { AllTheThings } from "./AllTheThings";\n\n',
                     },
                   ],
                   command: {

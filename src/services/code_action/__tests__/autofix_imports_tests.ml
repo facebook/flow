@@ -91,7 +91,7 @@ let add_import_tests =
         foo
       |} in
       let expected = {|
-        import {foo} from "./foo";
+        import { foo } from "./foo";
 
         foo
       |} in
@@ -104,13 +104,13 @@ let add_import_tests =
       let binding = (Export_index.Named, "foo") in
       let from = "./foo" in
       let contents = {|
-        import {zzz} from "./zzz";
+        import { zzz } from "./zzz";
 
         foo
       |} in
       let expected = {|
-        import {foo} from "./foo";
-        import {zzz} from "./zzz";
+        import { foo } from "./foo";
+        import { zzz } from "./zzz";
 
         foo
       |} in
@@ -120,13 +120,13 @@ let add_import_tests =
       let binding = (Export_index.Named, "foo") in
       let from = "./foo" in
       let contents = {|
-        import {bar} from "./bar";
+        import { bar } from "./bar";
 
         foo
       |} in
       let expected = {|
-        import {bar} from "./bar";
-        import {foo} from "./foo";
+        import { bar } from "./bar";
+        import { foo } from "./foo";
 
         foo
       |} in
@@ -136,15 +136,15 @@ let add_import_tests =
       let binding = (Export_index.Named, "baz") in
       let from = "./baz" in
       let contents = {|
-        import {bar} from "./bar";
-        import {foo} from "./foo";
+        import { bar } from "./bar";
+        import { foo } from "./foo";
 
         foo
       |} in
       let expected = {|
-        import {bar} from "./bar";
-        import {baz} from "./baz";
-        import {foo} from "./foo";
+        import { bar } from "./bar";
+        import { baz } from "./baz";
+        import { foo } from "./foo";
 
         foo
       |} in
@@ -154,15 +154,15 @@ let add_import_tests =
       let binding = (Export_index.Named, "baz") in
       let from = "./baz" in
       let contents = {|
-        import {foo} from "./foo";
-        import {bar} from "./bar";
+        import { foo } from "./foo";
+        import { bar } from "./bar";
 
         foo
       |} in
       let expected = {|
-        import {foo} from "./foo";
-        import {bar} from "./bar";
-        import {baz} from "./baz";
+        import { foo } from "./foo";
+        import { bar } from "./bar";
+        import { baz } from "./baz";
 
         foo
       |} in
@@ -172,18 +172,18 @@ let add_import_tests =
       let binding = (Export_index.Named, "foo") in
       let from = "./foo" in
       let contents = {|
-        import {bar} from "./foo";
+        import { bar } from "./foo";
 
         foo
       |} in
       let expected = {|
-        import {bar, foo} from "./foo";
+        import { bar, foo } from "./foo";
 
         foo
       |} in
       assert_patch ~ctxt expected binding from contents;
 
-      (* not only inserts `{foo}` specifier, but changes `"./foo"` to `'./foo'` *)
+      (* not only inserts `{ foo }` specifier, but changes `"./foo"` to `'./foo'` *)
       let expected = Str.global_replace (Str.regexp_string "\"") "'" expected in
       assert_patch ~ctxt ~single_quotes:true expected binding from contents );
 
@@ -197,7 +197,7 @@ let add_import_tests =
       |} in
       let expected = {|
         import Foo from "./foo";
-        import {foo} from "./foo";
+        import { foo } from "./foo";
 
         foo
       |} in
@@ -207,14 +207,14 @@ let add_import_tests =
       let binding = (Export_index.Named, "foo") in
       let from = "./foo" in
       let contents = {|
-        import type {IFoo} from "./foo";
+        import type { IFoo } from "./foo";
 
         foo
       |} in
       let expected = {|
-        import type {IFoo} from "./foo";
+        import type { IFoo } from "./foo";
 
-        import {foo} from "./foo";
+        import { foo } from "./foo";
 
         foo
       |} in
@@ -256,7 +256,7 @@ let add_import_tests =
         foo
       |} in
       let expected = {|
-        import type {IFoo} from "./foo";
+        import type { IFoo } from "./foo";
 
         foo
       |} in
@@ -266,10 +266,10 @@ let add_import_tests =
       let binding = (Export_index.NamedType, "IBar") in
       let from = "./foo" in
       let contents = {|
-        import type {IFoo} from "./foo";
+        import type { IFoo } from "./foo";
       |} in
       let expected = {|
-        import type {IBar, IFoo} from "./foo";
+        import type { IBar, IFoo } from "./foo";
       |} in
       assert_patch ~ctxt expected binding from contents );
 
@@ -277,10 +277,10 @@ let add_import_tests =
       let binding = (Export_index.NamedType, "IBar") in
       let from = "./foo" in
       let contents = {|
-        import type {IFoo, IBaz} from "./foo";
+        import type { IFoo, IBaz } from "./foo";
       |} in
       let expected = {|
-        import type {IFoo, IBaz, IBar} from "./foo";
+        import type { IFoo, IBaz, IBar } from "./foo";
       |} in
       assert_patch ~ctxt expected binding from contents );
 
@@ -288,14 +288,14 @@ let add_import_tests =
       let binding = (Export_index.NamedType, "IFoo") in
       let from = "./foo" in
       let contents = {|
-        import {foo} from "./foo";
+        import { foo } from "./foo";
 
         foo
       |} in
       let expected = {|
-        import type {IFoo} from "./foo";
+        import type { IFoo } from "./foo";
 
-        import {foo} from "./foo";
+        import { foo } from "./foo";
 
         foo
       |} in
@@ -310,7 +310,7 @@ let add_import_tests =
         foo
       |} in
       let expected = {|
-        import type {IFoo} from "./foo";
+        import type { IFoo } from "./foo";
 
         import foo from "./foo";
 
@@ -322,15 +322,15 @@ let add_import_tests =
       let binding = (Export_index.NamedType, "IBaz") in
       let from = "./baz" in
       let contents = {|
-        import {foo} from "./foo";
-        import {bar} from "./bar";
+        import { foo } from "./foo";
+        import { bar } from "./bar";
 
         foo
       |} in
       let expected = {|
-        import {foo} from "./foo";
-        import {bar} from "./bar";
-        import type {IBaz} from "./baz";
+        import { foo } from "./foo";
+        import { bar } from "./bar";
+        import type { IBaz } from "./baz";
 
         foo
       |} in
@@ -353,12 +353,12 @@ let add_import_tests =
       let binding = (Export_index.Namespace, "React") in
       let from = "react" in
       let contents = {|
-        import {foo} from "react";
+        import { foo } from "react";
 
         foo
       |} in
       let expected = {|
-        import {foo} from "react";
+        import { foo } from "react";
         import * as React from "react";
 
         foo
@@ -369,16 +369,16 @@ let add_import_tests =
       let binding = (Export_index.Namespace, "React") in
       let from = "react" in
       let contents = {|
-        import type {IFoo} from "./foo";
+        import type { IFoo } from "./foo";
 
-        import {foo} from "./foo";
+        import { foo } from "./foo";
 
         foo
       |} in
       let expected = {|
-        import type {IFoo} from "./foo";
+        import type { IFoo } from "./foo";
 
-        import {foo} from "./foo";
+        import { foo } from "./foo";
         import * as React from "react";
 
         foo
@@ -406,13 +406,13 @@ let add_import_tests =
       let from = "react" in
       let contents = {|
         import * as React from "react";
-        import {useState} from "react";
+        import { useState } from "react";
 
         foo
       |} in
       let expected = {|
         import * as React from "react";
-        import {useContext, useState} from "react";
+        import { useContext, useState } from "react";
 
         foo
       |} in
@@ -429,7 +429,7 @@ let add_import_tests =
       let expected = {|
         // @flow
 
-        import {foo} from "./foo";
+        import { foo } from "./foo";
 
         foo
       |} in
@@ -450,7 +450,7 @@ let add_import_tests =
 
         "use strict";
 
-        import {foo} from "./foo";
+        import { foo } from "./foo";
 
         foo
       |} in

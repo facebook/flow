@@ -2742,13 +2742,13 @@ and jsx_child ~opts (loc, child) =
       | None -> None
     end
 
-and partition_specifiers default specifiers =
+and partition_specifiers ~opts default specifiers =
   let open Ast.Statement.ImportDeclaration in
   let (special, named) =
     match specifiers with
     | Some (ImportNamespaceSpecifier (loc, id)) -> ([import_namespace_specifier (loc, id)], None)
     | Some (ImportNamedSpecifiers named_specifiers) ->
-      ([], Some (import_named_specifiers named_specifiers))
+      ([], Some (import_named_specifiers ~opts named_specifiers))
     | None -> ([], None)
   in
   match default with
@@ -2774,12 +2774,13 @@ and import_named_specifier { Ast.Statement.ImportDeclaration.kind; local; remote
       | None -> Empty);
     ]
 
-and import_named_specifiers named_specifiers =
+and import_named_specifiers ~opts named_specifiers =
   group
     [
       new_list
         ~wrap:(Atom "{", Atom "}")
         ~sep:(Atom ",")
+        ~wrap_spaces:opts.bracket_spacing
         (Base.List.map ~f:import_named_specifier named_specifiers);
     ]
 
@@ -2800,7 +2801,7 @@ and import_declaration
               | I.ImportValue -> Empty
             end;
             begin
-              match (partition_specifiers default specifiers, import_kind) with
+              match (partition_specifiers ~opts default specifiers, import_kind) with
               (* No export specifiers *)
               (* `import 'module-name';` *)
               | (([], None), I.ImportValue) -> pretty_space

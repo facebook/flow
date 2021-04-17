@@ -4,22 +4,22 @@
 >>> ./a/a.js
 // @flow
 
-import type {T} from "../lib";import {foo} from '../lib';
+import type { T } from "../lib";import {foo} from '../lib';
 
 module.exports = (foo(): T);
 
 >>> ./a/b/c/f.js
 // @flow
 
-import type {A} from "../../../d/e/lib-e";import {a} from '../../../d/e/lib-e';
+import type { A } from "../../../d/e/lib-e";import {a} from '../../../d/e/lib-e';
 
 module.exports = (a(): A);
 
 >>> ./file.js
 // @flow
 
-import type {B} from "./lib-flow";
-import type {T} from "./lib";import {foo} from './lib';
+import type { B } from "./lib-flow";
+import type { T } from "./lib";import {foo} from './lib';
 import {bar} from './lib-flow';
 
 module.exports = {
@@ -61,22 +61,22 @@ Warnings:
 >>> ./a/a.js
 // @flow
 
-import type {T} from "../lib";import {foo} from '../lib';
+import type { T } from "../lib";import {foo} from '../lib';
 
 module.exports = (foo(): T);
 
 >>> ./a/b/c/f.js
 // @flow
 
-import type {A} from "../../../d/e/lib-e";import {a} from '../../../d/e/lib-e';
+import type { A } from "../../../d/e/lib-e";import {a} from '../../../d/e/lib-e';
 
 module.exports = (a(): A);
 
 >>> ./file.js
 // @flow
 
-import type {B} from "./lib-flow";
-import type {T} from "./lib";import {foo} from './lib';
+import type { B } from "./lib-flow";
+import type { T } from "./lib";import {foo} from './lib';
 import {bar} from './lib-flow';
 
 module.exports = {
