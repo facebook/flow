@@ -1210,7 +1210,9 @@ let make_options
   in
   let opt_format =
     {
-      Options.opt_single_quotes =
+      Options.opt_bracket_spacing =
+        Base.Option.value (FlowConfig.format_bracket_spacing flowconfig) ~default:true;
+      opt_single_quotes =
         Base.Option.value (FlowConfig.format_single_quotes flowconfig) ~default:false;
     }
   in

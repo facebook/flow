@@ -8,7 +8,12 @@
 open Types_js_types
 
 let layout_options options =
-  Js_layout_generator.{ default_opts with single_quotes = Options.format_single_quotes options }
+  Js_layout_generator.
+    {
+      default_opts with
+      bracket_spacing = Options.format_bracket_spacing options;
+      single_quotes = Options.format_single_quotes options;
+    }
 
 let autofix_exports_code_actions
     ~options ~full_cx ~ast ~file_sig ~tolerable_errors ~typed_ast ~diagnostics uri loc =

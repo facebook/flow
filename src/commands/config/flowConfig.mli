@@ -99,6 +99,8 @@ val file_watcher : config -> file_watcher option
 
 val file_watcher_timeout : config -> int option
 
+val format_bracket_spacing : config -> bool option
+
 val format_single_quotes : config -> bool option
 
 val gc_worker_custom_major_ratio : config -> int option

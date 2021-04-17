@@ -39,7 +39,10 @@ type react_runtime =
   | ReactRuntimeAutomatic
   | ReactRuntimeClassic
 
-type format = { opt_single_quotes: bool }
+type format = {
+  opt_bracket_spacing: bool;
+  opt_single_quotes: bool;
+}
 
 type gc_control = {
   gc_minor_heap_size: int option;
@@ -162,6 +165,8 @@ let check_updates_against_providers opts = opts.opt_check_updates_against_provid
 let enums opts = opts.opt_enums
 
 let enums_with_unknown_members opts = opts.opt_enums_with_unknown_members
+
+let format_bracket_spacing opts = opts.opt_format.opt_bracket_spacing
 
 let format_single_quotes opts = opts.opt_format.opt_single_quotes
 

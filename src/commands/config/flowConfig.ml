@@ -62,6 +62,7 @@ module Opts = struct
     facebook_module_interop: bool;
     file_watcher_timeout: int option;
     file_watcher: file_watcher option;
+    format_bracket_spacing: bool option;  (** print spaces between brackets in object literals *)
     format_single_quotes: bool option;  (** prefer single-quoted strings *)
     gc_worker_custom_major_ratio: int option;  (** Gc.control's custom_major_ratio *)
     gc_worker_custom_minor_max_size: int option;  (** Gc.control's custom_minor_max_size *)
@@ -185,6 +186,7 @@ module Opts = struct
       facebook_module_interop = false;
       file_watcher = None;
       file_watcher_timeout = None;
+      format_bracket_spacing = None;
       format_single_quotes = None;
       gc_worker_custom_major_ratio = None;
       gc_worker_custom_minor_max_size = None;
@@ -448,6 +450,9 @@ module Opts = struct
     enum [("none", NoFileWatcher); ("dfind", DFind); ("watchman", Watchman)] (fun opts v ->
         Ok { opts with file_watcher = Some v })
 
+  let format_bracket_spacing_parser =
+    boolean (fun opts v -> Ok { opts with format_bracket_spacing = Some v })
+
   let format_single_quotes_parser =
     boolean (fun opts v -> Ok { opts with format_single_quotes = Some v })
 
@@ -654,6 +659,7 @@ module Opts = struct
       ("file_watcher.watchman.mergebase_with", watchman_mergebase_with_parser);
       ("file_watcher.watchman.sync_timeout", watchman_sync_timeout_parser);
       ("file_watcher", file_watcher_parser);
+      ("format.bracket_spacing", format_bracket_spacing_parser);
       ("format.single_quotes", format_single_quotes_parser);
       ("gc.worker.custom_major_ratio", gc_worker_custom_major_ratio_parser);
       ("gc.worker.custom_minor_max_size", gc_worker_custom_minor_max_size_parser);
@@ -1236,6 +1242,8 @@ let disable_live_non_parse_errors c = c.options.Opts.disable_live_non_parse_erro
 let check_updates_against_providers c = c.options.Opts.check_updates_against_providers
 
 let emoji c = c.options.Opts.emoji
+
+let format_bracket_spacing c = c.options.Opts.format_bracket_spacing
 
 let format_single_quotes c = c.options.Opts.format_single_quotes
 

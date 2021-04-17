@@ -71,10 +71,26 @@ let apply_patch contents patch =
          ^ String.sub contents end_offset (String.length contents - end_offset))
        contents
 
-let assert_patch ~ctxt ?(single_quotes = false) expected binding from contents =
+let assert_patch ~ctxt ?bracket_spacing ?single_quotes expected binding from contents =
   let expected = dedent_trim expected in
   let contents = dedent_trim contents in
-  let options = Js_layout_generator.{ default_opts with single_quotes } in
+  let options =
+    let open Js_layout_generator in
+    let options = default_opts in
+    let options =
+      Base.Option.value_map
+        ~default:options
+        ~f:(fun bracket_spacing -> { options with bracket_spacing })
+        bracket_spacing
+    in
+    let options =
+      Base.Option.value_map
+        ~default:options
+        ~f:(fun single_quotes -> { options with single_quotes })
+        single_quotes
+    in
+    options
+  in
   let patch = Autofix_imports.add_import ~options ~binding ~from (parse contents) in
   let patched = apply_patch contents patch in
   assert_equal ~ctxt ~printer:(fun x -> x) expected patched
@@ -455,6 +471,23 @@ let add_import_tests =
         foo
       |} in
       assert_patch ~ctxt expected binding from contents );
+
+    ( "bracket_spacing" >:: fun ctxt ->
+      let binding = (Export_index.Named, "foo") in
+      let from = "./foo" in
+      let contents = {|
+        foo
+      |} in
+      let expected = {|
+        import { foo } from "./foo";
+
+        foo
+      |} in
+      assert_patch ~ctxt ~bracket_spacing:true expected binding from contents;
+
+      let expected = Str.global_replace (Str.regexp_string "{ foo }") "{foo}" expected in
+      assert_patch ~ctxt ~bracket_spacing:false expected binding from contents );
+
   ]
 
 let tests = "autofix_imports" >::: ["add_import" >::: add_import_tests]
