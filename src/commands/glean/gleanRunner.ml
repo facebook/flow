@@ -736,10 +736,8 @@ let make ~output_dir ~write_root =
       let empty = { files_analyzed = 0; json_filenames = SSet.empty } in
       { report; combine; empty }
 
-    let visit ast ctx =
-      let Codemod_context.Typed.{ options; typed_ast; full_cx; file; file_sig; docblock; _ } =
-        ctx
-      in
+    let visit ~options ast ctx =
+      let Codemod_context.Typed.{ typed_ast; full_cx; file; file_sig; docblock; _ } = ctx in
       let root = Options.root options in
       let module_ref_prefix = Options.haste_module_ref_prefix options in
       let reader = State_reader.create () in

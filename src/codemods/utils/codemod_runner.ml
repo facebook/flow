@@ -55,7 +55,8 @@ let extract_flowlibs_or_exit options =
 
 type 'a unit_result = ('a, ALoc.t * Error_message.internal_error) result
 
-type ('a, 'ctx) abstract_visitor = (Loc.t, Loc.t) Flow_ast.Program.t -> 'ctx -> 'a
+type ('a, 'ctx) abstract_visitor =
+  options:Options.t -> (Loc.t, Loc.t) Flow_ast.Program.t -> 'ctx -> 'a
 
 (*************************)
 (*  Base Configurations  *)
@@ -225,7 +226,7 @@ let check_job ~visit ~iteration ~reader ~options acc roots =
             iteration;
           }
         in
-        let result = visit ast ccx in
+        let result = visit ~options ast ccx in
         FilenameMap.add file (Ok result) acc
       | Error e -> FilenameMap.add file (Error e) acc)
     acc
@@ -253,7 +254,7 @@ module type TYPED_RUNNER_WITH_PREPASS_CONFIG = sig
 
   val store_precheck_result : prepass_result unit_result FilenameMap.t -> unit
 
-  val visit : (Loc.t, Loc.t) Flow_ast.Program.t -> Codemod_context.Typed.t -> accumulator
+  val visit : (accumulator, Codemod_context.Typed.t) abstract_visitor
 end
 
 module type TYPED_RUNNER_CONFIG = sig
@@ -541,12 +542,13 @@ module UntypedRunner (C : UNTYPED_RUNNER_CONFIG) : STEP_RUNNER = struct
             log_input_files roots;
             let next = Parsing_service_js.next_of_filename_set workers roots in
             let mk_ccx file file_sig = { Codemod_context.Untyped.file; file_sig } in
+            let visit = C.visit ~options in
             let abstract_reader = Abstract_state_reader.Mutator_state_reader reader in
             let%lwt result =
               MultiWorkerLwt.call
                 workers
                 ~job:(fun _c file_key ->
-                  untyped_runner_job ~mk_ccx ~visit:C.visit ~abstract_reader file_key)
+                  untyped_runner_job ~mk_ccx ~visit ~abstract_reader file_key)
                 ~neutral:FilenameMap.empty
                 ~merge:FilenameMap.union
                 ~next
@@ -603,13 +605,13 @@ module UntypedFlowInitRunner (C : UNTYPED_FLOW_INIT_RUNNER_CONFIG) : STEP_RUNNER
         let reader = State_reader.create () in
         C.init ~reader;
         let mk_ccx file file_sig = { Codemod_context.UntypedFlowInit.file; reader; file_sig } in
+        let visit = C.visit ~options in
         let abstract_reader = Abstract_state_reader.State_reader reader in
         log_input_files filename_set;
         let%lwt result =
           MultiWorkerLwt.call
             workers
-            ~job:(fun _c file_key ->
-              untyped_runner_job ~visit:C.visit ~mk_ccx ~abstract_reader file_key)
+            ~job:(fun _c file_key -> untyped_runner_job ~visit ~mk_ccx ~abstract_reader file_key)
             ~neutral:FilenameMap.empty
             ~merge:FilenameMap.union
             ~next
