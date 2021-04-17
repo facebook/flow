@@ -1725,10 +1725,20 @@ let tests =
            assert_statement_string ~ctxt "export const a=b;";
            assert_statement_string ~ctxt "export interface a{a():b}";
            assert_statement_string ~ctxt ~pretty:true "export {};";
-           assert_statement_string ~ctxt ~pretty:true "export {a} from \"a\";";
+           assert_statement_string ~ctxt ~pretty:true "export { a } from \"a\";";
+           assert_statement_string
+             ~ctxt
+             ~pretty:true
+             ~opts:(no_bracket_spacing opts)
+             "export {a} from \"a\";";
            assert_statement_string ~ctxt ~pretty:true "export * from \"a\";";
            assert_statement_string ~ctxt ~pretty:true "export * as a from \"a\";";
-           assert_statement_string ~ctxt ~pretty:true "export type {a};";
+           assert_statement_string ~ctxt ~pretty:true "export type { a };";
+           assert_statement_string
+             ~ctxt
+             ~pretty:true
+             ~opts:(no_bracket_spacing opts)
+             "export type {a};";
            assert_statement_string
              ~ctxt
              ~pretty:true

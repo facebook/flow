@@ -2835,6 +2835,7 @@ and export_specifier ~opts source =
             new_list
               ~wrap:(Atom "{", Atom "}")
               ~sep:(Atom ",")
+              ~wrap_spaces:opts.bracket_spacing
               (List.map
                  (fun (loc, { ExportSpecifier.local; exported }) ->
                    source_location_with_comments
