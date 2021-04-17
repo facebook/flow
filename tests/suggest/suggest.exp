@@ -12,7 +12,7 @@ a(1);
 arrow-1.js
 // @flow
 
-const b = (x: ((k: string, l: number) => string), y: string, z: {|f: number|}): string => x(y, z.f);
+const b = (x: ((k: string, l: number) => string), y: string, z: {| f: number |}): string => x(y, z.f);
 b((k: string, l: number): string => (l + k), "a", { f: 2 });
 class-0.js
 // @flow
@@ -195,7 +195,7 @@ obj['n'](0)
 object-2.js
 // @flow
 
-function foo(x: {|l: () => void, m(): number, n: () => number|}): void {}
+function foo(x: {| l: () => void, m(): number, n: () => number |}): void {}
 
 foo({
   m(): number { return 1; },
@@ -205,7 +205,7 @@ foo({
 poly-0.js
 // @flow
 
-function foo<T>(x: T): {|f: T|} {
+function foo<T>(x: T): {| f: T |} {
   return {
     f: x
   }
@@ -230,12 +230,12 @@ declare opaque type O;
 type C = { f: O; }
 type D = { g: O; }
 
-(): {w: O, x: O, y: O, z: O,...} => { declare var x: {w: O, ...{| x: O, y: O |}, z: O}; return x; };
-(): {|w: O, x: O, y: O, z: O|} => { declare var x: {|w: O, ...{| x: O, y: O |}, z: O|}; return x; };
-(): {f: O, o: O,...} => { declare var x: {...C, o: O}; return x; };
-(): {...C,...} & {...D,...} => { declare var x: {...C} & {...D}; return x; };
-<T: {}, S: { f: O}>(): {f: O, o: O,...} => { declare var x: {...T, ...S, o: O}; return x; };
-<T: {}>(): {o: O,...} => { declare var x: {...T, o: O}; return x; };
+(): { w: O, x: O, y: O, z: O,... } => { declare var x: {w: O, ...{| x: O, y: O |}, z: O}; return x; };
+(): {| w: O, x: O, y: O, z: O |} => { declare var x: {|w: O, ...{| x: O, y: O |}, z: O|}; return x; };
+(): { f: O, o: O,... } => { declare var x: {...C, o: O}; return x; };
+(): { ...C,... } & { ...D,... } => { declare var x: {...C} & {...D}; return x; };
+<T: {}, S: { f: O}>(): { f: O, o: O,... } => { declare var x: {...T, ...S, o: O}; return x; };
+<T: {}>(): { o: O,... } => { declare var x: {...T, o: O}; return x; };
 string-literal.js
 // @flow
 

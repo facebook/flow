@@ -164,7 +164,7 @@ export default (suite(
                           },
                         },
                         newText:
-                          ': {a: number, b: (a: empty, b: string) => number,...}',
+                          ': { a: number, b: (a: empty, b: string) => number,... }',
                       },
                     ],
                   },

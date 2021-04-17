@@ -5,7 +5,7 @@
 // @flow
 
 export function tag_like_values(): $TEMPORARY$object<
-  {|non_tag_like: string, tag_like: $TEMPORARY$string<"tag_like">|},
+  {| non_tag_like: string, tag_like: $TEMPORARY$string<"tag_like"> |},
 > {
   return {
     tag_like: 'tag_like', // should print '$TEMPORARY$string<"tag_like">'
@@ -62,7 +62,7 @@ Warnings:
 >>> ./file.js
 // @flow
 
-export function tag_like_values(): {non_tag_like: string, tag_like: string,...} {
+export function tag_like_values(): { non_tag_like: string, tag_like: string,... } {
   return {
     tag_like: 'tag_like', // should print '$TEMPORARY$string<"tag_like">'
     non_tag_like: 'non_tag_like!', // should print 'string'
@@ -89,10 +89,10 @@ export function number_literal(): number {
 >>> ./file.js
 3,5c3
 < export function tag_like_values(): $TEMPORARY$object<
-<   {|non_tag_like: string, tag_like: $TEMPORARY$string<"tag_like">|},
+<   {| non_tag_like: string, tag_like: $TEMPORARY$string<"tag_like"> |},
 < > {
 ---
-> export function tag_like_values(): {non_tag_like: string, tag_like: string,...} {
+> export function tag_like_values(): { non_tag_like: string, tag_like: string,... } {
 13c11
 < export function array_literal(x: string, y: number): $TEMPORARY$array<number | string> {
 ---

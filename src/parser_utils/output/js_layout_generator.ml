@@ -3509,6 +3509,8 @@ and type_object ?(sep = Atom ",") ~opts loc { Ast.Type.Object.exact; properties;
     | first_prop :: _ ->
       if Loc.(loc.start.line < (prop_loc first_prop).start.line) then
         Some pretty_hardline
+      else if opts.bracket_spacing then
+        Some pretty_line
       else
         None
   in

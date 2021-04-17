@@ -173,7 +173,7 @@ var c = class e {
   }
 };
 
-var a: {|x: mixed|} = Object.create(null, {x: {value: 42}});
+var a: {| x: mixed |} = Object.create(null, {x: {value: 42}});
 
 function f2<X>(x: X, escape: boolean): X | number {
   if (escape) {
@@ -225,7 +225,7 @@ var u: mixed = (<X>(x: X, escape: boolean): X => {
   return u;
 })(42, true);
 
-var a3: {|x: mixed|} = {};
+var a3: {| x: mixed |} = {};
 
 function f6<X>(x: X, escape: boolean): X | void {
   if (escape) {
@@ -243,7 +243,7 @@ function f7<X>(x: X, escape: boolean): X | void {
   return a4.x;
 }
 
-var a5: {|x: mixed|} = Object.create(null);
+var a5: {| x: mixed |} = Object.create(null);
 
 function f8<X>(x: X, escape: boolean): X | void {
   if (escape) {

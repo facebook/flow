@@ -42,7 +42,7 @@ module.exports = {
     cond ? (cond2 ? "0" : 0) : (cond3 ? n : s),
 
 
-  o2: (): {|x: boolean|} =>
+  o2: (): {| x: boolean |} =>
     cond ? {x: true} : {x: false},
 }
 > flow status

@@ -1861,8 +1861,18 @@ let tests =
            assert_statement_string ~ctxt "type a={a:b,c:d};";
            assert_statement_string ~ctxt "type a={...a};";
            assert_statement_string ~ctxt "type a={a:b,...a};";
-           assert_statement_string ~ctxt ~pretty:true "type a = {a: b};";
-           assert_statement_string ~ctxt ~pretty:true "type a = {a: b, c: d};";
+           assert_statement_string ~ctxt ~pretty:true "type a = { a: b };";
+           assert_statement_string
+             ~ctxt
+             ~pretty:true
+             ~opts:Js_layout_generator.{ default_opts with bracket_spacing = false }
+             "type a = {a: b};";
+           assert_statement_string ~ctxt ~pretty:true "type a = { a: b, c: d };";
+           assert_statement_string
+             ~ctxt
+             ~pretty:true
+             ~opts:Js_layout_generator.{ default_opts with bracket_spacing = false }
+             "type a = {a: b, c: d};";
            assert_statement_string
              ~ctxt
              ~pretty:true
@@ -1870,14 +1880,14 @@ let tests =
            assert_statement_string ~ctxt "type a={a():b};";
            assert_statement_string ~ctxt "type a={get a():b};";
            assert_statement_string ~ctxt "type a={set a():b};";
-           assert_statement_string ~ctxt ~pretty:true "type a = {set a(): b};";
+           assert_statement_string ~ctxt ~pretty:true "type a = { set a(): b };";
            assert_statement_string ~ctxt "type a={a?:()=>a};";
            assert_statement_string ~ctxt "type a={+a:()=>a};";
            assert_statement_string ~ctxt "type a={():a};";
            assert_statement_string ~ctxt "type a={[b]:a};";
            assert_statement_string ~ctxt "type a={[a:b]:a};";
            assert_statement_string ~ctxt "type a={+[a:b]:a};";
-           assert_statement_string ~ctxt ~pretty:true "type a = {+[a: b]: a};";
+           assert_statement_string ~ctxt ~pretty:true "type a = { +[a: b]: a };";
            assert_statement_string ~ctxt "type a={a:b,+[a:b]:a,():a,c():b};" );
          ( "type_union_or_intersection" >:: fun ctxt ->
            assert_statement_string ~ctxt "type a=a|b;";
@@ -2364,7 +2374,7 @@ let tests =
              "switch (true) {\n  case a:\n    break;\n  //L\n  case b:\n    break;\n}" );
          ( "object_type_preserve_wrapping" >:: fun ctxt ->
            (* Object type that fits on single line with no wrapping is printed on single line *)
-           assert_statement_string ~ctxt ~pretty:true "type T = {a: 1};";
+           assert_statement_string ~ctxt ~pretty:true "type T = { a: 1 };";
            (* Object type that fits on single line but wraps is printed as wrapping *)
            assert_statement_string ~ctxt ~pretty:true "type T = {\n  a: 1,\n};" );
          ( "function_params_preserve_blank_lines_between_params" >:: fun ctxt ->
@@ -2483,7 +2493,15 @@ let tests =
            assert_statement
              ~ctxt
              ~pretty:true
-             ("function f(\n  " ^ a20 ^ ",\n  " ^ b20 ^ ",\n): {" ^ a20 ^ ": t, " ^ b20 ^ ": t} {}")
+             ( "function f(\n  "
+             ^ a20
+             ^ ",\n  "
+             ^ b20
+             ^ ",\n): { "
+             ^ a20
+             ^ ": t, "
+             ^ b20
+             ^ ": t } {}" )
              (statement_of_string
                 ("function f(" ^ a20 ^ ", " ^ b20 ^ "): {" ^ a20 ^ ": t, " ^ b20 ^ ": t} {}")) );
          ( "function_type_params_break_before_return_type" >:: fun ctxt ->
@@ -2493,7 +2511,7 @@ let tests =
            assert_statement
              ~ctxt
              ~pretty:true
-             ("type T = (\n  " ^ a20 ^ ",\n  " ^ b20 ^ "\n) => {" ^ a20 ^ ": t, " ^ b20 ^ ": t};")
+             ("type T = (\n  " ^ a20 ^ ",\n  " ^ b20 ^ "\n) => { " ^ a20 ^ ": t, " ^ b20 ^ ": t };")
              (statement_of_string
                 ("type T = (" ^ a20 ^ ", " ^ b20 ^ ") => {" ^ a20 ^ ": t, " ^ b20 ^ ": t};")) );
          ( "jsx_in_new_expression" >:: fun ctxt ->
