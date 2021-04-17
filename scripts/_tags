@@ -1,2 +1,0 @@
-true: safe_string
-<ppx_gen_rec.*>: package(compiler-libs.common)

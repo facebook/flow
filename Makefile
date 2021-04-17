@@ -409,7 +409,7 @@ _build/scripts/ppx_gen_flowlibs/ppx_gen_flowlibs_standalone.cmxa: scripts/ppx_ge
 
 _build/scripts/ppx_gen_flowlibs.exe: $(BUILT_LZ4_OBJECT_FILES) _build/src/common/xx/xx_stubs.o _build/scripts/ppx_gen_flowlibs/ppx_gen_flowlibs.cmxa _build/scripts/ppx_gen_flowlibs/ppx_gen_flowlibs_standalone.cmxa
 	ocamlfind ocamlopt -linkpkg -linkall \
-		-package ocaml-migrate-parsetree,unix \
+		-package ppxlib,unix \
 		-I _build/scripts/ppx_gen_flowlibs \
 		-ccopt "$(BUILT_LZ4_OBJECT_FILES) _build/src/common/xx/xx_stubs.o" \
 		_build/scripts/ppx_gen_flowlibs/ppx_gen_flowlibs.cmxa \
