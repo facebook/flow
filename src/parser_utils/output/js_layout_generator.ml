@@ -3559,9 +3559,16 @@ and type_generic ~opts loc { Ast.Type.Generic.id; targs; comments } =
   layout_node_with_comments_opt loc comments
   @@ fuse [generic_identifier id; option (type_args ~opts) targs]
 
-and type_indexed_access ~opts loc { Ast.Type.IndexedAccess._object; index; comments } =
+and type_indexed_access
+    ?(optional = false) ~opts loc { Ast.Type.IndexedAccess._object; index; comments } =
+  let left_delim =
+    if optional then
+      Atom "?.["
+    else
+      Atom "["
+  in
   layout_node_with_comments_opt loc comments
-  @@ fuse [type_ ~opts _object; Atom "["; type_ ~opts index; Atom "]"]
+  @@ fuse [type_ ~opts _object; left_delim; type_ ~opts index; Atom "]"]
 
 and type_nullable ~opts loc { Ast.Type.Nullable.argument; comments } =
   layout_node_with_comments_opt loc comments (fuse [Atom "?"; type_with_parens ~opts argument])
@@ -3622,7 +3629,8 @@ and type_ ~opts ((loc, t) : (Loc.t, Loc.t) Ast.Type.t) =
       | T.Array t -> type_array ~opts loc t
       | T.Generic generic -> type_generic ~opts loc generic
       | T.IndexedAccess indexed_access -> type_indexed_access ~opts loc indexed_access
-      | T.OptionalIndexedAccess _ -> failwith "TODO - done in later diff in stack"
+      | T.OptionalIndexedAccess { T.OptionalIndexedAccess.indexed_access; optional } ->
+        type_indexed_access ~optional ~opts loc indexed_access
       | T.Union t -> type_union ~opts loc t
       | T.Intersection t -> type_intersection ~opts loc t
       | T.Typeof t -> type_typeof ~opts loc t
