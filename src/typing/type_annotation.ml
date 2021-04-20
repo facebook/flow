@@ -252,7 +252,7 @@ let rec convert cx tparams_map =
   | (loc, (BooleanLiteral { Ast.BooleanLiteral.value; _ } as t_ast)) ->
     ((loc, mk_singleton_boolean cx loc value), t_ast)
   | (loc, IndexedAccess { IndexedAccess._object; index; comments }) ->
-    let reason = mk_reason RIndexedAccess loc in
+    let reason = mk_reason (RIndexedAccess { optional = false }) loc in
     let (((_, object_type), _) as _object) = convert cx tparams_map _object in
     let (((_, index_type), _) as index) = convert cx tparams_map index in
     let t =

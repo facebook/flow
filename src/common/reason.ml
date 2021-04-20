@@ -91,7 +91,7 @@ type 'loc virtual_reason_desc =
   | RNumberLit of string
   | RBigIntLit of string
   | RBooleanLit of bool
-  | RIndexedAccess
+  | RIndexedAccess of { optional: bool }
   | RMatchingProp of string * 'loc virtual_reason_desc
   | RObject
   | RObjectLit
@@ -285,7 +285,7 @@ let rec map_desc_locs f = function
     | RUndefinedProperty _ | RSomeProperty | RFieldInitializer _ | RUntypedModule _
     | RNamedImportedType _ | RImportStarType _ | RImportStarTypeOf _ | RImportStar _
     | RDefaultImportedType _ | RAsyncImport | RCode _ | RCustom _ | RIncompatibleInstantiation _
-    | ROpaqueType _ | RObjectMapi | RIndexedAccess ) as r ->
+    | ROpaqueType _ | RObjectMapi | RIndexedAccess _ ) as r ->
     r
   | REnumRepresentation desc -> REnumRepresentation (map_desc_locs f desc)
   | RConstructorCall desc -> RConstructorCall (map_desc_locs f desc)
@@ -556,7 +556,11 @@ let rec string_of_desc = function
   | RNumberLit x -> spf "number literal `%s`" x
   | RBigIntLit x -> spf "bigint literal `%s`" x
   | RBooleanLit b -> spf "boolean literal `%s`" (string_of_bool b)
-  | RIndexedAccess -> "indexed access"
+  | RIndexedAccess { optional } ->
+    if optional then
+      "optional indexed access"
+    else
+      "indexed access"
   | RMatchingProp (k, v) -> spf "object with property `%s` that matches %s" k (string_of_desc v)
   | RObject -> "object"
   | RObjectLit -> "object literal"
@@ -1363,7 +1367,7 @@ let classification_of_reason r =
   | REmpty
   | RAnyExplicit
   | RAnyImplicit
-  | RIndexedAccess
+  | RIndexedAccess _
   | RMatchingProp _
   | RObject
   | RObjectLit
