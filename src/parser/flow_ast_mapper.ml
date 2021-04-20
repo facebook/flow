@@ -1224,6 +1224,15 @@ class ['loc] mapper =
       else
         { _object = _object'; index = index'; comments = comments' }
 
+    method optional_indexed_access loc (ia : ('loc, 'loc) Ast.Type.OptionalIndexedAccess.t) =
+      let open Ast.Type.OptionalIndexedAccess in
+      let { indexed_access; optional } = ia in
+      let indexed_access' = this#indexed_access loc indexed_access in
+      if indexed_access' == indexed_access then
+        ia
+      else
+        { indexed_access = indexed_access'; optional }
+
     method string_literal_type _loc (lit : 'loc Ast.StringLiteral.t) =
       let open Ast.StringLiteral in
       let { value; raw; comments } = lit in
@@ -1355,6 +1364,8 @@ class ['loc] mapper =
       | (loc, Generic gt) -> id_loc this#generic_type loc gt t (fun gt -> (loc, Generic gt))
       | (loc, IndexedAccess ia) ->
         id_loc this#indexed_access loc ia t (fun ia -> (loc, IndexedAccess ia))
+      | (loc, OptionalIndexedAccess ia) ->
+        id_loc this#optional_indexed_access loc ia t (fun ia -> (loc, OptionalIndexedAccess ia))
       | (loc, StringLiteral lit) ->
         id_loc this#string_literal_type loc lit t (fun lit -> (loc, StringLiteral lit))
       | (loc, NumberLiteral lit) ->

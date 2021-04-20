@@ -3622,6 +3622,7 @@ and type_ ~opts ((loc, t) : (Loc.t, Loc.t) Ast.Type.t) =
       | T.Array t -> type_array ~opts loc t
       | T.Generic generic -> type_generic ~opts loc generic
       | T.IndexedAccess indexed_access -> type_indexed_access ~opts loc indexed_access
+      | T.OptionalIndexedAccess _ -> failwith "TODO - done in later diff in stack"
       | T.Union t -> type_union ~opts loc t
       | T.Intersection t -> type_intersection ~opts loc t
       | T.Typeof t -> type_typeof ~opts loc t

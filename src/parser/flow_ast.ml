@@ -222,6 +222,14 @@ and Type : sig
     [@@deriving show]
   end
 
+  module OptionalIndexedAccess : sig
+    type ('M, 'T) t = {
+      indexed_access: ('M, 'T) IndexedAccess.t;
+      optional: bool;
+    }
+    [@@deriving show]
+  end
+
   module Object : sig
     module Property : sig
       type ('M, 'T) t = 'M * ('M, 'T) t'
@@ -397,6 +405,7 @@ and Type : sig
     | Array of ('M, 'T) Array.t
     | Generic of ('M, 'T) Generic.t
     | IndexedAccess of ('M, 'T) IndexedAccess.t
+    | OptionalIndexedAccess of ('M, 'T) OptionalIndexedAccess.t
     | Union of ('M, 'T) Union.t
     | Intersection of ('M, 'T) Intersection.t
     | Typeof of ('M, 'T) Typeof.t

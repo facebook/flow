@@ -270,6 +270,7 @@ let rec convert cx tparams_map =
             mk_eval_id cx loc )
     in
     ((loc, t), IndexedAccess { IndexedAccess._object; index; comments })
+  | (_, OptionalIndexedAccess _) -> failwith "TODO - done in later diff in stack"
   (* TODO *)
   | ( loc,
       Generic

@@ -929,6 +929,13 @@ class virtual ['M, 'T, 'N, 'U] mapper =
       let comments' = Base.Option.map ~f:this#syntax comments in
       { _object = _object'; index = index'; comments = comments' }
 
+    method optional_indexed_access_type (ia : ('M, 'T) Ast.Type.OptionalIndexedAccess.t)
+        : ('N, 'U) Ast.Type.OptionalIndexedAccess.t =
+      let open Ast.Type.OptionalIndexedAccess in
+      let { indexed_access; optional } = ia in
+      let indexed_access' = this#indexed_access_type indexed_access in
+      { indexed_access = indexed_access'; optional }
+
     method type_predicate ((annot, pred) : ('M, 'T) Ast.Type.Predicate.t)
         : ('N, 'U) Ast.Type.Predicate.t =
       let open Ast.Type.Predicate in
@@ -1036,6 +1043,7 @@ class virtual ['M, 'T, 'N, 'U] mapper =
           | Interface i -> Interface (this#interface_type i)
           | Generic gt -> Generic (this#generic_type gt)
           | IndexedAccess ia -> IndexedAccess (this#indexed_access_type ia)
+          | OptionalIndexedAccess ia -> OptionalIndexedAccess (this#optional_indexed_access_type ia)
           | Union t' -> Union (this#union_type t')
           | Intersection t' -> Intersection (this#intersection_type t')
           | Tuple t' -> Tuple (this#tuple_type t')

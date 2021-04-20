@@ -1239,6 +1239,7 @@ let rec annot opts scope locs xs (loc, t) =
     let obj = annot opts scope locs xs _object in
     let elem = annot opts scope locs xs index in
     Annot (ElementType { loc; obj; elem; })
+  | T.OptionalIndexedAccess _ -> failwith "TODO - done in later diff in stack"
   | T.Tuple {T.Tuple.types; _} ->
     let ts_rev = List.rev_map (annot opts scope locs xs) types in
     Annot (Tuple {loc; ts = List.rev ts_rev})

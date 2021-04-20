@@ -263,6 +263,9 @@ class virtual ['M, 'T, 'N, 'U] mapper :
     method indexed_access_type :
       ('M, 'T) Ast.Type.IndexedAccess.t -> ('N, 'U) Ast.Type.IndexedAccess.t
 
+    method optional_indexed_access_type :
+      ('M, 'T) Ast.Type.OptionalIndexedAccess.t -> ('N, 'U) Ast.Type.OptionalIndexedAccess.t
+
     method identifier : ('M, 'M) Ast.Identifier.t -> ('N, 'N) Ast.Identifier.t
 
     method if_consequent_statement :

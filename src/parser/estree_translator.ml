@@ -1384,6 +1384,7 @@ with type t = Impl.t = struct
         | Array t -> array_type loc t
         | Generic g -> generic_type (loc, g)
         | IndexedAccess ia -> indexed_access (loc, ia)
+        | OptionalIndexedAccess ia -> optional_indexed_access (loc, ia)
         | Union t -> union_type (loc, t)
         | Intersection t -> intersection_type (loc, t)
         | Typeof t -> typeof_type (loc, t)
@@ -1601,12 +1602,22 @@ with type t = Impl.t = struct
         "GenericTypeAnnotation"
         loc
         [("id", id); ("typeParameters", option type_args targs)]
-    and indexed_access (loc, { Type.IndexedAccess._object; index; comments }) =
+    and indexed_access_properties { Type.IndexedAccess._object; index; comments = _ } =
+      [("objectType", _type _object); ("indexType", _type index)]
+    and indexed_access (loc, ({ Type.IndexedAccess.comments; _ } as ia)) =
+      node ?comments "IndexedAccessType" loc (indexed_access_properties ia)
+    and optional_indexed_access
+        ( loc,
+          {
+            Type.OptionalIndexedAccess.indexed_access =
+              { Type.IndexedAccess.comments; _ } as indexed_access;
+            optional;
+          } ) =
       node
         ?comments
-        "IndexedAccessType"
+        "OptionalIndexedAccessType"
         loc
-        [("objectType", _type _object); ("indexType", _type index)]
+        (indexed_access_properties indexed_access @ [("optional", bool optional)])
     and union_type (loc, { Type.Union.types = (t0, t1, ts); comments }) =
       node ?comments "UnionTypeAnnotation" loc [("types", array_of_list _type (t0 :: t1 :: ts))]
     and intersection_type (loc, { Type.Intersection.types = (t0, t1, ts); comments }) =

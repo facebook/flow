@@ -1304,6 +1304,17 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
         Generic { t with Generic.comments = merge_comments comments }
       | IndexedAccess ({ IndexedAccess.comments; _ } as t) ->
         IndexedAccess { t with IndexedAccess.comments = merge_comments comments }
+      | OptionalIndexedAccess
+          {
+            OptionalIndexedAccess.indexed_access = { IndexedAccess.comments; _ } as indexed_access;
+            optional;
+          } ->
+        OptionalIndexedAccess
+          {
+            OptionalIndexedAccess.indexed_access =
+              { indexed_access with IndexedAccess.comments = merge_comments comments };
+            optional;
+          }
       | Union ({ Union.comments; _ } as t) ->
         Union { t with Union.comments = merge_comments comments }
       | Intersection ({ Intersection.comments; _ } as t) ->
