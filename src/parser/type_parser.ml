@@ -184,33 +184,37 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
     let t = primary env in
     postfix_with env t
 
-  and postfix_with env t =
+  and postfix_with ?(in_optional_indexed_access = false) env t =
     if Peek.is_line_terminator env then
       t
     else
       match Peek.token env with
+      | T_PLING_PERIOD ->
+        Eat.token env;
+        Expect.token env T_LBRACKET;
+        postfix_brackets ~in_optional_indexed_access:true ~optional_indexed_access:true env t
       | T_LBRACKET ->
         Eat.token env;
-        postfix_brackets env t
+        postfix_brackets ~in_optional_indexed_access ~optional_indexed_access:false env t
       | T_PERIOD ->
         (match Peek.ith_token ~i:1 env with
         | T_LBRACKET ->
           error env (Parse_error.InvalidIndexedAccess { has_bracket = true });
           Expect.token env T_PERIOD;
           Expect.token env T_LBRACKET;
-          postfix_brackets env t
+          postfix_brackets ~in_optional_indexed_access ~optional_indexed_access:false env t
         | _ ->
           error env (Parse_error.InvalidIndexedAccess { has_bracket = false });
           t)
       | _ -> t
 
-  and postfix_brackets env t =
+  and postfix_brackets ~in_optional_indexed_access ~optional_indexed_access env t =
     let t =
       with_loc
         ~start_loc:(fst t)
         (fun env ->
           (* Legacy Array syntax `Foo[]` *)
-          if Eat.maybe env T_RBRACKET then
+          if (not optional_indexed_access) && Eat.maybe env T_RBRACKET then
             let trailing = Eat.trailing_comments env in
             Type.Array
               { Type.Array.argument = t; comments = Flow_ast_utils.mk_comments_opt ~trailing () }
@@ -218,15 +222,21 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
             let index = _type env in
             Expect.token env T_RBRACKET;
             let trailing = Eat.trailing_comments env in
-            Type.IndexedAccess
+            let indexed_access =
               {
                 Type.IndexedAccess._object = t;
                 index;
                 comments = Flow_ast_utils.mk_comments_opt ~trailing ();
-              })
+              }
+            in
+            if in_optional_indexed_access then
+              Type.OptionalIndexedAccess
+                { Type.OptionalIndexedAccess.indexed_access; optional = optional_indexed_access }
+            else
+              Type.IndexedAccess indexed_access)
         env
     in
-    postfix_with env t
+    postfix_with env ~in_optional_indexed_access t
 
   and primary env =
     let loc = Peek.loc env in

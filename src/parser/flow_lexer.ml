@@ -1715,6 +1715,7 @@ let type_token env lexbuf =
   | ";" -> Token (env, T_SEMICOLON)
   | "," -> Token (env, T_COMMA)
   | ":" -> Token (env, T_COLON)
+  | "?." -> Token (env, T_PLING_PERIOD)
   | "?" -> Token (env, T_PLING)
   | "[" -> Token (env, T_LBRACKET)
   | "]" -> Token (env, T_RBRACKET)
