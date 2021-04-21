@@ -15,6 +15,8 @@ struct
   class env_builder =
     object (_this)
       inherit Ssa_builder.ssa_builder as _super
+
+      val mutable expression_refinements = IMap.empty
     end
 
   let program_with_scope ?(ignore_toplevel = false) program =
