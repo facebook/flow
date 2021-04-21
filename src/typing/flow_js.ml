@@ -1460,6 +1460,33 @@ struct
               | _ -> false);
           rec_flow_t ~use_op:unknown_use cx trace (l, this_t);
           rec_flow cx trace (l, t_out)
+        (***************************)
+        (* optional indexed access *)
+        (***************************)
+        | ( DefT (r, trust, (EmptyT | VoidT | NullT)),
+            OptionalIndexedAccessT { use_op; tout_tvar; _ } ) ->
+          rec_flow_t ~use_op cx trace (EmptyT.why r trust, OpenT tout_tvar)
+        | ((MaybeT (_, t) | OptionalT { type_ = t; _ }), OptionalIndexedAccessT _) ->
+          rec_flow cx trace (t, u)
+        | (UnionT (_, rep), OptionalIndexedAccessT { use_op; reason; index_type; tout_tvar }) ->
+          let (t0, (t1, ts)) = UnionRep.members_nel rep in
+          let f t =
+            AnnotT
+              ( reason,
+                Tvar.mk_no_wrap_where cx reason (fun tvar ->
+                    rec_flow
+                      cx
+                      trace
+                      (t, OptionalIndexedAccessT { use_op; reason; index_type; tout_tvar = tvar })),
+                false )
+          in
+          let rep = UnionRep.make (f t0) (f t1) (Base.List.map ts ~f) in
+          rec_unify cx trace ~use_op:unknown_use (UnionT (reason, rep)) (OpenT tout_tvar)
+        | (_, OptionalIndexedAccessT { use_op; reason; index_type; tout_tvar })
+          when match l with
+               | IntersectionT _ -> false
+               | _ -> true ->
+          rec_flow cx trace (l, GetElemT (use_op, reason, index_type, tout_tvar))
         (*************)
         (* invariant *)
         (*************)
@@ -5874,6 +5901,7 @@ struct
     | MakeExactT _
     | FilterMaybeT _
     | ObjKitT _
+    | OptionalIndexedAccessT _
     | ReposLowerT _
     | ReposUseT _
     | UnifyT _
@@ -5955,6 +5983,7 @@ struct
       | AssertBinaryInRHST _
       | TestPropT _
       | OptionalChainT _
+      | OptionalIndexedAccessT _
       | MapTypeT _
       (* the above case is not needed for correctness, but rather avoids a slow path in TupleMap *)
       | UseT (_, ShapeT _)
@@ -6195,6 +6224,7 @@ struct
     | ObjTestProtoT _
     | ObjTestT _
     | OptionalChainT _
+    | OptionalIndexedAccessT _
     | OrT _
     | PredicateT _
     | ReactKitT _
@@ -6871,6 +6901,18 @@ struct
             let reason_op = replace_desc_reason (RProperty (Some x)) reason in
             GetPropT (use_op, reason, Named (reason_op, x), tout)
           | ElementType { index_type; _ } -> GetElemT (use_op, reason, index_type, tout)
+          | OptionalIndexedAccessNonMaybeType { index_type } ->
+            OptionalIndexedAccessT { use_op; reason; index_type; tout_tvar = tout }
+          | OptionalIndexedAccessResultType { void_reason } ->
+            let void = VoidT.why void_reason |> with_trust bogus_trust in
+            ResolveUnionT
+              {
+                reason;
+                resolved = [void];
+                unresolved = [];
+                upper = UseT (unknown_use, OpenT tout);
+                id = Reason.mk_id ();
+              }
           | Bind t -> BindT (use_op, reason, mk_boundfunctioncalltype t None [] tout, true)
           | SpreadType (options, todo_rev, head_slice) ->
             Object.(

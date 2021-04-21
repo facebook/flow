@@ -516,7 +516,8 @@ class virtual ['a, 'phase] t =
     method destructor cx map_cx t =
       match t with
       | NonMaybeType
-      | PropertyType _ ->
+      | PropertyType _
+      | OptionalIndexedAccessResultType _ ->
         t
       | ElementType { index_type; is_indexed_access } ->
         let index_type' = self#type_ cx map_cx index_type in
@@ -524,6 +525,12 @@ class virtual ['a, 'phase] t =
           t
         else
           ElementType { index_type = index_type'; is_indexed_access }
+      | OptionalIndexedAccessNonMaybeType { index_type } ->
+        let index_type' = self#type_ cx map_cx index_type in
+        if index_type' == index_type then
+          t
+        else
+          OptionalIndexedAccessNonMaybeType { index_type = index_type' }
       | Bind t' ->
         let t'' = self#type_ cx map_cx t' in
         if t'' == t' then
@@ -1475,6 +1482,13 @@ class virtual ['a, 'phase] t_with_uses =
         else
           OptionalChainT
             { reason; lhs_reason; this_t = this_t'; t_out = t_out'; voided_out = voided_out' }
+      | OptionalIndexedAccessT { use_op; reason; index_type; tout_tvar } ->
+        let index_type' = self#type_ cx map_cx index_type in
+        let tout_tvar' = self#tout cx map_cx tout_tvar in
+        if index_type' == index_type && tout_tvar' == tout_tvar then
+          t
+        else
+          OptionalIndexedAccessT { use_op; reason; index_type; tout_tvar }
       | InvariantT _ -> t
       | CallLatentPredT (r, b, i, t1, t2) ->
         let t1' = self#type_ cx map_cx t1 in

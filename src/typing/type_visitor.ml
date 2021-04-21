@@ -198,6 +198,7 @@ class ['a, 'phase] t =
     method destructor cx acc =
       function
       | NonMaybeType
+      | OptionalIndexedAccessResultType _
       | PropertyType _
       | ValuesType
       | ReadOnlyType
@@ -207,6 +208,7 @@ class ['a, 'phase] t =
         acc
       | ReactConfigType default_props -> self#type_ cx pole_TODO acc default_props
       | ElementType { index_type; _ } -> self#type_ cx pole_TODO acc index_type
+      | OptionalIndexedAccessNonMaybeType { index_type } -> self#type_ cx pole_TODO acc index_type
       | Bind t -> self#type_ cx pole_TODO acc t
       | SpreadType (_, ts, head_slice) ->
         let acc = self#list (self#object_kit_spread_operand cx) acc ts in
@@ -549,6 +551,9 @@ class ['a, 'phase] t =
         let acc = self#type_ cx pole_TODO acc this_t in
         let acc = self#use_type_ cx acc t_out in
         self#type_ cx pole_TODO acc voided_out
+      | OptionalIndexedAccessT { index_type; tout_tvar; _ } ->
+        let acc = self#type_ cx pole_TODO acc index_type in
+        self#tout cx pole_TODO acc tout_tvar
       | InvariantT _ -> acc
       | CallLatentPredT (_, _, _, t1, t2)
       | CallOpenPredT (_, _, _, t1, t2) ->

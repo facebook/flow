@@ -1750,6 +1750,8 @@ end = struct
           Ty.IndexedAccess { _object = ty; index = index_type' }
         else
           Ty.Utility (Ty.ElementType (ty, index_type'))
+      | T.OptionalIndexedAccessNonMaybeType _ -> failwith "TODO - done in later diff in stack"
+      | T.OptionalIndexedAccessResultType _ -> failwith "TODO - done in later diff in stack"
       | T.CallType ts ->
         let%map tys = mapM (type__ ~env) ts in
         Ty.Utility (Ty.Call (ty, tys))

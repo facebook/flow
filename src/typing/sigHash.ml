@@ -202,6 +202,7 @@ type hash =
   | IdxUnwrapH
   | IdxUnMaybeifyH
   | OptionalChainH
+  | OptionalIndexedAccessH
   | CallLatentPredH
   | CallOpenPredH
   | SubstOnPredH
@@ -224,6 +225,8 @@ type hash =
   | DestructNonMaybeTypeH
   | DestructPropertyTypeH
   | DestructElementTypeH
+  | DestructOptionalIndexedAccessNonMaybeTypeH
+  | DestructOptionalIndexedAccessResultTypeH
   | DestructBindH
   | DestructReadOnlyTypeH
   | DestructSpreadTypeH
@@ -348,6 +351,8 @@ let hash_of_destructor =
     | NonMaybeType -> DestructNonMaybeTypeH
     | PropertyType _ -> DestructPropertyTypeH
     | ElementType _ -> DestructElementTypeH
+    | OptionalIndexedAccessNonMaybeType _ -> DestructOptionalIndexedAccessNonMaybeTypeH
+    | OptionalIndexedAccessResultType _ -> DestructOptionalIndexedAccessResultTypeH
     | Bind _ -> DestructBindH
     | ReadOnlyType -> DestructReadOnlyTypeH
     | SpreadType _ -> DestructSpreadTypeH
@@ -449,6 +454,7 @@ let hash_of_use_ctor =
     | IdxUnwrap _ -> IdxUnwrapH
     | IdxUnMaybeifyT _ -> IdxUnMaybeifyH
     | OptionalChainT _ -> OptionalChainH
+    | OptionalIndexedAccessT _ -> OptionalIndexedAccessH
     | CallLatentPredT _ -> CallLatentPredH
     | CallOpenPredT _ -> CallOpenPredH
     | SubstOnPredT _ -> SubstOnPredH

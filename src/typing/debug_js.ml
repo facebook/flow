@@ -39,6 +39,8 @@ let string_of_destructor = function
   | NonMaybeType -> "NonMaybeType"
   | PropertyType x -> spf "PropertyType %s" (display_string_of_name x)
   | ElementType _ -> "ElementType"
+  | OptionalIndexedAccessNonMaybeType _ -> "OptionalIndexedAccessNonMaybeType"
+  | OptionalIndexedAccessResultType _ -> "OptionalIndexedAccessResultType"
   | Bind _ -> "Bind"
   | ReadOnlyType -> "ReadOnly"
   | SpreadType _ -> "Spread"
@@ -779,6 +781,7 @@ and dump_use_t_ : type phase. int * ISet.t -> phase Context.t_ -> Type.use_t -> 
     | ObjTestT _ -> p t
     | OptionalChainT { t_out; voided_out; _ } ->
       p ~extra:(spf "%s, %s" (use_kid t_out) (kid voided_out)) t
+    | OptionalIndexedAccessT { index_type; _ } -> p ~extra:(kid index_type) t
     | OrT (_, x, y) -> p ~extra:(spf "%s, %s" (kid x) (tout y)) t
     | PredicateT (pred, arg) ->
       p ~reason:false ~extra:(spf "%s, %s" (string_of_predicate pred) (tout arg)) t

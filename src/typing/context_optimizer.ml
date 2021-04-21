@@ -280,6 +280,15 @@ class context_optimizer ~no_lowers =
           t
         else
           ElementType { index_type = index_type'; is_indexed_access }
+      | OptionalIndexedAccessNonMaybeType { index_type } ->
+        let index_type' = self#type_ cx map_cx index_type in
+        if index_type' == index_type then
+          t
+        else
+          OptionalIndexedAccessNonMaybeType { index_type = index_type' }
+      | OptionalIndexedAccessResultType { void_reason } ->
+        SigHash.add_reason sig_hash void_reason;
+        t
       | Bind t' ->
         let t'' = self#type_ cx map_cx t' in
         if t'' == t' then

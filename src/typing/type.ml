@@ -832,6 +832,12 @@ module rec TypeTerm : sig
         name: string;
         cont: cont;
       }
+    | OptionalIndexedAccessT of {
+        use_op: use_op;
+        reason: reason;
+        index_type: t;
+        tout_tvar: tvar;
+      }
 
   and enum_check_t =
     | EnumCheck of {
@@ -1296,6 +1302,8 @@ module rec TypeTerm : sig
         (* For type normalizer purposes - in the future ElementType will be removed. *)
         is_indexed_access: bool;
       }
+    | OptionalIndexedAccessNonMaybeType of { index_type: t }
+    | OptionalIndexedAccessResultType of { void_reason: reason }
     | Bind of t
     | ReadOnlyType
     | SpreadType of
@@ -3457,6 +3465,7 @@ let string_of_use_ctor = function
   | FilterOptionalT _ -> "FilterOptionalT"
   | FilterMaybeT _ -> "FilterMaybeT"
   | SealGenericT _ -> "SealGenericT"
+  | OptionalIndexedAccessT _ -> "OptionalIndexedAccessT"
 
 let string_of_binary_test = function
   | InstanceofTest -> "instanceof"

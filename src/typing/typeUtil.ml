@@ -124,6 +124,7 @@ and reason_of_use_t = function
   | ObjTestProtoT (reason, _) -> reason
   | ObjTestT (reason, _, _) -> reason
   | OptionalChainT { reason; _ } -> reason
+  | OptionalIndexedAccessT { reason; _ } -> reason
   | OrT (reason, _, _) -> reason
   | PredicateT (_, (reason, _)) -> reason
   | ReactKitT (_, reason, _) -> reason
@@ -307,6 +308,8 @@ and mod_reason_of_use_t f = function
   | ObjTestT (reason, t1, t2) -> ObjTestT (f reason, t1, t2)
   | OptionalChainT ({ reason; _ } as opt_chain) ->
     OptionalChainT { opt_chain with reason = f reason }
+  | OptionalIndexedAccessT ({ reason; _ } as x) ->
+    OptionalIndexedAccessT { x with reason = f reason }
   | OrT (reason, t1, t2) -> OrT (f reason, t1, t2)
   | PredicateT (pred, (reason, t)) -> PredicateT (pred, (f reason, t))
   | ReactKitT (use_op, reason, tool) -> ReactKitT (use_op, f reason, tool)
@@ -389,6 +392,8 @@ let rec util_use_op_of_use_t :
   | GetPrivatePropT (op, r, s, c, b, t) -> util op (fun op -> GetPrivatePropT (op, r, s, c, b, t))
   | SetElemT (op, r, t1, m, t2, t3) -> util op (fun op -> SetElemT (op, r, t1, m, t2, t3))
   | GetElemT (op, r, t1, t2) -> util op (fun op -> GetElemT (op, r, t1, t2))
+  | OptionalIndexedAccessT ({ use_op; _ } as x) ->
+    util use_op (fun use_op -> OptionalIndexedAccessT { x with use_op })
   | ReposLowerT (r, d, u2) -> nested_util u2 (fun u2 -> ReposLowerT (r, d, u2))
   | ReposUseT (r, d, op, t) -> util op (fun op -> ReposUseT (r, d, op, t))
   | ConstructorT (op, r, targs, args, t) -> util op (fun op -> ConstructorT (op, r, targs, args, t))

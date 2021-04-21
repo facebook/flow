@@ -7,5 +7,14 @@ Indexed Access is not enabled. You may enable it by adding `indexed_access=true`
                     ^^^^^^^^^^
 
 
+Error ----------------------------------------------------------------------------------------------------- test.js:9:20
 
-Found 1 error
+Indexed Access is not enabled. You may enable it by adding `indexed_access=true` to the `[options]` section of your
+`.flowconfig`. [indexed-access-off]
+
+   9| type MaybeObjFoo = Obj?.['foo']; // Error
+                         ^^^^^^^^^^^^
+
+
+
+Found 2 errors
