@@ -19,6 +19,10 @@ module Make
 struct
   module Ssa_builder = Ssa_builder.Make (L) (Ssa_api) (Scope_builder)
 
+  let merge_and ref1 ref2 = And (ref1, ref2)
+
+  let merge_or ref1 ref2 = Or (ref1, ref2)
+
   class env_builder =
     object (this)
       inherit Ssa_builder.ssa_builder as super
@@ -29,8 +33,8 @@ struct
 
       method refined_reads : refinement L.LMap.t = refined_reads
 
-      method private push_refinement_scope () =
-        expression_refinement_scopes <- IMap.empty :: expression_refinement_scopes
+      method private push_refinement_scope scope =
+        expression_refinement_scopes <- scope :: expression_refinement_scopes
 
       method private pop_refinement_scope () =
         expression_refinement_scopes <- List.tl expression_refinement_scopes
@@ -39,6 +43,25 @@ struct
         let head = List.hd expression_refinement_scopes in
         let head' = IMap.map (fun v -> Not v) head in
         expression_refinement_scopes <- head' :: List.tl expression_refinement_scopes
+
+      method private peek_new_refinements () = List.hd expression_refinement_scopes
+
+      method private merge_refinement_scopes ~merge scope1 scope2 =
+        IMap.merge
+          (fun _ ref1 ref2 ->
+            match (ref1, ref2) with
+            | (Some ref1, Some ref2) -> Some (merge ref1 ref2)
+            | (Some ref, _) -> Some ref
+            | (_, Some ref) -> Some ref
+            | _ -> None)
+          scope1
+          scope2
+
+      method private merge_self_refinement_scope scope1 =
+        let scope2 = this#peek_new_refinements () in
+        let scope = this#merge_refinement_scopes ~merge:merge_and scope1 scope2 in
+        this#pop_refinement_scope ();
+        this#push_refinement_scope scope
 
       method private find_refinement name =
         let writes = SMap.find name this#ssa_env in
@@ -72,11 +95,43 @@ struct
         let { Flow_ast.Identifier.name; _ } = ident in
         this#add_refinement name Truthy
 
+      method logical_refinement expr =
+        let { Flow_ast.Expression.Logical.operator; left; right; comments = _ } = expr in
+        this#push_refinement_scope IMap.empty;
+        ignore @@ this#expression_refinement left;
+        let env1 = this#ssa_env in
+        let refinement_scope1 = this#peek_new_refinements () in
+        (match operator with
+        | Flow_ast.Expression.Logical.Or -> this#negate_new_refinements ()
+        | Flow_ast.Expression.Logical.And -> ()
+        | Flow_ast.Expression.Logical.NullishCoalesce ->
+          failwith "TODO logical_refinement nullish coalescing");
+        this#push_refinement_scope IMap.empty;
+        ignore @@ this#expression_refinement right;
+        let refinement_scope2 = this#peek_new_refinements () in
+        (* Pop RHS scope *)
+        this#pop_refinement_scope ();
+        (* Pop LHS scope *)
+        this#pop_refinement_scope ();
+        let merge =
+          match operator with
+          | Flow_ast.Expression.Logical.Or -> merge_or
+          | _ -> merge_and
+        in
+        let refinement_scope =
+          this#merge_refinement_scopes ~merge refinement_scope1 refinement_scope2
+        in
+        this#merge_self_refinement_scope refinement_scope;
+        this#merge_self_ssa_env env1
+
       method expression_refinement ((_loc, expr) as expression) =
         let open Flow_ast.Expression in
         match expr with
         | Identifier ident ->
           this#identifier_refinement ident;
+          expression
+        | Logical logical ->
+          this#logical_refinement logical;
           expression
         | Array _
         | ArrowFunction _
@@ -92,7 +147,6 @@ struct
         | JSXElement _
         | JSXFragment _
         | Literal _
-        | Logical _
         | MetaProperty _
         | Member _
         | New _
@@ -113,7 +167,7 @@ struct
       method! logical _loc (expr : (L.t, L.t) Flow_ast.Expression.Logical.t) =
         let open Flow_ast.Expression.Logical in
         let { operator; left; right; comments = _ } = expr in
-        this#push_refinement_scope ();
+        this#push_refinement_scope IMap.empty;
         ignore @@ this#expression_refinement left;
         let env1 = this#ssa_env in
         (match operator with
