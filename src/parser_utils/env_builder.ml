@@ -98,6 +98,16 @@ struct
         let { Flow_ast.Identifier.name; _ } = ident in
         this#add_refinement name Truthy
 
+      method assignment_refinement loc assignment =
+        ignore @@ this#assignment loc assignment;
+        let open Flow_ast.Expression.Assignment in
+        match assignment.left with
+        | ( _,
+            Flow_ast.Pattern.Identifier
+              { Flow_ast.Pattern.Identifier.name = (_, { Flow_ast.Identifier.name; _ }); _ } ) ->
+          this#add_refinement name Truthy
+        | _ -> ()
+
       method logical_refinement expr =
         let { Flow_ast.Expression.Logical.operator; left; right; comments = _ } = expr in
         this#push_refinement_scope IMap.empty;
@@ -127,7 +137,7 @@ struct
         this#merge_self_refinement_scope refinement_scope;
         this#merge_self_ssa_env env1
 
-      method expression_refinement ((_loc, expr) as expression) =
+      method expression_refinement ((loc, expr) as expression) =
         let open Flow_ast.Expression in
         match expr with
         | Identifier ident ->
@@ -136,9 +146,11 @@ struct
         | Logical logical ->
           this#logical_refinement logical;
           expression
+        | Assignment assignment ->
+          this#assignment_refinement loc assignment;
+          expression
         | Array _
         | ArrowFunction _
-        | Assignment _
         | Binary _
         | Call _
         | Class _

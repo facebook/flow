@@ -83,4 +83,9 @@ x || (x || x)"
                  |> add (mk_loc (2, 6) (2, 7)) Truthy
                  |> add (mk_loc (2, 13) (2, 14)) (Not (And (Truthy, Truthy)))
                  |> add (mk_loc (2, 18) (2, 19)) (And (Not (And (Truthy, Truthy)), Truthy)));
+         "assignment_truthy"
+         >:: mk_ssa_builder_test
+               "let x = null;
+(x = null) && x"
+               LocMap.(empty |> add (mk_loc (2, 14) (2, 15)) Truthy);
        ]
