@@ -10,6 +10,9 @@ type refinement =
   | Or of refinement * refinement
   | Not of refinement
   | Truthy
+  | Null
+  | Undefined
+  | Maybe
 [@@deriving show { with_path = false }]
 
 module Make
