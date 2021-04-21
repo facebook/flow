@@ -19,10 +19,55 @@ struct
   module Ssa_builder = Ssa_builder.Make (L) (Ssa_api) (Scope_builder)
 
   class env_builder =
-    object (_this)
+    object (this)
       inherit Ssa_builder.ssa_builder as _super
 
       val mutable expression_refinements = IMap.empty
+
+      method private add_refinement _name _refinement = ()
+
+      method identifier_refinement ((_loc, ident) as identifier) =
+        ignore @@ this#identifier identifier;
+        let { Flow_ast.Identifier.name; _ } = ident in
+        this#add_refinement name Truthy
+
+      method expression_refinement ((_loc, expr) as expression) =
+        let open Flow_ast.Expression in
+        match expr with
+        | Identifier ident ->
+          this#identifier_refinement ident;
+          expression
+        | Array _
+        | ArrowFunction _
+        | Assignment _
+        | Binary _
+        | Call _
+        | Class _
+        | Comprehension _
+        | Conditional _
+        | Function _
+        | Generator _
+        | Import _
+        | JSXElement _
+        | JSXFragment _
+        | Literal _
+        | Logical _
+        | MetaProperty _
+        | Member _
+        | New _
+        | Object _
+        | OptionalCall _
+        | OptionalMember _
+        | Sequence _
+        | Super _
+        | TaggedTemplate _
+        | TemplateLiteral _
+        | TypeCast _
+        | This _
+        | Unary _
+        | Update _
+        | Yield _ ->
+          this#expression expression
     end
 
   let program_with_scope ?(ignore_toplevel = false) program =
