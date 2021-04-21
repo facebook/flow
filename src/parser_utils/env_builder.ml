@@ -27,6 +27,8 @@ struct
 
       val mutable refined_reads = L.LMap.empty
 
+      method refined_reads : refinement L.LMap.t = refined_reads
+
       method private find_refinement name =
         let writes = SMap.find name this#ssa_env in
         IMap.find_opt (Ssa_builder.Val.id_of_val writes) expression_refinements
@@ -112,9 +114,11 @@ struct
         hoist#eval hoist#program program
     in
     ignore @@ ssa_walk#with_bindings loc bindings ssa_walk#program program;
-    (ssa_walk#acc, ssa_walk#values)
+    (ssa_walk#acc, ssa_walk#values, ssa_walk#refined_reads)
 
   let program program =
-    let (_, values) = program_with_scope ~ignore_toplevel:true program in
-    values
+    let (_, _, refined_reads) = program_with_scope ~ignore_toplevel:true program in
+    refined_reads
 end
+
+module With_Loc = Make (Loc_sig.LocS) (Ssa_api.With_Loc) (Scope_builder.With_Loc)
