@@ -23,25 +23,44 @@ struct
     object (this)
       inherit Ssa_builder.ssa_builder as super
 
-      val mutable expression_refinements = IMap.empty
+      val mutable expression_refinement_scopes = []
 
       val mutable refined_reads = L.LMap.empty
 
       method refined_reads : refinement L.LMap.t = refined_reads
 
+      method private push_refinement_scope () =
+        expression_refinement_scopes <- IMap.empty :: expression_refinement_scopes
+
+      method private pop_refinement_scope () =
+        expression_refinement_scopes <- List.tl expression_refinement_scopes
+
       method private find_refinement name =
         let writes = SMap.find name this#ssa_env in
-        IMap.find_opt (Ssa_builder.Val.id_of_val writes) expression_refinements
+        let key = Ssa_builder.Val.id_of_val writes in
+        List.fold_left
+          (fun refinement refinement_scope ->
+            match (IMap.find_opt key refinement_scope, refinement) with
+            | (None, _) -> refinement
+            | (Some refinement, None) -> Some refinement
+            | (Some refinement, Some refinement') -> Some (And (refinement, refinement')))
+          None
+          expression_refinement_scopes
 
       method private add_refinement name refinement =
         let writes_to_loc = SMap.find name this#ssa_env in
-        expression_refinements <-
-          IMap.update
-            (Ssa_builder.Val.id_of_val writes_to_loc)
-            (function
-              | None -> Some refinement
-              | Some r' -> Some (And (r', refinement)))
-            expression_refinements
+        match expression_refinement_scopes with
+        | scope :: scopes ->
+          let scope' =
+            IMap.update
+              (Ssa_builder.Val.id_of_val writes_to_loc)
+              (function
+                | None -> Some refinement
+                | Some r' -> Some (And (r', refinement)))
+              scope
+          in
+          expression_refinement_scopes <- scope' :: scopes
+        | _ -> failwith "Tried to add a refinement when no scope was on the stack"
 
       method identifier_refinement ((_loc, ident) as identifier) =
         ignore @@ this#identifier identifier;
@@ -89,11 +108,11 @@ struct
       method! logical _loc (expr : (L.t, L.t) Flow_ast.Expression.Logical.t) =
         let open Flow_ast.Expression.Logical in
         let { operator = _; left; right; comments = _ } = expr in
-        let outer_refs = expression_refinements in
+        this#push_refinement_scope ();
         ignore @@ this#expression_refinement left;
         let env1 = this#ssa_env in
         ignore @@ this#expression right;
-        expression_refinements <- outer_refs;
+        this#pop_refinement_scope ();
         this#merge_self_ssa_env env1;
         expr
 
