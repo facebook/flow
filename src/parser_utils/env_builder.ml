@@ -15,6 +15,26 @@ type refinement =
   | Maybe
 [@@deriving show { with_path = false }]
 
+(* These functions are adapted from typing/refinement.ml. Eventually, this will be the only place
+ * where refinement logic lives, so jmbrown is ok with this temporary duplication while he is
+ * fleshing out the refinement features of EnvBuilder
+ *
+ * The purpose of these functions is to extract _what_ is being refined when we have something like
+ * expr != null. What in expr does this refine? *)
+let rec key =
+  let open Flow_ast.Expression in
+  function
+  | (_, Identifier id) -> key_of_identifier id
+  | _ ->
+    (* other LHSes unsupported currently/here *)
+    None
+
+and key_of_identifier (_, { Flow_ast.Identifier.name; comments = _ }) =
+  if name = "undefined" then
+    None
+  else
+    Some name
+
 module Make
     (L : Loc_sig.S)
     (Ssa_api : Ssa_api.S with module L = L)
