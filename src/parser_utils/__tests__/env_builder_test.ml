@@ -45,4 +45,12 @@ let tests =
 let y = null;
 (x && (y = x)) + x"
                LocMap.(empty |> add (mk_loc (3, 11) (3, 12)) Truthy);
+         "logical_expr_successive"
+         >:: mk_ssa_builder_test
+               "let x = null;
+x && (x && x)"
+               LocMap.(
+                 empty
+                 |> add (mk_loc (2, 6) (2, 7)) Truthy
+                 |> add (mk_loc (2, 11) (2, 12)) (And (Truthy, Truthy)));
        ]

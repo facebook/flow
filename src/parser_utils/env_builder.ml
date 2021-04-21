@@ -36,7 +36,12 @@ struct
       method private add_refinement name refinement =
         let writes_to_loc = SMap.find name this#ssa_env in
         expression_refinements <-
-          IMap.add (Ssa_builder.Val.id_of_val writes_to_loc) refinement expression_refinements
+          IMap.update
+            (Ssa_builder.Val.id_of_val writes_to_loc)
+            (function
+              | None -> Some refinement
+              | Some r' -> Some (And (r', refinement)))
+            expression_refinements
 
       method identifier_refinement ((_loc, ident) as identifier) =
         ignore @@ this#identifier identifier;
