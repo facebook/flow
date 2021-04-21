@@ -5,6 +5,12 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
+type refinement =
+  | And of refinement * refinement
+  | Or of refinement * refinement
+  | Not of refinement
+  | Truthy
+
 module Make
     (L : Loc_sig.S)
     (Ssa_api : Ssa_api.S with module L = L)
