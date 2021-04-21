@@ -78,6 +78,17 @@ struct
         | Yield _ ->
           this#expression expression
 
+      method! logical _loc (expr : (L.t, L.t) Flow_ast.Expression.Logical.t) =
+        let open Flow_ast.Expression.Logical in
+        let { operator = _; left; right; comments = _ } = expr in
+        let outer_refs = expression_refinements in
+        ignore @@ this#expression_refinement left;
+        let env1 = this#ssa_env in
+        ignore @@ this#expression right;
+        expression_refinements <- outer_refs;
+        this#merge_self_ssa_env env1;
+        expr
+
       (* This method is called during every read of an identifier. We need to ensure that
        * if the identifier is refined that we record the refiner as the write that reaches
        * this read *)
