@@ -56,6 +56,7 @@ type t =
   | IndexedAccess of {
       _object: t;
       index: t;
+      optional: bool;
     }
 
 and tvar = RVar of int [@@unboxed]

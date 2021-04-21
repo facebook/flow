@@ -100,10 +100,14 @@ let type_ options =
     | Union (t0, t1, ts) as t -> union t (t0, t1, ts)
     | Inter (t0, t1, ts) -> intersection (t0, t1, ts)
     | Utility s -> utility s
-    | IndexedAccess { _object; index } ->
+    | IndexedAccess { _object; index; optional } ->
       let%bind _object = type_ _object in
       let%map index = type_ index in
-      (Loc.none, T.IndexedAccess { T.IndexedAccess._object; index; comments = None })
+      let indexed_access = { T.IndexedAccess._object; index; comments = None } in
+      if optional then
+        (Loc.none, T.OptionalIndexedAccess { T.OptionalIndexedAccess.indexed_access; optional })
+      else
+        (Loc.none, T.IndexedAccess indexed_access)
     | InlineInterface i -> inline_interface i
     | CharSet s ->
       let id = id_from_string "CharSet" in

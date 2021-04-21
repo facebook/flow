@@ -1747,11 +1747,13 @@ end = struct
       | T.ElementType { index_type; is_indexed_access } ->
         let%map index_type' = type__ ~env index_type in
         if is_indexed_access then
-          Ty.IndexedAccess { _object = ty; index = index_type' }
+          Ty.IndexedAccess { _object = ty; index = index_type'; optional = false }
         else
           Ty.Utility (Ty.ElementType (ty, index_type'))
-      | T.OptionalIndexedAccessNonMaybeType _ -> failwith "TODO - done in later diff in stack"
-      | T.OptionalIndexedAccessResultType _ -> failwith "TODO - done in later diff in stack"
+      | T.OptionalIndexedAccessNonMaybeType { index_type } ->
+        let%map index_type' = type__ ~env index_type in
+        Ty.IndexedAccess { _object = ty; index = index_type'; optional = true }
+      | T.OptionalIndexedAccessResultType _ -> return ty
       | T.CallType ts ->
         let%map tys = mapM (type__ ~env) ts in
         Ty.Utility (Ty.Call (ty, tys))
