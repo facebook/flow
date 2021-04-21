@@ -41,6 +41,8 @@ struct
     val resolve : unresolved:t -> t -> unit
 
     val simplify : t -> Ssa_api.write_loc list
+
+    val id_of_val : t -> int
   end = struct
     let curr_id = ref 0
 
@@ -170,6 +172,8 @@ struct
           | REF { contents = Resolved _ } ->
             failwith "A normalized value cannot be a PHI or a resolved REF")
         (WriteSet.elements vals)
+
+    let id_of_val { id; write_state = _ } = id
   end
 
   (* An environment is a map from variables to values. *)
