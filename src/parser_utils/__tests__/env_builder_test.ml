@@ -53,4 +53,17 @@ x && (x && x)"
                  empty
                  |> add (mk_loc (2, 6) (2, 7)) Truthy
                  |> add (mk_loc (2, 11) (2, 12)) (And (Truthy, Truthy)));
+         "logical_or"
+         >:: mk_ssa_builder_test
+               "let x = null;
+x || x"
+               LocMap.(empty |> add (mk_loc (2, 5) (2, 6)) (Not Truthy));
+         "logical_nested"
+         >:: mk_ssa_builder_test
+               "let x = null;
+x || (x || x)"
+               LocMap.(
+                 empty
+                 |> add (mk_loc (2, 6) (2, 7)) (Not Truthy)
+                 |> add (mk_loc (2, 11) (2, 12)) (And (Not Truthy, Not Truthy)));
        ]

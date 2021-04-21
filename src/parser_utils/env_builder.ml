@@ -35,6 +35,11 @@ struct
       method private pop_refinement_scope () =
         expression_refinement_scopes <- List.tl expression_refinement_scopes
 
+      method private negate_new_refinements () =
+        let head = List.hd expression_refinement_scopes in
+        let head' = IMap.map (fun v -> Not v) head in
+        expression_refinement_scopes <- head' :: List.tl expression_refinement_scopes
+
       method private find_refinement name =
         let writes = SMap.find name this#ssa_env in
         let key = Ssa_builder.Val.id_of_val writes in
@@ -107,10 +112,15 @@ struct
 
       method! logical _loc (expr : (L.t, L.t) Flow_ast.Expression.Logical.t) =
         let open Flow_ast.Expression.Logical in
-        let { operator = _; left; right; comments = _ } = expr in
+        let { operator; left; right; comments = _ } = expr in
         this#push_refinement_scope ();
         ignore @@ this#expression_refinement left;
         let env1 = this#ssa_env in
+        (match operator with
+        | Flow_ast.Expression.Logical.Or -> this#negate_new_refinements ()
+        | Flow_ast.Expression.Logical.And -> ()
+        | Flow_ast.Expression.Logical.NullishCoalesce ->
+          failwith "nullish coalescing refinements are not yet implemented");
         ignore @@ this#expression right;
         this#pop_refinement_scope ();
         this#merge_self_ssa_env env1;
