@@ -10,6 +10,7 @@ type refinement =
   | Or of refinement * refinement
   | Not of refinement
   | Truthy
+[@@deriving show { with_path = false }]
 
 module Make
     (L : Loc_sig.S)
