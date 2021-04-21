@@ -111,3 +111,8 @@ queries_in_file autocomplete "bracket_syntax_6.js" --lsp
 queries_in_file autocomplete "iterator.js" --lsp
 queries_in_file autocomplete "bracket_syntax_needed.js" --lsp
 queries_in_file autocomplete "bracket_syntax_needed_2.js" --lsp
+queries_in_file autocomplete "upper_bounds_1.js" --lsp
+queries_in_file autocomplete "upper_bounds_2.js" --lsp
+queries_in_file autocomplete "upper_bounds_3.js" --pretty
+queries_in_file autocomplete "upper_bounds_4.js" --pretty
+queries_in_file autocomplete "upper_bounds_5.js" --pretty

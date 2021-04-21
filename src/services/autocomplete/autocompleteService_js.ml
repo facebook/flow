@@ -323,7 +323,8 @@ let documentation_of_loc ~options ~reader ~cx ~file_sig ~typed_ast loc =
   | Def_error _ ->
     None
 
-let local_value_identifiers ~options ~reader ~cx ~ac_loc ~file_sig ~ast ~typed_ast ~tparams_rev =
+let local_value_identifiers
+    ~options ~reader ~cx ~genv ~ac_loc ~file_sig ~ast ~typed_ast ~tparams_rev =
   let scope_info = Scope_builder.program ~with_types:false ast in
   let open Scope_api.With_Loc in
   (* get the innermost scope enclosing the requested location *)
@@ -374,9 +375,69 @@ let local_value_identifiers ~options ~reader ~cx ~ac_loc ~file_sig ~ast ~typed_a
          Base.Option.map (LocMap.find_opt loc types) ~f:(fun type_ ->
              ( (name, documentation_of_loc ~options ~reader ~cx ~file_sig ~typed_ast loc),
                Type.TypeScheme.{ tparams_rev; type_ } )))
-  |> Ty_normalizer.from_schemes
-       ~options:ty_normalizer_options
-       ~genv:(Ty_normalizer_env.mk_genv ~full_cx:cx ~file:(Context.file cx) ~typed_ast ~file_sig)
+  |> Ty_normalizer.from_schemes ~options:ty_normalizer_options ~genv
+
+(* Roughly collects upper bounds of a type.
+ * This logic will be changed or made unnecessary once we have contextual typing *)
+let rec upper_bounds_of_t ~cx : Type.t -> Type.t list =
+  let open Base.List.Let_syntax in
+  function
+  | Type.OpenT (_, id) ->
+    let%bind use = Flow_js_utils.possible_uses cx id in
+    upper_bounds_of_use_t ~cx use
+  | t -> return t
+
+and upper_bounds_of_use_t ~cx : Type.use_t -> Type.t list = function
+  | Type.ReposLowerT (_, _, use) -> upper_bounds_of_use_t ~cx use
+  | Type.UseT (_, t) -> upper_bounds_of_t ~cx t
+  | _ -> []
+
+let rec literals_of_ty acc ty =
+  match ty with
+  | Ty.Union (t1, t2, ts) -> Base.List.fold_left (t1 :: t2 :: ts) ~f:literals_of_ty ~init:acc
+  | Ty.StrLit _
+  | Ty.NumLit _
+  | Ty.BoolLit _ ->
+    ty :: acc
+  | Ty.Bool _ -> Ty.BoolLit true :: Ty.BoolLit false :: acc
+  | _ -> acc
+
+let autocomplete_literals ~cx ~genv ~tparams_rev ~ac_loc lb_type =
+  let upper_bounds = upper_bounds_of_t ~cx lb_type in
+  let schemes =
+    Base.List.map upper_bounds ~f:(fun type_ -> ((), { Type.TypeScheme.tparams_rev; type_ }))
+  in
+  let options = { ty_normalizer_options with Ty_normalizer_env.expand_type_aliases = true } in
+  let upper_bound_tys =
+    Ty_normalizer.from_schemes ~options ~genv schemes
+    |> Base.List.map ~f:snd
+    |> Base.List.filter_map ~f:Base.Result.ok
+    |> Base.List.filter_map ~f:(function
+           | Ty.Type t -> Some t
+           | Ty.Decl _ -> None)
+  in
+  let upper_bound_ty =
+    match upper_bound_tys with
+    | [] -> Ty.Top
+    | ub_ty :: ub_tys -> Ty.mk_inter (ub_ty, ub_tys) |> Ty_utils.simplify_type ~merge_kinds:false
+  in
+  Hh_logger.info "upper_bound_ty: %s" (Ty_debug.dump_t upper_bound_ty);
+  (* TODO: since we're inserting values, we shouldn't really be using the Ty_printer *)
+  let exact_by_default = Context.exact_by_default cx in
+  (*let literals = Base.List.fold tys ~init:[] ~f:literals_of_ty in*)
+  let literals = literals_of_ty [] upper_bound_ty in
+  Base.List.map literals ~f:(fun ty ->
+      let name = Ty_printer.string_of_t_single_line ~with_comments:false ~exact_by_default ty in
+      (* TODO: if we had both the expanded and unexpanded type alias, we'd
+          use the unexpanded alias for `ty` and the expanded literal for `name`. *)
+      autocomplete_create_result
+        ~insert_text:name
+        ~rank:0
+        ~preselect:true
+        ~exact_by_default
+        ~log_info:"literal from upper bound"
+        (name, ac_loc)
+        ty)
 
 let src_dir_of_loc ac_loc =
   Loc.source ac_loc |> Base.Option.map ~f:(fun key -> File_key.to_string key |> Filename.dirname)
@@ -465,13 +526,31 @@ let autocomplete_id
     ~include_this
     ~imports
     ~tparams_rev
-    ~token =
+    ~token
+    ~type_ =
   (* TODO: filter to results that match `token` *)
   let open ServerProt.Response.Completion in
   let ac_loc = loc_of_aloc ~reader ac_loc |> remove_autocomplete_token_from_loc in
   let exact_by_default = Context.exact_by_default cx in
+  let genv = Ty_normalizer_env.mk_genv ~full_cx:cx ~file:(Context.file cx) ~typed_ast ~file_sig in
+  let results = autocomplete_literals ~cx ~genv ~tparams_rev ~ac_loc type_ in
+  let rank =
+    if results = [] then
+      0
+    else
+      1
+  in
   let identifiers =
-    local_value_identifiers ~options ~reader ~cx ~ac_loc ~file_sig ~typed_ast ~ast ~tparams_rev
+    local_value_identifiers
+      ~options
+      ~reader
+      ~cx
+      ~genv
+      ~ac_loc
+      ~file_sig
+      ~typed_ast
+      ~ast
+      ~tparams_rev
   in
   let (items_rev, errors_to_log) =
     identifiers
@@ -482,6 +561,7 @@ let autocomplete_id
              let result =
                autocomplete_create_result_elt
                  ~insert_text:name
+                 ~rank
                  ?documentation
                  ~exact_by_default
                  ~log_info:"local value identifier"
@@ -492,7 +572,7 @@ let autocomplete_id
            | Error err ->
              let error_to_log = Ty_normalizer.error_to_string err in
              (items_rev, error_to_log :: errors_to_log))
-         ([], [])
+         (results, [])
   in
   (* "this" is legal inside classes and (non-arrow) functions *)
   let items_rev =
@@ -502,7 +582,7 @@ let autocomplete_id
         name = "this";
         detail = "this";
         text_edits = [text_edit ("this", ac_loc)];
-        sort_text = sort_text_of_rank 0;
+        sort_text = sort_text_of_rank rank;
         preselect = false;
         documentation = None;
         log_info = "this";
@@ -521,7 +601,7 @@ let autocomplete_id
         name = "super";
         detail = "super";
         text_edits = [text_edit ("super", ac_loc)];
-        sort_text = sort_text_of_rank 0;
+        sort_text = sort_text_of_rank rank;
         preselect = false;
         documentation = None;
         log_info = "super";
@@ -706,7 +786,7 @@ let autocomplete_member
     | None ->
       let result = { ServerProt.Response.Completion.items; is_incomplete = false } in
       AcResult { result; errors_to_log }
-    | Some Autocomplete_js.{ include_this; include_super } ->
+    | Some Autocomplete_js.{ include_this; include_super; type_ } ->
       let {
         result = { ServerProt.Response.Completion.items = id_items; is_incomplete };
         errors_to_log = id_errors_to_log;
@@ -725,6 +805,7 @@ let autocomplete_member
           ~imports
           ~tparams_rev
           ~token
+          ~type_
       in
       let result = { ServerProt.Response.Completion.items = items @ id_items; is_incomplete } in
       let errors_to_log = errors_to_log @ id_errors_to_log in
@@ -771,7 +852,8 @@ let should_autoimport_react ~options ~imports ~file_sig =
     false
 
 let autocomplete_jsx_element
-    ~env ~options ~reader ~cx ~ac_loc ~file_sig ~ast ~typed_ast ~imports ~tparams_rev ~token =
+    ~env ~options ~reader ~cx ~ac_loc ~file_sig ~ast ~typed_ast ~imports ~tparams_rev ~token ~type_
+    =
   let ({ result; errors_to_log } as results) =
     autocomplete_id
       ~env
@@ -787,6 +869,7 @@ let autocomplete_jsx_element
       ~imports
       ~tparams_rev
       ~token
+      ~type_
   in
   if should_autoimport_react ~options ~imports ~file_sig then
     let open ServerProt.Response.Completion in
@@ -1061,14 +1144,23 @@ let autocomplete_unqualified_type
              (results, error_to_log :: errors_to_log))
          (tparam_results, [])
   in
+  let genv = Ty_normalizer_env.mk_genv ~full_cx:cx ~file:(Context.file cx) ~typed_ast ~file_sig in
   let value_identifiers =
-    local_value_identifiers ~options ~ast ~typed_ast ~reader ~ac_loc ~tparams_rev ~cx ~file_sig
+    local_value_identifiers
+      ~options
+      ~ast
+      ~typed_ast
+      ~reader
+      ~genv
+      ~ac_loc
+      ~tparams_rev
+      ~cx
+      ~file_sig
   in
-
   (* The value-level identifiers we suggest in type autocompletion:
-     - classes
-     - enums
-     - modules (followed by a dot) *)
+      - classes
+      - enums
+      - modules (followed by a dot) *)
   let (items, errors_to_log) =
     value_identifiers
     |> List.fold_left
@@ -1169,7 +1261,6 @@ let autocomplete_get_results
       | Ac_binding -> ("Empty", AcEmpty "Binding")
       | Ac_ignored -> ("Empty", AcEmpty "Ignored")
       | Ac_comment -> ("Empty", AcEmpty "Comment")
-      | Ac_literal -> ("Empty", AcEmpty "Literal")
       | Ac_jsx_text -> ("Empty", AcEmpty "JSXText")
       | Ac_module ->
         (* TODO: complete module names *)
@@ -1178,7 +1269,15 @@ let autocomplete_get_results
         (* TODO: complete object keys based on their upper bounds *)
         let result = { ServerProt.Response.Completion.items = []; is_incomplete = false } in
         ("Ackey", AcResult { result; errors_to_log = [] })
-      | Ac_id { include_super; include_this } ->
+      | Ac_literal { lit_type } ->
+        let ac_loc = loc_of_aloc ~reader ac_loc |> remove_autocomplete_token_from_loc in
+        let genv =
+          Ty_normalizer_env.mk_genv ~full_cx:cx ~file:(Context.file cx) ~typed_ast ~file_sig
+        in
+        let items = autocomplete_literals ~cx ~genv ~tparams_rev ~ac_loc lit_type in
+        let result = ServerProt.Response.Completion.{ items; is_incomplete = false } in
+        ("Acliteral", AcResult { result; errors_to_log = [] })
+      | Ac_id { include_super; include_this; type_ } ->
         ( "Acid",
           AcResult
             (autocomplete_id
@@ -1194,7 +1293,8 @@ let autocomplete_get_results
                ~include_this
                ~imports
                ~tparams_rev
-               ~token) )
+               ~token
+               ~type_) )
       | Ac_member { obj_type; in_optional_chain; bracket_syntax; member_loc } ->
         ( "Acmem",
           autocomplete_member
@@ -1213,7 +1313,7 @@ let autocomplete_get_results
             ~tparams_rev
             ~bracket_syntax
             ~member_loc )
-      | Ac_jsx_element ->
+      | Ac_jsx_element { type_ } ->
         ( "Ac_jsx_element",
           autocomplete_jsx_element
             ~env
@@ -1226,7 +1326,8 @@ let autocomplete_get_results
             ~typed_ast
             ~imports
             ~tparams_rev
-            ~token )
+            ~token
+            ~type_ )
       | Ac_jsx_attribute { attribute_name; used_attr_names; component_t; has_value } ->
         ( "Acjsx",
           autocomplete_jsx_attribute

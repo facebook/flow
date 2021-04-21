@@ -7,6 +7,8 @@
 
 let id_nop _ _ _ = false
 
+let literal_nop _ _ = false
+
 let lval_nop _ _ _ _ = ()
 
 let member_nop _ _ _ _ = false
@@ -62,6 +64,7 @@ type def =
 
 type 'phase hook_state_t = {
   id_hook: 'phase Context.t_ -> string -> ALoc.t -> bool;
+  literal_hook: 'phase Context.t_ -> ALoc.t -> bool;
   lval_hook: 'phase Context.t_ -> string -> ALoc.t -> def -> unit;
   member_hook: 'phase Context.t_ -> string -> ALoc.t -> Type.t -> bool;
   (* TODO: This is inconsistent with the way the id/member hooks work, but we
@@ -84,6 +87,7 @@ type 'phase hook_state_t = {
 let nop_hook_state : Type.Constraint.infer_phase hook_state_t =
   {
     id_hook = id_nop;
+    literal_hook = literal_nop;
     lval_hook = lval_nop;
     member_hook = member_nop;
     call_hook = call_nop;
@@ -99,6 +103,8 @@ let nop_hook_state : Type.Constraint.infer_phase hook_state_t =
 let hook_state = ref nop_hook_state
 
 let set_id_hook hook = hook_state := { !hook_state with id_hook = hook }
+
+let set_literal_hook hook = hook_state := { !hook_state with literal_hook = hook }
 
 let set_lval_hook hook = hook_state := { !hook_state with lval_hook = hook }
 
@@ -125,6 +131,8 @@ let set_export_named_hook hook = hook_state := { !hook_state with export_named_h
 let reset_hooks () = hook_state := nop_hook_state
 
 let dispatch_id_hook cx name loc = !hook_state.id_hook cx name loc
+
+let dispatch_literal_hook cx loc = !hook_state.literal_hook cx loc
 
 let dispatch_lval_hook cx name lhs_loc rhs_loc = !hook_state.lval_hook cx name lhs_loc rhs_loc
 

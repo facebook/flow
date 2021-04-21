@@ -8,6 +8,7 @@
 type ac_id = {
   include_super: bool;
   include_this: bool;
+  type_: Type.t;
 }
 
 type autocomplete_type =
@@ -16,7 +17,7 @@ type autocomplete_type =
   | Ac_comment  (** inside a comment *)
   | Ac_id of ac_id  (** identifier references *)
   | Ac_key  (** object key, not supported yet *)
-  | Ac_literal  (** inside a literal like a string or regex *)
+  | Ac_literal of { lit_type: Type.t }  (** inside a literal like a string or regex *)
   | Ac_module  (** a module name *)
   | Ac_type  (** type identifiers *)
   | Ac_qualified_type of Type.t  (** qualified type identifiers *)
@@ -26,7 +27,7 @@ type autocomplete_type =
       bracket_syntax: ac_id option;
       member_loc: Loc.t option; (* loc of `.foo` or `[foo]` *)
     }  (** member expressions *)
-  | Ac_jsx_element  (** JSX element name *)
+  | Ac_jsx_element of { type_: Type.t }  (** JSX element name *)
   | Ac_jsx_attribute of {
       attribute_name: string;
       used_attr_names: SSet.t;
@@ -42,7 +43,7 @@ type process_location_result = {
   autocomplete_type: autocomplete_type;
 }
 
-let default_ac_id = { include_super = false; include_this = false }
+let default_ac_id type_ = { include_super = false; include_this = false; type_ }
 
 let type_of_jsx_name =
   let open Flow_ast.JSX in
@@ -94,14 +95,14 @@ class process_request_searcher (from_trigger_character : bool) (cursor : Loc.t) 
       else
         super#comment c
 
-    method! t_identifier (((loc, _), { Flow_ast.Identifier.name; _ }) as ident) =
+    method! t_identifier (((loc, type_), { Flow_ast.Identifier.name; _ }) as ident) =
       if this#covers_target loc then
-        this#find loc name (Ac_id default_ac_id)
+        this#find loc name (Ac_id (default_ac_id type_))
       else
         super#t_identifier ident
 
-    method! jsx_identifier (((ac_loc, _), { Flow_ast.JSX.Identifier.name; _ }) as ident) =
-      if this#covers_target ac_loc then this#find ac_loc name (Ac_id default_ac_id);
+    method! jsx_identifier (((ac_loc, type_), { Flow_ast.JSX.Identifier.name; _ }) as ident) =
+      if this#covers_target ac_loc then this#find ac_loc name (Ac_id (default_ac_id type_));
       ident
 
     method member_with_loc expr_loc expr =
@@ -117,7 +118,7 @@ class process_request_searcher (from_trigger_character : bool) (cursor : Loc.t) 
             name
             (Ac_member { obj_type; in_optional_chain = false; bracket_syntax = None; member_loc })
         | PropertyExpression
-            ( (prop_loc, _),
+            ( (prop_loc, type_),
               Flow_ast.Expression.(
                 ( Literal { Flow_ast.Literal.raw = token; _ }
                 | Identifier (_, { Flow_ast.Identifier.name = token; _ }) )) )
@@ -129,7 +130,7 @@ class process_request_searcher (from_trigger_character : bool) (cursor : Loc.t) 
                {
                  obj_type;
                  in_optional_chain = false;
-                 bracket_syntax = Some default_ac_id;
+                 bracket_syntax = Some (default_ac_id type_);
                  member_loc;
                })
         | _ -> ()
@@ -152,7 +153,7 @@ class process_request_searcher (from_trigger_character : bool) (cursor : Loc.t) 
             name
             (Ac_member { obj_type; in_optional_chain = true; bracket_syntax = None; member_loc })
         | PropertyExpression
-            ( (prop_loc, _),
+            ( (prop_loc, type_),
               Flow_ast.Expression.(
                 ( Literal { Flow_ast.Literal.raw = token; _ }
                 | Identifier (_, { Flow_ast.Identifier.name = token; _ }) )) )
@@ -164,7 +165,7 @@ class process_request_searcher (from_trigger_character : bool) (cursor : Loc.t) 
                {
                  obj_type;
                  in_optional_chain = true;
-                 bracket_syntax = Some default_ac_id;
+                 bracket_syntax = Some (default_ac_id type_);
                  member_loc;
                })
         | _ -> ()
@@ -222,8 +223,8 @@ class process_request_searcher (from_trigger_character : bool) (cursor : Loc.t) 
       let (_, Opening.{ name = component_name; attributes; self_closing = _ }) = elt in
 
       (match component_name with
-      | Identifier ((loc, _), { Identifier.name; comments = _ }) ->
-        if this#covers_target loc then this#find loc name Ac_jsx_element
+      | Identifier ((loc, type_), { Identifier.name; comments = _ }) ->
+        if this#covers_target loc then this#find loc name (Ac_jsx_element { type_ })
       | NamespacedName _
       | MemberExpression _ ->
         (* TODO: these are rare so we haven't implemented them yet *)
@@ -267,8 +268,8 @@ class process_request_searcher (from_trigger_character : bool) (cursor : Loc.t) 
       let open Flow_ast.JSX.Closing in
       let (_, { name }) = elem in
       match name with
-      | Identifier ((loc, _), { Identifier.name; comments = _ }) ->
-        if this#covers_target loc then this#find loc name Ac_jsx_element;
+      | Identifier ((loc, type_), { Identifier.name; comments = _ }) ->
+        if this#covers_target loc then this#find loc name (Ac_jsx_element { type_ });
         elem
       | NamespacedName _
       | MemberExpression _ ->
@@ -278,8 +279,8 @@ class process_request_searcher (from_trigger_character : bool) (cursor : Loc.t) 
     method! jsx_attribute_value value =
       let open Flow_ast.JSX.Attribute in
       match value with
-      | Literal ((loc, _), Flow_ast.Literal.{ raw; _ }) when this#covers_target loc ->
-        this#find loc raw Ac_literal
+      | Literal ((loc, lit_type), Flow_ast.Literal.{ raw; _ }) when this#covers_target loc ->
+        this#find loc raw (Ac_literal { lit_type })
       | _ -> super#jsx_attribute_value value
 
     method! jsx_child child =
@@ -291,15 +292,16 @@ class process_request_searcher (from_trigger_character : bool) (cursor : Loc.t) 
     method! pattern_object_property_key ?kind key =
       let open Flow_ast.Pattern.Object.Property in
       match key with
+      (* TODO: we shouldn't have to fabricate a type here! *)
       | Literal (loc, Flow_ast.Literal.{ raw; _ }) when this#covers_target loc ->
-        this#find loc raw Ac_literal
+        this#find loc raw (Ac_literal { lit_type = Type.(AnyT.at Untyped loc) })
       | _ -> super#pattern_object_property_key ?kind key
 
     method! object_key key =
       let open Flow_ast.Expression.Object.Property in
       match key with
-      | Literal ((loc, _), Flow_ast.Literal.{ raw; _ }) when this#covers_target loc ->
-        this#find loc raw Ac_literal
+      | Literal ((loc, lit_type), Flow_ast.Literal.{ raw; _ }) when this#covers_target loc ->
+        this#find loc raw (Ac_literal { lit_type })
       | _ -> super#object_key key
 
     (* we don't currently autocomplete object keys *)
@@ -317,10 +319,14 @@ class process_request_searcher (from_trigger_character : bool) (cursor : Loc.t) 
 
     method! class_body x =
       try super#class_body x with
-      | Found ({ autocomplete_type = Ac_id _; _ } as f) ->
+      | Found ({ autocomplete_type = Ac_id id; _ } as f) ->
         raise
-          (Found { f with autocomplete_type = Ac_id { include_super = true; include_this = true } })
-      | Found ({ autocomplete_type = Ac_member ({ bracket_syntax = Some _; _ } as member); _ } as f)
+          (Found
+             {
+               f with
+               autocomplete_type = Ac_id { id with include_super = true; include_this = true };
+             })
+      | Found ({ autocomplete_type = Ac_member ({ bracket_syntax = Some id; _ } as member); _ } as f)
         ->
         raise
           (Found
@@ -330,7 +336,7 @@ class process_request_searcher (from_trigger_character : bool) (cursor : Loc.t) 
                  Ac_member
                    {
                      member with
-                     bracket_syntax = Some { include_super = true; include_this = true };
+                     bracket_syntax = Some { id with include_super = true; include_this = true };
                    };
              })
 
@@ -379,8 +385,8 @@ class process_request_searcher (from_trigger_character : bool) (cursor : Loc.t) 
     method! expression expr =
       let open Flow_ast.Expression in
       match expr with
-      | ((loc, _), Literal Flow_ast.Literal.{ raw; _ }) when this#covers_target loc ->
-        this#find loc raw Ac_literal
+      | ((loc, lit_type), Literal Flow_ast.Literal.{ raw; _ }) when this#covers_target loc ->
+        this#find loc raw (Ac_literal { lit_type })
       | (((loc, _) as annot), Member member) ->
         (this#on_type_annot annot, Member (this#member_with_loc loc member))
       | (((loc, _) as annot), OptionalMember opt_member) ->
@@ -391,7 +397,8 @@ class process_request_searcher (from_trigger_character : bool) (cursor : Loc.t) 
       match elem with
       | (loc, Flow_ast.Expression.TemplateLiteral.Element.{ value = { raw; _ }; _ })
         when this#covers_target loc ->
-        this#find loc raw Ac_literal
+        (* TODO: we shouldn't have to fabricate a type here! *)
+        this#find loc raw (Ac_literal { lit_type = Type.(AnyT.at Untyped loc) })
       | _ -> super#template_literal_element elem
 
     method! import_declaration decl_loc decl =
@@ -405,15 +412,18 @@ class process_request_searcher (from_trigger_character : bool) (cursor : Loc.t) 
     method! type_ t =
       let open Flow_ast.Type in
       match t with
-      | ( (loc, _),
+      | ( (loc, lit_type),
           ( StringLiteral Flow_ast.StringLiteral.{ raw; _ }
           | NumberLiteral Flow_ast.NumberLiteral.{ raw; _ } ) )
         when this#covers_target loc ->
-        this#find loc raw Ac_literal
+        this#find loc raw (Ac_literal { lit_type })
       | _ -> super#type_ t
   end
 
 let autocomplete_id from_trigger_character ~cursor _cx _ac_name ac_loc =
+  covers_target cursor ac_loc && not from_trigger_character
+
+let autocomplete_literal from_trigger_character ~cursor _cx ac_loc =
   covers_target cursor ac_loc && not from_trigger_character
 
 let autocomplete_object_key from_trigger_character ~cursor _cx _ac_name ac_loc =
@@ -431,6 +441,8 @@ let process_location ~trigger_character ~cursor ~typed_ast =
 
 let autocomplete_set_hooks ~trigger_character ~cursor =
   Type_inference_hooks_js.set_id_hook (autocomplete_id (trigger_character <> None) ~cursor);
+  Type_inference_hooks_js.set_literal_hook
+    (autocomplete_literal (trigger_character <> None) ~cursor);
   Type_inference_hooks_js.set_obj_prop_decl_hook
     (autocomplete_object_key (trigger_character <> None) ~cursor);
   Type_inference_hooks_js.set_member_hook (autocomplete_member ~cursor);

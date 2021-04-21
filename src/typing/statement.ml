@@ -5147,7 +5147,7 @@ and elem_call_opt_use
 
 and identifier_ cx name loc =
   if Type_inference_hooks_js.dispatch_id_hook cx name loc then
-    Unsoundness.at InferenceHooks loc
+    Tvar.mk cx (mk_reason (RIdentifier (OrdinaryName name)) loc)
   else
     let t = Env.var_ref ~lookup_mode:ForValue cx (OrdinaryName name) loc in
     (* We want to make sure that the reason description for the type we return
@@ -5171,37 +5171,40 @@ and identifier cx { Ast.Identifier.name; comments = _ } loc =
 
 (* traverse a literal expression, return result type *)
 and literal cx loc lit =
-  let make_trust = Context.trust_constructor cx in
-  let open Ast.Literal in
-  match lit.Ast.Literal.value with
-  | String s ->
-    begin
-      match Context.haste_module_ref_prefix cx with
-      | Some prefix when String_utils.string_starts_with s prefix ->
-        let m = String_utils.lstrip s prefix in
-        let t = Import_export.require cx (loc, m) loc in
-        let reason = mk_reason (RCustom "module reference") loc in
-        Flow.get_builtin_typeapp cx reason (OrdinaryName "$Flow$ModuleRef") [t]
-      | _ ->
-        (* It's too expensive to track literal information for large strings.*)
-        let max_literal_length = Context.max_literal_length cx in
-        let (lit, r_desc) =
-          if max_literal_length = 0 || String.length s <= max_literal_length then
-            (Literal (None, OrdinaryName s), RString)
-          else
-            (AnyLiteral, RLongStringLit max_literal_length)
-        in
-        DefT (mk_annot_reason r_desc loc, make_trust (), StrT lit)
-    end
-  | Boolean b -> DefT (mk_annot_reason RBoolean loc, make_trust (), BoolT (Some b))
-  | Null -> NullT.at loc |> with_trust make_trust
-  | Number f ->
-    DefT (mk_annot_reason RNumber loc, make_trust (), NumT (Literal (None, (f, lit.raw))))
-  | BigInt _ ->
-    let reason = mk_annot_reason (RBigIntLit lit.raw) loc in
-    Flow.add_output cx (Error_message.EBigIntNotYetSupported reason);
-    AnyT.error reason
-  | RegExp _ -> Flow.get_builtin_type cx (mk_annot_reason RRegExp loc) (OrdinaryName "RegExp")
+  if Type_inference_hooks_js.dispatch_literal_hook cx loc then
+    Tvar.mk cx (mk_reason (RCustom "literal") loc)
+  else
+    let make_trust = Context.trust_constructor cx in
+    let open Ast.Literal in
+    match lit.Ast.Literal.value with
+    | String s ->
+      begin
+        match Context.haste_module_ref_prefix cx with
+        | Some prefix when String_utils.string_starts_with s prefix ->
+          let m = String_utils.lstrip s prefix in
+          let t = Import_export.require cx (loc, m) loc in
+          let reason = mk_reason (RCustom "module reference") loc in
+          Flow.get_builtin_typeapp cx reason (OrdinaryName "$Flow$ModuleRef") [t]
+        | _ ->
+          (* It's too expensive to track literal information for large strings.*)
+          let max_literal_length = Context.max_literal_length cx in
+          let (lit, r_desc) =
+            if max_literal_length = 0 || String.length s <= max_literal_length then
+              (Literal (None, OrdinaryName s), RString)
+            else
+              (AnyLiteral, RLongStringLit max_literal_length)
+          in
+          DefT (mk_annot_reason r_desc loc, make_trust (), StrT lit)
+      end
+    | Boolean b -> DefT (mk_annot_reason RBoolean loc, make_trust (), BoolT (Some b))
+    | Null -> NullT.at loc |> with_trust make_trust
+    | Number f ->
+      DefT (mk_annot_reason RNumber loc, make_trust (), NumT (Literal (None, (f, lit.raw))))
+    | BigInt _ ->
+      let reason = mk_annot_reason (RBigIntLit lit.raw) loc in
+      Flow.add_output cx (Error_message.EBigIntNotYetSupported reason);
+      AnyT.error reason
+    | RegExp _ -> Flow.get_builtin_type cx (mk_annot_reason RRegExp loc) (OrdinaryName "RegExp")
 
 (* traverse a unary expression, return result type *)
 and unary cx loc =

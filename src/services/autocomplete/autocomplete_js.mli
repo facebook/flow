@@ -8,6 +8,7 @@
 type ac_id = {
   include_super: bool;
   include_this: bool;
+  type_: Type.t;
 }
 
 type autocomplete_type =
@@ -16,7 +17,7 @@ type autocomplete_type =
   | Ac_comment  (** inside a comment *)
   | Ac_id of ac_id  (** identifier references *)
   | Ac_key  (** object key, not supported yet *)
-  | Ac_literal  (** inside a literal like a string or regex *)
+  | Ac_literal of { lit_type: Type.t }  (** inside a literal like a string or regex *)
   | Ac_module  (** a module name *)
   | Ac_type  (** type identifiers *)
   | Ac_qualified_type of Type.t  (** qualified type identifiers *)
@@ -26,7 +27,7 @@ type autocomplete_type =
       bracket_syntax: ac_id option;
       member_loc: Loc.t option; (* loc of `.foo` or `[foo]` *)
     }  (** member expressions *)
-  | Ac_jsx_element  (** JSX element name *)
+  | Ac_jsx_element of { type_: Type.t }  (** JSX element name *)
   | Ac_jsx_attribute of {
       attribute_name: string;
       used_attr_names: SSet.t;
