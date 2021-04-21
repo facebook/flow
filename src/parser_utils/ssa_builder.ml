@@ -28,9 +28,9 @@ struct
 
     val mk_unresolved : int -> t
 
-    val empty : t
+    val empty : unit -> t
 
-    val uninitialized : t
+    val uninitialized : unit -> t
 
     val merge : t -> t -> t
 
@@ -42,51 +42,63 @@ struct
 
     val simplify : t -> Ssa_api.write_loc list
   end = struct
+    let curr_id = ref 0
+
     type ref_state =
       (* different unresolved vars are distinguished by their ids, which enables using structural
          equality for computing normal forms: see below *)
       | Unresolved of int
-      | Resolved of t
+      | Resolved of write_state
 
-    and t =
+    and write_state =
       | Uninitialized
       | Loc of L.t
-      | PHI of t list
+      | PHI of write_state list
       | REF of ref_state ref
 
-    let mk_unresolved id = REF (ref (Unresolved id))
+    and t = {
+      id: int;
+      write_state: write_state;
+    }
 
-    let empty = PHI []
+    let mk_with_write_state write_state =
+      let id = !curr_id in
+      curr_id := !curr_id + 1;
+      { id; write_state }
 
-    let uninitialized = Uninitialized
+    let mk_unresolved id = mk_with_write_state @@ REF (ref (Unresolved id))
+
+    let empty () = mk_with_write_state @@ PHI []
+
+    let uninitialized () = mk_with_write_state @@ Uninitialized
 
     let join = function
-      | [] -> empty
+      | [] -> PHI []
       | [t] -> t
       | ts -> PHI ts
 
-    module ValSet = Set.Make (struct
-      type nonrec t = t
+    module WriteSet = Set.Make (struct
+      type t = write_state
 
       let compare = Stdlib.compare
     end)
 
-    let rec normalize t =
+    let rec normalize (t : write_state) : WriteSet.t =
       match t with
       | Uninitialized
       | Loc _
       | REF { contents = Unresolved _ } ->
-        ValSet.singleton t
+        WriteSet.singleton t
       | PHI ts ->
         List.fold_left
           (fun vals' t ->
             let vals = normalize t in
-            ValSet.union vals' vals)
-          ValSet.empty
+            WriteSet.union vals' vals)
+          WriteSet.empty
           ts
       | REF ({ contents = Resolved t } as r) ->
         let vals = normalize t in
-        let t' = join (ValSet.elements vals) in
+        let t' = join (WriteSet.elements vals) in
         r := Resolved t';
         vals
 
@@ -98,12 +110,12 @@ struct
          resolved; thus, we do not shortcut normalization of previously normalized terms. Still, we
          expect (and have experimentally validated that) the cost of computing normal forms becomes
          smaller over time as terms remain close to their final normal forms. *)
-      let vals = ValSet.union (normalize t1) (normalize t2) in
-      join (ValSet.elements vals)
+      let vals = WriteSet.union (normalize t1.write_state) (normalize t2.write_state) in
+      mk_with_write_state @@ join (WriteSet.elements vals)
 
-    let one loc = Loc loc
+    let one loc = mk_with_write_state @@ Loc loc
 
-    let all locs = join (Base.List.map ~f:(fun loc -> Loc loc) locs)
+    let all locs = mk_with_write_state @@ join (Base.List.map ~f:(fun loc -> Loc loc) locs)
 
     (* Resolving unresolved to t essentially models an equation of the form
        unresolved = t, where unresolved is a reference to an unknown and t is the
@@ -111,8 +123,8 @@ struct
        erase any occurrences of unresolved in t: if t = unresolved | t' then
        unresolved = t is the same as unresolved = t'. *)
     let rec resolve ~unresolved t =
-      match unresolved with
-      | REF ({ contents = Unresolved _ } as r) -> r := Resolved (erase r t)
+      match unresolved.write_state with
+      | REF ({ contents = Unresolved _ } as r) -> r := Resolved (erase r t.write_state)
       | _ -> failwith "Only an unresolved REF can be resolved"
 
     and erase r t =
@@ -127,7 +139,7 @@ struct
           PHI ts'
       | REF r' ->
         if r == r' then
-          empty
+          PHI []
         else
           let t_opt = !r' in
           let t_opt' =
@@ -145,7 +157,7 @@ struct
 
     (* Simplification converts a Val.t to a list of locations. *)
     let simplify t =
-      let vals = normalize t in
+      let vals = normalize t.write_state in
       Base.List.map
         ~f:(function
           | Uninitialized -> Ssa_api.Uninitialized
@@ -154,7 +166,7 @@ struct
           | PHI _
           | REF { contents = Resolved _ } ->
             failwith "A normalized value cannot be a PHI or a resolved REF")
-        (ValSet.elements vals)
+        (WriteSet.elements vals)
   end
 
   (* An environment is a map from variables to values. *)
@@ -279,7 +291,7 @@ struct
         let ssa_env = SMap.values ssa_env in
         List.iter2 (fun { val_ref; _ } value -> Val.resolve ~unresolved:value !val_ref) ssa_env env0
 
-      method empty_ssa_env : Env.t = SMap.map (fun _ -> Val.empty) ssa_env
+      method empty_ssa_env : Env.t = SMap.map (fun _ -> Val.empty ()) ssa_env
 
       method havoc_current_ssa_env : unit =
         SMap.iter
@@ -295,13 +307,13 @@ struct
       method havoc_uninitialized_ssa_env : unit =
         SMap.iter
           (fun _x { val_ref; havoc } ->
-            val_ref := Val.merge Val.uninitialized havoc.Havoc.unresolved)
+            val_ref := Val.merge (Val.uninitialized ()) havoc.Havoc.unresolved)
           ssa_env
 
       method private mk_ssa_env =
         SMap.map (fun _ ->
             {
-              val_ref = ref Val.uninitialized;
+              val_ref = ref (Val.uninitialized ());
               havoc = Havoc.{ unresolved = this#mk_unresolved; locs = [] };
             })
 
