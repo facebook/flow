@@ -108,4 +108,30 @@ x || (x || x)"
                "let x = null;
 (x !== null) && x"
                LocMap.(empty |> add (mk_loc (2, 16) (2, 17)) (Not Null));
+         "eq_undefined"
+         >:: mk_ssa_builder_test
+               "let x = undefined;
+(x == undefined) && x"
+               LocMap.(empty |> add (mk_loc (2, 20) (2, 21)) Maybe);
+         "neq_undefined"
+         >:: mk_ssa_builder_test
+               "let x = undefined;
+(x != undefined) && x"
+               LocMap.(empty |> add (mk_loc (2, 20) (2, 21)) (Not Maybe));
+         "strict_eq_undefined"
+         >:: mk_ssa_builder_test
+               "let x = undefined;
+(x === undefined) && x"
+               LocMap.(empty |> add (mk_loc (2, 21) (2, 22)) Undefined);
+         "strit_neq_undefined"
+         >:: mk_ssa_builder_test
+               "let x = undefined;
+(x !== undefined) && x"
+               LocMap.(empty |> add (mk_loc (2, 21) (2, 22)) (Not Undefined));
+         "undefined_already_bound"
+         >:: mk_ssa_builder_test
+               "let undefined = 3;
+let x = null;
+(x !== undefined) && x"
+               LocMap.empty;
        ]

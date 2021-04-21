@@ -87,16 +87,19 @@ struct
         this#push_refinement_scope scope
 
       method private find_refinement name =
-        let writes = SMap.find name this#ssa_env in
-        let key = Ssa_builder.Val.id_of_val writes in
-        List.fold_left
-          (fun refinement refinement_scope ->
-            match (IMap.find_opt key refinement_scope, refinement) with
-            | (None, _) -> refinement
-            | (Some refinement, None) -> Some refinement
-            | (Some refinement, Some refinement') -> Some (And (refinement, refinement')))
-          None
-          expression_refinement_scopes
+        let writes = SMap.find_opt name this#ssa_env in
+        match writes with
+        | None -> None
+        | Some writes ->
+          let key = Ssa_builder.Val.id_of_val writes in
+          List.fold_left
+            (fun refinement refinement_scope ->
+              match (IMap.find_opt key refinement_scope, refinement) with
+              | (None, _) -> refinement
+              | (Some refinement, None) -> Some refinement
+              | (Some refinement, Some refinement') -> Some (And (refinement, refinement')))
+            None
+            expression_refinement_scopes
 
       method private add_refinement name refinement =
         let writes_to_loc = SMap.find name this#ssa_env in
@@ -176,6 +179,27 @@ struct
           in
           this#add_refinement name refinement
 
+      method undefined_test ~sense ~strict expr =
+        ignore @@ this#expression expr;
+        match key expr with
+        | None -> ()
+        | Some name ->
+          (* Only add the refinement if undefined is not re-bound *)
+          if SMap.find_opt "undefined" this#ssa_env = None then
+            let refinement =
+              if strict then
+                Undefined
+              else
+                Maybe
+            in
+            let refinement =
+              if sense then
+                refinement
+              else
+                Not refinement
+            in
+            this#add_refinement name refinement
+
       method eq_test ~strict ~sense left right =
         let open Flow_ast in
         match (left, right) with
@@ -183,6 +207,12 @@ struct
         | ((_, Expression.Literal { Literal.value = Literal.Null; _ }), expr)
         | (expr, (_, Expression.Literal { Literal.value = Literal.Null; _ })) ->
           this#null_test ~sense ~strict expr
+        | ( (_, Expression.Identifier (_, { Flow_ast.Identifier.name = "undefined"; comments = _ })),
+            expr )
+        | ( expr,
+            (_, Expression.Identifier (_, { Flow_ast.Identifier.name = "undefined"; comments = _ }))
+          ) ->
+          this#undefined_test ~sense ~strict expr
         | _ ->
           ignore @@ this#expression left;
           ignore @@ this#expression right
@@ -303,7 +333,7 @@ struct
     (ssa_walk#acc, ssa_walk#values, ssa_walk#refined_reads)
 
   let program program =
-    let (_, _, refined_reads) = program_with_scope ~ignore_toplevel:true program in
+    let (_, _, refined_reads) = program_with_scope ~ignore_toplevel:false program in
     refined_reads
 end
 
