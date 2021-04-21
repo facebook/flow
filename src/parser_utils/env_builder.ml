@@ -157,6 +157,67 @@ struct
         this#merge_self_refinement_scope refinement_scope;
         this#merge_self_ssa_env env1
 
+      method null_test ~strict ~sense expr =
+        ignore @@ this#expression expr;
+        match key expr with
+        | None -> ()
+        | Some name ->
+          let refinement =
+            if strict then
+              Null
+            else
+              Maybe
+          in
+          let refinement =
+            if sense then
+              refinement
+            else
+              Not refinement
+          in
+          this#add_refinement name refinement
+
+      method eq_test ~strict ~sense left right =
+        let open Flow_ast in
+        match (left, right) with
+        (* expr op null *)
+        | ((_, Expression.Literal { Literal.value = Literal.Null; _ }), expr)
+        | (expr, (_, Expression.Literal { Literal.value = Literal.Null; _ })) ->
+          this#null_test ~sense ~strict expr
+        | _ ->
+          ignore @@ this#expression left;
+          ignore @@ this#expression right
+
+      method binary_refinement loc expr =
+        let open Flow_ast.Expression.Binary in
+        let { operator; left; right; comments = _ } = expr in
+        match operator with
+        (* == and != refine if lhs or rhs is an ident and other side is null *)
+        | Equal -> this#eq_test ~strict:false ~sense:true left right
+        | NotEqual -> this#eq_test ~strict:false ~sense:false left right
+        | StrictEqual -> this#eq_test ~strict:true ~sense:true left right
+        | StrictNotEqual -> this#eq_test ~strict:true ~sense:false left right
+        | Instanceof ->
+          (* TODO *)
+          ignore @@ this#binary loc expr
+        | LessThan
+        | LessThanEqual
+        | GreaterThan
+        | GreaterThanEqual
+        | In
+        | LShift
+        | RShift
+        | RShift3
+        | Plus
+        | Minus
+        | Mult
+        | Exp
+        | Div
+        | Mod
+        | BitOr
+        | Xor
+        | BitAnd ->
+          ignore @@ this#binary loc expr
+
       method expression_refinement ((loc, expr) as expression) =
         let open Flow_ast.Expression in
         match expr with
@@ -169,9 +230,11 @@ struct
         | Assignment assignment ->
           this#assignment_refinement loc assignment;
           expression
+        | Binary binary ->
+          this#binary_refinement loc binary;
+          expression
         | Array _
         | ArrowFunction _
-        | Binary _
         | Call _
         | Class _
         | Comprehension _

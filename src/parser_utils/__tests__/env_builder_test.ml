@@ -88,4 +88,24 @@ x || (x || x)"
                "let x = null;
 (x = null) && x"
                LocMap.(empty |> add (mk_loc (2, 14) (2, 15)) Truthy);
+         "eq_null"
+         >:: mk_ssa_builder_test
+               "let x = null;
+(x == null) && x"
+               LocMap.(empty |> add (mk_loc (2, 15) (2, 16)) Maybe);
+         "neq_null"
+         >:: mk_ssa_builder_test
+               "let x = null;
+(x != null) && x"
+               LocMap.(empty |> add (mk_loc (2, 15) (2, 16)) (Not Maybe));
+         "strict_eq_null"
+         >:: mk_ssa_builder_test
+               "let x = null;
+(x === null) && x"
+               LocMap.(empty |> add (mk_loc (2, 16) (2, 17)) Null);
+         "strit_neq_null"
+         >:: mk_ssa_builder_test
+               "let x = null;
+(x !== null) && x"
+               LocMap.(empty |> add (mk_loc (2, 16) (2, 17)) (Not Null));
        ]
