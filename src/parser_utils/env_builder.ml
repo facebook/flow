@@ -20,9 +20,15 @@ struct
 
   class env_builder =
     object (this)
-      inherit Ssa_builder.ssa_builder as _super
+      inherit Ssa_builder.ssa_builder as super
 
       val mutable expression_refinements = IMap.empty
+
+      val mutable refined_reads = L.LMap.empty
+
+      method private find_refinement name =
+        let writes = SMap.find name this#ssa_env in
+        IMap.find_opt (Ssa_builder.Val.id_of_val writes) expression_refinements
 
       method private add_refinement name refinement =
         let writes_to_loc = SMap.find name this#ssa_env in
@@ -71,6 +77,15 @@ struct
         | Update _
         | Yield _ ->
           this#expression expression
+
+      (* This method is called during every read of an identifier. We need to ensure that
+       * if the identifier is refined that we record the refiner as the write that reaches
+       * this read *)
+      method! any_identifier loc name =
+        super#any_identifier loc name;
+        match this#find_refinement name with
+        | None -> ()
+        | Some refinement -> refined_reads <- L.LMap.add loc refinement refined_reads
     end
 
   let program_with_scope ?(ignore_toplevel = false) program =
