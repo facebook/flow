@@ -16,4 +16,22 @@ struct
     object (_this)
       inherit Ssa_builder.ssa_builder as _super
     end
+
+  let program_with_scope ?(ignore_toplevel = false) program =
+    let open Hoister in
+    let (loc, _) = program in
+    let ssa_walk = new env_builder in
+    let bindings =
+      if ignore_toplevel then
+        Bindings.empty
+      else
+        let hoist = new hoister ~with_types:true in
+        hoist#eval hoist#program program
+    in
+    ignore @@ ssa_walk#with_bindings loc bindings ssa_walk#program program;
+    (ssa_walk#acc, ssa_walk#values)
+
+  let program program =
+    let (_, values) = program_with_scope ~ignore_toplevel:true program in
+    values
 end
