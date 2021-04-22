@@ -421,7 +421,6 @@ let autocomplete_literals ~cx ~genv ~tparams_rev ~ac_loc lb_type =
     | [] -> Ty.Top
     | ub_ty :: ub_tys -> Ty.mk_inter (ub_ty, ub_tys) |> Ty_utils.simplify_type ~merge_kinds:false
   in
-  Hh_logger.info "upper_bound_ty: %s" (Ty_debug.dump_t upper_bound_ty);
   (* TODO: since we're inserting values, we shouldn't really be using the Ty_printer *)
   let exact_by_default = Context.exact_by_default cx in
   (*let literals = Base.List.fold tys ~init:[] ~f:literals_of_ty in*)
