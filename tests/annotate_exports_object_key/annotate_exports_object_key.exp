@@ -52,7 +52,7 @@ declare opaque type Val;
 declare var key: Key;
 declare var val: Val
 
-module.exports = ({ [key]: val }: { A: Val,... });
+module.exports = ({ [key]: val }: { A: Val, ... });
 
 
 === Diff between codemod-ed & autofix-ed ===
@@ -60,5 +60,5 @@ module.exports = ({ [key]: val }: { A: Val,... });
 9c9
 < module.exports = ({ [key]: val }: {| A: Val |});
 ---
-> module.exports = ({ [key]: val }: { A: Val,... });
+> module.exports = ({ [key]: val }: { A: Val, ... });
 

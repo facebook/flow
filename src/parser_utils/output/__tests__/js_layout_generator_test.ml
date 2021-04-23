@@ -1876,9 +1876,11 @@ let tests =
              ("(" ^ a30 ^ ":" ^ a30 ^ ",..." ^ b30 ^ ":" ^ b30 ^ "):c=>{}") );
          ( "type_object" >:: fun ctxt ->
            assert_statement_string ~ctxt "type a={};";
+           assert_statement_string ~ctxt "type a={...};";
            assert_statement_string ~ctxt "type a={||};";
            assert_statement_string ~ctxt "type a={a:b};";
            assert_statement_string ~ctxt "type a={|a:b|};";
+           assert_statement_string ~ctxt "type a={a:b,...};";
            assert_statement_string ~ctxt "type a={+a:b};";
            assert_statement_string ~ctxt "type a={a?:b};";
            assert_statement_string ~ctxt "type a={a:?b};";
@@ -1888,7 +1890,9 @@ let tests =
            assert_statement_string ~ctxt "type a={a:b,c:d};";
            assert_statement_string ~ctxt "type a={...a};";
            assert_statement_string ~ctxt "type a={a:b,...a};";
+           assert_statement_string ~ctxt ~pretty:true "type a = { ... };";
            assert_statement_string ~ctxt ~pretty:true "type a = { a: b };";
+           assert_statement_string ~ctxt ~pretty:true "type a = { a: b, ... };";
            assert_statement_string
              ~ctxt
              ~pretty:true
@@ -1915,7 +1919,13 @@ let tests =
            assert_statement_string ~ctxt "type a={[a:b]:a};";
            assert_statement_string ~ctxt "type a={+[a:b]:a};";
            assert_statement_string ~ctxt ~pretty:true "type a = { +[a: b]: a };";
-           assert_statement_string ~ctxt "type a={a:b,+[a:b]:a,():a,c():b};" );
+           assert_statement_string ~ctxt "type a={a:b,+[a:b]:a,():a,c():b};";
+           (* TODO: the RHS should be indented *)
+           assert_statement_string ~ctxt ~pretty:true "type T =\n/* foo */\n{ ... };";
+           (* TODO: the RHS should be indented *)
+           assert_statement_string ~ctxt ~pretty:true "type T =\n/* foo */\n{\n  // bar\n  ...\n};";
+           assert_statement_string ~ctxt ~pretty:true "type T = {\n  // foo\n  ...\n};";
+           assert_statement_string ~ctxt ~pretty:true "type T = {\n  /* foo */\n  ...\n};" );
          ( "type_union_or_intersection" >:: fun ctxt ->
            assert_statement_string ~ctxt "type a=a|b;";
            assert_statement_string ~ctxt "type a=a|b|c;";
