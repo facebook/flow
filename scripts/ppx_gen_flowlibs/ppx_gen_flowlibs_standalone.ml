@@ -5,6 +5,4 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
-open Migrate_parsetree
-
-let () = Driver.run_main ()
+let () = Ppxlib.Driver.standalone ()

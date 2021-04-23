@@ -5,15 +5,15 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
-open! Migrate_parsetree
-open Ast_405
+open Ppxlib
 
-let ocaml_version = Versions.ocaml_405
+let flowlib_dir_ref = ref ""
 
-open Asttypes
-open Parsetree
-open Ast_mapper
-open Ast_helper
+let prelude_dir_ref = ref ""
+
+let flowlib_cache = ref None
+
+let prelude_cache = ref None
 
 (* Read in all the flowlib files *)
 let get_libs dir =
@@ -26,7 +26,8 @@ let get_libs dir =
 
 (* Turn the (name, contents) list into a PPX ast (string * string) array
  * expression *)
-let contents lib_dir =
+let compute lib_dir =
+  let open Ast_helper in
   let libs = get_libs lib_dir in
   let hash =
     let state = Xx.init 0L in
@@ -45,39 +46,44 @@ let contents lib_dir =
   in
   (hash, contents)
 
+let memo path cache_ref =
+  match !cache_ref with
+  | Some result -> result
+  | None ->
+    let result = compute path in
+    cache_ref := Some result;
+    result
+
+let flowlib_hash ~loc:_ ~path:_ =
+  let (hash, _contents) = memo !flowlib_dir_ref flowlib_cache in
+  hash
+
 (* Whenever we see [%flowlib_contents], replace it wil the flowlib contents *)
-let ppx_gen_flowlibs_mapper ~flowlib ~prelude =
-  let (flowlib_hash, flowlib_contents) = flowlib in
-  let (prelude_hash, prelude_contents) = prelude in
-  {
-    default_mapper with
-    expr =
-      (fun mapper expr ->
-        match expr with
-        | { pexp_desc = Pexp_extension ({ txt = "flowlib_contents"; _ }, PStr []); _ } ->
-          flowlib_contents
-        | { pexp_desc = Pexp_extension ({ txt = "prelude_contents"; _ }, PStr []); _ } ->
-          prelude_contents
-        | { pexp_desc = Pexp_extension ({ txt = "flowlib_hash"; _ }, PStr []); _ } -> flowlib_hash
-        | { pexp_desc = Pexp_extension ({ txt = "prelude_hash"; _ }, PStr []); _ } -> prelude_hash
-        | other -> default_mapper.expr mapper other);
-  }
+let flowlib_contents ~loc:_ ~path:_ =
+  let (_hash, contents) = memo !flowlib_dir_ref flowlib_cache in
+  contents
+
+let prelude_hash ~loc:_ ~path:_ =
+  let (hash, _contents) = memo !prelude_dir_ref prelude_cache in
+  hash
+
+let prelude_contents ~loc:_ ~path:_ =
+  let (_hash, contents) = memo !prelude_dir_ref prelude_cache in
+  contents
+
+let make_rule name f =
+  Context_free.Rule.extension
+    (Extension.declare name Extension.Context.expression Ast_pattern.(pstr nil) f)
+
+let rules =
+  [
+    make_rule "flowlib_hash" flowlib_hash;
+    make_rule "flowlib_contents" flowlib_contents;
+    make_rule "prelude_hash" prelude_hash;
+    make_rule "prelude_contents" prelude_contents;
+  ]
 
 let () =
-  let flowlib_dir_ref = ref "" in
-  let prelude_dir_ref = ref "" in
-  let args =
-    [
-      ("-flowlib", Arg.Set_string flowlib_dir_ref, "Path to flowlib directory");
-      ("-prelude", Arg.Set_string prelude_dir_ref, "Path to prelude directory");
-    ]
-  in
-  Driver.register ~name:"ppx_gen_flowlibs" ~args ocaml_version (fun _config _cookies ->
-      let (flowlib, prelude) =
-        match (!flowlib_dir_ref, !prelude_dir_ref) with
-        | ("", _)
-        | (_, "") ->
-          failwith "Expected two arguments."
-        | (flowlib_dir, prelude_dir) -> (contents flowlib_dir, contents prelude_dir)
-      in
-      ppx_gen_flowlibs_mapper ~flowlib ~prelude)
+  Driver.add_arg "-flowlib" (Arg.Set_string flowlib_dir_ref) ~doc:"Path to flowlib directory";
+  Driver.add_arg "-prelude" (Arg.Set_string prelude_dir_ref) ~doc:"Path to prelude directory";
+  Driver.register_transformation ~rules "ppx_gen_flowlibs"

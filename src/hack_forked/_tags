@@ -9,7 +9,6 @@ true: package(unix),package(str),package(bigarray),package(ppx_deriving.std)
 <heap/*.ml*>: warn(-27-34)
 <naming/*.ml*>: warn(-27-45)
 <parsing/*.ml*>: warn(-27)
-<ppx/*.ml*>: package(ocaml-migrate-parsetree)
 <ppx>: -traverse
 <procs/*.ml*>: warn(-27)
 <server/serverInit.ml>: warn(-41-45)
