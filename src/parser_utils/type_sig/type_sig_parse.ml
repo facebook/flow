@@ -1197,8 +1197,12 @@ let typeof =
       Err (loc, CheckError)
 
 let rec annot opts scope locs xs (loc, t) =
+  let (_, annot) = annot_with_loc opts scope locs xs (loc, t) in
+  annot
+
+and annot_with_loc opts scope locs xs (loc, t) =
   let loc = Locs.push locs loc in
-  match t with
+  let annot = match t with
   | T.Any _ -> Annot (Any loc)
   | T.Mixed _ -> Annot (Mixed loc)
   | T.Empty _ -> Annot (Empty loc)
@@ -1239,7 +1243,9 @@ let rec annot opts scope locs xs (loc, t) =
     let obj = annot opts scope locs xs _object in
     let elem = annot opts scope locs xs index in
     Annot (ElementType { loc; obj; elem; })
-  | T.OptionalIndexedAccess _ -> failwith "TODO - done in later diff in stack"
+  | T.OptionalIndexedAccess ia ->
+    let (_, result) = optional_indexed_access opts scope locs xs (loc, ia) in
+    result
   | T.Tuple {T.Tuple.types; _} ->
     let ts_rev = List.rev_map (annot opts scope locs xs) types in
     Annot (Tuple {loc; ts = List.rev ts_rev})
@@ -1258,6 +1264,8 @@ let rec annot opts scope locs xs (loc, t) =
   | T.Exists _ ->
     let force = SSet.is_empty xs in
     Annot (Exists {loc; force})
+  in
+  (loc, annot)
 
 and function_type opts scope locs xs f: ('loc loc_node, 'loc parsed) fun_sig =
   let module F = T.Function in
@@ -2237,6 +2245,25 @@ and tparams =
     | Some (tparams_loc, {Ast.Type.TypeParams.params = tps; comments = _}) ->
       let tparams_loc = Locs.push locs tparams_loc in
       loop opts scope locs tparams_loc xs [] tps
+
+and optional_indexed_access opts scope locs xs (loc,  { T.OptionalIndexedAccess.indexed_access; optional }) =
+  let { T.IndexedAccess._object; index; comments = _} = indexed_access in
+  let (obj_loc, obj) = match _object with
+    | (loc, T.OptionalIndexedAccess ia) ->
+      let loc = Locs.push locs loc in
+      let (obj, _) = optional_indexed_access opts scope locs xs (loc, ia) in
+      (loc, obj)
+    | _ ->
+      annot_with_loc opts scope locs xs _object
+  in
+  let index = annot opts scope locs xs index in
+  let non_maybe_result = if optional then
+    Annot (OptionalIndexedAccessNonMaybeType {loc; obj; index})
+  else
+    Annot (ElementType { loc; obj; elem = index })
+  in
+  let result = Annot (OptionalIndexedAccessResultType {loc; non_maybe_result; void_loc = obj_loc}) in
+  (non_maybe_result, result)
 
 let annot_or_hint ~sort ~err_loc opts scope locs xs = function
   | Ast.Type.Available (_, t) -> annot opts scope locs xs t

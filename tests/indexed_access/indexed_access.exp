@@ -12,6 +12,48 @@ References:
           ^^^^^^ [2]
 
 
+Error --------------------------------------------------------------------------------------------------- import.js:10:2
+
+Cannot cast `1` to `B` because number [1] is incompatible with boolean [2]. [incompatible-cast]
+
+   import.js:10:2
+   10| (1: B); // Error
+        ^ [1]
+
+References:
+   optional_export.js:2:6
+    2|   b: boolean,
+            ^^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- import.js:14:2
+
+Cannot cast `true` to `N` because boolean [1] is incompatible with number [2]. [incompatible-cast]
+
+   import.js:14:2
+   14| (true: N); // Error
+        ^^^^ [1]
+
+References:
+   optional_export.js:4:9
+    4|     nn: number,
+               ^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- import.js:18:2
+
+Cannot cast `true` to `S` because boolean [1] is incompatible with string [2]. [incompatible-cast]
+
+   import.js:18:2
+   18| (true: S); // Error
+        ^^^^ [1]
+
+References:
+   optional_export.js:7:9
+    7|     ss: string,
+               ^^^^^^ [2]
+
+
 Error ------------------------------------------------------------------------------------------------- optional.js:8:18
 
 Cannot access string literal `xxx` on indexed access because property `xxx` is missing in object type [1].
@@ -569,7 +611,7 @@ References:
 
 
 
-Found 39 errors
+Found 42 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches

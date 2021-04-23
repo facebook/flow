@@ -4788,3 +4788,30 @@ let%expect_test "this_param_6" =
                          ))),
                    Polarity.Neutral)) };
               proto = ObjAnnotImplicitProto})} |}]
+
+let%expect_test "optional_indexed_access" =
+  print_sig {|
+    export type T = Obj?.['a']['b'];
+  |};
+  [%expect {|
+    CJSExports {types = { "T" -> (ExportTypeBinding 0) }; type_stars = []; strict = true}
+
+    Local defs:
+    0. TypeAlias {id_loc = [1:12-13];
+         name = "T"; tparams = Mono;
+         body =
+         (Annot
+            OptionalIndexedAccessResultType {
+              loc = [1:16-31];
+              non_maybe_result =
+              (Annot
+                 ElementType {loc = [1:16-31];
+                   obj =
+                   (Annot
+                      OptionalIndexedAccessNonMaybeType {
+                        loc = [1:16-26];
+                        obj = (TyRef (Unqualified BuiltinRef {ref_loc = [1:16-19]; name = "Obj"}));
+                        index = (Annot (SingletonString ([1:22-25], "a")))});
+                   elem = (Annot (SingletonString ([1:27-30], "b")))});
+              void_loc = [1:16-26]})}
+  |}]

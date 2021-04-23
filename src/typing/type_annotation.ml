@@ -2010,7 +2010,8 @@ and optional_indexed_access cx loc ~tparams_map { T.OptionalIndexedAccess.indexe
     let result_t =
       EvalT
         ( non_maybe_result_t,
-          TypeDestructorT (use_op, reason, OptionalIndexedAccessResultType { void_reason }),
+          TypeDestructorT
+            (unknown_use (* not used *), reason, OptionalIndexedAccessResultType { void_reason }),
           Eval.generate_id () )
     in
     ( non_maybe_result_t,
