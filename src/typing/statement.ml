@@ -739,50 +739,6 @@ and statement_decl cx =
  * flow to check types/create graphs for merge-time checking
  ***************************************************************)
 
-(* accumulates a list of previous statements' ASTs in reverse order *)
-(* can raise Abnormal.(Exn (Stmts _, _)). *)
-and toplevels =
-  let rec loop acc cx = function
-    | [] -> List.rev acc
-    | (loc, Ast.Statement.Empty empty) :: stmts ->
-      loop ((loc, Ast.Statement.Empty empty) :: acc) cx stmts
-    | stmt :: stmts ->
-      (match Abnormal.catch_stmt_control_flow_exception (fun () -> statement cx stmt) with
-      | (stmt, Some abnormal) ->
-        (* control flow exit out of a flat list:
-           check for unreachable code and rethrow *)
-        let warn_unreachable loc = Flow.add_output cx (Error_message.EUnreachable loc) in
-        let rest =
-          Base.List.map
-            ~f:
-              (let open Ast.Statement in
-              fun stmt ->
-                match stmt with
-                | (_, Empty _) as stmt -> stmt
-                (* function declarations are hoisted, so not unreachable *)
-                | (_, FunctionDeclaration _) -> statement cx stmt
-                (* variable declarations are hoisted, but associated assignments are
-                   not, so skip variable declarations with no assignments.
-                   Note: this does not seem like a practice anyone would use *)
-                | (_, VariableDeclaration d) as stmt ->
-                  VariableDeclaration.(
-                    d.declarations
-                    |> List.iter
-                         Declarator.(
-                           function
-                           | (_, { init = Some (loc, _); _ }) -> warn_unreachable loc
-                           | _ -> ()));
-                  Tast_utils.unreachable_mapper#statement stmt
-                | (loc, _) as stmt ->
-                  warn_unreachable loc;
-                  Tast_utils.unreachable_mapper#statement stmt)
-            stmts
-        in
-        Abnormal.throw_stmts_control_flow_exception (List.rev_append acc (stmt :: rest)) abnormal
-      | (stmt, None) -> loop (stmt :: acc) cx stmts)
-  in
-  (fun cx -> loop [] cx)
-
 (* can raise Abnormal.(Exn (Stmt _, _)) *)
 and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t =
   let open Ast.Statement in
@@ -835,7 +791,7 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t =
   let check cx b =
     Abnormal.catch_stmts_control_flow_exception (fun () ->
         toplevel_decls cx b.Block.body;
-        toplevels cx b.Block.body)
+        Toplevels.toplevels statement cx b.Block.body)
   in
   let catch_clause cx catch_clause =
     let { Try.CatchClause.param; body = (b_loc, b); comments } = catch_clause in
@@ -901,7 +857,7 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t =
       Abnormal.catch_stmts_control_flow_exception (fun () ->
           Env.in_lex_scope (fun () ->
               toplevel_decls cx body;
-              toplevels cx body))
+              Toplevels.toplevels statement cx body))
     in
     Abnormal.check_stmt_control_flow_exception ((loc, Block { Block.body; comments }), abnormal_opt)
   | (loc, Expression { Expression.expression = e; directive; comments }) ->
@@ -1279,7 +1235,8 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t =
                     unconditional exit, break_opt will be any break *)
                  let save_break = Abnormal.clear_saved (Abnormal.Break None) in
                  let (consequent_ast, exit) =
-                   Abnormal.catch_stmts_control_flow_exception (fun () -> toplevels cx consequent)
+                   Abnormal.catch_stmts_control_flow_exception (fun () ->
+                       Toplevels.toplevels statement cx consequent)
                  in
                  if added_default && Base.Option.is_none test then
                    Env.init_let
@@ -1574,7 +1531,7 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t =
       Env.in_lex_scope (fun () ->
           Abnormal.catch_stmts_control_flow_exception (fun () ->
               toplevel_decls cx b.Block.body;
-              toplevels cx b.Block.body))
+              Toplevels.toplevels statement cx b.Block.body))
     in
     (* save ref to env at end of try *)
     let try_env = Env.peek_env () in
@@ -1634,7 +1591,7 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t =
           Env.in_lex_scope (fun () ->
               Abnormal.catch_stmts_control_flow_exception (fun () ->
                   toplevel_decls cx body;
-                  toplevels cx body))
+                  Toplevels.toplevels statement cx body))
         in
         (* 2. non-throwing finally case. *)
         Env.update_env loc nonthrow_finally_env;
@@ -1644,7 +1601,7 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t =
           Env.in_lex_scope (fun () ->
               Abnormal.catch_stmts_control_flow_exception (fun () ->
                   toplevel_decls cx body;
-                  toplevels cx body))
+                  Toplevels.toplevels statement cx body))
         in
         (Some (f_loc, { Block.body = finally_block_ast; comments }), finally_abnormal)
     in
@@ -2213,7 +2170,7 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t =
     let (elements_ast, elements_abnormal) =
       Abnormal.catch_stmts_control_flow_exception (fun () ->
           toplevel_decls cx elements;
-          toplevels cx elements)
+          Toplevels.toplevels statement cx elements)
     in
     let reason = mk_reason (RModule (OrdinaryName name)) loc in
     let () =
@@ -7538,7 +7495,7 @@ and mk_class cx class_loc ~class_annot ~name_loc ~general reason c =
              cx
              class_sig
              ~decls:toplevel_decls
-             ~stmts:toplevels
+             ~stmts:(Toplevels.toplevels statement)
              ~expr:expression
              ~private_property_map;
 
@@ -8189,7 +8146,7 @@ and function_decl id cx ~annot reason func this_recipe super =
             this_recipe
             super
             ~decls:toplevel_decls
-            ~stmts:toplevels
+            ~stmts:(Toplevels.toplevels statement)
             ~expr:expression)
   in
   ignore (Abnormal.swap_saved Abnormal.Return save_return);

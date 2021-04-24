@@ -151,7 +151,7 @@ let before_and_after_stmts file_name =
     let t_stmts =
       try
         Statement.toplevel_decls cx stmts;
-        Statement.toplevels cx stmts
+        Toplevels.toplevels Statement.statement cx stmts
       with
       | Abnormal.Exn (Abnormal.Stmts t_stmts, _) -> t_stmts
       | Abnormal.Exn (Abnormal.Stmt t_stmt, _) -> [t_stmt]

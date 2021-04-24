@@ -20,7 +20,7 @@ module ImpExp = Import_export
 let infer_core cx statements =
   try
     statements |> Statement.toplevel_decls cx;
-    statements |> Statement.toplevels cx
+    statements |> Toplevels.toplevels Statement.statement cx
   with
   | Abnormal.Exn (Abnormal.Stmts stmts, Abnormal.Throw) ->
     (* throw is allowed as a top-level statement *)
