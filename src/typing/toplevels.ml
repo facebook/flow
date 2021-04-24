@@ -22,49 +22,67 @@ module type Ordering = sig
 end
 
 module Toplevels (Order : Ordering with type loc = ALoc.t) = struct
-  let toplevels statement =
-    let rec loop acc cx = function
-      | [] -> List.rev acc
-      | (loc, Ast.Statement.Empty empty) :: stmts ->
-        loop ((loc, Ast.Statement.Empty empty) :: acc) cx stmts
-      | stmt :: stmts ->
-        (match Abnormal.catch_stmt_control_flow_exception (fun () -> statement cx stmt) with
-        | (stmt, Some abnormal) ->
-          (* control flow exit out of a flat list:
-           check for unreachable code and rethrow *)
-          let warn_unreachable loc = Flow.add_output cx (Error_message.EUnreachable loc) in
-          let rest =
-            Base.List.map
-              ~f:
-                (let open Ast.Statement in
-                fun stmt ->
-                  match stmt with
-                  | (_, Empty _) as stmt -> stmt
-                  (* function declarations are hoisted, so not unreachable *)
-                  | (_, FunctionDeclaration _) -> statement cx stmt
-                  (* variable declarations are hoisted, but associated assignments are
-                   not, so skip variable declarations with no assignments.
-                   Note: this does not seem like a practice anyone would use *)
-                  | (_, VariableDeclaration d) as stmt ->
-                    VariableDeclaration.(
-                      d.declarations
-                      |> List.iter
-                           Declarator.(
-                             function
-                             | (_, { init = Some (loc, _); _ }) -> warn_unreachable loc
-                             | _ -> ()));
-                    Tast_utils.unreachable_mapper#statement stmt
-                  | (loc, _) as stmt ->
-                    warn_unreachable loc;
-                    Tast_utils.unreachable_mapper#statement stmt)
-              stmts
-          in
-          Abnormal.throw_stmts_control_flow_exception (List.rev_append acc (stmt :: rest)) abnormal
-        | (stmt, None) -> loop (stmt :: acc) cx stmts)
+  let toplevels statement cx stmts =
+    let ordering = Order.make stmts in
+    (* Enumerate and sort statements using the order specified *)
+    let stmts =
+      Base.List.mapi stmts ~f:(fun i s -> (i, s))
+      |> Base.List.sort ~compare:(fun a b -> Order.compare ordering (snd a) (snd b))
     in
-    fun cx statements ->
-      let ordering = Order.make statements in
-      Base.List.sort statements (Order.compare ordering) |> loop [] cx
+    (* Check the statement in the new order, but also find the first
+       statement that causes abnormal control flow in the *original*
+       ordering *)
+    let (rev_acc, abnormal) =
+      Base.List.fold
+        ~init:([], None)
+        ~f:(fun (acc, acc_abnormal) (i, stmt) ->
+          match stmt with
+          | (loc, Ast.Statement.Empty empty) ->
+            ((i, (loc, Ast.Statement.Empty empty)) :: acc, acc_abnormal)
+          | stmt ->
+            let (stmt, acc_abnormal) =
+              match Abnormal.catch_stmt_control_flow_exception (fun () -> statement cx stmt) with
+              | (stmt, Some abnormal) ->
+                let abnormal =
+                  match acc_abnormal with
+                  | Some (n, _) when n < i -> acc_abnormal
+                  | _ -> Some (i, abnormal)
+                in
+                (stmt, abnormal)
+              | (stmt, None) -> (stmt, acc_abnormal)
+            in
+            ((i, stmt) :: acc, acc_abnormal))
+        stmts
+    in
+    (* Undo the reordering of the now-checked statements *)
+    let stmts =
+      List.rev rev_acc
+      |> Base.List.sort ~compare:(fun a b -> Stdlib.compare (fst a) (fst b))
+      |> Base.List.map ~f:snd
+    in
+    (* If there was any abnormal control flow, add errors on any statements that are
+       lexically after the place where abnormal control was raised *)
+    match abnormal with
+    | Some (n, abnormal) ->
+      let warn_unreachable loc = Flow.add_output cx (Error_message.EUnreachable loc) in
+      Base.List.iteri
+        ~f:(fun i -> function
+          | (_, Ast.Statement.Empty _)
+          | (_, Ast.Statement.FunctionDeclaration _) ->
+            ()
+          | (_, Ast.Statement.VariableDeclaration d) when i > n ->
+            Ast.Statement.VariableDeclaration.(
+              d.declarations
+              |> List.iter
+                   Declarator.(
+                     function
+                     | (_, { init = Some ((loc, _), _); _ }) -> warn_unreachable loc
+                     | _ -> ()))
+          | (loc, _) when i > n -> warn_unreachable loc
+          | _ -> ())
+        stmts;
+      Abnormal.throw_stmts_control_flow_exception stmts abnormal
+    | None -> stmts
 end
 
 module LexicalOrdering : Ordering with type loc = ALoc.t = struct
